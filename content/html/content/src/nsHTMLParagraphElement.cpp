@@ -192,9 +192,6 @@ nsHTMLParagraphElement::AttributeToString(nsIAtom* aAttribute,
 static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (!aData || !aAttributes)
-    return;
-
   nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }

@@ -296,13 +296,10 @@ static void
 SpacerMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                             nsRuleData* aData)
 {
-  if (!aAttributes || !aData)
-    return;
-
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
 
-  if (aData->mPositionData) {
+  if (aData->mSID == eStyleStruct_Position) {
     nsHTMLValue value;
 
     const nsStyleDisplay* display = aData->mStyleContext->GetStyleDisplay();
@@ -344,13 +341,12 @@ SpacerMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                                  eCSSUnit_Pixel);
       }
     }
-  } else if (aData->mDisplayData) {
+  } else if (aData->mSID == eStyleStruct_Display) {
     nsHTMLValue value;
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       PRUint8 align = (PRUint8)(value.GetIntValue());
-      if (aData->mDisplayData &&
-          aData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
+      if (aData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
         if (align == NS_STYLE_TEXT_ALIGN_LEFT)
           aData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_LEFT,
                                                   eCSSUnit_Enumerated);

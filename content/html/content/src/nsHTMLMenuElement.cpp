@@ -199,10 +199,7 @@ nsHTMLMenuElement::AttributeToString(nsIAtom* aAttribute,
 static void
 MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (!aData || !aAttributes)
-    return;
-
-  if (aData->mListData) {
+  if (aData->mSID == eStyleStruct_List) {
     if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
       nsHTMLValue value;
       // type: enum

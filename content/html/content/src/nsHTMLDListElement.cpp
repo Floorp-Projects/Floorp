@@ -67,12 +67,6 @@ public:
   // nsIDOMHTMLDListElement
   NS_IMETHOD GetCompact(PRBool* aCompact);
   NS_IMETHOD SetCompact(PRBool aCompact);
-
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
 nsresult
@@ -153,47 +147,3 @@ nsHTMLDListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 
 NS_IMPL_BOOL_ATTR(nsHTMLDListElement, Compact, compact)
-
-
-NS_IMETHODIMP
-nsHTMLDListElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAString& aValue,
-                                      nsHTMLValue& aResult)
-{
-  if (aAttribute == nsHTMLAtoms::compact) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_NO_VALUE;
-  }
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-static void
-MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
-}
-
-NS_IMETHODIMP_(PRBool)
-nsHTMLDListElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
-{
-#if 0
-  static const AttributeDependenceEntry attributes[] = {
-    // { &nsHTMLAtoms::compact }, // handled by ua.css?
-    { nsnull, NS_STYLE_HINT_NONE },
-  };
-#endif
-
-  static const AttributeDependenceEntry* const map[] = {
-    // attributes,
-    sCommonAttributeMap
-  };
-
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
-}
-
-NS_IMETHODIMP
-nsHTMLDListElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
-{
-  aMapRuleFunc = &MapAttributesIntoRule;
-  return NS_OK;
-}

@@ -1237,16 +1237,10 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   // which *element* it's matching (style rules should not stop matching
   // when the display type is changed).
 
-  if (!aData)
-    return;
-
-  if (!aAttributes)
-    return;
-
   nsCompatibility mode;
   aData->mPresContext->GetCompatibilityMode(&mode);
 
-  if (aData->mSID == eStyleStruct_TableBorder && aData->mTableData) {
+  if (aData->mSID == eStyleStruct_TableBorder) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
     if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
       // cellspacing 
@@ -1266,9 +1260,8 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
           aData->mTableData->mBorderSpacingY.SetFloatValue(100.0f * value.GetPercentValue(), eCSSUnit_Pixel);
       }
     }
-  }
-
-  if (aData->mSID == eStyleStruct_Table && aData->mTableData) {
+  } 
+  else if (aData->mSID == eStyleStruct_Table) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
     if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
       MapTableBorderInto(aAttributes, aData, 0);
@@ -1296,7 +1289,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
         aData->mTableData->mRules.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
     }
   }
-  else if (aData->mSID == eStyleStruct_Margin && aData->mMarginData) {
+  else if (aData->mSID == eStyleStruct_Margin) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
   
     if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
@@ -1342,7 +1335,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       }
     }
   }
-  else if (aData->mSID == eStyleStruct_Padding && aData->mMarginData) {
+  else if (aData->mSID == eStyleStruct_Padding) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
   
     if (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
@@ -1376,7 +1369,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       }
     }
   }
-  else if (aData->mPositionData) {
+  else if (aData->mSID == eStyleStruct_Position) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
   
     if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
@@ -1406,7 +1399,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL)
       nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
   }
-  else if (aData->mSID == eStyleStruct_Border && aData->mMarginData) {
+  else if (aData->mSID == eStyleStruct_Border) {
     if (!aData->mStyleContext) return;
     const nsStyleTableBorder* tableStyle = aData->mStyleContext->GetStyleTableBorder();
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
@@ -1489,8 +1482,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       MapTableBorderInto(aAttributes, aData, borderStyle);
     }
   }
-
-  if (aData->mSID == eStyleStruct_Background) {
+  else if (aData->mSID == eStyleStruct_Background) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
   
     if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL)

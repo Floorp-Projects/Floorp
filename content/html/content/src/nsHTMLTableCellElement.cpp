@@ -90,7 +90,7 @@ protected:
   // This does not return a nsresult since all we care about is if we
   // found the row element that this cell is in or not.
   void GetRow(nsIDOMHTMLTableRowElement** aRow);
-  void GetTable(nsIContent** aTable);
+  nsIContent * GetTable();
 
   PRInt32 mColIndex;
 };
@@ -202,10 +202,10 @@ nsHTMLTableCellElement::GetRow(nsIDOMHTMLTableRowElement** aRow)
 }
 
 // protected method
-void
-nsHTMLTableCellElement::GetTable(nsIContent** aTable)
+nsIContent*
+nsHTMLTableCellElement::GetTable()
 {
-  *aTable = nsnull;
+  nsIContent *result = nsnull;
 
   if (mParent) {  // mParent should be a row
     nsIContent* section = mParent->GetParent();
@@ -214,13 +214,14 @@ nsHTMLTableCellElement::GetTable(nsIContent** aTable)
       section->GetTag(getter_AddRefs(tag));
       if (tag == nsHTMLAtoms::table) {
         // XHTML, without a row group
-        NS_ADDREF(*aTable = section);
+        result = section;
       } else {
         // we have a row group.
-        NS_IF_ADDREF(*aTable = section->GetParent());
+        result = section->GetParent();
       }
     }
   }
+  return result;
 }
 
 NS_IMETHODIMP
@@ -267,6 +268,10 @@ nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 NS_IMETHODIMP
 nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
+  nsresult rv = 
+    nsGenericHTMLContainerElement::WalkContentStyleRules(aRuleWalker);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Add style information from the mapped attributes of the table
   // element.  This depends on the strange behavior of the
   // |MapAttributesIntoRule| in nsHTMLTableElement.cpp, which is
@@ -274,14 +279,12 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   // contract.  However, things are OK (except for the incorrect
   // dependence on display type rather than tag) since tables and cells
   // match different, less specific, rules.
-  nsCOMPtr<nsIContent> table;
-  GetTable(getter_AddRefs(table));
-  nsCOMPtr<nsIStyledContent> styledTable(do_QueryInterface(table));
+  nsCOMPtr<nsIStyledContent> styledTable = do_QueryInterface(GetTable());
   if (styledTable) {
-    styledTable->WalkContentStyleRules(aRuleWalker);
+    rv = styledTable->WalkContentStyleRules(aRuleWalker);
   }
 
-  return nsGenericHTMLContainerElement::WalkContentStyleRules(aRuleWalker);
+  return rv;
 }
 
 
@@ -444,10 +447,7 @@ static
 void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
                            nsRuleData* aData)
 {
-  if (!aAttributes || !aData)
-    return;
- 
-  if (aData->mPositionData) {
+  if (aData->mSID == eStyleStruct_Position) {
     // width: value
     nsHTMLValue value;
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
@@ -479,37 +479,35 @@ void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       }
     }
   }
-  else if (aData->mTextData) {
-    if (aData->mSID == eStyleStruct_Text) {
-      if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
-        // align: enum
-        nsHTMLValue value;
-        aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-        if (value.GetUnit() == eHTMLUnit_Enumerated)
-          aData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
-      }
+  else if (aData->mSID == eStyleStruct_Text) {
+    if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
+      // align: enum
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated)
+        aData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+    }
 
-      if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
-        // nowrap: enum
-        nsHTMLValue value;
-        aAttributes->GetAttribute(nsHTMLAtoms::nowrap, value);
-        if (value.GetUnit() != eHTMLUnit_Null) {
-          // See if our width is not a pixel width.
-          nsHTMLValue widthValue;
-          aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
-          if (widthValue.GetUnit() != eHTMLUnit_Pixel)
-            aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_NOWRAP, eCSSUnit_Enumerated);
-        }
+    if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
+      // nowrap: enum
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::nowrap, value);
+      if (value.GetUnit() != eHTMLUnit_Null) {
+        // See if our width is not a pixel width.
+        nsHTMLValue widthValue;
+        aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
+        if (widthValue.GetUnit() != eHTMLUnit_Pixel)
+          aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_NOWRAP, eCSSUnit_Enumerated);
       }
     }
-    else {
-      if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
-        // valign: enum
-        nsHTMLValue value;
-        aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
-        if (value.GetUnit() == eHTMLUnit_Enumerated) 
-          aData->mTextData->mVerticalAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
-      }
+  }
+  else if (aData->mSID == eStyleStruct_TextReset) {
+    if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
+      // valign: enum
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated) 
+        aData->mTextData->mVerticalAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
     }
   }
   

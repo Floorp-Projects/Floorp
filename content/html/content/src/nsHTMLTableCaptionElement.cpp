@@ -197,10 +197,7 @@ nsHTMLTableCaptionElement::AttributeToString(nsIAtom* aAttribute,
 static 
 void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (!aAttributes || !aData)
-    return;
-
-  if (aData->mSID == eStyleStruct_TableBorder && aData->mTableData) {
+  if (aData->mSID == eStyleStruct_TableBorder) {
     if (aData->mTableData->mCaptionSide.GetUnit() == eCSSUnit_Null) {
       nsHTMLValue value;
       aAttributes->GetAttribute(nsHTMLAtoms::align, value);
