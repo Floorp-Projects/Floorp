@@ -602,6 +602,7 @@ nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 }
 
 
+PRIVATE
 void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
 {
   nsIURL* docURL = nsnull;
