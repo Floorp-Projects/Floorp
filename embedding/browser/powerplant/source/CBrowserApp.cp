@@ -28,27 +28,30 @@
 #include <UDrawingState.h>
 #include <UMemoryMgr.h>
 #include <URegistrar.h>
-
 #include <LWindow.h>
 #include <LCaption.h>
-
+#include <LIconControl.h>
 #include <UControlRegistry.h>
 #include <UGraphicUtils.h>
 #include <UEnvironment.h>
-
 #include <Appearance.h>
+#include <UConditionalDialogs.h>
+#include <LCMAttachment.h>
+#include <UCMMUtils.h>
 
 #include "ApplIDs.h"
 #include "CBrowserWindow.h"
 #include "CBrowserShell.h"
 #include "CUrlField.h"
 #include "CThrobber.h"
+#include "CWebBrowserCMAttachment.h"
 #include "UMacUnicode.h"
 #include "nsIImageManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsIPref.h"
 #include "nsRepeater.h"
 #include "nsILocalFile.h"
@@ -59,12 +62,15 @@
 #include "nsXPIDLString.h"
 #include "macstdlibextras.h"
 #include "SIOUX.h"
+#include "nsIURL.h"
+#include "nsINetDataCacheManager.h"
 
 #include <TextServices.h>
 
 extern "C" void NS_SetupRegistry();
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static const char* kProgramName = "PP Browser";
 
 // ===========================================================================
 //		¥ Main Program
@@ -116,6 +122,9 @@ CBrowserApp::CBrowserApp()
 
 	RegisterClass_(PP_PowerPlant::LWindow);	// You must register each kind of
 	RegisterClass_(PP_PowerPlant::LCaption);	// PowerPlant classes that you use in your PPob resource.
+	RegisterClass_(PP_PowerPlant::LTabGroupView);
+    RegisterClass_(PP_PowerPlant::LIconControl);
+    RegisterClass_(PP_PowerPlant::LView);
 	
 	// Register the Appearance Manager/GA classes
 	PP_PowerPlant::UControlRegistry::RegisterClasses();
@@ -125,6 +134,12 @@ CBrowserApp::CBrowserApp()
 	RegisterClass_(CBrowserWindow);
 	RegisterClass_(CUrlField);
 	RegisterClass_(CThrobber);
+
+   // Contexual Menu Support
+   UCMMUtils::Initialize();
+   RegisterClass_(LCMAttachment);
+   RegisterClass_(CWebBrowserCMAttachment);
+   AddAttachment(new LCMAttachment);
 
    // We need to idle threads often
    SetSleepTime(0);
@@ -156,26 +171,6 @@ CBrowserApp::CBrowserApp()
 
    rv = NS_InitEmbedding(appDir, nsnull);
 
-   nsMPFileLocProvider *locationProvider = new nsMPFileLocProvider;
-   ThrowIfNil_(locationProvider);
-   nsCOMPtr<nsIFile> rootDir;
-   rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(rootDir));
-   ThrowIfError_(rv);
-   rv = locationProvider->Initialize(rootDir, "PP Browser");   
-   ThrowIfError_(rv);
-   
-   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-   if (NS_SUCCEEDED(rv)) {	  
-		
-        prefs->ResetPrefs();    // Needed because things read default prefs during startup
-        prefs->ReadUserPrefs();
-        
-		// HACK ALERT: Since we don't have prefs UI, reduce the font size here by hand
-        prefs->SetIntPref("font.size.variable.x-western", 12);
-        prefs->SetIntPref("font.size.fixed.x-western", 12);
-	}
-	else
-		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
 }
 
 
@@ -188,12 +183,10 @@ CBrowserApp::CBrowserApp()
 CBrowserApp::~CBrowserApp()
 {
    nsresult rv;
-   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-   if (NS_SUCCEEDED(rv))	  
+   NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+   if (NS_SUCCEEDED(rv) && prefs)
       prefs->SavePrefFile();
 
-   UMacUnicode::ReleaseUnit();
-	   
    NS_TermEmbedding();
 }
 
@@ -206,9 +199,47 @@ CBrowserApp::~CBrowserApp()
 void
 CBrowserApp::StartUp()
 {
+    nsresult rv;
+    
+    // If we don't want different user profiles, all that's needed is
+    // to make an nsMPFileLocProvider. This will provide the same file
+    // locations as the profile service but always within the specified folder.
+    
+    nsCOMPtr<nsIFile> rootDir;   
+    nsMPFileLocProvider *locationProvider = new nsMPFileLocProvider;
+    ThrowIfNil_(locationProvider);
+    rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(rootDir));
+    ThrowIfNil_(rootDir);
+    rv = locationProvider->Initialize(rootDir, kProgramName);   
+    ThrowIfError_(rv);
+    
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    ThrowIfNil_(prefs);
+    // Needed because things read default prefs during startup
+    prefs->ResetPrefs();
+    prefs->ReadUserPrefs();
+
+    InitializePrefs();
+
 	ObeyCommand(PP_PowerPlant::cmd_New, nil);	// EXAMPLE, create a new window
 }
 
+// ---------------------------------------------------------------------------
+//		¥ MakeMenuBar
+// ---------------------------------------------------------------------------
+
+void
+CBrowserApp::MakeMenuBar()
+{
+    LApplication::MakeMenuBar();
+    
+    // Insert a menu which is not in the menu bar but which contains
+    // items which appear in contextual menus. We have to do this hack
+    // because LCMAttachment::AddCommand needs a command which is in
+    // some LMenu in order to get the text for a contextual menu item.
+    
+    LMenuBar::GetCurrentMenuBar()->InstallMenu(new LMenu(menu_Buzzwords), hierMenu);
+}
 
 // ---------------------------------------------------------------------------
 //	¥ ProcessNextEvent												  [public]
@@ -249,15 +280,16 @@ CBrowserApp::ProcessNextEvent()
 	if (LAttachable::ExecuteAttachments(msg_Event, &macEvent)) {
 		if (gotEvent) {
 #if DEBUG
-         if (!SIOUXHandleOneEvent(&macEvent))
+            if (macEvent.what == kHighLevelEvent || !SIOUXHandleOneEvent(&macEvent))
 #endif
-			DispatchEvent(macEvent);
+			    DispatchEvent(macEvent);
+			    
 		} else {
 			UseIdleTime(macEvent);
 			
-  		   Repeater::DoIdlers(macEvent);
-         // yield to other threads
-         ::PR_Sleep(PR_INTERVAL_NO_WAIT);
+  		    Repeater::DoIdlers(macEvent);
+                // yield to other threads
+            ::PR_Sleep(PR_INTERVAL_NO_WAIT);
 		}
 	}
 
@@ -269,6 +301,53 @@ CBrowserApp::ProcessNextEvent()
 	if (IsOnDuty() && GetUpdateCommandStatus()) {
 		UpdateMenus();
 	}
+}
+
+
+// ---------------------------------------------------------------------------
+//	¥ HandleAppleEvent												  [public]
+// ---------------------------------------------------------------------------
+
+void CBrowserApp::HandleAppleEvent(const AppleEvent&	inAppleEvent,
+                                   AppleEvent&			outAEReply,
+                                   AEDesc&				outResult,
+                                   long				    inAENumber)
+{
+	switch (inAENumber) {
+	
+		case 5000:
+		    {
+		        OSErr err;
+		        Handle dataH;
+		        
+        		StAEDescriptor urlDesc;
+			    err = ::AEGetParamDesc(&inAppleEvent, keyDirectObject, typeWildCard, urlDesc);
+			    ThrowIfOSErr_(err);
+			    
+			    StAEDescriptor coerceDesc;
+			    if (urlDesc.DescriptorType() != typeChar) {
+			        err = ::AECoerceDesc(urlDesc, typeChar, coerceDesc);
+			        ThrowIfOSErr_(err);
+			        dataH = ((AEDesc)coerceDesc).dataHandle;
+			    }
+			    else
+			        dataH = ((AEDesc)urlDesc).dataHandle;
+			        
+			    Size dataSize = ::GetHandleSize(dataH);
+			    StHandleLocker lock(dataH);
+			    
+       			CBrowserWindow *theWindow = CBrowserWindow::CreateWindow(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
+       			ThrowIfNil_(theWindow);
+       			theWindow->SetSizeToContent(false);
+                theWindow->GetBrowserShell()->LoadURL(*dataH, dataSize);
+       			       			
+       			theWindow->Show();
+			}
+		    break;
+			
+		default:
+		    LApplication::HandleAppleEvent(inAppleEvent, outAEReply, outResult, inAENumber);
+    }
 }
 
 
@@ -288,14 +367,44 @@ CBrowserApp::ObeyCommand(
 	
 		case PP_PowerPlant::cmd_New:
 			{
-   			CBrowserWindow	*theWindow = dynamic_cast<CBrowserWindow*>(LWindow::CreateWindow(wind_BrowserWindow, this));
+   			CBrowserWindow *theWindow = CBrowserWindow::CreateWindow(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
    			ThrowIfNil_(theWindow);
-   			// LWindow is not initially visible in PPob resource
-   			theWindow->Show();
-
+   			theWindow->SetSizeToContent(false);
             // Just for demo sake, load a URL	
-            LStr255     urlString("http://www.mozilla.org");
-            theWindow->GetBrowserShell()->LoadURL((Ptr)&urlString[1], urlString.Length());
+            theWindow->GetBrowserShell()->LoadURL("http://www.mozilla.org");
+   			theWindow->Show();
+			}
+			break;
+
+		case PP_PowerPlant::cmd_Open:
+		case cmd_OpenDirectory:
+            {
+                FSSpec fileSpec;
+                if (SelectFileObject(inCommand, fileSpec))
+                {
+                    nsresult rv;
+                    nsCOMPtr<nsILocalFileMac> macFile;
+                    
+                    rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
+                    ThrowIfError_(NS_ERROR_GET_CODE(rv));
+                    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(macFile, &rv));
+                    ThrowIfError_(NS_ERROR_GET_CODE(rv));
+                    nsCOMPtr<nsIFileURL> aURL(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
+                    ThrowIfError_(NS_ERROR_GET_CODE(rv));
+                    
+                    rv = aURL->SetFile(localFile);
+                    ThrowIfError_(NS_ERROR_GET_CODE(rv));
+                    
+                    nsXPIDLCString urlSpec;
+                    rv = aURL->GetSpec(getter_Copies(urlSpec));
+                    ThrowIfError_(NS_ERROR_GET_CODE(rv));
+                        
+           			CBrowserWindow *theWindow = CBrowserWindow::CreateWindow(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
+           			ThrowIfNil_(theWindow);
+           			theWindow->SetSizeToContent(false);
+                    theWindow->GetBrowserShell()->LoadURL(urlSpec.get());
+           			theWindow->Show();
+           		}
 			}
 			break;
 
@@ -331,6 +440,11 @@ CBrowserApp::FindCommandStatus(
 			outEnabled = true;
 			break;
 
+		case PP_PowerPlant::cmd_Open:
+		case cmd_OpenDirectory:
+			outEnabled = true;
+			break;
+
 		// Any that you don't handle, such as cmd_About and cmd_Quit,
 		// will be passed up to LApplication
 		default:
@@ -357,4 +471,103 @@ Boolean CBrowserApp::AttemptQuitSelf(SInt32 inSaveOption)
  	}
     
    return true;
+}
+
+nsresult CBrowserApp::InitializePrefs()
+{
+   nsresult rv;
+   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+   if (NS_SUCCEEDED(rv)) {	  
+
+        rv = InitCachePrefs();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Could not initialize cache prefs");
+        
+		// We are using the default prefs from mozilla. If you were
+		// disributing your own, this would be done simply by editing
+		// the default pref files.
+		
+		PRBool inited;
+		rv = prefs->GetBoolPref("ppbrowser.prefs_inited", &inited);
+		if (NS_FAILED(rv) || !inited)
+		{
+            prefs->SetIntPref("font.size.variable.x-western", 12);
+            prefs->SetIntPref("font.size.fixed.x-western", 12);
+            rv = prefs->SetBoolPref("ppbrowser.prefs_inited", PR_TRUE);
+            if (NS_SUCCEEDED(rv))
+                rv = prefs->SavePrefFile();
+        }
+        
+	}
+	else
+		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
+		
+    return rv;
+}
+
+nsresult CBrowserApp::InitCachePrefs()
+{
+	const char * const CACHE_DIR_PREF   = "browser.cache.directory";
+	
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+	if (NS_FAILED(rv)) return rv;
+	
+	// See if we have a pref to a dir which exists
+    nsCOMPtr<nsILocalFile> prefDir;
+    rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(prefDir));
+    if (NS_SUCCEEDED(rv)) {
+        PRBool isDir;
+        rv = prefDir->IsDirectory(&isDir);
+        if (NS_SUCCEEDED(rv) && isDir)
+            return NS_OK;
+    }
+
+    // Set up the new pref
+    nsCOMPtr<nsIFile> profileDir;   
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
+    NS_ASSERTION(profileDir, "NS_APP_USER_PROFILE_50_DIR is not defined");
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsILocalFile> cacheDir(do_QueryInterface(profileDir));
+    NS_ASSERTION(cacheDir, "Cannot get nsILocalFile from cache dir");
+
+    PRBool exists;
+    cacheDir->Append("Cache");
+    rv = cacheDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+    rv = cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv)) return rv;
+
+    return prefs->SetFileXPref(CACHE_DIR_PREF, cacheDir);
+}
+
+Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT	inCommand,
+                                      FSSpec& outSpec)
+{
+		// LFileChooser presents the standard dialog for asking
+		// the user to open a file. It supports both StandardFile
+		// and Navigation Services. The latter allows opening
+		// multiple files.
+
+	UConditionalDialogs::LFileChooser	chooser;
+	
+	NavDialogOptions *theDialogOptions = chooser.GetDialogOptions();
+	if (theDialogOptions) {
+		theDialogOptions->dialogOptionFlags |= kNavSelectAllReadableItem;
+	}
+
+    Boolean     result;
+	SInt32      dirID;
+	
+	if (inCommand == cmd_OpenDirectory)
+	{
+	    result = chooser.AskChooseFolder(outSpec, dirID);
+	}
+	else
+	{
+	    result = chooser.AskOpenFile(LFileTypeList(fileTypes_All));
+	    if (result)
+	        chooser.GetFileSpec(1, outSpec);
+	}
+    return result;
 }
