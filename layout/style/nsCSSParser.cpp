@@ -2062,8 +2062,10 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
             static const char* caseSensitiveHTMLAttribute[] = {
               // list based on http://www.w3.org/TR/REC-html40/index/attributes.html
               "abbr",          "alt",        "label",
-              "prompt",        "standby",     "summary",
-              "title",         nsnull
+              "prompt",        "standby",    "summary",
+              "title",         "class",      "archive",
+              "cite",          "datetime",   "href",
+              "name",          nsnull
             };
             short i = 0;
             const char* htmlAttr;

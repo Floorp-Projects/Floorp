@@ -3423,8 +3423,13 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
                                 nsCaseInsensitiveStringComparator());
       }
     case NS_ATTR_FUNC_CONTAINSMATCH:
-      return FindInReadable(aAttrSelector->mValue, aValue,
-                            nsCaseInsensitiveStringComparator());
+      if (isCaseSensitive) {
+        return FindInReadable(aAttrSelector->mValue, aValue);
+      }
+      else {
+        return FindInReadable(aAttrSelector->mValue, aValue,
+                              nsCaseInsensitiveStringComparator());
+      }
     default:
       NS_NOTREACHED("Shouldn't be ending up here");
       return PR_FALSE;
