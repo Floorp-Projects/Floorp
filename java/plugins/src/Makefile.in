@@ -32,6 +32,31 @@ LIBRARY_NAME = pluglet
 MODULE          = pluglet
 IS_COMPONENT    = 1
 
+JDKINCLUDE= -I$(JDKHOME)/include
+
+ifeq ($(OS_ARCH), Linux)
+	JDKINCLUDE += -I$(JDKHOME)/include/linux
+	archExpr = case "`uname -m`" in  \
+                i[3-6]86) \
+                    echo i386 \
+                    ;; \
+                sparc*)  \
+                    echo sparc \
+                    ;; \
+                *) \
+                    uname -m  \
+                    ;; \
+               esac
+
+
+endif
+ifeq ($(OS_ARCH), SunOS)
+	JDKINCLUDE += -I$(JDKHOME)/include/solaris
+	archExpr = uname -p
+endif
+
+HOSTTYPE = $(shell $(archExpr))
+
 CPPSRCS =  \
 	List.cpp \
 	Pluglet.cpp \
@@ -49,11 +74,11 @@ CPPSRCS =  \
 	PlugletViewFactory.cpp \
 	$(NULL)
 
-CXXFLAGS := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT  -DOJI_DISABLE $(CXXFLAGS) 
+CXXFLAGS := $(JDKINCLUDE) $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT  -DOJI_DISABLE $(CXXFLAGS) 
 
 DSO_LDOPTS += \
       -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
-      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/classic \
+      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/client \
       -ljava -ljvm -lawt -lXt\
       -lgdk
 						      

@@ -27,8 +27,6 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.JFileChooser;
 
-import DOMTreeDumper;
-
 public class DOMAccessPanel extends JPanel implements ActionListener, ItemListener,  TreeSelectionListener { 
 
     private JTextField name, aValue;
