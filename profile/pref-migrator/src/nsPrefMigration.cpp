@@ -681,6 +681,9 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   rv = m_prefsFile->FromFileSpec(systemTempFile);
   if (NS_FAILED(rv)) return rv;
 
+  //Clear the prefs in case a previous set was read in.
+  m_prefs->ResetPrefs();
+
   //Now read the prefs from the prefs file in the system directory
   m_prefs->ReadUserPrefsFrom(m_prefsFile);
 
@@ -2170,7 +2173,7 @@ convertPref(nsCString &aElement, void *aData)
 }
 
 NS_IMETHODIMP
-nsPrefConverter::ConvertPrefsToUTF8IfNecessary()
+nsPrefConverter::ConvertPrefsToUTF8()
 {
   nsresult rv;
 
@@ -2180,17 +2183,6 @@ nsPrefConverter::ConvertPrefsToUTF8IfNecessary()
   if(NS_FAILED(rv)) return rv;
   if (!prefs) return NS_ERROR_FAILURE;
 
-  PRBool prefs_converted = PR_FALSE;
-  rv = prefs->GetBoolPref("prefs.converted-to-utf8",&prefs_converted);
-  if(NS_FAILED(rv)) return rv;
-
-  if (prefs_converted) {
-#ifdef DEBUG_UTF8_CONVERSION
-    printf("utf8 pref conversion not needed\n");
-#endif
-    return NS_OK;
-  }
-  
   nsAutoString charSet;
   rv = GetPlatformCharset(charSet);
   if (NS_FAILED(rv)) return rv;
