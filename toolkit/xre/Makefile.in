@@ -82,7 +82,6 @@ EXPORTS = nsXULAppAPI.h
 
 SHAREDSRCS = \
 	nsNativeAppSupportBase.cpp \
-	nsSigHandlers.cpp \
 	nsWindowCreator.cpp \
 	showOSAlert.cpp \
 	$(NULL)
@@ -117,7 +116,8 @@ STACKWALK_SRC_LCSRCS =               \
 		$(NULL)
 
 STACKWALK_CPPSRCS := $(addprefix $(topsrcdir)/xpcom/base/, $(STACKWALK_SRC_LCSRCS))
-CPPSRCS           += nsSigHandlers.cpp nsStackFrameUnix.cpp
+CPPSRCS           += nsStackFrameUnix.cpp
+SHAREDSRCS	  += nsSigHandlers.cpp
 endif
 
 GARBAGE += $(SHAREDSRCS) $(wildcard *.$(OBJ_SUFFIX))
