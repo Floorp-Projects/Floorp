@@ -70,9 +70,7 @@ endif
 # [4.0] Master "Core Components" source and release <platform> tags   #
 #       (dependent upon <architecture> tags)                          #
 #######################################################################
-ifndef PLATFORM
 PLATFORM = $(OBJDIR_NAME)
-endif
 
 #######################################################################
 # [5.0] Master "Core Components" release <tree> tags                  #

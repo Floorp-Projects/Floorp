@@ -232,9 +232,6 @@ OVERVIEW of "config.mk":
         $(OS_CONFIG).mk         <architecture>-specific macros
                                 (dependent upon <architecture> tags)
 
-        platform.mk             source and release <platform> tags 
-				(dependent upon <architecture> tags)
-
         tree.mk                 release <tree> tags 
 				(dependent upon <architecture> tags)
 
