@@ -45,7 +45,9 @@ public:
   void DestroyLoader() {
     NS_IF_RELEASE(mImageLoader);
     mLoadImageFailed = PR_FALSE;
+#ifndef _WIN32
     mLoadBrokenImageFailed = PR_FALSE;
+#endif
   }
 
   nsIImage* GetImage();
@@ -79,16 +81,16 @@ public:
                       nsFrameImageLoaderCB aCallBack,
                       nsHTMLReflowMetrics& aDesiredSize);
 
-  PRBool GetLoadImageFailed() {
-    return mLoadImageFailed;
-  }
+  PRBool GetLoadImageFailed() const;
 
   void SizeOf(nsISizeOfHandler* aHandler) const;
 
 protected:
   nsIFrameImageLoader* mImageLoader;
   PRPackedBool mLoadImageFailed;
+#ifndef _WIN32
   PRPackedBool mLoadBrokenImageFailed;
+#endif
   nsString* mURLSpec;
   nsString* mBaseHREF;
 };

@@ -45,7 +45,9 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDeviceContext.h"
 
+#ifndef _WIN32
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
+#endif
 
 #define XP_IS_SPACE(_ch) \
   (((_ch) == ' ') || ((_ch) == '\t') || ((_ch) == '\n'))
@@ -68,7 +70,9 @@ nsHTMLImageLoader::nsHTMLImageLoader()
 {
   mImageLoader = nsnull;
   mLoadImageFailed = PR_FALSE;
+#ifndef _WIN32
   mLoadBrokenImageFailed = PR_FALSE;
+#endif
   mURLSpec = nsnull;
   mBaseHREF = nsnull;
 }
@@ -189,21 +193,21 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
   mImageLoader->GetImageLoadStatus(aLoadStatus);
   if (0 != (aLoadStatus & NS_IMAGE_LOAD_STATUS_ERROR)) {
     NS_RELEASE(mImageLoader);
+#ifdef _WIN32
+    // Display broken icon along with alt-text
+    mLoadImageFailed = PR_TRUE;
+#else
     if (mLoadImageFailed) {
       // We are doomed. Loading the broken image has just failed.
       mLoadBrokenImageFailed = PR_TRUE;
     }
     else {
-#ifdef _WIN32
-      // Display broken icon along with alt-text
-      mLoadImageFailed = PR_TRUE;
-#else
       // Try again, this time using the broke-image url
       mLoadImageFailed = PR_TRUE;
       return StartLoadImage(aPresContext, aForFrame, nsnull,
                             aNeedSizeUpdate, aLoadStatus);
-#endif
     }
+#endif
   }
   return NS_OK;
 }
@@ -286,6 +290,23 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       aDesiredSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
     }
   }
+}
+
+PRBool
+nsHTMLImageLoader::GetLoadImageFailed() const
+{
+  PRBool  result = PR_FALSE;
+
+  if (nsnull != mImageLoader) {
+    PRIntn  loadStatus;
+
+    // Ask the image loader whether the load failed
+    mImageLoader->GetImageLoadStatus(loadStatus);
+    result = (loadStatus & NS_IMAGE_LOAD_STATUS_ERROR) == NS_IMAGE_LOAD_STATUS_ERROR;
+  }
+
+  result |= PRBool(mLoadImageFailed);
+  return result;
 }
 
 //----------------------------------------------------------------------
