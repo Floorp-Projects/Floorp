@@ -102,6 +102,9 @@ public:
   virtual void BeginAddingChildren();
   virtual void DoneAddingChildren();
   
+  // nsIDOMNode specializations:
+  NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode **aResult);
+  
   // nsIDOMElement specializations:
   NS_IMETHOD GetAttribute(const nsAString& aName,
                           nsAString& aReturn);

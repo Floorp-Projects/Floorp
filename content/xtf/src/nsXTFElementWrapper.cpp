@@ -49,6 +49,8 @@
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"
+#include "nsContentUtils.h"
+#include "nsIXTFService.h"
 
 nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
     : nsXTFElementWrapperBase(aNodeInfo),
@@ -364,6 +366,43 @@ nsXTFElementWrapper::GetExistingAttrNameFromQName(const nsAString& aStr) const
   }
   
   return nodeInfo;
+}
+
+//----------------------------------------------------------------------
+// nsIDOMNode methods:
+
+NS_IMETHODIMP
+nsXTFElementWrapper::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
+{
+  *aResult = nsnull;
+  nsCOMPtr<nsIContent> it;
+  nsContentUtils::GetXTFServiceWeakRef()->CreateElement(getter_AddRefs(it),
+                                                        mNodeInfo);
+  if (!it)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(do_QueryInterface(it));
+  nsXTFElementWrapper* wrapper =
+    NS_STATIC_CAST(nsXTFElementWrapper*, NS_STATIC_CAST(nsIContent*, it.get()));
+  nsresult rv = CopyInnerTo(wrapper, aDeep);
+
+  if (NS_SUCCEEDED(rv)) {
+    if (mAttributeHandler) {
+      PRUint32 innerCount = 0;
+      mAttributeHandler->GetAttributeCount(&innerCount);
+      for (PRUint32 i = 0; i < innerCount; ++i) {
+        nsCOMPtr<nsIAtom> attrName;
+        mAttributeHandler->GetAttributeNameAt(i, getter_AddRefs(attrName));
+        if (attrName) {
+          nsAutoString value;
+          if (NS_SUCCEEDED(mAttributeHandler->GetAttribute(attrName, value)));
+            it->SetAttr(kNameSpaceID_None, attrName, value, PR_TRUE);
+        }
+      }
+    }
+    kungFuDeathGrip.swap(*aResult);
+  }
+  return rv;
 }
 
 //----------------------------------------------------------------------
