@@ -59,6 +59,9 @@ NS_COM PRInt32 nsUnescapeCount (char * str);
 
 NS_COM char *
 nsEscapeHTML(const char * string);
+
+NS_COM PRUnichar *
+nsEscapeHTML2(const PRUnichar * string);
  /*
   * Escape problem char's for HTML display 
   */
