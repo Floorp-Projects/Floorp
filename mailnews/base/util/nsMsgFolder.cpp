@@ -84,7 +84,6 @@
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
 nsrefcnt nsMsgFolder::gInstanceCount  = 0;
