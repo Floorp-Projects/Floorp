@@ -119,6 +119,7 @@ function createShortcuts()
     File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fCommunicator,  "",                 fileExe, 0);
     File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fCommunicator,  "",                 fileExe, 0);
     File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fCommunicator,  scProfileDescParam, fileExe, 0);
+//    File.windowsShortcut(fileExe, fFolderPath,    "Test Http",   "",             "",                 "http://sweetlou/products/client/temp/ssu", 0);
 
     /* set the Program Folder Path in the Mozilla key in the Windows Registry */
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);

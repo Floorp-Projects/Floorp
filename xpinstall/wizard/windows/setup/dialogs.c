@@ -346,7 +346,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
             if(MessageBox(hDlg, szBufTemp2, szStrCreateDirectory, MB_YESNO | MB_ICONQUESTION) == IDYES)
             {
-              if(CreateDirectoriesAll(szBuf) == FALSE)
+              if(CreateDirectoriesAll(szBuf, TRUE) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
 
@@ -647,7 +647,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
 
             if(MessageBox(hDlg, szBufTemp2, szStrCreateDirectory, MB_YESNO | MB_ICONQUESTION) == IDYES)
             {
-              if(CreateDirectoriesAll(szBuf) == FALSE)
+              if(CreateDirectoriesAll(szBuf, TRUE) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
 

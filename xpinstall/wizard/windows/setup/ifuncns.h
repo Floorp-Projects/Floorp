@@ -50,7 +50,7 @@ HRESULT     CreateALink(LPSTR lpszPathObj,
                         int iIcon);
 HRESULT     ProcessProgramFolder(DWORD dwTiming);
 HRESULT     ProcessProgramFolderShowCmd(void);
-HRESULT     CreateDirectoriesAll(char* szPath);
+HRESULT     CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall);
 void        ProcessFileOps(DWORD dwTiming);
 void        GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwSize);
 void        SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BOOL bOverwriteName, DWORD dwType, LPSTR szData, DWORD dwSize);
@@ -60,5 +60,6 @@ BOOL        WinRegKeyExists(HKEY hkRootKey, LPSTR szKey);
 BOOL        WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 HRESULT     FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilename);
 HRESULT     ProcessCopyFileSequential(DWORD dwTiming);
+void        UpdateInstallLog(LPSTR szDir);
 
 #endif

@@ -1025,22 +1025,30 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutComplete()
   PRInt32 ret = nsInstall::SUCCESS;
 
 #ifdef _WINDOWS
-  char *cDescription  = mDescription->ToNewCString();
-  char *cParams       = mParams->ToNewCString();
-  
-  char *targetNativePathStr;
-  char *shortcutNativePathStr;
-  char *workingpathNativePathStr;
-  char *iconNativePathStr;
+  char *cDescription             = nsnull;
+  char *cParams                  = nsnull;
+  char *targetNativePathStr      = nsnull;
+  char *shortcutNativePathStr    = nsnull;
+  char *workingpathNativePathStr = nsnull;
+  char *iconNativePathStr        = nsnull;
+
+  if(mDescription)
+    cDescription = mDescription->ToNewCString();
+  if(mParams)
+    cParams = mParams->ToNewCString();
 
   if((cDescription == nsnull) || (cParams == nsnull))
     ret = nsInstall::OUT_OF_MEMORY;
   else
   {
-    mTarget->GetPath(&targetNativePathStr);
-    mShortcutPath->GetPath(&shortcutNativePathStr);
-    mWorkingPath->GetPath(&workingpathNativePathStr);
-    mIcon->GetPath(&iconNativePathStr);
+    if(mTarget)
+      mTarget->GetPath(&targetNativePathStr);
+    if(mShortcutPath)
+      mShortcutPath->GetPath(&shortcutNativePathStr);
+    if(mWorkingPath)
+      mWorkingPath->GetPath(&workingpathNativePathStr);
+    if(mIcon)
+      mIcon->GetPath(&iconNativePathStr);
 
     ret = CreateALink(targetNativePathStr,
                       shortcutNativePathStr,

@@ -71,8 +71,7 @@ File.dirCreate(fUninstall);
 // the uninstaller.
 // These two files are created after installation is done, thus
 // are normally not logged for uninstall.
-logComment("[0/0] Installing: " + fCommunicator + "component.reg");
-logComment("[0/0] Installing: " + fCommunicator + "xpcom.log");
+logComment("Installing: " + fCommunicator + "component.reg");
 
 if(verifyDiskSpace(fCommunicator, srDest) == true)
 {

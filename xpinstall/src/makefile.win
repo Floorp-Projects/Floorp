@@ -86,7 +86,8 @@ OBJS =                                          \
        .\$(OBJDIR)\nsXPInstallManager.obj       \
        .\$(OBJDIR)\nsInstallFileOpItem.obj      \
        .\$(OBJDIR)\nsWinShortcut.obj            \
-	   .\$(OBJDIR)\nsJSFileSpecObj.obj          \
+       .\$(OBJDIR)\nsJSFileSpecObj.obj          \
+       .\$(OBJDIR)\nsInstallLogComment.obj      \
 #     .\$(OBJDIR)\nsUpdateNotification.obj     \
        $(NULL)
 

@@ -301,7 +301,7 @@ HRESULT Initialize(HINSTANCE hInstance)
   if(!FileExists(szTempDir))
   {
     AppendBackSlash(szTempDir, MAX_BUF);
-    CreateDirectoriesAll(szTempDir);
+    CreateDirectoriesAll(szTempDir, FALSE);
     if(!FileExists(szTempDir))
     {
       char szECreateTempDir[MAX_BUF];
@@ -684,7 +684,6 @@ HRESULT ParseSetupIni()
 
   lstrcpy(szFileIniSetup, szSetupDir);
   AppendBackSlash(szFileIniSetup, sizeof(szFileIniSetup));
-  lstrcat(szFileIniSetup, "\\");
   lstrcat(szFileIniSetup, FILE_INI_SETUP);
 
   CopyFile(szFileIniSetup, szFileIdiGetConfigIni, FALSE);
@@ -5030,7 +5029,7 @@ int ExtractDirEntries(char* directory, void* vZip)
       err = ZIP_FindNext( find, buf, sizeof(buf) );
       while ( err == ZIP_OK ) 
       {
-        CreateDirectoriesAll(buf);
+        CreateDirectoriesAll(buf, FALSE);
         if(buf[lstrlen(buf) - 1] != '/')
           // only extract if it's a file
           result = ZIP_ExtractFile(vZip, buf, buf);

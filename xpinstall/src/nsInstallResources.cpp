@@ -43,6 +43,18 @@ static nsXPIResourceTableItem XPIResTable[] =
     { "Patch",              "Patching: %s" },
     { "Uninstall",          "Uninstalling: %s" },
 
+    { "CopyFile",             "Copy File: %s to %s" },
+    { "ExecuteFile",          "Execute File: %s" },
+    { "ExecuteFileWithArgs",  "Execute File: %s with argument: %s" },
+    { "MoveFile",             "Move File: %s to %s" },
+    { "RenameFile",           "Rename File: %s to %s" },
+    { "CreateFolder",         "Create Folder: %s" },
+    { "RemoveFolder",         "Remove Folder: %s" },
+    { "RenameFolder",         "Rename Folder: %s to %s" },
+    { "WindowsShortcut",      "Windows Shortcut: %s" },
+    { "MacAlias",             "Mac Alias: %s" },
+    { "UnknownFileOpCommand", "Unkown file operation command!" },
+
     // XXX FileOp*() action strings
     // XXX WinReg and WinProfile action strings
 

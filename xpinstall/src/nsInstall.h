@@ -270,6 +270,8 @@ class nsInstall
         PRInt32    Confirm(nsString& string, PRBool* aReturn);
         void       InternalAbort(PRInt32 errcode);
 
+        PRInt32     ScheduleForInstall(nsInstallObject* ob);
+
         PRInt32    SaveError(PRInt32 errcode);
 
     private:
@@ -322,8 +324,6 @@ class nsInstall
         void        CleanUp();
 
         PRInt32     ExtractDirEntries(const nsString& directory, nsVoidArray *paths);
-
-        PRInt32     ScheduleForInstall(nsInstallObject* ob);
 
         static void DeleteVector(nsVoidArray* vector);
 };

@@ -69,7 +69,7 @@ chdir($cwdBuilder);
 # Mozilla-win32-install.exe (a self extracting file) will use the .xpi
 # files from its current directory as well, but it is not a requirement
 # that they exist because it already contains the .xpi files within itself.
-system("xcopy /f $cwdDistWin\\install\\xpi\\*.* $cwdDistWin\\install");
+system("copy $cwdDistWin\\install\\xpi\\*.* $cwdDistWin\\install");
 
 print "\n";
 print "**\n";
