@@ -218,7 +218,7 @@
 #define kBookmarkButtonHeight            16.0
 #define kMinBookmarkButtonWidth          16.0
 #define kMaxBookmarkButtonWidth         150.0
-#define kBookmarkButtonHorizPadding       2.0
+#define kBookmarkButtonHorizPadding       5.0
 #define kBookmarkButtonVerticalPadding    1.0
 #define kBookmarkToolbarBottomPadding     1.0
 
