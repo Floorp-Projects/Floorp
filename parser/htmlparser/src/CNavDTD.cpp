@@ -1332,7 +1332,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_noscript:
-          mHasOpenNoXXX++;
+          //mHasOpenNoXXX++;      // Fix for 33397 - Enable this when we handle NOSCRIPTS.
           isTokenHandled=PR_TRUE; // XXX - Throwing NOSCRIPT to the floor...yet another time..
           break;
 
