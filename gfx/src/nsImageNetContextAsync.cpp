@@ -28,7 +28,6 @@
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
-
 #include "nsITimer.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -100,8 +99,6 @@ public:
   
   // nsIStreamObserver methods:
   NS_DECL_NSISTREAMOBSERVER
-
-  // nsIStreamListener methods:
   NS_DECL_NSISTREAMLISTENER
 
   void SetKeepPumpingData(nsIChannel* channel, nsISupports* context) {
@@ -498,7 +495,6 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
                              NET_ReloadMethod aLoadMethod,
                              ilINetReader *aReader)
 {
-  nsIURI *nsurl;
   NS_PRECONDITION(nsnull != aURL, "null URL");
   NS_PRECONDITION(nsnull != aReader, "null reader");
   if (aURL == nsnull || aReader == nsnull) {
@@ -513,43 +509,39 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     }
   }
 
-  if (aURL->QueryInterface(kIURLIID, (void **)&nsurl) == NS_OK) {
-    aURL->SetReader(aReader);
+  nsresult rv;
+  nsCOMPtr<nsIURI> nsurl = do_QueryInterface(aURL, &rv);
+  if (NS_FAILED(rv)) return 0;
 
+  aURL->SetReader(aReader);
   SetReloadPolicy(aLoadMethod);    
   
-    // Find previously created ImageConsumer if possible
-    ImageConsumer *ic = new ImageConsumer(aURL, this);
-    NS_ADDREF(ic);
+  // Find previously created ImageConsumer if possible
+  ImageConsumer *ic = new ImageConsumer(aURL, this);
+  if (ic == nsnull)
+    return -1;
+  NS_ADDREF(ic);
         
-    // See if a reconnect is being done...(XXX: hack!)
-    if (mReconnectCallback && (*mReconnectCallback)(mReconnectArg, ic)) {
-      mRequests->AppendElement((void *)ic);
-    }
-    else {
-      nsCOMPtr<nsIChannel> channel;
-      nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
-      nsresult rv = NS_OpenURI(getter_AddRefs(channel), nsurl, group);
+  // See if a reconnect is being done...(XXX: hack!)
+  if (mReconnectCallback == nsnull
+      || !(*mReconnectCallback)(mReconnectArg, ic)) {
+    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
+    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, group);
+    if (NS_FAILED(rv)) goto error;
 
-      if (NS_SUCCEEDED(rv)) {
-        PRBool bIsBackground = aURL->GetBackgroundLoad();
-        if (bIsBackground) {
-          channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
-        }
-        rv = channel->AsyncRead(0, -1, nsnull, ic);
-      }
-      if (rv == NS_OK) {
-        mRequests->AppendElement((void *)ic);
-      }
-      else {
-        NS_RELEASE(ic);
-      }
+    PRBool bIsBackground = aURL->GetBackgroundLoad();
+    if (bIsBackground) {
+      (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
     }
-
-    NS_RELEASE(nsurl);
+    rv = channel->AsyncRead(0, -1, nsnull, ic);
+    if (NS_FAILED(rv)) goto error;
   }
-    
-  return 0;
+  return mRequests->AppendElement((void *)ic) ? 0 : -1;
+
+error:
+  NS_RELEASE(ic);
+  return -1;
 }
 
 nsresult
