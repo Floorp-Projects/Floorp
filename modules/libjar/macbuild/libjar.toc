@@ -1,2 +1,2 @@
-# target: libutilDebug.shlb
-mozilla/modules/libutil/src/obs.c
+# target: libjarDebug.shlb
+mozilla/modules/libjar/nsZipArchive.cpp
