@@ -199,7 +199,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
           return NS_ERROR_ILLEGAL_VALUE;
 
       if(kCharsetFromMetaTag <= src)
-          return NS_OK; // current charset have higher priority. do bother to do the following
+          return NS_OK; // current charset has higher priority. don't bother to do the following
 
       PRInt32 i;
       const PRUnichar *httpEquivValue=nsnull;
