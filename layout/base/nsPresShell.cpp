@@ -1055,35 +1055,6 @@ ReflowCommandHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
 
 // ----------------------------------------------------------------------------
 
-// A CantRenderReplacedElementEvent has a weak pointer to the presshell and the
-// presshell has a weak pointer to the event.  The event queue owns the event
-// and the presshell will delete the event if it's going to go away.
-struct CantRenderReplacedElementEvent : public PLEvent {
-  CantRenderReplacedElementEvent(PresShell* aPresShell,
-                                 nsIFrame* aFrame) NS_HIDDEN;
-  ~CantRenderReplacedElementEvent() {
-    RemoveLoadGroupRequest();
-  }
-  
-  // XXXldb Should the pres shell maintain a reference count on a single
-  // dummy layout request instead of doing creation of a separate one
-  // here (and per-event!)?
-  // XXXbz absolutely!  Should be a per-document counter, actually....
-  NS_HIDDEN_(void) AddLoadGroupRequest();
-  NS_HIDDEN_(void) RemoveLoadGroupRequest();
-  NS_HIDDEN_(PresShell*) OurPresShell() {
-    return NS_STATIC_CAST(PresShell*, owner);
-  }
-
-  void HandleEvent();
-
-  nsIFrame*  mFrame;                     // the frame that can't be rendered
-  CantRenderReplacedElementEvent* mNext; // next event in the list
-  nsCOMPtr<nsIRequest> mDummyLayoutRequest; // load group request
-};
-
-// ----------------------------------------------------------------------------
-
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   public nsStubDocumentObserver,
                   public nsISelectionController, public nsIObserver,
@@ -1358,14 +1329,18 @@ protected:
   // This method should be called after a reflow commands have been
   // removed from the queue, but after the state in the presshell is
   // such that it's safe to flush (i.e. mIsReflowing == PR_FALSE)
-  // If we are not reflowing and ther are no load-crated reflow commands, then
+  // If we are not reflowing and there are no load-crated reflow commands, then
   // the dummyLayoutRequest is removed
-  friend struct DummyLayoutRequestEvent;
-
   void DoneRemovingReflowCommands();
 
+  friend struct DummyLayoutRequestEvent;
   nsresult AddDummyLayoutRequest(void);
   nsresult RemoveDummyLayoutRequest();
+
+  friend struct CantRenderReplacedElementEvent;
+  NS_HIDDEN_(void) DequeuePostedEventFor(nsIFrame* aFrame);
+  NS_HIDDEN_(CantRenderReplacedElementEvent**)
+    FindPostedEventFor(nsIFrame* aFrame);
 
   void     WillCauseReflow() { ++mChangeNestCount; }
   nsresult DidCauseReflow();
@@ -3930,6 +3905,33 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
 
   return rv;
 }
+
+// A CantRenderReplacedElementEvent has a weak pointer to the presshell and the
+// presshell has a weak pointer to the event.  The event queue owns the event
+// and the presshell will delete the event if it's going to go away.
+struct CantRenderReplacedElementEvent : public PLEvent {
+  CantRenderReplacedElementEvent(PresShell* aPresShell,
+                                 nsIFrame* aFrame) NS_HIDDEN;
+  ~CantRenderReplacedElementEvent() {
+    RemoveLoadGroupRequest();
+  }
+  
+  // XXXldb Should the pres shell maintain a reference count on a single
+  // dummy layout request instead of doing creation of a separate one
+  // here (and per-event!)?
+  // XXXbz absolutely!  Should be a per-document counter, actually....
+  NS_HIDDEN_(void) AddLoadGroupRequest();
+  NS_HIDDEN_(void) RemoveLoadGroupRequest();
+  NS_HIDDEN_(PresShell*) OurPresShell() {
+    return NS_STATIC_CAST(PresShell*, owner);
+  }
+
+  void HandleEvent();
+
+  nsIFrame*  mFrame;                     // the frame that can't be rendered
+  CantRenderReplacedElementEvent* mNext; // next event in the list
+  nsCOMPtr<nsIRequest> mDummyLayoutRequest; // load group request
+};
 
 PR_STATIC_CALLBACK(void*)
 HandleCantRenderReplacedElementEvent(PLEvent* aEvent)
