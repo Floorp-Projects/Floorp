@@ -1250,7 +1250,6 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
     rv = source->GetValueConst(&uri);
     if (NS_FAILED(rv)) return(isValid);
 
-    PRBool          isIEFavorite = PR_FALSE;
     nsAutoString        theURI; theURI.AssignWithConversion(uri);
     if (theURI.Find(ieFavoritesDir) == 0)
     {
