@@ -1,3 +1,21 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
 /*- 
  * Copyright (c) 1990, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -92,9 +110,12 @@
 # endif
 #endif /* __linux */
 
-#ifdef SCO
+#if defined(SCO) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX)
 #include <sys/types.h>
 #include <sys/byteorder.h>
+#endif
+
+#ifdef SCO
 #include <sys/bitypes.h>
 #define MAXPATHLEN 	1024              
 #endif
@@ -119,8 +140,6 @@
 #endif
 
 #ifdef NCR
-#include <sys/types.h>
-#include <sys/byteorder.h>
 #include <sys/endian.h>
 #endif
 
@@ -132,11 +151,16 @@
 #include <fcntl.h>
 #endif
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(XP_OS2)
 #include <stdio.h>
 #include <io.h>
 #include <limits.h>
-#define MAXPATHLEN 	1024              
+
+#ifndef XP_OS2 
+#define MAXPATHLEN 	1024               
+#else
+#include "os2file.h"  /* includes dirent.h */
+#endif
 
 #define	EFTYPE		EINVAL		/* POSIX 1003.1 format errno. */
 
@@ -178,11 +202,19 @@ int mkstemp(const char *path);
 XP_END_PROTOS
 #endif	/* MACINTOSH */
 
+#if defined(XP_OS2)
+#include <xp_mcom.h>
+#include <pros2os.h>
+XP_BEGIN_PROTOS
+int mkstemp(char *path);
+XP_END_PROTOS
+#endif
+
 #ifndef macintosh
 #include <sys/types.h>
 #endif
 
-#if !defined(_WINDOWS) && !defined(macintosh)
+#if !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 #include <sys/stat.h>
 #include <errno.h>
 #endif
@@ -271,6 +303,11 @@ typedef enum { LockOutDatabase, UnlockDatabase } DBLockFlagEnum;
 #define	DB_LOCK		    0x2000	/* Do locking. */
 #define	DB_SHMEM	    0x4000	/* Use shared memory. */
 #define	DB_TXN		    0x8000	/* Do transactions. */
+#endif
+
+/* if we're using gcc's -pedantic-errors, uint isn't defined */
+#ifdef __STRICT_ANSI__
+typedef unsigned int uint;
 #endif
 
 /* Access method description structure. */
@@ -410,12 +447,7 @@ __END_DECLS
 #define LITTLE_ENDIAN   1234            /* LSB first: i386, vax, all NT risc */
 #endif
 
-#if defined(AIXV3)
-/* BYTE_ORDER, LITTLE_ENDIAN, BIG_ENDIAN are all defined here */
-#include <sys/machine.h>
-#endif
-
-#if defined(AIX)
+#if defined(AIXV3) || defined(AIX)
 /* BYTE_ORDER, LITTLE_ENDIAN, BIG_ENDIAN are all defined here */
 #include <sys/machine.h>
 #endif
