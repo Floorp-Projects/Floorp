@@ -131,7 +131,7 @@ nsJVMPluginTagInfo::GetCodeBase(const char* *result)
     }
 
     // Okay, we'll need to simulate it from the layout tag's base URL.
-    char* docBase;
+    const char* docBase;
     err = fPluginTagInfo->GetDocumentBase(&docBase);
     if (err != NS_OK) return err;
     PA_LOCK(codebase, const char*, docBase);
