@@ -54,6 +54,7 @@
 #include "dev.h"
 #include "dev3hack.h"
 #include "pki3hack.h"
+#include "pkim.h"
 
 
 /*************************************************************
@@ -1142,6 +1143,10 @@ PK11_DoPassword(PK11SlotInfo *slot, PRBool loadCerts, void *wincx)
     }
     if (rv == SECSuccess) {
 	rv = pk11_CheckVerifyTest(slot);
+	if (!PK11_IsFriendly(slot)) {
+	    nssTrustDomain_UpdateCachedTokenCerts(slot->nssToken->trustDomain,
+	                                      slot->nssToken);
+	}
     } else if (!attempt) PORT_SetError(SEC_ERROR_BAD_PASSWORD);
     return rv;
 }
