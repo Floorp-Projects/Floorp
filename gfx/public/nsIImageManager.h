@@ -76,7 +76,7 @@ public:
    * Flush the image cache as much as possible. The only images not
    * flushed out will be those that are in use.
    */
-  NS_IMETHOD FlushCache(void) = 0;
+  NS_IMETHOD FlushCache(PRUint8 img_catagory) = 0;
 
   /**
    * Determine the type of the image, based on the first few bytes of data.  
