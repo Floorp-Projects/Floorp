@@ -108,7 +108,27 @@
     </td>
   </tr>
 </table>
+<noscript>If you had Javascript active, you could toggle all of these with one click.<br></noscript>
+<script type="text/javascript">
+<!--
+function SetCheckboxes(setting) {
+  for (var count = 0; count < document.userprefsform.elements.length; count++) {
+    var theinput = document.userprefsform.elements[count];
+    if (theinput.type == "checkbox") {
+      if (theinput.name == "ExcludeSelf") {
+        theinput.checked = false;
+      }
+      else {
+        theinput.checked = setting;
+      }
+    }
+  }
+}
 
+document.write('<input type="button" value="Enable All Mail" onclick="SetCheckboxes(true); return false;">\n');
+document.write('<input type="button" value="Disable All Mail" onclick="SetCheckboxes(false); return false;">\n');
+// -->
+</script>
 <hr>
 <b>Field/recipient specific options:</b>
 <br>

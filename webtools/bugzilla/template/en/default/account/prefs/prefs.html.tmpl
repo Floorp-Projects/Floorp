@@ -98,7 +98,7 @@
 
 <h3>[% current_tab.description %]</h3>
 
-<form method="post" action="userprefs.cgi">
+<form name="userprefsform" method="post" action="userprefs.cgi">
   <input type="hidden" name="tab" value="[% current_tab.name %]">
 
   [%# See bug 160710 for why this is done this way %]
