@@ -340,7 +340,7 @@ public:
   NS_IMETHOD HasAttributeDependentStyle(nsIContent *aContent,
                                         nsIAtom *aAttribute,
                                         PRInt32 aModType,
-                                        PRBool *aResult);
+                                        nsReStyleHint *aResult);
 
   // Capture state from the entire frame heirarchy and store in aState
   NS_IMETHOD CaptureFrameState(nsIFrame*              aFrame,
@@ -1996,20 +1996,21 @@ NS_IMETHODIMP
 FrameManager::HasAttributeDependentStyle(nsIContent *aContent,
                                          nsIAtom *aAttribute,
                                          PRInt32 aModType,
-                                         PRBool *aResult)
+                                         nsReStyleHint *aResult)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
+
+  *aResult = mStyleSet->HasAttributeDependentStyle(GetPresContext(),
+                                                   aContent, aAttribute,
+                                                   aModType);
 
   if (aAttribute == nsHTMLAtoms::style) {
     // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
     // it doesn't really matter.  Or we could even let
     // HTMLCSSStyleSheetImpl::HasAttributeDependentStyle handle it.
-    *aResult = PR_TRUE;
-    return NS_OK;
+    *aResult = nsReStyleHint(*aResult | eReStyle_Self);
   }
 
-  *aResult = mStyleSet->HasAttributeDependentStyle(GetPresContext(), aContent,
-                                                   aAttribute, aModType);
   return NS_OK;
 }
 

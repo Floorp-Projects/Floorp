@@ -381,11 +381,11 @@ public:
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsIAtom* aMedium,
-                                    PRBool* aResult);
+                                    nsReStyleHint* aResult);
 
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsIAtom* aMedium,
-                                        PRBool* aResult);
+                                        nsReStyleHint* aResult);
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -515,9 +515,9 @@ HTMLCSSStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
                                               nsIAtom* aMedium,
-                                              PRBool* aResult)
+                                              nsReStyleHint* aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = nsReStyleHint(0);
   return NS_OK;
 }
 
@@ -525,9 +525,9 @@ HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                                   nsIAtom* aMedium,
-                                                  PRBool* aResult)
+                                                  nsReStyleHint* aResult)
 {
-  *aResult = PR_FALSE;
+  *aResult = nsReStyleHint(0);
   return NS_OK;
 }
 

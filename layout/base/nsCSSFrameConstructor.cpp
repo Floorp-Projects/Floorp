@@ -9918,13 +9918,49 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   return NS_OK;
 }
 
-static PRBool
-IsAncestorOf(nsIContent *aAncestor, nsIContent *aDescendant)
+void
+nsCSSFrameConstructor::RestyleLaterSiblings(nsIPresContext *aPresContext,
+                                            nsIContent *aContent)
 {
-  for (nsIContent* n = aDescendant; n; n = n->GetParent())
-    if (n == aAncestor)
-      return PR_TRUE;
-  return PR_FALSE;
+  nsIContent *parent = aContent->GetParent();
+  if (!parent)
+    return; // root element has no later siblings
+
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  nsIFrameManager *frameManager = shell->GetFrameManager();
+
+  for (PRInt32 index = parent->IndexOf(aContent) + 1,
+               index_end = parent->GetChildCount();
+       index != index_end; ++index) {
+    nsIContent *child = parent->GetChildAt(index);
+    if (!child->IsContentOfType(nsIContent::eELEMENT))
+      continue;
+
+    nsIFrame* primaryFrame = nsnull;
+    shell->GetPrimaryFrameFor(child, &primaryFrame);
+    if (primaryFrame) {
+      nsStyleChangeList changeList;
+      nsChangeHint frameChange = NS_STYLE_HINT_NONE;
+      frameManager->ComputeStyleChangeFor(primaryFrame, 
+                                          kNameSpaceID_Unknown, nsnull,
+                                          changeList, NS_STYLE_HINT_NONE,
+                                          frameChange);
+
+      if (frameChange & nsChangeHint_ReconstructDoc) {
+        ReconstructDocElementHierarchy(aPresContext);
+        return; // No need to worry about anything else.
+      }
+      else if (frameChange & nsChangeHint_ReconstructFrame) {
+        RecreateFramesForContent(aPresContext, child);
+        changeList.Clear();
+      } else {
+        ProcessRestyledFrames(changeList, aPresContext);
+      }
+    } else {
+      // no frames, reconstruct for content
+      MaybeRecreateFramesForContent(aPresContext, child);
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -9932,6 +9968,15 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
                                             nsIContent* aContent1,
                                             nsIContent* aContent2,
                                             PRInt32 aStateMask) 
+{
+  DoContentStateChanged(aPresContext, aContent1, aStateMask);
+  return DoContentStateChanged(aPresContext, aContent2, aStateMask);
+}
+
+nsresult
+nsCSSFrameConstructor::DoContentStateChanged(nsIPresContext* aPresContext, 
+                                             nsIContent* aContent,
+                                             PRInt32 aStateMask) 
 {
   nsresult  result = NS_OK;
 
@@ -9941,127 +9986,59 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
   if (shell) {
     nsStyleSet *styleSet = shell->StyleSet();
 
+    NS_ASSERTION(styleSet, "couldn't get style set");
     // test if any style rules exist which are dependent on content state
-    // Detect if one is the ancestor of the other, and skip if so.
-    if (aContent1 && aContent2) {
-      if (aContent1 == aContent2)
-        aContent2 = nsnull;
-      else if (IsAncestorOf(aContent1, aContent2))
-        aContent2 = nsnull;
-      else if (IsAncestorOf(aContent2, aContent1)) {
-        aContent1 = nsnull;
-      }
-    }
-
-    nsIFrame* primaryFrame1 = nsnull;
-    nsIFrame* primaryFrame2 = nsnull;
-    PRUint8 app1 = 0;
-    PRUint8 app2 = 0;
-
-    if (aContent1) {
-      shell->GetPrimaryFrameFor(aContent1, &primaryFrame1);
-      if (primaryFrame1) {
-        app1 = primaryFrame1->GetStyleDisplay()->mAppearance;
-      }
-
-      // XXXldb Why check app1 here when you could just do the code
-      // below |if (app1)| above and avoid the extra style reresolution?
-      if (!app1) {
-        if (!styleSet->HasStateDependentStyle(aPresContext, aContent1,
-                                              aStateMask))
-        {
-          primaryFrame1 = nsnull;
-          aContent1 = nsnull;
-        }
-      }
-    }
-
-    if (aContent2) {
-      shell->GetPrimaryFrameFor(aContent2, &primaryFrame2);
-      if (primaryFrame2) {
-        app2 = primaryFrame2->GetStyleDisplay()->mAppearance;
-      }
-
-      // XXXldb Why check app2 here when you could just do the code
-      // below |if (app2)| above and avoid the extra style reresolution?
-      if (!app2) {
-        if (!styleSet->HasStateDependentStyle(aPresContext, aContent2,
-                                              aStateMask))
-        {
-          primaryFrame2 = nsnull;
-          aContent2 = nsnull;
-        }
-      }
-    }
 
     nsCOMPtr<nsIFrameManager> frameManager;
     shell->GetFrameManager(getter_AddRefs(frameManager));
 
-    if (primaryFrame1) {
-      nsStyleChangeList changeList;
-      nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-      frameManager->ComputeStyleChangeFor(primaryFrame1, 
-                                          kNameSpaceID_Unknown, nsnull,
-                                          changeList, NS_STYLE_HINT_NONE,
-                                          frameChange);
+    if (aContent) {
+      nsIFrame* primaryFrame = nsnull;
+      shell->GetPrimaryFrameFor(aContent, &primaryFrame);
 
-      if (app1) {
-        nsCOMPtr<nsITheme> theme;
-        aPresContext->GetTheme(getter_AddRefs(theme));
-        PRBool repaint = PR_FALSE;
-        if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame1, app1))
-          theme->WidgetStateChanged(primaryFrame1, app1, nsnull, &repaint);
-        if (repaint)
-          ApplyRenderingChangeToTree(aPresContext, primaryFrame1, nsnull, nsChangeHint_RepaintFrame);
+      if (primaryFrame) {
+        PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
+        if (app) {
+          nsCOMPtr<nsITheme> theme;
+          aPresContext->GetTheme(getter_AddRefs(theme));
+          PRBool repaint = PR_FALSE;
+          if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame, app))
+            theme->WidgetStateChanged(primaryFrame, app, nsnull, &repaint);
+          if (repaint)
+            ApplyRenderingChangeToTree(aPresContext, primaryFrame, nsnull, nsChangeHint_RepaintFrame);
+        }
       }
 
-      if (frameChange & nsChangeHint_ReconstructDoc) {
-        return ReconstructDocElementHierarchy(aPresContext);
-        // No need to worry about anything else.
-      }
-      else if (frameChange & nsChangeHint_ReconstructFrame) {
-        result = RecreateFramesForContent(aPresContext, aContent1);
-        changeList.Clear();
-      } else {
-        ProcessRestyledFrames(changeList, aPresContext);
-      }
-    }
+      nsReStyleHint rshint = 
+        styleSet->HasStateDependentStyle(aPresContext, aContent, aStateMask);
+      if (rshint & eReStyle_Self) {
+        if (primaryFrame) {
+          nsStyleChangeList changeList;
+          nsChangeHint frameChange = NS_STYLE_HINT_NONE;
+          frameManager->ComputeStyleChangeFor(primaryFrame, 
+                                              kNameSpaceID_Unknown, nsnull,
+                                              changeList, NS_STYLE_HINT_NONE,
+                                              frameChange);
 
-    if (primaryFrame2) {
-      nsStyleChangeList changeList;
-      nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-      frameManager->ComputeStyleChangeFor(primaryFrame2, 
-                                          kNameSpaceID_Unknown, nsnull,
-                                          changeList, NS_STYLE_HINT_NONE, frameChange);
-      if (app2) {
-        nsCOMPtr<nsITheme> theme;
-        aPresContext->GetTheme(getter_AddRefs(theme));
-        PRBool repaint = PR_FALSE;
-        if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame2, app2))
-          theme->WidgetStateChanged(primaryFrame2, app2, nsnull, &repaint);
-        if (repaint)
-          ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull, nsChangeHint_RepaintFrame);
+          if (frameChange & nsChangeHint_ReconstructDoc) {
+            return ReconstructDocElementHierarchy(aPresContext);
+            // No need to worry about anything else.
+          }
+          else if (frameChange & nsChangeHint_ReconstructFrame) {
+            result = RecreateFramesForContent(aPresContext, aContent);
+            changeList.Clear();
+          } else {
+            ProcessRestyledFrames(changeList, aPresContext);
+          }
+        } else if (aContent) {
+          // no frames, reconstruct for content
+          result = MaybeRecreateFramesForContent(aPresContext, aContent);
+        }
       }
 
-      // max change needed for top level frames
-      if (frameChange & nsChangeHint_ReconstructDoc) {
-        result = ReconstructDocElementHierarchy(aPresContext);
-        changeList.Clear();
-      } else if (frameChange & nsChangeHint_ReconstructFrame) {
-        result = RecreateFramesForContent(aPresContext, aContent2);
-        changeList.Clear();
-      } else {
-        // process any children that need it
-        ProcessRestyledFrames(changeList, aPresContext);
+      if (rshint & eReStyle_LaterSiblings) {
+        RestyleLaterSiblings(aPresContext, aContent);
       }
-    }
-
-    // no frames, reconstruct for content
-    if (!primaryFrame1 && aContent1) {
-      result = MaybeRecreateFramesForContent(aPresContext, aContent1);
-    }
-    if (!primaryFrame2 && aContent2) {
-      result = MaybeRecreateFramesForContent(aPresContext, aContent2);
     }
   }
   return result;
@@ -10152,53 +10129,53 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
   // apply changes
   if (reconstruct) {
-    result = ReconstructDocElementHierarchy(aPresContext);
+    return ReconstructDocElementHierarchy(aPresContext);
   }
-  else if (reframe) {
+
+  nsIFrameManager *frameManager = shell->GetFrameManager();
+  nsReStyleHint rshint = nsReStyleHint(0);
+  frameManager->HasAttributeDependentStyle(aContent,
+                                           aAttribute, aModType, &rshint);
+  if (reframe) {
     result = RecreateFramesForContent(aPresContext, aContent);
+  } else if (primaryFrame) {
+    nsStyleChangeList changeList;
+    // put primary frame on list to deal with, re-resolve may update or add next in flows
+    changeList.AppendChange(primaryFrame, aContent, hint);
+
+    // there is an effect, so compute it
+    if (rshint & eReStyle_Self) {
+      frameManager->ComputeStyleChangeFor(primaryFrame, 
+                                          aNameSpaceID, aAttribute,
+                                          changeList, hint, hint);
+    }
+
+    // hint is for primary only
+    if (hint & nsChangeHint_ReconstructDoc) {
+      return ReconstructDocElementHierarchy(aPresContext);
+      // No need to worry about anything else.
+    } else if (hint & nsChangeHint_ReconstructFrame) {
+      result = RecreateFramesForContent(aPresContext, aContent);
+      changeList.Clear();
+    } else {
+      // let the frame deal with it, since we don't know how to
+      result = primaryFrame->AttributeChanged(aPresContext, aContent,
+                                              aNameSpaceID, aAttribute,
+                                              aModType);
+      // XXXwaterson should probably check for special IB siblings
+      // here, and propagate the AttributeChanged notification to
+      // them, as well. Currently, inline frames don't do anything on
+      // this notification, so it's not that big a deal.
+
+      // handle any children (primary may be on list too)
+      ProcessRestyledFrames(changeList, aPresContext);
+    }
+  } else if (rshint & eReStyle_Self) {
+    result = MaybeRecreateFramesForContent(aPresContext, aContent);
   }
-  else {
-    if (primaryFrame) {
-      nsStyleChangeList changeList;
-      // put primary frame on list to deal with, re-resolve may update or add next in flows
-      changeList.AppendChange(primaryFrame, aContent, hint);
-      nsCOMPtr<nsIFrameManager> frameManager;
-      shell->GetFrameManager(getter_AddRefs(frameManager));
 
-      PRBool affects;
-      frameManager->HasAttributeDependentStyle(aContent,
-                                               aAttribute, aModType, &affects);
-      if (affects) {
-        // there is an effect, so compute it
-        frameManager->ComputeStyleChangeFor(primaryFrame, 
-                                            aNameSpaceID, aAttribute,
-                                            changeList, hint, hint);
-      }
-
-      // hint is for primary only
-      if (hint & nsChangeHint_ReconstructDoc) {
-        result = ReconstructDocElementHierarchy(aPresContext);
-        changeList.Clear();
-      } else if (hint & nsChangeHint_ReconstructFrame) {
-        result = RecreateFramesForContent(aPresContext, aContent);
-        changeList.Clear();
-      } else {
-        // let the frame deal with it, since we don't know how to
-        result = primaryFrame->AttributeChanged(aPresContext, aContent,
-                                                aNameSpaceID, aAttribute,
-                                                aModType);
-        // XXXwaterson should probably check for special IB siblings
-        // here, and propagate the AttributeChanged notification to
-        // them, as well. Currently, inline frames don't do anything on
-        // this notification, so it's not that big a deal.
-
-        // handle any children (primary may be on list too)
-        ProcessRestyledFrames(changeList, aPresContext);
-      }
-    }
-    else {
-      result = MaybeRecreateFramesForContent(aPresContext, aContent);
-    }
+  if (rshint & eReStyle_LaterSiblings) {
+    RestyleLaterSiblings(aPresContext, aContent);
   }
 
   return result;
@@ -11335,8 +11312,9 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
   // If there is no document, we don't want to recreate frames for it.  (You
   // shouldn't generally be giving this method content without a document
   // anyway).
-  nsCOMPtr<nsIDocument> doc = aContent->GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+  // Rebuilding the frame tree can have bad effects, especially if it's the
+  // frame tree for chrome (see bug 157322).
+  NS_ENSURE_TRUE(aContent->GetDocument(), NS_ERROR_FAILURE);
 
   // Is the frame `special'? If so, we need to reframe the containing
   // block *here*, rather than trying to remove and re-insert the
@@ -11410,13 +11388,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
     }
   } else {
     // The content is the root node, so just rebuild the world.
-    // However, double check that it's really part of the document,
-    // since rebuilding the frame tree can have bad effects, especially
-    // if it's the frame tree for chrome (see bug 157322).
-    nsIDocument* doc = aContent->GetDocument();
-    NS_ASSERTION(doc, "received style change for content not in document");
-    if (doc)
-      ReconstructDocElementHierarchy(aPresContext);
+    ReconstructDocElementHierarchy(aPresContext);
   }
 
   return rv;
