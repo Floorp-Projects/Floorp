@@ -359,6 +359,12 @@ nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
+inline PRBool IsNonLabelFormControl(nsIContent *aContent)
+{
+  return aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL) &&
+         aContent->Tag() != nsHTMLAtoms::label;
+}
+
 already_AddRefed<nsIContent>
 nsHTMLLabelElement::GetForContent()
 {
@@ -377,7 +383,7 @@ nsHTMLLabelElement::GetForContent()
       nsIContent *result = nsnull;
       if (domElement) {
         CallQueryInterface(domElement, &result);
-        if (result && !result->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+        if (result && !IsNonLabelFormControl(result)) {
           NS_RELEASE(result); // assigns null
         }
       }
@@ -399,7 +405,7 @@ nsHTMLLabelElement::GetFirstFormControl(nsIContent *current)
   for (PRUint32 i = 0; i < numNodes; i++) {
     nsIContent *child = current->GetChildAt(i);
     if (child) {
-      if (child->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
+      if (IsNonLabelFormControl(child)) {
         NS_ADDREF(child);
         return child;
       }
