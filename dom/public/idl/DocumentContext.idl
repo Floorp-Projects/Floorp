@@ -1,0 +1,3 @@
+      interface DocumentContext {
+        attribute Document       document;
+      };

@@ -1,0 +1,6 @@
+      interface Attribute {
+        wstring             getName();
+        wstring             getValue();
+        attribute boolean        specified;
+        wstring             toString();
+      };
