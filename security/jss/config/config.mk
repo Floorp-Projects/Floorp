@@ -76,7 +76,7 @@ ifeq ($(OS_ARCH), Linux)
 MKSHLIB += -Wl,-Bsymbolic
 endif
 ifeq ($(OS_ARCH), OSF1)
-MKSHLIB += -B symbolic
+#MKSHLIB += -B symbolic
 endif
 ifeq ($(OS_ARCH), SunOS)
 MKSHLIB += -B symbolic
