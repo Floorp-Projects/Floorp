@@ -134,7 +134,7 @@ public:
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD Print();
-  NS_IMETHOD PrintContent(void);
+  NS_IMETHOD PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext);
   NS_IMETHOD SetEnableRendering(PRBool aOn);
   NS_IMETHOD GetEnableRendering(PRBool* aResult);
 
@@ -471,7 +471,7 @@ PluginViewerImpl::Print(void)
 
 
 NS_IMETHODIMP
-PluginViewerImpl::PrintContent()
+PluginViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext)
 {
 
   return NS_OK;
