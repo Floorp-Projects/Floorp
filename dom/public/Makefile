@@ -32,7 +32,7 @@ EXPORTS =			 \
 	nsIDOMNavigator.h        \
 	nsIDOMLocation.h	 \
 	nsIDOMWindowCollection.h \
-	nsIDOMScriptObjectFactory \
+	nsIDOMScriptObjectFactory.h \
 	nsDOMCID.h		 \
 	$(NULL)
 
