@@ -22,7 +22,9 @@
  * Rob Ginda rginda@netscape.com
  */
 
-var FAILED = "FAILED!";
+var FAILED = "FAILED!: ";
+var STATUS = "STATUS: ";
+
 var callStack = new Array();
 
 /*
@@ -36,7 +38,20 @@ function reportFailure (msg)
     var prefix = (funcName) ? "[reported from " + funcName + "] ": "";
     
     for (l in lines)
-        print (FAILED + ": " + prefix + lines[l]);
+        print (FAILED + prefix + lines[l]);
+
+}
+
+/*
+ * Print a non-failure message.
+ */
+function printStatus (msg)
+{
+    var lines = msg.split ("\n");
+    var l;
+
+    for (l in lines)
+        print (STATUS + lines[l]);
 
 }
 
