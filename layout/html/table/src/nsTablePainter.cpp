@@ -168,23 +168,30 @@ TableBackgroundPainter::TableBackgroundData::SetFrame(nsIFrame* aFrame)
 }
 
 void
+TableBackgroundPainter::TableBackgroundData::SetData(nsPresContext*      aPresContext,
+                                                     nsIRenderingContext& aRenderingContext)
+{
+  NS_PRECONDITION(mFrame, "null frame");
+  /* IsVisibleForPainting doesn't use aRenderingContext except in nsTextFrames,
+     so we're not going to bother translating.*/
+  PRBool isVisible;
+  nsresult rv = mFrame->IsVisibleForPainting(aPresContext, aRenderingContext,
+                                             PR_TRUE, &isVisible);
+  if (NS_SUCCEEDED(rv) && isVisible &&
+      mFrame->GetStyleVisibility()->IsVisible()) {
+    mBackground = mFrame->GetStyleBackground();
+    mBorder = mFrame->GetStyleBorder();
+  }
+}
+
+void
 TableBackgroundPainter::TableBackgroundData::SetFull(nsPresContext*      aPresContext,
                                                      nsIRenderingContext& aRenderingContext,
                                                      nsIFrame*            aFrame)
 {
   NS_PRECONDITION(aFrame, "null frame");
-  mFrame = aFrame;
-  mRect = aFrame->GetRect();
-  /* IsVisibleForPainting doesn't use aRenderingContext except in nsTextFrames,
-     so we're not going to bother translating.*/
-  PRBool isVisible;
-  nsresult rv = aFrame->IsVisibleForPainting(aPresContext, aRenderingContext,
-                                             PR_TRUE, &isVisible);
-  if (NS_SUCCEEDED(rv) && isVisible &&
-      aFrame->GetStyleVisibility()->IsVisible()) {
-    mBackground = aFrame->GetStyleBackground();
-    mBorder = aFrame->GetStyleBorder();
-  }
+  SetFrame(aFrame);
+  SetData(aPresContext, aRenderingContext);
 }
 
 inline PRBool
@@ -440,8 +447,11 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
 
   for (PRUint32 i = 0; i < numRowGroups; i++) {
     nsTableRowGroupFrame* rg = nsTableFrame::GetRowGroupFrame(NS_STATIC_CAST(nsIFrame*, rowGroups.ElementAt(i)));
-    nsRect rgRect = rg->GetRect();
-    if (rgRect.Intersects(mDirtyRect)) {
+    mRowGroup.SetFrame(rg);
+    // Need to compute the right rect via GetOffsetTo, since the row
+    // group may not be a child of the table.
+    mRowGroup.mRect.MoveTo(rg->GetOffsetTo(aTableFrame));
+    if (mRowGroup.mRect.Intersects(mDirtyRect)) {
       nsresult rv = PaintRowGroup(rg, rg->HasView());
       if (NS_FAILED(rv)) return rv;
     }
@@ -455,11 +465,15 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
 {
   NS_PRECONDITION(aFrame, "null frame");
 
+  if (!mRowGroup.mFrame) {
+    mRowGroup.SetFrame(aFrame);
+  }
+
   nsTableRowFrame* firstRow = aFrame->GetFirstRow();
 
   /* Load row group data */
   if (!aPassThrough) {
-    mRowGroup.SetFull(mPresContext, mRenderingContext, aFrame);
+    mRowGroup.SetData(mPresContext, mRenderingContext);
     if (mIsBorderCollapse && mRowGroup.ShouldSetBCBorder()) {
       nsMargin border;
       if (firstRow) {
@@ -476,9 +490,6 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
     }
     aPassThrough = !mRowGroup.IsVisible();
   }
-  else {
-    mRowGroup.SetFrame(aFrame);
-  }
 
   /* translate everything into row group coord system*/
   if (eOrigin_TableRowGroup != mOrigin) {
@@ -489,8 +500,8 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
 
   /* paint */
   for (nsTableRowFrame* row = firstRow; row; row = row->GetNextRow()) {
-    nsRect rect = row->GetRect();
-    if (mDirtyRect.YMost() >= rect.y) { //Intersect wouldn't handle rowspans
+    mRow.SetFrame(row);
+    if (mDirtyRect.YMost() >= mRow.mRect.y) { //Intersect wouldn't handle rowspans
       nsresult rv = PaintRow(row, aPassThrough || row->HasView());
       if (NS_FAILED(rv)) return rv;
     }
@@ -513,9 +524,13 @@ TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
 {
   NS_PRECONDITION(aFrame, "null frame");
 
+  if (!mRow.mFrame) {
+    mRow.SetFrame(aFrame);
+  }
+
   /* Load row data */
   if (!aPassThrough) {
-    mRow.SetFull(mPresContext, mRenderingContext, aFrame);
+    mRow.SetData(mPresContext, mRenderingContext);
     if (mIsBorderCollapse && mRow.ShouldSetBCBorder()) {
       nsMargin border;
       nsTableRowFrame* nextRow = aFrame->GetNextRow();
@@ -535,9 +550,6 @@ TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
       }
     }
     aPassThrough = !mRow.IsVisible();
-  }
-  else {
-    mRow.SetFrame(aFrame);
   }
 
   /* Translate */

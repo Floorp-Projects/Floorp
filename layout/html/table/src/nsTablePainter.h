@@ -185,6 +185,7 @@ class TableBackgroundPainter
     MOZ_DECL_CTOR_COUNTER(TableBackgroundData)
     struct TableBackgroundData {
       nsIFrame*                 mFrame;
+      /** mRect is the rect of mFrame in the current coordinate system */
       nsRect                    mRect;
       const nsStyleBackground*  mBackground;
       const nsStyleBorder*      mBorder;
@@ -212,6 +213,10 @@ class TableBackgroundPainter
 
       /** Set frame data (mFrame, mRect) but leave style data empty */
       void SetFrame(nsIFrame* aFrame);
+
+      /** Calculate the style data for mFrame */
+      void SetData(nsPresContext*      aPresContext,
+                   nsIRenderingContext& aRenderingContext);
 
       /** True if need to set border-collapse border; must call SetFull beforehand */
       PRBool ShouldSetBCBorder();
