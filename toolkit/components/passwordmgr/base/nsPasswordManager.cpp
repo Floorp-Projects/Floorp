@@ -1764,8 +1764,14 @@ nsPasswordManager::FillPassword(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIContent> fieldContent = do_QueryInterface(userField);
 
+  // The document may be null during teardown, for example as Windows
+  // sends a blur event as a native widget is destroyed.
+  nsIDocument *doc = fieldContent->GetDocument();
+  if (!doc)
+    return NS_OK;
+
   nsCAutoString realm;
-  if (!GetPasswordRealm(fieldContent->GetDocument()->GetDocumentURI(), realm))
+  if (!GetPasswordRealm(doc->GetDocumentURI(), realm))
     return NS_OK;
 
   nsAutoString userValue;
