@@ -23,14 +23,14 @@
 #ifndef __xpidl_h
 #define __xpidl_h
 
-#include <glib.h>
+#include <assert.h>
+#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <libIDL/IDL.h>
-#include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <glib.h>
+#include <libIDL/IDL.h>
 
 /*
  * Internal operation flags.
@@ -49,10 +49,10 @@ typedef gboolean (*nodeHandler)(TreeState *);
 /* Function that produces a table of nodeHandlers for a given mode */
 typedef nodeHandler *(*nodeHandlerFactory)();
 
-extern nodeHandler *xpidl_header_dispatch();
-extern nodeHandler *xpidl_stub_dispatch();
-extern nodeHandler *xpidl_typelib_dispatch();
-extern nodeHandler *xpidl_doc_dispatch();
+extern nodeHandler *xpidl_header_dispatch(void);
+extern nodeHandler *xpidl_stub_dispatch(void);
+extern nodeHandler *xpidl_typelib_dispatch(void);
+extern nodeHandler *xpidl_doc_dispatch(void);
 
 /*
  * nodeHandler that reports an error.
@@ -110,5 +110,11 @@ xpidl_strdup(const char *s);
  */
 gboolean
 xpidl_process_node(TreeState *state);
+
+/*
+ * Dump a comment containing IDL source decompiled from state->tree.
+ */
+void
+xpidl_dump_comment(TreeState *state, int indent);
 
 #endif /* __xpidl_h */

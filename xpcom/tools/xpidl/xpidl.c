@@ -64,7 +64,7 @@ xpidl_usage(int argc, char *argv[])
     }
 }
 
-static char OOM[] = "ERROR: out of memory\n";
+/* XXXbe static */ char OOM[] = "ERROR: out of memory\n";
 
 void *
 xpidl_malloc(size_t nbytes)
@@ -101,13 +101,6 @@ main(int argc, char *argv[])
     inc_head->next = NULL;
     inc_tail = &inc_head->next;
 
-#if 0
-    /* initialize mode factories */
-    modes[0].factory = headerDispatch;
-    modes[1].factory = typelibDispatch;
-    modes[2].factory = docDispatch;
-#endif
-
     for (i = 1; i < argc; i++) {
         if (argv[i][0] != '-')
             break;
@@ -130,14 +123,13 @@ main(int argc, char *argv[])
                 return 1;
             }
             inc = xpidl_malloc(sizeof *inc);
-            inc->directory = argv[i + 1];
+            inc->directory = argv[++i];
 #ifdef DEBUG_shaver_includes
             fprintf(stderr, "adding %s to include path\n", inc->directory);
 #endif
             inc->next = NULL;
             *inc_tail = inc;
 	    inc_tail = &inc->next;
-            i++;
             break;
           case 'o':
             if (i == argc) {
@@ -163,7 +155,7 @@ main(int argc, char *argv[])
             }
             if (mode) {
                 fprintf(stderr,
-                        "ERROR: can only specify one mode "
+                        "ERROR: must specify exactly one mode "
                         "(first \"%s\", now \"%s\")\n", mode->mode,
                         argv[i + 1]);
                 xpidl_usage(argc, argv);
@@ -190,10 +182,8 @@ main(int argc, char *argv[])
         return 1;
     }
 
-    for (idlfiles = 0; i < argc; i++) {
-        if (argv[i][0])
-            idlfiles += xpidl_process_idl(argv[i], inc_head, basename, mode);
-    }
+    for (idlfiles = 0; i < argc; i++)
+	idlfiles += xpidl_process_idl(argv[i], inc_head, basename, mode);
 
     if (!idlfiles)
         return 1;

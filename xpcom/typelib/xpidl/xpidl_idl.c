@@ -46,11 +46,11 @@ node_is_error(TreeState *state)
 void
 xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
 {
-    IDL_tree iter;
-    for (iter = p; iter; iter = IDL_LIST(iter).next) {
-        if (!foreach(IDL_LIST(iter).data,
-                     IDL_tree_get_scope(IDL_LIST(iter).data), user_data))
+    while (p) {
+	struct _IDL_LIST *list = &IDL_LIST(p);
+        if (!foreach(list->data, IDL_tree_get_scope(list->data), user_data))
             return;
+    	p = list->next;
     }
 }
 
@@ -60,17 +60,17 @@ xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
 gboolean
 xpidl_process_node(TreeState *state)
 {
-    nodeHandler *handlerp = state->dispatch, handler;
     gint type;
-    assert(state->tree);
+    nodeHandler *dispatch, handler;
 
+    assert(state->tree);
     type = IDL_NODE_TYPE(state->tree);
 
     /*
      * type == 0 shouldn't ever happen for real, so we use that slot for
      * pass-1 processing
      */
-    if (type && handlerp && (handler = handlerp[type]))
+    if (type && (dispatch = state->dispatch) && (handler = dispatch[type]))
         return handler(state);
     return TRUE;
 }
@@ -90,9 +90,7 @@ process_tree(TreeState *state)
     if (!xpidl_process_node(state))
         return FALSE;
     state->tree = NULL;
-    if (!process_tree_pass1(state))
-        return FALSE;
-    return TRUE;
+    return process_tree_pass1(state);
 }
 
 static int
@@ -138,25 +136,27 @@ static FILE *
 fopen_from_includes(const char *filename, const char *mode,
                     IncludePathEntry *include_path)
 {
-    char *filebuf = NULL;
-    FILE *file = NULL;
+    char *pathname;
+    FILE *file;
     if (!strcmp(filename, "-"))
         return stdin;
 
-    for (; include_path && !file; include_path = include_path->next) {
-        filebuf = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
-                                  include_path->directory, filename);
-        if (!filebuf)
+    while (include_path) {
+        pathname = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
+				   include_path->directory, filename);
+        if (!pathname)
             return NULL;
 #ifdef DEBUG_shaver_bufmgmt
-        fprintf(stderr, "looking for %s as %s\n", filename, filebuf);
+        fprintf(stderr, "looking for %s as %s\n", filename, pathname);
 #endif
-        file = fopen(filebuf, mode);
-        free(filebuf);
+        file = fopen(pathname, mode);
+        free(pathname);
+	if (file)
+	    return file;
+    	include_path = include_path->next;
     }
-    if (!file)
-        fprintf(stderr, "can't open %s for reading\n", filename);
-    return file;
+    fprintf(stderr, "can't open %s for reading\n", filename);
+    return NULL;
 }
 
 static struct input_callback_data *
@@ -233,7 +233,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
         /*
          * When we're stripping comments and processing #includes,
          * we need to be sure that we don't process anything inside
-         * \n%{ and \n%}.  In order to simplify things, we only process
+         * \n%{ and \n%}.  In order to simplify things, we process only
          * comment, include or raw-block stuff when they're at the
          * beginning of the block we're about to send (data->point).
          * This makes the processing much simpler, since we can skip
@@ -504,4 +504,15 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     IDL_tree_free(top);
 
     return 1;
+}
+
+void
+xpidl_dump_comment(TreeState *state, int indent)
+{
+    fprintf(state->file, "\n%*s/* ", indent, "");
+    IDL_tree_to_IDL(state->tree, state->ns, state->file,
+    		    IDLF_OUTPUT_NO_NEWLINES |
+		    IDLF_OUTPUT_NO_QUALIFY_IDENTS |
+		    IDLF_OUTPUT_PROPERTIES);
+    fputs(" */\n", state->file);
 }
