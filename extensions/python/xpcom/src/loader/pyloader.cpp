@@ -59,6 +59,7 @@ static char *PyTraceback_AsString(PyObject *exc_tb);
 
 #endif
 
+#include "nsITimelineService.h"
 
 typedef nsresult (*pfnPyXPCOM_NSGetModule)(nsIComponentManager *servMgr,
                                           nsIFile* location,
@@ -108,6 +109,7 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 #endif
 	PRBool bDidInitPython = !Py_IsInitialized(); // well, I will next line, anyway :-)
 	if (bDidInitPython) {
+		NS_TIMELINE_START_TIMER("PyXPCOM: Python initializing");
 		Py_Initialize();
 		if (!Py_IsInitialized()) {
 			LogError("Python initialization failed!\n");
@@ -118,8 +120,11 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 #endif // NS_DEBUG
 		AddStandardPaths();
 		PyEval_InitThreads();
+		NS_TIMELINE_STOP_TIMER("PyXPCOM: Python initializing");
+		NS_TIMELINE_MARK_TIMER("PyXPCOM: Python initializing");
 	}
 	// Get the Python interpreter state
+	NS_TIMELINE_START_TIMER("PyXPCOM: Python threadstate setup");
 	PyThreadState *threadStateCreated = NULL;
 	PyThreadState *threadState = PyThreadState_Swap(NULL);
 	if (threadState==NULL) {
@@ -153,7 +158,12 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 		LogError("Could not load main Python entry point\n");
 		return NS_ERROR_FAILURE;
 	}
-	
+
+#ifdef MOZ_TIMELINE
+    // If the timeline service is installed, see if we can install our hooks.
+    if (NULL==PyImport_ImportModule("timeline_hook"))
+        PyErr_Clear(); // but don't care if we can't.
+#endif    
 	// Abandon the thread-lock, as the first thing Python does
 	// is re-establish the lock (the Python thread-state story SUCKS!!!)
 	if (threadStateCreated) {
@@ -165,7 +175,13 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 		if (threadStateSave)
 			PyThreadState_Delete(threadStateSave);
 	}
-	return (*pfnEntryPoint)(servMgr, location, result);
+	NS_TIMELINE_STOP_TIMER("PyXPCOM: Python threadstate setup");
+	NS_TIMELINE_MARK_TIMER("PyXPCOM: Python threadstate setup");
+	NS_TIMELINE_START_TIMER("PyXPCOM: PyXPCOM NSGetModule entry point");
+	nsresult rc = (*pfnEntryPoint)(servMgr, location, result);
+	NS_TIMELINE_STOP_TIMER("PyXPCOM: PyXPCOM NSGetModule entry point");
+	NS_TIMELINE_MARK_TIMER("PyXPCOM: PyXPCOM NSGetModule entry point");
+	return rc;
 }
 
 // The internal helper that actually moves the
