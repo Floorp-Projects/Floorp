@@ -31,7 +31,7 @@ MODULE		= libreg
 LIBRARY_NAME	= mozreg_s
 
 # MacOSX requires the MoreFiles module
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifeq ($(OS_ARCH),Darwin)
 REQUIRES = macmorefiles
 endif
 
@@ -56,11 +56,6 @@ DEFINES         += -DUSE_BUFFERED_REGISTRY_IO
 #endif
 
 include $(topsrcdir)/config/rules.mk
-
-# xpcom/io pulls in osx toolkit headers
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
-CFLAGS	+= $(TK_CFLAGS)
-endif
 
 R_%.o: %.c
 ifeq ($(MOZ_OS2_TOOLS),VACPP)

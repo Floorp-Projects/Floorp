@@ -77,7 +77,3 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
-CXXFLAGS	+= $(TK_CFLAGS)
-endif
-

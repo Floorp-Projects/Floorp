@@ -45,7 +45,6 @@ GARBAGE		+= $(GFX_LCPPSRCS)
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS	+= $(TK_CFLAGS)
 DEFINES		+= -D_IMPL_NS_TIMER
 EXTRA_DSO_LDOPTS+= \
 		$(MOZ_COMPONENT_LIBS) \

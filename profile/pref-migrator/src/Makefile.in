@@ -68,8 +68,4 @@ ifeq ($(MOZ_OS2_TOOLS),EMX)
 CXXFLAGS	:= $(filter-out -g,$(CXXFLAGS))
 endif
 
-# xpcom/io pulls in osx toolkit headers
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
-CXXFLAGS	+= $(TK_CFLAGS)
-endif
 
