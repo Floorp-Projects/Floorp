@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Chris Seawood <cls@seawood.org>
  */
 
 
@@ -51,11 +52,30 @@ XPTC_InvokeByIndex:
 !   BIAS is 0x7ff (2047)
 !
 
+! integer regs
         ldx     [%sp + 0x7ff + 136],%o1    ! %sp + BIAS + 136  (%i1)
         ldx     [%sp + 0x7ff + 144],%o2    ! %sp + BIAS + 144  (%i2)
         ldx     [%sp + 0x7ff + 152],%o3    ! %sp + BIAS + 152  (%i3)
         ldx     [%sp + 0x7ff + 160],%o4    ! %sp + BIAS + 160  (%i4)
         ldx     [%sp + 0x7ff + 168],%o5    ! %sp + BIAS + 168  (%i5)
+
+! double (floating point) regs
+        ldd     [%sp + 0x7ff + 136],%d2    ! %sp + BIAS + 136  (%i1)
+        ldd     [%sp + 0x7ff + 144],%d4    ! %sp + BIAS + 144  (%i2)
+        ldd     [%sp + 0x7ff + 152],%d6    ! %sp + BIAS + 152  (%i3)
+        ldd     [%sp + 0x7ff + 160],%d8    ! %sp + BIAS + 160  (%i4)
+        ldd     [%sp + 0x7ff + 168],%d10   ! %sp + BIAS + 168  (%i5)
+        ldd     [%sp + 0x7ff + 176],%d12
+        ldd     [%sp + 0x7ff + 184],%d14
+        ldd     [%sp + 0x7ff + 192],%d16
+        ldd     [%sp + 0x7ff + 200],%d18
+        ldd     [%sp + 0x7ff + 208],%d20
+        ldd     [%sp + 0x7ff + 216],%d22
+        ldd     [%sp + 0x7ff + 224],%d24
+        ldd     [%sp + 0x7ff + 232],%d26
+        ldd     [%sp + 0x7ff + 240],%d28
+        ldd     [%sp + 0x7ff + 248],%d30
+
 
 
 !
