@@ -902,6 +902,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     PRUint32 size;
     mLocation->SetText(urlStr, size);
     GoTo(urlStr.GetUnicode());
+
     }
     break;
 
