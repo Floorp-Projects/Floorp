@@ -1129,10 +1129,10 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID);
   if (!params) return NO;
   
-  params->SetStringValue("format", NS_LITERAL_STRING("text/plain"));
+  params->SetCStringValue("format", "text/plain");
   params->SetBooleanValue("selection_only", PR_TRUE);
   
-  nsresult rv = cmdManager->DoCommand("cmd_GetContents", params, nsnull);
+  nsresult rv = cmdManager->DoCommand("cmd_getContents", params, nsnull);
   if (NS_FAILED(rv))
     return NO;
  
@@ -1163,7 +1163,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   nsCOMPtr<nsICommandParams> params = do_CreateInstance(NS_COMMAND_PARAMS_CONTRACTID);
   if (!params) return NO;
   
-  params->SetStringValue("data", textString);
+  params->SetStringValue("state_data", textString);
   nsresult rv = cmdManager->DoCommand("cmd_insertText", params, nsnull);
   
   return (BOOL)NS_SUCCEEDED(rv);

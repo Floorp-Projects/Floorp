@@ -660,8 +660,15 @@ nsInsertPlaintextCommand::IsCommandEnabled(const char * aCommandName,
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIPlaintextEditor> editor = do_QueryInterface(refCon);
-  *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
-
+  if (editor)
+  {
+    PRBool canInsert = PR_TRUE;
+    editor->GetCanModify(&canInsert);
+    *outCmdEnabled = canInsert;
+  }
+  else
+    *outCmdEnabled = PR_FALSE;
+  
   return NS_OK;
 }
 

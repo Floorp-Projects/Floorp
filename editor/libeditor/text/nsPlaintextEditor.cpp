@@ -1009,6 +1009,14 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   return result;
 }
 
+NS_IMETHODIMP nsPlaintextEditor::GetCanModify(PRBool *aCanModify)
+{
+  NS_ENSURE_ARG_POINTER(aCanModify);
+
+  *aCanModify = IsModifiable();
+  return NS_OK;
+}
+ 
 
 NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 {
