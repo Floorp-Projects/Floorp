@@ -27,18 +27,18 @@
         <treecol flex="1"/>
       </treecolgroup>
       
-       <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+      <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
         <rule chrome:localeType="region">
         </rule>
         <rule>
-        <treechildren flex="1">
-          <treeitem id="treechildren" uri="...">
-            <treerow>
-              <treecell label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                        value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-            </treerow>
-          </treeitem>
-        </treechildren>
+          <treechildren flex="1">
+            <treeitem id="treechildren" uri="...">
+              <treerow>
+                <treecell label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                          value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
         </rule>
       </template>
     </tree>
@@ -50,18 +50,18 @@
     <separator class="thin" />
  
     <menulist id="regionList" flex="1">
-          <menupopup
-              datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
-              sortResource="http://www.mozilla.org/rdf/chrome#name"
-              sortDirection="ascending">
-            <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
-                <rule chrome:localeType="region">
-                        <menuitem class="standard" uri="rdf:*" 
-                                  label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                                  value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-                </rule>
-            </template>
-          </menupopup>
+      <menupopup
+            datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
+            sortResource="http://www.mozilla.org/rdf/chrome#name"
+            sortDirection="ascending">
+        <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+          <rule chrome:localeType="region">
+            <menuitem class="standard" uri="rdf:*" 
+              label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+              value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+          </rule>
+        </template>
+      </menupopup>
     </menulist>       
 
   <separator/>  

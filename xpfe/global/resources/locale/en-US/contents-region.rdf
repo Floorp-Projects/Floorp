@@ -12,6 +12,7 @@
         chrome:displayName="US Region"
         chrome:author="mozilla.org"
         chrome:name="US"
+        chrome:localeType="region"
         chrome:previewURL="http://www.mozilla.org/locales/US.gif">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:US:packages">
