@@ -1,16 +1,19 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# Persistence - an abstract interface to give our objects persistance.
-# An effort is made to ensure files are updated atomically.  This
-# interface allows us to easily change the perl module we use
-# (Data::Dumper, Storable, etc).  You will have choices between
-# Data::Dumper which is slow but text files allows great debugging
-# capabilities and Storable (not yet implemented) which is much faster
-# but binary format.
+# Persistence - an abstract interface to save the data structures to
+# disk and load the data back.  An effort is made to ensure files are
+# updated atomically.  This interface allows us to easily change the
+# perl module we use to store the data (Data::Dumper, Storable, etc).
+# You will have choices between Data::Dumper which is slow but text
+# files allows great debugging capabilities and Storable (not yet
+# implemented) which is much faster but binary format.  testing is
+# going into this function.  Data::Dumper module has an implicit eval
+# and should not be used for securty sensitive uses.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/11/28 17:54:45 $ 
+
+# $Revision: 1.5 $ 
+# $Date: 2001/01/04 00:29:40 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence.pm,v $ 
 # $Name:  $ 
