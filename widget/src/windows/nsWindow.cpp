@@ -2076,7 +2076,7 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
   } 
   else 
   { // 0x20 - SPACE, 0x3D - EQUALS
-    if(virtualKeyCode < 0x20 || virtualKeyCode == 0x3D) 
+    if(virtualKeyCode < 0x20 || (virtualKeyCode == 0x3D && mIsControlDown)) 
     {
       uniChar = 0;
     } 
