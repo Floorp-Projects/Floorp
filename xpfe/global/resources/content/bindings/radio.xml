@@ -275,7 +275,7 @@
     </resources>
 
     <content>
-      <xul:image class="radio-check" inherits="checked,disabled,selected"/>
+      <xul:image class="radio-check" inherits="disabled,selected"/>
       <xul:hbox class="radio-label-box" flex="1">
         <xul:image class="radio-icon" inherits="src"/>
         <xul:label class="radio-label" inherits="xbl:text=label,accesskey,crop" flex="1"/>
