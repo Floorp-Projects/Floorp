@@ -184,7 +184,7 @@ LPSTR             GetArgV(LPSTR lpszCommandLine,
                           int iIndex,
                           LPSTR lpszDest,
                           int iDestSize);
-DWORD             ParseCommandLine(LPSTR aMessageToClose, LPSTR lpszCmdLine);
+DWORD             ParseCommandLine(LPSTR lpszCmdLine);
 DWORD             ParseForStartupOptions(LPSTR aCmdLine);
 void              SetSetupRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);

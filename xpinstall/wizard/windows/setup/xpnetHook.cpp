@@ -908,6 +908,7 @@ int DownloadFiles(char *szInputIniFile,
   GetSetupCurrentDownloadFile(szPartiallyDownloadedFilename,
                               sizeof(szPartiallyDownloadedFilename));
 
+  ShowMessage(NULL, FALSE);
   InitDownloadDlg();
 
   for(giIndex = 0; giIndex < giTotalArchivesToDownload; giIndex++)
@@ -1258,7 +1259,6 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                               sizeof(gszFileInfo),
                               szFileIniConfig);
       DisableSystemMenuItems(hWndDlg, FALSE);
-      RepositionWindow(hWndDlg, BANNER_IMAGE_DOWNLOAD);
       if(gbShowDownloadRetryMsg)
         SetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
       else
@@ -1283,6 +1283,8 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
       SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hWndDlg, IDC_STATUS_TO, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      RepositionWindow(hWndDlg, BANNER_IMAGE_DOWNLOAD);
+      ClosePreviousDialog();
       return FALSE;
 
     case WM_SIZE:

@@ -158,8 +158,10 @@ BOOL InitInstance(HINSTANCE hInstance, DWORD dwCmdShow)
   gSystemInfo.dwScreenX = GetSystemMetrics(SM_CXSCREEN);
   gSystemInfo.dwScreenY = GetSystemMetrics(SM_CYSCREEN);
 
-  gSystemInfo.lastWindowPosCenterX = gSystemInfo.dwScreenX / 2;
-  gSystemInfo.lastWindowPosCenterY = gSystemInfo.dwScreenY / 2;
+  gSystemInfo.lastWindowPosCenterX  = gSystemInfo.dwScreenX / 2;
+  gSystemInfo.lastWindowPosCenterY  = gSystemInfo.dwScreenY / 2;
+  gSystemInfo.lastWindowMinimized   = FALSE;
+  gSystemInfo.lastWindowIsTopWindow = TRUE;
 
   hInst = hInstance;
 
@@ -204,13 +206,14 @@ void PrintError(LPSTR szMsg, DWORD dwErrorCodeSH)
 
   if((sgProduct.mode != SILENT) && (sgProduct.mode != AUTO))
   {
+    ShowMessage(NULL, FALSE);
     MessageBox(hWndMain, szErrorString, NULL, MB_ICONEXCLAMATION);
   }
   else if(sgProduct.mode == AUTO)
   {
     ShowMessage(szErrorString, TRUE);
     Delay(5);
-    ShowMessage(szErrorString, FALSE);
+    ShowMessage(NULL, FALSE);
   }
 }
 
@@ -296,7 +299,12 @@ HRESULT NS_LoadString(HANDLE hInstance, DWORD dwID, LPSTR szStringBuf, DWORD dwS
 
 void Delay(DWORD dwSeconds)
 {
-  SleepEx(dwSeconds * 1000, FALSE);
+  DWORD i;
+  for(i = 0; i < dwSeconds * 10; i++)
+  {
+    SleepEx(100, FALSE);
+    ProcessWindowsMessages();
+  }
 }
 
 BOOL VerifyRestrictedAccess(void)
@@ -1765,7 +1773,6 @@ int CRCCheckDownloadedArchives(char *szCorruptedArchiveList,
     ++dwIndex0;
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
-  ShowMessage(szMsgCRCCheck, FALSE);
   return(iResult);
 }
 
@@ -2587,10 +2594,6 @@ HRESULT CleanupOrphanedGREs()
   if(greIDListToClean)
     GlobalFree(greIDListToClean);
 
-  // Hide message that orphaned GREs are being cleaned up
-  if(*sgProduct.greCleanupOrphansMessage != '\0');
-    ShowMessage(sgProduct.greCleanupOrphansMessage, FALSE);
-
   return(rv);
 }
 
@@ -2657,11 +2660,7 @@ void LaunchOneComponent(siC *siCObject, greInfo *aGre)
 
         LogISLaunchAppsComponentUncompress(siCObject->szDescriptionShort, dwErr);
         if(dwErr != FO_SUCCESS)
-        {
-          if(*szMessageString != '\0')
-            ShowMessage(szMessageString, FALSE);
           return;
-        }
       }
 
       if(aGre)
@@ -2675,9 +2674,6 @@ void LaunchOneComponent(siC *siCObject, greInfo *aGre)
 
       if(siCObject->dwAttributes & SIC_UNCOMPRESS)
         FileDelete(szSpawnFile);
-
-      if(*szMessageString != '\0')
-        ShowMessage(szMessageString, FALSE);
     }
   }
 }
@@ -2706,8 +2702,6 @@ void LaunchExistingGreInstaller(greInfo *aGre)
   UpdateGreInstallerCmdLine(NULL, szParameterBuf, sizeof(szParameterBuf), FOR_EXISTING_GRE);
   LogISLaunchAppsComponent(siCObject->szDescriptionShort);
   WinSpawn(aGre->installerAppPath, szParameterBuf, szTempDir, SW_SHOWNORMAL, WS_WAIT);
-  if(*szMessageString != '\0')
-    ShowMessage(szMessageString, FALSE);
 }
 
 HRESULT LaunchApps()
@@ -3219,9 +3213,6 @@ HRESULT ProcessXpinstallEngine()
 
   if((WIZ_OK == rv) && (siCFXpcomFile.bStatus == STATUS_ENABLED))
     rv = ProcessXpcomFile();
-
-  if(*siCFXpcomFile.szMessage != '\0')
-    ShowMessage(siCFXpcomFile.szMessage, FALSE);
 
   return(rv);
 }
@@ -5004,13 +4995,13 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
 
   if((sgProduct.mode != SILENT) && (sgProduct.mode != AUTO))
   {
+    ShowMessage(NULL, FALSE);
     return(MessageBox(hWndMain, szBufMsg, szDlgDiskSpaceCheckTitle, dwDlgType | MB_ICONEXCLAMATION | MB_DEFBUTTON2 | MB_APPLMODAL | MB_SETFOREGROUND));
   }
   else if(sgProduct.mode == AUTO)
   {
     ShowMessage(szBufMsg, TRUE);
     Delay(5);
-    ShowMessage(szBufMsg, FALSE);
     exit(1);
   }
 
@@ -6308,6 +6299,7 @@ void PrintUsage(void)
     _snprintf(szUsageMsg, sizeof(szUsageMsg), szBuf, szProcessFilename);
     szUsageMsg[sizeof(szUsageMsg) - 1] = '\0';
     GetPrivateProfileString("Messages", "DLG_USAGE_TITLE", "", strUsage, sizeof(strUsage), szFileIniInstall);
+    ShowMessage(NULL, FALSE);
     MessageBox(hWndMain, szUsageMsg, strUsage, MB_ICONEXCLAMATION);
   }
 }
@@ -6370,7 +6362,7 @@ DWORD ParseForStartupOptions(LPSTR aCmdLine)
   return(WIZ_OK);
 }
 
-DWORD ParseCommandLine(LPSTR aMessageToClose, LPSTR lpszCmdLine)
+DWORD ParseCommandLine(LPSTR lpszCmdLine)
 {
   char  szArgVBuf[MAX_BUF];
   int   i;
@@ -6394,7 +6386,7 @@ DWORD ParseCommandLine(LPSTR aMessageToClose, LPSTR lpszCmdLine)
 
     if(!lstrcmpi(szArgVBuf, "-h") || !lstrcmpi(szArgVBuf, "/h"))
     {
-      ShowMessage(aMessageToClose, FALSE);
+      ShowMessage(NULL, FALSE);
       PrintUsage();
       return(WIZ_ERROR_UNDEFINED);
     }
@@ -6646,6 +6638,7 @@ HRESULT ShowMessageAndQuitProcess(HWND aHwndFW, char *aMsgQuitProcess, char *aMs
     {
       char msgTitleStr[MAX_BUF];
       GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", msgTitleStr, sizeof(msgTitleStr), szFileIniInstall);
+      ShowMessage(NULL, TRUE);
       MessageBox(hWndMain, aMsgQuitProcess, msgTitleStr, MB_ICONEXCLAMATION | MB_SETFOREGROUND);
       break;
     }
@@ -6656,7 +6649,6 @@ HRESULT ShowMessageAndQuitProcess(HWND aHwndFW, char *aMsgQuitProcess, char *aMs
        * all the windows associated with the process */
       ShowMessage(aMsgQuitProcess, TRUE);
       Delay(5);
-      ShowMessage(aMsgQuitProcess, FALSE);
       break;
     }
 
@@ -6758,6 +6750,7 @@ HRESULT CheckInstances()
         switch(sgProduct.mode)
         {
           case NORMAL:
+            ShowMessage(NULL, FALSE);
             MessageBox(hWndMain, buf, msgTitleStr, MB_ICONEXCLAMATION | MB_SETFOREGROUND);
             break;
 
@@ -6766,7 +6759,6 @@ HRESULT CheckInstances()
              * all the windows associated with the process */
             ShowMessage(buf, TRUE);
             Delay(5);
-            ShowMessage(buf, FALSE);
             break;
 
           default:
@@ -6981,7 +6973,6 @@ int CRCCheckArchivesStartup(char *szCorruptedArchiveList, DWORD dwCorruptedArchi
     ++dwIndex0;
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
-  ShowMessage(szMsgCRCCheck, FALSE);
   return(iResult);
 }
 
@@ -7022,7 +7013,6 @@ int StartupCheckArchives(void)
           GetPrivateProfileString("Strings", "Error Corrupted Archives Detected AUTO mode", "", szBuf, sizeof(szBuf), szFileIniConfig);
           ShowMessage(szBuf, TRUE);
           Delay(5);
-          ShowMessage(szBuf, FALSE);
           break;
       }
 
@@ -7232,7 +7222,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szBuf, "FALSE") == 0)
     gShowBannerImage = FALSE;
 
-  iRv = ParseCommandLine(szMsgInitSetup, lpszCmdLine);
+  iRv = ParseCommandLine(lpszCmdLine);
   if(iRv)
     return(iRv);
 
@@ -7259,11 +7249,9 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
         break;
 
       case AUTO:
-        ShowMessage(szMsgInitSetup, FALSE);
         GetPrivateProfileString("Strings", "Message AUTO Restricted Access", "", szBuf, sizeof(szBuf), szFileIniConfig);
         ShowMessage(szBuf, TRUE);
         Delay(5);
-        ShowMessage(szBuf, FALSE);
         iRvMB = IDNO;
         break;
 
@@ -7611,7 +7599,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   LogISProductInfo();
   LogMSProductInfo();
   CleanupXpcomFile();
-  ShowMessage(szMsgInitSetup, FALSE);
 
   /* check the windows registry to see if a previous instance of setup finished downloading
    * all the required archives. */
@@ -9022,6 +9009,12 @@ void DeInitialize()
   if(gErrorMessageStream.bEnabled && gErrorMessageStream.bSendMessage)
     SendErrorMessage();
 
+  if(hDlgMessage)
+  {
+    DestroyWindow(hDlgMessage);
+    hDlgMessage = NULL;
+  }
+
   DeInitSiComponents(&siComponents);
   DeInitGre(&gGre);
   DeInitSXpcomFile();
@@ -9140,6 +9133,7 @@ void SaveInstallerFiles()
     i = 0;
     while(TRUE)
     {
+      ProcessWindowsMessages();
       if(*SetupFileList[i] == '\0')
         break;
 

@@ -263,7 +263,7 @@ HRESULT SmartUpdateJars()
     }
     hrResult = pfnXpiInit(szBuf, FILE_INSTALL_LOG, cbXPIProgress);
 
-    ShowMessage(szMsgSmartUpdateStart, FALSE);
+    ShowMessage(NULL, FALSE);
     InitProgressDlg();
     GetTotalArchivesToInstall();
     SetWindowText(dlgInfo.hWndDlg, szDlgExtractingTitle);
@@ -388,15 +388,12 @@ HRESULT SmartUpdateJars()
       siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
     } /* while(siCObject) */
 
+    SaveWindowPosition(dlgInfo.hWndDlg);
     //report 100% progress status for successful installs
     UpdateGREAppInstallerProgress(100);
     LogMSXPInstallStatus(NULL, hrResult);
     pfnXpiExit();
     DeInitProgressDlg();
-  }
-  else
-  {
-    ShowMessage(szMsgSmartUpdateStart, FALSE);
   }
 
   DeInitializeXPIStub();
@@ -465,11 +462,12 @@ ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
   {
 		case WM_INITDIALOG:
       DisableSystemMenuItems(hWndDlg, TRUE);
-			RepositionWindow(hWndDlg, BANNER_IMAGE_INSTALLING);
       SendDlgItemMessage (hWndDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
       SendDlgItemMessage (hWndDlg, IDC_GAUGE_ARCHIVE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
       SendDlgItemMessage (hWndDlg, IDC_STATUS3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
       SendDlgItemMessage (hWndDlg, IDC_GAUGE_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+			RepositionWindow(hWndDlg, BANNER_IMAGE_INSTALLING);
+      ClosePreviousDialog();
 			return FALSE;
 
 		case WM_COMMAND:
