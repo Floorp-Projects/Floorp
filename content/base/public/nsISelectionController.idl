@@ -176,15 +176,16 @@ interface nsISelectionController : nsISupports
   /** ScrolLine will scroll line up or down dependent on the boolean
    *  @param aForward scroll forward or backwards in selection
    */
-	void scrollLine(in boolean aForward);
+	  void scrollLine(in boolean aForward);
 
   /** ScrolHorizontal will scroll left or right dependent on the boolean
    *  @param aLeft if true will scroll left. if not will scroll right.
    */
-	void scrollHorizontal(in boolean aLeft);
+	  void scrollHorizontal(in boolean aLeft);
   /** SelectAll will select the whole page
    */
     void selectAll();
+
 };
 %{ C++
    #define NS_ISELECTIONCONTROLLER_CID \
