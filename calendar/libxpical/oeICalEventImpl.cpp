@@ -2458,20 +2458,20 @@ NS_IMETHODIMP oeICalEventDisplayImpl::SetDisplayDate( PRTime aNewVal )
     return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventDisplayImpl::GetDisplayDateEnd( PRTime *aRetVal )
+NS_IMETHODIMP oeICalEventDisplayImpl::GetDisplayEndDate( PRTime *aRetVal )
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "oeICalEventDisplayImpl::GetDisplayDateEnd()\n" );
+    printf( "oeICalEventDisplayImpl::GetDisplayEndDate()\n" );
 #endif
     *aRetVal = ConvertToPrtime( m_displaydateend );
     return NS_OK;
 }
     
 
-NS_IMETHODIMP oeICalEventDisplayImpl::SetDisplayDateEnd( PRTime aNewVal )
+NS_IMETHODIMP oeICalEventDisplayImpl::SetDisplayEndDate( PRTime aNewVal )
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "oeICalEventDisplayImpl::SetDisplayDateEnd()\n" );
+    printf( "oeICalEventDisplayImpl::SetDisplayEndDate()\n" );
 #endif
     m_displaydateend = ConvertFromPrtime( aNewVal );
     return NS_OK;

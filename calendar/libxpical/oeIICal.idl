@@ -153,7 +153,7 @@ interface oeIICalEventDisplay : oeIICalEvent
 {
     readonly attribute oeIICalEvent event;
     attribute PRTime displayDate;
-    attribute PRTime displayDateEnd;
+    attribute PRTime displayEndDate;
 };
 
 [scriptable, uuid(d44987b4-1dd1-11b2-9783-8a78ed685caf)]

@@ -1371,14 +1371,14 @@ void oeICalImpl::ChopAndAddEventToEnum( struct icaltimetype initialdisplaydate,
         
         if( icaltime_compare( endofday, eventenddate ) < 0 ) {
             enddateinms = ConvertToPrtime( endofday );
-            eventDisplay->SetDisplayDateEnd( enddateinms );
+            eventDisplay->SetDisplayEndDate( enddateinms );
             startdate = endofday;
             icaltime_adjust( &startdate, 0, 0, 0, 1 );
             if( icaltime_compare( startdate, checkenddate ) >= 0 )
                 break;
         } else {
             enddateinms = ConvertToPrtime( eventenddate );
-            eventDisplay->SetDisplayDateEnd( enddateinms );
+            eventDisplay->SetDisplayEndDate( enddateinms );
             break;
         }
     } while ( 1 );
