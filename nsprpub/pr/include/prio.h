@@ -197,7 +197,12 @@ union PRNetAddr {
 #if defined(XP_UNIX) || defined(XP_OS2)
     struct {                            /* Unix domain socket address */
         PRUint16 family;                /* address family (AF_UNIX) */
+#ifdef XP_OS2
+        char path[108];                 /* null-terminated pathname */
+                                        /* bind fails if size is not 108. */
+#else
         char path[104];                 /* null-terminated pathname */
+#endif
     } local;
 #endif
 };
