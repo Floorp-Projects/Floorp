@@ -821,7 +821,11 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   gtk_widget_push_colormap(gdk_rgb_get_cmap());
   gtk_widget_push_visual(gdk_rgb_get_visual());
 
-  BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
+  nsIWidget *baseParent = aInitData &&
+               (aInitData->mWindowType == eWindowType_dialog ||
+                aInitData->mWindowType == eWindowType_toplevel) ?
+                nsnull : aParent;
+  BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
   mParent = aParent;
   NS_IF_ADDREF(mParent);

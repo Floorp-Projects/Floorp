@@ -458,7 +458,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
 
 	// init base class
-	Inherited::StandardCreate(aParent, bounds, aHandleEventFunction, 
+        // (note: aParent is ignored. Mac (real) windows don't want parents)
+	Inherited::StandardCreate(nsnull, bounds, aHandleEventFunction, 
 														aContext, aAppShell, aToolkit, aInitData);
 
 

@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsIWebShellWindow.h"
 #include "nsIBrowserWindow.h"
+#include "nsIModalWindowSupport.h"
 #include "nsGUIEvent.h"
 #include "nsIWebShell.h"  
 #include "nsIDocumentLoaderObserver.h"
@@ -38,6 +39,7 @@
 #include "nsIDOMNode.h"
 
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 
 /* Forward declarations.... */
 struct PLEvent;
@@ -61,9 +63,10 @@ class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver,
-						             public nsIUrlDispatcher
-
-						           , public nsIPrompt
+                         public nsIUrlDispatcher,
+                         public nsIPrompt,
+                         public nsIModalWindowSupport,
+                         public nsSupportsWeakReference
 
 {
 public:
@@ -119,6 +122,7 @@ public:
   // nsIWebShellWindow methods...
   NS_IMETHOD Show(PRBool aShow);
   NS_IMETHOD ShowModal();
+  NS_IMETHOD ShowModally(PRBool aPrepare);
   NS_IMETHOD Close();
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);
   NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
@@ -226,7 +230,7 @@ public:
                               nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
-	// nsIBrowserWindow methods not already covered elsewhere
+  // nsIBrowserWindow methods not already covered elsewhere
   NS_IMETHOD Init(nsIAppShell* aAppShell,
                   nsIPref* aPrefs,
                   const nsRect& aBounds,
@@ -264,6 +268,11 @@ public:
   NS_IMETHOD PromptPassword(const PRUnichar *text, PRUnichar **pwd, PRBool *_retval);
   NS_IMETHOD ConfirmYN(const PRUnichar *text, PRBool *_retval);
   NS_IMETHOD ConfirmCheckYN(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
+
+  // nsIModalWindowSupport
+  NS_IMETHOD PrepareModality();
+  NS_IMETHOD FinishModality();
+
 protected:
   
   PRInt32 GetDocHeight(nsIDocument * aDoc);
@@ -294,6 +303,7 @@ protected:
 
   nsIWidget*              mWindow;
   nsIWebShell*            mWebShell;
+  nsCOMPtr<nsIWeakReference> mParentWindow;
   nsIXULWindowCallbacks*  mCallbacks;
   PRBool                  mContinueModalLoop;
   PRBool                  mLockedUntilChromeLoad;
