@@ -136,6 +136,7 @@ public:
       return NS_OK;
   }
 
+  void EnsureMenuItemIsVisible(nsIMenuFrame* aMenuFrame);
 
 protected:
   // redefine to tell the box system not to move the
@@ -163,6 +164,8 @@ protected:
                                            const nsRect & inScreenParentFrameRect, PRInt32 inScreenTopTwips, PRInt32 inScreenLeftTwips,
                                            PRInt32 inScreenBottomTwips, PRInt32 inScreenRightTwips ) ;
 
+  nsIScrollableView* GetScrollableView(nsIFrame* aStart);
+  
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
   // XXX Hack
