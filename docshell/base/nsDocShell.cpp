@@ -5174,8 +5174,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             // handling the load, though, so we fire a notification
             // before throwing the load away.
             PRBool abort = PR_FALSE;
-            mContentListener->OnStartURIOpen(aURI, &abort);
-            if (abort) {
+            nsresult rv2 = mContentListener->OnStartURIOpen(aURI, &abort);
+            if (NS_SUCCEEDED(rv2) && abort) {
                 // Hey, they're handling the load for us!  How convenient!
                 return NS_OK;
             }
