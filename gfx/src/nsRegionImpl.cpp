@@ -112,7 +112,7 @@ nsresult nsRegionImpl::GetRects (nsRegionRectSet **aRects)
   nsRegionRectSet* pRegionSet = *aRects;
   PRUint32 NumRects = mRegion.GetNumRects ();
 
-  if (pRegionSet == nsnull)                 // Not yet allocated
+  if (!pRegionSet)                          // Not yet allocated
   {
     PRUint8* pBuf = new PRUint8 [sizeof (nsRegionRectSet) + NumRects * sizeof (nsRegionRect)];
     pRegionSet = NS_REINTERPRET_CAST (nsRegionRectSet*, pBuf);
@@ -135,14 +135,14 @@ nsresult nsRegionImpl::GetRects (nsRegionRectSet **aRects)
   nsRegionRect* pDest = &pRegionSet->mRects [0];
   const nsRect* pSrc;
 
-  while (pSrc = ri.Next ())
+  while ((pSrc = ri.Next ()) != nsnull)
   {
     pDest->x = pSrc->x;
     pDest->y = pSrc->y;
     pDest->width  = pSrc->width;
     pDest->height = pSrc->height;
 
-    pDest++;
+    ++pDest;
   }
 
   return NS_OK;
