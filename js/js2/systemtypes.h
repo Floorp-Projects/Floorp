@@ -60,7 +60,15 @@
  #endif /* AIX4_3 */
 #endif	/* XP_BEOS */
 
+// Define float32 and float64.
 typedef double float64;
 typedef float float32;
+
+// A UTF-16 character
+// Use wchar_t on platforms on which wchar_t has 16 bits; otherwise use int16.
+// Note that in C++ wchar_t is a distinct type rather than a typedef for some integral type.
+// Like char, a char16 can be either signed or unsigned at the implementation's discretion.
+typedef wchar_t char16;
+typedef unsigned wchar_t uchar16;
 
 #endif
