@@ -756,10 +756,13 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 {
   // Don't pass shift, control and alt as key release events
-  if (event->state & GDK_SHIFT_MASK
-      || event->state & GDK_CONTROL_MASK
-      || event->state & GDK_MOD1_MASK)
-    return PR_FALSE;
+  if (event->keyval == GDK_Shift_L
+      || event->keyval == GDK_Shift_R
+      || event->keyval == GDK_Control_L
+      || event->keyval == GDK_Control_R
+      || event->keyval == GDK_Alt_L
+      || event->keyval == GDK_Alt_R)
+    return PR_TRUE;
 
   nsKeyEvent kevent;
   InitKeyEvent(event, p, kevent, NS_KEY_UP);
@@ -774,10 +777,13 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 {
   // Don't pass shift, control and alt as key press events
-  if (event->state & GDK_SHIFT_MASK
-      || event->state & GDK_CONTROL_MASK
-      || event->state & GDK_MOD1_MASK)
-    return PR_FALSE;
+  if (event->keyval == GDK_Shift_L
+      || event->keyval == GDK_Shift_R
+      || event->keyval == GDK_Control_L
+      || event->keyval == GDK_Control_R
+      || event->keyval == GDK_Alt_L
+      || event->keyval == GDK_Alt_R)
+    return PR_TRUE;
 
   nsKeyEvent kevent;
   InitKeyEvent(event, p, kevent, NS_KEY_DOWN);
