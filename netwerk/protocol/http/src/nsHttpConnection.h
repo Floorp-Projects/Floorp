@@ -37,6 +37,7 @@
 #include "plstr.h"
 #include "prclist.h"
 #include "nsCRT.h"
+#include "prlock.h"
 
 class nsHttpHandler;
 class nsHttpConnectionInfo;
@@ -73,7 +74,7 @@ public:
     nsresult OnHeadersAvailable(nsHttpTransaction *, PRBool *reset);
 
     // called by the transaction to inform the connection that it is done.
-    nsresult OnTransactionComplete(nsresult status);
+    nsresult OnTransactionComplete(nsHttpTransaction *, nsresult status);
 
     // called by the transaction to resume a read-in-progress
     nsresult Resume();
@@ -101,14 +102,6 @@ public:
     nsIEventQueue        *ConsumerEventQ() { return mConsumerEventQ; }
 
 private:
-    enum {
-        IDLE,
-        WAITING_FOR_WRITE,
-        WRITING,
-        WAITING_FOR_READ,
-        READING
-    };
-
     nsresult ActivateConnection();
     nsresult CreateTransport();
 
@@ -130,12 +123,16 @@ private:
     nsHttpTransaction              *mTransaction;    // hard ref
     nsHttpConnectionInfo           *mConnectionInfo; // hard ref
 
+    PRLock                         *mLock;
+
     PRUint32                        mReuseCount;
     PRUint32                        mMaxReuseCount; // value of keep-alive: max=
     PRUint32                        mIdleTimeout;   // value of keep-alive: timeout=
     PRUint32                        mLastActiveTime;
 
     PRPackedBool                    mKeepAlive;
+    PRPackedBool                    mWriteDone;
+    PRPackedBool                    mReadDone;
 };
 
 //-----------------------------------------------------------------------------

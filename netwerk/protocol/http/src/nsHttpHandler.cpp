@@ -375,17 +375,17 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
 {
     NS_ENSURE_ARG_POINTER(conn);
 
+    PRBool reusable = conn->CanReuse();
+
     LOG(("nsHttpHandler::ReclaimConnection [conn=%x keep-alive=%d]\n",
-        conn, conn->CanReuse()));
+        conn, reusable));
 
     nsAutoLock lock(mConnectionLock);
 
     // remove connection from the active connection list
     mActiveConnections.RemoveElement(conn);
 
-    LOG(("active connection count = %u\n", mActiveConnections.Count()));
-
-    if (conn->CanReuse()) {
+    if (reusable) {
         // verify that we aren't already maxed out on the number of
         // keep-alives we can have for this server.
         PRUint32 count = CountIdleConnections(conn->ConnectionInfo());
@@ -407,6 +407,8 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
         NS_RELEASE(conn);
     }
 
+    LOG(("active connection count is now %u\n", mActiveConnections.Count()));
+
     // process the pending transaction queue...
     if (mTransactionQ.Count() > 0)
         ProcessTransactionQ();
@@ -418,21 +420,32 @@ nsHttpHandler::ReclaimConnection(nsHttpConnection *conn)
 nsresult
 nsHttpHandler::CancelTransaction(nsHttpTransaction *trans, nsresult status)
 {
+    nsHttpConnection *conn;
+
     LOG(("nsHttpHandler::CancelTransaction [trans=%x status=%x]\n",
         trans, status));
 
     NS_ENSURE_ARG_POINTER(trans);
 
-    nsAutoLock lock(mConnectionLock);
-
     // we need to be inside the connection lock in order to know whether
     // or not this transaction has an associated connection.  otherwise,
     // we'd have a race condition (see bug 85822).
+    {
+        nsAutoLock lock(mConnectionLock);
 
-    if (trans->Connection())
-        trans->Connection()->OnTransactionComplete(status);
+        conn = trans->Connection();
+        if (conn)
+            NS_ADDREF(conn); // make sure the connection stays around.
+        else
+            RemovePendingTransaction(trans);
+    }
+
+    if (conn) {
+        conn->OnTransactionComplete(trans, status);
+        NS_RELEASE(conn);
+    }
     else
-        CancelPendingTransaction(trans, status);
+        trans->OnStopTransaction(status);
 
     return NS_OK;
 }
@@ -693,27 +706,39 @@ nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
         NS_ADDREF(conn);
 
         rv = conn->Init(ci);
-        if (NS_FAILED(rv)) goto failed;
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(conn);
+            return rv;
+        }
     }
 
-    rv = conn->SetTransaction(trans);
-    if (NS_FAILED(rv)) goto failed;
+    // assign the connection to the transaction.
+    trans->SetConnection(conn);
 
+    // consider this connection active, even though it may fail.
     mActiveConnections.AppendElement(conn);
-    return NS_OK;
+    
+    // we must not hold the connection lock while making this call
+    // as it could lead to deadlocks.
+    PR_Unlock(mConnectionLock);
+    rv = conn->SetTransaction(trans);
+    PR_Lock(mConnectionLock);
 
-failed:
-    NS_RELEASE(conn);
+    if (NS_FAILED(rv)) {
+        // the connection may already have been removed from the 
+        // active connection list.
+        if (mActiveConnections.RemoveElement(conn))
+            NS_RELEASE(conn);
+    }
+
     return rv;
 }
 
 // called with the connection lock held
 nsresult
-nsHttpHandler::CancelPendingTransaction(nsHttpTransaction *trans,
-                                        nsresult status)
+nsHttpHandler::RemovePendingTransaction(nsHttpTransaction *trans)
 {
-    LOG(("nsHttpHandler::CancelPendingTransaction [trans=%x status=%x]\n",
-        trans, status));
+    LOG(("nsHttpHandler::RemovePendingTransaction [trans=%x]\n", trans));
 
     NS_ENSURE_ARG_POINTER(trans);
 
@@ -723,16 +748,13 @@ nsHttpHandler::CancelPendingTransaction(nsHttpTransaction *trans,
         pt = (nsPendingTransaction *) mTransactionQ[i];
 
         if (pt->Transaction() == trans) {
-            trans->OnStopTransaction(status);
-
             mTransactionQ.RemoveElementAt(i);
             delete pt;
-
             return NS_OK;
         }
     }
 
-    LOG(("CancelPendingTransaction failed: transaction not in pending queue\n"));
+    NS_WARNING("transaction not in pending queue");
     return NS_ERROR_NOT_AVAILABLE;
 }
 

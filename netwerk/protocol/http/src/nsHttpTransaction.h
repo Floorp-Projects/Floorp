@@ -73,6 +73,8 @@ public:
     nsIInterfaceRequestor *Callbacks()      { return mCallbacks; } 
     nsIEventQueue         *ConsumerEventQ() { return mConsumerEventQ; }
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
+    PRBool                 IsDone()         { return mTransactionDone; }
+    nsresult               Status()         { return mStatus; } 
 
     // Called to take ownership of the response headers; the transaction
     // will drop any reference to the response headers after this call.

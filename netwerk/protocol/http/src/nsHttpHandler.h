@@ -168,7 +168,7 @@ private:
                                         nsHttpConnectionInfo *,
                                         PRBool failIfBusy = PR_FALSE);
 
-    nsresult CancelPendingTransaction(nsHttpTransaction *, nsresult status);
+    nsresult RemovePendingTransaction(nsHttpTransaction *);
 
     PRUint32 CountActiveConnections(nsHttpConnectionInfo *);
     PRUint32 CountIdleConnections(nsHttpConnectionInfo *);
