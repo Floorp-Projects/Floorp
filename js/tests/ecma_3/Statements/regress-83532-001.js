@@ -41,6 +41,8 @@ function test()
   function f () {switch(1) {case -1:}}
   function g(){switch(1){case (-1):}}
   var h = function() {switch(1) {case -1:}}
-
+  f();
+  g();
+  h();
   exitFunc ('test');
 }
