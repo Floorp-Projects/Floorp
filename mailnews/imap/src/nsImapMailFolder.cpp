@@ -1641,7 +1641,6 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 	if (NS_SUCCEEDED(filter->GetAction(&actionType, &value)))
 	{
 		nsCOMPtr<nsIMsgDBHdr> msgHdr;
-		nsresult rv = NS_OK;
 
 		if (m_msgParser)
 			m_msgParser->GetNewMsgHdr(getter_AddRefs(msgHdr));
@@ -1660,7 +1659,6 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 			case nsMsgFilterAction::Delete:
 			{
 				PRBool deleteToTrash = DeleteIsMoveToTrash();
-				PRBool showDeletedMessages = ShowDeletedMessages();
 				if (deleteToTrash)
 				{
 					// set value to trash folder
@@ -1700,7 +1698,6 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 
 				if (value && nsCRT::strcasecmp(folderName, (char *) value))
 				{
-					PRUint32 msgFlags;
 					msgHdr->GetFlags(&msgFlags);
 
 					if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED &&
@@ -2794,8 +2791,8 @@ NS_IMETHODIMP
 nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
                                  PRUint32 aMsgId)
 {
-	PRUnichar *progressMsg = IMAPGetStringByID(aMsgId);
 #ifdef DEBUG_bienvenu
+	PRUnichar *progressMsg = IMAPGetStringByID(aMsgId);
 	nsCString cString(progressMsg);
 	printf("status: %s\n", cString.GetBuffer());
 #endif
