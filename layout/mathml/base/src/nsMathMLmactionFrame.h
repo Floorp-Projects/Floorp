@@ -74,6 +74,12 @@ public:
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
+  NS_IMETHOD
+  Reflow(nsIPresContext*          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus);
+
   // nsIDOMMouseListener methods
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent)  { MOUSE(down) return NS_OK; }
   NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { MOUSE(up) return NS_OK; }
@@ -98,6 +104,7 @@ private:
   PRInt32         mSelection;
   nsIFrame*       mSelectedFrame;
   nsString        mRestyle;
+  PRBool          mWasRestyled;
 
   // helper to return the frame for the attribute selection="number"
   nsIFrame* 
