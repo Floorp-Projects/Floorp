@@ -545,9 +545,11 @@ nsSocketTransport::CompleteAsyncRead()
     nsSocketReadRequest *readRequest = mReadRequest;
     mReadRequest = nsnull;
 
+    PR_ExitMonitor(mMonitor);
     readRequest->OnStop();
-    NS_RELEASE(readRequest);
+    PR_EnterMonitor(mMonitor);
 
+    NS_RELEASE(readRequest);
     mSocketRef--;
 }
 
@@ -566,9 +568,11 @@ nsSocketTransport::CompleteAsyncWrite()
     nsSocketWriteRequest *writeRequest = mWriteRequest;
     mWriteRequest = nsnull;
 
+    PR_ExitMonitor(mMonitor);
     writeRequest->OnStop();
-    NS_RELEASE(writeRequest);
+    PR_EnterMonitor(mMonitor);
 
+    NS_RELEASE(writeRequest);
     mSocketRef--;
 }
 
@@ -1799,8 +1803,10 @@ nsSocketTransport::OnStatus(nsresult message)
     else
         req = mWriteRequest;
 
-    NS_ENSURE_TRUE(req, NS_ERROR_NOT_INITIALIZED);
-    return OnStatus(req, req->Context(), message);
+    if (req)
+        return OnStatus(req, req->Context(), message);
+
+    return NS_OK;
 }
 
 PRFileDesc *
