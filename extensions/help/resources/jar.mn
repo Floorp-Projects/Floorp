@@ -34,7 +34,7 @@ en-US.jar:
         locale/en-US/help/cs_priv_prefs_popup.xhtml     (locale/en-US/cs_priv_prefs_popup.xhtml)
         locale/en-US/help/page_info_help.html           (locale/en-US/page_info_help.html)  
         locale/en-US/help/passwords_help.html           (locale/en-US/passwords_help.html)
-        locale/en-US/help/privacy_help.html             (locale/en-US/privacy_help.html)
+        locale/en-US/help/privacy_help.xhtml            (locale/en-US/privacy_help.xhtml)
         locale/en-US/help/privsec_help.html             (locale/en-US/privsec_help.html)
         locale/en-US/help/profiles_help.html            (locale/en-US/profiles_help.html)
         locale/en-US/help/ssl_help.html                 (locale/en-US/ssl_help.html)

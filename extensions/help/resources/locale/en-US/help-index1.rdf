@@ -112,7 +112,7 @@
      <rdf:li>
        <rdf:Description ID="browsing_anonymously"
          nc:name="browsing anonymously"
-	 nc:link="privacy_help.html#browsing_anonymouslyIDX"/>
+	 nc:link="privacy_help.xhtml#how_can_i_make_sure_unauthorized_people_dont_use_information_about_me"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -440,12 +440,12 @@
      <rdf:li>
        <rdf:Description ID="cookies:email_and"
          nc:name="e-mail and cookies"
-	 nc:link="privacy_help.html#cookies:email_andIDX"/>
+	 nc:link="privacy_help.xhtml#how_can_i_control_web_pages_in_email_messages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies:foreign"
          nc:name="foreign cookies"
-	 nc:link="privacy_help.html#cookies:foreignIDX"/>
+	 nc:link="privacy_help.xhtml#what_are_third-party_cookies"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cookies:managing_per_site"
@@ -800,7 +800,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="images:email_and"
          nc:name="e-mail and images"
-	 nc:link="privacy_help.html#images:email_andIDX"/>
+	 nc:link="privacy_help.xhtml#how_can_i_control_web_pages_in_email_messages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="images:managing"
@@ -1455,7 +1455,7 @@
      <rdf:li>
        <rdf:Description ID="privacy"
          nc:name="privacy"
-	 nc:link="privacy_help.html#privacy:aboutIDX"/>
+	 nc:link="privacy_help.xhtml#privacy_on_the_internet"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="profiles"
@@ -1691,17 +1691,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="privacy:about"
          nc:name="about privacy"
-	 nc:link="privacy_help.html#privacy:aboutIDX"/>
+	 nc:link="privacy_help.xhtml#privacy_on_the_internet"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="privacy:cookies_and"
          nc:name="cookies and privacy"
-	 nc:link="privacy_help.html#privacy:cookies_andIDX"/>
+	 nc:link="privacy_help.xhtml#what_are_cookies_and_how_do_they_work"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="privacy:IP_address"
          nc:name="IP address"
-	 nc:link="privacy_help.html#privacy:IP_addressIDX"/>
+	 nc:link="privacy_help.xhtml#internet_address"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="privacy:P3P_levels"
@@ -1721,7 +1721,7 @@
      <rdf:li>
        <rdf:Description ID="privacy:protecting"
          nc:name="protecting your privacy"
-	 nc:link="privacy_help.html#privacy:protectingIDX"/>
+	 nc:link="privacy_help.xhtml#using_privacy_features"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="privacy:settings"
