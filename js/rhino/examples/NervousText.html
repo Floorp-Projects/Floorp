@@ -1,7 +1,19 @@
 <html>
 <body>
 This is the NervousText applet in javascript:
-<applet code=NervousText.class width=200 height=50 >
+<applet archive="js.jar" code=NervousText width=200 height=50 >
 </applet>
+
+<hr>
+The test assumes that applet code is generated with:
+<pre>
+java -classpath js.jar org.mozilla.javascript.tools.jsc.Main \
+  -extends java.applet.Applet \
+  -implements java.lang.Runnable \
+  NervousText.js
+</pre>
+and the resulting 2 classes, NervousText.class extending java.applet.Applet and implementing java.lang.Runnable and NervousText1.class which represents compiled JavaScript code, are placed in the same directory as NervousText.html.
+<p>
+The test also assumes that js.jar from Rhino distribution is available in the same directory. 
 </body>
 </html>
