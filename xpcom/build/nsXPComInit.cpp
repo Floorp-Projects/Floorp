@@ -521,7 +521,6 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     //    clients can create new objects.
 
     // Registry
-#if 0
     nsIFactory *registryFactory = NULL;
     rv = NS_RegistryGetFactory(&registryFactory);
     if (NS_FAILED(rv)) return rv;
@@ -534,7 +533,6 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                                   registryFactory, PR_TRUE);
     NS_RELEASE(registryFactory);
     if (NS_FAILED(rv)) return rv;
-#endif
 
     // Category Manager
     {
