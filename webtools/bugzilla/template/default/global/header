@@ -13,9 +13,11 @@
     <title>[% title %]</title>
     [% Param('headerhtml') %]
     [% jscript %]
-    <style type="text/css">
-      [% style %]
-    </style>
+    [% IF style %]
+      <style type="text/css">
+        [% style %]
+      </style>
+    [% END %]
   </head>
   <body [% Param('bodyhtml') %][% " " %][% extra %]>
 
