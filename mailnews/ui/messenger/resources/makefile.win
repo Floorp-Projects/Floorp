@@ -62,6 +62,8 @@ install::
 	$(MAKE_INSTALL) am-advanced.xul		$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) SearchDialog.xul	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) FilterListDialog.xul	$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) FilterEditor.xul	$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) FilterEditor.js		$(DIST)\bin\res\mailnews\messenger
 
 
 clobber::
@@ -95,4 +97,7 @@ clobber::
 	rm -f $(DIST)\res\mailnews\messenger\am-advanced.xul
 	rm -f $(DIST)\res\mailnews\messenger\SearchDialog.xul
 	rm -f $(DIST)\res\mailnews\messenger\FilterListDialog.xul
+	rm -f $(DIST)\res\mailnews\messenger\FilterEditor.xul
+	rm -f $(DIST)\res\mailnews\messenger\FilterEditor.js
+
 
