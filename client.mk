@@ -143,6 +143,9 @@ CONFIG_NSPR_FLAG = --with-nspr=$(NSPR_INSTALL_DIR)
 # Enable editor ...  might want to do this conditionally
 CONFIG_EDITOR_FLAG = --enable-editor
 
+# Turn on debug:
+DEBUG_FLAG = --enable-debug
+
 CONFIG_FLAGS = $(CONFIG_TOOLKIT_FLAG) $(CONFIG_NSPR_FLAG) $(CONFIG_EDITOR_FLAG)
 
 #
