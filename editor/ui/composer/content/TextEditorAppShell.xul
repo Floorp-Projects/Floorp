@@ -24,25 +24,22 @@
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorAppShell.dtd"> 
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="TextEditorOnLoad()"
 			  onunload="EditorShutdown()" 
         titlemodifier="&textEditorWindow.titlemodifier;" 
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         align="vertical"
 			  width="640" height="480">
 
-  <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
-  </html:script>
-
-	<!-- keys are appended from the overlay -->
-  <keyset id="defaultKeySet"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
 
   <broadcaster id="args" value="chrome://editor/content/EditorInitPagePlain.html"/>
   <broadcaster id="canPrint"/>
@@ -54,6 +51,9 @@
   <!-- broadcaster nodes are appended here from the overlays -->
   <broadcasterset id="broadcasterset">
   </broadcasterset>
+
+	<!-- keys are appended from the overlay -->
+  <keyset id="defaultKeySet"/>
 
   <toolbox id="EditorToolbars">
     <menubar>
@@ -121,13 +121,14 @@
       <titledbutton id="openButton"/>
       <titledbutton id="saveButton"/>
 
+      <html:div class="separator" align="vertical" />
+
       <titledbutton id="printButton"/>
       <titledbutton id="findButton"/>
       <titledbutton id="spellingButton"/>
 
       <spring flex="100%"/>
-    </toolbar>
-    
+    </toolbar>    
     </toolbox>
 
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
