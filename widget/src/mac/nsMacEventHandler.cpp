@@ -42,11 +42,8 @@
 #include "prinrval.h"
 
 #include <ToolUtils.h>
-#include <DiskInit.h>
-#include <LowMem.h>
 #include <TextServices.h>
 #include <UnicodeConverter.h>
-#include <Script.h>
 
 #include "nsCarbonHelpers.h"
 #include "nsIRollupListener.h"
@@ -766,7 +763,7 @@ enum
 	kReturnKeyCode          = 0x24,
 	kPowerbookEnterKeyCode  = 0x34,     // Enter on Powerbook's keyboard is different
 	
-	kInsertKeyCode					= 0x72,				// also help key
+	kHelpKeyCode						= 0x72,				// also insert key
 	kDeleteKeyCode					= 0x75,				// also forward delete key
 	kTabKeyCode							= 0x30,
 	kBackspaceKeyCode       = 0x33,
@@ -789,71 +786,70 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 	
 	switch (keyCode)
 	{
-//	case ??							:				raptorKeyCode = NS_VK_CANCEL;		break;			// don't know what this key means. Nor does joki
+//  case ??            :       raptorKeyCode = nsIDOMKeyEvent::DOM_VK_CANCEL;    break;     // don't know what this key means. Nor does joki
 
 // modifiers. We don't get separate events for these
-		case kEscapeKeyCode:				raptorKeyCode = NS_VK_ESCAPE;					break;
-		case kShiftKeyCode:					raptorKeyCode = NS_VK_SHIFT;					break;
-//		case kCommandKeyCode:       raptorKeyCode = NS_VK_META;           break;
-		case kCapsLockKeyCode:			raptorKeyCode = NS_VK_CAPS_LOCK;			break;
-		case kControlKeyCode:				raptorKeyCode = NS_VK_CONTROL;				break;
-		case kOptionkeyCode:				raptorKeyCode = NS_VK_ALT;						break;
-		case kClearKeyCode:					raptorKeyCode = NS_VK_CLEAR;					break;
+    case kShiftKeyCode:         raptorKeyCode = nsIDOMKeyEvent::DOM_VK_SHIFT;         break;
+    case kCommandKeyCode:       raptorKeyCode = nsIDOMKeyEvent::DOM_VK_META;          break;
+    case kCapsLockKeyCode:      raptorKeyCode = nsIDOMKeyEvent::DOM_VK_CAPS_LOCK;     break;
+    case kControlKeyCode:       raptorKeyCode = nsIDOMKeyEvent::DOM_VK_CONTROL;       break;
+    case kOptionkeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_ALT;           break;
 
 // function keys
-		case kF1KeyCode:						raptorKeyCode = NS_VK_F1;							break;
-		case kF2KeyCode:						raptorKeyCode = NS_VK_F2;							break;
-		case kF3KeyCode:						raptorKeyCode = NS_VK_F3;							break;
-		case kF4KeyCode:						raptorKeyCode = NS_VK_F4;							break;
-		case kF5KeyCode:						raptorKeyCode = NS_VK_F5;							break;
-		case kF6KeyCode:						raptorKeyCode = NS_VK_F6;							break;
-		case kF7KeyCode:						raptorKeyCode = NS_VK_F7;							break;
-		case kF8KeyCode:						raptorKeyCode = NS_VK_F8;							break;
-		case kF9KeyCode:						raptorKeyCode = NS_VK_F9;							break;
-		case kF10KeyCode:						raptorKeyCode = NS_VK_F10;						break;
-		case kF11KeyCode:						raptorKeyCode = NS_VK_F11;						break;
-		case kF12KeyCode:						raptorKeyCode = NS_VK_F12;						break;
-//	case kF13KeyCode:						raptorKeyCode = NS_VK_F13;						break;		// clash with the 3 below
-//	case kF14KeyCode:						raptorKeyCode = NS_VK_F14;						break;
-//	case kF15KeyCode:						raptorKeyCode = NS_VK_F15;						break;
-		case kPauseKeyCode:					raptorKeyCode = NS_VK_PAUSE;					break;
-		case kScrollLockKeyCode:		raptorKeyCode = NS_VK_SCROLL_LOCK;		break;
-		case kPrintScreenKeyCode:		raptorKeyCode = NS_VK_PRINTSCREEN;		break;
-	
+    case kF1KeyCode:            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F1;            break;
+    case kF2KeyCode:            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F2;            break;
+    case kF3KeyCode:            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F3;            break;
+    case kF4KeyCode:            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F4;            break;
+    case kF5KeyCode:            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F5;            break;
+    case kF6KeyCode:            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F6;            break;
+    case kF7KeyCode:            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F7;            break;
+    case kF8KeyCode:            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F8;            break;
+    case kF9KeyCode:            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F9;            break;
+    case kF10KeyCode:           raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F10;           break;
+    case kF11KeyCode:           raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F11;           break;
+    case kF12KeyCode:           raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F12;           break;
+//  case kF13KeyCode:           raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F13;           break;    // clash with the 3 below
+//  case kF14KeyCode:           raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F14;           break;
+//  case kF15KeyCode:           raptorKeyCode = nsIDOMKeyEvent::DOM_VK_F15;           break;
+    case kPauseKeyCode:         raptorKeyCode = nsIDOMKeyEvent::DOM_VK_PAUSE;         break;
+    case kScrollLockKeyCode:    raptorKeyCode = nsIDOMKeyEvent::DOM_VK_SCROLL_LOCK;   break;
+    case kPrintScreenKeyCode:   raptorKeyCode = nsIDOMKeyEvent::DOM_VK_PRINTSCREEN;   break;
+
 // keypad
-		case kKeypad0KeyCode:				raptorKeyCode = NS_VK_NUMPAD0;				break;
-		case kKeypad1KeyCode:				raptorKeyCode = NS_VK_NUMPAD1;				break;
-		case kKeypad2KeyCode:				raptorKeyCode = NS_VK_NUMPAD2;				break;
-		case kKeypad3KeyCode:				raptorKeyCode = NS_VK_NUMPAD3;				break;
-		case kKeypad4KeyCode:				raptorKeyCode = NS_VK_NUMPAD4;				break;
-		case kKeypad5KeyCode:				raptorKeyCode = NS_VK_NUMPAD5;				break;
-		case kKeypad6KeyCode:				raptorKeyCode = NS_VK_NUMPAD6;				break;
-		case kKeypad7KeyCode:				raptorKeyCode = NS_VK_NUMPAD7;				break;
-		case kKeypad8KeyCode:				raptorKeyCode = NS_VK_NUMPAD8;				break;
-		case kKeypad9KeyCode:				raptorKeyCode = NS_VK_NUMPAD9;				break;
+    case kKeypad0KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD0;      break;
+    case kKeypad1KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD1;      break;
+    case kKeypad2KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD2;      break;
+    case kKeypad3KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD3;      break;
+    case kKeypad4KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD4;      break;
+    case kKeypad5KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD5;      break;
+    case kKeypad6KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD6;      break;
+    case kKeypad7KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD7;      break;
+    case kKeypad8KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD8;      break;
+    case kKeypad9KeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_NUMPAD9;      break;
 
-		case kKeypadMultiplyKeyCode:	raptorKeyCode = NS_VK_MULTIPLY;			break;
-		case kKeypadAddKeyCode:				raptorKeyCode = NS_VK_ADD;					break;
-		case kKeypadSubtractKeyCode:	raptorKeyCode = NS_VK_SUBTRACT;			break;
-		case kKeypadDecimalKeyCode:		raptorKeyCode = NS_VK_DECIMAL;			break;
-		case kKeypadDivideKeyCode:		raptorKeyCode = NS_VK_DIVIDE;				break;
-//	case ??								:				raptorKeyCode = NS_VK_SEPARATOR;		break;
+    case kKeypadMultiplyKeyCode: raptorKeyCode = nsIDOMKeyEvent::DOM_VK_MULTIPLY;     break;
+    case kKeypadAddKeyCode:      raptorKeyCode = nsIDOMKeyEvent::DOM_VK_ADD;          break;
+    case kKeypadSubtractKeyCode: raptorKeyCode = nsIDOMKeyEvent::DOM_VK_SUBTRACT;     break;
+    case kKeypadDecimalKeyCode:  raptorKeyCode = nsIDOMKeyEvent::DOM_VK_DECIMAL;      break;
+    case kKeypadDivideKeyCode:   raptorKeyCode = nsIDOMKeyEvent::DOM_VK_DIVIDE;       break;
+//  case ??             :        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_SEPARATOR;    break;
 
+// this may clash with vk_insert, but help key is more useful in mozilla
+    case kHelpKeyCode:          raptorKeyCode = nsIDOMKeyEvent::DOM_VK_HELP;          break;
+    case kDeleteKeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_DELETE;        break;
+    case kEscapeKeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_ESCAPE;        break;
+    case kClearKeyCode:         raptorKeyCode = nsIDOMKeyEvent::DOM_VK_CLEAR;         break;
 
-// these may clash with forward delete and help
-    case kInsertKeyCode:				raptorKeyCode = NS_VK_INSERT;					break;
-    case kDeleteKeyCode:				raptorKeyCode = NS_VK_DELETE;					break;
-
-    case kBackspaceKeyCode:     raptorKeyCode = NS_VK_BACK;           break;
-    case kTabKeyCode:           raptorKeyCode = NS_VK_TAB;            break;
-    case kHomeKeyCode:          raptorKeyCode = NS_VK_HOME;           break;
-    case kEndKeyCode:           raptorKeyCode = NS_VK_END;            break;
-		case kPageUpKeyCode:				raptorKeyCode = NS_VK_PAGE_UP;        break;
-		case kPageDownKeyCode:			raptorKeyCode = NS_VK_PAGE_DOWN;      break;
-		case kLeftArrowKeyCode:			raptorKeyCode = NS_VK_LEFT;           break;
-		case kRightArrowKeyCode:		raptorKeyCode = NS_VK_RIGHT;          break;
-		case kUpArrowKeyCode:				raptorKeyCode = NS_VK_UP;             break;
-		case kDownArrowKeyCode:			raptorKeyCode = NS_VK_DOWN;           break;
+    case kBackspaceKeyCode:     raptorKeyCode = nsIDOMKeyEvent::DOM_VK_BACK_SPACE;    break;
+    case kTabKeyCode:           raptorKeyCode = nsIDOMKeyEvent::DOM_VK_TAB;           break;
+    case kHomeKeyCode:          raptorKeyCode = nsIDOMKeyEvent::DOM_VK_HOME;          break;
+    case kEndKeyCode:           raptorKeyCode = nsIDOMKeyEvent::DOM_VK_END;           break;
+    case kPageUpKeyCode:        raptorKeyCode = nsIDOMKeyEvent::DOM_VK_PAGE_UP;       break;
+    case kPageDownKeyCode:      raptorKeyCode = nsIDOMKeyEvent::DOM_VK_PAGE_DOWN;     break;
+    case kLeftArrowKeyCode:     raptorKeyCode = nsIDOMKeyEvent::DOM_VK_LEFT;          break;
+    case kRightArrowKeyCode:    raptorKeyCode = nsIDOMKeyEvent::DOM_VK_RIGHT;         break;
+    case kUpArrowKeyCode:       raptorKeyCode = nsIDOMKeyEvent::DOM_VK_UP;            break;
+    case kDownArrowKeyCode:     raptorKeyCode = nsIDOMKeyEvent::DOM_VK_DOWN;          break;
 
 		default:
 				if ((eventModifiers & controlKey) != 0)
@@ -862,23 +858,23 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 				// if we haven't gotten the key code already, look at the char code
 				switch (charCode)
 				{
-					case kReturnCharCode:				raptorKeyCode = NS_VK_RETURN;				break;
-					case kEnterCharCode:				raptorKeyCode = NS_VK_RETURN;				break;			// fix me!
-					case ' ':										raptorKeyCode = NS_VK_SPACE;				break;
-					case ';':										raptorKeyCode = NS_VK_SEMICOLON;		break;
-					case '=':										raptorKeyCode = NS_VK_EQUALS;				break;
-					case ',':										raptorKeyCode = NS_VK_COMMA;				break;
-					case '.':										raptorKeyCode = NS_VK_PERIOD;				break;
-					case '/':										raptorKeyCode = NS_VK_SLASH;				break;
-					case '`':										raptorKeyCode = NS_VK_BACK_QUOTE;		break;
-					case '{':
-					case '[':										raptorKeyCode = NS_VK_OPEN_BRACKET;	break;
-					case '\\':									raptorKeyCode = NS_VK_BACK_SLASH;		break;
-					case '}':
-					case ']':										raptorKeyCode = NS_VK_CLOSE_BRACKET;	break;
-					case '\'':
-					case '"':										raptorKeyCode = NS_VK_QUOTE;				break;
-					
+          case kReturnCharCode: raptorKeyCode = nsIDOMKeyEvent::DOM_VK_RETURN;       break;
+          case kEnterCharCode:  raptorKeyCode = nsIDOMKeyEvent::DOM_VK_RETURN;       break;    // fix me!
+          case ' ':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_SPACE;        break;
+          case ';':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_SEMICOLON;    break;
+          case '=':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_EQUALS;       break;
+          case ',':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_COMMA;        break;
+          case '.':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_PERIOD;       break;
+          case '/':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_SLASH;        break;
+          case '`':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_BACK_QUOTE;   break;
+          case '{':
+          case '[':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_OPEN_BRACKET; break;
+          case '\\':            raptorKeyCode = nsIDOMKeyEvent::DOM_VK_BACK_SLASH;   break;
+          case '}':
+          case ']':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_CLOSE_BRACKET; break;
+          case '\'':
+          case '"':             raptorKeyCode = nsIDOMKeyEvent::DOM_VK_QUOTE;        break;
+
 					default:
 						
 						if (charCode >= '0' && charCode <= '9')		// numerals
@@ -992,12 +988,13 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent,
   //
   if (aMessage == NS_KEY_PRESS 
 		&& !aKeyEvent.isMeta 
-		&& aKeyEvent.keyCode != NS_VK_PAGE_UP && aKeyEvent.keyCode != NS_VK_PAGE_DOWN
+		&& aKeyEvent.keyCode != nsIDOMKeyEvent::DOM_VK_PAGE_UP 
+		&& aKeyEvent.keyCode != nsIDOMKeyEvent::DOM_VK_PAGE_DOWN
 		// also consider:  function keys and sole modifier keys
 	) 
 	{
     ::ObscureCursor();
-  } // if (message == NS_KEY_PRESS && !aKeyEvent.isMeta && aKeyEvent.keyCode != NS_VK_PAGE_UP && aKeyEvent.keyCode != NS_VK_PAGE_DOWN
+  }
 }
 
 
@@ -1044,7 +1041,7 @@ PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
 		case kScrollLockKeyCode:	isSpecial = PR_TRUE; break;
 		case kPrintScreenKeyCode:	isSpecial = PR_TRUE; break;
 
-		case kInsertKeyCode:        isSpecial = PR_TRUE; break;
+		case kHelpKeyCode:					isSpecial = PR_TRUE; break;
 		case kDeleteKeyCode:				isSpecial = PR_TRUE; break;
 		case kTabKeyCode:						isSpecial = PR_TRUE; break;
 		case kBackspaceKeyCode:     isSpecial = PR_TRUE; break;
