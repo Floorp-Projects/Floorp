@@ -1118,8 +1118,13 @@ nsString& nsString::Trim(const char* aTrimSet,
 
     //now rewrite your string without unwanted 
     //leading or trailing characters.
-  while (from <= end) {
-    *to++ = *from++;
+  if (from != to) {
+    while (from <= end) {
+      *to++ = *from++;
+    }
+  }
+  else {
+    to = ++end;
   }
 
   *to = '\0';
