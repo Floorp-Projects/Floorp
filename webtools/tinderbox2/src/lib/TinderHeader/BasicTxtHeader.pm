@@ -6,8 +6,8 @@
 # gettree_header(), ).
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/08/13 19:52:34 $ 
+# $Revision: 1.8 $ 
+# $Date: 2003/08/17 01:39:21 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/BasicTxtHeader.pm,v $ 
 # $Name:  $ 
@@ -31,10 +31,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
@@ -51,7 +49,7 @@ use lib '#tinder_libdir#';
 use FileStructure;
 use Persistence;
 
-$VERSION = ( qw $Revision: 1.7 $ )[1];
+$VERSION = ( qw $Revision: 1.8 $ )[1];
 
 
 sub new {

@@ -5,8 +5,8 @@
 # managment system this module will get the current tree state and set
 # the current tree state using the bonsai conventions. 
 
-# $Revision: 1.8 $ 
-# $Date: 2002/05/03 03:13:03 $ 
+# $Revision: 1.9 $ 
+# $Date: 2003/08/17 01:39:22 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -29,10 +29,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
@@ -49,7 +47,7 @@ use BonsaiData;
 
 
 
-$VERSION = ( qw $Revision: 1.8 $ )[1];
+$VERSION = ( qw $Revision: 1.9 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.

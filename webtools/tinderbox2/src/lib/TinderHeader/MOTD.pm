@@ -4,8 +4,8 @@
 # TinderHeader::MOTD - the tree specific message of the day, set by
 # the administrators.
 
-# $Revision: 1.4 $ 
-# $Date: 2001/07/20 19:05:18 $ 
+# $Revision: 1.5 $ 
+# $Date: 2003/08/17 01:39:22 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/MOTD.pm,v $ 
 # $Name:  $ 
@@ -30,10 +30,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
@@ -51,7 +49,7 @@ use TinderHeader::BasicTxtHeader;
 
 @ISA = qw(TinderHeader::BasicTxtHeader);
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.
