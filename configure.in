@@ -2095,7 +2095,9 @@ AC_TRY_RUN([ int main () {
 AC_MSG_RESULT("$result")
 if test "$result" = "yes"; then
     AC_DEFINE(HAVE_64BIT_OS)
+    HAVE_64BIT_OS=1
 fi
+AC_SUBST(HAVE_64BIT_OS)
 
 dnl Check for usable wchar_t (2 bytes, unsigned)
 dnl (we really don't need the unsignedness check anymore)
