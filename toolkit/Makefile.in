@@ -46,14 +46,8 @@ include $(DEPTH)/config/autoconf.mk
 DIRS	= content locale obsolete xre components mozapps
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-# XXXben this is temporary, until Thunderbird is converted to Pinstripe on MacOS X. For now, 
-#        continue to use Qute. 
-ifdef MOZ_THUNDERBIRD
-DIRS    += skin/win skin/mac/obsolete
-else
 # Use Pinstripe on MacOS X
 DIRS	+= skin/mac
-endif
 else
 # Use Qute on Windows and Linux
 DIRS    += skin/win 
