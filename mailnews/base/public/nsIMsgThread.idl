@@ -17,11 +17,14 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIMsgHdr.idl"
 #include "nsIEnumerator.idl"
 #include "MailNewsTypes.idl"
 
-interface nsIMsgHdr;
+interface nsIMsgDBHdr;
+%{C++
+#include "nsIMsgHdr.h"
+%}
+
 
 [object, uuid(df64af90-e2da-11d2-8d6c-00805f8a6617)]
 interface nsIMsgThread : nsISupports {

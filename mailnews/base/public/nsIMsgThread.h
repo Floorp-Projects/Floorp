@@ -8,13 +8,14 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsrootidl.h" /* interface nsrootidl */
-#include "nsIMsgHdr.h" /* interface nsIMsgHdr */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-class nsIMsgHdr; /* forward decl */
+class nsIMsgDBHdr; /* forward decl */
+#include "nsIMsgHdr.h"
+
 
 /* starting interface:    nsIMsgThread */
 
