@@ -292,7 +292,10 @@ function loadCalendarEventDialog()
       }
       setFieldValue( "server-field", gEvent.parent.server );
 
+      //for now you can't edit which file the event is in.
       setFieldValue( "server-field", "true", "disabled" );
+
+      setFieldValue( "server-field-label", "true", "disabled" );
    }
    
    //the next line seems to crash Mozilla
