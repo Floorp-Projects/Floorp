@@ -53,6 +53,7 @@ nsGfxRadioControlFrame::nsGfxRadioControlFrame()
 
 nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 {
+ mFormFrame->RemoveRadioControlFrame((nsIFormControlFrame *)this);
  NS_IF_RELEASE(mRadioButtonFaceStyle);
 }
 
