@@ -97,7 +97,9 @@ enum nsBorderStyle {
                   ///dialog box border + title area
                 eBorderStyle_dialog,
                   ///window border
-                eBorderStyle_window
+                eBorderStyle_window,
+                  ///child window 3D border hint
+                eBorderStyle_3DChildWindow
               }; 
 
 /**
