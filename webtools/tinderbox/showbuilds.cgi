@@ -342,8 +342,7 @@ sub print_table_header {
     my $bn = $build_name_names->[$ii];
     $bn =~ s/Clobber/Clbr/g;
     $bn =~ s/Depend/Dep/g;
-#    $bn = "<font face='Helvetica,Arial' size=-1>$bn</font>";
-    $bn = "<tt>$bn</tt>";
+    $bn = "<font face='Helvetica,Arial' size=-1>$bn</font>";
 
     my $last_status = &last_status($ii);
     if ($last_status eq 'busted') {
@@ -371,12 +370,6 @@ sub print_table_footer {
   print &open_showbuilds_href(maxdate=>"$nextdate", nocrap=>'1')
        ."Show next $hours hours</a>";
 
-  if (open(FOOTER, "<$data_dir/footer.html")) {
-    while (<FOOTER>) {
-      print $_;
-    }
-    close FOOTER;
-  }
   print "<p><a href='${rel_path}admintree.cgi?tree=$tree'>",
         "Administrate Tinderbox Trees</a><br>\n";
 }
