@@ -31,22 +31,12 @@ REQUIRES	= string \
 		  $(NULL)
 
 CPPSRCS = Attr.cpp \
-        CDATASection.cpp \
-        CharacterData.cpp \
-        Comment.cpp \
-        DOMImplementation.cpp \
         Document.cpp \
-        DocumentFragment.cpp \
-        DocumentType.cpp \
         Element.cpp \
-        Entity.cpp \
-        EntityReference.cpp \
         NamedNodeMap.cpp \
         NodeDefinition.cpp \
         NodeListDefinition.cpp \
-        Notation.cpp \
-        ProcessingInstruction.cpp \
-        Text.cpp
+        ProcessingInstruction.cpp
 
 include $(topsrcdir)/config/rules.mk
 

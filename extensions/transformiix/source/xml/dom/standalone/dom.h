@@ -50,17 +50,11 @@ typedef 0 NULL;
 #define kTxAttrIndexOffset 0x40000000;
 #define kTxChildIndexOffset 0x80000000;
 
-class NodeList;
 class NamedNodeMap;
 class Document;
 class Element;
 class Attr;
-class Text;
-class Comment;
-class CDATASection;
 class ProcessingInstruction;
-class EntityReference;
-class DocumentType;
 
 /*
  * NULL string for use by Element::getAttribute() for when the attribute
@@ -76,22 +70,6 @@ const String NULL_STRING;
 #define kNameSpaceID_XML      2
 // kNameSpaceID_XSLT is 6 for module, see nsINameSpaceManager.h
 #define kNameSpaceID_XSLT     3
-
-//
-//Definition and Implementation the DOMImplementation class
-//
-class DOMImplementation
-{
-  public:
-    DOMImplementation();
-    ~DOMImplementation();
-
-    MBool hasFeature(String feature, const String& version) const;
-
-  private:
-    String implFeature;
-    String implVersion;
-};
 
 //
 // Abstract Class defining the interface for a Node.  See NodeDefinition below
@@ -124,7 +102,6 @@ class Node : public TxObject
     virtual const String& getNodeValue() = 0;
     virtual unsigned short getNodeType() const = 0;
     virtual Node* getParentNode() const = 0;
-    virtual NodeList* getChildNodes() = 0;
     virtual Node* getFirstChild() const = 0;
     virtual Node* getLastChild() const = 0;
     virtual Node* getPreviousSibling() const = 0;
@@ -136,11 +113,7 @@ class Node : public TxObject
     virtual void setNodeValue(const String& nodeValue) = 0;
 
     //Node manipulation functions
-    virtual Node* insertBefore(Node* newChild, Node* refChild) = 0;
-    virtual Node* replaceChild(Node* newChild, Node* oldChild) = 0;
-    virtual Node* removeChild(Node* oldChild) = 0;
     virtual Node* appendChild(Node* newChild) = 0;
-    virtual Node* cloneNode(MBool deep, Node* dest) = 0;
 
     virtual MBool hasChildNodes() const = 0;
     
@@ -256,8 +229,6 @@ class AttrMap : public NamedNodeMap
 class NodeDefinition : public Node, public NodeList
 {
   public:
-    NodeDefinition(NodeType type, const String& name,
-                   const String& value, Document* owner);
     virtual ~NodeDefinition();      //Destructor, delete all children of node
 
     //Read functions
@@ -265,7 +236,6 @@ class NodeDefinition : public Node, public NodeList
     virtual const String& getNodeValue();
     unsigned short getNodeType() const;
     Node* getParentNode() const;
-    NodeList* getChildNodes();
     Node* getFirstChild() const;
     Node* getLastChild() const;
     Node* getPreviousSibling() const;
@@ -277,11 +247,7 @@ class NodeDefinition : public Node, public NodeList
     virtual void setNodeValue(const String& nodeValue);
 
     //Child node manipulation functions
-    virtual Node* insertBefore(Node* newChild, Node* refChild);
-    virtual Node* replaceChild(Node* newChild, Node* oldChild);
-    virtual Node* removeChild(Node* oldChild);
     virtual Node* appendChild(Node* newChild);
-    Node* cloneNode(MBool deep, Node* dest);
 
     MBool hasChildNodes() const;
     
@@ -302,17 +268,33 @@ class NodeDefinition : public Node, public NodeList
     Node* item(PRUint32 index);
     PRUint32 getLength();
 
+    //Only to be used from XMLParser
+    void appendData(PRUnichar* aData, int aLength)
+    {
+      nodeValue.Append(aData, aLength);
+    };
+
   protected:
+    friend class Document;
+    NodeDefinition(NodeType type, const String& name,
+                   const String& value, Document* owner);
+    NodeDefinition(NodeType aType, const String& aValue,
+                   Document* aOwner);
+
     //Name, value, and attributes for this node.  Available to derrived
     //classes, since those derrived classes have a better idea how to use them,
     //than the generic node does.
     String nodeName;
     String nodeValue;
 
+    NodeDefinition* implAppendChild(NodeDefinition* newChild);
+    NodeDefinition* implRemoveChild(NodeDefinition* oldChild);
+
     void DeleteChildren();
 
-    Node* implInsertBefore(NodeDefinition* newChild, NodeDefinition* refChild);
   private:
+    void Init(NodeType aType, const String& aValue, Document* aOwner);
+
     //Type of node this is
     NodeType nodeType;
 
@@ -351,11 +333,36 @@ class NodeDefinition : public Node, public NodeList
 class DocumentFragment : public NodeDefinition
 {
   public:
-    DocumentFragment(const String& name, const String& value, Document* owner);
+    Node* appendChild(Node* newChild)
+    {
+      switch (newChild->getNodeType())
+        {
+          case Node::ELEMENT_NODE :
+          case Node::TEXT_NODE :
+          case Node::COMMENT_NODE :
+          case Node::PROCESSING_INSTRUCTION_NODE :
+            {
+              // Remove the "newChild" if it is already a child of this node
+              NodeDefinition* pNewChild = (NodeDefinition*)newChild;
+              if (pNewChild->getParentNode() == this)
+                pNewChild = implRemoveChild(pNewChild);
 
-    //Override insertBefore to limit Elements to having only certain nodes as
-    //children
-    Node* insertBefore(Node* newChild, Node* refChild);
+              return implAppendChild(pNewChild);
+            }
+
+          default:
+            break;
+        }
+
+      return nsnull;
+    };
+
+  private:
+    friend class Document;
+    DocumentFragment(Document* aOwner) :
+      NodeDefinition(Node::DOCUMENT_FRAGMENT_NODE, NULL_STRING, aOwner)
+    {
+    };
 };
 
 //
@@ -364,37 +371,29 @@ class DocumentFragment : public NodeDefinition
 class Document : public NodeDefinition
 {
   public:
-    Document(DocumentType* theDoctype = NULL);
+    Document();
 
     Element* getDocumentElement();
-    DocumentType* getDoctype();
-    const DOMImplementation& getImplementation();
 
     //Factory functions for various node types
-    DocumentFragment* createDocumentFragment();
+    Node* createComment(const String& aData);
+    Node* createDocumentFragment();
+    ProcessingInstruction* createProcessingInstruction(const String& aTarget,
+                                                       const String& aData);
+    Node* createTextNode(const String& theData);
+
     Element* createElement(const String& tagName);
     Attr* createAttribute(const String& name);
-    Text* createTextNode(const String& theData);
-    Comment* createComment(const String& theData);
-    CDATASection* createCDATASection(const String& theData);
-    ProcessingInstruction* createProcessingInstruction(const String& target,
-                                                       const String& data);
-    EntityReference* createEntityReference(const String& name);
-
-    //Override functions to enforce the One Element rule for documents, as well
-    //as limit documents to certain types of nodes.
-    Node* insertBefore(Node* newChild, Node* refChild);
-    Node* replaceChild(Node* newChild, Node* oldChild);
-    Node* removeChild(Node* oldChild);
 
     // Introduced in DOM Level 2
     Element* createElementNS(const String& aNamespaceURI,
                              const String& aTagName);
-
     Attr* createAttributeNS(const String& aNamespaceURI,
                             const String& aName);
-
     Element* getElementById(const String aID);
+
+    // Node manipulation functions
+    Node* appendChild(Node* newChild);
 
     //Override to return documentBaseURI
     String getBaseURI();
@@ -404,8 +403,6 @@ class Document : public NodeDefinition
 
   private:
     Element* documentElement;
-    DocumentType* doctype;
-    DOMImplementation implementation;
 
     // This class is friend to be able to set the documentBaseURI
     friend class XMLParser;
@@ -418,28 +415,17 @@ class Document : public NodeDefinition
 class Element : public NodeDefinition
 {
   public:
-    Element(const String& tagName, Document* owner);
-    Element(const String& aNamespaceURI, const String& aTagName,
-            Document* aOwner);
     virtual ~Element();
 
-    //Override insertBefore to limit Elements to having only certain nodes as
-    //children
-    Node* insertBefore(Node* newChild, Node* refChild);
-
-    const String& getTagName();
     NamedNodeMap* getAttributes();
-    const String& getAttribute(const String& name);
     void setAttribute(const String& name, const String& value);
     void setAttributeNS(const String& aNamespaceURI,
                         const String& aName,
                         const String& aValue);
-    void removeAttribute(const String& name);
     Attr* getAttributeNode(const String& name);
-    Attr* setAttributeNode(Attr* newAttr);
-    Attr* removeAttributeNode(Attr* oldAttr);
-    NodeList* getElementsByTagName(const String& name);
-    void normalize();
+
+    // Node manipulation functions
+    Node* appendChild(Node* newChild);
 
     //txXPathNode functions override
     MBool getLocalName(txAtom** aLocalName);
@@ -448,6 +434,11 @@ class Element : public NodeDefinition
     MBool hasAttr(txAtom* aLocalName, PRInt32 aNSID);
 
   private:
+    friend class Document;
+    Element(const String& tagName, Document* owner);
+    Element(const String& aNamespaceURI, const String& aTagName,
+            Document* aOwner);
+
     AttrMap mAttributes;
     txAtom* mLocalName;
     PRInt32 mNamespaceID;
@@ -460,17 +451,9 @@ class Element : public NodeDefinition
 //
 class Attr : public NodeDefinition
 {
-    // These need to be friend to be able to update the ownerElement
-    friend class AttrMap;
-    friend class Element;
   public:
-    Attr(const String& name, Document* owner);
-    Attr(const String& aNamespaceURI, const String& aName,
-         Document* aOwner);
     virtual ~Attr();
 
-    const String& getName() const;
-    MBool getSpecified() const;
     const String& getValue();
     void setValue(const String& newValue);
 
@@ -479,9 +462,8 @@ class Attr : public NodeDefinition
     void setNodeValue(const String& nodeValue);
     const String& getNodeValue();
 
-    //Override insertBefore to limit Attr to having only certain nodes as
-    //children
-    Node* insertBefore(Node* newChild, Node* refChild);
+    // Node manipulation functions
+    Node* appendChild(Node* newChild);
 
     //txXPathNode functions override
     MBool getLocalName(txAtom** aLocalName);
@@ -489,91 +471,19 @@ class Attr : public NodeDefinition
     Node* getXPathParent();
 
   private:
+    friend class Document;
+    Attr(const String& name, Document* owner);
+    Attr(const String& aNamespaceURI, const String& aName,
+         Document* aOwner);
+
+    // These need to be friend to be able to update the ownerElement
+    friend class AttrMap;
+    friend class Element;
+
     Element* ownerElement;
 
-    MBool specified;
     txAtom* mLocalName;
     PRInt32 mNamespaceID;
-};
-
-//
-//Definition and Implementation of CharacterData.  This class mearly provides
-//the interface and some default implementation.  It is not intended to be
-//instantiated by users of the DOM
-//
-class CharacterData : public NodeDefinition
-{
-  public:
-    const String& getData() const;
-    void setData(const String& source);
-    PRUint32 getLength() const;
-
-    String& substringData(PRUint32 offset, PRUint32 count, String& dest);
-    void appendData(const String& arg);
-    void insertData(PRUint32 offset, const String& arg);
-    void deleteData(PRUint32 offset, PRUint32 count);
-    void replaceData(PRUint32 offset, PRUint32 count, const String& arg);
-
-  protected:
-    CharacterData(NodeType type, const String& name,
-                   const String& value, Document* owner);
-};
-
-//
-//Definition and Implementation of a Text node.  The bulk of the functionality
-//comes from CharacterData and NodeDefinition.
-//
-class Text : public CharacterData
-{
-  public:
-    Text(const String& theData, Document* owner);
-
-    Text* splitText(PRUint32 offset);
-
-    //Override "child manipulation" function since Text Nodes can not have
-    //any children.
-    Node* insertBefore(Node* newChild, Node* refChild);
-    Node* replaceChild(Node* newChild, Node* oldChild);
-    Node* removeChild(Node* oldChild);
-    Node* appendChild(Node* newChild);
-
-  protected:
-    Text(NodeType type, const String& name, const String& value,
-         Document* owner);
-};
-
-//
-//Definition and Implementation of a Comment node.  All of the functionality is
-//inherrited from CharacterData and NodeDefinition.
-//
-class Comment : public CharacterData
-{
-  public:
-    Comment(const String& theData, Document* owner);
-
-    //Override "child manipulation" function since Comment Nodes can not have
-    //any children.
-    Node* insertBefore(Node* newChild, Node* refChild);
-    Node* replaceChild(Node* newChild, Node* oldChild);
-    Node* removeChild(Node* oldChild);
-    Node* appendChild(Node* newChild);
-};
-
-//
-//Definition and Implementation of a CDATASection node.  All of the
-//functionality is inherrited from Text, CharacterData, and NodeDefinition
-//
-class CDATASection : public Text
-{
-  public:
-    CDATASection(const String& theData, Document* owner);
-
-    //Override "child manipulation" function since CDATASection Nodes can not
-    //have any children.
-    Node* insertBefore(Node* newChild, Node* refChild);
-    Node* replaceChild(Node* newChild, Node* oldChild);
-    Node* removeChild(Node* oldChild);
-    Node* appendChild(Node* newChild);
 };
 
 //
@@ -587,113 +497,17 @@ class CDATASection : public Text
 class ProcessingInstruction : public NodeDefinition
 {
   public:
-    ProcessingInstruction(const String& theTarget, const String& theData,
-                          Document* owner);
     ~ProcessingInstruction();
-
-    const String& getTarget() const;
-    const String& getData() const;
-
-    void setData(const String& theData);
-
-    //Override "child manipulation" function since ProcessingInstruction Nodes
-    //can not have any children.
-    Node* insertBefore(Node* newChild, Node* refChild);
-    Node* replaceChild(Node* newChild, Node* oldChild);
-    Node* removeChild(Node* oldChild);
-    Node* appendChild(Node* newChild);
 
     //txXPathNode functions override
     MBool getLocalName(txAtom** aLocalName);
 
   private:
+    friend class Document;
+    ProcessingInstruction(const String& theTarget, const String& theData,
+                          Document* owner);
+
     txAtom* mLocalName;
-};
-
-//
-//Definition and Implementation of a Notation.  Most functionality
-//is inherrited from NodeDefinition.
-//
-class Notation : public NodeDefinition
-{
-  public:
-    Notation(const String& name, const String& pubID,
-             const String& sysID);
-
-    const String& getPublicId() const;
-    const String& getSystemId() const;
-
-    //Override "child manipulation" function since Notation Nodes
-    //can not have any children.
-    Node* insertBefore(Node* newChild, Node* refChild);
-    Node* replaceChild(Node* newChild, Node* oldChild);
-    Node* removeChild(Node* oldChild);
-    Node* appendChild(Node* newChild);
-
-  private:
-    String publicId;
-    String systemId;
-};
-
-//
-//Definition and Implementation of an Entity
-//
-class Entity : public NodeDefinition
-{
-  public:
-    Entity(const String& name, const String& pubID,
-           const String& sysID, const String& notName);
-
-    const String& getPublicId() const;
-    const String& getSystemId() const;
-    const String& getNotationName() const;
-
-    //Override insertBefore to limit Entity to having only certain nodes as
-    //children
-    Node* insertBefore(Node* newChild, Node* refChild);
-
-  private:
-    String publicId;
-    String systemId;
-    String notationName;
-};
-
-//
-//Definition and Implementation of an EntityReference
-//
-class EntityReference : public NodeDefinition
-{
-  public:
-    EntityReference(const String& name, Document* owner);
-
-    //Override insertBefore to limit EntityReference to having only certain
-    //nodes as children
-    Node* insertBefore(Node* newChild, Node* refChild);
-};
-
-//
-//Definition and Implementation of the DocumentType
-//
-class DocumentType : public NodeDefinition
-{
-  public:
-    DocumentType(const String& name, NamedNodeMap* theEntities,
-                 NamedNodeMap* theNotations);
-    ~DocumentType();
-
-    NamedNodeMap* getEntities();
-    NamedNodeMap* getNotations();
-
-    //Override "child manipulation" function since Notation Nodes
-    //can not have any children.
-    Node* insertBefore(Node* newChild, Node* refChild);
-    Node* replaceChild(Node* newChild, Node* oldChild);
-    Node* removeChild(Node* oldChild);
-    Node* appendChild(Node* newChild);
-
-  private:
-    NamedNodeMap* entities;
-    NamedNodeMap* notations;
 };
 
 class txNamespaceManager

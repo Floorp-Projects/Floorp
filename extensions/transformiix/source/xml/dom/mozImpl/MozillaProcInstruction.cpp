@@ -53,32 +53,6 @@ ProcessingInstruction::~ProcessingInstruction()
 }
 
 /**
- * Call nsIDOMProcessingInstruction::GetTarget to retrieve the target of the
- * processing instruction.
- *
- * @return the target of the processing instruction
- */
-const String& ProcessingInstruction::getTarget()
-{
-    NSI_FROM_TX(ProcessingInstruction);
-    nsProcessingInstruction->GetTarget(mTarget);
-    return mTarget;
-}
-
-/**
- * Call nsIDOMProcessingInstruction::GetData to retrieve the data of the
- * processing instruction.
- *
- * @return the data of the processing instruction
- */
-const String& ProcessingInstruction::getData()
-{
-    NSI_FROM_TX(ProcessingInstruction);
-    nsProcessingInstruction->GetData(mData);
-    return mData;
-}
-
-/**
  * Returns the local name atomized
  *
  * @return the node's localname atom

@@ -67,13 +67,9 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/base/txURIUtils.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaAttr.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaDocument.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaDocumentType.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaElement.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaEntity.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaNamedNodeMap.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaNode.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaNodeList.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaNotation.$(OBJ_SUFFIX) \
   ../source/xml/dom/mozImpl/MozillaProcInstruction.$(OBJ_SUFFIX) \
   ../source/xpath/AdditiveExpr.$(OBJ_SUFFIX) \
   ../source/xpath/AttributeValueTemplate.$(OBJ_SUFFIX) \

@@ -38,13 +38,9 @@ REQUIRES	= string \
 
 CPPSRCS = MozillaAttr.cpp \
         MozillaDocument.cpp \
-        MozillaDocumentType.cpp \
         MozillaElement.cpp \
-        MozillaEntity.cpp \
         MozillaNamedNodeMap.cpp \
         MozillaNode.cpp \
-        MozillaNodeList.cpp \
-        MozillaNotation.cpp \
         MozillaProcInstruction.cpp
 
 include $(topsrcdir)/config/rules.mk

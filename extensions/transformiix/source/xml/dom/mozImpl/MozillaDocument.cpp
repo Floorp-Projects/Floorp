@@ -35,10 +35,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEntity.h"
-#include "nsIDOMNotation.h"
 #include "nsIDOMProcessingInstruction.h"
-#include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 
@@ -267,27 +264,11 @@ Element* Document::getDocumentElement()
 }
 
 /**
- * Call nsIDOMDocument::GetDoctype to get the document's DocumentType.
- *
- * @return the DocumentType
- */
-DocumentType* Document::getDoctype()
-{
-    NSI_FROM_TX(Document);
-    nsCOMPtr<nsIDOMDocumentType> docType;
-    nsDocument->GetDoctype(getter_AddRefs(docType));
-    if (!docType) {
-        return nsnull;
-    }
-    return createDocumentType(docType);
-}
-
-/**
  * Call nsIDOMDocument::CreateDocumentFragment to create a DocumentFragment.
  *
  * @return the DocumentFragment
  */
-DocumentFragment* Document::createDocumentFragment()
+Node* Document::createDocumentFragment()
 {
     NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMDocumentFragment> fragment;
@@ -415,7 +396,7 @@ Attr* Document::createAttribute(nsIDOMAttr* aAttr)
  *
  * @return the Text node
  */
-Text* Document::createTextNode(const String& aData)
+Node* Document::createTextNode(const String& aData)
 {
     NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMText> text;
@@ -434,7 +415,7 @@ Text* Document::createTextNode(const String& aData)
  *
  * @return the Comment node
  */
-Comment* Document::createComment(const String& aData)
+Node* Document::createComment(const String& aData)
 {
     NSI_FROM_TX(Document);
     nsCOMPtr<nsIDOMComment> comment;
@@ -479,15 +460,6 @@ ProcessingInstruction* Document::createProcessingInstruction(
 IMPL_CREATE_WRAPPER(ProcessingInstruction)
 
 /**
- * Create a wrapper for a nsIDOMEntity, reuses an existing wrapper if possible.
- *
- * @param aEntity the nsIDOMEntity you want to wrap
- *
- * @return the Entity
- */
-IMPL_CREATE_WRAPPER(Entity)
-
-/**
  * Create a wrapper for a nsIDOMNode, reuses an existing wrapper if possible.
  *
  * @param aNode the nsIDOMNode you want to wrap
@@ -495,36 +467,6 @@ IMPL_CREATE_WRAPPER(Entity)
  * @return the Node
  */
 IMPL_CREATE_WRAPPER(Node)
-
-/**
- * Create a wrapper for a nsIDOMNotation, reuses an existing wrapper if
- * possible.
- *
- * @param aNotation the nsIDOMNotation you want to wrap
- *
- * @return the Notation
- */
-IMPL_CREATE_WRAPPER(Notation)
-
-/**
- * Create a wrapper for a nsIDOMDocumentType, reuses an existing wrapper if
- * possible.
- *
- * @param aDoctype the nsIDOMDocumentType you want to wrap
- *
- * @return the DocumentType
- */
-IMPL_CREATE_WRAPPER(DocumentType)
-
-/**
- * Create a wrapper for a nsIDOMNodeList, reuses an existing wrapper if
- * possible.
- *
- * @param aList the nsIDOMNodeList you want to wrap
- *
- * @return the NodeList
- */
-IMPL_CREATE_WRAPPER(NodeList)
 
 /**
  * Create a wrapper for a nsIDOMNamedNodeMap, reuses an existing wrapper if
@@ -577,7 +519,6 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
             Element* txElement = createElement(element);
             NS_RELEASE(element);
             return txElement;
-            break;
         }
         case nsIDOMNode::ATTRIBUTE_NODE:
         {
@@ -586,25 +527,17 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
             Attr* txAttr = createAttribute(attr);
             NS_RELEASE(attr);
             return txAttr;
-            break;
         }
         case nsIDOMNode::CDATA_SECTION_NODE:
         case nsIDOMNode::COMMENT_NODE:
         case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+        case nsIDOMNode::DOCUMENT_TYPE_NODE:
         case nsIDOMNode::ENTITY_REFERENCE_NODE:
+        case nsIDOMNode::ENTITY_NODE:
+        case nsIDOMNode::NOTATION_NODE:
         case nsIDOMNode::TEXT_NODE:
         {
             return createNode(aNode);
-            break;
-        }
-        case nsIDOMNode::ENTITY_NODE:
-        {
-            nsIDOMEntity* entity;
-            CallQueryInterface(aNode, &entity);
-            Entity* txEntity = createEntity(entity);
-            NS_RELEASE(entity);
-            return txEntity;
-            break;
         }
         case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
         {
@@ -613,7 +546,6 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
             ProcessingInstruction* txPi = createProcessingInstruction(pi);
             NS_RELEASE(pi);
             return txPi;
-            break;
         }
         case nsIDOMNode::DOCUMENT_NODE:
         {
@@ -622,24 +554,6 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
             }
             NS_ASSERTION(0, "We don't support creating new documents.");
             return nsnull;
-            break;
-        }
-        case nsIDOMNode::DOCUMENT_TYPE_NODE:
-        {
-            nsIDOMDocumentType* docType;
-            CallQueryInterface(aNode, &docType);
-            DocumentType* txDocType = createDocumentType(docType);
-            NS_RELEASE(docType);
-            return txDocType;
-            break;
-        }
-        case nsIDOMNode::NOTATION_NODE:
-        {
-            nsIDOMNotation* notation;
-            CallQueryInterface(aNode, &notation);
-            Notation* txNotation = createNotation(notation);
-            NS_RELEASE(notation);
-            return txNotation;
         }
         default:
         {
