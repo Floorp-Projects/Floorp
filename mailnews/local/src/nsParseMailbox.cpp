@@ -652,7 +652,7 @@ int nsParseMailMessageState::StartNewEnvelope(const char *line, PRUint32 lineLen
 int nsParseMailMessageState::ParseHeaders ()
 {
   char *buf = m_headers.GetBuffer();
-  char *buf_end = buf + m_headers.GetSize();
+  char *buf_end = buf + m_headers.GetBufferPos();
   while (buf < buf_end)
 	{
 	  char *colon = PL_strchr (buf, ':');
