@@ -49,11 +49,15 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  xpconnect \
 		  pipnss \
+		  content \
+		  htmlparser \
+		  layout \
 !if defined(BUILD_SMIME)
 		  msgsmime	\
 !endif
 		  imglib2 \
 		  $(NULL)
+#content, htmlparser and layout are for HTML*() in mimemoz2.cpp.
 
 include <$(DEPTH)\config\config.mak>
 
@@ -127,6 +131,8 @@ OBJS=											\
 		.\$(OBJDIR)\mimetenr.obj			\
 		.\$(OBJDIR)\mimetext.obj			\
 		.\$(OBJDIR)\mimethtm.obj			\
+		.\$(OBJDIR)\mimethpl.obj			\
+		.\$(OBJDIR)\mimethsa.obj			\
 		.\$(OBJDIR)\mimetpla.obj			\
 		.\$(OBJDIR)\mimetpfl.obj			\
 		.\$(OBJDIR)\mimetric.obj			\

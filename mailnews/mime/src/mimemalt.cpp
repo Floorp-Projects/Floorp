@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Ben Bucksch <mozilla@bucksch.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -41,6 +42,10 @@
 #include "prlog.h"
 #include "nsMimeTypes.h"
 #include "nsMimeStringResources.h"
+#include "nsIPref.h"
+#include "mimemoz2.h" // for prefs
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define MIME_SUPERCLASS mimeMultipartClass
 MimeDefClass(MimeMultipartAlternative, MimeMultipartAlternativeClass,
@@ -226,6 +231,29 @@ MimeMultipartAlternative_display_part_p(MimeObject *self,
    that, without descending into it to determine if any of its sub-parts
    are themselves unknown.
    */
+
+  // prefer_plaintext pref
+  nsIPref *pref = GetPrefServiceManager(self->options); 
+  PRBool prefer_plaintext = PR_FALSE;
+  if (pref)
+    (void)pref->GetBoolPref("mailnews.display.prefer_plaintext",
+                            &prefer_plaintext);
+  if (prefer_plaintext
+      && self->options->format_out != nsMimeOutput::nsMimeMessageSaveAs
+      && (!nsCRT::strncasecmp(ct, "text/html", 9) ||
+          !nsCRT::strncasecmp(ct, "text/enriched", 13) ||
+          !nsCRT::strncasecmp(ct, "text/richtext", 13))
+     )
+    // if the user prefers plaintext and this is the "rich" (e.g. HTML) part...
+  {
+#if DEBUG
+    printf ("Ignoring %s alternative\n", ct);
+#endif
+    return PR_FALSE;
+  }
+#if DEBUG
+  printf ("Considering %s alternative\n", ct);
+#endif
 
   MimeObjectClass *clazz = mime_find_class (ct, sub_hdrs, self->options, PR_TRUE);
   PRBool result = (clazz

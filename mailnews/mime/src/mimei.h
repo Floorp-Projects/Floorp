@@ -57,57 +57,68 @@
 
      MimeObject (abstract)
       |
-      |--- MimeContainer (abstract)
+      +--- MimeContainer (abstract)
       |     |
-      |     |--- MimeMultipart (abstract)
+      |     +--- MimeMultipart (abstract)
       |     |     |
-      |     |     |--- MimeMultipartMixed
+      |     |     +--- MimeMultipartMixed
       |     |     |
-      |     |     |--- MimeMultipartDigest
+      |     |     +--- MimeMultipartDigest
       |     |     |
-      |     |     |--- MimeMultipartParallel
+      |     |     +--- MimeMultipartParallel
       |     |     |
-      |     |     |--- MimeMultipartAlternative
+      |     |     +--- MimeMultipartAlternative
       |     |     |
-      |     |     |--- MimeMultipartRelated
+      |     |     +--- MimeMultipartRelated
       |     |     |
-      |     |     |--- MimeMultipartAppleDouble
+      |     |     +--- MimeMultipartAppleDouble
       |     |     |
-      |     |     |--- MimeSunAttachment
+      |     |     +--- MimeSunAttachment
       |     |     |
-      |     |     |--- MimeMultipartSigned (abstract)
+      |     |     \--- MimeMultipartSigned (abstract)
       |     |          |
-      |     |          |--- MimeMultipartSigned
+      |     |          \--- MimeMultipartSignedCMS
       |     |
-      |     |--- MimeXlateed (abstract)
+      |     +--- MimeEncrypted (abstract)
       |     |     |
-      |     |     |--- MimeXlateed
+      |     |     \--- MimeEncryptedPKCS7
       |     |
-      |     |--- MimeMessage
+      |     +--- MimeXlateed (abstract)
+      |     |     |
+      |     |     \--- MimeXlateed
       |     |
-      |     |--- MimeUntypedText
+      |     +--- MimeMessage
+      |     |
+      |     \--- MimeUntypedText
       |
-      |--- MimeLeaf (abstract)
+      +--- MimeLeaf (abstract)
       |     |
-      |     |--- MimeInlineText (abstract)
+      |     +--- MimeInlineText (abstract)
       |     |     |
-      |     |     |--- MimeInlineTextPlain
-      |     |     |
-      |     |     |--- MimeInlineTextHTML
-      |     |     |
-      |     |     |--- MimeInlineTextRichtext
+      |     |     +--- MimeInlineTextPlain
       |     |     |     |
-      |     |     |     |--- MimeInlineTextEnriched
-      |     |	    |
-      |     |	    |--- MimeInlineTextVCard
-      |     |	    |
-      |     |	    |--- MimeInlineTextCalendar
+      |     |     |     \--- MimeInlineTextHTMLAsPlaintext
+      |     |     |
+      |     |     +--- MimeInlineTextPlainFlowed
+      |     |     |
+      |     |     +--- MimeInlineTextHTML
+      |     |     |     |
+      |     |     |     \--- MimeInlineTextHTMLSanitized
+      |     |     |
+      |     |     +--- MimeInlineTextRichtext
+      |     |     |     |
+      |     |     |     \--- MimeInlineTextEnriched
+      |     |	  |
+      |     |	  +--- MimeInlineTextVCard
+      |     |     |
+      |     |	  \--- MimeInlineTextCalendar
       |     |
-      |     |--- MimeInlineImage
+      |     +--- MimeInlineImage
       |     |
-      |     |--- MimeExternalObject
+      |     \--- MimeExternalObject
       |
-      |--- MimeExternalBody
+      \--- MimeExternalBody
+
 
   =========================================================================
   The definition of these classes is somewhat idiosyncratic, since I defined
@@ -213,6 +224,10 @@
         parentClass.whatnot.object.finalize(object);             //  (works...)
         object->clazz->superclass->finalize(object);             //  WRONG!!
       }
+
+  If you write a libmime content type handler, libmime might create several
+  instances of your class at once and call e.g. the same finalize code for
+  3 different objects in a row.
  */
 
 #include "mimehdrs.h"

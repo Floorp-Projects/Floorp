@@ -180,38 +180,35 @@ MimeInlineTextHTML_parse_line (char *line, PRInt32 length, MimeObject *obj)
         (cp = PL_strncasestr(cp, "CHARSET=", length - (int)(cp - line))) 
         ) 
     {
-      if (cp)
+      char* cp1 = cp + 8;  //8 for the length of "CHARSET="
+      char* cp2 = PL_strnpbrk(cp1, " \"\'", length - (int)(cp1 - line));
+      if (cp2)
       {
-        char* cp1 = cp + 8;  //8 for the length of "CHARSET="
-        char* cp2 = PL_strnpbrk(cp1, " \"\'", length - (int)(cp1 - line));
-        if (cp2)
-        {
-          char* charset = PL_strndup(cp1, (int)(cp2 - cp1));
+        char* charset = PL_strndup(cp1, (int)(cp2 - cp1));
  
-          // Fix bug 101434, in this case since this parsing is a char* 
-          // operation, a real UTF-16 or UTF-32 document won't be parse 
-          // correctly, if it got parse, it cannot be UTF-16 nor UTF-32
-          // there fore, we ignore them if somehow we got that value
-          // 6 == strlen("UTF-16") or strlen("UTF-32"), this will cover
-          // UTF-16, UTF-16BE, UTF-16LE, UTF-32, UTF-32BE, UTF-32LE
-          if ((charset != nsnull) &&
-              nsCRT::strncasecmp(charset, "UTF-16", 6) &&
-              nsCRT::strncasecmp(charset, "UTF-32", 6))
-          { 
-            textHTML->charset = charset; 
+        // Fix bug 101434, in this case since this parsing is a char* 
+        // operation, a real UTF-16 or UTF-32 document won't be parse 
+        // correctly, if it got parse, it cannot be UTF-16 nor UTF-32
+        // there fore, we ignore them if somehow we got that value
+        // 6 == strlen("UTF-16") or strlen("UTF-32"), this will cover
+        // UTF-16, UTF-16BE, UTF-16LE, UTF-32, UTF-32BE, UTF-32LE
+        if ((charset != nsnull) &&
+            nsCRT::strncasecmp(charset, "UTF-16", 6) &&
+            nsCRT::strncasecmp(charset, "UTF-32", 6))
+        {
+          textHTML->charset = charset; 
 
-            // write out the data without the charset part...
-            if (textHTML->charset)
-            {
-              int err = MimeObject_write(obj, line, cp - line, PR_TRUE);
-              if (err == 0)
-                err = MimeObject_write(obj, cp2, length - (int)(cp2 - line), PR_TRUE);
+          // write out the data without the charset part...
+          if (textHTML->charset)
+          {
+            int err = MimeObject_write(obj, line, cp - line, PR_TRUE);
+            if (err == 0)
+              err = MimeObject_write(obj, cp2, length - (int)(cp2 - line), PR_TRUE);
 
-              return err;
-            }
+            return err;
           }
-          PR_FREEIF(charset);
         }
+        PR_FREEIF(charset);
       }
     }
   }
@@ -220,11 +217,6 @@ MimeInlineTextHTML_parse_line (char *line, PRInt32 length, MimeObject *obj)
   return MimeObject_write(obj, line, length, PR_TRUE);
 }
 
-/* This method is the same as that of MimeInlineTextRichtext (and thus
-   MimeInlineTextEnriched); maybe that means that MimeInlineTextHTML
-   should share a common parent with them which is not also shared by
-   MimeInlineTextPlain?
- */
 static int
 MimeInlineTextHTML_parse_eof (MimeObject *obj, PRBool abort_p)
 {

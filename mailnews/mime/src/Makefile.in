@@ -62,7 +62,11 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  pipnss \
 		  imglib2 \
+		  content \
+		  htmlparser \
+		  layout \
 		  $(NULL)
+#content, htmlparser and layout are for HTML*() in mimemoz2.cpp.
 
 ifdef BUILD_SMIME
 REQUIRES += \
@@ -96,6 +100,8 @@ CPPSRCS		= \
 		mimetenr.cpp \
 		mimetext.cpp \
 		mimethtm.cpp \
+		mimethpl.cpp \
+		mimethsa.cpp \
 		mimetpla.cpp \
 		mimetpfl.cpp \
 		mimetric.cpp \

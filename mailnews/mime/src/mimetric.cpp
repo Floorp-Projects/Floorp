@@ -351,10 +351,6 @@ MimeInlineTextRichtext_parse_begin (MimeObject *obj)
 }
 
 
-/* This method is largely the same as that of MimeInlineTextHTML; maybe that
-   means that MimeInlineTextRichtext and MimeInlineTextEnriched should share
-   a common parent with it which is not also shared by MimeInlineTextPlain?
- */
 static int
 MimeInlineTextRichtext_parse_eof (MimeObject *obj, PRBool abort_p)
 {

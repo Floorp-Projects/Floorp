@@ -194,6 +194,13 @@ extern "C" nsIPref          *GetPrefServiceManager(MimeDisplayOptions *opt);
 // Get the text converter...
 mozITXTToHTMLConv           *GetTextConverter(MimeDisplayOptions *opt);
 
+nsresult
+HTML2Plaintext(const nsString& inString, nsString& outString,
+               PRUint32 flags, PRUint32 wrapCol);
+nsresult
+HTMLSanitize(const nsString& inString, nsString& outString,
+             PRUint32 flags, const nsAString& allowedTags);
+
 /* This is the next generation string retrieval call */
 extern "C" char             *MimeGetStringByID(PRInt32 stringID);
 

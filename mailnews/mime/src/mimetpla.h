@@ -35,14 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* The MimeInlineTextPlain class implements the text/plain MIME content type,
+   and is also used for all otherwise-unknown text/ subtypes.
+ */
+
 #ifndef _MIMETPLA_H_
 #define _MIMETPLA_H_
 
 #include "mimetext.h"
-
-/* The MimeInlineTextHTML class implements the text/plain MIME content type,
-   and is also used for all otherwise-unknown text/ subtypes.
- */
 
 typedef struct MimeInlineTextPlainClass MimeInlineTextPlainClass;
 typedef struct MimeInlineTextPlain      MimeInlineTextPlain;

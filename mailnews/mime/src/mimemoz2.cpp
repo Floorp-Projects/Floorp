@@ -86,10 +86,26 @@
 #include "nsITransport.h"
 #include "mimeebod.h"
 #include "mimeeobj.h"
+// <for functions="HTML2Plaintext,HTMLSantinize">
+#include "nsXPCOM.h"
+#include "nsParserCIID.h"
+#include "nsIParser.h"
+#include "nsIHTMLContentSink.h"
+#include "nsIContentSerializer.h"
+#include "nsLayoutCID.h"
+#include "nsIComponentManager.h"
+#include "nsReadableUtils.h"
+#include "nsIHTMLToTextSink.h"
+#include "mozISanitizingSerializer.h"
+// </for>
 
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+// <for functions="HTML2Plaintext,HTMLSantinize">
+static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
+static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
+// </for>
 
 #ifdef HAVE_MIME_DATA_SLOT
 #define LOCK_LAST_CACHED_MESSAGE
@@ -1209,27 +1225,6 @@ mime_image_write_buffer(char *buf, PRInt32 size, void *image_closure)
   return size;
 }
 
-// 
-// Utility for finding HTML part.
-//
-static MimeObject*
-mime_find_text_html_part_1(MimeObject* obj)
-{
-  if (mime_subclass_p(obj->clazz,
-                      (MimeObjectClass*) &mimeInlineTextHTMLClass)) {
-    return obj;
-  }
-  if (mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeContainerClass)) {
-    MimeContainer* cobj = (MimeContainer*) obj;
-    PRInt32 i;
-    for (i=0 ; i<cobj->nchildren ; i++) {
-      MimeObject* result = mime_find_text_html_part_1(cobj->children[i]);
-      if (result) return result;
-    }
-  }
-  return NULL;
-}
-
 MimeObject*
 mime_get_main_object(MimeObject* obj)
 {
@@ -2104,4 +2099,132 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed,  PRInt32 *fontPixel
   }
 
   return NS_OK;
+}
+
+/* This function syncronously converts an HTML document (as string)
+   to plaintext (as string) using the Gecko converter.
+
+   flags: see nsIDocumentEncoder.h
+*/
+// TODO: |printf|s?
+/* <copy from="mozilla/htmlparser/test/outsinks/Convert.cpp"
+         author="akk"
+         adapted-by="Ben Bucksch"
+         comment=" 'This code would not have been possible without akk.' ;-P.
+                   No, really. "
+   > */
+nsresult
+HTML2Plaintext(const nsString& inString, nsString& outString,
+               PRUint32 flags, PRUint32 wrapCol)
+{
+  nsresult rv = NS_OK;
+
+#if DEBUG_BenB
+  printf("Converting HTML to plaintext\n");
+  char* charstar = ToNewUTF8String(inString);
+  printf("HTML source is:\n--------------------\n%s--------------------\n",
+         charstar);
+  delete[] charstar;
+#endif
+
+  // Create a parser
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID);
+  NS_ENSURE_TRUE(parser, NS_ERROR_FAILURE);
+
+  // Create the appropriate output sink
+  nsCOMPtr<nsIContentSink> sink =
+                               do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID);
+  NS_ENSURE_TRUE(sink, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
+  NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
+
+  textSink->Initialize(&outString, flags, wrapCol);
+
+  parser->SetContentSink(sink);
+  nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID);
+  NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+
+  parser->RegisterDTD(dtd);
+
+  rv = parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"),
+                     PR_FALSE, PR_TRUE);
+
+  // Aah! How can NS_ERROR and NS_ABORT_IF_FALSE be no-ops in release builds???
+  if (NS_FAILED(rv))
+  {
+    NS_ERROR("Parse() failed!");
+    return rv;
+  }
+
+#if DEBUG_BenB
+  charstar = ToNewUTF8String(outString);
+  printf("Plaintext is:\n--------------------\n%s--------------------\n",
+         charstar);
+  delete[] charstar;
+#endif
+
+  return rv;
+}
+// </copy>
+
+
+
+/* This function syncronously sanitizes an HTML document (string->string)
+   using the Gecko ContentSink mozISanitizingHTMLSerializer.
+
+   flags: currently unused
+   allowedTags: see mozSanitizingHTMLSerializer::ParsePrefs()
+*/
+// copied from HTML2Plaintext above
+nsresult
+HTMLSanitize(const nsString& inString, nsString& outString,
+             PRUint32 flags, const nsAString& allowedTags)
+{
+  nsresult rv = NS_OK;
+
+#if DEBUG_BenB
+  printf("Sanitizing HTML\n");
+  char* charstar = ToNewUTF8String(inString);
+  printf("Original HTML is:\n--------------------\n%s--------------------\n",
+         charstar);
+  delete[] charstar;
+#endif
+
+  // Create a parser
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID);
+  NS_ENSURE_TRUE(parser, NS_ERROR_FAILURE);
+
+  // Create the appropriate output sink
+  nsCOMPtr<nsIContentSink> sink =
+                    do_CreateInstance(MOZ_SANITIZINGHTMLSERIALIZER_CONTRACTID);
+  NS_ENSURE_TRUE(sink, NS_ERROR_FAILURE);
+
+  nsCOMPtr<mozISanitizingHTMLSerializer> sanSink(do_QueryInterface(sink));
+  NS_ENSURE_TRUE(sanSink, NS_ERROR_FAILURE);
+
+  sanSink->Initialize(&outString, flags, allowedTags);
+
+  parser->SetContentSink(sink);
+  nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID);
+  NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+
+  parser->RegisterDTD(dtd);
+
+  rv = parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"),
+                     PR_FALSE, PR_TRUE);
+  if (NS_FAILED(rv))
+  {
+    NS_ERROR("Parse() failed!");
+    return rv;
+  }
+
+#if DEBUG_BenB
+  charstar = ToNewUTF8String(outString);
+  printf("Sanitized HTML is:\n--------------------\n%s--------------------\n",
+         charstar);
+  delete[] charstar;
+#endif
+
+  return rv;
 }
