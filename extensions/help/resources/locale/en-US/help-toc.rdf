@@ -475,10 +475,10 @@
         <rdf:li> <rdf:Description ID="mail_prefs_notifications" nc:name="Notifications" nc:link="chrome://help/locale/mail_help.xhtml#notifications"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_messages" nc:name="Composition" nc:link="chrome://help/locale/mail_help.xhtml#composition"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail_prefs_formatting" nc:name="Send Format" nc:link="chrome://help/locale/mail_help.xhtml#send_format"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_addressing" nc:name="Addressing" nc:link="chrome://help/locale/mail_help.xhtml#addressing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_addressing" nc:name="Addressing" nc:link="chrome://help/locale/mail_help.xhtml#addressing_preferences"/> </rdf:li>
         <rdf:li> <rdf:Description ID="mail-prefs-labels" nc:name="Labels" nc:link="chrome://help/locale/mail_help.xhtml#labels"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-prefs-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.xhtml#return_receipts"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_offline" nc:name="Offline and Disk Space" nc:link="chrome://help/locale/mail_help.xhtml#disk_space_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-prefs-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.xhtml#return_receipts_preferences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_offline" nc:name="Offline and Disk Space" nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_preferences"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
