@@ -122,7 +122,7 @@ public:
 
     static  PRBool          ConvertStatus(nsEventStatus aStatus);
     virtual PRBool          DispatchEvent(nsGUIEvent* event);
-    virtual PRBool          DispatchMouseEvent(nsMouseEvent aEvent);
+    virtual PRBool          DispatchMouseEvent(nsMouseEvent& aEvent);
 
     virtual void            OnDestroy();
     virtual PRBool          OnPaint(nsPaintEvent &event);

@@ -1210,7 +1210,7 @@ PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchMouseEvent(nsMouseEvent aEvent)
+PRBool nsWindow::DispatchMouseEvent(nsMouseEvent& aEvent)
 {
   PRBool result = PR_FALSE;
   if (nsnull == mEventCallback && nsnull == mMouseListener) {
@@ -1509,4 +1509,5 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
 
   win->SetResized(PR_TRUE);
 }
+
 
