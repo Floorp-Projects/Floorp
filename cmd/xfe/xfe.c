@@ -2884,6 +2884,7 @@ FE_GetCharSetID(INTL_CharSetID_Selector selector)
         {
         case INTL_FileNameCsidSel:
         case INTL_DefaultTextWidgetCsidSel:
+        case INTL_MenuCsidSel:
                 charsetID = (INTLCharSetID) fe_LocaleCharSetID;
                 break;
         case INTL_OldBookmarkCsidSel:
