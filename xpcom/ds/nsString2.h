@@ -695,7 +695,7 @@ static  nsString2*  NewString(eCharSize aCharSize=eTwoByte);
 static void   SelfTest();
 virtual void  DebugDump(ostream& aStream) const;
 
-#ifdef  NS_DEBUG
+#ifdef  RICKG_DEBUG
   static	PRBool	mSelfTested;
 #endif
 

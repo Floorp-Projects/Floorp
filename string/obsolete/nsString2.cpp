@@ -35,7 +35,7 @@
 static const char* kNullPointerError = "Error: unexpected null ptr";
 static const char* kWhitespace="\b\t\r\n ";
 
-#ifdef  NS_DEBUG
+#ifdef  RICKG_DEBUG
 PRBool nsString2::mSelfTested = PR_FALSE;   
 #endif
 
@@ -123,7 +123,7 @@ void Subsume(nsStr& aDest,nsStr& aSource){
 nsString2::nsString2(eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent) {
   nsStr::Initialize(*this,aCharSize);
 
-#ifdef NS_DEBUG
+#ifdef RICKG_DEBUG
   if(!mSelfTested) {
     mSelfTested=PR_TRUE;
 		SelfTest();
@@ -1703,7 +1703,7 @@ NS_BASE int fputs(const nsString2& aString, FILE* out)
  */
 void nsString2::SelfTest(void) {
 
-#ifdef NS_DEBUG
+#ifdef RICKG_DEBUG
   static const char* kConstructorError = kConstructorError;
   static const char* kComparisonError  = "Comparision error!";
   static const char* kEqualsError = "Equals error!";
