@@ -578,16 +578,6 @@ WeekView.prototype.refreshDisplay = function( )
 
 /** PUBLIC
 *
-*   This is called when we are about the make a new event
-*   and we want to know what the default start date should be for the event.
-*/
-WeekView.prototype.getNewEventDate = function( )
-{
-   return this.calendarWindow.getSelectedDate();
-}
-
-/** PUBLIC
-*
 *   Go to the next week.
 */
 WeekView.prototype.goToNext = function()
