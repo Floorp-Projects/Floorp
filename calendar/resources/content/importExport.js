@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): ArentJan Banck <ajbanck@planet.nl>
+ *                 Steve Hampton <mvgrad78@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -89,7 +90,7 @@ function convertToUnicode(aCharset, aSrc )
 }
 
 /**** loadEventsFromFile
- * shows a file dialog, read the selected file and tries to parse events from it.
+ * shows a file dialog, read the selected file(s) and tries to parse events from it.
  */
 
 function loadEventsFromFile()
@@ -99,7 +100,7 @@ function loadEventsFromFile()
 
   openDialog("chrome://calendar/content/importDuplicatesDialog.xul", "caDuplicates", "chrome,modal,centerscreen", dupResult );
   if (dupResult.cancelled == true)
-    return;
+    return false;
 
 //   dump("*******************\n");
 //   dump("cancelled: " + dupResult.cancelled + "\n");
@@ -111,34 +112,50 @@ function loadEventsFromFile()
   
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
      
-  fp.init(window, "Open", nsIFilePicker.modeOpen);
+  fp.init(window, "Open", nsIFilePicker.modeOpenMultiple);
   fp.defaultExtension = "ics";
    
   fp.appendFilter( filterCalendar, "*" + extensionCalendar );
   fp.appendFilter( filterXcs, "*" + extensionXcs );
   fp.appendFilter( filterOutlookCsv, "*" + extensionCsv );
   fp.show();
+  var filesToAppend = fp.files;
 
-  if (fp.file && fp.file.path.length > 0) 
+  if (filesToAppend && filesToAppend.hasMoreElements()) 
     {
-      var aDataStream = readDataFromFile( fp.file.path, "UTF-8" );
       var calendarEventArray = new Array();
       var duplicateEventArray = new Array();
+      var currentFile;
+      var aDataStream;
+      var i;
 
-      switch (fp.filterIndex) {
-      case 0 : // ics
-        calendarEventArray = parseIcalData( aDataStream );
-        break;
-      case 1 : // xcs
-        calendarEventArray = parseXCSData( aDataStream );
-        break;
-      case 2: // csv
-        var ret = parseOutlookCSVData( aDataStream, dupResult.discard, dupResult.prompt );
-        calendarEventArray = ret.calendarEventArray;
-        duplicateEventArray = ret.calendarDuplicateArray;
-        break;
-      }
-   
+      while (filesToAppend.hasMoreElements())
+        {
+          currentFile = filesToAppend.getNext().QueryInterface(Components.interfaces.nsILocalFile);
+          aDataStream = readDataFromFile( currentFile.path, "UTF-8" );
+
+          switch (fp.filterIndex) {
+          case 0 : // ics
+            var tempEventArray = parseIcalData( aDataStream );
+            for (i=0; i < tempEventArray.length; i++)
+              calendarEventArray[calendarEventArray.length]  = tempEventArray[i];    
+            break;
+          case 1 : // xcs
+            var tempEventArray = parseXCSData( aDataStream );
+            for (i=0; i < tempEventArray.length; i++)
+              calendarEventArray[calendarEventArray.length]  = tempEventArray[i];    
+            break;
+          case 2: // csv
+            var ret = parseOutlookCSVData( aDataStream, dupResult.discard, dupResult.prompt );
+            for (i=0; i < ret.calendarEventArray.length; i++)
+              calendarEventArray[calendarEventArray.length]  = ret.calendarEventArray[i];
+            for (i=0; i < ret.calendarDuplicateArray.length; i++)
+	      duplicateEventArray[duplicateEventArray.length] = ret.calendarDuplicateArray[i];
+            break;
+          }
+      
+        }
+
 
       // If there are no events to import, let the user know
       //
