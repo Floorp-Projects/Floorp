@@ -24,6 +24,7 @@
 #include "domstubs.idl"
 
 interface nsIHelperAppLauncher;
+interface nsILocalFile;
 
 // nsIHelperAppLauncherDialog
 // ==========================
@@ -36,6 +37,12 @@ interface nsIHelperAppLauncherDialog : nsISupports {
     // Show confirmation dialog for launching application (or "save to
     // disk") for content specified by aLauncher.
     void show( in nsIHelperAppLauncher aLauncher, in nsISupports aContext );
+	
+	// invoke a save to file dialog instead of the full fledged helper app dialog.
+	// aDefaultFileName --> default file name to provide (can be null)
+	// aSuggestedFileExtension --> sugested file extension
+	// aFileLocation --> return value for the file location
+	void promptForSaveToFile(in nsISupports aWindowContext, in wstring aDefaultFile, in wstring aSuggestedFileExtension, out nsILocalFile aFileLocation);
 };
 
 
