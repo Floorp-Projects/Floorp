@@ -36,6 +36,8 @@
  #pragma warning(disable: 4786)
 #endif
 
+#include <ctype.h>
+#include <math.h>
 
 #include "lexutils.h"
 
@@ -47,7 +49,7 @@ namespace LexUtils {
     {
         string8_citer p1 = s1.begin();
         string8_citer p2 = s2_begin;
-        uint s2_size = s2_end - s2_begin - 1;
+        string8::difference_type s2_size = s2_end - s2_begin - 1;
 
         while (p1 != s1.end() && p2 != s2_end) {
             if (toupper(*p1) != toupper(*p2))
@@ -255,7 +257,7 @@ namespace LexUtils {
         uint32 i;
         end = lexUInt32 (begin, end, &i);
         
-        *rval = i * sign;
+        *rval = int32(i) * sign;
         
         return end;
     }
