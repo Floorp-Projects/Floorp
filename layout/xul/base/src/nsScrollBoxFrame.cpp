@@ -65,7 +65,6 @@
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollBoxViewCID, NS_SCROLL_PORT_VIEW_CID);
-static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
 
 //----------------------------------------------------------------------
