@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: error.c,v $ $Revision: 1.3 $ $Date: 2002/01/31 19:18:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: error.c,v $ $Revision: 1.4 $ $Date: 2003/12/02 02:05:47 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -45,6 +45,9 @@ static const char CVS_ID[] = "@(#) $RCSfile: error.c,v $ $Revision: 1.3 $ $Date:
 #ifndef BASE_H
 #include "base.h"
 #endif /* BASE_H */
+#include <string.h> /* for memmove */
+
+#define NSS_MAX_ERROR_STACK_COUNT 16 /* error codes */
 
 /*
  * The stack itself has a header, and a sequence of integers.
@@ -87,12 +90,8 @@ static PRCallOnceType error_call_once;
  *
  * This is the once-called callback.
  */
-
 static PRStatus
-error_once_function
-(
-  void
-)
+error_once_function ( void)
 {
   return nss_NewThreadPrivateIndex(&error_stack_index,PR_Free);
   /* return PR_NewThreadPrivateIndex(&error_stack_index, PR_Free); */
@@ -107,10 +106,7 @@ error_once_function
  */
 
 static error_stack *
-error_get_my_stack
-(
-  void
-)
+error_get_my_stack ( void)
 {
   PRStatus st;
   error_stack *rv;
@@ -129,18 +125,16 @@ error_get_my_stack
   if( (error_stack *)NULL == rv ) {
     /* Doesn't exist; create one */
     new_size = 16;
+  } else if( rv->header.count == rv->header.space  &&
+             rv->header.count  < NSS_MAX_ERROR_STACK_COUNT ) {
+    /* Too small, expand it */
+    new_size = PR_MIN( rv->header.space * 2, NSS_MAX_ERROR_STACK_COUNT);
   } else {
-    if( rv->header.count == rv->header.space ) {
-      /* Too small, expand it */
-      new_size = rv->header.space + 16;
-    } else {
-      /* Okay, return it */
-      return rv;
-    }
+    /* Okay, return it */
+    return rv;
   }
 
-  new_bytes = (new_size * sizeof(PRInt32)) + 
-    sizeof(struct stack_header_str);
+  new_bytes = (new_size * sizeof(PRInt32)) + sizeof(error_stack);
   /* Use NSPR's calloc/realloc, not NSS's, to avoid loops! */
   new_stack = PR_Calloc(1, new_bytes);
   
@@ -187,10 +181,7 @@ error_get_my_stack
  */
 
 NSS_IMPLEMENT PRInt32
-NSS_GetError
-(
-  void
-)
+NSS_GetError ( void)
 {
   error_stack *es = error_get_my_stack();
 
@@ -224,10 +215,7 @@ NSS_GetError
  */
 
 NSS_IMPLEMENT PRInt32 *
-NSS_GetErrorStack
-(
-  void
-)
+NSS_GetErrorStack ( void)
 {
   error_stack *es = error_get_my_stack();
 
@@ -250,10 +238,7 @@ NSS_GetErrorStack
  */
 
 NSS_IMPLEMENT void
-nss_SetError
-(
-  PRUint32 error
-)
+nss_SetError ( PRUint32 error)
 {
   error_stack *es;
 
@@ -268,8 +253,13 @@ nss_SetError
     return;
   }
 
-  es->stack[ es->header.count ] = error;
-  es->header.count++;
+  if (es->header.count < es->header.space) {
+    es->stack[ es->header.count++ ] = error;
+  } else {
+    memmove(es->stack, es->stack + 1, 
+		(es->header.space - 1) * (sizeof es->stack[0]));
+    es->stack[ es->header.space - 1 ] = error;
+  }
   return;
 }
 
@@ -280,10 +270,7 @@ nss_SetError
  */
 
 NSS_IMPLEMENT void
-nss_ClearErrorStack
-(
-  void
-)
+nss_ClearErrorStack ( void)
 {
   error_stack *es = error_get_my_stack();
   if( (error_stack *)NULL == es ) {
