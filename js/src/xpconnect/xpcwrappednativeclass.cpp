@@ -275,7 +275,7 @@ static JSBool
 isConstructorID(JSContext *cx, jsid id)
 {
     jsval idval;
-    const char *property_name;
+    const char *property_name=NULL;
     // XXX this could be improved by cacheing the hashed id for "constructor"
     if (JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
         (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL) {

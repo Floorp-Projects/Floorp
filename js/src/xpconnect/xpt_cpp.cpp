@@ -77,7 +77,7 @@ class InterfaceInfoManagerImpl : public nsIInterfaceInfoManager
 
 public:
     InterfaceInfoManagerImpl();
-    ~InterfaceInfoManagerImpl();
+    virtual ~InterfaceInfoManagerImpl();
 
     static InterfaceInfoManagerImpl* GetInterfaceInfoManager();
     static nsIAllocator* GetAllocator(InterfaceInfoManagerImpl* iim = NULL);
@@ -371,7 +371,7 @@ InterfaceInfoManagerImpl::BuildInterfaceForEntry(uint16 i)
 NS_IMETHODIMP
 InterfaceInfoManagerImpl::GetInfoForIID(const nsIID* iid, nsIInterfaceInfo** info)
 {
-    for(int i = 0; i < ENTRY_COUNT;i++)
+    for(unsigned int i = 0; i < ENTRY_COUNT;i++)
     {
         XPTInterfaceDirectoryEntry* entry = &InterfaceDirectoryEntryTable[i];
         if(iid->Equals(entry->iid))
@@ -390,7 +390,7 @@ InterfaceInfoManagerImpl::GetInfoForIID(const nsIID* iid, nsIInterfaceInfo** inf
 NS_IMETHODIMP
 InterfaceInfoManagerImpl::GetInfoForName(const char* name, nsIInterfaceInfo** info)
 {
-    for(int i = 0; i < ENTRY_COUNT;i++)
+    for(unsigned int i = 0; i < ENTRY_COUNT;i++)
     {
         XPTInterfaceDirectoryEntry* entry = &InterfaceDirectoryEntryTable[i];
         if(!strcmp(name, entry->name))
@@ -409,7 +409,7 @@ InterfaceInfoManagerImpl::GetInfoForName(const char* name, nsIInterfaceInfo** in
 NS_IMETHODIMP
 InterfaceInfoManagerImpl::GetIIDForName(const char* name, nsIID** iid)
 {
-    for(int i = 0; i < ENTRY_COUNT;i++)
+    for(unsigned int i = 0; i < ENTRY_COUNT;i++)
     {
         XPTInterfaceDirectoryEntry* entry = &InterfaceDirectoryEntryTable[i];
         if(!strcmp(name, entry->name))
@@ -429,7 +429,7 @@ InterfaceInfoManagerImpl::GetIIDForName(const char* name, nsIID** iid)
 NS_IMETHODIMP
 InterfaceInfoManagerImpl::GetNameForIID(const nsIID* iid, char** name)
 {
-    for(int i = 0; i < ENTRY_COUNT;i++)
+    for(unsigned int i = 0; i < ENTRY_COUNT;i++)
     {
         XPTInterfaceDirectoryEntry* entry = &InterfaceDirectoryEntryTable[i];
         if(iid->Equals(entry->iid))
