@@ -47,7 +47,7 @@
 #endif
 
 // header file for profiles
-#if defined(XP_PC) && defined(BUILD_PROFILE)
+#if defined(XP_PC) 
 #include "nsIProfile.h"
 #endif //XP_PC
 
@@ -57,7 +57,7 @@
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
 // for profile manager
-#if defined(XP_PC) && defined(BUILD_PROFILE)
+#if defined(XP_PC) 
 	static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 #endif // XP_PC
 
@@ -151,33 +151,28 @@ void nsSpecialFileSpec::operator = (Type aType)
                 // WIN	: ./profile
                 // MAC	: ./profile
 
-				    #ifdef XP_PC
-					#ifdef BUILD_PROFILE
+				    	#ifdef XP_PC
 						nsIProfile *profile = nsnull;
 						static nsFileSpec* profileDir = nsnull;
 
 						if (!profileDir)
 						{
-                            nsIProfile* profile = nsnull;
-                            nsresult rv = nsServiceManager::GetService(kProfileCID, 
+                           			 	nsIProfile* profile = nsnull;
+                            				nsresult rv = nsServiceManager::GetService(kProfileCID, 
 														nsIProfile::GetIID(), 
 														(nsISupports **)&profile);
-                            if (NS_FAILED(rv)) {
-                               return;
+                            				if (NS_FAILED(rv)) {
+                               					return;
 							}
 
-                            profile->Startup(nsnull);
+                            				profile->Startup(nsnull);
 
-                            profileDir = new nsFileSpec;
-                            profile->GetCurrentProfileDir(&profileDir);
+                            				profileDir = new nsFileSpec;
+                            				profile->GetCurrentProfileDir(&profileDir);
 						}
 						if (profileDir) {
 							*this = *profileDir;
 						}
-					#else
-						*this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
-						*this += "profile";
-					#endif
 					#endif // XP_PC
 
 					#ifdef XP_UNIX

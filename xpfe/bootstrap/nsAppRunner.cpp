@@ -33,7 +33,7 @@
 
 
 // header file for profile manager
-#if defined(XP_PC) && defined(BUILD_PROFILE)
+#if defined(XP_PC)
 	// include this for _getcwd call
 	#include <direct.h>
 
@@ -57,7 +57,7 @@ static NS_DEFINE_IID(kIAppShellServiceIID,  NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kICmdLineServiceIID,   NS_ICOMMANDLINE_SERVICE_IID);
 
 // defined for profileManager
-#if defined(XP_PC) && defined(BUILD_PROFILE)
+#if defined(XP_PC) 
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 #endif // XP_PC
 
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
   nsIPref *prefs;
 
   // initializations for profile manager
-  #if defined(XP_PC) && defined(BUILD_PROFILE)
+  #if defined(XP_PC)
 	char * currProfileName=nsnull;
 	char * currProfileDir=nsnull;
 	PRBool profileDirSet = PR_FALSE;
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 
   char* cmdResult = nsnull;
 
-  #if defined(XP_PC) && defined(BUILD_PROFILE)
+  #if defined(XP_PC) 
       profile  = nsnull;
   #endif // XP_PC
 
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
   NS_SetupRegistry_1();
 
   // get and start the ProfileManager service
-  #if defined(XP_PC) && defined(BUILD_PROFILE)
+  #if defined(XP_PC) 
   rv = nsServiceManager::GetService(kProfileCID, 
                                     nsIProfile::GetIID(), 
                                     (nsISupports **)&profile);
@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
   if (nsnull == urlstr){
 
 	// check for command line arguments for profile manager
-        #if defined(XP_PC) && defined(BUILD_PROFILE)
+        #if defined(XP_PC) 
 	
 	// -P command line option works this way:
 	// apprunner -P profilename 
@@ -314,7 +314,7 @@ int main(int argc, char* argv[])
    * check if we have a profile directory
    */
 
-  #if defined(XP_PC) && defined(BUILD_PROFILE)
+  #if defined(XP_PC) 
   if (!profileDirSet) {
 	  int numProfiles = 0;
 	  profile->GetProfileCount(&numProfiles);
@@ -536,7 +536,7 @@ done:
     nsServiceManager::ReleaseService(kPrefCID, prefs);
   }
 
-#if defined(XP_PC) && defined(BUILD_PROFILE)
+#if defined(XP_PC) 
   /* Release the global profile... */
   if (profile) {
     profile->Shutdown();

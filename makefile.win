@@ -45,9 +45,6 @@ DIRS = \
   jpeg				\
   modules\libreg		\
   xpcom				\
-!if defined(BUILD_PROFILE)
-  profile			\
-!endif
   modules\zlib			\
   modules\libjar        \
   modules\libutil		\
@@ -64,6 +61,7 @@ DIRS = \
   lib\xp			\
   lib\libpwcac			\
   network			\
+  profile			\
 !endif
 !if defined(LAYOUT_DIRS)
 # the following are associated with the layout engine
