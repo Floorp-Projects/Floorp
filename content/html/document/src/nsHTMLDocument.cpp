@@ -941,7 +941,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     mParser->SetCommand(aCommand);
     // create the content sink
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aURL, webShell);
+    rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aURL, webShell,aChannel);
     if (NS_FAILED(rv)) { return rv; }
     NS_ASSERTION(sink, "null sink with successful result from factory method");
     mParser->SetContentSink(sink); 
@@ -2155,7 +2155,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
         }
       }
       
-      result = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL, webShell);
+      result = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL, webShell,channel);
       
       if (NS_OK == result) {
         static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);

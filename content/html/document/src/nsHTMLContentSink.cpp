@@ -172,7 +172,8 @@ public:
 
   nsresult Init(nsIDocument* aDoc,
                 nsIURI* aURL,
-                nsIWebShell* aContainer);
+                nsIWebShell* aContainer,
+                nsIChannel* aChannel);
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -376,6 +377,9 @@ public:
   nsresult ProcessMETATag(const nsIParserNode& aNode);
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
+
+  nsresult ProcessHeaderData(nsIAtom* aHeader,nsString& aValue,nsIHTMLContent* aContent=nsnull);
+  nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
 
   // Script processing related routines
   nsresult ResumeParsing();
@@ -2165,7 +2169,8 @@ nsresult
 NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
                       nsIDocument* aDoc,
                       nsIURI* aURL,
-                      nsIWebShell* aWebShell)
+                      nsIWebShell* aWebShell,
+                      nsIChannel* aChannel)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -2176,7 +2181,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult rv = it->Init(aDoc, aURL, aWebShell);
+  nsresult rv = it->Init(aDoc, aURL, aWebShell,aChannel);
   if (NS_OK != rv) {
     delete it;
     return rv;
@@ -2270,7 +2275,8 @@ NS_IMPL_ISUPPORTS7(HTMLContentSink,
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIURI* aURL,
-                      nsIWebShell* aContainer)
+                      nsIWebShell* aContainer,
+                      nsIChannel* aChannel)
 {  
   MOZ_TIMER_DEBUGLOG(("Reset and start: nsHTMLContentSink::Init(), this=%p\n", this));
   MOZ_TIMER_RESET(mWatch);
@@ -2328,6 +2334,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   // XXX this presumes HTTP header info is alread set in document
   // XXX if it isn't we need to set it here...
+
+  ProcessHTTPHeaders(aChannel);
+
   mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, mPreferredStyle);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -4288,175 +4297,9 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
           nsAutoString result;
           it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
           if (result.Length() > 0) {
-            // XXX necko isn't going to process headers coming in from the parser
-            //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
-          
-            nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
-            if (NS_FAILED(rv)) return rv;
-
-                // see if we have a refresh "header".
-            if (!header.CompareWithConversion("refresh", PR_TRUE)) {
-                // Refresh headers are parsed with the following format in mind
-                // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
-                // By the time we are here, the following is true:
-                // header = "REFRESH"
-                // result = "5; URL=http://uri" // note the URL attribute is
-                // optional, if it is absent, the currently loaded url is used.
-                // Also note that the second and URL seperator can be either a ';'
-                // or a ','. This breaks some websites. The ',' seperator should be
-                // illegal but CNN is using it.
-
-                // 
-                // We need to handle the following strings.
-                //  - X is a set of digits
-                //  - URI is either a relative or absolute URI
-                //  - FOO is any text
-                //
-                // "" 
-                //  empty string. use the currently loaded URI
-                //  and refresh immediately.
-                // "X"
-                //  Refresh the currently loaded URI in X milliseconds.
-                // "X; URI"
-                //  Refresh using URI as the destination in X milliseconds.
-                // "X; URI; Blah"
-                //  Refresh using URI as the destination in X milliseconds,
-                //  ignoring "Blah"
-                // "URI"
-                //  Refresh immediately using URI as the destination.
-                // "URI; Blah"
-                //  Refresh immediately using URI as the destination,
-                //  ignoring "Blah"
-                // 
-                // Note that we need to remove any tokens wrapping the URI.
-                // These tokens currently include spaces, double and single
-                // quotes.
- 
-                // first get our baseURI
-                nsCOMPtr<nsIURI> baseURI;
-                nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
-                rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
-                if (NS_FAILED(rv)) return rv;
-
-                PRInt32 millis = -1;
-                nsAutoString uriAttrib;
-
-                PRInt32 semiColon = result.FindCharInSet(";,");
-                nsAutoString token;
-                if (semiColon > -1)
-                    result.Left(token, semiColon);
-                else
-                    token = result;
-
-                PRBool done = PR_FALSE;
-                while (!done && !token.IsEmpty()) {
-                    token.CompressWhitespace();
-                    // Ref. bug 22886
-                    // Apparently CONTENT can also start with a period (.).
-                    // Ex: <meta http-equiv = "refresh" content=".1; url=./recommendations1.html">
-                    // So let's relax a little bit otherwise http://www.mozillazine.org/resources/
-                    // wouldn't get redirected to the correct URL.
-                    if (millis == -1 && (nsCRT::IsAsciiDigit(token.First()) || token.First()==PRUnichar('.'))) {
-                        PRBool tokenIsANumber = PR_TRUE;
-                        nsReadingIterator<PRUnichar> doneIterating; token.EndReading(doneIterating);
-                        nsReadingIterator<PRUnichar> iter;          token.BeginReading(iter);
-                        while ( iter != doneIterating )
-                          {
-                            if (!(tokenIsANumber = nsCRT::IsAsciiDigit(*iter)) && *iter!=PRUnichar('.'))
-                              break;
-                            ++iter;
-                           }
-
-                        if (tokenIsANumber) {
-                            PRInt32 err;
-                            millis = token.ToInteger(&err) * 1000;
-                        } else {
-                            done = PR_TRUE;
-                        }
-                    } else {
-                        done = PR_TRUE;
-                    }
-                    if (done) {
-                        PRInt32 loc = token.FindChar('=');
-                        if (loc > -1)
-                            token.Cut(0, loc+1);
-                        token.Trim(" \"'");
-                        uriAttrib.Assign(token);
-                    } else {
-                        // Increment to the next token.
-                        if (semiColon > -1) {
-                            semiColon++;
-                            PRInt32 semiColon2 = result.FindCharInSet(";,", semiColon);
-                            if (semiColon2 == -1) semiColon2 = result.Length();
-                            result.Mid(token, semiColon, semiColon2 - semiColon);
-                            semiColon = semiColon2;
-                        } else {
-                            done = PR_TRUE;
-                        }
-                    }
-                } // end while
-
-                nsCOMPtr<nsIURI> uri;
-                if (uriAttrib.Length() == 0) {
-                    uri = baseURI;
-                } else {
-                    rv = NS_NewURI(getter_AddRefs(uri), 
-                                   uriAttrib, baseURI);
-                }
-
-                if (NS_SUCCEEDED(rv)) {
-                    NS_WITH_SERVICE(nsIScriptSecurityManager,
-                                    securityManager, 
-                                    NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                                    &rv);
-                    if (NS_SUCCEEDED(rv)) {
-                        rv = securityManager->CheckLoadURI(baseURI,
-                                                           uri,
-                                                           nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
-                        if (NS_SUCCEEDED(rv)) {
-                            nsCOMPtr<nsIRefreshURI> reefer = 
-                                do_QueryInterface(mWebShell);
-                            if (reefer) {
-                                if (millis == -1) millis = 0;
-                                rv = reefer->RefreshURI(uri, millis, 
-                                                        PR_FALSE, PR_TRUE);
-                                if (NS_FAILED(rv)) return rv;
-                            }
-                        }
-                    }
-                }
-            } // END refresh
-            else if (!header.CompareWithConversion("set-cookie", PR_TRUE)) {
-                nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
-                if (NS_FAILED(rv)) return rv;
-
-                nsCOMPtr<nsIURI> baseURI;
-                nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
-                rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
-                if (NS_FAILED(rv)) return rv;
-
-                rv = cookieServ->SetCookieString(baseURI, mDocument, result);
-                if (NS_FAILED(rv)) return rv;
-            } // END set-cookie
-
             header.ToLowerCase();
-            nsIAtom* fieldAtom = NS_NewAtom(header);
-            mDocument->SetHeaderData(fieldAtom, result);
-
-            if (fieldAtom == nsHTMLAtoms::headerDefaultStyle) {
-              mPreferredStyle = result;
-              mCSSLoader->SetPreferredSheet(mPreferredStyle);
-            }
-            else if (fieldAtom == nsHTMLAtoms::link) {
-              rv = ProcessLink(it, result);
-            }
-            else if (fieldAtom == nsHTMLAtoms::headerContentBase) {
-              ProcessBaseHref(result);
-            }
-            else if (fieldAtom == nsHTMLAtoms::headerWindowTarget) {
-              ProcessBaseTarget(result);
-            }
-            NS_IF_RELEASE(fieldAtom);
+            nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
+            rv=ProcessHeaderData(fieldAtom,result,it); 
           }//if (result.Length() > 0) 
         }//if (header.Length() > 0) 
       }//if(!mInsideNoXXXTag)
@@ -4464,6 +4307,215 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
     }//if (NS_OK == rv) 
   }//if (nsnull != parent)
 
+  return rv;
+}
+
+nsresult 
+HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
+  NS_ASSERTION(aChannel,"can't process http headers without a channel");
+  nsresult rv=NS_OK;
+
+  if(aChannel) {
+    nsCOMPtr<nsIHTTPChannel> httpchannel(do_QueryInterface(aChannel));
+    if (httpchannel) {
+      char*  headers[]={"link","default-style","content-base",0}; // add more http headers if you need
+      char** name=headers;
+      nsXPIDLCString tmp;
+      while(*name) {
+        nsCOMPtr<nsIAtom> key(dont_AddRef(NS_NewAtom(*name++)));
+        if(key) {
+          httpchannel->GetResponseHeader(key, getter_Copies(tmp));
+          if(tmp.get()) {
+            nsAutoString value;
+            value.AssignWithConversion(tmp);
+            ProcessHeaderData(key,value);
+          }
+        }
+        else {
+          rv=NS_ERROR_OUT_OF_MEMORY;
+        }
+      }//while
+    }//if - httpchannel 
+  }//if - channel
+
+  return rv;
+}
+
+nsresult
+HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,nsString& aValue,nsIHTMLContent* aContent)
+{
+  nsresult rv=NS_OK;
+  // XXX necko isn't going to process headers coming in from the parser          
+  //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
+  
+  // see if we have a refresh "header".
+  if (aHeader == nsHTMLAtoms::refresh) {
+    // Refresh headers are parsed with the following format in mind
+    // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
+    // By the time we are here, the following is true:
+    // header = "REFRESH"
+    // result = "5; URL=http://uri" // note the URL attribute is
+    // optional, if it is absent, the currently loaded url is used.
+    // Also note that the second and URL seperator can be either a ';'
+    // or a ','. This breaks some websites. The ',' seperator should be
+    // illegal but CNN is using it.
+    
+    // 
+    // We need to handle the following strings.
+    //  - X is a set of digits
+    //  - URI is either a relative or absolute URI
+    //  - FOO is any text
+    //
+    // "" 
+    //  empty string. use the currently loaded URI
+    //  and refresh immediately.
+    // "X"
+    //  Refresh the currently loaded URI in X milliseconds.
+    // "X; URI"
+    //  Refresh using URI as the destination in X milliseconds.
+    // "X; URI; Blah"
+    //  Refresh using URI as the destination in X milliseconds,
+    //  ignoring "Blah"
+    // "URI"
+    //  Refresh immediately using URI as the destination.
+    // "URI; Blah"
+    //  Refresh immediately using URI as the destination,
+    //  ignoring "Blah"
+    // 
+    // Note that we need to remove any tokens wrapping the URI.
+    // These tokens currently include spaces, double and single
+    // quotes.
+    
+    // first get our baseURI
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
+    rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
+    if (NS_FAILED(rv)) return rv;
+    
+    PRInt32 millis = -1;
+    nsAutoString uriAttrib;
+    
+    PRInt32 semiColon = aValue.FindCharInSet(";,");
+    nsAutoString token;
+    if (semiColon > -1)
+      aValue.Left(token, semiColon);
+    else
+      token = aValue;
+    
+    PRBool done = PR_FALSE;
+    while (!done && !token.IsEmpty()) {
+      token.CompressWhitespace();
+      // Ref. bug 22886
+      // Apparently CONTENT can also start with a period (.).
+      // Ex: <meta http-equiv = "refresh" content=".1; url=./recommendations1.html">
+      // So let's relax a little bit otherwise http://www.mozillazine.org/resources/
+      // wouldn't get redirected to the correct URL.
+      if (millis == -1 && (nsCRT::IsAsciiDigit(token.First()) || token.First()==PRUnichar('.'))) {
+        PRBool tokenIsANumber = PR_TRUE;
+        nsReadingIterator<PRUnichar> doneIterating; token.EndReading(doneIterating);
+        nsReadingIterator<PRUnichar> iter;          token.BeginReading(iter);
+        while ( iter != doneIterating ) {
+          if (!(tokenIsANumber = nsCRT::IsAsciiDigit(*iter)) && *iter!=PRUnichar('.'))
+            break;
+          ++iter;
+        }
+        
+        if (tokenIsANumber) {
+          PRInt32 err;
+          millis = token.ToInteger(&err) * 1000;
+        } 
+        else {
+          done = PR_TRUE;
+        }
+      } 
+      else {
+        done = PR_TRUE;
+      }
+      if (done) {
+        PRInt32 loc = token.FindChar('=');
+        if (loc > -1)
+          token.Cut(0, loc+1);
+        token.Trim(" \"'");
+        uriAttrib.Assign(token);
+      } 
+      else {
+        // Increment to the next token.
+        if (semiColon > -1) {
+          semiColon++;
+          PRInt32 semiColon2 = aValue.FindCharInSet(";,", semiColon);
+          if (semiColon2 == -1) semiColon2 = aValue.Length();
+          aValue.Mid(token, semiColon, semiColon2 - semiColon);
+          semiColon = semiColon2;
+        } 
+        else {
+          done = PR_TRUE;
+        }
+      }
+    } // end while
+    
+    nsCOMPtr<nsIURI> uri;
+    if (uriAttrib.Length() == 0) {
+      uri = baseURI;
+    } else {
+      rv = NS_NewURI(getter_AddRefs(uri), 
+        uriAttrib, baseURI);
+    }
+    
+    if (NS_SUCCEEDED(rv)) {
+      NS_WITH_SERVICE(nsIScriptSecurityManager,
+        securityManager, 
+        NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+        &rv);
+      if (NS_SUCCEEDED(rv)) {
+        rv = securityManager->CheckLoadURI(baseURI,
+          uri,
+          nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIRefreshURI> reefer = 
+            do_QueryInterface(mWebShell);
+          if (reefer) {
+            if (millis == -1) millis = 0;
+            rv = reefer->RefreshURI(uri, millis,PR_FALSE, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+          }//if (reefer)
+        }//if (NS_SUCCEEDED(rv)) {
+      }//if (NS_SUCCEEDED(rv)) {
+    }//if (NS_SUCCEEDED(rv)) {
+  } // END refresh
+  else if (aHeader == nsHTMLAtoms::setcookie) {
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
+    rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = cookieServ->SetCookieString(baseURI, mDocument, aValue);
+    if (NS_FAILED(rv)) return rv;
+  } // END set-cookie
+  
+  mDocument->SetHeaderData(aHeader, aValue);
+  
+  if (aHeader == nsHTMLAtoms::headerDefaultStyle) {
+    mPreferredStyle = aValue;
+    mCSSLoader->SetPreferredSheet(mPreferredStyle);
+  }
+  else if (aHeader == nsHTMLAtoms::link) {
+    rv = ProcessLink(aContent, aValue);
+  }
+  else if (aHeader == nsHTMLAtoms::headerContentBase) {
+    ProcessBaseHref(aValue);
+  }
+  else if (aHeader == nsHTMLAtoms::headerWindowTarget) {
+    ProcessBaseTarget(aValue);
+  }
+  
   return rv;
 }
 
