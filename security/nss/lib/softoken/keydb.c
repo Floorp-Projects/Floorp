@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.21 2002/06/13 23:25:37 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.22 2002/06/14 17:29:56 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -858,7 +858,7 @@ openNewDB(const char *appName, const char *prefix, const char *dbname,
 
     /* force a transactional read, which will verify that one and only one
      * process attempts the update. */
-    if (nsslowkey_version(updatedb) == NSSLOWKEY_DB_FILE_VERSION) {
+    if (nsslowkey_version(handle->db) == NSSLOWKEY_DB_FILE_VERSION) {
 	/* someone else has already updated the database for us */
 	db_FinishTransaction(handle->db, PR_FALSE);
 	return SECSuccess;
