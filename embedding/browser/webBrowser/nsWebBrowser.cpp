@@ -50,6 +50,7 @@
 #include "nsIDocShellHistory.h"
 #include "nsIURIContentListener.h"
 #include "nsGUIEvent.h"
+#include "nsISHistoryListener.h"
 
 // for painting the background window
 #include "nsIDeviceContext.h"
