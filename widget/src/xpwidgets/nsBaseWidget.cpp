@@ -72,9 +72,6 @@ nsBaseWidget::nsBaseWidget()
 ,	mIsDestroying(PR_FALSE)
 ,	mOnDestroyCalled(PR_FALSE)
 ,	mBounds(0,0,0,0)
-#ifdef LOSER
-,	mVScrollbar(nsnull)
-#endif
 ,   mZIndex(0)
 {
 #ifdef NOISY_WIDGET_LEAKS
@@ -105,9 +102,6 @@ nsBaseWidget::~nsBaseWidget()
 #endif
 
 	NS_IF_RELEASE(mMenuListener);
-#ifdef LOSER
-	NS_IF_RELEASE(mVScrollbar);
-#endif
 	NS_IF_RELEASE(mToolkit);
 	NS_IF_RELEASE(mContext);
 }
@@ -233,9 +227,6 @@ NS_METHOD nsBaseWidget::Destroy()
     parent->RemoveChild(this);
     NS_RELEASE(parent);
   }
-#ifdef LOSER
-	NS_IF_RELEASE(mVScrollbar);
-#endif
   // disconnect listeners.
   NS_IF_RELEASE(mMouseListener);
   NS_IF_RELEASE(mEventListener);
@@ -700,16 +691,6 @@ NS_IMETHODIMP nsBaseWidget::ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy)
 {
   return NS_ERROR_FAILURE;
 }
-
-#ifdef LOSER
-NS_METHOD nsBaseWidget::SetVerticalScrollbar(nsIWidget * aWidget)
-{
-  NS_IF_RELEASE(mVScrollbar);
-  mVScrollbar = aWidget;
-  NS_IF_ADDREF(mVScrollbar);
-  return NS_OK;
-}
-#endif
 
 NS_METHOD nsBaseWidget::EnableDragDrop(PRBool aEnable)
 {

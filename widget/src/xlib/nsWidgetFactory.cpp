@@ -39,12 +39,6 @@
 #include "nsToolkit.h"
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
-#ifdef LOSER
-#include "nsMenuBar.h"
-#include "nsMenu.h"
-#include "nsMenuItem.h"
-#include "nsPopUpMenu.h"
-#endif
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -62,12 +56,6 @@ static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
-#ifdef LOSER
-static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
-static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
-static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
-static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
-#endif
 
 static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
@@ -192,20 +180,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports* aOuter,
   else if (mClassID.Equals(kCLabel)) {
     inst = (nsISupports*)(nsWindow*)new nsLabel();
   }
-#ifdef LOSER
-  else if (mClassID.Equals(kCMenuBar)) {
-    inst = (nsISupports*)(nsIMenuBar*) new nsMenuBar();
-  }
-  else if (mClassID.Equals(kCMenu)) {
-    inst = (nsISupports*)(nsIMenu*) new nsMenu();
-  }
-  else if (mClassID.Equals(kCMenuItem)) {
-    inst = (nsISupports*)(nsIMenuItem*) new nsMenuItem();
-  }
-  else if (mClassID.Equals(kCPopUpMenu)) {
-    inst = (nsISupports*)new nsPopUpMenu();
-  }
-#endif
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
   }  

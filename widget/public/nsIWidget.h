@@ -679,14 +679,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) = 0;
 
 
-#ifdef LOSER
-    /**
-     * FSets the vertical scrollbar widget
-     *
-     */
-    NS_IMETHOD SetVerticalScrollbar(nsIWidget * aScrollbar) = 0;
-#endif
-
     /**
      * For printing and lightweight widgets
      *
