@@ -386,6 +386,16 @@ class nsGfxTextControlFrame : public nsFormControlFrame,
 private:
 	typedef nsFormControlFrame Inherited;
 
+#ifdef DEBUG
+  PRInt32 mDebugTotalReflows;
+  PRInt32 mDebugResizeReflows;
+  PRInt32 mDebugResizeUnconstrained;
+  PRInt32 mDebugResizeReflowsThatChangedMySize;
+  PRInt32 mDebugReflowsThatMovedSubdoc;
+  PRInt32 mDebugTotalPaints;
+  PRInt32 mDebugPaintsSinceLastReflow;
+#endif
+
 public:
 
   /** constructor */
@@ -479,6 +489,12 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
+
+  // override to dispatch a reflow command directly, rather than just marking self dirty
+  // and notifying parent (the default behavior in nsLeafFrame)
+  NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
+                             nsIContent*     aChild,
+                             nsISupports*    aSubContent);
  
   // Utility methods to get and set current widget state
   void GetTextControlFrameState(nsString& aValue);
