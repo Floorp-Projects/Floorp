@@ -41,6 +41,10 @@
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
 
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIDOMDocument.h"
+#include "nsIWebNavigation.h"
 
 class nsHTMLObjectElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLObjectElement
@@ -183,7 +187,31 @@ NS_IMETHODIMP
 nsHTMLObjectElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 {
   NS_ENSURE_ARG_POINTER(aContentDocument);
+
   *aContentDocument = nsnull;
+
+  NS_ENSURE_TRUE(mDocument, NS_OK);
+
+  nsCOMPtr<nsIPresShell> presShell;
+
+  mDocument->GetShellAt(0, getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, NS_OK);
+
+  nsCOMPtr<nsISupports> tmp;
+
+  presShell->GetSubShellFor(this, getter_AddRefs(tmp));
+  if (!tmp) return NS_OK;
+
+  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(tmp);
+  NS_ENSURE_TRUE(webNav, NS_OK);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+
+  webNav->GetDocument(getter_AddRefs(domDoc));
+
+  *aContentDocument = domDoc;
+
+  NS_IF_ADDREF(*aContentDocument);
 
   return NS_OK;
 }
