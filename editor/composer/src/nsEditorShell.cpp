@@ -849,7 +849,6 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
         if (NS_FAILED(result) || !fileURLString || !*fileURLString)
           return result;
 
-#if 0
         // all I want to do is call a method on nsToolkitCore that would normally
         // be static. But I have to go through all this crap. XPCOM sucks so bad.
         static NS_DEFINE_IID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
@@ -865,7 +864,6 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
           result = toolkitCore->ShowWindowWithArgs("chrome://editor/content", nsnull, fileURLString/*fileURL.GetAsString()*/);
         }
   
-#endif
 				// delete the string
 				
       }
