@@ -766,13 +766,13 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
             {
                 mMustCommit = PR_TRUE;
                 mAttempts++;
-                mOnStopDone = PR_TRUE;
-
-                rv = WriteRequest(mInputStream);
                 mTotalWritten = 0;
 
-                mHandler  ->ReleaseTransport(mTransport, nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES, PR_TRUE);
+                mHandler->ReleaseTransport(mTransport, 
+                        nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES, PR_TRUE);
                 mTransport = null_nsCOMPtr ();
+                mOnStopDone = PR_TRUE;
+                rv = WriteRequest(mInputStream);
 
             
                 if (NS_SUCCEEDED (rv))
@@ -866,7 +866,8 @@ nsHTTPPipelinedRequest::RestartRequest()
                 mAttempts++;
                 mMustCommit = PR_TRUE;
 
-                mHandler  ->ReleaseTransport(mTransport, nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES, PR_TRUE);
+                mHandler->ReleaseTransport(mTransport, 
+                        nsIHTTPProtocolHandler::DONTRECORD_CAPABILITIES, PR_TRUE);
                 mTransport = null_nsCOMPtr ();
 
                 rval = WriteRequest(mInputStream);
