@@ -5011,6 +5011,12 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
                                 float *aP2T, float *aT2P)
 {
   *aScrollableView = nsnull;
+  *aP2T = 0.0f;
+  *aT2P = 0.0f;
+
+  if (!mDocShell) {
+    return NS_OK;
+  }
 
   // Flush pending notifications so that the presentation is up to
   // date.
