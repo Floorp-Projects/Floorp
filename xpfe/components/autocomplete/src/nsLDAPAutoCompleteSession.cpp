@@ -108,7 +108,7 @@ nsLDAPAutoCompleteSession::OnStartLookup(const PRUnichar *searchString,
     if (mState == SEARCHING || mState == BINDING) {
         NS_ERROR("nsLDAPAutoCompleteSession::OnStartLookup(): called while "
                  "search already in progress; no lookup started.");
-        listener->OnAutoComplete(0, nsIAutoCompleteStatus::failed);
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
         return NS_ERROR_FAILURE;
     }
 
@@ -287,8 +287,8 @@ nsLDAPAutoCompleteSession::OnLDAPMessage(nsILDAPMessage *aMessage)
     //
     nsresult rv = aMessage->GetType(&messageType);
     if (NS_FAILED(rv)) {
-        NS_ERROR("nsAutoCompleteSession::OnLDAPMessage(): unexpected error in "
-                 "aMessage->GetType()");
+        NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPMessage(): unexpected "
+                 "error in aMessage->GetType()");
        
         // don't call FinishAutoCompleteLookup(), as this could conceivably 
         // be an anomaly, and perhaps the next message will be ok.  if this
@@ -296,6 +296,23 @@ nsLDAPAutoCompleteSession::OnLDAPMessage(nsILDAPMessage *aMessage)
         // reaped by a timeout (once that code gets implemented).
         //
         return NS_ERROR_UNEXPECTED;
+    }
+
+    // if this message is not associated with the current operation, 
+    // discard it, since it is probably from a previous (aborted) 
+    // operation
+    //
+    PRBool isCurrent;
+    rv = IsMessageCurrent(aMessage, &isCurrent);
+    if (NS_FAILED(rv)) {
+        // IsMessageCurrent will have logged any necessary errors
+        return rv;
+    }
+    if ( ! isCurrent ) {
+        PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG,
+               ("nsLDAPAutoCompleteSession::OnLDAPMessage(): received message "
+                "from operation other than current one; discarded"));
+        return NS_OK;
     }
 
     // XXXdmose - we may want a small state machine either here or
@@ -311,18 +328,24 @@ nsLDAPAutoCompleteSession::OnLDAPMessage(nsILDAPMessage *aMessage)
 
         // a bind has completed
         //
+        if (mState != BINDING) {
+            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+                   ("nsLDAPAutoCompleteSession::OnLDAPMessage(): LDAP bind "
+                    "entry returned after OnStopLookup() called; ignoring"));
+
+            // XXXdmose when nsLDAPService integration happens, need to make 
+            // sure that the possibility of having an already bound 
+            // connection, due to a previously unaborted bind, doesn't cause 
+            // any problems.
+
+            return NS_OK;
+        }
+
         return OnLDAPBind(aMessage);
 
     case nsILDAPMessage::RES_SEARCH_ENTRY:
         
         // ignore this if OnStopLookup was already called
-        //
-        // XXX one possible race condition still exists (bug 77452):
-        // if another search has been started before everything from
-        // the last search has been ignored.  Waiting for the patch in
-        // bug 70422 to land, as this implements
-        // nsILDAPMessage::GetOperation which will allow us to tell if
-        // the incoming message is stale or not.
         //
         if (mState != SEARCHING) {
             PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
@@ -338,13 +361,6 @@ nsLDAPAutoCompleteSession::OnLDAPMessage(nsILDAPMessage *aMessage)
     case nsILDAPMessage::RES_SEARCH_RESULT:
 
         // ignore this if OnStopLookup was already called
-        //
-        // XXX one possible race condition still exists (bug 77452):
-        // if another search has been started before everything from
-        // the last search has been ignored.  Waiting for the patch in
-        // bug 70422 to land, as this implements
-        // nsILDAPMessage::GetOperation which will allow us to tell if
-        // the incoming message is stale or not.
         //
         if (mState != SEARCHING) {
             PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG,
@@ -914,15 +930,24 @@ void
 nsLDAPAutoCompleteSession::FinishAutoCompleteLookup(AutoCompleteStatus 
                                                     aACStatus)
 {
-    nsresult rv; // temp for return value 
+    nsresult rv=NS_OK; // temp for return value 
 
-    // inform the listener that the search is over
+    // if there's a listener, inform the listener that the search is over
     //
-    if (aACStatus == nsIAutoCompleteStatus::matchFound) {
-        rv = mListener->OnAutoComplete(mResults, aACStatus);
+    if (mListener) {
+
+        if (aACStatus == nsIAutoCompleteStatus::matchFound) {
+            rv = mListener->OnAutoComplete(mResults, aACStatus);
+        } else {
+            rv = mListener->OnAutoComplete(0, aACStatus);
+        }
     } else {
-        rv = mListener->OnAutoComplete(0, aACStatus);
+        // if there's no listener, something's wrong 
+        // 
+        NS_ERROR("nsLDAPAutoCompleteSession::FinishAutoCompleteLookup(): "
+                 "called with mListener unset!");
     }
+
     if (NS_FAILED(rv)) {
 
         // there's nothing we can actually do here other than warn
@@ -1049,5 +1074,58 @@ nsLDAPAutoCompleteSession::SetMinStringLength(PRUint32 aMinStringLength)
     return NS_OK;
 }
 
+// check to see if the message returned is related to our current operation
+// if there is no current operation, it's not.  :-)
+//
+nsresult 
+nsLDAPAutoCompleteSession::IsMessageCurrent(nsILDAPMessage *aMessage, 
+                                            PRBool *aIsCurrent)
+{
+    // if there's no operation, this message must be stale (ie non-current)
+    //
+    if ( !mOperation ) {
+        *aIsCurrent = PR_FALSE;
+        return NS_OK;
+    }
+
+    // get the message id from the current operation
+    //
+    PRInt32 currentId;
+    nsresult rv = mOperation->GetMessageID(&currentId);
+    if (NS_FAILED(rv)) {
+        PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+               ("nsLDAPAutoCompleteSession::IsMessageCurrent(): unexpected "
+                "error 0x%lx calling mOperation->GetMessageId()", rv));
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // get the message operation from the message
+    //
+    nsCOMPtr<nsILDAPOperation> msgOp;
+    rv = aMessage->GetOperation(getter_AddRefs(msgOp));
+    if (NS_FAILED(rv)) {
+        PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+               ("nsLDAPAutoCompleteSession::IsMessageCurrent(): unexpected "
+                "error 0x%lx calling aMessage->GetOperation()", rv));
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // get the message operation id from the message operation
+    //
+    PRInt32 msgOpId;
+    rv = msgOp->GetMessageID(&msgOpId);
+    if (NS_FAILED(rv)) {
+        PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+               ("nsLDAPAutoCompleteSession::IsMessageCurrent(): unexpected "
+                "error 0x%lx calling msgOp->GetMessageId()", rv));
+        return NS_ERROR_UNEXPECTED;
+    }
+    
+    *aIsCurrent = (msgOpId == currentId);
+
+    return NS_OK;
+}
+
 
 #endif
+
