@@ -1781,14 +1781,14 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32 aLineNumber, nscoord aX, nsIFrame** aF
     {//only do this once
       nsRect parentRect;
       nsRect& parentRectRef = parentRect;
-      nsIFrame* parentFrame;
+      nsIFrame* tempParentFrame;
 
-      rv = tempFrame->GetParent(&parentFrame);
+      rv = tempFrame->GetParent(&tempParentFrame);
     
-      if(NS_FAILED(rv) || !parentFrame)
+      if(NS_FAILED(rv) || !tempParentFrame)
         return rv?rv:NS_ERROR_FAILURE;
 
-      parentFrame->GetRect(parentRectRef);
+      tempParentFrame->GetRect(parentRectRef);
       aX -= parentRect.x;
       gotParentRect = PR_TRUE;
     }
