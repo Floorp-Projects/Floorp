@@ -233,9 +233,9 @@ public class Context
     public static final int FEATURE_DYNAMIC_SCOPE = 7;
 
     /**
-     * Control if highly experimental support for the continuation in the
+     * Control if experimental support for the continuations in the
      * interpreter is enabled.
-     * If Rhino embedding enables this highly experimental features, then
+     * If Rhino embedding enables this experimental features, then
      * <tt>Continuation</tt> object will be available to scripts.
      * When used with  pure interpretation mode (optimizatio level is -1)
      * <tt>Continuation</tt>it allows to capture and restore continuations.
@@ -247,6 +247,21 @@ public class Context
      * @since 1.6 Release 1
      */
     public static final int FEATURE_INTERPRETER_CONTINUATIONS = 8;
+
+    /**
+     * Control if strict mode is enabled.
+     * With strict mode enabled Rhino reports runtime errors in the following
+     * cases:
+     * <ul>
+     * <li> Assignment to non-existing names which typically indicates missed
+     *      <b>var</b> declaration.
+     * <li> Passing non-string arguments to the eval function.
+     * </ul>
+     * <p>
+     * By default {@link #hasFeature(int)} returns false.
+     * @since 1.6 Release 1
+     */
+    public static final int FEATURE_STRICT_MODE = 9;
 
     public static final String languageVersionProperty = "language version";
     public static final String errorReporterProperty   = "error reporter";
@@ -2106,6 +2121,7 @@ public class Context
      * @see #FEATURE_E4X
      * @see #FEATURE_DYNAMIC_SCOPE
      * @see #FEATURE_INTERPRETER_CONTINUATIONS
+     * @see #FEATURE_STRICT_MODE
      */
     public boolean hasFeature(int featureIndex)
     {

@@ -40,10 +40,14 @@ import org.mozilla.javascript.*;
 public class ShellContextFactory extends ContextFactory
 {
     private boolean enableContinuations;
+    private boolean strictMode;
 
     protected boolean hasFeature(Context cx, int featureIndex)
     {
-        if (featureIndex == Context.FEATURE_INTERPRETER_CONTINUATIONS) {
+        switch (featureIndex) {
+          case Context.FEATURE_STRICT_MODE:
+            return strictMode;
+          case Context.FEATURE_INTERPRETER_CONTINUATIONS:
             return enableContinuations;
         }
         return super.hasFeature(cx, featureIndex);
@@ -53,6 +57,12 @@ public class ShellContextFactory extends ContextFactory
     {
         checkNotSealed();
         this.enableContinuations = flag;
+    }
+
+    public void setStrictMode(boolean flag)
+    {
+        checkNotSealed();
+        this.strictMode = flag;
     }
 
 }

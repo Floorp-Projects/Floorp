@@ -1777,20 +1777,16 @@ public class ScriptRuntime {
         } else {
             // "newname = 7;", where 'newname' has not yet
             // been defined, creates a new property in the
-            // global object. Find the global object by
-            // walking up the scope chain.
+            // top scope unless strict mode is specified.
+            if (cx.hasFeature(Context.FEATURE_STRICT_MODE)) {
+                throw Context.reportRuntimeError1("msg.assn.create.strict", id);
+            }
+            // Find the top scope by walking up the scope chain.
             bound = ScriptableObject.getTopLevelScope(scope);
             if (cx.useDynamicScope) {
                 bound = locateDynamicScope(cx, bound);
             }
             bound.put(id, bound, value);
-            /*
-            This code is causing immense performance problems in
-            scripts that assign to the variables as a way of creating them.
-            XXX need strict mode
-            String message = getMessage1("msg.assn.create", id);
-            Context.reportWarning(message);
-            */
         }
         return value;
     }
@@ -2213,6 +2209,9 @@ public class ScriptRuntime {
             return Undefined.instance;
         Object x = args[0];
         if (!(x instanceof String)) {
+            if (cx.hasFeature(Context.FEATURE_STRICT_MODE)) {
+                throw Context.reportRuntimeError0("msg.eval.nonstring.strict");
+            }
             String message = Context.getMessage0("msg.eval.nonstring");
             Context.reportWarning(message);
             return x;

@@ -192,6 +192,10 @@ public class Main
                 }
                 continue;
             }
+            if (arg.equals("-strict")) {
+                shellContextFactory.setStrictMode(true);
+                continue;
+            }
             if (arg.equals("-continuations")) {
                 shellContextFactory.setEnableContinuations(true);
                 cx.setOptimizationLevel(-1);
