@@ -333,10 +333,11 @@ var DefaultController =
 			case "cmd_findAgain":
 				return IsFindEnabled();
 				break;
+            // these are enabled on when we are in threaded mode
             case "cmd_selectThread":
+			    if (GetNumSelectedMessages() <= 0) return false;
 			case "cmd_expandAllThreads":
 			case "cmd_collapseAllThreads":
-                // these are enabled on when we are in threaded mode
                 if (!gDBView) return false;
                 return (gDBView.sortType == nsMsgViewSortType.byThread);
 				break;
@@ -368,8 +369,10 @@ var DefaultController =
 				return IsFolderCharsetEnabled();
       case "cmd_close":
       case "cmd_toggleWorkOffline":
-            case "cmd_selectFlagged":
         return true;
+            case "cmd_selectFlagged":
+                // disable select flagged until I finish the code in nsMsgDBView.cpp
+                return false;
 			default:
 				return false;
 		}

@@ -1326,9 +1326,7 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
     }
     break;
   case nsMsgViewCommandType::selectThread:
-#ifdef DEBUG_seth
-    printf("get the current index, expand the thread, and select all messages in that thread.\n");
-#endif
+    rv = ExpandAndSelectThread();
     break;
   case nsMsgViewCommandType::selectFlagged:
 #ifdef DEBUG_seth
@@ -2454,7 +2452,6 @@ nsresult nsMsgDBView::GetThreadCount(nsMsgKey messageKey, PRUint32 *pThreadCount
 	return rv;
 }
 
-
 // This counts the number of messages in an expanded thread, given the
 // index of the first message in the thread.
 PRInt32 nsMsgDBView::CountExpandedThread(nsMsgViewIndex index)
@@ -2531,6 +2528,52 @@ nsresult nsMsgDBView::ToggleExpansion(nsMsgViewIndex index, PRUint32 *numChanged
 	else
 		return CollapseByIndex(threadIndex, numChanged);
 
+}
+
+nsresult nsMsgDBView::ExpandAndSelectThread()
+{
+    nsresult rv;
+
+    NS_ASSERTION(mOutlinerSelection, "no outliner selection");
+    if (!mOutlinerSelection) return NS_ERROR_UNEXPECTED;
+
+    PRInt32 index;
+    rv = mOutlinerSelection->GetCurrentIndex(&index);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsMsgViewIndex threadIndex = ThreadIndexOfMsg(GetAt(index), index);
+    if (threadIndex == nsMsgViewIndex_None) {
+        NS_ASSERTION(PR_FALSE, "couldn't find thread");
+        return NS_MSG_MESSAGE_NOT_FOUND;
+    }
+
+    PRInt32 flags = m_flags[threadIndex];
+    PRInt32 count = 0;
+
+    if ((flags & MSG_VIEW_FLAG_ISTHREAD) && (flags && MSG_VIEW_FLAG_HASCHILDREN)) {
+      // if closed, expand this thread.
+      if (flags & MSG_FLAG_ELIDED) {
+        PRUint32 numExpanded;
+        rv = ExpandByIndex(threadIndex, &numExpanded);
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
+
+      // get the number of messages in the expanded thread
+      // so we know how many to select
+      count = CountExpandedThread(threadIndex); 
+    }
+    NS_ASSERTION(count > 0, "bad count");
+
+    // clear the existing selection.
+    mOutlinerSelection->ClearSelection(); 
+
+    // is this correct?
+    mOutlinerSelection->SetCurrentIndex(threadIndex); 
+
+    // the count should be 1 or greater. if there was only one message in the thread, we just select it.
+    // if more, we select all of them.
+    mOutlinerSelection->RangedSelect(threadIndex, threadIndex + count - 1, PR_TRUE /* augment */);
+    return NS_OK;
 }
 
 nsresult nsMsgDBView::ExpandAll()
