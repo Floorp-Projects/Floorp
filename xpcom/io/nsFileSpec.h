@@ -182,6 +182,9 @@ class nsOutputConsoleStream;
 
 class nsString;
 
+class nsIUnicodeEncoder;
+class nsIUnicodeDecoder;
+
 //========================================================================================
 // Conversion of native file errors to nsresult values. These are really only for use
 // in the file module, clients of this interface shouldn't really need them.
@@ -351,6 +354,9 @@ class NS_COM nsFileSpec
                                 // Do not try to free this!
        const char*              GetNativePathCString() const { return GetCString(); }
 
+                                // Returns a path in unicode 
+                                // converted from a file system charset.
+       void                     GetNativePathString(nsString &nativePathString);
 
        PRBool                   IsChildOf(nsFileSpec &possibleParent);
 
@@ -523,6 +529,16 @@ class NS_COM nsFileSpec
                                     const nsAutoCString argsString(args);
                                     return Execute(argsString);
                                 }
+
+    // Internal routine
+    //--------------------------------------------------
+
+    // Convert's routine from Native charset to Unicode.
+    protected:
+
+                                // use delete [] to free the returned buffer
+       PRUnichar*               ConvertFromFileSystemCharset(const char *inString);
+       static void              GetFileSystemCharset(nsString & fileSystemCharset);
 
     //--------------------------------------------------
     // Data

@@ -31,6 +31,13 @@
 #include "plbase64.h"
 #include "prmem.h"
 
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#define NS_IMPL_IDS
+#include "nsIPlatformCharset.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIUnicodeDecoder.h"
+
 #include <string.h>
 #include <stdio.h>
 
@@ -795,6 +802,8 @@ nsFilePath nsFilePath::operator +(const char* inRelativeUnixPath) const
 //                                nsFileSpec implementation
 //========================================================================================
 
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
 #ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec()
@@ -1102,6 +1111,91 @@ PRBool nsFileSpec::IsChildOf(nsFileSpec &possibleParent)
     return PR_FALSE;
 }
 
+//----------------------------------------------------------------------------------------
+void nsFileSpec::GetFileSystemCharset(nsString & fileSystemCharset)
+//----------------------------------------------------------------------------------------
+{
+  // From mozilla/widget/src/windows/nsFileWidget.cpp
+
+  static nsAutoString aCharset;
+  nsresult rv;
+
+  if (aCharset.Length() < 1) {
+	  nsCOMPtr <nsIPlatformCharset> platformCharset;
+	  rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+	                                          NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+	  if (NS_SUCCEEDED(rv)) 
+		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
+	  if (NS_FAILED(rv)) 
+		  aCharset.SetString("ISO-8859-1");
+  }
+  fileSystemCharset = aCharset;
+}
+
+
+//----------------------------------------------------------------------------------------
+PRUnichar * nsFileSpec::ConvertFromFileSystemCharset(const char *inString)
+//----------------------------------------------------------------------------------------
+{
+  // From mozilla/widget/src/windows/nsFileWidget.cpp
+
+  nsIUnicodeDecoder *aUnicodeDecoder = nsnull;
+  PRUnichar *outString = nsnull;
+  nsresult rv = NS_OK;
+
+  // get file system charset and create a unicode encoder
+  nsAutoString fileSystemCharset;
+  GetFileSystemCharset(fileSystemCharset);
+
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+  if (NS_SUCCEEDED(rv)) {
+    rv = ccm->GetUnicodeDecoder(&fileSystemCharset, &aUnicodeDecoder);
+  }
+
+  // converts from the file system charset to unicode
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 inLength = nsCRT::strlen(inString);
+    PRInt32 outLength;
+    rv = aUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
+    if (NS_SUCCEEDED(rv)) {
+      outString = new PRUnichar[outLength+1];
+      if (nsnull == outString) {
+        return nsnull;
+      }
+      rv = aUnicodeDecoder->Convert(inString, &inLength, outString, &outLength);
+      if (NS_SUCCEEDED(rv)) {
+        outString[outLength] = 0;
+      }
+    }
+  }
+  NS_IF_RELEASE(aUnicodeDecoder);
+
+  return NS_SUCCEEDED(rv) ? outString : nsnull;
+}
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::GetNativePathString(nsString &nativePathString)
+//----------------------------------------------------------------------------------------
+{
+  const char *path = GetCString();
+  if (nsnull == path) {
+    nativePathString.SetString("");
+    return;
+  }
+  else {
+    PRUnichar *converted = ConvertFromFileSystemCharset(path);
+    if (nsnull != converted) {
+      nativePathString.SetString(converted);
+      delete [] converted;
+    }
+    else
+      nativePathString.SetString(path);
+  }
+}
+ 
+ 
 #ifdef XP_MAC
 #pragma mark -
 #endif

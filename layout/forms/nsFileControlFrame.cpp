@@ -258,10 +258,9 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     if (result) {
       nsFileSpec fileSpec;
       fileWidget->GetFile(fileSpec);
-      const char * pathName = fileSpec.GetNativePathCString();
-      if (pathName) {
-        mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value, pathName);
-      }
+      nsAutoString  pathName;
+      fileSpec.GetNativePathString(pathName);
+      mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value, pathName);
     }
     NS_RELEASE(fileWidget);
   }
