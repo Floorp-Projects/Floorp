@@ -647,7 +647,7 @@ js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts)
     JSTokenType tt;
 
     JS_ASSERT(ts->lookahead == 0 ||
-              CURRENT_TOKEN(ts).pos.begin.lineno == ts->lineno);
+              CURRENT_TOKEN(ts).pos.end.lineno == ts->lineno);
     ts->flags |= TSF_NEWLINES;
     tt = js_PeekToken(cx, ts);
     ts->flags &= ~TSF_NEWLINES;
