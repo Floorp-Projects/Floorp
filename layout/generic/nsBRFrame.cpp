@@ -184,6 +184,8 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
       // code in nsLineLayout::VerticalAlignFrames that zaps minY/maxY
       // if the width is zero.
       // XXX This also fixes bug 10036!
+      // Warning: nsTextControlFrame::CalculateSizeStandard depends on
+      // the following line, see bug 228752.
       aMetrics.width = 1;
 
       // Update max-element-width to keep us honest
