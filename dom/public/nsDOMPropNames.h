@@ -217,19 +217,19 @@
     "document.getelementsbytagname", \
     "document.implementation", \
     "documenttype.entities", \
+    "documenttype.internalsubset", \
     "documenttype.name", \
     "documenttype.notations", \
     "documenttype.publicid", \
     "documenttype.systemid", \
-    "documenttype.internalsubset", \
     "domexception.code", \
     "domexception.message", \
     "domexception.name", \
     "domexception.result", \
     "domexception.tostring", \
-    "domimplementation.hasfeature", \
-    "domimplementation.createdocumenttype", \
     "domimplementation.createdocument", \
+    "domimplementation.createdocumenttype", \
+    "domimplementation.hasfeature", \
     "element.getattribute", \
     "element.getattributenode", \
     "element.getelementsbytagname", \
@@ -355,6 +355,8 @@
     "htmlfontelement.color", \
     "htmlfontelement.face", \
     "htmlfontelement.size", \
+    "htmlformcontrollist.item", \
+    "htmlformcontrollist.nameditem", \
     "htmlformelement.acceptcharset", \
     "htmlformelement.action", \
     "htmlformelement.elements", \
@@ -365,8 +367,6 @@
     "htmlformelement.reset", \
     "htmlformelement.submit", \
     "htmlformelement.target", \
-    "htmlformcontrollist.item", \
-    "htmlformcontrollist.nameditem", \
     "htmlframeelement.frameborder", \
     "htmlframeelement.longdesc", \
     "htmlframeelement.marginheight", \
@@ -655,17 +655,17 @@
     "navigator.javaenabled", \
     "navigator.language", \
     "navigator.mimetypes", \
-    "navigator.platform", \
-    "navigator.vendor", \
-    "navigator.vendorsub", \
-    "navigator.product", \
-    "navigator.productsub", \
     "navigator.oscpu", \
+    "navigator.platform", \
     "navigator.plugins", \
     "navigator.preference", \
+    "navigator.product", \
+    "navigator.productsub", \
     "navigator.securitypolicy", \
     "navigator.taintenabled", \
     "navigator.useragent", \
+    "navigator.vendor", \
+    "navigator.vendorsub", \
     "node.appendchild", \
     "node.attributes", \
     "node.childnodes", \
@@ -693,21 +693,21 @@
     "nsdocument.height", \
     "nsdocument.stylesheets", \
     "nsdocument.width", \
-    "nshtmlanchorelement.protocol", \
+    "nshtmlanchorelement.hash", \
     "nshtmlanchorelement.host", \
     "nshtmlanchorelement.hostname", \
     "nshtmlanchorelement.pathname", \
-    "nshtmlanchorelement.search", \
     "nshtmlanchorelement.port", \
-    "nshtmlanchorelement.hash", \
+    "nshtmlanchorelement.protocol", \
+    "nshtmlanchorelement.search", \
     "nshtmlanchorelement.text", \
-    "nshtmlareaelement.protocol", \
+    "nshtmlareaelement.hash", \
     "nshtmlareaelement.host", \
     "nshtmlareaelement.hostname", \
     "nshtmlareaelement.pathname", \
-    "nshtmlareaelement.search", \
     "nshtmlareaelement.port", \
-    "nshtmlareaelement.hash", \
+    "nshtmlareaelement.protocol", \
+    "nshtmlareaelement.search", \
     "nshtmlbuttonelement.blur", \
     "nshtmlbuttonelement.focus", \
     "nshtmldocument.alinkcolor", \
@@ -797,7 +797,6 @@
     "screen.pixeldepth", \
     "screen.width", \
     "selection.addrange", \
-    "selection.removerange", \
     "selection.addselectionlistener", \
     "selection.anchornode", \
     "selection.anchoroffset", \
@@ -806,17 +805,18 @@
     "selection.collapsetoend", \
     "selection.collapsetostart", \
     "selection.containsnode", \
-    "selection.sethint", \
-    "selection.gethint", \
     "selection.deletefromdocument", \
     "selection.endbatchchanges", \
     "selection.extend", \
     "selection.focusnode", \
     "selection.focusoffset", \
+    "selection.gethint", \
     "selection.getrangeat", \
     "selection.iscollapsed", \
     "selection.rangecount", \
+    "selection.removerange", \
     "selection.removeselectionlistener", \
+    "selection.sethint", \
     "selection.startbatchchanges", \
     "selection.tostring", \
     "selectionlistener.notifyselectionchanged", \
@@ -850,7 +850,6 @@
     "window.closed", \
     "window.confirm", \
     "window.content", \
-    "window.sidebar", \
     "window.controllers", \
     "window.defaultstatus", \
     "window.directories", \
@@ -903,6 +902,7 @@
     "window.self", \
     "window.setinterval", \
     "window.settimeout", \
+    "window.sidebar", \
     "window.sizetocontent", \
     "window.status", \
     "window.statusbar", \
@@ -915,6 +915,7 @@
     "windowcollection.item", \
     "windowcollection.length", \
     "windowcollection.nameditem", \
+    "xulbrowserelement.webbrowser", \
     "xulcheckboxelement.accesskey", \
     "xulcheckboxelement.checked", \
     "xulcheckboxelement.crop", \
@@ -938,14 +939,12 @@
     "xuldocument.persist", \
     "xuldocument.popupnode", \
     "xuldocument.tooltipnode", \
-    "xuliframeelement.docshell", \
-    "xulbrowserelement.webbrowser", \
     "xuleditorelement.editorshell", \
     "xulelement.addbroadcastlistener", \
     "xulelement.anonymouscontent", \
     "xulelement.blur", \
-    "xulelement.click", \
     "xulelement.classname", \
+    "xulelement.click", \
     "xulelement.controllers", \
     "xulelement.database", \
     "xulelement.docommand", \
@@ -955,6 +954,7 @@
     "xulelement.removebroadcastlistener", \
     "xulelement.resource", \
     "xulelement.style", \
+    "xuliframeelement.docshell", \
     "xulmenulistelement.crop", \
     "xulmenulistelement.data", \
     "xulmenulistelement.disabled", \
@@ -962,9 +962,8 @@
     "xulmenulistelement.selecteditem", \
     "xulmenulistelement.src", \
     "xulmenulistelement.value", \
-    "xulpopupelement.openpopup", \
     "xulpopupelement.closepopup", \
-    "xulradiogroupelement.selecteditem", \
+    "xulpopupelement.openpopup", \
     "xulradioelement.accesskey", \
     "xulradioelement.checked", \
     "xulradioelement.crop", \
@@ -972,6 +971,7 @@
     "xulradioelement.imgalign", \
     "xulradioelement.src", \
     "xulradioelement.value", \
+    "xulradiogroupelement.selecteditem", \
     "xultitledbuttonelement.accesskey", \
     "xultitledbuttonelement.crop", \
     "xultitledbuttonelement.disabled", \
@@ -982,6 +982,10 @@
     "xultreeelement.additemtoselection", \
     "xultreeelement.clearcellselection", \
     "xultreeelement.clearitemselection", \
+    "xultreeelement.currentcell", \
+    "xultreeelement.currentitem", \
+    "xultreeelement.ensureelementisvisible", \
+    "xultreeelement.getrowindexof", \
     "xultreeelement.invertselection", \
     "xultreeelement.removecellfromselection", \
     "xultreeelement.removeitemfromselection", \
@@ -990,13 +994,9 @@
     "xultreeelement.selectcellrange", \
     "xultreeelement.selectedcells", \
     "xultreeelement.selecteditems", \
-    "xultreeelement.currentitem", \
-    "xultreeelement.currentcell", \
     "xultreeelement.selectitem", \
     "xultreeelement.selectitemrange", \
     "xultreeelement.togglecellselection", \
     "xultreeelement.toggleitemselection", \
-    "xultreeelement.ensureelementisvisible", \
-    "xultreeelement.getrowindexof", \
 
 #endif // nsDOMPropNames_h__
