@@ -94,9 +94,6 @@ nsLDAPProtocolHandler::NewURI(const nsACString &aSpec,
     nsCOMPtr<nsILDAPURL> url;
     nsresult rv;
 
-    // no concept of a relative ldap url
-    NS_ASSERTION(!aBaseURI, "base url passed into LDAP protocol handler");
-
     url = do_CreateInstance(kLDAPURLCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 

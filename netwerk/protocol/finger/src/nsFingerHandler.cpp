@@ -87,9 +87,6 @@ nsFingerHandler::NewURI(const nsACString &aSpec,
                         nsIURI **result) {
     nsresult rv;
 
-    // no concept of a relative finger url
-    NS_ASSERTION(!aBaseURI, "base url passed into finger protocol handler");
-
     nsIURI* url;
     rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
                                             NS_GET_IID(nsIURI),

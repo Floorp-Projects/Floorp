@@ -101,9 +101,6 @@ nsDataHandler::NewURI(const nsACString &aSpec,
                       nsIURI **result) {
     nsresult rv;
 
-    // no concept of a relative data url
-    NS_ASSERTION(!aBaseURI, "base url passed into data protocol handler");
-
     nsIURI* url;
     rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
                                             NS_GET_IID(nsIURI),

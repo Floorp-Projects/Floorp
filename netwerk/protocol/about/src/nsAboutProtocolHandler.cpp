@@ -118,9 +118,6 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
 {
     nsresult rv;
 
-    // no concept of a relative about url
-    NS_ASSERTION(!aBaseURI, "base url passed into about protocol handler");
-
     nsIURI* url;
     rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
                                             NS_GET_IID(nsIURI),

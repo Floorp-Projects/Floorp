@@ -76,8 +76,6 @@ NS_IMETHODIMP inBitmapProtocolHandler::NewURI(const nsACString &aSpec,
                                               nsIURI *aBaseURI,
                                               nsIURI **result) 
 {
-  // no concept of a relative bitmap url
-  NS_ASSERTION(!aBaseURI, "base url passed into bitmap protocol handler");
   
   nsCOMPtr<nsIURI> uri;
   NS_NEWXPCOM(uri, inBitmapURI);
