@@ -32,8 +32,8 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libnkcachemgr_s.a \
 		$(DIST)/lib/libnkfilecache_s.a \
 		$(DIST)/lib/libnkmemcache_s.a \
-        $(DIST)/lib/libmozdbm_s.a     \
-        $(DIST)/lib/libxpcomio_s.a \
+		$(DIST)/lib/libmozdbm_s.a     \
+		$(DIST)/lib/libxpcomio_s.a \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -46,6 +46,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_FORCE_ALL) \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
