@@ -51,7 +51,6 @@
     (production :primary-expression (:array-literal) primary-expression-array-literal)
     (production :primary-expression (:object-literal) primary-expression-object-literal)
     (production :primary-expression (:function-expression) primary-expression-function-expression)
-    (production :primary-expression (:super-expression) primary-expression-super-expression)
     
     (production :parenthesized-expression (\( (:assignment-expression allow-in) \)) parenthesized-expression-assignment-expression)
     
@@ -90,10 +89,10 @@
     
     
     (%subsection "Super Operator")
-    (production :super-expression (super (:- \( include exclude)) super-expression-super)
-    (production :super-expression (super this) super-expression-super-this)
-    (production :super-expression (super :qualified-identifier) super-expression-super-qualified-identifier)
-    (production :super-expression (super :parenthesized-expression) super-expression-super-parenthesized-expression)
+    (production :super-expression (super) super-expression-super)
+    (production :super-expression (:full-super-expression) super-expression-full-super-expression)
+    
+    (production :full-super-expression (super :parenthesized-expression) full-super-expression-super-parenthesized-expression)
     
     
     (%subsection "Postfix Operators")
@@ -101,37 +100,49 @@
     (production :postfix-expression (:full-postfix-expression) postfix-expression-full-postfix-expression)
     (production :postfix-expression (:short-new-expression) postfix-expression-short-new-expression)
     
+    (production :postfix-expression-or-super (:postfix-expression) postfix-expression-or-super-postfix-expression)
+    (production :postfix-expression-or-super (:super-expression) postfix-expression-or-super-super)
+    
     (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier)
     (production :attribute-expression (:attribute-expression :member-operator) attribute-expression-member-operator)
+    (production :attribute-expression (:attribute-expression :class-of-operator) attribute-expression-class-of-operator)
     (production :attribute-expression (:attribute-expression :arguments) attribute-expression-call)
     
     (production :full-postfix-expression (:primary-expression) full-postfix-expression-primary-expression)
     (production :full-postfix-expression (:expression-qualified-identifier) full-postfix-expression-expression-qualified-identifier)
     (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression)
     (production :full-postfix-expression (:full-postfix-expression :member-operator) full-postfix-expression-member-operator)
+    (production :full-postfix-expression (:super-expression :member-operator) full-postfix-expression-super-member-operator)
+    (production :full-postfix-expression (:full-postfix-expression :class-of-operator) full-postfix-expression-class-of-operator)
     (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call)
-    (production :full-postfix-expression (:postfix-expression :no-line-break ++) full-postfix-expression-increment)
-    (production :full-postfix-expression (:postfix-expression :no-line-break --) full-postfix-expression-decrement)
+    (production :full-postfix-expression (:full-super-expression :arguments) full-postfix-expression-super-call)
+    (production :full-postfix-expression (:postfix-expression-or-super :no-line-break ++) full-postfix-expression-increment)
+    (production :full-postfix-expression (:postfix-expression-or-super :no-line-break --) full-postfix-expression-decrement)
     (? js2
       (production :full-postfix-expression (:postfix-expression @ :qualified-identifier) full-postfix-expression-coerce)
       (production :full-postfix-expression (:postfix-expression @ :parenthesized-expression) full-postfix-expression-indirect-coerce))
     
     (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new)
+    (production :full-new-expression (new :full-super-expression :arguments) full-new-expression-super-new)
     
     (production :full-new-subexpression (:primary-expression) full-new-subexpression-primary-expression)
     (production :full-new-subexpression (:qualified-identifier) full-new-subexpression-qualified-identifier)
     (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression)
     (production :full-new-subexpression (:full-new-subexpression :member-operator) full-new-subexpression-member-operator)
+    (production :full-new-subexpression (:super-expression :member-operator) full-new-subexpression-super-member-operator)
+    (production :full-new-subexpression (:full-new-subexpression :class-of-operator) full-new-subexpression-class-of-operator)
     
     (production :short-new-expression (new :short-new-subexpression) short-new-expression-new)
+    (production :short-new-expression (new :super-expression) short-new-expression-super-new)
     
     (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full)
     (production :short-new-subexpression (:short-new-expression) short-new-subexpression-new-short)
     
     
     (production :member-operator (\. :qualified-identifier) member-operator-qualified-identifier)
-    (production :member-operator (\. class) member-operator-class)
     (production :member-operator (:brackets) member-operator-brackets)
+    
+    (production :class-of-operator (\. class) class-of-operator-class)
     
     (production :brackets ([ ]) brackets-none)
     (production :brackets ([ (:list-expression allow-in) ]) brackets-unnamed)
@@ -148,65 +159,92 @@
     
     (%subsection "Unary Operators")
     (production :unary-expression (:postfix-expression) unary-expression-postfix)
-    (production :unary-expression (const :postfix-expression) unary-expression-const)
-    (production :unary-expression (delete :postfix-expression) unary-expression-delete)
+    (production :unary-expression (const :postfix-expression-or-super) unary-expression-const)
+    (production :unary-expression (delete :postfix-expression-or-super) unary-expression-delete)
     (production :unary-expression (void :unary-expression) unary-expression-void)
     (production :unary-expression (typeof :unary-expression) unary-expression-typeof)
-    (production :unary-expression (++ :postfix-expression) unary-expression-increment)
-    (production :unary-expression (-- :postfix-expression) unary-expression-decrement)
-    (production :unary-expression (+ :unary-expression) unary-expression-plus)
-    (production :unary-expression (- :unary-expression) unary-expression-minus)
-    (production :unary-expression (~ :unary-expression) unary-expression-bitwise-not)
+    (production :unary-expression (++ :postfix-expression-or-super) unary-expression-increment)
+    (production :unary-expression (-- :postfix-expression-or-super) unary-expression-decrement)
+    (production :unary-expression (+ :unary-expression-or-super) unary-expression-plus)
+    (production :unary-expression (- :unary-expression-or-super) unary-expression-minus)
+    (production :unary-expression (~ :unary-expression-or-super) unary-expression-bitwise-not)
     (production :unary-expression (! :unary-expression) unary-expression-logical-not)
+    
+    (production :unary-expression-or-super (:unary-expression) unary-expression-or-super-unary-expression)
+    (production :unary-expression-or-super (:super-expression) unary-expression-or-super-super)
     
     
     (%subsection "Multiplicative Operators")
     (production :multiplicative-expression (:unary-expression) multiplicative-expression-unary)
-    (production :multiplicative-expression (:multiplicative-expression * :unary-expression) multiplicative-expression-multiply)
-    (production :multiplicative-expression (:multiplicative-expression / :unary-expression) multiplicative-expression-divide)
-    (production :multiplicative-expression (:multiplicative-expression % :unary-expression) multiplicative-expression-remainder)
+    (production :multiplicative-expression (:multiplicative-expression-or-super * :unary-expression-or-super) multiplicative-expression-multiply)
+    (production :multiplicative-expression (:multiplicative-expression-or-super / :unary-expression-or-super) multiplicative-expression-divide)
+    (production :multiplicative-expression (:multiplicative-expression-or-super % :unary-expression-or-super) multiplicative-expression-remainder)
+    
+    (production :multiplicative-expression-or-super (:multiplicative-expression) multiplicative-expression-or-super-multiplicative-expression)
+    (production :multiplicative-expression-or-super (:super-expression) multiplicative-expression-or-super-super)
     
     
     (%subsection "Additive Operators")
     (production :additive-expression (:multiplicative-expression) additive-expression-multiplicative)
-    (production :additive-expression (:additive-expression + :multiplicative-expression) additive-expression-add)
-    (production :additive-expression (:additive-expression - :multiplicative-expression) additive-expression-subtract)
+    (production :additive-expression (:additive-expression-or-super + :multiplicative-expression-or-super) additive-expression-add)
+    (production :additive-expression (:additive-expression-or-super - :multiplicative-expression-or-super) additive-expression-subtract)
+    
+    (production :additive-expression-or-super (:additive-expression) additive-expression-or-super-additive-expression)
+    (production :additive-expression-or-super (:super-expression) additive-expression-or-super-super)
     
     
     (%subsection "Bitwise Shift Operators")
     (production :shift-expression (:additive-expression) shift-expression-additive)
-    (production :shift-expression (:shift-expression << :additive-expression) shift-expression-left)
-    (production :shift-expression (:shift-expression >> :additive-expression) shift-expression-right-signed)
-    (production :shift-expression (:shift-expression >>> :additive-expression) shift-expression-right-unsigned)
+    (production :shift-expression (:shift-expression-or-super << :additive-expression-or-super) shift-expression-left)
+    (production :shift-expression (:shift-expression-or-super >> :additive-expression-or-super) shift-expression-right-signed)
+    (production :shift-expression (:shift-expression-or-super >>> :additive-expression-or-super) shift-expression-right-unsigned)
+    
+    (production :shift-expression-or-super (:shift-expression) shift-expression-or-super-shift-expression)
+    (production :shift-expression-or-super (:super-expression) shift-expression-or-super-super)
     
     
     (%subsection "Relational Operators")
     (production (:relational-expression :beta) (:shift-expression) relational-expression-shift)
-    (production (:relational-expression :beta) ((:relational-expression :beta) < :shift-expression) relational-expression-less)
-    (production (:relational-expression :beta) ((:relational-expression :beta) > :shift-expression) relational-expression-greater)
-    (production (:relational-expression :beta) ((:relational-expression :beta) <= :shift-expression) relational-expression-less-or-equal)
-    (production (:relational-expression :beta) ((:relational-expression :beta) >= :shift-expression) relational-expression-greater-or-equal)
+    (production (:relational-expression :beta) ((:relational-expression-or-super :beta) < :shift-expression-or-super) relational-expression-less)
+    (production (:relational-expression :beta) ((:relational-expression-or-super :beta) > :shift-expression-or-super) relational-expression-greater)
+    (production (:relational-expression :beta) ((:relational-expression-or-super :beta) <= :shift-expression-or-super) relational-expression-less-or-equal)
+    (production (:relational-expression :beta) ((:relational-expression-or-super :beta) >= :shift-expression-or-super) relational-expression-greater-or-equal)
     (production (:relational-expression :beta) ((:relational-expression :beta) instanceof :shift-expression) relational-expression-instanceof)
-    (production (:relational-expression allow-in) ((:relational-expression allow-in) in :shift-expression) relational-expression-in)
+    (production (:relational-expression allow-in) ((:relational-expression allow-in) in :shift-expression-or-super) relational-expression-in)
+    
+    (production (:relational-expression-or-super :beta) ((:relational-expression :beta)) relational-expression-or-super-relational-expression)
+    (production (:relational-expression-or-super :beta) (:super-expression) relational-expression-or-super-super)
     
     
     (%subsection "Equality Operators")
     (production (:equality-expression :beta) ((:relational-expression :beta)) equality-expression-relational)
-    (production (:equality-expression :beta) ((:equality-expression :beta) == (:relational-expression :beta)) equality-expression-equal)
-    (production (:equality-expression :beta) ((:equality-expression :beta) != (:relational-expression :beta)) equality-expression-not-equal)
-    (production (:equality-expression :beta) ((:equality-expression :beta) === (:relational-expression :beta)) equality-expression-strict-equal)
-    (production (:equality-expression :beta) ((:equality-expression :beta) !== (:relational-expression :beta)) equality-expression-strict-not-equal)
+    (production (:equality-expression :beta) ((:equality-expression-or-super :beta) == (:relational-expression-or-super :beta)) equality-expression-equal)
+    (production (:equality-expression :beta) ((:equality-expression-or-super :beta) != (:relational-expression-or-super :beta)) equality-expression-not-equal)
+    (production (:equality-expression :beta) ((:equality-expression-or-super :beta) === (:relational-expression-or-super :beta)) equality-expression-strict-equal)
+    (production (:equality-expression :beta) ((:equality-expression-or-super :beta) !== (:relational-expression-or-super :beta)) equality-expression-strict-not-equal)
+    
+    (production (:equality-expression-or-super :beta) ((:equality-expression :beta)) equality-expression-or-super-equality-expression)
+    (production (:equality-expression-or-super :beta) (:super-expression) equality-expression-or-super-super)
     
     
     (%subsection "Binary Bitwise Operators")
     (production (:bitwise-and-expression :beta) ((:equality-expression :beta)) bitwise-and-expression-equality)
-    (production (:bitwise-and-expression :beta) ((:bitwise-and-expression :beta) & (:equality-expression :beta)) bitwise-and-expression-and)
+    (production (:bitwise-and-expression :beta) ((:bitwise-and-expression-or-super :beta) & (:equality-expression-or-super :beta)) bitwise-and-expression-and)
     
     (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and)
-    (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ (:bitwise-and-expression :beta)) bitwise-xor-expression-xor)
+    (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression-or-super :beta) ^ (:bitwise-and-expression-or-super :beta)) bitwise-xor-expression-xor)
     
     (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor)
-    (production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| (:bitwise-xor-expression :beta)) bitwise-or-expression-or)
+    (production (:bitwise-or-expression :beta) ((:bitwise-or-expression-or-super :beta) \| (:bitwise-xor-expression-or-super :beta)) bitwise-or-expression-or)
+    
+    (production (:bitwise-and-expression-or-super :beta) ((:bitwise-and-expression :beta)) bitwise-and-expression-or-super-bitwise-and-expression)
+    (production (:bitwise-and-expression-or-super :beta) (:super-expression) bitwise-and-expression-or-super-super)
+    
+    (production (:bitwise-xor-expression-or-super :beta) ((:bitwise-xor-expression :beta)) bitwise-xor-expression-or-super-bitwise-xor-expression)
+    (production (:bitwise-xor-expression-or-super :beta) (:super-expression) bitwise-xor-expression-or-super-super)
+    
+    (production (:bitwise-or-expression-or-super :beta) ((:bitwise-or-expression :beta)) bitwise-or-expression-or-super-bitwise-or-expression)
+    (production (:bitwise-or-expression-or-super :beta) (:super-expression) bitwise-or-expression-or-super-super)
     
     
     (%subsection "Binary Logical Operators")
@@ -231,7 +269,9 @@
     (%subsection "Assignment Operators")
     (production (:assignment-expression :beta) ((:conditional-expression :beta)) assignment-expression-conditional)
     (production (:assignment-expression :beta) (:postfix-expression = (:assignment-expression :beta)) assignment-expression-assignment)
-    (production (:assignment-expression :beta) (:postfix-expression :compound-assignment (:assignment-expression :beta)) assignment-expression-compound)
+    (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment (:assignment-expression :beta)) assignment-expression-compound)
+    (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment :super-expression) assignment-expression-compound-super)
+    (production (:assignment-expression :beta) (:postfix-expression :logical-assignment (:assignment-expression :beta)) assignment-expression-logical-compound)
     
     (production :compound-assignment (*=) compound-assignment-multiply)
     (production :compound-assignment (/=) compound-assignment-divide)
@@ -244,9 +284,10 @@
     (production :compound-assignment (&=) compound-assignment-bitwise-and)
     (production :compound-assignment (^=) compound-assignment-bitwise-xor)
     (production :compound-assignment (\|=) compound-assignment-bitwise-or)
-    (production :compound-assignment (&&=) compound-assignment-logical-and)
-    (production :compound-assignment (^^=) compound-assignment-logical-xor)
-    (production :compound-assignment (\|\|=) compound-assignment-logical-or)
+    
+    (production :logical-assignment (&&=) logical-assignment-logical-and)
+    (production :logical-assignment (^^=) logical-assignment-logical-xor)
+    (production :logical-assignment (\|\|=) logical-assignment-logical-or)
     
     
     (%subsection "Comma Expressions")
@@ -276,7 +317,7 @@
     (production (:statement :omega) ((:annotated-definition :omega)) statement-annotated-definition)
     (production (:statement :omega) (:empty-statement) statement-empty-statement)
     (production (:statement :omega) (:expression-statement (:semicolon :omega)) statement-expression-statement)
-    ;(production (:statement :omega) (:super-constructor-statement (:semicolon :omega)) statement-super-constructor-statement)
+    (production (:statement :omega) (:super-statement (:semicolon :omega)) statement-super-statement)
     (production (:statement :omega) (:annotated-block) statement-annotated-block)
     (production (:statement :omega) ((:labeled-statement :omega)) statement-labeled-statement)
     (production (:statement :omega) ((:if-statement :omega)) statement-if-statement)
@@ -311,8 +352,8 @@
     (production :expression-statement ((:- function { const) (:list-expression allow-in)) expression-statement-list-expression)
     
     
-    ;(%subsection "Super Constructor Statement")
-    ;(production :super-constructor-statement (super :arguments) super-constructor-statement-super-arguments)
+    (%subsection "Super Statement")
+    (production :super-statement (super :arguments) super-statement-super-arguments)
     
     
     (%subsection "Block")
