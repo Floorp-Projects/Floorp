@@ -50,7 +50,6 @@ CPPSRCS		= \
 		nsLDAPProtocolHandler.cpp \
 		nsLDAPProtocolModule.cpp \
 		nsLDAPChannel.cpp \
-		nsLDAPURI.cpp \
 		nsLDAPMessage.cpp \
 		nsLDAPConnection.cpp \
 		nsLDAPOperation.cpp \
