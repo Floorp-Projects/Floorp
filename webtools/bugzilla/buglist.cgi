@@ -1588,6 +1588,12 @@ if ($count > 0) {
     print "</FORM>\n";
 }
 
+# 2001-06-20, myk@mozilla.org, bug 47914:
+# Switch back from the shadow database to the regular database 
+# so that PutFooter() can determine the current user even if
+# the "logincookies" table is corrupted in the shadow database.
+SendSQL("USE $::db_name");
+
 PutFooter();
 
 if ($serverpush) {
