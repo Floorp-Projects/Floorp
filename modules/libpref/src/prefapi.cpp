@@ -183,7 +183,7 @@ class PrefNameBuffer;
 // PR_ALIGN_OF_WORD is only defined on some platforms.  ALIGN_OF_WORD has
 // already been defined to PR_ALIGN_OF_WORD everywhere
 #ifndef PR_ALIGN_OF_WORD
-#define PR_ALIGN_OF_WORD sizeof(void*)
+#define PR_ALIGN_OF_WORD PR_ALIGN_OF_POINTER
 #endif
 
 // making PrefNameBuffer exactly 8k for nice allocation
