@@ -60,8 +60,13 @@ AC_ARG_ENABLE(target,
     MOZ_TARGET=)
 
 if test -n "$MOZ_DEBUG"; then
-    CFLAGS="$CFLAGS -g"
-    CXXFLAGS="$CXXFLAGS -g"
+    CFLAGS="-g $CFLAGS"
+    CXXFLAGS="-g $CXXFLAGS"
+    DEFINES="$DEFINES -DDEBUG -UNDEBUG -DDEBUG_$(shell whoami)"
+else
+    CFLAGS="-O $CFLAGS"
+    CXXFLAGS="-O $CFLAGS"
+    DEFINES="$DEFINES -UDEBUG -DNDEBUG"    
 fi
 
 dnl ========================================================
