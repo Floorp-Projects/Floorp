@@ -26,6 +26,10 @@ ifndef topsrcdir
 topsrcdir	= $(DEPTH)
 endif
 
+ifndef USE_AUTOCONF
+include $(topsrcdir)/config/autoconf.mk
+endif
+
 #
 # Define an include-at-most-once flag
 #
@@ -195,12 +199,7 @@ NFSPWD		= $(DEPTH)/config/nfspwd
 PURIFY		= purify $(PURIFYOPTIONS)
 QUANTIFY	= quantify $(QUANTIFYOPTIONS)
 RANLIB		= /bin/true
-SDKINSTALL	= $(NSINSTALL) -t
-UNZIP_PROG	= $(LOCAL_BIN)/unzip
-ZIP_PROG	= $(LOCAL_BIN)/zip
-ZIP_COMPR	= 9
-ZIP_FLAGS	= -$(ZIP_COMPR)r
-MOC			= moc
+MOC		= moc
 XPIDL_COMPILE 	= $(DIST)/bin/xpidl
 XPIDL_LINK	= $(DIST)/bin/xpt_link
 
@@ -247,10 +246,7 @@ else
 JAVA_PROG	= $(LOCAL_BIN)java
 JAVAC_ZIP	= $(JAVA_LIB)/javac.zip
 endif
-PERL		= perl
 TAR		= tar
-EMACS		= xemacs
-WHOAMI		= /usr/bin/whoami
 endif
 endif
 
@@ -259,14 +255,8 @@ include $(topsrcdir)/config/$(OS_ARCH).mk
 endif
 
 OPTIMIZER	=
-ifndef MOZ_DEBUG
-DEFINES		+= -UDEBUG -DNDEBUG -DTRIMMED
-endif
 XBCFLAGS	=
-
 ifdef MOZ_DEBUG
-OPTIMIZER	=
-DEFINES		+= -DDEBUG -UNDEBUG -DDEBUG_$(shell $(WHOAMI)) -DTRACING
 JAVA_OPTIMIZER	= -g
 XBCFLAGS	= -FR$*
 endif
@@ -325,12 +315,6 @@ endif
 # Name of the binary code directories
 #
 # Override defaults
-EMACS			= $(ACEMACS)
-PERL			= $(ACPERL)
-RANLIB			= $(ACRANLIB)
-UNZIP_PROG		= $(ACUNZIP)
-WHOAMI			= $(ACWHOAMI)
-ZIP_PROG		= $(ACZIP)
 
 XPDIST		= $(DEPTH)/dist
 
@@ -371,80 +355,13 @@ endif
 
 DEFINES		+= -DOSTYPE=\"$(OS_CONFIG)\"
 
-# Specify that we are building a client.
-# This will instruct the cross platform libraries to
-# include all the client specific cruft.
-ifdef SERVER_BUILD
-DEFINES		+= -DSERVER_BUILD
-ifdef LIVEWIRE
-DEFINES		+= -DLIVEWIRE
-endif
-STATIC_JAVA	= yes
-else
-MOZILLA_CLIENT	= 1
-MOZ_JSD		= 1
-endif
-
-ifdef MOZ_MAIL_COMPOSE
-DEFINES		+= -DMOZ_MAIL_COMPOSE
-endif
-
-ifdef MOZ_MAIL_NEWS
-# for now, don't define MOZ_MAIL_NEWS inside source
-# DEFINES += -DMOZ_MAIL_NEWS
-endif
-
-ifdef NECKO
-DEFINES += -DNECKO
-endif
-
-ifdef MOZ_DARK
-DEFINES		+= -DMOZ_LDAP -DMOZ_MAIL_NEWS -DMOZ_NEO -DMOZ_OFFLINE -DMOZ_TASKBAR
-MOZ_LDAP	= 1
-MOZ_MAIL_NEWS	= 1
-MOZ_NEO		= 1
-MOZ_OFFLINE	= 1
-MOZ_TASKBAR	= 1
-endif
-
-ifdef MOZ_SMOOTH_PROGRESS
-DEFINES         += -DSMOOTH_PROGRESS
-endif
-
 ifdef MOZ_SECURITY
 DEFINES		+= -DMOZ_SECURITY
 endif
 
-# Crash-reporting system
-ifdef MOZ_FULLCIRCLE
-DEFINES		+= -DMOZ_FULLCIRCLE
-endif
-
-ifdef BUILD_DEBUG_GC
-DEFINES		+= -DDEBUG_GC
-endif
-
-ifdef MOZ_MEDIUM
-ifndef MODULAR_NETLIB
-SMART_MAIL = 1
-endif
-endif
-
-# i'm not sure if SHACK and ENDER still need to be defined explicitly
-# but I will just to be on the safe side. -skinny
-ifdef SMART_MAIL
-DEFINES     += -DSMART_MAIL -DENDER -DMOZ_ENDER_MIME -DSHACK
-endif
-
-
 #
 # Platform dependent switching off of JAVA
 #
-
-ifdef MOZ_LIBTEST
-DEFINES		+= -DLAYPROBE_API
-MOZ_LIBTEST	= 1
-endif
 
 ifdef MOZ_JAVA
 DEFINES		+= -DJAVA
@@ -472,22 +389,6 @@ ifdef FORTEZZA
 DEFINES		+= -DFORTEZZA
 endif
 
-ifdef UNIX_CRASH_ON_ASSERT
-DEFINES		+= -DUNIX_CRASH_ON_ASSERT
-endif
-
-ifdef SHACK
-DEFINES		+= -DSHACK
-endif
-
-ifdef MOZ_DOM
-DEFINES		+= -DDOM
-endif
-
-ifdef MOZ_TRANSACTION_RECEIPTS 
-DEFINES 	+= -DTRANSACTION_RECEIPTS 
-endif
-
 # For profiling
 ifdef MOZILLA_GPROF
 # Don't want profiling on build tools..
@@ -496,17 +397,9 @@ PROF_FLAGS	= $(OS_GPROF_FLAGS) -DMOZILLA_GPROF
 endif
 endif
 
-ifndef MOZ_FE
-MOZ_FE		= x
-endif
-
 ######################################################################
 
 GARBAGE		= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
-
-ifndef SDK
-SDK		= $(DEPTH)/dist/sdk
-endif
 
 ifneq ($(OS_ARCH),WINNT)
 NSINSTALL	= $(DEPTH)/config/nsinstall
@@ -677,17 +570,6 @@ ifneq (, $(filter $(MODULE), $(MOZ_DEBUG_MODULES)))
   OS_CXXFLAGS += -g
 endif
 
-ifdef NECKO
-DEFINES += -DNECKO
-endif
-
 DEFINES		+= -DOSTYPE=\"$(OS_CONFIG)\"
-
-EMACS			:= $(ACEMACS)
-PERL			:= $(ACPERL)
-RANLIB			:= $(ACRANLIB)
-UNZIP_PROG		:= $(ACUNZIP)
-WHOAMI			:= $(ACWHOAMI)
-ZIP_PROG		:= $(ACZIP)
 
 endif # ! DEBUG_AUTOCONF_XCOMPILE
