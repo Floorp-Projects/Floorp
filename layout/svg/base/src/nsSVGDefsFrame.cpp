@@ -198,6 +198,12 @@ nsSVGDefsFrame::ReplaceFrame(nsIAtom*  aListName,
   return NS_ERROR_UNEXPECTED;
 }
 
+nsIAtom *
+nsSVGDefsFrame::GetType() const
+{
+  return nsLayoutAtoms::svgDefsFrame;
+}
+
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:
 

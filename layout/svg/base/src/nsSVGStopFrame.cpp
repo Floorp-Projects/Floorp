@@ -40,6 +40,7 @@
 #include "nsIDOMSVGStopElement.h"
 #include "nsStyleContext.h"
 #include "nsContainerFrame.h"
+#include "nsLayoutAtoms.h"
 
 // This is a very simple frame whose only purpose is to capture style change
 // events and propogate them to the parent.  Most of the heavy lifting is done
@@ -49,6 +50,20 @@ typedef nsContainerFrame  nsSVGStopFrameBase;
 
 class nsSVGStopFrame : public nsSVGStopFrameBase
 {
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgStopFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGStop"), aResult);
+  }
+#endif
+
 protected:
   friend nsresult NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
                                      nsIContent*   aContent, 
@@ -76,6 +91,12 @@ nsSVGStopFrame::DidSetStyleContext(nsPresContext* aPresContext)
   if (mParent)
     mParent->DidSetStyleContext(aPresContext);
   return NS_OK;
+}
+
+nsIAtom *
+nsSVGStopFrame::GetType() const
+{
+  return nsLayoutAtoms::svgStopFrame;
 }
 
 // -------------------------------------------------------------------------
@@ -106,3 +127,4 @@ nsresult NS_NewSVGStopFrame(nsIPresShell* aPresShell,
 
   return NS_OK;
 }
+

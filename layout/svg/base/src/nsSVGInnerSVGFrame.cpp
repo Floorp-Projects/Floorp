@@ -53,6 +53,7 @@
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
 #include "nsSVGMatrix.h"
+#include "nsLayoutAtoms.h"
 
 typedef nsContainerFrame nsSVGInnerSVGFrameBase;
 
@@ -98,7 +99,19 @@ public:
                                PRInt32        aNameSpaceID,
                                nsIAtom*       aAttribute,
                                PRInt32        aModType);
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgInnerSVGFrame
+   */
+  virtual nsIAtom* GetType() const;
 
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGInnerSVG"), aResult);
+  }
+#endif
 
   // nsISVGChildFrame interface:
   NS_IMETHOD Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips);
@@ -328,6 +341,11 @@ nsSVGInnerSVGFrame::AttributeChanged(nsIContent*    aChild,
   return NS_OK;
 }
 
+nsIAtom *
+nsSVGInnerSVGFrame::GetType() const
+{
+  return nsLayoutAtoms::svgInnerSVGFrame;
+}
 
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods

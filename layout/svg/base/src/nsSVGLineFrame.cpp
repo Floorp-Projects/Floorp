@@ -46,6 +46,7 @@
 #include "nsIDOMSVGSVGElement.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
+#include "nsLayoutAtoms.h"
 
 class nsSVGLineFrame : public nsSVGPathGeometryFrame,
                        public nsISVGMarkable
@@ -56,6 +57,20 @@ protected:
 
   virtual ~nsSVGLineFrame();
   virtual nsresult Init();
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgLineFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGLine"), aResult);
+  }
+#endif
 
 public:
   // nsISVGValueObserver interface:
@@ -175,6 +190,12 @@ nsresult nsSVGLineFrame::Init()
   }
 
   return NS_OK; 
+}
+
+nsIAtom *
+nsSVGLineFrame::GetType() const
+{
+  return nsLayoutAtoms::svgLineFrame;
 }
 
 //----------------------------------------------------------------------

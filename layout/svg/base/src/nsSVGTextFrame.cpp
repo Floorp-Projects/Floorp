@@ -63,6 +63,7 @@
 #include "nsISVGTextContentMetrics.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
+#include "nsLayoutAtoms.h"
 
 typedef nsContainerFrame nsSVGTextFrameBase;
 
@@ -114,6 +115,20 @@ public:
                                PRInt32         aHint);
 
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgTextFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGText"), aResult);
+  }
+#endif
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
@@ -339,6 +354,12 @@ nsSVGTextFrame::DidSetStyleContext(nsPresContext* aPresContext)
 #endif
 
   return NS_OK;
+}
+
+nsIAtom *
+nsSVGTextFrame::GetType() const
+{
+  return nsLayoutAtoms::svgTextFrame;
 }
 
 NS_IMETHODIMP

@@ -63,6 +63,7 @@
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsContainerFrame.h"
+#include "nsLayoutAtoms.h"
 
 typedef nsFrame nsSVGGlyphFrameBase;
 
@@ -106,6 +107,20 @@ public:
                           nsSpread        aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle);
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgGlyphFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGGlyph"), aResult);
+  }
+#endif
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
@@ -377,6 +392,12 @@ nsSVGGlyphFrame::IsSelectable(PRBool* aIsSelectable,
   printf("nsSVGGlyphFrame(%p)::IsSelectable()=(%d,%d)\n", this, *aIsSelectable, aSelectStyle);
 #endif
   return rv;
+}
+
+nsIAtom *
+nsSVGGlyphFrame::GetType() const
+{
+  return nsLayoutAtoms::svgGlyphFrame;
 }
 
 //----------------------------------------------------------------------

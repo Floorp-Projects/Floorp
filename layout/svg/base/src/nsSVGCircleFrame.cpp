@@ -45,6 +45,7 @@
 #include "nsIDOMSVGSVGElement.h"
 //#include "nsASVGPathBuilder.h"
 #include "nsISVGRendererPathBuilder.h"
+#include "nsLayoutAtoms.h"
 
 class nsSVGCircleFrame : public nsSVGPathGeometryFrame
 {
@@ -56,6 +57,20 @@ protected:
   virtual nsresult Init();
 
 public:
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgCircleFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGCircle"), aResult);
+  }
+#endif
+
   // nsISVGValueObserver interface:
   NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
                                     nsISVGValue::modificationType aModType);
@@ -148,6 +163,12 @@ nsresult nsSVGCircleFrame::Init()
   
   return NS_OK;
 }  
+
+nsIAtom *
+nsSVGCircleFrame::GetType() const
+{
+  return nsLayoutAtoms::svgCircleFrame;
+}
 
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:

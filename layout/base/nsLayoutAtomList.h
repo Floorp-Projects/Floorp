@@ -237,6 +237,35 @@ LAYOUT_ATOM(endsInDiacritic, "EndsInDiacritic")                // PRUint32
 LAYOUT_ATOM(nextBidi, "NextBidi")                              // nsIFrame*
 LAYOUT_ATOM(charType, "charType")                              // PRUint8
 
+#ifdef MOZ_SVG
+  // Alphabetical list of SVG frame types
+LAYOUT_ATOM(svgCircleFrame,"SVGCircleFrame")
+LAYOUT_ATOM(svgClipPathFrame,"SVGClipPathFrame")
+LAYOUT_ATOM(svgDefsFrame,"SVGDefsFrame")
+LAYOUT_ATOM(svgEllipseFrame,"SVGEllipseFrame")
+LAYOUT_ATOM(svgForeignObjectFrame,"SVGForeignObjectFrame")
+LAYOUT_ATOM(svgGenericContainerFrame,"SVGGenericContainerFrame")
+LAYOUT_ATOM(svgGFrame,"SVGGFrame")
+LAYOUT_ATOM(svgGlyphFrame,"SVGGlyphFrame")
+LAYOUT_ATOM(svgGradientFrame,"SVGGradientFrame")
+LAYOUT_ATOM(svgImageFrame,"SVGImageFrame")
+LAYOUT_ATOM(svgInnerSVGFrame,"SVGInnerSVGFrame")
+LAYOUT_ATOM(svgLinearGradientFrame,"SVGLinearGradientFrame")
+LAYOUT_ATOM(svgLineFrame,"SVGLineFrame")
+LAYOUT_ATOM(svgMarkerFrame,"SVGMarkerFrame")
+LAYOUT_ATOM(svgOuterSVGFrame,"SVGOuterSVGFrame")
+LAYOUT_ATOM(svgPathFrame,"SVGPathFrame")
+LAYOUT_ATOM(svgPathGeometryFrame,"SVGPathGeometryFrame")
+LAYOUT_ATOM(svgPolylineFrame,"SVGPolylineFrame")
+LAYOUT_ATOM(svgPolygonFrame,"SVGPolygonFrame")
+LAYOUT_ATOM(svgRadialGradientFrame,"SVGRadialGradientFrame")
+LAYOUT_ATOM(svgRectFrame,"SVGRectFrame")
+LAYOUT_ATOM(svgStopFrame,"SVGStopFrame")
+LAYOUT_ATOM(svgTextFrame,"SVGTextFrame")
+LAYOUT_ATOM(svgTSpanFrame,"SVGTSpanFrame")
+LAYOUT_ATOM(svgUseFrame,"SVGUseFrame")
+#endif // MOZ_SVG
+
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code
 LAYOUT_ATOM(cellMap, "TableCellMap")

@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGDefsFrame.h"
+#include "nsLayoutAtoms.h"
 
 #define NS_SVGCLIPPATHFRAME_CID \
 {0xb497bbe2, 0x4434, 0x4d96, {0x9c, 0xe8, 0xf2, 0xad, 0xd1, 0x1f, 0x1d, 0x26}}
@@ -62,6 +63,19 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   NS_IMETHOD ClipHitTest(nsISVGChildFrame* aParent,
                          nsCOMPtr<nsIDOMSVGMatrix> aMatrix,
                          float aX, float aY, PRBool *aHit);
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgClipPathFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGClipPath"), aResult);
+  }
+#endif
 
  private:
   nsISVGChildFrame *mClipParent;

@@ -60,6 +60,7 @@
 #include "nsSVGMatrix.h"
 #include "nsINameSpaceManager.h"
 #include "nsSVGAtoms.h"
+#include "nsLayoutAtoms.h"
 
 typedef nsContainerFrame nsSVGTSpanFrameBase;
 
@@ -103,6 +104,19 @@ public:
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgTSpanFrame
+   */
+  virtual nsIAtom* GetType() const;
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGTSpan"), aResult);
+  }
+#endif
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
@@ -245,6 +259,12 @@ nsresult nsSVGTSpanFrame::Init()
   }
 
   return NS_OK;
+}
+
+nsIAtom *
+nsSVGTSpanFrame::GetType() const
+{
+  return nsLayoutAtoms::svgTSpanFrame;
 }
 
 //----------------------------------------------------------------------

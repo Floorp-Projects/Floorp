@@ -44,6 +44,7 @@
 #include "nsISVGContainerFrame.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
+#include "nsLayoutAtoms.h"
 
 typedef nsContainerFrame nsSVGDefsFrameBase;
 
@@ -83,7 +84,19 @@ public:
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::svgDefsFrame
+   */
+  virtual nsIAtom* GetType() const;
 
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  {
+    return MakeFrameName(NS_LITERAL_STRING("SVGDefs"), aResult);
+  }
+#endif
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
