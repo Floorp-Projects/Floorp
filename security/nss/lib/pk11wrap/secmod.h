@@ -126,10 +126,12 @@ extern SECMODModule *SECMOD_FindModule(const char *name);
 extern SECStatus SECMOD_DeleteModule(const char *name, int *type);
 extern SECStatus SECMOD_DeleteInternalModule(const char *name);
 extern PRBool SECMOD_CanDeleteInternalModule(void);
-extern SECStatus SECMOD_AddNewModule(const char* moduleName, char* dllPath,
+extern SECStatus SECMOD_AddNewModule(const char* moduleName, 
+			      const char* dllPath,
                               unsigned long defaultMechanismFlags,
                               unsigned long cipherEnableFlags);
-extern SECStatus SECMOD_AddNewModuleEx(const char* moduleName, char* dllPath,
+extern SECStatus SECMOD_AddNewModuleEx(const char* moduleName,
+			      const char* dllPath,
                               unsigned long defaultMechanismFlags,
                               unsigned long cipherEnableFlags,
                               char* modparms,
