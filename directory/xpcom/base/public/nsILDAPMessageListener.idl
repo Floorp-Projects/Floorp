@@ -1,5 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -32,9 +31,41 @@
  * GPL.
  */
 
-#include "nsIURI.idl"
+#include "nsISupports.idl"
+#include "nsILDAPMessage.idl"
 
-[scriptable, uuid(a96f4391-1adb-41d8-a821-e382af97aa1c)]
-interface nsILDAPURI : nsIURI {
+// a callback interface to be implemented by any objects that want to 
+// receive results from an nsILDAPOperation (ie nsILDAPMessages) as they
+// come in.
+//
+[scriptable, uuid(dc721d4b-3ff2-4387-a80c-5e29545f774a)]
+interface nsILDAPMessageListener : nsISupports
+{
+    // when ldap_result() returns, one of these routines is called, depending
+    // on the return value
 
+    // return value = LDAP_RES_SEARCH_ENTRY 
+    // 
+    void OnLDAPSearchEntry(in nsILDAPMessage aMessage);
+
+    // return value = LDAP_RES_SEARCH_REFERENCE
+    //
+    void OnLDAPSearchReference(in nsILDAPMessage aMessage);
+
+    // return value = LDAP_RES_SEARCH_RESULT
+    //
+    void OnLDAPSearchResult(in nsILDAPMessage aMessage);
+
+    // return value of -1
+    //
+    // XXX should have an arg?
+    //
+    void OnLDAPError();
+
+    // return value of 0
+    //	
+    void OnLDAPTimeout();
+
+    // XXX need to add other possible ldap_result return values 
 };
+

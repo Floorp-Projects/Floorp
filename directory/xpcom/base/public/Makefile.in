@@ -44,7 +44,7 @@ XPIDL_MODULE	= mozldap
 XPIDLSRCS	= 	nsILDAPConnection.idl \
 			nsILDAPOperation.idl \
 			nsILDAPMessage.idl \
-	  		nsILDAPURI.idl \
+			nsILDAPMessageListener.idl \
 			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
