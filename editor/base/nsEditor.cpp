@@ -3494,7 +3494,8 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   if (!shell)  return PR_FALSE;
 
   if (IsMozEditorBogusNode(aNode)) return PR_FALSE;
-
+  
+/*  THIS DOESN'T WORK!
   // it's not the bogus node, so see if it is an irrelevant text node
   if (PR_TRUE==IsTextNode(aNode))
   {
@@ -3521,7 +3522,7 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
       return PR_FALSE;
     }
   }
-  
+*/  
   // we got this far, so see if it has a frame.  If so, we'll edit it.
   nsIFrame *resultFrame;
   nsCOMPtr<nsIContent>content;

@@ -883,15 +883,16 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
     else block1 = mHTMLEditor->GetBlockNodeParent(selNode);
     block2 = mHTMLEditor->GetBlockNodeParent(priorNode);
   
-    if (block1 != block2) return NS_OK; 
-  
-    // if we are here then the selection is right after a mozBR
-    // that is in the same block as the selection.  We need to move
-    // the selection start to be before the mozBR.
-    res = nsEditor::GetNodeLocation(priorNode, address_of(selNode), &selOffset);
-    if (NS_FAILED(res)) return res;
-    res = aSelection->Collapse(selNode,selOffset);
-    if (NS_FAILED(res)) return res;
+    if (block1 == block2)
+    {
+      // if we are here then the selection is right after a mozBR
+      // that is in the same block as the selection.  We need to move
+      // the selection start to be before the mozBR.
+      res = nsEditor::GetNodeLocation(priorNode, address_of(selNode), &selOffset);
+      if (NS_FAILED(res)) return res;
+      res = aSelection->Collapse(selNode,selOffset);
+      if (NS_FAILED(res)) return res;
+    }
   }
 
   // we need to get the doc
@@ -901,8 +902,7 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, PRBool *aCancel)
   if (!doc) return NS_ERROR_NULL_POINTER;
     
   // for every property that is set, insert a new inline style node
-  res = CreateStyleForInsertText(aSelection, doc);
-  return res; 
+  return CreateStyleForInsertText(aSelection, doc);
 }    
 
 nsresult
@@ -998,7 +998,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     // dont spaz my selection in subtransactions
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsSubsumeStr subStr;
-    const nsPromiseFlatString &tString = PromiseFlatString(*inString);////MJUDGE SCC NEED HELP
+    nsAutoString tString(*inString);
     const PRUnichar *unicodeBuf = tString.get();
     nsCOMPtr<nsIDOMNode> unused;
     PRInt32 pos = 0;
@@ -1008,21 +1008,13 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     // it is to search for both tabs and newlines.
     if (isPRE)
     {
-      nsAutoString newlineChar(NS_LITERAL_STRING("\n"));
+      char newlineChar = '\n';
       while (unicodeBuf && (pos != -1) && (pos < (PRInt32)(*inString).Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = -1;
-        nsReadingIterator<PRUnichar> beginFindIter, endFindIter, beginIter;
-        inString->BeginReading(beginIter);
-        beginFindIter = beginIter;
-        inString->EndReading(endFindIter);
-        beginFindIter.advance(oldPos);
-        if (FindInReadable(newlineChar,beginFindIter,endFindIter))
-        {
-          pos = Distance(beginIter,beginFindIter);
-        }
+        pos = tString.FindChar(newlineChar, PR_FALSE, oldPos);
+
         if (pos != -1) 
         {
           subStrLen = pos - oldPos;
@@ -1032,8 +1024,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         }
         else
         {
-          subStrLen = (*inString).Length() - oldPos;
-          pos = (*inString).Length();
+          subStrLen = tString.Length() - oldPos;
+          pos = tString.Length();
         }
 
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
@@ -1053,22 +1045,13 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     }
     else
     {
-      nsAutoString specialChars;
-      specialChars = NS_LITERAL_STRING("\t\n");
+      char specialChars[] = {'\t','\n',0};
       nsAutoString tabString; tabString.AssignWithConversion("    ");
-      while (unicodeBuf && (pos != -1) && (pos < (PRInt32)(*inString).Length()))
+      while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        nsReadingIterator<PRUnichar> beginFindIter,endFindIter;
-        (*inString).BeginReading(beginFindIter);
-        beginFindIter.advance(oldPos);
-        (*inString).EndReading(endFindIter);
-        nsReadingIterator<PRUnichar> distanceIter;
-        (*inString).BeginReading(distanceIter);
-        pos = -1;
-        if (FindInReadable((const nsAString &)specialChars,beginFindIter,endFindIter))
-          pos = Distance(distanceIter,beginFindIter);
+        pos = tString.FindCharInSet(specialChars, oldPos);
         
         if (pos != -1) 
         {
@@ -1079,8 +1062,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         }
         else
         {
-          subStrLen = (*inString).Length() - oldPos;
-          pos = (*inString).Length();
+          subStrLen = tString.Length() - oldPos;
+          pos = tString.Length();
         }
 
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
@@ -1435,7 +1418,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
             res = mHTMLEditor->GetPriorHTMLNode(startNode, address_of(priorNode));
             if (NS_FAILED(res)) return res;
             // are they in same block?
-            if (mHTMLEditor->HasSameBlockNodeParent(startNode, priorNode)) 
+            if (priorNode && mHTMLEditor->HasSameBlockNodeParent(startNode, priorNode)) 
             {
               // are they same type?
               if (mHTMLEditor->IsTextNode(priorNode))
@@ -1546,7 +1529,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
             res = mHTMLEditor->GetNextHTMLNode(startNode, address_of(nextNode));
             if (NS_FAILED(res)) return res;
             // are they in same block?
-            if (mHTMLEditor->HasSameBlockNodeParent(startNode, nextNode)) 
+            if (nextNode && mHTMLEditor->HasSameBlockNodeParent(startNode, nextNode)) 
             {
               // are they same type?
               if ( mHTMLEditor->IsTextNode(nextNode) )
@@ -1703,7 +1686,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         {
           nsCOMPtr<nsIDOMNode> brNode;
           res = mHTMLEditor->GetPriorHTMLNode(nodeToDelete, address_of(brNode));
-          if (nsTextEditUtils::IsBreak(brNode))
+          if (brNode && nsTextEditUtils::IsBreak(brNode))
           {
             // is brNode also a descendant of same block?
             nsCOMPtr<nsIDOMNode> block, brBlock;
@@ -5273,6 +5256,33 @@ nsHTMLEditRules::RemoveEmptyNodes()
       PRBool bIsEmptyNode;
       res = mHTMLEditor->IsEmptyNode(node, &bIsEmptyNode, PR_FALSE, PR_TRUE);
       if (NS_FAILED(res)) return res;
+      
+      // only consider certain nodes to be empty for purposes of removal
+      if (!(
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("b"))      || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("i"))      || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("u"))      || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("tt"))     || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("s"))      || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("strike")) || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("big"))    || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("small"))  || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("blink"))  || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("sub"))    || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("sup"))    || 
+            nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("font"))   || 
+            nsHTMLEditUtils::IsList(node)      || 
+            nsHTMLEditUtils::IsParagraph(node) ||
+            nsHTMLEditUtils::IsHeader(node)    ||
+            nsHTMLEditUtils::IsListItem(node)  ||
+            nsHTMLEditUtils::IsBlockquote(node)||
+            nsHTMLEditUtils::IsDiv(node)       ||
+            nsHTMLEditUtils::IsPre(node)       ||
+            nsHTMLEditUtils::IsAddress(node) ) )
+      {
+        bIsEmptyNode = PR_FALSE;
+      }
+      
       if (bIsEmptyNode && !nsTextEditUtils::IsBody(node))
       {
         if (nsHTMLEditUtils::IsParagraph(node) ||

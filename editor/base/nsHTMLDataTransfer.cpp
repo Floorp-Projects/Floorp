@@ -186,6 +186,8 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
 {
   if (!mRules) return NS_ERROR_NOT_INITIALIZED;
 
+/* all this is unneeded: parser handles this for us
+
   // First, make sure there are no return chars in the document.
   // Bad things happen if you insert returns (instead of dom newlines, \n)
   // into an editor document.
@@ -198,6 +200,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
   // Mac linebreaks: Map any remaining CR to LF:
   inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"),
                                NS_ConvertASCIItoUCS2("\n"));
+*/
 
   // force IME commit; set up rules sniffing and batching
   ForceCompositionEnd();
@@ -223,7 +226,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
   // create a dom document fragment that represents the structure to paste
   nsCOMPtr<nsIDOMNode> fragmentAsNode;
   PRInt32 rangeStartHint, rangeEndHint;
-  res = CreateDOMFragmentFromPaste(nsrange, inputString, aContextStr, aInfoStr, 
+  res = CreateDOMFragmentFromPaste(nsrange, aInputString, aContextStr, aInfoStr, 
                                             address_of(fragmentAsNode),
                                             &rangeStartHint, &rangeEndHint);
   NS_ENSURE_SUCCESS(res, res);

@@ -603,6 +603,14 @@ nsHTMLEditor::NodeIsBlock(nsIDOMNode *aNode, PRBool *aIsBlock)
   return NodeIsBlockStatic(aNode, aIsBlock);
 }
 
+PRBool
+nsHTMLEditor::IsBlockNode(nsIDOMNode *aNode)
+{
+  PRBool isBlock;
+  NodeIsBlockStatic(aNode, &isBlock);
+  return isBlock;
+}
+
 // Non-static version for the nsIEditor interface and JavaScript
 NS_IMETHODIMP 
 nsHTMLEditor::SetDocumentTitle(const nsAReadableString &aTitle)
@@ -4451,7 +4459,6 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
   // want to treat them as such.  Also, don't call ListItems or table
   // cells empty if caller desires.
   if (!IsContainer(aNode) || nsHTMLEditUtils::IsAnchor(aNode) ||
-       nsHTMLEditUtils::IsTextarea(aNode) || nsHTMLEditUtils::IsMap(aNode) ||
        (aListOrCellNotEmpty && nsHTMLEditUtils::IsListItem(aNode)) ||
        (aListOrCellNotEmpty && nsHTMLEditUtils::IsTableCell(aNode)) ) 
   {
@@ -4459,6 +4466,15 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
     return NS_OK;
   }
   
+  // are we checking a block node?
+  PRBool isBlock = IsBlockNode(aNode);
+  // if so, we allow one br without violating emptiness
+  PRBool seenBR = PR_FALSE;
+  
+  // need this for later
+  PRBool isListItemOrCell = 
+       nsHTMLEditUtils::IsListItem(aNode) || nsHTMLEditUtils::IsTableCell(aNode);
+       
   // iterate over node. if no children, or all children are either 
   // empty text nodes or non-editable, then node qualifies as empty
   nsCOMPtr<nsIContentIterator> iter;
@@ -4522,9 +4538,28 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
         // is it the node we are iterating over?
         if (node.get() == aNode) break;
         // is it a moz-BR and did the caller ask us not to consider those relevant?
-        if (!(aMozBRDoesntCount && nsTextEditUtils::IsMozBR(node))) 
+        if ((aMozBRDoesntCount && nsTextEditUtils::IsMozBR(node)))
+        { 
+          // do nothing
+        }
+        else if (isBlock && !seenBR && nsTextEditUtils::IsBreak(node))
+        {
+          // the first br in a block doesn't count
+          seenBR = PR_TRUE;
+        }
+        else
         {
           // is it an empty node of some sort?
+          // note: list items or table cells are not considered empty
+          // if they contain other lists or tables
+          if (isListItemOrCell)
+          {
+            if (nsHTMLEditUtils::IsList(node) || nsHTMLEditUtils::IsTable(node))
+            {
+              *outIsEmptyNode = PR_FALSE;
+              break;
+            }
+          }
           PRBool isEmptyNode;
           res = IsEmptyNode(node, &isEmptyNode, aMozBRDoesntCount, aListOrCellNotEmpty);
           if (NS_FAILED(res)) return res;

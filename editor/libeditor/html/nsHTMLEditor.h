@@ -383,6 +383,8 @@ public:
                        PRBool aMozBRDoesntCount = PR_FALSE,
                        PRBool aListOrCellNotEmpty = PR_FALSE,
                        PRBool aSafeToAskFrames = PR_FALSE);
+                       
+  PRBool IsBlockNode(nsIDOMNode *aNode);
 
 protected:
 
