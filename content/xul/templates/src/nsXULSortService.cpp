@@ -178,6 +178,7 @@ private:
     static nsIAtom	*kIdAtom;
     static nsIAtom	*kNaturalOrderPosAtom;
     static nsIAtom	*kRDF_type;
+    static nsIAtom	*kURIAtom;
 
     static nsIRDFResource	*kNC_Name;
     static nsIRDFResource	*kRDF_instanceOf;
@@ -241,6 +242,7 @@ nsIAtom* XULSortServiceImpl::kSortDirectionAtom;
 nsIAtom* XULSortServiceImpl::kIdAtom;
 nsIAtom* XULSortServiceImpl::kNaturalOrderPosAtom;
 nsIAtom* XULSortServiceImpl::kRDF_type;
+nsIAtom* XULSortServiceImpl::kURIAtom;
 
 nsIRDFResource		*XULSortServiceImpl::kNC_Name;
 nsIRDFResource		*XULSortServiceImpl::kRDF_instanceOf;
@@ -271,6 +273,7 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 		kIdAtom				= NS_NewAtom("id");
 		kNaturalOrderPosAtom		= NS_NewAtom("pos");
 		kRDF_type			= NS_NewAtom("type");
+		kURIAtom			= NS_NewAtom("uri");
  
 		nsresult rv;
 
@@ -367,6 +370,7 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 	        NS_RELEASE(kIdAtom);
 	        NS_RELEASE(kNaturalOrderPosAtom);
 		NS_RELEASE(kRDF_type);
+		NS_RELEASE(kURIAtom);
 
 	        NS_RELEASE(kNC_Name);
 	        NS_RELEASE(kRDF_instanceOf);
@@ -1335,18 +1339,38 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 
 	PRBool			isContainerRDFSeq = PR_FALSE;
 
-	if (sortInfo.db)
+	if ((sortInfo.db) && (sortInfo.naturalOrderSort == PR_TRUE))
 	{
-		nsCOMPtr<nsIRDFResource>	containerRes;
-		if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetElementResource(container,
-					getter_AddRefs(containerRes))))
+		// walk up the content model to find the REAL
+		// parent container to determine if its a RDF_Seq
+		nsCOMPtr<nsIContent>		parent = do_QueryInterface(container);
+		while(PR_TRUE)
 		{
-			if (NS_FAILED(rv = sortInfo.db->HasAssertion( containerRes,
-				kRDF_instanceOf , kRDF_Seq, PR_TRUE, &isContainerRDFSeq))
-				|| (rv == NS_RDF_NO_VALUE))
+			nsAutoString	uriStr;
+			if (NS_SUCCEEDED(rv = parent->GetAttribute(kNameSpaceID_None, kIdAtom, uriStr))
+				&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
 			{
-				isContainerRDFSeq = PR_FALSE;
+				char	*uri= uriStr.ToNewCString();
+				if (uri)
+				{
+					nsCOMPtr<nsIRDFResource>	containerRes;
+					if (NS_SUCCEEDED(rv = gRDFService->GetResource(uri, getter_AddRefs(containerRes)))
+						&& (rv != NS_RDF_NO_VALUE) && (containerRes))
+					{
+						if (NS_FAILED(rv = sortInfo.db->HasAssertion( containerRes, kRDF_instanceOf,
+							kRDF_Seq, PR_TRUE, &isContainerRDFSeq)) || (rv == NS_RDF_NO_VALUE))
+						{
+							isContainerRDFSeq = PR_FALSE;
+						}
+					}
+					delete [] uri;
+				}
+				break;
 			}
+			if (NS_FAILED(rv = parent->GetParent(*getter_AddRefs(parent))))
+				break;
+			if (!parent)
+				break;
 		}
 	}
 
