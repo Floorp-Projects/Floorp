@@ -485,7 +485,12 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRUint32 n)
 PRUnichar* nsCRT::strdup(const PRUnichar* str)
 {
   PRUint32 len = nsCRT::strlen(str) + 1; // add one for null
-  PRUnichar* rslt = new PRUnichar[len];
+
+
+	nsCppSharedAllocator<PRUnichar> shared_allocator;
+	PRUnichar* rslt = shared_allocator.allocate(len);
+  // PRUnichar* rslt = new PRUnichar[len];
+
   if (rslt == NULL) return NULL;
   nsCRT::memcpy(rslt, str, len * sizeof(PRUnichar));
   return rslt;

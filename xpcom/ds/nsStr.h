@@ -43,6 +43,7 @@
 #define _nsStr
 
 #include "nscore.h"
+#include "nsCppSharedAllocator.h"
 
 //----------------------------------------------------------------------------------------
 
@@ -311,7 +312,11 @@ public:
 	  
     aDest.mCapacity=theNewCapacity++;
     size_t theSize=(theNewCapacity<<aDest.mCharSize);
-    aDest.mStr=new char[theSize];
+
+    // aDest.mStr=new char[theSize];
+		nsCppSharedAllocator<char> shared_allocator;
+		aDest.mStr = shared_allocator.allocate(theSize);
+
     aDest.mOwnsBuffer=1;
     return PR_TRUE;
   }
@@ -319,7 +324,9 @@ public:
   virtual PRBool Free(nsStr& aDest){
     if(aDest.mStr){
       if(aDest.mOwnsBuffer){
-        delete [] aDest.mStr;
+        // delete [] aDest.mStr;
+        nsCppSharedAllocator<char> shared_allocator;
+        shared_allocator.deallocate(aDest.mStr, aDest.mCapacity);
       }
       aDest.mStr=0;
       aDest.mOwnsBuffer=0;
