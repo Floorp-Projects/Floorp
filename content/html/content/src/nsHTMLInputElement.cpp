@@ -1522,8 +1522,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
          * submit the form (if we are in one)
          *
          * Bug 99920 and bug 109463:
-         * (a) if there is only one text input in the form, submit using JS
-         *     form.submit()
+         * (a) if there is only one text input in the form, submit by sending
+         *     a submit event directly to the form
          * (b) if there is more than one text input, submit by sending a click
          *     to the first submit button in the form.
          * (c) if there is more than one text input and no submit buttons, do
@@ -1571,25 +1571,30 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                 }
               }
             }
-
-            if (submitControl && numTextControlsFound > 1) {
-              // IE actually fires the button's onclick handler.  Dispatch
-              // the click event and let the button handle submitting the
-              // form.
-              nsCOMPtr<nsIPresShell> shell;
-              aPresContext->GetShell(getter_AddRefs(shell));
-              if (shell) {
+            
+            nsCOMPtr<nsIPresShell> shell;
+            aPresContext->GetShell(getter_AddRefs(shell));
+            if (shell) {
+              if (submitControl && numTextControlsFound > 1) {
+                // IE actually fires the button's onclick handler.  Dispatch
+                // the click event and let the button handle submitting the
+                // form.
                 nsGUIEvent event;
                 event.eventStructType = NS_MOUSE_EVENT;
                 event.message = NS_MOUSE_LEFT_CLICK;
                 event.widget = nsnull;
                 nsEventStatus status = nsEventStatus_eIgnore;
                 shell->HandleDOMEventWithTarget(submitControl, &event, &status);
+              } else if (numTextControlsFound == 1) {
+                // If there's only one text control, just submit the form
+                nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
+                nsFormEvent event;
+                event.eventStructType = NS_FORM_EVENT;
+                event.message         = NS_FORM_SUBMIT;
+                event.originator      = nsnull;
+                nsEventStatus status  = nsEventStatus_eIgnore;
+                shell->HandleDOMEventWithTarget(form, &event, &status);
               }
-            } else if (numTextControlsFound == 1) {
-              // If there's only one text control, just call submit()
-              nsCOMPtr<nsIDOMHTMLFormElement> form = do_QueryInterface(mForm);
-              form->Submit();
             }
           }
         }
