@@ -147,5 +147,17 @@ Netscape_Java_java_lang_ClassLoader_getSystemResourceAsName0(Java_java_lang_Stri
   return 0;
 }
 
+/*
+ * Class : java/lang/ClassLoader
+ * Method : getCallerClassLoader
+ * Signature : ()Ljava/lang/ClassLoader;
+ */
+NS_EXPORT NS_NATIVECALL(Java_java_lang_ClassLoader *)
+Netscape_Java_java_lang_ClassLoader_getCallerClassLoader()
+{
+    // IMPLEMENT
+    return NULL;
+}
+
 } /* extern "C" */
 
