@@ -634,7 +634,8 @@ NS_ParseContentType(const nsACString &rawContentType,
         contentType = Substring(begin, it);
         // now look for "charset=FOO" and extract "FOO"
         begin = ++it;
-        if (FindInReadable(NS_LITERAL_CSTRING("charset="), begin, it = end)) {
+        if (FindInReadable(NS_LITERAL_CSTRING("charset="), begin, it = end,
+                           nsCaseInsensitiveCStringComparator())) {
             contentCharset = Substring(it, end);
             contentCharset.StripWhitespace();
         }
