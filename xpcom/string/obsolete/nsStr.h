@@ -360,16 +360,6 @@ struct NS_COM nsStr {
   */
   static void StrTruncate(nsStr& aDest,PRUint32 aDestOffset);
 
- /**
-  * This method is used to perform a case conversion on the given string
-  *
-  * @update	gess 01/04/99
-  * @param  aDest is the nsStr to be case shifted
-  * @param  toUpper tells us to go upper vs. lower
-  */
-  static void ChangeCase(nsStr& aDest,PRBool aToUpper);
-
-
   /**
    * This method trims chars (given in aSet) from the edges of given buffer 
    *

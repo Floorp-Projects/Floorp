@@ -321,18 +321,6 @@ void nsStr::StrTruncate(nsStr& aDest,PRUint32 aDestOffset){
 
 
 /**
- * This method forces the given string to upper or lowercase
- * @update	gess1/7/99
- * @param   aDest is the string you're going to change
- * @param   aToUpper: if TRUE, then we go uppercase, otherwise we go lowercase
- * @return
- */
-void nsStr::ChangeCase(nsStr& aDest,PRBool aToUpper) {
-  // somehow UnicharUtil return failed, fallback to the old ascii only code
-  gCaseConverters[aDest.mCharSize](aDest.mStr,aDest.mLength,aToUpper);
-}
-
-/**
  * This method removes characters from the given set from this string.
  * NOTE: aSet is a char*, and it's length is computed using strlen, which assumes null termination.
  *
