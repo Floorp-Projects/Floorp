@@ -67,7 +67,7 @@ class nsInstallFileOpItem : public nsInstallObject
                         nsString&     a2,
                         PRInt32*      aReturn);
 
-    ~nsInstallFileOpItem();
+    virtual ~nsInstallFileOpItem();
 
     PRInt32       Prepare(void);
     PRInt32       Complete();
