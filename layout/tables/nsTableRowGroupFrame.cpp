@@ -983,12 +983,19 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
   aDesiredSize.height = 0;
 
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
-  nscoord availWidth  = nsTableFrame::RoundToPixel(aReflowState.availableWidth, p2t);
-  nscoord availHeight = nsTableFrame::RoundToPixel(aReflowState.availableHeight, p2t);
+  nscoord availWidth  = (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) ?
+                        NS_UNCONSTRAINEDSIZE :
+                        nsTableFrame::RoundToPixel(aReflowState.availableWidth, p2t);
+  nscoord availHeight = (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) ?
+                        NS_UNCONSTRAINEDSIZE :
+                        nsTableFrame::RoundToPixel(aReflowState.availableHeight, p2t);
   
   PRBool  borderCollapse = ((nsTableFrame*)aTableFrame->GetFirstInFlow())->IsBorderCollapse();
   nscoord cellSpacingY   = aTableFrame->GetCellSpacingY();
-
+  
+  NS_ASSERTION(aPresContext->IsPaginated(), "SplitRowGroup currently supports only paged media"); 
+  if (!aPresContext->IsPaginated())
+    return  NS_ERROR_NOT_IMPLEMENTED;
   // get the page height
   nsRect actualRect;
   nsRect adjRect;
