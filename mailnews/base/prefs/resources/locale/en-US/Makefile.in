@@ -51,6 +51,8 @@ EXPORT_RESOURCE_SAMPLES = \
 		am-server-top.dtd \
 		prefs.properties \
         am-serverwithnoidentities.dtd   \
+		SmtpServerList.dtd \
+		smtpEditOverlay.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
