@@ -19,18 +19,25 @@
 #include "nscore.h"
 #include "nsIGenericFactory.h"
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 
 #include "nsViewsCID.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsScrollingView.h"
 
-static NS_DEFINE_IID(kCViewManager, NS_VIEW_MANAGER_CID);
-static NS_DEFINE_IID(kCView, NS_VIEW_CID);
-static NS_DEFINE_IID(kCScrollingView, NS_SCROLLING_VIEW_CID);
+#include "nsIModule.h"
+
+static NS_DEFINE_CID(kCViewManager, NS_VIEW_MANAGER_CID);
+static NS_DEFINE_CID(kCView, NS_VIEW_CID);
+static NS_DEFINE_CID(kCScrollingView, NS_SCROLLING_VIEW_CID);
+static NS_DEFINE_CID(kCComponentManager, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+
+
 
 class nsViewFactory : public nsIFactory
 {   
@@ -96,6 +103,9 @@ nsresult nsViewFactory::LockFactory(PRBool aLock)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
 
+#if 0
+// OBSOLETED by nsViewModule - dp
+
 // return the proper factory to the caller
 extern "C" NS_VIEW nsresult
 NSGetFactory(nsISupports* serviceMgr,
@@ -132,3 +142,202 @@ NSGetFactory(nsISupports* serviceMgr,
 	
 	return rv;
 }
+#endif /* 0 */
+
+//////////////////////////////////////////////////////////////////////
+// Module object definition
+
+class nsViewModule : public nsIModule
+{
+  public:
+    NS_DECL_ISUPPORTS
+
+    // Construction, Init and destruction
+    nsViewModule();
+    virtual ~nsViewModule();
+
+    // nsIModule Interfaces
+    NS_DECL_NSIMODULE
+
+    // Facility for counting object instances
+    int IncrementObjCount() { if (mObjCount < 0) mObjCount = 0; return ++mObjCount; }
+    int DecrementObjCount()
+    {
+        NS_ASSERTION(mObjCount <= -1, "Object count negative.");
+        return --mObjCount;
+    }
+    int GetObjCount() { return mObjCount; }
+
+  private:
+    int mObjCount;
+};
+
+//////////////////////////////////////////////////////////////////////
+// Module Global
+//
+// This is used by the module to count object. Constructors and
+// destructors of objects created by this module need to
+// inc/dec the object count for the module. Unload decision will
+// be taken based on this.
+//
+// Constructor:
+//	gModule->IncrementObjCount();
+//
+// Descructor:
+//	gModule->DecrementObjCount();
+//
+// WARNING: This is weak reference. XPCOM guarantees that this module
+// 			object will be deleted just before the dll is unloaded. Hence,
+//			holding a weak reference is ok.
+
+static nsViewModule *gModule = NULL;
+
+//////////////////////////////////////////////////////////////////////
+// Module entry point
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsViewModule *viewModule;
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(return_cobj, "Null argument");
+    NS_ASSERTION(gModule == NULL, "nsViewModule: Module already created.");
+
+    viewModule = new nsViewModule;
+    if (viewModule == NULL) return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = viewModule->QueryInterface(nsIModule::GetIID(), (void **)return_cobj);
+
+    if (NS_FAILED(rv))
+    {
+        delete viewModule;
+        viewModule = NULL;
+    }
+
+    // WARNING: Weak Reference
+    gModule = viewModule;
+
+    return rv;
+}
+
+//////////////////////////////////////////////////////////////////////
+// VIEW Decoder Module Implementation
+
+NS_IMPL_ISUPPORTS(nsViewModule, nsIModule::GetIID())
+
+nsViewModule::nsViewModule(void)
+  : mObjCount(-1)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsViewModule::~nsViewModule(void)
+{
+    NS_ASSERTION(mObjCount <= 0, "Module released while having outstanding objects.");
+}
+
+//
+// The class object for us is just the factory and nothing more.
+//
+NS_IMETHODIMP
+nsViewModule::GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass,
+                            const nsIID &aIID, void **aFactory)
+{
+    nsresult rv = NS_OK;
+    
+    if (nsnull == aFactory)
+        return NS_ERROR_NULL_POINTER;
+
+    // XXX should we do this ?
+    *aFactory = nsnull;
+        
+    if (aClass.Equals(kCViewManager))
+    {
+        nsCOMPtr<nsIGenericFactory> factory;
+        rv = NS_NewGenericFactory(getter_AddRefs(factory), &nsViewManagerConstructor);
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = factory->QueryInterface(aIID, aFactory);
+        }
+    }
+    else if (aClass.Equals(kCView) || aClass.Equals(kCScrollingView))
+    {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        nsViewFactory* factory = new nsViewFactory(aClass);
+        if (factory)
+        {
+            NS_ADDREF(factory);
+            rv = factory->QueryInterface(aIID, aFactory);
+            NS_RELEASE(factory);
+        }
+    }
+	
+    return rv;
+}
+
+NS_IMETHODIMP
+nsViewModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                          nsIFileSpec *location,
+                          const char *registryLocation,
+                          const char *componentType)
+{
+    nsresult rv;
+  
+#ifdef DEBUG_dp
+    printf("***Registering view library...");
+#endif
+
+    rv = aCompMgr->RegisterComponentSpec(kCViewManager, "View Manager",
+                                         "component://netscape/view-manager",
+                                         location, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    rv = aCompMgr->RegisterComponentSpec(kCView, "View",
+                                         "component://netscape/view",
+                                         location, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+    rv = aCompMgr->RegisterComponentSpec(kCScrollingView, "Scrolling View",
+                                         "component://netscape/scrolling-view",
+                                         location, PR_TRUE, PR_TRUE);
+#ifdef DEBUG_dp
+    printf("done.\n");
+#endif
+    return rv;
+}
+
+NS_IMETHODIMP
+nsViewModule::UnregisterSelf(nsIComponentManager *aCompMgr,
+                            nsIFileSpec *location,
+                            const char *registryLocation)
+{
+    nsresult rv;
+    rv = aCompMgr->UnregisterComponentSpec(kCViewManager, location);
+    if (NS_FAILED(rv)) return rv;
+    rv = aCompMgr->UnregisterComponentSpec(kCView, location);
+    if (NS_FAILED(rv)) return rv;
+    rv = aCompMgr->UnregisterComponentSpec(kCScrollingView, location);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsViewModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (mObjCount < 0)
+    {
+        // Dll doesn't count objects.
+        return NS_ERROR_FAILURE;
+    }
+
+    PRBool unloadable = PR_FALSE;
+    if (mObjCount == 0)
+    {
+        // This dll can be unloaded now
+        unloadable = PR_TRUE;
+    }
+
+    if (okToUnload) *okToUnload = unloadable;
+    return NS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////
