@@ -43,19 +43,10 @@
 #include "nsIStyleContext.h"
 #include "nsINameSpaceManager.h" 
 #include "nsIXULTreeSlice.h"
-#include "nsIMonument.h"
 #include "nsIBoxLayout.h"
-#include "nsMonumentLayout.h"
 
-#define MOZ_GRID2 1
-
-#ifdef MOZ_GRID2
 #include "nsGrid.h"
 #include "nsGridRow.h"
-#else
-#include "nsGridLayout.h"
-#include "nsTempleLayout.h"
-#endif
 
 
 
@@ -137,7 +128,6 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         nsCOMPtr<nsIBox> box(do_QueryInterface(mParent));
         nsCOMPtr<nsIBoxLayout> lm;
 
-#ifdef MOZ_GRID2
         box->GetLayoutManager(getter_AddRefs(lm));
         nsCOMPtr<nsIGridPart> part(do_QueryInterface(lm));
 
@@ -147,39 +137,6 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         nsIBox* splitBox = nsnull;
         if (grid->GetColumnCount() > 0)
           splitBox = grid->GetColumnAt(i)->GetBox();
-#else
-        box->GetLayoutManager(getter_AddRefs(lm));
-        nsCOMPtr<nsIMonument> mon(do_QueryInterface(lm));
-
-        nsTempleLayout* temple = nsnull;
-        nsIBox* templeBox = nsnull;
-        mon->GetOtherTemple(box, &temple, &templeBox);
-        NS_IF_RELEASE(temple);
-        
-        nsMonumentIterator iter(templeBox);
-        nsIBox* child = nsnull;
-        nsObeliskLayout* ob;
-        PRInt32 currIndex = 0;
-        if (left)
-          i--;
- 
-        do {
-          if (i < 0) break;
-
-          iter.GetNextObelisk(&ob, PR_TRUE);
-          iter.GetBox(&child);
-
-          if (currIndex >= i)
-            break;
-
-          currIndex++;
-
-        } while (child);
-
-        nsIBox* splitBox = nsnull;
-        if (child) 
-          child->GetNextBox(&splitBox);
-#endif
 
         nsIFrame* splitter = nsnull;
         if (splitBox)
