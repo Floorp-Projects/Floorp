@@ -503,6 +503,31 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 	  //printf("aEvent->message %d\n", aEvent->message);
     switch(aEvent->message) {
 
+        case NS_KEY_DOWN: {
+          nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+          if (NS_VK_RETURN == keyEvent->keyCode) {
+            PRBool matchCase   = mMatchCheckBtn->GetState();
+            PRBool findDwn     = mDwnRadioBtn->GetState();
+            nsString searchStr;
+            mTextField->GetText(searchStr, 255);
+
+            nsIPresShell* shell = GetPresShell();
+            if (nsnull != shell) {
+              nsIDocument* doc = shell->GetDocument();
+              if (nsnull != doc) {
+                PRBool foundIt = PR_FALSE;
+                doc->FindNext(searchStr, matchCase, findDwn, foundIt);
+                if (!foundIt) {
+                  // Display Dialog here
+                }
+                ForceRefresh();
+                NS_RELEASE(doc);
+              }
+              NS_RELEASE(shell);
+            }
+          }
+        } break;
+
         case NS_MOUSE_LEFT_BUTTON_UP: {
           if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mCancelBtn->GetNativeData(NS_NATIVE_WIDGET)) {
             mDialog->Show(PR_FALSE);
@@ -565,6 +590,10 @@ nsBrowserWindow::DoFind()
 {
   if (mDialog != nsnull) {
     mDialog->Show(PR_TRUE);
+    mTextField->SetFocus();
+    nsString str;
+    mTextField->GetText(str, 255);
+    mTextField->SelectAll();
     return;
   }
 
@@ -663,6 +692,7 @@ nsBrowserWindow::DoFind()
   mCancelBtn->SetClientData(this);
   
   mDialog->Show(PR_TRUE);
+  mTextField->SetFocus();
 
 }
 
