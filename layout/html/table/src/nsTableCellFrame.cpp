@@ -382,14 +382,16 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
       GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)cellTableStyle)); 
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
-
-      // bug #8113
-      // as of the CSS2-errata http://www.w3.org/Style/css2-updates/REC-CSS2-19980512-errata.html
-      // always draw the background and border except when the cell is empty and 'empty-cells: hide' is set
-      if ( !(GetContentEmpty() && NS_STYLE_TABLE_EMPTY_CELLS_HIDE == cellTableStyle->mEmptyCells) ) {
+      // draw the background except when the cell is empty and 'empty-cells: hide' is set
+      if (!GetContentEmpty() || 
+          NS_STYLE_TABLE_EMPTY_CELLS_SHOW            == cellTableStyle->mEmptyCells || 
+          NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND == cellTableStyle->mEmptyCells) {
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *myColor, *myBorder, 0, 0);
-
+      }
+      // draw the border except when the cell is empty and 'empty-cells: hide || -moz-show-background' is set
+      if (!GetContentEmpty() || 
+          NS_STYLE_TABLE_EMPTY_CELLS_SHOW == cellTableStyle->mEmptyCells) {
         PRIntn skipSides = GetSkipSides();
         nsTableFrame* tableFrame = nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
         nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);

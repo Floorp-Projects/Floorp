@@ -765,7 +765,7 @@ nsStyleTableBorder::nsStyleTableBorder(nsIPresContext* aPresContext)
   if (aPresContext)
 		aPresContext->GetCompatibilityMode(&compatMode);
   mEmptyCells = (compatMode == eCompatibility_NavQuirks
-                  ? NS_STYLE_TABLE_EMPTY_CELLS_HIDE     // bug 33244
+                  ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
                   : NS_STYLE_TABLE_EMPTY_CELLS_SHOW);
   mCaptionSide = NS_SIDE_TOP;
   mBorderSpacingX.Reset();
