@@ -27,6 +27,8 @@ function onInit()
 {
     stringBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
     initServerType();
+
+    setupBiffUI(false);
 }
 
 function onPreInit(account, accountValues)
@@ -34,8 +36,6 @@ function onPreInit(account, accountValues)
     var type = parent.getAccountValue(account, accountValues, "server", "type");
     
     hideShowControls(type);
-
-    setupBiffUI();
 }
 
 
@@ -178,7 +178,7 @@ function secureSelect() {
         document.getElementById("server.port").value = protocolInfo.getDefaultServerPort(false);
 }
 
-function setupBiffUI()
+function setupBiffUI(fromOnCommand)
 { 
     var parentCheckBox = document.getElementById('server.doBiff');
     var checkBox = document.getElementById('server.downloadOnBiff');
@@ -194,14 +194,20 @@ function setupBiffUI()
         checked = false;
     }
 
-    if (checked) {
-      checkBox.setAttribute("disabled", "true");
-      textField.setAttribute("disabled", "true");
-      textLabel.setAttribute("disabled", "true");
+    // if we are called from oncommand, reverse this, since the
+    // checked value is what the checkbox was before we clicked on it
+    if (fromOnCommand) {
+        checked = !checked;
     }
-    else {
+
+    if (checked) {
       checkBox.removeAttribute("disabled");
       textField.removeAttribute("disabled");
       textLabel.removeAttribute("disabled");
+    }
+    else {
+      checkBox.setAttribute("disabled", "true");
+      textField.setAttribute("disabled", "true");
+      textLabel.setAttribute("disabled", "true");
     } 
 }
