@@ -42,13 +42,9 @@ var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getSe
 function onLoad()
 {
     parent.onPanelLoaded('am-smtp.xul');
-    var defaultSmtpServer = null;
-    try {
-        defaultSmtpServer = smtpService.defaultServer;
-    }
-    catch (ex) {
-        defaultSmtpServer = null;
-    }
+
+    var defaultSmtpServer = smtpService.defaultServer;
+
     initSmtpSettings(defaultSmtpServer);
 
     // Get the default smtp server preference to check if we need to lock the
@@ -66,13 +62,7 @@ function onLoad()
 
 function onSave()
 {
-    var defaultSmtpServer = null;
-    try {
-        defaultSmtpServer = smtpService.defaultServer;
-    }
-    catch (ex) {
-        defaultSmtpServer = null;
-    }
+    var defaultSmtpServer = smtpService.defaultServer;
 
     //if we have a null defaultSmtpServer and if the hostname field has valid 
     //values then we create a server and make it as the default.
