@@ -106,6 +106,7 @@ protected:
   
   PRUint32 mTimeout;
   PRUint32 mMinResultsForPopup;
+  PRUint32 mMaxRows;
   PRPackedBool mDisableAutoComplete; 
   PRPackedBool mCompleteDefaultIndex;
   PRPackedBool mForceComplete;

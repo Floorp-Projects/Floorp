@@ -78,6 +78,7 @@ NS_IMPL_RELEASE(nsFormFillController);
 nsFormFillController::nsFormFillController() :
   mTimeout(50),
   mMinResultsForPopup(1),
+  mMaxRows(0),
   mDisableAutoComplete(PR_FALSE), 
   mCompleteDefaultIndex(PR_FALSE),
   mForceComplete(PR_FALSE)
@@ -287,6 +288,20 @@ nsFormFillController::GetMinResultsForPopup(PRUint32 *aMinResultsForPopup)
 NS_IMETHODIMP nsFormFillController::SetMinResultsForPopup(PRUint32 aMinResultsForPopup)
 {
   mMinResultsForPopup = aMinResultsForPopup;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetMaxRows(PRUint32 *aMaxRows)
+{
+  *aMaxRows = mMaxRows;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::SetMaxRows(PRUint32 aMaxRows)
+{
+  mMaxRows = aMaxRows;
   return NS_OK;
 }
 

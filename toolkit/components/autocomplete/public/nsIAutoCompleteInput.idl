@@ -82,6 +82,11 @@ interface nsIAutoCompleteInput : nsISupports
   attribute unsigned long minResultsForPopup;
   
   /*
+   * The maximum number of rows to show in the autocomplete popup.
+   */
+  attribute unsigned long maxRows;
+
+  /*
    * Option to show a second column in the popup which contains
    * the comment for each autocomplete result
    */
