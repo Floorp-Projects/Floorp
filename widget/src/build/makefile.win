@@ -55,7 +55,6 @@ WIN_LIBS=                               \
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib                \
- $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\raptorgfxwin.lib           \
  $(DIST)\lib\raptorbasewidget_s.lib		  \
  $(DIST)\lib\raptorwidget_s.lib	        \
