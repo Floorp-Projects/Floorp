@@ -84,8 +84,6 @@ public abstract class XMLLib
 
     public abstract Object toAttributeName(Context cx, Object nameValue);
 
-    public abstract Object toDescendantsName(Context cx, Object name);
-
     public abstract Reference xmlPrimaryReference(Context cx,
                                                   Object nameObject,
                                                   Scriptable scope);

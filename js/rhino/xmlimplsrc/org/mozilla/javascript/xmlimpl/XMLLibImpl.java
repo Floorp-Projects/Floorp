@@ -125,51 +125,6 @@ public final class XMLLibImpl extends XMLLib
         return prettyIndent;
     }
 
-    private XMLName resolveName(Context cx, Object id)
-    {
-        if(id instanceof XMLName) return (XMLName)id;
-        if (id instanceof QName) {
-            QName qname = (QName)id;
-            return XMLName.formProperty(qname.uri(), qname.localName());
-        }
-
-        String name = ScriptRuntime.toString(id);
-        boolean isAttributeName = false;
-        if (name.length() != 0 && name.charAt(0) == '@') {
-            name = name.substring(1);
-            isAttributeName = true;
-        }
-
-        String uri = null;
-        if(!name.equals("*")) {
-            if (isAttributeName) {
-                uri = "";
-            } else {
-                uri = "";
-                if (cx == null) {
-                    cx = Context.getCurrentContext();
-                }
-                if (cx != null) {
-                    Object defaultNS = ScriptRuntime.searchDefaultNamespace(cx);
-                    if (defaultNS != null) {
-                        if (defaultNS instanceof Namespace) {
-                            uri = ((Namespace)defaultNS).uri();
-                        } else {
-                            // Should not happen but for now it could
-                            // due to bad searchDefaultNamespace implementation.
-                        }
-                    }
-                }
-            }
-        }
-
-        XMLName xmlName = XMLName.formProperty(uri, name);
-        if (isAttributeName) {
-            xmlName.setAttributeName();
-        }
-        return xmlName;
-    }
-
     private Namespace resolveNamespace(String prefix, Scriptable scope)
     {
         Namespace ns = null;
@@ -604,13 +559,6 @@ public final class XMLLibImpl extends XMLLib
         return toAttributeNameImpl(cx, nameValue);
     }
 
-    public Object toDescendantsName(Context cx, Object name)
-    {
-        XMLName xmlName = resolveName(cx, name);
-        xmlName.setDescendants();
-        return xmlName;
-    }
-
     /**
      * See E4X 11.1 PrimaryExpression : PropertyIdentifier production
      */
@@ -629,7 +577,7 @@ public final class XMLLibImpl extends XMLLib
             // of XMLWithScope
             if (scope instanceof XMLWithScope) {
                 xmlObj = (XMLObjectImpl)scope.getPrototype();
-                if (xmlObj.hasXMLProperty(xmlName)) {
+                if (xmlObj.hasXMLProperty(xmlName, false)) {
                     break;
                 }
                 if (firstXmlObject == null) {
@@ -644,7 +592,7 @@ public final class XMLLibImpl extends XMLLib
         }
 
         // xmlName == null corresponds to undefined
-        return new XMLReference(xmlObj, xmlName);
+        return new XMLReference(false, xmlObj, xmlName);
     }
 
     /**

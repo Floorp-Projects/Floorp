@@ -1151,7 +1151,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param start
      * @return
      */
-    boolean hasXMLProperty(XMLName xmlName)
+    boolean hasXMLProperty(XMLName xmlName, boolean descendants)
     {
         boolean result = false;
 
@@ -1169,7 +1169,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
             // Has now should return true if the property would have results > 0 or
             // if it's a method name
             String name = xmlName.localName();
-            if ((getPropertyList(xmlName).length() > 0) ||
+            if ((getPropertyList(xmlName, descendants).length() > 0) ||
                 (getMethod(name) != NOT_FOUND))
             {
                 result = true;
@@ -1229,7 +1229,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param start
      * @return
      */
-    Object getXMLProperty(XMLName xmlName)
+    Object getXMLProperty(XMLName xmlName, boolean descendants)
     {
         Object result = NOT_FOUND;
 
@@ -1241,7 +1241,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         }
         else
         {
-            result = getPropertyList(xmlName);
+            result = getPropertyList(xmlName, descendants);
         }
 
         return result;
@@ -1276,10 +1276,6 @@ todo need to handle namespace prefix not found in XML look for namespace type in
             if (xmlName.isAttributeName())
             {
                 setAttribute(xmlName, value);
-            }
-            else if (xmlName.isDescendants())
-            {
-                throw ScriptRuntime.typeError("Assignment to descendants (\"..\") not supported");
             }
             else if (xmlName.uri() == null &&
                      xmlName.localName().equals("*"))
@@ -1322,7 +1318,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
                     xmlValue = makeXmlFromString(lib, xmlName, ScriptRuntime.toString(value));
                 }
 
-                XMLList matches = (XMLList)getPropertyList(xmlName);
+                XMLList matches = (XMLList)getPropertyList(xmlName, false);
 
                 if (matches.length() == 0)
                 {
@@ -1361,9 +1357,9 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      *
      * @param name
      */
-    void deleteXMLProperty(XMLName name)
+    void deleteXMLProperty(XMLName name, boolean descendants)
     {
-        if (!name.isDescendants() && name.isAttributeName())
+        if (!descendants && name.isAttributeName())
         {
             XmlCursor curs = newCursor();
 
@@ -1391,7 +1387,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         }
         else
         {
-            XMLList matches = (XMLList)getPropertyList(name);
+            XMLList matches = (XMLList)getPropertyList(name, descendants);
 
             matches.remove();
         }
@@ -2233,7 +2229,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
         }
         else
         {
-            hasProperty = (getPropertyList(xmlName).length() > 0);
+            hasProperty = (getPropertyList(xmlName, false).length() > 0);
         }
 
         return hasProperty;
@@ -2592,7 +2588,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      */
     boolean propertyIsEnumerable(XMLName xmlName)
     {
-        return (getPropertyList(xmlName).length() > 0);
+        return (getPropertyList(xmlName, false).length() > 0);
     }
 
     /**
@@ -2738,7 +2734,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
     {
         // remove all children
         XMLName xmlName = XMLName.formStar();
-        XMLList matches = (XMLList)getPropertyList(xmlName);
+        XMLList matches = (XMLList)getPropertyList(xmlName, false);
         matches.remove();
 
         // append new children
@@ -3018,12 +3014,12 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      * @param start
      * @return
      */
-    XMLList getPropertyList(XMLName name)
+    XMLList getPropertyList(XMLName name, boolean descendants)
     {
         XMLList result;
 
         // Get the named property
-        if (name.isDescendants())
+        if (descendants)
         {
             result = descendants(name);
         }

@@ -990,19 +990,13 @@ public class Interpreter
             addStringOp(Token.GETPROP, child.getString());
             break;
 
-          case Token.GETELEM:
-            visitExpression(child, 0);
-            child = child.getNext();
-            visitExpression(child, 0);
-            addToken(Token.GETELEM);
-            stackChange(-1);
-            break;
-
           case Token.GET_REF:
             visitExpression(child, 0);
             addToken(Token.GET_REF);
             break;
 
+          case Token.GETELEM:
+          case Token.DESC_REF:
           case Token.DELPROP:
           case Token.BITAND:
           case Token.BITOR:
@@ -1267,7 +1261,6 @@ public class Interpreter
           case Token.ESCXMLATTR :
           case Token.ESCXMLTEXT :
           case Token.TOATTRNAME :
-          case Token.DESCENDANTS :
             visitExpression(child, 0);
             addToken(type);
             break;
@@ -2810,30 +2803,27 @@ switch (op) {
         continue Loop;
     }
     case Token.GET_REF : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.getReference(lhs);
+        Reference ref = (Reference)stack[stackTop];
+        stack[stackTop] = ScriptRuntime.getReference(ref, cx);
         continue Loop;
     }
     case Token.SET_REF : {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        Object value = stack[stackTop];
+        if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.setReference(lhs, rhs);
+        Reference ref = (Reference)stack[stackTop];
+        stack[stackTop] = ScriptRuntime.setReference(ref, value, cx);
         continue Loop;
     }
     case Token.DEL_REF : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.deleteReference(lhs);
+        Reference ref = (Reference)stack[stackTop];
+        stack[stackTop] = ScriptRuntime.deleteReference(ref, cx);
         continue Loop;
     }
     case Icode_REF_INC_DEC : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.referenceIncrDecr(lhs, iCode[frame.pc]);
+        Reference ref = (Reference)stack[stackTop];
+        stack[stackTop] = ScriptRuntime.referenceIncrDecr(ref, cx,
+                                                          iCode[frame.pc]);
         ++frame.pc;
         continue Loop;
     }
@@ -3247,6 +3237,16 @@ switch (op) {
                                                          cx, frame.scope);
         continue Loop;
     }
+    case Token.DESC_REF : {
+        Object rhs = stack[stackTop];
+        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        --stackTop;
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.getDescendantsRef(lhs, rhs,
+                                                          cx, frame.scope);
+        continue Loop;
+    }
     case Token.XML_REF : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
@@ -3353,12 +3353,6 @@ switch (op) {
         Object value = stack[stackTop];
         if (value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.toAttributeName(value, cx);
-        continue Loop;
-    }
-    case Token.DESCENDANTS : {
-        Object value = stack[stackTop];
-        if(value == DBL_MRK) value = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.toDescendantsName(value, cx);
         continue Loop;
     }
     case Token.COLONCOLON : {

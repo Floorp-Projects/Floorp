@@ -149,7 +149,7 @@ public class Token
         ESCXMLATTR     = 72,
         ESCXMLTEXT     = 73,
         TOATTRNAME     = 74,
-        DESCENDANTS    = 75,
+        DESC_REF       = 75, // Descendants reference to implement x..y
         XML_REF        = 76;
 
         // End of interpreter bytecodes
@@ -328,7 +328,7 @@ public class Token
           case ESCXMLTEXT:      return "ESCXMLTEXT";
           case ESCXMLATTR:      return "ESCXMLATTR";
           case TOATTRNAME:      return "TOATTRNAME";
-          case DESCENDANTS:     return "DESCENDANTS";
+          case DESC_REF:        return "DESC_REF";
           case XML_REF:         return "XML_REF";
           case TRY:             return "TRY";
           case SEMI:            return "SEMI";

@@ -43,57 +43,65 @@ import org.mozilla.javascript.xml.*;
 
 class XMLReference extends Reference
 {
+    private boolean descendants;
     private XMLObjectImpl xmlObject;
     private XMLName xmlName;
 
     /**
      * When xmlObject == null, it corresponds to undefined in JS, not null
      */
-    XMLReference(XMLObjectImpl xmlObject, XMLName xmlName)
+    XMLReference(boolean descendants, XMLObjectImpl xmlObject, XMLName xmlName)
     {
         if (xmlName == null)
             throw new IllegalArgumentException();
+        if (descendants && xmlObject == null)
+            throw new IllegalArgumentException();
+
+        this.descendants = descendants;
         this.xmlObject = xmlObject;
         this.xmlName = xmlName;
     }
 
-    public boolean has()
+    public boolean has(Context cx)
     {
         if (xmlObject == null) {
             return false;
         }
-        return xmlObject.hasXMLProperty(xmlName);
+        return xmlObject.hasXMLProperty(xmlName, descendants);
     }
 
     /**
      * See E4X 11.1 PrimaryExpression : PropertyIdentifier production
      */
-    public Object get()
+    public Object get(Context cx)
     {
         if (xmlObject == null) {
             throw ScriptRuntime.undefReadError(Undefined.instance,
                                                xmlName.toString());
         }
-        return xmlObject.getXMLProperty(xmlName);
+        return xmlObject.getXMLProperty(xmlName, descendants);
     }
 
-    public Object set(Object value)
+    public Object set(Context cx, Object value)
     {
         if (xmlObject == null) {
             throw ScriptRuntime.undefWriteError(Undefined.instance,
                                                 xmlName.toString(),
                                                 value);
         }
+        // Assignment to descendants causes parse error on bad reference
+        // and this should not be called
+        if (descendants) throw Kit.codeBug();
         xmlObject.putXMLProperty(xmlName, value);
         return value;
     }
 
-    public void delete()
+    public void delete(Context cx)
     {
         if (xmlObject == null) {
             return;
         }
-        xmlObject.deleteXMLProperty(xmlName);
+        xmlObject.deleteXMLProperty(xmlName, descendants);
     }
 }
 

@@ -323,14 +323,14 @@ class XMLList extends XMLObjectImpl implements Function
      * @param start
      * @return
      */
-    boolean hasXMLProperty(XMLName xmlName)
+    boolean hasXMLProperty(XMLName xmlName, boolean descendants)
     {
         boolean result = false;
 
         // Has now should return true if the property would have results > 0 or
         // if it's a method name
         String name = xmlName.localName();
-        if ((getPropertyList(xmlName).length() > 0) ||
+        if ((getPropertyList(xmlName, descendants).length() > 0) ||
             (getMethod(name) != NOT_FOUND))
         {
             result = true;
@@ -427,9 +427,9 @@ class XMLList extends XMLObjectImpl implements Function
      * @param name
      * @return
      */
-    Object getXMLProperty(XMLName name)
+    Object getXMLProperty(XMLName name, boolean descendants)
     {
-        return getPropertyList(name);
+        return getPropertyList(name, descendants);
     }
 
     /**
@@ -563,7 +563,7 @@ class XMLList extends XMLObjectImpl implements Function
      *
      * @param name
      */
-    void deleteXMLProperty(XMLName name)
+    void deleteXMLProperty(XMLName name, boolean descendants)
     {
         for (int i = 0; i < length(); i++)
         {
@@ -571,7 +571,7 @@ class XMLList extends XMLObjectImpl implements Function
 
             if (xml.tokenType() == XmlCursor.TokenType.START)
             {
-                xml.deleteXMLProperty(name);
+                xml.deleteXMLProperty(name, descendants);
             }
         }
     }
@@ -993,7 +993,7 @@ class XMLList extends XMLObjectImpl implements Function
         }
         else
         {
-            hasProperty = (getPropertyList(xmlName).length() > 0);
+            hasProperty = (getPropertyList(xmlName, false).length() > 0);
         }
 
         return hasProperty;
@@ -1256,7 +1256,7 @@ class XMLList extends XMLObjectImpl implements Function
      */
     boolean propertyIsEnumerable(XMLName xmlName)
     {
-        return hasXMLProperty(xmlName);
+        return hasXMLProperty(xmlName, false);
     }
 
     /**
@@ -1495,12 +1495,12 @@ class XMLList extends XMLObjectImpl implements Function
      * @param start
      * @return
      */
-    private XMLList getPropertyList(XMLName name)
+    private XMLList getPropertyList(XMLName name, boolean descendants)
     {
         XMLList propertyList = new XMLList(lib);
         javax.xml.namespace.QName qname = null;
 
-        if (!name.isDescendants() && !name.isAttributeName())
+        if (!descendants && !name.isAttributeName())
         {
             // Only set the targetProperty if this is a regular child get
             // and not a descendant or attribute get
@@ -1511,7 +1511,8 @@ class XMLList extends XMLObjectImpl implements Function
 
         for (int i = 0; i < length(); i++)
         {
-            propertyList.addToList(getXmlFromAnnotation(i).getPropertyList(name));
+            propertyList.addToList(getXmlFromAnnotation(i).
+                getPropertyList(name, descendants));
         }
 
         return propertyList;

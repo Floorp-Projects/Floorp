@@ -2022,9 +2022,11 @@ class BodyCodegen
 
               case Token.GET_REF:
                 generateExpression(child, node); // reference
+                cfw.addALoad(contextLocal);
                 addScriptRuntimeInvoke(
                     "getReference",
-                    "(Ljava/lang/Object;"
+                    "(Lorg/mozilla/javascript/Reference;"
+                    +"Lorg/mozilla/javascript/Context;"
                     +")Ljava/lang/Object;");
                 break;
 
@@ -2057,24 +2059,30 @@ class BodyCodegen
                     child = child.getNext();
                     if (type == Token.SET_REF_OP) {
                         cfw.add(ByteCode.DUP);
+                        cfw.addALoad(contextLocal);
                         addScriptRuntimeInvoke(
                             "getReference",
-                            "(Ljava/lang/Object;"
+                            "(Lorg/mozilla/javascript/Reference;"
+                            +"Lorg/mozilla/javascript/Context;"
                             +")Ljava/lang/Object;");
                     }
                     generateExpression(child, node);
+                    cfw.addALoad(contextLocal);
                     addScriptRuntimeInvoke(
                         "setReference",
-                        "(Ljava/lang/Object;"
+                        "(Lorg/mozilla/javascript/Reference;"
                         +"Ljava/lang/Object;"
+                        +"Lorg/mozilla/javascript/Context;"
                         +")Ljava/lang/Object;");
                 }
                 break;
 
               case Token.DEL_REF:
                 generateExpression(child, node);
+                cfw.addALoad(contextLocal);
                 addScriptRuntimeInvoke("deleteReference",
-                                       "(Ljava/lang/Object;"
+                                       "(Lorg/mozilla/javascript/Reference;"
+                                       +"Lorg/mozilla/javascript/Context;"
                                        +")Ljava/lang/Object;");
                 break;
 
@@ -2128,7 +2136,7 @@ class BodyCodegen
                         +"Ljava/lang/String;"
                         +"Lorg/mozilla/javascript/Context;"
                         +"Lorg/mozilla/javascript/Scriptable;"
-                        +")Ljava/lang/Object;");
+                        +")Lorg/mozilla/javascript/Reference;");
                 }
                 break;
 
@@ -2141,7 +2149,7 @@ class BodyCodegen
                         "(Ljava/lang/Object;"
                         +"Lorg/mozilla/javascript/Context;"
                         +"Lorg/mozilla/javascript/Scriptable;"
-                        +")Ljava/lang/Object;");
+                        +")Lorg/mozilla/javascript/Reference;");
                 }
                 break;
 
@@ -2184,13 +2192,17 @@ class BodyCodegen
                                        +")Ljava/lang/Object;");
                 break;
 
-              case Token.DESCENDANTS:
+              case Token.DESC_REF:
                 generateExpression(child, node);
+                generateExpression(child.getNext(), node);
                 cfw.addALoad(contextLocal);
-                addScriptRuntimeInvoke("toDescendantsName",
+                cfw.addALoad(variableObjectLocal);
+                addScriptRuntimeInvoke("getDescendantsRef",
                                        "(Ljava/lang/Object;"
+                                       +"Ljava/lang/Object;"
                                        +"Lorg/mozilla/javascript/Context;"
-                                       +")Ljava/lang/Object;");
+                                       +"Lorg/mozilla/javascript/Scriptable;"
+                                       +")Lorg/mozilla/javascript/Reference;");
                 break;
 
               case Token.COLONCOLON : {
@@ -3156,9 +3168,13 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
           case Token.GET_REF: {
             Node refChild = child.getFirstChild();
             generateExpression(refChild, node);
+            cfw.addALoad(contextLocal);
             cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke(
-                "referenceIncrDecr", "(Ljava/lang/Object;I)Ljava/lang/Object;");
+                "referenceIncrDecr",
+                "(Lorg/mozilla/javascript/Reference;"
+                +"Lorg/mozilla/javascript/Context;"
+                +"I)Ljava/lang/Object;");
             break;
           }
           default:

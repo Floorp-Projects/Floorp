@@ -1518,23 +1518,20 @@ public class ScriptRuntime {
         return value;
     }
 
-    public static Object getReference(Object obj)
+    public static Object getReference(Reference ref, Context cx)
     {
-        Reference ref = (Reference)obj;
-        return ref.get();
+        return ref.get(cx);
     }
 
-    public static Object setReference(Object obj, Object value)
+    public static Object setReference(Reference ref, Object value, Context cx)
     {
-        Reference ref = (Reference)obj;
-        return ref.set(value);
+        return ref.set(cx, value);
     }
 
-    public static Object deleteReference(Object obj)
+    public static Object deleteReference(Reference ref, Context cx)
     {
-        Reference ref = (Reference)obj;
-        ref.delete();
-        return wrapBoolean(!ref.has());
+        ref.delete(cx);
+        return wrapBoolean(!ref.has(cx));
     }
 
     static boolean isSpecialProperty(String s)
@@ -1542,10 +1539,10 @@ public class ScriptRuntime {
         return s.equals("__proto__") || s.equals("__parent__");
     }
 
-    public static Object specialReference(final Object obj,
-                                          final String specialProperty,
-                                          final Context cx,
-                                          final Scriptable scope)
+    public static Reference specialReference(final Object obj,
+                                             final String specialProperty,
+                                             Context cx,
+                                             final Scriptable scope)
     {
         final int PROTO = 0;
         final int PARENT = 1;
@@ -1562,10 +1559,10 @@ public class ScriptRuntime {
 
         final Scriptable sobj = toObject(scope, obj);
         return new Reference() {
-            public Object get()
+            public Object get(Context cx2)
             {
                 if (!specials) {
-                    return getObjectProp(sobj, specialProperty, cx);
+                    return getObjectProp(sobj, specialProperty, cx2);
                 }
                 if (id == PROTO) {
                     return getProto(sobj, scope);
@@ -1574,10 +1571,10 @@ public class ScriptRuntime {
                 }
             }
 
-            public Object set(Object value)
+            public Object set(Context cx2, Object value)
             {
                 if (!specials) {
-                    return setObjectProp(sobj, specialProperty, value, cx);
+                    return setObjectProp(sobj, specialProperty, value, cx2);
                 }
                 Scriptable result;
                 if (value == null) {
@@ -2464,9 +2461,10 @@ public class ScriptRuntime {
         }
     }
 
-    public static Object referenceIncrDecr(Object obj, int incrDecrMask)
+    public static Object referenceIncrDecr(Reference ref, Context cx,
+                                           int incrDecrMask)
     {
-        Object value = getReference(obj);
+        Object value = ref.get(cx);
         boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
@@ -2484,7 +2482,7 @@ public class ScriptRuntime {
             --number;
         }
         Number result = wrapNumber(number);
-        setReference(obj, result);
+        ref.set(cx, result);
         if (post) {
             return value;
         } else {
@@ -3059,10 +3057,8 @@ public class ScriptRuntime {
 
     public static Scriptable enterDotQuery(Object value, Scriptable scope)
     {
-        if (!(value instanceof XMLObject))
-        {
-            throw ScriptRuntime.typeError1("msg.isnt.xml.object",
-                                           ScriptRuntime.toString(value));
+        if (!(value instanceof XMLObject)) {
+            throw notXmlError(value);
         }
         XMLObject object = (XMLObject)value;
         return object.enterDotQuery(scope);
@@ -3378,6 +3374,11 @@ public class ScriptRuntime {
         return typeError1("msg.isnt.function", msg);
     }
 
+    private static RuntimeException notXmlError(Object value)
+    {
+        throw typeError1("msg.isnt.xml.object", ScriptRuntime.toString(value));
+    }
+
     private static void warnAboutNonJSObject(Object nonJSObject)
     {
         String message =
@@ -3449,10 +3450,14 @@ public class ScriptRuntime {
         return xmlLib.toAttributeName(cx, name);
     }
 
-    public static Object toDescendantsName(Object name, Context cx)
+    public static Reference getDescendantsRef(Object obj, Object elem,
+                                              Context cx, Scriptable scope)
     {
-        XMLLib xmlLib = currentXMLLib(cx);
-        return xmlLib.toDescendantsName(cx, name);
+        if (!(obj instanceof XMLObject)) {
+            throw notXmlError(obj);
+        }
+        XMLObject xmlObject = (XMLObject)obj;
+        return xmlObject.getDescendantsRef(cx, elem);
     }
 
     public static Object toQualifiedName(String namespace,
@@ -3463,9 +3468,9 @@ public class ScriptRuntime {
         return xmlLib.toQualifiedName(namespace, name, scope);
     }
 
-    public static Object xmlReference(Object xmlName,
-                                      Context cx,
-                                      Scriptable scope)
+    public static Reference xmlReference(Object xmlName,
+                                         Context cx,
+                                         Scriptable scope)
     {
         XMLLib xmlLib = currentXMLLib(cx);
         return xmlLib.xmlPrimaryReference(cx, xmlName, scope);

@@ -44,16 +44,16 @@ package org.mozilla.javascript;
  */
 public abstract class Reference
 {
-    public boolean has()
+    public boolean has(Context cx)
     {
         return true;
     }
 
-    public abstract Object get();
+    public abstract Object get(Context cx);
 
-    public abstract Object set(Object value);
+    public abstract Object set(Context cx, Object value);
 
-    public void delete()
+    public void delete(Context cx)
     {
     }
 }

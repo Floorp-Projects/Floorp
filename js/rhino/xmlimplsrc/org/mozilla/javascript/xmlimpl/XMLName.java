@@ -41,7 +41,6 @@ class XMLName
     private String uri;
     private String localName;
     private boolean isAttributeName;
-    private boolean isDescendants;
 
     private XMLName(String uri, String localName)
     {
@@ -71,23 +70,10 @@ class XMLName
         isAttributeName = true;
     }
 
-    boolean isDescendants()
-    {
-        return isDescendants;
-    }
-
-    void setDescendants()
-    {
-        if (isDescendants)
-            throw new IllegalStateException();
-        isDescendants = true;
-    }
-
     public String toString()
     {
         //return qname.localName();
         StringBuffer buff = new StringBuffer();
-        if(isDescendants()) buff.append("..");
         if(isAttributeName()) buff.append('@');
         if(uri() == null)
         {

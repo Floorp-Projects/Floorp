@@ -63,13 +63,13 @@ abstract class XMLObjectImpl extends XMLObject
      * ecmaHas(cx, id) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    abstract boolean hasXMLProperty(XMLName name);
+    abstract boolean hasXMLProperty(XMLName name, boolean descendants);
 
     /**
      * ecmaGet(cx, id) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    abstract Object getXMLProperty(XMLName name);
+    abstract Object getXMLProperty(XMLName name, boolean descendants);
 
     /**
      * ecmaPut(cx, id, value) calls this after resolving when id to XMLName
@@ -81,7 +81,7 @@ abstract class XMLObjectImpl extends XMLObject
      * ecmaDelete(cx, id) calls this after resolving when id to XMLName
      * and checking it is not Uint32 index.
      */
-    abstract void deleteXMLProperty(XMLName name);
+    abstract void deleteXMLProperty(XMLName name, boolean descendants);
 
     /**
      * Test XML equality with target the target.
@@ -190,7 +190,7 @@ abstract class XMLObjectImpl extends XMLObject
             // XXX Fix this cast
             return has((int)index, this);
         }
-        return hasXMLProperty(xmlName);
+        return hasXMLProperty(xmlName, false);
     }
 
     /**
@@ -209,7 +209,7 @@ abstract class XMLObjectImpl extends XMLObject
             }
             return result;
         }
-        return getXMLProperty(xmlName);
+        return getXMLProperty(xmlName, false);
     }
 
     /**
@@ -229,7 +229,7 @@ abstract class XMLObjectImpl extends XMLObject
     }
 
     /**
-     * Implementation of ECMAScript [[Delete]]
+     * Implementation of ECMAScript [[Delete]].
      */
     public final boolean ecmaDelete(Context cx, Object id)
     {
@@ -241,8 +241,14 @@ abstract class XMLObjectImpl extends XMLObject
             delete((int)index);
             return true;
         }
-        deleteXMLProperty(xmlName);
+        deleteXMLProperty(xmlName, false);
         return true;
+    }
+
+    public Reference getDescendantsRef(Context cx, Object id)
+    {
+        XMLName xmlName = lib.toXMLName(cx, id);
+        return new XMLReference(true, this, xmlName);
     }
 
     public NativeWith enterWith(Scriptable scope)

@@ -39,7 +39,6 @@
 package org.mozilla.javascript.xml;
 
 import org.mozilla.javascript.*;
-import org.mozilla.javascript.xml.*;
 
 /**
  *  This Interface describes what all XML objects (XML, XMLList) should have in common.
@@ -76,6 +75,11 @@ public abstract class XMLObject extends IdScriptableObject
      * Implementation of ECMAScript [[Delete]].
      */
     public abstract boolean ecmaDelete(Context cx, Object id);
+
+    /**
+     * To implement ECMAScript [[Descendants]].
+     */
+    public abstract Reference getDescendantsRef(Context cx, Object id);
 
     /**
      * Wrap this object into NativeWith to implement the with statement.

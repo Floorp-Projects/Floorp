@@ -948,7 +948,7 @@ final class IRFactory
             } else if (childType == Token.GET_REF) {
                 Node ref = child.getFirstChild();
                 child.removeChild(ref);
-                n = new Node(Token.DELPROP, ref);
+                n = new Node(Token.DEL_REF, ref);
             } else {
                 n = new Node(Token.TRUE);
             }
@@ -1080,12 +1080,14 @@ final class IRFactory
             break;
 
           case Token.DOTDOT:
-            if (right.getType() == Token.NAME) {
-                right.setType(Token.STRING);
+            {
+                Node ref;
+                if (right.getType() == Token.NAME) {
+                    right.setType(Token.STRING);
+                }
+                ref = new Node(Token.DESC_REF, left, right);
+                return new Node(Token.GET_REF, ref);
             }
-            right = new Node(Token.DESCENDANTS, right);
-            nodeType = Token.GETELEM;
-            break;
 
           case Token.LB:
             // OPT: could optimize to GETPROP iff string can't be a number
