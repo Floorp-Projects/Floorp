@@ -127,6 +127,7 @@ toolbarbutton[checked="true"]:hover:active {
   width: 13px;
   height: 11px;
   list-style-image: url("chrome://global/skin/button/tbmbtn-arrow.gif");
+  -moz-image-region: auto; /* cut off inheritance */
 }
 
 toolbarbutton:hover > stack > .toolbarbutton-menubutton-dropmarker {
