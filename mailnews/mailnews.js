@@ -291,6 +291,7 @@ pref("mailnews.start_page.url", "chrome://messenger-region/locale/region.propert
 pref("mailnews.start_page.enabled", true);
 
 pref("mailnews.remember_selected_message", true);
+pref("mailnews.scroll_to_new_message", true);
 
 /* file, print, and stop hidden by default.  
    see http://bugzilla.mozilla.org/show_bug.cgi?id=197729#c3 */

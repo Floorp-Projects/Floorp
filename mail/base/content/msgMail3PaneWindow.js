@@ -188,7 +188,7 @@ var folderListener = {
              // if we didn't just scroll, 
              // scroll to the first new message
              // but don't select it
-             if (!scrolled)
+             if (!scrolled && pref.getBoolPref("mailnews.scroll_to_new_message"))
                scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
 
              if (!scrolled && pref.getBoolPref("mailnews.remember_selected_message")) {
