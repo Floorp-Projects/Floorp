@@ -260,7 +260,7 @@ nsMsgAccount::SetKey(char *accountKey)
   // ex) mail.account.myaccount.identities = "joe-home,joe-work"
   char *identitiesKeyPref = PR_smprintf("mail.account.%s.identities",
                                         accountKey);
-  char *identityKey;
+  char *identityKey = nsnull;
   rv = m_prefs->CopyCharPref(identitiesKeyPref, &identityKey);
   PR_FREEIF(identitiesKeyPref);
 
@@ -270,7 +270,7 @@ nsMsgAccount::SetKey(char *accountKey)
   
   // XXX todo: iterate through identities. for now, assume just one
 
-  nsIMsgIdentity *identity;
+  nsIMsgIdentity *identity = nsnull;
   rv = nsComponentManager::CreateInstance(kMsgIdentityCID,
                                           nsnull,
                                           nsIMsgIdentity::GetIID(),
