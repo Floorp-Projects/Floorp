@@ -84,7 +84,7 @@ GetRunningJVM(void)
 PR_IMPLEMENT(nsJVMStatus)
 JVM_StartupJVM(void)
 {
-    nsIJVMPlugin* jvm = GetRunningJVM();
+    GetRunningJVM();
     return JVM_GetJVMStatus();
 }
 
