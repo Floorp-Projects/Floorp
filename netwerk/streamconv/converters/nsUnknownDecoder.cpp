@@ -267,6 +267,9 @@ void nsUnknownDecoder::DetermineContentType()
         offset = str.Find("<FRAMESET", PR_TRUE);
         if (offset < 0) {
           offset = str.Find("<SCRIPT", PR_TRUE);
+          if (offset < 0) {
+            offset = str.Find("<BODY", PR_TRUE);
+          }
         }
       }
     }
