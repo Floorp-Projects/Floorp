@@ -28,7 +28,7 @@ public:
     NS_DECL_ISUPPORTS
 
 	nsMessageView();
-	~nsMessageView();
+	virtual ~nsMessageView();
 	nsresult Init();
 	NS_DECL_NSIMESSAGEVIEW
 
