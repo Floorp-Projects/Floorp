@@ -569,7 +569,8 @@ pref("network.http.sendSecureXSiteReferrer", true);
 pref("network.http.redirection-limit", 20);
 
 // Enable http compression: comment this out in case of problems with 1.1
-pref("network.http.accept-encoding" ,"gzip,deflate,compress;q=0.9");
+// NOTE: support for "compress" has been disabled per bug 196406.
+pref("network.http.accept-encoding" ,"gzip,deflate");
 
 pref("network.http.pipelining"      , false);
 pref("network.http.proxy.pipelining", false);
