@@ -375,6 +375,13 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     //This is a window level mouseenter event and should stop here
     aEvent->message = 0;
     break;
+#ifdef CLICK_HOLD_CONTEXT_MENUS
+  case NS_DRAGDROP_GESTURE:
+    // an external drag gesture event came in, not generated internally
+    // by Gecko. Make sure we get rid of the click-hold timer.
+    KillClickHoldTimer();
+    break;
+#endif
   case NS_DRAGDROP_OVER:
     GenerateDragDropEnterExit(aPresContext, (nsGUIEvent*)aEvent);
     break;
