@@ -217,6 +217,7 @@ PR_STATIC_CALLBACK(void)
 HostDB_ClearEntry(PLDHashTable *table,
                   PLDHashEntryHdr *entry)
 {
+    LOG(("evicting record\n"));
     nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, entry);
 #if defined(DEBUG) && defined(PR_LOGGING)
     if (!he->rec->addr_info)
@@ -396,6 +397,7 @@ nsHostResolver::ResolveHost(const char            *host,
             else if (!bypassCache &&
                      he->rec->HasResult() &&
                      NowInMinutes() <= he->rec->expiration) {
+                LOG(("using cached record\n"));
                 // put reference to host record on stack...
                 result = he->rec;
             }
@@ -569,13 +571,13 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
             if (mEvictionQSize < mMaxCacheEntries)
                 mEvictionQSize++;
             else {
-                // remove last element on mEvictionQ
-                nsHostRecord *tail =
-                    NS_STATIC_CAST(nsHostRecord *, PR_LIST_TAIL(&mEvictionQ));
-                PR_REMOVE_AND_INIT_LINK(tail);
-                PL_DHashTableOperate(&mDB, tail->host, PL_DHASH_REMOVE);
+                // remove first element on mEvictionQ
+                nsHostRecord *head =
+                    NS_STATIC_CAST(nsHostRecord *, PR_LIST_HEAD(&mEvictionQ));
+                PR_REMOVE_AND_INIT_LINK(head);
+                PL_DHashTableOperate(&mDB, head->host, PL_DHASH_REMOVE);
                 // release reference to rec owned by mEvictionQ
-                NS_RELEASE(tail);
+                NS_RELEASE(head);
             }
         }
     }
