@@ -17,7 +17,7 @@
  */
 /*Factory for internal browser security resource managers*/
 
-#if 0
+#if 1
 
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
@@ -150,7 +150,7 @@ nsSecurityManagerModule::GetClassObject(nsIComponentManager *aCompMgr,
     {
     	if (!mScriptSecurityManagerFactory) {
             rv = NS_NewGenericFactory(getter_AddRefs(mScriptSecurityManagerFactory),
-                                      nsCodebasePrincipalConstructor);
+                                      Construct_nsIScriptSecurityManager);
         }
         fact = mScriptSecurityManagerFactory;
     }
@@ -158,7 +158,7 @@ nsSecurityManagerModule::GetClassObject(nsIComponentManager *aCompMgr,
     {
     	if (!mCodebasePrincipalFactory) {
             rv = NS_NewGenericFactory(getter_AddRefs(mCodebasePrincipalFactory),
-                                      Construct_nsIScriptSecurityManager);
+                                      nsCodebasePrincipalConstructor);
         }
         fact = mCodebasePrincipalFactory;
     }
