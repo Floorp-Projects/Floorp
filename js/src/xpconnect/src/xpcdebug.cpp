@@ -371,4 +371,103 @@ JSBool xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt)
     return JS_SetDebuggerHandler(rt, xpc_DebuggerKeywordHandler, nsnull);
 }
 
+/***************************************************************************/
+
+// The following will dump info about an object to stdout...
+
+
+// Quick and dirty (debug only damnit!) class to track which JSObjects have 
+// been visited as we traverse.
+
+class ObjectPile
+{
+public:
+    enum result {primary, seen, overflow};
+    
+    result Visit(JSObject* obj)
+    {
+        if(member_count == max_count) 
+            return overflow;
+        for(int i = 0; i < member_count; i++) 
+            if(array[i] == obj)
+                return seen;
+        array[member_count++] = obj;
+        return primary;            
+    }
+
+    ObjectPile() : member_count(0){}
+
+private:
+    enum {max_count = 50};
+    JSObject* array[max_count];
+    int member_count;
+};
+
+
+static const int tab_width = 2;
+#define INDENT(_d) (_d)*tab_width, " " 
+
+static void PrintObjectBasics(JSObject* obj)
+{
+    if(OBJ_IS_NATIVE(obj))
+        printf("%#x 'native' <%s>", 
+               obj, ((JSClass*)(obj->slots[JSSLOT_CLASS]-1))->name);        
+    else
+        printf("%#x 'host'", obj);
+
+}
+
+static void PrintObject(JSObject* obj, int depth, ObjectPile* pile)
+{
+    PrintObjectBasics(obj);
+
+    switch(pile->Visit(obj))
+    {
+    case ObjectPile::primary:
+        printf("\n");
+        break;
+    case ObjectPile::seen:    
+        printf(" (SEE ABOVE)\n");
+        return;
+    case ObjectPile::overflow:    
+        printf(" (TOO MANY OBJECTS)\n");
+        return;
+    }
+
+    if(!OBJ_IS_NATIVE(obj))
+        return;
+
+    JSObject* parent = (JSObject*)(obj->slots[JSSLOT_PARENT]);
+    JSObject* proto  = (JSObject*)(obj->slots[JSSLOT_PROTO]);
+
+    printf("%*sparent: ", INDENT(depth+1));
+    if(parent)
+        PrintObject(parent, depth+1, pile);
+    else
+        printf("null\n");
+    printf("%*sproto: ", INDENT(depth+1));
+    if(proto)
+        PrintObject(proto, depth+1, pile);
+    else
+        printf("null\n");
+}
+
+JSBool
+xpc_DumpJSObject(JSObject* obj)
+{
+    ObjectPile pile;
+
+    printf("Debugging reminders...\n");
+    printf("  class:  (JSClass*)(obj->slots[2]-1)\n");
+    printf("  parent: (JSObject*)(obj->slots[1])\n");
+    printf("  proto:  (JSObject*)(obj->slots[0])\n");
+    printf("\n");
+
+    if(obj)
+        PrintObject(obj, 0, &pile);
+    else
+        printf("xpc_DumpJSObject passed null!\n");
+
+    return JS_TRUE;
+}
 #endif

@@ -1483,6 +1483,9 @@ xpc_DumpJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals,
 extern JSBool
 xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text);
 
+extern JSBool
+xpc_DumpJSObject(JSObject* obj);
+
 extern JSBool 
 xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt);
 
