@@ -52,6 +52,7 @@ en-US.jar:
         locale/en-US/help/images/bullets.gif            (locale/en-US/images/bullets.gif)
         locale/en-US/help/images/checkspellingbox.gif   (locale/en-US/images/checkspellingbox.gif)
         locale/en-US/help/images/columns.gif            (locale/en-US/images/columns.gif)
+        locale/en-US/help/images/composer_icon.gif      (locale/en-US/images/composer_icon.gif)
         locale/en-US/help/images/flag.gif               (locale/en-US/images/flag.gif)
         locale/en-US/help/images/flag_column.gif       (locale/en-US/images/flag_column.gif)
         locale/en-US/help/images/frown.gif              (locale/en-US/images/frown.gif)
