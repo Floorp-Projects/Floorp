@@ -18,6 +18,7 @@ comm.jar:
 *   content/communicator/pref/pref-extensions.js                       (content/pref-extensions.js)
 *+  content/communicator/pref/pref-fonts.xul                           (content/pref-fonts.xul)
 *+  content/communicator/pref/pref-fonts.js                            (content/pref-fonts.js)
+*   content/communicator/pref/pref-calibrate-screen.xul                (content/pref-calibrate-screen.xul)
 
 en-US.jar:
 +   locale/en-US/communicator/pref/pref-fonts.dtd                      (locale/pref-fonts.dtd)
