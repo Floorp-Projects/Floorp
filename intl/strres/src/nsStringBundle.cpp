@@ -126,6 +126,8 @@ nsStringBundle::~nsStringBundle()
 nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 {
+  if (!mProps)
+    return NS_OK;
   NS_ENSURE_TRUE(mProps, NS_ERROR_UNEXPECTED);
   nsAutoCMonitor(this);
   nsAutoString name;
