@@ -864,9 +864,11 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
     for (index = 0; index < count; index++) {
         nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)
             mDocObservers.ElementAt(index);
-        observer->OnEndDocumentLoad(aLoadInitiator, 
-                                    aDocChannel,
-                                    aStatus, observer);
+        if (observer) {
+            observer->OnEndDocumentLoad(aLoadInitiator, 
+                                        aDocChannel,
+                                        aStatus, observer);
+        }
     }
     /*
      * Next notify the parent...
