@@ -84,7 +84,7 @@ public:
     };
 
 private:
-    int         FlushCntlSock(nsSocket *aSock);
+    int         FlushCntlSock(nsSocket *aSock, int bailOnTimeOut = 1);
     int         IssueCmd(char *aCmd, char *aResp, int aRespSize, 
                          nsSocket *aSock);
     int         ParseAddr(char *aBuf, char **aHost, int *aPort);
