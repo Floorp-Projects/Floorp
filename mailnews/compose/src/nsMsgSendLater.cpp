@@ -31,16 +31,21 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgCompCID.h"
 #include "nsMsgCompUtils.h"
 #include "nsMsgUtils.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMessage.h"
 #include "nsIRDFResource.h"
+#include "nsISupportsArray.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_IID(kIMsgSendLater, NS_IMSGSENDLATER_IID);
+static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
+static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
+static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
 
 // 
 // This function will be used by the factory to generate the 
@@ -67,18 +72,26 @@ NS_IMPL_ISUPPORTS(nsMsgSendLater, nsIMsgSendLater::GetIID())
 nsMsgSendLater::nsMsgSendLater()
 {
   mIdentity = nsnull;  
+  mTempIFileSpec = nsnull;
   mTempFileSpec = nsnull;
   mEnumerator = nsnull;
   mFirstTime = PR_TRUE;
+  mTotalSentSuccessfully = 0;
+  mTotalSendCount = 0;
+  mCompleteCallback = nsnull;
+  mTagData = nsnull;
+  mMessageFolder = nsnull;
+  mMessage = nsnull;
 
   NS_INIT_REFCNT();
 }
 
 nsMsgSendLater::~nsMsgSendLater()
 {
-  NS_RELEASE(mEnumerator);
-  if (mTempFileSpec)
-    delete mTempFileSpec;
+  if (mEnumerator)
+    NS_RELEASE(mEnumerator);
+  if (mTempIFileSpec)
+    NS_RELEASE(mTempIFileSpec);
 }
 
 nsresult
@@ -95,6 +108,12 @@ SaveMessageCompleteCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
       printf("nsMsgSendLater: Success on the message save...\n");
 #endif
       rv = ptr->CompleteMailFileSend();
+
+      // If the send operation failed..try the next one...
+      if (NS_FAILED(rv))
+        rv = ptr->StartNextMailFileSend();
+
+      NS_RELEASE(ptr);
     }
   }
 
@@ -102,9 +121,9 @@ SaveMessageCompleteCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
 }
 
 nsresult
-SendMessageCompleteCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
+SendMessageCompleteCallback(nsresult aExitCode, void *tagData, nsFileSpec *returnFileSpec)
 {
-  nsresult rv = NS_OK;
+  nsresult                    rv = NS_OK;
 
   if (tagData)
   {
@@ -115,7 +134,21 @@ SendMessageCompleteCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
       printf("nsMsgSendLater: Success on the message send operation!\n");
 #endif
 
+      PRBool    deleteMsgs = PR_FALSE;
+
+      //
+      // Now delete the message from the outbox folder.
+      //
+      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+      if (NS_SUCCEEDED(rv) && prefs)
+    		prefs->GetBoolPref("mail.really_delete_unsent_messages", &deleteMsgs);
+
+      if (deleteMsgs)
+        ptr->DeleteCurrentMessage();
+
+      ++(ptr->mTotalSentSuccessfully);
       rv = ptr->StartNextMailFileSend();
+      NS_RELEASE(ptr);
     }
   }
 
@@ -125,34 +158,55 @@ SendMessageCompleteCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
 nsresult
 nsMsgSendLater::CompleteMailFileSend()
 {
-nsresult rv;
+nsresult                    rv;
+nsString                    recips;
+nsString                    ccList;
+PRBool                      created;
+nsCOMPtr<nsIMsgCompFields>  compFields = nsnull;
+nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
 
-  NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
-	if (NS_FAILED(rv) || !smtpService)
+  // If for some reason the tmp file didn't get created, we've failed here
+  mTempIFileSpec->exists(&created);
+  if (!created)
     return NS_ERROR_FAILURE;
 
-  char      *aUnixStyleFilePath;
-
-  nsString      recips;
-  mMessage->GetRecipients(recips);
-  printf("SEND THIS : [%s]\n", recips.GetBuffer());
-
-  mMessage->GetRecipients(recips);
-  char      *buf = recips.ToNewCString();
-
-  mTempFileSpec->GetUnixStyleFilePath(&aUnixStyleFilePath);
-  if (!aUnixStyleFilePath)
+  // Get the recipients...
+  if (NS_FAILED(mMessage->GetRecipients(recips)))
     return NS_ERROR_FAILURE;
+  else
+  	mMessage->GetCCList(ccList);
 
-  nsFilePath    filePath (aUnixStyleFilePath);
-
-  nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(SendMessageCompleteCallback, 
-                                                                  nsMailDelivery, this);
-  if (!sendListener)
+  // Get the composition fields interface
+  nsresult res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, nsIMsgCompFields::GetIID(), 
+                                                    (void **) getter_AddRefs(compFields)); 
+  if (NS_FAILED(res) || !compFields)
+  {
     return NS_ERROR_FAILURE;
+  }
 
-  rv = smtpService->SendMailMessage(filePath, buf, nsnull, nsnull);
-  PR_FREEIF(buf);
+  // Get the message send interface
+  rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, nsIMsgSend::GetIID(), 
+                                          (void **) getter_AddRefs(pMsgSend)); 
+  if (NS_FAILED(res) || !pMsgSend)
+  {
+    return NS_ERROR_FAILURE;
+  }
+
+  char    *recipients = recips.ToNewCString();
+  char    *cc = ccList.ToNewCString();
+
+  compFields->SetTo(recipients, NULL);
+  compFields->SetCc(cc, NULL);
+  NS_ADDREF(this);  
+  PR_FREEIF(recipients);
+  PR_FREEIF(cc);
+  rv = pMsgSend->SendMessageFile(compFields, // nsIMsgCompFields                  *fields,
+                            mTempFileSpec,   // nsFileSpec                        *sendFileSpec,
+                            PR_TRUE,         // PRBool                            deleteSendFileOnCompletion,
+                            PR_FALSE,        // PRBool                            digest_p,
+                            nsMsgDeliverNow, // nsMsgDeliverMode                  mode,
+                            SendMessageCompleteCallback, // nsMsgSendCompletionCallback       completionCallback,
+                            this);           // void                              *tagData);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -177,12 +231,15 @@ nsMsgSendLater::StartNextMailFileSend()
   }
   else
     mEnumerator->Next();
+
   if (mEnumerator->IsDone() == NS_OK)
   {
     // Call any caller based callbacks and then exit cleanly
 #ifdef NS_DEBUG
     printf("nsMsgSendLater: Finished all \"Send Later\" operations successfully!\n");
 #endif
+    if (mCompleteCallback)
+      mCompleteCallback(NS_OK, mTotalSendCount, mTotalSentSuccessfully, mTagData);
     return NS_OK;
   }
 
@@ -213,16 +270,15 @@ nsMsgSendLater::StartNextMailFileSend()
   nsString      subject;
   mMessage->GetSubject(subject);
   tString = subject.ToNewCString();
-  printf("Fun subject %s\n", tString);
+  printf("Sending message: [%s]\n", tString);
   PR_FREEIF(tString);
 
-  nsFileSpec *tSpec = nsMsgCreateTempFileSpec("nsmail.tmp"); 
-	if (!tSpec)
+  mTempFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp"); 
+	if (!mTempFileSpec)
     return NS_ERROR_FAILURE;
 
-//  NS_NewFileSpecWithSpec(*tSpec, &mTempFileSpec);
-  delete tSpec;
-	if (!mTempFileSpec)
+  NS_NewFileSpecWithSpec(*mTempFileSpec, &mTempIFileSpec);
+	if (!mTempIFileSpec)
     return NS_ERROR_FAILURE;
 
   nsIMsgMessageService * messageService = nsnull;
@@ -230,6 +286,9 @@ nsMsgSendLater::StartNextMailFileSend()
   if (NS_FAILED(rv) && !messageService)
     return NS_ERROR_FAILURE;
 
+  ++mTotalSendCount;
+
+  NS_ADDREF(this);
   nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(SaveMessageCompleteCallback, 
                                                                   nsFileSaveDelivery, this);
   if (!sendListener)
@@ -238,7 +297,7 @@ nsMsgSendLater::StartNextMailFileSend()
     return NS_ERROR_FAILURE;
   }
 
-  rv = messageService->SaveMessageToDisk(aMessageURI, mTempFileSpec, PR_FALSE, sendListener, nsnull);
+  rv = messageService->SaveMessageToDisk(aMessageURI, mTempIFileSpec, PR_FALSE, sendListener, nsnull);
   ReleaseMessageServiceFromURI(aMessageURI, messageService);
 
 	if (NS_FAILED(rv))
@@ -295,14 +354,22 @@ nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity)
 }
 
 nsresult 
-nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity *identity)
+nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
+                                   nsMsgSendUnsentMessagesCallback  msgCallback,
+                                   void                             *tagData)
 {
-  if (!identity)
+ // RICHIE - for now hack it mIdentity = identity;
+
+nsIMsgIdentity *GetHackIdentity();
+
+  mIdentity = GetHackIdentity();
+  if (!mIdentity)
     return NS_ERROR_FAILURE;
 
-  mIdentity = identity;
+  mCompleteCallback = msgCallback;
+  mTagData = tagData;
 
-  mMessageFolder = GetUnsentMessagesFolder(identity);
+  mMessageFolder = GetUnsentMessagesFolder(mIdentity);
   if (!mMessageFolder)
     return NS_ERROR_FAILURE;
 
@@ -314,47 +381,8 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity *identity)
 	return StartNextMailFileSend();
 }
 
-
-
-
-#include "nsIComponentManager.h" 
-#include "nsMsgCompCID.h"
-#include "nsIMsgCompose.h"
-#include "nsIMsgCompFields.h"
-#include "nsIMsgSend.h"
-#include "nsIPref.h"
-#include "nsIServiceManager.h"
-#include "nscore.h"
-#include "nsIMsgMailSession.h"
-#include "nsINetSupportDialogService.h"
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
-#include "nsINetService.h"
-#include "nsIComponentManager.h"
-#include "nsString.h"
-#include "nsISmtpService.h"
-#include "nsISmtpUrl.h"
-#include "nsIUrlListener.h"
-#include "nsIEventQueueService.h"
-#include "nsIEventQueue.h"
-#include "nsIFileLocator.h"
-#include "MsgCompGlue.h"
-#include "nsCRT.h"
-#include "prmem.h"
-#include "nsIMimeURLUtils.h"
-#include "nsMsgSendLater.h"
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
-static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
-static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
-static NS_DEFINE_IID(kIMsgSendLaterIID, NS_IMSGSENDLATER_IID); 
-static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
-
-void DoItDude(void)
+nsIMsgIdentity *
+GetHackIdentity()
 {
 nsresult rv;
 
@@ -362,37 +390,46 @@ nsresult rv;
   if (NS_FAILED(rv)) 
   {
     printf("Failure on Mail Session Init!\n");
-    return ;
+    return nsnull;
   }  
 
-  nsCOMPtr<nsIMsgIdentity>  identity = nsnull;
-  
-  NS_WITH_SERVICE(nsIMsgMailSession, session, kCMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv)) 
-  {
-    printf("Failure getting Mail Session!\n");
-    return ;
-  }  
+  nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
+  nsCOMPtr<nsIMsgAccountManager>  accountManager;
 
-  nsCOMPtr<nsIMsgAccountManager> accountManager;
-  rv = session->GetAccountManager(getter_AddRefs(accountManager));
+  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
   if (NS_FAILED(rv)) 
   {
     printf("Failure getting account Manager!\n");
-    return ;
+    return nsnull;
   }  
-  rv = session->GetCurrentIdentity(getter_AddRefs(identity));
+
+  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
   {
     printf("Failure getting Identity!\n");
-    return ;
+    return nsnull;
   }  
-  
-  nsIMsgSendLater *pMsgSendLater;
-  rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL, kIMsgSendLaterIID, (void **) &pMsgSendLater); 
-  if (rv == NS_OK && pMsgSendLater) 
-  { 
-    printf("We succesfully obtained a nsIMsgSendLater interface....\n");    
-    pMsgSendLater->SendUnsentMessages(identity);
+
+  return identity;
+}
+
+nsresult
+nsMsgSendLater::DeleteCurrentMessage()
+{
+  nsCOMPtr<nsISupportsArray>  msgArray;
+
+  // Get the composition fields interface
+  nsresult res = nsComponentManager::CreateInstance(kISupportsArrayCID, NULL, nsISupportsArray::GetIID(), 
+                                                    (void **) getter_AddRefs(msgArray)); 
+  if (NS_FAILED(res) || !msgArray)
+  {
+    return NS_ERROR_FAILURE;
   }
+
+  msgArray->InsertElementAt(mMessage, 0);
+  res = mMessageFolder->DeleteMessages(msgArray, nsnull);
+  if (NS_FAILED(res))
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }

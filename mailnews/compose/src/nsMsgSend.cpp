@@ -1125,14 +1125,14 @@ nsMsgComposeAndSend::GatherMimeAttachments ()
 
 	if (m_dont_deliver_p && mSendCompleteCallback)
 	{
-		mSendCompleteCallback (NS_OK, m_fe_data);
-
     //
 		// Need to ditch the file spec here so that we don't delete the
 		// file, since in this case, the caller wants the file
     //
     mReturnFileSpec = mTempFileSpec;
     mTempFileSpec = nsnull;
+
+    mSendCompleteCallback (NS_OK, m_fe_data, mReturnFileSpec);
 		mSendCompleteCallback = 0;
 		Clear();
 	}
@@ -1505,6 +1505,7 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 nsresult
 nsMsgComposeAndSend::Init(
 						  nsMsgCompFields *fields,
+              nsFileSpec      *sendFileSpec,
 						  PRBool digest_p,
 						  PRBool dont_deliver_p,
 						  nsMsgDeliverMode mode,
@@ -1540,9 +1541,21 @@ nsMsgComposeAndSend::Init(
   if (NS_FAILED(rv))
     return rv;
 
-
-
-
+  //
+  // At this point, if we are only creating this object to do
+  // send operations on externally created RFC822 disk files, 
+  // make sure we have setup the appropriate nsFileSpec and
+  // move on with life.
+  //
+  //
+  // First check to see if we are doing a send operation on an external file
+  // or creating the file itself.
+  //
+  if (sendFileSpec)
+  {
+    mTempFileSpec = sendFileSpec;
+    return NS_OK;
+  }
 
   // Setup related part information
 	m_related_part = relatedPart;
@@ -1616,7 +1629,7 @@ NewsDeliveryCallback(nsIURL *aUrl, nsresult aExitCode, void *tagData)
   {
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
     ptr->DeliverAsNewsExit(aUrl, aExitCode);
-	NS_RELEASE(ptr);
+    NS_RELEASE(ptr);
   }
 
   return aExitCode;
@@ -1719,8 +1732,7 @@ nsMsgComposeAndSend::DeliverFileAsNews ()
 
   if (NS_SUCCEEDED(rv) && nntpService) 
   {	
-	NS_ADDREF(this);
-
+  	NS_ADDREF(this);
     nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
     if (!sendListener)
     {
@@ -1803,7 +1815,7 @@ nsMsgComposeAndSend::DeliverAsNewsExit(nsIURL *aUrl, nsresult aExitCode)
   // No real reason to bother the user at this point.
   //      
   if (mSendCompleteCallback)
-    mSendCompleteCallback (aExitCode, m_fe_data);
+    mSendCompleteCallback (aExitCode, m_fe_data, nsnull);
 
   mSendCompleteCallback = nsnull;
   return;
@@ -2035,7 +2047,7 @@ JFD */
 						op->unrefer();
 						/* The message has now been queued successfully. */
 						if (mSendCompleteCallback)
-							mSendCompleteCallback (NS_OK, m_fe_data);
+							mSendCompleteCallback (NS_OK, m_fe_data, nsnull);
 						mSendCompleteCallback = 0;
 						
 						// Clear() clears the Fcc path
@@ -2525,7 +2537,7 @@ nsMsgComposeAndSend::PostListImapMailboxFolder (	URL_Struct *url,
 		        // treated as successful close down the compose window
 		        /* The message has now been queued successfully. */
 				if (state->mSendCompleteCallback)
-					state->mSendCompleteCallback(NS_OK, state->m_fe_data);
+					state->mSendCompleteCallback(NS_OK, state->m_fe_data, nsnull);
 				state->mSendCompleteCallback = 0;
 				
 		        // Clear() clears the Fcc path
@@ -2742,7 +2754,7 @@ nsMsgComposeAndSend::PostSendToImapMagicFolder (	URL_Struct *url,
 				// treated as successful close down the compose window
 				/* The message has now been queued successfully. */
 				if (state->mSendCompleteCallback)
-					state->mSendCompleteCallback (NS_OK, state->m_fe_data);
+					state->mSendCompleteCallback (NS_OK, state->m_fe_data, nsnull);
 				state->mSendCompleteCallback = 0;
 				
 				// Clear() clears the Fcc path
@@ -2839,7 +2851,7 @@ nsMsgComposeAndSend::PostSendToImapMagicFolder (	URL_Struct *url,
 			}
 			/* The message has now been queued successfully. */
 			if (state->mSendCompleteCallback)
-				state->mSendCompleteCallback (NS_OK, state->m_fe_data);
+				state->mSendCompleteCallback (NS_OK, state->m_fe_data, nsnull);
 			state->mSendCompleteCallback = 0;
 			
 			// Clear() clears the Fcc path
@@ -2922,7 +2934,7 @@ nsMsgComposeAndSend::SendToMagicFolder ( PRUint32 flag )
 
 	  /* The message has now been queued successfully. */
 	  if (mSendCompleteCallback)
-  		mSendCompleteCallback (NS_OK, m_fe_data);
+  		mSendCompleteCallback (NS_OK, m_fe_data, nsnull);
 	  mSendCompleteCallback = 0;
 
 	  Clear();
@@ -3005,7 +3017,7 @@ nsMsgComposeAndSend::Fail(nsresult failure_code, char *error_msg)
 
   if (mSendCompleteCallback)
 	{
-	  mSendCompleteCallback (failure_code, m_fe_data);
+	  mSendCompleteCallback (failure_code, m_fe_data, nsnull);
 	}
   else if (m_attachments_done_callback)
 	{
@@ -3075,7 +3087,7 @@ nsMsgComposeAndSend::DeliverAsMailExit(nsIURL *aUrl, nsresult aExitCode)
   // No real reason to bother the user at this point.
   //      
   if (mSendCompleteCallback)
-    mSendCompleteCallback (aExitCode, m_fe_data);
+    mSendCompleteCallback (aExitCode, m_fe_data, nsnull);
 
   mSendCompleteCallback = nsnull;
   return;
@@ -3199,9 +3211,11 @@ nsMsgComposeAndSend::Clear()
 
 	if (mTempFileSpec) 
   {
-    mTempFileSpec->Delete(PR_FALSE);
-		delete mTempFileSpec;
-		mTempFileSpec = nsnull;
+    if (mReturnFileSpec == nsnull)
+    {
+      mTempFileSpec->Delete(PR_FALSE);
+      delete mTempFileSpec;
+    }
 	}
 
 	HJ82388
@@ -3351,15 +3365,14 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 {
   nsresult      rv;
 
-// RICHIE-SHERRY
-//extern void DoItDude(void);
-//DoItDude();
-//return NS_OK;
+
+  // Make sure the completion callback is setup first...
+  mSendCompleteCallback = completionCallback;
 
   if (!attachment1_body || !*attachment1_body)
 		attachment1_type = attachment1_body = 0;
 
-  rv = Init((nsMsgCompFields *)fields, 
+  rv = Init((nsMsgCompFields *)fields, nsnull,
 					digest_p, dont_deliver_p, mode,
 					attachment1_type, attachment1_body,
 					attachment1_body_length,
@@ -3368,8 +3381,47 @@ nsMsgComposeAndSend::CreateAndSendMessage(
           tagData);
 
 	if (NS_SUCCEEDED(rv))
-  {
-    mSendCompleteCallback = completionCallback;
+		return NS_OK;
+  else
+    return rv;
+}
+
+nsresult
+nsMsgComposeAndSend::SendMessageFile(
+ 						  nsIMsgCompFields                  *fields,
+              nsFileSpec                        *sendFileSpec,
+              PRBool                            deleteSendFileOnCompletion,
+						  PRBool                            digest_p,
+						  nsMsgDeliverMode                  mode,
+              nsMsgSendCompletionCallback       completionCallback,
+              void                              *tagData)
+{
+  nsresult      rv;
+
+  //
+  // First check to see if the external file we are sending is a valid file.
+  //
+  if (!sendFileSpec)
+    return NS_ERROR_FAILURE;
+  
+  if (!sendFileSpec->Exists())
+    return NS_ERROR_FAILURE;
+
+  // Make sure the completion callback is setup first...
+  mSendCompleteCallback = completionCallback;
+
+  // Should we delete the temp file when done?
+  if (!deleteSendFileOnCompletion)
+    mReturnFileSpec = sendFileSpec;
+
+  rv = Init((nsMsgCompFields *)fields, sendFileSpec,
+					    digest_p, PR_FALSE, mode,
+					    nsnull, nsnull, nsnull,
+					    nsnull, nsnull, nsnull, 
+              tagData);
+	if (NS_SUCCEEDED(rv))
+  { 
+    DeliverMessage();
 		return NS_OK;
   }
   else
@@ -3644,7 +3696,6 @@ nsMsgComposeAndSend::MimeDoFCC (
 	  if (status < 0)
 		goto FAIL;
 	}
-
 
   /* Write out the X-Mozilla-News-Host header.
 	 This is done only when writing to the queue file, not the FCC file.

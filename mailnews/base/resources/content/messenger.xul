@@ -44,7 +44,7 @@ Rights Reserved.
 <!ENTITY saveAsFileCmd.label ".File">  
 <!ENTITY saveAsTemplateCmd.label ".Template">  
 <!ENTITY getNewMsgCmd.label "Get New Messages">  
-<!ENTITY sendUnsentCmd.label ".Send Unsent Messages">  
+<!ENTITY sendUnsentCmd.label "Send Unsent Messages">  
 <!ENTITY updateMsgCountCmd.label ".Update Message Count">  
 <!ENTITY subscribeCmd.label ".Subscribe">  
 <!ENTITY renameFolderCmd.label ".Rename Folder...">  

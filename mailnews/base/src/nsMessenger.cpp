@@ -853,6 +853,17 @@ nsMessenger::GetTransactionManager(nsITransactionManager* *aTxnMgr)
   return NS_OK;
 }
 
+nsresult 
+SendUnsentMessagesCallback(nsresult aExitCode, PRUint32 totalSentCount,
+                           PRUint32 totalSentSuccessfully, void *tagData)
+{
+#ifdef NS_DEBUG
+  printf("SendUnsentMessagesCallback: Tried to send %d messages. %d successful.\n",
+          totalSentCount, totalSentSuccessfully);
+#endif
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMessenger::SendUnsentMessages()
 {
@@ -863,10 +874,7 @@ nsMessenger::SendUnsentMessages()
 	if (NS_SUCCEEDED(rv) && pMsgSendLater) 
 	{ 
 		printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
-		pMsgSendLater->SendUnsentMessages(nsnull); 
+		pMsgSendLater->SendUnsentMessages(nsnull, SendUnsentMessagesCallback, nsnull); 
 	} 
 	return NS_OK;
 }
-
-
-

@@ -317,6 +317,7 @@ public:
   //
   nsresult    Init(
 			             nsMsgCompFields  *fields,
+                   nsFileSpec       *sendFileSpec,
 			             PRBool           digest_p,
 			             PRBool           dont_deliver_p,
 			             nsMsgDeliverMode mode,
@@ -361,6 +362,15 @@ public:
 						              const struct nsMsgAttachmentData  *attachments,
 						              const struct nsMsgAttachedFile    *preloaded_attachments,
 						              void                              *relatedPart,
+                          nsMsgSendCompletionCallback       completionCallback,
+                          void                              *tagData);
+
+  NS_IMETHOD  SendMessageFile(
+ 						              nsIMsgCompFields                  *fields,
+                          nsFileSpec                        *sendFileSpec,
+                          PRBool                            deleteSendFileOnCompletion,
+						              PRBool                            digest_p,
+						              nsMsgDeliverMode                  mode,
                           nsMsgSendCompletionCallback       completionCallback,
                           void                              *tagData);
 

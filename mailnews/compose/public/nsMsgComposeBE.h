@@ -20,6 +20,7 @@
 #define _nsMsgComposeBE_H_
 
 #include "rosetta.h"
+#include "nsFileSpec.h"
 
 //
 // Composition back end declarations...
@@ -28,13 +29,12 @@
 //
 // Callback declarations for message delivery
 //
-// For completion of send operations...
-typedef nsresult (*nsMsgSendCompletionCallback) (nsresult aExitCode, void *tagData);
+// For completion of send/message creation operations...
+typedef nsresult (*nsMsgSendCompletionCallback) (nsresult aExitCode, void *tagData, nsFileSpec *returnFileSpec);
 
-// For completion of message creation operations...
-typedef nsresult (*nsMsgCreateCompletionCallback) (nsresult aExitCode, nsFileSpec *msgFile, void *tagData);
-
-
+// For completion of sending unsent messages operations...
+typedef nsresult (*nsMsgSendUnsentMessagesCallback) (nsresult aExitCode, PRUint32 totalSentCount,
+                                                     PRUint32 totalSentSuccessfully, void *tagData);
 
 // Message delivery modes
 typedef enum

@@ -39,6 +39,16 @@ class nsIMsgSend : public nsISupports {
                         nsMsgSendCompletionCallback       completionCallback,
                         void                              *tagData) = 0;
 
+  
+  NS_IMETHOD  SendMessageFile(
+ 						              nsIMsgCompFields                  *fields,
+                          nsFileSpec                        *sendFileSpec,
+                          PRBool                            deleteSendFileOnCompletion,
+						              PRBool                            digest_p,
+						              nsMsgDeliverMode                  mode,
+                          nsMsgSendCompletionCallback       completionCallback,
+                          void                              *tagData) = 0;
+
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgSend *priv);

@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
   if (NS_SUCCEEDED(rv) && pMsgSendLater) 
   { 
     printf("We succesfully obtained a nsIMsgSendLater interface....\n");    
-    pMsgSendLater->SendUnsentMessages(identity);
+    pMsgSendLater->SendUnsentMessages(identity, nsnull, nsnull);
   }
 
 #ifdef XP_PC

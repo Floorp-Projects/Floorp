@@ -27,7 +27,6 @@ XPIDLSRCS = \
 		nsIMsgComposeService.idl	\
 		nsIMsgCompose.idl	\
 		nsIMsgCompFields.idl	\
-		nsIMsgSendLater.idl	\
 		$(NULL)
 
 EXPORTS = \
@@ -41,6 +40,7 @@ EXPORTS = \
 		nsISmtpService.h \
 		MsgCompGlue.h \
 		nsMsgComposeBE.h	\
+		nsIMsgSendLater.h	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -35,21 +35,32 @@ public:
 	NS_DECL_ISUPPORTS
 
 	// nsIMsgSendLater support
-  NS_IMETHOD                SendUnsentMessages(nsIMsgIdentity *identity);
+  NS_IMETHOD                SendUnsentMessages(nsIMsgIdentity *identity,
+                                               nsMsgSendUnsentMessagesCallback msgCallback,
+                                               void *tagData);
 
   // Methods needed for implementing interface...
   nsIMsgFolder              *GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity);
   nsresult                  StartNextMailFileSend();
   nsresult                  CompleteMailFileSend();
 
-private:
+  nsresult                  DeleteCurrentMessage();
+
+  // counters
+  PRUint32                  mTotalSentSuccessfully;
+  PRUint32                  mTotalSendCount;
+
   // Private Information
+private:
   nsIMsgIdentity            *mIdentity;
   nsCOMPtr<nsIMsgFolder>    mMessageFolder;
   nsCOMPtr<nsIMessage>      mMessage;
-  nsIFileSpec               *mTempFileSpec;
+  nsFileSpec                *mTempFileSpec;
+  nsIFileSpec               *mTempIFileSpec;
   nsIEnumerator             *mEnumerator;
   PRBool                    mFirstTime;
+  nsMsgSendUnsentMessagesCallback  mCompleteCallback;
+  void                      *mTagData;
 };
 
 

@@ -57,6 +57,8 @@ GetTheTempDirectoryOnTheSystem(void)
     GetWindowsDirectory(retPath, TPATH_LEN);
 #endif 
 
+  // RICHIE - should do something better here!
+
 #ifdef XP_UNIX
   PL_strncpy(retPath, "/tmp/", TPATH_LEN);
 #endif

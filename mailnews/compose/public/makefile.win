@@ -22,7 +22,6 @@ XPIDLSRCS =										\
 				.\nsIMsgComposeService.idl		\
 				.\nsIMsgCompose.idl				\
 				.\nsIMsgCompFields.idl			\
-				.\nsIMsgSendLater.idl			\
 				$(NULL)
 
 ################################################################################
@@ -38,6 +37,7 @@ EXPORTS =										\
 				nsISmtpService.h				\
 				MsgCompGlue.h					\
 				nsMsgComposeBE.h				\
+				nsIMsgSendLater.h				\
 				$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

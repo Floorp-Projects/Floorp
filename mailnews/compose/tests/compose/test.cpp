@@ -153,7 +153,7 @@ in RED!</font></font></b>\n\
 </html>"};
 
 nsresult
-CallMe(nsresult aExitCode, void *tagData)
+CallMe(nsresult aExitCode, void *tagData, nsFileSpec *fs)
 {
   char *buf = (char *)tagData;
   
@@ -161,6 +161,13 @@ CallMe(nsresult aExitCode, void *tagData)
   printf("Exit code = %d\n", aExitCode);
   printf("What were the magic words => [%s]\n", buf);
   PR_FREEIF(buf);
+
+  if (fs)
+  {
+    printf("Delivery NOT Requested: Just created an RFC822 file. URL=[%s]\n", fs->GetCString());
+    delete fs;
+  }
+
   return NS_OK;
 }
 
@@ -278,11 +285,11 @@ int main(int argc, char *argv[])
 
       char *tagBuf = (char *)PR_Malloc(256);
       if (tagBuf)
-        PL_strcpy(tagBuf, "Do that voodo, you do, soooo welllll!\n");
+        PL_strcpy(tagBuf, "Do that voodo, that you do, soooo weeeelllll!");
       
       pMsgSend->CreateAndSendMessage(pMsgCompFields, 
 						    PR_FALSE,         // PRBool                            digest_p,
-						    PR_FALSE,         // PRBool                            dont_deliver_p,
+                PR_FALSE,         // PRBool                            dont_deliver_p,
 						    nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
 						    TEXT_HTML, //TEXT_PLAIN,       // const char                        *attachment1_type,
 						    pBody,            // const char                        *attachment1_body,

@@ -39,5 +39,6 @@ in const struct nsMsgAttachedFile    *preloaded_attachments,
 in void                              *relatedPart  nsMsgSendPart  )
 *******/
 
+	void SendMessageFile();
 };
 
