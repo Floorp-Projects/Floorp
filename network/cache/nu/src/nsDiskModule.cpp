@@ -437,6 +437,7 @@ void nsDiskModule::SetSize(const PRUint32 i_Size)
 
 char* FullFilename(const char* i_Filename)
 {
+    static int cacheFolderLength=0;
     if (0 == g_FullFilename)
     {
         g_FullFilename = new char[MAX_FILENAME_LEN];
@@ -445,7 +446,10 @@ char* FullFilename(const char* i_Filename)
             return 0;
     }
     PL_strcpy(g_FullFilename, nsCachePref::GetInstance()->DiskCacheFolder());
-    PL_strcat(g_FullFilename, (const char*)PR_GetDirectorySepartor()); //spelling check later as nspr fixes it. 
+    if (0==cacheFolderLength)
+        cacheFolderLength = PL_strlen(nsCachePref::GetInstance()->DiskCacheFolder());
+    g_FullFilename[cacheFolderLength] = PR_GetDirectorySepartor(); //spelling check later as nspr fixes it. 
+    g_FullFilename[cacheFolderLength+1] = '\0';
     PL_strcat(g_FullFilename, i_Filename);
     return g_FullFilename;
 }
