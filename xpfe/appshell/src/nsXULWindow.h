@@ -125,7 +125,6 @@ protected:
    PRPackedBool            mCenterAfterLoad;
    PRPackedBool            mIsHiddenWindow;
    PRPackedBool            mHadChildWindow;
-   PRPackedBool            mBeingDestroyed;
    unsigned long           mZlevel;
 };
 

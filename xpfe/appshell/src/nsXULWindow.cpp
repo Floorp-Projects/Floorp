@@ -103,7 +103,7 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mDebuting(PR_FALSE), mChromeLoaded(PR_FALSE), 
    mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
    mCenterAfterLoad(PR_FALSE), mIsHiddenWindow(PR_FALSE),
-   mHadChildWindow(PR_FALSE), mBeingDestroyed(PR_FALSE),
+   mHadChildWindow(PR_FALSE),
    mZlevel(nsIXULWindow::normalZ)
 {
   NS_INIT_REFCNT();
@@ -340,16 +340,6 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    ActivateParent();
 #endif
 
-   {
-    /* unregister before setting mBeingDestroyed because -turbo code
-        wants to be able to pose a dialog. */
-    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
-    if(appShell)
-        appShell->UnregisterTopLevelWindow(NS_STATIC_CAST(nsIXULWindow*, this));
-   }
-   
-   mBeingDestroyed = PR_TRUE;
-
    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
    if (parentWindow)
      parentWindow->RemoveChildWindow(this);
@@ -424,6 +414,13 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       mWindow = nsnull;
    }
 
+  /* Unregister very late. This must happen at least after mDocShell
+     is destroyed, because onunload handlers fire then, and those being
+     script, a new window could open. See bug 130719. */
+  nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+  if(appShell)
+      appShell->UnregisterTopLevelWindow(NS_STATIC_CAST(nsIXULWindow*, this));
+   
    return NS_OK;
 }
 
@@ -1457,13 +1454,6 @@ NS_IMETHODIMP nsXULWindow::CreateNewWindow(PRInt32 aChromeFlags,
    nsIXULWindow **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  /* Prevent windows being shut down from opening new windows in their
-     onUnload handler. This is abused by many websites (you're thinking
-     porn sites, but I should also mention CNN) and in my opinion just
-     shouldn't work. If you think it should, see bugzilla bug 115969). */
-  if (mBeingDestroyed)
-    return NS_ERROR_FAILURE;
 
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
     return CreateNewChromeWindow(aChromeFlags, _retval);
