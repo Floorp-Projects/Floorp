@@ -1427,7 +1427,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
 
 
 NS_IMETHODIMP
-nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
+nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
   nsresult res = NS_ERROR_NOT_INITIALIZED;
   
@@ -2562,7 +2562,6 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   {
     newElement->SetAttribute("cellpadding","2");
     newElement->SetAttribute("cellspacing","2");
-    newElement->SetAttribute("width","50%");
     newElement->SetAttribute("border","1");
   } else if (TagName.Equals("tr"))
   {
@@ -2595,6 +2594,8 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   if (NS_SUCCEEDED(res))
   {
     *aReturn = newElement;
+    // Getters must addref
+    NS_ADDREF(*aReturn);
   }
 
   return res;
@@ -2927,7 +2928,6 @@ nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOv
           if (!complete || !cssStyleSheet)
             return NS_ERROR_NULL_POINTER;
 
-          // Don't need to QI (subclass)
           nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(cssStyleSheet);
           nsCOMPtr<nsIStyleSet> styleSet;
           rv = ps->GetStyleSet(getter_AddRefs(styleSet));

@@ -513,8 +513,12 @@ function onOK()
     editorShell.CloneAttributes(imageElement, globalElement);
     if (insertNew)
     {
-      // 'true' means delete the selection before inserting
-      editorShell.InsertElement(imageElement, true);
+      try {
+        // 'true' means delete the selection before inserting
+        editorShell.InsertElementAtSelection(imageElement, true);
+      } catch (e) {
+        dump("Exception occured in InsertElementAtSelection\n");
+      }
     }
     return true;
   }

@@ -542,7 +542,7 @@ nsHTMLEditorLog::Align(const nsString& aAlign)
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
+nsHTMLEditorLog::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -558,13 +558,13 @@ nsHTMLEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 
     PrintSelection();
     PrintNode(node, 0);
-    Write("window.editorShell.InsertElement(n0, ");
+    Write("window.editorShell.InsertElementAtSelection(n0, ");
     Write(aDeleteSelection ? "true" : "false");
     Write(");\n");
     Flush();
   }
 
-  return nsHTMLEditor::InsertElement(aElement, aDeleteSelection);
+  return nsHTMLEditor::InsertElementAtSelection(aElement, aDeleteSelection);
 }
 
 NS_IMETHODIMP

@@ -23,7 +23,6 @@
 var toolkitCore;
 var tagName = "hr";
 var hLineElement;
-var percentChar = "";
 var width;
 var height;
 var align;
@@ -32,6 +31,7 @@ var shading;
 // dialog initialization code
 function Startup()
 {
+  dump("HLine Properties startup...\n");
   if (!InitEditorShell())
     return;
 
@@ -55,6 +55,7 @@ function Startup()
   dialog.centerAlign = document.getElementById("centerAlign");
   dialog.rightAlign = document.getElementById("rightAlign");
   dialog.shading = document.getElementById("3dShading");
+  dialog.pixelOrPercentSelect = document.getElementById("pixelOrPercentSelect");
 
   // Make a copy to use for AdvancedEdit and onSaveDefault
   globalElement = hLineElement.cloneNode(false);
@@ -76,8 +77,10 @@ function InitDialog()
   dialog.heightInput.value = globalElement.getAttribute("size");
 
   // Get the width attribute of the element, stripping out "%"
-  // This sets contents of button text and "percentChar" variable
-  dialog.widthInput.value = InitPixelOrPercentPopupButton(globalElement, "width", "pixelOrPercentButton");
+  // This sets contents of combobox (adds pixel and percent option elements)
+  dialog.widthInput.value = InitPixelOrPercentCombobox(globalElement,"width","pixelOrPercentSelect");
+  // Resize window after filling combobox
+  window.sizeToContent();
 
   align = globalElement.getAttribute("align");
   if (align == "center") {
@@ -146,6 +149,7 @@ function ValidateData()
 {
   // Height is always pixels
   height = ValidateNumberString(dialog.heightInput.value, 1, maxPixels);
+  var isPercent = (dialog.pixelOrPercentSelect.selectedIndex == 1);
   if (height == "") {
     // Set focus to the offending control
     dump("Height is empty\n");
@@ -156,8 +160,7 @@ function ValidateData()
   globalElement.setAttribute("size", height);
 
   var maxLimit;
-  dump("Validate width. PercentChar="+percentChar+"\n");
-  if (percentChar == "%") {
+  if (isPercent) {
     maxLimit = 100;
   } else {
     // Upper limit when using pixels
@@ -170,7 +173,9 @@ function ValidateData()
     dialog.widthInput.focus();
     return false;
   }
-  width = width + percentChar;
+  if (isPercent)
+    width = width + "%";
+
   dump("Height="+height+" Width="+width+"\n");
   globalElement.setAttribute("width", width);
 

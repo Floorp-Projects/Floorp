@@ -32,9 +32,9 @@ var href;
 var newLinkText;
 var HeadingsIndex = -1;
 var NamedAnchorsIndex = -1;
-var NamedAnchorsList = 0;
+var NamedAnchorList = 0;
 var HNodeArray;
-var StartIndexOfHeadings = 1;
+var NamedAnchorLink = "";
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
 // The returned node is has an "a" tagName
@@ -53,15 +53,8 @@ function Startup()
   linkMessage      = (document.getElementById("linkTextMessage")).firstChild;
   linkTextInput    = document.getElementById("linkTextInput");
   hrefInput        = document.getElementById("hrefInput");
+  NamedAnchorList = document.getElementById("NamedAnchorList");
 
-  if (!linkTextInput || 
-      !hrefInput ||
-      !linkMessage ||
-      !linkCaption)
-  {
-    dump("Not all dialog controls were found!!!\n");
-  }
-  
   // Get a single selected anchor element
   anchorElement = editorShell.GetSelectedElement(tagName);
 
@@ -106,13 +99,18 @@ function Startup()
       dump("Element not selected - calling createElementWithDefaults\n");
       anchorElement = editorShell.CreateElementWithDefaults(tagName);
 
+dump("1\n");
+
       // We will insert a new link at caret location if there's no selection
       // TODO: This isn't entirely correct. If selection doesn't have any text
       //   or an image, then shouldn't we clear the selection and insert new text?
       insertNew = selection.isCollapsed;
+dump("2\n");
       dump("insertNew is " + insertNew + "\n");
       linkCaption.data = GetString("EnterLinkText");
+dump("3\n");
       linkMessage.data = "";
+dump("4\n");
     }
   }
   if(!anchorElement)
@@ -123,17 +121,21 @@ function Startup()
 
     // Replace the link message with the link source string
     selectedText = GetSelectionAsText();
+dump("5\n");
     if (selectedText.length > 0) {
       // Use just the first 50 characters and add "..."
       selectedText = TruncateStringAtWordEnd(selectedText, 50, true);
+dump("6\n");
     } else {
       dump("Selected text for link source not found. Non-text elements selected?\n");
     }
     linkMessage.data = selectedText;
+dump("7\n");
     // The label above the selected text:
     linkCaption.data = GetString("LinkText");
   }
 
+dump("8\n");
   if (!selection.isCollapsed)
   {
     // HREF is a weird case: If selection extends beyond
@@ -146,11 +148,14 @@ function Startup()
     dump("insertLinkAroundSelection is TRUE\n");
   }
 
+dump("9\n");
   // Make a copy to use for AdvancedEdit and onSaveDefault
   globalElement = anchorElement.cloneNode(false);
+dump("10\n");
 
   // Get the list of existing named anchors and headings
   FillNamedAnchorList();
+dump("11\n");
 
   // Set data for the dialog controls
   InitDialog();
@@ -203,37 +208,79 @@ function RemoveLink()
 function FillNamedAnchorList()
 {
   NamedAnchorNodeList = editorShell.editorDocument.anchors;
-  var headingList = editorShell.editorDocument.getElementsByTagName("h2");
-  dump(headingList+" Count= "+headingList.length+"\n");
-  if (headingList.length > 0) {
-    dump("HELLO\n");
-    var heading = headingList.item(0);
-
-    var range = editorShell.editorDocument.createRange();
-    range.setStart(heading,0);
-    var lastChildIndex = heading.childNodes.length;
-    range.setEnd(heading,lastChildIndex);
-    var text = range.toString();
-    dump("Range:"+range+" LastChildIndex = "+lastChildIndex+"\nText: "+text+"\n");
+  var NamedAnchorCount = NamedAnchorNodeList.length;
+  if (NamedAnchorCount > 0) {
+    // Save index so we ignore if user selects it
+    NamedAnchorsIndex = 0;
+    AppendStringToListByID(NamedAnchorList,"NamedAnchorsCaption");
+    for (var i = 0; i < NamedAnchorCount; i++) {
+      // Prefix with some spaces to give an indented look
+      AppendStringToList(NamedAnchorList," "+NamedAnchorNodeList.item(i).name);
+    }
   }
+  var firstHeading = true;
+  for (var j = 1; j <= 6; j++) {
+    var headingList = editorShell.editorDocument.getElementsByTagName("h"+String(j));
+    dump(headingList+" Count= "+headingList.length+"\n");
+    if (headingList.length > 0) {
+      dump("HELLO\n");
+      var heading = headingList.item(0);
+
+      // Skip headings that already have a named anchor as their first child
+      //  (this may miss nearby anchors, but at least we don't insert another
+      //   under the same heading)
+      var child = heading.firstChild;
+      dump(child.nodeName+" = Heading's first child nodeName\n");
+      if (child && child.nodeName == "a" && child.name && child.name.length > 0)
+        continue;
+
+      var range = editorShell.editorDocument.createRange();
+      range.setStart(heading,0);
+      var lastChildIndex = heading.childNodes.length;
+      range.setEnd(heading,lastChildIndex);
+      var text = range.toString();
+      if (text) {
+        if (firstHeading) {
+          // Save index so we ignore if user selects it
+          HeadingsIndex = NamedAnchorList.length;
+          AppendStringToListByID(NamedAnchorList,"HeadingsCaption");
+          firstHeading = false;
+        }
+        // Use just first 40 characters, don't add "...",
+        //  and replace whitespace with "_" and strip non-word characters
+        text = PrepareStringForURL(TruncateStringAtWordEnd(text, 40, false));
+        // Append "_" to any name already in the list
+        if (GetExistingAnchorIndex(text) > -1)
+          text += "_";
+        // Prefix with some spaces to give an indented look
+        AppendStringToList(NamedAnchorList," "+text);
+        dump("Heading text for Named Anchor: "+text+"\n");
+        // Save nodes in an array so we can create anchor node under it later
+        if (!HNodeArray)
+          HNodeArray = new Array(heading)
+        else
+          HNodeArray[HNodeArray.length] = heading;
+      }
+    }
+  }
+}
+
+function GetExistingAnchorIndex(text)
+{
+  for (i=0; i < NamedAnchorList.length; i++) {
+    if (i != HeadingsIndex && i != NamedAnchorsIndex && 
+        NamedAnchorList[i].name == name)
+      return i;
+  }
+  return -1;
 }
 
 function SelectNamedAnchor()
 {
-  
+  var selIndex = NamedAnchorList.selectedIndex;
+  if (selIndex != HeadingsIndex && selIndex != NamedAnchorsIndex)
+    hrefInput.value = "#" + NamedAnchorList.options[selIndex].value.trimString();
 }
-
-function AnchorNameExists(name)
-{
-  if (NamedAnchorsList) {
-    for (i=0; i < NamedAnchorsList.length; i++) {
-      if (NamedAnchorsList[i].name == name)
-        return true;
-    }
-  }
-  return false;
-}
-
 
 // Get and validate data from widgets.
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
@@ -261,7 +308,6 @@ function ValidateData()
       return false;
     }
   }
-  window.sizeToContent();
   return true;
 }
 
@@ -281,18 +327,49 @@ function onOK()
       if (insertNew) {
         // Append the link text as the last child node 
         //   of the anchor node
-        dump("Creating text node\n");
         textNode = editorShell.editorDocument.createTextNode(newLinkText);
         if (textNode) {
           anchorElement.appendChild(textNode);
         }
-        dump("Inserting\n");
-        editorShell.InsertElement(anchorElement, false);
+        try {
+          editorShell.InsertElementAtSelection(anchorElement, false);
+        } catch (e) {
+          dump("Exception occured in InsertElementAtSelection\n");
+          return true;
+        }
       } else if (insertLinkAroundSelection) {
         // Text was supplied by the selection,
         //  so insert a link node as parent of this text
-        dump("Setting link around selected text\n");
-        editorShell.InsertLinkAroundSelection(anchorElement);
+        try {
+          editorShell.InsertLinkAroundSelection(anchorElement);
+        } catch (e) {
+          dump("Exception occured in InsertElementAtSelection\n");
+          return true;
+        }
+      }
+      // Check if the link was to a heading in 
+      //  the named anchor list.
+      if (HeadingsIndex > -1 && href[0] == "#") {
+        var name = href.substr(1);
+        var index = GetExistingAnchorIndex(name);
+
+        // This assumes Headings are always AFTER the Named Anchors in the list
+        dump("HeadingsIndex="+HeadingsIndex+" SelectIndex="+index+"\n");
+        if (index > HeadingsIndex) {
+          // We need to create a named anchor 
+          //  and insert it as the first child of the heading element
+          var headNode = HNodeList[index - (HeadingsIndex+1)];
+          var anchorNode = editorShell.editorDocument.createElement("a");
+          if (anchorNode) {
+            anchorNode.name = name;
+            // Remember to use editorShell method so it is undoable!
+            editorShell.InsertElement(anchorNode, headNode.parentNode, 0);
+            dump("Anchor node created and inserted under heading\n");
+          }
+        }
+        else {
+          dump("HREF is a named anchor but is not in the list!\n");
+        }
       }
       editorShell.EndBatchChanges();
     } else if (!insertNew) {

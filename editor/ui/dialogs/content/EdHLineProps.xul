@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+
 <!--
    - The contents of this file are subject to the Netscape Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -28,80 +29,60 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorHLineProperties.dtd">
 
-<!-- dialog containing a control requiring initial setup -->
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
-    onload = "Startup()"
-    align="vertical">
-
+<window class="dialog" title="&windowTitle.label;"
+	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	 xmlns:html="http://www.w3.org/TR/REC-html40"
+   onload = "Startup()"
+   align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdHLineProps.js">
-  </script>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <!--- Element-specific methods -->
+  <html:script language="JavaScript" src="chrome://editor/content/EdHLineProps.js"/>
 
-  <xul:keyset id="keyset"/>
-
-  <table width="100%">
-    <tr>
-      <td colspan="2">
-        <fieldset><legend align="left">&dimensionsFieldset.label;</legend>
-          <table>
-            <tr>
-              <td align="right">
-                <label for="height">&heightEditField.label;</label>
-              </td>
-              <td colspan="2">
-                <input type="text" id="height" size="4" maxlength="4"
-                    onkeyup="forceInteger('height')" />
-                <label> &pixelsPopup.value; </label>
-              </td>
-            </tr>
-            <tr>              
-              <td>
-                <label for="height">&widthEditField.label;</label>
-              </td>
-              <td>
-                <input type="text" id="width" size="4" maxlength="4"
-                    onkeyup="forceInteger('width')" />
-              </td>
-              <td>
-                <xul:menu>
-                  <xul:titledbutton class="popup" id="pixelOrPercentButton" align="right" value="&percentPopup.value;"/>
-                    <xul:menupopup id="PixelOrPercentMenu">
-                      <xul:menuitem value="&pixelsPopup.value;" oncommand="SetPixelOrPercentByID('pixelOrPercentButton', '')"/>
-                      <xul:menuitem value="&percentPopup.value;" oncommand="SetPixelOrPercentByID('pixelOrPercentButton', '%')"/>
-                    </xul:menupopup>
-                </xul:menu>
-              </td>
-            </tr>
-          </table>
-        </fieldset>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2">
-        <fieldset><legend align="left">&alignmentFieldset.label;</legend>
-          <label><input type="radio" name="Align" id="leftAlign"/>&leftPopup.value;</label>
-          <label><input type="radio" name="Align" id="centerAlign"/>&centerPopup.value;</label>
-          <label><input type="radio" name="Align" id="rightAlign"/>&rightPopup.value;</label>
-        </fieldset>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <label><input type="checkbox" id="3dShading"/>&threeDShading.label;</label>
-      </td>
-      <td align="right">
-        <xul:titledbutton class="spaced" id="SaveDefault" onclick="onSaveDefault()" value="&saveSettings.label;"/>
-      </td>
-    </tr>
-  </table>
+  <keyset id="keyset"/>
+  <html:fieldset><html:legend align="left">&dimensionsFieldset.label;</html:legend>
+    <html:table>
+      <html:tr>
+        <html:td align="right">
+          <html:label for="height">&heightEditField.label;</html:label>
+        </html:td>
+        <html:td colspan="2">
+          <html:input type="text" id="height" size="4" maxlength="4"
+              onkeyup="forceInteger('height')" />
+          <html:label> &pixelsPopup.value; </html:label>
+        </html:td>
+      </html:tr>
+      <html:tr>              
+        <html:td>
+          <html:label for="height">&widthEditField.label;</html:label>
+        </html:td>
+        <html:td>
+          <html:input type="text" id="width" size="4" maxlength="4"
+              onkeyup="forceInteger('width')" />
+        </html:td>
+        <html:td>
+          <html:select id="pixelOrPercentSelect" size="1"/>
+           <!-- option elements are appended by JS -->
+        </html:td>
+      </html:tr>
+    </html:table>
+  </html:fieldset>
+  <html:fieldset><html:legend align="left">&alignmentFieldset.label;</html:legend>
+    <box align="horizontal">
+      <html:label><html:input type="radio" name="Align" id="leftAlign"/>&leftPopup.value;</html:label>
+      <html:label><html:input type="radio" name="Align" id="centerAlign"/>&centerPopup.value;</html:label>
+      <html:label><html:input type="radio" name="Align" id="rightAlign"/>&rightPopup.value;</html:label>
+    </box>
+  </html:fieldset>
+  <box align="horizontal">
+    <html:label><html:input type="checkbox" id="3dShading"/>&threeDShading.label;</html:label>
+    <spring flex="100%"/>
+    <titledbutton id="SaveDefault" onclick="onSaveDefault()" value="&saveSettings.label;"/>
+  </box>
   <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEditButton"/>
+  <box id="AdvancedEditButton"/>
   <!-- from global dialogOverlay -->
-	<xul:box id="okCancelButtons"/> 
-</xul:window>
+	<box id="okCancelButtons"/> 
+</window>

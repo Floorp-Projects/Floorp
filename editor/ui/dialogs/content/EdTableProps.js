@@ -50,7 +50,7 @@ function Startup()
   InitDialog();
 
   // SET FOCUS TO FIRST CONTROL
- }
+}
 
 
 function InitDialog()

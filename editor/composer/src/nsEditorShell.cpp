@@ -32,9 +32,12 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDiskDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
@@ -397,17 +400,17 @@ nsEditorShell::DoEditorMode(nsIWebShell *aWebShell)
     nsCOMPtr<nsIDocumentViewer> docViewer;
     if (NS_SUCCEEDED(contViewer->QueryInterface(nsIDocumentViewer::GetIID(), (void**)getter_AddRefs(docViewer))))
     {
-      nsCOMPtr<nsIDocument> aDoc;
-      docViewer->GetDocument(*getter_AddRefs(aDoc));
-      if (aDoc)
+      nsCOMPtr<nsIDocument> Doc;
+      docViewer->GetDocument(*getter_AddRefs(Doc));
+      if (Doc)
       {
-        nsCOMPtr<nsIDOMDocument> aDOMDoc;
-        if (NS_SUCCEEDED(aDoc->QueryInterface(nsIDOMDocument::GetIID(), (void**)getter_AddRefs(aDOMDoc))))
+        nsCOMPtr<nsIDOMDocument>  DOMDoc;
+        if (NS_SUCCEEDED(Doc->QueryInterface(nsIDOMDocument::GetIID(), (void**)getter_AddRefs(DOMDoc))))
         {
           nsCOMPtr<nsIPresShell> presShell = dont_AddRef(GetPresShellFor(aWebShell));
           if( presShell )
           {
-            err = InstantiateEditor(aDOMDoc, presShell);
+            err = InstantiateEditor(DOMDoc, presShell);
           }
         }
       }
@@ -439,6 +442,37 @@ nsEditorShell::UpdateInterfaceState(void)
   return mStateMaintainer->ForceUpdate();
 }  
 
+// Generic attribute setting and removal
+NS_IMETHODIMP    
+nsEditorShell::SetAttribute(nsIDOMElement *element, const PRUnichar *attr, const PRUnichar *value)
+{
+  if (!element || !attr || !value)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (editor) {
+    nsAutoString attributeStr(attr);
+    nsAutoString valueStr(value);
+    result = editor->SetAttribute(element, attributeStr, valueStr); 
+  }
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::RemoveAttribute(nsIDOMElement *element, const PRUnichar *attr)
+{
+  if (!element || !attr)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (editor) {
+    nsAutoString attributeStr(attr);
+    result = editor->RemoveAttribute(element, attributeStr);
+  }
+  return result;
+}
 
 // the name of the attribute here should be the contents of the appropriate
 // tag, e.g. 'b' for bold, 'i' for italics.
@@ -670,7 +704,6 @@ NS_IMETHODIMP nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
               if (!complete || !cssStyleSheet)
                 return NS_ERROR_NULL_POINTER;
 
-              // Don't need to QI (subclass)
               styleSheet = do_QueryInterface(cssStyleSheet);
               if (!styleSheet)
                 return NS_ERROR_NULL_POINTER;
@@ -1078,7 +1111,7 @@ nsEditorShell::CreateWindowWithURL(const char* urlStr)
 NS_IMETHODIMP    
 nsEditorShell::NewWindow()
 {  
-  return CreateWindowWithURL("chrome://editor/content/");
+  return CreateWindowWithURL("resource:/res/html/empty_doc.html"/*"chrome://editor/content/"*/);
 }
 
 NS_IMETHODIMP    
@@ -1205,19 +1238,79 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         if (mustShowFileDialog)
         {
           // Check if the document has a title and prompt for one if missing
-          nsCOMPtr<nsIDocument> document = do_QueryInterface(doc);
+          nsCOMPtr<nsIDOMHTMLDocument> document = do_QueryInterface(doc);
           if (document)
           {
-            const nsString* title = document->GetDocumentTitle();		// don't delete
-            if (title)
+            //nsString* titlePtr = document->GetDocumentTitle();		// don't delete
+            nsString title;
+            res = document->GetTitle(title);
+
+            if (NS_SUCCEEDED(res) && title.Length() == 0)
             {
-              if (title->Length() == 0)
-              {
-                Alert(GetString("DocumentTitle"), GetString("NeedDocTitle"));
-                // TODO: Popup a simple dialog and set the title
-                // Note that this involves inserting a <title> tag 
-                //  with a text nodechild in the <head> area of the document.
-                // (I.e., nsIDocument has no "SetDocumentTitle()" SHOULD IT?)
+              // Use a "prompt" common dialog to get title string from user
+              NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res); 
+              if (NS_SUCCEEDED(res)) 
+              { 
+                PRUnichar *titleUnicode;
+                nsAutoString caption = GetString("DocumentTitle");
+                nsAutoString msg = GetString("NeedDocTitle"); 
+                PRBool retVal = PR_FALSE;
+                res = dialog->Prompt(mContentWindow, caption.GetUnicode(), msg.GetUnicode(),
+                                     nsnull, &titleUnicode, &retVal); 
+                
+                if( retVal == PR_FALSE)
+                {
+                  // This indicates Cancel was used -- don't continue saving
+                  *_retval = PR_FALSE;
+                  return NS_OK;
+                }
+                title = titleUnicode;
+                
+                // Set the title of the document -- this updates the window caption
+                //TODO: The webShell->SetTitle doesn't add any module suffix, like "- Composer"
+                document->SetTitle(title);
+                
+// SHOULDN'T SetTitle INSERT A <TITLE> NODE IN THE DOCUMENT? THIS DOES THAT:
+                nsCOMPtr<nsIDOMNodeList> titleList;
+                nsCOMPtr<nsIDOMNode>titleNode;
+                nsCOMPtr<nsIDOMNode> resultNode;
+                res = doc->GetElementsByTagName("title",getter_AddRefs(titleList));
+                if (NS_SUCCEEDED(res) && titleList)
+                {
+                  titleList->Item(0, getter_AddRefs(titleNode));
+                  if (!titleNode)
+                  {
+                    // Get the <HEAD> node, create a <TITLE> and insert it under the HEAD
+                    nsCOMPtr<nsIDOMNodeList> headList;
+                    res = doc->GetElementsByTagName("head",getter_AddRefs(headList));
+                    if (NS_SUCCEEDED(res) && headList)
+                    {
+                      nsCOMPtr<nsIDOMNode>headNode;
+                      headList->Item(0, getter_AddRefs(headNode));
+                      if (headNode)
+                      {
+                        nsCOMPtr<nsIDOMElement>titleElement;
+                        res = doc->CreateElement("title",getter_AddRefs(titleElement));
+                        if (NS_SUCCEEDED(res) && titleElement)
+                        {
+                          titleNode = do_QueryInterface(titleElement);
+                          if (titleNode)
+                            headNode->AppendChild(titleNode,getter_AddRefs(resultNode));
+                        }
+                      }
+                    }
+                  }
+                }
+                // Append a text node under the TITLE
+                if (titleNode)
+                {
+                  nsCOMPtr<nsIDOMText> textNode;
+                  res = doc->CreateTextNode(title,getter_AddRefs(textNode));
+                  if (NS_SUCCEEDED(res) && textNode)
+                    //TODO: Delete existing children?
+                    titleNode->AppendChild(textNode,getter_AddRefs(resultNode));
+                }
+// END -- SHOULDN'T NEED THIS
               }
             }
           }
@@ -1226,7 +1319,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
           res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
           if (NS_SUCCEEDED(res) && fileWidget)
           {
-            nsAutoString  promptString = GetString("SaveDocumentAs");
+            nsString  promptString = GetString("SaveDocumentAs");
 
             nsString* titles = nsnull;
             nsString* filters = nsnull;
@@ -1434,7 +1527,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
       // Convert it to the string version of the URL format
       // NOTE: THIS CRASHES IF fileSpec is empty
       nsFileURL url(fileSpec);
-      nsString  returnVal = url.GetURLString();
+      nsAutoString  returnVal = url.GetURLString();
       *_retval = returnVal.ToNewUnicode();
     }
     // TODO: SAVE THIS TO THE PREFS?
@@ -1911,7 +2004,7 @@ nsEditorShell::GetString(const PRUnichar *name, PRUnichar **_retval)
   }
 }
 
-static nsString *ptmpString = 0;
+static nsAutoString *ptmpString = 0;
 
 // Use this version within the shell:
 nsString
@@ -1919,7 +2012,7 @@ nsEditorShell::GetString(const nsString& name)
 {
   // Initialize upon first use to avoid static constructor
   if (!ptmpString)
-    ptmpString = new nsString();
+    ptmpString = new nsAutoString();
 
   // Don't fail, just return an empty string    
   *ptmpString = "";
@@ -1956,8 +2049,8 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     nsAutoString yes = aYesString ? *aYesString : GetString("Yes");
     nsAutoString no = aNoString ? *aNoString : GetString("No");
     nsAutoString cancel = GetString("Cancel");
+    //Note: "button0" is always Ok or Yes action, "button1" is Cancel
     block->SetString( nsICommonDialogs::eButton0Text, yes.GetUnicode() ); 
-    // This is currently not good -- 2nd button is linked to Cancel
     block->SetString( nsICommonDialogs::eButton1Text, cancel.GetUnicode() ); 
     block->SetString( nsICommonDialogs::eButton2Text, no.GetUnicode() ); 
 
@@ -2032,7 +2125,7 @@ nsEditorShell::GetContentsAs(const PRUnichar *format, PRUint32 flags,
   nsresult  err = NS_NOINTERFACE;
 
   nsAutoString aFormat (format);
-  nsString aContentsAs;
+  nsAutoString aContentsAs;
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor)
@@ -2349,7 +2442,42 @@ nsEditorShell::CreateElementWithDefaults(const PRUnichar *aInTagName, nsIDOMElem
 
 
 NS_IMETHODIMP
-nsEditorShell::InsertElement(nsIDOMElement *element, PRBool deleteSelection)
+nsEditorShell::DeleteElement(nsIDOMElement *element)
+{
+  if (!element)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (editor) {
+    // The nsIEditor::DeleteNode() wants a node
+    //   but it actually requires that it is an element!
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
+    result = editor->DeleteNode(node);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsEditorShell::InsertElement(nsIDOMElement *element, nsIDOMElement *parent, PRInt32 position)
+{
+  if (!element || !parent)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (editor) {
+    // The nsIEditor::InsertNode() wants nodes as params,
+    //   but it actually requires that they are elements!
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
+    nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(parent);
+    result = editor->InsertNode(node, parentNode, position);
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsEditorShell::InsertElementAtSelection(nsIDOMElement *element, PRBool deleteSelection)
 {
   if (!element)
     return NS_ERROR_NULL_POINTER;
@@ -2358,7 +2486,7 @@ nsEditorShell::InsertElement(nsIDOMElement *element, PRBool deleteSelection)
   switch (mEditorType)
   {
     case eHTMLTextEditorType:
-      result = mEditor->InsertElement(element, deleteSelection);
+      result = mEditor->InsertElementAtSelection(element, deleteSelection);
       break;
 
     case ePlainTextEditorType:
@@ -3088,7 +3216,7 @@ nsEditorShell::ExecuteScript(nsIScriptContext * aContext, const nsString& aScrip
   if (nsnull != aContext) {
     const char* url = "";
     PRBool isUndefined = PR_FALSE;
-    nsString rVal;
+    nsAutoString rVal;
 
 #ifdef APP_DEBUG
     char* script_str = aScript.ToNewCString();

@@ -68,7 +68,7 @@
     </xul:box>
     <xul:spring class="spacer"/>
     <div>&NamedAnchorMsg.label;</div>
-    <select id="NamedAnchorList" style="min-width: 15em; max-width: 25em" size="5" onchange="SelectNamedAnchor()"/>
+    <select id="NamedAnchorList" style="width: 15em;" size="5" onchange="SelectNamedAnchor()"/>
     </fieldset>
   </xul:box>
 

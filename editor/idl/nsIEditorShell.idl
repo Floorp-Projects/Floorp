@@ -223,13 +223,31 @@ interface nsIEditorShell : nsISupports
     *     after the end of the selection for all element except
     *     Named Anchors, which insert before the selection
     */  
-  void InsertElement(in nsIDOMElement element, in boolean deleteSelection);
+  void InsertElementAtSelection(in nsIDOMElement element, in boolean deleteSelection);
 
   /** Insert an link element as the parent of the current selection
     *
     * element   An "A" element with a non-empty "href" attribute
     */
   void InsertLinkAroundSelection(in nsIDOMElement anchorElement);
+
+  /** 
+   * Insert an element under parent at position.
+   * No checking is done to verify the legality of the insertion.
+   *  That is the responsibility of the caller.
+   * element:   The DOM element to insert.
+   * parent:    The element to insert the new object under
+   * position:  The place in parent to insert the new element
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   */
+  void InsertElement(in nsIDOMElement element, in nsIDOMElement parent, in PRInt32 position);
+
+  /** 
+    * DeleteNode removes element from the document
+    */
+  void DeleteElement(in nsIDOMElement element);
+
   void SelectElement(in nsIDOMElement element);
   void SetSelectionAfterElement(in nsIDOMElement element);
 
@@ -284,6 +302,8 @@ interface nsIEditorShell : nsISupports
   nsISupportsArray GetEmbeddedObjects();
 
   /* Formatting */
+  void SetAttribute(in nsIDOMElement element, in wstring attr, in wstring value);
+  void RemoveAttribute(in nsIDOMElement element, in wstring attr);
   void SetTextProperty(in wstring prop, in wstring attr, in wstring value);
   void RemoveTextProperty(in wstring prop, in wstring attr);
   void GetTextProperty(in wstring prop, in wstring attr, in wstring value, out boolean firstHas, out boolean anyHas, out boolean allHas);

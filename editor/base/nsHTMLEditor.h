@@ -85,7 +85,7 @@ public:
   NS_IMETHOD InsertBreak();
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD InsertHTML(const nsString &aInputString);
-  NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection);
+  NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   
   NS_IMETHOD DeleteSelection(ESelectionCollapseDirection aAction);
   NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode);

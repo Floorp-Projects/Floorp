@@ -44,34 +44,36 @@ function Startup()
     // We found an element and don't need to insert one
     insertNew = false;
     dump("Found existing anchor\n");
+
+    // Make a copy to use for AdvancedEdit
+    globalElement = anchorElement.cloneNode(false);
   } else {
     insertNew = true;
     // We don't have an element selected, 
     //  so create one with default attributes
     dump("Element not selected - calling createElementWithDefaults\n");
     anchorElement = editorShell.CreateElementWithDefaults(tagName);
-    // Use the current selection as suggested name
-    var name = GetSelectionAsText();
-    // Get 40 characters of the selected text and don't add "..."
-    name = TruncateStringAtWordEnd(name, 40, false);
-    // Replace whitespace with "_"
-    name = ReplaceWhitespace(name, "_");
+    if (anchorElement) {
+      // Use the current selection as suggested name
+      var name = GetSelectionAsText();
+      // Get 40 characters of the selected text and don't add "...",
+      //  replace whitespace with "_" and strip non-word characters
+      name = PrepareStringForURL(TruncateStringAtWordEnd(name, 40, false));
+      //Be sure the name is unique to the document
+      if (AnchorNameExists(name))
+        name += "_"
 
-    //Be sure the name is unique to the document
-    if (AnchorNameExists(name))
-      name += "_"
-
-    anchorElement.setAttribute("name",name);
+      // Make a copy to use for AdvancedEdit
+      globalElement = anchorElement.cloneNode(false);
+      globalElement.setAttribute("name",name);
+      //dump(globalElement+name+" = name"+" Get name Attribute="+globalElement.getAttribute("name")+"\n");
+    }
   }
-
   if(!anchorElement)
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
   }
-
-  // Make a copy to use for AdvancedEdit
-  globalElement = anchorElement.cloneNode(false);
 
   InitDialog();
   
@@ -106,7 +108,7 @@ function ValidateData()
       return false;
   } else {
     // Replace spaces with "_" else it causes trouble in URL parsing
-    name = ReplaceWhitespace(name, "_");
+    name = PrepareStringForURL(name);
     if (AnchorNameExists(name)) {
       ShowInputErrorMessage("\""+name+"\" "+GetString("DuplicateAnchorNameError"));            
       nameInput.focus();
@@ -126,7 +128,11 @@ function onOK()
 
     if (insertNew) {
       // Don't delete selected text when inserting
-      editorShell.InsertElement(anchorElement, false);
+      try {
+        editorShell.InsertElementAtSelection(anchorElement, false);
+      } catch (e) {
+        dump("Exception occured in InsertElementAtSelection\n");
+      }
     }
     return true;
   }

@@ -196,9 +196,7 @@ public:
     *     after the end of the selection for all element except
     *     Named Anchors, which insert before the selection
     */  
-  NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)=0;
-
-
+  NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection)=0;
 
   /** 
    * DeleteSelectionAndCreateNode combines DeleteSelection and CreateNode
