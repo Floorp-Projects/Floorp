@@ -92,6 +92,7 @@ nsCaret::nsCaret()
 , mDrawn(PR_FALSE)
 , mReadOnly(PR_FALSE)
 , mShowDuringSelection(PR_FALSE)
+, mCachedOffsetValid(PR_FALSE)
 , mLastCaretFrame(nsnull)
 , mLastCaretView(nsnull)
 , mLastContentOffset(0)
@@ -392,6 +393,7 @@ NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
     mLastCaretFrame = nsnull;     // frames are not refcounted.
     mLastCaretView = nsnull;
     mLastContentOffset = 0;
+    mCachedOffsetValid = PR_FALSE;
   }
   
   mDrawn = PR_FALSE;    // assume that the view has been cleared, and ensure
@@ -755,6 +757,9 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
   frameState |= NS_FRAME_EXTERNAL_REFERENCE;
   theFrame->SetFrameState(frameState);
 
+  if (theFrame != mLastCaretFrame || theFrameOffset != mLastContentOffset)
+    mCachedOffsetValid = PR_FALSE;
+
   mLastCaretFrame = theFrame;
   mLastContentOffset = theFrameOffset;
   return PR_TRUE;
@@ -1025,11 +1030,16 @@ void nsCaret::DrawCaret()
 
   if (!mDrawn)
   {
-    nsPoint   framePos(0, 0);
     nsRect    caretRect = frameRect;
-    
-    mLastCaretFrame->GetPointFromOffset(presContext, mRendContext, mLastContentOffset, &framePos);
-    caretRect += framePos;
+
+    // if mCachedOffsetValid, apply cached FrameOffset, else compute it again
+    if (!mCachedOffsetValid) 
+    {
+      mLastCaretFrame->GetPointFromOffset(presContext, mRendContext, mLastContentOffset, &mCachedFrameOffset);
+      mCachedOffsetValid = PR_TRUE;
+    }
+
+    caretRect += mCachedFrameOffset;
     
     //printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
     if(mCaretTwipsWidth < 0)
