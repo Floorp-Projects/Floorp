@@ -673,6 +673,12 @@ public class NativeJavaObject implements Scriptable, Wrapper {
 
                 return Result;
             }
+            else if (value instanceof Wrapper) {
+                value = ((Wrapper)value).unwrap();
+                if (type.isInstance(value))
+                    return value;
+                reportConversionError(value, type);
+            }
             else {
                 reportConversionError(value, type);
             }
