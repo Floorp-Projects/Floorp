@@ -2144,7 +2144,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
        * right; any info we get from extras on this type is pretty much
        * useless....
        */
-      if (PL_strcasecmp(aMimeContentType, APPLICATION_OCTET_STREAM) != 0)
+      if (PL_strcasecmp(aMIMEType, APPLICATION_OCTET_STREAM) != 0)
 #endif
         GetMIMEInfoForMimeTypeFromExtras(aMIMEType, _retval);
       LOG(("Searched extras (by type), found 0x%p\n", *_retval));
