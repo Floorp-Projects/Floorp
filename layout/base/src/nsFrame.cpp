@@ -570,7 +570,7 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
   
   //if (nsnull != mContent && (aEvent->message != NS_MOUSE_LEFT_BUTTON_UP ||
   //    (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !mDoingSelection))) {
-  if (nsnull != mContent &&  !mDoingSelection) {
+  if (nsnull != mContent) {
     mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
   }
 
@@ -580,7 +580,7 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
     }
   }
 
-  if(nsEventStatus_eIgnore == aEventStatus) {
+  if(nsEventStatus_eConsumeNoDefault != aEventStatus) {
     if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
 #if THIS_IS_THE_LINK_FIX
       nsIContent * content = mContent;
@@ -608,7 +608,6 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
                aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
       // no-op
     } else {
-      aEventStatus = nsEventStatus_eIgnore;
       return NS_OK;
     }
     if (SELECTION_DEBUG) printf("Message: %d-------------------------------------------------------------\n",aEvent->message);
