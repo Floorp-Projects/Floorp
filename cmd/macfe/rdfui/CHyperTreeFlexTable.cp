@@ -27,6 +27,7 @@
 // PowerPlant
 #include <LTableArrayStorage.h>
 #include <LDropFlag.h>
+#include <UGAColorRamp.h>
 
 #include "CHyperTreeHeader.h"
 #include "URDFUtilities.h"
@@ -310,16 +311,13 @@ void CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect
 	// the bg color later.
 	//
 	{
-		static const RGBColor normalColumnColor = { 0xEEEE, 0xEEEE, 0xEEEE };
-		static const RGBColor sortedColumnColor = { 0xDDDD, 0xDDDD, 0xDDDD };
-		RGBColor backColor;
 		PaneIDT columnPane;
 		
 		Rect backRect = inLocalRect;
 		backRect.bottom--;				// leave a one pixel line on the bottom as separator
 		backRect.right++;				// cover up vertical dividing line on right side
-		backColor = inCell.col == header->GetSortedColumn(columnPane) ? sortedColumnColor : normalColumnColor;
-		::RGBBackColor(&backColor);
+		Uint8 backColor = inCell.col == header->GetSortedColumn(columnPane) ? colorRamp_Gray3 : colorRamp_Gray1;
+		::RGBBackColor(&UGAColorRamp::GetColor(backColor));
 		::EraseRect(&backRect);
 	}
 		
@@ -824,7 +822,7 @@ CHyperTreeFlexTable :: DragSelection(
 		bounds.left = iconBounds.left;
 		
 		HT_Resource node = HT_GetNthItem(mViewBeforeDrag, URDFUtilities::PPRowToHTRow(cell.row) );
-		cstring finalCaption = CURLDragHelper::MakeIconTextValid ( HT_GetNodeName(node) );
+		string finalCaption = CURLDragHelper::MakeIconTextValid ( HT_GetNodeName(node) );
 		CIconTextSuite* suite = new CIconTextSuite( this, bounds, GetIconID(cell.row), finalCaption, node );
 		selection.InsertItemsAt ( 1, LArray::index_Last, &suite );
 	}
