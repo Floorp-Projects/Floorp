@@ -54,7 +54,6 @@
 #include "nsICookieService.h"
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
-static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 static NS_METHOD DiscardSegments(nsIInputStream *input,
                                  void *closure,
@@ -217,7 +216,14 @@ nsHttpChannel::Init(nsIURI *uri,
 nsresult
 nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
 {
-    nsresult rv;
+    nsCOMPtr<nsIEventQueueService> eqs;
+    nsCOMPtr<nsIEventQueue> eventQ;
+
+    gHttpHandler->GetEventQueueService(getter_AddRefs(eqs));
+    if (eqs)
+        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(eventQ));
+    if (!eventQ)
+        return NS_ERROR_FAILURE;
 
     nsAsyncCallEvent *event = new nsAsyncCallEvent;
     if (!event)
@@ -231,7 +237,7 @@ nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
                  nsHttpChannel::AsyncCall_EventHandlerFunc,
                  nsHttpChannel::AsyncCall_EventCleanupFunc);
 
-    rv = mEventQ->PostEvent(event);
+    nsresult rv = eventQ->PostEvent(event);
     if (NS_FAILED(rv)) {
         PL_DestroyEvent(event);
         NS_RELEASE_THIS();
@@ -343,7 +349,8 @@ nsHttpChannel::AsyncAbort(nsresult status)
 
     // create a proxy for the listener..
     nsCOMPtr<nsIRequestObserver> observer;
-    NS_NewRequestObserverProxy(getter_AddRefs(observer), mListener, mEventQ);
+    NS_NewRequestObserverProxy(getter_AddRefs(observer),
+                               mListener, NS_CURRENT_EVENTQ);
     if (observer) {
         observer->OnStartRequest(this, mListenerContext);
         observer->OnStopRequest(this, mListenerContext, mStatus);
@@ -509,6 +516,14 @@ nsHttpChannel::SetupTransaction()
             mRequestHead.SetHeader(nsHttp::Cache_Control, NS_LITERAL_CSTRING("max-age=0"), PR_TRUE);
         else
             mRequestHead.SetHeader(nsHttp::Pragma, NS_LITERAL_CSTRING("no-cache"), PR_TRUE);
+    }
+
+    if (!mEventQ) {
+        // grab a reference to the calling thread's event queue.
+        nsCOMPtr<nsIEventQueueService> eqs;
+        gHttpHandler->GetEventQueueService(getter_AddRefs(eqs));
+        if (eqs)
+            eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mEventQ));
     }
 
     // create the transaction object
@@ -1471,31 +1486,11 @@ nsHttpChannel::ReadFromCache()
     rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(stream));
     if (NS_FAILED(rv)) return rv;
 
-    // the cache stream implements blocking reads, so we want to read from
-    // it using the stream transport service.
-
-    nsCOMPtr<nsIStreamTransportService> sts =
-        do_GetService(kStreamTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsITransport> transport;
-    rv = sts->CreateInputTransport(stream, 0, -1, PR_TRUE, getter_AddRefs(transport));
-    if (NS_FAILED(rv)) return rv;
-
-    // collect progress notifications from the stream as it is read.
-    rv = transport->SetEventSink(this, mEventQ);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIInputStream> wrapper;
-    rv = transport->OpenInputStream(0, 0, 0, getter_AddRefs(wrapper));
-    if (NS_FAILED(rv)) return rv;
-
     rv = NS_NewInputStreamPump(getter_AddRefs(mCachePump),
-                               wrapper, -1, -1, 0, 0, PR_TRUE);
+                               stream, -1, -1, 0, 0, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mCachePump->AsyncRead(this, mListenerContext);
-    return rv;
+    return mCachePump->AsyncRead(this, mListenerContext);
 }
 
 nsresult
@@ -2787,18 +2782,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     NS_ENSURE_ARG_POINTER(listener);
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
-    nsresult rv;
-
-    // we want to grab a reference to the calling thread's event queue at
-    // this point.  we will proxy all events back to the current thread via
-    // this event queue.
-    if (!mEventQ) {
-        rv = gHttpHandler->GetCurrentEventQ(getter_AddRefs(mEventQ));
-        if (NS_FAILED(rv)) return rv;
-    }
-
     PRInt32 port;
-    rv = mURI->GetPort(&port);
+    nsresult rv = mURI->GetPort(&port);
     if (NS_FAILED(rv))
         return rv;
  
