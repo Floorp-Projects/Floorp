@@ -1297,7 +1297,7 @@ void pluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& 
 nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 {
   nsEventStatus rv = nsEventStatus_eIgnore;
-  if (!mInstance || !mWindow)   // if the instance or the window is null, we shouldn't be here
+  if (!mInstance || !mWindow || anEvent.message == NS_MENU_SELECTED)
     return rv;
 
 #ifdef XP_MAC
