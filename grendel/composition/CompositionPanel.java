@@ -774,7 +774,7 @@ public class CompositionPanel extends GeneralPanel {
 
       int ident = mAddressBar.getOptionsPanel().getSelectedIdentity();
       Preferences prefs = PreferencesFactory.Get();
-      String sigFileName = prefs.getString("mail.identity-" + ident + ".signature", "");
+      String sigFileName = prefs.getString("mail.identity.signature." + ident, "");
 
       Document doc = mEditor.getDocument();
       int oldPosition = mEditor.getCaretPosition();
