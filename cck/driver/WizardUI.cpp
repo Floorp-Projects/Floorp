@@ -493,6 +493,11 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 		for (int i = 0; i < curWidget->numOfOptions; i++) 
 			if (curWidget->options.value[i])
 				((CCheckListBox*)curWidget->control)->AddString(curWidget->options.value[i]);
+		if (strcmp(curWidget->options.value[--i], "Calendar") == 0)
+		{
+			((CCheckListBox*)curWidget->control)->DeleteString(i);
+			((CCheckListBox*)curWidget->control)->InsertString(3,curWidget->options.value[i]);
+		}
 
 		if (curWidget->value && curWidget->value != "")
 		{
