@@ -1109,14 +1109,14 @@ nsCacheService::OnProfileShutdown(PRBool cleanse)
     if (!gService)  return;
     nsAutoLock lock(gService->mCacheServiceLock);
 
+    gService->DoomActiveEntries();
+    gService->ClearDoomList();
+
 #ifdef NECKO_DISK_CACHE
-    if (gService->mDiskDevice) {
+    if (gService->mDiskDevice && gService->mEnableDiskDevice) {
         if (cleanse)
             gService->mDiskDevice->EvictEntries(nsnull);
 
-        gService->DoomActiveEntries();
-        gService->ClearDoomList();
-        
         gService->mDiskDevice->Shutdown();
         gService->mEnableDiskDevice = PR_FALSE;
     }
