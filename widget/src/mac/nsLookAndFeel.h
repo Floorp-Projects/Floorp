@@ -24,7 +24,7 @@ class nsLookAndFeel: public nsILookAndFeel {
   NS_DECL_ISUPPORTS
 
 public:
-  nsLookAndFeel(nsISupports *aOuter);
+  nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor);
