@@ -2080,7 +2080,7 @@ str_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
  */
 static JSBool
 tagify(JSContext *cx, JSObject *obj, jsval *argv,
-       const char *begin, const jschar *param, const char *end,
+       const char *begin, JSString *param, const char *end,
        jsval *rval)
 {
     JSString *str;
@@ -2100,7 +2100,7 @@ tagify(JSContext *cx, JSObject *obj, jsval *argv,
     taglen = 1 + beglen + 1;                            /* '<begin' + '>' */
     parlen = 0; /* Avoid warning. */
     if (param) {
-        parlen = js_strlen(param);
+        parlen = JSSTRING_LENGTH(param);
         taglen += 2 + parlen + 1;                       /* '="param"' */
     }
     endlen = strlen(end);
@@ -2117,7 +2117,7 @@ tagify(JSContext *cx, JSObject *obj, jsval *argv,
     if (param) {
         tagbuf[j++] = '=';
         tagbuf[j++] = '"';
-        js_strncpy(&tagbuf[j], param, parlen);
+        js_strncpy(&tagbuf[j], JSSTRING_CHARS(param), parlen);
         j += parlen;
         tagbuf[j++] = '"';
     }
@@ -2152,7 +2152,7 @@ tagify_value(JSContext *cx, JSObject *obj, jsval *argv,
     if (!param)
         return JS_FALSE;
     argv[0] = STRING_TO_JSVAL(param);
-    return tagify(cx, obj, argv, begin, JSSTRING_CHARS(param), end, rval);
+    return tagify(cx, obj, argv, begin, param, end, rval);
 }
 
 static JSBool
