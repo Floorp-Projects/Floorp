@@ -40,6 +40,23 @@ typedef struct
 #define MAX_ENTRIES 100
 
 
+class nsAbAutoCompleteSearchString
+{
+public:
+  nsAbAutoCompleteSearchString(const PRUnichar *uSearchString);
+  virtual ~nsAbAutoCompleteSearchString();
+  
+  const PRUnichar*  mFullString;
+  PRUint32          mFullStringLen;
+  
+  const PRUnichar*  mFirstPart;
+  PRUint32          mFirstPartLen;
+  
+  const PRUnichar*  mSecondPart;
+  PRUint32          mSecondPartLen;
+};
+
+
 class nsAbAutoCompleteSession : public nsIAbAutoCompleteSession
 {
 public:
@@ -65,12 +82,13 @@ public:
 protected:    
     void ResetMatchTypeConters();
     PRBool ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCompleteResults* results);
-    void AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pNameStr, const PRUnichar* pEmailStr,
-      const PRUnichar* pNotes, PRBool bIsMailList, MatchType type, nsIAutoCompleteResults* results);
-	  PRBool CheckEntry(const PRUnichar* searchStr, PRUint32 searchStrLen,const PRUnichar* nickName,const PRUnichar* userName, const PRUnichar* emailAddress, MatchType* matchType);
-	  nsresult SearchCards(nsIAbDirectory* directory, const PRUnichar* searchStr, nsIAutoCompleteResults* results);
-    nsresult SearchDirectory(nsString& fileName, const PRUnichar* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory = PR_FALSE);
-    nsresult SearchPreviousResults(const PRUnichar *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results);
+    void AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pDisplayNameStr, const PRUnichar* pFirstNameStr, const PRUnichar* pLastNameStr,
+      const PRUnichar* pEmailStr, const PRUnichar* pNotes, PRBool bIsMailList, MatchType type, nsIAutoCompleteResults* results);
+	  PRBool CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName,const PRUnichar* displayName, 
+	    const PRUnichar* firstName, const PRUnichar* lastName, const PRUnichar* emailAddress, MatchType* matchType);
+	  nsresult SearchCards(nsIAbDirectory* directory, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results);
+    nsresult SearchDirectory(nsString& fileName, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory = PR_FALSE);
+    nsresult SearchPreviousResults(nsAbAutoCompleteSearchString *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results);
 
     nsCOMPtr<nsIMsgHeaderParser> mParser;
     nsString mDefaultDomain;
@@ -90,7 +108,9 @@ public:
     //  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ABAUTOCOMPLETEPARAM_IID)
 	
 	nsAbAutoCompleteParam(const PRUnichar* nickName,
-                          const PRUnichar* userName,
+                          const PRUnichar* displayName,
+                          const PRUnichar* firstName,
+                          const PRUnichar* lastName,
                           const PRUnichar* emailAddress,
                           const PRUnichar* notes,
                           PRBool isMailList,
@@ -98,7 +118,9 @@ public:
 	{
 	  NS_INIT_REFCNT();
 		mNickName = nsCRT::strdup(nickName ? nickName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-		mUserName = nsCRT::strdup(userName ? userName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+		mDisplayName = nsCRT::strdup(displayName ? displayName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+		mFirstName = nsCRT::strdup(firstName ? firstName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+		mLastName = nsCRT::strdup(lastName ? lastName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
 		mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
 		mNotes = nsCRT::strdup(notes ? notes : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
 		mIsMailList = isMailList;
@@ -107,19 +129,19 @@ public:
 	
 	virtual ~nsAbAutoCompleteParam()
 	{
-	    if (mNickName)
-	        nsCRT::free(mNickName);
-	    if (mUserName)
-	        nsCRT::free(mUserName);
-	    if (mEmailAddress)
-	        nsCRT::free(mEmailAddress);
-	    if (mNotes)
-	        nsCRT::free(mNotes);
+    CRTFREEIF(mNickName);
+    CRTFREEIF(mDisplayName);
+    CRTFREEIF(mFirstName);
+    CRTFREEIF(mLastName);
+    CRTFREEIF(mEmailAddress);
+    CRTFREEIF(mNotes);
 	};
 	
 protected:
     PRUnichar* mNickName;
-    PRUnichar* mUserName;
+    PRUnichar* mDisplayName;
+    PRUnichar* mFirstName;
+    PRUnichar* mLastName;
     PRUnichar* mEmailAddress;
     PRUnichar* mNotes;
     PRBool mIsMailList;
@@ -128,7 +150,6 @@ protected:
 public:
     friend class nsAbAutoCompleteSession;
 };
-
 
 #endif /* nsAbAutoCompleteSession_h___ */
 

@@ -104,8 +104,9 @@ PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCom
     return PR_FALSE;
 }
 
-void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pNameStr, 
-    const PRUnichar* pEmailStr, const PRUnichar* pNotesStr, PRBool bIsMailList, MatchType type, nsIAutoCompleteResults* results)
+void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pDisplayNameStr, const PRUnichar* pFirstNameStr,
+    const PRUnichar* pLastNameStr, const PRUnichar* pEmailStr, const PRUnichar* pNotesStr, PRBool bIsMailList, MatchType type,
+    nsIAutoCompleteResults* results)
 {
   nsresult rv;
   PRUnichar* fullAddrStr = nsnull;
@@ -115,7 +116,7 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     if (mDefaultDomain[0] == 0)
       return;
 
-    nsAutoString aStr(pNameStr);
+    nsAutoString aStr(pDisplayNameStr);
     aStr.AppendWithConversion('@');
     aStr += mDefaultDomain;
     fullAddrStr = aStr.ToNewUnicode();
@@ -125,14 +126,14 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     if (mParser)
     {
       char * fullAddress = nsnull;
-      char * utf8Name = nsAutoString(pNameStr).ToNewUTF8String();
+      char * utf8Name = nsAutoString(pDisplayNameStr).ToNewUTF8String();
       char * utf8Email;
       if (bIsMailList)
       {
         if (pNotesStr && pNotesStr[0] != 0)
           utf8Email = nsAutoString(pNotesStr).ToNewUTF8String();   
         else
-          utf8Email = nsAutoString(pNameStr).ToNewUTF8String();   
+          utf8Email = nsAutoString(pDisplayNameStr).ToNewUTF8String();   
       }
       else
         utf8Email = nsAutoString(pEmailStr).ToNewUTF8String();   
@@ -151,14 +152,14 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     if (!fullAddrStr)
     {
       //oops, parser problem! I will try to do my best...
-      nsAutoString aStr(pNameStr);
+      nsAutoString aStr(pDisplayNameStr);
       aStr.AppendWithConversion(" <");
       if (bIsMailList)
       {
         if (pNotesStr && pNotesStr[0] != 0)
           aStr += pNotesStr;
         else
-          aStr += pNameStr;
+          aStr += pDisplayNameStr;
       }
       else
         aStr += pEmailStr;
@@ -173,7 +174,7 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     rv = nsComponentManager::CreateInstance(kAutoCompleteItemCID, nsnull, NS_GET_IID(nsIAutoCompleteItem), getter_AddRefs(newItem));
     if (NS_SUCCEEDED(rv))
     {
-      nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pNameStr, pEmailStr, pNotesStr, bIsMailList, type);
+      nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pDisplayNameStr, pFirstNameStr, pLastNameStr, pEmailStr, pNotesStr, bIsMailList, type);
       NS_IF_ADDREF(param);
       newItem->SetParam(param);
       NS_IF_RELEASE(param);
@@ -196,62 +197,116 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
   PR_Free(fullAddrStr);
 }
 
-PRBool nsAbAutoCompleteSession::CheckEntry(const PRUnichar* searchStr, PRUint32 searchStrLen,
-	const PRUnichar* nickName, const PRUnichar* userName, const PRUnichar* emailAddress, MatchType* matchType)
+PRBool nsAbAutoCompleteSession::CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName, const PRUnichar* displayName,
+  const PRUnichar* firstName, const PRUnichar* lastName, const PRUnichar* emailAddress, MatchType* matchType)
 {
-    // First check for a Nickname exact match
-    if (nickName && nsCRT::strcasecmp(searchStr, nickName) == 0)
-    {
-        *matchType = NICKNAME_EXACT_MATCH;
-        return PR_TRUE;
-    }
+  const PRUnichar * fullString;
+  PRUint32 fullStringLen;
+  
+  if (searchStr->mFirstPartLen > 0 && searchStr->mSecondPartLen == 0)
+  {
+    fullString = searchStr->mFirstPart;
+    fullStringLen = searchStr->mFirstPartLen;
+  }
+  else
+  {
+    fullString = searchStr->mFullString;
+    fullStringLen = searchStr->mFullStringLen;
+  }
 
-    // Then check for a Name exact match
-    if (userName && nsCRT::strcasecmp(searchStr, userName) == 0)
-    {
-        *matchType = NAME_EXACT_MATCH;
-        return PR_TRUE;
-    }
+  // First check for a Nickname exact match
+  if (nickName && nsCRT::strcasecmp(fullString, nickName) == 0)
+  {
+    *matchType = NICKNAME_EXACT_MATCH;
+    return PR_TRUE;
+  }
 
-    // Then check for a Email exact match
-    if (emailAddress && nsCRT::strcasecmp(searchStr, emailAddress) == 0)
-    {
-        *matchType = EMAIL_EXACT_MATCH;
-        return PR_TRUE;
-    }
+  // Then check for a display Name exact match
+  if (displayName && nsCRT::strcasecmp(fullString, displayName) == 0)
+  {
+    *matchType = NAME_EXACT_MATCH;
+    return PR_TRUE;
+  }
 
-    // Then check for a NickName partial match
-    if (nickName && nsCRT::strncasecmp(searchStr, nickName, searchStrLen) == 0)
-    {
-    	*matchType = NICKNAME_MATCH;
-        return PR_TRUE;
-    }
+  // Then check for a fisrt Name exact match
+  if (firstName && nsCRT::strcasecmp(fullString, firstName) == 0)
+  {
+    *matchType = NAME_EXACT_MATCH;
+    return PR_TRUE;
+  }
 
-    // Then check for a Name partial match
-    if (userName && nsCRT::strncasecmp(searchStr, userName, searchStrLen) == 0)
-    {
-    	*matchType = NAME_MATCH;
-        return PR_TRUE;
-    }
+  // Then check for a last Name exact match
+  if (lastName && nsCRT::strcasecmp(fullString, lastName) == 0)
+  {
+    *matchType = NAME_EXACT_MATCH;
+    return PR_TRUE;
+  }
 
-    // Then check for a Email partial match
-    if (emailAddress && nsCRT::strncasecmp(searchStr, emailAddress, searchStrLen) == 0)
+  // Then check for a Email exact match
+  if (emailAddress && nsCRT::strcasecmp(fullString, emailAddress) == 0)
+  {
+    *matchType = EMAIL_EXACT_MATCH;
+    return PR_TRUE;
+  }
+
+  // Then check for a NickName partial match
+  if (nickName && nsCRT::strncasecmp(fullString, nickName, fullStringLen) == 0)
+  {
+  	*matchType = NICKNAME_MATCH;
+    return PR_TRUE;
+  }
+
+  // Then check for a display Name partial match
+  if (displayName && nsCRT::strncasecmp(fullString, displayName, fullStringLen) == 0)
+  {
+  	*matchType = NAME_MATCH;
+    return PR_TRUE;
+  }
+
+  // Then check for a first Name partial match
+  if (firstName && nsCRT::strncasecmp(fullString, firstName, fullStringLen) == 0)
+  {
+  	*matchType = NAME_MATCH;
+    return PR_TRUE;
+  }
+
+  // Then check for a last Name partial match
+  if (lastName && nsCRT::strncasecmp(fullString, lastName, fullStringLen) == 0)
+  {
+  	*matchType = NAME_MATCH;
+    return PR_TRUE;
+  }
+
+  // Then check for a Email partial match
+  if (emailAddress && nsCRT::strncasecmp(fullString, emailAddress, fullStringLen) == 0)
+  {
+  	*matchType = EMAIL_MATCH;
+    return PR_TRUE;
+  }
+  
+  //If we have a muti-part search string, look for a partial match with first name and last name or reverse
+  if (searchStr->mFirstPartLen && searchStr->mSecondPartLen)
+  {
+    if (((firstName && nsCRT::strncasecmp(searchStr->mFirstPart, firstName, searchStr->mFirstPartLen) == 0) &&
+        (lastName && nsCRT::strncasecmp(searchStr->mSecondPart, lastName, searchStr->mSecondPartLen) == 0)) ||
+        ((lastName && nsCRT::strncasecmp(searchStr->mFirstPart, lastName, searchStr->mFirstPartLen) == 0) &&
+        (firstName && nsCRT::strncasecmp(searchStr->mSecondPart, firstName, searchStr->mSecondPartLen) == 0))
+       )
     {
-    	*matchType = EMAIL_MATCH;
-        return PR_TRUE;
+      *matchType = NAME_MATCH;
+      return PR_TRUE;
     }
+  }
 
 	return PR_FALSE;
 }
 
-nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, const PRUnichar* searchStr, nsIAutoCompleteResults* results)
+nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results)
 {
   nsresult rv;    
   nsCOMPtr<nsIEnumerator> cardsEnumerator;
   nsCOMPtr<nsIAbCard> card;
   
-  PRUint32 searchStrLen = nsCRT::strlen(searchStr);
-
   rv = directory->GetChildCards(getter_AddRefs(cardsEnumerator));
   if (NS_SUCCEEDED(rv) && cardsEnumerator)
   {
@@ -265,7 +320,9 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, const P
 	      if (NS_SUCCEEDED(rv))
 	      {
           nsXPIDLString pEmailStr;
-          nsXPIDLString pNameStr;
+          nsXPIDLString pDisplayNameStr;
+          nsXPIDLString pFirstNameStr;
+          nsXPIDLString pLastNameStr;
           nsXPIDLString pNickNameStr;
           nsXPIDLString pNotesStr;
 					PRBool bIsMailList;
@@ -297,7 +354,13 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, const P
 					}
             
             //Now, retrive the user name and nickname
-          rv = card->GetDisplayName(getter_Copies(pNameStr));
+          rv = card->GetDisplayName(getter_Copies(pDisplayNameStr));
+          if (NS_FAILED(rv))
+             	continue;
+          rv = card->GetFirstName(getter_Copies(pFirstNameStr));
+          if (NS_FAILED(rv))
+             	continue;
+          rv = card->GetLastName(getter_Copies(pLastNameStr));
           if (NS_FAILED(rv))
              	continue;
           rv = card->GetNickName(getter_Copies(pNickNameStr));
@@ -305,9 +368,11 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, const P
              	continue;
             
 					MatchType matchType;
- 					if (CheckEntry(searchStr, searchStrLen, (const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, &matchType))
-        		AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr,
-                        (const PRUnichar*)pNotesStr, bIsMailList, matchType, results);
+ 					if (CheckEntry(searchStr, (const PRUnichar*)pNickNameStr, (const PRUnichar*)pDisplayNameStr,
+ 					              (const PRUnichar*)pFirstNameStr, (const PRUnichar*)pLastNameStr, (const PRUnichar*)pEmailStr, &matchType))
+        		AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pDisplayNameStr, (const PRUnichar*)pFirstNameStr,
+        		            (const PRUnichar*)pLastNameStr, (const PRUnichar*)pEmailStr, (const PRUnichar*)pNotesStr, bIsMailList,
+        		            matchType, results);
 	      }
       }
     }
@@ -317,7 +382,7 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, const P
 }
 
 
-nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, const PRUnichar* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory)
+nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
@@ -369,13 +434,12 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, const PRUn
     return rv;
 }
 
-nsresult nsAbAutoCompleteSession::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results)
+nsresult nsAbAutoCompleteSession::SearchPreviousResults(nsAbAutoCompleteSearchString *searchStr, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results)
 {
     if (!previousSearchResult)
         return NS_ERROR_NULL_POINTER;
         
     nsXPIDLString prevSearchString;
-    PRUint32 searchStrLen = nsCRT::strlen(searchStr);
     nsresult rv;
 
     rv = previousSearchResult->GetSearchString(getter_Copies(prevSearchString));
@@ -386,7 +450,7 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(const PRUnichar *searchS
         return NS_ERROR_FAILURE;
     
     PRUint32 prevSearchStrLen = nsCRT::strlen(prevSearchString);
-    if (searchStrLen < prevSearchStrLen || nsCRT::strncasecmp(searchStr, prevSearchString, prevSearchStrLen != 0))
+    if (searchStr->mFullStringLen < prevSearchStrLen || nsCRT::strncasecmp(searchStr->mFullString, prevSearchString, prevSearchStrLen != 0))
         return NS_ERROR_ABORT;
 
     nsCOMPtr<nsISupportsArray> array;
@@ -419,8 +483,9 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(const PRUnichar *searchS
             param = (nsAbAutoCompleteParam *)(void *)item;
             
 			MatchType matchType;
-			if (CheckEntry(searchStr, searchStrLen, param->mNickName, param->mUserName, param->mEmailAddress, &matchType))
-        AddToResult(param->mNickName, param->mUserName, param->mEmailAddress, param->mNotes, param->mIsMailList, matchType, results);
+			if (CheckEntry(searchStr, param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress, &matchType))
+        AddToResult(param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress,
+          param->mNotes, param->mIsMailList, matchType, results);
 
 	    }
 	    return NS_OK;
@@ -457,15 +522,17 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
             listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
             return NS_OK;
         }
+        
+    nsAbAutoCompleteSearchString searchStrings(uSearchString);
     
 	  ResetMatchTypeConters();       
     nsCOMPtr<nsIAutoCompleteResults> results;
     rv = nsComponentManager::CreateInstance(kAutoCompleteResultsCID, nsnull, NS_GET_IID(nsIAutoCompleteResults), getter_AddRefs(results));
     if (NS_SUCCEEDED(rv))
-		  if (NS_FAILED(SearchPreviousResults(uSearchString, previousSearchResult, results)))
+		  if (NS_FAILED(SearchPreviousResults(&searchStrings, previousSearchResult, results)))
 		  {
 			  nsAutoString root; root.AssignWithConversion(kDirectoryDataSourceRoot);
-			  rv = SearchDirectory(root, uSearchString, results, PR_TRUE);
+			  rv = SearchDirectory(root, &searchStrings, results, PR_TRUE);
 		  }
                 
     AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
@@ -478,7 +545,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
         if (mDefaultDomain[0] != 0)
         {
             PRUnichar emptyStr = 0;
-            AddToResult(&emptyStr, uSearchString, &emptyStr, &emptyStr, PR_FALSE, DEFAULT_MATCH, results);
+            AddToResult(&emptyStr, uSearchString, &emptyStr, &emptyStr, &emptyStr, &emptyStr, PR_FALSE, DEFAULT_MATCH, results);
             addedDefaultItem = PR_TRUE;
         }
 
@@ -532,6 +599,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::GetDefaultDomain(PRUnichar * *aDefaultDom
     *aDefaultDomain = mDefaultDomain.ToNewUnicode();
     return NS_OK;
 }
+
 NS_IMETHODIMP nsAbAutoCompleteSession::SetDefaultDomain(const PRUnichar * aDefaultDomain)
 {
     mDefaultDomain = aDefaultDomain;
@@ -539,3 +607,36 @@ NS_IMETHODIMP nsAbAutoCompleteSession::SetDefaultDomain(const PRUnichar * aDefau
 }
 
 NS_IMPL_ISUPPORTS1(nsAbAutoCompleteParam, nsISupports)
+
+nsAbAutoCompleteSearchString::nsAbAutoCompleteSearchString(const PRUnichar *uSearchString)
+{
+  mFullString = nsCRT::strdup(uSearchString);
+  mFullStringLen = nsCRT::strlen(mFullString);
+  
+  PRInt32 i;
+  PRUnichar * aPtr;
+  for (i = 0, aPtr = (PRUnichar*)mFullString; i < mFullStringLen; i ++, aPtr ++)
+  {
+    if (*aPtr == ' ')
+    {
+      mFirstPart = nsCRT::strndup(mFullString, i);
+      mFirstPartLen = i;
+      mSecondPart = nsCRT::strdup(++aPtr);
+      mSecondPartLen = mFullStringLen - i - 1;
+      return;
+    }
+  }
+  
+  /* If we did not find a space in the search string, initialize the first and second part as null */
+  mFirstPart = nsnull;
+  mFirstPartLen = 0;
+  mSecondPart = nsnull;
+  mSecondPartLen = 0;
+}
+
+nsAbAutoCompleteSearchString::~nsAbAutoCompleteSearchString()
+{
+  CRTFREEIF((PRUnichar *)mFullString);
+  CRTFREEIF((PRUnichar *)mFirstPart);
+  CRTFREEIF((PRUnichar *)mSecondPart);
+}

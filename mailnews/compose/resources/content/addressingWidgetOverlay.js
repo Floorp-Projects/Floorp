@@ -735,7 +735,10 @@ function awRecipientKeyDown(event, element)
   switch(event.keyCode) {
   case 46:
   case 8:
-    if (!element.value)
+    /* do not query directly the value of the text field else the autocomplete widget could potentially
+       alter it value while doing some internal cleanup, instead, query the value through the first child
+    */
+    if (!document.getAnonymousNodes(element)[0].firstChild.value)
       awDeleteHit(element);
     event.preventBubble();  //We need to stop the event else the tree will receive it and the function
                             //awKeyDown will be executed!
