@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!DOCTYPE rdf:RDF [
-    <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+    <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
     %brandDTD;
 ]>
 

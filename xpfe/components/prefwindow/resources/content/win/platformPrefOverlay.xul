@@ -40,7 +40,7 @@
  ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE overlay [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %brandDTD;
 <!ENTITY % platformPrefOverlayDTD SYSTEM "chrome://communicator-platform/locale/pref/platformPrefOverlay.dtd">  
 %platformPrefOverlayDTD;

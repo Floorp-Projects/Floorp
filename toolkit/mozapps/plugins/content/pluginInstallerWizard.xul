@@ -41,7 +41,7 @@
 <?xml-stylesheet href="chrome://mozapps/skin/plugins/pluginInstallerWizard.css"?>
 
 <!DOCTYPE wizard [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %brandDTD;
 <!ENTITY % pluginsDTD SYSTEM "chrome://mozapps/locale/plugins/plugins.dtd">
 %pluginsDTD;

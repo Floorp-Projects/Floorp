@@ -41,7 +41,7 @@
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
  
 <!DOCTYPE page [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % regionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
 %regionDTD;

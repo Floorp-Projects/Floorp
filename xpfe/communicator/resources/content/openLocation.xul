@@ -42,7 +42,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE dialog [
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
   %brandDTD;
   <!ENTITY % openDialogDTD SYSTEM "chrome://communicator/locale/openLocation.dtd" >
   %openDialogDTD;

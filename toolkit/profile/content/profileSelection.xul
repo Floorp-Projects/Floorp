@@ -44,7 +44,7 @@
 <?xml-stylesheet href="chrome://mozapps/skin/profile/profileSelection.css" type="text/css"?>
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %brandDTD;
 <!ENTITY % profileDTD SYSTEM "chrome://mozapps/locale/profile/profileSelection.dtd">
 %profileDTD;

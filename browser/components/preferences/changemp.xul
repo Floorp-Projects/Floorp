@@ -25,7 +25,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <!DOCTYPE dialog [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 <!ENTITY % changempDTD SYSTEM "chrome://browser/locale/preferences/changemp.dtd" >
 %brandDTD;
 %changempDTD;

@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK *****
 
 <!DOCTYPE overlay [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %brandDTD;
 <!ENTITY % advancedDTD SYSTEM "chrome://browser/locale/preferences/advanced.dtd">
 %advancedDTD;

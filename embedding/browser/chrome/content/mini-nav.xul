@@ -42,7 +42,7 @@
 
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % embeddingDTD SYSTEM "chrome://embed/locale/embedding.dtd" >
 %embeddingDTD;

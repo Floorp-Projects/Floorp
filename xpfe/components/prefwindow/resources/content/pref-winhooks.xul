@@ -41,7 +41,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE page [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % platformDTD SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd" >
 %platformDTD;

@@ -42,7 +42,7 @@
 <?xml-stylesheet href="chrome://mozapps/skin/downloads/unknownContentType.css" type="text/css"?>
 
 <!DOCTYPE dialog [
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
   %brandDTD;
   <!ENTITY % uctDTD SYSTEM "chrome://mozapps/locale/downloads/unknownContentType.dtd" >
   %uctDTD;

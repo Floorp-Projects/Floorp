@@ -44,7 +44,7 @@
 
 <!DOCTYPE wizard [
 <!ENTITY % updateDTD SYSTEM "chrome://mozapps/locale/update/update.dtd">
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 %updateDTD;
 %brandDTD;
 ]>
