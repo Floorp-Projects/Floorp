@@ -80,18 +80,19 @@ public final class PK11SymKey implements SymmetricKey {
     public native KeyType getKeyType();
 
     public String getAlgorithm() {
-        // XXX !!!
-        return "";
+        return getKeyType().toString();
     }
 
     public byte[] getEncoded() {
-        // XXX !!!
-        return new byte[0];
+        try {
+            return getKeyData();
+        } catch(SymmetricKey.NotExtractableException nee) {
+            return null;
+        }
     }
 
     public String getFormat() {
-        // XXX !!!
-        return "";
+        return "RAW";
     }
 }
 
