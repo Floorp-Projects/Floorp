@@ -26,7 +26,7 @@
 
 native int(int);
 [ptr] native nsDispatchListener(nsDispatchListener);
-[ptr] native nsIWidget(nsIWidget);
+[ptr] native UndefinednsIWidget(nsIWidget);
 [ref] native PRBoolRef(PRBool);
 [ref] native voidStarRef(void *);
 
@@ -119,7 +119,7 @@ interface nsIAppShell : nsISupports
    * Determines whether a given event should be processed assuming the given
    * widget is a currently active modal window
    */
-  void EventIsForModalWindow(in PRBool aRealEvent, in voidStar aEvent, in nsIWidget aWidget,
+  void EventIsForModalWindow(in PRBool aRealEvent, in voidStar aEvent, in UndefinednsIWidget aWidget,
                              out PRBool aForWindow);
 
 };
