@@ -108,10 +108,7 @@ Contributor(s):
   <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
   <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
   <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
-  <command id="Browser:EditPage" oncommand="editPageOrFrame();" observes="isImage"/>
-  <command id="Browser:PrintSetup" oncommand="BrowserPrintSetup();"/>
   <command id="Browser:Print" oncommand="BrowserPrint();"/>
-  <command id="Browser:PrintPreview" oncommand="BrowserPrintPreview();"/>
   <command id="cmd_quit"/>
   <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
   <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
@@ -419,8 +416,8 @@ Contributor(s):
             <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
             <menuitem id="savepage" label="&saveFrameCmd.label;" accesskey="&saveFrameCmd.accesskey;" oncommand="saveFrameDocument();" hidden="true"/>
             <menuseparator/>
-            <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="Browser:PrintSetup"/>
-            <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" command="Browser:PrintPreview"/>
+            <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="BrowserPrintSetup();"/>
+            <menuitem id="printPreviewMenuItem" label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="BrowserPrintPreview();"/>
             <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
             <menuseparator/>
             <menuitem id="offlineGoOfflineCmd"
@@ -430,50 +427,42 @@ Contributor(s):
           </menupopup>
         </menu>
     
-        <menu id="menu_Edit"
-              label="&editMenu.label;"
+        <menu label="&editMenu.label;"
               accesskey="&editMenu.accesskey;">
-          <menupopup id="menu_Edit_Popup">
-            <menuitem id="menu_undo"
-                      label="&undoCmd.label;"
+          <menupopup>
+            <menuitem label="&undoCmd.label;"
                       key="key_undo"
                       accesskey="&undoCmd.accesskey;"
                       command="cmd_undo"/>
-            <menuitem id="menu_redo"
-                      label="&redoCmd.label;"
+            <menuitem label="&redoCmd.label;"
                       key="key_redo"
                       accesskey="&redoCmd.accesskey;"
                       command="cmd_redo"/>
             <menuseparator/>
-            <menuitem id="menu_cut"
-                      label="&cutCmd.label;"
+            <menuitem label="&cutCmd.label;"
                       key="key_cut"
                       accesskey="&cutCmd.accesskey;"
                       command="cmd_cut"/>
-            <menuitem id="menu_copy"
-                      label="&copyCmd.label;"
+            <menuitem label="&copyCmd.label;"
                       key="key_copy"
                       accesskey="&copyCmd.accesskey;"
                       command="cmd_copy"/>
-            <menuitem id="menu_paste"
-                      label="&pasteCmd.label;"
+            <menuitem label="&pasteCmd.label;"
                       key="key_paste"
                       accesskey="&pasteCmd.accesskey;"
                       command="cmd_paste"/>
-            <menuitem id="menu_delete"
-                      label="&deleteCmd.label;"
+            <menuitem label="&deleteCmd.label;"
                       key="key_delete"
                       accesskey="&deleteCmd.accesskey;"
                       command="cmd_delete"/>
             <menuseparator/>
-            <menuitem id="menu_selectAll"
-                      label="&selectAllCmd.label;"
+            <menuitem label="&selectAllCmd.label;"
                       key="key_selectAll"
                       accesskey="&selectAllCmd.accesskey;"
                       command="cmd_selectAll"/>
             <menuseparator/>
-            <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
-            <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
+            <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
+            <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
             <menuseparator id="menu_PrefsSeparator"/> 
             <menuitem id="menu_preferences"
                       label="&preferencesCmd.label;"
@@ -482,10 +471,10 @@ Contributor(s):
           </menupopup>
         </menu>
     
-        <menu id="menu_View" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
-          <menupopup id="menu_View_Popup">
-            <menu id="menu_Toolbars" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
-              <menupopup id="view_toolbars_popup" onpopupshowing="updateToolbarStates(this);"> 
+        <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
+          <menupopup>
+            <menu label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
+              <menupopup onpopupshowing="updateToolbarStates(this);"> 
                 <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewnavbar"  />
                 <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewpersonaltoolbar" />
                 <menuitem id="menuitem_showhide_tabbar" label="&tabbarCmd.label;" accesskey="&tabbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="showHideTabbar();" checked="true"/>
