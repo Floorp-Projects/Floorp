@@ -131,10 +131,6 @@ content/global/selectDialog.js,                       toolkit/content/global/sel
 content/global/selectDialog.xul,                      toolkit/content/global/selectDialog.xul 
 content/global/nsWidgetStateManager.js,               toolkit/content/global/nsWidgetStateManager.js 
 content/global/widgetStateManager.js,                 toolkit/content/global/widgetStateManager.js 
-content/global/wizardHandlerSet.js,                   toolkit/content/global/wizardHandlerSet.js 
-content/global/wizardManager.js,                      toolkit/content/global/wizardManager.js 
-content/global/wizardOverlay.js,                      toolkit/content/global/wizardOverlay.js 
-content/global/wizardOverlay.xul,                     toolkit/content/global/wizardOverlay.xul 
 content/global/nsTreeController.js,                   toolkit/content/global/nsTreeController.js 
 content/global/nsTreeSorting.js,                      toolkit/content/global/nsTreeSorting.js 
 content/global/nsClipboard.js,                        toolkit/content/global/nsClipboard.js 
