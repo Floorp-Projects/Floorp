@@ -29,6 +29,7 @@
 
 #include <console.h>
 #include <size_t.h>
+#include <string.h>
 
 #include <CFURL.h>
 #include <CFBundle.h>
@@ -113,6 +114,8 @@ void RemoveConsole()
 
 long WriteCharsToConsole(char *buffer, long n)
 {
+    for (char* cr = strchr(buffer, '\r'); cr; cr = strchr(cr + 1, '\r'))
+        *cr = '\n';
     if (_write) return _write(1, buffer, n);
 	return 0;
 }
