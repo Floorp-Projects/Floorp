@@ -367,7 +367,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS) {
 
         // XXX this method incorrectly returns a bool
-        rv = mPendingChannelList->AppendElement(i_Channel) 
+        rv = mPendingChannelList->AppendElement((nsISupports*)(nsIRequest*)i_Channel) 
             ? NS_OK : NS_ERROR_FAILURE;  
         NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
 
@@ -541,7 +541,7 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
         if (NS_FAILED(rv)) return rv;
 
         mPendingChannelList->RemoveElement(item);
-        channel = (nsHTTPChannel*)(nsISupports*)item;
+        channel = (nsHTTPChannel*)(nsIRequest*)(nsISupports*)item;
 
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                ("nsHTTPHandler::ReleaseTransport."
@@ -559,7 +559,7 @@ nsresult nsHTTPHandler::CancelPendingChannel(nsHTTPChannel* aChannel)
   PRBool ret;
 
   // XXX: RemoveElement *really* returns a PRBool :-(
-  ret = (PRBool) mPendingChannelList->RemoveElement(aChannel);
+  ret = (PRBool) mPendingChannelList->RemoveElement((nsISupports*)(nsIRequest*)aChannel);
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("nsHTTPHandler::CancelPendingChannel."

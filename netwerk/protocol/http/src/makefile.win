@@ -39,6 +39,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= $(LLIBS) \
 	$(LIBNSPR)				\
+    $(DIST)\lib\necko.lib       \
 	$(DIST)\lib\xpcom.lib	\
 	$(NULL)
 

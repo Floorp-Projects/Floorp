@@ -80,7 +80,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mOriginalURI(dont_QueryInterface(originalURI ? originalURI : i_URL)),
     mResponse(nsnull),
     mResponseContext(nsnull),
-    mResponseDataListener(nsnull),
     mState(HS_IDLE),
     mURI(dont_QueryInterface(i_URL)),
     mUsingProxy(PR_FALSE),
@@ -105,7 +104,6 @@ nsHTTPChannel::~nsHTTPChannel()
     //TODO if we keep our copy of mURI, then delete it too.
     NS_RELEASE(mRequest);
     NS_IF_RELEASE(mResponse);
-    NS_IF_RELEASE(mResponseDataListener);
 
     mHandler         = null_nsCOMPtr();
     mEventSink       = null_nsCOMPtr();
@@ -113,26 +111,7 @@ nsHTTPChannel::~nsHTTPChannel()
     mLoadGroup       = null_nsCOMPtr();
 }
 
-NS_IMETHODIMP
-nsHTTPChannel::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
-
-    *aInstancePtr = NULL;
-    
-    if (aIID.Equals(NS_GET_IID(nsIHTTPChannel)) ||
-        aIID.Equals(NS_GET_IID(nsIChannel)) ||
-        aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aInstancePtr = NS_STATIC_CAST(nsIHTTPChannel*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
- 
-NS_IMPL_ADDREF(nsHTTPChannel);
-NS_IMPL_RELEASE(nsHTTPChannel);
+NS_IMPL_ISUPPORTS4(nsHTTPChannel, nsIHTTPChannel, nsIChannel, nsIInterfaceRequestor, nsIProgressEventSink);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -194,23 +173,16 @@ NS_IMETHODIMP
 nsHTTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
                                nsIInputStream **o_Stream)
 {
-#if 0
     nsresult rv;
+    if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
 
-    if (!mConnected)
-        Open();
-
-    nsIInputStream* inStr; // this guy gets passed out to the user
-    rv = NS_NewSyncStreamListener(&mResponseDataListener, &inStr);
+    rv = NS_NewSyncStreamListener(o_Stream,
+                                  getter_AddRefs(mBufOutputStream),
+                                  getter_AddRefs(mResponseDataListener));
     if (NS_FAILED(rv)) return rv;
 
-    *o_Stream = inStr;
-    return NS_OK;
-
-#else
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif // if 0
-
+    mBufOutputStream = 0;
+    return Open();
 }
 
 NS_IMETHODIMP
@@ -253,8 +225,7 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     }
 
     mResponseDataListener = listener;
-    NS_ADDREF(mResponseDataListener);
-    mResponseContext = do_QueryInterface(aContext);
+    mResponseContext = aContext;
 
     if (mOpenObserver) {
         // we were AsyncOpen()'d
@@ -427,6 +398,9 @@ nsHTTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCall
         // to proceed
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIHTTPEventSink),
                                        getter_AddRefs(mEventSink));
+
+        (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
+                                       getter_AddRefs(mProgressEventSink));
     }
     return rv;
 }
@@ -551,9 +525,9 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
 {
     nsresult rv = NS_OK;
 
-    if (aListener) {
-        *aListener = mResponseDataListener;
-        NS_IF_ADDREF(mResponseDataListener);
+    if (aListener && mResponseDataListener) {
+        *aListener = mResponseDataListener.get();
+        NS_ADDREF(*aListener);
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
@@ -605,6 +579,41 @@ nsHTTPChannel::GetAuthTriedWithPrehost(PRBool* oTried)
         return NS_ERROR_NULL_POINTER;
 }
 
+// nsIInterfaceRequestor method
+NS_IMETHODIMP
+nsHTTPChannel::GetInterface(const nsIID &anIID, void **aResult ) {
+    // capture the progress event sink stuff. pass the rest through.
+    if (anIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
+        *aResult = NS_STATIC_CAST(nsIProgressEventSink*, this);
+        NS_ADDREF(this);
+        return NS_OK;
+    } else {
+        return mCallbacks ? mCallbacks->GetInterface(anIID, aResult) : NS_ERROR_NO_INTERFACE;
+    }
+}
+
+
+// nsIProgressEventSink methods
+NS_IMETHODIMP
+nsHTTPChannel::OnStatus(nsIChannel *aChannel,
+                        nsISupports *aContext,
+                        const PRUnichar *aMsg) {
+    nsresult rv = NS_OK;
+    if (mCallbacks) {
+        nsCOMPtr<nsIProgressEventSink> progressProxy;
+        rv = mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), getter_AddRefs(progressProxy));
+        if (NS_FAILED(rv)) return rv;
+        rv = progressProxy->OnStatus(this, aContext, aMsg);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
+                                  PRUint32 aProgress, PRUint32 aProgressMax) {
+    return mProgressEventSink ? mProgressEventSink->OnProgress(this, aContext, 
+                                aProgress, aProgressMax) : NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPChannel methods:
@@ -633,7 +642,6 @@ nsHTTPChannel::Open(void)
           rv = factory->CreateLoadGroupListener(mResponseDataListener, 
                                                 &newListener);
           if (NS_SUCCEEDED(rv)) {
-            NS_RELEASE(mResponseDataListener);
             // Already AddRefed from the factory...
             mResponseDataListener = newListener;
           }
@@ -656,7 +664,8 @@ nsHTTPChannel::Open(void)
       return rv;
     }
 
-    rv = transport->SetNotificationCallbacks(mCallbacks);
+    // pass ourself in to act as a proxy for progress callbacks
+    rv = transport->SetNotificationCallbacks(this);
     if (NS_FAILED(rv)) {
       // Unable to create a transport...  End the request...
       (void) ResponseCompleted(nsnull, rv, nsnull);
@@ -689,7 +698,7 @@ nsHTTPChannel::Open(void)
         {
             // send off the notification, and block.
             // make the nsIHTTPNotify api call
-            pNotify->ModifyRequest(this);
+            pNotify->ModifyRequest((nsISupports*)(nsIRequest*)this);
             // we could do something with the return code from the external
             // module, but what????            
         }
@@ -779,7 +788,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   // Fire the OnRedirect(...) notification.
   //
   if (mEventSink) {
-    mEventSink->OnRedirect(this, newURI);
+    mEventSink->OnRedirect((nsISupports*)(nsIRequest*)this, newURI);
   }
 
 
@@ -824,8 +833,8 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
   }
 
   // Null out pointers that are no longer needed...
-  mResponseContext = null_nsCOMPtr();
-  NS_IF_RELEASE(mResponseDataListener);
+  mResponseContext = 0;
+  mResponseDataListener = 0;
 
   // Release the transport...
   if (aTransport) {
@@ -886,7 +895,7 @@ nsresult nsHTTPChannel::OnHeadersAvailable()
 
     // Notify the event sink that response headers are available...
     if (mEventSink) {
-        rv = mEventSink->OnHeadersAvailable(this);
+        rv = mEventSink->OnHeadersAvailable((nsISupports*)(nsIRequest*)this);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -915,7 +924,7 @@ nsresult nsHTTPChannel::OnHeadersAvailable()
         {
             // send off the notification, and block.
             // make the nsIHTTPNotify api call
-            pNotify->AsyncExamineResponse(this);
+            pNotify->AsyncExamineResponse((nsISupports*)(nsIRequest*)this);
             // we could do something with the return code from the external
             // module, but what????            
         }
@@ -1048,8 +1057,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
     httpChannel->SetAuthTriedWithPrehost(PR_TRUE);
 
     // Fire the new request...
-    rv = channel->AsyncRead(0, -1, mResponseContext, 
-            mResponseDataListener);
+    rv = channel->AsyncRead(0, -1, mResponseContext, mResponseDataListener);
     *oChannel = channel;
     NS_ADDREF(*oChannel);
     return rv;
