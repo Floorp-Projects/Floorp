@@ -4580,7 +4580,8 @@ char * nsImapProtocol::OnCreateServerSourceFolderPathString()
   m_runningUrl->GetOnlineSubDirSeparator(&hierarchyDelimiter);
   if (m_imapMailFolderSink)
       m_imapMailFolderSink->GetOnlineDelimiter(&onlineDelimiter);
-  if (onlineDelimiter && *onlineDelimiter != hierarchyDelimiter)
+  if (onlineDelimiter && *onlineDelimiter != kOnlineHierarchySeparatorUnknown
+      && *onlineDelimiter != hierarchyDelimiter)
       m_runningUrl->SetOnlineSubDirSeparator (*onlineDelimiter);
   if (onlineDelimiter)
       nsCRT::free(onlineDelimiter);
@@ -4599,7 +4600,8 @@ char * nsImapProtocol::OnCreateServerDestinationFolderPathString()
   m_runningUrl->GetOnlineSubDirSeparator(&hierarchyDelimiter);
   if (m_imapMailFolderSink)
       m_imapMailFolderSink->GetOnlineDelimiter(&onlineDelimiter);
-  if (onlineDelimiter && *onlineDelimiter != hierarchyDelimiter)
+  if (onlineDelimiter && *onlineDelimiter != kOnlineHierarchySeparatorUnknown
+      && *onlineDelimiter != hierarchyDelimiter)
       m_runningUrl->SetOnlineSubDirSeparator (*onlineDelimiter);
   if (onlineDelimiter)
       nsCRT::free(onlineDelimiter);
@@ -4861,9 +4863,7 @@ void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
 
 void nsImapProtocol::OnListFolder(const char * aSourceMailbox, PRBool aBool)
 {
-#ifdef UNREADY_CODE
-  ListFolder();
-#endif
+  List(aSourceMailbox, aBool);
 }
 
 

@@ -653,6 +653,13 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 	if (NS_FAILED(rv))
 		return rv;
 
+    if (nsCRT::strcasecmp("INBOX", folderPath) == 0 &&
+        hierarchyDelimiter == kOnlineHierarchySeparatorNil)
+    {
+        hierarchyDelimiter = '/'; // set to default in this case (as in 4.x)
+        hostFolder->SetHierarchyDelimiter(hierarchyDelimiter);
+    }
+
 	nsCOMPtr <nsIMsgFolder> child;
 
 //	nsCString possibleName(aSpec->allocatedPathName);
