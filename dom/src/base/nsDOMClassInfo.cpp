@@ -1679,6 +1679,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                          JSVAL_VOID, nsnull, nsnull,
                                          JSPROP_ENUMERATE);
 
+        *objp = obj;
+
         return *_retval ? NS_OK : NS_ERROR_FAILURE;
       }
     }
