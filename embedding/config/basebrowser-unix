@@ -75,7 +75,6 @@ components/editor.xpt
 
 ; embedding                   
 components/libmozbrwsr.so                 
-components/libwebbrwsr.so
 components/mozbrwsr.xpt                 
 components/webBrowser_core.xpt
 components/webBrowser_setup.xpt
@@ -146,6 +145,16 @@ components/unicharutil.xpt
 ; components/libucvtw2.so for traditional chinese
 ; components/libucvibm.so for ibm
 
+
+res/language.properties
+res/langGroups.properties
+res/charsetData.properties
+res/charsetalias.properties
+res/acceptlanguage.properties
+res/wincharset.properties
+res/strres.properties 
+
+
 ; uriloader
 components/liburiloader.so
 components/uriloader.xpt
@@ -157,7 +166,6 @@ components/widget.xpt
 ; xpconnect
 components/libxpconnect.so
 components/xpconnect.xpt
-components/xpconnect_tests.xpt
 
 ; xpcom
 components/xpcom_base.xpt
