@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  htmlparser \
 		  chardet \
-		  appcomps \
 		  find \
 		  composer \
 		  editor \
@@ -55,6 +54,12 @@ REQUIRES	= xpcom \
 
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS	= gkgfx
+endif
+
+ifdef MOZ_PHOENIX
+REQUIRES += history
+else
+REQUIRES += appcomps
 endif
 
 CPPSRCS		= \
