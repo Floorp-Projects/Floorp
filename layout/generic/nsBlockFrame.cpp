@@ -2013,14 +2013,10 @@ nsBlockFrame::AppendNewFrames(nsIPresContext& aPresContext,
     // its place a placeholder frame
     nsIFrame* placeholder;
     if (MoveFrameOutOfFlow(aPresContext, frame, kidDisplay, kidPosition, placeholder)) {
-      // Remove 'frame' from the flow, and replace it with 'placeholder'
+      // Adjust previous frame's next sibling pointer
       if (nsnull != prevFrame) {
         prevFrame->SetNextSibling(placeholder);
       }
-      nsIFrame* nextSibling;
-      frame->GetNextSibling(nextSibling);
-      placeholder->SetNextSibling(nextSibling);
-      frame->SetNextSibling(nsnull);
 
       // The placeholder frame is always inline
       frame = placeholder;

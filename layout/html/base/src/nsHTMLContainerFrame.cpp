@@ -226,8 +226,13 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
 {
   aPlaceholderFrame = nsnull;
 
+  nsIFrame* nextSibling;
+
   // See if the element wants to be floated or absolutely positioned
   if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
+    aFrame->GetNextSibling(nextSibling);
+    aFrame->SetNextSibling(nsnull);
+
     // Create a placeholder frame that will serve as the anchor point.
     nsPlaceholderFrame* placeholder =
       CreatePlaceholderFrame(aPresContext, aFrame);
@@ -242,6 +247,9 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
     aPlaceholderFrame = placeholder;
 
   } else if (NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition) {
+    aFrame->GetNextSibling(nextSibling);
+    aFrame->SetNextSibling(nsnull);
+
     // Create a placeholder frame that will serve as the anchor point.
     nsAbsoluteFrame* placeholder =
       CreateAbsolutePlaceholderFrame(aPresContext, aFrame);
@@ -256,7 +264,12 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
     aPlaceholderFrame = placeholder;
   }
 
-  return aPlaceholderFrame != nsnull;
+  if (nsnull == aPlaceholderFrame) {
+    return PR_FALSE;
+  } else {
+    aPlaceholderFrame->SetNextSibling(nextSibling);
+    return PR_TRUE;
+  }
 }
 
 /**
