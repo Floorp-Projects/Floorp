@@ -924,7 +924,7 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 } /* end _md_CreateEventQueue() */
 #endif /* XP_OS2 */
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_MAC)
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */
