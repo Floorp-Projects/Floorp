@@ -43,6 +43,7 @@
 -(void)dealloc
 {
   NS_IF_RELEASE(mResults);
+  [super dealloc];
 }
 
 - (void) setErrorMessage: (NSString*) error

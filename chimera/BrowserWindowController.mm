@@ -1448,6 +1448,7 @@ static NSArray* sToolbarDefaults = nil;
 {
   [self stopThrobber];
   [mImages release];
+  [super dealloc];
 }
 
 
