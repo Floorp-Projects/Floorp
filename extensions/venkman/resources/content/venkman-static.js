@@ -50,8 +50,9 @@ if (DEBUG)
 else
     dd = warn = ASSERT = function (){};
 
-const MAX_STR_LEN = 20;  /* max string length to display before changing to
-                          * "n characters" display mode */
+var MAX_STR_LEN = 100;  /* max string length to display before changing to
+                         * "n characters" display mode.  as a var so we can
+                         * change it later. */
 const MAX_WORD_LEN = 20; /* number of characters to display before forcing a 
                           * potential word break point (in the console.) */
 var console = new Object();
