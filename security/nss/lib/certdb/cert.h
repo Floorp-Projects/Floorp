@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.16 2002/06/19 15:58:22 rangansen%netscape.com Exp $
+ * $Id: cert.h,v 1.17 2002/07/04 03:09:29 jpierre%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -532,6 +532,27 @@ extern SECStatus CERT_VerifySignedData(CERTSignedData *sd,
 				       void *wincx);
 
 /*
+** NEW FUNCTIONS with new bit-field-FIELD SECCertificateUsage - please use
+** verify a certificate by checking validity times against a certain time,
+** that we trust the issuer, and that the signature on the certificate is
+** valid.
+**	"cert" the certificate to verify
+**	"checkSig" only check signatures if true
+*/
+extern SECStatus
+CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
+		PRBool checkSig, SECCertificateUsage requiredUsages,
+                int64 t, void *wincx, CERTVerifyLog *log,
+                SECCertificateUsage* returnedUsages);
+
+/* same as above, but uses current time */
+extern SECStatus
+CERT_VerifyCertificateNow(CERTCertDBHandle *handle, CERTCertificate *cert,
+		   PRBool checkSig, SECCertificateUsage requiredUsages,
+                   void *wincx, SECCertificateUsage* returnedUsages);
+
+/*
+** OLD OBSOLETE FUNCTIONS with enum SECCertUsage - DO NOT USE FOR NEW CODE
 ** verify a certificate by checking validity times against a certain time,
 ** that we trust the issuer, and that the signature on the certificate is
 ** valid.
