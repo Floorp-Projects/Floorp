@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Viswanath Ramachandran <vishy@netscape.com>
  */
 
 #include "nsISupports.idl"
@@ -72,4 +73,6 @@ interface nsIDocShellLoadInfo : nsISupports
 	   SHEntry for this page
 	 */
 	 attribute nsISHEntry SHEntry;
+
+  attribute string target; // like _content, _blank etc
 };

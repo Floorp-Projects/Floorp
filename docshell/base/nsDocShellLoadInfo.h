@@ -51,6 +51,7 @@ protected:
    PRBool                           mStopActiveDocument;
    nsDocShellInfoLoadType           mLoadType;
    nsCOMPtr<nsISHEntry>             mSHEntry;
+   nsCString mTarget;
 };
 
 #endif /* nsDocShellLoadInfo_h__ */

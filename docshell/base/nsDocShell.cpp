@@ -263,7 +263,6 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 //*****************************************************************************
 // nsDocShell::nsIDocShell
 //*****************************************************************************   
-
 NS_IMETHODIMP
 nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoadFlags)
 {
@@ -273,7 +272,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoad
   PRBool inheritOwner = PR_FALSE;
   PRBool stopActiveDoc = PR_FALSE;
   nsCOMPtr<nsISHEntry> shEntry;
-
+  nsXPIDLCString target;
   PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);
 
   NS_ENSURE_ARG(aURI);
@@ -319,6 +318,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoad
     aLoadInfo->GetInheritOwner(&inheritOwner);
     aLoadInfo->GetStopActiveDocument(&stopActiveDoc);
     aLoadInfo->GetSHEntry(getter_AddRefs(shEntry));
+    aLoadInfo->GetTarget(getter_Copies(target));
   }
 
   if (!shEntry && loadType != LOAD_NORMAL_REPLACE) {
@@ -347,7 +347,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoad
   if (shEntry) {
     rv = LoadHistoryEntry(shEntry, loadType);
   } else {
-    rv = InternalLoad(aURI, referrer, owner, inheritOwner, stopActiveDoc, nsnull, nsnull, 
+    rv = InternalLoad(aURI, referrer, owner, inheritOwner, stopActiveDoc, (const char*) target, nsnull, 
                       nsnull, loadType, nsnull);
   }
 
@@ -3186,7 +3186,9 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
     nsXPIDLCString urlScheme;
     aURI->GetScheme(getter_Copies(urlScheme));
     // don't do it for javascript urls!
-    if (urlScheme && nsCRT::strcasecmp(jsSchemeName, urlScheme))
+    if (urlScheme && nsCRT::strcasecmp(jsSchemeName, urlScheme) 
+        && (!nsCRT::strcasecmp(aWindowTarget,"_content") ||
+            !nsCRT::strcasecmp(aWindowTarget,"_blank")))
     {
       nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID));
       PRBool haveHandler = PR_FALSE;
