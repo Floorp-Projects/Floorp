@@ -94,7 +94,7 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     SET_CALLER_JAVASCRIPT(cx);
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
 
-    if (!wrapper) {
+    if (!wrapper || !wrapper->IsValid()) {
         if (type == JSTYPE_OBJECT) {
             *vp = OBJECT_TO_JSVAL(obj);
             return JS_TRUE;
@@ -208,7 +208,7 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     nsXPCWrappedNative* wrapper;
 
     wrapper = GET_WRAPPER(cx, obj);
-    if(!wrapper)
+    if(!wrapper || !wrapper->IsValid())
     {
         XPCJSRuntime* rt = nsXPConnect::GetRuntime();
         if(rt && id == rt->GetStringID(XPCJSRuntime::IDX_CONSTRUCTOR))
@@ -274,7 +274,7 @@ WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     nsXPCWrappedNative* wrapper;
 
     wrapper = GET_WRAPPER(cx, obj);
-    if(!wrapper)
+    if(!wrapper || !wrapper->IsValid())
         return JS_FALSE;
 
     nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
@@ -344,7 +344,7 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
-    if(wrapper)
+    if(wrapper && wrapper->IsValid())
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -383,7 +383,8 @@ WrappedNative_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
-    if(wrapper &&
+    if(wrapper && 
+       wrapper->IsValid() &&
        nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
@@ -413,6 +414,7 @@ WrappedNative_GetAttributes(JSContext *cx, JSObject *obj, jsid id,
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
     if(wrapper &&
+       wrapper->IsValid() &&
        nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
@@ -441,6 +443,7 @@ WrappedNative_SetAttributes(JSContext *cx, JSObject *obj, jsid id,
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
     if(wrapper &&
+       wrapper->IsValid() &&
        nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
@@ -467,6 +470,7 @@ WrappedNative_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
     if(wrapper &&
+       wrapper->IsValid() &&
        nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
@@ -495,6 +499,7 @@ WrappedNative_DefaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
     if(wrapper &&
+       wrapper->IsValid() &&
        nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
@@ -517,7 +522,7 @@ WrappedNative_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     nsIXPCScriptable* as;
 
     wrapper = GET_WRAPPER(cx, obj);
-    if (!wrapper) {
+    if (!wrapper || !wrapper->IsValid()) {
         *statep = JSVAL_NULL;
         if (idp)
             *idp = INT_TO_JSVAL(0);
@@ -545,6 +550,7 @@ WrappedNative_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx, obj);
     if(wrapper &&
+       wrapper->IsValid() &&
        nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
@@ -589,6 +595,7 @@ WrappedNative_Call(JSContext *cx, JSObject *obj,
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx,obj);
     if(wrapper &&
+       wrapper->IsValid() &&
        nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
@@ -618,6 +625,7 @@ WrappedNative_Construct(JSContext *cx, JSObject *obj,
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx,obj);
     if(wrapper &&
+       wrapper->IsValid() &&
        nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
@@ -653,6 +661,7 @@ WrappedNative_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = GET_WRAPPER(cx,obj);
     if(wrapper &&
+       wrapper->IsValid() &&
        nsnull != (ds = wrapper->GetDynamicScriptable()) &&
        nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
@@ -667,12 +676,15 @@ WrappedNative_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 JS_STATIC_DLL_CALLBACK(void)
 WrappedNative_Finalize(JSContext *cx, JSObject *obj)
 {
+    nsXPCWrappedNative* wrapper = GET_WRAPPER(cx,obj);
+    if(!wrapper || !wrapper->IsValid())
+        return;
+
+    // Defer this push until we know we have a valid wrapper to work with.
+    // This call can *startup* XPConnect after it has been shutdown!
     AUTO_PUSH_JSCONTEXT(cx);
     // XXX we don't want to be setting this in finalization. RIGHT????
     // SET_CALLER_JAVASCRIPT(cx);
-    nsXPCWrappedNative* wrapper = GET_WRAPPER(cx,obj);
-    if(!wrapper)
-        return;
     NS_ASSERTION(obj == wrapper->GetJSObject(),"bad obj");
     // wrapper is responsible for calling DynamicScriptable->Finalize
     wrapper->JSObjectFinalized(cx, obj);

@@ -78,7 +78,7 @@ XPCJSRuntime::~XPCJSRuntime()
 #ifdef XPC_DUMP_AT_SHUTDOWN
         uint32 count = mWrappedJSMap->Count();
         if(count)
-            printf("deleting XPCJSRuntime with %d live wrapped JSObjects\n", (int)count);        
+            printf("deleting XPCJSRuntime with %d live wrapped JSObject\n", (int)count);        
 #endif
         delete mWrappedJSMap;
     }
@@ -88,7 +88,7 @@ XPCJSRuntime::~XPCJSRuntime()
 #ifdef XPC_DUMP_AT_SHUTDOWN
         uint32 count = mWrappedJSClassMap->Count();
         if(count)
-            printf("deleting XPCJSRuntime with %d live xpcwrappedjsclasses\n", (int)count);        
+            printf("deleting XPCJSRuntime with %d live nsXPCWrappedJSClass\n", (int)count);        
 #endif
         delete mWrappedJSClassMap;
     }
@@ -98,7 +98,7 @@ XPCJSRuntime::~XPCJSRuntime()
 #ifdef XPC_DUMP_AT_SHUTDOWN
         uint32 count = mWrappedNativeClassMap->Count();
         if(count)
-            printf("deleting XPCJSRuntime with %d live xpcwrappednativeclasses\n", (int)count);        
+            printf("deleting XPCJSRuntime with %d live nsXPCWrappedNativeClass\n", (int)count);        
 #endif
         delete mWrappedNativeClassMap;
     }
