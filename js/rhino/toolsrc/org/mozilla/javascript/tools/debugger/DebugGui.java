@@ -45,15 +45,18 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.StringTokenizer;
 
-import org.mozilla.javascript.*;
-import org.mozilla.javascript.debug.*;
-import org.mozilla.javascript.tools.shell.ConsoleTextArea;
 import java.util.*;
 import java.io.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import java.lang.reflect.Method;
-import java.net.URL;
+
+import org.mozilla.javascript.Scriptable;
+
+import org.mozilla.javascript.Kit;
+
+import org.mozilla.javascript.tools.shell.ConsoleTextArea;
+
 
 class MessageDialogWrapper {
 
@@ -353,8 +356,6 @@ class FilePopupMenu extends JPopupMenu {
         item.addActionListener(w);
         add(item = new JMenuItem("Clear Breakpoint"));
         item.addActionListener(w);
-        //add(item = new JMenuItem("Run to Cursor"));
-        //item.addActionListener(w);
         add(item = new JMenuItem("Run"));
         item.addActionListener(w);
     }
@@ -459,8 +460,6 @@ class FileTextArea extends JTextArea implements ActionListener,
             w.setBreakPoint(line + 1);
         } else if (cmd.equals("Clear Breakpoint")) {
             w.clearBreakPoint(line + 1);
-        } else if (cmd.equals("Run to Cursor")) {
-            w.runToCursor(e);
         } else if (cmd.equals("Run")) {
             w.load();
         }
@@ -608,7 +607,6 @@ class MoreWindows extends JDialog implements ActionListener {
 class FindFunction extends JDialog implements ActionListener {
     private String value = null;
     private JList list;
-    Hashtable functionNames;
     DebugGui debugGui;
     JButton setButton;
     JButton refreshButton;
@@ -641,11 +639,11 @@ class FindFunction extends JDialog implements ActionListener {
                 return;
             }
             setVisible(false);
-            Main.ScriptItem item = (Main.ScriptItem)functionNames.get(value);
+            Main.FunctionSource item = debugGui.main.functionSourceByName(value);
             if (item != null) {
-                Main.SourceInfo si = item.getSourceInfo();
-                String url = si.getUrl();
-                int lineNumber = item.getFirstLine();
+                Main.SourceInfo si = item.sourceInfo();
+                String url = si.url();
+                int lineNumber = item.firstLine();
                 FileWindow w = debugGui.getFileWindow(url);
                 if (w == null) {
                     debugGui.createFileWindow(si, lineNumber);
@@ -676,11 +674,9 @@ class FindFunction extends JDialog implements ActionListener {
         }
     };
 
-    FindFunction(DebugGui debugGui, Hashtable functionNames,
-                 String title,
-                 String labelText) {
+    FindFunction(DebugGui debugGui, String title, String labelText)
+    {
         super(debugGui, title, true);
-        this.functionNames = functionNames;
         this.debugGui = debugGui;
 
         cancelButton = new JButton("Cancel");
@@ -693,14 +689,9 @@ class FindFunction extends JDialog implements ActionListener {
         DefaultListModel model = (DefaultListModel)list.getModel();
         model.clear();
 
-        Enumeration e = functionNames.keys();
-        String[] a = new String[functionNames.size()];
-        int i = 0;
-        while (e.hasMoreElements()) {
-            a[i++] = e.nextElement().toString();
-        }
+        String[] a = debugGui.main.functionNames();
         java.util.Arrays.sort(a);
-        for (i = 0; i < a.length; i++) {
+        for (int i = 0; i < a.length; i++) {
             model.addElement(a[i]);
         }
         list.setSelectedIndex(0);
@@ -900,24 +891,10 @@ class FileWindow extends JInternalFrame implements ActionListener {
         }
     }
 
-    void runToCursor(ActionEvent e) {
-        try {
-            debugGui.runToCursor(getUrl(),
-                           textArea.getLineOfOffset(textArea.getCaretPosition()) + 1,
-                           e);
-        } catch (BadLocationException exc) {
-        }
-    }
-
     void load() {
-        Scriptable scope = debugGui.main.getScope();
-        if (scope == null) {
-            MessageDialogWrapper.showMessageDialog(debugGui, "Can't load scripts: no scope available", "Run", JOptionPane.ERROR_MESSAGE);
-        } else {
-            String url = getUrl();
-            if (url != null) {
-                new Thread(new LoadFile(debugGui,scope,url)).start();
-            }
+        String url = getUrl();
+        if (url != null) {
+            new Thread(new LoadFile(debugGui,url,sourceInfo.source())).start();
         }
     }
 
@@ -931,7 +908,7 @@ class FileWindow extends JInternalFrame implements ActionListener {
     }
 
     boolean isBreakPoint(int line) {
-        return sourceInfo.hasBreakpoint(line);
+        return sourceInfo.breakableLine(line) && sourceInfo.breakpoint(line);
     }
 
     void toggleBreakPoint(int line) {
@@ -943,19 +920,25 @@ class FileWindow extends JInternalFrame implements ActionListener {
     }
 
     void setBreakPoint(int line) {
-        if (sourceInfo.placeBreakpoint(line)) {
-            fileHeader.repaint();
+        if (sourceInfo.breakableLine(line)) {
+            boolean changed = sourceInfo.breakpoint(line, true);
+            if (changed) {
+                fileHeader.repaint();
+            }
         }
     }
 
     void clearBreakPoint(int line) {
-        if (sourceInfo.removeBreakpoint(line)) {
-            fileHeader.repaint();
+        if (sourceInfo.breakableLine(line)) {
+            boolean changed = sourceInfo.breakpoint(line, false);
+            if (changed) {
+                fileHeader.repaint();
+            }
         }
     }
 
     FileWindow(DebugGui debugGui, Main.SourceInfo sourceInfo) {
-        super(Main.SourceInfo.getShortName(sourceInfo.getUrl()),
+        super(DebugGui.getShortName(sourceInfo.url()),
               true, true, true, true);
         this.debugGui = debugGui;
         this.sourceInfo = sourceInfo;
@@ -970,7 +953,7 @@ class FileWindow extends JInternalFrame implements ActionListener {
         p.setRowHeaderView(fileHeader);
         setContentPane(p);
         pack();
-        updateText();
+        updateText(sourceInfo);
         textArea.select(0);
     }
 
@@ -984,11 +967,12 @@ class FileWindow extends JInternalFrame implements ActionListener {
     }
 
     public String getUrl() {
-        return sourceInfo.getUrl();
+        return sourceInfo.url();
     }
 
-    void updateText() {
-        String newText = sourceInfo.getSource();
+    void updateText(Main.SourceInfo sourceInfo) {
+        this.sourceInfo = sourceInfo;
+        String newText = sourceInfo.source();
         if (!textArea.getText().equals(newText)) {
             textArea.setText(newText);
             int pos = 0;
@@ -1737,7 +1721,7 @@ class Menubar extends JMenuBar implements ActionListener
                 count--;
                 windowMenu.remove(lastItem);
             }
-            String shortName = Main.SourceInfo.getShortName(url);
+            String shortName = DebugGui.getShortName(url);
 
             windowMenu.add(item = new JMenuItem((char)('0' + (count-4)) + " " + shortName, '0' + (count - 4)));
             if (hasMoreWin) {
@@ -1754,63 +1738,49 @@ class Menubar extends JMenuBar implements ActionListener
 
 class OpenFile implements Runnable
 {
-    String fileName;
     DebugGui debugGui;
-    OpenFile(DebugGui debugGui, String fileName)
+    String fileName;
+    String text;
+
+    OpenFile(DebugGui debugGui, String fileName, String text)
     {
-        this.fileName = fileName;
         this.debugGui = debugGui;
+        this.fileName = fileName;
+        this.text = text;
     }
+
     public void run() {
-        Context cx = Context.enter();
-        ContextData contextData = ContextData.get(cx);
-        contextData.breakNextLine = true;
         try {
-            cx.compileReader(new FileReader(fileName), fileName, 1, null);
-        } catch (Exception exc) {
-            String msg = exc.getMessage();
-            if (exc instanceof EcmaError) {
-                EcmaError err = (EcmaError)exc;
-                msg = err.getSourceName() + ", line " + err.getLineNumber() + ": " + msg;
-            }
+            debugGui.main.compileScript(fileName, text);
+        } catch (RuntimeException ex) {
             MessageDialogWrapper.showMessageDialog(debugGui,
-                                                   msg,
-                                                   "Error Compiling File",
+                                                   ex.getMessage(),
+                                                   "Error Compiling "+fileName,
                                                    JOptionPane.ERROR_MESSAGE);
-        } finally {
-            cx.exit();
         }
     }
 }
 
-class LoadFile implements Runnable {
-    Scriptable scope;
-    String fileName;
+class LoadFile implements Runnable
+{
     DebugGui debugGui;
-    LoadFile(DebugGui debugGui, Scriptable scope, String fileName) {
-        this.scope = scope;
-        this.fileName = fileName;
+    String fileName;
+    String text;
+    LoadFile(DebugGui debugGui, String fileName, String text)
+    {
         this.debugGui = debugGui;
+        this.fileName = fileName;
+        this.text = text;
     }
-    public void run() {
-        Context cx = Context.enter();
-        ContextData contextData = ContextData.get(cx);
-        contextData.breakNextLine = true;
+    public void run()
+    {
         try {
-            cx.evaluateReader(scope, new FileReader(fileName),
-                              fileName, 1, null);
-        } catch (Exception exc) {
-            String msg = exc.getMessage();
-            if (exc instanceof EcmaError) {
-                EcmaError err = (EcmaError)exc;
-                msg = err.getSourceName() + ", line " + err.getLineNumber() + ": " + msg;
-            }
+            debugGui.main.evalScript(fileName, text);
+        } catch (RuntimeException ex) {
             MessageDialogWrapper.showMessageDialog(debugGui,
-                                                   msg,
-                                                   "Run",
+                                                   ex.getMessage(),
+                                                   "Run error for "+fileName,
                                                    JOptionPane.ERROR_MESSAGE);
-        } finally {
-            cx.exit();
         }
     }
 }
@@ -1993,12 +1963,24 @@ class DebugGui extends JFrame
         return (FileWindow)fileWindows.get(url);
     }
 
+    static String getShortName(String url) {
+        int lastSlash = url.lastIndexOf('/');
+        if (lastSlash < 0) {
+            lastSlash = url.lastIndexOf('\\');
+        }
+        String shortName = url;
+        if (lastSlash >= 0 && lastSlash + 1 < url.length()) {
+            shortName = url.substring(lastSlash + 1);
+        }
+        return shortName;
+    }
+
     void removeWindow(FileWindow w) {
         fileWindows.remove(w.getUrl());
         JMenu windowMenu = getWindowMenu();
         int count = windowMenu.getItemCount();
         JMenuItem lastItem = windowMenu.getItem(count -1);
-        String name = Main.SourceInfo.getShortName(w.getUrl());
+        String name = getShortName(w.getUrl());
         for (int i = 5; i < count; i++) {
             JMenuItem item = windowMenu.getItem(i);
             if (item == null) continue; // separator
@@ -2070,7 +2052,7 @@ class DebugGui extends JFrame
     {
         boolean activate = true;
 
-        String url = sourceInfo.getUrl();
+        String url = sourceInfo.url();
         FileWindow w = new FileWindow(this, sourceInfo);
         fileWindows.put(url, w);
         if (line != -1) {
@@ -2141,10 +2123,10 @@ class DebugGui extends JFrame
 
     public void updateFileText(Main.SourceInfo sourceInfo)
     {
-        String fileName = sourceInfo.getUrl();
+        String fileName = sourceInfo.url();
         FileWindow w = getFileWindow(fileName);
         if (w != null) {
-            w.updateText();
+            w.updateText(sourceInfo);
             w.show();
         } else if (!fileName.equals("<stdin>")) {
             createFileWindow(sourceInfo, -1);
@@ -2213,20 +2195,6 @@ class DebugGui extends JFrame
         ctx.setMinimumSize(new Dimension(50, ctx.getMinimumSize().height));
     }
 
-    void runToCursor(String fileName,
-                     int lineNumber,
-                     ActionEvent evt) {
-        Main.SourceInfo si = (Main.SourceInfo)main.sourceNames.get(fileName);
-        if (si == null) {
-            System.out.println("debugger error: Couldn't find source: " + fileName);
-        }
-        if (si.breakableLine(lineNumber)) {
-            main.runToCursorFile = fileName;
-            main.runToCursorLine = lineNumber;
-            actionPerformed(evt);
-        }
-    }
-
     JMenu getWindowMenu() {
         return menubar.getMenu(3);
     }
@@ -2285,24 +2253,22 @@ class DebugGui extends JFrame
             returnValue = Main.GO;
         } else if (cmd.equals("Break")) {
             main.doBreak();
-        } else if (cmd.equals("Run to Cursor")) {
-            returnValue = Main.RUN_TO_CURSOR;
         } else if (cmd.equals("Exit")) {
             main.Exit();
         } else if (cmd.equals("Open")) {
             String fileName = chooseFile("Select a file to compile");
             if (fileName != null) {
-                new Thread(new OpenFile(this, fileName)).start();
+                String text = readFile(fileName);
+                if (text != null) {
+                    new Thread(new OpenFile(this, fileName, text)).start();
+                }
             }
         } else if (cmd.equals("Load")) {
-            Scriptable scope = main.getScope();
-            if (scope == null) {
-                MessageDialogWrapper.showMessageDialog(this, "Can't run scripts: no scope available", "Run", JOptionPane.ERROR_MESSAGE);
-            } else {
-                String fileName = chooseFile("Select a file to execute");
-                if (fileName != null) {
-                    new Thread(new LoadFile(this, scope,
-                                            fileName)).start();
+            String fileName = chooseFile("Select a file to execute");
+            if (fileName != null) {
+                String text = readFile(fileName);
+                if (text != null) {
+                    new Thread(new LoadFile(this, fileName, text)).start();
                 }
             }
         } else if (cmd.equals("More Windows...")) {
@@ -2320,8 +2286,7 @@ class DebugGui extends JFrame
         } else if (cmd.equals("Copy")) {
         } else if (cmd.equals("Paste")) {
         } else if (cmd.equals("Go to function...")) {
-            FindFunction dlg = new FindFunction(this, main.functionNames,
-                                                "Go to function",
+            FindFunction dlg = new FindFunction(this, "Go to function",
                                                 "Function");
             dlg.showDialog(this);
         } else if (cmd.equals("Tile")) {
@@ -2431,6 +2396,26 @@ class DebugGui extends JFrame
         } catch (IllegalAccessException exc) {
         } catch (java.lang.reflect.InvocationTargetException exc) {
         }
+    }
+
+    String readFile(String fileName)
+    {
+        String text;
+        try {
+            Reader r = new FileReader(fileName);
+            try {
+                text = Kit.readReader(r);
+            } finally {
+                r.close();
+            }
+        } catch (IOException ex) {
+            MessageDialogWrapper.showMessageDialog(this,
+                                                   ex.getMessage(),
+                                                   "Error reading "+fileName,
+                                                   JOptionPane.ERROR_MESSAGE);
+            text = null;
+        }
+        return text;
     }
 
 }

@@ -55,7 +55,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import java.lang.reflect.Method;
 import java.net.URL;
 
-public class Main implements Debugger, ContextListener {
+public class Main {
 
     DebugGui debugGui;
 
@@ -64,8 +64,7 @@ public class Main implements Debugger, ContextListener {
     static final int STEP_OUT = 2;
     static final int GO = 3;
     static final int BREAK = 4;
-    static final int RUN_TO_CURSOR = 5;
-    static final int EXIT = 6;
+    static final int EXIT = 5;
 
     static class ContextData
     {
@@ -103,10 +102,10 @@ public class Main implements Debugger, ContextListener {
             this.db = db;
             this.contextData = ContextData.get(cx);
             this.fnOrScript = fnOrScript;
-            ScriptItem item = db.getScriptItem(fnOrScript);
+            FunctionSource item = db.getFunctionSource(fnOrScript);
             if (item != null) {
-                this.sourceInfo = item.getSourceInfo();
-                this.lineNumber = item.getFirstLine();
+                this.sourceInfo = item.sourceInfo();
+                this.lineNumber = item.firstLine();
             }
             contextData.pushFrame(this);
         }
@@ -125,7 +124,7 @@ public class Main implements Debugger, ContextListener {
             this.lineNumber = lineno;
 
           checks:
-            if (sourceInfo == null || !sourceInfo.hasBreakpoint(lineno)) {
+            if (sourceInfo == null || !sourceInfo.checkBreakpointFast(lineno)) {
                 if (db.breakFlag) {
                     break checks;
                 }
@@ -175,7 +174,7 @@ public class Main implements Debugger, ContextListener {
 
         String getUrl() {
             if (sourceInfo != null) {
-                return sourceInfo.getUrl();
+                return sourceInfo.url();
             }
             return db.getNormilizedUrl(fnOrScript);
         }
@@ -197,184 +196,222 @@ public class Main implements Debugger, ContextListener {
         private int lineNumber;
     }
 
-    static class ScriptItem {
-
-        ScriptItem(DebuggableScript fnOrScript, SourceInfo sourceInfo) {
-            this.fnOrScript = fnOrScript;
-            this.sourceInfo = sourceInfo;
-        }
-
-        DebuggableScript getScript() { return fnOrScript; }
-
-        SourceInfo getSourceInfo() { return sourceInfo; }
-
-        int getFirstLine() {
-            return (firstLine == 0) ? 1 : firstLine;
-        }
-
-        void setFirstLine(int firstLine) {
-            if (firstLine <= 0) { throw new IllegalArgumentException(); }
-            if (this.firstLine != 0) { throw new IllegalStateException(); }
-            this.firstLine = firstLine;
-        }
-
-        private DebuggableScript fnOrScript;
+    static class FunctionSource
+    {
         private SourceInfo sourceInfo;
         private int firstLine;
+        private String name;
+
+        FunctionSource(SourceInfo sourceInfo, int firstLine, String name)
+        {
+            if (name == null) throw new IllegalArgumentException();
+            this.sourceInfo = sourceInfo;
+            this.firstLine = firstLine;
+            this.name = name;
+        }
+
+        SourceInfo sourceInfo()
+        {
+            return sourceInfo;
+        }
+
+        int firstLine()
+        {
+            return firstLine;
+        }
+
+        String name()
+        {
+            return name;
+        }
     }
 
-    static class SourceInfo {
+    static class SourceInfo
+    {
+        private String source;
+        private String url;
 
-        static String getShortName(String url) {
-            int lastSlash = url.lastIndexOf('/');
-            if (lastSlash < 0) {
-                lastSlash = url.lastIndexOf('\\');
-            }
-            String shortName = url;
-            if (lastSlash >= 0 && lastSlash + 1 < url.length()) {
-                shortName = url.substring(lastSlash + 1);
-            }
-            return shortName;
-        }
+        private int minLine;
+        private boolean[] breakableLines;
+        private boolean[] breakpoints;
 
-        SourceInfo(String sourceUrl, String source) {
-            this.sourceUrl = sourceUrl;
+        private static final boolean[] EMPTY_BOOLEAN_ARRAY = new boolean[0];
+
+        private FunctionSource[] functionSources;
+
+        SourceInfo(String source, DebuggableScript[] functions,
+                   String normilizedUrl)
+        {
             this.source = source;
-        }
+            this.url = normilizedUrl;
 
-        String getUrl() {
-            return sourceUrl;
-        }
+            int N = functions.length;
+            int[][] lineArrays = new int[N][];
+            for (int i = 0; i != N; ++i) {
+                lineArrays[i] = functions[i].getLineNumbers();
+            }
 
-        String getSource() {
-            return source;
-        }
-
-        synchronized void setSource(String source) {
-            if (!this.source.equals(source)) {
-                this.source = source;
-                endLine = 0;
-                breakableLines = null;
-
-                if (breakpoints != null) {
-                    for (int i = breakpoints.length - 1; i >= 0; --i) {
-                        if (breakpoints[i] == BREAK_FLAG) {
-                            breakpoints[i] = OLD_BREAK_FLAG;
+            int minAll = 0, maxAll = -1;
+            int[] firstLines = new int[N];
+            for (int i = 0; i != N; ++i) {
+                int[] lines = lineArrays[i];
+                if (lines == null || lines.length == 0) {
+                    firstLines[i] = -1;
+                } else {
+                    int min, max;
+                    min = max = lines[0];
+                    for (int j = 1; j != lines.length; ++j) {
+                        int line = lines[j];
+                        if (line < min) {
+                            min = line;
+                        } else if (line > max) {
+                            max = line;
+                        }
+                    }
+                    firstLines[i] = min;
+                    if (minAll > maxAll) {
+                        minAll = min;
+                        maxAll = max;
+                    } else {
+                        if (min < minAll) {
+                            minAll = min;
+                        }
+                        if (max > maxAll) {
+                            maxAll = max;
                         }
                     }
                 }
             }
-        }
 
-        synchronized void updateLineInfo(ScriptItem item) {
-
-            int[] lines = item.getScript().getLineNumbers();
-            if (lines.length == 0) {
-                return;
-            }
-
-            int fnFirstLine = lines[0];
-            int fnEndLine = fnFirstLine + 1;
-            for (int i = 1; i != lines.length; ++i) {
-                int line = lines[i];
-                if (line < fnFirstLine) {
-                    fnFirstLine = line;
-                }else if (line >= fnEndLine) {
-                    fnEndLine = line + 1;
+            if (minAll > maxAll) {
+                // No line information
+                this.minLine = -1;
+                this.breakableLines = EMPTY_BOOLEAN_ARRAY;
+                this.breakpoints = EMPTY_BOOLEAN_ARRAY;
+            } else {
+                if (minAll < 0) {
+                    // Line numbers can not be negative
+                    throw new IllegalStateException(String.valueOf(minAll));
                 }
-            }
-            item.setFirstLine(fnFirstLine);
-
-            if (endLine < fnEndLine) {
-                endLine = fnEndLine;
-            }
-            if (breakableLines == null) {
-                int newLength = 20;
-                if (newLength < endLine) { newLength = endLine; }
-                breakableLines = new boolean[newLength];
-            }else if (breakableLines.length < endLine) {
-                int newLength = breakableLines.length * 2;
-                if (newLength < endLine) { newLength = endLine; }
-                boolean[] tmp = new boolean[newLength];
-                System.arraycopy(breakableLines, 0, tmp, 0, breakableLines.length);
-                breakableLines = tmp;
-            }
-            int breakpointsEnd = (breakpoints == null) ? 0 : breakpoints.length;
-            for (int i = 0; i != lines.length; ++i) {
-                int line = lines[i];
-                breakableLines[line] = true;
-                if (line < breakpointsEnd) {
-                    if (breakpoints[line] == OLD_BREAK_FLAG) {
-                        breakpoints[line] = BREAK_FLAG;
+                this.minLine = minAll;
+                int linesTop = maxAll + 1;
+                this.breakableLines = new boolean[linesTop];
+                this.breakpoints = new boolean[linesTop];
+                for (int i = 0; i != N; ++i) {
+                    int[] lines = lineArrays[i];
+                    if (lines != null && lines.length != 0) {
+                        for (int j = 0; j != lines.length; ++j) {
+                            int line = lines[j];
+                            this.breakableLines[line] = true;
+                        }
                     }
                 }
             }
-        }
-
-        boolean breakableLine(int line) {
-            boolean[] breakableLines = this.breakableLines;
-            if (breakableLines != null && line < breakableLines.length) {
-                return breakableLines[line];
-            }
-            return false;
-        }
-
-        boolean hasBreakpoint(int line) {
-            byte[] breakpoints = this.breakpoints;
-            if (breakpoints != null && line < breakpoints.length) {
-                return breakpoints[line] == BREAK_FLAG;
-            }
-            return false;
-        }
-
-        synchronized boolean placeBreakpoint(int line) {
-            if (breakableLine(line)) {
-                if (breakpoints == null) {
-                    breakpoints = new byte[endLine];
-                }else if (line >= breakpoints.length) {
-                    byte[] tmp = new byte[endLine];
-                    System.arraycopy(breakpoints, 0, tmp, 0, breakpoints.length);
-                    breakpoints = tmp;
+            this.functionSources = new FunctionSource[N];
+            for (int i = 0; i != N; ++i) {
+                String name = functions[i].getFunctionName();
+                if (name == null) {
+                    name = "";
                 }
-                breakpoints[line] = BREAK_FLAG;
-                return true;
+                this.functionSources[i]
+                    = new FunctionSource(this, firstLines[i], name);
             }
-            return false;
         }
 
-        synchronized boolean removeBreakpoint(int line) {
-            boolean wasBreakpoint = false;
-            if (breakpoints != null && line < breakpoints.length) {
-                wasBreakpoint = (breakpoints[line] == BREAK_FLAG);
-                breakpoints[line] = 0;
+        String source()
+        {
+            return this.source;
+        }
+
+        String url()
+        {
+            return this.url;
+        }
+
+        int functionSourcesTop()
+        {
+            return functionSources.length;
+        }
+
+        FunctionSource functionSource(int i)
+        {
+            return functionSources[i];
+        }
+
+        void copyBreakpointsFrom(SourceInfo old)
+        {
+            int end = old.breakpoints.length;
+            if (end > this.breakpoints.length) {
+                end = this.breakpoints.length;
             }
-            return wasBreakpoint;
+            for (int line = 0; line != end; ++line) {
+                if (old.breakpoints[line]) {
+                    this.breakpoints[line] = true;
+                }
+            }
         }
 
-        synchronized void removeAllBreakpoints() {
-            breakpoints = null;
+        boolean breakableLine(int line)
+        {
+            return (line < this.breakableLines.length)
+                   && this.breakableLines[line];
         }
 
-        private String sourceUrl;
-        private String source;
+        boolean breakpoint(int line)
+        {
+            if (!breakableLine(line)) {
+                throw new IllegalArgumentException(String.valueOf(line));
+            }
+            return line < this.breakpoints.length && this.breakpoints[line];
+        }
 
-        private int endLine;
-        private boolean[] breakableLines;
+        final boolean checkBreakpointFast(int line)
+        {
+            return this.breakpoints[line];
+        }
 
-        private static final byte BREAK_FLAG = 1;
-        private static final byte OLD_BREAK_FLAG = 2;
-        private byte[] breakpoints;
+        boolean breakpoint(int line, boolean value)
+        {
+            if (!breakableLine(line)) {
+                throw new IllegalArgumentException(String.valueOf(line));
+            }
+            boolean changed;
+            synchronized (breakpoints) {
+                if (breakpoints[line] != value) {
+                    breakpoints[line] = value;
+                    changed = true;
+                } else {
+                    changed = false;
+                }
+            }
+            return changed;
+        }
 
+        void removeAllBreakpoints()
+        {
+            synchronized (breakpoints) {
+                for (int line = 0; line != breakpoints.length; ++line) {
+                    breakpoints[line] = false;
+                }
+            }
+        }
     }
 
+    private final Debugger debuggerImpl = new Debugger()
+    {
+        public DebugFrame getFrame(Context cx, DebuggableScript fnOrScript)
+        {
+            return mirrorStackFrame(cx, fnOrScript);
+        }
 
+        public void handleCompilationDone(Context cx,
+                                          DebuggableScript fnOrScript,
+                                          String source)
+        {
+            onCompilationDone(cx, fnOrScript, source);
+        }
+    };
 
-    int runToCursorLine;
-    String runToCursorFile;
-    private Hashtable scriptItems = new Hashtable();
-    Hashtable sourceNames = new Hashtable();
-
-    Hashtable functionNames = new Hashtable();
 
     boolean breakFlag = false;
 
@@ -400,80 +437,209 @@ public class Main implements Debugger, ContextListener {
     boolean breakOnEnter;
     boolean breakOnReturn;
 
+    private final Hashtable urlToSourceInfo = new Hashtable();
+    private final Hashtable functionNames = new Hashtable();
+    private final Hashtable functionToSource = new Hashtable();
 
-    /* ContextListener interface */
+    void enableForAllNewContexts()
+    {
+        Context.addContextListener(new ContextListener() {
 
-    public void contextCreated(Context cx) {
+            public void contextCreated(Context cx)
+            {
+                initNewContext(cx);
+            }
 
+            public void contextEntered(Context cx) { }
+
+            public void contextExited(Context cx) { }
+
+            public void contextReleased(Context cx) { }
+        });
+    }
+
+    void initNewContext(Context cx)
+    {
         ContextData contextData = new ContextData();
-        cx.setDebugger(this, contextData);
+        cx.setDebugger(debuggerImpl, contextData);
         cx.setGeneratingDebug(true);
         cx.setOptimizationLevel(-1);
     }
 
-    public void contextEntered(Context cx) {
+    DebugFrame mirrorStackFrame(Context cx, DebuggableScript fnOrScript)
+    {
+        return new StackFrame(cx, this, fnOrScript);
     }
 
-    public void contextExited(Context cx) {
+    void onCompilationDone(Context cx, DebuggableScript fnOrScript,
+                           String source)
+    {
+        if (!fnOrScript.isTopLevel()) {
+            return;
+        }
+        registerTopScript(fnOrScript, source);
     }
 
-    public void contextReleased(Context cx) {
-    }
-
-    /* end ContextListener interface */
-
-    public void doBreak() {
-        breakFlag = true;
-    }
-
-    ScriptItem getScriptItem(DebuggableScript fnOrScript) {
-        ScriptItem item = (ScriptItem)scriptItems.get(fnOrScript);
-        if (item == null) {
+    FunctionSource getFunctionSource(DebuggableScript fnOrScript)
+    {
+        FunctionSource fsource = functionSource(fnOrScript);
+        if (fsource == null) {
             String url = getNormilizedUrl(fnOrScript);
-            SourceInfo si = (SourceInfo)sourceNames.get(url);
+            SourceInfo si = sourceInfo(url);
             if (si == null) {
                 if (!fnOrScript.isGeneratedScript()) {
                     // Not eval or Function, try to load it from URL
-                    String source = null;
-                    try {
-                        InputStream is = openSource(url);
-                        try {
-                            source = Kit.readReader(new InputStreamReader(is));
-                        } finally {
-                            is.close();
-                        }
-                    } catch (IOException ex) {
-                        System.err.println
-                            ("Failed to load source from "+url+": "+ ex);
-                    }
+                    String source = loadSource(url);
                     if (source != null) {
-                        si = registerSource(url, source);
+                        DebuggableScript top = fnOrScript;
+                        for (;;) {
+                            DebuggableScript parent = top.getParent();
+                            if (parent == null) {
+                                break;
+                            }
+                            top = parent;
+                        }
+                        registerTopScript(top, source);
+                        fsource = functionSource(fnOrScript);
                     }
                 }
             }
-            if (si != null) {
-                item = registerScript(si, fnOrScript);
+        }
+        return fsource;
+    }
+
+    private String loadSource(String sourceUrl)
+    {
+        String source = null;
+        int hash = sourceUrl.indexOf('#');
+        if (hash >= 0) {
+            sourceUrl = sourceUrl.substring(0, hash);
+        }
+        try {
+            InputStream is;
+          openStream:
+            {
+                if (sourceUrl.indexOf(':') < 0) {
+                    // Can be a file name
+                    try {
+                        if (sourceUrl.startsWith("~/")) {
+                            String home = System.getProperty("user.home");
+                            if (home != null) {
+                                String pathFromHome = sourceUrl.substring(2);
+                                File f = new File(new File(home), pathFromHome);
+                                if (f.exists()) {
+                                    is = new FileInputStream(f);
+                                    break openStream;
+                                }
+                            }
+                        }
+                        File f = new File(sourceUrl);
+                        if (f.exists()) {
+                            is = new FileInputStream(f);
+                            break openStream;
+                        }
+                    } catch (SecurityException ex) { }
+                    // No existing file, assume missed http://
+                    if (sourceUrl.startsWith("//")) {
+                        sourceUrl = "http:" + sourceUrl;
+                    } else if (sourceUrl.startsWith("/")) {
+                        sourceUrl = "http://127.0.0.1" + sourceUrl;
+                    } else {
+                        sourceUrl = "http://" + sourceUrl;
+                    }
+                }
+
+                is = (new java.net.URL(sourceUrl)).openStream();
+            }
+
+            try {
+                source = Kit.readReader(new InputStreamReader(is));
+            } finally {
+                is.close();
+            }
+        } catch (IOException ex) {
+            System.err.println
+                ("Failed to load source from "+sourceUrl+": "+ ex);
+        }
+        return source;
+    }
+
+    private void registerTopScript(DebuggableScript topScript, String source)
+    {
+        if (!topScript.isTopLevel()) {
+            throw new IllegalArgumentException();
+        }
+        String url = getNormilizedUrl(topScript);
+        DebuggableScript[] functions = getAllFunctions(topScript);
+        final SourceInfo sourceInfo = new SourceInfo(source, functions, url);
+
+        synchronized (urlToSourceInfo) {
+            SourceInfo old = (SourceInfo)urlToSourceInfo.get(url);
+            if (old != null) {
+                sourceInfo.copyBreakpointsFrom(old);
+            }
+            urlToSourceInfo.put(url, sourceInfo);
+            for (int i = 0; i != sourceInfo.functionSourcesTop(); ++i) {
+                FunctionSource fsource = sourceInfo.functionSource(i);
+                String name = fsource.name();
+                if (name.length() != 0) {
+                    functionNames.put(name, fsource);
+                }
             }
         }
-        return item;
+
+        synchronized (functionToSource) {
+            for (int i = 0; i != functions.length; ++i) {
+                FunctionSource fsource = sourceInfo.functionSource(i);
+                functionToSource.put(functions[i], fsource);
+            }
+        }
+
+        swingInvokeLater(new Runnable() {
+            public void run()
+            {
+                debugGui.updateFileText(sourceInfo);
+            }
+        });
     }
 
-    /* Debugger Interface */
-
-    public void handleCompilationDone(Context cx, DebuggableScript fnOrScript,
-                                      String source)
+    FunctionSource functionSource(DebuggableScript fnOrScript)
     {
-         String sourceUrl = getNormilizedUrl(fnOrScript);
-         SourceInfo si = registerSource(sourceUrl, source);
-         registerScript(si, fnOrScript);
+        return (FunctionSource)functionToSource.get(fnOrScript);
     }
 
-    String getNormilizedUrl(DebuggableScript fnOrScript) {
+    String[] functionNames()
+    {
+        String[] a;
+        synchronized (urlToSourceInfo) {
+            Enumeration e = functionNames.keys();
+            a = new String[functionNames.size()];
+            int i = 0;
+            while (e.hasMoreElements()) {
+                a[i++] = (String)e.nextElement();
+            }
+        }
+        return a;
+    }
+
+    FunctionSource functionSourceByName(String functionName)
+    {
+        return (FunctionSource)functionNames.get(functionName);
+    }
+
+    SourceInfo sourceInfo(String url)
+    {
+        return (SourceInfo)urlToSourceInfo.get(url);
+    }
+
+    String getNormilizedUrl(DebuggableScript fnOrScript)
+    {
         String url = fnOrScript.getSourceName();
         if (url == null) { url = "<stdin>"; }
         else {
             // Not to produce window for eval from different lines,
-            // strip line numbers, i.e. replace all #[0-9]+\(eval\) by (eval)
+            // strip line numbers, i.e. replace all #[0-9]+\(eval\) by
+            // (eval)
             // Option: similar teatment for Function?
             char evalSeparator = '#';
             StringBuffer sb = null;
@@ -520,78 +686,26 @@ public class Main implements Debugger, ContextListener {
         return url;
     }
 
-    private static InputStream openSource(String sourceUrl)
-        throws IOException
+    private static DebuggableScript[] getAllFunctions(DebuggableScript function)
     {
-        int hash = sourceUrl.indexOf('#');
-        if (hash >= 0) {
-            sourceUrl = sourceUrl.substring(0, hash);
-        }
-        if (sourceUrl.indexOf(':') < 0) {
-            // Can be a file name
-            try {
-                if (sourceUrl.startsWith("~/")) {
-                    String home = System.getProperty("user.home");
-                    if (home != null) {
-                        String pathFromHome = sourceUrl.substring(2);
-                        File f = new File(new File(home), pathFromHome);
-                        if (f.exists()) {
-                            return new FileInputStream(f);
-                        }
-                    }
-                }
-                File f = new File(sourceUrl);
-                if (f.exists()) {
-                    return new FileInputStream(f);
-                }
-            } catch (SecurityException ex) { }
-            // No existing file, assume missed http://
-            if (sourceUrl.startsWith("//")) {
-                sourceUrl = "http:" + sourceUrl;
-            } else if (sourceUrl.startsWith("/")) {
-                sourceUrl = "http://127.0.0.1" + sourceUrl;
-            } else {
-                sourceUrl = "http://" + sourceUrl;
-            }
-        }
-
-        return (new java.net.URL(sourceUrl)).openStream();
+        ObjArray functions = new ObjArray();
+        collectFunctions_r(function, functions);
+        DebuggableScript[] result = new DebuggableScript[functions.size()];
+        functions.toArray(result);
+        return result;
     }
 
-    private SourceInfo registerSource(String sourceUrl, String source) {
-        SourceInfo si;
-        synchronized (sourceNames) {
-            si = (SourceInfo)sourceNames.get(sourceUrl);
-            if (si == null) {
-                si = new SourceInfo(sourceUrl, source);
-                sourceNames.put(sourceUrl, si);
-            } else {
-                si.setSource(source);
-            }
+    private static void collectFunctions_r(DebuggableScript function,
+                                           ObjArray array)
+    {
+        array.add(function);
+        for (int i = 0; i != function.getFunctionCount(); ++i) {
+            collectFunctions_r(function.getFunction(i), array);
         }
-        return si;
     }
 
-    private ScriptItem registerScript(final SourceInfo si,
-                                      DebuggableScript fnOrScript)
-    {
-        ScriptItem item = new ScriptItem(fnOrScript, si);
-        si.updateLineInfo(item);
-        scriptItems.put(fnOrScript, item);
-
-        String name = fnOrScript.getFunctionName();
-        if (name != null && name.length() > 0 && !name.equals("anonymous")) {
-            functionNames.put(name, item);
-        }
-
-        swingInvokeLater(new Runnable() {
-            public void run()
-            {
-                debugGui.updateFileText(si);
-            }
-        });
-
-        return item;
+    public void doBreak() {
+        breakFlag = true;
     }
 
     void handleBreakpointHit(StackFrame frame, Context cx) {
@@ -635,15 +749,37 @@ public class Main implements Debugger, ContextListener {
         }
     }
 
-    public DebugFrame getFrame(Context cx, DebuggableScript fnOrScript) {
-        return new StackFrame(cx, this, fnOrScript);
-    }
-
     /* end Debugger interface */
 
+    void compileScript(String url, String text)
+    {
+        Context cx = Context.enter();
+        try {
+            cx.compileString(text, url, 1, null);
+        } finally {
+            Context.exit();
+        }
+    }
 
-    Scriptable getScope() {
-        return (scopeProvider != null) ? scopeProvider.getScope() : null;
+    void evalScript(String url, String text)
+    {
+        Context cx = Context.enter();
+        try {
+            Scriptable scope = null;
+            if (scopeProvider != null) {
+                scope = scopeProvider.getScope();
+            }
+            if (scope == null) {
+                scope = new ImporterTopLevel(cx);
+            }
+            try {
+                cx.evaluateString(scope, text, url, 1, null);
+            } catch (JavaScriptException ex) {
+                throw new RuntimeException(ex.getMessage());
+            }
+        } finally {
+            Context.exit();
+        }
     }
 
     static void swingInvokeLater(Runnable f)
@@ -700,21 +836,6 @@ public class Main implements Debugger, ContextListener {
             currentContextData = contextData;
         }
         do {
-            if (runToCursorFile != null) {
-                if (url != null && url.equals(runToCursorFile)) {
-                    if (line == runToCursorLine) {
-                        runToCursorFile = null;
-                    } else {
-                        SourceInfo si = frame.sourceInfo();
-                        if (si == null || !si.hasBreakpoint(line))
-                        {
-                            break;
-                        } else {
-                            runToCursorFile = null;
-                        }
-                    }
-                }
-            }
             int frameCount = contextData.frameCount();
             this.frameIndex = frameCount -1;
 
@@ -794,10 +915,6 @@ public class Main implements Debugger, ContextListener {
                     contextData.breakNextLine = true;
                     contextData.stopAtFrameDepth = contextData.frameCount() -1;
                 }
-                break;
-            case RUN_TO_CURSOR:
-                contextData.breakNextLine = true;
-                contextData.stopAtFrameDepth = -1;
                 break;
             }
         } while (false);
@@ -963,8 +1080,9 @@ public class Main implements Debugger, ContextListener {
      *
      * Remove all breakpoints
      */
-    public void clearAllBreakpoints() {
-        Enumeration e = sourceNames.elements();
+    public void clearAllBreakpoints()
+    {
+        Enumeration e = urlToSourceInfo.elements();
         while (e.hasMoreElements()) {
             SourceInfo si = (SourceInfo)e.nextElement();
             si.removeAllBreakpoints();
@@ -1036,7 +1154,7 @@ public class Main implements Debugger, ContextListener {
         System.setIn(sdb.getIn());
         System.setOut(sdb.getOut());
         System.setErr(sdb.getErr());
-        Context.addContextListener(sdb);
+        sdb.enableForAllNewContexts();
         sdb.setScopeProvider(new ScopeProvider() {
                 public Scriptable getScope() {
                     return org.mozilla.javascript.tools.shell.Main.getScope();
