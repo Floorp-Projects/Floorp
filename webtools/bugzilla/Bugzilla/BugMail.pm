@@ -766,9 +766,9 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
         $add_diff = 0;
         
         if (exists($diff->{'fieldname'}) && 
-         ($diff->{'fieldname'} eq 'estimated_time' ||
-         $diff->{'fieldname'} eq 'remaining_time' ||
-         $diff->{'fieldname'} eq 'work_time')) {
+            ($diff->{'fieldname'} eq 'estimated_time' ||
+             $diff->{'fieldname'} eq 'remaining_time' ||
+             $diff->{'fieldname'} eq 'work_time')) {
             if ($user->groups->{Param("timetrackinggroup")}) {
                 $add_diff = 1;
             }
