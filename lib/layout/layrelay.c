@@ -1698,12 +1698,6 @@ void lo_rl_ReflowCell( MWContext *context, lo_DocState *state, LO_CellStruct *ce
 	first = lo_tv_GetFirstLayoutElement(relay_state->doc_state);
 	lo_rl_FitLayoutElements(relay_state, first);
 
-	/* Dummy Floating elements on a new line at the end of a document were not getting put into
-	   the line_array.  This code should ensure that anything left on the line_list gets flushed
-	   to the line_array. */
-	if (state->line_list != NULL)
-		lo_AppendLineListToLineArray( context, state, lo_GetLastElementInList(state->line_list) );
-
 	/* Restore cell line list and float list */
 	lo_rl_CopyStateToCell( relay_state->doc_state, cell );
 	
