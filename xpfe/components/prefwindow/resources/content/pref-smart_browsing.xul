@@ -44,6 +44,7 @@
 			<html:legend align="left">
 			<html:div>&lHeader;</html:div> 
 			</html:legend>
+<!-- rjc: comment out Related Links preferences from 4.x that aren't used in 5.x
 						<html:div>
 				<html:input name="related" type="checkbox" id="pref:0:bool:browser.related.enabled"/>
 				<html:label for="pref:0:bool:browser.related.enabled" accesskey="n" tabindex="0">
@@ -69,6 +70,7 @@
 				&afterAutoloadAlwaysRadio;
 				</html:label>
 			</html:div>
+-->
            <html:div>
 			&doNotDecp.label;
 			</html:div>
