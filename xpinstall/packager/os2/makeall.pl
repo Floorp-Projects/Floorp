@@ -135,6 +135,7 @@ if(!(-d "$inStagePath"))
 @gComponentList = ("xpcom",
                    "browser",
                    "mail",
+                   "spellcheck",
                    "psm",
                    "chatzilla",
                    "deflenus",
