@@ -1261,7 +1261,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
       }
       aCX->GetPixelsToTwips(&p2t);
       bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
-      mPadding.bottom = ascent / 8;
+      mPadding.bottom = NSIntPixelsToTwips((nscoord) NSToIntRound((float)ascent / (8.0f * p2t)),p2t);
       aMetrics.width = mPadding.right + bulletSize;
       aMetrics.height = mPadding.bottom + bulletSize;
       aMetrics.ascent = mPadding.bottom + bulletSize;
