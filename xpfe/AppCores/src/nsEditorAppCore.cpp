@@ -2143,7 +2143,8 @@ nsEditorAppCore::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, co
 }
 
 NS_IMETHODIMP
-nsEditorAppCore::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus)
+nsEditorAppCore::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus,
+								   nsIDocumentLoaderObserver * aObserver)
 {
    return PrepareDocumentForEditing();
 }
