@@ -319,6 +319,7 @@
           this.updatePref("browser.urlbar.showSearch");
 
         if (this.mShowSearch) {
+          this.textbox.mSearchInputTO = 0;
           this.textbox.addEventListener("input", this.mInputListener, false);
           if ("searchValue" in this.mSearchBox)
             this.mSearchBox.searchValue = this.textbox.currentSearchString;
