@@ -1,0 +1,63 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..
+MODULE=rdf 
+
+include <$(DEPTH)\config\rules.mak>
+
+FILES=\
+	bookmarks.html                  \
+	history.css                     \
+	history.xul                     \
+        bm-props.xul                    \
+        bookmark-folder-closed.gif      \
+        bookmark-folder-open.gif        \
+        bookmark-item.gif               \
+        bookmarks.css                   \
+        bookmarks.xul                   \
+        document.gif                    \
+        dom-test-1.css                  \
+        dom-test-1.xul                  \
+        dom-test-2.xul                  \
+        dom-test-3.xul                  \
+        dom-test-4.css                  \
+        dom-test-4.xul                  \
+        dom-test-5.xul                  \
+        flash-registry.rdf              \
+        flash.css                       \
+        flash.js                        \
+        flash.xul                       \
+        folder-closed.gif               \
+        folder-open.gif                 \
+        iefavorite.gif                  \
+        online.gif                      \
+        personal-folder-closed.gif      \
+        personal-folder-open.gif        \
+        remote-flash-1.rdf              \
+        remote-flash-2.rdf              \
+        remote-flash-3.rdf              \
+        sidebar.css                     \
+        sidebar.xul                     \
+        sidebarcontainer.xul            \
+        stock.gif                       \
+        unread.gif                      \
+        xpidl-test-1.xul                \
+        $(NULL)
+
+install::
+        -for %i in ($(FILES:/=\)) do @$(MAKE_INSTALL) %i $(DIST)\bin\res\rdf
