@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.3 $ $Date: 2001/10/08 19:26:02 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.4 $ $Date: 2001/10/15 16:50:01 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -58,6 +58,7 @@ struct nssListStr {
     nssListElement *head;
     PRUint32        count;
     nssListCompareFunc compareFunc;
+    nssListSortFunc    sortFunc;
 };
 
 struct nssListIteratorStr {
@@ -145,6 +146,13 @@ nssList_SetCompareFunction(nssList *list, nssListCompareFunc compareFunc)
     list->compareFunc = compareFunc;
 }
 
+NSS_IMPLEMENT void
+nssList_SetSortFunction(nssList *list, nssListSortFunc sortFunc)
+{
+    /* XXX if list already has elements, sort them */
+    list->sortFunc = sortFunc;
+}
+
 NSS_IMPLEMENT nssListCompareFunc
 nssList_GetCompareFunction(nssList *list)
 {
@@ -176,7 +184,31 @@ nsslist_add_element(nssList *list, void *data)
     PR_INIT_CLIST(&node->link);
     node->data = data;
     if (list->head) {
-	PR_APPEND_LINK(&node->link, &list->head->link);
+	if (list->sortFunc) {
+	    PRCList *link;
+	    nssListElement *currNode;
+	    currNode = list->head;
+	    /* insert in ordered list */
+	    while (currNode) {
+		link = &currNode->link;
+		if (list->sortFunc(data, currNode->data) <= 0) {
+		    /* new element goes before current node */
+		    PR_INSERT_BEFORE(&node->link, link);
+		    /* reset head if this is first */
+		    if (currNode == list->head) list->head = node;
+		    break;
+		}
+		if (link == PR_LIST_TAIL(&list->head->link)) {
+		    /* reached end of list, append */
+		    PR_INSERT_AFTER(&node->link, link);
+		    break;
+		}
+		currNode = (nssListElement *)PR_NEXT_LINK(&currNode->link);
+	    }
+	} else {
+	    /* not sorting */
+	    PR_APPEND_LINK(&node->link, &list->head->link);
+	}
     } else {
 	list->head = node;
     }
