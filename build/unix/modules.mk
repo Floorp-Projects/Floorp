@@ -50,7 +50,7 @@ BM_CVS_dbm	= $(BM_DIRS_dbm)
 #
 # js
 #
-BM_DIRS_js	= $(NSPRPUB_DIR) js/src
+BM_DIRS_js	= $(NSPRPUB_DIR) js
 BM_CVS_js	= $(NSPRPUB_DIR)
 BM_CVS_NS_js 	= js js/src js/src/fdlibm
 

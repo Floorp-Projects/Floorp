@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 # See top-level makefile for details
 #
 
-DIRS		= src
+DIRS		= src/fdlibm src
 
 ifdef MOZ_JAVA
 DIRS		+= jsj
