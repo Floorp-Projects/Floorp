@@ -212,8 +212,11 @@ void nsGCCache::ReuseGC(GCCacheEntry *entry, GdkGCValues *gcv, GdkGCValuesMask f
   unsigned long xvalues_mask=0;
 
   if (entry->clipRegion) {
+    // set it to none here and then set the clip region with
+    // gdk_gc_set_clip_region in GetGC()
     xvalues.clip_mask = None;
     xvalues_mask |= GCClipMask;
+    gdk_region_destroy(entry->clipRegion);
     entry->clipRegion = NULL;
   }
 
