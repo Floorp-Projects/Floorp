@@ -90,7 +90,6 @@
     <key id="key_savePage" key="&savePageCmd.commandkey;" modifiers="accel" command="cmd_savePage"/>
     <key id="key_print" key="&printCmd.commandkey;" modifiers="accel" command="cmd_print"/>
     <key id="key_close" key="&closeCmd.commandkey;" modifiers="accel" command="cmd_close"/>
-    <key keycode="VK_ESCAPE" command="cmd_close"/>
     <key id="key_goToLine"     key="&goToLineCmd.commandkey;"  command="cmd_goToLine"  modifiers="accel"/>
   </keyset>
 
