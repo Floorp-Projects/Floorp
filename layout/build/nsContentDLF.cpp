@@ -568,8 +568,6 @@ nsContentDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
   return status;
 }
 
-static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
-
 static nsresult
 RegisterTypes(nsICategoryManager* aCatMgr,
               const char* const* aTypes)

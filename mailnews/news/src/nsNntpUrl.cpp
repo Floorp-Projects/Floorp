@@ -65,7 +65,6 @@
 #include "nsINntpService.h"
 #include "nsIMsgMessageService.h"
 
-static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
     
 nsNntpUrl::nsNntpUrl()
 {

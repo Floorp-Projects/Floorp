@@ -76,7 +76,6 @@
 // CIDs
 
 // rdf
-static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,  NS_RDFXMLDATASOURCE_CID);
 
 // xpcom
@@ -85,7 +84,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 ////////////////////////////////////////////////////////////////////////
 // IIDs
 
-NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 
 #include "nsIMemory.h" // for the CID
 

@@ -57,7 +57,6 @@ static nsIPref* gPref = nsnull;
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
 
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsFontMetricsPh::nsFontMetricsPh()

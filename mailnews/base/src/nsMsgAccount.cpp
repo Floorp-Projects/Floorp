@@ -55,7 +55,6 @@
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgMailSession.h"
 
-static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 NS_IMPL_ISUPPORTS1(nsMsgAccount, nsIMsgAccount)

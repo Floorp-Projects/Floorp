@@ -64,8 +64,6 @@
 #include <photon/PtServer.h>
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 // BGR, not RGB - REVISIT
 #define NSCOLOR_TO_PHCOLOR(g,n) \

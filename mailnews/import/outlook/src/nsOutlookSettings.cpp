@@ -62,9 +62,6 @@
 #include "OutlookDebugLog.h"
 #include "nsIPop3IncomingServer.h"
 
-static NS_DEFINE_IID(kISupportsIID,        	NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
-
 class OutlookSettings {
 public:
 	static HKEY FindAccountsKey( void);

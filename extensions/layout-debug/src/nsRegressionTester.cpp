@@ -71,7 +71,6 @@
 
 
 static NS_DEFINE_CID(kFrameUtilCID, NS_FRAME_UTIL_CID);
-static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 
 
 nsRegressionTester::nsRegressionTester()

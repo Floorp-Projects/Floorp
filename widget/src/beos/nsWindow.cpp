@@ -97,7 +97,6 @@ static PRBool 			  gGotQuitShortcut = PR_FALSE;
 // Tracking last activated BWindow
 ////////////////////////////////////////////////////
 static BWindow           * gLastActiveWindow = NULL;
-static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
 
 // BCursor objects can't be created until they are used.  Some mozilla utilities, 
 // such as regxpcom, do not create a BApplication object, and therefor fail to run.,

@@ -44,9 +44,6 @@
 #include "nsITokenizer.h"
 #include "nsDTDUtils.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kClassIID, NS_PARSER_NODE_IID); 
-static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID); 
 
 static
 const nsString& GetEmptyString() {

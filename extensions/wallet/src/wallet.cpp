@@ -85,7 +85,6 @@
 #define morseAssert(x,y) 0
 #endif 
 
-static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 
 #include "prlong.h"
 #include "prinrval.h"

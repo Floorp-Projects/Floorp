@@ -51,7 +51,6 @@
     0x11d3,                                          \
     {0xa1, 0x78, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44}       \
 }
-static NS_DEFINE_CID(kFTPDirListingConverterCID, NS_FTPDIRLISTINGCONVERTER_CID);
 
 class nsFTPDirListingConv : public nsIStreamConverter {
 public:

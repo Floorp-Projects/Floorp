@@ -47,7 +47,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIMsgMailSession.h"
 
-static NS_DEFINE_CID(kMailboxServiceCID, NS_IMAILBOXSERVICE_IID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsLocalMoveCopyMsgTxn::nsLocalMoveCopyMsgTxn() :

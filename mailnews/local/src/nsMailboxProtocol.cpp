@@ -72,9 +72,6 @@ PRLogModuleInfo *MAILBOX;
 
 #include "nsIMsgMdnGenerator.h"
 
-static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
  *

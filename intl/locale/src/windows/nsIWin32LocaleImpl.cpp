@@ -47,8 +47,6 @@
 #include <Windows.h>
 #include "nsCRT.h"
 
-NS_DEFINE_IID(kIWin32LocaleImplCID, NS_WIN32LOCALE_CID);
-
 #define USER_DEFINED_PRIMARYLANG	0x0200
 #define USER_DEFINED_SUBLANGUAGE	0x20
 

@@ -26,8 +26,6 @@
 #include "nsEudoraImport.h"
 #include "nsReadableUtils.h"
 
-static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
-
 #include "EudoraDebugLog.h"
 
 #define	kWhitespace	" \t\b\r\n"

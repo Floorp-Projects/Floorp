@@ -64,8 +64,6 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsArray.h"
 
-static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-
 nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Folder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Name= nsnull;

@@ -54,7 +54,6 @@
 
 
 // Class IDs...
-static NS_DEFINE_CID(kEventQueueCID,  NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 
 static nsMacNSPREventQueueHandler*  gEventQueueHandler = nsnull;

@@ -87,11 +87,6 @@ enum eNPPStreamTypeInternal {
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
-static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID); 
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID); 
 static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);

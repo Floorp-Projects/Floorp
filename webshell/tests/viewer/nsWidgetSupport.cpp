@@ -45,12 +45,7 @@
 #include "nsITextWidget.h"
 
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
-static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 
 #ifdef XP_MAC
 	#define WIDGET_SUPPORT_EXPORT(returnType)	PR_PUBLIC_API(returnType)

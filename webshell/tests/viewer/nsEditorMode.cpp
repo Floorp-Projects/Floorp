@@ -59,7 +59,6 @@
 static nsIEditor *gEditor;
 
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
-static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 
 nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShell)
 {

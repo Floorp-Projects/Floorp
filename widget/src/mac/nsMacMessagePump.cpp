@@ -209,7 +209,6 @@ static pascal void EventFilter (EventRecord *ev)
 #pragma mark -
 #endif
 
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 //=================================================================
 /*  Constructor

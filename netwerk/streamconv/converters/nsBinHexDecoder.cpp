@@ -51,7 +51,6 @@
 #include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
 
-static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 #define DATA_BUFFER_SIZE (4096*2) 
 

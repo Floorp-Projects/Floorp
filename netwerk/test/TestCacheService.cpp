@@ -40,7 +40,6 @@
 
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kDNSServiceCID,             NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID,           NS_CACHESERVICE_CID);
 
 nsCOMPtr<nsIEventQueue>   gEventQ;

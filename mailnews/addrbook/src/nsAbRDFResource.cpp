@@ -45,8 +45,6 @@
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-
 nsAbRDFResource::nsAbRDFResource(void)
 {
 	mDatabase = nsnull;

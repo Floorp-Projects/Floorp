@@ -242,11 +242,7 @@ typedef struct
 /*-----------------------------------------------------------------
  * Globals
  *-----------------------------------------------------------------*/
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_IID(kIPrefMigrationIID, NS_IPREFMIGRATION_IID);
-static NS_DEFINE_IID(kPrefMigrationCID,  NS_PREFMIGRATION_CID);
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 

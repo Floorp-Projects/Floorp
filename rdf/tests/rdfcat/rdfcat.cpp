@@ -72,7 +72,6 @@
 // CIDs
 
 // rdf
-static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,  NS_RDFXMLDATASOURCE_CID);
 
 // xpcom

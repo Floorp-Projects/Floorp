@@ -58,8 +58,6 @@
 
 #include "OEDebugLog.h"
 
-static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
-
 typedef struct {
 	PRInt32		mozField;
 	PRInt32		multiLine;

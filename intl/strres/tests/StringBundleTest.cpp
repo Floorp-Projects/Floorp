@@ -55,9 +55,6 @@
 //
 #define TEST_URL "resource:/res/strres.properties"
 
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // let add some locale stuff

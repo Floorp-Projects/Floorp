@@ -58,7 +58,6 @@ nsDeviceContextSpecFactoryPh :: ~nsDeviceContextSpecFactoryPh()
 
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryPh, nsIDeviceContextSpecFactory)
 

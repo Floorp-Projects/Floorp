@@ -69,12 +69,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // needed for NS_TRY_SAFE_CALL_*
-static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
-static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
-static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID); 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 ///////////////////////////////////////////////////////////////////////////////
 // ns4xPluginStreamListener Methods

@@ -85,7 +85,6 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
 
 /* nsNSSCertificate */

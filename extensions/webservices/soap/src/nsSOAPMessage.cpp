@@ -526,8 +526,6 @@ NS_IMETHODIMP
   return NS_OK;
 }
 
-static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
-
 /**
  * Internally used to track down the encoding to be used at the headers
  * or parameters.   We know the version is legal, or we couldn't have

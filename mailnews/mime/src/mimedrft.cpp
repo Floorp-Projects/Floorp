@@ -93,7 +93,6 @@ static NS_DEFINE_CID(kCMsgComposeServiceCID,  NS_MSGCOMPOSESERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 // Define CIDs...
-static NS_DEFINE_CID(kMsgCompFieldsCID,       NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 
 // safe filename for all OSes

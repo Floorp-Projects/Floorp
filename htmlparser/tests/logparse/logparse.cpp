@@ -54,8 +54,6 @@ static NS_DEFINE_IID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // Interface IID's
-static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
-static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
 
 //----------------------------------------------------------------------
 

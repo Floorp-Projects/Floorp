@@ -40,8 +40,6 @@
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
 #define ENCODER_NAME_BASE "Unicode Encoder-"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsULE)

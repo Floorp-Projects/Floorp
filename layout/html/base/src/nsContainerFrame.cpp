@@ -64,8 +64,6 @@
 #include "nsRegion.h"
 #include "nsLayoutErrors.h"
 
-static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-
 #ifdef NS_DEBUG
 #undef NOISY
 #else

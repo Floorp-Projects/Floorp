@@ -83,7 +83,6 @@
 #define PREF_MAIL_WARN_FILTER_CHANGED "mail.warn_filter_changed"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
 nsrefcnt nsMsgFolder::gInstanceCount  = 0;

@@ -48,7 +48,6 @@ static int PR_CALLBACK colorPrefChanged(const char* aPref, void* aData);
 #include "nsSize.h"
 #endif
  
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 NS_IMPL_ISUPPORTS1(nsXPLookAndFeel, nsILookAndFeel)

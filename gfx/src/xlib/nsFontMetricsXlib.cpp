@@ -268,9 +268,6 @@ struct nsFontPropertyNameXlib
   int         mValue;
 };
 
-static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 static void SetCharsetLangGroup(nsFontMetricsXlibContext *aFmctx, nsFontCharSetInfoXlib* aCharSetInfo);
 
 static int SingleByteConvert(nsFontCharSetInfoXlib* aSelf, XFontStruct* aFont,

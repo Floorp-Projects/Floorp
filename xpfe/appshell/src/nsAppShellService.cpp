@@ -97,7 +97,6 @@ static PRBool OnMacOSX();
 static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 
 #define gEQActivatedNotification       "nsIEventQueueActivated"
 #define gEQDestroyedNotification       "nsIEventQueueDestroyed"

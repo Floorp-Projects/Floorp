@@ -53,11 +53,6 @@
 #include "nsClassicDetectors.h"
 
 
-static NS_DEFINE_CID(kJAClassicDetectorCID,         NS_JA_CLASSIC_DETECTOR_CID);
-static NS_DEFINE_CID(kJAClassicStringDetectorCID,   NS_JA_CLASSIC_STRING_DETECTOR_CID);
-static NS_DEFINE_CID(kKOClassicDetectorCID,         NS_KO_CLASSIC_DETECTOR_CID);
-static NS_DEFINE_CID(kKOClassicStringDetectorCID,   NS_KO_CLASSIC_STRING_DETECTOR_CID);
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJACharsetClassicDetector);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAStringCharsetClassicDetector);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsKOCharsetClassicDetector);

@@ -46,8 +46,6 @@
 #include "mimemoz2.h" // for prefs
 #include "nsCRT.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 extern "C" MimeObjectClass mimeMultipartRelatedClass;
 
 #define MIME_SUPERCLASS mimeMultipartClass

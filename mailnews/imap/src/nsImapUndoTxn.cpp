@@ -45,8 +45,6 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsIDBFolderInfo.h"
 
-static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
-
 nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
     m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
 {

@@ -45,8 +45,6 @@
 
 class nsIUnicharInputStream;
 
-static NS_DEFINE_CID(kPropertyElementCID, NS_IPROPERTYELEMENT_CID);
-static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
 
 class nsPersistentProperties : public nsIPersistentProperties
 {

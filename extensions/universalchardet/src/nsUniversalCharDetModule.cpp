@@ -55,8 +55,6 @@
 
 #include "nsUniversalDetector.h"
 
-static NS_DEFINE_CID(kUniversalDetectorCID,  NS_UNIVERSAL_DETECTOR_CID);
-static NS_DEFINE_CID(kUniversalStringDetectorCID,  NS_UNIVERSAL_STRING_DETECTOR_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUniversalXPCOMDetector);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUniversalXPCOMStringDetector);

@@ -26,7 +26,6 @@
 
 #include "nsCWebBrowser.h"
 #include "nsIComponentManager.h"
-#include "nsWidgetsCID.h"
 #include "nsRepeater.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -90,8 +89,6 @@
 
 // ToolBox
 #include <InternetConfig.h>
-
-static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 
 const nsCString CBrowserShell::kEmptyCString;
 nsCOMPtr<nsIDragHelperService> CBrowserShell::sDragHelper;

@@ -91,7 +91,6 @@ extern "C" {
 PRLogModuleInfo* gPIPNSSLog = nsnull;
 #endif
 
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 int nsNSSComponent::mInstanceCount = 0;
 

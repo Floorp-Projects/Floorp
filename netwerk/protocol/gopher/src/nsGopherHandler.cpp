@@ -43,7 +43,6 @@ PRLogModuleInfo* gGopherLog = nsnull;
 #endif
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-//static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 

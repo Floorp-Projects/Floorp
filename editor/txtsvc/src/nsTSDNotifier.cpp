@@ -40,8 +40,6 @@
 #include "nsTSDNotifier.h"
 #include "nsTextServicesDocument.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIEditActionListenerIID, NS_IEDITACTIONLISTENER_IID);
 
 nsTSDNotifier::nsTSDNotifier(nsTextServicesDocument *aDoc) : mDoc(aDoc)
 {

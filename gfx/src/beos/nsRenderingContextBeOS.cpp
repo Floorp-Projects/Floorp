@@ -47,7 +47,6 @@
 #include <Polygon.h>
 #include <math.h>
 
-static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextBeOS, nsIRenderingContext)
 

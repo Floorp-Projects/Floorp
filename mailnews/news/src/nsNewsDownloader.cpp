@@ -345,7 +345,6 @@ DownloadMatchingNewsArticlesToNewsDB::~DownloadMatchingNewsArticlesToNewsDB()
 {
 }
 
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 NS_IMPL_ISUPPORTS1(nsMsgDownloadAllNewsgroups, nsIUrlListener)
 

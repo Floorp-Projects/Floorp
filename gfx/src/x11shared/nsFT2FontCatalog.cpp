@@ -107,9 +107,6 @@ extern nsFontVendorName sVendorNamesList[];
 extern nsulCodePageRangeLanguage    ulCodePageRange1Language[];
 extern nsulCodePageRangeLanguage    ulCodePageRange2Language[];
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 nsHashtable* nsFT2FontCatalog::sVendorNames = nsnull;
 nsIPref*     nsFT2FontCatalog::sPref = nsnull;
 

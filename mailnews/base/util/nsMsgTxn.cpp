@@ -37,7 +37,6 @@
 
 #include "nsMsgTxn.h"
 #include "nsIMsgHdr.h"
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgTxn)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgTxn)

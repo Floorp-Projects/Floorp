@@ -57,6 +57,3 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kTextToSubURICID, NS_TEXTTOSUBURI_CID);

@@ -48,8 +48,6 @@
 #include "nsAbCardProperty.h"
 #include "prdtoa.h"
 
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-
 #define  PREVIOUS_EXTENSION ".prev"
 #define  kPABDirectory  2 // defined in nsDirPrefs.h
 #define  kMAPIDirectory 3 // defined in nsDirPrefs.h

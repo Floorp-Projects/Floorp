@@ -53,8 +53,6 @@
 #include "prprf.h"
 #include "nsMsgI18N.h"
 
-static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
-
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlain, MimeInlineTextPlainClass,
 			 mimeInlineTextPlainClass, &MIME_SUPERCLASS);

@@ -92,9 +92,7 @@ extern PRInt16 gCurrentMenuDepth;
 
 // CIDs
 #include "nsWidgetsCID.h"
-static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
-static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
 void InstallDefProc( short dpPath, ResType dpType, short dpID, Ptr dpAddr);
 

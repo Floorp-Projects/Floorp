@@ -54,7 +54,6 @@
 #include "nsString.h"
 #include "nsIURI.h"
 #include "nsIDialogParamBlock.h"
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMessengerBootstrap);

@@ -49,9 +49,6 @@
 #include "nsMsgUtils.h"
 #include "netCore.h"
 
-static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 NS_IMPL_THREADSAFE_ADDREF(nsCopyMessageStreamListener)
 NS_IMPL_THREADSAFE_RELEASE(nsCopyMessageStreamListener)
 

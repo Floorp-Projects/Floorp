@@ -53,7 +53,6 @@
 #define USER_DEFINED "x-user-def"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 

@@ -120,7 +120,6 @@
 #define DEBUG_CMD_LINE
 #endif
 
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
 
 #define UILOCALE_CMD_LINE_ARG "-UILocale"

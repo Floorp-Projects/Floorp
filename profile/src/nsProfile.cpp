@@ -153,17 +153,9 @@ static nsHashtable *gLocaleProfiles = nsnull;
 static nsProfileDirServiceProvider *gDirServiceProvider = nsnull;
 
 // IID and CIDs of all the services needed
-static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
-static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefConverterCID, NS_PREFCONVERTER_CID);
-static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 
 /*

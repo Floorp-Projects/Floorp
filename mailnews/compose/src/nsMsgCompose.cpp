@@ -117,7 +117,6 @@
 #include "nsIMsgMdnGenerator.h"
 
 // Defines....
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 static PRInt32 GetReplyOnTop()
@@ -278,8 +277,6 @@ NS_IMPL_ISUPPORTS2(nsMsgCompose, nsIMsgCompose, nsISupportsWeakReference)
 // Once we are here, convert the data which we know to be UTF-8 to UTF-16
 // for insertion into the editor
 //
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
 nsresult 
 GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
 {

@@ -47,13 +47,6 @@
 #include "nsNewsDatabase.h"
 #include "nsImapMailDatabase.h"
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
-static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
-static NS_DEFINE_CID(kCMsgRetentionSettings, NS_MSG_RETENTIONSETTINGS_CID);
-static NS_DEFINE_CID(kCMsgDownloadSettings, NS_MSG_DOWNLOADSETTINGS_CID);
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailDatabase)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNewsDatabase)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMailDatabase)

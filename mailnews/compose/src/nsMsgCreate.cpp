@@ -68,9 +68,6 @@
 #include "nsMsgBaseCID.h"
 
 
-// CID's needed
-static NS_DEFINE_CID(kPrefCID,            NS_PREF_CID);
-
 //
 // Implementation...
 //

@@ -59,8 +59,6 @@
 #include "nsMsgSend.h"
 #include "nsIStreamConverterService.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 NS_IMPL_ISUPPORTS6(nsURLFetcher, nsIURLFetcher, nsIStreamListener, nsIURIContentListener, nsIInterfaceRequestor, nsIWebProgressListener, nsISupportsWeakReference)
 
 

@@ -55,7 +55,6 @@
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
 
-static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 
 /*----------------------------------------------------------------------------

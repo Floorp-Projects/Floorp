@@ -133,7 +133,6 @@ void MyLogFunction(const char *fmt, ...)
 #define PR_LOG(module,level,args) MyLogFunction args
 #endif
 
-static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 nsNSSSocketInfo::nsNSSSocketInfo()
   : mFd(nsnull),

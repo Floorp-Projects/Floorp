@@ -47,7 +47,6 @@
 #include "nsIMIMEInfo.h"
 #include "nsIFile.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 MimeTypeArrayImpl::MimeTypeArrayImpl(nsIDOMNavigator* navigator)
 {

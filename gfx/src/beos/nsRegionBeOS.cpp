@@ -45,7 +45,6 @@
 static int nRegions; 
 #endif 
 
-static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 nsRegionBeOS :: nsRegionBeOS()
 {

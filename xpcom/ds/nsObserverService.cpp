@@ -49,7 +49,6 @@
 
 #define NS_WEAK_OBSERVERS
 
-static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 
 
 #if defined(PR_LOGGING)

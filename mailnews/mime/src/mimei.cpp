@@ -96,8 +96,6 @@ void getMsgHdrForCurrentURL(MimeDisplayOptions *opts, nsIMsgDBHdr ** aMsgHdr);
 
 #define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 /* ==========================================================================
    Allocation and destruction
    ==========================================================================

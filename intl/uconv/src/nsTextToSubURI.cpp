@@ -48,7 +48,6 @@
 #include "nsTextToSubURI.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_CID(kITextToSubURIIID, NS_ITEXTTOSUBURI_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 nsTextToSubURI::nsTextToSubURI()

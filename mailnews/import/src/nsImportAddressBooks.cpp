@@ -69,7 +69,6 @@
 
 #include "ImportDebug.h"
 
-static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_STRING_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);

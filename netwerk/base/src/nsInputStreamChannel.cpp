@@ -45,8 +45,6 @@
 #include "nsCOMPtr.h"
 #include "prlog.h"
 
-static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #if defined(PR_LOGGING)
 //

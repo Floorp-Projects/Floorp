@@ -62,9 +62,6 @@
 #include "OEDebugLog.h"
 #include "nsIPop3IncomingServer.h"
 
-static NS_DEFINE_IID(kISupportsIID,        	NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
-
 class OESettings {
 public:
 	static HKEY	Find50Key( void);

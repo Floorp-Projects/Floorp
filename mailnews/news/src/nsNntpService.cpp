@@ -91,7 +91,6 @@
 #define PREF_NETWORK_HOSTS_NNTP_SERVER	"network.hosts.nntp_server"
 #define PREF_MAIL_ROOT_NNTP 	"mail.root.nntp"
 
-static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);

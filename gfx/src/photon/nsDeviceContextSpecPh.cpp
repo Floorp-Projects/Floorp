@@ -57,8 +57,6 @@
 #include "nsReadableUtils.h"
 #include "nsIPref.h"
 
-static NS_DEFINE_CID( kPrintOptionsCID, NS_PRINTOPTIONS_CID );
-
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
 	NS_INIT_ISUPPORTS();

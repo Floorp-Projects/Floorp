@@ -55,7 +55,6 @@
 static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);
 
 static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
-static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
 
 
 #define THROB_NUM 14

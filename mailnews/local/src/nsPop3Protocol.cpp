@@ -64,8 +64,6 @@
 
 static PRLogModuleInfo *POP3LOGMODULE = nsnull;
 
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); 
-
 /* km
  *
  *

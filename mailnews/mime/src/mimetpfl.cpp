@@ -50,8 +50,6 @@
 #include "prprf.h"
 #include "nsMsgI18N.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 static const PRUint32 kSpacesForATab = 4; // Must be at least 1.
 static const PRUint32 kInitialBufferSize = 100;
 

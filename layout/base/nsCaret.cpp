@@ -79,8 +79,6 @@
 //------------------------------END OF IBM BIDI--------------------------------
 #endif //IBMBIDI
 
-static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-
 //-----------------------------------------------------------------------------
 
 nsCaret::nsCaret()

@@ -52,7 +52,6 @@
 #define	kCopyBufferSize		8192
 #define	kMailReadBufferSize	16384
 
-static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 
 static PRBool
 nsStringEndsWith(nsString& name, const char *ending)

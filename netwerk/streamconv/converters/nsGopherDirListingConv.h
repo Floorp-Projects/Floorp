@@ -43,8 +43,6 @@
     0x4efd, \
     { 0xa2, 0xc4, 0xfc, 0x39, 0xbf, 0xab, 0x80, 0x9d} \
 }
-static NS_DEFINE_CID(kGopherDirListingConverterCID,
-                     NS_GOPHERDIRLISTINGCONVERTER_CID);
 
 #define GOPHER_PORT 70
  

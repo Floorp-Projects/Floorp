@@ -49,7 +49,6 @@
 #include "nsWidgetsCID.h"
 #include "aimm.h"
 
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell) 
 

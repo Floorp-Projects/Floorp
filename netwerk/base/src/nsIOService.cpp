@@ -76,7 +76,6 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
-static NS_DEFINE_CID(kStdURLParserCID, NS_STDURLPARSER_CID);
 
 // A general port blacklist.  Connections to these ports will not be avoided unless 
 // the protocol overrides.

@@ -69,7 +69,6 @@ static PRLogModuleInfo *gTestSocketIOLog;
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 static PRTime gElapsedTime;
 static int gKeepRunning = 1;

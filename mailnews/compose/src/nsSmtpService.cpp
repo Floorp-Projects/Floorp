@@ -82,7 +82,6 @@ typedef struct _findServerByHostnameEntry {
 
 static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 static NS_DEFINE_CID(kCMailtoUrlCID, NS_MAILTOURL_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID); 
 
 // foward declarations...
 nsresult

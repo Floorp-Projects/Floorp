@@ -64,7 +64,6 @@
 
 static NS_DEFINE_IID(kFrameUtilCID, NS_FRAME_UTIL_CID);
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
-static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 
 static PLHashNumber
 HashKey(nsIAtom* key)

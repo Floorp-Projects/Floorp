@@ -44,7 +44,6 @@
 
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLDocument.h"
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 PrintSetupInfo::PrintSetupInfo(const PrintSetupInfo & aPSI) :
   mPortrait(aPSI.mPortrait),

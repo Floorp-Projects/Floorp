@@ -68,7 +68,6 @@
 #include "nsHTMLAtoms.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
-//static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #endif
 
 // image copy stuff

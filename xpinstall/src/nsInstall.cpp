@@ -170,8 +170,6 @@ nsInstallInfo::~nsInstallInfo()
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
-static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
-static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsInstall)
 

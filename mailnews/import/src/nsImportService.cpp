@@ -71,7 +71,6 @@
 PRLogModuleInfo *IMPORTLOGMODULE = nsnull;
 
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static nsIImportService *	gImportService = nsnull;
 static const char *	kWhitespace = "\b\t\r\n ";
 

@@ -58,7 +58,6 @@
 #include <math.h>
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 #define SMOOTH_SCROLL_MSECS_PER_FRAME 10
 #define SMOOTH_SCROLL_FRAMES    10

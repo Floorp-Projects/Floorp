@@ -28,8 +28,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
-static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
-
 #include "TextDebugLog.h"
 
 #define kWhitespace    " \t\b\r\n"

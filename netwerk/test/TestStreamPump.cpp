@@ -72,9 +72,7 @@ static PRLogModuleInfo *gTestLog = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 PRBool gDone = PR_FALSE;
 nsIEventQueue *gEventQ = nsnull;

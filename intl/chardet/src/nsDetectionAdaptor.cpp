@@ -46,7 +46,6 @@
 #include "nsDetectionAdaptor.h"
 #include "nsIContentSink.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 //--------------------------------------------------------------
 NS_IMETHODIMP nsMyObserver::Notify(

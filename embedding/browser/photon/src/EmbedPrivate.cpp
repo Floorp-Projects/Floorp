@@ -30,9 +30,6 @@
 #include "nsReadableUtils.h"
 #include "nsIWidget.h"
 
-// for NS_APPSHELL_CID
-#include <nsWidgetsCID.h>
-
 // for do_GetInterface
 #include <nsIInterfaceRequestor.h>
 #include <nsIInterfaceRequestorUtils.h>
@@ -61,7 +58,6 @@
 #include "nsIWebBrowserPrint.h"
 #include "nsIClipboardCommands.h"
 #include "docshell/nsCDefaultURIFixup.h"
-#include "nsGfxCIID.h"
 
 // for the focus hacking we need to do
 #include <nsIFocusController.h>
@@ -80,9 +76,6 @@
 #include "EmbedPrintListener.h"
 
 #include "PtMozilla.h"
-
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 static const char sWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 

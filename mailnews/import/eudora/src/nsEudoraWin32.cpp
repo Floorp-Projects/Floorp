@@ -40,7 +40,6 @@
 #include "EudoraDebugLog.h"
 
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 
 static const char *	kWhitespace = "\b\t\r\n ";
 

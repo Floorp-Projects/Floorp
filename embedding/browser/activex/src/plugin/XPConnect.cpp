@@ -80,8 +80,6 @@
 #include "nsIURI.h"
 #endif
 
-static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsScriptablePeer

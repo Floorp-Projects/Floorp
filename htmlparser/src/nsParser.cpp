@@ -79,9 +79,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
-static NS_DEFINE_IID(kExpatDriverCID, NS_EXPAT_DRIVER_CID);
-static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 //-------------------------------------------------------------------

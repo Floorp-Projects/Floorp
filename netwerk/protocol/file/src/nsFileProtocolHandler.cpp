@@ -47,8 +47,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDirectoryListing.h"
 
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-
 //-----------------------------------------------------------------------------
 
 nsFileProtocolHandler::nsFileProtocolHandler()
