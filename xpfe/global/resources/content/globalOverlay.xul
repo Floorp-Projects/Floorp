@@ -55,6 +55,7 @@
 	<broadcaster id="cmd_delete" 
 				 oncommand="goDoCommand('cmd_delete')"
 				 onchange="goUpdateCommand('cmd_delete')"
+				 valueDefault="&deleteCmd.label;"
 				 disabled="true"/>
 	<broadcaster id="cmd_selectAll" 
 				 oncommand="goDoCommand('cmd_selectAll')"
