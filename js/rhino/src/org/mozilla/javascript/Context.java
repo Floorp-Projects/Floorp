@@ -350,6 +350,15 @@ public class Context
     }
 
     /**
+     * Return {@link ContextFactory} instance to use to create Context instances
+     * for other execution threads.
+     */
+    protected ContextFactory factory()
+    {
+        return ContextFactory.getDefault();
+    }
+
+    /**
      * Call {@link
      * Callable#call(Context cx, Scriptable scope, Scriptable thisObj,
      *               Object[] args)}
@@ -365,6 +374,14 @@ public class Context
                               Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
+        return call(ContextFactory.getDefault(), callable, scope, thisObj,
+                    args);
+    }
+
+    static Object call(ContextFactory f, Callable callable, Scriptable scope,
+                       Scriptable thisObj, Object[] args)
+        throws JavaScriptException
+    {
         Context[] storage = getThreadContextStorage();
         Context cx;
         if (storage != null) {
@@ -377,7 +394,7 @@ public class Context
             return callable.call(cx, scope, thisObj, args);
         }
 
-        cx = new Context();
+        cx = f.newContext();
         if (!cx.creationEventWasSent) {
             cx.creationEventWasSent = true;
             cx.runListeners(CONTEXT_CREATED_EVENT);
