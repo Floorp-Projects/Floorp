@@ -32,17 +32,20 @@
 <script type="text/javascript" language="JavaScript">
 <!--
 function addSidebar() {
-      if ((typeof window.sidebar == "object") && (typeof window.sidebar.addPanel == "function"))
-      {
-         window.sidebar.addPanel ("Bugzilla", "[% Param('urlbase') %]sidebar.cgi", "");
-      }
-      else
-      {
-         var rv = window.confirm ("This page is enhanced for use with Netscape 6.  " + "Would you like to upgrade now?");
-         if (rv)
-            document.location.href = "http://home.netscape.com/download/index.html";
-      }
-   }
+  if ((typeof window.sidebar == "object") && (typeof window.sidebar.addPanel == "function"))
+  {
+    var sidebarname=window.location.host;
+    if (!/bug/i.test(sidebarname))
+      sidebarname="Bugzilla "+sidebarname;
+    window.sidebar.addPanel (sidebarname, "[% Param('urlbase') %]sidebar.cgi", "");
+  }
+  else
+  {
+    var rv = window.confirm ("This page is enhanced for use with Netscape 6.  " + "Would you like to upgrade now?");
+    if (rv)
+      document.location.href = "http://home.netscape.com/download/index.html";
+  }
+}
 //-->
 </script>
 
