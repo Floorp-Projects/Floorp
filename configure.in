@@ -303,6 +303,17 @@ if test "$_perl_res" != 0; then
     AC_MSG_ERROR([Perl $PERL_VERSION or higher is required.])
 fi
 
+AC_MSG_CHECKING([for File::stat])
+$PERL -e 'use File::stat;'
+_perl_res=$?
+if test $_perl_res != 0; then
+    AC_MSG_RESULT([no])
+    AC_MSG_WARN([Perl module File::stat not available. Make sure that you have a complete perl installation. Disabling jar packaging.])
+    MOZ_DISABLE_JAR_PACKAGING=1
+else
+    AC_MSG_RESULT([yes])
+fi
+
 AC_PATH_PROG(WHOAMI, whoami, :)
 AC_PATH_PROG(AUTOCONF, autoconf, :)
 AC_PATH_PROG(UNZIP, unzip, :)
