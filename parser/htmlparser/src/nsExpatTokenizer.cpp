@@ -120,6 +120,7 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
     XML_SetUnparsedEntityDeclHandler(mExpatParser, HandleUnparsedEntityDecl);
     XML_SetNotationDeclHandler(mExpatParser, HandleNotationDecl);
     XML_SetExternalEntityRefHandler(mExpatParser, HandleExternalEntityRef);
+    XML_SetCommentHandler(mExpatParser, HandleComment);
 #ifdef EXTERNAL_ENTITY_SUPPORT
     XML_SetExternalDTDLoader(mExpatParser, LoadExternalDTD);
 #endif
@@ -406,6 +407,18 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
       //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
     }
   }  
+}
+
+void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
+  CToken* theToken=gTokenRecycler->CreateTokenOfType(eToken_comment, eHTMLTag_unknown);
+  if(theToken) {
+    nsString& theString=theToken->GetStringValueXXX();
+    theString.SetString((PRUnichar *) name);
+    AddToken(theToken,NS_OK,*gTokenDeque,gTokenRecycler);
+  }
+  else{
+    //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
+  }
 }
 
 void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Char *target, const XML_Char *data){
