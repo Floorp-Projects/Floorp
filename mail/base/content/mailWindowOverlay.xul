@@ -1037,10 +1037,11 @@
               <menuseparator/>
             </menupopup>
           </menu>
-          <menuitem id="openMessageWindowMenuitem" label="&openMessageWindowCmd.label;"
-            observes="cmd_openMessage"
-            accesskey="&openMessageWindowCmd.accesskey;"
-            key="key_openMessage"/>
+          <menuitem id="openMessageFileMenuitem" label="&openMessageFileCmd.label;"
+            observes="cmd_openFileMessage"
+            key="key_openFileMessage"
+            accesskey="&openMessageFileCmd.accesskey;"
+            oncommand="MsgOpenFromFile();"/>
           <menu id="fileAttachmentMenu" label="&openAttachmentCmd.label;" accesskey="&openAttachmentCmd.accesskey;">
             <menupopup id="attachmentMenuList" onpopupshowing="FillAttachmentListPopup(this);"/>
           </menu>
@@ -1314,6 +1315,10 @@
                 accesskey="&editMsgAsNewCmd.accesskey;"
                 key="key_editAsNew"
                 observes="cmd_editAsNew"/>
+            <menuitem id="openMessageWindowMenuitem" label="&openMessageWindowCmd.label;"
+              observes="cmd_openMessage"
+              accesskey="&openMessageWindowCmd.accesskey;"
+              key="key_openMessage"/>
             <menuseparator/>
             <menu label="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
                 sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"

@@ -420,6 +420,10 @@ function InitMessageMenu()
   if(labelMenu)
       labelMenu.setAttribute("disabled", !aMessage);
 
+  var openMenu = document.getElementById("openMessageWindowMenuitem");
+  if (openMenu)
+      openMenu.setAttribute("disabled", !aMessage);
+
   // Disable mark menu when we're not in a folder
   var markMenu = document.getElementById("markMenu");
   if(markMenu)
@@ -1105,7 +1109,6 @@ function MsgSaveAsFile()
     }
 }
 
-
 function MsgSaveAsTemplate()
 {
     var folder = GetLoadedMsgFolder();
@@ -1208,6 +1211,48 @@ function MsgOpenSelectedMessageInExistingWindow()
         dump("reusing existing standalone message window failed: " + ex + "\n");
     }
     return false;
+}
+
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
+
+function MsgOpenFromFile()
+{
+   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+
+   var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService();
+   strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+   var extbundle = strBundleService.createBundle("chrome://messenger/locale/messenger.properties");
+   var filterLabel = extbundle.GetStringFromName("EMLFiles");
+   var windowTitle = extbundle.GetStringFromName("OpenEMLFiles");
+
+   fp.init(window, windowTitle, nsIFilePicker.modeOpen);
+   fp.appendFilter(filterLabel, "*.eml");
+
+   // Default or last filter is "All Files"
+   fp.appendFilters(nsIFilePicker.filterAll);
+
+  try {
+     var ret = fp.show();
+     if (ret == nsIFilePicker.returnCancel)
+       return null;
+   }
+   catch (ex) {
+     dump("filePicker.chooseInputFile threw an exception\n");
+     return null;
+   }
+
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                         .getService(Components.interfaces.nsIIOService);
+  var handler = ioService.getProtocolHandler("file");
+  var fileHandler = handler.QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+
+  var fileUrl = fileHandler.getURLSpecFromFile(fp.file);
+  var uri = Components.classes["@mozilla.org/network/standard-url;1"].
+              createInstance(Components.interfaces.nsIURI);
+  fileUrl += "?type=x-message-display";
+  uri.spec = fileUrl;
+
+  MsgOpenNewWindowForMessage(uri, null);
 }
 
 function MsgOpenNewWindowForMessage(messageUri, folderUri)
