@@ -21,5 +21,5 @@
   -->
 
 <!ENTITY AdvancedEditButton.label "Advanced Edit...">
-<!ENTITY AdvancedEditButton.tooltip "Add or modify HTML and style attributes, and JavaScript events for this object">
+<!ENTITY AdvancedEditButton.tooltip "Add or modify HTML elements, style attributes, and JavaScript">
 <!ENTITY chooseButton.label "Choose File...">
