@@ -271,7 +271,7 @@ nsresult nsSharedPrefHandler::EnsureTransactionService()
   if (mTransService)
     return NS_OK;
   nsresult rv;
-  mTransService = do_GetService("@mozilla.org/transaction/service;1", &rv);
+  mTransService = do_GetService(IPC_TRANSACTIONSERVICE_CONTRACTID, &rv);
   return rv;
 }
 
