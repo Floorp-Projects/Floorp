@@ -729,7 +729,7 @@ PRBool nsEudoraMac::BuildPOPAccount( nsIMsgAccountManager *accMgr, nsCString **p
         pop3Server->SetLeaveMessagesOnServer(*pStrs[kLeaveOnServerStr][0] == 'Y' ? PR_TRUE : PR_FALSE);
 
         // Fiddle with the identities
-				SetIdentities( accMgr, account, pStrs);
+				SetIdentities(accMgr, account, *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), pStrs);
 				result = PR_TRUE;
 				if (ppAccount)
 					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
@@ -779,7 +779,7 @@ PRBool nsEudoraMac::BuildIMAPAccount( nsIMsgAccountManager *accMgr, nsCString **
 				IMPORT_LOG0( "Created an account and set the IMAP server as the incoming server\n");
 
 				// Fiddle with the identities
-				SetIdentities( accMgr, account, pStrs);
+				SetIdentities(accMgr, account, *(pStrs[kPopAccountNameStr]), *(pStrs[kPopServerStr]), pStrs);
 				result = PR_TRUE;
 				if (ppAccount)
 					account->QueryInterface( NS_GET_IID(nsIMsgAccount), (void **)ppAccount);
@@ -793,24 +793,34 @@ PRBool nsEudoraMac::BuildIMAPAccount( nsIMsgAccountManager *accMgr, nsCString **
 }
 
 
-void nsEudoraMac::SetIdentities( nsIMsgAccountManager *accMgr, nsIMsgAccount *acc, nsCString **pStrs)
+void nsEudoraMac::SetIdentities(nsIMsgAccountManager *accMgr, nsIMsgAccount *acc, const char *userName, const char *serverName, nsCString **pStrs)
 {
 	nsresult	rv;
 	
-	if (pStrs[kReturnAddressStr]->Length() && pStrs[kFullNameStr]->Length() && pStrs[kSmtpServerStr]->Length()) {
-		nsCOMPtr<nsIMsgIdentity>	id;
-		rv = accMgr->CreateIdentity( getter_AddRefs( id));
-		if (id) {
-			nsString	fullName; fullName.AssignWithConversion(*(pStrs[kFullNameStr]));
-			id->SetFullName( fullName.GetUnicode());
-			id->SetIdentityName( fullName.GetUnicode());
-			id->SetEmail( *(pStrs[kReturnAddressStr]));
-			acc->AddIdentity( id);
-
-			IMPORT_LOG0( "Created identity and added to the account\n");
-			IMPORT_LOG1( "\tname: %s\n", (const char *)(*(pStrs[kFullNameStr])));
-			IMPORT_LOG1( "\temail: %s\n", (const char *)(*(pStrs[kReturnAddressStr])));
+	nsCOMPtr<nsIMsgIdentity>	id;
+	rv = accMgr->CreateIdentity( getter_AddRefs( id));
+	if (id) {
+		nsAutoString fullName; 
+		if (pStrs[kFullNameStr]->Length()) {
+			fullName.AssignWithConversion(*(pStrs[kFullNameStr]));
 		}
+		id->SetFullName( fullName.GetUnicode());
+		id->SetIdentityName( fullName.GetUnicode());
+		if (pStrs[kReturnAddressStr]->Length()) {
+			id->SetEmail( *(pStrs[kReturnAddressStr]));
+		}
+		else {
+			nsCAutoString emailAddress;
+			emailAddress = userName;
+			emailAddress += "@";
+			emailAddress += serverName;
+			id->SetEmail(emailAddress.get()); 
+		}
+		acc->AddIdentity( id);
+
+		IMPORT_LOG0( "Created identity and added to the account\n");
+		IMPORT_LOG1( "\tname: %s\n", (const char *)(*(pStrs[kFullNameStr])));
+		IMPORT_LOG1( "\temail: %s\n", (const char *)(*(pStrs[kReturnAddressStr])));
 	}
 
 	SetSmtpServer( accMgr, acc, *(pStrs[kSmtpServerStr]), nsnull);
