@@ -49,7 +49,7 @@ else
 	CCC = gcc
 	AS = gcc
 	ASFLAGS += -x assembler-with-cpp
-	CFLAGS += -fdollars-in-identifiers 
+	CFLAGS += -fdollars-in-identifiers
 	EXC_FLAGS = -fexceptions
 	EF_LIBS = -L$(DIST)/lib -lEF 
 	EF_LIB_FILES = $(DIST)/lib/libEF.a
@@ -60,6 +60,10 @@ endif
 
 CFLAGS += $(EXC_FLAGS)
 #LDFLAGS += $(NSPR_LIBS)
+
+ifdef USE_JVMDI
+CFLAGS += -DUSE_JVMDI
+endif
 
 ifeq ($(CPU_ARCH),x86)
 ARCH_DEFINES	+= -DGENERATE_FOR_X86
@@ -88,10 +92,6 @@ endif
 
 ARCH_DEFINES	+= -DTARGET_CPU=$(CPU_ARCH)
 CFLAGS += $(ARCH_DEFINES)
-
-ifndef BATCH_COMPILATION
-CFLAGS += -DBATCH_COMPILATION=0
-endif
 
 #
 # Some tools.
