@@ -20,18 +20,17 @@
  *
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
- *     Sean Su <ssu@netscape.com>
  */
 
 
 //#include "nsError.h"
 //#include "prtypes.h"
 
-#define nsresult long
-
 #ifdef XP_MAC
 #include <Files.h>
 #endif
+
+#define nsresult long
 
 PR_BEGIN_EXTERN_C
 
@@ -69,24 +68,25 @@ typedef void     (*pfnXPIFinal)   (const char* URL, PRInt32 finalStatus);
  *  call XPI_Init() to initialize XPCOM and the XPInstall
  *  engine, and to pass in your callback functions.
  *
- *  @param aDir     directory to use as "program" directory. If NULL default
- *                  will be used -- the location of the calling executable.
- *                  Must be native filename format.
- *  @param startCB  Called when script started
- *  @param progressCB Called for each installed file
- *  @param finalCB  Called with status code at end
+ *  @param aXPIStubDir   [MAC only] directory of the xpistub shlb off of which
+ *                       the component manager derives the components directory.
+ *  @param aProgramDir   directory to use as "program" directory. If NULL default
+ *                       will be used -- the location of the calling executable.
+ *                       Must be native filename format.
+ *  @param startCB       Called when script started
+ *  @param progressCB    Called for each installed file
+ *  @param finalCB       Called with status code at end
  *
  *  @returns    XPCOM status code indicating success or failure
  */
 PR_EXTERN(nsresult) XPI_Init( 
 #ifdef XP_MAC
-                              const FSSpec&     aDir,
+                              const FSSpec&     aXPIStubDir,
+                              const FSSpec&     aProgramDir,
 #else
-                              const char*       aDir,
+                              const char*       aProgramDir,
 #endif
-                              pfnXPIStart       startCB, 
-                              pfnXPIProgress    progressCB,
-                              pfnXPIFinal       finalCB     );
+                              pfnXPIProgress    progressCB );
 
 /** XPI_Install
  *
@@ -95,8 +95,10 @@ PR_EXTERN(nsresult) XPI_Init(
  *  @param file     Native filename of XPI archive
  *  @param args     Install.arguments, if any
  *  @param flags    the old SmartUpdate trigger flags. This may go away
+ *
+ *  @returns status  Status from the installed archive
  */
-PR_EXTERN(nsresult) XPI_Install( 
+PR_EXTERN(PRInt32) XPI_Install( 
 #ifdef XP_MAC
                                  const FSSpec& file,
 #else
