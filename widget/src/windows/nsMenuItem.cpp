@@ -20,13 +20,11 @@
 #include "nsIMenu.h"
 
 #include "nsToolkit.h"
-//#include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
 #include <windows.h>
 
-//#include "nsIAppShell.h"
 #include "nsGUIEvent.h"
 #include "nsIMenu.h"
 #include "nsMenu.h"
@@ -43,8 +41,8 @@ static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-//NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
 
+//-------------------------------------------------------------------------
 nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
   if (NULL == aInstancePtr) {                                            
@@ -71,9 +69,9 @@ nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;                                                 
 }
 
+//-------------------------------------------------------------------------
 NS_IMPL_ADDREF(nsMenuItem)
 NS_IMPL_RELEASE(nsMenuItem)
-
 
 //-------------------------------------------------------------------------
 //
@@ -83,10 +81,12 @@ NS_IMPL_RELEASE(nsMenuItem)
 nsMenuItem::nsMenuItem() : nsIMenuItem()
 {
   NS_INIT_REFCNT();
-  mMenu     = nsnull;
-  mTarget   = nsnull;
-  mListener = nsnull;
+  mMenu        = nsnull;
+  mTarget      = nsnull;
+  mListener    = nsnull;
   mIsSeparator = PR_FALSE;
+  mWebShell    = nsnull;
+  mDOMElement  = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -96,9 +96,9 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 //-------------------------------------------------------------------------
 nsMenuItem::~nsMenuItem()
 {
-  //NS_IF_RELEASE(mMenu);
-  //NS_IF_RELEASE(mTarget);
-  //NS_IF_RELEASE(mListener);
+  NS_IF_RELEASE(mListener);
+  //NS_IF_RELEASE(mWebShell);
+  //NS_IF_RELEASE(mDOMElement);
 }
 
 //-------------------------------------------------------------------------
@@ -208,8 +208,7 @@ NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetLabel(nsString &aText)
 {
-   mLabel = aText;
-  
+  mLabel = aText;  
   return NS_OK;
 }
 
@@ -226,7 +225,6 @@ NS_METHOD nsMenuItem::GetTarget(nsIWidget *& aTarget)
 {
   aTarget = mTarget;
   //NS_ADDREF(mTarget);
-
   return NS_OK;
 }
 
@@ -236,6 +234,7 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
   aData = (void *)mMenu;
   return NS_OK;
 }
+
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
@@ -370,14 +369,14 @@ NS_IMETHODIMP nsMenuItem::DoCommand()
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
 {
-  mWebShell = do_QueryInterface(aWebShell);
+  mWebShell = aWebShell;
   return NS_OK;
 }
 
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
 {
-  mDOMElement = do_QueryInterface(aDOMElement);
+  mDOMElement = aDOMElement;
   return NS_OK;
 }
 
@@ -392,6 +391,7 @@ nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+  printf("nsMenuItem::MenuSelected called\n");
   //DoCommand();
   return nsEventStatus_eIgnore;
 }
@@ -399,6 +399,7 @@ nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
+  printf("nsMenuItem::MenuDeselected called\n");
   if (mListener) {
     mListener->MenuDeselected(aMenuEvent);
   }
@@ -412,6 +413,7 @@ nsEventStatus nsMenuItem::MenuConstruct(
     void              * menubarNode,
 	void              * aWebShell)
 {
+  printf("nsMenuItem::MenuConstruct called\n");
   if (mListener) {
     mListener->MenuSelected(aMenuEvent);
   }
@@ -421,6 +423,7 @@ nsEventStatus nsMenuItem::MenuConstruct(
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
+  printf("nsMenuItem::MenuDestruct called\n");
   if (mListener) {
     mListener->MenuDeselected(aMenuEvent);
   }

@@ -90,17 +90,17 @@ public:
 protected:
   nsIWidget * GetMenuBarParent(nsISupports * aParent);
 
-  nsString    mLabel;
-  PRUint32    mCommand;
-  nsIWidget * mTarget;
-  nsIMenu   * mMenu;
+  nsString          mLabel;
+  PRUint32          mCommand;
+  nsIWidget       * mTarget;
+  nsIMenu         * mMenu;
   nsIMenuListener * mListener;
-  PRInt32     mCmdId;
-  PRBool      mIsSeparator;
+  PRInt32           mCmdId;
+  PRBool            mIsSeparator;
 
-  nsString                 mCommandStr;
-  nsCOMPtr<nsIWebShell>    mWebShell;
-  nsCOMPtr<nsIDOMElement>  mDOMElement;
+  nsString          mCommandStr;
+  nsIWebShell   *   mWebShell;
+  nsIDOMElement *   mDOMElement;
 };
 
 #endif // nsMenuItem_h__
