@@ -25,6 +25,10 @@ $apprunner_log = 'smoketest.log';
 # this just once:
 $ENV{'MOZILLA_FIVE_HOME'}="$apprunner_bin";
 $ENV{'LD_LIBRARY_PATH'}="/usr/lib:/lib:$apprunner_bin";
+
+
+cwd $apprunner_bin;
+
 # here are a few subroutines we use:
 # get_build_date - look through navigator.xul for the build id (1999-04-18-08)
 #                  returns the string
@@ -186,6 +190,7 @@ sub test_url {
     $| = 1; # gotta love autoflushing
     local $reaperchild;
     local $url = shift || "";
+    if( $url ne "" ) { $url = "-url " .  $url; }
     local $run_time = 'E2-FAILED';
 
     if ( $reaperchild = fork ) {
