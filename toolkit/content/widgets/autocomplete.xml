@@ -669,6 +669,13 @@
         ]]></body>
       </method>
       
+      <method name="clearOpenProperty">
+        <parameter name="aPopupNode"/>
+        <body><![CDATA[
+          aPopupNode.mPopupOpen = false;
+        ]]></body>
+      </method>
+
     </implementation>
 
     <handlers>
@@ -677,7 +684,7 @@
       </handler>
 
       <handler event="popuphiding">
-        this.mPopupOpen = false;
+        setTimeout(this.clearOpenProperty, 0, this);
         this.mInput.maxRows = 6;
       </handler>
     </handlers>
@@ -753,7 +760,9 @@
       <method name="showPopup">
         <body><![CDATA[
           var textbox = document.getBindingParent(this);
-          textbox.showHistoryPopup();
+          if (!textbox.popup.mPopupOpen) { 
+            textbox.showHistoryPopup();
+          }
         ]]></body>
       </method>
     </implementation>
