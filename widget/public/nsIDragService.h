@@ -26,7 +26,7 @@ class nsIDragSource;
 class nsIImage;
 
 // {8B5314BB-DB01-11d2-96CE-0060B0FB9956}
-#define NS_IDRAGSESSION_IID      \
+#define NS_IDRAGSERVICE_IID      \
 { 0x8b5314bb, 0xdb01, 0x11d2, { 0x96, 0xce, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
 
 

@@ -38,7 +38,7 @@ class nsITransferable : public nsISupports {
     *
     * @param  aDataFlavorList fills list with supported flavors
     */
-    NS_IMETHOD GetTransferDataFlavors(nsISupportsArray * aDataFlavorList) = 0;
+    NS_IMETHOD GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList) = 0;
 
   /**
     * See if the given flavor is supported  
@@ -53,16 +53,34 @@ class nsITransferable : public nsISupports {
     *
     * @param  aFlavor the flavor of data to retrieve
     * @param  aData the data
+    * @param  aDataLen the length of the data
     */
-    NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, nsISupports ** aData) = 0;
+    NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, void ** aData, PRUint32 * aDataLen) = 0;
 
   /**
-    * Sets data
+    * Set Data into the transferable as a specified DataFlavor
+    *
+    * @param  aFlavor the flavor of data that is being set
+    * @param  aData the data 
+    * @param  aDataLen the length of the data (it may or may not be meaningful)
+    */
+    NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen) = 0;
+
+  /**
+    * Convience method for setting string data into the transferable
     *
     * @param  aFlavor the flavor of data to retrieve
     * @param  aData the data
     */
-    NS_IMETHOD SetTransferData(const nsString & aStr) = 0;
+    NS_IMETHOD SetTransferString(const nsString & aStr) = 0;
+
+  /**
+    * Convience method for getting string data from the transferable
+    *
+    * @param  aFlavor the flavor of data to retrieve
+    * @param  aData the data
+    */
+    NS_IMETHOD GetTransferString(nsString & aStr) = 0;
 
   /**
     * Initializes the data flavor 
@@ -72,25 +90,6 @@ class nsITransferable : public nsISupports {
     */
     NS_IMETHOD AddDataFlavor(const nsString & aMimeType, const nsString & aHumanPresentableName) = 0;
 
-  /**
-    * Returns the Platform specific data object
-    *
-    * @param  aData the native data to be put on the clipboard
-    */
-    NS_IMETHOD GetNativeData(void ** aData) = 0;
-
-  /**
-    * Tells the transferrable, that now is the time to set the data on the native clipboard
-    *
-    */
-    NS_IMETHOD SetNativeClipboard() = 0;
-
-  /**
-    * Sets Native data 
-    *
-    * @param  aData the native data
-    */
-    NS_IMETHOD SetNativeData(void * aData) = 0;
 };
 
 #endif

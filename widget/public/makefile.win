@@ -22,6 +22,7 @@ DEFINES=-D_IMPL_NS_UI
 MODULE=raptor 
 
 EXPORTS=nsui.h \
+  nsIClipboardOwner.h \
   nsIClipboard.h \
   nsIDragTarget.h \
   nsIDragSource.h \
