@@ -40,8 +40,6 @@ nsRDFResource::nsRDFResource(void)
 
 nsRDFResource::~nsRDFResource(void)
 {
-    nsresult rv = NS_OK;
-    
     gRDFService->UnregisterResource(this);
 
     // N.B. that we need to free the URI *after* we un-cache the resource,

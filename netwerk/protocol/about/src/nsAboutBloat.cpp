@@ -108,7 +108,6 @@ nsAboutBloat::NewChannel(const char *verb,
             dumpFileName += "all-";
         else
             dumpFileName += "new-";
-        PRTime now = PR_Now();
         PRExplodedTime expTime;
         PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &expTime);
         char time[128];
