@@ -86,4 +86,5 @@ private:
   ImageData *mAlphaData;
 
   PRBool mInitalized;
+  PRInt32 mTimeout;
 };
