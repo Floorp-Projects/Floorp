@@ -25,6 +25,7 @@ public class UserPrefs {
   String fUserName;
   String fUserEmailAddress;
   String fUserOrganization;
+  String fSignatureFile;
 
   public String getUserName() {
     return fUserName;
@@ -50,12 +51,21 @@ public class UserPrefs {
     fUserOrganization = aOrganization;
   }
 
+  public String getSignatureFile() {
+    return fSignatureFile;
+  }
+
+  public void setSignatureFile(String file) {
+    fSignatureFile = file;
+  }
+
   public boolean equals(Object aObject) {
     if (aObject instanceof UserPrefs) {
       UserPrefs prefs = (UserPrefs) aObject;
       return prefs.fUserName.equals(fUserName) &&
         prefs.fUserEmailAddress.equals(fUserEmailAddress) &&
-        prefs.fUserOrganization.equals(fUserOrganization);
+        prefs.fUserOrganization.equals(fUserOrganization) &&
+        prefs.fSignatureFile.equals(fSignatureFile);
     }
     return false;
   }

@@ -21,6 +21,8 @@
 
 package grendel.prefs;
 
+import java.io.File;
+
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Rectangle;
@@ -47,6 +49,8 @@ import java.util.ResourceBundle;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JFileChooser;
+import javax.swing.text.JTextComponent;
 
 import grendel.ui.XMLPageBuilder;
 import grendel.ui.PageModel;
@@ -63,6 +67,8 @@ public class UserPrefsEditor
   static final String kNameKey="userNameField";
   static final String kOrganizationKey="userOrganizationField";
   static final String kEmailAddressKey="userEmailAddressField";
+  static final String kSignatureKey = "signatureField";
+  static final String kChooseKey = "signatureButton";
 
   Hashtable fValues = null;
 
@@ -76,10 +82,26 @@ public class UserPrefsEditor
       fValues.put(kNameKey, "");
       fValues.put(kOrganizationKey, "");
       fValues.put(kEmailAddressKey, "");
+      fValues.put(kSignatureKey, "");
       setStore(fValues);
     }
 
+    // this is where you handle the magic of buttons in this page
     public void actionPerformed(ActionEvent aEvent) {
+      String action = aEvent.getActionCommand();
+
+      if (action.equals(kChooseKey)) {
+        JFileChooser chooser = new JFileChooser();
+        File selected;
+        String path;
+        chooser.showDialog(fPanel, "Okay");
+        selected = chooser.getSelectedFile();
+        path = selected.getAbsolutePath();
+        ((JTextComponent)
+         fPanel.getCtrlByName(kSignatureKey)).setText(path);
+        fPrefs.setSignatureFile(path);
+        fListeners.firePropertyChange(null, null, fPrefs);
+      }
     }
   }
 
@@ -101,6 +123,9 @@ public class UserPrefsEditor
     c.addPropertyChangeListener(ca);
 
     c = fPanel.getCtrlByName(kEmailAddressKey);
+    c.addPropertyChangeListener(ca);
+
+    c = fPanel.getCtrlByName(kSignatureKey);
     c.addPropertyChangeListener(ca);
   }
 
@@ -126,10 +151,12 @@ public class UserPrefsEditor
     String name = (String) fValues.get(kNameKey);
     String org = (String) fValues.get(kOrganizationKey);
     String email = (String) fValues.get(kEmailAddressKey);
+    String sig = (String)fValues.get(kSignatureKey);
 
     fPrefs.setUserName(name);
     fPrefs.setUserOrganization(org);
     fPrefs.setUserEmailAddress(email);
+    fPrefs.setSignatureFile(sig);
 
     return fPrefs;
   }

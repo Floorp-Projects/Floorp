@@ -39,6 +39,7 @@ public class Prefs {
   static final String kUserName = "mail.identity-0.username";
   static final String kOrganization = "mail.identity-0.organization";
   static final String kEmailAddress = "mail.identity-0.email";
+  static final String kSignatureFile = "mail.identity-0.signature";
   //static final String kPopHost = "pop.host";
   //static final String kPopUser = "pop.user";
   //static final String kPopPassword = "pop.password";
@@ -62,6 +63,7 @@ public class Prefs {
     fPrefs.putString(kUserName, aPrefs.getUserName());
     fPrefs.putString(kEmailAddress, aPrefs.getUserEmailAddress());
     fPrefs.putString(kOrganization, aPrefs.getUserOrganization());
+    fPrefs.putString(kSignatureFile, aPrefs.getSignatureFile());
   }
 
   public MailServerPrefs getMailServerPrefs() {
