@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Mike Pinkerton (pinkerton@netscape.com)
+ *   Mark Hammond (MarkH@ActiveState.com)
  */
 
 #include "nsDragService.h"
@@ -185,23 +187,34 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
   if ( !mDataObject )
     return NS_ERROR_FAILURE;
 
+  nsresult dataFound = NS_ERROR_FAILURE;
+
   if ( IsCollectionObject(mDataObject) ) {
     // multiple items, use |anItem| as an index into our collection
     nsDataObjCollection * dataObjCol = NS_STATIC_CAST(nsDataObjCollection*, mDataObject);
     PRUint32 cnt = dataObjCol->GetNumDataObjects();   
     if (anItem >= 0 && anItem < cnt) {
       IDataObject * dataObj = dataObjCol->GetDataObjectAt(anItem);
-      return nsClipboard::GetDataFromDataObject(dataObj, 0, nsnull, aTransferable);
+      dataFound = nsClipboard::GetDataFromDataObject(dataObj, 0, nsnull, aTransferable);
     }
+    else
+      NS_WARNING ( "Index out of range!" );
   }
   else {
-    // Since there is only one object, they better be asking for item "0"
+    // If they are asking for item "0", we can just get it...
     if (anItem == 0) 
-      return nsClipboard::GetDataFromDataObject(mDataObject, anItem, nsnull, aTransferable);
-    else
-      return NS_ERROR_FAILURE;
+       dataFound = nsClipboard::GetDataFromDataObject(mDataObject, anItem, nsnull, aTransferable);
+    else {
+      // It better be a file drop, or else non-zero indexes are invalid!
+      FORMATETC fe2;
+      SET_FORMATETC(fe2, CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+      if ( mDataObject->QueryGetData(&fe2) == S_OK )
+        dataFound = nsClipboard::GetDataFromDataObject(mDataObject, anItem, nsnull, aTransferable);
+      else
+        NS_WARNING ( "Reqesting non-zero index, but clipboard data is not a collection!" );
+    }
   }
-  return NS_ERROR_FAILURE;
+  return dataFound;
 }
 
 //---------------------------------------------------------
