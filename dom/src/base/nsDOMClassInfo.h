@@ -237,8 +237,9 @@ protected:
   static JSString *sDocument_id;
   static JSString *sWindow_id;
 
-
   static const JSClass *sObjectClass;
+
+  static PRBool sDoSecurityCheckInAddProperty;
 };
 
 typedef nsDOMClassInfo nsDOMGenericSH;
@@ -333,8 +334,31 @@ public:
   {
     return new nsWindowSH(aData);
   }
+};
 
-  static PRBool sDoSecurityCheckInAddProperty;
+
+// Location scriptable helper
+
+class nsLocationSH : public nsDOMGenericSH
+{
+protected:
+  nsLocationSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsLocationSH()
+  {
+  }
+
+public:
+  NS_IMETHOD CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, PRUint32 mode,
+                         jsval *vp, PRBool *_retval);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsLocationSH(aData);
+  }
 };
 
 
@@ -538,6 +562,10 @@ public:
   }
 
 public:
+  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);

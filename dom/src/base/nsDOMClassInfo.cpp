@@ -326,6 +326,11 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 #define ELEMENT_SCRIPTABLE_FLAGS                                              \
   (NODE_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
 
+#define DOCUMENT_SCRIPTABLE_FLAGS                                             \
+  (NODE_SCRIPTABLE_FLAGS |                                                    \
+   nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
+   nsIXPCScriptable::WANT_DELPROPERTY)
+
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
   (DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
   nsIXPCScriptable::WANT_GETPROPERTY)
@@ -387,8 +392,12 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            nsIXPCScriptable::WANT_DELPROPERTY |
                            nsIXPCScriptable::WANT_ENUMERATE |
                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
-  NS_DEFINE_CLASSINFO_DATA(Location, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  // Don't allow modifications to Location.prototype
+  NS_DEFINE_CLASSINFO_DATA(Location, nsLocationSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS &
+                           ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE)
+
   NS_DEFINE_CLASSINFO_DATA(Navigator, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Plugin, nsPluginSH,
@@ -408,7 +417,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // Core classes
   NS_DEFINE_CLASSINFO_DATA(XMLDocument, nsDocumentSH,
-                           NODE_SCRIPTABLE_FLAGS |
+                           DOCUMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_ENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(DocumentType, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
@@ -451,7 +460,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // Misc HTML classes
   NS_DEFINE_CLASSINFO_DATA(HTMLDocument, nsHTMLDocumentSH,
-                           NODE_SCRIPTABLE_FLAGS |
+                           DOCUMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_GETPROPERTY |
                            nsIXPCScriptable::WANT_ENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(HTMLCollection, nsHTMLCollectionSH,
@@ -628,7 +637,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // XUL classes
   NS_DEFINE_CLASSINFO_DATA(XULDocument, nsDocumentSH,
-                           NODE_SCRIPTABLE_FLAGS |
+                           DOCUMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_ENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(XULElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -660,7 +669,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #ifdef MOZ_SVG
   // SVG document
   NS_DEFINE_CLASSINFO_DATA(SVGDocument, nsDocumentSH,
-                           NODE_SCRIPTABLE_FLAGS)
+                           DOCUMENT_SCRIPTABLE_FLAGS)
 
   // SVG element classes
   NS_DEFINE_CLASSINFO_DATA(SVGSVGElement, nsElementSH,
@@ -760,18 +769,20 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  // DOM Chrome Window class
+  // DOM Chrome Window class. Don't allow modifications to a chrome
+  // window's prototype
   NS_DEFINE_CLASSINFO_DATA(ChromeWindow, nsWindowSH,
-                           DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_GETPROPERTY |
-                           nsIXPCScriptable::WANT_SETPROPERTY |
-                           nsIXPCScriptable::WANT_NEWRESOLVE |
-                           nsIXPCScriptable::WANT_PRECREATE |
-                           nsIXPCScriptable::WANT_FINALIZE |
-                           nsIXPCScriptable::WANT_ADDPROPERTY |
-                           nsIXPCScriptable::WANT_DELPROPERTY |
-                           nsIXPCScriptable::WANT_ENUMERATE |
-                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
+                           (DEFAULT_SCRIPTABLE_FLAGS |
+                            nsIXPCScriptable::WANT_GETPROPERTY |
+                            nsIXPCScriptable::WANT_SETPROPERTY |
+                            nsIXPCScriptable::WANT_NEWRESOLVE |
+                            nsIXPCScriptable::WANT_PRECREATE |
+                            nsIXPCScriptable::WANT_FINALIZE |
+                            nsIXPCScriptable::WANT_ADDPROPERTY |
+                            nsIXPCScriptable::WANT_DELPROPERTY |
+                            nsIXPCScriptable::WANT_ENUMERATE |
+                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE) &
+                           ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE)
 
   NS_DEFINE_CLASSINFO_DATA(CSSRGBColor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -844,6 +855,8 @@ JSString *nsDOMClassInfo::sWindow_id          = nsnull;
 
 const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
 
+PRBool nsDOMClassInfo::sDoSecurityCheckInAddProperty = PR_TRUE;
+
 
 static inline JSObject *
 GetGlobalJSObject(JSContext *cx, JSObject *obj)
@@ -856,7 +869,6 @@ GetGlobalJSObject(JSContext *cx, JSObject *obj)
 
   return obj;
 }
-
 
 // static
 nsresult
@@ -958,12 +970,13 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
   if (!xs)
     return NS_ERROR_FAILURE;
 
-  nsresult rv;
   nsCOMPtr<nsIExceptionManager> xm;
-  rv = xs->GetCurrentExceptionManager(getter_AddRefs(xm));
+  nsresult rv = xs->GetCurrentExceptionManager(getter_AddRefs(xm));
   NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIException> exception;
   rv = xm->GetExceptionFromProvider(aResult, 0, getter_AddRefs(exception));
+
   jsval jv;
   rv = WrapNative(cx, ::JS_GetGlobalObject(cx), exception, 
                   NS_GET_IID(nsIException), &jv);
@@ -2481,8 +2494,12 @@ nsDOMClassInfo::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                             JSObject *obj, jsval id, PRUint32 mode,
                             jsval *vp, PRBool *_retval)
 {
-  if ((mode == JSACC_WATCH || mode == JSACC_PROTO || mode == JSACC_PARENT) &&
-      sSecMan) {
+  PRUint32 mode_type = mode & JSACC_TYPEMASK;
+
+  if ((mode_type == JSACC_WATCH ||
+       mode_type == JSACC_PROTO ||
+       mode_type == JSACC_PARENT)
+      && sSecMan) {
 
     JSObject *real_obj = nsnull;
     nsresult rv = wrapper->GetJSObject(&real_obj);
@@ -2767,9 +2784,6 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
 
 // Window helper
 
-// static
-PRBool nsWindowSH::sDoSecurityCheckInAddProperty = PR_TRUE;
-
 nsresult
 nsWindowSH::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
                                   nsIXPConnectWrappedNative *wrapper,
@@ -2987,6 +3001,13 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
+  if (id == STRING_TO_JSVAL(sLocation_id)) {
+    // Don't allow adding a window.location setter or getter, allowing
+    // that could lead to security bugs (see bug 143369).
+
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsresult rv =
     doCheckPropertyAccess(cx, obj, id, wrapper,
                           nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
@@ -3006,6 +3027,12 @@ nsWindowSH::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, jsval *vp,
                         PRBool *_retval)
 {
+  if (id == STRING_TO_JSVAL(sLocation_id)) {
+    // Don't allow deleting window.location, allowing that could lead
+    // to security bugs (see bug 143369).
+
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   nsresult rv =
     doCheckPropertyAccess(cx, obj, id, wrapper,
@@ -3055,7 +3082,9 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfoCreator) {
-    nsCOMPtr<nsIDOMCIExtension> creator(do_CreateInstance(name_struct->mCID, &rv));
+    nsCOMPtr<nsIDOMCIExtension> creator =
+      do_CreateInstance(name_struct->mCID, &rv);
+
     if (NS_FAILED(rv)) {
       nsDOMClassInfo::ThrowJSException(cx, rv);
       NS_ERROR("Couldn't create the DOMCI extender");
@@ -3738,40 +3767,56 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                        0,
                                        PR_FALSE,
                                        (void **) &getterObj);
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-      if (getterObj)
-        if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                   ::JS_GetStringLength(str), JSVAL_VOID, (JSPropertyOp)getterObj, nsnull,
-                                   JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED))
-          return NS_ERROR_FAILURE;
+      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && getterObj, NS_ERROR_FAILURE);
+
+      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                 ::JS_GetStringLength(str), JSVAL_VOID,
+                                 (JSPropertyOp)getterObj, nsnull,
+                                 JSPROP_ENUMERATE | JSPROP_GETTER |
+                                 JSPROP_SHARED)) {
+        return NS_ERROR_FAILURE;
+      }
+
       *objp = obj;
+
+      return NS_OK;
+    }
+
+    if (str == sLocation_id) {
+      // This must be done even if we're just getting the value of
+      // window.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
+      // here) since we must define window.location to prevent the
+      // getter from being overriden (for security reasons).
+
+      nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(native));
+      NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
+
+      nsCOMPtr<nsIDOMLocation> location;
+      rv = window->GetLocation(getter_AddRefs(location));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      jsval v;
+      rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), &v);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      sDoSecurityCheckInAddProperty = PR_FALSE;
+
+      JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                        ::JS_GetStringLength(str), v, nsnull,
+                                        nsnull, 0);
+
+      sDoSecurityCheckInAddProperty = PR_TRUE;
+
+      if (!ok) {
+        return NS_ERROR_FAILURE;
+      }
+
+      *objp = obj;
+
       return NS_OK;
     }
 
     if (flags & JSRESOLVE_ASSIGNING) {
-      if (str == sLocation_id) {
-        nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(native));
-        NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
-
-        nsCOMPtr<nsIDOMLocation> location;
-        rv = window->GetLocation(getter_AddRefs(location));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        jsval v;
-        rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), &v);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                   ::JS_GetStringLength(str), v, nsnull,
-                                   nsnull, 0)) {
-          return NS_ERROR_FAILURE;
-        }
-
-        *objp = obj;
-
-        return NS_OK;
-      }
-
       if (IsReadonlyReplaceable(str) ||
           (!(flags & JSRESOLVE_QUALIFIED) && IsWritableReplaceable(str))) {
         // A readonly "replaceable" property is being set, or a
@@ -3863,6 +3908,26 @@ nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
 
   return sgo->OnFinalize(obj);
+}
+
+
+// DOM Location helper
+
+NS_IMETHODIMP
+nsLocationSH::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, jsval id, PRUint32 mode,
+                          jsval *vp, PRBool *_retval)
+{
+  if ((mode & JSACC_TYPEMASK) == JSACC_PROTO && (mode & JSACC_WRITE)) {
+    // No setting location.__proto__, ever!
+
+    // Let XPConnect know that the access was not granted.
+    *_retval = PR_FALSE;
+
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  return nsDOMGenericSH::CheckAccess(wrapper, cx, obj, id, mode, vp, _retval);
 }
 
 
@@ -4411,46 +4476,88 @@ nsFormControlListSH::GetNamedItem(nsISupports *aNative,
 // Document helper for document.location and document.on*
 
 NS_IMETHODIMP
+nsDocumentSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, jsval id, jsval *vp,
+                          PRBool *_retval)
+{
+  // If we're in a state where we're not supposed to do a security
+  // check, return early.
+  if (!sDoSecurityCheckInAddProperty) {
+    return NS_OK;
+  }
+
+  if (id == STRING_TO_JSVAL(sLocation_id)) {
+    // Don't allow adding a document.location setter or getter, allowing
+    // that could lead to security bugs (see bug 143369).
+
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentSH::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                          JSObject *obj, jsval id, jsval *vp,
+                          PRBool *_retval)
+{
+  if (id == STRING_TO_JSVAL(sLocation_id)) {
+    // Don't allow deleting document.location, allowing that could lead
+    // to security bugs (see bug 143369).
+
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, PRUint32 flags,
                          JSObject **objp, PRBool *_retval)
 {
-  if (flags & JSRESOLVE_ASSIGNING && JSVAL_IS_STRING(id)) {
+  if (id == STRING_TO_JSVAL(sLocation_id)) {
+    // This must be done even if we're just getting the value of
+    // document.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
+    // here) since we must define document.location to prevent the
+    // getter from being overriden (for security reasons).
+
     JSString *str = JSVAL_TO_STRING(id);
+    nsCOMPtr<nsISupports> native;
+    wrapper->GetNative(getter_AddRefs(native));
+    NS_ENSURE_TRUE(native, NS_ERROR_UNEXPECTED);
 
-    if (str == sLocation_id) {
-      nsCOMPtr<nsISupports> native;
-      wrapper->GetNative(getter_AddRefs(native));
-      NS_ENSURE_TRUE(native, NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(native));
+    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-      nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(native));
-      NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsIDOMLocation> location;
+    nsresult rv = doc->GetLocation(getter_AddRefs(location));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsIDOMLocation> location;
+    jsval v;
 
-      nsresult rv = doc->GetLocation(getter_AddRefs(location));
-      NS_ENSURE_SUCCESS(rv, rv);
+    rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), &v);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      jsval v;
+    sDoSecurityCheckInAddProperty = PR_FALSE;
 
-      rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), &v);
-      NS_ENSURE_SUCCESS(rv, rv);
+    JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                      ::JS_GetStringLength(str), v, nsnull,
+                                      nsnull, 0);
 
-      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                 ::JS_GetStringLength(str), v, nsnull,
-                                 nsnull, 0)) {
-        return NS_ERROR_FAILURE;
-      }
+    sDoSecurityCheckInAddProperty = PR_TRUE;
 
-      *objp = obj;
-
-      return NS_OK;
+    if (!ok) {
+      return NS_ERROR_FAILURE;
     }
+
+    *objp = obj;
+
+    return NS_OK;
   }
 
   return nsNodeSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
 }
-
 
 NS_IMETHODIMP
 nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
