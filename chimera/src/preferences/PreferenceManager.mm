@@ -9,6 +9,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsString.h"
+#include "nsEmbedAPI.h"
 
 extern const char *prefContractID;
 
@@ -53,7 +54,9 @@ extern const char *prefContractID;
 
 - (BOOL) initMozillaPrefs
 {
-    nsresult rv;
+  nsresult rv = NS_InitEmbedding(nsnull, nsnull);
+  if (NS_FAILED(rv))
+    return NO;
 
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *path = [mainBundle bundlePath];
