@@ -34,15 +34,18 @@
   <tree id="tree" datasources="rdf:null" flex="1">
     <template>
       <treechildren>
-        <treeitem uri="..." type="rdf:urn:http-index-format:File-Type">
+        <!-- We force the 'container="true"' onto the treeitem, even
+             though this _should_ be a value that is computed by the
+             template engine. We need to hack it this way because,
+             if we don't, the tree control will assume that the item
+             shouldn't have a twisty next to it -->
+        <treeitem uri="..." type="rdf:urn:http-index-format:File-Type" container="true">
           <treerow>
-            <treecell class="filename">
-              <treeindentation/>
-              <titledbutton class="twisty" treeallowevents="true" />
-              <text value="rdf:urn:http-index-format:Filename"/>
-            </treecell>
-            <treecell><text value="rdf:urn:http-index-format:Content-Length"/></treecell>
-            <treecell><text value="rdf:urn:http-index-format:Last-Modified"/></treecell>
+            <treecell class="filename" indent="true"
+                      value="rdf:urn:http-index-format:Filename"/>
+
+            <treecell value="rdf:urn:http-index-format:Content-Length" />
+            <treecell value="rdf:urn:http-index-format:Last-Modified" />
           </treerow>
         </treeitem>
       </treechildren>

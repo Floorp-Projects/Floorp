@@ -59,8 +59,9 @@ function OnClick(event)
         // <treeitem>
         //   <treerow>
         //     <treecell>
-        //       <titledbutton class="twisty">
-        var treeitem = event.target.parentNode.parentNode.parentNode;
+        //       <box> <!-- anonymous -->
+        //         <titledbutton class="twisty"> <!-- anonymous -->
+        var treeitem = event.target.parentNode.parentNode.parentNode.parentNode;
         ToggleOpenState(treeitem);
     }
     else {
@@ -107,13 +108,6 @@ function ToggleOpenState(treeitem)
     debug('ToggleOpenState(' + treeitem.tagName + ')');
 
     if (treeitem.getAttribute('open') == 'true') {
-        debug('...closing\n');
-        treeitem.removeAttribute('open');
-    }
-    else {
-        debug('...opening\n');
-        treeitem.setAttribute('open', 'true');
-
         var url = treeitem.getAttribute('id');
         ReadDirectory(url);
     }
