@@ -72,7 +72,7 @@
 <!ENTITY insertMenu.label ".Insert">
 
 <!-- Format menu items -->
-<!ENTITY formatMenu.label ".Format">
+<!ENTITY formatMenu.label "Format">
 
 <!-- Message menu items -->
 <!ENTITY messageMenu.label "Message">
