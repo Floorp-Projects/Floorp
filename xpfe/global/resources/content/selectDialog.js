@@ -120,27 +120,17 @@ function AppendStringToTreelist(tree, string)
 {
   if (tree)
   {
-    var treechildren = tree.firstChild;
-    if (!treechildren)
-    {
-      treechildren = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treechildren");
-      if (treechildren)
-        tree.appendChild(treechildren);
-      else
-      {
-        dump("Failed to create <treechildren>\n");
-        return null;
-      }
-    }
+    var treechildren = document.getElementById('child');
+    
     var treeitem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treeitem");
     var treerow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treerow");
     var treecell = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treecell");
     if (treeitem && treerow && treecell)
     {
+      treecell.setAttribute("value", string);
       treerow.appendChild(treecell);
       treeitem.appendChild(treerow);
       treechildren.appendChild(treeitem)
-      treecell.setAttribute("value", string);
       var len = Number(tree.getAttribute("length"));
       if (!len) len = -1;
       tree.setAttribute("length",len+1);

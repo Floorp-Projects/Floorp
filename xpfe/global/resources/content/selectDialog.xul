@@ -36,7 +36,12 @@ Contributor(s): ______________________________________. -->
   <box align="vertical" style="width: 24em;margin: 5px;">
     <text id="info.txt" class="label"/>
     <box orient="vertical">
-      <tree rows="4" class="list" id="list" flex="1"/>
+      <tree rows="4" class="list" id="list" flex="1">
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren flex="1" id="child"/>
+      </tree>
     </box>
   </box>
   <box id="okCancelButtons"/>
