@@ -2257,37 +2257,51 @@ nsWebShell:: GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 
   static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 
+  
   nsresult rv;
-  NS_WITH_SERVICE(nsIGlobalHistory, history, kGlobalHistoryCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    // XXX aURLSpec should really be a char*, not a PRUnichar*.
-    nsAutoString urlStr(aURLSpec);
 
-    char buf[256];
-    char* url = buf;
+  nsIGlobalHistory* history;
+  rv = nsServiceManager::GetService(kGlobalHistoryCID,
+                                    nsIGlobalHistory::GetIID(),
+                                    (nsISupports**) &history);
 
-    if (urlStr.Length() >= sizeof(buf)) {
-      url = new char[urlStr.Length() + 1];
-      if (! url) return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (NS_FAILED(rv))
+    return NS_OK; // XXX Okay, we couldn't color the link. Big deal.
 
+  // XXX aURLSpec should really be a char*, not a PRUnichar*.
+  nsAutoString urlStr(aURLSpec);
+
+  char buf[256];
+  char* url = buf;
+
+  if (urlStr.Length() >= sizeof(buf)) {
+    url = new char[urlStr.Length() + 1];
+  }
+
+  PRInt64 lastVisitDate;
+
+  if (url) {
     urlStr.ToCString(url, urlStr.Length() + 1);
 
-    PRInt64 lastVisitDate;
     rv = history->GetLastVisitDate(url, &lastVisitDate);
 
     if (url != buf)
       delete[] url;
-
-    if (NS_FAILED(rv)) return rv;
-
-    // a last-visit-date of zero means we've never seen it before; so
-    // if it's not zero, we must've seen it.
-    if (! LL_IS_ZERO(lastVisitDate))
-      aState = eLinkState_Visited;
-
-    // XXX how to tell if eLinkState_OutOfDate?
   }
+  else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsServiceManager::ReleaseService(kGlobalHistoryCID, history);
+
+  if (NS_FAILED(rv)) return rv;
+
+  // a last-visit-date of zero means we've never seen it before; so
+  // if it's not zero, we must've seen it.
+  if (! LL_IS_ZERO(lastVisitDate))
+    aState = eLinkState_Visited;
+
+  // XXX how to tell if eLinkState_OutOfDate?
 
   return NS_OK;
 }
