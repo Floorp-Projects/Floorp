@@ -3856,16 +3856,6 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
   }
 
-  // XXX - Hack to fix the crash reported in bug 197015; Once the real 
-  // problem, in CSSLoader, is fixed then this hack could be removed.
-  // Close the head context, that got opened up by the link tag, because
-  // our CSSLoader, on loading the linked style sheet, calls the parser's
-  // ContinueParsing() even if the parser is not  blocked and that causes 
-  // the sink, whose current context is head, to go haywire. 
-  // Note: CSS loading is initiated before unwinding off this stack and 
-  // therefore the sink never got the chance to close its head context.
-  CloseHeadContext();
-
   if (parent) {
     // Create content object
     nsCOMPtr<nsIContent> element;
