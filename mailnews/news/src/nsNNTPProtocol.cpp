@@ -697,16 +697,10 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsresult rv = NS_OK;
 
   // if this connection comes from the cache, we need to initialize the
-  // load group here, by generating the start request notification.
+  // load group here, by generating the start request notification. nsMsgProtocol::OnStartRequest
+  // ignores the first parameter (which is supposed to be the channel) so we'll pass in null.
   if (m_fromCache)
-  {
-	  if (m_channelListener)
-	  {
-          if (!m_channelContext)
-	          m_channelContext = do_QueryInterface(aURL);
-		  rv = m_channelListener->OnStartRequest(this, m_channelContext);
-	  }
-  }
+    nsMsgProtocol::OnStartRequest(nsnull, aURL);
 
   m_articleNumber = -1;
   rv = aURL->GetHost(getter_Copies(m_hostName));
@@ -5085,9 +5079,16 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
   
   nsresult rv = NS_OK;
 
+
+  m_connectionBusy = PR_FALSE;
+  // send StopRequest notification after we've cleaned up the protocol
+  // because it can synchronously causes a new url to get run in the
+  // protocol - truly evil, but we're stuck at the moment.
+	if (m_channelListener)
+		rv = m_channelListener->OnStopRequest(this, m_channelContext, NS_OK, nsnull);
+
 	if (m_loadGroup)
 		m_loadGroup->RemoveChannel(NS_STATIC_CAST(nsIChannel *, this), nsnull, NS_OK, nsnull);
-
 	if (m_newsgroupList)
 	{
 		int status;
@@ -5102,40 +5103,30 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
       /* NS_RELEASE(m_newsgroup->GetNewsgroupList()); */
 	}
 
-    PR_FREEIF(m_path);
-    PR_FREEIF(m_responseText);
-    PR_FREEIF(m_dataBuf);
+  PR_FREEIF(m_path);
+  PR_FREEIF(m_responseText);
+  PR_FREEIF(m_dataBuf);
 
-    PR_FREEIF(m_cancelNewsgroups);
-    m_cancelNewsgroups = nsnull;
-    PR_FREEIF(m_cancelDistribution);
-    m_cancelDistribution = nsnull;
-    PR_FREEIF(m_cancelFromHdr);
-    m_cancelFromHdr = nsnull;
-    PR_FREEIF(m_cancelID);  
-    m_cancelID = nsnull;
-    
-  mDisplayInputStream = nsnull;
-  mDisplayOutputStream = nsnull;
-  m_loadGroup = nsnull;
-  mProgressEventSink = nsnull;
-  SetOwner(nsnull);
-
-	m_runningURL = null_nsCOMPtr();
-  m_url = null_nsCOMPtr();
-  m_originalUrl = null_nsCOMPtr();
-
-  nsCOMPtr <nsISupports> saveChannelContext = m_channelContext;
-  nsCOMPtr<nsIStreamListener> saveChannelListener = m_channelListener;
-  m_channelContext = nsnull;
-  m_channelListener = nsnull;
-  // send StopRequest notification after we've cleaned up the protocol
-  // because it can synchronously causes a new url to get run in the
-  // protocol - truly evil, but we're stuck at the moment.
-	if (saveChannelListener)
-		rv = saveChannelListener->OnStopRequest(this, saveChannelContext, NS_OK, nsnull);
+  PR_FREEIF(m_cancelNewsgroups);
+  m_cancelNewsgroups = nsnull;
+  PR_FREEIF(m_cancelDistribution);
+  m_cancelDistribution = nsnull;
+  PR_FREEIF(m_cancelFromHdr);
+  m_cancelFromHdr = nsnull;
+  PR_FREEIF(m_cancelID);  
+  m_cancelID = nsnull;
   
-  m_connectionBusy = PR_FALSE;
+  if (!m_connectionBusy)
+  {
+    mDisplayInputStream = nsnull;
+    mDisplayOutputStream = nsnull;
+    mProgressEventSink = nsnull;
+    SetOwner(nsnull);
+
+    m_channelContext = nsnull;
+    m_channelListener = nsnull;
+    m_loadGroup = nsnull;
+  }
   return NS_OK;
 }
 
