@@ -128,7 +128,8 @@ nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
         ? PR_TRUE : PR_FALSE;
     aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
         ? PR_TRUE : PR_FALSE;
-    aEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
+    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
+        ? PR_TRUE : PR_FALSE;
 
     switch (aGdkEvent->type) {
     case GDK_2BUTTON_PRESS:
@@ -177,7 +178,9 @@ nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent,
         ? PR_TRUE : PR_FALSE;
     aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
         ? PR_TRUE : PR_FALSE;
-    aEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
+    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
+        ? PR_TRUE : PR_FALSE;
+    
 }
 
 void
@@ -196,7 +199,9 @@ nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent,
         ? PR_TRUE : PR_FALSE;
     aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
         ? PR_TRUE : PR_FALSE;
-    aEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
+    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
+        ? PR_TRUE : PR_FALSE;
+    
 }
 
 void

@@ -63,6 +63,8 @@ struct nsKeyConverter nsKeycodes[] = {
     { NS_VK_CONTROL,    GDK_Control_R },
     { NS_VK_ALT,        GDK_Alt_L },
     { NS_VK_ALT,        GDK_Alt_R },
+    { NS_VK_META,       GDK_Meta_L },
+    { NS_VK_META,       GDK_Meta_R },
     { NS_VK_PAUSE,      GDK_Pause },
     { NS_VK_CAPS_LOCK,  GDK_Caps_Lock },
     { NS_VK_ESCAPE,     GDK_Escape },
@@ -175,6 +177,22 @@ GdkKeyCodeToDOMKeyCode(int aKeysym)
             return(nsKeycodes[i].vkCode);
     }
 
+    // function keys
+    // See bug 57262, Sun's Stop key generates F11 keysym code, in order to
+    // make Stop key stops the page loading while not sabotaging F11 key in
+    // all platforms, this code catches F11 keysym, then changes it into ESCAPE,
+    // which stops the page loading on all platforms.
+    // Now, Stop key has the same function as ESC in Solaris
+#if defined(SUNOS4) || defined(SOLARIS)
+    if (aKeysym == GDK_F11)
+        return NS_VK_ESCAPE;
+    //When F11 key is pressed in Sun keyboard, keysym is SunF36 not F11
+    if (aKeysym == 268828432)  //SunF36's value is 0x1005ff10(268828432)
+        return NS_VK_F11;       //Change it into F11
+    //When F12 key is pressed in Sun keyboard, keysym is SunF37 not F12
+    if (aKeysym == 268828433)  //SunF37's value is 0x1005ff11(268828433)
+        return NS_VK_F12;       //Change it into F12
+#endif
     // function keys
     if (aKeysym >= GDK_F1 && aKeysym <= GDK_F24)
         return aKeysym - GDK_F1 + NS_VK_F1;

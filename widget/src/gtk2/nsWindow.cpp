@@ -1189,7 +1189,20 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
         // the isShift flag alone (probably not a printable character)
         // if none of the other modifier keys are pressed then we need to
         // clear isShift so the character can be inserted in the editor
-        if (!event.isControl && !event.isAlt && !event.isMeta)
+
+        if ( event.isControl || event.isAlt || event.isMeta ) {
+           // make Ctrl+uppercase functional as same as Ctrl+lowercase
+           // when Ctrl+uppercase(eg.Ctrl+C) is pressed,convert the charCode
+           // from uppercase to lowercase(eg.Ctrl+c),so do Alt and Meta Key
+           // It is hack code for bug 61355, there is same code snip for
+           // Windows platform in widget/src/windows/nsWindow.cpp: See bug 16486
+           // Note: if Shift is pressed at the same time, do not to_lower()
+           // Because Ctrl+Shift has different function with Ctrl
+           if ( !event.isShift &&
+                event.charCode >= GDK_A &&
+                event.charCode <= GDK_Z )
+            event.charCode = gdk_keyval_to_lower(event.charCode);
+        } else        
             event.isShift = PR_FALSE;
     }
 
