@@ -71,11 +71,12 @@ private:
                                          const nsPoint& aPoint, 
                                          nsIFrame**     aFrame);
 
-  nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
-
 protected:
 
-  nsStackFrame(nsIPresShell* aPresShell);
+  nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
+
+
+  //nsStackFrame(nsIPresShell* aPresShell);
 
 private:
 

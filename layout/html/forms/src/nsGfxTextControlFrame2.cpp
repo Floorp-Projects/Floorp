@@ -71,6 +71,9 @@
 #include "nsIPresShell.h"
 #include "nsIComponentManager.h"
 
+#include "nsBoxLayoutState.h"
+#include "nsINameSpaceManager.h"
+
 
 #define DEFAULT_COLUMN_WIDTH 20
 
@@ -501,7 +504,7 @@ NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGfxTextControlFrame2* it = new (aPresShell) nsGfxTextControlFrame2();
+  nsGfxTextControlFrame2* it = new (aPresShell) nsGfxTextControlFrame2(aPresShell);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -509,8 +512,8 @@ NS_NewGfxTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-NS_IMPL_ADDREF_INHERITED(nsGfxTextControlFrame2, nsHTMLContainerFrame);
-NS_IMPL_RELEASE_INHERITED(nsGfxTextControlFrame2, nsHTMLContainerFrame);
+NS_IMPL_ADDREF_INHERITED(nsGfxTextControlFrame2, nsBoxFrame);
+NS_IMPL_RELEASE_INHERITED(nsGfxTextControlFrame2, nsBoxFrame);
  
 
 NS_IMETHODIMP
@@ -535,10 +538,10 @@ nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIStatefulFrame*) this;
     return NS_OK;
   }
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-nsGfxTextControlFrame2::nsGfxTextControlFrame2()
+nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFrame(aShell)
 {
   mIsProcessing=PR_FALSE;
   mFormFrame = nsnull;
@@ -567,7 +570,7 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
   }
-  return nsHTMLContainerFrame::Destroy(aPresContext);
+  return nsBoxFrame::Destroy(aPresContext);
 }
 
 // XXX: wouldn't it be nice to get this from the style context!
@@ -805,7 +808,7 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   } else {
     aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
     if (CSS_NOTSET != aCSSSize.height) {  // css provides height
-      NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
+      //NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.height) {
         aDesiredSize.height = aCSSSize.height;
         aHeightExplicit = PR_TRUE;
@@ -1202,9 +1205,116 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
+{
+  if (!DoesNeedRecalc(mPrefSize)) {
+     aSize = mPrefSize;
+     return NS_OK;
+  }
+
+  PropagateDebug(aState);
+
+  // navquirk can only happen if we are in the HTML namespace. It does not apply in XUL.
+  PRInt32 nameSpaceID;
+  mContent->GetNameSpaceID(nameSpaceID);
+  
+  aSize.width = 0;
+  aSize.height = 0;
+
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
+  nsSize styleSize(CSS_NOTSET,CSS_NOTSET);
+  nsIPresContext* aPresContext = aState.GetPresContext();
+  const nsHTMLReflowState* aReflowState = aState.GetReflowState();
+
+  if (!aReflowState)
+    return NS_OK;
+
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(&mode); 
+
+  nsSize desiredSize;
+  nsSize minSize;
+  nsMargin aBorder, aPadding;
+  
+  PRBool widthExplicit, heightExplicit;
+  PRInt32 ignore;
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+    PRInt32 width = 0;
+    if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
+      width = GetDefaultColumnWidth();
+    }
+    nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
+                                  nsnull, width, 
+                                  PR_FALSE, nsnull, 1);
+
+    if (PR_FALSE) { //eCompatibility_NavQuirks == mode && nameSpaceID == kNameSpaceID_HTML) {
+      CalculateSizeNavQuirks(aPresContext, aReflowState->rendContext, this, styleSize, 
+                             textSpec, desiredSize, minSize, widthExplicit, 
+                             heightExplicit, ignore, aBorder, aPadding);
+    } else {
+      CalculateSizeStandard(aPresContext, aReflowState->rendContext, this, styleSize, 
+                             textSpec, desiredSize, minSize, widthExplicit, 
+                             heightExplicit, ignore, aBorder, aPadding);
+    }
+  } else {
+    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
+                                  nsnull, GetDefaultColumnWidth(), 
+                                  PR_FALSE, nsHTMLAtoms::rows, 1);
+
+    if (PR_FALSE) {//eCompatibility_NavQuirks == mode && nameSpaceID == kNameSpaceID_HTML) {
+
+      CalculateSizeNavQuirks(aPresContext, aReflowState->rendContext, this, styleSize, 
+                             areaSpec, desiredSize, minSize, widthExplicit, 
+                             heightExplicit, ignore, aBorder, aPadding);
+
+    } else {
+      CalculateSizeStandard(aPresContext, aReflowState->rendContext, this, styleSize, 
+                           areaSpec, desiredSize, minSize, widthExplicit, 
+                           heightExplicit, ignore, aBorder, aPadding);
+    }
+  }
+
+  aSize = desiredSize;
+
+  AddBorderAndPadding(aSize);
+  AddInset(aSize);
+  nsIBox::AddCSSPrefSize(aState, this, aSize);
+
+  mPrefSize = aSize;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
+{
+  return nsBox::GetMinSize(aState, aSize);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
+{
+  return nsBox::GetMaxSize(aState, aSize);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
+{
+  nsSize size;
+  nsresult rv = GetPrefSize(aState, size);
+  aAscent = size.height;
+  return rv;
+}
 
 
-
+/*
 
 NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresContext, 
                                          nsHTMLReflowMetrics&     aDesiredSize,
@@ -1365,11 +1475,12 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
 
   aStatus = NS_FRAME_COMPLETE;
 
- // printf("width=%d, height=%d, ascent=%d\n", aDesiredSize.width, aDesiredSize.height, aDesiredSize.ascent);
+  printf("width=%d, height=%d, ascent=%d\n", aDesiredSize.width, aDesiredSize.height, aDesiredSize.ascent);
 
   return rv;
 }
 //#endif
+*/
 
 PRIntn
 nsGfxTextControlFrame2::GetSkipSides() const
@@ -1726,7 +1837,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
-    rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+    rv = nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
   }
 
   return rv;
@@ -1924,7 +2035,7 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
     list->GetNextSibling(&list);
   }
   */
-  nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  nsresult rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (mEditor)
     mEditor->PostCreate();
   //look for scroll view below this frame go along first child list

@@ -203,6 +203,12 @@ protected:
 
     virtual void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aChild, nsIFrame** aResult);
 
+    nsSize mPrefSize;
+    nsSize mMinSize;
+    nsSize mMaxSize;
+    nscoord mFlex;
+    nscoord mAscent;
+
 private: 
   
     friend class nsBoxFrameInner;

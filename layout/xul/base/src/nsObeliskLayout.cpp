@@ -327,7 +327,7 @@ nsObeliskLayout::Desecrated(nsIBox* aBox, nsBoxLayoutState& aState,  nsBoxSizeLi
     nsCOMPtr<nsIBoxLayout> layout;
     aBox->GetLayoutManager(getter_AddRefs(layout));
     aBox->SetLayoutManager(nsnull);
-    aBox->MarkDirty(aState);
+    aBox->MarkDirtyChildren(aState);
     aBox->SetLayoutManager(layout);
   }
 }

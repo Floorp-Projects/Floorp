@@ -23,6 +23,7 @@
 #ifndef nsGfxTextControlFrame2_h___
 #define nsGfxTextControlFrame2_h___
 
+#include "nsStackFrame.h"
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIDOMMouseListener.h"
@@ -46,7 +47,7 @@ class nsTextAreaSelectionImpl;
 
 
 
-class nsGfxTextControlFrame2 : public nsHTMLContainerFrame,
+class nsGfxTextControlFrame2 : public nsStackFrame,
                                public nsIAnonymousContentCreator,
                                public nsIFormControlFrame,
                                public nsIGfxTextControlFrame2,
@@ -54,15 +55,15 @@ class nsGfxTextControlFrame2 : public nsHTMLContainerFrame,
 
 {
 public:
-  nsGfxTextControlFrame2();
+  nsGfxTextControlFrame2(nsIPresShell* aShell);
   virtual ~nsGfxTextControlFrame2();
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);//remove yourself as a form control
 
-  NS_IMETHOD Reflow(nsIPresContext*          aCX,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
