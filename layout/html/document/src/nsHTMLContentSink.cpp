@@ -1305,9 +1305,11 @@ HTMLContentSink::HTMLContentSink()
     gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");
   }
 #endif
-  mNotAtRef = PR_TRUE;
-  mParser = nsnull;
+  mNotAtRef        = PR_TRUE;
+  mParser          = nsnull;
   mDocumentBaseURL = nsnull;
+  mBody            = nsnull;
+  mFrameset        = nsnull;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -1915,10 +1917,25 @@ HTMLContentSink::StartLayout()
   }
   mLayoutStarted = PR_TRUE;
 
-  // If it's a frameset document then disable scrolling; otherwise, let the
+  // determine if this is a top level frameset
+  PRBool topLevelFrameset = PR_FALSE;
+  if (mFrameset && mWebShell) {
+    nsIWebShell* rootWebShell;
+    mWebShell->GetRootWebShell(rootWebShell);
+    if (mWebShell == rootWebShell) {
+      topLevelFrameset = PR_TRUE;
+    }
+    NS_IF_RELEASE(rootWebShell);
+  }
+
+  // If it's a top level frameset document then disable scrolling; otherwise, let the
   // style dictate. We need to do this before the initial reflow...
   if (mWebShell) {
-    mWebShell->SetScrolling(mFrameset ? NS_STYLE_OVERFLOW_HIDDEN : -1);
+    if (topLevelFrameset) {
+      mWebShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
+    } else if (mBody) {
+ //     mWebShell->SetScrolling(-1);
+    }
   }
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
@@ -1952,15 +1969,6 @@ HTMLContentSink::StartLayout()
   nsresult rv = mDocumentURL->GetRef(&ref);
   if (rv == NS_OK) {
     mRef = new nsString(ref);
-  }
-  PRBool topLevelFrameset = PR_FALSE;
-  if (mFrameset && mWebShell) {
-    nsIWebShell* rootWebShell;
-    mWebShell->GetRootWebShell(rootWebShell);
-    if (mWebShell == rootWebShell) {
-      topLevelFrameset = PR_TRUE;
-    }
-    NS_IF_RELEASE(rootWebShell);
   }
 
   if ((nsnull != ref) || topLevelFrameset) {

@@ -298,6 +298,8 @@ public:
   nsresult DestroyPluginHost(void);
 
 protected:
+  void InitFrameData();
+
   PLEventQueue* mThreadEventQueue;
   nsIScriptGlobalObject *mScriptGlobal;
   nsIScriptContext* mScriptContext;
@@ -434,9 +436,7 @@ nsWebShell::nsWebShell()
   mScrollPref = nsScrollPreference_kAuto;
   mScriptGlobal = nsnull;
   mScriptContext = nsnull;
-  mMarginWidth  = -1;  
-  mMarginHeight = -1;
-  mScrolling = -1;
+  InitFrameData();
 }
 
 nsWebShell::~nsWebShell()
@@ -466,6 +466,8 @@ nsWebShell::~nsWebShell()
   }
   NS_IF_RELEASE(mScriptContext);
 
+  InitFrameData();
+
   // XXX Because we hold references to the children and they hold references
   // to us we never get destroyed. See Destroy() instead...
 #if 0
@@ -481,6 +483,13 @@ nsWebShell::~nsWebShell()
   }
 
   DestroyPluginHost();
+}
+
+void nsWebShell::InitFrameData()
+{
+  mMarginWidth  = -1;  
+  mMarginHeight = -1;
+  mScrolling    = -1;
 }
 
 void
@@ -1200,6 +1209,13 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsURLReloadType aType,
                     const PRUint32 aLocalIP)
 {
+  // if this is the top level web shell, initialize some things, in case the 
+  // web shell is being recycled
+  nsIWebShell *rootWebShell;
+  GetRootWebShell(rootWebShell);
+  if (this == rootWebShell) {
+    InitFrameData();
+  }
 
   return LoadURL(aURLSpec,"view",aPostData,aModifyHistory,aType, aLocalIP);
 }
