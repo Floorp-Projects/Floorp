@@ -161,7 +161,7 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
     mDocChangeRange->SelectNode(bodyNode);
     res = ReplaceNewlines(mDocChangeRange);
     if (NS_FAILED(res)) return res;
-    res = AdjustSpecialBreaks(PR_TRUE);
+    res = AdjustSpecialBreaks();
     if (NS_FAILED(res)) return res;
   }
   
