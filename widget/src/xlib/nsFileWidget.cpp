@@ -104,6 +104,11 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
   return NS_OK;
 }
 
+NS_METHOD nsFileWidget::GetSelectedType(PRInt16& theType)
+{
+  return NS_OK;
+}
+
 nsFileWidget::~nsFileWidget()
 {
 }
