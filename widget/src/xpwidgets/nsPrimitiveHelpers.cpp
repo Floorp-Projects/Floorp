@@ -149,7 +149,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
     if (NS_SUCCEEDED(rv))
       rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
     if (NS_FAILED(rv))
-      platformCharset.Assign("ISO-8859-1");
+      platformCharset.AssignWithConversion("ISO-8859-1");
       
     // get the encoder
     NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
@@ -201,7 +201,7 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
     if (NS_SUCCEEDED(rv))
       rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
     if (NS_FAILED(rv))
-      platformCharset.Assign("ISO-8859-1");
+      platformCharset.AssignWithConversion("ISO-8859-1");
       
     // get the decoder
     NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  

@@ -84,8 +84,7 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget        *aParent,
                           nsIToolkit       *aToolkit,
                           nsWidgetInitData *aInitData) 
 {
-  nsString title("Open");
-  Create(aParent, title, eMode_load, aContext, aAppShell, aToolkit, aInitData);
+  Create(aParent, NS_ConvertASCIItoUCS2("Open"), eMode_load, aContext, aAppShell, aToolkit, aInitData);
   return NS_OK;
 }
 
@@ -188,7 +187,7 @@ PRBool nsFileWidget::Show()
     nsNativeFileSpec fileSpec(theFile);
     nsFilePath filePath(fileSpec);
 	
-    mFile = filePath;
+    mFile.AssignWithConversion( NS_STATIC_CAST(const char*, filePath) );
     mFileSpec = fileSpec;
   }
   
@@ -446,11 +445,11 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
     const nsString& filter = mFilters[i];
     
     aFilterList.Append(title);
-    aFilterList.Append('\0');
+    aFilterList.AppendWithConversion('\0');
     aFilterList.Append(filter);
-    aFilterList.Append('\0');
+    aFilterList.AppendWithConversion('\0');
   }
-  aFilterList.Append('\0'); 
+  aFilterList.AppendWithConversion('\0'); 
 }
 
 //-------------------------------------------------------------------------

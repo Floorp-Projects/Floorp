@@ -267,11 +267,11 @@ nsEventStatus nsMenuBar::MenuConstruct(
           if (menuElement) {
             nsString menuNodeType;
             nsString menuName;
-			nsString menuAccessKey = " ";
+			nsString menuAccessKey; menuAccessKey.AssignWithConversion(" ");
             menuElement->GetNodeName(menuNodeType);
-            if (menuNodeType.Equals("menu")) {
-              menuElement->GetAttribute(nsAutoString("value"), menuName);
-			  menuElement->GetAttribute(nsAutoString("accesskey"), menuAccessKey);
+            if (menuNodeType.EqualsWithConversion("menu")) {
+              menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
+			  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("accesskey"), menuAccessKey);
               // Don't create the whole menu yet, just add in the top level names
               
                 // Create nsMenu
@@ -297,8 +297,8 @@ nsEventStatus nsMenuBar::MenuConstruct(
                   pnsMenuBar->AddMenu(pnsMenu); 
                   
                   nsString menuIDstring;
-                  menuElement->GetAttribute(nsAutoString("id"), menuIDstring);
-                  if(menuIDstring.Equals("menu_Help")) {
+                  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("id"), menuIDstring);
+                  if(menuIDstring.EqualsWithConversion("menu_Help")) {
                     nsMenuEvent event;
                     MenuHandle handle;
 #ifndef RHAPSODY
@@ -472,7 +472,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
       }      
       
       //XXX "aboutStrName" should be less hardcoded
-      nsAutoString temp = "aboutStrName";
+      nsAutoString temp; temp.AssignWithConversion("aboutStrName");
       const PRUnichar *ptrtmp = temp.GetUnicode();  
       PRUnichar *ptrv = nsnull;
       bundle->GetStringFromName(ptrtmp, &ptrv);

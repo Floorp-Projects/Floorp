@@ -220,8 +220,8 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
 
     if(mDOMElement) {
       nsString menuIDstring;
-      mDOMElement->GetAttribute(nsAutoString("id"), menuIDstring);
-      if(menuIDstring.Equals("menu_Help")) {
+      mDOMElement->GetAttribute(NS_ConvertASCIItoUCS2("id"), menuIDstring);
+      if(menuIDstring.EqualsWithConversion("menu_Help")) {
       mIsHelpMenu = PR_TRUE;
       ::HMGetHelpMenuHandle(&mMacMenuHandle);
       mMacMenuID = kHMHelpMenuID;
@@ -317,9 +317,9 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  }
 	  
 	  // I want to be internationalized too!
-	  nsString keyEquivalent = " ";
+	  nsString keyEquivalent; keyEquivalent.AssignWithConversion(" ");
 	  aMenuItem->GetShortcutChar(keyEquivalent);
-	  if(!keyEquivalent.Equals(" ")) {
+	  if(!keyEquivalent.EqualsWithConversion(" ")) {
 	    keyEquivalent.ToUpperCase();
 	    char keyStr[2];
 	    keyEquivalent.ToCString(keyStr, sizeof(keyStr));
@@ -566,7 +566,7 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 		    // "releaseName" is the current node id for the About Mozilla/Netscape
 		    // menu node.
 		    nsCOMPtr<nsIDOMElement> domElement;
-		    xulDoc->GetElementById("releaseName", getter_AddRefs(domElement));
+		    xulDoc->GetElementById(NS_ConvertASCIItoUCS2("releaseName"), getter_AddRefs(domElement));
 		    if (!domElement) {
 		      	NS_ERROR("GetElementById failed.");
 		      	return nsEventStatus_eConsumeNoDefault;
@@ -794,7 +794,7 @@ nsEventStatus nsMenu::MenuConstruct(
   // Open the node.
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
   if (domElement)
-    domElement->SetAttribute("open", "true");
+    domElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
   
   gCurrentMenuDepth++;
    
@@ -821,16 +821,16 @@ nsEventStatus nsMenu::MenuConstruct(
         nsString menuitemName;
         
         nsString label;
-        menuitemElement->GetAttribute("value", label);
+        menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), label);
         //printf("label = %s \n", label.ToNewCString());
         
         menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType.Equals("menuitem")) {
+        if (menuitemNodeType.EqualsWithConversion("menuitem")) {
           // LoadMenuItem
           LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
-        } else if (menuitemNodeType.Equals("menuseparator")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menuseparator")) {
           AddSeparator();
-        } else if (menuitemNodeType.Equals("menu")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menu")) {
           // Load a submenu
           LoadSubMenu(this, menuitemElement, menuitemNode);
         }
@@ -866,7 +866,7 @@ nsEventStatus nsMenu::HelpMenuConstruct(
   // Open the node.
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
   if (domElement)
-   domElement->SetAttribute("open", "true");
+   domElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
 
   gCurrentMenuDepth++;
    
@@ -893,16 +893,16 @@ nsEventStatus nsMenu::HelpMenuConstruct(
         nsString menuitemName;
         
         nsString label;
-        menuitemElement->GetAttribute("value", label);
+        menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), label);
         //printf("label = %s \n", label.ToNewCString());
         
         menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType.Equals("menuitem")) {
+        if (menuitemNodeType.EqualsWithConversion("menuitem")) {
           // LoadMenuItem
           LoadMenuItem(this, menuitemElement, menuitemNode, menuIndex, (nsIWebShell*)aWebShell);
-        } else if (menuitemNodeType.Equals("menuseparator")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menuseparator")) {
           AddSeparator();
-        } else if (menuitemNodeType.Equals("menu")) {
+        } else if (menuitemNodeType.EqualsWithConversion("menu")) {
           // Load a submenu
           LoadSubMenu(this, menuitemElement, menuitemNode);
         }
@@ -950,7 +950,7 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
     contentNode->GetDocument(*getter_AddRefs(document));
         
     if(document)
-      domElement->RemoveAttribute("open");
+      domElement->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
   }
   
   return nsEventStatus_eIgnore;
@@ -1246,11 +1246,11 @@ void nsMenu::LoadMenuItem(
   nsString menuitemName;
   nsString menuitemCmd;
 
-  menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
-  menuitemElement->GetAttribute(nsAutoString("checked"), checked);
-  menuitemElement->GetAttribute(nsAutoString("type"), type);
-  menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
-  menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), disabled);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("checked"), checked);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("type"), type);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuitemName);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, NS_GET_IID(nsIMenuItem), (void**)&pnsMenuItem);
@@ -1270,7 +1270,7 @@ void nsMenu::LoadMenuItem(
 		  return;
     }
     
-    nsAutoString cmdAtom("oncommand");
+    nsAutoString cmdAtom; cmdAtom.AssignWithConversion("oncommand");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
@@ -1285,7 +1285,7 @@ void nsMenu::LoadMenuItem(
 
 	//NS_ASSERTION(false, "get debugger");
     // Set key shortcut and modifiers
-    nsAutoString keyAtom("key");
+    nsAutoString keyAtom; keyAtom.AssignWithConversion("key");
     nsString keyValue;
     domElement->GetAttribute(keyAtom, keyValue);
 
@@ -1309,14 +1309,14 @@ void nsMenu::LoadMenuItem(
     
     if(keyElement){
         PRUint8 modifiers = knsMenuItemNoModifier;
-	    nsAutoString shiftAtom("shift");
-	    nsAutoString altAtom("alt");
-	    nsAutoString commandAtom("command");
+	    nsAutoString shiftAtom; shiftAtom.AssignWithConversion("shift");
+	    nsAutoString altAtom; altAtom.AssignWithConversion("alt");
+	    nsAutoString commandAtom; commandAtom.AssignWithConversion("command");
 	    nsString shiftValue;
 	    nsString altValue;
 	    nsString commandValue;
 		nsString controlValue;
-	    nsString keyChar = " ";
+	    nsString keyChar; keyChar.AssignWithConversion(" ");
 	    
 	    keyElement->GetAttribute(keyAtom, keyChar);
 	    keyElement->GetAttribute(shiftAtom, shiftValue);
@@ -1324,41 +1324,41 @@ void nsMenu::LoadMenuItem(
 	    keyElement->GetAttribute(commandAtom, commandValue);
 	    
       nsAutoString xulkey;
-      keyElement->GetAttribute("xulkey", xulkey);
-      if (xulkey.Equals("true"))
+      keyElement->GetAttribute(NS_ConvertASCIItoUCS2("xulkey"), xulkey);
+      if (xulkey.EqualsWithConversion("true"))
         modifiers |= knsMenuItemCommandModifier;
 
-		if(!keyChar.Equals(" ")) 
+		if(!keyChar.EqualsWithConversion(" ")) 
 	      pnsMenuItem->SetShortcutChar(keyChar);
 	      
-		if(shiftValue.Equals("true")) 
+		if(shiftValue.EqualsWithConversion("true")) 
 		  modifiers |= knsMenuItemShiftModifier;
 	    
-	    if(altValue.Equals("true"))
+	    if(altValue.EqualsWithConversion("true"))
 	      modifiers |= knsMenuItemAltModifier;
 	    
-	    if(commandValue.Equals("true"))
+	    if(commandValue.EqualsWithConversion("true"))
 	      modifiers |= knsMenuItemCommandModifier;
 
-		if(controlValue.Equals("true"))
+		if(controlValue.EqualsWithConversion("true"))
 	      modifiers |= knsMenuItemControlModifier;
 	      
         pnsMenuItem->SetModifiers(modifiers);
     }
 
-	if(disabled.Equals(NS_STRING_TRUE))
+	if(disabled.EqualsWithConversion(NS_STRING_TRUE))
       pnsMenuItem->SetEnabled(PR_FALSE);
     else
       pnsMenuItem->SetEnabled(PR_TRUE);
 
-	if(checked.Equals(NS_STRING_TRUE))
+	if(checked.EqualsWithConversion(NS_STRING_TRUE))
       pnsMenuItem->SetChecked(PR_TRUE);
     else
       pnsMenuItem->SetChecked(PR_FALSE);
       
-    if(type.Equals("checkbox"))
+    if(type.EqualsWithConversion("checkbox"))
       pnsMenuItem->SetMenuItemType(nsIMenuItem::eCheckbox);
-    else if ( type.Equals("radio") )
+    else if ( type.EqualsWithConversion("radio") )
       pnsMenuItem->SetMenuItemType(nsIMenuItem::eRadio);
       
 	nsISupports * supports = nsnull;
@@ -1378,7 +1378,7 @@ void nsMenu::LoadSubMenu(
   nsIDOMNode *    menuNode)
 {
   nsString menuName; 
-  menuElement->GetAttribute(nsAutoString("value"), menuName);
+  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
@@ -1394,8 +1394,8 @@ void nsMenu::LoadSubMenu(
 
     // set if it's enabled or disabled
     nsAutoString disabled;
-    menuElement->GetAttribute(nsAutoString("disabled"), disabled);
-    if ( disabled.Equals("true") )
+    menuElement->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), disabled);
+    if ( disabled.EqualsWithConversion("true") )
       pnsMenu->SetEnabled ( PR_FALSE );
     else
       pnsMenu->SetEnabled ( PR_TRUE );
@@ -1511,8 +1511,8 @@ nsMenu::AttributeChanged(
       if(aAttribute == disabledAtom.get()) {
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
         nsString valueString;
-        element->GetAttribute("disabled", valueString);
-        if(valueString.Equals("true"))
+        element->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), valueString);
+        if(valueString.EqualsWithConversion("true"))
           SetEnabled(PR_FALSE);
         else
           SetEnabled(PR_TRUE);
@@ -1520,7 +1520,7 @@ nsMenu::AttributeChanged(
         ::DrawMenuBar();
       } else if(aAttribute == valueAtom.get()) {
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
-        element->GetAttribute("value", mLabel);
+        element->GetAttribute(NS_ConvertASCIItoUCS2("value"), mLabel);
         ::DeleteMenu(mMacMenuID);
         
         mMacMenuHandle = NSStringNewMenu(mMacMenuID, mLabel);
@@ -1781,7 +1781,7 @@ nsMenu::GetMenuPopupElement(nsIDOMNode** aResult)
     if (menuPopupElement) {
       nsString menuPopupNodeType;
       menuPopupElement->GetNodeName(menuPopupNodeType);
-      if (menuPopupNodeType.Equals("menupopup")) {
+      if (menuPopupNodeType.EqualsWithConversion("menupopup")) {
         *aResult = menuPopupNode.get();
         NS_ADDREF(*aResult);        
         return;

@@ -237,7 +237,7 @@ static int colorPrefChanged (const char *newpref, void *data)
       rv = prefService->CopyCharPref(np->name, &colorStr);
       if (NS_SUCCEEDED(rv) && colorStr[0])
       {
-        nsString colorNSStr(colorStr);
+        nsString colorNSStr; colorNSStr.AssignWithConversion(colorStr);
         nscolor thecolor;
         if (NS_SUCCEEDED(NS_ColorNameToRGB(colorNSStr, &thecolor)))
         {
@@ -290,7 +290,7 @@ nsXPLookAndFeel::InitFromPref(nsLookAndFeelColorPref* aPref, nsIPref* aPrefServi
   nsresult rv = aPrefService->CopyCharPref(aPref->name, &colorStr);
   if (NS_SUCCEEDED(rv) && colorStr[0])
   {
-    nsAutoString colorNSStr(colorStr);
+    nsAutoString colorNSStr; colorNSStr.AssignWithConversion(colorStr);
     nscolor thecolor;
     if (NS_SUCCEEDED(NS_ColorNameToRGB(colorNSStr, &thecolor)))
     {

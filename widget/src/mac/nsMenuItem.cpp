@@ -55,7 +55,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mWebShell           = nsnull;
   mDOMElement         = nsnull;
   mDOMNode            = nsnull;
-  mKeyEquivalent      = " ";
+  mKeyEquivalent.AssignWithConversion(" ");
   mEnabled            = PR_TRUE;
   mIsChecked          = PR_FALSE;
   mMenuType           = eRegular;
@@ -148,9 +148,9 @@ NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
 {
   mIsChecked = aIsEnabled;
   if(mIsChecked)
-    mDOMElement->SetAttribute("checked", "true");
+    mDOMElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("true"));
   else
-    mDOMElement->SetAttribute("checked", "false");
+    mDOMElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("false"));
   return NS_OK;
 }
 
@@ -240,7 +240,7 @@ nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
       // uncheck them all.
       
       nsAutoString myGroupName;
-      mDOMElement->GetAttribute("name", myGroupName);
+      mDOMElement->GetAttribute(NS_ConvertASCIItoUCS2("name"), myGroupName);
       
       nsCOMPtr<nsIDOMNode> parent;
       mDOMNode->GetParentNode(getter_AddRefs(parent));
@@ -257,9 +257,9 @@ nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
           
           // if the current sibling is in the same group, clear it
           nsAutoString currGroupName;
-          currElement->GetAttribute("name", currGroupName);
+          currElement->GetAttribute(NS_ConvertASCIItoUCS2("name"), currGroupName);
           if ( currGroupName == myGroupName )
-            currElement->SetAttribute("checked", "false");
+            currElement->SetAttribute(NS_ConvertASCIItoUCS2("checked"), NS_ConvertASCIItoUCS2("false"));
         }
         
         // advance to the next node
