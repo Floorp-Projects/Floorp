@@ -78,6 +78,8 @@
 
 #include "nsIServiceManager.h"
 
+#include "jsapi.h"
+
 //----------------------------------------------------------------------
 
 nsChildContentList::nsChildContentList(nsIContent *aContent)
