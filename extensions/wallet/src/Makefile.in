@@ -58,7 +58,6 @@ CPPSRCS		= \
 		singsign.cpp \
 		nsPassword.cpp \
 		nsPasswordManager.cpp \
-		nsBasicStreamGenerator.cpp \
 		$(NULL)
 
 DEFAULTS_FILES	= \

@@ -545,12 +545,6 @@ nsWalletlibService::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 
 NS_IMETHODIMP
-nsWalletlibService::GetPassword(PRUnichar **password)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsWalletlibService::HaveData(nsIPrompt* dialog, const char *key, const PRUnichar *userName, PRBool *_retval)
 {
   return ::SINGSIGN_HaveData(dialog, key, userName, _retval);

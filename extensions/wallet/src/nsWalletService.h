@@ -43,7 +43,6 @@
 #include "nsIObserver.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsWeakReference.h"
-#include "nsIPasswordSink.h"
 #include "nsIPrompt.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIURI.h"
@@ -56,7 +55,6 @@ class nsWalletlibService : public nsIWalletService,
                            public nsIObserver,
                            public nsIFormSubmitObserver,
                            public nsIWebProgressListener,
-                           public nsIPasswordSink,
                            public nsSupportsWeakReference {
 
 public:
@@ -64,7 +62,6 @@ public:
   NS_DECL_NSIWALLETSERVICE
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIWEBPROGRESSLISTENER
-  NS_DECL_NSIPASSWORDSINK
   // NS_DECL_NSSUPPORTSWEAKREFERENCE
 
   nsWalletlibService();

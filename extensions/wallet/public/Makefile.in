@@ -34,8 +34,6 @@ SDK_XPIDLSRCS   = \
     $(NULL)
 
 XPIDLSRCS   = \
-    nsIPasswordSink.idl \
-    nsIKeyedStreamGenerator.idl \
     nsIWalletService.idl    \
     $(NULL)
 
