@@ -35,9 +35,6 @@ Rights Reserved.
   <html:iframe flex="100%" style="width: 100%; height:100%; border: none"
                src="chrome://messenger/content/aw-accounttype.xul"
                name="wizardContents" scrolling="auto"/>
-  <html:div>
-    &instructions.label;
-  </html:div>
   <html:br/><html:hr/>
   <box align="horizontal" style="margin: 10px">
 <!--
@@ -45,8 +42,8 @@ Rights Reserved.
     <titledbutton value="Load Page" onclick="onLoadPage(event);"/>
 -->
     <spring flex="100%"/>
-    <titledbutton class="dialog push" value="&lt; &backButton.label;" onclick="onBack(event);"/>
-    <titledbutton class="dialog push" value="&nextButton.label; &gt;" onclick="onNext(event);"/>
+    <titledbutton class="dialog push" id="backButton" value="&lt; &backButton.label;" onclick="onBack(event);"/>
+    <titledbutton class="dialog push" id="nextButton" value="&nextButton.label; &gt;" onclick="onNext(event);"/>
     <spring style="width: 10px"/>
     <titledbutton class="dialog push" value="&cancelButton.label;" onclick="onCancel(event);"/>
   </box>

@@ -47,6 +47,7 @@ function onLoad() {
         smtpService =
             Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);;
 
+    init();
     try {
 	wizardContents["smtp.hostname"] = smtpService.defaultServer.hostname;
 	dump("initialized with " + wizardContents["smtp.hostname"] + "\n");
@@ -54,13 +55,13 @@ function onLoad() {
     catch (ex) {
 	//dump("failed to get the smtp hostname\n");
     }
-    init();
 }
 
 function wizardPageLoaded(tag) {
     init();
     currentPageTag=tag;
     initializePage(contentWindow, wizardContents);
+    updateButtons(wizardMap[currentPageTag], window.parent);
 }
 
 function onNext(event) {
@@ -82,6 +83,7 @@ function onNext(event) {
     saveContents(contentWindow, wizardContents);
     
     nextPage(contentWindow);
+
 }
 
 function onCancel(event) {
@@ -102,13 +104,25 @@ function getUrlFromTag(title) {
 }
 
 
-// helper functions that actually do stuff
-function setNextEnabled(enabled) {
-    
+function setNextText(doc, hasNext) {
+    if (hasNext)
+        doc.getElementById("nextButton").setAttribute("value", "Next >");
+    else
+        doc.getElementById("nextButton").setAttribute("value", "Finish");
+
+}
+function setNextEnabled(doc, enabled) {
+    if (enabled)
+        doc.getElementById("nextButton").removeAttribute("disabled");
+    else
+        doc.getElementById("nextButton").setAttribute("disabled", "true");
 }
 
-function setBackEnabled(enabled) {
-
+function setBackEnabled(doc, enabled) {
+    if (enabled)
+        doc.getElementById("backButton").removeAttribute("disabled");
+    else
+        doc.getElementById("backButton").setAttribute("disabled", "true");
 }
 
 function nextPage(win) {
@@ -134,6 +148,13 @@ function initializePage(win, hash) {
     if (win.onInit) win.onInit();
 }
 
+
+function updateButtons(mapEntry, wizardWindow) {
+
+    //setNextEnabled(wizardWindow.document, mapEntry.next ? true : false);
+    setNextText(wizardWindow.document, mapEntry.next ? true : false);
+    setBackEnabled(wizardWindow.document, mapEntry.previous ? true : false);
+}
 
 function saveContents(win, hash) {
 
