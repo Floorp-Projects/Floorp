@@ -4975,6 +4975,7 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
     }
     // Now iterated through the child frames and set them
     nsCOMPtr<nsIContent> innercontent;
+    nsRect frameRect; 
     while (NS_ENUMERATOR_FALSE == aInnerIter->IsDone())
     {
       result = aInnerIter->CurrentNode(getter_AddRefs(innercontent));
@@ -4984,6 +4985,21 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
         if (NS_SUCCEEDED(result) && frame)
           //NOTE: eSpreadDown is now IGNORED. Selected state is set only for given frame
           frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+          frame->GetRect(frameRect);
+          
+          //if a rect is 0 height/width then try to notify next available in flow of selection status.
+          while (!frameRect.width || !frameRect.height)
+          {
+            //try to notify next in flow that its content is selected.
+            if (NS_SUCCEEDED(frame->GetNextInFlow(&frame)) && frame)
+            {
+              frame->GetRect(frameRect);
+              frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);
+            }
+            else
+              break;
+          }
+        //if the frame is splittable and this frame is 0,0 then set the next in flow frame to be selected also
       }
       result = aInnerIter->Next();
       if (NS_FAILED(result))

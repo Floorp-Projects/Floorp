@@ -612,6 +612,55 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
 }
 
+ /********************************************************
+* Refreshes each content's frame
+*********************************************************/
+static void RefreshAllContentFrames(nsIPresContext* aPresContext, nsIFrame * aFrame, nsIContent * aContent)
+{
+  nsIContent* frameContent;
+  aFrame->GetContent(&frameContent);
+  if (frameContent == aContent) {
+    ForceDrawFrame(aPresContext, (nsFrame *)aFrame);
+  }
+  NS_IF_RELEASE(frameContent);
+
+  aFrame->FirstChild(aPresContext, nsnull, &aFrame);
+  while (aFrame) {
+    RefreshAllContentFrames(aPresContext, aFrame, aContent);
+    aFrame->GetNextSibling(&aFrame);
+  }
+}
+
+/********************************************************
+* Refreshes each content's frame
+*********************************************************/
+
+/**
+  *
+ */
+void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame)//, PRBool)
+{
+  if (aFrame == nsnull) {
+    return;
+  }
+  nsRect    rect;
+  nsIView * view;
+  nsPoint   pnt;
+  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
+  aFrame->GetRect(rect);
+  rect.x = pnt.x;
+  rect.y = pnt.y;
+  if (view != nsnull) {
+    nsIViewManager * viewMgr;
+    view->GetViewManager(viewMgr);
+    if (viewMgr != nsnull) {
+      viewMgr->UpdateView(view, rect, 0);
+      NS_RELEASE(viewMgr);
+    }
+    //viewMgr->UpdateView(view, rect, NS_VMREFRESH_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
+  }
+
+}
 NS_IMETHODIMP
 nsFrame::Paint(nsIPresContext*      aPresContext,
                nsIRenderingContext& aRenderingContext,
@@ -694,7 +743,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     rect.x++;
     rect.y++;
     aRenderingContext.SetColor(NS_RGB(0,0,255));
-    nsRect drawrect(1, 1, rect.width, rect.height);
+    nsRect drawrect(rect.x, rect.y, rect.width, rect.height);
     aRenderingContext.DrawRect(drawrect);
     SelectionDetails *deletingDetails = details;
     while ((deletingDetails = details->mNext) != nsnull) {
@@ -2834,6 +2883,10 @@ nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool a
   if (!rect.IsEmpty()) {
     Invalidate(aPresContext, rect, PR_FALSE);
   }
+  if (frameState & NS_FRAME_OUTSIDE_CHILDREN)
+  {
+    RefreshAllContentFrames(aPresContext,this,mContent);
+  }
 #if 0
   if (aRange) {
     //lets see if the range contains us, if so we must redraw!
@@ -2921,6 +2974,18 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, P
 {
   NS_PRECONDITION(outChildFrame && outFrameContentOffset, "Null parameter");
   *outFrameContentOffset = (PRInt32)inHint;
+  //the best frame to reflect any given offset would be a visible frame if possible
+  //i.e. we are looking for a valid frame to place the blinking caret 
+  nsRect rect;
+  GetRect(rect);
+  if (!rect.width || !rect.height)
+  {
+    nsIFrame *nextFlow = nsnull;
+    //if we have a 0 width or height then lets look for another frame that possibly has
+    //the same content.  If we have no frames in flow then just let us return 'this' frame
+    if (NS_SUCCEEDED(GetNextInFlow(&nextFlow)) && nextFlow)
+      return nextFlow->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
+  }
   *outChildFrame = this;
   return NS_OK;
 }
@@ -2973,7 +3038,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
   nsIFrame *nearStoppingFrame = nsnull; //if we are backing up from edge, stop here
   nsIFrame *firstFrame;
   nsIFrame *lastFrame;
-  nsRect  nonUsedRect;
+  nsRect  rect;
   PRBool isBeforeFirstFrame, isAfterLastFrame;
   PRBool found = PR_FALSE;
   while (!found)
@@ -2990,8 +3055,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
     }
     PRUint32 lineFlags;
     result = it->GetLine(searchingLine, &firstFrame, &lineFrameCount,
-                         nonUsedRect, &lineFlags);
-    if (!lineFrameCount)
+                         rect, &lineFlags);
+    if (!lineFrameCount || !rect.height) //if no height not a valid line either.
       continue;
     if (NS_SUCCEEDED(result)){
       lastFrame = firstFrame;
@@ -3112,7 +3177,11 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
 
         if (NS_FAILED(resultFrame->GetView(aPresContext, &view)) || !view)
         {
-          result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
+          resultFrame->GetRect(rect);
+          if (!rect.width || !rect.height)
+            result = NS_ERROR_FAILURE;
+          else
+            result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
                                           getter_AddRefs(aPos->mResultContent),
                                           aPos->mContentOffset,
                                           aPos->mContentOffsetEnd,
@@ -3372,6 +3441,7 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
   nsresult rv = NS_ERROR_FAILURE;
   PRBool found = PR_FALSE;
   nsCOMPtr<nsIAtom> frameType;
+  nsRect rect;
   while (!found)  // this loop searches for a valid point to leave the peek offset struct.
   {
     nsIFrame *nextFrame = aFrame;
@@ -3390,9 +3460,10 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
       nextFrame = currentFrame; //back it up. lets show a warning
       NS_WARNING("lineFrame Count lied to us from nsILineIterator!\n");
     }
-    nextFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::brFrame == frameType.get()) 
+    nextFrame->GetRect(rect);
+    if (!rect.width) //this can happen with BR frames and or empty placeholder frames.
     {
+      //if we do hit an empty frame then back up the current frame to the frame before it if there is one.
       nextFrame = currentFrame; 
     }
       
@@ -3908,6 +3979,19 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
 #else
   
   newFrame = (nsIFrame *)isupports;
+  nsIContent *content = nsnull;
+  newFrame->GetContent(&content); 
+  if (!lineJump && (content == mContent))
+  {
+    //we will continue if this is NOT a text node. 
+    //in the case of a text node since that does not mean we are stuck. it could mean a change in style for
+    //the text node.  in the case of a hruleframe with generated before and after content, we do not
+    //want the splittable generated frame to get us stuck on an HR
+    nsCOMPtr<nsIAtom>        frameType;
+    newFrame->GetFrameType(getter_AddRefs(frameType) );
+    if (nsLayoutAtoms::textFrame != frameType.get() )
+      continue;  //we should NOT be getting stuck on the same piece of content on the same line. skip to next line.
+  }
   newFrame->GetRect(testRect);
   if (testRect.IsEmpty()) { // this must be a non-renderable frame creatd at the end of the line by Bidi reordering
     lineJump = PR_TRUE;
@@ -4138,55 +4222,7 @@ nsFrame::GetIBSpecialParent(nsIPresContext* aPresContext,
 //-----------------------------------------------------------------------------------
 
 
- /********************************************************
-* Refreshes each content's frame
-*********************************************************/
-static void RefreshAllContentFrames(nsIPresContext* aPresContext, nsIFrame * aFrame, nsIContent * aContent)
-{
-  nsIContent* frameContent;
-  aFrame->GetContent(&frameContent);
-  if (frameContent == aContent) {
-    ForceDrawFrame(aPresContext, (nsFrame *)aFrame);
-  }
-  NS_IF_RELEASE(frameContent);
 
-  aFrame->FirstChild(aPresContext, nsnull, &aFrame);
-  while (aFrame) {
-    RefreshAllContentFrames(aPresContext, aFrame, aContent);
-    aFrame->GetNextSibling(&aFrame);
-  }
-}
-
-/********************************************************
-* Refreshes each content's frame
-*********************************************************/
-
-/**
-  *
- */
-void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame)//, PRBool)
-{
-  if (aFrame == nsnull) {
-    return;
-  }
-  nsRect    rect;
-  nsIView * view;
-  nsPoint   pnt;
-  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
-  aFrame->GetRect(rect);
-  rect.x = pnt.x;
-  rect.y = pnt.y;
-  if (view != nsnull) {
-    nsIViewManager * viewMgr;
-    view->GetViewManager(viewMgr);
-    if (viewMgr != nsnull) {
-      viewMgr->UpdateView(view, rect, 0);
-      NS_RELEASE(viewMgr);
-    }
-    //viewMgr->UpdateView(view, rect, NS_VMREFRESH_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
-  }
-
-}
 
 void
 nsFrame::GetLastLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
