@@ -30,116 +30,12 @@
 #define DBG 0
 
 
-//Widget gFirstTopLevelWindow = 0;
-
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 //NS_IMPL_QUERY_INTERFACE(nsWindow, kIWidgetIID)
 //NS_IMPL_ADDREF(nsWindow)
 //NS_IMPL_RELEASE(nsWindow)
 
-/**
- *
- */
-nsrefcnt nsWindow::AddRefObject(void) { 
-  return ++mRefCnt; 
-}
-
-/**
- *
- */
-nsrefcnt nsWindow::ReleaseObject(void) { 
-  return (--mRefCnt) ? mRefCnt : (delete this, 0); 
-}
-
-
-/**
- *
- */
-nsresult nsWindow::QueryObject(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-    if (aIID.Equals(kIWidgetIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)&mInner);
-        AddRef();
-        return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
-}
-
-/**
- * nsISupports methods
- */
-nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    return mOuter->QueryInterface(aIID, aInstancePtr);
-}
-
-/**
- *
- */
-nsrefcnt nsWindow::AddRef(void)
-{
-    return mOuter->AddRef();
-}
-
-/**
- *
- */
-nsrefcnt nsWindow::Release(void)
-{
-    return mOuter->Release();
-}
-
-
-void nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
-{
-}
-
-void nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
-{
-} 
-
-//-------------------------------------------------------------------------
-//
-// Setup initial tooltip rectangles
-//
-//-------------------------------------------------------------------------
-void nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
-{
-}
-
-//-------------------------------------------------------------------------
-//
-// Update all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-void nsWindow::UpdateTooltips(nsRect* aNewTips[])
-{
-}
-
-//-------------------------------------------------------------------------
-//
-// Remove all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-void nsWindow::RemoveTooltips()
-{
-}
 
 
 //-------------------------------------------------------------------------
@@ -197,6 +93,50 @@ nsWindow::~nsWindow()
   //}
 }
 
+
+//-------------------------------------------------------------------------
+//
+// create a nswindow, if aParent is null, we will create the main parent
+//
+//-------------------------------------------------------------------------
+void nsWindow::Create(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+	// if we have a parent, add this widget to the parents list
+	if (aParent)
+	  aParent->AddChild(this);
+	  
+	// now create our stuff
+	
+	if (0==aParent)
+    CreateMainWindow(0, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+  else
+    CreateChildWindow(aParent->GetNativeData(NS_NATIVE_WIDGET), aParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+}
+
+//-------------------------------------------------------------------------
+//
+// This creates a nsWindow using the passed in nsNativeWidget(windowptr) no matter what
+//
+//-------------------------------------------------------------------------
+void nsWindow::Create(nsNativeWidget aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData)
+{
+
+		CreateMainWindow(aParent,0 , aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+		
+}
+
 //-------------------------------------------------------------------------
 //
 // 
@@ -230,6 +170,11 @@ void nsWindow::InitToolkit(nsIToolkit *aToolkit,
 }
 
 
+//-------------------------------------------------------------------------
+//
+// Create a new windowptr since we do not have a main window yet
+//
+//-------------------------------------------------------------------------
 void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent, 
                       nsIWidget *aWidgetParent,
                       const nsRect &aRect,
@@ -239,7 +184,6 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  //Widget mainWindow = 0, frame = 0;
   mBounds = aRect;
   mAppShell = aAppShell;
   Rect		bounds;
@@ -248,7 +192,14 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 	bounds.left = aRect.y;
 	bounds.bottom = aRect.y+aRect.height;
 	bounds.right = aRect.x+aRect.width;
-	mWindowPtr = NewCWindow(&mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
+	
+	// build the main native window
+	mWindowRecord = (WindowRecord*)new char[sizeof(WindowRecord)];   // allocate our own windowrecord space
+	mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
+	mWindowMadeHere = PR_TRUE;
+	
+	
+	
 	
   //InitToolkit(aToolkit, aWidgetParent);
   
@@ -258,21 +209,6 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
   //InitDeviceContext(aContext, (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL));
   
   //Widget frameParent = 0;
-
-#ifdef NOTNOW
-  if (gFirstTopLevelWindow == 0) 
-  	{
-    mainWindow = ::XtVaCreateManagedWidget("mainWindow",xmMainWindowWidgetClass,(Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL), nsnull);
-    gFirstTopLevelWindow = mainWindow;
-  	}
-  else 
-  	{
-    Widget shell = ::XtVaCreatePopupShell(" ",xmDialogShellWidgetClass,(Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL), 0);
-    XtVaSetValues(shell, XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
-    mainWindow = ::XtVaCreateManagedWidget("mainWindow",xmMainWindowWidgetClass,shell, nsnull);
-    XtVaSetValues(mainWindow, XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
-  	}
-#endif
 
   //mWidget = frame ;
     
@@ -320,77 +256,18 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 
 //-------------------------------------------------------------------------
 //
-// Create a window.
-//
-// Note: aNativeParent is always non-null if aWidgetParent is non-null.
-// aNativeaParent is set regardless if the parent for the Create() was an 
-// nsIWidget or a Native widget. 
-// aNativeParent is equal to aWidgetParent->GetNativeData(NS_NATIVE_WIDGET)
-//-------------------------------------------------------------------------
-
-void nsWindow::CreateWindow(nsNativeWidget aNativeParent, 
-                      nsIWidget *aWidgetParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  if (0==aNativeParent)
-    CreateMainWindow(aNativeParent, aWidgetParent, aRect, 
-        aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-  else
-    CreateChildWindow(aNativeParent, aWidgetParent, aRect, 
-        aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-}
-
-//-------------------------------------------------------------------------
-//
-// create with nsIWidget parent
-//
-//-------------------------------------------------------------------------
-
-void nsWindow::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-    if (aParent)
-      aParent->AddChild(this);
-      
-    CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), 
-        aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit,
-        aInitData);
-}
-
-//-------------------------------------------------------------------------
-//
-// create with a native parent
-//
-//-------------------------------------------------------------------------
-void nsWindow::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-    CreateWindow(aParent, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
-}
-
-
-//-------------------------------------------------------------------------
-//
 // Close this nsWindow
 //
 //-------------------------------------------------------------------------
 void nsWindow::Destroy()
 {
+
+	if (mWindowMadeHere==PR_TRUE)
+		{
+		CloseWindow(mWindowPtr);
+		delete mWindowRecord;
+		}
+		
 }
 
 //-------------------------------------------------------------------------
@@ -765,7 +642,7 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
-    res = NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
+    //res = NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&ctx);
     
     if (NS_OK == res)
       ctx->Init(mContext, this);
@@ -988,6 +865,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
+    /*
     if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, 
 					      nsnull, 
 					      kRenderingContextIID, 
@@ -997,7 +875,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
         result = DispatchEvent(&event);
         NS_RELEASE(event.renderingContext);
       }
-    else 
+    else */
       {
         result = PR_FALSE;
       }
@@ -1158,13 +1036,13 @@ PRBool nsWindow::GetResized()
 // find the widget that was hit
 //
 //-------------------------------------------------------------------------
-nsIWidget* nsWindow::FindWidgetHit(Point)
+nsWindow* nsWindow::FindWidgetHit(Point)
 {
-nsIWidget*	thewidget = NULL;
+nsWindow*	thewindow = NULL;
 
 	
 
-	return(thewidget);
+	return(thewindow);
 }
 
 //-------------------------------------------------------------------------
@@ -1227,6 +1105,130 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
     return(aNewY - 12 /*KLUDGE fix this later mBounds.height */);
   }
   return(aNewY);
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//
+//-------------------------------------------------------------------------
+nsrefcnt nsWindow::AddRefObject(void) 
+{ 
+  return ++mRefCnt; 
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//
+//-------------------------------------------------------------------------
+nsrefcnt nsWindow::ReleaseObject(void) 
+{ 
+  return (--mRefCnt) ? mRefCnt : (delete this, 0); 
+}
+
+
+//-------------------------------------------------------------------------
+//
+//
+//
+//-------------------------------------------------------------------------
+nsresult nsWindow::QueryObject(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+    if (aIID.Equals(kIWidgetIID)) {
+        *aInstancePtr = (void*) ((nsISupports*)this);
+        AddRef();
+        return NS_OK;
+    }
+
+    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+    if (aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = (void*) ((nsISupports*)&mInner);
+        AddRef();
+        return NS_OK;
+    }
+
+    return NS_NOINTERFACE;
+}
+
+//-------------------------------------------------------------------------
+//
+// nsISupports methods
+//
+//-------------------------------------------------------------------------
+nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    return mOuter->QueryInterface(aIID, aInstancePtr);
+}
+
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
+nsrefcnt nsWindow::AddRef(void)
+{
+    return mOuter->AddRef();
+}
+
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
+nsrefcnt nsWindow::Release(void)
+{
+    return mOuter->Release();
+}
+
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
+void nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+{
+}
+
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
+void nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+{
+} 
+
+//-------------------------------------------------------------------------
+//
+// Setup initial tooltip rectangles
+//
+//-------------------------------------------------------------------------
+void nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
+{
+}
+
+//-------------------------------------------------------------------------
+//
+// Update all tooltip rectangles
+//
+//-------------------------------------------------------------------------
+void nsWindow::UpdateTooltips(nsRect* aNewTips[])
+{
+}
+
+//-------------------------------------------------------------------------
+//
+// Remove all tooltip rectangles
+//
+//-------------------------------------------------------------------------
+void nsWindow::RemoveTooltips()
+{
 }
 
 
@@ -1320,7 +1322,6 @@ void nsWindow::Enumerator::Remove(nsWindow* aWinWidget)
     	}
 
 }
-
 
 //-------------------------------------------------------------------------
 //
