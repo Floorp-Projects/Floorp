@@ -64,8 +64,7 @@
                control="selectLangs"/>
       </hbox>
       <menulist id="selectLangs" oncommand="selectLanguage();"
-                preftype="localizedstring" prefstring="font.language.group"
-                wsm_attributes="value">
+                preftype="localizedstring" prefstring="font.language.group">
         <menupopup>
           <menuitem value="x-western" label="&font.langGroup.latin1;"/>
           <menuitem value="x-central-euro" label="&font.langGroup.latin2;"/>
@@ -282,13 +281,13 @@
         <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="foregroundtextmenu" palettename="standard"/> 
-        <data id="foregroundText" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="foregroundText" preftype="color" prefstring="browser.display.foreground_color"/>
       </hbox>
       <hbox align="center" style="margin-top: 5px">
         <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="backgroundmenu" palettename="standard"/> 
-        <data id="background" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="background" preftype="color" prefstring="browser.display.background_color"/>
       </hbox>
       <separator class="thin"/>
       <hbox align="center">
@@ -303,13 +302,13 @@
         <label value="&linkColor.label;" accesskey="&linkColor.accesskey;" control="unvisitedlinkmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="unvisitedlinkmenu" palettename="standard"/> 
-        <data id="unvisitedLinks" preftype="string" prefstring="browser.anchor_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="unvisitedLinks" preftype="string" prefstring="browser.anchor_color"/>
       </hbox>
       <hbox align="center" style="margin-top: 5px">
         <label value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" control="visitedlinkmenu"/>
         <spacer flex="1"/>
         <colorpicker type="button" id="visitedlinkmenu" palettename="standard"/> 
-        <data id="visitedLinks" preftype="string" prefstring="browser.visited_color" prefattribute="value" wsm_attributes="value"/>
+        <data id="visitedLinks" preftype="string" prefstring="browser.visited_color"/>
       </hbox>
       <separator class="thin"/>
       <hbox align="center">

@@ -92,7 +92,7 @@
               <!-- gopher port doesn't have an accesskey because the window needs a redesign - bbaetz -->
               <label value="&port.label;" accesskey="&gopherPort.accesskey;" control="networkProxyGopher_Port"/>
               <textbox id="networkProxyGopher_Port" preftype="int" prefstring="network.proxy.gopher_port"
-                         prefattribute="value" size="5"/>
+                       size="5"/>
             </hbox>
           </row>
           <row align="center">
