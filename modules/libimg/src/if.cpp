@@ -1175,6 +1175,7 @@ IL_NetRequestDone(il_container *ic, ilIURL *url, int status)
      * freeing of the data that was deferred there.
      */
     if (ic->state == IC_ABORT_PENDING) {
+        ic->is_url_loading = PR_FALSE;
         il_delete_container(ic);
         NS_RELEASE(url);
         return;
