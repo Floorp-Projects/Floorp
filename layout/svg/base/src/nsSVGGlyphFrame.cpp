@@ -478,7 +478,7 @@ nsSVGGlyphFrame::GetStrokeOpacity(float *aStrokeOpacity)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeWidth(float *aStrokeWidth)
 {
-  *aStrokeWidth = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeWidth;
+  *aStrokeWidth = GetStyleSVG()->mStrokeWidth;
   return NS_OK;
 }
 
@@ -507,7 +507,7 @@ nsSVGGlyphFrame::GetStrokeDashArray(float **arr, PRUint32 *count)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeDashoffset(float *aStrokeDashoffset)
 {
-  *aStrokeDashoffset = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeDashoffset;
+  *aStrokeDashoffset = GetStyleSVG()->mStrokeDashoffset;
   return NS_OK;
 }
 
@@ -515,7 +515,7 @@ nsSVGGlyphFrame::GetStrokeDashoffset(float *aStrokeDashoffset)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeLinecap(PRUint16 *aStrokeLinecap)
 {
-  *aStrokeLinecap = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeLinecap;
+  *aStrokeLinecap = GetStyleSVG()->mStrokeLinecap;
   return NS_OK;
 }
 
@@ -523,7 +523,7 @@ nsSVGGlyphFrame::GetStrokeLinecap(PRUint16 *aStrokeLinecap)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeLinejoin(PRUint16 *aStrokeLinejoin)
 {
-  *aStrokeLinejoin = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeLinejoin;
+  *aStrokeLinejoin = GetStyleSVG()->mStrokeLinejoin;
   return NS_OK;
 }
 
@@ -531,7 +531,7 @@ nsSVGGlyphFrame::GetStrokeLinejoin(PRUint16 *aStrokeLinejoin)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeMiterlimit(float *aStrokeMiterlimit)
 {
-  *aStrokeMiterlimit = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeMiterlimit; 
+  *aStrokeMiterlimit = GetStyleSVG()->mStrokeMiterlimit; 
   return NS_OK;
 }
 
@@ -548,7 +548,7 @@ nsSVGGlyphFrame::GetFillOpacity(float *aFillOpacity)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetFillRule(PRUint16 *aFillRule)
 {
-  *aFillRule = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFillRule;
+  *aFillRule = GetStyleSVG()->mFillRule;
   return NS_OK;
 }
 
@@ -556,7 +556,7 @@ nsSVGGlyphFrame::GetFillRule(PRUint16 *aFillRule)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
 {
-  *aStrokePaintType = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mType;
+  *aStrokePaintType = GetStyleSVG()->mStroke.mType;
   return NS_OK;
 }
 
@@ -564,7 +564,7 @@ nsSVGGlyphFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokePaint(nscolor *aStrokePaint)
 {
-  *aStrokePaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mPaint.mColor;
+  *aStrokePaint = GetStyleSVG()->mStroke.mPaint.mColor;
   return NS_OK;
 }
 
@@ -573,7 +573,7 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokeGradient(nsISVGGradient **aGrad)
 {
   nsIURI *aServer;
-  aServer = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mPaint.mPaintServer;
+  aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
   if (aServer == nsnull)
     return NS_ERROR_FAILURE;
   // Now have the URI.  Get the gradient 
@@ -584,7 +584,7 @@ nsSVGGlyphFrame::GetStrokeGradient(nsISVGGradient **aGrad)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetFillPaintType(PRUint16 *aFillPaintType)
 {
-  *aFillPaintType = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mType;
+  *aFillPaintType = GetStyleSVG()->mFill.mType;
   return NS_OK;
 }
 
@@ -592,7 +592,7 @@ nsSVGGlyphFrame::GetFillPaintType(PRUint16 *aFillPaintType)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetFillPaint(nscolor *aFillPaint)
 {
-  *aFillPaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mPaint.mColor;
+  *aFillPaint = GetStyleSVG()->mFill.mPaint.mColor;
   return NS_OK;
 }
 
@@ -601,7 +601,7 @@ NS_IMETHODIMP
 nsSVGGlyphFrame::GetFillGradient(nsISVGGradient **aGrad)
 {
   nsIURI *aServer;
-  aServer = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mPaint.mPaintServer;
+  aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
   if (aServer == nsnull)
     return NS_ERROR_FAILURE;
   // Now have the URI.  Get the gradient 
@@ -616,7 +616,7 @@ nsSVGGlyphFrame::GetFillGradient(nsISVGGradient **aGrad)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetFont(nsFont *aFont)
 {
-  *aFont = ((const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font))->mFont;
+  *aFont = GetStyleFont()->mFont;
 
   // XXX eventually we will have to treat decorations separately from
   // fonts, because they can have a different color than the current
@@ -627,7 +627,7 @@ nsSVGGlyphFrame::GetFont(nsFont *aFont)
   NS_ASSERTION(parentContext, "no style context on parent");
   
   PRUint8 styleDecorations =
-    ((const nsStyleTextReset*)parentContext->GetStyleData(eStyleStruct_TextReset))->mTextDecoration;
+    parentContext->GetStyleTextReset()->mTextDecoration;
   if (styleDecorations & NS_STYLE_TEXT_DECORATION_UNDERLINE)
     aFont->decorations |= NS_FONT_DECORATION_UNDERLINE;
   if (styleDecorations & NS_STYLE_TEXT_DECORATION_OVERLINE)
@@ -650,7 +650,7 @@ nsSVGGlyphFrame::GetCharacterData(nsAString & aCharacterData)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetTextRendering(PRUint16 *aTextRendering)
 {
-  *aTextRendering = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mTextRendering;
+  *aTextRendering = GetStyleSVG()->mTextRendering;
   return NS_OK;
 }
 
