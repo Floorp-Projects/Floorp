@@ -2143,9 +2143,6 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
     isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
     PRBool bidiEnabled;
     aPresContext->BidiEnabled(bidiEnabled);
-    //mrous
-    PRBool isVisual;
-    aPresContext->IsVisualMode(isVisual);
     //ahmed
     aPresContext->SetIsBidiSystem(isBidiSystem);
     if (bidiEnabled) {
@@ -2157,11 +2154,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         isRightToLeftOnBidiPlatform = PR_TRUE;
       }
       else if (eCharType_RightToLeftArabic == charType) {
-	//mrous add visual check to avoid reversing visual docs on bidi systems
-	// no need since it is already in the FE range, which the system does
-	// not interpret as bidi
         isRightToLeftOnBidiPlatform =
-	  ((hints & NS_RENDERING_HINT_ARABIC_SHAPING) && (!isVisual));
+	  (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
       }
       if (isRightToLeftOnBidiPlatform) {
         // indicate that the platform should use its native
