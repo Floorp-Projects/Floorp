@@ -43,7 +43,7 @@ class nsRDFContentSink : public nsIRDFContentSink
 {
 public:
     nsRDFContentSink();
-    ~nsRDFContentSink();
+    virtual ~nsRDFContentSink();
 
     virtual nsresult Init(nsIURL* aURL);
 

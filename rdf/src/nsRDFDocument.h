@@ -199,13 +199,31 @@ public:
     // nsIRDFDocument interface
     NS_IMETHOD GetDataBase(nsIRDFDataBase*& result);
 
-    NS_IMETHOD CreateChildren(nsIRDFNode* resource, nsISupportsArray* children) = 0;
+    NS_IMETHOD CreateChildren(nsIRDFContent* element, nsISupportsArray* children);
+
+    NS_IMETHOD AddTreeProperty(nsIRDFNode* resource);
+
+    NS_IMETHOD RemoveTreeProperty(nsIRDFNode* resource);
 
 protected:
     nsIContent*
     FindContent(const nsIContent* aStartNode,
                 const nsIContent* aTest1,
                 const nsIContent* aTest2) const;
+
+    PRBool IsTreeProperty(const nsIRDFNode* resource) const;
+
+    nsresult AttachTextNode(nsIContent* parent,
+                            nsIRDFNode* value);
+
+    nsresult NewChild(const nsString& tag,
+                      nsIRDFNode* resource,
+                      nsIRDFContent*& result,
+                      PRBool childrenMustBeGenerated);
+
+    virtual nsresult CreateChild(nsIRDFNode* property,
+                                 nsIRDFNode* value,
+                                 nsIRDFContent*& result) = 0;
 
     nsIArena*              mArena;
     nsVoidArray            mObservers;
@@ -228,6 +246,8 @@ protected:
     nsIStyleSheet*         mAttrStyleSheet;
     nsIParser*             mParser;
     nsIRDFDataBase*        mDB;
+    nsIRDFResourceManager* mResourceMgr;
+    nsISupportsArray*      mTreeProperties;
 };
 
 

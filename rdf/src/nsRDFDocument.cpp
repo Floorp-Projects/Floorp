@@ -23,11 +23,16 @@
 #include "nsIDocumentObserver.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIParser.h"
+#include "nsIRDFContent.h"
+#include "nsIRDFCursor.h"
 #include "nsIRDFDataBase.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
+#include "nsIRDFResourceManager.h"
 #include "nsIPresShell.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIServiceManager.h"
+#include "nsISupportsArray.h"
 #if XP_NEW_SELECTION
 #include "nsICollection.h"
 #else
@@ -44,32 +49,42 @@
 #include "nsRDFCID.h"
 #include "nsRDFContentSink.h"
 #include "nsRDFDocument.h"
+#include "nsITextContent.h"
 #include "nsIDTD.h"
+#include "nsLayoutCID.h"
+#include "rdfutil.h"
 
+////////////////////////////////////////////////////////////////////////
+
+static NS_DEFINE_IID(kIContentIID,        NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,       NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIParserIID,         NS_IPARSER_IID);
 static NS_DEFINE_IID(kIPresShellIID,      NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIRDFDataBaseIID,    NS_IRDFDATABASE_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,  NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFDocumentIID,    NS_IRDFDOCUMENT_IID);
+static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kITextContentIID,    NS_ITEXT_CONTENT_IID); // XXX grr...
 static NS_DEFINE_IID(kIWebShellIID,       NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID,    NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDTDIID,            NS_IDTD_IID);
-static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 #if XP_NEW_SELECTION
 static NS_DEFINE_IID(kICollectionIID,     NS_ICOLLECTION_IID);
 #else
 static NS_DEFINE_IID(kISelectionIID,      NS_ISELECTION_IID);
 #endif
 
+static NS_DEFINE_CID(kHTMLStyleSheetCID,      NS_HTMLSTYLESHEET_CID);
+static NS_DEFINE_CID(kParserCID,              NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kPresShellCID,           NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kRDFMemoryDataSourceCID, NS_RDFMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFSimpleDataBaseCID,   NS_RDFSIMPLEDATABASE_CID);
-static NS_DEFINE_CID(kParserCID,              NS_PARSER_IID); // XXX
+static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
+static NS_DEFINE_CID(kTextNodeCID,            NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,       NS_WELLFORMEDDTD_CID);
-static NS_DEFINE_CID(kHTMLStyleSheetCID,      NS_HTMLSTYLESHEET_CID);
 #if XP_NEW_SELECTION
 static NS_DEFINE_CID(kRangeListCID,           NS_RANGELIST_CID);
 #else
@@ -94,7 +109,9 @@ nsRDFDocument::nsRDFDocument()
       mDisplaySelection(PR_FALSE),
       mAttrStyleSheet(nsnull),
       mParser(nsnull),
-      mDB(nsnull)
+      mDB(nsnull),
+      mResourceMgr(nsnull),
+      mTreeProperties(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -113,6 +130,8 @@ nsRDFDocument::nsRDFDocument()
                                                     (void**) &mSelection)))
 #endif
         PR_ASSERT(0);
+
+    
 }
 
 nsRDFDocument::~nsRDFDocument()
@@ -129,10 +148,17 @@ nsRDFDocument::~nsRDFDocument()
         delete ns;
     }
 
+    if (mResourceMgr) {
+        nsServiceManager::ReleaseService(kRDFResourceManagerCID, mResourceMgr);
+        mResourceMgr = nsnull;
+    }
+
     // mParentDocument is never refcounted
     NS_IF_RELEASE(mSelection);
     NS_IF_RELEASE(mScriptContextOwner);
     NS_IF_RELEASE(mAttrStyleSheet);
+    NS_IF_RELEASE(mTreeProperties);
+    NS_IF_RELEASE(mRootContent);
     NS_IF_RELEASE(mDB);
     NS_IF_RELEASE(mDocumentURLGroup);
     NS_IF_RELEASE(mDocumentURL);
@@ -169,6 +195,17 @@ nsRDFDocument::Init()
 {
     nsresult rv;
     if (NS_FAILED(rv = NS_NewHeapArena(&mArena, nsnull)))
+        return rv;
+
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFSimpleDataBaseCID,
+                                                    nsnull,
+                                                    kIRDFDataBaseIID,
+                                                    (void**) &mDB)))
+        return rv;
+
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
+                                                    kIRDFResourceManagerIID,
+                                                    (nsISupports**) &mResourceMgr)))
         return rv;
 
     return NS_OK;
@@ -224,10 +261,7 @@ nsRDFDocument::StartDocumentLoad(nsIURL *aURL,
     nsIHTMLStyleSheet* sheet = nsnull;
     nsIDTD* dtd = nsnull;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFSimpleDataBaseCID,
-                                                    nsnull,
-                                                    kIRDFDataBaseIID,
-                                                    (void**) &mDB))) {
+    if (NS_FAILED(rv = Init())) {
         PR_ASSERT(0);
         goto done;
     }
@@ -287,7 +321,6 @@ nsRDFDocument::StartDocumentLoad(nsIURL *aURL,
         goto done;
     }
 
-    // XXX Use a factory!!!
     if (NS_FAILED(rv = nsRepository::CreateInstance(kWellFormedDTDCID,
                                                     nsnull,
                                                     kIDTDIID,
@@ -1104,6 +1137,128 @@ nsRDFDocument::GetDataBase(nsIRDFDataBase*& result)
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsRDFDocument::CreateChildren(nsIRDFContent* element, nsISupportsArray* children)
+{
+    nsresult rv;
+
+    NS_ASSERTION(mDB, "not initialized");
+    if (! mDB)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    NS_ASSERTION(mResourceMgr, "not initialized");
+    if (! mResourceMgr)
+        return NS_ERROR_NOT_INITIALIZED;
+
+
+    nsIRDFNode* resource = nsnull;
+    nsIRDFCursor* properties = nsnull;
+    PRBool moreProperties;
+
+    if (NS_FAILED(rv = element->GetResource(resource)))
+        goto done;
+
+    // Create a cursor that'll enumerate all of the outbound arcs
+    if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, properties)))
+        goto done;
+
+    while (NS_SUCCEEDED(rv = properties->HasMoreElements(moreProperties)) && moreProperties) {
+        nsIRDFNode* property = nsnull;
+        PRBool tv;
+
+        if (NS_FAILED(rv = properties->GetNext(property, tv /* ignored */)))
+            break;
+
+        nsAutoString uri;
+        if (NS_FAILED(rv = property->GetStringValue(uri))) {
+            NS_RELEASE(property);
+            break;
+        }
+
+        // Create a second cursor that'll enumerate all of the values
+        // for all of the arcs.
+        nsIRDFCursor* values;
+        if (NS_FAILED(rv = mDB->GetTargets(resource, property, PR_TRUE, values))) {
+            NS_RELEASE(property);
+            break;
+        }
+
+        PRBool moreValues;
+        while (NS_SUCCEEDED(rv = values->HasMoreElements(moreValues)) && moreValues) {
+            nsIRDFNode* value = nsnull;
+            if (NS_FAILED(rv = values->GetNext(value, tv /* ignored */)))
+                break;
+
+            // XXX At this point, we need to decide exactly what kind
+            // of kid to create in the content model. For example, for
+            // leaf nodes, we probably want to create some kind of
+            // text element.
+            nsIRDFContent* child;
+            if (NS_FAILED(rv = CreateChild(property, value, child))) {
+                NS_RELEASE(value);
+                break;
+            }
+
+            // And finally, add the child into the content model
+            children->AppendElement(child);
+
+            NS_RELEASE(child);
+            NS_RELEASE(value);
+        }
+
+        NS_RELEASE(values);
+        NS_RELEASE(property);
+
+        if (NS_FAILED(rv))
+            break;
+    }
+
+done:
+    NS_IF_RELEASE(resource);
+    NS_IF_RELEASE(properties);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsRDFDocument::AddTreeProperty(nsIRDFNode* resource)
+{
+    nsresult rv;
+    if (! mTreeProperties) {
+        if (NS_FAILED(rv = NS_NewISupportsArray(&mTreeProperties)))
+            return rv;
+    }
+
+    // ensure uniqueness
+    if (mTreeProperties->IndexOf(resource) != -1) {
+        PR_ASSERT(0);
+        return NS_OK;
+    }
+
+    mTreeProperties->AppendElement(resource);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRDFDocument::RemoveTreeProperty(nsIRDFNode* resource)
+{
+    if (! mTreeProperties) {
+        // XXX no properties have ever been inserted!
+        PR_ASSERT(0);
+        return NS_OK;
+    }
+
+    if (! mTreeProperties->RemoveElement(resource)) {
+        // XXX that specific property has never been inserted!
+        PR_ASSERT(0);
+        return NS_OK;
+    }
+
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
@@ -1132,5 +1287,97 @@ nsRDFDocument::FindContent(const nsIContent* aStartNode,
         NS_IF_RELEASE(content);
     }
     return nsnull;
+}
+
+
+PRBool
+nsRDFDocument::IsTreeProperty(const nsIRDFNode* property) const
+{
+#define TREE_PROPERTY_HACK
+#if defined(TREE_PROPERTY_HACK)
+    nsAutoString s;
+    property->GetStringValue(s);
+    if (s.Equals("http://home.netscape.com/NC-rdf#Bookmark") ||
+        s.Equals("http://home.netscape.com/NC-rdf#Folder")) {
+        return PR_TRUE;
+    }
+#endif // defined(TREE_PROPERTY_HACK)
+    if (rdf_IsOrdinalProperty(property)) {
+        return PR_TRUE;
+    }
+    if (! mTreeProperties) {
+        return PR_FALSE;
+    }
+    if (mTreeProperties->IndexOf(property) == -1) {
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
+nsresult
+nsRDFDocument::NewChild(const nsString& tag,
+                        nsIRDFNode* resource,
+                        nsIRDFContent*& result,
+                        PRBool childrenMustBeGenerated)
+{
+    nsresult rv;
+
+    nsIRDFContent* child;
+    if (NS_FAILED(rv = NS_NewRDFElement(&child)))
+        return rv;
+
+    if (NS_FAILED(rv = child->Init(this, tag, resource, childrenMustBeGenerated))) {
+        NS_RELEASE(child);
+        return rv;
+    }
+
+    result = child;
+    return NS_OK;
+}
+
+
+nsresult
+nsRDFDocument::AttachTextNode(nsIContent* parent,
+                              nsIRDFNode* value)
+{
+    nsresult rv;
+    nsAutoString s;
+    nsIContent* node = nsnull;
+    nsITextContent* text = nsnull;
+    nsIDocument* doc = nsnull;
+
+    if (NS_FAILED(rv = value->GetStringValue(s)))
+        goto error;
+
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kTextNodeCID,
+                                                    nsnull,
+                                                    kIContentIID,
+                                                    (void**) &node)))
+        goto error;
+
+    if (NS_FAILED(rv = QueryInterface(kIDocumentIID, (void**) &doc)))
+        goto error;
+
+    if (NS_FAILED(rv = node->SetDocument(doc, PR_FALSE)))
+        goto error;
+
+    if (NS_FAILED(rv = node->QueryInterface(kITextContentIID, (void**) &text)))
+        goto error;
+
+    if (NS_FAILED(rv = text->SetText(s.GetUnicode(), s.Length(), PR_FALSE)))
+        goto error;
+
+    // hook it up to the child
+    if (NS_FAILED(rv = node->SetParent(parent)))
+        goto error;
+
+    if (NS_FAILED(rv = parent->AppendChildTo(NS_STATIC_CAST(nsIContent*, node), PR_TRUE)))
+        goto error;
+
+error:
+    NS_IF_RELEASE(node);
+    NS_IF_RELEASE(text);
+    NS_IF_RELEASE(doc);
+    return rv;
 }
 

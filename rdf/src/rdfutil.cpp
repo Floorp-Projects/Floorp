@@ -45,8 +45,13 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, resource);
 ////////////////////////////////////////////////////////////////////////
 
 PRBool
-rdf_IsOrdinalProperty(const nsString& uri)
+rdf_IsOrdinalProperty(const nsIRDFNode* property)
 {
+    nsAutoString uri;
+
+    if (NS_FAILED(property->GetStringValue(uri)))
+        return PR_FALSE;
+
     if (uri.Find(kRDFNameSpaceURI) != 0)
         return PR_FALSE;
 

@@ -41,7 +41,14 @@
 
  */
 
+
+// #define the following if you want properties to show up as
+// attributes on an element. I know, this sucks, but I'm just not
+// really sure if this is necessary...
+//#define CREATE_PROPERTIES_AS_ATTRIBUTES
+
 #include "nsDOMEvent.h"
+#include "nsHashtable.h"
 #include "nsIAtom.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -137,6 +144,49 @@ RDFDOMNodeListImpl::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     return rv;
 }
 
+
+////////////////////////////////////////////////////////////////////////
+// AttributeKey
+
+class AttributeKey : public nsHashKey
+{
+private:
+    nsIAtom* mAttr;
+
+public:
+    AttributeKey(const nsString& s) {
+        mAttr = NS_NewAtom(s);
+    }
+
+    AttributeKey(nsIAtom* atom) {
+        mAttr = atom;
+        NS_IF_ADDREF(mAttr);
+    }
+
+    virtual ~AttributeKey(void) {
+        NS_IF_RELEASE(mAttr);
+    }
+
+    virtual PRUint32 HashValue(void) const {
+        return (PRUint32) mAttr;
+    }
+
+    virtual PRBool Equals(const nsHashKey* aKey) const {
+        AttributeKey* that = NS_DYNAMIC_CAST(AttributeKey*, aKey);
+        return ((that) && (this->mAttr == that->mAttr));
+    }
+
+    virtual nsHashKey* Clone(void) const {
+        return new AttributeKey(mAttr);
+    }
+
+    nsresult GetAtomValue(nsIAtom*& result) {
+        result = mAttr;
+        NS_IF_ADDREF(mAttr);
+        return NS_OK;
+    }
+};
+
 ////////////////////////////////////////////////////////////////////////
 // nsRDFElement
 
@@ -163,13 +213,34 @@ nsRDFElement::nsRDFElement(void)
       mResource(nsnull),
       mChildren(nsnull),
       mChildrenMustBeGenerated(PR_TRUE),
-      mParent(nsnull)
+      mParent(nsnull),
+      mAttributes(nsnull)
 {
     NS_INIT_REFCNT();
+}
+
+static PRBool
+rdf_AttributeDestroyEnumFunc(nsHashKey* key, void* aData, void* closure)
+{
+    // XXX this doesn't seem to work...
+    //nsHashtable* attributes = NS_DYNAMIC_CAST(nsHashtable*, closure);
+    //attributes->Remove(key);
+
+    nsString* value = NS_DYNAMIC_CAST(nsString*, aData);
+    delete value;
+
+    return PR_TRUE;
 }
  
 nsRDFElement::~nsRDFElement()
 {
+    if (mAttributes) {
+        mAttributes->Enumerate(rdf_AttributeDestroyEnumFunc, mAttributes);
+        delete mAttributes;
+    }
+    // mDocument is not refcounted
+    //NS_IF_RELEASE(mScriptObject); XXX don't forget!
+    NS_IF_RELEASE(mChildren);
     NS_IF_RELEASE(mNameSpace);
     NS_IF_RELEASE(mResource);
 }
@@ -583,17 +654,17 @@ nsRDFElement::GetDocument(nsIDocument*& aResult) const
 NS_IMETHODIMP
 nsRDFElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
-    NS_IF_RELEASE(mDocument);
-
     nsresult rv;
 
     if (aDocument) {
+        nsIRDFDocument* doc;
         if (NS_FAILED(rv = aDocument->QueryInterface(kIRDFDocumentIID,
-                                                     (void**) &mDocument)))
+                                                     (void**) &doc)))
             return rv;
-    }
 
-    // implicit AddRef() from QI
+        mDocument = doc;
+        NS_RELEASE(doc); // not refcounted
+    }
 
     if (aDeep && mChildren) {
         for (PRInt32 i = mChildren->Count() - 1; i >= 0; --i) {
@@ -640,6 +711,7 @@ nsRDFElement::SetParent(nsIContent* aParent)
 NS_IMETHODIMP
 nsRDFElement::CanContainChildren(PRBool& aResult) const
 {
+    // XXX Hmm -- not sure if this is unilaterally true...
     aResult = PR_TRUE;
     return NS_OK;
 }
@@ -779,20 +851,11 @@ nsRDFElement::IsSynthetic(PRBool& aResult)
 NS_IMETHODIMP
 nsRDFElement::GetTag(nsIAtom*& aResult) const
 {
-    PR_ASSERT(mResource);
-    if (! mResource)
-        return NS_ERROR_NOT_INITIALIZED;
-
     // XXX the problem with this is that we only have a
     // fully-qualified URI, not "just" the tag. And I think the style
     // system ain't gonna work right with that. So this is a complete
     // hack to parse what probably _was_ the tag out.
-    nsresult rv;
-
-    nsAutoString s;
-    if (NS_FAILED(rv = mResource->GetStringValue(s)))
-        return rv;
-
+    nsAutoString s = mTag;
     PRInt32 index;
 
     if ((index = s.RFind('#')) >= 0)
@@ -812,22 +875,49 @@ nsRDFElement::SetAttribute(const nsString& aName,
                            const nsString& aValue,
                            PRBool aNotify)
 {
-    PR_ASSERT(0); // this should be done via RDF
-    return NS_ERROR_UNEXPECTED;
+    if (! mAttributes) {
+        // Construct the attribute table on demand.
+        if (! (mAttributes = new nsHashtable(7)))
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    AttributeKey key(aName);
+
+    nsString* value = new nsString(aValue);
+    if (! value)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsString* old = NS_STATIC_CAST(nsString*, mAttributes->Put(&key, value));
+    delete old;
+
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsRDFElement::GetAttribute(const nsString& aName, nsString& aResult) const
 {
-    nsresult rv;
+    nsresult rv = NS_ERROR_FAILURE; // XXX is this right?
+
+    if (mAttributes) {
+        AttributeKey key(aName);
+        nsString* value = NS_STATIC_CAST(nsString*, mAttributes->Get(&key));
+        if (value) {
+            aResult = *value;
+            return NS_OK;
+        }
+    }
+
+#if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
+    // XXX I'm not sure if we should support properties as attributes
+    // or not...
     nsIRDFResourceManager* mgr = nsnull;
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
                                                     kIRDFResourceManagerIID,
                                                     (nsISupports**) &mgr)))
         return rv;
     
-    nsIRDFDataBase* db    = nsnull;
+    nsIRDFDataBase* db   = nsnull;
     nsIRDFNode* property = nsnull;
     nsIRDFNode* value    = nsnull;
 
@@ -851,14 +941,35 @@ done:
     NS_IF_RELEASE(db);
     nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
 
+#endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     return rv;
 }
 
 NS_IMETHODIMP
 nsRDFElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
 {
-    PR_ASSERT(0); // this should be done via RDF
-    return NS_ERROR_UNEXPECTED;
+    if (! mAttributes)
+        return NS_OK; // never set
+
+    AttributeKey key(aAttribute);
+    nsString* old = NS_STATIC_CAST(nsString*, mAttributes->Remove(&key));
+    delete old;
+
+    return NS_OK;
+}
+
+static PRBool
+rdf_AttributeNameEnumFunc(nsHashKey* key, void* aData, void* closure)
+{
+    nsISupportsArray* array = NS_DYNAMIC_CAST(nsISupportsArray*, closure);
+    AttributeKey* k = NS_DYNAMIC_CAST(AttributeKey*, key);
+
+    nsIAtom* atom;
+    if (NS_SUCCEEDED(k->GetAtomValue(atom))) {
+        array->AppendElement(atom);
+        NS_RELEASE(atom);
+    }
+    return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -867,7 +978,18 @@ nsRDFElement::GetAllAttributeNames(nsISupportsArray* aArray, PRInt32& aResult) c
     if (! aArray)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
+    nsresult rv = NS_OK;
+
+    aArray->Clear(); // XXX or did you want me to append?
+
+    if (mAttributes)
+        mAttributes->Enumerate(rdf_AttributeNameEnumFunc, aArray);
+
+    aResult = aArray->Count();
+
+#if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
+    // XXX I'm not sure if we should support attributes or not...
+
     nsIRDFResourceManager* mgr = nsnull;
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
                                                     kIRDFResourceManagerIID,
@@ -883,9 +1005,6 @@ nsRDFElement::GetAllAttributeNames(nsISupportsArray* aArray, PRInt32& aResult) c
 
     if (NS_FAILED(rv = db->ArcLabelsOut(mResource, properties)))
         goto done;
-
-    aArray->Clear(); // XXX or did you want me to append?
-    aResult = 0;
 
     while (NS_SUCCEEDED(rv = properties->HasMoreElements(moreProperties)) && moreProperties) {
         nsIRDFNode* property = nsnull;
@@ -916,21 +1035,28 @@ done:
     NS_IF_RELEASE(db);
     nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
 
+#endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
     return rv;
 }
 
 NS_IMETHODIMP
 nsRDFElement::GetAttributeCount(PRInt32& aResult) const
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    aResult = 0;
+
+#if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
+    PR_ASSERT(0);     // XXX need to write this...
+#endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
+
+    return rv;
 }
 
 
 static void
 rdf_Indent(FILE* out, PRInt32 aIndent)
 {
-    for (PRInt32 i = aIndent; --i >= 0; ) fputs(" ", out);
+    for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
 }
 
 NS_IMETHODIMP
@@ -949,7 +1075,6 @@ nsRDFElement::List(FILE* out, PRInt32 aIndent) const
         rdf_Indent(out, aIndent);
         fputs("[RDF ", out);
         fputs(tag->GetUnicode(), out);
-        fputs("\n", out);
 
         NS_RELEASE(tag);
     }
@@ -972,12 +1097,10 @@ nsRDFElement::List(FILE* out, PRInt32 aIndent) const
                 nsAutoString v;
                 GetAttribute(s, v);
 
-                rdf_Indent(out, aIndent);
                 fputs(" ", out);
                 fputs(s, out);
                 fputs("=", out);
                 fputs(v, out);
-                fputs("\n", out);
             }
         }
 
@@ -987,7 +1110,6 @@ nsRDFElement::List(FILE* out, PRInt32 aIndent) const
             return rv;
     }
 
-    rdf_Indent(out, aIndent);
     fputs("]\n", out);
 
     {
@@ -1091,7 +1213,10 @@ nsRDFElement::GetNameSpaceIdentifier(PRInt32& aNameSpaceId)
 // nsIRDFContent
 
 NS_IMETHODIMP
-nsRDFElement::Init(nsIRDFDocument* doc, nsIRDFNode* resource, PRBool childrenMustBeGenerated)
+nsRDFElement::Init(nsIRDFDocument* doc,
+                   const nsString& aTag,
+                   nsIRDFNode* resource,
+                   PRBool childrenMustBeGenerated)
 {
     NS_PRECONDITION(doc, "null ptr");
     NS_PRECONDITION(resource, "null ptr");
@@ -1099,8 +1224,9 @@ nsRDFElement::Init(nsIRDFDocument* doc, nsIRDFNode* resource, PRBool childrenMus
     if (!doc || !resource)
         return NS_ERROR_NULL_POINTER;
 
-    mDocument = doc;
-    NS_ADDREF(mDocument);
+    mTag = aTag;
+
+    mDocument = doc; // not refcounted
 
     mResource = resource;
     NS_ADDREF(mResource);
@@ -1257,7 +1383,7 @@ nsRDFElement::GenerateChildren(void) const
         unconstThis->mChildren->Clear();
     }
 
-    if (NS_FAILED(rv = mDocument->CreateChildren(unconstThis->mResource,
+    if (NS_FAILED(rv = mDocument->CreateChildren(unconstThis,
                                                  unconstThis->mChildren)))
         return rv;
 

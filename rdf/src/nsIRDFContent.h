@@ -36,7 +36,10 @@ class nsIRDFNode;
  */
 class nsIRDFContent : public nsIXMLContent {
 public:
-  NS_IMETHOD Init(nsIRDFDocument* doc, nsIRDFNode* resource, PRBool childrenMustBeGenerated) = 0;
+  NS_IMETHOD Init(nsIRDFDocument* doc,
+                  const nsString& tag,
+                  nsIRDFNode* resource,
+                  PRBool childrenMustBeGenerated) = 0;
 
   NS_IMETHOD SetResource(const nsString& aURI) = 0;
   NS_IMETHOD GetResource(nsString& rURI) const = 0;
