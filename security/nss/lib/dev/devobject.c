@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.17 $ $Date: 2002/02/13 21:09:15 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.18 $ $Date: 2002/02/15 17:37:58 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -213,6 +213,7 @@ traverse_objects_by_template
     NSSArena *objectArena = NULL;
     nssSession *session;
     nssList *objectList = NULL;
+    int objectStackSize = OBJECT_STACK_SIZE;
     slot = tok->slot;
     objectStack = startOS;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
@@ -225,19 +226,25 @@ traverse_objects_by_template
     }
     while (PR_TRUE) {
 	ckrv = CKAPI(slot)->C_FindObjects(hSession, objectStack, 
-	                                  OBJECT_STACK_SIZE, &count);
+	                                  objectStackSize, &count);
 	if (ckrv != CKR_OK) {
 	    nssSession_ExitMonitor(session);
 	    goto loser;
 	}
-	if (count == OBJECT_STACK_SIZE) {
+	if (count == objectStackSize) {
 	    if (!objectList) {
 		objectArena = NSSArena_Create();
 		objectList = nssList_Create(objectArena, PR_FALSE);
 	    }
-	    objectStack = nss_ZNEWARRAY(objectArena, CK_OBJECT_HANDLE, 
-	                                OBJECT_STACK_SIZE);
 	    nssList_Add(objectList, objectStack);
+	    objectStackSize = objectStackSize * 2;
+	    objectStack = nss_ZNEWARRAY(objectArena, CK_OBJECT_HANDLE, 
+	                                objectStackSize);
+	    if (objectStack == NULL) {
+		count =0;
+		break;
+		/* return what we can */
+	    }
 	} else {
 	    break;
 	}
@@ -249,20 +256,22 @@ traverse_objects_by_template
     }
     if (objectList) {
 	nssListIterator *objects;
+	CK_OBJECT_HANDLE *localStack;
 	objects = nssList_CreateIterator(objectList);
-	for (objectStack = (CK_OBJECT_HANDLE *)nssListIterator_Start(objects);
-	     objectStack != NULL;
-	     objectStack = (CK_OBJECT_HANDLE *)nssListIterator_Next(objects)) {
-	    for (i=0; i<count; i++) {
-		cbrv = (*callback)(tok, session, objectStack[i], arg);
+	objectStackSize = OBJECT_STACK_SIZE;
+	for (localStack = (CK_OBJECT_HANDLE *)nssListIterator_Start(objects);
+	     localStack != NULL;
+	     localStack = (CK_OBJECT_HANDLE *)nssListIterator_Next(objects)) {
+	    for (i=0; i< objectStackSize; i++) {
+		cbrv = (*callback)(tok, session, localStack[i], arg);
 	    }
+	    objectStackSize = objectStackSize * 2;
 	}
 	nssListIterator_Finish(objects);
 	nssListIterator_Destroy(objects);
-	count = OBJECT_STACK_SIZE;
     }
     for (i=0; i<count; i++) {
-	cbrv = (*callback)(tok, session, startOS[i], arg);
+	cbrv = (*callback)(tok, session, objectStack[i], arg);
     }
     if (objectArena)
 	NSSArena_Destroy(objectArena);
