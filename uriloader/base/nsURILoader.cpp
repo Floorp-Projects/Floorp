@@ -96,6 +96,7 @@ protected:
     nsCOMPtr<nsISupports> m_originalContext;
     nsURILoadCommand mCommand;
     nsCString m_windowTarget;
+    PRBool  mOnStopFired;
 };
 
 NS_IMPL_THREADSAFE_ADDREF(nsDocumentOpenInfo);
@@ -108,6 +109,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocumentOpenInfo)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsDocumentOpenInfo::nsDocumentOpenInfo()
+  : mOnStopFired (PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -192,8 +194,12 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISuppor
                                                 nsresult aStatus, const PRUnichar * errorMsg)
 {
   nsresult rv = NS_OK;
-  if (m_targetStreamListener)
+
+  if (!mOnStopFired && m_targetStreamListener)
+  {
+    mOnStopFired = PR_TRUE;
     m_targetStreamListener->OnStopRequest(aChannel, aCtxt, aStatus, errorMsg);
+  }
 
   m_targetStreamListener = 0;
 
