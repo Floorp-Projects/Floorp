@@ -1,0 +1,93 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+#include "nsIStreamListener.idl"
+
+interface nsIUrlListener;
+interface nsIURI;
+interface nsIImapUrl;
+interface nsIEventQueue;
+interface nsIImapProtocol;
+interface nsISupportsArray;
+interface nsIMsgFolder;
+interface nsIImapHostSessionList;
+
+[scriptable, uuid(132231ca-c796-11d3-b9f5-00108335942a)]
+interface nsIImapProtocol : nsIStreamListener {
+	/////////////////////////////////////////////////////////////////////////
+	/* LoadUrl should really be pushed into a generic protocol interface
+	// I think. Imap happens to be the only case where we need to push back
+	// a thread safe object to our test app. 
+	///////////////////////////////////////////////////////////////////////// */
+	void LoadUrl(in nsIURI aUrl, in nsISupports aConsumer);
+
+	///////////////////////////////////////////////////////////////////////// 
+	// IsBusy returns true if the connection is currently processing a url
+	// and false otherwise.
+	/////////////////////////////////////////////////////////////////////////
+	void IsBusy(out boolean aIsConnectionBusy, 
+                      out boolean isInboxConnection);
+
+	// Protocol instance examines the url, looking at the host name,
+	// user name and folder the action would be on in order to figure out
+	// if it can process this url. I decided to push the semantics about
+	// whether a connection can handle a url down into the connection level
+	// instead of in the connection cache.
+	void CanHandleUrl(in nsIImapUrl aImapUrl, out boolean aCanRunUrl,
+                            out boolean hasToWait);
+
+	/////////////////////////////////////////////////////////////////////////
+	// Right now, initialize requires the event queue of the UI thread, 
+	// or more importantly the event queue of the consumer of the imap
+	// protocol data. The protocol also needs a host session list.
+	/////////////////////////////////////////////////////////////////////////
+	void Initialize(in nsIImapHostSessionList aHostSessionList, in nsIEventQueue aSinkEventQueue) ;
+
+    void GetThreadEventQueue(out nsIEventQueue aEventQueue);
+
+    void NotifyFEEventCompletion();
+
+	void NotifyHdrsToDownload(out unsigned long keys, in unsigned long keyCount);
+	void NotifyBodysToDownload(out unsigned long keys, in unsigned long count);
+	// methods to get data from the imap parser flag state.
+	void GetFlagsForUID(in unsigned long uid, out boolean foundIt, out unsigned short flags);
+	void GetSupportedUserFlags(out unsigned short flags);
+
+	void GetRunningImapURL(out nsIImapUrl aImapUrl);
+
+	// this is for the temp message display hack
+    // ** jt - let's try it a little more generic way
+	void GetStreamConsumer (out nsISupports aSupport);
+    void GetRunningUrl(out nsIURI aUrl);
+
+    // Tell thread to die
+    void TellThreadToDie(in boolean isSafeToDie);
+    // Get last active time stamp
+    void GetLastActiveTimeStamp(out PRTime aTimeStamp);
+
+	void PseudoInterruptMsgLoad(in nsIImapUrl aImapUrl, out boolean interrupted);
+    void GetSelectedMailboxName(out string folderName);
+    // Reset folder connection to authenticated state
+    void ResetToAuthenticatedState();
+};
+
