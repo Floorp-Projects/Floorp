@@ -4339,7 +4339,10 @@ PK11_ReadAttribute(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,
     } else {
     	attr.pValue = PORT_Alloc(attr.ulValueLen);
     }
-    if (attr.pValue == NULL) return SECFailure;
+    if (attr.pValue == NULL) {
+	PK11_ExitSlotMonitor(slot);
+	return SECFailure;
+    }
     crv = PK11_GETTAB(slot)->C_GetAttributeValue(slot->session,id,&attr,1);
     PK11_ExitSlotMonitor(slot);
     if (crv != CKR_OK) {
