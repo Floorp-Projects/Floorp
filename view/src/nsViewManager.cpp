@@ -537,6 +537,9 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
   if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
   {
     Composite();
+    // XXX Composite() should return the top-most view that's dirty so
+    // we don't have to always use the root window...
+    mRootWindow->Update();
   }
   // or if a sync paint is allowed and it's time for the compositor to
   // do a refresh
