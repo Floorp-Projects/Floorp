@@ -563,8 +563,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       if (commandDispatcher) {
         commandDispatcher->SetActive(PR_TRUE);
-		commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
-	  }   
+        commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
+      }  
+      mCurrentFocus = nsnull;  
     }
     break;
     
@@ -663,9 +664,11 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       if (commandDispatcher) {
         commandDispatcher->SetActive(PR_FALSE);
-		commandDispatcher->SetSuppressFocus(PR_FALSE);
-	  }
+        commandDispatcher->SetSuppressFocus(PR_FALSE);
+      }
+      mCurrentFocus = nsnull;
     } 
+    
     break;
     
   case NS_KEY_PRESS:
