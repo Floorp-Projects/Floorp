@@ -42,7 +42,7 @@ toolbargrippy[tbgrippy-collapsed="true"]:hover:active
 
 toolbar[collapsed="true"] > toolbargrippy 
   {
-    width                 : 30px;
+    width                 : 20px;
   }
   
 .toolbar-standard > toolbargrippy

@@ -27,7 +27,15 @@
 }
 
 #FormatToolbar {
-  border-bottom: 1px solid #003366;
+  border-top: 1px solid #B6CADF;
+  border-bottom: 1px solid #000000;
+  border-left: 1px solid #48607E;
+  border-right: 2px solid #4D6685;
+  background-color: #7B94B2;  
+}
+
+#FormatToolbar > toolbargrippy {
+  margin-left: 0px;
 }
 
 .separator_small { 
@@ -383,19 +391,19 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
   }
 
 #linkButton-dark {
-	list-style-image:url("chrome://editor/skin/images/link.gif");
+	//list-style-image:url("chrome://editor/skin/images/link.gif");
 }
 #imageButton-dark {
-	list-style-image:url("chrome://editor/skin/images/image.gif");
+	//list-style-image:url("chrome://editor/skin/images/image.gif");
 }
 #namedAnchorButton-dark {
-	list-style-image:url("chrome://editor/skin/images/anchor.gif");
+	//list-style-image:url("chrome://editor/skin/images/anchor.gif");
 }
 #hlineButton-dark {
-	list-style-image:url("chrome://editor/skin/images/hline.gif");
+	//list-style-image:url("chrome://editor/skin/images/hline.gif");
 }
 #tableButton-dark {
-	list-style-image:url("chrome://editor/skin/images/table.gif");
+	//list-style-image:url("chrome://editor/skin/images/table.gif");
 }
 
 #spellingButton {

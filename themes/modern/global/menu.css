@@ -54,9 +54,9 @@ menupopup > menuitem, popup > menuitem
 
 menuseparator 
   {
-  	border-top			  : 1px solid #172254;
-    border-bottom         : 1px solid #5A518A; 
-    margin                : 2px 0px;
+  	border-top			  : 1px solid #FEFEFE;
+    border-bottom         : 1px solid #012655; 
+    margin                : 2px 3px;
   }
 
 menubar > menu 
@@ -203,6 +203,7 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
     color                 : #000000;
     font-size             : 10px;
     padding               : 2px;
+    padding-right		  : 3px;
   }
 
 /*

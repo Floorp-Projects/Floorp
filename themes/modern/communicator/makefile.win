@@ -56,6 +56,10 @@ install::
 	$(MAKE_INSTALL) tb-menubutton-dm.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) toolbar.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 	$(MAKE_INSTALL) unlock.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) throbber-groove-bottom.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) throbber-groove-left.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) throbber-groove-right.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
+	$(MAKE_INSTALL) throbber-groove-top.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin
 
 clobber::
 	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\*.*

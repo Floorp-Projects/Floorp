@@ -331,8 +331,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #statusbar-display
   {
     list-style-image      : url("chrome://communicator/skin/document.gif");
-    font-size			  : 10px;
-    color				  : #D0E7E7;
   }
   
 #statusbar-display[error="true"]
@@ -360,3 +358,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     -moz-user-focus       : ignore !important;
   }
 
+#PersonalToolbar
+  {
+  	background-color	  : #394B6E;
+  }

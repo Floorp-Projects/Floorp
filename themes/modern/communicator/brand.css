@@ -1,13 +1,14 @@
 
 #navigator-throbber
   {
-    -moz-binding          : url("chrome://global/content/xulBindings.xml#buttontop");
+    -moz-binding          : url("chrome://global/skin/globalBindings.xml#throbber");
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
-    margin                : 5px 1px 9px 8px;
+    margin                : 2px 1px 6px 8px;
     padding               : 0px;
     cursor                : pointer;
     border                : 0px;
     background-color	  : transparent;
+    text-align			  : center;
     -moz-user-focus       : ignore;
   }  
 
@@ -18,18 +19,38 @@
   
 #navigator-throbber:hover:active
   {
-    margin               : 4px 0px 5px 9px;
+    margin               : 2px 1px 6px 8px;
   }
 
-#navigator-throbber > .button-internal-box
+.throbber-icon
   {
-    border                : 0px;
-    padding               : 0px;
-    margin                : 0px;
+  	margin		: 0px 0px;
   }
-  
-#navigator-throbber > .button-internal-box > .button-text-container
+
+.throbber-groove-left
   {
-    display               : none;
-  }
-  
+  	background			 : url(chrome://communicator/skin/throbber-groove-left.gif) no-repeat;
+  	width				 : 3px;
+  	height				 : 38px;
+  }  
+
+.throbber-groove-right
+  {
+  	background			 : url(chrome://communicator/skin/throbber-groove-right.gif) no-repeat;
+  	width				 : 3px;
+  	height				 : 38px;
+  }  
+
+.throbber-groove-top
+  {
+  	background			 : url(chrome://communicator/skin/throbber-groove-top.gif) no-repeat;
+  	height				 : 3px;
+  	width				 : 32px;
+  }  
+
+.throbber-groove-bottom
+  {
+  	background			 : url(chrome://communicator/skin/throbber-groove-bottom.gif) no-repeat;
+  	height				 : 3px;
+  	width				 : 32px;
+  }  

@@ -20,6 +20,26 @@ box.padded {
 	width: 100%;
 }
 
+/* Header toolbar */
+
+#MsgHeadersToolbar {
+	background-color	: #7B94B2;
+	border-top			: 2px solid #4C6484;
+	border-bottom		: 0px;
+	border-left			: 1px solid #48607E;
+	border-right		: 2px solid #4D6685;
+}
+
+#MsgHeadersToolbar > toolbargrippy {
+	border-top			: 1px solid #B6CADF;
+	margin-left			: 0px;
+}
+
+#msgheaderstoolbar-box {
+	border-top			: 1px solid #B6CADF;
+}
+
+
 
 /* addressing widget */
 
@@ -228,10 +248,6 @@ textfield.addressingWidget[autocomplete="true"] > box
   {
     list-style-image      : url("chrome://global/skin/stop-clicked.gif");
   }
-
-toolbar#MsgHeadersToolbar {
-  border-bottom: 1px solid #999999;
-}
 
 box#addressingWidget {
   -moz-user-focus: normal;

@@ -63,7 +63,7 @@
   
   window.dialog 
     { 
-      background-color    : #CCCCCC;
+      background-color    : #B4C3D4;
       padding             : 7px 5px 5px 5px;
     }
 
@@ -127,11 +127,13 @@
   #status-bar 
     {
       border-top          : 1px solid #11151F;
-      background-color    : #6D88AA;
+      background-color    : #6E89AB;
       -moz-user-focus     : ignore;
       overflow            : hidden;
       margin			  : 0px;
       padding			  : 0px;
+      color				  : #D0E7E7;
+      font-size			  : 10px;
     }
 
 /**

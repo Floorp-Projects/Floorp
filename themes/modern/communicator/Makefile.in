@@ -57,6 +57,10 @@ EXPORT_RESOURCE = \
 		$(srcdir)/tb-menubutton-dm.gif \
 		$(srcdir)/toolbar.css \
 		$(srcdir)/unlock.gif \
+		$(srcdir)/throbber-groove-bottom.gif \
+		$(srcdir)/throbber-groove-left.gif \
+		$(srcdir)/throbber-groove-right.gif \
+		$(srcdir)/throbber-groove-top.gif \
 		$(NULL)
 
 DIRS = search xpinstall sidebar bookmarks directory profile regviewer related 

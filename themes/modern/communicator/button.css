@@ -56,7 +56,7 @@
   .button-toolbar[toggled="true"]
     {
       border                : 0px solid #036;
-      background-color      : #AAA;
+      background-color      : #DFFFFF;
       -moz-border-radius    : 4px;
     }    
 
@@ -75,7 +75,7 @@
   .button-toolbar-1
     {
       color               : #D0E7E7;
-      margin              : 3px 2px 6px 2px;
+      margin              : 3px 2px 9px 2px;
       font-size           : smaller;
       border              : 0px;
       padding			  : 0px;
@@ -98,7 +98,7 @@
   .button-toolbar-1[disabled="true"]:hover,
   .button-toolbar-1[disabled="true"]:hover:active
     {
-      margin              : 3px 2px 6px 2px;
+      margin              : 3px 2px 9px 2px;
       border              : none;
     }
     

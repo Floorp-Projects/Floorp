@@ -107,4 +107,16 @@
     </content>
   </binding>
 
+  <binding id="throbber" extends="chrome://global/content/xulBindings.xml#basetext">
+  	<content excludes="observes,template">
+  	  <xul:spring class="throbber-groove-left"/>
+  	  <xul:box flex="1" class="throbber-middle" orient="vertical">
+  	  	<xul:spring class="throbber-groove-top"/>
+  	  	<xul:image flex="1" class="throbber-icon" inherits="src"/>
+  	  	<xul:spring class="throbber-groove-bottom"/>
+  	  </xul:box>
+  	  <xul:spring class="throbber-groove-right"/>
+    </content>
+  </binding>
+
 </bindings>
