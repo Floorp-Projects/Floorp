@@ -925,6 +925,11 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
 
     PRBool serverMode = PR_FALSE;
     GetIsServerMode( &serverMode );
+#if 0
+/* temporarily disabling to clear smoketest blocker 99286
+   don't create an http protocol handler service before XPCOM is initialized
+   (danm for dp) */
+
     if ( !serverMode ) {  // okay, so it's not -turbo
         HKEY key;
         LONG result = ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_QUERY_VALUE, &key );
@@ -942,6 +947,7 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
                 SetIsServerMode( PR_TRUE );
         }
     }
+#endif
 
     return rv;
 }
