@@ -799,7 +799,7 @@ Accessible::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR* aNum
   for (long childIndex = 0; pvar[*aNumElementsFetched].vt == VT_DISPATCH; ++childIndex) {
     IAccessible *msaaAccessible = NS_STATIC_CAST(IAccessible*, pvar[*aNumElementsFetched].pdispVal);
     if (childIndex >= mEnumVARIANTPosition) {
-      if ((*aNumElementsFetched)++ >= aNumElementsRequested)
+      if (++*aNumElementsFetched >= aNumElementsRequested)
         break;
     }
     else {  
