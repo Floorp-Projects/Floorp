@@ -357,6 +357,14 @@ static Components gComponents[] = {
   { "XBL Service", NS_XBLSERVICE_CID, "component://netscape/xbl" },
   { "XBL Binding Manager", NS_BINDINGMANAGER_CID, "component://netscape/xbl/binding-manager" },
   
+  { "XUL Box Object", NS_BOXOBJECT_CID, "component://netscape/layout/xul-boxobject" },
+  { "XUL Tree Box Object", NS_TREEBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-tree" },
+  { "XUL Menu Box Object", NS_MENUBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-menu" },
+  { "XUL PopupSet Box Object", NS_POPUPSETBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-popupset" },
+  { "XUL Browser Box Object", NS_BROWSERBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-browser" },
+  { "XUL Editor Box Object", NS_EDITORBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-editor" },
+  { "XUL Iframe Object", NS_IFRAMEBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-iframe" },
+
   { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "component://netscape/autocopy" },
   { "Content policy service", NS_CONTENTPOLICY_CID, NS_CONTENTPOLICY_PROGID },
   { "XIF Converter", NS_XIFCONVERTER_CID, nsnull },

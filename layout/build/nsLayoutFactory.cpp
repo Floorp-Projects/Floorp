@@ -58,6 +58,8 @@
 #include "nsIXBLService.h"
 #include "nsIBindingManager.h"
 
+#include "nsIBoxObject.h"
+
 #include "nsIAutoCopy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIXIFConverter.h"
@@ -105,6 +107,14 @@ static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
 static NS_DEFINE_CID(kBindingManagerCID, NS_BINDINGMANAGER_CID);
 
+static NS_DEFINE_CID(kBoxObjectCID, NS_BOXOBJECT_CID);
+static NS_DEFINE_CID(kTreeBoxObjectCID, NS_TREEBOXOBJECT_CID);
+static NS_DEFINE_CID(kMenuBoxObjectCID, NS_MENUBOXOBJECT_CID);
+static NS_DEFINE_CID(kPopupSetBoxObjectCID, NS_POPUPSETBOXOBJECT_CID);
+static NS_DEFINE_CID(kBrowserBoxObjectCID, NS_BROWSERBOXOBJECT_CID);
+static NS_DEFINE_CID(kEditorBoxObjectCID, NS_EDITORBOXOBJECT_CID);
+static NS_DEFINE_CID(kIFrameBoxObjectCID, NS_IFRAMEBOXOBJECT_CID);
+
 static NS_DEFINE_CID(kDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kNodeInfoManagerCID, NS_NODEINFOMANAGER_CID);
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
@@ -135,6 +145,14 @@ extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 extern nsresult NS_NewXBLService(nsIXBLService** aResult);
 
 extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
+
+extern nsresult NS_NewBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewEditorBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewPopupSetBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
 
 extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 
@@ -406,6 +424,56 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
       return res;
     }
   }
+  else if (mClassID.Equals(kBoxObjectCID)) {
+    res = NS_NewBoxObject((nsIBoxObject**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewBoxObject", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kMenuBoxObjectCID)) {
+    res = NS_NewMenuBoxObject((nsIBoxObject**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewMenuBoxObject", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kTreeBoxObjectCID)) {
+    res = NS_NewTreeBoxObject((nsIBoxObject**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewTreeBoxObject", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kPopupSetBoxObjectCID)) {
+    res = NS_NewPopupSetBoxObject((nsIBoxObject**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewPopupSetBoxObject", res);
+      return res;
+    }
+  }
+  /*
+  else if (mClassID.Equals(kBrowserBoxObjectCID)) {
+    res = NS_NewBrowserBoxObject((nsIBoxObject**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewBrowserBoxObject", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kEditorBoxObjectCID)) {
+    res = NS_NewEditorBoxObject((nsIBoxObject**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewEditorBoxObject", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kIFrameBoxObjectCID)) {
+    res = NS_NewIFrameBoxObject((nsIBoxObject**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewIFrameBoxObject", res);
+      return res;
+    }
+  }*/
   else if (mClassID.Equals(kNodeInfoManagerCID)) {
     res = NS_NewNodeInfoManager((nsINodeInfoManager**) &inst);
     if (NS_FAILED(res)) {
