@@ -65,6 +65,7 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "jsapi.h"
+#include "nsMsgI18N.h"
 
 static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_CID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
@@ -85,16 +86,6 @@ static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 
-// defined in msgCompGlue.cpp
-extern char * nsMsgI18NGetDefaultMailCharset(void);
-extern nsresult ConvertFromUnicode(const nsString& aCharset, 
-                                   const nsString& inString,
-                                   char** outCString);
-extern nsresult ConvertToUnicode(const nsString& aCharset, 
-                                 const char* inCString, 
-                                 nsString& outString);
-extern const char *msgCompHeaderInternalCharset(void);
-extern nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
