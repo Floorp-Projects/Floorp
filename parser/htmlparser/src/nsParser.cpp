@@ -41,10 +41,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIBufferInputStream.h"
 
-#undef rickgdebug 
-#ifdef  rickgdebug
-#include "CRtfDTD.h"
-#endif
+//#define rickgdebug 
 
  
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -1104,7 +1101,7 @@ nsParser::OnStatus(nsIChannel* channel, nsISupports* aContext, const PRUnichar* 
 
 #ifdef rickgdebug
 #include <fstream.h>
-  fstream* gDumpFile;
+  fstream* gOutFile;
 #endif
 
 /**
@@ -1136,7 +1133,7 @@ nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
     NS_ASSERTION(contentType, "parser needs a content type to find a dtd");
 
 #ifdef rickgdebug
-  gDumpFile = new fstream("c:/temp/out.file",ios::trunc);
+  gOutFile= new fstream("c:/temp/out.file",ios::trunc);
 #endif
 
   return NS_OK;
@@ -1323,7 +1320,10 @@ nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
         mParserContext->mScanner->Append(mParserContext->mTransferBuffer,theNumRead);
 
   #ifdef rickgdebug
-        (*gDumpFile) << mParserContext->mTransferBuffer;
+        mParserContext->mTransferBuffer[theNumRead]=0;
+        mParserContext->mTransferBuffer[theNumRead+1]=0;
+        mParserContext->mTransferBuffer[theNumRead+2]=0;
+        (*gOutFile) << mParserContext->mTransferBuffer;
   #endif
 
       } //if
@@ -1378,9 +1378,9 @@ nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
   }
 
 #ifdef rickgdebug
-  if(gDumpFile){
-    gDumpFile->close();
-    delete gDumpFile;
+  if(gOutFile){
+    gOutFile->close();
+    delete gOutFile;
   }
 #endif
 

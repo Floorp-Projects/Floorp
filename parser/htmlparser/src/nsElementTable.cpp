@@ -60,7 +60,6 @@ TagList  gParamParents={2,{eHTMLTag_applet,eHTMLTag_object}};
 TagList  gTRParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
 TagList  gTREndParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
 
-
 //*********************************************************************************************
 //  Next, define the set of taglists for tags with special kids...
 //*********************************************************************************************
@@ -104,7 +103,7 @@ TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 // The following tag lists are used to define common set of root notes for the HTML elements...
 //*********************************************************************************************
 
-TagList  gRootTags={3,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table}};
+TagList  gRootTags={4,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table,eHTMLTag_applet}};
 TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
 
 TagList  gLIRootTags={7,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td}};
@@ -509,7 +508,7 @@ void InitializeElementTable(void) {
 
     Initialize( 
       /*tag*/                             eHTMLTag_fieldset,
-      /*requiredAncestor*/                eHTMLTag_form,eHTMLTag_unknown,
+      /*requiredAncestor*/                eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, (kSelf|kFlowEntity), kNone,	
@@ -744,7 +743,7 @@ void InitializeElementTable(void) {
 
     Initialize( 
       /*tag*/                             eHTMLTag_legend,
-      /*requiredAncestor*/                eHTMLTag_form,eHTMLTag_unknown,
+      /*requiredAncestor*/                eHTMLTag_fieldset,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gInFieldset,&gInFieldset,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kInlineEntity, kNone,	
@@ -883,7 +882,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special props, prop-range*/       kOmitWS,kDefaultPropRange,
       /*special parents,kids,skip*/       &gOptgroupParents,&gContainsOpts,eHTMLTag_unknown);
 
     Initialize( 
@@ -1094,7 +1093,7 @@ void InitializeElementTable(void) {
     Initialize( 
       /*tag*/                             eHTMLTag_table,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gInBody,	
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kNone, (kSelf|kInlineEntity),	
       /*special props, prop-range*/       (kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kNoStyleLeaksOut), 2,
@@ -1380,7 +1379,7 @@ PRBool nsHTMLElement::IsMemberOf(PRInt32 aSet) const{
 PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
   PRBool result=PR_FALSE;
     
-  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_userdefined)){
+  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_xmp)){
 
     result=(gHTMLElements[aTag].IsBlock() || 
             gHTMLElements[aTag].IsBlockEntity() ||
@@ -1405,7 +1404,7 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
  */
 PRBool nsHTMLElement::IsInlineEntity(eHTMLTags aTag){
   PRBool result=PR_FALSE;
-  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_userdefined)){
+  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_xmp)){
     result=TestBits(gHTMLElements[aTag].mParentBits,kInlineEntity);
   } 
   return result;
@@ -1420,7 +1419,7 @@ PRBool nsHTMLElement::IsInlineEntity(eHTMLTags aTag){
 PRBool nsHTMLElement::IsFlowEntity(eHTMLTags aTag){
   PRBool result=PR_FALSE;
 
-  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_userdefined)){
+  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_xmp)){
     result=TestBits(gHTMLElements[aTag].mParentBits,kFlowEntity);
   } 
   return result;
@@ -1434,7 +1433,7 @@ PRBool nsHTMLElement::IsFlowEntity(eHTMLTags aTag){
  */
 PRBool nsHTMLElement::IsBlockParent(eHTMLTags aTag){
   PRBool result=PR_FALSE;
-  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_userdefined)){
+  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_xmp)){
     result=TestBits(gHTMLElements[aTag].mInclusionBits,kBlockEntity);
   } 
   return result;
@@ -1449,7 +1448,7 @@ PRBool nsHTMLElement::IsBlockParent(eHTMLTags aTag){
  */
 PRBool nsHTMLElement::IsInlineParent(eHTMLTags aTag){
   PRBool result=PR_FALSE;
-  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_userdefined)){
+  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_xmp)){
     result=TestBits(gHTMLElements[aTag].mInclusionBits,kInlineEntity);
   } 
   return result;
@@ -1464,7 +1463,7 @@ PRBool nsHTMLElement::IsInlineParent(eHTMLTags aTag){
  */
 PRBool nsHTMLElement::IsFlowParent(eHTMLTags aTag){
   PRBool result=PR_FALSE;
-  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_userdefined)){
+  if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_xmp)){
     result=TestBits(gHTMLElements[aTag].mInclusionBits,kFlowEntity);
   } 
   return result;
@@ -1731,7 +1730,7 @@ PRBool nsHTMLElement::CanContainSelf(void) const {
  */
 PRBool nsHTMLElement::CanAutoCloseTag(eHTMLTags aTag) const{
   PRBool result=PR_TRUE;
-  if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)) {
+  if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_xmp)) {
     TagList* theTagList=gHTMLElements[mTagID].mDontAutocloseEnd;
     if(theTagList) {
       result=!FindTagInSet(aTag,theTagList->mTags,theTagList->mCount);

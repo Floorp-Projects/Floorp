@@ -92,12 +92,13 @@ nsHTMLTokenizer::FreeTokenRecycler(void) {
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult) {
+
+NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,PRInt32 aMode,PRBool aPlaintext) {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsHTMLTokenizer* it = new nsHTMLTokenizer();
+  nsHTMLTokenizer* it = new nsHTMLTokenizer(aMode,aPlaintext);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
