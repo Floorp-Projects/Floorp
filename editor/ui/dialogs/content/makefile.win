@@ -31,6 +31,8 @@ install::
 	$(MAKE_INSTALL) EdSpellCheck.js        $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdNamedAnchorProps.xul $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdNamedAnchorProps.js  $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdInsertTable.xul      $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdInsertTable.js       $(DIST)\bin\chrome\editor\dialogs\content\default
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdDialogCommon.js
@@ -44,3 +46,5 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdSpellCheck.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdNamedAnchorProps.xul
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdNamedAnchorProps.js
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdInsertTable.xul
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdInsertTable.js

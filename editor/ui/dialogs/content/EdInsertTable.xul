@@ -2,9 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
-<!-- dialog containing a control requiring initial setup -->
-<!-- WE SHOULD NOT USE ABSOLUTE WITH AND HEIGHT - USE BOXES INSTEAD? -->
-<xul:window class="dialog" title="PUT TITLE HERE"
+<xul:window class="dialog" title="Insert Table"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
@@ -13,18 +11,35 @@
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
   </script>
-  <script language="JavaScript" src="chrome://editordlgs/content/Ed?????.js">
+  <script language="JavaScript" src="chrome://editordlgs/content/EdInsertTable.js">
   </script>
 
   <xul:broadcaster id="args" value=""/>
   <table>
     <tr>
+      <td align="right">
+        Number of rows:
+      </td>
       <td>
+        <input type="text" id="rows" size="4"/>
       </td>
     </tr>
     <tr>
-      <!-- THIS SHOULD BE A XUL FRAGMENT -->
-      <td  align = "right">
+      <td align="right">
+        Number of columns:
+      </td>
+      <td>
+        <input type="text" id="columns" size="4"/>
+      </td>
+    </tr>
+  </table>
+  <hr width="100%"/>
+  <table width="100%">
+    <tr>
+      <td>
+        <button class="spaced" id="Advanced" onclick="onAdvanced()">More Attributes...</button>
+      </td>
+      <td align="right">
         <button class="spaced" id="OK" onclick="onOK()">OK</button>  
         <button class="spaced" id="Cancel" onclick="onCancel()">Cancel</button>
       </td>

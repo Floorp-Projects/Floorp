@@ -3,11 +3,10 @@
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
 <!-- dialog containing a control requiring initial setup -->
-<xul:window title="Horizontal Line Properties"
+<xul:window class="dialog" title="Horizontal Line Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    width="250" height="275"
     align="vertical" flex="100%">
 
   <!-- Methods common to all editor dialogs -->
@@ -15,7 +14,6 @@
   </script>
   <script language="JavaScript" src="chrome://editordlgs/content/EdHLineProps.js">
   </script>
-  <div flex="100%">
   <table width="100%">
     <tr>
       <td colspan="2">
@@ -74,7 +72,6 @@
       </td>
     </tr>
   </table>
-  </div>
 
 <xul:popup id="PixelOrPercentMenu">
   <xul:menu>

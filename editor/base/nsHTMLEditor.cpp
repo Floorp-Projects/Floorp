@@ -21,6 +21,7 @@
 #include "nsHTMLEditRules.h"
 #include "nsEditorEventListeners.h"
 #include "nsInsertHTMLTxn.h"
+#include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -2056,10 +2057,8 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   if (NS_FAILED(res) || !newElement)
     return NS_ERROR_FAILURE;
 
-
   // Set default values for new elements
-  // SHOULD THIS BE PUT IN "RULES" SYSTEM OR
-  //  ATTRIBUTES SAVED IN PREFS?
+  // TODO: These should probably be in XUL or prefs?
   if (isAnchor)
   {
     // TODO: Get the text of the selection and build a suggested Name
@@ -2122,6 +2121,29 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     newElement->SetAttribute("width", width);
     if (bNoShade)    
       newElement->SetAttribute("noshade", "");
+
+  } else if (TagName.Equals("table"))
+  {
+    newElement->SetAttribute("cellpadding","2");
+    newElement->SetAttribute("cellspacing","2");
+    newElement->SetAttribute("border","1");
+  } else if (TagName.Equals("tr"))
+  {
+    newElement->SetAttribute("valign","top");
+  } else if (TagName.Equals("td"))
+  {
+    newElement->SetAttribute("width","40px");
+    newElement->SetAttribute("height","40px");
+    newElement->SetAttribute("valign","top");
+
+    // Insert the default nbsp into the cell
+    nsCOMPtr<nsIDOMText>newTextNode;
+    nsresult result = mDoc->CreateTextNode("text", getter_AddRefs(newTextNode));
+    if (NS_SUCCEEDED(result) && newTextNode)
+    {
+      nsCOMPtr<nsIDOMNode>resultNode;
+      result = newElement->AppendChild(newTextNode, getter_AddRefs(resultNode));
+    }
   }
   // ADD OTHER DEFAULT ATTRIBUTES HERE
 
@@ -2131,6 +2153,12 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   }
 
   return res;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::CanContainElement(nsIDOMNode* aParent, nsIDOMElement* aElement)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2153,6 +2181,11 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   nsCOMPtr<nsIDOMNode> parentSelectedNode;
   PRInt32 offsetOfNewNode;
 
+  nsCOMPtr<nsIDOMSelection>selection;
+  res = nsEditor::GetSelection(getter_AddRefs(selection));
+  if (!NS_SUCCEEDED(res) || !selection)
+    return NS_ERROR_FAILURE;
+
   // Clear current selection.
   // Should put caret at anchor point?
   if (!aDeleteSelection)
@@ -2169,34 +2202,29 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
         collapseAfter = PR_FALSE;
     }
 
-    nsCOMPtr<nsIDOMSelection>selection;
-    res = nsEditor::GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(res) && selection)
+    if (collapseAfter)
     {
-      if (collapseAfter)
+      // Default behavior is to collapse to the end of the selection
+      selection->ClearSelection();
+    } else {
+      // Collapse to the start of the selection,
+      // We must explore the first range and find
+      //   its parent and starting offset of selection
+      // TODO: Move this logic to a new method nsIDOMSelection::CollapseToStart()???
+      nsCOMPtr<nsIDOMRange> firstRange;
+      res = selection->GetRangeAt(0, getter_AddRefs(firstRange));
+      if (NS_SUCCEEDED(res) && firstRange)
       {
-        // Default behavior is to collapse to the end of the selection
-        selection->ClearSelection();
-      } else {
-        // Collapse to the start of the selection,
-        // We must explore the first range and find
-        //   its parent and starting offset of selection
-        // TODO: Move this logic to a new method nsIDOMSelection::CollapseToStart()???
-        nsCOMPtr<nsIDOMRange> firstRange;
-        res = selection->GetRangeAt(0, getter_AddRefs(firstRange));
-        if (NS_SUCCEEDED(res) && firstRange)
+        nsCOMPtr<nsIDOMNode> parent;
+        res = firstRange->GetCommonParent(getter_AddRefs(parent));
+        if (NS_SUCCEEDED(res) && parent)
         {
-          nsCOMPtr<nsIDOMNode> parent;
-          res = firstRange->GetCommonParent(getter_AddRefs(parent));
-          if (NS_SUCCEEDED(res) && parent)
-          {
-            PRInt32 startOffset;
-            firstRange->GetStartOffset(&startOffset);
-            selection->Collapse(parent, startOffset);
-          } else {
-            // Very unlikely, but collapse to the end if we failed above
-            selection->ClearSelection();
-          }
+          PRInt32 startOffset;
+          firstRange->GetStartOffset(&startOffset);
+          selection->Collapse(parent, startOffset);
+        } else {
+          // Very unlikely, but collapse to the end if we failed above
+          selection->ClearSelection();
         }
       }
     }
@@ -2214,7 +2242,24 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
       res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
     } else {
       // Inserting a BLOCK element:
-
+      nsCOMPtr<nsIDOMNode> splitPointParent;
+      nsresult result = parentSelectedNode->GetParentNode(getter_AddRefs(splitPointParent));
+      if (NS_SUCCEEDED(result) && splitPointParent)
+      {
+#if 0
+        nsCOMPtr<nsIDOMNode> node;
+        PRInt32 offset;
+        // Note: 2nd param is ptr to nsCOMPtr
+        res = GetStartNodeAndOffset(selection, &node, &offset);
+        if (NS_SUCCEEDED(result) && parent)
+        {
+        }
+#endif          
+        res = SplitNodeDeep(parentSelectedNode, splitPointParent, offsetOfNewNode);
+//        if (NS_SUCCEEDED(result))
+//          res = InsertNode(aElement, parentSelectedNode, 0);
+        
+      }
     }
   }
   if (NS_SUCCEEDED(res))

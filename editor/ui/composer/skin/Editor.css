@@ -55,36 +55,28 @@ titledbutton#UnderlineButton {
   text-decoration: underline;
 }
 
-titledbutton.AlignButton {
-  margin: 0px;  
+button.PopupButton {
+  align: left;
+  margin: 0px;
   min-width: 5em;
   border: 1px solid transparent;
 }
 
-titledbutton.AlignButton:hover {
+button.PopupButton:hover {
   border: 1px outset white;
   min-width: 5em;
   text-decoration: none;
 }
 
-titledbutton.AlignButton:active {
+button.PopupButton:active {
   min-width: 5em;
   border: 1px inset;
 }
 
-titledbutton#LeftAlign {
-	list-style-image:url(chrome://editor/skin/images/ED_Left.gif);
+a[name][href=""] {
+  display: list-item; 
+  list-style-image: url(chrome://editor/skin/images/ED_Left.gif); 
+  list-style-position: inside;
+  line-height: 10px;
+  min-width: 10px;
 }
-
-titledbutton#CenterAlign {
-	list-style-image:url(chrome://editor/skin/images/ED_Center.gif);
-}
-
-titledbutton#RightAlign {
-	list-style-image:url(chrome://editor/skin/images/ED_Right.gif);
-}
-
-titledbutton#JustifyAlign {
-	list-style-image:url(chrome://editor/skin/images/ED_Justify.gif);
-}
-
