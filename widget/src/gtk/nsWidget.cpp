@@ -69,8 +69,6 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
-PRUint32 nsWidget::sWidgetCount = 0;
-
 // this is the nsWindow with the focus
 nsWidget *nsWidget::sFocusWindow = 0;
 
@@ -203,7 +201,6 @@ void nsWidget::DropMotionTarget(void)
 
 nsCOMPtr<nsIRollupListener> nsWidget::gRollupListener;
 nsWeakPtr          nsWidget::gRollupWidget;
-PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
 
 PRBool             nsWidget::mGDKHandlerInstalled = PR_FALSE;
 PRBool             nsWidget::sTimeCBSet = PR_FALSE;
@@ -221,7 +218,6 @@ gint nsWidget::sButtonMotionWidgetY = -1;
 
 nsWidget::nsWidget()
 {
-  mGrabTime = 0;
   mWidget = nsnull;
   mMozBox = 0;
   mParent = nsnull;
@@ -240,8 +236,6 @@ nsWidget::nsWidget()
     mUpdateArea->SetTo(0, 0, 0, 0);
   }
   
-  sWidgetCount++;
-
   mListenForResizes = PR_FALSE;
   mHasFocus = PR_FALSE;
   if (mGDKHandlerInstalled == PR_FALSE) {
@@ -275,8 +269,6 @@ nsWidget::~nsWidget()
   IndentByDepth(stdout);
   printf("nsWidget::~nsWidget:%p\n", this);
 #endif
-
-  sWidgetCount--;
 
   // it's safe to always call Destroy() because it will only allow itself
   // to be called once
@@ -1523,17 +1515,6 @@ nsWidget::AddToEventMask(GtkWidget * aWidget,
 }
 //////////////////////////////////////////////////////////////////
 void 
-nsWidget::InstallMotionNotifySignal(GtkWidget * aWidget)
-{
-  NS_ASSERTION( nsnull != aWidget, "widget is null");
-
-  InstallSignal((GtkWidget *)aWidget,
-				(gchar *)"motion_notify_event",
-				GTK_SIGNAL_FUNC(nsWidget::MotionNotifySignal));
-}
-
-//////////////////////////////////////////////////////////////////
-void 
 nsWidget::InstallEnterNotifySignal(GtkWidget * aWidget)
 {
   NS_ASSERTION( nsnull != aWidget, "widget is null");
@@ -2063,24 +2044,6 @@ nsWidget::InitMouseEvent(GdkEventButton * aGdkButtonEvent,
 // GTK widget signals
 //
 //////////////////////////////////////////////////////////////////
-/* static */ gint
-nsWidget::MotionNotifySignal(GtkWidget *      aWidget,
-							 GdkEventMotion * aGdkMotionEvent,
-							 gpointer         aData)
-{
-  NS_ASSERTION( nsnull != aWidget, "widget is null");
-  NS_ASSERTION( nsnull != aGdkMotionEvent, "event is null");
-
-  nsWidget * widget = (nsWidget *) aData;
-
-  NS_ASSERTION( nsnull != widget, "instance pointer is null");
-
-  widget->OnMotionNotifySignal(aGdkMotionEvent);
-
-  return PR_TRUE;
-}
-
-//////////////////////////////////////////////////////////////////
 /* static */ gint 
 nsWidget::EnterNotifySignal(GtkWidget *        aWidget, 
 							GdkEventCrossing * aGdkCrossingEvent, 
@@ -2214,19 +2177,6 @@ nsWidget::FocusOutSignal(GtkWidget *      aWidget,
 //////////////////////////////////////////////////////////////////////
 
 /* virtual */ GdkWindow *
-nsWidget::GetWindowForSetBackground()
-{
-  GdkWindow * gdk_window = nsnull;
-
-  if (mWidget)
-  {
-    gdk_window = mWidget->window;
-  }
-
-  return gdk_window;
-}
-
-/* virtual */ GdkWindow *
 nsWidget::GetRenderWindow(GtkObject * aGtkWidget)
 {
   GdkWindow * renderWindow = nsnull;
@@ -2238,6 +2188,28 @@ nsWidget::GetRenderWindow(GtkObject * aGtkWidget)
   return renderWindow;
 }
 
+void
+nsWidget::ThemeChanged()
+{
+  // Dispatch a NS_THEMECHANGED event for each of our children, recursively
+  nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
+  if (children) {
+    nsCOMPtr<nsISupports> isupp;
+
+    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))) && isupp) {
+
+      nsWidget* child = NS_REINTERPRET_CAST(nsWidget*, isupp.get());
+      child->ThemeChanged();
+
+      if (NS_FAILED(children->Next())) {
+        break;
+      }
+    }
+  }
+
+  DispatchStandardEvent(NS_THEMECHANGED);
+  Invalidate(PR_FALSE);
+}
 
 //////////////////////////////////////////////////////////////////////
 // default setfont for most widgets

@@ -221,6 +221,9 @@ protected:
   // given an X window this will find the nsWindow * for it.
   static nsWindow  *GetnsWindowFromXWindow(Window aWindow);
 
+  static gint ClientEventSignal(GtkWidget* widget, GdkEventClient* event, void* data);
+  virtual void ThemeChanged();
+
   // all of our DND stuff
 
   // this is the last window that had a drag event happen on it.

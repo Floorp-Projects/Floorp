@@ -882,7 +882,6 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
       sIsGrabbing = PR_TRUE;
       sGrabWindow = this;
     }
-    gRollupConsumeRollupEvent = PR_TRUE;
 
     gRollupListener = aListener;
     gRollupWidget = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
@@ -2057,6 +2056,12 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     gtk_signal_connect(GTK_OBJECT(mShell),
                        "drag_data_received",
                        GTK_SIGNAL_FUNC(nsWindow::DragDataReceived),
+                       this);
+
+    // Also set up client_event handling for theme change notifications
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "client_event",
+                       GTK_SIGNAL_FUNC(nsWindow::ClientEventSignal),
                        this);
   }
 
@@ -3467,6 +3472,63 @@ nsWindow::DragLeaveTimerCallback(nsITimer *aTimer, void *aClosure)
 {
   nsWindow *window = NS_STATIC_CAST(nsWindow *, aClosure);
   window->FireDragLeaveTimer();
+}
+
+/* static */
+gint
+nsWindow::ClientEventSignal(GtkWidget* widget, GdkEventClient* event, void* data)
+{
+  static GdkAtom atom_rcfiles = GDK_NONE;
+  if (!atom_rcfiles)
+    atom_rcfiles = gdk_atom_intern("_GTK_READ_RCFILES", FALSE);
+
+  if (event->message_type == atom_rcfiles) {
+    nsWidget* targetWindow = (nsWidget*) data;
+    targetWindow->ThemeChanged();
+  }
+
+  return FALSE;
+}
+
+void
+nsWindow::ThemeChanged()
+{
+  Display     *display;
+  Window       window;
+  Window       root_return;
+  Window       parent_return;
+  Window      *children_return = NULL;
+  unsigned int nchildren_return = 0;
+  unsigned int i = 0;
+
+  if (mSuperWin)
+  {
+    display = GDK_DISPLAY();
+    window = GDK_WINDOW_XWINDOW(mSuperWin->bin_window);
+    if (window && !((GdkWindowPrivate *)mSuperWin->bin_window)->destroyed)
+    {
+      // get a list of children for this window
+      XQueryTree(display, window, &root_return, &parent_return,
+                 &children_return, &nchildren_return);
+      // walk the list of children
+      for (i=0; i < nchildren_return; i++)
+      {
+        Window child_window = children_return[i];
+        nsWindow *thisWindow = GetnsWindowFromXWindow(child_window);
+        if (thisWindow)
+        {
+          thisWindow->ThemeChanged();
+        }
+      }
+
+      // free up the list of children
+      if (children_return)
+        XFree(children_return);
+    }
+  }
+
+  DispatchStandardEvent(NS_THEMECHANGED);
+  Invalidate(PR_FALSE);
 }
 
 ChildWindow::ChildWindow()
