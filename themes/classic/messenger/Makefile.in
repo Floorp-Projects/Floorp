@@ -37,9 +37,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	check.gif \
 	dot.gif \
 	fieldMapImport.css \
-	file-disabled.gif
-	file-hover-active.gif
-	file-hover.gif
+	file-disabled.gif \
+	file-hover-active.gif \
+	file-hover.gif \
 	file.gif \
 	flagcol.gif \
 	flaggedmail.gif \
@@ -120,7 +120,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	readmail.gif \
 	reply-disabled.gif \
 	reply-hover-active.gif \
-	reply-hover.gif
+	reply-hover.gif \
 	reply.gif \
 	replyall-disabled.gif \
 	replyall-hover-active.gif \

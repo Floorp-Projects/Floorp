@@ -130,7 +130,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	openfile.gif \
 	outdent-disabled.gif \
 	outdent-hover-active.gif \
-	outdent-hover.gif
+	outdent-hover.gif \
 	outdent.gif \
 	preview-disabled.gif \
 	preview-hover-active.gif \

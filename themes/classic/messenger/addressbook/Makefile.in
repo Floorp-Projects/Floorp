@@ -62,10 +62,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		searchold-hover-active.gif \
 		searchold-hover.gif \
 		searchold.gif \
-		stop-hover-active.gif \
-		stop-disabled.gif \
-		stop-hover.gif \
-		stop.giftrash-disabled.gif \
+		trash-disabled.gif \
 		trash-hover.gif \
 		trash.gif \
 		trash-hover-active.gif \
