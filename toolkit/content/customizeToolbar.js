@@ -22,7 +22,7 @@
 #   Joe Hewitt (hewitt@netscape.com)
 
 const kRowMax = 4;
-const kWindowWidth = 600;
+const kWindowWidth = 635;
 const kWindowHeight = 400;
 const kAnimateIncrement = 50;
 const kAnimateSteps = kWindowHeight / kAnimateIncrement - 1;
@@ -554,6 +554,12 @@ function restoreDefaultSet()
     toolbar = toolbar.nextSibling;
   }
 
+  // Restore the default icon size (large) and mode (icons only).
+  updateIconSize(false);
+  document.getElementById("smallicons").checked = false;
+  updateToolbarMode("icons");
+  document.getElementById("modelist").value = "icons";
+  
   // Remove all of the customized toolbars.
   var child = gToolbox.lastChild;
   while (child) {
@@ -608,14 +614,7 @@ function updateToolbarMode(aModeValue)
   }
 
   var iconSizeCheckbox = document.getElementById("smallicons");
-  if (aModeValue == "text") {
-    iconSizeCheckbox.disabled = true;
-    iconSizeCheckbox.checked = false;
-  }
-  else {
-    iconSizeCheckbox.disabled = false;
-    iconSizeCheckbox.checked = gToolboxIconSize;
-  }
+  iconSizeCheckbox.disabled = aModeValue == "text";
 
   repositionDialog();
 }
