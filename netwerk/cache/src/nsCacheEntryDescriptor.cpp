@@ -121,6 +121,17 @@ nsCacheEntryDescriptor::GetLastFetched(PRTime *result)
 
 
 NS_IMETHODIMP
+nsCacheEntryDescriptor::GetLastModified(PRTime *result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    *result = ConvertSecondsToPRTime(mCacheEntry->LastModified());
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsCacheEntryDescriptor::GetLastValidated(PRTime *result)
 {
     NS_ENSURE_ARG_POINTER(result);
@@ -342,7 +353,8 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char ** result)
     if (!key | !result) return NS_ERROR_NULL_POINTER;
     nsAReadableCString *value;
     *result = nsnull;
-    
+
+    // XXX not thread safe    
     nsresult rv = mCacheEntry->GetMetaDataElement(nsLiteralCString(key), &value);
     if (NS_SUCCEEDED(rv) && (value)) {
         *result = ToNewCString(*value);
@@ -358,7 +370,7 @@ nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     if (!key) return NS_ERROR_NULL_POINTER;
-
+    // XXX not thread safe
     // XXX allow null value, for clearing key?
     nsresult rv = mCacheEntry->SetMetaDataElement(nsLiteralCString(key),
                                                   nsLiteralCString(value));

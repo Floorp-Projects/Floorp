@@ -65,6 +65,9 @@ public:
     PRUint32 LastFetched(void)                         { return mLastFetched;}
     void     SetLastFetched( PRUint32  lastFetched)    { mLastFetched = lastFetched;}
 
+    PRUint32 LastModified(void)                        { return mLastModified;}
+    void     SetLastModified( PRUint32 lastModified)   { mLastModified = lastModified;}
+
     PRUint32 LastValidated(void)                       { return mLastValidated;}
     void     SetLastValidated( PRUint32 lastValidated) { mLastValidated = lastValidated;}
 
@@ -72,10 +75,10 @@ public:
     void     SetExpirationTime( PRUint32 expires) { mExpirationTime = expires;}
 
     PRUint32 DataSize(void)                       { return mDataSize;}
-    void     SetDataSize( PRUint32   size)        { mDataSize = size;}
+    void     SetDataSize( PRUint32  size);
 
     PRUint32 MetaDataSize(void)                   { return mMetaSize;}
-    void     SetMetaDataSize( PRUint32   size)    { mMetaSize = size;}
+    void     SetMetaDataSize( PRUint32  size);
 
     nsCacheDevice * CacheDevice(void)                        { return mCacheDevice;}
     void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device;}
@@ -158,21 +161,22 @@ private:
     // internal methods
     nsresult CommonOpen(nsCacheRequest * request, nsCacheAccessMode *accessGranted);
     void MarkDoomed()          { mFlags |=  eDoomedMask; }
-    void MarkStreamBased()     { mFlags |= eStreamDataMask; }
-    void MarkInitialized()     { mFlags |= eInitializedMask; }
+    void MarkStreamBased()     { mFlags |=  eStreamDataMask; }
+    void MarkInitialized()     { mFlags |=  eInitializedMask; }
     void MarkActive()          { mFlags |=  eActiveMask; }
     void MarkInactive()        { mFlags &= ~eActiveMask; }
 
     nsCString *            mKey;            // 4  // XXX ask scc about const'ness
     PRUint32               mFetchCount;     // 4
-    PRUint32               mLastFetched;    // 8
-    PRUint32               mLastValidated;  // 8
-    PRUint32               mExpirationTime; // 8
+    PRUint32               mLastFetched;    // 4
+    PRUint32               mLastModified;   // 4
+    PRUint32               mLastValidated;  // 4
+    PRUint32               mExpirationTime; // 4
     PRUint32               mFlags;          // 4
     PRUint32               mDataSize;       // 4
     PRUint32               mMetaSize;       // 4
     nsCacheDevice *        mCacheDevice;    // 4
-    nsCOMPtr<nsISupports>  mSecurityInfo;
+    nsCOMPtr<nsISupports>  mSecurityInfo;   // 
     nsCOMPtr<nsISupports>  mData;           // 
     nsCacheMetaData *      mMetaData;       // 4
     PRCList                mRequestQ;       // 8
@@ -196,10 +200,9 @@ public:
 
     nsCacheEntry *GetEntry( const nsCString * key);
     nsresult      AddEntry( nsCacheEntry *entry);
-    nsresult      RemoveEntry( nsCacheEntry *entry);
+    void          RemoveEntry( nsCacheEntry *entry);
     // XXX enumerate entries?
 
-    // XXX
 private:
 
     // PLDHashTable operation callbacks

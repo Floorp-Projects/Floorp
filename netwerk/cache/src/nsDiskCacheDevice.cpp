@@ -303,12 +303,14 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     return NS_OK;
 }
 
-nsresult
+
+void
 nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
 {
     // so it can't be seen by FindEntry() ever again.
-    return mBoundEntries.RemoveEntry(entry);
+    mBoundEntries.RemoveEntry(entry);
 }
+
 
 nsresult
 nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,

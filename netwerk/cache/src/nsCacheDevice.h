@@ -44,7 +44,7 @@ public:
 
     virtual nsresult DeactivateEntry( nsCacheEntry * entry ) = 0;
     virtual nsresult BindEntry( nsCacheEntry * entry ) = 0;
-    virtual nsresult DoomEntry( nsCacheEntry * entry ) = 0;
+    virtual void     DoomEntry( nsCacheEntry * entry ) = 0;
 
     virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
                                            nsCacheAccessMode mode,

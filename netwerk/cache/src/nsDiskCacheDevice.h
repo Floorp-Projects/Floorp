@@ -42,7 +42,7 @@ public:
     virtual nsCacheEntry *  FindEntry(nsCString * key);
     virtual nsresult        DeactivateEntry(nsCacheEntry * entry);
     virtual nsresult        BindEntry(nsCacheEntry * entry);
-    virtual nsresult        DoomEntry( nsCacheEntry * entry );
+    virtual void            DoomEntry( nsCacheEntry * entry );
 
     virtual nsresult        GetTransportForEntry(nsCacheEntry * entry,
                                           nsCacheAccessMode mode,

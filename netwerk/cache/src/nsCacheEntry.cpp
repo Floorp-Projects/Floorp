@@ -76,6 +76,21 @@ nsCacheEntry::~nsCacheEntry()
     delete mMetaData;
 }
 
+
+void
+nsCacheEntry::SetDataSize( PRUint32   size)
+{
+    mDataSize = size;
+    mLastModified = ConvertPRTimeToSeconds(PR_Now());
+}
+
+void
+nsCacheEntry::SetMetaDataSize( PRUint32   size)
+{
+    mMetaSize = size;
+    mLastModified = ConvertPRTimeToSeconds(PR_Now());
+}
+
 nsresult
 nsCacheEntry::GetSecurityInfo( nsISupports ** result)
 {
@@ -106,6 +121,7 @@ nsCacheEntry::GetData(nsISupports **result)
 nsresult
 nsCacheEntry::SetData(nsISupports * data)
 {
+    mLastModified = ConvertPRTimeToSeconds(PR_Now());
     mData = data;
     return NS_OK;
 }
@@ -132,6 +148,10 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
     nsresult rv = mMetaData->SetElement(key, value);
     if (NS_SUCCEEDED(rv))
         MarkMetaDataDirty();
+    
+    // XXX calc meta data size
+
+    mLastModified = ConvertPRTimeToSeconds(PR_Now());
 
     return rv;
 }
@@ -240,72 +260,18 @@ nsCacheEntry::CreateDescriptor(nsCacheRequest *           request,
     nsCacheEntryDescriptor * descriptor =
         new nsCacheEntryDescriptor(this, accessGranted);
 
+    // XXX check request is on q
+    PR_REMOVE_AND_INIT_LINK(request); // remove request regardless of success
+
     if (descriptor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // XXX check request is on q
-    PR_REMOVE_AND_INIT_LINK(request);
     PR_APPEND_LINK(descriptor, &mDescriptorQ);
 
     NS_ADDREF(*result = descriptor);
     return NS_OK;
 }
 
-#if 0
-nsresult
-nsCacheEntry::Open(nsCacheRequest * request, nsICacheEntryDescriptor ** result)
-{
-    if (!request)  return NS_ERROR_NULL_POINTER;
-
-    nsCacheAccessMode  accessGranted;
-    nsresult  rv = RequestAccess(request, &accessGranted);
-    if (NS_SUCCEEDED(rv)) {
-        //        rv = nsCacheEntryDescriptor::Create(this, accessGranted, result);
-
-        nsCacheEntryDescriptor * descriptor =
-            new nsCacheEntryDescriptor(this, accessGranted);
-
-        if (descriptor == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        NS_ADDREF(*result = descriptor);
-
-        if (NS_SUCCEEDED(rv)) {
-            // queue the descriptor
-            PR_APPEND_LINK(descriptor, &mDescriptorQ);
-        }
-
-    } else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-        // queue request
-        PR_APPEND_LINK(request, &mRequestQ);
-        // XXX allocate PRCondVar for request, if none
-        // XXX release service lock
-        // XXX wait until valid or doomed
-    }
-    return rv;
-}
-
-
-nsresult
-nsCacheEntry::AsyncOpen(nsCacheRequest * request)
-{
-    if (!request)  return NS_ERROR_NULL_POINTER;
-
-    nsCacheAccessMode  accessGranted;
-    nsresult  rv = RequestAccess(request, &accessGranted);
-    if (NS_SUCCEEDED(rv)) {
-        nsICacheEntryDescriptor * descriptor;
-        rv = nsCacheEntryDescriptor::Create(this, accessGranted, &descriptor);
-        if (NS_SUCCEEDED(rv)) {
-            // XXX queue the descriptor
-            // XXX post event to call listener with 
-        }
-    } else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-        // XXX queue request and we're done (MarkValid will notify pending requests)
-    }
-    return rv;
-}
-#endif
 
 PRBool
 nsCacheEntry::RemoveRequest(nsCacheRequest * request)
@@ -392,6 +358,7 @@ nsCacheEntryHashTable::GetEntry( const nsCString * key)
     return result;
 }
 
+
 nsresult
 nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
 {
@@ -409,22 +376,22 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
     return NS_OK;
 }
 
-nsresult
+
+void
 nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
 {
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
-    if (!cacheEntry) return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION(cacheEntry, "cacheEntry == nsnull");
 
     // XXX debug code to make sure we have the entry we're trying to remove
 
     (void) PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_REMOVE);
-    return NS_OK;
 }
 
-/*
+
+/**
  *  hash table operation callback functions
  */
-
 const void *
 nsCacheEntryHashTable::GetKey( PLDHashTable * /*table*/, PLDHashEntryHdr *hashEntry)
 {

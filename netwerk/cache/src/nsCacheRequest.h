@@ -29,6 +29,7 @@
 #include "nsICache.h"
 #include "nsICacheListener.h"
 #include "nsIEventQueue.h"
+#include "nsCacheSession.h"
 
 
 class nsCacheRequest : public PRCList
@@ -40,9 +41,7 @@ private:
     nsCacheRequest( nsCString *           key, 
                     nsICacheListener *    listener,
                     nsCacheAccessMode     accessRequested,
-                    PRBool                streamBased,
-                    nsCacheStoragePolicy  storagePolicy)
-
+                    nsCacheSession *      session)
         : mKey(key),
           mInfo(0),
           mListener(listener),
@@ -52,8 +51,9 @@ private:
     {
         PR_INIT_CLIST(this);
         SetAccessRequested(accessRequested);
-        if (streamBased)  MarkStreamBased();
-        SetStoragePolicy(storagePolicy);
+        SetStoragePolicy(session->StoragePolicy());
+        if (session->IsStreamBased())             MarkStreamBased();
+        if (session->WillDoomEntriesIfExpired())  MarkDoomEntriesIfExpired();
         MarkWaitingForValidation();
     }
     
@@ -69,10 +69,11 @@ private:
      * Simple Accessors
      */
     enum CacheRequestInfo {
-        eAccessRequestedMask       = 0xFF000000,
-        eStoragePolicyMask         = 0x00FF0000,
-        eStreamBasedMask           = 0x00000010,
-        eWaitingForValidationMask  = 0x00000001
+        eStoragePolicyMask         = 0x000000FF,
+        eStreamBasedMask           = 0x00000100,
+        eDoomEntriesIfExpiredMask  = 0x00001000,
+        eWaitingForValidationMask  = 0x00010000,
+        eAccessRequestedMask       = 0xFF000000
     };
 
     void SetAccessRequested(nsCacheAccessMode mode)
@@ -90,16 +91,20 @@ private:
     void MarkStreamBased()      { mInfo |=  eStreamBasedMask; }
     PRBool IsStreamBased()      { return (mInfo & eStreamBasedMask) != 0; }
 
+
+    void   MarkDoomEntriesIfExpired()  { mInfo |=  eDoomEntriesIfExpiredMask; }
+    PRBool WillDoomEntriesIfExpired()  { return (mInfo & eDoomEntriesIfExpiredMask); }
+
     void SetStoragePolicy(nsCacheStoragePolicy policy)
     {
         NS_ASSERTION(policy <= 0xFF, "too many bits in nsCacheStoragePolicy");
         mInfo &= ~eStoragePolicyMask;  // clear storage policy bits
-        mInfo |= policy << 16;         // or in new bits
+        mInfo |= policy;         // or in new bits
     }
 
     nsCacheStoragePolicy StoragePolicy()
     {
-        return (nsCacheStoragePolicy)((mInfo >> 16) & 0xFF);
+        return (nsCacheStoragePolicy)(mInfo & 0xFF);
     }
 
     void   MarkWaitingForValidation() { mInfo |=  eWaitingForValidationMask; }

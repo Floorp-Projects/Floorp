@@ -27,24 +27,41 @@
 #include "nsCacheService.h"
 
 
-
 NS_IMPL_ISUPPORTS1(nsCacheSession, nsICacheSession)
 
 nsCacheSession::nsCacheSession(const char *         clientID,
                                nsCacheStoragePolicy storagePolicy,
                                PRBool               streamBased)
     : mClientID(clientID),
-      mStoragePolicy(storagePolicy),
-      mStreamBased(streamBased)
+      mInfo(0)
 {
   NS_INIT_ISUPPORTS();
-  if (!streamBased) mStoragePolicy = nsICache::STORE_IN_MEMORY;
+  SetStoragePolicy(storagePolicy);
+
+  if (streamBased) MarkStreamBased();
+  else SetStoragePolicy(nsICache::STORE_IN_MEMORY);
 }
 
 nsCacheSession::~nsCacheSession()
 {
   /* destructor code */
     // notify service we are going away?
+}
+
+
+NS_IMETHODIMP nsCacheSession::GetDoomEntriesIfExpired(PRBool *result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    *result = WillDoomEntriesIfExpired();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCacheSession::SetDoomEntriesIfExpired(PRBool doomEntriesIfExpired)
+{
+    if (doomEntriesIfExpired)  MarkDoomEntriesIfExpired();
+    else                       ClearDoomEntriesIfExpired();
+    return NS_OK;
 }
 
 

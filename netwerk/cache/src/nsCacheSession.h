@@ -41,13 +41,36 @@ public:
     virtual ~nsCacheSession();
     
     nsCString *           ClientID()      { return &mClientID; }
-    nsCacheStoragePolicy  StoragePolicy() { return mStoragePolicy; }
-    PRBool                StreamBased()   { return mStreamBased; }
+
+    enum SessionInfo {
+        eStoragePolicyMask        = 0x000000FF,
+        eStreamBasedMask          = 0x00000100,
+        eDoomEntriesIfExpiredMask = 0x00001000
+    };
+
+    void   MarkStreamBased()  { mInfo |=  eStreamBasedMask; }
+    void   ClearStreamBased() { mInfo &= ~eStreamBasedMask; }
+    PRBool IsStreamBased()    { return (mInfo & eStreamBasedMask) != 0; }
+
+    void   MarkDoomEntriesIfExpired()  { mInfo |=  eDoomEntriesIfExpiredMask; }
+    void   ClearDoomEntriesIfExpired() { mInfo &= ~eDoomEntriesIfExpiredMask; }
+    PRBool WillDoomEntriesIfExpired()  { return (mInfo & eDoomEntriesIfExpiredMask); }
+
+    nsCacheStoragePolicy  StoragePolicy()
+    {
+        return (nsCacheStoragePolicy)(mInfo & eStoragePolicyMask);
+    }
+
+    void SetStoragePolicy(nsCacheStoragePolicy policy)
+    {
+        NS_ASSERTION(policy <= 0xFF, "too many bits in nsCacheStoragePolicy");
+        mInfo &= ~eStoragePolicyMask; // clear storage policy bits
+        mInfo |= policy;
+    }
 
 private:
     nsCString               mClientID;
-    nsCacheStoragePolicy    mStoragePolicy;
-    PRBool                  mStreamBased;
+    PRUint32                mInfo;
 };
 
 #endif // _nsCacheSession_h_

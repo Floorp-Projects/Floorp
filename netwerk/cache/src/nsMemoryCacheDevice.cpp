@@ -166,17 +166,14 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
 }
 
 
-nsresult
+void
 nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
 {
-    nsresult  rv = mMemCacheEntries.RemoveEntry(entry);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "dooming entry that we don't have");
-    if (NS_FAILED(rv)) return rv;
+    // XXX debug code to verify we have entry
+    mMemCacheEntries.RemoveEntry(entry);
 
     // remove entry from our eviction list
     PR_REMOVE_AND_INIT_LINK(entry);
-
-    return NS_OK;
 }
 
 
@@ -244,8 +241,7 @@ nsMemoryCacheDevice::EvictEntries(void)
         }
 
         // remove entry from our hashtable
-        rv = mMemCacheEntries.RemoveEntry(entry);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveEntry() failed?");
+        mMemCacheEntries.RemoveEntry(entry);
 
         // remove entry from the eviction list
         PR_REMOVE_AND_INIT_LINK(entry);
