@@ -1413,8 +1413,8 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
     if (entry)
     {
         PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tdeleting old Factory Entry."));
-        mFactories->Remove(&key);
-        delete entry;
+        mFactories->RemoveAndDelete(&key);
+        entry = NULL;
     }
     mFactories->Put(&key, newEntry);
 
@@ -1529,8 +1529,7 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
         }
         if (entry)
         {
-            mFactories->Remove(&key);
-            delete entry;
+            mFactories->RemoveAndDelete(&key);
             entry = NULL;
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tdeleting registered Factory."));
         }
@@ -1613,8 +1612,7 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
         }
         if (entry)
         {
-            mFactories->Remove(&key);
-            delete entry;
+            mFactories->RemoveAndDelete(&key);
             entry = NULL;
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING, ("\t\tdeleting registered Factory."));
         }
@@ -1656,9 +1654,9 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
         if (old->factory == aFactory)
         {
             PR_EnterMonitor(mMon);
-            old = (nsFactoryEntry *) mFactories->Remove(&key);
+            old = (nsFactoryEntry *) mFactories->RemoveAndDelete(&key);
+            old = NULL;
             PR_ExitMonitor(mMon);
-            delete old;
             res = NS_OK;
         }
 
@@ -1700,8 +1698,8 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
 #endif
             )
         {
-            nsFactoryEntry *entry = (nsFactoryEntry *) mFactories->Remove(&key);
-            delete entry;
+            mFactories->RemoveAndDelete(&key);
+            old = NULL;
             res = NS_OK;
         }
 #ifdef USE_REGISTRY
