@@ -88,11 +88,8 @@
 
  */
 
-#include "nsIFileStreams.h"
-#include "nsIOutputStream.h"
-#include "nsIFile.h"
-#include "nsIFileChannel.h"
-#include "nsAString.h"
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
 #include "nsIDTD.h"
 #include "nsIRDFPurgeableDataSource.h"
 #include "nsIInputStream.h"
@@ -822,27 +819,17 @@ RDFXMLDataSourceImpl::Flush(void)
         }
     }
 
-    // Is it a file? If so, we can write to it. Some day, it'd be nice
-    // if we didn't care what kind of stream this was...
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mURL);
-    if (fileURL) {
-        nsCOMPtr<nsIFile> file;
-        fileURL->GetFile(getter_AddRefs(file));
+    // XXX Replace this with channels someday soon...
+    nsFileURL url(mOriginalURLSpec, PR_TRUE);
+    nsFileSpec path(url);
 
-        if (file) {
-            nsCOMPtr<nsIOutputStream> out;
-            NS_NewLocalFileOutputStream(getter_AddRefs(out), file);
+    nsOutputFileStream out(path);
+    if (! out.is_open())
+        return NS_ERROR_FAILURE;
 
-            nsCOMPtr<nsIOutputStream> bufferedOut;
-            if (out)
-                NS_NewBufferedOutputStream(getter_AddRefs(bufferedOut), out, 4096);
-
-            if (bufferedOut) {
-                rv = Serialize(bufferedOut);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-    }
+    nsCOMPtr<nsIOutputStream> outIStream = out.GetIStream();
+    if (NS_FAILED(rv = Serialize(outIStream)))
+        goto done;
 
     mIsDirty = PR_FALSE;
 
