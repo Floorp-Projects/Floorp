@@ -2725,7 +2725,8 @@ PlaceFrameView(nsIPresContext* aPresContext,
   nsIView*  view;
   aFrame->GetView(aPresContext, &view);
   if (view)
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aFrame, view, nsnull);
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aFrame, view,
+                      aFrame->GetOverflowAreaProperty(aPresContext));
 
   nsContainerFrame::PositionChildViews(aPresContext, aFrame);
 }
