@@ -16,14 +16,13 @@
  * Reserved.
  */
 
+#if 0 // OBSOLETE
+
 /* -*- Mode: C; tab-width: 4 -*-
  *   nsGIFDecoder.cpp --- interface to gif decoder
  */
 
 #include "nsGIFCallback.h"
-
-NS_DEFINE_IID(kGIFCallbkIID, NS_GIFCALLBK_IID);
-NS_DEFINE_CID(kGIFCallbkCID, NS_GIFCALLBK_CID); 
 
 
 /* callbks: */
@@ -38,10 +37,12 @@ NS_IMETHODIMP GIFCallbk::QueryInterface(const nsIID& aIID, void** aResult)
     return NS_ERROR_NULL_POINTER;
   }
   
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  static NS_DEFINE_IID(kIImgDCallbkIID, NS_IIMGDCALLBK_IID);
+  static NS_DEFINE_IID(kGIFCallbkIID, NS_GIFCALLBK_IID);
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
   if ( aIID.Equals(kGIFCallbkIID) ||
-       aIID.Equals(kImgDCallbkIID)||
+       aIID.Equals(kIImgDCallbkIID)||
        aIID.Equals(kISupportsIID)) {
 	  *aResult = (void*) this;
     NS_INIT_REFCNT();
@@ -55,3 +56,4 @@ NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 /*-----------------------------*/
 
+#endif /* 0 */

@@ -40,7 +40,7 @@ LCFLAGS		= $(LCFLAGS) /TP
 MODULE=img 
 DEPTH=..\..\.. 
 EXPORTS= if_struct.h dllcompat.h il.h il_utilp.h  \
-    nsIImgDecoder.h nsImgDCallbk.h nsImgDecCID.h nsImgDecoder.h
+    nsIImgDecoder.h nsIImgDCallbk.h nsImgDCallbk.h
 
 include <$(DEPTH)/config/rules.mak>
 

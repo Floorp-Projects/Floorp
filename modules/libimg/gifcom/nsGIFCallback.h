@@ -16,14 +16,16 @@
  * Reserved.
  */
 
+#if 0 // OBSOLETE
+
 /* -*- Mode: C; tab-width: 4 -*-
  *   nsGIFDecoder.cpp --- interface to gif decoder
  */
 #ifndef _nsGIFCallbk_h
 #define _nsGIFCallbk_h
 
-
 #include "nsIImgDecoder.h"
+#include "nsIImgDCallbk.h"
 #include "nsGIFDecoder.h"
 
 /* new gif call back stuff: */
@@ -54,3 +56,4 @@ private:
 };
 
 #endif
+#endif /* 0 */

@@ -17,17 +17,16 @@
  */
 
 #include "png.h"
+#include "nsIImgDecoder.h" // include if_struct.h Needs to be first
 
-#include "if_struct.h"
 #include "ipng.h"
 
 
 #include "dllcompat.h"
 #include "pngdec.h"
 
-#include "nsIImgDecoder.h"
 #include "nsPNGDecoder.h"
-#include "nsPNGCallback.h"
+#include "nsIImgDCallbk.h"
 #include "ilISystemServices.h"
 
 #define OK 1

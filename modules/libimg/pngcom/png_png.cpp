@@ -19,12 +19,11 @@
 /* png_png.c - modified from example.c code */
 
 #include "png.h"
-#include "if_struct.h"
+#include "nsIImgDecoder.h" // include if_struct.h Needs to be first
 
 #include "ipng.h"
-#include "nsIImgDecoder.h"
 #include "nsPNGDecoder.h"
-#include "nsPNGCallback.h"
+#include "nsIImgDCallbk.h"
 
 #define OK 1
 #define ERROR -1

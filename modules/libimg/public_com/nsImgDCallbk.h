@@ -20,8 +20,9 @@
  *
  */
 
+// XXX This file needs to move to libimg/src - dp
 
-#include "nsIImgDecoder.h"
+#include "nsIImgDCallbk.h"
 
 /*---------------------------------------------*/
 /*-----------------class-----------------------*/

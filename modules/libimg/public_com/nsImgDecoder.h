@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#if 0 // OBSOLETE
 #ifndef nsImgDec_h___
 #define nsImgDec_h___
 
@@ -24,3 +25,4 @@
 #include "nsIFactory.h"
 
 #endif
+#endif /* 0 */

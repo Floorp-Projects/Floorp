@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.10 1999/06/09 20:19:29 pnunn%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.11 1999/08/10 22:41:26 dp%netscape.com Exp $
  */
 
 
@@ -29,6 +29,7 @@
 #include "nsIImgDecoder.h"
 #include "nsImgDCallbk.h"
 #include "ilISystemServices.h"
+#include "nsIFactory.h"
 
 /* for XP_GetString() */
 #include "xpgetstr.h"
@@ -80,8 +81,9 @@ struct il_cache_struct il_cache;
 /*-------------------------------*/
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+NS_DEFINE_IID(kIImgDCallbkIID, NS_IIMGDCALLBK_IID);
 
-NS_IMPL_ISUPPORTS(ImgDCallbk, kImgDCallbkIID)
+NS_IMPL_ISUPPORTS(ImgDCallbk, kIImgDCallbkIID)
 
 NS_IMETHODIMP
 ImgDCallbk::CreateInstance(const nsCID &aClass,
@@ -567,7 +569,7 @@ il_get_container(IL_GroupContext *img_cx,
 
         NS_ADDREF(imgdcb);
 
-        nsresult res = imgdcb->QueryInterface(kImgDCallbkIID, (void**)&imgdcb);
+        nsresult res = imgdcb->QueryInterface(kIImgDCallbkIID, (void**)&imgdcb);
 
         if (NS_FAILED(res)) {
 	         if(imgdcb)
