@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -27,28 +27,29 @@ var NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
 // Ask rjc@netscape.com if you want to know why exactly this is.
 
 // This is the set of fields that are visible in the window.
-var Fields     = ["name", "shortcut", "description", "url"];
+var gFields     = ["name", "shortcut", "description", "url"];
 
 // ...and this is a parallel array that contains the RDF properties
 // that they are associated with.
-var Properties = [NC_NAMESPACE_URI + "Name",
-                  NC_NAMESPACE_URI + "ShortcutURL",
-                  NC_NAMESPACE_URI + "Description",
-                  NC_NAMESPACE_URI + "URL"];
+var gProperties = [NC_NAMESPACE_URI + "Name",
+                   NC_NAMESPACE_URI + "ShortcutURL",
+                   NC_NAMESPACE_URI + "Description",
+                   NC_NAMESPACE_URI + "URL"];
 
-var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                    .getService(Components.interfaces.nsIRDFService);
 
-var RDFC = Components.classes["@mozilla.org/rdf/container-utils;1"].getService();
-RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
+var RDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                     .getService(Components.interfaces.nsIRDFContainerUtils);
 
 var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
 
-var bookmark_url = "";
+var gBookmarkURL = "";
 
 function Init()
 {
-  bookmark_url = window.arguments[0];
+  var x;
+  gBookmarkURL = window.arguments[0];
 
   // set up action buttons
   doSetOKCancel(Commit);
@@ -56,151 +57,126 @@ function Init()
   // Initialize the properties panel by copying the values from the
   // RDF graph into the fields on screen.
 
-  for (var i = 0; i < Fields.length; ++i) {
-    var field = document.getElementById(Fields[i]);
+  for (var i = 0; i < gFields.length; ++i) {
+    var field = document.getElementById(gFields[i]);
 
-    var value = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
-                                    RDF.GetResource(Properties[i]),
+    var value = Bookmarks.GetTarget(RDF.GetResource(gBookmarkURL),
+                                    RDF.GetResource(gProperties[i]),
                                     true);
 
-    if (value) value = value.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    if (value) value = value.Value;
+    if (value)
+      value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
 
-    dump("field '" + Fields[i] + "' <== '" + value + "'\n");
-
-    if (value) field.value = value;
+    if (value) //make sure were aren't stuffing null into any fields
+      field.value = value;
   }
 
   var propsWindow = document.getElementById("bmPropsWindow");
-	var nameNode = document.getElementById("name");
+  var nameNode = document.getElementById("name");
   var title = propsWindow.getAttribute("title");
   title = title.replace(/\*\*bm_title\*\*/gi, nameNode.value);
   propsWindow.setAttribute("title", title);
 
   // check bookmark schedule
-    var value = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
-                                    RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule"),
-                                    true);
+  value = Bookmarks.GetTarget(RDF.GetResource(gBookmarkURL),
+                              RDF.GetResource("http://home.netscape.com/WEB-rdf#Schedule"),
+                              true);
 
-    if (value) value = value.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    if (value) value = value.Value;
-    if ((value) && (value != ""))
-    {
-	var sep;
-	
-	// get day range
-	if ((sep = value.indexOf("|")) > 0)
-	{
-		var days = value.substr(0, sep);
-		value = value.substr(sep+1, value.length-1);
+  if (value) {
+    value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
 
-		var dayNode = document.getElementById("dayRange");
-		for (var x=0; x < dayNode.childNodes[0].childNodes.length; x++)
-		{
-			if (dayNode.childNodes[0].childNodes[x].getAttribute("data") == days)
-			{
-				dayNode.selectedItem = dayNode.childNodes[0].childNodes[x];
-				break;
-			}
-		}
-	}
+    if (value) {
+      var values = value.split("|");
+      if (values.length == 4) {
+        // get day range
+        var days = values[0];
+        var dayNode = document.getElementById("dayRange");
+        var dayItems = dayNode.childNodes[0].childNodes;
+        for (x=0; x < dayItems.length; ++x) {
+          if (dayItems[x].getAttribute("data") == days) {
+            dayNode.selectedItem = dayItems[x];
+            break;
+          }
+        }
 
-	// get hour range
-	if ((sep = value.indexOf("|")) > 0)
-	{
-		var hours = value.substr(0, sep);
-		value = value.substr(sep+1, value.length-1);
+        // get hour range
+        var hours = values[1].split("-");
+        var startHour = "";
+        var endHour = "";
 
-		var startHour = "";
-		var endHour = "";
+        if (hours.length == 2) {
+          startHour = hours[0];
+          endHour = hours[1];
+        }
 
-		var dashSep = hours.indexOf("-");
-		if (dashSep > 0)
-		{
-			startHour = hours.substr(0, dashSep);
-			endHour = hours.substr(dashSep + 1, hours.length-1);
-		}
+        // set start hour
+        var startHourNode = document.getElementById("startHourRange");
+        var startHourItems = startHourNode.childNodes[0].childNodes;
+        for (x=0; x < startHourItems.length; ++x) {
+          if (startHourItems[x].getAttribute("data") == startHour) {
+            startHourNode.selectedItem = startHourItems[x];
+            break;
+          }
+        }
 
-		// set start hour
-		var startHourNode = document.getElementById("startHourRange");
-		for (var x=0; x < startHourNode.childNodes[0].childNodes.length; x++)
-		{
-			if (startHourNode.childNodes[0].childNodes[x].getAttribute("data") == startHour)
-			{
-				startHourNode.selectedItem = startHourNode.childNodes[0].childNodes[x];
-				break;
-			}
-		}
+        // set end hour
+        var endHourNode = document.getElementById("endHourRange");
+        var endHourItems = endHourNode.childNodes[0].childNodes;
+        for (x=0; x < endHourItems.length; ++x) {
+          if (endHourItems[x].getAttribute("data") == endHour) {
+            endHourNode.selectedItem = endHourItems[x];
+            break;
+          }
+        }
 
-		// set end hour
-		var endHourNode = document.getElementById("endHourRange");
-		for (var x=0; x < endHourNode.childNodes[0].childNodes.length; x++)
-		{
-			if (endHourNode.childNodes[0].childNodes[x].getAttribute("data") == endHour)
-			{
-				endHourNode.selectedItem = endHourNode.childNodes[0].childNodes[x];
-				break;
-			}
-		}
-	}
+        // get duration
+        var duration = values[2];
+        var durationNode = document.getElementById("duration");
+        durationNode.value = duration;
 
-	// get duration
-	if ((sep = value.indexOf("|")) > 0)
-	{
-		var duration = value.substr(0, sep);
-		value = value.substr(sep+1, value.length-1);
+        // get notification method
+        var method = values[3];
+        if (method.indexOf("icon") >= 0)
+          document.getElementById("bookmarkIcon").checked = true;
 
-		var durationNode = document.getElementById("duration");
-		durationNode.value = duration;
-	}
+        if (method.indexOf("sound") >= 0)
+          document.getElementById("playSound").checked = true;
 
-	// get notification method
-    	if (value.indexOf("icon") >= 0)
-    	{
-    		document.getElementById("bookmarkIcon").checked = true;
-    	}
-    	if (value.indexOf("sound") >= 0)
-    	{
-    		document.getElementById("playSound").checked = true;
-    	}
-    	if (value.indexOf("alert") >= 0)
-    	{
-    		document.getElementById("showAlert").checked = true;
-    	}
-    	if (value.indexOf("open") >= 0)
-    	{
-    		document.getElementById("openWindow").checked = true;
-    	}
+        if (method.indexOf("alert") >= 0)
+          document.getElementById("showAlert").checked = true;
+
+        if (method.indexOf("open") >= 0)
+          document.getElementById("openWindow").checked = true;
+      }
     }
-
-  // if its a container, disable some things
-  var isContainerFlag = RDFC.IsContainer(Bookmarks, RDF.GetResource(bookmark_url));
-  if (!isContainerFlag)
-  {
-  	// XXX To do: the "RDFC.IsContainer" call above only works for RDF sequences;
-  	//            if its not a RDF sequence, we should to more checking to see if
-  	//            the item in question is really a container of not.  A good example
-  	//            of this is the "File System" container.
   }
 
-	if (isContainerFlag)
-	{
-		// If it is a folder, it has no URL or Keyword
-		document.getElementById("locationrow").setAttribute("hidden", "true");
-		document.getElementById("shortcutrow").setAttribute("hidden", "true");
-	}
+  // if its a container, disable some things
+  var isContainerFlag = RDFC.IsContainer(Bookmarks, RDF.GetResource(gBookmarkURL));
+  if (!isContainerFlag) {
+    // XXX To do: the "RDFC.IsContainer" call above only works for RDF sequences;
+    //            if its not a RDF sequence, we should to more checking to see if
+    //            the item in question is really a container of not.  A good example
+    //            of this is the "File System" container.
+  }
 
-  if (bookmark_url.indexOf("http://") != 0 && 
-      bookmark_url.indexOf("https://") != 0) {
+  if (isContainerFlag) {
+    // If it is a folder, it has no URL or Keyword
+    document.getElementById("locationrow").setAttribute("hidden", "true");
+    document.getElementById("shortcutrow").setAttribute("hidden", "true");
+  }
+
+  if (gBookmarkURL.indexOf("http://") != 0 &&
+      gBookmarkURL.indexOf("https://") != 0) {
     // only allow scheduling of http/https URLs
     document.getElementById("ScheduleTab").setAttribute("hidden", "true");
     document.getElementById("NotifyTab").setAttribute("hidden", "true");
   }
 
-	sizeToContent();
+  sizeToContent();
 
-	// set initial focus
-	document.getElementById("name").focus();
+  // set initial focus
+  document.getElementById("name").focus();
 }
 
 
@@ -212,216 +188,172 @@ function Commit()
   // Grovel through the fields to see if any of the values have
   // changed. If so, update the RDF graph and force them to be saved
   // to disk.
-  for (var i = 0; i < Fields.length; ++i)
-  {
-    var field = document.getElementById(Fields[i]);
-    // if the field was removed, just skip it
-    if (!field)	continue;
+  for (var i = 0; i < gFields.length; ++i) {
+    var field = document.getElementById(gFields[i]);
 
-    // Get the new value as a literal, using 'null' if the value is
-    // empty.
-    var newvalue = field.value;
-    dump("field value = " + newvalue + "\n");
+    if (field) {
+      // Get the new value as a literal, using 'null' if the value is empty.
+      var newvalue = field.value;
 
-    // if the field was removed, just skip it
-    if (!Properties[i])	continue;
+      var oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkURL),
+                                         RDF.GetResource(gProperties[i]),
+                                         true);
 
-    var oldvalue = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
-                                       RDF.GetResource(Properties[i]),
-                                       true);
+      if (oldvalue)
+        oldvalue = oldvalue.QueryInterface(Components.interfaces.nsIRDFLiteral);
 
-    if (oldvalue) oldvalue = oldvalue.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      if (newvalue && gProperties[i] == (NC_NAMESPACE_URI + "ShortcutURL")) {
+        // shortcuts are always lowercased internally
+        newvalue = newvalue.toLowerCase();
+      }
+      else if (newvalue && gProperties[i] == (NC_NAMESPACE_URI + "URL")) {
+        // we're dealing with the URL attribute;
+        // if a scheme isn't specified, use "http://"
+        if (newvalue.indexOf(":") < 0)
+          newvalue = "http://" + newvalue;
+      }
 
-    if ((newvalue) && (Properties[i] == (NC_NAMESPACE_URI + "ShortcutURL")))
-    {
-    	// shortcuts are always lowercased internally
-    	newvalue = newvalue.toLowerCase();
-    }
-    else if ((newvalue) && (Properties[i] == (NC_NAMESPACE_URI + "URL")))
-    {
-    	// we're dealing with the URL attribute;
-    	// if a scheme isn't specified, use "http://"
-    	if (newvalue.indexOf(":") < 0)
-    	{
-    		dump("Setting default URL scheme to HTTP.\n");
-    		newvalue = "http://" + newvalue;
-    	}
-    }
-    
-    if (updateAttribute(Properties[i], oldvalue, newvalue) == true)
-    {
-    	changed = true;
+      if (newvalue)
+        newvalue = RDF.GetLiteral(newvalue);
+
+      if (updateAttribute(gProperties[i], oldvalue, newvalue)) {
+        // Update gBookmarkURL if the url changed
+        if (newvalue && gProperties[i] == NC_NAMESPACE_URI + "URL")
+          gBookmarkURL = newvalue.Value;
+
+        changed = true;
+      }
     }
   }
   
-	// Update bookmark schedule if necessary;
-	// if the tab was removed, just skip it
-	var scheduleTab = document.getElementById("ScheduleTab");
-	if (scheduleTab)
-	{
-	  	var scheduleRes = "http://home.netscape.com/WEB-rdf#Schedule";
-		var oldvalue = Bookmarks.GetTarget(RDF.GetResource(bookmark_url),
-	                               RDF.GetResource(scheduleRes), true);
-	        var newvalue = "";
+  // Update bookmark schedule if necessary;
+  // if the tab was removed, just skip it
+  var scheduleTab = document.getElementById("ScheduleTab");
+  if (scheduleTab) {
+    var scheduleRes = "http://home.netscape.com/WEB-rdf#Schedule";
+    oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkURL),
+                                   RDF.GetResource(scheduleRes), true);
+    newvalue = "";
+    var dayRangeNode = document.getElementById("dayRange");
+    var dayRange = dayRangeNode.selectedItem.getAttribute("data");
 
-		var dayRange = "";
-		var dayRangeNode = document.getElementById("dayRange");
-		if (dayRangeNode)
-		{
-			dayRange = dayRangeNode.selectedItem.getAttribute("data");
-		}
-		if (dayRange != "")
-		{
-			var startHourRange = "";
-			var startHourRangeNode = document.getElementById("startHourRange");
-			if (startHourRangeNode)
-			{
-				startHourRange = startHourRangeNode.selectedItem.getAttribute("data");
-			}
-			var endHourRange = "";
-			var endHourRangeNode = document.getElementById("endHourRange");
-			if (endHourRangeNode)
-			{
-				endHourRange = endHourRangeNode.selectedItem.getAttribute("data");
-			}
+    if (dayRange) {
+      var startHourRangeNode = document.getElementById("startHourRange");
+      var startHourRange = startHourRangeNode.selectedItem.getAttribute("data");
 
-			if (parseInt(startHourRange) > parseInt(endHourRange))
-			{
-				var temp = startHourRange;
-				startHourRange = endHourRange;
-				endHourRange = temp;
-			}
+      var endHourRangeNode = document.getElementById("endHourRange");
+      var endHourRange = endHourRangeNode.selectedItem.getAttribute("data");
 
-			var duration = document.getElementById("duration").value;
-			if (duration == "")
-			{
-				var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
-				alert( bundle.GetStringFromName("pleaseEnterADuration") );
-				return(false);
-			}
+      if (parseInt(startHourRange) > parseInt(endHourRange)) {
+        var temp = startHourRange;
+        startHourRange = endHourRange;
+        endHourRange = temp;
+      }
 
-			var method = "";
-			if (document.getElementById("bookmarkIcon").checked)	method += ",icon";
-			if (document.getElementById("playSound").checked)	method += ",sound";
-			if (document.getElementById("showAlert").checked)	method += ",alert";
-			if (document.getElementById("openWindow").checked)	method += ",open";
-			if (method.length < 1)
-			{
-				var bundle = srGetStrBundle("chrome://communicator/locale/bookmarks/bookmark.properties");
-				alert( bundle.GetStringFromName("pleaseSelectANotification") );
-				return(false);
-			}
-			method = method.substr(1, method.length - 1);	// trim off the initial comma
+      var bookmarkBundle;
+      var duration = document.getElementById("duration").value;
+      if (!duration) {
+        bookmarkBundle = document.getElementById("bundle_bookmark");
+        alert (bookmarkBundle.getString("pleaseEnterADuration"));
+        return false;
+      }
 
-			dump("dayRange: " + dayRange + "\n");
-			dump("startHourRange: " + startHourRange + "\n");
-			dump("endHourRange: " + endHourRange + "\n");
-			dump("duration: " + duration + "\n");
-			dump("method: " + method + "\n");
-			
-			newvalue = dayRange + "|" + startHourRange + "-" + endHourRange + "|" + duration + "|" + method;
-		}
-	}
+      var methods = [];
+      if (document.getElementById("bookmarkIcon").checked)
+        methods.push("icon");
+      if (document.getElementById("playSound").checked)
+        methods.push("sound");
+      if (document.getElementById("showAlert").checked)
+        methods.push("alert");
+      if (document.getElementById("openWindow").checked)
+        methods.push("open");
 
-	if (updateAttribute(scheduleRes, oldvalue, newvalue) == true)
-	{
-		changed = true;
-	}
+      if (methods.length == 0) {
+        bookmarkBundle = document.getElementById("bundle_bookmark");
+        alert (bookmarkBundle.getString("pleaseSelectANotification"));
+        return false;
+      }
 
-	if (changed == true)
-	{
-		dump("re-writing bookmarks.html\n");
-		var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-		if (remote)
-		{
-			remote.Flush();
-		}
-	}
+      var method = methods.join(); // join string in array with ","
 
-	window.close();
+      newvalue = dayRange + "|" + startHourRange + "-" + endHourRange + "|" + duration + "|" + method;
+    }
+
+    if (newvalue)
+      newvalue = RDF.GetLiteral(newvalue);
+
+    if (updateAttribute(scheduleRes, oldvalue, newvalue))
+      changed = true;
+  }
+
+  if (changed) {
+    var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+    if (remote)
+      remote.Flush();
+  }
+
+  window.close();
+  return true;
 }
-
-
 
 function updateAttribute(prop, oldvalue, newvalue)
 {
-	var changed = false;
+  var changed = false;
 
-	if (!prop)	return(changed)
+  if (prop && (oldvalue || newvalue) && oldvalue != newvalue) {
 
-    newvalue = (newvalue != '') ? RDF.GetLiteral(newvalue) : null;
-
-    if (oldvalue != newvalue)
-    {
-      dump("replacing value for " + prop + "\n");
-      dump("  oldvalue = " + oldvalue + "\n");
-      dump("  newvalue = " + newvalue + "\n");
-
-      if (oldvalue && !newvalue) {
-        Bookmarks.Unassert(RDF.GetResource(bookmark_url),
-                           RDF.GetResource(prop),
-                           oldvalue);
-      }
-      else if (!oldvalue && newvalue) {
-        Bookmarks.Assert(RDF.GetResource(bookmark_url),
+    if (oldvalue && !newvalue) {
+      Bookmarks.Unassert(RDF.GetResource(gBookmarkURL),
                          RDF.GetResource(prop),
-                         newvalue,
-                         true);
-      }
-      else if (oldvalue && newvalue) {
-        Bookmarks.Change(RDF.GetResource(bookmark_url),
-                         RDF.GetResource(prop),
-                         oldvalue,
-                         newvalue);
-      }
-
-      changed = true;
+                         oldvalue);
     }
-  return(changed);
+    else if (!oldvalue && newvalue) {
+      Bookmarks.Assert(RDF.GetResource(gBookmarkURL),
+                       RDF.GetResource(prop),
+                       newvalue,
+                       true);
+    }
+    else /* if (oldvalue && newvalue) */ {
+      Bookmarks.Change(RDF.GetResource(gBookmarkURL),
+                       RDF.GetResource(prop),
+                       oldvalue,
+                       newvalue);
+    }
+
+    changed = true;
+  }
+
+  return changed;
 }
-
-
 
 function setEndHourRange()
 {
-   // Get the values of the start-time and end-time as ints
-   var startHourRange = "";
-   var startHourRangeNode = document.getElementById("startHourRange");
-   if (startHourRangeNode)
-   {
-      startHourRange = startHourRangeNode.selectedItem.getAttribute("data");
-      var startHourRangeInt = parseInt(startHourRange);
-   }
-   var endHourRange = "";
-   var endHourRangeNode = document.getElementById("endHourRange");
-   if (endHourRangeNode)
-   {
-      endHourRange = endHourRangeNode.selectedItem.getAttribute("data");
-      var endHourRangeInt = parseInt(endHourRange);
-   }
-   
-   if (endHourRangeNode)
-   {
-      var endHourItemNode = endHourRangeNode.firstChild.firstChild;
+  // Get the values of the start-time and end-time as ints
+  var startHourRangeNode = document.getElementById("startHourRange");
+  var startHourRange = startHourRangeNode.selectedItem.getAttribute("data");
+  var startHourRangeInt = parseInt(startHourRange);
 
-      if (endHourItemNode) {
+  var endHourRangeNode = document.getElementById("endHourRange");
+  var endHourRange = endHourRangeNode.selectedItem.getAttribute("data");
+  var endHourRangeInt = parseInt(endHourRange);
 
-         // disable all those end-times before the start-time
-         for (var index = 0; index < startHourRangeInt; index++) {
-            endHourItemNode.setAttribute("disabled", "true");
-            endHourItemNode = endHourItemNode.nextSibling;
-         }
+  var endHourItemNode = endHourRangeNode.firstChild.firstChild;
 
-         // update the selected value if it's out of the allowed range
-         if (startHourRangeInt >= endHourRangeInt) {
-            endHourRangeNode.selectedItem = endHourItemNode;
-         }
+  var index = 0;
 
-         // make sure all the end-times after the start-time are enabled
-         for (; index < 24; index++) {
-            endHourItemNode.removeAttribute("disabled");
-            endHourItemNode = endHourItemNode.nextSibling;
-         }
-      }
-   }
+  // disable all those end-times before the start-time
+  for (; index < startHourRangeInt; ++index) {
+    endHourItemNode.setAttribute("disabled", "true");
+    endHourItemNode = endHourItemNode.nextSibling;
+  }
+
+  // update the selected value if it's out of the allowed range
+  if (startHourRangeInt >= endHourRangeInt)
+    endHourRangeNode.selectedItem = endHourItemNode;
+
+  // make sure all the end-times after the start-time are enabled
+  for (; index < 24; ++index) {
+    endHourItemNode.removeAttribute("disabled");
+    endHourItemNode = endHourItemNode.nextSibling;
+  }
 }
