@@ -47,7 +47,7 @@ nsMailDatabase::~nsMailDatabase()
 
 // OK, dbName is probably folder name, since I can't figure out how nsFilePath interacts
 // with xpFileTypes and its related routines.
-	const char *folderName = dbName;
+	char *folderName = dbName;
 
 	*pMessageDB = NULL;
 
@@ -77,7 +77,6 @@ nsMailDatabase::~nsMailDatabase()
 	statResult = stat ((const char *) dbName, &st);
 
 	nsresult err = mailDB->OpenMDB(dbName, create);
-	PR_Free(dbName);
 
 	if (NS_SUCCEEDED(err))
 	{
