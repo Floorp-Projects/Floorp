@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+
+<!--
+
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+
+ * Ed Burns &gt;edburns@acm.org&lt;
+
+
+-->
+
+<project name="webclient" default="main" basedir=".">
+
+  <property name="Name" value="webclient"/>
+  <property name="name" value="webclient"/>
+  <property name="version" value="20020916"/>
+
+<!-- ************ Per user local properties ******************************* -->
+
+  <property file="${user.home}/build.properties"/>   <!-- User local        -->
+  <property file="build.properties"/>                <!-- Component local   -->
+  <property file="../build.properties"/>         <!-- java-supplement local -->
+  <property environment="myenv" />
+
+<!-- ************ Compiler Defaults *************************************** -->
+
+  <!-- Should Java compilations set the 'debug' compiler option? -->
+  <property name="compile.debug" value="true"/>
+
+  <!-- Should Java compilations set the 'deprecation' compiler option? -->
+  <property name="compile.deprecation" value="false"/>
+
+  <!-- Should Java compilations set the 'optimize' compiler option? -->
+  <property name="compile.optimize" value="false"/>
+
+<!-- ************ Where are we building into? ***************************** -->
+
+  <!-- The base directory for compilation targets -->
+  <property name="build.home" value="${myenv.MOZILLA_FIVE_HOME}/.."/>
+
+  <!-- The base directory for component sources -->
+  <property name="source.home" value="${basedir}/classes_spec"/>
+
+  <!-- Construct compile classpath -->
+  <path id="compile.classpath">
+    <pathelement location="${build.home}/classes"/>
+  </path>
+
+  <target name="main" 
+          depends="compile.classes_spec,compile.src_share,compile.src_moz"/>
+
+  <target name="compile.classes_spec">
+
+    <javac destdir="${build.home}/classes"
+             debug="${compile.debug}"
+       deprecation="${compile.deprecation}"
+          optimize="${compile.optimize}">
+      <classpath refid="compile.classpath"/>
+      <src path="${source.home}"/>
+      <patternset>
+            <include name="org/mozilla/webclient/wrapper_native/gtk/*" 
+                     if="build.unix.classes"/>
+      </patternset>
+      <patternset>
+            <include name="org/mozilla/webclient/wrapper_native/win32/*" 
+                     if="build.win32.classes"/>
+      </patternset>
+
+      <!-- PENDING(edburns): include additional patternsets for ICE,
+           HotJava, etc -->
+
+      <include name="org/mozilla/webclient/*"/>
+      <include name="org/mozilla/webclient/wrapper_native/*"/>
+      <include name="org/mozilla/webclient/test/*"/>
+    </javac>
+
+  </target>
+
+  <target name="compile.src_share" depends="compile.javah.headers">
+
+    <exec os="Linux" dir="${basedir}/src_share" executable="make"/>
+
+  </target>
+
+  <target name="compile.javah.headers" depends="compile.javah.canvas.headers">
+
+    <javah outputFile="${basedir}/src_share/BookmarksImpl.h"
+           class="org.mozilla.webclient.wrapper_native.BookmarksImpl">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/PreferencesImpl.h"
+           class="org.mozilla.webclient.wrapper_native.PreferencesImpl">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/CurrentPageImpl.h"
+           class="org.mozilla.webclient.wrapper_native.CurrentPageImpl">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/HistoryImpl.h"
+           class="org.mozilla.webclient.wrapper_native.HistoryImpl">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/WrapperFactoryImpl.h"
+           class="org.mozilla.webclient.wrapper_native.WrapperFactoryImpl">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/NavigationImpl.h"
+           class="org.mozilla.webclient.wrapper_native.NavigationImpl">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/RDFEnumeration.h"
+           class="org.mozilla.webclient.wrapper_native.RDFEnumeration">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/RDFTreeNode.h"
+           class="org.mozilla.webclient.wrapper_native.RDFTreeNode">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/ISupportsPeer.h"
+           class="org.mozilla.webclient.wrapper_native.ISupportsPeer">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/WindowControlImpl.h"
+           class="org.mozilla.webclient.wrapper_native.WindowControlImpl">
+      <classpath refid="compile.classpath"/>
+    </javah>
+    <javah outputFile="${basedir}/src_share/NativeEventThread.h"
+           class="org.mozilla.webclient.wrapper_native.NativeEventThread">
+      <classpath refid="compile.classpath"/>
+    </javah>
+  </target>
+
+  <target name="compile.javah.canvas.headers" 
+          depends="compile.unix.canvas.headers,compile.win32.canvas.headers"/>
+
+  <target name="compile.unix.canvas.headers" if="build.unix.classes">
+
+    <javah outputFile="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"
+      class="org.mozilla.webclient.wrapper_native.gtk.GtkBrowserControlCanvas">
+      <classpath refid="compile.classpath"/>
+    </javah>
+
+  </target>
+
+  <target name="compile.win32.canvas.headers" if="build.win32.classes">
+
+    <javah outputFile="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"
+      class="org.mozilla.webclient.wrapper_native.gtk.GtkBrowserControlCanvas">
+      <classpath refid="compile.classpath"/>
+    </javah>
+
+  </target>
+
+
+
+  <target name="compile.src_moz" depends="compile.src_share">
+
+    <exec os="Linux" dir="${basedir}/src_moz" executable="make"/>
+
+  </target>
+
+
+  <target name="clean">
+
+    <exec os="Linux" dir="${basedir}/src_moz" executable="make">
+
+      <arg line="clobber_all"/>
+
+    </exec>
+
+    <exec os="Linux" dir="${basedir}/src_share" executable="make">
+
+      <arg line="clobber_all"/>
+
+    </exec>
+
+    <delete >
+      <fileset dir="${basedir}/src_share">
+        <include name="*.h"/>
+        <exclude name="bal_util.h"/>
+        <exclude name="jni_util_export.h"/>
+        <exclude name="jni_util.h"/>
+      </fileset>
+    </delete>
+
+    <delete dir="${build.home}/classes/org/mozilla/webclient"/>
+
+  </target>
+
+
+</project>

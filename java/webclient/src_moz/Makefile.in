@@ -90,35 +90,6 @@ REQUIRES	= xpcom \
  		  $(NULL)
  
 CPPSRCS = \
-	ns_util.cpp \
-	ns_util_export.cpp \
-	dom_util.cpp \
-	nsActions.cpp \
-	rdf_util.cpp \
-	BookmarksImpl.cpp \
-	CBrowserContainer.cpp \
-	PromptActionEvents.cpp  \
-	CurrentPageImpl.cpp \
-	CurrentPageActionEvents.cpp \
-	HistoryImpl.cpp \
-	HistoryActionEvents.cpp \
-	ISupportsPeer.cpp \
-	NativeEventThread.cpp \
-	NativeEventThreadActionEvents.cpp \
-	NavigationImpl.cpp \
-	NavigationActionEvents.cpp \
-	InputStreamShim.cpp \
-	RDFEnumeration.cpp \
-	RDFTreeNode.cpp \
-	RDFActionEvents.cpp \
-	wsRDFObserver.cpp \
-	WindowControlImpl.cpp \
-	WindowControlActionEvents.cpp \
-	PreferencesImpl.cpp \
-	PreferencesActionEvents.cpp \
-	WrapperFactoryImpl.cpp \
-	motif/MotifBrowserControlCanvas.cpp \
-	motif/gtkmozilla.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

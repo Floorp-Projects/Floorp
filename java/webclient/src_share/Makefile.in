@@ -22,8 +22,6 @@ topsrcdir	= $(DEPTH)
 srcdir		= $(topsrcdir)/java/webclient/src_share
 VPATH		= $(topsrcdir)/java/webclient/src_share
 
-JAVAHOME        = $(JDKHOME)
-
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          = webclient
@@ -61,44 +59,3 @@ endif
 endif
 
 
-JAVAH_CLS= \
-	"-o BookmarksImpl.h org.mozilla.webclient.wrapper_native.BookmarksImpl" \
-	"-o PreferencesImpl.h org.mozilla.webclient.wrapper_native.PreferencesImpl" \
-	"-o CurrentPageImpl.h org.mozilla.webclient.wrapper_native.CurrentPageImpl" \
-	"-o HistoryImpl.h org.mozilla.webclient.wrapper_native.HistoryImpl" \
-	"-o WrapperFactoryImpl.h org.mozilla.webclient.wrapper_native.WrapperFactoryImpl" \
-	"-o NavigationImpl.h org.mozilla.webclient.wrapper_native.NavigationImpl" \
-	"-o RDFEnumeration.h org.mozilla.webclient.wrapper_native.RDFEnumeration" \
-	"-o RDFTreeNode.h org.mozilla.webclient.wrapper_native.RDFTreeNode" \
-	"-o ISupportsPeer.h org.mozilla.webclient.wrapper_native.ISupportsPeer" \
-	"-o WindowControlImpl.h org.mozilla.webclient.wrapper_native.WindowControlImpl" \
-	"-o NativeEventThread.h org.mozilla.webclient.wrapper_native.NativeEventThread" \
-	$(NULL)
-
-JAVAH_FILES=\
-	BookmarksImpl.h \
-	PreferencesImpl.h \
-	CurrentPageImpl.h \
-	HistoryImpl.h \
-	WrapperFactoryImpl.h \
-	NavigationImpl.h \
-	RDFEnumeration.h \
-	RDFTreeNode.h \
-	ISupportsPeer.h \
-	WindowControlImpl.h \
-	NativeEventThread.h \
-	$(NULL)
-
-JAVAH_PROG=$(JDKHOME)/bin/javah
-JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)
-
-export:: $(JAVAH_FILES)
-
-$(JAVAH_FILES): 
-	@for c in $(JAVAH_CLS); do \
-		echo $(JAVAH_PROG) $(JAVAH_FLAGS) $$c; \
-		$(JAVAH_PROG) $(JAVAH_FLAGS) $$c; \
-	done
-
-clobber_all::
-	rm -f $(JAVAH_FILES)
