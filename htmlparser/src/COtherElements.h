@@ -104,11 +104,8 @@ public:
   struct CFlags {
     PRUint32  mOmitEndTag:1;
     PRUint32  mIsContainer:1;
-    PRUint32  mForDTDUseOnly:1;
-    PRUint32  mDiscardTag:1;
     PRUint32  mPropagateDepth:4;
     PRUint32  mDeprecated:1;
-    PRUint32  mMustCloseSelf:1;
     PRUint32  mOmitWS:1;
   };
 
@@ -435,7 +432,7 @@ public:
    **********************************************************/
   static CGroupMembers& GetContainedGroups(void) {
     static CGroupMembers theGroups=CInlineElement::GetContainedGroups();
-    theGroups.mBits.mSelf=0;
+    theGroups.mBits.mSelf=1;
     return theGroups;
   }
 
@@ -445,6 +442,7 @@ public:
   static CGroupMembers& GetBlockGroupMembers(void) {
     static CGroupMembers theGroups={0};
     theGroups.mBits.mBlock=1;
+    theGroups.mBits.mSelf=1;
     return theGroups;
   }
 
