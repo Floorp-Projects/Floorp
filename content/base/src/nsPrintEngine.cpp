@@ -598,13 +598,12 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   mPrt->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
   if (NS_SUCCEEDED(rv) && mPrt->mPrintOptions && mPrt->mPrintSettings) {
     // Get the default printer name and set it into the PrintSettings
-    rv = CheckForPrinters(mPrt->mPrintOptions, mPrt->mPrintSettings, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, PR_TRUE);
+    rv = CheckForPrinters(mPrt->mPrintOptions, mPrt->mPrintSettings);
   } else {
     NS_ASSERTION(mPrt->mPrintSettings, "You can't Print without a PrintSettings!");
     rv = NS_ERROR_FAILURE;
   }
 
-  CHECK_RUNTIME_ERROR_CONDITION(nsIDebugObject::PRT_RUNTIME_CHECKFORPRINTERS, rv, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE);
   if (NS_FAILED(rv)) {
     PR_PL(("NS_ERROR_FAILURE - CheckForPrinters for Printers failed"));
     return CleanupOnFailure(rv, PR_FALSE);
@@ -1094,12 +1093,13 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   mPrt->mPrintOptions = do_GetService(sPrintOptionsContractID, &rv);
   if (NS_SUCCEEDED(rv) && mPrt->mPrintOptions && mPrt->mPrintSettings) {
     // Get the default printer name and set it into the PrintSettings
-    rv = CheckForPrinters(mPrt->mPrintOptions, mPrt->mPrintSettings, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, PR_TRUE);
+    rv = CheckForPrinters(mPrt->mPrintOptions, mPrt->mPrintSettings);
   } else {
     NS_ASSERTION(mPrt->mPrintSettings, "You can't Print without a PrintSettings!");
     rv = NS_ERROR_FAILURE;
   }
   if (NS_FAILED(rv)) {
+    ShowPrintErrorDialog(rv, PR_TRUE);
     CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
   }
@@ -1543,17 +1543,15 @@ nsPrintEngine::Cancel()
 // in the PrintSettings which is then used for Printer Preview
 nsresult
 nsPrintEngine::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
-                                     nsIPrintSettings* aPrintSettings,
-                                     PRUint32          aErrorCode,
-                                     PRBool            aIsPrinting)
+                                nsIPrintSettings* aPrintSettings)
 {
   NS_ENSURE_ARG_POINTER(aPrintOptions);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv;
 
   nsCOMPtr<nsISimpleEnumerator> simpEnum;
-  aPrintOptions->AvailablePrinters(getter_AddRefs(simpEnum));
+  rv = aPrintOptions->AvailablePrinters(getter_AddRefs(simpEnum));
   if (simpEnum) {
     PRBool fndPrinter = PR_FALSE;
     simpEnum->HasMoreElements(&fndPrinter);
@@ -1578,17 +1576,12 @@ nsPrintEngine::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
         nsMemory::Free(defPrinterName);
       }
       rv = NS_OK;
-    } else {
-      // this means there were no printers
-      ShowPrintErrorDialog(aErrorCode, aIsPrinting);
     }
   } else {
     // this means there were no printers
     // XXX the ifdefs are temporary until they correctly implement Available Printers
 #if defined(XP_MAC) || defined(XP_MACOSX)
     rv = NS_OK;
-#else
-    ShowPrintErrorDialog(aErrorCode, aIsPrinting);
 #endif
   }
   return rv;
@@ -2315,6 +2308,7 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_NO_PRINTDIALOG_IN_TOOLKIT)
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_NO_PRINTROMPTSERVICE)
+      NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_GFX_PRINTER_XPRINT_NO_XPRINT_SERVERS_FOUND)
 
     default:
       NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG(NS_ERROR_FAILURE)

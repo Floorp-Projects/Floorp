@@ -137,6 +137,35 @@ const char *XpuGetXpServerList( void )
 }
 
 
+Bool XpuXprintServersAvailable( void )
+{
+  const char *s;
+  int         c = 0;
+  /* BUGs/ToDo:
+   * - XpServerList resource needs to be sourced, too...
+   *   (see comment for |XpuGetXpServerList|, too)
+   * - There should be some validation whether the server entries
+   *   are
+   *     a) valid (easy :)
+   *   and
+   *     b) available (hard to implement when XOpenDisplay() should be avoided)
+   */
+  s = getenv("XPSERVERLIST");
+  /* Check if serverlist is non-empty */
+  if (s)
+  {
+    while( *s++ )
+    {
+      if( !isspace(*s) )
+        c++;
+    }
+  }
+  /* a valid server name must at least contain the ':'-seperator
+   * and a number (e.g. ":1") */
+  return( c >= 2 );
+}
+
+
 static 
 int XpuGetPrinter2( char *printer, char *display, Display **pdpyptr, XPContext *pcontextptr )
 {

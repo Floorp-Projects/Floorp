@@ -191,9 +191,7 @@ public:
                                 nsIPrintProgressParams* aParams);
   void ElipseLongString(PRUnichar *& aStr, const PRUint32 aLen, PRBool aDoFront);
   nsresult CheckForPrinters(nsIPrintOptions*  aPrintOptions,
-                            nsIPrintSettings* aPrintSettings,
-                            PRUint32          aErrorCode,
-                            PRBool            aIsPrinting);
+                            nsIPrintSettings* aPrintSettings);
   void CleanupDocTitleArray(PRUnichar**& aArray, PRInt32& aCount);
   void CheckForHiddenFrameSetFrames();
 
