@@ -164,7 +164,7 @@ void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
   pFrame->GetColIndex(colIndex);
 	if (rowIndex > 0)
 	{
-		MoveTo(aPresContext, rowIndex-1, colIndex, pFrame);
+		MoveToRowCol(aPresContext, rowIndex-1, colIndex, pFrame);
 	}
 }
 
@@ -178,7 +178,7 @@ void nsTreeFrame::MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame
 
 	if (rowIndex < totalRows-1)
 	{
-		MoveTo(aPresContext, rowIndex+1, colIndex, pFrame);
+		MoveToRowCol(aPresContext, rowIndex+1, colIndex, pFrame);
 	}
 }
 
@@ -190,7 +190,7 @@ void nsTreeFrame::MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame
   pFrame->GetColIndex(colIndex);
 	if (colIndex > 0)
 	{
-		MoveTo(aPresContext, rowIndex, colIndex-1, pFrame);
+		MoveToRowCol(aPresContext, rowIndex, colIndex-1, pFrame);
 	}
 }
 
@@ -204,11 +204,11 @@ void nsTreeFrame::MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFram
 
 	if (colIndex < totalCols-1)
 	{
-		MoveTo(aPresContext, rowIndex, colIndex+1, pFrame);
+		MoveToRowCol(aPresContext, rowIndex, colIndex+1, pFrame);
 	}
 }
 
-void nsTreeFrame::MoveTo(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame)
+void nsTreeFrame::MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame)
 {
 	nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(row, col);
 	if (nsnull==cellFrame)
