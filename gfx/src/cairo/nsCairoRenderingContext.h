@@ -221,6 +221,7 @@ protected:
 
     nsCOMPtr<nsCairoDrawingSurface> mDrawingSurface;
     nsCOMPtr<nsCairoDrawingSurface> mOffscreenSurface;
+    nsCOMPtr<nsCairoDrawingSurface> mBackBufferSurface;
 };
 
 #endif  // NSCAIRORENDERINGCONTEXT__H__

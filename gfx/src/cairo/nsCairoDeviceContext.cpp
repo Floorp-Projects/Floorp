@@ -73,6 +73,14 @@ nsCairoDeviceContext::~nsCairoDeviceContext()
 {
 }
 
+int
+helpful_error_handler (Display *dpy, XErrorEvent *error)
+{
+    fprintf (stderr, "++++++++ X Error! serial %d code: %d request: %d minor: %d\n",
+             error->serial, error->error_code, error->request_code, error->minor_code);
+    return 0;
+}
+
 NS_IMETHODIMP
 nsCairoDeviceContext::Init(nsNativeWidget aWidget)
 {
@@ -97,6 +105,12 @@ nsCairoDeviceContext::Init(nsNativeWidget aWidget)
         screen->GetRect (&x, &y, &width, &height );
         mWidthFloat = float(width);
         mHeightFloat = float(height);
+    }
+
+    if (getenv ("MOZ_X_SYNC")) {
+        fprintf (stderr, "+++ Enabling XSynchronize\n");
+        XSynchronize (gdk_x11_get_default_xdisplay(), True);
+        XSetErrorHandler (helpful_error_handler);
     }
 
     mWidth = -1;
@@ -282,6 +296,8 @@ nsCairoDeviceContext::GetRect(nsRect &aRect)
 #error write me
 #endif
 
+    fprintf (stderr, "+++ GetRect: %d %d %d %d\n", aRect.x, aRect.y, aRect.width, aRect.height);
+
     return NS_OK;
 }
 
@@ -289,7 +305,9 @@ nsCairoDeviceContext::GetRect(nsRect &aRect)
 NS_IMETHODIMP
 nsCairoDeviceContext::GetClientRect(nsRect &aRect)
 {
-    return this->GetRect(aRect);
+    fprintf (stderr, "+++ GetClientRect: ");
+    nsresult rv = this->GetRect(aRect);
+    return rv;
 }
 
 /*

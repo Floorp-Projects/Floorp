@@ -738,7 +738,8 @@ nsCairoRenderingContext::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 NS_IMETHODIMP
 nsCairoRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
 {
-    *aUseBackbuffer = PR_FALSE;
+//    *aUseBackbuffer = PR_FALSE;
+    *aUseBackbuffer = PR_TRUE;
     return NS_OK;
 }
 
@@ -747,22 +748,34 @@ nsCairoRenderingContext::GetBackbuffer(const nsRect &aRequestedSize,
                                        const nsRect &aMaxSize,
                                        nsIDrawingSurface* &aBackbuffer)
 {
-    NS_WARNING("GetBackbuffer: not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!mBackBufferSurface) {
+        nsIDeviceContext *dc = mDeviceContext.get();
+        mBackBufferSurface = new nsCairoDrawingSurface ();
+        mBackBufferSurface->Init (NS_STATIC_CAST(nsCairoDeviceContext*, dc),
+                                  aMaxSize.width, aMaxSize.height,
+                                  PR_FALSE);
+    }
+
+    aBackbuffer = mBackBufferSurface;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCairoRenderingContext::ReleaseBackbuffer(void)
 {
-    NS_WARNING("ReleaseBackbuffer: not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mBackBufferSurface = NULL;
+    return NS_OK;
+//    NS_WARNING("ReleaseBackbuffer: not implemented");
+//    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsCairoRenderingContext::DestroyCachedBackbuffer(void)
 {
-    NS_WARNING("DestroyCachedBackbuffer: not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mBackBufferSurface = NULL;
+    return NS_OK;
+//    NS_WARNING("DestroyCachedBackbuffer: not implemented");
+//    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -1009,12 +1022,14 @@ nsCairoRenderingContext::DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     const nscoord* aSpacing)
 {
+#if 0
     NS_WARNING("DrawString 1");
     cairo_move_to(mCairo, double(aX), double(aY));
     cairo_new_path (mCairo);
     cairo_text_path (mCairo, (const unsigned char *) aString);
     cairo_fill (mCairo);
     cairo_move_to(mCairo, -double(aX), -double(aY));
+#endif
     return NS_OK;
 }
 
@@ -1024,7 +1039,7 @@ nsCairoRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                     PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {
-    NS_WARNING("DrawString 2");
+//    NS_WARNING("DrawString 2");
     return DrawString(nsDependentString(aString), aX, aY, aFontID, aSpacing);
 }
 
@@ -1034,7 +1049,7 @@ nsCairoRenderingContext::DrawString(const nsString& aString,
                                     PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {
-    NS_WARNING("DrawString 3");
+//    NS_WARNING("DrawString 3");
     return DrawString(NS_ConvertUTF16toUTF8(aString).get(), aString.Length(), aX, aY, aSpacing);
 }
 

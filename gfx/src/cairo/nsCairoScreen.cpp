@@ -162,6 +162,7 @@ nsCairoScreen::Init ()
             mAvailRect.IntersectRect(mAvailRect, workarea);
         }
     }
+
 #elif MOZ_ENABLE_XLIB
     mScreenNum = 0;
     mRect.x = mAvailRect.x = 0;

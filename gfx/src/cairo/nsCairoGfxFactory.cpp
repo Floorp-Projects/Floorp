@@ -39,7 +39,6 @@
 #include "nsCOMPtr.h"
 #include "nsGfxCIID.h"
 
-#include "nsBlender.h"
 #include "nsScriptableRegion.h"
 #include "gfxImageFrame.h"
 #include "nsCairoFontMetrics.h"
@@ -49,8 +48,9 @@
 #include "nsCairoRegion.h"
 #include "nsCairoScreen.h"
 #include "nsCairoScreenManager.h"
+#include "nsCairoBlender.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoFontMetrics)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCairoDeviceContext)
@@ -130,10 +130,10 @@ static const nsModuleComponentInfo components[] =
     NS_SCRIPTABLE_REGION_CID,
     "@mozilla.org/gfx/region;1",
     nsScriptableRegionConstructor },
-  { "Blender",
+  { "Cairo Blender",
     NS_BLENDER_CID,
     "@mozilla.org/gfx/blender;1",
-    nsBlenderConstructor },
+    nsCairoBlenderConstructor },
   { "image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",
