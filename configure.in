@@ -783,36 +783,36 @@ case "$target" in
     ;;
 
 *-nto*) 
-    CFLAGS="$CFLAGS -DNTO -D_QNX_SOURCE -D_POSIX_C_SOURCE=199506 -D_i386"
-    CXXFLAGS="$CXXFLAGS -DNTO -D_QNX_SOURCE -D_POSIX_C_SOURCE=199506 -D_i386"
-    _WARNINGS_CFLAGS='-w'
-    _WARNINGS_CXXFLAGS='-w'
-    OS_TARGET="NTO"
-    MOZ_OPTIMIZE_FLAGS="-O1"
+	AC_DEFINE(NTO)	
+	AC_DEFINE(_QNX_SOURCE)
+	AC_DEFINE(_i386)
+	OS_TARGET=NTO
+	MOZ_OPTIMIZE_FLAGS="-O"
 	MOZ_DEBUG_FLAGS="-gstabs"
-    DSO_LDOPTS="-M $DSO_LDOPTS"
-    DSO_CFLAGS=''
-    DSO_PIC_CFLAGS="-shared -Wc,-fPIC -DPIC"
-    MKSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='qcc -Vgcc_ntox86 $(DSO_LDOPTS) -o $@'
-    AR='qcc -Vgcc_ntox86'
-    AR_FLAGS='-M -a $@'
-    AR_LIST='ar t'
-    AR_EXTRACT='ar x'
-    AR_DELETE='ar d'
-    _DEFINES_CFLAGS='-Wp,-include,$(DEPTH)/config-defs.h -DMOZILLA_CLIENT'
-    _DEFINES_CXXFLAGS='-Wp,-include,$(DEPTH)/config-defs.h -DMOZILLA_CLIENT'
-    _PREPROCESSOR_PREFIX="-Wp,"
-    _COMPILER_PREFIX="-Wc,"
-    _LINKER_PREFIX="-Wl,"      
 	USE_PTHREADS=1
-	_PTHREAD_LDFLAGS=""
-	LIBS="$LIBS -L/usr/lib -lsocket -lm -lstdc++"
-	HAVE_DEV_ZERO=1
-    MOZ_WIDGET_TOOLKIT="photon"
-    TK_CFLAGS='-I/usr/include/photon'
-    TK_LIBS='-lph -lphrender'
-    ;;
+	_PEDANTIC=
+	LIBS="$LIBS -lsocket -lstdc++"
+	_DEFINES_CFLAGS='-Wp,-include -Wp,$(DEPTH)/config-defs.h -DMOZILLA_CLIENT -D_POSIX_C_SOURCE=199506'
+	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -Wp,-include -Wp,$(DEPTH)/config-defs.h -D_POSIX_C_SOURCE=199506'
+	if test "$with_x" != "yes"
+	then
+		MOZ_WIDGET_TOOLKIT="photon"
+    	AC_DEFINE(NO_X11)
+	    TK_CFLAGS='-I/usr/include/photon'
+		TK_LIBS='-lph'
+		no_x="yes"
+	fi
+	case "${target_cpu}" in
+	ppc*)
+	AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)	
+	;;
+	esac
+	case "${host_cpu}" in
+	i?86)
+	USE_ELF_DYNSTR_GC=1
+	;;
+	esac
+	;;
 
 *-openbsd*)
     DLL_SUFFIX=".so.1.0"
