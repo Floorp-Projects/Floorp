@@ -761,7 +761,7 @@ void init_components()
 			Components[i].selected = FALSE;
 		}
 		else 
-			if (Components[i].additional)
+			if ((Components[i].additional) || !(Components[i].empty))
 			Components[i].selected = TRUE;
 	}
 }
@@ -799,10 +799,24 @@ void invisible()
 			Cee.Format("C%d", componentOrder);
 			WritePrivateProfileString("Setup Type0",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
 			WritePrivateProfileString("Setup Type1",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
-			if (Components[i].additional && !(Components[i].launchapp) && !(Components[i].invisible))
-				WritePrivateProfileString(Components[i].compname, "Attributes", "SELECTED|ADDITIONAL", iniDstPath);
-			else if (!(Components[i].disabled) && !(Components[i].additional) && !(Components[i].invisible))
-				WritePrivateProfileString(Components[i].compname, "Attributes", "SELECTED|FORCE_UPGRADE", iniDstPath);
+			if (Components[i].additional && !(Components[i].launchapp) &&
+				!Components[i].forceupgrade && !(Components[i].invisible))
+				WritePrivateProfileString(Components[i].compname, "Attributes",
+				"SELECTED|ADDITIONAL", iniDstPath);
+			else if (Components[i].additional && !(Components[i].launchapp) &&
+				Components[i].forceupgrade && !(Components[i].unselected) &&
+				!(Components[i].invisible))
+				WritePrivateProfileString(Components[i].compname, "Attributes",
+				"SELECTED|ADDITIONAL|FORCE_UPGRADE", iniDstPath);
+			else if (Components[i].additional && !(Components[i].launchapp) &&
+				Components[i].forceupgrade && Components[i].unselected &&
+				!(Components[i].invisible))
+				WritePrivateProfileString(Components[i].compname, "Attributes",
+				"UNSELECTED|ADDITIONAL|FORCE_UPGRADE", iniDstPath);
+			else if (!(Components[i].disabled) && !(Components[i].additional) &&
+				!(Components[i].invisible))
+				WritePrivateProfileString(Components[i].compname, "Attributes",
+				"SELECTED|FORCE_UPGRADE", iniDstPath);
 			else if (Components[i].additional && Components[i].launchapp && 
 				Components[i].uncompress && !(Components[i].invisible))
 				WritePrivateProfileString(Components[i].compname, "Attributes",
@@ -854,11 +868,17 @@ void LinuxInvisible()
 			else if ((Components[i].invisible) && !(Components[i].downloadonly))
 				WritePrivateProfileString(Components[i].compname,"Attributes",
 				"SELECTED|INVISIBLE",iniDstPath);
+			else if (!Components[i].empty)
+				WritePrivateProfileString(Components[i].compname,"Attributes",
+				"",iniDstPath);
 			else
 				WritePrivateProfileString(Components[i].compname,"Attributes",
 				"SELECTED",iniDstPath);
 			componentOrder++;
 		}
+		else
+			WritePrivateProfileString(Components[i].compname,"Attributes",
+			"INVISIBLE",iniDstPath);
 	}
 }
 

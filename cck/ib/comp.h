@@ -11,7 +11,9 @@ typedef struct s_component {
 	BOOL	forceupgrade;
 	BOOL	uncompress;
 	BOOL	downloadonly;
-
+	BOOL	unselected;
+	BOOL	empty;
+	
 	} COMPONENT;
 
 extern "C" __declspec(dllexport) 

@@ -72,7 +72,8 @@ int BuildComponentList(COMPONENT *comps, int *compNum, CString iniSrcPath,
 		comps[*compNum].forceupgrade = (strstr(attr, "FORCE_UPGRADE") != NULL);
 		comps[*compNum].uncompress = (strstr(attr, "UNCOMPRESS") != NULL);
 		comps[*compNum].downloadonly = (strstr(attr, "DOWNLOAD_ONLY") != NULL);
-
+		comps[*compNum].unselected = (strstr(attr, "UNSELECTED") != NULL);
+		comps[*compNum].empty	 = strcmp(attr, "");
 		
 		if (!(comps[*compNum].selected && comps[*compNum].invisible && 
 			invisibleCount))
