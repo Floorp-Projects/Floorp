@@ -1352,8 +1352,15 @@ function updateGoMenu(goMenu)
 
   if (!history.ref)
     history.ref = "NC:HistoryRoot";
+
+  var treeView = history.view;
   
-  var count = history.treeBoxObject.view.rowCount;
+  if (!treeView) {
+    setTimeout(updateGoMenu, 0, goMenu);
+    return;
+  }
+  
+  var count = treeView.rowCount;
   if (count > 10)
     count = 10;
 
