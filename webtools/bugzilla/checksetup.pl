@@ -265,8 +265,9 @@ if (@missing > 0) {
 #
 
 print "Checking user setup ...\n";
+$@ = undef;
 do 'localconfig';
-if ($@ ne "") { # capture errors in localconfig, bug 97290
+if ($@) { # capture errors in localconfig, bug 97290
    print STDERR <<EOT;
 An error has occurred while reading your 
 'localconfig' file.  The text of the error message is:
