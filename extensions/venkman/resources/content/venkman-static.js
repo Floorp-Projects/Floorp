@@ -71,7 +71,8 @@ function startupTests()
 function cont ()
 {
     console._stackOutlinerView.setStack(null);
-    disableDebugCommands()
+    disableDebugCommands();
+    --console._stopLevel;
     console.jsds.exitNestedEventLoop();
     return true;
 }
@@ -82,6 +83,7 @@ function step ()
     var topFrame = console.frames[0];
     console._stepPast = topFrame.script.fileName + topFrame.line;
     disableDebugCommands()
+    --console._stopLevel;
     console.jsds.exitNestedEventLoop();
 }
 
@@ -292,7 +294,6 @@ function init()
 {
     initPrefs();
     initCommands();
-    initDebugger();
     initOutliners();
     
     disableDebugCommands();
@@ -318,6 +319,8 @@ function init()
                                          + ",})"),
                              insertHyphenatedWord);
     
+    initDebugger(); /* debugger may need display() to init */
+
     display(MSG_HELLO, MT_HELLO);
     displayCommands();
     
