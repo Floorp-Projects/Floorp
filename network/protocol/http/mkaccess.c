@@ -66,6 +66,7 @@ extern int MK_ACCESS_COOKIES_WISHES;
 #if defined(CookieManagement)
 extern int MK_ACCESS_COOKIES_WISHES0;
 extern int MK_ACCESS_COOKIES_WISHES1;
+extern int MK_ACCESS_COOKIES_WISHESN;
 extern int MK_ACCESS_COOKIES_REMEMBER;
 extern int MK_ACCESS_COOKIES_ACCEPTED;
 extern int MK_ACCESS_COOKIES_PERMISSION;
@@ -738,10 +739,15 @@ NET_AskForAuthString(MWContext *context,
 			if (username && !(*username))
 				PR_Free(username);
 			PR_FREEIF(password);
-			status = PC_PromptUsernameAndPassword(context, buf, 
-											  	  &username, &password, 
-												  &remember_password,
-												  NET_IsURLSecure(URL_s->address));
+#if defined(SingleSignon)
+			/* prefill prompt with previous username/passwords if any */
+			status = SI_PromptUsernameAndPassword
+			    (context, buf, &username, &password, URL_s->address);
+#else
+			status = PC_PromptUsernameAndPassword
+			    (context, buf, &username, &password,
+			    &remember_password, NET_IsURLSecure(URL_s->address));
+#endif
 	
 			PR_Free(buf);
 		  }
@@ -1943,23 +1949,28 @@ net_IntSetCookieString(MWContext * context,
 		list_ptr = net_cookie_list;
 		while((cookie = (net_CookieStruct *)
 				XP_ListNextObject(list_ptr))!=0) {
-		    if (tmp_host && cookie->host &&
-			    PL_strcmp(tmp_host, cookie->host) == 0) {
+		    if (host_from_header && cookie->host &&
+			    PL_strcmp(host_from_header, cookie->host) == 0) {
 			count++;
 		    }
 		}
 		net_unlock_cookie_list();
 
-		if (count>0) {
+		if (count>1) {
 		    new_string = PR_smprintf(
-			XP_GetString(MK_ACCESS_COOKIES_WISHES1),
+			XP_GetString(MK_ACCESS_COOKIES_WISHESN),
                         tmp_host ? tmp_host : "",
 			count);
+		} else if (count==1){
+		    new_string = PR_smprintf(
+			XP_GetString(MK_ACCESS_COOKIES_WISHES1),
+                        tmp_host ? tmp_host : "");
 		} else {
 		    new_string = PR_smprintf(
 			XP_GetString(MK_ACCESS_COOKIES_WISHES0),
                         tmp_host ? tmp_host : "");
 		}
+		PR_Free(tmp_host);
 #else
         StrAllocCopy(new_string, XP_GetString(MK_ACCESS_COOKIES_THE_SERVER));
         StrAllocCat(new_string, tmp_host ? tmp_host : "");
