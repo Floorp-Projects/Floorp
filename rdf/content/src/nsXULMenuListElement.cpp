@@ -266,9 +266,13 @@ nsXULMenuListElement::SetSelectedItem(nsIDOMElement* aElement)
   
   if (!mSelectedItem) {
     // Remove all the old attributes.
-    mOuter->RemoveAttribute(nsAutoString("value"));
-    mOuter->RemoveAttribute(nsAutoString("src"));
-    mOuter->RemoveAttribute(nsAutoString("data"));
+    nsAutoString attribstr;
+    attribstr.AssignWithConversion("value");
+    mOuter->RemoveAttribute(attribstr);
+    attribstr.AssignWithConversion("src");
+    mOuter->RemoveAttribute(attribstr);
+    attribstr.AssignWithConversion("data");
+    mOuter->RemoveAttribute(attribstr);
     return NS_OK;
   }
 
