@@ -1914,7 +1914,8 @@ nsPop3Protocol::GetMsg()
 					#endif
             		// Should raise an error at this point.
             		// First, we need to delete our references to the two interfaces..
-            		return MK_POP3_OUT_OF_DISK_SPACE;
+                
+            		return (Error(MK_POP3_OUT_OF_DISK_SPACE));
             	}
             }
 			  // Delete our references to the two interfaces..
