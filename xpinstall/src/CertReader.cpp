@@ -1,5 +1,5 @@
 /* ***** BEGIN LICENSE BLOCK *****
-+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -117,11 +117,11 @@ static int my_inflate(unsigned char* compr, PRUint32 comprLen, unsigned char* un
   return 0;
 }
 
-CertReader::CertReader(nsIURI* aURI, nsISupports* aContext, nsPICertNotification* aObs)
+CertReader::CertReader(nsIURI* aURI, nsISupports* aContext, nsPICertNotification* aObs):
+ mContext(aContext),
+ mURI(aURI),
+ mObserver(do_QueryInterface(aObs))
 {
-  mObserver = aObs;
-  mContext  = aContext;
-  mURI      = aURI;
 }
 
 CertReader::~CertReader()
