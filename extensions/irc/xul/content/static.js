@@ -34,7 +34,7 @@
  *  Samuel Sieb, samuel@sieb.net, MIRC color codes, munger menu, and various
  */
 
-const __cz_version   = "0.9.52A";
+const __cz_version   = "0.9.52B";
 const __cz_condition = "green";
 
 var warn;
@@ -381,6 +381,13 @@ function processStartupURLs()
         var ary = client.prefs["initialURLs"];
         for (var i = 0; i < ary.length; ++i)
         {
+            if (ary[i] && ary[i] == "irc:///")
+            {
+                // Clean out "default network" entries, which we don't 
+                // support any more; replace with the harmless irc:// URL.
+                ary[i] = "irc://";
+                client.prefs["initialURLs"].update();
+            }
             if (ary[i] && ary[i] != "irc://")
                 gotoIRCURL(ary[i]);
         }
@@ -1293,12 +1300,13 @@ function parseIRCURL (url)
 
 function gotoIRCURL (url)
 {
+    var urlspec = url;
     if (typeof url == "string")
         url = parseIRCURL(url);
     
     if (!url)
     {
-        window.alert (getMsg(MSG_ERR_BAD_IRCURL, url));
+        window.alert (getMsg(MSG_ERR_BAD_IRCURL, urlspec));
         return;
     }
 
