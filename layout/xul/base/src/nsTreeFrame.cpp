@@ -764,3 +764,16 @@ nsTreeFrame::GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElemen
   
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTreeFrame::GetNumberOfVisibleRows(PRInt32* aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeFrame::GetIndexOfFirstVisibleRow(PRInt32* aResult)
+{
+  return NS_OK;
+}
+
