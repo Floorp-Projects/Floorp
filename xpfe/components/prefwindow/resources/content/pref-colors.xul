@@ -84,7 +84,7 @@
   </hbox>
   
   <groupbox>
-    <description>&someProvColors;</description>
+    <caption label="&someProvColors;"/>
   
     <radiogroup id="browserUseDocumentColors"
                 preftype="bool" prefstring="browser.display.use_document_colors">
