@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
+<!DOCTYPE window [
+<!ENTITY % webPanelsDTD SYSTEM "chrome://browser/locale/web-panels.dtd" >
+%webPanelsDTD;
+]>
+
+<page id="webpanels-window"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+  <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
+  <description style="color:red; margin-top:1em">The implementation of this panel is in progress.</description>
+</page>
