@@ -55,6 +55,8 @@ LDFLAGS += \
 	-lraptorhtmlpars \
 	$(DIST)/lib/libraptorhtmlbase_s.a \
 	-lraptorwebwidget \
+	$(DIST)/lib/libraptorhtmlstyle_s.a \
+	$(DIST)/lib/libjsdomcss_s.a \
 	$(DIST)/lib/libraptorlayout_s.a \
 	$(DIST)/lib/libraptorevents_s.a \
 	$(DIST)/lib/libjsdombase_s.a \
