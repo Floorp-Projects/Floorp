@@ -63,6 +63,7 @@ MICROLINE_LIB	= $(DIST)/lib/libXmL.a
 
 include $(DEPTH)/config/config.mk
 include $(DEPTH)/cmd/unixfe/config/unixfe.mk
+include $(DEPTH)/cmd/unixfe/config/motif.mk
 
 DIRS		= \
 		  $(XFE2_DIR) \
@@ -881,7 +882,7 @@ endif
 
 XFE_MOTIF_LDFLAGS	= \
 			$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
-			$(MOZILLA_XFE_MOTIF_STATIC_FLAGS) \
+			$(MOZILLA_XFE_MOTIF_FLAGS) \
 			$(MOZILLA_XFE_MOTIF_PRINT_SHELL_FLAGS)
 
 XFE_X11_LDFLAGS		= \
