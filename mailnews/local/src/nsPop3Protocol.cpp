@@ -581,19 +581,11 @@ nsPop3Protocol::WaitForStartOfConnectionResponse(nsIInputStream* aInputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(aInputStream, line_length, pauseForMoreData);
 
-    if(pauseForMoreData)
+    if(pauseForMoreData || line_length < 0 || !line)
     {
+		PR_FREEIF(line);
 		m_pop3ConData->pause_for_read = PR_TRUE;
-        return(0);
-    }
-    else if(line_length < 0)
-    {
-        m_pop3ConData->pause_for_read = PR_TRUE;
-        return line_length;
-    }
-    else if(!line)
-    {
-        return line_length; /* wait for line */
+        return(line_length);
     }
 
     if(*line == '+')
@@ -608,6 +600,7 @@ nsPop3Protocol::WaitForStartOfConnectionResponse(nsIInputStream* aInputStream,
         m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
 	}
     
+	PR_FREEIF(line);
     return(1);  /* everything ok */
 }
 
@@ -619,19 +612,11 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData)
+    if(pauseForMoreData || ln < 0 || !line)
     {
 	    m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
-        return(0);
-    }
-    else if(ln < 0)
-    {
-        m_pop3ConData->pause_for_read = PR_TRUE;
-        return ln;
-    }
-    else if(!line)
-    {
-        return ln; /* wait for line */
+		PR_FREEIF(line);
+        return(ln);
     }
 
     if(*line == '+')
@@ -654,6 +639,7 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
     m_pop3ConData->next_state = m_pop3ConData->next_state_after_response;
     m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
 
+	PR_FREEIF(line);
     return(1);  /* everything ok */
 }
 
@@ -729,20 +715,12 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData) 
+    if(pauseForMoreData || ln < 0 || !line) 
     {
 		m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
+		PR_FREEIF(line);
         return(0);
     }
-    else if (ln < 0) 
-    {
-		/* return TCP error
-		 */
-        m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
-        return ln;
-    } 
-    else if (!line) 
-        return ln; /* wait for line */
 
     if (!PL_strcmp(line, ".")) 
     {
@@ -758,6 +736,7 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
     else if (!PL_strcasecmp (line, "LOGIN")) 
         m_pop3CapabilityFlags |= POP3_HAS_AUTH_LOGIN;
     
+	PR_FREEIF(line);
     return 0;
 }
 
@@ -1109,19 +1088,11 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData)
+    if(pauseForMoreData || ln < 0 || !line)
     {
 		m_pop3ConData->pause_for_read = PR_TRUE;
-        return(0);
-    }
-    else if(ln < 0)
-    {
-        m_pop3ConData->pause_for_read = PR_TRUE;
-        return ln;
-    }
-    else if(!line)
-    {
-        return ln;
+		PR_FREEIF(line);
+        return(ln);
     }
     
     /* parse the line returned from the list command 
@@ -1131,11 +1102,12 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
      * list data is terminated by a ".CRLF" line
      */
     if(!PL_strcmp(line, "."))
-	  {
+	{
         m_pop3ConData->next_state = POP3_SEND_UIDL_LIST;
         m_pop3ConData->pause_for_read = PR_FALSE;
+		PR_FREEIF(line);
         return(0);
-	  }
+	}
     
 	token = nsCRT::strtok(line, " ", &newStr);
 	if (token)
@@ -1150,6 +1122,7 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
 		}
 	}
 
+	PR_FREEIF(line);
     return(0);
 }
 
@@ -1217,19 +1190,11 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData)
+    if(pauseForMoreData || ln < 0 || !line)
     {
 		m_pop3ConData->pause_for_read = PR_TRUE;
+		PR_FREEIF(line);
         return 0;
-    }
-    else if(ln < 0)
-    {
-        m_pop3ConData->pause_for_read = PR_TRUE;
-        return ln;
-    }
-    else if(!line)
-    {
-        return ln; /* wait for line */
     }
 
     if(!PL_strcmp(line, "."))
@@ -1284,7 +1249,10 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
                     m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl = 
                         PL_strdup(message_id_token);
                     if (!m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl)
+					{
+						PR_FREEIF(line);
                         return MK_OUT_OF_MEMORY;
+					}
                 }
             }
             else if (m_pop3ConData->only_uidl && message_id_token &&
@@ -1295,7 +1263,10 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
                 m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl =
                     PL_strdup(message_id_token);
                 if (!m_pop3ConData->msg_info[m_pop3ConData->current_msg_to_top-1].uidl)
+				{
+					PR_FREEIF(line);
                     return MK_OUT_OF_MEMORY;
+				}
             }
             else if (!m_pop3ConData->only_uidl)
             {	/* we have seen this message and we care about the edge,
@@ -1316,6 +1287,8 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
             }
         }
     }
+
+	PR_FREEIF(line);
     return 0;
 }
 
@@ -1387,19 +1360,11 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData)
+    if(pauseForMoreData || ln < 0 || !line)
     {
 		m_pop3ConData->pause_for_read = PR_TRUE;
-        return 0;
-    }
-    else if(ln < 0)
-    {
-        m_pop3ConData->pause_for_read = PR_TRUE;
+		PR_FREEIF(line);
         return ln;
-    }
-    else if(!line)
-    {
-        return ln; /* wait for line */
     }
 
     /* parse the line returned from the list command 
@@ -1409,11 +1374,12 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
      * list data is terminated by a ".CRLF" line
      */
     if(!PL_strcmp(line, "."))
-	  {
+	{
         m_pop3ConData->next_state = POP3_GET_MSG;
         m_pop3ConData->pause_for_read = PR_FALSE;
+		PR_FREEIF(line);
         return(0);
-	  }
+	}
     
     msg_num = atol(nsCRT::strtok(line, " ", &newStr));
 
@@ -1430,9 +1396,13 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
         
         m_pop3ConData->msg_info[msg_num-1].uidl = PL_strdup(uidl);
         if (!m_pop3ConData->msg_info[msg_num-1].uidl)
+		{
+			PR_FREEIF(line);
             return MK_OUT_OF_MEMORY;
+		}
     }
     
+	PR_FREEIF(line);
     return(0);
 }
 
@@ -1501,19 +1471,11 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
     PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData)
+    if(pauseForMoreData || ln < 0 || !line)
     {
+		PR_FREEIF(line);
 		m_pop3ConData->pause_for_read = PR_TRUE;
-        return 0;
-    }
-    else if(ln < 0)
-    {
-        m_pop3ConData->pause_for_read = PR_TRUE;
         return ln;
-    }
-    else if(!line)
-    {
-        return ln; /* wait for line */
     }
 
     /* parse the line returned from the list command 
@@ -1526,6 +1488,7 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
 	{
         m_pop3ConData->next_state = POP3_GET_MSG;
         m_pop3ConData->pause_for_read = PR_FALSE;
+		PR_FREEIF(line);
         return(0);
 	}
 
@@ -1544,9 +1507,12 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
 
         m_pop3ConData->msg_info[msg_num-1].uidl = PL_strdup(uidl);
         if (!m_pop3ConData->msg_info[msg_num-1].uidl)
+		{
+			PR_FREEIF(line);
             return MK_OUT_OF_MEMORY;
+		}
     }
-    
+    PR_FREEIF(line);
     return(0);
 }
 
@@ -2002,6 +1968,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         else
         {
             m_pop3ConData->pause_for_read = PR_TRUE;
+			PR_FREEIF(line);
             return (0);
         }
     }
@@ -2024,6 +1991,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 			BufferInput(CRLF, 2);
 
 			// now read in the next line
+			PR_FREEIF(line);
 			line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size, pauseForMoreData);
 			status += buffer_size;
 		} while (/* !pauseForMoreData && */ line);
@@ -2034,21 +2002,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     }
 
 	buffer_size = status;  // status holds # bytes we've actually buffered so far...
-
-#if 0
-    if (status < 0)
-    {
-        if (m_pop3ConData->msg_closure)
-        {
-            m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->msg_closure,
-                                            MK_POP3_MESSAGE_WRITE_ERROR);
-            m_pop3ConData->msg_closure = NULL;
-        }
-        m_nsIPop3Sink->AbortMailDelivery();
-        return(Error(MK_POP3_MESSAGE_WRITE_ERROR));
-    }
-#endif
-    
+  
     /* normal read. Yay! */
     if (m_pop3ConData->bytes_received_in_message + buffer_size >
         m_pop3ConData->cur_msg_size) 
@@ -2101,7 +2055,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         FE_SetProgressBarPercent(ce->window_id, ((ce->bytes_received*100) /
                                                  m_pop3ConData->total_download_size));
 #endif 
-    
+	PR_FREEIF(line);    
     return(0);
 }
 
