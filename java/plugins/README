@@ -1,0 +1,61 @@
+Java-Implemented Plug-ins.
+================================
+
+This directory contains the beginnings of the Java-Implemented plug-uns.
+
+The sources is divided into four directories
+
+	classes
+	       Java source files
+	src 
+	       Native code (c++/c)
+	jni
+	       Implamentations of java native methods
+	test
+	       Test code, including simple pluglet.
+
+========================================================================
+Win32 Build Directions:
+========================================================================
+Requirements:
+
+* built M8 mozilla tree for WinNT4.0
+
+* JDK1.2 or greater
+
+* Perl 5 perl.exe must be in your path
+
+How To Build:
+
+* Follow the directions in ..\README
+
+* type "nmake /f makefile.win"
+
+* apply the patch to mozilla/modules/plugin/nglsrc/nsPluginHostImpl.cpp
+  by executing : patch nsPluginHostImpl.cpp  < nsPluginHostImpl.patch
+  and execute "nmake /f makefile.win" inside mozilla/modules/plugin/nglsrc
+  directory
+
+
+How to Run:
+
+* Add following directories to to your path:
+  %MOZILLA_FIVE_HOME%, %JDKHOME%\jre\bin\classic
+
+How to build and run test
+* go to the test directory and type "nmake /f makefile.win"
+
+* Set PLUGLET environment to the  directory you have test.jar
+
+* Run appletviewer and load page test.html from test directory and if evething is ok you will see
+  some output from the test pluglet on the stdout.
+
+Problems:
+
+* clobber_all doesn't remove the .class files from dist\classes.  You
+  have to do this manually.
+
+* post to netscape.public.mozilla.java newsgroup
+
+
+

@@ -1,0 +1,9 @@
+Index: nsPluginHostImpl.cpp
+===================================================================
+RCS file: /cvsroot/mozilla/modules/plugin/nglsrc/nsPluginHostImpl.cpp,v
+retrieving revision 1.73
+diff -r1.73 nsPluginHostImpl.cpp
+1867a1868,1870
+> 	if (NS_FAILED(result)) {
+> 	  result = plugin->CreatePluginInstance(NULL, kIPluginInstanceIID,mimeType, (void **)&instance);
+> 	}
