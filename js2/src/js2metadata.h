@@ -647,6 +647,8 @@ public:
     JS2Object *obj;
 };
 
+typedef std::vector<js2val> ValueList;
+
 class NonWithFrame : public Frame {
 public:
 
@@ -655,7 +657,7 @@ public:
 
     LocalBindingMap localBindings;              // Map of qualified names to members defined in this frame
 
-    std::vector<js2val> *slots;                 // temporaries or frame variables allocted in this frame
+    ValueList *slots;                           // temporaries or frame variables allocted in this frame
     uint16 allocateSlot();
 
     virtual void instantiate(Environment * /*env*/)  { ASSERT(false); }

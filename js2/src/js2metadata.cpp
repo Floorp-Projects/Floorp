@@ -4428,8 +4428,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     FunctionInstance::~FunctionInstance()
     {
-        if (fWrap)
-            delete fWrap;
+//        if (fWrap)
+//            delete fWrap;
     }
 
 /************************************************************************************
