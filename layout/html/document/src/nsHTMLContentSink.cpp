@@ -983,6 +983,11 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     break;
   case eHTMLTag_table:
     mSink->mInMonolithicContainer++;
+  case eHTMLTag_tr:
+  case eHTMLTag_td:
+  case eHTMLTag_th:
+    // XXX if navigator_quirks_mode (only body in html supports background)
+    mSink->AddBaseTagInfo(content);     
     break;
   case eHTMLTag_map:
     mSink->ProcessMAPTag(aNode, content);
