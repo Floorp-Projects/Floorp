@@ -35,7 +35,12 @@ nsPresContext::nsPresContext()
                  NS_FONT_VARIANT_NORMAL,
                  NS_FONT_WEIGHT_NORMAL,
                  0,
-                 NS_POINTS_TO_TWIPS_INT(12))
+                 NS_POINTS_TO_TWIPS_INT(12)),
+    mDefaultFixedFont("Courier", NS_FONT_STYLE_NORMAL,
+                      NS_FONT_VARIANT_NORMAL,
+                      NS_FONT_WEIGHT_NORMAL,
+                      0,
+                      NS_POINTS_TO_TWIPS_INT(10))
 {
   NS_INIT_REFCNT();
   mShell = nsnull;
@@ -44,6 +49,9 @@ nsPresContext::nsPresContext()
   mLinkHandler = nsnull;
   mContainer = nsnull;
   mEventManager = nsnull;
+
+  mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
+  mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
 
 #ifdef DEBUG
   mInitialized = PR_FALSE;
@@ -188,6 +196,26 @@ const nsFont&
 nsPresContext::GetDefaultFont(void)
 {
   return mDefaultFont;
+}
+
+const nsFont&
+nsPresContext::GetDefaultFixedFont(void)
+{
+  return mDefaultFixedFont;
+}
+
+NS_METHOD
+nsPresContext::GetDefaultColor(nscolor& aColor)
+{
+  aColor = mDefaultColor;
+  return NS_OK;
+}
+
+NS_METHOD 
+nsPresContext::GetDefaultBackgroundColor(nscolor& aColor)
+{
+  aColor = mDefaultBackgroundColor;
+  return NS_OK;
 }
 
 void

@@ -45,6 +45,9 @@ public:
                                                       PRBool aForceUnique = PR_FALSE);
   virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
   virtual const nsFont& GetDefaultFont(void);
+  virtual const nsFont& GetDefaultFixedFont(void);
+  NS_IMETHOD GetDefaultColor(nscolor& aColor);
+  NS_IMETHOD GetDefaultBackgroundColor(nscolor& aColor);
   NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult);
   NS_IMETHOD LoadImage(const nsString& aURL,
                        const nscolor* aBackgroundColor,
@@ -74,6 +77,9 @@ protected:
   nsILinkHandler*       mLinkHandler;
   nsISupports*          mContainer;
   nsFont                mDefaultFont;
+  nsFont                mDefaultFixedFont;
+  nscolor               mDefaultColor;
+  nscolor               mDefaultBackgroundColor;
   nsVoidArray           mImageLoaders;
   nsIEventStateManager* mEventManager;
 
