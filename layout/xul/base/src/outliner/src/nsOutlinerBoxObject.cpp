@@ -149,7 +149,11 @@ NS_IMETHODIMP nsOutlinerBoxObject::SetView(nsIOutlinerView * aView)
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
     return body->SetView(aView);
-  return NS_OK;
+  else {
+    nsCOMPtr<nsISupports> suppView(do_QueryInterface(aView));
+    SetPropertyAsSupports(NS_LITERAL_STRING("view").get(), suppView);
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP nsOutlinerBoxObject::GetFocused(PRBool* aFocused)
@@ -181,6 +185,14 @@ NS_IMETHODIMP nsOutlinerBoxObject::GetSelection(nsIOutlinerSelection * *aSelecti
   nsIOutlinerBoxObject* body = GetOutlinerBody();
   if (body)
     return body->GetSelection(aSelection);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::GetRowHeight(PRInt32* _retval)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body) 
+    return body->GetRowHeight(_retval);
   return NS_OK;
 }
 

@@ -34,6 +34,8 @@ interface nsIBoxObject : nsISupports
 
   readonly attribute long x;
   readonly attribute long y;
+  readonly attribute long screenX;
+  readonly attribute long screenY;
   readonly attribute long width;
   readonly attribute long height;
 

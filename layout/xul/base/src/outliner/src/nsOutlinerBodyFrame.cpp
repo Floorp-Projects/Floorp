@@ -494,6 +494,17 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetSelection(nsIOutlinerSelection** aSelectio
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerBodyFrame::GetRowHeight(PRInt32* _retval)
+{
+  PRInt32 height = mRowHeight == 0 ? GetRowHeight() : mRowHeight;
+
+  float t2p;
+  mPresContext->GetTwipsToPixels(&t2p);
+  *_retval = NSToCoordRound((float) height * t2p);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerBodyFrame::GetFirstVisibleRow(PRInt32 *_retval)
 {
   *_retval = mTopRowIndex;

@@ -54,6 +54,11 @@ interface nsIOutlinerBoxObject : nsISupports
   readonly attribute nsIOutlinerSelection selection;
 
   /**
+   * Obtain the height of a row.
+   */
+  readonly attribute long rowHeight;
+
+  /**
    * Get the index of the first visible row.
    */
   long getFirstVisibleRow();
