@@ -23,7 +23,6 @@
 #include "nsIArena.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsBlockFrame.h"
 #include "nsIPresContext.h"
 #include "nsIDeviceContext.h"
 #include "nsHTMLIIDs.h"
