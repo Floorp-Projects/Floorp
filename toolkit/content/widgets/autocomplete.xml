@@ -305,7 +305,6 @@
                 break;
               case KeyEvent.DOM_VK_DOWN:
                 cancel = this.mController.handleKeyNavigation(IController.KEY_DOWN);
-                aEvent.preventBubble();
                 break;
               case KeyEvent.DOM_VK_LEFT:
                 cancel = this.mController.handleKeyNavigation(IController.KEY_LEFT);
@@ -419,7 +418,8 @@
                 onget="return this.tree.currentIndex;">
         <setter><![CDATA[
           this.tree.currentIndex = val;
-          this.tree.treeBoxObject.ensureRowIsVisible(val < 0 ? 0 : val);
+          if (this.tree.treeBoxObject.height > 0)
+            this.tree.treeBoxObject.ensureRowIsVisible(val < 0 ? 0 : val);
           return val;
         ]]></setter>
       </property>
