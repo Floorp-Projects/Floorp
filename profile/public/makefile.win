@@ -20,7 +20,8 @@ IGNORE_MANIFEST=1
 
 MODULE=profile 
 DEPTH=..\.. 
-EXPORTS=nsIProfile.h \
-	$(NULL)
+EXPORTS= profileSwitch.h \
+         nsIProfile.h \
+	     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
