@@ -211,19 +211,22 @@ const float STFSymbolYOffset = 4.0;
 
   [self showSelectedPopUpItem:([self controlView] && ![[self controlView] isFirstResponder])];
 
-  // Invalidate the focus ring
-  [controlView setKeyboardFocusRingNeedsDisplayInRect:cellFrame];
-
-  // Draw a custom focus ring if necessary
-  if (wasShowingFirstResponder && [[controlView window] isKeyWindow]) {
-    [NSGraphicsContext saveGraphicsState];
-
-    NSSetFocusRingStyle(NSFocusRingOnly);
-    [[self fieldOutlinePathForRect:cellFrame] fill];
-
-    [NSGraphicsContext restoreGraphicsState];
+  // Invalidate the focus ring to draw/undraw it depending on if we're in the
+  // key window. This will cause us to redraw the entire text field cell every time
+  // the insertion point flashes, but only then (it used to redraw any time anything in 
+  // the chrome changed).
+  if (wasShowingFirstResponder) {
+    [controlView setKeyboardFocusRingNeedsDisplayInRect:cellFrame];
+    if ([[controlView window] isKeyWindow]) {
+      [NSGraphicsContext saveGraphicsState];
+      
+      NSSetFocusRingStyle(NSFocusRingOnly);
+      [[self fieldOutlinePathForRect:cellFrame] fill];
+      
+      [NSGraphicsContext restoreGraphicsState];
+    }
   }
-
+  
   // Draw the text field
   [self setShowsFirstResponder:NO];
   [super drawWithFrame:[self textFieldRectFromRect:cellFrame] inView:controlView];
@@ -289,7 +292,7 @@ const float STFSymbolYOffset = 4.0;
 
   // Start at the top left of the middle section
   aPoint.x = aRect.origin.x + [_leftImage size].width;
-  aPoint.y = NSMaxY(aRect) - 1.0;
+  aPoint.y = NSMaxY(aRect) - 2.0;
   [fieldOutlinePath moveToPoint:aPoint];
 
   // Trace to the top right of the middle section
@@ -299,15 +302,15 @@ const float STFSymbolYOffset = 4.0;
   // Trace around the right curve to the bottom right of the middle section
   aPoint.y = aRect.origin.y;
   [fieldOutlinePath curveToPoint:aPoint
-                   controlPoint1:NSMakePoint(aPoint.x + 13.0, NSMaxY(aRect))
-                   controlPoint2:NSMakePoint(aPoint.x + 13.0, aPoint.y)];
+                   controlPoint1:NSMakePoint(aPoint.x + 11.0, NSMaxY(aRect))
+                   controlPoint2:NSMakePoint(aPoint.x + 11.0, aPoint.y)];
 
   // Trace to the bottom left of the middle section
   aPoint.x = aRect.origin.x + [_leftImage size].width;
   [fieldOutlinePath lineToPoint:aPoint];
 
   // Trace around the left curve to the top left of the middle section, i.e. the beginning
-  aPoint.y = NSMaxY(aRect) - 1.0;
+  aPoint.y = NSMaxY(aRect) - 2.0;
   [fieldOutlinePath curveToPoint:aPoint
                    controlPoint1:NSMakePoint(aPoint.x - 11.0, aRect.origin.y)
                    controlPoint2:NSMakePoint(aPoint.x - 11.0, aPoint.y)];
