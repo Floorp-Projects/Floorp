@@ -17,15 +17,14 @@
 
 DEPTH	= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE	= pref
 
-EXPORTS= prefapi.h prefldap.h
-
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS	= prefapi.h prefldap.h nsIPref.h
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk

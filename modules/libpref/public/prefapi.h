@@ -22,25 +22,18 @@
 #ifndef PREFAPI_H
 #define PREFAPI_H
 
-#include "prtypes.h"
-#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_OS2)
 #include "xp_core.h"
-#endif	 
+#include "prtypes.h"
 #include "jscompat.h"
 #include "jspubtd.h"
 
 #ifdef XP_WIN
-/* NSPR 1.0 compatibility */
-#ifdef NSPR
-#include "prhash.h"
-#else
 #include "plhash.h"
-#endif
 #endif
 
 NSPR_BEGIN_EXTERN_C
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef XP_PC
 // horrible pre-declaration...so kill me.
 int pref_InitInitialObjects(JSContext *js_context,JSObject *js_object);
 PR_EXTERN(int) pref_savePref(PRHashEntry *he, int i, void *arg);
@@ -142,7 +135,7 @@ PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
 */
 PR_EXTERN(JSBool)
 PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
-	const char* filename, XP_Bool bGlobalContext, XP_Bool bCallbacks);
+	const char* filename, PRBool bGlobalContext, PRBool bCallbacks);
 
 
 /*
@@ -174,7 +167,7 @@ enum {
 */
 PR_EXTERN(int) PREF_SetCharPref(const char *pref,const char* value);
 PR_EXTERN(int) PREF_SetIntPref(const char *pref,int32 value);
-PR_EXTERN(int) PREF_SetBoolPref(const char *pref,XP_Bool value);
+PR_EXTERN(int) PREF_SetBoolPref(const char *pref,PRBool value);
 PR_EXTERN(int) PREF_SetBinaryPref(const char *pref,void * value, long size);
 PR_EXTERN(int) PREF_SetColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue);
 PR_EXTERN(int) PREF_SetColorPrefDWord(const char *pref_name, uint32 colorref);
@@ -191,7 +184,7 @@ PR_EXTERN(int) PREF_SetRectPref(const char *pref_name, int16 left, int16 top, in
 */
 PR_EXTERN(int) PREF_SetDefaultCharPref(const char *pref,const char* value);
 PR_EXTERN(int) PREF_SetDefaultIntPref(const char *pref,int32 value);
-PR_EXTERN(int) PREF_SetDefaultBoolPref(const char *pref,XP_Bool value);
+PR_EXTERN(int) PREF_SetDefaultBoolPref(const char *pref,PRBool value);
 PR_EXTERN(int) PREF_SetDefaultBinaryPref(const char *pref,void * value, long size);
 PR_EXTERN(int) PREF_SetDefaultColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue);
 PR_EXTERN(int) PREF_SetDefaultRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom);
@@ -245,7 +238,7 @@ PR_EXTERN(int) PREF_CopyDefaultBinaryPref(const char *pref, void ** return_val, 
 // </font>
 */
 PR_EXTERN(int) PREF_CopyPathPref(const char *pref, char ** return_buf);
-PR_EXTERN(int) PREF_SetPathPref(const char *pref_name, const char *path, XP_Bool set_default);
+PR_EXTERN(int) PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default);
 
 /*
 // <font color=blue>
@@ -288,11 +281,11 @@ PR_EXTERN(int) PREF_GetConfigBool(const char *obj_name, XP_Bool *return_bool);
 
 /*
 // <font color=blue>
-// XP_Bool funtion that returns whether or not the preference is locked and therefore
+// PRBool funtion that returns whether or not the preference is locked and therefore
 // cannot be changed.
 // </font>
 */
-PR_EXTERN(XP_Bool) PREF_PrefIsLocked(const char *pref_name);
+PR_EXTERN(PRBool) PREF_PrefIsLocked(const char *pref_name);
 
 PR_EXTERN(int) PREF_GetPrefType(const char *pref_name);
 
@@ -380,13 +373,14 @@ PR_EXTERN(int) PREF_UnregisterCallback( const char* domain,
 /*
 // Front ends implement to determine whether AutoAdmin library is installed.
 */
-PR_EXTERN(XP_Bool) PREF_IsAutoAdminEnabled();
+PR_EXTERN(PRBool) PREF_IsAutoAdminEnabled(void);
 
 #ifdef XP_UNIX
 typedef void* XmStringPtr;
 typedef void* KeySymPtr;
-PR_EXTERN(XP_Bool) PREF_GetLabelAndMnemonic(char*, char**, XmStringPtr xmstring, KeySymPtr keysym);
-PR_EXTERN(XP_Bool) PREF_GetUrl(char*, char**);
+PR_EXTERN(void) PREF_AlterSplashIcon(struct fe_icon_data*);
+PR_EXTERN(PRBool) PREF_GetLabelAndMnemonic(char*, char**, XmStringPtr xmstring, KeySymPtr keysym);
+PR_EXTERN(PRBool) PREF_GetUrl(char*, char**);
 #endif
 
 NSPR_END_EXTERN_C

@@ -20,7 +20,7 @@ DEPTH		= ../../..
 MODULE		= pref
 LIBRARY_NAME	= pref
 
-REQUIRES	= libxp js pref nspr dbm security ldap java img layer util
+REQUIRES	= js pref nspr dbm security ldap img layer xpcom util
 
 ifneq ($(subst /,_,$(shell uname -s)),OS2)
 CSRCS		= unix/unixpref.c
@@ -39,6 +39,13 @@ endif
 
 CSRCS		+= prefapi.c
 
+CPPSRCS		+= nsPref.cpp
+
+include $(DEPTH)/config/rules.mk
+
+INCLUDES	+= -I$(DEPTH)/cmd/xfe/icons -Iunix
+
+DEFINES		+= -DB1M
 
 GARBAGE		+= unix/jsbuffer.h
 
