@@ -41,8 +41,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsSimpleURI::nsSimpleURI(nsISupports* outer)
     : mScheme(nsnull),
-      mPath(nsnull),
-      mSchemeType(nsIURI::UNKNOWN)
+      mPath(nsnull)
 {
     NS_INIT_AGGREGATED(outer);
 }
@@ -113,7 +112,6 @@ nsSimpleURI::SetSpec(const char* aSpec)
     mScheme = scheme.ToNewCString();
     if (mScheme == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    mSchemeType = SchemeTypeFor(mScheme);
     if (mPath)   
         nsCRT::free(mPath);
     mPath = path.ToNewCString();
@@ -134,6 +132,7 @@ nsSimpleURI::SetScheme(const char* scheme)
 {
     if (mScheme) nsCRT::free(mScheme);
     mScheme = nsCRT::strdup(scheme);
+    ToLowerCase(mScheme);
     return NS_OK;
 }
 
@@ -250,12 +249,18 @@ nsSimpleURI::Equals(nsIURI* other, PRBool *result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SchemeIs(PRUint32 i_Scheme, PRBool *o_Equals)
+nsSimpleURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 {
     NS_ENSURE_ARG_POINTER(o_Equals);
-    if (i_Scheme == nsIURI::UNKNOWN)
-        return NS_ERROR_INVALID_ARG;
-    *o_Equals = (mSchemeType == i_Scheme);
+    if (!i_Scheme) return NS_ERROR_NULL_POINTER;
+
+    // mScheme is guaranteed to be lower case.
+    if (*i_Scheme == *mScheme || *i_Scheme == (*mScheme - ('a' - 'A')) ) {
+        *o_Equals = PL_strcasecmp(mScheme, i_Scheme) ? PR_FALSE : PR_TRUE;
+    } else {
+        *o_Equals = PR_FALSE;
+    }
+
     return NS_OK;
 }
 

@@ -40,7 +40,7 @@ public:
     
     nsHTTPSHandler(void);
     virtual ~nsHTTPSHandler();
-    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
+    nsresult Init();
 
     //Functions from nsIProtocolHandler
     /*
@@ -53,17 +53,6 @@ public:
         *result = defaultPort;
         return NS_OK;
     };    
-
-    /* 
-        The GetScheme function uniquely identifies the scheme this handler 
-		is associated with. 
-    */
-    NS_IMETHOD GetScheme(char * *o_Scheme)
-    {
-        static const char* scheme = "https";
-        *o_Scheme = nsCRT::strdup(scheme);
-        return NS_OK;
-    };
 
     /**
      *    Called to create a transport from RequestTransport to accually

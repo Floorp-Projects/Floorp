@@ -117,8 +117,7 @@ nsHTTPHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsHTTPHandler::GetScheme(char * *o_Scheme)
 {
-    static const char* scheme = "http";
-    *o_Scheme = nsCRT::strdup(scheme);
+    *o_Scheme = nsCRT::strdup(mScheme);
     return NS_OK;
 }
 
@@ -612,10 +611,10 @@ nsHTTPHandler::nsHTTPHandler():
     mPipelineFirstRequest(PR_FALSE),
     mPipelineMaxRequests(DEFAULT_PIPELINE_MAX_REQUESTS),
     mReferrerLevel(0),
-    mScheme(nsIURI::HTTP),
     mRequestTimeout(DEFAULT_HTTP_REQUEST_TIMEOUT),
     mConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT),
-    mProxySSLConnectAllowed(PR_FALSE)
+    mProxySSLConnectAllowed(PR_FALSE),
+    mScheme(nsnull)
 {
     NS_INIT_REFCNT();
     SetAcceptEncodings(DEFAULT_ACCEPT_ENCODINGS);
@@ -838,6 +837,9 @@ nsHTTPHandler::Init()
     NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+
+    mScheme = nsCRT::strdup("http");
+    if (!mScheme) return NS_ERROR_OUT_OF_MEMORY;
       
     return NS_OK;
 }
@@ -872,6 +874,7 @@ nsHTTPHandler::~nsHTTPHandler()
 
     CRTFREEIF (mAcceptLanguages);
     CRTFREEIF (mAcceptEncodings);
+    CRTFREEIF (mScheme);
 }
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,

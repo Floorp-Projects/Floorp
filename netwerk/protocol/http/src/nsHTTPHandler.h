@@ -202,7 +202,7 @@ protected:
     nsCString mProductComment;
     nsCString mAppUserAgentOverride;
 
-    PRInt32   mScheme;
+    char *  mScheme; // used by nsHTTPHandler and nsHTTPSHandler
 
 private:
 

@@ -30,8 +30,7 @@ static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
  
 nsJARURI::nsJARURI()
-    : mJAREntry(nsnull),
-    mSchemeType(nsIURI::JAR)
+    : mJAREntry(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -116,7 +115,6 @@ nsJARURI::SetSpec(const char * aSpec)
     if (nsCRT::strncmp("jar", &aSpec[startPos], endPos - startPos - 1) != 0)
         return NS_ERROR_MALFORMED_URI;
 
-    mSchemeType = nsIURI::JAR;
     // Search backward from the end for the "!/" delimiter. Remember, jar URLs
     // can nest, e.g.:
     //    jar:jar:http://www.foo.com/bar.jar!/a.jar!/b.html
@@ -277,12 +275,16 @@ nsJARURI::Equals(nsIURI *other, PRBool *result)
 }
 
 NS_IMETHODIMP
-nsJARURI::SchemeIs(PRUint32 i_Scheme, PRBool *o_Equals)
+nsJARURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 {
     NS_ENSURE_ARG_POINTER(o_Equals);
-    if (i_Scheme == nsIURI::UNKNOWN)
-        return NS_ERROR_INVALID_ARG;
-    *o_Equals = (mSchemeType == i_Scheme);
+    if (!i_Scheme) return NS_ERROR_INVALID_ARG;
+
+    if (*i_Scheme == 'j' || *i_Scheme == 'J') {
+        *o_Equals = PL_strcasecmp("jar", i_Scheme) ? PR_FALSE : PR_TRUE;
+    } else {
+        *o_Equals = PR_FALSE;
+    }
     return NS_OK;
 }
 
