@@ -1547,13 +1547,13 @@ js_Interpret(JSContext *cx, jsval *result)
             }
 
           enum_next_property:
-            /* Get the next jsid to be enumerated and store it in rval */
+            /* Get the next jsid to be enumerated and store it in rval. */
             OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &rval);
             propobj->slots[JSSLOT_ITER_STATE] = iter_state;
 
-            /* No more jsids to iterate in obj ? */
+            /* No more jsids to iterate in obj? */
             if (iter_state == JSVAL_NULL) {
-                /* Enumerate the properties on obj's prototype chain */
+                /* Enumerate the properties on obj's prototype chain. */
                 obj = OBJ_GET_PROTO(cx, obj);
                 if (!obj) {
                     /* End of property list -- terminate loop. */
@@ -1571,19 +1571,16 @@ js_Interpret(JSContext *cx, jsval *result)
                 goto enum_next_property;
             }
 
-            /* Skip deleted and shadowed properties, leave next id in rval. */
-            if (obj != origobj) {
-                /* Have we already enumerated a shadower of this property? */
-                ok = OBJ_LOOKUP_PROPERTY(cx, origobj, rval, &obj2, &prop);
-                if (!ok)
-                    goto out;
-                if (prop) {
-                    OBJ_DROP_PROPERTY(cx, obj2, prop);
+            /* Skip properties not owned by obj, and leave next id in rval. */
+            ok = OBJ_LOOKUP_PROPERTY(cx, origobj, rval, &obj2, &prop);
+            if (!ok)
+                goto out;
+            if (prop) {
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
 
-                    /* Yes, don't enumerate again.  Go to the next property */
-                    if (obj2 != obj)
-                        goto enum_next_property;
-                }
+                /* Yes, don't enumerate again.  Go to the next property. */
+                if (obj2 != obj)
+                    goto enum_next_property;
             }
 
             /* Make sure rval is a string for uniformity and compatibility. */
