@@ -136,9 +136,11 @@ nsresult nsSelectionMgr::GetCopyOStream(ostream** aStream)
 
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult)
 {
+#ifndef NEW_CLIPBOARD_SUPPORT
   nsSelectionMgr* sm = new nsSelectionMgr;
   static nsIID iid = NS_ISELECTIONMGR_IID;
   return sm->QueryInterface(iid, (void**) aInstancePtrResult);
+#endif
 }
 
 //
@@ -176,9 +178,10 @@ void nsSelectionMgr::SetTopLevelWidget(GtkWidget* w)
 
   // Hmm, sometimes we need this, sometimes not.  I'm not clear why:
   // Register all the target types we handle:
-  gtk_selection_add_target(sWidget, GDK_SELECTION_PRIMARY,
+  gtk_selection_add_target(sWidget, 
+                           GDK_SELECTION_PRIMARY,
                            GDK_SELECTION_TYPE_STRING,
-			   GDK_SELECTION_TYPE_STRING);
+                           GDK_SELECTION_TYPE_STRING);
   // Need to add entries for whatever it is that emacs uses
   // Need to add entries for XIF and HTML
 }
