@@ -801,29 +801,30 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
  
   nsCOMPtr<nsIPluginTagInfo2> taginfo = do_QueryInterface(mPeer);
   NS_ENSURE_TRUE(taginfo, NS_ERROR_NO_INTERFACE);
-
-  nsPluginTagType tagtype;
-  nsresult rv = taginfo->GetTagType(&tagtype);
-  NS_ENSURE_SUCCESS(rv, rv);
   
   PRUint16 count = 0;
   const char* const* names = nsnull;
   const char* const* values = nsnull;
-  rv = taginfo->GetAttributes(count, names, values);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  // nsPluginTagType_Object or Applet may also have PARAM tags
-  // Note: The arrays handed back by GetParameters() are
-  // crafted specially to be directly behind the arrays from GetAtributes()
-  // with a null entry as a seperator. This is for 4.x backwards compatibility!
-  // see bug 111008 for details
-  if (tagtype != nsPluginTagType_Embed) {
-    PRUint16 pcount = 0;
-    const char* const* pnames = nsnull;
-    const char* const* pvalues = nsnull;    
-    if (NS_SUCCEEDED(taginfo->GetParameters(pcount, pnames, pvalues))) {
-      NS_ASSERTION(nsnull == values[count], "attribute/parameter array not setup correctly for 4.x plugins");
-      count += ++pcount; //if it's all setup correctly, then all we need is to change the count
+  nsPluginTagType tagtype;
+  nsresult rv = taginfo->GetTagType(&tagtype);
+  if (NS_SUCCEEDED(rv)) {
+    // Note: If we failed to get the tag type, we may be a full page plugin, so no arguments
+    rv = taginfo->GetAttributes(count, names, values);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    // nsPluginTagType_Object or Applet may also have PARAM tags
+    // Note: The arrays handed back by GetParameters() are
+    // crafted specially to be directly behind the arrays from GetAtributes()
+    // with a null entry as a seperator. This is for 4.x backwards compatibility!
+    // see bug 111008 for details
+    if (tagtype != nsPluginTagType_Embed) {
+      PRUint16 pcount = 0;
+      const char* const* pnames = nsnull;
+      const char* const* pvalues = nsnull;    
+      if (NS_SUCCEEDED(taginfo->GetParameters(pcount, pnames, pvalues))) {
+        NS_ASSERTION(nsnull == values[count], "attribute/parameter array not setup correctly for 4.x plugins");
+        count += ++pcount; //if it's all setup correctly, then all we need is to change the count
+      }
     }
   }
 
