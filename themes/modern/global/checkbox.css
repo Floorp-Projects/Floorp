@@ -7,8 +7,8 @@
     {
       border        : 2px solid transparent;
       margin			  : 0px 2px 0px 2px;
-      padding-left: 1px;
-      padding-right: 1px;
+      padding-left  : 1px;
+      padding-right : 1px;
     }
 
   checkbox > .internal-box
@@ -34,7 +34,8 @@
       list-style-image: url(chrome://global/skin/check-cb-check.gif);
     }
     
-  checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check
+  checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
+  checkbox[checked="true"][disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check
     {
       list-style-image: url(chrome://global/skin/check-cb-check-disabled.gif);
     }  
@@ -44,7 +45,8 @@
       list-style-image: url(chrome://global/skin/check-cb-pressed.gif);  
     }
   
-  checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check
+  checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
+  checkbox[disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check
     {
   	  list-style-image: url(chrome://global/skin/check-cb-disabled.gif);  
     }
@@ -66,13 +68,14 @@
       padding: 1px;
     }
 
-  checkbox[disabled="true"][value] > .internal-box > html 
+  checkbox[disabled="true"][value] > .internal-box > html,
+  checkbox[disabled="true"][value]:hover:active > .internal-box > html
     {
       color: #999999;
     }
     
   checkbox:focus
     {
-      border-color: #73869C;
+      border-color        : #8C9EB5;
       -moz-border-radius  : 4px 5px 4px 5px;
     }

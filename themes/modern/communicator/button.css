@@ -232,17 +232,18 @@
  **/  
   button.button-toolbar-3 
     {
-	  -moz-binding			: url("chrome://global/skin/globalBindings.xml#three-slice-button");
+	  -moz-binding			: url("chrome://global/skin/globalBindings.xml#nine-slice-button");
       background-color : transparent;
       border				: 0px;
       margin				: 3px 7px 2px 0px;
-      font-family   : Arial, sans-serif;
       -moz-user-focus       : ignore !important;
     }
 
-  .button-toolbar-3 > box > box > .button-text-box {
+  .button-toolbar-3 > box > box > .button-text-mid
+    {
+      font-family   : Arial, sans-serif;
       font-weight           : bold;
-  }
+    }
 
   button.button-toolbar-3[disabled="true"], .button-toolbar-3[disabled="true"]:hover, .button-toolbar-3[disabled="true"]:hover:active
     {
@@ -331,4 +332,20 @@ menubutton.button-toolbar-4
   {
     border                : 0px !important;
     padding               : 0px !important;
-  }  
+  } 
+  
+  /* text wrapping frame (hack because <text> does not support alignment) */
+  .button-text-container {
+      text-align          : center;
+      vertical-align      : middle;
+    }
+
+/* text frame */
+  .button-text  {
+      padding             : 0px 2px 0px 2px;
+    }
+  
+  button[orient="vertical"] > .button-internal-box > .button-text-container > .button-text {
+      padding             : 2px 2px 0px 2px;
+    }
+  

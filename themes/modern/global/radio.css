@@ -6,15 +6,17 @@
     {
       border: 2px solid transparent;
       margin: 0px 3px 0px 3px;
+      -moz-user-focus: normal !important;
     }
 
   radio > .internal-box
     {
+      -moz-user-focus: ignore;
     }
 
-  #radio:focus 
+  radio:focus 
     {
-      border-color: #73869C;
+      border-color: #8C9EB5;
       -moz-border-radius  : 4px 5px 4px 5px;
     }
     
@@ -85,5 +87,10 @@
   radio[disabled="true"][value] > .internal-box > html 
     {
       color: #999999;
+    }
+  
+    radiogroup 
+    {
+      -moz-user-focus : ignore;
     }
   

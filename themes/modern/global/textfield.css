@@ -7,10 +7,9 @@
 /* outer frame */
   textfield
     {
+      margin              : 1px;
+      border              : 3px solid transparent;
       padding             : 0px;
-      border              : 0px;
-      margin              : 4px;
-      background-color    : #FFFFFF;
       font                : inherit;
       color               : #000000;
       cursor              : text;
@@ -23,8 +22,7 @@
   
   textfield[focused="true"]
     {
-      border              : 3px solid #73869C;
-      margin              : 1px;
+      border-color        : #8C9EB5;
       -moz-border-radius  : 6px;
     }
    
@@ -45,7 +43,7 @@
       border              : 1px inset #B4C3D4;
       padding             : 1px 2px 1px 2px;
       cursor              : text;
-      background-color    : inherit;
+      background-color    : #FFFFFF;
       color               : inherit;
     }
   

@@ -1,4 +1,360 @@
-/* NEW WIDGET ANDING: <button> */
+/********************************/
+/* nine slice button - This is the default style used for all buttons.
+ * This style is fully scalable in 2 dimensions.  It supports normal and default buttons in 
+ * both active and disabled states, which includes 6 sets of sliced images.
+ ********************************/
+  
+  button {
+    -moz-binding			: url("chrome://global/skin/globalBindings.xml#nine-slice-button");
+    margin            : 2px;
+    border				    : 3px solid transparent;
+    min-width				  : 60px;
+    background-color  : transparent;
+    color					    : #1C1D1F;
+    -moz-user-focus   : normal !important;
+  }
+  
+  .button-text-mid {
+    font-family			    : charcoal, ms sans serif;
+    font-size 			    : 12px;
+    font-weight			    : normal;
+  }
+    
+  /* .......... focused state .......... */
+
+  button:focus {
+    border-color: #8C9EB5;
+    -moz-border-radius: 10px;
+  }
+    
+  /* .......... normal state .......... */
+  
+  .button-box-left {
+    width           : 9px;
+  }
+    
+  .button-left-top {
+    background			: url("chrome://global/skin/button-left-top.gif") no-repeat;
+    height          : 9px;
+  }
+
+  .button-left-mid {
+    background			: url("chrome://global/skin/button-left-mid.gif") repeat-y;
+  }
+
+  .button-left-btm {
+    background			  : url("chrome://global/skin/button-left-btm.gif") no-repeat;
+    height            : 8px;
+  }
+
+  .button-box-mid {
+    background-color  : #A5BABD;
+  }
+  
+  .button-mid-top {
+  	background			: url("chrome://global/skin/button-mid-top.gif") repeat-x;
+  	height          : 3px;
+    vertical-align  : top;
+  }
+
+  .button-mid-mid {
+  	background			  : url("chrome://global/skin/button-mid-mid.gif") repeat-x;
+    vertical-align    : middle;
+  	text-align        : center;
+  }
+
+  .button-mid-btm {
+    background			  : url("chrome://global/skin/button-mid-btm.gif") repeat-x;
+    height            : 4px;
+    vertical-align    : bottom;
+  }
+
+  .button-box-right {
+    width           : 7px;
+  }
+  
+  .button-right-top {
+  	background			: url("chrome://global/skin/button-right-top.gif") no-repeat;
+  	height          : 9px;
+  }
+
+  .button-right-mid {
+  	background			: url("chrome://global/skin/button-right-mid.gif") repeat-y;
+  }
+
+  .button-right-btm {
+    background			  : url("chrome://global/skin/button-right-btm.gif") no-repeat;
+    height            : 8px;
+  }
+  
+  /* .......... active state .......... */
+
+  button:hover:active > .button-box-left > .button-left-top {
+    background-image    : url("chrome://global/skin/button-active-left-top.gif");
+   }
+
+  button:hover:active > .button-box-left > .button-left-mid {
+    background-image    : url("chrome://global/skin/button-active-left-mid.gif");
+  }
+
+  button:hover:active > .button-box-left > .button-left-btm {
+    background-image    : url("chrome://global/skin/button-active-left-btm.gif");
+  }
+
+  button:hover:active > .button-box-mid {
+    background-color    : #84969C;
+  }
+  
+  button:hover:active > .button-box-mid > .button-mid-top {
+  	background-image    : url("chrome://global/skin/button-active-mid-top.gif");
+  }
+
+  button:hover:active > .button-box-mid > .button-mid-mid {
+  	background-image    : url("chrome://global/skin/button-active-mid-mid.gif");
+    color               : #ffffff;
+  }
+
+  button:hover:active > .button-box-mid > .button-mid-btm {
+    background-image    : url("chrome://global/skin/button-active-mid-btm.gif");
+  }
+
+  button:hover:active > .button-box-right > .button-right-top {
+  	background-image    : url("chrome://global/skin/button-active-right-top.gif");
+  }
+
+  button:hover:active > .button-box-right > .button-right-mid {
+  	background-image    : url("chrome://global/skin/button-active-right-mid.gif");
+  }
+
+  button:hover:active > .button-box-right > .button-right-btm {
+    background-image    : url("chrome://global/skin/button-active-right-btm.gif");
+  }
+
+  /* .......... disabled state .......... */
+
+  button[disabled="true"], 
+  button[disabled="true"]:hover, 
+  button[disabled="true"]:hover:active {
+    color					: #595F61;
+  }
+
+  
+  button:hover:active > .button-box-left > .button-left-top[disabled="true"],
+  .button-left-top[disabled="true"] {
+    background-image    : url("chrome://global/skin/button-dis-left-top.gif");
+   }
+
+  button:hover:active > .button-box-left > .button-left-mid[disabled="true"],
+  .button-left-mid[disabled="true"] {
+    background-image    : url("chrome://global/skin/button-dis-left-mid.gif");
+  }
+
+  button:hover:active > .button-box-left > .button-left-btm[disabled="true"],
+  .button-left-btm[disabled="true"] {
+    background-image    : url("chrome://global/skin/button-dis-left-btm.gif");
+  }
+
+  button:hover:active > .button-box-mid[disabled="true"],
+  .button-box-mid[disabled="true"] {
+    background-color    : #ADBEC6;
+  }
+  
+  button:hover:active > .button-box-mid > .button-mid-top[disabled="true"],
+  .button-mid-top[disabled="true"] {
+  	background-image    : url("chrome://global/skin/button-dis-mid-top.gif");
+  }
+
+  button:hover:active > .button-box-mid > .button-mid-mid[disabled="true"],
+  .button-mid-mid[disabled="true"] {
+  	background-image    : url("chrome://global/skin/button-dis-mid-mid.gif");
+  }
+
+  button:hover:active > .button-box-mid > .button-mid-btm[disabled="true"],
+  .button-mid-btm[disabled="true"] {
+    background-image    : url("chrome://global/skin/button-dis-mid-btm.gif");
+  }
+
+  button:hover:active > .button-box-right > .button-right-top[disabled="true"],
+  .button-right-top[disabled="true"] {
+  	background-image    : url("chrome://global/skin/button-dis-right-top.gif");
+  }
+
+  button:hover:active > .button-box-right > .button-right-mid[disabled="true"],
+  .button-right-mid[disabled="true"] {
+  	background-image    : url("chrome://global/skin/button-dis-right-mid.gif");
+  }
+
+  button:hover:active > .button-box-right > .button-right-btm[disabled="true"],
+  .button-right-btm[disabled="true"] {
+    background-image    : url("chrome://global/skin/button-dis-right-btm.gif");
+  }
+  
+  /* .......... default normal state .......... */
+
+  .button-box-left[default="true"] {
+    width           : 10px;
+  }
+    
+  .button-left-top[default="true"] {
+    background-image  : url("chrome://global/skin/button-def-left-top.gif");
+    height            : 10px;
+  }
+
+  .button-left-mid[default="true"] {
+    background-image  : url("chrome://global/skin/button-def-left-mid.gif");
+  }
+
+  .button-left-btm[default="true"] {
+    background-image  : url("chrome://global/skin/button-def-left-btm.gif");
+    height            : 9px;
+  }
+
+  .button-mid-top[default="true"] {
+  	background-image  : url("chrome://global/skin/button-def-mid-top.gif");
+  	height            : 4px;
+  }
+
+  .button-mid-mid[default="true"] {
+  	background-image  : url("chrome://global/skin/button-def-mid-mid.gif");
+  }
+
+  .button-mid-btm[default="true"] {
+    background-image  : url("chrome://global/skin/button-def-mid-btm.gif");
+    height            : 5px;
+  }
+
+  .button-box-right[default="true"] {
+    width             : 8px;
+  }
+  
+  .button-right-top[default="true"] {
+  	background-image   : url("chrome://global/skin/button-def-right-top.gif");
+  	height             : 10px;
+  }
+
+  .button-right-mid[default="true"] {
+  	background-image  : url("chrome://global/skin/button-def-right-mid.gif");
+  }
+
+  .button-right-btm[default="true"] {
+    background-image   : url("chrome://global/skin/button-def-right-btm.gif");
+    height             : 9px;
+  }
+
+  /* .......... default active state .......... */
+
+  :hover:active > .button-box-left > .button-left-top[default="true"] {
+    background-image  : url("chrome://global/skin/button-def-active-left-top.gif");
+  }
+
+  :hover:active > .button-box-left > .button-left-mid[default="true"] {
+    background-image  : url("chrome://global/skin/button-def-active-left-mid.gif");
+  }
+
+  :hover:active > .button-box-left > .button-left-btm[default="true"] {
+    background-image  : url("chrome://global/skin/button-def-active-left-btm.gif");
+  }
+
+  :hover:active > .button-box-mid > .button-mid-top[default="true"] {
+  	background-image  : url("chrome://global/skin/button-def-active-mid-top.gif");
+  }
+
+  :hover:active > .button-box-mid > .button-mid-mid[default="true"] {
+  	background-image  : url("chrome://global/skin/button-def-active-mid-mid.gif");
+  }
+
+  :hover:active > .button-box-mid > .button-mid-btm[default="true"] {
+    background-image  : url("chrome://global/skin/button-def-active-mid-btm.gif");
+  }
+
+  :hover:active > .button-box-right > .button-right-top[default="true"] {
+  	background-image   : url("chrome://global/skin/button-def-active-right-top.gif");
+  }
+
+  :hover:active > .button-box-right > .button-right-mid[default="true"] {
+  	background-image  : url("chrome://global/skin/button-def-active-right-mid.gif");
+  }
+
+  :hover:active > .button-box-right > .button-right-btm[default="true"] {
+    background-image   : url("chrome://global/skin/button-def-active-right-btm.gif");
+  }
+  
+  /* .......... default disabled state (the same as normal disabled) .......... */
+
+  button[default="true"][disabled="true"] {
+    margin-top          : 3px;
+    margin-bottom       : 3px;
+  }
+
+  :hover:active > .button-box-left > .button-left-top[disabled="true"][default="true"],
+  .button-left-top[disabled="true"][default="true"] {
+    background-image    : url("chrome://global/skin/button-dis-left-top.gif");
+    height              : 9px;
+  }
+
+  .button-box-left[disabled="true"][default="true"] {
+    width               : 9px;
+  }
+
+  :hover:active > .button-box-left > .button-left-top[disabled="true"][default="true"],
+  .button-left-top[disabled="true"][default="true"] {
+    background-image    : url("chrome://global/skin/button-dis-left-top.gif");
+    height              : 9px;
+  }
+
+  :hover:active > .button-box-left > .button-left-mid[disabled="true"][default="true"],
+  .button-left-mid[disabled="true"][default="true"] {
+    background-image    : url("chrome://global/skin/button-dis-left-mid.gif");
+  }
+
+  :hover:active > .button-box-left > .button-left-btm[disabled="true"][default="true"],
+  .button-left-btm[disabled="true"][default="true"] {
+    background-image    : url("chrome://global/skin/button-dis-left-btm.gif");
+    height              : 8px;
+  }
+
+  :hover:active > .button-box-mid[disabled="true"][default="true"],
+  .button-box-mid[disabled="true"][default="true"] {
+    background-color    : #ADBEC6;
+  }
+
+  :hover:active > .button-box-mid > .button-mid-top[disabled="true"][default="true"],
+  .button-mid-top[disabled="true"][default="true"] {
+  	background-image    : url("chrome://global/skin/button-dis-mid-top.gif");
+    height              : 3px;
+  }
+
+  :hover:active > .button-box-mid > .button-mid-mid[disabled="true"][default="true"],
+  .button-mid-mid[disabled="true"][default="true"] {
+  	background-image    : url("chrome://global/skin/button-dis-mid-mid.gif");
+  }
+
+  :hover:active > .button-box-mid > .button-mid-btm[disabled="true"][default="true"],
+  .button-mid-btm[disabled="true"][default="true"] {
+    background-image    : url("chrome://global/skin/button-dis-mid-btm.gif");
+    height              : 4px;
+  }
+
+  .button-box-right[disabled="true"][default="true"] {
+    width               : 7px;
+  }
+
+  :hover:active > .button-box-right > .button-right-top[disabled="true"][default="true"],
+  .button-right-top[disabled="true"][default="true"] {
+  	background-image    : url("chrome://global/skin/button-dis-right-top.gif");
+    height              : 9px;
+  }
+
+  :hover:active > .button-box-right > .button-right-mid[disabled="true"][default="true"],
+  .button-right-mid[disabled="true"][default="true"] {
+  	background-image    : url("chrome://global/skin/button-dis-right-mid.gif");
+  }
+
+  :hover:active > .button-box-right > .button-right-btm[disabled="true"][default="true"],
+  .button-right-btm[disabled="true"][default="true"] {
+    background-image    : url("chrome://global/skin/button-dis-right-btm.gif");
+    height              : 8px;
+  }
 
 /** plain (raw) buttons, class="plain" **/
   button.plain, button.plain:hover, button.plain:hover:active,
@@ -10,8 +366,7 @@
   button.plain > .button-internal-box > .button-text-container > .button-text, 
   button.plain > .button-internal-box > .button-text-container > .button.text:hover:active,
   button.plain > .button-internal-box > .button-icon, 
-  button.plain > .button-internal-box > .button.icon:hover:active
-    {
+  button.plain > .button-internal-box > .button.icon:hover:active {
       -moz-binding		  : url(chrome://global/content/xulBindings.xml#buttonleft);
       border              : 0px !important;
       margin              : 0px;
@@ -30,173 +385,6 @@
 
 button.plain-extended {}
 
-
-/** Default Button Styles (apply to usage of <button> without 
- *  any applied class).
- **/
-
-/* outer frame */
-  button 
-    {
-	  -moz-binding			: url("chrome://global/skin/globalBindings.xml#three-slice-button");
-      background-color      : transparent;
-      border				: 3px solid transparent;
-      margin        : 2px;
-      color					: #1C1D1F;
-      min-width				: 60px;
-      -moz-user-focus: normal !important;
-    }
-
-  button:focus 
-    {
-      border-color: #73869C;
-      -moz-border-radius: 10px;
-    }
-    
-  button[disabled="true"], button[disabled="true"]:hover, button[disabled="true"]:hover:active
-    {
-      border				: 0px;
-      color					: #595F61;
-    }
-
-  .button-image-left {
-	background			: url(chrome://global/skin/button-left.gif) no-repeat;
-	width				: 9px;
-	height				: 19px;
-  }
-
-  .button-image-middle {
-	background			: url(chrome://global/skin/button-middle.gif) repeat-x;
-  }
-
-  .button-text-box {
-	text-align          : center;
-    vertical-align      : middle;
-    padding				: 0px;
-    font-size 			: 12px;
-    font-family			: charcoal, ms sans serif;
-    font-weight			: normal;
-    margin-right		: 2px;
-    margin-bottom		: 2px;
-  }
-
-  .button-image-right {
-	background			: url(chrome://global/skin/button-right.gif) no-repeat;
-	width				: 7px;
-	height				: 19px;
-  }
-
-  .button-top-spring {
-	height				: 2px;
-  }
-
-  .button-bottom-spring {
-	height				: 1px;
-  }
-  
-  button:hover:active {
-  	color				: #1C1D1F;
-  }
-  
-  button:hover:active > .button-image-left {
-	background			: url(chrome://global/skin/button-clicked-left.gif) no-repeat;
-  }
-
-  button:hover:active > .button-image-middle {
-	background			: url(chrome://global/skin/button-clicked-middle.gif) repeat-x;
-  }
-
-  button:hover:active > .button-image-right {
-	background			: url(chrome://global/skin/button-clicked-right.gif) no-repeat;
-  }
-
-  button[disabled="true"] > .button-image-left,
-  button[disabled="true"]:hover:active > .button-image-left {
-	background			: url(chrome://global/skin/button-disabled-left.gif) no-repeat;
-  }
-
-  button[disabled="true"] > .button-image-middle,
-  button[disabled="true"]:hover:active > .button-image-middle {
-	background			: url(chrome://global/skin/button-disabled-middle.gif) repeat-x;
-  }
-
-  button[disabled="true"] > .button-image-right,
-  button[disabled="true"]:hover:active > .button-image-right {
-	background			: url(chrome://global/skin/button-disabled-right.gif) no-repeat;
-  }
-
-
-/* Default Button States */
-
-  button[default="true"] {
-    margin        : 1px;
-  }
-
-  button[default="true"]:focus {
-    -moz-border-radius: 12px;
-  }
-
-  .button-image-left[default="true"] {
-	background	: url(chrome://global/skin/button-def-left.gif) no-repeat;
-	width: 10px;
-	height: 21px;
-  }
-
-  .button-image-middle[default="true"] {
-	background	: url(chrome://global/skin/button-def-middle.gif) repeat-x;
-  }
-
-  .button-image-right[default="true"] {
-	background	: url(chrome://global/skin/button-def-right.gif) no-repeat;
-	width: 8px;
-	height: 21px;
-  }
-
-  button:hover:active > .button-image-left[default="true"] {
-	background	: url(chrome://global/skin/button-def-clicked-left.gif) no-repeat;
-  }
-
-  button:hover:active > .button-image-middle[default="true"] {
-	background	: url(chrome://global/skin/button-def-clicked-middle.gif) repeat-x;
-  }
-
-  button:hover:active > .button-image-right[default="true"] {
-	background	: url(chrome://global/skin/button-def-clicked-right.gif) no-repeat;
-  }
-
-  .button-image-left[default="true"][disabled="true"],
-  button[default="true"][disabled="true"]:hover:active > .button-image-left {
-	background	: url(chrome://global/skin/button-def-disabled-left.gif) no-repeat;
-  }
-
-  .button-image-middle[default="true"][disabled="true"],
-  button[default="true"][disabled="true"]:hover:active > .button-image-middle {
-	background	: url(chrome://global/skin/button-def-disabled-mid.gif) repeat-x;
-  }
-
-  .button-image-right[default="true"][disabled="true"],
-  button[default="true"][disabled="true"]:hover:active > .button-image-right {
-	background	: url(chrome://global/skin/button-def-disabled-right.gif) no-repeat;
-  }
-  
-/* text wrapping frame (hack because <text> does not support alignment) */
-  .button-text-container
-    {
-      text-align          : center;
-      vertical-align      : middle;
-    }
-
-/* text frame */
-  .button-text 
-    {
-      padding             : 0px 2px 0px 2px;
-    }
-  
-  button[orient="vertical"] > .button-internal-box > .button-text-container > .button-text
-    {
-      padding             : 2px 2px 0px 2px;
-    }
-  
 /** Styles for 'dialog' buttons (usually any command button in a dialog)
  *  This class gives buttons 10px of padding on each side to increase the
  *  strike area and make buttons with small amounts of text (e.g. 'OK') 
@@ -205,13 +393,11 @@ button.plain-extended {}
 
 /* internal frame */
   .button-dialog > .button-internal-box,
-  .button-dialog:hover > .button-internal-box
-    {
+  .button-dialog:hover > .button-internal-box {
       padding             : 2px 10px 2px 10px;
     }
   
-  .button-dialog:hover:hover:active > .button-internal-box 
-    {
+  .button-dialog:hover:hover:active > .button-internal-box  {
       padding             : 3px 9px 1px 11px;
     }
 
@@ -219,28 +405,23 @@ button.plain-extended {}
  *  editor's formatting toolbar or toolbars wanting a button similar to a command
  *  button but without an initial outset frame.
  **/ 
-  .button-borderless 
-    {
+  .button-borderless  {
       border              : 1px solid #CCCCCC;
     }
   
-  .button-borderless:hover
-    {
+  .button-borderless:hover {
       border              : 1px solid #000000;
     }
     
-  .button-borderless > .button-internal-box 
-    {
+  .button-borderless > .button-internal-box  {
       border              : 1px solid #CCCCCC;
     }
   
-  .button-borderless:hover > .button-internal-box 
-    {
+  .button-borderless:hover > .button-internal-box  {
       border              : 1px outset #CCCCCC;
     }
   
-  .button-borderless:hover:active > .button-internal-box 
-    {
+  .button-borderless:hover:active > .button-internal-box  {
       border              : 1px inset #CCCCCC;
     }
 
@@ -258,21 +439,18 @@ button.plain-extended {}
  * Reorder buttons 
  **/
    
-  .reorder-up
-    {
+  .reorder-up {
       min-width           : 0px;
       list-style-image    : url("chrome://global/skin/simple-arrow-up.gif");
     }    
     
-  .reorder-down
-    {
+  .reorder-down {
       min-width           : 0px;
       list-style-image    : url("chrome://global/skin/simple-arrow-down.gif");
     }    
     
   .reorder-up > .button-internal-box > .button-icon,
-  .reorder-down > .button-internal-box > .button-icon
-    {
+  .reorder-down > .button-internal-box > .button-icon {
       margin              : 0;
       padding             : 0;
     }

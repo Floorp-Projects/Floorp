@@ -16,6 +16,10 @@
   display: block;
 }
 
+*, *[disabled="true"] {
+  -moz-user-focus: ignore;
+}
+
 /**
  * Hide the content, but don't destroy the frames. 
  * DO NOT USE "_collapsed" IN YOUR XUL! 

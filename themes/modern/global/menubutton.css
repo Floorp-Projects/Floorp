@@ -1,5 +1,8 @@
-
-/* outermost frame */
+/*********************************
+ * Regular menubutton
+ *   Shows a caption and brings up a popup menu which executes a command.
+ *********************************/    
+   
   menubutton
     {
       border              : 1px solid #000000;
@@ -20,66 +23,42 @@
       vertical-align      : middle;
     }
     
-  menubutton:active > .menubutton-internal-box,
-  menubutton[open="true"] > .menubutton-internal-box
-    {
-      /*border              : 1px inset #CCCCCC;*/
-      padding             : 2px 1px 0px 3px;
-    }
-
   .menubutton-single-icon
     {
       margin-left		  : 3px;
     }
-    
-/** "Dual Functionality" menubutton
- *  Has a popup spawning button and a command invoking button, e.g. back/forward
- *  class="menubutton-dual"
- **/    
+
+/*********************************
+ * "Dual Functionality" menubutton
+ *   Has a popup spawning button and a command invoking button, e.g. back/forward
+ *   class="menubutton-dual"
+ *********************************/    
   
-/* inner button */
-  menubutton.menubutton-dual > .menubutton-dual-button,
-  menubutton.menubutton-dual:hover > .menubutton-dual-button,
-  menubutton.menubutton-dual:active > .menubutton-dual-button
+  .menubutton-dual,
+  .menubutton-dual > .menubutton-internal-box,
+  .menubutton-dual:hover > .menubutton-dual-button,
+  .menubutton-dual:active > .menubutton-dual-button
     {
       border              : none;
       margin              : 0px;
       -moz-border-radius  : 0px;
     }
 
-  menubutton.menubutton-dual[open="true"] > .menubutton-dual-button > .button-internal-box
+  .menubutton-dual-dropmarker-box
     {
-      border              : 1px inset #CCCCCC;
-      padding             : 3px 1px 1px 3px;  
-    }
-    
-/* inner dropmarker */
-  menubutton.menubutton-dual > .menubutton-dropmarker
-    {
-      border              : 1px outset #CCCCCC;
       list-style-image    : url("chrome://global/skin/simple-arrow-down.gif");
-      padding             : 0px 2px 0px 2px;
     }
     
-  menubutton.menubutton-dual[disabled="true"] > .menubutton-dropmarker
-    {
-      list-style-image    : url("chrome://global/skin/simple-arrow-down-disabled.gif");
-    }
-
-  menubutton.menubutton-dual[open="true"] > .menubutton-dropmarker
-    {
-      border              : 1px inset #CCCCCC;
-      padding             : 1px 1px 0 3px; /* negatives not allowed -LDB */
-    }
-
-  menubutton.menubutton-dual > menupopup
+  .menubutton-dual > menupopup
     {
       min-width           : 0px;
     }
     
-/** Icon only menubutton.menubutton-duals
- *  class="menubutton.menubutton-dual-icon"
- **/
+/**************
+ * Icon only menubutton.menubutton-duals
+ * class="menubutton.menubutton-dual-icon"
+ ***************/
+ 
   .menubutton.menubutton-dual-icon 
     {
       border              : 1px solid #000000;
