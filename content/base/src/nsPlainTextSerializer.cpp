@@ -125,6 +125,7 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   // initialize the tag stack to zero:
   mTagStack = new nsHTMLTag[TagStackSize];
   mTagStackIndex = 0;
+  mIgnoreAboveIndex = (PRUint32)kNotFound;
 
   // initialize the OL stack, where numbers for ordered lists are kept:
   mOLStack = new PRInt32[OLStackSize];
@@ -191,15 +192,23 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
     mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
 
   
-  if(mFlags & nsIDocumentEncoder::OutputFormatted) {
-    // Get some prefs that controls how we do formatted output
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv) && prefs) {
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv) && prefs) {
+    if(mFlags & nsIDocumentEncoder::OutputFormatted) {
+      // Get some prefs that controls how we do formatted output
       prefs->GetBoolPref(PREF_STRUCTS, &mStructs);
       prefs->GetIntPref(PREF_HEADER_STRATEGY, &mHeaderStrategy);
       // The quotesPreformatted pref is a temporary measure. See bug 69638.
       prefs->GetBoolPref("editor.quotesPreformatted", &mQuotesPreformatted);
     }
+
+    // XXX We should let the caller pass this in.
+    PRBool allowFrames;
+    prefs->GetBoolPref("browser.frames.enabled", &allowFrames);
+    if (allowFrames)
+      mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
+    else
+      mFlags |= nsIDocumentEncoder::OutputNoFramesContent;
   }
 
   return NS_OK;
@@ -226,9 +235,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
                                   PRInt32 aEndOffset, 
                                   nsAWritableString& aStr)
 {
-  if (mTagStackIndex > 0 &&
-      mTagStack[mTagStackIndex-1] == eHTMLTag_noscript &&
-      !(mFlags & nsIDocumentEncoder::OutputNoScriptContent)) {
+  if (mIgnoreAboveIndex != (PRUint32)kNotFound) {
     return NS_OK;
   }
 
@@ -394,9 +401,7 @@ nsPlainTextSerializer::CloseContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
 {
-  if (mTagStackIndex > 0 &&
-      mTagStack[mTagStackIndex-1] == eHTMLTag_noscript &&
-      !(mFlags & nsIDocumentEncoder::OutputNoScriptContent)) {
+  if (mIgnoreAboveIndex != (PRUint32)kNotFound) {
     return NS_OK;
   }
 
@@ -495,6 +500,24 @@ nsPlainTextSerializer::CloseFrameset(const nsIParserNode& aNode)
   return CloseContainer(aNode);
 }
 
+NS_IMETHODIMP
+nsPlainTextSerializer::GetPref(PRInt32 aTag, PRBool& aPref)
+{
+  nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
+
+  if (theHTMLTag == eHTMLTag_script) {
+    aPref = mFlags & nsIDocumentEncoder::OutputNoScriptContent;
+  }
+  else if (theHTMLTag == eHTMLTag_frameset) {
+    aPref = !(mFlags & nsIDocumentEncoder::OutputNoFramesContent);
+  }
+  else {
+    aPref = PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsPlainTextSerializer::DoFragment(PRBool aFlag)
 {
@@ -506,14 +529,21 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
 {
   eHTMLTags type = (eHTMLTags)aTag;
 
-  if (mTagStackIndex > 0 &&
-      mTagStack[mTagStackIndex-1] == eHTMLTag_noscript &&
-      !(mFlags & nsIDocumentEncoder::OutputNoScriptContent)) {
+  if (mTagStackIndex < TagStackSize) {
+    mTagStack[mTagStackIndex++] = type;
+  }
+
+  if (mIgnoreAboveIndex != (PRUint32)kNotFound) {
     return NS_OK;
   }
 
-  if (mTagStackIndex < TagStackSize) {
-    mTagStack[mTagStackIndex++] = type;
+  // Check if this tag's content that should not be output
+  if ((type == eHTMLTag_noscript &&
+       !(mFlags & nsIDocumentEncoder::OutputNoScriptContent)) ||
+      ((type == eHTMLTag_iframe || type == eHTMLTag_noframes) &&
+       !(mFlags & nsIDocumentEncoder::OutputNoFramesContent))) {
+    mIgnoreAboveIndex = mTagStackIndex;
+    return NS_OK;
   }
 
   if (type == eHTMLTag_body) {
@@ -740,16 +770,15 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
 {
   eHTMLTags type = (eHTMLTags)aTag;
 
-  if (mTagStackIndex > 0 &&
-      mTagStack[mTagStackIndex-1] == eHTMLTag_noscript &&
-      !(mFlags & nsIDocumentEncoder::OutputNoScriptContent) &&
-      type != eHTMLTag_noscript) {
-    return NS_OK;
-  }
-
   if (mTagStackIndex > 0) {
     --mTagStackIndex;
   }
+
+  if (mTagStackIndex >= mIgnoreAboveIndex) {
+    return NS_OK;
+  }
+
+  mIgnoreAboveIndex = (PRUint32)kNotFound;
 
   // End current line if we're ending a block level tag
   if((type == eHTMLTag_body) || (type == eHTMLTag_html)) {

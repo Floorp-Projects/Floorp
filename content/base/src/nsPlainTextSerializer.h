@@ -116,7 +116,7 @@ public:
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
-  NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref) { return NS_OK; }
+  NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref);
   NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
@@ -215,6 +215,9 @@ protected:
   // The tag stack: the stack of tags we're operating on, so we can nest:
   nsHTMLTag       *mTagStack;
   PRUint32         mTagStackIndex;
+
+  // Content in the stack above this index should be ignored:
+  PRUint32          mIgnoreAboveIndex;
 
   // The stack for ordered lists:
   PRInt32         *mOLStack;
