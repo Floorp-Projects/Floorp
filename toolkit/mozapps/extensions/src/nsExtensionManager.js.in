@@ -1709,7 +1709,7 @@ nsExtensionManager.prototype = {
   
   handleCommandLineArgs: function nsExtensionManager_handleCommandLineArgs ()
   {
-    var cmdLineSvc = Components.classes["@mozilla.org/appshell/commandLineService;1"]
+    var cmdLineSvc = Components.classes["@mozilla.org/app-startup/commandLineService;1"]
                               .getService(Components.interfaces.nsICmdLineService);
     var globalExtension = cmdLineSvc.getCmdLineValue("-install-global-extension");
     if (globalExtension)
