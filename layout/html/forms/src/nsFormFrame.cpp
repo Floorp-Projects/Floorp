@@ -770,15 +770,26 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsAutoString target;
     GetTarget(&target);
 
-    if (!isPost) {
-      if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
-        href.Append('?');
-      } else {                              // Adding to existing query string
-        if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed
-          href.Append('&');
+    // Add the URI encoded form values to the URI
+    // Get the scheme of the URI.
+    nsCOMPtr<nsIURI> actionURL;
+    nsXPIDLCString scheme;
+    if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL))) {
+      result = actionURL->GetScheme(getter_Copies(scheme));
+    }
+    nsAutoString theScheme(scheme);
+    // Append the URI encoded variable/value pairs for GET's
+    if (!theScheme.EqualsIgnoreCase("javascript")) { // Not for JS URIs, see bug 26917
+      if (!isPost) {
+        if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
+          href.Append('?');
+        } else {                              // Adding to existing query string
+          if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed
+            href.Append('&');
+          }
         }
+        href.Append(data);
       }
-      href.Append(data);
     }
     nsAutoString absURLSpec;
     result = NS_MakeAbsoluteURI(href, docURL, absURLSpec);
