@@ -629,7 +629,7 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
   }
   else {
     mDirection = NS_STYLE_DIRECTION_LTR;
-    mVisible = PR_TRUE;
+    mVisible = NS_STYLE_VISIBILITY_VISIBLE;
   }
   mDisplay = NS_STYLE_DISPLAY_INLINE;
   mFloats = NS_STYLE_FLOAT_NONE;

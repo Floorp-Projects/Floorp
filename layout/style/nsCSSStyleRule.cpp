@@ -1438,7 +1438,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
         // visibility: enum, inherit
         if (eCSSUnit_Enumerated == ourDisplay->mVisibility.GetUnit()) {
-          display->mVisible = PRBool (NS_STYLE_VISIBILITY_VISIBLE == ourDisplay->mVisibility.GetIntValue());
+          display->mVisible = ourDisplay->mVisibility.GetIntValue();
         }
         else if (eCSSUnit_Inherit == ourDisplay->mVisibility.GetUnit()) {
           display->mVisible = parentDisplay->mVisible;
