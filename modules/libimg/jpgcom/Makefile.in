@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= nsjpg
-IS_COMPONENT 	= 1
+IS_COMPONENT	= 1
 
 REQUIRES	+= util jpeg xpcom img
 
@@ -51,4 +51,12 @@ LOCAL_JMC_SUBDIR = .
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH)$(OS_RELEASE),SunOS5)
+ifeq ($(shell uname -r),5.3)
+# In this special case (jpeg.cpp), the compiler has to know
+# the OS version to a finer granularity than normal.
+DEFINES		+= -DOSMINOR=3
+endif
+endif
 
