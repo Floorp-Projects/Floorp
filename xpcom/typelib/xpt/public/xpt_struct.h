@@ -460,10 +460,6 @@ struct XPTParamDescriptor {
 #define XPT_PD_IS_SHARED(flags) (flags & XPT_PD_SHARED)
 #define XPT_PD_IS_DIPPER(flags) (flags & XPT_PD_DIPPER)
 
-/* this is bogus
-#define XPT_PARAMDESCRIPTOR_SIZE (XPT_TYPEDESCRIPTOR_SIZE + 1)
-*/
-
 extern XPT_PUBLIC_API(PRBool)
 XPT_FillParamDescriptor(XPTArena *arena, 
                         XPTParamDescriptor *pd, PRUint8 flags,
