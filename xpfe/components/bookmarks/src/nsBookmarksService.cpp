@@ -1585,7 +1585,6 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 			printf("nsBookmarksService::FireTimer - Pinging '%s'\n", url);
 #endif
 
-			nsresult		rv;
 			nsCOMPtr<nsIURI>	uri;
 			if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(uri), url)))
 			{
