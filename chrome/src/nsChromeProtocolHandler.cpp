@@ -79,7 +79,7 @@ public:
     NS_DECL_NSICHANNEL
 
     // nsITimerCallback
-    virtual void Notify(nsITimer* aTimer);
+    NS_IMETHOD_(void) Notify(nsITimer* aTimer);
 };
 
 NS_IMPL_ADDREF(nsCachedChromeChannel);
@@ -289,7 +289,7 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
 }
 
 
-void
+NS_IMETHODIMP_(void)
 nsCachedChromeChannel::Notify(nsITimer* aTimer)
 {
     (void) mListener->OnStopRequest(this, mContext, NS_OK, nsnull);

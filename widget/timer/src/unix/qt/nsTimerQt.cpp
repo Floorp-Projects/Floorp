@@ -64,8 +64,10 @@ nsTimerQt::~nsTimerQt()
 nsresult 
 nsTimerQt::Init(nsTimerCallbackFunc aFunc,
                 void *aClosure,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+                PRUint32 aDelay,
+                PRUint32 aPriority,
+                PRUint32 aType
+                )
 {
     //debug("nsTimerQt::Init called with func + closure with %u delay", aDelay);
     mFunc = aFunc;
@@ -84,8 +86,10 @@ nsTimerQt::Init(nsTimerCallbackFunc aFunc,
 
 nsresult 
 nsTimerQt::Init(nsITimerCallback *aCallback,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+                PRUint32 aDelay,
+                PRUint32 aPriority,
+                PRUint32 aType
+                )
 {
     //debug("nsTimerQt::Init called with callback only with %u delay", aDelay);
     mCallback = aCallback;

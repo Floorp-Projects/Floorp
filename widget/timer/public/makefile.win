@@ -25,6 +25,7 @@ DEPTH=..\..\..
 EXPORTS =				\
   nsITimer.h \
   nsITimerCallback.h \
+  nsITimerQueue.h \
 	$(NULL)
 
 MODULE=timer

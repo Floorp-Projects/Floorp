@@ -158,7 +158,7 @@ public:
 
   void Stop();
 
-  virtual void Notify(nsITimer *timer);
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   struct FrameData {
     nsIPresContext* mPresContext;  // pres context associated with the frame
@@ -196,7 +196,7 @@ void nsBlinkTimer::Start()
 {
   nsresult rv = NS_NewTimer(&mTimer);
   if (NS_OK == rv) {
-    mTimer->Init(this, 750);
+    mTimer->Init(this, 750, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_PRECISE);
   }
 }
 
@@ -242,17 +242,19 @@ PRInt32 nsBlinkTimer::FrameCount() {
   return mFrames.Count();
 }
 
-void nsBlinkTimer::Notify(nsITimer *timer)
+NS_IMETHODIMP_(void) nsBlinkTimer::Notify(nsITimer *timer)
 {
   // Toggle blink state bit so that text code knows whether or not to
   // render. All text code shares the same flag so that they all blink
   // in unison.
   gBlinkTextOff = PRBool(!gBlinkTextOff);
 
+#ifndef REPEATING_TIMERS
   // XXX hack to get auto-repeating timers; restart before doing
   // expensive work so that time between ticks is more even
   Stop();
   Start();
+#endif
 
 #ifdef NOISY_BLINK
   PRTime now = PR_Now();

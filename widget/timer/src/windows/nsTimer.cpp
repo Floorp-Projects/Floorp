@@ -18,349 +18,236 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Michael Lowe <michael.lowe@bigfoot.com>
  */
-#include "nsITimer.h"
-#include "nsITimerCallback.h"
+
+#include "nsWindowsTimer.h"
+#include "nsITimerQueue.h"
+#include "nsIWindowsTimerMap.h"
 #include "nsCRT.h"
 #include "prlog.h"
 #include <stdio.h>
 #include <windows.h>
 #include <limits.h>
+#include "nsWidgetsCID.h"
+#include "nsIServiceManager.h"
+#include <stdlib.h>
 
-static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-/*
- * Implementation of timers lifted from Windows front-end file timer.cpp
- */
-class TimerImpl : public nsITimer {
-public:
-  static TimerImpl *gTimerList;
-  static UINT gWindowsTimer;
-  static DWORD gNextFire;
+static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
-  static void ProcessTimeouts(DWORD aNow);
-  static void SyncTimeoutPeriod(DWORD aTickCount);
 
-public:
-  TimerImpl();
-  virtual ~TimerImpl();
+class nsTimer;
 
-  virtual nsresult Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-//              PRBool aRepeat, 
-                PRUint32 aDelay);
 
-  virtual nsresult Init(nsITimerCallback *aCallback,
-//              PRBool aRepeat, 
-                PRUint32 aDelay);
+#define NS_PRIORITY_IMMEDIATE 10
 
-  NS_DECL_ISUPPORTS
-
-  virtual void Cancel();
-  void Fire(DWORD aNow);
-
-  virtual PRUint32 GetDelay() { return mDelay; }
-  virtual void SetDelay(PRUint32 aDelay) {};
-
-  virtual void* GetClosure() { return mClosure; }
-
-private:
-  nsresult Init(PRUint32 aDelay);
-
-  PRUint32 mDelay;
-  nsTimerCallbackFunc mFunc;
-  void *mClosure;
-  nsITimerCallback *mCallback;
-  DWORD mFireTime;
-  // PRBool mRepeat;
-  TimerImpl *mNext;
-};
-
-TimerImpl *TimerImpl::gTimerList = NULL;
-UINT TimerImpl::gWindowsTimer = 0;
-DWORD TimerImpl::gNextFire = (DWORD)-1;
 
 void CALLBACK FireTimeout(HWND aWindow, 
                           UINT aMessage, 
                           UINT aTimerID, 
                           DWORD aTime)
 {
-  static BOOL bCanEnter = TRUE;
-
   //  Don't allow old timer messages in here.
-  if(aMessage != WM_TIMER)    {
+  if(aMessage != WM_TIMER) {
     PR_ASSERT(0);
     return;
   }
 
-  if(aTimerID != TimerImpl::gWindowsTimer)   {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIWindowsTimerMap, manager, kTimerManagerCID, &rv);
+  if (NS_FAILED(rv)) return;
+
+  nsTimer* timer = manager->GetTimer(aTimerID);
+  if (timer == nsnull) {
     return;
   }
-  
-  //  Block only one entry into this function, or else.
-  if(bCanEnter)   {
-    bCanEnter = FALSE;
-    // see if we need to fork off any timeout functions
-    if(TimerImpl::gTimerList)    {
-      TimerImpl::ProcessTimeouts(aTime);
-    }
-    bCanEnter = TRUE;
+
+  if (timer->GetType() != NS_TYPE_REPEATING_PRECISE) {
+    // stop OS timer: may be restarted later
+    timer->KillOSTimer();
+  }
+
+  nsCOMPtr<nsITimerQueue> queue = do_QueryInterface(manager, &rv);
+  if (NS_FAILED(rv)) return;
+
+  if (timer->GetPriority() >= NS_PRIORITY_IMMEDIATE) {
+    // fire timer immediatly
+    timer->Fire();
+    
+  } else {
+    // defer timer firing
+    queue->AddReadyQueue(timer);
+  }
+
+  // while event queue is empty, fire off waiting timers
+  MSG wmsg;
+  while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
+      !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE)) {
+    queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
   }
 }
 
-//  Function to correctly have the timer be set.
-void 
-TimerImpl::SyncTimeoutPeriod(DWORD aTickCount)
+
+NS_IMPL_ISUPPORTS1(nsTimer, nsITimer)
+
+
+nsTimer::nsTimer() : nsITimer()
 {
-    //  May want us to set tick count ourselves.
-    if(aTickCount == 0)    {
-        aTickCount = ::GetTickCount();
-    }
+  NS_INIT_ISUPPORTS();
 
-    //  If there's no list, we should clear the timer.
-    if(!gTimerList) {
-        if(gWindowsTimer) {
-            ::KillTimer(NULL, gWindowsTimer);
-            gWindowsTimer = 0;
-            gNextFire = (DWORD)-1;
-        }
-    }
-    else {
-        //  See if we need to clear the current timer.
-        //  Curcumstances are that if the timer will not
-        //      fire on time for the next timeout.
-        BOOL bSetTimer = FALSE;
-        TimerImpl *pTimeout = gTimerList;
-        if(gWindowsTimer)   {
-            if(pTimeout->mFireTime != gNextFire)   {
-                ::KillTimer(NULL, gWindowsTimer);
-                gWindowsTimer = 0;
-                gNextFire = (DWORD)-1;
-
-                //  Set the timer.
-                bSetTimer = TRUE;
-            }
-        }
-        else    {
-            //  No timer set, attempt.
-            bSetTimer = TRUE;
-        }
-
-        if(bSetTimer)   {
-            DWORD dwFireWhen = pTimeout->mFireTime > aTickCount ?
-                pTimeout->mFireTime - aTickCount : 0;
-            if(dwFireWhen > UINT_MAX)   {
-                dwFireWhen = UINT_MAX;
-            }
-            UINT uFireWhen = (UINT)dwFireWhen;
-
-            PR_ASSERT(gWindowsTimer == 0);
-            gWindowsTimer = ::SetTimer(NULL, 0, uFireWhen, (TIMERPROC)FireTimeout);
-
-            if(gWindowsTimer)   {
-                //  Set the fire time.
-                gNextFire = pTimeout->mFireTime;
-            }
-        }
-    }
-}
-
-// Walk down the timeout list and launch anyone appropriate
-void 
-TimerImpl::ProcessTimeouts(DWORD aNow)
-{
-    TimerImpl *p = gTimerList;
-    if(aNow == 0)   {
-        aNow = ::GetTickCount();
-    }
-
-    BOOL bCalledSync = FALSE;
-
-    // loop over all entries
-    while(p) {
-        // send it
-        if(p->mFireTime < aNow) {
-            //  Make sure that the timer cannot be deleted during the
-            //  Fire(...) call which may release *all* other references
-            //  to p...
-            NS_ADDREF(p);
-            p->Fire(aNow);
-
-            //  Clear the timer.
-            //  Period synced.
-            p->Cancel();
-            bCalledSync = TRUE;
-            NS_RELEASE(p);
-
-            //  Reset the loop (can't look at p->pNext now, and called
-            //      code may have added/cleared timers).
-            //  (could do this by going recursive and returning).
-            p = gTimerList;
-        } else {
-            //  Make sure we fire an timer.
-            //  Also, we need to check to see if things are backing up (they
-            //      may be asking to be fired long before we ever get to them,
-            //      and we don't want to pass in negative values to the real
-            //      timer code, or it takes days to fire....
-            if(bCalledSync == FALSE)    {
-                SyncTimeoutPeriod(aNow);
-                bCalledSync = TRUE;
-            }
-            //  Get next timer.
-            p = p->mNext;
-        }
-    }
-}
-
-
-TimerImpl::TimerImpl()
-{
-  NS_INIT_REFCNT();
-  mFunc = NULL;
-  mCallback = NULL;
-  mNext = NULL;
+  mFunc = nsnull;
+  mCallback = nsnull;
   mClosure = nsnull;
+  mTimerID = 0;
+  mTimerRunning = false;
 }
 
-TimerImpl::~TimerImpl()
+
+nsTimer::~nsTimer()
 {
-    Cancel();
-    NS_IF_RELEASE(mCallback);
-}
-
-nsresult 
-TimerImpl::Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
-{
-    mFunc = aFunc;
-    mClosure = aClosure;
-    // mRepeat = aRepeat;
-
-    return Init(aDelay);
-}
-
-nsresult 
-TimerImpl::Init(nsITimerCallback *aCallback,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
-{
-    mCallback = aCallback;
-    NS_ADDREF(mCallback);
-    // mRepeat = aRepeat;
-
-    return Init(aDelay);
-}
-
-nsresult
-TimerImpl::Init(PRUint32 aDelay)
-{
-    DWORD dwNow = ::GetTickCount();
+  KillOSTimer();
   
-    mDelay = aDelay;
-    mFireTime = (DWORD) aDelay + dwNow;
-    mNext = NULL;
-
-    // add it to the list
-    if(!gTimerList) {        
-        // no list add it
-        gTimerList = this;
-    } 
-    else {
-
-        // is it before everything else on the list?
-        if(mFireTime < gTimerList->mFireTime) {
-
-            mNext = gTimerList;
-            gTimerList = this;
-
-        } else {
-
-            TimerImpl * pPrev = gTimerList;
-            TimerImpl * pCurrent = gTimerList;
-
-            while(pCurrent && (pCurrent->mFireTime <= mFireTime)) {
-                pPrev = pCurrent;
-                pCurrent = pCurrent->mNext;
-            }
-
-            PR_ASSERT(pPrev);
-
-            // insert it after pPrev (this could be at the end of the list)
-            mNext = pPrev->mNext;
-            pPrev->mNext = this;
-
-        }
-
-    }
-
-    NS_ADDREF(this);
-
-    //  Sync the timer fire period.
-    SyncTimeoutPeriod(dwNow);
-    
-    return NS_OK;
+  NS_IF_RELEASE(mCallback);
 }
 
-NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
 
-void
-TimerImpl::Fire(DWORD aNow)
-{
-    if (mFunc != NULL) {
-        (*mFunc)(this, mClosure);
-    }
-    else if (mCallback != NULL) {
-         mCallback->Notify(this);
-    }
+NS_IMETHODIMP_(void) nsTimer::SetPriority(PRUint32 aPriority)
+{ 
+  PR_ASSERT(aPriority >= NS_PRIORITY_LOWEST && 
+            aPriority <= NS_PRIORITY_HIGHEST); 
+  mPriority = aPriority; 
 }
 
-void
-TimerImpl::Cancel()
+
+NS_IMETHODIMP nsTimer::Init(nsTimerCallbackFunc aFunc,
+                void *aClosure,
+                PRUint32 aDelay,
+                PRUint32 aPriority,
+                PRUint32 aType
+                )
 {
-    TimerImpl *me = this;
+  mFunc = aFunc;
+  mClosure = aClosure;
 
-    if(gTimerList == this) {
-
-        // first element in the list lossage
-        gTimerList = mNext;
-
-    } else {
-
-        // walk until no next pointer
-        for(TimerImpl * p = gTimerList; p && p->mNext && (p->mNext != this); p = p->mNext)
-            ;
-
-        // if we found something valid pull it out of the list
-        if(p && p->mNext && p->mNext == this) {
-            p->mNext = mNext;
-
-        } else {
-            // get out before we delete something that looks bogus
-            return;
-        }
-
-    }
-
-    // if we got here it must have been a valid element so trash it
-    NS_RELEASE(me);
-
-    //  If there's now no be sure to clear the timer.
-    SyncTimeoutPeriod(0);
+  return Init(aDelay, aPriority, aType);
 }
 
-nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
-{
-    NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-    if (nsnull == aInstancePtrResult) {
-      return NS_ERROR_NULL_POINTER;
-    }  
 
-    TimerImpl *timer = new TimerImpl();
-    if (nsnull == timer) {
-        return NS_ERROR_OUT_OF_MEMORY;
+NS_IMETHODIMP nsTimer::Init(nsITimerCallback *aCallback,
+                PRUint32 aDelay,
+                PRUint32 aPriority,
+                PRUint32 aType
+                )
+{
+  mCallback = aCallback;
+  NS_ADDREF(mCallback);
+
+  return Init(aDelay, aPriority, aType);
+}
+
+
+nsresult nsTimer::Init(PRUint32 aDelay,
+                PRUint32 aPriority,
+                PRUint32 aType
+                )
+{
+  // prevent timer being released before
+  // it has fired or is canceled
+  NS_ADDREF_THIS();
+  mTimerRunning = true;
+
+  mDelay = aDelay;
+
+  SetPriority(aPriority);
+  SetType(aType);
+
+  StartOSTimer(aDelay);
+
+  return NS_OK;
+}
+
+
+void nsTimer::Fire()
+{
+  // prevent a canceled timer which is 
+  // already in ready queue from firing
+  if (mTimerRunning == false) return;
+
+  // prevent notification routine 
+  // from releasing timer by canceling it
+  NS_ADDREF_THIS();
+
+  // invoke notification routine
+  if (mFunc != nsnull) {
+    (*mFunc)(this, mClosure);
+  }
+  else if (mCallback != nsnull) {
+    mCallback->Notify(this);
+  }
+
+  if (GetType() == NS_TYPE_REPEATING_SLACK) {
+    // restart timer
+    StartOSTimer(GetDelay());
+
+  } else if (GetType() == NS_TYPE_ONE_SHOT) {
+
+    // timer finished
+    if (mTimerRunning == true) {
+      mTimerRunning = false;
+
+      NS_RELEASE_THIS();
+    }
+  }
+
+  NS_RELEASE_THIS();
+}
+
+
+NS_IMETHODIMP_(void) nsTimer::Cancel()
+{
+  KillOSTimer();
+
+  // timer finished
+  if (mTimerRunning == true) {
+    mTimerRunning = false;
+
+    NS_RELEASE_THIS();
+  }
+}
+
+
+void nsTimer::StartOSTimer(PRUint32 aDelay)
+{
+  PR_ASSERT(mTimerID == 0);
+
+  nsresult rv;
+  NS_WITH_SERVICE(nsIWindowsTimerMap, manager, kTimerManagerCID, &rv);
+  if (NS_FAILED(rv)) return;
+
+  // create OS timer
+  mTimerID = ::SetTimer(NULL, 0, aDelay, (TIMERPROC)FireTimeout);
+
+  // store mapping from OS timer to timer object
+  manager->AddTimer(mTimerID, this);
+}
+
+
+void nsTimer::KillOSTimer()
+{
+  if (mTimerID != 0) {
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIWindowsTimerMap, manager, kTimerManagerCID, &rv);
+
+    // remove mapping from OS timer to timer object
+    if (NS_SUCCEEDED(rv)) {
+      manager->RemoveTimer(mTimerID);
     }
 
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+    // kill OS timer
+    ::KillTimer(NULL, mTimerID);
+
+    mTimerID = 0;
+  }
 }

@@ -69,7 +69,7 @@ public:
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus);
 
-  virtual void Notify(nsITimer *timer);
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }

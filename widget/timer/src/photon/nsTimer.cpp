@@ -49,11 +49,26 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult  Init( nsTimerCallbackFunc aFunc, void *aClosure, PRUint32 aDelay );
-  virtual nsresult  Init( nsITimerCallback *aCallback, PRUint32 aDelay );
+  virtual nsresult Init(nsTimerCallbackFunc aFunc,
+                void *aClosure,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
+
+  virtual nsresult Init(nsITimerCallback *aCallback,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
+
   virtual void      Cancel();
   virtual PRUint32  GetDelay() { return mDelay; }
   virtual void      SetDelay( PRUint32 aDelay ) { mDelay=aDelay; };
+  virtual PRUint32 GetPriority() {}
+  virtual void SetPriority(PRUint32 aPriority) {}
+  virtual PRUint32 GetType() {}
+  virtual void SetType(PRUint32 aType) {}
   virtual void*     GetClosure() { return mClosure; }
 
   static int TimerEventHandler( void *aData, pid_t aRcvId, void *aMsg, size_t aMsgLen );
@@ -155,7 +170,8 @@ NS_METHOD TimerImpl::SetupTimer( PRUint32 aDelay )
 }
 
 
-NS_METHOD TimerImpl::Init( nsTimerCallbackFunc aFunc, void *aClosure, PRUint32 aDelay )
+NS_METHOD TimerImpl::Init( nsTimerCallbackFunc aFunc, void *aClosure,
+                PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType)
 {
   nsresult err;
 
@@ -166,7 +182,8 @@ NS_METHOD TimerImpl::Init( nsTimerCallbackFunc aFunc, void *aClosure, PRUint32 a
 }
 
 
-NS_METHOD TimerImpl::Init( nsITimerCallback *aCallback, PRUint32 aDelay )
+NS_METHOD TimerImpl::Init( nsITimerCallback *aCallback, PRUint32 aDelay,
+                PRUint32 aPriority, PRUint32 aType)
 {
   nsresult err;
 

@@ -91,20 +91,29 @@ public:
 					TimerImpl();
 	virtual			~TimerImpl();
 												
-	virtual nsresult	Init(nsTimerCallbackFunc aFunc,
-							void *aClosure,
-//				              PRBool aRepeat, 
-                			PRUint32 aDelay);
-														
-	virtual nsresult	Init(nsITimerCallback *aCallback,
-//		     		         PRBool aRepeat, 
-                			PRUint32 aDelay);
+  virtual nsresult Init(nsTimerCallbackFunc aFunc,
+                void *aClosure,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
+
+  virtual nsresult Init(nsITimerCallback *aCallback,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
 					
     NS_DECL_ISUPPORTS
 
     virtual void		Cancel();
     virtual PRUint32	GetDelay()					{ return mDelay; }
     virtual void		SetDelay(PRUint32);
+  virtual PRUint32 GetPriority() {}
+  virtual void SetPriority(PRUint32 aPriority) {}
+
+  virtual PRUint32 GetType() {}
+  virtual void SetType(PRUint32 aType) {}
     virtual void*		GetClosure()				{ return mClosure; }
 
 	void				FireTimeout();
@@ -302,8 +311,7 @@ void TimerImpl::SetDelay(PRUint32 aDelay)
 }
 
 nsresult TimerImpl::Init(nsTimerCallbackFunc aFunc, void *aClosure,
-//  							PRBool aRepeat, 
-                			PRUint32 aDelay)
+                PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType)
 {
     mFunc = aFunc;
     mClosure = aClosure;
@@ -313,8 +321,7 @@ nsresult TimerImpl::Init(nsTimerCallbackFunc aFunc, void *aClosure,
 }
 
 nsresult TimerImpl::Init(nsITimerCallback *aCallback,
-//       				PRBool aRepeat, 
-                	PRUint32 aDelay)
+                PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType)
 {
     mCallback = aCallback;
     NS_ADDREF(mCallback);

@@ -3343,7 +3343,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsITimerCallback interface
-  virtual void Notify(nsITimer *timer);
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   nsIWebShell* mShell;
   nsString     mUrlSpec;
@@ -3369,7 +3369,7 @@ refreshData::~refreshData()
 
 NS_IMPL_ISUPPORTS(refreshData, kITimerCallbackIID);
 
-void refreshData::Notify(nsITimer *aTimer)
+NS_IMETHODIMP_(void) refreshData::Notify(nsITimer *aTimer)
 {
   NS_PRECONDITION((nsnull != mShell), "Null pointer...");
   if (nsnull != mShell) {

@@ -195,7 +195,7 @@ public:
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus);
 
-  virtual void Notify(nsITimer *timer);
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
 
 protected:
 

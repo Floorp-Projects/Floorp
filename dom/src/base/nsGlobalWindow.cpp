@@ -2138,7 +2138,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         } 
         
         err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout, 
-                                   delay32);
+                                   delay32, NS_PRIORITY_LOWEST);
         if (NS_OK != err) {
           NS_RELEASE(temp);
           NS_RELEASE(tempContext);
@@ -2298,7 +2298,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   } 
   
   err = timeout->timer->Init(nsGlobalWindow_RunTimeout, timeout, 
-                             (PRInt32)interval);
+                             (PRInt32)interval, NS_PRIORITY_LOWEST);
   if (NS_OK != err) {
     DropTimeout(timeout);
     return err;

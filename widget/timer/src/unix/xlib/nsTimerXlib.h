@@ -39,11 +39,17 @@ public:
   virtual ~nsTimerXlib();
 
   virtual nsresult Init(nsTimerCallbackFunc aFunc,
-                        void *aClosure,
-                        PRUint32 aDelay);
+                void *aClosure,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
 
   virtual nsresult Init(nsITimerCallback *aCallback,
-                        PRUint32 aDelay);
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
 
   NS_DECL_ISUPPORTS
 
@@ -52,6 +58,13 @@ public:
   
   virtual PRUint32 GetDelay() { return 0; };
   virtual void SetDelay(PRUint32 aDelay) {};
+
+  virtual PRUint32 GetPriority() {}
+  virtual void SetPriority(PRUint32 aPriority) {}
+
+  virtual PRUint32 GetType() {}
+  virtual void SetType(PRUint32 aType) {}
+
   virtual void *GetClosure() { return mClosure; }
 
   // this needs to be public so that the mainloop can

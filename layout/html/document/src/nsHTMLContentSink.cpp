@@ -194,7 +194,7 @@ public:
   NS_IMETHOD DoFragment(PRBool aFlag);
 
   // nsITimerCallback
-  virtual void Notify(nsITimer *timer);
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
   
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
@@ -2197,7 +2197,7 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   return NS_OK;
 }
 
-void 
+NS_IMETHODIMP_(void)
 HTMLContentSink::Notify(nsITimer *timer)
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::Notify()\n"));

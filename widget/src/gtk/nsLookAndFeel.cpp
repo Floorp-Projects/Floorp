@@ -260,6 +260,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
   case eMetric_CaretWidthTwips:
     aMetric = 20;
     break;
+  case eMetric_SubmenuDelay:
+    aMetric = 200;
+    break;
   default:
     aMetric = 0;
     res     = NS_ERROR_FAILURE;

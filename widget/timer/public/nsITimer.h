@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Michael Lowe <michael.lowe@bigfoot.com>
  */
 #ifndef nsITimer_h___
 #define nsITimer_h___
@@ -42,6 +43,36 @@ typedef void
 { 0x497eed20, 0xb740, 0x11d1,  \
 { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
 
+// --- Timer priorities ---
+#define NS_PRIORITY_HIGHEST 10
+#define NS_PRIORITY_HIGH 8
+#define NS_PRIORITY_NORMAL 5
+#define NS_PRIORITY_LOW 2
+#define NS_PRIORITY_LOWEST 0
+
+// --- Timer types ---
+#define NS_TYPE_ONE_SHOT 0           // Timer which fires once only
+
+#define NS_TYPE_REPEATING_SLACK 1    // After firing, timer is stopped and not 
+                                     // restarted until notifcation routine completes.   
+                                     // Specified timer period will be at least time between 
+                                     // when processing for last firing notifcation completes 
+                                     // and when the next firing occurs.  This is the preferable
+                                     // repeating type for most situations.
+
+#define NS_TYPE_REPEATING_PRECISE 2  // Timer which aims to have constant time between firings.
+                                     // The processing time for each timer notification should
+                                     // not influence timer period.   However, if the processing
+                                     // for the last timer firing could not be completed until  
+                                     // just before the next firing occurs, then you could have 
+                                     // two timer notification routines being executed in quick 
+                                     // sucession.
+
+// --- Indicate if timers on your platform support repeating timers ---
+#if defined(XP_PC) || defined(XP_UNIX)
+#define REPEATING_TIMERS 1
+#endif
+
 /**
  * Timer class, used to invoke a function or method after a fixed
  * millisecond interval. <B>Note that this interface is subject to
@@ -58,14 +89,17 @@ public:
    *
    * @param aFunc - The function to invoke
    * @param aClosure - an opaque pointer to pass to that function
-   * @param aRepeat - (Not yet implemented) One-shot or repeating
    * @param aDelay - The millisecond interval
+   * @param aPriority - The timer priority
+   * @param aType - The timer type : one shot or repeating
    * @result - NS_OK if this operation was successful
    */
-  virtual nsresult Init(nsTimerCallbackFunc aFunc,
-                        void *aClosure,
-//                      PRBool aRepeat, 
-                        PRUint32 aDelay)=0;
+  NS_IMETHOD Init(nsTimerCallbackFunc aFunc,
+                void *aClosure,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                )=0;
 
   /**
    * Initialize a timer to fire after the given millisecond interval.
@@ -73,25 +107,34 @@ public:
    * The <code>Notify</code> method of this method is invoked.
    *
    * @param aCallback - The interface to notify
-   * @param aRepeat - (Not yet implemented) One-shot or repeating
    * @param aDelay - The millisecond interval
+   * @param aPriority - The timer priority
+   * @param aType - The timer type : one shot or repeating
    * @result - NS_OK if this operation was successful
    */
-  virtual nsresult Init(nsITimerCallback *aCallback,
-//                      PRBool aRepeat, 
-                        PRUint32 aDelay)=0;
+  NS_IMETHOD Init(nsITimerCallback *aCallback,
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                )=0;
 
   /// Cancels the timeout
-  virtual void Cancel()=0;
+  NS_IMETHOD_(void) Cancel()=0;
 
   /// @return the millisecond delay of the timeout
-  virtual PRUint32 GetDelay()=0;
+  NS_IMETHOD_(PRUint32) GetDelay()=0;
 
   /// Change the millisecond interval for the timeout
-  virtual void SetDelay(PRUint32 aDelay)=0;
+  NS_IMETHOD_(void) SetDelay(PRUint32 aDelay)=0;
+
+  NS_IMETHOD_(PRUint32) GetPriority()=0;
+  NS_IMETHOD_(void) SetPriority(PRUint32 aPriority)=0;
+
+  NS_IMETHOD_(PRUint32) GetType()=0;
+  NS_IMETHOD_(void) SetType(PRUint32 aType)=0;
 
   /// @return the opaque pointer
-  virtual void* GetClosure()=0;
+  NS_IMETHOD_(void*) GetClosure()=0;
 };
 
 //
@@ -101,8 +144,6 @@ public:
 // the intention is that it be linked statically with the library/DLL
 // or app that uses it.
 
-extern
-nsresult NS_NewTimer(nsITimer** aInstancePtrResult);
+extern nsresult NS_NewTimer(nsITimer** aInstancePtrResult);
 
 #endif // nsITimer_h___
-

@@ -144,6 +144,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         // For now, lets assume p2t = 20.
         aMetric = 20 * ulPels;
         break;
+    case eMetric_SubmenuDelay:
+        aMetric = 200;
+        break;
 
       default:
          NS_ASSERTION( 0, "Bad metric");

@@ -977,7 +977,7 @@ nsSliderFrame::SetScrollbarListener(nsIScrollbarListener* aListener)
   mScrollbarListener = aListener;
 }
 
-void nsSliderFrame::Notify(nsITimer *timer)
+NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
 {
   nsIFrame* thumbFrame = mFrames.FirstChild();
   PageUpDown(thumbFrame, gChange);

@@ -743,7 +743,7 @@ void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags
   NotifyScrollPositionDidChange(offsetX, offsetY);
 }
 
-void nsScrollingView::Notify(nsITimer * aTimer)
+NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
 {
   nscoord xoff, yoff;
   nsIView *view;
@@ -782,7 +782,7 @@ void nsScrollingView::Notify(nsITimer * aTimer)
     obs->HandleEvent((nsIView *)this, &event, &retval);
     NS_RELEASE(obs);
   }
-  
+
   NS_RELEASE(mScrollingTimer);
 
   if (NS_OK == NS_NewTimer(&mScrollingTimer))

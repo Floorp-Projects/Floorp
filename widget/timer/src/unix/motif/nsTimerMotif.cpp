@@ -72,8 +72,10 @@ static NS_DEFINE_CID(kCMotifAppContextServiceCID, NS_MOTIF_APP_CONTEXT_SERVICE_C
 nsresult 
 nsTimerMotif::Init(nsTimerCallbackFunc aFunc,
                 void *aClosure,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+                PRUint32 aDelay,
+                PRUint32 aPriority,
+                PRUint32 aType
+                )
 {
     mFunc = aFunc;
     mClosure = aClosure;
@@ -90,8 +92,10 @@ nsTimerMotif::Init(nsTimerCallbackFunc aFunc,
 
 nsresult 
 nsTimerMotif::Init(nsITimerCallback *aCallback,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+                PRUint32 aDelay,
+                PRUint32 aPriority,
+                PRUint32 aType
+                )
 {
     mCallback = aCallback;
     // mRepeat = aRepeat;

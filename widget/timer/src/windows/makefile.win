@@ -24,8 +24,12 @@ LIBRARY_NAME=timer_s
 
 DEFINES=-DWIN32_LEAN_AND_MEAN -DSTRICT
 
+EXPORTS=nsTimerManager.h nsWindowsTimer.h nsIWindowsTimerMap.h
+
 CPPSRCS =			\
 	nsTimer.cpp		\
+	nsNewTimer.cpp		\
+	nsTimerManager.cpp		\
 	$(NULL)
 
 MODULE=timer
@@ -34,6 +38,8 @@ REQUIRES=xpcom
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsTimer.obj		\
+	.\$(OBJDIR)\nsNewTimer.obj		\
+	.\$(OBJDIR)\nsTimerManager.obj		\
 	$(NULL)
 
 LINCS= \

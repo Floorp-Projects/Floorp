@@ -40,30 +40,41 @@ public:
 
   virtual nsresult Init(nsTimerCallbackFunc aFunc,
                 void *aClosure,
-//              PRBool aRepeat, 
-                PRUint32 aDelay);
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
 
   virtual nsresult Init(nsITimerCallback *aCallback,
-//              PRBool aRepeat, 
-                PRUint32 aDelay);
+                PRUint32 aDelay,
+                PRUint32 aPriority = NS_PRIORITY_NORMAL,
+                PRUint32 aType = NS_TYPE_ONE_SHOT
+                );
 
   NS_DECL_ISUPPORTS
 
   virtual void Cancel();
+
   virtual PRUint32 GetDelay() { return mDelay; }
-  virtual void SetDelay(PRUint32 aDelay) { mDelay=aDelay; };
+  virtual void SetDelay(PRUint32 aDelay);
+
+  virtual PRUint32 GetPriority() { return mPriority; }
+  virtual void SetPriority(PRUint32 aPriority);
+
+  virtual PRUint32 GetType()  { return mType; }
+  virtual void SetType(PRUint32 aType);
+
   virtual void* GetClosure() { return mClosure; }
 
-  void FireTimeout();
+  PRBool FireTimeout();
 
 private:
-  nsresult Init(PRUint32 aDelay);
-
   PRUint32             mDelay;
+  PRUint32             mPriority;
+  PRUint32             mType;
   nsTimerCallbackFunc  mFunc;
   void *               mClosure;
   nsITimerCallback *   mCallback;
-  // PRBool            mRepeat;
   nsTimerGtk *         mNext;
   guint                mTimerId;
 };

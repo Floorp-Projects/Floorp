@@ -347,7 +347,7 @@ nsresult nsCaret::PrimeTimer()
 		if (NS_FAILED(err))
 			return err;
 		
-		mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate);
+		mBlinkTimer->Init(CaretBlinkCallback, this, mBlinkRate, NS_PRIORITY_HIGH, NS_TYPE_REPEATING_PRECISE);
 	}
 
 	return NS_OK;
@@ -688,7 +688,10 @@ void nsCaret::CaretBlinkCallback(nsITimer *aTimer, void *aClosure)
 	if (!theCaret) return;
 	
 	theCaret->DrawCaret();
+
+#ifndef REPEATING_TIMERS
 	theCaret->PrimeTimer();
+#endif
 }
 
 

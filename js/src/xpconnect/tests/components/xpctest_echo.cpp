@@ -43,7 +43,7 @@ public:
     NS_DECL_NSIECHO
 
     // not very xpcom compilant method from nsITimerCallback
-    virtual void Notify(nsITimer *timer);
+    NS_IMETHOD_(void) Notify(nsITimer *timer);
 
     xpctestEcho();
     virtual ~xpctestEcho();
@@ -424,7 +424,7 @@ xpctestEcho::CallReceiverSometimeLater(void)
 #endif
 }
 
-void 
+NS_IMETHODIMP_(void)
 xpctestEcho::Notify(nsITimer *timer)
 {
     if(mReceiver)

@@ -301,7 +301,7 @@ XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
     nsCOMPtr<nsIDOMNode> eventTarget;
     aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
     mPossibleTooltipNode = eventTarget.get();
-    mTooltipTimer->Init(sTooltipCallback, this, 500);   // 500 ms delay
+    mTooltipTimer->Init(sTooltipCallback, this, 500, NS_PRIORITY_HIGH);   // 500 ms delay
   }
   else
     NS_WARNING ( "Could not create a timer for tooltip tracking" );
