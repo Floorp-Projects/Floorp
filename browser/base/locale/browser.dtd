@@ -28,8 +28,8 @@
 
 <!ENTITY navbarCmd.label "Navigation Toolbar">
 <!ENTITY navbarCmd.accesskey "N">
-<!ENTITY personalbarCmd.label "Personal Toolbar">
-<!ENTITY personalbarCmd.accesskey "P">
+<!ENTITY personalbarCmd.label "Bookmarks Bar">
+<!ENTITY personalbarCmd.accesskey "B">
 <!ENTITY taskbarCmd.label "Status Bar">
 <!ENTITY taskbarCmd.accesskey "S">
 
