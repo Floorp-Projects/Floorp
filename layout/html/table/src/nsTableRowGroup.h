@@ -112,6 +112,7 @@ public:
 protected:
 
   virtual PRBool IsRow(nsIContent * aContent) const;
+  PRBool IsTableCell(nsIContent * aContent) const;
 
 };
 
