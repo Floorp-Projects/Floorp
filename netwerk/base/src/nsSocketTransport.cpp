@@ -26,11 +26,11 @@
 #include "nscore.h"
 #include "netCore.h"
 #include "nsIStreamListener.h"
+#include "nsILoadGroup.h"
 #include "nsSocketTransport.h"
 #include "nsSocketTransportService.h"
 #include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
-#include "nsILoadGroup.h"
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
