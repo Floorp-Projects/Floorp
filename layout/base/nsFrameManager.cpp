@@ -805,6 +805,20 @@ FrameManager::InsertFrames(nsIPresContext* aPresContext,
     return rv;
   }
 
+#ifdef IBMBIDI
+  if (aPrevFrame) {
+    // Insert aFrameList after the last bidi continuation of aPrevFrame.
+    nsIFrame* nextBidi;
+    for (; ;) {
+      GetFrameProperty(aPrevFrame, nsLayoutAtoms::nextBidi, 0, (void**) &nextBidi);
+      if (!nextBidi) {
+        break;
+      }
+      aPrevFrame = nextBidi;
+    }
+  }
+#endif // IBMBIDI
+
   return aParentFrame->InsertFrames(aPresContext, aPresShell, aListName,
                                     aPrevFrame, aFrameList);
 }
@@ -821,6 +835,15 @@ FrameManager::RemoveFrame(nsIPresContext* aPresContext,
   GetInsertionPoint(&aPresShell, aParentFrame, aOldFrame, &insertionPoint);
   if (insertionPoint)
     return insertionPoint->RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+
+#ifdef IBMBIDI
+  // Don't let the parent remove next bidi. In the other cases the it should NOT be removed.
+  nsIFrame* nextBidi;
+  GetFrameProperty(aOldFrame, nsLayoutAtoms::nextBidi, 0, (void**) &nextBidi);
+  if (nextBidi) {
+    RemoveFrame(aPresContext, aPresShell, aParentFrame, aListName, nextBidi);
+  }
+#endif // IBMBIDI
 
   return aParentFrame->RemoveFrame(aPresContext, aPresShell, aListName,
                                    aOldFrame);

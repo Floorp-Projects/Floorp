@@ -2633,6 +2633,18 @@ nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange, PRBool a
     }
   }
 #endif
+#ifdef IBMBIDI
+  PRInt32 start, end;
+  nsIFrame* frame;
+  GetNextSibling(&frame);
+  if (frame){
+    GetFirstLeaf(aPresContext, &frame);
+    GetOffsets(start, end);
+    if (start && end) {
+      frame->SetSelected(aPresContext, aRange, aSelected, aSpread);
+    }
+  }
+#endif // IBMBIDI
   return NS_OK;
 }
 
@@ -2776,7 +2788,13 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       nsIView * view; //used for call of get offset from view
       aBlockFrame->GetOffsetFromView(aPresContext, offset,&view);
       nscoord newDesiredX  = aPos->mDesiredX - offset.x;//get desired x into blockframe coordinates!
+#ifdef IBMBIDI
+      PRBool bidiEnabled;
+      aPresContext->BidiEnabled(bidiEnabled);
+      result = it->FindFrameAt(searchingLine, newDesiredX, bidiEnabled, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
+#else
       result = it->FindFrameAt(searchingLine, newDesiredX, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
+#endif // IBMBIDI
       if(NS_FAILED(result))
         continue;
     }
@@ -3463,28 +3481,63 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   PRInt32 lineFrameCount;
   PRUint32 lineFlags;
 
-  result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
-                       &lineFlags);
+#ifdef IBMBIDI
+  /* Check whether the visual and logical order of the frames are different */
+  PRBool lineIsReordered = PR_FALSE;
+  nsIFrame *firstVisual;
+  nsIFrame *lastVisual;
+  PRBool lineIsRTL;
+  PRBool lineJump = PR_FALSE;
+
+  it->GetDirection(&lineIsRTL);
+  result = it->CheckLineOrder(thisLine, &lineIsReordered, &firstVisual, &lastVisual);
   if (NS_FAILED(result))
     return result;
 
-  lastFrame = firstFrame;
-  for (;lineFrameCount > 1;lineFrameCount --){
-    result = lastFrame->GetNextSibling(&lastFrame);
-    if (NS_FAILED(result)){
-      NS_ASSERTION(0,"should not be reached nsFrame\n");
-      return NS_ERROR_FAILURE;
+  if (lineIsReordered) {
+    firstFrame = firstVisual;
+    lastFrame = lastVisual;
+  }
+  else
+#endif
+  {
+    result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
+                         &lineFlags);
+    if (NS_FAILED(result))
+      return result;
+
+    lastFrame = firstFrame;
+    for (;lineFrameCount > 1;lineFrameCount --){
+      result = lastFrame->GetNextSibling(&lastFrame);
+      if (NS_FAILED(result)){
+        NS_ASSERTION(0,"should not be reached nsFrame\n");
+        return NS_ERROR_FAILURE;
+      }
     }
   }
- 
+
   GetFirstLeaf(aPresContext, &firstFrame);
   GetLastLeaf(aPresContext, &lastFrame);
   //END LINE DATA CODE
-  if ((aPos->mDirection == eDirNext && lastFrame == this)
-    ||(aPos->mDirection == eDirPrevious && firstFrame == this))
+  if 
+#ifndef IBMBIDI  // jumping lines in RTL paragraphs
+      ((aPos->mDirection == eDirNext && lastFrame == this)
+       ||(aPos->mDirection == eDirPrevious && firstFrame == this))
+#else
+      (((lineIsRTL) &&
+        ((aPos->mDirection == eDirNext && firstFrame == this)
+         ||(aPos->mDirection == eDirPrevious && lastFrame == this)))
+       ||
+       ((!lineIsRTL) &&
+        ((aPos->mDirection == eDirNext && lastFrame == this)
+         ||(aPos->mDirection == eDirPrevious && firstFrame == this))))
+#endif
   {
     if (aPos->mJumpLines != PR_TRUE)
       return NS_ERROR_FAILURE;//we are done. cannot jump lines
+#ifdef IBMBIDI
+    lineJump = PR_TRUE;
+#endif
     if (aPos->mAmount != eSelectWord)
     {
       aPos->mPreferLeft = (PRBool)!(aPos->mPreferLeft);//drift to other side
@@ -3504,15 +3557,35 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   if (aPos->mAmount == eSelectDir)
     aPos->mAmount = eSelectNoAmount;//just get to next frame.
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
+#ifdef IBMBIDI
+  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
+                                (lineIsReordered) ? VISUAL : LEAF,
+                                aPresContext, 
+                                (lineJump && lineIsRTL)
+                                ? (aPos->mDirection == eDirNext) ? lastFrame : firstFrame
+                                : this);
+#else
   result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF, aPresContext, this);
+#endif
   if (NS_FAILED(result))
     return result;
   nsISupports *isupports = nsnull;
-  if (aPos->mDirection == eDirNext)
-    result = frameTraversal->Next();
-  else 
-    result = frameTraversal->Prev();
-
+#ifdef IBMBIDI
+  nsIFrame *newFrame;
+  nsRect testRect;
+  while (testRect.IsEmpty()) {
+    if (lineIsRTL && lineJump) 
+      if (aPos->mDirection == eDirPrevious)
+        result = frameTraversal->Next();
+      else 
+        result = frameTraversal->Prev();
+    else
+#endif
+      if (aPos->mDirection == eDirNext)
+        result = frameTraversal->Next();
+      else 
+        result = frameTraversal->Prev();
+    
   if (NS_FAILED(result))
     return result;
   result = frameTraversal->CurrentItem(&isupports);
@@ -3522,7 +3595,80 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
     return NS_ERROR_NULL_POINTER;
   //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
   //for speed reasons
+#ifndef IBMBIDI
   nsIFrame *newFrame = (nsIFrame *)isupports;
+#else
+  newFrame = (nsIFrame *)isupports;
+  newFrame->GetRect(testRect);
+  if (testRect.IsEmpty()) { // this must be a non-renderable frame creatd at the end of the line by Bidi reordering
+    lineJump = PR_TRUE;
+    aPos->mAmount = eSelectNoAmount;
+  }
+  }
+  PRBool newLineIsRTL = PR_FALSE;
+  if (lineJump) {
+    blockFrame = newFrame;
+    nsresult result = NS_ERROR_FAILURE;
+    while (NS_FAILED(result) && blockFrame)
+    {
+      thisBlock = blockFrame;
+      result = blockFrame->GetParent(&blockFrame);
+      if (NS_SUCCEEDED(result) && blockFrame){
+        result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+      }
+      else
+        blockFrame = nsnull;
+    }
+    if (!blockFrame || !it)
+      return NS_ERROR_FAILURE;
+    result = it->FindLineContaining(thisBlock, &thisLine);
+    if (NS_FAILED(result))
+      return result;
+    it->GetDirection(&newLineIsRTL);
+
+    result = it->CheckLineOrder(thisLine, &lineIsReordered, &firstVisual, &lastVisual);
+    if (NS_FAILED(result))
+      return result;
+
+    if (lineIsReordered)
+    {
+      firstFrame = firstVisual;
+      lastFrame = lastVisual;
+    }
+    else
+    {
+      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
+                           &lineFlags);
+      if (NS_FAILED(result))
+        return result;
+
+      lastFrame = firstFrame;
+      for (;lineFrameCount > 1;lineFrameCount --){
+        result = lastFrame->GetNextSibling(&lastFrame);
+        if (NS_FAILED(result)){
+          NS_ASSERTION(0,"should not be reached nsFrame\n");
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+
+    GetFirstLeaf(aPresContext, &firstFrame);
+    GetLastLeaf(aPresContext, &lastFrame);
+
+    if (newLineIsRTL) {
+      if (aPos->mDirection == eDirPrevious)
+        newFrame = firstFrame;
+      else
+        newFrame = lastFrame;
+    }
+    else {
+      if (aPos->mDirection == eDirNext)
+        newFrame = firstFrame;
+      else
+        newFrame = lastFrame;
+    }
+  }
+#endif // IBMBIDI
   PRBool selectable;
   newFrame->IsSelectable(&selectable, nsnull);
   if (!selectable)
@@ -3531,6 +3677,18 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
     aPos->mStartOffset = 0;
   else
     aPos->mStartOffset = -1;
+#ifdef IBMBIDI
+  long oldLevel, newLevel, baseLevel;
+  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&oldLevel);
+  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&newLevel);
+  newFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&baseLevel);
+  if (newLevel & 1) // The new frame is RTL, go to the other end
+    aPos->mStartOffset = -1 - aPos->mStartOffset;
+
+  if ((aPos->mAmount == eSelectNoAmount) && ((newLevel & 1) != (oldLevel & 1)))  {
+    aPos->mPreferLeft = !(aPos->mPreferLeft);
+  }
+#endif
   aPos->mResultFrame = newFrame;
   return NS_OK;
 }
@@ -3770,6 +3928,63 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
 
   return PR_FALSE;
 }
+
+#ifdef IBMBIDI
+/**
+ *  retrieve Bidi property of this frame
+ *  @lina 5/1/2000
+ */
+
+nsresult nsFrame::GetBidiProperty(nsIPresContext* aPresContext,
+                                  nsIAtom*        aPropertyName,
+                                  void**          aPropertyValue,
+                                  long            aSize) const
+{
+  if (!aPropertyValue || !aPropertyName) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if ( (aSize < 1) || (aSize > sizeof(void*) ) ) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  nsCRT::zero(aPropertyValue, aSize);
+  void* val = nsnull;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell) );
+
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager> frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager) );
+
+    if (frameManager) {
+      frameManager->GetFrameProperty( (nsIFrame*)this, aPropertyName, 0, &val);
+      if (val) {
+        nsCRT::memcpy(aPropertyValue, &val, aSize);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult nsFrame::SetBidiProperty(nsIPresContext* aPresContext,
+                                  nsIAtom*        aPropertyName,
+                                  void*           aPropertyValue) const
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell) );
+  if (shell) {
+    nsCOMPtr<nsIFrameManager> frameManager;
+    shell->GetFrameManager(getter_AddRefs(frameManager) );
+    if (frameManager) {
+      rv = frameManager->SetFrameProperty( (nsIFrame*) this, aPropertyName, aPropertyValue, nsnull);
+    }
+  }
+  return rv;
+}
+#endif // IBMBIDI
 
 #ifdef NS_DEBUG
 static void

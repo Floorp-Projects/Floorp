@@ -58,6 +58,10 @@
 #include "prenv.h"
 #include "plstr.h"
 
+#ifdef IBMBIDI
+#include "nsBidiPresUtils.h"
+#endif // IBMBIDI
+
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
 
@@ -1619,6 +1623,27 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                            NS_BLOCK_MARGIN_ROOT & mState);
 
   if (eReflowReason_Resize != aReflowState.reason) {
+#ifdef IBMBIDI
+    if (mLines) {
+      PRBool bidiEnabled;
+      aPresContext->BidiEnabled(bidiEnabled);
+      if (bidiEnabled) {
+        nsBidiPresUtils* bidiUtils;
+        aPresContext->GetBidiUtils(&bidiUtils);
+        if (bidiUtils) {
+          PRBool forceReflow;
+          nsresult rc = bidiUtils->Resolve(aPresContext, this,
+                                           mLines->mFirstChild, forceReflow);
+          if (NS_SUCCEEDED(rc) && forceReflow) {
+            // Mark everything dirty
+            for (nsLineBox* line = mLines; line; line = line->mNext) {
+              line->MarkDirty();
+            }
+          }
+        }
+      }
+    }
+#endif // IBMBIDI
     RenumberLists(aPresContext);
   }
 
@@ -4247,6 +4272,15 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   if (aUpdateMaximumWidth) {
     availWidth = NS_UNCONSTRAINEDSIZE;
   }
+#ifdef IBMBIDI
+  else {
+    nscoord rightEdge = aState.mReflowState.mRightEdge;
+    if ( (rightEdge != NS_UNCONSTRAINEDSIZE)
+         && (availWidth < rightEdge) ) {
+      availWidth = rightEdge;
+    }
+  }
+#endif // IBMBIDI
   aLineLayout.BeginLineReflow(x, aState.mY,
                               availWidth, availHeight,
                               impactedByFloaters,
@@ -4735,14 +4769,55 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     mStyleContext->GetStyleData(eStyleStruct_Text);
   PRBool allowJustify = NS_STYLE_TEXT_ALIGN_JUSTIFY == styleText->mTextAlign
     && !aLineLayout.GetLineEndsInBR() && ShouldJustifyLine(aState, aLine);
+#ifdef IBMBIDI
+  nsRect bounds(aLine->mBounds);
+
+  if (mRect.x) {
+    const nsStyleDisplay* display;
+    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+
+    if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
+      bounds.x += mRect.x;
+    }
+  }
+  PRBool successful = aLineLayout.HorizontalAlignFrames(bounds, allowJustify,
+    aState.GetFlag(BRS_SHRINKWRAPWIDTH));
+  // XXX: not only bidi: right alignment can be broken after RelativePositionFrames!!!
+#else
   PRBool successful = aLineLayout.HorizontalAlignFrames(aLine->mBounds, allowJustify,
                                                  aState.GetFlag(BRS_SHRINKWRAPWIDTH));
+#endif // IBMBIDI
   if (!successful) {
     // Mark the line dirty and then later once we've determined the width
     // we can do the horizontal alignment
     aLine->MarkDirty();
     aState.SetFlag(BRS_NEEDRESIZEREFLOW, PR_TRUE);
   }
+#ifdef IBMBIDI
+  else {
+    PRBool bidiEnabled;
+    aState.mPresContext->BidiEnabled(bidiEnabled);
+
+    if (bidiEnabled) {
+      PRBool isVisual;
+      aState.mPresContext->IsVisualMode(isVisual);
+      if (!isVisual) {
+        nsBidiPresUtils* bidiUtils;
+        aState.mPresContext->GetBidiUtils(&bidiUtils);
+
+        if (bidiUtils && bidiUtils->IsSuccessful() ) {
+          nsIFrame* nextInFlow = (aLine->mNext)
+                                 ? aLine->mNext->mFirstChild : nsnull;
+
+          bidiUtils->ReorderFrames(aState.mPresContext,
+                                   aState.mReflowState.rendContext,
+                                   aLine->mFirstChild, nextInFlow,
+                                   aLine->GetChildCount() );
+        } // bidiUtils
+      } // not visual mode
+    } // bidi enabled
+  } // successful
+#endif // IBMBIDI
 
   nsRect combinedArea;
   aLineLayout.RelativePositionFrames(combinedArea);
@@ -5263,6 +5338,9 @@ nsBlockFrame::InsertFrames(nsIPresContext* aPresContext,
     mFloaters.AppendFrames(nsnull, aFrameList);
     return NS_OK;
   }
+#ifdef IBMBIDI
+  else if (nsLayoutAtoms::nextBidi == aListName) {}
+#endif // IBMBIDI
   else if (nsnull != aListName) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -5278,6 +5356,9 @@ nsBlockFrame::InsertFrames(nsIPresContext* aPresContext,
   printf("\n");
 #endif
   nsresult rv = AddFrames(aPresContext, aFrameList, aPrevFrame);
+#ifdef IBMBIDI
+  if (aListName != nsLayoutAtoms::nextBidi)
+#endif // IBMBIDI
   if (NS_SUCCEEDED(rv)) {
     // Ask the parent frame to reflow me.
     ReflowDirtyChild(&aPresShell, nsnull);
@@ -5441,6 +5522,11 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
       line = line->mNext;
     }
   }
+#ifdef IBMBIDI
+  else if (nsLayoutAtoms::nextBidi == aListName) {
+    rv = DoRemoveFrame(aPresContext, aOldFrame);
+  }
+#endif // IBMBIDI
   else if (nsnull != aListName) {
     rv = NS_ERROR_INVALID_ARG;
   }
@@ -5448,6 +5534,9 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
     rv = DoRemoveFrame(aPresContext, aOldFrame);
   }
 
+#ifdef IBMBIDI
+  if (nsLayoutAtoms::nextBidi != aListName)
+#endif // IBMBIDI
   if (NS_SUCCEEDED(rv)) {
     // Ask the parent frame to reflow me.
     ReflowDirtyChild(&aPresShell, nsnull);  
@@ -5628,12 +5717,21 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
   nsIFrame* nextInFlow;
   aChild->GetNextInFlow(&nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
+#ifdef IBMBIDI
+  nsIFrame* nextBidi;
+  aChild->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
+                          (void**) &nextBidi);
+  if (nextBidi != nextInFlow) {
+#endif // IBMBIDI
   nsBlockFrame* parent;
   nextInFlow->GetParent((nsIFrame**)&parent);
   NS_PRECONDITION(nsnull != parent, "next-in-flow with no parent");
   NS_PRECONDITION(nsnull != parent->mLines, "next-in-flow with weird parent");
 //  NS_PRECONDITION(nsnull == parent->mOverflowLines, "parent with overflow");
   parent->DoRemoveFrame(aPresContext, nextInFlow);
+#ifdef IBMBIDI
+  }
+#endif // IBMBIDI
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -7206,9 +7304,21 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   mBullet->WillReflow(aState.mPresContext);
   mBullet->Reflow(aState.mPresContext, aMetrics, reflowState, status);
 
+#ifdef IBMBIDI
+  const nsStyleDisplay* display;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+#endif // IBMBIDI
   // Place the bullet now; use its right margin to distance it
   // from the rest of the frames in the line
-  nscoord x = - reflowState.mComputedMargin.right - aMetrics.width;
+  nscoord x = 
+#ifdef IBMBIDI
+    // For direction RTL: set x to the right margin for now.
+    // This value will be used to indent the bullet from the right most
+    // egde of the previous frame in nsLineLayout::HorizontalAlignFrames.
+             (NS_STYLE_DIRECTION_RTL == display->mDirection)
+             ? reflowState.mComputedMargin.right :
+#endif // IBMBIDI
+             - reflowState.mComputedMargin.right - aMetrics.width;
 
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location.
