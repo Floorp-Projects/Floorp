@@ -404,19 +404,23 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
       // strip double quotes from beginning and end
       value.Trim("\"", PR_TRUE, PR_TRUE);
 
+      // Filter out any attribute starting with _moz
+      if (key.EqualsWithConversion("_moz", PR_TRUE, 4))
+        continue;
+
+      // 
+      // Filter out special case of _moz_dirty
+      // Not needed if we're filtering out all _moz* tags.
+      //if (key.Equals(gMozDirty))
+      //  continue;
+
       // 
       // Filter out special case of <br type="_moz"> or <br _moz*>,
       // used by the editor.  Bug 16988.  Yuck.
       //
       if ((eHTMLTags)aNode.GetNodeType() == eHTMLTag_br
-          && ((key.EqualsWithConversion("type", PR_TRUE) && value.EqualsWithConversion("_moz"))
-              || key.EqualsWithConversion("_moz", PR_TRUE, 4)))
-        continue;
-
-      // 
-      // Filter out special case of _moz_dirty
-      //
-      if (key.Equals(gMozDirty))
+          && ((key.EqualsWithConversion("type", PR_TRUE)
+               && value.EqualsWithConversion("_moz"))))
         continue;
 
       if (mLowerCaseTags == PR_TRUE)
@@ -434,7 +438,8 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
 
       // Make all links absolute when converting only the selection:
       if ((mFlags & nsIDocumentEncoder::OutputAbsoluteLinks)
-          && (key.EqualsWithConversion("href", PR_TRUE) || key.EqualsWithConversion("src", PR_TRUE)
+          && (key.EqualsWithConversion("href", PR_TRUE)
+              || key.EqualsWithConversion("src", PR_TRUE)
               // Would be nice to handle OBJECT and APPLET tags,
               // but that gets more complicated since we have to
               // search the tag list for CODEBASE as well.
@@ -755,6 +760,11 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
     }
     return;
   }
+  else if (tag == eHTMLTag_userdefined)
+  {
+    // nsHTMLTags::GetStringValue doesn't work for userdefined tags
+    tagName = aNode.GetText();
+  }
   else
   {
     tagName.AssignWithConversion(nsHTMLTags::GetStringValue(tag));
@@ -1067,12 +1077,13 @@ nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode)
             NS_NewURI(getter_AddRefs(mURI), uristring);
         }
       }
+      return NS_OK;
     }
+    // else if not document_info, fall through to the normal AddStartTag call
   }
-  else
-  {
-    AddStartTag(aNode);
-  }
+
+  AddStartTag(aNode);
+
   return NS_OK;
 }
 
