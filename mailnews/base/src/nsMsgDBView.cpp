@@ -1045,6 +1045,8 @@ NS_IMETHODIMP nsMsgDBView::LoadMessageByUrl(const char *aUrl)
   {
     mMessengerInstance->LoadURL(NULL, aUrl);
     m_currentlyDisplayedMsgKey = nsMsgKey_None;
+    m_currentlyDisplayedMsgUri.Truncate();
+    m_currentlyDisplayedViewIndex = nsMsgViewIndex_None;
   }
   return NS_OK;
 }
@@ -1096,6 +1098,8 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   else {
     // if we have zero or multiple items selected, we shouldn't be displaying any message
     m_currentlyDisplayedMsgKey = nsMsgKey_None;
+    m_currentlyDisplayedMsgUri.Truncate();
+    m_currentlyDisplayedViewIndex = nsMsgViewIndex_None;
 
     // if we used to have one item selected, and now we have more than one, we should clear the message pane.
     nsCOMPtr <nsIMsgMessagePaneController> controller;
