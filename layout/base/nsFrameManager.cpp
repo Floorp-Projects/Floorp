@@ -457,8 +457,6 @@ FrameManager::GetCanvasFrame(nsIPresContext* aPresContext, nsIFrame** aCanvasFra
       // move on to the child's child
       childFrame->FirstChild(aPresContext, nsnull, &childFrame);
     }
-
-    NS_ASSERTION(*aCanvasFrame != nsnull, "CanvasFrame could not be found and should be");
   }
   return NS_OK;
 }
