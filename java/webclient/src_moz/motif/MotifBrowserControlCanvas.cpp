@@ -42,7 +42,7 @@
 
 #include <dlfcn.h>
 
-#include "ns_util.h" //for throwing Exceptions to Java
+#include "../ns_util.h" //for throwing Exceptions to Java
 
 extern "C" void NS_SetupRegistry();
 
