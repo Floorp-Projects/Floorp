@@ -25,8 +25,14 @@ use strict;
 
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once":
-use vars %::FORM;
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::usergroupset;
+    $zz = %::FORM;
+}
 
 print "Content-type: text/html\n\n";
 PutHeader ("Full Text Bug Listing");

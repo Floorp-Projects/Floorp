@@ -28,10 +28,11 @@ require "CGI.pl";
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
 
-# use vars qw($::buffer);
-my $zz = $::buffer;
-$zz = $zz . $zz;
-
+sub sillyness {
+    my $zz;
+    $zz = $::buffer;
+    $zz = %::COOKIE;
+}
 confirm_login();
 
 print "Set-Cookie: PLATFORM=$::FORM{'product'} ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
