@@ -37,6 +37,7 @@
 #include "nsIPresShell.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
+#include "nsIStyleContext.h"
 #include "nsIFrame.h"
 
 #include "nsIScriptGlobalObjectOwner.h"
@@ -179,6 +180,10 @@ public:
 
   // nsIMarkupDocumentViewer
   NS_DECL_NSIMARKUPDOCUMENTVIEWER
+
+  typedef void (*CallChildFunc)(nsIMarkupDocumentViewer* aViewer,
+                                void* aClosure);
+  nsresult CallChildren(CallChildFunc aFunc, void* aClosure);
 
   // nsIImageGroupObserver interface
   virtual void Notify(nsIImageGroup *aImageGroup,
@@ -1402,6 +1407,76 @@ NS_IMETHODIMP DocumentViewerImpl::SetAllowPlugins(PRBool aAllowPlugins)
    return NS_OK;
 }
 
+nsresult
+DocumentViewerImpl::CallChildren(CallChildFunc aFunc, void* aClosure)
+{
+  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
+  if (docShellNode)
+  {
+    PRInt32 i;
+    PRInt32 n;
+    docShellNode->GetChildCount(&n);
+    for (i=0; i < n; i++) 
+    {
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      NS_ASSERTION(childAsShell, "null child in docshell");
+      if (childAsShell) 
+      {
+        nsCOMPtr<nsIContentViewer> childCV;
+        childAsShell->GetContentViewer(getter_AddRefs(childCV));
+        if (childCV) 
+        {
+          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+          if (markupCV) {
+            (*aFunc)(markupCV, aClosure);
+          }
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+struct TextZoomInfo
+{
+  float mTextZoom;
+};
+
+static void
+SetChildTextZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  struct TextZoomInfo* textZoomInfo = (struct TextZoomInfo*) aClosure;
+  aChild->SetTextZoom(textZoomInfo->mTextZoom);
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetTextZoom(float aTextZoom)
+{
+  if (mDeviceContext) {
+    mDeviceContext->SetTextZoom(aTextZoom);
+    if (mPresContext) {
+      mPresContext->RemapStyleAndReflow();
+    }
+  }
+
+  // now set the text zoom on all children of mContainer
+  struct TextZoomInfo textZoomInfo = { aTextZoom };
+  return CallChildren(SetChildTextZoom, &textZoomInfo);
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetTextZoom(float* aTextZoom)
+{
+  NS_ENSURE_ARG_POINTER(aTextZoom);
+
+  if (mDeviceContext) {
+    return mDeviceContext->GetTextZoom(*aTextZoom);
+  }
+
+  *aTextZoom = 1.0;
+  return NS_OK;
+}
+
 // XXX: SEMANTIC CHANGE! 
 //      returns a copy of the string.  Caller is responsible for freeing result
 //      using Recycle(aDefaultCharacterSet)
@@ -1434,37 +1509,18 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
   return NS_OK;
 }
 
+static void
+SetChildDefaultCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  aChild->SetDefaultCharacterSet((PRUnichar*) aClosure);
+}
+
 NS_IMETHODIMP DocumentViewerImpl::SetDefaultCharacterSet(const PRUnichar* aDefaultCharacterSet)
 {
   mDefaultCharacterSet = aDefaultCharacterSet;  // this does a copy of aDefaultCharacterSet
   // now set the default char set on all children of mContainer
-  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
-  if (docShellNode)
-  {
-    PRInt32 i;
-    PRInt32 n;
-    docShellNode->GetChildCount(&n);
-    for (i=0; i < n; i++) 
-    {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      docShellNode->GetChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-      NS_ASSERTION(childAsShell, "null child in docshell");
-      if (childAsShell) 
-      {
-        nsCOMPtr<nsIContentViewer> childCV;
-        childAsShell->GetContentViewer(getter_AddRefs(childCV));
-        if (childCV) 
-        {
-          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
-          if (markupCV) {
-            markupCV->SetDefaultCharacterSet(aDefaultCharacterSet);
-          }
-        }
-      }
-    }
-  }
-  return NS_OK;
+  return CallChildren(SetChildDefaultCharacterSet,
+                      (void*) aDefaultCharacterSet);
 }
 
 // XXX: SEMANTIC CHANGE! 
@@ -1484,37 +1540,17 @@ NS_IMETHODIMP DocumentViewerImpl::GetForceCharacterSet(PRUnichar** aForceCharact
   return NS_OK;
 }
 
+static void
+SetChildForceCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  aChild->SetForceCharacterSet((PRUnichar*) aClosure);
+}
+
 NS_IMETHODIMP DocumentViewerImpl::SetForceCharacterSet(const PRUnichar* aForceCharacterSet)
 {
   mForceCharacterSet = aForceCharacterSet;
   // now set the force char set on all children of mContainer
-  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
-  if (docShellNode)
-  {
-    PRInt32 i;
-    PRInt32 n;
-    docShellNode->GetChildCount(&n);
-    for (i=0; i < n; i++) 
-    {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      docShellNode->GetChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-      NS_ASSERTION(childAsShell, "null child in docshell");
-      if (childAsShell) 
-      {
-        nsCOMPtr<nsIContentViewer> childCV;
-        childAsShell->GetContentViewer(getter_AddRefs(childCV));
-        if (childCV) 
-        {
-          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
-          if (markupCV) {
-            markupCV->SetForceCharacterSet(aForceCharacterSet);
-          }
-        }
-      }
-    }
-  }
-  return NS_OK;
+  return CallChildren(SetChildForceCharacterSet, (void*) aForceCharacterSet);
 }
 
 // XXX: SEMANTIC CHANGE! 
@@ -1542,71 +1578,31 @@ NS_IMETHODIMP DocumentViewerImpl::GetHintCharacterSetSource(PRInt32 *aHintCharac
   return NS_OK;
 }
 
+static void
+SetChildHintCharacterSetSource(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  aChild->SetHintCharacterSetSource((PRInt32) aClosure);
+}
 
 NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSetSource(PRInt32 aHintCharacterSetSource)
 {
   mHintCharsetSource = (nsCharsetSource)aHintCharacterSetSource;
-  // now set the force char set on all children of mContainer
-  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
-  if (docShellNode)
-  {
-    PRInt32 i;
-    PRInt32 n;
-    docShellNode->GetChildCount(&n);
-    for (i=0; i < n; i++) 
-    {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      docShellNode->GetChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-      NS_ASSERTION(childAsShell, "null child in docshell");
-      if (childAsShell) 
-      {
-        nsCOMPtr<nsIContentViewer> childCV;
-        childAsShell->GetContentViewer(getter_AddRefs(childCV));
-        if (childCV) 
-        {
-          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
-          if (markupCV) {
-            markupCV->SetHintCharacterSetSource(aHintCharacterSetSource);
-          }
-        }
-      }
-    }
-  }
-  return NS_OK;
+  // now set the hint char set source on all children of mContainer
+  return CallChildren(SetChildHintCharacterSetSource,
+                      (void*) aHintCharacterSetSource);
+}
+
+static void
+SetChildHintCharacterSet(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  aChild->SetHintCharacterSet((PRUnichar*) aClosure);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSet(const PRUnichar* aHintCharacterSet)
 {
   mHintCharset = aHintCharacterSet;
-  // now set the force char set on all children of mContainer
-  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
-  if (docShellNode)
-  {
-    PRInt32 i;
-    PRInt32 n;
-    docShellNode->GetChildCount(&n);
-    for (i=0; i < n; i++) 
-    {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      docShellNode->GetChildAt(i, getter_AddRefs(child));
-      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
-      NS_ASSERTION(childAsShell, "null child in docshell");
-      if (childAsShell) 
-      {
-        nsCOMPtr<nsIContentViewer> childCV;
-        childAsShell->GetContentViewer(getter_AddRefs(childCV));
-        if (childCV) 
-        {
-          nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
-          if (markupCV) {
-            markupCV->SetHintCharacterSet(aHintCharacterSet);
-          }
-        }
-      }
-    }
-  }
-  return NS_OK;
+  // now set the hint char set on all children of mContainer
+  return CallChildren(SetChildHintCharacterSet, (void*) aHintCharacterSet);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
