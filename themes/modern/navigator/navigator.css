@@ -43,39 +43,215 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
  */
 #back-button 
   {
-	  list-style-image      : url("chrome://navigator/skin/back.gif");
-    margin                : 0px;
+    list-style-image      : url("chrome://navigator/skin/back.png");
+  }
+
+#back-button[disabled="true"],
+#back-button[disabled="true"]:hover,
+#back-button[disabled="true"]:hover:active,
+#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
+#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/back-disabled.png");
+  }
+
+#back-button > .menubutton-dual-stack > .menubutton-dual-button:hover
+  {
+    list-style-image      : url("chrome://navigator/skin/back-hover.png");
+  }
+
+#back-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/back-clicked.png");
   }
 
 #forward-button 
   {
-	  list-style-image      : url("chrome://navigator/skin/forward.gif");
-    margin                : 0px;
+    list-style-image      : url("chrome://navigator/skin/forward.png");
+  }
+
+#forward-button[disabled="true"],
+#forward-button[disabled="true"]:hover,
+#forward-button[disabled="true"]:hover:active,
+#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
+#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/forward-disabled.png");
+  }
+
+#forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover
+  {
+    list-style-image      : url("chrome://navigator/skin/forward-hover.png");
+  }
+
+#forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/forward-clicked.png");
   }
 
 #stop-button 
   {
-	  list-style-image      : url("chrome://navigator/skin/stop.gif");
+	  list-style-image      : url("chrome://navigator/skin/stop.png");
+  } 
+
+#stop-button[disabled="true"],
+#stop-button[disabled="true"]:hover,
+#stop-button[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/stop-disabled.png");
+  } 
+
+#stop-button:hover
+  {
+    list-style-image      : url("chrome://navigator/skin/stop-hover.png");
+  } 
+
+#stop-button:hover:active
+  {
+    list-style-image      : url("chrome://navigator/skin/stop-clicked.png");
   } 
 
 #reload-button 
   {
-	  list-style-image      : url("chrome://navigator/skin/reload.gif");
+    list-style-image        : url("chrome://navigator/skin/reload.png");
+  }
+  
+#reload-button[disabled="true"],
+#reload-button[disabled="true"]:hover,
+#reload-button[disabled="true"]:hover:active
+  {
+	 ist-style-image      : url("chrome://navigator/skin/reload.png");
   }
 
+#reload-button:hover
+  {
+    list-style-image        : url("chrome://navigator/skin/reload-hover.png");
+  }
+
+#reload-button:hover:active
+  {
+    list-style-image        : url("chrome://navigator/skin/reload-clicked.png");
+  }
+
+#print-button 
+  {
+    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
+    list-style-image      : url("chrome://global/skin/print.png");
+    margin-left			  : 4px;
+  }
+
+#print-button[disabled="true"],
+#print-button[disabled="true"]:hover,
+#print-button[disabled="true"]:hover:active,
+#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
+#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://global/skin/print-disabled.png");
+  }
+
+#print-button > .menubutton-dual-stack > .menubutton-dual-button:hover
+  {
+    list-style-image      : url("chrome://global/skin/print-hover.png");
+  }
+
+#print-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://global/skin/print-clicked.png");
+  }
+
+
 /*all the urlbar stuff*/
+
+#nav-bar-inner
+  {
+  	behavior			  : url("chrome://global/skin/globalBindings.xml#nav-bar-inner");
+    padding-left          : 6px;
+    margin-top			  : -3px;
+  }
+
+.navbar-inner-groove-image-left
+  {
+  	background			  : url("chrome://navigator/skin/navbar-inner-groove-left.png") no-repeat;
+  	width				  : 6px;
+  	height				  : 31px;
+  }
+
+.navbar-inner-groove-image-middle
+  {
+  	background			  : url("chrome://navigator/skin/navbar-inner-groove-middle.png") repeat-x;
+  }
+
+.navbar-inner-groove-image-right
+  {
+  	background			  : url("chrome://navigator/skin/navbar-inner-groove-right.png") no-repeat;
+  	width				  : 6px;
+  	height				  : 31px;
+  }
+
+#urlbar-group
+  {
+  	behavior			  : url("chrome://global/skin/globalBindings.xml#urlbar-group");
+  	margin				  : 6px 8px 6px 8px;
+  }
+
+.urlbar-image-left
+  {
+  	background			  : url("chrome://navigator/skin/urlbar-left.png") no-repeat;
+  	width				  : 4px;
+  	height				  : 18px;
+  }
+
+.urlbar-image-middle
+  {
+  	background			  : url("chrome://navigator/skin/urlbar-middle.png") repeat-x;
+  }
+
+.urlbar-image-right
+  {
+  	background			  : url("chrome://navigator/skin/urlbar-right.png") no-repeat;
+  	width				  : 3px;
+  	height				  : 18px;
+  }
+
 #page-proxy-button 
   {
-	  list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
-	  cursor                : grab;
+  	margin-left			  : 4px;
+  	margin-right		  : 2px;
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.png"); 
+	cursor                : grab;
   } 
+
+/* #ubhist-keyword-popup does not exist in Mozilla, only in Netscape.  It gets overlayed in with 
+ * navExtraOverlay.xul.  Ideally, this styling should only exist in Netscape, but since it is
+ * in Mozilla right now, it should not be removed before we ship.  Take this out and put it in
+ * commercial after shipping.  (8/24/00) - nbhatla
+ */
 
 #ubhist-keyword-popup
   {
     margin                : 0px 4px 0px 0px;
     width                 : 10px; 
-    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+    list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup.png");
+    background-color	  : transparent;
+    border				  : 0px;
   } 
+
+#ubhist-keyword-popup > .menubutton-icon-internal-box
+  {
+  	border				  : 0px;
+  }
+
+#ubhist-keyword-popup:hover:active
+  {
+    margin                : 0px 4px 0px 0px;
+    width                 : 10px; 
+    list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup-active.png"); 
+  } 
+
+/*************************************/
 
 #ubhist
   {
@@ -119,19 +295,19 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     list-style-image      : url("chrome://communicator/skin/document-error.gif");
   }  
   
-#nav-bar-inner
+#go-button  
   {
-    padding-left          : 6px;
+    display               : none;
   }
   
 #search-button
   {
-    margin-right          : 1px;
+    margin-right          : 10px;
   }
   
 #home-button
   {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
+    list-style-image      : url("chrome://communicator/skin/bookmarks/home.png");
   }
   
 .menuitem-iconic
@@ -139,15 +315,12 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     padding               : 2px;
   }
 
-#print-button 
+#PersonalToolbar
   {
-	  list-style-image      : url("chrome://global/skin/print.gif");
+  	behavior			  : url("chrome://global/skin/globalBindings.xml#toolbar-bordered");
   }
 
-#nav-bar-buttons
+#PersonalToolbar > .inner-box
   {
- /*   behavior              : url("chrome://navigator/skin/navigatorBindings.xml#navigation-buttons");*/
-    vertical-align        : middle;
-  }  
-  
-  
+    border-bottom         : 1px solid #000000;
+  }

@@ -48,6 +48,30 @@ EXPORT_RESOURCE_SAMPLES = \
 	search.gif \
 	stop.gif \
 	pageInfo.css \
+	back-clicked.png \
+	back-disabled.png \
+	back-hover.png \
+	forward-clicked.png \
+	forward-disabled.png \
+	forward-hover.png \
+	navbar-inner-groove-left.png \
+	navbar-inner-groove-middle.png \
+	navbar-inner-groove-right.png \
+	reload-clicked.png \
+	reload-disabled.png \
+	reload-hover.png \
+	stop-clicked.png \
+	stop-disabled.png \
+	stop-hover.png \
+	urlbar-left.png \
+	urlbar-middle.png \
+	urlbar-right.png \
+	back.png \
+	forward.png \
+	reload.png \
+	stop.png \
+	ubhist-keyword-popup-active.png \
+	ubhist-keyword-popup.png \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

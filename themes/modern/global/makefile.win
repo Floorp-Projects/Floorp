@@ -154,3 +154,31 @@ install::
 	$(MAKE_INSTALL) wizardOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) loading.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) globalBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-active-left.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-active-middle.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-active-right.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-normal-left.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-normal-middle.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) button-3slice-normal-right.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) navbar-bg-leftcap.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) navbar-bg-rightcap.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-addressbook.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-bg-left.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-bg-right.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-bg.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-composer-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-composer.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-groove-left.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-groove-middle.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-groove-right.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-mail-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) mb-single-arrow.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) navbar-bg.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-addressbook-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-mail.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-navigator-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) taskbar-navigator.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) print-disabled.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) print-hover.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) print-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) print.png $(DIST)\bin\chrome\skins\$(THEME)\global\skin

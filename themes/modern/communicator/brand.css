@@ -2,15 +2,14 @@
 #navigator-throbber
   {
     behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
-    background-image      : url("chrome://communicator/skin/navbar-endbox.gif");
-    background-repeat     : no-repeat;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
     width                 : 56px;
     max-width             : 56px;
-    padding               : 8px 8px 7px 16px;
+    padding               : 7px 8px 6px 16px;
     margin                : 0px;
     cursor                : pointer;
     border                : none;
+    background-color	  : transparent;
   }  
 
 #navigator-throbber[busy="true"]
@@ -20,7 +19,7 @@
   
 #navigator-throbber:hover:active
   {
-    padding               : 9px 7px 6px 17px;
+    padding               : 8px 7px 5px 17px;
   }
 
 #navigator-throbber > .button-internal-box

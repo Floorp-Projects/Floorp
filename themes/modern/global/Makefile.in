@@ -100,6 +100,16 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 	progressmeter-busy.gif \
 	question-icon.gif \
 	radio.css \
+	mb-single-arrow.png \
+	navbar-bg.png \
+	taskbar-addressbook-clicked.png \
+	taskbar-mail.png \
+	taskbar-navigator-clicked.png \
+	taskbar-navigator.png \
+	print-disabled.png \
+	print-hover.png \
+	print-clicked.png \
+	print.png \
 	return-disabled.gif \
 	return.gif
 
@@ -160,6 +170,24 @@ EXPORT_RESOURCE_SAMPLES_2 = \
 	tabcontrol.css \
 	loading.gif \
 	globalBindings.xml \
+	button-3slice-active-left.png \
+	button-3slice-active-middle.png \
+	button-3slice-active-right.png \
+	button-3slice-normal-left.png \
+	button-3slice-normal-middle.png \
+	button-3slice-normal-right.png \
+	navbar-bg-leftcap.png \
+	navbar-bg-rightcap.png \
+	taskbar-addressbook.png \
+	taskbar-bg-left.png \
+	taskbar-bg-right.png \
+	taskbar-bg.png \
+	taskbar-composer-clicked.png \
+	taskbar-composer.png \
+	taskbar-groove-left.png \
+	taskbar-groove-middle.png \
+	taskbar-groove-right.png \
+	taskbar-mail-clicked.png \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -7,7 +7,7 @@
       border                : 1px solid transparent;
       margin                : 1px 0px 1px 0px;
       -moz-border-radius    : 0px;
-      color                 : black;
+      color                 : #FFFFFF;
       padding               : 0px;
       font                  : 3mm arial;
       max-width             : 10em;
@@ -74,36 +74,33 @@
   /* outer frame */
   .button-toolbar-1
     {
-      background-repeat   : no-repeat;
-      background-color    : transparent;
-      background-position : 0px 0px;
-      background-image    : url("chrome://global/skin/button32-bg.gif");
       color               : #CCFFFF;
-      width               : 36px;
-      height              : 36px;
-      margin              : 2px 6px 1px 1px;
+      width               : 34px;
+      height              : 34px;
+      margin              : 4px 6px 8px 1px;
       font-size           : smaller;
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
+      -moz-border-radius  : 0px;
     }
     
   .button-toolbar-1:hover 
     {
-      background-image    : url("chrome://global/skin/button32-bg-hover.gif");
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
     } 
 
   .button-toolbar-1:hover:active
     {
-      margin              : 3px 5px 0px 2px;
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
     }
 
   .button-toolbar-1[disabled="true"],
   .button-toolbar-1[disabled="true"]:hover,
   .button-toolbar-1[disabled="true"]:hover:active
     {
-      background-image    : url("chrome://global/skin/button32-bg-disabled.gif");
-      margin              : 2px 6px 1px 1px;
+      margin              : 0px 6px 4px 1px;
       border              : none;
     }
     
@@ -112,15 +109,17 @@
   .button-toolbar-1[disabled="true"]:hover > .button-internal-box,
   .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box
     {
-      border              : none;
+      border              : 0px;
+      padding			  : 0px;
     }
       
   .button-toolbar-1 > .button-internal-box,
   .button-toolbar-1:hover > .button-internal-box,
   .button-toolbar-1:hover:active > .button-internal-box
     {
-      border              : none;
+      border              : 0px;
       vertical-align      : middle;
+      padding			  : 0px;
     }
     
   .button-toolbar-1 > .button-internal-box > .button-text-container 
@@ -198,23 +197,67 @@
  **/  
   .button-toolbar-3 
     {
+	  behavior			    : url("chrome://global/skin/globalBindings.xml#three-slice-button");
       margin                : 0px 0px 0px 3px;
       font-weight           : bold;
-      background-color      : #99CCCC;
-    }  
-    
-  .button-toolbar-3 > .button-internal-box
-    {
-      border                : 1px outset #99CCCC;
-      padding               : 2px 4px 2px 4px;
+      background-color      : transparent;
+      border				: 0px;
+      margin				: 5px 7px 6px 0px;
+      color					: #2F405D;
     }
-    
-  .button-toolbar-3:hover:active > .button-internal-box 
-    {
-      border                : 1px inset #99CCCC;
-      padding               : 3px 3px 1px 5px;
-    } 
 
+  .button-toolbar-3[disabled="true"], .button-toolbar-3[disabled="true"]:hover, .button-toolbar-3[disabled="true"]:hover:active
+    {
+      border				: 0px;
+    }
+
+  .three-slice-button-image-left {
+	background			: url(chrome://global/skin/button-3slice-normal-left.png) no-repeat;
+	width				: 5px;
+	height				: 20px;
+  }
+
+  .three-slice-button-image-middle {
+	background			: url(chrome://global/skin/button-3slice-normal-middle.png) repeat-x;
+  }
+
+  .three-slice-button-text-box {
+	text-align          : center;
+    vertical-align      : middle;
+    padding				: 0px 3px;
+    font-size			: 10px;
+  }
+
+  .three-slice-button-image-right {
+	background			: url(chrome://global/skin/button-3slice-normal-right.png) no-repeat;
+	width				: 5px;
+	height				: 20px;
+  }
+
+  .three-slice-button-top-spring {
+	height				: 2px;
+  }
+
+  .three-slice-button-bottom-spring {
+	height				: 2px;
+  }
+  
+  .button-toolbar-3:hover:active {
+  	color				: #B2CAC9;
+  }
+  
+  .button-toolbar-3:hover:active > .three-slice-button-image-left {
+	background			: url(chrome://global/skin/button-3slice-active-left.png) no-repeat;
+  }
+
+  .button-toolbar-3:hover:active > .three-slice-button-image-middle {
+	background			: url(chrome://global/skin/button-3slice-active-middle.png) repeat-x;
+  }
+
+  .button-toolbar-3:hover:active > .three-slice-button-image-right {
+	background			: url(chrome://global/skin/button-3slice-active-right.png) no-repeat;
+  }
+  
 /** Expanding Region Button **/
 
 /* outer frame */
@@ -258,38 +301,38 @@
  **/
 .button-toolbar-4
   {
-    color                 : #99CCCC;
+    color                 : #D0E7E7;
     background            : inherit;
     font                  : inherit;
     border                : none;
-    padding               : 1px !important;
-    margin                : 0px;
+    padding               : 1px;
+    margin                : 0px 8px;
   }
 
 .button-toolbar-4:hover 
   {
     text-decoration       : none;
-    background-color      : #336699;
-    color                 : #CCFFFF;
   }
 
 .button-toolbar-4:hover:active 
   {
     text-decoration       : none;
     color                 : #CCFFFF;
-    padding               : 2px 0px 0px 2px !important;
   }
   
 menubutton.button-toolbar-4
   {
     behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
   }
-  
+
+.button-toolbar-4 > .menubutton-internal-box > .menubutton-single-icon
+  {
+      list-style-image	  : url(chrome://global/skin/mb-single-arrow.png);
+  }
+
 .button-toolbar-4 > .button-internal-box,
 .button-toolbar-4 > .menubutton-internal-box
   {
-    border                : none !important;
+    border                : 0px !important;
     padding               : 0px !important;
   }  
-
-  

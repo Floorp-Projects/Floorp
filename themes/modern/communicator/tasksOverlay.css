@@ -1,11 +1,21 @@
 #mini-nav 
   {
-	  list-style-image      : url("chrome://global/skin/taskbar-navigator.gif");
+	  list-style-image      : url("chrome://global/skin/taskbar-navigator.png");
   }
 
-#mini-mail 
+#mini-nav:hover:active 
   {
-	  list-style-image      : url("chrome://global/skin/taskbar-mail.gif");
+	  list-style-image      : url("chrome://global/skin/taskbar-navigator-clicked.png");
+  }
+
+#mini-mail
+  {
+	  list-style-image      : url("chrome://global/skin/taskbar-mail.png");
+  }
+
+#mini-mail:hover:active
+  {
+	  list-style-image      : url("chrome://global/skin/taskbar-mail-clicked.png");
   }
 
 #mini-mail[BiffState="NewMail"]
@@ -15,28 +25,87 @@
 
 #mini-addr 
   {
-	  list-style-image      : url("chrome://global/skin/taskbar-addressbook.gif");
+	  list-style-image      : url("chrome://global/skin/taskbar-addressbook.png");
+  }
+
+#mini-addr:hover:active
+  {
+	  list-style-image      : url("chrome://global/skin/taskbar-addressbook-clicked.png");
   }
 
 #mini-comp 
   {
-	  list-style-image      : url("chrome://global/skin/taskbar-composer.gif");
+	  list-style-image      : url("chrome://global/skin/taskbar-composer.png");
+  }
+
+#mini-comp:hover:active
+  {
+	  list-style-image      : url("chrome://global/skin/taskbar-composer-clicked.png");
   }
 
 #taskbar
   {
-    margin-top            : 2px;
+    behavior			  : url(chrome://global/skin/globalBindings.xml#taskbar);
     min-height            : 1em;
     user-focus            : ignore;
   }
 
+.taskbar-image-left
+  {
+	background			  : url(chrome://global/skin/taskbar-bg-left.png) no-repeat;
+	width				  : 8px;
+	height				  : 17px;
+  }
+
+.taskbar-image-middle
+  {
+	background			  : url(chrome://global/skin/taskbar-bg.png) repeat-x;
+	height				  : 17px;
+  }
+
+.taskbar-image-right
+  {
+	background			  : url(chrome://global/skin/taskbar-bg-right.png) no-repeat;
+	width				  : 8px;
+	height				  : 17px;  
+  }
+
 .taskbutton 
   {
-	  margin-right          : 1em !important;
+	margin-right          : -4px;
+	margin-left			  : 0px;
+	padding				  : 0px;
   }
 
 .taskbarspacer 
   {
     min-width             : 0.3em;
     width                 : 1em;
+  }
+
+#taskbarMenuBox 
+  {
+	behavior			  : url(chrome://global/skin/globalBindings.xml#taskbar-menu-box);
+	user-focus			  : ignore;
+	max-width			  : 75px;
+	margin-left			  : 100px;  // Need to change the XUL Later
+  }
+
+.taskbar-mb-image-left
+  {
+	background			  : url(chrome://global/skin/taskbar-groove-left.png) no-repeat;
+	width				  : 6px;
+	height				  : 17px;
+  }
+
+.taskbar-mb-image-middle
+  {
+	background			  : url(chrome://global/skin/taskbar-groove-middle.png) repeat-x;
+  }
+
+.taskbar-mb-image-right
+  {
+	background			  : url(chrome://global/skin/taskbar-groove-right.png) no-repeat;
+	width				  : 6px;
+	height				  : 17px;
   }

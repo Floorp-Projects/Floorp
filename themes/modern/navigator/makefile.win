@@ -46,3 +46,27 @@ install::
 	$(MAKE_INSTALL) reload.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) back-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) back-disabled.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) back-hover.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) forward-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) forward-disabled.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) forward-hover.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-inner-groove-left.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-inner-groove-middle.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navbar-inner-groove-right.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) reload-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) reload-disabled.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) reload-hover.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) stop-clicked.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) stop-disabled.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) stop-hover.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) ubhist-keyword-popup-active.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) ubhist-keyword-popup.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) urlbar-left.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) urlbar-middle.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) urlbar-right.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) back.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) forward.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) reload.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) stop.png $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin

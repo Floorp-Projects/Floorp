@@ -55,6 +55,9 @@ EXPORT_RESOURCE = \
 		$(srcdir)/prefpanels.css \
 		$(srcdir)/content-large.gif \
 		$(srcdir)/content-small.gif \
+		$(srcdir)/tb-menubutton-dm-clicked.png \
+		$(srcdir)/tb-menubutton-dm-hover.png \
+		$(srcdir)/tb-menubutton-dm.png \
 		$(NULL)
 
 DIRS = search xpinstall sidebar bookmarks directory profile regviewer related 

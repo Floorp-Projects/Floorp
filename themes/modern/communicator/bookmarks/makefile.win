@@ -42,3 +42,7 @@ install::
 	$(MAKE_INSTALL) personal-folder-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
 	$(MAKE_INSTALL) personal-folder-open-sel.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
 	$(MAKE_INSTALL) personal-folder-open.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) bookmark-folder-closed.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) bookmark-folder-open.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) bookmark-item.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) home.png $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks

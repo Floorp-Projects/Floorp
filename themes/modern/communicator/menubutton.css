@@ -59,13 +59,25 @@
 .menubutton-dual.toolbar
   {
     behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
-    border                  : none ! important;
+    border                  : 0px;
+    margin      	        : 4px 6px 8px 1px;
+    padding					: 0px;
   }
 
-.button-toolbar-1.menubutton-dual-button
+.menubutton-dual.toolbar[disabled="true"],
+.menubutton-dual.toolbar[disabled="true"]:hover,
+.menubutton-dual.toolbar[disabled="true"]:hover:active
+  {
+    margin                  : 0px 6px 4px 1px;
+	padding					: 0px;
+  }
+
+.button-toolbar-1.menubutton-dual-button,
+.button-toolbar-1.menubutton-dual-button[disabled="true"],
+.button-toolbar-1.menubutton-dual-button[disabled="true"]:hover:active
   {
     list-style-image        : inherit;
-    min-height              : 0px;
+    margin					: 0px;
   }
 
 .button-toolbar-2.menubutton-dual-button
@@ -82,19 +94,33 @@
 .menubutton-dual-dropmarker
   {
     background              : transparent;
-    list-style-image        : url("chrome://communicator/skin/tb-menubutton-dm.gif");
+    list-style-image        : url("chrome://communicator/skin/tb-menubutton-dm.png");
   } 
 
-.menubutton-dual-dropmarker[disabled="true"]
+.menubutton-dual.toolbar:hover > .menubutton-dual-stack > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker
+  {
+  	background				: transparent;
+  	list-style-image		: url("chrome://communicator/skin/tb-menubutton-dm-hover.png");
+  }
+  
+.menubutton-dual.toolbar:hover:active > .menubutton-dual-stack > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker
+  {
+  	background				: transparent;
+  	list-style-image		: url("chrome://communicator/skin/tb-menubutton-dm-clicked.png");
+  }
+
+.menubutton-dual-dropmarker[disabled="true"],
+.menubutton-dual.toolbar:hover[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker,
+.menubutton-dual.toolbar:hover:active[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-dropmarker-box > .menubutton-dual-dropmarker
   {
     background              : transparent;
-    list-style-image        : url("chrome://communicator/skin/tb-menubutton-dm-disabled.gif");
+    list-style-image        : none;
   } 
   
 .menubutton-dual-dropmarker-box
   {
-    margin-left             : 32px;
-    margin-bottom           : 1px;
+    margin-left             : 23px;
+    margin-top				: 25px;
   }
   
 .button-toolbar-2 + .menubutton-dual-dropmarker-box  

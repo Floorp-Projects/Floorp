@@ -53,7 +53,7 @@
     { 
       background-color    : #FFFFFF;
       padding             : 0px;
-      font-family         : Geneva, Tahoma, Helvetica, Arial, sans-serif;
+      font-family         : Verdana, Geneva, Tahoma, Helvetica, Arial, sans-serif;
     }
   
   window[wait-cursor] 
@@ -126,10 +126,12 @@
  */
   #status-bar 
     {
-      border-top          : 1px solid #999999;
-      background-color    : #CCCCCC;
+      border-top          : 1px solid #11151F;
+      background-color    : #647B9F;
       user-focus          : ignore;
-      overflow            : hidden
+      overflow            : hidden;
+      margin			  : 0px;
+      padding			  : 0px;
     }
 
   statusbar

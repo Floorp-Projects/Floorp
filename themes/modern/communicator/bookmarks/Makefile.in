@@ -45,6 +45,10 @@ EXPORT_RESOURCE_SAMPLES = \
         personal-folder-closed-sel.gif \
         personal-folder-open.gif \
         personal-folder-open-sel.gif \
+        bookmark-folder-closed.png \
+		bookmark-folder-open.png \
+		bookmark-item.png \
+		home.png \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -7,10 +7,10 @@
    
   <binding id="menubutton-dual-foo">
     <content excludes="observes,template,menupopup">
-      <xul:stack>
+      <xul:stack class="menubutton-dual-stack">
         <xul:button class="menubutton-dual-button button-toolbar-1 top" allowevents="true" 
                     inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey,disabled"/>
-        <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="bottom" flex="1">
+        <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" flex="1">
           <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
         </xul:box>
       </xul:stack>
@@ -19,10 +19,10 @@
 
   <binding id="menubutton-dual-standard">
     <content excludes="observes,template,menupopup">
-      <xul:stack>
+      <xul:stack class="menubutton-dual-stack">
         <xul:button class="menubutton-dual-button button-toolbar-2 top" allowevents="true" 
                     inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey,disabled"/>
-        <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="bottom" flex="1">
+        <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" flex="1">
           <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
         </xul:box>
       </xul:stack>

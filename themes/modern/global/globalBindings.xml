@@ -18,4 +18,114 @@
     </content>
   </binding>
 
+  <binding id="toolbar-primary" extends="chrome://global/content/toolbarBindings.xml#toolbar">
+  	<content inherits="false">
+  	  <xul:stack flex="1">
+  	  	<xul:box flex="1" class="toolbar-primary-bg-images">
+        	<xul:box class="toolbar-primary-image-left"/>
+    		<xul:box flex="1" class="toolbar-primary-image-middle"/>
+    	   	<xul:box class="toolbar-primary-image-right"/>
+    	</xul:box>
+    	<xul:box flex="1">
+       		<xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
+           		                onclick="this.grippyClicked();" tbattr="toolbar-grippy"
+            	                class="toolbar-primary-grippy"/>
+        	<xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,tborient:orient,tbautostretch:autostretch" autostretch="never">
+        	  <children/>
+        	</xul:box>
+      	</xul:box>
+      </xul:stack>
+    </content>
+  </binding>
+
+  <binding id="toolbar-bordered" extends="chrome://global/content/toolbarBindings.xml#toolbar">
+  	<content inherits="false">
+   		<xul:box class="inner-box" flex="1">
+       		<xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
+           		                onclick="this.grippyClicked();" tbattr="toolbar-grippy"
+            	                class="toolbar-primary-grippy"/>
+        	<xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar,tborient:orient,tbautostretch:autostretch" autostretch="never">
+        	  <children/>
+        	</xul:box>
+      	</xul:box>
+    </content>
+  </binding>
+
+  <binding id="nav-bar-inner" extends="xul:box">
+    <content>
+      <xul:stack flex="1">
+      	<xul:box flex="1" class="navbar-inner-groove-images">
+        	<xul:box class="navbar-inner-groove-image-left"/>
+    		<xul:box flex="1" class="navbar-inner-groove-image-middle"/>
+    	   	<xul:box class="navbar-inner-groove-image-right"/>
+    	</xul:box>
+	    <xul:box flex="1">
+	    	<children/>
+	    </xul:box>
+      </xul:stack>
+    </content>
+  </binding>
+  
+  <binding id="urlbar-group" extends="xul:box">
+    <content>
+      <xul:stack flex="1">
+      	<xul:box flex="1" class="urlbar-groove-images">
+        	<xul:box class="urlbar-image-left"/>
+    		<xul:box flex="1" class="urlbar-image-middle"/>
+    	   	<xul:box class="urlbar-image-right"/>
+    	</xul:box>
+	    <xul:box flex="1">
+	    	<children/>
+	    </xul:box>
+      </xul:stack>
+    </content>
+  </binding>
+
+  <binding id="three-slice-button" extends="chrome://global/content/xulBindings.xml#basetext">
+    <content excludes="observes,template">
+        <xul:spring class="three-slice-button-image-left" inherits="default,disabled"/>
+    	<xul:box flex="1" class="three-slice-button-image-middle" inherits="default,disabled" orient="vertical" align="center">
+    	  <xul:spring flex="1" class="three-slice-button-top-spring"/>
+    	  <xul:box flex="1">
+    	  	<xul:image class="three-slice-button-icon" inherits="src"/>
+    	    <xul:box class="three-slice-button-text-box" flex="1">
+		      <xul:text inherits="disabled,value,crop,accesskey"/>
+    	    </xul:box>
+    	  </xul:box>
+    	  <xul:spring flex="1" class="three-slice-button-bottom-spring"/>
+    	</xul:box>
+    	<xul:spring class="three-slice-button-image-right" inherits="default,disabled"/>
+    </content>
+  </binding>
+
+  <binding id="taskbar" extends="xul:box">
+  	<content>
+  	  <xul:stack flex="1">
+  	  	<xul:box flex="1" class="taskbar-bg-images">
+        	<xul:box class="taskbar-image-left"/>
+    		<xul:box flex="1" class="taskbar-image-middle"/>
+    	   	<xul:box class="taskbar-image-right"/>
+    	</xul:box>
+    	<xul:box flex="1">
+       		<children/>
+      	</xul:box>
+      </xul:stack>
+    </content>
+  </binding>
+
+  <binding id="taskbar-menu-box" extends="xul:box">
+  	<content>
+  	  <xul:stack flex="1">
+  	  	<xul:box flex="1" class="taskbar-mb-images">
+        	<xul:box class="taskbar-mb-image-left"/>
+    		<xul:box flex="1" class="taskbar-mb-image-middle"/>
+    	   	<xul:box class="taskbar-mb-image-right"/>
+    	</xul:box>
+    	<xul:box flex="1">
+       		<children/>
+      	</xul:box>
+      </xul:stack>
+    </content>
+  </binding>
+
 </bindings>

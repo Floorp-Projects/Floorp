@@ -1,6 +1,6 @@
+/* This white box is no longer needed in the new Modern skin.  Commented out. (8/24/00) -nbhatla*/
 
-
-.box-toolbar-group
+/*.box-toolbar-group
   {
     background-color      : #FFFFFF;
     -moz-border-radius    : 5px;
@@ -8,4 +8,4 @@
     margin                : 0px 10px 0px 5px;
   }
   
-  
+  */
