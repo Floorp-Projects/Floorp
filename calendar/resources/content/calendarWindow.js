@@ -690,6 +690,69 @@ CalendarView.prototype.refresh = function calView_refresh( ShowEvent )
    this.refreshEvents()
 }
 
+
+/*
+ * Create eventboxes. Calls aInteralFunction for every day the occurence
+ * spans.
+ * prototype: aInteralFunction(aItemOccurrence, aStartDate, aEndDate);
+ * Doesn't check if the parts fall withing the view. This is up to
+ * the internal function
+ */
+
+CalendarView.prototype.displayTimezone = "/mozilla.org/20050126_1/Europe/Amsterdam";
+CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFunction )
+{    
+    var startDate;
+    var origEndDate;
+
+    if ("displayTimezone" in this) {
+        startDate = aItemOccurrence.occurrenceStartDate.getInTimezone(this.displayTimezone).clone();
+        origEndDate = aItemOccurrence.occurrenceEndDate.getInTimezone(this.displayTimezone).clone();
+    } else {
+        // Copy the values from jsDate. jsDate is in de users timezone
+        // It's a hack, but it kind of works. It doesn't set the right
+        // timezone info for the date, but that's not a real problem.
+        startDate = aItemOccurrence.occurrenceStartDate.clone();
+        startDate.year = startDate.jsDate.getFullYear();
+        startDate.month = startDate.jsDate.getMonth();
+        startDate.day = startDate.jsDate.getDate();
+        startDate.hour = startDate.jsDate.getHours();
+        startDate.minute = startDate.jsDate.getMinutes();
+        startDate.second = startDate.jsDate.getSeconds();
+        startDate.normalize();
+
+        origEndDate = aItemOccurrence.occurrenceEndDate.clone();
+        origEndDate.year = origEndDate.jsDate.getFullYear();
+        origEndDate.month = origEndDate.jsDate.getMonth();
+        origEndDate.day = origEndDate.jsDate.getDate();
+        origEndDate.hour = origEndDate.jsDate.getHours();
+        origEndDate.minute = origEndDate.jsDate.getMinutes();
+        origEndDate.second = origEndDate.jsDate.getSeconds();
+        origEndDate.normalize();
+    }
+
+    var endDate = startDate.clone();
+    endDate.hour = 23;
+    endDate.minute = 59;
+    endDate.second = 59;
+    endDate.normalize();
+    while (endDate.compare(origEndDate) < 0) {
+        aInteralFunction(aItemOccurrence, startDate, endDate);
+
+        startDate.day = startDate.day + 1;
+        startDate.hour = 0;
+        startDate.minute = 0;
+        startDate.second = 0;
+        startDate.normalize();
+
+        endDate.day = endDate.day + 1;
+        endDate.normalize();
+    }
+    aInteralFunction(aItemOccurrence, startDate, origEndDate);
+}
+
+
+
 /**
  * PUBLIC
  * Set classes on a eventbox

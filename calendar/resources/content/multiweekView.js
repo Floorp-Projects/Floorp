@@ -230,7 +230,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
     this.removeElementsByAttribute("eventbox", "multiweekview");
     
     //Save this so we can use it again in onGetResult below in getListener
-    var savedThis = this;
+    var eventController = this;
 
     //Start of our getListener callback
     var getListener =
@@ -250,10 +250,8 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
                 var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
                 dump("calEvent.title:" + calEvent.title + "\n");
 
-                var DisplayDate = new Date(itemOccurrence.occurrenceStartDate.jsDate);
-                dayBoxItem = savedThis.dayBoxItemArray[savedThis.indexOfDate(DisplayDate)];
-                var eventbox = savedThis.createEventBox(itemOccurrence);
-                dayBoxItem.appendChild(eventbox);
+                eventController.createEventBox(itemOccurrence,
+                                               function(a1, a2, a3) { eventController.createEventBoxInternal(a1, a2, a3); } );
             }
         }
     };
@@ -266,9 +264,15 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
 
 }      
 // JT: Liberal code reuse (ie. Cut and Paste)
-// Create an eventbox and return it. Expects an ItemOccurence
-MultiweekView.prototype.createEventBox = function multiweekView_createEventBox(itemOccurrence)
+// Create an eventbox. Expects an ItemOccurence
+MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEventBox(itemOccurrence, startDate, endDate)
 {
+    var DisplayDate = new Date(startDate.jsDate);
+    dayBoxItem = this.dayBoxItemArray[this.indexOfDate(DisplayDate)];
+    // Check if the day is visible
+    if (!dayBoxItem)
+        return;
+
     var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
     // Make a box item to hold the event
     eventBox = document.createElement( "box" );
@@ -312,8 +316,7 @@ MultiweekView.prototype.createEventBox = function multiweekView_createEventBox(i
     // add the text to the event box
     eventBox.appendChild( eventBoxText );
 
-    return eventBox;
-
+    dayBoxItem.appendChild(eventBox);
 }
 
 
@@ -793,7 +796,7 @@ MultiweekView.prototype.doubleClickDay = function multiweekView_doubleClickDay( 
 
 MultiweekView.prototype.clearSelectedEvent = function multiweekView_clearSelectedEvent( )
 {
-  debug("clearSelectedEvent");
+  multiweekdebug("clearSelectedEvent");
 
   this.removeAttributeFromElements("eventselected", "true");
 }
@@ -931,7 +934,7 @@ MultiweekView.prototype.setFictitiousEvents = function multiweekView_setFictitio
 }
 
 
-function debug( Text )
+function multiweekdebug( Text )
 {
    dump( "multiweekView.js: "+ Text +"\n");
 

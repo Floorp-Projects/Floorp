@@ -105,6 +105,7 @@ function prepareCalendarToDoUnifinder()
 
 function finishCalendarToDoUnifinder()
 {
+    var calendar = createCalendar();
     calendar.removeObserver(unifinderToDoDataSourceObserver);
 }
 

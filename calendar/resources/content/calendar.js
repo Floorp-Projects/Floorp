@@ -101,8 +101,6 @@ var gDisplayToDoInViewChecked ;
 // DAY VIEW VARIABLES
 var kDayViewHourLeftStart = 105;
 
-var kWeekViewHourHeight = 50;
-var kWeekViewHourHeightDifference = 2;
 var kDaysInWeek = 7;
 
 const kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW = "8"; //the maximum number of dots that fit in the month view
@@ -766,7 +764,7 @@ function jsDateToDateTime(date)
 {
     var newDate = createDateTime();
     newDate.jsDate = date;
-    dump ("date: " + date + " newDate: " + newDate + " newDate.jsDate: "+ newDate.jsDate + "\n");
+    debug ("date: " + date + " newDate: " + newDate + " newDate.jsDate: "+ newDate.jsDate + "\n");
     return newDate;
 }
 

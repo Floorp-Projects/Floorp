@@ -228,24 +228,15 @@ MonthView.prototype.refreshEvents = function()
     endDate.setSeconds(endDate.getSeconds() - 1);
 
     // Save this off so we can get it again in onGetResult below
-    var savedThis = this;
+    var eventController = this;
     var getListener = {
         onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
             dump("onOperationComplete\n");
         },
         onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             for (var i = 0; i < aCount; ++i) {
-                dump(aItems[i] + "\n");
-                var itemOccurrence = aItems[i];
- 
-                var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
-                var startDate = new Date(calEvent.startDate.jsDate);
-                dayBoxItem = savedThis.dayBoxItemArray[savedThis.indexOfDate(startDate)];
-
-                // XXX need to look at the number of children here and determine what we're supposed to do
-                var eventBox = savedThis.createEventBox(itemOccurrence);
-                dayBoxItem.appendChild(eventBox);
- 
+                eventController.createEventBox(aItems[i],
+                                               function(a1, a2, a3) { eventController.createEventBoxInternal(a1, a2, a3); } );
             }
         }
     };
@@ -258,7 +249,7 @@ MonthView.prototype.refreshEvents = function()
                       0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
 }
 
-MonthView.prototype.createEventBox = function(itemOccurrence)
+MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, endDate)
 {
     var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
  
@@ -309,9 +300,11 @@ MonthView.prototype.createEventBox = function(itemOccurrence)
 
     eventBox.appendChild(eventBoxText);        
 
-    return eventBox;
+    // XXX need to look at the number of children here and determine what we're supposed to do
+    dayBoxItem = this.dayBoxItemArray[this.indexOfDate(startDate.jsDate)];
+    dayBoxItem.appendChild(eventBox);
 
-
+/*
 
   // Set the numberOfEventsToShow
   if( this.numberOfEventsToShow == false )
@@ -468,6 +461,7 @@ MonthView.prototype.createEventBox = function(itemOccurrence)
          this.selectBoxForEvent( calendarEventDisplay.event ); 
       } 
    }
+*/
 }
 
 
@@ -976,7 +970,7 @@ MonthView.prototype.doubleClickDay = function monthView_doubleClickDay( event )
 
 MonthView.prototype.clearSelectedEvent = function monthView_clearSelectedEvent( )
 {
-  debug("clearSelectedEvent");
+  monthdebug("clearSelectedEvent");
   this.removeAttributeFromElements("eventselected","true");
 }
 
@@ -1201,7 +1195,7 @@ var monthViewEventDragAndDropObserver  = {
   }
 };
 
-function debug( Text )
+function monthdebug( Text )
 {
    dump( "monthView.js: "+ Text +"\n");
 

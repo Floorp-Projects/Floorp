@@ -141,14 +141,15 @@ WeekView.prototype.refreshEvents = function()
     this.displayEndDate.setSeconds(this.displayEndDate.getSeconds() - 1);
 
     // Save this off so we can get it again in onGetResult below
-    var savedThis = this;
+    var eventController = this;
     var getListener = {
         onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
             debug("onOperationComplete\n");
         },
         onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             for (var i = 0; i < aCount; ++i) {
-                savedThis.createEventBox(aItems[i]);
+                eventController.createEventBox(aItems[i],
+                                               function(a1, a2, a3) { eventController.createEventBoxInternal(a1, a2, a3); } );
             }
         }
     };
@@ -323,62 +324,10 @@ WeekView.prototype.refreshEvents = function()
 */
 }
 
-//WeekView.prototype.displayTimezone = "/mozilla.org/20050126_1/Europe/Amsterdam";
-
 /** PRIVATE
 *
 *   This creates an event box for the week view
 */
-WeekView.prototype.createEventBox = function ( itemOccurrence )
-{    
-    var startDate;
-    var origEndDate;
-
-    if ("displayTimezone" in this) {
-        startDate = itemOccurrence.occurrenceStartDate.getInTimezone(this.displayTimezone).clone();
-        origEndDate = itemOccurrence.occurrenceEndDate.getInTimezone(this.displayTimezone).clone();
-    } else {
-        // Copy the values from jsDate. jsDate is in de users timezone
-        // It's a hack, but it kind of works. It doesn't set the right
-        // timezone info for the date, but that's not a real problem.
-        startDate = itemOccurrence.occurrenceStartDate.clone();
-        startDate.year = startDate.jsDate.getFullYear();
-        startDate.month = startDate.jsDate.getMonth();
-        startDate.day = startDate.jsDate.getDate();
-        startDate.hour = startDate.jsDate.getHours();
-        startDate.minute = startDate.jsDate.getMinutes();
-        startDate.second = startDate.jsDate.getSeconds();
-        startDate.normalize();
-
-        origEndDate = itemOccurrence.occurrenceEndDate.clone();
-        origEndDate.year = origEndDate.jsDate.getFullYear();
-        origEndDate.month = origEndDate.jsDate.getMonth();
-        origEndDate.day = origEndDate.jsDate.getDate();
-        origEndDate.hour = origEndDate.jsDate.getHours();
-        origEndDate.minute = origEndDate.jsDate.getMinutes();
-        origEndDate.second = origEndDate.jsDate.getSeconds();
-        origEndDate.normalize();
-    }
-
-    var endDate = startDate.clone();
-    endDate.hour = 23;
-    endDate.minute = 59;
-    endDate.second = 59;
-    endDate.normalize();
-    while (endDate.compare(origEndDate) < 0) {
-        this.createEventBoxInternal(itemOccurrence, startDate, endDate);
-
-        startDate.day = startDate.day + 1;
-        startDate.hour = 0;
-        startDate.minute = 0;
-        startDate.second = 0;
-        startDate.normalize();
-
-        endDate.day = endDate.day + 1;
-        endDate.normalize();
-    }
-    this.createEventBoxInternal(itemOccurrence, startDate, origEndDate);
-}
 
 WeekView.prototype.createEventBoxInternal = function (itemOccurrence, startDate, endDate)
 {    
@@ -403,6 +352,8 @@ WeekView.prototype.createEventBoxInternal = function (itemOccurrence, startDate,
         endDate.hour = this.highestEndHour;
         endDate.normalize();
     }
+dump(startDate+" "+endDate+"\n");
+dump(this.displayEndDate+"\n");
 
     /*
     if (calEvent.isAllDay) {

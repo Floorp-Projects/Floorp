@@ -112,32 +112,32 @@ DayView.prototype.refreshEvents = function()
     this.removeElementsByAttribute("eventbox", "dayview");
 
     // Figure out the start and end days for the week we're currently viewing
-    var startDate = new Date(this.calendarWindow.getSelectedDate());
-    var endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 1);
-    endDate.setSeconds(endDate.getSeconds() - 1);
+    this.displayStartDate = new Date(this.calendarWindow.getSelectedDate());
+    this.displayEndDate = new Date(this.displayStartDate );
+    this.displayEndDate.setDate(this.displayEndDate.getDate() + 1);
+    this.displayEndDate.setSeconds(this.displayEndDate.getSeconds() - 1);
 
     // Save this off so we can get it again in onGetResult below
-    var savedThis = this;
+    var eventController = this;
     var getListener = {
         onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
             dump("onOperationComplete\n");
         },
         onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             for (var i = 0; i < aCount; ++i) {
-                var eventBox = savedThis.createEventBox(aItems[i]);
-                dump("Adding eventBox " + eventBox + "\n");
-                document.getElementById("day-view-content-board").appendChild(eventBox);
+                eventController.createEventBox(aItems[i],
+                                               function(a1, a2, a3) { eventController.createEventBoxInternal(a1, a2, a3); } );
             }
         }
     };
 
     var ccalendar = getCalendar(); // XXX Should get the composite calendar here
 
-    dump("Fetching events from " + startDate.toString() + " to " + endDate.toString() + "\n");
+    dump("Fetching events from " + this.displayStartDate.toString() + " to " + this.displayEndDate.toString() + "\n");
 
     ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
-                      0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
+                      0, jsDateToDateTime(this.displayStartDate),
+                      jsDateToDateTime(this.displayEndDate), getListener);
 
     return;
     
@@ -350,12 +350,26 @@ DayView.prototype.createAllDayEventBox = function dayview_createAllDayEventBox( 
 *
 *   This creates an event box for the day view
 */
-DayView.prototype.createEventBox = function(itemOccurrence)
+DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, endDate)
 {
     var calEvent = itemOccurrence.item.QueryInterface(Components.interfaces.calIEvent);
 
-    var startDate = itemOccurrence.occurrenceStartDate;
-    var endDate = itemOccurrence.occurrenceEndDate;
+    // XXX Centralize this next checks
+    // Check if the event is within the bounds of events to be displayed.
+    if ((endDate.jsDate < this.displayStartDate) ||
+        (startDate.jsDate > this.displayEndDate))
+        return;
+
+    // XXX Should this really be done? better would be to adjust the
+    // display boundaries
+    if (startDate.jsDate < this.displayStartDate)
+        startDate.jsDate = this.displayStartDate;
+
+    if (endDate.jsDate > this.displayEndDate)
+        endDate.jsDate = this.displayEndDate;
+
+    startDate.normalize();
+    endDate.normalize();
 
     /*
     if (calEvent.isAllDay) {
@@ -441,7 +455,8 @@ DayView.prototype.createEventBox = function(itemOccurrence)
    
    eventBox.appendChild( eventTitleLabel );
    eventBox.appendChild( eventDescription );   
-   return eventBox;
+
+   document.getElementById("day-view-content-board").appendChild(eventBox);
 }
 
 /** PUBLIC
@@ -629,7 +644,7 @@ DayView.prototype.selectBoxForEvent = function dayview_selectBoxForEvent( calend
 */
 DayView.prototype.clearSelectedEvent = function dayview_clearSelectedEvent( )
 {
-  debug("clearSelectedEvent");
+  daydebug("clearSelectedEvent");
   this.removeAttributeFromElements("eventselected", "true");
 }
 
@@ -662,7 +677,7 @@ DayView.prototype.hiliteTodaysDate = function dayview_hiliteTodaysDate( )
 }
 
 
-function debug( Text )
+function daydebug( Text )
 {
    dump( "dayView.js: "+ Text +"\n");
 }
