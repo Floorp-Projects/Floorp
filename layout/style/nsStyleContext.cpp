@@ -200,15 +200,11 @@ struct StylePositionImpl: public nsStylePosition {
   {
     mPosition = NS_STYLE_POSITION_STATIC;
     mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
-    mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_AUTO;
-    mLeftOffset = 0;
-    mTopOffsetFlags = NS_STYLE_POSITION_VALUE_AUTO;
-    mTopOffset = 0;
-    mWidthFlags = NS_STYLE_POSITION_VALUE_AUTO;
-    mWidth = 0;
-    mHeightFlags = NS_STYLE_POSITION_VALUE_AUTO;
-    mHeight = 0;
-    mZIndex = 0;
+    mLeftOffset.SetAutoValue();
+    mTopOffset.SetAutoValue();
+    mWidth.SetAutoValue();
+    mHeight.SetAutoValue();
+    mZIndex.SetAutoValue();
     mClipFlags = NS_STYLE_CLIP_AUTO;
     mClip.SizeTo(0,0,0,0);
   }
@@ -241,11 +237,11 @@ struct StyleTextImpl: public nsStyleText {
     mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
     mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
 
-    mLetterSpacing.SetNormal();
-    mLineHeight.SetNormal();
-    mTextIndent.Set(0);
-    mWordSpacing.SetNormal();
-    mVerticalAlign.Set(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
+    mLetterSpacing.SetNormalValue();
+    mLineHeight.SetNormalValue();
+    mTextIndent.SetCoordValue(0);
+    mWordSpacing.SetNormalValue();
+    mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
   }
 
   virtual const nsID& GetID() {
