@@ -142,13 +142,7 @@
 .toolbarbutton-1 > stack > .toolbarbutton-menubutton-button 
   > .toolbarbutton-text,
 .toolbarbutton-1 > .toolbarbutton-text {
-  display: none !important;
-}
-
-.toolbarbutton-1 > stack > .toolbarbutton-menubutton-button 
-  > .toolbarbutton-icon,
-.toolbarbutton-1 > .toolbarbutton-icon {
-  display: inline !important;
+  display: none;
 }
 
 /* ::::: small primary toolbar buttons ::::: */

@@ -61,23 +61,6 @@
   display: none;
 }
 
-.toolbarbutton-1[buttonstyle="pictures"],
-.toolbarbutton-1[buttonstyle="pictures"] > .toolbarbutton-menubutton-button {
-  min-width: 0px;
-}
-
-.toolbarbutton-1[buttonstyle="pictures"] > .toolbarbutton-menubutton-button
-    > .toolbarbutton-text,
-.toolbarbutton-1[buttonstyle="pictures"] > .toolbarbutton-text {
-  display: none;
-}
-
-.toolbarbutton-1[buttonstyle="text"] > .toolbarbutton-menubutton-button
-    > .toolbarbutton-icon,
-.toolbarbutton-1[buttonstyle="text"] > .toolbarbutton-icon {
-  display: none;
-}
-
 /* ::::: standard toolbar buttons ::::: */
 
 .button-toolbar {

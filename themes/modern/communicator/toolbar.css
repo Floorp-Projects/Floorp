@@ -45,6 +45,7 @@
 
 .toolbar-primary {
   -moz-binding: url("chrome://communicator/skin/toolbar/toolbarBindings.xml#toolbar-primary");
+  min-height: 45px;
   background-color: #B1BDC9;
 }
 
@@ -63,15 +64,9 @@
   background-position: top;
 }
 
-.toolbar-primary[buttonstyle="pictures"] > .toolbar-primary-holder > .toolbar-primary-icon,
-.toolbar-primary[buttonstyle="text"] > .toolbar-primary-holder > .toolbar-primary-icon {
-  display: none;
-}
-
 /* ::::: toolbargrippy ::::: */
  
 .toolbar-primary-grippy { 
-  -moz-binding: url("chrome://communicator/skin/toolbar/toolbarBindings.xml#toolbargrippy-primary");
   border: none;
   background: url("chrome://communicator/skin/toolbar/prtb-grip-mid.gif") repeat-y;
   list-style-image: url("chrome://communicator/skin/toolbar/prtb-grip-btm.gif");
@@ -79,8 +74,8 @@
 
 .toolbar-primary-grippy > .toolbargrippy-texture {
   width: 13px;
-  height: 0px;
-  list-style-image: url("chrome://communicator/skin/toolbar/prtb-grip-top.gif");
+  height: 34px;
+  background: url("chrome://communicator/skin/toolbar/prtb-grip-top.gif") no-repeat top;
 }
 
 .toolbar-primary-grippy > .toolbargrippy-arrow {
@@ -96,7 +91,7 @@
 }
 
 .toolbar-primary-grippy:hover:active > .toolbargrippy-texture {
-  list-style-image: url("chrome://communicator/skin/toolbar/prtb-grip-top-act.gif");
+  background-image: url("chrome://communicator/skin/toolbar/prtb-grip-top-act.gif");
 }
 
 /* ::::: toolbar-primary separator ::::: */
