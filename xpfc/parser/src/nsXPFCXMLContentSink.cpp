@@ -388,7 +388,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddLeaf(const nsIParserNode& aNode)
     res = object->QueryInterface(kIXPFCCanvasIID,(void**)&canvas);
     if (NS_OK == res)
     {
-      canvas->CreateWidget();
+      canvas->CreateView();
       NS_RELEASE(canvas);
     }
 

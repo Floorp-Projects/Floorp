@@ -37,7 +37,7 @@ public:
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
   NS_IMETHOD GetClassPreferredSize(nsSize& aSize);
 
-  NS_IMETHOD CreateWidget();
+  NS_IMETHOD CreateView();
 
   NS_IMETHOD SetLabel(nsString& aString);
   NS_IMETHOD  SetBounds(const nsRect& aBounds);

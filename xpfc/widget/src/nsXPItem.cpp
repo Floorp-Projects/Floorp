@@ -152,7 +152,7 @@ nsresult nsXPItem :: GetClassPreferredSize(nsSize& aSize)
   return (NS_OK);
 }
 
-nsresult nsXPItem :: CreateWidget()
+nsresult nsXPItem :: CreateView()
 {
   nsresult res = NS_OK;
   return res;

@@ -31,6 +31,10 @@
 #include "nsITimer.h"
 #include "nsIThrobber.h"
 
+#include "nsViewsCID.h"
+#include "nsIViewManager.h"
+#include "nsXPFCToolkit.h"
+
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCXPFCButtonCID, NS_XPFC_BUTTON_CID);
 static NS_DEFINE_IID(kCIXPFCButtonIID,NS_IXPFC_BUTTON_IID);
@@ -39,6 +43,7 @@ static NS_DEFINE_IID(kInsButtonIID,   NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIWidgetIID,     NS_IWIDGET_IID);
 static NS_DEFINE_IID(kThrobberCID,    NS_THROBBER_CID);
 static NS_DEFINE_IID(kIThrobberIID,   NS_ITHROBBER_IID);
+static NS_DEFINE_IID(kViewCID,                    NS_VIEW_CID);
 
 #define DEFAULT_WIDTH  50
 #define DEFAULT_HEIGHT 50
@@ -101,7 +106,7 @@ nsresult nsXPFCButton :: GetClassPreferredSize(nsSize& aSize)
   return (NS_OK);
 }
 
-nsresult nsXPFCButton :: CreateWidget()
+nsresult nsXPFCButton :: CreateView()
 {
   nsresult res = NS_OK;
 
@@ -115,7 +120,7 @@ nsresult nsXPFCButton :: CreateWidget()
       return res;
 
     nsIWidget * parent = GetWidget();
-
+    
     nsSize size ;
 
     GetClassPreferredSize(size);
@@ -128,20 +133,19 @@ nsresult nsXPFCButton :: CreateWidget()
 
   } else {
 
+    nsIView * parent = GetView();
 
-    nsIWidget * parent = GetWidget();
+    LoadView(kViewCID, &kCButtonCID, parent);
 
-    res = LoadWidget(kCButtonCID);
-
+    nsIWidget * bw = nsnull;
     nsIButton * button = nsnull;
-    res = QueryInterface(kInsButtonIID,(void**)&button);
+
+    mView->GetWidget(bw);
+
+    res = bw->QueryInterface(kInsButtonIID,(void**)&button);
 
     if (NS_OK == res)
     {
-
-      nsIWidget * bw = nsnull;
-
-      res = button->QueryInterface(kIWidgetIID,(void**)&bw);
 
       if (NS_OK == res)
       {
@@ -152,25 +156,23 @@ nsresult nsXPFCButton :: CreateWidget()
 
         nsRect rect(0,0,size.width,size.height);
 
-        bw->Create(parent, 
-                   rect, 
-                   gXPFCToolkit->GetShellEventCallback(), 
-                   nsnull);
-
         bw->SetBackgroundColor(GetBackgroundColor());
         bw->SetForegroundColor(GetForegroundColor());
-        bw->Show(PR_TRUE);
 
         button->SetLabel(GetLabel());
 
-        NS_RELEASE(bw);
+        gXPFCToolkit->GetViewManager()->MoveViewTo(mView, rect.x, rect.y);
+        gXPFCToolkit->GetViewManager()->ResizeView(mView, rect.width, rect.height);
+        gXPFCToolkit->GetViewManager()->UpdateView(mView, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER) ;
 
       }
 
       NS_RELEASE(button);
     }
   
+    NS_RELEASE(bw);
     SetVisibility(PR_FALSE);      
+
   }
   return res;
 }
@@ -187,24 +189,33 @@ nsresult nsXPFCButton :: SetLabel(nsString& aString)
    */
   static NS_DEFINE_IID(kInsButtonIID, NS_IBUTTON_IID);
 
+  nsIWidget * bw = nsnull;
   nsIButton * button = nsnull;
-  nsresult res = QueryInterface(kInsButtonIID,(void**)&button);
 
-  if (NS_OK == res)
+  if (mView)
   {
-    button->SetLabel(aString);
-    NS_RELEASE(button);
-  }
+    mView->GetWidget(bw);
 
+    nsresult res = bw->QueryInterface(kInsButtonIID,(void**)&button);
+
+    if (NS_OK == res)
+    {
+      button->SetLabel(aString);
+      NS_RELEASE(button);
+    }
+
+    NS_RELEASE(bw);
+  }
   return NS_OK;
 }
 
 nsresult nsXPFCButton :: SetBounds(const nsRect &aBounds)
 {
 
-  if (mWidget == nsnull)
+  if (mView == nsnull)
   {
-    mThrobber->MoveTo(aBounds.x, aBounds.y);
+    if (mThrobber)
+      mThrobber->MoveTo(aBounds.x, aBounds.y);
     return NS_OK;
   } 
 
@@ -217,8 +228,11 @@ nsEventStatus nsXPFCButton :: OnPaint(nsIRenderingContext& aRenderingContext,
 {
   if (GetLabel() == "Throbber")
   {
-    mThrobber->Hide();
-    mThrobber->Show();
+    if (mThrobber)
+    {
+      mThrobber->Hide();
+      mThrobber->Show();
+    }
   }
   return (nsXPFCCanvas::OnPaint(aRenderingContext,aDirtyRect));
 }

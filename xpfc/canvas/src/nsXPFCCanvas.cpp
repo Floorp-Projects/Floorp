@@ -29,7 +29,6 @@
 #include "nsIDeviceContext.h"
 #include "nsWidgetsCID.h"
 #include "nsColor.h"
-
 #include "nsBoxLayout.h"
 #include "nsIXPFCCommand.h"
 #include "nsIXMLParserObject.h"
@@ -38,13 +37,12 @@
 #include "nsxpfcstrings.h"
 #include "nsXPFCMethodInvokerCommand.h"
 #include "nsIWebViewerContainer.h"
-
 #include "nsXPFCToolkit.h"
-
 #include "nsIButton.h"
 #include "nsITabWidget.h"
-
 #include "nspr.h"
+#include "nsViewsCID.h"
+#include "nsIViewManager.h"
 
 #define DEFAULT_WIDTH  100
 #define DEFAULT_HEIGHT 100
@@ -65,6 +63,9 @@ static NS_DEFINE_IID(kXPFCCommandCID, NS_XPFC_COMMAND_CID);
 
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+static NS_DEFINE_IID(kIViewIID,               NS_IVIEW_IID);
+static NS_DEFINE_IID(kViewCID,                NS_VIEW_CID);
+static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 
 
 nsXPFCCanvas :: nsXPFCCanvas(nsISupports* outer) :     
@@ -78,7 +79,6 @@ nsXPFCCanvas :: nsXPFCCanvas(nsISupports* outer) :
 {
   NS_INIT_AGGREGATED(outer);
 
-  mWidget = nsnull;
   mLayout = nsnull;
   mParent = nsnull;
   mBackgroundColor = NS_RGB(192,192,192);
@@ -122,8 +122,6 @@ nsXPFCCanvas :: ~nsXPFCCanvas()
 {
   DeleteChildren();
 
-  NS_IF_RELEASE(mWidget);
-
   mParent = nsnull;
 
   NS_IF_RELEASE(mLayout);
@@ -136,6 +134,8 @@ nsXPFCCanvas :: ~nsXPFCCanvas()
     NS_RELEASE(mImageGroup);
   }
 
+  if (nsnull != mView)
+    mView->Destroy();
 
 }
 
@@ -193,9 +193,6 @@ nsresult nsXPFCCanvas::AggregatedQueryInterface(const nsIID &aIID,
       AddRef();                                                            
       return NS_OK;                                                        
     }                                                                      
-
-  if (nsnull != mWidget)
-    return mWidget->QueryInterface(aIID, aInstancePtr);
 
     return NS_NOINTERFACE;
 }
@@ -368,8 +365,8 @@ nsresult nsXPFCCanvas::FindLargestTabID(PRUint32 aTabGroup, PRUint32& aTabID)
 
 nsresult nsXPFCCanvas :: SetFocus()
 {
-  if (mWidget)
-    mWidget->SetFocus();
+  if (GetWidget())
+    GetWidget()->SetFocus();
 
   return NS_OK;
 }
@@ -378,19 +375,20 @@ nsresult nsXPFCCanvas :: CreateImageGroup()
 {
   nsresult res = NS_OK;
 
-  if ((mImageGroup != nsnull) && (GetWidget() != nsnull))
+  if (nsnull != mImageGroup)
     return NS_OK;
 
   res = NS_NewImageGroup(&mImageGroup);
 
   if (NS_OK == res) 
   {
-    
-    nsIDeviceContext * deviceCtx = GetWidget()->GetDeviceContext();
+    nsIDeviceContext * deviceCtx = nsnull;
+
+    gXPFCToolkit->GetViewManager()->GetDeviceContext(deviceCtx);    
 
     mImageGroup->Init(deviceCtx);
 
-    NS_RELEASE(deviceCtx);
+    NS_IF_RELEASE(deviceCtx);
   }
 
   return res;
@@ -559,7 +557,9 @@ nsresult nsXPFCCanvas :: SetParameter(nsString& aKey, nsString& aValue)
       static NS_DEFINE_IID(kInsTabWidgetIID, NS_ITABWIDGET_IID);
 
       nsITabWidget * tab = nsnull;
-      nsresult res = QueryInterface(kInsTabWidgetIID,(void**)&tab);
+      nsIWidget * widget = GetWidget();
+      nsresult res = widget->QueryInterface(kInsTabWidgetIID,(void**)&tab);
+      NS_RELEASE(widget);
 
       if (NS_OK == res)
       {
@@ -576,52 +576,63 @@ nsresult nsXPFCCanvas :: SetParameter(nsString& aKey, nsString& aValue)
 }
 
 
-nsresult nsXPFCCanvas :: LoadWidget(const nsCID &aClassIID)
+nsresult nsXPFCCanvas :: LoadView(const nsCID &aViewClassIID, 
+                                  const nsCID * aWidgetClassIID,
+                                  nsIView * aParent,
+                                  nsWidgetInitData * aInitData,
+                                  nsNativeWidget aNativeWidget)
 {
-  nsresult rv;
+  nsresult res = NS_OK;
 
-  nsISupports * supports ;
+  nsRect bounds;
 
-  rv = QueryInterface(kISupportsIID, (void **) &supports);
+  GetBounds(bounds);
 
-  if (NS_OK != rv)
-    return rv;
+  res = nsRepository::CreateInstance(aViewClassIID, 
+                                    nsnull,
+                                    kIViewIID, 
+                                    (void**)&mView);
 
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (NS_OK != res)
+    return res;
 
-  rv = nsRepository::CreateInstance(aClassIID, 
-                                    nsnull, //supports, 
-                                    kIWidgetIID, 
-                                    (void**)&mWidget);
+  gXPFCToolkit->GetCanvasManager()->RegisterView((nsIXPFCCanvas*)this,mView);
 
-  NS_RELEASE(supports);
+  nsIView * view = nsnull;
 
-  if (mWidget != nsnull)
-  {
-    gXPFCToolkit->GetCanvasManager()->RegisterWidget(this,mWidget);
-  }
+  if (aParent != nsnull)
+    view = aParent;
+  else if (GetParent() != nsnull)
+    view = GetParent()->GetView();
 
-  return rv;
+  mView->Init(gXPFCToolkit->GetViewManager(),
+              bounds,
+              view,
+              aWidgetClassIID,
+              aInitData,
+              aNativeWidget);
+
+  return res;
 }
 
-nsresult nsXPFCCanvas :: CreateWidget()
+nsresult nsXPFCCanvas :: CreateView()
 {
   
-  nsresult rv;
+  nsresult res = NS_OK;
 
   static NS_DEFINE_IID(kCWidgetCID, NS_CHILD_CID);
 
-  rv = LoadWidget(kCWidgetCID);
+  res = LoadView(kViewCID, &kCWidgetCID);
 
-
-  return rv;
+  return res;
 }
 
-nsIWidget * nsXPFCCanvas :: GetWidget()
+// XXX change API to be XPCOM-ish - caller needs to release!
+nsIView * nsXPFCCanvas :: GetView()
 {
 
-  if (mWidget)
-      return mWidget;
+  if (nsnull != mView)
+    return (mView);    
 
   /*
    * If we have no parent, this usually means it is during parsing.
@@ -651,15 +662,36 @@ nsIWidget * nsXPFCCanvas :: GetWidget()
     if (root == nsnull)
       return nsnull;
 
-    nsIWidget * widget = root->GetWidget();
+    nsIView * view = root->GetView();
 
     NS_RELEASE(root);
-    return (widget);
+    return (view);
 
   }
 
-  return (GetParent()->GetWidget());
+  return (GetParent()->GetView());
 
+}
+
+// XXX change API to be XPCOM-ish - caller needs to release!
+nsIWidget * nsXPFCCanvas :: GetWidget()
+{
+
+  nsIWidget * widget  = nsnull;
+  nsIView * view = GetView();
+
+  while(widget == nsnull && view != nsnull)
+  {
+    view->GetWidget(widget);
+
+    if (widget)
+      break;
+
+    view->GetParent(view);
+
+  }
+  
+  return (widget);
 }
 
 nsILayout * nsXPFCCanvas :: GetLayout()
@@ -735,79 +767,44 @@ nsresult nsXPFCCanvas :: CreateDefaultLayout()
   return res;
 }
 
-nsresult nsXPFCCanvas :: Init(nsNativeWidget aNativeParent, const nsRect& aBounds, EVENT_CALLBACK   aHandleEventFunction)
+nsresult nsXPFCCanvas :: Init(nsNativeWidget aNativeParent, const nsRect& aBounds)
 {
-
-  SetBounds(aBounds) ;
 
   nsresult res = Init();
 
-  CreateWidget();
-
-  return res ;
-}
-
-nsresult nsXPFCCanvas :: Init(nsIWidget * aParent, const nsRect& aBounds, EVENT_CALLBACK   aHandleEventFunction)
-{
-
-
-  nsresult res = Init();
-
-  CreateWidget();
-
-  Create("MiniCal", aBounds, aHandleEventFunction, aParent);
   SetBounds(aBounds) ;
-
-  return res ;
-}
-
-
-
-PRBool nsXPFCCanvas::Create(char * lpszWindowName, 
-                           const nsRect& rect, 
-                           EVENT_CALLBACK   aHandleEventFunction,
-                           nsIWidget * pParent) 
-{
 
   static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
-#ifdef XP_UNIX
-  nsRepository::RegisterFactory(kCChildCID, "libwidgetunix.so", PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kIWidgetIID, "libwidgetunix.so", PR_FALSE, PR_FALSE);
-#endif
-  nsresult res ;
-  
-  if (mWidget == nsnull)
-  {
-    res = nsRepository::CreateInstance(kCChildCID, 
-                                       nsnull, 
-                                       kIWidgetIID, 
-                                       (void **)&(mWidget));
+  LoadView(kCViewCID, &kCChildCID, nsnull, nsnull, aNativeParent);
 
-    if (NS_OK != res)
-      return PR_FALSE;
-  }
+  return res ;
+}
+
+nsresult nsXPFCCanvas :: Init(nsIView * aParent, const nsRect& aBounds)
+{
+
+  nsresult res = Init();
+
+  Create(aBounds, aParent);
+
+  SetBounds(aBounds) ;
+
+  return res ;
+}
+
+
+
+PRBool nsXPFCCanvas::Create(const nsRect& rect, 
+                            nsIView * aParent) 
+{
+  static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
   nsWidgetInitData initData ;
 
   initData.clipChildren = PR_FALSE;
 
-  nsIDeviceContext * context = nsnull;
-  
-  if (GetWidget())
-    context = GetWidget()->GetDeviceContext();
-
-  mWidget->Create(pParent, 
-                  rect, 
-                  aHandleEventFunction, 
-                  context, 
-                  nsnull, 
-                  nsnull, 
-                  &initData);
-
-  NS_IF_RELEASE(context);
-
-  mWidget->Show(PR_TRUE);
+  LoadView(kCViewCID, &kCChildCID, aParent, &initData);
 
   return PR_TRUE;
 }
@@ -839,13 +836,23 @@ nsresult nsXPFCCanvas :: SetBounds(const nsRect &aBounds)
   mBounds.width = aBounds.width ;
   mBounds.height = aBounds.height ;
 
-  if (mWidget) {
-    mWidget->Invalidate(PR_FALSE);
-    mWidget->Resize(aBounds.x, aBounds.y, aBounds.width, aBounds.height, PR_FALSE);
-    mBounds.x = 0 ;
-    mBounds.y = 0 ;
-  }
+  if (mView != nsnull)
+  {
+    gXPFCToolkit->GetViewManager()->MoveViewTo(mView, mBounds.x, mBounds.y);
+    gXPFCToolkit->GetViewManager()->ResizeView(mView, mBounds.width, mBounds.height);
 
+    nsIWidget * widget = nsnull;
+
+    mView->GetWidget(widget);
+
+    if (widget)
+    {
+      mBounds.x = 0 ;
+      mBounds.y = 0 ;
+    }
+
+    NS_IF_RELEASE(widget);
+  }
 
   return NS_OK;
 }
@@ -891,19 +898,20 @@ nsEventStatus nsXPFCCanvas :: OnPaint(nsIRenderingContext& aRenderingContext,
 
 nsEventStatus nsXPFCCanvas :: OnResize(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  //SetBounds(*((nsSizeEvent*)aEvent)->windowSize);
-
-  if (mWidget != nsnull)
-  {
-    mWidget->Invalidate(PR_FALSE);
-    mBounds.x = 0 ;
-    mBounds.y = 0 ;
-  } else {
-    mBounds.x = aX ;
-    mBounds.y = aY ;
-  }
+  mBounds.x = aX ;
+  mBounds.y = aY ;
   mBounds.width = aWidth ;
   mBounds.height = aHeight ;
+
+  if (mView != nsnull)
+  {
+    nsRect bounds = mBounds;
+
+    bounds.x = 0;
+    bounds.y = 0;
+
+    gXPFCToolkit->GetViewManager()->UpdateView(mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER) ;
+  }
 
   mLayout->Layout();
 
@@ -1010,6 +1018,14 @@ nsIXPFCCanvas * nsXPFCCanvas :: GetParent()
 void nsXPFCCanvas :: SetParent(nsIXPFCCanvas * aCanvas)
 {
   mParent = aCanvas;
+
+  /*
+   * Update ye-ole view system
+   */
+
+  if (mView)
+    mView->SetParent(aCanvas->GetView());
+
   return ;
 }
 
@@ -1022,8 +1038,8 @@ void nsXPFCCanvas :: SetBackgroundColor(const nscolor &aColor)
 {
   mBackgroundColor = aColor;
 
-  if (mWidget)
-      mWidget->SetBackgroundColor(aColor);
+  if (GetWidget() != nsnull)
+      GetWidget()->SetBackgroundColor(aColor);
 }
 
 nscolor nsXPFCCanvas :: GetBorderColor(void)
@@ -1045,8 +1061,8 @@ void nsXPFCCanvas :: SetForegroundColor(const nscolor &aColor)
 {
   mForegroundColor = aColor;
 
-  if (mWidget)
-      mWidget->SetForegroundColor(aColor);
+  if (GetWidget() != nsnull)
+      GetWidget()->SetForegroundColor(aColor);
 }
 
 nscolor nsXPFCCanvas :: Highlight(const nscolor &aColor)
@@ -1229,7 +1245,7 @@ nsEventStatus nsXPFCCanvas :: PaintChildWidgets(nsIRenderingContext& aRenderingC
 {
   nsresult res ;
   nsIIterator * iterator ;
-  nsIXPFCCanvas * widget ;
+  nsIXPFCCanvas * canvas ;
   nsRect rect;
 
   // Iterate through the children
@@ -1242,18 +1258,12 @@ nsEventStatus nsXPFCCanvas :: PaintChildWidgets(nsIRenderingContext& aRenderingC
 
   while(!(iterator->IsDone()))
   {
-    widget = (nsIXPFCCanvas *) iterator->CurrentItem();
+    canvas = (nsIXPFCCanvas *) iterator->CurrentItem();
 
-    widget->GetBounds(rect);
+    canvas->GetBounds(rect);
 
     if (rect.width != 0 && rect.height != 0)
-    {
-      if (((nsXPFCCanvas *)widget)->mWidget == nsnull) {
-        widget->OnPaint(aRenderingContext,aDirtyRect);
-      } else {
-        ((nsXPFCCanvas *)widget)->mWidget->Invalidate(PR_FALSE);
-      }
-    }
+      canvas->OnPaint(aRenderingContext,aDirtyRect);
 
     iterator->Next();
   }
@@ -1349,8 +1359,14 @@ nsEventStatus nsXPFCCanvas :: HandleEvent(nsGUIEvent *aEvent)
           {
             canvas = (nsXPFCCanvas *) iterator->CurrentItem();
 
-            if (canvas->mWidget != nsnull)
-              canvas->mWidget->Invalidate(PR_FALSE);
+            if (canvas->mView != nsnull)
+            {
+              nsRect bounds;
+              canvas->mView->GetBounds(bounds);
+              bounds.x = 0;
+              bounds.y = 0;
+              gXPFCToolkit->GetViewManager()->UpdateView(canvas->mView, bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER) ;
+            }
 
             iterator->Next();
           }
@@ -1489,7 +1505,7 @@ PRBool nsXPFCCanvas::PaintRequested()
   {
     canvas = (nsXPFCCanvas *) iterator->CurrentItem();
 
-    if (canvas->mWidget == nsnull)
+    if (canvas->mView == nsnull)
     {
       
       if(canvas->GetVisibility() == PR_TRUE)
@@ -1947,13 +1963,30 @@ nsresult nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
    * Just paint ourselves for now
    */
 
-  GetWidget()->Invalidate(PR_FALSE);
+  nsRect bounds;
+
+  GetView()->GetBounds(bounds);
+
+  bounds.x = 0;
+  bounds.y = 0;
+
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+
   return NS_OK;
 }
 
 nsCursor nsXPFCCanvas::GetCursor()
 {
-  return (GetWidget()->GetCursor());
+  nsIWidget * widget = GetWidget();
+  nsCursor cursor = eCursor_standard;
+
+  if (widget != nsnull)
+  {
+    cursor = widget->GetCursor();
+    NS_RELEASE(widget);
+  }
+
+  return (cursor);
 }
 
 nsCursor nsXPFCCanvas::GetDefaultCursor(nsPoint& aPoint)
@@ -1985,7 +2018,16 @@ nsCursor nsXPFCCanvas::GetDefaultCursor(nsPoint& aPoint)
 
 void nsXPFCCanvas::SetCursor(nsCursor aCursor)
 {
-  GetWidget()->SetCursor(aCursor);
+  nsIWidget * widget = GetWidget();
+
+  if (widget != nsnull)
+  {
+    widget->SetCursor(aCursor);
+    NS_RELEASE(widget);
+  }
+
+  return ;
+
 }
 
 nsEventStatus nsXPFCCanvas::OnMouseMove(nsGUIEvent *aEvent)
@@ -2156,8 +2198,16 @@ void nsXPFCCanvas::Notify(nsIImageRequest *aImageRequest,
                           PRInt32 aParam1, PRInt32 aParam2,
                           void *aParam3)
 {
+  nsRect bounds;
+
+  GetView()->GetBounds(bounds);
+
   if (aNotificationType == nsImageNotification_kImageComplete)
-    GetWidget()->Invalidate(PR_FALSE);
+  {
+    bounds.x = 0;
+    bounds.y = 0;
+    gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+  }
   return ;
 }
 
