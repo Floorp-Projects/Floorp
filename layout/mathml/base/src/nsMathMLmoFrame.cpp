@@ -80,8 +80,15 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
                        PRUint32             aFlags)
 {
   nsresult rv = NS_OK;
-  if (NS_MATHML_OPERATOR_GET_FORM(mFlags) ||
-      NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
+  PRBool useMathMLChar =
+    NS_MATHML_OPERATOR_GET_FORM(mFlags) ||
+    NS_MATHML_OPERATOR_IS_CENTERED(mFlags);
+  if (!useMathMLChar || NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    // let the base class paint the background, border, outline
+    rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
+                                       aDirtyRect, aWhichLayer);
+  }
+  if (useMathMLChar) {
     rv = mMathMLChar.Paint(aPresContext, aRenderingContext,
                            aDirtyRect, aWhichLayer, this);
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
@@ -96,10 +103,6 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
       aRenderingContext.DrawRect(x,y,w,h);
     }
 #endif
-  }
-  else { // let the base class worry about the painting
-    rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                       aDirtyRect, aWhichLayer);
   }
   return rv;
 }
@@ -127,6 +130,15 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
       }
     }
   }
+  PRInt32 length = data.Length();
+
+  // special... in math mode, the usual minus sign '-' looks too short, so
+  // what we do here is to remap <mo>-</mo> to the official Unicode minus
+  // sign (U+2212) which looks much better. For background on this, see
+  // http://groups.google.com/groups?hl=en&th=66488daf1ade7635&rnum=1
+  if (1 == length && data[0] == '-') {
+    data = PRUnichar(0x2212);
+  }
 
   // cache the special bits: mutable, accent, movablelimits, centered.
   // we need to do this in anticipation of other requirements, and these
@@ -153,7 +165,7 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
 
   // see if this is an operator that should be centered to cater for 
   // fonts that are not math-aware
-  if (1 == data.Length()) {
+  if (1 == length) {
     PRUnichar ch = data[0];
     if ((ch == '+') || (ch == '=') || (ch == '*') ||
         (ch == 0x00D7)) { // &times;
@@ -167,9 +179,10 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
 }
 
 // get our 'form' and lookup in the Operator Dictionary to fetch 
-// our default data that may come from there, the look our attributes.
-// The function has to be called during reflow because certain value
-// before, we will re-use unchanged things that we computed earlier
+// our default data that may come from there. Then complete our setup
+// using attributes that we may have. To stay in sync, this function is
+// called very often. We depend on many things that may change around us.
+// However, we re-use unchanged values.
 void
 nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
 {
@@ -302,7 +315,7 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
     nsAutoString data;
     mMathMLChar.GetData(data);
     PRBool found = nsMathMLOperators::LookupOperator(data, form, &mFlags, &lspace, &rspace);
-    if (found) {
+    if (found && (lspace || rspace)) {
       // cache the default values of lspace & rspace that we get from the dictionary.
       // since these values are relative to the 'em' unit, convert to twips now
       nscoord em;
@@ -349,7 +362,8 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
         leftSpace = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
-  else if (NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
+  else if (mPresentationData.scriptLevel > 0 &&
+           NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
     leftSpace = 0;
   }
 
@@ -367,15 +381,28 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
         rightSpace = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
-  else if (NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
+  else if (mPresentationData.scriptLevel > 0 &&
+           NS_MATHML_EMBELLISH_IS_ACCENT(mEmbellishData.flags)) {
     rightSpace = 0;
+  }
+
+  // little extra tuning to round lspace & rspace to at least a pixel so that
+  // operators don't look as if they are colliding with their operands
+  if (leftSpace || rightSpace) {
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+    if (leftSpace && leftSpace < onePixel)
+      leftSpace = onePixel;
+    if (rightSpace && rightSpace < onePixel)
+      rightSpace = onePixel;
   }
 
   // the values that we get from our attributes override the dictionary
   mEmbellishData.leftSpace = leftSpace;
   mEmbellishData.rightSpace = rightSpace;
 
-  // Nows see if there are user-defined attributes that override the dictionary.
+  // Now see if there are user-defined attributes that override the dictionary.
   // XXX If an attribute can be forced to be true when it is false in the
   // dictionary, then the following code has to change...
 
@@ -505,15 +532,17 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.SetFont(font->mFont);
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
-  nscoord leading, axisHeight, height;
+  nscoord leading = 0, axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
 
   // Operators that exist in the dictionary, or those that are to be centered
   // to cater for fonts that are not math-aware, are handled by the MathMLChar
+  PRBool useMathMLChar = 
+    NS_MATHML_OPERATOR_GET_FORM(mFlags) ||
+    NS_MATHML_OPERATOR_IS_CENTERED(mFlags);;
 
-  if (NS_MATHML_OPERATOR_GET_FORM(mFlags) ||
-      NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
-    nsBoundingMetrics charSize;
+  nsBoundingMetrics charSize;
+  if (useMathMLChar) {
     nsBoundingMetrics initialSize = aDesiredStretchSize.mBoundingMetrics;
     nsBoundingMetrics container = initialSize;
 
@@ -644,15 +673,16 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
       // gracefully handle cases where stretching the char failed (i.e., GetBoundingMetrics failed)
       // clear our 'form' to behave as if the operator wasn't in the dictionary
       mFlags &= ~NS_MATHML_OPERATOR_FORM;
+      useMathMLChar = PR_FALSE;
     }
     else {
       // update our bounding metrics... it becomes that of our MathML char
-      mMathMLChar.GetBoundingMetrics(mBoundingMetrics);
+      mBoundingMetrics = charSize;
 
       // if the returned direction is 'unsupported', the char didn't actually change. 
       // So we do the centering only if necessary
-      if ((mMathMLChar.GetStretchDirection() != NS_STRETCH_DIRECTION_UNSUPPORTED)
-          || NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
+      if (mMathMLChar.GetStretchDirection() != NS_STRETCH_DIRECTION_UNSUPPORTED ||
+          NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
 
         if (isVertical || NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
           // the desired size returned by mMathMLChar maybe different
@@ -677,28 +707,42 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
         // this seems more reliable than using fm->GetLeading() on suspicious fonts               
         nscoord em;
         GetEmHeight(fm, em);
-        leading = NSToCoordRound(0.2f * em); 
-
-        aDesiredStretchSize.ascent = mBoundingMetrics.ascent + leading;
-        aDesiredStretchSize.descent = mBoundingMetrics.descent + leading;
+        leading = NSToCoordRound(0.2f * em); // so, leading remains 0 if we don't get here
       }
-      aDesiredStretchSize.height = aDesiredStretchSize.ascent + aDesiredStretchSize.descent;
-      aDesiredStretchSize.width = mBoundingMetrics.width;
-      aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
-
-      nscoord dy = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
-      mMathMLChar.SetRect(
-         nsRect(0, dy, charSize.width, charSize.ascent + charSize.descent));
-
-      mReference.x = 0;
-      mReference.y = aDesiredStretchSize.ascent;
     }
   }
 
-  if (!NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
-      !NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
+  if (!useMathMLChar) {
     // Place our children using the default method
     Place(aPresContext, aRenderingContext, PR_TRUE, aDesiredStretchSize);
+  }
+
+  // Fixup for the final height.
+  // On one hand, our stretchy height can sometimes be shorter than surrounding
+  // ASCII chars, e.g., arrow symbols have |mBoundingMetrics.ascent + leading|
+  // that is smaller than the ASCII's ascent, hence when painting the background
+  // later, it won't look uniform along the line.
+  // On the other hand, sometimes we may leave too much gap when our glyph happens
+  // to come from a font with tall glyphs. For example, since CMEX10 has very tall
+  // glyphs, its natural font metrics are large, even if we pick a small glyph
+  // whose size is comparable to the size of a normal ASCII glyph.
+  // So to avoid uneven spacing in either of these two cases, we use the height
+  // of the ASCII font as a reference and try to match it if possible.
+  nscoord ascent, descent;
+  fm->GetMaxAscent(ascent);
+  fm->GetMaxDescent(descent);
+  aDesiredStretchSize.ascent = PR_MAX(mBoundingMetrics.ascent + leading, ascent);
+  aDesiredStretchSize.descent = PR_MAX(mBoundingMetrics.descent + leading, descent);
+  aDesiredStretchSize.height = aDesiredStretchSize.ascent + aDesiredStretchSize.descent;
+  aDesiredStretchSize.width = mBoundingMetrics.width;
+  aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
+  mReference.x = 0;
+  mReference.y = aDesiredStretchSize.ascent;
+  // Place our mMathMLChar, its origin is in our coordinate system
+  if (useMathMLChar) {
+    nscoord dy = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
+    mMathMLChar.GetBoundingMetrics(charSize);
+    mMathMLChar.SetRect(nsRect(0, dy, charSize.width, charSize.ascent + charSize.descent));
   }
 
   // Before we leave... there is a last item in the check-list:
@@ -723,7 +767,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     aDesiredStretchSize.mBoundingMetrics.rightBearing += dx;
 
     nsRect rect;
-    if (NS_MATHML_OPERATOR_GET_FORM(mFlags)) {
+    if (useMathMLChar) {
       mMathMLChar.GetRect(rect);
       mMathMLChar.SetRect(nsRect(rect.x + dx, rect.y, rect.width, rect.height));
     }

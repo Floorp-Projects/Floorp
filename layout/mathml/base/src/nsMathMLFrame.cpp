@@ -304,7 +304,7 @@ nsMathMLFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
 #endif
   nscoord xHeight;
   aFontMetrics->GetXHeight(xHeight);
-  PRUnichar minus = '-';
+  PRUnichar minus = 0x2212; // not '-', but official Unicode minus sign
   nsBoundingMetrics bm;
   nsresult rv = aRenderingContext.GetBoundingMetrics(&minus, PRUint32(1), bm);
   if (NS_SUCCEEDED(rv)) {
@@ -314,18 +314,6 @@ nsMathMLFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
     // fall-back to the other version
     GetAxisHeight(aFontMetrics, aAxisHeight);
   }
-
-#if 0
-  nscoord oldAxis;
-  GetAxisHeight(aFontMetrics, oldAxis);
-
-  PRUnichar plus = '+';
-  rv = aRenderingContext.GetBoundingMetrics(&plus, PRUint32(1), bm);
-  nscoord plusAxis = bm.ascent - (bm.ascent + bm.descent)/2;;
-
-  printf("xheight:%4d Axis:%4d oldAxis:%4d  plusAxis:%4d\n",
-          xHeight, aAxisHeight, oldAxis, plusAxis);
-#endif
 }
 
 // ================
@@ -536,23 +524,26 @@ nsCSSMapping {
 };
 
 static void
-GetMathMLAttributeStyleSheet(nsIDocument*    aDocument,
+GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
                              nsIStyleSheet** aSheet)
 {
   static const char kTitle[] = "Internal MathML/CSS Attribute Style Sheet";
   *aSheet = nsnull;
 
   // first, look if the attribute stylesheet is already there
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIStyleSet> styleSet;
+  presShell->GetStyleSet(getter_AddRefs(styleSet));
+  if (!styleSet)
+    return;
   nsAutoString title;
-  PRInt32 count;
-  aDocument->GetNumberOfStyleSheets(&count);
-  for (PRInt32 i = 0; i < count; ++i) {
-    nsCOMPtr<nsIStyleSheet> sheet;
-    aDocument->GetStyleSheetAt(i, getter_AddRefs(sheet));
+  for (PRInt32 i = styleSet->GetNumberOfAgentStyleSheets() - 1; i >= 0; --i) {
+    nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(styleSet->GetAgentStyleSheetAt(i));
     nsCOMPtr<nsICSSStyleSheet> cssSheet(do_QueryInterface(sheet));
     if (cssSheet) {
       cssSheet->GetTitle(title);
-      if (title.EqualsIgnoreCase(kTitle)) {
+      if (title.Equals(NS_ConvertASCIItoUCS2(kTitle))) {
         *aSheet = sheet;
         NS_IF_ADDREF(*aSheet);
         return;
@@ -573,11 +564,8 @@ GetMathMLAttributeStyleSheet(nsIDocument*    aDocument,
   cssSheet->SetDefaultNameSpaceID(nsMathMLAtoms::nameSpaceID);
   nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(cssSheet));
 
-  // insert the stylesheet into the document without notifying observers
-  // (discovered that it will actually be inserted at position 1 since style
-  // sheets are internally arrayed between a nsIHTMLStyleSheet attribute sheet
-  // at the beginning and a nsIHTMLCSSStyleSheet inline sheet at the end...)
-  aDocument->InsertStyleSheetAt(sheet, 0, PR_FALSE);
+  // insert the stylesheet into the styleset without notifying observers
+  styleSet->AppendAgentStyleSheet(sheet);
   *aSheet = sheet;
   NS_ADDREF(*aSheet);
 }
@@ -659,7 +647,7 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
       aContent->GetDocument(*getter_AddRefs(doc));
       if (!doc) 
         return 0;
-      GetMathMLAttributeStyleSheet(doc, getter_AddRefs(sheet));
+      GetMathMLAttributeStyleSheet(aPresContext, getter_AddRefs(sheet));
       if (!sheet)
         return 0;
       // by construction, these cannot be null at this point

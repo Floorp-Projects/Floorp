@@ -1463,7 +1463,13 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       aDesiredSize.descent = childSize.descent;
       mBoundingMetrics = bmChild;
       // update to include the left correction
-      mBoundingMetrics.leftBearing += leftCorrection;
+      // but leave <msqrt> alone because the sqrt glyph itself is there first
+      nsCOMPtr<nsIAtom> tag;
+      mContent->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsMathMLAtoms::msqrt_)
+        leftCorrection = 0;
+      else
+        mBoundingMetrics.leftBearing += leftCorrection;
     }
     else {
       if (aDesiredSize.descent < childSize.descent)
@@ -1510,8 +1516,16 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       nsCOMPtr<nsIAtom> childFrameType;
       childFrame->GetFrameType(getter_AddRefs(childFrameType));
       GetReflowAndBoundingMetricsFor(childFrame, childSize, bmChild);
+      GetItalicCorrection(bmChild, leftCorrection, italicCorrection);
       dy = aDesiredSize.ascent - childSize.ascent;
-      if (0 < count) {
+      if (0 == count) {
+        // for <msqrt>, the sqrt glyph itself is there first
+        nsCOMPtr<nsIAtom> tag;
+        mContent->GetTag(*getter_AddRefs(tag));
+        if (tag.get() == nsMathMLAtoms::msqrt_)
+          leftCorrection = 0;
+      }
+      else {
         // add inter frame spacing
         nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
           prevFrameType, childFrameType);
@@ -1519,7 +1533,6 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       }
       count++;
       prevFrameType = childFrameType;
-      GetItalicCorrection(bmChild, leftCorrection, italicCorrection);
       // add left correction
       dx += leftCorrection;
       FinishReflowChild(childFrame, aPresContext, nsnull, childSize, dx, dy, 0);
