@@ -60,6 +60,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsIContentHandler.h"
 #include "nsIBrowserInstance.h"
+#include "nsAppFileLocationProvider.h"
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
@@ -809,13 +810,32 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   }
 
   // Start up the core services:
-
+  
+  // Create and register a directory service provider
+  nsAppFileLocationProvider* appFileLocProvider;
+  appFileLocProvider = new nsAppFileLocationProvider;
+  if (!appFileLocProvider) {
+    NS_ASSERTION(FALSE, "Could not create nsAppFileLocationProvider\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+  if (!directoryService) {
+    NS_ASSERTION(FALSE, "failed to get directory service");
+    return rv;
+  }
+  // RegisterProvider will AddRef it and own it - notice we have not AddRef'd it
+  rv = directoryService->RegisterProvider(appFileLocProvider);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION(FALSE, "Could not register directory service provider\n");
+    return rv;
+  }
+  
   // Initialize the cmd line service
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get command line service");
 
   if (NS_FAILED(rv)) {
-    fprintf(stderr, "Could not obtain CmdLine processing service\n");
+    NS_ASSERTION(FALSE, "Could not obtain CmdLine processing service\n");
     return rv;
   }
 
