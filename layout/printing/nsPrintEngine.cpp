@@ -2741,7 +2741,10 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
     } else {
       canCreateScrollbars = PR_TRUE;
     }
-    rv = aPO->mRootView->CreateWidget(kWidgetCID, nsnull, widget->GetNativeData(NS_NATIVE_WIDGET));
+    rv = aPO->mRootView->CreateWidget(kWidgetCID, nsnull, 
+                                      widget->GetNativeData(NS_NATIVE_WIDGET),
+                                      PR_TRUE, PR_TRUE, 
+                                      eContentTypeContent);
     aPO->mRootView->GetWidget(*getter_AddRefs(aPO->mWindow));
     aPO->mPresContext->SetPaginatedScrolling(canCreateScrollbars);
   }

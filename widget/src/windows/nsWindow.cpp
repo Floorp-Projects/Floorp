@@ -1637,17 +1637,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      }
    }*/
 
-    // Show nsIDocShellTreeItem::contentType in GWL_ID
-    // This way 3rd part apps can check if a window is chrome (0) or content (1)
-#ifdef MOZ_UNICODE
-    LONG contentType = aInitData? aInitData->mContentType: (parent? nsToolkit::mGetWindowLong(parent, GWL_ID): -1);
-    LONG isContent = (contentType == 1 || contentType == 2);
-    nsToolkit::mSetWindowLong(mWnd, GWL_ID, isContent);
-#else
-    LONG contentType = aInitData? aInitData->mContentType: (parent? ::GetWindowLong(parent, GWL_ID): -1);
-    LONG isContent = (contentType == 1 || contentType == 2);
-    ::SetWindowLong(mWnd, GWL_ID, isContent);
-#endif
+    mContentType = aInitData? aInitData->mContentType: eContentTypeInherit;
+    SetWin32ContentType();
 
     // call the event callback to notify about creation
 
@@ -1655,6 +1646,39 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     SubclassWindow(TRUE);
 
     return(NS_OK);
+}
+
+PRBool nsWindow::SetWin32ContentType()
+{
+  // Show mContentType in GWL_ID
+  // This way 3rd part apps can check if a window is UI (0) or content (1)
+  // Return true if control id changed
+
+  nsContentType newContentType = mContentType;
+
+#ifdef MOZ_UNICODE
+  if (newContentType == eContentTypeInherit) {
+    HWND parentWnd = mWnd;
+    newContentType = eContentTypeUI; // default if we're the root
+    if ((parentWnd = ::GetParent(parentWnd)) != 0) {
+      newContentType = (nsContentType)nsToolkit::mGetWindowLong(parentWnd, GWL_ID);
+    }
+  }
+  nsContentType oldContentType = (nsContentType)nsToolkit::mGetWindowLong(mWnd, GWL_ID);
+  nsToolkit::mSetWindowLong(mWnd, GWL_ID, (PRInt32)newContentType);
+#else
+  if (newContentType == eContentTypeInherit) {
+    HWND parentWnd = mWnd;
+    newContentType = eContentTypeUI; // default if we're the root
+    if ((parentWnd = ::GetParent(parentWnd)) != 0) {
+      newContentType = (nsContentType)nsToolkit::GetWindowLong(parentWnd, GWL_ID);
+    }
+  }
+  nsContentType oldContentType = (nsContentType)nsToolkit::GetWindowLong(mWnd, GWL_ID);
+  nsToolkit::SetWindowLong(mWnd, GWL_ID, (PRInt32)newContentType);
+#endif
+
+  return oldContentType != newContentType;
 }
 
 //-------------------------------------------------------------------------
@@ -1759,6 +1783,9 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
     HWND newParent = (HWND)aNewParent->GetNativeData(NS_NATIVE_WINDOW);
     NS_ASSERTION(newParent, "Parent widget has a null native window handle");
     ::SetParent(mWnd, newParent);
+    PRBool isChanged = mContentType == eContentTypeInherit && SetWin32ContentType();
+    NS_ASSERTION(!isChanged, "SetParent won't expose a new content type when decendents use eContentTypeInherit.");
+
     return NS_OK;
   }
   NS_WARNING("Null aNewParent passed to SetParent");

@@ -727,10 +727,11 @@ NS_IMETHODIMP nsView::GetClientData(void *&aData) const
 }
 
 NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
-                                     nsWidgetInitData *aWidgetInitData,
-                                     nsNativeWidget aNative,
-                                     PRBool aEnableDragDrop,
-                                     PRBool aResetVisibility)
+                                   nsWidgetInitData *aWidgetInitData,
+                                   nsNativeWidget aNative,
+                                   PRBool aEnableDragDrop,
+                                   PRBool aResetVisibility,
+                                   nsContentType aContentType)
 {
   nsIDeviceContext  *dx;
   nsRect            trect = mDimBounds;
@@ -751,17 +752,21 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
 
     if (PR_TRUE == usewidgets)
     {
+      PRBool initDataPassedIn = PR_TRUE;
+      nsWidgetInitData initData;
+      if (!aWidgetInitData) {
+        initDataPassedIn = PR_FALSE;
+        aWidgetInitData = &initData;
+      }
+      aWidgetInitData->mContentType = aContentType;
+
       if (aNative)
         mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
       else
       {
-        nsWidgetInitData initData;
-        if (nsnull == aWidgetInitData && nsnull != GetParent()) {
-          if (GetParent()->GetViewManager() != mViewManager) {
-            initData.mListenForResizes = PR_TRUE;
-            aWidgetInitData = &initData;
-          }
-        }
+        if (!initDataPassedIn && GetParent() && 
+          GetParent()->GetViewManager() != mViewManager)
+          initData.mListenForResizes = PR_TRUE;
 
         nsIWidget *parent;
         GetOffsetFromWidget(nsnull, nsnull, parent);
