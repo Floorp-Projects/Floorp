@@ -32,30 +32,10 @@ class TxObject {
  public:
 
     /**
-     * Creates a new TxObject
-    **/
-    TxObject() {};
-
-    /**
      * Deletes this TxObject
     **/
     virtual ~TxObject() {};
 
-    /**
-     * Returns the Hashcode for this TxObject
-    **/
-    virtual PRUint32 hashCode() {
-        return NS_PTR_TO_INT32(this);
-    } //-- hashCode
-
-    /**
-     * Returns true if the given Object is equal to this object.
-     * By default the comparison operator == is used, but this may
-     * be overridden
-    **/
-    virtual MBool equals(TxObject* obj) {
-        return (MBool)(obj == this);
-    } //-- equals
 };
 
 #endif
