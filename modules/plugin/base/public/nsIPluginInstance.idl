@@ -1,0 +1,133 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
+ *
+ * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
+ * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
+ * get linked with the plugin. You will however need to link with the "backward
+ * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
+ * browsers. 
+ *
+ * <P>See nsPlugin.idl for an overview of how this interface fits with the 
+ * overall plugin architecture.
+ */
+////////////////////////////////////////////////////////////////////////////////
+
+#include "nsPluginDefs.idl"
+
+////////////////////////////////////////////////////////////////////////////////
+// Plugin Instance Interface
+
+/**
+ * The nsIPluginInstance interface is the minimum interface plugin developers
+ * need to support in order to implement a plugin instance. The plugin manager
+ * may QueryInterface for more specific types, e.g. nsILiveConnectPluginInstance. 
+ *
+ * (Corresponds to NPP object.)
+ *
+ * The old NPP_Destroy call has been factored into two plugin instance 
+ * methods:
+ *
+ * Stop -- called when the plugin instance is to be stopped (e.g. by 
+ * displaying another plugin manager window, causing the page containing 
+ * the plugin to become removed from the display).
+ *
+ * Destroy -- called once, before the plugin instance peer is to be 
+ * destroyed. This method is used to destroy the plugin instance.
+ */
+[scriptable, uuid(f69b5c56-2de9-11d4-8cf4-0060b0fc14a3)]
+interface nsIPluginInstance : nsISupports
+{
+    /**
+     * Initializes a newly created plugin instance, passing to it the plugin
+     * instance peer which it should use for all communication back to the browser.
+     * 
+     * @param peer - the corresponding plugin instance peer
+     */
+    void initialize(in nsIPluginInstancePeer peer);
+
+    /**
+     * Returns a reference back to the plugin instance peer. This method is
+     * used whenever the browser needs to obtain the peer back from a plugin
+     * instance. The implementation of this method should be sure to increment
+     * the reference count on the peer by calling AddRef.
+     *
+     * @result - the resulting plugin instance peer
+     */
+    readonly attribute nsIPluginInstancePeer peer;
+
+    /**
+     * Called to instruct the plugin instance to start. This will be called after
+     * the plugin is first created and initialized, and may be called after the
+     * plugin is stopped (via the Stop method) if the plugin instance is returned
+     * to in the browser window's history.
+     */
+    void start();
+
+    /**
+     * Called to instruct the plugin instance to stop, thereby suspending its state.
+     * This method will be called whenever the browser window goes on to display
+     * another page and the page containing the plugin goes into the window's history
+     * list.
+     */
+    void stop();
+
+    /**
+     * Called to instruct the plugin instance to destroy itself. This is called when
+     * it become no longer possible to return to the plugin instance, either because 
+     * the browser window's history list of pages is being trimmed, or because the
+     * window containing this page in the history is being closed.
+     */
+    void destroy();
+
+    /**
+     * Called when the window containing the plugin instance changes.
+     *
+     * (Corresponds to NPP_SetWindow.)
+     *
+     * @param window - the plugin window structure
+     */
+    [noscript] void setWindow(in nsPluginWindowPtr window);
+
+    /**
+     * Called to tell the plugin that the initial src/data stream is
+	 * ready.  Expects the plugin to return a nsIPluginStreamListener.
+     *
+     * (Corresponds to NPP_NewStream.)
+     *
+     * @result - listener the browser will use to give the plugin the data
+     */
+    nsIPluginStreamListener newStream();
+
+    /**
+     * Called to instruct the plugin instance to print itself to a printer.
+     *
+     * (Corresponds to NPP_Print.)
+     *
+     * @param platformPrint - platform-specific printing information
+     * @result - NS_OK if this operation was successful
+     */
+    [noscript] void print(in nsPluginPrintPtr platformPrint);
+};
