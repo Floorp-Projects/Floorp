@@ -67,7 +67,8 @@
     while for each do
     return
     throw try catch
-    case of))
+    case of
+    note))
 
 ; Emit markup for one of the semantic keywords, as specified by keyword-symbol.
 ; space can be either nil, :before, or :after to indicate space placement.
@@ -1120,6 +1121,13 @@
     (depict-text-paragraph markup-stream last-paragraph-style text)))
 
 
+; (note . <styled-text>)
+(defun depict-note (markup-stream world semicolon last-paragraph-style &rest text)
+  (declare (ignore world semicolon))
+  (depict-division-style (markup-stream :wrap)
+    (depict-text-paragraph markup-stream last-paragraph-style (list* '(:keyword note) " " text))))
+
+
 ; (*/)
 ; These should have been filtered out by scan-/*, so any that remain are errors.
 (defun depict-*/ (markup-stream world semicolon last-paragraph-style)
@@ -1142,7 +1150,7 @@
   (declare (ignore semicolon))
   (let ((*assertion-depictor* #'(lambda (markup-stream) (depict-expression markup-stream world condition-annotated-expr %expr%))))
     (depict-division-style (markup-stream :wrap)
-      (depict-text-paragraph markup-stream last-paragraph-style text))))
+      (depict-text-paragraph markup-stream last-paragraph-style (list* '(:keyword note) " " text)))))
 
 ; (:assertion)
 (defun depict-assertion (markup-stream)

@@ -65,7 +65,7 @@
 
 #+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
                              (define . 2) (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
-                             (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2)
+                             (assert . 1) (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2)
                              (new . 1) (set-field . 1) (:narrow . 1) (:select . 1)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
@@ -4773,10 +4773,11 @@
 
 
 ; (// . <styled-text>)
-; A one-paragraph comment using the given <styled-text>.
+; (note . <styled-text>)
+; A one-paragraph comment using the given <styled-text>.  The note form precedes the text with the keyword 'note'.
 (defun scan-// (world type-env rest-statements last special-form &rest text)
   (unless text
-    (error "// should have non-empty text"))
+    (error "// or note should have non-empty text"))
   (let ((text2 (scan-expressions-in-comment world type-env text)))
     (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last)
       (values rest-codes
@@ -4837,7 +4838,7 @@
 ; <styled-text> can contain the entry (:assertion) to depict <condition-expr>.
 (defun scan-assert (world type-env rest-statements last special-form condition-expr &rest text)
   (unless text
-    (error "assert should have non-empty text"))
+    (setq text '((:assertion) ";")))
   (let ((text2 (scan-expressions-in-comment world type-env text)))
     (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
                          (scan-condition world type-env condition-expr)
@@ -5559,6 +5560,7 @@
     
     (:statement
      (// scan-// depict-//)
+     (note scan-// depict-note)
      (/* scan-/* depict-//)
      (*/ scan-*/ depict-*/)
      (bottom scan-bottom depict-bottom)
