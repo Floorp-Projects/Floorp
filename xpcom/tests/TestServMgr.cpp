@@ -100,11 +100,7 @@ AsyncShutdown(int testNumber)
     // code with a monitor.
 
     err = nsServiceManager::UnregisterService(kIMyServiceCID);
-    if (err == NS_ERROR_SERVICE_IN_USE) {
-        printf("async shutdown -- service still in use\n");
-        return NS_OK;
-    }
-    if (err == NS_ERROR_SERVICE_NOT_FOUND) {
+    if (err == NS_ERROR_SERVICE_NOT_AVAILABLE) {
         printf("async shutdown -- service not found\n");
         return NS_OK;
     }
