@@ -162,18 +162,24 @@ fe_print_colormap_allocation(fe_colormap *colormap)
           c = '*';
         }
       else if (allocation[i] & CELL_TRANSIENT)
+        {
         if (allocation[i] & CELL_PERMANENT)
+          {
           if (allocation[i] & CELL_IMAGE)
             c = 'A';
           else
             c = 'T';
+            }
         else
           c = 't';
+        }
       else if (allocation[i] & CELL_PERMANENT)
+        {
         if (allocation [i] & CELL_IMAGE)
           c = 'I';
         else
           c = 'p';
+        }
       else if (allocation[i] & CELL_IMAGE)
         c = 'i';
       else if (allocation[i] == CELL_AVAIL)
