@@ -178,6 +178,8 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
          ("nsFrameImageLoader::Notify frame=%p type=%x p1=%x p2=%x p3=%x",
           mTargetFrame, aNotificationType, aParam1, aParam2, aParam3));
 
+  nsIView*  view;
+
   switch (aNotificationType) {
   case nsImageNotification_kDimensions:
     mSize.width = aParam1;
@@ -197,6 +199,14 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     }
     mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_IMAGE_READY;
     DamageRepairFrame();
+    break;
+
+  case nsImageNotification_kIsTransparent:
+    // Mark the frame's view as having transparent areas
+    mTargetFrame->GetView(view);
+    NS_ASSERTION(nsnull != view, "no image view");
+    view->SetContentTransparency(PR_TRUE);
+    view->Release();
     break;
   }
 }
