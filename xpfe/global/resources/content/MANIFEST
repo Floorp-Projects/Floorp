@@ -3,6 +3,7 @@ globalOverlay.xul
 globalOverlay.js
 tasksOverlay.xul
 tasksOverlay.js
+tasksExtension.xul
 dialogOverlay.xul
 dialogOverlay.js
 commonDialog.xul
