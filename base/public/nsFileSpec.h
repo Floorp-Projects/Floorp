@@ -143,7 +143,7 @@
 #include <Files.h>
 #elif defined(XP_UNIX) || defined (XP_OS2)
 #include <dirent.h>
-#elif XP_PC
+#elif defined(XP_PC)
 #include "prio.h"
 #endif
 
@@ -676,7 +676,7 @@ class NS_BASE nsDirectoryIterator
 #if defined(XP_UNIX)
         DIR*                    mDir;
 #elif defined(XP_PC)
-        PRDir*                  mDir; // XXX why not use PRDir for Unix & Mac, too?
+        PRDir*                  mDir; // XXX why not use PRDir for Unix too?
 #elif defined(XP_MAC)
         OSErr                   SetToIndex();
 	    short                   mIndex;
