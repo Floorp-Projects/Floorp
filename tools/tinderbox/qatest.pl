@@ -19,24 +19,37 @@
 
 sub PrintUsage {
   die <<END_USAGE
-  usage: $0 <filename>
+  usage: $0 <filename> ["express"]
 END_USAGE
 }
 
-
-if ($#ARGV != 0) {
+if ($#ARGV < 0) {
   PrintUsage();
 }
 
-$DATAFILE = $ARGV[0];
+my $DATAFILE = $ARGV[0];
+my $MODE;     
+
+if($#ARGV > 0) {
+  $MODE = $ARGV[1];
+} else {
+  $MODE = "";
+}
+
+my $express  = 0;
+
+if($MODE eq "express") {
+  $express = 1;
+}
 
 my $ngdir	= "http://geckoqa.mcom.com/ngdriver/"; #$input->url(-base=>1) . "/ngdriver/";
 my $ngsuites = $ngdir . "suites/";
 my $conffile = "ngdriver.conf";
 my $HTMLreport = "";
 
-print "Content-type: text/html\n\n";
-
+unless ($express) {
+  print "Content-type: text/html\n\n";
+}
 
 &generateResults;
 
@@ -149,6 +162,25 @@ sub generateHTML
 
     my $os = `uname -s`;        # Cheap OS id for now
 
+    my %Matrices;
+    
+    # Hard-coded from ngdriver.conf, I didn't want extra files in tree.
+    
+    $extList{"mb"}  = "http://cemicrobrowser.web.aol.com/bugReportDetail.php?RID=%";
+    $extList{"bs"}  = "http://bugscape.nscp.aoltw.net/show_bug.cgi?id=%";
+    $extList{"bz"}  = "http://bugzilla.mozilla.org/show_bug.cgi?id=%";
+    $extList{"bzx"} = "http://bugzilla.mozilla.org/show_bug.cgi?id=%";
+      
+    $prjExtension = "bz";       # Buffy hard-coded here.
+      
+    $Matricies{"dom-core"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
+    $Matricies{"dom-html"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
+    $Matricies{"domevents"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
+    $Matricies{"javascript"} = "http://geckoqa.mcom.com/browser/standards/javascript/tcmatrix/index.html";
+    $Matricies{"forms"} = "http://geckoqa.mcom.com/browser/standards/form_submission/tcmatrix/index.html";
+    $Matricies{"formsec"} = "http://geckoqa.mcom.com/browser/standards/form_submission/tcmatrix/index.html";
+
+    unless ($express) {
     $HTMLreport .= <<END_PRINT;
 		<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 		<html>
@@ -172,37 +204,24 @@ sub generateHTML
  <h3><u>The Following Test Suites Were Run:</u></h3>
 <UL>
 END_PRINT
-
-    my %Matrices;
     
-    # Hard-coded from ngdriver.conf, I didn't want extra files in tree.
-    
-    $extList{"mb"}  = "http://cemicrobrowser.web.aol.com/bugReportDetail.php?RID=%";
-    $extList{"bs"}  = "http://bugscape.nscp.aoltw.net/show_bug.cgi?id=%";
-    $extList{"bz"}  = "http://bugzilla.mozilla.org/show_bug.cgi?id=%";
-    $extList{"bzx"} = "http://bugzilla.mozilla.org/show_bug.cgi?id=%";
-      
-    $prjExtension = "bz";       # Buffy hard-coded here.
-      
-    $Matricies{"dom-core"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
-    $Matricies{"dom-html"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
-    $Matricies{"domevents"} = "http://geckoqa.mcom.com/browser/standards/dom1/tcmatrix/index.html";
-    $Matricies{"javascript"} = "http://geckoqa.mcom.com/browser/standards/javascript/tcmatrix/index.html";
-    $Matricies{"forms"} = "http://geckoqa.mcom.com/browser/standards/form_submission/tcmatrix/index.html";
-    $Matricies{"formsec"} = "http://geckoqa.mcom.com/browser/standards/form_submission/tcmatrix/index.html";
-
-    for (my $var = 0;$File{'SuiteList'}->[$var]->{'Name'};$var++) {
-      if (my $href = $Matrices{$File{'SuiteList'}->[$var]->{'Name'}}) {
-        $HTMLreport .= "<li><a href=\"$href\">$File{'SuiteList'}->[$var]->{'Title'}</a></li>\n";
-      } else {
-        $HTMLreport .= "<li><a href=\"$ngsuites$File{'SuiteList'}->[$var]->{'Name'}\">$File{'SuiteList'}->[$var]->{'Title'}</a></li>\n";
+      for (my $var = 0;$File{'SuiteList'}->[$var]->{'Name'};$var++) {
+        if (my $href = $Matrices{$File{'SuiteList'}->[$var]->{'Name'}}) {
+          $HTMLreport .= "<li><a href=\"$href\">$File{'SuiteList'}->[$var]->{'Title'}</a></li>\n";
+        } else {
+          $HTMLreport .= "<li><a href=\"$ngsuites$File{'SuiteList'}->[$var]->{'Name'}\">$File{'SuiteList'}->[$var]->{'Title'}</a></li>\n";
+        }
       }
-    }
     
     $HTMLreport .= <<END_PRINT;
 	</UL>
 
 	<h3><u>Test Result Summary:</u></h3>
+END_PRINT
+    } # !express
+
+
+    $HTMLreport .= <<END_PRINT;
 	<table BORDER=2 CELLSPACING=0>
 	<tr>
 		<td VALIGN=TOP BGCOLOR="#999999">&nbsp;</td>
@@ -254,7 +273,10 @@ END_PRINT
 		<td VALIGN=TOP BGCOLOR="#FFFFCC"><font color="#990000">$pctFail</font></td>
 	</tr>
 	</TABLE>
+END_PRINT
 
+    unless ($express) {
+    $HTMLreport .= <<END_PRINT;
 <h3>Failed Testcases:</h3>
 END_PRINT
 
@@ -282,7 +304,6 @@ END_PRINT
       for ($fcnt = 0;$curFile = $File{'SuiteList'}->[$var]->{'FailedList'}->[$fcnt];$fcnt++) {
 		($none,$fName,$fDesc,$fStat,$fBug,$fExpected,$fActual) = split(/<->/,$curFile);
 		$HTMLreport.= "<TR><TD><A href=\"$ngsuites$curSuite->{'Name'}/$fName\" target=\"_new\">$fName</A></TD><TD>";
-
 
 		# Quiet perl warnings about unused variables.
 		my $tmp; $tmp = $fStat; $tmp = $fActual; $tmp = $fExpected;
@@ -315,6 +336,7 @@ END_PRINT
 	</BODY>
 	</HTML>
 END_PRINT
+  } # !express
 
     1;
   }
