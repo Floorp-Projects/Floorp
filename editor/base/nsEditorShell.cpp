@@ -4424,7 +4424,7 @@ nsEditorShell::GetEmbeddedObjects(nsISupportsArray **aObjectArray)
   if (!aObjectArray)
     return NS_ERROR_NULL_POINTER;
 
-  nsresult result;
+  nsresult result = NS_NOINTERFACE;
 
   switch (mEditorType)
   {

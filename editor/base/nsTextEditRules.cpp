@@ -69,10 +69,10 @@ NS_NewTextEditRules(nsIEditRules** aInstancePtrResult)
 
 nsTextEditRules::nsTextEditRules()
 : mEditor(nsnull)
-, mFlags(0) // initialized to 0 ("no flags set").  Real initial value is given in Init()
 , mPasswordText()
 , mBogusNode(nsnull)
 , mBody(nsnull)
+, mFlags(0) // initialized to 0 ("no flags set").  Real initial value is given in Init()
 , mActionNesting(0)
 , mLockRulesSniffing(PR_FALSE)
 , mTheAction(0)
@@ -603,8 +603,6 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     if (NS_FAILED(res)) return res;
   }
 
-  char specialChars[] = {'\t','\n',0};
-  
   // if the selection isn't collapsed, delete it.
   PRBool bCollapsed;
   res = aSelection->GetIsCollapsed(&bCollapsed);
@@ -630,6 +628,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     if (NS_FAILED(res)) return res;
   }
 
+#ifdef REPLACE_LINEBREAK_WITH_SPACES
+  // Commented out per bug 23485
   // if we're a single line control, pretreat the input string to remove returns
   // this is unnecessary if we use <BR>'s for breaks in "plain text", because
   // InsertBreak() checks the string.  But we don't currently do that, so we need this
@@ -640,6 +640,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   {
     outString->ReplaceChar(CRLF, ' ');
   }
+#endif /* REPLACE_LINEBREAK_WITH_SPACES */
 
   // get the (collapsed) selection location
   res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
@@ -710,7 +711,10 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         // is it a return?
         if (subStr.EqualsWithConversion("\n"))
         {
-          res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
+          if (nsIHTMLEditor::eEditorSingleLineMask & mFlags)
+            res = mEditor->InsertTextImpl(subStr, &curNode, &curOffset, doc);
+          else
+            res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
         }
         else
