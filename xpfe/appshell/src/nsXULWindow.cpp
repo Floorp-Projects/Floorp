@@ -767,9 +767,10 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
 
    appShell->Create(0, nsnull);
    appShell->Spinup();
-
-   nsCOMPtr<nsIWidget> window = mWindow;  // Store locally so it doesn't die on
-                                          // us
+   // Store locally so it doesn't die on us
+   nsCOMPtr<nsIWidget> window = mWindow;
+   nsCOMPtr<nsIXULWindow> tempRef = this;  
+                                          
 
    window->SetModal(PR_TRUE);
    mContinueModalLoop = PR_TRUE;
