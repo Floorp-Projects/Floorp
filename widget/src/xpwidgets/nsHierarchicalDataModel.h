@@ -19,9 +19,13 @@
 #ifndef nsHierarchicalDataModel_h___
 #define nsHierarchicalDataModel_h___
 
+#include "nsFont.h"
+#include "nsColor.h"
+
 class nsHierarchicalDataItem;
 class nsDataModelWidget;
 class nsIContent;
+class nsIImage;
 
 // Style info helper struct shared by most widgets.
 struct nsBasicStyleInfo
@@ -29,13 +33,13 @@ struct nsBasicStyleInfo
 	nsFont font;
 	nscolor foregroundColor;
 	nscolor backgroundColor;
-	nsIImage* pBackgroundImage;
+	nsIImage* pBackgroundImage;   //*** com_auto_ptr?
 
+	nsIImage* BackgroundImage ( ) const { return pBackgroundImage; }
+	
 	nsBasicStyleInfo(const nsFont& aFont)
-		:font(aFont)
-	{
-		pBackgroundImage = nsnull;
-	}
+		:font(aFont), pBackgroundImage(nsnull) { }
+
 };
 
 // -----------------------------------------------------------------
