@@ -254,13 +254,8 @@ function collapseExpand()
 
 function OpenURL(aInNewWindow)
 {
-    var currentIndex = gHistoryOutliner.currentIndex;
-    if (isContainer(gHistoryOutliner, currentIndex)) {
-        if (gHistoryOutliner.getAttribute("clickcount") == "1")
-            gHistoryOutliner.outlinerBoxObject.view.toggleOpenState(currentIndex);
-        return false;
-    }
-      
+    var currentIndex = gHistoryOutliner.currentIndex;     
+    var builder = gHistoryOutliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
     var url = builder.getResourceAtIndex(currentIndex).Value;
 
     if (aInNewWindow) {
