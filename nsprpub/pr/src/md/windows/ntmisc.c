@@ -431,7 +431,7 @@ PRProcess * _PR_CreateWindowsProcess(
                                        * string is in the form:
                                        *     name=value
                                        * XXX: usually NULL */
-                           NULL,  /* current drive and directory */
+                           attr->currentDirectory,  /* current drive and directory */
                            &startupInfo,
                            &procInfo
                           );
@@ -629,7 +629,7 @@ PRInt32 _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
     {
         mov ecx, val
         mov eax, 1
-        xadd dword ptr [ecx], eax
+        lock xadd dword ptr [ecx], eax
         inc eax
     }
 }
@@ -642,7 +642,7 @@ PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
     {
         mov ecx, val
         mov eax, 0ffffffffh
-        xadd dword ptr [ecx], eax
+        lock xadd dword ptr [ecx], eax
         dec eax
     }
 }

@@ -76,10 +76,10 @@ PRIntn main (PRIntn argc, char **argv)
     if (NULL != debug) PR_fprintf(debug, "Forking %s\n", child->name);
 
     child->attr = PR_NewProcessAttr();
-    PR_SetStdioRedirect(
+    PR_ProcessAttrSetStdioRedirect(
         child->attr, PR_StandardOutput,
         PR_GetSpecialFD(PR_StandardOutput));
-    PR_SetStdioRedirect(
+    PR_ProcessAttrSetStdioRedirect(
         child->attr, PR_StandardError,
         PR_GetSpecialFD(PR_StandardError));
 

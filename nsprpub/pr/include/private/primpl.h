@@ -1371,6 +1371,7 @@ struct PRProcessAttr {
     PRFileDesc *stdinFd;
     PRFileDesc *stdoutFd;
     PRFileDesc *stderrFd;
+    char *currentDirectory;
 };
 
 struct PRProcess {

@@ -37,10 +37,15 @@ PR_EXTERN(void) PR_ResetProcessAttr(PRProcessAttr *attr);
 
 PR_EXTERN(void) PR_DestroyProcessAttr(PRProcessAttr *attr);
 
-PR_EXTERN(void) PR_SetStdioRedirect(
+PR_EXTERN(void) PR_ProcessAttrSetStdioRedirect(
     PRProcessAttr *attr,
     PRSpecialFD stdioFd,
     PRFileDesc *redirectFd
+);
+
+PR_EXTERN(PRStatus) PR_ProcessAttrSetCurrentDirectory(
+    PRProcessAttr *attr,
+    const char *dir
 );
 
 /*

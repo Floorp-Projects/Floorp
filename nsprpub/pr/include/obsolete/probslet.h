@@ -25,6 +25,7 @@
 #define PROBSLET_H
 
 #include "prio.h"
+#include "prproces.h"
 
 PR_BEGIN_EXTERN_C
 
@@ -217,6 +218,12 @@ PR_EXTERN(PRStatus) PR_GetHostName(char *name, PRUint32 namelen);
 ** obsoleted by PR_GetErrorText().
 */
 PR_EXTERN(const char *) PR_GetErrorString(void);
+
+PR_EXTERN(void) PR_SetStdioRedirect(
+    PRProcessAttr *attr,
+    PRSpecialFD stdioFd,
+    PRFileDesc *redirectFd
+);
 
 PR_END_EXTERN_C
 
