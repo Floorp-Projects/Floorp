@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Leif Hedstrom <leif@netscape.com>
+ *                 Dan Mosedale <dmose@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -177,4 +178,34 @@ interface nsILDAPService : nsISupports {
      */
     void reconnectConnection(in wstring aKey,
                              in nsILDAPMessageListener aListener);
+
+    /**
+     * Generates and returns an LDAP search filter by substituting
+     * aValue, aAttr, aPrefix, and aSuffix into aPattern.
+     *
+     * The only good documentation I'm aware of for this function is
+     * at <http://docs.iplanet.com/docs/manuals/dirsdk/csdk41/html/filter.htm>
+     * and 
+     * <http://docs.iplanet.com/docs/manuals/dirsdk/csdk41/html/function.htm#17835>
+     * Unfortunately, this does not currently seem to be available
+     * under any open source license, so I can't include that
+     * documentation here in the doxygen comments.
+     *
+     * @param aMaxSize   maximum size (in PRUnichars) of string to be 
+     *                   created and returned (including final \0)
+     * @param aPattern   pattern to be used for the filter
+     * @param aPrefix    prefix to prepend to the filter
+     * @param aSuffix    suffix to be appended to the filer
+     * @param aAttr      replacement for %a in the pattern
+     * @param aValue     replacement for %v in the pattern
+     *  
+     * @exception NS_ERROR_INVALID_ARG      invalid parameter passed in
+     * @exception NS_ERROR_OUT_OF_MEMORY    allocation failed
+     * @exception NS_ERROR_NOT_AVAILABLE    filter longer than maxsiz chars
+     * @exception NS_ERROR_UNEXPECTED       ldap_create_filter returned
+     *                                      unexpected error code
+     */
+    AString createFilter(in unsigned long aMaxSize, in AString aPattern, 
+                         in AString aPrefix, in AString aSuffix,
+                         in AString aAttr, in AString aValue);
 };

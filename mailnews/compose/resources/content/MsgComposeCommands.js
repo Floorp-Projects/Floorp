@@ -1891,14 +1891,23 @@ function LoadIdentity(startup)
             //
             try { 
                 session2.outputFormat = 
-                    prefs.CopyUnicodePref(autocompleteDirectory + 
+                    prefs.CopyUnicharPref(autocompleteDirectory + 
                                      ".autoComplete.outputFormat");
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsLDAPAutoCompleteSession use its default.
             }
 
-            session2.filterTemplate = "cn=";
+            // override default search filter template?
+            //
+            try { 
+                session2.filterTemplate = 
+                    prefs.CopyUnicharPref(autocompleteDirectory + 
+                                     ".autoComplete.filterTemplate");
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsLDAPAutoCompleteSession use its default
+            }
 
             // override default maxHits (currently 100)
             //

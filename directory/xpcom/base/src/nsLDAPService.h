@@ -124,6 +124,20 @@ class nsLDAPService : public nsILDAPService, public nsILDAPMessageListener
     nsresult EstablishConnection(nsLDAPServiceEntry *,
                                  nsILDAPMessageListener *);
 
+    // kinda like strtok_r, but with iterators.  for use by 
+    // createFilter
+    //
+    char *NextToken(nsReadingIterator<PRUnichar> & aIter,
+                    nsReadingIterator<PRUnichar> & aIterEnd);
+
+    // count how many tokens are in this string; for use by
+    // createFilter; note that unlike with NextToken, these params
+    // are copies, not references.
+    //
+    PRUint32 CountTokens(nsReadingIterator<PRUnichar> aIter,
+                         nsReadingIterator<PRUnichar> aIterEnd);
+                   
+    
     PRLock *mLock;              // Lock mechanism
     nsHashtable *mServers;      // Hash table holding server entries
     nsHashtable *mConnections;  // Hash table holding "reverse"

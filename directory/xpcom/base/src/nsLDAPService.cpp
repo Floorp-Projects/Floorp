@@ -41,7 +41,7 @@
 #include "nsIConsoleService.h"
 #include "nsILDAPURL.h"
 #include "nsAutoLock.h"
-
+#include "nsCRT.h"
 
 // Constants for CIDs used here.
 //
@@ -848,4 +848,159 @@ nsresult nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     }
 
     return NS_OK;
+}
+
+/* AString createFilter (in unsigned long aMaxSize, in AString aPattern, in AString aPrefix, in AString aSuffix, in AString aAttr, in AString aValue); */
+NS_IMETHODIMP nsLDAPService::CreateFilter(PRUint32 aMaxSize, 
+                                          const nsAReadableString & aPattern,
+                                          const nsAReadableString & aPrefix,
+                                          const nsAReadableString & aSuffix,
+                                          const nsAReadableString & aAttr,
+                                          const nsAReadableString & aValue,
+                                          nsAWritableString & _retval)
+{
+    if (!aMaxSize) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    // prepare to tokenize |value| for %vM ... %vN
+    //
+    nsReadingIterator<PRUnichar> iter, iterEnd; // setup the iterators
+    aValue.BeginReading(iter);
+    aValue.EndReading(iterEnd);
+
+    // figure out how big of an array we're going to need for the tokens,
+    // including a trailing NULL, and allocate space for it.
+    //
+    PRUint32 numTokens = CountTokens(iter, iterEnd); 
+    char **valueWords;
+    valueWords = NS_STATIC_CAST(char **, 
+                                nsMemory::Alloc((numTokens + 1) *
+                                                sizeof(char *)));
+    if (!valueWords) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // build the array of values
+    //
+    PRUint32 curToken = 0;
+    while (iter != iterEnd && curToken < numTokens ) {
+        valueWords[curToken] = NextToken(iter, iterEnd);
+        if ( !valueWords[curToken] ) {
+            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(curToken, valueWords);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        curToken++;
+    }
+    valueWords[numTokens] = 0;  // end of array signal to LDAP C SDK
+
+    // make buffer to be used for construction 
+    //
+    char *buffer = NS_STATIC_CAST(char *, 
+                                  nsMemory::Alloc(aMaxSize * sizeof(char)));
+    if (!buffer) {
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numTokens, valueWords);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // create the filter itself
+    //
+    nsresult rv;
+    int result = ldap_create_filter(buffer, aMaxSize, 
+                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aPattern).get()),
+                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aPrefix).get()), 
+                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aSuffix).get()), 
+                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aAttr).get()),
+                   NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(aValue).get()),
+                   valueWords);
+    switch (result) {
+    case LDAP_SUCCESS:
+        rv = NS_OK;
+        break;
+
+    case LDAP_SIZELIMIT_EXCEEDED:
+        PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+                   ("nsLDAPService::CreateFilter(): "
+                    "filter longer than max size of %d generated", 
+                    aMaxSize));
+        rv = NS_ERROR_NOT_AVAILABLE;
+        break;
+
+    case LDAP_PARAM_ERROR:
+        rv = NS_ERROR_INVALID_ARG;
+        break;
+
+    default:
+        NS_ERROR("nsLDAPService::CreateFilter(): ldap_create_filter() "
+                 "returned unexpected error");
+        rv = NS_ERROR_UNEXPECTED;
+        break;
+    }
+
+    _retval = NS_ConvertUTF8toUCS2(buffer);
+
+    // done with the array and the buffer
+    //
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numTokens, valueWords);
+    nsMemory::Free(buffer);
+
+    return rv;
+}
+
+// Count the number of space-separated tokens between aIter and aIterEnd
+//
+PRUint32
+nsLDAPService::CountTokens(nsReadingIterator<PRUnichar> aIter,
+                           nsReadingIterator<PRUnichar> aIterEnd)
+{
+    PRUint32 count(0);
+
+    // keep iterating through the string until we hit the end
+    //
+    while (aIter != aIterEnd) {
+    
+        // move past any leading spaces
+        //
+        while (aIter != aIterEnd && nsCRT::IsAsciiSpace(*aIter)) {
+            aIter++;
+        }
+
+        // move past all chars in this token
+        //
+        while (aIter != aIterEnd) {
+
+            if (nsCRT::IsAsciiSpace(*aIter)) {
+                count++;    // token finished; increment the count
+                aIter++;    // move past the space
+                break;
+            }
+            aIter++; // move to next char and continue with this token
+        }
+    }
+
+    return count;
+}
+
+// return the next token in this iterator
+//
+char *
+nsLDAPService::NextToken(nsReadingIterator<PRUnichar> & aIter,
+                         nsReadingIterator<PRUnichar> & aIterEnd)
+{
+    nsAutoString token;
+
+    // move past any leading whitespace
+    //
+    while ( aIter != aIterEnd && nsCRT::IsAsciiSpace(*aIter) ) {
+        aIter++;
+    }
+
+    // copy the token into our local variable
+    //
+    while ( aIter != aIterEnd && !nsCRT::IsAsciiSpace(*aIter) ) {
+        token.Append(*aIter);
+        aIter++;
+    }
+
+    return token.ToNewCString();
 }
