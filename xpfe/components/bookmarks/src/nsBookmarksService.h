@@ -56,197 +56,243 @@
 #include "nsICacheSession.h"
 #include "nsILocalFile.h"
 
-#ifdef	DEBUG
-#ifdef	XP_MAC
+#ifdef  DEBUG
+#ifdef  XP_MAC
 #include <Timer.h>
 #endif
 #endif
 
-class nsBookmarksService : public nsIBookmarksService,
-			   public nsIRDFDataSource,
-			   public nsIRDFRemoteDataSource,
-			   public nsIStreamListener,
-			   public nsIRDFObserver,
-			   public nsIObserver,
-			   public nsSupportsWeakReference
+class nsBookmarksService :
+    public nsIBookmarksService,
+    public nsIRDFDataSource,
+    public nsIRDFRemoteDataSource,
+    public nsIStreamListener,
+    public nsIRDFObserver,
+    public nsIObserver,
+    public nsSupportsWeakReference
 {
 protected:
-  nsIRDFDataSource*		            mInner;
-  nsCOMPtr<nsIRDFResource>	      busyResource;
-  nsCOMPtr<nsISupportsArray>      mObservers;
-  nsCOMPtr<nsIStringBundle>	      mBundle;
-  nsCOMPtr<nsITimer>              mTimer;
-  nsCOMPtr<nsIIOService>          mNetService;
-  nsCOMPtr<nsICacheService>       mCacheService;
-  nsCOMPtr<nsICacheSession>       mCacheSession;
+    nsIRDFDataSource*               mInner;
+    nsCOMPtr<nsIRDFResource>        busyResource;
+    nsCOMPtr<nsISupportsArray>      mObservers;
+    nsCOMPtr<nsIStringBundle>       mBundle;
+    nsCOMPtr<nsITimer>              mTimer;
+    nsCOMPtr<nsIIOService>          mNetService;
+    nsCOMPtr<nsICacheService>       mCacheService;
+    nsCOMPtr<nsICacheSession>       mCacheSession;
 
-  PRUint32      htmlSize;
-  PRInt32       mUpdateBatchNest;
-  nsString      mPersonalToolbarName;
-  PRBool        mBookmarksAvailable;
-  PRBool        mDirty;
-  PRBool        mBrowserIcons;
-  PRBool        busySchedule;
+    PRUint32      htmlSize;
+    PRInt32       mUpdateBatchNest;
+    nsString      mPersonalToolbarName;
+    PRBool        mBookmarksAvailable;
+    PRBool        mDirty;
+    PRBool        mBrowserIcons;
+    PRBool        busySchedule;
 
-  // System Bookmark parsing
+    // System Bookmark parsing
 #ifdef XP_WIN
-  // @param aDirectory      - Favorites Folder to import from.
-  // @param aParentResource - Folder into which to place imported
-  //                          Favorites.
-  nsresult      ParseFavoritesFolder(nsIFile* aDirectory, 
-                                     nsIRDFResource* aParentResource);
+    // @param aDirectory      - Favorites Folder to import from.
+    // @param aParentResource - Folder into which to place imported
+    //                          Favorites.
+    nsresult      ParseFavoritesFolder(nsIFile* aDirectory, 
+                                       nsIRDFResource* aParentResource);
 #elif XP_MAC
-  PRBool        mIEFavoritesAvailable;
+    PRBool        mIEFavoritesAvailable;
 
-  nsresult      ReadFavorites();
+    nsresult      ReadFavorites();
 #endif
 
 #if defined(XP_WIN) || defined(XP_MAC)
-  void          HandleSystemBookmarks(nsIRDFNode* aNode);
+    void          HandleSystemBookmarks(nsIRDFNode* aNode);
 #endif
 
-  static void FireTimer(nsITimer* aTimer, void* aClosure);
-  nsresult ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFlag);
-  nsresult GetBookmarkToPing(nsIRDFResource **theBookmark);
+    static void FireTimer(nsITimer* aTimer, void* aClosure);
 
-	nsresult GetBookmarksFile(nsFileSpec* aResult);
-	nsresult WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds, nsIRDFResource *root);
-	nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream& strm, nsIRDFResource *container, PRInt32 level, nsISupportsArray *parentArray);
-	nsresult SerializeBookmarks(nsIURI* aURI);
-	nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
-	nsresult GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType);
-	nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
-	nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream& strm, nsIRDFResource *node,
-					 nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst);
-	PRBool   CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
+    nsresult ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFlag);
 
-	nsresult getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res, PRInt32 offset, nsIRDFNode **argValue);
-	nsresult insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, nsIRDFResource *objType);
-	nsresult deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex);
-	nsresult setFolderHint(nsIRDFResource *src, nsIRDFResource *objType);
-	nsresult getFolderViaHint(nsIRDFResource *src, PRBool fallbackFlag, nsIRDFResource **folder);
-	nsresult importBookmarks(nsISupportsArray *aArguments);
-	nsresult exportBookmarks(nsISupportsArray *aArguments);
-  nsresult ProcessCachedBookmarkIcon(nsIRDFResource* aSource, const PRUnichar *iconURL, nsIRDFNode** aTarget);
-	nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
-  void AnnotateBookmarkSchedule(nsIRDFResource* aSource, PRBool scheduleFlag);
-  nsresult IsBookmarkedInternal(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag);
-  nsresult InsertResource(nsIRDFResource* aResource, nsIRDFResource* aParentFolder, PRInt32 aIndex);
+    nsresult GetBookmarkToPing(nsIRDFResource **theBookmark);
 
-  nsresult ChangeURL(nsIRDFResource* aOldURL, nsIRDFResource* aNewURL);
+    nsresult GetBookmarksFile(nsFileSpec* aResult);
 
-	nsresult getLocaleString(const char *key, nsString &str);
+    nsresult WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds,
+                            nsIRDFResource *root);
 
-	nsresult LoadBookmarks();
-	nsresult initDatasource();
+    nsresult WriteBookmarksContainer(nsIRDFDataSource *ds,
+                                     nsOutputFileStream& strm,
+                                     nsIRDFResource *container,
+                                     PRInt32 level,
+                                     nsISupportsArray *parentArray);
 
-	// nsIStreamObserver methods:
-	NS_DECL_NSIREQUESTOBSERVER
+    nsresult SerializeBookmarks(nsIURI* aURI);
 
-	// nsIStreamListener methods:
-	NS_DECL_NSISTREAMLISTENER
+    nsresult GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
 
-	// nsIObserver methods:
-	NS_DECL_NSIOBSERVER
+    nsresult GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType);
+
+    nsresult UpdateBookmarkLastModifiedDate(nsIRDFResource *aSource);
+
+    nsresult WriteBookmarkProperties(nsIRDFDataSource *ds,
+                                     nsOutputFileStream& strm,
+                                     nsIRDFResource *node,
+                                     nsIRDFResource *property,
+                                     const char *htmlAttrib,
+                                     PRBool isFirst);
+
+    PRBool   CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
+
+    nsresult getArgumentN(nsISupportsArray *arguments, nsIRDFResource *res,
+                          PRInt32 offset, nsIRDFNode **argValue);
+
+    nsresult insertBookmarkItem(nsIRDFResource *src,
+                                nsISupportsArray *aArguments,
+                                nsIRDFResource *objType);
+
+    nsresult deleteBookmarkItem(nsIRDFResource *src,
+                                nsISupportsArray *aArguments,
+                                PRInt32 parentArgIndex);
+
+    nsresult setFolderHint(nsIRDFResource *src, nsIRDFResource *objType);
+
+    nsresult getFolderViaHint(nsIRDFResource *src, PRBool fallbackFlag,
+                              nsIRDFResource **folder);
+
+    nsresult importBookmarks(nsISupportsArray *aArguments);
+
+    nsresult exportBookmarks(nsISupportsArray *aArguments);
+
+    nsresult ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
+                                       const PRUnichar *iconURL,
+                                       nsIRDFNode** aTarget);
+
+    nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
+
+    void AnnotateBookmarkSchedule(nsIRDFResource* aSource,
+                                  PRBool scheduleFlag);
+
+    nsresult IsBookmarkedInternal(nsIRDFResource *bookmark,
+                                  PRBool *isBookmarkedFlag);
+
+    nsresult InsertResource(nsIRDFResource* aResource,
+                            nsIRDFResource* aParentFolder, PRInt32 aIndex);
+
+    nsresult ChangeURL(nsIRDFResource* aOldURL, nsIRDFResource* aNewURL);
+
+    nsresult getLocaleString(const char *key, nsString &str);
+
+    nsresult LoadBookmarks();
+    nsresult initDatasource();
+
+    // nsIStreamObserver methods:
+    NS_DECL_NSIREQUESTOBSERVER
+
+    // nsIStreamListener methods:
+    NS_DECL_NSISTREAMLISTENER
+
+    // nsIObserver methods:
+    NS_DECL_NSIOBSERVER
 
 public:
-	nsBookmarksService();
-	virtual ~nsBookmarksService();
-	nsresult Init();
+    nsBookmarksService();
+    virtual ~nsBookmarksService();
+    nsresult Init();
 
-	// nsISupports
-	NS_DECL_ISUPPORTS
+    // nsISupports
+    NS_DECL_ISUPPORTS
 
-	// nsIBookmarksService
-	NS_DECL_NSIBOOKMARKSSERVICE
+    // nsIBookmarksService
+    NS_DECL_NSIBOOKMARKSSERVICE
 
-	// nsIRDFDataSource
-	NS_IMETHOD GetURI(char* *uri);
+    // nsIRDFDataSource
+    NS_IMETHOD GetURI(char* *uri);
 
-	NS_IMETHOD GetSource(nsIRDFResource* property,
-			     nsIRDFNode* target,
-			     PRBool tv,
-			     nsIRDFResource** source) {
-		return mInner->GetSource(property, target, tv, source);
-	}
+    NS_IMETHOD GetSource(nsIRDFResource* property,
+                         nsIRDFNode* target,
+                         PRBool tv,
+                         nsIRDFResource** source)
+    {
+        return mInner->GetSource(property, target, tv, source);
+    }
 
-	NS_IMETHOD GetSources(nsIRDFResource* property,
-			      nsIRDFNode* target,
-			      PRBool tv,
-			      nsISimpleEnumerator** sources) {
-		return mInner->GetSources(property, target, tv, sources);
-	}
+    NS_IMETHOD GetSources(nsIRDFResource* property,
+                          nsIRDFNode* target,
+                          PRBool tv,
+                          nsISimpleEnumerator** sources)
+    {
+        return mInner->GetSources(property, target, tv, sources);
+    }
 
-	NS_IMETHOD GetTarget(nsIRDFResource* source,
-			     nsIRDFResource* property,
-			     PRBool tv,
-			     nsIRDFNode** target);
+    NS_IMETHOD GetTarget(nsIRDFResource* source,
+                         nsIRDFResource* property,
+                         PRBool tv,
+                         nsIRDFNode** target);
 
-	NS_IMETHOD GetTargets(nsIRDFResource* source,
-			      nsIRDFResource* property,
-			      PRBool tv,
-			      nsISimpleEnumerator** targets) {
-		return mInner->GetTargets(source, property, tv, targets);
-	}
+    NS_IMETHOD GetTargets(nsIRDFResource* source,
+                          nsIRDFResource* property,
+                          PRBool tv,
+                          nsISimpleEnumerator** targets)
+    {
+        return mInner->GetTargets(source, property, tv, targets);
+    }
 
-	NS_IMETHOD Assert(nsIRDFResource* aSource,
-			  nsIRDFResource* aProperty,
-			  nsIRDFNode* aTarget,
-			  PRBool aTruthValue);
+    NS_IMETHOD Assert(nsIRDFResource* aSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aTarget,
+                      PRBool aTruthValue);
 
-	NS_IMETHOD Unassert(nsIRDFResource* aSource,
-			    nsIRDFResource* aProperty,
-			    nsIRDFNode* aTarget);
+    NS_IMETHOD Unassert(nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aTarget);
 
-	NS_IMETHOD Change(nsIRDFResource* aSource,
-			  nsIRDFResource* aProperty,
-			  nsIRDFNode* aOldTarget,
-			  nsIRDFNode* aNewTarget);
+    NS_IMETHOD Change(nsIRDFResource* aSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aOldTarget,
+                      nsIRDFNode* aNewTarget);
+    
+    NS_IMETHOD Move(nsIRDFResource* aOldSource,
+                    nsIRDFResource* aNewSource,
+                    nsIRDFResource* aProperty,
+                    nsIRDFNode* aTarget);
+            
+    NS_IMETHOD HasAssertion(nsIRDFResource* source,
+                            nsIRDFResource* property,
+                            nsIRDFNode* target,
+                            PRBool tv,
+                            PRBool* hasAssertion);
 
-	NS_IMETHOD Move(nsIRDFResource* aOldSource,
-			nsIRDFResource* aNewSource,
-			nsIRDFResource* aProperty,
-			nsIRDFNode* aTarget);
-			
-	NS_IMETHOD HasAssertion(nsIRDFResource* source,
-				nsIRDFResource* property,
-				nsIRDFNode* target,
-				PRBool tv,
-				PRBool* hasAssertion);
+    NS_IMETHOD AddObserver(nsIRDFObserver* aObserver);
+    NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver);
 
-	NS_IMETHOD AddObserver(nsIRDFObserver* aObserver);
-	NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver);
+    NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval);
+    NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval);
 
-	NS_IMETHOD HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval);
-	NS_IMETHOD HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval);
-
-	NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-			       nsISimpleEnumerator** labels) {
-		return mInner->ArcLabelsIn(node, labels);
-	}
+    NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
+                           nsISimpleEnumerator** labels)
+    {
+        return mInner->ArcLabelsIn(node, labels);
+    }
 
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-				nsISimpleEnumerator** labels);
+                            nsISimpleEnumerator** labels);
 
-	NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult);
+    NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult);
 
-	NS_IMETHOD GetAllCmds(nsIRDFResource* source,
-                              nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
+    NS_IMETHOD GetAllCmds(nsIRDFResource* source,
+                          nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
 
-	NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-				    nsIRDFResource*   aCommand,
-				    nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-				    PRBool* aResult);
+    NS_IMETHOD IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                                nsIRDFResource*   aCommand,
+                                nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                                PRBool* aResult);
 
-	NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-			     nsIRDFResource*   aCommand,
-			     nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+    NS_IMETHOD DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+                         nsIRDFResource*   aCommand,
+                         nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
-	// nsIRDFRemoteDataSource
-	NS_DECL_NSIRDFREMOTEDATASOURCE
+    // nsIRDFRemoteDataSource
+    NS_DECL_NSIRDFREMOTEDATASOURCE
 
-	// nsIRDFObserver
-	NS_DECL_NSIRDFOBSERVER
+    // nsIRDFObserver
+    NS_DECL_NSIRDFOBSERVER
 };
 
 #endif // bookmarksservice___h___
