@@ -43,7 +43,7 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 
@@ -92,7 +92,7 @@ nsBaseWidget::nsBaseWidget()
   printf("WIDGETS+ = %d\n", gNumWidgets);
 #endif
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
     debug_RegisterPrefCallbacks();
 #endif
 
@@ -801,7 +801,7 @@ nsBaseWidget::SetIcon(const nsAReadableString&)
   return NS_OK;
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 //////////////////////////////////////////////////////////////
 //
 // Convert a GUI event message code to a string.
@@ -932,7 +932,8 @@ static PRBool debug_GetBoolPref(nsIPref * aPrefs,const char * aPrefName)
   return value;
 }
 //////////////////////////////////////////////////////////////
-static PRBool debug_GetCachedBoolPref(const char * aPrefName)
+PRBool
+nsBaseWidget::debug_GetCachedBoolPref(const char * aPrefName)
 {
   NS_ASSERTION(nsnull != aPrefName,"cmon, pref name is null.");
 
@@ -1168,7 +1169,7 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
 }
 //////////////////////////////////////////////////////////////
 
-#endif // NS_DEBUG
+#endif // DEBUG
 
 
 

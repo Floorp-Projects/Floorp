@@ -501,13 +501,7 @@ nsDragService::GetData               (nsITransferable * aTransferable,
         nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr, mTargetDragData,
                                                    mTargetDragDataLen, 
                                                    getter_AddRefs(genericDataWrapper));
-        rv = aTransferable->SetTransferData(flavorStr, genericDataWrapper, mTargetDragDataLen);
-#ifdef NS_DEBUG
-        if ( rv != NS_OK )
-          g_print("nsDragService:: Error setting data into transferable\n");
-#endif
-          
-        rv = NS_OK;
+        aTransferable->SetTransferData(flavorStr, genericDataWrapper, mTargetDragDataLen);
         // we found one, get out of this loop!
         PR_LOG(sDragLm, PR_LOG_DEBUG, ("dataFound and converted!\n"));
         break;

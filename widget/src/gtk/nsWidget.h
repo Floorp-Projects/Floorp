@@ -200,11 +200,6 @@ public:
   // get the toplevel window for this widget
   virtual GtkWindow *GetTopLevelWindow(void);
 
-#ifdef NS_DEBUG
-  static nsWidget *debugWidget;
-  static PRBool    sDebugFeedback;
-#endif
-
 
   PRBool   OnKey(nsKeyEvent &aEvent)         { return OnInput(aEvent); };
   PRBool   OnText(nsTextEvent &aEvent)       { return OnInput(aEvent); };

@@ -196,7 +196,7 @@ protected:
     CREATE_HACK
   };
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 protected:
   static nsAutoString debug_GuiEventToString(nsGUIEvent * aGuiEvent);
   static PRBool debug_WantPaintFlashing();
@@ -220,6 +220,7 @@ protected:
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID);
 
+  static PRBool debug_GetCachedBoolPref(const char* aPrefName);
 #endif
 };
 
