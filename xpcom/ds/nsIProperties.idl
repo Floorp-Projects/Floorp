@@ -1,0 +1,89 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(61c1b3c0-b1bf-11d3-93b6-00104ba0fd40)]
+interface nsIProperties : nsISupports
+{
+    /**
+     * Defines a new property. 
+     * @return NS_ERROR_FAILURE if a property with that name already
+     * exists.
+     */
+    void define(in string prop, in nsISupports initialValue);
+
+    /**
+     * Undefines a property.
+     * @return NS_ERROR_FAILURE if a property with that name doesn't
+     * already exist.
+     */
+    void undefine(in string prop);
+
+    /**
+     * Gets a property with a given name. 
+     * @return NS_ERROR_FAILURE if a property with that name doesn't
+     * exist.
+     */
+    void get(in string prop, in nsIIDRef uuid, 
+             [iid_is(uuid),retval] out nsQIResult result);
+
+    /**
+     * Sets a property with a given name to a given value. 
+     * @return NS_ERROR_FAILURE if a property with that name doesn't
+     * exist.
+     */
+    void set(in string prop, in nsISupports value);
+
+    /**
+     * Returns true if the property with the given name exists with
+     * the given value.
+     */
+    boolean has(in string prop, in nsIIDRef uuid, in nsISupports value);
+};
+
+%{C++
+
+#define NS_PROPERTIES_CID                            \
+{ /* 4de2bc90-b1bf-11d3-93b6-00104ba0fd40 */         \
+    0x4de2bc90,                                      \
+    0xb1bf,                                          \
+    0x11d3,                                          \
+    {0x93, 0xb6, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+}
+
+#define NS_PROPERTIES_PROGID    "component://netscape/properties"
+#define NS_PROPERTIES_CLASSNAME "Properties"
+
+#include "nsIComponentManager.h"
+
+inline nsresult
+NS_NewIProperties(nsISupports* outer, nsIProperties* *result)
+{
+    static NS_DEFINE_CID(kPropertiesCID, NS_PROPERTIES_CID);
+    return nsComponentManager::CreateInstance(kPropertiesCID, 
+                                              outer,
+                                              NS_GET_IID(nsIProperties),
+                                              (void**)result);
+}
+
+%}
