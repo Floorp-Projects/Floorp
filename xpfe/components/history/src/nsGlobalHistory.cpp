@@ -147,31 +147,32 @@ class tokenPair {
 public:
   tokenPair(const char *aName, PRUint32 aNameLen,
             const char *aValue, PRUint32 aValueLen) :
-    tokenName(aName, aNameLen),
-    tokenValue(aValue, aValueLen) {}
-  nsDependentCString tokenName;
-  nsDependentCString tokenValue;
+    tokenName(aName, aName+aNameLen),
+    tokenValue(aValue), tokenValueLength(aValueLen) {}
+  nsDependentSingleFragmentCSubstring tokenName;
+  const char* tokenValue;
+  PRUint32 tokenValueLength;
 };
 
 // individual search term, pulled from token/value structs
 class searchTerm {
 public:
-  searchTerm(const char* aDatasource, PRUint32 datasourceLen,
+  searchTerm(const char* aDatasource, PRUint32 aDatasourceLen,
              const char *aProperty, PRUint32 aPropertyLen,
-             const char* aMethod, PRUint32 methodLen,
-             const char* aText, PRUint32 textLen):
-    datasource(aDatasource, datasourceLen),
-    property(aProperty, aPropertyLen),
-    method(aMethod, methodLen)
+             const char* aMethod, PRUint32 aMethodLen,
+             const char* aText, PRUint32 aTextLen):
+    datasource(aDatasource, aDatasource+aDatasourceLen),
+    property(aProperty, aProperty+aPropertyLen),
+    method(aMethod, aMethod+aMethodLen)
   {
     // need to do UTF8-conversion/unescaping here, using
     // nsITextToSubURI
-    text.AssignWithConversion(aText, textLen);
+    text.AssignWithConversion(aText, aTextLen);
   }
   
-  nsDependentCString datasource;  // should always be "history" ?
-  nsDependentCString property;    // AgeInDays, Hostname, etc
-  nsDependentCString method;      // is, isgreater, isless
+  nsDependentSingleFragmentCSubstring datasource;  // should always be "history" ?
+  nsDependentSingleFragmentCSubstring property;    // AgeInDays, Hostname, etc
+  nsDependentSingleFragmentCSubstring method;      // is, isgreater, isless
   nsAutoString text;            // text to match
   rowMatchCallback match;      // matching callback if needed
 };
@@ -849,8 +850,8 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   err = aRow->AliasCellYarn(mEnv, aCol, &yarn);
   if (err != 0) return NS_ERROR_FAILURE;
 
-  nsDependentCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
-  aResult.Assign(url);
+  const char* startPtr = (const char*)yarn.mYarn_Buf;
+  aResult.Assign(Substring(startPtr, startPtr + yarn.mYarn_Fill));
   
   return NS_OK;
 }
@@ -967,8 +968,9 @@ nsGlobalHistory::MatchHost(nsIMdbRow *aRow,
   if (err != 0) return PR_FALSE;
 
   // do smart zero-termination
-  nsDependentCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
-  rv = NS_NewURI(&hostInfo->cachedUrl, nsCAutoString(url).get());
+  const char* startPtr = (const char *)yarn.mYarn_Buf;
+  rv = NS_NewURI(&hostInfo->cachedUrl,
+         nsCAutoString(Substring(startPtr, startPtr + yarn.mYarn_Fill)).get());
   if (NS_FAILED(rv)) return PR_FALSE;
 
   nsXPIDLCString urlHost;
@@ -1049,9 +1051,10 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
       if (err != 0)
         continue;
       
-      nsDependentCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
-      
-      rv = gRDFService->GetResource(nsCAutoString(uri).get(), getter_AddRefs(resource));
+      const char* startPtr = (const char*) yarn.mYarn_Buf;
+      rv = gRDFService->GetResource(
+            nsCAutoString(Substring(startPtr, startPtr+yarn.mYarn_Fill)).get(),
+            getter_AddRefs(resource));
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
       if (NS_FAILED(rv))
         continue;
@@ -2844,23 +2847,23 @@ nsGlobalHistory::TokenListToSearchQuery(const nsVoidArray& aTokens,
 
     // per-term tokens
     if (token->tokenName.Equals("datasource")) {
-      datasource = token->tokenValue.get();
-      datasourceLen = token->tokenValue.Length();
+      datasource = token->tokenValue;
+      datasourceLen = token->tokenValueLength;
     }
     else if (token->tokenName.Equals("match")) {
-      if (token->tokenValue.Equals("AgeInDays"))
+      if (Substring(token->tokenValue, token->tokenValue+token->tokenValueLength).Equals("AgeInDays"))
         matchCallback = matchAgeInDaysCallback;
       
-      property = token->tokenValue.get();
-      propertyLen = token->tokenValue.Length();
+      property = token->tokenValue;
+      propertyLen = token->tokenValueLength;
     }
     else if (token->tokenName.Equals("method")) {
-      method = token->tokenValue.get();
-      methodLen = token->tokenValue.Length();
+      method = token->tokenValue;
+      methodLen = token->tokenValueLength;
     }    
     else if (token->tokenName.Equals("text")) {
-      text = token->tokenValue.get();
-      textLen = token->tokenValue.Length();
+      text = token->tokenValue;
+      textLen = token->tokenValueLength;
     }
     
     // really, we should be storing the group-by as a column number or
@@ -3107,13 +3110,11 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
   nsAutoString stringName(NS_LITERAL_STRING("finduri-"));
 
   // property
-  stringName.AppendWithConversion(term->property.get(),
-                                  term->property.Length());
+  stringName.Append(NS_ConvertASCIItoUCS2(term->property));
   stringName.Append(PRUnichar('-'));
 
   // and now the method, such as "is" or "isgreater"
-  stringName.AppendWithConversion(term->method.get(),
-                                  term->method.Length());
+  stringName.Append(NS_ConvertASCIItoUCS2(term->method));
 
   // try adding -<text> to see if there's a match
   // for example, to match
@@ -3239,11 +3240,12 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
 
   // Since the URLEnumerator always returns the value of the URL
   // column, we create an RDF resource.
-  nsDependentCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
-
   nsresult rv;
   nsCOMPtr<nsIRDFResource> resource;
-  rv = gRDFService->GetResource(nsCAutoString(uri).get(), getter_AddRefs(resource));
+  const char* startPtr = (const char*) yarn.mYarn_Buf;
+  rv = gRDFService->GetResource(
+            nsCAutoString(Substring(startPtr, startPtr+yarn.mYarn_Fill)).get(),
+            getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
 
   *aResult = resource;
@@ -3415,7 +3417,7 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       mdb_err err;
 
       mdb_column property_column;
-      nsCAutoString property_name(term->property.get(),term->property.Length());
+      nsCAutoString property_name(term->property);
       property_name.Append(char(0));
       
       err = mStore->QueryToken(mEnv, property_name.get(), &property_column);
@@ -3428,10 +3430,12 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       mdbYarn yarn;
       aRow->AliasCellYarn(mEnv, property_column, &yarn);
 
-      nsDependentCString rowVal((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
+      const char* startPtr = (const char *)yarn.mYarn_Buf;
+      const nsASingleFragmentCString& rowVal =
+          Substring(startPtr, startPtr + yarn.mYarn_Fill);
 
       // set up some iterators
-      nsACString::const_iterator start, end;
+      nsASingleFragmentCString::const_iterator start, end;
       rowVal.BeginReading(start);
       rowVal.EndReading(end);
       
@@ -3516,10 +3520,10 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
     if (err != 0) return NS_ERROR_FAILURE;
 
     
-    nsDependentCString uri((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill);
-
-    rv = gRDFService->GetResource(nsCAutoString(uri).get(),
-                                  getter_AddRefs(resource));
+    const char* startPtr = (const char*)yarn.mYarn_Buf;
+    rv = gRDFService->GetResource(
+            nsCAutoString(Substring(startPtr, startPtr+yarn.mYarn_Fill)).get(),
+            getter_AddRefs(resource));
     if (NS_FAILED(rv)) return rv;
 
     *aResult = resource;
@@ -3538,10 +3542,8 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
   
   nsCAutoString findUri(mFindUriPrefix);
 
-  nsDependentCString rowValue((const char *)groupByValue.mYarn_Buf,
-                            groupByValue.mYarn_Fill);
-  
-  findUri.Append(rowValue);
+  const char* startPtr = (const char *)groupByValue.mYarn_Buf;
+  findUri.Append(Substring(startPtr, startPtr+groupByValue.mYarn_Fill));
   findUri.Append('\0');
 
   rv = gRDFService->GetResource(findUri.get(), getter_AddRefs(resource));
