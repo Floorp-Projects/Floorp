@@ -2465,7 +2465,7 @@ nsresult nsMsgCompose::BodyContainsHTMLTag(nsIDOMNode *node,  PRBool *_retval)
     if (NS_FAILED(rv))
       return rv;
     
-    if (aStr.CompareWithConversion("A") == 0)
+    if (aStr.EqualsWithConversion("a", PR_TRUE))
     {
       //We can ignore an anchore tag if the link is the same than the text
       nsAutoString href;
@@ -2504,7 +2504,7 @@ nsresult nsMsgCompose::BodyContainsHTMLTag(nsIDOMNode *node,  PRBool *_retval)
         }
       }
     }
-    else if (aStr.CompareWithConversion("BLOCKQUOTE") == 0)
+    else if (aStr.EqualsWithConversion("blockquote", PR_TRUE))
     {
       //skip <blockquote> only if the type is "cite"
       nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
@@ -2516,36 +2516,36 @@ nsresult nsMsgCompose::BodyContainsHTMLTag(nsIDOMNode *node,  PRBool *_retval)
         if (NS_SUCCEEDED(rv) && pItem)
         {
           rv = pItem->GetNodeValue(aStr);
-          if (NS_SUCCEEDED(rv) && aStr.CompareWithConversion("cite", PR_TRUE) == 0)
+          if (NS_SUCCEEDED(rv) && aStr.EqualsWithConversion("cite", PR_TRUE))
             *_retval = PR_FALSE;
         }
       }
     }
-    else if (aStr.CompareWithConversion("HTML") == 0)
+    else if (aStr.EqualsWithConversion("html", PR_TRUE))
     {
       *_retval = PR_FALSE;
     }
-    else if (aStr.CompareWithConversion("HEAD") == 0)
+    else if (aStr.EqualsWithConversion("head", PR_TRUE))
     {
       *_retval = PR_FALSE;
     }
-    else if (aStr.CompareWithConversion("BODY") == 0)
+    else if (aStr.EqualsWithConversion("body", PR_TRUE))
     {
       *_retval = PR_FALSE;
     }
-    else if (aStr.CompareWithConversion("P") == 0)
+    else if (aStr.EqualsWithConversion("p", PR_TRUE))
     {
       *_retval = PR_FALSE;
     }
-    else if (aStr.CompareWithConversion("BR") == 0)
+    else if (aStr.EqualsWithConversion("br", PR_TRUE))
     {
       *_retval = PR_FALSE;
     }
-    else if (aStr.CompareWithConversion("PRE") == 0)
+    else if (aStr.EqualsWithConversion("pre", PR_TRUE))
     {
       *_retval = PR_FALSE;
     }
-    else if (aStr.CompareWithConversion("#text") == 0)
+    else if (aStr.EqualsWithConversion("#text", PR_TRUE))
     {
       *_retval = PR_FALSE;
     }
