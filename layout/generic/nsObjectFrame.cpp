@@ -1285,6 +1285,9 @@ nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
 	nsresult rv = NS_OK;
 
 //~~~
+  //FIX FOR CRASHING WHEN NO INSTANCE OWVER
+  if (!mInstanceOwner)
+    return NS_ERROR_NULL_POINTER;
 #ifdef XP_WIN
   nsPluginWindow * window;
   mInstanceOwner->GetWindow(window);
