@@ -47,7 +47,7 @@
 #include "nsIWordBreaker.h"
 
 #include "nsITextContent.h"
-#include "nsTextReflow.h"/* XXX rename to nsTextRun */
+#include "nsTextRun.h"
 #include "nsTextFragment.h"
 #include "nsTextTransformer.h"
 #include "nsLayoutAtoms.h"
@@ -70,18 +70,18 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
-class TextFrame;
+// Helper class for managing blinking text
 
-class BlinkTimer : public nsITimerCallback {
+class nsBlinkTimer : public nsITimerCallback {
 public:
-  BlinkTimer();
-  virtual ~BlinkTimer();
+  nsBlinkTimer();
+  virtual ~nsBlinkTimer();
 
   NS_DECL_ISUPPORTS
 
-  void AddFrame(TextFrame* aFrame);
+  void AddFrame(nsIFrame* aFrame);
 
-  PRBool RemoveFrame(TextFrame* aFrame);
+  PRBool RemoveFrame(nsIFrame* aFrame);
 
   PRInt32 FrameCount();
 
@@ -95,9 +95,107 @@ public:
   nsVoidArray mFrames;
 };
 
-class TextFrame : public nsSplittableFrame {
+static PRBool gBlinkTextOff;
+static nsBlinkTimer* gTextBlinker;
+#ifdef NOISY_BLINK
+static PRTime gLastTick;
+#endif
+
+nsBlinkTimer::nsBlinkTimer()
+{
+  NS_INIT_REFCNT();
+  mTimer = nsnull;
+}
+
+nsBlinkTimer::~nsBlinkTimer()
+{
+  Stop();
+}
+
+void nsBlinkTimer::Start()
+{
+  nsresult rv = NS_NewTimer(&mTimer);
+  if (NS_OK == rv) {
+    mTimer->Init(this, 750);
+  }
+}
+
+void nsBlinkTimer::Stop()
+{
+  if (nsnull != mTimer) {
+    mTimer->Cancel();
+    NS_RELEASE(mTimer);
+  }
+}
+
+static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
+NS_IMPL_ISUPPORTS(nsBlinkTimer, kITimerCallbackIID);
+
+void nsBlinkTimer::AddFrame(nsIFrame* aFrame) {
+  mFrames.AppendElement(aFrame);
+  if (1 == mFrames.Count()) {
+    Start();
+  }
+}
+
+PRBool nsBlinkTimer::RemoveFrame(nsIFrame* aFrame) {
+  PRBool rv = mFrames.RemoveElement(aFrame);
+  if (0 == mFrames.Count()) {
+    Stop();
+  }
+  return rv;
+}
+
+PRInt32 nsBlinkTimer::FrameCount() {
+  return mFrames.Count();
+}
+
+void nsBlinkTimer::Notify(nsITimer *timer)
+{
+  // Toggle blink state bit so that text code knows whether or not to
+  // render. All text code shares the same flag so that they all blink
+  // in unison.
+  gBlinkTextOff = PRBool(!gBlinkTextOff);
+
+  // XXX hack to get auto-repeating timers; restart before doing
+  // expensive work so that time between ticks is more even
+  Stop();
+  Start();
+
+#ifdef NOISY_BLINK
+  PRTime now = PR_Now();
+  char buf[50];
+  PRTime delta;
+  LL_SUB(delta, now, gLastTick);
+  gLastTick = now;
+  PR_snprintf(buf, sizeof(buf), "%lldusec", delta);
+  printf("%s\n", buf);
+#endif
+
+  PRInt32 i, n = mFrames.Count();
+  for (i = 0; i < n; i++) {
+    nsIFrame* text = (nsIFrame*) mFrames.ElementAt(i);
+
+    // Determine damaged area and tell view manager to redraw it
+    nsPoint offset;
+    nsRect bounds;
+    text->GetRect(bounds);
+    nsIView* view;
+    text->GetOffsetFromView(offset, &view);
+    nsIViewManager* vm;
+    view->GetViewManager(vm);
+    bounds.x = offset.x;
+    bounds.y = offset.y;
+    vm->UpdateView(view, bounds, 0);
+    NS_RELEASE(vm);
+  }
+}
+
+//----------------------------------------------------------------------
+
+class nsTextFrame : public nsSplittableFrame {
 public:
-  TextFrame();
+  nsTextFrame();
 
   // nsIFrame
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
@@ -130,14 +228,6 @@ public:
                          nsIFrame *      aNewFrame,
                          PRUint32&       aActualContentOffset,
                          PRInt32&        aOffset);
-
-  NS_IMETHOD GetPositionSlowly(nsIPresContext& aCX,
-                         nsIRenderingContext * aRendContext,
-                         nsGUIEvent*     aEvent,
-                         nsIFrame *      aNewFrame,
-                         PRUint32&       aActualContentOffset,
-                         PRInt32&        aOffset);
-
 
   NS_IMETHOD SetSelected(nsSelectionStruct *aSS);
   NS_IMETHOD SetSelectedContentOffsets(nsSelectionStruct *aSS, 
@@ -189,7 +279,7 @@ public:
     nscoord mExtraSpacePerSpace;
     nscoord mRemainingExtraSpace;
 
-    TextStyle(nsIPresContext& aPresContext,
+    TextStyle(nsIPresContext* aPresContext,
               nsIRenderingContext& aRenderingContext,
               nsIStyleContext* sc)
     {
@@ -202,7 +292,7 @@ public:
       // Get the normal font
       nsFont plainFont(mFont->mFont);
       plainFont.decorations = NS_FONT_DECORATION_NONE;
-      aPresContext.GetMetricsFor(plainFont, &mNormalFont);
+      aPresContext->GetMetricsFor(plainFont, &mNormalFont);
       aRenderingContext.SetFont(mNormalFont);
       aRenderingContext.GetWidth(' ', mSpaceWidth);
       mLastFont = mNormalFont;
@@ -211,7 +301,7 @@ public:
       mSmallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == plainFont.variant;
       if (mSmallCaps) {
         plainFont.size = nscoord(0.7 * plainFont.size);
-        aPresContext.GetMetricsFor(plainFont, &mSmallFont);
+        aPresContext->GetMetricsFor(plainFont, &mSmallFont);
       }
       else {
         mSmallFont = nsnull;
@@ -245,18 +335,26 @@ public:
     }
   };
 
+  nsIDocument* GetDocument(nsIPresContext* aPresContext);
+
+  nsresult GetPositionSlowly(nsIPresContext* aCX,
+                             nsIRenderingContext * aRendContext,
+                             nsGUIEvent*     aEvent,
+                             nsIFrame *      aNewFrame,
+                             PRUint32*       aActualContentOffset,
+                             PRInt32*        aOffset);
+
   PRIntn PrepareUnicodeText(nsTextTransformer& aTransformer,
                             PRInt32* aIndicies,
                             PRUnichar* aBuffer,
-                            PRInt32& aTextLen,
-                            nscoord& aNewWidth);
+                            PRInt32* aTextLen);
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             nsIStyleContext* aStyleContext,
                             TextStyle& aStyle,
                             nscoord aX, nscoord aY, nscoord aWidth);
 
-  void PaintTextSlowly(nsIPresContext& aPresContext,
+  void PaintTextSlowly(nsIPresContext* aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        nsIStyleContext* aStyleContext,
                        TextStyle& aStyle,
@@ -273,44 +371,44 @@ public:
                             TextStyle& aStyle,
                             PRUnichar* aWord,
                             PRInt32 aWordLength,
-                            nscoord& aWidthResult);
+                            nscoord* aWidthResult);
 
   void GetWidth(nsIRenderingContext& aRenderingContext,
                 TextStyle& aStyle,
                 PRUnichar* aBuffer, PRInt32 aLength,
-                nscoord& aWidthResult);
+                nscoord* aWidthResult);
 
-  void PaintUnicodeText(nsIPresContext& aPresContext,
+  void PaintUnicodeText(nsIPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         nsIStyleContext* aStyleContext,
                         TextStyle& aStyle,
                         nscoord dx, nscoord dy);
 
-  void PaintAsciiText(nsIPresContext& aPresContext,
+  void PaintAsciiText(nsIPresContext* aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       nsIStyleContext* aStyleContext,
                       TextStyle& aStyle,
                       nscoord dx, nscoord dy);
 
-  nscoord ComputeTotalWordWidth(nsIPresContext& aPresContext,
+  nscoord ComputeTotalWordWidth(nsIPresContext* aPresContext,
                                 nsLineLayout& aLineLayout,
                                 const nsHTMLReflowState& aReflowState,
                                 nsIFrame* aNextFrame,
                                 nscoord aBaseWidth);
 
-  nscoord ComputeWordFragmentWidth(nsIPresContext& aPresContext,
+  nscoord ComputeWordFragmentWidth(nsIPresContext* aPresContext,
                                    nsLineLayout& aLineLayout,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
                                    nsITextContent* aText,
-                                   PRBool& aStop);
+                                   PRBool* aStop);
 
-  void ToCString(nsString& aBuf, PRInt32& aContentLength) const;
+  void ToCString(nsString& aBuf, PRInt32* aContentLength) const;
 
 protected:
-  virtual ~TextFrame();
+  virtual ~nsTextFrame();
 
-  // XXX pack this tighter?
+  // XXX pack this tighter
   PRInt32 mContentOffset;
   PRInt32 mContentLength;
   PRUint32 mFlags;
@@ -342,108 +440,10 @@ protected:
 
 //----------------------------------------------------------------------
 
-static PRBool gBlinkTextOff;
-static BlinkTimer* gTextBlinker;
-#ifdef NOISY_BLINK
-static PRTime gLastTick;
-#endif
-
-BlinkTimer::BlinkTimer()
-{
-  NS_INIT_REFCNT();
-  mTimer = nsnull;
-}
-
-BlinkTimer::~BlinkTimer()
-{
-  Stop();
-}
-
-void BlinkTimer::Start()
-{
-  nsresult rv = NS_NewTimer(&mTimer);
-  if (NS_OK == rv) {
-    mTimer->Init(this, 750);
-  }
-}
-
-void BlinkTimer::Stop()
-{
-  if (nsnull != mTimer) {
-    mTimer->Cancel();
-    NS_RELEASE(mTimer);
-  }
-}
-
-static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
-NS_IMPL_ISUPPORTS(BlinkTimer, kITimerCallbackIID);
-
-void BlinkTimer::AddFrame(TextFrame* aFrame) {
-  mFrames.AppendElement(aFrame);
-  if (1 == mFrames.Count()) {
-    Start();
-  }
-}
-
-PRBool BlinkTimer::RemoveFrame(TextFrame* aFrame) {
-  PRBool rv = mFrames.RemoveElement(aFrame);
-  if (0 == mFrames.Count()) {
-    Stop();
-  }
-  return rv;
-}
-
-PRInt32 BlinkTimer::FrameCount() {
-  return mFrames.Count();
-}
-
-void BlinkTimer::Notify(nsITimer *timer)
-{
-  // Toggle blink state bit so that text code knows whether or not to
-  // render. All text code shares the same flag so that they all blink
-  // in unison.
-  gBlinkTextOff = PRBool(!gBlinkTextOff);
-
-  // XXX hack to get auto-repeating timers; restart before doing
-  // expensive work so that time between ticks is more even
-  Stop();
-  Start();
-
-#ifdef NOISY_BLINK
-  PRTime now = PR_Now();
-  char buf[50];
-  PRTime delta;
-  LL_SUB(delta, now, gLastTick);
-  gLastTick = now;
-  PR_snprintf(buf, sizeof(buf), "%lldusec", delta);
-  printf("%s\n", buf);
-#endif
-
-  PRInt32 i, n = mFrames.Count();
-  for (i = 0; i < n; i++) {
-    TextFrame* text = (TextFrame*) mFrames.ElementAt(i);
-
-    // Determine damaged area and tell view manager to redraw it
-    nsPoint offset;
-    nsRect bounds;
-    text->GetRect(bounds);
-    nsIView* view;
-    text->GetOffsetFromView(offset, &view);
-    nsIViewManager* vm;
-    view->GetViewManager(vm);
-    bounds.x = offset.x;
-    bounds.y = offset.y;
-    vm->UpdateView(view, bounds, 0);
-    NS_RELEASE(vm);
-  }
-}
-
-//----------------------------------------------------------------------
-
 nsresult
 NS_NewTextFrame(nsIFrame*& aResult)
 {
-  nsIFrame* frame = new TextFrame;
+  nsIFrame* frame = new nsTextFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -451,19 +451,19 @@ NS_NewTextFrame(nsIFrame*& aResult)
   return NS_OK;
 }
 
-TextFrame::TextFrame()
+nsTextFrame::nsTextFrame()
   : nsSplittableFrame()
 {
   if (nsnull == gTextBlinker) {
     // Create text timer the first time out
-    gTextBlinker = new BlinkTimer();
+    gTextBlinker = new nsBlinkTimer();
   }
   mSelectionOffset = PRUint32(-1);
   mSelectionEnd = PRUint32(-1);
   NS_ADDREF(gTextBlinker);
 }
 
-TextFrame::~TextFrame()
+nsTextFrame::~nsTextFrame()
 {
   if (0 != (mFlags & TEXT_BLINK_ON)) {
     NS_ASSERTION(nsnull != gTextBlinker, "corrupted blinker");
@@ -475,10 +475,28 @@ TextFrame::~TextFrame()
   }
 }
 
+nsIDocument*
+nsTextFrame::GetDocument(nsIPresContext* aPresContext)
+{
+  nsIDocument* result = nsnull;
+  if (mContent) {
+    mContent->GetDocument(result);
+  }
+  if (!result && aPresContext) {
+    nsIPresShell* shell;
+    aPresContext->GetShell(&shell);
+    if (shell) {
+      shell->GetDocument(&result);
+      NS_RELEASE(shell);
+    }
+  }
+  return result;
+}
+
 NS_IMETHODIMP
-TextFrame::GetCursor(nsIPresContext& aPresContext,
-                     nsPoint& aPoint,
-                     PRInt32& aCursor)
+nsTextFrame::GetCursor(nsIPresContext& aPresContext,
+                       nsPoint& aPoint,
+                       PRInt32& aCursor)
 {
   const nsStyleColor* styleColor;
   GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
@@ -494,9 +512,9 @@ TextFrame::GetCursor(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-TextFrame::ContentChanged(nsIPresContext* aPresContext,
-                          nsIContent*     aChild,
-                          nsISupports*    aSubContent)
+nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
+                            nsIContent*     aChild,
+                            nsISupports*    aSubContent)
 {
   // Generate a reflow command with this frame as the target frame
   nsIReflowCommand* cmd;
@@ -516,10 +534,10 @@ TextFrame::ContentChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-TextFrame::Paint(nsIPresContext& aPresContext,
-                 nsIRenderingContext& aRenderingContext,
-                 const nsRect& aDirtyRect,
-                 nsFramePaintLayer aWhichLayer)
+nsTextFrame::Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer)
 {
   if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;
@@ -532,11 +550,11 @@ TextFrame::Paint(nsIPresContext& aPresContext,
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     sc->GetStyleData(eStyleStruct_Display);
   if (disp->mVisible) {
-    TextStyle ts(aPresContext, aRenderingContext, mStyleContext);
+    TextStyle ts(&aPresContext, aRenderingContext, mStyleContext);
     if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) ||
         ((NS_STYLE_TEXT_ALIGN_JUSTIFY == ts.mText->mTextAlign) &&
          (mRect.width > mComputedWidth))) {
-      PaintTextSlowly(aPresContext, aRenderingContext, sc, ts, 0, 0);
+      PaintTextSlowly(&aPresContext, aRenderingContext, sc, ts, 0, 0);
     }
     else {
       // Choose rendering pathway based on rendering context
@@ -546,11 +564,11 @@ TextFrame::Paint(nsIPresContext& aPresContext,
       if ((TEXT_HAS_MULTIBYTE & mFlags) ||
           (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
         // Use PRUnichar rendering routine
-        PaintUnicodeText(aPresContext, aRenderingContext, sc, ts, 0, 0);
+        PaintUnicodeText(&aPresContext, aRenderingContext, sc, ts, 0, 0);
       }
       else {
         // Use char rendering routine
-        PaintAsciiText(aPresContext, aRenderingContext, sc, ts, 0, 0);
+        PaintAsciiText(&aPresContext, aRenderingContext, sc, ts, 0, 0);
       }
     }
   }
@@ -564,11 +582,10 @@ TextFrame::Paint(nsIPresContext& aPresContext,
  * the prepared output.
  */
 PRIntn
-TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
-                              PRInt32* aIndexes,
-                              PRUnichar* aBuffer,
-                              PRInt32& aTextLen,
-                              nscoord& aNewWidth)
+nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
+                                PRInt32* aIndexes,
+                                PRUnichar* aBuffer,
+                                PRInt32* aTextLen)
 {
   PRIntn numSpaces = 0;
   PRUnichar* dst = aBuffer;
@@ -681,7 +698,7 @@ TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     numSpaces--;
   }
 
-  aTextLen = textLength;
+  *aTextLen = textLength;
   return numSpaces;
 }
 
@@ -722,10 +739,10 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 // XXX word-spacing
 
 void 
-TextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
-                                nsIStyleContext* aStyleContext,
-                                TextStyle& aTextStyle,
-                                nscoord aX, nscoord aY, nscoord aWidth)
+nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
+                                  nsIStyleContext* aStyleContext,
+                                  TextStyle& aTextStyle,
+                                  nscoord aX, nscoord aY, nscoord aWidth)
 {
   nscolor overColor;
   nscolor underColor;
@@ -785,16 +802,14 @@ TextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
 }
 
 void
-TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            nsIStyleContext* aStyleContext,
-                            TextStyle& aTextStyle,
-                            nscoord dx, nscoord dy)
+nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              nsIStyleContext* aStyleContext,
+                              TextStyle& aTextStyle,
+                              nscoord dx, nscoord dy)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
+
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
 
@@ -817,12 +832,12 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   nsCOMPtr<nsIWordBreaker> wb;
   doc->GetWordBreaker(getter_AddRefs(wb));
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
-  PrepareUnicodeText(tx,
-                     displaySelection ? ip : nsnull,
-                     paintBuf, textLength, width);
+  PrepareUnicodeText(tx, (displaySelection ? ip : nsnull),
+                     paintBuf, &textLength);
   PRUnichar* text = paintBuf;
   if (0 != textLength) {
-    if (!displaySelection || !mSelected || mSelectionOffset > mContentLength) { 
+    if (!displaySelection || !mSelected ||
+        (mSelectionOffset > PRUint32(mContentLength))) { 
       //if selection is > content length then selection has "slid off"
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
@@ -832,18 +847,20 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
     }
     else {
       ip[mContentLength] = ip[mContentLength-1];
-      if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
+      if ((ip[mContentLength]-mContentOffset) < textLength) {
+        //must set up last one for selection beyond edge if in boundary
         ip[mContentLength]++;
+      }
         
       nscoord textWidth;
       if (mSelectionOffset < 0)
         mSelectionOffset = 0;
       if (mSelectionEnd < 0)
         mSelectionEnd = mContentLength;
-      if (mSelectionEnd >  mContentLength)
-        mSelectionEnd = mContentLength;
-      if (mSelectionOffset > mContentLength)
-        mSelectionOffset = mContentLength;
+      if (mSelectionEnd >  PRUint32(mContentLength))
+        mSelectionEnd = PRUint32(mContentLength);
+      if (mSelectionOffset > PRUint32(mContentLength))
+        mSelectionOffset = PRUint32(mContentLength);
       PRInt32 selectionEnd = mSelectionEnd;
       PRInt32 selectionOffset = mSelectionOffset;
       if (mSelectionEnd < mSelectionOffset)
@@ -854,12 +871,10 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
       //where are the selection points "really"
       selectionOffset = ip[selectionOffset] - mContentOffset;
       selectionEnd = ip[selectionEnd]  - mContentOffset;
-      if (selectionOffset == selectionEnd){
+      if (selectionOffset == selectionEnd) {
         aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
         PaintTextDecorations(aRenderingContext, aStyleContext,
                              aTextStyle, dx, dy, width);
-//        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
-
 				//shell->RefreshCaret();
 				
 #ifdef SHOW_SELECTION_CURSOR
@@ -929,25 +944,25 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
 }
 
 //measure Spaced Textvoid
-NS_IMETHODIMP
-TextFrame::GetPositionSlowly(nsIPresContext& aCX,
-                             nsIRenderingContext * aRendContext,
-                             nsGUIEvent*     aEvent,
-                             nsIFrame*       aNewFrame,
-                             PRUint32&       aAcutalContentOffset,
-                             PRInt32&        aOffset)
+nsresult
+nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
+                               nsIRenderingContext* aRendContext,
+                               nsGUIEvent* aEvent,
+                               nsIFrame* aNewFrame,
+                               PRUint32* aAcutalContentOffset,
+                               PRInt32* aOffset)
 
 {
-  if ((!aRendContext) ||(!aEvent)||(!aNewFrame))
+  if (!aRendContext || !aEvent || !aNewFrame) {
     return NS_ERROR_NULL_POINTER;
-  TextStyle ts(aCX, *aRendContext, mStyleContext);
-  if (!ts.mSmallCaps && (!ts.mWordSpacing) && (!ts.mLetterSpacing))
-    return NS_ERROR_INVALID_ARG;
+  }
 
-  nsCOMPtr<nsIPresShell> shell;
-  aCX.GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
+  TextStyle ts(aPresContext, *aRendContext, mStyleContext);
+  if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
 
   // Make enough space to transform
   PRUnichar paintBufMem[TEXT_BUF_SIZE];
@@ -959,7 +974,6 @@ TextFrame::GetPositionSlowly(nsIPresContext& aCX,
     ip = new PRInt32[mContentLength+1];
     paintBuf = new PRUnichar[mContentLength];
   }
-  nscoord width = mRect.width;
   PRInt32 textLength;
 
   // Transform text from content into renderable form
@@ -968,10 +982,7 @@ TextFrame::GetPositionSlowly(nsIPresContext& aCX,
   nsCOMPtr<nsIWordBreaker> wb;
   doc->GetWordBreaker(getter_AddRefs(wb));
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
-  PrepareUnicodeText(tx,
-                     ip,
-                     paintBuf, textLength, width);
-
+  PrepareUnicodeText(tx, ip, paintBuf, &textLength);
 
   nsPoint origin;
   nsIView * view;
@@ -979,7 +990,7 @@ TextFrame::GetPositionSlowly(nsIPresContext& aCX,
   GetOffsetFromView(origin, &view);
 
   nscoord charWidth,widthsofar = 0;
-  PRInt32 index(0);
+  PRInt32 index = 0;
   PRBool found = PR_FALSE;
   PRUnichar* startBuf = paintBuf;
   nsIFontMetrics* lastFont = ts.mLastFont;
@@ -1015,12 +1026,12 @@ TextFrame::GetPositionSlowly(nsIPresContext& aCX,
     }
     if ((aEvent->point.x - origin.x) >= widthsofar && (aEvent->point.x - origin.x) <= (widthsofar + glyphWidth)){
       if ( ((aEvent->point.x - origin.x) - widthsofar) <= (glyphWidth /2)){
-        aOffset = index;
+        *aOffset = index;
         found = PR_TRUE;
         break;
       }
       else{
-        aOffset = index+1;
+        *aOffset = index+1;
         found = PR_TRUE;
         break;
       }
@@ -1033,16 +1044,17 @@ TextFrame::GetPositionSlowly(nsIPresContext& aCX,
   }
   paintBuf = startBuf;
   if (!found){
-    aOffset = textLength;
+    *aOffset = textLength;
   }
-  aAcutalContentOffset = mContentOffset;//offset;//((TextFrame *)aNewFrame)->mContentOffset;
+  *aAcutalContentOffset = mContentOffset;//offset;//((nsTextFrame *)aNewFrame)->mContentOffset;
   PRInt32 i;
   for (i = 0;i <= mContentLength; i ++){
-    if (ip[i] == aOffset + mContentOffset){ //reverse mapping
-        aOffset = i;
-        break;
+    if (ip[i] == *aOffset + mContentOffset){ //reverse mapping
+      *aOffset = i;
+      break;
     }
   }
+
   // Cleanup
   if (paintBuf != paintBufMem) {
     delete [] paintBuf;
@@ -1054,12 +1066,12 @@ TextFrame::GetPositionSlowly(nsIPresContext& aCX,
 }
 
 void
-TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
-                        nsIStyleContext* aStyleContext,
-                        TextStyle& aTextStyle,
-                        PRUnichar* aBuffer, PRInt32 aLength,
-                        nscoord aX, nscoord aY,
-                        nscoord aWidth)
+nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
+                          nsIStyleContext* aStyleContext,
+                          TextStyle& aTextStyle,
+                          PRUnichar* aBuffer, PRInt32 aLength,
+                          nscoord aX, nscoord aY,
+                          nscoord aWidth)
 {
   PRUnichar buf[TEXT_BUF_SIZE];
   PRUnichar* bp0 = buf;
@@ -1185,11 +1197,11 @@ TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
 }
 
 inline void
-TextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
-                                TextStyle& aTextStyle,
-                                PRUnichar* aWord,
-                                PRInt32 aWordLength,
-                                nscoord& aWidthResult)
+nsTextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
+                                  TextStyle& aTextStyle,
+                                  PRUnichar* aWord,
+                                  PRInt32 aWordLength,
+                                  nscoord* aWidthResult)
 {
   nsIRenderingContext& rc = *aReflowState.rendContext;
   GetWidth(rc, aTextStyle, aWord, aWordLength, aWidthResult);
@@ -1201,10 +1213,10 @@ TextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
 
 // XXX factor in logic from RenderString into here; gaps, justification, etc.
 void
-TextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
-                    TextStyle& aTextStyle,
-                    PRUnichar* aBuffer, PRInt32 aLength,
-                    nscoord& aWidthResult)
+nsTextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
+                      TextStyle& aTextStyle,
+                      PRUnichar* aBuffer, PRInt32 aLength,
+                      nscoord* aWidthResult)
 {
   PRUnichar buf[TEXT_BUF_SIZE];
   PRUnichar* bp0 = buf;
@@ -1251,20 +1263,18 @@ TextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
     delete [] bp0;
   }
   aTextStyle.mLastFont = lastFont;
-  aWidthResult = sum;
+  *aWidthResult = sum;
 }
 
 void
-TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
-                           nsIRenderingContext& aRenderingContext,
-                           nsIStyleContext* aStyleContext,
-                           TextStyle& aTextStyle,
-                           nscoord dx, nscoord dy)
+nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             nsIStyleContext* aStyleContext,
+                             TextStyle& aTextStyle,
+                             nscoord dx, nscoord dy)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
+
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
 
@@ -1289,7 +1299,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
   aTextStyle.mNumSpaces = PrepareUnicodeText(tx,
                                              displaySelection ? ip : nsnull,
-                                             paintBuf, textLength, width);
+                                             paintBuf, &textLength);
   if (mRect.width > mComputedWidth) {
     if (0 != aTextStyle.mNumSpaces) {
       nscoord extra = mRect.width - mComputedWidth;
@@ -1310,7 +1320,8 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
 
   PRUnichar* text = paintBuf;
   if (0 != textLength) {
-    if (!displaySelection || !mSelected || mSelectionOffset > mContentLength) { 
+    if (!displaySelection || !mSelected ||
+        (mSelectionOffset > PRUint32(mContentLength))) { 
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       RenderString(aRenderingContext, aStyleContext, aTextStyle,
@@ -1324,11 +1335,11 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
       if (mSelectionOffset < 0)
         mSelectionOffset = 0;
       if (mSelectionEnd < 0)
-        mSelectionEnd = mContentLength;
-      if (mSelectionEnd >  mContentLength)
-        mSelectionEnd = mContentLength;
-      if (mSelectionOffset > mContentLength)
-        mSelectionOffset = mContentLength;
+        mSelectionEnd = PRUint32(mContentLength);
+      if (mSelectionEnd >  PRUint32(mContentLength))
+        mSelectionEnd = PRUint32(mContentLength);
+      if (mSelectionOffset > PRUint32(mContentLength))
+        mSelectionOffset = PRUint32(mContentLength);
       PRInt32 selectionEnd = mSelectionEnd;
       PRInt32 selectionOffset = mSelectionOffset;
       if (mSelectionEnd < mSelectionOffset)
@@ -1346,9 +1357,8 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
 				//shell->RefreshCaret();
 
 #ifdef SHOW_SELECTION_CURSOR
-
         GetWidth(aRenderingContext, aTextStyle,
-                 text, PRUint32(selectionOffset), textWidth);
+                 text, PRUint32(selectionOffset), &textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
                               CURSOR_COLOR);
@@ -1361,7 +1371,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
           // Render first (unselected) section
           GetWidth(aRenderingContext, aTextStyle,
                    text, PRUint32(selectionOffset),
-                   textWidth);
+                   &textWidth);
           RenderString(aRenderingContext, aStyleContext, aTextStyle,
                        text, selectionOffset,
                        x, dy, textWidth);
@@ -1372,7 +1382,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
           // Get the width of the second (selected) section
           GetWidth(aRenderingContext, aTextStyle,
                    text + selectionOffset,
-                   PRUint32(secondLen), textWidth);
+                   PRUint32(secondLen), &textWidth);
 
           // Render second (selected) section
           aRenderingContext.SetColor(aTextStyle.mSelectionBGColor);
@@ -1392,7 +1402,7 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
           {
             GetWidth(aRenderingContext, aTextStyle,
                      text + selectionOffset, PRUint32(thirdLen),
-                     textWidth);
+                     &textWidth);
             RenderString(aRenderingContext, aStyleContext, aTextStyle,
                          text + selectionEnd,
                          thirdLen, x, dy, textWidth);
@@ -1412,16 +1422,14 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
 }
 
 void
-TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          nsIStyleContext* aStyleContext,
-                          TextStyle& aTextStyle,
-                          nscoord dx, nscoord dy)
+nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            nsIStyleContext* aStyleContext,
+                            TextStyle& aTextStyle,
+                            nscoord dx, nscoord dy)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
+
   PRBool displaySelection;
   displaySelection = doc->GetDisplaySelection();
 
@@ -1447,9 +1455,8 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   nsCOMPtr<nsIWordBreaker> wb;
   doc->GetWordBreaker(getter_AddRefs(wb));
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
-  PrepareUnicodeText(tx,
-                     displaySelection ? ip : nsnull,
-                     rawPaintBuf, textLength, width);
+  PrepareUnicodeText(tx, (displaySelection ? ip : nsnull),
+                     rawPaintBuf, &textLength);
   // Translate unicode data into ascii for rendering
   char* dst = paintBuf;
   char* end = dst + textLength;
@@ -1460,7 +1467,8 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
 
   char* text = paintBuf;
   if (0 != textLength) {
-    if (!displaySelection || !mSelected || mSelectionOffset > mContentLength) { 
+    if (!displaySelection || !mSelected ||
+        (mSelectionOffset > PRUint32(mContentLength))) { 
       //if selection is > content length then selection has "slid off"
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
@@ -1477,10 +1485,10 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
         mSelectionOffset = 0;
       if (mSelectionEnd < 0)
         mSelectionEnd = mContentLength;
-      if (mSelectionEnd >  mContentLength)
-        mSelectionEnd = mContentLength;
-      if (mSelectionOffset > mContentLength)
-        mSelectionOffset = mContentLength;
+      if (mSelectionEnd >  PRUint32(mContentLength))
+        mSelectionEnd = PRUint32(mContentLength);
+      if (mSelectionOffset > PRUint32(mContentLength))
+        mSelectionOffset = PRUint32(mContentLength);
       PRInt32 selectionEnd = mSelectionEnd;
       PRInt32 selectionOffset = mSelectionOffset;
       if (mSelectionEnd < mSelectionOffset)
@@ -1495,8 +1503,6 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
         aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
         PaintTextDecorations(aRenderingContext, aStyleContext,
                              aTextStyle, dx, dy, width);
-//        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
-
 				//shell->RefreshCaret();
 				
 #ifdef SHOW_SELECTION_CURSOR
@@ -1567,7 +1573,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-TextFrame::FindTextRuns(nsLineLayout& aLineLayout)
+nsTextFrame::FindTextRuns(nsLineLayout& aLineLayout)
 {
   if (nsnull == mPrevInFlow) {
     aLineLayout.AddText(this);
@@ -1633,16 +1639,18 @@ BinarySearchForPosition(nsIRenderingContext* acx,
 // display of selection is based on the compressed text.
 //---------------------------------------------------------------------------
 NS_IMETHODIMP
-TextFrame::GetPosition(nsIPresContext& aCX,
-                       nsIRenderingContext * aRendContext,
-                       nsGUIEvent*     aEvent,
-                       nsIFrame*       aNewFrame,
-                       PRUint32&       aActualContentOffset,
-                       PRInt32&        aOffset)
+nsTextFrame::GetPosition(nsIPresContext& aPresContext,
+                         nsIRenderingContext* aRendContext,
+                         nsGUIEvent* aEvent,
+                         nsIFrame* aNewFrame,
+                         PRUint32& aActualContentOffset,
+                         PRInt32& aOffset)
 {
-  TextStyle ts(aCX, *aRendContext, mStyleContext);
-  if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing)
-    return GetPositionSlowly(aCX,aRendContext,aEvent,aNewFrame,aActualContentOffset,aOffset);
+  TextStyle ts(&aPresContext, *aRendContext, mStyleContext);
+  if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing) {
+    return GetPositionSlowly(&aPresContext, aRendContext, aEvent, aNewFrame,
+                             &aActualContentOffset, &aOffset);
+  }
 
   PRUnichar wordBufMem[WORD_BUF_SIZE];
   PRUnichar paintBufMem[TEXT_BUF_SIZE];
@@ -1653,7 +1661,6 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     ip = new PRInt32[mContentLength+1];
     paintBuf = new PRUnichar[mContentLength];
   }
-  nscoord width = 0;
   PRInt32 textLength;
 
   // Find the font metrics for this text
@@ -1663,31 +1670,29 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     styleContext->GetStyleData(eStyleStruct_Font);
   NS_RELEASE(styleContext);
   nsCOMPtr<nsIFontMetrics> fm;
-  aCX.GetMetricsFor(font->mFont, getter_AddRefs(fm));
+  aPresContext.GetMetricsFor(font->mFont, getter_AddRefs(fm));
   aRendContext->SetFont(fm);
 
-  nsCOMPtr<nsIPresShell> shell;
-  aCX.GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
+  // Get the document
+  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(&aPresContext)));
+
   // Get the renderable form of the text
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsCOMPtr<nsIWordBreaker> wb;
   doc->GetWordBreaker(getter_AddRefs(wb));
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
-  PrepareUnicodeText(tx,
-                     ip, paintBuf, textLength, width);
+  PrepareUnicodeText(tx, ip, paintBuf, &textLength);
   ip[mContentLength] = ip[mContentLength-1];
-  if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
+  if ((ip[mContentLength]-mContentOffset) < textLength) {
+    //must set up last one for selection beyond edge if in boundary
     ip[mContentLength]++;
+  }
 
-  PRInt32 offset = mContentOffset + mContentLength;
   PRInt32 index;
   PRInt32 textWidth;
   PRUnichar* text = paintBuf;
   nsPoint origin;
-  //GetOrigin(origin);
   nsIView * view;
   GetView(&view);
   GetOffsetFromView(origin, &view);
@@ -1723,7 +1728,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
     delete [] paintBuf;
   }
 
-  aActualContentOffset = mContentOffset;//offset;//((TextFrame *)aNewFrame)->mContentOffset;
+  aActualContentOffset = mContentOffset;//offset;//((nsTextFrame *)aNewFrame)->mContentOffset;
   aOffset = index;
   //reusing wordBufMem
   PRInt32 i;
@@ -1738,14 +1743,13 @@ TextFrame::GetPosition(nsIPresContext& aCX,
 }
 
 NS_IMETHODIMP
-TextFrame::SetSelected(nsSelectionStruct *aSelStruct)
+nsTextFrame::SetSelected(nsSelectionStruct *aSelStruct)
 {
   if (!aSelStruct)
     return NS_ERROR_NULL_POINTER;
   if (aSelStruct->mType & nsSelectionStruct::SELON){
-    
-    aSelStruct->mEndFrame = PR_MIN(aSelStruct->mEndFrame,mContentLength);
-    aSelStruct->mStartFrame= PR_MIN(aSelStruct->mStartFrame,mContentLength);
+    aSelStruct->mEndFrame = PR_MIN(aSelStruct->mEndFrame, PRUint32(mContentLength));
+    aSelStruct->mStartFrame= PR_MIN(aSelStruct->mStartFrame, PRUint32(mContentLength));
 
     if (aSelStruct->mType & nsSelectionStruct::SELTOEND)
       aSelStruct->mEndFrame = mContentLength;
@@ -1761,7 +1765,7 @@ TextFrame::SetSelected(nsSelectionStruct *aSelStruct)
 
     if (mSelectionOffset != trueBegin || mSelectionEnd != trueEnd)
     {
-      PRBool	wasCollapsed = (mSelectionOffset == mSelectionEnd);
+//XXX      PRBool	wasCollapsed = (mSelectionOffset == mSelectionEnd);
       mSelectionOffset = trueBegin;
       mSelectionEnd = trueEnd;
     	// XXX when we no longer rely on the blue triangle to show the selection
@@ -1775,9 +1779,9 @@ TextFrame::SetSelected(nsSelectionStruct *aSelStruct)
 }
 
 NS_IMETHODIMP
-TextFrame::SetSelectedContentOffsets(nsSelectionStruct *aSS, 
-                                     nsIFocusTracker *aTracker,
-                                     nsIFrame **aActualSelected)
+nsTextFrame::SetSelectedContentOffsets(nsSelectionStruct *aSS, 
+                                       nsIFocusTracker *aTracker,
+                                       nsIFrame **aActualSelected)
 {
   if (!aActualSelected || !aSS)
     return NS_ERROR_NULL_POINTER;
@@ -1806,7 +1810,7 @@ TextFrame::SetSelectedContentOffsets(nsSelectionStruct *aSS,
 
   nsIFrame *nextInFlow = GetNextInFlow();
   if (nextInFlow){
-    if (aSS->mType & nsSelectionStruct::SELTOEND || aSS->mEndContent > (mContentLength + mContentOffset)){ 
+    if (aSS->mType & nsSelectionStruct::SELTOEND || aSS->mEndContent > PRUint32(mContentLength + mContentOffset)){ 
         nextInFlow->SetSelectedContentOffsets(aSS, aTracker ,aActualSelected);
     }
     else if (aSS->mType & nsSelectionStruct::SELON) { //we must shut off all folowing selected frames if we are selecting frames 
@@ -1835,7 +1839,7 @@ TextFrame::SetSelectedContentOffsets(nsSelectionStruct *aSS,
       aSS->mType = aSS->mType - nsSelectionStruct::CHECKFOCUS;
     }
   }
-  if (mContentOffset > aSS->mStartContent){
+  if (PRUint32(mContentOffset) > aSS->mStartContent){
     aSS->mStartFrame = 0;
   }
   else
@@ -1845,7 +1849,10 @@ TextFrame::SetSelectedContentOffsets(nsSelectionStruct *aSS,
 }
 
 NS_IMETHODIMP
-TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset)
+nsTextFrame::GetSelected(PRBool *aSelected,
+                         PRInt32 *aBeginOffset,
+                         PRInt32 *aEndOffset,
+                         PRInt32 *aBeginContentOffset)
 {
   if (!aSelected || !aBeginOffset || !aEndOffset || !aBeginContentOffset)
     return NS_ERROR_NULL_POINTER;
@@ -1859,9 +1866,12 @@ TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOf
 
 
 NS_IMETHODIMP
-TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* inRendContext, PRInt32 inOffset, nsPoint* outPoint)
+nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
+                                nsIRenderingContext* inRendContext,
+                                PRInt32 inOffset,
+                                nsPoint* outPoint)
 {
-  if (!inPresContext || !inRendContext || !outPoint)
+  if (!aPresContext || !inRendContext || !outPoint)
     return NS_ERROR_NULL_POINTER;
 
   if (mContentLength <= 0) {
@@ -1875,7 +1885,7 @@ TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext
     NS_ASSERTION(0,"offset less than this frame has in GetPointFromOffset");
     inOffset = 0;
   }
-  TextStyle ts(*inPresContext, *inRendContext, mStyleContext);
+  TextStyle ts(aPresContext, *inRendContext, mStyleContext);
 
   
   PRUnichar wordBufMem[WORD_BUF_SIZE];
@@ -1890,20 +1900,16 @@ TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext
   nscoord width = mRect.width;
   PRInt32 textLength;
 
-  // Transform text from content into renderable form
-  nsCOMPtr<nsIPresShell> shell;
-  inPresContext->GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsIDocument> doc;
-  shell->GetDocument(getter_AddRefs(doc));
+  // Get the document
+  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
 
+  // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsCOMPtr<nsIWordBreaker> wb;
   doc->GetWordBreaker(getter_AddRefs(wb));
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
-  PrepareUnicodeText(tx,
-                     ip,
-                     paintBuf, textLength, width);
+  PrepareUnicodeText(tx, ip, paintBuf, &textLength);
   ip[mContentLength] = ip[mContentLength-1];
   if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
     ip[mContentLength]++;
@@ -1913,7 +1919,7 @@ TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext
   }
   GetWidth(*inRendContext, ts,
            paintBuf, ip[inOffset]-mContentOffset,
-           width);
+           &width);
   (*outPoint).x = width;
   (*outPoint).y = 0;
 
@@ -1927,7 +1933,9 @@ TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext
 
 
 NS_IMETHODIMP
-TextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFrameContentOffset, nsIFrame **outChildFrame)
+nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
+                                           PRInt32* outFrameContentOffset,
+                                           nsIFrame **outChildFrame)
 {
   if (nsnull == outChildFrame)
     return NS_ERROR_NULL_POINTER;
@@ -1954,8 +1962,13 @@ TextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFr
 
 
 NS_IMETHODIMP
-TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset, nsIFrame **aResultFrame, 
-                      PRInt32 *aFrameOffset, PRInt32 *aContentOffset, PRBool aEatingWS)
+nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
+                        nsDirection aDirection,
+                        PRInt32 aStartOffset,
+                        nsIFrame **aResultFrame, 
+                        PRInt32 *aFrameOffset,
+                        PRInt32 *aContentOffset,
+                        PRBool aEatingWS)
 {
   //default, no matter what grab next/ previous sibling. 
   if (!aResultFrame || !aFrameOffset || !aContentOffset)
@@ -1971,7 +1984,6 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
     ip = new PRInt32[mContentLength+1];
     paintBuf = new PRUnichar[mContentLength];
   }
-  nscoord width = mRect.width;
   PRInt32 textLength;
 
   // Transform text from content into renderable form
@@ -1982,10 +1994,11 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsCOMPtr<nsIWordBreaker> wb;
   doc->GetWordBreaker(getter_AddRefs(wb));
-  NS_IF_RELEASE(doc);
+  NS_RELEASE(doc);
 
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
   nsresult result(NS_OK);
+
   switch (aAmount){
   case eSelectNoAmount : {
       *aResultFrame = this;
@@ -1996,7 +2009,7 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
     }
     break;
   case eSelectCharacter : {
-    PrepareUnicodeText(tx, ip, paintBuf, textLength, width);
+    PrepareUnicodeText(tx, ip, paintBuf, &textLength);
     ip[mContentLength] = ip[mContentLength-1];
     if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
       ip[mContentLength]++;
@@ -2152,27 +2165,23 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
   return result;
 }
 
-
-
 NS_IMETHODIMP
-TextFrame::GetOffsets(PRInt32 &start, PRInt32 &end) const
+nsTextFrame::GetOffsets(PRInt32 &start, PRInt32 &end) const
 {
   start = mContentOffset;
   end = mContentOffset+mContentLength;
   return NS_OK;
 }
 
-
-
 NS_IMETHODIMP
-TextFrame::Reflow(nsIPresContext& aPresContext,
-                  nsHTMLReflowMetrics& aMetrics,
-                  const nsHTMLReflowState& aReflowState,
-                  nsReflowStatus& aStatus)
+nsTextFrame::Reflow(nsIPresContext& aPresContext,
+                    nsHTMLReflowMetrics& aMetrics,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus& aStatus)
 {
   //  NS_PRECONDITION(nsnull != aReflowState.lineLayout, "no line layout");
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-     ("enter TextFrame::Reflow: aMaxSize=%d,%d",
+     ("enter nsTextFrame::Reflow: aMaxSize=%d,%d",
       aReflowState.availableWidth, aReflowState.availableHeight));
 
   // XXX If there's no line layout, we shouldn't even have created this
@@ -2185,12 +2194,12 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   // Get starting offset into the content
   PRInt32 startingOffset = 0;
   if (nsnull != mPrevInFlow) {
-    TextFrame* prev = (TextFrame*) mPrevInFlow;
+    nsTextFrame* prev = (nsTextFrame*) mPrevInFlow;
     startingOffset = prev->mContentOffset + prev->mContentLength;
   }
 
   nsLineLayout& lineLayout = *aReflowState.lineLayout;
-  TextStyle ts(aPresContext, *aReflowState.rendContext, mStyleContext);
+  TextStyle ts(&aPresContext, *aReflowState.rendContext, mStyleContext);
 
   // Initialize mFlags (without destroying the TEXT_BLINK_ON bit) bits
   // that are filled in by the reflow routines.
@@ -2255,7 +2264,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   // is only valid for one pass through the measuring loop.
   PRBool inWord = lineLayout.InWord() ||
     ((nsnull != mPrevInFlow) &&
-     (((TextFrame*)mPrevInFlow)->mFlags & TEXT_FIRST_LETTER));
+     (((nsTextFrame*)mPrevInFlow)->mFlags & TEXT_FIRST_LETTER));
   if (inWord) {
     mFlags |= TEXT_IN_WORD;
   }
@@ -2321,7 +2330,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
         justDidFirstLetter = PR_TRUE;
       }
       if (ts.mSmallCaps) {
-        MeasureSmallCapsText(aReflowState, ts, bp, wordLen, width);
+        MeasureSmallCapsText(aReflowState, ts, bp, wordLen, &width);
       }
       else {
         aReflowState.rendContext->GetWidth(bp, wordLen, width);
@@ -2404,8 +2413,9 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
           // Look ahead in the text-run and compute the final word
           // width, taking into account any style changes and stopping
           // at the first breakable point.
-          nscoord wordWidth = ComputeTotalWordWidth(aPresContext, lineLayout,
-                                                    aReflowState, next, lastWordWidth);
+          nscoord wordWidth = ComputeTotalWordWidth(&aPresContext, lineLayout,
+                                                    aReflowState, next,
+                                                    lastWordWidth);
           if (!breakable || (x - lastWordWidth + wordWidth <= maxWidth)) {
             // The fully joined word has fit. Account for the joined
             // word's affect on the max-element-size here (since the
@@ -2489,13 +2499,13 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   aStatus = rs;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("exit TextFrame::Reflow: status=%x width=%d",
+                 ("exit nsTextFrame::Reflow: status=%x width=%d",
                   aStatus, aMetrics.width));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
+nsTextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 {
   // Get the text fragments that make up our content
   const nsTextFragment* frag;
@@ -2549,9 +2559,9 @@ TextFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 }
 
 NS_IMETHODIMP
-TextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
-                                  nsIRenderingContext& aRC,
-                                  nscoord& aDeltaWidth)
+nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
+                                    nsIRenderingContext& aRC,
+                                    nscoord& aDeltaWidth)
 {
   nscoord dw = 0;
   const nsStyleText* textStyle = (const nsStyleText*)
@@ -2634,11 +2644,11 @@ TextFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
 }
 
 nscoord
-TextFrame::ComputeTotalWordWidth(nsIPresContext& aPresContext,
-                                 nsLineLayout& aLineLayout,
-                                 const nsHTMLReflowState& aReflowState,
-                                 nsIFrame* aNextFrame,
-                                 nscoord aBaseWidth)
+nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
+                                   nsLineLayout& aLineLayout,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsIFrame* aNextFrame,
+                                   nscoord aBaseWidth)
 {
   nscoord addedWidth = 0;
   while (nsnull != aNextFrame) {
@@ -2660,7 +2670,7 @@ TextFrame::ComputeTotalWordWidth(nsIPresContext& aPresContext,
                                                        aLineLayout,
                                                        aReflowState,
                                                        frame, tc,
-                                                       stop);
+                                                       &stop);
           NS_RELEASE(tc);
           NS_RELEASE(content);
           addedWidth += moreWidth;
@@ -2680,9 +2690,7 @@ TextFrame::ComputeTotalWordWidth(nsIPresContext& aPresContext,
           goto done;
         }
       }
-      // XXX This assumes that a next-in-flow will follow it's
-      // prev-in-flow in the text-run. Maybe not a good assumption?
-      // What if the next-in-flow isn't actually part of the flow?
+      // Also look at the frame's next-in-flow, if it has one.
       frame->GetNextInFlow(&frame);
     }
 
@@ -2697,13 +2705,23 @@ TextFrame::ComputeTotalWordWidth(nsIPresContext& aPresContext,
   return aBaseWidth + addedWidth;
 }
 
-nscoord
-TextFrame::ComputeWordFragmentWidth(nsIPresContext& aPresContext,
+#if 0
+nsIStyleContext*
+nsTextFrame::GetCorrectStyleContext(nsIPresContext* aPresContext,
                                     nsLineLayout& aLineLayout,
                                     const nsHTMLReflowState& aReflowState,
-                                    nsIFrame* aTextFrame,
-                                    nsITextContent* aText,
-                                    PRBool& aStop)
+                                    nsIFrame* aTextFrame)
+{
+}
+#endif
+                                    
+nscoord
+nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
+                                      nsLineLayout& aLineLayout,
+                                      const nsHTMLReflowState& aReflowState,
+                                      nsIFrame* aTextFrame,
+                                      nsITextContent* aText,
+                                      PRBool* aStop)
 {
   PRUnichar buf[TEXT_BUF_SIZE];
   nsIDocument* doc;
@@ -2714,7 +2732,7 @@ TextFrame::ComputeWordFragmentWidth(nsIPresContext& aPresContext,
     // objects, e.g. generated content, do not live in the document model
     nsIPresShell* shell;
 
-    aPresContext.GetShell(&shell);
+    aPresContext->GetShell(&shell);
     shell->GetDocument(&doc);
     NS_RELEASE(shell);
   }
@@ -2735,10 +2753,10 @@ TextFrame::ComputeWordFragmentWidth(nsIPresContext& aPresContext,
   PRUnichar* bp = tx.GetNextWord(PR_TRUE, wordLen, contentLen, isWhitespace);
   if ((nsnull == bp) || isWhitespace) {
     // Don't bother measuring nothing
-    aStop = PR_TRUE;
+    *aStop = PR_TRUE;
     return 0;
   }
-  aStop = contentLen < tx.GetContentLength();
+  *aStop = contentLen < tx.GetContentLength();
 
   nsIStyleContext* sc;
   if ((NS_OK == aTextFrame->GetStyleContext(&sc)) &&
@@ -2751,9 +2769,9 @@ TextFrame::ComputeWordFragmentWidth(nsIPresContext& aPresContext,
     nsIFontMetrics* oldfm;
     rc.GetFontMetrics(oldfm);
 
-    TextStyle ts(aLineLayout.mPresContext, rc, sc);
+    TextStyle ts(&aLineLayout.mPresContext, rc, sc);
     if (ts.mSmallCaps) {
-      MeasureSmallCapsText(aReflowState, ts, buf, wordLen, width);
+      MeasureSmallCapsText(aReflowState, ts, buf, wordLen, &width);
     }
     else {
       rc.GetWidth(buf, wordLen, width);
@@ -2776,13 +2794,13 @@ TextFrame::ComputeWordFragmentWidth(nsIPresContext& aPresContext,
     return width;
   }
 
-  aStop = PR_TRUE;
+  *aStop = PR_TRUE;
   return 0;
 }
 
 // Translate the mapped content into a string that's printable
 void
-TextFrame::ToCString(nsString& aBuf, PRInt32& aContentLength) const
+nsTextFrame::ToCString(nsString& aBuf, PRInt32* aContentLength) const
 {
   const nsTextFragment* frag;
   PRInt32 numFrags;
@@ -2801,7 +2819,7 @@ TextFrame::ToCString(nsString& aBuf, PRInt32& aContentLength) const
   for (i = 0; i < n; i++) {
     sum += frag[i].GetLength();
   }
-  aContentLength = sum;
+  *aContentLength = sum;
 
   // Set current fragment and current fragment offset
   PRInt32 fragOffset = 0, offset = 0;
@@ -2845,7 +2863,7 @@ TextFrame::ToCString(nsString& aBuf, PRInt32& aContentLength) const
 }
 
 NS_IMETHODIMP
-TextFrame::GetFrameType(nsIAtom** aType) const
+nsTextFrame::GetFrameType(nsIAtom** aType) const
 {
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
   *aType = nsLayoutAtoms::textFrame; 
@@ -2854,13 +2872,13 @@ TextFrame::GetFrameType(nsIAtom** aType) const
 }
 
 NS_IMETHODIMP
-TextFrame::GetFrameName(nsString& aResult) const
+nsTextFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Text", aResult);
 }
 
 NS_IMETHODIMP
-TextFrame::List(FILE* out, PRInt32 aIndent) const
+nsTextFrame::List(FILE* out, PRInt32 aIndent) const
 {
   // Output the tag
   IndentBy(out, aIndent);
@@ -2873,7 +2891,7 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
 
   PRInt32 contentLength;
   nsAutoString tmp;
-  ToCString(tmp, contentLength);
+  ToCString(tmp, &contentLength);
 
   // Output the first/last content offset and prev/next in flow info
   PRBool isComplete = (mContentOffset + mContentLength) == contentLength;
