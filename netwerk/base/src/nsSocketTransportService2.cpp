@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+
 #include "nsSocketTransportService2.h"
 #include "nsSocketTransport2.h"
 #include "nsPrintfCString.h"
@@ -42,7 +46,6 @@
 #include "nsAutoLock.h"
 #include "nsNetError.h"
 #include "prlock.h"
-#include "prlog.h"
 #include "prerror.h"
 #include "plstr.h"
 
