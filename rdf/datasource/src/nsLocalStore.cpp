@@ -285,25 +285,23 @@ LocalStoreImpl::Init(const char *uri)
 nsresult
 LocalStoreImpl::Flush()
 {
-	nsCOMPtr<nsIRDFRemoteDataSource>	remote = do_QueryInterface(mInner);
-	nsresult				rv = NS_OK;
-	if (remote)
-	{
-		rv = remote->Flush();
-	}
-	return(rv);
+	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+    NS_ASSERTION(remote != nsnull, "not an nsIRDFRemoteDataSource");
+	if (! remote)
+        return NS_ERROR_UNEXPECTED;
+
+    return remote->Flush();
 }
 
 nsresult
 LocalStoreImpl::Refresh(PRBool sync)
 {
-	nsCOMPtr<nsIRDFRemoteDataSource>	remote = do_QueryInterface(mInner);
-	nsresult				rv = NS_OK;
-	if (remote)
-	{
-		rv = remote->Refresh(sync);
-	}
-	return NS_OK; // XXX Always return OK, even if we couldn't load the file.
+	nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);
+    NS_ASSERTION(remote != nsnull, "not an nsIRDFRemoteDataSource");
+	if (! remote)
+        return NS_ERROR_UNEXPECTED;
+
+    return remote->Refresh(sync);
 }
 
 nsresult
@@ -315,24 +313,13 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
     nsresult rv;
 
 	// Look for localstore.rdf in the current profile
-	// directory. This is as convoluted as it seems because we
-	// want to 1) not break viewer (which has no profiles), and 2)
-	// still deal reasonably (in the short term) when no
-	// localstore.rdf is installed in the profile directory.
+	// directory. Bomb if we can't find it.
+    NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-	nsFileSpec spec;
-	do {
-		NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-		if (NS_FAILED(rv)) break;
-
-        rv = profile->GetCurrentProfileDir(&spec);
-        if (NS_FAILED(rv)) break;
-    } while (0);
-
-    if (NS_FAILED(rv)) {
-        // XXX We should probably tell the user that we're doing this.
-        spec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-    }
+    nsFileSpec spec;
+    rv = profile->GetCurrentProfileDir(&spec);
+    if (NS_FAILED(rv)) return rv;
 
     spec += "localstore.rdf";
 
@@ -358,18 +345,14 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
     if (NS_FAILED(rv)) return rv;
 
     // register this as a named data source with the RDF service
-    nsIRDFService* rdf;
-    rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      nsIRDFService::GetIID(),
-                                      (nsISupports**) &rdf);
-
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = rdf->RegisterDataSource(this, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register local store");
+    if (NS_FAILED(rv)) return rv;
 
-    nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-    return rv;
+    return NS_OK;
 }
 
 
