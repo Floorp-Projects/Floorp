@@ -168,6 +168,12 @@ nsMsgAccountManagerDataSource::Init()
     return NS_OK;
 }
 
+void nsMsgAccountManagerDataSource::Close()
+{
+	mAccountManager = null_nsCOMPtr();
+	nsMsgRDFDataSource::Close();
+}
+
 /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,

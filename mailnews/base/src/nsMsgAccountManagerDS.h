@@ -40,6 +40,7 @@ public:
   virtual ~nsMsgAccountManagerDataSource();
   virtual nsresult Init();
 
+  virtual void Close();
   // service manager shutdown method
 
   // RDF datasource methods

@@ -42,6 +42,7 @@ public:
   nsMsgFolderDataSource(void);
   virtual ~nsMsgFolderDataSource (void);
   virtual nsresult Init();
+  virtual void Close();
 
   // nsIRDFDataSource methods
   NS_IMETHOD GetURI(char* *uri);

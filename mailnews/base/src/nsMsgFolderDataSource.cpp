@@ -166,6 +166,12 @@ nsresult nsMsgFolderDataSource::Init()
 	return nsMsgRDFDataSource::Init();
 }
 
+void nsMsgFolderDataSource::Close()
+{
+	kFolderArcsOutArray = null_nsCOMPtr();
+	nsMsgRDFDataSource::Close();
+}
+
 nsresult nsMsgFolderDataSource::CreateArcsOutEnumerator()
 {
 	nsCOMPtr<nsISupportsArray> folderArcsOut;

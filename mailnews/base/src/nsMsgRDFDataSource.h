@@ -27,7 +27,6 @@
 #include "nsISupportsArray.h"
 #include "nsITransactionManager.h"
 #include "nsIMsgWindowData.h"
-
 class nsMsgRDFDataSource : public nsIRDFDataSource,
                            public nsIShutdownListener,
   						   public nsIMsgWindowData
@@ -42,6 +41,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
   NS_DECL_NSIRDFDATASOURCE
   NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports* service);
 
+  virtual void Close();
 
  protected:
 	nsIRDFService *getRDFService();
