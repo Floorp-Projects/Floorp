@@ -297,10 +297,6 @@ if(!CanEnterProduct($product))
 
 GetVersionTable();
 
-if (lsearch(\@::enterable_products, $product) == -1) {
-    ThrowUserError("invalid_product_name", { product => $product});
-}
-
 my $product_id = get_product_id($product);
 
 if (0 == @{$::components{$product}}) {        
