@@ -35,9 +35,7 @@ nsSampleWordBreaker::~nsSampleWordBreaker()
   PR_AtomicDecrement(&g_InstanceCount);
 }
 
-NS_DEFINE_IID(kIWordBreakerIID, NS_IWORDBREAKER_IID);
-
-NS_IMPL_ISUPPORTS(nsSampleWordBreaker, kIWordBreakerIID);
+NS_IMPL_ISUPPORTS1(nsSampleWordBreaker, nsIWordBreaker);
 
 nsresult nsSampleWordBreaker::BreakInBetween(
   const PRUnichar* aText1 , PRUint32 aTextLen1,

@@ -302,8 +302,8 @@ public:
 };
 
 //--------------------------------------------------------------
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsXMLEncodingObserverFactory , kIFactoryIID);
+
+NS_IMPL_ISUPPORTS1( nsXMLEncodingObserverFactory , nsIFactory);
 
 NS_IMETHODIMP nsXMLEncodingObserverFactory::CreateInstance(
     nsISupports* aDelegate, const nsIID &aIID, void** aResult)

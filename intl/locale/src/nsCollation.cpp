@@ -38,7 +38,7 @@ NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-NS_IMPL_ISUPPORTS(nsCollationFactory, kICollationFactoryIID);
+NS_IMPL_ISUPPORTS1(nsCollationFactory, nsICollationFactory);
 
 nsresult nsCollationFactory::CreateCollation(nsILocale* locale, nsICollation** instancePtr)
 {

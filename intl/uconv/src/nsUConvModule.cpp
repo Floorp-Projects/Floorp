@@ -80,7 +80,7 @@ nsUConvModule::~nsUConvModule()
   Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsUConvModule, kIModuleIID)
+NS_IMPL_ISUPPORTS1(nsUConvModule, nsIModule)
 
 nsresult
 nsUConvModule::Initialize()

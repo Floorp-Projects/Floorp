@@ -436,7 +436,7 @@ public:
   NS_DECL_NSISTRINGBUNDLE
 };
 
-NS_IMPL_ISUPPORTS(nsExtensibleStringBundle, NS_GET_IID(nsIStringBundle));
+NS_IMPL_ISUPPORTS1(nsExtensibleStringBundle, nsIStringBundle)
 
 nsExtensibleStringBundle::nsExtensibleStringBundle(const char * aRegistryKey, 
                                                   nsILocale * aLocale, 

@@ -156,11 +156,9 @@ PRUnichar nsCompressedMap::Lookup(
   }
 }
 
-NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
-
 nsrefcnt nsCaseConversionImp2::gInit      = 0;
 
-NS_IMPL_ISUPPORTS(nsCaseConversionImp2, kCaseConversionIID);
+NS_IMPL_ISUPPORTS1(nsCaseConversionImp2, nsICaseConversion);
 
 static nsCompressedMap *gUpperMap = nsnull;
 static nsCompressedMap *gLowerMap = nsnull;

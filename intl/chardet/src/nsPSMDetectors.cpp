@@ -750,8 +750,8 @@ private:
 };
 
 //--------------------------------------------------------------
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsXPCOMDetectorFactory , kIFactoryIID);
+
+NS_IMPL_ISUPPORTS1( nsXPCOMDetectorFactory , nsIFactory);
 
 NS_IMETHODIMP nsXPCOMDetectorFactory::CreateInstance(
     nsISupports* aDelegate, const nsIID &aIID, void** aResult)

@@ -326,8 +326,7 @@ private:
 };
 
 //--------------------------------------------------------------
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( MyFactory , kIFactoryIID);
+NS_IMPL_ISUPPORTS1( MyFactory , nsIFactory)
 
 NS_IMETHODIMP MyFactory::CreateInstance(
     nsISupports* aDelegate, const nsIID &aIID, void** aResult)

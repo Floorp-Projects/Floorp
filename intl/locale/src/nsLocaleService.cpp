@@ -50,10 +50,7 @@
 //
 // iids
 //
-static NS_DEFINE_IID(kILocaleDefinitionIID,NS_ILOCALEDEFINITION_IID);
-static NS_DEFINE_IID(kILocaleServiceIID,NS_ILOCALESERVICE_IID);
 static NS_DEFINE_IID(kILocaleIID,NS_ILOCALE_IID);
-static NS_DEFINE_IID(kIFactoryIID,NS_IFACTORY_IID);
 #if defined(XP_PC) && !defined(XP_OS2)
 static NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
 #endif
@@ -339,7 +336,7 @@ nsLocaleService::~nsLocaleService(void)
 	if (mApplicationLocale) mApplicationLocale->Release();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsLocaleService, kILocaleServiceIID);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleService, nsILocaleService);
 
 NS_IMETHODIMP
 nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
@@ -544,7 +541,7 @@ NS_NewLocaleService(nsILocaleService** result)
 // nsLocaleDefinition methods
 //
 
-NS_IMPL_ISUPPORTS(nsLocaleDefinition,kILocaleDefinitionIID)
+NS_IMPL_ISUPPORTS1(nsLocaleDefinition,nsILocaleDefinition)
 
 nsLocaleDefinition::nsLocaleDefinition(void)
 {
@@ -580,7 +577,7 @@ nsLocaleServiceFactory::~nsLocaleServiceFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsLocaleServiceFactory,kIFactoryIID)
+NS_IMPL_ISUPPORTS1(nsLocaleServiceFactory,nsIFactory)
 
 NS_IMETHODIMP
 nsLocaleServiceFactory::CreateInstance(nsISupports* aOuter,

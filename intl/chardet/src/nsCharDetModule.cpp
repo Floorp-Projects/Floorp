@@ -110,8 +110,6 @@ protected:
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
-
 nsCharDetModule::nsCharDetModule()
   : mInitialized(PR_FALSE)
 {
@@ -123,7 +121,7 @@ nsCharDetModule::~nsCharDetModule()
   Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsCharDetModule, kIModuleIID)
+NS_IMPL_ISUPPORTS1(nsCharDetModule, nsIModule)
 
 // Perform our one-time intialization for this module
 nsresult

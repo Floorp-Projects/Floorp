@@ -41,7 +41,7 @@ static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 
-NS_IMPL_ISUPPORTS(nsCollationWin, kICollationIID);
+NS_IMPL_ISUPPORTS1(nsCollationWin, nsICollation);
 
 
 nsCollationWin::nsCollationWin() 
