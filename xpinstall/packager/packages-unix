@@ -48,7 +48,6 @@ bin/components/libunicharutil.so
 bin/mozilla
 bin/mozilla-bin
 bin/icons/*
-bin/libcmt.so
 bin/libgtksuperwin.so
 bin/libgtkxtbin.so
 bin/libjsj.so
