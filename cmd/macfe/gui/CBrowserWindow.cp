@@ -1846,7 +1846,7 @@ void
 CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inResource )
 {
 	// hide the old one if it is around.
-	if ( mPopdownParent )
+	if ( sPopdownParent )
 		ClosePopdownTreeView();
 	else {	
 		try { 
@@ -1909,12 +1909,30 @@ CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inR
 void
 CBrowserWindow :: ClosePopdownTreeView ( )
 {
-	if ( mPopdownParent ) {
-		mPopdownParent->Hide();
-		LCommander::SwitchTarget(mSavedPopdownTarget);
-	}
+	if ( sPopdownParent ) {
+		sPopdownParent->Hide();						// hide it in whatever window it may be in
 
-	// no parent visible, so clear this out.
+		// if it was in this window, redraw things immediately if we're in the middle of 
+		// a drag and drop and then reset the target commander to what it was before the
+		// popdown was activated.		
+		if ( sPopdownParent == mPopdownParent ) {
+			
+			if ( ::StillDown() ) {						// redraw browser window if mouse down
+				Rect treePortRect;
+				FocusDraw();
+				
+				// set the clip rgn to only redraw the area obscured by the tree
+				mPopdownParent->CalcPortFrameRect(treePortRect);
+				StRegion redrawArea(treePortRect);
+				Draw(nil);
+			}
+		
+			LCommander::SwitchTarget(mSavedPopdownTarget);
+		
+		} // if popdown in this window
+	} // if a popdown is visible
+
+	// no tree visible anymore, so clear this out.
 	sPopdownParent = NULL;
 	
 } // ClosePopdownTreeView
@@ -1950,8 +1968,12 @@ CBrowserWindow :: Click( SMouseDownEvent &inMouseDown )
 		LPane *clickedPane = FindSubPaneHitBy(inMouseDown.wherePort.h, inMouseDown.wherePort.v);
 		if ( clickedPane == sPopdownParent )
 			clickedPane->Click(inMouseDown);
-		else
+		else {
+			// don't do it on a mouse-down, wait for the mouse up
+			while ( ::StillDown() ) 
+				;
 			ClosePopdownTreeView();
+		}
 	}
 	else
 		CNetscapeWindow::Click(inMouseDown);	// process click normally
