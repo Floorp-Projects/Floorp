@@ -463,13 +463,13 @@ CLSID nsDataObj::GetClassID() const
 //-----------------------------------------------------
 // Registers a the DataFlavor/FE pair
 //-----------------------------------------------------
-void nsDataObj::AddDataFlavor(const nsString & aDataFlavor, LPFORMATETC aFE)
+void nsDataObj::AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE)
 {
   // These two lists are the mapping to and from data flavors and FEs
   // Later, OLE will tell us it's needs a certain type of FORMATETC (text, unicode, etc)
   // so we will look up data flavor that corresponds to the FE
   // and then ask the transferable for that type of data
-  mDataFlavors->AppendElement(new nsString(aDataFlavor));
+  mDataFlavors->AppendElement(new nsCAutoString(aDataFlavor));
   m_enumFE->AddFE(aFE);
 
 }

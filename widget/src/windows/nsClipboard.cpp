@@ -29,6 +29,7 @@
 #include "nsITransferable.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
+#include "nsXPIDLString.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
@@ -75,24 +76,23 @@ nsClipboard::~nsClipboard()
 }
 
 //-------------------------------------------------------------------------
-UINT nsClipboard::GetFormat(const nsString & aMimeStr)
+UINT nsClipboard::GetFormat(const char* aMimeStr)
 {
+  nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
   UINT format = 0;
 
-  if (aMimeStr.Equals(kTextMime)) {
+  if (mimeStr.Equals(kTextMime)) {
     format = CF_TEXT;
-  } else if (aMimeStr.Equals(kUnicodeMime)) {
+  } else if (mimeStr.Equals(kUnicodeMime)) {
     format = CF_UNICODETEXT;
-  } else if (aMimeStr.Equals(kJPEGImageMime)) {
+  } else if (mimeStr.Equals(kJPEGImageMime)) {
     format = CF_DIB;
-  } else if (aMimeStr.Equals(kDropFilesMime)) {
+  } else if (mimeStr.Equals(kDropFilesMime)) {
     format = CF_HDROP;
   } else {
-    char * str = aMimeStr.ToNewCString();
-    format = ::RegisterClipboardFormat(str);
-    delete[] str;
+    format = ::RegisterClipboardFormat(aMimeStr);
   }
-  printf("nsClipboard::GetFormat [%s] 0x%x\n", aMimeStr.ToNewCString(), format);
+  printf("nsClipboard::GetFormat [%s] 0x%x\n", aMimeStr, format);
   return format;
 }
 
@@ -146,8 +146,8 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
     dfList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
-      char* flavorStr;
-      currentFlavor->ToString(&flavorStr);
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString(getter_Copies(flavorStr));
       UINT format = GetFormat(flavorStr);
 
       // check here to see if we can the data back from global member
@@ -158,8 +158,6 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
       // Now tell the native IDataObject about both the DataFlavor and 
       // the native data format
       dObj->AddDataFlavor(flavorStr, &fe);
-      
-      delete [] flavorStr;
     }
   }
 
@@ -537,8 +535,8 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
-      char* flavorStr;
-      currentFlavor->ToString(&flavorStr);
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString(getter_Copies(flavorStr));
       UINT format = GetFormat(flavorStr);
 
       void   * data;
@@ -561,8 +559,6 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
           break;
         }
       }
-      
-      delete [] flavorStr;
     }
   }
   return res;
@@ -650,8 +646,8 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
-      char* flavorStr;
-      currentFlavor->ToString(&flavorStr);
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString(getter_Copies(flavorStr));
       UINT format = GetFormat(flavorStr);
 
       void   * data;
@@ -669,8 +665,7 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
       }
 
       // Now, delete the memory that was created by the transferable
-      delete [] data;
-      delete [] flavorStr;
+      nsCRT::free ( data );
     }
   }
 

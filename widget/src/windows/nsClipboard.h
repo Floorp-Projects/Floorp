@@ -58,7 +58,7 @@ public:
 
   static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen);
 
-  static UINT     GetFormat(const nsString & aMimeStr);
+  static UINT     GetFormat(const char* aMimeStr);
 
 
 protected:
