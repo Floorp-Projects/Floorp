@@ -27,6 +27,8 @@
 #include "nsIObserver.h"
 #include "nsITransformMediator.h"
 #endif
+#include "nsIUnicharInputStream.h"
+#include "nsIUnicharStreamLoader.h"
 
 class nsIDocument;
 class nsIScriptObjectOwner;
@@ -48,11 +50,11 @@ typedef enum {
 
 // XXX Till the parser knows a little bit more about XML, 
 // this is a HTMLContentSink.
-class nsXMLContentSink : public nsIXMLContentSink
+class nsXMLContentSink : public nsIXMLContentSink,
 #ifdef XSL
-                         ,
-                         public nsIObserver
+                         public nsIObserver,
 #endif
+                         public nsIUnicharStreamLoaderObserver
 {
 public:
   nsXMLContentSink();
@@ -64,6 +66,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);

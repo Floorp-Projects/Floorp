@@ -21,7 +21,6 @@
 #include "nsIXMLElementFactory.h"
 #include "nsIParser.h"
 #include "nsIUnicharInputStream.h"
-#include "nsIUnicharStreamLoader.h"
 #include "nsIDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIXMLContent.h"
@@ -239,39 +238,21 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
 }
 
 #ifndef XSL
-// nsISupports
-NS_IMPL_ISUPPORTS(nsXMLContentSink, kIXMLContentSinkIID)
+
+NS_IMPL_ISUPPORTS3(nsXMLContentSink, 
+                   nsIXMLContentSink,
+                   nsIContentSink,
+                   nsIUnicharStreamLoaderObserver)
+
 #else
 
 NS_IMPL_THREADSAFE_ADDREF(nsXMLContentSink)
 NS_IMPL_THREADSAFE_RELEASE(nsXMLContentSink)
-
-nsresult
-nsXMLContentSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  nsresult rv = NS_NOINTERFACE;
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIXMLContentSinkIID)) {
-    *aInstancePtr = (void*)(nsIXMLContentSink*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIObserverIID)) {
-    *aInstancePtr = (void*)(nsIObserver*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIXMLContentSink*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return rv;
-}
+NS_IMPL_QUERY_INTERFACE4(nsXMLContentSink,
+                         nsIXMLContentSink,
+                         nsIContentSink,
+                         nsIObserver,
+                         nsIUnicharStreamLoaderObserver)
 #endif
 
   // nsIContentSink
@@ -1773,27 +1754,27 @@ IsJavaScriptLanguage(const nsString& aName, const char* *aVersion)
   return PR_TRUE;
 }
 
-static void
-nsDoneLoadingScript(nsIUnicharStreamLoader* aLoader,
-                    nsString& aData,
-                    void* aRef,
-                    nsresult aStatus)
+NS_IMETHODIMP
+nsXMLContentSink::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
+                                          nsresult aStatus,
+                                          const PRUnichar* string)
 {
-  nsXMLContentSink* sink = (nsXMLContentSink*)aRef;
+  nsresult rv = NS_OK;
+  nsString aData(string);
 
   if (NS_OK == aStatus) {
-    // XXX We have no way of indicating failure. Silently fail?
-    sink->EvaluateScript(aData, 0, sink->mScriptLanguageVersion);
+    rv = EvaluateScript(aData, 0, mScriptLanguageVersion);
+    if (NS_FAILED(rv)) return rv;
   }
 
-  sink->ResumeParsing();
-
-  // The url loader held a reference to the sink
-  NS_RELEASE(sink);
+  rv = ResumeParsing();
+  if (NS_FAILED(rv)) return rv;
 
   // We added a reference when the loader was created. This
   // release should destroy it.
   NS_RELEASE(aLoader);
+
+  return rv;
 }
 
 nsresult
@@ -1875,19 +1856,11 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
         return rv;
       }
 
-      // Add a reference to this since the url loader is holding
-      // onto it as opaque data.
-      NS_ADDREF(this);
-
       nsIUnicharStreamLoader* loader;
       nsCOMPtr<nsILoadGroup> loadGroup;
 
       mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      rv = NS_NewUnicharStreamLoader(&loader,
-                                     url,
-                                     loadGroup,
-                                     (nsStreamCompleteFunc)nsDoneLoadingScript,
-                                     (void *)this);
+      rv = NS_NewUnicharStreamLoader(&loader, url, loadGroup, this);
       NS_RELEASE(url);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;

@@ -26,7 +26,6 @@ MODULE		= necko
 LIBRARY_NAME	= neckoutil_s
 
 CPPSRCS		= \
-		nsNetStreamLoader.cpp \
 		nsNeckoUtil.cpp \
 		$(NULL)
 

@@ -48,6 +48,7 @@ XPIDLSRCS	= \
 		nsIContentHandler.idl \
 		nsIURIDispatcher.idl \
 		nsIURIContentListener.idl \
+		nsIUnicharStreamLoader.idl \
 		$(NULL)
 
 EXPORTS		= \

@@ -23,7 +23,6 @@ LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 LIBRARY_NAME=neckoutil_s
 
 CPP_OBJS =                          \
-        .\$(OBJDIR)\nsNetStreamLoader.obj \
         .\$(OBJDIR)\nsNeckoUtil.obj \
         $(NULL)
 
