@@ -45,6 +45,9 @@ sub AddLink {
 print "Content-type: text/html\n\n";
 PutHeader("Dependency graph", "Dependency graph", $id);
 
+$::FORM{'rankdir'} = "LR" if !defined $::FORM{'rankdir'};
+
+
 if (defined $id) {
     ConnectToDatabase();
     quietly_check_login();
@@ -150,7 +153,6 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
     $::FORM{'id'} = "";
     $::FORM{'doall'} = 0;
     $::FORM{'showsummary'} = 0;
-    $::FORM{'rankdir'} = "LR";
 }    
 
 print "
