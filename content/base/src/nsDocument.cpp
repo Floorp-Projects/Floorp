@@ -1130,6 +1130,10 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
     }
   }
 
+  if (aHeaderField == nsHTMLAtoms::headerContentLanguage) {
+    CopyUTF16toUTF8(aData, mContentLanguage);
+  }
+  
   if (aHeaderField == nsHTMLAtoms::headerDefaultStyle) {
     // switch alternate style sheets based on default
     nsAutoString type;
@@ -4248,7 +4252,6 @@ void
 nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 {
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  PRBool have_contentLanguage = PR_FALSE;
   PRTime modDate = LL_ZERO;
   nsresult rv;
 
@@ -4265,13 +4268,6 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
                                        mReferrer);
     if (NS_FAILED(rv)) {
       mReferrer.Truncate();
-    }
-    
-    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Language"),
-                                        mContentLanguage);
-
-    if (NS_SUCCEEDED(rv)) {
-      have_contentLanguage = PR_TRUE;
     }
   } else {
     nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
@@ -4315,12 +4311,6 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 #endif
                   &prtime);
     mLastModified.Assign(buf);
-  }
-
-  if (!have_contentLanguage) {
-    const nsAdoptingString& defLanguage =
-      nsContentUtils::GetLocalizedStringPref("intl.accept_languages");
-    CopyUTF16toUTF8(defLanguage, mContentLanguage);
   }
 }
 
