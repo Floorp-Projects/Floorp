@@ -116,10 +116,10 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // Anything but a gopher url needs to end in a /,
     // otherwise we end up linking to file:///foo/dirfile
     const char gopherProt[] = "gopher";
-    if (nsCRT::strncmp(scheme.get(),gopherProt,sizeof(gopherProt)-1)) {
+    if (nsCRT::strncmp(scheme.get(),gopherProt,unsigned(sizeof(gopherProt)-1))) {
         PRUnichar sep;
         const char fileProt[] = "file";
-        if (!nsCRT::strncmp(scheme.get(),fileProt,sizeof(fileProt)-1)) {
+        if (!nsCRT::strncmp(scheme.get(),fileProt,unsigned(sizeof(fileProt)-1))) {
             // How do I do this in an XP way???
 #ifdef XP_MAC
             sep = ':';
