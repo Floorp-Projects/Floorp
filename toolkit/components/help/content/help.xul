@@ -182,7 +182,7 @@
                     command="cmd_textZoomReduce"/>
                 <toolbarbutton id="help-zoom-large-button"
                     class="toolbarbutton-1" label="&textZoomEnlargeBtn.label;"
-                    tooltiptext="&textZoomReduceBtn.tooltip;"
+                    tooltiptext="&textZoomEnlargeBtn.tooltip;"
                     command="cmd_textZoomEnlarge"/>
                 <toolbarbutton id="help-print-button" class="browserButton"
                     label="&printButton.label;"
