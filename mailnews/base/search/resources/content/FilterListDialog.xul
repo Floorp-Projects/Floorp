@@ -27,7 +27,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd">
 <window class="dialog" id="filterListDialog"
-  xmlns:NC="http://home.netscape.com/NC-rdf#"
+  xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
   onload="onLoad();"
