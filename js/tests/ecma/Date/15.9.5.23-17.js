@@ -38,7 +38,6 @@
     var VERSION = "ECMA_1";
     startTest();
     var TITLE = "Date.prototype.setTime()";
-    var TZ_DIFF = -8;
 
     writeHeaderToLog( SECTION + " Date.prototype.setTime(time)");
 
