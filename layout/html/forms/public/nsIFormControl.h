@@ -50,6 +50,13 @@ public:
   virtual PRInt32 GetMaxNumValues() = 0;
 
   /**
+    * Get the content of this control if applicable
+    * @param aResult the nsString which will be set to the name (out parm)
+    * @return PR_TRUE if there was content, PR_FALSE otherwise 
+    */
+  virtual PRBool GetContent(nsString& aResult) const = 0;
+
+  /**
     * Get the name of this control. Controls without names will not have any
     * data submitted.
     * @param aResult the nsString which will be set to the name (out parm)
@@ -86,6 +93,12 @@ public:
     * Set this control back to its initial value
     */
   virtual void Reset() = 0;
+
+  /**
+    * Set this content of this control. This is a no-op for controls that do not
+    * have content set explicitly.
+    */
+  virtual void SetContent(const nsString& aValue) = 0;
 
   /**
     * Set the form manager for this control

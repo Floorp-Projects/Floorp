@@ -579,7 +579,9 @@ NS_NewHTMLSelect(nsIHTMLContent** aInstancePtrResult,
 
   nsIHTMLContent* it = new nsSelect(aTag, aFormMan);
 
-  HACK((nsSelect*)it, aHackIndex);
+  if (aHackIndex > 0) {
+    HACK((nsSelect*)it, aHackIndex);
+  }
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

@@ -65,6 +65,8 @@ public:
 
   // nsIFormControl methods
 
+  PRBool GetContent(nsString& aResult) const;
+
   /**
     * @see nsIFormControl GetFormManager
     */
@@ -94,6 +96,8 @@ public:
     * @see nsIFormControl GetFormManager
     */
   virtual void Reset();
+
+  virtual void SetContent(const nsString& aValue);
 
   /**
     * @see nsIFormControl GetFormManager
@@ -189,12 +193,14 @@ protected:
     NS_DECL_ISUPPORTS
 
     // nsIFormControl
+    virtual PRBool GetContent(nsString& aResult) const;
     virtual PRBool GetName(nsString& aName) const;
     virtual void GetType(nsString& aType) const;
     virtual PRInt32 GetMaxNumValues();
     virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                   nsString* aValues, nsString* aNames);
     virtual void Reset();
+    virtual void SetContent(const nsString& aValue);
     virtual void SetFormManager(nsIFormManager* aFormMan, PRBool aDecrementRef = PR_TRUE);
     virtual nsIFormManager* GetFormManager() const;
     virtual nsrefcnt GetRefCount() const;

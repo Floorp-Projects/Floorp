@@ -35,6 +35,7 @@
 
 #include "nsHTMLForms.h"
 #include "nsIFormManager.h"
+#include "nsIFormControl.h"
 #include "nsIImageMap.h"
 
 #include "nsRepository.h"
@@ -76,6 +77,7 @@ static PRInt32 gLogLevel = 0;
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTMLCONTENTSINK_IID);
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
 class HTMLContentSink : public nsIHTMLContentSink {
 public:
@@ -198,10 +200,8 @@ protected:
   nsIStyleSheet* mStyleSheet;
   nsIFormManager* mCurrentForm;
   nsIImageMap* mCurrentMap;
-#if XXX_chris_karnaze_writes_this_part
-  nsHTMLOptionList* mCurrentSelect;
-  nsHTMLOption* mCurrentOption;
-#endif
+  nsIHTMLContent* mCurrentSelect;
+  nsIHTMLContent* mCurrentOption;
 
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
@@ -233,10 +233,9 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mStyleSheet);
   NS_IF_RELEASE(mCurrentForm);
   NS_IF_RELEASE(mCurrentMap);
-#if XXX_chris_karnaze_writes_this_part
   NS_IF_RELEASE(mCurrentSelect);
   NS_IF_RELEASE(mCurrentOption);
-#endif
+
   if (nsnull != mTitle) {
     delete mTitle;
   }
@@ -707,8 +706,8 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   eHTMLTags parentType;
   nsIHTMLContent* parent = GetCurrentContainer(&parentType);
 
-/*  switch (parentType) {
-  case eHTMLTag_table:
+  switch (parentType) {
+  /*case eHTMLTag_table:
   case eHTMLTag_tr:
   case eHTMLTag_tbody:
   case eHTMLTag_thead:
@@ -716,7 +715,7 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     // XXX Discard leaf content (those annoying \n's really) in
     // table's or table rows
     return PR_TRUE;
-
+  */
   case eHTMLTag_option:
     ProcessOPTIONTagContent(aNode);
     return PR_TRUE;
@@ -728,7 +727,7 @@ PRBool HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     }
     break;
   }
-*/
+
   nsresult rv = NS_OK;
   nsIHTMLContent* leaf = nsnull;
   switch (aNode.GetTokenType()) {
@@ -1166,9 +1165,13 @@ HTMLContentSink::ProcessTEXTAREATag(nsIHTMLContent** aInstancePtrResult,
   if ((NS_OK == rv) && (nsnull != *aInstancePtrResult)) {
     // Add remaining attributes from the tag
     rv = AddAttributes(aNode, *aInstancePtrResult);
-    //if (0 < content.Length()) {
-    //  ((nsTextArea*)*aInstancePtrResult)->SetContent(content);
-    //}
+    if (0 < content.Length()) {
+      nsIFormControl* control;
+      rv = (*aInstancePtrResult)->QueryInterface(kIFormControlIID, (void **)&control);
+      if (NS_OK == rv) {
+        control->SetContent(content);
+      }
+    }
   }
 
   NS_RELEASE(atom);
@@ -1183,21 +1186,15 @@ HTMLContentSink::ProcessOpenSELECTTag(nsIHTMLContent** aInstancePtrResult,
   tmp.ToUpperCase();
   nsIAtom* atom = NS_NewAtom(tmp);
 
-#if XXX_chris_karnaze_writes_this_part
   if (nsnull != mCurrentSelect) {
-    mCurrentSelect->Close();
     NS_RELEASE(mCurrentSelect);
   }
-  nsresult rv = NS_NewHTMLOptionList(&mCurrentSelect, atom, mCurrentForm);
+  nsresult rv = NS_NewHTMLSelect(&mCurrentSelect, atom, mCurrentForm);
   if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
     // Add remaining attributes from the tag
     rv = AddAttributes(aNode, mCurrentSelect);
     *aInstancePtrResult = mCurrentSelect;
   }
-#else
-  nsAutoString foo("SELECT tag goes here");
-  nsresult rv = NS_NewHTMLText(aInstancePtrResult, foo.GetUnicode(), foo.Length());
-#endif
 
   NS_RELEASE(atom);
   return rv;
@@ -1206,12 +1203,8 @@ HTMLContentSink::ProcessOpenSELECTTag(nsIHTMLContent** aInstancePtrResult,
 nsresult
 HTMLContentSink::ProcessCloseSELECTTag(const nsIParserNode& aNode)
 {
-#if XXX_chris_karnaze_writes_this_part
-  if (nsnull != mCurrentSelect) {
-    mCurrentSelect->Close();
-    NS_RELEASE(mCurrentSelect);
-  }
-#endif
+  NS_IF_RELEASE(mCurrentSelect);
+  mCurrentSelect = nsnull;
   return NS_OK;
 }
 
@@ -1219,43 +1212,39 @@ nsresult
 HTMLContentSink::ProcessOpenOPTIONTag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-#if XXX_chris_karnaze_writes_this_part
   if (nsnull != mCurrentSelect) {
     if (nsnull != mCurrentOption) {
-      mCurrentOption->Close();
       NS_RELEASE(mCurrentOption);
     }
-
-    nsAutoString value, selected;
-    PRBool hasValue = FindAttribute(aNode, "value", value);
-    PRBool hasSelected = FindAttribute(aNode, "selected", selected);
-    rv = NS_NewHTMLOption(&mCurrentOption, value, hasSelected);
+    nsAutoString tmp(aNode.GetText());
+    tmp.ToUpperCase();
+    nsIAtom* atom = NS_NewAtom(tmp);
+    rv = NS_NewHTMLOption(&mCurrentOption, atom);
+    if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
+      // Add remaining attributes from the tag
+      rv = AddAttributes(aNode, mCurrentOption);
+    }
+    NS_RELEASE(atom);
   }
-#endif
   return rv;
 }
 
 nsresult
 HTMLContentSink::ProcessCloseOPTIONTag(const nsIParserNode& aNode)
 {
-#if XXX_chris_karnaze_writes_this_part
-  if (nsnull != mCurrentSelect) {
-    if (nsnull != mCurrentOption) {
-      mCurrentSelect->AddOption(mCurrentOption);
-      NS_RELEASE(mCurrentOption);
-    }
-  }
-#endif
+  NS_IF_RELEASE(mCurrentOption);
+  mCurrentOption = nsnull;
   return NS_OK;
 }
 
 nsresult
 HTMLContentSink::ProcessOPTIONTagContent(const nsIParserNode& aNode)
 {
-#if XXX_chris_karnaze_writes_this_part
-  if (nsnull != mCurrentSelect) {
+  if ((nsnull != mCurrentSelect) && (nsnull != mCurrentOption)) {
+    nsIFormControl* control;
+    nsresult rv = mCurrentOption->QueryInterface(kIFormControlIID, (void **)&control);
     nsAutoString currentText;
-    mCurrentOption->GetOptionText(currentText);
+    control->GetContent(currentText); // why do we need to do this
 
     switch (aNode.GetTokenType()) {
     case eToken_text:
@@ -1277,9 +1266,8 @@ HTMLContentSink::ProcessOPTIONTagContent(const nsIParserNode& aNode)
       break;
     }
 
-    mCurrentOption->SetOptionText(currentText);
+    control->SetContent(currentText);
   }
-#endif
   return NS_OK;
 }
 
