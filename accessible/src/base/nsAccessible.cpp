@@ -588,25 +588,26 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
 /* readonly attribute wstring state; */
 NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState) 
 { 
-  nsresult rv = NS_OK; 
   *aState = 0;
 
-  nsCOMPtr<nsIDOMElement> currElement(do_QueryInterface(mDOMNode));
-  if (currElement) {
-    // Set STATE_UNAVAILABLE state based on disabled attribute
-    // The disabled attribute is mostly used in XUL elements and HTML forms, but
-    // if someone sets it on another attribute, 
-    // it seems reasonable to consider it unavailable
-    PRBool isDisabled = PR_FALSE;
-    currElement->HasAttribute(NS_LITERAL_STRING("disabled"), &isDisabled);
-    if (isDisabled)  
-      *aState |= STATE_UNAVAILABLE;
-    else { 
-      *aState |= STATE_FOCUSABLE;
-      nsCOMPtr<nsIDOMNode> focusedNode;
-      if (gLastFocusedNode == mDOMNode) {
-        *aState |= STATE_FOCUSED;
-      }
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE;  // Node shut down
+  }
+
+  // Set STATE_UNAVAILABLE state based on disabled attribute
+  // The disabled attribute is mostly used in XUL elements and HTML forms, but
+  // if someone sets it on another attribute, 
+  // it seems reasonable to consider it unavailable
+  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled)) {
+    *aState |= STATE_UNAVAILABLE;
+  }
+  else if (!mRoleMapEntry || content->IsFocusable()) {
+    // Default state is focusable unless role manually set
+    // Subclasses of nsAccessible will clear focusable state if necessary
+    *aState |= STATE_FOCUSABLE;
+    if (gLastFocusedNode == mDOMNode) {
+      *aState |= STATE_FOCUSED;
     }
   }
 
@@ -618,7 +619,7 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
       *aState |= STATE_OFFSCREEN;
   }
 
-  return rv;
+  return NS_OK;
 }
 
   /* readonly attribute boolean focusedChild; */
@@ -1427,9 +1428,10 @@ NS_IMETHODIMP nsAccessible::GetKeyBinding(nsAString& _retval)
 }
 
 /* unsigned long getRole (); */
-NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *_retval)
+NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *aRole)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aRole = ROLE_NOTHING;
+  return NS_OK;
 }
 
 /* PRUint8 getAccNumActions (); */
