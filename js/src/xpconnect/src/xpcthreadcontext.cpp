@@ -82,8 +82,7 @@ nsXPCThreadJSContextStackImpl::nsXPCThreadJSContextStackImpl()
 
 nsXPCThreadJSContextStackImpl::~nsXPCThreadJSContextStackImpl() {}
 
-static NS_DEFINE_IID(knsXPCThreadJSContextStackImplIID, NS_IJSCONTEXTSTACK_IID);
-NS_IMPL_ISUPPORTS(nsXPCThreadJSContextStackImpl, knsXPCThreadJSContextStackImplIID);
+NS_IMPL_ISUPPORTS1(nsXPCThreadJSContextStackImpl, nsIJSContextStack)
 
 //static
 nsXPCThreadJSContextStackImpl*
@@ -91,9 +90,11 @@ nsXPCThreadJSContextStackImpl::GetSingleton()
 {
     static nsXPCThreadJSContextStackImpl* singleton = nsnull;
     if(!singleton)
-        singleton = new nsXPCThreadJSContextStackImpl();
-    if(singleton)
-        NS_ADDREF(singleton);
+    {
+        if(nsnull != (singleton = new nsXPCThreadJSContextStackImpl()))
+            NS_ADDREF(singleton);
+    }
+    NS_IF_ADDREF(singleton);
     return singleton;
 }
 

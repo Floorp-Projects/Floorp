@@ -22,9 +22,9 @@
 
 static const char* XPC_QUERY_INTERFACE_STR = "QueryInterface";
 
-static NS_DEFINE_IID(kWrappedJSClassIID, NS_IXPCONNECT_WRAPPED_JS_CLASS_IID);
-NS_IMPL_ISUPPORTS(nsXPCWrappedJSClass, kWrappedJSClassIID)
+NS_IMPL_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
+// the value of this variable is never used - we use its address as a sentinel
 static uint32 zero_methods_descriptor;
 
 // static

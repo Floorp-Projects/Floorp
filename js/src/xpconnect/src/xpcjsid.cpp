@@ -37,7 +37,7 @@ static void ThrowBadResultException(uintN errNum, JSContext* cx, nsresult rv)
 /***************************************************************************/
 // nsJSID
 
-NS_IMPL_ISUPPORTS(nsJSID, NS_GET_IID(nsIJSID))
+NS_IMPL_ISUPPORTS1(nsJSID, nsIJSID)
 
 char nsJSID::gNoString[] = "";
 
@@ -224,25 +224,7 @@ nsJSID::NewID(const char* str)
 /***************************************************************************/
 /***************************************************************************/
 
-NS_IMETHODIMP
-nsJSIID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports)) ||
-      aIID.Equals(NS_GET_IID(nsIJSID)) ||
-      aIID.Equals(NS_GET_IID(nsIJSIID))) {
-    *aInstancePtr = (void*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  *aInstancePtr = nsnull;
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsJSIID)
-NS_IMPL_RELEASE(nsJSIID)
+NS_IMPL_ISUPPORTS2(nsJSIID, nsIJSID, nsIJSIID)
 
 nsJSIID::nsJSIID()  {NS_INIT_ISUPPORTS();}
 nsJSIID::~nsJSIID() {}
@@ -367,11 +349,7 @@ private:
 
 /*********************************************/
 
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(CIDCreateInstance, \
-                                   NS_GET_IID(CIDCreateInstance), \
-                                   this)
-NS_IMPL_ADDREF(CIDCreateInstance)
-NS_IMPL_RELEASE(CIDCreateInstance)
+NS_IMPL_ISUPPORTS2(CIDCreateInstance, CIDCreateInstance, nsIXPCScriptable)
 
 CIDCreateInstance::CIDCreateInstance(nsJSCID *aCID)
     : mCID(aCID)
@@ -522,13 +500,13 @@ public:
     NS_IMETHOD AboutToRelease(nsISupports* aObj);
     ServiceReleaser(const nsCID& aCID);
 
+    virtual ~ServiceReleaser();
 private:
     ServiceReleaser(); // not implemented
-    virtual ~ServiceReleaser();
     nsCID mCID;
 };
 
-NS_IMPL_ISUPPORTS(ServiceReleaser, NS_GET_IID(ServiceReleaser));
+NS_IMPL_ISUPPORTS2(ServiceReleaser, ServiceReleaser, nsIXPConnectFinalizeListener)
 
 ServiceReleaser::ServiceReleaser(const nsCID& aCID)
     : mCID(aCID)
@@ -571,11 +549,7 @@ private:
 
 /*********************************************/
 
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(CIDGetService, \
-                                   NS_GET_IID(CIDGetService), \
-                                   this)
-NS_IMPL_ADDREF(CIDGetService)
-NS_IMPL_RELEASE(CIDGetService)
+NS_IMPL_ISUPPORTS2(CIDGetService, CIDGetService, nsIXPCScriptable)
 
 CIDGetService::CIDGetService(nsJSCID *aCID)
     : mCID(aCID)
@@ -730,25 +704,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
 /***************************************************************************/
 /***************************************************************************/
 
-NS_IMETHODIMP
-nsJSCID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports)) ||
-      aIID.Equals(NS_GET_IID(nsIJSID)) ||
-      aIID.Equals(NS_GET_IID(nsIJSCID))) {
-    *aInstancePtr = (void*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  *aInstancePtr = nsnull;
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsJSCID)
-NS_IMPL_RELEASE(nsJSCID)
+NS_IMPL_ISUPPORTS2(nsJSCID, nsIJSID, nsIJSCID)
 
 nsJSCID::nsJSCID()  {NS_INIT_ISUPPORTS();}
 nsJSCID::~nsJSCID() {}
@@ -897,7 +853,7 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj)
             ((nsIJSID*)wrapper->GetNative())->GetId(&id);
         }
     }
-    // XXX it would be nice to try to construct one from an object that can be
+    // XXX it might be nice to try to construct one from an object that can be
     // converted into a string.
     return id;
 }

@@ -52,10 +52,11 @@ public:
                                         const char* aFunctionName,
                                         PRInt32 aLineNumber,
                                         nsIJSStackFrameLocation* aCaller);
-private:
+
     XPCJSStackFrame();
     virtual ~XPCJSStackFrame();
 
+private:
     XPCJSStack* mStack;
     nsIJSStackFrameLocation* mCaller;
 
@@ -155,8 +156,7 @@ XPCJSStackFrame::~XPCJSStackFrame()
 }
 
 
-static NS_DEFINE_IID(kFrameIID, NS_IJSSTACKFRAMELOCATION_IID);
-NS_IMPL_QUERY_INTERFACE(XPCJSStackFrame, kFrameIID)
+NS_IMPL_QUERY_INTERFACE1(XPCJSStackFrame, nsIJSStackFrameLocation)
 
 // do chained ref counting
 
