@@ -36,7 +36,7 @@ static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 // nsInputStreamChannel methods:
 
 nsInputStreamChannel::nsInputStreamChannel()
-    : mContentType(nsnull), mContentLength(-1)
+    : mContentType(nsnull), mContentLength(-1), mLoadAttributes(LOAD_NORMAL)
 {
     NS_INIT_REFCNT(); 
 }
@@ -252,14 +252,14 @@ nsInputStreamChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosit
 NS_IMETHODIMP
 nsInputStreamChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-    *aLoadAttributes = LOAD_NORMAL;
+    *aLoadAttributes = mLoadAttributes;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsInputStreamChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-    // ignore attempts to set load attributes
+    mLoadAttributes = aLoadAttributes;
     return NS_OK;
 }
 
