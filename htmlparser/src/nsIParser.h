@@ -24,6 +24,8 @@
 #include "nsIStreamListener.h"
 #include "nsIDTD.h"
 #include "nsIInputStream.h"
+#include <fstream.h>
+
 
 #define NS_IPARSER_IID      \
   {0x355cbba0, 0xbf7d,  0x11d1,  \
@@ -36,7 +38,6 @@ class nsString;
 class CToken;
 class nsIURL;
 class nsIDTDDebug;
-class fstream;
 
 /**
  *  This class defines the iparser interface. This XPCOM
