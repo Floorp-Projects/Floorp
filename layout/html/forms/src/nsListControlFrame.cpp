@@ -2099,18 +2099,22 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult
 nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-  if (IsInDropDownMode() == PR_TRUE) {
-    PRInt32 oldIndex;
-    PRInt32 curIndex = mSelectedIndex;
-    if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
-      mSelectedIndex    = curIndex;
-      mOldSelectedIndex = oldIndex;
-      if (kNothingSelected != mSelectedIndex) {
-        if (mOldSelectedIndex != mSelectedIndex) {
-          if (mOldSelectedIndex != kNothingSelected) {
-            SetContentSelected(mOldSelectedIndex, PR_FALSE);
+  if (mComboboxFrame) { // Synonym for IsInDropDownMode()
+    PRBool isDroppedDown = PR_FALSE;
+    mComboboxFrame->IsDroppedDown(&isDroppedDown);
+    if (isDroppedDown) {
+      PRInt32 oldIndex;
+      PRInt32 curIndex = mSelectedIndex;
+      if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
+        mSelectedIndex    = curIndex;
+        mOldSelectedIndex = oldIndex;
+        if (kNothingSelected != mSelectedIndex) {
+          if (mOldSelectedIndex != mSelectedIndex) {
+            if (mOldSelectedIndex != kNothingSelected) {
+              SetContentSelected(mOldSelectedIndex, PR_FALSE);
+            }
+            SetContentSelected(mSelectedIndex, PR_TRUE);
           }
-          SetContentSelected(mSelectedIndex, PR_TRUE);
         }
       }
     }
