@@ -187,6 +187,9 @@ public:
     NS_IMETHOD CopyPrefsTree(const char *srcRoot, const char *destRoot);
     NS_IMETHOD DeleteBranch(const char *branchName);
 
+	NS_IMETHOD CreateChildList(const char* parent_node, char **child_list);
+	NS_IMETHOD NextChild(const char *child_list, PRInt16 *index, char **listchild);
+
 protected:
 
     nsPref();
@@ -951,6 +954,106 @@ NS_IMETHODIMP nsPref::DeleteBranch(const char *branchName)
 //----------------------------------------------------------------------------------------
 {
     return _convertRes(PREF_DeleteBranch(branchName));
+}
+
+#include "prprf.h"
+/*
+ * Creates an iterator over the children of a node.
+ */
+typedef struct 
+{
+	char*		 childList;
+	char*		 parent;
+	unsigned int bufsize;
+} PrefChildIter; 
+
+/* if entry begins with the given string, i.e. if string is
+  "a"
+  and entry is
+  "a.b.c" or "a.b"
+  then add "a.b" to the list. */
+static PR_CALLBACK PRIntn
+pref_addChild(PLHashEntry *he, int i, void *arg)
+{
+	PrefChildIter* pcs = (PrefChildIter*) arg;
+	if ( PL_strncmp((char*)he->key, pcs->parent, strlen(pcs->parent)) == 0 )
+	{
+		char buf[512];
+		char* nextdelim;
+		PRUint32 parentlen = strlen(pcs->parent);
+		char* substring;
+		PRBool substringBordersSeparator = PR_FALSE;
+
+		PL_strncpy(buf, (char*)he->key, PR_MIN(512, strlen((char*)he->key) + 1));
+		nextdelim = buf + parentlen;
+		if (parentlen < PL_strlen(buf))
+		{
+			/* Find the next delimiter if any and truncate the string there */
+			nextdelim = strstr(nextdelim, ".");
+			if (nextdelim)
+				*nextdelim = '\0';
+		}
+
+		substring = strstr(pcs->childList, buf);
+		if (substring)
+		{
+			int buflen = strlen(buf);
+			PR_ASSERT(substring[buflen] > 0);
+			substringBordersSeparator = (substring[buflen] == '\0' || substring[buflen] == ';');
+		}
+
+		if (!substring || !substringBordersSeparator)
+		{
+			uint newsize = strlen(pcs->childList) + strlen(buf) + 2;
+			if (newsize > pcs->bufsize)
+			{
+				pcs->bufsize *= 3;
+				pcs->childList = (char*) realloc(pcs->childList, sizeof(char) * pcs->bufsize);
+				if (!pcs->childList)
+					return HT_ENUMERATE_STOP;
+			}
+			PL_strcat(pcs->childList, buf);
+			PL_strcat(pcs->childList, ";");
+		}
+	}
+	return 0;
+}
+
+
+NS_IMETHODIMP nsPref::CreateChildList(const char* parent_node, char **child_list)
+{
+	PrefChildIter pcs;
+
+	pcs.bufsize = 2048;
+	pcs.childList = (char*) malloc(sizeof(char) * pcs.bufsize);
+	if (*parent_node > 0)
+		pcs.parent = PR_smprintf("%s.", parent_node);
+	else
+		pcs.parent = PL_strdup("");
+	if (!pcs.parent || !pcs.childList)
+		return PREF_OUT_OF_MEMORY;
+	pcs.childList[0] = '\0';
+
+	PL_HashTableEnumerateEntries(gHashTable, pref_addChild, &pcs);
+
+	*child_list = pcs.childList;
+	PR_Free(pcs.parent);
+	
+	return (pcs.childList == NULL) ? PREF_OUT_OF_MEMORY : PREF_OK;
+}
+
+NS_IMETHODIMP nsPref::NextChild(const char *child_list, PRInt16 *index, char **listchild)
+{
+	char* temp = (char*)&child_list[*index];
+	char* child = strtok(temp, ";");
+	if (child)
+	{
+		*index += strlen(child) + 1;
+		*listchild = child;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 //========================================================================================
