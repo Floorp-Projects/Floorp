@@ -580,10 +580,8 @@ inline void
 nsRuleNode::PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 {
   nsRuleNode* curr = this;
-  while (curr && curr != aHighestNode) {
-    if (curr->mNoneBits & aBit)
-      break;
-
+  while (curr != aHighestNode) {
+    NS_ASSERTION(!(curr->mNoneBits & aBit), "propagating too far");
     curr->mNoneBits |= aBit;
     curr = curr->mParent;
   }
@@ -596,7 +594,17 @@ nsRuleNode::PropagateInheritBit(PRUint32 aBit, nsRuleNode* aHighestNode)
     return; // Already set.
 
   nsRuleNode* curr = this;
-  while (curr && curr != aHighestNode) {
+  while (curr != aHighestNode) {
+    if (curr->mInheritBits & aBit) {
+#ifdef DEBUG
+      while (curr != aHighestNode) {
+        NS_ASSERTION(curr->mInheritBits & aBit, "bit not set");
+        curr = curr->mParent;
+      }
+#endif
+      break;
+    }
+
     curr->mInheritBits |= aBit;
     curr = curr->mParent;
   }
@@ -1357,49 +1365,65 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   // We start at the most specific rule in the tree.  
   nsStyleStruct* startStruct = nsnull;
   
-  nsCOMPtr<nsIStyleRule> rule = mRule;
   nsRuleNode* ruleNode = this;
-  nsRuleNode* highestNode = nsnull;
-  nsRuleNode* rootNode = this;
+  nsRuleNode* highestNode = nsnull; // The highest node in the rule tree
+                                    // that has the same properties
+                                    // specified for struct |aSID| as
+                                    // |this| does.
+  nsRuleNode* rootNode = this; // After the loop below, this will be the
+                               // highest node that we've walked without
+                               // finding cached data on the rule tree.
+                               // If we don't find any cached data, it
+                               // will be the root.  (XXX misnamed)
   RuleDetail detail = eRuleNone;
   PRUint32 bit = nsCachedStyleData::GetBitForSID(aSID);
 
   while (ruleNode) {
     startStruct = ruleNode->mStyleData.GetStyleData(aSID);
     if (startStruct)
-      break; // We found a rule with fully specified data.  We don't need to go up
-             // the tree any further, since the remainder of this branch has already
-             // been computed.
+      break; // We found a rule with fully specified data.  We don't
+             // need to go up the tree any further, since the remainder
+             // of this branch has already been computed.
 
-    // See if this rule node has cached the fact that the remaining nodes along this
-    // path specify no data whatsoever.
+    // See if this rule node has cached the fact that the remaining
+    // nodes along this path specify no data whatsoever.
     if (ruleNode->mNoneBits & bit)
       break;
 
-    // Failing the following test mean that we have specified no rule information yet 
-    // along this branch, but some ancestor in the rule tree actually has the data.  We 
-    // continue walking up the rule tree without asking the style rules for any information 
-    // (since the bit being set tells us that the rules aren't going to supply any info anyway. 
-    if (!(detail == eRuleNone && ruleNode->mInheritBits & bit)) {
-      // Ask the rule to fill in the properties that it specifies.
-      ruleNode->GetRule(getter_AddRefs(rule));
-      if (rule)
-        rule->MapRuleInfoInto(aRuleData);
+    // If the inherit bit is set on a rule node for this struct, that
+    // means its rule won't have any information to add, so skip it.
+    // XXXldb I don't understand why we need to check |detail| here, but
+    // we do.
+    if (detail == eRuleNone)
+      while (ruleNode->mInheritBits & bit) {
+        NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nsnull,
+                     "inherit bit with cached data makes no sense");
+        // Climb up to the next rule in the tree (a less specific rule).
+        rootNode = ruleNode;
+        ruleNode = ruleNode->mParent;
+        NS_ASSERTION(!(ruleNode->mNoneBits & bit), "can't have both bits set");
+      }
 
-      // Now we check to see how many properties have been specified by the rules
-      // we've examined so far.
-      RuleDetail oldDetail = detail;
-      detail = CheckSpecifiedProperties(aSID, *aSpecificData);
-    
-      if (oldDetail == eRuleNone && detail != oldDetail)
-        highestNode = ruleNode;
+    // Ask the rule to fill in the properties that it specifies.
+    nsIStyleRule *rule = ruleNode->mRule;
+    if (rule)
+      rule->MapRuleInfoInto(aRuleData);
 
-      if (detail == eRuleFullMixed || detail == eRuleFullInherited)
-        break; // We don't need to examine any more rules.  All properties have been fully specified.
-    }
+    // Now we check to see how many properties have been specified by
+    // the rules we've examined so far.
+    RuleDetail oldDetail = detail;
+    detail = CheckSpecifiedProperties(aSID, *aSpecificData);
+  
+    if (oldDetail == eRuleNone && detail != eRuleNone)
+      highestNode = ruleNode;
 
+    if (detail == eRuleFullMixed || detail == eRuleFullInherited)
+      break; // We don't need to examine any more rules.  All properties
+             // have been fully specified.
+
+    // Climb up to the next rule in the tree (a less specific rule).
     rootNode = ruleNode;
-    ruleNode = ruleNode->mParent; // Climb up to the next rule in the tree (a less specific rule).
+    ruleNode = ruleNode->mParent;
   }
 
   PRBool isReset = nsCachedStyleData::IsReset(aSID);
@@ -1423,16 +1447,23 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   }
   else if (!startStruct && ((!isReset && (detail == eRuleNone || detail == eRulePartialInherited)) 
                              || detail == eRuleFullInherited)) {
-    // We specified no non-inherited information and neither did any of our parent rules.  We set a bit
-    // along the branch from the highest node down to our node indicating that no non-inherited data
-    // was specified.
+    // We specified no non-inherited information and neither did any of
+    // our parent rules.
+
+    // We set a bit along the branch from the highest node (ruleNode)
+    // down to our node (this) indicating that no non-inherited data was
+    // specified.  This bit is guaranteed to be set already on the path
+    // from the highest node to the root node.  (We can only set this
+    // bit if detail == eRuleNone because an explicit inherit value
+    // could override a non-inherited value higher in the rule tree.)
     if (detail == eRuleNone)
       PropagateNoneBit(bit, ruleNode);
     
     // All information must necessarily be inherited from our parent style context.
     // In the absence of any computed data in the rule tree and with
     // no rules specified that didn't have values of 'inherit', we should check our parent.
-    nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
+    nsCOMPtr<nsIStyleContext> parentContext =
+        dont_AddRef(aContext->GetParent());
     if (parentContext) {
       // We have a parent, and so we should just inherit from the parent.
       // Set the inherit bits on our context.  These bits tell the style context that
@@ -2039,6 +2070,9 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   const nsStyleFont* parentFont = nsnull;
   PRBool inherited = aInherited;
 
+  if (parentContext)
+    parentFont = NS_STATIC_CAST(const nsStyleFont*,
+                               parentContext->GetStyleData(eStyleStruct_Font));
   if (aStartStruct)
     // We only need to compute the delta between this computed data and our
     // computed data.
@@ -2048,9 +2082,6 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
-      if (parentContext)
-        parentFont = NS_STATIC_CAST(const nsStyleFont*,
-                               parentContext->GetStyleData(eStyleStruct_Font));
       if (parentFont)
         font = new (mPresContext) nsStyleFont(*parentFont);
     }
@@ -2061,6 +2092,8 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, defaultFont);
     font = new (mPresContext) nsStyleFont(defaultFont);
   }
+  if (!parentFont)
+    parentFont = font;
 
   // See if there is a minimum font-size constraint to honor
   nscoord minimumFontSize = 0; // unconstrained by default
@@ -2114,11 +2147,6 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   // Now compute our font struct
   if (generic == kGenericFont_NONE) {
     // continue the normal processing
-    if (!parentFont) {
-      parentFont = parentContext
-                 ? (nsStyleFont*)parentContext->GetStyleData(eStyleStruct_Font)
-                 : font;
-    }
     // our default font is the most recent generic font
     generic = parentFont->mFlags & NS_STYLE_FONT_FACE_MASK;
     mPresContext->GetDefaultFont(generic, defaultFont);
@@ -2169,6 +2197,9 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   const nsStyleText* parentText = nsnull;
   PRBool inherited = aInherited;
 
+  if (parentContext)
+    parentText = NS_STATIC_CAST(const nsStyleText*,
+                               parentContext->GetStyleData(eStyleStruct_Text));
   if (aStartStruct)
     // We only need to compute the delta between this computed data and our
     // computed data.
@@ -2178,16 +2209,15 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
-      if (parentContext)
-        parentText = NS_STATIC_CAST(const nsStyleText*,
-                               parentContext->GetStyleData(eStyleStruct_Text));
       if (parentText)
         text = new (mPresContext) nsStyleText(*parentText);
     }
   }
 
   if (!text)
-    parentText = text = new (mPresContext) nsStyleText();
+    text = new (mPresContext) nsStyleText();
+  if (!parentText)
+    parentText = text;
 
     // letter-spacing: normal, length, inherit
   SetCoord(textData.mLetterSpacing, text->mLetterSpacing, parentText->mLetterSpacing,
@@ -2356,6 +2386,9 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
   const nsStyleUserInterface* parentUI = nsnull;
   PRBool inherited = aInherited;
 
+  if (parentContext)
+    parentUI = NS_STATIC_CAST(const nsStyleUserInterface*,
+                      parentContext->GetStyleData(eStyleStruct_UserInterface));
   if (aStartData)
     // We only need to compute the delta between this computed data and our
     // computed data.
@@ -2365,16 +2398,15 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
-      if (parentContext)
-        parentUI = NS_STATIC_CAST(const nsStyleUserInterface*,
-                      parentContext->GetStyleData(eStyleStruct_UserInterface));
       if (parentUI)
         ui = new (mPresContext) nsStyleUserInterface(*parentUI);
     }
   }
 
   if (!ui)
-    parentUI = ui = new (mPresContext) nsStyleUserInterface();
+    ui = new (mPresContext) nsStyleUserInterface();
+  if (!parentUI)
+    parentUI = ui;
 
   // cursor: enum, auto, url, inherit
   nsCSSValueList*  list = uiData.mCursor;
@@ -2762,9 +2794,12 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
   
   const nsCSSDisplay& displayData = NS_STATIC_CAST(const nsCSSDisplay&, aData);
   nsStyleVisibility* visibility = nsnull;
-  const nsStyleVisibility* parentVisibility = visibility;
+  const nsStyleVisibility* parentVisibility = nsnull;
   PRBool inherited = aInherited;
 
+  if (parentContext)
+    parentVisibility = NS_STATIC_CAST(const nsStyleVisibility*,
+                         parentContext->GetStyleData(eStyleStruct_Visibility));
   if (aStartStruct)
     // We only need to compute the delta between this computed data and our
     // computed data.
@@ -2774,16 +2809,15 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
-      if (parentContext)
-        parentVisibility = NS_STATIC_CAST(const nsStyleVisibility*,
-                         parentContext->GetStyleData(eStyleStruct_Visibility));
       if (parentVisibility)
         visibility = new (mPresContext) nsStyleVisibility(*parentVisibility);
     }
   }
 
   if (!visibility)
-    parentVisibility = visibility = new (mPresContext) nsStyleVisibility(mPresContext);
+    visibility = new (mPresContext) nsStyleVisibility(mPresContext);
+  if (!parentVisibility)
+    parentVisibility = visibility;
 
   // opacity: factor, percent, inherit
   if (eCSSUnit_Percent == displayData.mOpacity.GetUnit()) {
@@ -2860,6 +2894,9 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
   const nsStyleColor* parentColor = nsnull;
   PRBool inherited = aInherited;
 
+  if (parentContext)
+    parentColor = NS_STATIC_CAST(const nsStyleColor*,
+                              parentContext->GetStyleData(eStyleStruct_Color));
   if (aStartStruct)
     // We only need to compute the delta between this computed data and our
     // computed data.
@@ -2869,16 +2906,15 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
-      if (parentContext)
-        parentColor = NS_STATIC_CAST(const nsStyleColor*,
-                              parentContext->GetStyleData(eStyleStruct_Color));
       if (parentColor)
         color = new (mPresContext) nsStyleColor(*parentColor);
     }
   }
 
   if (!color)
-    parentColor = color = new (mPresContext) nsStyleColor(mPresContext);
+    color = new (mPresContext) nsStyleColor(mPresContext);
+  if (!parentColor)
+    parentColor = color;
 
   // color: color, string, inherit
   SetColor(colorData.mColor, parentColor->mColor, mPresContext, color->mColor, inherited);
@@ -3524,6 +3560,9 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   const nsStyleList* parentList = nsnull;
   PRBool inherited = aInherited;
 
+  if (parentContext)
+    parentList = NS_STATIC_CAST(const nsStyleList*,
+                               parentContext->GetStyleData(eStyleStruct_List));
   if (aStartStruct)
     // We only need to compute the delta between this computed data and our
     // computed data.
@@ -3533,16 +3572,15 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
-      if (parentContext)
-        parentList = NS_STATIC_CAST(const nsStyleList*,
-                               parentContext->GetStyleData(eStyleStruct_List));
       if (parentList)
         list = new (mPresContext) nsStyleList(*parentList);
     }
   }
 
   if (!list)
-    parentList = list = new (mPresContext) nsStyleList();
+    list = new (mPresContext) nsStyleList();
+  if (!parentList)
+    parentList = list;
 
   // list-style-type: enum, none, inherit
   if (eCSSUnit_Enumerated == listData.mType.GetUnit()) {
@@ -3787,6 +3825,9 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct, const nsCSSStruc
   const nsStyleTableBorder* parentTable = nsnull;
   PRBool inherited = aInherited;
 
+  if (parentContext)
+    parentTable = NS_STATIC_CAST(const nsStyleTableBorder*,
+                        parentContext->GetStyleData(eStyleStruct_TableBorder));
   if (aStartStruct)
     // We only need to compute the delta between this computed data and our
     // computed data.
@@ -3796,16 +3837,15 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct, const nsCSSStruc
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
-      if (parentContext)
-        parentTable = NS_STATIC_CAST(const nsStyleTableBorder*,
-                        parentContext->GetStyleData(eStyleStruct_TableBorder));
       if (parentTable)
         table = new (mPresContext) nsStyleTableBorder(*parentTable);
     }
   }
 
   if (!table)
-    parentTable = table = new (mPresContext) nsStyleTableBorder(mPresContext);
+    table = new (mPresContext) nsStyleTableBorder(mPresContext);
+  if (!parentTable)
+    parentTable = table;
 
   // border-collapse: enum, inherit
   if (eCSSUnit_Enumerated == tableData.mBorderCollapse.GetUnit()) {
@@ -4081,6 +4121,9 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
   const nsStyleQuotes* parentQuotes = nsnull;
   PRBool inherited = aInherited;
 
+  if (parentContext)
+    parentQuotes = NS_STATIC_CAST(const nsStyleQuotes*,
+                             parentContext->GetStyleData(eStyleStruct_Quotes));
   if (aStartStruct)
     // We only need to compute the delta between this computed data and our
     // computed data.
@@ -4090,16 +4133,15 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
-      if (parentContext)
-        parentQuotes = NS_STATIC_CAST(const nsStyleQuotes*,
-                             parentContext->GetStyleData(eStyleStruct_Quotes));
       if (parentQuotes)
         quotes = new (mPresContext) nsStyleQuotes(*parentQuotes);
     }
   }
 
   if (!quotes)
-    parentQuotes = quotes = new (mPresContext) nsStyleQuotes();
+    quotes = new (mPresContext) nsStyleQuotes();
+  if (!parentQuotes)
+    parentQuotes = quotes;
 
   // quotes: [string string]+, none, inherit
   PRUint32 count;
@@ -4180,7 +4222,6 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
     xul = new (mPresContext) nsStyleXUL();
 
   const nsStyleXUL* parentXUL = xul;
-
   if (parentContext)
     parentXUL = NS_STATIC_CAST(const nsStyleXUL*,
                                 parentContext->GetStyleData(eStyleStruct_XUL));
