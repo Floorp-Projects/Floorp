@@ -22,7 +22,7 @@ MODULE=xpfe\components
 DEPTH=..\..\..\..
 
 XPIDLSRCS=\
-	nsIPrefWindow.idl \
+	.\nsIPrefWindow.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
