@@ -50,7 +50,7 @@ class nsIStyleContext;
 
 /** 
   * nsIRadioControlFrame is the common interface radio buttons.
-  * @see nsFromControlFrame and its base classes for more info
+  * @see nsFormControlFrame and its base classes for more info
   */
 class nsIRadioControlFrame : public nsISupports {
 
@@ -59,30 +59,14 @@ public:
 
   /**
    * Sets the Pseudo Style Contexts for the Radio button
-   *
    */
 
    NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext) = 0;
 
-  /**
-   * When a user clicks on a radiobutton the value needs to be set after the onmouseup
-   * and before the onclick event is processed via script. The EVM always lets script
-   * get first crack at the processing, and script can cancel further processing of 
-   * the event by return null.
-   *
-   * This means the radiobutton needs to have it's new value set before it goes to script 
-   * to process the onclick and then if script cancels the event it needs to be set back.
-   * In Nav and IE there is a flash of it being set and then unset
-   * 
-   * We have added this extra method to the radiobutton so nsHTMLInputElement can get
-   * the content of the currently selected radiobutton for that radio group
-   *
-   * That way if it is cancelled then the original radiobutton can be set back
-   */
-
-   NS_IMETHOD GetRadioGroupSelectedContent(nsIContent ** aRadioBtn) = 0;
-
-
+   /**
+    * Called by content when the radio button's state changes
+    */
+   NS_IMETHOD OnChecked(nsIPresContext* aPresContext, PRBool aChecked) = 0;
 };
 
 #endif

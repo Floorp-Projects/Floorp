@@ -65,19 +65,10 @@ public:
    //nsIRadioControlFrame methods
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext);
-  NS_IMETHOD GetRadioGroupSelectedContent(nsIContent ** aRadioBtn);
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
-
-  virtual PRBool GetChecked();
-  virtual PRBool GetDefaultChecked();
-  virtual PRBool GetRestoredChecked() { return mRestoredChecked;}
-  virtual PRBool IsRestored()         { return mIsRestored;}
-
-  virtual void   SetChecked(nsIPresContext* aPresContext, PRBool aValue, PRBool aSetInitialValue);
-
-  void InitializeControl(nsIPresContext* aPresContext);
+  NS_IMETHOD OnChecked(nsIPresContext* aPresContext, PRBool aChecked);
 
   NS_IMETHOD GetAdditionalStyleContext(PRInt32 aIndex, 
                                        nsIStyleContext** aStyleContext) const;
@@ -103,9 +94,7 @@ public:
                         nsIRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect);
 
-       // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
+  // nsIFormControlFrame
   NS_IMETHOD OnContentReset();
 
   //nsIStatefulFrame
@@ -122,14 +111,8 @@ public:
 
 protected:
 
-	virtual PRBool	GetRadioState();
-	virtual void 		SetRadioState(nsIPresContext* aPresContext, PRBool aValue);
-
     //GFX-rendered state variables
-  PRBool           mChecked;
   nsIStyleContext* mRadioButtonFaceStyle;
-  PRBool           mRestoredChecked;
-  PRBool           mIsRestored;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

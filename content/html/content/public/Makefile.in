@@ -38,6 +38,9 @@ EXPORTS		= \
 		nsIForm.h \
 		nsILink.h \
 		nsIOptionElement.h \
+		nsIRadioControlElement.h \
+		nsIRadioVisitor.h \
+		nsIScriptElement.h \
 		nsITextControlElement.h \
 		nsIScriptElement.h \
 		nsIFormSubmission.h \

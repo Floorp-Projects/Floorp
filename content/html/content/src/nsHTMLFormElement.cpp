@@ -61,6 +61,7 @@
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
 #include "nsHashtable.h"
+#include "nsDoubleHashtable.h"
 #include "nsContentList.h"
 #include "nsGUIEvent.h"
 
@@ -75,6 +76,10 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 
+// radio buttons
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIRadioControlElement.h"
+#include "nsIRadioVisitor.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
@@ -88,8 +93,14 @@ class nsHTMLFormElement : public nsGenericHTMLContainerElement,
                           public nsIForm
 {
 public:
-  nsHTMLFormElement();
+  nsHTMLFormElement() :
+    mGeneratingSubmit(PR_FALSE),
+    mGeneratingReset(PR_FALSE),
+    mDemotingForm(PR_FALSE) { };
+
   virtual ~nsHTMLFormElement();
+
+  virtual nsresult Init(nsINodeInfo* aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -119,10 +130,15 @@ public:
   NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement,
                                     const nsAReadableString& aName);
   NS_IMETHOD ResolveName(const nsAReadableString& aName,
-                         nsISupports **aReturn);
+                         nsISupports** aReturn);
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
   NS_IMETHOD SetDemotingForm(PRBool aDemotingForm);
   NS_IMETHOD IsDemotingForm(PRBool* aDemotingForm);
+  NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
+                                   nsIDOMHTMLInputElement* aRadio);
+  NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
+                                   nsIDOMHTMLInputElement** aRadio);
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor);
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -138,6 +154,7 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+
 protected:
   nsresult DoSubmitOrReset(nsIPresContext* aPresContext,
                            nsEvent* aEvent,
@@ -196,6 +213,7 @@ protected:
   // Data members
   //
   nsFormControlList *mControls;
+  nsDoubleHashtableStringSupports mSelectedRadioButtons;
   PRPackedBool mGeneratingSubmit;
   PRPackedBool mGeneratingReset;
   PRPackedBool mDemotingForm;
@@ -335,14 +353,22 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
 }
 
 
-nsHTMLFormElement::nsHTMLFormElement():
-  mGeneratingSubmit(PR_FALSE),
-  mGeneratingReset(PR_FALSE),
-  mDemotingForm(PR_FALSE)
+nsresult
+nsHTMLFormElement::Init(nsINodeInfo *aNodeInfo)
 {
-  mControls = new nsFormControlList(this);
+  nsresult rv = nsGenericHTMLElement::Init(aNodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_IF_ADDREF(mControls);
+  mControls = new nsFormControlList(this);
+  if (!mControls) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(mControls);
+
+  rv = mSelectedRadioButtons.Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 nsHTMLFormElement::~nsHTMLFormElement()
@@ -990,6 +1016,17 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild)
     }
   }
 
+  //
+  // Notify the radio button it's been added to a group
+  //
+  PRInt32 type;
+  aChild->GetType(&type);
+  if (type == NS_FORM_INPUT_RADIO) {
+    nsCOMPtr<nsIRadioControlElement> radio = do_QueryInterface(aChild);
+    nsresult rv = radio->AddedToRadioGroup();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -1014,6 +1051,17 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild)
     nsISupportsKey key(aChild);
 
     mControls->mNotInElements->Remove(&key);
+  }
+
+  //
+  // Remove it from the radio group if it's a radio button
+  //
+  PRInt32 type;
+  aChild->GetType(&type);
+  if (type == NS_FORM_INPUT_RADIO) {
+    nsCOMPtr<nsIRadioControlElement> radio = do_QueryInterface(aChild);
+    nsresult rv = radio->RemovedFromRadioGroup(this, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -1083,8 +1131,111 @@ nsHTMLFormElement::IsDemotingForm(PRBool* aDemotingForm)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsHTMLFormElement::SetCurrentRadioButton(const nsAString& aName,
+                                         nsIDOMHTMLInputElement* aRadio)
+{
+  return mSelectedRadioButtons.Put(aName, (nsISupports*)aRadio);
+}
 
+NS_IMETHODIMP
+nsHTMLFormElement::GetCurrentRadioButton(const nsAString& aName,
+                                         nsIDOMHTMLInputElement** aRadio)
+{
+  *aRadio = (nsIDOMHTMLInputElement*)mSelectedRadioButtons.Get(aName).get();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
+                                  nsIRadioVisitor* aVisitor)
+{
+  nsresult rv = NS_OK;
+
+  PRBool stopIterating = PR_FALSE;
+
+  if (aName.IsEmpty()) {
+    //
+    // XXX If the name is empty, it's not stored in the control list.  There
+    // *must* be a more efficient way to do this.
+    //
+    nsCOMPtr<nsIFormControl> control;
+    PRUint32 len = 0;
+    GetElementCount(&len);
+    for (PRUint32 i=0; i<len; i++) {
+      GetElementAt(i, getter_AddRefs(control));
+      PRInt32 type;
+      control->GetType(&type);
+      if (type == NS_FORM_INPUT_RADIO) {
+        nsCOMPtr<nsIDOMHTMLInputElement> elem(do_QueryInterface(control));
+        if (elem) {
+          //
+          // XXX This is a particularly frivolous string copy just to determine
+          // if the string is empty or not
+          //
+          nsAutoString name;
+          elem->GetName(name);
+          if (name.IsEmpty()) {
+            aVisitor->Visit(control, &stopIterating);
+            if (stopIterating) {
+              break;
+            }
+          }
+        }
+      }
+    }
+  } else {
+    //
+    // Get the control / list of controls from the form using form["name"]
+    //
+    nsCOMPtr<nsISupports> item;
+    rv = ResolveName(aName, getter_AddRefs(item));
+
+    if (item) {
+      //
+      // If it's just a lone radio button, then select it.
+      //
+      nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(item));
+      if (formControl) {
+        PRInt32 type;
+        formControl->GetType(&type);
+        if (type == NS_FORM_INPUT_RADIO) {
+          aVisitor->Visit(formControl, &stopIterating);
+        }
+      } else {
+        //
+        // If it's a list, we have to find the first non-disabled one and
+        // select it.
+        //
+        nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(item));
+        if (nodeList) {
+          PRUint32 length = 0;
+          nodeList->GetLength(&length);
+          for (PRUint32 i=0; i<length; i++) {
+            nsCOMPtr<nsIDOMNode> node;
+            nodeList->Item(i, getter_AddRefs(node));
+            nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(node));
+            if (formControl) {
+              PRInt32 type;
+              formControl->GetType(&type);
+              if (type == NS_FORM_INPUT_RADIO) {
+                aVisitor->Visit(formControl, &stopIterating);
+                if (stopIterating) {
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return rv;
+}
+
+
+//----------------------------------------------------------------------
 // nsFormControlList implementation, this could go away if there were
 // a lightweight collection implementation somewhere
 

@@ -103,27 +103,9 @@ public:
                     nsReflowStatus&          aStatus);
 #endif
 
-  NS_IMETHOD GetChecked(PRBool* aIsChecked) {
-    *aIsChecked = GetCheckboxState(); return NS_OK;
-  }
-  NS_IMETHOD SetChecked(nsIPresContext* aPresContext, PRBool aIsChecked) {
-    SetCheckboxState(aPresContext, aIsChecked); return NS_OK;
-  }
-
 protected:
 
-    // native/gfx implementations need to implement needs.
   PRBool GetCheckboxState();
-  void SetCheckboxState(nsIPresContext* aPresContext, PRBool aValue);
-
-   // Utility methods for implementing SetProperty/GetProperty
-  void SetCheckboxControlFrameState(nsIPresContext* aPresContext,
-                                    const nsAReadableString& aValue);
-  void GetCheckboxControlFrameState(nsAWritableString& aValue);  
-
-    // utility routine for converting from DOM values to internal enum
-  void CheckStateToString(PRBool inState, nsAWritableString& outStateAsString) ;
-  PRBool StringToCheckState(const nsAReadableString & aStateAsString) ;
 
 protected:
 

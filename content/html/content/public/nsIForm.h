@@ -43,6 +43,8 @@
 
 class nsIFormControl;
 class nsISizeOfHandler;
+class nsIDOMHTMLInputElement;
+class nsIRadioVisitor;
 
 
 #define NS_FORM_METHOD_GET  0
@@ -69,91 +71,129 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORM_IID)
 
   /**
-    * Add an element to end of this form's list of elements
-    * @param aElement the element to add
-    * @return NS_OK if the element was successfully added 
-    */
+   * Add an element to end of this form's list of elements
+   *
+   * @param aElement the element to add
+   * @return NS_OK if the element was successfully added
+   */
   NS_IMETHOD AddElement(nsIFormControl* aElement) = 0;
 
   /**    
-    * Add an element to the lookup table mainted by the form.
-    * We can't fold this method into AddElement() because when
-    * AddElement() is called, the form control has no
-    * attributes.  The name or id attributes of the form control
-    * are used as a key into the table.
-    */
+   * Add an element to the lookup table mainted by the form.
+   *
+   * We can't fold this method into AddElement() because when
+   * AddElement() is called, the form control has no
+   * attributes.  The name or id attributes of the form control
+   * are used as a key into the table.
+   */
   NS_IMETHOD AddElementToTable(nsIFormControl* aElement,
                                const nsAReadableString& aName) = 0;
 
   /**
-    * Get the element at a specified index position
-    * @param aIndex the index
-    * @param aElement the element at that index
-    * @return NS_OK if there was an element at that position, -1 otherwise 
-    */
+   * Get the element at a specified index position
+   *
+   * @param aIndex the index
+   * @param aElement the element at that index
+   * @return NS_OK if there was an element at that position, -1 otherwise
+   */
   NS_IMETHOD GetElementAt(PRInt32 aIndex, nsIFormControl** aElement) const = 0;
 
   /**
-    * Get the number of elements in this form
-    * @param aCount the number of elements
-    * @return NS_OK if there was an element at that position, -1 otherwise 
-    */
+   * Get the number of elements in this form
+   *
+   * @param aCount the number of elements
+   * @return NS_OK if there was an element at that position, -1 otherwise
+   */
   NS_IMETHOD GetElementCount(PRUint32* aCount) const = 0;
 
   /**
-    * Remove an element from this form's list of elements
-    * @param aElement the element to remove
-    * @return NS_OK if the element was successfully removed.
-    */
+   * Remove an element from this form's list of elements
+   *
+   * @param aElement the element to remove
+   * @return NS_OK if the element was successfully removed.
+   */
   NS_IMETHOD RemoveElement(nsIFormControl* aElement) = 0;
 
   /**
-    * Remove an element from the lookup table mainted by the form.
-    * We can't fold this method into RemoveElement() because when
-    * RemoveElement() is called it doesn't know if the element is
-    * removed because the id attribute has changed, or bacause the
-    * name attribute has changed.
-    *
-    * @param aElement the element to remove
-    * @param aName the name or id of the element to remove
-    * @return NS_OK if the element was successfully removed.
-    */
+   * Remove an element from the lookup table mainted by the form.
+   * We can't fold this method into RemoveElement() because when
+   * RemoveElement() is called it doesn't know if the element is
+   * removed because the id attribute has changed, or bacause the
+   * name attribute has changed.
+   *
+   * @param aElement the element to remove
+   * @param aName the name or id of the element to remove
+   * @return NS_OK if the element was successfully removed.
+   */
   NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement,
                                     const nsAReadableString& aName) = 0;
 
   /**
-    * Resolve a name in the scope of the form object, this means find
-    * form controls in this form with the correct value in the name
-    * attribute.
-    *
-    * @param aElement the element to remove
-    * @param aName the name or id of the element to remove
-    * @return NS_OK if the element was successfully removed.
-    */
+   * Resolve a name in the scope of the form object, this means find
+   * form controls in this form with the correct value in the name
+   * attribute.
+   *
+   * @param aElement the element to remove
+   * @param aName the name or id of the element to remove
+   * @return NS_OK if the element was successfully removed.
+   */
   NS_IMETHOD ResolveName(const nsAReadableString& aName,
                          nsISupports **aResult) = 0;
 
   /**
-    * Get the index of the given control within this form.
-    */
+   * Get the index of the given control within this form.
+   */
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex) = 0;
 
   /**
-    * This is a flag set on the form by nsHTMLContentSink::DemoteForm()
-    * to let form controls know that children of the form are being moved
-    * around needlessly (which is what DemoteForm() does).
-    *
-    * Form controls query this so that they can avoid changing their form when
-    * the inevitable SetParent() occurs.  This prevents problems with indexing
-    * in DemoteForm() itself as well as other problems that arise from form
-    * controls setting their form to null, even temporarily.
-    */
+   * This is a flag set on the form by nsHTMLContentSink::DemoteForm()
+   * to let form controls know that children of the form are being moved
+   * around needlessly (which is what DemoteForm() does).
+   *
+   * Form controls query this so that they can avoid changing their form when
+   * the inevitable SetParent() occurs.  This prevents problems with indexing
+   * in DemoteForm() itself as well as other problems that arise from form
+   * controls setting their form to null, even temporarily.
+   *
+   * @param aDemotingForm whether the current form is being demoted.
+   */
   NS_IMETHOD SetDemotingForm(PRBool aDemotingForm) = 0;
 
   /**
-    * Test whether this form is currently being demoted
-    */
+   * Test whether this form is currently being demoted
+   *
+   * @param aDemotingForm a boolean to hold whether the current form is being
+   *        demoted.
+   */
   NS_IMETHOD IsDemotingForm(PRBool* aDemotingForm) = 0;
+
+  /**
+   * Set the currently selected radio button in a group
+   *
+   * @param aName the radio group to set the button in
+   * @param aRadio the radio button to be returned
+   */
+  NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
+                                   nsIDOMHTMLInputElement* aRadio) = 0;
+
+  /**
+   * Get the currently selected radio button in a group
+   *
+   * @param aName the radio group to get the radio button in
+   * @param aRadio the radio button to be returned
+   */
+  NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
+                                   nsIDOMHTMLInputElement** aRadio) = 0;
+
+  /**
+   * Walk over the radios in a group and call Visit() on the visitor.
+   *
+   * @param aName the radio group to walk
+   * @param aVisitor the visitor to call Visit() on
+   */
+  NS_IMETHOD WalkRadioGroup(const nsAString& aName,
+                            nsIRadioVisitor* aVisitor) = 0;
+
 };
 
 #endif /* nsIForm_h___ */
