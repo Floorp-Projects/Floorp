@@ -228,7 +228,7 @@ nsresult TextEditorTest::TestTextProperties()
   TEST_POINTER(textNode.get());
   textData = do_QueryInterface(textNode);
   textData->GetLength(&length);
-  NS_ASSERTION(length==249, "wrong text node");
+  NS_ASSERTION(length==915, "wrong text node");
   selection->Collapse(textNode, 1);
   selection->Extend(textNode, length-2);
   result = mTextEditor->SetInlineProperty(nsIEditProperty::u, nsnull, nsnull);

@@ -157,7 +157,8 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
       return WillRemoveTextProperty(aSelection, aCancel);
     case kOutputText:
       return WillOutputText(aSelection, 
-                            info->outString,
+                            info->outputFormat,
+                            info->outString,                            
                             aCancel);
   }
   return NS_ERROR_FAILURE;
@@ -835,24 +836,28 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
 
 nsresult
 nsTextEditRules::WillOutputText(nsIDOMSelection *aSelection, 
-                                nsString *aOutString,
-                                PRBool *aCancel)
+                                const nsString  *aOutputFormat,
+                                nsString *aOutString,                                
+                                PRBool   *aCancel)
 {
   // null selection ok
-  if (!aOutString || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  if (!aOutString || !aOutputFormat || !aCancel) { return NS_ERROR_NULL_POINTER; }
 
   // initialize out param
   *aCancel = PR_FALSE;
-  
-  if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
-  {
-    *aOutString = mPasswordText;
-    *aCancel = PR_TRUE;
-  }
-  else if (mBogusNode)
-  { // this means there's no content, so output null string
-    *aOutString = "";
-    *aCancel = PR_TRUE;
+
+  if (PR_TRUE == aOutputFormat->Equals("text/plain"))
+  { // only use these rules for plain text output
+    if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
+    {
+      *aOutString = mPasswordText;
+      *aCancel = PR_TRUE;
+    }
+    else if (mBogusNode)
+    { // this means there's no content, so output null string
+      *aOutString = "";
+      *aCancel = PR_TRUE;
+    }
   }
   return NS_OK;
 }
