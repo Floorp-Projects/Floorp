@@ -2,6 +2,12 @@
 # Rude Module                  #
 ################################
 
+# This module implements the same functionality as Insult.bm and
+# Excuse.bm but using remote servers. Those servers are currently (and
+# probably forever) down. This module is therefore mainly here for
+# historical interest, and may be removed from future distributions. 
+# If you use, or need, this module, please let me know. - ian@hixie.ch
+
 package BotModules::Rude;
 use vars qw(@ISA);
 use Net::Telnet;
