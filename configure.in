@@ -1377,6 +1377,8 @@ dnl
 dnl Add the pthread flags to the nspr libs
 dnl
 NSPR_LIBS="$NSPR_LIBS $PTHREAD_LDFLAGS"
+dnl ========================================================
+
 
 dnl system NSPR support
 dnl we always use the system NSPR from now on...this option
@@ -1466,6 +1468,37 @@ if test "${NSPR_DIR}" -a -d "${NSPR_DIR}"; then
 fi
 dnl End of nspr tests
 dnl ========================================================
+
+dnl
+dnl If NSPR was not detected in the system, use the one in the source
+dnl tree (mozilla/nsprpub)
+dnl
+dnl NSPR_INCLUDE_DIR and NSPR_CFLAGS are blank because NSPR built as
+dnl part of the mozilla build, will install its headers and libs in
+dnl the same place as mozilla.
+dnl
+if test "$MISSING_NSPR"; then
+
+dnl   AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
+
+   echo
+   echo "*** NSPR was not detected in your system.  This is not a problem."
+   echo "*** I will use the one in the current source tree instead. "
+   echo
+   sleep 3
+
+   NSPR_INCLUDE_DIR=
+   NSPR_CFLAGS=
+   NSPR_LIBS="-lplds3 -lplc3 -lnspr3 $PTHREAD_LDFLAGS"
+dnl
+dnl Otherwise, we are using an NSPR installed in the system.
+dnl
+dnl We need to set MOZ_NATIVE_NSPR so that mozilla/nsprpub 
+dnl is not build.
+dnl
+else
+   MOZ_NATIVE_NSPR=1
+fi
 
 LDFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
@@ -1558,12 +1591,6 @@ if test "$MISSING_MOTIF"; then
    AC_MSG_ERROR([ Could not find the following motif libraries: $MISSING_MOTIF ]);
 fi
 fi # $no_x
-
-if test "$MISSING_NSPR"; then
-   AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
-else
-   MOZ_NATIVE_NSPR=1
-fi
 
 dnl Set various defines and substitutions
 dnl ========================================================
@@ -1673,8 +1700,12 @@ dnl NSPR.  Since at this point in configure.in, we know what we
 dnl want, we force USE_PTHREADS to the correct value.
 dnl 
 
-dnl XXX ramiro.  need to autodetect this one.
-MOZ_NSPRENV_USE_PTHREADS=1
+dnl 
+dnl USE_PTHREADS
+dnl
+dnl Same as detected above.
+dnl
+MOZ_NSPRENV_USE_PTHREADS=$USE_PTHREADS
 
 dnl 
 dnl BUILD_OPT
