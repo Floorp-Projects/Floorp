@@ -61,6 +61,8 @@ LIBS = \
 	-lraptorwebwidget	\
 	-lraptorhtml	\
 	-lraptorhtmlpars	\
+	-lexpat \
+	-lxmltok \
 	-ljsdom		\
 	-ljsurl		\
 	-lraptorbase	\
