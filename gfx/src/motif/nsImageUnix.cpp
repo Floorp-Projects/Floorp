@@ -224,7 +224,6 @@ nsresult nsImageUnix::Optimize(nsDrawingSurface aDrawingSurface)
 
 void nsImageUnix::CreateImage(nsDrawingSurface aSurface)
 {
-  XWindowAttributes wa;
   PRUint32 wdepth;
   Visual * visual ;
   PRUint32 format ;
@@ -232,23 +231,15 @@ void nsImageUnix::CreateImage(nsDrawingSurface aSurface)
   //char * data = (char *) PR_Malloc(sizeof(char) * mWidth * mHeight * mDepth);
   
   if(mImageBits) {
-    ::XGetWindowAttributes(unixdrawing->display,
-			   unixdrawing->drawable,
-			   &wa);
-    
-    /* XXX What if mDepth != wDepth */
-    wdepth = wa.depth;
-    visual = wa.visual;
-    
     /* Need to support monochrome too */
-    if (visual->c_class == TrueColor || visual->c_class == DirectColor)
+    if (unixdrawing->visual->c_class == TrueColor || unixdrawing->visual->c_class == DirectColor)
       format = ZPixmap;
     else
       format = XYPixmap;
     
     mImage = ::XCreateImage(unixdrawing->display,
-			    visual,
-			    wdepth,
+			    unixdrawing->visual,
+			    unixdrawing->depth,
 			    format,
 			    0,
 			    (char *)mImageBits,

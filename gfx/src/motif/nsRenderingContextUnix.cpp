@@ -132,6 +132,7 @@ NS_IMPL_RELEASE(nsRenderingContextUnix)
 nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 					nsIWidget *aWindow)
 {
+
   if (nsnull == aWindow->GetNativeData(NS_NATIVE_WINDOW))
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -144,6 +145,15 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mRenderingSurface->drawable = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
   mRenderingSurface->gc       = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
 
+  XWindowAttributes wa;
+
+  ::XGetWindowAttributes(mRenderingSurface->display,
+			 mRenderingSurface->drawable,
+			 &wa);
+
+  mRenderingSurface->visual = wa.visual;
+  mRenderingSurface->depth = wa.depth;
+  
   mFrontBuffer = mRenderingSurface;
 
   ((nsDeviceContextUnix *)aContext)->SetDrawingSurface(mRenderingSurface);
@@ -482,6 +492,8 @@ nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
   surface->drawable = p ;
   surface->display  = mRenderingSurface->display;
   surface->gc       = mRenderingSurface->gc;
+  surface->visual   = mRenderingSurface->visual;
+  surface->depth    = mRenderingSurface->depth;
 
   return ((nsDrawingSurface)surface);
 }
@@ -494,8 +506,8 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
   ::XFreePixmap(surface->display, surface->drawable);
 
   //XXX greg, this seems bad. MMP
-  //if (mRenderingSurface == surface)
-    //mRenderingSurface = nsnull;
+  if (mRenderingSurface == surface)
+    mRenderingSurface = nsnull;
 
   delete aDS;
 }

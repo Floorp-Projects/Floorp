@@ -33,6 +33,8 @@ typedef struct nsDrawingSurfaceUnix {
   Display *display ;
   Drawable drawable ;
   GC       gc ;
+  Visual * visual ;
+  PRUint32 depth ;
 };
 
 class nsDeviceContextUnix : public nsIDeviceContext
