@@ -1642,18 +1642,17 @@ net_CheckForCookiePermission(char * hostname) {
  *  -1 if cookie permission exists for host and indicates host can't set cookies
  */
 PUBLIC int
-NET_CookiePermission(MWContext * context) {
+NET_CookiePermission(char* URLName) {
     net_CookiePermissionStruct * cookiePermission;
     char * host;
     char * colon;
 
-    if (!context || !(context->hist.cur_doc_ptr) ||
-	    !(context->hist.cur_doc_ptr->address)) {
+    if (!URLName || !(*URLName)) {
 	return 0;
     }
 
     /* remove protocol from URL name */
-    host = NET_ParseURL(context->hist.cur_doc_ptr->address, GET_HOST_PART);
+    host = NET_ParseURL(URLName, GET_HOST_PART);
 
     /* remove port number from URL name */
     colon = PL_strchr(host, ':');
@@ -1959,6 +1958,10 @@ NET_CookieCount(char * URLName) {
     char * host;
     char * colon;
     int count = 0;
+
+    if (!URLName || !(*URLName)) {
+	return 0;
+    }
 
     /* remove protocol from URL name */
     host = NET_ParseURL(URLName, GET_HOST_PART);
