@@ -1053,7 +1053,7 @@ gtk_moz_embed_get_link_message(GtkMozEmbed *embed)
   if (embedPrivate->mWindow) {
     *getter_Copies(embedString) =
       NEW_TOOLKIT_STRING(embedPrivate->mWindow->mLinkMessage);
-    retval = strdup(embedString);
+    retval = g_strdup(embedString);
   }
 
   return retval;
@@ -1074,7 +1074,7 @@ gtk_moz_embed_get_js_status(GtkMozEmbed *embed)
   if (embedPrivate->mWindow) {
     *getter_Copies(embedString) =
       NEW_TOOLKIT_STRING(embedPrivate->mWindow->mJSStatus);
-    retval = strdup(embedString);
+    retval = g_strdup(embedString);
   }
 
   return retval;
@@ -1095,7 +1095,7 @@ gtk_moz_embed_get_title(GtkMozEmbed *embed)
   if (embedPrivate->mWindow) {
     *getter_Copies(embedString) = 
       NEW_TOOLKIT_STRING(embedPrivate->mWindow->mTitle);
-    retval = strdup(embedString);
+    retval = g_strdup(embedString);
   }
 
   return retval;
@@ -1115,7 +1115,7 @@ gtk_moz_embed_get_location(GtkMozEmbed *embed)
   
   if (embedPrivate->mURI.Length()) {
     *getter_Copies(embedString) = NEW_TOOLKIT_STRING(embedPrivate->mURI);
-    retval = strdup(embedString);
+    retval = g_strdup(embedString);
   }
 
   return retval;
