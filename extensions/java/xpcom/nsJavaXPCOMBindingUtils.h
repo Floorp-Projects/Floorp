@@ -81,6 +81,7 @@ extern jmethodID getNameMID;
 class nsJavaXPCOMBindings;
 extern nsJavaXPCOMBindings* gBindings;
 
+extern PRBool gJavaXPCOMInitialized;
 PRBool InitializeJavaGlobals(JNIEnv *env);
 void FreeJavaGlobals(JNIEnv* env);
 
