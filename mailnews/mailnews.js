@@ -425,6 +425,7 @@ pref("compose.throbber.url","chrome://messenger/locale/messenger.properties");
 pref("addressbook.throbber.url","chrome://messenger/locale/messenger.properties");
 
 pref("mailnews.send_plaintext_flowed", true); // RFC 2646=======
+pref("mailnews.display.disable_format_flowed_support", false);
 
 // these two news.cancel.* prefs are for use by QA for automated testing.  see bug #31057
 pref("news.cancel.confirm",true);
