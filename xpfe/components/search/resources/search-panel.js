@@ -685,6 +685,9 @@ function checkSearchProgress()
 
 function sidebarOpenURL(event, treeitem, root)
 {
+  if (event.target.localName != "treecell")  //make sure they clicked on a real cell
+    return false;
+
   mClickCount = nsPreferences.getBoolPref("browser.search.use_double_clicks", false) ? 2 : 1;
 
   if ((event.button != 1) || (event.detail != mClickCount))
