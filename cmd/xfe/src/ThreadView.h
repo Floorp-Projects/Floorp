@@ -168,7 +168,12 @@ private:
   int m_nLoadingFolders;
 
 #if HANDLE_CMD_QUEUE
+
+#if !defined(HANDLE_LIST_CHANGED)
+	/* will be promoted to MNListView.h */
   MSG_ViewIndex m_lineChanged;
+#endif /* HANDLE_LIST_CHANGED */
+
   MSG_ViewIndex m_lastLoadedInd;  /* which line is being displayed */
 #if defined(DEL_5_0)
   MessageKey    m_lastLoadedKey; /* which message is being displayed */

@@ -1076,12 +1076,14 @@ XFE_ThreadView::loadFolder(MSG_FolderInfo *folderInfo)
   char *window_title;
   int window_title_length;
 
+  // must be valid.
+  XP_ASSERT(folderInfo);
+  if (!folderInfo) return;
+  
   // only need to do everything below here if the folder being
   // loaded is different than what's currently displayed.
   if (m_folderInfo != folderInfo) {
 	  
-	  // must be valid.
-	  XP_ASSERT(folderInfo);
 	  
 	  // clear the currently display message, since we're in a different folder now.
 	  DD(printf("Load Folder: Blank out message view...\n");)

@@ -27,12 +27,15 @@
 #include "xp_str.h"
 #include "xpassert.h"
 
+static const char *XNotifyAtomId = "Moz Xfe X Notify";
+
 XFE_NotificationCenter::XFE_NotificationCenter()
 {
 	m_hashtable = NULL;
 
 	m_forwarder = NULL;
 	m_numlists = 0;
+	m_clientWidget = 0;
 }
 
 XFE_NotificationCenter::~XFE_NotificationCenter()
@@ -179,36 +182,134 @@ XFE_NotificationCenter::getForwarder()
 
 void 
 XFE_NotificationCenter::notifyInterested(const char *notification_name,
-					 void *callData)
+										 void *callData)
 {
-	if (m_forwarder && m_forwarder != this)
-		{
-			m_forwarder->notifyInterested(notification_name, callData);
-		}
-	else
-		{
-			int j;
-			XFE_NotificationList *list;
-			
-			if (!m_hashtable)
-				return;
-
-			list = getNotificationListForName(notification_name);
-			
-			if (list)
-				{
-					for (j = 0; j < list->num_interested; j ++)
-						{
-							XP_ASSERT(list->callbacks[j].callbackFunction);
-							
-							if (list->callbacks[j].callbackFunction)
-								{
-									(*list->callbacks[j].callbackFunction)
-										(this, list->callbacks[j].obj, list->callbacks[j].clientData, callData);
-								}
-						}
-				}
-		}
+  dispatchCallbacks(notification_name, callData);
 }
   
+
+void
+XFE_NotificationCenter::notifyInterestedWithDelay(const char *notification_name,
+												  void *callData)
+{
+  XP_ASSERT(m_clientWidget);
+  
+  if (!m_clientWidget)
+    return;
+  
+  // Send a clientMessage event to the registered window
+  sendClientMessageEvent(notification_name, callData);
+}
+
+
+void 
+XFE_NotificationCenter::dispatchCallbacks(const char *notificationName,
+										  void *callData)
+{
+  if (m_forwarder && m_forwarder != this)
+    m_forwarder->notifyInterested(notificationName, callData);
+  else {
+    
+    if (!m_hashtable)
+      return;
+	
+    XFE_NotificationList *list;
+    int j;
+  
+    list = getNotificationListForName(notificationName);
+  
+    if (list) {
+      for (j = 0; j < list->num_interested; j ++) {
+		XP_ASSERT(list->callbacks[j].callbackFunction);
+		
+		if (list->callbacks[j].callbackFunction) {
+		  (*list->callbacks[j].callbackFunction)
+			(this, list->callbacks[j].obj, list->callbacks[j].clientData, callData);
+		}
+      }
+    }
+    
+  }
+
+}
+  
+
+void XFE_NotificationCenter::registerNotifyWidget(Widget w)
+{
+  // We only allow this to happen once
+  XP_ASSERT(!m_clientWidget);
+
+  m_clientWidget = w;
+
+  // Register the ClientMessage atom
+  NOTIFICATION_MESSAGE = XInternAtom(XtDisplay(m_clientWidget), XNotifyAtomId, False);
+  
+  // Add an event handler for this window
+  XtAddEventHandler(m_clientWidget, NoEventMask, True, clientMessageHandler, this);
+}
+
+
+void XFE_NotificationCenter::clientMessageHandler(Widget, XtPointer clientData,
+												  XEvent *xe, Boolean *)
+{
+  // Ignore all other non-maskable events
+  if (xe->type != ClientMessage) return;
+
+  XClientMessageEvent *ce = (XClientMessageEvent *) xe;
+  XFE_NotificationCenter *nc = (XFE_NotificationCenter *) clientData;
+  
+  XP_ASSERT(nc);
+  const char *notificationName = getNotificationNameFromClientMessage(ce);
+  void *eventCallData = getEventCallDataFromClientMessage(ce);
+  
+  nc->dispatchCallbacks(notificationName, eventCallData);
+}
+
+
+void XFE_NotificationCenter::sendClientMessageEvent(const char *notificationName, 
+													void *callData)
+{
+  XClientMessageEvent event;
+
+  event.display = XtDisplay(m_clientWidget);
+  event.window = XtWindow(m_clientWidget);
+  event.type = ClientMessage;
+  event.format = 8;
+  event.message_type = NOTIFICATION_MESSAGE;
+
+  packClientMessageData(&event, notificationName, callData);
+  XPutBackEvent(event.display, (XEvent *) &event);
+}
+
+// Note that this approach works because we're always sending to the same application
+typedef struct {
+  const char *notificationName;
+  void *callData;
+} XfeXClientMessage;
+
+void XFE_NotificationCenter::packClientMessageData(XClientMessageEvent *event,
+												   const char *notificationName, 
+												   void *callData)
+{
+  XfeXClientMessage *message = (XfeXClientMessage *) event->data.b;
+  
+  message->notificationName = notificationName;
+  message->callData = callData;
+}
+
+
+const char *XFE_NotificationCenter::getNotificationNameFromClientMessage(XClientMessageEvent *ce)
+{
+  XfeXClientMessage *message = (XfeXClientMessage *) ce->data.b;
+
+  return message->notificationName;
+}
+
+
+void *XFE_NotificationCenter::getEventCallDataFromClientMessage(XClientMessageEvent *ce)
+{
+  XfeXClientMessage *message = (XfeXClientMessage *) ce->data.b;
+
+  return message->callData;
+}
 

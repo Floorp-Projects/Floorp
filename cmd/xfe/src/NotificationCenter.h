@@ -29,6 +29,7 @@
 #include "plhash.h"
 
 #include "xp_core.h"
+#include <Xm/Xm.h>
 
 class XFE_NotificationCenter; /* must be defined for the callback stuff. */
 
@@ -113,7 +114,7 @@ public:
 						  XFE_NotificationCenter *obj,
 						  XFE_FunctionNotification notification_func,
 						  void *clientData = NULL);
-	
+
 	void unregisterInterest(const char *notification_name,
 							XFE_NotificationCenter *obj,
 							XFE_FunctionNotification notification_func,
@@ -135,21 +136,55 @@ public:
 	// Notify those that are interested
 	void notifyInterested(const char *notification_name,
 						  void *callData = NULL);
-	
+
+	// notifyInterestedWithDelay() differs from notifyInterested() in that
+	// the notification is not given out until the next iteration of the
+	// FE event loop. Use notifyInterestedWithDelay() in cases where you
+	// want the current call stack to unwind before triggering an operation.
+	void notifyInterestedWithDelay(const char *notification_name,
+								   void *callData = NULL);
+
+	// The widget to which delayed notifications are sent. 
+	// This must be set before notifyInterestedWithDelay() is used.
+	// You do not need this if you're only ever using notifyInterested().
+	void registerNotifyWidget(Widget w);
+
 	void setForwarder(XFE_NotificationCenter *obj);
 	XFE_NotificationCenter *getForwarder();
 	
-private:
+	// This should really be private, and is only called from the X ClientMessage
+	// handler. Do not call this function directly.
+	void dispatchCallbacks(const char *notificationName,
+						   void *callData = NULL);
+
+protected:
 	XFE_NotificationCenter *m_forwarder;
-	
-	PRHashTable *m_hashtable;
-	
-	int m_numlists;
-	
+
 	XFE_NotificationList *getNotificationListForName(const char *name);
 	XFE_NotificationList *addNewNotificationList(const char *name);
 
-	static int destroyHashEnumerator(PRHashEntry *he, int i, void *arg);
+	PRHashTable *m_hashtable;
+	int m_numlists;
+	
+  private:
+	Widget m_clientWidget;     // Widget to which we're sending the ClientMessage event  
+	Atom NOTIFICATION_MESSAGE; // Atom registered for all ClientMessage events we send
+
+	static int destroyHashEnumerator(PRHashEntry *he, int i, void *arg);	
+
+	// Utility functions to pack and unpack a ClientMessage event
+	static const char *getNotificationNameFromClientMessage(XClientMessageEvent *ce);
+	static void *getEventCallDataFromClientMessage(XClientMessageEvent *ce);
+	static void packClientMessageData(XClientMessageEvent *ce, 
+									  const char *notificationName,
+									  void *callData);
+
+	// Construct and send a ClientMessage event notification.
+	void sendClientMessageEvent(const char *notification_name, void *callData);
+
+	// Xt callback handler for the ClientMessageEvent
+	static void clientMessageHandler(Widget, XtPointer, XEvent *, Boolean *);	
+
 };
 
 #endif /* _xfe_notificationcenter_h */
