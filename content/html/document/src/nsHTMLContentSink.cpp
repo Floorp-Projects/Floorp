@@ -791,8 +791,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
     const nsAReadableString& key = aNode.GetKeyAt(i);
-    k.Truncate();
-    k.Append(key);
+    k.Assign(key);
     k.ToLowerCase();
 
     nsIAtom*  keyAtom = NS_NewAtom(k);
@@ -804,7 +803,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
       GetAttributeValueAt(aNode, i, v);
 
       // Add attribute to content
-      aContent->SetAttr(kNameSpaceID_HTML, keyAtom, v,aNotify);
+      aContent->SetAttr(kNameSpaceID_HTML, keyAtom, v, aNotify);
     }
     NS_RELEASE(keyAtom);
   }
@@ -3779,7 +3778,8 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 
 
 NS_IMETHODIMP
-HTMLContentSink::WillProcessTokens(void) {
+HTMLContentSink::WillProcessTokens(void)
+{
   if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
     mDelayTimerStart = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
@@ -3787,18 +3787,20 @@ HTMLContentSink::WillProcessTokens(void) {
 }
 
 NS_IMETHODIMP
-HTMLContentSink::DidProcessTokens(void) {
+HTMLContentSink::DidProcessTokens(void)
+{
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLContentSink::WillProcessAToken(void) {
+HTMLContentSink::WillProcessAToken(void)
+{
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLContentSink::DidProcessAToken(void) {
-
+HTMLContentSink::DidProcessAToken(void)
+{
   if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
 
 #ifdef NS_DEBUG
@@ -3860,8 +3862,8 @@ PRInt32 newMaxTokenProcessingTime = GetMaxTokenProcessingTime();
    if ((currentTime - mDelayTimerStart) > NS_STATIC_CAST(PRUint32, GetMaxTokenProcessingTime())) {
      return NS_ERROR_HTMLPARSER_INTERRUPTED;
    }
-  
   }
+
   return NS_OK;
 }
 

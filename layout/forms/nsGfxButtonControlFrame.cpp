@@ -66,63 +66,6 @@ nsGfxButtonControlFrame::nsGfxButtonControlFrame()
   mDefaultValueWasChanged = PR_FALSE;
 }
 
-PRBool
-nsGfxButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
-{
-  PRInt32 type;
-  GetType(&type);
-  PRBool successful = PR_TRUE;
-  if ((NS_FORM_INPUT_HIDDEN == type) || (this == aSubmitter)) {
-     // Can not use the nsHTMLButtonControlFrame::IsSuccessful because
-     // it will fail it's test of (this==aSubmitter)
-    nsAutoString name;
-    PRBool disabled = PR_FALSE;
-    nsFormControlHelper::GetDisabled(mContent, &disabled);
-    successful = !disabled && (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
-  } else {
-    successful = PR_FALSE;
-  }
-  return successful;
-}
-
-PRInt32
-nsGfxButtonControlFrame::GetMaxNumValues() 
-{
-  PRInt32 type;
-  GetType(&type);
-  if ((NS_FORM_INPUT_SUBMIT == type) || (NS_FORM_INPUT_HIDDEN == type)) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-PRBool
-nsGfxButtonControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                     nsString* aValues, nsString* aNames)
-{
-  nsAutoString name;
-  nsresult result = GetName(&name);
-  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_HAS_VALUE != result)) {
-    return PR_FALSE;
-  }
-
-  PRInt32 type;
-  GetType(&type);
-
-  if (NS_FORM_INPUT_RESET == type) {
-    aNumValues = 0;
-    return PR_FALSE;
-  } else {
-    nsAutoString value;
-    GetValue(&value);
-    aValues[0] = value;
-    aNames[0]  = name;
-    aNumValues = 1;
-    return PR_TRUE;
-  }
-}
-
 nsresult
 NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -618,28 +561,6 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
     return skiprv;
   }
 #endif
-
-  PRInt32 type;
-  GetType(&type);
-  // hidden inputs are zero width/height and are finished here
-  if (NS_FORM_INPUT_HIDDEN == type) {
-    aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
-    if (aDesiredSize.maxElementSize) {
-      aDesiredSize.maxElementSize->width = aDesiredSize.maxElementSize->height = 0;
-    }
-    // just in case the hidden input is the target of an incremental reflow 
-    if (eReflowReason_Incremental == aReflowState.reason) {
-      nsIFrame* targetFrame;
-      aReflowState.reflowCommand->GetTarget(targetFrame);
-      if (this == targetFrame) {
-        nsIFrame* nextFrame;
-        // Remove the next frame from the reflow path
-        aReflowState.reflowCommand->GetNext(nextFrame); 
-      }
-    }
-    aStatus = NS_FRAME_COMPLETE;   
-    return rv;
-  }
 
   if ((kSuggestedNotSet != mSuggestedWidth) || 
       (kSuggestedNotSet != mSuggestedHeight)) {

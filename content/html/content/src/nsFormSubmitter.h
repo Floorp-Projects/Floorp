@@ -36,6 +36,8 @@ class nsIPresContext;
 class nsIUnicodeEncoder;
 class nsIDOMNode;
 class nsAString;
+class nsIDOMHTMLFormElement;
+class nsIAtom;
 
 class nsFormSubmitter {
 
@@ -90,6 +92,10 @@ protected:
   static nsresult GetPlatformEncoder(nsIUnicodeEncoder** encoder);
   static PRUint32 GetFileNameWithinPath(nsString& aPathName);
   static nsresult GetContentType(char* aPathName, char** aContentType);
+
+  static nsresult GetEnumAttr(nsIForm* form, nsIAtom* atom, PRInt32* aValue);
+  static nsresult FullyGetMethod(nsIForm* form, PRInt32* aMethod);
+  static nsresult FullyGetEnctype(nsIForm* form, PRInt32* aEnctype);
 
   // Detection of first form to notify observers
   static PRBool gFirstFormSubmitted;

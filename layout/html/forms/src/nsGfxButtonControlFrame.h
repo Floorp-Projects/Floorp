@@ -87,10 +87,6 @@ public:
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
-  PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
-  virtual PRInt32 GetMaxNumValues();
-  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                nsString* aValues, nsString* aNames);
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
  

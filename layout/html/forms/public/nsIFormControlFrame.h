@@ -42,7 +42,7 @@
 #include "nsFont.h"
 class nsFormFrame;
 class nsIPresContext;
-class nsString;
+class nsAString;
 class nsIContent;
 
 
@@ -63,22 +63,13 @@ public:
 
   NS_IMETHOD GetType(PRInt32* aType) const =  0;
 
-  NS_IMETHOD GetName(nsString* aName) = 0;
+  NS_IMETHOD GetName(nsAString* aName) = 0;
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE) = 0;
 
   virtual void ScrollIntoView(nsIPresContext* aPresContext) = 0;  
 
   virtual void MouseClicked(nsIPresContext* aPresContext) = 0;
-
-  virtual void Reset(nsIPresContext* aPresContext) = 0;
-
-  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter) = 0;
-
-  virtual PRInt32 GetMaxNumValues() = 0;
-
-  virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                 nsString* aValues, nsString* aNames) = 0;
 
   virtual void SetFormFrame(nsFormFrame* aFrame) = 0;
 
@@ -140,7 +131,10 @@ public:
 
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue) = 0; 
 
-  
+  /**
+   * Notification that the content has been reset
+   */
+  NS_IMETHOD OnContentReset() = 0;
 
 };
 

@@ -61,6 +61,9 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 #include "nsCExternalHandlerService.h"
 #include "nsICharsetAlias.h"
 #include "nsEscape.h"
+#include "nsISimpleEnumerator.h"
+#include "nsUnicharUtils.h"
+#include "nsICategoryManager.h"
 
 #include "nsIDOMNode.h"
 #include "nsRange.h"
@@ -85,6 +88,9 @@ static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 // JBK moved from nsFormFrame - bug 34297
 // submission
 
+PRBool nsFormSubmitter::gFirstFormSubmitted = PR_FALSE;
+
+// static
 nsresult
 nsFormSubmitter::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
 {
@@ -128,6 +134,7 @@ nsFormSubmitter::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
   return NS_OK;
 }
 
+// static
 nsresult
 nsFormSubmitter::OnSubmit(nsIForm* form,
                           nsIPresContext* aPresContext,
@@ -187,8 +194,8 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
            do_GetService(kFormProcessorCID, &rv);
 
   PRInt32 method, enctype;
-  form->FullyGetMethod(method);
-  form->FullyGetEnctype(enctype);
+  FullyGetMethod(form, &method);
+  FullyGetEnctype(form, &enctype);
 
   PRBool isURLEncoded = (NS_FORM_ENCTYPE_MULTIPART != enctype);
 
@@ -221,7 +228,10 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
   nsCOMPtr<nsILinkHandler> handler;
   if (NS_OK == aPresContext->GetLinkHandler(getter_AddRefs(handler))) {
     nsAutoString href;
-    form->FullyGetAction(href);
+    nsCOMPtr<nsIDOMHTMLFormElement> formDOMElement = do_QueryInterface(form);
+    if (formDOMElement) {
+      formDOMElement->GetAction(href);
+    }
 
     // Get the document.
     // We'll need it now to form the URL we're submitting to.
@@ -300,7 +310,9 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
     }
 
     nsAutoString target;
-    form->FullyGetTarget(target);
+    if (formDOMElement) {
+      formDOMElement->GetTarget(target);
+    }
 
     // Add the URI encoded form values to the URI
     // Get the scheme of the URI.
@@ -345,40 +357,48 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
     rv = NS_MakeAbsoluteURI(absURLSpec, href, docURL);
     if (NS_FAILED(rv)) return rv;
 
+    // If this is the first form, bring alive the first form submit
+    // category observers
+    if (!gFirstFormSubmitted) {
+      gFirstFormSubmitted = PR_TRUE;
+      NS_CreateServicesFromCategory(NS_FIRST_FORMSUBMIT_CATEGORY,
+                                    nsnull,
+                                    NS_FIRST_FORMSUBMIT_CATEGORY);
+    }
+
     // Notify observers that the form is being submitted.
     rv = NS_OK;
     nsCOMPtr<nsIObserverService> service =
              do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString  theTopic = NS_ConvertASCIItoUCS2(NS_FORMSUBMIT_SUBJECT);
-    nsCOMPtr<nsIEnumerator> theEnum;
-    rv = service->EnumerateObserverList(theTopic.get(),
-                                            getter_AddRefs(theEnum));
+    nsCOMPtr<nsISimpleEnumerator> theEnum;
+    rv = service->EnumerateObservers(NS_FORMSUBMIT_SUBJECT,
+                                     getter_AddRefs(theEnum));
     if (NS_SUCCEEDED(rv) && theEnum) {
       nsCOMPtr<nsISupports> inst;
+      // XXX What is cancelSubmit doing anyway?
       PRBool cancelSubmit = PR_FALSE;
 
       nsCOMPtr<nsIScriptGlobalObject> globalObject;
       document->GetScriptGlobalObject(getter_AddRefs(globalObject));
       nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(globalObject);
 
-      for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
-        nsresult gotObserver = NS_OK;
-        gotObserver = theEnum->CurrentItem(getter_AddRefs(inst));
-        if (NS_SUCCEEDED(gotObserver) && inst) {
-          nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver(
-                          do_QueryInterface(inst, &rv));
-          if (NS_SUCCEEDED(rv) && formSubmitObserver) {
-            nsCOMPtr<nsGenericElement> formElement = do_QueryInterface(form);
-            if (formElement) {
-              nsresult notifyStatus = formSubmitObserver->Notify(formElement,
-                                                                 window,
-                                                                 actionURL,
-                                                                 &cancelSubmit);
-              if (NS_FAILED(notifyStatus)) { // assert/warn if we get here?
-                return notifyStatus;
-              }
+      PRBool loop = PR_TRUE;
+      while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {
+        theEnum->GetNext(getter_AddRefs(inst));
+
+        nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver(
+                        do_QueryInterface(inst, &rv));
+        if (formSubmitObserver) {
+          nsCOMPtr<nsGenericElement> formElement = do_QueryInterface(form);
+          if (formElement) {
+            nsresult notifyStatus = formSubmitObserver->Notify(formElement,
+                                                               window,
+                                                               actionURL,
+                                                               &cancelSubmit);
+            if (NS_FAILED(notifyStatus)) { // assert/warn if we get here?
+              return notifyStatus;
             }
           }
         }
@@ -447,6 +467,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
 // JBK moved from nsFormFrame - bug 34297
 // Process form stuff without worrying about FILE elements
 #define CRLF "\015\012"
+// static
 nsresult
 nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form,
                                      nsIPresContext* aPresContext,
@@ -572,6 +593,7 @@ nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form,
   return rv;
 }
 
+// static
 nsresult
 nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
                                     nsIPresContext* aPresContext,
@@ -1075,6 +1097,7 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
 
 
 // JBK moved from nsFormFrame - bug 34297
+// static
 void
 nsFormSubmitter::GetSubmitCharset(nsIForm* form,
                                   nsAString& oCharset,
@@ -1160,6 +1183,7 @@ nsFormSubmitter::GetSubmitCharset(nsIForm* form,
 }
 
 // JBK moved from nsFormFrame - bug 34297
+// static
 nsresult
 nsFormSubmitter::GetEncoder(nsIForm* form,
                             nsIPresContext* aPresContext,
@@ -1180,6 +1204,8 @@ nsFormSubmitter::GetEncoder(nsIForm* form,
                                     (nsISupports**)&ccm);
   if (NS_SUCCEEDED(rv) && ccm) {
      nsString charset(aCharset);
+     if (charset.Equals(NS_LITERAL_STRING("ISO-8859-1")))
+       charset.Assign(NS_LITERAL_STRING("windows-1252"));
      rv = ccm->GetUnicodeEncoder(&charset, encoder);
      nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
      if (encoder) {
@@ -1196,6 +1222,7 @@ nsFormSubmitter::GetEncoder(nsIForm* form,
 }
 
 // XXX i18n helper routines
+// static
 nsString*
 nsFormSubmitter::URLEncode(const nsAString& aString,
                            nsIUnicodeEncoder* encoder,
@@ -1235,6 +1262,7 @@ nsFormSubmitter::URLEncode(const nsAString& aString,
 }
 
 // XXX i18n helper routines
+// static
 char*
 nsFormSubmitter::UnicodeToNewBytes(const PRUnichar* aSrc,
                                    PRUint32 aLen,
@@ -1321,6 +1349,7 @@ nsFormSubmitter::UnicodeToNewBytes(const PRUnichar* aSrc,
 }
 
 
+// static
 nsresult
 nsFormSubmitter::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
 {
@@ -1364,6 +1393,7 @@ nsFormSubmitter::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
 
 
 // return the filename without the leading directories (Unix basename)
+// static
 PRUint32
 nsFormSubmitter::GetFileNameWithinPath(nsString& aPathName)
 {
@@ -1385,6 +1415,7 @@ nsFormSubmitter::GetFileNameWithinPath(nsString& aPathName)
 }
 
 
+// static
 nsresult
 nsFormSubmitter::GetContentType(char* aPathName, char** aContentType)
 {
@@ -1418,3 +1449,39 @@ nsFormSubmitter::GetContentType(char* aPathName, char** aContentType)
   return NS_OK;
 }
 
+// static
+nsresult
+nsFormSubmitter::GetEnumAttr(nsIForm* form, nsIAtom* atom, PRInt32* aValue)
+{
+  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(form);
+  if (content) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+                    content->GetHTMLAttribute(atom, value)) {
+      if (eHTMLUnit_Enumerated == value.GetUnit()) {
+        (*aValue) = value.GetIntValue();
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// JBK moved from nsFormFrame - bug 34297
+// Get the Method, with proper defaults (for submit/reset)
+// static
+nsresult
+nsFormSubmitter::FullyGetMethod(nsIForm* form, PRInt32* aMethod)
+{
+  (*aMethod) = NS_FORM_METHOD_GET;
+  return GetEnumAttr(form, nsHTMLAtoms::method, aMethod);
+}
+
+// JBK moved from nsFormFrame - bug 34297
+// Get the Enctype, with proper defaults (for submit/reset)
+// static
+nsresult
+nsFormSubmitter::FullyGetEnctype(nsIForm* form, PRInt32* aEnctype)
+{
+  (*aEnctype) = NS_FORM_ENCTYPE_URLENCODED;
+  return GetEnumAttr(form, nsHTMLAtoms::enctype, aEnctype);
+}

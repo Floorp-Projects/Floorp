@@ -47,6 +47,8 @@
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 
+#include "nsISelectElement.h"
+#include "nsIDOMHTMLSelectElement.h"
 
 
 class nsHTMLOptGroupElement : public nsGenericHTMLContainerElement,
@@ -71,12 +73,25 @@ public:
   // nsIDOMHTMLOptGroupElement
   NS_DECL_NSIDOMHTMLOPTGROUPELEMENT
 
+  // nsIContent
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                           PRBool aDeepSetDocument);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
+                            PRBool aDeepSetDocument);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                           PRBool aDeepSetDocument);
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
+
+protected:
+
+  nsresult GetSelect(nsISelectElement **aSelectElement);
 };
 
 nsresult
@@ -175,9 +190,9 @@ nsHTMLOptGroupElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  rv = GetPrimaryFrame(this, formControlFrame);
-  nsIFrame* formFrame = nsnull;
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
+  nsIFrame* formFrame = nsnull;
   if (formControlFrame &&
       NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame),
                                                     (void **)&formFrame)) &&
@@ -208,3 +223,94 @@ nsHTMLOptGroupElement::SizeOf(nsISizeOfHandler* aSizer,
   return NS_OK;
 }
 #endif
+
+
+// Get the select content element that contains this option
+nsresult
+nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
+{
+  *aSelectElement = nsnull;
+  // Get the containing element (Either a select or an optGroup)
+  nsCOMPtr<nsIContent> parent;
+  nsCOMPtr<nsIContent> prevParent;
+  GetParent(*getter_AddRefs(parent));
+  while (parent) {
+    CallQueryInterface(parent, aSelectElement);
+    if (*aSelectElement) {
+      break;
+    }
+    prevParent = parent;
+    prevParent->GetParent(*getter_AddRefs(parent));
+  }
+
+  return NS_OK;
+}
+
+// nsIContent
+NS_IMETHODIMP
+nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
+                                     PRBool aDeepSetDocument)
+{
+  // Since we're appending, the relevant option index to add after is found
+  // *after* this optgroup.
+  nsCOMPtr<nsISelectElement> sel;
+  GetSelect(getter_AddRefs(sel));
+  if (sel) {
+    PRInt32 count;
+    ChildCount(count);
+    sel->WillAddOptions(aKid, this, count);
+  }
+
+  // Actually perform the append
+  return nsGenericHTMLContainerElement::AppendChildTo(aKid,
+                                                      aNotify,
+                                                      aDeepSetDocument);
+}
+
+NS_IMETHODIMP
+nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                                     PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsCOMPtr<nsISelectElement> sel;
+  GetSelect(getter_AddRefs(sel));
+  if (sel) {
+    sel->WillAddOptions(aKid, this, aIndex);
+  }
+
+  return nsGenericHTMLContainerElement::InsertChildAt(aKid,
+                                                      aIndex,
+                                                      aNotify,
+                                                      aDeepSetDocument);
+}
+
+NS_IMETHODIMP
+nsHTMLOptGroupElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                                      PRBool aNotify, PRBool aDeepSetDocument)
+{
+  nsCOMPtr<nsISelectElement> sel;
+  GetSelect(getter_AddRefs(sel));
+  if (sel) {
+    sel->WillRemoveOptions(this, aIndex);
+    sel->WillAddOptions(aKid, this, aIndex);
+  }
+
+  return nsGenericHTMLContainerElement::ReplaceChildAt(aKid,
+                                                       aIndex,
+                                                       aNotify,
+                                                       aDeepSetDocument);
+}
+
+NS_IMETHODIMP
+nsHTMLOptGroupElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
+{
+  nsCOMPtr<nsISelectElement> sel;
+  GetSelect(getter_AddRefs(sel));
+  if (sel) {
+    sel->WillRemoveOptions(this, aIndex);
+  }
+
+  nsresult rv = nsGenericHTMLContainerElement::RemoveChildAt(aIndex,
+                                                             aNotify);
+
+  return rv;
+}

@@ -123,11 +123,6 @@ public:
   /**
    *
    */
-  NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext) = 0;
-
-  /**
-   *
-   */
   NS_IMETHOD SetFrameConstructor(nsCSSFrameConstructor *aConstructor) = 0;
 
   /**

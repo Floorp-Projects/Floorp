@@ -829,7 +829,7 @@ nsFormControlHelper::PaintCheckMark(nsIRenderingContext& aRenderingContext,
 }
 
 nsresult
-nsFormControlHelper::GetName(nsIContent* aContent,nsString* aResult)
+nsFormControlHelper::GetName(nsIContent* aContent, nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
   if (nsnull != aContent) {
@@ -851,7 +851,7 @@ nsFormControlHelper::GetName(nsIContent* aContent,nsString* aResult)
 
 
 nsresult
-nsFormControlHelper::GetValue(nsIContent* aContent, nsString* aResult)
+nsFormControlHelper::GetValue(nsIContent* aContent, nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
   if (nsnull != aContent) {
@@ -1029,4 +1029,53 @@ void nsFormControlHelper::GetFormCompatibilityMode(nsIPresContext* aPresContext,
   } else {
     aCompatMode = eCompatibility_Standard;
   }
+}
+
+nsresult
+nsFormControlHelper::Reset(nsIFrame* aFrame, nsIPresContext* aPresContext)
+{
+  nsCOMPtr<nsIContent> controlContent;
+  aFrame->GetContent(getter_AddRefs(controlContent));
+
+  nsCOMPtr<nsIFormControl> control = do_QueryInterface(controlContent);
+  if (control) {
+    control->Reset();
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsFormControlHelper::SaveContentState(nsIFrame* aFrame,
+                                      nsIPresContext* aPresContext,
+                                      nsIPresState** aState)
+{
+  nsCOMPtr<nsIContent> controlContent;
+  aFrame->GetContent(getter_AddRefs(controlContent));
+
+  nsCOMPtr<nsIFormControl> control = do_QueryInterface(controlContent);
+  if (control) {
+    control->SaveState(aPresContext, aState);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsFormControlHelper::RestoreContentState(nsIFrame* aFrame,
+                                         nsIPresContext* aPresContext,
+                                         nsIPresState* aState)
+{
+  nsCOMPtr<nsIContent> controlContent;
+  aFrame->GetContent(getter_AddRefs(controlContent));
+
+  nsCOMPtr<nsIFormControl> control = do_QueryInterface(controlContent);
+  if (control) {
+    control->RestoreState(aPresContext, aState);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }

@@ -51,7 +51,7 @@ class nsIGfxTextControlFrame2 : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IGFXTEXTCONTROLFRAME2_IID; return iid; }
 
-	NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
+  NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
   
   NS_IMETHOD    GetTextLength(PRInt32* aTextLength) = 0;
   

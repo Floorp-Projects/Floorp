@@ -49,6 +49,10 @@ REQUIRES	= xpcom \
 		  editor \
 		  gfx2 \
 		  imglib2 \
+		  mimetype \
+		  exthandler \
+		  unicharutil \
+		  uconv \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -56,6 +60,7 @@ CPPSRCS		= \
 		nsGenericHTMLElement.cpp \
 		nsGenericDOMHTMLCollection.cpp \
 		GenericElementCollection.cpp \
+		nsFormSubmitter.cpp \
 		nsHTMLAnchorElement.cpp \
 		nsHTMLAppletElement.cpp \
 		nsHTMLAreaElement.cpp \

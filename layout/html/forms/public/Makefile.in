@@ -31,6 +31,7 @@ MODULE		= layout
 EXPORTS		= \
 		nsIFormManager.h \
 		nsIListControlFrame.h \
+		nsIImageControlFrame.h \
 		nsIComboboxControlFrame.h \
 		nsIFormControlFrame.h \
 		nsIRadioControlFrame.h \

@@ -57,14 +57,12 @@
 #include "nsIDOMNSHTMLOptionCollectn.h" 
 #include "nsIPresShell.h"
 #include "nsIPresState.h"
-#include "nsISupportsArray.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
 #include "nsIScrollableView.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMNode.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIStatefulFrame.h"
 #include "nsISupportsArray.h"
 #include "nsISelectControlFrame.h"
 #include "nsISupportsPrimitives.h"
@@ -341,19 +339,19 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
 
   if (aIID.Equals(NS_GET_IID(nsIComboboxControlFrame))) {
-    *aInstancePtr = (void*) ((nsIComboboxControlFrame*) this);
+    *aInstancePtr = (void*)(nsIComboboxControlFrame*)this;
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
-    *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
+    *aInstancePtr = (void*)(nsIFormControlFrame*)this;
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {                                         
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
+    *aInstancePtr = (void*)(nsIAnonymousContentCreator*)this;
     return NS_OK;   
   } else if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
     *aInstancePtr = (void *)(nsISelectControlFrame*)this;
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr = (void *)(nsIStatefulFrame*)this;
+    *aInstancePtr = (void*)(nsIStatefulFrame*)this;
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIRollupListener))) {
     *aInstancePtr = (void*)(nsIRollupListener*)this;
@@ -411,94 +409,30 @@ nsComboboxControlFrame::Init(nsIPresContext*  aPresContext,
   return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
 
-//--------------------------------------------------------------
-PRBool
-nsComboboxControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
-{
-  nsAutoString name;
-  PRBool disabled = PR_FALSE;
-  nsFormControlHelper::GetDisabled(mContent, &disabled);
-  return !disabled && (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
-}
-
-// If nothing is selected, and we have options, select item 0
-// This is a UI decision that goes against the HTML 4 spec.
-// See bugzilla bug 15841 for justification of this deviation.
-NS_IMETHODIMP
-nsComboboxControlFrame::MakeSureSomethingIsSelected(nsIPresContext* aPresContext)
-{
-  REFLOW_DEBUG_MSG("CBX::MakeSureSomethingIsSelected\n");
-
-  nsIFormControlFrame* fcFrame = nsnull;
-  nsresult rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
-  if (NS_SUCCEEDED(rv) && fcFrame) {
-    // If nothing selected, and there are options, default selection to item 0
-   rv = mListControlFrame->GetSelectedIndex(&mSelectedIndex);
-    if (NS_SUCCEEDED(rv) && (mSelectedIndex < 0)) {
-       // Find out if there are any options in the list to select
-      PRInt32 length = 0;
-      mListControlFrame->GetNumberOfOptions(&length);
-      if (length > 0) {
-         // Set listbox selection to first item in the list box
-        rv = fcFrame->SetProperty(aPresContext, nsHTMLAtoms::selectedindex, NS_ConvertASCIItoUCS2("0"));
-        mSelectedIndex = 0;
-      } else {
-        UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // Needed to reflow when removing last option
-      }
-    }
-    
-    // Don't NS_RELEASE fcFrame here as it isn't addRef'd in the QI (???)
-  }
-  return rv;
-}  
-
 // Initialize the text string in the combobox using either the current
 // selection in the list box or the first item item in the list box.
 void 
-nsComboboxControlFrame::InitTextStr(nsIPresContext* aPresContext, PRBool aUpdate)
+nsComboboxControlFrame::InitTextStr()
 {
-  MakeSureSomethingIsSelected(aPresContext);
-
+  PRInt32 selectedIndex;
+  mListControlFrame->GetSelectedIndex(&selectedIndex);
   // Update the selected text string
-  mListControlFrame->GetSelectedItem(mTextStr);
+  if (selectedIndex == -1) {
+    mListControlFrame->GetOptionText(0, mTextStr);
+  } else {
+    mListControlFrame->GetOptionText(selectedIndex, mTextStr);
+  }
 
-   // Update the display by setting the value attribute
-  mDisplayContent->SetText(mTextStr.get(), mTextStr.Length(), aUpdate);
+  // Update the display by setting the value attribute
+  mDisplayContent->SetText(mTextStr.get(), mTextStr.Length(), PR_FALSE);
 }
+
 
 //--------------------------------------------------------------
-
-// Reset the combo box back to it original state.
-
-void 
-nsComboboxControlFrame::Reset(nsIPresContext* aPresContext)
-{
-  if (mPresState) {
-    nsIStatefulFrame* sFrame = nsnull;
-    nsresult res = mListControlFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame),
-                                                     (void**)&sFrame);
-    if (NS_SUCCEEDED(res) && sFrame) {
-      res = sFrame->RestoreState(mPresContext, mPresState);
-      NS_RELEASE(sFrame);
-    }
-    mPresState = do_QueryInterface(nsnull);
-  }
-
-   // Reset the dropdown list to its original state
-  nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
-  if ((NS_OK == result) && (nsnull != fcFrame)) {
-    fcFrame->Reset(aPresContext); 
-  }
- 
-    // Update the combobox using the text string returned from the dropdown list
-  InitTextStr(aPresContext, PR_TRUE);
-}
-
 void 
 nsComboboxControlFrame::InitializeControl(nsIPresContext* aPresContext)
 {
-  Reset(aPresContext);
+  nsFormControlHelper::Reset(this, aPresContext);
 }
 
 //--------------------------------------------------------------
@@ -1703,7 +1637,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     // Reflow the dropdown list to match the width of the display + button
     ReflowComboChildFrame(mDropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, 
                           aDesiredSize.width, NS_UNCONSTRAINEDSIZE);
-    lcf->SetPassId(0); // reset it back
+    lcf->SetPassId(0);
   }
 
 #else  // DO_NEW_REFLOW
@@ -1789,7 +1723,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
 //--------------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::GetName(nsString* aResult)
+nsComboboxControlFrame::GetName(nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
   if (mContent) {
@@ -1807,44 +1741,6 @@ nsComboboxControlFrame::GetName(nsString* aResult)
     }
   }
   return result;
-}
-
-PRInt32 
-nsComboboxControlFrame::GetMaxNumValues()
-{
-  return 1;
-}
-  
-/*XXX-REMOVE
-PRBool
-nsComboboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                   nsString* aValues, nsString* aNames)
-{
-  nsAutoString name;
-  nsresult result = GetName(&name);
-  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_HAS_VALUE != result)) {
-    return PR_FALSE;
-  }
-
-  // use our name and the text widgets value 
-  aNames[0] = name;
-  aValues[0] = mTextStr;
-  aNumValues = 1;
-  nsresult status = PR_TRUE;
-  return status;
-}
-*/
-
-PRBool
-nsComboboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                     nsString* aValues, nsString* aNames)
-{
-  nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
-  if ((NS_SUCCEEDED(result)) && (nsnull != fcFrame)) {
-    return fcFrame->GetNamesValues(aMaxNumValues, aNumValues, aValues, aNames);
-  }
-  return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -1933,16 +1829,7 @@ nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
   mDropdownFrame = aDropDownFrame;
  
   if (NS_OK != mDropdownFrame->QueryInterface(NS_GET_IID(nsIListControlFrame), (void**)&mListControlFrame)) {
-
     return NS_ERROR_FAILURE;
-  }
-
-  // The ListControlFrame was just created and added to the comboxbox
-  // so provide it with a PresState so it can restore itself
-  // when it does its first "Reset"
-  if (mPresState) {
-    mListControlFrame->SetPresState(mPresState);
-    mPresState = do_QueryInterface(nsnull);
   }
 
   return NS_OK;
@@ -1991,9 +1878,10 @@ NS_IMETHODIMP
 nsComboboxControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex)
 {
   if (mListControlFrame) {
-     // Check to see if the selection changed
+    // Check to see if the selection changed
     if (mSelectedIndex != aNewIndex || aForceUpdate) {
-      mListControlFrame->GetSelectedItem(mTextStr); // Update text box
+      mListControlFrame->GetOptionText(aNewIndex, mTextStr);
+      SelectionChanged();
 
       // Fix for Bug 42661 (remove comment later)
 #ifdef DO_REFLOW_DEBUG
@@ -2002,9 +1890,7 @@ nsComboboxControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUp
       delete [] str;
 #endif
       mSelectedIndex = aNewIndex;
-      mListControlFrame->UpdateSelection(aDoDispatchEvent, aForceUpdate, mContent);
-    } else {
-      mSelectedIndex = aNewIndex;
+      mListControlFrame->UpdateSelection();
     }
   }
 
@@ -2075,9 +1961,9 @@ nsComboboxControlFrame::SelectionChanged()
       rv = mPresContext->GetShell(getter_AddRefs(shell));
       ReflowDirtyChild(shell, (nsIFrame*) mDisplayFrame);
 
-      nsCOMPtr<nsIPresShell> presShell;
-      mPresContext->GetShell(getter_AddRefs(presShell));
-      presShell->FlushPendingNotifications(PR_FALSE);
+//      nsCOMPtr<nsIPresShell> presShell;
+//      mPresContext->GetShell(getter_AddRefs(presShell));
+//      presShell->FlushPendingNotifications(PR_FALSE);
     }
   }
   return rv;
@@ -2137,19 +2023,6 @@ nsComboboxControlFrame::RemoveOption(nsIPresContext* aPresContext, PRInt32 aInde
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
-{
-  nsISelectControlFrame* listFrame = nsnull;
-  nsresult rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
-                                              (void**)&listFrame);
-  if (NS_SUCCEEDED(rv) && listFrame) {
-    rv = listFrame->SetOptionSelected(aIndex, aValue);
-    NS_RELEASE(listFrame);
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
 {
   nsISelectControlFrame* listFrame = nsnull;
@@ -2162,18 +2035,42 @@ nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
   return rv;
 }
 
+//---------------------------------------------------------
+// Used by layout to determine if we have a fake option
 NS_IMETHODIMP
-nsComboboxControlFrame::OptionDisabled(nsIContent * aContent)
+nsComboboxControlFrame::GetDummyFrame(nsIFrame** aFrame)
 {
-  nsISelectControlFrame* listFrame = nsnull;
-  nsresult rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
-                                              (void**)&listFrame);
-  if (NS_SUCCEEDED(rv) && listFrame) {
-    rv = listFrame->OptionDisabled(aContent);
-    NS_RELEASE(listFrame);
+  nsISelectControlFrame* listFrame;
+  NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
+
+  CallQueryInterface(mDropdownFrame, &listFrame);
+  NS_ASSERTION(listFrame, "No list frame!");
+
+  if (listFrame) {
+    listFrame->GetDummyFrame(aFrame);
   }
-  return rv;
+
+  return NS_OK;
 }
+
+NS_IMETHODIMP
+nsComboboxControlFrame::SetDummyFrame(nsIFrame* aFrame)
+{
+  nsISelectControlFrame* listFrame;
+  NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
+
+  CallQueryInterface(mDropdownFrame, &listFrame);
+  NS_ASSERTION(listFrame, "No list frame!");
+
+  if (listFrame) {
+    listFrame->SetDummyFrame(aFrame);
+  }
+
+  return NS_OK;
+}
+
+// End nsISelectControlFrame
+//----------------------------------------------------------------------
 
 NS_IMETHODIMP 
 nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext, 
@@ -2511,7 +2408,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
     mPopupFrames.SetFrames(aChildList);
   } else {
     rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    InitTextStr(aPresContext, PR_FALSE);
+    InitTextStr();
 
     nsIFrame * child = aChildList;
     while (child != nsnull) {
@@ -2573,40 +2470,6 @@ nsComboboxControlFrame::Rollup()
     mListControlFrame->CaptureMouseEvents(mPresContext, PR_FALSE);
   }
   return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// nsIStatefulFrame
-// XXX Do we need to implement this here?  It is already implemented in
-//     the ListControlFrame, our child...
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
-{
-  if (!mListControlFrame) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // The ListControlFrame ignores requests to Save its state 
-  // when it is owned by a combobox
-  // so we call the internal SaveState here
-  return mListControlFrame->SaveStateInternal(aPresContext, aState);
-
-}
-
-NS_IMETHODIMP
-nsComboboxControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
-{
-  // The ListControlFrame ignores requests to Restore its state 
-  // when it is owned by a combobox
-  // so we cache it here if the frame hasn't been created yet
-  // or we call the internal RestoreState here
-  if (!mListControlFrame) {
-    mPresState = aState;
-    return NS_OK;
-  }
-
-  return mListControlFrame->RestoreStateInternal(aPresContext, aState);
 }
 
 NS_METHOD 
@@ -2706,3 +2569,55 @@ nsComboboxControlFrame::GetScrollableView(nsIScrollableView** aView)
   return NS_OK;
 }
 
+//---------------------------------------------------------
+// gets the content (an option) by index and then set it as
+// being selected or not selected
+//---------------------------------------------------------
+NS_IMETHODIMP
+nsComboboxControlFrame::OnOptionSelected(nsIPresContext* aPresContext,
+                                         PRInt32 aIndex,
+                                         PRBool aSelected)
+{
+  if (aSelected && !mDroppedDown) {
+    mListControlFrame->GetOptionText(aIndex, mTextStr);
+    SelectionChanged();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsComboboxControlFrame::OnContentReset()
+{
+  if (mListControlFrame) {
+    nsCOMPtr<nsIFormControlFrame> formControl =
+      do_QueryInterface(mListControlFrame);
+    formControl->OnContentReset();
+  }
+  return NS_OK;
+}
+
+
+//--------------------------------------------------------
+// nsIStatefulFrame
+//--------------------------------------------------------
+NS_IMETHODIMP
+nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext,
+                                  nsIPresState** aState)
+{
+  nsCOMPtr<nsIStatefulFrame> stateful(do_QueryInterface(mListControlFrame));
+  if (stateful) {
+    return stateful->SaveState(aPresContext, aState);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsComboboxControlFrame::RestoreState(nsIPresContext* aPresContext,
+                                     nsIPresState* aState)
+{
+  nsCOMPtr<nsIStatefulFrame> stateful(do_QueryInterface(mListControlFrame));
+  if (stateful) {
+    return stateful->RestoreState(aPresContext, aState);
+  }
+  return NS_OK;
+}

@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
+#include "nsIImageControlFrame.h"
 #include "nsImageFrame.h"
 #include "nsFormControlHelper.h"
 #include "nsIFormControlFrame.h"
@@ -78,7 +79,8 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
 #define nsImageControlFrameSuper nsImageFrame
 class nsImageControlFrame : public nsImageControlFrameSuper,
-                            public nsIFormControlFrame 
+                            public nsIFormControlFrame,
+                            public nsIImageControlFrame
 {
 public:
   nsImageControlFrame();
@@ -122,18 +124,9 @@ public:
 
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
 
-  PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
-
-  virtual PRInt32 GetMaxNumValues();
-
-  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                nsString* aValues, nsString* aNames);
-
   NS_IMETHOD GetType(PRInt32* aType) const;
 
-  NS_IMETHOD GetName(nsString* aName);
-
-  virtual void Reset(nsIPresContext*) {};
+  NS_IMETHOD GetName(nsAString* aName);
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
   void ScrollIntoView(nsIPresContext* aPresContext);
@@ -156,6 +149,11 @@ public:
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD OnContentReset();
+
+  // nsIImageControlFrame
+  NS_IMETHOD GetClickedX(PRInt32* aX);
+  NS_IMETHOD GetClickedY(PRInt32* aY);
 
 protected:
   void GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect); // XXX this implementation is a copy of nsHTMLButtonControlFrame
@@ -225,6 +223,10 @@ nsImageControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
   } 
+  if (aIID.Equals(NS_GET_IID(nsIImageControlFrame))) {
+    *aInstancePtr = (void*) ((nsIImageControlFrame*) this);
+    return NS_OK;
+  }
 
   return nsImageControlFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
@@ -403,62 +405,13 @@ nsImageControlFrame::GetType(PRInt32* aType) const
 }
 
 NS_IMETHODIMP
-nsImageControlFrame::GetName(nsString* aResult)
+nsImageControlFrame::GetName(nsAString* aResult)
 {
   if (nsnull == aResult) {
     return NS_OK;
   } else {
     return nsFormFrame::GetName(this, *aResult);
   }
-}
-
-PRBool
-nsImageControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
-{
-  // Image control will only add it's value if it is clicked on.
-  // XXX Is this right?
-  return (this == (aSubmitter));
-}
-
-PRInt32
-nsImageControlFrame::GetMaxNumValues() 
-{
-  return 2;
-}
-
-
-PRBool
-nsImageControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                     nsString* aValues, nsString* aNames)
-{
-  if (aMaxNumValues <= 0) {
-    return PR_FALSE;
-  }
-
-  char buf[20];
-  aNumValues = 2;
-
-  sprintf(&buf[0], "%d", mLastClickPoint.x);
-  aValues[0].AssignWithConversion(&buf[0]);
-
-  sprintf(&buf[0], "%d", mLastClickPoint.y);
-  aValues[1].AssignWithConversion(&buf[0]);
-
-  nsAutoString name;
-  nsresult result = GetName(&name);
-  if (NS_CONTENT_ATTR_HAS_VALUE == result && (name.Length() > 0)) {
-    aNames[0] = name;
-    aNames[0].AppendWithConversion(".x");
-    aNames[1] = name;
-    aNames[1].AppendWithConversion(".y");
-  } else {
-    // If the Image Element has no name, simply return x and y
-    // to Nav and IE compatability.
-    aNames[0].AssignWithConversion("x");
-    aNames[1].AssignWithConversion("y");
-  }
-
-  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -553,3 +506,22 @@ NS_IMETHODIMP nsImageControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHei
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImageControlFrame::OnContentReset()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageControlFrame::GetClickedX(PRInt32* aX)
+{
+  *aX = mLastClickPoint.x;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageControlFrame::GetClickedY(PRInt32* aY)
+{
+  *aY = mLastClickPoint.y;
+  return NS_OK;
+}

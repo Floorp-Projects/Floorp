@@ -21,8 +21,9 @@
 
 DEPTH=..\..\..\.. 
 
-EXPORTS=nsIFormControl.h nsIForm.h nsILink.h  \
-	nsISelectElement.h nsIScriptElement.h nsIBodySuper.h
+EXPORTS=nsIFormControl.h nsIForm.h nsILink.h nsIOptionElement.h  \
+	nsISelectElement.h nsIScriptElement.h nsIBodySuper.h \
+	nsITextControlElement.h
 
 MODULE=content 
 

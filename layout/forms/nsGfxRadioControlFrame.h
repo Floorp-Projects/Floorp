@@ -103,15 +103,10 @@ public:
                         nsIRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect);
 
-  virtual PRInt32 GetMaxNumValues() { return 1; }
-  
-  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                nsString* aValues, nsString* aNames);
-  virtual void Reset(nsIPresContext* aPresContext);
-
        // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
+  NS_IMETHOD OnContentReset();
 
   //nsIStatefulFrame
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);

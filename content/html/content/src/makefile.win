@@ -44,6 +44,10 @@ REQUIRES	= xpcom \
 		  layout \
 		  gfx \
 		  content_xul \
+		  mimetype \
+		  exthandler \
+		  unicharutil \
+		  uconv \
 		  $(NULL)
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 !if defined(XP_NEW_SELECTION)
@@ -61,6 +65,7 @@ CPPSRCS=				\
 	nsGenericHTMLElement.cpp	\
 	nsGenericDOMHTMLCollection.cpp	\
 	GenericElementCollection.cpp    \
+	nsFormSubmitter.cpp             \
 	nsHTMLAnchorElement.cpp		\
 	nsHTMLAppletElement.cpp		\
 	nsHTMLAreaElement.cpp		\
@@ -122,6 +127,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsGenericHTMLElement.obj		\
 	.\$(OBJDIR)\nsGenericDOMHTMLCollection.obj	\
 	.\$(OBJDIR)\GenericElementCollection.obj    	\
+	.\$(OBJDIR)\nsFormSubmitter.obj                 \
 	.\$(OBJDIR)\nsHTMLAnchorElement.obj		\
 	.\$(OBJDIR)\nsHTMLAppletElement.obj		\
 	.\$(OBJDIR)\nsHTMLAreaElement.obj		\

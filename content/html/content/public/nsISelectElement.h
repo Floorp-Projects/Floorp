@@ -46,6 +46,8 @@
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
 
 class nsIDOMHTMLOptionElement;
+class nsIPresContext;
+class nsIPresState;
 
 /** 
  * This interface is used to notify a SELECT when OPTION
@@ -58,6 +60,21 @@ class nsISelectElement : public nsISupports {
 public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISELECTELEMENT_IID)
+
+  /**
+   * To be called when stuff is added under a child of
+   * the select--but *before* they are actually added.
+   */
+  NS_IMETHOD WillAddOptions(nsIContent* aOptions,
+                            nsIContent* aParent,
+                            PRInt32 aContentIndex) = 0;
+
+  /**
+   * To be called when stuff is removed under a child of
+   * the select--but *before* they are actually removed.
+   */
+  NS_IMETHOD WillRemoveOptions(nsIContent* aParent,
+                               PRInt32 aContentIndex) = 0;
 
   /**
    * An OPTION element has been added to the SELECT's
@@ -86,13 +103,42 @@ public:
   /**
   * Returns whether we're the option is selected
   */
-  NS_IMETHOD IsOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool * aIsSelected) = 0;
+  NS_IMETHOD IsOptionSelected(nsIDOMHTMLOptionElement* anOption,
+                              PRBool* aIsSelected) = 0;
 
   /**
   * Sets an option selected or delselected
   */
-  NS_IMETHOD SetOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool aIsSelected) = 0;
+  NS_IMETHOD SetOptionSelected(nsIDOMHTMLOptionElement* anOption,
+                               PRBool aIsSelected) = 0;
 
+  /**
+   * Checks whether an option is disabled (even if it's part of an optgroup)
+   */
+  NS_IMETHOD IsOptionDisabled(PRInt32 aIndex, PRBool* aIsDisabled) = 0;
+
+  /**
+  * Sets multiple options (or just sets startIndex if select is single)
+  */
+  NS_IMETHOD SetOptionsSelectedByIndex(PRInt32 aStartIndex,
+                                       PRInt32 aEndIndex,
+                                       PRBool aIsSelected,
+                                       PRBool aClearAll,
+                                       PRBool aSetDisabled,
+                                       PRBool* aChangedSomething) = 0;
+
+  /**
+  * Called when an option is disabled
+  */
+  NS_IMETHOD OnOptionDisabled(nsIDOMHTMLOptionElement* anOption) = 0;
+
+  /**
+   * Called to save/restore to/from pres. state
+   */
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext,
+                       nsIPresState** aState) = 0;
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext,
+                          nsIPresState* aState) = 0;
 };
 
 #endif // nsISelectElement_h___

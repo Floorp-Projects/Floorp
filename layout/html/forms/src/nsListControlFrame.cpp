@@ -66,8 +66,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIStatefulFrame.h"
-#include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsILookAndFeel.h"
@@ -241,8 +239,7 @@ public:
 
   nsSelectUpdateTimer()
       : mPresContext(nsnull), mDelay(0), mHasBeenNotified(PR_FALSE), 
-        mItemsAdded(PR_FALSE), mItemsRemoved(PR_FALSE), mItemsInxSet(PR_FALSE),
-        mRemovedSelectedIndex(PR_FALSE)
+        mItemsAdded(PR_FALSE), mItemsRemoved(PR_FALSE), mItemsInxSet(PR_FALSE)
   {
     NS_INIT_ISUPPORTS();
   }
@@ -279,7 +276,6 @@ public:
       mItemsRemoved    = PR_FALSE;
       mItemsInxSet     = PR_FALSE;
       mHasBeenNotified = PR_FALSE;
-      mRemovedSelectedIndex = PR_FALSE;
       mInxArray.Clear();
     }
 
@@ -331,8 +327,6 @@ public:
   }
 
   PRPackedBool HasBeenNotified()      { return mHasBeenNotified; }
-  void SetRemovedSelectedIndex()      { mRemovedSelectedIndex = PR_TRUE; }
-  PRPackedBool RemovedSelectedIndex() { return mRemovedSelectedIndex; }
 
 private:
   nsListControlFrame * mListControl;
@@ -344,7 +338,6 @@ private:
   PRPackedBool         mItemsAdded;
   PRPackedBool         mItemsRemoved;
   PRPackedBool         mItemsInxSet;
-  PRPackedBool         mRemovedSelectedIndex;
   nsVoidArray          mInxArray;
 
 };
@@ -397,18 +390,13 @@ nsSelectUpdateTimer::~nsSelectUpdateTimer()
 nsListControlFrame::nsListControlFrame()
   : mWeakReferent(this)
 {
-  mSelectedIndex      = kNothingSelected;
   mComboboxFrame      = nsnull;
   mFormFrame          = nsnull;
   mButtonDown         = PR_FALSE;
   mMaxWidth           = 0;
   mMaxHeight          = 0;
   mPresContext        = nsnull;
-  mEndExtendedIndex   = kNothingSelected;
-  mStartExtendedIndex = kNothingSelected;
   mIsCapturingMouseEvents = PR_FALSE;
-  mDelayedIndexSetting = kNothingSelected;
-  mDelayedValueSetting = PR_FALSE;
 
   mIsAllContentHere   = PR_FALSE;
   mIsAllFramesHere    = PR_FALSE;
@@ -428,6 +416,7 @@ nsListControlFrame::nsListControlFrame()
   mPassId                      = 0;
 
   mUpdateTimer                 = nsnull;
+  mDummyFrame                  = nsnull;
 
   REFLOW_COUNTER_INIT()
 }
@@ -481,7 +470,6 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
                           nsFramePaintLayer    aWhichLayer,
                           PRUint32             aFlags)
 {
-  nsIStyleContext* sc = mStyleContext;
   const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
       
@@ -704,7 +692,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       if (optionElement) {
         nsAutoString text;
         rv = optionElement->GetLabel(text);
-        if (NS_CONTENT_ATTR_HAS_VALUE != rv || 0 == text.Length()) {
+        if (NS_CONTENT_ATTR_HAS_VALUE != rv || text.IsEmpty()) {
           if (NS_OK != optionElement->GetText(text)) {
             text = "No Value";
           }
@@ -719,11 +707,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 #endif // DEBUG_rodsXXX
 
 
-  if (mDelayedIndexSetting != kNothingSelected) {
-    SetOptionSelected(mDelayedIndexSetting, mDelayedValueSetting);
-    mDelayedIndexSetting = kNothingSelected;
-  }
-
   // If all the content and frames are here 
   // then initialize it before reflow
     if (mIsAllContentHere && !mHasBeenInitialized) {
@@ -732,7 +715,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       }
       if (mIsAllFramesHere && !mHasBeenInitialized) {
         mHasBeenInitialized = PR_TRUE;
-        ResetList(aPresContext);
       }
     }
 
@@ -746,10 +728,11 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         // an incremental reflow comes through the list gets scrolled to the first selected item
         // I haven't been able to make it do it, but it will do it
         // basically the real solution is to know when all the reframes are there.
-        nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
-        if (content) {
-          ScrollToFrame(content);
+        PRInt32 selectedIndex = mEndSelectionIndex;
+        if (selectedIndex == kNothingSelected) {
+          GetSelectedIndex(&selectedIndex);
         }
+        ScrollToIndex(selectedIndex);
       }
     }
 
@@ -770,10 +753,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Add the list frame as a child of the form
   if (eReflowReason_Initial == aReflowState.reason) {
-    if (mPresState) {
-      RestoreState(aPresContext, mPresState);
-      mPresState = do_QueryInterface(nsnull);
-    }
     if (IsInDropDownMode() == PR_FALSE && !mFormFrame) {
       nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
       nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
@@ -1070,7 +1049,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
 #ifdef IBMBIDI
-  nsRect parentRect, thisRect;
   // Retrieve the scrollbar's width and height
   float sbWidth  = 0.0;
   float sbHeight = 0.0;;
@@ -1214,70 +1192,6 @@ nsListControlFrame::IsOptionElement(nsIContent* aContent)
 
 
 //---------------------------------------------------------
-PRBool 
-nsListControlFrame::IsOptionElementFrame(nsIFrame *aFrame)
-{
-  PRBool result = PR_FALSE;
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  if (content) {
-    result = IsOptionElement(content);
-  }
-  return result;
-}
-
-
-//---------------------------------------------------------
-// Go up the frame tree looking for the first ancestor that has content
-// which is selectable
-
-nsIFrame *
-nsListControlFrame::GetSelectableFrame(nsIFrame *aFrame)
-{
-  nsIFrame* selectedFrame = aFrame;
-  
-  while ((nsnull != selectedFrame) && 
-         (PR_FALSE ==IsOptionElementFrame(selectedFrame))) {
-      selectedFrame->GetParent(&selectedFrame);
-  }  
-
-  return(selectedFrame);  
-}
-
-//---------------------------------------------------------
-void 
-nsListControlFrame::ForceRedraw(nsIPresContext* aPresContext) 
-{
-  //XXX: Hack. This should not be needed. The problem is DisplaySelected
-  //and DisplayDeselected set and unset an attribute on generic HTML content
-  //which does not know that it should repaint as the result of the attribute
-  //being set. This should not be needed once the event state manager handles
-  //selection.
-  nsFormControlHelper::ForceDrawFrame(aPresContext, this);
-}
-
-
-//---------------------------------------------------------
-// XXX: Here we introduce a new -moz-option-selected attribute so a attribute
-// selecitor n the ua.css can change the style when the option is selected.
-
-void 
-nsListControlFrame::DisplaySelected(nsIContent* aContent) 
-{
-  // ignore return value, not much we can do if it fails
-  aContent->SetAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, nsAutoString(), mIsAllFramesHere);
-}
-
-//---------------------------------------------------------
-void 
-nsListControlFrame::DisplayDeselected(nsIContent* aContent) 
-{
-  // ignore return value, not much we can do if it fails
-  aContent->UnsetAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, mIsAllFramesHere);
-}
-
-
-//---------------------------------------------------------
 // Starts at the passed in content object and walks up the 
 // parent heierarchy looking for the nsIDOMHTMLOptionElement
 //---------------------------------------------------------
@@ -1302,266 +1216,115 @@ nsListControlFrame::GetOptionFromContent(nsIContent *aContent)
 // of option elements
 //---------------------------------------------------------
 PRInt32 
-nsListControlFrame::GetSelectedIndexFromContent(nsIContent *aContent) 
+nsListControlFrame::GetIndexFromContent(nsIContent *aContent)
 {
-  // Search the list of option elements looking for a match
-  // between the hit frame's content and the content of an option element
-
-  // get the collection of option items
-  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
-  if (options) {
-    PRUint32 numOptions;
-    options->GetLength(&numOptions);
-
-    PRUint32 inx;
-    for (inx = 0; inx < numOptions; inx++) {
-      nsIContent * option = GetOptionAsContent(options, inx);
-      if (option != nsnull) {
-        if (option == aContent) {
-          NS_RELEASE(option);
-          return inx;
-        }
-        NS_RELEASE(option);
-      }
+  nsCOMPtr<nsIDOMHTMLOptionElement> option;
+  option = do_QueryInterface(aContent);
+  if (option) {
+    PRInt32 retval;
+    option->GetIndex(&retval);
+    if (retval >= 0) {
+      return retval;
     }
   }
   return kNothingSelected;
 }
 
 //---------------------------------------------------------
-// Finds the index of the hit frame's content in the list
-// of option elements
-//---------------------------------------------------------
-PRInt32 
-nsListControlFrame::GetSelectedIndexFromFrame(nsIFrame *aHitFrame) 
+void
+nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex,
+                                      PRInt32 aEndIndex,
+                                      PRBool aClearAll)
 {
-  NS_ASSERTION(aHitFrame, "No frame for html <select> element\n");  
-
-  PRInt32 indx = kNothingSelected;
-  // Get the content of the frame that was selected
-  if (aHitFrame) {
-    nsCOMPtr<nsIContent> selectedContent;
-    aHitFrame->GetContent(getter_AddRefs(selectedContent));
-    if (selectedContent) {
-      indx = GetSelectedIndexFromContent(selectedContent);
-    }
-  }
-  return indx;
-}
-
-
-//---------------------------------------------------------
-void 
-nsListControlFrame::ClearSelection()
-{
-  PRInt32 length = 0;
-  GetNumberOfOptions(&length);
-  for (PRInt32 i = 0; i < length; i++) {
-    if (i != mSelectedIndex) {
-      SetContentSelected(i, PR_FALSE);
-    } 
-  }
+  SetOptionsSelectedFromFrame(aStartIndex, aEndIndex, PR_TRUE, aClearAll);
 }
 
 //---------------------------------------------------------
 void 
-nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue)
+nsListControlFrame::SingleSelection(PRInt32 aSelectedIndex, PRBool aDoToggle)
 {
-  PRInt32 startInx;
-  PRInt32 endInx;
-
-  if (aStartIndex < aEndIndex) {
-    startInx = aStartIndex;
-    endInx   = aEndIndex;
+  // Get Current selection
+  if (aDoToggle) {
+    ToggleOptionSelectedFromFrame(aSelectedIndex);
   } else {
-    startInx = aEndIndex;
-    endInx   = aStartIndex;
+    SetOptionsSelectedFromFrame(aSelectedIndex, aSelectedIndex,
+                                PR_TRUE, PR_TRUE);
   }
-
-  PRInt32 i = 0;
-  PRBool startInverting = PR_FALSE;
-
-  PRInt32 length = 0;
-  GetNumberOfOptions(&length);
-  for (i = 0; i < length; i++) {
-    if (i == startInx) {
-      startInverting = PR_TRUE;
-    }
-    if (startInverting && ((i != mStartExtendedIndex && aDoInvert) || !aDoInvert)) {
-      if (aDoInvert) {
-        SetContentSelected(i, !IsContentSelectedByIndex(i));
-      } else {
-        SetContentSelected(i, aSetValue);
-      }
-    }
-    if (i == endInx) {
-      startInverting = PR_FALSE;
-    }
-  }
+  ScrollToIndex(aSelectedIndex);
+  mStartSelectionIndex = aSelectedIndex;
+  mEndSelectionIndex = aSelectedIndex;
+  mChangesNotNotified = PR_TRUE;
 }
 
 //---------------------------------------------------------
-void 
-nsListControlFrame::SingleSelection()
+void
+nsListControlFrame::PerformSelection(PRInt32 aSelectedIndex,
+                                     PRBool aIsShift,
+                                     PRBool aIsControl)
 {
-   // Get Current selection
-  if (mSelectedIndex != kNothingSelected) {
-    if (mOldSelectedIndex != mSelectedIndex) {
-        // Deselect the previous selection if there is one
-      if (mOldSelectedIndex != kNothingSelected) {
-        SetContentSelected(mOldSelectedIndex, PR_FALSE);
-      }
-        // Display the new selection
-      SetContentSelected(mSelectedIndex, PR_TRUE);
-    } else {
-      // Selecting the currently selected item so do nothing.
-    }
-  }
-}
+  PRBool isMultiple;
+  GetMultiple(&isMultiple);
 
-//---------------------------------------------------------
-void 
-nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
-{
-  if (kNothingSelected != mSelectedIndex) {
-    //if ((aIsShift) || (mButtonDown && (!aIsControl))) {
+  if (kNothingSelected == aSelectedIndex) {
+  } else if (isMultiple) {
     if (aIsShift) {
-        // Shift is held down
-      SetContentSelected(mSelectedIndex, PR_TRUE);
-      if (mEndExtendedIndex == kNothingSelected) {
-        if (mOldSelectedIndex == kNothingSelected) {
-          mStartExtendedIndex = mSelectedIndex;
-          mEndExtendedIndex   = kNothingSelected;
-        } else {
-          if (mSelectedIndex == mOldSelectedIndex) {
-            mEndExtendedIndex = kNothingSelected;
-          } else {
-            mEndExtendedIndex = mSelectedIndex;
-          }
-          ExtendedSelection(mStartExtendedIndex, mEndExtendedIndex, PR_FALSE, PR_TRUE);
-        }
+      // Get the range from beginning (low) to end (high)
+      // Shift *always* works, even if the current option is disabled
+      PRInt32 startIndex;
+      PRInt32 endIndex;
+      if (mStartSelectionIndex == kNothingSelected) {
+        startIndex = aSelectedIndex;
+        endIndex   = aSelectedIndex;
+      } else if (mStartSelectionIndex <= aSelectedIndex) {
+        startIndex = mStartSelectionIndex;
+        endIndex   = aSelectedIndex;
       } else {
-        if (mStartExtendedIndex < mEndExtendedIndex) {
-          if (mSelectedIndex < mStartExtendedIndex) {
-            ExtendedSelection(mSelectedIndex+1, mEndExtendedIndex, PR_TRUE, PR_TRUE);
-            mEndExtendedIndex   = mSelectedIndex;
-          } else if (mSelectedIndex > mEndExtendedIndex) {
-            ExtendedSelection(mEndExtendedIndex+1, mSelectedIndex, PR_FALSE, PR_TRUE);
-            mEndExtendedIndex = mSelectedIndex;
-          } else if (mSelectedIndex < mEndExtendedIndex) {
-            ExtendedSelection(mSelectedIndex+1, mEndExtendedIndex, PR_FALSE, PR_FALSE);
-            if (mSelectedIndex == mStartExtendedIndex) {
-              mEndExtendedIndex = kNothingSelected;
-            } else {
-              mEndExtendedIndex = mSelectedIndex;
-            }
-          }
-        } else if (mStartExtendedIndex > mEndExtendedIndex) {
-          if (mSelectedIndex > mStartExtendedIndex) {
-            ExtendedSelection(mEndExtendedIndex, mSelectedIndex-1, PR_TRUE, PR_TRUE);
-            mEndExtendedIndex   = mSelectedIndex;
-          } else if (mSelectedIndex < mEndExtendedIndex) {
-            ExtendedSelection(mStartExtendedIndex, mEndExtendedIndex-1, PR_FALSE, PR_TRUE);
-            mEndExtendedIndex = mSelectedIndex;
-          } else if (mSelectedIndex > mEndExtendedIndex) {
-            ExtendedSelection(mEndExtendedIndex, mSelectedIndex-1, PR_FALSE, PR_FALSE);
-            if (mSelectedIndex == mStartExtendedIndex) {
-              mEndExtendedIndex = kNothingSelected;
-            } else {
-              mEndExtendedIndex = mSelectedIndex;
-            }
-          }
-        }
+        startIndex = aSelectedIndex;
+        endIndex   = mStartSelectionIndex;
       }
+
+      ExtendedSelection(startIndex, endIndex, PR_TRUE);
+      ScrollToIndex(aSelectedIndex);
+
+      if (mStartSelectionIndex == kNothingSelected) {
+        mStartSelectionIndex = aSelectedIndex;
+        mEndSelectionIndex = aSelectedIndex;
+      } else {
+        mEndSelectionIndex = aSelectedIndex;
+      }
+      mChangesNotNotified = PR_TRUE;
     } else if (aIsControl) {
-      // Control is held down
-      if (IsContentSelectedByIndex(mSelectedIndex)) {
-        SetContentSelected(mSelectedIndex, PR_FALSE);
-        // after clearing the selected item
-        // we need to check to see if there are any more 
-        // selected items
-        PRInt32 i;
-        PRInt32 max = 0;
-        if (NS_SUCCEEDED(GetNumberOfOptions(&max))) {
-          for (i=0;i<max;i++) {
-            if (IsContentSelectedByIndex(i)) {
-              // set this to "-1" to force the dispatch of the onchange event
-              mOldSelectedIndex = -1;
-              break;
-            }
-          }
-        }
-        // didn't find any other seleccted items
-        // so we must set the currently selected item to "-1"
-        // this also forces the dispatch of the onchange event
-        if (i == max) {
-          mSelectedIndex = -1;
-        }
-
-      } else {
-        SetContentSelected(mSelectedIndex, PR_TRUE);
-      }
-
+      SingleSelection(aSelectedIndex, PR_TRUE);
     } else {
-       // Neither control nor shift is held down
-      SetContentSelected(mSelectedIndex, PR_TRUE);
-      mStartExtendedIndex = mSelectedIndex;
-      mEndExtendedIndex   = kNothingSelected;
-      ClearSelection();
+      SingleSelection(aSelectedIndex, PR_FALSE);
     }
+  } else {
+    SingleSelection(aSelectedIndex, PR_FALSE);
   }
+
 #ifdef DEBUG_rodsX
-  printf("mSelectedIndex:      %d\n", mSelectedIndex);
-  printf("mOldSelectedIndex:   %d\n", mOldSelectedIndex);
-  printf("mStartExtendedIndex: %d\n", mStartExtendedIndex);
-  printf("mEndExtendedIndex:   %d\n", mEndExtendedIndex);
+  printf("aSelectedIndex:      %d\n", aSelectedIndex);
+  printf("mStartSelectionIndex:  %d\n", mStartSelectionIndex);
+  printf("mLastStartIndex:     %d\n", mLastStartIndex);
+  printf("mLastEndIndex:       %d\n", mLastEndIndex);
 #endif
 }
 
 //---------------------------------------------------------
 void 
-nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent)
+nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent,
+                                        PRInt32 aSelectedIndex)
 {
-
-  PRBool multipleSelections = PR_FALSE;
-  GetMultiple(&multipleSelections);
-  if (multipleSelections) {
-    nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-    PRBool isShift;
-    PRBool isControl;
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+  PRBool isShift;
+  PRBool isControl;
 #ifdef XP_MAC
-    mouseEvent->GetMetaKey(&isControl);
+  mouseEvent->GetMetaKey(&isControl);
 #else
-    mouseEvent->GetCtrlKey(&isControl);
+  mouseEvent->GetCtrlKey(&isControl);
 #endif
-    mouseEvent->GetShiftKey(&isShift);
-    MultipleSelection(isShift, isControl);
-  } else {
-    SingleSelection();
-  }
-}
-
-//---------------------------------------------------------
-PRBool 
-nsListControlFrame::HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2)
-{
-   // Quick check, if the frames are equal they must have
-   // the same content
-  if (aFrame1 == aFrame2)
-    return PR_TRUE;
-
-  PRBool result = PR_FALSE;
-  nsIContent* content1 = nsnull;
-  nsIContent* content2 = nsnull;
-  aFrame1->GetContent(&content1);
-  aFrame2->GetContent(&content2);
-  if (aFrame1 == aFrame2) {
-    result = PR_TRUE;
-  }
-  
-  NS_IF_RELEASE(content1);
-  NS_IF_RELEASE(content2);
-  return(result);
+  mouseEvent->GetShiftKey(&isShift);
+  PerformSelection(aSelectedIndex, isShift, isControl);
 }
 
 //---------------------------------------------------------
@@ -1601,42 +1364,6 @@ nsListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGra
 
   return NS_OK;
 }
-
-//---------------------------------------------------------
-nsIView* 
-nsListControlFrame::GetViewFor(nsIWidget* aWidget)
-{           
-  nsIView*  view = nsnull;
-  void*     clientData;
-
-  NS_PRECONDITION(nsnull != aWidget, "null widget ptr");
-	
-  // The widget's client data points back to the owning view
-  if (aWidget && NS_SUCCEEDED(aWidget->GetClientData(clientData))) {
-    view = (nsIView*)clientData;
-  }
-
-  return view;
-}
-
-//---------------------------------------------------------
-// Determine if a view is an ancestor of another view.
-PRBool 
-nsListControlFrame::IsAncestor(nsIView* aAncestor, nsIView* aChild)
-{
-  nsIView* view = aChild;
-  while (nsnull != view) {
-    if (view == aAncestor)
-       // Is an ancestor
-      return(PR_TRUE);
-    else {
-      view->GetParent(view);
-    }
-  }
-   // Not an ancestor
-  return(PR_FALSE);
-}
-
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
@@ -1683,7 +1410,7 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
   if (nsFormFrame::GetDisabled(this))
     return NS_OK;
 
-  switch(aEvent->message) {
+  switch (aEvent->message) {
     case NS_KEY_PRESS:
       if (NS_KEY_EVENT == aEvent->eventStructType) {
 #ifdef DEBUG_rodsXXX
@@ -1785,6 +1512,10 @@ nsListControlFrame::Init(nsIPresContext*  aPresContext,
   nsCOMPtr<nsIDOMKeyListener> keyListener = do_QueryInterface(mEventListener);
   if (!keyListener) { return NS_ERROR_NO_INTERFACE; }
   reciever->AddEventListenerByIID(keyListener, NS_GET_IID(nsIDOMKeyListener));
+
+  mStartSelectionIndex = kNothingSelected;
+  mEndSelectionIndex = kNothingSelected;
+  mChangesNotNotified = PR_FALSE;
 
   return result;
 }
@@ -1917,10 +1648,11 @@ nsListControlFrame::GetOption(nsIDOMHTMLCollection& aCollection, PRInt32 aIndex)
 {
   nsIDOMNode* node = nsnull;
   if (NS_SUCCEEDED(aCollection.Item(aIndex, &node))) {
-    NS_ASSERTION(nsnull != node, "Item was succussful, but node from collection was null!");
-    if (nsnull != node) {
+    NS_ASSERTION(node,
+                 "Item was successful, but node from collection was null!");
+    if (node) {
       nsIDOMHTMLOptionElement* option = nsnull;
-      node->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement), (void**)&option);
+      CallQueryInterface(node, &option);
       NS_RELEASE(node);
       return option;
     }
@@ -1932,49 +1664,6 @@ nsListControlFrame::GetOption(nsIDOMHTMLCollection& aCollection, PRInt32 aIndex)
 
 
 //---------------------------------------------------------
-// For a given index in the collection it sets the aValue 
-// parameter with the "value" ATTRIBUTE from the DOM element
-// This method return PR_TRUE if successful
-//---------------------------------------------------------
-PRBool
-nsListControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection, 
-                                   PRInt32               aIndex, 
-                                   nsString&             aValue)
-{
-  PRBool status = PR_FALSE;
-  nsresult result = NS_OK;
-  nsIDOMHTMLOptionElement* option = GetOption(aCollection, aIndex);
-  if (option) {
-     // Check for value attribute on the option element.
-     // Can not use the return value from option->GetValue() because it
-     // always returns NS_OK even when the value attribute does not
-     // exist.
-   nsCOMPtr<nsIHTMLContent> optionContent;
-   result = option->QueryInterface(kIHTMLContentIID, getter_AddRefs(optionContent));
-   if (NS_SUCCEEDED(result)) {
-     nsHTMLValue value;
-      result = optionContent->GetHTMLAttribute(nsHTMLAtoms::value, value);
-
-      if (NS_CONTENT_ATTR_NOT_THERE == result) {
-        result = option->GetText(aValue);
-        aValue.CompressWhitespace();
-        if (aValue.Length() > 0) {
-          status = PR_TRUE;
-        }
-      } else {
-          // Need to use the options GetValue to get the real value because
-          // it does extra processing on the return value. (i.e it trims it.)
-         result = option->GetValue(aValue);
-         status = PR_TRUE;
-      }
-    }
-    NS_RELEASE(option);
-  }
-
-  return status;
-}
-static int cnt = 0;
-//---------------------------------------------------------
 // For a given piece of content, it determines whether the 
 // content (an option) is selected or not
 // return PR_TRUE if it is, PR_FALSE if it is NOT
@@ -1982,7 +1671,7 @@ static int cnt = 0;
 PRBool 
 nsListControlFrame::IsContentSelected(nsIContent* aContent)
 {
-  nsString value; 
+  nsAutoString value;
   //nsIAtom * selectedAtom = NS_NewAtom("selected");
   nsresult result = aContent->GetAttr(kNameSpaceID_None, nsLayoutAtoms::optionSelectedPseudo, value);
 
@@ -2008,121 +1697,17 @@ nsListControlFrame::IsContentSelectedByIndex(PRInt32 aIndex)
 // gets the content (an option) by index and then set it as
 // being selected or not selected
 //---------------------------------------------------------
-void 
-nsListControlFrame::SetContentSelected(PRInt32        aIndex, 
-                                       PRBool         aSelected,
-                                       PRBool         aDoScrollTo,
-                                       nsIPresShell * aPresShell)
+NS_IMETHODIMP
+nsListControlFrame::OnOptionSelected(nsIPresContext* aPresContext,
+                                     PRInt32 aIndex,
+                                     PRBool aSelected)
 {
-  if (aIndex == kNothingSelected) {
-    return;
+  if (aSelected) {
+    ScrollToIndex(aIndex);
   }
-
-  // Check to see that the index is in the proper range.  It could be out of 
-  // range due to something like a back button being hit and the 
-  // script that populates the list box not being executed (eg bug 88343)
-  PRInt32 numOptions = 0;
-  if (NS_SUCCEEDED(GetNumberOfOptions(&numOptions))) {
-    if (aIndex >= numOptions || aIndex < 0) {
-       mSelectedIndex = kNothingSelected;
-#ifdef NS_DEBUG
-      printf("Index: %d Range 0:%d  (setting to %s)\n", aIndex, numOptions, aSelected?"TRUE":"FALSE");
-      NS_ASSERTION(0, "Bad Index has been passed into SetContentSelected!");
-#endif
-      return;    
-    }
-  } else {
-#ifdef NS_DEBUG
-    NS_ASSERTION(0, "Couldn't get number of options for select!");
-#endif
-  }
-
-  nsIContent* content = GetOptionContent(aIndex);
-  NS_ASSERTION(content != nsnull, "Content should not be null!");
-
-  nsIPresShell* presShell;
-  if (aPresShell == nsnull) {
-    mPresContext->GetShell(&presShell);
-  } else {
-    presShell = aPresShell;
-    NS_ADDREF(presShell);
-  }
-  SetContentSelected(aIndex, content, aSelected, aDoScrollTo, presShell);
-  NS_RELEASE(content);
-  NS_RELEASE(presShell);
-}
-
-void 
-nsListControlFrame::SetContentSelected(PRInt32        aIndex, 
-                                       nsIContent *   aContent, 
-                                       PRBool         aSelected,
-                                       PRBool         aDoScrollTo,
-                                       nsIPresShell * aPresShell)
-{
-  if (aContent != nsnull) {
-    PRBool isSelected = IsContentSelected(aContent);
-    //if (aSelected != isSelected) {
-      if (aPresShell) {
-        nsIFrame * childframe;
-        nsresult result = aPresShell->GetPrimaryFrameFor(aContent, &childframe);
-        if (NS_SUCCEEDED(result) && childframe != nsnull) {
-          if (aSelected) {
-            DisplaySelected(aContent);
-            // Now that it is selected scroll to it
-            if (aDoScrollTo) {
-              ScrollToFrame(aContent);
-            }
-          } else {
-            DisplayDeselected(aContent);
-          }
-        } else {
-          mDelayedIndexSetting = aIndex;
-          mDelayedValueSetting = aSelected;
-        }
-      }
-    //}
-  }
-
-}
-
-//---------------------------------------------------------
-// Deselects all the content items in the select
-//---------------------------------------------------------
-nsresult 
-nsListControlFrame::Deselect() 
-{
-
-  /* This code works fine but it
-   * isn't quite as efficient as the code below
-  PRInt32 i;
-  PRInt32 max = 0;
-  if (NS_SUCCEEDED(GetNumberOfOptions(&max))) {
-    for (i=0;i<max;i++) {
-      SetContentSelected(i, PR_FALSE);
-    }
-  }
-  */
-
-  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
-  if (options) {
-    PRUint32 length = 0;
-    options->GetLength(&length);
-    PRUint32 i;
-    for (i=0;i<length;i++) {
-      nsCOMPtr<nsIDOMNode> node;
-      if (NS_SUCCEEDED(options->Item(i, getter_AddRefs(node)))) {
-        nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-        if (content && IsContentSelected(content)) {
-          DisplayDeselected(content);
-        }
-      }
-    }
-  }
-
-  mSelectedIndex = kNothingSelected;
-  
   return NS_OK;
 }
+
 
 //---------------------------------------------------------
 PRIntn
@@ -2149,40 +1734,17 @@ nsListControlFrame::SetFormFrame(nsFormFrame* aFormFrame)
 
 
 //---------------------------------------------------------
-PRBool
-nsListControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
-{
-  nsAutoString name;
-  PRBool disabled = PR_FALSE;
-  nsFormControlHelper::GetDisabled(mContent, &disabled);
-  return !disabled && (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
-}
-
-
-//---------------------------------------------------------
 void 
 nsListControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
 }
 
 
-//---------------------------------------------------------
-PRInt32 
-nsListControlFrame::GetMaxNumValues()
+NS_IMETHODIMP
+nsListControlFrame::OnContentReset()
 {
-  PRBool multiple;
-  GetMultiple(&multiple);
-  if (multiple) {
-    PRUint32 length = 0;
-    nsIDOMHTMLCollection* options = GetOptions(mContent);
-    if (options) {
-      options->GetLength(&length);
-      NS_RELEASE(options);
-    }
-    return (PRInt32)length; // XXX fix return on GetMaxNumValues
-  } else {
-    return 1;
-  }
+  ResetList(mPresContext);
+  return NS_OK;
 }
 
 //---------------------------------------------------------
@@ -2192,7 +1754,6 @@ nsListControlFrame::GetMaxNumValues()
 void 
 nsListControlFrame::ResetList(nsIPresContext* aPresContext, nsVoidArray * aInxList)
 {
-
   REFLOW_DEBUG_MSG("LBX::ResetList\n");
 
   // if all the frames aren't here 
@@ -2201,128 +1762,30 @@ nsListControlFrame::ResetList(nsIPresContext* aPresContext, nsVoidArray * aInxLi
     return;
   }
 
-  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
-  if (!options) {
-    return;
+  // Scroll to the selected index
+  PRInt32 indexToSelect = kNothingSelected;
+
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(mContent));
+  NS_ASSERTION(selectElement, "No select element!");
+  if (selectElement) {
+    selectElement->GetSelectedIndex(&indexToSelect);
+    ScrollToIndex(indexToSelect);
   }
 
-  // Check here to see if this listbox has has its state restored
-  // Either by being a list or by being a dropdown.
-  // if we have been restored then we don't set any of the default selections
-  PRBool hasBeenRestored = mPresState != nsnull;
+  mStartSelectionIndex = kNothingSelected;
+  mEndSelectionIndex = kNothingSelected;
+  mChangesNotNotified = PR_FALSE;
 
-  PRUint32 numOptions;
-  options->GetLength(&numOptions);
-
-  mSelectedIndex      = kNothingSelected;
-  mStartExtendedIndex = kNothingSelected;
-  mEndExtendedIndex   = kNothingSelected;
-  PRBool multiple;
-  GetMultiple(&multiple);
-
-  // Clear the cache and set the default selections
-  // if we haven't been restored
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-
-  // This code has been reworked to make it as efficient as possible.
-  // In the case, where it is a single select, we do not select any items
-  // while they are being reset, we wait until the end and set the selected
-  // item once. This also means that when it is a multiple select
-  // we set the selected item twice, but the cost at that point is very low.
-  PRUint32 i;
-  for (i = 0; i < numOptions; i++) {
-    nsCOMPtr<nsIDOMHTMLOptionElement> option = getter_AddRefs(GetOption(*options, i));
-    if (option) {
-      PRBool selected = PR_FALSE;
-      if (!hasBeenRestored) {
-        option->GetDefaultSelected(&selected);
-      }
-      if (aInxList) {
-        selected = aInxList->IndexOf((void*)i) > -1;
-      }
-
-      nsCOMPtr<nsIContent> content(do_QueryInterface(option));
-      if (selected) {
-        NS_ASSERTION(content, "There is no way this could be nsnull");
-
-        mSelectedIndex = i;
-
-        if (multiple) {
-          SetContentSelected(i, content, PR_TRUE, PR_FALSE, presShell);
-          mStartExtendedIndex = i;
-          if (mEndExtendedIndex == kNothingSelected) {
-            mEndExtendedIndex = i;
-          }
-        }
-      } else if (IsContentSelected(content)){
-        SetContentSelected(i, content, PR_FALSE, PR_FALSE, presShell);
-      }
-    }
-  }
-
-  // To make the final adjustments
-  // set the selected item to true and scroll to it
-  PRUint32 indexToSelect;
-  if (multiple) {
-    indexToSelect = mStartExtendedIndex;
-  } else {
-    indexToSelect = mSelectedIndex;
-  }
-  SetContentSelected(indexToSelect, PR_TRUE, PR_TRUE, presShell);
-
-  // Ok, so we were restored, now set the last known selections from the restore state.
-  if (hasBeenRestored) {
-    nsCOMPtr<nsISupports> supp;
-    mPresState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"), getter_AddRefs(supp));
-
-    nsresult res = NS_ERROR_NULL_POINTER;
-    if (!supp)
-      return;
-
-    nsCOMPtr<nsISupportsArray> value = do_QueryInterface(supp);
-    if (!value)
-      return;
-
-    PRUint32 count = 0;
-    value->Count(&count);
-
-    nsCOMPtr<nsISupportsPRInt32> thisVal;
-    PRInt32 j=0;
-    for (i=0; i<count; i++) {
-      nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
-      thisVal = do_QueryInterface(suppval);
-      if (thisVal) {
-        res = thisVal->GetData(&j);
-        if (NS_SUCCEEDED(res)) {
-          mSelectedIndex = j;
-          SetContentSelected(j, PR_TRUE);// might want to use ToggleSelection
-          if (multiple) {
-            mStartExtendedIndex = j;
-            if (mEndExtendedIndex == kNothingSelected) {
-              mEndExtendedIndex = j;
-            }
-          }
-        }
-      } else {
-        res = NS_ERROR_UNEXPECTED;
-      }
-      if (!NS_SUCCEEDED(res)) break;
-    }
-  }
-    
   if (mComboboxFrame != nsnull) {
-    if (mSelectedIndex == kNothingSelected) {
-      mComboboxFrame->MakeSureSomethingIsSelected(mPresContext);
-    } else {
-      mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
-    }
+    // don't dispatch event
+    mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, indexToSelect);
   }
+
 } 
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::GetName(nsString* aResult)
+nsListControlFrame::GetName(nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
   if (mContent) {
@@ -2342,72 +1805,6 @@ nsListControlFrame::GetName(nsString* aResult)
   return result;
 }
  
-
-//---------------------------------------------------------
-PRInt32 
-nsListControlFrame::GetNumberOfSelections()
-{
-  PRInt32 count = 0;
-  PRInt32 length = 0;
-  GetNumberOfOptions(&length);
-  PRInt32 i = 0;
-  for (i = 0; i < length; i++) {
-    if (IsContentSelectedByIndex(i)) {
-      count++;
-    }
-  }
-  return(count);
-}
-
-
-//---------------------------------------------------------
-PRBool
-nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                     nsString* aValues, nsString* aNames)
-{
-  aNumValues = 0;
-  nsAutoString name;
-  nsresult result = GetName(&name);
-  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_NOT_THERE == result)) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
-  if (!options) {
-    return PR_FALSE;
-  }
-
-  PRBool status = PR_FALSE;
-  PRBool multiple;
-  GetMultiple(&multiple);
-  if (!multiple) {
-    if (mSelectedIndex >= 0) {
-      nsAutoString value;
-      GetOptionValue(*options, mSelectedIndex, value);
-      aNumValues = 1;
-      aNames[0]  = name;
-      aValues[0] = value;
-      status = PR_TRUE;
-    }
-  } 
-  else {
-    aNumValues = 0;
-    PRInt32 length = 0;
-    GetNumberOfOptions(&length);
-    for (int i = 0; i < length; i++) {
-      if (PR_TRUE == IsContentSelectedByIndex(i)) {
-        nsAutoString value;
-        GetOptionValue(*options, i, value);
-        aNames[aNumValues]  = name;
-        aValues[aNumValues] = value;
-        aNumValues++;
-      }
-    }
-    status = PR_TRUE;
-  } 
-
-  return status;
-}
 
 //---------------------------------------------------------
 void 
@@ -2449,7 +1846,7 @@ nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
 // if there is nothing selected, then the 0th item's text is returned
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::GetSelectedItem(nsString & aStr)
+nsListControlFrame::GetOptionText(PRInt32 aIndex, nsAString & aStr)
 {
   aStr.SetLength(0);
   nsresult rv = NS_ERROR_FAILURE; 
@@ -2462,7 +1859,8 @@ nsListControlFrame::GetSelectedItem(nsString & aStr)
     if (numOptions == 0) {
       rv = NS_OK;
     } else {
-      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*options, mSelectedIndex));
+      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(
+          getter_AddRefs(GetOption(*options, aIndex)));
       if (optionElement) {
 #if 0 // This is for turning off labels Bug 4050
         nsAutoString text;
@@ -2498,33 +1896,8 @@ nsListControlFrame::GetSelectedItem(nsString & aStr)
 NS_IMETHODIMP 
 nsListControlFrame::GetSelectedIndex(PRInt32 * aIndex)
 {
-  *aIndex = mSelectedIndex;
-  return NS_OK;
-}
-
-//---------------------------------------------------------
-NS_IMETHODIMP 
-nsListControlFrame::GetSelectedIndexFromDOM(PRInt32 * aIndex)
-{
-  // figure out which item is selected by looking at which
-  // option are selected
-  *aIndex = kNothingSelected;
-  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
-  if (options) {
-    PRUint32 numOptions;
-    options->GetLength(&numOptions);
-
-    PRUint32 inx;
-    for (inx = 0; inx < numOptions && (*aIndex == kNothingSelected); inx++) {
-      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionAsContent(options, inx));
-      if (nsnull != content) {
-        if (IsContentSelected(content)) {
-          *aIndex = (PRInt32)inx;
-        }
-      }
-    }
-  }
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(mContent));
+  return selectElement->GetSelectedIndex(aIndex);
 }
 
 //---------------------------------------------------------
@@ -2558,25 +1931,6 @@ nsListControlFrame::GetNumberOfOptions(PRInt32* aNumOptions)
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
-}
-
-//---------------------------------------------------------
-// Select the specified item in the listbox using control logic.
-// If it a single selection listbox the previous selection will be
-// de-selected. 
-void 
-nsListControlFrame::ToggleSelected(PRInt32 aIndex)
-{
-  PRBool multiple;
-  GetMultiple(&multiple);
-
-  if (PR_TRUE == multiple) {
-    SetContentSelected(aIndex, PR_TRUE);
-  } else {
-    SetContentSelected(mSelectedIndex, PR_FALSE);
-    SetContentSelected(aIndex, PR_TRUE);
-    mSelectedIndex = aIndex;
-  }
 }
 
 //----------------------------------------------------------------------
@@ -2648,7 +2002,7 @@ nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
   }
 
   nsresult rv = StartUpdateTimer(aPresContext);
-  if (NS_SUCCEEDED(rv) && mUpdateTimer != nsnull) {
+  if (NS_SUCCEEDED(rv) && mUpdateTimer) {
     mUpdateTimer->ItemAdded(aIndex, numOptions);
   }
   return NS_OK;
@@ -2660,239 +2014,120 @@ nsListControlFrame::RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
   StopUpdateTimer();
   nsresult rv = StartUpdateTimer(aPresContext);
-  if (NS_SUCCEEDED(rv) && mUpdateTimer != nsnull) {
+  if (NS_SUCCEEDED(rv) && mUpdateTimer) {
     PRInt32 numOptions;
     GetNumberOfOptions(&numOptions);
     mUpdateTimer->ItemRemoved(aIndex, numOptions);
   }
 
-  // Check to see which index is being removed
-  // if the current index is being removed, remember that
-  // if the index is less then the current index
-  // then decrement the current selected index
-  if (aIndex == mSelectedIndex) {
-    mUpdateTimer->SetRemovedSelectedIndex();
-    mSelectedIndex = kNothingSelected;
-
-  } if (aIndex < mSelectedIndex) {
-    mSelectedIndex--;
-  }
-
   return NS_OK;
 }
 
-//-------------------------------------------------------------------
-nsresult nsListControlFrame::GetPresStateAndValueArray(nsISupportsArray ** aSuppArray)
-{
-  // Basically we need to check for and/or create
-  // both the PresState and the Supports Array
-  // There may already be a no PresState and no Supports Array
-  // or there may be PresState and no Supports Array
-  // or there may be both
-
-  // So assume we need to create the supports array and 
-  //flip it off if we don't
-  PRBool createSupportsArray = PR_TRUE;
-
-  nsresult res = NS_ERROR_FAILURE;
-  if (mPresState) {
-    nsCOMPtr<nsISupports> supp;
-    mPresState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"), getter_AddRefs(supp));
-    if (supp) {
-      res = supp->QueryInterface(NS_GET_IID(nsISupportsArray), (void**)aSuppArray);
-      if (NS_FAILED(res)) {
-        return res;
-      }
-      createSupportsArray = PR_FALSE;
-    }
-  } else {
-    NS_NewPresState(getter_AddRefs(mPresState));
-  }
-
-  if (createSupportsArray) {
-    res = NS_NewISupportsArray(aSuppArray);
-    if (NS_SUCCEEDED(res)) {
-      res = mPresState->SetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"), *aSuppArray);
-    }
-  }
-  return res;
-}
-
-//-------------------------------------------------------------------
-nsresult nsListControlFrame::SetSelectionInPresState(PRInt32 aIndex, PRBool aValue)
-{
-  // if there is no PresState and we ned to remove it
-  // from the PresState, then there is nothing to do
-  if (!mPresState && !aValue) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsISupportsArray> suppArray;
-  nsresult res = GetPresStateAndValueArray(getter_AddRefs(suppArray));
-
-  if (NS_FAILED(res) || !suppArray)
-    return res;
-
-  if (aValue) {
-    PRUint32 count;
-    suppArray->Count(&count);
-    return SetOptionIntoPresState(suppArray, aIndex, count);
-  } else {
-    return RemoveOptionFromPresState(suppArray, aIndex);
-  }
-
-}
-
-//-------------------------------------------------------------------
-nsresult nsListControlFrame::RemoveOptionFromPresState(nsISupportsArray * aSuppArray, 
-                                                       PRInt32            aIndex)
-{
-  NS_ENSURE_ARG_POINTER(aSuppArray);
-  nsresult res = NS_ERROR_FAILURE;
-  PRUint32 count;
-  aSuppArray->Count(&count);
-  nsCOMPtr<nsISupportsPRInt32> thisVal;
-  for (PRUint32 i=0; i<count; i++) {
-    nsCOMPtr<nsISupports> suppval = getter_AddRefs(aSuppArray->ElementAt(i));
-    thisVal = do_QueryInterface(suppval);
-    if (thisVal) {
-      PRInt32 optIndex;
-      res = thisVal->GetData(&optIndex);
-      if (NS_SUCCEEDED(res)) {
-        if (optIndex == aIndex) {
-          aSuppArray->RemoveElementAt(i);
-          return NS_OK;
-        }
-      }
-    } else {
-      res = NS_ERROR_UNEXPECTED;
-    }
-    if (NS_FAILED(res)) break;
-  }
-  return res;
-}
-
-//-------------------------------------------------------------------
-nsresult nsListControlFrame::SetOptionIntoPresState(nsISupportsArray * aSuppArray, 
-                                                    PRInt32            aIndex, 
-                                                    PRInt32            anItemNum)
-{
-  NS_ENSURE_ARG_POINTER(aSuppArray);
-  nsCOMPtr<nsISupportsPRInt32> thisVal;
-  nsresult res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-	                 nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
-  if (NS_SUCCEEDED(res) && thisVal) {
-    res = thisVal->SetData(aIndex);
-	  if (NS_SUCCEEDED(res)) {
-      PRBool okay = aSuppArray->InsertElementAt((nsISupports *)thisVal, anItemNum);
-	    if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
-    }
-	}
-  return res;
-}
-
 //---------------------------------------------------------
-// Select the specified item in the listbox using control logic.
-// If it a single selection listbox the previous selection will be
-// de-selected. 
-NS_IMETHODIMP
-nsListControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
+// Set the option selected in the DOM.  This method is named
+// as it is because it indicates that the frame is the source
+// of this event rather than the receiver.
+nsresult
+nsListControlFrame::SetOptionsSelectedFromFrame(PRInt32 aStartIndex,
+                                                PRInt32 aEndIndex,
+                                                PRBool aValue,
+                                                PRBool aClearAll)
 {
-  if (!mIsAllFramesHere && !mHasBeenInitialized) {
-    return SetSelectionInPresState(aIndex, aValue);
-  }
-
-  // The mUpdateTimer will NOT be null if this is called from script
-  // and it hasn't been notified. 
-  //
-  // So when there is a timer and the option's new value is TRUE
-  // then we want to stop the timer, set the value and restart the timer.
-  // The timer only tracks the indexes that will be set to true,
-  // so if "aValue" is false we don't need to do anything.
-  if (mUpdateTimer != nsnull && !mUpdateTimer->HasBeenNotified()) {
-    if (aValue) {
-      StopUpdateTimer();
-      ToggleSelected(aIndex); // sets mSelectedIndex
-      nsresult rv = StartUpdateTimer(mPresContext);
-      if (NS_SUCCEEDED(rv) && mUpdateTimer != nsnull) {
-        mUpdateTimer->ItemIndexSet(aIndex);
-      }
-    }
-    return NS_OK;
-  }
-
-  // It gets here when there is a timer and it HAS been notified
-  // which can happen if the JS is setting the "selectedIndex" of
-  // the selecte and no items were added or removed form the select
-  PRBool multiple;
-  nsresult rv = GetMultiple(&multiple);
-  if (NS_SUCCEEDED(rv)) {
-    if (aValue) {
-      ToggleSelected(aIndex); // sets mSelectedIndex
-    } else {
-      SetContentSelected(aIndex, aValue);
-      if (!multiple) {
-        // Get the new selIndex from the DOM (may have changed)
-        PRInt32 selectedIndex;
-        GetSelectedIndexFromDOM(&selectedIndex);
-        if (mSelectedIndex != selectedIndex) {
-          ToggleSelected(selectedIndex); // sets mSelectedIndex
-        }
-      }
-    }
-    // Should we send an event here or not?
-    if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-      rv = mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, aIndex); // don't dispatch event
-    }
+  nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(mContent));
+  PRBool wasChanged = PR_FALSE;
+  nsresult rv = selectElement->SetOptionsSelectedByIndex(aStartIndex,
+                                                         aEndIndex,
+                                                         aValue,
+                                                         aClearAll,
+                                                         PR_FALSE,
+                                                         &wasChanged);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "SetSelected failed");
+  if (NS_SUCCEEDED(rv) && !mChangesNotNotified && wasChanged) {
+    mChangesNotNotified = PR_TRUE;
   }
   return rv;
 }
 
-// Compare content state with local cache of last known state
-// If there was a change, call SelectionChanged()
-NS_IMETHODIMP
-nsListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent)
+nsresult
+nsListControlFrame::ToggleOptionSelectedFromFrame(PRInt32 aIndex)
 {
-  if (!mIsAllFramesHere || !mIsAllContentHere) {
+  nsCOMPtr<nsIDOMHTMLCollection> options(getter_AddRefs(GetOptions(mContent)));
+  NS_ASSERTION(options, "No options");
+  if (!options) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIDOMHTMLOptionElement> option(
+      getter_AddRefs(GetOption(*options, aIndex)));
+  NS_ASSERTION(option, "No option");
+  if (!option) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRBool value = PR_FALSE;
+  nsresult rv = option->GetSelected(&value);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetSelected failed");
+  nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(mContent));
+  PRBool wasChanged = PR_FALSE;
+  rv = selectElement->SetOptionsSelectedByIndex(aIndex,
+                                                aIndex,
+                                                !value,
+                                                PR_FALSE,
+                                                PR_FALSE,
+                                                &wasChanged);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "SetSelected failed");
+  if (wasChanged) {
+    mChangesNotNotified = PR_TRUE;
+  }
+
+  return rv;
+}
+
+
+// Dispatch event and such
+NS_IMETHODIMP
+nsListControlFrame::UpdateSelection()
+{
+  if (!mIsAllFramesHere || !mIsAllContentHere || !mChangesNotNotified) {
     return NS_OK;
   }
   nsresult rv = NS_OK;
-  PRBool changed = PR_FALSE;
-
 
   PRBool isDroppedDown = PR_FALSE;
   if (mComboboxFrame != nsnull) {
     mComboboxFrame->IsDroppedDown(&isDroppedDown);
   }
-  if (aDoDispatchEvent && !isDroppedDown) {
-    rv = SelectionChanged(aContent); // Dispatch event
+  if (!isDroppedDown) {
+    rv = SelectionChanged(); // Dispatch event
+    mChangesNotNotified = PR_FALSE;
   }
 
-  if (aForceUpdate && mComboboxFrame) {
-    rv = mComboboxFrame->SelectionChanged(); // Update view
-  }
   return rv;
 }
 
 NS_IMETHODIMP
-nsListControlFrame::GetOptionsContainer(nsIPresContext* aPresContext, nsIFrame** aFrame)
+nsListControlFrame::ComboboxUpdateSelection(PRBool aForceUpdate,
+                                            PRBool aSendEvent)
+{
+  if (mComboboxFrame) {
+    mComboboxFrame->ListWasSelected(mPresContext, aForceUpdate, aSendEvent);
+  }
+  mChangesNotNotified = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsListControlFrame::GetOptionsContainer(nsIPresContext* aPresContext,
+                                        nsIFrame** aFrame)
 {
   return FirstChild(aPresContext, nsnull, aFrame);
 }
 
-NS_IMETHODIMP
-nsListControlFrame::OptionDisabled(nsIContent * aContent)
-{
-  if (IsContentSelected(aContent)) {
-    PRInt32 inx = GetSelectedIndexFromContent(aContent);
-    SetOptionSelected(inx, PR_FALSE);
-  }
-  return NS_OK;
-}
-
 // Send out an onchange notification.
 nsresult
-nsListControlFrame::SelectionChanged(nsIContent* aContent)
+nsListControlFrame::SelectionChanged()
 {
   nsresult ret = NS_ERROR_FAILURE;
 
@@ -2907,6 +2142,7 @@ nsListControlFrame::SelectionChanged(nsIContent* aContent)
   if (presShell) {
     ret = presShell->HandleEventWithTarget(&event, this, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
+
   return ret;
 }
 
@@ -2916,6 +2152,22 @@ NS_IMETHODIMP
 nsListControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
 {
   *aValue = IsContentSelectedByIndex(aIndex);
+  return NS_OK;
+}
+
+//---------------------------------------------------------
+// Used by layout to determine if we have a fake option
+NS_IMETHODIMP
+nsListControlFrame::GetDummyFrame(nsIFrame** aFrame)
+{
+  (*aFrame) = mDummyFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsListControlFrame::SetDummyFrame(nsIFrame* aFrame)
+{
+  mDummyFrame = aFrame;
   return NS_OK;
 }
 
@@ -2930,66 +2182,13 @@ nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName,
 {
   if (nsHTMLAtoms::selected == aName) {
     return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
-
   } else if (nsHTMLAtoms::selectedindex == aName) {
-    PRInt32 error = 0;
-    nsAutoString str(aValue);
-    PRInt32 selectedIndex = str.ToInteger(&error, 10); // Get index from aValue
-    if (error) {
-      return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
-    } else {
-      // Start by getting the num of options
-      // to make sure the new index is within the bounds
-      // if selectedIndex is -1, deselect all (bug 28143)
-      PRInt32 numOptions = 0;
-      GetNumberOfOptions(&numOptions);
-      if (selectedIndex < -1 || selectedIndex >= numOptions) {
-        return NS_ERROR_FAILURE;
-      }
-      if (selectedIndex == -1) {
-        Deselect();
-      }
-      else {
-        // Get the DOM interface for the select
-        // we will use this to see if it is a "multiple" select 
-        nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(mContent));
-        if (selectElement) {
-          // check to see if it is a mulitple select
-          PRBool multiple = PR_FALSE;
-          if (NS_FAILED(GetMultiple(&multiple, selectElement))) {
-            multiple = PR_FALSE;
-          }
-          if (mUpdateTimer != nsnull) {
-            if (!mUpdateTimer->HasBeenNotified()) {
-              StopUpdateTimer();
-              ToggleSelected(selectedIndex); // sets mSelectedIndex
-              nsresult rv = StartUpdateTimer(aPresContext);
-              if (NS_SUCCEEDED(rv) && mUpdateTimer != nsnull) {
-                mUpdateTimer->ItemIndexSet(selectedIndex);
-              }
-              return NS_OK;
-            }
-          }
-          // if it is a multiple, select the new item
-          if (multiple) {
-            Deselect();
-            SetOptionSelected(selectedIndex, PR_TRUE);
-            mSelectedIndex = selectedIndex;
-          } else {
-            // if it is a single select, 
-            // check to see if it is the currect selection
-            // if it is, then do nothing
-            if (mSelectedIndex != selectedIndex) {
-              ToggleSelected(selectedIndex); // sets mSelectedIndex
-              if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // do dispatch event
-              }
-            }
-          }
-        }
-      }
-    }
+    // You shouldn't be calling me for this!!!
+    return NS_ERROR_INVALID_ARG;
   }
+
+  // We should be told about selectedIndex by the DOM element through
+  // OnOptionSelected
 
   return NS_OK;
 }
@@ -3010,15 +2209,9 @@ nsListControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
     nsFormControlHelper::GetBoolString(selected, aValue);
     
   // For selectedIndex, get the value from the widget
-  } else  if (nsHTMLAtoms::selectedindex == aName) {
-    // figures out the first selected item from the content
-    PRInt32 selectedIndex;
-    GetSelectedIndexFromDOM(&selectedIndex);
-    if ((kNothingSelected == selectedIndex) && (mComboboxFrame)) {
-      selectedIndex = 0;
-    }
-    nsAutoString str; str.AppendInt(selectedIndex, 10);
-    aValue.Append(str);
+  } else if (nsHTMLAtoms::selectedindex == aName) {
+    // You shouldn't be calling me for this!!!
+    return NS_ERROR_INVALID_ARG;
   }
 
   return NS_OK;
@@ -3137,17 +2330,11 @@ nsListControlFrame::SyncViewWithFrame(nsIPresContext* aPresContext)
 NS_IMETHODIMP 
 nsListControlFrame::AboutToDropDown()
 {
-  mSelectedIndexWhenPoppedDown = mSelectedIndex;
+  PRInt32 selectedIndex;
+  GetSelectedIndex(&selectedIndex);
+  mSelectedIndexWhenPoppedDown = selectedIndex;
   if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized) {
-    if (mSelectedIndex != kNothingSelected) {
-      // make sure we scroll to the correct item before it drops down
-      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
-      if (content) {
-        ScrollToFrame(content);
-      }
-    } else {
-      ScrollToFrame(nsnull); // this means it scrolls to 0,0
-    }
+    ScrollToIndex(selectedIndex);
   }
 
   return NS_OK;
@@ -3178,12 +2365,10 @@ nsListControlFrame::AboutToRollup()
     // if the indexes do NOT match then the selection in the combobox 
     // was never updated, and therefore we should reset the the selection back to 
     // whatever it was before it was dropped down.
-    if (index != mSelectedIndex) {
+    if (index != mStartSelectionIndex) {
       ResetSelectedItem();
     } else {
-      if (IsInDropDownMode() == PR_TRUE) {
-        mComboboxFrame->ListWasSelected(mPresContext, PR_FALSE, PR_TRUE); 
-      }
+      ComboboxUpdateSelection(PR_FALSE, PR_TRUE);
     }
   }
   return NS_OK;
@@ -3233,11 +2418,12 @@ nsListControlFrame::DidReflow(nsIPresContext* aPresContext,
     return rv;
   } else {
     nsresult rv = nsScrollFrame::DidReflow(aPresContext, aStatus);
-    if (!mDoneWithInitialReflow && mSelectedIndex != kNothingSelected) {
-      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
-      if (content) {
-        ScrollToFrame(content);
-      }
+    PRInt32 selectedIndex = mEndSelectionIndex;
+    if (selectedIndex == kNothingSelected) {
+      GetSelectedIndex(&selectedIndex);
+    }
+    if (!mDoneWithInitialReflow && selectedIndex != kNothingSelected) {
+      ScrollToIndex(selectedIndex);
       mDoneWithInitialReflow = PR_TRUE;
     }
     return rv;
@@ -3293,42 +2479,14 @@ nsListControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
   return NS_OK;
 }
 
-//---------------------------------------------------------
-NS_IMETHODIMP 
-nsListControlFrame::IsTargetOptionDisabled(PRBool &aIsDisabled)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  aIsDisabled = PR_FALSE;
-
-  nsCOMPtr<nsIEventStateManager> stateManager;
-  rv = mPresContext->GetEventStateManager(getter_AddRefs(stateManager));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIContent> content;
-    rv = stateManager->GetEventTargetContent(nsnull, getter_AddRefs(content));
-    if (NS_SUCCEEDED(rv) && content) {
-      if (IsOptionElement(content)) {
-        aIsDisabled = nsFormFrame::GetDisabled(this, content);
-      } else {
-        rv = NS_ERROR_FAILURE; // return error when it is not an option
-      }
-    }
-  }
-  return rv;
-}
-
 //----------------------------------------------------------------------
-NS_IMETHODIMP 
+nsresult
 nsListControlFrame::IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled)
 {
-  nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
-  nsCOMPtr<nsIDOMHTMLOptionElement> optionElement;
-  if (options) {
-    optionElement = getter_AddRefs(GetOption(*options, anIndex));
-    nsCOMPtr<nsIContent> content = do_QueryInterface(optionElement);
-    if (content) {
-      aIsDisabled = nsFormFrame::GetDisabled(nsnull, content);
-      return NS_OK;
-    }
+  nsCOMPtr<nsISelectElement> sel(do_QueryInterface(mContent));
+  if (sel) {
+    sel->IsOptionDisabled(anIndex, &aIsDisabled);
+    return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
@@ -3337,11 +2495,13 @@ nsListControlFrame::IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled)
 // This is used to reset the the list and it's selection because the 
 // selection was cancelled and the list rolled up.
 void nsListControlFrame::ResetSelectedItem()
-{  
+{
   if (mIsAllFramesHere) {
-    ToggleSelected(mSelectedIndexWhenPoppedDown);  
+    SingleSelection(mSelectedIndexWhenPoppedDown, PR_FALSE);
+    // We're resetting ... don't send OnChange
+    mChangesNotNotified = PR_FALSE;
     if (IsInDropDownMode() == PR_TRUE) {
-      mComboboxFrame->ListWasSelected(mPresContext, PR_TRUE, PR_FALSE); 
+      ComboboxUpdateSelection(PR_TRUE, PR_FALSE);
     }
   }
 }
@@ -3373,6 +2533,8 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 
   REFLOW_DEBUG_MSG("--------------------------- MouseUp ----------------------------\n");
 
+  mButtonDown = PR_FALSE;
+
   if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
   }
@@ -3387,33 +2549,12 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
         aMouseEvent->PreventCapture();
         aMouseEvent->PreventBubble();
       } else {
-        mButtonDown = PR_FALSE;
         CaptureMouseEvents(mPresContext, PR_FALSE);
         return NS_OK;
       }
-      mButtonDown = PR_FALSE;
       CaptureMouseEvents(mPresContext, PR_FALSE);
       return NS_ERROR_FAILURE; // means consume event
     } else {
-      mButtonDown = PR_FALSE;
-      CaptureMouseEvents(mPresContext, PR_FALSE);
-      return NS_OK;
-    }
-  }
-
-  // Check to see if the disabled option was clicked on
-  // NS_ERROR_FAILURE is returned is it isn't over an option
-  PRBool optionIsDisabled;
-  if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
-    if (optionIsDisabled) {
-      if (IsInDropDownMode() == PR_TRUE) {
-        ResetSelectedItem();
-      } else {
-        SetContentSelected(mSelectedIndex, PR_FALSE);
-        mSelectedIndex = kNothingSelected;
-      }
-      REFLOW_DEBUG_MSG(">>>>>> Option is disabled");
-      mButtonDown = PR_FALSE;
       CaptureMouseEvents(mPresContext, PR_FALSE);
       return NS_OK;
     }
@@ -3427,7 +2568,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
 
-  if (IsInDropDownMode() == PR_TRUE) {
+  if (IsInDropDownMode()) {
     // XXX This is a bit of a hack, but.....
     // But the idea here is to make sure you get an "onclick" event when you mouse
     // down on the select and the drag over an option and let go
@@ -3442,14 +2583,27 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     nsMouseEvent * mouseEvent;
     privateEvent->GetInternalNSEvent((nsEvent**)&mouseEvent);
 
-    if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, mOldSelectedIndex, mSelectedIndex))) {
-      REFLOW_DEBUG_MSG2(">>>>>> Found Index: %d", mSelectedIndex);
-      if (kNothingSelected != mSelectedIndex) {
-        SetContentSelected(mSelectedIndex, PR_TRUE);  
+    PRInt32 selectedIndex;
+    if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
+      REFLOW_DEBUG_MSG2(">>>>>> Found Index: %d", selectedIndex);
+
+      // If it's disabled, disallow the click and leave.
+      PRBool isDisabled = PR_FALSE;
+      IsOptionDisabled(selectedIndex, isDisabled);
+      if (isDisabled) {
+        aMouseEvent->PreventDefault();
+        aMouseEvent->PreventCapture();
+        aMouseEvent->PreventBubble();
+        CaptureMouseEvents(mPresContext, PR_FALSE);
+        return NS_ERROR_FAILURE;
       }
-      if (mComboboxFrame) {
-        mComboboxFrame->ListWasSelected(mPresContext, PR_TRUE, PR_TRUE); 
-      } 
+
+      if (kNothingSelected != selectedIndex) {
+        if (!mChangesNotNotified) {
+          ResetSelectedItem();
+        }
+      }
+      ComboboxUpdateSelection(PR_TRUE, PR_TRUE);
       mouseEvent->clickCount = 1;
     } else {
       // the click was out side of the select or its dropdown
@@ -3457,11 +2611,9 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     }
   } else {
     REFLOW_DEBUG_MSG(">>>>>> Didn't find");
-    mButtonDown = PR_FALSE;
     CaptureMouseEvents(mPresContext, PR_FALSE);
-    if (mSelectedIndex != mOldSelectedIndex) {
-      UpdateSelection(PR_TRUE, PR_FALSE, mContent);
-    }
+    // Notify
+    UpdateSelection();
 #if 0 // XXX - this is a partial fix for Bug 29990
     if (mSelectedIndex != mStartExtendedIndex) {
       mEndExtendedIndex = mSelectedIndex;
@@ -3502,7 +2654,6 @@ PRBool nsListControlFrame::IsClickingInCombobox(nsIDOMEvent* aMouseEvent)
 //----------------------------------------------------------------------
 nsresult
 nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent, 
-                                         PRInt32&     aOldIndex, 
                                          PRInt32&     aCurIndex)
 {
   if (IsClickingInCombobox(aMouseEvent)) {
@@ -3530,8 +2681,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 
     nsCOMPtr<nsIContent> optionContent = getter_AddRefs(GetOptionFromContent(content));
     if (optionContent) {
-      aOldIndex = aCurIndex;
-      aCurIndex = GetSelectedIndexFromContent(optionContent);
+      aCurIndex = GetIndexFromContent(optionContent);
       rv = NS_OK;
     }
   }
@@ -3545,8 +2695,8 @@ nsListControlFrame::GetScrollableView(nsIScrollableView*& aScrollableView)
 
   nsIView * scrollView;
   GetView(mPresContext, &scrollView);
-  nsresult rv = scrollView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&aScrollableView);
-  NS_ASSERTION(NS_SUCCEEDED(rv) && aScrollableView, "We must be able to get a ScrollableView");
+  CallQueryInterface(scrollView, &aScrollableView);
+  NS_ASSERTION(aScrollableView, "We must be able to get a ScrollableView");
 }
 
 //----------------------------------------------------------------------
@@ -3556,6 +2706,8 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   NS_ASSERTION(aMouseEvent != nsnull, "aMouseEvent is null.");
 
   REFLOW_DEBUG_MSG("--------------------------- MouseDown ----------------------------\n");
+
+  mButtonDown = PR_TRUE;
 
   if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
@@ -3579,59 +2731,12 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  // Check to see if the disabled option was clicked on
-  // NS_ERROR_FAILURE is returned is it isn't over an option
-  PRBool optionIsDisabled;
-  if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
-    if (optionIsDisabled) {
-      if (IsInDropDownMode() == PR_TRUE) {
-        ResetSelectedItem();
-      }
-      return NS_OK;
-    }
-  }
-
-  PRInt32 oldIndex;
-  PRInt32 curIndex = mSelectedIndex;
-
-  if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
-    if (IsInDropDownMode() == PR_TRUE) {
-#if 0 // Fix for Bug 50024
-      // the pop up stole focus away from the webshell
-      // now I am giving it back
-      nsIFrame * parentFrame;
-      GetParentWithView(mPresContext, &parentFrame);
-      if (nsnull != parentFrame) {
-        nsIView * pView;
-        parentFrame->GetView(mPresContext, &pView);
-        if (nsnull != pView) {
-          nsIWidget *window = nsnull;
-
-          nsIView *ancestor = pView;
-          while (nsnull != ancestor) {
-            ancestor->GetWidget(window); // addrefs
-            if (nsnull != window) {
-              window->SetFocus();
-              NS_IF_RELEASE(window);
-	            break;
-	          }
-	          ancestor->GetParent(ancestor);
-          }
-        }
-      }
-      // turn back on focus events
-      nsCOMPtr<nsIEventStateManager> stateManager;
-      if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
-        stateManager->ConsumeFocusEvents(PR_TRUE);
-      }
-#endif
-    } else {
-      mSelectedIndex    = curIndex;
-      mOldSelectedIndex = oldIndex;
+  PRInt32 selectedIndex;
+  if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
+    if (!IsInDropDownMode()) {
       // Handle Like List
-      mButtonDown = PR_TRUE;
       CaptureMouseEvents(mPresContext, PR_TRUE);
-      HandleListSelection(aMouseEvent);
+      HandleListSelection(aMouseEvent, selectedIndex);
     }
   } else {
     // NOTE: the combo box is responsible for dropping it down
@@ -3683,22 +2788,9 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
     PRBool isDroppedDown = PR_FALSE;
     mComboboxFrame->IsDroppedDown(&isDroppedDown);
     if (isDroppedDown) {
-      PRInt32 oldIndex;
-      PRInt32 curIndex = mSelectedIndex;
-      if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
-        PRBool optionIsDisabled = PR_FALSE;
-        if (NS_SUCCEEDED(IsTargetOptionDisabled(optionIsDisabled)) && !optionIsDisabled) {
-          mSelectedIndex    = curIndex;
-          mOldSelectedIndex = oldIndex;
-          if (kNothingSelected != mSelectedIndex) {
-            if (mOldSelectedIndex != mSelectedIndex) {
-              if (mOldSelectedIndex != kNothingSelected) {
-                SetContentSelected(mOldSelectedIndex, PR_FALSE);
-              }
-              SetContentSelected(mSelectedIndex, PR_TRUE);
-            }
-          }
-        }
+      PRInt32 selectedIndex;
+      if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
+        PerformSelection(selectedIndex, PR_FALSE, PR_FALSE);
       }
     }
   } else {// XXX - temporary until we get drag events
@@ -3716,69 +2808,11 @@ nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
   //REFLOW_DEBUG_MSG("DragMove\n");
 
   if (IsInDropDownMode() == PR_FALSE) { 
-    // check to make sure we are a mulitple select list
-    PRBool multipleSelections = PR_FALSE;
-    GetMultiple(&multipleSelections);
-    if (multipleSelections) {
-      // get the currently moused over item
-      PRInt32 oldIndex;
-      PRInt32 curIndex = mSelectedIndex;
-      if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
-        if (curIndex != oldIndex) {
-          // select down the list
-          if (curIndex > oldIndex) {
-            PRInt32 startInx = oldIndex > mStartExtendedIndex?oldIndex+1:oldIndex;
-            PRInt32 endInx   = curIndex > mStartExtendedIndex?curIndex+1:curIndex;
-            PRInt32 i;
-            for (i=startInx;i<endInx;i++) {
-              if (i != mStartExtendedIndex) { // skip the starting clicked on node
-                PRBool optionIsDisabled;
-                if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
-                  if (!optionIsDisabled) {
-                    mSelectedIndex = i;
-                    SetContentSelected(mSelectedIndex, i > mStartExtendedIndex);
-                  }
-                }
-              }
-            }
-            mSelectedIndex = curIndex;
-          } else {
-            // select up the list
-            PRInt32 startInx = oldIndex >= mStartExtendedIndex?oldIndex:oldIndex-1;
-            PRInt32 endInx   = curIndex >= mStartExtendedIndex?curIndex:curIndex-1;
-            PRInt32 i;
-            for (i=startInx;i>endInx;i--) {
-              if (i != mStartExtendedIndex) { // skip the starting clicked on node
-                PRBool optionIsDisabled;
-                if (NS_OK == IsTargetOptionDisabled(optionIsDisabled)) {
-                  if (!optionIsDisabled) {
-                    mSelectedIndex = i;
-                    SetContentSelected(mSelectedIndex, i < mStartExtendedIndex);
-                  }
-                }
-              }
-            }
-            mSelectedIndex = curIndex;
-          }
-        } else {
-          //mOldSelectedIndex = oldIndex;
-          mSelectedIndex    = curIndex;
-        }
-      }
-    } else { // Fix Bug 44454
-      // get the currently moused over item
-      PRInt32 oldIndex;
-      PRInt32 curIndex = mSelectedIndex;
-      if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, oldIndex, curIndex))) {
-        if (curIndex != oldIndex) { // select down the list
-          SetContentSelected(mSelectedIndex, PR_FALSE);
-          mSelectedIndex = curIndex;
-          SetContentSelected(mSelectedIndex, PR_TRUE);
-          mStartExtendedIndex = mSelectedIndex;
-          mEndExtendedIndex   = kNothingSelected;
-        }
-      }
-    } // Fix Bug 44454
+    PRInt32 selectedIndex;
+    if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
+      // DragMove is the same as hitting shift+click
+      PerformSelection(selectedIndex, PR_TRUE, PR_FALSE);
+    }
   }
   return NS_OK;
 }
@@ -3790,6 +2824,21 @@ nsresult
 nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   return NS_OK;
+}
+
+nsresult
+nsListControlFrame::ScrollToIndex(PRInt32 aIndex)
+{
+  if (aIndex < 0) {
+    return ScrollToFrame(nsnull);
+  } else {
+    nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(aIndex));
+    if (content) {
+      return ScrollToFrame(content);
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------
@@ -3884,25 +2933,39 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 // backwards until we get back to the original item or an enabled option
 // 
 // anNewIndex - will get set to the new index if it finds one
-// anOldIndex - gets sets to the old index if a new index is found
 // aDoSetNewIndex - indicates that a new item was found and it can be selected
 // aWasDisabled - means it found a new item but it was disabled
 // aNumOptions - the total number of options in the list
 // aDoAdjustInc - the initial increment 1-n
 // aDoAdjustIncNext - the increment used to search for the next enabled option
+//
+// the aDoAdjustInc could be a "1" for a single item or
+// any number greater representing a page of items
+//
 void
-nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &anOldIndex, 
-                                              PRBool &aDoSetNewIndex, PRBool &aWasDisabled,
-                                              PRInt32 aNumOptions, PRInt32 aDoAdjustInc, 
+nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 startIndex,
+                                              PRInt32 &anNewIndex,
+                                              PRInt32 aNumOptions,
+                                              PRInt32 aDoAdjustInc,
                                               PRInt32 aDoAdjustIncNext)
 {
-  // the aDoAdjustInc could be a "1" for a single item or 
-  // any number greater representing a page of items
+  // means we reached the end of the list and now we are searching backwards
+  PRBool doingReverse = PR_FALSE;
+  // lowest index in the search range
+  PRInt32 bottom      = 0;
+  // highest index in the search range
+  PRInt32 top         = aNumOptions;
+
+  // Start off keyboard options at selectedIndex if nothing else is defaulted to
   //
-  PRInt32 newIndex    = anNewIndex + aDoAdjustInc;
-  PRBool doingReverse = PR_FALSE;   // means we reached the end of the list and now we are searching backwards
-  PRInt32 bottom      = 0;          // lowest index in the search range
-  PRInt32 top         = aNumOptions;// highest index in the search range
+  // XXX Perhaps this should happen for mouse too, to start off shift click
+  // automatically in multiple ... to do this, we'd need to override
+  // OnOptionSelected and set mStartSelectedIndex if nothing is selected.  Not
+  // sure of the effects, though, so I'm not doing it just yet.
+  if (startIndex < bottom) {
+    GetSelectedIndex(&startIndex);
+  }
+  PRInt32 newIndex    = startIndex + aDoAdjustInc;
 
   // make sure we start off in the range
   if (newIndex < bottom) {
@@ -3911,17 +2974,10 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &anOl
     newIndex = aNumOptions-1;
   }
 
-
-  aWasDisabled = PR_FALSE;
   while (1) {
-    // Special Debug Code
-    //printf("T:%d  B:%d  I:%d  R:%d  IM:%d  I:%d\n", top, bottom, newIndex, aDoAdjustInc, aDoAdjustIncNext, doingReverse);
-    //if (newIndex < -30 || newIndex > 30) {
-    //  printf("********************************* Stopped!\n");
-    //  return;
-    //}
     // if the newIndex isn't disabled, we are golden, bail out
-    if (NS_OK == IsOptionDisabled(newIndex, aWasDisabled) && !aWasDisabled) {
+    PRBool isDisabled = PR_TRUE;
+    if (NS_OK == IsOptionDisabled(newIndex, isDisabled) && !isDisabled) {
       break;
     }
 
@@ -3937,9 +2993,9 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &anOl
         // reverse the incrementer
         // set the other end of the list to our original starting index
         newIndex         = bottom;
-        aDoAdjustIncNext = -aDoAdjustIncNext;
+        aDoAdjustIncNext = 1;
         doingReverse     = PR_TRUE;
-        top              = anNewIndex;
+        top              = startIndex;
       }
     } else  if (newIndex >= top) {
       if (doingReverse) {
@@ -3949,17 +3005,15 @@ nsListControlFrame::AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &anOl
         // reverse the incrementer
         // set the other end of the list to our original starting index
         newIndex = top - 1;
-        aDoAdjustIncNext = -aDoAdjustIncNext;
+        aDoAdjustIncNext = -1;
         doingReverse     = PR_TRUE;
-        bottom           = anNewIndex;
+        bottom           = startIndex;
       }
     }
   }
 
   // Looks like we found one
-  anOldIndex     = anNewIndex;
   anNewIndex     = newIndex;
-  aDoSetNewIndex = PR_TRUE;
 }
 
 nsresult
@@ -4038,9 +3092,9 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // We are handling this so don't let it bubble up
   aKeyEvent->PreventBubble();
 
-  // this tells us whether we need to process the new index that was set
-  // DOM_VK_RETURN & DOM_VK_ESCAPE will leave this false
-  PRBool doSetNewIndex = PR_FALSE;
+  // this is the new index to set
+  // DOM_VK_RETURN & DOM_VK_ESCAPE will not set this
+  PRInt32  newIndex = kNothingSelected;
 
   // set up the old and new selected index and process it
   // DOM_VK_RETURN selects the item
@@ -4052,27 +3106,23 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
     case nsIDOMKeyEvent::DOM_VK_UP:
     case nsIDOMKeyEvent::DOM_VK_LEFT: {
-      REFLOW_DEBUG_MSG2("DOM_VK_UP   mSelectedIndex: %d ", mSelectedIndex);
-      if (mSelectedIndex > 0) {
-        PRBool wasDisabled;
-        AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
-                                  doSetNewIndex, wasDisabled, 
-                                  (PRInt32)numOptions, -1, -1);
-      }
-      REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
+      REFLOW_DEBUG_MSG2("DOM_VK_UP   mEndSelectionIndex: %d ",
+                        mEndSelectionIndex);
+      AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
+                                (PRInt32)numOptions,
+                                -1, -1);
+      REFLOW_DEBUG_MSG2("  After: %d\n", newIndex);
       } break;
     
     case nsIDOMKeyEvent::DOM_VK_DOWN:
     case nsIDOMKeyEvent::DOM_VK_RIGHT: {
-      REFLOW_DEBUG_MSG2("DOM_VK_DOWN mSelectedIndex: %d ", mSelectedIndex);
+      REFLOW_DEBUG_MSG2("DOM_VK_DOWN mEndSelectionIndex: %d ",
+                        mEndSelectionIndex);
 
-      if (mSelectedIndex < (PRInt32)(numOptions-1)) {
-        PRBool wasDisabled;
-        AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
-                                  doSetNewIndex, wasDisabled, 
-                                  (PRInt32)numOptions, 1, 1);
-      }
-      REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
+      AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
+                                (PRInt32)numOptions,
+                                1, 1);
+      REFLOW_DEBUG_MSG2("  After: %d\n", newIndex);
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_RETURN: {
@@ -4080,10 +3130,10 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         if (IsInDropDownMode() == PR_TRUE) {
           PRBool isDroppedDown;
           mComboboxFrame->IsDroppedDown(&isDroppedDown);
-          mComboboxFrame->ListWasSelected(mPresContext, isDroppedDown, PR_TRUE);
+          ComboboxUpdateSelection(isDroppedDown, PR_TRUE);
         } else {
-	        UpdateSelection(PR_TRUE, PR_FALSE, mContent);
-	      }
+          UpdateSelection();
+        }
       }
       } break;
 
@@ -4094,70 +3144,61 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_PAGE_UP: {
-      if (mSelectedIndex > 0) {
-        PRBool wasDisabled;
-        AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
-                                  doSetNewIndex, wasDisabled, 
-                                  (PRInt32)numOptions, -(mNumDisplayRows-1), -1);
-      }
+      AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
+                                (PRInt32)numOptions,
+                                -(mNumDisplayRows-1), -1);
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN: {
-      if (mSelectedIndex < (PRInt32)(numOptions-1)) {
-        PRBool wasDisabled;
-        AdjustIndexForDisabledOpt(mSelectedIndex, mOldSelectedIndex, 
-                                  doSetNewIndex, wasDisabled, 
-                                  (PRInt32)numOptions, (mNumDisplayRows-1), 1);
-      }
+      AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
+                                (PRInt32)numOptions,
+                                (mNumDisplayRows-1), 1);
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_HOME: {
-      if (mSelectedIndex > 0) {
-        mOldSelectedIndex = mSelectedIndex;
-        mSelectedIndex    = 0;
-        doSetNewIndex     = PR_TRUE;
-      }
+      AdjustIndexForDisabledOpt(0, newIndex,
+                                (PRInt32)numOptions,
+                                0, 1);
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_END: {
-      if ((mSelectedIndex+1) < (PRInt32)numOptions) {
-        mOldSelectedIndex = mSelectedIndex;
-        mSelectedIndex    = (PRInt32)numOptions-1;
-        if (mSelectedIndex > (PRInt32)numOptions) {
-          mSelectedIndex = (PRInt32)numOptions-1;
-        }
-        doSetNewIndex = PR_TRUE;
-      }
+      AdjustIndexForDisabledOpt(numOptions-1, newIndex,
+                                (PRInt32)numOptions,
+                                0, -1);
       } break;
 
 
     default: { // Select option with this as the first character
                // XXX Not I18N compliant
-      code = (PRUint32)ToLowerCase((PRUnichar)code);
-      PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1) % numOptions;
+      code = (PRUint32)nsCRT::ToLower((PRUnichar)code);
+      PRInt32 selectedIndex;
+      GetSelectedIndex(&selectedIndex);
+      if (selectedIndex == kNothingSelected) {
+        selectedIndex = 0;
+      } else {
+        selectedIndex = (selectedIndex+1) % numOptions;
+      }
       PRInt32 startedAtIndex    = selectedIndex;
       PRBool  loopedAround  = PR_FALSE;
       while ((selectedIndex < startedAtIndex && loopedAround) || !loopedAround) {
-        nsCOMPtr<nsIDOMHTMLOptionElement>optionElement = getter_AddRefs(GetOption(*options, selectedIndex));
+        nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(
+            getter_AddRefs(GetOption(*options, selectedIndex)));
         if (optionElement) {
-          PRBool isDisabled = PR_FALSE;
-          optionElement->GetDisabled(&isDisabled);
-          if (!isDisabled) {
-            nsAutoString text;
-            if (NS_OK == optionElement->GetText(text)) {
-              text.ToLowerCase();
-              PRUnichar firstChar = text.CharAt(0);
-              if (firstChar == (PRUnichar)code) {
-                mOldSelectedIndex = mSelectedIndex;
-                mSelectedIndex    = selectedIndex;
-                SingleSelection();
-                if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                  mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
-                } else {
-                  UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
-                }
-                break;
+          nsAutoString text;
+          if (NS_OK == optionElement->GetText(text)) {
+            text.ToLowerCase();
+            PRUnichar firstChar = text.CharAt(0);
+            if (firstChar == (PRUnichar)code) {
+              PerformSelection(selectedIndex, PR_FALSE, PR_FALSE);
+              if (mComboboxFrame && mIsAllFramesHere) {
+                // dispatch event
+                mComboboxFrame->UpdateSelection(PR_TRUE,
+                                                PR_TRUE,
+                                                selectedIndex);
+              } else {
+                UpdateSelection(); // dispatch event
               }
+              break;
             }
           }
         }
@@ -4171,36 +3212,17 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     } break;//case
   } // switch
 
-  // actually process the new index and let the selection code
-  // the scrolling for us
-  if (doSetNewIndex) {
-    PRBool multipleSelections = PR_FALSE;
-    GetMultiple(&multipleSelections);
-    if (multipleSelections && isShift) {
-      REFLOW_DEBUG_MSG2("mStartExtendedIndex: %d\n", mStartExtendedIndex);
-
-      // determine the direct it is moving and this if the select should be added to or not
-      PRBool appendSel = ((code == nsIDOMKeyEvent::DOM_VK_UP || code == nsIDOMKeyEvent::DOM_VK_LEFT) && 
-                          mSelectedIndex < mStartExtendedIndex) ||
-                         ((code == nsIDOMKeyEvent::DOM_VK_DOWN || code == nsIDOMKeyEvent::DOM_VK_RIGHT) && 
-                          mSelectedIndex > mStartExtendedIndex);
-      if (appendSel) {
-        SetContentSelected(mSelectedIndex, PR_TRUE);
-      } else {
-        SetContentSelected(mSelectedIndex, PR_TRUE);
-        SetContentSelected(mOldSelectedIndex, PR_FALSE);
-      }
-      UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
+  // Actually process the new index and let the selection code
+  // do the scrolling for us
+  if (newIndex != kNothingSelected) {
+    PerformSelection(newIndex, isShift, PR_FALSE);
+    // Dispatch event
+    if (mComboboxFrame && mIsAllFramesHere) {
+      mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, newIndex);
     } else {
-      SingleSelection();
-      if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-        mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, mSelectedIndex); // dispatch event
-      } else {
-        UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
-      }
-      mStartExtendedIndex = mSelectedIndex;
-      mEndExtendedIndex   = kNothingSelected;
+      UpdateSelection();
     }
+
     // XXX - Are we cover up a problem here???
     // Why aren't they getting flushed each time?
     // because this isn't needed for Gfx
@@ -4209,7 +3231,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       mPresContext->GetShell(getter_AddRefs(presShell));
       presShell->FlushPendingNotifications(PR_FALSE);
     }
-    REFLOW_DEBUG_MSG2("  After: %d\n", mSelectedIndex);
+    REFLOW_DEBUG_MSG2("  After: %d\n", newIndex);
   } else {
     REFLOW_DEBUG_MSG("  After: SKIPPED it\n");
   }
@@ -4217,105 +3239,6 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-// nsIStatefulFrame
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState)
-{
-  // Don't save state before we are initialized
-  if (!mHasBeenInitialized) {
-    return NS_OK;
-  }
-
-  PRBool saveState = PR_FALSE;
-  nsresult res = NS_OK;
-
-  // Determine if we need to save state (non-default options selected)
-  PRInt32 i, numOptions = 0;
-  GetNumberOfOptions(&numOptions);
-  for (i = 0; i < numOptions; i++) {
-    nsCOMPtr<nsIContent> content = dont_AddRef(GetOptionContent(i));
-    nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(content));
-    if (option) {
-      PRBool stateBool = IsContentSelected(content);
-      PRBool defaultStateBool = PR_FALSE;
-      res = option->GetDefaultSelected(&defaultStateBool);
-      NS_ENSURE_SUCCESS(res, res);
-
-      if (stateBool != defaultStateBool) {
-        saveState = PR_TRUE;
-        break;
-      }
-    }
-  }
-
-  if (saveState) {
-    nsCOMPtr<nsISupportsArray> value;
-    nsresult res = NS_NewISupportsArray(getter_AddRefs(value));
-    NS_ENSURE_TRUE(value, res);
-
-    PRInt32 j = 0;
-    for (i = 0; i < numOptions; i++) {
-      if (IsContentSelectedByIndex(i)) {
-        res = SetOptionIntoPresState(value, i, j++);
-      }
-    }
-
-    res = NS_NewPresState(aState);
-    NS_ENSURE_SUCCESS(res, res);
-    res = (*aState)->SetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"), value);
-  }
-  
-  return res;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::SaveState(nsIPresContext* aPresContext,
-                              nsIPresState** aState)
-{
-  NS_ENSURE_ARG_POINTER(aState);
-
-  if (mComboboxFrame == nsnull) {
-    return SaveStateInternal(aPresContext, aState);
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-//-----------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::RestoreStateInternal(nsIPresContext* aPresContext,
-                                         nsIPresState* aState)
-{
-  mPresState = aState;
-
-  if (mHasBeenInitialized) { // Already called Reset, call again to update selection
-    ResetList(aPresContext);
-  }
-  return NS_OK;
-}
-
-//-----------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
-                                 nsIPresState* aState)
-{
-  NS_ENSURE_ARG_POINTER(aState);
-  // ignore requests for saving state that are made directly 
-  // to the list frame by the system
-  // The combobox frame will call RestoreStateInternal 
-  // to have its state saved.
-  //
-  // mComboboxFrame is null when it is a stand-alone listbox
-  if (mComboboxFrame == nsnull) {
-    return RestoreStateInternal(aPresContext, aState);
-  }
-
-  return NS_OK;
-}
 
 /*******************************************************************************
  * nsListEventListener
@@ -4572,11 +3495,24 @@ nsListControlFrame::ItemsHaveBeenRemoved(nsIPresContext * aPresContext)
   // Only adjust things if it is a combobox
   // removing items on a listbox should effect anything
   if (IsInDropDownMode()) {
-    // if items were removed ahead of the selected item the 
-    // selected index is moved down
-    // if the selected item was removed then we should reset the list
-    if (mUpdateTimer->RemovedSelectedIndex()) {
-      ResetList(aPresContext);
-    }
+    ResetList(aPresContext);
   }
+}
+
+
+//--------------------------------------------------------
+// nsIStatefulFrame
+//--------------------------------------------------------
+NS_IMETHODIMP
+nsListControlFrame::SaveState(nsIPresContext* aPresContext,
+                              nsIPresState** aState)
+{
+  return nsFormControlHelper::SaveContentState(this, aPresContext, aState);
+}
+
+NS_IMETHODIMP
+nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
+                                 nsIPresState* aState)
+{
+  return nsFormControlHelper::RestoreContentState(this, aPresContext, aState);
 }

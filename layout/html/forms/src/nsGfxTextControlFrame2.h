@@ -121,15 +121,10 @@ public:
 
 //==== BEGIN NSIFORMCONTROLFRAME
   NS_IMETHOD GetType(PRInt32* aType) const; //*
-  NS_IMETHOD GetName(nsString* aName);//*
+  NS_IMETHOD GetName(nsAString* aName);//*
   virtual void SetFocus(PRBool aOn , PRBool aRepaint); 
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void Reset(nsIPresContext* aPresContext);
-  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
-  virtual PRInt32 GetMaxNumValues();/**/
-  virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                nsString* aValues, nsString* aNames);
   virtual void SetFormFrame(nsFormFrame* aFrame);
   virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
@@ -145,6 +140,7 @@ public:
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
+  NS_IMETHOD OnContentReset();
 
 
 //==== END NSIFORMCONTROLFRAME
@@ -171,7 +167,7 @@ public:
                               PRInt32         aModType, 
                               PRInt32         aHint);
 
-  NS_IMETHOD GetText(nsString* aText, PRBool aInitialValue);
+  NS_IMETHOD GetText(nsString* aText);
 
   NS_DECL_ISUPPORTS_INHERITED
 

@@ -47,26 +47,13 @@ class nsIFrame;
   { 0x80, 0x2d, 0x0, 0x60, 0x8, 0x15, 0xa7, 0x91 } }
 
 
+// XXX We can't get rid of this entirely yet ... layout is checking it.
 /** 
   * Interface to provide submitting and resetting forms
  **/
 class nsIFormManager : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMMANAGER_IID)
-  /**
-    * Reset the values of all of this manager's controls back to their
-    * initial values. This is in response to a reset button being pushed.
-    */
-  NS_IMETHOD OnReset(nsIPresContext* aPresContext) = 0;
-
-  /**
-    * Submit the values of this manager's controls depending on its action,
-    * method attributes. This in response to a submit button being clicked.
-    * @param aPresContext the presentation context
-    * @param aFrame the frame of the submit button 
-    * @param aSubmitter the control that caused the submit 
-    */
-  NS_IMETHOD OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame) = 0;
 
 };
 

@@ -87,6 +87,13 @@ public:
 
   // overrided nsIFormControl method
   NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD Reset();
+  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
+  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
+  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
+                            PRInt32& aNumValues,
+                            nsString* aValues,
+                            nsString* aNames);
 
   // nsIContent overrides...
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -112,6 +119,12 @@ public:
 
 protected:
   PRInt8 mType;
+
+private:
+  // The analogue of defaultValue in the DOM for input and textarea
+  nsresult SetDefaultValue(const nsAReadableString& aDefaultValue);
+  nsresult GetDefaultValue(nsAWritableString& aDefaultValue);
+
 };
 
 
@@ -289,12 +302,14 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
   }
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+
+  if (formControlFrame) {
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
   }
-  return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -306,8 +321,9 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
   nsresult rv = NS_OK;
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  rv = GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+
+  if (formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
   }
 
@@ -398,13 +414,13 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  rv = GetPrimaryFrame(this, formControlFrame, PR_FALSE);
-  if (NS_SUCCEEDED(rv) && formControlFrame)
-  {
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+
+  if (formControlFrame) {
     nsIFrame* formFrame = nsnull;
-    if (NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame), 
-                                  (void **)&formFrame)) && formFrame)
-    {
+    CallQueryInterface(formControlFrame, &formFrame);
+
+    if (formFrame) {
       const nsStyleUserInterface* uiStyle;
       formFrame->GetStyleData(eStyleStruct_UserInterface,
                               (const nsStyleStruct *&)uiStyle);
@@ -454,8 +470,8 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
       {
         // Tell the frame about the click
         nsIFormControlFrame* formControlFrame = nsnull;
-        rv = GetPrimaryFrame(this, formControlFrame);
-        if (NS_SUCCEEDED(rv)) {
+        GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+        if (formControlFrame) {
           formControlFrame->MouseClicked(aPresContext);
         }
       }
@@ -537,3 +553,76 @@ nsHTMLButtonElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   return NS_OK;
 }
 #endif
+
+nsresult
+nsHTMLButtonElement::GetDefaultValue(nsAWritableString& aDefaultValue)
+{
+  return GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);
+}
+
+nsresult
+nsHTMLButtonElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
+{
+  return SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue, PR_TRUE);
+}
+
+nsresult
+nsHTMLButtonElement::Reset()
+{
+  return NS_OK;
+}
+
+nsresult
+nsHTMLButtonElement::IsSuccessful(nsIContent* aSubmitElement,
+                                  PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  if (aSubmitElement != this) {
+    return NS_OK;
+  }
+
+  // if it's disabled, it won't submit
+  PRBool disabled;
+  nsresult rv = GetDisabled(&disabled);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (disabled) {
+    return NS_OK;
+  }
+
+  // If there is no name, it won't submit
+  nsAutoString val;
+  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, val);
+  *_retval = rv != NS_CONTENT_ATTR_NOT_THERE;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLButtonElement::GetMaxNumValues(PRInt32 *_retval)
+{
+  *_retval = 1;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLButtonElement::GetNamesValues(PRInt32 aMaxNumValues,
+                                    PRInt32& aNumValues,
+                                    nsString* aValues,
+                                    nsString* aNames)
+{
+  NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
+
+  // We'll of course use the name of the control for the submit
+  nsAutoString name;
+  nsresult rv = GetName(name);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString value;
+  rv = GetValue(value);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aNames[0] = name;
+  aValues[0] = value;
+  aNumValues = 1;
+  return NS_OK;
+}

@@ -129,16 +129,12 @@ public:
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
 
-  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   NS_IMETHOD GetType(PRInt32* aType) const;
-  NS_IMETHOD GetName(nsString* aName);
-  NS_IMETHOD GetValue(nsString* aName);
-  virtual PRInt32 GetMaxNumValues();
-  virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                 nsString* aValues, nsString* aNames);
+  NS_IMETHOD GetName(nsAString* aName);
+  NS_IMETHOD GetValue(nsAString* aName);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void Reset(nsIPresContext*) {};
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
+  NS_IMETHOD OnContentReset();
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
   void ScrollIntoView(nsIPresContext* aPresContext);

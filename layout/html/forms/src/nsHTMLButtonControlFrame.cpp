@@ -216,41 +216,6 @@ nsHTMLButtonControlFrame::GetDefaultLabel(nsString& aString)
 }
 
 
-PRInt32
-nsHTMLButtonControlFrame::GetMaxNumValues() 
-{
-  return 1;
-}
-
-
-PRBool
-nsHTMLButtonControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                     nsString* aValues, nsString* aNames)
-{
-  nsAutoString name;
-  nsresult result = GetName(&name);
-  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_HAS_VALUE != result)) {
-    return PR_FALSE;
-  }
-
-  PRInt32 type;
-  GetType(&type);
-  nsAutoString value;
-  nsresult valResult = GetValue(&value);
-
-  if (NS_CONTENT_ATTR_HAS_VALUE == valResult) {
-    aValues[0] = value;
-    aNames[0]  = name;
-    aNumValues = 1;
-    return PR_TRUE;
-  } else {
-    aNumValues = 0;
-    return PR_FALSE;
-  }
-
-}
-
-
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetType(PRInt32* aType) const
 {
@@ -267,7 +232,7 @@ nsHTMLButtonControlFrame::GetType(PRInt32* aType) const
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetName(nsString* aResult)
+nsHTMLButtonControlFrame::GetName(nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
   if (mContent) {
@@ -288,7 +253,7 @@ nsHTMLButtonControlFrame::GetName(nsString* aResult)
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetValue(nsString* aResult)
+nsHTMLButtonControlFrame::GetValue(nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
   if (mContent) {
@@ -306,21 +271,6 @@ nsHTMLButtonControlFrame::GetValue(nsString* aResult)
     }
   }
   return result;
-}
-
-PRBool
-nsHTMLButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
-{
-  PRBool successful = PR_TRUE;
-  if (this == (aSubmitter)) {
-    nsAutoString name;
-    PRBool disabled = PR_FALSE;
-    nsFormControlHelper::GetDisabled(mContent, &disabled);
-    successful = !disabled && (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
-  } else {
-    successful = PR_FALSE;
-  }
-  return successful;
 }
 
 PRBool
@@ -863,3 +813,8 @@ nsHTMLButtonControlFrame::AppendFrames(nsIPresContext* aPresContext,
                                      aFrameList);
 }
 
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::OnContentReset()
+{
+  return NS_OK;
+}
