@@ -254,7 +254,9 @@ all:: export libs install
 #
 # Maybe this should be done in config/Makefile so it only happens once...?
 #
-TARGETS			+= tweak_nspr
+#XXXceb
+# Directory SDK doesn't use NSPR
+#TARGETS			+= tweak_nspr
 
 #
 # Since the NSPR folks won't help, we'll fix things the sneaky way.
