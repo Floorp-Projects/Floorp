@@ -30,6 +30,7 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
+#include "nsIPref.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocShellEdit.h"
@@ -37,7 +38,8 @@
 #include "nsIGenericWindow.h"
 #include "nsIScrollable.h"
 #include "nsITextScroll.h"
-#include "nsIPref.h"
+
+#include "nsDSURIContentListener.h"
 
 class nsDocShellInitInfo
 {
@@ -52,7 +54,7 @@ public:
 
 class nsDocShellBase : public nsIDocShell, public nsIDocShellEdit, 
    public nsIDocShellFile, public nsIGenericWindow, public nsIScrollable, 
-   public nsITextScroll 
+   public nsITextScroll
 {
 public:
    NS_DECL_ISUPPORTS
@@ -72,15 +74,24 @@ protected:
       PRInt32* aOffset);
    nsresult GetRootScrollableView(nsIScrollableView** aOutScrollView);
    nsresult GetPresShell(nsIPresShell** aPresShell);
+   nsresult NewURI(const PRUnichar* aUri, nsIURI** aURI);
+   nsresult EnsureContentListener();
 
 protected:
    PRBool                     mCreated;
    nsString                   mName;
+   nsDSURIContentListener*    mContentListener;
    nsDocShellInitInfo*        mBaseInitInfo;
    nsCOMPtr<nsIContentViewer> mContentViewer;
-   nsCOMPtr<nsIDocShell>      mParent;
    nsCOMPtr<nsIWidget>        mParentWidget;
    nsCOMPtr<nsIPref>          mPrefs;
+
+   /* Note this can not be nsCOMPtr as that that would cause an addref on the 
+   parent thus a cycle.  A weak reference would work, but not required as the
+   interface states a requirement to zero out the parent when the parent is
+   releasing the interface.*/
+   nsIDocShell*               mParent; 
+                                       
 };
 
 #endif /* nsDocShellBase_h__ */

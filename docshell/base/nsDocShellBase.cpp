@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -20,10 +20,12 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
+#include "nsIComponentManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDeviceContext.h"
+#include "nsCURILoader.h"
 
 #include "nsDocShellBase.h"
 
@@ -31,7 +33,7 @@
 //***    nsDocShellBase: Object Management
 //*****************************************************************************
 
-nsDocShellBase::nsDocShellBase() : mCreated(PR_FALSE)
+nsDocShellBase::nsDocShellBase() : mCreated(PR_FALSE), mContentListener(nsnull)
 {
 	NS_INIT_REFCNT();
    mBaseInitInfo = new nsDocShellInitInfo();
@@ -43,6 +45,12 @@ nsDocShellBase::~nsDocShellBase()
       {
       delete mBaseInitInfo;
       mBaseInitInfo = nsnull;
+      }
+
+   if(mContentListener)
+      {
+      mContentListener->Release();
+      mContentListener = nsnull;
       }
 }
 
@@ -65,21 +73,27 @@ NS_IMETHODIMP nsDocShellBase::LoadURI(const PRUnichar* uri,
    return LoadURIVia(uri, presContext, 0);
 }
 
-NS_IMETHODIMP nsDocShellBase::LoadURIVia(const PRUnichar* uri, 
-   nsIPresContext* presContext, PRUint32 adapterBinding)
+NS_IMETHODIMP nsDocShellBase::LoadURIVia(const PRUnichar* aUri, 
+   nsIPresContext* aPresContext, PRUint32 aAdapterBinding)
 {
-  NS_ENSURE_ARG(uri);
-   //XXX First Check
-	/*
-	Loads a given URI through the specified adapter.  This will give priority
-	to loading the requested URI in the object implementing this interface.
-	If it can't be loaded here	however, the URL dispatcher will go through its
-	normal process of content loading.
+   NS_ENSURE_ARG(aUri);
 
-	@param uri - The URI to load.
-	@param adapterBinding - The local IP address of the adapter to bind to.
-	*/
-  return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIURILoader> uriLoader;
+   NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(NS_URI_LOADER_PROGID,
+         nsnull, NS_GET_IID(nsIURILoader), getter_AddRefs(uriLoader)), 
+         NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIURI> uri;
+   NS_ENSURE_SUCCESS(NewURI(aUri, getter_AddRefs(uri)), NS_ERROR_FAILURE);  
+
+   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+
+   /*
+   Call uriloader passing mContentListener as the nsIURIContentListener
+   uriLoader->OpenURI(uri, nsnull, nsnull, 
+   */
+
+   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
@@ -104,20 +118,18 @@ NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
 NS_IMETHODIMP nsDocShellBase::SetDocument(nsIDOMDocument* aDocument, 
    nsIPresContext* presContext)
 {
-  NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+   NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
+   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // caller is responsible for calling nsString::Recycle(*aName);
 NS_IMETHODIMP nsDocShellBase::GetName(PRUnichar** aName)
 {
-  NS_ENSURE_ARG_POINTER(aName);
-  *aName = nsnull;
-  if (0!=mName.Length())
-  {
-    *aName = mName.ToNewUnicode();
-  }
-  return NS_OK;
+   NS_ENSURE_ARG_POINTER(aName);
+   *aName = nsnull;
+   if(0 != mName.Length())
+      *aName = mName.ToNewUnicode();
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetName(const PRUnichar* aName)
@@ -162,8 +174,32 @@ NS_IMETHODIMP nsDocShellBase::GetParent(nsIDocShell** parent)
 NS_IMETHODIMP nsDocShellBase::SetParent(nsIDocShell* aParent)
 {
   // null aParent is ok
-  mParent = aParent;   // this assignment does an addref
+   /*
+   Note this doesn't do an addref on purpose.  This is because the parent
+   is an implied lifetime.  We don't want to create a cycle by refcounting
+   the parent.
+   */
+   mParent = aParent;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellBase::GetParentURIContentListener(nsIURIContentListener**
+   aParent)
+{
+   NS_ENSURE_ARG_POINTER(aParent);
+   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+
+   mContentListener->GetParentContentListener(aParent);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellBase::SetParentURIContentListener(nsIURIContentListener*
+   aParent)
+{
+   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+
+   mContentListener->SetParentContentListener(aParent);
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::CanHandleContentType(const PRUnichar* contentType, 
@@ -1079,3 +1115,24 @@ nsresult nsDocShellBase::GetPresShell(nsIPresShell** aPresShell)
 
    return NS_OK;
 }
+
+nsresult nsDocShellBase::NewURI(const PRUnichar* aUri, nsIURI** aURI)
+{
+   //XXX Get new URI
+   return NS_ERROR_FAILURE;
+}
+
+nsresult nsDocShellBase::EnsureContentListener()
+{
+   if(mContentListener)
+      return NS_OK;
+   
+   mContentListener = new nsDSURIContentListener();
+   NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
+
+   mContentListener->AddRef();
+   mContentListener->DocShellBase(this);
+
+   return NS_OK;
+}
+
