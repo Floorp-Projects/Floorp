@@ -381,6 +381,12 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
+  nsBlockFrame* f = NS_CONST_CAST(nsBlockFrame*, this);
+  nsRect* overflowArea = f->GetOverflowAreaProperty(PR_FALSE);
+  if (overflowArea) {
+    fprintf(out, " [overflow=%d,%d,%d,%d]", overflowArea->x, overflowArea->y,
+            overflowArea->width, overflowArea->height);
+  }
   PRInt32 numInlineLines = 0;
   PRInt32 numBlockLines = 0;
   if (! mLines.empty()) {
@@ -2140,7 +2146,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     aState.ReconstructMarginAbove(line);
 
     // Update aState.mPrevChild as if we had reflowed all of the frames in
-    // this line.  This is expensive in some cases, since it requires
+    // the last line.  This is expensive in some cases, since it requires
     // walking |GetNextSibling|.
     aState.mPrevChild = line.prev()->LastChild();
   }
@@ -2156,6 +2162,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     nsBlockFrame* nextInFlow = aState.mNextInFlow;
     line_iterator nifLine = nextInFlow->begin_lines();
     if (nifLine == nextInFlow->end_lines()) {
+      NS_WARNING("Drained the life from next-in-flow!\n");
       aState.mNextInFlow = (nsBlockFrame*) aState.mNextInFlow->mNextInFlow;
       continue;
     }
@@ -2186,8 +2193,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     lastFrame->SetNextSibling(nsnull);
 
     // Add line to our line list
-    if (aState.mPrevChild)
+    if (aState.mPrevChild) {
       aState.mPrevChild->SetNextSibling(toMove->mFirstChild);
+    }
+     
     line = mLines.before_insert(end_lines(), toMove);
 
     // If line contains floats, remove them from aState.mNextInFlow's
@@ -2570,11 +2579,12 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       if (aDamageDeletedLines) {
         Invalidate(fromLine->mBounds);
       }
-      if (aFromLine.next() != end_lines())
+      if (aFromLine.next() != aFromContainer.end())
         aFromLine.next()->MarkPreviousMarginDirty();
 
       Invalidate(fromLine->GetCombinedArea());
       aFromContainer.erase(aFromLine);
+      // Note that aFromLine just got incremented, so don't use it again here!
       aState.FreeLineBox(fromLine);
     }
 
@@ -2591,10 +2601,10 @@ nsBlockFrame::PullFrameFrom(nsBlockReflowState& aState,
       
       // The frame is being pulled from a next-in-flow; therefore we
       // need to add it to our sibling list.
+      frame->SetNextSibling(nsnull);
       if (nsnull != aState.mPrevChild) {
         aState.mPrevChild->SetNextSibling(frame);
       }
-      frame->SetNextSibling(nsnull);
     }
 
     // Stop pulling because we found a frame to pull
@@ -4729,9 +4739,9 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
   // Find the line and the previous sibling that contains
   // deletedFrame; we also find the pointer to the line.
   nsBlockFrame* flow = this;
-  nsLineList& lines = flow->mLines;
-  nsLineList::iterator line = lines.begin(),
-                       line_end = lines.end();
+  nsLineList* lines = &flow->mLines;
+  nsLineList::iterator line = lines->begin(),
+                       line_end = lines->end();
   nsIFrame* prevSibling = nsnull;
   for ( ; line != line_end; ++line) {
     nsIFrame* frame = line->mFirstChild;
@@ -4807,7 +4817,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       // If line is empty, remove it now
       if (0 == lineChildCount) {
         nsLineBox *cur = line;
-        line = lines.erase(line);
+        line = lines->erase(line);
         // Invalidate the space taken up by the line.
         // XXX We need to do this if we're removing a frame as a result of
         // a call to RemoveFrame(), but we may not need to do this in all
@@ -4857,9 +4867,9 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       NS_ASSERTION(nsnull != flow, "whoops, continuation without a parent");
       // add defensive pointer check for bug 56894
       if (flow) {
-        lines = flow->mLines;
-        line = lines.begin();
-        line_end = lines.end();
+        lines = &flow->mLines;
+        line = lines->begin();
+        line_end = lines->end();
         prevSibling = nsnull;
       } else {
         aDeletedFrame = nsnull;
