@@ -1289,7 +1289,7 @@ if ($toolong) {
 }
 
 if (Param('usequip')){
-  print "<HR><A HREF=newquip.html><I>$quip</I></A></CENTER>\n";
+  print "<HR><A HREF=quips.cgi><I>$quip</I></A></CENTER>\n";
 }
 print "<HR SIZE=10>";
 print "$count bugs found." if $count > 9;
