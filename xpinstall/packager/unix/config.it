@@ -102,6 +102,7 @@ Description Short=XPInstall Engine
 Description Long=Installer technology
 Archive=xpcom.xpi
 $InstallSize$:xpcom
+$InstallSizeArchive$:xpcom.xpi
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
@@ -111,6 +112,7 @@ Description Short=Navigator
 Description Long=Web browser software
 Archive=browser.xpi
 $InstallSize$:browser
+$InstallSizeArchive$:browser.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
@@ -120,6 +122,7 @@ Description Short=Mail & News
 Description Long=Email and Newsgroup software
 Archive=mail.xpi
 $InstallSize$:mail
+$InstallSizeArchive$:mail.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
@@ -129,6 +132,7 @@ Description Short=Personal Security Manager
 Description Long=Personal Security Manager (PSM) for crypto operations
 Archive=psm.xpi
 $InstallSize$:psm
+$InstallSizeArchive$:psm.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
@@ -138,6 +142,7 @@ Description Short=Chatzilla
 Description Long=Chatzilla IRC client
 Archive=chatzilla.xpi
 $InstallSize$:chatzilla
+$InstallSizeArchive$:chatzilla.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
@@ -147,6 +152,7 @@ Description Short=Quality Feedback Agent
 Description Long=Tool for reporting software crashes to Netscape
 Archive=talkback.xpi
 $InstallSize$:talkback
+$InstallSizeArchive$:talkback.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
@@ -156,6 +162,7 @@ Description Short=English US Profile Defaults
 Description Long=English US Profile Defaults
 Archive=deflenus.xpi
 $InstallSize$:deflenus
+$InstallSizeArchive$:deflenus.xpi
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
@@ -165,6 +172,7 @@ Description Short=English (US) Language Pack
 Description Long=English (US) Language Pack
 Archive=langenus.xpi
 $InstallSize$:langenus
+$InstallSizeArchive$:langenus.xpi
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
@@ -174,6 +182,7 @@ Description Short=US Regional Pack
 Description Long=Regional contents for US users
 Archive=regus.xpi
 $InstallSize$:regus
+$InstallSizeArchive$:regus.xpi
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
@@ -199,4 +208,4 @@ Arguments=-installer
 ;-------------------------------------------------------------------------
 Filename=mozilla-bin
 ; *** LOCALIZE ME BABY ***
-Message=An older installation of Mozilla was detected.  Please choose to delete the directory contents of your current Mozilla installation by hitting the 'Delete' button.  Alternatively, please hit the 'Cancel' button and choose a different destination directory.  
+Message=An older installation of Mozilla was detected.  Please choose to delete the directory contents of your current Mozilla installation by pressing the 'Delete' button.  Alternatively, please press the 'Cancel' button and choose a different destination directory.  

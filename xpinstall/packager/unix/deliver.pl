@@ -139,18 +139,22 @@ spew("Completed making .xpis");
 #-------------------------------------------------------------------------
 #// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
 #// config.ini, installer.ini into stub
+spew("Creating stub installer tarball...");
 chdir("$RAW/..");
 system("mv $RAW $ROOT/$SUBDIR");
 system("tar cvf $STUB/$aStubName.tar ./$SUBDIR/mozilla-installer ./$SUBDIR/mozilla-installer-bin ./$SUBDIR/installer.ini ./$SUBDIR/README ./$SUBDIR/config.ini ./$SUBDIR/MPL-1.1.txt"); 
 system("mv $ROOT/$SUBDIR $RAW");
 system("gzip $STUB/$aStubName.tar");
+spew("Completed creating stub installer tarball");
 
 #// tar and gzip mozilla-installer, mozilla-installer-bin, README, license, 
 #// config.ini, installer.ini and .xpis into sea
+spew("Creating blob (aka full or sea) installer tarball...");
 system("mv $RAW $ROOT/$SUBDIR");
 system("tar cvf $BLOB/$aBlobName.tar ./$SUBDIR/"); 
 system("mv $ROOT/$SUBDIR $RAW");
 system("gzip $BLOB/$aBlobName.tar");
+spew("Completed creating blob (aka full or sea) installer tarball");
 chdir($_orig);
 
 spew("Completed packaging stub and sea");
