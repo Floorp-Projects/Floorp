@@ -177,6 +177,11 @@ public:
                                     PRBool *aHorizontalVisible) const = 0;
 
   /**
+   * Set the visible (disables the scrollbars when the are hidden)
+   */
+  NS_IMETHOD SetScrollbarVisibility(PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible) = 0;
+  /**
    * Set the properties describing how scrolling can be performed
    * in this scrollable.
    * @param aProperties new properties

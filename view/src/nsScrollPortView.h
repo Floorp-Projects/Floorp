@@ -75,6 +75,8 @@ public:
   NS_IMETHOD  GetControlInsets(nsMargin &aInsets) const;
   NS_IMETHOD  GetScrollbarVisibility(PRBool *aVerticalVisible,
                                      PRBool *aHorizontalVisible) const;
+  NS_IMETHOD SetScrollbarVisibility(PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible);
   NS_IMETHOD  SetScrollProperties(PRUint32 aProperties);
   NS_IMETHOD  GetScrollProperties(PRUint32 *aProperties);
   NS_IMETHOD  SetLineHeight(nscoord aHeight);

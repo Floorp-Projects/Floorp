@@ -345,6 +345,14 @@ NS_IMETHODIMP nsScrollPortView::GetScrollbarVisibility(PRBool *aVerticalVisible,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsScrollPortView::SetScrollbarVisibility(PRBool aVerticalVisible,
+                                                       PRBool aHorizontalVisible)
+{
+  NS_WARNING("Attempt to set scrollbars visibility this is not xp!");
+  return NS_OK;
+}
+
+
 
 void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float scale)
 {
