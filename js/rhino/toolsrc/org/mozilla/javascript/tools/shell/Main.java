@@ -80,20 +80,29 @@ public class Main {
 
         args = processOptions(cx, args);
 
+        int skip = 0;
+        if (fileList.size() == 0 && args.length > 0) {
+            skip = 1;
+            fileList.addElement(args[0]);
+        }
+        if (processStdin)
+            fileList.addElement(null);
+
         // get the command line arguments after the name of the script,
         // and define "arguments" array in the top-level object
         Object[] array = args;
         if (args.length > 0) {
-            int length = args.length - 1;
+            int length = args.length - skip;
             array = new Object[length];
-            System.arraycopy(args, 1, array, 0, length);
+            System.arraycopy(args, skip, array, 0, length);
         }
         Scriptable argsObj = cx.newArray(global, array);
         global.defineProperty("arguments", argsObj,
-                             ScriptableObject.DONTENUM);
+                              ScriptableObject.DONTENUM);
         
-        if (processStdin)
-            processSource(cx, args.length == 0 ? null : args[0]);
+        for (int i=0; i < fileList.size(); i++) {
+            processSource(cx, (String) fileList.get(i));
+        }
 
         cx.exit();
         return exitCode;
@@ -107,9 +116,9 @@ public class Main {
         for (int i=0; i < args.length; i++) {
             String arg = args[i];
             if (!arg.startsWith("-")) {
+                processStdin = false;
                 String[] result = new String[args.length - i];
-                for (int j=i; j < args.length; j++)
-                    result[j-i] = args[j];
+                System.arraycopy(args, i, result, 0, args.length - i);
                 return result;
             }
             if (arg.equals("-version")) {
@@ -146,9 +155,7 @@ public class Main {
                 processStdin = false;
                 if (++i == args.length)
                     usage(arg);
-                if (args[i].equals("-"))
-                    processStdin = false;
-                processSource(cx, args[i]);
+                fileList.addElement(args[i].equals("-") ? null : args[i]);
                 continue;
             }
             usage(arg);
@@ -369,4 +376,5 @@ public class Main {
     static private final int EXITCODE_FILE_NOT_FOUND = 4;
     //static private DebugShell debugShell;
     static boolean processStdin = true;
+    static Vector fileList = new Vector(5);
 }

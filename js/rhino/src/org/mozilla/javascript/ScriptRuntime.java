@@ -432,6 +432,13 @@ public class ScriptRuntime {
         return (index < args.length) ? toString(args[index]) : "undefined";
     }
 
+    /**
+     * Optimized version of toString(Object) for numbers.
+     */
+    public static String toString(double val) {
+        return numberToString(val, 10);
+    }
+    
     public static String numberToString(double d, int base) {
         if (d != d)
             return "NaN";

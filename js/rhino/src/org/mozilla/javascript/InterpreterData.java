@@ -57,7 +57,7 @@ class InterpreterData {
                                     ? INITIAL_STRINGTABLE_SIZE
                                     : lastStringTableIndex * 2];
 
-        itsNumberTable = new Number[lastNumberTableIndex == 0
+        itsNumberTable = new double[lastNumberTableIndex == 0
                                     ? INITIAL_NUMBERTABLE_SIZE
                                     : lastNumberTableIndex * 2];
         
@@ -113,7 +113,7 @@ class InterpreterData {
     String[] itsStringTable;
     int itsStringTableIndex;
 
-    Number[] itsNumberTable;
+    double[] itsNumberTable;
     int itsNumberTableIndex;
     
     InterpretedFunction[] itsNestedFunctions;
