@@ -66,7 +66,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsEudoraFactory.cpp \
 		nsEudoraStringBundle.cpp \
 		nsEudoraImport.cpp \
 		nsEudoraMailbox.cpp \
