@@ -540,7 +540,7 @@ static char * gTop100List[] = {
    "http://members.aol.com",
    "http://www.imdb.com",
    "http://uk.imdb.com",
-   "http://macromedia.com",
+   "http://www.macromedia.com",
    "http://www.infobeat.com",
    "http://www.fxweb.com",
    "http://www.whowhere.com",
