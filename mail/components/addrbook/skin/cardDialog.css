@@ -22,7 +22,7 @@
  */
 
 /* ===== cardViewOverlay.css ============================================
-  == Styles for the Address Book Card view.
+  == Styles for Address Book dialogs.
   ======================================================================= */
 
 @import url("chrome://messenger/skin/");
@@ -47,6 +47,44 @@
 
 .stateZipSpacer {
   width: 3em;
+}
+
+/* ::::: List dialogs ::::: */
+
+#addressingWidget {
+  -moz-user-focus: none;
+  width: 0;
+}
+
+#typecol-addressingWidget {
+  min-width: 9em;
+  border-right: 1px solid #CACAFF;
+}
+
+.addressingWidgetItem,
+.dummy-row {
+  border: none !important;
+  background-color: inherit !important;
+  color: inherit !important;
+}
+
+.addressingWidgetCell {
+  border-bottom: 1px solid #CACAFF;
+  padding: 0px;
+}
+
+.addressingWidgetCell:first-child {
+  border-top: none;
+}
+
+.dummy-row-cell:first-child {
+  border-top: none;
+  border-bottom: 1px solid #CACAFF;
+}
+
+.person-icon {
+  margin: 0 3px;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.png");
 }
 
 /* XXX: would be nice to find a common place for this XXX ::::captions in tabs ::::: */
