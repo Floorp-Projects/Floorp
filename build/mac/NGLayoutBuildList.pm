@@ -1210,6 +1210,7 @@ sub MakeResourceAliases()
 		my($pref_chrome_dir) = "$chrome_dir" . "pref";
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",	"$pref_chrome_dir:content:default:", 0);
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",		"$pref_chrome_dir:skin:default:", 0);
+		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",		"$pref_chrome_dir:locale:en-US:", 0);
 	}
 
 	print("--- Resource copying complete ----\n")
