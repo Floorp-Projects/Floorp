@@ -116,6 +116,8 @@ typedef struct _reginfo
   #endif
 #elif defined XP_MAC
   #define VR_INTERFACE(__x)  __declspec(export) __x
+#elif defined(MOZ_STRIP_NOT_EXPORTED)
+  #define VR_INTERFACE(type) __attribute__ ((dllexport)) type
 #else
   #define VR_INTERFACE(type)     type
 #endif

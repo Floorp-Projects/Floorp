@@ -28,6 +28,8 @@
 #define NS_COM _declspec(dllexport)
 #elif defined(XP_MAC)
 #define NS_COM __declspec(export)
+#elif defined(MOZ_STRIP_NOT_EXPORTED)
+#define NS_COM __attribute__ ((dllexport))
 #else  /* !XP_PC */
 #define NS_COM
 #endif /* !XP_PC */
@@ -77,8 +79,13 @@
 
 #else  /* !XP_PC && !XP_MAC */
 
+#if defined(MOZ_STRIP_NOT_EXPORTED)
+#define NS_EXPORT __attribute__ ((dllexport))
+#define NS_EXPORT_(type) __attribute__ ((dllexport)) type
+#else
 #define NS_EXPORT
 #define NS_EXPORT_(type) type
+#endif
 
 #define NS_IMETHOD_(type) virtual type
 #define NS_IMETHOD virtual nsresult

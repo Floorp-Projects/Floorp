@@ -103,10 +103,19 @@
 #define JS_STATIC_DLL_CALLBACK(__x) __x _Optlink
 
 #else /* Unix */
+
+#ifdef MOZ_STRIP_NOT_EXPORTED
+#define JS_EXTERN_API(__type) extern __attribute__ ((dllexport)) __type
+#define JS_EXPORT_API(__type) __attribute__ ((dllexport))__type
+#define JS_EXTERN_DATA(__type) extern __attribute__ ((dllexport)) __type
+#define JS_EXPORT_DATA(__type) __attribute__ ((dllexport)) __type
+#else 
 #define JS_EXTERN_API(__type) extern __type
 #define JS_EXPORT_API(__type) __type
 #define JS_EXTERN_DATA(__type) extern __type
 #define JS_EXPORT_DATA(__type) __type
+#endif
+
 #define JS_DLL_CALLBACK
 #define JS_STATIC_DLL_CALLBACK(__x) static __x
 

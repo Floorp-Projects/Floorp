@@ -36,6 +36,9 @@
 #ifdef XP_WIN32
 #define UNICVTAPI __declspec(dllexport)
 
+#elif defined(MOZ_STRIP_NOT_EXPORTED)
+#define UNICVTAPI __attribute__ ((dllexport))
+
 #else
 #define UNICVTAPI
 #endif
