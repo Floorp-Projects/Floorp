@@ -160,6 +160,10 @@
   text-align: right;
 }
 
+#collapseddateValue > .textbox-input-box menupopup { 
+  text-align: left;
+}
+
 #collapsedfromBox {
   width: 18em;
 }
