@@ -53,6 +53,7 @@
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
 #include "nsSVGAtoms.h"
+#include "nsHTMLAtoms.h"
 #include "nsICSSStyleRule.h"
 #include "nsISVGSVGElement.h"
 #include "nsRuleWalker.h"
@@ -714,7 +715,12 @@ nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
       document->AttributeChanged(this, aNamespaceID, aAttribute, modType);
     }
   }
-  
+
+  if (aNamespaceID == kNameSpaceID_XMLEvents && 
+      aAttribute == nsHTMLAtoms::_event && GetOwnerDoc()) {
+    GetOwnerDoc()->AddXMLEventsContent(this);
+  }
+
   return NS_OK;
 }
 
