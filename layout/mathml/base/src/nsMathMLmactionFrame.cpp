@@ -413,7 +413,7 @@ nsMathMLmactionFrame::ShowStatus(nsIPresContext* aPresContext,
       if (treeOwner) {
         nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
         if (browserChrome) {
-          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, aStatusMsg.GetUnicode());
+          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, aStatusMsg.GetUnicode());
         }
       }
     }
