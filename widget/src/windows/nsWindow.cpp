@@ -2469,6 +2469,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           }
           break;
 
+        case WM_CLOSE: // close request
+          DispatchStandardEvent(NS_XUL_CLOSE);
+          result = PR_TRUE; // abort window closure
+          break;
+
         case WM_DESTROY:
             // clean up.
             OnDestroy();
