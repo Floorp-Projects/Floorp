@@ -1264,10 +1264,13 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
   nsCOMPtr<nsIDocument> newDoc = do_QueryInterface(aDocument, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // 0) Replace the old document with the new one
+  // Set new container
+  newDoc->SetContainer(mContainer);
+
+  // Replace the old document with the new one
   mDocument = newDoc;
 
-  // 1) Set the script global object on the new document
+  // Set the script global object on the new document
   nsCOMPtr<nsIScriptGlobalObject> global(do_GetInterface(mContainer));
 
   if (global) {
@@ -1278,7 +1281,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // 2) Replace the current pres shell with a new shell for the new document
+  // Replace the current pres shell with a new shell for the new document
 
   nsCOMPtr<nsILinkHandler> linkHandler;
   if (mPresShell) {
@@ -1301,7 +1304,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
       mPresContext->SetLinkHandler(linkHandler);
     }
 
-    // 3) Create a new style set for the document
+    // Create a new style set for the document
 
     nsStyleSet *styleSet;
     rv = CreateStyleSet(mDocument, &styleSet);
@@ -1318,10 +1321,9 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     styleSet->EndUpdate();
 
     // The pres shell owns the style set now.
-
     mPresShell->BeginObservingDocument();
 
-    // 4) Register the focus listener on the new document
+    // Register the focus listener on the new document
 
     nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mDocument, &rv);
     NS_WARN_IF_FALSE(erP, "No event receiver in document!");
