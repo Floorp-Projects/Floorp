@@ -631,6 +631,8 @@ GetIndexFromSelectionType(SelectionType aType)
     case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT: return 5; break;
     default:return -1;break;
     }
+    /* NOTREACHED */
+    return 0;
 }
 
 static SelectionType 
@@ -647,6 +649,8 @@ GetSelectionTypeFromIndex(PRInt8 aIndex)
     default:
       return nsISelectionController::SELECTION_NORMAL;break;
   }
+  /* NOTREACHED */
+  return 0;
 }
 
 
