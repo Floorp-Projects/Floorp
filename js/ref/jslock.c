@@ -102,6 +102,7 @@ js_CompareAndSwap(prword *w, prword ov, prword nv)
 #ifndef ULTRA_SPARC
     PR_ASSERT(nv >= 0);
     asm volatile ("
+stbar
 swap [%1],%4
 1:  tst %4
 bneg,a 1b
@@ -119,6 +120,7 @@ mov 0,%0
 #else /* ULTRA_SPARC */
     PR_ASSERT(ov != nv);
     asm volatile ("
+stbar
 cas [%1],%2,%3
 cmp %2,%3
 be,a 1f
@@ -141,25 +143,12 @@ mov 0,%0
 }
 
 #elif defined(AIX) && !defined(NSPR_LOCK)
+#include <sys/atomic_op.h>
 
 PR_INLINE int
 js_CompareAndSwap(prword *w, prword ov, prword nv)
 {
-/*
-  int i = -1;
-
-  lwarx reg,0,w
-  cmpw reg,ov
-  bne no
-  stwcx. nv,0,w
-  beq yes
-  no:
-  li res,0
-  yes:
-  */
-    extern int compare_and_swap(int*,int*,int);
-
-    return compare_and_swap(w,&ov,nv);
+    return !_check_lock(w,ov,nv);
 }
 
 #else
