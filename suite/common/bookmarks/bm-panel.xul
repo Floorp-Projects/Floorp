@@ -19,55 +19,53 @@
 -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
+<!-- <?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?> -->
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  align="vertical">
 
-  <html:script src="bookmarks.js"/>
+  <html:div style="width:100px;height:100px" flex="1">
+    <html:script src="bookmarks.js"/>
 
-<popup id="contextual" oncreate="return fillContextMenu('contextual');" >
-	<menu />
-</popup>
+    <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+      <menu />
+    </popup>
 
-<tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
-   flex="100%" style="height: 100%"
-   datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch" 
-   ondblclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');">
+    <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
+          style="height: 100%; width:100%;"
+          datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch" 
+          ondblclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');">
 
-  <!-- Commented out until new tree content model and template builder can play nice -->
-  <template>
-    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-      <treechildren>
-        <treeitem uri="...">
-          <treerow>
-            <treecell>
-              <html:hr width="75%" align="center" size="1" />
-            </treecell>
-          </treerow>
-        </treeitem>  		
-      </treechildren>
-    </rule>
-  	
-    <rule>
-      <treechildren>
-        <treeitem uri="...">
-          <treerow>
-            <treecell>
-              <treeindentation />
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
-                            align="left" />
-            </treecell>
-          </treerow>
-        </treeitem>
-      </treechildren>
-    </rule>
-  </template>
-  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-</tree>
+      <template>
+        <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+          <treechildren>
+            <treeitem uri="...">
+              <treerow>
+                <treecell>
+                  <html:hr width="75%" align="center" size="1" />
+                </treecell>
+              </treerow>
+            </treeitem>  		
+          </treechildren>
+        </rule>
 
+        <rule>
+          <treechildren>
+            <treeitem uri="...">
+              <treerow>
+                <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </rule>
+      </template>
+
+      <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+    </tree>
+  </html:div>
 </window>
 
