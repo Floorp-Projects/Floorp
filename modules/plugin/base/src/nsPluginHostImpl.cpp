@@ -4819,8 +4819,8 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     // See bug 197855.    
     dirEntry->Normalize();
 
-    nsCAutoString filePath;
-    rv = dirEntry->GetNativePath(filePath);
+    nsAutoString filePath;
+    rv = dirEntry->GetPath(filePath);
     if (NS_FAILED(rv))
       continue;
     
@@ -4834,7 +4834,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       dirEntry->GetLastModifiedTime(&fileModTime);
 
       item->mModTime = fileModTime;
-      item->mFilename.AssignWithConversion(filePath.get());
+      item->mFilename = filePath;
       pluginFilesArray.AppendElement(item);
     }
   } // end round of up of plugin files
