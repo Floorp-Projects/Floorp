@@ -67,23 +67,15 @@ struct nsReflowMetrics {
   // value carried into the child frame. The child frame, if it has a
   // top margin to apply will set it to the actual top margin to use.
   nscoord posTopMargin;         // in/out 
-  nscoord negTopMargin;         // in/out
 
   // These values are set by the child frame indicating its bottom
   // margin value.
   nscoord posBottomMargin;      // out
-  nscoord negBottomMargin;      // out
 
   nsReflowMetrics(nsSize* aMaxElementSize) {
     maxElementSize = aMaxElementSize;
-  }
-
-  void SetMargins(nscoord aPosTop, nscoord aNegTop,
-                  nscoord aPosBottom, nscoord aNegBottom) {
-    posTopMargin = aPosTop;
-    negTopMargin = aNegTop;
-    posBottomMargin = aPosBottom;
-    negBottomMargin = aNegBottom;
+    posTopMargin = 0;
+    posBottomMargin = 0;
   }
 };
 
@@ -660,6 +652,10 @@ inline nsReflowState::nsReflowState(nsIFrame*      aFrame,
   maxSize = aMaxSize;
   parentReflowState = nsnull;
   frame = aFrame;
+  widthConstraint = eReflowSize_Constrained;
+  heightConstraint = eReflowSize_Constrained;
+  minSize.width = 0;
+  minSize.height = 0;
 }
 
 // Constructs an initial reflow state (no parent reflow state) for an
@@ -678,6 +674,10 @@ inline nsReflowState::nsReflowState(nsIFrame*         aFrame,
   maxSize = aMaxSize;
   parentReflowState = nsnull;
   frame = aFrame;
+  widthConstraint = eReflowSize_Constrained;
+  heightConstraint = eReflowSize_Constrained;
+  minSize.width = 0;
+  minSize.height = 0;
 }
 
 // Construct a reflow state for the given frame, parent reflow state, and
@@ -692,6 +692,10 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
   maxSize = aMaxSize;
   parentReflowState = &aParentReflowState;
   frame = aFrame;
+  widthConstraint = eReflowSize_Constrained;
+  heightConstraint = eReflowSize_Constrained;
+  minSize.width = 0;
+  minSize.height = 0;
 }
 
 // Constructs a reflow state that overrides the reflow reason of the parent
@@ -706,6 +710,10 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
   maxSize = aMaxSize;
   parentReflowState = &aParentReflowState;
   frame = aFrame;
+  widthConstraint = eReflowSize_Constrained;
+  heightConstraint = eReflowSize_Constrained;
+  minSize.width = 0;
+  minSize.height = 0;
 }
 
 #endif /* nsIFrame_h___ */
