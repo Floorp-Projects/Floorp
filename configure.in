@@ -110,6 +110,12 @@ dnl ========================================================
 MKSHLIB='$(LD) $(DSO_LDOPTS)'
 DSO_LDOPTS='-shared -soname $(@:$(OBJDIR)/%.so=%.so)'
 
+dnl gcc can come with its own linker so its better to use the pass-thru calls
+dnl ========================================================
+if test "$GNU_CC" = 1; then
+    MKSHLIB='$(CC) -shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.so=%.so)'
+fi
+
 dnl now the exceptions
 dnl ========================================================
 case "$target" in
@@ -566,6 +572,8 @@ AC_SUBST(FE_GTK_LIBS)
 AC_SUBST(FE_GNOME_CFLAGS)
 AC_SUBST(FE_GNOME_LIBS)
 
+#if test -z "$USE_NGLAYOUT"; then
+
 dnl system JPEG support
 dnl ========================================================
 AC_ARG_WITH(jpeg,
@@ -679,6 +687,8 @@ if [ test -n "${PNG_DIR}" && test -d "${PNG_DIR}" && test "$SYSTEM_PNG" = 1 ]; t
     PNG_CFLAGS="-I${PNG_DIR}/include"
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
+
+#fi # !USE_NGLAYOUT
 
 dnl system NSPR support
 dnl we always use the system NSPR from now on...this option
