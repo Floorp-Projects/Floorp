@@ -43,12 +43,7 @@ LD_LIBS += \
 	xpfc10 \
 	$(NATIVE_RAPTOR_WIDGET) \
 	$(NATIVE_JULIAN_DLL) \
-	nsfmt$(MOZ_BITS)30 \
-	nsuni$(MOZ_BITS)30 \
-	nscck$(MOZ_BITS)30 \
-	nsjpn$(MOZ_BITS)30 \
-	nscnv$(MOZ_BITS)30 \
-	nssb$(MOZ_BITS)30 \
+    $(NATIVE_LIBNLS_LIBS) \
 	$(NATIVE_RAPTOR_GFX) \
 	$(RAPTOR_GFX) \
 	$(NATIVE_JULIAN_DLL) \

@@ -9,7 +9,7 @@
 #
 GDEPTH = ../../../..
 
-DIRS_LIBS = demo
+DIRS_LIBS = demo images
 
 MODULE = trex
 
@@ -20,41 +20,3 @@ libs::
 	$(INSTALL) toolbar.ui $(DIST)/bin/res/ui
 	$(INSTALL) test.ui $(DIST)/bin/res/ui
 	$(INSTALL) compose_event.ui $(DIST)/bin/res/ui
-	$(INSTALL) image.jpg $(DIST)/bin/res/ui
-	$(INSTALL) agenda_mini.gif $(DIST)/bin/res/ui
-	$(INSTALL) agenda_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) agenda_pressed_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) agenda_hover_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) intray_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) intray_pressed_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) intray_hover_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) tasks_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) tasks_hover_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) tasks_pressed_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) day_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) day_hover_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) day_pressed_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) week_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) week_hover_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) week_pressed_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) month_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) month_hover_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) month_pressed_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) newentry_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) newentry_hover_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) newentry_pressed_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) newtask_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) newtask_hover_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) newtask_pressed_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) print_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) print_hover_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) print_pressed_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) inbox_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) sent_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) outbox_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) trash_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) browser_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) mail_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) addrbook_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) portal_full.gif $(DIST)/bin/res/ui
-	$(INSTALL) trex_full.gif $(DIST)/bin/res/ui

@@ -23,12 +23,7 @@ LD_LIBS += \
 	raptorbase \
 	xpcom$(MOZ_BITS) \
 	$(NATIVE_JULIAN_DLL) \
-	nsfmt$(MOZ_BITS)30 \
-	nsuni$(MOZ_BITS)30 \
-	nscck$(MOZ_BITS)30 \
-	nsjpn$(MOZ_BITS)30 \
-	nscnv$(MOZ_BITS)30 \
-	nssb$(MOZ_BITS)30 \
+    $(NATIVE_LIBNLS_LIBS) \
 	$(XP_REG_LIB)
 
 EXTRA_LIBS += $(NSPR_LIBS)

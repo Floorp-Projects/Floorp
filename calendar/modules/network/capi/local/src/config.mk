@@ -19,12 +19,7 @@ INCLUDES       += -I../inc -I$(GDEPTH)/include
 
 LD_LIBS += \
 	$(NATIVE_JULIAN_DLL) \
-	nsfmt$(MOZ_BITS)30 \
-	nsuni$(MOZ_BITS)30 \
-	nscck$(MOZ_BITS)30 \
-	nsjpn$(MOZ_BITS)30 \
-	nscnv$(MOZ_BITS)30 \
-	nssb$(MOZ_BITS)30 \
+    $(NATIVE_LIBNLS_LIBS) \
     util10
 
 EXTRA_LIBS += $(NSPR_LIBS)

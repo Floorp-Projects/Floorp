@@ -20,12 +20,7 @@ LD_LIBS += \
 	raptorhtmlpars \
 	$(NATIVE_JULIAN_DLL) \
 	xpcom$(MOZ_BITS) \
-	nsfmt$(MOZ_BITS)30 \
-	nsuni$(MOZ_BITS)30 \
-	nscck$(MOZ_BITS)30 \
-	nsjpn$(MOZ_BITS)30 \
-	nscnv$(MOZ_BITS)30 \
-	nssb$(MOZ_BITS)30 \
+    $(NATIVE_LIBNLS_LIBS) \
 	$(NATIVE_RAPTOR_WIDGET) \
 	xpcom$(MOZ_BITS) \
 	$(XP_REG_LIB)

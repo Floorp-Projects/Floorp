@@ -13,15 +13,15 @@
 <panel name="FolderViewRule"> 
   <object class="timebaruserheading" backgroundcolor="#C0C0C0" title="Folders" weightmajor="0"/>
   <foldercanvas >
-	<xpitem label="Trex"			halign="left" valign="bottom" fullimage="resource://res/ui/trex_full.gif" />
-	<xpitem label="Inbox"			halign="left" valign="bottom" fullimage="resource://res/ui/inbox_full.gif" />
-	<xpitem label="Outbox"			halign="left" valign="bottom" fullimage="resource://res/ui/outbox_full.gif" />
-	<xpitem label="Sent"			halign="left" valign="bottom" fullimage="resource://res/ui/sent_full.gif" />
-	<xpitem label="Trash"			halign="left" valign="bottom" fullimage="resource://res/ui/trash_full.gif" />
-	<xpitem label="Portal"			halign="left" valign="bottom" fullimage="resource://res/ui/portal_full.gif" />
-	<xpitem label="Mail"			halign="left" valign="bottom" fullimage="resource://res/ui/mail_full.gif" />
-	<xpitem label="Browser"			halign="left" valign="bottom" fullimage="resource://res/ui/browser_full.gif" />
-	<xpitem label="Address Book"	halign="left" valign="bottom" fullimage="resource://res/ui/addrbook_full.gif" />
+	<xpitem label="Trex"			halign="left" valign="bottom" fullimage="resource://res/ui/images/trex_full.gif" />
+	<xpitem label="Inbox"			halign="left" valign="bottom" fullimage="resource://res/ui/images/inbox_full.gif" />
+	<xpitem label="Outbox"			halign="left" valign="bottom" fullimage="resource://res/ui/images/outbox_full.gif" />
+	<xpitem label="Sent"			halign="left" valign="bottom" fullimage="resource://res/ui/images/sent_full.gif" />
+	<xpitem label="Trash"			halign="left" valign="bottom" fullimage="resource://res/ui/images/trash_full.gif" />
+	<xpitem label="Portal"			halign="left" valign="bottom" fullimage="resource://res/ui/images/portal_full.gif" />
+	<xpitem label="Mail"			halign="left" valign="bottom" fullimage="resource://res/ui/images/mail_full.gif" />
+	<xpitem label="Browser"			halign="left" valign="bottom" fullimage="resource://res/ui/images/browser_full.gif" />
+	<xpitem label="Address Book"	halign="left" valign="bottom" fullimage="resource://res/ui/images/addrbook_full.gif" />
   </foldercanvas>
 </panel> 
 

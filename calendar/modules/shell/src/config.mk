@@ -50,12 +50,7 @@ LD_LIBS += \
 	$(NATIVE_ZLIB_DLL) \
 	$(NATIVE_XP_DLL) \
 	$(NATIVE_JULIAN_DLL) \
-	nsfmt$(MOZ_BITS)30 \
-	nsuni$(MOZ_BITS)30 \
-	nscck$(MOZ_BITS)30 \
-	nsjpn$(MOZ_BITS)30 \
-	nscnv$(MOZ_BITS)30 \
-	nssb$(MOZ_BITS)30 \
+    $(NATIVE_LIBNLS_LIBS) \
 	xpcom$(MOZ_BITS) \
 	util10 \
 	calcore10 \
