@@ -2782,3 +2782,81 @@ nsImapService::BuildSubscribeDatasource(nsIImapIncomingServer *aServer, nsIMsgWi
 
 	return NS_OK;
 } 
+
+NS_IMETHODIMP
+nsImapService::SubscribeFolder(nsIEventQueue* eventQueue, 
+                               nsIMsgFolder* aFolder,
+                               const PRUnichar* folderName, 
+                               nsIUrlListener* urlListener, nsIURI** url)
+{
+    NS_ENSURE_ARG_POINTER(eventQueue);
+    NS_ENSURE_ARG_POINTER(aFolder);
+    NS_ENSURE_ARG_POINTER(folderName);
+    
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
+    nsresult rv;
+    PRUnichar hierarchySeparator = GetHierarchyDelimiter(aFolder);
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aFolder, urlListener,
+                              urlSpec, hierarchySeparator);
+    if (NS_SUCCEEDED(rv) && imapUrl)
+    {
+        rv = SetImapUrlSink(aFolder, imapUrl);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+            urlSpec.Append("/subscribe>");
+            urlSpec.AppendWithConversion(hierarchySeparator);
+            char *utfFolderName =
+                CreateUtf7ConvertedStringFromUnicode(folderName);
+            char *escapedFolderName = nsEscape(utfFolderName, url_Path);
+            urlSpec.Append(escapedFolderName);
+            nsCRT::free(escapedFolderName);
+            nsCRT::free(utfFolderName);
+            rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                                                 nsnull, url);
+        }
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::UnsubscribeFolder(nsIEventQueue* eventQueue, 
+                               nsIMsgFolder* aFolder,
+                               const PRUnichar* folderName, 
+                               nsIUrlListener* urlListener, nsIURI** url)
+{
+    NS_ENSURE_ARG_POINTER(eventQueue);
+    NS_ENSURE_ARG_POINTER(aFolder);
+    NS_ENSURE_ARG_POINTER(folderName);
+    
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
+    nsresult rv;
+    PRUnichar hierarchySeparator = GetHierarchyDelimiter(aFolder);
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), aFolder, urlListener,
+                              urlSpec, hierarchySeparator);
+    if (NS_SUCCEEDED(rv) && imapUrl)
+    {
+        rv = SetImapUrlSink(aFolder, imapUrl);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+            urlSpec.Append("/unsubscribe>");
+            urlSpec.AppendWithConversion(hierarchySeparator);
+            char *utfFolderName =
+                CreateUtf7ConvertedStringFromUnicode(folderName);
+            char *escapedFolderName = nsEscape(utfFolderName, url_Path);
+            urlSpec.Append(escapedFolderName);
+            nsCRT::free(escapedFolderName);
+            nsCRT::free(utfFolderName);
+            rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                                                 nsnull, url);
+        }
+    }
+    return rv;
+}

@@ -192,5 +192,15 @@ interface nsIImapService : nsISupports
                     in nsIMsgFolder aMailFolder,
                     in nsIUrlListener aUrlListener);
 
+  nsIURI subscribeFolder(in nsIEventQueue aClientEventQueue,
+                         in nsIMsgFolder aMailFolder,
+                         in wstring mailboxName,
+                         in nsIUrlListener aUrlListener);
+
+  nsIURI unsubscribeFolder(in nsIEventQueue aClientEventQueue,
+                           in nsIMsgFolder aMailFolder,
+                           in wstring mailboxName,
+                           in nsIUrlListener aUrlListener);
+
   void buildSubscribeDatasource(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow);
 };
