@@ -43,6 +43,7 @@
 #include "nsIObserver.h"
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
+#include "nsWeakPtr.h"
 #if defined(XP_MAC)
 #include <OSUtils.h>
 #include <OpenTransport.h>
@@ -108,6 +109,8 @@ private:
         
     static PRBool           gNeedLateInitialization;
     static PLDHashTableOps  gHashTableOps;
+    
+    nsWeakPtr               mPrefService;
 
     PRLock *                mDNSServiceLock;
     PRCondVar *             mDNSCondVar;

@@ -874,7 +874,8 @@ PLDHashTableOps nsDNSService::gHashTableOps =
 
 
 nsDNSService::nsDNSService()
-    : mDNSServiceLock(nsnull)
+    : mPrefService(nsnull)
+    , mDNSServiceLock(nsnull)
     , mDNSCondVar(nsnull)
     , mEvictionQCount(0)
     , mMaxCachedLookups(32)
@@ -1149,6 +1150,9 @@ nsDNSService::InstallPrefObserver()
     nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))  return rv;
     
+    // save for later
+    mPrefService = getter_AddRefs( NS_GetWeakReference(prefs));
+    
     nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefs, &rv);
     if (NS_FAILED(rv))  return rv;
     
@@ -1188,8 +1192,8 @@ nsDNSService::RemovePrefObserver()
 {
     nsresult rv, rv2;
     
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))  return rv;
+    nsCOMPtr<nsIPrefService> prefs = do_QueryReferent(mPrefService);
+    if (!prefs)  return NS_OK;  // no pref service, no need to unregister
     
     nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefs, &rv);
     if (NS_FAILED(rv))  return rv;
