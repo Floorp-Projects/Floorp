@@ -1198,7 +1198,7 @@ nsresult nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISu
   return rv;
 }
 
-NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, const char *aMessageUri)
+NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, nsIMsgFolder *aMsgFolder, const char *aMessageUri)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

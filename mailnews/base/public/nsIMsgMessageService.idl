@@ -128,5 +128,5 @@ interface nsIMsgMessageService : nsISupports {
 						in nsIUrlListener aUrlListener, 
 						out nsIURI aURL);
 
-	void Search(in nsIMsgSearchSession aSearchSession, in nsIMsgWindow aMsgWindow, in string aSearchUri);
+	void Search(in nsIMsgSearchSession aSearchSession, in nsIMsgWindow aMsgWindow, in nsIMsgFolder aMsgFolder, in string aSearchUri);
 };

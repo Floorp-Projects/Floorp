@@ -363,7 +363,7 @@ nsresult nsMailboxService::DisplayMessageForPrinting(const char* aMessageURI,
   return rv;
 }
 
-NS_IMETHODIMP nsMailboxService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, const char *aMessageUri)
+NS_IMETHODIMP nsMailboxService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, nsIMsgFolder *aMsgFolder, const char *aMessageUri)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
