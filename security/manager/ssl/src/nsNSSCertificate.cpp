@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.46 2001/08/21 01:12:38 rangansen%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.47 2001/08/22 04:05:42 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -2517,64 +2517,269 @@ nsNSSCertificateDB::GetCertsByType(PRUint32           aType,
   return PR_TRUE;
 }
 
+SECStatus PR_CALLBACK
+collect_certs(void *arg, SECItem **certs, int numcerts)
+{
+  CERTDERCerts *collectArgs;
+  SECItem *cert;
+  SECStatus rv;
+
+  collectArgs = (CERTDERCerts *)arg;
+
+  collectArgs->numcerts = numcerts;
+  collectArgs->rawCerts = (SECItem *) PORT_ArenaZAlloc(collectArgs->arena,
+                                           sizeof(SECItem) * numcerts);
+  if ( collectArgs->rawCerts == NULL )
+    return(SECFailure);
+
+  cert = collectArgs->rawCerts;
+
+  while ( numcerts-- ) {
+    rv = SECITEM_CopyItem(collectArgs->arena, cert, *certs);
+    if ( rv == SECFailure )
+      return(SECFailure);
+    cert++;
+    certs++;
+  }
+
+  return (SECSuccess);
+}
+
+CERTDERCerts*
+nsNSSCertificateDB::getCertsFromPackage(PRArenaPool *arena, char *data, 
+                                        PRUint32 length)
+{
+  CERTDERCerts *collectArgs = 
+               (CERTDERCerts *)PORT_ArenaZAlloc(arena, sizeof(CERTDERCerts));
+  if ( collectArgs == nsnull ) 
+    return nsnull;
+
+  collectArgs->arena = arena;
+  SECStatus sec_rv = CERT_DecodeCertPackage(data, length, collect_certs, 
+                                            (void *)collectArgs);
+  if (sec_rv != SECSuccess)
+    return nsnull;
+
+  return collectArgs;
+}
+
+nsresult
+nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
+                                         nsIInterfaceRequestor *ctx)
+{
+  // First thing we have to do is figure out which certificate we're 
+  // gonna present to the user.  The CA may have sent down a list of 
+  // certs which may or may not be a chained list of certs.  Until
+  // the day we can design some solid UI for the general case, we'll
+  // code to the > 90% case.  That case is where a CA sends down a
+  // list that is a chain up to its root in either ascending or 
+  // descending order.  What we're gonna do is compare the first 
+  // 2 entries, if the first was signed by the second, we assume
+  // the leaf cert is the first cert and display it.  If the second
+  // cert was signed by the first cert, then we assume the first cert
+  // is the root and the last cert in the array is the leaf.  In this
+  // case we display the last cert.
+  PRUint32 numCerts;
+
+  x509Certs->Count(&numCerts);
+  NS_ASSERTION(numCerts > 0, "Didn't get any certs to import.");
+  if (numCerts == 0)
+    return NS_OK; // Nothing to import, so nothing to do.
+
+  nsCOMPtr<nsIX509Cert> certToShow;
+  nsCOMPtr<nsISupports> isupports;
+  PRUint32 selCertIndex;
+  if (numCerts == 1) {
+    // There's only one cert, so let's show it.
+    selCertIndex = 0;
+    isupports = dont_AddRef(x509Certs->ElementAt(selCertIndex));
+    certToShow = do_QueryInterface(isupports);
+  } else {
+    nsCOMPtr<nsIX509Cert> cert0;
+    nsCOMPtr<nsIX509Cert> cert1;
+
+    isupports = dont_AddRef(x509Certs->ElementAt(0));
+    cert0 = do_QueryInterface(isupports);
+
+    isupports = dont_AddRef(x509Certs->ElementAt(1));
+    cert1 = do_QueryInterface(isupports);
+
+    nsXPIDLString cert0SubjectName;
+    nsXPIDLString cert0IssuerName;
+    nsXPIDLString cert1SubjectName;
+    nsXPIDLString cert1IssuerName;
+
+    cert0->GetIssuerName(getter_Copies(cert0IssuerName));
+    cert0->GetSubjectName(getter_Copies(cert0SubjectName));
+
+    cert1->GetIssuerName(getter_Copies(cert1IssuerName));
+    cert1->GetSubjectName(getter_Copies(cert1SubjectName));
+
+    if (nsCRT::strcmp(cert1IssuerName.get(), cert0SubjectName.get()) == 0) {
+      // In this case, the first cert in the list signed the second,
+      // so the first cert is the root.  Let's display the last cert 
+      // in the list.
+      selCertIndex = numCerts-1;
+      isupports = dont_AddRef(x509Certs->ElementAt(selCertIndex));
+      certToShow = do_QueryInterface(isupports);
+    } else 
+    if (nsCRT::strcmp(cert0IssuerName.get(), cert1SubjectName.get()) == 0) { 
+      // In this case the second cert has signed the first cert.  The 
+      // first cert is the leaf, so let's display it.
+      selCertIndex = 0;
+      certToShow = cert0;
+    } else {
+      // It's not a chain, so let's just show the first one in the 
+      // downloaded list.
+      selCertIndex = 0;
+      certToShow = cert0;
+    }
+  }
+
+  if (!certToShow)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsICertificateDialogs> dialogs;
+  nsresult rv = ::getNSSDialogs(getter_AddRefs(dialogs), 
+                                NS_GET_IID(nsICertificateDialogs));
+                       
+  if (NS_FAILED(rv))
+    return rv;
+ 
+  SECItem der;
+  rv=certToShow->GetRawDER((char **)&der.data, &der.len);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
+  CERTCertificate *tmpCert;
+  CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
+  tmpCert = CERT_NewTempCertificate(certdb, &der,
+                                    nsnull, PR_FALSE, PR_TRUE);
+  if (!tmpCert) {
+    NS_ASSERTION(0,"Couldn't create cert from DER blob\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  PRBool canceled;
+  if (tmpCert->isperm) {
+    dialogs->CACertExists(ctx, &canceled);
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 trustBits;
+  rv = dialogs->DownloadCACert(ctx, certToShow, &trustBits, &canceled);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (canceled)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("trust is %d\n", trustBits));
+  nsXPIDLCString nickname;
+  nickname.Adopt(CERT_MakeCANickname(tmpCert));
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Created nick \"%s\"\n", nickname.get()));
+
+  nsNSSCertTrust trust;
+  trust.SetValidCA();
+  trust.AddCATrust(trustBits & nsIX509CertDB::TRUSTED_SSL,
+                   trustBits & nsIX509CertDB::TRUSTED_EMAIL,
+                   trustBits & nsIX509CertDB::TRUSTED_OBJSIGN);
+
+  SECStatus srv = CERT_AddTempCertToPerm(tmpCert, 
+                                         NS_CONST_CAST(char*,nickname.get()), 
+                                         trust.GetTrust()); 
+
+  if (srv != SECSuccess)
+    return NS_ERROR_FAILURE;
+
+  // Now it's time to add the rest of the certs we just downloaded.
+  // Since we didn't prompt the user about any of these certs, we
+  // won't set any trust bits for them.
+  nsNSSCertTrust defaultTrust;
+  defaultTrust.SetValidCA();
+  defaultTrust.AddCATrust(0,0,0);
+  for (PRUint32 i=0; i<numCerts; i++) {
+    if (i == selCertIndex)
+      continue;
+
+    isupports = dont_AddRef(x509Certs->ElementAt(i));
+    certToShow = do_QueryInterface(isupports);
+    certToShow->GetRawDER((char **)&der.data, &der.len);
+
+    tmpCert = CERT_NewTempCertificate(certdb, &der,
+                                      nsnull, PR_FALSE, PR_TRUE);
+
+    if (!tmpCert) {
+      NS_ASSERTION(0, "Couldn't create temp cert from DER blob\n");
+      continue;  // Let's try to import the rest of 'em
+    }
+    nickname.Adopt(CERT_MakeCANickname(tmpCert));
+    CERT_AddTempCertToPerm(tmpCert, NS_CONST_CAST(char*,nickname.get()), 
+                           defaultTrust.GetTrust());
+    CERT_DestroyCertificate(tmpCert);
+  }
+  
+  return NS_OK;  
+}
+
 /*
- * [noscript] void importCertificate (in nsIX509Cert cert, 
- *                                    in unsigned long type,
- *                                    in unsigned long trust, 
- *                                    in wchar tokenName); 
+ *  [noscript] void importCertificates(in charPtr data, in unsigned long length,
+ *                                     in unsigned long type, 
+ *                                     in nsIInterfaceRequestor ctx);
  */
 NS_IMETHODIMP 
-nsNSSCertificateDB::ImportCertificate(nsIX509Cert *cert, 
-                                      PRUint32 type,
-                                      PRUint32 trusted,
-                                      const PRUnichar *nickname)
+nsNSSCertificateDB::ImportCertificates(char * data, PRUint32 length, 
+                                       PRUint32 type, 
+                                       nsIInterfaceRequestor *ctx)
+
 {
   SECStatus srv = SECFailure;
   nsresult nsrv;
-  CERTCertificate *tmpCert = NULL;
-  nsNSSCertTrust trust;
-  char *nick;
-  SECItem der;
+
+  PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  if (!arena)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  CERTDERCerts *certCollection = getCertsFromPackage(arena, data, length);
+  if (!certCollection) {
+    PORT_FreeArena(arena, PR_FALSE);
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsISupportsArray> array;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
+  if (NS_FAILED(rv)) {
+    PORT_FreeArena(arena, PR_FALSE);
+    return rv;
+  }
+
+  // Now let's create some certs to work with
+  nsCOMPtr<nsIX509Cert> x509Cert;
+  nsNSSCertificate *nssCert;
+  SECItem *currItem;
+  for (int i=0; i<certCollection->numcerts; i++) {
+     currItem = &certCollection->rawCerts[i];
+     nssCert = new nsNSSCertificate((char*)currItem->data, currItem->len);
+     if (!nssCert)
+       return NS_ERROR_OUT_OF_MEMORY;
+     x509Cert = do_QueryInterface(nssCert);
+     array->AppendElement(x509Cert);
+  }
   switch (type) {
   case nsIX509Cert::CA_CERT:
-    trust.SetValidCA();
-    trust.AddCATrust(trusted & nsIX509CertDB::TRUSTED_SSL,
-                     trusted & nsIX509CertDB::TRUSTED_EMAIL,
-                     trusted & nsIX509CertDB::TRUSTED_OBJSIGN);
+    nsrv = handleCACertDownload(array, ctx);
     break;
   default:
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  nsrv = cert->GetRawDER((char **)&der.data, &der.len);
-  if (nsrv != NS_OK)
-    return NS_ERROR_FAILURE;
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
-  tmpCert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &der,
-                                    NULL, PR_FALSE, PR_TRUE);
-  if (!tmpCert) goto done;
-  if (nickname) {
-    nick = NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(nickname).get());
-  } else {
-    nick = CERT_MakeCANickname(tmpCert);
-  }
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Created nick \"%s\"\n", nick));
-  /* XXX check to see if cert is perm (it shouldn't be, but NSS asserts if it is */
-  /* XXX this is an ugly peek into NSS */
-
-  //Check moved to PSMContentDownloader::OnStopRequest in nsNSSComponent.cpp
-  //so that the user can be informed before downloading, if cert exists
-
-  /*
-  if (tmpCert->isperm) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Cert was already in db %s\n", nick));
-    return NS_ERROR_FAILURE;
-  }
-  */
-  srv = CERT_AddTempCertToPerm(tmpCert, nick, trust.GetTrust());
-done:
-  if (tmpCert) 
-    CERT_DestroyCertificate(tmpCert);
-  return (srv) ? NS_ERROR_FAILURE : NS_OK;
+    // We only deal with import CA certs in this method currently.
+     nsrv = NS_ERROR_FAILURE;
+     break;
+  }  
+  PORT_FreeArena(arena, PR_FALSE);
+  if (srv != SECSuccess && nsrv == NS_OK)
+    nsrv = NS_ERROR_FAILURE;
+  return nsrv;
 }
 
 char *
@@ -2714,32 +2919,7 @@ done:
     PR_FREEIF(tmp);
     return(nickname);
 }
-static SECStatus PR_CALLBACK
-collect_certs(void *arg, SECItem **certs, int numcerts)
-{
-    CERTDERCerts *collectArgs;
-    SECItem *cert;
-    SECStatus rv;
 
-    collectArgs = (CERTDERCerts *)arg;
-
-    collectArgs->numcerts = numcerts;
-    collectArgs->rawCerts = (SECItem *) PORT_ArenaZAlloc(collectArgs->arena,
-                                           sizeof(SECItem) * numcerts);
-    if ( collectArgs->rawCerts == NULL )
-      return(SECFailure);
-    cert = collectArgs->rawCerts;
-
-    while ( numcerts-- ) {
-        rv = SECITEM_CopyItem(collectArgs->arena, cert, *certs);
-        if ( rv == SECFailure )
-          return(SECFailure);
-        cert++;
-        certs++;
-    }
-
-    return (SECSuccess);
-}
 
 NS_IMETHODIMP 
 nsNSSCertificateDB::ImportUserCertificate(char *data, PRUint32 length, nsIInterfaceRequestor *ctx)
@@ -2748,23 +2928,17 @@ nsNSSCertificateDB::ImportUserCertificate(char *data, PRUint32 length, nsIInterf
   char * nickname = NULL;
   SECStatus sec_rv;
   int numCACerts;
-	SECItem *CACerts;
-	CERTDERCerts * collectArgs;
-	PRArenaPool *arena;
-	CERTCertificate * cert=NULL;
+  SECItem *CACerts;
+  CERTDERCerts * collectArgs;
+  PRArenaPool *arena;
+  CERTCertificate * cert=NULL;
 
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if ( arena == NULL ) 
     goto loser;
 
-  collectArgs = (CERTDERCerts *)PORT_ArenaZAlloc(arena, sizeof(CERTDERCerts));
-  if ( collectArgs == NULL ) 
-    goto loser;
-
-  collectArgs->arena = arena;
-  sec_rv = CERT_DecodeCertPackage(data, length, collect_certs, 
-			      (void *)collectArgs);
-  if (sec_rv != SECSuccess)
+  collectArgs = getCertsFromPackage(arena, data, length);
+  if (!collectArgs)
     goto loser;
 
   cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), collectArgs->rawCerts,

@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.18 2001/08/15 01:34:36 javi%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.19 2001/08/22 04:05:45 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -74,6 +74,7 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 #define PIP_PKCS12_NOSMARTCARD_EXPORT  4
 #define PIP_PKCS12_RESTORE_FAILED      5
 #define PIP_PKCS12_BACKUP_FAILED       6
+#define PIP_PKCS12_NSS_ERROR           7
 
 // constructor
 nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
@@ -182,7 +183,12 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   // Later - check to see if this should become default email cert
   handleError(PIP_PKCS12_RESTORE_OK);
 finish:
-  if (NS_FAILED(rv) || srv != SECSuccess) {
+  // If srv != SECSuccess, NSS probably set a specific error code.
+  // We should use that error code instead of inventing a new one
+  // for every error possible.
+  if (srv != SECSuccess) {
+    handleError(PIP_PKCS12_NSS_ERROR);
+  } else if (NS_FAILED(rv)) { 
     handleError(PIP_PKCS12_RESTORE_FAILED);
   }
   // finish the decoder
@@ -726,53 +732,67 @@ nsPKCS12Blob::handleError(int myerr)
     if (NS_FAILED(rv)) return rv;
     errPrompt->Alert(nsnull, errorMsg.get());
     return PR_TRUE;
-  case 0: 
-  default:
-    break;
-  }
-  switch (prerr) {
-  // The following errors have the potential to be "handled", by asking
-  // the user (via a dialog) whether s/he wishes to continue
-  case 0: break;
-  case SEC_ERROR_PKCS12_CERT_COLLISION:
-    /* pop a dialog saying the cert is already in the database */
-    /* ask to keep going?  what happens if one collision but others ok? */
-  // The following errors cannot be "handled", notify the user (via an alert)
-  // that the operation failed.
+  case PIP_PKCS12_NSS_ERROR:
+    switch (prerr) {
+    // The following errors have the potential to be "handled", by asking
+    // the user (via a dialog) whether s/he wishes to continue
+    case 0: break;
+    case SEC_ERROR_PKCS12_CERT_COLLISION:
+      /* pop a dialog saying the cert is already in the database */
+      /* ask to keep going?  what happens if one collision but others ok? */
+      // The following errors cannot be "handled", notify the user (via an alert)
+      // that the operation failed.
 #if 0
-// XXX a boy can dream...
-//     but the PKCS12 lib never throws this error
-//     but then again, how would it?  anyway, convey the info below
-  case SEC_ERROR_PKCS12_PRIVACY_PASSWORD_INCORRECT:
-    rv = nssComponent->GetPIPNSSBundleString(
+      // XXX a boy can dream...
+      //     but the PKCS12 lib never throws this error
+      //     but then again, how would it?  anyway, convey the info below
+    case SEC_ERROR_PKCS12_PRIVACY_PASSWORD_INCORRECT:
+      rv = nssComponent->GetPIPNSSBundleString(
                               NS_LITERAL_STRING("PKCS12PasswordInvalid").get(), 
                               errorMsg);
-    if (NS_FAILED(rv)) return rv;
-    errPrompt->Alert(nsnull, errorMsg.get());
+      if (NS_FAILED(rv)) return rv;
+      errPrompt->Alert(nsnull, errorMsg.get());
     break;
 #endif
-  case SEC_ERROR_BAD_PASSWORD:
-    rv = nssComponent->GetPIPNSSBundleString(
-                            NS_LITERAL_STRING("PK11BadPassword").get(), 
+    case SEC_ERROR_BAD_PASSWORD:
+      rv = nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("PK11BadPassword").get(), 
+                              errorMsg);
+      if (NS_FAILED(rv)) return rv;
+      errPrompt->Alert(nsnull, errorMsg.get());
+      break;
+    case SEC_ERROR_BAD_DER:
+    case SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE:
+    case SEC_ERROR_PKCS12_INVALID_MAC:
+      rv = nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("PKCS12DecodeErr").get(), 
+                              errorMsg);
+      if (NS_FAILED(rv)) return rv;
+      errPrompt->Alert(nsnull, errorMsg.get());
+      break;
+    case SEC_ERROR_PKCS12_DUPLICATE_DATA:
+      rv = nssComponent->GetPIPNSSBundleString(
+                            NS_LITERAL_STRING("PKCS12DupData").get(),
                             errorMsg);
-    if (NS_FAILED(rv)) return rv;
-    errPrompt->Alert(nsnull, errorMsg.get());
-    break;
-  case SEC_ERROR_BAD_DER:
-  case SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE:
-  case SEC_ERROR_PKCS12_INVALID_MAC:
-    rv = nssComponent->GetPIPNSSBundleString(
-                            NS_LITERAL_STRING("PKCS12DecodeErr").get(), 
+      if (NS_FAILED(rv)) return rv;
+      errPrompt->Alert(nsnull, errorMsg.get());
+      break;
+    default:
+      rv = nssComponent->GetPIPNSSBundleString(
+                            NS_LITERAL_STRING("PKCS12UnknownErr").get(), 
                             errorMsg);
-    if (NS_FAILED(rv)) return rv;
-    errPrompt->Alert(nsnull, errorMsg.get());
+      if (NS_FAILED(rv)) return rv;
+      errPrompt->Alert(nsnull, errorMsg.get());
+    }
     break;
+  case 0: 
   default:
     rv = nssComponent->GetPIPNSSBundleString(
                             NS_LITERAL_STRING("PKCS12UnknownErr").get(), 
                             errorMsg);
     if (NS_FAILED(rv)) return rv;
     errPrompt->Alert(nsnull, errorMsg.get());
+    break;
   }
   if (NS_FAILED(rv)) return rv;
   return keepGoing;
