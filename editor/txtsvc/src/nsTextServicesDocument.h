@@ -128,6 +128,7 @@ public:
   /* nsITextServicesDocument method implementations. */
   NS_IMETHOD InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell);
   NS_IMETHOD InitWithEditor(nsIEditor *aEditor);
+  NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
   NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter);
   NS_IMETHOD CanEdit(PRBool *aCanEdit);
   NS_IMETHOD GetCurrentTextBlock(nsString *aStr);

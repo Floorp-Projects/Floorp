@@ -77,7 +77,7 @@ public:
   } TSDBlockSelectionStatus;
 
   /**
-   * Initailizes the text services document to use a particular
+   * Initializes the text services document to use a particular
    * DOM document.
    * @param aDOMDocument is the document to use. It is AddRef'd
    * by this method.
@@ -85,6 +85,12 @@ public:
    * setting the selection. It is AddRef'd by this method.
    */
   NS_IMETHOD InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell) = 0;
+
+  /**
+   * Get the DOM document for the document in use.
+   * @return aDocument the dom document [OUT]
+   */
+  NS_IMETHOD GetDocument(nsIDOMDocument **aDocument) = 0;
 
   /**
    * Initializes the text services document to use a particular
