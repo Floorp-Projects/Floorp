@@ -1368,10 +1368,10 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFram
         //PostAppendRow(*aResult, aPresContext, tableFrame->GetColCount());
       }
     }
-
-    mBottomFrame = *aResult;
-    return;
   }
+
+  mBottomFrame = *aResult;
+  return;
 } 
 
 NS_IMETHODIMP
