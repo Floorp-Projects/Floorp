@@ -86,109 +86,9 @@ public class NativeRegExpCtor extends NativeFunction {
         return (RegExpImpl) ScriptRuntime.getRegExpProxy(cx);
     }
 
-    protected int getIdAttributes(int id)
-    {
-        int shifted = id - idBase;
-        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
-            switch (shifted) {
-                case Id_multiline:
-                case Id_STAR:
-                case Id_input:
-                case Id_UNDERSCORE:
-                    return PERMANENT;
-            }
-            return PERMANENT | READONLY;
-        }
-        return super.getIdAttributes(id);
-    }
-
     private static String stringResult(Object obj)
     {
         return (obj == null) ? "" : obj.toString();
-    }
-
-    protected Object getIdValue(int id)
-    {
-        int shifted = id - idBase;
-        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
-            RegExpImpl impl = getImpl();
-            switch (shifted) {
-                case Id_multiline:
-                case Id_STAR:
-                    return wrap_boolean(impl.multiline);
-
-                case Id_input:
-                case Id_UNDERSCORE:
-                    return stringResult(impl.input);
-
-                case Id_lastMatch:
-                case Id_AMPERSAND:
-                    return stringResult(impl.lastMatch);
-
-                case Id_lastParen:
-                case Id_PLUS:
-                    return stringResult(impl.lastParen);
-
-                case Id_leftContext:
-                case Id_BACK_QUOTE:
-                    return stringResult(impl.leftContext);
-
-                case Id_rightContext:
-                case Id_QUOTE:
-                    return stringResult(impl.rightContext);
-            }
-            // Must be one of $1..$9, convert to 0..8
-            int substring_number = shifted - DOLLAR_ID_BASE - 1;
-            return impl.getParenSubString(substring_number).toString();
-        }
-        return super.getIdValue(id);
-    }
-
-    protected void setIdValue(int id, Object value)
-    {
-        switch (id - idBase) {
-            case Id_multiline:
-            case Id_STAR:
-                getImpl().multiline = ScriptRuntime.toBoolean(value);
-                return;
-
-            case Id_input:
-            case Id_UNDERSCORE:
-                getImpl().input = ScriptRuntime.toString(value);
-                return;
-        }
-        super.setIdValue(id, value);
-    }
-
-    protected String getIdName(int id)
-    {
-        int shifted = id - idBase;
-        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
-            switch (shifted) {
-                case Id_multiline:    return "multiline";
-                case Id_STAR:         return "$*";
-
-                case Id_input:        return "input";
-                case Id_UNDERSCORE:   return "$_";
-
-                case Id_lastMatch:    return "lastMatch";
-                case Id_AMPERSAND:    return "$&";
-
-                case Id_lastParen:    return "lastParen";
-                case Id_PLUS:         return "$+";
-
-                case Id_leftContext:  return "leftContext";
-                case Id_BACK_QUOTE:   return "$`";
-
-                case Id_rightContext: return "rightContext";
-                case Id_QUOTE:        return "$'";
-            }
-            // Must be one of $1..$9, convert to 0..8
-            int substring_number = shifted - DOLLAR_ID_BASE - 1;
-            char[] buf = { '$', (char)('1' + substring_number) };
-            return new String(buf);
-        }
-        return super.getIdName(id);
     }
 
 // #string_id_map#
@@ -228,14 +128,14 @@ public class NativeRegExpCtor extends NativeFunction {
         MAX_INSTANCE_ID = DOLLAR_ID_BASE + 9;
 
 // maxId for superclass
-    private int idBase;
+    private static int idBase = -1;
 
     {
-        idBase = getMaxId();
-        setMaxId(idBase + MAX_INSTANCE_ID);
+        if (idBase < 0) idBase = getMaxInstanceId();
+        setMaxInstanceId(idBase, idBase + MAX_INSTANCE_ID);
     }
 
-    protected int mapNameToId(String s) {
+    protected int findInstanceIdInfo(String s) {
         int id;
 // #generated# Last update: 2001-05-24 16:09:31 GMT+02:00
         L0: { id = 0; String X = null; int c;
@@ -269,8 +169,109 @@ public class NativeRegExpCtor extends NativeFunction {
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
 // #/generated#
+
+        if (id == 0) return super.findInstanceIdInfo(s);
+
+        int attr;
+        switch (id) {
+          case Id_multiline:
+          case Id_STAR:
+          case Id_input:
+          case Id_UNDERSCORE:
+            attr = PERMANENT;
+            break;
+          default:
+            attr = PERMANENT | READONLY;
+            break;
+        }
+
+        return instanceIdInfo(attr, idBase + id);
+    }
+
 // #/string_id_map#
 
-        return (id != 0) ? idBase + id : super.mapNameToId(s);
+    protected String getInstanceIdName(int id)
+    {
+        int shifted = id - idBase;
+        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
+            switch (shifted) {
+                case Id_multiline:    return "multiline";
+                case Id_STAR:         return "$*";
+
+                case Id_input:        return "input";
+                case Id_UNDERSCORE:   return "$_";
+
+                case Id_lastMatch:    return "lastMatch";
+                case Id_AMPERSAND:    return "$&";
+
+                case Id_lastParen:    return "lastParen";
+                case Id_PLUS:         return "$+";
+
+                case Id_leftContext:  return "leftContext";
+                case Id_BACK_QUOTE:   return "$`";
+
+                case Id_rightContext: return "rightContext";
+                case Id_QUOTE:        return "$'";
+            }
+            // Must be one of $1..$9, convert to 0..8
+            int substring_number = shifted - DOLLAR_ID_BASE - 1;
+            char[] buf = { '$', (char)('1' + substring_number) };
+            return new String(buf);
+        }
+        return super.getInstanceIdName(id);
     }
+
+    protected Object getInstanceIdValue(int id)
+    {
+        int shifted = id - idBase;
+        if (1 <= shifted && shifted <= MAX_INSTANCE_ID) {
+            RegExpImpl impl = getImpl();
+            switch (shifted) {
+                case Id_multiline:
+                case Id_STAR:
+                    return wrap_boolean(impl.multiline);
+
+                case Id_input:
+                case Id_UNDERSCORE:
+                    return stringResult(impl.input);
+
+                case Id_lastMatch:
+                case Id_AMPERSAND:
+                    return stringResult(impl.lastMatch);
+
+                case Id_lastParen:
+                case Id_PLUS:
+                    return stringResult(impl.lastParen);
+
+                case Id_leftContext:
+                case Id_BACK_QUOTE:
+                    return stringResult(impl.leftContext);
+
+                case Id_rightContext:
+                case Id_QUOTE:
+                    return stringResult(impl.rightContext);
+            }
+            // Must be one of $1..$9, convert to 0..8
+            int substring_number = shifted - DOLLAR_ID_BASE - 1;
+            return impl.getParenSubString(substring_number).toString();
+        }
+        return super.getInstanceIdValue(id);
+    }
+
+    protected void setInstanceIdValue(int id, Object value)
+    {
+        switch (id - idBase) {
+            case Id_multiline:
+            case Id_STAR:
+                getImpl().multiline = ScriptRuntime.toBoolean(value);
+                return;
+
+            case Id_input:
+            case Id_UNDERSCORE:
+                getImpl().input = ScriptRuntime.toString(value);
+                return;
+        }
+        super.setInstanceIdValue(id, value);
+    }
+
 }

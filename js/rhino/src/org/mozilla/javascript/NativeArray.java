@@ -61,11 +61,12 @@ public class NativeArray extends IdScriptable {
      * always gets at least an object back, even when Array == null.
      */
 
+    private static final Object ARRAY_TAG = new Object();
+
     static void init(Context cx, Scriptable scope, boolean sealed)
     {
         NativeArray obj = new NativeArray();
-        obj.prototypeFlag = true;
-        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
+        obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
     /**
@@ -101,81 +102,120 @@ public class NativeArray extends IdScriptable {
         return "Array";
     }
 
-    protected int getIdAttributes(int id)
+    private static final int
+        Id_length        =  1,
+        MAX_INSTANCE_ID  =  1;
+
     {
-        if (id == Id_length) {
-            return DONTENUM | PERMANENT;
-        }
-        return super.getIdAttributes(id);
+        setMaxInstanceId(0, MAX_INSTANCE_ID);
     }
 
-    protected Object getIdValue(int id)
+    protected int findInstanceIdInfo(String s)
+    {
+        if (s.equals("length")) {
+            return instanceIdInfo(DONTENUM | PERMANENT, Id_length);
+        }
+        return super.findInstanceIdInfo(s);
+    }
+
+    protected String getInstanceIdName(int id)
+    {
+        if (id == Id_length) { return "length"; }
+        return super.getInstanceIdName(id);
+    }
+
+    protected Object getInstanceIdValue(int id)
     {
         if (id == Id_length) {
             return wrap_double(length);
         }
-        return super.getIdValue(id);
+        return super.getInstanceIdValue(id);
     }
 
-    protected void setIdValue(int id, Object value)
+    protected void setInstanceIdValue(int id, Object value)
     {
         if (id == Id_length) {
             setLength(value); return;
         }
-        super.setIdValue(id, value);
+        super.setInstanceIdValue(id, value);
+    }
+
+    protected void initPrototypeId(int id)
+    {
+        String s;
+        int arity;
+        switch (id) {
+          case Id_constructor:    arity=1; s="constructor";    break;
+          case Id_toString:       arity=0; s="toString";       break;
+          case Id_toLocaleString: arity=1; s="toLocaleString"; break;
+          case Id_toSource:       arity=0; s="toSource";       break;
+          case Id_join:           arity=1; s="join";           break;
+          case Id_reverse:        arity=0; s="reverse";        break;
+          case Id_sort:           arity=1; s="sort";           break;
+          case Id_push:           arity=1; s="push";           break;
+          case Id_pop:            arity=1; s="pop";            break;
+          case Id_shift:          arity=1; s="shift";          break;
+          case Id_unshift:        arity=1; s="unshift";        break;
+          case Id_splice:         arity=1; s="splice";         break;
+          case Id_concat:         arity=1; s="concat";         break;
+          case Id_slice:          arity=1; s="slice";          break;
+          default: throw new IllegalArgumentException(String.valueOf(id));
+        }
+        initPrototypeMethod(ARRAY_TAG, id, s, arity);
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
-        if (prototypeFlag) {
-            switch (f.methodId()) {
-                case Id_constructor:
-                    return jsConstructor(cx, scope, args, f, thisObj == null);
-
-                case Id_toString:
-                    return toStringHelper(cx, scope, thisObj,
-                        cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE),
-                        false);
-
-                case Id_toLocaleString:
-                    return toStringHelper(cx, scope, thisObj, false, true);
-
-                case Id_toSource:
-                    return toStringHelper(cx, scope, thisObj, true, false);
-
-                case Id_join:
-                    return js_join(cx, thisObj, args);
-
-                case Id_reverse:
-                    return js_reverse(cx, thisObj, args);
-
-                case Id_sort:
-                    return js_sort(cx, scope, thisObj, args);
-
-                case Id_push:
-                    return js_push(cx, thisObj, args);
-
-                case Id_pop:
-                    return js_pop(cx, thisObj, args);
-
-                case Id_shift:
-                    return js_shift(cx, thisObj, args);
-
-                case Id_unshift:
-                    return js_unshift(cx, thisObj, args);
-
-                case Id_splice:
-                    return js_splice(cx, scope, thisObj, args);
-
-                case Id_concat:
-                    return js_concat(cx, scope, thisObj, args);
-
-                case Id_slice:
-                    return js_slice(cx, thisObj, args);
-            }
+        if (!f.hasTag(ARRAY_TAG)) {
+            return super.execMethod(f, cx, scope, thisObj, args);
         }
-        return super.execMethod(f, cx, scope, thisObj, args);
+        int id = f.methodId();
+        switch (id) {
+          case Id_constructor:
+            return jsConstructor(cx, scope, args, f, thisObj == null);
+
+          case Id_toString:
+            return toStringHelper(cx, scope, thisObj,
+                cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE), false);
+
+          case Id_toLocaleString:
+            return toStringHelper(cx, scope, thisObj, false, true);
+
+          case Id_toSource:
+            return toStringHelper(cx, scope, thisObj, true, false);
+
+          case Id_join:
+            return js_join(cx, thisObj, args);
+
+          case Id_reverse:
+            return js_reverse(cx, thisObj, args);
+
+          case Id_sort:
+            return js_sort(cx, scope, thisObj, args);
+
+          case Id_push:
+            return js_push(cx, thisObj, args);
+
+          case Id_pop:
+            return js_pop(cx, thisObj, args);
+
+          case Id_shift:
+            return js_shift(cx, thisObj, args);
+
+          case Id_unshift:
+            return js_unshift(cx, thisObj, args);
+
+          case Id_splice:
+            return js_splice(cx, scope, thisObj, args);
+
+          case Id_concat:
+            return js_concat(cx, scope, thisObj, args);
+
+          case Id_slice:
+            return js_slice(cx, thisObj, args);
+        }
+        throw new IllegalArgumentException(String.valueOf(id));
     }
 
     public Object get(int index, Scriptable start)
@@ -642,12 +682,10 @@ public class NativeArray extends IdScriptable {
                                     Object cmp, Object[] cmpBuf)
         throws JavaScriptException
     {
-        if (check) {
-            if (cmp == null) {
-                if (cmpBuf != null) Kit.codeBug();
-            } else {
-                if (cmpBuf == null || cmpBuf.length != 2) Kit.codeBug();
-            }
+        if (cmp == null) {
+            if (cmpBuf != null) Kit.codeBug();
+        } else {
+            if (cmpBuf == null || cmpBuf.length != 2) Kit.codeBug();
         }
 
         Object undef = Undefined.instance;
@@ -692,7 +730,7 @@ public class NativeArray extends IdScriptable {
                                  Object cmp, Object[] cmpBuf)
         throws JavaScriptException
     {
-        if (check && length <= 1) Kit.codeBug();
+        if (length <= 1) Kit.codeBug();
 
         // Build heap
         for (int i = length / 2; i != 0;) {
@@ -747,7 +785,7 @@ public class NativeArray extends IdScriptable {
                                           Object cmp, Object[] cmpBuf)
         throws JavaScriptException
     {
-        if (check && length <= 1) Kit.codeBug();
+        if (length <= 1) Kit.codeBug();
 
         // Build heap
         for (long i = length / 2; i != 0;) {
@@ -1088,72 +1126,10 @@ public class NativeArray extends IdScriptable {
         return result;
     }
 
-    protected String getIdName(int id)
-    {
-        if (id == Id_length) { return "length"; }
-
-        if (prototypeFlag) {
-            switch (id) {
-                case Id_constructor:     return "constructor";
-                case Id_toString:        return "toString";
-                case Id_toLocaleString:  return "toLocaleString";
-                case Id_toSource:        return "toSource";
-                case Id_join:            return "join";
-                case Id_reverse:         return "reverse";
-                case Id_sort:            return "sort";
-                case Id_push:            return "push";
-                case Id_pop:             return "pop";
-                case Id_shift:           return "shift";
-                case Id_unshift:         return "unshift";
-                case Id_splice:          return "splice";
-                case Id_concat:          return "concat";
-                case Id_slice:           return "slice";
-            }
-        }
-        return null;
-    }
-
-    protected int methodArity(int methodId)
-    {
-        if (prototypeFlag) {
-            switch (methodId) {
-                case Id_constructor:     return 1;
-                case Id_toString:        return 0;
-                case Id_toLocaleString:  return 1;
-                case Id_toSource:        return 0;
-                case Id_join:            return 1;
-                case Id_reverse:         return 0;
-                case Id_sort:            return 1;
-                case Id_push:            return 1;
-                case Id_pop:             return 1;
-                case Id_shift:           return 1;
-                case Id_unshift:         return 1;
-                case Id_splice:          return 1;
-                case Id_concat:          return 1;
-                case Id_slice:           return 1;
-            }
-        }
-        return super.methodArity(methodId);
-    }
-
-    private static final int
-        Id_length        =  1,
-        MAX_INSTANCE_ID  =  1;
-
-    { setMaxId(MAX_INSTANCE_ID); }
-
-    protected int mapNameToId(String s)
-    {
-        if (s.equals("length")) { return Id_length; }
-        else if (prototypeFlag) {
-            return toPrototypeId(s);
-        }
-        return 0;
-    }
 
 // #string_id_map#
 
-    private static int toPrototypeId(String s)
+    protected int findPrototypeId(String s)
     {
         int id;
 // #generated# Last update: 2004-03-17 13:17:02 CET
@@ -1191,30 +1167,26 @@ public class NativeArray extends IdScriptable {
     }
 
     private static final int
-        Id_constructor          = MAX_INSTANCE_ID + 1,
-        Id_toString             = MAX_INSTANCE_ID + 2,
-        Id_toLocaleString       = MAX_INSTANCE_ID + 3,
-        Id_toSource             = MAX_INSTANCE_ID + 4,
-        Id_join                 = MAX_INSTANCE_ID + 5,
-        Id_reverse              = MAX_INSTANCE_ID + 6,
-        Id_sort                 = MAX_INSTANCE_ID + 7,
-        Id_push                 = MAX_INSTANCE_ID + 8,
-        Id_pop                  = MAX_INSTANCE_ID + 9,
-        Id_shift                = MAX_INSTANCE_ID + 10,
-        Id_unshift              = MAX_INSTANCE_ID + 11,
-        Id_splice               = MAX_INSTANCE_ID + 12,
-        Id_concat               = MAX_INSTANCE_ID + 13,
-        Id_slice                = MAX_INSTANCE_ID + 14,
+        Id_constructor          = 1,
+        Id_toString             = 2,
+        Id_toLocaleString       = 3,
+        Id_toSource             = 4,
+        Id_join                 = 5,
+        Id_reverse              = 6,
+        Id_sort                 = 7,
+        Id_push                 = 8,
+        Id_pop                  = 9,
+        Id_shift                = 10,
+        Id_unshift              = 11,
+        Id_splice               = 12,
+        Id_concat               = 13,
+        Id_slice                = 14,
 
-        MAX_PROTOTYPE_ID        = MAX_INSTANCE_ID + 14;
+        MAX_PROTOTYPE_ID        = 14;
 
 // #/string_id_map#
 
     private long length;
     private Object[] dense;
     private static final int maximumDenseLength = 10000;
-
-    private boolean prototypeFlag;
-
-    private static final boolean check = true && Context.check;
 }

@@ -45,16 +45,16 @@ package org.mozilla.javascript;
  */
 final class NativeError extends IdScriptable
 {
+    private static final Object ERROR_TAG = new Object();
 
     static void init(Context cx, Scriptable scope, boolean sealed)
     {
         NativeError obj = new NativeError();
-        obj.prototypeFlag = true;
         ScriptableObject.putProperty(obj, "name", "Error");
         ScriptableObject.putProperty(obj, "message", "");
         ScriptableObject.putProperty(obj, "fileName", "");
         ScriptableObject.putProperty(obj, "lineNumber", new Integer(0));
-        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
+        obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
     static NativeError make(Context cx, Scriptable scope, IdFunction ctorObj,
@@ -81,22 +81,47 @@ final class NativeError extends IdScriptable
         return obj;
     }
 
+    public String getClassName()
+    {
+        return "Error";
+    }
+
+    public String toString()
+    {
+        return js_toString(this);
+    }
+
+    protected void initPrototypeId(int id)
+    {
+        String s;
+        int arity;
+        switch (id) {
+          case Id_constructor: arity=1; s="constructor"; break;
+          case Id_toString:    arity=0; s="toString";    break;
+          case Id_toSource:    arity=0; s="toSource";    break;
+          default: throw new IllegalArgumentException(String.valueOf(id));
+        }
+        initPrototypeMethod(ERROR_TAG, id, s, arity);
+    }
+
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
-        if (prototypeFlag) {
-            switch (f.methodId()) {
-              case Id_constructor:
-                return make(cx, scope, f, args);
-
-              case Id_toString:
-                return js_toString(thisObj);
-
-              case Id_toSource:
-                return js_toSource(cx, scope, thisObj);
-            }
+        if (!f.hasTag(ERROR_TAG)) {
+            return super.execMethod(f, cx, scope, thisObj, args);
         }
-        return super.execMethod(f, cx, scope, thisObj, args);
+        int id = f.methodId();
+        switch (id) {
+          case Id_constructor:
+            return make(cx, scope, f, args);
+
+          case Id_toString:
+            return js_toString(thisObj);
+
+          case Id_toSource:
+            return js_toSource(cx, scope, thisObj);
+        }
+        throw new IllegalArgumentException(String.valueOf(id));
     }
 
     private static String js_toString(Scriptable thisObj)
@@ -148,16 +173,6 @@ final class NativeError extends IdScriptable
         return sb.toString();
     }
 
-    public String getClassName()
-    {
-        return "Error";
-    }
-
-    public String toString()
-    {
-        return js_toString(this);
-    }
-
     private static String getString(Scriptable obj, String id)
     {
         Object value = ScriptableObject.getProperty(obj, id);
@@ -165,35 +180,9 @@ final class NativeError extends IdScriptable
         return ScriptRuntime.toString(value);
     }
 
-    protected String getIdName(int id)
-    {
-        if (prototypeFlag) {
-            switch (id) {
-              case Id_constructor: return "constructor";
-              case Id_toString:    return "toString";
-              case Id_toSource:    return "toSource";
-            }
-        }
-        return null;
-    }
-
-    protected int methodArity(int methodId)
-    {
-        if (prototypeFlag) {
-            switch (methodId) {
-              case Id_constructor: return 1;
-              case Id_toString:    return 0;
-              case Id_toSource:    return 0;
-            }
-        }
-        return super.methodArity(methodId);
-    }
-
-    protected int mapNameToId(String s)
+    protected int findPrototypeId(String s)
     {
         int id;
-        if (!prototypeFlag) { return 0; }
-
 // #string_id_map#
 // #generated# Last update: 2004-03-17 13:35:15 CET
         L0: { id = 0; String X = null; int c;
@@ -218,6 +207,4 @@ final class NativeError extends IdScriptable
         MAX_PROTOTYPE_ID  = 3;
 
 // #/string_id_map#
-
-    private boolean prototypeFlag;
 }

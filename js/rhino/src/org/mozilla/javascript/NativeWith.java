@@ -53,7 +53,10 @@ public class NativeWith implements Scriptable, IdFunctionMaster {
         IdFunction ctor = new IdFunction(obj, FTAG, Id_constructor,
                                          "With", 0, scope);
         ctor.markAsConstructor(obj);
-        ctor.exportAsScopeProperty(sealed);
+        if (sealed) {
+            ctor.sealObject();
+        }
+        ctor.exportAsScopeProperty();
     }
 
     private NativeWith() {

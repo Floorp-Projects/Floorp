@@ -45,20 +45,14 @@ package org.mozilla.javascript;
  */
 public class BaseFunction extends IdScriptable implements Function {
 
-    static void init(Context cx, Scriptable scope, boolean sealed) {
+    private static final Object FUNCTION_TAG = new Object();
+
+    static void init(Context cx, Scriptable scope, boolean sealed)
+    {
         BaseFunction obj = new BaseFunction();
-        obj.prototypeFlag = true;
         obj.functionName = "";
         obj.isPrototypePropertyImmune = true;
-        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
-    }
-
-    protected void fillConstructorProperties(IdFunction ctor, boolean sealed)
-    {
-        // Fix up bootstrapping problem: getPrototype of the IdFunction
-        // can not return Function.prototype because Function object is not
-        // yet defined.
-        ctor.setPrototype(this);
+        obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
     public String getClassName() {
@@ -90,107 +84,166 @@ public class BaseFunction extends IdScriptable implements Function {
                                        functionName);
     }
 
-    protected int getIdAttributes(int id)
+// #string_id_map#
+
+    private static final int
+        Id_length       = 1,
+        Id_arity        = 2,
+        Id_name         = 3,
+        Id_prototype    = 4,
+        Id_arguments    = 5,
+
+        MAX_INSTANCE_ID = 5;
+
+    {
+        setMaxInstanceId(0, MAX_INSTANCE_ID);
+    }
+
+    protected int findInstanceIdInfo(String s)
+    {
+        int id;
+// #generated# Last update: 2001-05-20 00:12:12 GMT+02:00
+        L0: { id = 0; String X = null; int c;
+            L: switch (s.length()) {
+            case 4: X="name";id=Id_name; break L;
+            case 5: X="arity";id=Id_arity; break L;
+            case 6: X="length";id=Id_length; break L;
+            case 9: c=s.charAt(0);
+                if (c=='a') { X="arguments";id=Id_arguments; }
+                else if (c=='p') { X="prototype";id=Id_prototype; }
+                break L;
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+// #/string_id_map#
+
+        if (id == 0) return super.findInstanceIdInfo(s);
+
+        int attr;
+        switch (id) {
+          case Id_length:
+          case Id_arity:
+          case Id_name:
+            attr = DONTENUM | READONLY | PERMANENT;
+            break;
+          case Id_prototype:
+            attr = (isPrototypePropertyImmune)
+                   ? DONTENUM | READONLY | PERMANENT
+                   : DONTENUM;
+            break;
+          case Id_arguments:
+            if (argumentsProperty == null) {
+                attr = DONTENUM;
+            } else {
+                attr = EMPTY;
+            }
+            break;
+          default: throw new IllegalStateException();
+        }
+        return instanceIdInfo(attr, id);
+    }
+
+    protected String getInstanceIdName(int id)
     {
         switch (id) {
-            case Id_length:
-            case Id_arity:
-            case Id_name:
-                return DONTENUM | READONLY | PERMANENT;
-            case Id_prototype:
-                return isPrototypePropertyImmune
-                    ? DONTENUM | READONLY | PERMANENT
-                    : DONTENUM;
-            case Id_arguments:
-                return EMPTY;
+            case Id_length:       return "length";
+            case Id_arity:        return "arity";
+            case Id_name:         return "name";
+            case Id_prototype:    return "prototype";
+            case Id_arguments:    return "arguments";
         }
-        return super.getIdAttributes(id);
+        return super.getInstanceIdName(id);
     }
 
-    protected boolean hasIdValue(int id)
-    {
-        if (id == Id_prototype) {
-            return prototypeProperty != NOT_FOUND;
-        }
-        else if (id == Id_arguments) {
-            // Should after delete Function.arguments its activation still
-            // be available during Function call?
-            // This code assumes it should not: after default set/deleteIdValue
-            // hasIdValue/getIdValue would not be called again
-            // To handle the opposite case, set/deleteIdValue should be
-            // overwritten as well
-            return null != getActivation(Context.getContext());
-        }
-        return super.hasIdValue(id);
-    }
-
-    protected Object getIdValue(int id)
+    protected Object getInstanceIdValue(int id)
     {
         switch (id) {
-            case Id_length:    return wrap_int(getLength());
-            case Id_arity:     return wrap_int(getArity());
-            case Id_name:      return getFunctionName();
-            case Id_prototype: return getPrototypeProperty();
-            case Id_arguments: return getArguments();
+          case Id_length:    return wrap_int(getLength());
+          case Id_arity:     return wrap_int(getArity());
+          case Id_name:      return getFunctionName();
+          case Id_prototype: return getPrototypeProperty();
+          case Id_arguments: return getArguments();
         }
-        return super.getIdValue(id);
+        return super.getInstanceIdValue(id);
     }
 
-    protected void setIdValue(int id, Object value)
+    protected void setInstanceIdValue(int id, Object value)
     {
         if (id == Id_prototype) {
-            prototypeProperty = (value != null) ? value : UniqueTag.NULL_VALUE;
+            if (!isPrototypePropertyImmune) {
+                prototypeProperty = (value != null)
+                                    ? value : UniqueTag.NULL_VALUE;
+            }
             return;
+        } else if (id == Id_arguments) {
+            argumentsProperty = (value != null)
+                                ? value : UniqueTag.NULL_VALUE;
         }
-        super.setIdValue(id, value);
+        super.setInstanceIdValue(id, value);
     }
 
-    protected void deleteIdValue(int id)
+    protected void fillConstructorProperties(IdFunction ctor)
     {
-        if (id == Id_prototype) {
-            prototypeProperty = NOT_FOUND;
-            return;
+        // Fix up bootstrapping problem: getPrototype of the IdFunction
+        // can not return Function.prototype because Function object is not
+        // yet defined.
+        ctor.setPrototype(this);
+        super.fillConstructorProperties(ctor);
+    }
+
+    protected void initPrototypeId(int id)
+    {
+        String s;
+        int arity;
+        switch (id) {
+          case Id_constructor: arity=1; s="constructor"; break;
+          case Id_toString:    arity=1; s="toString";    break;
+          case Id_toSource:    arity=1; s="toSource";    break;
+          case Id_apply:       arity=2; s="apply";       break;
+          case Id_call:        arity=1; s="call";        break;
+          default: throw new IllegalArgumentException(String.valueOf(id));
         }
-        super.deleteIdValue(id);
+        initPrototypeMethod(FUNCTION_TAG, id, s, arity);
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
-        if (prototypeFlag) {
-            int methodId = f.methodId();
-            switch (methodId) {
-              case Id_constructor:
-                return jsConstructor(cx, scope, args);
-
-              case Id_toString: {
-                BaseFunction realf = realFunction(thisObj, f);
-                int indent = ScriptRuntime.toInt32(args, 0);
-                return realf.decompile(indent, 0);
-              }
-
-              case Id_toSource: {
-                BaseFunction realf = realFunction(thisObj, f);
-                int indent = 0;
-                int flags = Decompiler.TO_SOURCE_FLAG;
-                if (args.length != 0) {
-                    indent = ScriptRuntime.toInt32(args[0]);
-                    if (indent >= 0) {
-                        flags = 0;
-                    } else {
-                        indent = 0;
-                    }
-                }
-                return realf.decompile(indent, flags);
-              }
-
-              case Id_apply:
-              case Id_call:
-                return applyOrCall(methodId == Id_apply, cx, scope,
-                                   thisObj, args);
-            }
+        if (!f.hasTag(FUNCTION_TAG)) {
+            return super.execMethod(f, cx, scope, thisObj, args);
         }
-        return super.execMethod(f, cx, scope, thisObj, args);
+        int id = f.methodId();
+        switch (id) {
+          case Id_constructor:
+            return jsConstructor(cx, scope, args);
+
+          case Id_toString: {
+            BaseFunction realf = realFunction(thisObj, f);
+            int indent = ScriptRuntime.toInt32(args, 0);
+            return realf.decompile(indent, 0);
+          }
+
+          case Id_toSource: {
+            BaseFunction realf = realFunction(thisObj, f);
+            int indent = 0;
+            int flags = Decompiler.TO_SOURCE_FLAG;
+            if (args.length != 0) {
+                indent = ScriptRuntime.toInt32(args[0]);
+                if (indent >= 0) {
+                    flags = 0;
+                } else {
+                    indent = 0;
+                }
+            }
+            return realf.decompile(indent, flags);
+          }
+
+          case Id_apply:
+          case Id_call:
+            return applyOrCall(id, cx, scope, thisObj, args);
+        }
+        throw new IllegalArgumentException(String.valueOf(id));
     }
 
     private BaseFunction realFunction(Scriptable thisObj, IdFunction f)
@@ -208,6 +261,9 @@ public class BaseFunction extends IdScriptable implements Function {
      */
     public void setImmunePrototypeProperty(Object value)
     {
+        if (isPrototypePropertyImmune) {
+            throw new IllegalStateException();
+        }
         prototypeProperty = (value != null) ? value : UniqueTag.NULL_VALUE;
         isPrototypePropertyImmune = true;
     }
@@ -326,7 +382,7 @@ public class BaseFunction extends IdScriptable implements Function {
         return functionName;
     }
 
-    Object getPrototypeProperty() {
+    final Object getPrototypeProperty() {
         Object result = prototypeProperty;
         if (result == null) {
             synchronized (this) {
@@ -361,13 +417,21 @@ public class BaseFunction extends IdScriptable implements Function {
 
     private Object getArguments()
     {
-        // <Function name>.arguments is deprecated, so we use a slow
-        // way of getting it that doesn't add to the invocation cost.
-        // TODO: add warning, error based on version
-        NativeCall activation = getActivation(Context.getContext());
-        return activation == null
-               ? null
-               : activation.get("arguments", activation);
+      // <Function name>.arguments is deprecated, so we use a slow
+      // way of getting it that doesn't add to the invocation cost.
+      // TODO: add warning, error based on version
+      Object value = argumentsProperty;
+      if (value != null) {
+          // Should after changing <Function name>.arguments its
+          // activation still be available during Function call?
+          // This code assumes it should not: argumentsProperty != null
+          // means assigned or delete arguments
+          return (value == UniqueTag.NULL_VALUE) ? null : value;
+      }
+      NativeCall activation = getActivation(Context.getContext());
+      return (activation == null)
+             ? null
+             : activation.get("arguments", activation);
     }
 
     NativeCall getActivation(Context cx)
@@ -449,7 +513,7 @@ public class BaseFunction extends IdScriptable implements Function {
      *
      * See Ecma 15.3.4.[34]
      */
-    private static Object applyOrCall(boolean isApply,
+    private static Object applyOrCall(int id,
                                       Context cx, Scriptable scope,
                                       Scriptable thisObj, Object[] args)
         throws JavaScriptException
@@ -465,7 +529,7 @@ public class BaseFunction extends IdScriptable implements Function {
         }
 
         Object[] callArgs;
-        if (isApply) {
+        if (id == Id_apply) {
             // Follow Ecma 15.3.4.3
             if (L <= 1) {
                 callArgs = ScriptRuntime.emptyArgs;
@@ -494,76 +558,9 @@ public class BaseFunction extends IdScriptable implements Function {
         return ScriptRuntime.call(cx, function, callThis, callArgs, scope);
     }
 
-    protected String getIdName(int id)
-    {
-        switch (id) {
-            case Id_length:       return "length";
-            case Id_arity:        return "arity";
-            case Id_name:         return "name";
-            case Id_prototype:    return "prototype";
-            case Id_arguments:    return "arguments";
-        }
-
-        if (prototypeFlag) {
-            switch (id) {
-                case Id_constructor:  return "constructor";
-                case Id_toString:     return "toString";
-                case Id_toSource:     return "toSource";
-                case Id_apply:        return "apply";
-                case Id_call:         return "call";
-            }
-        }
-        return null;
-    }
-
-    protected int methodArity(int methodId)
-    {
-        if (prototypeFlag) {
-            switch (methodId) {
-                case Id_constructor: return 1;
-                case Id_toString:    return 1;
-                case Id_toSource:    return 1;
-                case Id_apply:       return 2;
-                case Id_call:        return 1;
-            }
-        }
-        return super.methodArity(methodId);
-    }
-
-// #string_id_map#
-
-    private static final int
-        Id_length       = 1,
-        Id_arity        = 2,
-        Id_name         = 3,
-        Id_prototype    = 4,
-        Id_arguments    = 5,
-
-        MAX_INSTANCE_ID = 5;
-
-    { setMaxId(MAX_INSTANCE_ID); }
-
-    protected int mapNameToId(String s)
+    protected int findPrototypeId(String s)
     {
         int id;
-// #generated# Last update: 2001-05-20 00:12:12 GMT+02:00
-        L0: { id = 0; String X = null; int c;
-            L: switch (s.length()) {
-            case 4: X="name";id=Id_name; break L;
-            case 5: X="arity";id=Id_arity; break L;
-            case 6: X="length";id=Id_length; break L;
-            case 9: c=s.charAt(0);
-                if (c=='a') { X="arguments";id=Id_arguments; }
-                else if (c=='p') { X="prototype";id=Id_prototype; }
-                break L;
-            }
-            if (X!=null && X!=s && !X.equals(s)) id = 0;
-        }
-// #/generated#
-// #/string_id_map#
-
-        if (id != 0 || !prototypeFlag) { return id; }
-
 // #string_id_map#
 // #generated# Last update: 2004-03-17 13:23:22 CET
         L0: { id = 0; String X = null; int c;
@@ -583,13 +580,13 @@ public class BaseFunction extends IdScriptable implements Function {
     }
 
     private static final int
-        Id_constructor    = MAX_INSTANCE_ID + 1,
-        Id_toString       = MAX_INSTANCE_ID + 2,
-        Id_toSource       = MAX_INSTANCE_ID + 3,
-        Id_apply          = MAX_INSTANCE_ID + 4,
-        Id_call           = MAX_INSTANCE_ID + 5,
+        Id_constructor    = 1,
+        Id_toString       = 2,
+        Id_toSource       = 3,
+        Id_apply          = 4,
+        Id_call           = 5,
 
-        MAX_PROTOTYPE_ID  = MAX_INSTANCE_ID + 5;
+        MAX_PROTOTYPE_ID  = 5;
 
 // #/string_id_map#
 
@@ -597,6 +594,6 @@ public class BaseFunction extends IdScriptable implements Function {
 
     private Object prototypeProperty;
     private boolean isPrototypePropertyImmune;
-    private boolean prototypeFlag;
+    private Object argumentsProperty;
 }
 

@@ -129,7 +129,10 @@ public class NativeJavaTopPackage
         // a ScriptableObject.
         ScriptableObject global = (ScriptableObject) scope;
 
-        getClass.exportAsScopeProperty(sealed);
+        if (sealed) {
+            getClass.sealObject();
+        }
+        getClass.exportAsScopeProperty();
         global.defineProperty("Packages", top, ScriptableObject.DONTENUM);
         global.defineProperty("java", javaAlias, ScriptableObject.DONTENUM);
     }

@@ -59,7 +59,9 @@ import org.mozilla.javascript.*;
 
 
 
-public class NativeRegExp extends IdScriptable implements Function {
+public class NativeRegExp extends IdScriptable implements Function
+{
+    private static final Object REGEXP_TAG = new Object();
 
     public static final int JSREG_GLOB = 0x1;       // 'g' flag: global
     public static final int JSREG_FOLD = 0x2;       // 'i' flag: fold
@@ -133,8 +135,7 @@ public class NativeRegExp extends IdScriptable implements Function {
 
         NativeRegExp proto = new NativeRegExp();
         proto.re = (RECompiled)compileRE("", null, false);
-        proto.prototypeFlag = true;
-        proto.setMaxId(MAX_PROTOTYPE_ID);
+        proto.activatePrototypeMap(MAX_PROTOTYPE_ID);
         proto.setParentScope(scope);
         proto.setPrototype(getObjectPrototype(scope));
 
@@ -2575,124 +2576,6 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         throw ScriptRuntime.constructError("SyntaxError", msg);
     }
 
-    protected int getIdAttributes(int id)
-    {
-        switch (id) {
-            case Id_lastIndex:
-                return ScriptableObject.PERMANENT | ScriptableObject.DONTENUM;
-            case Id_source:
-            case Id_global:
-            case Id_ignoreCase:
-            case Id_multiline:
-                return ScriptableObject.PERMANENT | ScriptableObject.READONLY
-                                                  | ScriptableObject.DONTENUM;
-        }
-        return super.getIdAttributes(id);
-    }
-
-    protected Object getIdValue(int id)
-    {
-        switch (id) {
-            case Id_lastIndex:
-                return wrap_double(lastIndex);
-            case Id_source:
-                return new String(re.source);
-            case Id_global:
-                return wrap_boolean((re.flags & JSREG_GLOB) != 0);
-            case Id_ignoreCase:
-                return wrap_boolean((re.flags & JSREG_FOLD) != 0);
-            case Id_multiline:
-                return wrap_boolean((re.flags & JSREG_MULTILINE) != 0);
-        }
-        return super.getIdValue(id);
-    }
-
-    protected void setIdValue(int id, Object value)
-    {
-        if (id == Id_lastIndex) {
-            setLastIndex(ScriptRuntime.toNumber(value));
-            return;
-        }
-        super.setIdValue(id, value);
-    }
-
-    void setLastIndex(double value)
-    {
-        lastIndex = value;
-    }
-
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
-                             Scriptable thisObj, Object[] args)
-    {
-        if (prototypeFlag) {
-            switch (f.methodId()) {
-              case Id_compile:
-                return realThis(thisObj, f).compile(cx, scope, args);
-
-              case Id_toString:
-              case Id_toSource:
-                return realThis(thisObj, f).toString();
-
-              case Id_exec:
-                return realThis(thisObj, f).execSub(cx, scope, args, MATCH);
-
-              case Id_test: {
-                Object x = realThis(thisObj, f).execSub(cx, scope, args, TEST);
-                return Boolean.TRUE.equals(x) ? Boolean.TRUE : Boolean.FALSE;
-              }
-
-              case Id_prefix:
-                return realThis(thisObj, f).execSub(cx, scope, args, PREFIX);
-            }
-        }
-        return super.execMethod(f, cx, scope, thisObj, args);
-    }
-
-    private static NativeRegExp realThis(Scriptable thisObj, IdFunction f)
-    {
-        if (!(thisObj instanceof NativeRegExp))
-            throw incompatibleCallError(f);
-        return (NativeRegExp)thisObj;
-    }
-
-    protected String getIdName(int id)
-    {
-        switch (id) {
-            case Id_lastIndex:  return "lastIndex";
-            case Id_source:     return "source";
-            case Id_global:     return "global";
-            case Id_ignoreCase: return "ignoreCase";
-            case Id_multiline:  return "multiline";
-        }
-
-        if (prototypeFlag) {
-            switch (id) {
-                case Id_compile:  return "compile";
-                case Id_toString: return "toString";
-                case Id_toSource: return "toSource";
-                case Id_exec:     return "exec";
-                case Id_test:     return "test";
-                case Id_prefix:   return "prefix";
-            }
-        }
-        return null;
-    }
-
-    protected int methodArity(int methodId)
-    {
-        if (prototypeFlag) {
-            switch (methodId) {
-                case Id_compile:  return 1;
-                case Id_toString: return 0;
-                case Id_toSource: return 0;
-                case Id_exec:     return 1;
-                case Id_test:     return 1;
-                case Id_prefix:   return 1;
-            }
-        }
-        return super.methodArity(methodId);
-    }
-
 // #string_id_map#
 
     private static final int
@@ -2704,9 +2587,11 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
 
         MAX_INSTANCE_ID = 5;
 
-    { setMaxId(MAX_INSTANCE_ID); }
+    {
+        setMaxInstanceId(0, MAX_INSTANCE_ID);
+    }
 
-    protected int mapNameToId(String s)
+    protected int findInstanceIdInfo(String s)
     {
         int id;
 // #generated# Last update: 2001-05-24 12:01:22 GMT+02:00
@@ -2728,9 +2613,124 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
 // #/generated#
 // #/string_id_map#
 
-        if (id != 0 || !prototypeFlag) { return id; }
+        if (id == 0) return super.findInstanceIdInfo(s);
+
+        int attr;
+        switch (id) {
+          case Id_lastIndex:
+            attr = PERMANENT | DONTENUM;
+            break;
+          case Id_source:
+          case Id_global:
+          case Id_ignoreCase:
+          case Id_multiline:
+            attr = PERMANENT | READONLY | DONTENUM;
+            break;
+          default:
+            throw new IllegalStateException();
+        }
+        return instanceIdInfo(attr, id);
+    }
+
+    protected String getInstanceIdName(int id)
+    {
+        switch (id) {
+            case Id_lastIndex:  return "lastIndex";
+            case Id_source:     return "source";
+            case Id_global:     return "global";
+            case Id_ignoreCase: return "ignoreCase";
+            case Id_multiline:  return "multiline";
+        }
+        return super.getInstanceIdName(id);
+    }
+
+    protected Object getInstanceIdValue(int id)
+    {
+        switch (id) {
+            case Id_lastIndex:
+                return wrap_double(lastIndex);
+            case Id_source:
+                return new String(re.source);
+            case Id_global:
+                return wrap_boolean((re.flags & JSREG_GLOB) != 0);
+            case Id_ignoreCase:
+                return wrap_boolean((re.flags & JSREG_FOLD) != 0);
+            case Id_multiline:
+                return wrap_boolean((re.flags & JSREG_MULTILINE) != 0);
+        }
+        return super.getInstanceIdValue(id);
+    }
+
+    protected void setInstanceIdValue(int id, Object value)
+    {
+        if (id == Id_lastIndex) {
+            setLastIndex(ScriptRuntime.toNumber(value));
+            return;
+        }
+        super.setInstanceIdValue(id, value);
+    }
+
+    void setLastIndex(double value)
+    {
+        lastIndex = value;
+    }
+
+    protected void initPrototypeId(int id)
+    {
+        String s;
+        int arity;
+        switch (id) {
+          case Id_compile:  arity=1; s="compile";  break;
+          case Id_toString: arity=0; s="toString"; break;
+          case Id_toSource: arity=0; s="toSource"; break;
+          case Id_exec:     arity=1; s="exec";     break;
+          case Id_test:     arity=1; s="test";     break;
+          case Id_prefix:   arity=1; s="prefix";   break;
+          default: throw new IllegalArgumentException(String.valueOf(id));
+        }
+        initPrototypeMethod(REGEXP_TAG, id, s, arity);
+    }
+
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+                             Scriptable thisObj, Object[] args)
+    {
+        if (!f.hasTag(REGEXP_TAG)) {
+            return super.execMethod(f, cx, scope, thisObj, args);
+        }
+        int id = f.methodId();
+        switch (id) {
+          case Id_compile:
+            return realThis(thisObj, f).compile(cx, scope, args);
+
+          case Id_toString:
+          case Id_toSource:
+            return realThis(thisObj, f).toString();
+
+          case Id_exec:
+            return realThis(thisObj, f).execSub(cx, scope, args, MATCH);
+
+          case Id_test: {
+            Object x = realThis(thisObj, f).execSub(cx, scope, args, TEST);
+            return Boolean.TRUE.equals(x) ? Boolean.TRUE : Boolean.FALSE;
+          }
+
+          case Id_prefix:
+            return realThis(thisObj, f).execSub(cx, scope, args, PREFIX);
+        }
+        throw new IllegalArgumentException(String.valueOf(id));
+    }
+
+    private static NativeRegExp realThis(Scriptable thisObj, IdFunction f)
+    {
+        if (!(thisObj instanceof NativeRegExp))
+            throw incompatibleCallError(f);
+        return (NativeRegExp)thisObj;
+    }
 
 // #string_id_map#
+    protected int findPrototypeId(String s)
+    {
+        int id;
 // #generated# Last update: 2004-03-17 13:54:21 CET
         L0: { id = 0; String X = null; int c;
             L: switch (s.length()) {
@@ -2752,17 +2752,16 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
     }
 
     private static final int
-        Id_compile       = MAX_INSTANCE_ID + 1,
-        Id_toString      = MAX_INSTANCE_ID + 2,
-        Id_toSource      = MAX_INSTANCE_ID + 3,
-        Id_exec          = MAX_INSTANCE_ID + 4,
-        Id_test          = MAX_INSTANCE_ID + 5,
-        Id_prefix        = MAX_INSTANCE_ID + 6,
+        Id_compile       = 1,
+        Id_toString      = 2,
+        Id_toSource      = 3,
+        Id_exec          = 4,
+        Id_test          = 5,
+        Id_prefix        = 6,
 
-        MAX_PROTOTYPE_ID = MAX_INSTANCE_ID + 6;
+        MAX_PROTOTYPE_ID = 6;
 
 // #/string_id_map#
-    private boolean prototypeFlag;
 
     RECompiled re;
     private double lastIndex;          /* index after last match, for //g iterator */

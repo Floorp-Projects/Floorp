@@ -44,9 +44,12 @@ package org.mozilla.javascript;
 
 final class NativeMath extends IdScriptable
 {
+    private static final Object MATH_TAG = new Object();
+
     static void init(Context cx, Scriptable scope, boolean sealed)
     {
         NativeMath obj = new NativeMath();
+        obj.activatePrototypeMap(MAX_ID);
         obj.setPrototype(getObjectPrototype(scope));
         obj.setParentScope(scope);
         if (sealed) { obj.sealObject(); }
@@ -54,39 +57,65 @@ final class NativeMath extends IdScriptable
                                         ScriptableObject.DONTENUM);
     }
 
-    public String getClassName() { return "Math"; }
-
-    protected int getIdAttributes(int id)
+    private NativeMath()
     {
-        if (id > LAST_METHOD_ID) {
-            return DONTENUM | READONLY | PERMANENT;
-        }
-        return super.getIdAttributes(id);
     }
 
-    protected Object getIdValue(int id)
+    public String getClassName() { return "Math"; }
+
+    protected void initPrototypeId(int id)
     {
-        if (id > LAST_METHOD_ID) {
+        if (id <= LAST_METHOD_ID) {
+            String name;
+            int arity;
+            switch (id) {
+              case Id_toSource: arity = 0; name = "toSource"; break;
+              case Id_abs:      arity = 1; name = "abs";      break;
+              case Id_acos:     arity = 1; name = "acos";     break;
+              case Id_asin:     arity = 1; name = "asin";     break;
+              case Id_atan:     arity = 1; name = "atan";     break;
+              case Id_atan2:    arity = 2; name = "atan2";    break;
+              case Id_ceil:     arity = 1; name = "ceil";     break;
+              case Id_cos:      arity = 1; name = "cos";      break;
+              case Id_exp:      arity = 1; name = "exp";      break;
+              case Id_floor:    arity = 1; name = "floor";    break;
+              case Id_log:      arity = 1; name = "log";      break;
+              case Id_max:      arity = 2; name = "max";      break;
+              case Id_min:      arity = 2; name = "min";      break;
+              case Id_pow:      arity = 2; name = "pow";      break;
+              case Id_random:   arity = 0; name = "random";   break;
+              case Id_round:    arity = 1; name = "round";    break;
+              case Id_sin:      arity = 1; name = "sin";      break;
+              case Id_sqrt:     arity = 1; name = "sqrt";     break;
+              case Id_tan:      arity = 1; name = "tan";      break;
+              default: throw new IllegalStateException(String.valueOf(id));
+            }
+            initPrototypeMethod(MATH_TAG, id, name, arity);
+        } else {
+            String name;
             double x;
             switch (id) {
-                case Id_E:       x = Math.E;             break;
-                case Id_PI:      x = Math.PI;            break;
-                case Id_LN10:    x = 2.302585092994046;  break;
-                case Id_LN2:     x = 0.6931471805599453; break;
-                case Id_LOG2E:   x = 1.4426950408889634; break;
-                case Id_LOG10E:  x = 0.4342944819032518; break;
-                case Id_SQRT1_2: x = 0.7071067811865476; break;
-                case Id_SQRT2:   x = 1.4142135623730951; break;
-                default: /* Unreachable */ x = 0;
+              case Id_E:       x = Math.E;             name = "E";       break;
+              case Id_PI:      x = Math.PI;            name = "PI";      break;
+              case Id_LN10:    x = 2.302585092994046;  name = "LN10";    break;
+              case Id_LN2:     x = 0.6931471805599453; name = "LN2";     break;
+              case Id_LOG2E:   x = 1.4426950408889634; name = "LOG2E";   break;
+              case Id_LOG10E:  x = 0.4342944819032518; name = "LOG10E";  break;
+              case Id_SQRT1_2: x = 0.7071067811865476; name = "SQRT1_2"; break;
+              case Id_SQRT2:   x = 1.4142135623730951; name = "SQRT2";   break;
+              default: throw new IllegalStateException(String.valueOf(id));
             }
-            return cacheIdValue(id, wrap_double(x));
+            initPrototypeValue(id, name, wrap_double(x),
+                               DONTENUM | READONLY | PERMANENT);
         }
-        return super.getIdValue(id);
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
+        if (!f.hasTag(MATH_TAG)) {
+            return super.execMethod(f, cx, scope, thisObj, args);
+        }
         double x;
         int methodId = f.methodId();
         switch (methodId) {
@@ -214,8 +243,7 @@ final class NativeMath extends IdScriptable
                 x = Math.tan(x);
                 break;
 
-            default:
-                return super.execMethod(f, cx, scope, thisObj, args);
+            default: throw new IllegalStateException(String.valueOf(methodId));
         }
         return wrap_double(x);
     }
@@ -275,70 +303,9 @@ final class NativeMath extends IdScriptable
         return result;
     }
 
-    protected String getIdName(int id)
-    {
-        switch (id) {
-            case Id_toSource: return "toSource";
-            case Id_abs:      return "abs";
-            case Id_acos:     return "acos";
-            case Id_asin:     return "asin";
-            case Id_atan:     return "atan";
-            case Id_atan2:    return "atan2";
-            case Id_ceil:     return "ceil";
-            case Id_cos:      return "cos";
-            case Id_exp:      return "exp";
-            case Id_floor:    return "floor";
-            case Id_log:      return "log";
-            case Id_max:      return "max";
-            case Id_min:      return "min";
-            case Id_pow:      return "pow";
-            case Id_random:   return "random";
-            case Id_round:    return "round";
-            case Id_sin:      return "sin";
-            case Id_sqrt:     return "sqrt";
-            case Id_tan:      return "tan";
-
-            case Id_E:        return "E";
-            case Id_PI:       return "PI";
-            case Id_LN10:     return "LN10";
-            case Id_LN2:      return "LN2";
-            case Id_LOG2E:    return "LOG2E";
-            case Id_LOG10E:   return "LOG10E";
-            case Id_SQRT1_2:  return "SQRT1_2";
-            case Id_SQRT2:    return "SQRT2";
-        }
-        return null;
-    }
-
-    protected int methodArity(int methodId)
-    {
-        switch (methodId) {
-            case Id_toSource: return 0;
-            case Id_abs:      return 1;
-            case Id_acos:     return 1;
-            case Id_asin:     return 1;
-            case Id_atan:     return 1;
-            case Id_atan2:    return 2;
-            case Id_ceil:     return 1;
-            case Id_cos:      return 1;
-            case Id_exp:      return 1;
-            case Id_floor:    return 1;
-            case Id_log:      return 1;
-            case Id_max:      return 2;
-            case Id_min:      return 2;
-            case Id_pow:      return 2;
-            case Id_random:   return 0;
-            case Id_round:    return 1;
-            case Id_sin:      return 1;
-            case Id_sqrt:     return 1;
-            case Id_tan:      return 1;
-        }
-        return super.methodArity(methodId);
-    }
-
 // #string_id_map#
 
-    protected int mapNameToId(String s)
+    protected int findPrototypeId(String s)
     {
         int id;
 // #generated# Last update: 2004-03-17 13:51:32 CET
@@ -421,9 +388,7 @@ final class NativeMath extends IdScriptable
         Id_SQRT1_2      = LAST_METHOD_ID + 7,
         Id_SQRT2        = LAST_METHOD_ID + 8,
 
-        MAX_INSTANCE_ID = LAST_METHOD_ID + 8;
-
-    { setMaxId(MAX_INSTANCE_ID); }
+        MAX_ID = LAST_METHOD_ID + 8;
 
 // #/string_id_map#
 }

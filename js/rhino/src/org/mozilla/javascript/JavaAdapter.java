@@ -171,7 +171,10 @@ public final class JavaAdapter implements IdFunctionMaster
         IdFunction ctor = new IdFunction(obj, FTAG, Id_JavaAdapter,
                                          "JavaAdapter", 1, scope);
         ctor.markAsConstructor(null);
-        ctor.exportAsScopeProperty(sealed);
+        if (sealed) {
+            ctor.sealObject();
+        }
+        ctor.exportAsScopeProperty();
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,

@@ -100,7 +100,10 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                   throw Kit.codeBug();
             }
             IdFunction f = new IdFunction(obj, FTAG, id, name, arity, scope);
-            f.exportAsScopeProperty(sealed);
+            if (sealed) {
+                f.sealObject();
+            }
+            f.exportAsScopeProperty();
         }
 
         ScriptableObject.defineProperty(scope, "NaN",
@@ -143,7 +146,10 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
             IdFunction ctor = new IdFunction(obj, FTAG, Id_new_CommonError,
                                              name, 1, scope);
             ctor.markAsConstructor(errorProto);
-            ctor.exportAsScopeProperty(sealed);
+            if (sealed) {
+                ctor.sealObject();
+            }
+            ctor.exportAsScopeProperty();
         }
     }
 

@@ -35,22 +35,22 @@
 
 package org.mozilla.javascript;
 
+import java.io.*;
+
 /**
 Base class for native object implementation that uses IdFunction to export its methods to script via <class-name>.prototype object.
 
 Any descendant should implement at least the following methods:
-    mapNameToId
-    getIdName
+    findInstanceIdInfo
+    getInstanceIdName
     execMethod
     methodArity
 
 To define non-function properties, the descendant should override
-    getIdValue
-    setIdValue
-    getIdAttributes
+    getInstanceIdValue
+    setInstanceIdValue
 to get/set property value and provide its default attributes.
 
-During initialization descendant should call setMaxId directly or via calling addAsPrototype.
 
 To customize initializition of constructor and protype objects, descendant
 may override scopeInit or fillConstructorProperties methods.
@@ -59,12 +59,288 @@ may override scopeInit or fillConstructorProperties methods.
 public abstract class IdScriptable extends ScriptableObject
     implements IdFunctionMaster
 {
+    private static final class PrototypeValues implements Serializable
+    {
+        private static final int VALUE_SLOT = 0;
+        private static final int NAME_SLOT = 1;
+        private static final int SLOT_SPAN = 2;
+
+        private IdScriptable obj;
+        private Object tag;
+        private int maxId;
+        private volatile Object[] valueArray;
+        private volatile short[] attributeArray;
+        private volatile int lastFoundId = 1;
+
+        // The following helps to avoid creation of valueArray during runtime
+        // initialization for common case of "constructor" property
+        int constructorId;
+        private IdFunction constructor;
+        private short constructorAttrs;
+
+        PrototypeValues(IdScriptable obj, int maxId)
+        {
+            if (obj == null) throw new IllegalArgumentException();
+            if (maxId < 1) throw new IllegalArgumentException();
+            this.obj = obj;
+            this.maxId = maxId;
+        }
+
+        final void initValue(int id, String name, Object value, int attributes)
+        {
+            if (!(1 <= id && id <= maxId))
+                throw new IllegalArgumentException();
+            if (name == null)
+                throw new IllegalArgumentException();
+            if (value == NOT_FOUND)
+                throw new IllegalArgumentException();
+            ScriptableObject.checkValidAttributes(attributes);
+            if (obj.findPrototypeId(name) != id)
+                throw new IllegalArgumentException(name);
+
+            if (id == constructorId) {
+                if (!(value instanceof IdFunction)) {
+                    throw new IllegalArgumentException(
+                        "consructor should be initialized with IdFunction");
+                }
+                constructor = (IdFunction)value;
+                constructorAttrs = (short)attributes;
+                return;
+            }
+
+            initSlot(id, name, value, attributes);
+        }
+
+        private void initSlot(int id, String name, Object value,
+                              int attributes)
+        {
+            Object[] array = valueArray;
+            if (array == null)
+                throw new IllegalStateException();
+
+            if (value == null) {
+                value = UniqueTag.NULL_VALUE;
+            }
+            int index = (id - 1) * SLOT_SPAN;
+            synchronized (this) {
+                Object value2 = array[index + VALUE_SLOT];
+                if (value2 == null) {
+                    array[index + VALUE_SLOT] = value;
+                    array[index + NAME_SLOT] = name;
+                    attributeArray[id - 1] = (short)attributes;
+                } else {
+                    if (!name.equals(array[index + NAME_SLOT]))
+                         throw new IllegalStateException();
+                }
+            }
+        }
+
+        final IdFunction createPrecachedConstructor()
+        {
+            if (constructorId != 0) throw new IllegalStateException();
+            constructorId = obj.findPrototypeId("constructor");
+            if (constructorId == 0) {
+                throw new IllegalStateException(
+                    "No id for constructor property");
+            }
+            obj.initPrototypeId(constructorId);
+            if (constructor == null) {
+                throw new IllegalStateException(
+                    obj.getClass().getName()+".initPrototypeId() did not "
+                    +"initialize id="+constructorId);
+            }
+            constructor.initFunction(obj.getClassName(),
+                                     ScriptableObject.getTopLevelScope(obj));
+            constructor.markAsConstructor(obj);
+            return constructor;
+        }
+
+        final int findId(String name)
+        {
+            Object[] array = valueArray;
+            if (array == null) {
+                return obj.findPrototypeId(name);
+            }
+            int id = lastFoundId;
+            if (name == array[(id - 1) * SLOT_SPAN + NAME_SLOT]) {
+                return id;
+            }
+            id = obj.findPrototypeId(name);
+            if (id != 0) {
+                int nameSlot = (id - 1) * SLOT_SPAN + NAME_SLOT;
+                // Make cache to work!
+                array[nameSlot] = name;
+                lastFoundId = id;
+            }
+            return id;
+        }
+
+        final boolean has(int id)
+        {
+            Object[] array = valueArray;
+            if (array == null) {
+                // Not yet initialized, assume all exists
+                return true;
+            }
+            int valueSlot = (id  - 1) * SLOT_SPAN + VALUE_SLOT;
+            Object value = array[valueSlot];
+            if (value == null) {
+                // The particular entry has not been yet initialized
+                return true;
+            }
+            return value != NOT_FOUND;
+        }
+
+        final Object get(int id)
+        {
+            Object value = ensureId(id);
+            if (value == UniqueTag.NULL_VALUE) {
+                value = null;
+            }
+            return value;
+        }
+
+        final void set(int id, Scriptable start, Object value)
+        {
+            if (value == NOT_FOUND) throw new IllegalArgumentException();
+            ensureId(id);
+            int attr = attributeArray[id - 1];
+            if ((attr & READONLY) == 0) {
+                if (start == obj) {
+                    if (value == null) {
+                        value = UniqueTag.NULL_VALUE;
+                    }
+                    int valueSlot = (id  - 1) * SLOT_SPAN + VALUE_SLOT;
+                    synchronized (this) {
+                        valueArray[valueSlot] = value;
+                    }
+                }
+                else {
+                    int nameSlot = (id  - 1) * SLOT_SPAN + NAME_SLOT;
+                    String name = (String)valueArray[nameSlot];
+                    start.put(name, start, value);
+                }
+            }
+        }
+
+        final void delete(int id)
+        {
+            ensureId(id);
+            int attr = attributeArray[id - 1];
+            if ((attr & PERMANENT) == 0) {
+                int valueSlot = (id  - 1) * SLOT_SPAN + VALUE_SLOT;
+                synchronized (this) {
+                    valueArray[valueSlot] = NOT_FOUND;
+                    attributeArray[id - 1] = EMPTY;
+                }
+            }
+        }
+
+        final int getAttributes(int id)
+        {
+            ensureId(id);
+            return attributeArray[id - 1];
+        }
+
+        final void setAttributes(int id, int attributes)
+        {
+            ScriptableObject.checkValidAttributes(attributes);
+            ensureId(id);
+            synchronized (this) {
+                attributeArray[id - 1] = (short)attributes;
+            }
+        }
+
+        final Object[] getNames(boolean getAll, Object[] extraEntries)
+        {
+            Object[] names = null;
+            int count = 0;
+            for (int id = 1; id <= maxId; ++id) {
+                Object value = ensureId(id);
+                if (getAll || (attributeArray[id - 1] & DONTENUM) == 0) {
+                    if (value != NOT_FOUND) {
+                        int nameSlot = (id  - 1) * SLOT_SPAN + NAME_SLOT;
+                        String name = (String)valueArray[nameSlot];
+                        if (names == null) {
+                            names = new Object[maxId - 1];
+                        }
+                        names[count++] = name;
+                    }
+                }
+            }
+            if (count == 0) {
+                return extraEntries;
+            } else if (extraEntries == null || extraEntries.length == 0) {
+                if (count != names.length) {
+                    Object[] tmp = new Object[count];
+                    System.arraycopy(names, 0, tmp, 0, count);
+                    names = tmp;
+                }
+                return names;
+            } else {
+                int extra = extraEntries.length;
+                Object[] tmp = new Object[extra + count];
+                System.arraycopy(extraEntries, 0, tmp, 0, extra);
+                System.arraycopy(names, 0, tmp, extra, count);
+                return tmp;
+            }
+        }
+
+        private Object ensureId(int id)
+        {
+            Object[] array = valueArray;
+            if (array == null) {
+                synchronized (this) {
+                    array = valueArray;
+                    if (array == null) {
+                        array = new Object[maxId * SLOT_SPAN];
+                        valueArray = array;
+                        attributeArray = new short[maxId];
+                    }
+                }
+            }
+            int valueSlot = (id  - 1) * SLOT_SPAN + VALUE_SLOT;
+            Object value = array[valueSlot];
+            if (value == null) {
+                if (id == constructorId) {
+                    initSlot(constructorId, "constructor",
+                             constructor, constructorAttrs);
+                    constructor = null; // no need to refer it any longer
+                } else {
+                    obj.initPrototypeId(id);
+                }
+                value = array[valueSlot];
+                if (value == null) {
+                    throw new IllegalStateException(
+                        obj.getClass().getName()+".initPrototypeId(int id) "
+                        +"did not initialize id="+id);
+                }
+            }
+            return value;
+        }
+    }
+
+    public IdScriptable()
+    {
+    }
+
     public boolean has(String name, Scriptable start)
     {
-        if (maxId != 0) {
-            int id = mapNameToId_writeCached(name);
+        if (maxInstanceId != 0) {
+            int info = findInstanceIdInfo(name);
+            if (info != 0) {
+                int attr = (info >>> 16);
+                if ((attr & PERMANENT) != 0) {
+                    return true;
+                }
+                int id = (info & 0xFFFF);
+                return NOT_FOUND != getInstanceIdValue(id);
+            }
+        }
+        if (prototypeValues != null) {
+            int id = prototypeValues.findId(name);
             if (id != 0) {
-                return hasValue(id);
+                return prototypeValues.has(id);
             }
         }
         return super.has(name, start);
@@ -72,23 +348,17 @@ public abstract class IdScriptable extends ScriptableObject
 
     public Object get(String name, Scriptable start)
     {
-        if (maxId != 0) {
-            int id = mapNameToId_writeCached(name);
+        if (maxInstanceId != 0) {
+            int info = findInstanceIdInfo(name);
+            if (info != 0) {
+                int id = (info & 0xFFFF);
+                return getInstanceIdValue(id);
+            }
+        }
+        if (prototypeValues != null) {
+            int id = prototypeValues.findId(name);
             if (id != 0) {
-                Object[] data = idMapData;
-                if (data == null) {
-                    return getIdValue(id);
-                }
-                else {
-                    Object value = data[id - 1];
-                    if (value == null) {
-                        value = getIdValue(id);
-                    }
-                    else if (value == UniqueTag.NULL_VALUE) {
-                        value = null;
-                    }
-                    return value;
-                }
+                return prototypeValues.get(id);
             }
         }
         return super.get(name, start);
@@ -96,17 +366,18 @@ public abstract class IdScriptable extends ScriptableObject
 
     public void put(String name, Scriptable start, Object value)
     {
-        if (maxId != 0) {
-            int id = mapNameToId_cached(name);
-            if (id != 0) {
+        if (maxInstanceId != 0) {
+            int info = findInstanceIdInfo(name);
+            if (info != 0) {
                 if (start == this && isSealed()) {
                     throw Context.reportRuntimeError1("msg.modify.sealed",
                                                       name);
                 }
-                int attr = getIdAttributes(id);
+                int attr = (info >>> 16);
                 if ((attr & READONLY) == 0) {
                     if (start == this) {
-                        setIdValue(id, value);
+                        int id = (info & 0xFFFF);
+                        setInstanceIdValue(id, value);
                     }
                     else {
                         start.put(name, start, value);
@@ -115,22 +386,43 @@ public abstract class IdScriptable extends ScriptableObject
                 return;
             }
         }
+        if (prototypeValues != null) {
+            int id = prototypeValues.findId(name);
+            if (id != 0) {
+                if (start == this && isSealed()) {
+                    throw Context.reportRuntimeError1("msg.modify.sealed",
+                                                      name);
+                }
+                prototypeValues.set(id, start, value);
+                return;
+            }
+        }
         super.put(name, start, value);
     }
 
     public void delete(String name)
     {
-        if (maxId != 0) {
-            int id = mapNameToId(name);
-            if (id != 0) {
+        if (maxInstanceId != 0) {
+            int info = findInstanceIdInfo(name);
+            if (info != 0) {
                 // Let the super class to throw exceptions for sealed objects
                 if (!isSealed()) {
-                    int attr = getIdAttributes(id);
+                    int attr = (info >>> 16);
                     if ((attr & PERMANENT) == 0) {
-                        deleteIdValue(id);
+                        int id = (info & 0xFFFF);
+                        setInstanceIdValue(id, NOT_FOUND);
                     }
                     return;
                 }
+            }
+        }
+        if (prototypeValues != null) {
+            int id = prototypeValues.findId(name);
+            if (id != 0) {
+                if (!isSealed()) {
+                    prototypeValues.delete(id);
+                }
+                return;
             }
         }
         super.delete(name);
@@ -138,13 +430,17 @@ public abstract class IdScriptable extends ScriptableObject
 
     public int getAttributes(String name)
     {
-        if (maxId != 0) {
-            int id = mapNameToId(name);
+        if (maxInstanceId != 0) {
+            int info = findInstanceIdInfo(name);
+            if (info != 0) {
+                int attr = (info >>> 16);
+                return attr;
+            }
+        }
+        if (prototypeValues != null) {
+            int id = prototypeValues.findId(name);
             if (id != 0) {
-                if (hasValue(id)) {
-                    return getIdAttributes(id);
-                }
-                // For ids with deleted values super will throw exceptions
+                return prototypeValues.getAttributes(id);
             }
         }
         return super.getAttributes(name);
@@ -152,64 +448,56 @@ public abstract class IdScriptable extends ScriptableObject
 
     public void setAttributes(String name, int attributes)
     {
-        if (maxId != 0) {
-            int id = mapNameToId(name);
-            if (id != 0) {
-                synchronized (this) {
-                    if (hasValue(id)) {
-                        setIdAttributes(id, attributes);
-                        return;
-                    }
+        ScriptableObject.checkValidAttributes(attributes);
+        if (maxInstanceId != 0) {
+            int info = findInstanceIdInfo(name);
+            if (info != 0) {
+                int currentAttributes = (info >>> 16);
+                if (attributes != currentAttributes) {
+                    throw new RuntimeException(
+                        "Change of attributes for this id is not supported");
                 }
-                // For ids with deleted values super will throw exceptions
-            }
-        }
-        super.setAttributes(name, attributes);
-    }
-
-    /**
-     * Redefine ScriptableObject.defineProperty to allow changing
-     * values/attributes of id-based properties unless
-     * getIdAttributes contains the READONLY attribute.
-     * @see #getIdAttributes
-     * @see org.mozilla.javascript.ScriptableObject#defineProperty
-     */
-    public void defineProperty(String propertyName, Object value,
-                               int attributes)
-    {
-        if (maxId != 0) {
-            int id = mapNameToId(propertyName);
-            if (id != 0) {
-                int current_attributes = getIdAttributes(id);
-                if ((current_attributes & READONLY) != 0) {
-                    // It is a bug to redefine id with readonly attributes
-                    throw new RuntimeException
-                        ("Attempt to redefine read-only id " + propertyName);
-                }
-                setIdAttributes(id, attributes);
-                setIdValue(id, value);
                 return;
             }
         }
-        super.defineProperty(propertyName, value, attributes);
+        if (prototypeValues != null) {
+            int id = prototypeValues.findId(name);
+            if (id != 0) {
+                prototypeValues.setAttributes(id, attributes);
+                return;
+            }
+        }
+        super.setAttributes(name, attributes);
     }
 
     Object[] getIds(boolean getAll)
     {
         Object[] result = super.getIds(getAll);
 
-        if (maxId != 0) {
+        if (prototypeValues != null) {
+            result = prototypeValues.getNames(getAll, result);
+        }
+
+        if (maxInstanceId != 0) {
             Object[] ids = null;
             int count = 0;
 
-            for (int id = maxId; id != 0; --id) {
-                if (hasValue(id)) {
-                    if (getAll || (getIdAttributes(id) & DONTENUM) == 0) {
+            for (int id = maxInstanceId; id != 0; --id) {
+                String name = getInstanceIdName(id);
+                int info = findInstanceIdInfo(name);
+                if (info != 0) {
+                    int attr = (info >>> 16);
+                    if ((attr & PERMANENT) == 0) {
+                        if (NOT_FOUND == getInstanceIdValue(id)) {
+                            continue;
+                        }
+                    }
+                    if (getAll || (attr & DONTENUM) == 0) {
                         if (count == 0) {
                             // Need extra room for no more then [1..id] names
                             ids = new Object[id];
                         }
-                        ids[count++] = getIdName(id);
+                        ids[count++] = name;
                     }
                 }
             }
@@ -228,86 +516,52 @@ public abstract class IdScriptable extends ScriptableObject
         return result;
     }
 
-// Try to avoid calls to mapNameToId by quering name cache
-    private int mapNameToId_cached(String name)
+    /** Get maximum id findInstanceIdInfo can generate */
+    protected final int getMaxInstanceId()
     {
-        if (CACHE_NAMES) {
-            Object[] data = idMapData;
-            if (data != null) {
-                int id = lastIdCache;
-                if (data[id - 1 + maxId] == name) {
-                    return id;
-                }
-            }
-        }
-        return mapNameToId(name);
-    }
-
-// Same as mapNameToId_cached but put to cache id found by mapNameToId
-    private int mapNameToId_writeCached(String name) {
-        if (CACHE_NAMES) {
-            Object[] data = idMapData;
-            if (data != null) {
-                int id = lastIdCache;
-                if (data[id - 1 + maxId] == name) {
-                    return id;
-                }
-                id = mapNameToId(name);
-                if (id != 0) {
-                    data[id - 1 + maxId] = name;
-                    lastIdCache = id;
-                }
-                return id;
-            }
-        }
-        return mapNameToId(name);
+        return maxInstanceId;
     }
 
     /**
-     * Map name to id of prototype or instance property.
-     * Should return 0 if not found
+     * Set maximum id findInstanceIdInfo can generate.
+     *
+     * @param maxInstanceId new value of maximum id.
+     * @param prevMaxId the current result of {@link #getMaxInstanceId()}.
+     *                  It is used for consitency checks.
      */
-    protected abstract int mapNameToId(String name);
+    protected final void setMaxInstanceId(int prevMaxId, int maxInstanceId)
+    {
+        if (prevMaxId != this.maxInstanceId) {
+            // Consitency check
+            throw new IllegalStateException();
+        }
+        if (this.maxInstanceId >= maxInstanceId) {
+            // maxInstanceId can only go up
+            throw new IllegalArgumentException();
+        }
+        this.maxInstanceId = maxInstanceId;
+    }
+
+    protected static int instanceIdInfo(int attributes, int id)
+    {
+        return (attributes << 16) | id;
+    }
+
+    /**
+     * Map name to id of instance property.
+     * Should return 0 if not found or the result of
+     * {@link #instanceIdInfo(int, int)}.
+     */
+    protected int findInstanceIdInfo(String name)
+    {
+        return 0;
+    }
 
     /** Map id back to property name it defines.
      */
-    protected String getIdName(int id)
+    protected String getInstanceIdName(int id)
     {
         throw new IllegalArgumentException(String.valueOf(id));
-    }
-
-    /** Get attributes for id.
-     ** Default implementation return DONTENUM that is the standard attribute
-     ** for core EcmaScript function. Typically descendants need to overwrite
-     ** this for non-function attributes like length to return
-     ** DONTENUM | READONLY | PERMANENT or DONTENUM | PERMANENT
-     */
-    protected int getIdAttributes(int id)
-    {
-        return DONTENUM;
-    }
-
-    /**
-     * Set attributes for id.
-     * Descendants should override the default implementation if they want to
-     * allow to change id attributes since the default implementation throw an
-     * exception unless new attributes eqaul the result of
-     * <tt>getIdAttributes(id)</tt>.
-     */
-    protected void setIdAttributes(int id, int attributes)
-    {
-        int current = getIdAttributes(id);
-        if (attributes != current) {
-            throw new RuntimeException(
-                "Change of attributes for this id is not supported");
-        }
-    }
-
-    /** Check if id value exists.
-     ** Default implementation always returns true */
-    protected boolean hasIdValue(int id)
-    {
-        return true;
     }
 
     /** Get id value.
@@ -316,60 +570,18 @@ public abstract class IdScriptable extends ScriptableObject
      ** Default implementation creates IdFunction instance for given id
      ** and cache its value
      */
-    protected Object getIdValue(int id)
+    protected Object getInstanceIdValue(int id)
     {
-        Scriptable scope = ScriptableObject.getTopLevelScope(this);
-        IdFunction f = newIdFunction(id, scope);
-        return cacheIdValue(id, f);
+        throw new IllegalStateException(String.valueOf(id));
     }
 
     /**
-     * Set id value.
-     * IdScriptable never calls this method if result of
-     * <code>getIdAttributes(id)</code> contains READONLY attribute.
-     * Descendants can overwrite this method to provide custom handler for
-     * property assignments.
+     * Set or delete id value. If value == NOT_FOUND , the implementation
+     * should make sure that the following getInstanceIdValue return NOT_FOUND.
      */
-    protected void setIdValue(int id, Object value)
+    protected void setInstanceIdValue(int id, Object value)
     {
-        synchronized (this) {
-            Object[] data = ensureIdData();
-            data[id - 1] = (value != null) ? value : UniqueTag.NULL_VALUE;
-        }
-    }
-
-    /**
-     * Store value in permanent cache unless value was already assigned to id.
-     * After this call IdScriptable never calls hasIdValue and getIdValue
-     * for the given id.
-     */
-    protected Object cacheIdValue(int id, Object value)
-    {
-        synchronized (this) {
-            Object[] data = ensureIdData();
-            Object curValue = data[id - 1];
-            if (curValue == null) {
-                data[id - 1] = (value != null) ? value : UniqueTag.NULL_VALUE;
-            }
-            else {
-                value = curValue;
-            }
-        }
-        return value;
-    }
-
-    /**
-     * Delete value represented by id so hasIdValue return false.
-     * IdScriptable never calls this method if result of
-     * <code>getIdAttributes(id)</code> contains PERMANENT attribute.
-     * Descendants can overwrite this method to provide custom handler for
-     * property delete.
-     */
-    protected void deleteIdValue(int id)
-    {
-        synchronized (this) {
-            ensureIdData()[id - 1] = NOT_FOUND;
-        }
+        throw new IllegalStateException(String.valueOf(id));
     }
 
     /** 'thisObj' will be null if invoked as constructor, in which case
@@ -380,42 +592,9 @@ public abstract class IdScriptable extends ScriptableObject
         throw f.unknown();
     }
 
-    /**
-     * Get arity or defined argument count for the given function id.
-     * If subclass overrides ths method, it should always calls
-     * <tt>super.methodArity(id)</tt> for unknown functions.
-     */
-    protected int methodArity(int methodId)
-    {
-        throw new IllegalArgumentException(String.valueOf(methodId));
-    }
-
-    /** Get maximum id mapNameToId can generate */
-    protected final int getMaxId()
-    {
-        return maxId;
-    }
-
-    /** Set maximum id mapNameToId can generate */
-    protected final void setMaxId(int maxId)
-    {
-        // maxId can only go up
-        if (maxId < this.maxId) Kit.codeBug();
-        this.maxId = maxId;
-    }
-
-    /**
-     * Prepare this object to serve as the prototype property of constructor
-     * object with name <code>getClassName()<code> defined in
-     * <code>scope</code>.
-     * @param maxId maximum id available in prototype object
-     * @param cx current context
-     * @param scope object to define constructor in.
-     * @param sealed indicates whether object and all its properties should
-     *        be sealed
-     */
-    public void addAsPrototype(int maxId, Context cx, Scriptable scope,
-                               boolean sealed)
+    public final IdFunction exportAsJSClass(int maxPrototypeId,
+                                            Scriptable scope,
+                                            boolean sealed)
     {
         // Set scope and prototype unless IdScriptable is top level scope itself
         if (scope != this && scope != null) {
@@ -423,24 +602,79 @@ public abstract class IdScriptable extends ScriptableObject
             setPrototype(getObjectPrototype(scope));
         }
 
-        setMaxId(maxId);
-        IdFunction ctor = newConstructor(scope);
-        ctor.markAsConstructor(this);
-        fillConstructorProperties(ctor, sealed);
-        cacheIdValue(ctor.methodId(), ctor);
-        ctor.exportAsScopeProperty(sealed);
+        activatePrototypeMap(maxPrototypeId);
+        IdFunction ctor = prototypeValues.createPrecachedConstructor();
+        if (sealed) {
+            sealObject();
+        }
+        fillConstructorProperties(ctor);
+        if (sealed) {
+            ctor.sealObject();
+        }
+        ctor.exportAsScopeProperty();
+        return ctor;
     }
 
-    protected void fillConstructorProperties(IdFunction ctor, boolean sealed)
+    public final boolean hasPrototypeMap()
+    {
+        return prototypeValues != null;
+    }
+
+    public final void activatePrototypeMap(int maxPrototypeId)
+    {
+        PrototypeValues values = new PrototypeValues(this, maxPrototypeId);
+        synchronized (this) {
+            if (prototypeValues != null)
+                throw new IllegalStateException();
+            prototypeValues = values;
+        }
+    }
+
+    public final void initPrototypeMethod(Object tag, int id, String name,
+                                          int arity)
+    {
+        Scriptable scope = ScriptableObject.getTopLevelScope(this);
+        IdFunction f = newIdFunction(tag, id, name, arity, scope);
+        prototypeValues.initValue(id, name, f, DONTENUM);
+    }
+
+    public final void initPrototypeConstructor(IdFunction f)
+    {
+        int id = prototypeValues.constructorId;
+        if (id == 0)
+            throw new IllegalStateException();
+        if (f.methodId() != id)
+            throw new IllegalArgumentException();
+        if (isSealed()) { f.sealObject(); }
+        prototypeValues.initValue(id, "constructor", f, DONTENUM);
+    }
+
+    public final void initPrototypeValue(int id, String name, Object value,
+                                         int attributes)
+    {
+        prototypeValues.initValue(id, name, value, attributes);
+    }
+
+    protected void initPrototypeId(int id)
+    {
+        throw new IllegalStateException(String.valueOf(id));
+    }
+
+    protected int findPrototypeId(String name)
+    {
+        throw new IllegalStateException(name);
+    }
+
+    protected void fillConstructorProperties(IdFunction ctor)
     {
     }
 
-    protected void addIdFunctionProperty
-        (Scriptable obj, int id, boolean sealed)
+    protected void addIdFunctionProperty(Scriptable obj, Object tag, int id,
+                                         String name, int arity)
     {
         Scriptable scope = ScriptableObject.getTopLevelScope(obj);
-        IdFunction f = newIdFunction(id, scope);
-        f.addAsProperty(obj, sealed);
+        IdFunction f = newIdFunction(tag, id, name, arity, scope);
+        f.addAsProperty(obj);
     }
 
     /**
@@ -470,26 +704,13 @@ public abstract class IdScriptable extends ScriptableObject
                                        f.getFunctionName());
     }
 
-    protected IdFunction newIdFunction(int id, Scriptable scope)
+    private IdFunction newIdFunction(Object tag, int id, String name,
+                                     int arity, Scriptable scope)
     {
-        return newIdFunction(getIdName(id), id, scope);
-    }
-
-    protected IdFunction newIdFunction(String name, int id, Scriptable scope)
-    {
-        IdFunction f = new IdFunction(this, null, id, name, methodArity(id),
+        IdFunction f = new IdFunction(this, tag, id, name, arity,
                                       scope);
         if (isSealed()) { f.sealObject(); }
         return f;
-    }
-
-    protected IdFunction newConstructor(Scriptable scope)
-    {
-        int constructorId = mapNameToId("constructor");
-        if (constructorId == 0) {
-            throw new IllegalStateException("No id for constructor property");
-        }
-        return newIdFunction(getClassName(), constructorId, scope);
     }
 
     protected final Object wrap_double(double x)
@@ -514,32 +735,7 @@ public abstract class IdScriptable extends ScriptableObject
         return x ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    private boolean hasValue(int id)
-    {
-        Object value;
-        Object[] data = idMapData;
-        if (data == null || (value = data[id - 1]) == null) {
-            return hasIdValue(id);
-        }
-        else {
-            return value != NOT_FOUND;
-        }
-    }
-
-    // Must be called only from synchronized (this)
-    private Object[] ensureIdData()
-    {
-        Object[] data = idMapData;
-        if (data == null) {
-            idMapData = data = new Object[CACHE_NAMES ? maxId * 2 : maxId];
-        }
-        return data;
-    }
-
-    private int maxId;
-    private Object[] idMapData;
-
-    private static final boolean CACHE_NAMES = true;
-    private int lastIdCache;
+    private int maxInstanceId;
+    private volatile PrototypeValues prototypeValues;
 }
 

@@ -73,6 +73,8 @@ import java.io.Serializable;
  */
 public class ImporterTopLevel extends IdScriptable
 {
+    private static final Object IMPORTER_TAG = new Object();
+
     public ImporterTopLevel() { }
 
     public ImporterTopLevel(Context cx) {
@@ -92,24 +94,26 @@ public class ImporterTopLevel extends IdScriptable
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
         ImporterTopLevel obj = new ImporterTopLevel();
-        obj.prototypeFlag = true;
-        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
+        obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
     public void initStandardObjects(Context cx, boolean sealed)
     {
+        // Assume that Context.initStandardObjects initialize JavaImporter
+        // property lazily so the above init call is not yet called
         cx.initStandardObjects(this, sealed);
-        prototypeFlag = true;
         topScopeFlag = true;
-        // topScopeFlag hides constructor property so constructor name
-        // would refer to constructor property in the prototype of the scope
+        // If seal is true then exportAsJSClass(cx, seal) would seal
+        // this obj. Since this is scope as well, it would not allow
+        // to add variables.
+        IdFunction ctor = exportAsJSClass(MAX_PROTOTYPE_ID, this, false);
+        if (sealed) {
+            ctor.sealObject();
+        }
+        // delete "constructor" defined by exportAsJSClass so "constructor"
+        // name would refer to Object.constructor
         // and not to JavaImporter.prototype.constructor.
-        // For this reason addAsPrototype can not be used to replace
-        // the following 4 lines as it requires to have id for "constructor".
-        setMaxId(MAX_PROTOTYPE_ID);
-        IdFunction ctor = newIdFunction("JavaImporter", Id_constructor, this);
-        ctor.markAsConstructor(this);
-        ctor.exportAsScopeProperty(sealed);
+        delete("constructor");
     }
 
     public boolean has(String name, Scriptable start) {
@@ -170,7 +174,7 @@ public class ImporterTopLevel extends IdScriptable
             }
         }
         // set explicitly prototype and scope
-        // as otherwise in topScopeFlag mode BaseFunction.construct
+        // as otherwise in top scope mode BaseFunction.construct
         // would keep them set to null. It also allow to use
         // JavaImporter without new and still get properly
         // initialized object.
@@ -232,22 +236,37 @@ public class ImporterTopLevel extends IdScriptable
         put(n, this, cl);
     }
 
+    protected void initPrototypeId(int id)
+    {
+        String s;
+        int arity;
+        switch (id) {
+          case Id_constructor:   arity=0; s="constructor";   break;
+          case Id_importClass:   arity=1; s="importClass";   break;
+          case Id_importPackage: arity=1; s="importPackage"; break;
+          default: throw new IllegalArgumentException(String.valueOf(id));
+        }
+        initPrototypeMethod(IMPORTER_TAG, id, s, arity);
+    }
+
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
-        if (prototypeFlag) {
-            switch (f.methodId()) {
-              case Id_constructor:
-                return js_construct(scope, args);
-
-              case Id_importClass:
-                return realThis(thisObj, f).js_importClass(args);
-
-              case Id_importPackage:
-                return realThis(thisObj, f).js_importPackage(args);
-            }
+        if (!f.hasTag(IMPORTER_TAG)) {
+            return super.execMethod(f, cx, scope, thisObj, args);
         }
-        return super.execMethod(f, cx, scope, thisObj, args);
+        int id = f.methodId();
+        switch (id) {
+          case Id_constructor:
+            return js_construct(scope, args);
+
+          case Id_importClass:
+            return realThis(thisObj, f).js_importClass(args);
+
+          case Id_importPackage:
+            return realThis(thisObj, f).js_importPackage(args);
+        }
+        throw new IllegalArgumentException(String.valueOf(id));
     }
 
     private static ImporterTopLevel realThis(Scriptable thisObj, IdFunction f)
@@ -257,33 +276,10 @@ public class ImporterTopLevel extends IdScriptable
         return (ImporterTopLevel)thisObj;
     }
 
-    protected String getIdName(int id)
-    {
-        if (prototypeFlag) {
-            switch (id) {
-              case Id_constructor:   return "constructor";
-              case Id_importClass:   return "importClass";
-              case Id_importPackage: return "importPackage";
-            }
-        }
-        return super.getIdName(id);
-    }
-
-    public int methodArity(int methodId) {
-        if (prototypeFlag) {
-            switch (methodId) {
-              case Id_constructor:   return 0;
-              case Id_importClass:   return 1;
-              case Id_importPackage: return 1;
-            }
-        }
-        return super.methodArity(methodId);
-    }
-
 // #string_id_map#
 
-    protected int mapNameToId(String s) {
-        if (!prototypeFlag) { return 0; }
+    protected int findPrototypeId(String s)
+    {
         int id;
 // #generated# Last update: 2004-06-08 02:03:11 CEST
         L0: { id = 0; String X = null; int c;
@@ -297,11 +293,6 @@ public class ImporterTopLevel extends IdScriptable
             if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
 // #/generated#
-
-        if (id == Id_constructor && topScopeFlag) {
-            // see comments in initStandardObjects
-            id = 0;
-        }
         return id;
     }
 
@@ -314,7 +305,5 @@ public class ImporterTopLevel extends IdScriptable
 // #/string_id_map#
 
     private ObjArray importedPackages = new ObjArray();
-
-    private boolean prototypeFlag;
     private boolean topScopeFlag;
 }

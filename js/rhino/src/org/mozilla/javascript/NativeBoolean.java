@@ -42,19 +42,23 @@ package org.mozilla.javascript;
  * See ECMA 15.6.
  * @author Norris Boyd
  */
-final class NativeBoolean extends IdScriptable {
+final class NativeBoolean extends IdScriptable
+{
+    private static final Object BOOLEAN_TAG = new Object();
 
-    static void init(Context cx, Scriptable scope, boolean sealed) {
+    static void init(Context cx, Scriptable scope, boolean sealed)
+    {
         NativeBoolean obj = new NativeBoolean(false);
-        obj.prototypeFlag = true;
-        obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
+        obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
-    private NativeBoolean(boolean b) {
+    private NativeBoolean(boolean b)
+    {
         booleanValue = b;
     }
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return "Boolean";
     }
 
@@ -66,36 +70,51 @@ final class NativeBoolean extends IdScriptable {
         return super.getDefaultValue(typeHint);
     }
 
+    protected void initPrototypeId(int id)
+    {
+        String s;
+        int arity;
+        switch (id) {
+          case Id_constructor: arity=1; s="constructor"; break;
+          case Id_toString:    arity=0; s="toString";    break;
+          case Id_toSource:    arity=0; s="toSource";    break;
+          case Id_valueOf:     arity=0; s="valueOf";     break;
+          default: throw new IllegalArgumentException(String.valueOf(id));
+        }
+        initPrototypeMethod(BOOLEAN_TAG, id, s, arity);
+    }
+
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
-        if (prototypeFlag) {
-            switch (f.methodId()) {
-              case Id_constructor: {
-                boolean b = ScriptRuntime.toBoolean(args, 0);
-                if (thisObj == null) {
-                    // new Boolean(val) creates a new boolean object.
-                    return new NativeBoolean(b);
-                }
-                // Boolean(val) converts val to a boolean.
-                return wrap_boolean(b);
-              }
-
-              case Id_toString:
-                return realThisBoolean(thisObj, f) ? "true" : "false";
-
-              case Id_toSource:
-                if (realThisBoolean(thisObj, f))
-                    return "(new Boolean(true))";
-                else
-                    return "(new Boolean(false))";
-
-              case Id_valueOf:
-                return wrap_boolean(realThisBoolean(thisObj, f));
-          }
+        if (!f.hasTag(BOOLEAN_TAG)) {
+            return super.execMethod(f, cx, scope, thisObj, args);
         }
+        int id = f.methodId();
+        switch (id) {
+          case Id_constructor: {
+            boolean b = ScriptRuntime.toBoolean(args, 0);
+            if (thisObj == null) {
+                // new Boolean(val) creates a new boolean object.
+                return new NativeBoolean(b);
+            }
+            // Boolean(val) converts val to a boolean.
+            return wrap_boolean(b);
+          }
 
-        return super.execMethod(f, cx, scope, thisObj, args);
+          case Id_toString:
+            return realThisBoolean(thisObj, f) ? "true" : "false";
+
+          case Id_toSource:
+            if (realThisBoolean(thisObj, f))
+                return "(new Boolean(true))";
+            else
+                return "(new Boolean(false))";
+
+          case Id_valueOf:
+            return wrap_boolean(realThisBoolean(thisObj, f));
+        }
+        throw new IllegalArgumentException(String.valueOf(id));
     }
 
     private static boolean realThisBoolean(Scriptable thisObj, IdFunction f)
@@ -105,35 +124,10 @@ final class NativeBoolean extends IdScriptable {
         return ((NativeBoolean)thisObj).booleanValue;
     }
 
-    protected String getIdName(int id) {
-        if (prototypeFlag) {
-            switch (id) {
-              case Id_constructor: return "constructor";
-              case Id_toString:    return "toString";
-              case Id_toSource:    return "toSource";
-              case Id_valueOf:     return "valueOf";
-            }
-        }
-        return null;
-    }
-
-    protected int methodArity(int methodId)
-    {
-        if (prototypeFlag) {
-            switch (methodId) {
-              case Id_constructor: return 1;
-              case Id_toString:    return 0;
-              case Id_toSource:    return 0;
-              case Id_valueOf:     return 0;
-            }
-        }
-        return super.methodArity(methodId);
-    }
-
 // #string_id_map#
 
-    protected int mapNameToId(String s) {
-        if (!prototypeFlag) { return 0; }
+    protected int findPrototypeId(String s)
+    {
         int id;
 // #generated# Last update: 2004-03-17 13:28:00 CET
         L0: { id = 0; String X = null; int c;
@@ -161,6 +155,4 @@ final class NativeBoolean extends IdScriptable {
 // #/string_id_map#
 
     private boolean booleanValue;
-
-    private boolean prototypeFlag;
 }

@@ -43,11 +43,14 @@ package org.mozilla.javascript;
  * @see org.mozilla.javascript.Arguments
  * @author Norris Boyd
  */
-public final class NativeCall extends ScriptableObject
+public final class NativeCall extends IdScriptable
 {
+    private static final Object CALL_TAG = new Object();
+
     static void init(Context cx, Scriptable scope, boolean sealed)
     {
-        new NativeCallPrototype(cx, scope, sealed);
+        NativeCall obj = new NativeCall();
+        obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
     NativeCall() { }
@@ -129,28 +132,26 @@ public final class NativeCall extends ScriptableObject
         return thisObj;
     }
 
-    NativeCall caller;
-    NativeFunction funObj;
-    Scriptable thisObj;
-    private Object[] originalArgs;
-}
-
-final class NativeCallPrototype extends IdScriptable
-{
-    NativeCallPrototype(Context cx, Scriptable scope, boolean sealed)
+    protected void initPrototypeId(int id)
     {
-        addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
-    }
-
-    public String getClassName()
-    {
-        return "Call";
+        String s;
+        int arity;
+        if (id == Id_constructor) {
+            arity=1; s="constructor";
+        } else {
+          throw new IllegalArgumentException(String.valueOf(id));
+        }
+        initPrototypeMethod(CALL_TAG, id, s, arity);
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
-        if (f.methodId() == Id_constructor) {
+        if (!f.hasTag(CALL_TAG)) {
+            return super.execMethod(f, cx, scope, thisObj, args);
+        }
+        int id = f.methodId();
+        if (id == Id_constructor) {
             if (thisObj != null) {
                 throw Context.reportRuntimeError1("msg.only.from.new", "Call");
             }
@@ -159,22 +160,10 @@ final class NativeCallPrototype extends IdScriptable
             result.setPrototype(getObjectPrototype(scope));
             return result;
         }
-        return super.execMethod(f, cx, scope, thisObj, args);
+        throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    protected String getIdName(int id)
-    {
-        if (id == Id_constructor) return "constructor";
-        return null;
-    }
-
-    protected int methodArity(int methodId)
-    {
-        if (methodId == Id_constructor) return 1;
-        return super.methodArity(methodId);
-    }
-
-    protected int mapNameToId(String s)
+    protected int findPrototypeId(String s)
     {
         return s.equals("constructor") ? Id_constructor : 0;
     }
@@ -182,4 +171,11 @@ final class NativeCallPrototype extends IdScriptable
     private static final int
         Id_constructor   = 1,
         MAX_PROTOTYPE_ID = 1;
+
+
+    NativeCall caller;
+    NativeFunction funObj;
+    Scriptable thisObj;
+    private Object[] originalArgs;
 }
+

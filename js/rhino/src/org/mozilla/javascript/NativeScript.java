@@ -57,13 +57,12 @@ import java.io.IOException;
 
 class NativeScript extends NativeFunction implements Script
 {
+    private static final Object SCRIPT_TAG = new Object();
 
     static void init(Context cx, Scriptable scope, boolean sealed)
     {
         NativeScript obj = new NativeScript(null);
-        obj.prototypeIdShift = obj.getMaxId();
-        obj.addAsPrototype(obj.prototypeIdShift + MAX_PROTOTYPE_ID,
-                           cx, scope, sealed);
+        obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
     private NativeScript(Script script)
@@ -126,42 +125,60 @@ class NativeScript extends NativeFunction implements Script
         return script == null ? Undefined.instance : script.exec(cx, scope);
     }
 
+    protected void initPrototypeId(int id)
+    {
+        String s;
+        int arity;
+        switch (id) {
+          case Id_constructor: arity=1; s="constructor"; break;
+          case Id_toString:    arity=0; s="toString";    break;
+          case Id_exec:        arity=0; s="exec";        break;
+          case Id_compile:     arity=1; s="compile";     break;
+          default: throw new IllegalArgumentException(String.valueOf(id));
+        }
+        initPrototypeMethod(SCRIPT_TAG, id, s, arity);
+    }
+
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
-        if (0 <= prototypeIdShift) {
-            switch (f.methodId() - prototypeIdShift) {
-                case Id_constructor: {
-                    String source = (args.length == 0)
-                                    ? ""
-                                    : ScriptRuntime.toString(args[0]);
-                    Script script = compile(cx, source);
-                    NativeScript nscript = new NativeScript(script);
-                    nscript.setParentScope(scope);
-                    nscript.setPrototype(getClassPrototype(scope, "Script"));
-                    return nscript;
-                }
-                case Id_toString: {
-                    NativeScript real = realThis(thisObj, f);
-                    Script realScript = real.script;
-                    if (realScript == null) { realScript = real; }
-                    return cx.decompileScript(realScript,
-                                              getTopLevelScope(scope), 0);
-                }
-                case Id_exec: {
-                    throw Context.reportRuntimeError1(
-                        "msg.cant.call.indirect", "exec");
-                }
-                case Id_compile: {
-                    NativeScript real = realThis(thisObj, f);
-                    String source = ScriptRuntime.toString(args, 0);
-                    real.script = compile(cx, source);
-                    return real;
-                }
-            }
+        if (!f.hasTag(SCRIPT_TAG)) {
+            return super.execMethod(f, cx, scope, thisObj, args);
         }
+        int id = f.methodId();
+        switch (id) {
+          case Id_constructor: {
+            String source = (args.length == 0)
+                            ? ""
+                            : ScriptRuntime.toString(args[0]);
+            Script script = compile(cx, source);
+            NativeScript nscript = new NativeScript(script);
+            nscript.setParentScope(scope);
+            nscript.setPrototype(getClassPrototype(scope, "Script"));
+            return nscript;
+          }
 
-        return super.execMethod(f, cx, scope, thisObj, args);
+          case Id_toString: {
+            NativeScript real = realThis(thisObj, f);
+            Script realScript = real.script;
+            if (realScript == null) { realScript = real; }
+            return cx.decompileScript(realScript,
+                                      getTopLevelScope(scope), 0);
+          }
+
+          case Id_exec: {
+            throw Context.reportRuntimeError1(
+                "msg.cant.call.indirect", "exec");
+          }
+
+          case Id_compile: {
+            NativeScript real = realThis(thisObj, f);
+            String source = ScriptRuntime.toString(args, 0);
+            real.script = compile(cx, source);
+            return real;
+          }
+        }
+        throw new IllegalArgumentException(String.valueOf(id));
     }
 
     private static NativeScript realThis(Scriptable thisObj, IdFunction f)
@@ -182,49 +199,9 @@ class NativeScript extends NativeFunction implements Script
         return cx.compileString(source, filename, linep[0], null);
     }
 
-    protected String getIdName(int id)
-    {
-        if (0 <= prototypeIdShift) {
-            switch (id - prototypeIdShift) {
-                case Id_constructor: return "constructor";
-                case Id_toString:    return "toString";
-                case Id_exec:        return "exec";
-                case Id_compile:     return "compile";
-            }
-        }
-        return super.getIdName(id);
-    }
-
-    protected int methodArity(int methodId)
-    {
-        if (0 <= prototypeIdShift) {
-            switch (methodId - prototypeIdShift) {
-                case Id_constructor: return 1;
-                case Id_toString:    return 0;
-                case Id_exec:        return 0;
-                case Id_compile:     return 1;
-            }
-        }
-        return super.methodArity(methodId);
-    }
-
-    protected int mapNameToId(String s)
-    {
-        if (0 <= prototypeIdShift) {
-            int id = toPrototypeId(s);
-            if (id != 0) {
-                // Shift [1, MAX_PROTOTYPE_ID] to
-                // [NativeFunction.getMaxId() + 1,
-                //    NativeFunction.getMaxId() + MAX_PROTOTYPE_ID]
-                return prototypeIdShift + id;
-            }
-        }
-        return super.mapNameToId(s);
-    }
-
 // #string_id_map#
 
-    private static int toPrototypeId(String s)
+    protected int findPrototypeId(String s)
     {
         int id;
 // #generated# Last update: 2001-05-23 13:25:01 GMT+02:00
@@ -251,10 +228,5 @@ class NativeScript extends NativeFunction implements Script
 // #/string_id_map#
 
     private Script script;
-
-    // "0 <= prototypeIdShift" serves as indicator of prototype instance
-    // and as id offset to take into account ids present in each instance
-    // of the base class NativeFunction.
-    private int prototypeIdShift = -1;
 }
 

@@ -152,28 +152,61 @@ class Arguments extends IdScriptable {
         super.delete(index);
     }
 
-    protected int getIdAttributes(int id)
+// #string_id_map#
+
+    private static final int
+        Id_callee           = 1,
+        Id_length           = 2,
+        Id_caller           = 3,
+
+        MAX_INSTANCE_ID     = 3;
+
     {
-        switch (id) {
-            case Id_callee:
-            case Id_caller:
-            case Id_length:
-                return DONTENUM;
-        }
-        return super.getIdAttributes(id);
+        setMaxInstanceId(0, MAX_INSTANCE_ID);
     }
 
-    protected boolean hasIdValue(int id)
+    protected int findInstanceIdInfo(String s)
     {
-        switch (id) {
-            case Id_callee: return calleeObj != NOT_FOUND;
-            case Id_length: return lengthObj != NOT_FOUND;
-            case Id_caller: return callerObj != NOT_FOUND;
+        int id;
+// #generated# Last update: 2002-04-09 20:46:33 CEST
+        L0: { id = 0; String X = null; int c;
+            if (s.length()==6) {
+                c=s.charAt(5);
+                if (c=='e') { X="callee";id=Id_callee; }
+                else if (c=='h') { X="length";id=Id_length; }
+                else if (c=='r') { X="caller";id=Id_caller; }
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
         }
-        return super.hasIdValue(id);
+// #/generated#
+
+        if (id == 0) return super.findInstanceIdInfo(s);
+
+        int attr;
+        switch (id) {
+          case Id_callee:
+          case Id_caller:
+          case Id_length:
+            attr = DONTENUM;
+            break;
+          default: throw new IllegalStateException();
+        }
+        return instanceIdInfo(attr, id);
     }
 
-    protected Object getIdValue(int id)
+// #/string_id_map#
+
+    protected String getInstanceIdName(int id)
+    {
+        switch (id) {
+            case Id_callee: return "callee";
+            case Id_length: return "length";
+            case Id_caller: return "caller";
+        }
+        return null;
+    }
+
+    protected Object getInstanceIdValue(int id)
     {
         switch (id) {
             case Id_callee: return calleeObj;
@@ -185,17 +218,17 @@ class Arguments extends IdScriptable {
                     NativeCall caller = activation.caller;
                     if (caller == null) {
                         value = null;
-                    }else {
+                    } else {
                         value = caller.get("arguments", caller);
                     }
                 }
                 return value;
             }
         }
-        return super.getIdValue(id);
+        return super.getInstanceIdValue(id);
     }
 
-    protected void setIdValue(int id, Object value)
+    protected void setInstanceIdValue(int id, Object value)
     {
         switch (id) {
             case Id_callee: calleeObj = value; return;
@@ -204,27 +237,7 @@ class Arguments extends IdScriptable {
                 callerObj = (value != null) ? value : UniqueTag.NULL_VALUE;
                 return;
         }
-        super.setIdValue(id, value);
-    }
-
-    protected void deleteIdValue(int id)
-    {
-        switch (id) {
-            case Id_callee: calleeObj = NOT_FOUND; return;
-            case Id_length: lengthObj = NOT_FOUND; return;
-            case Id_caller: callerObj = NOT_FOUND; return;
-        }
-        super.deleteIdValue(id);
-    }
-
-    protected String getIdName(int id)
-    {
-        switch (id) {
-            case Id_callee: return "callee";
-            case Id_length: return "length";
-            case Id_caller: return "caller";
-        }
-        return null;
+        super.setInstanceIdValue(id, value);
     }
 
     Object[] getIds(boolean getAll)
@@ -264,37 +277,6 @@ class Arguments extends IdScriptable {
         }
         return ids;
     }
-
-// #string_id_map#
-
-    private static final int
-        Id_callee           = 1,
-        Id_length           = 2,
-        Id_caller           = 3,
-
-        MAX_INSTANCE_ID     = 3;
-
-    { setMaxId(MAX_INSTANCE_ID); }
-
-    protected int mapNameToId(String s)
-    {
-        int id;
-// #generated# Last update: 2002-04-09 20:46:33 CEST
-        L0: { id = 0; String X = null; int c;
-            if (s.length()==6) {
-                c=s.charAt(5);
-                if (c=='e') { X="callee";id=Id_callee; }
-                else if (c=='h') { X="length";id=Id_length; }
-                else if (c=='r') { X="caller";id=Id_caller; }
-            }
-            if (X!=null && X!=s && !X.equals(s)) id = 0;
-        }
-// #/generated#
-        return id;
-    }
-
-// #/string_id_map#
-
 
 // Fields to hold caller, callee and length properties,
 // where NOT_FOUND value tags deleted properties.

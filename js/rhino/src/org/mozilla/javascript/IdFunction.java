@@ -39,15 +39,27 @@ package org.mozilla.javascript;
 
 public class IdFunction extends BaseFunction
 {
-    public IdFunction(IdFunctionMaster master, Object tag, int id,
-                      String name, int arity, Scriptable scope)
+    public IdFunction(IdFunctionMaster master, Object tag, int id, int arity)
     {
-        if (scope == null) throw new IllegalArgumentException();
-        this.functionName = name;
         this.master = master;
         this.tag = tag;
         this.methodId = id;
         this.arity = arity;
+        if (arity < 0) throw new IllegalArgumentException();
+    }
+
+    public IdFunction(IdFunctionMaster master, Object tag, int id,
+                      String name, int arity, Scriptable scope)
+    {
+        this(master, tag, id, arity);
+        initFunction(name, scope);
+    }
+
+    public void initFunction(String name, Scriptable scope)
+    {
+        if (name == null) throw new IllegalArgumentException();
+        if (scope == null) throw new IllegalArgumentException();
+        this.functionName = name;
         setParentScope(scope);
     }
 
@@ -69,19 +81,13 @@ public class IdFunction extends BaseFunction
 
     public final void addAsProperty(Scriptable target)
     {
-        addAsProperty(target, false);
-    }
-
-    public final void addAsProperty(Scriptable target, boolean seal)
-    {
-        if (seal) { sealObject(); }
         ScriptableObject.defineProperty(target, functionName, this,
                                         ScriptableObject.DONTENUM);
     }
 
-    public void exportAsScopeProperty(boolean seal)
+    public void exportAsScopeProperty()
     {
-        addAsProperty(getParentScope(), seal);
+        addAsProperty(getParentScope());
     }
 
     public Scriptable getPrototype()
