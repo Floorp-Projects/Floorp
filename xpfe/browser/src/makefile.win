@@ -38,7 +38,12 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\base                  \
       -I$(PUBLIC)\dom                   \
       -I$(PUBLIC)\js                    \
-      -I$(PUBLIC)\netlib 
+!ifdef NECKO
+      -I$(PUBLIC)\necko                 \
+!else
+      -I$(PUBLIC)\netlib                \
+!endif
+       $(NULL)
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = nsbrowser
@@ -55,7 +60,7 @@ LLIBS=                          \
  $(DIST)\lib\raptorgfxwin.lib   \
  $(DIST)\lib\plc3.lib       \
 !ifdef NECKO
- $(DIST)\lib\necko.lib		\
+ $(DIST)\lib\neckoutil_s.lib    \
 !else
  $(DIST)\lib\netlib.lib         \
 !endif
