@@ -185,7 +185,7 @@
 /* text wrapper frame */
   .button-toolbar-2 > .button-internal-box > .button-text-container 
     {
-      padding-top         : 3px;
+      padding-top         : 6px;
       text-align          : center;
     }
 
