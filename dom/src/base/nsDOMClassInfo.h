@@ -196,6 +196,7 @@ protected:
   static nsresult DefineStaticJSVals(JSContext *cx);
 
   static PRBool sIsInitialized;
+  static PRBool sDisableDocumentAllSupport;
 
   static jsval sTop_id;
   static jsval sParent_id;
@@ -261,6 +262,8 @@ protected:
   static jsval sSelf_id;
   static jsval sOpener_id;
   static jsval sAdd_id;
+  static jsval sAll_id;
+  static jsval sTags_id;
 
   static const JSClass *sObjectClass;
 
@@ -676,6 +679,32 @@ protected:
                                              jsval *rval);
 
 public:
+  static JSBool JS_DLL_CALLBACK DocumentAllGetProperty(JSContext *cx,
+                                                       JSObject *obj, jsval id,
+                                                       jsval *vp);
+  static JSBool JS_DLL_CALLBACK DocumentAllNewResolve(JSContext *cx,
+                                                      JSObject *obj, jsval id,
+                                                      uintN flags,
+                                                      JSObject **objp);
+  static void JS_DLL_CALLBACK ReleaseDocument(JSContext *cx, JSObject *obj);
+  static JSBool JS_DLL_CALLBACK CallToGetPropMapper(JSContext *cx,
+                                                    JSObject *obj, uintN argc,
+                                                    jsval *argv, jsval *rval);
+  static JSBool JS_DLL_CALLBACK DocumentAllHelperGetProperty(JSContext *cx,
+                                                             JSObject *obj,
+                                                             jsval id,
+                                                             jsval *vp);
+  static JSBool JS_DLL_CALLBACK DocumentAllHelperNewResolve(JSContext *cx,
+                                                            JSObject *obj,
+                                                            jsval id,
+                                                            uintN flags,
+                                                            JSObject **objp);
+  static JSBool JS_DLL_CALLBACK DocumentAllTagsNewResolve(JSContext *cx,
+                                                          JSObject *obj,
+                                                          jsval id,
+                                                          uintN flags,
+                                                          JSObject **objp);
+
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsval id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
