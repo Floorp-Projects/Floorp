@@ -80,12 +80,12 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
     {
         nsCOMPtr<nsIURI> uri;
         PRUint32 newFixupFlags = aFixupFlags & ~FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-        nsresult rv =  CreateFixupURI(
-            PromiseFlatString(Substring(uriString, 
-                                        12, 
-                                        uriString.Length() - 12)).get(),
-            newFixupFlags,
-            getter_AddRefs(uri));
+
+        nsAutoString tempString;
+        tempString = Substring(uriString, 12, uriString.Length() - 12);
+        nsresult rv =  CreateFixupURI(tempString.get(),
+                                      newFixupFlags,
+                                      getter_AddRefs(uri));
         if (NS_FAILED(rv) || !uri)
             return NS_ERROR_FAILURE;
         nsXPIDLCString spec;
