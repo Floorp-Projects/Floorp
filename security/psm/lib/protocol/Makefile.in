@@ -52,15 +52,12 @@ EXPORTS = \
 	rsrcids.h \
 	messages.h \
 	newproto.h \
-	obscure.h \
 	$(NULL)
 
 
 CSRCS  = newproto.c \
 	 templates.c \
 	 protocolshr.c \
-	 obscure.c \
-	 obspriv.c \
 	 $(NULL)
 
 include $(topsrcdir)/config/rules.mk
