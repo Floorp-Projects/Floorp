@@ -142,7 +142,11 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 {
+#ifdef USE_GTK_FIXED
+  mWidget = gtk_fixed_new();
+#else
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
+#endif
   GTK_WIDGET_SET_FLAGS(mWidget, GTK_CAN_FOCUS);
 
   gtk_widget_set_events (mWidget,
@@ -242,7 +246,11 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
 {
     switch(aDataType) {
       case NS_NATIVE_WINDOW:
+#ifndef USE_GTK_FIXED
 	return (void *)GTK_LAYOUT(mWidget)->bin_window;
+#else
+	return (void *)mWidget->window;
+#endif
       case NS_NATIVE_DISPLAY:
 	return (void *)GDK_DISPLAY();
       case NS_NATIVE_WIDGET:
@@ -272,6 +280,7 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+#ifndef USE_GTK_FIXED
   if (GTK_IS_LAYOUT(mWidget)) {
     GtkAdjustment* horiz = gtk_layout_get_hadjustment(GTK_LAYOUT(mWidget));
     GtkAdjustment* vert = gtk_layout_get_vadjustment(GTK_LAYOUT(mWidget));
@@ -280,6 +289,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     gtk_adjustment_value_changed(horiz);
     gtk_adjustment_value_changed(vert);
   }
+#endif
   return NS_OK;
 }
 
@@ -341,13 +351,17 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
+#ifndef USE_GTK_FIXED
   gtk_layout_freeze(GTK_LAYOUT(mWidget));
+#endif
   return NS_OK;
 }
 
 NS_METHOD nsWindow::EndResizingChildren(void)
 {
+#ifndef USE_GTK_FIXED
   gtk_layout_thaw(GTK_LAYOUT(mWidget));
+#endif
   return NS_OK;
 }
 

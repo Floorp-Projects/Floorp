@@ -20,6 +20,7 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
+#include "plevent.h"
 #include <gtk/gtk.h>
 
 /**
@@ -28,10 +29,6 @@
 
 class nsAppShell : public nsIAppShell
 {
-  private:
-    GtkWidget          *mTopLevel;
-    nsDispatchListener *mDispatchListener;
-
   public:
     nsAppShell();
     virtual ~nsAppShell();
@@ -39,13 +36,17 @@ class nsAppShell : public nsIAppShell
     NS_DECL_ISUPPORTS
 
     // nsIAppShellInterface
-    NS_IMETHOD        Create(int* argc, char ** argv);
-    NS_IMETHOD        Run(); 
-    NS_IMETHOD        Exit();
-    NS_IMETHOD        SetDispatchListener(nsDispatchListener* aDispatchListener);
-    virtual void*     GetNativeData(PRUint32 aDataType);
+    NS_IMETHOD		Create(int* argc, char ** argv);
+    NS_IMETHOD		Run(); 
+    NS_IMETHOD		Exit();
+    NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
+    virtual void*	GetNativeData(PRUint32 aDataType);
 
-    // Public global
+  private:
+    nsDispatchListener	*mDispatchListener;
+
+  protected:
+      PLEventQueue	*mPLEventQueue;
 };
 
 #endif // nsAppShell_h__

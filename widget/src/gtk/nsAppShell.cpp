@@ -18,12 +18,30 @@
 
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
-#include "plevent.h"
 #include <stdlib.h>
 
-// XXX -- This is a HACK
+extern void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue);
 
-//PLEventQueue*  gUnixMainEventQueue = nsnull;
+//-------------------------------------------------------------------------
+//
+// nsAppShell constructor
+//
+//-------------------------------------------------------------------------
+nsAppShell::nsAppShell()
+{
+  mPLEventQueue = nsnull;
+  mRefCnt = 0;
+  mDispatchListener = 0;
+}
+
+//-------------------------------------------------------------------------
+//
+// nsAppShell destructor
+//
+//-------------------------------------------------------------------------
+nsAppShell::~nsAppShell()
+{
+}
 
 //-------------------------------------------------------------------------
 //
@@ -37,8 +55,15 @@ NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
   mDispatchListener = aDispatchListener;
-
   return NS_OK;
+}
+
+static void event_processor_callback(gpointer data,
+                                     gint source,
+                                     GdkInputCondition condition)
+{
+  PLEventQueue *event = (PLEventQueue*)data;
+  PR_ProcessPendingEvents(event);
 }
 
 //-------------------------------------------------------------------------
@@ -61,46 +86,18 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// PLEventQueue Processor
-//
-//-------------------------------------------------------------------------
-/*
-static void nsUnixEventProcessorCallback(gpointer data,
-                                         gint source,
-                                         GdkInputCondition condition)
-{
-  NS_ASSERTION(source==PR_GetEventQueueSelectFD(gUnixMainEventQueue),
-               "Error in nsUnixMain.cpp:nsUnixEventProcessCallback");
-  PR_ProcessPendingEvents(gUnixMainEventQueue);
-}
-*/
-//-------------------------------------------------------------------------
-//
-// Enter a message handler loop
-//
-//-------------------------------------------------------------------------
-
-
-//  XXX This comes from nsWebShell.  If we don't link against nsWebShell
-//      this will break.  FIX ME FIX ME Please!
-
-extern void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue);
-
 NS_METHOD nsAppShell::Run()
 {
-/*
-  gUnixMainEventQueue = PR_CreateEventQueue("viewer-event-queue", PR_GetCurrentThread());
+  if ( mPLEventQueue == NULL )
+    mPLEventQueue = PL_CreateEventQueue("toolkit", nsnull);
 
-  // XXX Setup webshell's event queue. This must be changed
-  nsWebShell_SetUnixEventQueue(gUnixMainEventQueue);
-
-  gdk_input_add(PR_GetEventQueueSelectFD(gUnixMainEventQueue),
+  gdk_input_add(PR_GetEventQueueSelectFD(mPLEventQueue),
                 GDK_INPUT_READ,
-                nsUnixEventProcessorCallback,
-                NULL);
-*/
+                event_processor_callback,
+                mPLEventQueue);
+
+  nsWebShell_SetUnixEventQueue(mPLEventQueue);
+
   gtk_main();
 
   return NS_OK;
@@ -118,26 +115,6 @@ NS_METHOD nsAppShell::Exit()
   gtk_exit(0);
 
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// nsAppShell constructor
-//
-//-------------------------------------------------------------------------
-nsAppShell::nsAppShell()
-{
-  mRefCnt = 0;
-  mDispatchListener = 0;
-}
-
-//-------------------------------------------------------------------------
-//
-// nsAppShell destructor
-//
-//-------------------------------------------------------------------------
-nsAppShell::~nsAppShell()
-{
 }
 
 //-------------------------------------------------------------------------
