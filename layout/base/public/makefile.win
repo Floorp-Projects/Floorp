@@ -75,5 +75,10 @@ EXPORTS =				\
 
 MODULE=raptor 
 
+XPIDLSRCS=						\
+		.\nsIChromeEventHandler.idl			\
+		$(NULL)
+
+
 include <$(DEPTH)\config\rules.mak>
 
