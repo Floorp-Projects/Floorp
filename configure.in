@@ -1315,7 +1315,7 @@ dnl Make pedantic a flag for now since the builds currently choke on it.
 MOZ_ARG_ENABLE_BOOL(pedantic,
 [  --enable-pedantic       Issue all warnings demanded by strict ANSI C ],
   [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic -Wno-long-long" ])
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic" ])
 
 dnl Note: This should not be disabled if --enable-oji is set
 MOZ_ARG_DISABLE_BOOL(shared,
