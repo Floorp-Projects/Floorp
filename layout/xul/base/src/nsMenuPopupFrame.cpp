@@ -1185,8 +1185,7 @@ nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
   if (tag && (tag.get() == nsXULAtoms::menu ||
-              tag.get() == nsXULAtoms::menuitem) &&
-      !IsDisabled(aContent))
+              tag.get() == nsXULAtoms::menuitem))
       return PR_TRUE;
 
   return PR_FALSE;

@@ -840,6 +840,22 @@ popup > menuitem[menuactive="true"] {
   color: white;
 }
 
+menupopup > menu[menuactive="true"][disabled="true"] {
+  color: #999999;
+}
+
+popup > menu[menuactive="true"][disabled="true"] {
+  color: #999999;
+}
+
+menupopup > menuitem[menuactive="true"][disabled="true"] {
+  color: #999999;
+}
+
+popup > menuitem[menuactive="true"][disabled="true"] {
+  color: #999999;
+}
+
 .menu-right {
   padding: 0px;
   border: 0px;
@@ -912,6 +928,10 @@ menu > .menu-right {
 }
 
 menu[disabled="true"] > .menu-right {
+  list-style-image: url("chrome://global/skin/menu-arrow-disabled.gif");
+}
+
+menu[menuactive="true"][disabled="true"] > .menu-right {
   list-style-image: url("chrome://global/skin/menu-arrow-disabled.gif");
 }
 
