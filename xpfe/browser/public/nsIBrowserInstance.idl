@@ -33,7 +33,6 @@ interface nsIBrowserInstance : nsISupports {
     attribute boolean cmdLineURLUsed;
     
     // Infrastructure.
-    void init();
     void setWebShellWindow( in nsIDOMWindowInternal aWindow );
     
     // File.

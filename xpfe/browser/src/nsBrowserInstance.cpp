@@ -107,9 +107,6 @@
 #include "nsToolkitCompsCID.h"
 #endif
 
-#include "nsBrowserStatusFilter.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
-
 // If DEBUG, NS_BUILD_REFCNT_LOGGING, MOZ_PERF_METRICS, or MOZ_JPROF is
 // defined, enable the PageCycler.
 #if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_PERF_METRICS) || defined(MOZ_JPROF)
@@ -579,13 +576,6 @@ nsBrowserInstance::StartPageCycler(PRBool* aIsPageCycling)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBrowserInstance::Init()
-{
-  nsresult rv = NS_OK;
-
-  return rv;
-}
 
 NS_IMETHODIMP    
 nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
