@@ -2810,10 +2810,9 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
     if (! aFrame)
       break;
 
-    nsCOMPtr<nsIAtom> frameType;
-    aFrame->GetFrameType(getter_AddRefs(frameType));
-
-    if (nsLayoutAtoms::blockFrame == frameType.get())
+    const nsStyleDisplay* display;
+    aFrame->GetStyleData(eStyleStruct_Display, NS_REINTERPRET_CAST(const nsStyleStruct*&, display));
+    if (NS_STYLE_DISPLAY_INLINE != display->mDisplay)
       break;
   }
 
