@@ -35,6 +35,7 @@ checkbox {
   -moz-box-align: center;
   margin: 2px 4px;
   padding: 0px 2px;
+  border: 1px solid transparent;
 }
 
 .checkbox-label-box {
