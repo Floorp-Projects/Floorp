@@ -88,6 +88,7 @@
 <!ENTITY  mediaURL              "URL:">
 <!ENTITY  mediaBase             "Base URL:">
 <!ENTITY  mediaAlt              "Alternate Text:">
+<!ENTITY  mediaAltHeader        "Alternate Text">
 <!ENTITY  mediaNo               "No.">
 <!ENTITY  mediaName             "Name">
 <!ENTITY  mediaAddress          "Address">
