@@ -450,7 +450,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
    
 	// Create an empty database for this mail folder, set its name from the user  
 	nsCOMPtr<nsIMsgDatabase> newsDBFactory;
-	nsIMsgDatabase *newsDB = nsnull;
+	nsCOMPtr <nsIMsgDatabase> newsDB;
 
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
@@ -464,7 +464,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
-		rv = newsDBFactory->Open(dbFileSpec, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) &newsDB);
+		rv = newsDBFactory->Open(dbFileSpec, PR_TRUE, PR_FALSE, getter_AddRefs(newsDB));
 		if (NS_SUCCEEDED(rv) && newsDB) {
 			//Now let's create the actual new folder
 			char *setStr = PR_smprintf("");

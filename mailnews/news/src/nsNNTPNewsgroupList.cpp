@@ -140,6 +140,7 @@ nsNNTPNewsgroupList::CleanUp() {
 	if (m_newsDB) {
 		m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
 		m_newsDB->Close(PR_TRUE);
+		NS_RELEASE(m_newsDB);
 	}
 
 	if (m_knownArts.set) {
