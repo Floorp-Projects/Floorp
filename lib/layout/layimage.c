@@ -1547,15 +1547,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 #ifdef DEBUG_shaver
         fprintf(stderr, "----GETTING IMAGE DATA----\n");
 #endif
-        /* if (db) { */
-        if (!db) {
-            if (cx)
-                db = DOM_StyleDatabaseFromContext(cx);
-            else
-                goto error;
-            if (!db)
-                goto error;
-        }
+        if (db) {
             if (!DOM_StyleGetProperty(cx, db, (DOM_Node *)element,
                                       BORDERWIDTH_STYLE, &entry))
                 goto error;
@@ -1585,8 +1577,8 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
                 image->border_vert_space = IMAGE_DEF_VERTICAL_SPACE;
                 image->border_horiz_space = IMAGE_DEF_HORIZONTAL_SPACE;
             }
-            /*         } else { */
-#else /* DOM */
+        } else {
+#endif /* DOM */
             
 	if (image->anchor_href != NULL)
 	{
@@ -1598,11 +1590,8 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	}
 	image->border_vert_space = IMAGE_DEF_VERTICAL_SPACE;
 	image->border_horiz_space = IMAGE_DEF_HORIZONTAL_SPACE;
-#endif
-#if 0
 #ifdef DOM
         }
-#endif
 #endif
 
 	if ((image->text_attr != NULL)&&
