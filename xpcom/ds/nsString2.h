@@ -407,8 +407,9 @@ public:
   /**
    * assign given string to this string
    * @param   aStr: buffer to be assigned to this 
-   * @param   alength is the length of the given str (or -1)
-              if you want me to determine its length
+   * @param   aCount is the length of the given str (or -1) if you want me to determine its length
+   *  NOTE:   IFF you pass -1 as aCount, then your buffer must be null terminated.
+
    * @return  this
    */
   nsString& Assign(const nsStr& aString,PRInt32 aCount=-1);
@@ -466,6 +467,7 @@ public:
    *  
    *  @param   aString is the source to be appended to this
    *  @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
+   *  NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
    *  @return  number of chars copied
    */
   nsString& Append(const nsStr& aString,PRInt32 aCount);
@@ -518,6 +520,8 @@ public:
    *  @param  aCopy -- String to be inserted into this
    *  @param  anOffset -- insertion position within this str
    *  @param  aCount -- number of chars to be copied from aCopy
+   *  NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+   *
    *  @return number of chars inserted into this.
    */
   nsString& Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
@@ -748,6 +752,7 @@ public:
    */
   PRBool IsASCII(const PRUnichar* aBuffer=0);
 
+  void    DebugDump(void) const;
 
   /**
    *  Determine if given char is a valid space character
@@ -781,7 +786,6 @@ public:
 extern NS_COM int fputs(const nsString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsString& aString);
 //virtual void  DebugDump(ostream& aStream) const;
-
 
 /**************************************************************
   Here comes the AutoString class which uses internal memory

@@ -364,8 +364,9 @@ public:
   /**
    * assign given string to this string
    * @param   aStr: buffer to be assigned to this 
-   * @param   alength is the length of the given str (or -1)
-              if you want me to determine its length
+   * @param   aCount is the length of the given str (or -1) if you want me to determine its length
+   *  NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+   *
    * @return  this
    */
   nsCString& Assign(const nsStr& aString,PRInt32 aCount=-1);
@@ -417,6 +418,8 @@ public:
    *  
    *  @param   aString is the source to be appended to this
    *  @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
+   *  NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+   *
    *  @return  number of chars copied
    */
   nsCString& Append(const nsCString& aString,PRInt32 aCount);
@@ -468,6 +471,8 @@ public:
    *  @param  aCopy -- String to be inserted into this
    *  @param  anOffset -- insertion position within this str
    *  @param  aCount -- number of chars to be copied from aCopy
+   *  NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+   *
    *  @return number of chars inserted into this.
    */
   nsCString& Insert(const nsCString& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
@@ -674,6 +679,8 @@ public:
   PRBool  EqualsIgnoreCase(const nsStr& aString) const;
   PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
   PRBool  EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aCount=-1) const;
+
+  void    DebugDump(void) const;
 
 
   static  void        Recycle(nsCString* aString);
