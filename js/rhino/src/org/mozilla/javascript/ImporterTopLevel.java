@@ -226,23 +226,11 @@ public class ImporterTopLevel extends IdScriptable
         put(n, this, cl);
     }
 
-    public int methodArity(int methodId) {
-        if (prototypeFlag) {
-            switch (methodId) {
-              case Id_constructor:   return 0;
-              case Id_importClass:   return 1;
-              case Id_importPackage: return 1;
-            }
-        }
-        return super.methodArity(methodId);
-    }
-
-    public Object execMethod
-        (int methodId, IdFunction f,
-         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
+    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+	                         Scriptable thisObj, Object[] args)
     {
         if (prototypeFlag) {
-            switch (methodId) {
+            switch (f.methodId) {
               case Id_constructor:
                 return js_construct(scope, args);
 
@@ -253,7 +241,7 @@ public class ImporterTopLevel extends IdScriptable
                 return realThis(thisObj, f).js_importPackage(args);
             }
         }
-        return super.execMethod(methodId, f, cx, scope, thisObj, args);
+        return super.execMethod(f, cx, scope, thisObj, args);
     }
 
     private static ImporterTopLevel realThis(Scriptable thisObj, IdFunction f)
@@ -273,6 +261,17 @@ public class ImporterTopLevel extends IdScriptable
             }
         }
         return super.getIdName(id);
+    }
+
+    public int methodArity(int methodId) {
+        if (prototypeFlag) {
+            switch (methodId) {
+              case Id_constructor:   return 0;
+              case Id_importClass:   return 1;
+              case Id_importPackage: return 1;
+            }
+        }
+        return super.methodArity(methodId);
     }
 
 // #string_id_map#
