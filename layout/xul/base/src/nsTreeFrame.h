@@ -37,8 +37,6 @@ public:
   void MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame);
     
-  void FireChangeHandler(nsIPresContext& aPresContext);
-
   PRBool IsSlatedForReflow() { return mSlatedForReflow; };
   void SlateForReflow() { mSlatedForReflow = PR_TRUE; };
 

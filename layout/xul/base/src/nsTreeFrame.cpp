@@ -73,8 +73,6 @@ void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aF
   nsCOMPtr<nsIDOMXULElement> itemElement = do_QueryInterface(itemContent);
   treeElement->SelectItem(itemElement);
   treeElement->SelectCell(cellElement);
-
-  FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame* aFrame)
@@ -94,14 +92,11 @@ void nsTreeFrame::ToggleSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
 
   treeElement->ToggleItemSelection(itemElement);
   treeElement->ToggleCellSelection(cellElement);
-
-  FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pEndFrame)
 {
  // XXX Re-implement!
- // FireChangeHandler(aPresContext);
 }
 
 void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
@@ -163,23 +158,6 @@ void nsTreeFrame::MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt3
 	// We now have the cell that should be selected. 
 	nsTreeCellFrame* pTreeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);
 	SetSelection(aPresContext, pTreeCell);
-
-  FireChangeHandler(aPresContext);
-}
-
-void nsTreeFrame::FireChangeHandler(nsIPresContext& aPresContext)
-{
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event;
-  event.eventStructType = NS_EVENT;
-
-  event.message = NS_FORM_CHANGE;
-  if (nsnull != mContent) {
-
-    // Set up the target by doing a PreHandleEvent
-
-    mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-  }
 }
 
 NS_IMETHODIMP 
