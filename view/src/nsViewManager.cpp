@@ -740,7 +740,7 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
       localcx->CopyOffScreenBits(ds, 0, 0, damageRectInPixels, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
     }
   } else {
-#ifdef DEBUG
+#ifdef DEBUG_roc
     printf("XXX Damage rectangle (%d,%d,%d,%d) does not intersect the widget's view (%d,%d,%d,%d)!\n",
            damageRect.x, damageRect.y, damageRect.width, damageRect.height,
            viewRect.x, viewRect.y, viewRect.width, viewRect.height);
