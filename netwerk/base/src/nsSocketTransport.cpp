@@ -847,14 +847,6 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
                     if (secCtrl)
                         secCtrl->SetNotificationCallbacks(mNotificationCallbacks);
                 }
-                else if (nsCRT::strcmp(mSocketTypes[type], "ssl-forcehandshake") == 0) {
-                    mSecurityInfo = socketInfo;
-                    nsCOMPtr<nsISSLSocketControl> secCtrl(do_QueryInterface(mSecurityInfo));
-                    if (secCtrl) {
-                        secCtrl->SetForceHandshake(PR_TRUE);
-                        secCtrl->SetNotificationCallbacks(mNotificationCallbacks);
-                    }
-                }
                 else if ((nsCRT::strcmp(mSocketTypes[type], "socks") == 0) 
                          || (nsCRT::strcmp(mSocketTypes[type], "socks4") == 0)) {
                     // since socks is transparent, any layers above

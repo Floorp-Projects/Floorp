@@ -638,7 +638,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         const char *connectionType = nsnull;
         
         if (NS_SUCCEEDED(server->GetIsSecure(&isSecure)) && isSecure) 
-          connectionType = "ssl-forcehandshake";
+          connectionType = "ssl";
 
         nsCOMPtr<nsIProxyInfo> proxyInfo;
         rv = NS_ExamineForProxy("imap", hostName.get(), port, getter_AddRefs(proxyInfo));

@@ -474,7 +474,7 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
     if (NS_FAILED(rv)) proxyInfo = nsnull;
 
     if (isSecure)
-      rv = OpenNetworkSocketWithInfo(hostName.get(), port, "ssl-forcehandshake", proxyInfo, ir);
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, "ssl", proxyInfo, ir);
     else
       rv = OpenNetworkSocketWithInfo(hostName.get(), port, nsnull, proxyInfo, ir);
 

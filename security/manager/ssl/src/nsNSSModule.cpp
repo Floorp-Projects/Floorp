@@ -232,13 +232,6 @@ static const nsModuleComponentInfo components[] =
   },
   
   {
-    NS_ISSLFHSOCKETPROVIDER_CLASSNAME,
-    NS_SSLSOCKETPROVIDER_CID,
-    NS_ISSLFHSOCKETPROVIDER_CONTRACTID,
-    nsSSLSocketProviderConstructor
-  },
-
-  {
     NS_SDR_CLASSNAME,
     NS_SDR_CID,
     NS_SDR_CONTRACTID,
