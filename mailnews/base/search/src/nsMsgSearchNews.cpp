@@ -431,7 +431,8 @@ void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, nsIMsgFolder *folder)
     nsCOMPtr <nsIMsgFolder> scopeFolder;
     err = m_scope->GetFolder(getter_AddRefs(scopeFolder));
     m_scope->GetSearchSession(getter_AddRefs(session));
-    session->AddSearchHit (pHeaders, scopeFolder);
+    if (session)
+      session->AddSearchHit (pHeaders, scopeFolder);
 }
 
 

@@ -32,7 +32,7 @@
 #include "nsXPIDLString.h"
 #include "nsIMsgSearchNotify.h"
 
-NS_IMPL_ISUPPORTS3(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener, nsIFolderListener)
+NS_IMPL_ISUPPORTS4(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener, nsIFolderListener, nsISupportsWeakReference)
 
 nsMsgSearchSession::nsMsgSearchSession()
 {

@@ -32,6 +32,7 @@
 #include "nsFileStream.h"
 #include "nsIMsgSearchSession.h"
 #include "nsCOMPtr.h"
+#include "nsIWeakReference.h"
 
 class nsMsgSearchScopeTerm : public nsIMsgSearchScopeTerm
 {
@@ -53,7 +54,7 @@ public:
   char *m_name;
   nsCOMPtr <nsIMsgFolder> m_folder;
   nsCOMPtr <nsIMsgSearchAdapter> m_adapter;
-  nsCOMPtr <nsIMsgSearchSession> m_searchSession;
+  nsWeakPtr m_searchSession;
   PRBool m_searchServer;
   
 };

@@ -1262,7 +1262,7 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
 	m_attribute = attribute;
 	m_folder = folder;
 	m_searchServer = PR_TRUE;
-  m_searchSession = session;
+    m_searchSession = getter_AddRefs(NS_GetWeakReference(session));
 }
 
 nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
@@ -1289,8 +1289,8 @@ NS_IMETHODIMP
 nsMsgSearchScopeTerm::GetSearchSession(nsIMsgSearchSession** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-
-    *aResult = m_searchSession;
+    nsCOMPtr<nsIMsgSearchSession> searchSession = do_QueryReferent (m_searchSession);
+    *aResult = searchSession;
     NS_IF_ADDREF(*aResult);
     return NS_OK;
 }

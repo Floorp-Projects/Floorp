@@ -32,10 +32,11 @@
 #include "nsITimer.h"
 #include "nsMsgSearchArray.h"
 #include "nsISupportsArray.h"
+#include "nsWeakReference.h"
 
 class nsMsgSearchAdapter;
 
-class nsMsgSearchSession : public nsIMsgSearchSession, public nsIUrlListener, public nsIFolderListener
+class nsMsgSearchSession : public nsIMsgSearchSession, public nsIUrlListener, public nsIFolderListener, public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
