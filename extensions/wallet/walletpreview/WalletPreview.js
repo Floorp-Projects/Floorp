@@ -1,137 +1,144 @@
-    /* for localization */
-    var Bundle = srGetStrBundle("chrome://wallet/locale/WalletPreview.properties");
-    var heading = Bundle.GetStringFromName("heading");
-    var bypass = Bundle.GetStringFromName("bypass");
-    var okCmdLabel = Bundle.GetStringFromName("okCmdLabel");
-    var cancelCmdLabel = Bundle.GetStringFromName("cancelCmdLabel");
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released March
+ * 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation. Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
 
-    /* for xpconnect */
-    var walletpreview =
-      Components.classes
-        ["component://netscape/walletpreview/walletpreview-world"].createInstance();
-    walletpreview = walletpreview.QueryInterface(Components.interfaces.nsIWalletPreview);
+/* for localization */
+var JS_STRINGS_FILE = "chrome://wallet/locale/WalletPreview.properties";
+var bundle = srGetStrBundle(JS_STRINGS_FILE);
+var heading = bundle.GetStringFromName("heading");
+var bypass = bundle.GetStringFromName("bypass");
+var doNotPrefill = bundle.GetStringFromName("doNotPrefill");
 
-    function DoGetPrefillList()
-    {
-      return walletpreview.GetPrefillValue();
+/* for xpconnect */
+var walletpreview =
+    Components.classes
+      ["component://netscape/walletpreview/walletpreview-world"].createInstance();
+walletpreview = walletpreview.QueryInterface(Components.interfaces.nsIWalletPreview);
+
+var prefillList = [];
+var fieldCount = 0;
+
+function Startup() {
+
+  /* fetch the input */
+
+  list = walletpreview.GetPrefillValue();
+  BREAK = list[0];
+  prefillList = list.split(BREAK);
+
+  /* create the heading */
+
+  var heading = document.getElementById("heading");
+  heading.setAttribute("value", bundle.GetStringFromName("heading"));
+  var fieldHeading = document.getElementById("fieldHeading");
+  fieldHeading.setAttribute("value", bundle.GetStringFromName("fieldHeading"));
+  var valueHeading = document.getElementById("valueHeading");
+  valueHeading.setAttribute("value", bundle.GetStringFromName("valueHeading"));
+
+  var menuPopup;
+  var count;
+
+  /* create the fill-in entries */
+
+  for (i=1; i<prefillList.length-2; i+=3) {
+
+    if(prefillList[i] != 0) {
+      count = prefillList[i];
+      menuPopup = document.createElement("menupopup");
+//      menuList.setAttribute("size", Number(count)+1);
     }
-
-    function DoSave(value)
-    {
-      walletpreview.SetValue(value, window);
+    count--;
+    var menuItem = document.createElement("menuitem");
+    if (count == (prefillList[i]-1)) {
+      menuItem.setAttribute("selected", "true");
     }
-    /* end of xpconnect stuff */
+    menuItem.setAttribute("data", prefillList[i+1]);
+    menuItem.setAttribute("value", prefillList[i+2]);
+    menuPopup.appendChild(menuItem);
 
-    index_frame = 0;
-    title_frame = 1;
-    list_frame = 2;
-    button_frame = 3;
-    var prefillList = [];
+    if(count == 0) {
+      var lastMenuItem = document.createElement("menuitem");
+      lastMenuItem.setAttribute("data", prefillList[i+1]);
+      lastMenuItem.setAttribute("value", "<"+doNotPrefill+">");
+      menuPopup.appendChild(lastMenuItem);
 
-    function loadFillins(){
-      top.frames[title_frame].document.open();
-      top.frames[title_frame].document.write
-        ("&nbsp;" + heading);
-      top.frames[title_frame].document.close();
+      var menuList = document.createElement("menulist");
+      menuList.setAttribute("id", "x"+(++fieldCount));
+      menuList.setAttribute("allowevents", "true");
+      menuList.appendChild(menuPopup);
 
-      top.frames[list_frame].document.open();
-      top.frames[list_frame].document.write(
-        "<form name='fSelectFillin'>" +
-          "<br/>" +
-          "<table border='0'>" +
-            "<tr>" +
-              "<td>" +
-                "<br/>" 
-      )
-      var count;
-      for (i=1; !(i>=prefillList.length-2); i+=3) {
-        if(prefillList[i] != 0) {
-          count = prefillList[i];
-          top.frames[list_frame].document.write(
-                "<tr>" +
-                  "<td>" + prefillList[i+1] + ":  </td>" +
-                  "<td>" +
-                    "<select>" 
-          )
-          count--;
-        }
-        top.frames[list_frame].document.write(
-                      "<option VALUE='"+prefillList[i+1]+"'>" +
-                        prefillList[i+2] +
-                      "</option>" 
-        )
-        if(count == 0) {
-          top.frames[list_frame].document.write(
-                      "<option VALUE='"+prefillList[i+1]+"'>&lt;do not prefill&gt;</option>" +
-                    "</select><br/>" +
-                  "</td>" +
-                "</tr>" 
-          )
-        }
-      }
-      top.frames[list_frame].document.write(
-              "</td>" +
-            "</tr>" +
-          "</table>" +
-        "</form>"
-      );
-      top.frames[list_frame].document.close();
-    };
+      var treeCell0 = document.createElement("treecell");
+      treeCell0.setAttribute("value", prefillList[i+1])
 
-    function loadButtons(){
-      top.frames[button_frame].document.open();
-      top.frames[button_frame].document.write(
-        "<form name=buttons>" +
-          "<br/>" +
-          "<input type='checkbox' name='skip'> " +
-            bypass +
-          "</input> " +
-          "<br/>" +
-          "<br/>" +
-          "<div align='center'>" +
-            "<button onclick='parent.Save();'>" + okCmdLabel + "</button>" +
-            " &nbsp;&nbsp;" +
-            "<button onclick='parent.Cancel();'>" + cancelCmdLabel + "</button>" +
-          "</div>" +
-          "<input type='hidden' name='fillins' value=' ' size='-1'>" +
-          "<input type='hidden' name='list' value=' ' size='-1'>" +
-          "<input type='hidden' name='url' value=' ' size='-1'>" +
-        "</form>"
-      );
-      top.frames[button_frame].document.close();
+      var treeCell = document.createElement("treecell");
+      treeCell.appendChild(menuList);
+
+      var treeRow = document.createElement("treerow");
+      treeRow.appendChild(treeCell0);
+      treeRow.appendChild(treeCell);
+
+      var treeItem = document.createElement("treeitem");
+      treeItem.appendChild(treeRow);
+
+      var treeChildren = document.getElementById("combolists");
+      treeChildren.appendChild(treeItem);
     }
+  }
 
-    function loadFrames(){
-      list = DoGetPrefillList();
-      BREAK = list[0];
-      prefillList = list.split(BREAK);
-      loadFillins();
-      loadButtons();
-    }
+  /* create checkbox label */
 
-    function Save(){
-      selname = top.frames[list_frame].document.fSelectFillin;
-      var list = top.frames[button_frame].document.buttons.list;
-      var url = top.frames[button_frame].document.buttons.url;
-      var skip = top.frames[button_frame].document.buttons.skip;
-      list.value = prefillList[prefillList.length-2];
-      url.value = prefillList[prefillList.length-1];
-      var fillins = top.frames[button_frame].document.buttons.fillins;
-      fillins.value = "";
-      for (i=0; !(i>=selname.length); i++) {
-        fillins.value = fillins.value +
-          selname.elements[i].options[selname.elements[i].selectedIndex].value + "#*%$" +
-          selname.elements[i].options[selname.elements[i].selectedIndex].text + "#*%$";
-      }
-      var result = "|list|"+list.value+"|fillins|"+fillins.value;
-      result += "|url|"+url.value+"|skip|"+skip.checked+"|";
-      DoSave(result);
-    }
+  var checkBoxText = document.getElementById("checkboxText");
+  checkBoxText.setAttribute("value", bypass);
 
-    function Cancel(){
-      selname = top.frames[list_frame].document.fSelectFillin;
-      var list = top.frames[button_frame].document.buttons.list;
-      list.value = prefillList[prefillList.length-2];
-      var result = "|list|"+list.value+"|fillins||url||skip|false|";
-      DoSave(result);
-    }
+  /* initialization OK and Cancel buttons */
+
+  doSetOKCancel(Save, Cancel);
+}
+
+function Save() {
+  var list = prefillList[prefillList.length-2];
+  var url = prefillList[prefillList.length-1];
+  var fillins = "";
+
+  for (i=1; i<=fieldCount; i++) { 
+    var menuList = document.getElementById("x" + i);
+dump("menuList.selectedItem="+menuList.selectedItem.getAttribute("data")+"\n");
+dump("menuList.selectedItem="+menuList.selectedItem.getAttribute("value")+"\n");
+    fillins +=
+      menuList.selectedItem.getAttribute("data") + "#*%$" +
+      menuList.selectedItem.getAttribute("value") + "#*%$";
+  }
+
+  var checkBox = document.getElementById("checkbox");
+  var checked = checkBox.checked;
+
+  var result = "|list|"+list+"|fillins|"+fillins+"|url|"+url+"|skip|"+checked+"|";
+  walletpreview.SetValue(result, window);
+  return true;
+}
+
+function Cancel() {
+  var list = prefillList[prefillList.length-2];
+  var result = "|list|"+list+"|fillins||url||skip|false|";
+  walletpreview.SetValue(result, window);
+  return true;
+}
