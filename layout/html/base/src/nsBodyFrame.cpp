@@ -734,23 +734,27 @@ nsBodyFrame::HandleEvent(nsIPresContext& aPresContext,
   // our first-child first (children after the first-child are either
   // absolute positioned frames or are floating frames, both of which
   // are on top (in the z order) of the first-child).
-  PRInt32 n = mChildCount;
+  
+  /*XXX Commenting event dispatch to BodyFrame's absolutely positioned 
+   * children.  They already get the event through the view hierarchy.
+   */
+  /*PRInt32 n = mChildCount;*/
   nsIFrame* kid = mFirstChild;
-  kid->GetNextSibling(kid);
+  /*kid->GetNextSibling(kid);
   while (--n >= 0) {
     if (nsnull == kid) {
       kid = mFirstChild;
-    }
+    }*/
     nsRect kidRect;
     kid->GetRect(kidRect);
     if (kidRect.Contains(aEvent->point)) {
       aEvent->point.MoveBy(-kidRect.x, -kidRect.y);
       kid->HandleEvent(aPresContext, aEvent, aEventStatus);
       aEvent->point.MoveBy(kidRect.x, kidRect.y);
-      break;
+      /*break;*/
     }
-    kid->GetNextSibling(kid);
-  }
+    /*kid->GetNextSibling(kid);
+  }*/
 
   // XXX Hack mouse enter/exit and cursor code. THIS DOESN'T BELONG HERE!
 #if 1
