@@ -7472,7 +7472,16 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
                  (nsLayoutAtoms::positionedInlineFrame == frameType)) {
         containingBlock = frame;
         break;
+      } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
+        // If the positioned frame is a fieldset, use the area frame inside it
+        frame->FirstChild(aPresContext, nsnull, &containingBlock);
+        break;
       }
+#ifdef DEBUG
+      else {
+        NS_WARNING("Positioned frame that does not handle positioned kids; looking further up the parent chain");
+      }
+#endif
     }
   }
 
