@@ -79,8 +79,10 @@ public:
 
   // Take aFrame out of the frame list. This also disconnects aFrame
   // from the sibling list. This will return PR_FALSE if aFrame is
-  // nsnull or if aFrame is not in the list.
-  PRBool RemoveFrame(nsIFrame* aFrame);
+  // nsnull or if aFrame is not in the list. The second frame is
+  // a hint for the prev-sibling of aFrame; if the hint is correct,
+  // then this is O(1) time.
+  PRBool RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint = nsnull);
 
   // Remove the first child from the list. The caller is assumed to be
   // holding a reference to the first child. This call is equivalent
