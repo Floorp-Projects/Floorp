@@ -22,6 +22,11 @@ function doEngineClick(node)
 	if (!resultsTree)	return;
 	var contentArea = document.getElementById("content");
 	if (!contentArea)	return;
+	var statusNode = document.getElementById("status-button");
+	if (statusNode)
+	{
+		statusNode.setAttribute("value", "");
+	}
 
 	var html="";
 
@@ -92,14 +97,22 @@ function doResultClick(node)
 			if (internetSearchStore)
 			{
 				var src = rdf.GetResource(theID, true);
-//				var urlProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+				var urlProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
 				var bannerProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#Banner", true);
 				var htmlProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#HTML", true);
-/*
+
 				var url = internetSearchStore.GetTarget(src, urlProperty, true);
 				if (url)	url = url.QueryInterface(Components.interfaces.nsIRDFLiteral);
 				if (url)	url = url.Value;
-*/
+				if (url)
+				{
+					var statusNode = document.getElementById("status-button");
+					if (statusNode)
+					{
+						statusNode.setAttribute("value", url);
+					}
+				}
+
 				var banner = internetSearchStore.GetTarget(src, bannerProperty, true);
 				if (banner)	banner = banner.QueryInterface(Components.interfaces.nsIRDFLiteral);
 				if (banner)	banner = banner.Value;

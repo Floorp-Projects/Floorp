@@ -87,6 +87,6 @@ the scrollbar is visible. Yes, I know this is not necessary for win32 or gtk, bu
 use this area for information (maybe full URL of selected item or the like) in the future.
 -->
 	<box id="status-bar" style="min-height:15px; max-height:15px;">
-		<titledbutton class="status-bar" align="left" value=""/>
+		<titledbutton id="status-button" class="status-bar" align="left" value=""/>
 	</box>
 </window>
