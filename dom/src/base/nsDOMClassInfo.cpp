@@ -1889,9 +1889,8 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
  
     if (iim) {
       nsCOMPtr<nsIInterfaceInfo> if_info;
-      nsresult dbg_rv =
-        iim->GetInfoForIID(ci_data.mProtoChainInterface,
-                           getter_AddRefs(if_info));
+      iim->GetInfoForIID(ci_data.mProtoChainInterface,
+                         getter_AddRefs(if_info));
 
       if (if_info) {
         nsXPIDLCString name;
