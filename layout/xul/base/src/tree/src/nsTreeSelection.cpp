@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Original Author: David W. Hyatt (hyatt@netscape.com)
+ *   Dave Hyatt <hyatt@mozilla.org> (Original Author)
  *   Brian Ryner <bryner@brianryner.com>
  *   Jan Varga <varga@nixcorp.com>
  *
