@@ -2486,7 +2486,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   aState.ComputeBlockAvailSpace(splitType, availSpace);
 
   // Reflow the block into the available space
-  nsReflowStatus frameReflowStatus;
+  nsReflowStatus frameReflowStatus=NS_FRAME_COMPLETE;
   nsMargin computedOffsets;
   rv = brc.ReflowBlock(frame, availSpace, applyTopMargin,
                        aState.mPrevBottomMargin, aState.IsAdjacentWithTop(),
