@@ -992,6 +992,12 @@ radio[pane] {
   -moz-appearance: none;
   -moz-box-align: center;
 }
+
+prefwindow[chromehidden~="toolbar"] .chromeclass-toolbar
+{
+  display: none;
+}
+
 /********** expander ********/
 
 expander {
