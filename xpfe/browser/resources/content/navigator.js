@@ -488,18 +488,18 @@ function Startup()
       var cmdLineService = Components.classes["@mozilla.org/appshell/commandLineService;1"]
                                      .getService(Components.interfaces.nsICmdLineService);
       startPage = cmdLineService.URLToLoad;
+      if (!startPage) {
+        var cmdLineHandler = Components.classes["@mozilla.org/commandlinehandler/general-startup;1?type=browser"]
+                                       .getService(Components.interfaces.nsICmdLineHandler);
+        startPage = cmdLineHandler.defaultArgs;
+      }
       appCore.cmdLineURLUsed = true;
     }
 
     if (!startPage) {
       // Check for window.arguments[0]. If present, use that for startPage.
-      if ("arguments" in window && window.arguments.length > 0) {
+      if ("arguments" in window && window.arguments.length >= 1)
         startPage = window.arguments[0];
-      } else {
-        var cmdLineHandler = Components.classes["@mozilla.org/commandlinehandler/general-startup;1?type=browser"]
-                                       .getService(Components.interfaces.nsICmdLineHandler);
-        startPage = cmdLineHandler.defaultArgs;
-      }
     }
 
     if (startPage)
