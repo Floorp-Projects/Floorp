@@ -1,0 +1,201 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html><head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Igor Bukanov">
+   <meta name="KeyWords" content="Rhino, JavaScript, Java">
+   <title>Debug API changes</title>
+</head>
+
+<body bgcolor="#ffffff">
+
+<h2 align="center">Debug API changes in Rhino 1.5 Release 4</h2>
+<p>
+The main difference between the old and new API is that the application needs to implement both org.mozilla.javascript.debugger.Debugger and
+org.mozilla.javascript.debugger.DebugFrame interfaces to receive debug
+information during script execution. See the API documentation for these
+classes for details:
+<br>
+<tt><a href="http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/debug/DebugFrame.java">http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/debug/DebugFrame.java</a>
+<br><a href="http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/debug/Debugger.java">http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/debug/Debugger.java</a>
+</tt>
+<p>
+In addition the org.mozilla.javascript.debugger.DebuggableEngine interface and the getDebuggableEngine method in org.mozilla.javascript.Context are replaced by 3 Context methods: setDebugger, getDebugger and getDebuggerContextData to set/get debugger and its Context data in the current thread Context:<br>
+<tt><a href="http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/Context.java">http://lxr.mozilla.org/mozilla/source/js/rhino/src/org/mozilla/javascript/Context.java</a></tt>
+
+<p>The following gives few examples how to update your current application to  the new API.
+<p>
+1. Setting and querying a Debugger implementation
+<p>
+Old API:
+<pre>
+cx.getDebuggableEngine.setDebugger(debugger);
+cx.getDebuggableEngine.getDebugger();
+</pre>
+New API:
+<pre>
+cx.setDebugger(debugger);
+cx.getDebugger();
+</pre>
+
+<p>
+2. Monitoring execution of each line in the script
+<p>
+Old implementation:
+<pre>
+public MyDebugger implement Debugger {
+
+    public void handleCompilationDone(Context cx, 
+                                      DebuggableScript fnOrScript,
+                                      StringBuffer source)
+    {
+    }
+
+    void handleBreakpointHit(Context cx) 
+    {
+        DebugFrame frame = cx.getDebuggableEngine().getFrame(0);
+        System.out.println("New line:" + frame.getLineNumber());
+    }
+
+    void handleExceptionThrown(Context cx, Object exception)
+    {
+    }
+}
+...
+cx.getDebuggableEngine.setDebugger(new MyDebugger());
+cx.getDebuggableEngine.setBreakNextLine(true);
+</pre>
+
+New implementation:
+<pre>
+public MyDebugger implement Debugger 
+{
+    public void handleCompilationDone(Context cx,
+                                      DebuggableScript fnOrScript,
+                                      StringBuffer source)
+    {
+    }
+    
+    public DebugFrame getFrame(Context cx, DebuggableScript fnOrScript)
+    {
+        return new MyDebugFrame();
+    }
+}
+
+class MyDebugFrame implements DebugFrame
+{
+    public void onEnter(Context cx, Scriptable activation,
+                        Scriptable thisObj, Object[] args)
+    {
+    }
+    
+    public void onExceptionThrown(Context cx, Throwable ex)
+    {
+    }
+    
+    public void onExit(Context cx, boolean byThrow,
+                       Object resultOrException)
+    {
+    }
+
+    public void onLineChange(Context cx, int lineNumber) 
+    {
+        System.out.println("New line:" + frame.getLineNumber());
+    }
+}
+...
+cx.setDebugger(new MyDebugger());
+</pre>
+Note the in the new implementation the application can monitor function  enter/exit by customizing enterFrame and onExit in the above code.
+<p>
+3. Breakpoint handling
+<p>
+Old implementation:
+<pre>
+public MyDebugger implement Debugger {
+
+    public void handleCompilationDone(Context cx, DebuggableScript fnOrScript,
+                                      StringBuffer source)
+    {
+        int breakpointLine = ...;
+        fnOrScript.placeBreakpoint(breakpointLine);
+    }
+
+    void handleBreakpointHit(Context cx) {
+        DebugFrame frame = cx.getDebuggableEngine().getFrame(0);
+        System.out.println("Breakpoint hit: "+frame.getSourceName()+":"+frame.getLineNumber());
+    }
+
+    void handleExceptionThrown(Context cx, Object exception)
+    {
+    }
+}
+...
+cx.getDebuggableEngine.setDebugger(new MyDebugger());
+</pre>
+
+New implementation:
+<pre>
+public MyDebugger implement Debugger 
+{
+    public void handleCompilationDone(Context cx,
+                                      DebuggableScript fnOrScript,
+                                      StringBuffer source)
+    {
+    }
+    
+    public DebugFrame getFrame(Context cx, DebuggableScript fnOrScript)
+    {
+        return new MyDebugFrame(fnOrScript);
+    }
+}
+
+class MyDebugFrame implements DebugFrame
+{
+    DebuggableScript fnOrScript;
+    
+    MyDebugFrame(DebuggableScript fnOrScript)
+    {
+        this.fnOrScript = fnOrScript;
+    }
+    
+    public void onEnter(Context cx, Scriptable activation,
+                        Scriptable thisObj, Object[] args)
+    {
+	System.out.println("Frame entered");
+    }
+    
+    public void onLineChange(Context cx, int lineNumber) 
+    {
+        if (isBreakpoint(lineNumber)) {
+            System.out.println("Breakpoint hit: "+fnOrScript.getSourceName()+":"+lineNumber);
+        }
+    }
+    
+    public void onExceptionThrown(Context cx, Throwable ex)
+    {
+    }
+    
+    public void onExit(Context cx, boolean byThrow,
+                       Object resultOrException)
+    {
+        System.out.println("Frame exit, result="+resultOrException);
+    }
+    
+    private boolean isBreakpoint(int lineNumber) 
+    {
+    	...
+    } 
+}
+...
+cx.setDebugger(new MyDebugger());
+</pre>
+
+Here debugger during execution needs to decide if a particular line has breakpoint on it set or not during script execution, not at the moment of script initialization.
+
+<p>See also Rhino Debugger that fully explore the new API:<br><tt><a  href="http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/debugger/Main.java">http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/debugger/Main.java</a></tt>. The debugger changes includes support for debugging eval and Function scripts and loading script sources from their URL if debugger was not installed during scripts initialization.
+
+<hr width="100%"><br>
+<a href="index.html">back to top</a></h3>
+
+
+</body></html>
