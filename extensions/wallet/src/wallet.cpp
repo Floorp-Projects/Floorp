@@ -383,7 +383,9 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
     // Async reading thru the calls of the event sink interface
     rv = NS_OpenURI(getter_AddRefs(pChannel), pURL, serv);
     if (NS_FAILED(rv)) {
+#ifdef DEBUG
         printf("ERROR: NewChannelFromURI failed for %s\n", in);
+#endif
         return rv;
     }
 
@@ -648,14 +650,18 @@ Wallet_Localize(char* genericString) {
   /* create a bundle for the localization */
   nsCOMPtr<nsIStringBundleService> pStringService = do_GetService(kStringBundleServiceCID, &ret);
   if (NS_FAILED(ret)) {
+#ifdef DEBUG
     printf("cannot get string service\n");
+#endif
     return v.ToNewUnicode();
   }
   nsCOMPtr<nsILocale> locale;
   nsCOMPtr<nsIStringBundle> bundle;
   ret = pStringService->CreateBundle(PROPERTIES_URL, locale, getter_AddRefs(bundle));
   if (NS_FAILED(ret)) {
+#ifdef DEBUG
     printf("cannot create instance\n");
+#endif
     return v.ToNewUnicode();
   }
 
@@ -665,7 +671,9 @@ Wallet_Localize(char* genericString) {
   PRUnichar *ptrv = nsnull;
   ret = bundle->GetStringFromName(ptrtmp, &ptrv);
   if (NS_FAILED(ret)) {
+#ifdef DEBUG
     printf("cannot get string from name\n");
+#endif
     return v.ToNewUnicode();
   }
   v = ptrv;
