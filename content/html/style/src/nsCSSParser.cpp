@@ -127,6 +127,8 @@ public:
 
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive);
 
+  NS_IMETHOD SetQuirkMode(PRBool aQuirkMode);
+
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader);
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
@@ -294,7 +296,7 @@ CSSParserImpl::CSSParserImpl()
     mChildSheetCount(0),
     mChildLoader(nsnull),
     mSection(eCSSSection_Charset),
-    mNavQuirkMode(PR_TRUE),
+    mNavQuirkMode(PR_FALSE),
     mCaseSensitive(PR_FALSE),
     mNameSpace(nsnull),
     mGroupStack(nsnull)
@@ -361,6 +363,13 @@ NS_IMETHODIMP
 CSSParserImpl::SetCaseSensitive(PRBool aCaseSensitive)
 {
   mCaseSensitive = aCaseSensitive;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSParserImpl::SetQuirkMode(PRBool aQuirkMode)
+{
+  mNavQuirkMode = aQuirkMode;
   return NS_OK;
 }
 
@@ -828,11 +837,11 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
     // XXX need to have nsILoadGroup passed in here
     aErrorCode = NS_NewURI(&url, aURLSpec, mURL/*, group*/);
 #else
-    nsILoadGroup* LoadGroup = nsnull;
-    mURL->GetLoadGroup(&LoadGroup);
-    if (LoadGroup) {
-      aErrorCode = LoadGroup->CreateURL(&url, mURL, aURLSpec, nsnull);
-      NS_RELEASE(LoadGroup);
+    nsILoadGroup* loadGroup = nsnull;
+    mURL->GetLoadGroup(&loadGroup);
+    if (loadGroup) {
+      aErrorCode = loadGroup->CreateURL(&url, mURL, aURLSpec, nsnull);
+      NS_RELEASE(loadGroup);
     }
     else {
       aErrorCode = NS_NewURL(&url, aURLSpec, mURL);
@@ -2475,7 +2484,11 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
         if (NS_FAILED(rv)) return PR_FALSE;
         
         char* str = tk->mIdent.ToNewCString();
-        if (!str) return NS_ERROR_OUT_OF_MEMORY;
+        if (!str) {
+          NS_RELEASE(base);
+          aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+          return PR_FALSE;
+        }
 
         rv = NS_MakeAbsoluteURI(str, base, absURL);
         NS_RELEASE(base);
