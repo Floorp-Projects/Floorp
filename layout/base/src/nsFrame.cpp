@@ -716,6 +716,14 @@ NS_METHOD nsFrame::ContentDeleted(nsIPresShell*   aShell,
   return NS_OK;
 }
 
+NS_METHOD nsFrame::ContentChanged(nsIPresShell*   aShell,
+                                  nsIPresContext* aPresContext,
+                                  nsIContent*     aChild,
+                                  nsISupports*    aSubContent)
+{
+  return NS_OK;
+}
+
 NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
                                     nsReflowMetrics& aMetrics)
 {

@@ -122,6 +122,10 @@ public:
                              nsIContent*     aContainer,
                              nsIContent*     aChild,
                              PRInt32         aIndexInParent);
+  NS_IMETHOD  ContentChanged(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aChild,
+                             nsISupports*    aSubContent);
 
   NS_IMETHOD  GetReflowMetrics(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aMetrics);
