@@ -15,9 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */ 
-#include "nsCOMPtr.h"
-#include "nsCRT.h"
+
 #include "msgCore.h"
+#include "nsCRT.h"
 #include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgSendPart.h"
@@ -54,15 +54,17 @@
 #include "nsIMIMEService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsMsgCompCID.h"
+#include "nsIFileSpec.h"
+#include "nsCOMPtr.h"
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
 // for these two interfaces 
 //
-static NS_DEFINE_IID(kIMsgSend, NS_IMSGSEND_IID);
+
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
@@ -123,7 +125,7 @@ nsresult NS_NewMsgSend(const nsIID &aIID, void ** aInstancePtrResult)
 	{
 		nsMsgComposeAndSend *pSend = new nsMsgComposeAndSend();
 		if (pSend)
-			return pSend->QueryInterface(kIMsgSend, aInstancePtrResult);
+			return pSend->QueryInterface(NS_GET_IID(nsIMsgSend), aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -132,7 +134,7 @@ nsresult NS_NewMsgSend(const nsIID &aIID, void ** aInstancePtrResult)
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgComposeAndSend, nsCOMTypeInfo<nsIMsgSend>::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgComposeAndSend, NS_GET_IID(nsIMsgSend));
 
 nsMsgComposeAndSend::nsMsgComposeAndSend() : 
     m_messageKey(0xffffffff)
@@ -2489,9 +2491,10 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
     // using callbacks for notification
     // 
-    nsFilePath    filePath(*mTempFileSpec);
-  	AddRef();
-    rv = smtpService->SendMailMessage(filePath, buf, mSendListener, nsnull, nsnull);
+  	NS_ADDREF_THIS(); 
+	nsCOMPtr<nsIFileSpec> aFileSpec;
+	NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
+    rv = smtpService->SendMailMessage(aFileSpec, buf, mSendListener, nsnull, nsnull);
   }
   
   PR_FREEIF(buf); // free the buf because we are done with it....
@@ -2521,6 +2524,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     // using callbacks for notification
     // 
     nsFilePath    filePath (*mTempFileSpec);
+	NS_ADDREF_THIS();
   	AddRef();
     rv = nntpService->PostMessage(filePath, mCompFields->GetNewsgroups(), mSendListener, nsnull);
   }

@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsISmtpService.h"
+#include "nsISmtpServer.h"
 #include "nsIProtocolHandler.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -43,40 +44,14 @@ public:
 
 	////////////////////////////////////////////////////////////////////////
 	// we suppport the nsISmtpService interface 
-	////////////////////////////////////////////////////////////////////////
-    
-	////////////////////////////////////////////////////////////////////////
-	// SendMailMessage requires the file name of the message to send, the
-    // sender, a comma delimited list of recipients.
-	// It builds an Smtp url, makes an smtp connection and runs the url. If
-    // you want a handle on the running task, pass in a valid nsIURI ptr.
-    // You can later interrupt this action by asking the netlib service
-    // manager to interrupt the url you are given back. Remember to release
-    // aURL when you are done with it.
-    // Pass nsnull in for aURL if you don't care about the returned URL.
-	////////////////////////////////////////////////////////////////////////
-
-	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath,
-                               const nsString& aRecipients,
-                               nsIUrlListener * aUrlListener,
-                               nsISmtpServer * aServer,
-							   nsIURI ** aURL);
-
-  NS_IMETHOD GetSmtpServers(nsISupportsArray ** aResult);
-  NS_IMETHOD GetDefaultSmtpServer(nsISmtpServer **aServer);
-  NS_IMETHOD SetDefaultSmtpServer(nsISmtpServer *aServer);
-  
-	//////////////////////////////////////////////////////////////////////////
-	// End support of nsISmtpService interface 
-	//////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////    
+	NS_DECL_NSISMTPSERVICE
 
 	//////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIProtocolHandler interface 
 	//////////////////////////////////////////////////////////////////////////
     NS_DECL_NSIPROTOCOLHANDLER
-	//////////////////////////////////////////////////////////////////////////
-	// End support of nsIProtocolHandler interface 
-	//////////////////////////////////////////////////////////////////////////
+
     
 private:
     nsCOMPtr<nsISupportsArray> mSmtpServers;

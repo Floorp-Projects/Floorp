@@ -17,9 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
-#include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-
 #include "nsSmtpService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
@@ -28,16 +26,17 @@
 
 #include "nsSmtpUrl.h"
 #include "nsSmtpProtocol.h"
+#include "nsIFileSpec.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // foward declarations...
 
 nsresult
-NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath,
+NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
                      const char* aHostName, const char* aSender, 
-                     const nsString& aRecipients, nsIUrlListener *,
+                     const char * aRecipients, nsIUrlListener *,
                      nsIURI ** aUrl);
 nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer);
 
@@ -77,8 +76,8 @@ nsresult nsSmtpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
-nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath,
-                                        const nsString& aRecipients, 
+nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
+                                        const char * aRecipients, 
 										nsIUrlListener * aUrlListener,
                                         nsISmtpServer * aServer,
                                         nsIURI ** aURL)
@@ -128,9 +127,9 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath,
 // The following are two convience functions I'm using to help expedite building and running a mail to url...
 
 // short cut function for creating a mailto url...
-nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath,
+nsresult NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
                               const char* aHostName, const char* aSender, 
-							  const nsString& aRecipients, nsIUrlListener * aUrlListener, nsIURI ** aUrl)
+							  const char * aRecipients, nsIUrlListener * aUrlListener, nsIURI ** aUrl)
 {
 	// mscott: this function is a convience hack until netlib actually dispatches smtp urls.
 	// in addition until we have a session to get a password, host and other stuff from, we need to use default values....
@@ -142,20 +141,13 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath,
 
 	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
-		// assemble a url spec...
-        char *recipients = aRecipients.ToNewCString();
 		char * urlSpec= PR_smprintf("mailto://%s:%d/%s",
-                                    (const char*)aHostName, 25, recipients ? recipients : "");
-		if (recipients)
-			delete [] recipients;
+                                    (const char*)aHostName, 25, aRecipients ? aRecipients : "");
 		if (urlSpec)
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
 			url->SetSpec(urlSpec);
-			nsFileSpec aFileSpec (aFilePath);
-			nsCOMPtr<nsIFileSpec> aIFileSpec;
-			NS_NewFileSpecWithSpec(aFileSpec, getter_AddRefs(aIFileSpec));
-			smtpUrl->SetPostMessageFile(aIFileSpec);
+			smtpUrl->SetPostMessageFile(aFilePath);
 			// this cast is safe....it is necessary because of a bug to the xpidl compiler
 			smtpUrl->SetUserEmailAddress((char *) aSender);
 			url->RegisterListener(aUrlListener);
