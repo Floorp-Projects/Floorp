@@ -76,6 +76,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsHTMLAtoms.h"
+#include "nsCSSPseudoElements.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -102,7 +103,6 @@
 #include "nsTimer.h"
 #include "nsWeakPtr.h"
 #include "plarena.h"
-#include "nsCSSAtoms.h"
 #include "nsIObserverService.h" // for reflow observation
 #include "nsIDocShell.h"        // for reflow observation
 #include "nsIDOMRange.h"
@@ -4719,7 +4719,8 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
       nsCOMPtr<nsIStyleContext> pseudoStyleContext;
       
       primaryFrame->GetStyleContext(getter_AddRefs(styleContext));
-      mPresContext->ProbePseudoStyleContextFor(aContent, nsCSSAtoms::afterPseudo,
+      mPresContext->ProbePseudoStyleContextFor(aContent,
+                                               nsCSSPseudoElements::after,
                                                styleContext,
                                                getter_AddRefs(pseudoStyleContext));
       if (pseudoStyleContext) {

@@ -501,10 +501,6 @@ noembed, noscript, param {
   -moz-box-orient: inherit;
 }
 
-*|*:-moz-wrapped-frame {
-  display: inherit;
-}
-
 *|*:-moz-page, *|*:-moz-page-sequence {
   display: block;
   background: transparent;

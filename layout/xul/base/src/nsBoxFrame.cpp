@@ -90,6 +90,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsWidgetsCID.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsViewsCID.h"
 #include "nsIScrollableView.h"
 #include "nsHTMLContainerFrame.h"
@@ -2556,7 +2557,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
     if (!aForce) {
       nsIAtom*  pseudoTag;
       aStyleContext->GetPseudoType(pseudoTag);
-      if (pseudoTag == nsLayoutAtoms::scrolledContentPseudo) {
+      if (pseudoTag == nsCSSAnonBoxes::scrolledContent) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
           ("nsBoxFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
         aForce = PR_TRUE;

@@ -49,7 +49,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIStyleFrameConstruction.h"
-#include "nsLayoutAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsTimer.h"
 #include "nsICSSStyleSheet.h"
 #include "nsNetUtil.h"
@@ -58,7 +58,6 @@
 #include "nsRuleWalker.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLBodyElement.h"
-#include "nsHTMLAtoms.h"
 #include "nsHashtable.h"
 
 #ifdef MOZ_PERF_METRICS
@@ -1143,7 +1142,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleForNonElement(
         mOverrideRuleProcessors) {
       EnsureRuleWalker(aPresContext);
       result = GetContext(aPresContext, aParentContext,
-                          nsHTMLAtoms::mozNonElementPseudo);
+                          nsCSSAnonBoxes::mozNonElement);
       NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
     }
   }

@@ -43,6 +43,7 @@
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsIWidget.h"
 #include "nsILinkHandler.h"
 #include "nsHTMLValue.h"

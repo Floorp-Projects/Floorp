@@ -41,7 +41,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
-#include "nsCSSAtoms.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDOMDocument.h"
 #include "nsIBoxObject.h"

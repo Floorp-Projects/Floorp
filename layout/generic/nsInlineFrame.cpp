@@ -46,6 +46,7 @@
 #include "nsIFontMetrics.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsReflowPath.h"
 #ifdef ACCESSIBILITY
 #include "nsIServiceManager.h"
@@ -1074,10 +1075,8 @@ nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
         // we behave as if an anonymous (unstyled) span was the child
         // of the parent frame.
         nsIStyleContext* newSC;
-        aPresContext->ResolvePseudoStyleContextFor(mContent,
-                                                   nsHTMLAtoms::mozLineFrame,
-                                                   parentContext,
-                                                   &newSC);
+        aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                      nsCSSAnonBoxes::mozLineFrame, parentContext, &newSC);
         if (newSC) {
           // Switch to the new style context.
           SetStyleContext(aPresContext, newSC);

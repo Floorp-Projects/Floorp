@@ -61,6 +61,7 @@
 #include "nsVoidArray.h"
 #include "nsIView.h"
 #include "nsHTMLAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDeviceContext.h"
@@ -860,7 +861,7 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
 
   nsCOMPtr<nsIStyleContext> colGroupStyle;
   aPresContext.ResolvePseudoStyleContextFor(colGroupContent,
-                                            nsHTMLAtoms::tableColGroupPseudo,
+                                            nsCSSAnonBoxes::tableColGroup,
                                             mStyleContext,
                                             getter_AddRefs(colGroupStyle));        
   // Create a col group frame
@@ -978,7 +979,7 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
       // all other anonymous cols use a pseudo style context of the col group
       aColGroupFrame.GetContent(getter_AddRefs(iContent));
       aColGroupFrame.GetStyleContext(getter_AddRefs(parentStyleContext));
-      aPresContext.ResolvePseudoStyleContextFor(iContent, nsHTMLAtoms::tableColPseudo,
+      aPresContext.ResolvePseudoStyleContextFor(iContent, nsCSSAnonBoxes::tableCol,
                                                 parentStyleContext, getter_AddRefs(styleContext));
     }
     // ASSERTION to check for bug 54454 sneaking back in...

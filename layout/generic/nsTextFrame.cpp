@@ -66,7 +66,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIFocusTracker.h"
 #include "nsICaret.h"
-#include "nsHTMLAtoms.h"
+#include "nsCSSPseudoElements.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
 
@@ -1060,7 +1060,7 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
       nsCOMPtr<nsIContent> parentContent;
       aContent->GetParent(*getter_AddRefs(parentContent));
       aPresContext->ProbePseudoStyleContextFor(parentContent,
-  					     nsHTMLAtoms::mozSelectionPseudo,
+  					     nsCSSPseudoElements::mozSelection,
   					     aStyleContext, &sc);
       if (nsnull != sc) {
         mSelectionPseudoStyle = PR_TRUE;

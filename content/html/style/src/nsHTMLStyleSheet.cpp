@@ -56,6 +56,7 @@
 #include "nsLayoutCID.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsCSSAnonBoxes.h"
 
 #include "nsRuleWalker.h"
 
@@ -1049,7 +1050,7 @@ HTMLStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData,
                                   nsIAtom* aMedium)
 {
   nsIAtom* pseudoTag = aData->mPseudoTag;
-  if (pseudoTag == nsHTMLAtoms::tableColPseudo) {
+  if (pseudoTag == nsCSSAnonBoxes::tableCol) {
     nsRuleWalker *ruleWalker = aData->mRuleWalker;
     if (ruleWalker) {
       ruleWalker->Forward(mTableColRule);

@@ -27,7 +27,7 @@
 #include "nsFrame.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsHTMLAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsUnitConversion.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -726,7 +726,8 @@ nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
       nsresult rv = NS_NewMathMLForeignFrameWrapper(shell, &wrapper);
       if (NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIStyleContext> newStyleContext;
-      aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::mozAnonymousBlock,
+      aPresContext->ResolvePseudoStyleContextFor(mContent,
+                                                 nsCSSAnonBoxes::mozAnonymousBlock,
                                                  mStyleContext,
                                                  getter_AddRefs(newStyleContext));
       rv = wrapper->Init(aPresContext, mContent, this, newStyleContext, nsnull);

@@ -48,7 +48,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsStyleUtil.h"
-#include "nsCSSAtoms.h"
+#include "nsCSSPseudoElements.h"
 #include "nsThemeConstants.h"
 #include "nsITheme.h"
 #include "pldhash.h"
@@ -2730,8 +2730,8 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
 
   nsCOMPtr<nsIAtom> pseudoTag;
   aContext->GetPseudoType(*getter_AddRefs(pseudoTag));
-  PRBool generatedContent = (pseudoTag == nsCSSAtoms::beforePseudo || 
-                             pseudoTag == nsCSSAtoms::afterPseudo);
+  PRBool generatedContent = (pseudoTag == nsCSSPseudoElements::before || 
+                             pseudoTag == nsCSSPseudoElements::after);
 
   if (parentContext && 
       ((aRuleDetail != eRuleFullReset &&

@@ -91,7 +91,6 @@
 #include "nsMutationEvent.h"
 
 #include "nsRuleNode.h"
-#include "nsCSSAtoms.h"
 
 // input type=radio
 #include "nsIRadioControlFrame.h"
