@@ -346,22 +346,25 @@ NS_IMETHODIMP
 nsXIFConverter::AppendEntity(const PRUnichar aChar, nsAWritableString* aStr,
                              nsAReadableString* aInsertIntoTag)
 {
-  nsAutoString str;
+  NS_NAMED_LITERAL_STRING(lt, "lt");
+  NS_NAMED_LITERAL_STRING(gt, "gt");
+  NS_NAMED_LITERAL_STRING(amp, "amp");
+  nsAReadableString* str = 0;
   switch (aChar)
   {
     case '<':
-      str = NS_LITERAL_STRING("lt");
+      str = &lt;
       break;
     case '>':
-      str = NS_LITERAL_STRING("gt");
+      str = &gt;
       break;
     case '&':
-      str = NS_LITERAL_STRING("amp");
+      str = &amp;
       break;
     default:
       return NS_ERROR_BASE;
   }
-  if (str.IsEmpty())
+  if (!str)
     return NS_ERROR_BASE;
 
   // Now we know we have an entity -- do our thing.
@@ -372,20 +375,12 @@ nsXIFConverter::AppendEntity(const PRUnichar aChar, nsAWritableString* aStr,
 
     // Can't call AddAttribute directly -- it does entityizing
     // and will call us back.  So just do what it does:
-    mBuffer->Append(mSpace);
-    mBuffer->Append(mValue);
-    mBuffer->Append(mEqual);
-    mBuffer->Append(mQuote);    // XML requires quoted attributes
-    mBuffer->Append(str);
-    mBuffer->Append(mQuote);
-
+    mBuffer->Append(mSpace + mValue + mEqual + mQuote + *str + mQuote);
     FinishStartTag(mEntity, PR_TRUE, PR_FALSE);
   }
   else if (aStr)
   {
-    aStr->Append(NS_LITERAL_STRING("&"));
-    aStr->Append(str);
-    aStr->Append(NS_LITERAL_STRING(";"));
+    aStr->Append(NS_LITERAL_STRING("&") + *str + NS_LITERAL_STRING(";"));
   }
   return NS_OK;
 }
@@ -695,10 +690,9 @@ NS_IMETHODIMP nsXIFConverter::WriteDebugFile()
   ofstream out(filename);
   // Good grief -- there doesn't seem to be any direct way to send
   // an nsAWritableString to a stream.
-  nsAutoString stupid(*mBuffer);
-  char* utf8 = stupid.ToNewUTF8String();
+  char* utf8 = ToNewUTF8String(*mBuffer);
   out << utf8;
-  Recycle(utf8);
+  nsMemory::Free(utf8);
   out.close();
   return NS_OK;
 #endif /* DEBUG_XIF */
