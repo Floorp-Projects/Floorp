@@ -39,6 +39,7 @@ Rights Reserved.
 <html:script src="chrome://global/content/wizardManager.js"/>
 <html:script src="chrome://global/content/widgetStateManager.js"/>
 
+<html:script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/AccountWizard.js"/>
 <box align="vertical" flex="100%">
   <box id="contentsink" flex="100%">
