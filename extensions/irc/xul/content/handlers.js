@@ -439,7 +439,7 @@ function onWindowKeyPress (e)
         case 33: /* pgup */
             if (e.ctrlKey)
             {
-                cycleView(1);
+                cycleView(-1);
                 break;
             }
 
@@ -458,7 +458,7 @@ function onWindowKeyPress (e)
         case 34: /* pgdn */
             if (e.ctrlKey)
             {
-                cycleView(-1);
+                cycleView(1);
                 break;
             }
 
