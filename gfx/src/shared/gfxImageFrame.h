@@ -14,48 +14,52 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Copyright (C) 2000-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
- *   Chris Saari <saari@netscape.com>
  */
 
-#include "gfxIImageContainer.h"
+#include "gfxIImageFrame.h"
+#include "nsIInterfaceRequestor.h"
 
-#include "gfxIImageContainerObserver.h"
+#include "nsIImage.h"
 
+#include "nsPoint.h"
 #include "nsSize.h"
 
-#include "nsSupportsArray.h"
-
 #include "nsCOMPtr.h"
-#include "nsITimer.h"
-#include "nsITimerCallback.h"
 
-class gfxImageContainer : public gfxIImageContainer,
-                          public nsITimerCallback
+#define GFX_IMAGEFRAME_CID \
+{ /* aa699204-1dd1-11b2-84a9-a280c268e4fb */         \
+     0xaa699204,                                     \
+     0x1dd1,                                         \
+     0x11b2,                                         \
+    {0x84, 0xa9, 0xa2, 0x80, 0xc2, 0x68, 0xe4, 0xfb} \
+}
+
+class gfxImageFrame : public gfxIImageFrame,
+                      public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_GFXIIMAGECONTAINER
+  NS_DECL_GFXIIMAGEFRAME
+  NS_DECL_NSIINTERFACEREQUESTOR
 
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  gfxImageFrame();
+  virtual ~gfxImageFrame();
 
-  gfxImageContainer();
-  virtual ~gfxImageContainer();
+protected:
+  nsSize mSize;
 
 private:
-  /* additional members */
-  nsSupportsArray mFrames;
-  nsSize mSize;
-  PRUint32 mCurrentFrame;
-  PRUint32 mCurrentAnimationFrame;
-  PRBool   mCurrentFrameIsFinishedDecoding;
-  PRBool   mDoneDecoding;
-  
-  nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<gfxIImageContainerObserver> mObserver;
-};
+  /* private members */
+  nsCOMPtr<nsIImage> mImage;
+  nsPoint mOffset;
 
+  PRInt32 mTimeout;
+
+  PRPackedBool mInitalized;   // 8 bits
+  gfx_format mFormat;         // 16 bits
+};

@@ -21,30 +21,33 @@
 #    Stuart Parmenter <pavlov@netscape.com>
 #
 
-DEPTH	= ..\..
+DEPTH=..\..
+
 include <$(DEPTH)/config/config.mak>
 
-MODULE		= gfx2
-LIBRARY_NAME= gfx2
-DLL		    = $(OBJDIR)\$(LIBRARY_NAME).dll
-MAKE_OBJ_TYPE = DLL
+MODULE=gfx2
 
-OBJS = \
-	.\$(OBJDIR)\gfxImageContainer.obj \
+MAKE_OBJ_TYPE=DLL
+DLLNAME=gfx2
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+LCFLAGS = -DWIN32_LEAN_AND_MEAN
+
+CPP_OBJS = \
+  .\$(OBJDIR)\nsGfxFactory.obj \
+	.\$(OBJDIR)\gfxImageFrame.obj \
 	$(NULL)
 
 LLIBS	= \
-	$(DIST)\lib\gfx2_s.lib \
- 	$(DIST)\lib\xpcom.lib \
-	$(NULL)
-
-DIRS		= windows
+	$(DIST)\lib\gkgfxwin.lib \
+ 	$(DIST)\lib\xpcom.lib
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin\components
 
 clobber::
-	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
-	rm -f $(PDBFILE).pdb
+        $(RM) $(DIST)\lib\$(MODULE).lib
+        $(RM) $(DIST)\bin\components\$(MODULE).dll
