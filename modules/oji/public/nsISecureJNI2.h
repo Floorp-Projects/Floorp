@@ -338,6 +338,6 @@ public:
     0x598a,                                             \
     0x11d2,                                             \
     {0xa1, 0xd4, 0x00, 0x80, 0x5f, 0x8f, 0x69, 0x4d }   \
-};
+}
 
 #endif // nsISecureJNI2_h___
