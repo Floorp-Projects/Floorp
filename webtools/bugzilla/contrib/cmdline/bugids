@@ -19,13 +19,14 @@
 #
 # Contributor(s): 
 
-defaultcolumnlist="severity priority platform status resolution target_milestone status_whiteboard keywords summaryfull"
-
 thisdir=`dirname "$0"`
-query=`$thisdir/makequery "$@"` 
-if test "$?" != "0"; then exit 1; fi
+buglist="$thisdir/buglist"
+csvfile="$thisdir/buglist.csv"
 
-outputfile="/dev/stdout"
-#outputfile="buglist.html"
-#\rm -f ${outputfile}
-wget -q -O ${outputfile} --header="Cookie: COLUMNLIST=${COLUMNLIST-${defaultcolumnlist}}" "${query}"
+$thisdir/buglist "$@" 2>&1 1>${csvfile}
+if test "$?" != "0"; then cat "$csvfile" 1>&2; exit 1; fi
+
+# 1. use 'awk' to select the first column (bug_id)
+# 2. use 'grep -v' to remove the first line with the column headers
+# 3. use backquotes & 'echo' to get all values in one line, space separated
+echo `cat ${csvfile} | awk -F, '{printf $1 "\n"}' | grep -v bug_id`
