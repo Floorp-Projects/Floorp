@@ -31,6 +31,7 @@ import grendel.prefs.base.UIPrefs;
 import grendel.ui.MessageDisplayManager;
 import grendel.ui.MultiMessageDisplayManager;
 import grendel.ui.UnifiedMessageDisplayManager;
+import grendel.ui.Splash;
 
 /**
  * This launches the Grendel GUI.
@@ -40,6 +41,8 @@ public class Main {
   static MessageDisplayManager fManager;
 
   public static void main(String argv[]) {
+    
+    Splash splash = new Splash();
 
     UIPrefs prefs = UIPrefs.GetMaster();
 
@@ -64,6 +67,7 @@ public class Main {
     }
     MessageDisplayManager.SetDefaultManager(fManager);
     fManager.displayMaster();
+    splash.dispose();
   }
 }
 
