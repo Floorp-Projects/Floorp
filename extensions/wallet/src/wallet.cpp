@@ -557,6 +557,10 @@ char key[maxKeySize+1];
 PRUint32 keyPosition = 0;
 PRBool keyFailure = FALSE;
 
+PRBool wallet_BadKey() {
+  return keyFailure;
+}
+
 void
 wallet_SetKey() {
   keyFailure = FALSE;
@@ -689,7 +693,7 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
   XP_List * list_ptr;
   wallet_MapElement * ptr;
 
-  if (obscure && keyFailure) {
+  if (obscure && wallet_BadKey()) {
     return;
   }
 
@@ -755,7 +759,7 @@ wallet_ReadFromFile
   if (obscure) {
     wallet_RestartKey();
     wallet_ReadKey(strm);
-    if (keyFailure) {
+    if (wallet_BadKey()) {
       FE_Confirm("Key failure -- value file will not be opened");
       strm.close();
       return;
@@ -1223,7 +1227,7 @@ wallet_Initialize() {
 //    }
 #endif
     wallet_initialized = TRUE;
-  } else if (keyFailure) {
+  } else if (wallet_BadKey()) {
     wallet_SetKey();
     wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
   }
@@ -1505,8 +1509,8 @@ wallet_RequestToPrefill(XP_List * list) {
       schema);
     }
     FLUSH_BUFFER
-    delete schema;
-    delete value;
+    delete []schema;
+    delete []value;
   }    
 
   /* finish generating list of fillins */
@@ -1644,7 +1648,7 @@ wallet_RequestToPrefill(XP_List * list) {
 
 void
 wallet_PostEdit() {
-  if (keyFailure) {
+  if (wallet_BadKey()) {
     return;
   }
 
@@ -1674,7 +1678,7 @@ wallet_PostEdit() {
     *separator = '\0';
     if (strcmp(cookie, "OK")) {
       *separator = BREAK;
-      delete cookies;
+      delete []cookies;
       return;
     }
     cookie = separator+1;
@@ -1688,7 +1692,7 @@ wallet_PostEdit() {
     nsOutputFileStream strm(walletFile);
     if (!strm.is_open()) {
       NS_ERROR("unable to open file");
-      delete cookies;
+      delete []cookies;
       return;
     }
     wallet_RestartKey();
@@ -1707,7 +1711,7 @@ wallet_PostEdit() {
     strm.close();
     wallet_Clear(&wallet_SchemaToValue_list);
     wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
-    delete cookies;
+    delete []cookies;
   }
 }
 

@@ -183,7 +183,7 @@ XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
       XP_FREE(argv[j]);
     }
 
-    delete cookies;
+    delete[] cookies;
     NS_RELEASE(netservice);
   }
 
