@@ -2772,6 +2772,7 @@ CK_RV NSC_InitToken(CK_SLOT_ID slotID,CK_CHAR_PTR pPin,
 	    if (object) pk11_FreeObject(object);
 	} while (object != NULL);
     }
+    slot->DB_loaded = PR_FALSE;
     PK11_USE_THREADS(PZ_Unlock(slot->objectLock);)
 
     /* then clear out the key database */
