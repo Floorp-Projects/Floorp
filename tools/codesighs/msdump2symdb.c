@@ -97,9 +97,14 @@ static Switch* gSwitches[] = {
 typedef struct __struct_MSDump_Symbol
 /*
 **  Struct to hold infomration on a symbol.
+**
+**  mSize               Size of the symbol once all work is complete.
+**  mOffset             Offset of the symbol in the section.
+**  mName               Symbolic name.
 */
 {
     unsigned    mSize;
+    unsigned    mOffset;
     char*       mName;
 }
 MSDump_Symbol;
@@ -111,7 +116,7 @@ typedef struct __struct_MSDump_Section
 **
 **  mLength             Length of the section in bytes.
 **  mUsed               Number of bytes used in the section thus far.
-**                      Should eventually match mLength after read complete.
+**                      Should eventually match mLength after work is done.
 **  mType               Type of section, as string (.data, .text, et. al.)
 **  mSymbols            Symbols found inside the section.
 **  mSymbolCount        Number of symbols in array.
@@ -424,7 +429,7 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
         sectionString = skipToArg(inLine, 3);
         if(NULL != sectionString)
         {
-            if(0 != strncmp(sectionString, "DEBUG", 5) && 0 != strncmp(sectionString, "ABS", 3))
+            if(0 != strncmp(sectionString, "DEBUG", 5) && 0 != strncmp(sectionString, "ABS", 3) && 0 != strncmp(sectionString, "UNDEF", 5))
             {
                 /*
                 **  MUST start with "SECT"
@@ -479,14 +484,16 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                                     }
 
                                     /*
-                                    **  Create more space for the section in the object..
+                                    **  Create more space for the section in the object...
                                     */
                                     moved = realloc(inContainer->mReadState.mCurrentObject->mSections, sizeof(MSDump_Section) * sectionIndex1);
                                     if(NULL != moved)
                                     {
+                                        unsigned oldCount = inContainer->mReadState.mCurrentObject->mSectionCount;
+
                                         inContainer->mReadState.mCurrentObject->mSections = (MSDump_Section*)moved;
                                         inContainer->mReadState.mCurrentObject->mSectionCount = sectionIndex1;
-                                        memset(&inContainer->mReadState.mCurrentObject->mSections[sectionIndex], 0, sizeof(MSDump_Section));
+                                        memset(&inContainer->mReadState.mCurrentObject->mSections[oldCount], 0, sizeof(MSDump_Section) * (sectionIndex1 - oldCount));
                                         
                                         /*
                                         **  Other section details.
@@ -523,15 +530,14 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                         else
                         {
                             const char* offsetArg = NULL;
-                            char* endOffsetArg = NULL;
                             const char* classArg = NULL;
-                            const char* symbolArg = NULL;
-                            unsigned offset = 0;
 
                             /*
                             **  This is an section we've seen before, and must list a symbol.
                             **  Figure out the things we want to know about the symbol, e.g. size.
+                            **  We will ignore particular classes of symbols.
                             */
+
                             offsetArg = skipToArg(inLine, 2);
 
                             classArg = skipToArg(offsetArg, 4);
@@ -540,58 +546,76 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                                 classArg = skipToArg(classArg, 2);
                             }
 
-                            symbolArg = skipToArg(classArg, 3);
-
-
-                            /*
-                            ** Convert the offset to something meaninful (size).
-                            */
-                            errno = 0;
-                            offset = strtoul(offsetArg, &endOffsetArg, 16);
-                            if(0 == errno && endOffsetArg != offsetArg)
+                            if(0 != strncmp(classArg, "Label", 5))
                             {
-                                void* moved = NULL;
-
+                                char* endOffsetArg = NULL;
+                                unsigned offset = 0;
+                                
                                 /*
-                                **  Increase the size of the symbol array in the section.
-                                **  Assumed symbols are unique within each section.
+                                ** Convert the offset to something meaninful (size).
                                 */
-                                moved = realloc(inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols, sizeof(MSDump_Symbol) * (inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbolCount + 1));
-                                if(NULL != moved)
+                                errno = 0;
+                                offset = strtoul(offsetArg, &endOffsetArg, 16);
+                                if(0 == errno && endOffsetArg != offsetArg)
                                 {
-                                    unsigned symIndex = 0;
+                                    void* moved = NULL;
                                     
                                     /*
-                                    **  Record symbol details.
-                                    **  Assumed symbols are encountered in order for their section (size calc depends on it).
+                                    **  Increase the size of the symbol array in the section.
+                                    **  Assumed symbols are unique within each section.
                                     */
-                                    symIndex = inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbolCount;
-                                    inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbolCount++;
-
-                                    inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex].mSize = inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mLength - inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mUsed - offset;
-                                    inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mUsed += inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex].mSize;
-
-                                    inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex].mName = strdup(symbolArg);
-                                    if(NULL != inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex].mName)
+                                    moved = realloc(inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols, sizeof(MSDump_Symbol) * (inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbolCount + 1));
+                                    if(NULL != moved)
                                     {
-                                        trimWhite(inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex].mName);
+                                        unsigned symIndex = 0;
+                                        const char* symbolArg = NULL;
+
+
+                                        symbolArg = skipToArg(classArg, 3);
+
+                                        
+                                        /*
+                                        **  Record symbol details.
+                                        **  Assumed symbols are encountered in order for their section (size calc depends on it).
+                                        */
+                                        symIndex = inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbolCount;
+                                        inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbolCount++;
+                                        inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols = (MSDump_Symbol*)moved;
+                                        memset(&inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex], 0, sizeof(MSDump_Symbol));
+                                        
+                                        inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex].mOffset = offset;
+                                        
+                                        /*
+                                        **  We could allocate smarter here if it ever mattered.
+                                        */
+                                        inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex].mName = strdup(symbolArg);
+                                        if(NULL != inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex].mName)
+                                        {
+                                            char* trim = NULL;
+
+                                            trim = (char*)skipNonWhite(inContainer->mReadState.mCurrentObject->mSections[sectionIndex].mSymbols[symIndex].mName);
+                                            if(NULL != trim)
+                                            {
+                                                *trim = '\0';
+                                            }
+                                        }
+                                        else
+                                        {
+                                            retval = __LINE__;
+                                            ERROR_REPORT(retval, inLine, "Unable to duplicate symbol name.");
+                                        }
                                     }
                                     else
                                     {
                                         retval = __LINE__;
-                                        ERROR_REPORT(retval, inLine, "Unable to duplicate symbol name.");
+                                        ERROR_REPORT(retval, inLine, "Unable to grow symbol array for section.");
                                     }
                                 }
                                 else
                                 {
                                     retval = __LINE__;
-                                    ERROR_REPORT(retval, inLine, "Unable to grow symbol array for section.");
+                                    ERROR_REPORT(retval, inLine, "Unable to convert offset to a number.");
                                 }
-                            }
-                            else
-                            {
-                                retval = __LINE__;
-                                ERROR_REPORT(retval, inLine, "Unable to convert offset to a number.");
                             }
                         }
                     }
@@ -606,14 +630,6 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                     retval = __LINE__;
                     ERROR_REPORT(retval, inLine, "No match for section prefix.");
                 }
-            }
-            else
-            {
-                /*
-                **  DEBUG section.
-                **  Skip the next line too.
-                */
-                inContainer->mReadState.mSkipLines = 1;
             }
         }
         else
@@ -636,7 +652,7 @@ void dumpCleanup(MSDump_Container* inContainer)
     unsigned sectionLoop = 0;
     unsigned symbolLoop = 0;
 
-    for(objectLoop = 0; objectLoop < inContainer->mObjectCount; inContainer++)
+    for(objectLoop = 0; objectLoop < inContainer->mObjectCount; objectLoop++)
     {
         for(sectionLoop = 0; sectionLoop < inContainer->mObjects[objectLoop].mSectionCount; sectionLoop++)
         {
@@ -653,6 +669,121 @@ void dumpCleanup(MSDump_Container* inContainer)
     }
     CLEANUP(inContainer->mObjects);
     inContainer->mObjectCount = 0;
+}
+
+
+int qsortSymOffset(const void* in1, const void* in2)
+/*
+**  qsort callback to sort the symbols by their offset.
+*/
+{
+    MSDump_Symbol* sym1 = (MSDump_Symbol*)in1;
+    MSDump_Symbol* sym2 = (MSDump_Symbol*)in2;
+    int retval = 0;
+
+    if(sym1->mOffset < sym2->mOffset)
+    {
+        retval = 1;
+    }
+    else if(sym1->mOffset > sym2->mOffset)
+    {
+        retval = -1;
+    }
+
+    return retval;
+}
+
+
+int calcContainer(Options* inOptions, MSDump_Container* inContainer)
+/*
+**  Resposible for doing any size calculations based on the offsets known.
+**  After this calculation, each sections mUsed will match mSize.
+**  After this calculation, all symbols should know how big they are.
+*/
+{
+    int retval = 0;
+    unsigned objectLoop = 0;
+    unsigned sectionLoop = 0;
+    unsigned symbolLoop = 0;
+
+
+    /*
+    **  Need to sort all symbols by their offsets.
+    */
+    for(objectLoop = 0; 0 == retval && objectLoop < inContainer->mObjectCount; objectLoop++)
+    {
+        for(sectionLoop = 0; 0 == retval && sectionLoop < inContainer->mObjects[objectLoop].mSectionCount; sectionLoop++)
+        {
+            qsort(
+                inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols,
+                inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbolCount,
+                sizeof(MSDump_Symbol),
+                qsortSymOffset
+                );
+        }
+    }
+
+
+    /*
+    **  Need to go through all symbols and calculate their size.
+    */
+    for(objectLoop = 0; 0 == retval && objectLoop < inContainer->mObjectCount; objectLoop++)
+    {
+        for(sectionLoop = 0; 0 == retval && sectionLoop < inContainer->mObjects[objectLoop].mSectionCount; sectionLoop++)
+        {
+            for(symbolLoop = 0; 0 == retval && symbolLoop < inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbolCount; symbolLoop++)
+            {
+                inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mSize =
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mLength -
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mUsed -
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mOffset;
+
+                inContainer->mObjects[objectLoop].mSections[sectionLoop].mUsed += 
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mSize;
+            }
+        }
+    }
+
+
+    return retval;
+}
+
+
+int reportContainer(Options* inOptions, MSDump_Container* inContainer)
+/*
+**  Display all symbols and their data.
+**  We'll use a tsv format.
+*/
+{
+    int retval = 0;
+    unsigned objectLoop = 0;
+    unsigned sectionLoop = 0;
+    unsigned symbolLoop = 0;
+    int printRes = 0;
+
+    for(objectLoop = 0; 0 == retval && objectLoop < inContainer->mObjectCount; objectLoop++)
+    {
+        for(sectionLoop = 0; 0 == retval && sectionLoop < inContainer->mObjects[objectLoop].mSectionCount; sectionLoop++)
+        {
+            for(symbolLoop = 0; 0 == retval && symbolLoop < inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbolCount; symbolLoop++)
+            {
+                printRes = fprintf(inOptions->mOutput, "%s\t%.8X\t%s\t%s\n",
+                    inContainer->mObjects[objectLoop].mObject, 
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mSize,
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mType,
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mName
+                    );
+
+                if(0 > printRes)
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, inOptions->mOutputName, "Unable to write to file.");
+                }
+            }
+        }
+    }
+
+    return retval;
 }
 
 
@@ -679,6 +810,22 @@ int dump2symdb(Options* inOptions)
             continue;
         }
         retval = processLine(inOptions, &container, lineBuffer);
+    }
+
+    /*
+    **  Perform whatever calculations desired.
+    */
+    if(0 == retval)
+    {
+        retval = calcContainer(inOptions, &container);
+    }
+
+    /*
+    **  Output what we know.
+    */
+    if(0 == retval)
+    {
+        retval = reportContainer(inOptions, &container);
     }
 
     /*
