@@ -53,31 +53,25 @@
       <columns><column/><column/><column /></columns>
       <rows>
         <row valign="middle" autostretch="never">
-          <text class="label" value="&widthEditField.label;"
-              tooltip="aTooltip"    tooltiptext="&widthEditField.tooltip;" />
+          <text class="label" value="&widthEditField.label;" />
           <textfield class="narrow" id="width" flex="1" onkeyup="forceInteger('width')"/>
-          <menulist id="pixelOrPercentMenulist"
-              tooltip="aTooltip"    tooltiptext="&pixelsPercentPopup.tooltip;" />
+          <menulist id="pixelOrPercentMenulist" />
           <!-- menupopup and menuitems added by JS -->
         </row>
         <row valign="middle" autostretch="never">
           <text class="label" value="&heightEditField.label;"
               tooltip="aTooltip"    tooltiptext="&heightEditField.tooltip;" />
           <textfield class="narrow" id="height" onkeyup="forceInteger('height')"/>
-          <text class="label" value="&pixelsPopup.value;"
-              tooltip="aTooltip"    tooltiptext="&pixels.tooltip;" />
+          <text class="label" value="&pixelsPopup.value;" />
         </row>
       </rows>
     </grid>        
   </titledbox>
   <titledbox><title><text align="left" value="&alignmentBox.label;"/></title>
     <radiogroup id="alignmentGroup" orient="horizontal">
-      <radio group="alignmentGroup" id="leftAlign" value="&leftRadio.value;"
-             tooltip="aTooltip"  tooltiptext="&leftRadio.tooltip;" />
-      <radio group="alignmentGroup" id="centerAlign" value="&centerRadio.value;"
-             tooltip="aTooltip"  tooltiptext="&centerRadio.tooltip;" />
-      <radio group="alignmentGroup" id="rightAlign" value="&rightRadio.value;"
-             tooltip="aTooltip"  tooltiptext="&rightRadio.tooltip;" />
+      <radio group="alignmentGroup" id="leftAlign" value="&leftRadio.value;" />
+      <radio group="alignmentGroup" id="centerAlign" value="&centerRadio.value;" />
+      <radio group="alignmentGroup" id="rightAlign" value="&rightRadio.value;" />
     </radiogroup>
   </titledbox>
   <box>
@@ -85,8 +79,7 @@
       <columns><column/><column flex="1"/><column/></columns>
       <rows>
         <row>
-          <checkbox id="3dShading" value="&threeDShading.label;"
-               tooltip="aTooltip"  tooltiptext="&threeDShading.tooltip;" />
+          <checkbox id="3dShading" value="&threeDShading.label;" />
           <spring/>
           <button class="dialog"  id="SaveDefault" value="&saveSettings.label;" 
                oncommand="onSaveDefault()"

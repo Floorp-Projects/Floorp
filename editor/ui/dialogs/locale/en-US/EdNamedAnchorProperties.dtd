@@ -22,7 +22,7 @@
 
 <!ENTITY windowTitle.label "Named Anchor Properties">
 <!ENTITY anchorNameEditField.label "Anchor Name:">
-<!ENTITY noSpacesMsg.label "(Do not include spaces)">
-<!ENTITY nameInput.tooltip "Enter a name for this anchor (target). Click Advanced Edit to add or modify additional properties for this anchor.">
+<!ENTITY noSpacesMsg.label "(Spaces are not allowed.)">
+<!ENTITY nameInput.tooltip "Enter a unique name for this named anchor (target)">
 
 

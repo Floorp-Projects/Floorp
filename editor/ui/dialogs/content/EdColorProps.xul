@@ -61,8 +61,7 @@
       <columns><column/><column/></columns>
       <rows>
         <row>
-          <text class="label" value="&normalText.label;&colon.character;"
-              tooltip="aTooltip" tooltiptext="&normalText.tooltip;" />
+          <text class="label" value="&normalText.label;&colon.character;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="textCW" class="color-well"/>
@@ -74,8 +73,7 @@
           </menu>
         </row>
         <row>
-        <text class="label" value="&linkText.label;&colon.character;"
-              tooltip="aTooltip" tooltiptext="&linkText.tooltip;" />
+        <text class="label" value="&linkText.label;&colon.character;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="linkCW" class="color-well"/>
@@ -87,8 +85,7 @@
           </menu>
         </row>
         <row>
-          <text class="label" value="&activeLinkText.label;&colon.character;"
-              tooltip="aTooltip" tooltiptext="&activeLinkText.tooltip;" />
+          <text class="label" value="&activeLinkText.label;&colon.character;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="activeCW" class="color-well"/>
@@ -100,8 +97,7 @@
           </menu>
         </row>
         <row>
-          <text class="label" value ="&visitedLinkText.label;&colon.character;"
-              tooltip="aTooltip" tooltiptext="&visitedLinkText.tooltip;" />
+          <text class="label" value ="&visitedLinkText.label;&colon.character;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="visitedCW" class="color-well"/>
@@ -113,14 +109,13 @@
           </menu>
         </row>
         <row>
-          <text class="label" value="&background.label;"
-              tooltip="aTooltip" tooltiptext="&background.tooltip;" />
+          <text class="label" value="&background.label;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="backgroundCW" class="color-well"/>
               <image class="popup-trigger"/>
             </box>
-    	      <menupopup tooltip="aTooltip" tooltiptext="&background.tooltip;">
+    	      <menupopup>
               <colorpicker id="backgroundCP" palettename="standard" onclick="GetColorAndUpdate('backgroundCP','backgroundCW',this);"/>
     	      </menupopup>
           </menu>
@@ -142,8 +137,7 @@
     <rows>
       <row>
         <textfield id="BackgroundImageInput"/>
-        <button class="dialog" id="ChooseFile" flex="1"
-              tooltip="aTooltip" tooltiptext="&ChooseFile.tooltip;" />
+        <button class="dialog" id="ChooseFile" flex="1" />
       </row>
       <row autostretch="never" valign="middle">
         <html class="label wrap" flex="1">&saveImageMsg.label;</html>
