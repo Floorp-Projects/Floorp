@@ -328,22 +328,27 @@ class NS_COM nsFileSpec
         PRBool                  operator ==(const nsFileSpec& inOther) const;
         PRBool                  operator !=(const nsFileSpec& inOther) const;
 
-                                operator const char* () const { return GetCString(); }
-                                    // Same as GetCString (please read the comments).
-                                    // Do not try to free this!
-       const char*              GetNativePathCString() const { return GetCString(); }
-                                    // Same as GetCString (please read the comments).
-                                    // Do not try to free this!
+
+                                // Returns a native path, and allows the
+                                // path to be "passed" to legacy code.  This practice
+                                // is VERY EVIL and should only be used to support legacy
+                                // code.  Using it guarantees bugs on Macintosh.
+                                // The path is cached and freed by the nsFileSpec destructor
+                                // so do not delete (or free) it. See also nsNSPRPath below,
+                                // if you really must pass a string  to PR_OpenFile().
+                                // Doing so will introduce two automatic bugs.
        const char*              GetCString() const;
-                                    // Returns a native path, and allows the
-                                    // path to be "passed" to legacy code.  This practice
-                                    // is VERY EVIL and should only be used to support legacy
-                                    // code.  Using it guarantees bugs on Macintosh.
-                                    // The path is cached and freed by the nsFileSpec destructor
-                                    // so do not delete (or free) it. See also nsNSPRPath below,
-                                    // if you really must pass a string  to PR_OpenFile().
-                                    // Doing so will introduce two automatic bugs.
-       PRBool                     IsChildOf(nsFileSpec &possibleParent);
+
+                                // Same as GetCString (please read the comments).
+                                // Do not try to free this!
+                                operator const char* () const { return GetCString(); }
+
+                                // Same as GetCString (please read the comments).
+                                // Do not try to free this!
+       const char*              GetNativePathCString() const { return GetCString(); }
+
+
+       PRBool                   IsChildOf(nsFileSpec &possibleParent);
 
 #ifdef XP_MAC
         // For Macintosh people, this is meant to be useful in its own right as a C++ version
@@ -372,10 +377,10 @@ class NS_COM nsFileSpec
         ConstStr255Param        GetLeafPName() const { return mSpec.name; }
 
         OSErr                   GetCatInfo(CInfoPBRec& outInfo) const;
-#if DOUGT_UNTESTED        
+
         OSErr                   SetFileTypeAndCreator(OSType type, OSType creator);
         OSErr                   GetFileTypeAndCreator(OSType* type, OSType* creator);
-#endif
+
 #endif // end of Macintosh utility methods.
 
         PRBool                  Valid() const { return NS_SUCCEEDED(Error()); }
@@ -394,33 +399,46 @@ class NS_COM nsFileSpec
     //--------------------------------------------------
 
         char*                   GetLeafName() const; // Allocated.  Use nsCRT::free().
+        
+#if 0
+// needs implementing
+                                // copy the leaf name into the supplied buffer, thus
+                                // getting a copy without allocation. Buffer should be
+                                // 64 chars big.
+        void                    GetLeafNameCopy(char* destBuffer, PRInt32 bufferSize) const;
+#endif        
+                                // inLeafName can be a relative path, so this allows
+                                // one kind of concatenation of "paths".
         void                    SetLeafName(const char* inLeafName);
-                                    // inLeafName can be a relative path, so this allows
-                                    // one kind of concatenation of "paths".
         void                    SetLeafName(const nsString& inLeafName)
                                 {
                                     const nsAutoCString leafName(inLeafName);
                                     SetLeafName(leafName);
                                 }
-        void                    GetParent(nsFileSpec& outSpec) const;
-                                    // Return the filespec of the parent directory. Used
-                                    // in conjunction with GetLeafName(), this lets you
-                                    // parse a path into a list of node names.  Beware,
-                                    // however, that the top node is still not a name,
-                                    // but a spec.  Volumes on Macintosh can have identical
-                                    // names.  Perhaps could be used for an operator --() ?
 
-        typedef PRUint32        TimeStamp; // ie nsFileSpec::TimeStamp.  This is 32 bits now,
-                                           // but might change, eg, to a 64-bit class.  So use the
-                                           // typedef, and use a streaming operator to convert
-                                           // to a string, so that your code won't break.  It's
-                                           // none of your business what the number means.  Don't
-                                           // rely on the implementation.
+                                // Return the filespec of the parent directory. Used
+                                // in conjunction with GetLeafName(), this lets you
+                                // parse a path into a list of node names.  Beware,
+                                // however, that the top node is still not a name,
+                                // but a spec.  Volumes on Macintosh can have identical
+                                // names.  Perhaps could be used for an operator --() ?
+        void                    GetParent(nsFileSpec& outSpec) const;
+
+
+                                // ie nsFileSpec::TimeStamp.  This is 32 bits now,
+                                // but might change, eg, to a 64-bit class.  So use the
+                                // typedef, and use a streaming operator to convert
+                                // to a string, so that your code won't break.  It's
+                                // none of your business what the number means.  Don't
+                                // rely on the implementation.
+        typedef PRUint32        TimeStamp;
+
+                                // This will return different values on different
+                                // platforms, even for the same file (eg, on a server).
+                                // But if the platform is constant, it will increase after
+                                // every file modification.
         void                    GetModDate(TimeStamp& outStamp) const;
-                                           // This will return different values on different
-                                           // platforms, even for the same file (eg, on a server).
-                                           // But if the platform is constant, it will increase after
-                                           // every file modification.
+
         PRBool                  ModDateChanged(const TimeStamp& oldStamp) const
                                 {
                                     TimeStamp newStamp;
@@ -438,15 +456,17 @@ class NS_COM nsFileSpec
                                       relativePath(inRelativeUnixPath);
                                     return *this + relativePath;
                                 }
+
+                                // Concatenate the relative path to this directory.
+                                // Used for constructing the filespec of a descendant.
+                                // This must be a directory for this to work.  This differs
+                                // from SetLeafName(), since the latter will work
+                                // starting with a sibling of the directory and throws
+                                // away its leaf information, whereas this one assumes
+                                // this is a directory, and the relative path starts
+                                // "below" this.
         void                    operator += (const char* inRelativeUnixPath);
-                                    // Concatenate the relative path to this directory.
-                                    // Used for constructing the filespec of a descendant.
-                                    // This must be a directory for this to work.  This differs
-                                    // from SetLeafName(), since the latter will work
-                                    // starting with a sibling of the directory and throws
-                                    // away its leaf information, whereas this one assumes
-                                    // this is a directory, and the relative path starts
-                                    // "below" this.
+
         void                    operator += (const nsString& inRelativeUnixPath)
                                 {
                                     const nsAutoCString relativePath(inRelativeUnixPath);
@@ -461,22 +481,22 @@ class NS_COM nsFileSpec
                                     MakeUnique(suggestedLeafName);
                                 }
     
-        PRBool                  IsDirectory() const;
-                                    // More stringent than Exists()
-        PRBool                  IsFile() const;
-                                    // More stringent than Exists()
+                               
+        PRBool                  IsDirectory() const;          // More stringent than Exists()                               
+        PRBool                  IsFile() const;               // More stringent than Exists()
         PRBool                  Exists() const;
 
         PRBool                  IsHidden() const;
         
         PRBool                  IsSymlink() const;
+
     //--------------------------------------------------
     // Creation and deletion of objects.  These can modify the disk.
     //--------------------------------------------------
 
+                                // Called for the spec of an alias.  Modifies the spec to
+                                // point to the original.  Sets mError.
         nsresult                ResolveSymlink(PRBool& wasSymlink);
-                                    // Called for the spec of an alias.  Modifies the spec to
-                                    // point to the original.  Sets mError.
 
         void                    CreateDirectory(int mode = 0700 /* for unix */);
         void                    CreateDir(int mode = 0700) { CreateDirectory(mode); }
@@ -498,11 +518,17 @@ class NS_COM nsFileSpec
                                     const nsAutoCString argsString(args);
                                     return Execute(argsString);
                                 }
+
     //--------------------------------------------------
     // Data
     //--------------------------------------------------
 
     protected:
+    
+                                // Clear the nsFileSpec contents, resetting it
+                                // to the uninitialized state;
+       void                     Clear();
+       
                                 friend class nsFilePath;
                                 friend class nsFileURL;
                                 friend class nsDirectoryIterator;
@@ -511,6 +537,7 @@ class NS_COM nsFileSpec
 #endif
         nsSimpleCharString      mPath;
         nsresult                mError;
+
 }; // class nsFileSpec
 
 // FOR HISTORICAL REASONS:

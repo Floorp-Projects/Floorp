@@ -44,185 +44,46 @@ class FileImpl
 //========================================================================================
 {
     public:
-                                        FileImpl(PRFileDesc* inDesc)
-                                            : mFileDesc(inDesc)
-											, mNSPRMode(0)
-                                            , mFailed(PR_FALSE)
-                                            , mEOF(PR_FALSE)
-                                            , mLength(-1)
-                                        {
-                                            NS_INIT_REFCNT();
+                                        FileImpl(PRFileDesc* inDesc);
+                                        FileImpl(const nsFileSpec& inFile, int nsprMode, PRIntn accessMode);
 
-                                            nsresult rv = mOutBuffer.Init(4096, 4096);
-                                            if (NS_FAILED(rv)) mFailed = PR_TRUE;
-
-                                            mWriteCursor = nsnull;
-                                            mWriteLimit  = nsnull;
-
-                                        }
-                                        FileImpl(
-                                            const nsFileSpec& inFile,
-                                            int nsprMode,
-                                            PRIntn accessMode)
-                                            : mFileDesc(nsnull)
-											, mNSPRMode(-1)
-                                            , mFailed(PR_FALSE)
-                                            , mEOF(PR_FALSE)
-                                            , mLength(-1)
-                                        {
-                                            NS_INIT_REFCNT();
-
-                                            nsresult rv = mOutBuffer.Init(4096, 4096);
-                                            if (NS_FAILED(rv)) mFailed = PR_TRUE;
-    
-                                            mWriteCursor = nsnull;
-                                            mWriteLimit  = nsnull;
-
-                                            rv = Open(inFile, nsprMode, accessMode);
-///                                            NS_ASSERTION(NS_SUCCEEDED(rv), "Open failed");
-                                        }
-        virtual                         ~FileImpl()
-                                        {
-                                            Close();
-                                        }
-        
+        virtual                         ~FileImpl();        
         // nsISupports interface
                                         NS_DECL_ISUPPORTS
 
-		// nsIOpenFile interface
-        NS_IMETHOD                      Open(
-                                            const nsFileSpec& inFile,
-                                            int nsprMode,
-                                            PRIntn accessMode);
+        // nsIOpenFile interface
+        NS_IMETHOD                      Open(const nsFileSpec& inFile, int nsprMode, PRIntn accessMode);
         NS_IMETHOD                      Close();
         NS_IMETHOD                      Seek(PRSeekWhence whence, PRInt32 offset);
-
-        NS_IMETHOD                      GetIsOpen(PRBool* outOpen)
-                                        {
-                                            *outOpen = (mFileDesc != nsnull);
-                                            return NS_OK;
-                                        }
+        NS_IMETHOD                      GetIsOpen(PRBool* outOpen);
         NS_IMETHOD                      Tell(PRIntn* outWhere);
 
-		// nsIInputStream interface
-        NS_IMETHOD                      Available(PRUint32 *aLength)
-                                        {
-                                            NS_PRECONDITION(aLength != nsnull, "null ptr");
-                                            if (!aLength)
-                                                return NS_ERROR_NULL_POINTER;
-                                            if (mLength < 0)
-                                                return NS_ERROR_UNEXPECTED;
-                                            *aLength = mLength;
-                                            return NS_OK;
-                                        }
-		NS_IMETHOD                      Read(char* aBuf,
-			                                PRUint32 aCount,
-					                        PRUint32 *aReadCount)
-								        {
-								            NS_PRECONDITION(aBuf != nsnull, "null ptr");
-								            if (!aBuf)
-								                return NS_ERROR_NULL_POINTER;
-								            NS_PRECONDITION(aReadCount != nsnull, "null ptr");
-								            if (!aReadCount)
-								                return NS_ERROR_NULL_POINTER;
-								            if (!mFileDesc)
-								                return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
-								            if (mFailed)
-								                return NS_ERROR_FAILURE;
-								            PRInt32 bytesRead = PR_Read(mFileDesc, aBuf, aCount);
-								            if (bytesRead < 0)
-								            {
-								                *aReadCount = 0;
-								                mFailed = PR_TRUE;
-								                return NS_FILE_RESULT(PR_GetError());
-								            }
-                                            else if (bytesRead == 0) {
-                                                mEOF = PR_TRUE;
-                                            }
-								            *aReadCount = bytesRead;
-								            return NS_OK;
-								        }
-		// nsIOutputStream interface
-		NS_IMETHOD                      Write(const char* aBuf,
-			                                PRUint32 aCount,
-					                        PRUint32 *aWriteCount)
-								        {
-								            NS_PRECONDITION(aBuf != nsnull, "null ptr");
-								            NS_PRECONDITION(aWriteCount != nsnull, "null ptr");
-                                            
-                                            *aWriteCount = 0;
+        // nsIInputStream interface
+        NS_IMETHOD                      Available(PRUint32 *aLength);
+        NS_IMETHOD                      Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount);
 
-								#ifdef XP_MAC
-								            // Calling PR_Write on stdout is sure suicide.
-								            if (mFileDesc == PR_STDOUT || mFileDesc == PR_STDERR)
-								            {
-								                cout.write(aBuf, aCount);
-								                *aWriteCount = aCount;
-								                return NS_OK;
-								            }
-								#endif
-								            if (!mFileDesc)
-								                return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
-								            if (mFailed)
-								               return NS_ERROR_FAILURE;
-
-                                            PRUint32 bufOffset = 0;
-                                            PRUint32 currentWrite = 0;
-                                            while (aCount > 0) 
-                                            {
-                                                if (mWriteCursor == nsnull || mWriteCursor == mWriteLimit)
-                                                {
-                                                    char* seg = mOutBuffer.AppendNewSegment();
-                                                    if (seg == nsnull) 
-                                                    {
-                                                        // buffer is full, try again
-                                                        Flush();
-                                                        seg = mOutBuffer.AppendNewSegment();
-                                                        if (seg == nsnull)
-                                                            return NS_ERROR_OUT_OF_MEMORY;
-                                                    }
-                                                    mWriteCursor = seg;
-                                                    mWriteLimit  = seg + mOutBuffer.GetSegmentSize();
-                                                }
-                                                
-                                                // move
-                                                
-                                                currentWrite = mWriteLimit - mWriteCursor;
-                                                
-                                                if (aCount < currentWrite)
-                                                    currentWrite = aCount;
-
-                                                memcpy(mWriteCursor, (aBuf + bufOffset), currentWrite);
-                                                
-                                                mWriteCursor += currentWrite;  
-                                                
-                                                aCount    -= currentWrite;
-                                                bufOffset += currentWrite;
-                                                *aWriteCount += currentWrite;
-                                            }	
-								            return NS_OK;
-								        }
+        // nsIOutputStream interface
+        NS_IMETHOD                      Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
         NS_IMETHOD                      Flush();
-
-        NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF)
-        						        {
-        						            *outAtEOF = mEOF;
-        						            return NS_OK;
-        						        }
-        NS_IMETHOD                      SetAtEOF(PRBool inAtEOF)
-        						        {
-        						            mEOF = inAtEOF;
-        						            return NS_OK;
-        						        }
+        NS_IMETHOD                      GetAtEOF(PRBool* outAtEOF);
+        NS_IMETHOD                      SetAtEOF(PRBool inAtEOF);
 
     protected:
     
+        enum {
+            kOuputBufferSegmentSize    = 4096,
+            kOuputBufferMaxSize        = 4096
+        };
+        
+        nsresult                        AllocateBuffers(PRUint32 segmentSize, PRUint32 maxSize);
+
         PRFileDesc*                     mFileDesc;
         int                             mNSPRMode;
         PRBool                          mFailed;
         PRBool                          mEOF;
         PRInt32                         mLength;
 
+        PRBool                          mGotBuffers;
         nsSegmentedBuffer               mOutBuffer;
         char*                           mWriteCursor;
         char*                           mWriteLimit;
@@ -243,6 +104,60 @@ NS_IMPL_QUERY_HEAD(FileImpl)
     foundInterface = NS_STATIC_CAST(nsIBaseStream*, NS_STATIC_CAST(nsIOutputStream*, this));
   else
 NS_IMPL_QUERY_TAIL(nsIOutputStream)
+
+
+//----------------------------------------------------------------------------------------
+FileImpl::FileImpl(PRFileDesc* inDesc)
+//----------------------------------------------------------------------------------------
+: mFileDesc(inDesc)
+, mNSPRMode(0)
+, mFailed(PR_FALSE)
+, mEOF(PR_FALSE)
+, mLength(-1)
+, mGotBuffers(PR_FALSE)
+{
+    NS_INIT_REFCNT();
+    
+    mWriteCursor = nsnull;
+    mWriteLimit  = nsnull;
+}
+
+
+//----------------------------------------------------------------------------------------
+FileImpl::FileImpl(const nsFileSpec& inFile, int nsprMode, PRIntn accessMode)
+//----------------------------------------------------------------------------------------
+: mFileDesc(nsnull)
+, mNSPRMode(-1)
+, mFailed(PR_FALSE)
+, mEOF(PR_FALSE)
+, mLength(-1)
+, mGotBuffers(PR_FALSE)
+{
+    NS_INIT_REFCNT();
+
+    mWriteCursor = nsnull;
+    mWriteLimit  = nsnull;
+
+    nsresult rv = Open(inFile, nsprMode, accessMode);		// this sets nsprMode
+    
+    if (NS_FAILED(rv))
+    {
+#if DEBUG
+        char *fileName = inFile.GetLeafName();
+        printf("Opening file %s failed\n", fileName);
+        nsCRT::free(fileName);
+#endif
+    }
+    
+}
+
+//----------------------------------------------------------------------------------------
+FileImpl::~FileImpl()
+//----------------------------------------------------------------------------------------
+{
+    nsresult  rv = Close();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Close failed");
+}
 
 
 //----------------------------------------------------------------------------------------
@@ -286,8 +201,8 @@ NS_IMETHODIMP FileImpl::Open(
     mFileDesc = 0;
     OSErr err = inFile.Error();
     if (err != noErr)
-    	if (err != fnfErr || !(nsprMode & PR_CREATE_FILE))
-        	return NS_FILE_RESULT(inFile.Error());
+      if (err != fnfErr || !(nsprMode & PR_CREATE_FILE))
+          return NS_FILE_RESULT(inFile.Error());
     err = noErr;
 #if DEBUG
     const OSType kCreator = 'CWIE';
@@ -338,6 +253,28 @@ NS_IMETHODIMP FileImpl::Open(
      return NS_OK;
 } // FileImpl::Open
 
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP FileImpl::Available(PRUint32 *aLength)
+//----------------------------------------------------------------------------------------
+{
+    NS_PRECONDITION(aLength != nsnull, "null ptr");
+    if (!aLength)
+        return NS_ERROR_NULL_POINTER;
+    if (mLength < 0)
+        return NS_ERROR_UNEXPECTED;
+    *aLength = mLength;
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP FileImpl::GetIsOpen(PRBool* outOpen)
+//----------------------------------------------------------------------------------------
+{
+    *outOpen = (mFileDesc != nsnull);
+    return NS_OK;
+}
+
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP FileImpl::Seek(PRSeekWhence whence, PRInt32 offset)
 //----------------------------------------------------------------------------------------
@@ -371,6 +308,105 @@ NS_IMETHODIMP FileImpl::Seek(PRSeekWhence whence, PRInt32 offset)
     return NS_OK;
 } // FileImpl::Seek
 
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP FileImpl::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
+//----------------------------------------------------------------------------------------
+{
+    NS_PRECONDITION(aBuf != nsnull, "null ptr");
+    if (!aBuf)
+        return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(aReadCount != nsnull, "null ptr");
+    if (!aReadCount)
+        return NS_ERROR_NULL_POINTER;
+    if (!mFileDesc)
+        return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
+    if (mFailed)
+        return NS_ERROR_FAILURE;
+    PRInt32 bytesRead = PR_Read(mFileDesc, aBuf, aCount);
+    if (bytesRead < 0)
+    {
+        *aReadCount = 0;
+        mFailed = PR_TRUE;
+        return NS_FILE_RESULT(PR_GetError());
+    }
+    else if (bytesRead == 0)
+    {
+        mEOF = PR_TRUE;
+    }
+    *aReadCount = bytesRead;
+    return NS_OK;
+}
+
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP FileImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
+//----------------------------------------------------------------------------------------
+{
+    NS_PRECONDITION(aBuf != nsnull, "null ptr");
+    NS_PRECONDITION(aWriteCount != nsnull, "null ptr");
+                    
+    *aWriteCount = 0;
+
+#ifdef XP_MAC
+    // Calling PR_Write on stdout is sure suicide.
+    if (mFileDesc == PR_STDOUT || mFileDesc == PR_STDERR)
+    {
+        cout.write(aBuf, aCount);
+        *aWriteCount = aCount;
+        return NS_OK;
+    }
+#endif
+    if (!mFileDesc)
+        return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
+    if (mFailed)
+       return NS_ERROR_FAILURE;
+
+    if (!mGotBuffers)
+    {
+        nsresult rv = AllocateBuffers(kOuputBufferSegmentSize, kOuputBufferMaxSize);
+        if (NS_FAILED(rv))
+          return rv;        // try to write non-buffered?
+    }
+    
+    PRUint32 bufOffset = 0;
+    PRUint32 currentWrite = 0;
+    while (aCount > 0) 
+    {
+        if (mWriteCursor == nsnull || mWriteCursor == mWriteLimit)
+        {
+            char* seg = mOutBuffer.AppendNewSegment();
+            if (seg == nsnull) 
+            {
+                // buffer is full, try again
+                Flush();
+                seg = mOutBuffer.AppendNewSegment();
+                if (seg == nsnull)
+                    return NS_ERROR_OUT_OF_MEMORY;
+            }
+            mWriteCursor = seg;
+            mWriteLimit  = seg + mOutBuffer.GetSegmentSize();
+        }
+        
+        // move
+        currentWrite = mWriteLimit - mWriteCursor;
+        
+        if (aCount < currentWrite)
+            currentWrite = aCount;
+
+        memcpy(mWriteCursor, (aBuf + bufOffset), currentWrite);
+        
+        mWriteCursor += currentWrite;  
+        
+        aCount    -= currentWrite;
+        bufOffset += currentWrite;
+        *aWriteCount += currentWrite;
+    }
+    
+    return NS_OK;
+}
+
+
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP FileImpl::Tell(PRIntn* outWhere)
 //----------------------------------------------------------------------------------------
@@ -385,7 +421,8 @@ NS_IMETHODIMP FileImpl::Tell(PRIntn* outWhere)
 NS_IMETHODIMP FileImpl::Close()
 //----------------------------------------------------------------------------------------
 {
-    Flush();
+    if ((mNSPRMode & PR_RDONLY) == 0)
+        Flush();
 
     if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || !mFileDesc) 
        return NS_OK;
@@ -423,10 +460,10 @@ NS_IMETHODIMP FileImpl::Flush()
 
         PRInt32 bytesWrit = PR_Write(mFileDesc, seg, segSize);
         if (bytesWrit != (PRInt32)segSize)
-		{
-			mFailed = PR_TRUE;
-			return NS_FILE_RESULT(PR_GetError());
-		}
+        {
+          mFailed = PR_TRUE;
+          return NS_FILE_RESULT(PR_GetError());
+        }
     }
 
     mOutBuffer.Empty();
@@ -441,6 +478,36 @@ NS_IMETHODIMP FileImpl::Flush()
                                                 
     return NS_OK;
 } // FileImpl::flush
+
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP FileImpl::GetAtEOF(PRBool* outAtEOF)
+//----------------------------------------------------------------------------------------
+{
+  *outAtEOF = mEOF;
+  return NS_OK;
+}
+
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP FileImpl::SetAtEOF(PRBool inAtEOF)
+//----------------------------------------------------------------------------------------
+{
+    mEOF = inAtEOF;
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+nsresult FileImpl::AllocateBuffers(PRUint32 segmentSize, PRUint32 maxBufSize)
+//----------------------------------------------------------------------------------------
+{
+    nsresult rv = mOutBuffer.Init(segmentSize, maxBufSize);
+    if (NS_SUCCEEDED(rv))
+      mGotBuffers = PR_TRUE;
+
+    return rv;
+}
+
 
 //----------------------------------------------------------------------------------------
 NS_COM nsresult NS_NewTypicalInputFileStream(
