@@ -171,6 +171,8 @@ nsFrameIterator::CurrentItem(nsISupports **aItem)
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
   *aItem = mCurrent;
+  if (mOffEdge)
+    return NS_COMFALSE;
   return NS_OK;
 }
 
@@ -254,7 +256,7 @@ nsLeafIterator::Next()
   setCurrent(result);
   if (!result)
     setOffEdge(1);
-  return nsnull;
+  return NS_OK;
 }
 
 
@@ -267,10 +269,39 @@ nsLeafIterator::Prev()
   nsIFrame *result;
   nsIFrame *parent = getCurrent();
   if (!parent)
-    return NS_ERROR_FAILURE;
-
-  parent = getLast();
+    parent = getLast();
   while(parent){
+    nsIFrame *grandParent;
+    if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent &&
+      NS_SUCCEEDED(grandParent->FirstChild(nsnull,&result))){
+      nsFrameList list(result);
+      if (result = list.GetPrevSiblingFor(parent)){
+        parent = result;
+        while(NS_SUCCEEDED(parent->FirstChild(nsnull,&result)) && result){
+          parent = result;
+          while(NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
+            parent = result;
+          }
+        }
+        result = parent;
+        break;
+      }
+      else if (NS_FAILED(parent->GetParent(&result)) || !result){
+          result = nsnull;
+          break;
+      }
+      else 
+        parent = result;
+    }
+    else{
+      setLast(parent);
+      result = nsnull;
+      break;
+    }
+  }
+
+
+/*  while(parent){
     nsIFrame *grandParent;
     if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent){
       nsIFrame * grandFchild;
@@ -297,8 +328,9 @@ nsLeafIterator::Prev()
       }
     }
   }
+  */
   setCurrent(result);
   if (!result)
     setOffEdge(-1);
-  return nsnull;
+  return NS_OK;
 }

@@ -1601,7 +1601,7 @@ nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 a
   nsresult result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
   if (NS_FAILED(result))
     return result;
-  nsISupports *isupports;
+  nsISupports *isupports = nsnull;
   if (aDirection == eDirNext)
     result = frameTraversal->Next();
   else 

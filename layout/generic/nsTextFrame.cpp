@@ -160,12 +160,13 @@ public:
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
 
-  // TextFrame methods
+/*  // TextFrame methods
   struct SelectionInfo {
     PRInt32 mStartOffset;
     PRInt32 mEndOffset;
     PRBool mEmptySelection;
   };
+  */
 
 /*  void ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
                             nsIDocument* aDocument,
@@ -1823,7 +1824,6 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
       PRInt32 i;
       for (i = aStartOffset -1; i >=0;  i--){
         if (ip[i] < ip[aStartOffset]){
-          *aResultFrame = this;
           *aFrameOffset = i;
           break;
         }
@@ -1838,7 +1838,6 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
       PRInt32 i;
       for (i = aStartOffset +1; i <= mContentLength;  i++){
         if (ip[i] > ip[aStartOffset]){
-          *aResultFrame = this;
           *aFrameOffset = i;
           break;
         }
@@ -1853,32 +1852,53 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
     }
     if (!found){
       if (frameUsed){
-        return frameUsed->PeekOffset(eSelectCharacter, aDirection,  start, aResultFrame, 
+        result = frameUsed->PeekOffset(eSelectCharacter, aDirection,  start, aResultFrame, 
               aFrameOffset, aContentOffset, aEatingWS);
       }
       else {//reached end ask the frame for help
-        return nsFrame::PeekOffset(eSelectCharacter, aDirection, start, aResultFrame,
+        result = nsFrame::PeekOffset(eSelectCharacter, aDirection, start, aResultFrame,
                   aFrameOffset, aContentOffset, aEatingWS);
       }
     }
-    *aContentOffset = mContentOffset;
+    else{
+      *aResultFrame = this;
+      *aContentOffset = mContentOffset;
+    }
                           }
   break;
   case eSelectWord : {
     nsIFrame *frameUsed = nsnull;
+    PRBool keepSearching; //if you run out of chars before you hit the end of word, maybe next frame has more text to select?
     PRInt32 start;
     PRBool found = PR_FALSE;
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
     if (aDirection == eDirPrevious){
+      keepSearching = PR_TRUE;
       tx.Init(this, mContentOffset + aStartOffset);
       if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace)){
-        *aFrameOffset = aStartOffset - contentLen;
-        //check for whitespace next.
-        while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace))
-          *aFrameOffset -= contentLen;
-        if (!isWhitespace)
+        if ((aEatingWS && !isWhitespace) || !aEatingWS){
+          *aFrameOffset = aStartOffset - contentLen;
+          //check for whitespace next.
+          if (*aFrameOffset > 0)
+            keepSearching = PR_FALSE;//reached the beginning of a word
+          aEatingWS = !isWhitespace;//nowhite space, just eat chars.
+          while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace)){
+            *aFrameOffset -= contentLen;
+            aEatingWS = PR_FALSE;
+          }
+          keepSearching = *aFrameOffset <= 0;
+          if (!isWhitespace){
+            if (!keepSearching)
+              found = PR_TRUE;
+            else
+              aEatingWS = PR_TRUE;
+          }
+        }
+        else {
+          *aFrameOffset = mContentLength;
           found = PR_TRUE;
+        }
       }
       frameUsed = GetPrevInFlow();
       start = -1; //start at end
@@ -1889,8 +1909,12 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
         if ((aEatingWS && isWhitespace) || !aEatingWS){
           *aFrameOffset = aStartOffset + contentLen;
           //check for whitespace next.
-          while (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace) && isWhitespace)
+          keepSearching = PR_TRUE;
+          isWhitespace = PR_TRUE;
+          while (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace) && isWhitespace){
             *aFrameOffset += contentLen;
+            keepSearching = PR_FALSE;
+          }
         }
         else if (aEatingWS)
           *aFrameOffset = mContentOffset;
@@ -1899,7 +1923,7 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
           found = PR_TRUE;
           aEatingWS = PR_FALSE;
         }
-        else 
+        else if (!keepSearching) //we have found the "whole" word so just looking for WS
           aEatingWS = PR_TRUE;
       }
       frameUsed = GetNextInFlow();
@@ -1907,16 +1931,18 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
     }
     if (!found || (*aFrameOffset > mContentLength) || (*aFrameOffset < 0)){ //gone too far
       if (frameUsed){
-        return frameUsed->PeekOffset(aAmount, aDirection,  start, aResultFrame, 
+        result = frameUsed->PeekOffset(aAmount, aDirection,  start, aResultFrame, 
               aFrameOffset, aContentOffset, aEatingWS);
       }
       else {//reached end ask the frame for help
-        return nsFrame::PeekOffset(aAmount, aDirection, start, aResultFrame,
+        result = nsFrame::PeekOffset(aAmount, aDirection, start, aResultFrame,
                   aFrameOffset, aContentOffset, aEatingWS);
       }
     }
-    *aContentOffset = mContentOffset;
-    *aResultFrame   = this;
+    else {
+      *aContentOffset = mContentOffset;
+      *aResultFrame   = this;
+    }
                      }
     break;
   case eSelectLine : 
@@ -1928,6 +1954,17 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
   }
   if (ip != indicies) {
     delete [] ip;
+  }
+  if (NS_FAILED(result)){
+    *aResultFrame = this;
+    *aContentOffset = mContentOffset;
+    if (aDirection = eDirNext){
+      *aFrameOffset = mContentLength;
+    }
+    else if (aDirection = eDirPrevious){
+      *aFrameOffset = 0;
+    }
+    result = NS_OK;
   }
   return result;
 }
