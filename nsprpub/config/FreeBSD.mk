@@ -42,7 +42,13 @@ endif
 
 ARCH			= freebsd
 
+MOZ_OBJFORMAT          := $(shell test -x /usr/bin/objformat && /usr/bin/objformat || echo aout)
+
+ifeq ($(MOZ_OBJFORMAT),elf)
+DLL_SUFFIX		= so
+else
 DLL_SUFFIX		= so.1.0
+endif
 
 DSO_CFLAGS		= -fPIC
 DSO_LDOPTS		= -Bshareable
