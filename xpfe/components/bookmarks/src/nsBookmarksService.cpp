@@ -4432,7 +4432,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 					const char	*url = nsnull;
 					if (NS_SUCCEEDED(rv = child->GetValueConst(&url)) && (url))
 					{
-						nsAutoString	uri; uri.AssignWithConversion(url);
+						nsCAutoString	uri(url);
 
 						PRBool		isBookmarkSeparator = PR_FALSE;
 						if (NS_SUCCEEDED(mInner->HasAssertion(child, kRDF_type,
@@ -4450,19 +4450,13 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 							// Now do properly replace %22's; this is particularly important for javascript: URLs
 							static const char kEscape22[] = "%22";
 							PRInt32 offset;
-							while ((offset = uri.FindChar(PRUnichar('\"'))) >= 0)
+							while ((offset = uri.FindChar('\"')) >= 0)
 							{
 								uri.Cut(offset, 1);
-								uri.InsertWithConversion(kEscape22, offset);
-							}
-							char	*escapedID = uri.ToNewUTF8String();
-							if (escapedID)
-							{
-								strm << (const char *) escapedID;
-								nsCRT::free(escapedID);
-								escapedID = nsnull;
+								uri.Insert(kEscape22, offset);
 							}
 
+							strm << uri.get();
 							strm << "\"";
 								
 							// output ADD_DATE
