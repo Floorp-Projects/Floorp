@@ -37,15 +37,15 @@
 
     <skin> 
       <RDF:Description ID="chrome://messenger/skin/">
-	    <base>resource:/res/mailnews/messenger/</base>
+	    <base>resource:/chrome/messenger/skin/default/</base>
         <main>messenger.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
       <RDF:Description ID="chrome://messenger/content/">
-	    <base>resource:/res/mailnews/messenger/</base>
-        <main>mailshell.xul</main> 
+	    <base>resource:/chrome/messenger/content/default/</base>
+        <main>messenger.xul</main> 
       </RDF:Description> 
     </content> 
 
@@ -55,15 +55,15 @@
 
     <skin> 
       <RDF:Description ID="chrome://messengercompose/skin/">
-	    <base>resource:/res/mailnews/compose/</base>
+	    <base>resource:/chrome/messengercompose/skin/default/</base>
         <main>messengercompose.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
       <RDF:Description ID="chrome://messengercompose/content/">
-	    <base>resource:/res/mailnews/compose/</base>
-        <main>msgcompose.xul</main> 
+	    <base>resource:/chrome/messengercompose/content/default/</base>
+        <main>messengercompose.xul</main> 
       </RDF:Description> 
     </content> 
 
@@ -106,15 +106,15 @@
 
     <skin> 
       <RDF:Description ID="chrome://addressbook/skin/">
-	    <base>resource:/res/mailnews/addrbook/</base>
-        <main>addrshell.css</main> 
+	    <base>resource:/chrome/addressbook/skin/default/</base>
+        <main>addressbook.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
       <RDF:Description ID="chrome://addressbook/content/">
-	    <base>resource:/res/mailnews/addrbook/</base>
-        <main>addrshell.xul</main> 
+	    <base>resource:/chrome/addressbook/content/default/</base>
+        <main>addressbook.xul</main> 
       </RDF:Description> 
     </content> 
 
