@@ -22,7 +22,9 @@ import java.io.StringReader;
 import java.io.IOException;
 
 /**
- * This class implements the global native object (function and value properties only).
+ * This class implements the global native object (function and value 
+ * properties only).
+ * 
  * See ECMA 15.1.[12].
  *
  * @author Mike Shaver
@@ -399,4 +401,3 @@ public class NativeGlobal {
         
     }
 }
-
