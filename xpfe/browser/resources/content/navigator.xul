@@ -208,6 +208,103 @@ Contributor(s): ______________________________________. -->
   
 <!-- broadcasters are appended from the overlay -->
 <broadcasterset id="broadcasterset"/>
+
+<toolbox id="main-toolbox">
+		<!-- Menu -->
+  	<menubar id="main-menubar"/>
+
+  <toolbar class="main-bar" chromeclass="toolbar" persist="collapsed">
+    <titledbutton id="back-button" align="top" value="&backButton.label;" observes="canGoBack" />  
+
+    <titledbutton id="forward-button" align="top" value="&forwardButton.label;" observes="canGoForward" />
+    
+
+    <!-- Right now only regular reload is supported.  When the
+    functionality is available, look for 'Shift' key pressed state
+    and pass on appropriate reload type. (The shift functionality
+    is available.  There's a shiftDown field in the event object.)
+    -->
+    <titledbutton id="reload-button" align="top"
+      value="&reloadButton.label;" observes="canReload"/>
+   
+
+    <titledbutton id="stop-button" align="top"
+      value="&stopButton.label;" onclick="BrowserStop()">
+      <observes element="canStop" attribute="disabled"
+        onbroadcast="BrowserCanStop()"/>
+    </titledbutton>
+
+    <box align="vertical" flex="100%">
+      <spring flex="100%"/>
+      <html:input id="urlbar" type="text" chromeclass="location"
+        onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
+      <spring flex="100%"/>
+    </box>
+
+    <titledbutton id="search-button" align="top"
+      value="&searchButton.label;" onclick="OpenSearch('internet', document.getElementById('urlbar').value);" />
+
+    <titledbutton id="print-button" align="top" 
+      value="&printButton.label;" onclick="BrowserPrint()">
+      <observes element="canPrint" attribute="disabled"/>
+    </titledbutton>
+
+    <titledbutton id="Throbber" 
+      onclick="window.content.location.href='&throbber.url;'">
+      <observes element="Browser:Throbber" attribute="busy"/>
+    </titledbutton>
+  </toolbar>
+  <toolbar class="main-bar" chromeclass="toolbar" persist="collapsed"
+    datasources="rdf:bookmarks" id="PersonalToolbar"
+    ref="NC:PersonalToolbarFolder" 
+    ondraggesture="return BeginDragPersonalToolbar(event);"
+    ondragdrop="return DropPersonalToolbar(event);"
+    ondragover="return DragOverPersonalToolbar(event);"
+    onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')">
+
+    <!-- This template builds content from the bookmarks datasource -->
+    <template>
+      <!-- Rules for content hanging _directly_ off the toolbar -->
+      <rule parent="toolbar" iscontainer="true">
+        <menu uri="...">
+          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
+            align="left" />
+          <menupopup />
+        </menu>
+      </rule>
+      <rule parent="toolbar">
+        <titledbutton uri="..." align="left" 
+          value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+      </rule>
+
+      <!-- Recursive rules for nested folders -->
+      <rule iscontainer="true">
+        <menupopup>
+          <menu uri="..." align="left"
+            value="rdf:http://home.netscape.com/NC-rdf#Name" >
+            <menupopup />
+          </menu>
+        </menupopup>
+      </rule>
+      <rule>
+        <menupopup>
+          <menuitem align="left" uri="..." 
+            value="rdf:http://home.netscape.com/NC-rdf#Name" />
+        </menupopup>
+      </rule>
+    </template>
+
+    <titledbutton id="home-button" align="left"
+      value="&homeButton.label;" 
+      defaultURL="&defaultHomepage.url;"
+      onclick="BrowserHome(); event.preventBubble();"/>
+    <titledbutton id="netscape-button" align="left"
+      value="&netscapeButton.label;" 
+      onclick="window.content.location.href='&myNetscape.url;'; event.preventBubble();"/>
+    <spring flex="100%"/>
+  </toolbar>
+</toolbox>
+
 	
 <!-- sidebar/toolbar/content/status -->
 <box id="sidebarparent" align="horizontal" flex="100%">
@@ -218,102 +315,7 @@ Contributor(s): ______________________________________. -->
     onclick="sidebarSaveState(this)"/>
   
   <box id="appcontent" align="vertical" flex="100%">
-    <toolbox id="main-toolbox">
-		<!-- Menu -->
-      	<menubar id="main-menubar"/>
 
-      <toolbar class="main-bar" chromeclass="toolbar" persist="collapsed">
-        <titledbutton id="back-button" align="top" value="&backButton.label;" observes="canGoBack" />          
-        
-        <titledbutton id="forward-button" align="top" value="&forwardButton.label;" observes="canGoForward" />
-        
-
-        <!-- Right now only regular reload is supported.  When the
-        functionality is available, look for 'Shift' key pressed state
-        and pass on appropriate reload type. (The shift functionality
-        is available.  There's a shiftDown field in the event object.)
-        -->
-        <titledbutton id="reload-button" align="top"
-          value="&reloadButton.label;" observes="canReload"/>
-       
-
-        <titledbutton id="stop-button" align="top"
-          value="&stopButton.label;" onclick="BrowserStop()">
-          <observes element="canStop" attribute="disabled"
-            onbroadcast="BrowserCanStop()"/>
-        </titledbutton>
-    
-        <box align="vertical" flex="100%">
-          <spring flex="100%"/>
-          <html:input id="urlbar" type="text" chromeclass="location"
-            onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
-          <spring flex="100%"/>
-        </box>
-
-        <titledbutton id="search-button" align="top"
-          value="&searchButton.label;" onclick="OpenSearch('internet', document.getElementById('urlbar').value);" />
-
-        <titledbutton id="print-button" align="top" 
-          value="&printButton.label;" onclick="BrowserPrint()">
-          <observes element="canPrint" attribute="disabled"/>
-        </titledbutton>
-
-        <titledbutton id="Throbber" 
-          onclick="window.content.location.href='&throbber.url;'">
-          <observes element="Browser:Throbber" attribute="busy"/>
-        </titledbutton>
-      </toolbar>
-      <toolbar class="main-bar" chromeclass="toolbar" persist="collapsed"
-        datasources="rdf:bookmarks" id="PersonalToolbar"
-        ref="NC:PersonalToolbarFolder" 
-        ondraggesture="return BeginDragPersonalToolbar(event);"
-        ondragdrop="return DropPersonalToolbar(event);"
-        ondragover="return DragOverPersonalToolbar(event);"
-        onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')">
-
-        <!-- This template builds content from the bookmarks datasource -->
-        <template>
-          <!-- Rules for content hanging _directly_ off the toolbar -->
-          <rule parent="toolbar" iscontainer="true">
-            <menu uri="...">
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
-                align="left" />
-              <menupopup />
-            </menu>
-          </rule>
-          <rule parent="toolbar">
-            <titledbutton uri="..." align="left" 
-              value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </rule>
-
-          <!-- Recursive rules for nested folders -->
-          <rule iscontainer="true">
-            <menupopup>
-              <menu uri="..." align="left"
-                value="rdf:http://home.netscape.com/NC-rdf#Name" >
-                <menupopup />
-              </menu>
-            </menupopup>
-          </rule>
-          <rule>
-            <menupopup>
-              <menuitem align="left" uri="..." 
-                value="rdf:http://home.netscape.com/NC-rdf#Name" />
-            </menupopup>
-          </rule>
-        </template>
-
-        <titledbutton id="home-button" align="left"
-          value="&homeButton.label;" 
-          defaultURL="&defaultHomepage.url;"
-          onclick="BrowserHome(); event.preventBubble();"/>
-        <titledbutton id="netscape-button" align="left"
-          value="&netscapeButton.label;" 
-          onclick="window.content.location.href='&myNetscape.url;'; event.preventBubble();"/>
-        <spring flex="100%"/>
-      </toolbar>
-    </toolbox>
- 
     <!-- type attribute is used by frame construction to locate iframes
          intended to hold (html) content -->
     <!-- id's use is a mystery -->
