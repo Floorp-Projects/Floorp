@@ -261,6 +261,28 @@
     </orderedlist>
   </section>
 
+  <section id="lifecycle">
+    <title>Life Cycle of a Bug</title>
+
+    <para>
+      The life cycle, also known as work flow, of a bug is currently hardcoded
+      into Bugzilla. <xref linkend="lifecycle-image"/> contains a graphical
+      repsentation of this life cycle. If you wish to customize this image for
+      your site, the <ulink url="../images/bzLifecycle.xml">diagram file</ulink>
+      is available in <ulink url="http://www.gnome.org/projects/dia">Dia's</ulink>
+      native XML format.
+    </para>
+
+    <figure id="lifecycle-image">
+      <title>Lifecycle of a Bugzilla Bug</title>
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="../images/bzLifecycle.png" scale="66" />
+        </imageobject>
+      </mediaobject>
+    </figure>
+  </section>
+
   <section id="query">
     <title>Searching for Bugs</title>
 
