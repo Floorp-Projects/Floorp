@@ -29,8 +29,9 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"
+#include "nsCWebBrowser.h"
+#include "nsWidgetsCID.h"
 
-#include "WebBrowser.h"
 #include "WebBrowserChrome.h"
 
 nsVoidArray WebBrowserChrome::sBrowserList;
@@ -38,12 +39,11 @@ nsVoidArray WebBrowserChrome::sBrowserList;
 WebBrowserChrome::WebBrowserChrome()
 {
 	NS_INIT_REFCNT();
-	sBrowserList.AppendElement(this);
+    mNativeWindow = nsnull;
 }
 
 WebBrowserChrome::~WebBrowserChrome()
 {
-  sBrowserList.RemoveElement(this);
 }
 
 //*****************************************************************************
@@ -58,7 +58,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-//   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)  //optional
 //   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
 
@@ -93,9 +93,8 @@ NS_IMETHODIMP WebBrowserChrome::SetOverLink(const PRUnichar* aLink)
 NS_IMETHODIMP WebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
    NS_ENSURE_ARG_POINTER(aWebBrowser);
-   NS_ENSURE_TRUE(mBrowser, NS_ERROR_NOT_INITIALIZED);
-
-   *aWebBrowser = mBrowser;
+   NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_NOT_INITIALIZED);
+   *aWebBrowser = mWebBrowser;
    NS_IF_ADDREF(*aWebBrowser);
 
    return NS_OK;
@@ -104,9 +103,9 @@ NS_IMETHODIMP WebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 NS_IMETHODIMP WebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 {
    NS_ENSURE_ARG(aWebBrowser);   // Passing nsnull is NOT OK
-   NS_ENSURE_TRUE(mBrowser, NS_ERROR_NOT_INITIALIZED);
-
-   mBrowser = aWebBrowser;
+   NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_NOT_INITIALIZED);
+   NS_ERROR("Who be calling me");
+   mWebBrowser = aWebBrowser;
    return NS_OK;
 }
 
@@ -123,18 +122,38 @@ NS_IMETHODIMP WebBrowserChrome::SetChromeMask(PRUint32 aChromeMask)
 }
 
 
+// in winEmbed.cpp
+extern nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
+
 NS_IMETHODIMP WebBrowserChrome::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **aWebBrowser)
 {
    NS_ENSURE_ARG_POINTER(aWebBrowser);
    *aWebBrowser = nsnull;
 
-   extern WebBrowser * CreateWebBrowser();
-   WebBrowser *aBrowser = CreateWebBrowser();
+    mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
+    
+	if (!mWebBrowser)
+        return NS_ERROR_FAILURE;
 
-   if (!aBrowser)
-       return NS_ERROR_FAILURE;
+    mWebBrowser->SetTopLevelWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
 
-   return aBrowser->GetWebBrowser(aWebBrowser);
+    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
+    dsti->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
+
+    
+    mBaseWindow = do_QueryInterface(mWebBrowser);
+    mNativeWindow = CreateNativeWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+
+    if (!mNativeWindow)
+        return NS_ERROR_FAILURE;
+
+    mBaseWindow->InitWindow( mNativeWindow,
+                             nsnull, 
+                             0, 0, 450, 450);
+    mBaseWindow->Create();
+    
+    NS_IF_ADDREF(*aWebBrowser = mWebBrowser);
+    return NS_OK;
 }
 
 
@@ -145,28 +164,13 @@ NS_IMETHODIMP WebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
     NS_ENSURE_ARG_POINTER(aBrowserItem);
     *aBrowserItem = nsnull;
 
+    if (!mWebBrowser)
+        return NS_ERROR_FAILURE;
 
-    PRInt32 cnt = sBrowserList.Count();
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebBrowser));
+    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
-    for (int i = 0; i < cnt; cnt++) 
-    {
-        WebBrowserChrome* aChrome = (WebBrowserChrome*) sBrowserList.ElementAt(cnt);
-        if (aChrome == this || !aChrome)
-            continue;	
-        
-        nsCOMPtr<nsIWebBrowser> webBrowser;
-        aChrome->GetWebBrowser(getter_AddRefs(webBrowser));
-        
-        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(webBrowser));
-        NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-        docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aBrowserItem);
- 
-        if (*aBrowserItem)
-            break;
-   }
-
-   return NS_OK; // Return OK even if we didn't find it???
+    return docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aBrowserItem);
 }
 
 NS_IMETHODIMP WebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
@@ -176,6 +180,11 @@ NS_IMETHODIMP WebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 
 
 NS_IMETHODIMP WebBrowserChrome::ShowAsModal(void)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP WebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -211,6 +220,10 @@ NS_IMETHODIMP WebBrowserChrome::OnProgressChange(nsIWebProgress *progress, nsIRe
 NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIRequest *request,
                                                PRInt32 progressStateFlags, PRUint32 status)
 {
+
+    if ((progressStateFlags & flag_stop) && (progressStateFlags & flag_is_request))
+    {
+    }
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -255,37 +268,37 @@ NS_IMETHODIMP WebBrowserChrome::Destroy()
 
 NS_IMETHODIMP WebBrowserChrome::SetPosition(PRInt32 x, PRInt32 y)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mBaseWindow->SetPosition(x, y);
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetPosition(PRInt32* x, PRInt32* y)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mBaseWindow->GetPosition(x, y);
 }
 
 NS_IMETHODIMP WebBrowserChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mBaseWindow->SetSize(cx, cy, fRepaint);
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetSize(PRInt32* cx, PRInt32* cy)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mBaseWindow->GetSize(cx, cy);
 }
 
 NS_IMETHODIMP WebBrowserChrome::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mBaseWindow->SetPositionAndSize(x, y, cx, cy, fRepaint);
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx, PRInt32* cy)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mBaseWindow->GetPositionAndSize(x, y, cx, cy);
 }
 
 NS_IMETHODIMP WebBrowserChrome::Repaint(PRBool aForce)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+   return mBaseWindow->Repaint(aForce);
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetParentWidget(nsIWidget** aParentWidget)
@@ -306,24 +319,24 @@ NS_IMETHODIMP WebBrowserChrome::GetParentNativeWindow(nativeWindow* aParentNativ
 {
    NS_ENSURE_ARG_POINTER(aParentNativeWindow);
 
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   *aParentNativeWindow = mNativeWindow;
    return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_NOT_IMPLEMENTED;
+   mNativeWindow = aParentNativeWindow;
+   return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetVisibility(PRBool* aVisibility)
 {
-   return NS_ERROR_NOT_IMPLEMENTED;
+   return mBaseWindow->GetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP WebBrowserChrome::SetVisibility(PRBool aVisibility)
 {   
-    return NS_ERROR_NOT_IMPLEMENTED;
+   return mBaseWindow->SetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetMainWidget(nsIWidget** aMainWidget)
@@ -333,13 +346,13 @@ NS_IMETHODIMP WebBrowserChrome::GetMainWidget(nsIWidget** aMainWidget)
 
 NS_IMETHODIMP WebBrowserChrome::SetFocus()
 {
-   return NS_ERROR_NOT_IMPLEMENTED;
+   return mBaseWindow->SetFocus();
 }
 
 NS_IMETHODIMP WebBrowserChrome::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
    PRBool* aTookFocus)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+   return mBaseWindow->FocusAvailable(aCurrentFocus, aTookFocus);
 }
 
 NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar** aTitle)

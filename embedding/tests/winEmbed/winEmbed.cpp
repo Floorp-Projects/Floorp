@@ -27,15 +27,14 @@
 #include "resource.h"
 
 
+#include "nsIContentViewerEdit.h"
+
 #include "nsEmbedAPI.h"
-#include "WebBrowser.h"
 #include "WebBrowserChrome.h"
 
-WebBrowser* CreateWebBrowser();
-
-
-
 #define MAX_LOADSTRING 100
+
+#define IDC_Status 100
 
 // Global Variables:
 HINSTANCE hInst;
@@ -50,6 +49,55 @@ LRESULT CALLBACK	GetURI(HWND, UINT, WPARAM, LPARAM);
 
 
 char gLastURI[100];
+
+// utility function
+nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
+{
+    if (!chrome)
+        return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(chrome);
+    
+    HWND hWnd;
+    baseWindow->GetParentNativeWindow((void**)&hWnd);
+    
+    if (!hWnd)
+        return NS_ERROR_NULL_POINTER;
+
+    RECT rect;
+    GetClientRect(hWnd, &rect);
+    rect.top += 32;
+    rect.bottom -= 32;
+    baseWindow->SetPositionAndSize(rect.left, 
+                                   rect.top, 
+                                   rect.right - rect.left, 
+                                   rect.bottom - rect.top,
+                                   PR_TRUE);
+    
+    baseWindow->SetVisibility(PR_TRUE);
+    return NS_OK;
+}
+
+
+nsresult OpenWebPage(char* url)
+{
+    WebBrowserChrome * chrome = new WebBrowserChrome();
+    if (!chrome)
+        return NS_ERROR_FAILURE;
+    
+    NS_ADDREF(chrome); // native window will hold the addref.
+
+    nsCOMPtr<nsIWebBrowser> newBrowser;
+    chrome->GetNewBrowser(0, getter_AddRefs(newBrowser));
+    if (!newBrowser)
+        return NS_ERROR_FAILURE;
+
+    // Place it where we want it.
+    ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
+
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
+    return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode());
+}   
 
 int main ()
 {
@@ -69,10 +117,7 @@ int main ()
 
 // put up at lease on browser window ....
 /////////////////////////////////////////////////////////////
-    WebBrowser* newBrowser = CreateWebBrowser();
-    if (!newBrowser) 
-        return -1;
-    newBrowser->GoTo("http://people.netscape.com/dougt");
+    OpenWebPage("http://people.netscape.com/dougt");
 /////////////////////////////////////////////////////////////
 
 
@@ -83,7 +128,7 @@ int main ()
 		DispatchMessage(&msg);
 	}
 
-// Close down Embedding APIs
+    // Close down Embedding APIs
     NS_TermEmbedding();
 
 	return msg.wParam;
@@ -127,57 +172,31 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
 
 
-WebBrowser * CreateWebBrowser()
+nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
 {
+    HWND mainWindow;
 
-    STARTUPINFO StartupInfo;
-    StartupInfo.dwFlags = 0;
-    GetStartupInfo( &StartupInfo );
+    mainWindow = CreateWindow( szWindowClass, 
+                                szTitle, 
+                                WS_OVERLAPPEDWINDOW,
+                                0, 
+                                0, 
+                                450, 
+                                450, 
+                                NULL, 
+                                NULL, 
+                                GetModuleHandle(NULL), 
+                                NULL); 
 
-    HINSTANCE hInstance = GetModuleHandle(NULL);
-    int nCmdShow = StartupInfo.dwFlags & STARTF_USESHOWWINDOW ? StartupInfo.wShowWindow : SW_SHOWDEFAULT;
-
-
-    WebBrowser *browser = new WebBrowser();
-    if (! browser)
-        return NULL;
-
-    HWND hWnd;
-
-    hWnd = CreateWindow( szWindowClass, 
-                        szTitle, 
-                        WS_OVERLAPPEDWINDOW,
-                        0, 
-                        0, 
-                        450, 
-                        450, 
-                        NULL, 
-                        NULL, 
-                        hInstance, 
-                        NULL); 
-
-    if (!hWnd)
-    {
-      return NULL;
-    }
-    
-    SetWindowLong( hWnd, GWL_USERDATA, (LONG)browser);  // save the browser LONG_PTR.
-
-    WebBrowserChrome* chrome = nsnull;//new WebBrowserChrome();
-
-    if ( NS_FAILED( browser->Init(hWnd, chrome) ) )  // this will own hWnd
+    if (!mainWindow)
         return NULL;
     
-    RECT rect;
-    GetClientRect(hWnd, &rect);
-    rect.top += 32;
+    SetWindowLong( mainWindow, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
 
-    browser->SetPositionAndSize(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+    ShowWindow(mainWindow, SW_SHOWDEFAULT);
+    UpdateWindow(mainWindow);
 
-    ShowWindow(hWnd, nCmdShow);
-    UpdateWindow(hWnd);
-
-    return browser;
+    return mainWindow;
 }
 
 //
@@ -197,7 +216,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	HDC hdc;
 	TCHAR szHello[MAX_LOADSTRING];
 	LoadString(hInst, IDS_HELLO, szHello, MAX_LOADSTRING);
-    WebBrowser *browser = (WebBrowser *) GetWindowLong(hWnd, GWL_USERDATA);
+    nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLong(hWnd, GWL_USERDATA);
 
 	switch (message) 
 	{
@@ -207,49 +226,99 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			// Parse the menu selections:
 			switch (wmId)
 			{
-                case IDM_EXIT:
-                    if (browser)
-                        delete browser;
-                    DestroyWindow(hWnd);
-				   break;
-
                 case MOZ_NewBrowser:
                     gLastURI[0] = 0;
                     if (DialogBox(hInst, (LPCTSTR)MOZ_GetURI, hWnd, (DLGPROC)GetURI))
-                    {
-                        WebBrowser* newBrowser = CreateWebBrowser();
-                        if (!newBrowser)
-                            break;
-                        newBrowser->GoTo(gLastURI);
-                    }
+                        OpenWebPage(gLastURI);
                     break;
 
                 case MOZ_NewEditor:
                     gLastURI[0] = 0;
-                    if (DialogBox(hInst, (LPCTSTR)MOZ_GetURI, hWnd, (DLGPROC)GetURI))
-                    {
-                        WebBrowser* newBrowser = CreateWebBrowser();
-                        if (!newBrowser)
-                            break;
-                        newBrowser->Edit(gLastURI);
-                    }
                     break;
 
                 case MOZ_Open:
                     gLastURI[0] = 0;
-                    if (browser && DialogBox(hInst, (LPCTSTR)MOZ_GetURI, hWnd, (DLGPROC)GetURI))
+                    if (chrome && DialogBox(hInst, (LPCTSTR)MOZ_GetURI, hWnd, (DLGPROC)GetURI))
                     {
-                        browser->GoTo(gLastURI);
+                        nsCOMPtr<nsIWebBrowser> wb;
+                        chrome->GetWebBrowser(getter_AddRefs(wb));
+                        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(wb));
+                        webNav->LoadURI(NS_ConvertASCIItoUCS2(gLastURI).GetUnicode());
                     }
                     break;
-				
+
+				 case MOZ_Save:
+                    
+                    if (chrome)
+                    {
+                        nsCOMPtr<nsIWebBrowser> wb;
+                        chrome->GetWebBrowser(getter_AddRefs(wb));
+
+                        nsCOMPtr <nsIDocShell> rootDocShell;
+                        wb->GetDocShell(getter_AddRefs(rootDocShell));
+
+
+                        nsCOMPtr<nsIContentViewer> pContentViewer;
+                        nsresult res = rootDocShell->GetContentViewer(getter_AddRefs(pContentViewer));
+
+                        if (NS_SUCCEEDED(res))
+                        {
+                            nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer); 
+                            spContentViewerFile->Save();
+                        }
+                    }
+                    break;
+
                 case MOZ_Print:
                     
-                    if (browser)
-                        browser->Print();
-                 //   editor->SetTextProperty(NS_ConvertASCIItoUCS2("font").GetUnicode(),
-                 //                           NS_ConvertASCIItoUCS2("color").GetUnicode(),
-                 //                           NS_ConvertASCIItoUCS2("BLUE").GetUnicode());
+                    if (chrome)
+                    {
+                        nsCOMPtr<nsIWebBrowser> wb;
+                        chrome->GetWebBrowser(getter_AddRefs(wb));
+
+                        nsCOMPtr <nsIDocShell> rootDocShell;
+                        wb->GetDocShell(getter_AddRefs(rootDocShell));
+
+
+                        nsCOMPtr<nsIContentViewer> pContentViewer;
+                        nsresult res = rootDocShell->GetContentViewer(getter_AddRefs(pContentViewer));
+
+                        if (NS_SUCCEEDED(res))
+                        {
+                            nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer); 
+                            spContentViewerFile->Print(PR_TRUE, nsnull);
+                        }
+                    }
+                    break;
+
+                case MOZ_Cut:
+                case MOZ_Copy:
+                case MOZ_Paste:
+                case MOZ_SelectAll:
+                    if (chrome)
+                    {
+                        nsCOMPtr<nsIWebBrowser> wb;
+                        chrome->GetWebBrowser(getter_AddRefs(wb));
+
+                        nsCOMPtr <nsIDocShell> rootDocShell;
+                        wb->GetDocShell(getter_AddRefs(rootDocShell));
+
+
+                        nsCOMPtr<nsIContentViewer> pContentViewer;
+                        nsresult res = rootDocShell->GetContentViewer(getter_AddRefs(pContentViewer));
+
+                        if (NS_SUCCEEDED(res))
+                        {
+                            nsCOMPtr<nsIContentViewerEdit> spContentViewerEdit = do_QueryInterface(pContentViewer); 
+                            if (message == MOZ_Cut)
+                                spContentViewerEdit->CopySelection();
+                            else if (message == MOZ_Copy)
+                                spContentViewerEdit->CutSelection();
+                            else if (message == MOZ_SelectAll)
+                                spContentViewerEdit->SelectAll();
+                        }
+                    }
+
                     break;
 
                 default:
@@ -257,12 +326,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 
-        case WM_SIZE:
-            RECT rect;
-            GetClientRect(hWnd, &rect);
-            rect.top += 32;
-            if (browser)
-                browser->SetPositionAndSize(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
+            case WM_SIZE:
+                ResizeEmbedding(chrome);
             break;
         
 		case WM_PAINT:
@@ -284,6 +349,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case WM_DESTROY:
             PostQuitMessage(0);
+            NS_RELEASE(chrome);
 			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);

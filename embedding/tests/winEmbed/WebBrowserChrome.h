@@ -23,13 +23,21 @@
 #define __WebBrowserChrome__
 
 #include "nsCOMPtr.h"
+#include "nsIGenericFactory.h"
+#include "nsString.h"
 #include "nsIWebBrowserChrome.h"
+
+#include "nsIDocShell.h"
+#include "nsIContentViewer.h"
+#include "nsIContentViewerFile.h"
 #include "nsIBaseWindow.h"
+#include "nsIWebNavigation.h"
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 #include "nsIWebBrowser.h"
 #include "nsVoidArray.h"
+
 
 
 class WebBrowserChrome   : public nsIWebBrowserChrome,
@@ -51,9 +59,13 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
 
 protected:
-  
-   nsCOMPtr<nsIWebBrowser> mBrowser;
-
+   
+   nativeWindow mNativeWindow;
+   
+   nsCOMPtr<nsIWebBrowser> mWebBrowser;
+   nsCOMPtr<nsIBaseWindow> mBaseWindow;
+   nsCOMPtr<nsIWebBrowserChrome> mTopWindow;
+    
    static nsVoidArray sBrowserList;
 };
 
