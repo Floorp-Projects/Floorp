@@ -1006,61 +1006,6 @@ setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
   return rv;
 }
 
-//
-// Implementation of an nsIInterfaceRequestor for use
-// as context for NSS calls
-//
-class PSMContentDownloaderContext : public nsIInterfaceRequestor
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIINTERFACEREQUESTOR
-
-  PSMContentDownloaderContext();
-  virtual ~PSMContentDownloaderContext();
-
-};
-
-NS_IMPL_ISUPPORTS1(PSMContentDownloaderContext, nsIInterfaceRequestor)
-
-PSMContentDownloaderContext::PSMContentDownloaderContext()
-{
-  NS_INIT_ISUPPORTS();
-}
-
-PSMContentDownloaderContext::~PSMContentDownloaderContext()
-{
-}
-
-/* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-NS_IMETHODIMP PSMContentDownloaderContext::GetInterface(const nsIID & uuid, void * *result)
-{
-  nsresult rv;
-
-  if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
-    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-    if (!proxyman) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIPrompt> prompter;
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    if (wwatch) {
-      wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-      if (prompter) {
-        nsCOMPtr<nsIPrompt> proxyPrompt;
-        proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPrompt),
-                                    prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
-        if (!proxyPrompt) return NS_ERROR_FAILURE;
-        *result = proxyPrompt;
-        NS_ADDREF((nsIPrompt*)*result);
-      }
-    }
-  } else {
-    rv = NS_ERROR_NO_INTERFACE;
-  }
-
-  return rv;
-}
-
 class PSMContentDownloader : public nsIStreamListener
 {
 public:
@@ -1180,7 +1125,7 @@ PSMContentDownloader::OnStopRequest(nsIRequest* request,
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
 
   nsresult rv;
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new PSMContentDownloaderContext();
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
 
   switch (mType) {
   case PSMContentDownloader::X509_CA_CERT:
