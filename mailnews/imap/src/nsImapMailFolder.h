@@ -272,6 +272,8 @@ protected:
                                      mailbox_spec *boxSpec);
 	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr *tweakMe);
 
+	nsresult SyncFlags(nsImapFlagAndUidState *flagState);
+
 	void SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted);
 	virtual PRBool ShowDeletedMessages();
 	virtual PRBool DeleteIsMoveToTrash();

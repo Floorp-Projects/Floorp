@@ -1407,6 +1407,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 				}
 			}
 		}
+		SyncFlags(aSpec->flagState);
 	   	if (keysToFetch.GetSize())
     	{			
             PrepareToAddHeadersToMailDB(aProtocol, keysToFetch, aSpec);
@@ -2355,6 +2356,25 @@ nsImapMailFolder::BeginMessageUpload()
     return NS_ERROR_FAILURE;
 }
 
+// synchronize the message flags in the database with the server flags
+nsresult nsImapMailFolder::SyncFlags(nsImapFlagAndUidState *flagState)
+{
+    // update all of the database flags
+	PRInt32 messageIndex;
+	
+	flagState->GetNumberOfMessages(&messageIndex);
+
+	for (PRInt32 flagIndex=0; flagIndex < messageIndex; flagIndex++)
+	{
+		PRUint32 uidOfMessage;
+		flagState->GetUidOfMessage(flagIndex, &uidOfMessage);
+		imapMessageFlagsType flags;
+		flagState->GetMessageFlags(flagIndex, &flags);
+		// ### dmb need to do something about imap deleted flag;
+		NotifyMessageFlags(flags, uidOfMessage);
+    }
+	return NS_OK;
+}
 
     // message flags operation
 NS_IMETHODIMP
