@@ -168,6 +168,8 @@ and to ensure that no more events will be delivered for that owner.
 #include "prtypes.h"
 #include "prclist.h"
 #include "prthread.h"
+#include "prlock.h"
+#include "prcvar.h"
 #include "prmon.h"
 
 /* For HWND */
@@ -465,6 +467,9 @@ struct PLEvent {
     PLDestroyEventProc	destructor;
     void*				owner;
     void*				synchronousResult;
+    PRLock*             lock;
+    PRCondVar*          condVar;
+    PRBool              handled;
 #ifdef PL_POST_TIMINGS
     PRIntervalTime      postTime;
 #endif
@@ -475,7 +480,7 @@ struct PLEvent {
 
 /*
 ** Returns the event queue associated with the main thread.
-**
+** 
 */
 #ifdef XP_PC
 /* -----------------------------------------------------------------------

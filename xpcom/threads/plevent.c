@@ -262,10 +262,6 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
     mon = self->monitor;
     PR_EnterMonitor(mon);
 
-#ifdef PL_POST_TIMINGS
-    event->postTime = PR_IntervalNow();
-#endif
-
     /* insert event into thread's event queue: */
     if (event != NULL) {
       PR_APPEND_LINK(&event->link, &self->queue);
@@ -293,11 +289,7 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
     return NULL;
 
     PR_ASSERT(event != NULL);
-    PR_CEnterMonitor(event);
-
-#ifdef PL_POST_TIMINGS
-    event->postTime = PR_IntervalNow();
-#endif
+    PR_Lock(event->lock);
 
     if (PR_CurrentThread() == self->handlerThread) {
 	/* Handle the case where the thread requesting the event handling
@@ -317,8 +309,13 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
 	    for (i = 0; i < entryCount; i++)
 		PR_ExitMonitor(self->monitor);
 	}
-	PR_CWait(event, PR_INTERVAL_NO_TIMEOUT);	/* wait for event to be handled or destroyed */
-	if (entryCount) {
+	
+    event->handled = PR_FALSE;
+
+    while (!event->handled)
+        PR_WaitCondVar(event->condVar, PR_INTERVAL_NO_TIMEOUT);	/* wait for event to be handled or destroyed */
+	
+    if (entryCount) {
 	    for (i = 0; i < entryCount; i++)
 		PR_EnterMonitor(self->monitor);
 	}
@@ -326,7 +323,7 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
 	event->synchronousResult = NULL;
     }
 
-    PR_CExitMonitor(event);
+    PR_Unlock(event->lock);
 
     /* For synchronous events, they're destroyed here on the caller's
        thread before the result is returned. See PL_HandleEvent. */
@@ -406,10 +403,11 @@ _pl_DestroyEventForOwner(PLEvent* event, void* owner, PLEventQueue* queue)
            ("$$$ \tdestroying event %0x for owner %0x", event, owner));
     PL_DequeueEvent(event, queue);
     if (event->synchronousResult == (void*)PR_TRUE) {
-        PR_CEnterMonitor(event);
+        PR_Lock(event->lock);
         event->synchronousResult = NULL;
-        PR_CNotify(event);
-        PR_CExitMonitor(event);
+        event->handled = PR_TRUE;
+        PR_NotifyCondVar(event->condVar);
+        PR_Unlock(event->lock);
     }
     else {
         PL_DestroyEvent(event);
@@ -556,11 +554,19 @@ PL_InitEvent(PLEvent* self, void* owner,
          PLHandleEventProc handler,
          PLDestroyEventProc destructor)
 {
+#ifdef PL_POST_TIMINGS
+    self->postTime = PR_IntervalNow();
+#endif
     PR_INIT_CLIST(&self->link);
     self->handler = handler;
     self->destructor = destructor;
     self->owner = owner;
     self->synchronousResult = NULL;
+    self->handled = PR_FALSE;
+    self->lock = PR_NewLock();
+    PR_ASSERT(self->lock);
+    self->condVar = PR_NewCondVar(self->lock);
+    PR_ASSERT(self->condVar);
 }
 
 PR_IMPLEMENT(void*)
@@ -576,20 +582,17 @@ PL_HandleEvent(PLEvent* self)
     void* result;
     if (self == NULL)
         return;
-
+ 
     /* This event better not be on an event queue anymore. */
     PR_ASSERT(PR_CLIST_IS_EMPTY(&self->link));
 
-#ifdef PL_POST_TIMINGS
-    printf("$$$ last (%d) \n", PR_IntervalToMilliseconds(PR_IntervalNow() - self->postTime));
-#endif
-
     result = (*self->handler)(self);
     if (NULL != self->synchronousResult) {
-    PR_CEnterMonitor(self);
+    PR_Lock(self->lock);
     self->synchronousResult = result;
-    PR_CNotify(self);    /* wake up the guy waiting for the result */
-    PR_CExitMonitor(self);
+    self->handled = PR_TRUE;
+    PR_NotifyCondVar(self->condVar);
+    PR_Unlock(self->lock);
     }
     else {
     /* For asynchronous events, they're destroyed by the event-handler
@@ -597,15 +600,28 @@ PL_HandleEvent(PLEvent* self)
     PL_DestroyEvent(self);
     }
 }
+#ifdef PL_POST_TIMINGS
+static long s_eventCount = 0;
+static long s_totalTime  = 0;
+#endif
 
 PR_IMPLEMENT(void)
 PL_DestroyEvent(PLEvent* self)
 {
     if (self == NULL)
-    return;
+        return;
 
     /* This event better not be on an event queue anymore. */
     PR_ASSERT(PR_CLIST_IS_EMPTY(&self->link));
+
+    PR_DestroyCondVar(self->condVar);
+    PR_DestroyLock(self->lock);
+   
+#ifdef PL_POST_TIMINGS
+    s_totalTime += PR_IntervalNow() - self->postTime;
+    s_eventCount++;
+    printf("$$$ running avg (%d) \n", PR_IntervalToMilliseconds(s_totalTime/s_eventCount));
+#endif
 
     (*self->destructor)(self);
 }
