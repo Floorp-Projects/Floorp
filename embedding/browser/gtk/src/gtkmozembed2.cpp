@@ -679,14 +679,27 @@ gtk_moz_embed_reload(GtkMozEmbed *embed, gint32 flags)
 void
 gtk_moz_embed_set_chrome_mask(GtkMozEmbed *embed, guint32 flags)
 {
-  // XXX
+  EmbedPrivate *embedPrivate;
+
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+
+  embedPrivate = (EmbedPrivate *)embed->data;
+
+  embedPrivate->mChromeMask = flags;
 }
 
 guint32
 gtk_moz_embed_get_chrome_mask(GtkMozEmbed *embed)
 {
-  // XXX
-  return 0;
+  EmbedPrivate *embedPrivate;
+
+  g_return_val_if_fail ((embed != NULL), 0);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), 0);
+
+  embedPrivate = (EmbedPrivate *)embed->data;
+
+  return embedPrivate->mChromeMask;
 }
 
 void

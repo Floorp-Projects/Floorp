@@ -109,6 +109,9 @@ class EmbedPrivate {
   // for profiles
   static nsIPref                *sPrefs;
 
+  // chrome mask
+  PRUint32                       mChromeMask;
+
  private:
 
   // is the chrome listener attached yet?
