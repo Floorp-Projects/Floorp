@@ -264,7 +264,7 @@ nsBox::IsDirty(PRBool& aDirty)
   GetFrame(&frame);
   frame->GetFrameState(&state);
 
-  aDirty = (state & NS_FRAME_IS_DIRTY);  
+  aDirty = (state & NS_FRAME_IS_DIRTY) != 0;
   return NS_OK;
 }
 
@@ -276,7 +276,7 @@ nsBox::HasDirtyChildren(PRBool& aDirty)
   GetFrame(&frame);
   frame->GetFrameState(&state);
 
-  aDirty = (state & NS_FRAME_HAS_DIRTY_CHILDREN);  
+  aDirty = (state & NS_FRAME_HAS_DIRTY_CHILDREN) != 0;
   return NS_OK;
 }
 
@@ -832,7 +832,7 @@ nsBox::GetWasCollapsed(nsBoxLayoutState& aState)
   nsFrameState state;
   frame->GetFrameState(&state);
  
-  return (state & NS_STATE_IS_COLLAPSED);
+  return (state & NS_STATE_IS_COLLAPSED) != 0;
 }
 
 void
@@ -1083,7 +1083,7 @@ nsBox::GetOrientation(PRBool& aIsHorizontal)
    GetFrame(&frame);
    nsFrameState state;
    frame->GetFrameState(&state);
-   aIsHorizontal = (state & NS_STATE_IS_HORIZONTAL);
+   aIsHorizontal = (state & NS_STATE_IS_HORIZONTAL) != 0;
    return NS_OK;
 }
 
@@ -1094,7 +1094,7 @@ nsBox::GetDirection(PRBool& aIsNormal)
    GetFrame(&frame);
    nsFrameState state;
    frame->GetFrameState(&state);
-   aIsNormal = (state & NS_STATE_IS_DIRECTION_NORMAL);
+   aIsNormal = (state & NS_STATE_IS_DIRECTION_NORMAL) != 0;
    return NS_OK;
 }
 
