@@ -533,7 +533,9 @@ nsFSMultipartFormData::AddNameFilePair(nsIDOMHTMLElement* aSource,
   //
   // Add the file to the stream
   //
-  mPostDataStream->AppendStream(aStream);
+  if (aStream) {
+    mPostDataStream->AppendStream(aStream);
+  }
 
   //
   // CRLF after file

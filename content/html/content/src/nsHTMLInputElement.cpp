@@ -2166,7 +2166,6 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   //
   // Submit file if it's input type=file and this encoding method accepts files
   //
-  PRBool submittedValue = PR_FALSE;
   if (type == NS_FORM_INPUT_FILE) {
 
     //
@@ -2228,27 +2227,34 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
             aFormSubmission->AddNameFilePair(this, name, filename,
                                              bufferedStream, contentType,
                                              PR_FALSE);
-            submittedValue = PR_TRUE;
+            return rv;
           }
         }
 
         //
         // If we don't submit as a file, at least submit the truncated filename.
         //
-        if (!submittedValue) {
-          aFormSubmission->AddNameValuePair(this, name, filename);
-          submittedValue = PR_TRUE;
-        }
+        aFormSubmission->AddNameFilePair(this, name, filename,
+            nsnull, NS_LITERAL_CSTRING("application/octet-stream"),
+            PR_FALSE);
+        return rv;
       }
     }
+    
+    //
+    // If we can't even make a truncated filename, submit empty string
+    // rather than sending everything
+    //
+    aFormSubmission->AddNameFilePair(this, name, value,
+        nsnull, NS_LITERAL_CSTRING("application/octet-stream"),
+        PR_FALSE);
+    return rv;
   }
 
-  if (!submittedValue) {
-    // Submit
-    // (for type=image, only submit if value is non-null)
-    if (type != NS_FORM_INPUT_IMAGE || !value.IsEmpty()) {
-      rv = aFormSubmission->AddNameValuePair(this, name, value);
-    }
+  // Submit
+  // (for type=image, only submit if value is non-null)
+  if (type != NS_FORM_INPUT_IMAGE || !value.IsEmpty()) {
+    rv = aFormSubmission->AddNameValuePair(this, name, value);
   }
 
   return rv;
