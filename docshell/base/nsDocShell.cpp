@@ -73,7 +73,8 @@ nsDocShell::nsDocShell() :
   mTreeOwner(nsnull),
   mChromeEventHandler(nsnull),
   mCurrentScrollbarPref(-1,-1),
-  mDefaultScrollbarPref(-1,-1)
+  mDefaultScrollbarPref(-1,-1),
+  mEODForCurrentDocument (PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -1893,7 +1894,7 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
       }
 
    NS_ENSURE_SUCCESS(SetupNewViewer(viewer), NS_ERROR_FAILURE);
-
+   mEODForCurrentDocument = PR_FALSE; // clear the current flag
    return NS_OK;
 }
 

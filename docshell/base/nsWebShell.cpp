@@ -2667,7 +2667,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
   if (loader == mDocLoader) {
     mProcessedEndDocumentLoad = PR_TRUE;
 
-    if (mScriptGlobal) {
+    if (mScriptGlobal && !mEODForCurrentDocument) {
       nsIDocumentViewer* docViewer;
       if (nsnull != mContentViewer &&
           NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
@@ -2684,6 +2684,8 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
         NS_RELEASE(docViewer);
       }
     }
+
+    mEODForCurrentDocument = PR_TRUE;
 
     // Fire the EndLoadURL of the web shell container
     if (nsnull != aURL) {
