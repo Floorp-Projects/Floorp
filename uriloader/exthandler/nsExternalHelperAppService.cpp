@@ -1268,12 +1268,12 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   nsXPIDLCString MIMEType;
   mMimeInfo->GetMIMEType( getter_Copies( MIMEType ) );
 
-  // retarget all load notifcations to our docloader instead of the original window's docloader...
+  // retarget all load notifications to our docloader instead of the original window's docloader...
   RetargetLoadNotifications(request);
   // ignore failure...
   ExtractSuggestedFileNameFromChannel(aChannel); 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
-  if (httpChannel) 
+  nsCOMPtr<nsIEncodedChannel> encChannel = do_QueryInterface( aChannel );
+  if (encChannel) 
   {
     // Turn off content encoding conversions if needed
     PRBool applyConversion = PR_TRUE;
@@ -1287,18 +1287,16 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
       nsCOMPtr<nsIURI> channelURI;
       aChannel->GetURI(getter_AddRefs(channelURI));
       nsCOMPtr<nsIURL> channelURL(do_QueryInterface(channelURI));
-      nsCAutoString extension;
       if (channelURL)
       {
+        nsCAutoString extension;
         channelURL->GetFileExtension(extension);
         if (!extension.IsEmpty())
           mHelperAppService->ApplyDecodingForExtension(extension.get(), &applyConversion);
       }
     }
-    
-    nsCOMPtr<nsIEncodedChannel> encodedChannel(do_QueryInterface(httpChannel));
-    NS_ENSURE_TRUE(encodedChannel, NS_ERROR_UNEXPECTED);
-    encodedChannel->SetApplyConversion( applyConversion );
+
+    encChannel->SetApplyConversion( applyConversion );
   }
 
   mTimeDownloadStarted = PR_Now();
