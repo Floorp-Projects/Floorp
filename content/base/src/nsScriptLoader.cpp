@@ -43,6 +43,7 @@
 #include "nsIScriptElement.h"
 #include "nsIDocShell.h"
 #include "jsapi.h"
+#include "nsIHttpChannel.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -93,7 +94,12 @@ nsScriptLoadRequest::~nsScriptLoadRequest()
 {
 }
 
-NS_IMPL_ISUPPORTS0(nsScriptLoadRequest)
+
+// The nsScriptLoadRequest is passed as the context to necko, and thus
+// it needs to be threadsafe. Necko won't do anything with this
+// context, but it will AddRef and Release it on other threads.
+
+NS_IMPL_THREADSAFE_ISUPPORTS0(nsScriptLoadRequest)
 
 void
 nsScriptLoadRequest::FireScriptAvailable(nsresult aResult,
@@ -389,17 +395,22 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
         return FireErrorNotification(rv, aElement, aObserver);
       }
 
+      // Get the referrer url from the document
+      nsCOMPtr<nsIURI> documentURI;
+      mDocument->GetDocumentURL(getter_AddRefs(documentURI));
+
       nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
 
+      nsCOMPtr<nsIChannel> channel;
       rv = NS_NewStreamLoader(getter_AddRefs(loader), scriptURI, this,
                               reqsup, loadGroup, prompter,
-                              nsIChannel::LOAD_NORMAL);
+                              nsIChannel::LOAD_NORMAL, documentURI,
+                              nsIHttpChannel::REFERRER_INLINES);
       if (NS_FAILED(rv)) {
         mPendingRequests.RemoveElement(reqsup, 0);
         return FireErrorNotification(rv, aElement, aObserver);
       }
     }
-    
   } else {
     request->mLoading = PR_FALSE;
     request->mIsInline = PR_TRUE;
