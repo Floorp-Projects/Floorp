@@ -105,6 +105,22 @@ public:
    */
   NS_IMETHOD SetPresState(nsIPresState * aState) = 0;
 
+  /**
+   *
+   */
+  NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) = 0;
+
+  /**
+   *
+   */
+  NS_IMETHOD SaveStateInternal(nsIPresContext* aPresContext,
+                               nsIPresState** aState) = 0;
+  /**
+   *
+   */
+  NS_IMETHOD RestoreStateInternal(nsIPresContext* aPresContext,
+                                  nsIPresState* aState) = 0;
+
 };
 
 #endif

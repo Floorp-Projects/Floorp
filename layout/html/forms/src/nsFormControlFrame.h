@@ -216,14 +216,32 @@ public:
                                nsSize& aCachedMaxElementSize,
                                nsHTMLReflowMetrics& aDesiredSize);
 
-  static nsresult SkipResizeReflow(nsSize& aCacheSize,
-                                   nsSize& aCachedMaxElementSize,
-                                   nsIPresContext* aPresContext,
-                                   nsHTMLReflowMetrics& aDesiredSize,
-                                   const nsHTMLReflowState& aReflowState,
-                                   nsReflowStatus& aStatus);
+  static void SkipResizeReflow(nsSize& aCacheSize,
+                               nsSize& aCachedMaxElementSize,
+                               nsSize& aCachedAvailableSize,
+                               nsHTMLReflowMetrics& aDesiredSize,
+                               const nsHTMLReflowState& aReflowState,
+                               nsReflowStatus& aStatus,
+                               PRBool& aBailOnWidth,
+                               PRBool& aBailOnHeight);
   // AccessKey Helper function
   static nsresult RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg);
+
+  /**
+   * Helper routine to allow controls to have focus border using pseudo-style rule
+   * where focus has a border and non-focus does not. Call in Paint if you have the focus
+   *
+   * @param aPresContext
+   * @param aRenderingContext
+   * @param aFrame - the frame that we are painting
+   * @param aDirtyRect - the dirty area
+   * @param aRect - the area to paint within the dirty area
+   */
+  static nsresult PaintSpecialBorder(nsIPresContext* aPresContext, 
+                                     nsIRenderingContext& aRenderingContext,
+                                     nsIFrame *aFrame,
+                                     const nsRect& aDirtyRect,
+                                     const nsRect& aRect);
 
 protected:
 

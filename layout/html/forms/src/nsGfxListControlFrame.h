@@ -126,6 +126,9 @@ public:
   NS_IMETHOD AboutToRollup();
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent);
   NS_IMETHOD SetPresState(nsIPresState * aState) { mPresState = aState; return NS_OK;}
+  NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
+  NS_IMETHOD SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreStateInternal(nsIPresContext* aPresContext, nsIPresState* aState);
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
@@ -243,6 +246,8 @@ protected:
   PRBool       mIsAllContentHere;
   PRBool       mIsAllFramesHere;
   PRBool       mHasBeenInitialized;
+
+  PRBool       mOverrideReflowOpt;
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
   nsCOMPtr<nsIPresState> mPresState;        // Need cache state when list is null

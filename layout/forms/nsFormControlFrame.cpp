@@ -60,6 +60,15 @@
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIEventStateManager.h"
 
+#ifdef DEBUG_evaughan
+#define DEBUG_rods
+#endif
+
+#ifdef DEBUG_rods
+#define FCF_NOISY
+#endif
+
+const PRInt32 kSizeNotSet = -1;
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -79,10 +88,10 @@ nsFormControlFrame::nsFormControlFrame()
   mPresContext    = nsnull;
 
   // Reflow Optimization
-  mCacheSize.width             = -1;
-  mCacheSize.height            = -1;
-  mCachedMaxElementSize.width  = -1;
-  mCachedMaxElementSize.height = -1;
+  mCacheSize.width             = kSizeNotSet;
+  mCacheSize.height            = kSizeNotSet;
+  mCachedMaxElementSize.width  = kSizeNotSet;
+  mCachedMaxElementSize.height = kSizeNotSet;
 }
 
 nsFormControlFrame::~nsFormControlFrame()
@@ -123,49 +132,89 @@ void nsFormControlFrame::SetupCachedSizes(nsSize& aCacheSize,
   }
 }
 
-nsresult nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
-                                              nsSize& aCachedMaxElementSize,
-                                              nsIPresContext* aPresContext,
-                                              nsHTMLReflowMetrics& aDesiredSize,
-                                              const nsHTMLReflowState& aReflowState,
-                                              nsReflowStatus& aStatus)
+//------------------------------------------------------------
+void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
+                                          nsSize& aCachedMaxElementSize,
+                                          nsSize& aCachedAvailableSize,
+                                          nsHTMLReflowMetrics& aDesiredSize,
+                                          const nsHTMLReflowState& aReflowState,
+                                          nsReflowStatus& aStatus,
+                                          PRBool& aBailOnWidth,
+                                          PRBool& aBailOnHeight)
 {
-#if 1
-  if (aReflowState.reason == eReflowReason_Resize) {
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth &&
-        NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) {
 
-      if (aCacheSize.width > -1 && aCacheSize.height > -1) {
-        aDesiredSize.width  = aCacheSize.width;
-        aDesiredSize.height = aCacheSize.height;
-        if (aDesiredSize.maxElementSize != nsnull) {
-          aDesiredSize.maxElementSize->width = aCachedMaxElementSize.width;
-          aDesiredSize.maxElementSize->height = aCachedMaxElementSize.height;
+  if (aReflowState.reason == eReflowReason_Incremental) {
+    aBailOnHeight = PR_FALSE;
+    aBailOnWidth  = PR_FALSE;
+
+  } else if (eReflowReason_Initial == aReflowState.reason) {
+    aBailOnHeight = PR_FALSE;
+    aBailOnWidth  = PR_FALSE;
+
+  } else {
+
+    nscoord width;
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
+      if (aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE) {
+        width = NS_UNCONSTRAINEDSIZE;
+        aBailOnWidth = aCacheSize.width != kSizeNotSet;
+#ifdef FCF_NOISY
+        if (aBailOnWidth) {
+          printf("-------------- #1 Bailing on aCachedAvailableSize.width %d != kSizeNotSet\n", aCachedAvailableSize.width);
         }
-        aDesiredSize.ascent = aDesiredSize.height;
-        aDesiredSize.descent = 0;
-        aStatus = NS_FRAME_COMPLETE;
-        return NS_OK;
+#endif
+      } else {
+        width = aReflowState.availableWidth - aReflowState.mComputedBorderPadding.left -
+                aReflowState.mComputedBorderPadding.right;
+        aBailOnWidth = aCachedAvailableSize.width <= width && aCachedAvailableSize.width != kSizeNotSet;
+#ifdef FCF_NOISY
+        if (aBailOnWidth) {
+          printf("-------------- #2 Bailing on aCachedAvailableSize.width %d <= width %d\n", aCachedAvailableSize.width, width );
+        }
+#endif
       }
     } else {
-      if (aCacheSize.width == aReflowState.mComputedWidth && 
-          aCacheSize.height == aReflowState.mComputedHeight) {
-        aDesiredSize.width  = aCacheSize.width;
-        aDesiredSize.height = aCacheSize.height;
-        if (aDesiredSize.maxElementSize != nsnull) {
-          aDesiredSize.maxElementSize->width = aCachedMaxElementSize.width;
-          aDesiredSize.maxElementSize->height = aCachedMaxElementSize.height;
-        }
-        aDesiredSize.ascent = aDesiredSize.height;
-        aDesiredSize.descent = 0;
-        aStatus = NS_FRAME_COMPLETE;
-       return NS_OK;
+      width = aReflowState.mComputedWidth;
+      //if (aCachedAvailableSize.width == kSizeNotSet) {
+      //  //aBailOnWidth = aCachedAvailableSize.width == aCacheSize.width;
+        aBailOnWidth = PR_FALSE;
+      //} else {
+        aBailOnWidth = width == (aCacheSize.width - aReflowState.mComputedBorderPadding.left - aReflowState.mComputedBorderPadding.right);
+      //}
+#ifdef FCF_NOISY
+      if (aBailOnWidth) {
+        printf("-------------- #3 Bailing on aCachedAvailableSize.width %d == aReflowState.mComputedWidth %d\n", aCachedAvailableSize.width, width );
       }
+#endif
+    }
+    
+    nscoord height;
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) {
+      if (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
+        height = NS_UNCONSTRAINEDSIZE;
+        aBailOnHeight = aCachedAvailableSize.height != kSizeNotSet;
+      } else {
+        height = aReflowState.availableHeight - aReflowState.mComputedBorderPadding.top -
+                 aReflowState.mComputedBorderPadding.bottom;
+        aBailOnHeight = aCachedAvailableSize.height <= height;
+      }
+    } else {
+      height = aReflowState.mComputedWidth;
+      aBailOnHeight = aCachedAvailableSize.height == height;
+    }
+
+    if (aBailOnWidth || aBailOnHeight) {
+      aDesiredSize.width  = aCacheSize.width;
+      aDesiredSize.height = aCacheSize.height;
+
+      if (aDesiredSize.maxElementSize != nsnull) {
+        aDesiredSize.maxElementSize->width  = aCachedMaxElementSize.width;
+        aDesiredSize.maxElementSize->height = aCachedMaxElementSize.height;
+      }
+      aDesiredSize.ascent = aDesiredSize.height;
+      aDesiredSize.descent = 0;
     }
   }
-#endif 
-  return NS_ERROR_FAILURE;
-
 }
 
 nscoord 
@@ -232,8 +281,20 @@ nsFormControlFrame::Paint(nsIPresContext* aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
-  return nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+
+  nsresult rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                             aWhichLayer);
+
+ if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer){
+
+    nsRect rect(0, 0, mRect.width, mRect.height);
+    PaintSpecialBorder(aPresContext, 
+                       aRenderingContext,
+                       this,
+                       aDirtyRect,
+                       rect);    
+  }
+  return rv;
 }
 
 void 
@@ -320,12 +381,13 @@ nsFormControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
-
+#if 0
   nsresult skiprv = SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                      aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(skiprv)) {
     return skiprv;
   }
+#endif
 
   nsresult rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
@@ -702,3 +764,43 @@ nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+// static 
+nsresult nsFormControlFrame::PaintSpecialBorder(nsIPresContext* aPresContext, 
+                                                nsIRenderingContext& aRenderingContext,
+                                                nsIFrame *aFrame,
+                                                const nsRect& aDirtyRect,
+                                                const nsRect& aRect)
+{
+  NS_ASSERTION( aPresContext, "PresContext cannot be null");
+  NS_ASSERTION( aFrame, "Frame cannot be null");
+
+  nsresult rv=NS_OK;
+#if 0
+  if(aPresContext && aFrame){
+    // first probe for the pseudo-style context for the frame
+
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    nsCOMPtr<nsIStyleContext> context;
+    aFrame->GetStyleContext(getter_AddRefs(context));
+    nsCOMPtr<nsIStyleContext> specialBorderStyle;
+
+    // style for the inner such as a dotted line (Windows)
+    aPresContext->ProbePseudoStyleContextFor(content, nsHTMLAtoms::mozControlSpecialBorderPseudo, context,
+                                            PR_FALSE,
+                                            getter_AddRefs(specialBorderStyle));
+    if (specialBorderStyle){
+      // paint the border
+
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)specialBorderStyle ->GetStyleData(eStyleStruct_Spacing);
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aFrame,
+                                  aDirtyRect, aRect, *spacing, specialBorderStyle, 0);
+    }
+
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+#endif
+  return rv;
+}

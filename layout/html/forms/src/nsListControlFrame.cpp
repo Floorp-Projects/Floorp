@@ -67,6 +67,7 @@ static NS_DEFINE_IID(kIFrameIID,                  NS_IFRAME_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID,        NS_IPRIVATEDOMEVENT_IID);
 //static NS_DEFINE_IID(kBlockFrameCID,              NS_BLOCK_FRAME_CID);
 
+
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
 const PRInt32 kDefaultMultiselectHeight = 4; // This is compatible with 4.x browsers
@@ -92,9 +93,124 @@ NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+#if 0
+  // set the state flags (if any are provided)
+  nsFrameState state;
+  it->GetFrameState( &state );
+  state |= NS_BLOCK_SPACE_MGR;
+  it->SetFrameState( state );
+#endif
   *aNewFrame = it;
   return NS_OK;
 }
+
+//-----------------------------------------------------------
+// Reflow Debugging Macros
+// These let us "see" how many reflow counts are happening
+//-----------------------------------------------------------
+#ifdef DO_REFLOW_COUNTER
+
+#define MAX_REFLOW_CNT 1024
+static PRInt32 gTotalReqs    = 0;;
+static PRInt32 gTotalReflows = 0;;
+static PRInt32 gReflowControlCntRQ[MAX_REFLOW_CNT];
+static PRInt32 gReflowControlCnt[MAX_REFLOW_CNT];
+static PRInt32 gReflowInx = -1;
+
+#define REFLOW_COUNTER() \
+  if (mReflowId > -1) \
+    gReflowControlCnt[mReflowId]++;
+
+#define REFLOW_COUNTER_REQUEST() \
+  if (mReflowId > -1) \
+    gReflowControlCntRQ[mReflowId]++;
+
+#define REFLOW_COUNTER_DUMP(__desc) \
+  if (mReflowId > -1) {\
+    gTotalReqs    += gReflowControlCntRQ[mReflowId];\
+    gTotalReflows += gReflowControlCnt[mReflowId];\
+    printf("** Id:%5d %s RF: %d RQ: %d   %d/%d  %5.2f\n", \
+           mReflowId, (__desc), \
+           gReflowControlCnt[mReflowId], \
+           gReflowControlCntRQ[mReflowId],\
+           gTotalReflows, gTotalReqs, float(gTotalReflows)/float(gTotalReqs)*100.0f);\
+  }
+
+#define REFLOW_COUNTER_INIT() \
+  if (gReflowInx < MAX_REFLOW_CNT) { \
+    gReflowInx++; \
+    mReflowId = gReflowInx; \
+    gReflowControlCnt[mReflowId] = 0; \
+    gReflowControlCntRQ[mReflowId] = 0; \
+  } else { \
+    mReflowId = -1; \
+  }
+
+// reflow messages
+#define REFLOW_DEBUG_MSG(_msg1) printf((_msg1))
+#define REFLOW_DEBUG_MSG2(_msg1, _msg2) printf((_msg1), (_msg2))
+#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) printf((_msg1), (_msg2), (_msg3))
+#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) printf((_msg1), (_msg2), (_msg3), (_msg4))
+
+#else //-------------
+
+#define REFLOW_COUNTER_REQUEST() 
+#define REFLOW_COUNTER() 
+#define REFLOW_COUNTER_DUMP(__desc) 
+#define REFLOW_COUNTER_INIT() 
+
+#define REFLOW_DEBUG_MSG(_msg) 
+#define REFLOW_DEBUG_MSG2(_msg1, _msg2) 
+#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) 
+#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) 
+
+
+#endif
+
+//------------------------------------------
+// This is for being VERY noisy
+//------------------------------------------
+#ifdef DO_VERY_NOISY
+#define REFLOW_NOISY_MSG(_msg1) printf((_msg1))
+#define REFLOW_NOISY_MSG2(_msg1, _msg2) printf((_msg1), (_msg2))
+#define REFLOW_NOISY_MSG3(_msg1, _msg2, _msg3) printf((_msg1), (_msg2), (_msg3))
+#define REFLOW_NOISY_MSG4(_msg1, _msg2, _msg3, _msg4) printf((_msg1), (_msg2), (_msg3), (_msg4))
+#else
+#define REFLOW_NOISY_MSG(_msg) 
+#define REFLOW_NOISY_MSG2(_msg1, _msg2) 
+#define REFLOW_NOISY_MSG3(_msg1, _msg2, _msg3) 
+#define REFLOW_NOISY_MSG4(_msg1, _msg2, _msg3, _msg4) 
+#endif
+
+//------------------------------------------
+// Displays value in pixels or twips
+//------------------------------------------
+#ifdef DO_PIXELS
+#define PX(__v) __v / 15
+#else
+#define PX(__v) __v 
+#endif
+
+//------------------------------------------
+// Asserts if we return a desired size that 
+// doesn't correctly match the mComputedWidth
+//------------------------------------------
+#ifdef DO_UNCONSTRAINED_CHECK
+#define UNCONSTRAINED_CHECK() \
+if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
+  nscoord width = aDesiredSize.width - borderPadding.left - borderPadding.right; \
+  if (width != aReflowState.mComputedWidth) { \
+    printf("aDesiredSize.width %d %d != aReflowState.mComputedWidth %d\n", aDesiredSize.width, width, aReflowState.mComputedWidth); \
+  } \
+  NS_ASSERTION(width == aReflowState.mComputedWidth, "Returning bad value when constrained!"); \
+}
+#else
+#define UNCONSTRAINED_CHECK()
+#endif
+//------------------------------------------------------
+//-- Done with macros
+//------------------------------------------------------
+
 
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame()
@@ -109,7 +225,6 @@ nsListControlFrame::nsListControlFrame()
   mEndExtendedIndex   = kNothingSelected;
   mStartExtendedIndex = kNothingSelected;
   mIsCapturingMouseEvents = PR_FALSE;
-  mWasRestored            = PR_FALSE;
 
   mSelectionCache        = new nsVoidArray();
   mSelectionCacheLength     = 0;
@@ -122,11 +237,20 @@ nsListControlFrame::nsListControlFrame()
   mCacheSize.height            = -1;
   mCachedMaxElementSize.width  = -1;
   mCachedMaxElementSize.height = -1;
+  mCachedAvailableSize.width   = -1;
+  mCachedAvailableSize.height  = -1;
+  mCachedUnconstrainedSize.width  = -1;
+  mCachedUnconstrainedSize.height = -1;
+  
+  mOverrideReflowOpt           = PR_FALSE;
+
+  REFLOW_COUNTER_INIT()
 }
 
 //---------------------------------------------------------
 nsListControlFrame::~nsListControlFrame()
 {
+  REFLOW_COUNTER_DUMP("nsLCF");
   nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 
   // if list is dropped down 
@@ -205,26 +329,88 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //---------------------------------------------------------
 // Reflow is overriden to constrain the listbox height to the number of rows and columns
 // specified. 
+#ifdef DO_REFLOW_DEBUG
+static int myCounter = 0;
 
+static void printSize(char * aDesc, nscoord aSize) 
+{
+  printf(" %s: ", aDesc);
+  if (aSize == NS_UNCONSTRAINEDSIZE) {
+    printf("UNC");
+  } else {
+    printf("%d", aSize);
+  }
+}
+#endif
+
+//-----------------------------------------------------------------
+// Main Reflow for ListBox/Dropdown
+//-----------------------------------------------------------------
 NS_IMETHODIMP 
 nsListControlFrame::Reflow(nsIPresContext*          aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
 {
-#ifdef DEBUG_rodsXXX
-  printf("nsListControlFrame::Reflow    Reason: ");
+  REFLOW_COUNTER_REQUEST();
+
+#ifdef DO_REFLOW_DEBUG
+  printf("%p ** Id: %d nsLCF::Reflow %d R: ", this, mReflowId, myCounter++);
   switch (aReflowState.reason) {
-    case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
-    case eReflowReason_Incremental:printf("eReflowReason_Incremental\n");break;
-    case eReflowReason_Resize:printf("eReflowReason_Resize\n");break;
+    case eReflowReason_Initial:
+      printf("Initia");break;
+    case eReflowReason_Incremental:
+      printf("Increm");break;
+    case eReflowReason_Resize:
+      printf("Resize");break;
     case eReflowReason_StyleChange:
-      printf("eReflowReason_StyleChange\n");
-      break;
+      printf("StyleC");break;
+    case eReflowReason_Dirty:
+      printf("Dirty ");break;
+    default:printf("<unknown>%d", aReflowState.reason);break;
   }
+  
+  printSize("AW", aReflowState.availableWidth);
+  printSize("AH", aReflowState.availableHeight);
+  printSize("CW", aReflowState.mComputedWidth);
+  printSize("CH", aReflowState.mComputedHeight);
+  printf("\n");
 #endif // DEBUG_rodsXXX
 
+  PRBool bailOnWidth;
+  PRBool bailOnHeight;
+  // This ifdef is for turning off the optimization
+  // so we can check timings against the old version
+#if 1
+
+  nsFormControlFrame::SkipResizeReflow(mCacheSize, 
+                                       mCachedMaxElementSize, 
+                                       mCachedAvailableSize, 
+                                       aDesiredSize, aReflowState, 
+                                       aStatus, 
+                                       bailOnWidth, bailOnHeight);
+
+  // Here we bail if both the height and the width haven't changed
+  // also we see if we should override the optimization
+  //
+  // The optimization can get overridden by the combobox 
+  // sometime the combobox knows that the list MUST do a full reflow
+  // no matter what
+  if (!mOverrideReflowOpt && bailOnWidth && bailOnHeight) {
+    REFLOW_DEBUG_MSG3("*** Done nsLCF - Bailing on DW: %d  DH: %d ", PX(aDesiredSize.width), PX(aDesiredSize.height));
+    REFLOW_DEBUG_MSG3("bailOnWidth %d  bailOnHeight %d\n", PX(bailOnWidth), PX(bailOnHeight));
+    return NS_OK;
+  } else if (mOverrideReflowOpt) {
+    mOverrideReflowOpt = PR_FALSE;
+  }
+
+#else
+  bailOnWidth  = PR_FALSE;
+  bailOnHeight = PR_FALSE;
+#endif
+
 #ifdef DEBUG_rodsXXX
+  // Lists out all the options
   {
   nsresult rv = NS_ERROR_FAILURE; 
   nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
@@ -252,23 +438,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 #endif // DEBUG_rodsXXX
 
 
-
-#if 0
-    // reflow optimization - why reflow if all the contents 
-    // and frames aren't there yet
-    if (!mIsAllContentHere || !mIsAllFramesHere) {
-      aDesiredSize.width  = 30*15;
-      aDesiredSize.height = 30*15;
-      if (nsnull != aDesiredSize.maxElementSize) {
-        aDesiredSize.maxElementSize->width  = aDesiredSize.width;
-	      aDesiredSize.maxElementSize->height = aDesiredSize.height;
-      }
-      aStatus = NS_FRAME_COMPLETE;
-      printf("--------------------------> Skipping reflow\n");
-      return NS_OK;
-    }
-#endif
-
   // If all the content and frames are here 
   // then initialize it before reflow
     if (mIsAllContentHere && !mHasBeenInitialized) {
@@ -277,40 +446,10 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       }
       if (mIsAllFramesHere && !mHasBeenInitialized) {
         mHasBeenInitialized = PR_TRUE;
-        Reset(!mWasRestored);
-        mWasRestored = PR_FALSE;
-#if 1
-        nsCOMPtr<nsIReflowCommand> cmd;
-        nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(cmd), this, nsIReflowCommand::StyleChanged);
-        if (NS_FAILED(rv)) { return rv; }
-        if (!cmd) { return NS_ERROR_NULL_POINTER; }
-        nsCOMPtr<nsIPresShell> shell;
-        rv = mPresContext->GetShell(getter_AddRefs(shell));
-        if (NS_FAILED(rv)) { return rv; }
-        if (!shell) { return NS_ERROR_NULL_POINTER; }
-        rv = shell->EnterReflowLock();
-        if (NS_FAILED(rv)) { return rv; }
-        rv = shell->AppendReflowCommand(cmd);
-        // must do this next line regardless of result of AppendReflowCommand
-        shell->ExitReflowLock(PR_TRUE);
-#else
-        if (mParent) {
-          nsCOMPtr<nsIPresShell> shell;
-          nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
-          mState |= NS_FRAME_IS_DIRTY;
-          mParent->ReflowDirtyChild(shell, (nsIFrame*) this);
-        }
-#endif
+        Reset(aPresContext);
       }
     }
 
-#if 0
-  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
-                                                         aDesiredSize, aReflowState, aStatus);
-  if (NS_SUCCEEDED(skiprv)) {
-    return skiprv;
-  }
-#endif
 
     if (eReflowReason_Incremental == aReflowState.reason) {
       nsIFrame* targetFrame;
@@ -325,12 +464,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         if (content) {
           ScrollToFrame(content);
         }
-#if 0
-      } else {
-        nsresult rv = nsScrollFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-        aStatus = NS_FRAME_COMPLETE;
-        return rv;
-#endif
       }
     }
 
@@ -381,7 +514,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   nsHTMLReflowMetrics  scrolledAreaDesiredSize(&scrolledAreaSize);
 
 
-  if (eReflowReason_Incremental == firstPassState.reason) {
+  if (eReflowReason_Incremental == aReflowState.reason) {
     nsIFrame* targetFrame;
     firstPassState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
@@ -392,10 +525,13 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  nsScrollFrame::Reflow(aPresContext, 
-                        scrolledAreaDesiredSize,
-                        firstPassState, 
-                        aStatus);
+  nsresult res = nsScrollFrame::Reflow(aPresContext, 
+                                       scrolledAreaDesiredSize,
+                                       firstPassState, 
+                                       aStatus);
+  if (NS_FAILED(res)) {
+    return res;
+  }
 
   // Compute the bounding box of the contents of the list using the area 
   // calculated by the first reflow as a starting point.
@@ -507,7 +643,17 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       GetSizeAttribute(&numRows);
       // because we are not a drop down 
       // we will always have 2 or more rows
-      visibleHeight = numRows * heightOfARow;
+      if (numRows >= 1) {
+        visibleHeight = numRows * heightOfARow;
+      } else {
+        PRBool multipleSelections = PR_FALSE;
+        GetMultiple(&multipleSelections);
+        if (multipleSelections) {
+          visibleHeight = PR_MIN(length, kMaxDropDownRows) * heightOfARow;
+        } else {
+          visibleHeight = 2 * heightOfARow;
+        }
+      }
     }
   }
 
@@ -579,7 +725,24 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
+
+  mCachedAvailableSize.width  = aDesiredSize.width - (border.left + border.right + padding.left + padding.right);
+  mCachedAvailableSize.height = aDesiredSize.height - (border.top + border.bottom + padding.top + padding.bottom);
+
+  REFLOW_DEBUG_MSG3("** nsLCF Caching AW: %d  AH: %d\n", PX(mCachedAvailableSize.width), PX(mCachedAvailableSize.height));
+
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+
+  REFLOW_DEBUG_MSG3("** Done nsLCF DW: %d  DH: %d\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
+
+  REFLOW_COUNTER();
+
+#ifdef DO_REFLOW_COUNTER
+  if (gReflowControlCnt[mReflowId] > 50) {
+    REFLOW_DEBUG_MSG3("** Id: %d Cnt: %d ", mReflowId, gReflowControlCnt[mReflowId]);
+    REFLOW_DEBUG_MSG3("Done nsLCF DW: %d  DH: %d\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
+  }
+#endif
 
   return NS_OK;
 }
@@ -1473,23 +1636,12 @@ nsListControlFrame::GetMaxNumValues()
   }
 }
 
-
 //---------------------------------------------------------
 // Resets the select back to it's original default values;
 // those values as determined by the original HTML
 //---------------------------------------------------------
 void 
 nsListControlFrame::Reset(nsIPresContext* aPresContext)
-{
-  Reset(PR_TRUE);
-}
-
-//---------------------------------------------------------
-// Resets the select back to it's original default values;
-// those values as determined by the original HTML
-//---------------------------------------------------------
-void 
-nsListControlFrame::Reset(PRBool aDoSelect)
 {
   // if all the frames aren't here 
   // don't bother reseting
@@ -1502,6 +1654,11 @@ nsListControlFrame::Reset(PRBool aDoSelect)
     return;
   }
 
+  // Check here to see if this listbox has has its state restored
+  // Either by being a list or by being a dropdown.
+  // if we have been restored then we don't set any of the default selections
+  PRBool hasBeenRestored = mPresState != nsnull;
+
   PRUint32 numOptions;
   options->GetLength(&numOptions);
 
@@ -1511,10 +1668,10 @@ nsListControlFrame::Reset(PRBool aDoSelect)
   PRBool multiple;
   GetMultiple(&multiple);
 
-  if (aDoSelect) {
-    Deselect();
-  }
+  Deselect();
 
+  // Clear the cache and set the default selections
+  // if we havn't been restored
   mSelectionCache->Clear();
   mSelectionCacheLength = 0;
   PRUint32 i;
@@ -1522,7 +1679,9 @@ nsListControlFrame::Reset(PRBool aDoSelect)
     nsCOMPtr<nsIDOMHTMLOptionElement> option = getter_AddRefs(GetOption(*options, i));
     if (option) {
       PRBool selected = PR_FALSE;
-      option->GetDefaultSelected(&selected);
+      if (!hasBeenRestored) {
+        option->GetDefaultSelected(&selected);
+      }
 
       mSelectionCache->AppendElement((void*)selected);
       mSelectionCacheLength++;
@@ -1540,7 +1699,47 @@ nsListControlFrame::Reset(PRBool aDoSelect)
     }
   }
 
+  // Ok, so we were restored, now set the last known selections from the restore state.
+  if (hasBeenRestored) {
+    nsCOMPtr<nsISupports> supp;
+    mPresState->GetStatePropertyAsSupports("selecteditems", getter_AddRefs(supp));
 
+    nsresult res = NS_ERROR_NULL_POINTER;
+    if (!supp)
+      return;
+
+    nsCOMPtr<nsISupportsArray> value = do_QueryInterface(supp);
+    if (!value)
+      return;
+
+    PRUint32 count = 0;
+    value->Count(&count);
+
+    nsCOMPtr<nsISupportsPRInt32> thisVal;
+    PRInt32 j=0;
+    for (PRUint32 i=0; i<count; i++) {
+      nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
+      thisVal = do_QueryInterface(suppval);
+      if (thisVal) {
+        res = thisVal->GetData(&j);
+        if (NS_SUCCEEDED(res)) {
+          mSelectedIndex = j;
+          SetContentSelected(j, PR_TRUE);// might want to use ToggleSelection
+          mSelectionCache->ReplaceElementAt((void*)PR_TRUE, j);
+          if (multiple) {
+            mStartExtendedIndex = j;
+            if (mEndExtendedIndex == kNothingSelected) {
+              mEndExtendedIndex = j;
+            }
+          }
+        }
+      } else {
+        res = NS_ERROR_UNEXPECTED;
+      }
+      if (!NS_SUCCEEDED(res)) break;
+    }
+  }
+    
   if (mComboboxFrame != nsnull) {
     if (mSelectedIndex == kNothingSelected) {
       mComboboxFrame->MakeSureSomethingIsSelected(mPresContext);
@@ -1848,7 +2047,10 @@ nsListControlFrame::DoneAddingContent(PRBool aIsDone)
 NS_IMETHODIMP
 nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
-  
+#ifdef DO_REFLOW_DEBUG
+  printf("---- Id: %d nsLCF %p Added Option %d\n", mReflowId, this, aIndex);
+#endif
+
   if (!mIsAllContentHere) {
     nsCOMPtr<nsISelectElement> element(do_QueryInterface(mContent));
     if (element) {
@@ -1890,7 +2092,7 @@ nsListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
         wasReset = PR_TRUE;
       }
 
-#if DEBUG_rodsXXX
+#ifdef DEBUG_rodsXXX
       {
       nsAutoString text = "No Value";
       nsresult rv = option->GetLabel(text);
@@ -2435,6 +2637,9 @@ nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
 nsresult
 nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 {
+#ifdef DO_REFLOW_DEBUG
+  printf("--------------------------- MouseUp ----------------------------\n");
+#endif
 
   if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
@@ -2542,6 +2747,9 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 nsresult
 nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
+#ifdef DO_REFLOW_DEBUG
+  printf("--------------------------- MouseDown ----------------------------\n");
+#endif
   if (nsFormFrame::GetDisabled(this)) { 
     return NS_OK;
   }
@@ -2629,7 +2837,6 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         // This will consume the focus event we get from the clicking on the dropdown
         //stateManager->ConsumeFocusEvents(PR_TRUE);
 
-
         PRBool isDroppedDown;
         mComboboxFrame->IsDroppedDown(&isDroppedDown);
         mComboboxFrame->ShowDropDown(!isDroppedDown);
@@ -2642,11 +2849,14 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
       }
     }
   }
-  aMouseEvent->PreventDefault();
-  aMouseEvent->PreventCapture();
-  aMouseEvent->PreventBubble();
-  return NS_ERROR_FAILURE; //consumes event
-  //return NS_OK;
+
+  if (IsInDropDownMode() == PR_TRUE) {
+    aMouseEvent->PreventDefault();
+    aMouseEvent->PreventCapture();
+    aMouseEvent->PreventBubble();
+    return NS_ERROR_FAILURE; //consumes event
+  }
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -2869,9 +3079,9 @@ nsListControlFrame::GetStateType(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::SaveState(nsIPresContext* aPresContext,
-                              nsIPresState** aState)
+nsListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   nsCOMPtr<nsISupportsArray> value;
   nsresult res = NS_NewISupportsArray(getter_AddRefs(value));
@@ -2904,41 +3114,41 @@ nsListControlFrame::SaveState(nsIPresContext* aPresContext,
   return res;
 }
 
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsListControlFrame::SaveState(nsIPresContext* aPresContext,
+                              nsIPresState** aState)
+{
+  if (mComboboxFrame == nsnull) {
+    return SaveStateInternal(aPresContext, aState);\
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+//-----------------------------------------------------------
+NS_IMETHODIMP
+nsListControlFrame::RestoreStateInternal(nsIPresContext* aPresContext,
+                                         nsIPresState* aState)
+{
+  mPresState = aState;
+  return NS_OK;
+}
+
+//-----------------------------------------------------------
 NS_IMETHODIMP
 nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
                                  nsIPresState* aState)
 {
-  nsCOMPtr<nsISupports> supp;
-  aState->GetStatePropertyAsSupports("selecteditems", getter_AddRefs(supp));
-
-  nsresult res = NS_ERROR_NULL_POINTER;
-  if (!supp)
-    return res;
-
-  nsCOMPtr<nsISupportsArray> value = do_QueryInterface(supp);
-  if (!value)
-    return res;
-
-  PRUint32 count = 0;
-  value->Count(&count);
-
-  mWasRestored = PR_TRUE;
-
-  nsCOMPtr<nsISupportsPRInt32> thisVal;
-  PRInt32 j=0;
-  for (PRUint32 i=0; i<count; i++) {
-    nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
-    thisVal = do_QueryInterface(suppval);
-    if (thisVal) {
-      res = thisVal->GetData(&j);
-      if (NS_SUCCEEDED(res)) {
-        res = SetOptionSelected(j, PR_TRUE); // might want to use ToggleSelection
-      }
-    } else {
-      res = NS_ERROR_UNEXPECTED;
-    }
-    if (!NS_SUCCEEDED(res)) break;
+  // ignore requests for saving state that are made directly 
+  // to the list frame by the system
+  // The combobox frame will call RestoreStateInternal 
+  // to have its state saved.
+  //
+  // mComboboxFrame is null when it is a stand-alone listbox
+  if (mComboboxFrame == nsnull) {
+    return RestoreStateInternal(aPresContext, aState);
   }
-    
-  return res;
+
+  return NS_OK;
 }
