@@ -215,6 +215,7 @@ nsresult nsMailboxUrl::GetFilePath(const nsFileSpec ** aFilePath)
 	return NS_OK;
 }
 
+#if 0
 nsresult nsMailboxUrl::SetFilePath(const nsFileSpec& aFilePath)
 {
 	NS_LOCK_INSTANCE();
@@ -225,6 +226,7 @@ nsresult nsMailboxUrl::SetFilePath(const nsFileSpec& aFilePath)
     NS_UNLOCK_INSTANCE();
     return NS_OK;	
 }
+#endif
 
 nsresult nsMailboxUrl::GetMessageKey(nsMsgKey& aMessageKey)
 {
@@ -320,7 +322,10 @@ NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 		{
 			char * uri = nsnull;
 			nsFileSpec folder = *filePath;
-			nsBuildLocalMessageURI(folder, m_messageKey, &uri);
+			nsBuildLocalMessageURI(m_spec, m_messageKey, &uri);
+#ifdef DEBUG_alecf
+            fprintf(stderr, "nsBuildLocalMessageURI(%s, %d -> %s) in nsMailboxUrl::GetURI", m_spec, m_messageKey, uri);
+#endif
 			*aURI = uri;
 		}
 		else
