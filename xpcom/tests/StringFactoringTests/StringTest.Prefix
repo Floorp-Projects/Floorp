@@ -1,4 +1,4 @@
 // StringTest.Prefix
 
 #define STANDALONE_STRING_TESTS
-#define NEW_STRING_APIS
+#define HAVE_CPP_2BYTE_WCHAR_T
