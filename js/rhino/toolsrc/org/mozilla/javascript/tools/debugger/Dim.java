@@ -66,6 +66,7 @@ class Dim {
 
     private volatile ContextData interruptedContextData = null;
 
+    ContextFactory contextFactory;
     private Object monitor = new Object();
     private Object eventThreadMonitor = new Object();
     private volatile int returnValue = -1;
@@ -488,7 +489,7 @@ class Dim {
 
         void withContext()
         {
-            Context.call(this);
+            dim.contextFactory.call(this);
         }
 
         // ContextFactory.Listener interface
@@ -537,6 +538,7 @@ class Dim {
 
     void attachTo(ContextFactory factory)
     {
+        this.contextFactory = factory;
         factory.addListener(new DimIProxy(this, IPROXY_LISTEN));
     }
 
