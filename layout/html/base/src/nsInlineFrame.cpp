@@ -29,6 +29,12 @@
 #include "nsIPresContext.h"
 #include "nsFrameReflowState.h"
 
+#ifdef NS_DEBUG
+#undef NOISY_ANON_BLOCK
+#else
+#undef NOISY_ANON_BLOCK
+#endif
+
 // XXX TODO:
 // append/insert/remove floater testing
 
@@ -531,7 +537,9 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
       // can generate a reflow command.
       rv = anonymousBlock->AppendFrames2(aPresContext, aPresShell, nsnull,
                                          newBlockFrames.FirstChild());
-//printf("AppendFrames: case 1\n");
+#ifdef NOISY_ANON_BLOCK
+      printf("AppendFrames: case 1\n");
+#endif
     }
     else {
       // There is no prior block frames that are the children of this
@@ -554,7 +562,9 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
       if (section3.NotEmpty()) {
         mFrames.AppendFrames(nsnull, section3);
       }
-//printf("AppendFrames: case 2\n");
+#ifdef NOISY_ANON_BLOCK
+      printf("AppendFrames: case 2\n");
+#endif
 
       if (aGenerateReflowCommands) {
         // generate a reflow command for "this"
@@ -571,7 +581,9 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
   else {
     // The new frames contain no block frames
     mFrames.AppendFrames(this, aFrameList);
-//printf("AppendFrames: case 3\n");
+#ifdef NOISY_ANON_BLOCK
+    printf("AppendFrames: case 3\n");
+#endif
 
     if (aGenerateReflowCommands) {
       // generate a reflow command for "this"
@@ -672,7 +684,9 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
       mFrames.InsertFrames(this, nsnull, anonymousBlock);
       target = this;
       generateReflowCommand = PR_TRUE;
-//printf("InsertBlockFrames: case 1\n");
+#ifdef NOISY_ANON_BLOCK
+      printf("InsertBlockFrames: case 1\n");
+#endif
     }
     else {
       // Take all of the frames before the anonymous block, plus the
@@ -687,7 +701,9 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
       }
       anonymousBlock->InsertFrames2(aPresContext, aPresShell, nsnull,
                                     nsnull, frames.FirstChild());
-//printf("InsertBlockFrames: case 2\n");
+#ifdef NOISY_ANON_BLOCK
+      printf("InsertBlockFrames: case 2\n");
+#endif
     }
   }
   else {
@@ -706,7 +722,9 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
       anonymousBlock = (nsAnonymousBlockFrame*) prevFrameParent;
       anonymousBlock->InsertFrames2(aPresContext, aPresShell, nsnull,
                                     aPrevFrame, aFrameList);
-//printf("InsertBlockFrames: case 3\n");
+#ifdef NOISY_ANON_BLOCK
+      printf("InsertBlockFrames: case 3\n");
+#endif
     }
     else {
       // The previous frame's parent is an inline frame. First see if
@@ -742,7 +760,9 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
         frames.AppendFrames(anonymousBlock, aFrameList);
         anonymousBlock->AppendFrames2(aPresContext, aPresShell, nsnull,
                                       frames.FirstChild());
-//printf("InsertBlockFrames: case 4\n");
+#ifdef NOISY_ANON_BLOCK
+        printf("InsertBlockFrames: case 4\n");
+#endif
       }
       else {
         // There is no anymous block before the insertion point. See
@@ -778,7 +798,9 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
           // Now update the anonymous block
           anonymousBlock->InsertFrames2(aPresContext, aPresShell, nsnull,
                                         nsnull, frames.FirstChild());
-//printf("InsertBlockFrames: case 5\n");
+#ifdef NOISY_ANON_BLOCK
+          printf("InsertBlockFrames: case 5\n");
+#endif
         }
         else {
           // There are no anonymous blocks so create one and place the
@@ -795,7 +817,9 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
           flow->mFrames.InsertFrames(flow, aPrevFrame, anonymousBlock);
           generateReflowCommand = PR_TRUE;
           target = flow;
-//printf("InsertBlockFrames: case 6\n");
+#ifdef NOISY_ANON_BLOCK
+          printf("InsertBlockFrames: case 6\n");
+#endif
         }
       }
     }
@@ -833,7 +857,9 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
     mFrames.InsertFrames(this, nsnull, aFrameList);
     generateReflowCommand = PR_TRUE;
     target = this;
-//printf("InsertInlineFrames: case 1\n");
+#ifdef NOISY_ANON_BLOCK
+    printf("InsertInlineFrames: case 1\n");
+#endif
   }
   else {
     nsIFrame* prevFrameParent;
@@ -860,7 +886,9 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
         }
         anonymousBlock->InsertFrames2(aPresContext, aPresShell, nsnull,
                                       aPrevFrame, aFrameList);
-//printf("InsertInlineFrames: case 2\n");
+#ifdef NOISY_ANON_BLOCK
+        printf("InsertInlineFrames: case 2\n");
+#endif
       }
       else {
         // aPrevFrame is the last frame that should be in the
@@ -878,7 +906,9 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
                                                    aFrameList);
         generateReflowCommand = PR_TRUE;
         target = anonymousBlockParent;
-//printf("InsertInlineFrames: case 3\n");
+#ifdef NOISY_ANON_BLOCK
+        printf("InsertInlineFrames: case 3\n");
+#endif
       }
     }
     else {
@@ -890,7 +920,9 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
       flow->mFrames.InsertFrames(flow, aPrevFrame, aFrameList);
       generateReflowCommand = PR_TRUE;
       target = flow;
-//printf("InsertInlineFrames: case 4\n");
+#ifdef NOISY_ANON_BLOCK
+      printf("InsertInlineFrames: case 4\n");
+#endif
     }
   }
 
@@ -928,7 +960,9 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
     mFrames.DeleteFrame(aPresContext, aOldFrame);
     generateReflowCommand = PR_TRUE;
     target = this;
-//printf("RemoveFrame: case 1\n");
+#ifdef NOISY_ANON_BLOCK
+    printf("RemoveFrame: case 1\n");
+#endif
   }
   else {
     nsIFrame* nextInFlow;
@@ -949,7 +983,9 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
       mFrames.DeleteFrame(aPresContext, anonymousBlock);
       generateReflowCommand = PR_TRUE;
       target = this;
-//printf("RemoveFrame: case 2\n");
+#ifdef NOISY_ANON_BLOCK
+      printf("RemoveFrame: case 2\n");
+#endif
     }
     else {
       // If the frame being removed is a block frame then we may need to
@@ -971,7 +1007,9 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
             // There is a block in the anonymous block after the block
             // that we are removing. This means that we can let the
             // anonymous block remove the frame.
-//printf("RemoveFrame: case 3\n");
+#ifdef NOISY_ANON_BLOCK
+            printf("RemoveFrame: case 3\n");
+#endif
             anonymousBlock->RemoveFrame2(aPresContext, aPresShell, aListName,
                                          aOldFrame);
           }
@@ -981,8 +1019,73 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
             // (up to the closest prior block) so that they can be
             // moved outside the anonymous block and into an inline
             // frame.
-//printf("RemoveFrame: case 4\n");
-NS_NOTYETIMPLEMENTED("RemoveFrame: case 4");
+
+            // First get the last frame out of the picture; delete any
+            // continuations it might have.
+            nsInlineFrame* anonymousBlockParent;
+            anonymousBlock->GetParent((nsIFrame*&) anonymousBlockParent);
+            nsAnonymousBlockFrame* ab = anonymousBlock;
+            anonymousBlock->RemoveFramesFrom(aOldFrame);
+            aOldFrame->DeleteFrame(aPresContext);
+            while (nsnull != nextInFlow) {
+              nsIFrame* nextParent;
+              nextInFlow->GetParent(nextParent);
+              if (nextParent != ab) {
+                ab = (nsAnonymousBlockFrame*) nextParent;
+              }
+              ab->RemoveFirstFrame();
+              nsIFrame* nextNextInFlow;
+              nextInFlow->GetNextInFlow(nextNextInFlow);
+              nextInFlow->DeleteFrame(aPresContext);
+              nextInFlow = nextNextInFlow;
+            }
+
+            // Any inline frames that are between the new last-block
+            // inside the anonymous block and the block we just
+            // removed need to be taken out of the anonymous block.
+            nsFrameList inlines;
+            while (nsnull != anonymousBlock) {
+              // Find the first inline before the last block
+              nsIFrame* kids;
+              anonymousBlock->FirstChild(nsnull, kids);
+              if (nsnull != kids) {
+                SectionData sd(kids);
+                if (sd.HasABlock()) {
+                  kids = sd.lastBlock;
+                  kids->GetNextSibling(kids);
+                  if (nsnull != kids) {
+                    // Take the frames that follow the last block
+                    // (which are inline frames) and remove them from
+                    // the anonymous block. Insert them into the
+                    // inlines frame-list.
+                    anonymousBlock->RemoveFramesFrom(kids);
+                    inlines.InsertFrames(nsnull, nsnull, kids);
+                  }
+                }
+                else {
+                  // All of the frames are inline frames -- take them
+                  // all away.
+                  anonymousBlock->RemoveFramesFrom(kids);
+                  inlines.InsertFrames(nsnull, nsnull, kids);
+                }
+              }
+              anonymousBlock->GetPrevInFlow((nsIFrame*&) anonymousBlock);
+            }
+
+            // Now we have all of the inline frames that need to be
+            // placed into an inline parent instead of the anonymous
+            // block parent.
+            if (inlines.NotEmpty()) {
+              // Place the inline frames after the anonymous block
+              // frame in the child list of the anonymousBlockParent.
+              anonymousBlockParent->mFrames.AppendFrames(anonymousBlockParent,
+                                                         inlines);
+            }
+            generateReflowCommand = PR_TRUE;
+            target = anonymousBlockParent;
+#ifdef NOISY_ANON_BLOCK
+            printf("RemoveFrame: case 4\n");
+#endif
           }
         }
         else {
@@ -997,7 +1100,7 @@ NS_NOTYETIMPLEMENTED("RemoveFrame: case 4");
           // remove aOldFrame's continuations if it has any...
           nsInlineFrame* anonymousBlockParent;
           anonymousBlock->GetParent((nsIFrame*&) anonymousBlockParent);
-          anonymousBlock->StealFirstFrame();
+          anonymousBlock->RemoveFirstFrame();
           aOldFrame->GetNextInFlow(nextInFlow);
           aOldFrame->DeleteFrame(aPresContext);
           while (nsnull != nextInFlow) {
@@ -1006,12 +1109,11 @@ NS_NOTYETIMPLEMENTED("RemoveFrame: case 4");
             if (nextParent != anonymousBlock) {
               anonymousBlock = (nsAnonymousBlockFrame*) nextParent;
             }
-            anonymousBlock->StealFirstFrame();
+            anonymousBlock->RemoveFirstFrame();
             nsIFrame* nextNextInFlow;
             nextInFlow->GetNextInFlow(nextNextInFlow);
             nextInFlow->DeleteFrame(aPresContext);
             nextInFlow = nextNextInFlow;
-//printf("RemoveFrame: case 5a\n");
           }
 
           // Gather up the inline frames that follow aOldFrame
@@ -1027,35 +1129,41 @@ NS_NOTYETIMPLEMENTED("RemoveFrame: case 4");
               }
               nsIFrame* next;
               kid->GetNextSibling(next);
-              anonymousBlock->StealFirstFrame();
+              anonymousBlock->RemoveFirstFrame();
               frames.AppendFrame(nsnull, kid);
               kid = next;
             }
             anonymousBlock->GetNextInFlow((nsIFrame*&) anonymousBlock);
           }
 
-          // If the anonymousBlockParent has a prev-in-flow then
-          // append the inline frames there, otherwise insert them
-          // before the anonymousBlock.
-          anonymousBlockParent->GetPrevInFlow(prevInFlow);
-          if (nsnull != prevInFlow) {
-            anonymousBlockParent = (nsInlineFrame*) prevInFlow;
-            anonymousBlockParent->mFrames.AppendFrames(anonymousBlockParent,
-                                                       frames);
-          }
-          else {
-            anonymousBlockParent->mFrames.InsertFrames(anonymousBlockParent,
-                                                       nsnull,
-                                                       frames);
+          if (frames.NotEmpty()) {
+            // If the anonymousBlockParent has a prev-in-flow then
+            // append the inline frames there, otherwise insert them
+            // before the anonymousBlock.
+            anonymousBlockParent->GetPrevInFlow(prevInFlow);
+            if (nsnull != prevInFlow) {
+              anonymousBlockParent = (nsInlineFrame*) prevInFlow;
+              anonymousBlockParent->mFrames.AppendFrames(anonymousBlockParent,
+                                                         frames);
+            }
+            else {
+              anonymousBlockParent->mFrames.InsertFrames(anonymousBlockParent,
+                                                         nsnull,
+                                                         frames);
+            }
           }
           generateReflowCommand = PR_TRUE;
           target = anonymousBlockParent;
-//printf("RemoveFrame: case 5\n");
+#ifdef NOISY_ANON_BLOCK
+          printf("RemoveFrame: case 5\n");
+#endif
         }
       }
       else {
         // We can let the anonymousBlock remove the frame directly
-//printf("RemoveFrame: case 6\n");
+#ifdef NOISY_ANON_BLOCK
+        printf("RemoveFrame: case 6\n");
+#endif
         anonymousBlock->RemoveFrame2(aPresContext, aPresShell, aListName,
                                      aOldFrame);
       }
