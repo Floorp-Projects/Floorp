@@ -971,6 +971,15 @@ NS_IMETHODIMP oeICalImpl::FetchEvent( const char *id, oeIICalEvent **ev)
 #ifdef ICAL_DEBUG_ALL
     printf( "oeICalImpl::FetchEvent()\n" );
 #endif
+
+    if( id == nsnull ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::FetchEvent() - Invalid Id.\n" );
+        #endif
+        *ev = nsnull;
+        return NS_OK;
+    }
+
     oeIICalEvent* event = m_eventlist.GetEventById( id );
     if( event != nsnull ) {
         event->AddRef();
