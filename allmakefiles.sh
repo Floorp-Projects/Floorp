@@ -271,6 +271,11 @@ layout/xul/content/src/Makefile
 layout/xbl/Makefile
 layout/xbl/public/Makefile
 layout/xbl/src/Makefile
+layout/xbl/builtin/Makefile
+layout/xbl/builtin/os2/Makefile
+layout/xsl/Makefile
+layout/xsl/document/Makefile
+layout/xsl/document/src/Makefile
 "
 
 MAKEFILES_appfilelocprovider="
@@ -340,6 +345,7 @@ netwerk/base/Makefile
 netwerk/base/public/Makefile
 netwerk/base/src/Makefile
 netwerk/build/Makefile
+netwerk/build2/Makefile
 netwerk/cache/build/Makefile
 netwerk/cache/filecache/Makefile
 netwerk/cache/Makefile
@@ -389,6 +395,7 @@ netwerk/streamconv/src/Makefile
 netwerk/streamconv/test/Makefile
 netwerk/test/Makefile
 netwerk/testserver/Makefile
+netwerk/resources/Makefile
 
 uriloader/exthandler/Makefile
 intl/strres/public/Makefile
@@ -429,6 +436,8 @@ rdf/chrome/Makefile
 rdf/chrome/build/Makefile
 rdf/chrome/public/Makefile
 rdf/chrome/src/Makefile
+rdf/chrome/tools/Makefile
+rdf/chrome/tools/chromereg/Makefile
 rdf/util/Makefile
 rdf/util/public/Makefile
 rdf/util/src/Makefile
@@ -528,6 +537,7 @@ widget/timer/src/unix/motif/Makefile
 widget/timer/src/unix/photon/Makefile
 widget/timer/src/unix/xlib/Makefile
 widget/timer/src/unix/qt/Makefile
+widget/timer/src/os2/Makefile
 "
 
 MAKEFILES_xpcom="
@@ -651,7 +661,11 @@ xpfe/components/remote/src/Makefile
 xpfe/components/autocomplete/Makefile
 xpfe/components/autocomplete/public/Makefile
 xpfe/components/autocomplete/src/Makefile
+xpfe/components/urlbarhistory/Makefile
+xpfe/components/urlbarhistory/public/Makefile
+xpfe/components/urlbarhistory/src/Makefile
 xpfe/components/console/Makefile
+xpfe/components/build/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
@@ -661,6 +675,7 @@ xpfe/browser/src/Makefile
 xpfe/browser/resources/Makefile
 xpfe/browser/resources/content/Makefile
 xpfe/browser/resources/content/unix/Makefile
+xpfe/browser/resources/content/os2/Makefile
 xpfe/browser/resources/locale/Makefile
 xpfe/browser/resources/locale/en-US/Makefile
 xpfe/browser/resources/locale/en-US/unix/Makefile
@@ -678,12 +693,15 @@ xpfe/communicator/resources/Makefile
 xpfe/communicator/resources/locale/Makefile
 xpfe/communicator/resources/locale/en-US/Makefile
 xpfe/communicator/resources/content/Makefile
+xpfe/communicator/resources/content/os2/Makefile
 "
 
 MAKEFILES_embedding="
 embedding/Makefile
+embedding/base/Makefile
 embedding/browser/Makefile
 embedding/browser/build/Makefile
+embedding/browser/chrome/Makefile
 embedding/browser/webBrowser/Makefile
 embedding/browser/gtk/Makefile
 embedding/browser/gtk/src/Makefile
@@ -906,7 +924,9 @@ for extension in $MOZ_EXTENSIONS; do
 	    extensions/xmlextras/base/public/Makefile
 	    extensions/xmlextras/build/Makefile
 	    extensions/xmlextras/build/src/Makefile
+	    extensions/xmlextras/soap/Makefile
 	    extensions/xmlextras/soap/public/Makefile
+	    extensions/xmlextras/soap/src/Makefile
 	    extensions/xmlextras/tests/Makefile
             " ;;
         xmlterm ) MAKEFILES_extensions="$MAKEFILES_extensions
