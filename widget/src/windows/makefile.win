@@ -30,6 +30,7 @@ CPPSRCS =              \
 	nsDragService.cpp      \
 	Ienumfe.cpp      \
 	nsDataObj.cpp      \
+	nsDataObjCollection.cpp      \
 	nsClipboard.cpp      \
 	nsPopUpMenu.cpp      \
 	nsMenuBar.cpp        \
@@ -66,6 +67,7 @@ OBJS =                             \
 	.\$(OBJDIR)\nsDragService.obj  \
 	.\$(OBJDIR)\Ienumfe.obj  \
 	.\$(OBJDIR)\nsDataObj.obj  \
+	.\$(OBJDIR)\nsDataObjCollection.obj  \
 	.\$(OBJDIR)\nsClipboard.obj  \
 	.\$(OBJDIR)\nsPopUpMenu.obj  \
 	.\$(OBJDIR)\nsMenuBar.obj  \

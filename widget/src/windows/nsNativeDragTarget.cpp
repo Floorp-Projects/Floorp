@@ -122,16 +122,16 @@ void nsNativeDragTarget::GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect
 
   // Default is move if we can, in fact drop here.
   *pdwEffect    = DROPEFFECT_MOVE;
-  *aGeckoAction = DRAGDROP_ACTION_MOVE;
+  *aGeckoAction = nsIDragService::DRAGDROP_ACTION_MOVE;
 
   // Given the key modifiers gifure out what state we are in for both
   // the native system and Gecko
   if (grfKeyState & MK_CONTROL) {
     if (canLink && (grfKeyState & MK_SHIFT)) {
-      *aGeckoAction = DRAGDROP_ACTION_LINK;
+      *aGeckoAction = nsIDragService::DRAGDROP_ACTION_LINK;
       *pdwEffect    = DROPEFFECT_LINK;
     } else {
-      *aGeckoAction = DRAGDROP_ACTION_COPY;
+      *aGeckoAction = nsIDragService::DRAGDROP_ACTION_COPY;
       *pdwEffect    = DROPEFFECT_COPY;
     }
   }
