@@ -54,7 +54,7 @@ interface nsIGlobalHistory : nsISupports
     string GetURLCompletion(in string aURL);
 
     // get the last page visited
-    string GetLastPageVisted();
+    string GetLastPageVisited();
 };
 
 %{ C++
