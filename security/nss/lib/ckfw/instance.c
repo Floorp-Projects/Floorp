@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:19 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:31:49 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -132,7 +132,6 @@ struct NSSCKFWInstanceStr {
 
   CK_ULONG lastSessionHandle;
   nssCKFWHash *sessionHandleHash;
-  nssCKFWHash *sessionHandleReverseHash;
 
   CK_ULONG lastObjectHandle;
   nssCKFWHash *objectHandleHash;
@@ -288,19 +287,13 @@ nssCKFWInstance_Create
     goto loser;
   }
 
-  fwInstance->sessionHandleReverseHash = nssCKFWHash_Create(fwInstance,
-    fwInstance->arena, pError);
-  if( (nssCKFWHash *)NULL == fwInstance->sessionHandleReverseHash ) {
-    goto loser;
-  }
-
   fwInstance->objectHandleHash = nssCKFWHash_Create(fwInstance,
     fwInstance->arena, pError);
   if( (nssCKFWHash *)NULL == fwInstance->objectHandleHash ) {
     goto loser;
   }
 
-  if( (void *)NULL != (void *)mdInstance->GetSlots ) {
+  if( (void *)NULL == (void *)mdInstance->GetSlots ) {
     /* That routine is required */
     *pError = CKR_GENERAL_ERROR;
     goto loser;
@@ -377,7 +370,9 @@ nssCKFWInstance_Destroy
   NSSCKFWInstance *fwInstance
 )
 {
+#ifdef NSSDEBUG
   CK_RV error = CKR_OK;
+#endif /* NSSDEBUG */
   CK_ULONG i;
 
 #ifdef NSSDEBUG
@@ -560,18 +555,19 @@ nssCKFWInstance_CreateSessionHandle
   }
 
   hSession = ++(fwInstance->lastSessionHandle);
+
+  /* Alan would say I should unlock for this call. */
+  
+  *pError = nssCKFWSession_SetHandle(fwSession, hSession);
+  if( CKR_OK != *pError ) {
+    goto done;
+  }
+
   *pError = nssCKFWHash_Add(fwInstance->sessionHandleHash, 
               (const void *)hSession, (const void *)fwSession);
   if( CKR_OK != *pError ) {
     hSession = (CK_SESSION_HANDLE)0;
     goto done;
-  }
-
-  *pError = nssCKFWHash_Add(fwInstance->sessionHandleReverseHash,
-              (const void *)fwSession, (const void *)hSession);
-  if( CKR_OK != *pError ) {
-    nssCKFWHash_Remove(fwInstance->sessionHandleHash, (const void *)hSession);
-    hSession = (CK_SESSION_HANDLE)0;
   }
 
  done:
@@ -605,6 +601,8 @@ nssCKFWInstance_ResolveSessionHandle
   fwSession = (NSSCKFWSession *)nssCKFWHash_Lookup(
                 fwInstance->sessionHandleHash, (const void *)hSession);
 
+  /* Assert(hSession == nssCKFWSession_GetHandle(fwSession)) */
+
   (void)nssCKFWMutex_Unlock(fwInstance->mutex);
 
   return fwSession;
@@ -637,7 +635,7 @@ nssCKFWInstance_DestroySessionHandle
                 fwInstance->sessionHandleHash, (const void *)hSession);
 
   nssCKFWHash_Remove(fwInstance->sessionHandleHash, (const void *)hSession);
-  nssCKFWHash_Remove(fwInstance->sessionHandleReverseHash, (const void *)fwSession);
+  nssCKFWSession_SetHandle(fwSession, (CK_SESSION_HANDLE)0);
 
   (void)nssCKFWMutex_Unlock(fwInstance->mutex);
 
@@ -655,24 +653,18 @@ nssCKFWInstance_FindSessionHandle
   NSSCKFWSession *fwSession
 )
 {
-  CK_SESSION_HANDLE hSession;
-
 #ifdef NSSDEBUG
   if( CKR_OK != nssCKFWInstance_verifyPointer(fwInstance) ) {
     return (CK_SESSION_HANDLE)0;
   }
-#endif /* NSSDEBUG */
 
-  if( CKR_OK != nssCKFWMutex_Lock(fwInstance->mutex) ) {
+  if( CKR_OK != nssCKFWSession_verifyPointer(fwSession) ) {
     return (CK_SESSION_HANDLE)0;
   }
+#endif /* NSSDEBUG */
 
-  hSession = (CK_SESSION_HANDLE)nssCKFWHash_Lookup(
-               fwInstance->sessionHandleReverseHash, (const void *)fwSession);
-
-  (void)nssCKFWMutex_Unlock(fwInstance->mutex);
-
-  return hSession;
+  return nssCKFWSession_GetHandle(fwSession);
+  /* look it up and assert? */
 }
 
 /*
@@ -706,6 +698,13 @@ nssCKFWInstance_CreateObjectHandle
   }
 
   hObject = ++(fwInstance->lastObjectHandle);
+
+  *pError = nssCKFWObject_SetHandle(fwObject, hObject);
+  if( CKR_OK != *pError ) {
+    hObject = (CK_OBJECT_HANDLE)0;
+    goto done;
+  }
+
   *pError = nssCKFWHash_Add(fwInstance->objectHandleHash, 
               (const void *)hObject, (const void *)fwObject);
   if( CKR_OK != *pError ) {
@@ -744,6 +743,8 @@ nssCKFWInstance_ResolveObjectHandle
   fwObject = (NSSCKFWObject *)nssCKFWHash_Lookup(
                 fwInstance->objectHandleHash, (const void *)hObject);
 
+  /* Assert(hObject == nssCKFWObject_GetHandle(fwObject)) */
+
   (void)nssCKFWMutex_Unlock(fwInstance->mutex);
   return fwObject;
 }
@@ -761,6 +762,7 @@ nssCKFWInstance_ReassignObjectHandle
 )
 {
   CK_RV error = CKR_OK;
+  NSSCKFWObject *oldObject;
 
 #ifdef NSSDEBUG
   error = nssCKFWInstance_verifyPointer(fwInstance);
@@ -774,10 +776,20 @@ nssCKFWInstance_ReassignObjectHandle
     return error;
   }
 
+  oldObject = (NSSCKFWObject *)nssCKFWHash_Lookup(
+                 fwInstance->objectHandleHash, (const void *)hObject);
+  /* Assert(hObject == nssCKFWObject_GetHandle(oldObject) */
+  (void)nssCKFWObject_SetHandle(oldObject, (CK_SESSION_HANDLE)0);
   nssCKFWHash_Remove(fwInstance->objectHandleHash, (const void *)hObject);
+
+  error = nssCKFWObject_SetHandle(fwObject, hObject);
+  if( CKR_OK != error ) {
+    goto done;
+  }
   error = nssCKFWHash_Add(fwInstance->objectHandleHash, 
             (const void *)hObject, (const void *)fwObject);
 
+ done:
   (void)nssCKFWMutex_Unlock(fwInstance->mutex);
   return error;
 }
@@ -807,11 +819,36 @@ nssCKFWInstance_DestroyObjectHandle
 
   fwObject = (NSSCKFWObject *)nssCKFWHash_Lookup(
                 fwInstance->objectHandleHash, (const void *)hObject);
-
+  /* Assert(hObject = nssCKFWObject_GetHandle(fwObject)) */
   nssCKFWHash_Remove(fwInstance->objectHandleHash, (const void *)hObject);
+  (void)nssCKFWObject_SetHandle(fwObject, (CK_SESSION_HANDLE)0);
 
   (void)nssCKFWMutex_Unlock(fwInstance->mutex);
   return;
+}
+
+/*
+ * nssCKFWInstance_FindObjectHandle
+ *
+ */
+NSS_IMPLEMENT CK_OBJECT_HANDLE
+nssCKFWInstance_FindObjectHandle
+(
+  NSSCKFWInstance *fwInstance,
+  NSSCKFWObject *fwObject
+)
+{
+#ifdef NSSDEBUG
+  if( CKR_OK != nssCKFWInstance_verifyPointer(fwInstance) ) {
+    return (CK_OBJECT_HANDLE)0;
+  }
+
+  if( CKR_OK != nssCKFWObject_verifyPointer(fwObject) ) {
+    return (CK_OBJECT_HANDLE)0;
+  }
+#endif /* NSSDEBUG */
+  
+  return nssCKFWObject_GetHandle(fwObject);
 }
 
 /*

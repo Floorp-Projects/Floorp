@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.2 $ $Date: 2000/04/03 21:58:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.3 $ $Date: 2000/04/19 21:32:11 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -384,7 +384,9 @@ nss_ckmdSessionObject_Destroy
   NSSCKFWInstance *fwInstance
 )
 {
+#ifdef NSSDEBUG
   CK_RV error = CKR_OK;
+#endif /* NSSDEBUG */
   nssCKMDSessionObject *mdso;
   CK_ULONG i;
 
@@ -501,7 +503,9 @@ nss_ckmdSessionObject_GetAttributeTypes
   CK_ULONG ulCount
 )
 {
+#ifdef NSSDEBUG
   CK_RV error = CKR_OK;
+#endif /* NSSDEBUG */
   nssCKMDSessionObject *obj;
 
 #ifdef NSSDEBUG
@@ -651,7 +655,9 @@ nss_ckmdSessionObject_SetAttribute
   NSSItem n;
   NSSItem *ra;
   CK_ATTRIBUTE_TYPE_PTR rt;
+#ifdef NSSDEBUG
   CK_RV error;
+#endif /* NSSDEBUG */
 
 #ifdef NSSDEBUG
   error = nss_ckmdSessionObject_verifyPointer(mdObject);
@@ -855,28 +861,6 @@ nss_ckmdFindSessionObjects_Next
   CK_RV *pError
 );
 
-/*
- * This (or something like it) should be in ../base or something.
- */
-static int
-attributes_match
-(
-  NSSItem *a,
-  void *b_data,
-  CK_ULONG b_size
-)
-{
-  if( a->size != b_size ) {
-    return 0;
-  }
-
-  if( PR_TRUE == nsslibc_memequal(a->data, b_data, a->size, (PRStatus *)NULL) ) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
 static CK_BBOOL
 items_match
 (
@@ -885,7 +869,15 @@ items_match
   CK_ULONG ulValueLen
 )
 {
-  return CK_FALSE; /* XXX fgmr 19990517 rush to compile.. */
+  if( a->size != ulValueLen ) {
+    return CK_FALSE;
+  }
+
+  if( PR_TRUE == nsslibc_memequal(a->data, pValue, ulValueLen, (PRStatus *)NULL) ) {
+    return CK_TRUE;
+  } else {
+    return CK_FALSE;
+  }
 }
 
 /*
@@ -1069,7 +1061,6 @@ nss_ckmdFindSessionObjects_Next
 )
 {
   nssCKMDFindSessionObjects *mdfso;
-  nssCKFWHash *hash;
 
 #ifdef NSSDEBUG
   if( CKR_OK != nss_ckmdFindSessionObjects_verifyPointer(mdFindObjects) ) {

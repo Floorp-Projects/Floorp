@@ -31,7 +31,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:10 $ $Name:  $';
+$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:31:42 $ $Name:  $';
 
 $copyright = '/* THIS IS A GENERATED FILE */
 /* 
@@ -477,7 +477,7 @@ __ADJOIN(MODULE_NAME,C_GetFunctionList)
   return CKR_OK;
 }
 
-#ifdef DECLARE_STRICT_CRYPTOKI_NAMES
+/* This one is always present */
 CK_RV CK_ENTRY
 C_GetFunctionList
 (
@@ -486,7 +486,6 @@ C_GetFunctionList
 {
   return __ADJOIN(MODULE_NAME,C_GetFunctionList)(ppFunctionList);
 }
-#endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
 #undef __ADJOIN
 

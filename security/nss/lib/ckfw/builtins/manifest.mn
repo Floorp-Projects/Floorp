@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:49 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:32:38 $ $Name:  $"
 
 CORE_DEPTH = ../../../..
 
@@ -51,3 +51,5 @@ CSRCS =			\
 REQUIRES = security nspr
 
 LIBRARY_NAME = nssckbi
+
+EXTRA_SHARED_LIBS = -L$(DIST)/lib -lnssckfw -lnssb -lnspr4 -lplc4 -lplds4

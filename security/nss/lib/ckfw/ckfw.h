@@ -35,7 +35,7 @@
 #define CKFW_H
 
 #ifdef DEBUG
-static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:11 $ $Name:  $";
+static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:31:45 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -82,6 +82,7 @@ static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.1 $ $D
  *  nssCKFWInstance_CreateObjectHandle
  *  nssCKFWInstance_ResolveObjectHandle
  *  nssCKFWInstance_DestroyObjectHandle
+ *  nssCKFWInstance_FindObjectHandle
  *
  *  -- module fronts --
  *  nssCKFWInstance_GetNSlots
@@ -273,6 +274,17 @@ nssCKFWInstance_DestroyObjectHandle
 (
   NSSCKFWInstance *fwInstance,
   CK_OBJECT_HANDLE hObject
+);
+
+/*
+ * nssCKFWInstance_FindObjectHandle
+ *
+ */
+NSS_IMPLEMENT CK_OBJECT_HANDLE
+nssCKFWInstance_FindObjectHandle
+(
+  NSSCKFWInstance *fwInstance,
+  NSSCKFWObject *fwObject
 );
 
 /*
@@ -1190,6 +1202,9 @@ nssCKFWMechanism_GetInHardware
  *  nssCKFWSession_GetSessionState
  *  nssCKFWSession_SetFWFindObjects
  *  nssCKFWSession_GetFWFindObjects
+ *  nssCKFWSession_SetMDSession
+ *  nssCKFWSession_SetHandle
+ *  nssCKFWSession_GetHandle
  *
  *  -- module fronts --
  *  nssCKFWSession_GetDeviceError
@@ -1215,7 +1230,6 @@ NSS_EXTERN NSSCKFWSession *
 nssCKFWSession_Create
 (
   NSSCKFWToken *fwToken,
-  NSSCKMDSession *mdSession,
   CK_BBOOL rw,
   CK_VOID_PTR pApplication,
   CK_NOTIFY Notify,
@@ -1325,6 +1339,38 @@ nssCKFWSession_GetFWFindObjects
 (
   NSSCKFWSession *fwSesssion,
   CK_RV *pError
+);
+
+/*
+ * nssCKFWSession_SetMDSession
+ *
+ */
+NSS_EXTERN CK_RV
+nssCKFWSession_SetMDSession
+(
+  NSSCKFWSession *fwSession,
+  NSSCKMDSession *mdSession
+);
+
+/*
+ * nssCKFWSession_SetHandle
+ *
+ */
+NSS_EXTERN CK_RV
+nssCKFWSession_SetHandle
+(
+  NSSCKFWSession *fwSession,
+  CK_SESSION_HANDLE hSession
+);
+
+/*
+ * nssCKFWSession_GetHandle
+ *
+ */
+NSS_EXTERN CK_SESSION_HANDLE
+nssCKFWSession_GetHandle
+(
+  NSSCKFWSession *fwSession
 );
 
 /*
@@ -1492,6 +1538,8 @@ nssCKFWSession_GetRandom
  *  nssCKFWObject_GetArena
  *
  * -- private accessors --
+ *  nssCKFWObject_SetHandle
+ *  nssCKFWObject_GetHandle
  *
  * -- module fronts --
  *  nssCKFWObject_IsTokenObject
@@ -1557,6 +1605,27 @@ nssCKFWObject_GetArena
 (
   NSSCKFWObject *fwObject,
   CK_RV *pError
+);
+
+/*
+ * nssCKFWObject_SetHandle
+ *
+ */
+NSS_IMPLEMENT CK_RV
+nssCKFWObject_SetHandle
+(
+  NSSCKFWObject *fwObject,
+  CK_OBJECT_HANDLE hObject
+);
+
+/*
+ * nssCKFWObject_GetHandle
+ *
+ */
+NSS_IMPLEMENT CK_OBJECT_HANDLE
+nssCKFWObject_GetHandle
+(
+  NSSCKFWObject *fwObject
 );
 
 /*
