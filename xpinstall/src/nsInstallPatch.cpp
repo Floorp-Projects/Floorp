@@ -226,7 +226,12 @@ PRInt32 nsInstallPatch::Prepare()
 
     if (err != nsInstall::SUCCESS)
     {   
-        return err;
+        // clean up tmp patched file since patching failed
+		if ((mPatchedFile != nsnull) && (mPatchedFile->Exists()))
+        {
+			mPatchedFile->Delete(PR_FALSE);
+        }
+		return err;
     }
 
     PR_ASSERT(mPatchedFile != nsnull);
@@ -466,12 +471,9 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 			if (status == GDIFF_ERR_CHECKSUM)
 				status = GDIFF_ERR_CHECKSUM_RESULT;
 
-            if (status == GDIFF_OK)
-            {
-                *newFile = outFileSpec;
-                if ( outFile != nsnull)
-                    PL_strfree( outFile );
-            }
+            *newFile = outFileSpec;
+            if ( outFile != nsnull)
+                PL_strfree( outFile );
 
 		} else {
 
