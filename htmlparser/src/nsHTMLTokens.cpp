@@ -698,10 +698,11 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
         if(kMinus==aChar) {
              //in this case, we're reading a long-form comment <-- xxx -->
           aString+=aChar;
-          nsAutoString temp("");
           PRBool done=PR_FALSE;
           PRInt32 findpos=kNotFound;
-          result=aScanner.ReadWhile(temp,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
+          result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
+          findpos=aString.RFind("->");
+          nsAutoString temp("");
           while((kNotFound==findpos) && (NS_OK==result)) {
             result=aScanner.ReadUntil(temp,kMinus,PR_TRUE);
             if(NS_OK==result) {

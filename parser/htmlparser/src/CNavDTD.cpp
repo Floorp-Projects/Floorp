@@ -1205,7 +1205,22 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
   nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
-  nsresult result=(mSink) ? mSink->AddComment(aNode) : NS_OK; 
+
+  // You may find this hard to beleive, but this has to be here
+  // so that the TBODY doesnt die when it sees a comment.
+  // This case occurs on WWW.CREAF.COM
+  eHTMLTags theTag=mBodyContext->mTags.Last();
+  nsresult result=NS_OK;
+
+  switch(theTag) {
+    case eHTMLTag_table:
+    case eHTMLTag_tr:
+    case eHTMLTag_tbody:
+    case eHTMLTag_td:
+      break;
+    default:
+      result=(mSink) ? mSink->AddComment(aNode) : NS_OK; 
+  }
   return result;
 }
 
