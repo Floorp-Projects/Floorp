@@ -3,6 +3,7 @@
 #
 nsIForm.h
 nsIFormControl.h
+nsIFormSubmission.h
 nsILink.h
 nsIOptionElement.h
 nsIScriptElement.h

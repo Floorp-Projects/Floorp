@@ -56,6 +56,7 @@
 #include "nsAsyncStreamListener.h"
 #include "nsFileStreams.h"
 #include "nsBufferedStreams.h"
+#include "nsMIMEInputStream.h"
 #include "nsProtocolProxyService.h"
 #include "nsSOCKSSocketProvider.h"
 #include "nsSOCKS4SocketProvider.h"
@@ -724,6 +725,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_BUFFEREDOUTPUTSTREAM_CID,
       NS_BUFFEREDOUTPUTSTREAM_CONTRACTID,
       nsBufferedOutputStream::Create },
+    { NS_MIMEINPUTSTREAM_CLASSNAME,
+      NS_MIMEINPUTSTREAM_CID,
+      NS_MIMEINPUTSTREAM_CONTRACTID,
+      nsMIMEInputStreamConstructor },
     { "Protocol Proxy Service",
       NS_PROTOCOLPROXYSERVICE_CID,
       "@mozilla.org/network/protocol-proxy-service;1",

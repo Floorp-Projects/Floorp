@@ -50,6 +50,7 @@ CPPSRCS		= \
 		nsLinebreakConverter.cpp \
 		nsLocalFileCommon.cpp \
 		nsLocalFileUnicode.cpp \
+		nsMultiplexInputStream.cpp \
 		nsPipe2.cpp \
 		nsScriptableInputStream.cpp \
 		nsSegmentedBuffer.cpp \
@@ -119,6 +120,7 @@ XPIDLSRCS	= \
 		nsIInputStreamTee.idl \
 		nsILineInputStream.idl \
 		nsILocalFile.idl \
+		nsIMultiplexInputStream.idl \
 		nsIObjectInputStream.idl \
 		nsIObjectOutputStream.idl \
 		nsIOutputStream.idl \

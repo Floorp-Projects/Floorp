@@ -49,6 +49,7 @@ CPPSRCS		= \
 		nsInputStreamChannel.cpp \
 		nsIOService.cpp \
 		nsLoadGroup.cpp \
+		nsMIMEInputStream.cpp \
 		nsNetModRegEntry.cpp \
 		nsNetModuleMgr.cpp \
 		nsProtocolProxyService.cpp \

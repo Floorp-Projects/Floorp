@@ -172,12 +172,8 @@ public:
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Reset();
-  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
-  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
-  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
-                            PRInt32& aNumValues,
-                            nsString* aValues,
-                            nsString* aNames);
+  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                               nsIContent* aSubmitElement);
 
   // nsIContent
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
@@ -420,27 +416,9 @@ nsHTMLLabelElement::Reset()
   return NS_OK;
 }
 
-nsresult
-nsHTMLLabelElement::IsSuccessful(nsIContent* aSubmitElement,
-                                 PRBool *_retval)
+NS_IMETHODIMP
+nsHTMLLabelElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                                      nsIContent* aSubmitElement)
 {
-  *_retval = PR_FALSE;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLLabelElement::GetMaxNumValues(PRInt32 *_retval)
-{
-  *_retval = 0;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLLabelElement::GetNamesValues(PRInt32 aMaxNumValues,
-                                   PRInt32& aNumValues,
-                                   nsString* aValues,
-                                   nsString* aNames)
-{
-  aNumValues = 0;
   return NS_OK;
 }

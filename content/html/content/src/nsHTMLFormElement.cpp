@@ -39,7 +39,7 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIFormManager.h"
-#include "nsFormSubmitter.h"
+#include "nsIFormSubmission.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsIHTMLDocument.h"
@@ -63,7 +63,18 @@
 #include "nsHashtable.h"
 #include "nsContentList.h"
 #include "nsGUIEvent.h"
+
+// form submission
 #include "nsIFormSubmitObserver.h"
+#include "nsIURI.h"
+#include "nsIObserverService.h"
+#include "nsICategoryManager.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsRange.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsNetUtil.h"
+
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
@@ -131,15 +142,71 @@ protected:
   nsresult DoSubmitOrReset(nsIPresContext* aPresContext,
                            nsEvent* aEvent,
                            PRInt32 aMessage);
+  nsresult DoReset();
 
-  NS_IMETHOD OnReset(nsIPresContext* aPresContext);
-  nsresult RemoveSelfAsWebProgressListener();
+  //
+  // Submit Helpers
+  //
+  //
+  /**
+   * Actually perform the submit (called by DoSubmitOrReset)
+   *
+   * @param aPresContext the presentation context
+   * @param aEvent the DOM event that was passed to us for the submit
+   */
+  nsresult DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent);
+  /**
+   * Walk over the form elements and call SubmitNamesValues() on them to get
+   * their data pumped into the FormSubmitter.
+   *
+   * @param aFormSubmission the form submission object
+   * @param aSubmitElement the element that was clicked on (nsnull if none)
+   */
+  nsresult WalkFormElements(nsIFormSubmission* aFormSubmission,
+                            nsIContent* aSubmitElement);
+  /**
+   * Get the full URL to submit to.  Do not submit if the returned URL is null.
+   *
+   * @param aActionURL the full, unadulterated URL you'll be submitting to
+   */
+  nsresult GetActionURL(nsIURI** aActionURL);
+  /**
+   * Notify any submit observsers of the submit.
+   *
+   * @param aActionURL the URL being submitted to
+   * @param aCancelSubmit out param where submit observers can specify that the
+   *        submit should be cancelled.
+   */
+  nsresult NotifySubmitObservers(nsIURI* aActionURL, PRBool* aCancelSubmit);
 
+  /**
+   * Compare two nodes in the same tree (Negative result means a < b, 0 ==,
+   * positive >).  This function may fail if the nodes are not in a tree
+   * or are in different trees.
+   *
+   * @param a the first node
+   * @param b the second node
+   * @param retval whether a < b (negative), a == b (0), or a > b (positive)
+   */
+  static nsresult CompareNodes(nsIDOMNode* a,
+                               nsIDOMNode* b,
+                               PRInt32* retval);
+
+  //
+  // Data members
+  //
   nsFormControlList *mControls;
   PRPackedBool mGeneratingSubmit;
   PRPackedBool mGeneratingReset;
   PRPackedBool mDemotingForm;
+
+protected:
+  // Detection of first form to notify observers
+  static PRBool gFirstFormSubmitted;
 };
+
+PRBool nsHTMLFormElement::gFirstFormSubmitted = PR_FALSE;
+
 
 // nsFormControlList
 class nsFormControlList : public nsIDOMNSHTMLFormControlList,
@@ -324,9 +391,7 @@ nsHTMLFormElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
 
   nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   CopyInnerTo(this, it, aDeep);
 
@@ -520,7 +585,8 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
 nsresult
 nsHTMLFormElement::DoSubmitOrReset(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
-                                   PRInt32 aMessage) {
+                                   PRInt32 aMessage)
+{
   NS_ENSURE_ARG_POINTER(aPresContext);
 
   // Make sure the presentation is up-to-date
@@ -535,27 +601,16 @@ nsHTMLFormElement::DoSubmitOrReset(nsIPresContext* aPresContext,
   // Submit or Reset the form
   nsresult rv = NS_OK;
   if (NS_FORM_RESET == aMessage) {
-    rv = OnReset(aPresContext);
+    rv = DoReset();
   }
   else if (NS_FORM_SUBMIT == aMessage) {
-    nsIContent *originatingElement = nsnull;
-
-    // Get the originating frame (failure is non-fatal)
-    if (aEvent) {
-      if (NS_FORM_EVENT == aEvent->eventStructType) {
-        originatingElement = ((nsFormEvent *)aEvent)->originator;
-      }
-    }
-
-    // Pass the form originator
-    rv = nsFormSubmitter::OnSubmit(this, aPresContext, originatingElement);
+    rv = DoSubmit(aPresContext, aEvent);
   }
   return rv;
 }
 
-// JBK moved from nsFormFrame - bug 34297
-NS_IMETHODIMP
-nsHTMLFormElement::OnReset(nsIPresContext* aPresContext)
+nsresult
+nsHTMLFormElement::DoReset()
 {
   // JBK walk the elements[] array instead of form frame controls - bug 34297
   PRUint32 numElements;
@@ -570,6 +625,326 @@ nsHTMLFormElement::OnReset(nsIPresContext* aPresContext)
 
   return NS_OK;
 }
+
+nsresult
+nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
+{
+  nsIContent *originatingElement = nsnull;
+
+  // Get the originating frame (failure is non-fatal)
+  if (aEvent) {
+    if (NS_FORM_EVENT == aEvent->eventStructType) {
+      originatingElement = ((nsFormEvent *)aEvent)->originator;
+    }
+  }
+
+  //
+  // Get the submission object
+  //
+  nsCOMPtr<nsIFormSubmission> submission;
+  nsresult rv = GetSubmissionFromForm(this, aPresContext,
+                                      getter_AddRefs(submission));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  //
+  // Dump the data into the submission object
+  //
+  rv = WalkFormElements(submission, originatingElement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  //
+  // Get the action and target
+  //
+  nsCOMPtr<nsIURI> actionURI;
+  rv = GetActionURL(getter_AddRefs(actionURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (actionURI) {
+    nsAutoString target;
+    rv = GetTarget(target);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    //
+    // Notify observers of submit
+    //
+    PRBool aCancelSubmit = PR_FALSE;
+    rv = NotifySubmitObservers(actionURI, &aCancelSubmit);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!aCancelSubmit) {
+      //
+      // Submit
+      //
+      rv = submission->SubmitTo(actionURI, target, this, aPresContext);
+    }
+  }
+
+  return rv;
+}
+
+
+nsresult
+nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
+                                         PRBool* aCancelSubmit)
+{
+  // If this is the first form, bring alive the first form submit
+  // category observers
+  if (!gFirstFormSubmitted) {
+    gFirstFormSubmitted = PR_TRUE;
+    NS_CreateServicesFromCategory(NS_FIRST_FORMSUBMIT_CATEGORY,
+                                  nsnull,
+                                  NS_FIRST_FORMSUBMIT_CATEGORY);
+  }
+
+  // Notify observers that the form is being submitted.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIObserverService> service =
+    do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISimpleEnumerator> theEnum;
+  rv = service->EnumerateObservers(NS_FORMSUBMIT_SUBJECT,
+                                   getter_AddRefs(theEnum));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (theEnum) {
+    nsCOMPtr<nsISupports> inst;
+    *aCancelSubmit = PR_FALSE;
+
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(globalObject);
+
+    PRBool loop = PR_TRUE;
+    while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {
+      theEnum->GetNext(getter_AddRefs(inst));
+
+      nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver(
+                      do_QueryInterface(inst));
+      if (formSubmitObserver) {
+        rv = formSubmitObserver->Notify(this,
+                                        window,
+                                        aActionURL,
+                                        aCancelSubmit);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      if (*aCancelSubmit) {
+        return NS_OK;
+      }
+    }
+  }
+
+  return rv;
+}
+
+
+// static
+nsresult
+nsHTMLFormElement::CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIDOMNode> parentA;
+  PRInt32 indexA;
+  rv = a->GetParentNode(getter_AddRefs(parentA));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!parentA) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  {
+    // To get the index, we must turn them both into contents
+    // and do IndexOf().  Ick.
+    nsCOMPtr<nsIContent> parentA(do_QueryInterface(parentA));
+    nsCOMPtr<nsIContent> contentA(do_QueryInterface(a));
+    if (!parentA && !contentA) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    rv = parentA->IndexOf(contentA, indexA);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsIDOMNode> parentB;
+  PRInt32 indexB;
+  rv = b->GetParentNode(getter_AddRefs(parentB));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!parentB) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  {
+    // To get the index, we must turn them both into contents
+    // and do IndexOf().  Ick.
+    nsCOMPtr<nsIContent> parentB(do_QueryInterface(parentB));
+    nsCOMPtr<nsIContent> bContent(do_QueryInterface(b));
+    if (!parentB && !bContent) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    rv = parentB->IndexOf(bContent, indexB);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  *retval = ComparePoints(parentA, indexA, parentB, indexB);
+  return NS_OK;
+}
+
+
+nsresult
+nsHTMLFormElement::WalkFormElements(nsIFormSubmission* aFormSubmission,
+                                    nsIContent* aSubmitElement)
+{
+  //
+  // If the submitter is an input type=image element, it is not in the
+  // form.elements[] array.  So we get the DOMNode pointer to it here so that
+  // later we can determine its proper position in the submit order.
+  //
+  nsCOMPtr<nsIDOMNode> imageElementNode;
+  {
+    nsCOMPtr<nsIFormControl> submitControl = do_QueryInterface(aSubmitElement);
+    if (submitControl) {
+      PRInt32 type;
+      submitControl->GetType(&type);
+      if (type == NS_FORM_INPUT_IMAGE) {
+        imageElementNode = do_QueryInterface(aSubmitElement);
+      }
+    }
+  }
+
+  //
+  // Walk the list of nodes and call SubmitNamesValues() on the controls
+  //
+  PRUint32 numElements;
+  GetElementCount(&numElements);
+
+  PRUint32 elementX;
+  for (elementX = 0; elementX < numElements; elementX++) {
+    nsCOMPtr<nsIFormControl> control;
+    GetElementAt(elementX, getter_AddRefs(control));
+
+    // Determine whether/when to submit the image element, which is not in
+    // the list of form.elements[]
+    if (imageElementNode) {
+      // If the input type=image element is before this element, submit it
+      // instead
+      nsCOMPtr<nsIDOMNode> controlNode(do_QueryInterface(control));
+      PRInt32 comparison;
+      CompareNodes(imageElementNode, controlNode, &comparison);
+      if (comparison < 0) {
+        nsCOMPtr<nsIFormControl> image = do_QueryInterface(imageElementNode);
+        image->SubmitNamesValues(aFormSubmission, aSubmitElement);
+        imageElementNode = nsnull;
+      }
+    }
+
+    // Tell the control to submit its name/value pairs to the submission
+    control->SubmitNamesValues(aFormSubmission, aSubmitElement);
+  }
+
+  // The image appeared after all other controls
+  if (imageElementNode) {
+    nsCOMPtr<nsIFormControl> image = do_QueryInterface(imageElementNode);
+    image->SubmitNamesValues(aFormSubmission, aSubmitElement);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
+{
+  nsresult rv = NS_OK;
+
+  *aActionURL = nsnull;
+
+  //
+  // Grab the URL string
+  //
+  nsAutoString action;
+  GetAction(action);
+
+  //
+  // Form the full action URL
+  //
+
+  // Get the document to form the URL.
+  // We'll also need it later to get the DOM window when notifying form submit
+  // observers (bug 33203)
+  if (!mDocument) {
+    return NS_OK; // No doc means don't submit, see Bug 28988
+  }
+
+  // Get base URL
+  nsCOMPtr<nsIURI> docURL;
+  mDocument->GetBaseURL(*getter_AddRefs(docURL));
+  NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
+  if (!docURL) {
+    return NS_OK; // No base URL -> exit early, see Bug 30721
+  }
+
+  // If an action is not specified and we are inside
+  // a HTML document then reload the URL. This makes us
+  // compatible with 4.x browsers.
+  // If we are in some other type of document such as XML or
+  // XUL, do nothing. This prevents undesirable reloading of
+  // a document inside XUL.
+
+  nsCOMPtr<nsIURI> actionURL;
+  if (action.IsEmpty()) {
+    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+    if (!htmlDoc) {
+      // Must be a XML, XUL or other non-HTML document type
+      // so do nothing.
+      return NS_OK;
+    }
+
+    rv = docURL->Clone(getter_AddRefs(actionURL));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    rv = NS_NewURI(getter_AddRefs(actionURL), action, docURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  //
+  // Verify the URL should be reached
+  //
+  // Get security manager, check to see if access to action URI is allowed.
+  //
+  // XXX This code has not been tested.  mailto: does not work in forms.
+  //
+  nsCOMPtr<nsIScriptSecurityManager> securityManager =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = securityManager->CheckLoadURI(docURL, actionURL,
+                                     nsIScriptSecurityManager::STANDARD);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString scheme;
+  PRBool isMailto = PR_FALSE;
+  if (actionURL && NS_FAILED(rv = actionURL->SchemeIs("mailto", &isMailto))) {
+    return rv;
+  }
+
+  if (isMailto) {
+    PRBool enabled;
+    rv = securityManager->IsCapabilityEnabled("UniversalSendMail", &enabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!enabled) {
+      // Form submit to a mailto: URI requires UniversalSendMail privilege
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+  }
+
+  //
+  // Assign to the output
+  //
+  *aActionURL = actionURL;
+  NS_ADDREF(*aActionURL);
+
+  return rv;
+}
+
 
 // nsIForm
 

@@ -65,7 +65,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsGenericHTMLElement.obj		\
 	.\$(OBJDIR)\nsGenericDOMHTMLCollection.obj	\
 	.\$(OBJDIR)\GenericElementCollection.obj    	\
-	.\$(OBJDIR)\nsFormSubmitter.obj                 \
+	.\$(OBJDIR)\nsFormSubmission.obj                 \
 	.\$(OBJDIR)\nsHTMLAnchorElement.obj		\
 	.\$(OBJDIR)\nsHTMLAppletElement.obj		\
 	.\$(OBJDIR)\nsHTMLAreaElement.obj		\

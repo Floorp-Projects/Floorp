@@ -75,10 +75,8 @@ public:
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Reset();
-  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
-  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
-  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                            nsString* aValues, nsString* aNames);
+  NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                               nsIContent* aSubmitElement);
 
 #ifdef DEBUG
   // nsIContent
@@ -208,27 +206,9 @@ nsHTMLFieldSetElement::Reset()
   return NS_OK;
 }
 
-nsresult
-nsHTMLFieldSetElement::IsSuccessful(nsIContent* aSubmitElement,
-                                    PRBool *_retval)
+NS_IMETHODIMP
+nsHTMLFieldSetElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
+                                         nsIContent* aSubmitElement)
 {
-  *_retval = PR_FALSE;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLFieldSetElement::GetMaxNumValues(PRInt32 *_retval)
-{
-  *_retval = 0;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLFieldSetElement::GetNamesValues(PRInt32 aMaxNumValues,
-                                      PRInt32& aNumValues,
-                                      nsString* aValues,
-                                      nsString* aNames)
-{
-  aNumValues = 0;
   return NS_OK;
 }

@@ -10,6 +10,7 @@ nsIInputStream.idl
 nsIInputStreamTee.idl
 nsILineInputStream.idl
 nsILocalFile.idl
+nsIMultiplexInputStream.idl
 nsIObjectInputStream.idl
 nsIObjectOutputStream.idl
 nsIOutputStream.idl

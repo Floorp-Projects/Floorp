@@ -54,6 +54,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsURLParsers.obj               \
         .\$(OBJDIR)\nsStandardURL.obj              \
         .\$(OBJDIR)\nsSimpleURI.obj                \
+        .\$(OBJDIR)\nsMIMEInputStream.obj          \
         .\$(OBJDIR)\nsNetModuleMgr.obj             \
         .\$(OBJDIR)\nsNetModRegEntry.obj           \
         .\$(OBJDIR)\nsLoadGroup.obj                \
