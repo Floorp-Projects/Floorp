@@ -40,7 +40,7 @@
 
 // forward declarations of a couple of helper methods.
 // Takes a bitmap from the windows registry and converts it into 4 byte RGB data.
-void ConvertColorBitMap(unsigned char * aBitmapBuffer, PBITMAPINFOHEADER pBitMapInfo, nsCString& iconBuffer);
+void ConvertColorBitMap(unsigned char * aBitmapBuffer, PBITMAPINFO pBitMapInfo, nsCString& iconBuffer);
 void ConvertMaskBitMap(unsigned char * aBitMaskBuffer, PBITMAPINFOHEADER pBitMapInfo, nsCString& iconBuffer);
 
 // nsIconChannel methods
@@ -180,41 +180,52 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 *
   return NS_OK;
 }
 
-void ConvertColorBitMap(unsigned char * buffer, PBITMAPINFOHEADER pBitMapHeaderInfo, nsCString& iconBuffer)
+void ConvertColorBitMap(unsigned char * buffer, PBITMAPINFO pBitMapInfo, nsCString& iconBuffer)
 {
   // windows invers the row order in their bitmaps. So we need to invert the rows back into a top-down order.
 
-  PRUint32 bytesPerPixel = pBitMapHeaderInfo->biBitCount / 8;
-  InvertRows(buffer, pBitMapHeaderInfo->biSizeImage, pBitMapHeaderInfo->biWidth * bytesPerPixel);
+  PRUint32 bytesPerPixel = pBitMapInfo->bmiHeader.biBitCount / 8;
+  InvertRows(buffer, pBitMapInfo->bmiHeader.biSizeImage, pBitMapInfo->bmiHeader.biWidth * bytesPerPixel);
   
   PRUint32 index = 0;
   // if each pixel uses 16 bits to describe the color then each R, G, and B value uses 5 bites. Use some fancy
-  // bit operations to blow up the 16 bit case into 1 byte per component color.
-  if (pBitMapHeaderInfo->biBitCount == 16)
+  // bit operations to blow up the 16 bit case into 1 byte per component color. Actually windows
+  // is using a 5:6:5 scheme. so the green component gets 6 bits....
+  if (pBitMapInfo->bmiHeader.biBitCount == 16)
   {
     PRUint8 redValue, greenValue, blueValue;
-    while (index < pBitMapHeaderInfo->biSizeImage)
+    while (index < pBitMapInfo->bmiHeader.biSizeImage)
     {                            
       DWORD dst=(DWORD) buffer[index];
       PRUint16 num = 0;
-      num = (PRUint8) buffer[index];
+      num = (PRUint8) buffer[index+1];
       num <<= 8;
-      num |= (PRUint8) buffer[index+1];
+      num |= (PRUint8) buffer[index];
+      // be sure to ignore the top bit
+      //num &= 0x7FFF; // only want the low 15 bits.....not the 16th...
 
-      redValue = ((PRUint32) (((float)(num & 0x7c00) / 0x7c00) * 0xFF0000) & 0xFF0000)>> 16;
-      greenValue =  ((PRUint32)(((float)(num & 0x03E0) / 0x03E0) * 0x00FF00) & 0x00FF00)>> 8;
+      // use num as an offset into the color table....get the RGBQuad entry and read out
+      // the RGB values.
+      //RGBQUAD rgbValues = pBitMapInfo->bmiColors[num];
+
+      //redValue = ( (num & 0xf800) >> 11);
+      //greenValue = ( (num & 0x07E0) >> 5);
+      //blueValue = ( num & 0x001F);
+
+      redValue = ((PRUint32) (((float)(num & 0xf800) / 0xf800) * 0xFF0000) & 0xFF0000)>> 16;
+      greenValue =  ((PRUint32)(((float)(num & 0x07E0) / 0x07E0) * 0x00FF00) & 0x00FF00)>> 8;
       blueValue =  ((PRUint32)(((float)(num & 0x001F) / 0x001F) * 0x0000FF) & 0x0000FF);
 
       // now we have the right RGB values...
-      iconBuffer.Append((char) redValue);
-      iconBuffer.Append((char) greenValue);
       iconBuffer.Append((char) blueValue);
+      iconBuffer.Append((char) greenValue);
+      iconBuffer.Append((char) redValue);
       index += bytesPerPixel;
     }
   }
   else // otherwise we must be using 32 bits per pixel so each component value is getting one byte...
   {
-    while (index < pBitMapHeaderInfo->biSizeImage)
+    while (index < pBitMapInfo->bmiHeader.biSizeImage)
     {
       iconBuffer.Append((char) buffer[index]);
       iconBuffer.Append((char) buffer[index+1]);
@@ -297,7 +308,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
           iconBuffer.Assign((char) pBitMapInfo.bmiHeader.biWidth);
           iconBuffer.Append((char) pBitMapInfo.bmiHeader.biHeight);
 
-          ConvertColorBitMap(buffer, &pBitMapInfo.bmiHeader, iconBuffer);
+          ConvertColorBitMap(buffer, &pBitMapInfo, iconBuffer);
           
           // now we need to tack on the alpha data...which is hbmMask
           pBitMapInfo.bmiHeader.biBitCount = 0;
