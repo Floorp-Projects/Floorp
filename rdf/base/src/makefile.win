@@ -37,10 +37,10 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFService.obj              \
         .\$(OBJDIR)\nsRDFXMLDataSource.obj        \
         .\$(OBJDIR)\rdfutil.obj                   \
-        .\$(OBJDIR)\nsRDFResource.obj             \
 	$(NULL)
 
 LINCS=  -I$(PUBLIC)\rdf          \
+        -I$(PUBLIC)\rdfutil      \
         -I$(PUBLIC)\xpcom        \
         -I$(PUBLIC)\raptor       \
         -I$(PUBLIC)\netlib       \

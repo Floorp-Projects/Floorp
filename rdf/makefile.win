@@ -21,6 +21,7 @@ MODULE = rdf
 
 DIRS=\
         base            \
+        util            \
         content         \
         datasource      \
         build           \
