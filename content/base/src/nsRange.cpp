@@ -914,6 +914,7 @@ nsresult nsRange::DeleteContents()
       deleteList.AppendElement(NS_STATIC_CAST(void*,cN));
     }
     iter.Next();
+    NS_IF_RELEASE(cN);  // balances addref inside CurrentNode()
     res = iter.CurrentNode(&cN);
   }
   
@@ -926,6 +927,8 @@ nsresult nsRange::DeleteContents()
     res = cParent->RemoveChildAt(indx, PR_TRUE);
   }
   
+  NS_IF_RELEASE(cStart);
+  NS_IF_RELEASE(cEnd);
   return NS_OK;
 }
 
@@ -1082,5 +1085,96 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 nsresult nsRange::ToString(nsString& aReturn)
-{ return NS_ERROR_NOT_IMPLEMENTED; }
+{ 
+ 
+  nsIContent *cStart;
+  nsIContent *cEnd;
+  
+  // clear the string
+  aReturn.Truncate();
+  
+  // get the content versions of our endpoints
+  nsresult res = mStartParent->QueryInterface(kIContentIID, (void**)&cStart);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::ToString");
+    return NS_ERROR_UNEXPECTED;
+  }
+  res = mEndParent->QueryInterface(kIContentIID, (void**)&cEnd);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::ToString");
+    NS_IF_RELEASE(cStart);
+    return NS_ERROR_UNEXPECTED;
+  }
+  
+  // effeciency hack for simple case
+  if (cStart == cEnd)
+  {
+    nsIDOMText *textNode;
+    res = mStartParent->QueryInterface(kIDOMTextIID, (void**)&textNode);
+    if (!NS_SUCCEEDED(res)) // if it's not a text node, skip to iterator approach
+    {
+       goto toStringComplexLabel;
+    }
+    // grab the text
+    res = textNode->SubstringData(mStartOffset,mEndOffset-mStartOffset,aReturn);
+    if (!NS_SUCCEEDED(res)) 
+    {
+      NS_NOTREACHED("nsRange::ToString");
+      NS_IF_RELEASE(cStart);
+      NS_IF_RELEASE(cEnd);
+      NS_IF_RELEASE(textNode);
+      return res;
+    }
+    NS_IF_RELEASE(textNode);
+    return NS_OK;
+  } 
+  
+toStringComplexLabel:
+  /* complex case: cStart != cEnd, or cStart not a text node
+     revisit - there are potential optimizations here and also tradeoffs.
+  */
+  
+  nsContentIterator iter(this);
+  nsString tempString;
+  nsIContent *cN;
+ 
+  // loop through the content iterator, which returns nodes in the range in 
+  // close tag order, and grab the text from any text node
+  res = iter.CurrentNode(&cN);
+  while (NS_COMFALSE == iter.IsDone())
+  {
+    nsIDOMText *textNode;
+    res = cN->QueryInterface(kIDOMTextIID, (void**)&textNode);
+    if (NS_SUCCEEDED(res)) // if it's a text node, get the text
+    {
+      if (cN == cStart) // only include text past start offset
+      {
+        PRUint32 strLength;
+        textNode->GetLength(&strLength);
+        textNode->SubstringData(mStartOffset,strLength-mStartOffset,tempString);
+        aReturn += tempString;
+      }
+      else if (cN == cEnd)  // only include text before end offset
+      {
+        textNode->SubstringData(0,mEndOffset,tempString);
+        aReturn += tempString;
+      }
+      else  // grab the whole kit-n-kaboodle
+      {
+        textNode->GetData(tempString);
+        aReturn += tempString;
+      }
+      NS_IF_RELEASE(textNode);
+    }
+    iter.Next();
+    NS_IF_RELEASE(cN);  // balances addref inside CurrentNode()
+    res = iter.CurrentNode(&cN);
+  }
+
+  NS_IF_RELEASE(cStart);
+  NS_IF_RELEASE(cEnd);
+  return NS_OK;
+}
 
