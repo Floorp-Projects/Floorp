@@ -74,6 +74,7 @@ box#sidebar-box {
 
 box#sidebar-panels {
   min-height: 1px;
+  border-bottom: 4px solid #003366;
 }
 
 box#sidebar-box[hidden="true"] {
@@ -118,15 +119,15 @@ splitter.sidebar-main-header titledbutton:hover {
 titledbutton.panel-bar {
   padding: 0px;
   margin: 0px;
+  padding-left: 15px;
   border-top: 1px solid white;
   background-color: #CCCCCC;
-  padding: 0px;
-  padding-left: 5px;
-  padding-right: 5px;
   font-size: smaller;
 }
 
-titledbutton.panel-bar[selected="1"] {
+titledbutton.panel-bar[selected="true"] {
   background-color: #98CCF8;
+  padding-left: 5px;
+  margin: 0px;
+  border-bottom: 1px solid #808080;
 }
-
