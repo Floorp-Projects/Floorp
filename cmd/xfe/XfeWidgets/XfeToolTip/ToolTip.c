@@ -717,6 +717,18 @@ TipStringEnterItem(Widget w,_XfeTipItemInfo info)
 
 	if (_XfeToolTipIsLocked())
 	{
+		_xfe_tt_stage_one_target = NULL;
+
+		/* Remove the timeout if its still active */
+		StageTwoRemoveTimeout(w);
+
+		_xfe_tt_stage_two_target = NULL;
+
+		_XfeToolTipUnlock();
+
+/* 		printf("TipStringEnterItem(%s): tool tips are locked - abort\n", */
+/* 			   XtName(w)); */
+
 #ifdef DEBUG_TOOL_TIPS
 		printf("TipStringEnterItem(%s): tool tips are locked - abort\n",
 			   XtName(w));
@@ -724,6 +736,10 @@ TipStringEnterItem(Widget w,_XfeTipItemInfo info)
 	}
 
 	_XfeToolTipLock();
+
+#ifdef DEBUG_TOOL_TIPS
+    printf("TipStringEnterItem: stage_one_target = %s\n",XtName(w));
+#endif
 
 	_xfe_tt_stage_one_target = w;
 
@@ -744,6 +760,10 @@ TipStringLeaveItem(Widget w,_XfeTipItemInfo info)
 	/* If a target exists, reset it so that stage two aborts */
 	if (_XfeIsAlive(_xfe_tt_stage_one_target))
 	{
+#ifdef DEBUG_TOOL_TIPS
+		printf("TipStringLeaveItem: stage_one_target = NULL\n");
+#endif
+
 		_xfe_tt_stage_one_target = NULL;
 	}
 
@@ -962,6 +982,10 @@ StageTwoTimeout(XtPointer closure,XtIntervalId * id)
 	if (_XfeIsAlive(_xfe_tt_stage_one_target))
 	{
 		assert( w == _xfe_tt_stage_one_target);
+
+#ifdef DEBUG_TOOL_TIPS
+		printf("StageTwoTimeout: stage_one_target = NULL\n");
+#endif
 		
 		/* Reset the stage one target */
 		_xfe_tt_stage_one_target = NULL;
