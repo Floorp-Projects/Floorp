@@ -4291,7 +4291,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
 #endif // IBMBIDI
           if (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace,
-                             PR_FALSE) &&
+                             PR_FALSE, aPos->mIsKeyboardSelect) &&
             (aPos->mStartOffset - contentLen >= mContentOffset) ){
             if ((aPos->mEatingWS && !isWhitespace) || !aPos->mEatingWS){
               aPos->mContentOffset = aPos->mStartOffset - contentLen;
@@ -4307,7 +4307,8 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 #endif // IBMBIDI
                 while (isWhitespace &&
                        tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen,
-                                      &isWhitespace, PR_FALSE)){
+                                      &isWhitespace, PR_FALSE,
+                                      aPos->mIsKeyboardSelect)){
                   aPos->mContentOffset -= contentLen;
                   aPos->mEatingWS = PR_TRUE;
 #ifdef IBMBIDI
@@ -4342,7 +4343,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 #ifdef IBMBIDI
           wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
-          if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE) &&
+          if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE, aPos->mIsKeyboardSelect) &&
             (aPos->mStartOffset + contentLen <= (mContentLength + mContentOffset))){
 
             if ((aPos->mEatingWS && isWhitespace) || !aPos->mEatingWS){
@@ -4357,7 +4358,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
                 wordLen = (mState & NS_FRAME_IS_BIDI)
                         ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
-                  while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
+                  while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE, aPos->mIsKeyboardSelect))
                   {
                     if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
                       goto TryNextFrame;
@@ -4379,7 +4380,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
                 wordLen = (mState & NS_FRAME_IS_BIDI)
                         ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
-                  while(tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
+                  while(tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE, aPos->mIsKeyboardSelect))
                   {
                     if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
                       goto TryNextFrame;

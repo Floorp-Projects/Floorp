@@ -110,8 +110,6 @@ static nsICaseConversion* gCaseConv =  nsnull;
 nsresult
 nsTextTransformer::Initialize()
 {
-  nsresult res = NS_OK;
-  
   // read in our global word selection prefs
   if ( !sWordSelectPrefInited ) {
     nsCOMPtr<nsIPrefBranch> prefBranch =
@@ -123,8 +121,8 @@ nsTextTransformer::Initialize()
     }
     sWordSelectPrefInited = PR_TRUE;
   }
-  
-  return res;
+
+  return NS_OK;
 }
 static nsresult EnsureCaseConv()
 {
@@ -394,7 +392,8 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
 
 PRInt32
 nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
-                                         PRBool*  aWasTransformed)
+                                         PRBool*  aWasTransformed,
+                                         PRBool aIsKeyboardSelect)
 {
   const nsTextFragment* frag = mFrag;
   PRInt32 fragLen = frag->GetLength();
@@ -414,9 +413,13 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
   }
   PRBool readingAlphaNumeric = PR_TRUE; //only used in sWordSelectStopAtPunctuation
 
-  //we must know if we are starting in alpha numerics.
+  // We must know if we are starting in alpha numerics.
+  // Treat high bit chars as alphanumeric, otherwise we get stuck on accented letters
+  // We can't trust isalnum() results for isalnum()
+  // Therefore we don't stop at non-ascii (high bit) punctuation,
+  // which is just fine. The punctuation we care about is low bit.
   if (sWordSelectStopAtPunctuation && offset < fragLen)
-    readingAlphaNumeric = isalnum((unsigned char)*cp);
+    readingAlphaNumeric = isalnum((unsigned char)*cp) || !IS_ASCII_CHAR(*cp);
   
   for (; offset < fragLen && !breakAfterThis; offset++) {
     unsigned char ch = *cp++;
@@ -431,8 +434,17 @@ nsTextTransformer::ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
     else if (XP_IS_SPACE(ch)) {
       break;
     }
-    else if (sWordSelectStopAtPunctuation && ((readingAlphaNumeric && !isalnum(ch)) || (!readingAlphaNumeric && isalnum(ch)) )) {
-      // on some platforms, punctuation breaks words too.
+    else if (sWordSelectStopAtPunctuation && 
+             readingAlphaNumeric && !isalnum(ch) && IS_ASCII_CHAR(ch)) {
+      if (!aIsKeyboardSelect)
+        break;
+      // For keyboard move-by-word, need to pass by at least
+      // one alphanumeric char before stopping at punct
+      readingAlphaNumeric = PR_FALSE;
+    }
+    else if (sWordSelectStopAtPunctuation && 
+            !readingAlphaNumeric && (isalnum(ch) || !IS_ASCII_CHAR(ch))) {
+      // On some platforms, punctuation breaks for word selection
       break;
     }
     else if (IS_DISCARDED(ch)) {
@@ -817,7 +829,8 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
                                PRBool* aIsWhiteSpaceResult,
                                PRBool* aWasTransformed,
                                PRBool aResetTransformBuf,
-                               PRBool aForLineBreak)
+                               PRBool aForLineBreak,
+                               PRBool aIsKeyboardSelect)
 {
   const nsTextFragment* frag = mFrag;
   PRInt32 fragLen = frag->GetLength();
@@ -910,7 +923,9 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
         }
         else {
           if (!aForLineBreak)
-            offset = ScanNormalAsciiText_F_ForWordBreak(&wordLen, aWasTransformed);
+            offset = ScanNormalAsciiText_F_ForWordBreak(&wordLen, 
+                                                        aWasTransformed, 
+                                                        aIsKeyboardSelect);
           else
             offset = ScanNormalAsciiText_F(&wordLen, aWasTransformed);
         }
@@ -951,7 +966,8 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
         }
         else {
           if (!aForLineBreak)
-            offset = ScanNormalAsciiText_F_ForWordBreak(&wordLen, aWasTransformed);
+            offset = ScanNormalAsciiText_F_ForWordBreak(&wordLen, aWasTransformed, 
+                                                        aIsKeyboardSelect);
           else
             offset = ScanNormalAsciiText_F(&wordLen, aWasTransformed);
         }
@@ -1091,12 +1107,19 @@ nsTextTransformer::ScanNormalWhiteSpace_B()
 
 // wordlen==*aWordLen, contentlen=newOffset-currentOffset, isWhitespace=f
 PRInt32
-nsTextTransformer::ScanNormalAsciiText_B(PRInt32* aWordLen)
+nsTextTransformer::ScanNormalAsciiText_B(PRInt32* aWordLen, PRBool aIsKeyboardSelect)
 {
   const nsTextFragment* frag = mFrag;
   PRInt32 offset = mOffset;
   PRUnichar* bp = mTransformBuf.GetBufferEnd();
   PRUnichar* startbp = mTransformBuf.GetBuffer();
+
+  PRUnichar ch = frag->CharAt(offset - 1);
+  // Treat high bit chars as alphanumeric, otherwise we get stuck on accented letters
+  // We can't trust isalnum() results for isalnum()
+  // Therefore we don't stop at non-ascii (high bit) punctuation,
+  // which is just fine. The punctuation we care about is low bit.
+  PRBool readingAlphaNumeric = isalnum(ch) || !IS_ASCII_CHAR(ch);
 
   while (--offset >= 0) {
     PRUnichar ch = frag->CharAt(offset);
@@ -1109,6 +1132,18 @@ nsTextTransformer::ScanNormalAsciiText_B(PRInt32* aWordLen)
     else if (IS_DISCARDED(ch)) {
       continue;
     } 
+    else if (sWordSelectStopAtPunctuation && readingAlphaNumeric && 
+             !isalnum(ch) && IS_ASCII_CHAR(ch)) {
+      // Break on ascii punctuation
+      break;
+    }
+    else if (sWordSelectStopAtPunctuation && !readingAlphaNumeric &&
+             (isalnum(ch) || !IS_ASCII_CHAR(ch))) {
+      if (!aIsKeyboardSelect)
+        break;
+      readingAlphaNumeric = PR_TRUE;
+    }
+    
     if (ch > MAX_UNIBYTE) SetHasMultibyte(PR_TRUE);
     if (bp == startbp) {
       PRInt32 oldLength = mTransformBuf.mBufferLen;
@@ -1297,7 +1332,8 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
                                PRInt32* aWordLenResult,
                                PRInt32* aContentLenResult,
                                PRBool* aIsWhiteSpaceResult,
-                               PRBool aForLineBreak)
+                               PRBool aForLineBreak,
+                               PRBool aIsKeyboardSelect)
 {
   const nsTextFragment* frag = mFrag;
   PRInt32 offset = mOffset;
@@ -1343,7 +1379,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
           offset = ScanNormalUnicodeText_B(aForLineBreak, &wordLen);
         }
         else {
-          offset = ScanNormalAsciiText_B(&wordLen);
+          offset = ScanNormalAsciiText_B(&wordLen, aIsKeyboardSelect);
         }
         break;
 
@@ -1378,7 +1414,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
           offset = ScanNormalUnicodeText_B(aForLineBreak, &wordLen);
         }
         else {
-          offset = ScanNormalAsciiText_B(&wordLen);
+          offset = ScanNormalAsciiText_B(&wordLen, aIsKeyboardSelect);
         }
         break;
     }
@@ -1657,7 +1693,7 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
       if (gNoisy) {
         nsAutoString uc2(st->text);
         printf("%s forwards test: '", isAsciiTest ? "ascii" : "unicode");
-        fputs(NS_LossyConvertUCS2toASCII(uc2).get(), stdout);
+        fputs(NS_ConvertUCS2toUTF8(uc2).get(), stdout);
         printf("'\n");
       }
       tx.Init2(&frag, 0, preModeValue[preMode], NS_STYLE_TEXT_TRANSFORM_NONE);
@@ -1672,7 +1708,7 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
         if (gNoisy) {
           nsAutoString tmp(bp, wordLen);
           printf("  '");
-          fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
+          fputs(NS_ConvertUCS2toUTF8(tmp).get(), stdout);
           printf("': ws=%s wordLen=%d (%d) contentLen=%d (offset=%d)\n",
                  ws ? "yes" : "no",
                  wordLen, *expectedResults, contentLen, tx.mOffset);
@@ -1696,7 +1732,7 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
       if (gNoisy) {
         nsAutoString uc2(st->text);
         printf("%s backwards test: '", isAsciiTest ? "ascii" : "unicode");
-        fputs(NS_LossyConvertUCS2toASCII(uc2).get(), stdout);
+        fputs(NS_ConvertUCS2toUTF8(uc2).get(), stdout);
         printf("'\n");
       }
       tx.Init2(&frag, frag.GetLength(), NS_STYLE_WHITESPACE_NORMAL,
@@ -1710,7 +1746,7 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
         if (gNoisy) {
           nsAutoString tmp(bp, wordLen);
           printf("  '");
-          fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
+          fputs(NS_ConvertUCS2toUTF8(tmp).get(), stdout);
           printf("': ws=%s wordLen=%d contentLen=%d (offset=%d)\n",
                  ws ? "yes" : "no",
                  wordLen, contentLen, tx.mOffset);
@@ -1732,6 +1768,10 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
       if (error) {
         fprintf(stderr, "nsTextTransformer: self test %d failed\n", testNum);
       }
+      else if (gNoisy) {
+        fprintf(stdout, "nsTextTransformer: self test %d succeeded\n", testNum);
+      }
+
       testNum++;
     }
   }

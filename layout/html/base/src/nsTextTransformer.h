@@ -73,6 +73,8 @@ class nsIWordBreaker;
   || ((_ch) >= CH_LRE && (_ch) <= CH_RLO))
 #endif // IBMBIDI
 
+#define IS_ASCII_CHAR(ch) ((ch&0xff80) == 0)
+
 #define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 128 // used to be 256
 
 // Indicates whether the transformed text should be left as ascii
@@ -184,13 +186,15 @@ public:
                          PRBool* aIsWhitespaceResult,
                          PRBool* aWasTransformed,
                          PRBool aResetTransformBuf = PR_TRUE,
-                         PRBool aForLineBreak = PR_TRUE);
+                         PRBool aForLineBreak = PR_TRUE,
+                         PRBool aIsKeyboardSelect = PR_FALSE);
 
   PRUnichar* GetPrevWord(PRBool aInWord,
                          PRInt32* aWordLenResult,
                          PRInt32* aContentLenResult,
                          PRBool* aIsWhitespaceResult,
-                         PRBool aForLineBreak = PR_TRUE);
+                         PRBool aForLineBreak = PR_TRUE,
+                         PRBool aIsKeyboardSelect = PR_FALSE);
 
   
   // Returns PR_TRUE if the LEAVE_AS_ASCII flag is set
@@ -273,7 +277,8 @@ protected:
   PRInt32 ScanNormalAsciiText_F(PRInt32* aWordLen,
                                 PRBool*  aWasTransformed);
   PRInt32 ScanNormalAsciiText_F_ForWordBreak(PRInt32* aWordLen,
-                                PRBool*  aWasTransformed);
+                                PRBool*  aWasTransformed,
+                                PRBool aIsKeyboardSelect);
   PRInt32 ScanNormalUnicodeText_F(PRBool aForLineBreak,
                                   PRInt32* aWordLen,
                                   PRBool*  aWasTransformed);
@@ -285,7 +290,7 @@ protected:
 
   // Helper methods for GetPrevWord (B == backwards)
   PRInt32 ScanNormalWhiteSpace_B();
-  PRInt32 ScanNormalAsciiText_B(PRInt32* aWordLen);
+  PRInt32 ScanNormalAsciiText_B(PRInt32* aWordLen, PRBool aIsKeyboardSelect);
   PRInt32 ScanNormalUnicodeText_B(PRBool aForLineBreak, PRInt32* aWordLen);
   PRInt32 ScanPreWrapWhiteSpace_B(PRInt32* aWordLen);
   PRInt32 ScanPreData_B(PRInt32* aWordLen);

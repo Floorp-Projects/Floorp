@@ -96,7 +96,8 @@ struct nsPeekOffsetStruct
                PRBool aEatingWS,
                PRBool aPreferLeft,
                PRBool aJumpLines,
-               PRBool aScrollViewStop)
+               PRBool aScrollViewStop,
+               PRBool aIsKeyboardSelect)
       {
        mTracker=aTracker;
        mDesiredX=aDesiredX;
@@ -107,6 +108,7 @@ struct nsPeekOffsetStruct
        mPreferLeft=aPreferLeft;
        mJumpLines = aJumpLines;
        mScrollViewStop = aScrollViewStop;
+       mIsKeyboardSelect = aIsKeyboardSelect;
       }
   nsIFocusTracker *mTracker;
   nscoord mDesiredX;
@@ -121,6 +123,7 @@ struct nsPeekOffsetStruct
   PRBool mPreferLeft;
   PRBool mJumpLines;
   PRBool mScrollViewStop;
+  PRBool mIsKeyboardSelect;
 };
 
 class nsIScrollableView;

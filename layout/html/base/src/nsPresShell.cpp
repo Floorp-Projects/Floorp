@@ -3335,6 +3335,7 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   pos.mContentOffset = 0;
   pos.mContentOffsetEnd = 0;
   pos.mScrollViewStop = PR_FALSE;//dont stop on scrolled views.
+  pos.mIsKeyboardSelect = PR_TRUE;
   if (aForward)
   {
     outsideLimit = 1;//search from end

@@ -5983,6 +5983,7 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
       pos.mDirection = eDirNext;
       pos.mDesiredX = aEvent->point.x;
       pos.mScrollViewStop = PR_FALSE;
+      pos.mIsKeyboardSelect = PR_FALSE;
       result = nsFrame::GetNextPrevLineFromeBlockFrame(aPresContext,
                                           &pos,
                                           mainframe, 
