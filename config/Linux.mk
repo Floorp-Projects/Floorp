@@ -27,7 +27,7 @@ ARCH			:= linux
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPU_ARCH		:= x86
 else
-ifeq (,$(filter-out sa110,$(OS_TEST)))
+ifeq (,$(filter-out armv4l sa110,$(OS_TEST)))
 CPU_ARCH		:= arm
 else
 CPU_ARCH		:= $(OS_TEST)
