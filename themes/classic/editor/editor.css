@@ -40,6 +40,13 @@
   padding: 5px 0px 0px 5px;
 }
 
+/* Multiline textarea for HTML source editing */
+#content-source, #doctype-text
+  {
+    font-family   : monospace;
+    font-size     : larger;
+  }
+
 #appcontent
   {
     border-left           : 1px solid ThreeDShadow;
