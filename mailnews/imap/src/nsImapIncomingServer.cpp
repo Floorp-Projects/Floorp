@@ -44,8 +44,6 @@ public:
     virtual ~nsImapIncomingServer();
 
 	// we support the nsIImapIncomingServer interface
-	NS_IMETHOD GetRootFolderPath(char **);
-	NS_IMETHOD SetRootFolderPath(char *);
 	NS_IMETHOD SetKey(char * aKey);  // override nsMsgIncomingServer's implementation...
 	NS_IMETHOD GetServerURI(char * *aServerURI);
 
@@ -67,8 +65,6 @@ nsImapIncomingServer::~nsImapIncomingServer()
 {
 	PR_FREEIF(m_rootFolderPath);
 }
-
-NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, RootFolderPath, "directory")
 
 NS_IMETHODIMP nsImapIncomingServer::SetKey(char * aKey)  // override nsMsgIncomingServer's implementation...
 {

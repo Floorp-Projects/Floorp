@@ -23,10 +23,6 @@ class nsIImapIncomingServer : public nsISupports {
     return iid;
   }
 
-  /* attribute string rootFolderPath; */
-  NS_IMETHOD GetRootFolderPath(char * *aRootFolderPath) = 0;
-  NS_IMETHOD SetRootFolderPath(char * aRootFolderPath) = 0;
-
 };
 
 #endif /* __gen_nsIPop3IncomingServer_h__ */
