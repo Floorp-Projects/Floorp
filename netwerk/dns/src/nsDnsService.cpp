@@ -122,6 +122,29 @@ protected:
 
 NS_IMPL_ISUPPORTS1(nsDNSRequest, nsIRequest)
 
+NS_IMETHODIMP
+nsDNSRequest::IsPending(PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsDNSRequest::Cancel(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsDNSRequest::Suspend(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsDNSRequest::Resume(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // utility routines:
