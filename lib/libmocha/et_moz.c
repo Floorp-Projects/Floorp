@@ -37,7 +37,6 @@
 #include "pa_parse.h"
 #include "netcache.h"
 #include "secnav.h"
-#include "secstubn.h"
 
 #define IL_CLIENT
 #include "libimg.h"             /* Image Library public API. */
