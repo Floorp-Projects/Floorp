@@ -913,13 +913,13 @@ nsGfxTextControlFrame::SelectAllTextContent(nsIDOMNode *aBodyNode, nsIDOMSelecti
     result = aBodyNode->GetLastChild(getter_AddRefs(lastChild));
     if ((NS_SUCCEEDED(result)) && lastChild)
     {
-      aSelection->Collapse(firstChild, 0);
+      aSelection->Collapse(firstChild, 0, SELECTION_NORMAL);
       nsCOMPtr<nsIDOMCharacterData>text = do_QueryInterface(lastChild);
       if (text)
       {
         PRUint32 length;
         text->GetLength(&length);
-        aSelection->Extend(lastChild, length);
+        aSelection->Extend(lastChild, length, SELECTION_NORMAL);
       }
     }
   }
@@ -1220,7 +1220,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
               result = mEditor->InsertText(value);
               result = SelectAllTextContent(bodyNode, selection);
             }
-            selection->ClearSelection();
+            selection->ClearSelection(SELECTION_NORMAL);
           }
         }
       }
