@@ -679,7 +679,7 @@ nsresult nsAbCardDataSource::DoNewCard(nsIAbCard *card, nsISupportsArray *argume
 	{
 		PRUnichar *name;
 		literal->GetValue(&name);
-		nsString tempStr = name;
+		nsString tempStr(name);
 		nsMemory::Free(name);
 		nsCAutoString nameStr; nameStr.AssignWithConversion(tempStr);
 

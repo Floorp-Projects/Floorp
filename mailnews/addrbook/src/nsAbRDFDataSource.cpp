@@ -146,7 +146,7 @@ nsresult nsAbRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 												const PRUnichar *newValue)
 {
 	nsCOMPtr<nsIRDFNode> newValueNode;
-	nsString newValueStr = newValue;
+	nsString newValueStr(newValue);
 	createNode(newValueStr, getter_AddRefs(newValueNode));
 	NotifyObservers(resource, propertyResource, newValueNode, PR_FALSE, PR_TRUE);
 	return NS_OK;

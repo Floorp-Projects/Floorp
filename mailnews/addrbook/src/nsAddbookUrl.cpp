@@ -117,8 +117,8 @@ nsAddbookUrl::CrackAddURL(char *searchPart)
 NS_IMETHODIMP 
 nsAddbookUrl::CrackPrintURL(char *searchPart, PRInt32 aOperation)
 {
-  nsCString       emailAddr = "";
-  nsCString       folderName = "";
+  nsCString       emailAddr;
+  nsCString       folderName;
 
 	char *rest = searchPart;
 

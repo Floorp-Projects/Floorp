@@ -626,7 +626,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(nsIDOMWindow *aDOMWindow, PRInt32 *aTransa
   //
   if ( (mAbSyncAddressBook) && (*mAbSyncAddressBook) )
   {
-    nsCString prefId = "ldap_2.servers.";
+    nsCString prefId("ldap_2.servers.");
     prefId.Append(mAbSyncAddressBook);
     prefId.Append(".filename");
 
@@ -2822,7 +2822,7 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   tValue = aTagValue->ToNewCString();
   if (tValue)
   {
-    rv = nsMsgI18NConvertToUnicode(nsCString("UTF-8"), tValue, outValue);
+    rv = nsMsgI18NConvertToUnicode(nsCString("UTF-8"), nsCString(tValue), outValue);
     if (NS_SUCCEEDED(rv))
       aTagValue->Assign(outValue);
     PR_FREEIF(tValue);

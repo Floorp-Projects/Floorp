@@ -392,7 +392,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
     if (NS_FAILED(rv) || !pPref) 
 		  goto EarlyExit;
 
-    nsCString prefId = "ldap_2.servers.";
+    nsCString prefId("ldap_2.servers.");
     prefId.Append(charAb);
     prefId.Append(".filename");
 

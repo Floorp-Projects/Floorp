@@ -115,7 +115,7 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     if (mDefaultDomain[0] == 0)
       return;
 
-    nsAutoString aStr = pNameStr;
+    nsAutoString aStr(pNameStr);
     aStr.AppendWithConversion('@');
     aStr += mDefaultDomain;
     fullAddrStr = aStr.ToNewUnicode();
@@ -151,7 +151,7 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     if (!fullAddrStr)
     {
       //oops, parser problem! I will try to do my best...
-      nsAutoString aStr = pNameStr;
+      nsAutoString aStr(pNameStr);
       aStr.AppendWithConversion(" <");
       if (bIsMailList)
       {
