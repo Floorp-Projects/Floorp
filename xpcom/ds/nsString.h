@@ -136,7 +136,7 @@ const PRUnichar* GetUnicode(void) const;
  * @param 
  * @return
  */
-operator PRUnichar*() const;
+operator const PRUnichar*() const;
 
 /**
  * Retrieve unicode char at given index

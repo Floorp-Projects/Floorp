@@ -350,7 +350,7 @@ const PRUnichar* nsString::GetUnicode(void) const{
   return mStr;
 }
 
-nsString::operator PRUnichar*() const{
+nsString::operator const PRUnichar*() const{
   return mStr;
 }
 
