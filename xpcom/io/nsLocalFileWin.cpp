@@ -1792,14 +1792,24 @@ nsLocalFile::Exists(PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsLocalFile::IsWritable(PRBool *_retval)
+nsLocalFile::IsWritable(PRBool *aIsWritable)
 {
-    nsresult rv = HasFileAttribute(FILE_ATTRIBUTE_READONLY, _retval);
+    //TODO: extend to support NTFS file permissions
+
+    // The read-only attribute on a FAT directory only means that it can't 
+    // be deleted. It is still possible to modify the contents of the directory.
+    nsresult rv = IsDirectory(aIsWritable);
     if (NS_FAILED(rv))
         return rv;
+    if (*aIsWritable)
+        return NS_OK;
 
-    // writable if it doesn't have the readonly attribute
-    *_retval = !*_retval;
+    // writable if the file doesn't have the readonly attribute
+    rv = HasFileAttribute(FILE_ATTRIBUTE_READONLY, aIsWritable);
+    if (NS_FAILED(rv))
+        return rv;
+    *aIsWritable = !*aIsWritable;
+
     return NS_OK;
 }
 
