@@ -28,5 +28,10 @@
 #include "nsVoidArray.h"
 
 /* Right now, plstr.h does not implement strok yet, so we'll go through the string library for this.... */
+/* We need to fix this! strtok is not thread-safe on most platforms.
+ * we need a better solution for this */
 #include <string.h>
 #define XP_STRTOK                 	strtok
+
+/* see mozilla/xpcom/public/nsError.h for details */
+#define NS_ERROR_MODULE_MAIL 16
