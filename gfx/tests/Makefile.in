@@ -22,9 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = btest
-
-include $(topsrcdir)/config/config.mk
+#DIRS = btest
 
 CPPSRCS = \
 	DumpColors.cpp		\
@@ -32,38 +30,43 @@ CPPSRCS = \
 	TestRect.cpp		\
 	$(NULL)
 
+include $(topsrcdir)/config/config.mk
+
 INCLUDES+=-I$(srcdir)/../src -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom
 
-DIRS	=
-
-OBJS	= $(CPPSRCS:.cpp=.o)
-
-EX_LIBS = \
-	$(DIST)/lib/libraptorgfx.a	\
-	$(DIST)/lib/libraptorbase.a	\
-	$(DIST)/lib/libxpcom.a	\
+LIBS = \
+	-lraptorgfx \
+	-lraptorbase \
+	-lnetlib \
+	-lhttpurl \
+	-lgophurl \
+	-labouturl \
+	-lremoturl \
+	-lfileurl \
+	-lftpurl \
+	-lnetwork \
+	-lsockstuburl \
+	-lmimetype \
+	-lnetcnvts \
+	-lnetcache \
+	-lnetutil \
+	-lpwcac \
+	-lgmbase$(MOZ_TOOLKIT) \
+	$(TK_LIBS) \
+	-lxpcom \
+	-lreg \
+	-lpref \
+	-ljs \
+	-lsecfree \
+	-limg \
+	$(JPEG_LIBS) \
+	$(PNG_LIBS) \
+	-lmozutil \
+	-lxp \
+	$(NSPR_LIBS) \
+	$(ZLIB_LIBS) \
 	$(NULL)
 
-ifeq (linux,$(ARCH))
-OS_LIBS += /usr/lib/libdl.so
-endif
-
-PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
-
-TARGETS = $(PROGS)
+SIMPLE_PROGRAMS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
 include $(topsrcdir)/config/rules.mk
-
-$(OBJDIR)/%.o: %.cpp
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) -c $<
-
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(OS_LIBS)
-
-export::
-
-install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
-
