@@ -2771,7 +2771,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                                      JSMSG_TOO_MANY_FUN_ARGS);
                 return NULL;
             }
-            pn2->pn_pos.end = PN_LAST(pn2)->pn_pos.end;
+            pn2->pn_pos.end = CURRENT_TOKEN(ts).pos.end;
         } else {
             js_UngetToken(ts);
             return pn;
