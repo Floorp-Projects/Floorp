@@ -47,7 +47,7 @@
 #include "nsIScrollbarFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsWidgetsCID.h"
-
+#include "nsINameSpaceManager.h"
 
 //
 // NS_NewNativeScrollbarFrame
@@ -187,16 +187,47 @@ nsNativeScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext, nsIConten
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aModType, aHint);
   
-  if ( aAttribute == nsXULAtoms::curpos ||  aAttribute == nsXULAtoms::maxpos || 
-         aAttribute == nsXULAtoms::pageincrement || aAttribute == nsXULAtoms::increment ) {
+  if (  aAttribute == nsXULAtoms::curpos ||
+        aAttribute == nsXULAtoms::maxpos || 
+        aAttribute == nsXULAtoms::pageincrement ||
+        aAttribute == nsXULAtoms::increment ) {
     nsAutoString valueStr;
     aChild->GetAttr(aNameSpaceID, aAttribute, valueStr);
-    PRInt32 value = atoi(NS_LossyConvertUCS2toASCII(valueStr).get());
-    if ( value < 0 )
+    
+    PRInt32 error;
+    PRInt32 value = valueStr.ToInteger(&error);
+    if (value < 0)
       value = 1;          // just be safe and sanity check, scrollbar expects unsigned
 
-    nsCOMPtr<nsINativeScrollbar> scrollbar ( do_QueryInterface(mScrollbar) );
-    if ( scrollbar ) {
+    nsCOMPtr<nsINativeScrollbar> scrollbar(do_QueryInterface(mScrollbar));
+    if (scrollbar) {
+      if (aAttribute == nsXULAtoms::maxpos) {
+        // bounds check it
+        PRUint32 maxValue = (PRUint32)value;
+        PRUint32 current;
+        scrollbar->GetPosition(&current);
+        if (current > maxValue)
+        {
+          PRInt32 oldPosition = (PRInt32)current;
+          PRInt32 curPosition = maxValue;
+        
+          nsCOMPtr<nsIContent> scrollbarContent;
+          nsIFrame* sbFrame = nsnull;
+          FindScrollbar(this, &sbFrame, getter_AddRefs(scrollbarContent));
+          nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(sbFrame));
+          if (scrollbarFrame) {
+            nsCOMPtr<nsIScrollbarMediator> mediator;
+            scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
+            if (mediator)
+              mediator->PositionChanged(oldPosition, /* inout */ curPosition);
+          }
+
+          nsAutoString currentStr;
+          currentStr.AppendInt(curPosition);
+          scrollbarContent->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_FALSE);
+        }
+      }
+      
       if ( aAttribute == nsXULAtoms::curpos )
         scrollbar->SetPosition(value);
       else if ( aAttribute == nsXULAtoms::maxpos )
