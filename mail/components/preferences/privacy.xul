@@ -69,12 +69,24 @@
                   type="bool"/>
       <preference id="mail.phishing.detection.enabled"
                   name="mail.phishing.detection.enabled"
-                  type="bool"/>  
+                  type="bool"/> 
+      <preference id="mailnews.downloadToTempFile"
+                  name="mailnews.downloadToTempFile"
+                  type="bool"/>                   
       <preference id="wallet.crypto"
                   name="wallet.crypto"
                   type="bool"/>
       <preference id="pref.privacy.disable_button.view_passwords"
                   name="pref.privacy.disable_button.view_passwords"
+                  type="bool"/>
+      <preference id="security.disable_button.openCertManager"
+                  name="security.disable_button.openCertManager"
+                  type="bool"/>
+      <preference id="security.OCSP.disable_button.managecrl"
+                  name="security.OCSP.disable_button.managecrl"
+                  type="bool"/>
+      <preference id="security.disable_button.openDeviceManager"
+                  name="security.disable_button.openDeviceManager"
                   type="bool"/>
     </preferences>
 
@@ -82,7 +94,9 @@
       <tabs>
         <tab label="&itemGeneral.label;"/>
         <tab label="&itemPhishing.label;"/>
+        <tab label="&itemAntiVirus.label;"/>
         <tab label="&itemPasswords.label;"/>
+        <tab label="&itemSecurity.label;"/>
       </tabs>
       
       <tabpanels flex="1">
@@ -133,6 +147,16 @@
                     preference="mail.phishing.detection.enabled"/>
 
         </tabpanel>
+
+        <!-- Anti Virus --> 
+        <tabpanel orient="vertical">
+          <description>&antiVirus.intro;</description>
+          <class separator="thin"/>
+          <checkbox id="enableAntiVirusQuaruntine"
+                    label="&antiVirus.label;" accesskey="&antiVirus.accesskey;"
+                    preference="mailnews.downloadToTempFile"/>
+
+        </tabpanel>
         
         <!-- Password --> 
 
@@ -160,6 +184,24 @@
           </hbox>
         </tabpanel>
 
+        <!-- Security --> 
+        <tabpanel orient="vertical"> 
+          <description>&certificatesInfo.label;</description>           
+          <separator class="thin"/>
+          <description class="indent">
+            <button label="&viewCertificates.label;" accesskey="&viewCertificates.accesskey;" 
+                    oncommand="gPrivacyPane.showCertificates();"
+                    preference="security.disable_button.openCertManager"/>
+            <button label="&viewCRLs.label;" accesskey="&viewCRLs.accesskey;" 
+                    oncommand="gPrivacyPane.showCRLs();"
+                    preference="security.OCSP.disable_button.managecrl"/>
+            <button label="&viewOCSP.label;" accesskey="&viewOCSP.accesskey;" 
+                    oncommand="gPrivacyPane.showOCSP();"/>
+            <button label="&viewSecurityDevices.label;" accesskey="&viewSecurityDevices.accesskey;" 
+                    oncommand="gPrivacyPane.showSecurityDevices();"
+                    preference="security.disable_button.openDeviceManager"/>
+          </description>
+        </tabpanel>
       </tabpanels>
     </tabbox>
 

@@ -1,11 +1,11 @@
 <!ENTITY itemGeneral.label       "General">
 <!ENTITY itemUpdate.label        "Update">
-<!ENTITY itemSecurity.label      "Security">
+<!ENTITY itemOffline.label       "Offline &amp; Disk Space">
 
 <!-- General Settings -->
 
 <!ENTITY showCondensedAddresses.label  "Show only display name for people in my address book">
-<!ENTITY showCondensedAddresses.accesskey "S">
+<!ENTITY showCondensedAddresses.accesskey "p">
 
 <!-- LOCALIZATION NOTE (markAsRead.label): This will concatenate with
      "xxx seconds before marking a message as read", using a number and
@@ -15,21 +15,18 @@
 <!ENTITY markAsReadEnd.label           "seconds before marking a message as read">
 <!ENTITY markAsReadEnd.accesskey       "d">
 <!ENTITY showFolderColumns.label       "Show expanded columns in the folder pane">
-<!ENTITY showFolderColumns.accesskey   "h">
+<!ENTITY showFolderColumns.accesskey   "f">
 <!ENTITY rememberLastMsg.label         "Remember the last selected message">
-<!ENTITY rememberLastMsg.accesskey     "e">
+<!ENTITY rememberLastMsg.accesskey     "b">
 <!ENTITY reuseExp.label                "Open new messages in:">
 <!ENTITY reuseExpRadio0.label          "A new message window">
-<!ENTITY reuseExpRadio0.accesskey      "n">
+<!ENTITY reuseExpRadio0.accesskey      "i">
 <!ENTITY reuseExpRadio1.label          "An existing message window">
 <!ENTITY reuseExpRadio1.accesskey      "x">
-<!ENTITY showOfflineSettings.label     "Offline Settings...">
-<!ENTITY showOfflineSettings.accesskey "f">
-<!ENTITY connectionTimeout.label "Connection timeout: ">
+<!ENTITY connectionTimeout.label       "Connection timeout: ">
 <!ENTITY connectionTimeout.accesskey   "C">
-<!ENTITY connectionSeconds.label "seconds">
-<!ENTITY offline.label                 "Configure Offline Settings">
-<!ENTITY configEditDesc.label          "&brandShortName;'s Configuration File">
+<!ENTITY connectionSeconds.label       "seconds">
+<!ENTITY configEditDesc.label          "Advanced Configuration">
 <!ENTITY configEdit.label              "Config Editor...">
 <!ENTITY configEdit.accesskey          "g">
 
@@ -38,19 +35,36 @@
 <!ENTITY enableSmartUpdate.label        "&brandShortName;">
 <!ENTITY enableSmartUpdate.accesskey    "T">
 <!ENTITY enableExtensionUpdate.label    "My Extensions and Themes">
-<!ENTITY enableExtensionUpdate.accesskey "y">
+<!ENTITY enableExtensionUpdate.accesskey "M">
 <!ENTITY checkNow.label                 "Check Now...">
 <!ENTITY appCheckNow.accesskey          "k">
-<!ENTITY extensionsCheckNow.accesskey   "o">
+<!ENTITY extensionsCheckNow.accesskey   "h">
 
-<!-- Security -->
-<!ENTITY certificates.label             "Certificates">
-<!ENTITY certificatesInfo.label         "Manage certificates, revocation lists, certificate verification and security devices">
-<!ENTITY viewCertificates.label         "View Certificates">
-<!ENTITY viewCertificates.accesskey     "i">
-<!ENTITY viewCRLs.label                 "Revocation Lists">
-<!ENTITY viewCRLs.accesskey             "R">
-<!ENTITY viewOCSP.label                 "Verification">
-<!ENTITY viewOCSP.accesskey             "V">
-<!ENTITY viewSecurityDevices.label      "Security Devices">
-<!ENTITY viewSecurityDevices.accesskey  "u">
+<!-- Offline and Disk Space -->
+<!ENTITY offline.label  "Offline">
+<!ENTITY textStartUp   "When starting up:">
+<!ENTITY radioRememberPrevState "Remember previous online state">
+<!ENTITY radioRememberPrevState.accesskey "R">
+<!ENTITY radioAskMe "Ask me for online state at startup">
+<!ENTITY radioAskMe.accesskey "u">
+<!ENTITY radioAlwaysOnline "Always start up online">
+<!ENTITY radioAlwaysOnline.accesskey "l">
+
+<!ENTITY textGoingOnline "Send unsent messages when going online?">
+<!ENTITY radioAutoSend "Yes">
+<!ENTITY radioAutoSend.accesskey "Y">
+<!ENTITY radioNotSend "No">
+<!ENTITY radioNotSend.accesskey "N">
+<!ENTITY radioAskUnsent "Ask me">
+<!ENTITY radioAskUnsent.accesskey "s">
+<!ENTITY textGoingOffline "Download messages for offline use when going offline?">
+<!ENTITY radioAutoDownload "Yes">
+<!ENTITY radioAutoDownload.accesskey "e">
+<!ENTITY radioNotDownload "No">
+<!ENTITY radioNotDownload.accesskey "o">
+<!ENTITY radioAskDownload "Ask me">
+<!ENTITY radioAskDownload.accesskey "a">
+<!ENTITY Diskspace "Disk Space">
+<!ENTITY offlineCompact.label "Compact folders when it will save over">
+<!ENTITY offlineCompact.accesskey "v">
+<!ENTITY kb.label "KB">

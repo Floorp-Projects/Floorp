@@ -120,7 +120,6 @@
   locale/@AB_CD@/messenger/preferences/advanced.dtd                     (%chrome/messenger/preferences/advanced.dtd)
   locale/@AB_CD@/messenger/preferences/receipts.dtd                     (%chrome/messenger/preferences/receipts.dtd)
   locale/@AB_CD@/messenger/preferences/connection.dtd                   (%chrome/messenger/preferences/connection.dtd)
-  locale/@AB_CD@/messenger/preferences/offline.dtd                      (%chrome/messenger/preferences/offline.dtd)
   locale/@AB_CD@/messenger/preferences/downloads.dtd                    (%chrome/messenger/preferences/downloads.dtd)
   locale/@AB_CD@/messenger/preferences/downloadactions.dtd              (%chrome/messenger/preferences/downloadactions.dtd)
   locale/@AB_CD@/messenger/preferences/changeaction.dtd                 (%chrome/messenger/preferences/changeaction.dtd)

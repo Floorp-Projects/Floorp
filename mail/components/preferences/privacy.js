@@ -137,4 +137,28 @@ var gPrivacyPane = {
       document.getElementById("setMasterPassword").focus();
     }
   },
+
+  showCertificates: function ()
+  {
+    document.documentElement.openSubDialog("chrome://pippki/content/certManager.xul",
+                                        "width=600,height=400", null);
+  },
+  
+  showCRLs: function ()
+  {
+    document.documentElement.openSubDialog("chrome://pippki/content/crlManager.xul",
+                                        "width=600,height=400", null);
+  },
+  
+  showOCSP: function ()
+  {
+    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/ocsp.xul",
+                                           "", null);
+  },
+  
+  showSecurityDevices: function ()
+  {
+    document.documentElement.openSubDialog("chrome://pippki/content/device_manager.xul",
+                                        "width=600,height=400", null);
+  },
 };
