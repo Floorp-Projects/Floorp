@@ -233,14 +233,18 @@ JS_PopArguments(JSContext *cx, void *mark);
  * to the caller to keep the string alive until Remove is called.
  */
 
-/* XXX typedef'd here rather than in jspubtd.h #ifdef va_start, to avoid bad
- * XXX includers who grab jspubtd.h, then <stdarg.h>, then jsapi.h and unhide
- * XXX the typedef uses below in JS_AddArgumentFormatter without exposing the
- * XXX definition in jspubtd.h, which is of course include-idempotent.
+#ifndef JS_ARGUMENT_FORMATTER_DEFINED
+#define JS_ARGUMENT_FORMATTER_DEFINED 1
+/* XXX typedef'd here and in jspubtd.h #ifdef va_start, even though we include
+ * XXX jspubtd.h up above, to avoid bad XXX includers who grab jspubtd.h, then
+ * XXX <stdarg.h>, then jsapi.h, thereby hiding the jspubtd def but unhiding
+ * XXX the typedef use below in JS_AddArgumentFormatter; we need jspubtd.h to
+ * XXX do the typedef for jsapi.h-independent files such as jscntxt.h.
  */
 typedef JSBool
 (* CRT_CALL JSArgumentFormatter)(JSContext *cx, const char *format,
 				 JSBool fromJS, jsval **vpp, va_list *app);
+#endif
 
 JS_PUBLIC_API(JSBool)
 JS_AddArgumentFormatter(JSContext *cx, const char *format,
