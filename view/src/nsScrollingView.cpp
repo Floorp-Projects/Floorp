@@ -799,6 +799,59 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
       break;
     }
 
+    case NS_KEY_DOWN:
+    {
+      nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+      switch (keyEvent->keyCode) {
+        case NS_VK_PAGE_DOWN : 
+        case NS_VK_PAGE_UP   : {
+          nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
+          nsIWidget     *win = mVScrollBarView->GetWidget();
+
+          if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
+          {
+            PRUint32  oldpos = scrollv->GetPosition();
+            nsRect rect;
+            GetBounds(rect);
+            nscoord newPos = 0;
+            if (keyEvent->keyCode == NS_VK_PAGE_DOWN) {
+              newPos = oldpos+rect.height;
+            } else {
+              newPos = oldpos-rect.height;
+              newPos = (newPos < 0 ? 0 : newPos);
+            }
+            ScrollTo(0, newPos, 0);
+          }
+
+        } break;
+
+        case NS_VK_DOWN : 
+        case NS_VK_UP   : {
+          nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
+          nsIWidget     *win = mVScrollBarView->GetWidget();
+
+          if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
+          {
+            PRUint32  oldpos  = scrollv->GetPosition();
+            PRUint32  lineInc = scrollv->GetLineIncrement();
+            nscoord newPos = 0;
+            if (keyEvent->keyCode == NS_VK_DOWN) {
+              newPos = oldpos+lineInc;
+            } else {
+              newPos = oldpos-lineInc;
+              newPos = (newPos < 0 ? 0 : newPos);
+            }
+            ScrollTo(0, newPos, 0);
+          }
+
+        } break;
+
+        default:
+          break;
+
+      } // switch
+    } break;
+
     case NS_MOUSE_MOVE:
     {
       nsRect  trect;
