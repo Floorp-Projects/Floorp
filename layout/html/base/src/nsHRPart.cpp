@@ -29,6 +29,7 @@
 #include "nsIFontMetrics.h"
 #include "nsIHTMLAttributes.h"
 #include "nsStyleConsts.h"
+#include "nsCSSRendering.h"
 
 #undef DEBUG_HR_REFCNT
 
@@ -81,18 +82,6 @@ protected:
                               nsReflowMetrics& aDesiredSize,
                               const nsSize& aMaxSize);
 
-  // Weird color computing code stolen from winfe which was stolen
-  // from the xfe which was written originally by Eric Bina. So there.
-	static void Get3DColors(nscolor aResult[2], nscolor aColor);
-  static const int RED_LUMINOSITY;
-  static const int GREEN_LUMINOSITY;
-  static const int BLUE_LUMINOSITY;
-  static const int INTENSITY_FACTOR;
-  static const int LIGHT_FACTOR;
-  static const int LUMINOSITY_FACTOR;
-  static const int MAX_COLOR;
-  static const int COLOR_DARK_THRESHOLD;
-  static const int COLOR_LIGHT_THRESHOLD;
 };
 
 HRuleFrame::HRuleFrame(nsIContent* aContent,
@@ -157,7 +146,7 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
   {
     // XXX Get correct color by finding the first parent that actually
     // specifies a color.
-    Get3DColors(colors, color->mBackgroundColor);
+    nsCSSRendering::Get3DColors(colors, color->mBackgroundColor);
   }
 
   // Draw a "shadowed" box around the rule area
@@ -196,55 +185,6 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-// Weird color computing code stolen from winfe which was stolen
-// from the xfe which was written originally by Eric Bina. So there.
-
-const int HRuleFrame::RED_LUMINOSITY = 30;
-const int HRuleFrame::GREEN_LUMINOSITY = 59;
-const int HRuleFrame::BLUE_LUMINOSITY = 11;
-const int HRuleFrame::INTENSITY_FACTOR = 25;
-const int HRuleFrame::LIGHT_FACTOR = 0;
-const int HRuleFrame::LUMINOSITY_FACTOR = 75;
-const int HRuleFrame::MAX_COLOR = 255;
-const int HRuleFrame::COLOR_DARK_THRESHOLD = 51;
-const int HRuleFrame::COLOR_LIGHT_THRESHOLD = 204;
-
-
-void HRuleFrame::Get3DColors(nscolor aResult[2], nscolor aColor)
-{
-  int rb = NS_GET_R(aColor);
-  int gb = NS_GET_G(aColor);
-  int bb = NS_GET_B(aColor);
-  int intensity = (rb + gb + bb) / 3;
-  int luminosity =
-    ((RED_LUMINOSITY * rb) / 100) +
-    ((GREEN_LUMINOSITY * gb) / 100) +
-    ((BLUE_LUMINOSITY * bb) / 100);
-  int brightness = ((intensity * INTENSITY_FACTOR) +
-                    (luminosity * LUMINOSITY_FACTOR)) / 100;
-  int f0, f1;
-  if (brightness < COLOR_DARK_THRESHOLD) {
-    f0 = 30;
-    f1 = 50;
-  } else if (brightness > COLOR_LIGHT_THRESHOLD) {
-    f0 = 45;
-    f1 = 50;
-  } else {
-    f0 = 30 + (brightness * (45 - 30) / MAX_COLOR);
-    f1 = f0;
-  }
-  int r = rb - (f0 * rb / 100);
-  int g = gb - (f0 * gb / 100);
-  int b = bb - (f0 * bb / 100);
-  aResult[0] = NS_RGB(r, g, b);
-  r = rb + (f1 * (MAX_COLOR - rb) / 100);
-  if (r > 255) r = 255;
-  g = gb + (f1 * (MAX_COLOR - gb) / 100);
-  if (g > 255) g = 255;
-  b = bb + (f1 * (MAX_COLOR - bb) / 100);
-  if (b > 255) b = 255;
-  aResult[1] = NS_RGB(r, g, b);
-}
 
 void HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                 nsReflowMetrics& aDesiredSize,
