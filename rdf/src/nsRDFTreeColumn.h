@@ -21,11 +21,12 @@
 
 #include "nsString.h"
 #include "nsITreeColumn.h"
+#include "nsIRDFResource.h"
 #include "rdf.h"
 
 class nsRDFTreeDataModel;
 
-class nsRDFTreeColumn : public nsITreeColumn {
+class nsRDFTreeColumn : public nsITreeColumn, public nsIRDFResource {
 private:
     nsRDFTreeDataModel& mTree;
     nsString            mName;
@@ -63,14 +64,16 @@ public:
     NS_IMETHOD SetPixelWidth(PRUint32 newWidth);
 
     ////////////////////////////////////////////////////////////////////////
+    // nsIRDFResource interface
+
+    NS_IMETHOD GetResource(RDF_Resource& result /* out */) const;
+
+    ////////////////////////////////////////////////////////////////////////
+    // Implementation methods
 
     void SetVisibility(PRBool visible);
 
     PRBool IsVisible(void) const;
-
-    RDF_Resource GetProperty(void) const {
-        return mProperty;
-    }
 };
 
 #endif // nsRDFTreeColumn_h__

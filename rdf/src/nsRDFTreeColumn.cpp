@@ -21,8 +21,10 @@
 #include "nsIDMWidget.h"
 #include "nsIDataModel.h"
 
-static NS_DEFINE_IID(kIDataModelIID, NS_IDATAMODEL_IID);
-static NS_DEFINE_IID(kITreeColumnIID, NS_ITREECOLUMN_IID);
+static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDataModelIID,   NS_IDATAMODEL_IID);
+static NS_DEFINE_IID(kITreeColumnIID,  NS_ITREECOLUMN_IID);
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 
 const PRUint32 nsRDFTreeColumn::kDefaultWidth = 64; // XXX
 
@@ -51,7 +53,27 @@ nsRDFTreeColumn::~nsRDFTreeColumn(void)
 
 NS_IMPL_ADDREF(nsRDFTreeColumn);
 NS_IMPL_RELEASE(nsRDFTreeColumn);
-NS_IMPL_QUERY_INTERFACE(nsRDFTreeColumn, kITreeColumnIID);
+
+NS_IMETHODIMP
+nsRDFTreeColumn::QueryInterface(const nsIID& iid, void** result)
+{
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = NULL;
+    if (iid.Equals(kITreeColumnIID) ||
+        iid.Equals(kISupportsIID)) {
+        *result = static_cast<nsITreeColumn*>(this);
+        AddRef();
+        return NS_OK;
+    }
+    else if (iid.Equals(kIRDFResourceIID)) {
+        *result = static_cast<nsIRDFResource*>(this);
+        AddRef();
+        return NS_OK;
+    }
+    return NS_ERROR_NO_INTERFACE;
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -98,6 +120,18 @@ nsRDFTreeColumn::SetPixelWidth(PRUint32 newWidth)
 
 
 ////////////////////////////////////////////////////////////////////////
+// nsIRDFResource interface
+
+NS_IMETHODIMP
+nsRDFTreeColumn::GetResource(RDF_Resource& result) const
+{
+    result = mProperty;
+    return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation methods
 
 void
 nsRDFTreeColumn::SetVisibility(PRBool visible)

@@ -84,7 +84,7 @@ public:
 private:
     nsVector       mColumns;
 
-    void CreateColumns(void);
+    nsresult CreateColumns(void);
 };
 
 

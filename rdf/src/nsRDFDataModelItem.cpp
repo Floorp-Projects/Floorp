@@ -20,6 +20,10 @@
 #include "nsRDFDataModelItem.h"
 #include "rdf-int.h"
 
+static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDMItemIID,      NS_IDMITEM_IID);
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IDMITEM_IID);
+
 ////////////////////////////////////////////////////////////////////////
 
 nsRDFDataModelItem::nsRDFDataModelItem(nsRDFDataModel& model, RDF_Resource resource)
@@ -44,8 +48,27 @@ nsRDFDataModelItem::~nsRDFDataModelItem(void)
 NS_IMPL_ADDREF(nsRDFDataModelItem);
 NS_IMPL_RELEASE(nsRDFDataModelItem);
 
-static NS_DEFINE_IID(kIDMItemIID, NS_IDMITEM_IID);
-NS_IMPL_QUERY_INTERFACE(nsRDFDataModelItem, kIDMItemIID);
+NS_IMETHODIMP
+nsRDFDataModelItem::QueryInterface(const nsIID& iid, void** result)
+{
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = NULL;
+    if (iid.Equals(kIDMItemIID) ||
+        iid.Equals(kISupportsIID)) {
+        *result = static_cast<nsIDMItem*>(this);
+        AddRef();
+        return NS_OK;
+    }
+    else if (iid.Equals(kIRDFResourceIID)) {
+        *result = static_cast<nsIRDFResource*>(this);
+        AddRef();
+        return NS_OK;
+    }
+    return NS_ERROR_NO_INTERFACE;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDMItem interface
@@ -120,7 +143,20 @@ nsRDFDataModelItem::GetIntPropertyValue(PRInt32& value, const nsString& itemProp
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 ////////////////////////////////////////////////////////////////////////
+// nsIRDFResource interface
+
+NS_IMETHODIMP
+nsRDFDataModelItem::GetResource(RDF_Resource& resource /* out */) const
+{
+    resource = mResource;
+    return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation methods
 
 void
 nsRDFDataModelItem::InvalidateCachedSubtreeSize(void)
@@ -204,7 +240,7 @@ nsRDFDataModelItem::Open(void)
         // Arcs are outbound, that is, from a parent to it's
         // child. Find all targets whose source is "me".
         cursor = RDF_GetTargets(mDataModel.GetDB(),
-                                GetResource(),
+                                mResource,
                                 mDataModel.GetArcProperty(),
                                 RDF_RESOURCE_TYPE,
                                 PR_TRUE);
@@ -213,7 +249,7 @@ nsRDFDataModelItem::Open(void)
         // Arcs are inbound, that is, from a child to it's
         // parent. Find all sources whose target is "me".
         cursor = RDF_GetSources(mDataModel.GetDB(),
-                                GetResource(),
+                                mResource,
                                 mDataModel.GetArcProperty(),
                                 RDF_RESOURCE_TYPE,
                                 PR_TRUE);

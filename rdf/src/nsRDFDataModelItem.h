@@ -21,13 +21,14 @@
 
 #include "rdf.h"
 #include "nsIDMItem.h"
+#include "nsIRDFResource.h"
 #include "nsVector.h"
 
 class nsRDFDataModel;
 
 ////////////////////////////////////////////////////////////////////////
 
-class nsRDFDataModelItem : public nsIDMItem {
+class nsRDFDataModelItem : public nsIDMItem, public nsIRDFResource {
 private:
     nsRDFDataModel&     mDataModel;
     RDF_Resource        mResource;
@@ -76,13 +77,15 @@ public:
     NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) const;
 
     ////////////////////////////////////////////////////////////////////////
+    // nsIRDFResource interface
+
+    NS_IMETHOD GetResource(RDF_Resource& resource /* out */) const;
+
+    ////////////////////////////////////////////////////////////////////////
+    // Implementation methods
     
     nsRDFDataModel& GetDataModel(void) const {
         return mDataModel;
-    }
-
-    RDF_Resource GetResource(void) const {
-        return mResource;
     }
 
     PRBool IsOpen(void) const {
