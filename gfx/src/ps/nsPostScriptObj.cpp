@@ -28,6 +28,10 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  * 10/09/2000       IPLabs Linux Team      True Unicode glyps support added.
  */
+ 
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#define PR_LOGGING 1
+#include "prlog.h"
 
 #include "nscore.h"
 #include "nsPostScriptObj.h"
@@ -59,6 +63,10 @@
 #include <stdlib.h>
 #include "prprf.h"
 #endif
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo *nsPostScriptObjLM = PR_NewLogModule("nsPostScriptObj");
+#endif /* PR_LOGGING */
 
 extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
 
@@ -159,16 +167,16 @@ PrintAsDSCTextline(FILE *f, const char *text, int maxlen)
  *  Default Constructor
  *	@update 2/1/99 dwc
  */
-nsPostScriptObj::nsPostScriptObj()
+nsPostScriptObj::nsPostScriptObj() :
+  mPrintContext(nsnull),
+  mPrintSetup(nsnull),
+  mTitle(nsnull)
 {
-	mPrintContext = nsnull;
-	mPrintSetup = nsnull;
+  PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("nsPostScriptObj::nsPostScriptObj()\n"));
 
-        nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-          (nsISupports**) &gPrefs);
+  nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**) &gPrefs);
 
-	gLangGroups = new nsHashtable();
-  mTitle = nsnull;
+  gLangGroups = new nsHashtable();
 }
 
 /** ---------------------------------------------------
@@ -177,6 +185,8 @@ nsPostScriptObj::nsPostScriptObj()
  */
 nsPostScriptObj::~nsPostScriptObj()
 {
+  PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("nsPostScriptObj::~nsPostScriptObj()\n"));
+
   // The mPrintContext can be null
   // if  opening the PostScript document
   // fails.  Giving an invalid path, relative path
@@ -184,29 +194,14 @@ nsPostScriptObj::~nsPostScriptObj()
   // write permissions for will fail to open a document
   // see bug 85535 
   if (mPrintContext) {
-    // end the document
-    end_document();
-    finalize_translation();
-    if ( mPrintSetup->filename != nsnull )
-      fclose( mPrintSetup->out );
-    else {
-#if defined(XP_OS2_VACPP) || defined(XP_PC)
-      // pclose not defined OS2TODO
-#else
-	pclose( mPrintSetup->out );
-#endif
-    }
-#ifdef VMS
-    if ( mPrintSetup->print_cmd != nsnull ) {
-      char VMSPrintCommand[1024];
-      PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s /delete %s.",
-        mPrintSetup->print_cmd, mPrintSetup->filename);
-      // FixMe: Check for error and return one of NS_ERROR_GFX_PRINTER_* on demand  
-      system(VMSPrintCommand);
-      free((void *)mPrintSetup->filename);
-    }
-#endif
+    if (mPrintSetup->out) {
+      fclose(mPrintSetup->out);
+      mPrintSetup->out = nsnull;
+    }  
   }
+  
+  finalize_translation();
+
   // Cleanup things allocated along the way
   if (nsnull != mTitle){
     nsMemory::Free(mTitle);
@@ -235,9 +230,8 @@ nsPostScriptObj::~nsPostScriptObj()
     delete gLangGroups;
     gLangGroups = nsnull;
   }
-#ifdef DEBUG
-  puts("nsPostScriptObj::~nsPostScriptObj(): printing done.");
-#endif /* DEBUG */  
+
+  PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("nsPostScriptObj::~nsPostScriptObj(): printing done."));
 }
 
 void 
@@ -277,8 +271,9 @@ const char *paper_size_to_paper_name(float width_in_inch, float height_in_inch)
 nsresult 
 nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 {
-  PRBool      isGray, isAPrinter, isFirstPageFirst;
-  int         printSize;
+  PRBool      isGray,
+              isAPrinter,
+              isFirstPageFirst;
   int         landscape;
   float       fwidth, fheight;
   const char *printername;
@@ -347,20 +342,14 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
         PR_SetEnv(envvar);
         free(envvar);
         
-        const char *command;
+        aSpec->GetCommand(&mPrintSetup->print_cmd);
 #ifndef VMS
-        aSpec->GetCommand( &command );
-#if defined(XP_OS2_VACPP) || defined(XP_PC)
-	mPrintSetup->out = nsnull;
-        // popen not defined OS2TODO
-#else
-        mPrintSetup->out = popen(command, "w");
-#endif
+        mPrintSetup->out = tmpfile();
         mPrintSetup->filename = nsnull;  
 #else
         // We can not open a pipe and print the contents of it. Instead
         // we have to print to a file and then print that.
-        aSpec->GetCommand( &mPrintSetup->print_cmd );
+        
         mPrintSetup->filename = tempnam("SYS$SCRATCH:","MOZ_P");
         mPrintSetup->out = fopen(mPrintSetup->filename, "w");
 #endif
@@ -2024,9 +2013,11 @@ nsPostScriptObj::end_page()
  *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
-void 
+nsresult 
 nsPostScriptObj::end_document()
 {
+  PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("nsPostScriptObj::end_document()\n"));
+
   FILE *f;
 
   f = mPrintContext->prSetup->out;
@@ -2034,6 +2025,49 @@ nsPostScriptObj::end_document()
   fprintf(f, "%%%%Trailer\n");
   fprintf(f, "%%%%Pages: %d\n", (int) mPageNumber - 1);
   fprintf(f, "%%%%EOF\n");
+
+  if (mPrintSetup->filename) {
+    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("print to file completed.\n"));
+  }  
+  else {
+    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("piping job to '%s'\n", mPrintSetup->print_cmd));
+
+#ifdef VMS
+    char VMSPrintCommand[1024];
+    PR_snprintf(VMSPrintCommand, sizeof(VMSPrintCommand), "%s %s.",
+      mPrintSetup->print_cmd, mPrintSetup->filename);
+    // FixMe: Check for error and return one of NS_ERROR_GFX_PRINTER_* on demand  
+    system(VMSPrintCommand);
+    free((void *)mPrintSetup->filename);
+#else
+    FILE  *pipe;
+    char   buf[256];
+    size_t len;
+        
+    pipe = popen(mPrintSetup->print_cmd, "w");
+    /* XXX: We should look at |errno| in this case and return something
+     * more specific here... */
+    if (!pipe)
+      return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+    
+    size_t job_size = 0;
+    
+    /* Reset file pointer to the beginning of the temp file... */
+    fseek(mPrintSetup->out, 0, SEEK_SET);
+
+    do {
+      len = fread(buf, 1, sizeof(buf), mPrintSetup->out);
+      fwrite(buf, 1, len, pipe);
+      
+      job_size += len;
+    } while(len == sizeof(buf));
+
+    pclose(pipe);
+    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("piping done, copied %ld bytes.\n", job_size));
+#endif /* VMS */
+  }
+  
+  return NS_OK;
 }
 
 /** ---------------------------------------------------

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,8 +39,6 @@
 
 #include "nsFontMetricsPS.h"
 #include "nsDeviceContextPS.h"
-
-static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 /** ---------------------------------------------------
  *  See documentation in nsFontMetricsPS.h
