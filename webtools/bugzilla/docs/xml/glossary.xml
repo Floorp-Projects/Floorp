@@ -3,7 +3,7 @@
   <glossdiv>
     <title>0-9, high ascii</title>
 
-    <glossentry>
+    <glossentry id="gloss-htaccess">
       <glossterm>.htaccess</glossterm>
 
       <glossdef>
@@ -195,7 +195,7 @@
   <glossdiv id="gloss-d">
     <title>D</title>
 
-    <glossentry>
+    <glossentry id="gloss-daemon">
       <glossterm>daemon</glossterm>
 
       <glossdef>
@@ -208,6 +208,23 @@
         a web server, are generally run as daemons.</para>
       </glossdef>
     </glossentry>
+    
+    <glossentry id="gloss-dos">
+      <glossterm>DOS Attack</glossterm>
+      
+      <glossdef>
+        <para>A DOS, or Denial of Service attack, is when a user attempts to
+        deny access to a web server by repeatadly accessing a page or sending
+        malformed requests to a webserver. This can be effectively prevented
+        by using <filename>mod_throttle</filename> as described in
+        <xref linkend="security-webserver-mod-throttle"/>. A D-DOS, or
+        Distributed Denial of Service attack, is when these requests come
+        from multiple sources at the same time. Unfortunately, these are much
+        more difficult to defend against.
+        </para>
+      </glossdef>
+    </glossentry>
+    
   </glossdiv>
 
   <glossdiv id="gloss-g">
@@ -393,6 +410,19 @@
   <glossdiv id="gloss-s">
     <title>S</title>
 
+    <glossentry id="gloss-service">
+      <glossterm>Service</glossterm>
+      
+      <glossdef>
+        <para>In Windows NT environment, a boot-time background application
+        is refered to as a service. These are generally managed through the
+        control pannel while logged in as an account with
+        <quote>Administrator</quote> level capabilities. For more
+        information, consult your Windows manual or the MSKB.
+        </para>
+      </glossdef>
+    </glossentry>
+
     <glossentry>
       <glossterm>
         <acronym>SGML</acronym>
@@ -520,4 +550,3 @@ sgml-shorttag:t
 sgml-tag-region-if-active:t
 End:
 -->
-

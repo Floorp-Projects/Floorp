@@ -9,6 +9,7 @@
 <!ENTITY glossary SYSTEM "glossary.xml">
 <!ENTITY installation SYSTEM "installation.xml">
 <!ENTITY administration SYSTEM "administration.xml">
+<!ENTITY security SYSTEM "security.xml">
 <!ENTITY using SYSTEM "using.xml">
 <!ENTITY integration SYSTEM "integration.xml">
 <!ENTITY index SYSTEM "index.xml">
@@ -34,6 +35,7 @@
 <!ENTITY bz-nextver "2.20">
 <!ENTITY bz-date "2004-10-24">
 <!ENTITY % bz-devel "INCLUDE">
+<!ENTITY current-year "2004">
 
 <!ENTITY landfillbase "http://landfill.bugzilla.org/bugzilla-tip/">
 <!ENTITY bz "http://www.bugzilla.org/">
@@ -141,6 +143,9 @@
 
 <!-- Administering Bugzilla -->
 &administration;
+
+<!-- Securing Bugzilla -->
+&security;
 
 <!-- Customizing Bugzilla -->
 &customization;
