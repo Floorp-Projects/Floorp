@@ -1501,9 +1501,9 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 				Recycle(uri);
 
 				// determine site (host name)
-				PRInt32		slashOffset1 = site.Find("://");
+				slashOffset1 = site.Find("://");
 				if (slashOffset1 < 1)			return(NS_ERROR_UNEXPECTED);
-				PRInt32 	slashOffset2 = site.FindChar(PRUnichar('/'), PR_FALSE, slashOffset1 + 3);
+				slashOffset2 = site.FindChar(PRUnichar('/'), PR_FALSE, slashOffset1 + 3);
 				if (slashOffset2 <= slashOffset1)	return(NS_ERROR_UNEXPECTED);
 				site.Truncate(slashOffset2 + 1);
 
@@ -1565,10 +1565,10 @@ InternetSearchDataSource::clearFilters(void)
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
 				break;
 
-			nsCOMPtr<nsIRDFLiteral>	filterSite = do_QueryInterface(arc);
-			if (!filterSite)	continue;
+			nsCOMPtr<nsIRDFLiteral>	filterSiteLiteral = do_QueryInterface(arc);
+			if (!filterSiteLiteral)	continue;
 			
-			localstore->Unassert(kNC_FilterSearchSitesRoot, kNC_Child, filterSite);
+			localstore->Unassert(kNC_FilterSearchSitesRoot, kNC_Child, filterSiteLiteral);
 		}
 	}
 
