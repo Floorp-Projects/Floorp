@@ -310,9 +310,11 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   // then initialize it before reflow
     if (mIsAllContentHere && !mHasBeenInitialized) {
       if (PR_FALSE == mIsAllFramesHere) {
+#ifdef DEBUG_rodsXXX
         printf("**********************************************************\n");
         printf("**********************************************************\n");
         printf("**********************************************************\n");
+#endif
         CheckIfAllFramesHere();
       }
       if (mIsAllFramesHere && !mHasBeenInitialized) {
@@ -1062,8 +1064,10 @@ nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
   switch(aEvent->message) {
     case NS_KEY_PRESS:
       if (NS_KEY_EVENT == aEvent->eventStructType) {
+#ifdef DEBUG_rodsXXX
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
         printf("---> %d %c\n", keyEvent->keyCode, keyEvent->keyCode);
+#endif
         //if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
         //  MouseClicked(&aPresContext);
         //}
@@ -2720,7 +2724,9 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
       } else {
 
         if (code == nsIDOMKeyEvent::DOM_VK_UP || code == nsIDOMKeyEvent::DOM_VK_LEFT) {
+#ifdef DEBUG_rodsXXX
           printf("DOM_VK_UP   mSelectedIndex: %d ", mSelectedIndex);
+#endif
           if (mSelectedIndex > 0) {
             mOldSelectedIndex = mSelectedIndex;
             mSelectedIndex--;
@@ -2729,9 +2735,13 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
             }
           }
+#ifdef DEBUG_rodsXXX
           printf("  After: %d\n", mSelectedIndex);
+#endif
         } if (code == nsIDOMKeyEvent::DOM_VK_DOWN || code == nsIDOMKeyEvent::DOM_VK_RIGHT) {
+#ifdef DEBUG_rodsXXX
           printf("DOM_VK_DOWN mSelectedIndex: %d ", mSelectedIndex);
+#endif
           if ((mSelectedIndex+1) < (PRInt32)numOptions) {
             mOldSelectedIndex = mSelectedIndex;
             mSelectedIndex++;
@@ -2740,7 +2750,9 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
             }
           }
+#ifdef DEBUG_rodsXXX
           printf("  After: %d\n", mSelectedIndex);
+#endif
         } if (code == nsIDOMKeyEvent::DOM_VK_RETURN) {
           if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
             mComboboxFrame->ListWasSelected(mPresContext);
