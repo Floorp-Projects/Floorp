@@ -101,6 +101,7 @@ sub initBug  {
   $self->{'whoid'} = $user_id;
   &::SendSQL("SELECT groupset FROM profiles WHERE userid=$self->{'whoid'}");
   my $usergroupset = &::FetchOneColumn();
+  if (!$usergroupset) { $usergroupset = '0' }
   $self->{'usergroupset'} = $usergroupset;
 
   my $query = "
