@@ -71,7 +71,7 @@ function pref(prefName, value) {
         }
     }
     catch(e) {
-        displayError("pref failed with error: " + e);
+        displayError("pref", e);
     }
 }
 
@@ -92,7 +92,7 @@ function defaultPref(prefName, value) {
         }
     }
     catch(e) {
-        displayError("defaultPref failed with error: " + e);
+        displayError("defaultPref", e);
     }
 }
 
@@ -109,7 +109,7 @@ function lockPref(prefName, value) {
         prefBranch.lockPref(prefName);
     }
     catch(e) {
-        displayError("lockPref failed with error: " + e);
+        displayError("lockPref", e);
     }
 }
 
@@ -121,7 +121,7 @@ function unlockPref(prefName) {
         prefBranch.unlockPref(prefName);
     }
     catch(e) {
-        displayError("unlockPref failed with error: " + e);
+        displayError("unlockPref", e);
     }
 }
 
@@ -145,7 +145,7 @@ function getPref(prefName) {
         }
     }
     catch(e) {
-        displayError("getPref failed with error: " + e);
+        displayError("getPref", e);
     }
 }
 
@@ -159,10 +159,10 @@ function getLDAPAttributes(host, base, filter, attribs) {
                    + "?sub?" +  filter;
         var ldapquery = Components.classes[LDAPSyncQueryContractID]
                                   .createInstance(nsILDAPSyncQuery);
-        return ldapquery.getQueryResults(url);
+        processLDAPValues(ldapquery.getQueryResults(url));     // user supplied method
     }
     catch(e) {
-        displayError("getLDAPAttibutes failed with error: " + e);
+        displayError("getLDAPAttibutes", e);
     }
 }
 
@@ -187,20 +187,24 @@ function getLDAPValue(str, key) {
         return str.substring(start_pos, end_pos);
     }
     catch(e) {
-        displayError("getLDAPValue failed with error: " + e);
+        displayError("getLDAPValue", e);
     }
 }
 
-function displayError(message) {
+function displayError(funcname, message) {
 
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                  .getService(Components.interfaces.nsIPromptService);
-    if (promptService) {
-        
-        title = "AutoConfig Alert";
-        err = "Netscape.cfg/AutoConfig failed. Please Contact your system administrator \n Error Message: " + message;
-        promptService.alert(null, title, err);
-    } 
+    try {
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                      .getService(Components.interfaces.nsIPromptService);
+        var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                               .getService(Components.interfaces.nsIStringBundleService)
+                               .createBundle("chrome://autoconfig/locale/autoconfig.properties");
+
+         var title = bundle.GetStringFromName("autoConfigTitle");
+         var msg = bundle.formatStringFromName("autoConfigMsg", [funcname], 1);
+         promptService.alert(null, title, msg + " " + message);
+    }
+    catch(e) { }
 }
 
 function getenv(name) {
@@ -210,7 +214,7 @@ function getenv(name) {
         return currentProcess.getEnvironment(name);
     }
     catch(e) {
-        displayError("getEnvironment failed with error: " + e);
+        displayError("getEnvironment", e);
     }
 }
 
