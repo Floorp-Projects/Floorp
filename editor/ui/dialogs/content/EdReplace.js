@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): Kin Blas <kin@netscape.com>
+ * Contributor(s): Akkana Peck <akkana@netscape.com>
  *
  */
 
@@ -70,13 +71,10 @@ function onLoad()
 
   // Get the xul <editor> element:
   var editorXUL = window.opener.document.getElementById("content-frame");
-  dump("editor XUL: " + editorXUL + ", type = "
-       + editorXUL.getAttribute("type") + "\n");
 
   // Get the nsIWebBrowserFind service:
   //gFindInst = editorXUL.docShell.QueryInterface(Components.interfaces.nsIWebBrowserFind);
   gFindInst = editorXUL.webBrowserFind;
-  dump("webBrowserFind: " + gFindInst + "\n");
 
   try {
   // get the find service, which stores global find state
@@ -89,7 +87,6 @@ function onLoad()
 
   try {
     gReplaceDialog.editor = editorXUL.editor.QueryInterface(Components.interfaces.nsIPlaintextEditor);
-    dump("Got editor: " + gReplaceDialog.editor + "\n");
   } catch(e) { dump("Couldn't get an editor! " + e + "\n"); }
   // If we don't get the editor, then we won't allow replacing.
 
@@ -170,11 +167,13 @@ function onReplaceAll()
   setUpFindInst();
 
   // Search.
-  do {
+  while (true) {
     var result = gFindInst.findNext();
-    if (result)
-      gReplaceDialog.editor.insertText(gReplaceDialog.replaceKey.value);
-  } while (result);
+    dump("result of find: " + result + "\n");
+    if (!result)
+      break;
+    gReplaceDialog.editor.insertText(gReplaceDialog.replaceKey.value);
+  }
 
   return false;
 }

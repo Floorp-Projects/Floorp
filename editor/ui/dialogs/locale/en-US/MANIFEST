@@ -34,6 +34,7 @@ EditorPageProperties.dtd
 EditorColorProperties.dtd
 EdColorPicker.dtd
 EditorPersonalDictionary.dtd
+EditorReplace.dtd
 EditorSpellCheck.dtd
 EditorTableProperties.dtd
 EditorFormProperties.dtd

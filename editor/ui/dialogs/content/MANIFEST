@@ -35,6 +35,8 @@ EdLinkProps.xul
 EdLinkProps.js
 EdLinkChecker.xul
 EdLinkChecker.js
+EdReplace.xul
+EdReplace.js
 EdSpellCheck.xul
 EdSpellCheck.js
 EdDictionary.xul
