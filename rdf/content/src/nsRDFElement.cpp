@@ -1816,7 +1816,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
     // End XUL Only Code
 
     // See if they're closing the element.
-    if ((aNameSpaceID == kNameSpaceID_XUL) && (aName == kOpenAtom)) {
+    if ((aNameSpaceID == kNameSpaceID_None) && (aName == kOpenAtom)) {
         mContentsMustBeGenerated = PR_TRUE;
         NS_IF_RELEASE(mChildren);
     }
