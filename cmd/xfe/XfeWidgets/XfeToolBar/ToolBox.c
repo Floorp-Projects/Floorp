@@ -1037,12 +1037,6 @@ InsertDynamicChild(Widget child)
 
 /*   	printf("InsertDynamicChild(%s) for %s\n",XtName(w),XtName(child)); */
 
-	/* Increase the item count */
-	tp->item_count++;
-
-	/* The new tab's index */
-	index = tp->item_count - 1;
-
 	/* For every tool item, we need 2 tab buttoms: (1 opened & 1 closed) */
 	closed_tab = CreateTab(w,False);
 	opened_tab = CreateTab(w,True);
@@ -1056,23 +1050,28 @@ InsertDynamicChild(Widget child)
 	XtAddCallback(opened_tab,XmNarmCallback,TabArmCB,NULL);
 	XtAddCallback(opened_tab,XmNdisarmCallback,TabDisarmCB,NULL);
 
+	/* The new tab's index */
+	index = tp->item_count;
+
 	/* Allocate more space for the new tabs */
 	tp->closed_tabs = (WidgetList) XtRealloc((char *) tp->closed_tabs,
-											 sizeof(Widget) * tp->item_count);
+											 (index + 1) * sizeof(Widget));
 	
 	tp->opened_tabs = (WidgetList) XtRealloc((char *) tp->opened_tabs,
-											 sizeof(Widget) * tp->item_count);
+											 (index + 1) * sizeof(Widget));
 	
+
 	/* Place the new tabs in the tab lists */
 	tp->closed_tabs[index] = closed_tab;
 	tp->opened_tabs[index] = opened_tab;
 	
 	/* Allocate more space for the new item */
 	tp->items = (WidgetList) XtRealloc((char *) tp->items,
-									   sizeof(Widget) * tp->item_count);
+									   (index + 1) * sizeof(Widget));
 
 	/* Place the new tab in the tab tab list */
 	tp->items[index] = child;
+	tp->item_count = index + 1;
 
 	/* Add item event handlers */
 	ChildSetDraggable(w,child,True);
