@@ -60,122 +60,122 @@ class nsIToolkit;
 
 class nsWidget : public nsBaseWidget
 {
- public:
-    nsWidget();
-    virtual ~nsWidget();
+public:
+  nsWidget();
+  virtual ~nsWidget();
 
-    NS_IMETHOD            Create(nsIWidget *aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIAppShell *aAppShell = nsnull,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
-    NS_IMETHOD            Create(nsNativeWidget aParent,
-                                     const nsRect &aRect,
-                                     EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
-                                     nsIAppShell *aAppShell = nsnull,
-                                     nsIToolkit *aToolkit = nsnull,
-                                     nsWidgetInitData *aInitData = nsnull);
+  NS_IMETHOD            Create(nsIWidget *aParent,
+                               const nsRect &aRect,
+                               EVENT_CALLBACK aHandleEventFunction,
+                               nsIDeviceContext *aContext,
+                               nsIAppShell *aAppShell = nsnull,
+                               nsIToolkit *aToolkit = nsnull,
+                               nsWidgetInitData *aInitData = nsnull);
+  NS_IMETHOD            Create(nsNativeWidget aParent,
+                               const nsRect &aRect,
+                               EVENT_CALLBACK aHandleEventFunction,
+                               nsIDeviceContext *aContext,
+                               nsIAppShell *aAppShell = nsnull,
+                               nsIToolkit *aToolkit = nsnull,
+                               nsWidgetInitData *aInitData = nsnull);
 
-    NS_IMETHOD Destroy(void);
-    nsIWidget* GetParent(void);
+  NS_IMETHOD Destroy(void);
+  nsIWidget* GetParent(void);
 
-    NS_IMETHOD SetModal(void);
-    NS_IMETHOD Show(PRBool state);
-    NS_IMETHOD IsVisible(PRBool &aState);
-    NS_IMETHOD CaptureMouse(PRBool aCapture);
+  NS_IMETHOD SetModal(void);
+  NS_IMETHOD Show(PRBool state);
+  NS_IMETHOD IsVisible(PRBool &aState);
+  NS_IMETHOD CaptureMouse(PRBool aCapture);
 
-    NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
-    NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-    NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
-		      PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
+  NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+                    PRInt32 aHeight, PRBool aRepaint);
 
-    NS_IMETHOD Enable(PRBool aState);
-    NS_IMETHOD SetFocus(void);
+  NS_IMETHOD Enable(PRBool aState);
+  NS_IMETHOD SetFocus(void);
 
-    NS_IMETHOD GetBounds(nsRect &aRect);
+  NS_IMETHOD GetBounds(nsRect &aRect);
 
-    PRBool OnResize(nsSizeEvent event);
-    virtual PRBool OnResize(nsRect &aRect);
-    virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
+  PRBool OnResize(nsSizeEvent event);
+  virtual PRBool OnResize(nsRect &aRect);
+  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
 
-    nsIFontMetrics *GetFont(void);
-    NS_IMETHOD SetFont(const nsFont &aFont);
+  nsIFontMetrics *GetFont(void);
+  NS_IMETHOD SetFont(const nsFont &aFont);
 
-    NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
+  NS_IMETHOD SetBackgroundColor(const nscolor &aColor);
 
-    NS_IMETHOD SetCursor(nsCursor aCursor);
+  NS_IMETHOD SetCursor(nsCursor aCursor);
 
-    NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
+  NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
 
-    void* GetNativeData(PRUint32 aDataType);
+  void* GetNativeData(PRUint32 aDataType);
 #ifdef NS_GTK_REF
-    void ReleaseNativeData(PRUint32 aDataType);
+  void ReleaseNativeData(PRUint32 aDataType);
 #endif
 
 
-    NS_IMETHOD GetAbsoluteBounds(nsRect &aRect);
-    NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
-    NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
+  NS_IMETHOD GetAbsoluteBounds(nsRect &aRect);
+  NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
+  NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
 
-    NS_IMETHOD BeginResizingChildren(void);
-    NS_IMETHOD EndResizingChildren(void);
+  NS_IMETHOD BeginResizingChildren(void);
+  NS_IMETHOD EndResizingChildren(void);
 
-    NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-    NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
+  NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 
-    virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
+  virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
   // the following are nsWindow specific, and just stubbed here
 
-    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-    NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar);
-    NS_IMETHOD ShowMenuBar(PRBool aShow);
+  NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+  NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar);
+  NS_IMETHOD ShowMenuBar(PRBool aShow);
 
-    NS_IMETHOD Invalidate(PRBool aIsSynchronous);
-    NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
-    NS_IMETHOD Update(void);
-    NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+  NS_IMETHOD Invalidate(PRBool aIsSynchronous);
+  NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
+  NS_IMETHOD Update(void);
+  NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
-    void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
+  void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
     
   // Utility functions
 
-    PRBool     ConvertStatus(nsEventStatus aStatus);
-    PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
-    PRBool     DispatchStandardEvent(PRUint32 aMsg);
-    PRBool     DispatchFocus(nsGUIEvent &aEvent);
+  PRBool     ConvertStatus(nsEventStatus aStatus);
+  PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
+  PRBool     DispatchStandardEvent(PRUint32 aMsg);
+  PRBool     DispatchFocus(nsGUIEvent &aEvent);
 
   // are we a "top level" widget?
-    PRBool     mIsToplevel;
+  PRBool     mIsToplevel;
 
 #ifdef DEBUG
   void IndentByDepth(FILE* out);
 #endif
 
- protected:
+protected:
 
-    virtual void InitCallbacks(char * aName = nsnull);
-    virtual void OnDestroy();
+  virtual void InitCallbacks(char * aName = nsnull);
+  virtual void OnDestroy();
 
-    NS_IMETHOD CreateNative(GtkWidget *parentWindow) { return NS_OK; }
+  NS_IMETHOD CreateNative(GtkWidget *parentWindow) { return NS_OK; }
 
-    nsresult CreateWidget(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData,
-                      nsNativeWidget aNativeParent = nsnull);
+  nsresult CreateWidget(nsIWidget *aParent,
+                        const nsRect &aRect,
+                        EVENT_CALLBACK aHandleEventFunction,
+                        nsIDeviceContext *aContext,
+                        nsIAppShell *aAppShell,
+                        nsIToolkit *aToolkit,
+                        nsWidgetInitData *aInitData,
+                        nsNativeWidget aNativeParent = nsnull);
 
 
-    PRBool DispatchWindowEvent(nsGUIEvent* event);
+  PRBool DispatchWindowEvent(nsGUIEvent* event);
 
   // Return the Gdk window whose background should change
-  virtual GdkWindow * GetWindowForSetBackground();
+  virtual GdkWindow *GetWindowForSetBackground();
 
   // Sets font for widgets
   virtual void SetFontNative(GdkFont *aFont);
@@ -340,16 +340,17 @@ protected:
                        GtkWidget *    aGtkWidget);
 #endif
 
-    GtkWidget *mWidget;
-    nsIWidget *mParent;
+  guint32 mGrabTime;
+  GtkWidget *mWidget;
+  nsIWidget *mParent;
 
-    // This is the composite update area (union of all the calls to
-    // Invalidate)
-    nsRect mUpdateArea;
+  // This is the composite update area (union of all the calls to
+  // Invalidate)
+  nsRect mUpdateArea;
 
-    PRBool mShown;
+  PRBool mShown;
 
-    PRUint32 mPreferredWidth, mPreferredHeight;
+  PRUint32 mPreferredWidth, mPreferredHeight;
 private:
   PRBool mIsDragDest;
   static nsILookAndFeel *sLookAndFeel;

@@ -21,6 +21,7 @@
 
 NS_IMPL_ADDREF_INHERITED(nsCheckButton, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsCheckButton, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsCheckButton, nsICheckButton, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -106,28 +107,6 @@ void nsCheckButton::InitCallbacks(char * aName)
   InstallSignal(mCheckButton,
                 "toggled",
                 GTK_SIGNAL_FUNC(nsCheckButton::ToggledSignal));
-}
-
-/**
- * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
- * @modify gpk 8/4/98
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- *
-*/
-nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    if (aIID.Equals(nsICheckButton::GetIID())) {
-        *aInstancePtr = (void*) ((nsICheckButton*)this);
-        AddRef();
-        return NS_OK;
-    }
-    return nsWidget::QueryInterface(aIID,aInstancePtr);
 }
 
 //-------------------------------------------------------------------------

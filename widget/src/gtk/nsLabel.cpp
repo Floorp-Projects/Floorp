@@ -23,6 +23,7 @@
 
 NS_IMPL_ADDREF_INHERITED(nsLabel, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsLabel, nsWidget)
+NS_IMPL_QUERY_INTERFACE2(nsLabel, nsILabel, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -50,7 +51,7 @@ nsLabel::~nsLabel()
 // Create the nativeLabel widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsLabel::CreateNative(GtkWidget *parentWindow)
+NS_IMETHODIMP  nsLabel::CreateNative(GtkWidget *parentWindow)
 {
   unsigned char alignment = GetNativeAlignment();
 
@@ -65,7 +66,7 @@ NS_METHOD  nsLabel::CreateNative(GtkWidget *parentWindow)
 //
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
+NS_IMETHODIMP nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
     nsLabelInitData* data = (nsLabelInitData *) aInitData;
@@ -79,7 +80,7 @@ NS_METHOD nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
 // Set alignment
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
+NS_IMETHODIMP nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 {
   GtkJustification align;
 
@@ -89,26 +90,6 @@ NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
   gtk_misc_set_alignment(GTK_MISC(mWidget), 0.0, align);
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-
-  nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-
-  if (result == NS_NOINTERFACE && aIID.Equals(nsILabel::GetIID())) {
-      *aInstancePtr = (void*) ((nsILabel*)this);
-      AddRef();
-      result = NS_OK;
-  }
-
-  return result;
-}
-
 
 //-------------------------------------------------------------------------
 //

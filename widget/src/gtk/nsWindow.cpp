@@ -37,7 +37,6 @@
 
 #include "stdio.h"
 
-
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -599,7 +598,6 @@ NS_METHOD nsWindow::Show(PRBool bState)
 #endif
 
       gtk_widget_show(mShell);
-
     }
   }
   // hide
@@ -871,6 +869,9 @@ nsWindow::OnRealize()
   // we were just realized, so we better have a window, but we will make sure...
   if (mShell->window)
   {
+    // XXX bug 8002
+    //    gdk_window_raise(mShell->window);
+
     gint wmd = ConvertBorderStyles(mBorderStyle);
     if (wmd != -1)
       gdk_window_set_decorations(mShell->window, (GdkWMDecoration)wmd);

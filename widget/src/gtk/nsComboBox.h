@@ -33,11 +33,9 @@ class nsComboBox : public nsWidget,
 
 public:
   nsComboBox();
-  ~nsComboBox();
+  virtual ~nsComboBox();
 
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIComboBox interface
   NS_IMETHOD      AddItemAt(nsString &aItem, PRInt32 aPosition);
@@ -50,10 +48,6 @@ public:
   NS_IMETHOD      SelectItem(PRInt32 aPosition);
   NS_IMETHOD      Deselect() ;
 
-  virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
-  virtual PRBool  OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
-  virtual PRBool  OnResize(nsRect &aRect) { return PR_FALSE; }
-  
   // nsIComboBox interface
   NS_IMETHOD      SetMultipleSelection(PRBool aMultipleSelections);
   PRInt32         GetSelectedCount();

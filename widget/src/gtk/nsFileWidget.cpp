@@ -19,7 +19,7 @@
 #include "nsFileWidget.h"
 #include "nsIToolkit.h"
 
-NS_IMPL_ISUPPORTS(nsFileWidget, nsIFileWidget::GetIID());
+NS_IMPL_ISUPPORTS1(nsFileWidget, nsIFileWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -42,16 +42,19 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
 //-------------------------------------------------------------------------
 nsFileWidget::~nsFileWidget()
 {
-  GtkWidget *menu_item;
-  GList *list = g_list_first(GTK_MENU_SHELL(mFilterMenu)->children);
-
-  for (;list; list = list->next)
+  if (mFilterMenu)
   {
-    menu_item = GTK_WIDGET(list->data);
-    gchar *data = (gchar*)gtk_object_get_data(GTK_OBJECT(menu_item), "filters");
+    GtkWidget *menu_item;
+    GList *list = g_list_first(GTK_MENU_SHELL(mFilterMenu)->children);
 
-    if (data)
-      delete[] data;
+    for (;list; list = list->next)
+    {
+      menu_item = GTK_WIDGET(list->data);
+      gchar *data = (gchar*)gtk_object_get_data(GTK_OBJECT(menu_item), "filters");
+      
+      if (data)
+        delete[] data;
+    }
   }
 
   gtk_widget_destroy(mWidget);
@@ -72,6 +75,13 @@ static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
   gtk_main_quit();
 }
 
+static void filter_item_activated(GtkWidget *w, gpointer data)
+{
+  nsFileWidget *f = (nsFileWidget*)data;
+  gchar *foo = (gchar*)gtk_object_get_data(GTK_OBJECT(w), "filters");
+  g_print("filter_item_activated(): %s\n", foo);
+}
+
 //-------------------------------------------------------------------------
 //
 // Show - Display the file dialog
@@ -84,7 +94,12 @@ PRBool nsFileWidget::Show()
     // make things shorter
     GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
 
-    gtk_option_menu_set_menu(GTK_OPTION_MENU(mOptionMenu), mFilterMenu);
+    if (mNumberOfFilters != 0)
+    {
+      gtk_option_menu_set_menu(GTK_OPTION_MENU(mOptionMenu), mFilterMenu);
+    }
+    else
+      gtk_widget_hide(mOptionMenu);
 
     //    gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
     gtk_widget_show(mWidget);
@@ -111,9 +126,9 @@ PRBool nsFileWidget::Show()
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
-				      const nsString aTitles[],
-				      const nsString aFilters[])
+NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
+                                          const nsString aTitles[],
+                                          const nsString aFilters[])
 {
   GtkWidget *menu_item;
 
@@ -134,6 +149,11 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
 
     gtk_object_set_data(GTK_OBJECT(menu_item), "filters", filters);
 
+    gtk_signal_connect(GTK_OBJECT(menu_item),
+                       "activate",
+                       GTK_SIGNAL_FUNC(filter_item_activated),
+                       this);
+
     gtk_menu_append(GTK_MENU(mFilterMenu), menu_item);
     gtk_widget_show(menu_item);
 
@@ -143,7 +163,7 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
   return NS_OK;
 }
 
-NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
+NS_IMETHODIMP  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
   if (mWidget) {
     gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
@@ -155,7 +175,7 @@ NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::GetSelectedType(PRInt16& theType)
+NS_IMETHODIMP  nsFileWidget::GetSelectedType(PRInt16& theType)
 {
   theType = mSelectedType;
   return NS_OK;
@@ -166,7 +186,7 @@ NS_METHOD  nsFileWidget::GetSelectedType(PRInt16& theType)
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
+NS_IMETHODIMP  nsFileWidget::SetDefaultString(const nsString& aString)
 {
   if (mWidget) {
     gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget),
@@ -181,7 +201,7 @@ NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
 // Set the display directory
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
+NS_IMETHODIMP  nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
 {
   mDisplayDirectory = aDirectory;
   return NS_OK;
@@ -192,7 +212,7 @@ NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec& aDirectory)
 // Get the display directory
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
+NS_IMETHODIMP  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 {
   aDirectory = mDisplayDirectory;
   return NS_OK;
@@ -200,13 +220,13 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 
 
 //-------------------------------------------------------------------------
-NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
-                               const nsString& aTitle,
-                               nsFileDlgMode aMode,
-                               nsIDeviceContext *aContext,
-                               nsIAppShell *aAppShell,
-                               nsIToolkit *aToolkit,
-                               void *aInitData)
+NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
+                                   const nsString& aTitle,
+                                   nsFileDlgMode aMode,
+                                   nsIDeviceContext *aContext,
+                                   nsIAppShell *aAppShell,
+                                   nsIToolkit *aToolkit,
+                                   void *aInitData)
 {
   mMode = aMode;
   mTitle.SetLength(0);

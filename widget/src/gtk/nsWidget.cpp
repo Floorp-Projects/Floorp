@@ -30,6 +30,8 @@
 #include <gdk/gdkx.h>
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+
+
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
 
@@ -62,6 +64,7 @@ nsWidget::nsWidget()
     sLookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,
                            mBackground);
 
+  mGrabTime = 0;
   mWidget = nsnull;
   mParent = nsnull;
   mPreferredWidth  = 0;
@@ -94,7 +97,7 @@ nsWidget::~nsWidget()
   }
 }
 
-NS_METHOD nsWidget::GetAbsoluteBounds(nsRect &aRect)
+NS_IMETHODIMP nsWidget::GetAbsoluteBounds(nsRect &aRect)
 {
   gint x;
   gint y;
@@ -120,7 +123,7 @@ NS_METHOD nsWidget::GetAbsoluteBounds(nsRect &aRect)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+NS_IMETHODIMP nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
   gint x;
   gint y;
@@ -147,7 +150,7 @@ NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+NS_IMETHODIMP nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
 #ifdef DEBUG_pavlov
     g_print("nsWidget::ScreenToWidget\n");
@@ -258,7 +261,7 @@ nsIWidget* nsWidget::GetParent(void)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsWidget::Show(PRBool bState)
+NS_IMETHODIMP nsWidget::Show(PRBool bState)
 {
   if (!mWidget)
     return NS_OK; // Will be null durring printing
@@ -279,7 +282,7 @@ NS_METHOD nsWidget::Show(PRBool bState)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::SetModal(void)
+NS_IMETHODIMP nsWidget::SetModal(void)
 {
 	GtkWindow *toplevel;
 
@@ -297,18 +300,31 @@ NS_METHOD nsWidget::SetModal(void)
 // grab mouse events for this widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::CaptureMouse(PRBool aCapture)
+NS_IMETHODIMP nsWidget::CaptureMouse(PRBool aCapture)
 {
   if (aCapture)
+  {
+    mGrabTime = gdk_time_get();
+
+    GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
+    gdk_pointer_grab (mWidget->window, TRUE,
+                      GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                      GDK_POINTER_MOTION_MASK,
+                      NULL, cursor, mGrabTime);
     gtk_grab_add(mWidget);
+  }
   else
+  {
+    gdk_pointer_ungrab(mGrabTime);
     gtk_grab_remove(mWidget);
+  }
 
   return NS_OK;
 }
 
 
-NS_METHOD nsWidget::IsVisible(PRBool &aState)
+NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
 {
   if (mWidget) {
     aState = GTK_WIDGET_VISIBLE(mWidget);
@@ -325,7 +341,7 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
+NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
   if (mWidget) 
   {
@@ -371,7 +387,7 @@ NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 #if 0
   printf("nsWidget::Resize %s (%p) to %d %d\n",
@@ -392,7 +408,7 @@ NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+NS_IMETHODIMP nsWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
                            PRInt32 aHeight, PRBool aRepaint)
 {
   Resize(aWidth,aHeight,aRepaint);
@@ -458,7 +474,7 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 // Enable/disable this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::Enable(PRBool bState)
+NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 {
   if (mWidget) {
     ::gtk_widget_set_sensitive(mWidget, bState);
@@ -471,7 +487,7 @@ NS_METHOD nsWidget::Enable(PRBool bState)
 // Give the focus to this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::SetFocus(void)
+NS_IMETHODIMP nsWidget::SetFocus(void)
 {
   if (mWidget) {
     ::gtk_widget_grab_focus(mWidget);
@@ -479,7 +495,7 @@ NS_METHOD nsWidget::SetFocus(void)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::GetBounds(nsRect &aRect)
+NS_IMETHODIMP nsWidget::GetBounds(nsRect &aRect)
 {
   aRect = mBounds;
   return NS_OK;
@@ -501,7 +517,7 @@ nsIFontMetrics *nsWidget::GetFont(void)
 // Set this component font
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::SetFont(const nsFont &aFont)
+NS_IMETHODIMP nsWidget::SetFont(const nsFont &aFont)
 {
     nsIFontMetrics* mFontMetrics;
     mContext->GetMetricsFor(aFont, mFontMetrics);
@@ -530,7 +546,7 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
+NS_IMETHODIMP nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
   nsBaseWidget::SetBackgroundColor(aColor);
 
@@ -568,7 +584,7 @@ NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
 // Set this component cursor
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
+NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 {
   if (!mWidget || !mWidget->window)
     return NS_ERROR_FAILURE;
@@ -633,7 +649,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
+NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
   if (mWidget == nsnull) {
     return NS_OK; // mWidget will be null during printing. 
@@ -658,7 +674,7 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
+NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
   if (mWidget == nsnull) {
     return NS_OK;  // mWidget is null during printing
@@ -687,7 +703,7 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::Update(void)
+NS_IMETHODIMP nsWidget::Update(void)
 {
   if (! mWidget)
     return NS_OK;
@@ -783,49 +799,49 @@ void nsWidget::ReleaseNativeData(PRUint32 aDataType)
 // Set the colormap of the window
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::SetColorMap(nsColorMap *aColorMap)
+NS_IMETHODIMP nsWidget::SetColorMap(nsColorMap *aColorMap)
 {
     return NS_OK;
 }
 
-NS_METHOD nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
+NS_IMETHODIMP nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::Scroll");
     return NS_OK;
 }
 
-NS_METHOD nsWidget::BeginResizingChildren(void)
+NS_IMETHODIMP nsWidget::BeginResizingChildren(void)
 {
   return NS_OK;
 }
 
-NS_METHOD nsWidget::EndResizingChildren(void)
+NS_IMETHODIMP nsWidget::EndResizingChildren(void)
 {
   return NS_OK;
 }
 
-NS_METHOD nsWidget::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
+NS_IMETHODIMP nsWidget::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
   aWidth  = mPreferredWidth;
   aHeight = mPreferredHeight;
   return (mPreferredWidth != 0 && mPreferredHeight != 0)?NS_OK:NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 {
     mPreferredWidth  = aWidth;
     mPreferredHeight = aHeight;
     return NS_OK;
 }
 
-NS_METHOD nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
+NS_IMETHODIMP nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
 {
   g_print("bleh\n");
   NS_NOTYETIMPLEMENTED("nsWidget::SetMenuBar");
   return NS_OK;
 }
 
-NS_METHOD nsWidget::ShowMenuBar(PRBool aShow)
+NS_IMETHODIMP nsWidget::ShowMenuBar(PRBool aShow)
 {
   g_print("bleh\n");
   NS_NOTYETIMPLEMENTED("nsWidget::ShowMenuBar");
@@ -951,7 +967,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsWidget::Create(nsIWidget *aParent,
+NS_IMETHODIMP nsWidget::Create(nsIWidget *aParent,
                            const nsRect &aRect,
                            EVENT_CALLBACK aHandleEventFunction,
                            nsIDeviceContext *aContext,
@@ -969,7 +985,7 @@ NS_METHOD nsWidget::Create(nsIWidget *aParent,
 // create with a native parent
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::Create(nsNativeWidget aParent,
+NS_IMETHODIMP nsWidget::Create(nsNativeWidget aParent,
                            const nsRect &aRect,
                            EVENT_CALLBACK aHandleEventFunction,
                            nsIDeviceContext *aContext,

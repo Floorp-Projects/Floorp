@@ -23,6 +23,7 @@
 
 NS_IMPL_ADDREF_INHERITED(nsListBox, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsListBox, nsWidget)
+NS_IMPL_QUERY_INTERFACE3(nsListBox, nsIListBox, nsIListWidget, nsIWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -68,37 +69,11 @@ void nsListBox::InitCallbacks(char * aName)
 
 //-------------------------------------------------------------------------
 //
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
-
-    if (result == NS_NOINTERFACE) {
-      if (aIID.Equals(nsIListBox::GetIID())) {
-        *aInstancePtr = (void*) ((nsIListBox*)this);
-        AddRef();
-        result = NS_OK;
-      }
-      else if (aIID.Equals(nsIListWidget::GetIID())) {
-        *aInstancePtr = (void*) ((nsIListWidget*)this);
-        AddRef();
-        result = NS_OK;
-      }
-    }
-
-    return result;
-}
-
-
-//-------------------------------------------------------------------------
-//
 //  initializer
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
+NS_IMETHODIMP nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 {
   mMultiSelect = aMultipleSelections;
   if (mCList) {
@@ -117,7 +92,7 @@ NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
+NS_IMETHODIMP nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
   if (mCList) {
     gchar *text[2];
@@ -204,7 +179,7 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //  Gets the selected of selected item
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsListBox::GetSelectedItem(nsString& aItem)
+NS_IMETHODIMP nsListBox::GetSelectedItem(nsString& aItem)
 {
   aItem.Truncate();
   if (mCList) {
@@ -256,7 +231,7 @@ PRInt32 nsListBox::GetSelectedIndex()
 //  SelectItem
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
+NS_IMETHODIMP nsListBox::SelectItem(PRInt32 aPosition)
 {
   if (mCList) {
     gtk_clist_select_row(GTK_CLIST(mCList), aPosition, 0);
@@ -287,7 +262,7 @@ PRInt32 nsListBox::GetSelectedCount()
 //  GetSelectedIndices
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+NS_IMETHODIMP nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
   if (mCList) {
     PRInt32 i=0, num = 0;
@@ -313,7 +288,7 @@ NS_METHOD nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //  SetSelectedIndices
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+NS_IMETHODIMP nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
   if (mCList) {
     gtk_clist_unselect_all(GTK_CLIST(mCList));
@@ -330,7 +305,7 @@ NS_METHOD nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //  Deselect
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsListBox::Deselect()
+NS_IMETHODIMP nsListBox::Deselect()
 {
   if (mCList) {
     gtk_clist_unselect_all(GTK_CLIST(mCList));
@@ -343,7 +318,7 @@ NS_METHOD nsListBox::Deselect()
 // Set initial parameters
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
+NS_IMETHODIMP nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
     nsListBoxInitData* data = (nsListBoxInitData *) aInitData;
@@ -357,7 +332,7 @@ NS_METHOD nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
 // Create the native widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsListBox::CreateNative(GtkWidget *parentWindow)
+NS_IMETHODIMP nsListBox::CreateNative(GtkWidget *parentWindow)
 {
   // to handle scrolling
   mWidget = gtk_scrolled_window_new (nsnull, nsnull);

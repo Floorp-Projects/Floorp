@@ -33,13 +33,7 @@ public:
   nsTextAreaWidget();
   virtual ~nsTextAreaWidget();
 
-  // nsISupports
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
-  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
-  virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
+  NS_DECL_ISUPPORTS_INHERITED
 
   virtual void SetFontNative(GdkFont *aFont);
 

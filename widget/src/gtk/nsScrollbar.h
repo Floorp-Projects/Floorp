@@ -33,10 +33,7 @@ public:
   nsScrollbar(PRBool aIsVertical);
   virtual                 ~nsScrollbar();
 
-  // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIScrollBar implementation
   NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
@@ -50,11 +47,6 @@ public:
   NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                            PRUint32 aPosition, PRUint32 aLineIncrement);
   virtual PRBool OnScroll (nsScrollbarEvent & aEvent, PRUint32 cPos);
-
-
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
-  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
-  virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
 
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);

@@ -33,21 +33,13 @@ public:
   nsButton();
   virtual ~nsButton();
 
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
-  NS_IMETHOD_(nsrefcnt) Release(void);                                      
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIButton part
   NS_IMETHOD     SetLabel(const nsString& aText);
   NS_IMETHOD     GetLabel(nsString& aBuffer);
 
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY) { return PR_FALSE; }
-  virtual PRBool OnPaint(nsPaintEvent & aEvent) { return PR_FALSE; }
-  virtual PRBool OnResize(nsRect &aRect) { return PR_FALSE; }
-
   virtual void SetFontNative(GdkFont *aFont);
-
 
 protected:
   NS_METHOD CreateNative(GtkWidget *parentWindow);
