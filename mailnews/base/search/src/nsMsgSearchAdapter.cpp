@@ -619,19 +619,35 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
             
 			useQuotes = !reallyDredd ||
                 (nsAutoString(convertedValue).FindChar((PRUnichar)' ') != -1);
-			if (useQuotes)
+
+			// now convert to char* and escape quoted_specials
+			value = TryToConvertCharset(convertedValue, destCharset, reallyDredd);
+			if (value)
 			{
-                PRUnichar *oldConvertedValue = convertedValue;
-				convertedValue = EscapeQuoteImapSearchProtocol(convertedValue);
-                nsCRT::free(oldConvertedValue);
+				if (useQuotes)
+				{
+					char *oldValue = value;
+					// max escaped length is one extra character for every character in the cmd.
+					char *newValue = (char*)PR_Malloc(sizeof(char) * (2*nsCRT::strlen(value) + 1));
+					if (newValue)
+					{
+						char *p = newValue;
+						while (1)
+						{
+							char ch = *value++;
+							if (!ch)
+								break;
+							if (ch == '"' || ch == '\\')
+								*p++ = '\\';
+							*p++ = ch;
+						}
+						*p = '\0';
+						value = nsCRT::strdup(newValue); // realloc down to smaller size
+						nsCRT::free(newValue);
+					}
+					nsCRT::free(oldValue);
+				}
 			}
-
-            // now convert to char*
-            value = TryToConvertCharset(convertedValue, destCharset, reallyDredd);
-            // if couldn't convert, send as is
-			if (!value)
-				value = NS_ConvertUCS2toUTF8(convertedValue).ToNewCString();
-
 			nsCRT::free(convertedValue);
 			valueWasAllocated = PR_TRUE;
 
