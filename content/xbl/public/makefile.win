@@ -22,7 +22,9 @@
 DEPTH=..\..\.. 
 
 EXPORTS =				\
-        nsIXBLService.h \
+    nsIBindableContent.h \
+    nsIXBLBinding.h \
+    nsIXBLService.h \
     $(NULL)
 
 MODULE=raptor 

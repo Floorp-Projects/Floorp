@@ -12,10 +12,14 @@
 #include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsIContent.h"
+#include "nsIBindableContent.h"
 #include "nsIDocument.h"
 #include "nsIXMLContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsXMLDocument.h"
+#include "nsHTMLAtoms.h"
+
+#include "nsIXBLBinding.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
@@ -95,8 +99,11 @@ public:
   nsXBLService();
   virtual ~nsXBLService();
 
+  // This method loads a binding doc and then builds the specific binding required.
+  NS_IMETHOD GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** aResult);
+
   // This method checks the hashtable and then calls FetchBindingDocument on a miss.
-  NS_IMETHOD GetBindingDocument(nsCAutoString& aURLStr, nsIDocument** aResult);
+  NS_IMETHOD GetBindingDocument(nsIURL* aURI, nsIDocument** aResult);
 
   // This method synchronously loads and parses an XBL file.
   NS_IMETHOD FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult);
@@ -139,7 +146,8 @@ protected:
 
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
 
-
+  // XBL Atoms
+  static nsIAtom* kExtendsAtom;              
 };
 
 
@@ -149,6 +157,8 @@ protected:
 PRUint32 nsXBLService::gRefCnt = 0;
 nsSupportsHashtable* nsXBLService::mBindingTable = nsnull;
 nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
+
+nsIAtom* nsXBLService::kExtendsAtom = nsnull;
 
 PRInt32 nsXBLService::kNameSpaceID_XBL;
 
@@ -179,6 +189,9 @@ nsXBLService::nsXBLService(void)
     rv = gNameSpaceManager->RegisterNameSpace(kXBLNameSpaceURI, kNameSpaceID_XBL);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XBL namespace");
     if (NS_FAILED(rv)) return;
+
+    // Create our atoms
+    kExtendsAtom = NS_NewAtom("extends");
   }
 }
 
@@ -188,6 +201,9 @@ nsXBLService::~nsXBLService(void)
   if (gRefCnt == 0) {
     delete mBindingTable;
     NS_IF_RELEASE(gNameSpaceManager);
+    
+    // Release our atoms
+    NS_RELEASE(kExtendsAtom);
   }
 }
 
@@ -197,12 +213,22 @@ NS_IMETHODIMP
 nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL) 
 { 
   nsresult rv;
+
+  nsCOMPtr<nsIBindableContent> bindableContent = do_QueryInterface(aContent);
+  if (!bindableContent)
+    return NS_ERROR_FAILURE;
+
   nsCAutoString url = aURL;
-  nsCOMPtr<nsIDocument> document;
-  if (NS_FAILED(rv = GetBindingDocument(url, getter_AddRefs(document)))) {
+  nsCOMPtr<nsIXBLBinding> binding;
+  if (NS_FAILED(rv = GetBinding(url, getter_AddRefs(binding)))) {
     NS_ERROR("Failed loading an XBL document for content node.");
     return rv;
   }
+
+  // Install the binding on the content node.
+  // When installed, the bound content will clone the
+  // anonymous content and place it into the binding.
+  bindableContent->SetBinding(binding);
 
   return NS_OK; 
 }
@@ -219,31 +245,93 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult)
 
 // Internal helper methods ////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsXBLService::GetBindingDocument(nsCAutoString& aURLStr, nsIDocument** aResult)
+NS_IMETHODIMP nsXBLService::GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** aResult)
 {
-  nsCOMPtr<nsIDocument> document;
-  if (aURLStr != nsCAutoString("")) {
-    nsCOMPtr<nsIURL> uri;
-    nsComponentManager::CreateInstance("component://netscape/network/standard-url",
-                                          nsnull,
-                                          NS_GET_IID(nsIURL),
-                                          getter_AddRefs(uri));
-    uri->SetSpec(aURLStr);
+  *aResult = nsnull;
 
-    // XXX Obtain the # marker and remove it from the URL.
+  if (aURLStr == nsCAutoString(""))
+    return NS_ERROR_FAILURE;
 
-    // We've got a file.  Check our key binding file cache.
-    nsIURIKey key(uri);
-    document = dont_AddRef(NS_STATIC_CAST(nsIDocument*, mBindingTable->Get(&key)));
+  nsCOMPtr<nsIURL> uri;
+  nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+                                        nsnull,
+                                        NS_GET_IID(nsIURL),
+                                        getter_AddRefs(uri));
+  uri->SetSpec(aURLStr);
 
-    if (!document) {
-      FetchBindingDocument(uri, getter_AddRefs(document));
-      if (document) {
-        // Put the key binding doc into our table.
-        mBindingTable->Put(&key, document);
+  // XXX Obtain the # marker and remove it from the URL.
+  nsXPIDLCString ref;
+  uri->GetRef(getter_Copies(ref));
+  uri->SetRef("");
+
+  nsCOMPtr<nsIDocument> doc;
+  GetBindingDocument(uri, getter_AddRefs(doc));
+  if (!doc)
+    return NS_ERROR_FAILURE;
+
+  // We have a doc. Obtain our specific binding element.
+  // Walk the children looking for the binding that matches the ref
+  // specified in the URL.
+  nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
+  if (!root)
+    return NS_ERROR_FAILURE;
+
+  nsAutoString bindingName(ref);
+
+  PRInt32 count;
+  root->ChildCount(count);
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> child;
+    root->ChildAt(i, *getter_AddRefs(child));
+
+    nsAutoString value;
+    child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, value);
+    
+    // If no ref is specified just use this.
+    if ((bindingName == "") || (bindingName == value)) {
+      // Make a new binding
+      NS_NewXBLBinding(aResult);
+
+      // Initialize its bound element.
+      (*aResult)->SetBindingElement(child);
+
+      // Check for the presence of an extends attribute
+      child->GetAttribute(kNameSpaceID_None, kExtendsAtom, value);
+      if (value != "") {
+        // We have a base class binding. Load it right now.
+        nsCOMPtr<nsIXBLBinding> baseBinding;
+        nsCAutoString url = value;
+        GetBinding(url, getter_AddRefs(baseBinding));
+        if (!baseBinding)
+          return NS_OK; // At least we got the derived class binding loaded.
+        (*aResult)->SetBaseBinding(baseBinding);
       }
-      else return NS_ERROR_FAILURE;
+
+      break;
     }
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXBLService::GetBindingDocument(nsIURL* aURI, nsIDocument** aResult)
+{
+  *aResult = nsnull;
+  
+  // We've got a file.  Check our key binding file cache.
+  nsIURIKey key(aURI);
+  nsCOMPtr<nsIDocument> document;
+  document = dont_AddRef(NS_STATIC_CAST(nsIDocument*, mBindingTable->Get(&key)));
+
+  if (!document) {
+    FetchBindingDocument(aURI, getter_AddRefs(document));
+    if (document) {
+      // Put the key binding doc into our table.
+      mBindingTable->Put(&key, document);
+    }
+    else return NS_ERROR_FAILURE;
   }
 
   *aResult = document;
