@@ -64,60 +64,60 @@
 static 
 char *strtoken_r(char ** stringp, const char *delim, int skip)
 {
-	char *s;
-	const char *spanp;
-	int c, sc;
-	char *tok;
-
-	if ((s = *stringp) == NULL)
-		return (NULL);
-
-	if (skip) {
+  char *s;
+  const char *spanp;
+  int c, sc;
+  char *tok;
+  
+  if ((s = *stringp) == NULL)
+    return (NULL);
+  
+  if (skip) {
 		/*
-		 * Skip (span) leading delimiters (s += strspn(s, delim)).
-		 */
-	cont:
+                * Skip (span) leading delimiters (s += strspn(s, delim)).
+    */
+cont:
 		c = *s;
-		for (spanp = delim; (sc = *spanp++) != 0;) {
-			if (c == sc) {
-				s++;
-				goto cont;
-			}
-		}
-		if (c == 0) {		/* no token found */
-			*stringp = NULL;
-			return (NULL);
-		}
-	}
-
-	/*
+                for (spanp = delim; (sc = *spanp++) != 0;) {
+                  if (c == sc) {
+                    s++;
+                    goto cont;
+                  }
+                }
+                if (c == 0) {		/* no token found */
+                  *stringp = NULL;
+                  return (NULL);
+                }
+  }
+  
+  /*
 	 * Scan token (scan for delimiters: s += strcspn(s, delim), sort of).
-	 * Note that delim must have one NUL; we stop if we see that, too.
+         * Note that delim must have one NUL; we stop if we see that, too.
 	 */
-	for (tok = s;;) {
-		c = *s++;
-		spanp = delim;
-		do {
-			if ((sc = *spanp++) == c) {
-				if (c == 0)
-					s = NULL;
-				else
-					s[-1] = 0;
-				*stringp = s;
-				return( (char *) tok );
-			}
-		} while (sc != 0);
-	}
-	/* NOTREACHED */
-	return (NULL);
+  for (tok = s;;) {
+    c = *s++;
+    spanp = delim;
+    do {
+      if ((sc = *spanp++) == c) {
+        if (c == 0)
+          s = NULL;
+        else
+          s[-1] = 0;
+        *stringp = s;
+        return( (char *) tok );
+      }
+    } while (sc != 0);
+  }
+  /* NOTREACHED */
+  return (NULL);
 }
 
 
 /* static */ char *nsIMAPGenericParser::Imapstrtok_r(char *s1, const char *s2, char **lasts)
 {
-	if (s1)
-		*lasts = s1;
-	return (strtoken_r(lasts, s2, 1));
+  if (s1)
+    *lasts = s1;
+  return (strtoken_r(lasts, s2, 1));
 }
 
 
@@ -125,39 +125,39 @@ char *strtoken_r(char ** stringp, const char *delim, int skip)
 
 
 nsIMAPGenericParser::nsIMAPGenericParser() :
-	fNextToken(nsnull),
-	fCurrentLine(nsnull),
-	fLineOfTokens(nsnull),
-  fStartOfLineOfTokens(nsnull),
-	fCurrentTokenPlaceHolder(nsnull),
-	fAtEndOfLine(PR_FALSE),
-  fTokenizerAdvanced(PR_FALSE),
-  fSyntaxErrorLine(nsnull),
-	fSyntaxError(PR_FALSE),
-	fDisconnected(PR_FALSE)
+fNextToken(nsnull),
+fCurrentLine(nsnull),
+fLineOfTokens(nsnull),
+fStartOfLineOfTokens(nsnull),
+fCurrentTokenPlaceHolder(nsnull),
+fAtEndOfLine(PR_FALSE),
+fTokenizerAdvanced(PR_FALSE),
+fSyntaxErrorLine(nsnull),
+fSyntaxError(PR_FALSE),
+fDisconnected(PR_FALSE)
 {
 }
 
 nsIMAPGenericParser::~nsIMAPGenericParser()
 {
-	PR_FREEIF( fCurrentLine );
-	PR_FREEIF( fStartOfLineOfTokens);
-	PR_FREEIF( fSyntaxErrorLine );
+  PR_FREEIF( fCurrentLine );
+  PR_FREEIF( fStartOfLineOfTokens);
+  PR_FREEIF( fSyntaxErrorLine );
 }
 
 void nsIMAPGenericParser::HandleMemoryFailure()
 {
-	SetConnected(PR_FALSE);
+  SetConnected(PR_FALSE);
 }
 
 void nsIMAPGenericParser::ResetLexAnalyzer()
 {
-	PR_FREEIF( fCurrentLine );
-	PR_FREEIF( fStartOfLineOfTokens );
-	fTokenizerAdvanced = PR_FALSE;
-	
-	fCurrentLine = fNextToken = fLineOfTokens = fStartOfLineOfTokens = fCurrentTokenPlaceHolder = nsnull;
-	fAtEndOfLine = PR_FALSE;
+  PR_FREEIF( fCurrentLine );
+  PR_FREEIF( fStartOfLineOfTokens );
+  fTokenizerAdvanced = PR_FALSE;
+  
+  fCurrentLine = fNextToken = fLineOfTokens = fStartOfLineOfTokens = fCurrentTokenPlaceHolder = nsnull;
+  fAtEndOfLine = PR_FALSE;
 }
 
 PRBool nsIMAPGenericParser::LastCommandSuccessful()
@@ -361,18 +361,18 @@ void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
 // the end of the Astring.  Call GetNextToken() to get the token after it.
 char *nsIMAPGenericParser::CreateAstring()
 {
-	if (*fNextToken == '{')
-	{
-		return CreateLiteral();		// literal
-	}
-	else if (*fNextToken == '"')
-	{
-		return CreateQuoted();		// quoted
-	}
-	else
-	{
-		return CreateAtom();		// atom
-	}
+  if (*fNextToken == '{')
+  {
+    return CreateLiteral();		// literal
+  }
+  else if (*fNextToken == '"')
+  {
+    return CreateQuoted();		// quoted
+  }
+  else
+  {
+    return CreateAtom();		// atom
+  }
 }
 
 
@@ -381,9 +381,9 @@ char *nsIMAPGenericParser::CreateAstring()
 // Call GetNextToken() to get the next token after the atom.
 char *nsIMAPGenericParser::CreateAtom()
 {
-	char *rv = PL_strdup(fNextToken);
-	//fNextToken = GetNextToken();
-	return (rv);
+  char *rv = PL_strdup(fNextToken);
+  //fNextToken = GetNextToken();
+  return (rv);
 }
 
 // CreateNilString creates either NIL (reutrns NULL) or a string
@@ -393,15 +393,15 @@ char *nsIMAPGenericParser::CreateAtom()
 // Regardless of type, call GetNextToken() to get the token after it.
 char *nsIMAPGenericParser::CreateNilString()
 {
-	if (!PL_strncasecmp(fNextToken, "NIL", 3))
-	{
-		if (strlen(fNextToken) != 3)
-			fNextToken += 3;
-		//fNextToken = GetNextToken();
-		return NULL;
-	}
-	else
-		return CreateString();
+  if (!PL_strncasecmp(fNextToken, "NIL", 3))
+  {
+    if (strlen(fNextToken) != 3)
+      fNextToken += 3;
+    //fNextToken = GetNextToken();
+    return NULL;
+  }
+  else
+    return CreateString();
 }
 
 
@@ -411,22 +411,22 @@ char *nsIMAPGenericParser::CreateNilString()
 // the end of the String.  Call GetNextToken() to get the token after it.
 char *nsIMAPGenericParser::CreateString()
 {
-	if (*fNextToken == '{')
-	{
-		char *rv = CreateLiteral();		// literal
-		return (rv);
-	}
-	else if (*fNextToken == '"')
-	{
-		char *rv = CreateQuoted();		// quoted
-		//fNextToken = GetNextToken();
-		return (rv);
-	}
-	else
-	{
-		SetSyntaxError(PR_TRUE);
-		return NULL;
-	}
+  if (*fNextToken == '{')
+  {
+    char *rv = CreateLiteral();		// literal
+    return (rv);
+  }
+  else if (*fNextToken == '"')
+  {
+    char *rv = CreateQuoted();		// quoted
+    //fNextToken = GetNextToken();
+    return (rv);
+  }
+  else
+  {
+    SetSyntaxError(PR_TRUE);
+    return NULL;
+  }
 }
 
 
@@ -442,7 +442,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
     + 1;	// one char past opening '"'
   
   int  charIndex = 0;
-  int  tokenIndex = 0;
+  int  escapeCharsCut = 0;
   PRBool closeQuoteFound = PR_FALSE;
   nsCString returnString(currentChar);
   
@@ -468,7 +468,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
       charIndex++;
       
       // account for charIndex not reflecting the eat of the escape character
-      tokenIndex++;
+      escapeCharsCut++;
     }
     else
       charIndex++;
@@ -491,13 +491,13 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
       //			fCurrentTokenPlaceHolder -= charDiff;
       //			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
       //				fAtEndOfLine = PR_TRUE;
-      AdvanceTokenizerStartingPoint ((fNextToken - fLineOfTokens) + returnString.Length() + 2);
+      AdvanceTokenizerStartingPoint ((fNextToken - fLineOfTokens) + returnString.Length() + escapeCharsCut + 2);
       if (!nsCRT::strcmp(fLineOfTokens, CRLF))
         fAtEndOfLine = PR_TRUE;
     }
     else
     {
-      fCurrentTokenPlaceHolder += tokenIndex + charIndex + 1 - strlen(fNextToken);
+      fCurrentTokenPlaceHolder += escapeCharsCut + charIndex + 1 - strlen(fNextToken);
       if (!*fCurrentTokenPlaceHolder)
         *fCurrentTokenPlaceHolder = ' ';	// put the token delimiter back
                                                 /*	if (!nsCRT::strcmp(fNextToken, CRLF))
@@ -517,86 +517,86 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 // the literal string.
 char *nsIMAPGenericParser::CreateLiteral()
 {
-	int32 numberOfCharsInMessage = atoi(fNextToken + 1);
-	int32 charsReadSoFar = 0, currentLineLength = 0;
-	int32 bytesToCopy = 0;
-
-	uint32 numBytes = numberOfCharsInMessage + 1;
+  int32 numberOfCharsInMessage = atoi(fNextToken + 1);
+  int32 charsReadSoFar = 0, currentLineLength = 0;
+  int32 bytesToCopy = 0;
+  
+  uint32 numBytes = numberOfCharsInMessage + 1;
   NS_ASSERTION(numBytes, "overflow!");
   if (!numBytes)
     return nsnull;
-
-	char *returnString = (char *) PR_Malloc(numBytes);
-
-	if (returnString)
-	{
-		*(returnString + numberOfCharsInMessage) = 0; // Null terminate it first
-
-		PRBool terminatedLine = PR_FALSE;
-		while (ContinueParse() && (charsReadSoFar < numberOfCharsInMessage))
-		{
-			if (!terminatedLine)
-			{
-				if (fCurrentTokenPlaceHolder &&
-					*fCurrentTokenPlaceHolder == nsCRT::LF &&
-					*(fCurrentTokenPlaceHolder+1))
-				{
-					// This is a static buffer, with a CRLF between the literal size ({91}) and
-					// the string itself
-					fCurrentTokenPlaceHolder++;
-				}
-				else
-				{
-					// We have to read the next line from AdvanceToNextLine().
-					terminatedLine = PR_TRUE;
-					AdvanceToNextLine();
-				}
-			}
-			else
-				AdvanceToNextLine();
+  
+  char *returnString = (char *) PR_Malloc(numBytes);
+  
+  if (returnString)
+  {
+    *(returnString + numberOfCharsInMessage) = 0; // Null terminate it first
+    
+    PRBool terminatedLine = PR_FALSE;
+    while (ContinueParse() && (charsReadSoFar < numberOfCharsInMessage))
+    {
+      if (!terminatedLine)
+      {
+        if (fCurrentTokenPlaceHolder &&
+          *fCurrentTokenPlaceHolder == nsCRT::LF &&
+          *(fCurrentTokenPlaceHolder+1))
+        {
+          // This is a static buffer, with a CRLF between the literal size ({91}) and
+          // the string itself
+          fCurrentTokenPlaceHolder++;
+        }
+        else
+        {
+          // We have to read the next line from AdvanceToNextLine().
+          terminatedLine = PR_TRUE;
+          AdvanceToNextLine();
+        }
+      }
+      else
+        AdvanceToNextLine();
       if (ContinueParse())
       {
         currentLineLength = strlen(terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder);
         bytesToCopy = (currentLineLength > numberOfCharsInMessage - charsReadSoFar ?
-                 numberOfCharsInMessage - charsReadSoFar : currentLineLength);
+          numberOfCharsInMessage - charsReadSoFar : currentLineLength);
         NS_ASSERTION (bytesToCopy, "0 length literal?");
-
+        
         memcpy(returnString + charsReadSoFar, terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder, bytesToCopy); 
         charsReadSoFar += bytesToCopy;
       }
-		}
-		
-		if (ContinueParse())
-		{
-			if (bytesToCopy == 0)
-			{
-				skip_to_CRLF();
-				fAtEndOfLine = PR_TRUE;
-			}
-			else if (currentLineLength == bytesToCopy)
-			{
-				fAtEndOfLine = PR_TRUE;
-			}
-			else
-			{
-				// Move fCurrentTokenPlaceHolder
-				if (terminatedLine)
-					AdvanceTokenizerStartingPoint (bytesToCopy);
-				else
-					AdvanceTokenizerStartingPoint (	bytesToCopy + 
-													strlen(fNextToken) + 
-													2 /* CRLF */ +
-													(fNextToken - fLineOfTokens)
-													);
-				if (!*fCurrentTokenPlaceHolder)	// landed on a token boundary
-					fCurrentTokenPlaceHolder++;
-				if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
-					fAtEndOfLine = PR_TRUE;
-			}	
-		}
-	}
-
-	return returnString;
+    }
+    
+    if (ContinueParse())
+    {
+      if (bytesToCopy == 0)
+      {
+        skip_to_CRLF();
+        fAtEndOfLine = PR_TRUE;
+      }
+      else if (currentLineLength == bytesToCopy)
+      {
+        fAtEndOfLine = PR_TRUE;
+      }
+      else
+      {
+        // Move fCurrentTokenPlaceHolder
+        if (terminatedLine)
+          AdvanceTokenizerStartingPoint (bytesToCopy);
+        else
+          AdvanceTokenizerStartingPoint (	bytesToCopy + 
+          strlen(fNextToken) + 
+          2 /* CRLF */ +
+          (fNextToken - fLineOfTokens)
+          );
+        if (!*fCurrentTokenPlaceHolder)	// landed on a token boundary
+          fCurrentTokenPlaceHolder++;
+        if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
+          fAtEndOfLine = PR_TRUE;
+      }	
+    }
+  }
+  
+  return returnString;
 }
 
 
@@ -609,158 +609,158 @@ char *nsIMAPGenericParser::CreateLiteral()
 char *nsIMAPGenericParser::CreateParenGroup()
 {
 #ifdef DEBUG_bienvenu
-	NS_ASSERTION(fNextToken[0] == '(', "we don't have a paren group!");
+  NS_ASSERTION(fNextToken[0] == '(', "we don't have a paren group!");
 #endif
-
-	int numOpenParens = 1;
-
-	// build up a buffer with the paren group.
-	// start with an initial chunk, expand later if necessary
-	nsCString buf;
-	nsCString returnString;
-	int bytesUsed = 0;
-	
-	// count the number of parens in the current token
-	int count, tokenLen = strlen(fNextToken);
-	for (count = 1; (count < tokenLen) && (numOpenParens > 0); count++)
-	{
-		if (fNextToken[count] == '(')
-			numOpenParens++;
-		else if (fNextToken[count] == ')')
-			numOpenParens--;
-	}
-
-	if ((numOpenParens > 0) && ContinueParse())
-	{
-		// Copy that first token from before
-		returnString =fNextToken;
-		returnString.Append(" ");	// space that got stripped off the token
-
-		PRBool extractReset = PR_TRUE;
-		while (extractReset && ContinueParse())
-		{
-			extractReset = PR_FALSE;
-			// Go through the current line and look for the last close paren.
-			// We're not trying to parse it just yet, just separate it out.
-			int len = strlen(fCurrentTokenPlaceHolder);
-			for (count = 0; (count < len) && (numOpenParens > 0) && !extractReset; count++)
-			{
-				if (*fCurrentTokenPlaceHolder == '{')
-				{
-					fNextToken = GetNextToken();
-					NS_ASSERTION(fNextToken, "out of memory?or invalid syntax");
-					if (fNextToken)
-					{
-						tokenLen = strlen(fNextToken);
-						if (fNextToken[tokenLen-1] == '}')
-						{
-							// ok, we're looking at a literal string here
-						
-							// first, flush buf
-							if (bytesUsed > 0)
-							{
-								buf.Truncate(bytesUsed);
-								returnString.Append(buf);
+  
+  int numOpenParens = 1;
+  
+  // build up a buffer with the paren group.
+  // start with an initial chunk, expand later if necessary
+  nsCString buf;
+  nsCString returnString;
+  int bytesUsed = 0;
+  
+  // count the number of parens in the current token
+  int count, tokenLen = strlen(fNextToken);
+  for (count = 1; (count < tokenLen) && (numOpenParens > 0); count++)
+  {
+    if (fNextToken[count] == '(')
+      numOpenParens++;
+    else if (fNextToken[count] == ')')
+      numOpenParens--;
+  }
+  
+  if ((numOpenParens > 0) && ContinueParse())
+  {
+    // Copy that first token from before
+    returnString =fNextToken;
+    returnString.Append(" ");	// space that got stripped off the token
+    
+    PRBool extractReset = PR_TRUE;
+    while (extractReset && ContinueParse())
+    {
+      extractReset = PR_FALSE;
+      // Go through the current line and look for the last close paren.
+      // We're not trying to parse it just yet, just separate it out.
+      int len = strlen(fCurrentTokenPlaceHolder);
+      for (count = 0; (count < len) && (numOpenParens > 0) && !extractReset; count++)
+      {
+        if (*fCurrentTokenPlaceHolder == '{')
+        {
+          fNextToken = GetNextToken();
+          NS_ASSERTION(fNextToken, "out of memory?or invalid syntax");
+          if (fNextToken)
+          {
+            tokenLen = strlen(fNextToken);
+            if (fNextToken[tokenLen-1] == '}')
+            {
+              // ok, we're looking at a literal string here
+              
+              // first, flush buf
+              if (bytesUsed > 0)
+              {
+                buf.Truncate(bytesUsed);
+                returnString.Append(buf);
                 buf.Truncate();
-								bytesUsed = 0;
-							}
-
-							returnString.Append(fNextToken);	// append the {xx} to the buffer
-							returnString.Append(CRLF);			// append a CRLF to the buffer
-							char *lit = CreateLiteral();
-							fTokenizerAdvanced = PR_FALSE;	// force it to use fCurrentTokenPlaceHolder
-							NS_ASSERTION(lit, "syntax error or out of memory");
-							if (lit)
-							{
-								returnString.Append(lit);
-								//fCurrentTokenPlaceHolder += nsCRT::strlen(lit);
-								//AdvanceTokenizerStartingPoint(nsCRT::strlen(lit));
-								//fNextToken = GetNextToken();
-								extractReset = PR_TRUE;
-								PR_Free(lit);
-							}
-						}
-						else
-						{
+                bytesUsed = 0;
+              }
+              
+              returnString.Append(fNextToken);	// append the {xx} to the buffer
+              returnString.Append(CRLF);			// append a CRLF to the buffer
+              char *lit = CreateLiteral();
+              fTokenizerAdvanced = PR_FALSE;	// force it to use fCurrentTokenPlaceHolder
+              NS_ASSERTION(lit, "syntax error or out of memory");
+              if (lit)
+              {
+                returnString.Append(lit);
+                //fCurrentTokenPlaceHolder += nsCRT::strlen(lit);
+                //AdvanceTokenizerStartingPoint(nsCRT::strlen(lit));
+                //fNextToken = GetNextToken();
+                extractReset = PR_TRUE;
+                PR_Free(lit);
+              }
+            }
+            else
+            {
 #ifdef DEBUG_bienvenu
-							NS_ASSERTION(PR_FALSE, "syntax error creating paren group");	// maybe not an error, but definitely a rare condition
+              NS_ASSERTION(PR_FALSE, "syntax error creating paren group");	// maybe not an error, but definitely a rare condition
 #endif
-						}
-					}
-				}
-				else if (*fCurrentTokenPlaceHolder == '"')
-				{
-					// We're looking at a quoted string here.
-					// Ignore the characters within it.
-
-					// first, flush buf
-					if (bytesUsed > 0)
-					{
-						buf.Truncate(bytesUsed);
-						returnString.Append(buf);
+            }
+          }
+        }
+        else if (*fCurrentTokenPlaceHolder == '"')
+        {
+          // We're looking at a quoted string here.
+          // Ignore the characters within it.
+          
+          // first, flush buf
+          if (bytesUsed > 0)
+          {
+            buf.Truncate(bytesUsed);
+            returnString.Append(buf);
             buf.Truncate();
-						bytesUsed = 0;
-					}
-
-					fNextToken = GetNextToken();
-					NS_ASSERTION(fNextToken, "syntax error or out of memory creating paren group");
-					if (fNextToken)
-					{
-						char *q = CreateQuoted();
-						fTokenizerAdvanced = PR_FALSE;	// force it to use fCurrentTokenPlaceHolder
-						NS_ASSERTION(q, "syntax error or out of memory creating paren group");
-						if (q)
-						{
-							returnString.Append("\"");
-							returnString.Append(q);
-							returnString.Append("\"");
-							extractReset = PR_TRUE;
-							PR_Free(q);
-						}
-					}
-				}
-				else if (*fCurrentTokenPlaceHolder == '(')
-					numOpenParens++;
-				else if (*fCurrentTokenPlaceHolder == ')')
-					numOpenParens--;
-
-
-				if (!extractReset)
-				{
-					// append this character to the buffer
-					buf += *fCurrentTokenPlaceHolder;
-
-					//.SetCharAt(*fCurrentTokenPlaceHolder, bytesUsed);
-					bytesUsed++;
-					fCurrentTokenPlaceHolder++;
-				}
-			}
-		}
-	}
-	else if ((numOpenParens == 0) && ContinueParse())
-	{
-		// the whole paren group response was finished in a single token
-		buf.Append(fNextToken);
-	}
-
-
-	if (numOpenParens != 0 || !ContinueParse())
-	{
-		SetSyntaxError(PR_TRUE);
-		returnString.SetLength(0);
-	}
-	else
-	{
-		// flush buf the final time
-		if (bytesUsed > 0)
-		{
-			buf.Truncate(bytesUsed);
-			returnString.Append(buf);
+            bytesUsed = 0;
+          }
+          
+          fNextToken = GetNextToken();
+          NS_ASSERTION(fNextToken, "syntax error or out of memory creating paren group");
+          if (fNextToken)
+          {
+            char *q = CreateQuoted();
+            fTokenizerAdvanced = PR_FALSE;	// force it to use fCurrentTokenPlaceHolder
+            NS_ASSERTION(q, "syntax error or out of memory creating paren group");
+            if (q)
+            {
+              returnString.Append("\"");
+              returnString.Append(q);
+              returnString.Append("\"");
+              extractReset = PR_TRUE;
+              PR_Free(q);
+            }
+          }
+        }
+        else if (*fCurrentTokenPlaceHolder == '(')
+          numOpenParens++;
+        else if (*fCurrentTokenPlaceHolder == ')')
+          numOpenParens--;
+        
+        
+        if (!extractReset)
+        {
+          // append this character to the buffer
+          buf += *fCurrentTokenPlaceHolder;
+          
+          //.SetCharAt(*fCurrentTokenPlaceHolder, bytesUsed);
+          bytesUsed++;
+          fCurrentTokenPlaceHolder++;
+        }
+      }
+    }
+  }
+  else if ((numOpenParens == 0) && ContinueParse())
+  {
+    // the whole paren group response was finished in a single token
+    buf.Append(fNextToken);
+  }
+  
+  
+  if (numOpenParens != 0 || !ContinueParse())
+  {
+    SetSyntaxError(PR_TRUE);
+    returnString.SetLength(0);
+  }
+  else
+  {
+    // flush buf the final time
+    if (bytesUsed > 0)
+    {
+      buf.Truncate(bytesUsed);
+      returnString.Append(buf);
       buf.Truncate();
-		}
-		fNextToken = GetNextToken();
-	}
-
-	return ToNewCString(returnString);
+    }
+    fNextToken = GetNextToken();
+  }
+  
+  return ToNewCString(returnString);
 }
 
