@@ -349,21 +349,16 @@ var nsSaveCommand =
     var result = false;
     if (window.editorShell)
     {
-      var docUrl = window.GetDocumentUrl();
-      var isAboutBlank = IsUrlAboutBlank(docUrl);
-
-      // Saving remote files should use publish command
-      if (isAboutBlank || (GetScheme(docUrl) == "file"))
-      {
-        FinishHTMLSource();
-        result = SaveDocument(isAboutBlank, false, editorShell.contentsMIMEType);
-        window._content.focus();
-      }
-      else
-      {
+      // XXX Switching keybinding from Save to Publish isn't working now :(
+      //     so do publishing if editing remote url
+      var docUrl = GetDocumentUrl();
+      var scheme = GetScheme(docUrl);
+      if (scheme && scheme != "file")
         goDoCommand("cmd_publish");
-        return true;
-      }
+
+      FinishHTMLSource();
+      result = SaveDocument(IsUrlAboutBlank(docUrl), false, editorShell.contentsMIMEType);
+      window._content.focus();
     }
     return result;
   }
@@ -460,21 +455,33 @@ var nsPublishCommand =
   {
     if (window.editorShell)
     {
-      var docURL = GetDocumentUrl();
+      var docUrl = GetDocumentUrl();
+      var filename = GetFilename(docUrl);
       var publishData;
+      if (filename)
+      {
+        // Try to get site data from the document url
+        publishData = GetPublishDataFromUrl(docUrl);
 
-      // If new page or we haven't published to a site
-      //   containing docURL before, use the publish dialog 
-      if (IsUrlAboutBlank(docURL) || (publishData = GetPublishDataFromUrl(docURL)) == null)
-      {
-        goDoCommand("cmd_publishAs");
+        // If none, use default publishing site
+        //XXX Should we do this? Maybe bring up dialog instead?
+        if (!publishData)
+        {
+         dump(" *** PUBLISHING TO DEFAULT SITE\n");
+          publishData = GetPublishDataFromSiteName(GetDefaultPublishSiteName(), filename);
+        }
+
+        if (publishData)
+        {
+          FinishHTMLSource();
+          return Publish(publishData);
+        }
       }
-      else
-      {
-        FinishHTMLSource();
-        Publish(publishData);
-      }
-      window._content.focus();
+
+      // User needs to supply a filename or we didn't find publish data above
+      // Bring up the dialog via cmd_publishAs, 
+      //   but set commandnode "state" attribute to "" to use default initial site
+      doStatefulCommand("cmd_publishAs", "");
       return true;
     }
     return false;
@@ -487,27 +494,40 @@ var nsPublishAsCommand =
   {
     return (window.editorShell && window.editorShell.documentEditable);
   },
-
+  
   doCommand: function(aCommand)
   {
     if (window.editorShell)
     {
       FinishHTMLSource();
 
-      // Launch Publish dialog
-      // Object to pass back data from dialog
-      var publishData = {};
+      // SiteName is stored in the "state" attribute on the command node
+      var siteName;
+      var commandNode = document.getElementById(aCommand);
+      if (commandNode)
+        siteName = commandNode.getAttribute("state");
+
+      var docUrl = GetDocumentUrl();
+      var filename = GetFilename(docUrl);
+      var publishData;
+
+      // Try to publish to a particular site
+      if (filename && siteName && (publishData = GetPublishDataFromSiteName(siteName, docUrl)))
+        return Publish(publishData);
+
+      // User needs to supply a filename or sitename or we didn't find publish data above
+      // Launch the publish dialog to initialized with requested sitename (or default if none)
       window.ok = false;
-      window.openDialog("chrome://editor/content/EditorPublish.xul","_blank", "chrome,close,titlebar,modal", "", publishData);
+      publishData = {};
+      window.openDialog("chrome://editor/content/EditorPublish.xul","_blank", "chrome,close,titlebar,modal", "", siteName, publishData);
+      window._content.focus();
       if (window.ok)
-      {
-        Publish(publishData);
-        return true;
-      }
+        return Publish(publishData);
     }
     return false;
   }
 }
+
 // ------- output utilites   ----- //
 
 // returns a fileExtension string
@@ -750,7 +770,7 @@ function GetWrapColumn()
 {
   var wrapCol = 72;
   try {
-    wrapCol = window.editorShell.editor.GetWrapWidth();
+    wrapCol = window.editorShell.editor.wrapWidth;
   }
   catch (e) {}
 
@@ -1207,14 +1227,20 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     success = false;
   }
 
-  try {
-    window.editorShell.doAfterSave(doUpdateURL, urlstring);  // we need to update the url before notifying listeners
-    if (!aSaveCopy && success)
-      window.editorShell.editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
-  } catch (e) {}
+  if (success)
+  {
+    try {
+      window.editorShell.doAfterSave(doUpdateURL, urlstring);  // we need to update the url before notifying listeners
+      if (!aSaveCopy)
+        window.editorShell.editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
 
+      // Set UI based on whether we're editing a remote or local url
+      SetSaveAndPublishUI(urlString);
+    } catch (e) {}
+  }
   return success;
 }
+
 
 //-------------------------------  Publishing
 var gPublishData;
@@ -1232,8 +1258,6 @@ function Publish(publishData)
   gPublishData = publishData;
 
   var otherFilesURI = CreateURIFromPublishData(publishData, false);
-  gStateFlag = 0;
-  gStatus = 0;
   var success = OutputFileWithPersistAPI(window.editorShell.editorDocument, 
                                          docURI, otherFilesURI, window.editorShell.contentsMIMEType);
 
@@ -1241,17 +1265,71 @@ function Publish(publishData)
   {
     //XXX We really shouldn't continue here unless we get confirmation that file was really uploaded
     // Get the new docUrl from the "browse location" in case "publish location" was FTP
-    var docUrl = GetDocUrlFromPublishData(publishData);
-    try {
-      if (docUrl)
-        window.editorShell.doAfterSave(true, docUrl);  // we need to update the url before notifying listeners
+    var urlString = GetDocUrlFromPublishData(publishData);
 
+    try {
+      window.editorShell.doAfterSave(true, urlString);  // we need to update the url before notifying listeners
       window.editorShell.editor.ResetModificationCount();  // this should cause notification to listeners that document has changed
+
+      // Set UI based on whether we're editing a remote or local url
+      SetSaveAndPublishUI(urlString);
     } catch (e) {}
   }
-
-
   return success;
+}
+
+function InitPublishMenu()
+{
+  var publishSitesSeparator = document.getElementById("publishSitesSeparator");
+  if (!publishSitesSeparator)
+    return;
+
+  var menupopup = publishSitesSeparator.parentNode;
+  if (!menupopup)
+    return;
+
+  // Clear existing site items
+  var next = publishSitesSeparator.nextSibling;
+  while (next)
+  {
+    var tmp = next.nextSibling
+    menupopup.removeChild(next);
+    next = tmp
+  }
+
+  // Get site name list: sorted, but put default name is first
+  var siteNameList = GetSiteNameList(true, true);
+  if (!siteNameList)
+  {
+    // No site data in prefs yet
+    SetElementHidden(publishSitesSeparator, true);
+    return;
+  }
+
+  SetElementHidden(publishSitesSeparator, false);
+
+  // Append sitenames to submenu
+  for (var i = 0; i < siteNameList.length; i++)
+  {
+    var menuItem = document.createElementNS(XUL_NS, "menuitem");
+    if (menuItem)
+    {
+      var accessKey;
+      if (i <= 9)
+        accessKey = String(i+1);
+      else if (i == 10)
+        accessKey = "0";
+      else
+        accessKey = " ";
+
+      menuItem.setAttribute("label", accessKey+" " + siteNameList[i]);
+      menuItem.setAttribute("value", siteNameList[i]);
+      if (accessKey != " ")
+        menuItem.setAttribute("accesskey", accessKey);
+
+      menupopup.appendChild(menuItem);
+    }
+  }
 }
 
 // Create a nsIURI object filled in with all required publishing info
@@ -1303,6 +1381,52 @@ function GetDocUrlFromPublishData(publishData)
   url += FormatDirForPublishing(publishData.docDir) + publishData.filename;
 
   return url;
+}
+
+// Depending on editing local vs. remote files:
+//   1. Switch the "Save" and "Publish" buttons on toolbars,
+//   2. Hide "Save" menuitem if editing remote
+//   3. Shift accel+S keybinding to Save or Publish commands
+// Note: A new, unsaved file is treated as a local file
+//     (XXX Have a pref to treat as remote for user's who mostly edit remote?)
+function SetSaveAndPublishUI(urlString)
+{
+  // Associate the "save" keybinding with Save for local files, 
+  //   or with Publish for remote files
+  var scheme = GetScheme(urlString);
+  var menuItem1;
+  var menuItem2;
+  var saveButton = document.getElementById("saveButton");
+  var publishButton = document.getElementById("publishButton");
+  var command;
+  if (!scheme || scheme == "file")
+  {
+    menuItem1 = document.getElementById("publishMenuitem");
+    menuItem2 = document.getElementById("saveMenuitem");
+    command = "cmd_save";
+    SetElementHidden(publishButton, true);
+    SetElementHidden(saveButton, false);
+    SetElementHidden(menuItem2, false);
+  }
+  else
+  {
+    // Editing a remote file
+    menuItem1 = document.getElementById("saveMenuitem");
+    menuItem2 = document.getElementById("publishMenuitem");
+    command = "cmd_publish";
+    SetElementHidden(saveButton, true);
+    SetElementHidden(publishButton, false);
+    SetElementHidden(menuItem1, true);
+  }
+  var key = document.getElementById("savekb");
+  if (key && command)
+    key.setAttribute("observes", command);
+
+  if (menuItem1 && menuItem2)
+  {
+    menuItem1.removeAttribute("key");
+    menuItem2.setAttribute("key","savekb");
+  }
 }
 
 // ****** end of save / publish **********//
@@ -1585,8 +1709,6 @@ var nsSpellingCommand =
     try {
       window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
               "chrome,close,titlebar,modal", "");
-
-      dump("*** Spell Checking completed = "+window.spellCheckCompleted+"\n");
     }
     catch(ex) {
       dump("*** Exception error: SpellChecker Dialog Closing\n");

@@ -228,7 +228,6 @@ var DocumentStateListener =
 {
   NotifyDocumentCreated: function()
   {
-dump(" ***** DocumentStateListener called in JS ********************\n");
     // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
     EditorSetDefaultPrefsAndDoctype();
     EditorInitToolbars();
@@ -313,7 +312,9 @@ function EditorStartup(editorType, editorElement)
   var url = document.getElementById("args").getAttribute("value");
   var charset = document.getElementById("args").getAttribute("charset");
   if (charset) editorShell.SetDocumentCharacterSet(charset);
+
   editorShell.LoadUrl(url);
+  SetSaveAndPublishUI(url);
 }
 
 // This is also called by Message Composer
@@ -548,6 +549,7 @@ function delayedOpenWindow(chrome, flags, url)
         FinishHTMLSource(); 
 
       editorShell.LoadUrl(url);
+      SetSaveAndPublishUI(url);
       return;
     }
   }
@@ -1580,6 +1582,7 @@ function EditorOpenUrl(url)
         FinishHTMLSource(); 
 
       window.editorShell.LoadUrl(url);
+      SetSaveAndPublishUI(url);
     }
     else
     {
@@ -1682,7 +1685,7 @@ function AppendRecentMenuitem(menupopup, title, url, menuIndex)
 {
   if (menupopup)
   {
-    var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
+    var menuItem = document.createElementNS(XUL_NS, "menuitem");
     if (menuItem)
     {
       var accessKey;

@@ -212,6 +212,17 @@ function SetElementEnabled(element, doEnable)
   }
 }
 
+function SetElementHidden(element, hide)
+{
+  if (element)
+  {
+    if (hide)
+      element.setAttribute("hidden", true);
+    else
+      element.removeAttribute("hidden");
+  }
+}
+
 function DisableItem(id, disable)
 {
   var item = document.getElementById(id);
@@ -622,40 +633,59 @@ function GetScheme(url)
 
 function GetHost(url)
 {
+  if (!url)
+    return "";
+
   var IOService = GetIOService();
   if (!IOService)
     return "";
 
   var host = "";
-  if (url)
-  {
-    try {
-      host = IOService.extractUrlPart(url, IOService.url_Host, {start:0}, {end:0}); 
-     } catch (e) {}
-  }
+  try {
+    host = IOService.extractUrlPart(url, IOService.url_Host, {start:0}, {end:0}); 
+   } catch (e) {}
+
   return host;
+}
+
+function GetUsername(url)
+{
+  if (!url)
+    return "";
+
+  var IOService = GetIOService();
+  if (!IOService)
+    return "";
+
+  var username = "";
+  try {
+    username = IOService.extractUrlPart(url, IOService.url_Username, {start:0}, {end:0});
+  } catch (e) {}
+
+  return username;
 }
 
 function GetFilename(url)
 {
+  if (!url || IsUrlAboutBlank(url))
+    return "";
+
   var IOService = GetIOService();
   if (!IOService)
     return "";
 
   var filename;
 
-  if (url)
-  {
-    try {
-      filename = IOService.extractUrlPart(url, IOService.url_FileBaseName, {start:0}, {end:0});
-      if (filename)
-      {
-        var ext = IOService.extractUrlPart(url, IOService.url_FileExtension, {start:0}, {end:0});
-        if (ext)
-          filename += "."+ext;
-      }
-     } catch (e) {}
-  }
+  try {
+    filename = IOService.extractUrlPart(url, IOService.url_FileBaseName, {start:0}, {end:0});
+    if (filename)
+    {
+      var ext = IOService.extractUrlPart(url, IOService.url_FileExtension, {start:0}, {end:0});
+      if (ext)
+        filename += "."+ext;
+    }
+  } catch (e) {}
+
   return filename ? filename : "";
 }
 

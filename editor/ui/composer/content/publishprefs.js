@@ -46,33 +46,15 @@ function GetPublishSiteData()
   if (!publishBranch)
     return null;
 
-  var siteCountObj = {value:0};
-  var siteNamePrefs;
-  try {
-    siteNamePrefs = publishBranch.getChildList("site_name.", siteCountObj);
-  } catch (e) {}
-
-  if (!siteNamePrefs || siteCountObj.value == 0)
+  // Array of site names - sorted, but don't put default name first
+  var siteNameList = GetSiteNameList(true, false);
+  if (!siteNameList)
     return null;
 
   // Array of all site data
   var siteArray = [];
-  // Array of site names
-  var siteNameList = [];
-  var index = 0;
-  var i;
-  for (i = 0; i < siteCountObj.value; i++)
-  {
-    var siteName = GetPublishStringPref(publishBranch, siteNamePrefs[i]);
-    if (siteName)
-    {
-      siteNameList[index] = siteName;
-      index++;
-    }
-  }
+
   var siteCount = siteNameList.length;
-  if (siteCount == 0)
-    return null;
 
   // Build array for sites in alphabetical order (XXX Ascii sort, not locale-aware)
   if (siteCount > 1)
@@ -85,8 +67,8 @@ function GetPublishSiteData()
   } catch (e) {}
 
   // Get publish data using siteName as the key
-  index = 0;
-  for (i = 0; i < siteCount; i++)
+  var index = 0;
+  for (var i = 0; i < siteCount; i++)
   {
     // Associated data uses site name as key
     var publishData = GetPublishData_internal(publishBranch, siteNameList[i]);
@@ -128,7 +110,7 @@ function GetDefaultPublishSiteName()
 //   from database of sites previously published to.
 function GetPublishDataFromUrl(docUrl)
 {
-  if (!docUrl || IsUrlAboutBlank(docUrl))
+  if (!docUrl || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file")
     return null;
 
   var pubSiteData = GetPublishSiteData();
@@ -179,28 +161,37 @@ function GetPublishDataFromUrl(docUrl)
 // Similar to above, but in param is a site profile name
 // Note that this is more efficient than getting from a URL,
 //   since we don't have to get all the sitedata but can key off of sitename.
-// But caller must supply the filename
-function GetPublishDataFromSiteName(siteName, filename)
+// Caller must supply the current docUrl or just a filename
+// If doc URL is supplied, we find the publish subdirectory if publishUrl is part of docUrl
+function GetPublishDataFromSiteName(siteName, docUrlOrFilename)
 {
   var publishBranch = GetPublishPrefsBranch();
   if (!publishBranch)
     return null;
 
-  var siteCount = {value:0};
-  var siteNamePrefs;
-  try {
-    siteNamePrefs = publishBranch.getChildList("site_name.", siteCount);
-  } catch (e) {}
-
-  if (!siteNamePrefs || siteCount.value == 0)
+  var siteNameList = GetSiteNameList(false, false);
+  if (!siteNameList)
     return null;
-
-  for (var i = 0; i < siteCount.value; i++)
+  for (var i = 0; i < siteNameList.length; i++)
   {
-    var name = GetPublishStringPref(publishBranch, siteNamePrefs[i]);
-    if (name && name == siteName)
+    if (siteNameList[i] == siteName)
     {
       var publishData = GetPublishData_internal(publishBranch, siteName);
+      var filename = docUrlOrFilename;
+      var scheme = GetScheme(docUrlOrFilename);
+      if (scheme)
+      {
+        // Separate into the base url and filename
+        var lastSlash = docUrlOrFilename.lastIndexOf("\/");
+        var url = docUrlOrFilename.slice(0, lastSlash);
+        filename = docUrlOrFilename.slice(lastSlash+1);
+
+        // Get length of the publish url that matches this docUrl
+        var len = GetMatchingPublishUrlLength(publishData, url);
+        if (len)
+          // The remainder is a subdirectory within the site
+          publishData.docDir = FormatDirForPublishing(url.slice(len));
+      }
       publishData.filename = filename;
       return publishData;
     }
@@ -438,6 +429,56 @@ function GetPublishPrefsBranch()
   return prefsService.getBranch("editor.publish.");
 }
 
+function GetSiteNameList(doSort, defaultFirst)
+{
+  var publishBranch = GetPublishPrefsBranch();
+  if (!publishBranch)
+    return null;
+
+  var siteCountObj = {value:0};
+  var siteNamePrefs;
+  try {
+    siteNamePrefs = publishBranch.getChildList("site_name.", siteCountObj);
+  } catch (e) {}
+
+  if (!siteNamePrefs || siteCountObj.value == 0)
+    return null;
+
+  // Array of site names
+  var siteNameList = [];
+  var index = 0;
+  var defaultName = "";
+  if (defaultFirst)
+  {
+    defaultName = GetPublishStringPref(publishBranch, "default_site");
+    // This always sorts to top -- replace with real string below
+    siteNameList[0] = "";
+    index++;
+  }
+
+  for (var i = 0; i < siteCountObj.value; i++)
+  {
+    var siteName = GetPublishStringPref(publishBranch, siteNamePrefs[i]);
+    // Skip if siteName pref is empty or is default name
+    if (siteName && siteName != defaultName)
+    {
+      siteNameList[index] = siteName;
+      index++;
+    }
+  }
+
+  if (siteNameList.length && doSort)
+    siteNameList.sort();
+
+  if (defaultName)
+  {
+    siteNameList[0] = defaultName;
+    index++;
+  }
+
+  return siteNameList.length? siteNameList : null;
+}
+
 // Find index of a site record in supplied publish site database
 // docUrl: Document URL with or without filename
 //         (Must end in "/" if no filename)
@@ -451,7 +492,7 @@ function FindSiteIndexAndDocDir(publishSiteData, docUrl, dirObj)
   if (dirObj)
     dirObj.value = "/";
 
-  if (!publishSiteData || !docUrl)
+  if (!publishSiteData || !docUrl || GetScheme(docUrl) == "file")
     return -1;
 
   // Remove filename from docUrl
@@ -472,16 +513,11 @@ function FindSiteIndexAndDocDir(publishSiteData, docUrl, dirObj)
     //  but that may also have a directory after the site base URL
     //  So we must examine all records to find the site URL that best
     //    matches the document URL (XXX is this right?)
-    var pubUrlFound = docUrl.indexOf(publishSiteData[i].publishUrl) == 0;
-    var browseUrlFound = docUrl.indexOf(publishSiteData[i].browseUrl) == 0;
-    if (pubUrlFound || browseUrlFound)
+    var len = GetMatchingPublishUrlLength(publishSiteData[i], docUrl);
+    if (len > siteUrlLen)
     {
-      var len = pubUrlFound ? publishSiteData[i].publishUrl.length : publishSiteData[i].browseUrl.length;
-      if (len > siteUrlLen)
-      {
-        siteIndex = i;
-        siteUrlLen = len;
-      }
+      siteIndex = i;
+      siteUrlLen = len;
     }
   }
 
@@ -490,6 +526,24 @@ function FindSiteIndexAndDocDir(publishSiteData, docUrl, dirObj)
     dirObj.value = FormatDirForPublishing(docUrl.slice(siteUrlLen));
 
   return siteIndex;
+}
+
+// Look for a matching publish url within the document url
+// (We need to look at both "publishUrl" and "browseUrl" in case we are editing
+//  an http: document but using ftp: to publish.)
+// Return the length of that matching portion
+// Used to find the optimum publishing site within all site data
+//   and to extract remaining directory from the end of a document url
+function GetMatchingPublishUrlLength(publishData, docUrl)
+{
+  if (publishData && docUrl)
+  {
+    var pubUrlFound = docUrl.indexOf(publishData.publishUrl) == 0;
+    var browseUrlFound = docUrl.indexOf(publishData.browseUrl) == 0;
+    if (pubUrlFound || browseUrlFound)
+      return  pubUrlFound ? publishData.publishUrl.length : publishData.browseUrl.length;
+  }
+  return 0;
 }
 
 // Prefs that don't exist will through an exception,

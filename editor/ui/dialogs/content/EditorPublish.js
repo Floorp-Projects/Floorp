@@ -31,20 +31,25 @@ var gPreviousDefaultSite;
 var gPreviousDefaultDir;
 var gPreviousTitle;
 var gSettingsChanged = false;
+var gInitialSiteName;
+var gInitialSiteIndex = -1;
 
 // Dialog initialization code
 function Startup()
 {
+  window.opener.ok = false;
+
   if (!InitEditorShell()) return;
 
   // Element to edit is passed in
-  if (!window.arguments[1])
+  gInitialSiteName = window.arguments[1];
+  gReturnData = window.arguments[2];
+  if (!gReturnData)
   {
     dump("Publish: Return data object not supplied\n");
     window.close();
     return;
   }
-  gReturnData = window.arguments[1];
 
   gDialog.TabPanels           = document.getElementById("TabPanels");
   gDialog.PublishTab          = document.getElementById("PublishTab");
@@ -99,7 +104,6 @@ function Startup()
 
 function InitDialog()
 {
-  var siteIndex = -1;
   if (gPublishSiteData)
     FillSiteList();
 
@@ -117,14 +121,15 @@ function InitDialog()
       if (gPublishSiteData)
       {
         var dirObj = {};
-        siteIndex = FindSiteIndexAndDocDir(gPublishSiteData, docUrl, dirObj);
-
-        // Select the site we found
-        gDialog.SiteList.selectedIndex = siteIndex;
-        var docDir = dirObj.value;
-
-        if (siteIndex != -1)
+        var siteIndex = FindSiteIndexAndDocDir(gPublishSiteData, docUrl, dirObj);
+        
+        // Select this site only if the same as user's intended site, or there wasnt' one
+        if (siteIndex != -1 && (gInitialSiteIndex == -1 || siteIndex == gInitialSiteIndex))
         {
+          // Select the site we found
+          gDialog.SiteList.selectedIndex = siteIndex;
+          var docDir = dirObj.value;
+
           // Be sure directory found is part of that site's dir list
           AppendDirToSelectedSite(docDir);
 
@@ -133,14 +138,14 @@ function InitDialog()
 
           //XXX HOW DO WE DECIDE WHAT "OTHER" DIR TO USE?
           //gPublishSiteData[siteIndex].otherDir = docDir;
-        }        
+        }
       }
     }
   }
 
-  // We didn't find a site -- use default
-  if (siteIndex == -1)
-    gDialog.SiteList.selectedIndex = gDefaultSiteIndex;
+  // We haven't selected a site -- use initial or default site
+  if (gDialog.SiteList.selectedIndex == -1)
+    gDialog.SiteList.selectedIndex = (gInitialSiteIndex != -1) ? gInitialSiteIndex : gDefaultSiteIndex;
 
   // Fill in  all the site data for currently-selected site
   SelectSiteList();
@@ -179,6 +184,9 @@ function FillSiteList()
         menuitem.setAttribute("default", "true");
       }
     }
+    // Find initial site location
+    if (name == gInitialSiteName)
+      gInitialSiteIndex = i;
   }
 }
 
@@ -467,6 +475,16 @@ function ValidateSettings()
     FillSiteList();
     gDialog.SiteList.selectedIndex = siteIndex;
   }
+  else
+  {
+    // Update selected item if sitename changed 
+    var selectedItem = gDialog.SiteList.selectedItem;
+    if (selectedItem && selectedItem.getAttribute("label") != siteName)
+    {
+      selectedItem.setAttribute("label", siteName);
+      gDialog.SiteList.setAttribute("label", siteName);
+    }
+  }
   
   // Get the directory name in site to publish to
   var docDir = GetDocDirInput();
@@ -535,7 +553,10 @@ function ShowErrorInPanel(panelId, errorMsgId, widgetWithError)
 
 function doHelpButton()
 {
-  openHelp("chrome://help/content/help.xul?publish");
+  if (gCurrentPanel == gPublishPanel)
+    openHelp("chrome://help/content/help.xul?publish_tab");
+  else
+    openHelp("chrome://help/content/help.xul?settings_tab");
 }
 
 function onAccept()

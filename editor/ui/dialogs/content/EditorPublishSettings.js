@@ -28,6 +28,7 @@ var gPreviousDefaultSite;
 var gPreviousTitle;
 var gSettingsChanged = false;
 var gSiteDataChanged = false;
+var gNewSite = false;
 
 // Dialog initialization code
 function Startup()
@@ -39,6 +40,10 @@ function Startup()
   gDialog.PublishUrlInput     = document.getElementById("PublishUrlInput");
   gDialog.BrowseUrlInput      = document.getElementById("BrowseUrlInput");
   gDialog.UsernameInput       = document.getElementById("UsernameInput");
+  gDialog.PasswordInput       = document.getElementById("PasswordInput");
+  gDialog.SavePassword        = document.getElementById("SavePassword");
+  gDialog.SetDefaultButton    = document.getElementById("SetDefaultButton");
+  gDialog.RemoveSiteButton    = document.getElementById("RemoveSiteButton");
   gDialog.OkButton            = document.documentElement.getButton("accept");
 
   gPublishSiteData = GetPublishSiteData();
@@ -67,37 +72,30 @@ function InitDialog()
 
 function FillSiteList()
 {
-  ClearTreelist(gDialog.SiteList);
+  ClearListbox(gDialog.SiteList);
   gDefaultSiteIndex = -1;
 
-  // Fill the site lists
+  // Fill the site list
   var count = gPublishSiteData.length;
-  var i;
-
-  for (i = 0; i < count; i++)
+  for (var i = 0; i < count; i++)
   {
     var name = gPublishSiteData[i].siteName;
-    var menuitem = AppendStringToTreelist(gDialog.SiteList, name);
+    var item = gDialog.SiteList.appendItem(name);
+    SetPublishItemStyle(item);
+    if (name == gDefaultSiteName)
+      gDefaultSiteIndex = i;
+  }
+}
 
-    // Add a cell before the text to display a check for default site
-    if (menuitem)
-    {
-      var checkCell = document.createElementNS(XUL_NS, "treecell");
-      checkCell.setAttribute("class", "treecell-check");
-
-      // Insert tree cell before the one created by AppendStringToTreelist():
-      //   (menuitem=treeitem) -> treerow -> treecell
-      menuitem.firstChild.insertBefore(checkCell, menuitem.firstChild.firstChild);      
-
-      // Show checkmark in front of default site
-      if (name == gDefaultSiteName)
-      {
-        gDefaultSiteIndex = i;
-dump(" *** Setting checked style on tree item\n");
-        checkCell.checked = true;
-        menuitem.checked = true;
-      }
-    }
+function SetPublishItemStyle(item)
+{
+  // Add a cell before the text to display a check for default site
+  if (item)
+  {
+    if (item.label == gDefaultSiteName)
+      item.setAttribute("class", "bold");
+    else
+      item.removeAttribute("class");
   }
 }
 
@@ -109,6 +107,8 @@ function AddNewSite()
 
   // Initialize Setting widgets to none of the selected sites
   InitSiteSettings(-1);
+  gNewSite = true;
+
   SetTextboxFocus(gDialog.SiteNameInput);
 }
 
@@ -117,30 +117,25 @@ function RemoveSite()
   if (!gPublishSiteData)
     return;
 
-  var count = gPublishSiteData.length;
   var index = gDialog.SiteList.selectedIndex;
   var item;
-  if (index >= 0)
+  if (index != -1)
+  {
     item = gDialog.SiteList.selectedItems[0];
 
-dump(" **** Before remove: count = "+count+"\n");
+    // Remove one item from site data array
+    gPublishSiteData.splice(index, 1);
+    // Remove item from site list
+    gDialog.SiteList.clearSelection();
+    gDialog.SiteList.removeItemAt(index);
 
-  // Remove one item from site array
-  gPublishSiteData.splice(index, 1);
+    // Adjust if we removed last item and reselect a site
+    if (index >= gPublishSiteData.length)
+      index--;
+    InitSiteSettings(index);
 
-dump(" **** After remove: count = "+gPublishSiteData.length+"\n");
-  count--;
-
-  if (index >= count)
-    index--;
-
-  // Remove item from site list
-  if (item)
-    item.parentNode.removeChild(item);
-
-  InitSiteSettings(index);
-
-  gSiteDataChanged = true;
+    gSiteDataChanged = true;
+  }
 }
 
 function SetDefault()
@@ -149,10 +144,18 @@ function SetDefault()
     return;
 
   var index = gDialog.SiteList.selectedIndex;
-  if (index >= 0)
+  if (index != -1)
   {
     gDefaultSiteIndex = index;
     gDefaultSiteName = gPublishSiteData[index].siteName;
+    
+    // Set bold style on new default
+    var item = gDialog.SiteList.firstChild;
+    while (item)
+    {
+      SetPublishItemStyle(item);
+      item = item.nextSibling;
+    }
   }
 }
 
@@ -180,14 +183,17 @@ function InitSiteSettings(selectedSiteIndex)
   var savePassord = false;
 
   var haveData = (gPublishSiteData && selectedSiteIndex != -1);
+  gDialog.SiteList.selectedIndex = selectedSiteIndex;
 
   gDialog.SiteNameInput.value = haveData ? gPublishSiteData[selectedSiteIndex].siteName : "";
   gDialog.PublishUrlInput.value = haveData ? gPublishSiteData[selectedSiteIndex].publishUrl : "";
   gDialog.BrowseUrlInput.value = haveData ? gPublishSiteData[selectedSiteIndex].browseUrl : "";
   gDialog.UsernameInput.value = haveData ? gPublishSiteData[selectedSiteIndex].username : "";
+  gDialog.PasswordInput.value = haveData ? gPublishSiteData[selectedSiteIndex].password : "";
+  gDialog.SavePassword.checked = haveData ? gPublishSiteData[selectedSiteIndex].savePassword : false;
 
-  gDialog.SiteList.selectedIndex = selectedSiteIndex;
-
+  gDialog.SetDefaultButton.disabled = !haveData;
+  gDialog.RemoveSiteButton.disabled = !haveData;
   gSettingsChanged = false;
 }
 
@@ -217,35 +223,40 @@ function UpdateSettings()
   var siteIndex = -1;
   if (!gPublishSiteData)
   {
-dump(" * Create new gPublishSiteData\n");
     // Create the first site profile
     gPublishSiteData = new Array(1);
     siteIndex = 0;
+    gNewSite = true;
+  }
+  else
+  {
+    // Add new data at the end of list
+    siteIndex = gPublishSiteData.length;
+  }
+    
+  if (gNewSite || gDialog.SiteList.selectedIndex == -1)
+  {
+    // Init new site object
+    gPublishSiteData[siteIndex] = {};
+    gPublishSiteData[siteIndex].docDir = "/";
+    gPublishSiteData[siteIndex].otherDir = "/";
+    gPublishSiteData[siteIndex].dirList = ["/"];
   }
   else
   {
     // Update existing site profile
     siteIndex = gDialog.SiteList.selectedIndex;
-    if (siteIndex == -1)
-    {
-      // But if none selected, add new data at the end
-      siteIndex = gPublishSiteData.length;
-    }
   }
-dump(" * UpdateSettings: NEW DATA AT index="+siteIndex+", gPublishSiteData.length="+gPublishSiteData.length+"\n");
 
-  gPublishSiteData[siteIndex] = {};
   gPublishSiteData[siteIndex].siteName = newName;
   gPublishSiteData[siteIndex].publishUrl = newUrl;
   gPublishSiteData[siteIndex].browseUrl = FormatUrlForPublishing(gDialog.BrowseUrlInput.value);
   gPublishSiteData[siteIndex].username = TrimString(gDialog.UsernameInput.value);
+  gPublishSiteData[siteIndex].password= gDialog.PasswordInput.value;
+  gPublishSiteData[siteIndex].savePassword = gDialog.SavePassword.checked;
 
   if (siteIndex == gDefaultSiteIndex)
     gDefaultSiteName = newName;
-
-dump("  Default SiteName = "+gDefaultSiteName+", Index="+gDefaultSiteIndex+"\n");
-
-dump("New Site Array: data="+gPublishSiteData[siteIndex].siteName+","+gPublishSiteData[siteIndex].publishUrl+","+gPublishSiteData[siteIndex].browseUrl+","+gPublishSiteData[siteIndex].username+"\n");
 
   var count = gPublishSiteData.length;
   if (count > 1)
@@ -256,8 +267,6 @@ dump("New Site Array: data="+gPublishSiteData[siteIndex].siteName+","+gPublishSi
     //Find previous items in sorted list
     for (var i = 0; i < count; i++)
     {
-  dump(" Name #"+i+" = "+gPublishSiteData[i].siteName+"\n");
-
       if (gPublishSiteData[i].siteName == newName)
       {
         siteIndex = i;
@@ -274,19 +283,21 @@ dump("New Site Array: data="+gPublishSiteData[siteIndex].siteName+","+gPublishSi
   }
 
   FillSiteList();
-
   gDialog.SiteList.selectedIndex = siteIndex;
 
-  gSettingsChanged = false;
-
+  // Signal saving data to prefs
   gSiteDataChanged = true;
+  
+  // Clear current site flags
+  gSettingsChanged = false;
+  gNewSite = false;
 
   return true;
 }
 
 function doHelpButton()
 {
-  openHelp("chrome://help/content/help.xul?publishSettings");
+  openHelp("chrome://help/content/help.xul?site_settings");
 }
 
 function onAccept()
