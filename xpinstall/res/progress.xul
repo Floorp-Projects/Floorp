@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="../samples/xul.css" type="text/css"?> 
+<?xml-stylesheet href="../../chrome/global/skin/default/xul.css" type="text/css"?> 
 <?xml-stylesheet href="progress.css" type="text/css"?> 
 
 <!DOCTYPE window
