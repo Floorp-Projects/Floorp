@@ -491,10 +491,11 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_fromPrivateKeyInfo
     (   JNIEnv *env,
         jclass clazz,
         jbyteArray keyArray,
-        jobject tokenObj
+        jobject tokenObj,
+        jbyteArray publicValueArray
     )
 {
-    SECItem derPK;
+    SECItem *derPK = NULL;
     jthrowable excep;
     SECStatus status;
     SECItem nickname;
@@ -502,13 +503,7 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_fromPrivateKeyInfo
     SECKEYPrivateKey* privk = NULL;
     PK11SlotInfo *slot = NULL;
     unsigned int keyUsage;
-
-    /*
-     * initialize so we can goto finish
-     */
-    derPK.data = NULL;
-    derPK.len = 0;
-
+    SECItem *publicValue = NULL;
 
     PR_ASSERT(env!=NULL && clazz!=NULL);
 
@@ -518,18 +513,19 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_fromPrivateKeyInfo
     }
 
     /*
-     * copy the java byte array into a local copy
+     * copy the java byte arrays into local copies
      */
-    derPK.len = (*env)->GetArrayLength(env, keyArray);
-    if(derPK.len <= 0) {
-        JSS_throwMsg(env, INVALID_KEY_FORMAT_EXCEPTION, "Key array is empty");
-        goto finish;
-    }
-    derPK.data = (unsigned char*)
-            (*env)->GetByteArrayElements(env, keyArray, NULL);
-    if(derPK.data == NULL) {
+    derPK = JSS_ByteArrayToSECItem(env, keyArray);
+    if( derPK == NULL ) {
         ASSERT_OUTOFMEM(env);
         goto finish;
+    }
+    if( publicValueArray != NULL ) {
+        publicValue = JSS_ByteArrayToSECItem(env, publicValueArray);
+        if( publicValue == NULL ) {
+            ASSERT_OUTOFMEM(env);
+            goto finish;
+        }
     }
 
     /*
@@ -546,14 +542,14 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_fromPrivateKeyInfo
     /*
      * enable the key for as many operations as possible
      */
-    keyUsage =  KU_KEY_ENCIPHERMENT | KU_DATA_ENCIPHERMENT |
-                KU_DIGITAL_SIGNATURE | KU_DIGITAL_SIGNATURE;
+    keyUsage =  KU_ALL;
 
-    status = PK11_ImportDERPrivateKeyInfoAndReturnKey(slot, &derPK, &nickname,
-                NULL /*public value*/, PR_FALSE /*isPerm*/,
+    status = PK11_ImportDERPrivateKeyInfoAndReturnKey(slot, derPK, &nickname,
+                publicValue, PR_FALSE /*isPerm*/,
                 PR_TRUE /*isPrivate*/, keyUsage, &privk, NULL /*wincx*/);
     if(status != SECSuccess) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to import private key info");
+        JSS_throwMsgPrErr(env, TOKEN_EXCEPTION,
+            "Failed to import private key info");
         goto finish;
     }
 
@@ -562,14 +558,14 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_fromPrivateKeyInfo
 
 finish:
     /* Save any exceptions */
-    if( (excep=(*env)->ExceptionOccurred(env)) ) {
+    if( (excep=(*env)->ExceptionOccurred(env)) != NULL ) {
         (*env)->ExceptionClear(env);
     }
-    if(derPK.data != NULL) {
-        (*env)->ReleaseByteArrayElements(   env,
-                                            keyArray,
-                                            (jbyte*) derPK.data,
-                                            JNI_ABORT           );
+    if( derPK != NULL ) {
+        SECITEM_FreeItem(derPK, PR_TRUE /*freeit*/);
+    }
+    if( publicValue != NULL ) {
+        SECITEM_FreeItem(publicValue, PR_TRUE /*freeit*/);
     }
     /* now re-throw the exception */
     if( excep ) {

@@ -96,6 +96,7 @@ public class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
      */
     public static PK11PrivKey
     fromPrivateKeyInfo(PKCS8EncodedKeySpec spec, CryptoToken token)
+        throws TokenException
     {
         return fromPrivateKeyInfo(spec.getEncoded(), token);
     }
@@ -107,8 +108,23 @@ public class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
      * into a KeyStore, at which point it will be made a permanent (token)
      * object.
      */
+    public static PK11PrivKey
+    fromPrivateKeyInfo(byte[] pki, CryptoToken token) throws TokenException {
+        return fromPrivateKeyInfo(pki, token, null);
+    }
+
+    /**
+     * Imports a PrivateKeyInfo, storing it as a temporary PrivateKey
+     * on the given token.
+     * The key will be a temporary (session) key until it is imported
+     * into a KeyStore, at which point it will be made a permanent (token)
+     * object.
+     * @param publicValue An encoding of the public key, as used by the NSS
+     *  pk11wrap code. Don't use this unless you know what you're doing.
+     */
     public static native PK11PrivKey
-    fromPrivateKeyInfo(byte[] pki, CryptoToken token);
+    fromPrivateKeyInfo(byte[] pki, CryptoToken token, byte[] publicValue)
+        throws TokenException;
 
     protected DSAParameterSpec
     getDSAParams() throws TokenException {

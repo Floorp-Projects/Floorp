@@ -41,6 +41,7 @@ import org.mozilla.jss.crypto.InvalidKeyFormatException;
 import org.mozilla.jss.crypto.PrivateKey;
 import org.mozilla.jss.crypto.TokenSupplierManager;
 import org.mozilla.jss.crypto.SignatureAlgorithm;
+import org.mozilla.jss.crypto.TokenException;
 import org.mozilla.jss.asn1.*;
 import org.mozilla.jss.pkcs11.PK11PubKey;
 import org.mozilla.jss.pkcs11.PK11PrivKey;
@@ -49,6 +50,9 @@ import org.mozilla.jss.util.Assert;
 import java.security.Key;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.math.BigInteger;
+import java.io.StringWriter;
+import java.io.PrintWriter;
 
 public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
 {
@@ -109,6 +113,7 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
     protected java.security.PrivateKey engineGeneratePrivate(KeySpec keySpec)
         throws InvalidKeySpecException
     {
+      try {
         if( keySpec instanceof RSAPrivateCrtKeySpec ) {
             //
             // PKCS #1 RSAPrivateKey
@@ -139,10 +144,6 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
             return PK11PrivKey.fromPrivateKeyInfo( ASN1Util.encode(pki),
                 TokenSupplierManager.getTokenSupplier().getThreadToken() );
         } else if( keySpec instanceof DSAPrivateKeySpec ) {
-            throw new InvalidKeySpecException(
-              "DSAPrivateKeySpec not supported: " +
-              "http://bugzilla.mozilla.org/show_bug.cgi?id=150720");
-            /*
             DSAPrivateKeySpec spec = (DSAPrivateKeySpec) keySpec;
             SEQUENCE pqgParams = new SEQUENCE();
             pqgParams.addElement(new INTEGER(spec.getP()));
@@ -160,9 +161,19 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
                     null                // OPTIONAL SET OF Attribute
             );
 
+            // Derive the public key from the private key
+            BigInteger y = spec.getG().modPow(spec.getX(), spec.getP());
+            byte[] yBA = y.toByteArray();
+            // we need to chop off a leading zero byte
+            if( y.bitLength() % 8 == 0 ) {
+                byte[] newBA = new byte[yBA.length-1];
+                Assert._assert(newBA.length >= 0);
+                System.arraycopy(yBA, 1, newBA, 0, newBA.length);
+                yBA = newBA;
+            }
+            
             return PK11PrivKey.fromPrivateKeyInfo( ASN1Util.encode(pki),
-                TokenSupplierManager.getTokenSupplier().getThreadToken() );
-            */
+                TokenSupplierManager.getTokenSupplier().getThreadToken(), yBA );
         } else if( keySpec instanceof PKCS8EncodedKeySpec ) {
             return PK11PrivKey.fromPrivateKeyInfo(
                 (PKCS8EncodedKeySpec)keySpec,
@@ -171,6 +182,13 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
 
         throw new InvalidKeySpecException("Unsupported KeySpec type: " +
             keySpec.getClass().getName());
+      } catch(TokenException te) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            te.printStackTrace(pw);
+            throw new InvalidKeySpecException("TokenException: " +
+                sw.toString());
+      }
     }
 
     protected KeySpec engineGetKeySpec(Key key, Class keySpec)
