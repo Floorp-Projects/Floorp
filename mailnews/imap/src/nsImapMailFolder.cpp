@@ -3146,7 +3146,31 @@ nsImapMailCopyState::~nsImapMailCopyState()
     }
 }
 
-NS_IMPL_ISUPPORTS(nsImapMailCopyState, NS_IMAPMAILCOPYSTATE_IID);
+NS_IMPL_ADDREF(nsImapMailCopyState)
+NS_IMPL_RELEASE(nsImapMailCopyState)
+
+NS_IMETHODIMP 
+nsImapMailCopyState::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aInstancePtr = NULL;
+
+  static NS_DEFINE_IID(kClassIID, nsImapMailCopyState::GetIID());
+  if (aIID.Equals(kClassIID)) {
+    *aInstancePtr = (void*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }               
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    *aInstancePtr = (void*) ((nsISupports*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
 
 nsresult
 nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
