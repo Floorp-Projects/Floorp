@@ -25,7 +25,6 @@
 #include "nsStyleConsts.h"
 #include "nsHTMLIIDs.h"
 #include "nsCSSRendering.h"
-
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIReflowCommand.h"
@@ -33,29 +32,35 @@
 #include "nsIStyleContext.h"
 #include "nsIView.h"
 #include "nsIFontMetrics.h"
-
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLValue.h"
-
-//#include "js/jsapi.h"
-//#include "nsDOMEvent.h"
-#define DOM_EVENT_INIT      0x0001
-
-#include "prprf.h"
-
-// XXX These are unfortunate dependencies
+#include "nsDOMEvent.h"
 #include "nsIHTMLContent.h"
-#include "nsHTMLImage.h"
+#include "prprf.h"
 
 // XXX temporary for :first-letter support
 #include "nsITextContent.h"
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 
+//XXX begin
+
+// 11-03-98: low hanging memory fruit: get rid of text-runs that have
+// only one piece of text in them!
+
+// 09-17-98: I don't like keeping mInnerBottomMargin
+
+// 09-18-98: floating block elements don't size quite right because we
+// wrap them in a body frame and the body frame doesn't honor the css
+// width/height properties (among others!). The body code needs
+// updating.
+
+//XXX end
+
 #ifdef NS_DEBUG
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
-#define NOISY_FIRST_LETTER
+#undef NOISY_FIRST_LETTER
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_RUNIN
 #else
@@ -66,96 +71,16 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #undef NOISY_RUNIN
 #endif
 
-#ifdef REALLY_NOISY_FIRST_LINE
-static void
-DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
-{
-  fputs(gap, stdout);
-  aFrame->ListTag(stdout);
-  printf(": ");
-  nsIStyleContext* sc;
-  aFrame->GetStyleContext(sc);
-  while (nsnull != sc) {
-    nsIStyleContext* psc;
-    printf("%p ", sc);
-    psc = sc->GetParent();
-    NS_RELEASE(sc);
-    sc = psc;
-  }
-  printf("\n");
-}
-#endif
-
 /* 52b33130-0b99-11d2-932e-00805f8add32 */
 #define NS_BLOCK_FRAME_CID \
 { 0x52b33130, 0x0b99, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 static const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
-// 11-03-98: low hanging memory fruit: get rid of text-runs that have
-// only one piece of text in them!
-
-// 09-15-98: make sure that the outer container of the block (e.g. the
-// body sets up the outer top margin feed in properly so that the top
-// margin collapses properly with the body margin. Note that for the
-// block that is reflowing a body's children the body will have a
-// padding value that wants to be collapsed with the blocks
-// first-child's top-margin (e.g. BODY P foo needs to collapse P's margin
-// with the BODY's padding
-
-// 09-17-98: I don't like keeping mInnerBottomMargin
-
-
-// 09-18-98: I think I can get rid of the distinction in this code
-// between blocks and inlines. The only real issue remaining is that
-// real blocks (that implement nsIRunaround) require a slightly
-// different coordinate system to begin reflow at (x/y/widht/height
-// values to aInlineReflow.Init) than do regular frames that do not
-// implement nsIRunaround. Factoring break-before/break-after should
-// be easy and handle the other 90% difference.
-
-// 09-18-98: floating block elements don't size quite right because we
-// wrap them in a body frame and the body frame doesn't honor the css
-// width/height properties (among others!). The body code needs
-// updating.
-
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-//XXX below this line is dubious (the entire file? :-)
-
-// XXX MULTICOL support; note that multicol will end up using the
-// equivalent of pagination! Therefore we should probably make sure
-// the pagination code isn't completely stupid.
-
-// XXX page-breaks
-
-// XXX out of memory checks are missing
-
-// XXX Tuneup: if mNoWrap is true and we are given a ResizeReflow we
-// can just return because there's nothing to do!; this is true in
-// nsInlineFrame too!
-// Except that noWrap is ignored if the containers width is too small
-// (like a table cell with a fixed width.)
-
-//----------------------------------------------------------------------
-// XXX It's really important that blocks strip out extra whitespace;
-// otherwise we will see ALOT of this, which will waste memory big time:
-//
-//   <fd(inline - empty height because of compressed \n)>
-//   <fd(block)>
-//   <fd(inline - empty height because of compressed \n)>
-//   <fd(block)>
-//   ...
-//----------------------------------------------------------------------
 
 class BulletFrame;
 struct LineData;
 class nsBlockFrame;
-
-/* 52b33130-0b99-11d2-932e-00805f8add32 */
-#define NS_BLOCK_FRAME_CID \
-{ 0x52b33130, 0x0b99, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-// XXX hide this as soon as list bullet code is cleaned up
 
 struct nsBlockReflowState : public nsFrameReflowState {
   nsBlockReflowState(nsIPresContext& aPresContext,
@@ -403,7 +328,8 @@ public:
   PRBool ReflowInlineFrame(nsBlockReflowState& aState,
                            LineData* aLine,
                            nsIFrame* aFrame,
-                           nsReflowStatus& aResult);
+                           nsReflowStatus& aResult,
+                           PRBool& aAddedToLine);
 
   nsresult SplitLine(nsBlockReflowState& aState,
                      LineData* aLine,
@@ -420,7 +346,8 @@ public:
                    LineData* aToLine,
                    LineData** aFromList,
                    PRBool aUpdateGeometricParent,
-                   nsReflowStatus& aResult);
+                   nsReflowStatus& aResult,
+                   PRBool& aAddedToLine);
 
   void PushLines(nsBlockReflowState& aState);
 
@@ -469,6 +396,29 @@ public:
 
 //----------------------------------------------------------------------
 
+#ifdef REALLY_NOISY_FIRST_LINE
+static void
+DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
+{
+  fputs(gap, stdout);
+  aFrame->ListTag(stdout);
+  printf(": ");
+  nsIStyleContext* sc;
+  aFrame->GetStyleContext(sc);
+  while (nsnull != sc) {
+    nsIStyleContext* psc;
+    printf("%p ", sc);
+    psc = sc->GetParent();
+    NS_RELEASE(sc);
+    sc = psc;
+  }
+  printf("\n");
+}
+#endif
+
+//----------------------------------------------------------------------
+
+#include "nsHTMLImage.h"
 class BulletFrame : public nsFrame {
 public:
   BulletFrame(nsIContent* aContent, nsIFrame* aParentFrame);
@@ -1558,7 +1508,6 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
         NS_IF_RELEASE(newFirstLineStyle);
       }
 
-#if 0
       // Re-resolve the :first-letter pseudo style context
       nsIStyleContext* newFirstLetterStyle =
         aPresContext->ProbePseudoStyleContextFor(mContent,
@@ -1573,7 +1522,6 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
       else {
         NS_IF_RELEASE(newFirstLetterStyle);
       }
-#endif
     }
 
     // Update the child frames on each line
@@ -1657,7 +1605,6 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
     mFirstLineStyle = aPresContext.
       ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLinePseudo,
                                  mStyleContext);
-#if 0
     mFirstLetterStyle = aPresContext.
       ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLetterPseudo,
                                  (nsnull != mFirstLineStyle
@@ -1668,7 +1615,6 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
       ListTag(stdout);
       printf(": first-letter style found\n");
     }
-#endif
 #endif
   }
 
@@ -2588,7 +2534,8 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
       const nsStyleDisplay* display;
       frame->GetStyleData(eStyleStruct_Display,
                           (const nsStyleStruct*&) display);
-      if (NS_STYLE_DISPLAY_RUN_IN == display->mDisplay) {
+      if ((NS_STYLE_DISPLAY_RUN_IN == display->mDisplay) ||
+          (NS_STYLE_DISPLAY_COMPACT == display->mDisplay)) {
         haveRunIn = PR_TRUE;
         break;
       }
@@ -2625,7 +2572,7 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
 
   if (haveRunIn) {
     // XXX For now, reflow the world when we contain a frame that is a
-    // run-in frame. (lazy code)
+    // run-in/compact frame. (lazy code)
     lastCleanLine = nsnull;
     firstDirtyLine = mLines;
     aState.mY = aState.mBorderPadding.top;
@@ -3074,7 +3021,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     }
     else {
       while (--n >= 0) {
-        keepGoing = ReflowInlineFrame(aState, aLine, frame, aReflowResult);
+        PRBool addedToLine;
+        keepGoing = ReflowInlineFrame(aState, aLine, frame, aReflowResult,
+                                      addedToLine);
         if (!keepGoing) {
           // It is possible that one or more of next lines are empty
           // (because of DeleteNextInFlowsFor). If so, delete them now
@@ -3093,14 +3042,19 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           goto done;
         }
         frame->GetNextSibling(frame);
+        if (addedToLine) {
+          NS_ASSERTION(nsnull != frame, "added to line but no new frame");
+          n++;
+        }
       }
     }
   }
 
   // Pull frames from the next line until we can't
   while (nsnull != aLine->mNext) {
+    PRBool addedToLine;
     keepGoing = PullFrame(aState, aLine, &aLine->mNext,
-                          PR_FALSE, aReflowResult);
+                          PR_FALSE, aReflowResult, addedToLine);
     if (!keepGoing) {
       goto done;
     }
@@ -3115,8 +3069,9 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       aState.mNextInFlow = nextInFlow;
       continue;
     }
+    PRBool addedToLine;
     keepGoing = PullFrame(aState, aLine, &nextInFlow->mLines,
-                          PR_TRUE, aReflowResult);
+                          PR_TRUE, aReflowResult, addedToLine);
     if (!keepGoing) {
       goto done;
     }
@@ -3741,11 +3696,13 @@ PRBool
 nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
                                 LineData* aLine,
                                 nsIFrame* aFrame,
-                                nsReflowStatus& aReflowResult)
+                                nsReflowStatus& aReflowResult,
+                                PRBool& aAddedToLine)
 {
   nsresult rv;
   nsIFrame* nextInFlow;
 
+  aAddedToLine = PR_FALSE;
   if (!aState.mInlineReflowPrepared) {
     PrepareInlineReflow(aState, aFrame, PR_FALSE);
   }
@@ -3805,7 +3762,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   if (!NS_INLINE_IS_BREAK(aReflowResult)) {
     aState.mPrevChild = aFrame;
     if (NS_FRAME_IS_COMPLETE(aReflowResult)) {
-      aFrame->GetNextSibling(aFrame);
       return PR_TRUE;
     }
 
@@ -3822,18 +3778,24 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       // Add new child to the line
       aLine->mChildCount++;
     }
-    aFrame->GetNextSibling(aFrame);
 
-#if 0
     // XXX Special hackery to keep going if we just split because of a
     // :first-letter situation.
     if (reflowingFirstLetter) {
+      if (nsnull != nextInFlow) {
+        aAddedToLine = PR_TRUE;
+        nextInFlow->ReResolveStyleContext(&aState.mPresContext,
+                                          mFirstLineStyle
+                                          ? mFirstLineStyle
+                                          : mStyleContext);
+      }
       if (aState.mInlineReflow->GetAvailWidth() > 0) {
-        aLine->SetLastContentIsComplete();/* XXX what to do??? */
         return PR_TRUE;
       }
     }
-#endif
+
+    // Split line after the frame we just reflowed
+    aFrame->GetNextSibling(aFrame);
   }
   else {
     if (NS_INLINE_IS_BREAK_AFTER(aReflowResult)) {
@@ -3968,7 +3930,8 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
                         LineData* aLine,
                         LineData** aFromList,
                         PRBool aUpdateGeometricParent,
-                        nsReflowStatus& aReflowResult)
+                        nsReflowStatus& aReflowResult,
+                        PRBool& aAddedToLine)
 {
   LineData* fromLine = *aFromList;
   NS_ASSERTION(nsnull != fromLine, "bad line to pull from");
@@ -4038,10 +4001,12 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 
   // Reflow the frame
   if (aLine->IsBlock()) {
+    aAddedToLine = PR_FALSE;
     return ReflowBlockFrame(aState, aLine, frame, aReflowResult);
   }
   else {
-    return ReflowInlineFrame(aState, aLine, frame, aReflowResult);
+    return ReflowInlineFrame(aState, aLine, frame, aReflowResult,
+                             aAddedToLine);
   }
 }
 
