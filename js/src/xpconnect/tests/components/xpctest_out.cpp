@@ -125,7 +125,7 @@ NS_IMETHODIMP xpcTestOut :: GetLongLong(PRInt64 ll){
 	return NS_OK;
 };
 NS_IMETHODIMP xpcTestOut :: SetLongLong(PRInt64 ll){
-	longProperty = ll;
+	JSLL_L2I(longProperty, ll);
 	return NS_OK;
 };
 NS_IMETHODIMP xpcTestOut :: GetUnsignedShort(PRUint16 *us){
