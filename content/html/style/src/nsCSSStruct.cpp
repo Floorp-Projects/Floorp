@@ -22,6 +22,8 @@
 #include "nsCSSPropIDs.h"
 #include "nsUnitConversion.h"
 
+//#define DEBUG_REFS
+
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
 static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
 static NS_DEFINE_IID(kCSSTextSID, NS_CSS_TEXT_SID);
@@ -512,6 +514,11 @@ protected:
   nsCSSList*      mList;
 };
 
+#ifdef DEBUG_REFS
+static PRInt32 gInstanceCount;
+#endif
+
+
 void* CSSDeclarationImpl::operator new(size_t size)
 {
   void* result = new char[size];
@@ -523,6 +530,10 @@ void* CSSDeclarationImpl::operator new(size_t size)
 CSSDeclarationImpl::CSSDeclarationImpl(void)
 {
   NS_INIT_REFCNT();
+#ifdef DEBUG_REFS
+  ++gInstanceCount;
+  fprintf(stdout, "%d + CSSDeclaration\n", gInstanceCount);
+#endif
 }
 
 CSSDeclarationImpl::~CSSDeclarationImpl(void)
@@ -545,6 +556,10 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
   if (nsnull != mList) {
     delete mList;
   }
+#ifdef DEBUG_REFS
+  --gInstanceCount;
+  fprintf(stdout, "%d - CSSDeclaration\n", gInstanceCount);
+#endif
 }
 
 NS_IMPL_ISUPPORTS(CSSDeclarationImpl, kICSSDeclarationIID);
