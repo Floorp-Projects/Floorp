@@ -36,7 +36,7 @@
 
 #include "stdio.h"
 
-#define DBG 0
+#define DBG 1
 #if 0
 #define DEBUG_shaver 1
 #define DEBUG_pavlov 1
@@ -44,6 +44,8 @@
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 extern GtkWidget *gAppContext;
+
+void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data);
 
 //-------------------------------------------------------------------------
 //
@@ -214,6 +216,10 @@ void nsWindow::InitCallbacks(char * aName)
                      "key_release_event",
 		     GTK_SIGNAL_FUNC(nsGtkWidget_KeyReleaseMask_EventHandler),
 		     this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "size_allocate",
+		     GTK_SIGNAL_FUNC(DoResize),
+		     this);
 }
 
 //-------------------------------------------------------------------------
@@ -260,7 +266,7 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-  nsWindow::Resize(aWidth, aHeight,aRepaint);
+  nsWindow::Resize(aWidth, aHeight, aRepaint);
   nsWidget::Move(aX,aY);
 #if 0
   NS_NOTYETIMPLEMENTED("nsWindow::Resize");
@@ -480,10 +486,13 @@ nsIAppShell* nsWindow::GetAppShell()
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+#ifdef DBG
   g_print("nsWindow::Scroll\n");
-
+#endif
   if (GTK_IS_LAYOUT(mWidget)) {
+#ifdef DBG
     g_print ("is layout dX = %d, dY = %d\n", aDx, aDy);
+#endif
     GtkAdjustment* horiz = gtk_layout_get_hadjustment(GTK_LAYOUT(mWidget));
     GtkAdjustment* vert = gtk_layout_get_vadjustment(GTK_LAYOUT(mWidget));
     horiz->value -= aDx;
@@ -631,6 +640,13 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
+#ifdef DBG
+  g_print("nsWindow::OnResize\n");
+#endif
+
+  if (GetResized() == PR_TRUE)
+    return FALSE;
+
   nsRect* size = aEvent.windowSize;
 
   if (mEventCallback && !mIgnoreResize) {
@@ -659,7 +675,9 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
+#ifdef DBG
   g_print("nsWindow::OnScroll\n");
+#endif
   return FALSE;
 }
 
@@ -755,70 +773,75 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
 //-----------------------------------------------------
 //
 
-gint nsWindow_Refresh_Callback(gpointer p)
+gint ResetResize(gpointer call_data)
 {
-    nsWindow* widgetWindow = (nsWindow*)p;
-    nsRect bounds;
-    widgetWindow->GetResizeRect(&bounds);
-
-    nsSizeEvent event;
-    event.message = NS_SIZE;
-    event.widget  = widgetWindow;
-    event.time    = 0; //TBD
-    event.windowSize = &bounds;
-
-    widgetWindow->SetBounds(bounds);
-    widgetWindow->OnResize(event);
-    nsPaintEvent pevent;
-    pevent.message = NS_PAINT;
-    pevent.widget = widgetWindow;
-    pevent.time = 0;
-    pevent.rect = (nsRect *)&bounds;
-    widgetWindow->OnPaint(pevent);
-
-    gtk_timeout_add (50, (GtkFunction)nsGtkWidget_ResetResize_Callback, widgetWindow);
+    nsWindow* widgetWindow = (nsWindow*)call_data;
+    widgetWindow->SetResized(PR_FALSE);
+    return FALSE;
 }
 
-//
-// Resize a child window widget. All nsManageWidget's use
-// this to resize. The nsManageWidget passes all resize
-// request's directly to this function.
-
-extern "C" void nsWindow_ResizeWidget(GtkWidget *w)
+gint DoRefresh(gpointer call_data)
 {
-  int width = 0;
-  int height = 0;
-  nsWindow *win = 0;
+    nsWindow *win = (nsWindow*)call_data;
+    
+    nsRect bounds;
+    win->GetResizeRect(&bounds);
 
-   // Get the new size for the window
-  win = gtk_object_get_user_data(GTK_OBJECT(w));
-  width = w->allocation.width;
-  height = w->allocation.height;
-//  XtVaGetValues(w, XmNuserData, &win, XmNwidth, &width, XmNheight, &height, nsnull);
+    nsSizeEvent sizeEvent;
+    sizeEvent.eventStructType = NS_SIZE_EVENT;
+    sizeEvent.message         = NS_SIZE;
+    sizeEvent.point.x         = 0;
+    sizeEvent.point.y         = 0;
+    sizeEvent.time            = PR_IntervalNow();
 
-   // Setup the resize rectangle for the window.
+    // nsGUIEvent
+    sizeEvent.widget          = win;
+    sizeEvent.nativeMsg       = nsnull;
+
+    // nsSizeEvent
+    sizeEvent.windowSize     = &bounds;
+    sizeEvent.mWinWidth      = bounds.width;
+    sizeEvent.mWinHeight     = bounds.height;
+ 
+    win->SetBounds(bounds);
+    win->OnResize(sizeEvent);
+
+    nsPaintEvent pevent;
+    pevent.message = NS_PAINT;
+    pevent.widget = win;
+    pevent.time = PR_IntervalNow();
+    pevent.rect = (nsRect *)&bounds;
+    win->OnPaint(pevent);
+
+    gtk_timeout_add(50, (GtkFunction)ResetResize, win);
+    return FALSE;
+}
+
+
+void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
+{
+  g_print("DoResized called\n");
+  nsWindow *win = (nsWindow*)data;
+
   nsRect bounds;
-  bounds.width = width;
-  bounds.height = height;
+  bounds.width = allocation->width;
+  bounds.height = allocation->height;
   bounds.x = 0;
   bounds.y = 0;
   win->SetResizeRect(bounds);
 
-  if (! win->GetResized()) {
+  if (!win->GetResized()) {
+  DoRefresh(win);
+}
+/*
+  if (!win->GetResized()) {
     if (win->IsChild()) {
-       // Call refresh directly. Don't filter resize events.
-      nsWindow_Refresh_Callback(win);
     }
     else {
-       // XXX: KLUDGE: Do actual resize later. This lets most
-       // of the resize events come through before actually
-       // resizing. This is only needed for main (shell)
-       // windows. This should be replaced with code that actually
-       // Compresses the event queue.
-      gtk_timeout_add (250, (GtkFunction)nsWindow_Refresh_Callback, win);
+      gtk_timeout_add(250, (GtkFunction)DoRefresh, win);
     }
   }
-
+*/
   win->SetResized(PR_TRUE);
 }
 
@@ -830,6 +853,8 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
   aMenuBar->GetNativeData(voidData);
   menubar = GTK_WIDGET(voidData);
 
+//  gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
+  
   gtk_box_pack_start(GTK_BOX(mVBox), menubar, FALSE, FALSE, 0);
   gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
   printf("adding menu bar (%p) to vbox (%p)\n", menubar, mVBox);
