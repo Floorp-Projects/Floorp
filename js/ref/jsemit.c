@@ -238,7 +238,7 @@ EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
 	switch (stmt->type) {
 	  case STMT_FINALLY:
 	    if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
-		js_Emit3(cx, cg, JSOP_JSR, JUMP_OFFSET_HI(finallyIndex), 
+		js_Emit3(cx, cg, JSOP_JSR, JUMP_OFFSET_HI(finallyIndex),
 			 JUMP_OFFSET_LO(finallyIndex)) < 0)
 		return -1;
 	    finallyIndex--;
@@ -490,7 +490,7 @@ FixupCatchJumps(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t tryStart,
     );
     return JS_TRUE;
 }
-	
+
 #endif
 
 JSBool
@@ -1150,10 +1150,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	 * NOTE: This will cause problems if we use JSRs for something other
 	 * than finally handling in the future.  Caveat hacker!
 	 */
-	
-	if (pn->pn_kid3)
+	if (pn->pn_kid3) {
 	    js_PushStatement(&cg->treeContext, &stmtInfo, STMT_FINALLY,
 			     CG_OFFSET(cg));
+	}
 
 	/* mark try location for decompilation, then emit try block */
 	if (js_NewSrcNote2(cx, cg, SRC_TRYFIN, 0) < 0 ||
@@ -1207,7 +1207,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 		iter = iter->pn_kid2;
 		disc = iter->pn_kid1;
-		
+
 		if (catchjmp != -1) {
 		    /* fix up and clean up previous catch block */
 		    CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, catchjmp);
@@ -1235,7 +1235,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		    js_Emit1(cx, cg, JSOP_NEWINIT) < 0 ||
 		    js_Emit1(cx, cg, JSOP_EXCEPTION) < 0)
 		    return JS_FALSE;
-		
+
 		/* setprop <atomIndex> */
 		ale = js_IndexAtom(cx, disc->pn_atom, &cg->atomList);
 		if (!ale)
@@ -1245,7 +1245,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
 		    js_Emit1(cx, cg, JSOP_ENTERWITH) < 0)
 		    return JS_FALSE;
-		
+
 		/* boolean_expr */
 		if (disc->pn_expr) {
 		    ptrdiff_t guardstart = CG_OFFSET(cg);
@@ -1255,8 +1255,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		    catchjmp = js_Emit3(cx, cg, JSOP_IFEQ, 0, 0);
 		    if (catchjmp < 0)
 			return JS_FALSE;
-		    if (!js_SetSrcNoteOffset(cx, cg, guardnote, 0, 
-					     (ptrdiff_t)CG_OFFSET(cg) - 
+		    if (!js_SetSrcNoteOffset(cx, cg, guardnote, 0,
+					     (ptrdiff_t)CG_OFFSET(cg) -
 					     guardstart))
 			return JS_FALSE;
 		}
@@ -1271,7 +1271,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		 * jump over the remaining catch blocks
 		 * this counts as a non-local jump, so do the finally thing
 		 */
-		
+
 		/* popscope */
 		if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
 		    js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0)
@@ -1280,7 +1280,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		/* jsr <finally>, if required */
 		if (pn->pn_kid3)
 		    EMIT_FINALLY_JSR(cx, cg);
-		
+
 		/* this will get fixed up to jump to after catch/finally */
 		if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
 		    js_Emit3(cx, cg, JSOP_GOTO, 0, 0) < 0)
@@ -1309,7 +1309,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		(js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
 		 js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0))
 		return JS_FALSE;
-	    
+
 	    if (pn->pn_kid3) {
 		finallyCatch = CG_OFFSET(cg);
 		EMIT_FINALLY_JSR(cx, cg);
@@ -1335,7 +1335,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		!js_EmitTree(cx, cg, pn->pn_kid3) ||
 		js_Emit1(cx, cg, JSOP_RETSUB) < 0)
 		return JS_FALSE;
-	    
+
 	}
 
 	if (js_NewSrcNote(cx, cg, SRC_ENDBRACE) < 0 ||
@@ -1347,7 +1347,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	    return JS_FALSE;
 
 	CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
-	
+
 	/*
 	 * Add the try note last, to let post-order give us the right ordering
 	 * (first to last, inner to outer).

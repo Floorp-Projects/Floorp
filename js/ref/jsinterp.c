@@ -782,8 +782,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
      * Here we wrap the call to js_Interpret with code to (conditionally)
      * save and restore the old stack frame chain into a chain of 'dormant'
      * frame chains. Since we are replacing cx->fp we were running into the
-     * problem that if gc was called, then some of the objects associated 
-     * with the old frame chain (stored here in the C stack as 'oldfp') were 
+     * problem that if gc was called, then some of the objects associated
+     * with the old frame chain (stored here in the C stack as 'oldfp') were
      * not rooted and were being collected. This was bad. So, now we
      * preserve the links to these 'dormant' frame chains in cx before
      * calling js_Interpret and cleanup afterwards. gc walks these dormant
@@ -2592,7 +2592,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    len = 0;
 	    CHECK_BRANCH(-1);
 	    break;
-	      
+
 	  case JSOP_EXCEPTION:
 	    PUSH(fp->exception);
 	    break;

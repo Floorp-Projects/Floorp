@@ -149,7 +149,7 @@ JS_GetEmptyStringValue(JSContext *cx);
  * The variable argument list after format must consist of &b, &c, &s, e.g.,
  * where those variables have the types given above.  For the pointer types
  * char *, JSString *, and JSObject *, the pointed-at memory returned belongs
- * to the JS runtime, not to the calling native code.  The runtimes promises
+ * to the JS runtime, not to the calling native code.  The runtime promises
  * to keep this memory valid so long as argv refers to allocated stack space
  * (so long as the native function is active).
  *

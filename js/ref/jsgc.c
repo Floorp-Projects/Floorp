@@ -695,7 +695,8 @@ restart:
     js_MarkAtomState(&rt->atomState, gc_mark);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
-        /* Iterate frame chain and dormant chains. Temporarily tack current  
+	/*
+	 * Iterate frame chain and dormant chains. Temporarily tack current
          * frame onto the head of the dormant list to ease iteration.
          *
          * (NOTE: see comment on this whole 'dormant' thing in js_Execute)
