@@ -39,4 +39,5 @@ themes/classic/messenger/Makefile
 themes/classic/messenger/messengercompose/Makefile
 themes/classic/navigator/Makefile
 themes/classic/navigator/unix/Makefile
+themes/classic/preview/win/Makefile
 

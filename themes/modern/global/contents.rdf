@@ -14,7 +14,7 @@
         chrome:author="mozilla.org"
         chrome:description="A contemporary theme for all Communicator components."
         chrome:name="modern/1.0"
-        chrome:image="jar:resource:///chrome/modern.jar!/skin/modern/global/preview.png">
+        chrome:image="jar:resource:///chrome/modern.jar!/skin/modern/global/preview.gif">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:skin:modern/1.0:packages">
         <RDF:li resource="urn:mozilla:skin:modern/1.0:global"/>

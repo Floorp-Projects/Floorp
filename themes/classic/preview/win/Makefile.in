@@ -19,8 +19,8 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-THEME_ROOT_DEPTH = @srcdir@
+DEPTH		= ../../../..
+THEME_ROOT_DEPTH = @srcdir@/../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -28,13 +28,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-DIRS  = communicator editor global messenger navigator preview/win
-
 include $(topsrcdir)/config/rules.mk
 
-chrome::
-	@$(REGCHROME) skin classic/communicator classic.jar
-	@$(REGCHROME) skin classic/editor classic.jar
-	@$(REGCHROME) skin classic/global classic.jar
-	@$(REGCHROME) skin classic/messenger classic.jar
-	@$(REGCHROME) skin classic/navigator classic.jar

@@ -4,7 +4,7 @@ blue.jar:
     skin/blue/global/contents.rdf                                   (global/contents.rdf)
     skin/blue/messenger/contents.rdf                                (messenger/contents.rdf)
     skin/blue/navigator/contents.rdf                                (navigator/contents.rdf)
-    skin/blue/global/preview.png                                               
+    skin/blue/global/preview.gif                                               
     skin/blue/communicator/box.css                                  (communicator/box.css)
     skin/blue/communicator/securityOverlay.css                      (communicator/securityOverlay.css)
     skin/blue/communicator/menubuttonBindings.xml                   (communicator/menubuttonBindings.xml)
