@@ -345,14 +345,10 @@ nsMathMLFrame::ParseNumericValue(nsString&   aString,
   aString.CompressWhitespace(); //  aString is not a const in this code...
 
   PRInt32 stringLength = aString.Length();
+  if (!stringLength)
+    return PR_FALSE;
 
-  if (!stringLength) return PR_FALSE;
-
-  nsAutoString number(aString);
-  number.SetLength(0);
-
-  nsAutoString unit(aString);
-  unit.SetLength(0);
+  nsAutoString number, unit;
 
   // Gather up characters that make up the number
   PRBool gotDot = PR_FALSE;
@@ -379,15 +375,15 @@ nsMathMLFrame::ParseNumericValue(nsString&   aString,
   // Convert number to floating point
   PRInt32 errorCode;
   float floatValue = number.ToFloat(&errorCode);
-  if (NS_FAILED(errorCode)) return PR_FALSE;
+  if (errorCode)
+    return PR_FALSE;
 
   nsCSSUnit cssUnit;
-  if (0 == unit.Length()) {
+  if (unit.IsEmpty()) {
     cssUnit = eCSSUnit_Number; // no explicit unit, this is a number that will act as a multiplier
   }
   else if (unit.Equals(NS_LITERAL_STRING("%"))) {
-    floatValue = floatValue / 100.0f;
-    aCSSValue.SetPercentValue(floatValue);
+    aCSSValue.SetPercentValue(floatValue / 100.0f);
     return PR_TRUE;
   }
   else if (unit.Equals(NS_LITERAL_STRING("em"))) cssUnit = eCSSUnit_EM;

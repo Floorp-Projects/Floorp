@@ -144,6 +144,8 @@ nsMathMLmpaddedFrame::ProcessAttributes(nsIPresContext* aPresContext)
   }
 }
 
+// parse an input string in the following format (see bug 148326 for testcases):
+// [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | css-unit | namedspace)
 PRBool
 nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
                                      PRInt32&    aSign,
@@ -151,12 +153,15 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
                                      PRInt32&    aPseudoUnit)
 {
   aCSSValue.Reset();
+  aSign = NS_MATHML_SIGN_INVALID;
+  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_UNSPECIFIED;
   aString.CompressWhitespace(); // aString is not a const in this code
 
   PRInt32 stringLength = aString.Length();
-  if (!stringLength) return PR_FALSE;
+  if (!stringLength)
+    return PR_FALSE;
 
-  nsAutoString value;
+  nsAutoString number, unit;
 
   //////////////////////
   // see if the sign is there
@@ -175,19 +180,31 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     aSign = NS_MATHML_SIGN_UNSPECIFIED;
 
   // skip any space after the sign
-  while (i < stringLength && XP_IS_SPACE(aString[i]))
+  if (i < stringLength && XP_IS_SPACE(aString[i]))
     i++;
 
-  ///////////////////////
-  // get the string that represents the numeric value
+  // get the number
+  PRBool gotDot = PR_FALSE, gotPercent = PR_FALSE;
+  for (; i < stringLength; i++) {
+    PRUnichar c = aString[i];
+    if (gotDot && c == '.') {
+      // error - two dots encountered
+      aSign = NS_MATHML_SIGN_INVALID;
+      return PR_FALSE;
+    }
 
-  value.SetLength(0);
-  while (i < stringLength && !XP_IS_SPACE(aString[i])) {
-    value.Append(aString[i]);
-    i++;
+    if (c == '.')
+      gotDot = PR_TRUE;
+    else if (!nsCRT::IsAsciiDigit(c)) {
+      break;
+    }
+    number.Append(c);
   }
-  // convert to CSS units
-  if (!ParseNumericValue(value, aCSSValue)) {
+
+  // catch error if we didn't enter the loop above... we could simply initialize
+  // floatValue = 1, to cater for cases such as width="height", but that wouldn't
+  // be in line with the spec which requires an explicit number
+  if (number.IsEmpty()) {
 #ifdef NS_DEBUG
     printf("mpadded: attribute with bad numeric value: %s\n",
             NS_LossyConvertUCS2toASCII(aString).get());
@@ -196,88 +213,88 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     return PR_FALSE;
   }
 
-  // skip any space in-between
-  while (i < stringLength && XP_IS_SPACE(aString[i]))
+  PRInt32 errorCode;
+  float floatValue = number.ToFloat(&errorCode);
+  if (errorCode) {
+    aSign = NS_MATHML_SIGN_INVALID;
+    return PR_FALSE;
+  }
+
+  // skip any space after the number
+  if (i < stringLength && XP_IS_SPACE(aString[i]))
     i++;
 
-  //////////////////////////
-  // get the string that represents the pseudo unit
+  // see if this is a percentage-based value
+  if (i < stringLength && aString[i] == '%') {
+    i++;
+    gotPercent = PR_TRUE;
 
-  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_UNSPECIFIED;
-  if (i == stringLength) { // no explicit pseudo-unit ...
-    if ((eCSSUnit_Number == aCSSValue.GetUnit()) && aCSSValue.GetFloatValue()) {
-      // ... and no explicit CSS unit either
+    // skip any space after the '%' sign
+    if (i < stringLength && XP_IS_SPACE(aString[i]))
+      i++;
+  }
 
+  // the remainder now should be a css-unit, or a pseudo-unit, or a named-space
+  aString.Right(unit, stringLength - i);
+
+  if (unit.IsEmpty()) {
+    // also cater for the edge case of "0" for which the unit is optional
+    if (gotPercent || !floatValue) {
+      aCSSValue.SetPercentValue(floatValue / 100.0f);
+      aPseudoUnit = NS_MATHML_PSEUDO_UNIT_ITSELF;
+      return PR_TRUE;
+    }
+    /*
+    else {
+      // no explicit CSS unit and no explicit pseudo-unit...
       // In this case, the MathML REC suggests taking ems for
       // h-unit (width, lspace) or exs for v-unit (height, depth).
       // Here, however, we explicitly request authors to specify
       // the unit. This is more in line with the CSS REC (and
       // it allows keeping the code simpler...)
+    }
+    */
+  }
+  else if (unit.Equals(NS_LITERAL_STRING("width")))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
+  else if (unit.Equals(NS_LITERAL_STRING("height"))) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
+  else if (unit.Equals(NS_LITERAL_STRING("depth")))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
+  else if (unit.Equals(NS_LITERAL_STRING("lspace"))) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
+  else if (!gotPercent) { // percentage can only apply to a pseudo-unit
 
-#ifdef NS_DEBUG
-      printf("mpadded: attribute with bad numeric value: %s\n",
-              NS_LossyConvertUCS2toASCII(aString).get());
-#endif
-      aCSSValue.Reset();
-      aSign = NS_MATHML_SIGN_INVALID;
-      return PR_FALSE;
+    // see if the unit is a named-space
+    // XXX nsnull in ParseNamedSpacedValue()? don't access mstyle?
+    if (ParseNamedSpaceValue(nsnull, unit, aCSSValue)) {
+      // re-scale properly, and we know that the unit of the named-space is 'em'
+      floatValue *= aCSSValue.GetFloatValue();
+      aCSSValue.SetFloatValue(floatValue, eCSSUnit_EM);
+      aPseudoUnit = NS_MATHML_PSEUDO_UNIT_NAMEDSPACE;
+      return PR_TRUE;
     }
 
-    // else the only other valid possibility here is a percentage value,
-    // otherwise ParseNumericValue() would have failed
-   
-    aPseudoUnit = NS_MATHML_PSEUDO_UNIT_ITSELF;
+    // see if the input was just a CSS value
+    number.Append(unit); // leave the sign out if it was there
+    if (ParseNumericValue(number, aCSSValue))
+      return PR_TRUE;
+  }
+
+  // if we enter here, we have a number that will act as a multiplier on a pseudo-unit
+  if (aPseudoUnit != NS_MATHML_PSEUDO_UNIT_UNSPECIFIED) {
+    if (gotPercent)
+      aCSSValue.SetPercentValue(floatValue / 100.0f);
+    else
+      aCSSValue.SetFloatValue(floatValue, eCSSUnit_Number);
+
     return PR_TRUE;
   }
 
-  if (value.Equals(NS_LITERAL_STRING("width")))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
-  else if (value.Equals(NS_LITERAL_STRING("height"))) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
-  else if (value.Equals(NS_LITERAL_STRING("depth")))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
-  else if (value.Equals(NS_LITERAL_STRING("lspace"))) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
-  else 
-  {
-    nsCSSValue aCSSNamedSpaceValue;
-    if (!aCSSValue.IsLengthUnit() &&
-         ParseNamedSpaceValue(nsnull, value, aCSSNamedSpaceValue))
-    { // XXX nsnull in ParseNamedSpacedValue()? don't access mstyle?
 
-      aPseudoUnit = NS_MATHML_PSEUDO_UNIT_NAMEDSPACE;
-      float namedspace = aCSSNamedSpaceValue.GetFloatValue();
-
-      // combine aCSSNamedSpaceValue and aCSSValue since
-      // we know that the unit of aCSSNamedSpaceValue is 'em'
-      nsCSSUnit unit = aCSSValue.GetUnit();
-      if (eCSSUnit_Number == unit) {
-        float scaler = aCSSValue.GetFloatValue();
-        aCSSValue.SetFloatValue(scaler*namedspace, eCSSUnit_EM);
-        return PR_TRUE;
-      }
-      else if (eCSSUnit_Percent == unit) {
-        float scaler = aCSSValue.GetPercentValue();
-        aCSSValue.SetFloatValue(scaler*namedspace, eCSSUnit_EM);
-        return PR_TRUE;
-      }
-    }
-
-    // if we reach here, it means we encounter an unexpected pseudo-unit
-    aCSSValue.Reset();
-    aSign = NS_MATHML_SIGN_INVALID;
-    return PR_FALSE;
-  }
-
-  if (aCSSValue.IsLengthUnit()) {
-    // if we enter here, it means we have both a CSS unit *and* a pseudo-unit,
-    // e.g., width="100em height", this an error/ambiguity that the author should fix
 #ifdef NS_DEBUG
-    printf("mpadded: attribute with bad numeric value: %s\n",
-            NS_LossyConvertUCS2toASCII(aString).get());
+  printf("mpadded: attribute with bad numeric value: %s\n",
+          NS_LossyConvertUCS2toASCII(aString).get());
 #endif
-    aCSSValue.Reset();
-    aSign = NS_MATHML_SIGN_INVALID;
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
+  // if we reach here, it means we encounter an unexpected input
+  aSign = NS_MATHML_SIGN_INVALID;
+  return PR_FALSE;
 }
 
 void
@@ -291,14 +308,11 @@ nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
                                   nscoord&             aValueToUpdate)
 {
   nsCSSUnit unit = aCSSValue.GetUnit();
-  if (NS_MATHML_SIGN_INVALID != aSign && eCSSUnit_Null != unit) 
-  {
+  if (NS_MATHML_SIGN_INVALID != aSign && eCSSUnit_Null != unit) {
     nscoord scaler = 0, amount = 0;
 
-    if (eCSSUnit_Percent == unit || eCSSUnit_Number == unit) 
-    {
-      switch(aPseudoUnit)
-      {
+    if (eCSSUnit_Percent == unit || eCSSUnit_Number == unit) {
+      switch(aPseudoUnit) {
         case NS_MATHML_PSEUDO_UNIT_WIDTH:
              scaler = aBoundingMetrics.width;
              break;
@@ -344,8 +358,8 @@ nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
     to 0 if it would otherwise become negative. Dimensions which are 
     initially 0 can be made negative
     */
-    if (0 < oldValue && 0 > aValueToUpdate) aValueToUpdate = 0;
-
+    if (0 < oldValue && 0 > aValueToUpdate)
+      aValueToUpdate = 0;
   }
 }
 
@@ -364,6 +378,9 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
   //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   if (NS_FAILED(rv)) return rv;
 
+  // use our overflow area to cache our natural size
+  aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+
   nscoord height = mBoundingMetrics.ascent;
   nscoord depth  = mBoundingMetrics.descent;
   nscoord width  = mBoundingMetrics.width;
@@ -378,14 +395,14 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
               mWidthSign, pseudoUnit, mWidth,
               lspace, mBoundingMetrics, width);
 
-  // update height
+  // update "height" (this is the ascent in the terminology of the REC)
   pseudoUnit = (mHeightPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_HEIGHT : mHeightPseudoUnit;
   UpdateValue(aPresContext, mStyleContext,
               mHeightSign, pseudoUnit, mHeight,
               lspace, mBoundingMetrics, height);
 
-  // update depth
+  // update "depth" (this is the descent in the terminology of the REC)
   pseudoUnit = (mDepthPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_DEPTH : mDepthPseudoUnit;
   UpdateValue(aPresContext, mStyleContext,
@@ -400,13 +417,21 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
               lspace, mBoundingMetrics, lspace);
 
   // do the padding now that we have everything
+  // The idea here is to maintain the invariant that <mpadded>...</mpadded> (i.e.,
+  // with no attributes) looks the same as <mrow>...</mrow>. But when there are
+  // attributes, tweak our metrics and move children to achieve the desired visual
+  // effects.
 
-  if (lspace) { // there was padding on the left
+  if (mLeftSpaceSign != NS_MATHML_SIGN_INVALID) { // there was padding on the left
+    // dismiss the left italic correction now (so that our parent won't correct us)
     mBoundingMetrics.leftBearing = 0;
   }
 
-  if (width != mBoundingMetrics.width) { // there was padding on the right
-    mBoundingMetrics.rightBearing = lspace + width;
+  if (mLeftSpaceSign != NS_MATHML_SIGN_INVALID ||
+      mWidthSign != NS_MATHML_SIGN_INVALID) { // there was padding on the right
+    // dismiss the right italic correction now (so that our parent won't correct us)
+    mBoundingMetrics.width = PR_MAX(0, lspace + width);
+    mBoundingMetrics.rightBearing = mBoundingMetrics.width;
   }
 
   nscoord dy = height - mBoundingMetrics.ascent;
@@ -414,7 +439,6 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
 
   mBoundingMetrics.ascent = height;
   mBoundingMetrics.descent = depth;
-  mBoundingMetrics.width = lspace + width;
 
   aDesiredSize.ascent += dy;
   aDesiredSize.descent += depth - mBoundingMetrics.descent;
@@ -422,8 +446,12 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
+  // combine our tweaked size and our natural size to get our real estate
+  nsRect rect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  aDesiredSize.mOverflowArea.MoveTo(dx, dy);
+  aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, rect);
+
   if (dx || dy) {
-    nsRect rect;
     nsIFrame* childFrame = mFrames.FirstChild();
     while (childFrame) {
       childFrame->GetRect(rect);
@@ -434,6 +462,16 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;
+
+  // If we have tweaked things so that our children now stick outside,
+  // we need to update our NS_FRAME_OUTSIDE_CHILDREN bit
+  if (aDesiredSize.mOverflowArea.x < 0 ||
+      aDesiredSize.mOverflowArea.y < 0 ||
+      aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width ||
+      aDesiredSize.mOverflowArea.YMost() > aDesiredSize.height)
+    mState |= NS_FRAME_OUTSIDE_CHILDREN;
+  else
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
