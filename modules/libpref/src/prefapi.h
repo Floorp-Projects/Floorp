@@ -249,6 +249,8 @@ PR_EXTERN(PrefResult) PREF_SetDefaultBinaryPref(const char *pref,void * value, l
 PR_EXTERN(PrefResult) PREF_SetDefaultColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue);
 PR_EXTERN(PrefResult) PREF_SetDefaultRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom);
 
+PRBool PREF_HasUserPref(const char* pref_name);
+
 /*
 // <font color=blue>
 // Get the various types of preferences.  These functions take a dotted
@@ -267,14 +269,12 @@ PR_EXTERN(PrefResult) PREF_SetDefaultRectPref(const char *pref_name, PRInt16 lef
 // (if it is reasonably possible)
 // </font>
 */
-PR_EXTERN(PrefResult) PREF_GetCharPref(const char *pref, char * return_buf, int * buf_length);
-PR_EXTERN(PrefResult) PREF_GetIntPref(const char *pref, PRInt32 * return_int);	
-PR_EXTERN(PrefResult) PREF_GetBoolPref(const char *pref, PRBool * return_val);	
-PR_EXTERN(PrefResult) PREF_GetBinaryPref(const char *pref, void * return_val, int * buf_length);	
-PR_EXTERN(PrefResult) PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue);
-PR_EXTERN(PrefResult) PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref);
-PR_EXTERN(PrefResult) PREF_GetRectPref(const char *pref_name, PRInt16 *left, PRInt16 *top, PRInt16 *right, PRInt16 *bottom);
-
+PrefResult PREF_GetIntPref(const char *pref,
+                           PRInt32 * return_int, PRBool isDefault);	
+PrefResult PREF_GetBoolPref(const char *pref, PRBool * return_val, PRBool isDefault);	
+PrefResult PREF_GetBinaryPref(const char *pref, void * return_val, int * buf_length, PRBool isDefault);
+PrefResult PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue, PRBool isDefault);
+PrefResult PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref, PRBool isDefault);
 /*
 // <font color=blue>
 // These functions are similar to the above "Get" version with the significant
@@ -282,11 +282,8 @@ PR_EXTERN(PrefResult) PREF_GetRectPref(const char *pref_name, PRInt16 *left, PRI
 // the caller will need to be responsible for freeing it...
 // </font>
 */
-PR_EXTERN(PrefResult) PREF_CopyCharPref(const char *pref, char ** return_buf);
-PR_EXTERN(PrefResult) PREF_CopyBinaryPref(const char *pref_name, void ** return_value, int *size);
-
-PR_EXTERN(PrefResult) PREF_CopyDefaultCharPref( const char *pref_name,  char ** return_buffer );
-PR_EXTERN(PrefResult) PREF_CopyDefaultBinaryPref(const char *pref, void ** return_val, int * size);	
+PrefResult PREF_CopyCharPref(const char *pref, char ** return_buf, PRBool isDefault);
+PrefResult PREF_CopyBinaryPref(const char *pref_name, void ** return_value, int *size, PRBool isDefault);
 
 /*
 // <font color=blue>
@@ -297,24 +294,8 @@ PR_EXTERN(PrefResult) PREF_CopyDefaultBinaryPref(const char *pref, void ** retur
 // between paths and aliases flattened into binary strings.
 // </font>
 */
-PR_EXTERN(PrefResult) PREF_CopyPathPref(const char *pref, char ** return_buf);
+PR_EXTERN(PrefResult) PREF_CopyPathPref(const char *pref, char ** return_buf, PRBool isDefault);
 PR_EXTERN(PrefResult) PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default);
-
-/*
-// <font color=blue>
-// Same as the previous "Get" functions but will always return the
-// default value regardless of what the user has set.  These are designed
-// to be used by functions which "reset" the preferences
-//
-// </font>
-*/
-PR_EXTERN(PrefResult) PREF_GetDefaultCharPref(const char *pref, char * return_buf, int * buf_length);
-PR_EXTERN(PrefResult) PREF_GetDefaultIntPref(const char *pref, PRInt32 * return_int);	
-PR_EXTERN(PrefResult) PREF_GetDefaultBoolPref(const char *pref, PRBool * return_val);	
-PR_EXTERN(PrefResult) PREF_GetDefaultBinaryPref(const char *pref, void * return_val, int * buf_length);	
-PR_EXTERN(PrefResult) PREF_GetDefaultColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue);
-PR_EXTERN(PrefResult) PREF_GetDefaultColorPrefDWord(const char *pref_name, PRUint32 *colorref);
-PR_EXTERN(PrefResult) PREF_GetDefaultRectPref(const char *pref_name, PRInt16 *left, PRInt16 *top, PRInt16 *right, PRInt16 *bottom);
 
 /*
 // <font color=blue>
@@ -342,7 +323,7 @@ PR_EXTERN(PrefResult) PREF_GetConfigBool(const char *obj_name, PRBool *return_bo
 /*
  * Listpref API
  */
-PR_EXTERN(PrefResult) PREF_GetListPref(const char *pref_name, char*** list);
+PR_EXTERN(PrefResult) PREF_GetListPref(const char *pref_name, char*** list, PRBool isDefault);
 PR_EXTERN(PrefResult) PREF_SetListPref(const char *pref_name, char** list);
 PR_EXTERN(PrefResult) PREF_AppendListPref(const char *pref_name, const char *value);
 PR_EXTERN(PrefResult) PREF_FreeListPref(char*** list);
