@@ -343,22 +343,15 @@ sub FindMakefiles {
   # Build xpidl
   print "gmake -C mozilla/xpcom/typelib\n";
   system("gmake -C mozilla/xpcom/typelib");
-  
+
   # Now try the modules.
-  foreach (@dirs) {
-    print "dir = $_ (export)\n";
-    #run_shell_command("gmake -C $_ export");
-    print "gmake -C $_ export\n";
-    system("gmake -C $_ export");
-  }
 
-  print "basedir = $basedir\n";
-  foreach (@dirs) {
-    print "dir = $_ (libs)\n";
-    #run_shell_command("gmake -C $dir");
-    print "gmake -C $_ export\n";
-    system("gmake -C $_ libs");    
-  }
+  chdir("$basedir/mozilla");
 
+  # Export-phase first.  Export IDL stuff first to avoid IDL order problems.
+  # system("gmake export-idl"); # testing, not part of make system yet.
+  system("gmake export");  # run_shell_command("gmake export");
 
+  # Libs-phase next.
+  system("gmake libs");  # run_shell_command("gmake libs");
 }
