@@ -46,7 +46,7 @@ interface nsIMimeMiscStatus : nsISupports{
 
 [scriptable, uuid(756DBE17-B59A-11d3-98A9-001083010E9B)] 
 interface nsIMsgHeaderSink : nsISupports{
-	void handleHeader(in string aHeaderName, in wstring aHeaderValue);
+	void handleHeader(in string aHeaderName, in wstring aHeaderValue, in boolean dontCollectAddress);
 
 	// make a sandwhich around header processing.....
 	void onStartHeaders();

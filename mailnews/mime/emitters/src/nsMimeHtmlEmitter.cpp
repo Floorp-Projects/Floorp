@@ -167,6 +167,20 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   else
     mFirstHeaders = PR_FALSE;
  
+  PRBool bFromNewsgroups = PR_FALSE;
+  for (PRInt32 j=0; j<mHeaderArray->Count(); j++)
+  {
+    headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(j);
+    if (!(headerInfo && headerInfo->name && *headerInfo->name))
+      continue;
+
+    if (!nsCRT::strcasecmp("Newsgroups", headerInfo->name))
+    {
+      bFromNewsgroups = PR_TRUE;
+	  break;
+    }
+  }
+
   // try to get a header sink if there is one....
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 
   nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
@@ -207,7 +221,7 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
        *((PRUnichar **)getter_Copies(unicodeHeaderValue)) = nsXPIDLString::Copy(NS_ConvertUTF8toUCS2(headerValue).GetUnicode());
 
        if (NS_SUCCEEDED(rv))
-         headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue);
+         headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue, bFromNewsgroups);
     }
   }
 
