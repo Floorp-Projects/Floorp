@@ -294,7 +294,7 @@ if ($action eq 'new') {
         PutTrailer($localtrailer);
         exit;
     }
-    if ($sortkey!~/^[0-9]+$/) {
+    if (!detaint_natural($sortkey)) {
         print "The sortkey for a milestone must be a number. Please press\n";
         print "<b>Back</b> and try again.\n";
         PutTrailer($localtrailer);
