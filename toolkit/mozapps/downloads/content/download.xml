@@ -132,7 +132,7 @@
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="middle"/>
+          <xul:label xbl:inherits="value=target" crop="center"/>
           <xul:label value="&starting.label;"/>
         </xul:vbox>
         <xul:vbox pack="start">
@@ -152,14 +152,10 @@
         </xul:vbox>
 #endif
         <xul:vbox flex="1">
-          <xul:label xbl:inherits="value=target" flex="1" crop="middle"/>
+          <xul:label xbl:inherits="value=target" crop="center"/>
           <xul:progressmeter mode="normal" value="0" flex="1"
                             xbl:inherits="value=progress,mode=progressmode"/>
-          <xul:hbox align="center" flex="1">
-            <xul:label value="&pause.label;" class="link" 
-                      onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('pause');"/>          
-            <xul:label xbl:inherits="value=status"/>
-          </xul:hbox>                     
+          <xul:label xbl:inherits="value=status" crop="center"/>
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&cancel.label;" class="link"
@@ -289,14 +285,10 @@
         </xul:vbox>
 #endif
         <xul:vbox flex="1">
-          <xul:label xbl:inherits="value=target" flex="1" crop="middle"/>
+          <xul:label xbl:inherits="value=target" flex="1" crop="center"/>
           <xul:progressmeter mode="normal" value="0" flex="1"
                             xbl:inherits="value=progress,mode=progressmode"/>
-          <xul:hbox align="center" flex="1">
-            <xul:label value="&resume.label;" class="link" 
-                      onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('resume');"/>          
-            <xul:label xbl:inherits="value=status"/>
-          </xul:hbox>                     
+          <xul:label xbl:inherits="value=status"/>
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:label value="&cancel.label;" class="link"
@@ -324,7 +316,7 @@
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="middle"/>
+          <xul:label xbl:inherits="value=target" crop="center"/>
           <xul:label value="&done.label;"/>
         </xul:vbox>
         <xul:vbox pack="start">
@@ -344,7 +336,7 @@
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="middle"/>
+          <xul:label xbl:inherits="value=target" crop="center"/>
           <xul:label value="&canceled.label;"/>
         </xul:vbox>
         <xul:vbox pack="start">
@@ -364,7 +356,7 @@
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="middle"/>
+          <xul:label xbl:inherits="value=target" crop="center"/>
           <xul:label value="&failed.label;"/>
         </xul:vbox>
         <xul:vbox pack="start">
