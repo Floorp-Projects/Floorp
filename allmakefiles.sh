@@ -746,6 +746,19 @@ if [ `echo "$MOZ_EXTENSIONS" | grep -c cookie` != 0 ]; then
 END_EXTENSIONS_COOKIE_MAKEFILES
 fi
 
+if [ `echo "$MOZ_EXTENTIONS" | grep -c psm-glue` != 0 ]; then
+  add_makefiles <<END_EXTENTIONS_PSM_GLUE_MAKEFILES
+  extensions/psm-glue/public/Makefile.in
+  extensions/psm-glue/Makefile.in
+  extensions/psm-glue/res/content/Makefile.in
+  extensions/psm-glue/res/Makefile.in
+  extensions/psm-glue/res/skin/Makefile.in
+  extensions/psm-glue/res/locale/Makefile.in
+  extentions/psm-glue/res/locale/en-US/Makefile.in
+  extensions/psm-glue/src/Makefile.in
+END_EXTENTIONS_PSM_GLUE_MAKEFILES
+fi
+
 if [ `echo "$MOZ_EXTENSIONS" | grep -c irc` != 0 ]; then
   add_makefiles <<END_EXTENSIONS_IRC_MAKEFILES
   extensions/irc/Makefile
