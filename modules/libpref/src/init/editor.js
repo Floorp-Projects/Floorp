@@ -87,6 +87,10 @@ pref("editor.toolbars.showbutton.ol", true);
 pref("editor.toolbars.showbutton.outdent", true);
 pref("editor.toolbars.showbutton.indent", true);
 
+pref("editor.toolbars.showbutton.absolutePosition", true);
+pref("editor.toolbars.showbutton.decreaseZIndex", true);
+pref("editor.toolbars.showbutton.increaseZIndex", true);
+
 pref("editor.auto_save",                    false);
 pref("editor.auto_save_delay",              10);    // minutes
 pref("editor.use_html_editor",              0);
@@ -123,3 +127,6 @@ pref("editor.always_show_publish_dialog",    false);
  *            other special markup symbols as defined in HTML4.
  */
 //pref("editor.encode_entity",                 "html");
+
+pref("editor.resizing.preserve_ratio",       true);
+pref("editor.positioning.offset",            0);

@@ -534,3 +534,46 @@
   -moz-image-region: rect(260px 64px 272px 48px);
 }
 
+
+#absolutePositionButton{
+  -moz-image-region: rect(273px 16px 289px 0px);
+}
+
+#absolutePositionButton:hover {
+  -moz-image-region: rect(273px 32px 289px 16px);
+}
+
+#absolutePositionButton:hover:active {
+  -moz-image-region: rect(273px 48px 289px 32px);
+}
+
+#absolutePositionButton[disabled="true"] {
+  -moz-image-region: rect(273px 64px 289px 48px) ! important;
+}
+
+
+#absolutePositionButton[checked="true"]{
+  -moz-image-region: rect(289px 16px 305px 0px);
+}
+
+#absolutePositionButton[checked="true"]:hover {
+  -moz-image-region: rect(289px 32px 305px 16px);
+}
+
+#absolutePositionButton[checked="true"]:hover:active {
+  -moz-image-region: rect(289px 48px 305px 32px);
+}
+
+
+#FormatToolbar > #increaseZIndexButton {
+  list-style-image: url("chrome://editor/content/images/bringtofront.gif");
+}
+#FormatToolbar > #increaseZIndexButton[disabled="true"] {
+  list-style-image: url("chrome://editor/content/images/bringtofront-disabled.gif");
+}
+#FormatToolbar > #decreaseZIndexButton {
+  list-style-image: url("chrome://editor/content/images/sendtoback.gif");
+}
+#FormatToolbar > #decreaseZIndexButton[disabled="true"] {
+  list-style-image: url("chrome://editor/content/images/sendtoback-disabled.gif");
+}
