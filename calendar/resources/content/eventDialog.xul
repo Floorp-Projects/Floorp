@@ -190,7 +190,7 @@
                      <!-- All Day -->    
                      <row align="center">
                         <spacer />
-                        <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;" checked="false" oncommand="commandAllDay()"/>
+                        <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;" oncommand="commandAllDay()" persist="checked"/>
                      </row>
                      
                      

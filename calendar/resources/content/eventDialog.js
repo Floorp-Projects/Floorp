@@ -193,8 +193,9 @@ function loadCalendarEventDialog()
          setFieldValue( "status-field", "ICAL_STATUS_CANCELLED" );
       break;
    }
-   
-   setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
+   if( "edit" == args.mode )
+      setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
+
    setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
    
    if( gEvent.alarm === false && gEvent.alarmLength == 0 )
