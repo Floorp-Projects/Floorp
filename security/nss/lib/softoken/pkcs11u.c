@@ -1261,6 +1261,50 @@ pk11_nullAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type)
     }
     pk11_FreeAttribute(attribute);
 }
+
+static CK_RV
+pk11_SetCertAttribute(PK11TokenObject *to, CK_ATTRIBUTE_TYPE type, 
+						void *value, unsigned int len)
+{
+    NSSLOWCERTCertificate *cert;
+    char *nickname = NULL;
+    SECStatus rv;
+
+    /* we can't change the ID or the EMAIL values, but let the
+     * upper layers feel better about the fact we tried to set these */
+    if ((type == CKA_ID) || (type == CKA_NETSCAPE_EMAIL)) {
+	return CKR_OK;
+    }
+
+    if (to->obj.slot->certDB == NULL) {
+	return CKR_TOKEN_WRITE_PROTECTED;
+    }
+
+    if (type != CKA_LABEL)  {
+	return CKR_ATTRIBUTE_READ_ONLY;
+    }
+
+    cert = pk11_getCert(to);
+    if (cert == NULL) {
+	return CKR_OBJECT_HANDLE_INVALID;
+    }
+
+    if (value != NULL) {
+	nickname = PORT_ZAlloc(len+1);
+	if (nickname == NULL) {
+	    return CKR_HOST_MEMORY;
+	}
+	PORT_Memcpy(nickname,value,len);
+	nickname[len] = 0;
+    }
+    rv = nsslowcert_AddPermNickname(to->obj.slot->certDB, cert, nickname);
+    if (nickname) PORT_Free(nickname);
+    if (rv != SECSuccess) {
+	return CKR_DEVICE_ERROR;
+    }
+    return CKR_OK;
+}
+
 static CK_RV
 pk11_SetPrivateKeyAttribute(PK11TokenObject *to, CK_ATTRIBUTE_TYPE type, 
 						void *value, unsigned int len)
@@ -1381,6 +1425,7 @@ pk11_forceTokenAttribute(PK11Object *object,CK_ATTRIBUTE_TYPE type,
     switch (object->objclass) {
     case CKO_CERTIFICATE:
 	/* change NICKNAME, EMAIL,  */
+	crv = pk11_SetCertAttribute(to,type,value,len);
 	break;
     case CKO_NETSCAPE_CRL:
 	/* change URL */
