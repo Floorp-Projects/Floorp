@@ -331,3 +331,17 @@ nsresult nsEventListenerManager::ReleaseEvent(nsIDOMEventListener *aListener)
   return NS_OK;
 }
 
+NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult) 
+{
+  nsIEventListenerManager* l = new nsEventListenerManager();
+
+  if (nsnull == l) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  if (NS_OK == l->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult)) {
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}

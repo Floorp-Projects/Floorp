@@ -28,7 +28,7 @@ static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static char* mEventNames[] = {
   "onmousedown", "onmouseup", "onclick", "ondblclick", "onmouseover", "onmouseout",
   "onmousemove", "onkeydown", "onkeyup", "onkeypress", "onfocus", "onblur", 
-  "onload", "onabort", "onerror"
+  "onload", "onunload", "onabort", "onerror"
 };
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
@@ -287,6 +287,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_MOUSE_RIGHT_BUTTON_UP:
     return mEventNames[eDOMEvents_mouseup];
     break;
+  case NS_MOUSE_LEFT_CLICK:
+  case NS_MOUSE_RIGHT_CLICK:
+    return mEventNames[eDOMEvents_click];
+    break;
   case NS_MOUSE_LEFT_DOUBLECLICK:
   case NS_MOUSE_RIGHT_DOUBLECLICK:
     return mEventNames[eDOMEvents_dblclick];
@@ -305,6 +309,25 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     break;
   case NS_KEY_DOWN:
     return mEventNames[eDOMEvents_keydown];
+    break;
+  case NS_GOTFOCUS:
+    return mEventNames[eDOMEvents_focus];
+    break;
+  case NS_LOSTFOCUS:
+    return mEventNames[eDOMEvents_blur];
+    break;
+  case NS_PAGE_LOAD:
+  case NS_IMAGE_LOAD:
+    return mEventNames[eDOMEvents_load];
+    break;
+  case NS_PAGE_UNLOAD:
+    return mEventNames[eDOMEvents_unload];
+    break;                      
+  case NS_IMAGE_ABORT:
+    return mEventNames[eDOMEvents_abort];
+    break;                      
+  case NS_IMAGE_ERROR:
+    return mEventNames[eDOMEvents_error];
     break;
   default:
     break;

@@ -587,22 +587,18 @@ nsresult nsHTMLContent::GetListenerManager(nsIEventListenerManager **aInstancePt
   if (nsnull != mListenerManager) {
     return mListenerManager->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult);;
   }
-  else {
-    nsIEventListenerManager* l = new nsEventListenerManager();
-
-    if (nsnull == l) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (NS_OK == l->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult)) {
-      mListenerManager = l;
-      NS_ADDREF(mListenerManager);
-      return NS_OK;
-    }
-
-    return NS_ERROR_FAILURE;
+  if (NS_OK == NS_NewEventListenerManager(aInstancePtrResult)) {
+    mListenerManager = *aInstancePtrResult;
+    NS_ADDREF(mListenerManager);
+    return NS_OK;
   }
+  return NS_ERROR_FAILURE;
 }
+
+nsresult nsHTMLContent::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
+{
+  return NS_NewEventListenerManager(aInstancePtrResult);
+} 
 
 nsresult nsHTMLContent::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
 {
@@ -652,7 +648,7 @@ nsresult nsHTMLContent::HandleDOMEvent(nsIPresContext& aPresContext,
   }
 
   //Bubbling stage
-  if (mParent != nsnull) {
+  if (DOM_EVENT_CAPTURE != aFlags && mParent != nsnull) {
     mRet = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, DOM_EVENT_BUBBLE, aEventStatus);
   }
 

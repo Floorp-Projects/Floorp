@@ -86,4 +86,6 @@ public:
 
 };
 
+extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult); 
+
 #endif // nsIEventListenerManager_h__

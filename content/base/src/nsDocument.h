@@ -25,6 +25,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsXIFConverter.h"
+#include "nsIJSScriptObject.h"
 
 class nsISelection;
 class nsIEventListenerManager;
@@ -49,7 +50,8 @@ protected:
 
 
 // Base class for our document implementations
-class nsDocument : public nsIDocument, public nsIDOMDocument, public nsIScriptObjectOwner, public nsIDOMEventCapturer {
+class nsDocument : public nsIDocument, public nsIDOMDocument, public nsIScriptObjectOwner, 
+                   public nsIDOMEventCapturer, public nsIJSScriptObject {
 public:
   NS_DECL_ISUPPORTS
 
@@ -233,8 +235,7 @@ public:
   NS_IMETHOD ReleaseEvent(nsIDOMEventListener *aListener);
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
-
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
                             nsEvent* aEvent, 
@@ -242,6 +243,15 @@ public:
                             PRUint32 aFlags,
                             nsEventStatus& aEventStatus);
 
+  // nsIJSScriptObject interface
+  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext);
+  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, jsval aID);
+  virtual void      Finalize(JSContext *aContext);
 
   virtual PRBool IsInRange(nsIContent *aStartContent, nsIContent* aEndContent, nsIContent* aContent) const;
   virtual PRBool IsBefore(nsIContent *aNewContent, nsIContent* aCurrentContent) const;
@@ -255,6 +265,8 @@ protected:
 
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  nsresult SetScriptEventListener(JSContext *aContext, REFNSIID aListenerTypeIID);
 
   nsDocument();
   virtual ~nsDocument(); 
