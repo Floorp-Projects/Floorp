@@ -57,13 +57,11 @@
  * GetFirstChildFrame returns the first "real" child frame of a
  * given frame.  It will descend down into pseudo-frames (unless the
  * pseudo-frame is the :before generated frame).   
- * @param aPresContext the prescontext
  * @param aFrame the frame
  * @param aFrame the frame's content node
  */
 static nsIFrame*
-GetFirstChildFrame(nsPresContext* aPresContext,
-                   nsIFrame*       aFrame,
+GetFirstChildFrame(nsIFrame*       aFrame,
                    nsIContent*     aContent)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
@@ -77,7 +75,7 @@ GetFirstChildFrame(nsPresContext* aPresContext,
   if (childFrame &&
       childFrame->IsPseudoFrame(aContent) &&
       !childFrame->IsGeneratedContentFrame()) {
-    return GetFirstChildFrame(aPresContext, childFrame, aContent);
+    return GetFirstChildFrame(childFrame, aContent);
   }
 
   return childFrame;
@@ -87,13 +85,11 @@ GetFirstChildFrame(nsPresContext* aPresContext,
  * GetLastChildFrame returns the last "real" child frame of a
  * given frame.  It will descend down into pseudo-frames (unless the
  * pseudo-frame is the :after generated frame).   
- * @param aPresContext the prescontext
  * @param aFrame the frame
  * @param aFrame the frame's content node
  */
 static nsIFrame*
-GetLastChildFrame(nsPresContext* aPresContext,
-                  nsIFrame*       aFrame,
+GetLastChildFrame(nsIFrame*       aFrame,
                   nsIContent*     aContent)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
@@ -119,7 +115,7 @@ GetLastChildFrame(nsPresContext* aPresContext,
     if (lastChildFrame &&
         lastChildFrame->IsPseudoFrame(aContent) &&
         !lastChildFrame->IsGeneratedContentFrame()) {
-      return GetLastChildFrame(aPresContext, lastChildFrame, aContent);
+      return GetLastChildFrame(lastChildFrame, aContent);
     }
 
     return lastChildFrame;
@@ -130,12 +126,12 @@ GetLastChildFrame(nsPresContext* aPresContext,
 
 // static
 nsIFrame*
-nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame, nsPresContext* aPresContext)
+nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
   NS_ASSERTION(!aFrame->GetPrevInFlow(), "aFrame must be first-in-flow");
   
-  nsIFrame* firstFrame = GetFirstChildFrame(aPresContext, aFrame, aFrame->GetContent());
+  nsIFrame* firstFrame = GetFirstChildFrame(aFrame, aFrame->GetContent());
 
   if (firstFrame && IsGeneratedContentFor(nsnull, firstFrame,
                                           nsCSSPseudoElements::before)) {
@@ -147,11 +143,11 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame, nsPresContext* aPresContext)
 
 // static
 nsIFrame*
-nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame, nsPresContext* aPresContext)
+nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
-  nsIFrame* lastFrame = GetLastChildFrame(aPresContext, aFrame, aFrame->GetContent());
+  nsIFrame* lastFrame = GetLastChildFrame(aFrame, aFrame->GetContent());
 
   if (lastFrame && IsGeneratedContentFor(nsnull, lastFrame,
                                          nsCSSPseudoElements::after)) {

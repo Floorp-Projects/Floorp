@@ -4527,8 +4527,7 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
   if (primaryFrame) {
     // See whether it's a request for the before or after generated content
     if (Before == aType) {
-      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(primaryFrame,
-                                                            mPresContext);
+      nsIFrame* beforeFrame = nsLayoutUtils::GetBeforeFrame(primaryFrame);
       if (beforeFrame) {
         // Create an iterator
         rv = NS_NewFrameContentIterator(mPresContext, beforeFrame, aIterator);
@@ -4543,8 +4542,7 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
       if (nsLayoutUtils::HasPseudoStyle(aContent, styleContext,
                                         nsCSSPseudoElements::after,
                                         mPresContext)) {
-        nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(primaryFrame,
-                                                            mPresContext);
+        nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(primaryFrame);
         if (afterFrame)
         {
           NS_ASSERTION(afterFrame->IsGeneratedContentFrame(),
