@@ -32,6 +32,7 @@ CPPSRCS =     \
   COtherDTD.cpp \
   nsParser.cpp  \
   nsHTMLTokens.cpp  \
+  nsHTMLTags.cpp \
   prstrm.cpp \
   $(NULL)
 
