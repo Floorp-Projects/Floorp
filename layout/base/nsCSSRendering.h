@@ -150,7 +150,7 @@ protected:
                           const nsStyleSpacing& aBorderStyle,
                           nsIStyleContext* aStyleContext,
                           PRIntn aSkipSides,
-                          PRInt16 aBorderRadius,nsRect* aGap = 0);
+                          PRInt16 aBorderRadius[4],nsRect* aGap = 0);
 
 
   static void RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingContext,
@@ -166,7 +166,7 @@ protected:
                               const nsStyleSpacing& aStyle,
                               nscoord aDX,
                               nscoord aDY,
-                              PRInt16 aTheRadius);
+                              PRInt16 aTheRadius[4]);
 
 
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
@@ -251,23 +251,20 @@ class RoundedRect
 {
 
 public:
-  PRInt32 mRoundness;
+  PRInt32 mRoundness[4];
+
   PRBool  mDoRound;
 
-  PRInt16 mOuterLeft;
-  PRInt16 mOuterRight;
-  PRInt16 mOuterTop;
-  PRInt16 mOuterBottom;
-  PRInt16 mInnerLeft;
-  PRInt16 mInnerRight;
-  PRInt16 mInnerTop;
-  PRInt16 mInnerBottom;
+  PRInt16 mLeft;
+  PRInt16 mRight;
+  PRInt16 mTop;
+  PRInt16 mBottom;
 
   /** 
    *  Construct a rounded rectangle object
    *  @update 4/19/99
    */
-  void  RoundRect() {mRoundness=0;}
+  void  RoundRect() {mRoundness[0]=0;}
 
   /**
    *  Set the curves boundaries and then break it up into the curve pieces for rendering
@@ -278,7 +275,7 @@ public:
    *  @param aHeight -- Height of bounding box
    *  @param aRadius -- radius for the rounding
    */
-  void  Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius,PRInt16 aNumTwipPerPix);
+  void  Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius[4],PRInt16 aNumTwipPerPix);
 
 
   /**
