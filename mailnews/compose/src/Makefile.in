@@ -22,9 +22,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = mailnews
 LIBRARY_NAME=msgcompose
-
+IS_COMPONENT=1
 
 EXPORTS = \
 	nsSmtpUrl.h	\
