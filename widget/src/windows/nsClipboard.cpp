@@ -561,21 +561,12 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       PRBool success = PR_FALSE;
 
       if (nsnull != aDataObject) {
-        res = GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen);
-        if ( NS_SUCCEEDED(res) ) {
-          nsCOMPtr<nsISupports> genericDataWrapper;
-          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
-          aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
+        if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen)) )
           success = PR_TRUE;
-        }
-      } else if (nsnull != aWindow) {
-        res = GetNativeDataOffClipboard(aWindow, format, &data, &dataLen);
-        if ( NS_SUCCEEDED(res) ) {
-          nsCOMPtr<nsISupports> genericDataWrapper;
-          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
-          aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
+      } 
+      else if (nsnull != aWindow) {
+        if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, format, &data, &dataLen)) )
           success = PR_TRUE;
-        }
       }
 
       if ( success ) {
@@ -584,6 +575,12 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         PRInt32 signedLen = NS_STATIC_CAST(PRInt32, dataLen);
         nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &data, &signedLen );
         dataLen = signedLen;
+
+        nsCOMPtr<nsISupports> genericDataWrapper;
+        nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+        aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
+
+        nsAllocator::Free ( NS_REINTERPRET_CAST(char*, data) );
         break;
       }
 
