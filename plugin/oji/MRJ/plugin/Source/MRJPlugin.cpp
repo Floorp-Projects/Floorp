@@ -198,16 +198,16 @@ NS_METHOD MRJPlugin::QueryInterface(const nsIID& aIID, void** instancePtr)
 
 NS_METHOD MRJPlugin::CreateInstance(nsISupports *aOuter, const nsIID& aIID, void **aResult)
 {
-	if (aIID.Equals(kIPluginInstanceIID) || aIID.Equals(kIJVMPluginInstanceIID)) {
-		if (StartupJVM() == NS_OK) {
-			MRJPluginInstance* instance = new MRJPluginInstance(this);
-			instance->AddRef();		// if not us, then who will take this burden?
-			*aResult = instance;
-			return NS_OK;
-		}
-		return NS_ERROR_FAILURE;
+	nsresult result = StartupJVM();
+	if (result == NS_OK) {
+		MRJPluginInstance* instance = new MRJPluginInstance(this);
+		if (instance == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+		result = instance->QueryInterface(aIID, aResult);
+		if (result != NS_OK)
+			delete instance;
 	}
-	return NS_NOINTERFACE;
+	return result;
 }
 
 #define NS_APPLET_MIME_TYPE "application/x-java-applet"
@@ -215,7 +215,7 @@ NS_METHOD MRJPlugin::CreateInstance(nsISupports *aOuter, const nsIID& aIID, void
 NS_METHOD MRJPlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, const char* aPluginMIMEType, void **aResult)
 {
 	nsresult result = NS_NOINTERFACE;
-	if (::strcmp(aPluginMIMEType, NS_JVM_MIME_TYPE) == 0 || ::strcmp(aPluginMIMEType, NS_APPLET_MIME_TYPE) == 0)
+	if (::strcmp(aPluginMIMEType, NS_JVM_MIME_TYPE) == 0 || ::strncmp(aPluginMIMEType, NS_APPLET_MIME_TYPE, sizeof(NS_APPLET_MIME_TYPE) - 1) == 0)
 		result = CreateInstance(aOuter, aIID, aResult);
 	else if (::strcmp(aPluginMIMEType, "application/x-java-frame") == 0) {
 		// create a special plugin instance that manages an embedded frame.
