@@ -321,6 +321,11 @@ private:
                             void** aCachedClassPolicy);
 
     nsresult
+    CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject,
+                                     nsIPrincipal* aObject,
+                                     PRBool aIsCheckConnect);
+
+    nsresult
     CheckSameOriginDOMProp(nsIPrincipal* aSubject, 
                            nsIPrincipal* aObject,
                            PRUint32 aAction,

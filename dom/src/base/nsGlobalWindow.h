@@ -314,6 +314,15 @@ protected:
   nsCOMPtr<nsIPrincipal>        mDocumentPrincipal;
   nsCOMPtr<nsIURI>              mOpenerScriptURL; // Used to determine whether to clear scope
 
+  // XXX We need mNavigatorHolder because we make two SetNewDocument()
+  // calls when transitioning from page to page. This keeps a reference
+  // to the JSObject holder for the navigator object in between
+  // SetNewDocument() calls so that the JSObject doesn't get garbage
+  // collected in between these calls.
+  // See bug 163645 for more on why we need this and bug 209607 for info
+  // on how we can remove the need for this.
+  nsCOMPtr<nsIXPConnectJSObjectHolder> mNavigatorHolder;
+
   nsIDOMElement*                mFrameElement; // WEAK
 
   friend class nsDOMScriptableHelper;
@@ -445,6 +454,7 @@ public:
   NS_DECL_NSIDOMJSNAVIGATOR
   
   void SetDocShell(nsIDocShell *aDocShell);
+  void LoadingNewDocument();
   nsresult RefreshMIMEArray();
 
 protected:
