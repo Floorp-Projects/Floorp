@@ -49,13 +49,22 @@ nsHttpAuthManager::nsHttpAuthManager()
 
 nsresult nsHttpAuthManager::Init()
 {
+  // get reference to the auth cache.  we assume that we will live
+  // as long as gHttpHandler.  instantiate it if necessary.
+
   if (!gHttpHandler) {
     nsresult rv;
     nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+      return rv;
+
     nsCOMPtr<nsIProtocolHandler> handler;
     rv = ios->GetProtocolHandler("http", getter_AddRefs(handler));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+      return rv;
+
+    // maybe someone is overriding our HTTP handler implementation?
+    NS_ENSURE_TRUE(gHttpHandler, NS_ERROR_UNEXPECTED);
   }
 	
   mAuthCache = gHttpHandler->AuthCache();
@@ -68,8 +77,10 @@ nsHttpAuthManager::~nsHttpAuthManager()
 }
 
 NS_IMETHODIMP
-nsHttpAuthManager::GetAuthIdentity(const nsACString & aHost,
+nsHttpAuthManager::GetAuthIdentity(const nsACString & aScheme,
+                                   const nsACString & aHost,
                                    PRInt32 aPort,
+                                   const nsACString & aAuthType,
                                    const nsACString & aRealm,
                                    const nsACString & aPath,
                                    nsAString & aUserDomain,
@@ -79,12 +90,14 @@ nsHttpAuthManager::GetAuthIdentity(const nsACString & aHost,
   nsHttpAuthEntry * entry = nsnull;
   nsresult rv;
   if (!aPath.IsEmpty())
-    rv = mAuthCache->GetAuthEntryForPath(PromiseFlatCString(aHost).get(),
+    rv = mAuthCache->GetAuthEntryForPath(PromiseFlatCString(aScheme).get(),
+                                         PromiseFlatCString(aHost).get(),
                                          aPort,
                                          PromiseFlatCString(aPath).get(),
                                          &entry);
   else
-    rv = mAuthCache->GetAuthEntryForDomain(PromiseFlatCString(aHost).get(),
+    rv = mAuthCache->GetAuthEntryForDomain(PromiseFlatCString(aScheme).get(),
+                                           PromiseFlatCString(aHost).get(),
                                            aPort,
                                            PromiseFlatCString(aRealm).get(),
                                            &entry);
@@ -94,15 +107,17 @@ nsHttpAuthManager::GetAuthIdentity(const nsACString & aHost,
   if (!entry)
     return NS_ERROR_UNEXPECTED;
 
+  aUserDomain.Assign(entry->Domain());
   aUserName.Assign(entry->User());
   aUserPassword.Assign(entry->Pass());
-  //TODO: nsHttpAuthEntry has no "domain", which will be solved in bug 159015.
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpAuthManager::SetAuthIdentity(const nsACString & aHost,
+nsHttpAuthManager::SetAuthIdentity(const nsACString & aScheme,
+                                   const nsACString & aHost,
                                    PRInt32 aPort,
+                                   const nsACString & aAuthType,
                                    const nsACString & aRealm,
                                    const nsACString & aPath,
                                    const nsAString & aUserDomain,
@@ -113,7 +128,8 @@ nsHttpAuthManager::SetAuthIdentity(const nsACString & aHost,
                            PromiseFlatString(aUserName).get(),
                            PromiseFlatString(aUserPassword).get());
 
-  return mAuthCache->SetAuthEntry(PromiseFlatCString(aHost).get(),
+  return mAuthCache->SetAuthEntry(PromiseFlatCString(aScheme).get(),
+                                  PromiseFlatCString(aHost).get(),
                                   aPort,
                                   PromiseFlatCString(aPath).get(),
                                   PromiseFlatCString(aRealm).get(),
