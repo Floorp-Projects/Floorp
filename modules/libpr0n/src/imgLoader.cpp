@@ -622,6 +622,23 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLeng
   else if (aLength >= 8 && !nsCRT::strncmp(aContents, "#define ", 8)) {
     *aContentType = nsCRT::strndup("image/x-xbitmap", 15);
   }
+  /* PBM, PGM or PPM? */
+  /* These start with the letter 'P' followed by a digit from 1 through 6
+   * followed by a whitespace character.
+   */
+  else if (aLength >= 3 && ((unsigned char)aContents[0]==0x50 &&
+                            ((unsigned char)aContents[2]==0x9 || (unsigned char)aContents[2]==0xa ||
+                             (unsigned char)aContents[2]==0xd || (unsigned char)aContents[2]==0x20)))
+  {
+    unsigned char c = (unsigned char)aContents[1];
+    if (c == '1' || c == '4') {
+      *aContentType = nsCRT::strndup("image/x-portable-bitmap", 23);
+    } else if (c == '2' || c == '5') {
+      *aContentType = nsCRT::strndup("image/x-portable-graymap", 24);
+    } else if (c == '3' || c == '6') {
+      *aContentType = nsCRT::strndup("image/x-portable-pixmap", 23);
+    }
+  }
   else {
     /* none of the above?  I give up */
     /* don't raise an exception, simply return null */

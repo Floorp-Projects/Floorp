@@ -22,6 +22,16 @@
  *
  */
 
+/*
+ * Current limitations:
+ *
+ *  Doesn't handle PGM and PPM files for which the maximum sample value
+ *  is something other than 255.
+ *
+ */
+
+#include <ctype.h>
+
 #include "nsPPMDecoder.h"
 
 #include "nsIInputStream.h"
@@ -29,6 +39,7 @@
 #include "imgIContainerObserver.h"
 
 #include "nspr.h"
+#include "plstr.h"
 
 #include "nsIComponentManager.h"
 
@@ -36,20 +47,66 @@
 
 NS_IMPL_ISUPPORTS1(nsPPMDecoder, imgIDecoder)
 
+/*
+ * "F_" stands for "find", so F_TYPE means we're looking for the image type
+ * digit.
+ */
+enum ParseState {
+  F_P,
+  F_TYPE,
+  F_WIDTH,
+  F_HEIGHT,
+  F_MAXVAL,
+  F_INITIALIZE,
+  F_TEXTBITDATA,
+  F_TEXTDATA,
+  F_RAWDATA
+};
+
+/*
+ * What kind of white space do we skip.
+ */
+enum Skip {
+  NOTHING,
+  WHITESPACE,
+  SINGLEWHITESPACE,
+  TOENDOFLINE
+};
+
+/*
+ * We look up the digit after the initial 'P' in this string to check
+ * whether it's valid; the index is then used with the following
+ * constants.
+ */
+static char ppmTypes[] = "1231456";
+
+enum {
+  TYPE_PBM = 0,
+  TYPE_PGM = 1,
+  TYPE_PPM = 2,
+  PPMTYPE = 0x3,
+  PPMRAW = 0x4
+};
 
 nsPPMDecoder::nsPPMDecoder()
 {
   NS_INIT_ISUPPORTS();
-  mDataReceived = 0;
-  mDataWritten = 0;
 
-  mDataLeft = 0;
-  mPrevData = nsnull;
+  mBuffer = nsnull;
+  mBufferSize = 0;
+
+  mState = F_P;
+  mSkip = NOTHING;
+  mOldSkip = NOTHING;
+  mType = 0;
 }
 
 nsPPMDecoder::~nsPPMDecoder()
 {
-
+  if (mBuffer != nsnull)
+    PR_Free(mBuffer);
+  if (mRowData != nsnull)
+    PR_Free(mRowData);
 }
 
 
@@ -90,172 +147,244 @@ NS_IMETHODIMP nsPPMDecoder::Flush()
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-static char *__itoa(int n)
-{
-	char *s;
-	int i, j, sign, tmp;
-	
-	/* check sign and convert to positive to stringify numbers */
-	if ( (sign = n) < 0)
-		n = -n;
-	i = 0;
-	s = (char*) malloc(sizeof(char));
-	
-	/* grow string as needed to add numbers from powers of 10 
-     * down till none left 
-     */
-	do
-	{
-		s = (char*) realloc(s, (i+1)*sizeof(char));
-		s[i++] = n % 10 + '0';  /* '0' or 30 is where ASCII numbers start */
-		s[i] = '\0';
-	}
-	while( (n /= 10) > 0);	
-	
-	/* tack on minus sign if we found earlier that this was negative */
-	if (sign < 0)
-	{
-		s = (char*) realloc(s, (i+1)*sizeof(char));
-		s[i++] = '-';
-	}
-	s[i] = '\0';
-	
-	/* pop numbers (and sign) off of string to push back into right direction */
-	for (i = 0, j = strlen(s) - 1; i < j; i++, j--)
-	{
-		tmp = s[i];
-		s[i] = s[j];
-		s[j] = tmp;
-	}
-	
-	return s;
-}
-
-
 /* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
 NS_IMETHODIMP nsPPMDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
   nsresult rv;
 
-  char *buf = (char *)PR_Malloc(count + mDataLeft);
-  if (!buf)
+  if (mBuffer == nsnull) {
+    mBuffer = (char *)PR_Malloc(count);
+    mBufferSize = count;
+  } else if (mBuffer != nsnull && mBufferSize != count) {
+    PR_Free(mBuffer);
+    mBuffer = (char *)PR_Malloc(count);
+    mBufferSize = count;
+  }
+  if (!mBuffer)
     return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 
-  
-  // read the data from the input stram...
+  // read the data from the input stream...
   PRUint32 readLen;
-  rv = inStr->Read(buf+mDataLeft, count, &readLen);
-
-  PRUint32 dataLen = readLen + mDataLeft;
-
-  if (mPrevData) {
-    strncpy(buf, mPrevData, mDataLeft);
-    PR_Free(mPrevData);
-    mPrevData = nsnull;
-    mDataLeft = 0;
-  }
-
-  char *data = buf;
-
+  rv = inStr->Read(mBuffer, count, &readLen);
   if (NS_FAILED(rv)) return rv;
 
-  if (mDataReceived == 0) {
-
+  if (mState == F_P && mObserver)
     mObserver->OnStartDecode(nsnull, nsnull);
 
-    // Check the magic number
-    char type;
-    if ((sscanf(data, "P%c\n", &type) !=1) || (type != '6')) {
-      return NS_ERROR_FAILURE;
+  char *p = mBuffer;
+  char *bufferEnd = mBuffer+readLen;
+  char *s;
+  int n;
+
+  while (p < bufferEnd) {
+    if (mSkip == WHITESPACE) {
+      while (p < bufferEnd && *p != '#'
+	      && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r'))
+	p++;
+      if (p == bufferEnd)
+	break;
+      if (*p == '#') {
+	mOldSkip = WHITESPACE;
+	mSkip = TOENDOFLINE;
+	continue;
+      }
+      mSkip = NOTHING;
+    } else if (mSkip == SINGLEWHITESPACE) {
+      if (*p != ' ' && *p != '\t' && *p != '\n' && *p != '\r')
+	return NS_ERROR_FAILURE;
+      p++;
+      mSkip = NOTHING;
+    } else if (mSkip == TOENDOFLINE) {
+      while (p < bufferEnd && *p != '\n')
+	p++;
+      if (p == bufferEnd)
+	break;
+      mSkip = mOldSkip;
+      mOldSkip = NOTHING;
+      if (mSkip != NOTHING)
+	continue;
     }
-    int i = 3;
-    data += i;
-
-#if 0
-    // XXX
-    // Ignore comments
-    while ((input = fgetc(f)) == '#')
-      fgets(junk, 512, f);
-    ungetc(input, f);
-#endif
-
-    // Read size
-    int w, h, mcv;
-
-    if (sscanf(data, "%d %d\n%d\n", &w, &h, &mcv) != 3) {
-      return NS_ERROR_FAILURE;
+    switch (mState) {
+    case F_P:
+      if (*p != 'P')
+	return NS_ERROR_FAILURE;
+      p++;
+      mState = F_TYPE;
+      break;
+    case F_TYPE:
+      if ((s = PL_strchr(ppmTypes, *p)) == NULL)
+	return NS_ERROR_FAILURE;
+      mType = s-ppmTypes;
+      p++;
+      mState = F_WIDTH;
+      mDigitCount = 0;
+      mSkip = WHITESPACE;
+      break;
+    case F_WIDTH:
+    case F_HEIGHT:
+    case F_MAXVAL:
+      while (mDigitCount < sizeof(mDigits) && p < bufferEnd && isdigit(*p))
+	mDigits[mDigitCount++] = *p++;
+      if (mDigitCount == sizeof(mDigits))
+	return NS_ERROR_FAILURE;		// number too big
+      if (p == bufferEnd)
+	break;
+      if (*p == '#') {
+	mOldSkip = NOTHING;
+	mSkip = TOENDOFLINE;
+	break;
+      }
+      mDigits[mDigitCount] = 0;
+      n = strtol(mDigits, (char **)NULL, 10);
+      if (mState == F_WIDTH) {
+	mWidth = n;
+	mDigitCount = 0;
+	mState = F_HEIGHT;
+	mSkip = WHITESPACE;
+      } else if (mState == F_HEIGHT) {
+	mHeight = n;
+	mDigitCount = 0;
+	if ((mType & PPMTYPE) != TYPE_PBM) {
+	  mState = F_MAXVAL;
+	  mSkip = WHITESPACE;
+	} else
+	  mState = F_INITIALIZE;
+      } else if (mState == F_MAXVAL) {
+	mMaxValue = n;
+	mDigitCount = 0;
+	mState = F_INITIALIZE;
+      }
+      break;
+    case F_INITIALIZE:
+      mImage->Init(mWidth, mHeight, mObserver);
+      if (mObserver)
+	mObserver->OnStartContainer(nsnull, nsnull, mImage);
+      mFrame->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB);
+      mImage->AppendFrame(mFrame);
+      if (mObserver)
+	mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+      mRow = 0;
+      mBytesPerRow = 3*mWidth;
+      mFrame->GetImageBytesPerRow(&mFrameBytesPerRow);
+      mRowData = (PRUint8 *)PR_Malloc(mFrameBytesPerRow);
+      mRowDataFill = 0;
+      if (mType & PPMRAW) {
+	mState = F_RAWDATA;
+	mSkip = SINGLEWHITESPACE;
+      } else if ((mType & PPMTYPE) == TYPE_PBM) {
+	mState = F_TEXTBITDATA;
+	mSkip = WHITESPACE;
+      } else {
+	mState = F_TEXTDATA;
+	mSkip = WHITESPACE;
+	mDigitCount = 0;
+      }
+      break;
+    case F_TEXTBITDATA:
+      {
+	PRUint8 c = *p++;
+	if (c == '1') {
+	  mRowData[mRowDataFill++] = 0;
+	  mRowData[mRowDataFill++] = 0;
+	  mRowData[mRowDataFill++] = 0;
+	} else {
+	  mRowData[mRowDataFill++] = 255;
+	  mRowData[mRowDataFill++] = 255;
+	  mRowData[mRowDataFill++] = 255;
+	}
+      }
+      mSkip = WHITESPACE;
+      rv = checkSendRow();
+      if (NS_FAILED(rv)) return rv;
+      break;
+    case F_TEXTDATA:
+      while (mDigitCount < sizeof(mDigits) && p < bufferEnd && isdigit(*p))
+	mDigits[mDigitCount++] = *p++;
+      if (mDigitCount == sizeof(mDigits))
+	return NS_ERROR_FAILURE;             // number too big
+      if (p == bufferEnd)
+	break;
+      mDigits[mDigitCount] = 0;
+      n = strtol(mDigits, (char **)NULL, 10);
+      mDigitCount = 0;
+      switch (mType & PPMTYPE) {
+      case 1:
+	mRowData[mRowDataFill++] = n;
+	mRowData[mRowDataFill++] = n;
+	mRowData[mRowDataFill++] = n;
+	break;
+      case 2:
+	mRowData[mRowDataFill++] = n;
+	break;
+      }
+      mSkip = WHITESPACE;
+      rv = checkSendRow();
+      if (NS_FAILED(rv)) return rv;
+      break;
+    case F_RAWDATA:
+      if (mType & PPMRAW) {
+	switch (mType & PPMTYPE) {
+	case TYPE_PBM:
+	  {
+	    PRUint32 c = *p++;
+	    int i = 0;
+	    while (mRowDataFill < mBytesPerRow && i < 8) {
+	      if (c & 0x80) {
+		mRowData[mRowDataFill++] = 0;
+		mRowData[mRowDataFill++] = 0;
+		mRowData[mRowDataFill++] = 0;
+	      } else {
+		mRowData[mRowDataFill++] = 255;
+		mRowData[mRowDataFill++] = 255;
+		mRowData[mRowDataFill++] = 255;
+	      }
+	      c <<= 1;
+	      i++;
+	    }
+	  }
+	  break;
+	case TYPE_PGM:
+	  {
+	    PRUint8 c = *p++;
+	    mRowData[mRowDataFill++] = c;
+	    mRowData[mRowDataFill++] = c;
+	    mRowData[mRowDataFill++] = c;
+	  }
+	  break;
+	case TYPE_PPM:
+	  if (mMaxValue == 255) {
+	    PRUint32 bytesInBuffer = bufferEnd-p;
+	    PRUint32 bytesNeeded = mBytesPerRow-mRowDataFill;
+	    PRUint32 chunk = PR_MIN(bytesInBuffer, bytesNeeded);
+	    memcpy(mRowData+mRowDataFill, p, chunk);
+	    p += chunk;
+	    mRowDataFill += chunk;
+	  } else {
+	    mRowData[mRowDataFill++] = *p++;
+	  }
+	  break;
+	}
+	rv = checkSendRow();
+	if (NS_FAILED(rv)) return rv;
+      }
+      break;
     }
-    char *ws = __itoa(w), *hs = __itoa(h), *mcvs = __itoa(mcv);
-    int j = strlen(ws) + strlen(hs) + strlen(mcvs) + 3;
-    data += j;
-//    free(ws);
-//    free(hs);
-//    free(mcvs);
-
-    readLen -= i + j;
-    dataLen = readLen; // since this is the first pass, we don't have any data waiting that we need to keep track of
-
-    mImage->Init(w, h, mObserver);
-    if (mObserver)
-      mObserver->OnStartContainer(nsnull, nsnull, mImage);
-
-    rv = mFrame->Init(0, 0, w, h, gfxIFormats::RGB);
-    if (NS_FAILED(rv))
-      return rv;
-
-    mImage->AppendFrame(mFrame);
-    if (mObserver)
-      mObserver->OnStartFrame(nsnull, nsnull, mFrame);
   }
+  return NS_OK;
+}
 
-  PRUint32 bpr;
-  nscoord width;
-  mFrame->GetImageBytesPerRow(&bpr);
-  mFrame->GetWidth(&width);
+NS_METHOD nsPPMDecoder::checkSendRow()
+{
+  nsresult rv;
 
-  // XXX ceil?
-  PRUint32 real_bpr = width * 3;
-  
-  PRUint32 i = 0;
-  PRUint32 rownum = mDataWritten / real_bpr;  // XXX this better not have a decimal
-  
-  PRUint32 wroteLen = 0;
-
-  if (readLen > real_bpr) {
-
-    do {
-      PRUint8 *line = (PRUint8*)data + i*real_bpr;
-      mFrame->SetImageData(line, real_bpr, (rownum++)*bpr);
-
-      nsRect r(0, rownum, width, 1);
+  if (mRowDataFill == mBytesPerRow) {
+    rv = mFrame->SetImageData(mRowData, mFrameBytesPerRow, mRow*mFrameBytesPerRow);
+    if (NS_FAILED(rv)) return rv;
+    nsRect r(0, mRow, mWidth, 1);
+    if (mObserver)
       mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
-
-
-      wroteLen += real_bpr ;
-      i++;
-    } while(dataLen >= real_bpr * (i+1));
-
+    mRow++;
+    mRowDataFill = 0;
   }
-  
-  mDataReceived += readLen;  // don't double count previous data that is in 'dataLen'
-  mDataWritten += wroteLen;
-
-  PRUint32 dataLeft = dataLen - wroteLen;
-
-  if (dataLeft > 0) {
-    if (mPrevData) {
-      mPrevData = (char *)PR_Realloc(mPrevData, mDataLeft + dataLeft);
-      strncpy(mPrevData + mDataLeft, data+wroteLen, dataLeft);
-      mDataLeft += dataLeft;
-
-    } else {
-      mDataLeft = dataLeft;
-      mPrevData = (char *)PR_Malloc(mDataLeft);
-      strncpy(mPrevData, data+wroteLen, mDataLeft);
-    }
-  }
-
-  PR_FREEIF(buf);
-
   return NS_OK;
 }

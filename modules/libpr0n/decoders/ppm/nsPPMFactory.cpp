@@ -30,8 +30,16 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPPMDecoder)
 
-static const nsModuleComponentInfo components[] =
+static nsModuleComponentInfo components[] =
 {
+  { "pbm decoder",
+    NS_PPMDECODER_CID,
+    "@mozilla.org/image/decoder;2?type=image/x-portable-bitmap",
+    nsPPMDecoderConstructor, },
+  { "pgm decoder",
+    NS_PPMDECODER_CID,
+    "@mozilla.org/image/decoder;2?type=image/x-portable-graymap",
+    nsPPMDecoderConstructor, },
   { "ppm decoder",
     NS_PPMDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/x-portable-pixmap",
