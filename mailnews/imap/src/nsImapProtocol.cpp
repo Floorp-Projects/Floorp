@@ -8261,8 +8261,23 @@ nsImapMockChannel::OnTransportStatus(nsITransport *transport, nsresult status,
     {
       nsCAutoString host;
       if (m_url)
+      {
         m_url->GetHost(host);
-      mProgressEventSink->OnStatus(this, nsnull, status, NS_ConvertUTF8toUCS2(host).get()); 
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
+        if (mailnewsUrl) 
+        {
+          nsCOMPtr<nsIMsgIncomingServer> server;
+          nsresult rv = mailnewsUrl->GetServer(getter_AddRefs(server));
+          if (NS_SUCCEEDED(rv) && server)
+          {
+            nsXPIDLCString realHostName;
+            rv = server->GetRealHostName(getter_Copies(realHostName));
+            if (NS_SUCCEEDED(rv))
+              host = realHostName;
+          }
+        }
+        mProgressEventSink->OnStatus(this, nsnull, status, NS_ConvertUTF8toUCS2(host).get()); 
+      }
     }
   } 
   return NS_OK;
