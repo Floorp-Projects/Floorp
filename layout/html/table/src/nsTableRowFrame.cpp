@@ -1278,39 +1278,63 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
                                      aReflowState.reflowState,
                                      aNextFrame, kidAvailSize);
 
-    // Unfortunately we need to reflow the child several times.
-    // The first time is for the incremental reflow command. We can't pass in
-    // a max width of NS_UNCONSTRAINEDSIZE, because the max width must match
+    // Remember the current desired size, we'll need it later
+    nsSize  oldMinSize = ((nsTableCellFrame*)aNextFrame)->GetPass1MaxElementSize();
+    nsSize  oldDesiredSize = ((nsTableCellFrame*)aNextFrame)->GetPass1DesiredSize();
+    
+    // Reflow the cell passing it the incremental reflow command. We can't pass
+    // in a max width of NS_UNCONSTRAINEDSIZE, because the max width must match
     // the width of the previous reflow...
     rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+    
+    //XXX: this is a hack, shouldn't it be the case that a min size is 
+    //     never larger than a desired size?
+    if (kidMaxElementSize.width>desiredSize.width)
+      desiredSize.width = kidMaxElementSize.width;
+    if (kidMaxElementSize.height>desiredSize.height)
+      desiredSize.height = kidMaxElementSize.height;
+    
+    // Update the cell layout data.
+    ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
 
-    // Now see if we need to do the regular pass 1 reflow and gather the max
-    // width and max element size. Note that since we don't now whether the
-    // minimum width has changed we pass is PR_TRUE
+    // Now see if we need to do the regular pass 1 reflow and gather the preferred
+    // width. If the new minimum width is different from the old minimum width,
+    // then we should consider the max element size
     if (aReflowState.tableFrame->ColumnsCanBeInvalidatedBy(*(nsTableCellFrame*)aNextFrame,
-                                                           PR_TRUE)) {
-      // Changes to the cell frame could require the columns to be rebalanced.
-      // Remember the current mimumum and desired size, we'll need them later
-      nsSize  oldMinSize = ((nsTableCellFrame*)aNextFrame)->GetPass1MaxElementSize();
-      nsSize  oldDesiredSize = ((nsTableCellFrame*)aNextFrame)->GetPass1DesiredSize();
-
-      // Do the unconstrained reflow and get the pass1 information
-      // XXX Why the reflow reason of eReflowReason_Initial?
-      kidReflowState.reason = eReflowReason_Initial;
-      kidReflowState.reflowCommand = nsnull;
-      kidReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
-      rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
-
-      //XXX: this is a hack, shouldn't it be the case that a min size is 
-      //     never larger than a desired size?
-      if (kidMaxElementSize.width>desiredSize.width)
-        desiredSize.width = kidMaxElementSize.width;
-      if (kidMaxElementSize.height>desiredSize.height)
-        desiredSize.height = kidMaxElementSize.height;
-      
-      // Update the cell layout data.
-      ((nsTableCellFrame *)aNextFrame)->SetPass1DesiredSize(desiredSize);
-      ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
+                                                           oldMinSize.width != kidMaxElementSize.width)) {
+      // For fixed-layout tables we don't need to know the preferred width
+      if (aReflowState.tableFrame->RequiresPass1Layout()) {
+        // Changes to the cell frame could require the columns to be rebalanced.
+        // XXX We don't really need to compute the max element size again, we just
+        // computed it above. However, for the time being do compute it again and
+        // make sure it's consistent...
+        nscoord prevMaxElementWidth = kidMaxElementSize.width;
+  
+        // Do the unconstrained reflow and get the pass1 information
+        // XXX Why the reflow reason of eReflowReason_Initial?
+        kidReflowState.reason = eReflowReason_Initial;
+        kidReflowState.reflowCommand = nsnull;
+        kidReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
+        rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+  
+        //XXX: this is a hack, shouldn't it be the case that a min size is 
+        //     never larger than a desired size?
+        if (kidMaxElementSize.width>desiredSize.width)
+          desiredSize.width = kidMaxElementSize.width;
+        if (kidMaxElementSize.height>desiredSize.height)
+          desiredSize.height = kidMaxElementSize.height;
+        
+#if 0
+        // XXX See above
+        NS_ASSERTION(prevMaxElementWidth == kidMaxElementSize.width,
+                     "different max element width!");
+#else
+        ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
+#endif
+  
+        // Update the cell layout data.
+        ((nsTableCellFrame *)aNextFrame)->SetPass1DesiredSize(desiredSize);
+      }
 
       // Now that we know the minimum and preferred widths see if the column
       // widths need to be rebalanced

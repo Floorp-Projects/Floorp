@@ -546,6 +546,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   if (NS_UNCONSTRAINEDSIZE!=availSize.height)
     availSize.height -= topInset+bottomInset;
 
+  PRBool  isStyleChanged = PR_FALSE;
   if (eReflowReason_Incremental == aReflowState.reason) 
   {
     // We *must* do this otherwise incremental reflow that's
@@ -566,9 +567,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
         aReflowState.reflowCommand->GetType(type);
         if (nsIReflowCommand::StyleChanged==type)
         {
-          rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
-          aStatus = NS_FRAME_COMPLETE;
-          return rv;
+          isStyleChanged = PR_TRUE;
         }
         else {
           NS_ASSERTION(PR_FALSE, "table cell target of illegal incremental reflow type");
@@ -589,6 +588,13 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   nsIFrame* firstKid = mFrames.FirstChild();
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
                                    availSize);
+
+  // If it was a style change targeted at us, then reflow the child using
+  // the special reflow reason
+  if (isStyleChanged) {
+    kidReflowState.reason = eReflowReason_StyleChange;
+    kidReflowState.reflowCommand = nsnull;
+  }
 
   if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl en", firstKid, &kidReflowState, nsnull);
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState, aStatus);
@@ -686,25 +692,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   if (nsDebugTable::gRflCell) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize);
 
   return NS_OK;
-}
-
-NS_METHOD nsTableCellFrame::IR_StyleChanged(nsIPresContext&          aPresContext,
-                                            nsHTMLReflowMetrics&     aDesiredSize,
-                                            const nsHTMLReflowState& aReflowState,
-                                            nsReflowStatus&          aStatus)
-{
-  nsresult rv = NS_OK;
-  // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
-  // XXX: we can optimize this when we know which style attribute changed
-  nsTableFrame* tableFrame=nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-  {
-    tableFrame->InvalidateCellMap();
-    tableFrame->InvalidateFirstPassCache();
-  }
-
-  return rv;
 }
 
 /**
