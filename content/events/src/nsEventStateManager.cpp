@@ -25,6 +25,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsEventStateManager::nsEventStateManager() {
   mEventTarget = nsnull;
+  NS_INIT_REFCNT();
 }
 
 nsEventStateManager::~nsEventStateManager() {
