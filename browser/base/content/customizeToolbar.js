@@ -180,7 +180,12 @@ var dropObserver = {
       return;
 
     paletteItem = paletteItem.cloneNode(paletteItem);
-    toolbar.insertBefore(paletteItem, gCurrentDragOverItem);
+
+    var paletteEnclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                    "toolbarpaletteitem");
+    paletteEnclosure.appendChild(paletteItem);
+
+    toolbar.insertBefore(paletteEnclosure, gCurrentDragOverItem);
     gCurrentDragOverItem.removeAttribute("dragactive");
     gCurrentDragOverItem = null;
   },
