@@ -38,15 +38,17 @@
 #define __NSNSSCERTIFICATEDB_H__
 
 #include "nsIX509CertDB.h"
+#include "nsIX509CertDB2.h"
 #include "nsNSSCertHeader.h"
 
 class nsIArray;
 
-class nsNSSCertificateDB : public nsIX509CertDB
+class nsNSSCertificateDB : public nsIX509CertDB, public nsIX509CertDB2
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIX509CERTDB
+  NS_DECL_NSIX509CERTDB2
 
   nsNSSCertificateDB(); 
   virtual ~nsNSSCertificateDB();

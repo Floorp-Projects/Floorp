@@ -77,7 +77,7 @@ NSSCleanupAutoPtrClass(CERTCertList, CERT_DestroyCertList)
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 
-NS_IMPL_ISUPPORTS1(nsNSSCertificateDB, nsIX509CertDB)
+NS_IMPL_ISUPPORTS2(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
 
 nsNSSCertificateDB::nsNSSCertificateDB()
 {
@@ -1380,4 +1380,61 @@ done:
     }
     PR_FREEIF(tmp);
     return(nickname);
+}
+
+NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const char *aTrust, const char *aName)
+{
+  NS_ENSURE_ARG_POINTER(aBase64);
+  nsCOMPtr <nsIX509Cert> newCert;
+
+  nsNSSCertTrust trust;
+
+  // need to calculate the trust bits from the aTrust string.
+  nsresult rv = CERT_DecodeTrustString(trust.GetTrust(), /* this is const, but not declared that way */(char *) aTrust);
+  NS_ENSURE_SUCCESS(rv, rv); // if bad trust passed in, return error.
+  trust.SetValidCA();
+  trust.AddCATrust(trust.GetTrust()->sslFlags,
+                   trust.GetTrust()->emailFlags,
+                   trust.GetTrust()->objectSigningFlags);
+
+
+  rv = ConstructX509FromBase64(aBase64, getter_AddRefs(newCert));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SECItem der;
+  rv = newCert->GetRawDER(&der.len, (PRUint8 **)&der.data);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
+  CERTCertificate *tmpCert;
+  CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
+  tmpCert = CERT_FindCertByDERCert(certdb, &der);
+  if (!tmpCert) 
+    tmpCert = CERT_NewTempCertificate(certdb, &der,
+                                      nsnull, PR_FALSE, PR_TRUE);
+
+  if (!tmpCert) {
+    NS_ASSERTION(0,"Couldn't create cert from DER blob\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (tmpCert->isperm) {
+    CERT_DestroyCertificate(tmpCert);
+    return NS_OK;
+  }
+
+  CERTCertificateCleaner tmpCertCleaner(tmpCert);
+
+  nsXPIDLCString nickname;
+  nickname.Adopt(CERT_MakeCANickname(tmpCert));
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Created nick \"%s\"\n", nickname.get()));
+
+  SECStatus srv = CERT_AddTempCertToPerm(tmpCert, 
+                                         NS_CONST_CAST(char*,nickname.get()), 
+                                         trust.GetTrust()); 
+
+  CERT_DestroyCertificate(tmpCert);
+
+  return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
