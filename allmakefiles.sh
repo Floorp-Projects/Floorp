@@ -936,8 +936,11 @@ if [ "$NS_TRACE_MALLOC" ]; then
     MAKEFILES_tracemalloc="tools/trace-malloc/Makefile"
 fi
 
-# layout/mathml
+# MathML
 if [ "$MOZ_MATHML" ]; then
+    MAKEFILES_intl="$MAKEFILES_intl
+	intl/uconv/ucvmath/Makefile
+"
     MAKEFILES_layout="$MAKEFILES_layout
 	layout/mathml/Makefile
 	layout/mathml/base/Makefile
