@@ -56,13 +56,8 @@ CPPSRCS		=                           \
 		nsWrapUtils.cpp  \
 		nsInternetCiter.cpp  \
 		nsAOLCiter.cpp  \
-		$(NULL)
-
-ifdef IBMBIDI
-CPPSRCS		+= \
 		nsTextEditRulesBidi.cpp \
 		$(NULL)
-endif                
 
 # don't want the shared lib; force the creation of a static lib.
 FORCE_STATIC_LIB = 1
