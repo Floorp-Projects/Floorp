@@ -61,5 +61,8 @@ sub StageProduct
   system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist\"     -d \"$dirStageProductName\" -f \"$dirDistPackagesProductName/xpcom-win.pkg\" -o $aOsPkg -v");
   system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\" -d \"$dirStageProductName/gre\" -f \"$dirDistPackagesProductName/basebrowser-installer-win.pkg\" -o $aOsPkg -v");
   system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist/bin\" -d \"$dirStageProductName/gre\" -f \"$dirDistPackagesProductName/gre-installer-win.pkg\" -o $aOsPkg -v");
+
+  # consolidate the .xpt files for each xpi into one file
+  system("perl \"$dirMozPackager/xptlink.pl\" --source \"$aDirSrcDist\" --destination \"$dirStageProductName\" -o $aOsPkg --verbose");
 }
 
