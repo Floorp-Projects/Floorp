@@ -166,7 +166,7 @@
               oncommand="onDownloadShowOptions();"/>
     </hbox>
     
-    <resizer dir="bottomright"/>
+    <resizer id="windowResizer" dir="bottomright"/>
   </hbox>  
 
 </window>
