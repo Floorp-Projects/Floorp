@@ -428,7 +428,7 @@ sub InstallResources($;$;$)
    close (BDATE);
    close (OUTPUT);
 
-   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:src:navigator.xul :mozilla:config:build_number");
+   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:resources:content:navigator.xul :mozilla:config:build_number");
 
  }
 
