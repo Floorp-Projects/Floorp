@@ -58,7 +58,6 @@ DEFINES		+= -D_IMPL_NS_HTML
 INCLUDES	+= \
 		-I$(srcdir) \
 		-I$(srcdir)/../../../xml/document/src \
-		-I$(srcdir)/../../../xsl/document/src \
 		-I$(srcdir)/../../../html/base/src \
 		-I$(srcdir)/../../../html/document/src \
 		-I$(srcdir)/../../../base/src \
