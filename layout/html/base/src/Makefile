@@ -37,7 +37,6 @@ CPPSRCS =				\
 	nsHTMLImage.cpp			\
 	nsHTMLReflowCommand.cpp		\
 	nsHTMLTagContent.cpp		\
-	nsHTMLTags.cpp			\
 	nsImageMap.cpp			\
 	nsLeafFrame.cpp			\
 	nsPageFrame.cpp			\
