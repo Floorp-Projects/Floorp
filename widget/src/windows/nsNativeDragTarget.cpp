@@ -59,7 +59,7 @@ static POINTL gDragLastPoint;
 // construction
 //-----------------------------------------------------
 nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
-: m_cRef(0), mWindow(aWnd)
+: m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE)
 {
   mHWnd    = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
 
@@ -124,9 +124,15 @@ void nsNativeDragTarget::GetGeckoDragAction(LPDATAOBJECT pData, DWORD grfKeyStat
   if ( pData )
     canLink = (S_OK == ::OleQueryLinkFromData(pData) ? PR_TRUE : PR_FALSE);
 
-  // Default is move if we can, in fact drop here.
-  *pdwEffect    = DROPEFFECT_MOVE;
-  *aGeckoAction = nsIDragService::DRAGDROP_ACTION_MOVE;
+  // Default is move if we can, in fact drop here,
+  // and if the drop source supports a move operation.
+  if (mCanMove) {
+    *pdwEffect    = DROPEFFECT_MOVE;
+    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_MOVE;
+  } else {
+    *aGeckoAction = nsIDragService::DRAGDROP_ACTION_COPY;
+    *pdwEffect    = DROPEFFECT_COPY;
+  }
 
   // Given the key modifiers figure out what state we are in for both
   // the native system and Gecko
@@ -232,6 +238,9 @@ STDMETHODIMP nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
     // tell the drag service about this drag (it may have come from an
     // outside app).
     mDragService->StartDragSession();
+
+    // Remember if this operation allows a move.
+    mCanMove = (*pdwEffect) & DROPEFFECT_MOVE;
 
     // Set the native data object into drag service
     //
