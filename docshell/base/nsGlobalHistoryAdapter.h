@@ -56,15 +56,15 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGLOBALHISTORY2
 
-  static nsresult Create(nsISupports *aOuter,
-                         REFNSIID aIID,
-                         void **aResult);
+  static NS_METHOD Create(nsISupports *aOuter,
+                          REFNSIID aIID,
+                          void **aResult);
 
-  static nsresult RegisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFile* aPath,
-                               const char* aLoaderStr,
-                               const char* aType,
-                               const nsModuleComponentInfo *aInfo);
+  static NS_METHOD RegisterSelf(nsIComponentManager* aCompMgr,
+                                nsIFile* aPath,
+                                const char* aLoaderStr,
+                                const char* aType,
+                                const nsModuleComponentInfo *aInfo);
 
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_GLOBALHISTORYADAPTER_CID);
 
