@@ -26,6 +26,11 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_XSL
+MODULE = transformiix
+REQUIRES = string xpcom necko
+endif
+
 CPPSRCS = URIUtils.cpp
 
 include $(topsrcdir)/config/rules.mk

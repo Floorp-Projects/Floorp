@@ -26,6 +26,11 @@ VPATH           = @srcdir@:@srcdir@/xmltok:@srcdir@/xmlparse
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_XSL
+MODULE = transformiix
+REQUIRES = string xpcom necko dom layout widget webbrwsr
+endif
+
 CSRCS = xmltok.c xmlrole.c xmlparse.c hashtable.c
 CPPSRCS = XMLParser.cpp
 

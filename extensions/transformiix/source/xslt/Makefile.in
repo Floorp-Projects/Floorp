@@ -28,6 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS            = functions util
 
+ifdef MOZ_XSL
+MODULE = transformiix
+REQUIRES = string xpcom dom layout widget necko
+endif
+
 CPPSRCS = Names.cpp \
         Numbering.cpp \
         OutputFormat.cpp \

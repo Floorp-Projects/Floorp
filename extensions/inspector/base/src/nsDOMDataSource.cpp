@@ -65,8 +65,8 @@ nsIRDFResource*    kINS_HasChildren;
 ////////////////////////////////////////////////////////////////////////
 
 nsDOMDataSource::nsDOMDataSource() :
-  mObservers(nsnull),
-  mDocument(nsnull)
+  mDocument(nsnull),
+  mObservers(nsnull)
 {
 	NS_INIT_REFCNT();
 
