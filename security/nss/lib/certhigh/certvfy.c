@@ -1101,7 +1101,7 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    if ( ( flags & requiredFlags ) == requiredFlags ||
 		     certUsage == certUsageStatusResponder ) {
 		    /* we found a trusted one, so return */
-        //Check  the special case of certUsageStatusResponder
+        /* Check  the special case of certUsageStatusResponder */
         if(certUsage == certUsageStatusResponder) {
            issuerCert = CERT_FindCertIssuer(cert, t, certUsage);
 	         if (issuerCert) {
