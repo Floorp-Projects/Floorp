@@ -1036,6 +1036,39 @@ nsBrowserInstance::SetTextZoom(float aTextZoom)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBrowserInstance::GetDocumentCharset(PRUnichar **aCharset)
+{
+  nsAutoString docCharset; 
+  PRUnichar *pDocCharset = nsnull;
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
+
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (docShell) 
+  {
+    nsCOMPtr<nsIContentViewer> childCV;
+    NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+    if (childCV) 
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+      if (markupCV) {
+        pDocCharset = (PRUnichar *) docCharset.GetUnicode();
+        NS_ENSURE_SUCCESS(markupCV->GetDefaultCharacterSet(&pDocCharset), NS_ERROR_FAILURE);
+      }
+    }
+  }
+  
+  //a little cludgy here - make sure have an nsAutoString with strlen > 0, so we can use ToNewUnicode()
+  nsAutoString docCharsetAdjustedLengthBuff(pDocCharset);
+  *aCharset = (PRUnichar *) docCharsetAdjustedLengthBuff.ToNewUnicode();
+  return NS_OK;
+}
+
 NS_IMETHODIMP    
 nsBrowserInstance::SetDocumentCharset(const PRUnichar *aCharset)
 {

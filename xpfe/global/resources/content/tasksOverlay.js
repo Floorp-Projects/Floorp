@@ -104,13 +104,28 @@ function toOpenWindowByType( inType, uri )
 function OpenBrowserWindow()
 {
   dump("In OpenBrowserWindw()...\n");
+  var charsetArg = new String();
   var handler = Components.classes['component://netscape/commandlinehandler/general-startup-browser'];
   handler = handler.getService();
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
   var startpage = handler.defaultArgs;
   var url = handler.chromeUrlForTask;
-  window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage );
-}
+  
+  if (appCore != null) {
+       
+      try {
+            var DocCharset = appCore.GetDocumentCharset();
+            charsetArg = "charset="+DocCharset;
+            dump("*** Current document charset: " + DocCharset + "\n");
+             window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage, charsetArg);
+     }
+ 
+       catch(ex) { 
+           dump("*** failed to read document charset \n");
+       }
+  } 
+  window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
+ }
 
 
 function CycleWindow( inType, inChromeURL )
