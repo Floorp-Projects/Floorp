@@ -71,17 +71,12 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
   }
   
   nsIDOMNode* node = nsnull;
-  jboolean iscopy;
-  const jchar* name = env->GetStringChars(jname, &iscopy);
-  if (!name) {
-    JavaDOMGlobals::ThrowException(env,
-      "NodeMap.getNamedItem: GetStringChars failed");
-    env->ReleaseStringChars(jname, name);
+  nsString* name = JavaDOMGlobals::GetUnicode(env, jname);
+  if (!name)
     return NULL;
-  }
 
-  nsresult rv = map->GetNamedItem((PRUnichar*)name, &node);
-  env->ReleaseStringChars(jname, name);
+  nsresult rv = map->GetNamedItem(*name, &node);
+  nsString::Recycle(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -146,17 +141,12 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
   }
   
   nsIDOMNode* node = nsnull;
-  jboolean iscopy;
-  const jchar* name = env->GetStringChars(jname, &iscopy);
-  if (!name) {
-    JavaDOMGlobals::ThrowException(env,
-      "NamedNodeMap.removeNamedItem: GetStringChars failed");
-    env->ReleaseStringChars(jname, name);
+  nsString* name = JavaDOMGlobals::GetUnicode(env, jname);
+  if (!name)
     return NULL;
-  }
 
-  nsresult rv = map->RemoveNamedItem((PRUnichar*)name, &node);
-  env->ReleaseStringChars(jname, name);
+  nsresult rv = map->RemoveNamedItem(*name, &node);
+  nsString::Recycle(name);
 
   if (NS_FAILED(rv) || !node) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;

@@ -133,17 +133,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_setValue
     return;
   }
 
-  jboolean iscopy;
-  const jchar* cstr = env->GetStringChars(jval, &iscopy);
-  if (!cstr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Attr.setValue: GetStringChars failed\n"));
-    env->ReleaseStringChars(jval, cstr);
+  
+  nsString* cstr = JavaDOMGlobals::GetUnicode(env, jval);
+  if (!cstr)
     return;
-  }
 
-  nsresult rv = attr->SetValue((PRUnichar*)cstr);
-  env->ReleaseStringChars(jval, cstr);
+  nsresult rv = attr->SetValue(*cstr);
+  nsString::Recycle(cstr);
 
   if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 

@@ -25,6 +25,7 @@
 #include "jni.h"
 #include "prclist.h"
 #include "nsError.h"
+#include "nsString2.h"
 
 class nsISupports;
 class nsIDOMNode;
@@ -96,6 +97,9 @@ class JavaDOMGlobals {
                              const char * message = NULL,
                              nsresult rv = NS_OK,
                              ExceptionType exceptionType = EXCEPTION_RUNTIME);
+
+  static nsString* GetUnicode(JNIEnv *env,
+			      jstring str);
 };
   
 #endif /* __JavaDOMGlobals_h__ */

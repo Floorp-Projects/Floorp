@@ -22,6 +22,7 @@
 #include "prlog.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMEventTarget.h"
 #include "javaDOMEventsGlobals.h"
 #include "org_mozilla_dom_events_MouseEventImpl.h"
 
@@ -276,10 +277,10 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getShiftKe
 
 /*
  * Class:     org_mozilla_dom_events_MouseEventImpl
- * Method:    getRelatedNode
- * Signature: ()Lorg/w3c/dom/Node;
+ * Method:    getRelatedTarget
+ * Signature: ()Lorg/w3c/dom/events/EventTarget;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getRelatedNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getRelatedTarget
   (JNIEnv *env, jobject jthis)
 {
   nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
@@ -290,16 +291,20 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getRelatedN
     return NULL;
   }
 
-  nsIDOMNode* node = nsnull;
-  nsresult rv = event->GetRelatedNode(&node);
+  nsIDOMEventTarget* ret = nsnull;
+  nsresult rv = event->GetRelatedTarget(&ret);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
         "MouseEvent.getRelatedNode: failed", rv);
     return NULL;
   }
-  if (!node)
+  if (!ret)
     return NULL;
 
+  nsIDOMNode* node = nsnull;
+  rv = ret->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
+  printf("========== rv:%x  node:%x", rv, node);
+//      return JavaDOMGlobals::CreateNodeSubtype(env, ret);
   return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
 
@@ -334,14 +339,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
     return;
   }
 
-  jboolean iscopy;
-  const jchar* cvalue = env->GetStringChars(jtypeArg, &iscopy);
-  if (!cvalue) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("UIEvent.initUIEvent: GetStringChars failed"));
-    env->ReleaseStringChars(jtypeArg, cvalue);
+  nsString* cvalue = JavaDOMGlobals::GetUnicode(env, jtypeArg);
+  if (!cvalue)
     return;
-  }
 
   PRBool canBubble   = jcanBubbleArg  == JNI_TRUE ? PR_TRUE : PR_FALSE;
   PRBool cancelable  = jcancelableArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
@@ -350,7 +350,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
   PRBool shiftKeyArg = jshiftKeyArg   == JNI_TRUE ? PR_TRUE : PR_FALSE;
   PRBool metaKeyArg  = jmetaKeyArg    == JNI_TRUE ? PR_TRUE : PR_FALSE;
 
-  nsresult rv = event->InitMouseEvent((PRUnichar*)cvalue,
+  nsresult rv = event->InitMouseEvent(*cvalue,
 				      ctrlKeyArg, 
 				      altKeyArg, 
 				      shiftKeyArg, 
@@ -362,7 +362,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_MouseEventImpl_initMouseEvent
 				      (PRUint16)jbuttonArg, 
 				      (PRUint16)jdetailArg);
 
-  env->ReleaseStringChars(jtypeArg, cvalue);
+  nsString::Recycle(cvalue);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,

@@ -822,17 +822,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
     return;
   }
 
-  jboolean iscopy;
-  const jchar* value = env->GetStringChars(jvalue, &iscopy);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,
-        "Node.setNodeValue: GetStringChars failed");
-    env->ReleaseStringChars(jvalue, value);
+  nsString* value = JavaDOMGlobals::GetUnicode(env, jvalue);
+  if (!value)
     return;
-  }
 
-  nsresult rv = node->SetNodeValue((PRUnichar*)value);
-  env->ReleaseStringChars(jvalue, value);
+  nsresult rv = node->SetNodeValue(*value);
+  nsString::Recycle(value);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -873,22 +868,17 @@ JNIEXPORT jlong JNICALL Java_org_mozilla_dom_NodeImpl_addNativeEventListener
         return 0;
     }
 
-    jboolean iscopy;
-    const jchar* type = env->GetStringChars(jtype, &iscopy);
-    if (!type) {
-        JavaDOMGlobals::ThrowException(env,
-            "EventTarget.addEventListener: GetStringChars failed\n");
-	env->ReleaseStringChars(jtype, type);
+    nsString* type = JavaDOMGlobals::GetUnicode(env, jtype);
+    if (!type)
         return 0;
-    }
 
     useCapture = juseCapture == JNI_TRUE ? PR_TRUE : PR_FALSE;
 
     listener = new NativeDOMProxyListener(env, jlistener);
     
-    nsresult rv = target->AddEventListener((PRUnichar*)type, listener, useCapture);
+    nsresult rv = target->AddEventListener(*type, listener, useCapture);
     target->Release();
-    env->ReleaseStringChars(jtype, type);
+    nsString::Recycle(type);
 
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
@@ -925,21 +915,17 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_removeNativeEventListener
         return;
     }
 
-    jboolean iscopy;
-    const jchar* type = env->GetStringChars(jtype, &iscopy);
-    if (!type) {
-        JavaDOMGlobals::ThrowException(env,
-                "NodeImpl.removeEventListener: GetStringChars failed\n");
-	env->ReleaseStringChars(jtype, type);
+    
+    nsString* type = JavaDOMGlobals::GetUnicode(env, jtype);
+    if (!type)
         return;
-    }
 
     useCapture = juseCapture == JNI_TRUE ? PR_TRUE : PR_FALSE;
 
-    nsresult rv = target->RemoveEventListener((PRUnichar*)type, 
-                              (nsIDOMEventListener*) jlistener, useCapture);
+    nsresult rv = target->RemoveEventListener(*type, 
+			      (nsIDOMEventListener*) jlistener, useCapture);
     target->Release();
-    env->ReleaseStringChars(jtype, type);
+    nsString::Recycle(type);
 
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,        

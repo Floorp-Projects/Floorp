@@ -52,17 +52,12 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createAttribute
   }
 
   nsIDOMAttr* ret = nsnull;
-  jboolean iscopy = JNI_FALSE;
-  const jchar* name = env->GetStringChars(jname, &iscopy);
-  if (!name) {
-    JavaDOMGlobals::ThrowException(env, 
-        "Document.createAttribute: GetStringChars failed");
-    env->ReleaseStringChars(jname, name);
+  nsString* name = JavaDOMGlobals::GetUnicode(env, jname);
+  if (!name)
     return NULL;
-  }
 
-  nsresult rv = doc->CreateAttribute((PRUnichar*)name, &ret);  
-  env->ReleaseStringChars(jname, name);
+  nsresult rv = doc->CreateAttribute(*name, &ret);  
+  nsString::Recycle(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -110,17 +105,12 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createCDATASection
   }
 
   nsIDOMCDATASection* ret = nsnull;
-  jboolean iscopy;
-  const jchar* data = env->GetStringChars(jdata, &iscopy);
-  if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-        "Document.createCDATASection: GetStringChars failed");
-    env->ReleaseStringChars(jdata, data);
+  nsString* data = JavaDOMGlobals::GetUnicode(env, jdata);
+  if (!data)
     return NULL;
-  }
 
-  nsresult rv = doc->CreateCDATASection((PRUnichar*)data, &ret);
-  env->ReleaseStringChars(jdata, data);
+  nsresult rv = doc->CreateCDATASection(*data, &ret);
+  nsString::Recycle(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -167,17 +157,12 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createComment
   }
 
   nsIDOMComment* ret = nsnull;
-  jboolean iscopy;
-  const jchar* data = env->GetStringChars(jdata, &iscopy);
-  if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-        "Document.createComment: GetStringChars failed");
-    env->ReleaseStringChars(jdata, data);
+  nsString* data = JavaDOMGlobals::GetUnicode(env, jdata);
+  if (!data)
     return NULL;
-  }
 
-  nsresult rv = doc->CreateComment((PRUnichar*)data, &ret);  
-  env->ReleaseStringChars(jdata, data);
+  nsresult rv = doc->CreateComment(*data, &ret);  
+  nsString::Recycle(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -262,17 +247,11 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createElement
   }
 
   nsIDOMElement* ret = nsnull;
-  jboolean iscopy;
-  const jchar* tagName = env->GetStringChars(jtagName, &iscopy);
-  if (!tagName) {
-    JavaDOMGlobals::ThrowException(env,
-        "Document.createElement: GetStringChars failed");
-    env->ReleaseStringChars(jtagName, tagName);
-    return NULL;
-  }
-
-  nsresult rv = doc->CreateElement((PRUnichar*)tagName, &ret); 
-  env->ReleaseStringChars(jtagName, tagName);
+  nsString* tagName = JavaDOMGlobals::GetUnicode(env, jtagName);
+  if (!tagName)
+      return NULL;
+  nsresult rv = doc->CreateElement(*tagName, &ret); 
+  nsString::Recycle(tagName);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -320,17 +299,12 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
   }
 
   nsIDOMEntityReference* ret = nsnull;
-  jboolean iscopy;
-  const jchar* name = env->GetStringChars(jname, &iscopy);
-  if (!name) {
-    JavaDOMGlobals::ThrowException(env,
-        "Document.createEntityReference: GetStringChars failed");
-    env->ReleaseStringChars(jname, name);
+  nsString* name = JavaDOMGlobals::GetUnicode(env, jname);
+  if (!name)
     return NULL;
-  }
 
-  nsresult rv = doc->CreateEntityReference((PRUnichar*)name, &ret);  
-  env->ReleaseStringChars(jname, name);
+  nsresult rv = doc->CreateEntityReference(*name, &ret);  
+  nsString::Recycle(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -379,27 +353,20 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
   }
 
   nsIDOMProcessingInstruction* ret = nsnull;
-  jboolean iscopy;
-  jboolean iscopy2;
-  const jchar* target = env->GetStringChars(jtarget, &iscopy);
-  if (!target) {
-    JavaDOMGlobals::ThrowException(env,
-        "Document.createProcessingInstruction: GetStringChars target failed");
+  
+  nsString* target = JavaDOMGlobals::GetUnicode(env, jtarget);
+  if (!target)
     return NULL;
-  }
 
-  const jchar* data = env->GetStringChars(jdata, &iscopy2);
+  nsString* data = JavaDOMGlobals::GetUnicode(env, jdata);
   if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-        "Document.createProcessingInstruction: GetStringChars data failed");
-    env->ReleaseStringChars(jdata, data);  
-    env->ReleaseStringChars(jtarget, target);
+    nsString::Recycle(target);
     return NULL;
   }
 
-  nsresult rv = doc->CreateProcessingInstruction((PRUnichar*)target, (PRUnichar*)data, &ret);
-  env->ReleaseStringChars(jdata, data);  
-  env->ReleaseStringChars(jtarget, target);
+  nsresult rv = doc->CreateProcessingInstruction(*target, *data, &ret);
+  nsString::Recycle(target);
+  nsString::Recycle(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -448,17 +415,12 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
   }
 
   nsIDOMText* ret = nsnull;
-  jboolean iscopy;
-  const jchar* data = env->GetStringChars(jdata, &iscopy);
-  if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-        "Document.createTextNode: GetStringChars failed");
-    env->ReleaseStringChars(jdata, data);
+  nsString* data = JavaDOMGlobals::GetUnicode(env, jdata);
+  if (!data)
     return NULL;
-  }
 
-  nsresult rv = doc->CreateTextNode((PRUnichar*)data, &ret);  
-  env->ReleaseStringChars(jdata, data);
+  nsresult rv = doc->CreateTextNode(*data, &ret);  
+  nsString::Recycle(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -584,17 +546,12 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
   }
 
   nsIDOMNodeList* elements = nsnull;
-  jboolean iscopy;
-  const jchar* tagName = env->GetStringChars(jtagName, &iscopy);
-  if (!tagName) {
-    JavaDOMGlobals::ThrowException(env,
-        "Document.getElementsByTagName: GetStringChars failed");
-    env->ReleaseStringChars(jtagName, tagName);
+  nsString* tagName = JavaDOMGlobals::GetUnicode(env, jtagName);
+  if (!tagName)
     return NULL;
-  }
 
-  nsresult rv = doc->GetElementsByTagName((PRUnichar*)tagName, &elements);  
-  env->ReleaseStringChars(jtagName, tagName);
+  nsresult rv = doc->GetElementsByTagName(*tagName, &elements);  
+  nsString::Recycle(tagName);
 
   if (NS_FAILED(rv) || !elements) {
     JavaDOMGlobals::ThrowException(env,

@@ -44,18 +44,13 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
     return NULL;
   }
 
-  jboolean iscopy;
-  const jchar* cname = env->GetStringChars(jname, &iscopy);
-  if (!cname) {
-    JavaDOMGlobals::ThrowException(env,
-        "Element.getAttribute: GetStringChars failed");
-    env->ReleaseStringChars(jname, cname);
+  nsString* cname = JavaDOMGlobals::GetUnicode(env, jname);
+  if (!cname)
     return NULL;
-  }
 
   nsString attr;
-  nsresult rv = element->GetAttribute((PRUnichar*)cname, attr);  
-  env->ReleaseStringChars(jname, cname);
+  nsresult rv = element->GetAttribute(*cname, attr);  
+  nsString::Recycle(cname);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -89,18 +84,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNode
     return NULL;
   }
 
-  jboolean iscopy;
-  const jchar* cname = env->GetStringChars(jname, &iscopy);
-  if (!cname) {
-    JavaDOMGlobals::ThrowException(env,
-	"Element.getAttributeNode: GetStringChars failed");
-    env->ReleaseStringChars(jname, cname);
+  nsString* cname = JavaDOMGlobals::GetUnicode(env, jname);
+  if (!cname)
     return NULL;
-  }
 
   nsIDOMAttr* attr = nsnull;
-  nsresult rv = element->GetAttributeNode((PRUnichar*)cname, &attr);  
-  env->ReleaseStringChars(jname, cname);
+  nsresult rv = element->GetAttributeNode(*cname, &attr);  
+  nsString::Recycle(cname);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
@@ -144,18 +134,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagName
     return NULL;
   }
 
-  jboolean iscopy;
-  const jchar* cname = env->GetStringChars(jname, &iscopy);
-  if (!cname) {
-    JavaDOMGlobals::ThrowException(env,
-        "Element.getElementsByTagName: GetStringChars failed");
-    env->ReleaseStringChars(jname, cname);
+  nsString* cname = JavaDOMGlobals::GetUnicode(env, jname);
+  if (!cname)
     return NULL;
-  }
 
   nsIDOMNodeList* nodes = nsnull;
-  nsresult rv = element->GetElementsByTagName((PRUnichar*)cname, &nodes);
-  env->ReleaseStringChars(jname, cname);
+  nsresult rv = element->GetElementsByTagName(*cname, &nodes);
+  nsString::Recycle(cname);
 
   if (NS_FAILED(rv) || !nodes) {
     JavaDOMGlobals::ThrowException(env,
@@ -255,17 +240,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttribute
     return;
   }
 
-  jboolean iscopy;
-  const jchar* name = env->GetStringChars(jname, &iscopy);
-  if (!name) {
-    JavaDOMGlobals::ThrowException(env,
-      "Element.removeAttribute: GetStringChars failed");
-    env->ReleaseStringChars(jname, name);
+  nsString* name = JavaDOMGlobals::GetUnicode(env, jname);
+  if (!name)
     return;
-  }
 
-  nsresult rv = element->RemoveAttribute((PRUnichar*)name);  
-  env->ReleaseStringChars(jname, name);
+  nsresult rv = element->RemoveAttribute(*name);  
+  nsString::Recycle(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -350,28 +330,19 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
     return;
   }
 
-  jboolean iscopy;
-  const jchar* name = env->GetStringChars(jname, &iscopy);
-  if (!name) {
-    JavaDOMGlobals::ThrowException(env,
-	"Element.setAttribute: GetStringChars name failed");
-    env->ReleaseStringChars(jname, name);
+  nsString* name = JavaDOMGlobals::GetUnicode(env, jname);
+  if (!name)
       return;
-  }
 
-  jboolean iscopy2;
-  const jchar* value = env->GetStringChars(jvalue, &iscopy2);
+  nsString* value = JavaDOMGlobals::GetUnicode(env, jvalue);
   if (!value) {
-    JavaDOMGlobals::ThrowException(env,
-        "Element.setAttribute: GetStringChars name failed");
-    env->ReleaseStringChars(jvalue, value);  
-    env->ReleaseStringChars(jname, name);
+    nsString::Recycle(name);
     return;
   }
 
-  nsresult rv = element->SetAttribute((PRUnichar*)name, (PRUnichar*)value);
-  env->ReleaseStringChars(jvalue, value);  
-  env->ReleaseStringChars(jname, name);
+  nsresult rv = element->SetAttribute(*name, *value);
+  nsString::Recycle(value);
+  nsString::Recycle(name);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;

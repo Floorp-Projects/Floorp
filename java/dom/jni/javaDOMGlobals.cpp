@@ -427,6 +427,9 @@ void JavaDOMGlobals::Destroy(JNIEnv *env)
 jobject JavaDOMGlobals::CreateNodeSubtype(JNIEnv *env, 
 					  nsIDOMNode *node) 
 {
+  if (!node)
+    return NULL;
+
   PRUint16 nodeType = 0;
   (void) node->GetNodeType(&nodeType);
 
@@ -596,4 +599,19 @@ void JavaDOMGlobals::ThrowException(JNIEnv *env,
   } 
 
   // an exception is thrown in any case
+}
+
+nsString* JavaDOMGlobals::GetUnicode(JNIEnv *env,
+				     jstring jstr)
+{
+  jboolean iscopy = JNI_FALSE;
+  const jchar* name = env->GetStringChars(jstr, &iscopy);
+  if (!name) {
+    ThrowException(env, "GetStringChars failed");
+    return NULL;
+  }
+  nsString* ustr = new nsString((PRUnichar*)name, 
+				env->GetStringLength(jstr));
+  env->ReleaseStringChars(jstr, name);
+  return ustr;
 }

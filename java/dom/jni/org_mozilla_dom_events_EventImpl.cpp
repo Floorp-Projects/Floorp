@@ -20,16 +20,20 @@
 */
 
 #include "prlog.h"
+#include "nsIDOMNode.h"
 #include"nsIDOMEvent.h"
+#include"nsIDOMEventTarget.h"
 #include"javaDOMEventsGlobals.h"
 #include "org_mozilla_dom_events_EventImpl.h"
 
+//  static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+
 /*
  * Class:     org_mozilla_dom_events_EventImpl
- * Method:    getCurrentNode
- * Signature: ()Lorg/w3c/dom/Node;
+ * Method:    getCurrentTarget
+ * Signature: ()Lorg/w3c/dom/events/EventTarget;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getCurrentNode
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getCurrentTarget
   (JNIEnv *env, jobject jthis)
 {
     nsIDOMEvent* event = (nsIDOMEvent*)
@@ -40,15 +44,19 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getCurrentNode
         return NULL;
     }
 
-    nsIDOMNode* ret = nsnull;
-    nsresult rv = event->GetCurrentNode(&ret);
+    nsIDOMEventTarget* ret = nsnull;
+    nsresult rv = event->GetCurrentTarget(&ret);
     if (NS_FAILED(rv) || !ret) {
         JavaDOMGlobals::ThrowException(env,
             "Event.getCurrentNode: failed", rv);
         return NULL;
     }
 
-    return JavaDOMGlobals::CreateNodeSubtype(env, ret);
+    nsIDOMNode* node = nsnull;
+    rv = ret->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
+    printf("========== rv:%x  node:%x", rv, node);
+//      return JavaDOMGlobals::CreateNodeSubtype(env, ret);
+    return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
 
 /*
@@ -175,15 +183,18 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_events_EventImpl_getTarget
         return NULL;
     }
 
-    nsIDOMNode* ret = nsnull;
+    nsIDOMEventTarget* ret = nsnull;
     nsresult rv = event->GetTarget(&ret);
     if (NS_FAILED(rv) || !ret) {
         JavaDOMGlobals::ThrowException(env,
             "Event.getTarget: failed", rv);
         return NULL;
     }
-
-    return JavaDOMGlobals::CreateNodeSubtype(env, ret);
+    nsIDOMNode* node = nsnull;
+    rv = ret->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
+    printf("========== rv:%x  node:%x", rv, node);
+//      return JavaDOMGlobals::CreateNodeSubtype(env, ret);
+    return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
 
 /*
@@ -305,20 +316,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_initEvent
     return;
   }
 
-  jboolean iscopy;
-  const jchar* cvalue = env->GetStringChars(jeventTypeArg, &iscopy);
-  if (!cvalue) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Event.initEvent: GetStringChars failed\n"));
-    env->ReleaseStringChars(jeventTypeArg, cvalue);
+  nsString* cvalue = JavaDOMGlobals::GetUnicode(env, jeventTypeArg);
+  if (!cvalue)
     return;
-  }
 
   PRBool canBubble = jcanBubbleArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
   PRBool cancelable = jcancelableArg == JNI_TRUE ? PR_TRUE : PR_FALSE;
 
-  nsresult rv = event->InitEvent((PRUnichar*)cvalue, canBubble, cancelable);
-  env->ReleaseStringChars(jeventTypeArg, cvalue);
+  nsresult rv = event->InitEvent(*cvalue, canBubble, cancelable);
+  nsString::Recycle(cvalue);
 
   if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 

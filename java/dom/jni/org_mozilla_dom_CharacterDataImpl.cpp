@@ -41,17 +41,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_appendData
     return;
   }
   
-  jboolean iscopy;
-  const jchar* value = env->GetStringChars(jvalue, &iscopy);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,  
-	"CharacterData.appendData: GetStringChars failed");
-    env->ReleaseStringChars(jvalue, value);
+  nsString* value = JavaDOMGlobals::GetUnicode(env, jvalue);
+  if (!value)
     return;
-  }
 
-  nsresult rv = data->AppendData((PRUnichar*)value);
-  env->ReleaseStringChars(jvalue, value);
+  nsresult rv = data->AppendData(*value);
+  nsString::Recycle(value);
+
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
@@ -181,17 +177,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_insertData
     return;
   }
   
-  jboolean iscopy;
-  const jchar* value = env->GetStringChars(jvalue, &iscopy);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,  
-	"CharacterData.insertData: GetStringChars failed");
-    env->ReleaseStringChars(jvalue, value);
+  nsString* value = JavaDOMGlobals::GetUnicode(env, jvalue);
+  if (!value)
     return;
-  }
 
-  nsresult rv = data->InsertData((PRUint32) offset, (PRUnichar*)value);
-  env->ReleaseStringChars(jvalue, value);
+  nsresult rv = data->InsertData((PRUint32) offset, *value);
+  nsString::Recycle(value);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -230,17 +221,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
     return;
   }
   
-  jboolean iscopy;
-  const jchar* value = env->GetStringChars(jvalue, &iscopy);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,  
-        "CharacterData.replaceData: GetStringChars failed");
-    env->ReleaseStringChars(jvalue, value);
+  nsString* value = JavaDOMGlobals::GetUnicode(env, jvalue);
+  if (!value)
     return;
-  }
 
-  nsresult rv = data->ReplaceData((PRUint32) offset, (PRUint32) count, (PRUnichar*)value);
-  env->ReleaseStringChars(jvalue, value);
+  nsresult rv = data->ReplaceData((PRUint32) offset, (PRUint32) count, *value);
+  nsString::Recycle(value);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
@@ -271,17 +257,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_setData
     return;
   }
   
-  jboolean iscopy;
-  const jchar* value = env->GetStringChars(jvalue, &iscopy);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,  
-        "CharacterData.setData: GetStringChars failed");
-    env->ReleaseStringChars(jvalue, value);
+  nsString* value = JavaDOMGlobals::GetUnicode(env, jvalue);
+  if (!value)
     return;
-  }
 
-  nsresult rv = data->SetData((PRUnichar*)value);
-  env->ReleaseStringChars(jvalue, value);
+  nsresult rv = data->SetData(*value);
+  nsString::Recycle(value);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;

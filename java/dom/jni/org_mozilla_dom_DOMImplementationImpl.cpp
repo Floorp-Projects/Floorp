@@ -148,32 +148,23 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_DOMImplementationImpl_hasFeature
     return JNI_FALSE;
   }
 
-  jboolean iscopy;
-  const jchar* feature = env->GetStringChars(jfeature, &iscopy);
-  if (!feature) {
-      PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	     ("DOMImplementation.hasFeature: GetStringChars feature failed\n"));
-      env->ReleaseStringChars(jfeature, feature);
+  nsString* feature = JavaDOMGlobals::GetUnicode(env, jfeature);
+  if (!feature)
       return JNI_FALSE;
-  }
 
-  jboolean iscopy2;
-  const jchar* version = NULL;
+  nsString* version = new nsString();
   if (jversion) {
-      version = env->GetStringChars(jversion, &iscopy2);
+      version = JavaDOMGlobals::GetUnicode(env, jversion);
       if (!version) {
-	  PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-		 ("DOMImplementation.hasFeature: GetStringChars version failed\n"));
-	  env->ReleaseStringChars(jversion, version);
-	  env->ReleaseStringChars(jfeature, feature);
+	  nsString::Recycle(feature);
 	  return JNI_FALSE;
       }
   }
 
   PRBool ret = PR_FALSE;
-  nsresult rv = dom->HasFeature((PRUnichar*)feature, (PRUnichar*)version, &ret);
-  env->ReleaseStringChars(jversion, version);
-  env->ReleaseStringChars(jfeature, feature);
+  nsresult rv = dom->HasFeature(*feature, *version, &ret);
+  nsString::Recycle(feature);
+  nsString::Recycle(version);
 
   if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 

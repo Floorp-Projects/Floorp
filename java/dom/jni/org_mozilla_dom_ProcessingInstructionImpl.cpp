@@ -110,17 +110,12 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_setData
     return;
   }
 
-  jboolean iscopy;
-  const jchar* data = env->GetStringChars(jdata, &iscopy);
-  if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-        "ProcessingInstruction.setData: GetStringChars failed");
-    env->ReleaseStringChars(jdata, data);
+  nsString* data = JavaDOMGlobals::GetUnicode(env, jdata);
+  if (!data)
     return;
-  }
 
-  nsresult rv = pi->SetData((PRUnichar*)data);
-  env->ReleaseStringChars(jdata, data);
+  nsresult rv = pi->SetData(*data);
+  nsString::Recycle(data);
 
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
