@@ -175,7 +175,7 @@ protected:
     PLDHashTable mRequestInfoHash;
 
 private:
-    nsListenerInfo *GetListenerInfo(nsIWeakReference* aListener);
+    nsListenerInfo *GetListenerInfo(nsIWebProgressListener* aListener);
 
     PRInt32 GetMaxTotalProgress();
 
