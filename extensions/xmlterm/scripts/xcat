@@ -19,6 +19,11 @@ $height = $opt_height if $opt_height;
 
 my $cookie = $ENV{LTERM_COOKIE};           # XMLTerm cookie
 
+if (!$cookie) {
+    print 'Please use the "eval `xenv`" command to set-up the remote XMLterm environment'."\n";
+    exit;
+}
+
 my $dir = cwd();
 
 foreach my $url (@ARGV) {                 # for each argument
@@ -114,7 +119,7 @@ foreach my $url (@ARGV) {                 # for each argument
                    (?::(\d+))?                    # port
                  )?
                  (/|/[^/\s]\S*?)?                 # pathname
-                 (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # URL terminator (look ahead)
+                 (?=>|\)|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # URL terminator (look ahead)
                  %x ) {
             $urlvals[$nurl] = $&;
             s%$&%%;
@@ -132,9 +137,9 @@ foreach my $url (@ARGV) {                 # for each argument
 
             print "\e{S$cookie\n";             # HTML stream escape sequence
             if ($nurl >= 2) {
-                print "<img src='$urlvals[1]' $clickcmd><br>";
+                print "<a target='_new' href='$urlstr'><img src='$urlvals[1]'></a><br>";
             }
-            print "<div class='textlink' $clickcmd')\">$urldesc</div>";
+            print "<a target='_new' href='$urlstr'>$urldesc</a>";
             print "\000";                      # Terminate HTML stream
         }
 
@@ -172,8 +177,8 @@ foreach my $url (@ARGV) {                 # for each argument
                (?::(\d+))?                    # port
              )?
              (/|/[^/\s]\S*?)?                 # pathname
-             (?=>|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # URL terminator (look ahead)
-             %<span class="textlink" onClick="return HandleEvent(event,'click','textlink',-\#,'$&')">$&</span>%xg;
+             (?=>|\)|\"|\'|\s|[.,!](?:\s|\Z)|\Z) # URL terminator (look ahead)
+             %<a target='_new' href='$&'>$&</a>%xg;
 
             s/"&gt;"/&gt;/g;   # Replace "&gt;" with &gt; in the end
 

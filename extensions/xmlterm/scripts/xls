@@ -14,6 +14,10 @@ if ($opt_help) {
     exit;
 }
 
+my $char_cols = $ENV{COLUMNS};
+
+$char_cols = 80 unless $char_cols;
+
 # Icon details
 #my $imgdir="chrome://xmlterm/skin/default/images"
 my $imgdir = "file:///usr/share/pixmaps/mc";
@@ -21,9 +25,6 @@ my $imgdir = "file:///usr/share/pixmaps/mc";
 my %img;
 ($img{'directory'}, $img{'executable'}, $img{'plainfile'}, $img{'urlfile'}) =
     ('i-directory.png', 'i-executable.png', 'i-regular.png', 'i-regular.png');
-
-my $ncols = 5;
-$ncols = $opt_cols if ($opt_cols);
 
 my $dir = cwd();
 my $rowimg = "";
@@ -42,10 +43,26 @@ if (@ARGV) {
     @filelist = glob("*");                 # all files in current directory
 }
 
+my $file;
+my $maxlen = 0;
+foreach $file (@filelist) {        # for each file in the list
+    $maxlen = length($file) if length($file) > $maxlen;
+}
+
+my $table_cols = $char_cols/($maxlen+1);
+
+$table_cols = $opt_cols if ($opt_cols);
+
 my $cookie = $ENV{LTERM_COOKIE};           # XMLTerm cookie
+
+if (!$cookie) {
+    print 'Please use the "eval `xenv`" command to set-up the remote XMLterm environment'."\n";
+    exit;
+}
+
 print "\e{S$cookie\012";                     # HTML stream escape sequence
 print "<TABLE FRAME=none BORDER=0>";
-print "<COLGROUP COLSPAN=$ncols WIDTH=1*>";
+print "<COLGROUP COLSPAN=$table_cols WIDTH=1*>";
 
 foreach $file (@filelist) {        # for each file in the list
     $file =~ m%\A(.*?) (\.[^/.]*)?\Z%x # Deconstruct file name
@@ -147,7 +164,7 @@ foreach $file (@filelist) {        # for each file in the list
     $rowtxt .= "$tail</SPAN>";
     $nfile++;
 
-    if (($nfile % $ncols) == 0) {       # print complete table row
+    if (($nfile % $table_cols) == 0) {       # print complete table row
         print "<TR CLASS='icons'>$rowimg" unless $opt_text;
         print "<TR>$rowtxt";
         $rowimg = "";

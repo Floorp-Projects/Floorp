@@ -32,6 +32,9 @@
 
 #include "nsIDocumentViewer.h"
 
+#include "nsILocalFile.h"
+#include "nsIFileStreams.h"
+
 #include "nsITextContent.h"
 
 #include "nsIDOMElement.h"
@@ -64,6 +67,7 @@
 // mozXMLTermSession definition
 /////////////////////////////////////////////////////////////////////////
 static const char* kWhitespace=" \b\t\r\n";
+static const PRUnichar kNBSP = 160;
 
 const char* const mozXMLTermSession::sessionElementNames[] = {
   "session",
@@ -113,6 +117,7 @@ mozXMLTermSession::mozXMLTermSession() :
   mXMLTerminal(nsnull),
 
   mBodyNode(nsnull),
+  mMenusNode(nsnull),
   mSessionNode(nsnull),
   mCurrentDebugNode(nsnull),
 
@@ -125,7 +130,7 @@ mozXMLTermSession::mozXMLTermSession() :
 
   mEntryHasOutput(PR_FALSE),
 
-  mPromptSpanNode(nsnull),
+  mPromptTextNode(nsnull),
   mCommandSpanNode(nsnull),
   mInputTextNode(nsnull),
 
@@ -157,6 +162,9 @@ mozXMLTermSession::mozXMLTermSession() :
   mBotScrollRow(0),
 
   mRestoreInputEcho(PR_FALSE),
+
+  mCountExportHTML(0),
+  mLastExportHTML(nsAutoString()),
 
   mShellPrompt(nsAutoString()),
   mPromptHTML(nsAutoString()),
@@ -224,6 +232,15 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
   if (NS_FAILED(result) || !mBodyNode)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDOMElement> menusElement;
+  nsAutoString menusID( NS_LITERAL_STRING("menus") );
+  result = vDOMHTMLDocument->GetElementById(menusID,
+                                            getter_AddRefs(menusElement));
+
+  if (NS_SUCCEEDED(result) && menusElement) {
+    mMenusNode = do_QueryInterface(menusElement);
+  }
+
   // Use body node as session node by default
   mSessionNode = mBodyNode;
 
@@ -275,7 +292,7 @@ NS_IMETHODIMP mozXMLTermSession::Finalize(void)
 
   mXMLTermStream = nsnull;
 
-  mPromptSpanNode = nsnull;
+  mPromptTextNode = nsnull;
   mCommandSpanNode = nsnull;
   mInputTextNode = nsnull;
 
@@ -283,6 +300,7 @@ NS_IMETHODIMP mozXMLTermSession::Finalize(void)
   mCurrentEntryNode = nsnull;
 
   mBodyNode = nsnull;
+  mMenusNode = nsnull;
   mSessionNode = nsnull;
   mCurrentDebugNode = nsnull;
 
@@ -509,9 +527,24 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       XMLT_LOG(mozXMLTermSession::ReadAll,62,
                ("Terminating screen mode\n"));
 
+      // Uncollapse non-screen stuff
+      nsAutoString attName(NS_LITERAL_STRING("xmlt-block-collapsed"));
+
+      nsCOMPtr<nsIDOMElement> menusElement = do_QueryInterface(mMenusNode);
+
+      if (NS_SUCCEEDED(result) && menusElement) {
+        menusElement->RemoveAttribute(attName);
+      }
+
+      nsCOMPtr<nsIDOMElement> sessionElement = do_QueryInterface(mSessionNode);
+
+      if (sessionElement) {
+        sessionElement->RemoveAttribute(attName);
+      }
+
       // Delete screen element
       nsCOMPtr<nsIDOMNode> resultNode;
-      mSessionNode->RemoveChild(mScreenNode, getter_AddRefs(resultNode));
+      mBodyNode->RemoveChild(mScreenNode, getter_AddRefs(resultNode));
       if (NS_FAILED(result))
         break;
       mScreenNode = nsnull;
@@ -613,7 +646,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                   opvals, buf_row));
 
         nsCOMPtr<nsIDOMNode> resultNode;
-        result = mSessionNode->RemoveChild(mScreenNode,
+        result = mBodyNode->RemoveChild(mScreenNode,
                                            getter_AddRefs(resultNode));
         if (NS_FAILED(result))
           break;
@@ -1107,6 +1140,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
                                     nsISelectionController::SELECTION_FOCUS_REGION);
+
   }
 
   // Show caret
@@ -1115,6 +1149,115 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
   // Scroll frame (ignore result)
   ScrollToBottomLeft();
 
+  return NS_OK;
+}
+
+
+/** Exports HTML to file, with META REFRESH, if refreshSeconds is non-zero.
+ * Nothing is done if display has not changed since last export, unless
+ * forceExport is true. Returns true if export actually takes place.
+ * If filename is a null string, HTML is written to STDERR.
+ */
+NS_IMETHODIMP mozXMLTermSession::ExportHTML(const PRUnichar* aFilename,
+                                            PRInt32 permissions,
+                                            const PRUnichar* style,
+                                            PRUint32 refreshSeconds,
+                                            PRBool forceExport,
+                                            PRBool* exported)
+{
+  nsresult result;
+
+  if (!aFilename || !exported)
+    return NS_ERROR_NULL_POINTER;
+
+  *exported = PR_FALSE;
+
+  if (forceExport)
+    mLastExportHTML.SetLength(0);
+
+  nsAutoString indentString; indentString.SetLength(0);
+  nsAutoString htmlString;
+  result = ToHTMLString(mBodyNode, indentString, htmlString,
+                        PR_TRUE, PR_FALSE );
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  if (htmlString.Equals(mLastExportHTML))
+    return NS_OK;
+
+  mLastExportHTML.Assign( htmlString );
+  mCountExportHTML++;
+
+  nsAutoString filename( aFilename );
+
+  if (filename.Length() == 0) {
+    // Write to STDERR
+    char* htmlCString = ToNewCString(htmlString);
+    fprintf(stderr, "mozXMLTermSession::ExportHTML:\n%s\n\n", htmlCString);
+    nsCRT::free(htmlCString);
+
+    *exported = PR_TRUE;
+    return NS_OK;
+  }
+
+  // Copy HTML to local file
+  nsCOMPtr<nsILocalFile> localFile = do_CreateInstance( NS_LOCAL_FILE_CONTRACTID, &result);
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  XMLT_LOG(mozXMLTermSession::ExportHTML,0,
+           ("Exporting %d\n", mCountExportHTML));
+
+  result = localFile->InitWithUnicodePath(filename.get());
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  PRInt32 ioFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
+
+  nsCOMPtr<nsIOutputStream> outStream;
+  result = NS_NewLocalFileOutputStream(getter_AddRefs(outStream),
+                                       localFile, ioFlags, permissions);
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  PRUint32 writeCount;
+
+  nsCAutoString cString( "<html>\n<head>\n" );
+
+  if (refreshSeconds > 0) {
+     cString.Append("<META HTTP-EQUIV='refresh' content='");
+     cString.AppendInt(refreshSeconds);
+     cString.Append("'>");
+  }
+
+  cString.Append("<title>xmlterm page</title>\n");
+  cString.Append("<link title='defaultstyle' rel='stylesheet' type='text/css' href='xmlt.css'>\n");
+
+  if (style) {
+    cString.Append("<style type='text/css'>\n");
+    cString.AppendWithConversion(style);
+    cString.Append("</style>\n");
+  }
+
+  cString.Append("<script language='JavaScript'>var exportCount=");
+  cString.AppendInt(mCountExportHTML);
+  cString.Append(";</script>\n");
+  cString.Append("<script language='JavaScript' src='xmlt.js'></script>\n</head>");
+
+  cString.AppendWithConversion(htmlString);
+
+  cString.Append("</html>\n");
+
+  result = outStream->Write(cString.get(), cString.Length(),
+                            &writeCount);
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  result = outStream->Flush();
+
+  result = outStream->Close();
+
+  *exported = PR_TRUE;
   return NS_OK;
 }
 
@@ -1182,7 +1325,14 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
 
   XMLT_LOG(mozXMLTermSession::DisplayInput,70,("cursorCol=%d\n", cursorCol));
 
-  result = SetDOMText(mInputTextNode, aString);
+  // If string terminates in whitespace, append NBSP for cursor positioning
+  nsAutoString tempString( aString );
+  if (aString.Last() == PRUnichar(' '))
+    tempString += kNBSP;
+
+  // Display string
+  result = SetDOMText(mInputTextNode, tempString);
+
   if (NS_FAILED(result))
     return NS_ERROR_FAILURE;
 
@@ -1218,20 +1368,15 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
 
   } else {
     // Get the last bit of text in the prompt
-    nsCOMPtr<nsIDOMNode> promptTextNode;
-    result = mPromptSpanNode->GetLastChild(getter_AddRefs(promptTextNode));
+    nsCOMPtr<nsIDOMText> domText (do_QueryInterface(mPromptTextNode));
 
-    if (NS_SUCCEEDED(result)) {
-      nsCOMPtr<nsIDOMText> domText (do_QueryInterface(promptTextNode));
-
-      if (domText) {
-        PRUint32 textLength;
-        result = domText->GetLength(&textLength);
-        if (NS_SUCCEEDED(result)) {
-          XMLT_LOG(mozXMLTermSession::DisplayInput,72,
-                   ("textLength=%d\n", textLength));
-          result = selection->Collapse(promptTextNode, textLength);
-        }
+    if (domText) {
+      PRUint32 textLength;
+      result = domText->GetLength(&textLength);
+      if (NS_SUCCEEDED(result)) {
+        XMLT_LOG(mozXMLTermSession::DisplayInput,72,
+                 ("textLength=%d\n", textLength));
+        result = selection->Collapse(mPromptTextNode, textLength);
       }
     }
   }
@@ -1899,8 +2044,13 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
       mOutputTextNode = textNode;
       mOutputTextOffset = 0;
 
+      // If string terminates in whitespace, append NBSP for cursor positioning
+      nsAutoString tempString( aString );
+      if (newline || (aString.Last() == PRUnichar(' ')))
+        tempString += kNBSP;
+
       // Display incomplete line
-      result = SetDOMText(mOutputTextNode, aString);
+      result = SetDOMText(mOutputTextNode, tempString);
       if (NS_FAILED(result))
         return NS_ERROR_FAILURE;
 
@@ -1988,7 +2138,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
       currentStyle = strStyle[0];
 
     mOutputTextOffset = 0;
-    tagName.Assign(NS_LITERAL_STRING("span"));
+    tagName.Assign(NS_LITERAL_STRING("pre"));
 
     PR_ASSERT(strLength > 0);
 
@@ -2857,6 +3007,7 @@ void mozXMLTermSession::PositionOutputCursor(mozILineTermAux* lineTermAux)
 
   XMLT_LOG(mozXMLTermSession::PositionOutputCursor,80,("\n"));
 
+  PRBool dummyOutput = PR_FALSE;
   if (!mOutputTextNode) {
     // Append dummy output line
     nsCOMPtr<nsIDOMNode> spanNode, textNode;
@@ -2867,6 +3018,12 @@ void mozXMLTermSession::PositionOutputCursor(mozILineTermAux* lineTermAux)
 
     if (NS_FAILED(result) || !spanNode || !textNode)
       return;
+
+    // Display NBSP for cursor positioning
+    nsAutoString tempString;
+    tempString += kNBSP;
+    SetDOMText(textNode, tempString);
+    dummyOutput = PR_TRUE;
 
     mOutputDisplayType = SPAN_DUMMY_NODE;
     mOutputDisplayNode = spanNode;
@@ -2891,6 +3048,8 @@ void mozXMLTermSession::PositionOutputCursor(mozILineTermAux* lineTermAux)
     domText->GetData(text);
 
     PRInt32 textOffset = text.Length();
+    if (textOffset && dummyOutput) textOffset--;
+
     if (lineTermAux && (mOutputDisplayType == PRE_STDIN_NODE)) {
       // Get cursor column
       PRInt32 cursorCol = 0;
@@ -3152,20 +3311,25 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
   nsAutoString classAttribute;
 
   // Create prompt element
-  nsCOMPtr<nsIDOMNode> newPromptSpanNode;
+  nsCOMPtr<nsIDOMNode> promptSpanNode;
   tagName.Assign(NS_LITERAL_STRING("span"));
   name.AssignWithConversion(sessionElementNames[PROMPT_ELEMENT]);
   result = NewElement(tagName, name, mCurrentEntryNumber,
-                      inputNode, newPromptSpanNode);
-  if (NS_FAILED(result) || !newPromptSpanNode) {
+                      inputNode, promptSpanNode);
+  if (NS_FAILED(result) || !promptSpanNode) {
     return NS_ERROR_FAILURE;
   }
 
-  mPromptSpanNode = newPromptSpanNode;
-
   // Add event attributes to prompt element
   result = SetEventAttributes(name, mCurrentEntryNumber,
-                                mPromptSpanNode);
+                                promptSpanNode);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(result) || !domDoc)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> resultNode;
 
   if (mPromptHTML.Length() == 0) {
 
@@ -3177,19 +3341,23 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
     tagName.Assign(NS_LITERAL_STRING("span"));
     name.Assign(NS_LITERAL_STRING("noicons"));
     result = NewElementWithText(tagName, name, -1,
-                                mPromptSpanNode, spanNode, textNode);
+                                promptSpanNode, spanNode, textNode);
     if (NS_FAILED(result) || !spanNode || !textNode) {
       return NS_ERROR_FAILURE;
     }
 
-    // Set prompt text
-    result = SetDOMText(textNode, aPrompt);
-    if (NS_FAILED(result))
-      return NS_ERROR_FAILURE;
+    // Strip single trailing space, if any, from prompt string
+    int spaceOffset = aPrompt.Length();
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    result = mXMLTerminal->GetDOMDocument(getter_AddRefs(domDoc));
-    if (NS_FAILED(result) || !domDoc)
+    if ((spaceOffset > 0) && (aPrompt.Last() == ((PRUnichar) ' ')))
+      spaceOffset--;
+
+    nsAutoString promptStr;
+    aPrompt.Left(promptStr, spaceOffset);
+
+    // Set prompt text
+    result = SetDOMText(textNode, promptStr);
+    if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
     // Create IMG element
@@ -3205,31 +3373,16 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
     imgElement->SetAttribute(attName, attValue);
 
     attName.Assign(NS_LITERAL_STRING("src"));
-    attValue.Assign(NS_LITERAL_STRING("chrome://xmlterm/content/wheel.gif"));
+    attValue.Assign(NS_LITERAL_STRING("chrome://xmlterm/skin/wheel.gif"));
     imgElement->SetAttribute(attName, attValue);
 
     attName.Assign(NS_LITERAL_STRING("align"));
     attValue.Assign(NS_LITERAL_STRING("middle"));
     imgElement->SetAttribute(attName, attValue);
 
-    nsCOMPtr<nsIDOMNode> resultNode;
-
     // Append IMG element
     nsCOMPtr<nsIDOMNode> imgNode = do_QueryInterface(imgElement);
-    result = mPromptSpanNode->AppendChild(imgNode,
-                                          getter_AddRefs(resultNode));
-    if (NS_FAILED(result))
-      return NS_ERROR_FAILURE;
-
-    // Append text node containing single space
-    nsCOMPtr<nsIDOMText> stubText;
-    nsAutoString spaceStr(NS_LITERAL_STRING(" "));
-    result = domDoc->CreateTextNode(spaceStr, getter_AddRefs(stubText));
-    if (NS_FAILED(result) || !stubText)
-      return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDOMNode> stubNode = do_QueryInterface(stubText);
-    result = mPromptSpanNode->AppendChild(stubNode,
+    result = promptSpanNode->AppendChild(imgNode,
                                           getter_AddRefs(resultNode));
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
@@ -3237,7 +3390,7 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
 #else // !DEFAULT_ICON_PROMPT
     // Create text node as child of prompt element
     nsCOMPtr<nsIDOMNode> textNode;
-    result = NewTextNode(mPromptSpanNode, textNode);
+    result = NewTextNode(promptSpanNode, textNode);
 
     if (NS_FAILED(result) || !textNode)
       return NS_ERROR_FAILURE;
@@ -3250,9 +3403,23 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
 
   } else {
     // User-specified HTML prompt
-    result = InsertFragment(mPromptHTML, mPromptSpanNode,
+    result = InsertFragment(mPromptHTML, promptSpanNode,
                             mCurrentEntryNumber);
   }
+
+  // Append text node containing single NBSP
+  nsCOMPtr<nsIDOMText> stubText;
+  nsAutoString spaceStr(kNBSP);
+  result = domDoc->CreateTextNode(spaceStr, getter_AddRefs(stubText));
+  if (NS_FAILED(result) || !stubText)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> stubNode = do_QueryInterface(stubText);
+  result = inputNode->AppendChild(stubNode, getter_AddRefs(resultNode));
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  mPromptTextNode = stubNode;
 
   // Create command element
   nsCOMPtr<nsIDOMNode> newCommandSpanNode;
@@ -3315,12 +3482,28 @@ NS_IMETHODIMP mozXMLTermSession::NewScreen(void)
   nsAutoString tagName(NS_LITERAL_STRING("div"));
   nsAutoString name(NS_LITERAL_STRING("screen"));
   result = NewElement(tagName, name, 0,
-                      mSessionNode, divNode);
+                      mBodyNode, divNode);
 
   if (NS_FAILED(result) || !divNode)
     return NS_ERROR_FAILURE;
 
   mScreenNode = divNode;
+
+  // Collapse non-screen stuff
+  nsAutoString attName(NS_LITERAL_STRING("xmlt-block-collapsed"));
+  nsAutoString attValue(NS_LITERAL_STRING("true"));
+
+  nsCOMPtr<nsIDOMElement> menusElement = do_QueryInterface(mMenusNode);
+
+  if (NS_SUCCEEDED(result) && menusElement) {
+    menusElement->SetAttribute(attName, attValue);
+  }
+
+  nsCOMPtr<nsIDOMElement> sessionElement = do_QueryInterface(mSessionNode);
+
+  if (sessionElement) {
+    sessionElement->SetAttribute(attName, attValue);
+  }
 
   // Create individual row elements
   nsCOMPtr<nsIDOMNode> resultNode;
@@ -4147,6 +4330,8 @@ NS_IMETHODIMP mozXMLTermSession::ToHTMLString(nsIDOMNode* aNode,
   if (domText) {
     // Text node
     domText->GetData(htmlString);
+    htmlString.ReplaceChar(kNBSP, ' ');
+
   } else {
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aNode);
 

@@ -3,14 +3,11 @@
   <head>
     <title>xmlterm page</title>
 
-<!--
   <link title="defaultstyle" rel="stylesheet" type="text/css"
-        href="chrome://xmlterm/content/xmltpage.css">
--->
+        href="chrome://xmlterm/skin/xmltpage.css">
 <!--
 NOTE: Ugly workaround for modifying CSS rules until bug 53448 is fixed
       Put all the CSS stuff inline      
--->
   <style type="text/css">
 /* xmltpage.css: default style sheet for xmlterm.html */
 
@@ -72,7 +69,7 @@ SPAN.helplink      { font-family: sans-serif; color: blue; cursor: hand;
                      text-decoration: underline }
 
 /* Level style */
-DIV.intermediate {display: block}
+DIV.intermediate {display: none}
 DIV.beginner     {display: none}
 
 /* Icons style */
@@ -81,6 +78,7 @@ SPAN.icons   {display: none}
 IMG.icons    {display: none}
 TR.icons     {display: none}
   </style>
+-->
 
   <script language="JavaScript" src="XMLTermCommands.js">
   </script>
@@ -92,33 +90,40 @@ TR.icons     {display: none}
 <!-- PNG alpha meld demo
   <img src="file:///home/svn/ice.png" style="position:absolute; top:45px; right: 0px;">
 -->
+  <div class="menus" id="menus">
 
-  <form name="xmltform1">
-
-    <span class="helplink" id="aboutxmlterm" onclick="return AboutXMLTerm();">
-      About XMLTerm
-    </span>
-
-    &nbsp;
-    <input type="button" size=4 value="New"
-           onClick="return NewXMLTerm('');">
-
-    &nbsp;
-    <span class="helplink" onclick="return ExplainTip('level');">
-     Level:</span>
-    <select name="userLevel" size=1 onchange="return UpdateSettings('userLevel');">
-      <option value="beginner">beginner</option>
-      <option value="intermediate" selected>intermediate</option>
-      <option value="advanced">advanced</option>
-    </select>
-
-    &nbsp;
-    <span class="helplink" onclick="return ExplainTip('icons');">
-    Icons:</span>
-    <select name="showIcons" size=1 onchange="return UpdateSettings('showIcons');">
-      <option value="off" selected>off</option>
-      <option value="on">on</option>
-    </select>
+    <form name="xmltform1">
+    
+      <span class="helplink" id="aboutxmlterm" onclick="return AboutXMLTerm();">
+        About XMLTerm
+      </span>
+    
+      &nbsp;
+      <input type="button" size=4 value="New"
+             onClick="return NewXMLTerm('');">
+    
+<!--
+      &nbsp;
+      <input type="button" size=4 value="Webcast"
+             onClick="return ToggleWebcast();">
+-->
+    
+      &nbsp;
+      <span class="helplink" onclick="return ExplainTip('level');">
+       Level:</span>
+      <select name="userLevel" size=1 onchange="return UpdateSettings('userLevel');">
+        <option value="beginner">beginner</option>
+        <option value="intermediate">intermediate</option>
+        <option value="advanced" selected>advanced</option>
+      </select>
+    
+      &nbsp;
+      <span class="helplink" onclick="return ExplainTip('icons');">
+      Icons:</span>
+      <select name="showIcons" size=1 onchange="return UpdateSettings('showIcons');">
+        <option value="off" selected>off</option>
+        <option value="on">on</option>
+      </select>
 
 <!--
     <span class="helplink" onclick="return ExplainTip('windows');">
@@ -132,67 +137,74 @@ TR.icons     {display: none}
            onClick="return SaveSettings();">
  -->
 
-  <hr>
-  </form>
+    <hr>
+    </form>
 
-  <div class="intermediate">
+    <div class="intermediate">
+    
+      <div class="beginner">
+        <form name="xmltform2">
+          <center>  <span class="formhead">Keyboard shortcuts</span> </center>
+          <table align=center>
+            <tr>
+              <td align=center> <span class="formhead">F1</span>
+              <td align=center> <span class="formhead">F2</span>
+              <td align=center> <span class="formhead">F7</span>
+              <td align=center> <span class="formhead">F8</span>
+              <td align=center> <span class="formhead">F9</span>
+            <tr>
+              <td align=center> <span class="formhead">ctl-Home</span>
+              <td align=center> <span class="formhead">ctl-End</span>
+            <tr>
+              <td><input type="button" value="Hide all output"
+                         onClick="return F1Key();">
+              <td><input type="button" value="Show all output"
+                         onClick="return F2Key();">
+              <td><input type="button" value="Explain tip"
+                         onClick="return F7Key();">
+              <td><input type="button" value="New tip"
+                         onClick="return F8Key();">
+              <td><input type="button" value="New XMLTerm"
+                         onClick="return F9Key();">
+          </table>
+          <br>
+          <input type="button" value="Set History"
+                 onClick="return SetHistoryValue();">
 
-    <div class="beginner">
-      <form name="xmltform2">
-        <center>  <span class="formhead">Keyboard shortcuts</span> </center>
-        <table align=center>
-          <tr>
-            <td align=center> <span class="formhead">F1</span>
-            <td align=center> <span class="formhead">F2</span>
-            <td align=center> <span class="formhead">F7</span>
-            <td align=center> <span class="formhead">F8</span>
-            <td align=center> <span class="formhead">F9</span>
-          <tr>
-            <td align=center> <span class="formhead">ctl-Home</span>
-            <td align=center> <span class="formhead">ctl-End</span>
-          <tr>
-            <td><input type="button" value="Hide all output"
-                       onClick="return F1Key();">
-            <td><input type="button" value="Show all output"
-                       onClick="return F2Key();">
-            <td><input type="button" value="Explain tip"
-                       onClick="return F7Key();">
-            <td><input type="button" value="New tip"
-                       onClick="return F8Key();">
-            <td><input type="button" value="New XMLTerm"
-                       onClick="return F9Key();">
-        </table>
-        <br>
-        <input type="button" value="Set History"
-               onClick="return SetHistoryValue();">
-        <input type="button" value="Set Prompt"
-               onClick="return SetPromptValue();">
-        <span class="formhead">Value:</span>
-        <input size=45 type="text" id="inputvalue"
-               value="<img src='http://dmoz.org/img/lizard2a.gif'>"
-               onFocus="return FormFocus();" onBlur="return FormBlur();">
-      </form>
-      <hr>
+          <input type="button" value="Set Prompt"
+                 onClick="return SetPromptValue();">
+
+          <br>
+          <span class="formhead">Value:</span>
+
+          <input size=45 type="text" id="inputvalue"
+                 value=""
+                 onFocus="return FormFocus();" onBlur="return FormBlur();">
+
+        </form>
+        <hr>
+      </div>
+    
+      <table id="xmlttip" width=100%>
+        <tr><td align=left valign=top nowrap>
+        <span class="helplink" id="tiphead" onclick="return NewTip();">
+          New Tip:
+        </span>
+        <td align=left valign=top>
+        <span class="tipdata" id="tipdata">
+          &nbsp;
+        </span>
+        <td align=right valign=top nowrap>
+        <span class="helplink" id="explaintip" onclick="return ExplainTip();">
+          Explain Tip
+        </span>
+      </table>
+    
     </div>
 
-    <table id="xmlttip" width=100%>
-      <tr><td align=left valign=top nowrap>
-      <span class="helplink" id="tiphead" onclick="return NewTip();">
-        New Tip:
-      </span>
-      <td align=left valign=top>
-      <span class="tipdata" id="tipdata">
-        &nbsp;
-      </span>
-      <td align=right valign=top nowrap>
-      <span class="helplink" id="explaintip" onclick="return ExplainTip();">
-        Explain Tip
-      </span>
-    </table>
-
+    <br>
   </div>
 
-  <br>
 <!--
   <iframe name="iframet" src="chrome://xmlterm/content/xmltblank.html"
           frameborder=0>

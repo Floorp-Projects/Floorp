@@ -82,6 +82,7 @@ mozXMLTermShell::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
       debugStr = nsnull;
     }
 
+    tlog_init(stderr);
     tlog_set_level(XMLT_TLOG_MODULE, messageLevel, debugStr);
     mLoggingInitialized = PR_TRUE;
   }
@@ -183,6 +184,33 @@ NS_IMETHODIMP mozXMLTermShell::SetPrompt(const PRUnichar* aPrompt,
   }
 }
 
+
+/** Exports HTML to file, with META REFRESH, if refreshSeconds is non-zero.
+ * Nothing is done if display has not changed since last export, unless
+ * forceExport is true. Returns true if export actually takes place.
+ * If filename is a null string, HTML is written to STDERR.
+ */
+NS_IMETHODIMP mozXMLTermShell::ExportHTML(const PRUnichar* aFilename,
+                                          PRInt32 permissions,
+                                          const PRUnichar* style,
+                                          PRUint32 refreshSeconds,
+                                          PRBool forceExport,
+                                          const PRUnichar* aCookie,
+                                          PRBool* exported)
+{
+  if (!mXMLTerminal)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsresult result;
+  PRBool matchesCookie;
+  result = mXMLTerminal->MatchesCookie(aCookie, &matchesCookie);
+  if (NS_FAILED(result) || !matchesCookie)
+    return NS_ERROR_FAILURE;
+
+  return mXMLTerminal->ExportHTML( aFilename, permissions, style,
+                                   refreshSeconds, forceExport,
+                                   exported);
+}
 
 /** Ignore key press events
  * (workaround for form input being transmitted to xmlterm)

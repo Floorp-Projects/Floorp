@@ -43,5 +43,5 @@ function StartupXMLTerm() {
      window.title = "xmlterm: "+window.arguments;
 
    // Initialize XMLTerm shell in content window with argvals
-   window.xmlterm.Init(xmltwin, "", window.arguments);
+   window.xmlterm.init(xmltwin, "", window.arguments);
 }

@@ -624,7 +624,8 @@ mozXMLTermMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   XMLT_LOG(mozXMLTermMouseListener::MouseClick,50, ("buttonCode=%d\n",
                                                     buttonCode));
 
-#ifndef NO_WORKAROUND
+#if 0
+  // NO MORE NEED FOR THIS WORKAROUND!
   // Without this workaround, clicking on the xmlterm window to give it
   // focus fails position the cursor at the end of the last line
   // (For some reason, the MouseDown event causes the cursor to be positioned
@@ -646,6 +647,18 @@ mozXMLTermMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   if (NS_FAILED(result) || !selection)
     return NS_OK; // Do not consume mouse event
 
+  PRBool isCollapsed;
+  result = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(result))
+    return NS_OK; // Do not consume mouse event
+
+  XMLT_LOG(mozXMLTermMouseListener::MouseClick,50, ("isCollapsed=%d\n",
+                                                    isCollapsed));
+
+  // If non-collapsed selection, do not collapse it
+  if (!isCollapsed)
+    return NS_OK;
+
   // Locate selection range
   nsCOMPtr<nsIDOMNSUIEvent> uiEvent (do_QueryInterface(mouseEvent));
   if (!uiEvent)
@@ -662,7 +675,7 @@ mozXMLTermMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
     return NS_OK; // Do not consume mouse event
 
   (void)selection->Collapse(parentNode, offset);
-#endif // !NO_WORKAROUND
+#endif
 
   return NS_OK; // Do not consume mouse event
 }

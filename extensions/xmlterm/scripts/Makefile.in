@@ -80,6 +80,7 @@ XMLTERM_SCRIPTS = \
 	$(srcdir)/xmlterm \
 	$(srcdir)/xls \
 	$(srcdir)/xcat \
+	$(srcdir)/xenv \
 	$(NULL)
 
 libs:: 
@@ -89,7 +90,8 @@ xpi::
 	zip $(DIST)/bin/$(XPIFILE) install.js
 	cd $(DIST); zip -g bin/$(XPIFILE) \
                bin/xcat \
-               bin/xls
+               bin/xls \
+               bin/xenv
 	cd $(DIST)/bin; zip -g $(XPIFILE) \
                components/libxmlterm.so \
                components/xmlterm.xpt \

@@ -55,6 +55,10 @@ SIMPLE_PROGRAMS = lterm ptytest unitest utf8conv
 # Defines
 DEFINES =
 
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../lineterm \
+		$(NULL)
+
 # Libraries to be linked
 ifeq ($(OS_ARCH),FreeBSD)
 PTHREADLIBOPT = -pthread
