@@ -48,8 +48,9 @@
 #include "nsNetUtil.h"
 #include "mozITXTToHTMLConv.h"
 
-#define PREF_MAIL_CONVERT_EMOTICONS "mail.convert_emoticons"
-#define PREF_MAIL_CONVERT_STRUCTS "mail.convert_structs"
+#define PREF_MAIL_DISPLAY_GLYPH "mail.display_glyph"
+#define PREF_MAIL_DISPLAY_STRUCT "mail.display_struct"
+
 #define PREF_MAIL_MIME_XUL_OUTPUT "mail.mime_xul_output"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -519,11 +520,11 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
     if (NS_SUCCEEDED(rv) && prefs) {
-      rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_EMOTICONS,&enable_emoticons);
+      rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_GLYPH,&enable_emoticons);
       if (NS_FAILED(rv) || enable_emoticons) {
 	whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
       }
-      rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_STRUCTS,&enable_structs);
+      rv = prefs->GetBoolPref(PREF_MAIL_DISPLAY_STRUCT,&enable_structs);
       if (NS_FAILED(rv) || enable_structs) {
       	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
       }

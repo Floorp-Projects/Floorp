@@ -79,7 +79,7 @@ static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
-#define PREF_MAIL_CONVERT_STRUCTS "mail.convert_structs"
+#define PREF_MAIL_SEND_STRUCT "mail.send_struct"
 #define PREF_MAIL_STRICTLY_MIME "mail.strictly_mime"
 #define PREF_MAIL_MESSAGE_WARNING_SIZE "mailnews.message_warning_size"
 
@@ -1247,7 +1247,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
       NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
       if (NS_SUCCEEDED(rv) && prefs)
       {
-        rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_STRUCTS,&enable_structs);
+        rv = prefs->GetBoolPref(PREF_MAIL_SEND_STRUCT,&enable_structs);
         if (NS_FAILED(rv) || enable_structs)
           whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
       }
