@@ -621,6 +621,10 @@ public:
    */
   NS_IMETHOD  GetStyleData(nsStyleStructID       aSID,
                            const nsStyleStruct*& aStyleStruct) const = 0;
+  // Fill a style struct with data
+  NS_IMETHOD  GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const = 0;
+  // Utility function: more convenient than 2 calls to GetStyleData to get border and padding
+  NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const = 0;
 
   /**
    * These methods are to access any additional style contexts that

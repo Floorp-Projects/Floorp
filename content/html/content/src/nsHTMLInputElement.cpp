@@ -1323,23 +1323,23 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         nscoord pad = NSIntPixelsToTwips(3, p2t);
 
         // add left and right padding around the radio button via css
-        nsStyleSpacing* spacing = (nsStyleSpacing*) aContext->GetMutableStyleData(eStyleStruct_Spacing);
-        if (eStyleUnit_Null == spacing->mMargin.GetLeftUnit()) {
+        nsStyleMargin* margin = (nsStyleMargin*) aContext->GetMutableStyleData(eStyleStruct_Margin);
+        if (eStyleUnit_Null == margin->mMargin.GetLeftUnit()) {
           nsStyleCoord left(pad);
-          spacing->mMargin.SetLeft(left);
+          margin->mMargin.SetLeft(left);
         }
-        if (eStyleUnit_Null == spacing->mMargin.GetRightUnit()) {
+        if (eStyleUnit_Null == margin->mMargin.GetRightUnit()) {
           nsStyleCoord right(NSIntPixelsToTwips(5, p2t));
-          spacing->mMargin.SetRight(right);
+          margin->mMargin.SetRight(right);
         }
         // add bottom padding if backward mode
         // XXX why isn't this working?
         nsCompatibility mode;
         aPresContext->GetCompatibilityMode(&mode);
         if (eCompatibility_NavQuirks == mode) {
-          if (eStyleUnit_Null == spacing->mMargin.GetBottomUnit()) {
+          if (eStyleUnit_Null == margin->mMargin.GetBottomUnit()) {
             nsStyleCoord bottom(pad);
-            spacing->mMargin.SetBottom(bottom);
+            margin->mMargin.SetBottom(bottom);
           }
         }
         break;

@@ -199,8 +199,8 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
       const nsStyleDisplay* disp =
         (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
       if (disp->IsVisibleOrCollapsed()) {
-        const nsStyleSpacing* spacing =
-          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+        const nsStyleBorder* border =
+          (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
         const nsStyleColor* color =
           (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
         nsTableFrame* tableFrame = nsnull;
@@ -210,7 +210,7 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
         }
         nsRect rect(0,0,mRect.width, mRect.height);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, *spacing, 0, 0);
+                                        aDirtyRect, rect, *color, *border, 0, 0);
       }
     }
   }

@@ -599,18 +599,20 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       }
 
       if (hasOverflowClip) {
-        const nsStyleSpacing* spacing;
+        const nsStyleBorder* borderStyle;
+        const nsStylePadding* paddingStyle;
         nsMargin              border, padding;
 
-        aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+        aFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
+        aFrame->GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingStyle);
         
         // XXX We don't support the 'overflow-clip' property yet so just use the
         // content area (which is the default value) as the clip shape
         overflowClipRect.SetRect(0, 0, frameSize.width, frameSize.height);
-        spacing->GetBorder(border);
+        borderStyle->GetBorder(border);
         overflowClipRect.Deflate(border);
         // XXX We need to handle percentage padding
-        if (spacing->GetPadding(padding)) {
+        if (paddingStyle->GetPadding(padding)) {
           overflowClipRect.Deflate(padding);
         }
       }

@@ -187,19 +187,19 @@ void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext* aPresCon
   nsVoidArray styles;
   // styles are added to the array in the order least dominant -> most dominant
   //    1. table
-  const nsStyleSpacing *spacing;
-  mTableFrame.GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
+  const nsStyleBorder *borderStyleData;
+  mTableFrame.GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+  styles.AppendElement((void*)borderStyleData);
   //    2. colgroup
   nsTableColFrame* colFrame;
   mTableFrame.GetColumnFrame(aColIndex, colFrame);
   nsIFrame* colGroupFrame;
   colFrame->GetParent(&colGroupFrame);
-  colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
+  colGroupFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+  styles.AppendElement((void*)borderStyleData);
   //    3. col
-  colFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
+  colFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+  styles.AppendElement((void*)borderStyleData);
   //    4. rowgroup
   nsTableCellFrame* cellFrame = mTableFrame.GetCellInfoAt(aRowIndex, aColIndex);
   nsRect rowRect(0,0,0,0);
@@ -209,14 +209,14 @@ void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext* aPresCon
     rowFrame->GetRect(rowRect);
     nsIFrame* rowGroupFrame;
     rowFrame->GetParent(&rowGroupFrame);
-    rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    rowGroupFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
     //    5. row
-    rowFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    rowFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
     //    6. cell (need to do something smart for rowspanner with row frame)
-    cellFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    cellFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
   }
   ComputeBorderSegment(NS_SIDE_LEFT, &styles, *border, PR_FALSE);
   // now give half the computed border to the table segment, and half to the cell
@@ -293,21 +293,21 @@ void nsTableBorderCollapser::ComputeRightBorderForEdgeAt(nsIPresContext* aPresCo
 		  }
     }
   }
-  const nsStyleSpacing *spacing;
+  const nsStyleBorder *borderStyleData;
   if (!rightNeighborFrame) { 
     // if rightNeighborFrame is null, our right neighbor is the table 
-    mTableFrame.GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    mTableFrame.GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
   }
   //    2. colgroup //XXX: need to test if we're really on a colgroup border
   nsTableColFrame* colFrame = mTableFrame.GetColFrame(aColIndex);
   nsIFrame* colGroupFrame;
   colFrame->GetParent(&colGroupFrame);
-  colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
+  colGroupFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+  styles.AppendElement((void*)borderStyleData);
   //    3. col
-  colFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
+  colFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+  styles.AppendElement((void*)borderStyleData);
   //    4. rowgroup
   nsTableCellFrame* cellFrame = cellMap->GetCellInfoAt(aRowIndex, aColIndex);
   nsRect rowRect(0,0,0,0);
@@ -319,20 +319,20 @@ void nsTableBorderCollapser::ComputeRightBorderForEdgeAt(nsIPresContext* aPresCo
     rowFrame->GetParent(&rowGroupFrame);
     if (!rightNeighborFrame) {
       // if rightNeighborFrame is null, our right neighbor is the table so we include the rowgroup and row
-      rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-      styles.AppendElement((void*)spacing);
+      rowGroupFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+      styles.AppendElement((void*)borderStyleData);
       //    5. row
-      rowFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-      styles.AppendElement((void*)spacing);
+      rowFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+      styles.AppendElement((void*)borderStyleData);
     }
     //    6. cell (need to do something smart for rowspanner with row frame)
-    cellFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    cellFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
   }
   //    7. left edge of rightNeighborCell, if there is one
   if (rightNeighborFrame) {
-    rightNeighborFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    rightNeighborFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
   }
   ComputeBorderSegment(NS_SIDE_RIGHT, &styles, border, (nsnull != rightNeighborFrame));
   // now give half the computed border to each of the two neighbors 
@@ -393,18 +393,18 @@ void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext* aPresCont
   nsVoidArray styles;
   // styles are added to the array in the order least dominant -> most dominant
   //    1. table
-  const nsStyleSpacing *spacing;
-  mTableFrame.GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
+  const nsStyleBorder *borderStyleData;
+  mTableFrame.GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+  styles.AppendElement((void*)borderStyleData);
   //    2. colgroup
   nsTableColFrame* colFrame = mTableFrame.GetColFrame(aColIndex);
   nsIFrame* colGroupFrame;
   colFrame->GetParent(&colGroupFrame);
-  colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
+  colGroupFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+  styles.AppendElement((void*)borderStyleData);
   //    3. col
-  colFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
+  colFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+  styles.AppendElement((void*)borderStyleData);
   //    4. rowgroup
   nsTableCellFrame* cellFrame = cellMap->GetCellInfoAt(aRowIndex, aColIndex);
   if (cellFrame) {
@@ -412,14 +412,14 @@ void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext* aPresCont
     cellFrame->GetParent(&rowFrame);
     nsIFrame* rowGroupFrame;
     rowFrame->GetParent(&rowGroupFrame);
-    rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    rowGroupFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
     //    5. row
-    rowFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    rowFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
     //    6. cell (need to do something smart for rowspanner with row frame)
-    cellFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    cellFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
   }
   ComputeBorderSegment(NS_SIDE_TOP, &styles, *border, PR_FALSE);
   // now give half the computed border to the table segment, and half to the cell
@@ -505,21 +505,21 @@ void nsTableBorderCollapser::ComputeBottomBorderForEdgeAt(nsIPresContext* aPresC
 		  }
     }
   }
-  const nsStyleSpacing *spacing;
+  const nsStyleBorder *borderStyleData;
   if (!bottomNeighborFrame) {
     // if bottomNeighborFrame is null, our bottom neighbor is the table 
-    mTableFrame.GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    mTableFrame.GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
 
     //    2. colgroup   // XXX: need to deterine if we're on a colgroup boundary
     nsTableColFrame* colFrame = mTableFrame.GetColFrame(aColIndex);
     nsIFrame* colGroupFrame;
     colFrame->GetParent(&colGroupFrame);
-    colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    colGroupFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
     //    3. col
-    colFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    colFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
   }
   //    4. rowgroup // XXX: use rowgroup only if we're on a table edge
   nsTableCellFrame* cellFrame = cellMap->GetCellInfoAt(aRowIndex, aColIndex);
@@ -530,19 +530,19 @@ void nsTableBorderCollapser::ComputeBottomBorderForEdgeAt(nsIPresContext* aPresC
     rowFrame->GetRect(rowRect);
     nsIFrame* rowGroupFrame;
     rowFrame->GetParent(&rowGroupFrame);
-    rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    rowGroupFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
     //    5. row
-    rowFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    rowFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
     //    6. cell (need to do something smart for rowspanner with row frame)
-    cellFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    cellFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
   }
   //    7. top edge of bottomNeighborCell, if there is one
   if (bottomNeighborFrame) {
-    bottomNeighborFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-    styles.AppendElement((void*)spacing);
+    bottomNeighborFrame->GetStyleData(eStyleStruct_Border, ((const nsStyleStruct *&)borderStyleData));
+    styles.AppendElement((void*)borderStyleData);
   }
   ComputeBorderSegment(NS_SIDE_BOTTOM, &styles, border, (nsnull != bottomNeighborFrame));
   // now give half the computed border to each of the two neighbors 
@@ -740,33 +740,33 @@ void nsTableBorderCollapser::ComputeBorderSegment(PRUint8      aSide,
     PRInt32 styleCount = aStyles->Count();
     if (0 != styleCount) {
       nsVoidArray sameWidthBorders;
-      nsStyleSpacing * spacing;
-      nsStyleSpacing * lastSpacing=nsnull;
+      nsStyleBorder * borderStyleData;
+      nsStyleBorder * lastBorderStyleData=nsnull;
       nsMargin border;
       PRInt32 maxWidth=0;
       PRUint8 side = aSide;
       PRInt32 i;
       for (i = 0; i < styleCount; i++) {
-        spacing = (nsStyleSpacing *)(aStyles->ElementAt(i));
+        borderStyleData = (nsStyleBorder *)(aStyles->ElementAt(i));
         if (aFlipLastSide && (i == styleCount-1)) {
           side = GetOpposingEdge(aSide);
-          lastSpacing = spacing;
+          lastBorderStyleData = borderStyleData;
         }
-        if (spacing->GetBorderStyle(side) == NS_STYLE_BORDER_STYLE_HIDDEN) {
+        if (borderStyleData->GetBorderStyle(side) == NS_STYLE_BORDER_STYLE_HIDDEN) {
           aBorder.mStyle=NS_STYLE_BORDER_STYLE_HIDDEN;
           aBorder.mWidth=0;
           return;
         }
-        else if (spacing->GetBorderStyle(side)!=NS_STYLE_BORDER_STYLE_NONE) {
-          if (spacing->GetBorder(border)) {
+        else if (borderStyleData->GetBorderStyle(side)!=NS_STYLE_BORDER_STYLE_NONE) {
+          if (borderStyleData->GetBorder(border)) {
             nscoord borderWidth = GetWidthForSide(border, side);
             if (borderWidth == maxWidth) {
-              sameWidthBorders.AppendElement(spacing);
+              sameWidthBorders.AppendElement(borderStyleData);
             }
             else if (borderWidth > maxWidth) {
               maxWidth = borderWidth;
               sameWidthBorders.Clear();
-              sameWidthBorders.AppendElement(spacing);
+              sameWidthBorders.AppendElement(borderStyleData);
             }
           }
         }
@@ -782,38 +782,38 @@ void nsTableBorderCollapser::ComputeBorderSegment(PRUint8      aSide,
         return;
       }
       else if (1 == styleCount) { // there was just one border of the largest width
-        spacing = (nsStyleSpacing *)(sameWidthBorders.ElementAt(0));
+        borderStyleData = (nsStyleBorder *)(sameWidthBorders.ElementAt(0));
         side = aSide;
-        if (spacing == lastSpacing)
+        if (borderStyleData == lastBorderStyleData)
           side = GetOpposingEdge(aSide);
-        if (!spacing->GetBorderColor(side, aBorder.mColor)) {
+        if (!borderStyleData->GetBorderColor(side, aBorder.mColor)) {
           // XXX EEEK handle transparent border color somehow...
         }
-        aBorder.mStyle = spacing->GetBorderStyle(side);
+        aBorder.mStyle = borderStyleData->GetBorderStyle(side);
         return;
       }
       else {
-        nsStyleSpacing* winningStyleBorder;
+        nsStyleBorder* winningStyleBorder;
         PRUint8 winningStyle=NS_STYLE_BORDER_STYLE_NONE;
         for (i = 0; i < styleCount; i++) {
-          spacing = (nsStyleSpacing *)(sameWidthBorders.ElementAt(i));
+          borderStyleData = (nsStyleBorder *)(sameWidthBorders.ElementAt(i));
           side = aSide;
-          if (spacing == lastSpacing)
+          if (borderStyleData == lastBorderStyleData)
             side = GetOpposingEdge(aSide);
-          PRUint8 thisStyle = spacing->GetBorderStyle(side);
+          PRUint8 thisStyle = borderStyleData->GetBorderStyle(side);
           PRUint8 borderCompare = CompareBorderStyles(thisStyle, winningStyle);
           if (BORDER_PRECEDENT_HIGHER == borderCompare) {
             winningStyle = thisStyle;
-            winningStyleBorder = spacing;
+            winningStyleBorder = borderStyleData;
           }
           else if (BORDER_PRECEDENT_EQUAL == borderCompare) {
             // we're in lowest-to-highest precedence order, so later border styles win
-            winningStyleBorder=spacing;
+            winningStyleBorder=borderStyleData;
           }          
         }
         aBorder.mStyle = winningStyle;
         side = aSide;
-        if (winningStyleBorder == lastSpacing)
+        if (winningStyleBorder == lastBorderStyleData)
           side = GetOpposingEdge(aSide);
         if (!winningStyleBorder->GetBorderColor(side, aBorder.mColor)) {
           // XXX handle transparent border colors somehow

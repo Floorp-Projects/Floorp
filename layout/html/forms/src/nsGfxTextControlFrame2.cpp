@@ -2061,10 +2061,12 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   padding.SizeTo(0, 0, 0, 0);
 
   // Get the CSS border
-  const nsStyleSpacing* spacing;
-  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
-  spacing->CalcBorderFor(this, border);
-  spacing->CalcPaddingFor(this, padding);
+  const nsStyleBorder* borderStyle;
+  const nsStylePadding* paddingStyle;
+  GetStyleData(eStyleStruct_Border,  (const nsStyleStruct *&)borderStyle);
+  GetStyleData(eStyleStruct_Padding,  (const nsStyleStruct *&)paddingStyle);
+  borderStyle->CalcBorderFor(this, border);
+  paddingStyle->CalcPaddingFor(this, padding);
 
   nsresult rv;
   if (navQuirksMode) {

@@ -73,16 +73,18 @@ nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color = (const nsStyleColor*)
         mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
-        mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      const nsStyleBorder* border = (const nsStyleBorder*)
+        mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStyleOutline* outline = (const nsStyleOutline*)
+        mStyleContext->GetStyleData(eStyleStruct_Outline);
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, *spacing, 0, 0);
+                                      aDirtyRect, rect, *color, *border, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, mStyleContext, skipSides);
+                                  aDirtyRect, rect, *border, mStyleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, mStyleContext, 0);
+                                  aDirtyRect, rect, *border, *outline, mStyleContext, 0);
       
       // The sole purpose of this is to trigger display
       //  of the selection window for Named Anchors,

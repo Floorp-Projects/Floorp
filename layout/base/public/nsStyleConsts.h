@@ -195,13 +195,13 @@
 #define NS_STYLE_BORDER_COLLAPSE                0
 #define NS_STYLE_BORDER_SEPARATE                1
 
-// See nsStyleSpacing mBorder enum values
+// See nsStyleBorder mBorder enum values
 #define NS_STYLE_BORDER_WIDTH_THIN              0
 #define NS_STYLE_BORDER_WIDTH_MEDIUM            1
 #define NS_STYLE_BORDER_WIDTH_THICK             2
 // XXX chopping block #define NS_STYLE_BORDER_WIDTH_LENGTH_VALUE      3
 
-// See nsStyleSpacing mBorderStyle
+// See nsStyleBorder mBorderStyle
 #define NS_STYLE_BORDER_STYLE_NONE              0
 #define NS_STYLE_BORDER_STYLE_GROOVE            1
 #define NS_STYLE_BORDER_STYLE_RIDGE             2
@@ -450,7 +450,7 @@
 #define NS_STYLE_LIST_STYLE_POSITION_INSIDE     0
 #define NS_STYLE_LIST_STYLE_POSITION_OUTSIDE    1
 
-// See nsStyleSpacing
+// See nsStyleMargin
 #define NS_STYLE_MARGIN_SIZE_AUTO               0
 
 // See nsStyleText

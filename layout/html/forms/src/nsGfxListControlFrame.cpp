@@ -554,11 +554,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
       } else if (targetFrame == firstChildFrame) {
         nsRect rect;
         firstChildFrame->GetRect(rect);
-        const nsStyleSpacing* scrollSpacing;
-        firstChildFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)scrollSpacing);
-        nsMargin scrollBorderPadding;
-        scrollBorderPadding.SizeTo(0, 0, 0, 0);
-        scrollSpacing->CalcBorderPaddingFor(firstChildFrame, scrollBorderPadding);
+        nsMargin scrollBorderPadding(0, 0, 0, 0);
+        firstChildFrame->CalcBorderPadding(scrollBorderPadding);
         rect.width  -= (scrollBorderPadding.left + scrollBorderPadding.right);
         rect.height -= (scrollBorderPadding.top + scrollBorderPadding.bottom)*2;
         printf("Inc Pass CW: %d CH: %d\n", rect.width, rect.height);
@@ -741,22 +738,19 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Subtract out the borders
   nsMargin border;
-  if (!aReflowState.mStyleSpacing->GetBorder(border)) {
+  if (!aReflowState.mStyleBorder->GetBorder(border)) {
     NS_NOTYETIMPLEMENTED("percentage border");
     border.SizeTo(0, 0, 0, 0);
   }
 
   nsMargin padding;
-  if (!aReflowState.mStyleSpacing->GetPadding(padding)) {
+  if (!aReflowState.mStylePadding->GetPadding(padding)) {
     NS_NOTYETIMPLEMENTED("percentage padding");
     padding.SizeTo(0, 0, 0, 0);
   }
 
-  const nsStyleSpacing* scrollSpacing;
-  firstChildFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)scrollSpacing);
-  nsMargin scrollBorderPadding;
-  scrollBorderPadding.SizeTo(0, 0, 0, 0);
-  scrollSpacing->CalcBorderPaddingFor(firstChildFrame, scrollBorderPadding);
+  nsMargin scrollBorderPadding(0, 0, 0, 0);
+  firstChildFrame->CalcBorderPadding(scrollBorderPadding);
 
 
   mMaxWidth  -= (scrollBorderPadding.left + scrollBorderPadding.right);
