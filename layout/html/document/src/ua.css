@@ -21,13 +21,6 @@
 // XXX I'm starting to believe that this portion of the style sheet
 // comes from the PresentationContext.
 
-// XXX temporary hack
-IMPLICITP {
-  display: block;
-  margin-top: 0pt;
-  margin-bottom: 2pt;
-}
-
 BODY {
   font-family: "Times Roman", serif;
   font-style: normal;
@@ -36,7 +29,6 @@ BODY {
   font-size: 11pt;
   line-height: 1.1;
   background: rgb(255,255,255);
-//  background: rgb(192,192,192);
   color: black;
   padding: 12px;
   display: block;
@@ -132,7 +124,8 @@ HR {
 }
 
 BR {
-  display: block;
+  display: inline;
+  color: cyan;
 }
 
 // Block tags
