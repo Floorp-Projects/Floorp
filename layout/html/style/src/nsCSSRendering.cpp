@@ -2354,11 +2354,11 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
 
   // if we are printing, bail for now
-  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
-  if (thePrinterContext) {
+  PRBool  canDrawBackground;
+  aPresContext->GetBackgroundDraw(canDrawBackground);
+  if(!canDrawBackground){
     return;
   }
-
 
   // if there is no background image, try a color.
   if (aColor.mBackgroundImage.IsEmpty()) {
