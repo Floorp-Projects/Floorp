@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.17 $ 
-# $Date: 2001/10/18 15:05:57 $ 
+# $Revision: 1.18 $ 
+# $Date: 2001/10/18 16:19:59 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -444,19 +444,6 @@ sub daemon_main {
   
   symlink ($UID, $FileStructure::LOCK_FILE) ||
     return ;
-
-  # This file makes writing /etc/rc.d/inid.d scripts easier and its
-  # naming and location are OS specific.  
-
-  # Why have two separate files? (both lock and pid could be combined)
-  # It is convienient for debugging to move the lock file into the
-  # HTML tree along with the DB files so that the state gets cleaned
-  # if I wipe the HTML dir. Howver the init scripts always look for
-  # the pid file in the same place and I find these scripts
-  # convienient for stopping programs even when debugging.
-
-  my $pid="$$\n";  
-  overwrite_file($PID_FILE, $pid);  
 
   my ($summary_data);
 

@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.11 $
-# $Date: 2001/10/18 16:17:24 $
+# $Revision: 1.12 $
+# $Date: 2001/10/18 16:19:58 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -206,12 +206,6 @@ sub set_static_vars {
 
   $BUILDCF = "buildcf";
 
-  # Where to place file containing pid, this file makes writing
-  # /etc/rc.d/inid.d scripts easier and its naming and location are OS
-  # specific.
-
-  $PID_DIR = "/var/run/";
-
   # minimum time between the start of consecutive builds.  Tinderbox
   # requires this to be grater then 5 mintues.
 
@@ -273,7 +267,6 @@ sub get_env {
   $| = 1;
   $PROGRAM = File::Basename::basename($0);
   $PID = $$; 
-  $PID_FILE= "$PID_DIR/$PROGRAM.pid";
   $TIME = time();
   $LOCALTIME = localtime($main::TIME);
 
@@ -301,8 +294,6 @@ sub fatal_error {
     print LOG "[$LOCALTIME] $_";
   }
   print LOG "\n";
-
-  unlink ($PID_FILE);
 
   die("\n");
 }
@@ -340,31 +331,6 @@ sub daemonize {
 
     setsid;
     umask 0;
-
-    # Do I want to stop multiple instances from running?  I am not
-    # sure how to deal with multiple instances.  I think the best
-    # course would be to have a master program which forks all the
-    # childeren.  This would ensure that the children die when the
-    # master is killed.  We only allow one master.  The childeren
-    # would be specified on the command line via multiple arguments
-    # (somehow).
-
-    if (-e $PID_FILE) {
-        die("Pid file: $PID_FILE already exists.\n");
-    }
-
-    # This file makes writing /etc/rc.d/inid.d scripts easier and its
-    # naming and location are OS specific.  
-    
-    my $out="$$\n";  
-    
-    open(FILE, ">$PID_FILE") ||
-        die("Could not open: $PID_FILE. $!\n");
-    
-    print FILE $out;
-    
-    close(FILE) ||
-        die("Could not close: $PID_FILE. $!\n");
 
     print "$PROGRAM pid: $$\n";
 
