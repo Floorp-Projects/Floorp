@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.14 2001/11/08 02:15:38 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.15 2002/02/22 04:23:25 wtc%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -47,6 +47,8 @@
 #include "winsock.h"	/* for MSG_PEEK */
 #elif defined(XP_MAC)
 #include "macsocket.h"
+#elif defined(BEOS)
+#define MSG_PEEK 0x2
 #else
 #include <sys/socket.h> /* for MSG_PEEK */
 #endif

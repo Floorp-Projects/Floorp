@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.21 2001/11/22 00:46:48 jpierre%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.22 2002/02/22 04:23:24 wtc%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -53,7 +53,7 @@
 #include "hasht.h"
 #include "nssilock.h"
 #include "pkcs11t.h"
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include "unistd.h"
 #endif
 #include "nssrwlk.h"
@@ -1273,7 +1273,7 @@ SEC_END_PROTOS
 #include <process.h>
 #endif
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
 #define SSL_GETPID() getpid()
 #elif defined(WIN32)
 

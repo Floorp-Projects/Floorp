@@ -47,7 +47,7 @@
 /* commercial compression */
 #include "jzlib.h"
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include "sys/stat.h"
 #endif
 
@@ -252,7 +252,7 @@ int JAR_extract
             (unsigned int) phy->compression);
       }
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
     if (phy->mode)
       chmod (outpath, 0400 | (mode_t) phy->mode);
 #endif
@@ -891,7 +891,7 @@ static int jar_listzip (JAR *jar, JAR_FILE fp)
         goto loser;
         }
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
       /* with unix we need to locate any bits from 
          the protection mask in the external attributes. */
         {

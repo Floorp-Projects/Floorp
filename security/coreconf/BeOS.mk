@@ -13,7 +13,7 @@
 # 
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are 
-# Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+# Copyright (C) 2002 Netscape Communications Corporation.  All
 # Rights Reserved.
 # 
 # Contributor(s):
@@ -30,41 +30,50 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
+# Config stuff for BeOS
+#
 
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
+include $(CORE_DEPTH)/coreconf/UNIX.mk
 
-# don't want the 32 in the shared library name
-SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
-IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+XP_DEFINE := $(XP_DEFINE:-DXP_UNIX=-DXP_BEOS)
 
-RES = $(OBJDIR)/ssl.res
-RESNAME = ssl.rc
+USE_PTHREADS = 
 
-EXTRA_SHARED_LIBS += \
-	$(DIST)/lib/nss3.lib \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
-	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
-	$(NULL)
+ifeq ($(USE_PTHREADS),1)
+	IMPL_STRATEGY = _PTH
+endif
+
+CC			= gcc
+CCC			= g++
+RANLIB			= ranlib
+
+DEFAULT_COMPILER = gcc
+
+ifeq ($(OS_TEST),ppc)
+	OS_REL_CFLAGS	= -Dppc
+	CPU_ARCH	= ppc
 else
-
-
-# $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
-# $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
-EXTRA_SHARED_LIBS += \
-	-L$(DIST)/lib/ \
-	-lnss3 \
-	-lplc4 \
-	-lplds4 \
-	-lnspr4 \
-	$(NULL)
-
-ifeq ($(OS_ARCH), BeOS)
-EXTRA_SHARED_LIBS += -lbe
+	OS_REL_CFLAGS	= -Di386
+	CPU_ARCH	= x86
 endif
 
-ifeq ($(OS_ARCH), Darwin)
-EXTRA_SHARED_LIBS += -dylib_file @executable_path/libsoftokn3.dylib:$(DIST)/lib/libsoftokn3.dylib
+MKSHLIB		= $(CC) -nostart -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
+ifdef BUILD_OPT
+	OPTIMIZER	= -O2
 endif
 
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wall -pipe
+OS_LIBS			= -lbe
+
+DEFINES			+= -DBEOS
+
+ifdef USE_PTHREADS
+	DEFINES		+= -D_REENTRANT
 endif
+
+ARCH			= beos
+
+DSO_CFLAGS		= -fPIC
+DSO_LDOPTS		=
+DSO_LDFLAGS		=
+

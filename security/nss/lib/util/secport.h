@@ -38,14 +38,14 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.h,v 1.2 2001/05/21 21:25:32 wtc%netscape.com Exp $
+ * $Id: secport.h,v 1.3 2002/02/22 04:23:30 wtc%netscape.com Exp $
  */
 
 #ifndef _SECPORT_H_
 #define _SECPORT_H_
 
 /*
- * define XP_MAC, XP_WIN, or XP_UNIX, in case they are not defined
+ * define XP_MAC, XP_WIN, XP_BEOS, or XP_UNIX, in case they are not defined
  * by anyone else
  */
 #ifdef macintosh
@@ -67,6 +67,12 @@
 # define XP_WIN16
 # endif
 #endif
+#endif
+
+#ifdef __BEOS__
+# ifndef XP_BEOS
+# define XP_BEOS
+# endif
 #endif
 
 #ifdef unix

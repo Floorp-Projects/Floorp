@@ -55,8 +55,14 @@ typedef unsigned int mode_t;
 
 #define HAVE_LCHOWN
 
-#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(VMS) || defined(NTO) || defined(DARWIN)
+#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(VMS) || defined(NTO) || defined(DARWIN) || defined(BEOS)
 #undef HAVE_LCHOWN
+#endif
+
+#define HAVE_FCHMOD
+
+#if defined(BEOS)
+#undef HAVE_FCHMOD
 #endif
 
 #ifdef LINUX
@@ -403,7 +409,11 @@ retry:
 		if (utime(toname, &utb) < 0)
 		    fail("cannot set times of %s", toname);
 	    }
+#ifdef HAVE_FCHMOD
 	    if (fchmod(tofd, mode) < 0)
+#else
+	    if (chmod(toname, mode) < 0)
+#endif
 		fail("cannot change mode of %s", toname);
 	    if ((owner || group) && fchown(tofd, uid, gid) < 0)
 		fail("cannot change owner of %s", toname);

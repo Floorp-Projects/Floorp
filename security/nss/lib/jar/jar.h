@@ -203,7 +203,7 @@ typedef struct JAR_Physical_
   unsigned long offset;
   unsigned long length;
   unsigned long uncompressed_length;
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
   uint16 mode;
 #endif
   }

@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.23 2001/12/07 01:36:23 relyea%netscape.com Exp $
+ * $Id: sslsock.c,v 1.24 2002/02/22 04:23:26 wtc%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1800,7 +1800,7 @@ ssl_NewSocket(void)
 #endif
 
 #ifdef DEBUG
-#if defined(XP_UNIX) || defined(XP_WIN32)
+#if defined(XP_UNIX) || defined(XP_WIN32) || defined(XP_BEOS)
     if (firsttime) {
 	firsttime = 0;
 
