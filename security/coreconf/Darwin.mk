@@ -35,6 +35,8 @@
 
 include $(CORE_DEPTH)/coreconf/UNIX.mk
 
+DEFAULT_COMPILER = cc
+
 CC		= cc
 CCC		= c++
 RANLIB		= ranlib
