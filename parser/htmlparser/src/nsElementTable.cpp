@@ -1283,10 +1283,10 @@ void InitializeElementTable(void) {
     Initialize( 
       /*tag*/                             eHTMLTag_userdefined,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_frameset,
-	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+	    /*rootnodes,endrootnodes*/          &gInHTML,&gInHTML,	
       /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kFlowEntity, (kFlowEntity|kSelf), kNone,	
-      /*special props, prop-range*/       kLegalOpen, kBodyPropRange,
+      /*parent,incl,exclgroups*/          kHTMLContent, (kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       kOmitEndTag|kLegalOpen, kBodyPropRange,
       /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown);
   }//if
 };

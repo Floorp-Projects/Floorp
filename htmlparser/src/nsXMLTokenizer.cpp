@@ -145,8 +145,8 @@ nsXMLTokenizer::~nsXMLTokenizer(){
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult nsXMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens) {
-  return nsHTMLTokenizer::ConsumeToken(aScanner,aFlushTokens);
+nsresult nsXMLTokenizer::ConsumeToken(nsScanner& aScanner) {
+  return nsHTMLTokenizer::ConsumeToken(aScanner);
 }
 
 
