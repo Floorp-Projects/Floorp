@@ -19,6 +19,7 @@
  *   Christopher Blizzard <blizzard@mozilla.org>
  *   Ramiro Estrugo <ramiro@eazel.com>
  */
+#include <stdlib.h>
 #include "gtkmozembed.h"
 #include "nsIWebBrowser.h"
 #include "nsCWebBrowser.h"
