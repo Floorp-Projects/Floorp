@@ -1184,31 +1184,35 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
     curFrame->GetParent(&curFrame);
   }
   
+  // Create a mouseout event that we fire to the content before
+  // scrolling, to allow tooltips to disappear, etc.
+
+  nsMouseEvent mouseOutEvent;
+  mouseOutEvent.eventStructType = NS_MOUSE_EVENT;
+  mouseOutEvent.message = NS_MOUSE_EXIT_SYNTH;
+  mouseOutEvent.widget = msEvent->widget;
+  mouseOutEvent.clickCount = 0;
+  mouseOutEvent.point = nsPoint(0,0);
+  mouseOutEvent.refPoint = nsPoint(0,0);
+  mouseOutEvent.isShift = PR_FALSE;
+  mouseOutEvent.isControl = PR_FALSE;
+  mouseOutEvent.isAlt = PR_FALSE;
+  mouseOutEvent.isMeta = PR_FALSE;
+
+  nsCOMPtr<nsIContent> targetContent;
+  aTargetFrame->GetContent(getter_AddRefs(targetContent));
+
+  nsEventStatus mouseoutStatus = nsEventStatus_eIgnore;
+
   if (treeFrame) {
-    PRInt32 scrollIndex, visibleRows;
-    treeFrame->GetIndexOfFirstVisibleRow(&scrollIndex);
-    treeFrame->GetNumberOfVisibleRows(&visibleRows);
-
-    if (scrollPage)
-      scrollIndex += ((numLines > 0) ? visibleRows : -visibleRows);
-    else
-      scrollIndex += numLines;
-    
-    if (scrollIndex < 0)
-      scrollIndex = 0;
-    else {
-      PRInt32 numRows, lastPageTopRow;
-      treeFrame->GetRowCount(&numRows);
-      lastPageTopRow = numRows - visibleRows;
-      if (scrollIndex > lastPageTopRow)
-        scrollIndex = lastPageTopRow;
-    }
-    
-    treeFrame->ScrollToIndex(scrollIndex);
-    return NS_OK;
-  }
-
-  if (outlinerBoxObject) {
+    if (targetContent)
+      targetContent->HandleDOMEvent(aPresContext, &mouseOutEvent, nsnull,
+                                    NS_EVENT_FLAG_INIT, &mouseoutStatus);
+    return DoTreeScroll(aPresContext, numLines, scrollPage, treeFrame);
+  } else if (outlinerBoxObject) {
+    if (targetContent)
+      targetContent->HandleDOMEvent(aPresContext, &mouseOutEvent, nsnull,
+                                    NS_EVENT_FLAG_INIT, &mouseoutStatus);
     if (scrollPage)
       outlinerBoxObject->ScrollByPages((numLines > 0) ? 1 : -1);
     else
@@ -1264,6 +1268,10 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   }
 
   if (sv) {
+    if (targetContent)
+      targetContent->HandleDOMEvent(aPresContext, &mouseOutEvent, nsnull,
+                                    NS_EVENT_FLAG_INIT, &mouseoutStatus);
+
     if (scrollPage)
       sv->ScrollByPages((numLines > 0) ? 1 : -1);
     else
