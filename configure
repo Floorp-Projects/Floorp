@@ -9593,6 +9593,16 @@ then
 
 MOZ_NSPRENV_USE_PTHREADS=$USE_PTHREADS
 
+MOZ_NSPRENV_CLASSIC_NSPR=
+case "$target" in
+	*-linux*)
+		if test "$USE_PTHREADS"x = x
+		then
+			MOZ_NSPRENV_CLASSIC_NSPR=1
+		fi
+	;;
+esac
+
 if test "$MOZ_DEBUG"
 then
   MOZ_NSPRENV_BUILD_OPT=
@@ -9612,14 +9622,6 @@ fi
 MOZ_NSPRENV_NO_MDUPDATE=1
 
 MOZ_NSPRENV_MOZILLA_CLIENT=
-case "$target" in
-	*-linux*)
-		if test ! -x /lib/libc.so.6
-		then
-			MOZ_NSPRENV_MOZILLA_CLIENT=1
-		fi
-	;;
-esac
 
 MOZ_NSPRENV_DIST=`pwd`/dist
 
