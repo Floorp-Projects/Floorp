@@ -140,8 +140,8 @@ sub BuildIDLProject($$)
         EmptyTree($datafolder_path);
     }
 
-    BuildOneProject($project_path,  "headers", "", 0, 0, 0);
-    BuildOneProject($project_path,  $module_name.".xpt", "", 1, 0, 1);
+    BuildOneProject($project_path,  "headers", 0, 0, 0);
+    BuildOneProject($project_path,  $module_name.".xpt", 1, 0, 1);
 }
 
 #--------------------------------------------------------------------------------------------------
@@ -1372,9 +1372,9 @@ sub BuildStubs()
 #// are the same.
 #//--------------------------------------------------------------------------------------------------
 
-sub BuildOneProject($$$$$$)
+sub BuildOneProject($$$$$)
 {
-    my ($project_path, $target_name, $toc_file, $alias_shlb, $alias_xSYM, $component) = @_;
+    my ($project_path, $target_name, $alias_shlb, $alias_xSYM, $component) = @_;
 
     unless ($project_path =~ m/^$main::BUILD_ROOT.+/) { return; }
     
@@ -1600,10 +1600,10 @@ sub BuildRuntimeProjects()
     #// target names differ from the output names. Make them by hand instead.
     if ( $main::CARBON ) {
         if ($main::PROFILE) {
-            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntimeCarbonProfil.shlb", "", 0, 0, 0);
+            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntimeCarbonProfil.shlb", 0, 0, 0);
         }
         else {
-            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntimeCarbon$D.shlb", "", 0, 0, 0);
+            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntimeCarbon$D.shlb", 0, 0, 0);
         }
         _MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
         if ( $main::ALIAS_SYM_FILES ) {
@@ -1612,14 +1612,14 @@ sub BuildRuntimeProjects()
     }
     else {
         if ($main::PROFILE) {
-            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntimeProfil.shlb", "", 0, 0, 0);
+            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntimeProfil.shlb", 0, 0, 0);
             _MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
             if ( $main::ALIAS_SYM_FILES ) {
                 _MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");      
             }
         }
         else {
-            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntime$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntime$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
         }
     }
     
@@ -1641,9 +1641,9 @@ sub BuildRuntimeProjects()
         }
     }
 
-    BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",                       "NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",                       "NSStdLib$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
-    BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",                      "NSPR20$D.shlb", "NSPR20.toc", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",                      "NSPR20$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
     print("--- Runtime projects complete ----\n");
 }
@@ -1668,25 +1668,25 @@ sub BuildCommonProjects()
     #// Shared libraries
     #//
 
-    BuildOneProject(":mozilla:modules:libreg:macbuild:libreg.mcp",              "libreg$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",                     "xpcom$D.shlb", "xpcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",                      "JavaScript$D.shlb", "JavaScript.toc", 1, $main::ALIAS_SYM_FILES, 0); 
-    BuildOneProject(":mozilla:js:macbuild:JSLoader.mcp",                        "JSLoader$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:js:macbuild:LiveConnect.mcp",                     "LiveConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:modules:libreg:macbuild:libreg.mcp",              "libreg$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",                     "xpcom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",                      "JavaScript$D.shlb", 1, $main::ALIAS_SYM_FILES, 0); 
+    BuildOneProject(":mozilla:js:macbuild:JSLoader.mcp",                        "JSLoader$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:js:macbuild:LiveConnect.mcp",                     "LiveConnect$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
-    BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",                  "zlib$D.shlb", "zlib.toc", 1, $main::ALIAS_SYM_FILES, 0); 
-    BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",                  "zlib$D.Lib", "", 0, 0, 0); 
-    BuildOneProject(":mozilla:modules:libjar:macbuild:libjar.mcp",              "libjar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libjar:macbuild:libjar.mcp",              "libjar$D.Lib", "", 0, 0, 0);
+    BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",                  "zlib$D.shlb", 1, $main::ALIAS_SYM_FILES, 0); 
+    BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",                  "zlib$D.Lib", 0, 0, 0); 
+    BuildOneProject(":mozilla:modules:libjar:macbuild:libjar.mcp",              "libjar$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:modules:libjar:macbuild:libjar.mcp",              "libjar$D.Lib", 0, 0, 0);
 
-    BuildOneProject(":mozilla:modules:oji:macbuild:oji.mcp",                    "oji$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:caps:macbuild:Caps.mcp",                          "Caps$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",            "libpref$D.shlb", "libpref.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:js:macbuild:XPConnect.mcp",                       "XPConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libutil:macbuild:libutil.mcp",            "libutil$D.shlb", "libutil.toc", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:modules:oji:macbuild:oji.mcp",                    "oji$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:caps:macbuild:Caps.mcp",                          "Caps$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",            "libpref$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:js:macbuild:XPConnect.mcp",                       "XPConnect$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:modules:libutil:macbuild:libutil.mcp",            "libutil$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
-    BuildOneProject(":mozilla:db:mork:macbuild:mork.mcp",                       "Mork$D.shlb", "Mork.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:dbm:macbuild:DBM.mcp",                            "DBM$D.o", "", 0, 0, 0);
+    BuildOneProject(":mozilla:db:mork:macbuild:mork.mcp",                       "Mork$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:dbm:macbuild:DBM.mcp",                            "DBM$D.o", 0, 0, 0);
     
     print("--- Common projects complete ----\n");
 }
@@ -1704,12 +1704,12 @@ sub BuildImglibProjects()
 
     print("--- Starting Imglib projects ----\n");
 
-    BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",                          "JPEG$D.o", "", 0, 0, 0);
-    BuildOneProject(":mozilla:modules:libimg:macbuild:png.mcp",                 "png$D.o", "", 0, 0, 0);
-    BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",              "libimg$D.shlb", "libimg.toc", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:modules:libimg:macbuild:gifdecoder.mcp",          "gifdecoder$D.shlb", "gifdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",          "pngdecoder$D.shlb", "pngdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",          "jpgdecoder$D.shlb", "jpgdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",                          "JPEG$D.o", 0, 0, 0);
+    BuildOneProject(":mozilla:modules:libimg:macbuild:png.mcp",                 "png$D.o", 0, 0, 0);
+    BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",              "libimg$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:modules:libimg:macbuild:gifdecoder.mcp",          "gifdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",          "pngdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",          "jpgdecoder$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     print("--- Imglib projects complete ----\n");
 } # imglib
@@ -1728,23 +1728,23 @@ sub BuildInternationalProjects()
 
     print("--- Starting International projects ----\n");
 
-    BuildOneProject(":mozilla:intl:chardet:macbuild:chardet.mcp",               "chardet$D.shlb", "chardet.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",                   "uconv$D.shlb", "uconv.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvlatin.mcp",                "ucvlatin$D.shlb", "uconvlatin.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvja.mcp",                   "ucvja$D.shlb", "ucvja.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw.mcp",                   "ucvtw$D.shlb", "ucvtw.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw2.mcp",                  "ucvtw2$D.shlb", "ucvtw2.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvcn.mcp",                   "ucvcn$D.shlb", "ucvcn.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvko.mcp",                   "ucvko$D.shlb", "ucvko.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvibm.mcp",                  "ucvibm$D.shlb", "ucvibm.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:unicharutil:macbuild:unicharutil.mcp",       "unicharutil$D.shlb", "unicharutil.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:locale:macbuild:locale.mcp",                 "nslocale$D.shlb", "nslocale.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:lwbrk:macbuild:lwbrk.mcp",                   "lwbrk$D.shlb", "lwbrk.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:strres:macbuild:strres.mcp",                 "strres$D.shlb", "strres.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:chardet:macbuild:chardet.mcp",               "chardet$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",                   "uconv$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvlatin.mcp",                "ucvlatin$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvja.mcp",                   "ucvja$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw.mcp",                   "ucvtw$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvtw2.mcp",                  "ucvtw2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvcn.mcp",                   "ucvcn$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvko.mcp",                   "ucvko$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:uconv:macbuild:ucvibm.mcp",                  "ucvibm$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:unicharutil:macbuild:unicharutil.mcp",       "unicharutil$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:locale:macbuild:locale.mcp",                 "nslocale$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:lwbrk:macbuild:lwbrk.mcp",                   "lwbrk$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:strres:macbuild:strres.mcp",                 "strres$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-# BuildOneProject(":mozilla:intl:uconv:macbuild:ucvja2.mcp",                    "ucvja2$D.shlb", "ucvja2.toc", 1, $main::ALIAS_SYM_FILES, 1);
-# BuildOneProject(":mozilla:intl:uconv:macbuild:ucvvt.mcp",                 "ucvvt$D.shlb", "ucvvt.toc", 1, $main::ALIAS_SYM_FILES, 1);
-# BuildOneProject(":mozilla:intl:uconv:macbuild:ucvth.mcp",                 "ucvth$D.shlb", "ucvth.toc", 1, $main::ALIAS_SYM_FILES, 1);
+# BuildOneProject(":mozilla:intl:uconv:macbuild:ucvja2.mcp",                    "ucvja2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+# BuildOneProject(":mozilla:intl:uconv:macbuild:ucvvt.mcp",                 "ucvvt$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+# BuildOneProject(":mozilla:intl:uconv:macbuild:ucvth.mcp",                 "ucvth$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     print("--- International projects complete ----\n");
 } # intl
@@ -1763,16 +1763,16 @@ sub BuildNeckoProjects()
 
     print("--- Starting Necko projects ----\n");
 
-    BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",                    "Necko$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",                   "Necko2$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",                "JSUrl$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",                    "Necko$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",                   "Necko2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",                "JSUrl$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     # security stuff
-    BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", "", 0, 0, 0);
-    BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", "", 0, 0, 0); 
+    BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", 0, 0, 0);
+    BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", 0, 0, 0); 
 
     # now depends on PSM shared library.
-    #BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);    
+    #BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);    
     
     print("--- Necko projects complete ----\n");
 } # necko
@@ -1791,19 +1791,19 @@ sub BuildBrowserUtilsProjects()
 
     print("--- Starting Browser utils projects ----\n");
 
-    BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.mcp",                "uriLoader$D.shlb", "uriloader.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:uriloader:extprotocol:mac:extProtocol.mcp",       "extProtocol$D.shlb", "extprotocol.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.mcp",                "uriLoader$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:uriloader:extprotocol:mac:extProtocol.mcp",       "extProtocol$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     
-    BuildOneProject(":mozilla:profile:macbuild:profile.mcp",                    "profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp", "prefm$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:profile:macbuild:profile.mcp",                    "profile$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp", "prefm$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-    BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",           "Cookie$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",           "Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",    "WalletViewers$D.shlb", "walletviewer.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",           "Cookie$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",           "Wallet$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",    "WalletViewers$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     
-    BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     
-    BuildOneProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSource.mcp",      "DOMDataSource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSource.mcp",      "DOMDataSource$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     print("--- Browser utils projects complete ----\n");
 } # browserutils
@@ -1834,24 +1834,24 @@ sub BuildLayoutProjects()
     #// Build Layout projects
     #//
 
-    BuildOneProject(":mozilla:expat:macbuild:expat.mcp",                        "expat$D.o", "", 0, 0, 0);
-    BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",              "htmlparser$D.shlb", "htmlparser.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",                            "gfx$D.shlb", "gfx.toc", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", "dom.toc", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", "plugin.toc", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:layout:macbuild:layout.mcp",                      "layout$D.shlb", "layout.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:view:macbuild:view.mcp",                          "view$D.shlb", "view.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:widget:macbuild:widget.mcp",                      "widget$D.shlb", "widget.toc", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:webshell:macbuild:webshell.mcp",                  "webshell$D.shlb", "webshell.toc", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",              "RaptorShell$D.shlb", "RaptorShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:expat:macbuild:expat.mcp",                        "expat$D.o", 0, 0, 0);
+    BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",              "htmlparser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:layout:macbuild:layout.mcp",                      "layout$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:view:macbuild:view.mcp",                          "view$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:widget:macbuild:widget.mcp",                      "widget$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:webshell:macbuild:webshell.mcp",                  "webshell$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",              "RaptorShell$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
     #// XXX this is here because of a very TEMPORARY dependency
-    BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",                            "RDFLibrary$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",                            "RDFLibrary$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-    BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpinstall:macbuild:xpistub.mcp",                  "xpistub$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpinstall:macbuild:xpistub.mcp",                  "xpistub$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     if (!($main::PROFILE)) {
-        BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.mcp",           "Mozilla Installer$D", "", 0, 0, 0);
+        BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.mcp",           "Mozilla Installer$D", 0, 0, 0);
     }
     print("--- Layout projects complete ---\n");
 }
@@ -1872,9 +1872,9 @@ sub BuildEditorProjects()
 
     print("--- Starting Editor projects ----\n");
 
-    BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.mcp",                 "EditorTxmgr$D.shlb", "txmgr.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:editor:txtsvc:macbuild:txtsvc.mcp",               "TextServices$D.shlb", "txtsvc.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:editor:macbuild:editor.mcp",                      "EditorCore$D.shlb", "EditorCore.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.mcp",                 "EditorTxmgr$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:editor:txtsvc:macbuild:txtsvc.mcp",               "TextServices$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:editor:macbuild:editor.mcp",                      "EditorCore$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     print("--- Editor projects complete ----\n");
 }
@@ -1895,8 +1895,8 @@ sub BuildViewerProjects()
 
     print("--- Starting Viewer projects ----\n");
 
-    BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",            "viewer$D", "viewer.toc", 0, 0, 0);
-    BuildOneProject(":mozilla:embedding:browser:macbuild:webBrowser.mcp",       "webBrowser$D.shlb", "webBrowser.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",            "viewer$D",  0, 0, 0);
+    BuildOneProject(":mozilla:embedding:browser:macbuild:webBrowser.mcp",       "webBrowser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     print("--- Viewer projects complete ----\n");
 }
@@ -1918,23 +1918,23 @@ sub BuildXPAppProjects()
     print("--- Starting XPApp projects ----\n");
 
     # Components
-    BuildOneProject(":mozilla:xpfe:components:timebomb:macbuild:timebomb.mcp", "tmbm$D.shlb", "tmbmComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp", "FindComponent$D.shlb", "FindComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:ucth:macbuild:ucth.mcp",  "ucth$D.shlb", "ucth.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:xfer:macbuild:xfer.mcp",  "xfer$D.shlb", "xfer.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:bookmarks:macbuild:Bookmarks.mcp", "Bookmarks$D.shlb", "BookmarksComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:search:macbuild:Search.mcp", "Search$D.shlb", "SearchComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:directory:Directory.mcp", "Directory$D.shlb", "DirectoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.mcp", "RegViewer$D.shlb", "RegViewerComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.shlb", "shistoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:urlbarhistory:macbuild:urlbarhistory.mcp", "urlbarhistory$D.shlb", "urlbarhistoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:components:autocomplete:macbuild:AutoComplete.mcp", "AutoComplete$D.shlb", "AutoComplete.toc", 1, $main::ALIAS_SYM_FILES, 1);        
+    BuildOneProject(":mozilla:xpfe:components:timebomb:macbuild:timebomb.mcp", "tmbm$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp", "FindComponent$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:ucth:macbuild:ucth.mcp",  "ucth$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:xfer:macbuild:xfer.mcp",  "xfer$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:bookmarks:macbuild:Bookmarks.mcp", "Bookmarks$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:search:macbuild:Search.mcp", "Search$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:directory:Directory.mcp", "Directory$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.mcp", "RegViewer$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:urlbarhistory:macbuild:urlbarhistory.mcp", "urlbarhistory$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:autocomplete:macbuild:AutoComplete.mcp", "AutoComplete$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);        
 
     # Applications
-    BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",             "AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:browser:macbuild:mozBrowser.mcp",            "mozBrowser$D.shlb", "mozBrowser.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",             "AppShell$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:browser:macbuild:mozBrowser.mcp",            "mozBrowser$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     print("--- XPApp projects complete ----\n");
 }
@@ -2055,24 +2055,24 @@ sub BuildMailNewsProjects()
 
     print("--- Starting MailNews projects ----\n");
 
-    BuildOneProject(":mozilla:mailnews:base:util:macbuild:msgUtil.mcp",                 "MsgUtil$D.lib", "MsgUtil.toc", 0, 0, 0);
-    BuildOneProject(":mozilla:mailnews:base:macbuild:msgCore.mcp",                      "mailnews$D.shlb", "mailnews.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:compose:macbuild:msgCompose.mcp",                "MsgCompose$D.shlb", "MsgCompose.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:db:macbuild:msgDB.mcp",                          "MsgDB$D.shlb", "MsgDB.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",                    "MsgLocal$D.shlb", "MsgLocal.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:imap:macbuild:msgimap.mcp",                      "MsgImap$D.shlb", "MsgImap.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:news:macbuild:msgnews.mcp",                      "MsgNews$D.shlb", "MsgNews.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbook.mcp",              "MsgAddrbook$D.shlb", "MsgAddrbook.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:absync:macbuild:AbSync.mcp",                 "AbSyncSvc$D.shlb", "AbSyncSvc.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",                         "Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:mime:emitters:macbuild:mimeEmitter.mcp",         "mimeEmitter$D.shlb", "mimeEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:mime:cthandlers:vcard:macbuild:vcard.mcp",       "vcard$D.shlb", "vcard.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp", "smime$D.shlb", "smime.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:mime:cthandlers:signstub:macbuild:signed.mcp", "signed$D.shlb", "signed.toc", 1, $main::ALIAS_SYM_FILES, 1);
-#   BuildOneProject(":mozilla:mailnews:mime:cthandlers:calendar:macbuild:calendar.mcp", "calendar$D.shlb", "calendar.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:import:macbuild:msgImport.mcp",                  "msgImport$D.shlb", "msgImport.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:import:text:macbuild:msgImportText.mcp",     "msgImportText$D.shlb", "msgImportText.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:import:eudora:macbuild:msgImportEudora.mcp",     "msgImportEudora$D.shlb", "msgImportEudora.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:base:util:macbuild:msgUtil.mcp",                 "MsgUtil$D.lib", 0, 0, 0);
+    BuildOneProject(":mozilla:mailnews:base:macbuild:msgCore.mcp",                      "mailnews$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:compose:macbuild:msgCompose.mcp",                "MsgCompose$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:db:macbuild:msgDB.mcp",                          "MsgDB$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",                    "MsgLocal$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:imap:macbuild:msgimap.mcp",                      "MsgImap$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:news:macbuild:msgnews.mcp",                      "MsgNews$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbook.mcp",              "MsgAddrbook$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:absync:macbuild:AbSync.mcp",                 "AbSyncSvc$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",                         "Mime$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:mime:emitters:macbuild:mimeEmitter.mcp",         "mimeEmitter$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:mime:cthandlers:vcard:macbuild:vcard.mcp",       "vcard$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp", "smime$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:mime:cthandlers:signstub:macbuild:signed.mcp", "signed$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+#   BuildOneProject(":mozilla:mailnews:mime:cthandlers:calendar:macbuild:calendar.mcp", "calendar$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:import:macbuild:msgImport.mcp",                  "msgImport$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:import:text:macbuild:msgImportText.mcp",     "msgImportText$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:mailnews:import:eudora:macbuild:msgImportEudora.mcp",     "msgImportEudora$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     print("--- MailNews projects complete ----\n");
 }
@@ -2088,12 +2088,12 @@ sub BuildMozilla()
     _assertRightDirectory();
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
-    BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",           "apprunner$D", "apprunner.toc", 0, 0, 1);
+    BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",           "apprunner$D", 0, 0, 1);
 
 
     # build tool to create Component Registry in release builds only.
     if (!($main::DEBUG)) {
-        BuildOneProject(":mozilla:xpcom:tools:registry:macbuild:RegXPCOM.mcp", "RegXPCOM", "regxpcom.toc", 0, 0, 1);
+        BuildOneProject(":mozilla:xpcom:tools:registry:macbuild:RegXPCOM.mcp", "RegXPCOM", 0, 0, 1);
     }
     
     # copy command line documents into the Apprunner folder and set correctly the signature
