@@ -34,6 +34,10 @@
 var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
 var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
 
+// get the "msgLoad" atom
+var atomService = Components.classes["@mozilla.org/atom-service;1"].getService().QueryInterface(Components.interfaces.nsIAtomService);
+var gMsgLoadedAtom = atomService.getAtom("msgLoaded").QueryInterface(Components.interfaces.nsISupports);
+
 var gViewAllHeaders = false;
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
@@ -352,6 +356,17 @@ var messageHeaderSink = {
         displayAttachmentsForCollapsedView();
       else
         displayAttachmentsForExpandedView();
+    },
+
+    onEndMsgDownload: function(url)
+    {
+      var msgFolder;
+      if (url)
+      {
+        msgFolder = url.folder;
+        if (msgFolder)
+          msgFolder.NotifyFolderEvent(gMsgLoadedAtom);
+      }
     },
 
     mSecurityInfo  : null,
