@@ -20,7 +20,7 @@
   <html:script language="JavaScript" src="resource:/res/samples/finddialog.js">
   </html:script>
 
-    <html:table border="1" style="width:400px;">
+    <html:table border="0" style="width:400px;">
         <html:tr>
             <html:td class="fieldlabel">
                 Find:
