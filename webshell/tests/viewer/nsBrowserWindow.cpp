@@ -2014,14 +2014,7 @@ nsBrowserWindow::DoCopy()
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-
-#ifndef NEW_CLIPBOARD_SUPPORT
-    nsISelectionMgr* selectionMgr;
-    if (NS_SUCCEEDED(mAppShell->GetSelectionMgr(&selectionMgr)))
-      shell->DoCopy(selectionMgr);
-#else
     shell->DoCopy();
-#endif
     NS_RELEASE(shell);
   }
 }
@@ -2032,19 +2025,7 @@ nsBrowserWindow::DoPaste()
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
 
-#ifndef NEW_CLIPBOARD_SUPPORT
-    nsISelectionMgr* selectionMgr;
-    if (NS_SUCCEEDED(mAppShell->GetSelectionMgr(&selectionMgr)))
-    {
-      nsString newString;
-      selectionMgr->PasteTextBlocking(&newString);
-      char* cstring = newString.ToNewCString();
-      printf("Would paste: '%s'\n", cstring);
-      delete[] cstring;
-    }
-#else
     printf("nsBrowserWindow::DoPaste()\n");
-#endif
 
     NS_RELEASE(shell);
   }

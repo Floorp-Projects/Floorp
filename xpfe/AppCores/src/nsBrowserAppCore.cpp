@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -1475,12 +1474,10 @@ nsBrowserAppCore::PrintPreview()
 NS_IMETHODIMP    
 nsBrowserAppCore::Copy()
 { 
-#ifdef NEW_CLIPBOARD_SUPPORT
   nsIPresShell * presShell = GetPresShellFor(mContentAreaWebShell);
   if (nsnull != presShell) {
     presShell->DoCopy();
   }
-#endif
 
   return NS_OK;
 }
