@@ -63,6 +63,7 @@ public:
   NS_IMETHOD GetControllers(nsIControllers** aResult)=0;
 
   NS_IMETHOD MoveFocus(PRBool aForward, nsIDOMElement* aElt)=0;
+  NS_IMETHOD RewindFocusState()=0;
 };
 
 #endif // nsIFocusController_h__

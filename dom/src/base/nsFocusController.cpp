@@ -100,6 +100,7 @@ nsFocusController::GetFocusedWindow(nsIDOMWindowInternal** aWindow)
 NS_IMETHODIMP
 nsFocusController::SetFocusedElement(nsIDOMElement* aElement)
 {
+  mPreviousElement = mCurrentElement;
   mCurrentElement = aElement;
 
   if (!mSuppressFocus) {
@@ -108,6 +109,15 @@ nsFocusController::SetFocusedElement(nsIDOMElement* aElement)
     // before updating.
     UpdateCommands(NS_LITERAL_STRING("focus"));
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFocusController::RewindFocusState()
+{
+  mCurrentElement = mPreviousElement;
+  mCurrentWindow = mPreviousWindow;
+
   return NS_OK;
 }
 
@@ -124,6 +134,9 @@ nsFocusController::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
         basewin->SetFocus();
     }
   }
+  if(mCurrentWindow) mPreviousWindow = mCurrentWindow;
+  else if (aWindow) mPreviousWindow = aWindow;
+
   mCurrentWindow = aWindow;
   return NS_OK;
 }
