@@ -72,7 +72,7 @@ sub include {
     open(FILE, $filename);
     while (<FILE>) {
         # on cygwin, line endings are screwed up, so normalise them.
-        s/[\xDA\x0A]+$/\n/os if $^O eq 'cygwin';
+        s/[\x0D\x0A]+$/\n/os if $^O eq 'cygwin';
         $stack->newline;
         if (/^\#([a-z]+)\n?$/os) { # argumentless processing instruction
             process($stack, $1);
