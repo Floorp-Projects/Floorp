@@ -58,7 +58,7 @@ namespace VM {
         BRANCH, /* target label */
         BRANCH_FALSE, /* target label, condition */
         BRANCH_TRUE, /* target label, condition */
-        CALL, /* result, target, args */
+        CALL, /* result, target, name, args */
         COMPARE_EQ, /* dest, source1, source2 */
         COMPARE_GE, /* dest, source1, source2 */
         COMPARE_GT, /* dest, source1, source2 */
@@ -77,11 +77,13 @@ namespace VM {
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
         LOAD_STRING, /* dest, immediate value (string) */
+        METHOD_CALL, /* result, target base, target value, args */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
         NAME_XCR, /* dest, name, value */
         NEGATE, /* dest, source */
         NEW_ARRAY, /* dest */
+        NEW_FUNCTION, /* dest, ICodeModule */
         NEW_OBJECT, /* dest */
         NOP, /* do nothing and like it */
         NOT, /* dest, source */
@@ -139,11 +141,13 @@ namespace VM {
         "LOAD_IMMEDIATE",
         "LOAD_NAME     ",
         "LOAD_STRING   ",
+        "METHOD_CALL   ",
         "MOVE          ",
         "MULTIPLY      ",
         "NAME_XCR      ",
         "NEGATE        ",
         "NEW_ARRAY     ",
+        "NEW_FUNCTION  ",
         "NEW_OBJECT    ",
         "NOP           ",
         "NOT           ",
@@ -472,18 +476,18 @@ namespace VM {
         /* print() and printOperands() inherited from GenericBranch */
     };
 
-    class Call : public Instruction_3<TypedRegister, TypedRegister, RegisterList> {
+    class Call : public Instruction_4<TypedRegister, TypedRegister, const StringAtom*, RegisterList> {
     public:
-        /* result, target, args */
-        Call (TypedRegister aOp1, TypedRegister aOp2, RegisterList aOp3) :
-            Instruction_3<TypedRegister, TypedRegister, RegisterList>
-            (CALL, aOp1, aOp2, aOp3) {};
+        /* result, target, name, args */
+        Call (TypedRegister aOp1, TypedRegister aOp2, const StringAtom* aOp3, RegisterList aOp4) :
+            Instruction_4<TypedRegister, TypedRegister, const StringAtom*, RegisterList>
+            (CALL, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CALL] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << mOp3;
+            f << opcodeNames[CALL] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << ArgList(mOp3, registers);
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << ArgList(mOp4, registers);
             return f;
         }
     };
@@ -696,6 +700,22 @@ namespace VM {
         }
     };
 
+    class MethodCall : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList> {
+    public:
+        /* result, target base, target value, args */
+        MethodCall (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, RegisterList aOp4) :
+            Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList>
+            (METHOD_CALL, aOp1, aOp2, aOp3, aOp4) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[METHOD_CALL] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "R" << mOp3.first << ", " << mOp4;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first] << ", " << ArgList(mOp4, registers);
+            return f;
+        }
+    };
+
     class Move : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
@@ -761,6 +781,22 @@ namespace VM {
             (NEW_ARRAY, aOp1) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[NEW_ARRAY] << "\t" << "R" << mOp1.first;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            return f;
+        }
+    };
+
+    class NewFunction : public Instruction_2<TypedRegister, ICodeModule *> {
+    public:
+        /* dest, ICodeModule */
+        NewFunction (TypedRegister aOp1, ICodeModule * aOp2) :
+            Instruction_2<TypedRegister, ICodeModule *>
+            (NEW_FUNCTION, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[NEW_FUNCTION] << "\t" << "R" << mOp1.first << ", " << "ICodeModule";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1131,6 +1167,7 @@ namespace VM {
             (XOR, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
+
 
 } /* namespace VM */
 

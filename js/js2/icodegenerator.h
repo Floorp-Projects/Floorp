@@ -219,8 +219,8 @@ namespace ICG {
         
         TypedRegister op(ICodeOp op, TypedRegister source);
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
-        TypedRegister call(TypedRegister target, RegisterList args);
-        void callVoid(TypedRegister target, RegisterList args);
+        TypedRegister call(TypedRegister target, const StringAtom &name, RegisterList args);
+        TypedRegister methodCall(TypedRegister targetBase, TypedRegister targetValue, RegisterList args);
 
         void move(TypedRegister destination, TypedRegister source);
         TypedRegister logicalNot(TypedRegister source);
@@ -229,9 +229,11 @@ namespace ICG {
         TypedRegister loadBoolean(bool value);
         TypedRegister loadImmediate(double value);
         TypedRegister loadString(String &value);
+        TypedRegister loadString(const StringAtom &name);
                 
         TypedRegister newObject();
         TypedRegister newArray();
+        TypedRegister newFunction(ICodeModule *icm);
         
         TypedRegister loadName(const StringAtom &name);
         void saveName(const StringAtom &name, TypedRegister value);
