@@ -51,7 +51,8 @@ DIRS = 	external \
 	util \
 	dom \
 	xpcom \
-	webclient
+	webclient \
+	build
 !else
 !ifdef BUILD_BLACKCONNECT_ONLY
 DIRS =	external \
@@ -72,7 +73,7 @@ DIRS  = external \
 !endif
 
 !ifdef PACKAGE_BUILD
-DIRS += build
+DIRS = $(DIRS)  build
 !endif
 
 include <$(DEPTH)\config\rules.mak>

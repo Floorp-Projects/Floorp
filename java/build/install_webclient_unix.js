@@ -58,6 +58,20 @@ logComment("Starting Install Process");
    var fJavadev        = getFolder("Program","javadev");
    symlink(fComponents + "libjavadom.so", 
            getFolder(fJavadev, "lib/libjavadom.so"));
+   symlink(fComponents + "libbcorb.so", 
+           getFolder(fJavadev, "lib/libbcorb.so"));
+   symlink(fComponents + "libbcjavastubs.so", 
+           getFolder(fJavadev, "lib/libbcjavastubs.so"));
+   symlink(fComponents + "libjavaloader.so", 
+           getFolder(fJavadev, "lib/libjavaloader.so"));
+   symlink(fComponents + "libjavaSample.so", 
+           getFolder(fJavadev, "lib/libjavaSample.so"));
+   symlink(fComponents + "libbcTest.so", 
+           getFolder(fJavadev, "lib/libbcTest.so"));
+   symlink(fComponents + "libbcxpcomstubs.so", 
+           getFolder(fJavadev, "lib/libbcxpcomstubs.so"));
+   symlink(fProgram + "regxpcom", 
+           getFolder(fJavadev, "lib/regxpcom"));
 
    // check return value
    if(err == SUCCESS)

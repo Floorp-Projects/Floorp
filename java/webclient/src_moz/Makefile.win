@@ -26,7 +26,6 @@ MAKE_OBJ_TYPE	= DLL
 
 MODULE=webclient 
 
-DIRS = win32
 
 OBJS =                              \
     .\$(OBJDIR)\ns_util.obj  \
@@ -56,7 +55,6 @@ OBJS =                              \
     .\$(OBJDIR)\PreferencesImpl.obj  \
     .\$(OBJDIR)\PreferencesActionEvents.obj  \
     .\$(OBJDIR)\ISupportsPeer.obj  \
-    .\win32\$(OBJDIR)\Win32BrowserControlCanvas.obj \
     $(NULL)
 
 
@@ -87,7 +85,6 @@ LLIBS = \
 	$(DIST)\lib\nspr4.lib \
 	$(DIST)\lib\plc4.lib \
 	$(DIST)\lib\plds4.lib \
-	$(JDKHOME)\jre\lib\jawt.lib \
 	$(NULL)  
 
 WIN_LIBS=                       \
@@ -114,7 +111,6 @@ include <$(DEPTH)\config\rules.mak>
 INCS = \
 	-I..\bal\ \
 	-I..\bal\win32 \
-	-Iwin32 \
 	$(INCS) \
 	$(NULL)
 !else
@@ -140,9 +136,11 @@ buildRunems:
 	copy $(DIST)\bin\windbgdlg.exe $(JDKHOME)\bin
 !ifdef BAL_INTERFACE
 !else
+!ifndef PACKAGE_BUILD
 	@echo +++ Creating runem.bat.  Use this to run the test browser.
 	rm -f runem.bat
 	@echo $(PERL) ..\src_share\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) %1% >> runem.bat
+!endif
 !endif
 
 install:: $(DLL) buildRunems 
