@@ -280,6 +280,10 @@ public:
   virtual PRBool DeleteChildsNextInFlow(nsIPresContext& aPresContext,
                                         nsIFrame* aNextInFlow);
 
+  void SetShrinkWrap(PRBool aShrinkWrap) {
+    mShrinkWrap = aShrinkWrap;
+  }
+
   PRBool DrainOverflowLines();
 
   PRBool RemoveChild(LineData* aLines, nsIFrame* aChild);
@@ -378,6 +382,11 @@ public:
 
   // For list-item frames, this is the bullet frame.
   BulletFrame* mBullet;
+
+  // If true then this frame doesn't act like css says, instead it
+  // shrink wraps around its contents instead of filling out to its
+  // parents size.
+  PRBool mShrinkWrap;
 };
 
 //----------------------------------------------------------------------
@@ -1420,12 +1429,14 @@ nsBlockReflowState::GetAvailableSpace()
 
 nsresult
 NS_NewBlockFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                 nsIFrame*& aNewFrame)
+                 nsIFrame*& aNewFrame, PRBool aShrinkWrap)
 {
-  aNewFrame = new nsBlockFrame(aContent, aParentFrame);
-  if (nsnull == aNewFrame) {
+  nsBlockFrame* it = new nsBlockFrame(aContent, aParentFrame);
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  aNewFrame = it;
+  it->SetShrinkWrap(aShrinkWrap);
   return NS_OK;
 }
 
@@ -1855,9 +1866,10 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState& aState,
   }
   else {
     // There are two options here. We either shrink wrap around our
-    // contents or we fluff out to the maximum available width.
+    // contents or we fluff out to the maximum available width. Note:
+    // We always shrink wrap when given an unconstrained width.
     nscoord contentWidth = aState.mKidXMost + aState.mBorderPadding.right;
-    if (!aState.mUnconstrainedWidth) {
+    if (!mShrinkWrap && !aState.mUnconstrainedWidth) {
       // Fluff out to the max width if we aren't already that wide
       if (contentWidth < aState.maxSize.width) {
         contentWidth = aState.maxSize.width;

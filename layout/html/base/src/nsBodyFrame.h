@@ -34,7 +34,7 @@ class nsBodyFrame : public nsHTMLContainerFrame,
 {
 public:
   friend nsresult NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent,
-                                  nsIFrame*& aResult);
+                                  nsIFrame*& aResult, PRBool aIsTopLevel);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -73,8 +73,12 @@ public:
 
   NS_IMETHOD VerifyTree() const;
 
+  void SetIsTopLevel(PRBool aIsTopLevel) {
+    mIsTopLevel = aIsTopLevel;
+  }
+
 protected:
-  PRBool  mIsPseudoFrame;
+  PRBool  mIsTopLevel;
 
   nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
@@ -109,12 +113,9 @@ private:
   nsVoidArray     mAbsoluteItems;
   PRInt32         mChildCount;
 
-  nsSize GetColumnAvailSpace(nsIPresContext* aPresContext,
+  nsSize GetColumnAvailSpace(nsIPresContext& aPresContext,
                              const nsMargin& aBorderPadding,
                              const nsSize&   aMaxSize);
-
-  // XXX FIX ME...
-  PRBool IsPseudoFrame() const;
 };
 
 #endif /* nsBodyFrame_h___ */
