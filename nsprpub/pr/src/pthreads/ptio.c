@@ -3281,21 +3281,30 @@ PR_IMPLEMENT(PRStatus) PR_SetFDInheritable(
 
 PR_IMPLEMENT(PRFileDesc*) PR_ImportFile(PRInt32 osfd)
 {
-    PRFileDesc *fd = pt_SetMethods(osfd, PR_DESC_FILE);
+    PRFileDesc *fd;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+    fd = pt_SetMethods(osfd, PR_DESC_FILE);
     if (NULL == fd) close(osfd);
     return fd;
 }  /* PR_ImportFile */
 
 PR_IMPLEMENT(PRFileDesc*) PR_ImportTCPSocket(PRInt32 osfd)
 {
-    PRFileDesc *fd = pt_SetMethods(osfd, PR_DESC_SOCKET_TCP);
+    PRFileDesc *fd;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+    fd = pt_SetMethods(osfd, PR_DESC_SOCKET_TCP);
     if (NULL == fd) close(osfd);
     return fd;
 }  /* PR_ImportTCPSocket */
 
 PR_IMPLEMENT(PRFileDesc*) PR_ImportUDPSocket(PRInt32 osfd)
 {
-    PRFileDesc *fd = pt_SetMethods(osfd, PR_DESC_SOCKET_UDP);
+    PRFileDesc *fd;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+    fd = pt_SetMethods(osfd, PR_DESC_SOCKET_UDP);
     if (NULL != fd) close(osfd);
     return fd;
 }  /* PR_ImportUDPSocket */

@@ -410,6 +410,8 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportFile(PRInt32 osfd)
 {
     PRFileDesc *fd = NULL;
 
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
     fd = PR_AllocFileDesc(osfd, &_pr_fileMethods);
     if( !fd ) {
         (void) _PR_MD_CLOSE_FILE(osfd);
