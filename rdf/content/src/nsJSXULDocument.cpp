@@ -26,7 +26,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMNode.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
 
@@ -34,11 +34,11 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXULDocumentIID, NS_IDOMXULDOCUMENT_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
-NS_DEF_PTR(nsIDOMNode);
+NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMXULDocument);
 NS_DEF_PTR(nsIDOMNodeList);
 
@@ -131,14 +131,14 @@ ResolveXULDocument(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method GetElementByID
+// Native method GetElementById
 //
 PR_STATIC_CALLBACK(JSBool)
-XULDocumentGetElementByID(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULDocument *nativeThis = (nsIDOMXULDocument*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMNode* nativeRet;
+  nsIDOMElement* nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -152,14 +152,14 @@ XULDocumentGetElementByID(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->GetElementByID(b0, &nativeRet)) {
+    if (NS_OK != nativeThis->GetElementById(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
-    JS_ReportError(cx, "Function getElementByID requires 1 parameters");
+    JS_ReportError(cx, "Function getElementById requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -239,7 +239,7 @@ static JSPropertySpec XULDocumentProperties[] =
 //
 static JSFunctionSpec XULDocumentMethods[] = 
 {
-  {"getElementByID",          XULDocumentGetElementByID,     1},
+  {"getElementById",          XULDocumentGetElementById,     1},
   {"getElementsByAttribute",          XULDocumentGetElementsByAttribute,     2},
   {0}
 };

@@ -94,6 +94,7 @@ static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_
 static NS_DEFINE_IID(kIDocumentIID,           NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIHTMLStyleSheetIID,     NS_IHTML_STYLE_SHEET_IID);
+static NS_DEFINE_IID(kIHTMLCSSStyleSheetIID,  NS_IHTML_CSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID,     NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,   NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kIParserIID,             NS_IPARSER_IID);
@@ -117,6 +118,7 @@ static NS_DEFINE_IID(kIXULContentSinkIID,     NS_IXULCONTENTSINK_IID);
 static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID,        NS_HTMLSTYLESHEET_CID);
+static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,     NS_HTML_CSS_STYLESHEET_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
@@ -544,7 +546,7 @@ public:
     nsresult Init(void);
     nsresult StartLayout(void);
 
-    void SearchForNodeByID(const nsString& anID, nsIContent* anElement, nsIDOMNode** aReturn);
+    void SearchForNodeByID(const nsString& anID, nsIContent* anElement, nsIDOMElement** aReturn);
 
     static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
@@ -816,6 +818,27 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
 
     if (NS_FAILED(rv)) {
         NS_ERROR("unable to add HTML style sheet");
+        return rv;
+    }
+
+    // Create an inline style sheet for inline content that contains a style 
+    // attribute.
+    nsIHTMLCSSStyleSheet* inlineSheet;
+    if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kHTMLCSSStyleSheetCID,
+                                                       nsnull,
+                                                       kIHTMLCSSStyleSheetIID,
+                                                       (void**) &inlineSheet))) {
+        if (NS_SUCCEEDED(rv = inlineSheet->Init(aURL, this))) {
+            mInlineStyleSheet = inlineSheet;
+            NS_ADDREF(mInlineStyleSheet);
+
+            AddStyleSheet(mInlineStyleSheet);
+        }
+        NS_RELEASE(inlineSheet);
+    }
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("unable to add inline style sheet");
         return rv;
     }
       
@@ -1803,9 +1826,7 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     if ((index = uri.RFind('#')) < 0) {
         if ((index = uri.RFind('/')) < 0) {
             *aNameSpaceID = kNameSpaceID_None;
-            nsAutoString name;
-            uri.Right(name, uri.Length()-1);
-            *aTag = NS_NewAtom(name);
+            *aTag = NS_NewAtom(uri);
             return NS_OK;
         }
     }
@@ -1962,21 +1983,16 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
             nsString elementValue;
             nsString attributeValue;
 
-            PRInt32 namespaceID = -1;
-           
-
-            pChildContent->GetNameSpaceID(namespaceID);
-
-            pChildContent->GetAttribute(namespaceID, 
+            pChildContent->GetAttribute(kNameSpaceID_None, 
                                         kElementAtom,
                                         elementValue);
             
-            pChildContent->GetAttribute(namespaceID, 
+            pChildContent->GetAttribute(kNameSpaceID_None, 
                                         kAttributeAtom,
                                         attributeValue);
 
-            nsIDOMNode* pDOMNode = nsnull;
-            GetElementByID(elementValue, &pDOMNode);
+            nsIDOMElement* pDOMNode = nsnull;
+            GetElementById(elementValue, &pDOMNode);
             
             if (!pDOMNode)
               break;
@@ -2194,7 +2210,7 @@ XULDocumentImpl::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
 // nsIDOMXULDocument interface
 
 NS_IMETHODIMP
-XULDocumentImpl::GetElementByID(const nsString& aId, nsIDOMNode** aReturn)
+XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 {
     nsresult rv;
 
@@ -2223,8 +2239,8 @@ XULDocumentImpl::GetElementByID(const nsString& aId, nsIDOMNode** aReturn)
 
     if (elements->Count() > 0) {
         nsISupports* element = elements->ElementAt(0);
-        rv = element->QueryInterface(nsIDOMNode::GetIID(), (void**) aReturn);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
+        rv = element->QueryInterface(nsIDOMElement::GetIID(), (void**) aReturn);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM element");
         NS_RELEASE(element);
         return rv;
     }
@@ -2239,7 +2255,7 @@ XULDocumentImpl::GetElementByID(const nsString& aId, nsIDOMNode** aReturn)
 void
 XULDocumentImpl::SearchForNodeByID(const nsString& anID, 
                                    nsIContent* anElement,
-                                   nsIDOMNode** aReturn)
+                                   nsIDOMElement** aReturn)
 {
     // See if we match.
     PRInt32 namespaceID;
@@ -2251,7 +2267,7 @@ XULDocumentImpl::SearchForNodeByID(const nsString& anID,
 
     if (idValue == anID)
     {
-      nsCOMPtr<nsIDOMNode> pDomNode( do_QueryInterface(anElement) );
+      nsCOMPtr<nsIDOMElement> pDomNode( do_QueryInterface(anElement) );
       if (pDomNode)
       {
         *aReturn = pDomNode;

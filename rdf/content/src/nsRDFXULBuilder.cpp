@@ -53,6 +53,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsIURL.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
 #include "nsRDFContentUtils.h"
@@ -206,6 +207,9 @@ public:
     GetResource(PRInt32 aNameSpaceID,
                 nsIAtom* aNameAtom,
                 nsIRDFResource** aResource);
+
+    nsresult
+    GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -278,7 +282,6 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
         kIdAtom                   = NS_NewAtom("id");
         kDataSourcesAtom          = NS_NewAtom("datasources");
         kTreeAtom                 = NS_NewAtom("tree");
-
 
         if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kRDFServiceCID,
                                                            kIRDFServiceIID,
@@ -485,22 +488,9 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
     // values. We could QI for the nsIRDFResource here, but doing this
     // via the nsIContent interface allows us to support generic nodes
     // that might get added in by DOM calls.
-    nsAutoString uri;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_RDF,
-                                              kIdAtom,
-                                              uri))) {
-        NS_ERROR("severe error retrieving attribute");
-        return rv;
-    }
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        NS_ERROR("tree element has no RDF:ID");
-        return NS_ERROR_UNEXPECTED;
-    }
-
     nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, getter_AddRefs(resource)))) {
-        NS_ERROR("unable to create resource");
+    if (NS_FAILED(rv = GetElementResource(aElement, getter_AddRefs(resource)))) {
+        NS_ERROR("unable to get element resource");
         return rv;
     }
 
@@ -1015,6 +1005,13 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
         return NS_OK;
     }
 
+    // Get the nsIContent interface, it's a bit more utilitarian
+    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
+    if (! element) {
+        NS_ERROR("element doesn't support nsIContent");
+        return NS_ERROR_UNEXPECTED;
+    }
+
     // Make sure it's a XUL element; otherwise, we really don't have
     // any business with the attribute.
     PRBool isXULElement;
@@ -1215,10 +1212,6 @@ RDFXULBuilderImpl::RemoveChild(nsIContent* aElement, nsIRDFNode* aValue)
     if (NS_SUCCEEDED(rv = aValue->QueryInterface(kIRDFResourceIID,
                                                  (void**) getter_AddRefs(resource)))) {
 
-        // If it's a resource, then look for a child container to remove
-        const char* resourceURI;
-        resource->GetValue(&resourceURI);
-
         PRInt32 count;
         aElement->ChildCount(count);
         while (--count >= 0) {
@@ -1229,12 +1222,10 @@ RDFXULBuilderImpl::RemoveChild(nsIContent* aElement, nsIRDFNode* aValue)
             if (IsHTMLElement(child))
                 continue;
 
-            nsAutoString uri;
-            rv = child->GetAttribute(kNameSpaceID_RDF, kIdAtom, uri);
-            if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-                continue;
+            nsCOMPtr<nsIRDFResource> elementResource;
+            rv = GetElementResource(child, getter_AddRefs(elementResource));
 
-            if (! uri.Equals(resourceURI))
+            if (resource != elementResource)
                 continue;
 
             // okay, found it. now blow it away...
@@ -1752,26 +1743,7 @@ RDFXULBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResou
         return rv;
     }
 
-    nsAutoString uri;
-    if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_RDF,
-                                             kIdAtom,
-                                             uri))) {
-        NS_ERROR("severe error retrieving attribute");
-        return rv;
-    }
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        NS_ERROR("tree element has no RDF:ID");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, aResource))) {
-        NS_ERROR("unable to create resource");
-        return rv;
-    }
-
-    return NS_OK;
+    return GetElementResource(element, aResource);
 }
 
 nsresult
@@ -1790,7 +1762,7 @@ RDFXULBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
     if (NS_FAILED(rv = aResource->GetValue(&uri)))
         return rv;
 
-    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_RDF, kIdAtom, uri, PR_FALSE)))
+    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, uri, PR_FALSE)))
         return rv;
 
     *aResult = result;
@@ -1827,4 +1799,50 @@ RDFXULBuilderImpl::GetResource(PRInt32 aNameSpaceID,
     nsresult rv = gRDFService->GetUnicodeResource(uri, aResource);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
     return rv;
+}
+
+
+nsresult
+RDFXULBuilderImpl::GetElementResource(nsIContent* aElement, nsIRDFResource** aResult)
+{
+    // Perform a reverse mapping from an element in the content model
+    // to an RDF resource.
+    nsresult rv;
+    nsAutoString uri;
+    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
+                                              kIdAtom,
+                                              uri))) {
+        NS_ERROR("severe error retrieving attribute");
+        return rv;
+    }
+
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+        NS_ERROR("tree element has no ID");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Since the element will store its ID attribute as a document-relative value,
+    // we may need to qualify it first...
+    NS_ASSERTION(mDocument != nsnull, "builder has no document -- can't fully qualify URI");
+    if (nsnull != mDocument) {
+        nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
+        NS_ASSERTION(doc, "doesn't support nsIDocument");
+        if (doc) {
+          nsIURL* docURL = nsnull;
+          doc->GetBaseURL(docURL);
+          if (docURL) {
+              const char* url;
+              docURL->GetSpec(&url);
+              rdf_PossiblyMakeAbsolute(url, uri);
+              NS_RELEASE(docURL);
+          }
+        }
+    }
+
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, aResult))) {
+        NS_ERROR("unable to create resource");
+        return rv;
+    }
+
+    return NS_OK;
 }
