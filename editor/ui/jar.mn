@@ -14,7 +14,6 @@ comm.jar:
 	content/editor/EditorInitPagePlain.html                  (composer/content/EditorInitPagePlain.html) 
 	content/editor/EditorExtra.css                           (composer/content/EditorExtra.css) 
 	content/editor/EditorAllTags.css                         (composer/content/EditorAllTags.css) 
-	content/editor/EditorOverride.css                        (composer/content/EditorOverride.css) 
 	content/editor/EditorParagraphMarks.css                  (composer/content/EditorParagraphMarks.css)
         content/editor/EditorContent.css                         (composer/content/EditorContent.css)  
 	content/editor/editorOverlay.xul                         (composer/content/editorOverlay.xul) 
