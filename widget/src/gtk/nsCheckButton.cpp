@@ -71,7 +71,7 @@ void nsCheckButton::InitCallbacks(char * aName)
   InstallButtonReleaseSignal(mCheckButton);
 
   // These are needed so that the events will go to us and not our parent.
-  AddToEventMask(mCheckButton,
+  AddToEventMask(mWidget,
                  GDK_BUTTON_PRESS_MASK |
                  GDK_BUTTON_RELEASE_MASK |
                  GDK_ENTER_NOTIFY_MASK |
