@@ -504,6 +504,17 @@ public:
 };
 
 
+class nsAutoEditBatch
+{
+  private:
+    nsCOMPtr<nsIEditor> mEd;
+  public:
+    nsAutoEditBatch( nsIEditor *aEd) : mEd(do_QueryInterface(aEd)) 
+                   { if (mEd) mEd->BeginTransaction(); }
+    ~nsAutoEditBatch() { if (mEd) mEd->EndTransaction(); }
+};
+
+
 /*
 factory method(s)
 */
