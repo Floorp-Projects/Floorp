@@ -1900,7 +1900,7 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
   // sized then we collapse into nothingness.
   if ((eHTMLFrameConstraint_Unconstrained == aState.widthConstraint) &&
       (eHTMLFrameConstraint_Unconstrained == aState.heightConstraint) &&
-      ((0 == aState.mKidXMost - aState.mBorderPadding.left) ||
+      ((0 == aState.mKidXMost - aState.mBorderPadding.left) &&
        (0 == aState.mY - aState.mBorderPadding.top))) {
     aMetrics.width = 0;
     aMetrics.height = 0;
