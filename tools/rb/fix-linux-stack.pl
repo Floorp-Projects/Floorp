@@ -54,20 +54,17 @@ use IPC::Open2;
 my %pipes;
 while (<>) {
     my $line = $_;
-    if ($line =~ /([ 0-9\|]*)(.*) \[(\/[^ ]*) \+(0x[0-9A-F]{8})\]$/) {
+    if ($line =~ /([ \|0-9]*)(.*) \[([^ ]*) \+(0x[0-9A-F]{8})\]$/) {
         my $before = $1; # preserve minimal stuff before to preserve
                          # balance trees
         my $badsymbol = $2;
-        my $file = $3; # only match files with absolute pathnames,
-                       # since addr2line can deal with only shared
-                       # libraries, not the app binary.
+        my $file = $3;
         my $address = $4;
 
         my $pipe;
         unless (exists $pipes{$file}) {
-            my $pid = open2(my $addr, my $func,
+            my $pid = open2($pipe->{read}, $pipe->{write},
                             '/usr/bin/addr2line', '-C', '-f', '-e', "$file");
-            $pipe = { write => $func, read => $addr };
             $pipes{$file} = $pipe;
         } else {
             $pipe = $pipes{$file};
@@ -78,14 +75,9 @@ while (<>) {
         print {$out} "$address\n";
         chomp(my $symbol = <$in>);
         chomp(my $fileandline = <$in>);
-        if ($symbol eq "??") {
-            $symbol = $badsymbol;
-        }
-        if ($fileandline eq "??:0") {
-            print "$before$symbol\n";
-        } else {
-            print "$before$symbol ($fileandline)\n";
-        }
+        ($symbol eq "??") && { $symbol = $badsymbol };
+        ($fileandline eq "??:0") && { $fileandline = $file };
+        print "$before$symbol ($fileandline)\n";
     } else {
         print $line;
     }
