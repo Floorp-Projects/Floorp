@@ -42,8 +42,7 @@ interface nsILoadGroupListenerFactory : nsISupports
 [scriptable, uuid(19845248-29ab-11d3-8cce-0060b0fc14a3)]
 interface nsILoadGroup : nsIRequest
 {
-    void init(in nsIStreamObserver observer,
-              in nsILoadGroup parent);
+    void init(in nsIStreamObserver observer);
 
     /**
      * Accesses the default load attributes for the group, returned as
@@ -84,25 +83,12 @@ interface nsILoadGroup : nsIRequest
      */
     readonly attribute nsISimpleEnumerator channels;
 
-    /**
-     * Adds a new sub-group to the group.
-     */
-    void addSubGroup(in nsILoadGroup group);
-
-    /**
-     * Removes a sub-group from the group.
-     */
-    void removeSubGroup(in nsILoadGroup group);
-
-    /**
-     * Returns the sub-groups of a group.
-     * Enumerator element type: nsILoadGroup.
-     */
-    readonly attribute nsISimpleEnumerator subGroups;
-
 	attribute nsIStreamObserver groupObserver;
 
     attribute nsILoadGroupListenerFactory groupListenerFactory;
+
+
+	readonly attribute unsigned long activeCount;
 };
 
 %{C++
