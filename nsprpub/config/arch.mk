@@ -64,6 +64,9 @@ endif
 ifeq ($(OS_ARCH),SINIX-N)
 OS_ARCH		:= SINIX
 endif
+ifeq ($(OS_ARCH),SINIX-Y)
+OS_ARCH		:= SINIX
+endif
 # SINIX changes name to ReliantUNIX with 5.43
 ifeq ($(OS_ARCH),ReliantUNIX-N)
 OS_ARCH		:= SINIX
