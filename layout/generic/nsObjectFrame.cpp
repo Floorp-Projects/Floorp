@@ -1996,7 +1996,7 @@ nsresult nsPluginDOMContextMenuListener::Init(nsObjectFrame *aFrame)
 
   // Register context menu listener
   if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(content));
     if (receiver) {
       nsCOMPtr<nsIDOMContextMenuListener> cxMenuListener;
       QueryInterface(NS_GET_IID(nsIDOMContextMenuListener), getter_AddRefs(cxMenuListener));
@@ -2016,12 +2016,12 @@ nsresult nsPluginDOMContextMenuListener::Destroy(nsObjectFrame *aFrame)
 
   // Unregister context menu listener
   if (content) {
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+    nsCOMPtr<nsIDOMEventTarget> receiver(do_QueryInterface(content));
     if (receiver) {
       nsCOMPtr<nsIDOMContextMenuListener> cxMenuListener;
       QueryInterface(NS_GET_IID(nsIDOMContextMenuListener), getter_AddRefs(cxMenuListener));
       if (cxMenuListener) { 
-        receiver->RemoveEventListenerByIID(cxMenuListener, NS_GET_IID(nsIDOMContextMenuListener));
+        receiver->RemoveEventListener(NS_LITERAL_STRING("contextmenu"), cxMenuListener, PR_TRUE);
       }
       else NS_ASSERTION(PR_FALSE, "Unable to remove event listener for plugin");
     }
