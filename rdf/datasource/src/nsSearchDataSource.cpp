@@ -47,6 +47,8 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsEnumeratorUtils.h"
 
+#include "nsIRDFRemoteDataSource.h"
+
 #include "nsEscape.h"
 
 #include "nsIURL.h"
@@ -81,6 +83,7 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID)
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 
 static const char kURINC_SearchRoot[] = "NC:SearchEngineRoot";
+static const char kURINC_LastSearchRoot[] = "NC:LastSearchRoot";
 
 
 
@@ -141,6 +144,8 @@ private:
 
     // pseudo-constants
 	static nsIRDFResource		*kNC_SearchRoot;
+	static nsIRDFResource		*kNC_LastSearchRoot;
+	static nsIRDFResource		*kNC_Ref;
 	static nsIRDFResource		*kNC_Child;
 	static nsIRDFResource		*kNC_Data;
 	static nsIRDFResource		*kNC_Name;
@@ -245,6 +250,8 @@ PRInt32				SearchDataSource::gRefCnt;
 nsIRDFDataSource		*SearchDataSource::mInner = nsnull;
 
 nsIRDFResource			*SearchDataSource::kNC_SearchRoot;
+nsIRDFResource			*SearchDataSource::kNC_LastSearchRoot;
+nsIRDFResource			*SearchDataSource::kNC_Ref;
 nsIRDFResource			*SearchDataSource::kNC_Child;
 nsIRDFResource			*SearchDataSource::kNC_Data;
 nsIRDFResource			*SearchDataSource::kNC_Name;
@@ -272,10 +279,10 @@ PRBool
 SearchDataSource::isEngineURI(nsIRDFResource *r)
 {
 	PRBool		isEngineURIFlag = PR_FALSE;
-        nsXPIDLCString	uri;
+	const char	*uri = nsnull;
 	
-	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, kEngineProtocol, sizeof(kEngineProtocol) - 1))
+	r->GetValueConst(&uri);
+	if ((uri) && (!strncmp(uri, kEngineProtocol, sizeof(kEngineProtocol) - 1)))
 	{
 		isEngineURIFlag = PR_TRUE;
 	}
@@ -288,10 +295,10 @@ PRBool
 SearchDataSource::isSearchURI(nsIRDFResource *r)
 {
 	PRBool		isSearchURIFlag = PR_FALSE;
-        nsXPIDLCString	uri;
+	const char	*uri = nsnull;
 	
-	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, kSearchProtocol, sizeof(kSearchProtocol) - 1))
+	r->GetValueConst(&uri);
+	if ((uri) && (!strncmp(uri, kSearchProtocol, sizeof(kSearchProtocol) - 1)))
 	{
 		isSearchURIFlag = PR_TRUE;
 	}
@@ -312,6 +319,8 @@ SearchDataSource::SearchDataSource(void)
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
 		gRDFService->GetResource(kURINC_SearchRoot,                   &kNC_SearchRoot);
+		gRDFService->GetResource(kURINC_LastSearchRoot,               &kNC_LastSearchRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI "ref",              &kNC_Ref);
 		gRDFService->GetResource(NC_NAMESPACE_URI "child",            &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI "data",             &kNC_Data);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name",             &kNC_Name);
@@ -333,6 +342,8 @@ SearchDataSource::~SearchDataSource (void)
 	if (--gRefCnt == 0)
 	{
 		NS_RELEASE(kNC_SearchRoot);
+		NS_RELEASE(kNC_LastSearchRoot);
+		NS_RELEASE(kNC_Ref);
 		NS_RELEASE(kNC_Child);
 		NS_RELEASE(kNC_Data);
 		NS_RELEASE(kNC_Name);
@@ -755,6 +766,59 @@ SearchDataSource::BeginSearchRequest(nsIRDFResource *source)
 	nsAutoString		uri(sourceURI);
 	if (uri.Find("internetsearch:") != 0)
 		return(NS_ERROR_FAILURE);
+
+	// remember the last search query
+
+	nsCOMPtr<nsIRDFDataSource>	localstore;
+	rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
+	if (NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIRDFNode>	lastTarget;
+		if (NS_SUCCEEDED(rv = localstore->GetTarget(kNC_LastSearchRoot, kNC_Ref,
+			PR_TRUE, getter_AddRefs(lastTarget))))
+		{
+			if (rv != NS_RDF_NO_VALUE)
+			{
+#ifdef	DEBUG
+				nsCOMPtr<nsIRDFLiteral>	lastLit = do_QueryInterface(lastTarget);
+				if (lastLit)
+				{
+					PRUnichar	*lastUni = nsnull;
+					lastLit->GetValueConst(&lastUni);
+					nsAutoString	lastStr(lastUni);
+					char *lastC = lastStr.ToNewCString();
+					if (lastC)
+					{
+						printf("\nLast Search: '%s'\n", lastC);
+						delete [] lastC;
+						lastC = nsnull;
+					}
+				}
+#endif
+				rv = localstore->Unassert(kNC_LastSearchRoot, kNC_Ref, lastTarget);
+			}
+		}
+		if (uri.Length() > 0)
+		{
+			const PRUnichar	*uriUni = uri.GetUnicode();
+			nsCOMPtr<nsIRDFLiteral>	uriLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(uriUni, getter_AddRefs(uriLiteral))))
+			{
+				rv = localstore->Assert(kNC_LastSearchRoot, kNC_Ref, uriLiteral, PR_TRUE);
+			}
+		}
+		
+		// XXX Currently, need to flush localstore as its being leaked
+		// and thus never written out to disk otherwise
+
+		// gotta love the name "remoteLocalStore"
+		nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(localstore);
+		if (remoteLocalStore)
+		{
+			remoteLocalStore->Flush();
+		}
+	}
+
 	uri.Cut(0, strlen("internetsearch:"));
 
 	nsVoidArray	*engineArray = new nsVoidArray;
@@ -1617,7 +1681,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 	SearchDataSource::GetData(data, "interpret", "relevanceStart", relevanceStartStr);
 	SearchDataSource::GetData(data, "interpret", "relevanceEnd", relevanceEndStr);
 
-#ifdef	DEBUG
+#if 0
 	char *cStr;
 	cStr = resultListStartStr.ToNewCString();
 	if (cStr)
@@ -1703,11 +1767,11 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		if (resultItem.Length() < 1)	break;
 		htmlResults.Cut(0, resultItemEnd + resultItemEndStr.Length());
 
-#if 0
+#if DEBUG
 		char	*results = resultItem.ToNewCString();
 		if (results)
 		{
-			printf("-----\nResult: %s\n", results);
+			printf("----- Search result: '%s'\n", results);
 			delete [] results;
 			results = nsnull;
 		}
@@ -1778,7 +1842,19 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 #endif
 
 		nsCOMPtr<nsIRDFResource>	res;
+
+#define	OLDWAY
+#ifdef	OLDWAY
 		rv = gRDFService->GetResource(href, getter_AddRefs(res));
+#else
+		const char			*parentURI = nsnull;
+		mParent->GetValueConst(&parentURI);
+		if (!parentURI)	break;
+		rv = rdf_CreateAnonymousResource(parentURI, getter_AddRefs(res));
+		// XXX must save HREF attribute
+#endif
+
+
 		delete [] href;
 		href = nsnull;
 		if (NS_FAILED(rv))	continue;
@@ -1988,11 +2064,12 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 				}
 			}
 		}
-
+#ifdef	OLDWAY
 		// Note: always add in parent-child relationship last!  (if it isn't already set)
 		PRBool		parentHasChildFlag = PR_FALSE;
 		mDataSource->HasAssertion(mParent, kNC_Child, res, PR_TRUE, &parentHasChildFlag);
 		if (parentHasChildFlag == PR_FALSE)
+#endif
 		{
 			rv = mDataSource->Assert(mParent, kNC_Child, res, PR_TRUE);
 		}
