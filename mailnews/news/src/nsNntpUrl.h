@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -23,12 +23,14 @@
 #include "nsMsgMailNewsUrl.h"
 #include "nsINNTPNewsgroupPost.h"
 #include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 
-class nsNntpUrl : public nsINntpUrl, public nsMsgMailNewsUrl, public nsIMsgUriUrl
+class nsNntpUrl : public nsINntpUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl
 {
 public:
     NS_DECL_NSINNTPURL
-    NS_DECL_NSIMSGURIURL
+    NS_DECL_NSIMSGMESSAGEURL
+
     // nsNntpUrl
     nsNntpUrl();
     virtual ~nsNntpUrl();
@@ -38,9 +40,14 @@ public:
 protected:  
     nsINNTPNewsgroupPost *m_newsgroupPost;
 	virtual const char * GetUserName() { return m_userName.GetBuffer();}
+	nsNewsAction m_newsAction; // the action this url represents...parse mailbox, display messages, etc.
     
     nsFileSpec	*m_filePath; 
 	nsCString m_userName;
+    
+    // used by save message to disk
+	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
+    PRBool                m_addDummyEnvelope;
 
 	/* NNTP specific event sinks */
 	nsINNTPHost				* m_newsHost;

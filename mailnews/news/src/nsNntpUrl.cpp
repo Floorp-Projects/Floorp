@@ -49,6 +49,8 @@ nsNntpUrl::nsNntpUrl()
     m_newsgroupPost = nsnull;
     m_newsgroupName = nsnull;
     m_messageKey = nsMsgKey_None;
+	m_newsAction = nsINntpUrl::ActionGetNewNews;
+    m_addDummyEnvelope = PR_FALSE;
 }
  
 nsNntpUrl::~nsNntpUrl()
@@ -78,9 +80,9 @@ nsresult nsNntpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         NS_ADDREF_THIS();
         return NS_OK;
     }
-	if (aIID.Equals(nsIMsgUriUrl::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIMsgMessageUrl)))
 	{
-		*aInstancePtr = (void *) ((nsIMsgUriUrl *) this);
+		*aInstancePtr = (void *) ((nsIMsgMessageUrl *) this);
 		NS_ADDREF_THIS();
 		return NS_OK;
 	}
@@ -88,9 +90,25 @@ nsresult nsNntpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     return nsMsgMailNewsUrl::QueryInterface(aIID, aInstancePtr);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsINntpUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsNntpUrl::GetNewsAction(nsNewsAction *aNewsAction)
+{
+	if (aNewsAction)
+		*aNewsAction = m_newsAction;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsNntpUrl::SetNewsAction(nsNewsAction aNewsAction)
+{
+	m_newsAction = aNewsAction;
+	return NS_OK;
+}
+
 nsresult nsNntpUrl::SetNntpHost (nsINNTPHost * newsHost)
 {
 	NS_LOCK_INSTANCE();
@@ -216,7 +234,7 @@ nsresult nsNntpUrl::GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList)
     return NS_OK;
 }
 
-// from nsIMsgUriUrl
+// from nsIMsgMessageUrl
 NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 {	
 	nsresult rv;
@@ -234,6 +252,25 @@ NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 		return NS_ERROR_NULL_POINTER;
 	}
 }
+
+NS_IMPL_GETSET(nsNntpUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
+
+NS_IMETHODIMP nsNntpUrl::SetMessageFile(nsIFileSpec * aFileSpec)
+{
+	m_messageFileSpec = dont_QueryInterface(aFileSpec);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsNntpUrl::GetMessageFile(nsIFileSpec ** aFileSpec)
+{
+	if (aFileSpec)
+	{
+		*aFileSpec = m_messageFileSpec;
+		NS_IF_ADDREF(*aFileSpec);
+	}
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP nsNntpUrl::SetUsername(const char *aUserName)
 {
