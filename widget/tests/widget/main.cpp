@@ -17,7 +17,7 @@
  */
 #include "nsIWidget.h"
 
-extern nsresult WidgetTest();
+extern nsresult WidgetTest(int * argc, char **argv);
 
 #ifdef XP_PC
 
@@ -36,3 +36,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
 #endif
 
+#ifdef XP_UNIX
+void main(int argc, char **argv)
+{
+  int argC = argc;
+
+  WidgetTest(&argC, argv);
+
+}
+#endif

@@ -221,12 +221,28 @@ void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 
 //-------------------------------------------------------------------------
 //
+//  SetSelectedIndices
+//
+//-------------------------------------------------------------------------
+void nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+{
+  if (GetSelectedCount() > 0) {
+    XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
+  }
+  int i;
+  for (i=0;i<aSize;i++) {
+    SelectItem(aIndices[i]);
+  }
+}
+
+//-------------------------------------------------------------------------
+//
 //  Deselect
 //
 //-------------------------------------------------------------------------
 void nsListBox::Deselect()
 {
-  XtVaSetValues(mWidget, XmNselectedItemCount, 0);
+  XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
 }
 
 
@@ -301,6 +317,18 @@ void nsListBox::Create(nsIWidget *aParent,
 
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
+  unsigned char selectionPolicy;
+  
+  Boolean autoSelection;
+  if (mMultiSelect) {
+    //selectionPolicy = XmEXTENDED_SELECT;
+    selectionPolicy = XmMULTIPLE_SELECT;
+    autoSelection   = TRUE;
+  } else {
+    selectionPolicy = XmBROWSE_SELECT;
+    autoSelection   = FALSE;
+  }
+
   mWidget = ::XtVaCreateManagedWidget("",
                                     xmListWidgetClass,
                                     parentWidget,
@@ -310,8 +338,21 @@ void nsListBox::Create(nsIWidget *aParent,
                                     XmNwidth, aRect.width,
                                     XmNheight, aRect.height,
                                     XmNrecomputeSize, False,
+                                    XmNselectionPolicy, selectionPolicy,
+                                    XmNautomaticSelection, autoSelection,
+                                    XmNscrollBarDisplayPolicy, XmAS_NEEDED,
+                                    XmNlistSizePolicy, XmCONSTANT,
+                                    XmNmarginTop, 0,
+                                    XmNmarginBottom, 0,
+                                    XmNmarginLeft, 0,
+                                    XmNmarginRight, 0,
+                                    XmNmarginHeight, 0,
+                                    XmNmarginWidth, 0,
+                                    XmNlistMarginHeight, 0,
+                                    XmNlistMarginWidth, 0,
+                                    XmNscrolledWindowMarginWidth, 0,
+                                    XmNscrolledWindowMarginHeight, 0,
                                     nsnull);
-
   if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
@@ -479,6 +520,16 @@ PRInt32 nsListBox::AggListBox::GetSelectedCount()
 void nsListBox::AggListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
   GET_OUTER()->GetSelectedIndices(aIndices, aSize);
+}
+
+//-------------------------------------------------------------------------
+//
+//  GetSelectedIndices
+//
+//-------------------------------------------------------------------------
+void nsListBox::AggListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+{
+  GET_OUTER()->SetSelectedIndices(aIndices, aSize);
 }
 
 //-------------------------------------------------------------------------

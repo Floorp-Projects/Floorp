@@ -107,7 +107,20 @@ void nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
-  int index = 0;//::SendMessage(mWnd, LB_FINDSTRINGEXACT, (int)aStartPos, (LPARAM)(LPCTSTR)val); 
+
+  int i;
+  PRInt32 index = -1;
+  for (i=0;i<mNumItems && index == -1;i++) {
+    XmString str;
+    XtVaGetValues(mItems[i], XmNlabelString, &str, nsnull);
+    char * text;
+    if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
+      if (!strcmp(text, val)) {
+        index = i;
+      }
+      XtFree(text);
+    }
+  }
   NS_FREE_STR_BUF(val);
 
   return index;
@@ -130,8 +143,20 @@ PRInt32  nsComboBox::GetItemCount()
 //-------------------------------------------------------------------------
 PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 {
-  int status = 0;//::SendMessage(mWnd, LB_DELETESTRING, (int)aPosition, (LPARAM)(LPCTSTR)0); 
-  return 0;//(status != LB_ERR?PR_TRUE:PR_FALSE);
+
+  if (aPosition >= 0 && aPosition < mNumItems) {
+    XtUnmanageChild(mItems[aPosition]);
+    XtDestroyWidget(mItems[aPosition]);
+    int i;
+    for (i=aPosition ; i < mNumItems-1; i++) {
+      mItems[i] = mItems[i+1];
+    }
+    mItems[mNumItems-1] = NULL;
+    mNumItems--;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+
 }
 
 //-------------------------------------------------------------------------
@@ -142,17 +167,19 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
   PRBool result = PR_FALSE;
-  /*int len = ::SendMessage(mWnd, LB_GETTEXTLEN, (int)aPosition, (LPARAM)0); 
-  if (len != LB_ERR) {
-    char * str = new char[len+1];
-    anItem.SetLength(0);
-    int status = ::SendMessage(mWnd, LB_GETTEXT, (int)aPosition, (LPARAM)(LPCTSTR)str); 
-    if (status != LB_ERR) {
-      anItem.Append(str);
-      result = PR_TRUE;
-    }
-    delete str;
-  }*/
+
+  if (aPosition < 0 || aPosition >= mNumItems) {
+    return result;
+  }
+
+  XmString str;
+  XtVaGetValues(mItems[aPosition], XmNlabelString, &str, nsnull);
+  char * text;
+  if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
+    anItem = text;
+    XtFree(text);
+  }
+
   return result;
 }
 
@@ -163,8 +190,14 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 void nsComboBox::GetSelectedItem(nsString& aItem)
 {
-  int index = 0;//::SendMessage(mWnd, LB_GETCURSEL, (int)0, (LPARAM)0); 
-  GetItemAt(aItem, index); 
+  Widget w;
+  XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
+  int i;
+  for (i=0;i<mNumItems;i++) {
+    if (((Widget)mItems[i]) == w) {
+      GetItemAt(aItem, i);
+    }
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -175,11 +208,18 @@ void nsComboBox::GetSelectedItem(nsString& aItem)
 PRInt32 nsComboBox::GetSelectedIndex()
 {  
   if (!mMultiSelect) { 
-    return 0;//::SendMessage(mWnd, LB_GETCURSEL, (int)0, (LPARAM)0);
+    Widget w;
+    XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
+    int i;
+    for (i=0;i<mNumItems;i++) {
+      if (((Widget)mItems[i]) == w) {
+        return (PRInt32)i;
+      }
+    }
   } else {
     NS_ASSERTION(0, "Multi selection list box does not support GetSlectedIndex()");
   }
-  return 0;
+  return -1;
 }
 
 //-------------------------------------------------------------------------
@@ -196,6 +236,7 @@ void nsComboBox::SelectItem(PRInt32 aPosition)
 		    NULL);
     }
   } else {
+    // this is an error
   }
 }
 
@@ -221,7 +262,7 @@ PRInt32 nsComboBox::GetSelectedCount()
 //-------------------------------------------------------------------------
 void nsComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
-  //::SendMessage(mWnd, LB_GETSELITEMS, (int)aSize, (LPARAM)aIndices);
+  // this is an error
 }
 
 //-------------------------------------------------------------------------
@@ -234,7 +275,7 @@ void nsComboBox::Deselect()
   if (!mMultiSelect) { 
     //::SendMessage(mWnd, LB_SETCURSEL, (WPARAM)-1, (LPARAM)0); 
   } else {
-    //::SendMessage(mWnd, LB_SETSEL, (WPARAM) (BOOL)PR_FALSE, (LPARAM)(UINT)-1); 
+    // this is an error
   }
 
 }
@@ -310,10 +351,6 @@ void nsComboBox::Create(nsIWidget *aParent,
     mPullDownMenu = XmCreatePulldownMenu(parentWidget, "pulldown", args, argc);
 
     argc = 0;
-    //XtSetArg(args[argc], XmNx, aRect.x); argc++;
-    //XtSetArg(args[argc], XmNy, aRect.y); argc++;
-    //XtSetArg(args[argc], XmNx, 0); argc++;
-    //XtSetArg(args[argc], XmNy, 0); argc++;
     XtSetArg(args[argc], XmNmarginHeight, 0); argc++;
     XtSetArg(args[argc], XmNmarginWidth, 0); argc++;
     XtSetArg(args[argc], XmNrecomputeSize, False); argc++;

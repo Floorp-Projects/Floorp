@@ -67,6 +67,7 @@ public:
     PRInt32   GetSelectedIndex();
     PRInt32   GetSelectedCount();
     void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+    void      SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
     void      SelectItem(PRInt32 aPosition);
     void      Deselect() ;
 
@@ -84,7 +85,7 @@ private:
   // Aggregator class and instance variable used to aggregate in the
   // nsIListBox interface to nsListBox w/o using multiple
   // inheritance.
-  class AggListBox : public nsIListWidget {
+  class AggListBox : public nsIListBox {
   public:
     AggListBox();
     virtual ~AggListBox();
@@ -102,6 +103,7 @@ private:
     PRInt32   GetSelectedIndex();
     PRInt32   GetSelectedCount();
     void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+    void      SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
     void      SelectItem(PRInt32 aPosition);
     void      Deselect() ;
 
