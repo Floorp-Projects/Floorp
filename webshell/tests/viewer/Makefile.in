@@ -225,7 +225,3 @@ install:: $(PROGRAM)_motif
 	$(INSTALL) -m 555 $(PROGRAM)_motif $(DIST)/bin
 
 endif
-
-caca:
-	@echo $(EXTRA_DEPS)
-
