@@ -930,12 +930,19 @@ XFE_RDFTreeView::setStandAloneState(XP_Bool state)
 	XP_ASSERT( XfeIsAlive(_tree) );
 
 	_standAloneState = state;
+#ifdef UNDEF
+    /* 
+     * We need to set lot more properties based on standalone state. 
+     * We instead call setHTTreeviewProperties to do all that
+     */
 
 	int visibleColumns = (_standAloneState ? 0 : 1);
 
 	XtVaSetValues(_tree,
 				  XmNvisibleColumns,		visibleColumns,
 				  NULL);
+#endif   /* UNDEF */
+
 }
 //////////////////////////////////////////////////////////////////////////
 XP_Bool
@@ -1077,6 +1084,9 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
          ac ++;
          XtSetArg(av[ac], XmNhideUnhideButtons, True);
          ac++;
+         XtSetArg(av[ac], XmNsingleClickActivation, False);
+         ac++;
+
     }
     else
     {
@@ -1087,6 +1097,9 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
          ac++;
          XtSetArg(av[ac], XmNvisibleColumns, 1);
          ac++;
+         XtSetArg(av[ac], XmNsingleClickActivation, True);
+         ac++;
+
     }
 
 
@@ -1100,8 +1113,8 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
    }
 
 
-   Widget  tree = getBaseWidget();
-   XtSetValues(tree, av, ac);
+
+   XtSetValues(_tree, av, ac);
 
 
 
