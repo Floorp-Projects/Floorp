@@ -416,27 +416,69 @@ unlink "data/versioncache";
 #
 # +++ Can anybody tell me what a Windows Perl would do with this code?
 #
+# Changes 03/14/00 by SML
+#
+# This abstracts out what files are executable and what ones are not.  It makes
+# for slightly neater code and lets us do things like determine exactly which
+# files are executable and which ones are not.
+#
+# Not all directories have permissions changed on them.  i.e., changing ./CVS
+# to be 0640 is bad.
+#
+# Fixed bug in chmod invokation.  chmod (at least on my linux box running perl
+# 5.005 needs a valid first argument, not 0.
+#
+# (end changes, 03/14/00 by SML)
+#
+#
+
+# These are the files which need to be marked executable
+my @executable_files = ('processmail', 'whineatnews.pl', 'collectstats.pl', 'checksetup.pl', 'syncshadowdb');
+
+# tell me if a file is executable.  All CGI files and those in @executable_files
+# are executable
+sub isExecutableFile {
+  my ($file) = @_;
+  if ($file =~ /\.cgi/) {
+    return 1;
+  }
+
+  my $exec_file;
+  foreach $exec_file (@executable_files) {
+    if ($file eq $exec_file) {
+      return 1;
+    }
+  }
+  return undef;
+}
 
 if ($webservergroup) {
     mkdir 'shadow', 0770 unless -d 'shadow';
     # Funny! getgrname returns the GID if fed with NAME ...
     my $webservergid = getgrnam($webservergroup);
-    chown 0, $webservergid, glob('*');
-    chmod 0640, glob('*');
+    # chmod needs to be called with a valid uid, not 0.  $< returns the
+    # caller's uid.  Maybe there should be a $bugzillauid, and call with that
+    # userid.
+    chown $<, $webservergid, glob('*');
+    my @files = glob('*');
+    my $file;
+    foreach $file (@files) {
+      # do not change permissions on directories here
+      if (!(-d $file)) {
+        # check if the file is executable.
+        if (isExecutableFile($file)) {
+          chmod 0750, $file;
+        } else {
+          chmod 0640, $file;
+        }
+      }
+    }
 
-    chmod 0750, glob('*.cgi'),
-                'processmail',
-                'whineatnews.pl',
-                'collectstats.pl',
-                'checksetup.pl',
-                'syncshadowdb';
-
+    # make sure that contrib keeps the permissions it had (don't touch it)
     chmod 0770, 'data', 'shadow';
     chmod 0666, glob('data/*');
+    chmod 0777, glob('data/*/'); # directories stay executable
 }
-
-
-
 
 
 ###########################################################################
