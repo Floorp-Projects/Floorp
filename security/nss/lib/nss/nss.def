@@ -32,16 +32,21 @@
 ;+#
 ;+#
 ;+# OK, this file is meant to support SUN, LINUX, AIX and WINDOWS
-;+#  AIX must be just the list of functions. All lines with ;+ in them get
-;+#   removed. All trailing ';' are also removed at the end.
-;+#  Sun and LINUX remove all the lines with 'UNIX_REMOVE' on them and all ';+'
-;+#   are removed as well.
+;+#   1. For all unix platforms, the string ";-"  means "remove this line"
+;+#   2. For all unix platforms, the string " DATA " will be removed from any 
+;+#	line on which it occurs.
+;+#   3. Lines containing ";+" will have ";+" removed on SUN and LINUX.
+;+#      On AIX, lines containing ";+" will be removed.  
+;+#   4. For all unix platforms, the string ";;" will thave the ";;" removed.
+;+#   5. For all unix platforms, after the above processing has taken place,
+;+#    all characters after the first ";" on the line will be removed.  
+;+#    And for AIX, the first ";" will also be removed.
 ;+#  This file is passed directly to windows. Since ';' is a comment, all UNIX
-;+#   directives are hidden behind ';' and ';+'
+;+#   directives are hidden behind ";", ";+", and ";-"
 ;+NSS_3.2 {       # NSS 3.2 release
 ;+    global:
-LIBRARY nss3	;+ UNIX_REMOVE
-EXPORTS		;+ UNIX_REMOVE
+LIBRARY nss3	;-
+EXPORTS		;-
 ATOB_AsciiToData;
 BTOA_DataToAscii;
 CERT_AsciiToName;
@@ -49,8 +54,8 @@ CERT_CertTimesValid;
 CERT_CheckCertValidTimes;
 CERT_DestroyCertificate;
 CERT_DupCertificate;
-CERT_FreeNicknames;
 CERT_FreeDistNames;
+CERT_FreeNicknames;
 CERT_GetAVATag;
 CERT_GetCertEmailAddress;
 CERT_GetCertNicknames;
@@ -85,8 +90,8 @@ PK11_CheckUserPassword;
 PK11_CipherOp;
 PK11_CloneContext;
 PK11_ConfigurePKCS11;
-PK11_CreateDigestContext;
 PK11_CreateContextBySymKey;
+PK11_CreateDigestContext;
 PK11_DestroyContext;
 PK11_DigestBegin;
 PK11_DigestOp;
@@ -97,6 +102,7 @@ PK11_FindCertFromDERCert;
 PK11_FindKeyByAnyCert;
 PK11_FindKeyByDERCert;
 PK11_FindSlotByName;
+PK11_Finalize;
 PK11_FortezzaHasKEA;
 PK11_FreeSlot;
 PK11_FreeSymKey;
@@ -109,9 +115,13 @@ PK11_GetInternalKeySlot;
 PK11_GetInternalSlot;
 PK11_GetSlotName;
 PK11_GetTokenName;
-PK11_KeyGen;
+PK11_HashBuf;
 PK11_IsFIPS;
 PK11_IsInternal;
+PK11_IsHW;
+PK11_IsPresent;
+PK11_IsReadOnly;
+PK11_KeyGen;
 PK11_NeedLogin;
 PK11_SetPasswordFunc;
 PK11_SetSlotPWValues;
@@ -173,7 +183,6 @@ PK11_GetTokenInfo;
 PK11_GetWindow;
 PK11_GetWrapKey;
 PK11_IVFromParam;
-PK11_IsPresent;
 PK11_MakeKEAPubKey;
 PK11_ParamFromIV;
 PK11_PubDecryptRaw;
@@ -264,11 +273,9 @@ PK11_FindPrivateKeyFromCert;
 PK11_FortezzaMapSig;
 PK11_GetKeyLength;
 PK11_GetKeyStrength;
-PK11_HashBuf;
 PK11_ImportCertForKeyToSlot;
 PK11_ImportEncryptedPrivateKeyInfo;
 PK11_ImportPrivateKeyInfo;
-PK11_IsHW;
 PK11_MapPBEMechanismToCryptoMechanism;
 PK11_PBEKeyGen;
 PK11_ParamFromAlgid;
@@ -360,7 +367,7 @@ SEC_PointerToOctetStringTemplate DATA ;
 SEC_SetOfAnyTemplate DATA ;
 SEC_UTCTimeTemplate DATA ;
 sgn_DigestInfoTemplate DATA ;
-;+# commands?
+;+# commands
 CERT_DecodeBasicConstraintValue;
 CERT_DecodeOidSequence;
 CERT_DecodeUserNotice;
@@ -371,10 +378,6 @@ CERT_FindCertByNickname;
 CERT_GenTime2FormattedAscii;
 CERT_Hexify;
 CERT_CompareName;
-;+#MD2_Flatten;
-;+#MD2_Resurrect;
-;+#MD5_Flatten;
-;+#MD5_Resurrect;
 NSSBase64Decoder_Create;
 NSSBase64Decoder_Destroy;
 NSSBase64Decoder_Update;
@@ -385,11 +388,6 @@ NSSBase64Encoder_Update;
 ;+#PK11_FindKeyByKeyID;
 PK11_InitPin;
 PK11_NeedUserInit;
-;+#PQG_ParamGen;
-;+#PQG_VerifyParams;
-;+#SECITEM_ReallocItem;
-;+#SECKEY_DeriveKeyDBPassword;
-;+#SECKEY_GetKeyDBVersion;
 ;+    local:
 ;+       *;
 ;+};
