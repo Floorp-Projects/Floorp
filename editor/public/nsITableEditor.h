@@ -24,13 +24,21 @@
 #ifndef nsITableEditor_h__
 #define nsITableEditor_h__
 
+  // Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
+#ifndef nsCOMPtr_h___
+#include "nsCOMPtr.h"
+#endif
+
+#ifndef nsIDOMElement_h__
+#include "nsIDOMElement.h"
+	// for |nsIDOMElement| because an |nsCOMPtr<nsIDOMElement>&| is used, below
+#endif
+
 
 #define NS_ITABLEEDITOR_IID                   \
 { /* 4805e684-49b9-11d3-9ce4-ed60bd6cb5bc} */ \
 0x4805e684, 0x49b9, 0x11d3,                   \
 { 0x9c, 0xe4, 0xed, 0x60, 0xbd, 0x6c, 0xb5, 0xbc } }
-
-class nsIDOMElement;
 
 class nsITableEditor : public nsISupports
 {
