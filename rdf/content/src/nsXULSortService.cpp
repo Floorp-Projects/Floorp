@@ -1438,8 +1438,8 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 
 
 NS_IMETHODIMP
-XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIContent *root, nsIContent *trueParent,
-					nsIContent *container, nsIContent *node, PRBool aNotify)
+XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIRDFDataSource *cache, nsIContent *root,
+					nsIContent *trueParent, nsIContent *container, nsIContent *node, PRBool aNotify)
 {
 	nsresult	rv;
 	nsAutoString	sortResource, sortDirection, sortResource2;
@@ -1449,7 +1449,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIConten
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = db;
 	sortInfo.resCache = nsnull;
-	sortInfo.mInner = nsnull;
+	sortInfo.mInner = cache;			/* can be null */
 	sortInfo.colIndex = -1;
 	sortInfo.parentContainer = trueParent;
 	sortInfo.kTreeCellAtom = kTreeCellAtom;

@@ -105,6 +105,7 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kTextNodeCID,                NS_TEXTNODE_CID);
 
 static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 
 static NS_DEFINE_CID(kHTMLElementFactoryCID,  NS_HTML_ELEMENT_FACTORY_CID);
@@ -306,6 +307,7 @@ protected:
     nsCOMPtr<nsIRDFCompositeDataSource> mDB;
     nsCOMPtr<nsIContent>                mRoot;
 
+    nsCOMPtr<nsIRDFDataSource>		mCache;
     nsCOMPtr<nsITimer> mTimer;
 
     // pseudo-constants
@@ -595,6 +597,9 @@ RDFGenericBuilderImpl::Init()
                                           (nsISupports**) &gXULSortService);
         if (NS_FAILED(rv)) return rv;
 
+	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+		nsnull, nsIRDFDataSource::GetIID(), (void **)&mCache);
+
         rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
                                                 nsnull,
                                                 kIHTMLElementFactoryIID,
@@ -716,6 +721,16 @@ NS_IMETHODIMP
 RDFGenericBuilderImpl::SetRootContent(nsIContent* aElement)
 {
     mRoot = dont_QueryInterface(aElement);
+    
+    if (mCache)
+    {
+    	// flush (delete) the cache when re-rerooting the generated content
+    	mCache = nsnull;
+    	// and then re-create a new, empty cache
+	nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+		nsnull, nsIRDFDataSource::GetIID(), (void **)&mCache);
+    }
+    
     return NS_OK;
 }
 
@@ -941,6 +956,11 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
 
     nsresult rv;
 
+	if (mCache)
+	{
+		mCache->Assert(aSource, aProperty, aTarget, PR_TRUE /* XXX should be value passed in */);
+	}
+
     nsCOMPtr<nsISupportsArray> elements;
     rv = NS_NewISupportsArray(getter_AddRefs(elements));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
@@ -1058,6 +1078,11 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
         return NS_OK;
 
     nsresult rv;
+
+	if (mCache)
+	{
+		mCache->Unassert(aSource, aProperty, aTarget);
+	}
 
     nsCOMPtr<nsISupportsArray> elements;
     rv = NS_NewISupportsArray(getter_AddRefs(elements));
@@ -1185,6 +1210,11 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
 
     nsresult rv;
 
+	if (mCache)
+	{
+		mCache->Change(aSource, aProperty, aOldTarget, aNewTarget);
+	}
+
     nsCOMPtr<nsISupportsArray> elements;
     rv = NS_NewISupportsArray(getter_AddRefs(elements));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
@@ -1300,6 +1330,12 @@ RDFGenericBuilderImpl::OnMove(nsIRDFResource* aOldSource,
                               nsIRDFNode* aTarget)
 {
     NS_NOTYETIMPLEMENTED("write me");
+
+	if (mCache)
+	{
+		mCache->Move(aOldSource, aNewSource, aProperty, aTarget);
+	}
+
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2027,8 +2063,8 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = NS_ERROR_UNEXPECTED;
 
                 if (gXULSortService && isResourceElement) {
-                    rv = gXULSortService->InsertContainerNode(mDB, mRoot, trueParent, aRealNode,
-                                                              realKid, aNotify);
+                    rv = gXULSortService->InsertContainerNode(mDB, mCache,
+                    	mRoot, trueParent, aRealNode, realKid, aNotify);
                 }
 
                 if (NS_FAILED(rv)) {
