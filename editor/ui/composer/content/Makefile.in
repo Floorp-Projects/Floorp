@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -17,41 +16,40 @@
 #
 # Contributors:
 #    Sammy Ford
+#
 
-DEPTH = ../../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+EXPORT_RESOURCE_CONTENT = \
+		$(srcdir)/EditorAppShell.xul \
+		$(srcdir)/EditorCommands.js \
+		$(srcdir)/TextEditorAppShell.xul \
+		$(srcdir)/EditorInitPage.html \
+		$(srcdir)/EditorInitPagePlain.html \
+		$(srcdir)/editor.properties \
+		$(srcdir)/EditorStyles1.css \
+		$(srcdir)/EditorContent.css \
+		$(srcdir)/contentframe.xul \
+		$(srcdir)/sidebar-editor.rdf \
+		$(srcdir)/sidebar-editor.xul \
+		$(srcdir)/sb-bookmarks-panel.xul \
+		$(srcdir)/sb-bookmarks.js \
+		$(srcdir)/sb-file-contextMenu.js \
+		$(srcdir)/sb-file-panel.js \
+		$(srcdir)/sb-file-panel.xul \
+		$(srcdir)/sb-FileWidgetFileHandler.js \
+		$(srcdir)/viewsource.xul \
+		$(srcdir)/viewsource.js \
+		$(srcdir)/editorOverlay.xul \
+		$(srcdir)/editorOverlay.js \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-EXPORT_RESOURCE_CONTENT = \
-	$(srcdir)/EditorAppShell.xul \
-	$(srcdir)/EditorCommands.js \
-	$(srcdir)/TextEditorAppShell.xul \
-	$(srcdir)/EditorInitPage.html \
-	$(srcdir)/EditorInitPagePlain.html \
-	$(srcdir)/editor.properties \
-	$(srcdir)/EditorStyles1.css \
-	$(srcdir)/EditorContent.css \
-	$(srcdir)/contentframe.xul \
-	$(srcdir)/sidebar-editor.rdf \
-	$(srcdir)/sidebar-editor.xul \
-	$(srcdir)/sb-bookmarks-panel.xul \
-	$(srcdir)/sb-bookmarks.js \
-	$(srcdir)/sb-file-contextMenu.js \
-	$(srcdir)/sb-file-panel.js \
-	$(srcdir)/sb-file-panel.xul \
-	$(srcdir)/sb-FileWidgetFileHandler.js \
-  $(srcdir)/viewsource.xul \
-  $(srcdir)/viewsource.js \
-  $(srcdir)/editorOverlay.xul \
-  $(srcdir)/editorOverlay.js \
-	$(NULL)
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/editor/content/default
