@@ -29,6 +29,7 @@
 #include "nsIFileStreams.h"       // New Necko file streams
 
 #include "nsNetUtil.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIFileTransportService.h"
 #include "nsIStorageStream.h"
 #include "nsIHttpChannel.h"
@@ -43,6 +44,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIWebProgressListener.h"
 #include "nsIAuthPrompt.h"
 #include "nsIPrompt.h"
@@ -882,6 +884,118 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     return NS_OK;
 }
 
+nsresult
+nsWebBrowserPersist::GetExtensionForContentType(const PRUnichar *aContentType, PRUnichar **aExt)
+{
+    NS_ENSURE_ARG_POINTER(aContentType);
+    NS_ENSURE_ARG_POINTER(aExt);
+
+    *aExt = nsnull;
+
+    nsresult rv;
+    if (!mMIMEService)
+    {
+        mMIMEService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
+        NS_ENSURE_TRUE(mMIMEService, NS_ERROR_FAILURE);
+    }
+
+    nsCOMPtr<nsIMIMEInfo> mimeInfo;
+    nsCAutoString contentType;
+    contentType.AssignWithConversion(aContentType);
+    mMIMEService->GetFromMIMEType(contentType.get(), getter_AddRefs(mimeInfo));
+    if (mimeInfo)
+    {
+        nsXPIDLCString ext;
+        if (NS_SUCCEEDED(mimeInfo->GetPrimaryExtension(getter_Copies(ext))))
+        {
+            *aExt = ToNewUnicode(ext);
+            NS_ENSURE_TRUE(*aExt, NS_ERROR_OUT_OF_MEMORY);
+            return NS_OK;
+        }
+    }
+
+    return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsWebBrowserPersist::GetDocumentExtension(nsIDOMDocument *aDocument, PRUnichar **aExt)
+{
+    NS_ENSURE_ARG_POINTER(aDocument);
+    NS_ENSURE_ARG_POINTER(aExt);
+
+    nsXPIDLString contentType;
+    nsresult rv = GetDocEncoderContentType(aDocument, nsnull, getter_Copies(contentType));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    return GetExtensionForContentType(contentType.get(), aExt);
+}
+
+nsresult
+nsWebBrowserPersist::GetDocEncoderContentType(nsIDOMDocument *aDocument, const PRUnichar *aContentType, PRUnichar **aRealContentType)
+{
+    NS_ENSURE_ARG_POINTER(aDocument);
+    NS_ENSURE_ARG_POINTER(aRealContentType);
+
+    *aRealContentType = nsnull;
+
+    nsAutoString defaultContentType(NS_LITERAL_STRING("text/html"));
+
+    // Get the desired content type for the document, either by using the one
+    // supplied or from the document itself.
+
+    nsAutoString contentType;
+    if (aContentType)
+    {
+        contentType.Assign(aContentType);
+    }
+    else
+    {
+        // Get the content type from the document
+        nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(aDocument);
+        if (nsDoc)
+        {
+            nsAutoString type;
+            if (NS_SUCCEEDED(nsDoc->GetContentType(type)) && type.Length() > 0)
+            {
+                contentType.Assign(type);
+            }
+        }
+    }
+
+    // Check that an encoder actually exists for the desired output type. The
+    // following content types will usually yield an encoder.
+    //
+    //   text/xml
+    //   application/xml
+    //   application/xhtml+xml
+    //   image/svg+xml
+    //   text/html
+    //   text/plain
+
+    if (contentType.Length() > 0 &&
+        !contentType.EqualsIgnoreCase(defaultContentType))
+    {
+        // Check if there is an encoder for the desired content type
+        nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
+        contractID.AppendWithConversion(contentType);
+
+        nsCID cid;
+        nsresult rv = nsComponentManager::ContractIDToClassID(contractID.get(), &cid);
+        if (NS_SUCCEEDED(rv))
+        {
+            *aRealContentType = ToNewUnicode(contentType);
+        }
+    }
+
+    // Use the default if no encoder exists for the desired one
+    if (!*aRealContentType)
+    {
+        *aRealContentType = ToNewUnicode(defaultContentType);
+    }
+    
+    NS_ENSURE_TRUE(*aRealContentType, NS_ERROR_OUT_OF_MEMORY);
+
+    return NS_OK;
+}
 
 nsresult nsWebBrowserPersist::SaveDocumentInternal(
     nsIDOMDocument *aDocument, nsIURI *aFile, nsIURI *aDataPath)
@@ -1045,18 +1159,16 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         // Set the document base to ensure relative links still work
         SetDocumentBase(aDocument, mCurrentBaseURI);
 
-        nsCAutoString contentType; 
-        if (mContentType.Length() > 0)
-        {
-            contentType.AssignWithConversion(mContentType);
-        }
-        else
-        {
-            // TODO infer the other content type - from the DOM document maybe?
-            contentType.Assign("text/html");
-        }
+        // Get the content type to save with
+        nsXPIDLString realContentType;
+        GetDocEncoderContentType(aDocument,
+            (mContentType.Length() > 0) ? mContentType.get() : nsnull,
+            getter_Copies(realContentType));
+
+        nsCAutoString contentType; contentType.AssignWithConversion(realContentType);
         nsAutoString charType; // Empty
 
+        // Save the document
         nsCOMPtr<nsIDocument> docAsDoc = do_QueryInterface(aDocument);
         rv = SaveDocumentWithFixup(
             docAsDoc,
@@ -1089,7 +1201,6 @@ nsresult nsWebBrowserPersist::SaveDocuments()
         mCurrentBaseURI = docData->mBaseURI;
 
         // Save the document, fixing it up with the new URIs as we do
-        nsAutoString charType; // Empty
         
         nsEncoderNodeFixup *nodeFixup;
         nodeFixup = new nsEncoderNodeFixup;
@@ -1100,16 +1211,14 @@ nsresult nsWebBrowserPersist::SaveDocuments()
 
         nsCOMPtr<nsIDocument> docAsDoc = do_QueryInterface(docData->mDocument);
 
-        nsCAutoString contentType;
-        if (mContentType.Length() > 0)
-        {
-            contentType.AssignWithConversion(mContentType);
-        }
-        else
-        {
-            // TODO infer the other content type - from the DOM document maybe?
-            contentType.Assign("text/html");
-        }
+        // Get the content type
+        nsXPIDLString realContentType;
+        GetDocEncoderContentType(docData->mDocument,
+            (mContentType.Length() > 0) ? mContentType.get() : nsnull,
+            getter_Copies(realContentType));
+
+        nsCAutoString contentType; contentType.AssignWithConversion(realContentType.get());
+        nsAutoString charType; // Empty
 
         // Save the document, fixing up the links as it goes out
         rv = SaveDocumentWithFixup(
@@ -1573,13 +1682,15 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
         if (data)
         {
             data->mIsSubFrame = PR_TRUE;
-            // TODO how do we get the proper extension (or MIME type) from a DOM document?
-            data->mSubFrameExt.Assign(NS_LITERAL_STRING(".htm"));
             // Save the frame content
             nsCOMPtr<nsIDOMDocument> content;
             nodeAsFrame->GetContentDocument(getter_AddRefs(content));
             if (content)
             {
+                nsXPIDLString ext;
+                GetDocumentExtension(content, getter_Copies(ext));
+                data->mSubFrameExt.Assign(NS_LITERAL_STRING("."));
+                data->mSubFrameExt.Append(ext);
                 SaveSubframeContent(content, data);
             }
         }
@@ -1594,13 +1705,15 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
         if (data)
         {
             data->mIsSubFrame = PR_TRUE;
-            // TODO how do we get the proper extension (or MIME type) from a DOM document?
-            data->mSubFrameExt.Assign(NS_LITERAL_STRING(".htm"));
             // Save the frame content
             nsCOMPtr<nsIDOMDocument> content;
             nodeAsIFrame->GetContentDocument(getter_AddRefs(content));
             if (content)
             {
+                nsXPIDLString ext;
+                GetDocumentExtension(content, getter_Copies(ext));
+                data->mSubFrameExt.Assign(NS_LITERAL_STRING("."));
+                data->mSubFrameExt.Append(ext);
                 SaveSubframeContent(content, data);
             }
         }
