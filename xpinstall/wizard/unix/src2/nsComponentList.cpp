@@ -152,7 +152,6 @@ nsComponentList::AddComponent(nsComponent *aComponent)
         return E_PARAM;
 
     aComponent->AddRef();
-    aComponent->SetIndex(mLength);
     nsComponentItem *newItem 
        = (nsComponentItem *) malloc(sizeof(nsComponentItem));
     newItem->mComp = aComponent;
@@ -236,7 +235,6 @@ nsComponentList::GetCompByIndex(int aIndex)
         }
 
         currItem = currItem->mNext;
-        if (!currItem) break;
     }
 
     return NULL;

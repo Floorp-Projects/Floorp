@@ -135,6 +135,8 @@ nsXInstaller::ParseConfig()
 
 BAIL:
     XI_IF_FREE(cfg);
+    if (err != OK)
+        ErrorHandler(err);
     return err;
 }
 

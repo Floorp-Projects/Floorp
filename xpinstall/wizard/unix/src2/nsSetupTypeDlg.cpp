@@ -326,15 +326,16 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
                 break;
             }
         
-            currComp = NULL;
             currIndex = atoi(currVal + strlen(COMPONENT));
             currComp = compList->GetCompByIndex(currIndex);
-            if (currComp)
+            if (!currComp)
             {
-                // preserve next ptr
-                currST->SetComponent(currComp);
-                currNumComps++;
+                err = E_OUT_OF_BOUNDS;
+                goto BAIL;
             }
+
+            currST->SetComponent(currComp);
+            currNumComps++;
         }
         if (currNumComps > 0)
         {
