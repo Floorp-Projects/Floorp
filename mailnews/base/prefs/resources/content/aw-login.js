@@ -34,6 +34,15 @@ function validate() {
       return false;
   }
 
+  var pageData = parent.GetPageData();
+  var serverType = parent.getCurrentServerType(pageData);
+  var hostName = parent.getCurrentHostname(pageData);
+
+  if (parent.AccountExists(username,hostName,serverType)) {
+    var alertText = Bundle.GetStringFromName("accountExists");
+    window.alert(alertText);
+    return false;
+  }
   return true;
 }
 

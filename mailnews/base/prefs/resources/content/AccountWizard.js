@@ -488,6 +488,25 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 
 }
 
+function AccountExists(userName,hostName,serverType)
+{
+  dump("AccountExists("+userName+","+hostName+","+serverType+")\n");
+  var accountExists = false;
+  var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+  try {
+        var server = accountManager.FindServer(userName,hostName,serverType);
+        if (server) {
+		dump("account exists\n");
+                accountExists = true;
+        }
+  }
+  catch (ex) {
+	dump("AccountExists() failed: "+ex+"\n");
+        accountExists = false;
+  }
+  return accountExists;
+}
+
 function checkForInvalidAccounts()
 {
     am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);

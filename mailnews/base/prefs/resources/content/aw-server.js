@@ -35,27 +35,22 @@ function validate() {
     return false;
   }
 
-  dump("check if this account exists\n");
+  /* if this is for a server that doesn't require a username, 
+   * check if the account exists. 
+   * for other types, we check after the user provides the username (see aw-login.js)
+   */
   var pageData = parent.GetPageData();
-  var hostName = servername.value;
   var serverType = parent.getCurrentServerType(pageData);
-  var userName = parent.getCurrentUserName(pageData);
+  var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + serverType].getService(Components.interfaces.nsIMsgProtocolInfo);
+  if (!protocolinfo.requiresUsername) {
+    var userName = parent.getCurrentUserName(pageData);
+    var hostName = servername.value;
 
-  var accountExists = false;
-  var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
-  try {
-	var server = accountManager.FindServer(userName,hostName,serverType);
-	if (server) {
-		accountExists = true;
-	}
-  }
-  catch (ex) {
-	accountExists = false;
-  }
-  if (accountExists) {
-    var alertText = Bundle.GetStringFromName("accountExists");
-    window.alert(alertText);
-    return false;
+    if (parent.AccountExists(userName,hostName,serverType)) {
+      var alertText = Bundle.GetStringFromName("accountExists");
+      window.alert(alertText);
+      return false;
+    }
   }
 
   return true;
