@@ -43,7 +43,7 @@
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
-static gEatMouseMove = PR_FALSE;
+static PRInt32 gEatMouseMove = PR_FALSE;
 
 //
 // NS_NewMenuFrame

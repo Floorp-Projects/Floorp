@@ -644,7 +644,7 @@ nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement 
 
 	folderArray->AppendElement(dstResource);
 	
-	rv = DoCommand(database, isMove ? NC_RDF_MOVE : NC_RDF_COPY, folderArray, argumentArray);
+	rv = DoCommand(database, isMove ? (char *)NC_RDF_MOVE : (char *)NC_RDF_COPY, folderArray, argumentArray);
 	return rv;
 
 #else

@@ -794,7 +794,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
 
     PRBool    compHTML = PR_FALSE;
     mComposeObj->GetComposeHTML(&compHTML);
-    mComposeObj->mTempComposeFileSpec = nsMsgCreateTempFileSpec(compHTML ? "nscomp.html" : "nscomp.txt");
+    mComposeObj->mTempComposeFileSpec = nsMsgCreateTempFileSpec(compHTML ? (char *)"nscomp.html" : (char *)"nscomp.txt");
     if (!mComposeObj->mTempComposeFileSpec)
       return NS_MSG_ERROR_WRITING_FILE;
 
@@ -1500,7 +1500,7 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream)
     }
     else   // Have to write data to a temp file then load the URL...
     {
-      mSigFileSpec = nsMsgCreateTempFileSpec(m_composeHTML ? "sig.html" : "sig.txt");
+      mSigFileSpec = nsMsgCreateTempFileSpec(m_composeHTML ? (char *)"sig.html" : (char *)"sig.txt");
       if (!mSigFileSpec)
         return NS_ERROR_FAILURE;
 
@@ -1566,7 +1566,7 @@ nsMsgCompose::BuildBodyMessage()
   // Since we have a body in the comp fields, we need to create a 
   // body of this old body...
   //  
-  mTempComposeFileSpec = nsMsgCreateTempFileSpec(m_composeHTML ? "nscomp.html" : "nscomp.txt");
+  mTempComposeFileSpec = nsMsgCreateTempFileSpec(m_composeHTML ? (char *)"nscomp.html" : (char *)"nscomp.txt");
   if (!mTempComposeFileSpec)
     return NS_MSG_ERROR_WRITING_FILE;
   

@@ -92,7 +92,9 @@ private:
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an nsAutoLock object on the heap.
     static void* operator new(size_t /*size*/) {
+#if !(__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
         return nsnull;
+#endif
     }
     static void operator delete(void* /*memory*/) {}
 
@@ -172,7 +174,9 @@ private:
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an nsAutoLock object on the heap.
     static void* operator new(size_t /*size*/) {
+#if !(__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
         return nsnull;
+#endif
     }
     static void operator delete(void* /*memory*/) {}
 };
@@ -229,7 +233,9 @@ private:
     // Not meant to be implemented. This makes it a compiler error to
     // attempt to create an nsAutoLock object on the heap.
     static void* operator new(size_t /*size*/) {
+#if !(__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
         return nsnull;
+#endif
     }
     static void operator delete(void* /*memory*/) {}
 };

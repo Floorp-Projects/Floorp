@@ -109,7 +109,7 @@ nsresult nsXPTCStubBase::Stub##n() \
     "call   *%%edx"                    /* PrepareAndDispatch */ \
     : "=a" (result)     /* %0 */ \
     : "d" (method)      /* %1 */ \
-    : "ax", "dx", "cx", "memory" ); \
+    : "cx", "memory" ); \
     return result; \
 }
 

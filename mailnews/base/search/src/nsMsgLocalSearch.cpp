@@ -700,7 +700,7 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
 			// Don't even bother to look at expunged messages awaiting compression
 			pHeaders->GetFlags(&msgFlags);
             pValue->attribute = nsMsgSearchAttrib::Subject;
-            char *reString = (msgFlags & MSG_FLAG_HAS_RE) ? "Re: " : "";
+            char *reString = (msgFlags & MSG_FLAG_HAS_RE) ? (char *)"Re: " : (char *)"";
             pHeaders->GetSubject(&subject);
             pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) nsAutoCString(subject)); // hack. invoke cast operator by force
             newResult->AddValue (pValue);
