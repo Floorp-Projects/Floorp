@@ -1,0 +1,170 @@
+<?xml version="1.0"?> 
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+     Mike Kowalski <mikejk@ameritech.net>
+  -->
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % prefAdvancedDTD SYSTEM "chrome://communicator/locale/pref/pref-advanced.dtd"> %prefAdvancedDTD;
+]>
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-advanced.xul');"
+      headertitle="&lHeader;">
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    var panel = "chrome://communicator/content/pref/pref-advanced.xul";
+    var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress"];
+    
+    function Startup() {
+      ftpCheck();
+      turboCheck();
+    }   
+    
+    function ftpCheck() {
+      var checked = document.getElementById("advancedMailFTP").checked;
+      var field = document.getElementById("advancedMailFTPAddress");
+      field.disabled = !checked;
+      if (checked)
+        field.focus();
+    }
+
+    /* 
+     * Name: turboCheck()
+     * 
+     * Arguments: none
+     *
+     * Description: This function is called when the root advanced prefs panel
+     * is loaded. The turbo mode setting is not exactly a preference -- setting
+     * the checkbox should (on leaving the prefs with an "Ok") result in a call
+     * to the backend to do the necessary win32 registry twiddling needed for
+     * turbo mode to go into effect. Clearing it should undo this work. We need
+     * to call the backend to determine if turbo mode is enabled (since we are 
+     * required to check for it in a non-trivial way) and then explicitly set the
+     * checkbox here based on what we find. Finally, we have to hide the checkbox
+     * (and the group box that frames it) if we are not executing on a Win32 
+     * platform.
+     *
+     * Return Value: void
+     *
+     * Original Code: syd@netscape.com 6/8/2001
+     *
+    */
+
+    function turboCheck()
+    {
+      var frame = document.getElementById("perfSettings");
+      if (navigator.platform != "Win32") {
+        frame.setAttribute("hidden", "true");
+        return;
+      }
+      if (!("isTurboEnabled" in parent))
+        parent.isTurboEnabled = -1;
+      else {
+        document.getElementById("enableTurbo").checked = parent.isTurboEnabled;
+        return;
+      }
+      var winhooksService = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
+      if (winhooksService) {
+        parent.isTurboEnabled = winhooksService.isOptionEnabled("-turbo");
+        document.getElementById("enableTurbo").checked = parent.isTurboEnabled;
+      }
+
+      parent.hPrefWindow.registerOKCallbackFunc( saveTurboSetting );
+    }
+
+    /* 
+     * Name: saveTurboSetting()
+     * 
+     * Arguments: none
+     *
+     * Description: This function is called when the user hits the OK button in
+     * the preferences panel. The function determines what the turbo "preference" 
+     * setting is and performs the appropriate action to enable or disable turbo mode.
+     *
+     * Return Value: void
+     *
+     * Original Code: syd@netscape.com 6/9/2001
+     *
+    */
+
+    function saveTurboSetting() {
+      if (navigator.platform != "Win32")
+        return;   
+
+      var winhooksService = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
+      if (winhooksService && parent.isTurboEnabled != -1) {
+        if (parent.isTurboEnabled)
+          winhooksService.startupAddOption("-turbo");
+        else 
+          winhooksService.startupRemoveOption("-turbo");
+        var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
+        appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
+        var nativeAppSupport = null;
+        try {
+          nativeAppSupport = appShell.nativeAppSupport;
+        }
+        catch ( ex ) {
+        }
+        if (nativeAppSupport)
+          nativeAppSupport.isServerMode = parent.isTurboEnabled;
+        }
+      }
+  ]]>
+  </script>
+
+  <groupbox id="advancedSettings" align="start">
+    <caption label="&advancedTitle.label;"/>
+    <vbox align="start" id="contentEnablingBox">
+      <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
+                prefstring="security.enable_java"/>
+    </vbox>
+    <vbox>
+    <vbox align="start">
+      <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
+                prefstring="advanced.mailftp"
+                oncommand="ftpCheck();"/>
+    </vbox>
+    <hbox class="indent">
+      <textbox id="advancedMailFTPAddress"
+               preftype="string" prefstring="network.ftp.anonymous_password"
+               flex="2"/>
+    </hbox>
+    </vbox>
+    <separator/>
+  </groupbox>
+  <groupbox id="perfSettings">
+    <caption id="perfLabel" label="&perfTitle.label;"/>
+    <vbox id="perfBox" align="start">
+      <checkbox id="enableTurbo" label="&enableTurbo.label;" accesskey="&enableTurboCheck.accesskey;"
+                oncommand="parent.isTurboEnabled = this.checked;"/>
+      <vbox class="indent" flex="1">
+        <description>&perfdescription.label;</description>
+      </vbox>
+    </vbox>
+  </groupbox>
+  
+</page>
+
+

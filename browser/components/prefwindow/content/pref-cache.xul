@@ -1,0 +1,115 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+        Diego Biurrun   <diego@biurrun.de>
+                - added disk cache folder choice
+  -->
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % prefCacheDTD SYSTEM "chrome://communicator/locale/pref/pref-cache.dtd" >
+%prefCacheDTD;
+]>
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-cache.xul');"
+      headertitle="&lHeader;">
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["browserCacheMemoryCache", "browserCacheDiskCache", "browserCacheCheckDocFrequency"];
+  ]]>
+  </script>
+  
+  <stringbundle id="bundle_prefutilities"
+                src="chrome://communicator/locale/pref/prefutilities.properties"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-cache.js"/>
+
+  <groupbox>
+    <caption label="&cacheTitle.label;"/>
+    
+    <description>&cachePara;</description>
+
+    <separator class="thin"/>
+    
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+        <column/>
+      </columns>
+      
+      <rows>
+        <row align="center">
+          <label value="&memCache.label;" accesskey="&memCache.accesskey;" control="browserCacheMemoryCache"/>
+          <hbox align="center">
+            <textbox id="browserCacheMemoryCache" size="8" preftype="int"
+                       prefstring="browser.cache.memory.capacity"/>
+            <label value="&kbytes;"/>
+          </hbox>
+          <button label="&clearMemCache.label;" accesskey="&clearMemCache.accesskey;"
+                  oncommand="prefClearMemCache();"
+                  id="clearMemCache"
+                  prefstring="pref.advanced.cache.disable_button.clear_memory"/>
+        </row>
+        <row align="center">
+          <label value="&diskCache.label;" accesskey="&diskCache.accesskey;" control="browserCacheDiskCache"/>
+          <hbox align="center">
+            <textbox id="browserCacheDiskCache" size="8" preftype="int"
+                       prefstring="browser.cache.disk.capacity" prefattribute="value"/>
+            <label value="&kbytes;"/>
+          </hbox>
+          <button label="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"
+                  oncommand="prefClearDiskCache();"
+                  id="clearDiskCache"
+                  prefstring="pref.advanced.cache.disable_button.clear_disk"/>
+        </row>
+        <row align="center">
+          <label value="&diskCacheFolder.label;"/>
+          <hbox align="center">
+            <textbox id="browserCacheDiskCacheFolder" readonly="true"/>
+          </hbox>
+          <button label="&chooseDiskCacheFolder.label;" accesskey="&chooseDiskCacheFolder.accesskey;"
+                  oncommand="prefCacheSelectFolder();" id="chooseDiskCacheFolder"/>
+        </row>
+
+    <description>&diskCacheFolderExplanation;</description>
+
+      </rows>
+    </grid>
+
+    <separator class="thin"/>
+    
+    <description>&docCache;</description>
+    <vbox align="start" class="indent">
+      <radiogroup id="browserCacheCheckDocFrequency"
+                  prefstring="browser.cache.check_doc_frequency">
+        <radio value="1" label="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>
+        <radio value="3" label="&autoRadio.label;" accesskey="&autoRadio.accesskey;"/>
+        <radio value="0" label="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
+        <radio value="2" label="&neverRadio.label;" accesskey="&neverRadio.accesskey;"/>
+      </radiogroup>
+    </vbox>
+
+  </groupbox>
+</page>

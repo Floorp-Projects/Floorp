@@ -1,0 +1,3 @@
+en-unix.jar:
+        locale/en-US/browser-platform/contents.rdf 			(contents-platform.rdf)
+        locale/en-US/browser-platform/pref/platformPrefOverlay.dtd
