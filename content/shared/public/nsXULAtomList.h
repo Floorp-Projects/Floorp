@@ -118,7 +118,7 @@ XUL_ATOM(tbDropLocationCoord, "tb-droplocationcoord")
 XUL_ATOM(tbDropOn, "tb-dropon")
 XUL_ATOM(tbTriggerRepaint, "tb-triggerrepaint")
 XUL_ATOM(container, "container")
-
+XUL_ATOM(tbDragDropArea, "dragdroparea")
 
 XUL_ATOM(widget, "widget")
 XUL_ATOM(window, "window")
