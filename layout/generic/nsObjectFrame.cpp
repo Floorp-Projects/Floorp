@@ -384,7 +384,16 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
 
   nsAutoString data;
   rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
-  if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0)) 
+
+  PRBool havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0);
+
+  if(!havedata)
+  {// try it once more for SRC attrubute
+    rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, data);
+    havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0);
+  }
+
+  if(havedata) 
   {
     // should be really call to imlib
     nsAutoString ext;
