@@ -293,6 +293,12 @@ function EditorOpen()
   }
 }
 
+function EditorOpenRemote()
+{
+  /* note that if the last parameter is not 0, the default will be for a browser window rather than a composer window */
+  window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal", 0);
+}
+
 function EditorNewPlaintext()
 {
   window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
@@ -332,9 +338,6 @@ function EditorClose()
 {
   dump("In EditorClose...\n");
   return editorShell.CloseWindow();
-  // This doesn't work, but we can close
-  //   the window in the EditorAppShell, so we don't need it
-  //window.close();
 }
 
 // Check for changes to document and allow saving before closing
@@ -1140,9 +1143,6 @@ function EditorSetDefaultPrefs()
               headelement.appendChild( element );
           }
         }
-
-        /* create doctype comment */
-        element = domdoc.createComment("");
       }
     }
   }
