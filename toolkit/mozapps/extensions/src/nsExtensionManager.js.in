@@ -70,11 +70,26 @@ function getDir(aKey, aSubDirs)
   return dir;
 }
 
+function nsInstallLogBase()
+{
+}
+
+nsInstallLogBase.prototype = {
+  CHROME_TYPE_PACKAGE   : "package",
+  CHROME_TYPE_SKIN      : "skin",
+  CHROME_TYPE_LOCALE    : "locale",
+
+  TOKEN_ADD_FILE        : "add",
+  TOKEN_REGISTER_CHROME : "register",
+  TOKEN_PROFILE         : "profile",
+  TOKEN_GLOBAL          : "global"
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 //
-// nsInstallLogger
+// nsInstallLogWriter
 //
-function nsInstallLogger(aExtensionID, aIsProfile)
+function nsInstallLogWriter(aExtensionID, aIsProfile)
 {
   this._isProfile = aIsProfile; // XXXben
   this._uninstallLog = getDir(aIsProfile ? "ProfD" : "ProfD",
@@ -82,10 +97,9 @@ function nsInstallLogger(aExtensionID, aIsProfile)
   this._uninstallLog.append("uninstall.log");
 }
 
-nsInstallLogger.prototype = {
-  _extensionDir: null,
-  _uninstallDir: null,
-  _ds: null,
+nsInstallLogWriter.prototype = {
+  __proto__       : nsInstallLogBase.prototype,
+  _uninstallLog   : null,
   
   open: function ()
   {
@@ -104,19 +118,69 @@ nsInstallLogger.prototype = {
   
   addFile: function (aFile) 
   {
-    var line = "add file: " + aFile.persistentDescriptor + "\n";
+    var line = "add\t" + aFile.persistentDescriptor + "\n";
     this._fos.write(line, line.length);
   },
   
-  CHROME_TYPE_PACKAGE : "package",
-  CHROME_TYPE_SKIN    : "skin",
-  CHROME_TYPE_LOCALE  : "locale",
-  registerChrome: function (aFileURL, aChromeType, aIsProfile)
+  registerChrome: function (aProviderName, aFileURL, aChromeType, aIsProfile)
   {
     var profile = aIsProfile ? "profile" : "global";
-    var line = "register " + aChromeType + " (" + profile + "): " + aFileURL + "\n";
+    // register\tprofile\tpackage\t<provider_name>
+    var line = "register\t" + profile + "\t" + aChromeType + "\t" + aProviderName + "\n";
     this._fos.write(line, line.length);
   }  
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsInstallLogReader
+//
+function nsInstallLogReader(aExtensionID, aIsProfile, aListener)
+{
+  this._isProfile = aIsProfile; // XXXben
+  this.uninstallLog = getDir(aIsProfile ? "ProfD" : "ProfD",
+                              ["extensions", aExtensionID, "uninstall"]); // XXXben XCurProcDir
+  this.uninstallLog.append("uninstall.log");
+  this._listener = aListener
+}
+
+nsInstallLogReader.prototype = {
+  __proto__       : nsInstallLogBase.prototype,
+  uninstallLog    : null,
+  _listener       : null,
+  
+  read: function ()
+  {
+    var fis = Components.classes["@mozilla.org/network/file-input-stream;1"]
+                        .createInstance(Components.interfaces.nsIFileInputStream);
+    fis.init(this.uninstallLog, -1, -1, false);
+    var lis = fis.QueryInterface(Components.interfaces.nsILineInputStream);
+    var line = { value: "" };
+    var more = false;
+    do {
+      more = lis.readLine(line);
+      this._parseLine(line.value);
+    }
+    while (more);
+    fis.close();
+  },
+  
+  _parseLine: function (aLine)
+  {
+    var parts = aLine.split("\t");
+    if (parts[0] == this.TOKEN_ADD_FILE) {
+      var prefix = this.TOKEN_ADD_FILE + "\t";
+      var filePD = aLine.substr(prefix.length, aLine.length - 1); // strips off \n
+      var lf = Components.classes["@mozilla.org/file/local;1"]
+                         .createInstance(Components.interfaces.nsILocalFile);
+      lf.persistentDescriptor = filePD;
+      this._listener.onAddFile(lf);
+    }
+    else if (parts[0] == this.TOKEN_REGISTER_CHROME) {
+      var isProfile = parts[1] == this.TOKEN_PROFILE;
+      this._listener.onRegisterChrome(parts[3], lf, parts[2], isProfile);
+    }
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -139,7 +203,7 @@ function nsExtensionInstaller (aExtensionDS)
 nsExtensionInstaller.prototype = {
   // Utility services and helpers
   _rdf              : null,
-  _logger           : null,
+  _writer           : null,
 
   // Extension metadata
   _extensionID      : null,
@@ -165,8 +229,8 @@ nsExtensionInstaller.prototype = {
     this._extDirKey = this._isProfile ? "ProfD" : "ProfD"; // XXXben XCurProcDir
 
     // Create a logger to log install operations for uninstall
-    this._logger = new nsInstallLogger(this._extensionID, this._isProfile);
-    this._logger.open();
+    this._writer = new nsInstallLogWriter(this._extensionID, this._isProfile);
+    this._writer.open();
     
     // Move files from the staging dir into the extension's final home.
     // This function generates uninstall log files and creates backups of
@@ -187,10 +251,12 @@ nsExtensionInstaller.prototype = {
     
     // Register chrome packages for files specified in the extension manifest
     this._registerChromeForExtension();
-    this._logger.close();
+    this._writer.close();
     
     // Unset the "toBeInstalled" flag
-    this._extensionDS.removePendingExtensionEntry(this._extensionID, this._isProfile);
+    this._extensionDS.setExtensionProperty(this._extensionID, 
+                                           this._extensionDS._emR("toBeInstalled"),
+                                           null, this._isProfile);
   },
   
   _installExtensionFiles: function ()
@@ -216,7 +282,7 @@ nsExtensionInstaller.prototype = {
       if (fileName != "") {
         targetFile.append(fileName);
         zipReader.extract(entry.name, targetFile);
-        this._logger.addFile(targetFile.QueryInterface(Components.interfaces.nsILocalFile));
+        this._writer.addFile(targetFile.QueryInterface(Components.interfaces.nsILocalFile));
       }
     }
     zipReader.close();
@@ -236,7 +302,6 @@ nsExtensionInstaller.prototype = {
       var file = files.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
       var chromeFile = chromeDir.clone();
       var fileName = file.Value.substr("urn:mozilla:extension:file:".length, file.Value.length);
-      dump("*** file = " + fileName + "\n");
       chromeFile.append(fileName);
       
       var providers = [this._provTypePackage, this._provTypeSkin, this._provTypeLocale];
@@ -266,17 +331,110 @@ nsExtensionInstaller.prototype = {
     var type;
     if (aChromeType.EqualsNode(this._provTypePackage)) {
       cr.installPackage(fileURL, this._isProfile);
-      type = this._logger.CHROME_TYPE_PACKAGE;
+      type = this._writer.CHROME_TYPE_PACKAGE;
     }
     else if (aChromeType.EqualsNode(this._provTypeSkin)) {
       cr.installSkin(fileURL, this._isProfile);
-      type = this._logger.CHROME_TYPE_SKIN;
+      type = this._writer.CHROME_TYPE_SKIN;
     }
     else if (aChromeType.EqualsNode(this._provTypeLocale)) {
       cr.installLocale(fileURL, this._isProfile);
-      type = this._logger.CHROME_TYPE_LOCALE;
+      type = this._writer.CHROME_TYPE_LOCALE;
     }
-    this._logger.registerChrome(fileURL, type, this._isProfile);
+    var providerName = this._getProviderName(aPath);
+    this._writer.registerChrome(providerName, fileURL, type, this._isProfile);
+  },
+  
+  _getProviderName: function (aPath)
+  {
+    var parts = aPath.split("/");
+    
+    for (var i = 1; i < parts.length; ++i) {
+      var lastPath = parts[parts.length - i];
+      if (lastPath == "")
+        continue;
+      return lastPath;
+    }
+    return lastPath;
+  }
+};
+
+function nsExtensionUninstaller(aExtensionDS)
+{
+  this._cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                       .getService(Components.interfaces.nsIXULChromeRegistry);
+  this._extensionDS = aExtensionDS;
+}
+
+nsExtensionUninstaller.prototype = {
+  _extensionDS  : null,
+  _cr           : null,
+
+  uninstall: function (aExtensionID, aIsProfile)
+  {
+    // Initialize the installer for this extension
+    this._extensionID = aExtensionID;
+    this._isProfile = aIsProfile;
+    this._extDirKey = this._isProfile ? "ProfD" : "ProfD"; // XXXben XCurProcDir
+    this._extensionsDir = getDir(this._extDirKey, ["extensions"]);
+
+    // Create a logger to log install operations for uninstall
+    this._reader = new nsInstallLogReader(this._extensionID, 
+                                          this._isProfile, 
+                                          this);
+    this._reader.read();
+    
+    // Now remove the uninstall log file. 
+    this._removeFile(this._reader.uninstallLog);
+
+    // Unset the "toBeUninstalled" flag
+    this._extensionDS.setExtensionProperty(this._extensionID, 
+                                           this._extensionDS._emR("toBeInstalled"),
+                                           null, this._isProfile);
+  },
+  
+  ///////////////////////////////////////////////////////////////////////////////
+  // nsIInstallLogReaderListener
+  onAddFile: function (aFile)
+  {
+    this._removeFile(aFile);
+  },
+  
+  _removeFile: function (aFile)
+  {
+    if (aFile.exists()) {
+      try {
+        aFile.remove(false);
+      }
+      catch(e) {
+        dump("*** ex = " + e + ", path = " + aFile.path + "\n");
+      }
+    }
+      
+    // Clean up the parent hierarchy if possible  
+    var parent = aFile.parent;
+    if (parent.exists()) {
+      var e = parent.directoryEntries;
+      if (parent.isDirectory() && !e.hasMoreElements() && 
+          !parent.equals(this._extensionsDir)) // stop at the extensions dir
+        this._removeFile(parent);
+    }
+  },
+  
+  onRegisterChrome: function (aProviderName, aFile, aChromeType, aIsProfile)
+  {
+    switch (aChromeType) {
+    case this._reader.CHROME_TYPE_PACKAGE:
+      dump("*** dereg " + aProviderName + ", prf = " + aIsProfile + "\n");
+      this._cr.uninstallPackage(aProviderName, aIsProfile)
+      break;
+    case this._reader.CHROME_TYPE_SKIN:
+      this._cr.uninstallSkin(aProviderName, aIsProfile)
+      break;
+    case this._reader.CHROME_TYPE_LOCALE:
+      this._cr.uninstallLocale(aProviderName, aIsProfile)
+      break;
+    }
   }
 };
 
@@ -441,8 +599,9 @@ function nsExtensionManager()
 }
 
 nsExtensionManager.prototype = {
-  _extInstaller: null,
-
+  _extInstaller     : null,
+  _extUninstaller   : null,
+  
   /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
   observe: function (aSubject, aTopic, aData)
@@ -498,6 +657,7 @@ nsExtensionManager.prototype = {
           
         // Clean up any helper objects
         delete this._extInstaller;
+        delete this._extUninstaller;
           
         win.close();
         
@@ -527,6 +687,7 @@ nsExtensionManager.prototype = {
           var path = line.value;
           if (path.charAt(path.length-1) == "\n")
             path = path.substr(0, path.length - 1);
+          dump("*** loading pref file at " + lf.path + "\n");
           lf.initWithPath(path);
           
           if (lf.exists())
@@ -623,8 +784,7 @@ nsExtensionManager.prototype = {
       
       // Now locate this extension within the extensions folder
       // First, where is it installed - profile or global?
-      var location = this._ds.getExtensionProperty(extension.id, "installLocation");
-      var dir = location == "profile" ? profileDir : globalDir;
+      var dir = this._ds.isProfileExtension(extension.id) ? profileDir : globalDir;
       
       // Now synthesize the components dir for the extension
       var sourceDir = aGetDirFunc(dir, extension.id);
@@ -711,7 +871,9 @@ nsExtensionManager.prototype = {
     var extensionID = this._canInstallExtension(ds);
     if (extensionID) {
       this._ensureDS();
-      this._ds.addPendingExtensionEntry(extensionID, installProfile);
+      
+      this._ds.setExtensionProperty(extensionID, this._ds._emR("toBeInstalled"),
+                                    this._ds._emL("true"), installProfile);
       // Then we stage the extension's XPI into a temporary directory so we 
       // can extract them after the next restart. 
       this._stageExtensionXPI(aZipReader, extensionID, installProfile);
@@ -748,17 +910,10 @@ nsExtensionManager.prototype = {
   // This function is called on the next startup 
   _finalizeInstall: function (aExtensionID)
   {
-    var installLocation = this._ds.getExtensionProperty(aExtensionID, "installLocation");
-    var isProfile = installLocation == "profile";
-    
     if (!this._extInstaller)
       this._extInstaller = new nsExtensionInstaller(this._ds);
-    this._extInstaller.install(aExtensionID, isProfile);
-  },
-
-  _unregisterChromeForExtension: function (aExtensionID, aLogger)
-  {
-  
+    this._extInstaller.install(aExtensionID, 
+                               this._ds.isProfileExtension(aExtensionID));
   },
   
   _finalizeEnable: function (aExtensionID)
@@ -773,7 +928,10 @@ nsExtensionManager.prototype = {
   
   _finalizeUninstall: function (aExtensionID)
   {
-    dump("*** trying to finalize uninstall for " + aExtensionID + "\n");
+    if (!this._extUninstaller)
+      this._extUninstaller = new nsExtensionUninstaller(this._ds);
+    this._extUninstaller.uninstall(aExtensionID, 
+                                   this._ds.isProfileExtension(aExtensionID));
   },
       
   uninstallExtension: function (aExtensionID)
@@ -1052,24 +1210,21 @@ nsExtensionsDataSource.prototype = {
     return items;
   },
   
-  addPendingExtensionEntry: function (aExtensionID, aInstallProfile)
+  isProfileExtension: function (aExtensionID)
   {
-    this._setExtensionProperty(aExtensionID, this._emR("toBeInstalled"), 
-                               this._emL("true"), aInstallProfile);
-  },
-  
-  removePendingExtensionEntry: function (aExtensionID, aInstallProfile)
-  {
-    this._setExtensionProperty(aExtensionID, this._emR("toBeInstalled"), 
-                               this._emL("false"), aInstallProfile);
+    return this.getExtensionProperty(aExtensionID, "installLocation") == "profile";
   },
   
   _setProperty: function (aDS, aSource, aProperty, aNewValue)
   {
     var oldValue = aDS.GetTarget(aSource, aProperty, true);
-    if (oldValue)
-      aDS.Change(aSource, aProperty, oldValue, aNewValue);
-    else
+    if (oldValue) {
+      if (aNewValue)
+        aDS.Change(aSource, aProperty, oldValue, aNewValue);
+      else
+        aDS.Unassert(aSource, aProperty, oldValue);
+    }
+    else if (aNewValue)
       aDS.Assert(aSource, aProperty, aNewValue, true);
   },
   
@@ -1083,13 +1238,11 @@ nsExtensionsDataSource.prototype = {
     return "";
   },
   
-  _setExtensionProperty: function (aExtensionID, aPropertyArc, aPropertyValue, aIsProfile)
+  setExtensionProperty: function (aExtensionID, aPropertyArc, aPropertyValue, aIsProfile)
   {
     var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
-    if (aIsProfile === undefined) {
-      var installLocation = this.GetTarget(extension, this._emR("installLocation"), true);
-      aIsProfile = installLocation.EqualsNode(this._emL("profile"));
-    }
+    if (aIsProfile === undefined)
+      aIsProfile = this.isProfileExtension(aExtensionID);
     var ds = aIsProfile ? this._profileExtensions : this._appExtensions;
     
     this._setProperty(ds, extension, aPropertyArc, aPropertyValue);
@@ -1156,16 +1309,16 @@ nsExtensionsDataSource.prototype = {
   
   enableExtension: function (aExtensionID)
   {
-    this._setExtensionProperty(aExtensionID, this._emR("toBeEnabled"), this._emL("true"));
-    this._setExtensionProperty(aExtensionID, this._emR("toBeDisabled"), this._emL("false"));
-    this._setExtensionProperty(aExtensionID, this._emR("disabled"), this._emL("false"));
+    this.setExtensionProperty(aExtensionID, this._emR("toBeEnabled"), this._emL("true"));
+    this.setExtensionProperty(aExtensionID, this._emR("toBeDisabled"), null);
+    this.setExtensionProperty(aExtensionID, this._emR("disabled"), null);
   },
   
   disableExtension: function (aExtensionID)
   {
-    this._setExtensionProperty(aExtensionID, this._emR("toBeDisabled"), this._emL("true"));
-    this._setExtensionProperty(aExtensionID, this._emR("toBeEnabled"), this._emL("false"));
-    this._setExtensionProperty(aExtensionID, this._emR("disabled"), this._emL("true"));
+    this.setExtensionProperty(aExtensionID, this._emR("toBeDisabled"), this._emL("true"));
+    this.setExtensionProperty(aExtensionID, this._emR("toBeEnabled"), null);
+    this.setExtensionProperty(aExtensionID, this._emR("disabled"), this._emL("true"));
   },
   
   uninstallExtension: function (aExtensionID)
@@ -1177,7 +1330,9 @@ nsExtensionsDataSource.prototype = {
     var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
     ctr.RemoveElement(extension, true);
     
-    this._setExtensionProperty(aExtensionID, this._emR("toBeUninstalled"), this._emL("true"));
+    this.setExtensionProperty(aExtensionID, this._emR("toBeUninstalled"), 
+                              this._emL("true"), 
+                              this.isProfileExtension(aExtensionID));
   },
   
   loadExtensions: function (aProfile)
@@ -1294,24 +1449,34 @@ nsExtensionsDataSource.prototype = {
     return this._composite.GetTargets(aSource, aProperty, aTruthValue);
   },
   
+  _getTargetDSFromSource: function (aSource)
+  {
+    var extensionID = aSource.Value.substr("urn:mozilla:extension:".length, aSource.Value.length);
+    return this.isProfileExtension(extensionID) ? this._profileExtensions : this._appExtensions;
+  },
+  
   Assert: function (aSource, aProperty, aTarget, aTruthValue)
   {
-    return Components.results.NS_RDF_ASSERTION_REJECTED;
+    var targetDS = this._getTargetDSFromSource(aSource);
+    targetDS.Assert(aSource, aProperty, aTarget, aTruthValue);
   },
   
   Unassert: function (aSource, aProperty, aTarget)
   {
-    return Components.results.NS_RDF_ASSERTION_REJECTED;
+    var targetDS = this._getTargetDSFromSource(aSource);
+    targetDS.Unassert(aSource, aProperty, aTarget);
   },
   
   Change: function (aSource, aProperty, aOldTarget, aNewTarget)
   {
-    return Components.results.NS_RDF_ASSERTION_REJECTED;
+    var targetDS = this._getTargetDSFromSource(aSource);
+    targetDS.Change(aSource, aProperty, aOldTarget, aNewTarget);
   },
 
   Move: function (aSource, aNewSource, aProperty, aTarget)
   {
-    return Components.results.NS_RDF_ASSERTION_REJECTED;
+    var targetDS = this._getTargetDSFromSource(aSource);
+    targetDS.Move(aSource, aNewSource, aProperty, aTarget);
   },
   
   HasAssertion: function (aSource, aProperty, aTarget, aTruthValue)
