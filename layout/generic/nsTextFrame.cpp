@@ -2591,6 +2591,10 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         {
           if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPresContext, aPos)))
             return NS_OK;//else fall through
+          else if (aPos->mDirection == eDirNext)
+            aPos->mContentOffset = mContentOffset + mContentLength;
+          else
+            aPos->mContentOffset = mContentOffset;
         }
         else 
           aPos->mResultContent = mContent;
