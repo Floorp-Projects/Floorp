@@ -548,7 +548,6 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
     if (NS_SUCCEEDED(rv) && ((aAbsolutePixelRect.y + aAbsolutePixelRect.height + absoluteDropDownHeight) > screenHeightInPixels)) {
       // move the dropdown list up
       dropdownYOffset = - (dropdownRect.height);
-      dropdownYOffset = PR_MAX(dropdownYOffset, 0);
     }
   } 
  
