@@ -121,7 +121,7 @@ interface nsIFile : nsISupports
      *
      *   @param newParentDir
      *       This param is the destination directory. If the
-     *       newParentDir is empty, copyTo() will use the parent
+     *       newParentDir is null, copyTo() will use the parent
      *       directory of this file. If the newParentDir is not
      *       empty and is not a directory, an error will be
      *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
