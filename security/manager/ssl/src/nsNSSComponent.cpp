@@ -102,12 +102,12 @@ nsNSSComponent::nsNSSComponent()
 
 nsNSSComponent::~nsNSSComponent()
 {
-  if (mCertContentListener) {
+  if (mPSMContentListener) {
     nsresult rv = NS_ERROR_FAILURE;
       
     nsCOMPtr<nsIURILoader> dispatcher(do_GetService(NS_URI_LOADER_CONTRACTID));
     if (dispatcher) {
-      rv = dispatcher->UnRegisterContentListener(mCertContentListener);
+      rv = dispatcher->UnRegisterContentListener(mPSMContentListener);
     }
   }
   if (mPref)
@@ -325,14 +325,14 @@ nsNSSComponent::InitializePIPNSSBundle()
 }
 
 nsresult
-nsNSSComponent::RegisterCertContentListener()
+nsNSSComponent::RegisterPSMContentListener()
 {
   nsresult rv = NS_OK;
-  if (!mCertContentListener) {
+  if (!mPSMContentListener) {
     nsCOMPtr<nsIURILoader> dispatcher(do_GetService(NS_URI_LOADER_CONTRACTID));
     if (dispatcher) {
-      mCertContentListener = do_CreateInstance(NS_CERTCONTENTLISTEN_CONTRACTID);
-      rv = dispatcher->RegisterContentListener(mCertContentListener);
+      mPSMContentListener = do_CreateInstance(NS_PSMCONTENTLISTEN_CONTRACTID);
+      rv = dispatcher->RegisterContentListener(mPSMContentListener);
     }
   }
   return rv;
@@ -502,7 +502,7 @@ nsNSSComponent::Init()
     return rv;
   }
   InstallLoadableRoots();
-  RegisterCertContentListener();
+  RegisterPSMContentListener();
   RegisterProfileChangeObserver();
   return rv;
 }
@@ -754,30 +754,30 @@ setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
 // Implementation of an nsIInterfaceRequestor for use
 // as context for NSS calls
 //
-class CertDownloaderContext : public nsIInterfaceRequestor
+class PSMContentDownloaderContext : public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  CertDownloaderContext();
-  virtual ~CertDownloaderContext();
+  PSMContentDownloaderContext();
+  virtual ~PSMContentDownloaderContext();
 
 };
 
-NS_IMPL_ISUPPORTS1(CertDownloaderContext, nsIInterfaceRequestor)
+NS_IMPL_ISUPPORTS1(PSMContentDownloaderContext, nsIInterfaceRequestor)
 
-CertDownloaderContext::CertDownloaderContext()
+PSMContentDownloaderContext::PSMContentDownloaderContext()
 {
   NS_INIT_ISUPPORTS();
 }
 
-CertDownloaderContext::~CertDownloaderContext()
+PSMContentDownloaderContext::~PSMContentDownloaderContext()
 {
 }
 
 /* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-NS_IMETHODIMP CertDownloaderContext::GetInterface(const nsIID & uuid, void * *result)
+NS_IMETHODIMP PSMContentDownloaderContext::GetInterface(const nsIID & uuid, void * *result)
 {
   nsresult rv;
 
@@ -805,16 +805,23 @@ NS_IMETHODIMP CertDownloaderContext::GetInterface(const nsIID & uuid, void * *re
   return rv;
 }
 
-class CertDownloader : public nsIStreamListener
+class PSMContentDownloader : public nsIStreamListener
 {
 public:
-  CertDownloader() {NS_ASSERTION(PR_FALSE, "don't use this constructor."); }
-  CertDownloader(PRUint32 type);
-  virtual ~CertDownloader();
+  PSMContentDownloader() {NS_ASSERTION(PR_FALSE, "don't use this constructor."); }
+  PSMContentDownloader(PRUint32 type);
+  virtual ~PSMContentDownloader();
   
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+
+  enum {UNKNOWN_TYPE = 0};
+  enum {X509_CA_CERT  = 1};
+  enum {X509_USER_CERT  = 2};
+  enum {X509_EMAIL_CERT  = 3};
+  enum {X509_SERVER_CERT  = 4};
+  enum {PKCS7_CRL = 5};
 
 protected:
   char* mByteData;
@@ -822,10 +829,11 @@ protected:
   PRInt32 mContentLength;
   PRUint32 mType;
   nsCOMPtr<nsISecurityManagerComponent> mNSS;
+  nsCOMPtr<nsIURI> mURI;
 };
 
 
-CertDownloader::CertDownloader(PRUint32 type)
+PSMContentDownloader::PSMContentDownloader(PRUint32 type)
   : mByteData(nsnull),
     mType(type)
 {
@@ -834,24 +842,27 @@ CertDownloader::CertDownloader(PRUint32 type)
   mNSS = do_GetService(PSM_COMPONENT_CONTRACTID);
 }
 
-CertDownloader::~CertDownloader()
+PSMContentDownloader::~PSMContentDownloader()
 {
   if (mByteData)
     nsMemory::Free(mByteData);
 }
 
 /*NS_IMPL_ISUPPORTS1(CertDownloader, nsIStreamListener);*/
-NS_IMPL_ISUPPORTS(CertDownloader,NS_GET_IID(nsIStreamListener));
+NS_IMPL_ISUPPORTS(PSMContentDownloader,NS_GET_IID(nsIStreamListener));
 
 const PRInt32 kDefaultCertAllocLength = 2048;
 
 NS_IMETHODIMP
-CertDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
+PSMContentDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
 {
   nsresult rv;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertDownloader::OnStartRequest\n"));
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
   if (!channel) return NS_ERROR_FAILURE;
+
+  // Get the URI //
+  channel->GetURI(getter_AddRefs(mURI));
 
   rv = channel->GetContentLength(&mContentLength);
   if (rv != NS_OK || mContentLength == -1)
@@ -866,7 +877,7 @@ CertDownloader::OnStartRequest(nsIRequest* request, nsISupports* context)
 }
 
 NS_IMETHODIMP
-CertDownloader::OnDataAvailable(nsIRequest* request,
+PSMContentDownloader::OnDataAvailable(nsIRequest* request,
                                 nsISupports* context,
                                 nsIInputStream *aIStream,
                                 PRUint32 aSourceOffset,
@@ -905,7 +916,7 @@ CertDownloader::OnDataAvailable(nsIRequest* request,
 }
 
 NS_IMETHODIMP
-CertDownloader::OnStopRequest(nsIRequest* request,
+PSMContentDownloader::OnStopRequest(nsIRequest* request,
                               nsISupports* context,
                               nsresult aStatus)
 {
@@ -914,10 +925,10 @@ CertDownloader::OnStopRequest(nsIRequest* request,
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
 
   nsresult rv;
-  nsCOMPtr<nsIInterfaceRequestor> ctx = new CertDownloaderContext();
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new PSMContentDownloaderContext();
 
   switch (mType) {
-  case nsIX509Cert::CA_CERT:
+  case PSMContentDownloader::X509_CA_CERT:
     {
       nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(mByteData, mBufferOffset);
       if (certdb == nsnull)
@@ -935,8 +946,11 @@ CertDownloader::OnStopRequest(nsIRequest* request,
 
       return certdb->ImportCertificate(cert, mType, trust, nsnull);
     }
-  case nsIX509Cert::USER_CERT:
+  case PSMContentDownloader::X509_USER_CERT:
     return certdb->ImportUserCertificate(mByteData, mBufferOffset, ctx);
+    break;
+  case PSMContentDownloader::PKCS7_CRL:
+    return certdb->ImportCrl(mByteData, mBufferOffset, mURI, SEC_CRL_TYPE);
   default:
 	  rv = NS_ERROR_FAILURE;
 	  break;
@@ -955,43 +969,45 @@ loser:
 */
 
 PRUint32
-getPSMCertType(const char * aContentType)
+getPSMContentType(const char * aContentType)
 { 
   if (!nsCRT::strcasecmp(aContentType, "application/x-x509-ca-cert"))
-    return nsIX509Cert::CA_CERT;
+    return PSMContentDownloader::X509_CA_CERT;
   else if (!nsCRT::strcasecmp(aContentType, "application/x-x509-server-cert"))
-    return nsIX509Cert::SERVER_CERT;
+    return PSMContentDownloader::X509_SERVER_CERT;
   else if (!nsCRT::strcasecmp(aContentType, "application/x-x509-user-cert"))
-    return nsIX509Cert::USER_CERT;
+    return PSMContentDownloader::X509_USER_CERT;
   else if (!nsCRT::strcasecmp(aContentType, "application/x-x509-email-cert"))
-    return nsIX509Cert::EMAIL_CERT;
-  return nsIX509Cert::UNKNOWN_CERT;
+    return PSMContentDownloader::X509_EMAIL_CERT;
+  else if (!nsCRT::strcasecmp(aContentType, "application/x-pkcs7-crl"))
+    return PSMContentDownloader::PKCS7_CRL;
+  return PSMContentDownloader::UNKNOWN_TYPE;
 }
 
 
-NS_IMPL_ISUPPORTS2(CertContentListener,
+NS_IMPL_ISUPPORTS2(PSMContentListener,
                    nsIURIContentListener,
                    nsISupportsWeakReference); 
 
-CertContentListener::CertContentListener()
+PSMContentListener::PSMContentListener()
 {
   NS_INIT_REFCNT();
   mLoadCookie = nsnull;
   mParentContentListener = nsnull;
 }
 
-CertContentListener::~CertContentListener()
+PSMContentListener::~PSMContentListener()
 {
 }
 
 nsresult
-CertContentListener::init()
+PSMContentListener::init()
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CertContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
+PSMContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
 {
   //if we don't want to handle the URI, return PR_TRUE in
   //*aAbortOpen
@@ -999,7 +1015,7 @@ CertContentListener::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
 }
 
 NS_IMETHODIMP
-CertContentListener::GetProtocolHandler(nsIURI *aURI, 
+PSMContentListener::GetProtocolHandler(nsIURI *aURI, 
                                         nsIProtocolHandler **aProtocolHandler)
 {
   *aProtocolHandler = nsnull;
@@ -1007,7 +1023,7 @@ CertContentListener::GetProtocolHandler(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
-CertContentListener::IsPreferred(const char * aContentType,
+PSMContentListener::IsPreferred(const char * aContentType,
                                  nsURILoadCommand aCommand,
                                  char ** aDesiredContentType,
                                  PRBool * aCanHandleContent)
@@ -1017,13 +1033,13 @@ CertContentListener::IsPreferred(const char * aContentType,
 }
 
 NS_IMETHODIMP
-CertContentListener::CanHandleContent(const char * aContentType,
+PSMContentListener::CanHandleContent(const char * aContentType,
                                       nsURILoadCommand aCommand,
                                       char ** aDesiredContentType,
                                       PRBool * aCanHandleContent)
 {
   PRUint32 type;
-  type = getPSMCertType(aContentType);
+  type = getPSMContentType(aContentType);
   if (type == nsIX509Cert::UNKNOWN_CERT) {
     *aCanHandleContent = PR_FALSE;
   } else {
@@ -1033,18 +1049,18 @@ CertContentListener::CanHandleContent(const char * aContentType,
 }
 
 NS_IMETHODIMP
-CertContentListener::DoContent(const char * aContentType,
+PSMContentListener::DoContent(const char * aContentType,
                                nsURILoadCommand aCommand,
                                nsIRequest * aRequest,
                                nsIStreamListener ** aContentHandler,
                                PRBool * aAbortProcess)
 {
-  CertDownloader *downLoader;
+  PSMContentDownloader *downLoader;
   PRUint32 type;
-  type = getPSMCertType(aContentType);
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertContentListener::DoContent\n"));
+  type = getPSMContentType(aContentType);
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PSMContentListener::DoContent\n"));
   if (type != nsIX509Cert::UNKNOWN_CERT) {
-    downLoader = new CertDownloader(type);
+    downLoader = new PSMContentDownloader(type);
     if (downLoader) {
       downLoader->QueryInterface(NS_GET_IID(nsIStreamListener), 
                                             (void **)aContentHandler);
@@ -1055,7 +1071,7 @@ CertContentListener::DoContent(const char * aContentType,
 }
 
 NS_IMETHODIMP
-CertContentListener::GetLoadCookie(nsISupports * *aLoadCookie)
+PSMContentListener::GetLoadCookie(nsISupports * *aLoadCookie)
 {
   *aLoadCookie = mLoadCookie;
   NS_IF_ADDREF(*aLoadCookie);
@@ -1063,14 +1079,14 @@ CertContentListener::GetLoadCookie(nsISupports * *aLoadCookie)
 }
 
 NS_IMETHODIMP
-CertContentListener::SetLoadCookie(nsISupports * aLoadCookie)
+PSMContentListener::SetLoadCookie(nsISupports * aLoadCookie)
 {
   mLoadCookie = aLoadCookie;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-CertContentListener::GetParentContentListener(nsIURIContentListener ** aContentListener)
+PSMContentListener::GetParentContentListener(nsIURIContentListener ** aContentListener)
 {
   *aContentListener = mParentContentListener;
   NS_IF_ADDREF(*aContentListener);
@@ -1078,7 +1094,7 @@ CertContentListener::GetParentContentListener(nsIURIContentListener ** aContentL
 }
 
 NS_IMETHODIMP
-CertContentListener::SetParentContentListener(nsIURIContentListener * aContentListener)
+PSMContentListener::SetParentContentListener(nsIURIContentListener * aContentListener)
 {
   mParentContentListener = aContentListener;
   return NS_OK;

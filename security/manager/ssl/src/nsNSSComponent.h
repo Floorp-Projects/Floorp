@@ -52,8 +52,8 @@
   {0xd4b49dd6, 0x1dd1, 0x11b2, \
     { 0xb6, 0xfe, 0xb1, 0x4c, 0xfa, 0xf6, 0x9c, 0xbd }}
 
-#define NS_CERTCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
-#define NS_CERTCONTENTLISTEN_CONTRACTID "@mozilla.org/security/certdownload;1"
+#define NS_PSMCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
+#define NS_PSMCONTENTLISTEN_CONTRACTID "@mozilla.org/security/psmdownload;1"
 
 
 class NS_NO_VTABLE nsINSSComponent : public nsISupports {
@@ -107,13 +107,13 @@ private:
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
   char * GetPK11String(const PRUnichar *name, PRUint32 len);
-  nsresult RegisterCertContentListener();
+  nsresult RegisterPSMContentListener();
   nsresult RegisterProfileChangeObserver();
   static int PrefChangedCallback(const char* aPrefName, void* data);
   void PrefChanged(const char* aPrefName);
 
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
-  nsCOMPtr<nsIURIContentListener> mCertContentListener;
+  nsCOMPtr<nsIURIContentListener> mPSMContentListener;
   nsCOMPtr<nsIPref> mPref;
   static PRBool mNSSInitialized;
 };
@@ -122,11 +122,11 @@ private:
 // Now we need a content listener to register 
 //--------------------------------------------
 
-class CertContentListener : public nsIURIContentListener,
+class PSMContentListener : public nsIURIContentListener,
                             public nsSupportsWeakReference {
 public:
-  CertContentListener();
-  virtual ~CertContentListener();
+  PSMContentListener();
+  virtual ~PSMContentListener();
   nsresult init();
 
   NS_DECL_ISUPPORTS

@@ -35,15 +35,12 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include "nsString.h"
-%}
-
 interface nsISupportsArray;
 interface nsIX509Cert;
 interface nsIPK11Token;
 interface nsILocalFile;
 interface nsIInterfaceRequestor;
+interface nsIURI;
 
 %{C++
 
@@ -70,6 +67,12 @@ interface nsIOCSPResponder : nsISupports {
   readonly attribute wstring serviceURL;
 };
 
+[scriptable, uuid(c185d920-4a3e-11d5-ba27-00108303b117)]
+interface nsICrlEntry : nsISupports {
+  readonly attribute wstring name;
+  readonly attribute wstring lastUpdate;
+  readonly attribute wstring nextUpdate;
+};
 
 [scriptable, uuid(da48b3c0-1284-11d5-ac67-000064657374)]
 interface nsIX509CertDB : nsISupports {
@@ -196,5 +199,29 @@ interface nsIX509CertDB : nsISupports {
    */
   nsISupportsArray getOCSPResponders();
 
-};
+  /*
+   * importCrl
+   *
+   * Import a CRL into the database.
+   */
+  [noscript] void importCrl(in charPtr data, 
+                            in unsigned long length,
+						                in nsIURI uri,
+                            in PRUint32 type);
+
+  /*
+   * getCrls
+   *
+   * Get a list of Crl entries in the DB.
+   */
+  nsISupportsArray getCrls();
+
+  /*
+   * deleteCrl
+   *
+   * Delete the crl.
+   */
+  void deleteCrl(in PRUint32 crlIndex);
+
+ };
 
