@@ -877,7 +877,7 @@ dump("ONSELECTION CHANGED\n")
       <constructor>
         gBMtxmgr = BookmarksUtils.getTransactionManager();
       </constructor>  
-      <field name="clickCount">2</field>
+      <field name="clickCount">1</field>
     </implementation>
   </binding>
   <!-- Tree with folders only -->
