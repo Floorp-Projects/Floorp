@@ -30,7 +30,13 @@ require "CGI.pl";
 
 use vars %::versions,
     %::components,
-    %::COOKIE;
+    %::COOKIE,
+    %::keywordsbyname,
+    %::legal_keywords,
+    %::legal_opsys,
+    %::legal_platform,
+    %::legal_priority,
+    %::legal_severity;
 
 confirm_login();
 
@@ -351,6 +357,28 @@ if ($#idlist < 0) {
     exit;
 }
 
+
+my @keywordlist;
+my %keywordseen;
+
+if ($::FORM{'keywords'}) {
+    foreach my $keyword (split(/,/, $::FORM{'keywords'})) {
+        $keyword = trim($keyword);
+        my $i = $::keywordsbyname{$keyword};
+        if (!$i) {
+            print "Unknown keyword named <code>$keyword</code>.\n";
+            print "<P>The legal keyword names are <A HREF=describekeywords.cgi>";
+            print "listed here</A>.\n";
+            print "<P>Please click the <B>Back</B> button and try again.\n";
+            exit;
+        }
+        if (!$keywordseen{$i}) {
+            push(@keywordlist, $i);
+            $keywordseen{$i} = 1;
+        }
+    }
+}
+
 if ($::comma eq "") {
     if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
         print "Um, you apparently did not change anything on the selected\n";
@@ -385,6 +413,23 @@ sub SnapShotDeps {
 }
 
 
+sub SnapShotKeywords {
+    my ($id) = (@_);
+    SendSQL("SELECT keyworddefs.name 
+             FROM keyworddefs, keywords
+             WHERE keywords.bug_id = $id AND keyworddefs.id = keywords.keywordid
+             ORDER BY keyworddefs.name");
+    my @list;
+    while (MoreSQLData()) {
+        push(@list, FetchOneColumn());
+    }
+    return join(',', @list);
+}
+    
+
+my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
+
+
 my $whoid = DBNameToIdAndCheck($::FORM{'who'});
 my $timestamp;
 
@@ -399,13 +444,14 @@ sub LogDependencyActivity {
 }
 
 # this loop iterates once for each bug to be processed (eg when this script
-# is called by  with multiple bugs selected from buglist.cgi instead of
+# is called with multiple bugs selected from buglist.cgi instead of
 # show_bug.cgi).
 #
 foreach my $id (@idlist) {
     my %dependencychanged;
-    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write");
+    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write, keywords write, keyworddefs read");
     my @oldvalues = SnapShotBug($id);
+    my $oldkeywords = SnapShotKeywords($id);
 
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
         print "
@@ -491,6 +537,27 @@ The changes made were:
             my $tmp = $me;
             $me = $target;
             $target = $tmp;
+        }
+    }
+
+    if (@::legal_keywords) {
+        # There are three kinds of "keywordsaction": makeexact, add, delete.
+        # For makeexact, we delete everything, and then add our things.
+        # For add, we delete things we're adding (to make sure we don't
+        # end up having them twice), and then we add them.
+        # For delete, we just delete things on the list.
+        if ($keywordaction eq "makeexact") {
+            SendSQL("DELETE FROM keywords WHERE bug_id = $id");
+        }
+        foreach my $keyword (@keywordlist) {
+            if ($keywordaction ne "makeexact") {
+                SendSQL("DELETE FROM keywords
+                         WHERE bug_id = $id AND keywordid = $keyword");
+            }
+            if ($keywordaction ne "delete") {
+                SendSQL("INSERT INTO keywords 
+                         (bug_id, keywordid) VALUES ($id, $keyword)");
+            }
         }
     }
 
@@ -582,7 +649,12 @@ The changes made were:
     # what has changed since before we wrote out the new values.
     #
     my @newvalues = SnapShotBug($id);
-    foreach my $col (@::log_columns) {
+
+    push(@oldvalues, $oldkeywords);
+    push(@newvalues, SnapShotKeywords($id));
+    foreach my $c (@::log_columns, "keywords") {
+        my $col = $c;           # We modify it, don't want to modify array
+                                # values in place.
         my $old = shift @oldvalues;
         my $new = shift @newvalues;
         if (!defined $old) {

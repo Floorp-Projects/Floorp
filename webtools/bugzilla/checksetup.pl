@@ -637,7 +637,19 @@ $table{votes} =
     index(who),
     index(bug_id)';
 
+$table{keywords} =
+    'bug_id mediumint not null,
+     keywordid smallint not null,
 
+     index(bug_id),
+     index(keywordid)';
+
+$table{keyworddefs} =
+    'id smallint not null primary key,
+     name varchar(64) not null,
+     description mediumtext,
+
+     unique(name)';
 
 
 
@@ -727,6 +739,7 @@ AddGroup 'tweakparams',      'Can tweak operating parameters';
 AddGroup 'editgroupmembers', 'Can put people in and out of groups that they are members of.';
 AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
+AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
 
 
 

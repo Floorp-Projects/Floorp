@@ -235,7 +235,8 @@ from   bugs,
        profiles assign,
        profiles report
        left join profiles qacont on bugs.qa_contact = qacont.userid,
-       versions projector
+       versions projector,
+       keywords
 
 where  bugs.assigned_to = assign.userid 
 and    bugs.reporter = report.userid
@@ -290,6 +291,27 @@ if (defined $::FORM{'sql'}) {
           $query .= "\t)\n";
       }
   }
+}
+
+if ($::FORM{'keywords'}) {
+    GetVersionTable();
+    my @list;
+    foreach my $v (split(',', $::FORM{'keywords'})) {
+        my $id = $::keywordsbyname{trim($v)};
+        if ($id) {
+            push(@list, "keywords.keywordid = $id");
+        } else {
+            print "Unknown keyword named <code>$v</code>.\n";
+            print "<P>The legal keyword names are <A HREF=describekeywords.cgi>";
+            print "listed here</A>.\n";
+            print "<P>Please click the <B>Back</B> button and try again.\n";
+            exit;
+        }
+    }
+    if (@list) {
+        $query .= "and keywords.bug_id = bugs.bug_id and (" .
+            join(" $::FORM{'keywords_type'} ", @list) . ")\n";
+    }
 }
 
 
@@ -750,8 +772,22 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
     }
         
 
-    print "
-</TABLE>
+    if (@::legal_keywords) {
+        print qq{
+<TR><TD><B><A HREF="describekeywords.cgi">Keywords</A>:</TD>
+<TD COLSPAN=3><INPUT NAME=keywords SIZE=32 VALUE="">
+<SELECT NAME="keywordaction">
+<OPTION VALUE="add">Add these keywords
+<OPTION VALUE="delete">Delete these keywords
+<OPTION VALUE="makeexact">Make the keywords be exactly this list
+</SELECT>
+</TD>
+</TR>
+};
+    }
+
+
+    print "</TABLE>
 
 <INPUT NAME=multiupdate value=Y TYPE=hidden>
 

@@ -336,6 +336,18 @@ sub GenerateVersionTable {
         print FID GenerateCode('@::legal_target_milestone');
         print FID GenerateCode('%::milestoneurl');
     }
+
+    SendSQL("SELECT id, name FROM keyworddefs ORDER BY name");
+    while (MoreSQLData()) {
+        my ($id, $name) = FetchSQLData();
+        $::keywordsbyid{$id} = $name;
+        $::keywordsbyname{$name} = $id;
+        push(@::legal_keywords, $name);
+    }
+    print FID GenerateCode('@::legal_keywords');
+    print FID GenerateCode('%::keywordsbyname');
+    print FID GenerateCode('%::keywordsbyid');
+
     print FID "1;\n";
     close FID;
     rename $tmpname, "data/versioncache" || die "Can't rename $tmpname to versioncache";

@@ -77,7 +77,7 @@ foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
                   "changedin", "votes", "short_desc", "short_desc_type",
                   "long_desc", "long_desc_type", "bug_file_loc",
                   "bug_file_loc_type", "status_whiteboard",
-                  "status_whiteboard_type") {
+                  "status_whiteboard_type", "keywords") {
     $default{$name} = "";
     $type{$name} = 0;
 }
@@ -367,17 +367,20 @@ print $jscript;
 
 my @logfields = ("[Bug creation]", @::log_columns);
 
-print "
-<FORM METHOD=GET ACTION=\"buglist.cgi\">
+print qq{
+<FORM METHOD=GET ACTION="buglist.cgi">
 
 <table>
 <tr>
-<th align=left><A HREF=\"bug_status.html\">Status</a>:</th>
-<th align=left><A HREF=\"bug_status.html\">Resolution</a>:</th>
-<th align=left><A HREF=\"bug_status.html#rep_platform\">Platform</a>:</th>
-<th align=left><A HREF=\"bug_status.html#op_sys\">OpSys</a>:</th>
-<th align=left><A HREF=\"bug_status.html#priority\">Priority</a>:</th>
-<th align=left><A HREF=\"bug_status.html#severity\">Severity</a>:</th>
+<th align=left><A HREF="bug_status.html">Status</a>:</th>
+<th align=left><A HREF="bug_status.html">Resolution</a>:</th>
+<th align=left><A HREF="bug_status.html#rep_platform">Platform</a>:</th>
+<th align=left><A HREF="bug_status.html#op_sys">OpSys</a>:</th>
+<th align=left><A HREF="bug_status.html#priority">Priority</a>:</th>
+<th align=left><A HREF="bug_status.html#severity">Severity</a>:</th>
+};
+
+print "
 </tr>
 <tr>
 <td align=left valign=top>
@@ -538,6 +541,25 @@ if (Param("usestatuswhiteboard")) {
     StringSearch("Status whiteboard", "status_whiteboard");
 }
 
+if (@::legal_keywords) {
+    my $def = value_quote($default{'keywords'});
+    print qq{
+<TR>
+<TD ALIGN="right"><A HREF="describekeywords.cgi">Keywords</A>:</TD>
+<TD><INPUT NAME="keywords" SIZE=30 VALUE=$def></TD>
+<TD><SELECT NAME=keywords_type>
+};
+    foreach my $i (["or", "Any of the listed keywords set"]) {
+                my ($n, $d) = (@$i);
+        my $sel = "";
+        if ($default{"keywords"} eq $n) {
+            $sel = " SELECTED";
+        }
+        print qq{<OPTION VALUE="$n"$sel>$d\n};
+    }
+    print qq{</SELECT></TD></TR>};
+}
+
 print "
 </table>
 <p>
@@ -590,6 +612,9 @@ if (UserInGroup("tweakparams")) {
 }
 if (UserInGroup("editcomponents")) {
     print "<a href=editproducts.cgi>Edit Bugzilla products and components</a><br>\n";
+}
+if (UserInGroup("editkeywords")) {
+    print "<a href=editkeywords.cgi>Edit Bugzilla keywords</a><br>\n";
 }
 if (defined $::COOKIE{"Bugzilla_login"}) {
     print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";

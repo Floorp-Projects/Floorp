@@ -37,6 +37,7 @@ sub bug_form_pl_sillyness {
     $zz = @::legal_priority;
     $zz = @::legal_resolution_no_dup;
     $zz = @::legal_severity;
+    $zz = @::keywordsbyname;
 }
 
 my %knownattachments;
@@ -327,6 +328,24 @@ if (Param("usestatuswhiteboard")) {
     value_quote($bug{'status_whiteboard'}) .
     "\" SIZE=60></
   </TR>";
+}
+
+if (@::legal_keywords) {
+    SendSQL("SELECT keyworddefs.name 
+             FROM keyworddefs, keywords
+             WHERE keywords.bug_id = $id AND keyworddefs.id = keywords.keywordid
+             ORDER BY keyworddefs.name");
+    my @list;
+    while (MoreSQLData()) {
+        push(@list, FetchOneColumn());
+    }
+    my $value = value_quote(join(',', @list));
+    print qq{
+<TR>
+<TD ALIGN=right><B><A HREF="describekeywords.cgi">Keywords</A>:</B>
+<TD COLSPAN=6><INPUT NAME="keywords" VALUE="$value" SIZE=60></TD>
+</TR>
+};
 }
 
 print "<tr><td align=right><B>Attachments:</b></td>\n";
