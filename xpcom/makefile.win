@@ -19,6 +19,6 @@ DEPTH=..
 
 IGNORE_MANIFEST=1
 
-DIRS=public src tests tools libxpt
+DIRS=libxpt tools public src tests
 
 include <$(DEPTH)\config\rules.mak>
