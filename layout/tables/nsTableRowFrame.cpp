@@ -546,156 +546,6 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
   nsresult  result = NS_OK;
   PRBool    isFirst=PR_TRUE;
 
-  // XXX CONSTRUCTION
-#if 0
-  for (;;) {
-    // what row am I?
-    // to handle rows with no cells, this block must be done before the "Get the next content object" block
-    if (PR_TRUE==isFirst)
-      SetRowIndex(aState.tableFrame->GetNextAvailRowIndex());
-
-    // Get the next content object
-    nsIContent* cell;
-    mContent->ChildAt(kidIndex, cell);
-    if (nsnull == cell) {
-      break;  // no more content
-    }
-
-    // what column does this cell belong to?
-    colIndex = aState.tableFrame->GetNextAvailColIndex(mRowIndex, colIndex);
-    if (gsDebug) printf("%p : next col index = %d\n", this, colIndex);
-
-    /* for style context optimization, set the content's column index if possible.
-     * this can only be done if we really have an nsTableCell.  
-     * other tags mapped to table cell display won't benefit from this optimization
-     * see nsHTMLStyleSheet::RulesMatching
-     */
-    nsIHTMLTableCellElement *cellContent = nsnull;
-    nsresult rv = cell->QueryInterface(kIHTMLTableCellElementIID, 
-                                       (void **)&cellContent);  // cellContent: REFCNT++
-    if (NS_SUCCEEDED(rv))
-    { // we know it's a table cell
-      cellContent->SetColIndex(colIndex);
-      if (gsDebug) printf("%p : set cell content %p to col index = %d\n", this, cellContent, colIndex);
-      NS_RELEASE(cellContent);
-    }
-    // part of the style optimization is to ensure that the column frame for the cell exists
-    // we used to do this post-pass1, now we do it incrementally for the optimization
-    nsReflowStatus status;
-    aState.tableFrame->EnsureColumnFrameAt(colIndex,
-                                           &aPresContext,
-                                           aDesiredSize,
-                                           aState.reflowState,
-                                           status);
-    // Create a child frame -- always an nsTableCellFrame
-    nsIStyleContext*    kidSC = aPresContext.ResolveStyleContextFor(cell, this, PR_FALSE);
-    nsIContentDelegate* kidDel = cell->GetDelegate(&aPresContext);
-    nsIFrame*           kidFrame;
-
-    nsresult result = kidDel->CreateFrame(&aPresContext, cell, this, kidSC, kidFrame);
-    NS_RELEASE(kidDel);
-    NS_RELEASE(cell);
-    if (NS_FAILED(result)) {
-      NS_RELEASE(kidSC);
-      break;
-    }
-    // this sets the frame's notion of it's column index
-    ((nsTableCellFrame *)kidFrame)->InitCellFrame(colIndex);
-    if (gsDebug) printf("%p : set cell frame %p to col index = %d\n", this, kidFrame, colIndex);
-    // add the cell frame to the table's cell map
-    aState.tableFrame->AddCellToTable(this, (nsTableCellFrame *)kidFrame, isFirst);
-
-    // Because we're not splittable always allow the child to be as high as
-    // it wants. The default available width is also unconstrained so we can
-    // get the child's maximum width
-    nsSize  kidAvailSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-    NS_IF_RELEASE(kidSC);
-
-    // Get the child's margins
-    nsMargin  margin;
-    nscoord   topMargin = 0;
-
-    if (aState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame, margin) == NS_OK)
-    {
-      topMargin = margin.top;
-    }
-   
-    maxTopMargin = PR_MAX(margin.top, maxTopMargin);
-    maxBottomMargin = PR_MAX(margin.bottom, maxBottomMargin);
-    
-    // Link child frame into the list of children
-    if (nsnull != prevKidFrame) {
-      prevKidFrame->SetNextSibling(kidFrame);
-    } else {
-      mFirstChild = kidFrame;  // our first child
-      SetFirstContentOffset(kidIndex);
-    }
-    mChildCount++;
-
-    // Reflow the child. We always want back the max element size even if the
-    // caller doesn't ask for it, because the table needs it to compute column
-    // widths
-    nsReflowMetrics kidSize(&kidMaxElementSize);
-    nsReflowState   kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                   eReflowReason_Initial);
-    kidFrame->WillReflow(aPresContext);
-    if (gsDebug) printf ("%p InitR: avail=%d\n", this, kidAvailSize.width);
-    status = ReflowChild(kidFrame, &aPresContext, kidSize, kidReflowState);
-    if (gsDebug) 
-      printf ("TR %p for cell %p Initial Reflow: desired=%d, MES=%d\n", 
-             this, kidFrame, kidSize.width, kidMaxElementSize.width);
-    //XXX: this is a hack, shouldn't it be the case that a min size is 
-    //     never larger than a desired size?
-    if (kidMaxElementSize.width>kidSize.width)
-      kidSize.width = kidMaxElementSize.width;
-    if (kidMaxElementSize.height>kidSize.height)
-      kidSize.height = kidMaxElementSize.height;
-    ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
-    ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected child reflow status");
-
-    if (gsDebug) 
-    {
-        printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
-                NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                kidSize.width, kidSize.height, 
-                kidMaxElementSize.width, kidMaxElementSize.height);
-    }
-
-    // Place the child
-    x += margin.left;
-    nsRect kidRect(x, topMargin, kidSize.width, kidSize.height);
-    PlaceChild(aPresContext, aState, kidFrame, kidRect, aDesiredSize.maxElementSize,
-               &kidMaxElementSize);
-    x += kidSize.width + margin.right;
-
-    // Move to the next content child
-    prevKidFrame = kidFrame;
-    kidIndex++;
-    isFirst=PR_FALSE;
-  }
-
-  SetMaxChildHeight(aState.maxCellHeight, maxTopMargin, maxBottomMargin);  // remember height of tallest child who doesn't have a row span
-
-  // Return our desired size
-  aDesiredSize.width = x;
-  aDesiredSize.height = aState.maxCellVertSpace;   
-
-  if (gsDebug)
-    printf("initial -- row %p width = %d MES=%d from maxSize %d\n", 
-           this, aDesiredSize.width, aDesiredSize.maxElementSize->width,
-           aState.reflowState.maxSize.width);
-
-  // Update the content mapping
-  if (nsnull != prevKidFrame) {
-    SetLastContentOffset(kidIndex - 1);
-#ifdef NS_DEBUG
-    NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
-    PRInt32 len = LengthOf(mFirstChild);
-    NS_ASSERTION(len == mChildCount, "bad child count");
-#endif
-  }
-#else
   // what row am I?
   // to handle rows with no cells, this block must be done before the "Get the next content object" block
   SetRowIndex(aState.tableFrame->GetNextAvailRowIndex());
@@ -800,7 +650,6 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
   // Return our desired size
   aDesiredSize.width = x;
   aDesiredSize.height = aState.maxCellVertSpace;   
-#endif
 
   return result;
 }
@@ -1076,10 +925,6 @@ nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
 
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
-    // XXX CONSTRUCTION
-#if 0
-    NS_ASSERTION(nsnull == mFirstChild, "unexpected reflow reason");
-#endif
     result = InitialReflow(aPresContext, state, aDesiredSize);
     GetMinRowSpan(tableFrame);
     FixMinCellHeight(tableFrame);
