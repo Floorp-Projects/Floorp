@@ -22,28 +22,28 @@ include <$(DEPTH)/config/config.mak>
 
 EXPORTS =                           \
         netCore.h                   \
-        nsIFileTransportService.h   \
-        nsISocketTransportService.h \
         nsIProxy.h                  \
         $(NULL)
 
-XPIDLSRCS =                        \
-        .\nsIRequest.idl           \
-        .\nsIChannel.idl           \
-        .\nsIURI.idl               \
-        .\nsIURL.idl               \
-        .\nsIStreamObserver.idl    \
-        .\nsIStreamListener.idl    \
-        .\nsIIOService.idl         \
-        .\nsIEventSinkGetter.idl   \
-        .\nsIPrompt.idl            \
-        .\nsIProtocolHandler.idl   \
-        .\nsIProgressEventSink.idl \
-		.\nsINetModRegEntry.idl    \
-		.\nsINetModuleMgr.idl      \
-		.\nsINetNotify.idl         \
-		.\nsILoadGroup.idl         \
-		.\nsIStreamConverter2.idl	\
+XPIDLSRCS =                             \
+        .\nsIRequest.idl                \
+        .\nsIChannel.idl                \
+        .\nsIURI.idl                    \
+        .\nsIURL.idl                    \
+        .\nsIStreamObserver.idl         \
+        .\nsIStreamListener.idl         \
+        .\nsIIOService.idl              \
+        .\nsIEventSinkGetter.idl        \
+        .\nsIPrompt.idl                 \
+        .\nsIProtocolHandler.idl        \
+        .\nsIProgressEventSink.idl      \
+	.\nsINetModRegEntry.idl         \
+	.\nsINetModuleMgr.idl           \
+	.\nsINetNotify.idl              \
+	.\nsILoadGroup.idl              \
+	.\nsIStreamConverter2.idl       \
+        .\nsISocketTransportService.idl \
+        .\nsIFileTransportService.idl   \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

@@ -122,14 +122,8 @@ public:
   nsresult Init(nsDocLoaderImpl *aDocLoader, nsIStreamListener *aListener);
 
   NS_DECL_ISUPPORTS
-
-  // nsIStreamListener methods:
-  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
-  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, 
-                           const PRUnichar *errorMsg);
-
-  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *inStr, 
-                             PRUint32 sourceOffset, PRUint32 count);
+  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSISTREAMLISTENER
 
 protected:
   virtual ~nsChannelListener();
@@ -300,10 +294,7 @@ public:
     void SetParent(nsDocLoaderImpl* aParent);
     void SetDocumentChannel(nsIChannel* channel);
 
-    // nsIStreamObserver methods: (for observing the load group)
-    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
-                             nsresult status, const PRUnichar *errorMsg);
+    NS_DECL_NSISTREAMOBSERVER
 
     nsILoadGroup* GetLoadGroup() { return mLoadGroup; } 
 

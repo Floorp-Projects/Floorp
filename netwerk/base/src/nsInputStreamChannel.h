@@ -24,20 +24,19 @@
 #include "nsIURI.h"
 #include "nsCRT.h"
 #include "nsILoadGroup.h"
+#include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 
-class nsInputStreamChannel : public nsIChannel
+class nsInputStreamChannel : public nsIChannel, 
+                             public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
-
-    // nsIRequest methods:
     NS_DECL_NSIREQUEST
-    
-    // nsIChannel methods:
     NS_DECL_NSICHANNEL
+    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSISTREAMLISTENER
 
-    // nsInputStreamChannel methods:
     nsInputStreamChannel(); 
     virtual ~nsInputStreamChannel();
 
@@ -52,6 +51,8 @@ protected:
     nsCOMPtr<nsIInputStream>    mInputStream;
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
     nsCOMPtr<nsISupports>       mOwner;
+    nsCOMPtr<nsIChannel>        mFileTransport;
+    nsCOMPtr<nsIStreamListener> mRealListener;
 };
 
 #define NS_INPUTSTREAMCHANNEL_CID                    \

@@ -28,10 +28,8 @@
 #include "nsIURI.h"
 #include "nsAutoLock.h"
 #include "prtime.h"
-
 #include "nsString2.h"
 #include "nsIEventQueue.h"
-
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -111,13 +109,11 @@ typedef enum _FTP_ACTION {
 class nsFtpConnectionThread : public nsIRunnable {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
 
     nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener *aListener,
                           nsIChannel* channel, nsISupports* ctxt);
     virtual ~nsFtpConnectionThread();
-    
-    // nsIRunnable method
-    NS_IMETHOD Run();
 
     nsresult Init(nsIURI* aUrl);
     nsresult Process();

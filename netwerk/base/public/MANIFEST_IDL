@@ -9,3 +9,5 @@ nsIURI.idl
 nsIURL.idl
 nsIChannel.idl
 nsIRequest.idl
+nsISocketTransportService.idl
+nsIFileTransportService.idl

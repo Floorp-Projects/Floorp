@@ -48,6 +48,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../io \
 		-I$(srcdir)/../components \
 		-I$(srcdir)/../threads \
+		-I$(srcdir)/../threads/_xpidlgen \
 		-I$(srcdir)/../proxy/src \
 		$(NULL)
 

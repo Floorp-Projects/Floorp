@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -485,14 +486,14 @@ nsSocketTransportService::CreateTransport(const char* aHost,
                                           PRInt32 aPort,
                                           nsIChannel** aResult)
 {
-  return CreateTransport(aHost, aPort, nsnull, aResult);
+  return CreateTransportOfType(nsnull, aHost, aPort, aResult);
 }
 
 NS_IMETHODIMP
-nsSocketTransportService::CreateTransport(const char* aHost, 
-                                          PRInt32 aPort,
-                                          const char* aSocketType,
-                                          nsIChannel** aResult)
+nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
+                                                const char* aHost, 
+                                                PRInt32 aPort,
+                                                nsIChannel** aResult)
 {
   nsresult rv = NS_OK;
   nsSocketTransport* transport = nsnull;

@@ -133,9 +133,7 @@ public:
   NS_DECL_ISUPPORTS
 
 #ifdef NECKO
-  // nsIStreamObserver methods:
-  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt) { return NS_OK; }
-  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  NS_DECL_NSISTREAMOBSERVER
 #else
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax) { return NS_OK; }
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg) { return NS_OK; }
@@ -143,6 +141,13 @@ public:
   NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
 #endif
 };
+
+#ifdef NECKO
+NS_IMETHODIMP CStreamListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
+{
+  return NS_OK;
+}
+#endif
 
 #ifdef NECKO
 NS_IMETHODIMP CStreamListener::OnStopRequest(nsIChannel* channel, nsISupports* aContext,

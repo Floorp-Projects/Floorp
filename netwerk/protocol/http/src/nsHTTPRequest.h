@@ -63,13 +63,8 @@ public:
     nsHTTPRequest(nsIURI* i_URL=0, HTTPMethod i_Method=HM_GET, nsIChannel* i_pTranport = nsnull);
     virtual ~nsHTTPRequest();
 
-    // Methods from nsISupports
     NS_DECL_ISUPPORTS
-
-    // nsIStreamObserver functions
     NS_DECL_NSISTREAMOBSERVER
-
-    // nsIRequest methods:
     NS_DECL_NSIREQUEST
 
     // Finally our own methods...

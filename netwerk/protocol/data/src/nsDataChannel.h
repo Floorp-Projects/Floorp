@@ -37,14 +37,8 @@ class nsIProgressEventSink;
 class nsDataChannel : public nsIDataChannel {
 public:
     NS_DECL_ISUPPORTS
-
-    // nsIRequest methods:
     NS_DECL_NSIREQUEST
-
-    // nsIChannel methods:
     NS_DECL_NSICHANNEL
-
-    // nsIDataChannel methods:
     NS_DECL_NSIDATACHANNEL
 
     // nsFTPChannel methods:

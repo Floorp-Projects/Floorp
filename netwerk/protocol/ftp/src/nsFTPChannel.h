@@ -41,20 +41,10 @@ class nsFTPChannel : public nsIFTPChannel,
                      public nsIStreamListener {
 public:
     NS_DECL_ISUPPORTS
-
-    // nsIRequest methods:
     NS_DECL_NSIREQUEST
-
-    // nsIChannel methods:
     NS_DECL_NSICHANNEL
-
-    // nsIFTPChannel methods:
     NS_DECL_NSIFTPCHANNEL
-
-    // nsIStreamObserver methods:
     NS_DECL_NSISTREAMOBSERVER
-
-    // nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
 
     // nsFTPChannel methods:

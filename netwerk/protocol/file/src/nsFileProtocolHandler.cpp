@@ -30,7 +30,7 @@
 #include "nsFileSpec.h"
 #include "nsAutoLock.h"
 
-static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +60,9 @@ nsFileProtocolHandler::~nsFileProtocolHandler()
     NS_IF_RELEASE(mSuspended);
 }
 
-NS_IMPL_ISUPPORTS(nsFileProtocolHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_ISUPPORTS2(nsFileProtocolHandler,
+                   nsIFileProtocolHandler,
+                   nsIProtocolHandler);
 
 NS_METHOD
 nsFileProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -170,8 +172,6 @@ nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 NS_IMETHODIMP
 nsFileProtocolHandler::NewChannelFromNativePath(const char* nativePath, 
                                                 nsIFileChannel* *result)
@@ -191,51 +191,6 @@ nsFileProtocolHandler::NewChannelFromNativePath(const char* nativePath,
                     nsnull,  // XXX bogus getter
                     (nsIChannel**)result);
     NS_RELEASE(uri);
-    return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-nsresult
-nsFileProtocolHandler::ProcessPendingRequests(void)
-{
-    return mPool->ProcessPendingRequests();
-}
-
-nsresult
-nsFileProtocolHandler::DispatchRequest(nsIRunnable* runnable)
-{
-    return mPool->DispatchRequest(runnable);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-nsresult
-nsFileProtocolHandler::Suspend(nsFileChannel* request)
-{
-    nsresult rv;
-    nsAutoCMonitor mon(this);   // protect mSuspended
-    if (mSuspended == nsnull) {
-        rv = NS_NewISupportsArray(&mSuspended);
-        if (NS_FAILED(rv)) return rv;
-    }
-    return mSuspended->AppendElement(NS_STATIC_CAST(nsIChannel*, request)) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
-}
-
-nsresult
-nsFileProtocolHandler::Resume(nsFileChannel* request)
-{
-    nsresult rv;
-    nsAutoCMonitor mon(this);   // protect mSuspended
-    if (mSuspended == nsnull)
-        return NS_ERROR_FAILURE;
-    // XXX RemoveElement returns a bool instead of nsresult!
-    PRBool removed = mSuspended->RemoveElement(NS_STATIC_CAST(nsIChannel*, request));
-    rv = removed ? NS_OK : NS_ERROR_FAILURE;
-    if (NS_FAILED(rv)) return rv;
-
-    // restart the request
-    rv = mPool->DispatchRequest(NS_STATIC_CAST(nsIRunnable*, request));
     return rv;
 }
 

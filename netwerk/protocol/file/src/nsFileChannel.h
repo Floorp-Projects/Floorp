@@ -19,6 +19,16 @@
 #ifndef nsFileChannel_h__
 #define nsFileChannel_h__
 
+#include "nsIFileChannel.h"
+#include "nsIFileProtocolHandler.h"
+#include "nsIEventSinkGetter.h"
+#include "nsILoadGroup.h"
+#include "nsIStreamListener.h"
+#include "nsIChannel.h"
+#include "nsFileSpec.h"
+#include "nsIURI.h"
+#include "nsCOMPtr.h"
+
 // mscott --  this is just one temporary hack until we have a legit stream converter
 // story going....if the file we are opening is an rfc822 file then we want to 
 // go out and convert the data into html before we try to load it. so I'm inserting
@@ -44,16 +54,7 @@
 #include "nsXPIDLString.h"
 #endif
 
-class nsIEventSinkGetter;
-class nsIStreamListener;
-class nsFileProtocolHandler;
-class nsIBaseStream;
-class nsIBufferInputStream;
-class nsIBufferOutputStream;
-
-class nsFileChannel : public nsIFileChannel, 
-                      public nsIRunnable,
-                      public nsIPipeObserver,
+class nsFileChannel : public nsIFileChannel,
                       public nsIStreamListener
 {
 public:
@@ -61,17 +62,8 @@ public:
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIFILECHANNEL
-    NS_DECL_NSIPIPEOBSERVER
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
-
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIRunnable methods:
-
-    NS_IMETHOD Run(void);
-
-    ////////////////////////////////////////////////////////////////////////////
-    // nsFileChannel:
 
     nsFileChannel();
     // Always make the destructor virtual: 
@@ -81,60 +73,28 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(nsFileProtocolHandler* handler,
-                  const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                  nsIEventSinkGetter* getter);
-
-    void Process(void);
-
-    enum State {
-        QUIESCENT,
-        START_READ,
-        READING,
-        START_WRITE,
-        WRITING,
-        ENDING
-    };
+    nsresult Init(nsIFileProtocolHandler* handler, const char* verb, nsIURI* uri,
+                  nsILoadGroup *aGroup, nsIEventSinkGetter* getter);
 
 protected:
     nsresult CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel** result);
 
 protected:
-    nsIURI*                     mURI;
-    nsIEventSinkGetter*         mGetter;        // XXX it seems wrong keeping this -- used by GetParent
-    nsIStreamListener*          mListener;
-    nsIEventQueue*              mEventQueue;
-
-    nsFileSpec                  mSpec;
-
-    nsISupports*                mContext;
-    nsFileProtocolHandler*      mHandler;
-    State                       mState;
-    PRBool                      mSuspended;
-
-    // state variables:
-    nsIBaseStream*              mFileStream;    // cast to nsIInputStream/nsIOutputStream for reading/Writing
-    nsIBufferInputStream*       mBufferInputStream;
-    nsIBufferOutputStream*      mBufferOutputStream;
-    nsresult                    mStatus;
-    PRUint32                    mSourceOffset;
-    PRUint32                    mAmount;
-    PRBool                      mReadFixedAmount;  // if user wants to only read a fixed number of bytes set this flag
-
-    PRMonitor*                  mMonitor;
-    PRUint32                    mLoadAttributes;
-    nsILoadGroup*               mLoadGroup;
-    nsCOMPtr<nsISupports>       mOwner;
-
-    nsCOMPtr<nsIStreamListener> mRealListener;
+    nsCOMPtr<nsIURI>                    mURI;
+    nsCOMPtr<nsIFileProtocolHandler>    mHandler;
+    nsCOMPtr<nsIEventSinkGetter>        mGetter;        // XXX it seems wrong keeping this -- used by GetParent
+    char*                               mCommand;
+    nsFileSpec                          mSpec;
+    nsCOMPtr<nsIChannel>                mFileTransport;
+    PRUint32                            mLoadAttributes;
+    nsCOMPtr<nsILoadGroup>              mLoadGroup;
+    nsCOMPtr<nsISupports>               mOwner;
+    nsCOMPtr<nsIStreamListener>         mRealListener;
 
 #ifdef STREAM_CONVERTER_HACK
-    nsCOMPtr<nsIStreamConverter> mStreamConverter;
-    nsCString                    mStreamConverterOutType;
+    nsCOMPtr<nsIStreamConverter>        mStreamConverter;
+    nsCString                           mStreamConverterOutType;
 #endif
 };
-
-#define NS_FILE_TRANSPORT_SEGMENT_SIZE   (4*1024)
-#define NS_FILE_TRANSPORT_BUFFER_SIZE    (32*1024)
 
 #endif // nsFileChannel_h__
