@@ -35,8 +35,11 @@
 //*****************************************************************************
 
 // Windows
+
+// Views
 enum {
-    wind_BrowserWindow = 129
+    view_BrowserStatusBar = 130,
+    view_BrowserToolBar = 131
 };
 
 // Dialogs
@@ -113,6 +116,8 @@ enum {
 enum {
     cmd_OpenDirectory           = 'ODir',
     cmd_OpenLinkInNewWindow     = 'OLnN',
+    
+    cmd_SaveAllAs               = 'SvDc',
 
 	cmd_Back                    = 'Back',
 	cmd_Forward                 = 'Forw',

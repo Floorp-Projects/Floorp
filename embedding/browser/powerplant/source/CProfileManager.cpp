@@ -44,6 +44,9 @@
 #include "nsXPIDLString.h"
 #include "nsIRegistry.h"
 
+// ANSI
+#include <climits>
+
 // Constants
 
 const MessageT    msg_OnNewProfile 	        = 2000;

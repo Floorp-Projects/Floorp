@@ -198,11 +198,17 @@ NS_METHOD CAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFil
     nsresult rv;
     PRBool exists;
     nsCOMPtr<nsILocalFile> localDir;
-   
+
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = directoryService->Get(NS_MAC_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+    
+    OSErr   err;
+    long    response;
+    err = ::Gestalt(gestaltSystemVersion, &response);
+    const char *prop = (!err && response >= 0x00001000) ? NS_MAC_USER_LIB_DIR : NS_MAC_DOCUMENTS_DIR;
+
+    rv = directoryService->Get(prop, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;   
 
     rv = localDir->AppendRelativePath(mProductDirName);

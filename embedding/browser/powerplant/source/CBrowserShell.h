@@ -82,8 +82,15 @@ public:
 	virtual void		        DrawSelf();	
 	virtual void		        ClickSelf(const SMouseDownEvent	&inMouseDown);
 	virtual void		        EventMouseUp(const EventRecord	&inMacEvent);
+	
+#if __PowerPlant__ >= 0x02200000
+    virtual void                AdjustMouseSelf(Point				/* inPortPt */,
+                                                const EventRecord&	inMacEvent,
+                                                RgnHandle			outMouseRgn);
+#else
     virtual void                AdjustCursorSelf(Point inPortPt,
                                                  const EventRecord&	inMacEvent);
+#endif
 
 	// LCommander
 	virtual void                BeTarget();
@@ -92,7 +99,7 @@ public:
     virtual Boolean             ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioParam);
     virtual void                FindCommandStatus(PP_PowerPlant::CommandT inCommand,
             		                              Boolean &outEnabled, Boolean &outUsesMark,
-            					                  PP_PowerPlant::Char16 &outMark, Str255 outName);
+            					                  UInt16 &outMark, Str255 outName);
 
 	// LPeriodical
 	virtual	void		        SpendTime(const EventRecord&		inMacEvent);
@@ -115,9 +122,18 @@ public:
 	NS_METHOD               Back();
 	NS_METHOD               Forward();
 	NS_METHOD               Stop();
+	NS_METHOD               Reload();
 	                        
-	NS_METHOD               LoadURL(const char* urlText, SInt32 urlTextLen = -1);
-	NS_METHOD               LoadURL(const nsString& urlText);
+	NS_METHOD               LoadURL(const nsACString& urlText);
+	NS_METHOD               GetCurrentURL(nsACString& urlText);
+
+        // Puts up a Save As dialog and saves current URI and all images, etc.
+    NS_METHOD               SaveDocument();
+        // Puts up a Save As dialog and saves current URI only.
+    NS_METHOD               SaveCurrentURI();
+        // Same as above but without UI
+    NS_METHOD               SaveDocument(const FSSpec& destFile);
+    NS_METHOD               SaveCurrentURI(const FSSpec& destFile);
 	
 	   // Puts up a find dialog and does the find operation                        
 	Boolean                 Find();
@@ -140,6 +156,8 @@ protected:
                                          PRBool& wrapFind,
                                          PRBool& entireWord,
                                          PRBool& caseSensitive);
+   virtual Boolean          DoSaveFileDialog(FSSpec& outSpec, Boolean& outIsReplacing);
+
    NS_METHOD                GetClipboardHandler(nsIClipboardCommands **aCommand);
    
    Boolean                  HasFormElements();

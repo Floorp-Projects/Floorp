@@ -47,7 +47,7 @@ Boolean
 CUrlField::HandleKeyPress(const EventRecord	&inKeyEvent)
 {
 	Boolean		keyHandled = true;
-	Char16		theChar = (Char16) (inKeyEvent.message & charCodeMask);
+	SInt16		theChar = (SInt16) (inKeyEvent.message & charCodeMask);
 
 	if (theChar == char_Return || theChar == char_Enter)
 	{

@@ -1648,6 +1648,9 @@ sub BuildEmbeddingProjects()
     
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
+    # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
+    my($C) = $main::options{carbon} ? "Carbon" : "";
+
     my($dist_dir) = GetBinDirectory();
 
     StartBuildModule("embedding");
@@ -1658,15 +1661,21 @@ sub BuildEmbeddingProjects()
     BuildOneProject(":mozilla:embedding:base:macbuild:EmbedAPI.mcp", "EmbedAPI$D.o", 0, 0, 0);
     MakeAlias(":mozilla:embedding:base:macbuild:EmbedAPI$D.o", ":mozilla:dist:embedding:");
 
-    if ($main::options{embedding_test} && !$main::options{carbon})
+    if ((!$main::options{carbon} && $main::options{embedding_test}) || ($main::options{carbon} && $main::options{embedding_test_carbon}))
     {
-        if (-e GetCodeWarriorRelativePath("MacOS Support:PowerPlant"))
+    	my($PowerPlantPath) = $main::options{carbon} ? "Carbon Support:PowerPlant" : "MacOS Support:PowerPlant";
+        if (-e GetCodeWarriorRelativePath($PowerPlantPath))
         {
-            BuildOneProject(":mozilla:embedding:browser:powerplant:PPBrowser.mcp",            "PPEmbed$D",  0, 0, 0);
+        	# Build PowerPlant and export the lib and the precompiled header
+            BuildOneProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp", "PowerPlant$C$D.o",  0, 0, 0);
+            MakeAlias(":mozilla:lib:mac:PowerPlant:PowerPlant$C$D.o", ":mozilla:dist:mac:powerplant:");
+            MakeAlias(":mozilla:lib:mac:PowerPlant:pch:PPHeaders$D" . "_pch", ":mozilla:dist:mac:powerplant:");
+            
+            BuildOneProject(":mozilla:embedding:browser:powerplant:PPBrowser.mcp", "PPEmbed$C$D",  0, 0, 0);
         }
         else
         {
-            print("MacOS Support:PowerPlant does not exist - embedding sample will not be built\n");
+            print("$PowerPlantPath does not exist - embedding sample will not be built\n");
         }
     }
     

@@ -46,8 +46,13 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsIWebBrowserPersist.h"
+#include "nsIURI.h"
 #include "nsWeakPtr.h"
 #include "nsRect.h"
+#include "nsReadableUtils.h"
+#include "nsILocalFile.h"
+#include "nsILocalFileMac.h"
 
 #include <UModalDialogs.h>
 #include <LStream.h>
@@ -63,6 +68,12 @@
 
 #ifndef _H_LCheckBox
 #include "LCheckBox.h"
+#endif
+
+#if PP_Target_Carbon
+#include <UNavServicesDialogs.h>
+#else
+#include <UConditionalDialogs.h>
 #endif
 
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
@@ -137,7 +148,7 @@ void CBrowserShell::FinishCreateSelf()
 {
 	FocusDraw();
 	
-	CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(GetMacPort()));
+	CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(Compat_GetMacWindow()));
 	ThrowIfNil_(ourWindow);
 	ourWindow->AddListener(this);
 	
@@ -197,7 +208,7 @@ void CBrowserShell::DrawSelf()
 {
     EventRecord osEvent;
     osEvent.what = updateEvt;
-    mMessageSink.DispatchOSEvent(osEvent, GetMacPort());
+    mMessageSink.DispatchOSEvent(osEvent, Compat_GetMacWindow());
 }
 
 	
@@ -207,20 +218,37 @@ void CBrowserShell::ClickSelf(const SMouseDownEvent	&inMouseDown)
 		SwitchTarget(this);
 
 	FocusDraw();
-	mMessageSink.DispatchOSEvent((EventRecord&)inMouseDown.macEvent, GetMacPort());
+	mMessageSink.DispatchOSEvent((EventRecord&)inMouseDown.macEvent, Compat_GetMacWindow());
 }
 
 
 void CBrowserShell::EventMouseUp(const EventRecord	&inMacEvent)
 {
     FocusDraw();
-    mMessageSink.DispatchOSEvent((EventRecord&)inMacEvent, GetMacPort());
+    mMessageSink.DispatchOSEvent((EventRecord&)inMacEvent, Compat_GetMacWindow());
     
     LEventDispatcher *dispatcher = LEventDispatcher::GetCurrentEventDispatcher();
     if (dispatcher)
         dispatcher->UpdateMenus();
 }
 
+#if __PowerPlant__ >= 0x02200000
+void CBrowserShell::AdjustMouseSelf(Point				inPortPt,
+                                    const EventRecord&	inMacEvent,
+                                    RgnHandle			outMouseRgn)
+{
+    static Point	lastWhere = {0, 0};
+
+    if ((*(long*)&lastWhere != *(long*)&inMacEvent.where))
+    {
+        HandleMouseMoved(inMacEvent);
+        lastWhere = inMacEvent.where;
+    }
+    Rect cursorRect = { inPortPt.h, inPortPt.v, inPortPt.h + 1, inPortPt.v + 1 };
+    ::RectRgn(outMouseRgn, &cursorRect);
+}
+
+#else
 
 void CBrowserShell::AdjustCursorSelf(Point				/* inPortPt */,
                                      const EventRecord&	inMacEvent)
@@ -233,7 +261,7 @@ void CBrowserShell::AdjustCursorSelf(Point				/* inPortPt */,
         lastWhere = inMacEvent.where;
     }
 }
-
+#endif
 
 //*****************************************************************************
 //***    CBrowserShell: LCommander overrides
@@ -259,7 +287,7 @@ Boolean CBrowserShell::HandleKeyPress(const EventRecord	&inKeyEvent)
 	FocusDraw();
 
 	// dispatch the event
-	Boolean keyHandled = mMessageSink.DispatchOSEvent((EventRecord&)inKeyEvent, GetMacPort());
+	Boolean keyHandled = mMessageSink.DispatchOSEvent((EventRecord&)inKeyEvent, Compat_GetMacWindow());
 
 	return keyHandled;
 }
@@ -273,6 +301,16 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
 
     switch (inCommand)
     {
+        case cmd_SaveAs:
+            rv = SaveCurrentURI();
+            ThrowIfError_(rv);
+            break;
+            
+        case cmd_SaveAllAs:
+            rv = SaveDocument();
+            ThrowIfError_(rv);
+            break;
+            
         case cmd_Cut:
             rv = GetClipboardHandler(getter_AddRefs(clipCmd));
             if (NS_SUCCEEDED(rv))
@@ -350,14 +388,21 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
 
 void CBrowserShell::FindCommandStatus(PP_PowerPlant::CommandT inCommand,
             		                  Boolean &outEnabled, Boolean &outUsesMark,
-            					      PP_PowerPlant::Char16 &outMark, Str255 outName)
+            					      UInt16 &outMark, Str255 outName)
 {
     nsresult rv;
     nsCOMPtr<nsIClipboardCommands> clipCmd;
     PRBool canDo;
+    nsCOMPtr<nsIURI> currURI;
 
     switch (inCommand)
     {
+        case cmd_SaveAs:
+        case cmd_SaveAllAs:
+            rv = mWebBrowserAsWebNav->GetCurrentURI(getter_AddRefs(currURI));
+            outEnabled = NS_SUCCEEDED(rv);
+            break;
+            
         case cmd_Cut:
             rv = GetClipboardHandler(getter_AddRefs(clipCmd));
             if (NS_SUCCEEDED(rv)) {
@@ -425,7 +470,7 @@ void CBrowserShell::SpendTime(const EventRecord&		inMacEvent)
 
             unsigned char eventType = ((inMacEvent.message >> 24) & 0x00ff);
             if (eventType == suspendResumeMessage)
-            mMessageSink.DispatchOSEvent(const_cast<EventRecord&>(inMacEvent), GetMacPort());
+            mMessageSink.DispatchOSEvent(const_cast<EventRecord&>(inMacEvent), Compat_GetMacWindow());
         }
         break;
     }
@@ -473,7 +518,7 @@ NS_METHOD CBrowserShell::SetWebBrowser(nsIWebBrowser* aBrowser)
 
     FocusDraw();
 
-    CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(GetMacPort()));
+    CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(Compat_GetMacWindow()));
     NS_ENSURE_TRUE(ourWindow, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIWidget>  aWidget;
@@ -564,31 +609,168 @@ NS_METHOD CBrowserShell::Forward()
 
 NS_METHOD CBrowserShell::Stop()
 {
-    return mWebBrowserAsWebNav->Stop(nsIWebNavigation::STOP_ALL);
+   return mWebBrowserAsWebNav->Stop(nsIWebNavigation::STOP_ALL);
+}
+
+NS_METHOD CBrowserShell::Reload()
+{
+    return mWebBrowserAsWebNav->Stop(nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 //*****************************************************************************
 //***    CBrowserShell: URL Loading
 //*****************************************************************************
 
-NS_METHOD CBrowserShell::LoadURL(const char* urlText, SInt32 urlTextLen)
+
+NS_METHOD CBrowserShell::LoadURL(const nsACString& urlText)
 {
-    nsAutoString urlString;
+   nsAutoString unicodeURL;
+   CopyASCIItoUCS2(urlText, unicodeURL);
+   return mWebBrowserAsWebNav->LoadURI(unicodeURL.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+}
+
+NS_METHOD CBrowserShell::GetCurrentURL(nsACString& urlText)
+{
+    nsresult rv;
+    nsCOMPtr<nsIURI> currentURI;
+    rv = mWebBrowserAsWebNav->GetCurrentURI(getter_AddRefs(currentURI));
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString urlPath;
+    rv = currentURI->GetSpec(getter_Copies(urlPath));
+    if (NS_FAILED(rv)) return rv;
+    urlText.Assign(urlPath.get());
     
-    if (urlTextLen == -1)
-        urlString.AssignWithConversion(urlText);
-    else
-        urlString.AssignWithConversion(urlText, urlTextLen);
-        
-    return LoadURL(urlString);
+    return NS_OK;
 }
 
+//*****************************************************************************
+//***    CBrowserShell: URI Saving
+//*****************************************************************************
 
-NS_METHOD CBrowserShell::LoadURL(const nsString& urlText)
+NS_METHOD CBrowserShell::SaveDocument()
 {
-   return mWebBrowserAsWebNav->LoadURI(urlText.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+    FSSpec      fileSpec;
+    Boolean     isReplacing;
+    nsresult    rv = NS_OK;
+    
+    if (DoSaveFileDialog(fileSpec, isReplacing)) {
+        if (isReplacing) {
+            OSErr err = ::FSpDelete(&fileSpec);
+            if (err) return NS_ERROR_FAILURE;
+        }
+        rv = SaveDocument(fileSpec);
+    }
+    return rv;
 }
 
+NS_METHOD CBrowserShell::SaveCurrentURI()
+{
+    FSSpec      fileSpec;
+    Boolean     isReplacing;
+    nsresult    rv = NS_OK;
+    
+    if (DoSaveFileDialog(fileSpec, isReplacing)) {
+        if (isReplacing) {
+            OSErr err = ::FSpDelete(&fileSpec);
+            if (err) return NS_ERROR_FAILURE;
+        }
+        rv = SaveCurrentURI(fileSpec);
+    }
+    return rv;
+}
+
+NS_METHOD CBrowserShell::SaveDocument(const FSSpec& outSpec)
+{
+    nsresult    rv;
+    
+    nsCOMPtr<nsIWebBrowserPersist> wbPersist(do_GetInterface(mWebBrowser, &rv));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    rv = mWebBrowserAsWebNav->GetDocument(getter_AddRefs(domDoc));
+    if (NS_FAILED(rv)) return rv;
+
+    FSSpec nonConstOutSpec = outSpec;    
+    nsCOMPtr<nsILocalFileMac> localMacFile;
+    rv = NS_NewLocalFileWithFSSpec(&nonConstOutSpec, PR_FALSE, getter_AddRefs(localMacFile));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(localMacFile, &rv));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIFile> parentDir;
+    rv = localFile->GetParent(getter_AddRefs(parentDir));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString outDirPath, outFilePath;    
+    parentDir->GetPath(getter_Copies(outDirPath));
+    localFile->GetPath(getter_Copies(outFilePath));
+    
+    rv = wbPersist->SaveDocument(domDoc, outFilePath, outDirPath);
+    
+    return rv;
+}
+
+NS_METHOD CBrowserShell::SaveCurrentURI(const FSSpec& outSpec)
+{
+    nsresult    rv;
+    
+    nsCOMPtr<nsIWebBrowserPersist> wbPersist(do_GetInterface(mWebBrowser, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    FSSpec nonConstOutSpec = outSpec;    
+    nsCOMPtr<nsILocalFileMac> localMacFile;
+    rv = NS_NewLocalFileWithFSSpec(&nonConstOutSpec, PR_FALSE, getter_AddRefs(localMacFile));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(localMacFile, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString outFilePath;    
+    localFile->GetPath(getter_Copies(outFilePath));
+    
+    rv = wbPersist->SaveCurrentURI(outFilePath);
+    
+    return rv;
+}
+
+Boolean CBrowserShell::DoSaveFileDialog(FSSpec& outSpec, Boolean& outIsReplacing)
+{
+#if PP_Target_Carbon
+	UNavServicesDialogs::LFileDesignator	designator;
+#else
+	UConditionalDialogs::LFileDesignator	designator;
+#endif
+
+    nsresult rv;
+    nsAutoString docTitle;
+    Str255       defaultName;
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    rv = mWebBrowserAsWebNav->GetDocument(getter_AddRefs(domDoc));
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(domDoc, &rv));
+        if (NS_SUCCEEDED(rv))
+            htmlDoc->GetTitle(docTitle);
+    }
+    
+    // For now, we'll assume that we're saving HTML
+    NS_NAMED_LITERAL_STRING(htmlSuffix, ".html");
+    if (docTitle.IsEmpty())
+        docTitle.AssignWithConversion("untitled");
+    else {
+        if (docTitle.Length() > 31 - htmlSuffix.Length())
+            docTitle.Truncate(31 - htmlSuffix.Length());
+    }
+    docTitle.Append(htmlSuffix);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(docTitle, defaultName);
+
+    Boolean     result;
+    
+    result = designator.AskDesignateFile(defaultName);
+    if (result) {
+        designator.GetFileSpec(outSpec);
+        outIsReplacing = designator.IsReplacing();
+    }
+    
+    return result;
+}
 
 //*****************************************************************************
 //***    CBrowserShell: Text Searching
@@ -694,7 +876,7 @@ void CBrowserShell::HandleMouseMoved(const EventRecord& inMacEvent)
     if (IsActive())
     {
         FocusDraw();
-        mMessageSink.DispatchOSEvent(const_cast<EventRecord&>(inMacEvent), GetMacPort());
+        mMessageSink.DispatchOSEvent(const_cast<EventRecord&>(inMacEvent), Compat_GetMacWindow());
     }
 }
 

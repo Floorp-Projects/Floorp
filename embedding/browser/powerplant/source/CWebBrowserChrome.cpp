@@ -79,6 +79,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
@@ -188,7 +189,12 @@ NS_IMETHODIMP CWebBrowserChrome::IsWindowModal(PRBool *_retval)
 
 NS_IMETHODIMP CWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-   mBrowserWindow->ResizeWindowTo(aCX, aCY + kGrowIconSize);
+   CBrowserShell *browserShell = mBrowserWindow->GetBrowserShell();
+   NS_ENSURE_TRUE(browserShell, NS_ERROR_NULL_POINTER);
+   
+   SDimension16 curSize;
+   browserShell->GetFrameSize(curSize);
+   mBrowserWindow->ResizeWindowBy(aCX - curSize.width, aCY - curSize.height);
    mBrowserWindow->SetSizeToContent(false);
    return NS_OK;
 }
@@ -470,7 +476,7 @@ NS_IMETHODIMP CWebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
     NS_ENSURE_ARG(aSiteWindow);
     NS_ENSURE_STATE(mBrowserWindow);
 
-    *aSiteWindow = mBrowserWindow->GetMacPort();
+    *aSiteWindow = mBrowserWindow->Compat_GetMacWindow();
     
     return NS_OK;
 }
