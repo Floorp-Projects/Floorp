@@ -541,35 +541,28 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
   if (aDocShell == mDocShell)
     return NS_OK;
 
-  /* SetDocShell(nsnull) means the window is being torn down. Set the
-     "closed" JS property, Drop our reference to the script context,
-     allowing it to be deleted later, and hand off our reference
-     to the script object (held via a named JS root) to the context
-     so it will be unrooted later. Meanwhile, keep our weak reference
-     to the script object so it can be retrieved later, as the JS glue
-     is wont to do. */
+  // SetDocShell(nsnull) means the window is being torn down. Drop our
+  // reference to the script context, allowing it to be deleted
+  // later. Meanwhile, keep our weak reference to the script object
+  // (mJSObject) so that it can be retrieved later (until it is
+  // finalized by the JS GC).
+
   if (!aDocShell && mContext) {
     ClearAllTimeouts();
 
-    if (mJSObject) {
-      // Indicate that the window is now closed. Since we've
-      // cleared scope, we have to explicitly set a property.
-      jsval val = BOOLEAN_TO_JSVAL(JS_TRUE);
-      ::JS_SetProperty((JSContext *)mContext->GetNativeContext(),
-                       mJSObject, "closed", &val);
-    }
-
-    // if we are closing the window while in full screen mode, 
-    // be sure to restore os chrome
+    // if we are closing the window while in full screen mode, be sure
+    // to restore os chrome
     if (mFullScreen) {
       nsCOMPtr<nsIFocusController> focusController;
       GetRootFocusController(getter_AddRefs(focusController));
       PRBool isActive = PR_FALSE;
       focusController->GetActive(&isActive);
       // only restore OS chrome if the closing window was active
+
       if (isActive) {
         nsCOMPtr<nsIFullScreen> fullScreen =
           do_GetService("@mozilla.org/browser/fullscreen;1");
+
         if (fullScreen)
           fullScreen->ShowAllOSChrome();
       }
@@ -579,6 +572,7 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
     mControllers = nsnull;      // force release now
     mChromeEventHandler = nsnull; // force release now
   }
+
   mDocShell = aDocShell;        // Weak Reference
 
   if (mLocation)
