@@ -57,7 +57,9 @@ public:
   static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
   
   NS_METHOD ProcessData(unsigned char *data, PRUint32 count);
-  
+
+  NS_METHOD FlushImageData();
+
   nsCOMPtr<imgIContainer> mImageContainer;
   nsCOMPtr<gfxIImageFrame> mImageFrame;
   nsCOMPtr<imgIRequest> mImageRequest;
@@ -69,6 +71,8 @@ public:
   
   PRUint8 *mAlphaLine;
   PRUint8 mBackgroundRGBIndex;
+  PRUint8 mCurrentPass;
+  PRUint8 mLastFlushedPass;
 };
 
 // static callbacks for the GIF decoder

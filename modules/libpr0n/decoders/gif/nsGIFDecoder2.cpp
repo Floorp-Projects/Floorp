@@ -49,6 +49,9 @@ nsGIFDecoder2::nsGIFDecoder2()
 
   mCurrentRow = -1;
   mLastFlushedRow = -1;
+
+  mCurrentPass = 0;
+  mLastFlushedPass = 0;
 }
 
 nsGIFDecoder2::~nsGIFDecoder2(void)
@@ -149,6 +152,43 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
   return NS_OK;
 }
 
+// Push any new rows according to mCurrentPass/mLastFlushedPass and
+// mCurrentRow/mLastFlushedRow.  Note: caller is responsible for
+// updating mlastFlushed{Row,Pass}.
+NS_METHOD
+nsGIFDecoder2::FlushImageData()
+{
+  PRInt32 width;
+  PRInt32 height;
+  mImageFrame->GetWidth(&width);
+  mImageFrame->GetHeight(&height);
+  switch (mCurrentPass - mLastFlushedPass) {
+    case 0: {  // same pass
+      PRInt32 remainingRows = mCurrentRow - mLastFlushedRow;
+      if (remainingRows) {
+        nsRect r(0, mLastFlushedRow+1, width, remainingRows);
+        mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
+      }    
+    }
+    break;
+  
+    case 1: {  // one pass on - need to handle bottom & top rects
+      nsRect r(0, 0, width, mCurrentRow);
+      mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
+      nsRect r2(0, mLastFlushedRow+1, width, height-mLastFlushedRow);
+      mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r2);
+    }
+    break;
+
+    default: {  // more than one pass on - push the whole frame
+      nsRect r(0, 0, width, height);
+      mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
+    }
+  }
+
+  return NS_OK;
+}
+
 //******************************************************************************
 PRUint32 nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count)
 {
@@ -162,14 +202,9 @@ PRUint32 nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count)
   }
 
   if (mImageFrame && mObserver) {
-    PRInt32 remainingRows = mCurrentRow-mLastFlushedRow;
-    if (remainingRows) {
-      PRInt32 width;
-      mImageFrame->GetWidth(&width);  
-      nsRect r(0, mLastFlushedRow+1, width, remainingRows);
-      mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
-      mLastFlushedRow = mCurrentRow;
-    }    
+    FlushImageData();
+    mLastFlushedRow = mCurrentRow;
+    mLastFlushedPass = mCurrentPass;
   }
 
   return count; // we always consume all the data
@@ -313,15 +348,11 @@ int EndImageFrame(
     
   if (decoder->mObserver && decoder->mImageFrame) {
     decoder->mImageFrame->SetFrameDisposalMethod(aDisposal);
-  
-    PRInt32 remainingRows = decoder->mCurrentRow-decoder->mLastFlushedRow;
-    if (remainingRows) {
-      PRInt32 width;
-      decoder->mImageFrame->GetWidth(&width);
-      nsRect r(0, decoder->mLastFlushedRow+1, width, remainingRows);
-      decoder->mObserver->OnDataAvailable(nsnull, nsnull, decoder->mImageFrame, &r);
-      decoder->mCurrentRow = decoder->mLastFlushedRow = -1;
-    }    
+
+    decoder->FlushImageData();
+
+    decoder->mCurrentRow = decoder->mLastFlushedRow = -1;
+    decoder->mCurrentPass = decoder->mLastFlushedPass = 0;
 
     decoder->mObserver->OnStopFrame(nsnull, nsnull, decoder->mImageFrame);
   }
@@ -441,7 +472,9 @@ int HaveDecodedRow(
           ++rowBufIndex;
         }
 
-        decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr, bpr, aRowNumber*bpr);
+        for (int i=0; i<aDuplicateCount; i++)
+          decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr,
+                                             bpr, (aRowNumber+i)*bpr);
       }
       break;
     case gfxIFormats::BGR:
@@ -453,7 +486,9 @@ int HaveDecodedRow(
           ++rowBufIndex;
         }
 
-        decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr, bpr, aRowNumber*bpr);
+        for (int i=0; i<aDuplicateCount; i++)
+          decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr,
+                                             bpr, (aRowNumber+i)*bpr);
       }
       break;
     case gfxIFormats::RGB_A1:
@@ -495,8 +530,12 @@ int HaveDecodedRow(
 
           ++rowBufIndex;
         }
-        decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr, bpr, aRowNumber*bpr);
-        decoder->mImageFrame->SetAlphaData(decoder->mAlphaLine, abpr, aRowNumber*abpr);
+        for (int i=0; i<aDuplicateCount; i++) {
+          decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr,
+                                             bpr, (aRowNumber+i)*bpr);
+          decoder->mImageFrame->SetAlphaData(decoder->mAlphaLine,
+                                             abpr, (aRowNumber+i)*abpr);
+        }
       }
       break;
     default:
@@ -504,7 +543,10 @@ int HaveDecodedRow(
 
     }
 
-    decoder->mCurrentRow = aRowNumber;
+    decoder->mCurrentRow = aRowNumber+aDuplicateCount-1;
+    decoder->mCurrentPass = aInterlacePass;
+    if (aInterlacePass == 1)
+      decoder->mLastFlushedPass = aInterlacePass;   // interlaced starts at 1
   }
 
   return 0;
