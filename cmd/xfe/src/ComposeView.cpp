@@ -441,9 +441,6 @@ XFE_ComposeView::createSubjectBar(Widget parent)
 		XFE_Component* top_level = getToplevel();
 		Widget         top_widget = top_level->getBaseWidget();
 
-		//    I don't think we need this anymore...djw
-		CONTEXT_DATA(getContext())->top_area = top_widget;
-	
 		XFE_Toolbox* toolbox = new XFE_Toolbox(top_level, m_subjectFormW);
 		
 		toolbox_widget = toolbox->getBaseWidget();
