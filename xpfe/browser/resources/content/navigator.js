@@ -946,6 +946,10 @@ function OpenSearch(tabName, searchStr)
   {
     var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
     bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
+    if ((title == null) || (title == ""))
+    {
+    	title = url;
+    }
     bmks.AddBookmark(url, title);
   }
 
