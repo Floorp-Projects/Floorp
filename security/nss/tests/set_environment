@@ -125,9 +125,11 @@ then
     RM=/cygdrive/c/cygwin/bin/rm.exe    #FIXME - in case we cant cporrect 
                                         #these with the PATH alone
     PATH=`perl $QASCRIPT_DIR/path_uniq "$PATH"`
+    RSH=/cygdrive/c/winnt/system32/rsh
 elif [ "$os_name" = "Windows_95" -o \
     "$os_name" = "Windows_NT" -o \
     "$os_name" = "WINNT" -o \
+    "$os_name" = "Windows" -o \
     "$os_name" = "Windows_98" ]
 then
     #FIXME net use, mount the neccessary pnetwork drives and partitiones first
@@ -149,6 +151,7 @@ then
     os_name="Windows"
     O_MKS=ON
     O_WIN=ON
+    RSH=c:/winnt/system32/rsh
     
 else
     EDITOR=vi
@@ -158,6 +161,7 @@ else
     XMCD_LIBDIR=/usr/local/lib/xmcd
     DISPLAY=:0.0
     PATH=`perl $QASCRIPT_DIR/path_uniq "$PATH"`
+    RSH=rsh
 fi
 
 BASEPATH=$PATH    # in  case we we set and reset DIST directories the PATH 
