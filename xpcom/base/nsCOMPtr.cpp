@@ -39,7 +39,7 @@ nsCOMPtr_base::assign_with_AddRef( nsISupports* rawPtr )
 void
 nsCOMPtr_base::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid, nsresult* result )
   {
-    nsresult status = NS_OK;
+    nsresult status = NS_ERROR_NULL_POINTER;
     if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryInterface(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
       rawPtr = 0;
 
