@@ -1195,6 +1195,10 @@ sub SplitEnumType {
 }
 
 sub UserInGroup {
+    if ($_[1]) {
+        die "UserInGroup no longer takes a second parameter.";
+    }
+    
     return defined Bugzilla->user && defined Bugzilla->user->groups->{$_[0]};
 }
 
