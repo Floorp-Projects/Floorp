@@ -97,7 +97,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 // nsPopupSetFrame cntr
 //
 nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
-mPresContext(nsnull), mElementFrame(nsnull)
+mPresContext(nsnull), mElementFrame(nsnull), mCreateHandlerSucceeded(PR_FALSE)
 {
 
 } // cntr
@@ -388,10 +388,13 @@ nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent,
   if (!OnCreate(aPopupContent))
     return NS_OK;
 
+#ifdef DEBUG_PINK
   printf("X Pos: %d\n", mXPos);
   printf("Y Pos: %d\n", mYPos);
+#endif
 
   // Generate the popup.
+  mCreateHandlerSucceeded = PR_TRUE;
   MarkAsGenerated(aPopupContent);
 
   // determine if this menu is a context menu and flag it
@@ -411,15 +414,19 @@ nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent,
 NS_IMETHODIMP
 nsPopupSetFrame::HidePopup()
 {
-  ActivatePopup(PR_FALSE);
+  if ( mCreateHandlerSucceeded )
+    ActivatePopup(PR_FALSE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPopupSetFrame::DestroyPopup()
 {
-  OpenPopup(PR_FALSE);
-  mPopupType.SetLength(0);  
+  if ( mCreateHandlerSucceeded ) {    // ensure the popup was created before we try to destroy it
+    OpenPopup(PR_FALSE);
+    mPopupType.SetLength(0);
+  }
+  mCreateHandlerSucceeded = PR_FALSE;
   return NS_OK;
 }
 
