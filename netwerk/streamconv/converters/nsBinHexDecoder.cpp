@@ -521,10 +521,11 @@ nsresult nsBinHexDecoder::SetContentType(nsIRequest * aRequest, const char * fil
       if (url)
       {
         nsXPIDLCString fileExt;
-        url->GetFileExtension(getter_Copies(fileExt));
-        if (*(fileExt.get()))
+        rv = url->GetFileExtension(getter_Copies(fileExt));
+        if (NS_SUCCEEDED(rv) && *(fileExt.get()))
         {
-          mimeService->GetTypeFromExtension(fileExt, getter_Copies(contentType));
+          rv = mimeService->GetTypeFromExtension(fileExt, getter_Copies(contentType));
+          if (NS_SUCCEEDED(rv) && *(contentType.get()))
           mContentType = contentType;
         }
       }
