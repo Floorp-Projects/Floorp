@@ -7,13 +7,15 @@ use Getopt::Long;
 # XXX do we really need this?
 $| = 1;
 
+# Save original arguments so we can send them to the new script if we upgrade
+# ourselves
+my @original_args = @ARGV;
+
 #
 # Catch these signals
 #
 $SIG{INT} = sub { print "SIGINT\n"; die; };
 $SIG{TERM} = sub { print "SIGTERM\n"; die; };
-
-my @original_args = @ARGV;
 
 #
 # PROGRAM START
@@ -57,7 +59,8 @@ MachineName: the name of this machine (how it is identified and will show up on
 
 [Mozilla-specific options]
 --nousemozconfig: do not get .mozconfig from the server
---nousepatches: bring down new patches from the tinderbox and apply them
+--nousepatches: do not bring down new patches from the tinderbox and apply them
+
 The following options will be brought down from the server if not specified
 here, unless --notrust is specified.  If --notrust is specified, defaults given
 will be used instead.
@@ -369,21 +372,95 @@ sub eat_command {
   return 0;
 }
 
+use Fcntl;
+use POSIX qw(:errno_h);
+
+sub set_nonblocking {
+  my $this = shift;
+  my ($handle) = @_;
+  my $flags = 0;
+  fcntl($handle, F_GETFL, $flags) or return;
+  $flags |= O_NONBLOCK;
+  fcntl($handle, F_SETFL, $flags) or return;
+}
+
+sub _kill_command {
+  # Kill a command and its children
+  my $this = shift;
+  my ($pid, $children_of) = @_;
+  $this->print_log("Killing $pid\n");
+  kill('INT', $pid);
+  foreach my $child_pid (@{$children_of->{$pid}}) {
+    $this->_kill_command($child_pid);
+  }
+}
+
+sub kill_command {
+  # Kill a command and its children (children first)
+  my $this = shift;
+  my ($pid) = @_;
+  # Get the ps -aux table and pass it to _kill_command
+  my %children_of;
+  open PS_AUX, "ps aux|";
+  while (<PS_AUX>) {
+    print;
+    if (/\s*(\d+)\s*(\d+)/) {
+      if (!exists($children_of{$2})) {
+        $children_of{$2} = [];
+      }
+      push @{$children_of{$2}}, $1;
+    }
+  }
+  close PS_AUX;
+  $this->_kill_command($pid, \%children_of);
+}
+
 sub do_command {
   my $this = shift;
-  my ($command, $status, $grep_sub) = @_;
+  my ($command, $status, $grep_sub, $max_idle_time) = @_;
 
   $this->start_section("RUNNING '$command'");
 
   my $please_send_status = 0;
 
-  my $pid = open BUILD, "$command 2>&1|";
+  my $handle;
+  my $pid = open $handle, "$command 2>&1|";
   if (!$pid) {
-    die "Could not start build: $!";
+    $this->end_section("(FAILURE: could not start) RUNNING '$command'");
+    return 200;
   }
-  # The time we first tried to kill the process
-  while (<BUILD>) {
-    $this->print_log($grep_sub ? &$grep_sub($_) : $_);
+  $this->set_nonblocking($handle);
+  my $last_read_time = time;
+  my $build_error;
+  while (1) {
+    #
+    # Read from the buffer asynchronously
+    #
+    my $buffer;
+    my $rv = sysread($handle, $buffer, 1024);
+    # If nothing was read, we check if the process is OK
+    if (!$rv) {
+      #
+      # Check if the process is dead
+      #
+      my $wait_pid = waitpid($pid, POSIX::WNOHANG());
+      if (($wait_pid == $pid && POSIX::WIFEXITED($?)) || $wait_pid == -1) {
+        $build_error = $?;
+        last;
+      }
+      # Kill the process if it's still alive and hung
+      if ($max_idle_time && (time - $last_read_time) > $max_idle_time) {
+        $this->print_log("Command appears to have hanged!");
+        $build_error = 1;
+        $this->kill_command($pid);
+        $please_send_status = 202;
+      }
+      sleep(3);
+      next;
+    }
+    $last_read_time = time;
+
+    $this->print_log($grep_sub ? &$grep_sub($buffer) : $buffer);
 
     {
       # Send status and check whether we need to kill every 3 minutes
@@ -394,20 +471,15 @@ sub do_command {
         flush $log_out;
         my $success = $this->build_status(1);
         if ($success) {
-          if ($this->{COMMANDS}{kick}) {
-            print "\nKilling $pid\n\n";
-            kill('INT', $pid);
+          if ($this->eat_command("kick")) {
+            $this->kill_command($pid);
             $please_send_status = 301;
-            delete $this->{COMMANDS}{kick};
           }
         }
       }
     }
-
   }
-  close BUILD;
-
-  my $build_error = $?;
+  close $handle;
 
   if ($build_error) {
     $this->end_section("(FAILURE: $build_error) RUNNING '$command'");
@@ -669,7 +741,7 @@ sub new {
     $this->{COMPILER} = 'gcc';
   }
   if ($this->{COMPILER} eq 'cl') {
-    $this->{COMPILER_VERSION} = `cl`;
+    $this->{COMPILER_VERSION} = `cl 2>&1`;
   } elsif ($this->{COMPILER} eq 'gcc') {
     $this->{COMPILER_VERSION} = `gcc --version`;
   }
@@ -717,6 +789,7 @@ sub finish_build {
 sub do_action {
   my ($client, $config, $persistent_vars, $build_vars) = @_;
   my $init_tree_status = 1;
+  my $max_cvs_idle_time = 90*60; # 90 minutes
 
   #
   # We will only build if:
@@ -731,7 +804,7 @@ sub do_action {
   #
   my $please_checkout = 0;
   if (! -f "mozilla/client.mk") {
-    $client->do_command("cvs -d$config->{cvsroot} co mozilla/client.mk", $init_tree_status);
+    $client->do_command("cvs -d$config->{cvsroot} co mozilla/client.mk", $init_tree_status, undef, $max_cvs_idle_time);
     $please_checkout = 1;
   }
   if (-f "mozilla/client.mk") {
@@ -809,10 +882,8 @@ EOM
   $client->end_section("SETTING MOZ_OBJDIR");
 
   #
-  # Clean non-objdir stuff out
+  # Clean non-objdir stuff out to make an objdir build work
   #
-  # XXX only the rm -rf is necessary now, this is temporary while I clean out
-  # my personal trees
   if (-f "Makefile") {
     $client->do_command("make distclean", $init_tree_status+2);
   }
@@ -859,10 +930,10 @@ EOM
     #
     if ($config->{cvs_co_date} || $please_checkout ||
         (time - $persistent_vars->{LAST_CHECKOUT}) >= (24*60*60)) {
-      $err = $client->do_command("make -f client.mk checkout", $init_tree_status+1, $parsing_code);
+      $err = $client->do_command("make -f client.mk checkout", $init_tree_status+1, $parsing_code, $max_cvs_idle_time);
       $persistent_vars->{LAST_CHECKOUT} = time;
     } else {
-      $err = $client->do_command("make -f client.mk fast-update", $init_tree_status+1, $parsing_code);
+      $err = $client->do_command("make -f client.mk fast-update", $init_tree_status+1, $parsing_code, $max_cvs_idle_time);
     }
     if ($err) {
       $persistent_vars->{LAST_CHECKOUT} = 0;
@@ -1195,6 +1266,7 @@ use strict;
 
 sub get_config {
   my ($client, $config, $persistent_vars, $build_vars, $content_ref) = @_;
+  $client->parse_simple_tag($content_ref, "pageloader_url");
 }
 
 sub finish_build {
@@ -1203,6 +1275,9 @@ sub finish_build {
 
 sub do_action {
   my ($client, $config, $persistent_vars, $build_vars) = @_;
+  #my $err = $client->do_command("objdir/dist/bin/mozilla -CreateProfile tinder");
+#dist/bin/mozilla -P tinder http://cowtools.mcom.com/page-loader/loader.pl?delay=1000\&nocache=0\&maxcyc=1\&timeout=15000\&auto=1
+  #return $err;
   return 0;
 }
 
