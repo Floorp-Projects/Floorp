@@ -99,6 +99,17 @@ public:
    */
   virtual const nsFont& GetDefaultFont(void) = 0;
 
+  /** 
+   * Get the default fixed pitch font
+   */
+  virtual const nsFont& GetDefaultFixedFont(void) = 0;
+
+  /** 
+   * Get the defualt colors
+   */
+  NS_IMETHOD GetDefaultColor(nscolor& aColor) = 0;
+  NS_IMETHOD GetDefaultBackgroundColor(nscolor& aColor) = 0;
+
   NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult) = 0;
 
   /**
