@@ -32,10 +32,11 @@ MAKE_OBJ_TYPE	= DLL
 OBJS	= \
 		.\$(OBJDIR)\DummyChannel.obj \
 		.\$(OBJDIR)\ImageCache.obj \
+		.\$(OBJDIR)\ImageFactory.obj \
+		.\$(OBJDIR)\imgContainer.obj \
 		.\$(OBJDIR)\imgLoader.obj \
 		.\$(OBJDIR)\imgRequest.obj \
 		.\$(OBJDIR)\imgRequestProxy.obj \
-		.\$(OBJDIR)\ImageFactory.obj \
 		$(NULL)
 
 LLIBS=\

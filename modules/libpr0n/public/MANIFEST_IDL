@@ -1,3 +1,5 @@
+imgIContainer.idl
+imgIContainerObserver.idl
 imgIDecoder.idl
 imgIDecoderObserver.idl
 imgILoader.idl

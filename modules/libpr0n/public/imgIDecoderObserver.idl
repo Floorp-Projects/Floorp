@@ -21,11 +21,10 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "gfxIImageContainerObserver.idl"
-#include "gfxtypes.idl"
+#include "imgIContainerObserver.idl"
 
 interface imgIRequest;
-interface gfxIImageContainer;
+interface imgIContainer;
 interface gfxIImageFrame;
 
 %{C++
@@ -40,42 +39,42 @@ interface gfxIImageFrame;
  * @see imagelib2
  */
 [scriptable, uuid(350163d2-1dd2-11b2-9e69-89959ecec1f3)]
-interface imgIDecoderObserver : gfxIImageContainerObserver
+interface imgIDecoderObserver : imgIContainerObserver
 {
   /**
    * called as soon as the image begins getting decoded
    */
-  void onStartDecode(in imgIRequest request, in nsISupports cx);
+  void onStartDecode(in imgIRequest aRequest, in nsISupports cx);
 
   /**
    * called once the image has been inited and therefore has a width and height
    */
-  void onStartContainer(in imgIRequest request, in nsISupports cx, in gfxIImageContainer image);
+  void onStartContainer(in imgIRequest aRequest, in nsISupports cx, in imgIContainer aContainer);
 
   /**
    * called when each frame is created
    */
-  void onStartFrame(in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame);
+  void onStartFrame(in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame);
 
   /**
    * called when some part of the frame has new data in it
    */
-  [noscript] void onDataAvailable(in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame, [const] in nsRect rect);
+  [noscript] void onDataAvailable(in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame, [const] in nsRect aRect);
 
   /**
    * called when a frame is finished decoding
    */
-  void onStopFrame(in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame);
+  void onStopFrame(in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame);
 
   /**
    * probably not needed.  called right before onStopDecode
    */
-  void onStopContainer(in imgIRequest request, in nsISupports cx, in gfxIImageContainer image);
+  void onStopContainer(in imgIRequest aRequest, in nsISupports cx, in imgIContainer aContainer);
 
   /**
    * called when the decoder is dying off
    */
-  void onStopDecode(in imgIRequest request, in nsISupports cx,
+  void onStopDecode(in imgIRequest aRequest, in nsISupports cx,
                     in nsresult status, in wstring statusArg);
 
 };

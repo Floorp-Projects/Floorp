@@ -28,7 +28,7 @@
 
 #include "nsCOMPtr.h"
 
-#include "gfxIImageContainer.h"
+#include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 #include "imgIDecoderObserver.h"
 #include "imgIRequest.h"
@@ -83,7 +83,7 @@ protected:
   int OutputScanlines(int num_scanlines);
 
 public:
-  nsCOMPtr<gfxIImageContainer> mImage;
+  nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
   nsCOMPtr<imgIRequest> mRequest;
 

@@ -32,7 +32,7 @@
 
 #include "nsIComponentManager.h"
 
-#include "gfxIImageContainerObserver.h"
+#include "imgIContainerObserver.h"
 
 
 #include "ImageLogging.h"

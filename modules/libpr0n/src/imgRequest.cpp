@@ -48,7 +48,7 @@ PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 
 
 NS_IMPL_ISUPPORTS6(imgRequest, imgIRequest, nsIRequest,
-                   imgIDecoderObserver, gfxIImageContainerObserver,
+                   imgIDecoderObserver, imgIContainerObserver,
                    nsIStreamListener, nsIStreamObserver)
 
 imgRequest::imgRequest() : 
@@ -77,7 +77,7 @@ nsresult imgRequest::Init(nsIChannel *aChannel)
   mChannel = aChannel;
 
   // XXX do not init the image here.  this has to be done from the image decoder.
-  mImage = do_CreateInstance("@mozilla.org/gfx/image;2");
+  mImage = do_CreateInstance("@mozilla.org/image/container;1");
 
   return NS_OK;
 }
@@ -226,8 +226,8 @@ NS_IMETHODIMP imgRequest::Resume()
 
 /** imgIRequest methods **/
 
-/* readonly attribute gfxIImageContainer image; */
-NS_IMETHODIMP imgRequest::GetImage(gfxIImageContainer * *aImage)
+/* readonly attribute imgIContainer image; */
+NS_IMETHODIMP imgRequest::GetImage(imgIContainer * *aImage)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequest::GetImage\n", this));
@@ -265,10 +265,10 @@ NS_IMETHODIMP imgRequest::GetURI(nsIURI **aURI)
 }
 
 
-/** gfxIImageContainerObserver methods **/
+/** imgIContainerObserver methods **/
 
-/* [noscript] void frameChanged (in gfxIImageContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
-NS_IMETHODIMP imgRequest::FrameChanged(gfxIImageContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
+/* [noscript] void frameChanged (in imgIContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
+NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
 {
   LOG_SCOPE(gImgLog, "imgRequest::FrameChanged");
 
@@ -303,8 +303,8 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
   return NS_OK;
 }
 
-/* void onStartContainer (in imgIRequest request, in nsISupports cx, in gfxIImageContainer image); */
-NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx, gfxIImageContainer *image)
+/* void onStartContainer (in imgIRequest request, in nsISupports cx, in imgIContainer image); */
+NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStartContainer");
 
@@ -371,8 +371,8 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
   return NS_OK;
 }
 
-/* void onStopContainer (in imgIRequest request, in nsISupports cx, in gfxIImageContainer image); */
-NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx, gfxIImageContainer *image)
+/* void onStopContainer (in imgIRequest request, in nsISupports cx, in imgIContainer image); */
+NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStopContainer");
 
@@ -506,7 +506,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     // this->Cancel(NS_BINDING_ABORTED);
     this->RemoveFromCache();
 
-    // XXX notify the person that owns us now that wants the gfxIImageContainer off of us?
+    // XXX notify the person that owns us now that wants the imgIContainer off of us?
 
     //return NS_ERROR_IMAGELIB_NO_DECODER;
     return NS_ERROR_FAILURE;

@@ -26,7 +26,7 @@
 
 #include "imgIDecoder.h"
 
-#include "gfxIImageContainer.h"
+#include "imgIContainer.h"
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
 #include "imgIRequest.h"
@@ -67,7 +67,7 @@ end_callback(png_structp png_ptr, png_infop info_ptr);
 
 
 public:
-  nsCOMPtr<gfxIImageContainer> mImage;
+  nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
   nsCOMPtr<imgIRequest> mRequest;
   nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed

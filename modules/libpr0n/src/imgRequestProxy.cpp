@@ -42,7 +42,7 @@
 
 #include "ImageLogging.h"
 
-NS_IMPL_ISUPPORTS5(imgRequestProxy, imgIRequest, nsIRequest, imgIDecoderObserver, gfxIImageContainerObserver, nsIStreamObserver)
+NS_IMPL_ISUPPORTS5(imgRequestProxy, imgIRequest, nsIRequest, imgIDecoderObserver, imgIContainerObserver, nsIStreamObserver)
 
 imgRequestProxy::imgRequestProxy() :
   mCanceled(PR_FALSE)
@@ -150,8 +150,8 @@ NS_IMETHODIMP imgRequestProxy::Resume()
 
 /**  imgIRequest methods **/
 
-/* readonly attribute gfxIImageContainer image; */
-NS_IMETHODIMP imgRequestProxy::GetImage(gfxIImageContainer * *aImage)
+/* readonly attribute imgIContainer image; */
+NS_IMETHODIMP imgRequestProxy::GetImage(imgIContainer * *aImage)
 {
   return mOwner->GetImage(aImage);
 }
@@ -168,10 +168,10 @@ NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
   return mOwner->GetURI(aURI);
 }
 
-/** gfxIImageContainerObserver methods **/
+/** imgIContainerObserver methods **/
 
-/* [noscript] void frameChanged (in gfxIImageContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
-NS_IMETHODIMP imgRequestProxy::FrameChanged(gfxIImageContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
+/* [noscript] void frameChanged (in imgIContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
+NS_IMETHODIMP imgRequestProxy::FrameChanged(imgIContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequestProxy::FrameChanged\n", this));
@@ -196,8 +196,8 @@ NS_IMETHODIMP imgRequestProxy::OnStartDecode(imgIRequest *request, nsISupports *
   return NS_OK;
 }
 
-/* void onStartContainer (in imgIRequest request, in nsISupports cx, in gfxIImageContainer image); */
-NS_IMETHODIMP imgRequestProxy::OnStartContainer(imgIRequest *request, nsISupports *cx, gfxIImageContainer *image)
+/* void onStartContainer (in imgIRequest request, in nsISupports cx, in imgIContainer image); */
+NS_IMETHODIMP imgRequestProxy::OnStartContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequestProxy::OnStartContainer\n", this));
@@ -244,8 +244,8 @@ NS_IMETHODIMP imgRequestProxy::OnStopFrame(imgIRequest *request, nsISupports *cx
   return NS_OK;
 }
 
-/* void onStopContainer (in imgIRequest request, in nsISupports cx, in gfxIImageContainer image); */
-NS_IMETHODIMP imgRequestProxy::OnStopContainer(imgIRequest *request, nsISupports *cx, gfxIImageContainer *image)
+/* void onStopContainer (in imgIRequest request, in nsISupports cx, in imgIContainer image); */
+NS_IMETHODIMP imgRequestProxy::OnStopContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequestProxy::OnStopContainer\n", this));
@@ -281,6 +281,9 @@ NS_IMETHODIMP imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult statusCode, in wstring statusText); */
 NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode, const PRUnichar *statusText)
 {
+  if (!mDummyChannel)
+    return NS_OK;
+
   nsCOMPtr<nsILoadGroup> loadGroup;
   mDummyChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   if (loadGroup) {

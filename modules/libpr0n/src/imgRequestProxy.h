@@ -24,7 +24,7 @@
 #include "imgRequest.h"
 #include "imgIDecoderObserver.h"
 
-#include "gfxIImageContainer.h"
+#include "imgIContainer.h"
 #include "imgIDecoder.h"
 #include "nsIStreamObserver.h"
 #include "nsIChannel.h"
@@ -54,7 +54,7 @@ public:
   NS_DECL_IMGIREQUEST
   NS_DECL_NSIREQUEST
   NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_GFXIIMAGECONTAINEROBSERVER
+  NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_NSISTREAMOBSERVER
 
   imgRequestProxy();

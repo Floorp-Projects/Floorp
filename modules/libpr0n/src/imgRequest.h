@@ -30,7 +30,7 @@
 
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "gfxIImageContainer.h"
+#include "imgIContainer.h"
 #include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
 #include "nsIStreamListener.h"
@@ -74,14 +74,14 @@ public:
   NS_DECL_IMGIREQUEST
   NS_DECL_NSIREQUEST
   NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_GFXIIMAGECONTAINEROBSERVER
+  NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSISTREAMOBSERVER
 
 private:
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;
-  nsCOMPtr<gfxIImageContainer> mImage;
+  nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIDecoder> mDecoder;
 
   nsVoidArray mObservers;
