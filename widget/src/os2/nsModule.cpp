@@ -38,6 +38,10 @@
 
 #include <unidef.h>
 
+#ifdef XP_OS2_VACPP
+#define KBD_CTRL KBD_CONTROL
+#endif
+
 #define WARPZILLA_PRESPARAM "PP_WARPZILLA"
 
 static void GetKeyboardName( char *buff);
@@ -86,8 +90,9 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
 
    fontService = nsnull;
 
-   dragService = new nsDragService;
-   NS_ADDREF(dragService);
+   // XXXX KNOCKED OUT UNTIL nsDragService.cpp builds again
+   //   dragService = new nsDragService;
+   //   NS_ADDREF(dragService);
 
    // keep a ref beyond the client app so we shut ourselves down properly.
    appshell = aPrimaevalAppShell;

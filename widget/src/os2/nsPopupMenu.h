@@ -43,6 +43,7 @@ class nsPopupMenu : public nsIPopUpMenu, public nsMenuBase
    NS_IMETHOD Create( nsIWidget *aParent);
    NS_IMETHOD GetParent( nsIWidget *&aParent);
    NS_IMETHOD ShowMenu( PRInt32 aX, PRInt32 aY);
+   NS_IMETHOD AddMenu(nsIMenu * aMenu);
 
    // Common methods with nsMenu
    DECL_MENU_BASE_METHODS
