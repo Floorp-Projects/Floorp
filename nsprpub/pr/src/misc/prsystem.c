@@ -31,6 +31,7 @@
 #ifndef QSV_NUMPROCESSORS
 #define QSV_NUMPROCESSORS 26
 #endif
+#endif
 
 #if defined(HPUX)
 #include <sys/mp.h>
