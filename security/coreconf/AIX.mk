@@ -72,3 +72,9 @@ endif
 AIX_WRAP	= $(DIST)/lib/aixwrap.o
 AIX_TMP		= $(OBJDIR)/_aix_tmp.o
 OS_LIBS		+= -lsvld
+ifdef MAPFILE
+EXPORT_RULES = -bexport:$(MAPFILE)
+endif
+PROCESS_MAP_FILE = grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
+                sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' > $@
+

@@ -132,6 +132,14 @@ endif
 NOMD_OS_CFLAGS += $(DSO_CFLAGS) $(OS_DEFINES) $(SOL_CFLAGS)
 
 MKSHLIB  = $(LD) $(DSO_LDOPTS)
+ifdef MAPFILE
+    MKSHLIB += -M $(MAPFILE)
+endif
+PROCESS_MAP_FILE = grep -v ';-' $(LIBRARY_NAME).def | \
+         sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
+
+
+
 
 # ld options:
 # -G: produce a shared object

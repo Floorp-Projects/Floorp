@@ -66,6 +66,11 @@ endif
 MKSHLIB     += $(LD) $(DSO_LDOPTS)
 #DSO_LDOPTS += -G -z defs
 DSO_LDOPTS += -G
+ifdef MAPFILE
+# Add LD options to restrict exported symbols to those in the map file
+endif
+# Change PROCESS to put the mapfile in the correct format for this platform
+PROCESS_MAP_FILE = cp $(LIBRARY_NAME).def $@
 
 CPU_ARCH    = x86
 ARCH        = ncr

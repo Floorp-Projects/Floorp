@@ -63,4 +63,10 @@ endif
 
 # The command to build a shared library on OSF1.
 MKSHLIB    += ld -shared -expect_unresolved "*" -soname $(notdir $@)
+ifdef MAPFILE
+MKSHLIB += -hidden -input $(MAPFILE)
+endif
+PROCESS_MAP_FILE = grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
+ sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,^,-exported_symbol ,' > $@
+
 DSO_LDOPTS += -shared

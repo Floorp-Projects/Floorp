@@ -54,3 +54,9 @@ XCFLAGS                        += $(OPTIMIZER)
 
 # The command to build a shared library in POSIX on OpenVMS.
 MKSHLIB = vmsld_psm OBJDIR=$(OBJDIR) $(OPTIMIZER)
+ifdef MAPFILE
+# Add LD options to restrict exported symbols to those in the map file
+endif
+# Change PROCESS to put the mapfile in the correct format for this platform
+PROCESS_MAP_FILE = copy $(LIBRARY_NAME).def $@
+
