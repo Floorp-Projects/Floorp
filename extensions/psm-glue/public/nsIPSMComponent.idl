@@ -1,0 +1,70 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Hubbie Shaw
+ *   Doug Turner <dougt@netscape.com>
+*/
+
+#include "nsISupports.idl"
+//#include "nsIPrincipal.idl"
+interface nsIPrincipal;
+
+%{C++
+#include "cmtcmn.h"
+%}
+
+[ptr] native nsCMTControlStar(CMT_CONTROL);
+
+[scriptable, uuid(9e482670-5412-11d3-bbc8-0000861d1237)]
+interface nsIPSMComponent : nsISupports 
+{
+
+  [noscript] nsCMTControlStar GetControlConnection( );
+  void DisplaySecurityAdvisor();
+
+  /* Secure Hashing functions */
+  void hashBegin(in unsigned long alg, out unsigned long id);
+  void hashUpdate(in unsigned long id, in string buf, in unsigned long buflen);
+  void hashEnd(in unsigned long id, out string hash, out unsigned long hashlen,
+               in unsigned long maxLen);
+  
+  /* Signature Verification functions */
+  void verifyRSABegin(out unsigned long id);
+  void verifyRSAUpdate(in unsigned long id, in string buf, 
+                       in unsigned long buflen);
+  void verifyRSAEnd(in unsigned long id, in string plaintext,
+                    in unsigned long plaintextLen,
+                    in boolean keepCert, out nsIPrincipal principal);
+};
+
+%{C++
+#define PSM_COMPONENT_PROGID "component://netscape/psm"
+#define PSM_COMPONENT_CLASSNAME "Mozilla PSM Component"
+
+/* Hash Algorithms (based on cmtcmn.h) */ 
+#define PSM_HASH_MD2  1
+#define PSM_HASH_MD2_LENGTH 16
+#define PSM_HASH_MD5  2
+#define PSM_HASH_MD5_LENGTH 16
+#define PSM_HASH_SHA1 3
+#define PSM_HASH_SHA1_LENGTH 20
+#define PSM_HASH_MAX_LENGTH PSM_HASH_SHA1_LENGTH
+%}
+
