@@ -1024,8 +1024,10 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   mWidth = aSrcRect.width;
   mHeight = aSrcRect.height;
 
+#ifdef DEBUG_FOO
   printf("nsImageGTK::DrawTile((src: %d, %d), (tile: %d, %d) %p\n", mWidth, mHeight,
          aTileRect.width, aTileRect.height, this);
+#endif
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
@@ -1055,22 +1057,25 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     unsigned long xvalues_mask = 0;
     xvalues.fill_style = FillTiled;
     xvalues.tile = GDK_WINDOW_XWINDOW(mImagePixmap);
-    xvalues_mask = GCFillStyle | GCTile;
+    xvalues.ts_x_origin = aTileRect.x;
+    xvalues.ts_y_origin = aTileRect.y;
+    xvalues_mask = GCFillStyle | GCTile | GCTileStipXOrigin | GCTileStipYOrigin;
     XChangeGC(GDK_DISPLAY(), GDK_GC_XGC(copyGC), xvalues_mask, &xvalues);
 
     // draw onscreen
+#ifdef DEBUG_FOO
     printf("gdk_draw_rectangle(..., %d, %d, %d, %d)\n",
            aTileRect.x, aTileRect.y, 
            aTileRect.width, aTileRect.height);
-
+#endif
     gdk_draw_rectangle(drawing->GetDrawable(), copyGC, PR_TRUE,
-                       aTileRect.x, aTileRect.y, 
+                       0, 0,
                        aTileRect.width, aTileRect.height);
   }
 
- gdk_gc_unref(copyGC);
+  gdk_gc_unref(copyGC);
 
- return NS_OK;
+  return NS_OK;
 }
 
 //------------------------------------------------------------
