@@ -139,14 +139,15 @@ JS_PUBLIC_API(void)
 JS_HashTableDestroy(JSHashTable *ht)
 {
     uint32 i, n;
-    JSHashEntry *he, *next;
+    JSHashEntry *he, **hep;
     JSHashAllocOps *allocOps = ht->allocOps;
     void *allocPriv = ht->allocPriv;
 
     n = NBUCKETS(ht);
     for (i = 0; i < n; i++) {
-        for (he = ht->buckets[i]; he; he = next) {
-            next = he->next;
+        hep = &ht->buckets[i];
+        while ((he = *hep) != NULL) {
+            *hep = he->next;
             (*allocOps->freeEntry)(allocPriv, he, HT_FREE_ENTRY);
         }
     }

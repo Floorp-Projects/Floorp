@@ -1031,7 +1031,7 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
     JSDHashTable *table;
     JSRuntime *rt;
-    JSString *idstr;
+    JSResolvingKey key;
     JSDHashEntryHdr *entry;
     JSObject *fun_proto, *obj_proto;
 
@@ -1043,17 +1043,18 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     table = cx->resolving;
     if (table) {
         rt = cx->runtime;
-        idstr = ATOM_TO_STRING(rt->atomState.FunctionAtom);
-        entry = JS_DHashTableOperate(table, idstr, JS_DHASH_LOOKUP);
+        key.obj = obj;
+        key.id = (jsid) rt->atomState.FunctionAtom;
+        entry = JS_DHashTableOperate(table, &key, JS_DHASH_LOOKUP);
         if (JS_DHASH_ENTRY_IS_BUSY(entry))
-            idstr = ATOM_TO_STRING(rt->atomState.ObjectAtom);
+            key.id = (jsid) rt->atomState.ObjectAtom;
 
-        entry = JS_DHashTableOperate(table, idstr, JS_DHASH_ADD);
+        entry = JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
         if (!entry) {
             JS_ReportOutOfMemory(cx);
             return NULL;
         }
-        ((JSDHashEntryStub *)entry)->key = idstr;
+        ((JSResolvingEntry *)entry)->key = key;
     }
 
     /* Initialize the function class first so constructors can be made. */
@@ -1253,13 +1254,10 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
                         JSBool *resolved)
 {
     JSString *idstr;
-    JSDHashTable *table;
-    JSDHashEntryHdr *entry;
     JSRuntime *rt;
     JSAtom *atom;
     JSObjectOp init;
     uintN i;
-    JSBool ok;
 
     CHECK_REQUEST(cx);
     *resolved = JS_FALSE;
@@ -1267,12 +1265,6 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     if (!JSVAL_IS_STRING(id))
         return JS_TRUE;
     idstr = JSVAL_TO_STRING(id);
-    table = cx->resolving;
-    if (table) {
-        entry = JS_DHashTableOperate(table, idstr, JS_DHASH_LOOKUP);
-        if (JS_DHASH_ENTRY_IS_BUSY(entry))
-            return JS_TRUE;
-    }
     rt = cx->runtime;
 
 #if JS_HAS_UNDEFINED
@@ -1321,39 +1313,12 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
         }
     }
 
-    if (!init) {
-        ok = JS_TRUE;
-    } else {
-        if (!table) {
-            table = JS_NewDHashTable(JS_DHashGetStubOps(),
-                                     NULL,
-                                     sizeof(JSDHashEntryStub),
-                                     JS_DHASH_MIN_SIZE);
-            if (!table)
-                goto outofmem;
-            cx->resolving = table;
-        }
-        entry = JS_DHashTableOperate(table, idstr, JS_DHASH_ADD);
-        if (!entry)
-            goto outofmem;
-        ((JSDHashEntryStub *)entry)->key = idstr;
-
-        if (init(cx, obj))
-            ok = *resolved = JS_TRUE;
-        else
-            ok = JS_FALSE;
-
-        JS_DHashTableRawRemove(table, entry);
-        if (table->entryCount == 0) {
-            JS_DHashTableDestroy(table);
-            cx->resolving = NULL;
-        }
+    if (init) {
+        if (!init(cx, obj))
+            return JS_FALSE;
+        *resolved = JS_TRUE;
     }
-    return ok;
-
-outofmem:
-    JS_ReportOutOfMemory(cx);
-    return JS_FALSE;
+    return JS_TRUE;
 }
 
 static JSBool

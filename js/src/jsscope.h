@@ -191,10 +191,18 @@ js_NewScopeProperty(JSContext *cx, JSScope *scope, jsid id,
 extern void
 js_DestroyScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop);
 
+/*
+ * For bogus historical reasons, these functions cope with null sprop params.
+ * They hide details of reference or "short-term property hold" accounting, so
+ * they're worth the space.  But do use HOLD_SCOPE_PROPERTY to keep a non-null
+ * sprop in hand for a scope-locking critical section.
+ */
 extern JSScopeProperty *
 js_HoldScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop);
 
 extern JSScopeProperty *
 js_DropScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop);
+
+#define HOLD_SCOPE_PROPERTY(scope,sprop) ((sprop)->nrefs++)
 
 #endif /* jsscope_h___ */
