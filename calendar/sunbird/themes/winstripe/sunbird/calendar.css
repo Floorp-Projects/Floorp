@@ -69,6 +69,24 @@
 }
 
 /*--------------------------------------------------------------------
+ *   Icons-only and text-only mode
+ *-------------------------------------------------------------------*/
+
+toolbar[mode="icons"] .toolbarbutton-text {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-menubutton-dropmarker,
+toolbar[mode="text"] .toolbarbutton-icon {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-text {
+  padding: 0px !important;
+  margin: 3px 5px !important;
+}
+
+/*--------------------------------------------------------------------
  *   new event button
  *-------------------------------------------------------------------*/
 
