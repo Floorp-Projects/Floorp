@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: genxref,v 1.4 1999/04/26 19:52:55 endico%mozilla.org Exp $
+# $Id: genxref,v 1.5 1999/07/22 19:58:11 terry%mozilla.org Exp $
 
 # genxref.pl --	Finds identifiers in a set of C files using an
 #		extremely fuzzy algorithm.  It sort of works.
@@ -361,7 +361,7 @@ sub dumpdb {
     print(STDERR "Starting pass 3: Dump database to disk.\n");
 
     $start = time;
-    tie (%xrefdb, "DB_File" , "xref", O_RDWR|O_CREAT, 0664, $DB_HASH)
+    tie (%xrefdb, "DB_File" , "xref.out.$$", O_RDWR|O_CREAT, 0664, $DB_HASH)
 	|| die("Could not open \"xref\" for writing");
 
     $i = 0;
@@ -375,14 +375,16 @@ sub dumpdb {
     }
 
     untie(%xrefdb);
+    rename("xref.out.$$", "xref") || die "Couldn't rename xref.out.$$ to xref";
     print(STDERR 
 	  "Completed pass 3 (",(time-$start),"s):",
 	  "Information on $i identifiers dumped to disk.\n\n");
 }
 
 
-tie (%fileidx, "DB_File", "fileidx", O_RDWR|O_CREAT, 0660, $DB_HASH)
-    || die("Could not open \"fileidx\" for writing");
+tie (%fileidx, "DB_File", "fileidx.out.$$", O_RDWR|O_CREAT, 0660, $DB_HASH)
+    || die("Could not open \"fileidx.out.$$\" for writing");
+
 
 open(FILES, "find $realpath -print |");
 while (<FILES>) {
@@ -405,3 +407,5 @@ close(FILES);
 
 dbmclose(%fileidx);
 
+rename("fileidx.out.$$", "fileidx")
+    || die "Couldn't rename fileidx.out.$$ to fileidx";
