@@ -17,7 +17,6 @@
  */
 #include "nsFrameImageLoader.h"
 #include "nsIPresContext.h"
-#include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsIFrame.h"
@@ -230,21 +229,14 @@ nsFrameImageLoader::DamageRepairFrame()
 void
 nsFrameImageLoader::ReflowFrame()
 {
-  nsIContent* content;
+  nsIContent* content = nsnull;
   mTargetFrame->GetContent(content);
   if (nsnull != content) {
-    nsIPresShell* shell;
-    shell = mPresContext->GetShell();
-    if (nsnull != shell) {
-      shell->EnterReflowLock();
-      shell->BeginUpdate();
-#ifdef NOISY
-      printf("  reflow %p\n", mTargetFrame);
-#endif
-      shell->ContentChanged(content, nsnull);
-      shell->EndUpdate();
-      shell->ExitReflowLock();
-      NS_RELEASE(shell);
+    nsIDocument* document = nsnull;
+    content->GetDocument(document);
+    if (nsnull != document) {
+      document->ContentChanged(content, nsnull);
+      NS_RELEASE(document);
     }
     NS_RELEASE(content);
   }
