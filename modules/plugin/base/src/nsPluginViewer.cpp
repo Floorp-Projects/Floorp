@@ -25,12 +25,8 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIServiceManager.h"
 #include "nsIChannel.h"
 #include "nsNeckoUtil.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"

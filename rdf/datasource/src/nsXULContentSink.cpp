@@ -59,9 +59,7 @@
 #include "nsIUnicharStreamLoader.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsIViewManager.h"
@@ -743,6 +741,9 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
 
   if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase(kCSSType)) {
     nsIURI* url = nsnull;
+#ifdef NECKO    // we need to be passed the nsILoadGroup here
+    result = NS_NewURI(&url, aHref, mDocumentBaseURL/*, group*/);
+#else
     nsILoadGroup* LoadGroup = nsnull;
     mDocumentBaseURL->GetLoadGroup(&LoadGroup);
     if (LoadGroup) {
@@ -750,25 +751,9 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
       NS_RELEASE(LoadGroup);
     }
     else {
-#ifndef NECKO
       result = NS_NewURL(&url, aHref, mDocumentBaseURL);
-#else
-      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-      if (NS_FAILED(result)) return result;
-
-      nsIURI *uri = nsnull, *baseUri = nsnull;
-      result = mDocumentBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-      if (NS_FAILED(result)) return result;
-
-      const char *uriStr = aHref.GetBuffer();
-      result = service->NewURI(uriStr, baseUri, &uri);
-      NS_RELEASE(baseUri);
-      if (NS_FAILED(result)) return result;
-
-      result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-      NS_RELEASE(uri);
-#endif // NECKO
     }
+#endif
     if (NS_OK != result) {
       return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
     }
@@ -1187,9 +1172,17 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...
+#ifdef NECKO
+    char* url;
+#else
     const char* url;
+#endif
     mDocumentURL->GetSpec(&url);
-    return rdf_CreateAnonymousResource(url, aResource);
+    nsresult rv = rdf_CreateAnonymousResource(url, aResource);
+#ifdef NECKO
+    nsCRT::free(url);
+#endif
+    return rv;
 }
 
 nsresult
@@ -1437,6 +1430,9 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             // Use the SRC attribute value to load the URL
             nsIURI* url = nsnull;
             nsAutoString absURL;
+#ifdef NECKO    // we need to be passed the nsILoadGroup here
+            rv = NS_NewURI(&url, absURL/*, group*/);
+#else
             nsILoadGroup* LoadGroup;
 
             rv = mDocumentBaseURL->GetLoadGroup(&LoadGroup);
@@ -1446,21 +1442,9 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
                 NS_RELEASE(LoadGroup);
             }
             else {
-#ifndef NECKO
                 rv = NS_NewURL(&url, absURL);
-#else
-                NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-                if (NS_FAILED(rv)) return rv;
-
-                nsIURI *uri = nsnull;
-                const char *uriStr = absURL.GetBuffer();
-                rv = service->NewURI(uriStr, nsnull, &uri);
-                if (NS_FAILED(rv)) return rv;
-
-                rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-                NS_RELEASE(uri);
-#endif // NECKO
             }
+#endif
             if (NS_OK != rv) {
                 return rv;
             }
@@ -1538,7 +1522,11 @@ XULContentSinkImpl::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
             }
         
             nsIURI* docURL = mDocument->GetDocumentURL();
+#ifdef NECKO
+            char* url;
+#else
             const char* url;
+#endif
             if (docURL) {
                 (void)docURL->GetSpec(&url);
             }
@@ -1548,7 +1536,9 @@ XULContentSinkImpl::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
 
             PRBool result = context->EvaluateString(aScript, url, aLineNo, 
                                                     val, &isUndefined);
-      
+#ifdef NECKO
+            nsCRT::free(url);
+#endif
             NS_IF_RELEASE(docURL);
       
             NS_RELEASE(context);

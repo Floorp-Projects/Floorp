@@ -104,17 +104,10 @@ public:
    */
   virtual nsIURI* GetDocumentURL() const = 0;
 
-#ifdef NECKO
-  /**
-   * Return the LoadGroup for the document. May return null.
-   */
-  NS_IMETHOD_(nsILoadGroup*) GetDocumentLoadGroup() const = 0;
-#else
   /**
    * Return the LoadGroup for the document. May return null.
    */
   virtual nsILoadGroup* GetDocumentLoadGroup() const = 0;
-#endif
 
   /**
    * Return the base URL for realtive URLs in the document. May return null (or the document URL).

@@ -27,10 +27,8 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
 #include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsIURLGroup.h"
 #include "nsIWebShell.h"
@@ -1019,23 +1017,10 @@ nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl,
       result = NS_NewURL(aUrl, absURL);
     }
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
-
-    nsIURI *baseUri = nsnull, *uri = nsnull;
-    result = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-    if (NS_FAILED(result)) return result;
-
-    char *absUrlStr = nsnull;
-    result = service->MakeAbsolute(aHref, baseUri, &absUrlStr);
-    NS_RELEASE(baseUri);
-    if (NS_FAILED(result)) return result;
-
-    result = service->NewURI(absUrlStr, nsnull, &uri);
-    if (NS_FAILED(result)) return result;
-
-    result = uri->QueryInterface(nsIURI::GetIID(), (void**)aUrl);
-    NS_RELEASE(uri);
+    result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
+    if (NS_SUCCEEDED(result)) {
+      result = NS_NewURL(aUrl, absURL);
+    }
 #endif // NECKO
   }
   NS_RELEASE(docURL);
@@ -1142,6 +1127,9 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
   if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) {
     nsIURI* url = nsnull;
+#ifdef NECKO    // XXX we need to get passed in the nsILoadGroup here!
+    result = NS_NewURI(&url, aHref, mDocumentBaseURL/*, group*/);
+#else
     nsILoadGroup* LoadGroup = nsnull;
     mDocumentBaseURL->GetLoadGroup(&LoadGroup);
     if (LoadGroup) {
@@ -1149,26 +1137,9 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
       NS_RELEASE(LoadGroup);
     }
     else {
-#ifndef NECKO
       result = NS_NewURL(&url, aHref, mDocumentBaseURL);
-#else
-      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-      if (NS_FAILED(result)) return result;
-
-      nsIURI *uri = nsnull, *baseUri = nsnull;
-      result = mDocumentBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-      if (NS_FAILED(result)) return result;
-
-      const char *uriStr = aHref.GetBuffer();
-      result = service->NewURI(uriStr, baseUri, &uri);
-      NS_RELEASE(baseUri);
-      if (NS_FAILED(result)) return result;
-
-      result = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-      NS_RELEASE(uri);
-      if (NS_FAILED(result)) return result;
-#endif // NECKO
     }
+#endif
     if (NS_OK != result) {
       return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
     }
@@ -1561,8 +1532,18 @@ nsXMLContentSink::StartLayout()
 
   // If the document we are loading has a reference or it is a top level
   // frameset document, disable the scroll bars on the views.
+#ifdef NECKO
+  char* ref = nsnull;
+  nsIURL* url;
+  nsresult rv = mDocumentURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
+  if (NS_SUCCEEDED(rv)) {
+    rv = url->GetRef(&ref);
+    NS_RELEASE(url);
+  }
+#else
   const char* ref;
   (void)mDocumentURL->GetRef(&ref);
+#endif
   PRBool topLevelFrameset = PR_FALSE;
   if (mWebShell) {
     nsIWebShell* rootWebShell;
@@ -1602,6 +1583,10 @@ nsXMLContentSink::StartLayout()
         NS_RELEASE(shell);
       }
     }
+#ifdef NECKO
+    // XXX who actually uses ref here anyway?
+    nsCRT::free(ref);
+#endif
   }
 }
 
@@ -1633,25 +1618,34 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
       }
         
       nsIURI* docURL = mDocument->GetDocumentURL();
+#ifdef NECKO
+      char* url;
+#else
       const char* url;
+#endif
       if (docURL) {
-         (void)docURL->GetSpec(&url);
+        rv = docURL->GetSpec(&url);
       }
 
-      nsAutoString val;
-      PRBool isUndefined;
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString val;
+        PRBool isUndefined;
 
-      PRBool result = context->EvaluateString(aScript, url, aLineNo, 
-                                              val, &isUndefined);
+        PRBool result = context->EvaluateString(aScript, url, aLineNo, 
+                                                val, &isUndefined);
       
-      NS_IF_RELEASE(docURL);
+        NS_IF_RELEASE(docURL);
       
-      NS_RELEASE(context);
-      NS_RELEASE(owner);
+        NS_RELEASE(context);
+        NS_RELEASE(owner);
+#ifdef NECKO
+        nsCRT::free(url);
+#endif
+      }
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -1764,32 +1758,20 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       nsIURI* url = nsnull;
       nsAutoString absURL;
       nsIURI* docURL = mDocument->GetDocumentURL();
-      nsILoadGroup* LoadGroup;
-
-      rv = docURL->GetLoadGroup(&LoadGroup);
-      
-      if ((NS_OK == rv) && LoadGroup) {
-        rv = LoadGroup->CreateURL(&url, docURL, src, nsnull);
-        NS_RELEASE(LoadGroup);
+#ifdef NECKO
+      // XXX we need to be passed the nsILoadGroup here
+      rv = NS_NewURI(&url, absURL/*, group*/);
+#else
+      nsILoadGroup* group = nsnull;
+      rv = docURL->GetLoadGroup(&group);
+      if ((NS_OK == rv) && group) {
+        rv = group->CreateURL(&url, docURL, src, nsnull);
+        NS_RELEASE(group);
       }
       else {
-#ifndef NECKO
-          rv = NS_NewURL(&url, absURL);
-#else
-          NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-          if (NS_FAILED(rv)) return rv;
-
-          nsIURI *uri = nsnull;
-          const char *uriStr = absURL.GetBuffer();
-          rv = service->NewURI(uriStr, nsnull, &uri);
-          if (NS_FAILED(rv)) return rv;
-
-          rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-          NS_RELEASE(uri);
-          if (NS_FAILED(rv)) return rv;
-#endif // NECKO
-
+        rv = NS_NewURL(&url, absURL);
       }
+#endif
       NS_RELEASE(docURL);
       if (NS_OK != rv) {
         return rv;

@@ -237,46 +237,68 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     nsresult rv = NS_OK;
     
     // Retrieve the resource for this chrome element.
+#ifdef NECKO
+    char* host;
+#else
     const char* host;
+#endif
     if (NS_FAILED(rv = aChromeURL->GetHost(&host))) {
         NS_ERROR("Unable to retrieve the host for a chrome URL.");
         return rv;
     }
 
     nsAutoString hostStr(host);
+#ifdef NECKO
+    nsCRT::free(host);
+    char* file;
+#else
     const char* file;
-    
+#endif
+
     // Construct a chrome URL and use it to look up a resource.
     nsAutoString windowType = nsAutoString("chrome://") + hostStr + "/";
 
     // Stash any search part of the URL for later
+#ifdef NECKO
+    nsIURL* url = nsnull;
+    rv = aChromeURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
+    if (NS_SUCCEEDED(rv)) {
+        (void)url->GetQuery(&file);
+        NS_RELEASE(url);
+    }
+#else
     aChromeURL->GetSearch(&file);
+#endif
     nsAutoString searchStr(file);
 
     // Find out the package type of the URL
+#ifdef NECKO
+    aChromeURL->GetPath(&file);
+#else
     aChromeURL->GetFile(&file);
+#endif
     nsAutoString restOfURL(file);
     
-		// Find the second slash.
-		nsAutoString packageType("content");
-		nsAutoString path("");
-	  PRInt32 slashIndex = -1;
-	  if (restOfURL.Length() > 1)
-		{
-			// There is something to the right of that slash. A provider type must have
-			// been specified.
-			slashIndex = restOfURL.Find('/', 1);
-		  if (slashIndex == -1)
+    // Find the second slash.
+    nsAutoString packageType("content");
+    nsAutoString path("");
+    PRInt32 slashIndex = -1;
+    if (restOfURL.Length() > 1)
+    {
+        // There is something to the right of that slash. A provider type must have
+        // been specified.
+        slashIndex = restOfURL.Find('/', 1);
+        if (slashIndex == -1)
 		    slashIndex = restOfURL.Length();
 
-			restOfURL.Mid(packageType, 1, slashIndex - 1);
+        restOfURL.Mid(packageType, 1, slashIndex - 1);
 
-			if (slashIndex < restOfURL.Length()-1)
-			{
-				// There are some extra subdirectories to remember.
-				restOfURL.Right(path, restOfURL.Length()-slashIndex-1);
-			}
-		}
+        if (slashIndex < restOfURL.Length()-1)
+        {
+            // There are some extra subdirectories to remember.
+            restOfURL.Right(path, restOfURL.Length()-slashIndex-1);
+        }
+    }
 
     windowType += packageType + "/";
 
@@ -343,8 +365,16 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     char* search = searchStr.ToNewCString();
     aChromeURL->SetSpec(finalDecision);
     if (search && *search) {
-      aChromeURL->SetSearch(search);
-      delete []search;
+#ifdef NECKO
+        rv = aChromeURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        if (NS_SUCCEEDED(rv)) {
+            (void)url->SetQuery(search);
+            NS_RELEASE(url);
+        }
+#else
+        aChromeURL->SetSearch(search);
+#endif
+        delete []search;
     }
     delete []finalDecision;
     return NS_OK;

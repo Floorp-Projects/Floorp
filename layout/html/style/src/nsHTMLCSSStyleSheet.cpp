@@ -625,17 +625,25 @@ HTMLCSSStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
 
 void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
-  PRUnichar* buffer;
-
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("HTML CSS Style Sheet: ", out);
+#ifdef NECKO
+  char* buffer;
+  mURL->GetSpec(&buffer);
+#else
+  PRUnichar* buffer;
   mURL->ToString(&buffer);
+#endif
   nsAutoString as(buffer,0);
   fputs(as, out);
   fputs("\n", out);
+#ifdef NECKO
+  nsCRT::free(buffer);
+#else
   delete buffer;
+#endif
 }
 
 

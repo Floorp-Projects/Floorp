@@ -84,11 +84,11 @@
 #include "nsITextContent.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
+#include "nsNeckoUtil.h"
+#include "nsILoadGroup.h"
+#else
 #include "nsIURLGroup.h"
+#endif // NECKO
 #include "nsIWebShell.h"
 #include "nsIXMLContent.h"
 #include "nsIXULChildDocument.h"
@@ -1036,9 +1036,18 @@ generate_RDF_seed( nsString* result, nsIURI* aOptionalURL )
 
 		if ( aOptionalURL )
 			{
+#ifdef NECKO
+                char* s = 0;
+#else
 				const char* s = 0;
-				if ( NS_SUCCEEDED(status = aOptionalURL->GetSpec(&s)) )
-					(*result) = s;
+#endif
+                status = aOptionalURL->GetSpec(&s);
+				if ( NS_SUCCEEDED(status) ) {
+					(*result) = s;      // copied by nsString
+#ifdef NECKO
+                    nsCRT::free(s);
+#endif
+                }
 			}
 		else
 			{
@@ -1067,18 +1076,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 #ifndef NECKO
 				NS_NewURL(getter_AddRefs(syntheticURL), seedString);
 #else
-                nsresult rv;
-                NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-                if (NS_FAILED(rv)) return rv;
-
-                nsIURI *uri = nsnull;
-                const char *uriStr = seedString.GetBuffer();
-                rv = service->NewURI(uriStr, nsnull, &uri);
-                if (NS_FAILED(rv)) return rv;
-
-                rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&syntheticURL);
-                NS_RELEASE(uri);
-                if (NS_FAILED(rv)) return rv;
+				NS_NewURI(getter_AddRefs(syntheticURL), seedString);
 #endif // NECKO
 			}
 
@@ -1096,7 +1094,11 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
     mDocumentTitle.Truncate();
 
     mDocumentURL = syntheticURL;
+#ifdef NECKO
+    // XXX help
+#else
     syntheticURL->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
+#endif
 
     SetDocumentURLAndGroup(syntheticURL);
 
@@ -1295,7 +1297,11 @@ void
 XULDocumentImpl::SetDocumentURLAndGroup(nsIURI* anURL)
 {
     mDocumentURL = dont_QueryInterface(anURL);
+#ifdef NECKO
+    // XXX help
+#else
     anURL->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
+#endif
 }
 
 NS_IMETHODIMP 
@@ -3784,7 +3790,11 @@ XULDocumentImpl::LoadCSSStyleSheet(nsIURI* url)
 {
     nsresult rv;
     nsIInputStream* iin;
+#ifdef NECKO
+    rv = NS_OpenURI(&iin, url);
+#else
     rv = NS_OpenURL(url, &iin);
+#endif
     if (NS_OK != rv) {
         NS_RELEASE(url);
         return rv;

@@ -48,11 +48,8 @@
 
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIEventQueueService.h"
-#include "nsIIOService.h"
-#include "nsIChannel.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+#include "nsNeckoUtil.h"
+#include "nsIBufferInputStream.h"
 #endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
@@ -84,6 +81,15 @@ public:
                 FTPDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent);
 	virtual		~FTPDataSourceCallback(void);
 
+#ifdef NECKO
+    // nsIStreamObserver methods:
+    NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+    NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_ERROR_NOT_IMPLEMENTED; }
+    // nsIStreamListener methods:
+    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+#else
 	// stream observer
 
 	NS_IMETHOD	OnStartBinding(nsIURI *aURL, const char *aContentType);
@@ -95,6 +101,7 @@ public:
 	NS_IMETHOD	GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
 	NS_IMETHOD	OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, 
                                PRUint32 aLength);
+#endif
 };
 
 
@@ -218,7 +225,6 @@ nsIRDFResource		*FTPDataSourceCallback::kNC_loading;
 
 static const char	kFTPprotocol[] = "ftp:";
 static const char	kFTPcommand[] = "http://home.netscape.com/NC-rdf#ftpcommand?";
-
 
 
 static PRBool
@@ -610,7 +616,11 @@ FTPDataSourceCallback::~FTPDataSourceCallback()
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+FTPDataSourceCallback::OnStartBinding(nsISupports *ctxt)
+#else
 FTPDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
+#endif
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -624,7 +634,7 @@ FTPDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
 }
 
 
-
+#ifndef NECKO
 NS_IMETHODIMP
 FTPDataSourceCallback::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
 {
@@ -638,11 +648,15 @@ FTPDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 {
 	return(NS_OK);
 }
-
+#endif
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+FTPDataSourceCallback::OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) 
+#else
 FTPDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
+#endif
 {
 	nsAutoString		trueStr("true");
 	nsIRDFLiteral		*literal = nsnull;
@@ -660,17 +674,22 @@ FTPDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PRUni
 // stream listener methods
 
 
-
+#ifndef NECKO
 NS_IMETHODIMP
 FTPDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 {
 	return(NS_OK);
 }
-
+#endif
 
 
 NS_IMETHODIMP
+#ifdef NECKO
+FTPDataSourceCallback::OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *aIStream, 
+                                       PRUint32 sourceOffset, PRUint32 aLength)
+#else
 FTPDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+#endif
 {
 	nsresult	rv = NS_OK;
 
@@ -814,42 +833,16 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResu
 			}
 		}
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        
-        nsIChannel *channel = nsnull;
-        rv = service->NewChannel("load", (const char*) ftpURL, nsnull, nsnull, &channel);
-        if (NS_FAILED(rv)) return rv;
-
-        FTPDataSourceCallback *callback = new FTPDataSourceCallback(mInner, source);
-        if (!callback) return NS_ERROR_OUT_OF_MEMORY;
-
-        nsIStreamListener *listener = nsnull;
-        rv = callback->QueryInterface(nsIStreamListener::GetIID(), (void**)&listener);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(channel);
-            delete callback;
-            return rv;
-        }
-
-        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(channel);
-            delete callback;
-            return rv;
-        }
-
-        nsIEventQueue *eventQ = nsnull;
-        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(channel);
-            delete callback;
-            return rv;
-        }
-
-        rv = channel->AsyncRead(0, -1, nsnull, eventQ, callback);
-        NS_RELEASE(channel);
-        NS_RELEASE(eventQ);
+        nsIURI		*url;
+        rv = NS_NewURI(&url, (const char*) ftpURL);
+		if (NS_SUCCEEDED(rv))
+		{
+			FTPDataSourceCallback	*callback = new FTPDataSourceCallback(mInner, source);
+			if (nsnull != callback)
+			{
+				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), url);
+			}
+		}
 #endif // NECKO
 	}
 	return NS_NewEmptyEnumerator(aResult);

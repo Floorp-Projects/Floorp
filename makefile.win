@@ -93,9 +93,15 @@ DIRS = \
   $(NULL)
 
 
+!ifdef NECKO
+export::
+        @echo NECKO is enabled
+!endif
+
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
+

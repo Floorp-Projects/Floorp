@@ -879,11 +879,18 @@ RDFXULBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
         if (! url)
             return NS_ERROR_UNEXPECTED;
 
+#ifdef NECKO
+        char* context;
+#else
         const char* context;
+#endif
         rv = url->GetSpec(&context);
         if (NS_FAILED(rv)) return rv;
 
         rv = rdf_CreateAnonymousResource(context, getter_AddRefs(resource));
+#ifdef NECKO
+        nsCRT::free(context);
+#endif
         if (NS_FAILED(rv)) return rv;
 
         // Set it's RDF:type in the graph s.t. the element's tag can be
