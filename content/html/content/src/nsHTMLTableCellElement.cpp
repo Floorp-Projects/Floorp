@@ -305,7 +305,10 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
   }
   else if ((aAttribute == nsHTMLAtoms::colspan) ||
            (aAttribute == nsHTMLAtoms::rowspan)) {
-    if (ParseValue(aValue, -1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)) {
+    PRBool parsed = (aAttribute == nsHTMLAtoms::colspan)
+      ? ParseValue(aValue, -1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)
+      : ParseValue(aValue, -1, aResult, eHTMLUnit_Integer);
+    if (parsed) {
       PRInt32 val = aResult.GetIntValue();
       // quirks mode does not honor the special html 4 value of 0
       if ((val < 0) || ((0 == val) && InNavQuirksMode(mDocument))) {
