@@ -74,6 +74,7 @@ const char *XFE_MozillaApp::appNotBusyCallback = "XFE_MozillaApp::appNotBusyCall
 const char *XFE_MozillaApp::changeInToplevelFrames = "XFE_MozillaApp::changeInToplevelFrames";
 const char *XFE_MozillaApp::biffStateChanged = "XFE_MozillaApp::biffStateChanged";
 const char *XFE_MozillaApp::updateToolbarAppearance = "XFE_MozillaApp::updateToolbarAppearance";
+const char *XFE_MozillaApp::updateRelatedLinksShowing = "XFE_MozillaApp::updateRelatedLinksShowing";
 const char *XFE_MozillaApp::linksAttributeChanged = "XFE_MozillaApp::linksAttributeChanged";
 const char *XFE_MozillaApp::defaultColorsChanged = "XFE_MozillaApp::defaultColorsChanged";
 const char *XFE_MozillaApp::defaultFontChanged = "XFE_MozillaApp::defaultFontChanged";

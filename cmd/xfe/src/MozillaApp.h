@@ -59,7 +59,8 @@ public:
 
   static const char *changeInToplevelFrames;
   static const char *biffStateChanged;
-  static const char *updateToolbarAppearance;
+  static const char *updateToolbarAppearance;  
+  static const char *updateRelatedLinksShowing;
   static const char *linksAttributeChanged; 
   static const char *defaultColorsChanged; 
   static const char *defaultFontChanged; 
