@@ -23,6 +23,7 @@
 #include "nsMacWindow.h"
 #include "nsMacEventHandler.h"
 #include "nsMacMessageSink.h"
+#include "nsMacControl.h"
 
 #include "nsIServiceManager.h"    // for drag and drop
 #include "nsWidgetsCID.h"
@@ -716,8 +717,8 @@ PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
 NS_IMETHODIMP nsMacWindow::SetTitle(const nsString& aTitle)
 {
 	Str255 title;
-	title[0] = aTitle.Length();
-	aTitle.ToCString((char*)title + 1, sizeof(title) - 1);
+	// unicode to file system charset
+	nsMacControl::StringToStr255(aTitle, title);
 	::SetWTitle(mWindowPtr, title);
 	return NS_OK;
 }
