@@ -61,7 +61,7 @@ struct RowReflowState {
 #define NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN 0x80000000  // set if child cells have been
                                                             // added to the table
 
-#define NS_TABLE_MAX_ROW_INDEX  (1<<20)
+#define NS_TABLE_MAX_ROW_INDEX  (1<<19)
 
 /**
  * nsTableRowFrame is the frame that maps table rows 
@@ -293,7 +293,7 @@ protected:
 
 public:
   struct RowBits {
-    unsigned mRowIndex:20;
+    int      mRowIndex:20;
     unsigned mMinRowSpan:12;        // the smallest row span among all my child cells
   };
 
@@ -313,9 +313,8 @@ inline PRInt32 nsTableRowFrame::GetRowIndex() const
 
 inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
 {
-  NS_PRECONDITION((aRowIndex >= 0) && (aRowIndex < NS_TABLE_MAX_ROW_INDEX),
-                  "unexpected row index");
-  mBits.mRowIndex = unsigned(aRowIndex);
+  NS_PRECONDITION(aRowIndex < NS_TABLE_MAX_ROW_INDEX, "unexpected row index");
+  mBits.mRowIndex = aRowIndex;
 }
 
 inline void nsTableRowFrame::ResetInitChildren()
