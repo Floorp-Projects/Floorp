@@ -2831,7 +2831,12 @@ main
   /* This needs to be after fe_InstallPreferences() to 
    * get the right filename.
    */
+  /* BUG 224560: stever says GH_InitGlobalHistory shouldn't be here,
+   * but that we do need to call NET_FinishInitNetLib() to initialize
+   * cookies and other good things:
   GH_InitGlobalHistory();
+   */
+  NET_FinishInitNetLib();
 
   /*
   ** Initialize the security library.
