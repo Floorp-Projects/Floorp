@@ -258,27 +258,37 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
 
   if ((-1 != aMaxLength) && (mFlags&TEXT_EDITOR_FLAG_PLAINTEXT))
   {
-    // get the current text length
-    // get the length of inString
-    // if len(doc) is at or over max, cancel the insert
-    // if l(doc) + l(input) > max, set aOutString to subset of inString so length = max
+    // Get the current text length.
+    // Get the length of inString.
+		// Get the length of the selection.
+		//   If selection is collapsed, it is length 0.
+		//   Subtract the length of the selection from the len(doc) 
+		//   since we'll delete the selection on insert.
+		//   This is resultingDocLength.
+    // If (resultingDocLength) is at or over max, cancel the insert
+    // If (resultingDocLength) + (length of input) > max, 
+		//    set aOutString to subset of inString so length = max
     PRInt32 docLength;
     result = mEditor->GetDocumentLength(&docLength);
-    if (NS_SUCCEEDED(result))
+    if (NS_FAILED(result)) { return result; }
+    PRInt32 start, end;
+    result = mEditor->GetTextSelectionOffsets(aSelection, start, end);
+    if (NS_FAILED(result)) { return result; }
+    PRInt32 selectionLength = end-start;
+    if (selectionLength<0) { selectionLength *= (-1); }
+    PRInt32 resultingDocLength = docLength - selectionLength;
+    if (resultingDocLength >= aMaxLength) 
     {
-      if (docLength >= aMaxLength) 
+      *aOutString = "";
+      *aCancel = PR_TRUE;
+      return result;
+    }
+    else
+    {
+      PRInt32 inCount = inString.Length();
+      if ((inCount+resultingDocLength) > aMaxLength)
       {
-        *aOutString = "";
-        *aCancel = PR_TRUE;
-        return result;
-      }
-      else
-      {
-        PRInt32 inCount = inString.Length();
-        if ((inCount+docLength)>aMaxLength)
-        {
-          inString.Truncate(aMaxLength-docLength);
-        }
+        inString.Truncate(aMaxLength-resultingDocLength);
       }
     }
   }
