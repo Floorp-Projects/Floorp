@@ -743,14 +743,16 @@ public:
         nsCOMPtr<nsIDOMElement> element;
 
         // Get the DOM document
-        NPN_GetValue(mData->pPluginInstance, NPNVDOMElement, (void *) &element);
+        NPN_GetValue(mData->pPluginInstance, NPNVDOMElement, 
+                     NS_STATIC_CAST(nsIDOMElement **, getter_AddRefs(element)));
         if (element)
         {
             element->GetOwnerDocument(getter_AddRefs(mDOMDocument));
         }
 
         // Get the DOM window
-        NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, (void *) &mDOMWindow);
+        NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, 
+                     NS_STATIC_CAST(nsIDOMWindow **, getter_AddRefs(mDOMWindow)));
         if (mDOMWindow)
         {
             nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(mDOMWindow);

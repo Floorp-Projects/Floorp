@@ -6590,7 +6590,7 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
 
   //get nsPluginStreamListenerPeer* ptr from finalStreamListener 
   nsPluginStreamListenerPeer *pslp = NS_REINTERPRET_CAST(nsPluginStreamListenerPeer*,
-                                     *(NS_REINTERPRET_CAST(void**, &finalStreamListener)));
+                                                         finalStreamListener.get());
   rv = pslp->ServeStreamAsFile(request, ctxt);
   return rv;
 }
