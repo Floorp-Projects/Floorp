@@ -36,8 +36,9 @@
 // nsComboBox constructor
 //
 //-------------------------------------------------------------------------
-nsComboBox::nsComboBox(nsISupports *aOuter) : nsWindow(aOuter)
+nsComboBox::nsComboBox() : nsWindow(), nsIListWidget(), nsIComboBox()
 {
+  NS_INIT_REFCNT();
   mMultiSelect = PR_FALSE;
   mBackground  = NS_RGB(124, 124, 124);
 
@@ -306,33 +307,30 @@ void nsComboBox::Deselect()
 
 }
 
-
 //-------------------------------------------------------------------------
 //
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsComboBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+  static NS_DEFINE_IID(kInsComboBoxIID, NS_ICOMBOBOX_IID);
+  static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
 
-    static NS_DEFINE_IID(kIComboBoxIID, NS_ICOMBOBOX_IID);
-    static NS_DEFINE_IID(kIListWidgetIID, NS_ILISTWIDGET_IID);
-    if (result == NS_NOINTERFACE) {
-      if (aIID.Equals(kIComboBoxIID)) {
-        *aInstancePtr = (void*) ((nsIComboBox*)&mAggWidget);
-        AddRef();
-        result = NS_OK;
-      }
-      else if (aIID.Equals(kIListWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIListWidget*)&mAggWidget);
-        AddRef();
-        result = NS_OK;
-      }
-    }
+  if (aIID.Equals(kInsComboBoxIID)) {
+    *aInstancePtr = (void*) ((nsIComboBox*)this);
+    AddRef();
+    return NS_OK;
+  }
+  else if (aIID.Equals(kInsListWidgetIID)) {
+    *aInstancePtr = (void*) ((nsIListWidget*)this);
+    AddRef();
+    return NS_OK;
+  }
 
-    return result;
+  return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -465,141 +463,5 @@ PRBool nsComboBox::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
-
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-#define GET_OUTER() ((nsComboBox*) ((char*)this - nsComboBox::GetOuterOffset()))
-
-
-//-------------------------------------------------------------------------
-//
-//  SetMultipleSelection
-//
-//-------------------------------------------------------------------------
-
-void nsComboBox::AggComboBox::SetMultipleSelection(PRBool aMultipleSelections)
-{
-  GET_OUTER()->SetMultipleSelection(aMultipleSelections);
-}
-
-
-//-------------------------------------------------------------------------
-//
-//  AddItemAt
-//
-//-------------------------------------------------------------------------
-
-void nsComboBox::AggComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
-{
-  GET_OUTER()->AddItemAt(aItem, aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Finds an item at a postion
-//
-//-------------------------------------------------------------------------
-PRInt32  nsComboBox::AggComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
-{
-  return  GET_OUTER()->FindItem(aItem, aStartPos);
-}
-
-//-------------------------------------------------------------------------
-//
-//  CountItems - Get Item Count
-//
-//-------------------------------------------------------------------------
-PRInt32  nsComboBox::AggComboBox::GetItemCount()
-{
-  return GET_OUTER()->GetItemCount();
-}
-
-//-------------------------------------------------------------------------
-//
-//  Removes an Item at a specified location
-//
-//-------------------------------------------------------------------------
-PRBool  nsComboBox::AggComboBox::RemoveItemAt(PRInt32 aPosition)
-{
-  return GET_OUTER()->RemoveItemAt(aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Removes an Item at a specified location
-//
-//-------------------------------------------------------------------------
-PRBool nsComboBox::AggComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
-{
-  return  GET_OUTER()->GetItemAt(anItem, aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Gets the selected of selected item
-//
-//-------------------------------------------------------------------------
-void nsComboBox::AggComboBox::GetSelectedItem(nsString& aItem)
-{
-  GET_OUTER()->GetSelectedItem(aItem);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Gets the list of selected otems
-//
-//-------------------------------------------------------------------------
-PRInt32 nsComboBox::AggComboBox::GetSelectedIndex()
-{  
-  return GET_OUTER()->GetSelectedIndex();
-}
-
-//-------------------------------------------------------------------------
-//
-//  SelectItem
-//
-//-------------------------------------------------------------------------
-void nsComboBox::AggComboBox::SelectItem(PRInt32 aPosition)
-{
-  GET_OUTER()->SelectItem(aPosition);
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedCount
-//
-//-------------------------------------------------------------------------
-PRInt32 nsComboBox::AggComboBox::GetSelectedCount()
-{
-  return  GET_OUTER()->GetSelectedCount();
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedIndices
-//
-//-------------------------------------------------------------------------
-void nsComboBox::AggComboBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
-{
-  GET_OUTER()->GetSelectedIndices(aIndices, aSize);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Deselect
-//
-//-------------------------------------------------------------------------
-void nsComboBox::AggComboBox::Deselect()
-{
-  GET_OUTER()->Deselect();
-}
-
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsComboBox, AggComboBox);
 
 
