@@ -568,17 +568,18 @@ PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void*
   nsCOMPtr<nsIXBLInsertionPoint> insertionPoint;
   PRUint32 count;
   points->Count(&count);
-  PRUint32 i = 0, currIndex = 0;  
+  PRUint32 i = 0;
+  PRInt32 currIndex = 0;  
   for ( ; i < count; i++) {
     nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)points->ElementAt(i));
     currPoint->GetInsertionIndex(&currIndex);
-    if (currIndex == index) {
+    if (currIndex == (PRInt32)index) {
       // This is a match. Break out of the loop and set our variable.
       insertionPoint = currPoint;
       break;
     }
     
-    if (currIndex > index)
+    if (currIndex > (PRInt32)index)
       // There was no match. Break.
       break;
   }

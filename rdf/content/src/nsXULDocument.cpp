@@ -445,6 +445,12 @@ nsXULDocument::nsXULDocument(void)
 {
     NS_INIT_REFCNT();
     mCharSetID.AssignWithConversion("UTF-8");
+
+    // Force initialization.
+    mBindingManager = do_CreateInstance("@mozilla.org/xbl/binding-manager;1");
+    nsCOMPtr<nsIDocumentObserver> observer(do_QueryInterface(mBindingManager));
+    if (observer) // We must always be the first observer of the document.
+      mObservers.InsertElementAt(observer, 0);
 }
 
 nsXULDocument::~nsXULDocument()
@@ -1946,13 +1952,6 @@ nsXULDocument::GetAndIncrementContentID(PRInt32* aID)
 NS_IMETHODIMP
 nsXULDocument::GetBindingManager(nsIBindingManager** aResult)
 {
-  nsresult rv;
-  if (!mBindingManager) {
-    mBindingManager = do_CreateInstance("@mozilla.org/xbl/binding-manager;1", &rv);
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
-  }
-
   *aResult = mBindingManager;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
@@ -6461,6 +6460,8 @@ nsXULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
       contractID += "-tree";
     else if (tag.get() == nsXULAtoms::scrollbox)
       contractID += "-scrollbox";
+    else if (tag.get() == nsXULAtoms::outliner)
+      contractID += "-outliner";
   }
   contractID += ";1";
 

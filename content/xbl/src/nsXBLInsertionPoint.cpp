@@ -49,7 +49,7 @@ nsXBLInsertionPoint::GetInsertionParent(nsIContent** aParentElement)
 }
 
 NS_IMETHODIMP
-nsXBLInsertionPoint::GetInsertionIndex(PRUint32 *aResult)
+nsXBLInsertionPoint::GetInsertionIndex(PRInt32 *aResult)
 {
   *aResult = mIndex;
   return NS_OK;
@@ -100,7 +100,7 @@ nsXBLInsertionPoint::ChildAt(PRUint32 aIndex, nsIContent** aResult)
 NS_IMETHODIMP
 nsXBLInsertionPoint::Matches(nsIContent* aContent, PRUint32 aIndex, PRBool* aResult)
 {
-  *aResult = (aContent == mParentElement && aIndex == mIndex);
+  *aResult = (aContent == mParentElement && mIndex != -1 && ((PRInt32)aIndex) == mIndex);
   return NS_OK;
 }
 

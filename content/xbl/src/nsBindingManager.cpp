@@ -47,6 +47,7 @@
 #include "nsITextContent.h"
 #include "nsIStreamListener.h"
 #include "nsIStyleRuleSupplier.h"
+#include "nsIDocumentObserver.h"
 
 #include "nsIXBLBinding.h"
 #include "nsIXBLDocumentInfo.h"
@@ -196,20 +197,42 @@ nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aRes
 // = nsAnonymousContentList 
 // ==================================================================
 
-class nsAnonymousContentList : public nsGenericDOMNodeList 
+// {CC949466-626E-4e3b-88EE-967DC5CEF7BF}
+#define NS_IANONYMOUSCONTENTLIST_IID \
+{ 0xcc949466, 0x626e, 0x4e3b, { 0x88, 0xee, 0x96, 0x7d, 0xc5, 0xce, 0xf7, 0xbf } }
+
+class nsIAnonymousContentList : public nsISupports
+{
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUSCONTENTLIST_IID; return iid; }
+
+   // nsIAnonymousContentList
+  NS_IMETHOD GetInsertionPointCount(PRUint32* aCount)=0;
+  NS_IMETHOD GetInsertionPointAt(PRUint32 i, nsIXBLInsertionPoint** aResult)=0;
+};
+
+class nsAnonymousContentList : public nsGenericDOMNodeList, public nsIAnonymousContentList
 {
 public:
   nsAnonymousContentList(nsISupportsArray* aElements);
   virtual ~nsAnonymousContentList();
 
+  NS_DECL_ISUPPORTS_INHERITED
+
   // nsIDOMNodeList interface
   NS_DECL_IDOMNODELIST
+
+  // nsIAnonymousContentList
+  NS_IMETHOD GetInsertionPointCount(PRUint32* aCount);
+  NS_IMETHOD GetInsertionPointAt(PRUint32 i, nsIXBLInsertionPoint** aResult);
   
 private:
   nsISupportsArray* mElements;
 };
 
 MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList);
+
+NS_IMPL_ISUPPORTS_INHERITED(nsAnonymousContentList, nsGenericDOMNodeList, nsIAnonymousContentList)
 
 nsAnonymousContentList::nsAnonymousContentList(nsISupportsArray* aElements)
 {
@@ -276,9 +299,28 @@ nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsAnonymousContentList::GetInsertionPointCount(PRUint32* aCount)
+{
+  *aCount = 0;
+  if (mElements)
+    mElements->Count(aCount);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAnonymousContentList::GetInsertionPointAt(PRUint32 i, nsIXBLInsertionPoint** aResult)
+{
+  *aResult = nsnull;
+  if (mElements)
+    *aResult = (nsIXBLInsertionPoint*)mElements->ElementAt(i);
+  return NS_OK;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 
-class nsBindingManager : public nsIBindingManager, public nsIStyleRuleSupplier
+class nsBindingManager : public nsIBindingManager, public nsIStyleRuleSupplier, public nsIDocumentObserver
 {
   NS_DECL_ISUPPORTS
 
@@ -334,13 +376,68 @@ public:
 
   NS_IMETHOD GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult);
 
+  NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
+
   // nsIStyleRuleSupplier
   NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
                        nsISupportsArrayEnumFunc aFunc, void* aData,
                        nsIContent* aContent);
 
-  NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult);
+  // nsIDocumentObserver
+  NS_IMETHOD BeginUpdate(nsIDocument* aDocument) { return NS_OK; }
+  NS_IMETHOD EndUpdate(nsIDocument* aDocument) { return NS_OK; }
+  NS_IMETHOD BeginLoad(nsIDocument* aDocument) { return NS_OK; }
+  NS_IMETHOD EndLoad(nsIDocument* aDocument) { return NS_OK; }
+  NS_IMETHOD BeginReflow(nsIDocument* aDocument,
+			                   nsIPresShell* aShell) { return NS_OK; }
+  NS_IMETHOD EndReflow(nsIDocument* aDocument,
+		                   nsIPresShell* aShell) { return NS_OK; } 
+  NS_IMETHOD ContentChanged(nsIDocument* aDoc, 
+                            nsIContent* aContent,
+                            nsISupports* aSubContent) { return NS_OK; }
+  NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2) { return NS_OK; }
+  NS_IMETHOD AttributeChanged(nsIDocument* aDocument,
+                              nsIContent*  aContent,
+                              PRInt32      aNameSpaceID,
+                              nsIAtom*     aAttribute,
+                              PRInt32      aHint) { return NS_OK; }
+  NS_IMETHOD ContentAppended(nsIDocument* aDocument,
+			                       nsIContent* aContainer,
+                             PRInt32     aNewIndexInContainer);
+  NS_IMETHOD ContentInserted(nsIDocument* aDocument,
+			                       nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentReplaced(nsIDocument* aDocument,
+			                       nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer) { return NS_OK; }
+  NS_IMETHOD ContentRemoved(nsIDocument* aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer);
+  NS_IMETHOD StyleSheetAdded(nsIDocument* aDocument,
+                             nsIStyleSheet* aStyleSheet) { return NS_OK; }
+  NS_IMETHOD StyleSheetRemoved(nsIDocument* aDocument,
+                               nsIStyleSheet* aStyleSheet) { return NS_OK; }
+  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument* aDocument,
+                                            nsIStyleSheet* aStyleSheet,
+                                            PRBool aDisabled) { return NS_OK; }
+  NS_IMETHOD StyleRuleChanged(nsIDocument* aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint) { return NS_OK; }
+  NS_IMETHOD StyleRuleAdded(nsIDocument* aDocument,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule) { return NS_OK; }
+  NS_IMETHOD StyleRuleRemoved(nsIDocument* aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule) { return NS_OK; }
+  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument* aDocument) { return NS_OK; }
 
 protected:
   void GetEnclosingScope(nsIContent* aContent, nsIContent** aParent);
@@ -348,6 +445,8 @@ protected:
 
   void WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData,
                  nsIContent* aParent, nsIContent* aCurrContent);
+
+  nsresult GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
 
 // MEMBER VARIABLES
 protected: 
@@ -396,7 +495,7 @@ protected:
 // Static member variable initialization
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS2(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier)
+NS_IMPL_ISUPPORTS3(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier, nsIDocumentObserver)
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
@@ -1145,6 +1244,168 @@ nsBindingManager::ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult)
   if (binding)
     return binding->ShouldBuildChildFrames(aResult);
 
+  return NS_OK;
+}
+
+nsresult
+nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult)
+{
+  *aResult = nsnull;
+
+  // Check to see if the content is anonymous.
+  nsCOMPtr<nsIContent> bindingParent;
+  aChild->GetBindingParent(getter_AddRefs(bindingParent));
+  if (bindingParent == aParent)
+    return NS_OK; // It is anonymous. Don't use the insertion point, since that's only
+                  // for the explicit kids.
+
+  nsCOMPtr<nsIContent> insertionElement;
+  PRUint32 index;
+  GetInsertionPoint(aParent, aChild, getter_AddRefs(insertionElement), &index);
+  if (insertionElement) {
+    // See if we nest even further in.
+    nsCOMPtr<nsIContent> nestedPoint;
+    GetNestedInsertionPoint(insertionElement, aChild, getter_AddRefs(nestedPoint));
+    if (nestedPoint)
+      insertionElement = nestedPoint;
+  }
+
+  *aResult = insertionElement;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::ContentAppended(nsIDocument* aDocument,
+			                            nsIContent* aContainer,
+                                  PRInt32     aNewIndexInContainer)
+{
+  // XXX This is hacked and not quite correct. See below.
+  if (aNewIndexInContainer == -1 || !mContentListTable)
+    // It's anonymous.
+    return NS_OK;
+
+  PRInt32 childCount;
+  nsCOMPtr<nsIContent> child;
+  aContainer->ChildCount(childCount);
+  aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(child));
+  
+  nsCOMPtr<nsIContent> ins;
+  GetNestedInsertionPoint(aContainer, child, getter_AddRefs(ins));
+
+  if (ins) {
+    nsISupportsKey key(ins);
+    nsCOMPtr<nsIDOMNodeList> nodeList = getter_AddRefs(NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key)));
+    if (nodeList) {
+      nsCOMPtr<nsIAnonymousContentList> contentList(do_QueryInterface(nodeList));
+      if (contentList) {
+        // Find a non-pseudo-insertion point and just jam ourselves in.
+        // This is not 100% correct.  Hack city, baby.
+        PRUint32 count;
+        contentList->GetInsertionPointCount(&count);
+        for (PRUint32 i =0; i < count; i++) {
+          nsCOMPtr<nsIXBLInsertionPoint> point;
+          contentList->GetInsertionPointAt(i, getter_AddRefs(point));
+          PRInt32 index;
+          point->GetInsertionIndex(&index);
+          if (index != -1) {
+            // We're real. Jam all the kids in.
+            // XXX Check the filters to find the correct points.
+            for (PRInt32 j = aNewIndexInContainer; j < childCount; j++) {
+              aContainer->ChildAt(j, *getter_AddRefs(child));
+              point->AddChild(child);
+              SetInsertionParent(child, ins);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+ 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::ContentInserted(nsIDocument* aDocument,
+			                     nsIContent* aContainer,
+                           nsIContent* aChild,
+                           PRInt32 aIndexInContainer)
+{
+// XXX This is hacked just to make menus work again.
+  if (aIndexInContainer == -1 || !mContentListTable)
+    // It's anonymous.
+    return NS_OK;
+ 
+  nsCOMPtr<nsIContent> ins;
+  GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(ins));
+
+  if (ins) {
+    nsISupportsKey key(ins);
+    nsCOMPtr<nsIDOMNodeList> nodeList = getter_AddRefs(NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key)));
+    if (nodeList) {
+      nsCOMPtr<nsIAnonymousContentList> contentList(do_QueryInterface(nodeList));
+      if (contentList) {
+        // Find a non-pseudo-insertion point and just jam ourselves in.
+        // This is not 100% correct.  Hack city, baby.
+        PRUint32 count;
+        contentList->GetInsertionPointCount(&count);
+        for (PRUint32 i =0; i < count; i++) {
+          nsCOMPtr<nsIXBLInsertionPoint> point;
+          contentList->GetInsertionPointAt(i, getter_AddRefs(point));
+          PRInt32 index;
+          point->GetInsertionIndex(&index);
+          if (index != -1) {
+            // We're real. Jam the kid in.
+            // XXX Check the filters to find the correct points.
+            point->AddChild(aChild);
+            SetInsertionParent(aChild, ins);
+            break;
+          }
+        }
+      }
+    }
+  }
+ 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::ContentRemoved(nsIDocument* aDocument,
+                                 nsIContent* aContainer,
+                                 nsIContent* aChild,
+                                 PRInt32 aIndexInContainer)
+
+{
+  if (aIndexInContainer == -1 || !mContentListTable)
+    // It's anonymous.
+    return NS_OK;
+ 
+  nsCOMPtr<nsIContent> point;
+  GetNestedInsertionPoint(aContainer, aChild, getter_AddRefs(point));
+
+  if (point) {
+    nsISupportsKey key(point);
+    nsCOMPtr<nsIDOMNodeList> nodeList = getter_AddRefs(NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key)));
+    if (nodeList) {
+      nsCOMPtr<nsIAnonymousContentList> contentList(do_QueryInterface(nodeList));
+      if (contentList) {
+        // Find a non-pseudo-insertion point and remove ourselves.
+        PRUint32 count;
+        contentList->GetInsertionPointCount(&count);
+        for (PRUint32 i =0; i < count; i++) {
+          nsCOMPtr<nsIXBLInsertionPoint> point;
+          contentList->GetInsertionPointAt(i, getter_AddRefs(point));
+          PRInt32 index;
+          point->GetInsertionIndex(&index);
+          if (index != -1) {
+            point->RemoveChild(aChild);
+          }
+        }
+      }
+    }
+  }
+ 
   return NS_OK;
 }
 

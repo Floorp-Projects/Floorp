@@ -64,6 +64,7 @@ NS_XULATOM(menupopup);
 NS_XULATOM(object);
 NS_XULATOM(observes);
 NS_XULATOM(open);
+NS_XULATOM(outliner);
 NS_XULATOM(parent);
 NS_XULATOM(persist);
 NS_XULATOM(popup);
