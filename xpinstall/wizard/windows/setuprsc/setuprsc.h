@@ -96,6 +96,7 @@
 #define IDC_USE_FTP                     1074
 #define IDC_DESTINATION                 1074
 #define IDC_CHECK_TURBO_MODE            1075
+#define IDC_CHECK_RECAPTURE_HOMEPAGE    1076
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -112,7 +113,7 @@
 #define DLG_ADVANCED_SETTINGS           10207
 #define DLG_SELECT_ADDITIONAL_COMPONENTS 10208
 #define DLG_UPGRADE                     10209
-#define DLG_DOWNLOAD_OPTIONS            10210
+#define DLG_ADDITIONAL_OPTIONS          10210
 #define DLG_DOWNLOADING                 10211
 #define DLG_START_INSTALL1              10212
 #define IDB_BOX_CHECKED                 10304
@@ -140,7 +141,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1076
+#define _APS_NEXT_CONTROL_VALUE         1078
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -33,7 +33,7 @@ LRESULT CALLBACK  DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LO
 LRESULT CALLBACK  DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
-LRESULT CALLBACK  DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
+LRESULT CALLBACK  DlgProcAdditionalOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSiteSelector(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
@@ -60,7 +60,7 @@ BOOL              CheckWizardStateCustom(DWORD dwDefault);
 LPSTR             GetStartInstallMessage(void);
 void              AppendStringWOAmpersand(LPSTR szInputString, DWORD dwInputStringSize, LPSTR szString);
 void              TruncateString(HWND hWnd, LPSTR szInPath, LPSTR szOutPath, DWORD dwOutPathBufSize);
-void              SaveDownloadOptions(HWND hDlg, HWND hwndCBSiteSelector);
+void              SaveAdditionalOptions(HWND hDlg, HWND hwndCBSiteSelector);
 WNDPROC           SubclassWindow( HWND hWnd, WNDPROC NewWndProc);
 LRESULT CALLBACK  ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void              DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose);

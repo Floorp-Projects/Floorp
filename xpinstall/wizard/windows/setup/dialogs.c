@@ -1635,9 +1635,9 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
 void SaveDownloadProtocolOption(HWND hDlg)
 {
   if(IsDlgButtonChecked(hDlg, IDC_USE_FTP) == BST_CHECKED)
-    diDownloadOptions.dwUseProtocol = UP_FTP;
+    diAdditionalOptions.dwUseProtocol = UP_FTP;
   else if(IsDlgButtonChecked(hDlg, IDC_USE_HTTP) == BST_CHECKED)
-    diDownloadOptions.dwUseProtocol = UP_HTTP;
+    diAdditionalOptions.dwUseProtocol = UP_HTTP;
 }
 
 LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
@@ -1692,7 +1692,7 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
       SendDlgItemMessage (hDlg, IDC_USE_FTP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_USE_HTTP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
-      switch(diDownloadOptions.dwUseProtocol)
+      switch(diAdditionalOptions.dwUseProtocol)
       {
         case UP_HTTP:
           CheckDlgButton(hDlg, IDC_USE_FTP,  BST_UNCHECKED);
@@ -1707,7 +1707,7 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
 
       }
 
-      if((diDownloadOptions.bShowProtocols) && (diDownloadOptions.bUseProtocolSettings))
+      if((diAdditionalOptions.bShowProtocols) && (diAdditionalOptions.bUseProtocolSettings))
       {
         ShowWindow(GetDlgItem(hDlg, IDC_USE_FTP),  SW_SHOW);
         ShowWindow(GetDlgItem(hDlg, IDC_USE_HTTP), SW_SHOW);
@@ -1751,7 +1751,7 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
   return(0);
 }
 
-void SaveDownloadOptions(HWND hDlg, HWND hwndCBSiteSelector)
+void SaveAdditionalOptions(HWND hDlg, HWND hwndCBSiteSelector)
 {
   int iIndex;
 
@@ -1761,12 +1761,18 @@ void SaveDownloadOptions(HWND hDlg, HWND hwndCBSiteSelector)
 
   /* get the state of the Save Installer Files checkbox */
   if(IsDlgButtonChecked(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES) == BST_CHECKED)
-    diDownloadOptions.bSaveInstaller = TRUE;
+    diAdditionalOptions.bSaveInstaller = TRUE;
   else
-    diDownloadOptions.bSaveInstaller = FALSE;
+    diAdditionalOptions.bSaveInstaller = FALSE;
+
+  /* get the state of the Recapture Homepage checkbox */
+  if(IsDlgButtonChecked(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE) == BST_CHECKED)
+    diAdditionalOptions.bRecaptureHomepage = TRUE;
+  else
+    diAdditionalOptions.bRecaptureHomepage = FALSE;
 }
 
-LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+LRESULT CALLBACK DlgProcAdditionalOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   RECT  rDlg;
   char  szBuf[MAX_BUF];
@@ -1780,19 +1786,35 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
   switch(msg)
   {
     case WM_INITDIALOG:
-      if(gdwSiteSelectorStatus == SS_HIDE)
+//      if(gdwSiteSelectorStatus == SS_HIDE)
+//      {
+//        ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE0),  SW_HIDE);
+//        ShowWindow(GetDlgItem(hDlg, IDC_LIST_SITE_SELECTOR),  SW_HIDE);
+//      }
+
+      if(diAdditionalOptions.bShowHomepageOption == FALSE)
       {
         ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE0),  SW_HIDE);
-        ShowWindow(GetDlgItem(hDlg, IDC_LIST_SITE_SELECTOR),  SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE),  SW_HIDE);
+      }
+
+      if(GetTotalArchivesToDownload() == 0)
+     {
+        ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE1),  SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES),  SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH), SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_PROXY_SETTINGS), SW_HIDE);
       }
 
       DisableSystemMenuItems(hDlg, FALSE);
-      SetWindowText(hDlg, diDownloadOptions.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diDownloadOptions.szMessage0);
-      SetDlgItemText(hDlg, IDC_MESSAGE1, diDownloadOptions.szMessage1);
+      SetWindowText(hDlg, diAdditionalOptions.szTitle);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diAdditionalOptions.szMessage0);
+      SetDlgItemText(hDlg, IDC_MESSAGE1, diAdditionalOptions.szMessage1);
 
       GetPrivateProfileString("Strings", "IDC Save Installer Files", "", szBuf, sizeof(szBuf), szFileIniConfig);
       SetDlgItemText(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, szBuf);
+      GetPrivateProfileString("Strings", "IDC Recapture Homepage", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      SetDlgItemText(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, szBuf);
 
       GetSaveInstallerPath(szBuf, sizeof(szBuf));
       SetDlgItemText(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, szBuf);
@@ -1809,6 +1831,7 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
       SendDlgItemMessage (hDlg, IDC_LIST_SITE_SELECTOR, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
 
       if(GetClientRect(hDlg, &rDlg))
@@ -1843,10 +1866,15 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
       else
         SendMessage(hwndCBSiteSelector, CB_SETCURSEL, 0, 0);
 
-      if(diDownloadOptions.bSaveInstaller)
+      if(diAdditionalOptions.bSaveInstaller)
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_CHECKED);
       else
         CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_UNCHECKED);
+
+      if(diAdditionalOptions.bRecaptureHomepage)
+        CheckDlgButton(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, BST_CHECKED);
+      else
+        CheckDlgButton(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, BST_UNCHECKED);
 
       break;
 
@@ -1854,19 +1882,19 @@ LRESULT CALLBACK DlgProcDownloadOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          SaveDownloadOptions(hDlg, hwndCBSiteSelector);
+          SaveAdditionalOptions(hDlg, hwndCBSiteSelector);
           DestroyWindow(hDlg);
           DlgSequenceNext();
           break;
 
         case IDWIZBACK:
-          SaveDownloadOptions(hDlg, hwndCBSiteSelector);
+          SaveAdditionalOptions(hDlg, hwndCBSiteSelector);
           DestroyWindow(hDlg);
           DlgSequencePrev();
           break;
 
         case IDC_BUTTON_ADDITIONAL_SETTINGS:
-          SaveDownloadOptions(hDlg, hwndCBSiteSelector);
+          SaveAdditionalOptions(hDlg, hwndCBSiteSelector);
           dwWizardState = DLG_PROGRAM_FOLDER;
           DestroyWindow(hDlg);
           DlgSequenceNext();
@@ -2003,7 +2031,7 @@ LPSTR GetStartInstallMessage()
     dwBufSize += 4; // take into account 4 indentation spaces
     dwBufSize += lstrlen(szSiteSelectorDescription) + 2; // the extra 2 bytes is for the \r\n characters
 
-    if(diDownloadOptions.bSaveInstaller)
+    if(diAdditionalOptions.bSaveInstaller)
     {
       dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
 
@@ -2127,7 +2155,7 @@ LPSTR GetStartInstallMessage()
       lstrcat(szMessageBuf, szSiteSelectorDescription); // site selector description
       lstrcat(szMessageBuf, "\r\n");
 
-      if(diDownloadOptions.bSaveInstaller)
+      if(diAdditionalOptions.bSaveInstaller)
       {
         lstrcat(szMessageBuf, "\r\n");
 
@@ -2714,7 +2742,7 @@ void DlgSequenceNext()
 
  
      case DLG_QUICK_LAUNCH:
-        dwWizardState = DLG_DOWNLOAD_OPTIONS;
+        dwWizardState = DLG_ADDITIONAL_OPTIONS;
         gbProcessingXpnstallFiles = FALSE;
 
         do
@@ -2742,18 +2770,18 @@ void DlgSequenceNext()
           break;
         }
 
-        if((diDownloadOptions.bShowDialog == TRUE) && (GetTotalArchivesToDownload() > 0))
+        if(ShowAdditionalOptionsDialog() == TRUE)
         {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diDownloadOptions.szTitle, DlgProcDownloadOptions);
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdditionalOptions.szTitle, DlgProcAdditionalOptions);
           bDone = TRUE;
         }
         else
         {
-          dwWizardState = DLG_DOWNLOAD_OPTIONS;
+          dwWizardState = DLG_ADDITIONAL_OPTIONS;
         }
         break;
 
-      case DLG_DOWNLOAD_OPTIONS:
+      case DLG_ADDITIONAL_OPTIONS:
         dwWizardState = DLG_START_INSTALL;
         gbProcessingXpnstallFiles = FALSE;
         if(diStartInstall.bShowDialog)
@@ -2840,7 +2868,7 @@ void DlgSequenceNext()
           ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
 
           /* save the installer files in the local machine */
-          if(diDownloadOptions.bSaveInstaller)
+          if(diAdditionalOptions.bSaveInstaller)
             SaveInstallerFiles();
 
           if(CheckInstances())
@@ -2858,7 +2886,7 @@ void DlgSequenceNext()
           CreateDirectoriesAll(szDestPath, TRUE);
 
           /* save the installer files in the local machine */
-          if(diDownloadOptions.bSaveInstaller)
+          if(diAdditionalOptions.bSaveInstaller)
             SaveInstallerFiles();
 
           hrErr = SmartUpdateJars();
@@ -2933,16 +2961,17 @@ void DlgSequencePrev()
         break;
 
       case DLG_ADVANCED_SETTINGS:
-        dwWizardState = DLG_DOWNLOAD_OPTIONS;
+        dwWizardState = DLG_ADDITIONAL_OPTIONS;
         gbProcessingXpnstallFiles = FALSE;
-        if((diDownloadOptions.bShowDialog == TRUE) && (GetTotalArchivesToDownload() > 0))
+
+        if(ShowAdditionalOptionsDialog() == TRUE)
         {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diDownloadOptions.szTitle, DlgProcDownloadOptions);
+          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdditionalOptions.szTitle, DlgProcAdditionalOptions);
           bDone = TRUE;
         }
         break;
 
-      case DLG_DOWNLOAD_OPTIONS:
+      case DLG_ADDITIONAL_OPTIONS:
         dwWizardState = DLG_QUICK_LAUNCH;
         gbProcessingXpnstallFiles = FALSE;
         if(diQuickLaunch.bShowDialog)
