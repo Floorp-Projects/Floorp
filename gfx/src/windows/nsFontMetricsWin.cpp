@@ -203,7 +203,7 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   aContext->GetNativeWidget(widget);
   HWND win = (HWND)widget;
   HDC dc = ::GetDC(win);
-  HFONT oldfont = ::SelectObject(dc, (HGDIOBJ) mFontHandle);
+  HFONT oldfont = (HFONT)::SelectObject(dc, (HGDIOBJ) mFontHandle);
 
   // Get font metrics
   float dev2app;
@@ -283,7 +283,7 @@ NS_IMETHODIMP nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext,
   aContext->GetNativeWidget(widget);
   HWND win = (HWND)widget;
   HDC  hdc = ::GetDC(win);
-  HFONT oldfont = ::SelectObject(hdc, (HGDIOBJ) mFontHandle);
+  HFONT oldfont = (HFONT)::SelectObject(hdc, (HGDIOBJ) mFontHandle);
 
   SIZE size;
 

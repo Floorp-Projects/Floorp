@@ -131,7 +131,7 @@ nsDrawingSurfaceWin :: ~nsDrawingSurfaceWin()
 {
   if ((nsnull != mDC) && (nsnull != mOrigBitmap))
   {
-    HBITMAP bits = ::SelectObject(mDC, mOrigBitmap);
+    HBITMAP bits = (HBITMAP)::SelectObject(mDC, mOrigBitmap);
 
     if (nsnull != bits)
       ::DeleteObject(bits);
@@ -196,7 +196,7 @@ nsresult nsDrawingSurfaceWin :: Init(nsIWidget *aOwner)
   if (nsnull != mDCOwner)
   {
     NS_ADDREF(mDCOwner);
-    mDC = (HWND)mDCOwner->GetNativeData(NS_NATIVE_GRAPHIC);
+    mDC = (HDC)mDCOwner->GetNativeData(NS_NATIVE_GRAPHIC);
 
     return NS_OK;
   }
@@ -435,9 +435,9 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
       ::SelectPalette(aOldDC, mOrigPalette, TRUE);
   }
 
-  mOrigSolidBrush = ::SelectObject(aNewDC, mBlackBrush);
-  mOrigFont = ::SelectObject(aNewDC, mDefFont);
-  mOrigSolidPen = ::SelectObject(aNewDC, mBlackPen);
+  mOrigSolidBrush = (HBRUSH)::SelectObject(aNewDC, mBlackBrush);
+  mOrigFont = (HFONT)::SelectObject(aNewDC, mDefFont);
+  mOrigSolidPen = (HPEN)::SelectObject(aNewDC, mBlackPen);
 
   // If this is a palette device, then select and realize the palette
   nsPaletteInfo palInfo;
@@ -466,7 +466,7 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mInitialized = PR_TRUE;
 #endif
 
-  mBlackBrush = ::GetStockObject(BLACK_BRUSH);
+  mBlackBrush = (HBRUSH)::GetStockObject(BLACK_BRUSH);
   mDefFont = ::CreateFont(12, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                           ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
                           DEFAULT_QUALITY, FF_ROMAN | VARIABLE_PITCH, "Times New Roman");
@@ -818,7 +818,7 @@ nsDrawingSurface nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds)
       hBits = ::CreateCompatibleBitmap(mDC, 2, 2);
     }
 
-    surf->mOrigBitmap = ::SelectObject(surf->mDC, hBits);
+    surf->mOrigBitmap = (HBITMAP)::SelectObject(surf->mDC, hBits);
   }
 
   return (nsDrawingSurface)surf;
@@ -955,7 +955,7 @@ void nsRenderingContextWin::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoi
   lb.lbHatch = 0;
   SetupSolidPen();
   HBRUSH brush = ::CreateBrushIndirect(&lb);
-  HBRUSH oldBrush = ::SelectObject(mDC, brush);
+  HBRUSH oldBrush = (HBRUSH)::SelectObject(mDC, brush);
   ::Polygon(mDC, pp0, int(aNumPoints));
   ::SelectObject(mDC, oldBrush);
   ::DeleteObject(brush);
@@ -992,7 +992,7 @@ void nsRenderingContextWin::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoi
   if (NULL == mNullPen)
     mNullPen = ::CreatePen(PS_NULL, 0, 0);
 
-  HPEN oldPen = ::SelectObject(mDC, mNullPen);
+  HPEN oldPen = (HPEN)::SelectObject(mDC, mNullPen);
   ::Polygon(mDC, pp0, int(aNumPoints));
   ::SelectObject(mDC, oldPen);
 
@@ -1011,7 +1011,7 @@ void nsRenderingContextWin :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
   SetupSolidPen();
-  HBRUSH oldBrush = ::SelectObject(mDC, ::GetStockObject(NULL_BRUSH));
+  HBRUSH oldBrush = (HBRUSH)::SelectObject(mDC, ::GetStockObject(NULL_BRUSH));
   
   ::Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
   ::SelectObject(mDC, oldBrush);

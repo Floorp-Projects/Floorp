@@ -348,13 +348,13 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
         HBITMAP oldbits;
 
         if (nsnull == mAlphaHBitmap) {
-          oldbits = ::SelectObject(srcdc, mHBitmap);
+          oldbits = (HBITMAP)::SelectObject(srcdc, mHBitmap);
           ::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
                        aSWidth, aSHeight, SRCCOPY);
         }
         else if (gIsWinNT && (aDWidth == aSWidth) && (aDHeight == aSHeight))
         {
-          oldbits = ::SelectObject(srcdc, mHBitmap);
+          oldbits = (HBITMAP)::SelectObject(srcdc, mHBitmap);
           ::MaskBlt(the_hdc, aDX, aDY, aDWidth, aDHeight,
                     srcdc, aSX, aSY, mAlphaHBitmap, aSX, aSY, MASKBLT_ROP);
         }
@@ -362,7 +362,7 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
         {
           COLORREF oldTextColor = ::SetTextColor(the_hdc, RGB(0, 0, 0));
           COLORREF oldBkColor = ::SetBkColor(the_hdc, RGB(255, 255, 255));
-          oldbits = ::SelectObject(srcdc, mAlphaHBitmap);
+          oldbits = (HBITMAP)::SelectObject(srcdc, mAlphaHBitmap);
           ::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
                        aSWidth, aSHeight, SRCAND);
           ::SetTextColor(the_hdc, oldTextColor);
@@ -435,13 +435,13 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
         if (nsnull == mAlphaHBitmap)
         {
-          oldbits = ::SelectObject(srcdc, mHBitmap);
+          oldbits = (HBITMAP)::SelectObject(srcdc, mHBitmap);
           ::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
                        mBHead->biWidth, mBHead->biHeight, SRCCOPY);
         }
         else if (gIsWinNT && (aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight))
         {
-          oldbits = ::SelectObject(srcdc, mHBitmap);
+          oldbits = (HBITMAP)::SelectObject(srcdc, mHBitmap);
           ::MaskBlt(the_hdc, aX, aY, aWidth, aHeight,
                     srcdc, 0, 0, mAlphaHBitmap, 0, 0, MASKBLT_ROP);
         }
@@ -449,7 +449,7 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
         {
           COLORREF oldTextColor = ::SetTextColor(the_hdc, RGB(0, 0, 0));
           COLORREF oldBkColor = ::SetBkColor(the_hdc, RGB(255, 255, 255));
-          oldbits = ::SelectObject(srcdc, mAlphaHBitmap);
+          oldbits = (HBITMAP)::SelectObject(srcdc, mAlphaHBitmap);
           ::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
                        mAlphaWidth, mAlphaHeight, SRCAND);
           ::SetTextColor(the_hdc, oldTextColor);
