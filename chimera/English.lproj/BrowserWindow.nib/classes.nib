@@ -51,7 +51,7 @@
                 mLocationSheetWindow = id; 
                 mLocationToolbarView = id; 
                 mPageMenu = id; 
-                mPersonalToolbar = BookmarksToolbar; 
+                mPersonalToolbar = CHBookmarksToolbar; 
                 mProgress = id; 
                 mSidebarBookmarksDataSource = id; 
                 mSidebarBrowserView = id; 
@@ -60,9 +60,15 @@
                 mSidebarTabView = id; 
                 mStatus = id; 
                 mTabBrowser = id; 
-                mURLBar = id; 
+                mURLBar = NSTextField; 
             }; 
             SUPERCLASS = NSWindowController; 
+        }, 
+        {
+            CLASS = CHAutoCompleteTableView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mURLBar = NSTextField; mWindowController = BrowserWindowController; }; 
+            SUPERCLASS = NSTableView; 
         }, 
         {CLASS = CHAutoCompleteTextField; LANGUAGE = ObjC; SUPERCLASS = NSTextField; }, 
         {CLASS = CHBookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 

@@ -22,9 +22,11 @@
 */
 
 #import <AppKit/AppKit.h>
+#import "BrowserWindowController.h"
 
 @interface CHAutoCompleteTableView : NSTableView {
-
+  IBOutlet NSTextField* mURLBar;
+  IBOutlet BrowserWindowController* mWindowController;
 }
 
 @end

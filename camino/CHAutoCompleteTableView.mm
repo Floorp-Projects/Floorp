@@ -25,4 +25,14 @@
 
 @implementation CHAutoCompleteTableView
 
+-(void)controlTextDidChange:(NSNotification*)aNotification
+{
+  printf("Input changed.\n");
+}
+
+-(void)controlTextDidEndEditing:(NSNotification*)aNotification
+{
+  printf("Editing finished.\n");
+}
+
 @end
