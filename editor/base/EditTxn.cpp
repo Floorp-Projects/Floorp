@@ -27,15 +27,19 @@ static NS_DEFINE_IID(kITransactionIID, NS_ITRANSACTION_IID);
 NS_IMPL_ADDREF(EditTxn)
 NS_IMPL_RELEASE(EditTxn)
 
+MOZ_DECL_CTOR_COUNTER(EditTxn);
+
 // note that aEditor is not refcounted
 EditTxn::EditTxn()
   : mTransactionID(-1)
 {
+  MOZ_COUNT_CTOR(EditTxn);
   NS_INIT_REFCNT();
 }
 
 EditTxn::~EditTxn()
 {
+  MOZ_COUNT_DTOR(EditTxn);
 }
 
 NS_IMETHODIMP EditTxn::Do(void)
