@@ -38,7 +38,6 @@
 // Mozilla
 #include "nsIProfile.h"
 #include "nsIServiceManager.h"
-#include "nsCRT.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -227,7 +226,7 @@ BOOL CProfilesDlg::OnInitDialog()
     {
         CString tmpStr(W2T(profileList[index]));
         m_ProfileList.AddString(tmpStr);
-        if (nsCRT::strcmp(profileList[index], curProfileName.get()) == 0)
+        if (wcscmp(profileList[index], curProfileName.get()) == 0)
             selectedRow = index;
     }
 

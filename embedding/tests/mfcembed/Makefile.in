@@ -38,6 +38,15 @@ PROGRAM		= mfcembed$(BIN_SUFFIX)
 RESFILE		= MfcEmbed.res
 
 MODULE = mfcEmbed
+
+# comment this out if for some reason you want to link against xpcom
+# directly instead of using the standalone glue
+GRE_BUILD = 1
+
+ifdef GRE_BUILD
+DEFINES   += -DXPCOM_GLUE
+endif
+
 REQUIRES = \
 	xpcom_obsolete \
 	xpcom \
@@ -97,7 +106,7 @@ CPPSRCS		= \
 		StdAfx.cpp       \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s gkgfx mfcEmbedComponents
+EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s
 
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc
@@ -106,10 +115,19 @@ endif
 LIBS		= \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
-		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
-		$(MOZ_JS_LIBS) \
 		$(NULL)
+
+ifdef GRE_BUILD
+LIBS += \
+		 $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
+		 $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
+		 $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
+		 $(DIST)/lib/$(LIB_PREFIX)embedstring_s.$(LIB_SUFFIX) \
+		 $(NULL)
+else
+LIBS += $(XPCOM_LIBS)
+endif
 
 OS_LIBS		+= \
 		ole32.lib \

@@ -35,24 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nspr.h"
-#include "prlink.h"
-#include "nsMemory.h"
-#include "nsXPCOMPrivate.h"
+#include "nsXPCOMGlue.h"
 
+#include "nspr.h"
+#include "nsMemory.h"
 #include "nsGREDirServiceProvider.h"
+#include "nsXPCOMPrivate.h"
+#include <stdlib.h>
+
+#if XP_WIN32
+#include <windows.h>
+#endif
+
+void GRE_AddGREToEnvironment();
+
+// functions provided by nsMemory.cpp and nsDebug.cpp
+nsresult GlueStartupMemory();
+void GlueShutdownMemory();
+nsresult GlueStartupDebug();
+void GlueShutdownDebug();
 
 static PRLibrary *xpcomLib = nsnull;
 static XPCOMFunctions *xpcomFunctions = nsnull;
 static nsIMemory* xpcomMemory = nsnull;
 
-extern nsresult GlueStartupMemory();
-extern void GlueShutdownMemory();
-extern nsresult GlueStartupDebug();
-extern void GlueShutdownDebug();
-
 extern "C"
-nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
+nsresult XPCOMGlueStartup(const char* xpcomFile)
 {
 #ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
     return NS_OK;
@@ -121,12 +129,14 @@ nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
         return NS_ERROR_FAILURE;
     }
 
+    GRE_AddGREToEnvironment();
+
     return rv;
 #endif
 }
 
 extern "C"
-nsresult NS_COM XPCOMGlueShutdown()
+nsresult XPCOMGlueShutdown()
 {
 #ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
     return NS_OK;
@@ -252,19 +262,66 @@ NS_GetTraceRefcnt(nsITraceRefcnt* *result)
 #endif // #ifndef  XPCOM_GLUE_NO_DYNAMIC_LOADING
 
 
+static char  sEnvString[MAXPATHLEN*10];
+static char* spEnvString = 0;
+
+void
+GRE_AddGREToEnvironment()
+{
+  const char* grePath = GRE_GetGREPath();
+  if (!grePath)
+    return;
+
+  const char* path = PR_GetEnv(XPCOM_SEARCH_KEY);
+  if (!path) {
+    path = "";
+  }
+
+  if (spEnvString) PR_smprintf_free(spEnvString);
+
+  /**
+   * if the PATH string is longer than our static buffer, allocate a
+   * buffer for the environment string. This buffer will be leaked at shutdown!
+   */
+  if (strlen(grePath) + strlen(path) +
+      sizeof(XPCOM_SEARCH_KEY) + sizeof(XPCOM_ENV_PATH_SEPARATOR) > MAXPATHLEN*10) {
+      if (PR_smprintf(XPCOM_SEARCH_KEY "=%s" XPCOM_ENV_PATH_SEPARATOR "%s",
+                      grePath,
+                      path)) {
+          PR_SetEnv(spEnvString);
+      }
+  } else {
+      if (sprintf(sEnvString,
+                  XPCOM_SEARCH_KEY "=%s" XPCOM_ENV_PATH_SEPARATOR "%s",
+                  grePath,
+                  path) > 0) {
+          PR_SetEnv(sEnvString);
+      }
+  }
+                 
+#if XP_WIN32
+  // On windows, the current directory is searched before the 
+  // PATH environment variable.  This is a very bad thing 
+  // since libraries in the cwd will be picked up before
+  // any that are in either the application or GRE directory.
+
+  if (grePath) {
+    SetCurrentDirectory(grePath);
+  }
+#endif
+}
+
+
 // Default GRE startup/shutdown code
 
 extern "C"
-nsresult NS_COM GRE_Startup()
+nsresult GRE_Startup()
 {
-    char* xpcomLocation = nsGREDirServiceProvider::GetXPCOMPath();
-    
+    const char* xpcomLocation = GRE_GetXPCOMPath();
+
     // Startup the XPCOM Glue that links us up with XPCOM.
     nsresult rv = XPCOMGlueStartup(xpcomLocation);
     
-    if (xpcomLocation)
-        free(xpcomLocation);
-
     if (NS_FAILED(rv)) {
         NS_WARNING("gre: XPCOMGlueStartup failed");
         return rv;
@@ -292,7 +349,7 @@ nsresult NS_COM GRE_Startup()
 }
 
 extern "C"
-nsresult NS_COM GRE_Shutdown()
+nsresult GRE_Shutdown()
 {
     NS_ShutdownXPCOM(nsnull);
     XPCOMGlueShutdown();
