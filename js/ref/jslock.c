@@ -528,7 +528,6 @@ emptyFatlock(JSThinLock *p)
     PR_Lock(lck);
     i = fl->susp;
     if (i < 1) {
-	fl->susp = -1;
 	deallocateFatlock(fl);
 	fl = NULL;
     }
