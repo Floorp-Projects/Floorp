@@ -328,7 +328,7 @@ nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
 
   PRBool doContinue = PR_TRUE;
 
-  res = DoContentFilterCallback(aFlavor, 
+  res = DoContentFilterCallback(aFlavor, aDeleteSelection,
                                 (nsIDOMNode **)address_of(fragmentAsNode), 
                                 (nsIDOMNode **)address_of(streamStartParent), 
                                 &streamStartOffset,
@@ -788,6 +788,7 @@ nsHTMLEditor::RemoveInsertionListener(nsIContentFilter *aListener)
  
 nsresult
 nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor, 
+                                      PRBool aWillDeleteSelection,
                                       nsIDOMNode **aFragmentAsNode, 
                                       nsIDOMNode **aFragStartNode, 
                                       PRInt32 *aFragStartOffset,
@@ -805,7 +806,8 @@ nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor,
   {
     listener = (nsIContentFilter *)mContentFilters[i];
     if (listener)
-      listener->NotifyOfInsertion(aFlavor, nsnull, aFragmentAsNode,
+      listener->NotifyOfInsertion(aFlavor, nsnull, aWillDeleteSelection,
+                                  aFragmentAsNode,
                                   aFragStartNode, aFragStartOffset, 
                                   aFragEndNode, aFragEndOffset,
                                   aTargetNode, aTargetOffset, aDoContinue);
