@@ -44,7 +44,7 @@ protected:
 public:
   nsDirectionalFrame(PRUnichar aChar);
 
-  void* operator new(size_t aSize);
+  void* operator new(size_t aSize) CPP_THROW_NEW;
 
   static const nsIID& GetIID();
 

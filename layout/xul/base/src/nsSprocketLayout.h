@@ -68,7 +68,7 @@ public:
            PRBool aIsHorizontal);
 
   void Add(const nsMargin& aMargin, PRBool aIsHorizontal);
-  void* operator new(size_t sz, nsBoxLayoutState& aState);
+  void* operator new(size_t sz, nsBoxLayoutState& aState) CPP_THROW_NEW;
   void operator delete(void* aPtr, size_t sz);
 
 };
@@ -84,7 +84,7 @@ public:
   nsComputedBoxSize* next;
 
   void Clear();
-  void* operator new(size_t sz, nsBoxLayoutState& aState);
+  void* operator new(size_t sz, nsBoxLayoutState& aState) CPP_THROW_NEW;
   void operator delete(void* aPtr, size_t sz);
 
 };

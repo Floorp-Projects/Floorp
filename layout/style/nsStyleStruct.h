@@ -45,7 +45,6 @@
 #include "nsFont.h"
 #include "nsVoidArray.h"
 #include "nsStyleCoord.h"
-#include "nsStyleStruct.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleSet.h"
 #include "nsIPresContext.h"
@@ -138,7 +137,7 @@ struct nsStyleFont : public nsStyleStruct {
   PRInt32 CalcDifference(const nsStyleFont& aOther) const;
   static PRInt32 CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
   
-  void* operator new(size_t sz, nsIPresContext* aContext);
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsIPresContext* aContext);
 
   PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
@@ -228,7 +227,7 @@ struct nsStyleMargin: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Margin)
 
-  void* operator new(size_t sz, nsIPresContext* aContext);
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsIPresContext* aContext);
 
   void RecalcData();
@@ -261,7 +260,7 @@ struct nsStylePadding: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Padding)
 
-  void* operator new(size_t sz, nsIPresContext* aContext);
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsIPresContext* aContext);
 
   void RecalcData();
@@ -338,7 +337,7 @@ struct nsStyleBorder: public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Border)
 
-  void* operator new(size_t sz, nsIPresContext* aContext);
+  void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsIPresContext* aContext);
 
   PRBool IsBorderSideVisible(PRUint8 aSide) const;

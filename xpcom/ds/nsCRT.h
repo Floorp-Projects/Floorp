@@ -78,7 +78,7 @@ extern const PRUnichar kIsoLatin1ToUCS2[256];
 // This macro works with the next macro to declare a non-inlined
 // version of the above.
 #define NS_DECL_ZEROING_OPERATOR_NEW \
-  void* operator new(size_t sz);     \
+  void* operator new(size_t sz) CPP_THROW_NEW;     \
   void operator delete(void* ptr);
 
 #define NS_IMPL_ZEROING_OPERATOR_NEW(_class) \

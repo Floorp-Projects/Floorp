@@ -146,7 +146,7 @@ public:
 
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
   // (which comes from the presShell) to perform the allocation.
-  void* operator new(size_t sz, nsIPresShell* aPresShell);
+  void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
 
   // Overridden to prevent the global delete from being called, since the memory
   // came out of an nsIArena instead of the global delete operator's heap.  
