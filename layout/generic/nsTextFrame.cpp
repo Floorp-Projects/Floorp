@@ -768,7 +768,9 @@ public:
                                    PRUint32 aWordBufSize,
                                    PRBool aCanBreakBefore);
 
+#ifdef DEBUG
   void ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const;
+#endif
 
 protected:
   virtual ~nsTextFrame();
@@ -5833,6 +5835,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
   return dimensions; // 0
 }
 
+#ifdef DEBUG
 // Translate the mapped content into a string that's printable
 void
 nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
@@ -5871,6 +5874,7 @@ nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
     }
   }
 }
+#endif
 
 nsIAtom*
 nsTextFrame::GetType() const
