@@ -154,6 +154,9 @@ nsresult nsAbAutoCompleteSession::InitializeTable()
   rv = directory->GetChildCards(getter_AddRefs(cards));
   if (NS_FAILED(rv)) return rv;
 
+  rv = PopulateTableWithAB(cards);
+  if (NS_FAILED(rv)) return rv;
+
   return NS_OK; // always return success??
 }
 
