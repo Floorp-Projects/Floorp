@@ -114,8 +114,7 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsSpringFrame.obj    \
     	.\$(OBJDIR)\nsSliderFrame.obj \
         .\$(OBJDIR)\nsProgressMeterFrame.obj    \
-		.\$(OBJDIR)\nsCheckBoxFrame.obj \
-        .\$(OBJDIR)\nsTitledButtonFrame.obj    \
+		    .\$(OBJDIR)\nsTitledButtonFrame.obj    \
          .\$(OBJDIR)\nsTitledBoxFrame.obj    \
         .\$(OBJDIR)\nsBox.obj    \
         .\$(OBJDIR)\nsContainerBox.obj    \
