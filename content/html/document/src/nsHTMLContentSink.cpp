@@ -24,11 +24,10 @@
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
+#include "nsIUnicharStreamLoader.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
-class nsIUnicharStreamLoader : public nsISupports {};    // XXX what?
 #else
-#include "nsIUnicharStreamLoader.h"
 #include "nsIURLGroup.h"
 #include "nsIHttpURL.h"
 #endif // NECKO
@@ -2956,15 +2955,11 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       // onto it as opaque data.
       NS_ADDREF(this);
 
-#ifdef NECKO
-      NS_ASSERTION(0, "fix me");
-#else
       nsIUnicharStreamLoader* loader;
       rv = NS_NewUnicharStreamLoader(&loader,
                                      url, 
                                      (nsStreamCompleteFunc)nsDoneLoadingScript, 
                                      (void *)this);
-#endif
       NS_RELEASE(url);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;

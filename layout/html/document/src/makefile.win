@@ -57,6 +57,10 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\content\src \
   -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
 
+!ifdef NECKO
+LINCS = $(LINCS) -I$(PUBLIC)\neckoutil_s
+!endif
+
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \

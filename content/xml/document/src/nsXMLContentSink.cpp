@@ -29,8 +29,9 @@
 #ifdef NECKO
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
-#endif // NECKO
+#else
 #include "nsIURLGroup.h"
+#endif // NECKO
 #include "nsIWebShell.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"

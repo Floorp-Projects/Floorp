@@ -33,8 +33,9 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
+#else
 #include "nsIURLGroup.h"
+#endif // NECKO
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"

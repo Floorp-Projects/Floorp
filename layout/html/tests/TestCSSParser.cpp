@@ -23,6 +23,7 @@
 #ifndef NECKO
 #include "nsINetService.h"
 #else
+#include "nsNeckoUtil.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #endif // NECKO
@@ -170,7 +171,11 @@ int main(int argc, char** argv)
 
       // Get an input stream from the url
       nsIInputStream* in;
+#ifndef NECKO
       rv = NS_OpenURL(url, &in);
+#else
+      rv = NS_OpenURI(&in, url);
+#endif // NECKO
       if (rv != NS_OK) {
         printf("open of url('%s') failed: error=%x\n", urlName, rv);
         continue;
