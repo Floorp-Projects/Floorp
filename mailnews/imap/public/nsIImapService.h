@@ -172,6 +172,8 @@ public:
                             const char* leafName,
                             nsIUrlListener* urlListener,
                             nsIURI** url) = 0;
+
+//    NS_IMETHOD RunImapUrl (nsIEventQueue * eventQueue, nsIURI * aURI
 };
 
 
