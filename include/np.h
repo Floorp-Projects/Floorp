@@ -18,7 +18,6 @@
 
 
 /*
- *  np.h $Revision: 3.4 $
  *  Prototypes for functions exported by libplugin and called by the FEs or other XP libs.
  *  Prototypes for functions exported by the FEs and called by libplugin are in nppg.h.
  */
