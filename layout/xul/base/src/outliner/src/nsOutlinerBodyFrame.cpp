@@ -29,6 +29,8 @@
 #include "nsIScrollbarFrame.h"
 
 #include "nsOutlinerBodyFrame.h"
+#include "nsOutlinerSelection.h"
+
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 
@@ -280,9 +282,16 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
   // Outliner, meet the view.
   mView = aView;
   
-  if (mView)
+  if (mView) {
     // View, meet the outliner.
     mView->SetOutliner(this);
+    
+    // Give the view a new empty selection object to play with.
+    nsCOMPtr<nsIOutlinerSelection> sel;
+    NS_NewOutlinerSelection(this, getter_AddRefs(sel));
+
+    mView->SetSelection(sel);
+  }
 
   // Changing the view causes us to refetch our data.  This will
   // necessarily entail a full invalidation of the outliner.
@@ -381,6 +390,22 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowsRemoved(PRInt32 index, PRInt32 count)
 {
   return NS_OK;
 }
+
+void
+nsOutlinerBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, const PRUnichar* aColID)
+{
+  // XXX Automatically fill in the following props: container, open, selected, focused
+  // And colID too, if it is non-empty.
+  mScratchArray->Clear();
+  
+  nsCOMPtr<nsIOutlinerSelection> selection;
+  mView->GetSelection(getter_AddRefs(selection));
+  PRBool isSelected;
+  selection->IsSelected(aRowIndex, &isSelected);
+  if (isSelected)
+    mScratchArray->AppendElement(nsHTMLAtoms::selected);
+}
+
 
 PRInt32 nsOutlinerBodyFrame::GetRowHeight(nsIPresContext* aPresContext)
 {
@@ -492,7 +517,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
 
   // Now obtain the properties for our row.
   // XXX Automatically fill in the following props: open, container, selected, focused
-  mScratchArray->Clear();
+  PrefillPropertyArray(aRowIndex, NS_LITERAL_STRING(""));
   mView->GetRowProperties(aRowIndex, mScratchArray);
 
   // Resolve style for the row.  It contains all the info we need to lay ourselves
