@@ -170,6 +170,10 @@ ifdef MOZ_ENABLE_GTK
 tier_9_dirs	+= widget/src/gtksuperwin widget/src/gtkxtbin
 endif
 
+ifdef MOZ_ENABLE_GTK2
+tier_9_dirs     += widget/src/gtkxtbin
+endif
+
 tier_9_dirs	+= \
 		modules/libutil \
 		netwerk \
