@@ -33,6 +33,7 @@
 bool JNIHeaderGenerator::genHeaderFile(ClassFileSummary &summ,
 				       PRFileDesc *fp)
 {
+  Uint32 i;
   const ClassFileReader &reader = *summ.getReader();
   const char *className = reader.getThisClass()->getUtf()->getUtfString();
 
@@ -49,7 +50,7 @@ bool JNIHeaderGenerator::genHeaderFile(ClassFileSummary &summ,
   TemporaryBuffer overbuf(methodCount*sizeof(bool));
   bool *overloadedMethods = (bool *) (char *) overbuf;
  
-  for (Uint32 i = 0; i < methodCount; i++) {
+  for (i = 0; i < methodCount; i++) {
     const char *methodName = methods[i]->getName();
 
     overloadedMethods[i] = false;
