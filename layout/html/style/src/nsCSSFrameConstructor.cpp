@@ -10753,6 +10753,25 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     if (!newFrame) 
       return NS_ERROR_NULL_POINTER;
     newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
+  } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
+    rv = NS_NewFieldSetFrame(aPresContext->PresShell(), &newFrame,
+                             NS_BLOCK_SPACE_MGR);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(aPresContext, content, aParentFrame, styleContext,
+                     aFrame);
+
+      // XXXbz should we be passing in a non-null aContentParentFrame?
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+
+      // Create a continuing area frame
+      // XXXbz we really shouldn't have to do this by hand!
+      nsIFrame* continuingAreaFrame;
+      nsIFrame* areaFrame = aFrame->GetFirstChild(nsnull);
+      CreateContinuingFrame(aPresContext, areaFrame, newFrame, &continuingAreaFrame);
+
+      // Set the fieldset's initial child list
+      newFrame->SetInitialChildList(aPresContext, nsnull, continuingAreaFrame);
+    }
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected frame type");
     rv = NS_ERROR_UNEXPECTED;
