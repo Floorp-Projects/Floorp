@@ -22,9 +22,10 @@ function DoEnabling()
   var noProxy = document.getElementById("networkProxyNone");
   var autoURL = document.getElementById("networkProxyAutoconfigURL");
   var autoReload = document.getElementById("autoReload");
+  var copyButton = document.getElementById("reuseProxy");
 
   // convenience arrays
-  var manual = [ftp, ftpPort, gopher, gopherPort, http, httpPort, socks, socksPort, socksVersion, socksVersion4, socksVersion5, ssl, sslPort, noProxy];
+  var manual = [ftp, ftpPort, gopher, gopherPort, http, httpPort, socks, socksPort, socksVersion, socksVersion4, socksVersion5, ssl, sslPort, noProxy, copyButton];
   var auto = [autoURL, autoReload];
 
   // radio buttons
@@ -70,5 +71,27 @@ function ReloadPAC() {
   var pps = Components.classesByID[kPROTPROX_CID]
                        .getService(nsIProtocolProxyService);
   pps.configureFromPAC(autoURL.value);
-}   
+}
+
+function DoProxyCopy()
+{
+  var http = document.getElementById("networkProxyHTTP");
+  var httpPort = document.getElementById("networkProxyHTTP_Port");
+  var httpValue = http.value;
+  var httpPortValue = httpPort.value;
+  if (httpValue && httpPortValue && parseInt(httpPortValue) > 0) {
+    var ftp = document.getElementById("networkProxyFTP");
+    var gopher = document.getElementById("networkProxyGopher");
+    var ssl = document.getElementById("networkProxySSL");
+    var ftpPort = document.getElementById("networkProxyFTP_Port");
+    var gopherPort = document.getElementById("networkProxyGopher_Port");
+    var sslPort = document.getElementById("networkProxySSL_Port");
+    ftp.value = httpValue;
+    gopher.value = httpValue;
+    ssl.value = httpValue;
+    ftpPort.value = httpPortValue;
+    gopherPort.value = httpPortValue;
+    sslPort.value = httpPortValue;
+  }
+}
 
