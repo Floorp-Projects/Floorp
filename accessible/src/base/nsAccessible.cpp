@@ -700,11 +700,13 @@ nsresult nsAccessible::GetFullKeyName(const nsAString& aModifierName, const nsAS
   return NS_OK;
 }
 
-PRBool nsAccessible::IsPartiallyVisible() 
+PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen) 
 {
   // We need to know if at least a kMinPixels around the object is visible
   // Otherwise it will be marked STATE_OFFSCREEN and STATE_INVISIBLE
   
+  *aIsOffscreen = PR_FALSE;
+
   const PRUint16 kMinPixels  = 12;
 
   // Set up the variables we need, return false if we can't get at them all
@@ -725,6 +727,16 @@ PRBool nsAccessible::IsPartiallyVisible()
   shell->GetPrimaryFrameFor(content, &frame);
   if (!frame) 
     return PR_FALSE;
+
+  // If visibility:hidden or visibility:collapsed then mark with STATE_INVISIBLE
+  nsCOMPtr<nsIStyleContext> styleContext;
+  frame->GetStyleContext(getter_AddRefs(styleContext));
+  if (styleContext) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)styleContext->GetStyleData(eStyleStruct_Visibility);
+    if (!vis || !vis->IsVisible())
+      return PR_FALSE;
+  }
 
   nsCOMPtr<nsIPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
@@ -754,7 +766,11 @@ PRBool nsAccessible::IsPartiallyVisible()
                                  NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
                                  &rectVisibility);
 
-  return rectVisibility == nsRectVisibility_kVisible;
+  if (rectVisibility == nsRectVisibility_kVisible)
+    return PR_TRUE;
+
+  *aIsOffscreen = PR_TRUE;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP nsAccessible::GetFocusedNode(nsIDOMNode **aFocusedNode) 
@@ -825,8 +841,12 @@ NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState)
   }
 
   // Check if STATE_OFFSCREEN bitflag should be turned on for this object
-  if (!IsPartiallyVisible())
-    *aAccState |= STATE_OFFSCREEN | STATE_INVISIBLE;
+  PRBool isOffscreen;
+  if (!IsPartiallyVisible(&isOffscreen)) {
+    *aAccState |= STATE_INVISIBLE;
+    if (isOffscreen)
+      *aAccState |= STATE_OFFSCREEN;
+  }
 
   return rv;
 }
