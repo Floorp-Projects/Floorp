@@ -997,7 +997,7 @@ nsStandardURL::GetAsciiHost(nsACString &result)
     }
 
     // something went wrong... guess all we can do is URL escape :-/
-    NS_EscapeURL(Host(), esc_AlwaysCopy, result);
+    NS_EscapeURL(Host(), esc_OnlyNonASCII | esc_AlwaysCopy, result);
     return NS_OK;
 }
 
