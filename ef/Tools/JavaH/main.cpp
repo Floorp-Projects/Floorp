@@ -179,9 +179,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
-#ifdef __GNUC__
+#if defined( __GNUC__ ) && ( __GNUC__ < 2 ) || (__GNUC_MINOR__ < 9)
 /* for gcc with -fhandle-exceptions */
 void terminate() {}
 #endif
-
-
