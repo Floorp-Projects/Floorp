@@ -45,9 +45,9 @@
 
 #alertNotification
 {
-  background-color: transparent;
   min-height: 50px;
   border: ridge #5486DA 4px;
+  background-color: white;
 }
 
 .alertImageBox 
@@ -55,19 +55,16 @@
   margin-left: 4px;
   margin-right: 6px;
   min-height: 46px;
-  background-color: transparent;
 }
 
 .alertTitle 
 {
   font-weight: bold;
-  background-color: transparent;
 }
 
 .alertText 
 {
   margin-right: 6px;
-  background-color: transparent;
 }
 
 .alertText[clickable="true"] 
