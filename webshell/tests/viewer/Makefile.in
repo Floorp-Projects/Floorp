@@ -66,6 +66,9 @@ TOOLKIT_CFLAGS := \
 	$(TK_CFLAGS)
 
 
+TOOLKIT_CPPSRCS_beos := \
+	nsBeOSMain.cpp
+
 TOOLKIT_CPPSRCS_gtk := \
 	nsGTKMain.cpp \
 	nsGTKMenu.cpp
@@ -80,6 +83,11 @@ TOOLKIT_CPPSRCS_photon := \
 
 TOOLKIT_CPPSRCS_xlib := \
 	nsXlibMain.cpp
+
+
+ifeq ($(MOZ_TOOLKIT),beos)
+BEOS_PROGRAM_RESOURCE = viewer-beos.rsrc
+endif
 
 TOOLKIT_CPPSRCS := $(TOOLKIT_CPPSRCS_$(MOZ_TOOLKIT))
 
