@@ -251,6 +251,9 @@ sub value_quote {
     $var =~ s/</\&lt;/g;
     $var =~ s/>/\&gt;/g;
     $var =~ s/"/\&quot;/g;
+    # See bug http://bugzilla.mozilla.org/show_bug.cgi?id=4928 for 
+    # explanaion of why bugzilla does this linebreak substitution. 
+    # This caused form submission problems in mozilla (bug 22983, 32000).
     $var =~ s/\n/\&#010;/g;
     $var =~ s/\r/\&#013;/g;
     return $var;
