@@ -103,6 +103,14 @@ nsComboboxControlFrame::nsComboboxControlFrame()
 //--------------------------------------------------------------
 nsComboboxControlFrame::~nsComboboxControlFrame()
 {
+  // get the reciever interface from the browser button's content node
+  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mButtonContent));
+  reciever->RemoveEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
+
+  nsCOMPtr<nsIDOMEventReceiver> displayReciever(do_QueryInterface(mDisplayContent));
+  displayReciever->RemoveEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
+  //selectReciever->RemoveEventListenerByIID((nsIDOMFocusListener *)this, nsCOMTypeInfo<nsIDOMFocusListener>::GetIID());
+
   mFormFrame = nsnull;
   NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mDisplayContent);
@@ -732,6 +740,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
      // Reflow display + button
     nsAreaFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
     displayFrame->GetRect(displayRect);
+    buttonFrame->GetRect(buttonRect);
 
     // Reflow the dropdown list to match the width of the display + button
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, aDesiredSize.width, NS_UNCONSTRAINEDSIZE);
@@ -927,10 +936,12 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
     nsIFrame * displayFrame = GetDisplayFrame(*mPresContext);
     nsRect displayRect;
      // Get the current sizes of the combo box child frames
-    displayFrame->GetRect(displayRect);
-    GetAbsoluteFramePosition(*mPresContext, displayFrame,  absoluteTwips, absolutePixels);
-    PositionDropdown(*mPresContext, displayRect.height, absoluteTwips, absolutePixels);
-
+    //displayFrame->GetRect(displayRect);
+    //GetAbsoluteFramePosition(*mPresContext, displayFrame,  absoluteTwips, absolutePixels);
+    //PositionDropdown(*mPresContext, displayRect.height, absoluteTwips, absolutePixels);
+    if (mListControlFrame) {
+      mListControlFrame->SyncViewWithFrame();
+    }
     ToggleList(mPresContext);
     return NS_OK;
   } else if (mDroppedDown && !aDoDropDown) {
@@ -944,7 +955,7 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
 NS_IMETHODIMP
 nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
 {
-  mDropdownFrame        = aDropDownFrame;
+  mDropdownFrame = aDropDownFrame;
  
   if (NS_OK != mDropdownFrame->QueryInterface(kIListControlFrameIID, (void**)&mListControlFrame)) {
     return NS_ERROR_FAILURE;
@@ -1016,6 +1027,21 @@ nsComboboxControlFrame::UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUp
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsComboboxControlFrame::AbsolutelyPositionDropDown()
+{
+  nsRect absoluteTwips;
+  nsRect absolutePixels;
+  nsIFrame* displayFrame = GetDisplayFrame(*mPresContext);
+  nsRect rect;
+  displayFrame->GetRect(rect);
+  GetAbsoluteFramePosition(*mPresContext, displayFrame,  absoluteTwips, absolutePixels);
+  PositionDropdown(*mPresContext, rect.height, absoluteTwips, absolutePixels);
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
 nsComboboxControlFrame::SelectionChanged(PRBool aDoDispatchEvent)
@@ -1180,11 +1206,11 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   NS_NewHTMLInputElement(&mDisplayContent, tag);
   NS_ADDREF(mDisplayContent);
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
-  //mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::readonly, nsAutoString("true"), PR_FALSE);
 
     //XXX: Do not use nsHTMLAtoms::id use nsHTMLAtoms::kClass instead. There will end up being multiple
     //ids set to the same value which is illegal.
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, nsAutoString("-moz-display"), PR_FALSE);
+  // This is 
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("X"), PR_TRUE);
   aChildList.AppendElement(mDisplayContent);
 

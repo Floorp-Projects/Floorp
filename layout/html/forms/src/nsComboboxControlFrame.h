@@ -139,6 +139,7 @@ public:
   NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame);
   NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext);
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex);
+  NS_IMETHOD AbsolutelyPositionDropDown();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
@@ -173,6 +174,7 @@ protected:
                             nscoord                  aAvailableHeight);
 
   nsresult GetScreenHeight(nsIPresContext& aPresContext, nscoord& aHeight);
+public:
   nsresult PositionDropdown(nsIPresContext& aPresContext,
                             nscoord aHeight, 
                             nsRect aAbsoluteTwipsRect, 
@@ -181,13 +183,14 @@ protected:
                                     nsIFrame *aFrame, 
                                     nsRect& aAbsoluteTwipsRect, 
                                     nsRect& aAbsolutePixelRect);
+  nsIFrame* GetDisplayFrame(nsIPresContext& aPresContext);
+protected:
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsIPresContext* aPresContext, PRBool aShowList);
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
   void InitTextStr(PRBool aUpdate);
   nsresult GetPrimaryComboFrame(nsIPresContext& aPresContext, nsIContent* aContent, nsIFrame** aFrame);
   nsIFrame* GetButtonFrame(nsIPresContext& aPresContext);
-  nsIFrame* GetDisplayFrame(nsIPresContext& aPresContext);
   nsIFrame* GetDropdownFrame();
   NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
  
