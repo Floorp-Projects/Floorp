@@ -144,7 +144,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
     nsMsgViewIndex resultIndex;
     nsMsgKey resultKey;
     nsMsgViewIndex threadIndex;
-    ViewNavigate(nsMsgNavigationType.firstNew, &resultKey, &resultIndex, &threadIndex, PR_TRUE);
+    ViewNavigate(nsMsgNavigationType::firstNew, &resultKey, &resultIndex, &threadIndex, PR_TRUE);
     if (mTree && resultKey != nsMsgKey_None && resultIndex != nsMsgViewIndex_None)
         mTree->EnsureRowIsVisible(resultIndex);
   }
