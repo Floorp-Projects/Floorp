@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.25 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslsecur.c,v 1.26 2005/02/24 00:38:23 julien.pierre.bugs%sun.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -675,6 +675,7 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 	sc->serverKey = SECKEY_CopyPrivateKey(key);
 	if (sc->serverKey == NULL)
 	    goto loser;
+	SECKEY_CacheStaticFlags(sc->serverKey);
     }
 
     if (kea == kt_rsa) {
