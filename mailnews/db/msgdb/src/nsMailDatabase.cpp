@@ -80,7 +80,11 @@ nsMailDatabase::~nsMailDatabase()
 	stat (nativeFolderName, &st);
 	PR_FREEIF(nativeFolderName);
 
-	nsresult err = mailDB->OpenMDB((const char *) summarySpec, create);
+	summarySpec.Delete(PR_FALSE);	// ### temporary hack until mork is persistent.
+	nsresult err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+	
+	if (create && upgrading)	// #### temporary hack until mork is persistent
+		err = mailDB->OpenMDB((const char *) summarySpec, create);
 
 	if (NS_SUCCEEDED(err))
 	{
@@ -111,6 +115,9 @@ nsMailDatabase::~nsMailDatabase()
 		if (err != NS_OK)
 		{
 			mailDB->Close(PR_TRUE);
+			if (err == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+				summarySpec.Delete(PR_FALSE);
+
 			mailDB = NULL;
 		}
 	}
@@ -334,14 +341,17 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 	if (stat(nativeFileName, &st)) 
 		return NS_MSG_ERROR_FOLDER_MISSING;
 
-	if (valid)
+	if (m_dbFolderInfo)
 	{
-		m_dbFolderInfo->SetFolderSize(st.st_size);
-		m_dbFolderInfo->SetFolderDate(st.st_mtime);
-	}
-	else
-	{
-		m_dbFolderInfo->SetFolderDate(0);	// that ought to do the trick.
+		if (valid)
+		{
+			m_dbFolderInfo->SetFolderSize(st.st_size);
+			m_dbFolderInfo->SetFolderDate(st.st_mtime);
+		}
+		else
+		{
+			m_dbFolderInfo->SetFolderDate(0);	// that ought to do the trick.
+		}
 	}
 	return ret;
 }

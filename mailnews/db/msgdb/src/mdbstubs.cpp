@@ -502,7 +502,9 @@ mdb_err nsIMdbRow::AddColumn( // make sure a particular column is inside row
 		m_owningPort->m_tokenStrings.StringAt(inColumn, columnStr);
 
 		columnName = columnStr.ToNewCString();
+#ifdef DEBUG_DB
 		printf("adding column %s : %s\n", columnName, inYarn->mYarn_Buf);
+#endif
 		delete [] columnName;
 	}
 	mdbCellImpl	newCell;
@@ -578,7 +580,7 @@ mdb_err nsIMdbRow::Read(nsIOFileStream *stream)
 	}
 
 	m_oid.mOid_Id = atoi(p + 1);
-#ifdef DEBUG
+#ifdef DEBUG_DB
 	printf("reading row id = %d\n", m_oid.mOid_Id);
 #endif
 	for (PRInt32 i = 0; i < numCells; i++)
@@ -588,7 +590,7 @@ mdb_err nsIMdbRow::Read(nsIOFileStream *stream)
 		{
 			cell->Read(stream);
 			m_cells.AppendCell(*cell);
-#ifdef DEBUG
+#ifdef DEBUG_DB
 			nsString columnStr;
 
 			m_owningPort->m_tokenStrings.StringAt(cell->m_column, columnStr);

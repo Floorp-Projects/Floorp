@@ -286,7 +286,7 @@ nsMsgDatabase::nsMsgDatabase()
 
 nsMsgDatabase::~nsMsgDatabase()
 {
-	Close(FALSE);
+//	Close(FALSE);	// better have already been closed.
     if (m_ChangeListeners) {
         // better not be any listeners, because we're going away.
         NS_ASSERTION(m_ChangeListeners->Count() == 0, "shouldn't have any listeners");
@@ -295,7 +295,18 @@ nsMsgDatabase::~nsMsgDatabase()
 }
 
 NS_IMPL_ADDREF(nsMsgDatabase)
-NS_IMPL_RELEASE(nsMsgDatabase)
+
+NS_IMETHODIMP nsMsgDatabase::Release(void)                    
+{                                                      
+  NS_PRECONDITION(0 != mRefCnt, "dup release");        
+  if (--mRefCnt == 0) {                                
+    NS_DELETEXPCOM(this);                              
+    return 0;                                          
+  }                                                    
+  return mRefCnt;                                      
+}
+
+// NS_IMPL_RELEASE(nsMsgDatabase)
 
 NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
 {   
@@ -389,8 +400,16 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			if (stat(nativeFileName, &st)) 
 				ret = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
 			else
-				ret = myMDBFactory->OpenFileStore(m_mdbEnv, NULL, nativeFileName, NULL, /* const mdbOpenPolicy* inOpenPolicy */
+			{
+				mdbOpenPolicy inOpenPolicy;
+
+				inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
+				inOpenPolicy.mOpenPolicy_MinMemory = 0;
+				inOpenPolicy.mOpenPolicy_MaxLazy = 0;
+
+				ret = myMDBFactory->OpenFileStore(m_mdbEnv, NULL, nativeFileName, &inOpenPolicy, 
 				&thumb); 
+			}
 			if (NS_SUCCEEDED(ret) && thumb)
 			{
 				mdb_count outTotal;    // total somethings to do in operation
@@ -400,16 +419,22 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 				do
 				{
 					ret = thumb->DoMore(m_mdbEnv, &outTotal, &outCurrent, &outDone, &outBroken);
+					if (ret != 0)
+					{// mork isn't really doing NS erorrs yet.
+						outDone = PR_TRUE;
+						break;
+					}
 				}
 				while (NS_SUCCEEDED(ret) && !outBroken && !outDone);
-				if (NS_SUCCEEDED(ret) && outDone)
+				m_mdbEnv->ClearErrors(); // ### temporary...
+				if (ret != 0 && NS_SUCCEEDED(ret) && outDone)
 				{
 					ret = myMDBFactory->ThumbToOpenStore(m_mdbEnv, thumb, &m_mdbStore);
-					if (ret == NS_OK)
+					if (ret == NS_OK && m_mdbStore)
 						ret = InitExistingDB();
 				}
 #ifdef DEBUG_bienvenu
-				DumpContents();
+//				DumpContents();
 #endif
 			}
 			else if (create)	// ### need error code saying why open file store failed
@@ -432,7 +457,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 
 NS_IMETHODIMP nsMsgDatabase::CloseMDB(PRBool commit)
 {
-	--mRefCnt;
+//	--mRefCnt; don't decrement ref-count so we'll stay in memory until Mork files in and out.
 	PR_ASSERT(mRefCnt >= 0);
 	if (mRefCnt == 0)
 	{
@@ -446,6 +471,8 @@ NS_IMETHODIMP nsMsgDatabase::CloseMDB(PRBool commit)
 			DumpCache();
 		}
 #endif
+		if (m_mdbStore)
+			m_mdbStore->Release();
 		// if this terrifies you, we can make it a static method
 		delete this;	
 		return(NS_OK);
@@ -486,10 +513,12 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommitType commitType)
 			err = m_mdbStore->SmallCommit(GetEnv());
 			break;
 		case kLargeCommit:
-			err = m_mdbStore->LargeCommit(GetEnv(), &commitThumb);
+			err = m_mdbStore->CompressCommit(GetEnv(), &commitThumb);
+//			err = m_mdbStore->LargeCommit(GetEnv(), &commitThumb);
 			break;
 		case kSessionCommit:
-			err = m_mdbStore->SessionCommit(GetEnv(), &commitThumb);
+			// comment out until persistence works.
+//			err = m_mdbStore->SessionCommit(GetEnv(), &commitThumb);
 			break;
 		case kCompressCommit:
 			err = m_mdbStore->CompressCommit(GetEnv(), &commitThumb);
@@ -509,7 +538,8 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommitType commitType)
 		NS_RELEASE(commitThumb);
 	}
 	// ### do something with error, but clear it now because mork errors out on commits.
-	GetEnv()->ClearErrors();
+	if (GetEnv())
+		GetEnv()->ClearErrors();
 	return err;
 }
 
@@ -1292,7 +1322,12 @@ NS_IMPL_ISUPPORTS(nsMsgDBEnumerator, nsIEnumerator::GetIID())
 
 NS_IMETHODIMP nsMsgDBEnumerator::First(void)
 {
-	nsresult rv = mDB->m_mdbAllMsgHeadersTable->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
+	nsresult rv = 0;
+
+	if (!mDB || !mDB->m_mdbAllMsgHeadersTable)
+		return NS_ERROR_NULL_POINTER;
+		
+	mDB->m_mdbAllMsgHeadersTable->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
 	if (NS_FAILED(rv)) return rv;
     return Next();
 }
@@ -1307,6 +1342,8 @@ NS_IMETHODIMP nsMsgDBEnumerator::Next(void)
         NS_IF_RELEASE(mResultHdr);
         mResultHdr = nsnull;
         rv = mRowCursor->NextRow(mDB->GetEnv(), &hdrRow, &rowPos);
+		if (!hdrRow)
+			rv = NS_ERROR_RDF_CURSOR_EMPTY;
         if (NS_FAILED(rv)) {
             mDone = PR_TRUE;
             return rv;
@@ -1373,18 +1410,21 @@ NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 {
 	nsresult	err = NS_OK;
 	nsIMdbTableRowCursor *rowCursor;
-	err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
-	while (err == NS_OK && rowCursor)
+	if (m_mdbAllMsgHeadersTable)
 	{
-		mdbOid outOid;
-		mdb_pos	outPos;
+		err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+		while (err == NS_OK && rowCursor)
+		{
+			mdbOid outOid;
+			mdb_pos	outPos;
 
-		err = rowCursor->NextRowOid(GetEnv(), &outOid, &outPos);
-		// is this right? Mork is returning a 0 id, but that should valid.
-		if (outPos < 0 || outOid.mOid_Scope == 0)	
-			break;
-		if (err == NS_OK)
-			outputKeys.Add(outOid.mOid_Id);
+			err = rowCursor->NextRowOid(GetEnv(), &outOid, &outPos);
+			// is this right? Mork is returning a 0 id, but that should valid.
+			if (outPos < 0 || outOid.mOid_Scope == 0)	
+				break;
+			if (err == NS_OK)
+				outputKeys.Add(outOid.mOid_Id);
+		}
 	}
 	return err;
 }

@@ -156,7 +156,7 @@ nsresult nsDBFolderInfo::AddToNewMDB()
 			&gDBFolderInfoOID, &m_mdbRow);
 
 		// add the row to the singleton table.
-		if (NS_SUCCEEDED(err))
+		if (m_mdbRow && NS_SUCCEEDED(err))
 		{
 			err = m_mdbTable->AddRow(m_mdb->GetEnv(), m_mdbRow);
 		}
