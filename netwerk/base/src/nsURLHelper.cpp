@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsURLHelper.h"
+#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIURLParser.h"
