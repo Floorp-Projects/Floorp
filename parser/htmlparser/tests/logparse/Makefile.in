@@ -26,7 +26,7 @@ VPATH		  = y:/mozilla/htmlparser/tests/logparse
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= TestParser.exe
+PROGRAM		= logparse.exe
 
 REQUIRES	= \
    xpcom \
@@ -36,7 +36,7 @@ REQUIRES	= \
 	 $(NULL)
 
 CPPSRCS		= \
-  TestParser.cpp\
+  logparse.cpp\
   $(NULL)
 
 LIBS		= \

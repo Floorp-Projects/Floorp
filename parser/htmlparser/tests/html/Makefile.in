@@ -21,12 +21,12 @@
 
 DEPTH		  = ../../..
 topsrcdir	= y:/mozilla
-srcdir		= y:/mozilla/htmlparser/tests/logparse
-VPATH		  = y:/mozilla/htmlparser/tests/logparse
+srcdir		= y:/mozilla/htmlparser/tests/html
+VPATH		  = y:/mozilla/htmlparser/tests/html
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= logparse.exe
+PROGRAM		= TestParser.exe
 
 REQUIRES	= \
    xpcom \
@@ -36,7 +36,7 @@ REQUIRES	= \
 	 $(NULL)
 
 CPPSRCS		= \
-  logparse.cpp\
+  TestParser.cpp\
   $(NULL)
 
 LIBS		= \

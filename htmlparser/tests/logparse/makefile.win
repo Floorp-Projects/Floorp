@@ -28,10 +28,10 @@ REQUIRES = \
 	 $NULL
 
 MAKE_OBJ_TYPE = EXE
-PROGRAM = .\$(OBJDIR)\TestParser.exe
+PROGRAM = .\$(OBJDIR)\logparse.exe
 
 OBJS = \
-	.\$(OBJDIR)\TestParser.obj\
+	.\$(OBJDIR)\logparse.obj\
 	$(NULL)
 
 
