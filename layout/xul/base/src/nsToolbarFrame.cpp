@@ -82,6 +82,7 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
 {
+#if 0
   if (eFramePaintLayer_Underlay == aWhichLayer) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -108,7 +109,11 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
   // hidden
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
-  
+
+#endif
+
+  return nsBlockFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
+    
 } // Paint
 
 
