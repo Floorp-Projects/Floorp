@@ -48,7 +48,7 @@
 #include "nsSelectionRange.h"
 
 #define CALC_DEBUG 0
-//#define DO_SELECTION 1
+#define DO_SELECTION 0
 
 
 
@@ -937,15 +937,15 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
       if (strstr(buf, "basic4")) {
         int xx = 0;
         xx++;
-      }
-      if (strstr(buf, "font5")) {
-        int xx = 0;
-        xx++;
-      }
-      if (strstr(buf, "green")) {
-        int xx = 0;
-        xx++;
       }*/
+      if (strstr(buf, "paragraph")) {
+        int xx = 0;
+        xx++;
+      }
+      if (strstr(buf, "two.")) {
+        int xx = 0;
+        xx++;
+      }
     }
 #endif
 
@@ -969,7 +969,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 
       PRBool skip = PR_FALSE;
       startCoord = 0;
-      if (startPnt->GetOffset() > mContentOffset+mContentLength) {
+      if (startPnt->GetOffset() > mContentOffset+mContentLength ||
+        (startPnt->GetOffset() == mContentOffset+mContentLength)) {// && mContentOffset == 0)) {
         skip = PR_TRUE;
       } else if (startPnt->GetOffset() <= mContentOffset) {
         //startCoord = 0;
@@ -986,17 +987,17 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
       }
 
       endCoord = mContentLength;
-      if (endPnt->GetOffset() > mContentOffset+mContentLength) {
+      if (endPnt->GetOffset() >= mContentOffset+mContentLength) {
         //endCoord = mContentLength;
       } else if (endPnt->GetOffset() <= mContentOffset) {
         //endCoord = mContentLength;
         skip = PR_TRUE;
       } else {
-        if (endPnt->GetOffset() == (PRInt32)compressedStrLen) {
-          endCoord = compressedStrLen;
-        } else {
+        //if (endPnt->GetOffset() == (PRInt32)compressedStrLen) {
+         // endCoord = compressedStrLen;
+        //} else {
           endCoord = indexes[endPnt->GetOffset()-mContentOffset]-mContentOffset;
-        }
+        //}
       }
  
 
@@ -1615,6 +1616,7 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
       for (j=0;j<PRInt32(mContentLength);j++) {
         if (indexes[j] == i+mContentOffset) {
           aOffset = j+mContentOffset;
+          break;
           //printf("Char pos %d  Offset is %d\n", i, aOffset);
         }
       }
@@ -1625,7 +1627,7 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
     }
   }
 
-  aOffset = i;
+  aOffset = mContentOffset+mContentLength;
   aWidth  = width;
 
   if (shouldDelete) {
