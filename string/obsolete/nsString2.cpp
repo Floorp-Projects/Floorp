@@ -126,6 +126,8 @@ HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service
     return NS_OK;
 }
 
+#if 0
+/* not used yet */
 static HandleCaseConversionShutdown3* gListener = NULL;
 
 static void StartUpCaseConversion()
@@ -148,7 +150,7 @@ static void CheckCaseConversion()
     // NS_ASSERTION( gCaseConv != NULL , "cannot obtain UnicharUtil");
    
 }
-
+#endif
 /***********************************************************************
   IMPLEMENTATION NOTES:
 
