@@ -1609,6 +1609,8 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
   		{
 	  		Rect		imageDestRect = imageRect;
 	  		::OffsetRect(&imageDestRect, x, y);
+	  		imageDestRect.bottom = PR_MIN(imageDestRect.bottom, aY1);
+	  		imageDestRect.right = PR_MIN(imageDestRect.right, aX1);
 	  		
 	  		// CopyBits will do the truncation for us at the edges
         CopyBitsWithMask((BitMap*)(&mImagePixmap),
