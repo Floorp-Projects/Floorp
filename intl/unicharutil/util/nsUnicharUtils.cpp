@@ -71,7 +71,7 @@ public:
     {
         NS_InitCaseConversion();
         gCaseConv->ToUpper(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
-        return 0;
+        return aSourceLength;
     }
 };
 
@@ -95,7 +95,7 @@ nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUni
   {
       NS_InitCaseConversion();
       PRInt32 result;
-      gCaseConv->CaseCompare(lhs, rhs, aLength, &result);
+      gCaseConv->CaseInsensitiveCompare(lhs, rhs, aLength, &result);
       return result;
   }
 
