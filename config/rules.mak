@@ -802,6 +802,16 @@ chrome::
 
 !endif # WARREN_JAR_PACKAGING
 
+regchrome:
+!if !defined(MOZ_DISABLE_JAR_PACKAGING)
+  $(PERL) $(DEPTH)\config\zipchrome.pl win32 $(DIST)\bin\chrome
+  $(PERL) $(DEPTH)\config\installchrome.pl win32 jar $(DIST)\bin\chrome
+!else
+#  XXX do it this way once everyone has perl installed. For now some
+#  people apparently have trouble with that so do the rules.mak stuff instead
+#    $(PERL) $(DEPTH)\config\installchrome.pl win32 resource $(DIST)\bin\chrome
+!endif
+
 ################################################################################
 
 # Easier than typing it by hand, works from any directory:
