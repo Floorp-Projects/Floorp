@@ -71,6 +71,12 @@ public:
                             nscoord                 aPrevCellMin,
                             nscoord                 aPrevCellDes) const;
 
+#ifdef DEBUG
+  void  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    *aResult = sizeof(*this);
+  }
+#endif
+
 protected:
    /* assign the width of all columns
     * if there is a colframe with a width attribute, use it as the column width.

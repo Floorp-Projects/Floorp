@@ -165,6 +165,12 @@ protected:
                             nscoord                 aPrevCellMin,
                             nscoord                 aPrevCellDes) const;
 
+#ifdef DEBUG
+  void  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
+    *aResult = sizeof(*this);
+  }
+#endif
+
 protected:
   nsTableFrame * mTableFrame;
   PRInt32        mCols;

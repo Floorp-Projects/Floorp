@@ -130,6 +130,10 @@ public:
   void Dump() const;
 #endif
 
+#ifdef DEBUG
+  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
+
 protected:
   /** set the CellMap to (aNumRows x aNumColumns) */
   void Grow(PRInt32 aNumMapRows, 

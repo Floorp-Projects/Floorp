@@ -50,6 +50,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLBodyElement.h"
+#include "nsISizeOfHandler.h"
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -5473,7 +5474,20 @@ nsTableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     return NS_ERROR_NULL_POINTER;
   }
   PRUint32 sum = sizeof(*this);
-  // XXX write me
+
+  // Add in the amount of space for the column width array
+  sum += mColumnWidthsLength * sizeof(PRInt32);
+
+  // Add in size of cell map
+  PRUint32 cellMapSize;
+  mCellMap->SizeOf(aHandler, &cellMapSize);
+  aHandler->AddSize(nsLayoutAtoms::cellMap, cellMapSize);
+
+  // Add in size of table layout strategy
+  PRUint32 strategySize;
+  mTableLayoutStrategy->SizeOf(aHandler, &strategySize);
+  aHandler->AddSize(nsLayoutAtoms::tableStrategy, strategySize);
+
   *aResult = sum;
   return NS_OK;
 }

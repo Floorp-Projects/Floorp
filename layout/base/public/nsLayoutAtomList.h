@@ -88,17 +88,21 @@ LAYOUT_ATOM(placeholderFrame, "PlaceholderFrame")
 LAYOUT_ATOM(positionedInlineFrame, "PositionedInlineFrame")
 LAYOUT_ATOM(rootFrame, "RootFrame")
 LAYOUT_ATOM(scrollFrame, "ScrollFrame")
-LAYOUT_ATOM(tableOuterFrame, "TableOuterFrame")
+LAYOUT_ATOM(tableCellFrame, "TableCellFrame")
+LAYOUT_ATOM(tableColFrame, "TableColFrame")
+LAYOUT_ATOM(tableColGroupFrame, "TableColGroupFrame")
 LAYOUT_ATOM(tableFrame, "TableFrame")
+LAYOUT_ATOM(tableOuterFrame, "TableOuterFrame")
 LAYOUT_ATOM(tableRowGroupFrame, "TableRowGroupFrame")
 LAYOUT_ATOM(tableRowFrame, "TableRowFrame")
-LAYOUT_ATOM(tableCellFrame, "TableCellFrame")
 LAYOUT_ATOM(textFrame, "TextFrame")
 LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code
+LAYOUT_ATOM(cellMap, "TableCellMap")
 LAYOUT_ATOM(imageMap, "ImageMap")
 LAYOUT_ATOM(lineBox, "LineBox")
+LAYOUT_ATOM(tableStrategy, "TableLayoutStrategy")
 LAYOUT_ATOM(textRun, "TextRun")
 #endif

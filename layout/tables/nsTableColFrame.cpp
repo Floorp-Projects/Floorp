@@ -24,6 +24,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsCSSRendering.h"
+#include "nsLayoutAtoms.h"
 
 nsTableColFrame::nsTableColFrame()
   : nsFrame(), mIsAnonymous(PR_FALSE), mProportion(WIDTH_NOT_SET)
@@ -170,6 +171,15 @@ NS_NewTableColFrame(nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
+nsTableColFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::tableColFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTableColFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TableCol", aResult);
@@ -183,7 +193,6 @@ nsTableColFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     return NS_ERROR_NULL_POINTER;
   }
   PRUint32 sum = sizeof(*this);
-  // XXX write me
   *aResult = sum;
   return NS_OK;
 }

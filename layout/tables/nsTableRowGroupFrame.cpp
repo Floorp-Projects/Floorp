@@ -1632,7 +1632,6 @@ nsTableRowGroupFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) cons
     return NS_ERROR_NULL_POINTER;
   }
   PRUint32 sum = sizeof(*this);
-  // XXX write me
   *aResult = sum;
   return NS_OK;
 }
