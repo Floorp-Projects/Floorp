@@ -500,6 +500,12 @@ NS_IMETHODIMP nsRenderingContextBeOS::SetClipRegion(const nsIRegion& aRegion,
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextBeOS::CopyClipRegion(nsIRegion &aRegion)
+{
+  aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mRegion));
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextBeOS::GetClipRegion(nsIRegion **aRegion)
 {
 	nsresult  rv = NS_OK;

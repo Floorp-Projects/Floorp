@@ -456,6 +456,14 @@ nsRenderingContextXlib::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aC
 }
 
 NS_IMETHODIMP
+nsRenderingContextXlib::CopyClipRegion(nsIRegion &aRegion)
+{
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::CopyClipRegion()\n"));
+  aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsRenderingContextXlib::GetClipRegion(nsIRegion **aRegion)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetClipRegion()\n"));
