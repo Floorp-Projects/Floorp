@@ -210,7 +210,6 @@ endif
 endif
 
 $(PACKAGE): $(MOZILLA_BIN)
-ifneq ($(MOZ_PKG_APPNAME),thunderbird)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
 # NOTE: this must be a tar now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
@@ -228,7 +227,6 @@ ifndef EXCLUDE_NSPR_LIBS
 endif
 endif
 endif # DMG
-endif # not Thunderbird
 	@echo "Stripping package directory..."
 	@cd $(DIST)/$(MOZ_PKG_APPNAME); find . ! -type d \
 			! -name "*.js" \

@@ -8,7 +8,7 @@ var prettyName = "US English profile default";
 var regName    = "defaults/mozilla/en-US";
 // --- END CHANGABLE STUFF ---
 
-srDest = $SpaceRequired$:thunderbird;
+srDest = $SpaceRequired$:bin;
 err    = initInstall(prettyName, regName, "$Version$"); 
 logComment("initInstall: " + err);
 
@@ -21,7 +21,7 @@ if(verifyDiskSpace(fProgram, srDest))
 
   err = addDirectory("",
                      "$Version$",
-                     "thunderbird",              // dir name in jar to extract 
+                     "bin",              // dir name in jar to extract 
                      fProgram,           // Where to put this file (Returned from GetFolder) 
                      "",                 // subdir name to create relative to fProgram
                      true);              // Force Flag 

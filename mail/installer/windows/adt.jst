@@ -20,11 +20,11 @@ logComment("initInstall: " + err);
 var fProgram = getFolder("Program");
 logComment("fProgram: " + fProgram);
 
-err = addDirectory("", "$Version$", "thunderbird", fProgram, "", true);
+err = addDirectory("", "$Version$", "bin", fProgram, "", true);
 logComment("addDirectory: " + err);
 
 addFile("Inspector Command Line Handler",
-        "thunderbird/components/inspector-cmdline.js",
+        "bin/components/inspector-cmdline.js",
         getFolder("Components"),
         "");
 

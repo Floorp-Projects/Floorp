@@ -19,7 +19,7 @@ var chromeName = chromeNode + "-mail.jar";
 var platformName = langcode + "-" + platformNode + ".jar";
 var localeName = "locale/" + chromeNode + "/";
 
-srDest = $SpaceRequired$:thunderbird;
+srDest = $SpaceRequired$:bin;
 err    = initInstall(prettyName, regName, "$Version$"); 
 logComment("initInstall: " + err);
 
@@ -30,7 +30,7 @@ if(verifyDiskSpace(fProgram, srDest))
 {
   var chromeType = LOCALE;
   err = addDirectory("",
-                     "thunderbird",     // dir name in jar to extract 
+                     "bin",     // dir name in jar to extract 
                      fProgram,  // Where to put this file (Returned from GetFolder) 
                      "");       // Force Flag 
   logComment("addDirectory() returned: " + err);
@@ -43,7 +43,7 @@ if(verifyDiskSpace(fProgram, srDest))
     chromeType |= PROFILE_CHROME;
     fProgram = getFolder("Profile");
     logComment("try installing to the user profile:" + fProgram);
-    err = addDirectory("","thunderbird",fProgram,"");
+    err = addDirectory("","bin",fProgram,"");
   }
  
   setPackageFolder(fProgram);

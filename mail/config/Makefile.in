@@ -26,80 +26,51 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
-	BASEMAIL = basemail-win
-	PREF = pref-win
-	INSPECTOR = inspector-win
-	_PLATFORM = dos
-else
-ifeq ($(OS_ARCH),OS2)
-	BASEMAIL = basemail-os2
-	PREF = pref-os2
-	INSPECTOR = inspector-os2
-	_PLATFORM = unix
-else
-	BASEMAIL = basemail-unix
-	PREF = pref-unix
-	INSPECTOR = inspector-unix
-	_PLATFORM = unix
-endif
-endif
-
-APP_NAME=thunderbird
-
 mail_chrome: mail-jar.mn
 
-	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/comm
-	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/comm $(DIST)/bin/chrome/comm.jar
+	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/comm
+	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/comm $(DIST)/bin/chrome/comm.jar
 
-	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/toolkit
-	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/toolkit $(DIST)/bin/chrome/toolkit.jar
+	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/toolkit
+	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/toolkit $(DIST)/bin/chrome/toolkit.jar
 
-	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/msg
-	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/msg $(DIST)/bin/chrome/messenger.jar
+	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/msg
+	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/msg $(DIST)/bin/chrome/messenger.jar
 
-	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/classic
-	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/classic $(DIST)/bin/chrome/classic.jar
+	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/classic
+	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/classic $(DIST)/bin/chrome/classic.jar
 
-	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/en-US
-	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/en-US $(DIST)/bin/chrome/en-US.jar
+	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/en-US
+	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/en-US $(DIST)/bin/chrome/en-US.jar
 
-	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/US
-	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/US $(DIST)/bin/chrome/US.jar
+	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/US
+	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/US $(DIST)/bin/chrome/US.jar
 
 ifdef MOZ_PSM
-	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/pipnss
-	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/pipnss $(DIST)/bin/chrome/pipnss.jar
+	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/pipnss
+	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/pipnss $(DIST)/bin/chrome/pipnss.jar
 
-	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/pippki
-	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/pippki $(DIST)/bin/chrome/pippki.jar
+	$(NSINSTALL) -D $(DIST)/bin/tmpchrome/pippki
+	$(UNZIP) -o -d $(DIST)/bin/tmpchrome/pippki $(DIST)/bin/chrome/pippki.jar
 endif
 
-	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/mail-jar.mn -mozpath $(MOZILLA_DIR) -jarfile mail.jar -chrome $(DIST)/$(APP_NAME)/tmpchrome > $(MOZILLA_DIR)/mail/config/mail-tmp.mn
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/$(APP_NAME)/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/mail-tmp.mn
+	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/mail-jar.mn -mozpath $(MOZILLA_DIR) -jarfile mail.jar -chrome $(DIST)/bin/tmpchrome > $(MOZILLA_DIR)/mail/config/mail-tmp.mn
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/bin/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/mail-tmp.mn
 
-	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/qute-jar.mn -mozpath $(MOZILLA_DIR) -jarfile qute.jar -chrome $(DIST)/$(APP_NAME)/tmpchrome > $(MOZILLA_DIR)/mail/config/qute-tmp.mn
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/$(APP_NAME)/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/qute-tmp.mn
+	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/qute-jar.mn -mozpath $(MOZILLA_DIR) -jarfile qute.jar -chrome $(DIST)/bin/tmpchrome > $(MOZILLA_DIR)/mail/config/qute-tmp.mn
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/bin/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/qute-tmp.mn
 
-	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/en-US-jar.mn -mozpath $(MOZILLA_DIR) -jarfile en-US-mail.jar -chrome $(DIST)/$(APP_NAME)/tmpchrome > $(MOZILLA_DIR)/mail/config/en-US-tmp.mn
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/$(APP_NAME)/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/en-US-tmp.mn
+	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/en-US-jar.mn -mozpath $(MOZILLA_DIR) -jarfile en-US-mail.jar -chrome $(DIST)/bin/tmpchrome > $(MOZILLA_DIR)/mail/config/en-US-tmp.mn
+	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/bin/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/en-US-tmp.mn
 
 	-$(RM) -f $(MOZILLA_DIR)/mail/config/mail-tmp.mn
 	-$(RM) -f $(MOZILLA_DIR)/mail/config/qute-tmp.mn
 	-$(RM) -f $(MOZILLA_DIR)/mail/config/en-US-tmp.mn
-	-$(RM) -rf $(DIST)/$(APP_NAME)/tmpchrome 
+	-$(RM) -rf $(DIST)/bin/tmpchrome 
 
 mail_copy::
-	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEMAIL) -o $(_PLATFORM) -v
-ifneq (,$(findstring pref,$(MOZ_EXTENSIONS)))
-	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(PREF) -o $(_PLATFORM) -v
-endif
-ifneq (,$(findstring inspector,$(MOZ_EXTENSIONS)))
-	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(INSPECTOR) -o $(_PLATFORM) -v
-endif
-	$(NSINSTALL) -t $(DIST)/bin/$(APP_NAME)$(BIN_SUFFIX) $(DIST)/$(APP_NAME)/
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(MOZILLA_DIR)/mail/config/installed-chrome.txt > $(DIST)/$(APP_NAME)/chrome/installed-chrome.txt
-	rm -f $(DIST)/$(APP_NAME)/components/compreg.dat
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(MOZILLA_DIR)/mail/config/installed-chrome.txt > $(DIST)/bin/chrome/installed-chrome.txt
+	rm -f $(DIST)/bin/components/compreg.dat
 
 libs::
 	$(MAKE) mail_chrome

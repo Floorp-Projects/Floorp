@@ -42,6 +42,63 @@ VPATH		= @srcdir@
 
 NO_GECKO_SDK=1
 
+NO_PKG_FILES = \
+	TestGtkEmbed \
+	bloaturls.txt \
+	codesighs* \
+	elf-dynstr-gc \
+	thunderbird-config \
+	mangle* \
+	maptsv* \
+	mfc* \
+	mkdepend* \
+	msdump* \
+	msmap* \
+	nm2tsv* \
+	nsinstall* \
+	rebasedlls* \
+	regchrome* \
+	regxpcom* \
+	res/samples \
+	res/throbber \
+	shlibsign* \
+	winEmbed.exe \
+	xpcshell* \
+	xpidl* \
+	xpt_dump* \
+	xpt_link* \
+	dirver* \
+	plugins \
+	res/arrow.gif \
+	res/arrowd.gif \
+	res/boatcycle.html \
+	res/cmessage.txt \
+	res/dtd \
+	res/html \
+	res/loading-image.gif \
+	res/rdf \
+	res/viewer.properties \
+	res/viewsource.css \
+	chrome/US.jar \
+	chrome/chromelist.txt \
+	chrome/classic.jar \
+	chrome/comm.jar \
+	chrome/embed-sample.jar \
+	chrome/en-US.jar \
+	chrome/messenger.jar \
+	chrome/pipnss.jar \
+	chrome/pippki.jar \
+	chrome/toolkit.jar \
+	PalmSyncInstall.exe \
+	$(NULL)
+
+ifeq ($(OS_ARCH), WINNT)
+NO_PKG_FILES += \
+	chrome/en-unix.jar \
+	chrome/en-mac.jar \
+	$(NULL)
+endif
+
 # Before building the installer, re-make in mail/config to pick up
 # new files in dist/bin.  This is needed for Talkback.
 libs:: 
@@ -51,6 +108,12 @@ libs::
 # new files in dist/bin.  This is needed for Talkback.
 installer:: 
 	$(MAKE) -C ../config
+
+ifeq ($(OS_ARCH), Darwin)
+MOZ_PKG_APPNAME = Thunderbird
+endif
+
+include $(DEPTH)/config/autoconf.mk
 
 include $(DEPTH)/xpinstall/packager/Makefile
 

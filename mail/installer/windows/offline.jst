@@ -6,7 +6,7 @@ logComment("initInstall: " + err);
 var fProgram = getFolder("Program");
 logComment("fProgram: " + fProgram);
 
-err = addDirectory("", "$Version$", "thunderbird", fProgram, "", true);
+err = addDirectory("", "$Version$", "bin", fProgram, "", true);
 logComment("addDirectory: " + err);
 
 var jarFolder = getFolder("Chrome", "offline.jar");

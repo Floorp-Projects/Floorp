@@ -32,14 +32,9 @@ DIRS		= base components extensions app
 # entering mail\config
 
 ifeq ($(OS_ARCH),WINNT)
-DIRS += config
 ifdef MOZ_INSTALLER
 DIRS += installer/windows
 endif
-endif
-
-ifeq ($(OS_ARCH),Linux)
-DIRS += config
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -269,7 +269,7 @@ function updateMapi()
       // appropriate previous Mapi32.dll.
       addFile("",
               "$Version$",
-              "thunderbird/mozMapi32.dll",           // file name in jar to extract 
+              "bin/mozMapi32.dll",           // file name in jar to extract 
               getFolder("Win System"),       // Where to put this file (Returned from getFolder) 
               "Mapi32.dll",                  // new name when installed
               DO_NOT_UNINSTALL);
@@ -494,7 +494,7 @@ logComment("args: " + args);
 if(args == "-greLocal")
   gGreLocal = true;
 
-srDest = $SpaceRequired$:thunderbird;
+srDest = $SpaceRequired$:bin;
 err    = initInstall("$ProductName$", "Mail", "$Version$"); 
 logComment("initInstall: " + err);
 
@@ -509,7 +509,7 @@ if(verifyDiskSpace(fProgram, srDest))
   upgradeCleanup();
   err = addDirectory("",
                      "$Version$",
-                     "thunderbird",              // dir name in jar to extract 
+                     "bin",              // dir name in jar to extract 
                      fProgram,           // Where to put this file (Returned from GetFolder) 
                      "",                 // subdir name to create relative to fProgram
                      true);              // Force Flag 

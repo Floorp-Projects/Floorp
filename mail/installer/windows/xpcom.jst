@@ -18,7 +18,7 @@ var fileComponentRegStr;
 var fileMsvcrt;
 var fileMsvcirt;
 
-srDest = $SpaceRequired$:thunderbird;
+srDest = $SpaceRequired$:bin;
 err    = initInstall("Mozilla XPCOM", "XPCOM", "$Version$"); 
 logComment("initInstall: " + err);
 
@@ -41,7 +41,7 @@ if(verifyDiskSpace(fProgram, srDest))
   upgradeCleanup();
   err = addDirectory("",
                      "$Version$",
-                     "thunderbird",              // dir name in jar to extract 
+                     "bin",              // dir name in jar to extract 
                      fProgram,           // Where to put this file (Returned from GetFolder) 
                      "",                 // subdir name to create relative to fProgram
                      true);              // Force Flag 

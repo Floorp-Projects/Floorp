@@ -3,381 +3,327 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 [langenus]
-thunderbird\chrome\en-US-mail.jar
-thunderbird\chrome\en-win.jar
+bin\chrome\en-US-mail.jar
+bin\chrome\en-win.jar
 
 [regus]
-thunderbird\defaults\profile\US\localstore.rdf
-thunderbird\defaults\profile\US\mimeTypes.rdf
+bin\defaults\profile\US\localstore.rdf
+bin\defaults\profile\US\mimeTypes.rdf
 
 [deflenus]
-thunderbird\defaults\messenger\mailViews.dat
-thunderbird\defaults\profile\localstore.rdf
-thunderbird\defaults\profile\mimeTypes.rdf
-thunderbird\defaults\profile\extensions\*
-thunderbird\defaults\profile\extensions\{972ce4c6-7e08-4474-a285-3208198ce6fd}\install.rdf
+bin\defaults\messenger\mailViews.dat
+bin\defaults\profile\localstore.rdf
+bin\defaults\profile\mimeTypes.rdf
+bin\defaults\profile\extensions\*
+bin\defaults\profile\extensions\{972ce4c6-7e08-4474-a285-3208198ce6fd}\install.rdf
 
 [xpcom]
-thunderbird\xpcom.dll
-thunderbird\xpcom_compat.dll
-thunderbird\components\xpcom_compat_c.dll
-thunderbird\xpistub.dll
-thunderbird\components\jar50.dll
-thunderbird\components\xpcom_base.xpt
-thunderbird\components\xpcom_components.xpt
-thunderbird\components\xpcom_ds.xpt
-thunderbird\components\xpcom_io.xpt
-thunderbird\components\xpcom_thread.xpt
-thunderbird\components\xpcom_xpti.xpt
-thunderbird\components\xpcom_obsolete.xpt
-thunderbird\nspr4.dll      
-thunderbird\plc4.dll       
-thunderbird\plds4.dll
-thunderbird\js3250.dll   
-thunderbird\components\jsd3250.dll
-thunderbird\components\xpinstal.dll  
-thunderbird\mozz.dll
+bin\xpcom.dll
+bin\xpcom_compat.dll
+bin\xpistub.dll
+bin\components\jar50.dll
+bin\components\xpcom_base.xpt
+bin\components\xpcom_components.xpt
+bin\components\xpcom_ds.xpt
+bin\components\xpcom_io.xpt
+bin\components\xpcom_thread.xpt
+bin\components\xpcom_xpti.xpt
+bin\components\xpcom_obsolete.xpt
+bin\nspr4.dll      
+bin\plc4.dll       
+bin\plds4.dll
+bin\js3250.dll   
+bin\components\jsd3250.dll
+bin\components\xpinstal.dll  
 
 ; Optional offline extension
 [offline]
-thunderbird\chrome\offline.jar
-
-; [Additional Developer Tools]
-[adt]
-; [Document Inspector]
-thunderbird\components\inspector-cmdline.js
-thunderbird\components\inspector.dll
-thunderbird\components\inspector.xpt
-thunderbird\chrome\inspector.jar
-thunderbird\defaults\pref\inspector.js
-thunderbird\res\inspector\viewer-registry.rdf
-thunderbird\res\inspector\search-registry.rdf
+bin\chrome\offline.jar
 
 ; Optional Talkback
 [talkback]
-thunderbird\components\qfaservices.dll
-thunderbird\components\qfaservices.xpt
-thunderbird\components\BrandRes.dll
-thunderbird\components\fullsoft.dll
-thunderbird\components\master.ini
-thunderbird\components\talkback-l10n.ini
-thunderbird\components\talkback.cnt
-thunderbird\components\talkback.exe
-thunderbird\components\talkback.hlp
+bin\components\qfaservices.dll
+bin\components\qfaservices.xpt
+bin\components\BrandRes.dll
+bin\components\fullsoft.dll
+bin\components\master.ini
+bin\components\talkback-l10n.ini
+bin\components\talkback.cnt
+bin\components\talkback.exe
+bin\components\talkback.hlp
 
 [mail]
 
-thunderbird\xpicleanup.exe
-thunderbird\thunderbird.exe
-thunderbird\LICENSE.txt
-thunderbird\README.txt
+bin\xpicleanup.exe
+bin\thunderbird.exe
+bin\LICENSE.txt
+bin\README.txt
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Mail Specific Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-thunderbird\components\mail.dll
-thunderbird\components\import.dll
+bin\components\addrbook.xpt
+bin\components\mime.xpt
+bin\components\mailnews.xpt
+bin\components\msgbase.xpt
+bin\components\msgcompo.xpt
+bin\components\msgdb.xpt
+bin\components\msgimap.xpt
+bin\components\msglocal.xpt
+bin\components\msgnews.xpt
+bin\components\msgsearch.xpt
+bin\components\import.xpt
+bin\components\impComm4xMail.xpt
+bin\components\mailview.xpt
+bin\components\mailprofilemigration.xpt
 
-thunderbird\components\addrbook.xpt
-thunderbird\components\mime.xpt
-thunderbird\components\mailnews.xpt
-thunderbird\components\msgbase.xpt
-thunderbird\components\msgcompo.xpt
-thunderbird\components\msgdb.xpt
-thunderbird\components\msgimap.xpt
-thunderbird\components\msglocal.xpt
-thunderbird\components\msgnews.xpt
-thunderbird\components\msgsearch.xpt
-thunderbird\components\import.xpt
-thunderbird\components\impComm4xMail.xpt
-thunderbird\components\mailview.xpt
-
-thunderbird\chrome\mail.jar
-thunderbird\chrome\icons\default\abcardWindow.ico
-thunderbird\chrome\icons\default\addressbookWindow.ico
-thunderbird\chrome\icons\default\messengerWindow.ico
-thunderbird\chrome\icons\default\msgcomposeWindow.ico
+bin\chrome\mail.jar
+bin\chrome\icons\default\abcardWindow.ico
+bin\chrome\icons\default\addressbookWindow.ico
+bin\chrome\icons\default\messengerWindow.ico
+bin\chrome\icons\default\msgcomposeWindow.ico
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Mail Extensions (smime, etc.)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-thunderbird\MapiProxy.dll
-thunderbird\mozMapi32.dll
-thunderbird\components\msgMapi.dll
-thunderbird\components\mapihook.xpt
-thunderbird\components\nsSetDefaultMail.js
-thunderbird\components\nsUnsetDefaultMail.js
-thunderbird\components\offlineStartup.js
+bin\MapiProxy.dll
+bin\mozMapi32.dll
+bin\components\mapihook.xpt
+bin\components\nsSetDefaultMail.js
+bin\components\nsUnsetDefaultMail.js
+bin\components\offlineStartup.js
 
-thunderbird\components\mdn-service.js
+bin\components\mdn-service.js
 
-thunderbird\components\smime-service.js
-thunderbird\components\msgsmime.xpt
-thunderbird\components\msgsmime.dll
+bin\components\smime-service.js
+bin\components\msgsmime.xpt
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Chrome Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-thunderbird\chrome\qute.jar
+bin\chrome\qute.jar
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Default Profile Settings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; default pref files
-thunderbird\defaults\pref\
-thunderbird\greprefs\
+bin\defaults\pref\
+bin\greprefs\
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; App extensions to Mail
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; LDAP components 
-thunderbird\components\mozldap.dll
-thunderbird\components\mozldap.xpt
-thunderbird\components\nsLDAPPrefsService.js
-thunderbird\nsldap32v50.dll
-thunderbird\nsldappr32v50.dll
+bin\components\mozldap.xpt
+bin\components\nsLDAPPrefsService.js
+bin\nsldap32v50.dll
+bin\nsldappr32v50.dll
 
 ; wallet
-thunderbird\components\wallet.dll
-thunderbird\components\wallet.xpt 
-thunderbird\components\signonviewer.xpt 
+bin\components\wallet.xpt 
+bin\components\signonviewer.xpt 
 
 ; download progress
-thunderbird\components\nsProgressDialog.js
-thunderbird\components\nsHelperAppDlg.js
-thunderbird\components\nsDownloadProgressListener.js
-thunderbird\components\downloadmanager.xpt
+bin\components\nsProgressDialog.js
+bin\components\nsHelperAppDlg.js
+bin\components\nsDownloadProgressListener.js
+bin\components\downloadmanager.xpt
 
 ; spellchecker (may not be present)
-thunderbird\components\myspell.dll
-thunderbird\components\spellchecker.xpt
-thunderbird\components\spellchk.dll
+bin\components\myspell.dll
+bin\components\spellchecker.xpt
+bin\components\spellchk.dll
 ;; XXX these two files are bogus, they should not be in components\myspell...
-thunderbird\components\myspell\*
+bin\components\myspell\*
 
 ; xpinstall (needed to dynamically install themes
-thunderbird\components\xpinstall.xpt
+bin\components\xpinstall.xpt
 
 ; xmlextras (for RSS feeds and the like)
-thunderbird\components\xmlextras.dll
-thunderbird\components\xmlextras.xpt
+bin\components\xmlextras.xpt
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Base Package Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 ; Javascript:
-thunderbird\components\jsurl.xpt
+bin\components\jsurl.xpt
 
 ; xpconnect
-thunderbird\components\xpc3250.dll
-thunderbird\components\xpconnect.xpt
+bin\components\xpconnect.xpt
 
 ; XP widgets/graphics
-thunderbird\gkgfx.dll
-thunderbird\components\gkgfxwin.dll      
-thunderbird\components\gkwidget.dll   
-thunderbird\components\widget.xpt
-thunderbird\components\gfx.xpt                      
+bin\components\widget.xpt
+bin\components\gfx.xpt                      
 
 ; layout
-thunderbird\components\gklayout.dll                   
-thunderbird\components\gkparser.dll                 
-thunderbird\components\layout_base.xpt              
-thunderbird\components\layout_xul.xpt               
-thunderbird\components\content_base.xpt
-thunderbird\components\htmlparser.xpt
-thunderbird\components\content_html.xpt
-thunderbird\components\content_htmldoc.xpt
-thunderbird\components\content_xmldoc.xpt
-thunderbird\components\content_xslt.xpt
-thunderbird\components\xultmpl.xpt
-thunderbird\components\xuldoc.xpt
+bin\components\layout_base.xpt              
+bin\components\layout_xul.xpt               
+bin\components\content_base.xpt
+bin\components\htmlparser.xpt
+bin\components\content_html.xpt
+bin\components\content_htmldoc.xpt
+bin\components\content_xmldoc.xpt
+bin\components\content_xslt.xpt
+bin\components\xultmpl.xpt
+bin\components\xuldoc.xpt
 
 ; Imaging:
-thunderbird\components\imglib2.dll
-thunderbird\components\imgicon.dll
-thunderbird\components\imgicon.xpt
-thunderbird\components\imglib2.xpt
+bin\components\imgicon.xpt
+bin\components\imglib2.xpt
 
 ; accessibility (out of process API support)
-thunderbird\components\accessibility.dll              
-thunderbird\components\accessibility.xpt                 
-thunderbird\components\accessibility-msaa.xpt
+bin\components\accessibility.xpt                 
+bin\components\accessibility-msaa.xpt
 
 ; caps (JavaScript security)
-thunderbird\components\caps.dll                     
-thunderbird\components\caps.xpt                             
+bin\components\caps.xpt                             
 
 ; glue: appshell, docshell, uriloader, chrome, components
-thunderbird\components\appshell.dll                 
-thunderbird\components\appshell.xpt                 
-thunderbird\components\docshell.dll                 
-thunderbird\components\docshell_base.xpt            
-thunderbird\components\uriloader.xpt
-thunderbird\components\chrome.dll                 
-thunderbird\components\webbrwsr.dll              
-thunderbird\components\webBrowser_core.xpt
-thunderbird\components\embedcomponents.dll
-thunderbird\components\windowwatcher.xpt
-thunderbird\components\webbrowserpersist.xpt
-thunderbird\components\commandhandler.xpt
+bin\components\appshell.xpt                                 
+bin\components\docshell_base.xpt            
+bin\components\uriloader.xpt        
+bin\components\webBrowser_core.xpt
+bin\components\windowwatcher.xpt
+bin\components\webbrowserpersist.xpt
+bin\components\commandhandler.xpt
 ; we need mozbrwser.xpt for nsIXULWindow.xpt
-thunderbird\components\mozbrwsr.xpt
+bin\components\mozbrwsr.xpt
 
 ; jar
-thunderbird\components\jar.xpt
+bin\components\jar.xpt
 
 ; prefs
-thunderbird\components\pref.xpt                     
-thunderbird\components\xppref32.dll
+bin\components\pref.xpt                     
 
 ; profile              
-thunderbird\components\profile.xpt
-thunderbird\components\profilemigration.dll
-thunderbird\components\toolkitprofile.xpt
+bin\components\profile.xpt
+bin\components\toolkitprofile.xpt
 
 ; rdf
-thunderbird\components\rdf.dll
-thunderbird\components\rdf.xpt
+bin\components\rdf.xpt
 
 ; required i18n libraries
-thunderbird\components\i18n.dll
-thunderbird\components\intl.xpt
-thunderbird\components\locale.xpt
-thunderbird\components\uconv.dll
-thunderbird\components\uconv.xpt
-thunderbird\components\unicharutil.xpt
+bin\components\intl.xpt
+bin\components\locale.xpt
+bin\components\uconv.xpt
+bin\components\unicharutil.xpt
 
 ; dom 
-thunderbird\components\dom.xpt                      
-thunderbird\components\dom_base.xpt
-thunderbird\components\dom_core.xpt
-thunderbird\components\dom_css.xpt
-thunderbird\components\dom_events.xpt
-thunderbird\components\dom_html.xpt
-thunderbird\components\dom_range.xpt
-thunderbird\components\dom_stylesheets.xpt
-thunderbird\components\dom_traversal.xpt
-thunderbird\components\dom_views.xpt
-thunderbird\components\dom_xbl.xpt
-thunderbird\components\dom_xul.xpt
-thunderbird\components\dom_loadsave.xpt
+bin\components\dom.xpt                      
+bin\components\dom_base.xpt
+bin\components\dom_core.xpt
+bin\components\dom_css.xpt
+bin\components\dom_events.xpt
+bin\components\dom_html.xpt
+bin\components\dom_range.xpt
+bin\components\dom_stylesheets.xpt
+bin\components\dom_traversal.xpt
+bin\components\dom_views.xpt
+bin\components\dom_xbl.xpt
+bin\components\dom_xul.xpt
+bin\components\dom_loadsave.xpt
 
 ; editor / composer for HTML compose
-thunderbird\components\editor.dll                   
-thunderbird\components\editor.xpt
-thunderbird\components\composer.xpt
-thunderbird\components\composer.dll
-thunderbird\components\txmgr.dll
-thunderbird\components\txmgr.xpt
+bin\components\editor.xpt
+bin\components\composer.xpt
+bin\components\txmgr.xpt
 
 ; find functionality
 ; Optional - only if your code uses nsIWebBrowserFind
-thunderbird\components\txtsvc.xpt
+bin\components\txtsvc.xpt
 
 ; netwerk
-thunderbird\components\necko.dll                    
-thunderbird\components\necko2.dll  
-thunderbird\components\necko.xpt                               
-thunderbird\components\necko_data.xpt               
-thunderbird\components\necko_dns.xpt                
-thunderbird\components\necko_http.xpt               
-thunderbird\components\necko_jar.xpt                
-thunderbird\components\necko_res.xpt                
-thunderbird\components\necko_strconv.xpt
-thunderbird\components\necko_file.xpt
-thunderbird\components\necko_cache.xpt
-thunderbird\components\necko_cookie.xpt         
-thunderbird\components\nsProxyAutoConfig.js
+bin\components\necko.xpt                               
+bin\components\necko_data.xpt               
+bin\components\necko_dns.xpt                
+bin\components\necko_http.xpt               
+bin\components\necko_jar.xpt                
+bin\components\necko_res.xpt                
+bin\components\necko_strconv.xpt
+bin\components\necko_file.xpt
+bin\components\necko_cache.xpt
+bin\components\necko_cookie.xpt         
+bin\components\nsProxyAutoConfig.js
  
 ; extensions
-thunderbird\components\nsExtensionManager.js
-thunderbird\components\nsBackgroundUpdateService.js
-thunderbird\components\extensions.xpt
-thunderbird\components\update.xpt
+bin\components\nsExtensionManager.js
+bin\components\nsBackgroundUpdateService.js
+bin\components\extensions.xpt
+bin\components\update.xpt
             
 ; psm2
 ; Optional - only if you need HTTPS support
-thunderbird\components\pipboot.dll
-thunderbird\components\pipboot.xpt
-thunderbird\components\pipnss.dll
-thunderbird\components\pipnss.xpt
-thunderbird\components\pippki.dll
-thunderbird\components\pippki.xpt
-thunderbird\nss3.dll
-thunderbird\smime3.dll
-thunderbird\softokn3.chk
-thunderbird\softokn3.dll
-thunderbird\ssl3.dll
-thunderbird\nssckbi.dll
+bin\components\pipboot.xpt
+bin\components\pipnss.xpt
+bin\components\pippki.xpt
+bin\nss3.dll
+bin\smime3.dll
+bin\softokn3.chk
+bin\softokn3.dll
+bin\ssl3.dll
+bin\nssckbi.dll
 
 ; core platform files
-thunderbird\regxpcom.exe
-thunderbird\components\appcomps.dll
-thunderbird\components\autocomplete.xpt
-thunderbird\components\alerts.xpt
-thunderbird\components\jsdservice.xpt
-thunderbird\components\find.xpt
-thunderbird\components\chardet.xpt
-thunderbird\components\jsconsole-clhandler.js
-thunderbird\components\layout_xul_tree.xpt
-thunderbird\components\mork.dll
-thunderbird\components\mozfind.dll
-thunderbird\components\mozfind.xpt
-thunderbird\components\mimetype.xpt
-thunderbird\components\nsprefm.dll
-thunderbird\components\prefmigr.xpt
-thunderbird\components\proxyObject.xpt
-thunderbird\components\exthandler.xpt
-thunderbird\components\embed_base.xpt
-thunderbird\components\webshell_idls.xpt
-thunderbird\components\widget.xpt
-thunderbird\components\windowds.xpt
-thunderbird\components\wlltvwrs.dll
-thunderbird\components\helperAppDlg.xpt
-thunderbird\components\progressDlg.xpt
-thunderbird\components\dom_xpath.xpt
-thunderbird\AccessibleMarshal.dll
-thunderbird\components\lwbrk.xpt
-thunderbird\components\nsCloseAllWindows.js
-thunderbird\components\winhooks.xpt
+bin\regxpcom.exe
+bin\components\autocomplete.xpt
+bin\components\alerts.xpt
+bin\components\jsdservice.xpt
+bin\components\find.xpt
+bin\components\chardet.xpt
+bin\components\jsconsole-clhandler.js
+bin\components\layout_xul_tree.xpt
+bin\components\mozfind.xpt
+bin\components\mimetype.xpt
+bin\components\prefmigr.xpt
+bin\components\proxyObject.xpt
+bin\components\exthandler.xpt
+bin\components\embed_base.xpt
+bin\components\webshell_idls.xpt
+bin\components\widget.xpt
+bin\components\windowds.xpt
+bin\components\helperAppDlg.xpt
+bin\components\progressDlg.xpt
+bin\components\dom_xpath.xpt
+bin\AccessibleMarshal.dll
+bin\components\lwbrk.xpt
+bin\components\nsCloseAllWindows.js
+bin\components\winhooks.xpt
 
-thunderbird\res\ua.css
-thunderbird\res\html.css
-thunderbird\res\quirk.css
-thunderbird\res\forms.css
-thunderbird\res\platform-forms.css
-thunderbird\res\charsetData.properties
-thunderbird\res\charsetalias.properties
-thunderbird\res\langGroups.properties
-thunderbird\res\language.properties
-thunderbird\res\wincharset.properties
-thunderbird\res\builtin\*
-thunderbird\res\entityTables\*
+bin\res\ua.css
+bin\res\html.css
+bin\res\quirk.css
+bin\res\forms.css
+bin\res\platform-forms.css
+bin\res\charsetData.properties
+bin\res\charsetalias.properties
+bin\res\langGroups.properties
+bin\res\language.properties
+bin\res\wincharset.properties
+bin\res\builtin\*
+bin\res\entityTables\*
 
 ; editor resource files
-thunderbird\res\EditorOverride.css
-thunderbird\res\grabber.gif
-thunderbird\res\table-add-column-after-active.gif
-thunderbird\res\table-add-column-after-hover.gif
-thunderbird\res\table-add-column-after.gif
-thunderbird\res\table-add-column-before-active.gif
-thunderbird\res\table-add-column-before-hover.gif
-thunderbird\res\table-add-column-before.gif
-thunderbird\res\table-add-row-after-active.gif
-thunderbird\res\table-add-row-after-hover.gif
-thunderbird\res\table-add-row-after.gif
-thunderbird\res\table-add-row-before-active.gif
-thunderbird\res\table-add-row-before-hover.gif
-thunderbird\res\table-add-row-before.gif
-thunderbird\res\table-remove-column-active.gif
-thunderbird\res\table-remove-column-hover.gif
-thunderbird\res\table-remove-column.gif
-thunderbird\res\table-remove-row-active.gif
-thunderbird\res\table-remove-row-hover.gif
-thunderbird\res\table-remove-row.gif
+bin\res\EditorOverride.css
+bin\res\grabber.gif
+bin\res\table-add-column-after-active.gif
+bin\res\table-add-column-after-hover.gif
+bin\res\table-add-column-after.gif
+bin\res\table-add-column-before-active.gif
+bin\res\table-add-column-before-hover.gif
+bin\res\table-add-column-before.gif
+bin\res\table-add-row-after-active.gif
+bin\res\table-add-row-after-hover.gif
+bin\res\table-add-row-after.gif
+bin\res\table-add-row-before-active.gif
+bin\res\table-add-row-before-hover.gif
+bin\res\table-add-row-before.gif
+bin\res\table-remove-column-active.gif
+bin\res\table-remove-column-hover.gif
+bin\res\table-remove-column.gif
+bin\res\table-remove-row-active.gif
+bin\res\table-remove-row-hover.gif
+bin\res\table-remove-row.gif
