@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *	Luke (lukemz@onemodel.org)
  */
 package com.netscape.jndi.ldap;
 
@@ -189,12 +190,37 @@ class AttributesImpl implements Attributes {
         }
         else {
             enumVals = attr.getStringValues();
-        }    
-        if (enumVals != null) {
-             while ( enumVals.hasMoreElements() ) {
-                jndiAttr.add(enumVals.nextElement());
-            }
-        }    
+        }
+	/* Performance enhancement for an attribute with many values.
+	 * If number of value over threshold, use TreeSet to quickly
+	 * eliminate value duplication. Locally extends JNDI attribute
+	 * to pass TreeSet directly to Vector of JNDI attribute.
+	 */    
+	if (attr.size() < 50 ) {
+          if (enumVals != null) {
+              while ( enumVals.hasMoreElements() ) {
+                  jndiAttr.add(enumVals.nextElement());
+              }
+          }    
+	} 
+	else {
+	  /* A local class to allow constructing a JNDI attribute
+	   * from a TreeSet.
+	   */
+	  class BigAttribute extends BasicAttribute {
+		public BigAttribute (String id, TreeSet val) {
+			super(id);
+			values = new Vector (val);
+		}
+	  }
+	  TreeSet valSet = new TreeSet();
+          if (enumVals != null) {
+              while ( enumVals.hasMoreElements() ) {
+                  valSet.add(enumVals.nextElement());
+              }
+          }    
+          jndiAttr = new BigAttribute(attr.getName(), valSet);
+	}
         return jndiAttr;
     }
 
