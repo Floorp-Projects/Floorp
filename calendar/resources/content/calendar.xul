@@ -366,35 +366,6 @@
          </splitter>
          
          <vbox>
-            <!-- Begin Day/Month/Week Deck -->
-            <deck id="calendar-deck" persist="selectedIndex" flex="1">
-             
-               <!-- Calendar Month View -->
-                
-               <vbox id="month-view-box"/>
-             
-               <!-- End: Calendar Month View -->
-         
-             
-               <!-- Calendar Week View -->
-                
-               <vbox id="week-view-box"/>
-            
-               <!-- End: Calendar Week View -->
-            
-             
-               <!-- Calendar Day View -->
-             
-               <vbox id="day-view-box"/>
-            
-               <!-- End: Calendar Day View -->
-                      
-            </deck>  <!-- End: Day/Month/Week Deck -->
-            <splitter id="calendar-view-splitter" collapse="after" persist="state"
-            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="gCalendarWindow.doResize();">
-               <grippy class="sidebar-splitter-grippy"/>
-            </splitter>
-         
             <vbox id="bottom-events-box" persist="height">
                <box align="center">
                   <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
@@ -446,6 +417,37 @@
                  </treechildren>
                </tree>
             </vbox>
+            
+            <splitter id="calendar-view-splitter" collapse="before" persist="state"
+            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="gCalendarWindow.doResize();">
+               <grippy class="sidebar-splitter-grippy"/>
+            </splitter>
+         
+            <!-- Begin Day/Month/Week Deck -->
+            <deck id="calendar-deck" persist="selectedIndex" flex="1">
+             
+               <!-- Calendar Month View -->
+                
+               <vbox id="month-view-box"/>
+             
+               <!-- End: Calendar Month View -->
+         
+             
+               <!-- Calendar Week View -->
+                
+               <vbox id="week-view-box"/>
+            
+               <!-- End: Calendar Week View -->
+            
+             
+               <!-- Calendar Day View -->
+             
+               <vbox id="day-view-box"/>
+            
+               <!-- End: Calendar Day View -->
+                      
+            </deck>  <!-- End: Day/Month/Week Deck -->
+            
          </vbox>
          
       </hbox> <!-- End: box with unifinder on left, calendar on right -->
