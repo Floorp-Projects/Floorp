@@ -36,8 +36,8 @@ var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
 var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 
-var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
 var ioService = Components.classesByID["{9ac9e770-18bc-11d3-9337-00104ba0fd40}"].getService();
 ioService = ioService.QueryInterface(Components.interfaces.nsIIOService);
@@ -850,8 +850,8 @@ function ComposeLoad()
     var errorTitle = gComposeMsgsBundle.getString("initErrorDlogTitle");
     var errorMsg = gComposeMsgsBundle.getString("initErrorDlogMessage");
     errorMsg = errorMsg.replace(/%1\$s/, ex);
-    if (commonDialogsService)
-      commonDialogsService.Alert(window, errorTitle, errorMsg);
+    if (promptService)
+      promptService.Alert(window, errorTitle, errorMsg);
     else
       window.alert(errorMsg);
 
@@ -1042,13 +1042,14 @@ function GenericSendMessage( msgType )
 				//Check if we have a subject, else ask user for confirmation
 				if (subject == "")
 				{
-    				if (commonDialogsService)
+    				if (promptService)
     				{
 						var result = {value:0};
-        				if (commonDialogsService.Prompt(
+        				if (promptService.Prompt(
         					window,
         					gComposeMsgsBundle.getString("subjectDlogTitle"),
         					gComposeMsgsBundle.getString("subjectDlogMessage"),
+                                                "", 0,
         					gComposeMsgsBundle.getString("defaultSubject"),
         					result
         					))
@@ -1401,10 +1402,10 @@ function ComposeCanClose()
 		// and therefore need to be visible (to prevent user confusion)
 		window.focus();
         
-		if (commonDialogsService)
+		if (promptService)
 		{
             var result = {value:0};
-			commonDialogsService.UniversalDialog(
+			promptService.UniversalDialog(
 				window,
 				null,
 				gComposeMsgsBundle.getString("saveDlogTitle"),
@@ -1480,8 +1481,8 @@ function AttachFile()
     var errorTitle = gComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
     var errorMsg = gComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
 
-    if (commonDialogsService)
-      commonDialogsService.Alert(window, errorTitle, errorMsg);
+    if (promptService)
+      promptService.Alert(window, errorTitle, errorMsg);
     else
       window.alert(errorMsg);
   }
@@ -1514,13 +1515,14 @@ function AddAttachment(attachment, prettyName)
 
 function AttachPage()
 {
-    if (commonDialogsService)
+    if (promptService)
     {
         var result = {value:0};
-        if (commonDialogsService.Prompt(
+        if (promptService.Prompt(
         	window,
         	gComposeMsgsBundle.getString("attachPageDlogTitle"),
         	gComposeMsgsBundle.getString("attachPageDlogMessage"),
+                "", 0,
         	null,
         	result))
         {
@@ -1837,8 +1839,8 @@ var attachmentBucketObserver = {
         var errorTitle = gComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
         var errorMsg = gComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
 
-        if (commonDialogsService)
-          commonDialogsService.Alert(window, errorTitle, errorMsg);
+        if (promptService)
+          promptService.Alert(window, errorTitle, errorMsg);
         else
           window.alert(errorMsg);
       }
@@ -1900,8 +1902,8 @@ function DisplaySaveFolderDlg(folderURI)
     var newMessage = DlgMsg.replace(/@FolderName@/, msgfolder.name);
     var SaveDlgMsg = newMessage.replace(/@HostName@/, msgfolder.hostname);
 
-    if (commonDialogsService)
-      commonDialogsService.AlertCheck(window, SaveDlgTitle, SaveDlgMsg, CheckMsg, checkbox);
+    if (promptService)
+      promptService.AlertCheck(window, SaveDlgTitle, SaveDlgMsg, CheckMsg, checkbox);
     else
       window.alert(SaveDlgMsg);
     try {

@@ -593,11 +593,9 @@ function myPrompt(message, oldValue, title) {
   if (!title) {
     title = " ";
   }
-  var commonDialogService =
-    Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-  commonDialogService =
-    commonDialogService.QueryInterface(Components.interfaces.nsICommonDialogs);
-  commonDialogService.Prompt(window, title, message, oldValue, newValue)
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+  promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+  promptService.Prompt(window, title, message, "", 0, oldValue, newValue)
   return newValue.value;
 }
 

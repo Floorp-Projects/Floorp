@@ -74,15 +74,13 @@
       } else {
 
         // more than one value, have user select the one he wants
-        var commonDialogService =
-          Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-        commonDialogService =
-          commonDialogService.QueryInterface(Components.interfaces.nsICommonDialogs);
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+        promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
         var position = {};
         var title = " ";
         var message = "";
         var ok =
-          commonDialogService.Select
+          promptService.Select
             (window, title, message, valueList.length, valueList, position)
         if (ok) {
           target.value = valueList[position.value];

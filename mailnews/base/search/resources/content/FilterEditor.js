@@ -68,14 +68,12 @@ function onOk()
 {
     if (isDuplicateFilterNameExists())
     {
-        var commonDialogsService
-            = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-        commonDialogsService
-            = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+        promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
-        if (commonDialogsService)
+        if (promptService)
         {
-            commonDialogsService.Alert(window,
+            promptService.Alert(window,
                 gFilterBundle.getString("cannotHaveDuplicateFilterTitle"),
                 gFilterBundle.getString("cannotHaveDuplicateFilterMessage")
             );

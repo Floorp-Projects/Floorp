@@ -84,8 +84,8 @@ var accountCount = accounts.Count();
 var nsIMsgIdentity = Components.interfaces.nsIMsgIdentity;
 var nsIMsgIncomingServer = Components.interfaces.nsIMsgIncomingServer;
 var gPrefsBundle;
-var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
 // the current nsIMsgAccount
 var gCurrentAccount;
@@ -172,7 +172,7 @@ function onCancel()
     if (!(accountCount > 0)) {
         var confirmTitle = gPrefsBundle.getString("accountWizard");
         var confirmMsg = gPrefsBundle.getString("cancelWizard");
-        if (commonDialogsService.Confirm(window,confirmTitle,confirmMsg))
+        if (promptService.Confirm(window,confirmTitle,confirmMsg))
           window.close();
         else 
           return;

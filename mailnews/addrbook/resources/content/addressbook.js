@@ -247,10 +247,8 @@ function AbDeleteDirectory()
 {
 	dump("\AbDeleteDirectory from XUL\n");
 
-    var commonDialogsService 
-        = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-    commonDialogsService 
-        = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
     var selArray = dirTree.selectedItems;
     var count = selArray.length;
@@ -288,9 +286,9 @@ function AbDeleteDirectory()
         }
         else 
         {
-            if (commonDialogsService)
+            if (promptService)
             {
-                commonDialogsService.Alert(window,
+                promptService.Alert(window,
                     gAddressBookBundle.getString("cannotDeleteTitle"), 
                     gAddressBookBundle.getString("cannotDeleteMessage"));
             }

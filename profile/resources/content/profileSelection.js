@@ -172,7 +172,7 @@ function onStart()
                               gBrandBundle.getString("brandShortName"));
     var title = gProfileManagerBundle.getString("migratetitle");
 
-    if (commonDialogService.Confirm(window, title, lString))
+    if (promptService.Confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
     else
       return false;

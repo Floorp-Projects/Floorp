@@ -28,16 +28,14 @@ var reorderDownButton;
 const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
 var gFilterBundle;
-var gCommonDialogsService;
+var gPromptService;
 
 function onLoad()
 {
     rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
-    gCommonDialogsService
-         = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-    gCommonDialogsService
-        = gCommonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+    var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    gPromptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
     gFilterBundle = document.getElementById("bundle_filter");
 

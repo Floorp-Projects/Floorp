@@ -297,9 +297,8 @@ function onOK()
           errorMessage = gFilePickerBundle.getFormattedString("saveParentDoesntExistMessage",
                                                               [oldParent.unicodePath, file.unicodePath]);
         }
-        var commonDialogs = Components.classes["@mozilla.org/appshell/commonDialogs;1"]
-                                      .getService(Components.interfaces.nsICommonDialogs);
-        commonDialogs.Alert(window, errorTitle, errorMessage);
+        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+        promptService.Alert(window, errorTitle, errorMessage);
         ret = nsIFilePicker.returnCancel;
       }
     }

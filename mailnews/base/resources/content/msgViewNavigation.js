@@ -22,8 +22,8 @@
 
 //NOTE: gMessengerBundle must be defined and set or this Overlay won't work
 
-var commonDialogs = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-commonDialogs = commonDialogs.QueryInterface(Components.interfaces.nsICommonDialogs);
+var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
 
@@ -150,7 +150,7 @@ function CrossFolderNavigation(type, supportsFolderPane )
         case 1:
         default:
             var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt", [ nextFolder.name ], 1); 
-            if (commonDialogs.Confirm(window, promptText, promptText)) {
+            if (promptService.Confirm(window, promptText, promptText)) {
                 gNextMessageAfterLoad = type;
                 if (supportsFolderPane)
                   SelectFolder(nextFolderURI);

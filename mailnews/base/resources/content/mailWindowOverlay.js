@@ -661,9 +661,8 @@ function ConfirmUnsubscribe(folder)
     var dialogMsg = gMessengerBundle.getFormattedString("confirmUnsubscribeText",
                                         [folder.name], 1);
 
-    var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
-                                                                    "nsICommonDialogs");
-    return commonDialogService.Confirm(window, titleMsg, dialogMsg);
+    var promptService = nsJSComponentManager.getService("@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService");
+    return promptService.Confirm(window, titleMsg, dialogMsg);
 }
 
 function MsgUnsubscribe()
