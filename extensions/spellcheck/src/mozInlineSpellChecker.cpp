@@ -167,7 +167,7 @@ NS_IMETHODIMP mozInlineSpellChecker::SetEnableRealTimeSpell(PRBool aEnabled)
       nsCOMPtr<nsIEditorSpellCheck> spellchecker = do_CreateInstance("@mozilla.org/editor/editorspellchecker;1", &res);
       if (NS_SUCCEEDED(res) && spellchecker)
       {
-        nsCOMPtr<nsITextServicesFilter> filter = do_CreateInstance("@mozilla.org/editor/txtsrvfilter;1", &res);
+        nsCOMPtr<nsITextServicesFilter> filter = do_CreateInstance("@mozilla.org/editor/txtsrvfiltermail;1", &res);
         spellchecker->SetFilter(filter);
         nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
         res = spellchecker->InitSpellChecker(editor, PR_FALSE);
