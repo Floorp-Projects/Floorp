@@ -1,34 +1,30 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+<?xml version="1.0"?>
+# -*- Mode: HTML -*-
 
-<!-- The contents of this file are subject to the Netscape Public
-License Version 1.1 (the "License"); you may not use this file
-except in compliance with the License. You may obtain a copy of
-the License at http://www.mozilla.org/NPL/
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
 
-Software distributed under the License is distributed on an "AS
-IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-implied. See the License for the specific language governing
-rights and limitations under the License.
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
 
-The Original Code is Mozilla Communicator client code, released
-March 31, 1998.
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
 
-The Initial Developer of the Original Code is Netscape
-Communications Corporation. Portions created by Netscape are
-Copyright (C) 1998-2000 Netscape Communications Corporation. All
-Rights Reserved.
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-2000 Netscape Communications Corporation. All
+# Rights Reserved.
 
-Contributor(s):
-  Dean Tessman <dean_tessman@hotmail.com>
--->
-
+# Contributor(s):
+#   Dean Tessman <dean_tessman@hotmail.com>
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css" type="text/css"?>
-
-<?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
-<?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -187,7 +183,7 @@ Contributor(s):
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="toggleSidebar('viewHistorySidebar');"/>
 
-    <broadcaster id="isImage"/>
+    <broadcaster id="isImage"/>     
   </broadcasterset>
 
   <keyset id="mainKeyset">
@@ -202,10 +198,8 @@ Contributor(s):
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
     <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
-    <key id="key_close"/>
-    <key id="key_closeWindow"/>
-    <key id="key_quit"/>
-
+    <key id="key_close"  key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
+    <key id="key_closeWindow"  key="&closeCmd.key;" command="cmd_closeWindow" modifiers="accel,shift"/>
     <key id="key_undo"
          key="&undoCmd.key;"
          modifiers="accel"/>
@@ -221,9 +215,33 @@ Contributor(s):
     <key id="key_paste"
          key="&pasteCmd.key;"
          modifiers="accel"/>
-    <key id="key_delete"/>
-    <key id="key_selectAll"/>
-  
+    <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
+
+#ifdef XP_WIN
+    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
+    <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
+
+    <!-- Supporting IE 'refresh' shortcut key -->
+    <key keycode="VK_F5" oncommand="BrowserReload();"/>
+    <key keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
+
+    <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
+
+    <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
+#elifdef XP_UNIX
+    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="alt"/>
+    <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
+
+    <!-- Some people apparently use this combination too on Unix...
+         we live and learn.  -->
+    <key key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
+    <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
+
+    <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
+    <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
+#endif
     <key id="key_reload"  key="&reloadCmd.commandkey;" oncommand="BrowserReload();" modifiers="accel"/>
     <key key="&reloadCmd.commandkey;" oncommand="BrowserReloadSkipCache();" modifiers="accel,shift"/>
     <key id="key_viewSource" key="&pageSourceCmd.commandkey;" command="View:PageSource" modifiers="accel"/>
@@ -351,7 +369,7 @@ Contributor(s):
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"
                 oncommand="saveDocument(window._content.document);"/>
-      <menuseparator id="context-sep-viewbgimage"/>
+      <menuseparator id="context-sep-viewbgimage"/>  
       <menuitem id="context-viewbgimage"
                 label="&viewBGImageCmd.label;"
                 accesskey="&viewBGImageCmd.accesskey;"
@@ -468,7 +486,7 @@ Contributor(s):
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons" iconsize="small">
     <!-- Menu -->
-      <menubar id="main-menubar" class="chromeclass-menubar">
+      <menubar id="main-menubar" class="chromeclass-menubar"> 
         <menu label="&fileMenu.label;"
               accesskey="&fileMenu.accesskey;">
           <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
@@ -480,7 +498,7 @@ Contributor(s):
                       label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
             <menuitem label="&openLocationCmd.label;" accesskey="&openLocationCmd.accesskey;" key="focusURLBar" command="Browser:OpenLocation"/>
             <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
-            <menuitem id="menu_close"/>
+            <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
             <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
             <menuseparator/>
             <menuitem label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;" key="key_savePage" command="Browser:SavePage"/>
@@ -489,6 +507,9 @@ Contributor(s):
             <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="BrowserPrintSetup();"/>
             <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="BrowserPrintPreview();"/>
             <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="Browser:Print"/>
+            <menuseparator/>
+            <menuitem label="&quitApplicationCmd.label;" id="menu_FileQuitItem"
+                      key="key_quit" accesskey="&quitApplicationCmd.accesskey;" command="cmd_quit"/>
           </menupopup>
         </menu>
     
@@ -954,3 +975,4 @@ Contributor(s):
     </statusbarpanel>
   </statusbar>
 </window>
+  

@@ -262,3 +262,19 @@
 <!ENTITY openDownloadsSidebar.commandkey "E">
 
 <!ENTITY blockImageCmd.label            "Block Images from this Server">
+
+#ifdef XP_WIN
+<!ENTITY quitApplicationCmd.label       "Exit"> 
+<!ENTITY quitApplicationCmd.key         "Q"> 
+<!ENTITY quitApplicationCmd.accesskey   "x">
+#elifdef XP_UNIX
+<!ENTITY goBackCmd.commandKey "[">
+<!ENTITY goForwardCmd.commandKey "]">
+<!ENTITY quitApplicationCmd.label       "Quit"> 
+<!ENTITY quitApplicationCmd.key         "Q"> 
+<!ENTITY quitApplicationCmd.accesskey   "q">
+#endif
+
+<!ENTITY closeCmd.label                 "Close">  
+<!ENTITY closeCmd.key                   "W">  
+<!ENTITY closeCmd.accesskey             "c">
