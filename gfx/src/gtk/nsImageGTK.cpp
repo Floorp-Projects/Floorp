@@ -26,6 +26,8 @@
 
 #define IsFlagSet(a,b) (a & b)
 
+#undef CHEAP_PERFORMANCE_MEASUREMENT
+
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 //------------------------------------------------------------
@@ -61,16 +63,22 @@ NS_IMPL_ISUPPORTS(nsImageGTK, kIImageIID);
 
 //------------------------------------------------------------
 
-nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
+nsresult
+ nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
+                  PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
 {
   g_return_val_if_fail ((aWidth != 0) || (aHeight != 0), NS_ERROR_FAILURE);
 
-  if (nsnull != mImageBits)
+  if (nsnull != mImageBits) {
    delete[] (PRUint8*)mImageBits;
+   mImageBits = nsnull;
+  }
 
   if (nsnull != mAlphaBits) {
     delete[] (PRUint8*)mAlphaBits;
+    mAlphaBits = nsnull;
     gdk_pixmap_unref(mAlphaPixmap);
+    mAlphaPixmap = nsnull;
   }
 
   if (24 == aDepth) {
@@ -107,7 +115,6 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMask
       mAlphaBits = new unsigned char[mAlphaRowBytes * aHeight];
       mAlphaWidth = aWidth;
       mAlphaHeight = aHeight;
-      mAlphaPixmap = gdk_pixmap_new(nsnull, mWidth, mHeight, 1);
       break;
 
     case nsMaskRequirements_kNeeds8Bit:
@@ -125,10 +132,103 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMask
 
 void nsImageGTK::ComputMetrics()
 {
-
   mRowBytes = CalcBytesSpan(mWidth);
   mSizeImage = mRowBytes * mHeight;
+}
 
+PRInt32
+nsImageGTK::GetBytesPix()
+{
+  NS_NOTYETIMPLEMENTED("somebody called this thang");
+  return 0;/* XXX */
+}
+
+PRInt32
+nsImageGTK::GetHeight()
+{
+  return mHeight;
+}
+
+PRInt32
+nsImageGTK::GetWidth()
+{
+  return mWidth;
+}
+
+PRUint8*
+nsImageGTK::GetBits()
+{
+  return mImageBits;
+}
+
+void*
+nsImageGTK::GetBitInfo()
+{
+  return nsnull;
+}
+
+PRInt32
+nsImageGTK::GetLineStride()
+{
+  return mRowBytes;
+}
+
+nsColorMap*
+nsImageGTK::GetColorMap()
+{
+  return nsnull;
+}
+
+PRBool
+nsImageGTK::IsOptimized()
+{
+  return PR_TRUE;
+}
+
+PRUint8*
+nsImageGTK::GetAlphaBits()
+{
+  return mAlphaBits;
+}
+
+PRInt32
+nsImageGTK::GetAlphaWidth()
+{
+  return mAlphaWidth;
+}
+
+PRInt32
+nsImageGTK::GetAlphaHeight()
+{
+  return mAlphaHeight;
+}
+
+PRInt32
+nsImageGTK::GetAlphaLineStride()
+{
+  return mAlphaRowBytes;
+}
+
+nsIImage*
+nsImageGTK::DuplicateImage()
+{
+  return nsnull;
+}
+
+void
+nsImageGTK::SetAlphaLevel(PRInt32 aAlphaLevel)
+{
+}
+
+PRInt32
+nsImageGTK::GetAlphaLevel()
+{
+  return 0;
+}
+
+void
+nsImageGTK::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
+{
 }
 
 //------------------------------------------------------------
@@ -148,19 +248,30 @@ PRInt32  nsImageGTK::CalcBytesSpan(PRUint32  aWidth)
 //------------------------------------------------------------
 
 // set up the palette to the passed in color array, RGB only in this array
-void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
+void
+nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
+                         PRUint8 aFlags,
+                         nsRect *aUpdateRect)
 {
 
   if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, aFlags)){
+    if (nsnull != mAlphaPixmap) {
+      gdk_pixmap_unref(mAlphaPixmap);
+      mAlphaPixmap = nsnull;
+    }
   }
-
 }
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define HAIRY_CONVERT_888
 #endif
 
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+static PRTime gConvertTime, gStartTime, gPixmapTime, gEndTime;
+#endif
+
 #ifdef HAIRY_CONVERT_888
+#include "prtime.h"
 
 // This is really ugly. Mozilla uses BGR image data, while
 // gdk_rgb uses RGB data. So before we draw an image
@@ -170,14 +281,14 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect
 //
 static void
 moz_gdk_draw_bgr_image (GdkDrawable *drawable,
-                    GdkGC *gc,
-                    gint x,
-                    gint y,
-                    gint width,
-                    gint height,
-                    GdkRgbDither dith,
-                    guchar *rgb_buf,
-                    gint rowstride)
+                        GdkGC *gc,
+                        gint x,
+                        gint y,
+                        gint width,
+                        gint height,
+                        GdkRgbDither dith,
+                        guchar *rgb_buf,
+                        gint rowstride)
 {
   int tx, ty;
 
@@ -186,6 +297,7 @@ moz_gdk_draw_bgr_image (GdkDrawable *drawable,
   gint bpl;
   guchar *bptr, *bp2;
   int r, g, b;
+
 
   bpl = (width * 3 + 3) & ~0x3;
   tmp_buf = (guchar *)g_malloc (bpl * height);
@@ -250,6 +362,10 @@ moz_gdk_draw_bgr_image (GdkDrawable *drawable,
       obuf += bpl;
     }
 
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+  gConvertTime = PR_Now();
+#endif
+
   gdk_draw_rgb_image (drawable, gc, x, y, width, height,
                       dith, tmp_buf, bpl);
 
@@ -311,9 +427,10 @@ moz_gdk_draw_bgr_image (GdkDrawable *drawable,
 //------------------------------------------------------------
 
 // Draw the bitmap, this method has a source and destination coordinates
-NS_IMETHODIMP nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+NS_IMETHODIMP
+nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
@@ -332,14 +449,22 @@ NS_IMETHODIMP nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 //------------------------------------------------------------
 
 // Draw the bitmap, this draw just has destination coordinates
-NS_IMETHODIMP nsImageGTK::Draw(nsIRenderingContext &aContext,
-                                  nsDrawingSurface aSurface,
-                                  PRInt32 aX, PRInt32 aY,
-                                  PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP
+nsImageGTK::Draw(nsIRenderingContext &aContext,
+                 nsDrawingSurface aSurface,
+                 PRInt32 aX, PRInt32 aY,
+                 PRInt32 aWidth, PRInt32 aHeight)
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
-  nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*) aSurface;
+  // XXX kipp: this is temporary code until we eliminate the
+  // width/height arguments from the draw method.
+  if ((aWidth != mWidth) || (aHeight != mHeight)) {
+    aWidth = mWidth;
+    aHeight = mHeight;
+  }
+
+  nsDrawingSurfaceGTK* drawing = (nsDrawingSurfaceGTK*) aSurface;
 
   XImage *x_image = nsnull;
   Pixmap pixmap = 0;
@@ -348,62 +473,100 @@ NS_IMETHODIMP nsImageGTK::Draw(nsIRenderingContext &aContext,
   GC      gc;
   XGCValues gcv;
 
-  if (mAlphaBits != nsnull)
-    {
-      /* get the X primitives */
-      dpy = GDK_WINDOW_XDISPLAY(mAlphaPixmap);
-      visual = GDK_VISUAL_XVISUAL(gdk_rgb_get_visual());
-      /* this is the depth of the pixmap that we are going to draw to.
-         It's always a bitmap.  We're doing alpha here folks. */
-      x_image = XCreateImage(dpy, visual,
-                             1, /* visual depth...1 for bitmaps */
-                             XYPixmap,
-                             0, /* x offset, XXX fix this */
-                             (char *)mAlphaBits,  /* cast away our sign. */
-                             mWidth,
-                             mHeight,
-                             32,/* bitmap pad */
-                             mAlphaRowBytes); /* bytes per line */
-      x_image->bits_per_pixel=1;
-      /* Image library always places pixels left-to-right MSB to LSB */
-      x_image->bitmap_bit_order = MSBFirst;
-      /* This definition doesn't depend on client byte ordering
-         because the image library ensures that the bytes in
-         bitmask data are arranged left to right on the screen,
-         low to high address in memory. */
-      x_image->byte_order = MSBFirst;
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+  gStartTime = gPixmapTime = PR_Now();
+#endif
+
+  // Create gc clip-mask on demand
+  if ((mAlphaBits != nsnull) && (nsnull == mAlphaPixmap))
+  {
+    mAlphaPixmap = gdk_pixmap_new(nsnull, aWidth, aHeight, 1);
+
+    /* get the X primitives */
+    dpy = GDK_WINDOW_XDISPLAY(mAlphaPixmap);
+
+    /* this is the depth of the pixmap that we are going to draw to.
+       It's always a bitmap.  We're doing alpha here folks. */
+    visual = GDK_VISUAL_XVISUAL(gdk_rgb_get_visual());
+
+    // Make an image out of the alpha-bits created by the image library
+    x_image = XCreateImage(dpy, visual,
+                           1, /* visual depth...1 for bitmaps */
+                           XYPixmap,
+                           0, /* x offset, XXX fix this */
+                           (char *)mAlphaBits,  /* cast away our sign. */
+                           aWidth,
+                           aHeight,
+                           32,/* bitmap pad */
+                           mAlphaRowBytes); /* bytes per line */
+
+    x_image->bits_per_pixel=1;
+
+    /* Image library always places pixels left-to-right MSB to LSB */
+    x_image->bitmap_bit_order = MSBFirst;
+
+    /* This definition doesn't depend on client byte ordering
+       because the image library ensures that the bytes in
+       bitmask data are arranged left to right on the screen,
+       low to high address in memory. */
+    x_image->byte_order = MSBFirst;
 #if defined(IS_LITTLE_ENDIAN)
-      // no, it's still MSB XXX check on this!!
-      //      x_image->byte_order = LSBFirst;
+    // no, it's still MSB XXX check on this!!
+    //      x_image->byte_order = LSBFirst;
 #elif defined (IS_BIG_ENDIAN)
-      x_image->byte_order = MSBFirst;
+    x_image->byte_order = MSBFirst;
 #else
 #error ERROR! Endianness is unknown;
 #endif
-      pixmap = GDK_WINDOW_XWINDOW(mAlphaPixmap);
-      memset(&gcv, 0, sizeof(XGCValues));
-      gcv.function = GXcopy;
-      gc = XCreateGC(dpy, pixmap, GCFunction, &gcv);
 
-      XPutImage(dpy, pixmap, gc, x_image, 0, 0, 0, 0,
-                mWidth, mHeight);
+    // Write into the pixemap that is underneath gdk's mAlphaPixmap
+    // the image we just created.
+    pixmap = GDK_WINDOW_XWINDOW(mAlphaPixmap);
+    memset(&gcv, 0, sizeof(XGCValues));
+    gcv.function = GXcopy;
+    gc = XCreateGC(dpy, pixmap, GCFunction, &gcv);
+    XPutImage(dpy, pixmap, gc, x_image, 0, 0, 0, 0,
+              aWidth, aHeight);
+    XFreeGC(dpy, gc);
 
-      XFreeGC(dpy, gc);
-      gdk_gc_set_clip_mask(drawing->gc, mAlphaPixmap);
-      gdk_gc_set_clip_origin(drawing->gc, aX, aY);
-    }
+    // Now we are done with the temporary image
+    x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
+    XDestroyImage(x_image);
+
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+    gPixmapTime = PR_Now();
+#endif
+  }
+
+  if (nsnull != mAlphaPixmap)
+  {
+    // Setup gc to use the given alpha-pixmap for clipping
+    gdk_gc_set_clip_mask(drawing->gc, mAlphaPixmap);
+    gdk_gc_set_clip_origin(drawing->gc, aX, aY);
+  }
+
   moz_gdk_draw_bgr_image (drawing->drawable,
                           drawing->gc,
-                          aX, aY, mWidth, mHeight,
+                          aX, aY, aWidth, aHeight,
                           GDK_RGB_DITHER_MAX,
                           mImageBits, mRowBytes);
-  if (mAlphaBits != nsnull)
-    {
-      gdk_gc_set_clip_origin(drawing->gc, 0, 0);
-      gdk_gc_set_clip_mask(drawing->gc, nsnull);
-      x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
-      XDestroyImage(x_image);
-    }
+
+  if (mAlphaPixmap != nsnull)
+  {
+    // Revert gc to its old clip-mask and origin
+    gdk_gc_set_clip_origin(drawing->gc, 0, 0);
+    gdk_gc_set_clip_mask(drawing->gc, nsnull);
+  }
+
+#ifdef CHEAP_PERFORMANCE_MEASUREMENT
+  gEndTime = PR_Now();
+  printf("nsImageGTK: for %d,%d image, total=%lld pixmap=%lld, cvt=%lld\n",
+         aWidth, aHeight,
+         gEndTime - gStartTime,
+         gPixmapTime - gStartTime,
+         gConvertTime - gPixmapTime);
+#endif
+
   return NS_OK;
 }
 
