@@ -574,6 +574,9 @@
       <property name="webNavigation"
                 readonly="true"
                 onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"/>
+      <property name="webBrowserFind"
+                readonly="true"
+                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebBrowserFind);"/>
       <property name="markupDocumentViewer"
                 readonly="true"
                 onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);"/>

@@ -51,9 +51,6 @@ interface nsIBrowserInstance : nsISupports {
     // Edit.
     void copy();
     
-    // Search.
-    void find();
-    void findNext();
 };
 
 %{C++

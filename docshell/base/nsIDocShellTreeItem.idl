@@ -47,6 +47,8 @@ interface nsIDocShellTreeItem : nsISupports
 	const long typeContentWrapper=2;
 	const long typeChromeWrapper=3;
 
+	const long typeAll=0x7FFFFFFF;
+
 	/*
 	The type this item is.  
 	*/

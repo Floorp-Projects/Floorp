@@ -72,6 +72,7 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellHistory.h"
 #include "nsIURIFixup.h"
+#include "nsIWebBrowserFind.h"
 
 #define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
 
@@ -252,6 +253,7 @@ protected:
     NS_IMETHOD GetRootScrollableView(nsIScrollableView ** aOutScrollView);
     NS_IMETHOD EnsureContentListener();
     NS_IMETHOD EnsureScriptEnvironment();
+    NS_IMETHOD EnsureFind();
 
     PRBool IsFrame();
 
@@ -285,6 +287,7 @@ protected:
     nsCOMPtr<nsIGlobalHistory> mGlobalHistory;
     nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
     nsCOMPtr<nsIURIFixup>      mURIFixup;
+    nsCOMPtr<nsIWebBrowserFind> mFind;
     PRInt32                    mMarginWidth;
     PRInt32                    mMarginHeight;
     PRInt32                    mItemType;

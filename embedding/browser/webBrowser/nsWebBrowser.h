@@ -46,7 +46,6 @@
 #include "nsIWebBrowserSetup.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserFocus.h"
-#include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIWindowWatcher.h"
 
@@ -94,7 +93,6 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsIInterfaceRequestor,
                      public nsIWebBrowserPersist,
                      public nsIWebBrowserFocus,
-                     public nsIWebBrowserFind,
                      public nsIWebBrowserPrint
 {
 friend class nsDocShellTreeOwner;
@@ -113,7 +111,6 @@ public:
     NS_DECL_NSIWEBBROWSERSETUP
     NS_DECL_NSIWEBBROWSERPERSIST
     NS_DECL_NSIWEBBROWSERFOCUS
-    NS_DECL_NSIWEBBROWSERFIND
     NS_DECL_NSIWEBBROWSERPRINT
 
 protected:
@@ -125,7 +122,6 @@ protected:
     NS_IMETHOD GetPrimaryContentWindow(nsIDOMWindowInternal **aDomWindow);
     NS_IMETHOD BindListener(nsISupports *aListener, const nsIID& aIID);
     NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
-    NS_IMETHOD EnsureFindImpl();
 
     NS_IMETHOD FillBackground(const nsRect &aRect);
 
@@ -146,8 +142,7 @@ protected:
    PRUint32                   mContentType;
    nativeWindow               mParentNativeWindow;
    nsIWebBrowserPersistProgress *mProgressListener;
-   nsCOMPtr<nsIWebProgress>   mWebProgress;
-   nsWebBrowserFindImpl*      mFindImpl;
+   nsCOMPtr<nsIWebProgress>      mWebProgress;
 
    // so that we can draw when we get expose events
    nsCOMPtr<nsIRenderingContext> mRC;

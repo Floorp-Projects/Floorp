@@ -32,7 +32,11 @@ LIBRARY_NAME	= mozfind
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string dom js layout widget appshell editor necko txtsvc docshell locale uriloader txmgr gfx2 mozcomps
 
-CPPSRCS		= nsFindComponent.cpp
+CPPSRCS		= \
+            nsFindComponent.cpp   \
+            nsFindService.cpp     \
+            nsFindModule.cpp      \
+            $(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \

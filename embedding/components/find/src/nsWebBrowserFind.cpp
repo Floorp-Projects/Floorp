@@ -16,8 +16,9 @@
  * Communications, Inc.  Portions created by Netscape are
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
- * Author:
+ * Contributors:
  *   Conrad Carlen <ccarlen@netscape.com>
+ *   Simon Fraser  <sfraser@netscape.com>
  */
 
 #include "nsWebBrowserFind.h"
@@ -86,6 +87,10 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     if (*outDidFind)
         return OnFind(searchFrame);     // we are done
 
+    // if we are not searching other frames, return
+    if (!mSearchSubFrames && !mSearchParentFrames)
+        return NS_OK;
+
     nsCOMPtr<nsIDOMWindow> rootFrame = do_QueryReferent(mRootSearchFrame);
     NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
     
@@ -108,7 +113,8 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     
     nsCOMPtr<nsIDocShellTreeItem> curItem;
 
-    // XXX We should avoid searching in frameset documents here.    
+    // XXX We should avoid searching in frameset documents here.
+    // We also need to honour mSearchSubFrames and mSearchParentFrames.
     PRBool hasMore, doFind = PR_FALSE;
     while (NS_SUCCEEDED(docShellEnumerator->HasMoreElements(&hasMore)) && hasMore)
     {

@@ -37,11 +37,13 @@ LLIBS = \
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\windowwatcher_s.lib \
 	$(DIST)\lib\appstartupnotifier_s.lib \
+	$(DIST)\lib\find_s.lib \
 	$(NULL)
 
 INCS = $(INCS) \
 	-I$(DEPTH)\embedding\components\windowwatcher\src \
 	-I$(DEPTH)\embedding\components\appstartup\src \
+	-I$(DEPTH)\embedding\components\find\src \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

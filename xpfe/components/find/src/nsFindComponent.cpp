@@ -60,6 +60,20 @@
 #endif
 
 
+/*
+
+    Warning: this code is soon to become obsolete. The Find code has moved
+    into mozilla/embedding/components/find, and is now shared between
+    embedding apps and mozilla.
+    
+    This code remains because editor needs its find and replace functionality,
+    for now.
+    
+    Simon Fraser sfraser@netscape.com
+
+*/
+
+
 nsFindComponent::Context::Context()
 {
   NS_INIT_REFCNT();
@@ -85,6 +99,9 @@ nsFindComponent::Context::~Context()
         mReplaceDialog = 0;
     }
 }
+
+// nsFindComponent::Context implementation...
+NS_IMPL_ISUPPORTS1( nsFindComponent::Context, nsISearchContext)
 
 NS_IMETHODIMP
 nsFindComponent::Context::Init( nsIDOMWindowInternal *aWindow,
@@ -413,6 +430,22 @@ nsFindComponent::Context::SetReplaceDialog( nsIDOMWindowInternal *aDialog )
 #pragma mark -
 #endif
 
+
+/*
+
+    Warning: this code is soon to become obsolete. The Find code has moved
+    into mozilla/embedding/components/find, and is now shared between
+    embedding apps and mozilla.
+    
+    This code remains because editor needs its find and replace functionality,
+    for now.
+    
+    Simon Fraser sfraser@netscape.com
+
+*/
+
+
+
 // ctor
 nsFindComponent::nsFindComponent()
     : mLastSearchString(),
@@ -703,16 +736,3 @@ nsFindComponent::ResetContext( nsISupports *aContext,
   return NS_OK;
 }
 
-// nsFindComponent::Context implementation...
-NS_IMPL_ISUPPORTS1( nsFindComponent::Context, nsISearchContext)
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindComponent)
-
-static nsModuleComponentInfo components[] = {
-  { NS_IFINDCOMPONENT_CLASSNAME,
-    NS_FINDCOMPONENT_CID,
-    NS_IFINDCOMPONENT_CONTRACTID,
-    nsFindComponentConstructor}
-};
-
-NS_IMPL_NSGETMODULE("nsFindComponent", components)

@@ -23,6 +23,7 @@ DEPTH=..\..
 DIRS= \
 	windowwatcher \
 	appstartup \
+	find \
 	build \
 	$(NULL)
 
