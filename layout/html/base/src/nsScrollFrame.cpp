@@ -574,8 +574,9 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   }
   // XXX: End Temporary Hack.
 
-  if (getScrollBarDimensions)
+  if (getScrollBarDimensions) {
     GetScrollbarDimensions(aPresContext, sbWidth, sbHeight);
+  }
 
   // Compute the scroll area size (area inside of the border edge and inside
   // of any vertical and horizontal scrollbars), and whether space was left
@@ -664,6 +665,18 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
     // Go ahead and reflow the child a second time
     if (mustReflow) {
+      // If this is an incremental reflow, then we need to make sure
+      // that we repaint after resizing the display width.
+      // The child frame won't know to do that, because we're telling
+      // it it's a resize reflow. Therefore, we need to do it
+      if (eReflowReason_Incremental == aReflowState.reason) {
+        nsRect  kidRect;
+
+        kidFrame->GetRect(kidRect);
+        Invalidate(&aPresContext, kidRect, PR_FALSE);
+      }
+
+      // Reflow the child frame with a reflow reason of reflow
       kidReflowState.reason = eReflowReason_Resize;
       ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                   aStatus);
