@@ -321,6 +321,7 @@ viewer:Components:AbSyncSvc.shlb
 viewer:Components:AbSyncSvc.xpt 
 viewer:Components:mozldap.shlb
 viewer:Components:mozldap.xpt
+viewer:Components:ldapAutoComplete.xpt
 viewer:Essential Files:LDAPClient.shlb
 viewer:res:Mailnews:*
 
