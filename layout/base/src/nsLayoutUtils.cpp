@@ -93,11 +93,7 @@ GetLastChildFrame(nsIPresContext* aPresContext,
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
   // Get the last in flow frame
-  nsIFrame* lastInFlow;
-  do {
-    lastInFlow = aFrame;
-    lastInFlow->GetNextInFlow(&aFrame);
-  } while (aFrame);
+  nsIFrame* lastInFlow = aFrame->GetLastInFlow();
 
   // Get the last child frame
   nsIFrame* firstChildFrame;
@@ -110,16 +106,8 @@ GetLastChildFrame(nsIPresContext* aPresContext,
 
     // Get the frame's first-in-flow. This matters in case the frame has
     // been continuted across multiple lines
-    while (PR_TRUE) {
-      nsIFrame* prevInFlow;
-      lastChildFrame->GetPrevInFlow(&prevInFlow);
-      if (prevInFlow) {
-        lastChildFrame = prevInFlow;
-      } else {
-        break;
-      }
-    }
-
+    lastChildFrame = lastChildFrame->GetFirstInFlow();
+    
     // If the last child frame is a pseudo-frame, then return its last child.
     // Note that the frame we create for the generated content is also a
     // pseudo-frame and so don't drill down in that case
