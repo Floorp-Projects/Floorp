@@ -28,6 +28,7 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsCacheEntry.h"
 #include "nsIOutputStream.h"
+#include "nsITransport.h"
 
 class nsCacheEntryDescriptor :
     public PRCList,
@@ -36,6 +37,7 @@ class nsCacheEntryDescriptor :
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHEENTRYDESCRIPTOR
+    NS_DECL_NSICACHEENTRYINFO
     
     nsCacheEntryDescriptor(nsCacheEntry * entry, nsCacheAccessMode  mode);
     virtual ~nsCacheEntryDescriptor();

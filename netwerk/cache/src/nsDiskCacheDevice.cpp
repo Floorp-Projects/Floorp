@@ -33,6 +33,7 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsISupportsArray.h"
+#include "nsITransport.h"
 
 static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
 
@@ -531,7 +532,7 @@ NS_IMETHODIMP nsCacheEntryInfo::GetExpirationTime(PRTime *aExpirationTime)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryInfo::GetStreamBased(PRBool *aStreamBased)
+NS_IMETHODIMP nsCacheEntryInfo::IsStreamBased(PRBool *aStreamBased)
 {
     *aStreamBased = PR_TRUE;
     return NS_OK;
