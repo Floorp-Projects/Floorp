@@ -1,5 +1,5 @@
 var strBundleService = null;
-function JS_GetStrBundle(path, locale)
+function srGetStrBundle(path, locale)
 {
   var strBundle = null;
 
