@@ -273,6 +273,7 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
 
 nsresult nsRenderingContextWin :: CommonInit(void)
 {
+  ::SetPolyFillMode(mDC, WINDING);
 	mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
                      mContext->GetAppUnitsToDevUnits());
   mP2T = mContext->GetDevUnitsToAppUnits();
@@ -690,8 +691,6 @@ void nsRenderingContextWin::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
 	}
 
   // Outline the polygon
-  int pfm = ::GetPolyFillMode(mDC);
-  ::SetPolyFillMode(mDC, WINDING);
   LOGBRUSH lb;
   lb.lbStyle = BS_NULL;
   lb.lbColor = 0;
@@ -702,7 +701,6 @@ void nsRenderingContextWin::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
   ::Polygon(mDC, pp0, int(aNumPoints));
   ::SelectObject(mDC, oldBrush);
   ::DeleteObject(brush);
-  ::SetPolyFillMode(mDC, pfm);
 
   // Release temporary storage if necessary
   if (pp0 != pts)
@@ -731,8 +729,6 @@ void nsRenderingContextWin::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
 	}
 
   // Fill the polygon
-  int pfm = ::GetPolyFillMode(mDC);
-  ::SetPolyFillMode(mDC, WINDING);
   SetupSolidBrush();
 
   if (NULL == mNullPen)
@@ -741,7 +737,6 @@ void nsRenderingContextWin::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
   HPEN oldPen = ::SelectObject(mDC, mNullPen);
   ::Polygon(mDC, pp0, int(aNumPoints));
   ::SelectObject(mDC, oldPen);
-  ::SetPolyFillMode(mDC, pfm);
 
   // Release temporary storage if necessary
   if (pp0 != pts)
