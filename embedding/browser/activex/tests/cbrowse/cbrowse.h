@@ -32,13 +32,12 @@ public:
 	public:
 	virtual BOOL InitInstance();
 		virtual int ExitInstance();
+	virtual int Run();
 	//}}AFX_VIRTUAL
 
 // Implementation
 
 	//{{AFX_MSG(CBrowseApp)
-		// NOTE - the ClassWizard will add and remove member functions here.
-		//    DO NOT EDIT what you see in these blocks of generated code !
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 private:

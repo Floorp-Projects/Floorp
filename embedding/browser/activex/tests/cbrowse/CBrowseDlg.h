@@ -101,6 +101,8 @@ protected:
 	afx_msg void OnStop();
 	afx_msg void OnFileSaveAs();
 	afx_msg void OnFilePrint();
+	afx_msg void OnDebugVisible();
+	afx_msg void OnUpdateDebugVisible(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	afx_msg void OnEditBold();
 	afx_msg void OnEditItalic();
