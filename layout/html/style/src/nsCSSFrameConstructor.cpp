@@ -4105,6 +4105,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
   nsIFrame* newFrame = nsnull;  // the frame we construct
   PRBool    isReplaced = PR_FALSE;
   PRBool    addToHashTable = PR_TRUE;
+  PRBool    isFloaterContainer = PR_FALSE;
   nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
@@ -4207,6 +4208,9 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
         rv = NS_NewFormFrame(aPresShell, &newFrame,
                              isOutOfFlow ? NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT : 0);
         processChildren = PR_TRUE;
+
+        // A form frame is a block frame therefore it can contain floaters
+        isFloaterContainer = PR_TRUE;
       }
       else if (nsHTMLAtoms::frameset == aTag) {
         rv = NS_NewHTMLFramesetFrame(aPresShell, &newFrame);
@@ -4273,8 +4277,31 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
       // Process the child content if requested
       nsFrameItems childItems;
       if (processChildren) {
-        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
-                             PR_TRUE, childItems, PR_FALSE);
+        if (isFloaterContainer) {
+          // If the frame can contain floaters, then push a floater
+          // containing block
+          PRBool haveFirstLetterStyle, haveFirstLineStyle;
+          HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
+                                &haveFirstLetterStyle, &haveFirstLineStyle);
+          nsFrameConstructorSaveState floaterSaveState;
+          aState.PushFloaterContainingBlock(newFrame, floaterSaveState,
+                                            PR_FALSE, PR_FALSE);
+          
+          // Process the child frames
+          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                               PR_TRUE, childItems, PR_FALSE);
+          
+          // Set the frame's floater list if there were any floated children
+          if (aState.mFloatedItems.childList) {
+            newFrame->SetInitialChildList(aPresContext,
+                                          nsLayoutAtoms::floaterList,
+                                          aState.mFloatedItems.childList);
+          }
+
+        } else {
+          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                               PR_TRUE, childItems, PR_FALSE);
+        }
       }
 
       // if there are any anonymous children create frames for them
