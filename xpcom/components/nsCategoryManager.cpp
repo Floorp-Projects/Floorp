@@ -128,20 +128,25 @@ class nsCategoryManager
     : public nsICategoryManager,
       public nsObjectHashtable
   {
-    public:
+    private:
+      friend class nsCategoryManagerFactory;
       nsCategoryManager();
+      nsresult initialize();
+        // Warning: whoever creates an instance must call |initialize()| before any other method
+
+    public:
       virtual ~nsCategoryManager();
 
       NS_DECL_ISUPPORTS
       NS_DECL_NSICATEGORYMANAGER
 
     private:
-      nsresult initialize();
       CategoryNode* find_category( const char* );
       nsresult persist( const char* aCategoryName, const char* aKey, const char* aValue );
       nsresult dont_persist( const char* aCategoryName, const char* aKey );
 
     private:
+        // |mRegistry != 0| after |initialize()|... I can't live without it
       nsCOMPtr<nsIRegistry>  mRegistry;
       nsRegistryKey          mCategoriesRegistryKey;
   };
@@ -157,28 +162,30 @@ nsCategoryManager::nsCategoryManager()
 nsresult
 nsCategoryManager::initialize()
   {
-    // BULLSHIT ALERT: need more consistent error handling in this routine
- 
- 
     const char* kCategoriesRegistryPath = "Software/Mozilla/XPCOM/Categories";
       // Alas, this is kind of buried down here, but you can't put constant strings in a class declaration... oh, well
 
 
       // Get a pointer to the registry, and get it open and ready for us
 
-    nsresult rv;
-    if ( mRegistry = do_GetService(NS_REGISTRY_PROGID, &rv) )
-      if ( NS_SUCCEEDED(rv = mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry)) )
-        if ( (rv = mRegistry->GetSubtree(nsIRegistry::Common, kCategoriesRegistryPath, &mCategoriesRegistryKey)) == NS_ERROR_REG_NOT_FOUND )
-          rv = mRegistry->AddSubtree(nsIRegistry::Common, kCategoriesRegistryPath, &mCategoriesRegistryKey);
+    nsresult status;
+    if ( mRegistry = do_GetService(NS_REGISTRY_PROGID, &status) )
+      if ( NS_SUCCEEDED(status = mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry)) )
+        if ( (status = mRegistry->GetSubtree(nsIRegistry::Common, kCategoriesRegistryPath, &mCategoriesRegistryKey)) == NS_ERROR_REG_NOT_FOUND )
+          status = mRegistry->AddSubtree(nsIRegistry::Common, kCategoriesRegistryPath, &mCategoriesRegistryKey);
 
+      // All right, we've got the registry now (or not), that's the important thing.
+      //  Returning an error will cause callers to destroy me.  So not getting the registry
+      //  is worth returning an error for (I can't live without it).  Now we'll load in our
+      //  persistent data from the registry, but that's _not_ worth getting killed over, so
+      //  don't save any errors from this process.
 
       // Now load the registry data
 
-    if ( NS_SUCCEEDED(rv) )
+    if ( NS_SUCCEEDED(status) )
       {
         nsCOMPtr<nsIEnumerator> keys;
-        rv = mRegistry->EnumerateSubtrees(mCategoriesRegistryKey, getter_AddRefs(keys));
+        mRegistry->EnumerateSubtrees(mCategoriesRegistryKey, getter_AddRefs(keys));
         for ( keys->First(); keys->IsDone() == NS_ENUMERATOR_FALSE; keys->Next() )
           {
             nsXPIDLCString categoryName;
@@ -214,7 +221,7 @@ nsCategoryManager::initialize()
           }
       }
 
-    return rv;
+    return status;
   }
 
 nsCategoryManager::~nsCategoryManager()
@@ -233,19 +240,10 @@ nsCategoryManager::find_category( const char* aCategoryName )
 nsresult
 nsCategoryManager::persist( const char* aCategoryName, const char* aKey, const char* aValue )
   {
-    nsresult status;
-    NS_ASSERTION(mRegistry,     "mRegistry is NULL!");
-
-    if (!mRegistry) {
-        mRegistry = do_GetService(NS_REGISTRY_PROGID, &status);
-    }
-    if (NS_FAILED(status)) return status;
-
     NS_ASSERTION(mRegistry, "mRegistry is NULL!");
-    if (!mRegistry) return NS_ERROR_FAILURE;
 
     nsRegistryKey categoryRegistryKey;
-    status = mRegistry->GetSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
+    nsresult status = mRegistry->GetSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
 
     if ( status == NS_ERROR_REG_NOT_FOUND )
       status = mRegistry->AddSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
@@ -259,22 +257,10 @@ nsCategoryManager::persist( const char* aCategoryName, const char* aKey, const c
 nsresult
 nsCategoryManager::dont_persist( const char* aCategoryName, const char* aKey )
   {
-    NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
-    NS_ASSERTION(aKey,          "aKey is NULL!");
-    NS_ASSERTION(mRegistry,     "mRegistry is NULL!");
-
-    nsresult status;
-
-    if (!mRegistry) {
-        mRegistry = do_GetService(NS_REGISTRY_PROGID, &status);
-    }
-    if (NS_FAILED(status)) return status;
-
     NS_ASSERTION(mRegistry, "mRegistry is NULL!");
-    if (!mRegistry) return NS_ERROR_FAILURE;
 
     nsRegistryKey categoryRegistryKey;
-    status = mRegistry->GetSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
+    nsresult status = mRegistry->GetSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
 
     if ( NS_SUCCEEDED(status) )
       status = mRegistry->DeleteValue(categoryRegistryKey, aKey);
@@ -339,23 +325,29 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
       *_retval = 0;
 
 
-
-    nsresult status = NS_OK;
-
+      // Before we can insert a new entry, we'll need to
+      //  find the |CategoryNode| to put it in...
     CategoryNode* category;
     if ( !(category = find_category(aCategoryName)) )
       {
+          // That category doesn't exist yet; let's make it.
         category = new CategoryNode;
         nsStringKey categoryNameKey(aCategoryName);
         Put(&categoryNameKey, category);
       }
 
+      // See if this entry is already in this category
     LeafNode* entry = category->find_leaf(aEntryName);
 
+    nsresult status = NS_OK;
     if ( entry )
       {
+          // If this entry is in the category already,
+          //  then you better have said 'replace'!
+
         if ( aReplace )
           {
+              // return the value that we're replacing
             if ( _retval )
               *_retval = nsXPIDLCString::Copy(*entry);
           }
@@ -363,12 +355,25 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
           status = NS_ERROR_INVALID_ARG;
       }
 
-    entry = new LeafNode(aValue);
-    nsStringKey entryNameKey(aEntryName);
-    category->Put(&entryNameKey, entry);
+    if ( NS_SUCCEEDED(status) )
+      {
+          // If you didn't say 'replace', and there was already an entry there,
+          //  then we can't put your value in, or make it persistent (see below)
+        entry = new LeafNode(aValue);
+        nsStringKey entryNameKey(aEntryName);
+        category->Put(&entryNameKey, entry);
 
-    if ( aPersist )
-      status = persist(aCategoryName, aEntryName, aValue);
+          // If you said 'persist' but not 'replace', and an entry
+          //  got in the way ... sorry, you won't go into the persistent store.
+          //  This was probably an error on your part.  If this was _really_
+          //  what you wanted to do, i.e., have a different value in the backing
+          //  store than in the live database, then do it by setting the value
+          //  with 'persist' and 'replace' and saving the returned old value, then
+          //  restoring the old value with 'replace' but _not_ 'persist'.
+
+        if ( aPersist )
+          status = persist(aCategoryName, aEntryName, aValue);
+      }
 
     return status;
   }
@@ -381,7 +386,6 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
                                         PRBool aDontPersist,
                                         char **_retval )
   {
-    nsresult rv = NS_OK;
 
     NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
     NS_ASSERTION(aEntryName,    "aEntryName is NULL!");
@@ -400,10 +404,11 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
         category->RemoveAndDelete(&entryKey);
       }
 
+    nsresult status = NS_OK;
     if ( aDontPersist )
-      rv = dont_persist(aCategoryName, aEntryName);
+      status = dont_persist(aCategoryName, aEntryName);
 
-    return rv;
+    return status;
   }
 
 
@@ -439,8 +444,12 @@ nsCategoryManager::EnumerateCategory( const char *aCategoryName,
           status = NS_NewAdapterEnumerator(_retval, innerEnumerator);
       }
 
+      // If you couldn't find the category, or had trouble creating an enumerator...
     if ( !NS_SUCCEEDED(status) )
-      status = NS_NewEmptyEnumerator(_retval);
+      {
+        NS_IF_RELEASE(*_retval);
+        status = NS_NewEmptyEnumerator(_retval);
+      }
 
     return status;
   }
@@ -511,11 +520,15 @@ nsCategoryManagerFactory::CreateInstance( nsISupports* aOuter, const nsIID& aIID
       status = NS_ERROR_NO_AGGREGATION;
     else
       {
-         nsCOMPtr<nsICategoryManager> new_category_manager = new nsCategoryManager;
-         if ( new_category_manager )
-          status = new_category_manager->QueryInterface(aIID, aResult);
-         else
-           status = NS_ERROR_OUT_OF_MEMORY;
+        nsCategoryManager* raw_category_manager;
+        nsCOMPtr<nsICategoryManager> new_category_manager = (raw_category_manager = new nsCategoryManager);
+        if ( new_category_manager )
+          {
+            if ( NS_SUCCEEDED(status = raw_category_manager->initialize()) )
+              status = new_category_manager->QueryInterface(aIID, aResult);
+          }
+        else
+          status = NS_ERROR_OUT_OF_MEMORY;
       }
 
     return status;
