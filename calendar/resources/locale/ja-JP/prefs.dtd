@@ -71,7 +71,7 @@
 <!ENTITY pref.dateformat.label      "日付形式:" >
 <!ENTITY pref.dateformat.long       "ロング形式" >
 <!ENTITY pref.dateformat.short      "ショート形式"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
+<!ENTITY pref.dateformat.storeingmt "協定世界時(UTC) で日付を保存する" >
 <!ENTITY pref.defaultlength.label   "イベント間隔(デフォルト):" >
 <!ENTITY pref.defaultsnoozelength.label   "スヌーズ間隔(デフォルト):" >
 
