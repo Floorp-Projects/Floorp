@@ -898,17 +898,19 @@ NS_MSG_BASE nsresult NS_SetPersistentFile(const char *relPrefName,
     prefService->GetBranch(nsnull, getter_AddRefs(mainBranch));
     if (!mainBranch) return NS_ERROR_FAILURE;
 
-    // Write the relative.
-    nsCOMPtr<nsIRelativeFilePref> relFilePref;
-    NS_NewRelativeFilePref(aFile, nsDependentCString(NS_APP_USER_PROFILE_50_DIR), getter_AddRefs(relFilePref));
-    if (!relFilePref) return NS_ERROR_FAILURE;
-    rv = mainBranch->SetComplexValue(relPrefName, NS_GET_IID(nsIRelativeFilePref), relFilePref);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write profile-relative file pref.");
-    
     // Write the absolute for backwards compatibilty's sake.
     // Or, if aPath is on a different drive than the profile dir.
     rv = mainBranch->SetComplexValue(absPrefName, NS_GET_IID(nsILocalFile), aFile);
     
+    // Write the relative path.
+    nsCOMPtr<nsIRelativeFilePref> relFilePref;
+    NS_NewRelativeFilePref(aFile, nsDependentCString(NS_APP_USER_PROFILE_50_DIR), getter_AddRefs(relFilePref));
+    if (relFilePref) {
+        nsresult rv2 = mainBranch->SetComplexValue(relPrefName, NS_GET_IID(nsIRelativeFilePref), relFilePref);
+        if (NS_FAILED(rv2) && NS_SUCCEEDED(rv))
+            mainBranch->ClearUserPref(relPrefName);
+    }
+
     return rv;
 }
 
