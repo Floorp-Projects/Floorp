@@ -750,7 +750,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
   // The second clause is for a container which won't fire stretch even though it is
   // embellished, e.g., as in <mfrac><mo>...</mo> ... </mfrac>, the test is convoluted
   // because it excludes the particular case of the core <mo>...</mo> itself.
-  // (<mo> needs to stretch its MathMLChar).
+  // (<mo> needs to fire stretch on its MathMLChar in any case to initialize it)
   PRBool placeOrigin = !NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) ||
                        (mEmbellishData.core && !mEmbellishData.firstChild &&
                         mEmbellishData.direction == NS_STRETCH_DIRECTION_UNSUPPORTED);
@@ -777,12 +777,18 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
     if (!parentWillFireStretch) {
       // There is nobody who will fire the stretch for us, we do it ourselves!
 
+      PRBool stretchAll =
+        /* NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mEmbellishData.flags) || */
+        NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags);
+
       nsBoundingMetrics defaultSize;
-      if (!mEmbellishData.core) {
-        // case of a bare <mo>...</mo> itself
+      if (!mEmbellishData.core /* case of a bare <mo>...</mo> itself */
+          || stretchAll) { /* or <mover><mo>...</mo>...</mover>, or friends */
+        // use our current size as computed earlier by Place()
         defaultSize = aDesiredSize.mBoundingMetrics;
       }
-      else {
+      else { /* case of <msup><mo>...</mo>...</msup> or friends */
+        // compute a size that doesn't include embellishments
         GetPreferredStretchSize(aPresContext, aRenderingContext, 0,
                                 mEmbellishData.direction, defaultSize);
       }
