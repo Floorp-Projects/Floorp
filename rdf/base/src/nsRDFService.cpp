@@ -542,7 +542,7 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         char buf[128];
         char* progID = buf;
         if (len >= PRInt32(sizeof buf))
-            progID = new char[len + 1];
+            progID = (char *)nsAllocator::Alloc(len + 1);
 
         if (progID == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -555,7 +555,7 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         rv = nsComponentManager::ProgIDToCLSID(progID, &cid);
 
         if (progID != buf)
-            delete[] progID;
+            nsCRT::free(progID);
 
         if (NS_SUCCEEDED(rv)) {
             rv = nsComponentManager::FindFactory(cid, getter_AddRefs(factory));
@@ -599,7 +599,7 @@ ServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResourc
 
     PRUint32 len = nsCRT::strlen(aURI);
     if (len >= sizeof(buf)) {
-        uri = new char[len + 1];
+        uri = (char *)nsAllocator::Alloc(len + 1);
         if (! uri) return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -616,7 +616,7 @@ ServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResourc
     nsresult rv = GetResource(uri, aResource);
 
     if (uri != buf)
-        delete[] uri;
+        nsCRT::free(uri);
 
     return rv;
 }
@@ -915,7 +915,7 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         char buf[64];
         char* progID = buf, *p;
         if (progIDStr.Length() >= PRInt32(sizeof buf))
-            progID = new char[progIDStr.Length() + 1];
+            progID = (char *)nsAllocator::Alloc(progIDStr.Length() + 1);
 
         if (progID == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -931,7 +931,7 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         rv = nsServiceManager::GetService(progID, kISupportsIID, getter_AddRefs(isupports), nsnull);
 
         if (progID != buf)
-            delete[] progID;
+            nsCRT::free(progID);
 
         if (NS_FAILED(rv)) return rv;
 

@@ -1052,12 +1052,12 @@ rdf_BlockingWrite(nsIOutputStream* stream, const nsString& s)
     char* p = buf;
 
     if (s.Length() >= PRInt32(sizeof buf))
-        p = new char[s.Length() + 1];
+        p = (char *)nsAllocator::Alloc(s.Length() + 1);
 
     nsresult rv = rdf_BlockingWrite(stream, s.ToCString(p, s.Length() + 1), s.Length());
 
     if (p != buf)
-        delete[](p);
+        nsCRT::free(p);
 
     return rv;
 }
