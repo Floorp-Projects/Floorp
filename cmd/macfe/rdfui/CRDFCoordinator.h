@@ -264,6 +264,7 @@ public:
 
 protected:
 
+	virtual void	DrawSelf();
 	virtual void	FinishCreateSelf();
 	virtual	void	ListenToMessage( MessageT inMessage, void *ioParam);
 	virtual void	FindCommandStatus(

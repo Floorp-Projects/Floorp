@@ -40,6 +40,7 @@
 
 #include "CHyperTreeFlexTable.h"
 #include "CNavCenterTitle.h"
+#include "UGraphicGizmos.h"
 
 
 // XP headers
@@ -885,4 +886,20 @@ CPopdownRDFCoordinator :: ListenToMessage ( MessageT inMessage, void *ioParam )
 		CRDFCoordinator::ListenToMessage ( inMessage, ioParam );
 
 } // ListenToMessage
+
+
+//
+// DrawSelf
+//
+// Draw a sunken bevel frame so that we look like we are a drop target
+//
+void
+CPopdownRDFCoordinator :: DrawSelf ( )
+{
+	Rect localRect;
+	CalcLocalFrameRect(localRect);
+	
+	UGraphicGizmos::BevelTintRect ( localRect, -2, 0x6000, 0x6000 );
+
+} // DrawSelf
 
