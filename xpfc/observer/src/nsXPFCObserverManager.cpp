@@ -32,11 +32,13 @@ class ListEntry {
 public:
   nsIXPFCSubject * subject;
   nsIXPFCObserver * observer;
+  PRUint32 count;
 
   ListEntry(nsIXPFCSubject * aSubject, 
             nsIXPFCObserver * aObserver) { 
     subject = aSubject;
     observer = aObserver;
+    count = 1;
   }
   ~ListEntry() {
   }
@@ -169,7 +171,38 @@ nsresult nsXPFCObserverManager::Register(nsIXPFCSubject * aSubject, nsIXPFCObser
 {
   PR_EnterMonitor(monitor);
 
-  mList->Append(new ListEntry(aSubject, aObserver));
+  /*
+   * Check to see if this registration already exists and if so, simply bump up the ref count
+   */
+
+  nsIIterator * iterator;
+  PRBool bFound = PR_FALSE;
+
+  mList->CreateIterator(&iterator);
+
+  iterator->Init();
+
+  ListEntry * item ;
+
+  while(!(iterator->IsDone()))
+  {
+    item = (ListEntry *) iterator->CurrentItem();
+
+    if (item->subject == aSubject && item->observer == aObserver)
+    {
+      item->count++;
+      bFound = PR_TRUE;
+      break;
+    }  
+
+    iterator->Next();
+  }
+
+  NS_RELEASE(iterator);
+  
+
+  if (PR_FALSE == bFound)
+    mList->Append(new ListEntry(aSubject, aObserver));
 
   PR_ExitMonitor(monitor);
 
