@@ -50,6 +50,7 @@
    *
    * @see nsReadableFragment
    * @see nsAString
+   * @status FROZEN
    */
 
 template <class CharT>
@@ -194,6 +195,13 @@ class nsReadingIterator
           return *this;
         }
   };
+
+  /**
+   *
+   * @see nsWritableFragment
+   * @see nsAString
+   * @status FROZEN
+   */
 
 template <class CharT>
 class nsWritingIterator
