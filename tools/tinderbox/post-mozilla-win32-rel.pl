@@ -15,6 +15,11 @@ use strict;
 
 package PostMozilla;
 
+sub talkbackProcessing {
+  my ($mozilla_build_dir, $cacheit) = @_;
+  TinderUtils::run_shell_command "make -C $mozilla_build_dir/mozilla deliver";
+}
+
 sub packit {
   my ($packaging_dir, $package_location, $url, $stagedir) = @_;
   my $status;
@@ -112,6 +117,8 @@ sub returnStatus{
   return @status;
 }
 
+  
+
 sub main {
   # Get build directory from caller.
   my ($mozilla_build_dir) = @_;
@@ -169,6 +176,8 @@ sub main {
     $ftp_path   = "/home/ftp/pub/mozilla/tinderbox-builds";
   }
 
+  talkbackProcessing($mozilla_build_dir,$cachebuild);
+
   $upload_directory = $package_location . "/" . $upload_directory;
 
   unless (packit($package_creation_path,$package_location,$url_path,$upload_directory)) {
@@ -181,6 +190,8 @@ sub main {
   }
 
   if (cacheit($c_hour,$c_yday,$Settings::build_hour,$last_build_day)) { 
+    TinderUtils::run_shell_command "mv $upload_directory/../../symbols $upload_directory";
+    TinderUtils::run_shell_command "mv $upload_directory $mozilla_build_dir";
     open BLAH, ">last-built"; 
     close BLAH;
     return reportRelease ("$url_path", "$datestamp");
