@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.5 2000/08/02 01:01:01 nelsonb%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.6 2000/08/02 20:47:05 nelsonb%netscape.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -174,6 +174,7 @@ void     s_mp_exch(mp_int *a, mp_int *b);      /* swap a and b in place   */
 
 mp_err   s_mp_lshd(mp_int *mp, mp_size p);     /* left-shift by p digits  */
 void     s_mp_rshd(mp_int *mp, mp_size p);     /* right-shift by p digits */
+mp_err   s_mp_mul_2d(mp_int *mp, mp_digit d);  /* multiply by 2^d in place */
 void     s_mp_div_2d(mp_int *mp, mp_digit d);  /* divide by 2^d in place  */
 void     s_mp_mod_2d(mp_int *mp, mp_digit d);  /* modulo 2^d in place     */
 void     s_mp_div_2(mp_int *mp);               /* divide by 2 in place    */
