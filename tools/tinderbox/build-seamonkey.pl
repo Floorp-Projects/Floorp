@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.46 $ ';
+$Version = '$Revision: 1.47 $ ';
 
 
 sub PrintUsage {
@@ -105,8 +105,8 @@ sub PrintExampleConfig {
 sub ConditionalArgs {
   my $cvsuser = $ENV{USER};
 
-  $fe          = 'mozilla-bin';
-  $RelBinaryName  = "dist/bin/$fe";
+  $mozillaBinary  = 'mozilla-bin';
+  $RelBinaryName  = "dist/bin/$mozillaBinary";
   #$FullBinaryName  = "$BaseDir/$DirName/$TopLevel/$Topsrcdir/$RelBinaryName";
   $ENV{CVSROOT} = ":pserver:$cvsuser%netscape.com\@cvs.mozilla.org:/cvsroot";
   print "build-seamonkey.pl: CVSROOT = $ENV{CVSROOT}\n";
@@ -210,9 +210,9 @@ sub BuildIt {
     unless ($TestOnly) {
       
 	  # Only delete if it exists.
-	  if (&BinaryExists($fe)) {
-		print LOG "deleting existing binary: $fe\n";
-		&DeleteBinary($fe);
+	  if (&BinaryExists($mozillaBinary)) {
+		print LOG "deleting existing binary: $mozillaBinary\n";
+		&DeleteBinary($mozillaBinary);
 	  } else {
 		print LOG "no binary detected, can't delete.\n";
 	  }
@@ -246,14 +246,14 @@ sub BuildIt {
 
     } # unless ($TestOnly)
     
-	if (&BinaryExists($fe)) {
+	if (&BinaryExists($mozillaBinary)) {
 	  if ($RunTest) {
-		print LOG "$fe binary exists, build successful.\n";
+		print LOG "$mozillaBinary binary exists, build successful.\n";
 
         # Mozilla AliveTest.
 		print LOG "Running AliveTest ...\n";
 		print "Running AliveTest ...\n";
-		$BuildStatus = &RunAliveTest($fe, 60);
+		$BuildStatus = &RunAliveTest($mozillaBinary, 60);
 
 		# ViewerTest.
 		if ($BuildStatus == 0 and $ViewerTest) {
@@ -267,7 +267,7 @@ sub BuildIt {
 		  $BuildStatusStr = 'success';
 		  print LOG "Running BloatTest ...\n";
 		  print "Running BloatTest ...\n";
-		  $BuildStatus = &RunBloatTest($fe);
+		  $BuildStatus = &RunBloatTest;
 		}
 
 		# Run MailNews test.
@@ -298,13 +298,13 @@ sub BuildIt {
         
 
 	  } else {
-		print LOG "$fe binary exists, build successful. Skipping test.\n";
+		print LOG "$mozillaBinary binary exists, build successful. Skipping test.\n";
 		$BuildStatus = 0;
 	  }
 	} else {
-	  print LOG "Error: $fe binary missing, build FAILED\n";
+	  print LOG "Error: $mozillaBinary binary missing, build FAILED\n";
 	  $BuildStatus = 666;
-	} # if (&BinaryExists($fe))
+	} # if (&BinaryExists($mozillaBinary))
 
 
 	if ($BuildStatus == 0) {
@@ -395,7 +395,7 @@ sub MailStartBuildMessage {
 
 # check for the existence of the binary
 sub BinaryExists {
-  my ($fe) = @_;
+  my ($bin) = @_;
   my $BinName;
   
   $BinName = "$BuildDir/$TopLevel/$Topsrcdir/$RelBinaryName";
@@ -411,10 +411,10 @@ sub BinaryExists {
 }
 
 sub DeleteBinary {
-  my ($fe) = @_;
+  my ($bin) = @_;
   my $BinName;
 
-  print LOG "DeleteBinary: fe      = $fe\n";
+  print LOG "DeleteBinary: fe      = $bin\n";
   
   $BinName = "$BuildDir/$TopLevel/${Topsrcdir}/$RelBinaryName";
 
@@ -703,10 +703,9 @@ sub RunFileBasedTest {
 
 
 sub RunBloatTest {
-  my ($fe) = @_;
   my $Binary;
   my $status = 0;
-  $fe = 'x' unless defined $fe;
+  $bin = 'x' unless defined $bin;
 
   print LOG "in runBloatTest\n";
 
