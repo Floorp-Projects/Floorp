@@ -1274,12 +1274,16 @@ nsWebShell::SetTitle(const PRUnichar* aTitle)
   mTitle = aTitle;
 
   // Title's set on the top level web-shell are passed ont to the container
-  nsIBrowserWindow *browserWindow;
-
-  browserWindow = GetBrowserWindow();
-  if (nsnull != browserWindow) {
-    browserWindow->SetTitle(aTitle);
-    NS_RELEASE(browserWindow);
+  nsIWebShell* parent;
+  GetParent(parent);
+  if (nsnull == parent) {  
+    nsIBrowserWindow *browserWindow = GetBrowserWindow();
+    if (nsnull != browserWindow) {
+      browserWindow->SetTitle(aTitle);
+      NS_RELEASE(browserWindow);
+    }
+  } else {
+    NS_RELEASE(parent);
   }
 
   return NS_OK;
