@@ -58,7 +58,7 @@
         this.ifSetAttribute("disableAutocomplete", false);
         this.ifSetAttribute("forceComplete", false);
         this.ifSetAttribute("tabScrolling", false);
-
+        this.ifSetAttribute("showCommentColumn", false);
         
         // initialize the search sessions
         this.searchSessions = this.getAttribute("searchSessions");
@@ -154,11 +154,40 @@
                 onset="return this.setAttribute('autoFillAfterMatch', val);"
                 onget="return this.getAttribute('autoFillAfterMatch') == 'true';"/>
                 
-      <!-- adds a second column to the results list which contains the string
-           in the comment field of each autocomplete result -->
+      <!-- toggles a second column in the results list which contains
+           the string in the comment field of each autocomplete result -->
       <property name="showCommentColumn"
-                onset="return this.setAttribute('showCommentColumn', val);"
-                onget="return this.getAttribute('showCommentColumn') == 'true';"/>
+                onget=
+		  "return this.getAttribute('showCommentColumn') == 'true';">
+        <setter><![CDATA[
+
+          var currentState = this.getAttribute('showCommentColumn');          
+
+          // if comment column has been switched from off to on
+          //
+          if (val && (currentState == 'false')) { 
+
+            // reset the flex on the value column and add the comment column
+            //
+            document.getElementById("value").setAttribute("flex", 2);
+            this.resultsPopup.addColumn({id: "comment", flex: 1});
+
+          // if comment column has been switched from on to off
+          //
+          } else if (!val && (currentState == 'true')) {
+
+            // reset the flex on the value column and add the comment column
+            //
+            document.getElementById("value").setAttribute("flex", 1);
+            this.resultsPopup.removeColumn('comment');
+          }
+
+          // save and return the current state
+          //
+          return this.setAttribute('showCommentColumn', val);
+        ]]></setter>
+      </property>
+
                 
       <!-- option for completing to the default result whenever the user hits
            enter or the textbox loses focus -->
@@ -1057,6 +1086,21 @@
           getCellProperties: function(aIndex, aColId, aProperties)
           {
             this.getRowProperties(aIndex, aProperties);
+
+            // for the value column, append nsIAutoCompleteItem::className
+            // to the property list so that we can style this column
+            // using that property
+            try { 
+              if (aColId == "value") {
+                var className = this.mTextbox.getResultAt(aIndex).className;
+                  if ( className != "" ) {
+                    aProperties.AppendElement(this.createAtom(className));
+                  }
+              }
+            } catch (ex) {
+              // the ability to style here is a frill, so don't abort
+              // if there's a problem
+            } 
           },
 
           getColumnProperties: function(aColId, aColElt, aProperties) 
@@ -1179,6 +1223,15 @@
             col.setAttribute(name, aAttrs[name]);
           this.outliner.appendChild(col);
           return col;
+        ]]></body>
+      </method>
+
+      <!-- remove a single column from the outliner, specified by
+           element id -->
+      <method name="removeColumn">
+        <parameter name="aColId"/>
+        <body><![CDATA[
+          return this.outliner.removeChild(document.getElementById(aColId));
         ]]></body>
       </method>
 
