@@ -806,7 +806,9 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // but we want to include space for the scrollbars
   // So fake like we will need scrollbars also
   if (!isInDropDownMode && 0 == length) {
-    scrolledAreaHeight = visibleHeight+1;
+    if (aReflowState.mComputedWidth != 0) {
+      scrolledAreaHeight = visibleHeight+1;
+    }
   }
 
   PRBool needsVerticalScrollbar = PR_FALSE;
@@ -826,12 +828,14 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // So this may not be the best solution, but we get the height of the font
   // for the list frame and use that as the max/minimum size for the contents
   if (visibleHeight == 0) {
-    nsCOMPtr<nsIFontMetrics> fontMet;
-    nsresult rvv = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
-    if (NS_SUCCEEDED(rvv) && fontMet) {
-      aReflowState.rendContext->SetFont(fontMet);
-      fontMet->GetHeight(visibleHeight);
-      mMaxHeight = visibleHeight;
+    if (aReflowState.mComputedHeight != 0) {
+      nsCOMPtr<nsIFontMetrics> fontMet;
+      nsresult rvv = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+      if (NS_SUCCEEDED(rvv) && fontMet) {
+        aReflowState.rendContext->SetFont(fontMet);
+        fontMet->GetHeight(visibleHeight);
+        mMaxHeight = visibleHeight;
+      }
     }
   }
 
@@ -851,8 +855,11 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
     // calculate full height for comparison
     // must add in Border & Padding twice because the scrolled area also inherits Border & Padding
-    nscoord fullHeight = visibleHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+    nscoord fullHeight = 0;
+    if (aReflowState.mComputedHeight != 0) {
+      fullHeight = visibleHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
                                          // + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+    }
     if (fullHeight > aReflowState.mComputedMaxHeight) {
       visibleHeight = aReflowState.mComputedMaxHeight - aReflowState.mComputedBorderPadding.top - aReflowState.mComputedBorderPadding.bottom;
     }
@@ -904,6 +911,12 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (mPassId == 0 || mPassId == 2) {
     nsScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
+    if (aReflowState.mComputedHeight == 0) {
+      aDesiredSize.ascent  = 0;
+      aDesiredSize.descent = 0;
+      aDesiredSize.height  = 0;
+    }
+
     // Set the max element size to be the same as the desired element size.
   } else {
     aDesiredSize.width  = visibleWidth;
