@@ -43,10 +43,18 @@ nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
     NS_INIT_REFCNT();
 	m_mdb = db;
-	if(m_mdb)
-		m_mdb->AddRef();
 	Init();
 	m_mdbRow = dbRow;
+	if(m_mdb)
+	{
+		m_mdb->AddRef();
+		mdbOid outOid;
+		if (dbRow && dbRow->GetOid(m_mdb->GetEnv(), &outOid) == NS_OK)
+		{
+			m_messageKey = outOid.mOid_Id;
+			m_mdb->AddHdrToUseCache((nsIMsgDBHdr *) this, m_messageKey);
+		}
+	}
 }
 
 
@@ -122,6 +130,7 @@ nsMsgHdr::~nsMsgHdr()
 		if (m_mdb)
 		{	// presumably, acquiring a row increments strong ref count
 			m_mdbRow->CutStrongRef(m_mdb->GetEnv());
+			m_mdb->RemoveHdrFromUseCache((nsIMsgDBHdr *) this, m_messageKey);
 			m_mdb->Release();
 		}
 	}

@@ -141,10 +141,83 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 	return NS_OK;
 }
 
+
+nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
+{
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = NS_ERROR_FAILURE;
+
+	*result = nsnull;
+
+	if (m_headersInUse)
+	{
+		// it would be nice if we had a hash table that hashed 32 bit int's
+		nsCAutoString strKey;
+		strKey.Append(key, 10);
+		nsStringKey hashKey(strKey.GetBuffer());
+		// nsHashtable doesn't do an addref
+		*result = (nsIMsgDBHdr *) m_headersInUse->Get(&hashKey);
+		if (*result)
+		{
+			NS_ADDREF(*result);
+			rv = NS_OK;
+		}
+	}
+	return rv;
+}
+
+nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key) 
+{
+	if (!m_headersInUse)
+		m_headersInUse = new nsHashtable;
+	if (m_headersInUse)
+	{
+		nsCOMPtr<nsISupports> supports(do_QueryInterface(hdr));
+		// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
+		nsCAutoString strKey;
+		strKey.Append(key, 10);
+		nsStringKey hashKey(strKey.GetBuffer());
+		m_headersInUse->Put(&hashKey, hdr);
+		NS_ADDREF(hdr);
+		// the hash table won't add ref, we'll do it ourselves
+		// stand for the addref that CreateMsgHdr normally does.
+
+		return NS_OK;
+	}
+	return NS_ERROR_OUT_OF_MEMORY;
+}
+
+nsresult nsMsgDatabase::ClearUseHdrCache()
+{
+	if (m_headersInUse)
+	{
+		m_headersInUse->Reset();
+	}
+	return NS_OK;
+}
+
+nsresult nsMsgDatabase::RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
+{
+	if (m_headersInUse)
+	{
+		if (key == nsMsgKey_None)
+			hdr->GetMessageKey(&key);
+
+		nsCAutoString strKey;
+		strKey.Append(key, 10);
+		nsStringKey hashKey(strKey.GetBuffer());
+		nsIMsgDBHdr *removedHdr = (nsIMsgDBHdr *) m_headersInUse->Remove(&hashKey); 
+	}
+	return NS_OK;
+}
+
+
 nsresult
 nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *result)
 {
-	nsresult rv = GetHdrFromCache(key, result);
+	nsresult rv = GetHdrFromUseCache(key, result);
 	if (NS_SUCCEEDED(rv) && *result)
 	{
 		hdrRow->Release();
@@ -326,6 +399,7 @@ nsMsgDatabase::CleanupCache()
 			if (pMessageDB)
 			{
 				pMessageDB->ForceClosed();
+				delete pMessageDB;	// try this...shake out people holding onto db.
 				i--;	// back up array index, since closing removes db from cache.
 			}
 		}
@@ -429,6 +503,7 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_threadRootKeyColumnToken(0),
 	  m_bCacheHeaders(PR_FALSE),
 	  m_cachedHeaders(nsnull),
+	  m_headersInUse(nsnull),
 	  m_HeaderParser(nsnull)
 {
 	NS_INIT_REFCNT();
@@ -439,7 +514,9 @@ nsMsgDatabase::~nsMsgDatabase()
 {
 //	Close(FALSE);	// better have already been closed.
 	ClearHdrCache();
+	ClearUseHdrCache();
 	delete m_cachedHeaders;
+	delete m_headersInUse;
 
 	RemoveFromCache(this);
 #ifdef DEBUG_bienvenu1
@@ -1030,7 +1107,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **pmsgHdr
 		return NS_ERROR_NULL_POINTER;
 
 	*pmsgHdr = NULL;
-	err = GetHdrFromCache(key, pmsgHdr);
+	err = GetHdrFromUseCache(key, pmsgHdr);
 	if (NS_SUCCEEDED(err) && *pmsgHdr)
 		return err;
 
@@ -1044,6 +1121,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **pmsgHdr
 
 		if (err == NS_OK && hdrRow)
 		{
+//			NS_ASSERTION(hasOid, "we had oid, right?");
 			err = CreateMsgHdr(hdrRow,  key, pmsgHdr);
 		}
 	}
@@ -1868,7 +1946,11 @@ nsresult nsMsgDBEnumerator::PrefetchNext()
 		if (hdrRow->GetOid(mDB->GetEnv(), &outOid) == NS_OK)
             key = outOid.mOid_Id;
 
-        rv = mDB->CreateMsgHdr(hdrRow, key, &mResultHdr);
+		rv = mDB->GetHdrFromUseCache(key, &mResultHdr);
+		if (NS_SUCCEEDED(rv) && mResultHdr)
+			hdrRow->Release();
+		else
+			rv = mDB->CreateMsgHdr(hdrRow, key, &mResultHdr);
         if (NS_FAILED(rv))
 			return rv;
 
@@ -2758,7 +2840,11 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsCString &msgID)
 		nsMsgKey key=0;
 		if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
 			key = outOid.mOid_Id;
-		rv = CreateMsgHdr(hdrRow, key, &msgHdr);
+		rv = GetHdrFromUseCache(key, &msgHdr);
+		if (NS_SUCCEEDED(rv) && msgHdr)
+			hdrRow->Release();
+		else
+			rv = CreateMsgHdr(hdrRow, key, &msgHdr);
 	}
 	return msgHdr;
 }
@@ -2786,7 +2872,11 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForSubject(nsCString &subject)
 		nsMsgKey key=0;
 		if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
 			key = outOid.mOid_Id;
-		rv = CreateMsgHdr(hdrRow, key, &msgHdr);
+		rv = GetHdrFromUseCache(key, &msgHdr);
+		if (NS_SUCCEEDED(rv) && msgHdr)
+			hdrRow->Release();
+		else
+			rv = CreateMsgHdr(hdrRow, key, &msgHdr);
 	}
 	return msgHdr;
 }

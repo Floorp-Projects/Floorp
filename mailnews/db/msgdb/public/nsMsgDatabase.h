@@ -348,13 +348,21 @@ protected:
 	mdb_token			m_threadRootKeyColumnToken;
 	nsIMsgHeaderParser	*m_HeaderParser;
 
-	// header caching stuff
+	// header caching stuff - MRU headers, keeps them around in memory
 	nsresult			GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result);
 	nsresult			AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 	nsresult			ClearHdrCache();
 	nsresult			RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key);
+	// all headers currently instantiated, doesn't hold refs
+	// these get added when msg hdrs get constructed, and removed when they get destroyed.
+	nsresult			GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result);
+	nsresult			AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key); 
+	nsresult			ClearUseHdrCache();
+	nsresult			RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 
-	nsSupportsHashtable	*m_cachedHeaders;
+	nsSupportsHashtable	*m_cachedHeaders; // keeps MRU headers around
+	// all instantiated headers, but doesn't hold refs. 
+	nsHashtable			*m_headersInUse;  
 	PRBool				m_bCacheHeaders;
 
 };
