@@ -272,11 +272,11 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mAcceptsActivation(PR_TRUE)
 	, mIsActive(PR_FALSE)
 	, mZoomOnShow(PR_FALSE)
-	, mPhantomScrollbar(nil)
+	, mPhantomScrollbar(nsnull)
 {
   //mMacEventHandler.reset(new nsMacEventHandler(this));
 	mMacEventHandler = (auto_ptr<nsMacEventHandler>) new nsMacEventHandler(this);
-	WIDGET_SET_CLASSNAME("nsMacWindow");
+	WIDGET_SET_CLASSNAME("nsMacWindow");	
 }
 
 
@@ -289,6 +289,14 @@ nsMacWindow::~nsMacWindow()
 {
 	if (mWindowPtr)
 	{
+  	// cleanup the struct we hang off the scrollbar's refcon	
+  	if ( mPhantomScrollbar ) {
+  	  PhantomScrollbarData* data = 
+  	    NS_REINTERPRET_CAST(PhantomScrollbarData*, ::GetControlReference(mPhantomScrollbar));
+  	  delete data;
+  	  ::SetControlReference(mPhantomScrollbar, (long)nsnull);
+  	}
+  	
 		if (mWindowMadeHere)
 			::DisposeWindow(mWindowPtr);
       
@@ -300,6 +308,7 @@ nsMacWindow::~nsMacWindow()
 		nsMacMessageSink::RemoveRaptorWindowFromList(mWindowPtr);
 		mWindowPtr = nsnull;
 	}
+	
 }
 
 
@@ -508,13 +517,21 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
   // create a phantom scrollbar to catch the attention of mousewheel 
   // drivers. We'll catch events sent to this scrollbar in the eventhandler
-  // and dispatch them into gecko as NS_SCROLL_EVENTs at that point. Stash
-  // an identifier in the refcon so we can check it before calling TrackControl().
-  Rect sbRect = { 32000, 32000, 32100, 32016 };
+  // and dispatch them into gecko as NS_SCROLL_EVENTs at that point. We need
+  // to hang a struct off the refCon in order to provide some data
+  // to the action proc.
+  //
+  // For Logitech, the scrollbar has to be in the content area but can have
+  // zero width. For USBOverdrive (used also my MSFT), the scrollbar can be
+  // anywhere, but must have a valid width (one pixel wide works). The
+  // current location (one pixel wide, and flush along the left side of the
+  // window) is a reasonable comprimise in the short term. It is not intended
+  // to fix all cases. 
+  Rect sbRect = { 100, 0, 200, 1 };
   mPhantomScrollbar = ::NewControl ( mWindowPtr, &sbRect, nil, true, 50, 0, 100, 
-                                            kControlScrollBarLiveProc, (long)'mozz' );
+                                            kControlScrollBarLiveProc, (long)new PhantomScrollbarData );
   ::EmbedControl ( rootControl, mPhantomScrollbar );
-
+    
 	// register tracking and receive handlers with the native Drag Manager
 #if !TARGET_CARBON
 	if ( sDragTrackingHandlerUPP ) {
