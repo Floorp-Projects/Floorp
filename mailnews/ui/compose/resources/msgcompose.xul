@@ -43,7 +43,7 @@
 	    }
 	  }
 	  if(composeAppCore != null) {
-	    dump("setting window & editor for compose app core");
+	    dump("setting window &amp; editor for compose app core");
 	    composeAppCore.SetWindow(window);
 	    composeAppCore.SetEditor(editorAppCore);
 	    composeAppCore.CompleteCallback("MessageSent();");
@@ -167,22 +167,22 @@
 
 	<toolbar>
 		<html:p>To:</html:p>
-		<html:input id="msgTo" style="vertical-align: center" type="text" style="width:200px;" /> 
+		<html:input id="msgTo" style="vertical-align:center; width:200px;" type="text" /> 
 	</toolbar>
 
 	<toolbar>
 		<html:p>Cc:</html:p>
-		<html:input id="msgCc" style="vertical-align: center" type="text" style="width:200px;" />   
+		<html:input id="msgCc" style="vertical-align:center; width:200px;" type="text" />   
 	</toolbar>
 
 	<toolbar>
 		<html:p>Bcc:</html:p>
-		<html:input id="msgBcc" style="vertical-align: center" type="text" style="width:200px;" />   
+		<html:input id="msgBcc" style="vertical-align:center; width:200px;" type="text" />   
 	</toolbar>
 	
 	<toolbar>
 		<html:p>Subject:</html:p>
-		<html:input id="msgSubject" style="vertical-align: center" type="text" style="width:500px;" /> 
+		<html:input id="msgSubject" style="vertical-align:center; width:500px;" type="text" /> 
 	</toolbar>
 </toolbox>
 
