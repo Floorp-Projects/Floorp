@@ -72,6 +72,9 @@ class nsIImage;
 class nsIImageLoadingContent;
 class nsIDOMHTMLFormElement;
 class nsIDOMDocument;
+class nsIConsoleService;
+class nsIStringBundleService;
+class nsIStringBundle;
 
 class nsContentUtils
 {
@@ -437,6 +440,34 @@ public:
     return sXPConnect;
   }
 
+  /**
+   * Report a localized error message to the error console.
+   *   @param aFile Properties file containing localized message.
+   *   @param aMessageName Name of localized message.
+   *   @param aParams Parameters to be substituted into localized message.
+   *   @param aParamsLength Length of aParams.
+   *   @param aURI URI of resource containing error (may be null).
+   *   @param aLineNumber Line number within resource containing error.
+   *   @param aColumnNumber Column number within resource containing error.
+   *   @param aErrorFlags See nsIScriptError.
+   *   @param aCategory Name of module reporting error.
+   */
+  enum PropertiesFile {
+    eCSS_PROPERTIES,
+    eXBL_PROPERTIES,
+    eXUL_PROPERTIES,
+    PropertiesFile_COUNT
+  };
+  static nsresult ReportToConsole(PropertiesFile aFile,
+                                  const char *aMessageName,
+                                  const PRUnichar **aParams,
+                                  PRUint32 aParamsLength,
+                                  nsIURI* aURI,
+                                  PRUint32 aLineNumber,
+                                  PRUint32 aColumnNumber,
+                                  PRUint32 aErrorFlags,
+                                  const char *aCategory);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
@@ -464,6 +495,11 @@ private:
   static nsIPref *sPref;
 
   static imgILoader* sImgLoader;
+
+  static nsIConsoleService* sConsoleService;
+
+  static nsIStringBundleService* sStringBundleService;
+  static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];
 
   static PRBool sInitialized;
 };

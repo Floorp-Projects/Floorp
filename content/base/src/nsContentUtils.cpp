@@ -105,6 +105,11 @@
 #include "nsNodeInfoManager.h"
 #include "nsCRT.h"
 
+// for ReportToConsole
+#include "nsIStringBundle.h"
+#include "nsIScriptError.h"
+#include "nsIConsoleService.h"
+
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
@@ -118,6 +123,10 @@ nsIIOService *nsContentUtils::sIOService = nsnull;
 nsIPrefBranch *nsContentUtils::sPrefBranch = nsnull;
 nsIPref *nsContentUtils::sPref = nsnull;
 imgILoader *nsContentUtils::sImgLoader = nsnull;
+nsIConsoleService *nsContentUtils::sConsoleService;
+nsIStringBundleService *nsContentUtils::sStringBundleService;
+nsIStringBundle *nsContentUtils::sStringBundles[PropertiesFile_COUNT];
+
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
@@ -372,6 +381,10 @@ nsContentUtils::Shutdown()
 {
   sInitialized = PR_FALSE;
 
+  for (PRInt32 i = 0; i < PRInt32(PropertiesFile_COUNT); ++i)
+    NS_IF_RELEASE(sStringBundles[i]);
+  NS_IF_RELEASE(sStringBundleService);
+  NS_IF_RELEASE(sConsoleService);
   NS_IF_RELEASE(sDOMScriptObjectFactory);
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecurityManager);
@@ -2020,4 +2033,61 @@ nsCxPusher::Pop()
 
   mScx = nsnull;
   mScriptIsRunning = PR_FALSE;
+}
+
+static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][38] = {
+  // Must line up with the enum values in |PropertiesFile| enum.
+  "chrome://global/locale/css.properties",
+  "chrome://global/locale/xbl.properties",
+  "chrome://global/locale/xul.properties"
+};
+
+/* static */ nsresult
+nsContentUtils::ReportToConsole(PropertiesFile aFile,
+                                const char *aMessageName,
+                                const PRUnichar **aParams,
+                                PRUint32 aParamsLength,
+                                nsIURI* aURI,
+                                PRUint32 aLineNumber,
+                                PRUint32 aColumnNumber,
+                                PRUint32 aErrorFlags,
+                                const char *aCategory)
+{
+  nsresult rv;
+
+  nsIStringBundle *bundle = sStringBundles[aFile];
+  if (!bundle) {
+    if (!sStringBundleService) {
+      rv = CallGetService(NS_STRINGBUNDLE_CONTRACTID, &sStringBundleService);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    if (!sConsoleService) { // only need to bother null-checking here
+      rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &sConsoleService);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    sStringBundleService->CreateBundle(gPropertiesFiles[aFile], &bundle);
+    sStringBundles[aFile] = bundle; // transfer ownership
+  }
+
+  nsXPIDLString errorText;
+  rv = bundle->FormatStringFromName(NS_ConvertASCIItoUCS2(aMessageName).get(),
+                                    aParams, aParamsLength,
+                                    getter_Copies(errorText));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString spec;
+  if (aURI)
+    aURI->GetSpec(spec);
+
+  nsCOMPtr<nsIScriptError> errorObject =
+      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = errorObject->Init(errorText.get(),
+                         NS_ConvertUTF8toUTF16(spec).get(), // file name
+                         EmptyString().get(), // source line
+                         aLineNumber, aColumnNumber,
+                         aErrorFlags, aCategory);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return sConsoleService->LogMessage(errorObject);
 }
