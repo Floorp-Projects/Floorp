@@ -348,6 +348,19 @@ Contributor(s): ______________________________________. -->
              <!-- This is the smart search pop-up -->
 			 <!-- <titledbutton id="action-popup" align="right"/> -->
 
+			 <!-- this is the urlbar keyword/session history popup -->              
+             <menu>
+			 <titledbutton id="sessionhist-popup"/>
+			 <menupopup>
+			 <menuitem value="&quoteKeyword.label;" oncommand="setKeyword(0)"/>
+			 <menuitem value="&localKeyword.label;" oncommand="setKeyword(1)"/>
+			 <menuitem value="&shopKeyword.label;" oncommand="setKeyword(2)"/>
+			 <menuitem value="&careerKeyword.label;" oncommand="setKeyword(3)"/>
+			 <menuitem value="&webmailKeyword.label;" oncommand="setKeyword(4)"/>
+			 <menuitem value="&listKeywords.label;" oncommand="setKeyword(5)"/>		 
+			 </menupopup>
+			 </menu> 
+
 			 <titledbutton id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
 
              <!-- this is the urlbar --> 
