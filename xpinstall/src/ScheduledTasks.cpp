@@ -267,9 +267,7 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
         
         //Now reset the leafname
         tmpLocalFile->SetNativeLeafName(leafname);
-        
-        MakeUnique(tmpLocalFile);                                 //  for the call to MakeUnique
-        
+        tmpLocalFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
         tmpLocalFile->GetParent(getter_AddRefs(parent)); //get the parent for later use in MoveTo
         tmpLocalFile->GetNativeLeafName(uniqueLeafName);//this is the new "unique" leafname
 

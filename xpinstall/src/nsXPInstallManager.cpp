@@ -156,7 +156,9 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
     NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(item->mURL.get()).get());
     nsIStreamListener* listener = new CertReader(uri, nsnull, this);
     NS_ADDREF(listener);
+
     rv = NS_OpenURI(listener, nsnull, uri);
+
     NS_RELEASE(listener);
     if (NS_FAILED(rv)) {
         NS_RELEASE_THIS();
@@ -740,7 +742,7 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
             if (NS_SUCCEEDED(rv))
             { 
                 temp->AppendNative(NS_LITERAL_CSTRING("tmp.xpi"));
-                MakeUnique(temp);
+                temp->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
                 *file = temp;
                 NS_IF_ADDREF(*file);
             }
@@ -773,7 +775,7 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
                 if (NS_SUCCEEDED(rv))
                 {
                     userChrome->Append(leaf);
-                    MakeUnique(userChrome);
+                    userChrome->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0644);
                     *file = userChrome;
                     NS_IF_ADDREF(*file);
                 }
@@ -1083,6 +1085,7 @@ nsXPInstallManager::OnCertAvailable(nsIURI *aURI,
 
     NS_ADDREF(listener);
     nsresult rv = NS_OpenURI(listener, nsnull, uri);
+
     NS_ASSERTION(NS_SUCCEEDED(rv), "OpenURI failed");
     NS_RELEASE(listener);
 

@@ -208,17 +208,27 @@ CertReader::OnDataAvailable(nsIRequest *request,
     PRUint32 cSize   = xtolong ((unsigned char *) ziplocal->size);
 
     if (orgSize == 0)
-      return NS_ERROR_FAILURE;
-
-    unsigned char* orgData = (unsigned char*) malloc(orgSize);
-          
-    if (!orgData)
       return NS_BINDING_ABORTED;
-          
-    int err = my_inflate((unsigned char*)data, 
-                         cSize, 
-                         orgData,
-                         orgSize);
+
+    unsigned char* orgData;
+    int err = 0;
+
+    orgData = (unsigned char*) malloc(orgSize);
+    
+    if (!orgData)
+	  return NS_BINDING_ABORTED;
+
+    if (xtoint(ziplocal->method) == DEFLATED) {
+
+      err = my_inflate((unsigned char*)data, 
+                       cSize, 
+                       orgData,
+                       orgSize);
+    }
+    else {
+      memcpy(orgData, data, orgSize);
+    }
+
 
     if (err == 0) 
     {
@@ -228,10 +238,11 @@ CertReader::OnDataAvailable(nsIRequest *request,
     }
     if (orgData)  
         free(orgData);
-
+    
     return NS_BINDING_ABORTED;
   }
-  return NS_ERROR_FAILURE;
+
+  return NS_BINDING_ABORTED;
 }
 
 NS_IMETHODIMP
