@@ -7,11 +7,11 @@
 <!ENTITY info2.label "Junk mail controls can be fine-tuned by using the Junk Mail toolbar button to mark junk messages appropriately.">
 <!ENTITY level.label "Enable junk mail controls">
 <!ENTITY level.accesskey "E">
-<!ENTITY move.label "Move incoming messages determined to be junk to:">
+<!ENTITY move.label "Move incoming messages determined to be junk mail to:">
 <!ENTITY otherFolder.label "Other:">
 <!ENTITY junkFolderOn.label "&quot;Junk Mail&quot; folder on:">
 <!ENTITY purge1.label "Automatically delete messages marked as junk mail after">
 <!ENTITY purge1.accesskey "u">
 <!ENTITY purge2.label "days">
-<!ENTITY whitelist.label "Do not mark messages as junk mail if the sender is my address book:">
+<!ENTITY whitelist.label "Do not mark messages as junk mail if the sender is in my address book:">
 <!ENTITY whitelist.accesskey "D">
