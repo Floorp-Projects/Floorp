@@ -44,14 +44,6 @@ class nsIRadioButton : public nsIButton {
     virtual void SetState(PRBool aState) = 0;
 
     /**
-     * Tells the RadioButton NOT to notify the RadioGroup that it value has been changed
-     *
-     * @param aState PR_TRUE sets the RadioButton and unsets all siblings, PR_FALSE unsets it
-     *
-     */
-    virtual void SetStateNoNotify(PRBool aState) = 0;
-
-    /**
      * Gets the state the RadioButton
      *
      * @return PR_TRUE if set, PR_FALSE if unset
