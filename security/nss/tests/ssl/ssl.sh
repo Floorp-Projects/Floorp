@@ -80,7 +80,7 @@ ssl_init()
   SSLCOV=${QADIR}/ssl/sslcov.txt
   SSLAUTH=${QADIR}/ssl/sslauth.txt
   SSLSTRESS=${QADIR}/ssl/sslstress.txt
-  REQUEST_FILE=${QADIR}/ssl/sslreq.txt
+  REQUEST_FILE=${QADIR}/ssl/sslreq.dat
 
   #temparary files
   SERVEROUTFILE=${TMP}/tests_server.$$
