@@ -473,7 +473,6 @@ nsJARChannel::GetContentType(char* *aContentType)
         char* fileName = new char[PL_strlen(mJAREntry)+1];
         PL_strcpy(fileName, mJAREntry);
 
-        //char* fileName = <get the relative part of the jar URL's file name>;
         if (fileName != nsnull) {
             PRInt32 len = nsCRT::strlen(fileName);
             const char* ext = nsnull;
@@ -555,26 +554,21 @@ nsJARChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 NS_IMETHODIMP
 nsJARChannel::GetOwner(nsISupports* *aOwner)
 {
-    if (!mOwner)
-    {
-        nsCOMPtr<nsIPrincipal> principal;
-        nsresult rv = mJAR->GetPrincipal(mJAREntry, getter_AddRefs(principal));
-        if (NS_SUCCEEDED(rv) && principal)
-            mOwner = do_QueryInterface(principal);
-        else
-            mOwner = null_nsCOMPtr();
-    }
+    nsCOMPtr<nsIPrincipal> principal;
+    nsresult rv = mJAR->GetPrincipal(mJAREntry, getter_AddRefs(principal));
+    if (NS_SUCCEEDED(rv) && principal)
+        rv = principal->QueryInterface(NS_GET_IID(nsISupports), (void **)aOwner);
+    else
+        *aOwner = nsnull;
 
-    *aOwner = mOwner.get();
-    NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::SetOwner(nsISupports* aOwner)
 {
-    mOwner = aOwner;
-    return NS_OK;
+    //XXX: is this OK?
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -635,7 +629,7 @@ NS_IMETHODIMP
 nsJARChannel::Open(char* *contentType, PRInt32 *contentLength) 
 {
 	nsresult rv;
-	rv = nsComponentManager::CreateInstance(kZipReaderCID, 
+	rv = nsComponentManager::CreateInstance(kZipReaderCID,
                                             nsnull,
                                             NS_GET_IID(nsIZipReader),
                                             getter_AddRefs(mJAR));
@@ -652,7 +646,7 @@ nsJARChannel::Open(char* *contentType, PRInt32 *contentLength)
     if (NS_FAILED(rv)) return rv; 
 
     // If this fails, GetOwner will fail, but otherwise we can continue.
-	rv = mJAR->ParseManifest();
+	mJAR->ParseManifest();
 
     nsCOMPtr<nsIZipEntry> entry;
 	rv = mJAR->GetEntry(mJAREntry, getter_AddRefs(entry));
