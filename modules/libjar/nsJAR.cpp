@@ -263,7 +263,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
 
   PRFileDesc* fd;
   rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 0664, &fd);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) return NS_ERROR_FILE_ACCESS_DENIED;
 
   nsZipItem *item = 0;
   PRInt32 err = mZip.ExtractFileToFileDesc(zipEntry, fd, &item);
