@@ -35,6 +35,8 @@ public:
   // Returns the associated anchored item
   nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
 
+  NS_IMETHOD  SetIndexInParent(PRInt32 aIndexInParent);
+
   // Resize reflow methods
   NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
                            nsReflowMetrics& aDesiredSize,

@@ -63,6 +63,15 @@ AbsoluteFrame::~AbsoluteFrame()
 {
 }
 
+NS_METHOD AbsoluteFrame::SetIndexInParent(PRInt32 aIndexInParent)
+{
+  if (nsnull != mFrame) {
+    mFrame->SetIndexInParent(aIndexInParent);
+  }
+  
+  return nsFrame::SetIndexInParent(aIndexInParent);
+}
+
 nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
                                    const nsRect&    aRect,
                                    nsStylePosition* aPosition)
@@ -101,8 +110,7 @@ nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
     if (aPosition->mZIndex.GetUnit() == eStyleUnit_Integer) {
       zIndex = aPosition->mZIndex.GetIntValue();
     } else if (aPosition->mZIndex.GetUnit() == eStyleUnit_Auto) {
-      // XXX need to handle z-index "auto"
-      NS_NOTYETIMPLEMENTED("zIndex: auto");
+      zIndex = 0;
     } else if (aPosition->mZIndex.GetUnit() == eStyleUnit_Inherit) {
       // XXX need to handle z-index "inherit"
       NS_NOTYETIMPLEMENTED("zIndex: inherit");

@@ -200,8 +200,7 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
     aDesiredSize.height = PR_MAX(desiredRect.YMost(), mSpaceManager->YMost());
     if (isPseudoFrame) {
       aDesiredSize.width = desiredRect.XMost();
-    }
-    else {
+    } else {
       aDesiredSize.width = aMaxSize.width;
       aDesiredSize.height += mySpacing->mBorderPadding.top +
         mySpacing->mBorderPadding.bottom;
@@ -275,7 +274,9 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
   // XXX Clear the list of regions. This fixes a problem with the way reflow
   // appended is currently working (we're reflowing some framems twice)
-  mSpaceManager->ClearRegions();
+  if (nsReflowCommand::FrameAppended == aReflowCommand.GetType()) {
+    mSpaceManager->ClearRegions();
+  }
   mSpaceManager->Translate(leftInset, topInset);
 
   // The reflow command should never be target for us
@@ -307,8 +308,7 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   aDesiredSize.height = PR_MAX(aDesiredRect.YMost(), mSpaceManager->YMost());
   if (isPseudoFrame) {
     aDesiredSize.width = aDesiredRect.XMost();
-  }
-  else {
+  } else {
     aDesiredSize.width = aMaxSize.width;
     aDesiredSize.height += mySpacing->mBorderPadding.top +
       mySpacing->mBorderPadding.bottom;

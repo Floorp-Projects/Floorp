@@ -31,9 +31,17 @@
 #include "nsIDocument.h"
 #include "nsIURL.h"
 #include "nsReflowCommand.h"
+#include "nsIPtr.h"
+#include "nsAbsoluteFrame.h"
+#include "nsPlaceholderFrame.h"
+#include "nsIContentDelegate.h"
 
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
+
+NS_DEF_PTR(nsIStyleContext);
 
 nsHTMLContainerFrame::nsHTMLContainerFrame(nsIContent* aContent,
                                            PRInt32 aIndexInParent,
@@ -235,6 +243,38 @@ static void AdjustIndexInParents(nsIFrame*         aContainerFrame,
   }
 }
 
+nsIFrame* nsHTMLContainerFrame::CreateFrameFor(nsIPresContext* aPresContext,
+                                               nsIContent*     aContent,
+                                               PRInt32         aIndexInParent)
+{
+  // Get the style content for the frame
+  nsIStyleContextPtr  styleContext = aPresContext->ResolveStyleContextFor(aContent, this);
+  nsStylePosition*    position = (nsStylePosition*)styleContext->GetData(kStylePositionSID);
+  nsStyleDisplay*     display = (nsStyleDisplay*)styleContext->GetData(kStyleDisplaySID);
+  nsIFrame*           result;
+
+  // See whether it wants any special handling
+  if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+    AbsoluteFrame::NewFrame(&result, aContent, aIndexInParent, this);
+  } else if (display->mFloats != NS_STYLE_FLOAT_NONE) {
+    PlaceholderFrame::NewFrame(&result, aContent, aIndexInParent, this);
+  } else if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
+    nsFrame::NewFrame(&result, aContent, aIndexInParent, this);
+  } else {
+    nsIContentDelegate* delegate;
+
+    // Ask the content delegate to create the frame
+    // XXX The delegate will also resolve the style context...
+    delegate = aContent->GetDelegate(aPresContext);
+    result = delegate->CreateFrame(aPresContext, aContent, aIndexInParent, this);
+    NS_RELEASE(delegate);
+  }
+
+  // Set the frame's style context
+  result->SetStyleContext(aPresContext, styleContext);
+  return result;
+}
+
 NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
                                                 nsIPresContext* aPresContext,
                                                 nsIContent*     aContainer,
@@ -262,6 +302,69 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
 
     frame->GetNextInFlow((nsIFrame*&)frame);
   }
+
+  // Find the frame that precedes this frame
+  nsIFrame* prevSibling = nsnull;
+
+  if (aIndexInParent > 0) {
+    nsIContent* precedingContent = aContainer->ChildAt(aIndexInParent - 1);
+    prevSibling = aShell->FindFrameWithContent(precedingContent);
+    NS_RELEASE(precedingContent);
+
+    // The frame may have a next-in-flow. Get the last-in-flow
+    nsIFrame* nextInFlow;
+    do {
+      prevSibling->GetNextInFlow(nextInFlow);
+      if (nsnull != nextInFlow) {
+        prevSibling = nextInFlow;
+      }
+    } while (nsnull != nextInFlow);
+  }
+
+  // Get the geometric parent. We expect it to be this frame or one of its
+  // next-in-flow(s). It could be a pseudo-frame, but then it better also be
+  // a nsHTMLContainerFrame...
+  nsHTMLContainerFrame* parent = this;
+
+  if (nsnull != prevSibling) {
+    prevSibling->GetGeometricParent((nsIFrame*&)parent);
+  }
+
+  // Create the new frame
+  nsIFrame* newFrame = parent->CreateFrameFor(aPresContext, aChild, aIndexInParent);
+
+  // Insert the frame
+  if (nsnull == prevSibling) {
+    // If there's no preceding frame, then this is the first content child
+    NS_ASSERTION(0 == aIndexInParent, "unexpected index-in-parent");
+    NS_ASSERTION(0 == parent->mFirstContentOffset, "unexpected first content offset");
+    newFrame->SetNextSibling(parent->mFirstChild);
+    parent->mFirstChild = newFrame;
+
+  } else {
+    nsIFrame* nextSibling;
+
+    // Link the new frame into
+    prevSibling->GetNextSibling(nextSibling);
+    newFrame->SetNextSibling(nextSibling);
+    prevSibling->SetNextSibling(newFrame);
+
+    if (nsnull == nextSibling) {
+      // The new frame is the last child frame
+      parent->SetLastContentOffset(newFrame);
+
+      if (parent->IsPseudoFrame()) {
+        parent->PropagateContentOffsets();
+      }
+    }
+  }
+  parent->mChildCount++;
+
+  // Generate a reflow command
+  nsReflowCommand* cmd = new nsReflowCommand(aPresContext, parent,
+                                             nsReflowCommand::FrameAppended,
+                                             newFrame);
+  aShell->AppendReflowCommand(cmd);
 
   return NS_OK;
 }
