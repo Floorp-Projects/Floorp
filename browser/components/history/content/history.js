@@ -455,4 +455,3 @@ function searchHistory(aInput)
      gHistoryTree.setAttribute("ref",
                                "find:datasource=history&match=Name&method=contains&text=" + escape(aInput));
  }
-                                                                       

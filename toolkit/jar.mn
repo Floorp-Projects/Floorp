@@ -9,6 +9,7 @@ toolkit.jar:
 +        content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
 +        content/global/widgets/tabbrowser.xml              (content/widgets/tabbrowser.xml)
 +        content/global/widgets/tabbox.xml                  (content/widgets/tabbox.xml)
++        content/global/widgets/textbox.xml                 (content/widgets/textbox.xml)
 
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)

@@ -119,7 +119,7 @@
   <hbox align="center" pack="center">
     <label value="&find.label;" accesskey="&find.accesskey;"/>
   </hbox>
-  <textbox oninput="searchHistory(this.value);" flex="1"/>
+  <textbox type="timed" timeout="800" callback="searchHistory(this.value);" flex="1"/>
 </toolbar>
 </toolbox>
 <tree id="historyTree"/>
