@@ -218,11 +218,6 @@
      Sorry, but you can not delete the default classification,
      '[% name FILTER html %]'.
 
-  [% ELSIF error == "auth_cant_edit_versions" %]
-    [% title = "Access Denied" %]
-    Sorry, you aren't a member of the 'editcomponents' group, and so
-    you aren't allowed to add, modify or delete versions.
-
   [% ELSIF error == "component_already_exists" %]
     [% title = "Component Already Exists" %]
     A component with the name '[% name FILTER html %]' already exists.
