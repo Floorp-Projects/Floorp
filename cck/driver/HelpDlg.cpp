@@ -42,7 +42,7 @@ BOOL CHelpDlg::OnInitDialog()
 	    CWnd myWnd;
 	
 		myWnd.MessageBox("Unable to open file" + Helptext, "ERROR", MB_OK);
-		exit( 3 );
+//		exit( 3 );
 	}
 
 	else 

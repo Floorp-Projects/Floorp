@@ -18,6 +18,7 @@ char *secarray[5]={"Wid1","Wid2","Wid3","Wid4","Wid5"};
 char *buttarray[5]={"Butt1","Butt2","Butt3","Butt4","Butt5"};
 int number;
 CString iniTracker;
+CString HelpEdit;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -87,12 +88,41 @@ BOOL CWizHelp::OnInitDialog()
 	    CWnd myWnd;
 	
 		myWnd.MessageBox("Unable to open file" + Helpfilename, "ERROR", MB_OK);
-		exit( 3 );
+//		exit( 3 );
+	}
+
+			else {
+	GetPrivateProfileString(varSection, "Number", "", buffer, MAX_SIZE,Helpfilename );
+	number = atoi(buffer);
+	GetPrivateProfileString(varSection, "HelpText", "", buffer, MAX_SIZE,Helpfilename );
+	HelpEdit = CString(buffer);
+
+	FILE *fPtr2;
+
+	CString Helptext = CString(iniFilePath) + "\\" + HelpEdit;
+//CWnd newwindow;
+//newwindow.MessageBox(HelpEdit,Helptext,MB_OK);
+	//	ThatWind.MessageBox(Helptext,"something",MB_OK);
+	if( !( fPtr2 = fopen(Helptext, "r") ) )
+	{
+	    CWnd myWnd;
+	
+		myWnd.MessageBox("Unable to open file" + Helptext, "ERROR", MB_OK);
+//		exit( 3 );
 	}
 
 	else 
-	GetPrivateProfileString(varSection, "Number", "", buffer, MAX_SIZE,Helpfilename );
-	number = atoi(buffer);
+		fseek(fPtr2, 0,2);
+		long f_size = ftell(fPtr2);
+		fseek (fPtr2,0,0);
+		char *file_buffer;
+		file_buffer = (char *) malloc (f_size);
+		fread (file_buffer,1,f_size,fPtr2);
+		file_buffer[f_size]=NULL;
+
+//	ThatWind.MessageBox(file_buffer,"buffer",MB_OK);
+	CEdit *ebptr =(CEdit *) GetDlgItem(ID_HELP_EDIT);
+	ebptr->SetWindowText(file_buffer);
 
 		for (int count =0; count < number; count ++)
 	{
@@ -155,7 +185,7 @@ BOOL CWizHelp::OnInitDialog()
 //		int k=((CButton*)Button1)->Create("Button1", BS_PUSHBUTTON | WS_TABSTOP|WS_VISIBLE | WS_CHILD, tmpRect, this, ID);
 		int k=Button1->Create("Button", BS_PUSHBUTTON | WS_TABSTOP|WS_VISIBLE, tmpRect, this, ID);
 	
-*/	
+		*/	}
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
