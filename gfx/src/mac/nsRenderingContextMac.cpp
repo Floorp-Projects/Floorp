@@ -1301,7 +1301,7 @@ nsRenderingContextMac::GetTextDimensions(const char* aString, PRUint32 aLength,
     mGS->mFontMetrics->GetMaxAscent(aDimensions.ascent);
     mGS->mFontMetrics->GetMaxDescent(aDimensions.descent);
   }
-  return GetWidth(aString, aLength, aDimensions.width, aFontID);
+  return GetWidth(aString, aLength, aDimensions.width);
 }
 
 NS_IMETHODIMP
