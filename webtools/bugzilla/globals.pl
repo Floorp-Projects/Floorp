@@ -54,10 +54,10 @@ sub globals_pl_sillyness {
 # here
 # 
 
-my $db_host = "localhost";
-my $db_name = "bugs";
-my $db_user = "bugs";
-my $db_pass = "";
+$::db_host = "localhost";
+$::db_name = "bugs";
+$::db_user = "bugs";
+$::db_pass = "";
 
 do 'localconfig';
 
@@ -84,13 +84,13 @@ $::superusergroupset = "9223372036854775807";
 sub ConnectToDatabase {
     my ($useshadow) = (@_);
     if (!defined $::db) {
-        my $name = $db_name;
+        my $name = $::db_name;
         if ($useshadow && Param("shadowdb") && Param("queryagainstshadowdb")) {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-	$::db = DBI->connect("DBI:mysql:host=$db_host;database=$name", $db_user, $db_pass)
-            || die "Can't connect to database server.";
+	$::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
+            || die "Can't connect to database server.\n";
     }
 }
 
