@@ -1645,7 +1645,7 @@ fe_ccp (MWContext *context, XEvent *event, fe_CCP ccp)
       }
   else
     {
-		if (focus && ccp == fe_Copy) {
+		if (ccp == fe_Copy) {
 			fe_OwnSelection(context, time, True);
 		}
 		else {
