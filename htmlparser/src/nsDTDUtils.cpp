@@ -461,7 +461,8 @@ void CTokenRecycler::RecycleToken(CToken* aToken) {
   if(aToken) {
     PRInt32 theType=aToken->GetTokenType();
     CTokenFinder finder(aToken);
-    CToken* theMatch=(CToken*)mTokenCache[theType-1]->FirstThat(finder);
+    CToken* theMatch;
+    theMatch=(CToken*)mTokenCache[theType-1]->FirstThat(finder);
     mTokenCache[theType-1]->Push(aToken);
   }
 }
@@ -669,7 +670,7 @@ void CObserverDictionary::UnregisterObservers() {
   nsObserverReleaser theReleaser;
   for(theIndex=0;theIndex<=NS_HTML_TAG_MAX;theIndex++){
     if(mObservers[theIndex]){
-      nsIElementObserver* theElementObserver=0;
+      //nsIElementObserver* theElementObserver=0;
       mObservers[theIndex]->ForEach(theReleaser);
       delete mObservers[theIndex];
     }
