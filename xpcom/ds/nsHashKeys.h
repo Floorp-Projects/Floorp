@@ -235,7 +235,8 @@ public:
 
   KeyType GetKey() const { return mID; }
   KeyTypePointer GetKeyPointer() const { return &mID; }
-  PRBool operator==(KeyTypePointer aKey) const { return aKey->Equals(mID); }
+
+  PRBool KeyEquals(KeyTypePointer aKey) const { return aKey->Equals(mID); }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey);
