@@ -48,6 +48,7 @@
 #include "nsIOutputStream.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -146,8 +147,7 @@ nsDataChannel::ParseData() {
 
     if (comma == buffer) {
         // nothing but data
-        // XXX maybe we shouldn't include the charset in the content-type?!?
-        mContentType = NS_LITERAL_CSTRING("text/plain;charset=US-ASCII");
+        mContentType = NS_LITERAL_CSTRING("text/plain");
         mContentCharset = NS_LITERAL_CSTRING("US-ASCII");
     } else {
         // everything else is content type
@@ -229,7 +229,7 @@ nsDataChannel::ParseData() {
 
         nsMemory::Free(decodedData);
     } else {
-        dataToWrite->dataLen = dataLen;
+        dataToWrite->dataLen = nsUnescapeCount(dataBuffer);
         dataToWrite->data = dataBuffer;
 
         rv = bufOutStream->WriteSegments(nsReadData, dataToWrite, dataLen, &wrote);
