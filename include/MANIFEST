@@ -6,7 +6,6 @@ client.h
 csid.h
 ctxtfunc.h
 dirprefs.h
-edt.h
 edttypes.h
 fe_proto.h
 glhist.h
