@@ -38,8 +38,11 @@ include $(topsrcdir)/config/config.mk
 # XXX replace with proper configure test for glib
 CFLAGS += $(shell glib-config --cflags)
 
+# seperate out to get dependancies right
+LIBXPT=$(DIST)/lib/libxpt.a
+
 # XXX need configure test
-EX_LIBS = -lIDL -L$(DIST)/bin -lxpt $(NSPR_LIBS) $(shell glib-config --libs)
+EX_LIBS = -lIDL -L$(DIST)/bin $(LIBXPT) $(NSPR_LIBS) $(shell glib-config --libs)
 
 PROGS = $(OBJDIR)/xpidl
 
@@ -47,7 +50,7 @@ TARGETS= $(PROGS)
 
 include $(topsrcdir)/config/rules.mk
 
-$(PROGS): $(OBJS)
+$(PROGS): $(OBJS) $(LIBXPT)
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ $(OBJS) $(LD_FLAGS) $(EX_LIBS) $(OS_LIBS)
 
