@@ -605,7 +605,7 @@ pk11_FindPublicKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	if (label == NULL) {
 	   return (PK11Attribute *)&pk11_StaticNullAttr;
 	}
-	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label)+1, PR_TRUE);
+	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label), PR_TRUE);
 	PORT_Free(label);
 	return att;
     default:
@@ -660,7 +660,7 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	if (label == NULL) {
 	   return (PK11Attribute *)&pk11_StaticNullAttr;
 	}
-	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label)+1, PR_TRUE);
+	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label), PR_TRUE);
 	PORT_Free(label);
 	return att;
     default:
@@ -818,7 +818,7 @@ pk11_FindPrivateKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	if (label == NULL) {
 	   return (PK11Attribute *)&pk11_StaticNullAttr;
 	}
-	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label)+1, PR_TRUE);
+	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label), PR_TRUE);
 	PORT_Free(label);
 	return att;
     default:
@@ -852,7 +852,7 @@ pk11_FindSMIMEAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return (PK11Attribute *) &pk11_StaticFalseAttr;
     case CKA_NETSCAPE_EMAIL:
 	return pk11_NewTokenAttribute(type,object->dbKey.data,
-						object->dbKey.len, PR_FALSE);
+						object->dbKey.len-1, PR_FALSE);
     case CKA_SENSITIVE:
 	return NULL;
     default:
@@ -1031,7 +1031,7 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return pk11_NewTokenAttribute(type, hash, SHA1_LENGTH, PR_TRUE);
     case CKA_LABEL:
 	return cert->nickname ? pk11_NewTokenAttribute(type, cert->nickname,
-				PORT_Strlen(cert->nickname)+1, PR_FALSE) :
+				PORT_Strlen(cert->nickname), PR_FALSE) :
 					(PK11Attribute *) &pk11_StaticNullAttr;
     case CKA_SUBJECT:
 	return pk11_NewTokenAttribute(type,cert->derSubject.data,
@@ -1047,7 +1047,7 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return attr;
     case CKA_NETSCAPE_EMAIL:
 	return cert->emailAddr ? pk11_NewTokenAttribute(type, cert->emailAddr,
-				PORT_Strlen(cert->emailAddr)+1, PR_FALSE) :
+				PORT_Strlen(cert->emailAddr), PR_FALSE) :
 					(PK11Attribute *) &pk11_StaticNullAttr;
     default:
 	break;
