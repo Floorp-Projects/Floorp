@@ -245,7 +245,10 @@ function AbDelete()
 function AbDeleteDirectory()
 {
 	dump("\AbDeleteDirectory from XUL\n");
-
+	var confirmDeleteAddressbook =
+	Bundle.GetStringFromName("confirmDeleteAddressbook");
+	if(!window.confirm(confirmDeleteAddressbook))
+		return;
 
 	var selArray = dirTree.selectedItems;
 	var count = selArray.length;
