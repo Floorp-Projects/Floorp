@@ -708,6 +708,10 @@ final class NativeString extends IdScriptable {
     private static String js_concat(String target, Object[] args) {
         int N = args.length;
         if (N == 0) { return target; }
+        else if (N == 1) {
+            String arg = ScriptRuntime.toString(args[0]);
+            return target.concat(arg);
+        }
 
         // Find total capacity for the final string to avoid unnecessary
         // re-allocations in StringBuffer
