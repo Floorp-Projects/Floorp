@@ -4767,7 +4767,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
       PRBool blockParser = kBlockByDefault;
 
-      if (mimeType.IsEmpty() || mimeType.Equals(NS_LITERAL_STRING("text/css"))) { 
+      if (mimeType.IsEmpty() || mimeType.EqualsIgnoreCase("text/css")) { 
         if (!title.IsEmpty()) {  // possibly preferred sheet
           nsAutoString preferredStyle;
           mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, preferredStyle);
