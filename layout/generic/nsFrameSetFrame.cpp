@@ -37,7 +37,6 @@
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
-#include "nsCSSLayout.h"
 #include "nsIDocumentLoader.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
