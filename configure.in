@@ -4057,11 +4057,7 @@ MOZ_ARG_HEADER(Build dependencies)
 dnl ========================================================
 dnl = Do not auto generate dependency info
 dnl ========================================================
-if test "$_WIN32_MSVC"; then
-MOZ_AUTO_DEPS=
-else
 MOZ_AUTO_DEPS=1
-fi
 MOZ_ARG_DISABLE_BOOL(auto-deps,
 [  --disable-auto-deps     Do not automatically generate dependency info],
     MOZ_AUTO_DEPS=,
