@@ -21,6 +21,8 @@
 
 #include "nsBaseWidget.h"
 
+
+
 // XXX: This must go away when nsAutoCString moves out of nsFileSpec.h
 #include "nsFileSpec.h" // for nsAutoCString()
 
@@ -30,14 +32,8 @@ class nsIToolkit;
 
 #include <gtk/gtk.h>
 
-#ifndef       USE_XIM
-#define       USE_XIM
-#endif
-
-#ifdef DEBUG
-#undef NOISY_DESTROY
-#else
-#undef NOISY_DESTROY
+#ifdef USE_XIM
+#include <gdk/gdkprivate.h>
 #endif
 
 #define NSRECT_TO_GDKRECT(ns,gdk) \
@@ -115,10 +111,6 @@ public:
   NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
 
   void* GetNativeData(PRUint32 aDataType);
-#ifdef NS_GTK_REF
-  void ReleaseNativeData(PRUint32 aDataType);
-#endif
-
 
   NS_IMETHOD GetAbsoluteBounds(nsRect &aRect);
   NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
@@ -250,8 +242,20 @@ protected:
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
   // Static method used to trampoline to OnDestroySignal
-  static gint DestroySignal(GtkWidget *      aGtkWidget,
-                            nsWidget*        aWidget);
+  static gint  DestroySignal(GtkWidget *      aGtkWidget,
+                             nsWidget*        aWidget);
+
+
+
+#ifdef USE_XIM
+public:
+  PRBool          mIMEEnable;
+  PRUnichar*      mIMECompositionUniString;
+  PRInt32         mIMECompositionUniStringSize;
+  void            SetXICSpotLocation(nsPoint aPoint);
+#endif
+
+
 
 private:
 
@@ -355,6 +359,16 @@ protected:
   PRBool mShown;
 
   PRUint32 mPreferredWidth, mPreferredHeight;
+
+#ifdef        USE_XIM
+  GdkICPrivate *mIC;
+  GdkICPrivate *GetXIC();
+  void SetXIC(GdkICPrivate *aIC);
+  void GetXYFromPosition(unsigned long *aX, unsigned long *aY);
+#endif /* USE_XIM */
+
+
+
 private:
   PRBool mIsDragDest;
   static nsILookAndFeel *sLookAndFeel;

@@ -18,10 +18,7 @@
 #ifndef nsWindow_h__
 #define nsWindow_h__
 
-#define USE_XIM
-#ifdef  USE_XIM
-#include <gdk/gdkprivate.h>
-#endif
+
 
 #include "nsISupports.h"
 
@@ -97,12 +94,7 @@ public:
   // in nsWidget now
   //    virtual  PRBool OnResize(nsSizeEvent &aEvent);
 
-#ifdef        USE_XIM
-  PRBool          mIMEEnable;
-  PRUnichar*      mIMECompositionUniString;
-  PRInt32         mIMECompositionUniStringSize;
-  void SetXICSpotLocation(nsPoint aPoint);
-#endif
+
 
 protected:
 
@@ -125,11 +117,6 @@ protected:
 
   virtual gint OnDrawSignal(GdkRectangle * aArea);
   virtual void OnRealize();
-
-#ifdef  USE_XIM
-  virtual void OnFocusInSignal(GdkEventFocus * aGdkFocusEvent);
-  virtual void OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent);
-#endif /* USE_XIM */
 
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
@@ -156,13 +143,6 @@ protected:
   GtkWidget *mShell;  /* used for toplevel windows */
   
   nsIMenuBar *mMenuBar;
-
-#ifdef        USE_XIM
-  GdkICPrivate* mIC;
-  GdkICPrivate* GetXIC();
-  void SetXIC(GdkICPrivate *aIC);
-  void GetXYFromPosition(unsigned long *aX, unsigned long *aY);
-#endif /* USE_XIM */
 };
 
 //
