@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout_xul \
 		  content_xsl \
+		  content_xul \
 		  windowwatcher \
 		  intl \
 		  imglib2 \

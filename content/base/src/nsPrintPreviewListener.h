@@ -67,12 +67,12 @@ public:
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 
   // nsIDOMMouseListener
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent)     { printf("preventing MouseDown\n"); aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent)       { printf("preventing MouseUp\n"); aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent)    { printf("preventing MouseClick\n"); aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { printf("preventing MouseDblClick\n"); aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent)     { printf("preventing MouseOver\n"); aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
-  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent)      { printf("preventing MouseOut\n"); aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent)     { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent)       { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent)    { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent)     { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent)      { aMouseEvent->StopPropagation();aMouseEvent->PreventDefault(); return NS_OK; }
 
   // nsIDOMMouseMotionListener
   NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent)      { return NS_OK; };
