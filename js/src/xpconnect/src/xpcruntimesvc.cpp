@@ -30,7 +30,6 @@ nsJSRuntimeServiceImpl::nsJSRuntimeServiceImpl() :
     mRuntime(0)
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() {
@@ -43,16 +42,25 @@ nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() {
 
 NS_IMPL_ISUPPORTS1(nsJSRuntimeServiceImpl, nsIJSRuntimeService);
 
+static nsJSRuntimeServiceImpl* gJSRuntimeService = nsnull;
+
 nsJSRuntimeServiceImpl*
 nsJSRuntimeServiceImpl::GetSingleton()
 {
-    static nsJSRuntimeServiceImpl *singleton = nsnull;
-    if (!singleton) {
-	if ((singleton = new nsJSRuntimeServiceImpl()) != nsnull)
-	    NS_ADDREF(singleton);
+    if (!gJSRuntimeService) {
+	gJSRuntimeService = new nsJSRuntimeServiceImpl();
+        if (gJSRuntimeService) {
+	    NS_ADDREF(gJSRuntimeService);
+        }
     }
-    NS_IF_ADDREF(singleton);
-    return singleton;
+    NS_IF_ADDREF(gJSRuntimeService);
+    return gJSRuntimeService;
+}
+
+void
+nsJSRuntimeServiceImpl::FreeSingleton()
+{
+    NS_IF_RELEASE(gJSRuntimeService);
 }
 
 const uint32 gGCSize = 4L * 1024L * 1024L; /* pref? */

@@ -42,11 +42,40 @@
 #define JS_CLASS_MAP_SIZE       256
 #define NATIVE_CLASS_MAP_SIZE   256
 
+#if 0
+extern "C" {
+  void __log_addref(void* p, int oldrc, int newrc);
+  void __log_release(void* p, int oldrc, int newrc);
+};
+
+NS_IMETHODIMP_(nsrefcnt) nsXPConnect::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  __log_addref(this, mRefCnt, mRefCnt + 1);
+  ++mRefCnt;
+  return mRefCnt;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsXPConnect::Release(void)
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  __log_release(this, mRefCnt, mRefCnt - 1);
+  --mRefCnt;
+  if (mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+
+NS_IMPL_QUERY_INTERFACE1(nsXPConnect, nsIXPConnect)
+#else
 NS_IMPL_ISUPPORTS1(nsXPConnect, nsIXPConnect)
+#endif
 
 const char XPC_COMPONENTS_STR[] = "Components";
 
-nsXPConnect* nsXPConnect::mSelf = nsnull;
+nsXPConnect* nsXPConnect::gSelf = nsnull;
 
 /***************************************************************************/
 
@@ -141,21 +170,47 @@ GetPerThreadData()
 nsXPConnect*
 nsXPConnect::GetXPConnect()
 {
-    // XXX This pattern causes us to retain an extra ref on the singleton.
-    // XXX Should the singleton nsXPConnect object *ever* be deleted?
-    if(!mSelf)
+    if(!gSelf)
     {
-        mSelf = new nsXPConnect();
-        if(mSelf && (!mSelf->mContextMap ||
-                     !mSelf->mArbitraryScriptable ||
-                     !mSelf->mInterfaceInfoManager ||
-                     !mSelf->mThrower ||
-                     !mSelf->mContextStack))
-            NS_RELEASE(mSelf);
+        gSelf = new nsXPConnect();
+        if (!gSelf) {
+            return nsnull;
+        }
+        if (!gSelf->mContextMap ||
+            !gSelf->mArbitraryScriptable ||
+            !gSelf->mInterfaceInfoManager ||
+            !gSelf->mThrower ||
+            !gSelf->mContextStack)
+        {
+            // ctor failed to create an acceptable instance
+            delete gSelf;
+        }
+        else
+        {
+            // Keep the singleton alive
+            NS_ADDREF(gSelf);
+        }
     }
-    if(mSelf)
-        NS_ADDREF(mSelf);
-    return mSelf;
+    if(gSelf)
+    {
+        NS_ADDREF(gSelf);
+    }
+    return gSelf;
+}
+
+void
+nsXPConnect::FreeXPConnect()
+{
+    nsXPConnect* xpc = gSelf;
+    if (xpc) {
+        nsrefcnt cnt;
+        NS_RELEASE2(xpc, cnt);
+#ifdef DEBUG_kipp
+        if (0 != cnt) {
+            printf("*** dangling reference to nsXPConnect: refcnt=%d\n", cnt);
+        }
+#endif
+    }
 }
 
 // static
@@ -260,7 +315,6 @@ nsXPConnect::nsXPConnect()
         mContextStack(nsnull)
 {
     NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
 
     nsXPCWrappedNativeClass::OneTimeInit();
     mContextMap = JSContext2XPCContextMap::newMap(CONTEXT_MAP_SIZE);
@@ -288,7 +342,7 @@ nsXPConnect::~nsXPConnect()
         delete mThrower;
     if(mContextStack)
         nsServiceManager::ReleaseService("nsThreadJSContextStack", mContextStack);
-    mSelf = nsnull;
+    gSelf = nsnull;
 }
 
 NS_IMETHODIMP
