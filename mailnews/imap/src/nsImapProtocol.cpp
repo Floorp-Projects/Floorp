@@ -1256,12 +1256,14 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   PRBool anotherUrlRun = PR_FALSE;
   PRBool rerunningUrl = PR_FALSE;
   PRBool isExternalUrl;
-
+  PRBool validUrl = PR_TRUE;
 
   PseudoInterrupt(PR_FALSE);  // clear this if left over from previous url.
 
   m_runningUrl->GetRerunningUrl(&rerunningUrl);
   m_runningUrl->GetExternalLinkUrl(&isExternalUrl);
+  m_runningUrl->GetValidUrl(&validUrl);
+
   if (isExternalUrl)
   {
     m_runningUrl->GetImapAction(&m_imapAction);
@@ -1291,7 +1293,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
   nsCAutoString urlSpec;
   mailnewsurl->GetSpec(urlSpec);
-  Log("ProcessCurrentURL", urlSpec.get(), " = currentUrl");
+  Log("ProcessCurrentURL", urlSpec.get(), (validUrl) ? " = currentUrl\n" : " is not valid\n");    
+  if (!validUrl)
+    return PR_FALSE;
+
   if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMailFolderSink && !rerunningUrl)
     m_imapMailFolderSink->SetUrlState(this, mailnewsurl, PR_TRUE, NS_OK);
 

@@ -60,7 +60,7 @@ interface nsImapContentModifiedTypes
 	const long IMAP_CONTENT_FORCE_CONTENT_NOT_MODIFIED = 3;
 } ;
 
-[scriptable, uuid(AEAA246D-F9E2-11d3-98BA-001083010E9B)]
+[scriptable, uuid(5db36585-f1b7-41bb-a270-eb11f1f49924)]
 interface nsIImapUrl : nsISupports
 {
 	// Initialization method used to initialize the url...
@@ -106,6 +106,7 @@ interface nsIImapUrl : nsISupports
   attribute boolean fetchPartsOnDemand;	// set to true if we're fetching a msg for display and want to not download parts
   attribute boolean msgLoadingFromCache; // true if this msg load is coming from a cache, so we can know to mark it read
   attribute boolean externalLinkUrl; // true if we ran this url because the user clicked on a link.
+  attribute boolean validUrl; // false if we couldn't parse url for whatever reason.
   attribute nsISupports copyState;
   attribute nsIFileSpec msgFileSpec;
   attribute nsIImapMockChannel mockChannel;
