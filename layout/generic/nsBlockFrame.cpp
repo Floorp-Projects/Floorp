@@ -623,11 +623,18 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     autoSpaceManager.CreateSpaceManagerFor(aPresContext, this);
 
   // See if it's an incremental reflow command targeted only at
-  // absolute frames. If so we can skip a whole lot of work via this
-  // fast path.
+  // absolute frames and we can skip ReflowDirtyLines().
+  PRBool needToReflowLines = aMetrics.mComputeMEW ||
+    // If we have lines with clearance, we need to check their positions
+    (GetStateBits() & NS_BLOCK_HAS_CLEAR_CHILDREN) ||
+    // The areas of any floats in this block or in blocks under us
+    // need to be put into the space manager --- unless we are our own
+    // space manager, in which case it doesn't matter.
+    !(GetStateBits() & NS_BLOCK_SPACE_MGR);
+
   if (mAbsoluteContainer.HasAbsoluteFrames() &&
       eReflowReason_Incremental == aReflowState.reason &&
-      !aMetrics.mComputeMEW &&
+      !needToReflowLines &&
       mAbsoluteContainer.ReflowingAbsolutesOnly(this, aReflowState)) {
     nsSize containingBlockSize
       = CalculateContainingBlockSizeForAbsolutes(aReflowState, GetSize());
