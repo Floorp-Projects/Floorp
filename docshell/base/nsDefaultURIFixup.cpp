@@ -97,9 +97,9 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI *aURI, nsIURI **aReturn)
     return NS_OK;
 }
 
-/* nsIURI createFixupURI (in wstring aURIText, in unsigned long aFixupFlags); */
+/* nsIURI createFixupURI (in nsAUTF8String aURIText, in unsigned long aFixupFlags); */
 NS_IMETHODIMP
-nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFlags, nsIURI **aURI)
+nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, PRUint32 aFixupFlags, nsIURI **aURI)
 {
     NS_ENSURE_ARG(!aStringURI.IsEmpty());
     NS_ENSURE_ARG_POINTER(aURI);
@@ -107,7 +107,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
     nsresult rv;
     *aURI = nsnull;
 
-    nsAutoString uriString(aStringURI);
+    nsCAutoString uriString(aStringURI);
     uriString.Trim(" ");  // Cleanup the empty spaces that might be on each end.
 
     // Eliminate embedded newlines, which single-line text fields now allow:
@@ -115,22 +115,30 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
 
     NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
+    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString scheme;
+    ioService->ExtractScheme(aStringURI, scheme);
+    
     // View-source is a pseudo scheme. We're interested in fixing up the stuff
     // after it. The easiest way to do that is to call this method again with the
     // "view-source:" lopped off and then prepend it again afterwards.
 
-    if (uriString.EqualsIgnoreCase("view-source:", 12))
+    if (scheme.EqualsIgnoreCase("view-source"))
     {
         nsCOMPtr<nsIURI> uri;
         PRUint32 newFixupFlags = aFixupFlags & ~FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
 
-        rv =  CreateFixupURI(Substring(uriString, 12, uriString.Length() - 12),
+        rv =  CreateFixupURI(Substring(uriString,
+                                       sizeof("view-source:") - 1,
+                                       uriString.Length() -
+                                         (sizeof("view-source:") - 1)),
                              newFixupFlags, getter_AddRefs(uri));
         if (NS_FAILED(rv))
             return NS_ERROR_FAILURE;
         nsCAutoString spec;
         uri->GetSpec(spec);
-        uriString.Assign(NS_LITERAL_STRING("view-source:") + NS_ConvertUTF8toUCS2(spec));
+        uriString.Assign(NS_LITERAL_CSTRING("view-source:") + spec);
     }
     else {
         // Check for if it is a file URL
@@ -152,18 +160,18 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
         //   http:\\broken.com\blah?arg=somearg\foo.jpg (stops at question mark)
         //   http:\\broken.com#odd\ref (stops at hash)
         //  
-        if (uriString.FindChar(':') == -1 ||
-            uriString.EqualsIgnoreCase("http:", 5) ||
-            uriString.EqualsIgnoreCase("https:", 6) ||
-            uriString.EqualsIgnoreCase("ftp:", 4))
+        if (scheme.IsEmpty() ||
+            scheme.EqualsIgnoreCase("http") ||
+            scheme.EqualsIgnoreCase("https") ||
+            scheme.EqualsIgnoreCase("ftp"))
         {
             // Walk the string replacing backslashes with forward slashes until
             // the end is reached, or a question mark, or a hash, or a forward
             // slash. The forward slash test is to stop before trampling over
             // URIs which legitimately contain a mix of both forward and
             // backward slashes.
-            nsAFlatString::iterator start;
-            nsAFlatString::iterator end;
+            nsCAutoString::iterator start;
+            nsCAutoString::iterator end;
             uriString.BeginWriting(start);
             uriString.EndWriting(end);
             while (start != end) {
@@ -182,29 +190,25 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
     PRBool bAsciiURI = IsASCII(uriString);
     PRBool bUseNonDefaultCharsetForURI =
                         !bAsciiURI &&
-                        (uriString.FindChar(':') == kNotFound ||
-                        uriString.EqualsIgnoreCase("http:", 5) ||
-                        uriString.EqualsIgnoreCase("https:", 6) ||
-                        uriString.EqualsIgnoreCase("ftp:", 4) ||
-                        uriString.EqualsIgnoreCase("file:", 5));
+                        (scheme.IsEmpty() ||
+                         scheme.EqualsIgnoreCase("http") ||
+                         scheme.EqualsIgnoreCase("https") ||
+                         scheme.EqualsIgnoreCase("ftp") ||
+                         scheme.EqualsIgnoreCase("file"));
 
-    // Check the scheme...
-    NS_LossyConvertUCS2toASCII asciiURI(uriString);
-    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCAutoString scheme;
-    ioService->ExtractScheme(asciiURI, scheme);
+    // Now we need to check whether "scheme" is something we don't
+    // really know about.
     nsCOMPtr<nsIProtocolHandler> ourHandler, extHandler;
     
     ioService->GetProtocolHandler(scheme.get(), getter_AddRefs(ourHandler));
     extHandler = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default");
-
+    
     if (ourHandler != extHandler || !PossiblyHostPortUrl(uriString)) {
         // Just try to create an URL out of it
         rv = NS_NewURI(aURI, uriString,
                        bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
     }
-
+    
     if (*aURI) {
         if (aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI)
             MakeAlternateURI(*aURI);
@@ -234,13 +238,13 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
     //
     if (uriString.EqualsIgnoreCase("://", 3))
     {
-        nsAutoString newUriString;
+        nsCAutoString newUriString;
         uriString.Mid(newUriString, 3, uriString.Length() - 3);
         uriString = newUriString;
     }
     else if (uriString.EqualsIgnoreCase("//", 2))
     {
-        nsAutoString newUriString;
+        nsCAutoString newUriString;
         uriString.Mid(newUriString, 2, uriString.Length() - 2);
         uriString = newUriString;
     }
@@ -264,14 +268,14 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
             hostPos = uriString.Length();
 
         // extract host name
-        nsAutoString hostSpec;
+        nsCAutoString hostSpec;
         uriString.Left(hostSpec, hostPos);
 
         // insert url spec corresponding to host name
         if (hostSpec.EqualsIgnoreCase("ftp", 3)) 
-            uriString.Assign(NS_LITERAL_STRING("ftp://") + uriString);
+            uriString.Assign(NS_LITERAL_CSTRING("ftp://") + uriString);
         else 
-            uriString.Assign(NS_LITERAL_STRING("http://") + uriString);
+            uriString.Assign(NS_LITERAL_CSTRING("http://") + uriString);
 
         // For ftp & http, we want to use system charset.
         if (!bAsciiURI)
@@ -394,7 +398,7 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     return PR_TRUE;
 }
 
-nsresult nsDefaultURIFixup::FileURIFixup(const nsAString& aStringURI, 
+nsresult nsDefaultURIFixup::FileURIFixup(const nsACString& aStringURI, 
                                          nsIURI** aURI)
 {
     nsCAutoString uriSpecOut;
@@ -409,20 +413,21 @@ nsresult nsDefaultURIFixup::FileURIFixup(const nsAString& aStringURI,
     return NS_ERROR_FAILURE;
 }
 
-nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsAString& aIn,
+nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
                                                    nsCString& aOut)
 {
     PRBool attemptFixup = PR_FALSE;
 
 #if defined(XP_WIN) || defined(XP_OS2)
     // Check for \ in the url-string or just a drive (PC)
-    if(kNotFound != aIn.FindChar(PRUnichar('\\')) || ((aIn.Length() == 2 ) && (aIn.Last() == PRUnichar(':') || aIn.Last() == PRUnichar('|'))))
+    if(kNotFound != aIn.FindChar('\\') ||
+       (aIn.Length() == 2 && (aIn.Last() == ':' || aIn.Last() == '|')))
     {
         attemptFixup = PR_TRUE;
     }
 #elif XP_UNIX
     // Check if it starts with / (UNIX)
-    if(aIn.First() == PRUnichar('/'))
+    if(aIn.First() == '/')
     {
         attemptFixup = PR_TRUE;
     }
@@ -460,14 +465,21 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsAString& aIn,
         //       system charset (e.g. ACP on window)- this is very rare case
         // We should remove this logic and convert to File system charset here
         // once we change nsICmdLineService to use wstring and ensure
-        // all the Unicode data come in is correctly converted. 
-        if (PossiblyByteExpandedFileName(aIn)) {
+        // all the Unicode data come in is correctly converted.
+        // XXXbz nsICmdLineService doesn't hand back unicode, so in some cases
+        // what we have is actually a "utf8" version of a "utf16" string that's
+        // actually byte-expanded native-encoding data.  Someone upstream needs
+        // to stop using AssignWithConversion and do things correctly.  See bug
+        // 58866 for what happens if we remove this
+        // PossiblyByteExpandedFileName check.
+        NS_ConvertUTF8toUCS2 in(aIn);
+        if (PossiblyByteExpandedFileName(in)) {
           // removes high byte
-          rv = NS_NewNativeLocalFile(NS_LossyConvertUCS2toASCII(aIn), PR_FALSE, getter_AddRefs(filePath));
+          rv = NS_NewNativeLocalFile(NS_LossyConvertUCS2toASCII(in), PR_FALSE, getter_AddRefs(filePath));
         }
         else {
           // input is unicode
-          rv = NS_NewLocalFile(aIn, PR_FALSE, getter_AddRefs(filePath));
+          rv = NS_NewLocalFile(in, PR_FALSE, getter_AddRefs(filePath));
         }
 
         if (NS_SUCCEEDED(rv))
@@ -480,7 +492,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsAString& aIn,
     return NS_ERROR_FAILURE;
 }
 
-PRBool nsDefaultURIFixup::PossiblyHostPortUrl(const nsAString &aUrl)
+PRBool nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString &aUrl)
 {
     // Oh dear, the protocol is invalid. Test if the protocol might
     // actually be a url without a protocol:
@@ -508,18 +520,18 @@ PRBool nsDefaultURIFixup::PossiblyHostPortUrl(const nsAString &aUrl)
     // Read the hostname which should of the form
     // [a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*:
 
-    nsReadingIterator<PRUnichar> iterBegin;
-    nsReadingIterator<PRUnichar> iterEnd;
+    nsACString::const_iterator iterBegin;
+    nsACString::const_iterator iterEnd;
     aUrl.BeginReading(iterBegin);
     aUrl.EndReading(iterEnd);
-    nsReadingIterator<PRUnichar> iter = iterBegin;
+    nsACString::const_iterator iter = iterBegin;
 
     while (iter != iterEnd)
     {
         PRUint32 chunkSize = 0;
         // Parse a chunk of the address
         while (iter != iterEnd &&
-               (*iter == PRUnichar('-') ||
+               (*iter == '-' ||
                 nsCRT::IsAsciiAlpha(*iter) ||
                 nsCRT::IsAsciiDigit(*iter)))
         {
@@ -530,12 +542,12 @@ PRBool nsDefaultURIFixup::PossiblyHostPortUrl(const nsAString &aUrl)
         {
             return PR_FALSE;
         }
-        if (*iter == PRUnichar(':'))
+        if (*iter == ':')
         {
             // Go onto checking the for the digits
             break;
         }
-        if (*iter != PRUnichar('.'))
+        if (*iter != '.')
         {
             // Whatever it is, it ain't a hostname!
             return PR_FALSE;
@@ -559,7 +571,7 @@ PRBool nsDefaultURIFixup::PossiblyHostPortUrl(const nsAString &aUrl)
         {
             digitCount++;
         }
-        else if (*iter == PRUnichar('/'))
+        else if (*iter == '/')
         {
             break;
         }
@@ -636,7 +648,7 @@ const char * nsDefaultURIFixup::GetCharsetForUrlBar()
   return charset;
 }
 
-nsresult nsDefaultURIFixup::KeywordURIFixup(const nsAString & aURIString, 
+nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString, 
                                             nsIURI** aURI)
 {
     // These are keyword formatted strings
@@ -666,7 +678,7 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsAString & aURIString,
         if(keyword)
         {
             nsCAutoString keywordSpec("keyword:");
-            char *utf8Spec = ToNewUTF8String(aURIString);
+            char *utf8Spec = ToNewCString(aURIString); // aURIString is UTF-8
             if(utf8Spec)
             {
                 char* escapedUTF8Spec = nsEscape(utf8Spec, url_Path);

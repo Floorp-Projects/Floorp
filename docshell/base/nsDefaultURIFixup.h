@@ -44,11 +44,11 @@ protected:
 
 private:
     /* additional members */
-    nsresult FileURIFixup(const nsAString &aStringURI, nsIURI** aURI);
-    nsresult ConvertFileToStringURI(const nsAString& aIn, nsCString& aOut);
-    nsresult KeywordURIFixup(const nsAString &aStringURI, nsIURI** aURI);
+    nsresult FileURIFixup(const nsACString &aStringURI, nsIURI** aURI);
+    nsresult ConvertFileToStringURI(const nsACString& aIn, nsCString& aOut);
+    nsresult KeywordURIFixup(const nsACString &aStringURI, nsIURI** aURI);
     PRBool PossiblyByteExpandedFileName(const nsAString& aIn);
-    PRBool PossiblyHostPortUrl(const nsAString& aUrl);
+    PRBool PossiblyHostPortUrl(const nsACString& aUrl);
     PRBool MakeAlternateURI(nsIURI *aURI);
     const char * GetFileSystemCharset();
     const char * GetCharsetForUrlBar();

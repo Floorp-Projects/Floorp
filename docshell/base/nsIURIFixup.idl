@@ -66,6 +66,6 @@ interface nsIURIFixup : nsISupports
      * @param aURIText    Candidate URI.
      * @param aFixupFlags Flags that govern ways the URI may be fixed up.
      */
-    nsIURI createFixupURI(in AString aURIText, in unsigned long aFixupFlags);
+    nsIURI createFixupURI(in AUTF8String aURIText, in unsigned long aFixupFlags);
 };
 
