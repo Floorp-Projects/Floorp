@@ -349,7 +349,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 		{
 		  char *in, *out;
 		  for (in = url, out = url; *in; in++)
-			if (!nsString::IsSpace(*in))
+			if (!nsCRT::IsAsciiSpace(*in))
 			  *out++ = *in;
 		  *out = 0;
 		}
@@ -404,14 +404,14 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  if (bod->body && all_headers_p)
 		{
 		  char *s = bod->body;
-		  while (nsString::IsSpace(*s)) s++;
+		  while (nsCRT::IsAsciiSpace(*s)) s++;
 		  if (*s)
 			{
 			  char *s2;
 			  const char *pre = "<P><PRE>";
 			  const char *suf = "</PRE>";
 			  PRInt32 i;
-			  for(i = nsCRT::strlen(s)-1; i >= 0 && nsString::IsSpace(s[i]); i--)
+			  for(i = nsCRT::strlen(s)-1; i >= 0 && nsCRT::IsAsciiSpace(s[i]); i--)
 				s[i] = 0;
  			  s2 = nsEscapeHTML(s);
 			  if (!s2) goto FAIL;

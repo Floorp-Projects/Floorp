@@ -5252,14 +5252,14 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     PRInt32 first = 0;
 
     while(1) {
-        while (first < datasources.Length() && nsString::IsSpace(datasources.CharAt(first)))
+        while (first < datasources.Length() && nsCRT::IsAsciiSpace(datasources.CharAt(first)))
             ++first;
 
         if (first >= datasources.Length())
             break;
 
         PRInt32 last = first;
-        while (last < datasources.Length() && !nsString::IsSpace(datasources.CharAt(last)))
+        while (last < datasources.Length() && !nsCRT::IsAsciiSpace(datasources.CharAt(last)))
             ++last;
 
         nsAutoString uriStr;

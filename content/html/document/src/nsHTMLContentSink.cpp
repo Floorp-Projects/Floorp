@@ -3816,11 +3816,11 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 PRBool done = PR_FALSE;
                 while (!done && !token.IsEmpty()) {
                     token.CompressWhitespace();
-                    if (millis == -1 && nsString::IsDigit(token.First())) {
+                    if (millis == -1 && nsCRT::IsAsciiDigit(token.First())) {
                         PRInt32 i = 0;
                         PRUnichar value = nsnull;
                         while ((value = token[i++])) {
-                            if (!nsString::IsDigit(value)) {
+                            if (!nsCRT::IsAsciiDigit(value)) {
                                 i = -1;
                                 break;
                             }
