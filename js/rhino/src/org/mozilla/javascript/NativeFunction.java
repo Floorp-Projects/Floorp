@@ -919,9 +919,21 @@ public class NativeFunction extends ScriptableObject implements Function {
             return jsFunction_call(cx, thisObj, args, funObj);
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         Scriptable newThis = args[0] == null
-                             ? null
+                             ? ScriptableObject.getTopLevelScope(thisObj)
                              : ScriptRuntime.toObject(funObj, args[0]);
-        Object[] newArgs = cx.getElements((Scriptable) args[1]);
+        Object[] newArgs;
+        if (args.length > 1) {
+            if ((args[1] instanceof NativeArray) 
+                    || (args[1] instanceof Arguments))
+                newArgs = cx.getElements((Scriptable) args[1]);
+            else
+                throw NativeGlobal.constructError(
+                        cx, "TypeError",
+                        ScriptRuntime.getMessage("msg.arg.isnt.array", null),
+                        thisObj);            
+        }
+        else
+            newArgs = new Object[0];
         return ScriptRuntime.call(cx, val, newThis, newArgs);
     }
 
@@ -941,7 +953,7 @@ public class NativeFunction extends ScriptableObject implements Function {
                                                 ScriptRuntime.emptyArgs);
         } else {
             Scriptable newThis = args[0] == null
-                                 ? null
+                                 ? ScriptableObject.getTopLevelScope(thisObj)
                                  : ScriptRuntime.toObject(funObj, args[0]);
 
             Object[] newArgs = new Object[args.length - 1];
