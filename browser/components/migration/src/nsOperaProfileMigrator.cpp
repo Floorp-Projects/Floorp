@@ -606,7 +606,7 @@ nsOperaCookieMigrator::~nsOperaCookieMigrator()
 { 
   if (mStream)
     mStream->SetInputStream(nsnull);
-};
+}
 
 
 nsresult
