@@ -53,6 +53,11 @@ nsWalletlibService::QueryInterface(REFNSIID iid, void** result)
 NS_IMPL_ADDREF(nsWalletlibService);
 NS_IMPL_RELEASE(nsWalletlibService);
 
+NS_IMETHODIMP nsWalletlibService::WALLET_ChangePassword() {
+    ::WLLT_ChangePassword();
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsIURL* url) {
     ::WLLT_PreEdit(url);
     return NS_OK;

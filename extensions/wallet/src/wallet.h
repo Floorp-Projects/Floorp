@@ -34,6 +34,9 @@
 XP_BEGIN_PROTOS
 
 extern void
+WLLT_ChangePassword();
+
+extern void
 WLLT_PreEdit(nsIURL* url);
 
 extern void

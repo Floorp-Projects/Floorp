@@ -45,6 +45,7 @@
 
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
@@ -356,11 +357,10 @@ wallet_GetUsingDialogsPref(void)
 /* The following routines are used for accessing strings to be localized */
 /*************************************************************************/
 
-#define TEST_URL "resource:/res/wallet.properties"
-
+#ifdef xxx
 /* temporary until I can get the real routine below to work */
 PUBLIC char*
-Wallet_Localize(char* genericString) {
+Wallet_Localize1(char* genericString) {
   nsAutoString v("***NO LOCALIZED STRING FOUND***");
   if (!PL_strcmp(genericString,"IncorrectKey_TryAgain?")) {
     v = nsAutoString("Incorrect key.  Do you want to try again?");
@@ -372,6 +372,8 @@ Wallet_Localize(char* genericString) {
     v = nsAutoString("Following items can be pre-filled for you.");
   } else if (!PL_strcmp(genericString,"password")){
     v = nsAutoString("database password: ");
+  } else if (!PL_strcmp(genericString,"newPassword")){
+    v = nsAutoString("new password: ");
   } else if (!PL_strcmp(genericString,"SelectUser")){
     v = nsAutoString("Select a username to be entered on this form");
   } else if (!PL_strcmp(genericString,"SelectUserWhosePasswordIsBeingChanged")){
@@ -395,9 +397,12 @@ Wallet_Localize(char* genericString) {
   }
   return v.ToNewCString();
 }
+#endif
+
+#define TEST_URL "resource:/res/wallet.properties"
 
 PUBLIC char*
-Wallet_Localize2(char* genericString) {
+Wallet_Localize(char* genericString) {
   nsresult ret;
   nsAutoString v("");
 
@@ -711,7 +716,6 @@ Wallet_GetKey() {
   if (keyPosition >= PL_strlen(key)) {
     keyPosition = 0;
   }
-char c = key[keyPosition];
   return key[keyPosition++];
 }
 
@@ -720,9 +724,25 @@ Wallet_BadKey() {
   return keyFailure;
 }
 
+PRIVATE PRBool
+wallet_KeyExists() {
+  nsSpecialSystemDirectory keyFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  keyFile += "res";
+//  keyFile += "wallet";
+  keyFile += "key";
+  nsInputFileStream strm(keyFile);
+
+  if (!strm.is_open()) {
+    return PR_FALSE;
+  } else {
+    strm.close();
+    return PR_TRUE;
+  }
+}
+
 PUBLIC PRBool
-Wallet_SetKey() {
-  if (keySet) {
+Wallet_SetKey(PRBool newkey) {
+  if (keySet && !newkey) {
     return TRUE;
   }
 
@@ -732,7 +752,12 @@ Wallet_SetKey() {
   if (!wallet_GetUsingDialogsPref()) {
     key[keyPosition++] = '~';
   } else {
-    char * password = Wallet_Localize("password");
+    char * password;
+    if (newkey) {
+      password = Wallet_Localize("newPassword");
+    } else {
+      password = Wallet_Localize("password");
+    }
     char * newkey = FE_GetString(password);
     PR_FREEIF(password);
     for (; (keyPosition < PL_strlen(newkey) && keyPosition < maxKeySize); keyPosition++) {
@@ -743,16 +768,19 @@ Wallet_SetKey() {
   }
   Wallet_RestartKey();
 
-  /* verify this with the saved key */
   nsSpecialSystemDirectory keyFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
   keyFile += "res";
 //  keyFile += "wallet";
   keyFile += "key";
-  nsInputFileStream strm(keyFile);
 
-  if (!strm.is_open()) {
+  /* verify this with the saved key */
+  if (newkey || !wallet_KeyExists()) {
 
-    /* file of saved key doesn't exist, so create it */
+    /*
+     * Either key is to be changed or the file containing the saved key doesn' exist.
+     * In either case we need to (re)create and re(write) the file.
+     */
+
     nsOutputFileStream strm2(keyFile);
     if (!strm2.is_open()) {
       keyFailure = TRUE;
@@ -785,6 +813,7 @@ Wallet_SetKey() {
      * is why the following code reads a character and immediately after the read
      * checks for eof()
      */
+    nsInputFileStream strm(keyFile);
     Wallet_RestartKey();
     char* p = key+1;
     while (*p) {
@@ -1190,7 +1219,7 @@ PRInt32 FieldToValue(
     return -1;
   }
 
-  /* fetch schema name from field/schema tables */
+  /* if no schema name is given, fetch schema name from field/schema tables */
   XP_List* FieldToSchema_list = wallet_FieldToSchema_list;
   XP_List* URLFieldToSchema_list = wallet_specificURLFieldToSchema_list;
   XP_List* SchemaToValue_list;
@@ -1198,8 +1227,9 @@ PRInt32 FieldToValue(
   if (nsnull == resume) {
     resume = wallet_SchemaToValue_list;
   }
-  if ((wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list) != -1) ||
-       (wallet_ReadFromList(field, schema, dummy, FieldToSchema_list) != -1)) {
+  if ((schema.Length() > 0) ||
+      (wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list) != -1) ||
+      (wallet_ReadFromList(field, schema, dummy, FieldToSchema_list) != -1)) {
     /* schema name found, now fetch value from schema/value table */ 
     SchemaToValue_list = resume;
     if (wallet_ReadFromList(schema, value, itemList, SchemaToValue_list) != -1) {
@@ -1307,9 +1337,23 @@ wallet_GetPrefills(
       nsAutoString field;
       result = inputElement->GetName(field);
       if (NS_SUCCEEDED(result)) {
-        nsAutoString schema;
+        nsAutoString schema("");
         nsAutoString value;
         XP_List* itemList;
+
+        /* get schema name from vcard attribute if it exists */
+        nsIDOMElement * element;
+        result = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
+        if ((NS_SUCCEEDED(result)) && (nsnull != element)) {
+          nsAutoString vcard("VCARD_NAME");
+          result = element->GetAttribute(vcard, schema);
+          NS_RELEASE(element);
+        }
+
+        /*
+         * if schema name was specified in vcard attribute the get value from schema name,
+         * otherwise get value from field name by using mapping tables to get schema name
+         */
         if (FieldToValue(field, schema, value, itemList, resume) == 0) {
           if (value == "" && nsnull != itemList) {
             /* pick first of a set of synonymous values */
@@ -1333,7 +1377,7 @@ wallet_GetPrefills(
     nsAutoString field;
     result = selectElement->GetName(field);
     if (NS_SUCCEEDED(result)) {
-      nsAutoString schema;
+      nsAutoString schema("");
       nsAutoString value;
       XP_List* itemList;
       if (FieldToValue(field, schema, value, itemList, resume) == 0) {
@@ -1387,7 +1431,7 @@ wallet_Initialize() {
     Wallet_RestartKey();
     char * message = Wallet_Localize("IncorrectKey_TryAgain?");
     char * failed = Wallet_Localize("KeyFailure");
-    while (!Wallet_SetKey()) {
+    while (!Wallet_SetKey(PR_FALSE)) {
       if (!FE_Confirm(message)) {
         FE_Confirm(failed);
         PR_FREEIF(message);
@@ -1424,6 +1468,39 @@ wallet_Initialize() {
 //    wallet_Dump(wallet_SchemaToValue_list);
 #endif
 
+}
+
+#ifdef SingleSignon
+extern int SI_SaveSignonData();
+extern int SI_LoadSignonData(PRBool fullLoad);
+#endif
+
+PUBLIC
+void WLLT_ChangePassword() {
+
+  /* do nothing if password was never set */
+  if (!wallet_KeyExists()) {
+    return;
+  }
+
+  /* read in user data using old key */
+
+  wallet_Initialize();
+#ifdef SingleSignon
+  SI_LoadSignonData(PR_TRUE);
+#endif
+  if (Wallet_BadKey()) {
+    return;
+  }
+
+  /* establish new key */
+  Wallet_SetKey(PR_TRUE);
+
+  /* write out user data using new key */
+  wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
+#ifdef SingleSignon
+  SI_SaveSignonData();
+#endif
 }
 
 /*

@@ -321,7 +321,7 @@ MyFE_SelectDialog
 extern void Wallet_RestartKey();
 extern char Wallet_GetKey();
 extern PRBool Wallet_BadKey();
-extern PRBool Wallet_SetKey();
+extern PRBool Wallet_SetKey(PRBool newkey);
 extern char * Wallet_Localize(char * genericString);
 
 void
@@ -341,7 +341,7 @@ si_BadKey() {
 
 PRBool
 si_SetKey() {
-  return Wallet_SetKey();
+  return Wallet_SetKey(PR_FALSE);
 }
 
 /* end of temporary */
@@ -406,11 +406,11 @@ PRIVATE PRBool si_RememberSignons = PR_FALSE;
 PRIVATE int
 si_SaveSignonDataLocked();
 
-PRIVATE int
-si_SaveSignonData();
+PUBLIC int
+SI_SaveSignonData();
 
-PRIVATE int
-si_LoadSignonData(PRBool fullLoad);
+PUBLIC int
+SI_LoadSignonData(PRBool fullLoad);
 
 PRIVATE void
 si_RemoveAllSignonData();
@@ -441,7 +441,7 @@ si_SetSignonRememberingPref(PRBool x)
 
     /* if pref is being turned on, load the signon file into memory */
     if (x == 1) {
-        si_LoadSignonData(FALSE);
+        SI_LoadSignonData(FALSE);
     }
 }
 
@@ -482,7 +482,7 @@ si_GetSignonRememberingPref(void)
          * calls si_GetSignonRememberingPref
          */
         si_list_invalid = PR_FALSE;
-        si_LoadSignonData(FALSE);
+        SI_LoadSignonData(FALSE);
     }
 #endif
 
@@ -808,7 +808,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
                 user_count++;
             }
             if (user_count > 1) {
-                si_LoadSignonData(TRUE);
+                SI_LoadSignonData(TRUE);
                 url = si_GetURL(URLName);
             }
             user_ptr = url->signonUser_list;
@@ -1031,11 +1031,11 @@ si_PutReject(char * URLName, char * userName, PRBool save) {
     if (reject) {
         /*
          * lock the signon list
-         *  Note that, for efficiency, si_LoadSignonData already sets the lock
+         *  Note that, for efficiency, SI_LoadSignonData already sets the lock
          *  before calling this routine whereas none of the other callers do.
          *  So we need to determine whether or not we were called from
-         *  si_LoadSignonData before setting or clearing the lock.  We can
-         *  determine this by testing "save" since only si_LoadSignonData
+         *  SI_LoadSignonData before setting or clearing the lock.  We can
+         *  determine this by testing "save" since only SI_LoadSignonData
          *  passes in a value of PR_FALSE for "save".
          */
         XP_List * list_ptr;
@@ -1084,7 +1084,7 @@ si_PutReject(char * URLName, char * userName, PRBool save) {
 
         if (save) {
             si_signon_list_changed = PR_TRUE;
-            si_SaveSignonData();
+            SI_SaveSignonData();
         }
         if (save) {
             si_unlock_signon_list();
@@ -1178,11 +1178,11 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
 
     /*
      * lock the signon list
-     *   Note that, for efficiency, si_LoadSignonData already sets the lock
+     *   Note that, for efficiency, SI_LoadSignonData already sets the lock
      *   before calling this routine whereas none of the other callers do.
      *   So we need to determine whether or not we were called from
-     *   si_LoadSignonData before setting or clearing the lock.  We can
-     *   determine this by testing "save" since only si_LoadSignonData passes
+     *   SI_LoadSignonData before setting or clearing the lock.  We can
+     *   determine this by testing "save" since only SI_LoadSignonData passes
      *   in a value of PR_FALSE for "save".
      */
     if (save) {
@@ -1691,8 +1691,8 @@ si_ReadLine
 /*
  * Load signon data from disk file
  */
-PRIVATE int
-si_LoadSignonData(PRBool fullLoad) {
+PUBLIC int
+SI_LoadSignonData(PRBool fullLoad) {
     /*
      * This routine is called initially with fullLoad set to FALSE.  That will cause
      * the main file (consisting of URLs and usernames but having dummy passwords) to
@@ -2163,8 +2163,8 @@ si_SaveSignonDataLocked() {
  * The parameter passed in on entry is ignored
  */
 
-PRIVATE int
-si_SaveSignonData() {
+PUBLIC int
+SI_SaveSignonData() {
     int retval;
 
     /* do nothing if signon preference is not enabled */
@@ -2239,7 +2239,7 @@ SINGSIGN_RememberSignonData
 
         if ((j<submit.value_cnt) && si_OkToSave(URLName, /* urlname */
                 ((char **)submit.value_array)[j] /* username */)) {
-            si_LoadSignonData(TRUE);
+            SI_LoadSignonData(TRUE);
             si_PutData(URLName, &submit, PR_TRUE);
         }
     } else if (passwordCount == 2) {
@@ -2272,7 +2272,7 @@ SINGSIGN_RememberSignonData
         }
 
         /* get to password being saved */
-        si_LoadSignonData(TRUE); /* this destroys "user" so we need to recalculate it */
+        SI_LoadSignonData(TRUE); /* this destroys "user" so we need to recalculate it */
         user = si_GetURLAndUserForChangeForm
             (((char **)submit.value_array)[pswd[0]]);
         if (!user) { /* this should never happen but just in case */
@@ -2331,7 +2331,7 @@ SINGSIGN_RestoreSignonData
     /* get first saved user just so we can see the name of the first item on the form */
     user = si_GetUser(URLName, PR_TRUE, NULL); /* this is the first saved user */
     if (user) {
-        si_LoadSignonData(PR_TRUE); /* this destroys "user" so need to recalculate it */
+        SI_LoadSignonData(PR_TRUE); /* this destroys "user" so need to recalculate it */
         user = si_GetUser(URLName, PR_TRUE, NULL);
         data_ptr = user->signonData_list; /* this is first item on form */
         data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
@@ -2357,7 +2357,7 @@ SINGSIGN_RestoreSignonData
     /* restore the data from previous time this URL was visited */
     user = si_GetUser(URLName, PR_FALSE, name);
     if (user) {
-        si_LoadSignonData(TRUE); /* this destroys user so need to recaculate it */
+        SI_LoadSignonData(TRUE); /* this destroys user so need to recaculate it */
         user = si_GetUser(URLName, PR_TRUE, name);
         if (user) { /* this should alwlays be true but just in case */
             data_ptr = user->signonData_list;
@@ -2408,7 +2408,7 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password)
     type_array[1] = FORM_TYPE_PASSWORD;
 
     /* Save the signon data */
-    si_LoadSignonData(TRUE);
+    SI_LoadSignonData(TRUE);
     si_PutData(URLName, &submit, PR_TRUE);
 
     /* Free up the data memory just allocated */
@@ -2448,7 +2448,7 @@ si_RestoreOldSignonDataFromBrowser
         si_unlock_signon_list();
         return;
     }
-    si_LoadSignonData(TRUE); /* this destroys "user" so need to recalculate it */
+    SI_LoadSignonData(TRUE); /* this destroys "user" so need to recalculate it */
     user = si_GetUser(URLName, pickFirstUser, "username");
 
     /* restore the data from previous time this URL was visited */
@@ -2882,7 +2882,7 @@ SINGSIGN_DisplaySignonInfoAsHTML()
                    calls si_GetSignonRememberingPref */
             si_list_invalid = PR_FALSE;
             si_RemoveAllSignonData();
-            si_LoadSignonData(TRUE);
+            SI_LoadSignonData(TRUE);
         }
 #endif
 
