@@ -50,6 +50,8 @@ NS_HIDDEN_(nsresult) NS_NewXFormsTextAreaElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsGroupElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsOutputElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsRepeatElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsInsertElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsDeleteElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsUploadElement(nsIXTFElement **aElement);
 
 /// @todo Having \<contextcontainer\> in the factory means that the item can be
@@ -111,6 +113,10 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsOutputElement(aElement);
   if (aTagName.EqualsLiteral("repeat"))
     return NS_NewXFormsRepeatElement(aElement);
+  if (aTagName.EqualsLiteral("insert"))
+    return NS_NewXFormsInsertElement(aElement);
+  if (aTagName.EqualsLiteral("delete"))
+    return NS_NewXFormsDeleteElement(aElement);
   if (aTagName.EqualsLiteral("contextcontainer") ||
       aTagName.EqualsLiteral("contextcontainer-inline"))
     return NS_NewXFormsContextContainer(aElement);

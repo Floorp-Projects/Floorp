@@ -118,6 +118,7 @@ CPPSRCS		= \
 		nsXFormsSendElement.cpp \
 		nsXFormsSetFocusElement.cpp \
 		nsXFormsSetValueElement.cpp \
+		nsXFormsInsertDeleteElement.cpp \
 		nsXFormsLoadElement.cpp \
 		nsXFormsMessageElement.cpp \
 		nsXFormsLabelElement.cpp \

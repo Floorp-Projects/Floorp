@@ -718,7 +718,8 @@ nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent)
   aTarget->GetOwnerDocument(getter_AddRefs(domDoc));
 
   nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(domDoc);
-
+  NS_ENSURE_STATE(doc);
+  
   nsCOMPtr<nsIDOMEvent> event;
   doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
@@ -728,6 +729,8 @@ nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent)
                    data->canBubble, data->canCancel);
 
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
+  NS_ENSURE_STATE(target);
+
   PRBool cancelled;
   return target->DispatchEvent(event, &cancelled);
 }

@@ -243,7 +243,7 @@ nsXFormsRepeatElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
   if (aName == nsXFormsAtoms::bind ||
       aName == nsXFormsAtoms::nodeset ||
       aName == nsXFormsAtoms::model) {
-    Refresh();
+    Bind();
   }
 
   return NS_OK;
@@ -277,6 +277,13 @@ nsXFormsRepeatElement::DoneAddingChildren()
 NS_IMETHODIMP
 nsXFormsRepeatElement::Bind()
 {
+  if (mAddingChildren)
+    return NS_OK;
+
+  mModel = nsXFormsUtils::GetModel(mElement);
+
+  Refresh();
+
   return NS_OK;
 }
 
