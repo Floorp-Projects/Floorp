@@ -1,0 +1,5 @@
+#!dest communicator:skin:wallet
+CookieViewer.css
+SignonViewer.css
+WalletEditor.css
+wallet.css
