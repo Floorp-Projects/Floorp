@@ -267,7 +267,13 @@ nsresult nsPref::useDefaultPrefFile()
     {
 	    // There is no locator component. Or perhaps there is a locator, but the
 	    // locator couldn't find where to put it. So put it in the cwd (NB, viewer comes here.)
-	    prefsFile = NS_CreateFileSpec();
+        // #include nsIComponentManager.h
+        nsresult rv = nsComponentManager::CreateInstance(
+        	(const char*)NS_FILESPEC_PROGID,
+        	(nsISupports*)nsnull,
+        	(const nsID&)nsIFileSpec::GetIID(),
+        	(void**)&prefsFile);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
 	    if (!prefsFile)
 	    	return NS_ERROR_FAILURE;
 	    prefsFile->SetUnixStyleFilePath("default_prefs.js"); // in default working directory.
@@ -870,7 +876,12 @@ NS_IMETHODIMP nsPref::GetFilePref(const char *pref_name, nsIFileSpec** value)
     if (!value)
         return NS_ERROR_NULL_POINTER;        
 
-    *value = NS_CreateFileSpec();
+        nsresult rv = nsComponentManager::CreateInstance(
+        	(const char*)NS_FILESPEC_PROGID,
+        	(nsISupports*)nsnull,
+        	(const nsID&)nsIFileSpec::GetIID(),
+        	(void**)value);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
     if (!*value)
       return NS_ERROR_FAILURE;
 
@@ -896,9 +907,15 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
     {
         // nsPersistentFileDescriptor requires an existing
         // object. Make it first. COM makes this difficult, of course...
-	    nsIFileSpec* tmp = NS_CreateFileSpec();
+	    nsIFileSpec* tmp = nsnull;
+        nsresult rv = nsComponentManager::CreateInstance(
+        	(const char*)NS_FILESPEC_PROGID,
+        	(nsISupports*)nsnull,
+        	(const nsID&)nsIFileSpec::GetIID(),
+        	(void**)&tmp);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
 	    if (!tmp)
-	      return NS_ERROR_FAILURE;
+	    	return NS_ERROR_FAILURE;
 		tmp->fromFileSpec(value);
         tmp->createDir();
         NS_RELEASE(tmp);
@@ -1324,7 +1341,13 @@ extern "C" JSBool pref_InitInitialObjects()
 	int k;
 	JSBool worked = JS_FALSE;
 	// Parse all the random files that happen to be in the components directory.
-    nsIDirectoryIterator* i = NS_CreateDirectoryIterator();
+    nsIDirectoryIterator* i = nsnull;
+    rv = nsComponentManager::CreateInstance(
+        	(const char*)NS_DIRECTORYITERATOR_PROGID,
+        	(nsISupports*)nsnull,
+        	(const nsID&)nsIDirectoryIterator::GetIID(),
+        	(void**)&i);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
     if (!i || NS_FAILED(i->Init(componentsDir)))
     	return JS_FALSE;
 
