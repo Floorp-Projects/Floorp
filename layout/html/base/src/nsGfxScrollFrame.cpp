@@ -51,6 +51,8 @@
 #include "nsIElementFactory.h"
 #include "nsBoxLayoutState.h"
 #include "nsINodeInfo.h"
+#include "nsIScrollbarFrame.h"
+#include "nsIScrollbarMediator.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -1367,6 +1369,17 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, NS_ConvertToString("true"), PR_TRUE);
   else
      content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed, PR_TRUE);
+
+  nsCOMPtr<nsIScrollbarFrame> scrollbar(do_QueryInterface(aScrollbar));
+  if (scrollbar) {
+    // See if we have a mediator.
+    nsCOMPtr<nsIScrollbarMediator> mediator;
+    scrollbar->GetScrollbarMediator(getter_AddRefs(mediator));
+    if (mediator) {
+      // Inform the mediator of the visibility change.
+      mediator->VisibilityChanged(aVisible);
+    }
+  }
 }
 
 PRInt32

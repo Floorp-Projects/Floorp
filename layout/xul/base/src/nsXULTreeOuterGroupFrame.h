@@ -36,7 +36,7 @@
 #include "nsITimerCallback.h"
 #include "nsITimer.h"
 #include "nsIDragTracker.h"
-
+#include "nsIReflowCallback.h"
 
 class nsCSSFrameConstructor;
 class nsDragOverListener;
@@ -147,7 +147,7 @@ private:
 
 
 class nsXULTreeOuterGroupFrame : public nsXULTreeGroupFrame, public nsIScrollbarMediator,
-                                    public nsIDragTracker
+                                 public nsIDragTracker, public nsIReflowCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -163,6 +163,9 @@ public:
   
   NS_IMETHOD Init(nsIPresContext* aPresContext, nsIContent* aContent,
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
+
+  // nsIReflowCallback
+  NS_IMETHOD ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag);
 
 protected:
   nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
@@ -207,6 +210,7 @@ public:
   
   NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD VisibilityChanged(PRBool aVisible);
 
   void VerticalScroll(PRInt32 aDelta);
 
@@ -243,6 +247,8 @@ public:
   nsTreeLayoutState GetTreeLayoutState() { return mTreeLayoutState; }
   void SetTreeLayoutState(nsTreeLayoutState aState) { mTreeLayoutState = aState; }
 
+  void PostReflowCallback();
+
 protected: // Data Members
 
   void ComputeTotalRowCount(PRInt32& aRowCount, nsIContent* aParent);
@@ -268,7 +274,7 @@ protected: // Data Members
   nsDragOverListener* mDragOverListener;
   nsDragAutoScrollTimer* mAutoScrollTimer;      // actually a strong ref
   nsTreeLayoutState mTreeLayoutState;
-  
+  PRBool mReflowCallbackPosted;
 }; // class nsXULTreeOuterGroupFrame
 
 

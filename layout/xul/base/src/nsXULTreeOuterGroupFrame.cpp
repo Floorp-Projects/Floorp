@@ -40,7 +40,6 @@
 #include "nsIDragService.h"
 #include "nsIServiceManager.h"
 
-
 #define TICK_FACTOR 50
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
@@ -175,7 +174,7 @@ nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRB
 :nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
  mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mAutoScrollTimer(nsnull),
  mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull), mCurrentlyTrackingAutoScroll(PR_FALSE),
- mTreeLayoutState(eTreeLayoutNormal)
+ mTreeLayoutState(eTreeLayoutNormal), mReflowCallbackPosted(PR_FALSE)
 {
 }
 
@@ -216,6 +215,7 @@ nsXULTreeOuterGroupFrame::Release(void)
 NS_INTERFACE_MAP_BEGIN(nsXULTreeOuterGroupFrame)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
   NS_INTERFACE_MAP_ENTRY(nsIDragTracker)
+  NS_INTERFACE_MAP_ENTRY(nsIReflowCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsXULTreeGroupFrame)
 
 
@@ -303,6 +303,8 @@ nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
     mTreeLayoutState = eTreeLayoutAbort;
     if (mCurrentIndex > 0)
       VerticalScroll(mCurrentIndex * mRowHeight);
+
+    PostReflowCallback();
   } 
 }
 
@@ -408,6 +410,26 @@ nsXULTreeOuterGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aPar
         ComputeTotalRowCount(aCount, childContent);
     }
   }
+}
+
+void
+nsXULTreeOuterGroupFrame::PostReflowCallback()
+{
+  if (!mReflowCallbackPosted) {
+    mReflowCallbackPosted = PR_TRUE;
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    shell->PostReflowCallback(this);
+  }
+}
+
+NS_IMETHODIMP
+nsXULTreeOuterGroupFrame::VisibilityChanged(PRBool aVisible)
+{
+  if (!aVisible && mCurrentIndex > 0)
+    EnsureRowIsVisible(0);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1020,6 +1042,15 @@ nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
+{
+  mReflowCallbackPosted = PR_FALSE;
+  nsBoxLayoutState state(mPresContext);
+  MarkDirtyChildren(state);
+  *aFlushFlag = PR_TRUE;
+  return NS_OK;
+}
 
 //
 // Paint

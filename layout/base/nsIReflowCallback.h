@@ -17,30 +17,27 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
+ * Original Author: David Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
  */
+#ifndef nsIReflowCallback_h___
+#define nsIReflowCallback_h___
 
-#ifndef nsIScrollbarMediator_h___
-#define nsIScrollbarMediator_h___
+// {03E6FD70-889C-44b1-8639-A7EF5A80ED5C}
+#define NS_IREFLOWCALLBACK_IID \
+{ 0x3e6fd70, 0x889c, 0x44b1, { 0x86, 0x39, 0xa7, 0xef, 0x5a, 0x80, 0xed, 0x5c } }
 
-// {351C003A-E8F7-4d10-8BFA-635C9860D650}
-#define NS_ISCROLLBARMEDIATOR_IID \
-{ 0x351c003a, 0xe8f7, 0x4d10, { 0x8b, 0xfa, 0x63, 0x5c, 0x98, 0x60, 0xd6, 0x50 } }
+class nsIPresShell;
 
-static NS_DEFINE_IID(kIScrollbarMediatorIID,     NS_ISCROLLBARMEDIATOR_IID);
-
-class nsIScrollbarMediator : public nsISupports {
-
+/**
+ * Reflow callback interface
+ */
+class nsIReflowCallback : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISCROLLBARMEDIATOR_IID; return iid; }
-  
-  NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
-  NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
+  static const nsIID& GetIID() { static nsIID iid = NS_IREFLOWCALLBACK_IID; return iid; }
 
-  NS_IMETHOD VisibilityChanged(PRBool aVisible) = 0;
+  NS_IMETHOD ReflowFinished(nsIPresShell* aShell, PRBool* aFlushFlag) = 0;
 };
 
-#endif
-
+#endif /* nsIFrameUtil_h___ */

@@ -243,7 +243,9 @@ nsXULTreeGroupFrame::GetFirstTreeBox()
     mFrameConstructor->CreateTreeWidgetContent(mPresContext, this, nsnull, startContent,
                                                &mTopFrame, isAppend, PR_FALSE, 
                                                nsnull);
-    
+    if (mTopFrame)
+      mOuterFrame->PostReflowCallback();
+
     mBottomFrame = mTopFrame;
     nsCOMPtr<nsIXULTreeSlice> slice(do_QueryInterface(mTopFrame));
     PRBool isGroup = PR_FALSE;
@@ -320,6 +322,8 @@ nsXULTreeGroupFrame::GetNextTreeBox(nsIBox* aBox)
       mFrameConstructor->CreateTreeWidgetContent(mPresContext, this, prevFrame, nextContent,
                                                  &result, isAppend, PR_FALSE,
                                                  nsnull);
+      if (result)
+        mOuterFrame->PostReflowCallback();
     }
   }
 
