@@ -193,13 +193,12 @@ public:
     
     /** Write data into the stream.
      *  @param aBuf the buffer into which the data is read
-     *  @param aOffset the start offset of the data
      *  @param aCount the maximum number of bytes to read
      *  @param errorResult the error code if an error occurs
      *  @return number of bytes read or -1 if error
      */   
     NS_IMETHOD
-    Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount); 
+    Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount); 
 
     //////////////////////////////////////////////////////////////////////////
     //
@@ -394,7 +393,6 @@ public:
     /** Read data from the stream.
      *  @param aErrorCode the error code if an error occurs
      *  @param aBuf the buffer into which the data is read
-     *  @param aOffset the start offset of the data
      *  @param aCount the maximum number of bytes to read
      *  @param aReadCount out parameter to hold the number of
      *         bytes read, eof if 0. if an error occurs, the
@@ -402,7 +400,7 @@ public:
      *  @return error status
      */   
     NS_IMETHOD
-    Read(char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aReadCount); 
+    Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount); 
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIPluginInputStream:
@@ -1820,13 +1818,11 @@ CPluginManagerStream::~CPluginManagerStream(void)
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 
 NS_METHOD
-CPluginManagerStream::Write(const char* buffer, PRUint32 offset, PRUint32 len, 
-                            PRUint32 *aWriteCount)
+CPluginManagerStream::Write(const char* buffer, PRUint32 len, PRUint32 *aWriteCount)
 {
     assert( npp != NULL );
     assert( pstream != NULL );
 
-    assert(offset == 0);    // XXX need to handle the non-sequential write case
     *aWriteCount = NPN_Write(npp, pstream, len, (void* )buffer);
     return *aWriteCount >= 0 ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -1953,14 +1949,13 @@ CPluginInputStream::GetLength(PRUint32 *aLength)
 }
 
 NS_METHOD
-CPluginInputStream::Read(char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aReadCount)
+CPluginInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
 {
-    if (aOffset > mBufferLength)
-        return NS_ERROR_FAILURE;        // XXX right error?
-    PRUint32 cnt = PR_MIN(aCount, mBufferLength - aOffset);
-    memcpy(aBuf, &mBuffer[aOffset], cnt);
+    PRUint32 cnt = PR_MIN(aCount, mBufferLength);
+    memcpy(aBuf, mBuffer + mAmountRead, cnt);
     *aReadCount = cnt;
-    mAmountRead -= cnt;
+    mAmountRead += cnt;
+    mBufferLength -= cnt;
     return NS_OK;
 }
 
