@@ -992,13 +992,13 @@ PRUint8 bitToCharSet[64] =
 /*13*/ DEFAULT_CHARSET,
 /*14*/ DEFAULT_CHARSET,
 /*15*/ DEFAULT_CHARSET,
-/*16*/ DEFAULT_CHARSET,
-/*17*/ THAI_CHARSET,
-/*18*/ SHIFTJIS_CHARSET,
-/*19*/ GB2312_CHARSET,
-/*20*/ HANGEUL_CHARSET,
-/*21*/ CHINESEBIG5_CHARSET,
-/*22*/ JOHAB_CHARSET,
+/*16*/ THAI_CHARSET,
+/*17*/ SHIFTJIS_CHARSET,
+/*18*/ GB2312_CHARSET,
+/*19*/ HANGEUL_CHARSET,
+/*20*/ CHINESEBIG5_CHARSET,
+/*21*/ JOHAB_CHARSET,
+/*22*/ DEFAULT_CHARSET,
 /*23*/ DEFAULT_CHARSET,
 /*24*/ DEFAULT_CHARSET,
 /*25*/ DEFAULT_CHARSET,
@@ -1391,7 +1391,7 @@ static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
   { "GB2312",      936,  GenerateMultiByte },
   { "HANGEUL",     949,  GenerateMultiByte },
   { "CHINESEBIG5", 950,  GenerateMultiByte },
-  { "JOHAB",       0,    GenerateMultiByte }
+  { "JOHAB",       1361, GenerateMultiByte }
 };
 
 static int
@@ -1402,6 +1402,13 @@ HaveConverterFor(PRUint8 aCharSet)
   if (WideCharToMultiByte(gCharSetInfo[gCharSetToIndex[aCharSet]].mCodePage, 0,
                           &wc, 1, mb, sizeof(mb), nsnull, nsnull)) {
     return 1;
+  }
+
+  // remove from table, since we can't support it anyway
+  for (int i = 0; i < sizeof(bitToCharSet); i++) {
+    if (bitToCharSet[i] == aCharSet) {
+      bitToCharSet[i] = DEFAULT_CHARSET;
+    }
   }
 
   return 0;
@@ -1418,16 +1425,21 @@ nsFontWinA::GetSubsets(HDC aDC)
   int dword;
   DWORD* array = signature.fsCsb;
   mSubsetsCount = 0;
+  int i = 0;
   for (dword = 0; dword < 2; dword++) {
     for (int bit = 0; bit < sizeof(DWORD) * 8; bit++) {
       if ((array[dword] >> bit) & 1) {
-        PRUint8 charSet = bitToCharSet[bit];
+        PRUint8 charSet = bitToCharSet[i];
+#ifdef DEBUG_FONT_SIGNATURE
+        printf("  %02d %s\n", i, gCharSetInfo[gCharSetToIndex[charSet]].mName);
+#endif
         if (charSet != DEFAULT_CHARSET) {
           if (HaveConverterFor(charSet)) {
             mSubsetsCount++;
           }
         }
       }
+      i++;
     }
   }
 
@@ -1437,18 +1449,20 @@ nsFontWinA::GetSubsets(HDC aDC)
     return 0;
   }
 
-  int i = 0;
+  i = 0;
+  int j = 0;
   for (dword = 0; dword < 2; dword++) {
     for (int bit = 0; bit < sizeof(DWORD) * 8; bit++) {
       if ((array[dword] >> bit) & 1) {
-        PRUint8 charSet = bitToCharSet[bit];
+        PRUint8 charSet = bitToCharSet[i];
         if (charSet != DEFAULT_CHARSET) {
           if (HaveConverterFor(charSet)) {
-            mSubsets[i].mCharSet = charSet;
-            i++;
+            mSubsets[j].mCharSet = charSet;
+            j++;
           }
         }
       }
+      i++;
     }
   }
 
@@ -1470,6 +1484,9 @@ FreeFont(nsFontWinA* aFont)
     subset++;
   }
   PR_Free(aFont->mSubsets);
+  if (aFont->mFont) {
+    ::DeleteObject(aFont->mFont);
+  }
   delete aFont;
 }
 
@@ -1535,6 +1552,9 @@ nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
     HFONT oldFont = (HFONT) ::SelectObject(aDC, (HGDIOBJ) hfont);
     font->mFont = hfont;
     font->mLogFont = logFont;
+#ifdef DEBUG_FONT_SIGNATURE
+    printf("%s\n", logFont.lfFaceName);
+#endif
     if (!font->GetSubsets(aDC)) {
       mLoadedFontsCount--;
       ::SelectObject(aDC, (HGDIOBJ) oldFont);
