@@ -20,6 +20,9 @@
       case "chrome://communicator/content/pref/pref-appearance.xul":
         _elementIDs.push("generalStartupMail");
         break;
+      case "chrome://cookie/content/pref-cookies.xul":
+        _elementIDs.push("networkDisableCookieForMailNews");
+        break;
       }
     }
   ]]>
@@ -39,6 +42,13 @@
               pref="true" preftype="bool" prefstring="general.startup.mail"
               prefattribute="checked"/>         
   </groupbox>
+  <!--- cookie toggle for mail/news -->
+  <page id="cookiesPanel">
+    <checkbox id="networkDisableCookieForMailNews"
+              label="&disableCookieForMailNews.label;" accesskey="&disableCookieForMailNews.accesskey;"
+              pref="true" preftype="bool" prefstring="network.cookie.disableCookieForMailNews"
+              prefattribute="checked" insertafter="networkCookieBehaviorSeparator"/>
+  </page>
 
   <!-- category tree entries for mail/news -->
   <treechildren id="panelChildren">

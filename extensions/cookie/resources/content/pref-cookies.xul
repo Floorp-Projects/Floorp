@@ -26,7 +26,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://cookie/locale/pref-cookies.dtd">
 
-<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<page id="cookiesPanel" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="init();"
       headertitle="&lHeader;">
 
@@ -34,7 +34,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-
+  var panel = "chrome://cookie/content/pref-cookies.xul";
   var _elementIDs = ["networkCookieBehaviour", "networkWarnAboutCookies",
                      "lifetimeEnabled", "lifetimeBehavior", "lifetimeDays"];
 
@@ -64,6 +64,13 @@
     p3pButton.disabled = (cookieBehavior.value != cookies_p3p);
     if (parent.hPrefWindow.getPrefIsLocked(p3pButton.getAttribute("prefstring")) )
       p3pButton.disabled = true;
+
+    // if mailnews is installed then we will have networkCookieBehaviorForMailNews checkbox
+    if (document.getElementById('networkDisableCookieForMailNews'))
+    {
+      var networkDisableCookieForMailNews = document.getElementById("networkDisableCookieForMailNews");
+      networkDisableCookieForMailNews.disabled = cookieBehavior.value == cookies_disabled; 
+    }
 
     var warnCheckbox = document.getElementById("networkWarnAboutCookies");
     warnCheckbox.disabled = (cookieBehavior.value == cookies_disabled);
@@ -111,7 +118,7 @@
       <radio value="0" label="&accAllCookiesRadio.label;"
              accesskey="&accAllCookiesRadio.accesskey;" oncommand="setDisables();"/>
     </radiogroup>
-    <separator/>
+    <separator id="networkCookieBehaviorSeparator"/>
     <vbox align="start">
       <checkbox id="networkWarnAboutCookies" label="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
                 prefstring="network.cookie.warnAboutCookies"/>
