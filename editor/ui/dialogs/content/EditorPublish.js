@@ -106,6 +106,8 @@ function Startup()
 
     if (scheme != "file")
     {
+      var siteFound = false;
+
       // Editing a remote URL.
       // Attempt to find doc URL in Site Data
       if (gPublishSiteData)
@@ -116,6 +118,8 @@ function Startup()
         // Select this site only if the same as user's intended site, or there wasn't one
         if (siteIndex != -1 && (gInitialSiteIndex == -1 || siteIndex == gInitialSiteIndex))
         {
+          siteFound = true;
+
           // Select the site we found
           gDialog.SiteList.selectedIndex = siteIndex;
           var docDir = dirObj.value;
@@ -129,26 +133,26 @@ function Startup()
           //XXX HOW DO WE DECIDE WHAT "OTHER" DIR TO USE?
           //gPublishSiteData[siteIndex].otherDir = docDir;
         }
-        else
+      }
+      if (!siteFound)
+      {
+        // Not found in site database 
+        // Setup for a new site and use data from a remote URL
+        if (!addNewSite)
+          AddNewSite();
+
+        addNewSite = true;
+
+        var publishData = CreatePublishDataFromUrl(docUrl);
+        if (publishData)
         {
-          // Not found in site database 
-          // Setup for a new site and use data from a remote URL
-          if (!addNewSite)
-            AddNewSite();
-
-          addNewSite = true;
-
-          var publishData = CreatePublishDataFromUrl(docUrl);
-          if (publishData)
-          {
-            filename = publishData.filename;
-            gDialog.SiteNameInput.value    = publishData.siteName;
-            gDialog.PublishUrlInput.value  = publishData.publishUrl;
-            gDialog.BrowseUrlInput.value   = publishData.browseUrl;
-            gDialog.UsernameInput.value    = publishData.username;
-            gDialog.PasswordInput.value    = publishData.password;
-            gDialog.SavePassword.checked   = false;
-          }
+          filename = publishData.filename;
+          gDialog.SiteNameInput.value    = publishData.siteName;
+          gDialog.PublishUrlInput.value  = publishData.publishUrl;
+          gDialog.BrowseUrlInput.value   = publishData.browseUrl;
+          gDialog.UsernameInput.value    = publishData.username;
+          gDialog.PasswordInput.value    = publishData.password;
+          gDialog.SavePassword.checked   = false;
         }
       }
     }
@@ -178,7 +182,7 @@ function Startup()
   if (gDialog.SiteList.selectedIndex == -1)
   {
     // No selected site -- assume same directory
-    gDialog.OtherDirRadiogroup.selectedItem = gDialog.selectedItem = gDialog.SameLocationRadio;
+    gDialog.OtherDirRadiogroup.selectedItem = gDialog.SameLocationRadio;
   }
   else
   {
@@ -186,11 +190,11 @@ function Startup()
     if (gPublishSiteData[gDialog.SiteList.selectedIndex].docDir == 
         gPublishSiteData[gDialog.SiteList.selectedIndex].otherDir)
     {
-      gDialog.OtherDirRadiogroup.selectedItem = gDialog.selectedItem = gDialog.SameLocationRadio;
+      gDialog.OtherDirRadiogroup.selectedItem = gDialog.SameLocationRadio;
     }
     else
     {
-      gDialog.OtherDirRadiogroup.selectedItem = gDialog.selectedItem = gDialog.OtherDirRadiogroup;
+      gDialog.OtherDirRadiogroup.selectedItem = gDialog.OtherDirRadiogroup;
     }
   }
 
