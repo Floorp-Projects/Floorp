@@ -28,10 +28,6 @@ REQUIRES	= nspr dbm img util layer js hook lay style
 
 include $(DEPTH)/config/rules.mk
 
-ifndef NO_MOCHA
-DEFINES		+= -DMOCHA
-endif
-
 # XXX this should actually be "pa_hash.c pa_hash.rmap:" and be in the GARBAGE
 # XXX list and so on, but we don't have perl everywhere yet...
 #
