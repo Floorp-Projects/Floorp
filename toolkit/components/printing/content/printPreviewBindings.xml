@@ -37,6 +37,8 @@
 #
 # ***** END LICENSE BLOCK ***** -->
 
+# this file depends on printUtils.js
+
 <!DOCTYPE window SYSTEM "chrome://global/locale/printPreview.dtd">
 
 <bindings id="printPreviewBindings"
@@ -51,10 +53,10 @@
 
     <content>
       <xul:button label="&print.label;" accesskey="&print.accesskey;"
-        oncommand="BrowserPrint();"/>
+        oncommand="PrintUtils.print();"/>
 
       <xul:button label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
-        oncommand="doPageSetup();"/>
+        oncommand="PrintUtils.showPageSetup();"/>
 
       <xul:vbox align="center" pack="center">
         <xul:label value="&page.label;"/>
