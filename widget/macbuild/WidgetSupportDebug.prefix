@@ -1,8 +1,0 @@
-//
-// WidgetDebug.Prefix
-//
-// Global prefix file for the debug Widget project.
-//
-
-#include "WidgetSupportConfig.h"
-#include "MacPrefix_debug.h"
