@@ -95,6 +95,7 @@ PRUnichar *nsMsgFolder::kLocalizedSentName;
 PRUnichar *nsMsgFolder::kLocalizedDraftsName;
 PRUnichar *nsMsgFolder::kLocalizedTemplatesName;
 PRUnichar *nsMsgFolder::kLocalizedUnsentName;
+PRUnichar *nsMsgFolder::kLocalizedJunkName;
 
 nsIAtom * nsMsgFolder::kTotalMessagesAtom = nsnull;
 nsIAtom * nsMsgFolder::kBiffStateAtom = nsnull;
@@ -200,6 +201,7 @@ nsMsgFolder::~nsMsgFolder(void)
     CRTFREEIF(kLocalizedDraftsName);
     CRTFREEIF(kLocalizedTemplatesName);
     CRTFREEIF(kLocalizedUnsentName);
+    CRTFREEIF(kLocalizedJunkName);
 #ifdef MSG_FASTER_URI_PARSING
     mParsingURL = nsnull;
 #endif
@@ -234,6 +236,8 @@ nsMsgFolder::initializeStrings()
                             &kLocalizedDraftsName);
   bundle->GetStringFromName(NS_LITERAL_STRING("templatesFolderName").get(),
                             &kLocalizedTemplatesName);
+  bundle->GetStringFromName(NS_LITERAL_STRING("junkFolderName").get(),
+                            &kLocalizedJunkName);
   bundle->GetStringFromName(NS_LITERAL_STRING("unsentFolderName").get(),
                             &kLocalizedUnsentName);
   return NS_OK;
@@ -877,27 +881,22 @@ NS_IMETHODIMP nsMsgFolder::SetPrettyName(const PRUnichar *name)
   nsAutoString unicodeName(name);
 
   //Set pretty name only if special flag is set and if it the default folder name
-
   if (mFlags & MSG_FOLDER_FLAG_INBOX && unicodeName.Equals(NS_LITERAL_STRING("Inbox"), nsCaseInsensitiveStringComparator()))
     rv = SetName(kLocalizedInboxName);
-
   else if (mFlags & MSG_FOLDER_FLAG_SENTMAIL && unicodeName.Equals(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
     rv = SetName(kLocalizedSentName);
-
   //netscape webmail uses "Draft" instead of "Drafts"
   else if (mFlags & MSG_FOLDER_FLAG_DRAFTS && (unicodeName.Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()) 
                                                 || unicodeName.Equals(NS_LITERAL_STRING("Draft"), nsCaseInsensitiveStringComparator())))  
     rv = SetName(kLocalizedDraftsName);
-
   else if (mFlags & MSG_FOLDER_FLAG_TEMPLATES && unicodeName.Equals(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
     rv = SetName(kLocalizedTemplatesName);
-
   else if (mFlags & MSG_FOLDER_FLAG_TRASH && unicodeName.Equals(NS_LITERAL_STRING("Trash"), nsCaseInsensitiveStringComparator()))
     rv = SetName(kLocalizedTrashName);
-
   else if (mFlags & MSG_FOLDER_FLAG_QUEUE && unicodeName.Equals(NS_LITERAL_STRING("Unsent Messages"), nsCaseInsensitiveStringComparator()))
     rv = SetName(kLocalizedUnsentName);
-
+  else if (mFlags & MSG_FOLDER_FLAG_JUNK && unicodeName.Equals(NS_LITERAL_STRING("Junk"), nsCaseInsensitiveStringComparator()))
+    rv = SetName(kLocalizedJunkName);
   else
     rv = SetName(name);
 

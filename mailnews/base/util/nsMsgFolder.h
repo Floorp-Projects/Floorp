@@ -320,6 +320,7 @@ protected:
   static PRUnichar *kLocalizedDraftsName;
   static PRUnichar *kLocalizedTemplatesName;
   static PRUnichar *kLocalizedUnsentName;
+  static PRUnichar *kLocalizedJunkName;
   
   static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kBiffStateAtom;

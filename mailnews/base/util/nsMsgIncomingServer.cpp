@@ -1823,7 +1823,19 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   NS_ENSURE_SUCCESS(rv,rv);
   rv = SetBoolValue("moveOnSpam", moveOnSpam);
   NS_ENSURE_SUCCESS(rv,rv);
-  
+
+  PRInt32 moveTargetMode;
+  rv = mSpamSettings->GetMoveTargetMode(&moveTargetMode);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetIntValue("moveTargetMode", moveTargetMode);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLCString spamActionTargetAccount;
+  rv = mSpamSettings->GetActionTargetAccount(getter_Copies(spamActionTargetAccount));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetCharValue("spamActionTargetAccount", spamActionTargetAccount.get());
+  NS_ENSURE_SUCCESS(rv,rv);
+
   nsXPIDLCString spamActionTargetFolder;
   rv = mSpamSettings->GetActionTargetFolder(getter_Copies(spamActionTargetFolder));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1881,6 +1893,18 @@ nsMsgIncomingServer::GetSpamSettings(nsISpamSettings **aSpamSettings)
     rv = GetBoolValue("moveOnSpam", &moveOnSpam);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = mSpamSettings->SetMoveOnSpam(moveOnSpam);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRInt32 moveTargetMode;
+    rv = GetIntValue("moveTargetMode", &moveTargetMode);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetMoveTargetMode(moveTargetMode);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    nsXPIDLCString spamActionTargetAccount;
+    rv = GetCharValue("spamActionTargetAccount", getter_Copies(spamActionTargetAccount));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetActionTargetAccount(spamActionTargetAccount);    
     NS_ENSURE_SUCCESS(rv,rv);
 
     nsXPIDLCString spamActionTargetFolder;

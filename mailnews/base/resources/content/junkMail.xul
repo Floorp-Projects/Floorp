@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -71,10 +71,32 @@
 
   <separator/>
 
-  <hbox align="center">
-    <checkbox id="moveOnSpam" accesskey="&move.accesskey;" label="&move.label;"/>
-    <menulist id="actionTargetFolder"/>
-  </hbox>
+  <vbox align="start">
+    <label value="&action.label;"/>
+
+    <checkbox id="moveOnSpam" label="&move.label;"/>
+
+    <radiogroup id="moveTargetMode">
+      <grid class="specialFolderPickerGrid">
+        <columns>
+          <column flex="1"/>
+          <column flex="2"/>
+        </columns>
+        <rows>
+          <row align="center">
+            <radio id="moveTargetMode0" 
+                   value="0" label="&junkFolderOn.label;"/> 
+  	        <menulist id="actionTargetAccount" flex="1"/>
+          </row> 
+          <row align="center">
+            <radio id="moveTargetMode1" 
+	           value="1" label="&otherFolder.label;"/>
+  	        <menulist id="actionTargetFolder"/>
+          </row>
+        </rows>
+      </grid>
+    </radiogroup>
+  </vbox>
 
   <hbox autostretch="never" align="center">
     <checkbox id="purge" accesskey="&purge1.accesskey;" label="&purge1.label;"/>

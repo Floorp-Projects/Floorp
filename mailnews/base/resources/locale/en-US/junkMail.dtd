@@ -3,7 +3,7 @@
 <!ENTITY account.accesskey "A">
 <!ENTITY viewLog.label "Junk Mail Log">
 <!ENTITY viewLog.accesskey "j">
-<!ENTITY info1.label "Junk Mail Controls evaluate your incoming messages and identify those which are most likely to be junk.">
+<!ENTITY info1.label "Junk Mail Controls evaluate your incoming messages, and identify those which are most likely to be &quot;junk&quot; mail or unsolicted mail.">
 <!ENTITY info2.label "Choose a level of control below.  A high level will identify more junk mail but may identify some valid messages as junk, while a low level will identify less junk mail but is less likely to identify some valid messages as junk.">
 <!ENTITY off.label "Off">
 <!ENTITY off.accesskey "O">
@@ -17,8 +17,10 @@
 <!ENTITY high.accesskey "H">
 <!ENTITY highest.label "Highest">
 <!ENTITY highest.accesskey "s">
-<!ENTITY move.label "When messages are identitied as junk, move them to a folder:">
-<!ENTITY move.accesskey "n">
+<!ENTITY action.label "When messages are identified as junk mail:">
+<!ENTITY move.label "Move the messages to:">
+<!ENTITY otherFolder.label "Other:">
+<!ENTITY junkFolderOn.label "&quot;Junk&quot; Folder on:">
 <!ENTITY purge1.label "Automatically delete messages identified as junk after">
 <!ENTITY purge1.accesskey "u">
 <!ENTITY purge2.label "days">

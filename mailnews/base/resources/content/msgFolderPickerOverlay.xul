@@ -320,6 +320,28 @@ Rights Reserved.
     </menulist>
 
   <menulist label="&chooseaccountclickhere.label;" 
+        uri="" id="actionTargetAccount" 
+        sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+        sortDirection="ascending"
+        datasources="rdf:msgaccountmanager rdf:mailnewsfolders" 
+        ref="msgaccounts:/">
+    <template>
+      <rule nc:IsServer="true" nc:CanCreateFoldersOnServer="true">
+        <menupopup>
+          <menuitem uri="..." class="folderMenuItem menuitem-iconic" 
+                    label="rdf:http://home.netscape.com/NC-rdf#Name"
+                    oncommand="PickedMsgFolder(event.target,'actionTargetAccount')"
+                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                    IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                    CanCreateFoldersOnServer="rdf:http://home.netscape.com/NC-rdf#CanCreateFoldersOnServer"/>
+        </menupopup>
+      </rule>
+    </template>
+    <menupopup />
+  </menulist>
+
+  <menulist label="&chooseaccountclickhere.label;" 
         uri="" id="msgFccAccountPicker" 
         sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
         sortDirection="ascending"

@@ -5,14 +5,18 @@
 #include "prmem.h"
 #include "nsIFileStreams.h"
 
+#define MOVE_TARGET_MODE_JUNK_ON_ACCOUNT 0
+#define MOVE_TARGET_MODE_FOLDER          1
+
 nsSpamSettings::nsSpamSettings()
 {
   NS_INIT_ISUPPORTS();
 
   mLevel = 0;
   mMoveOnSpam = PR_FALSE;
+  mMoveTargetMode = MOVE_TARGET_MODE_JUNK_ON_ACCOUNT;
   mPurge = PR_FALSE;
-  mPurgeInterval = 15; // 15 days
+  mPurgeInterval = 14; // 14 days
   mUseWhiteList = PR_FALSE;
   mLoggingEnabled = PR_FALSE;
 }
@@ -38,6 +42,21 @@ NS_IMETHODIMP nsSpamSettings::SetLevel(PRInt32 aLevel)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsSpamSettings::GetMoveTargetMode(PRInt32 *aMoveTargetMode)
+{
+  NS_ENSURE_ARG_POINTER(aMoveTargetMode);
+  *aMoveTargetMode = mMoveTargetMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::SetMoveTargetMode(PRInt32 aMoveTargetMode)
+{
+  NS_ASSERTION((aMoveTargetMode == 0 || aMoveTargetMode == 1), "bad mode");
+  mMoveTargetMode = aMoveTargetMode;
+  return NS_OK;
+}
+
 NS_IMPL_GETSET(nsSpamSettings, LoggingEnabled, PRBool, mLoggingEnabled);
 NS_IMPL_GETSET(nsSpamSettings, MoveOnSpam, PRBool, mMoveOnSpam);
 NS_IMPL_GETSET(nsSpamSettings, Purge, PRBool, mPurge);
@@ -53,6 +72,19 @@ NS_IMETHODIMP nsSpamSettings::GetWhiteListAbURI(char * *aWhiteListAbURI)
 NS_IMETHODIMP nsSpamSettings::SetWhiteListAbURI(const char * aWhiteListAbURI)
 {
   mWhiteListAbURI = aWhiteListAbURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::GetActionTargetAccount(char * *aActionTargetAccount)
+{
+  NS_ENSURE_ARG_POINTER(aActionTargetAccount);
+  *aActionTargetAccount = ToNewCString(mActionTargetAccount);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::SetActionTargetAccount(const char * aActionTargetAccount)
+{
+  mActionTargetAccount = aActionTargetAccount;
   return NS_OK;
 }
 
@@ -263,6 +295,14 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
   rv = aSpamSettings->GetLevel(&mLevel); 
   NS_ENSURE_SUCCESS(rv,rv);
 
+  rv = aSpamSettings->GetMoveTargetMode(&mMoveTargetMode); 
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLCString actionTargetAccount;
+  rv = aSpamSettings->GetActionTargetAccount(getter_Copies(actionTargetAccount)); 
+  NS_ENSURE_SUCCESS(rv,rv);
+  mActionTargetAccount = actionTargetAccount;
+
   nsXPIDLCString actionTargetFolder;
   rv = aSpamSettings->GetActionTargetFolder(getter_Copies(actionTargetFolder)); 
   NS_ENSURE_SUCCESS(rv,rv);
@@ -275,3 +315,29 @@ NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
   
   return rv;
 }
+
+NS_IMETHODIMP nsSpamSettings::GetSpamFolderURI(char **aSpamFolderURI)
+{
+  NS_ENSURE_ARG_POINTER(aSpamFolderURI);
+  nsresult rv;
+
+  if (mMoveTargetMode == MOVE_TARGET_MODE_FOLDER)
+    return GetActionTargetFolder(aSpamFolderURI);
+
+  NS_ASSERTION(mMoveTargetMode == MOVE_TARGET_MODE_JUNK_ON_ACCOUNT, "bad mode");
+
+  // if the mode is MOVE_TARGET_MODE_JUNK_ON_ACCOUNT
+  // the spam folder URI = account uri + "/Junk"
+  nsXPIDLCString folderURI;
+  rv = GetActionTargetAccount(getter_Copies(folderURI));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // see nsMsgFolder::SetPrettyName() for where the pretty name is set.
+  folderURI.Append("/Junk");
+  *aSpamFolderURI = ToNewCString(folderURI);
+  if (!*aSpamFolderURI)
+    return NS_ERROR_OUT_OF_MEMORY;
+  else 
+    return rv;
+}
+

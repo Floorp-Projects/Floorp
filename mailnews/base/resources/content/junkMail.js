@@ -61,15 +61,24 @@ function setupForAccountFromFolder(aURI)
   serverList.selectedItem = menuitems[0];
 
   // set up the UI for this server
+  // set up the level radio group
   document.getElementById("level").selectedItem = document.getElementById("level" + obj.settings.level);
 
+  // set up the junk mail folder picker
   document.getElementById("moveOnSpam").checked = obj.settings.moveOnSpam;
+  document.getElementById("moveTargetMode").selectedItem = document.getElementById("moveTargetMode" + obj.settings.moveTargetMode);
+
+  // if there is a target account, use it.  else use the current account
+  SetFolderPicker(obj.settings.actionTargetAccount ? obj.settings.actionTargetAccount : obj.server.serverURI, "actionTargetAccount");
+  
   if (obj.settings.actionTargetFolder)
     SetFolderPicker(obj.settings.actionTargetFolder, "actionTargetFolder");
 
+  // set up the purge UI
   document.getElementById("purge").checked = obj.settings.purge;
   document.getElementById("purgeInterval").value = obj.settings.purgeInterval;
 
+  // set up the whitelist UI
   document.getElementById("useWhiteList").checked = obj.settings.useWhiteList;
   var abList = document.getElementById("whiteListAbURI");
   menuitems = abList.getElementsByAttribute("id", obj.settings.whiteListAbURI);
@@ -98,6 +107,8 @@ function storeSettings(aSettings)
   aSettings.level = document.getElementById("level").selectedItem.getAttribute("value");
 
   aSettings.moveOnSpam = document.getElementById("moveOnSpam").checked;
+  aSettings.moveTargetMode = document.getElementById("moveTargetMode").selectedItem.getAttribute("value");
+  aSettings.actionTargetAccount = document.getElementById("actionTargetAccount").getAttribute("uri");
   aSettings.actionTargetFolder = document.getElementById("actionTargetFolder").getAttribute("uri");
 
   aSettings.purge = document.getElementById("purge").checked;
@@ -109,4 +120,6 @@ function storeSettings(aSettings)
 
 function doHelpButton()
 {
+  // until we have help, I use this for testing
+  dump("XXX " + gSpamSettings[gCurrentServer.key].settings.spamFolderURI + "\n");
 }

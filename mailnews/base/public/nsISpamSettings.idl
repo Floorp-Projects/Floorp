@@ -13,7 +13,17 @@ interface nsISpamSettings: nsISupports {
   attribute long level; 
 
   attribute boolean moveOnSpam;
+  /**
+   * 0 for actionTargetAccount, 1 for actionTargetFolder
+   * most consumers will just use spamFolderURI
+   */
+  attribute long moveTargetMode;
+  attribute string actionTargetAccount;
   attribute string actionTargetFolder;
+  /**
+   * built from moveTargetMode, actionTargetAccount, actionTargetFolder
+   */
+  readonly attribute string spamFolderURI;
 
   attribute boolean purge;
   /**

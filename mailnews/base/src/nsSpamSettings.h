@@ -22,6 +22,8 @@ private:
   PRInt32 mLevel; 
 
   PRBool mMoveOnSpam;
+  PRInt32 mMoveTargetMode;
+  nsCString mActionTargetAccount;
   nsCString mActionTargetFolder;
 
   PRBool mPurge;
