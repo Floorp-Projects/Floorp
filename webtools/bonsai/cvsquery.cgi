@@ -568,11 +568,18 @@ function js_who_menu(n,extra,d) {
 }
 
 function js_file_menu(repos,dir,file,rev,branch,d) {
+    var fileName="";
     if( parseInt(navigator.appVersion) < 4 ){
         return true;
     }
+    for (var i=0;i<d.target.text.length;i++)
+    {
+        if (d.target.text.charAt(i)!=" ") {
+            fileName+=d.target.text.charAt(i);
+        }
+    }
     l = document.layers['popup'];
-    l.src="../registry/file.cgi?cvsroot="+repos+"&file="+file+"&dir="+dir+"&rev="+rev+"&branch="+branch+"&linked_text="+d.target.text;
+    l.src="../registry/file.cgi?cvsroot="+repos+"&file="+file+"&dir="+dir+"&rev="+rev+"&branch="+branch+"&linked_text="+fileName;
 
     l.top = d.target.y - 6;
     l.left = d.target.x - 6;
