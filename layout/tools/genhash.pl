@@ -92,7 +92,7 @@ while (<T>) {
 }
 
 # Print out tag name table at the end
-print "\nconst nsStaticNameTableEntry $clazz::kNameTable[] = {\n";
+print "\nconst $clazz::NameTableEntry $clazz::kNameTable[] = {\n";
 for ($i = 0; $i < $nextval; $i++) {
   $val = $vals[$i];
   $newval = $val;
