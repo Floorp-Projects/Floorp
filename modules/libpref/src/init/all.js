@@ -866,3 +866,10 @@ pref("privacy.popups.sound_url",                  "");
 pref("privacy.popups.statusbar_icon_enabled",     true);
 pref("privacy.popups.prefill_whitelist",          false);
 pref("privacy.popups.remove_blacklist",           true);
+
+// whether use prefs from system
+pref("config.use_system_prefs", false);
+
+// if the system has enabled accessibility
+pref("config.use_system_prefs.accessibility", false);
+

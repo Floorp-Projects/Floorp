@@ -26,3 +26,8 @@
 <!ENTITY jvm.name                     "Version">
 <!ENTITY jvm.home                     "Path">
 
+<!ENTITY systemPrefCaption.label           "System Preferences">
+<!ENTITY systemPrefCheck.label             "Use Preferences from System">
+<!ENTITY systemPrefCheck.accesskey         "s">
+<!ENTITY systemPrefDescription.label       "Check this item to inherit preferences from the system. The system settings will override the &brandShortName; preferences">
+

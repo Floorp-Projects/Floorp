@@ -54,6 +54,9 @@
 
 #include <nsIObserver.h>
 
+union MozPrefValue;
+struct SysPrefItem;
+
 //////////////////////////////////////////////////////////////////////////
 //
 // nsSystemPref, as an extension of mozilla pref service, reads some mozilla
@@ -81,9 +84,22 @@ public:
     nsresult Init(void);
 
 private:
-    nsresult ReadSystemPrefs();
+    // funcs used to load system prefs and save mozilla default prefs
+    nsresult UseSystemPrefs();
     nsresult ReadSystemPref(const char *aPrefName);
+    nsresult SaveMozDefaultPref(const char *aPrefName,
+                                MozPrefValue *aPrefVal,
+                                PRBool *aLocked);
+
+    // funcs used to load mozilla default prefs
+    nsresult UseMozillaPrefs();
+    nsresult RestoreMozDefaultPref(const char *aPrefName,
+                                   MozPrefValue *aPrefVal,
+                                   PRBool aLocked);
+
     nsCOMPtr<nsIPrefBranch>  mSysPrefService;
+    PRBool mEnabled;  // system pref is enabled or not
+    SysPrefItem *mSysPrefs;
 };
 
 #define NS_SYSTEMPREF_CID                  \

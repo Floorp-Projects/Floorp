@@ -591,7 +591,7 @@ GConfProxy::~GConfProxy()
     mInitialized = PR_FALSE;
 
     if (mGConfLib) {
-        PR_UnloadLibrary(mGConfLib);
+        // PR_UnloadLibrary(mGConfLib);
         mGConfLib = nsnull;
     }
     if (mObservers) {
