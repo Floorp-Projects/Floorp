@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.282 $ ';
+$::UtilsVersion = '$Revision: 1.283 $ ';
 
 package TinderUtils;
 
@@ -906,16 +906,14 @@ sub BuildIt {
         # Allow skipping of mozilla phase.
         unless ($Settings::SkipMozilla) {
           
-          # Make sure we have $Settings::moz_client_mk
-          unless (-e "$TreeSpecific::name/$Settings::moz_client_mk") {
+          # Make sure we have an up-to-date $Settings::moz_client_mk
             
-            # Set CVSROOT here.  We should only need to checkout a new
-            # version of $Settings::moz_client_mk once; we might have 
-            # more than one cvs tree so set CVSROOT here to avoid confusion.
-            $ENV{CVSROOT} = $Settings::moz_cvsroot;
+          # Set CVSROOT here.  We should only need to checkout a new
+          # version of $Settings::moz_client_mk once; we might have 
+          # more than one cvs tree so set CVSROOT here to avoid confusion.
+          $ENV{CVSROOT} = $Settings::moz_cvsroot;
             
-            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk $TreeSpecific::extrafiles");
-          }
+          run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk $TreeSpecific::extrafiles");
           
           # Create toplevel source directory.
           chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
