@@ -48,7 +48,9 @@
 #include "nsISOAPAttachments.h"
 #include "nsCOMPtr.h"
 
-class nsSOAPBlock:public nsISOAPBlock, public nsIJSNativeInitializer {
+class nsSOAPBlock : public nsISOAPBlock,
+                    public nsIJSNativeInitializer
+{
 public:
   nsSOAPBlock();
   virtual ~ nsSOAPBlock();
@@ -63,11 +65,11 @@ public:
 protected:
   nsString mNamespaceURI;
   nsString mName;
-   nsCOMPtr < nsISOAPEncoding > mEncoding;
-   nsCOMPtr < nsISchemaType > mSchemaType;
-   nsCOMPtr < nsISOAPAttachments > mAttachments;
-   nsCOMPtr < nsIDOMElement > mElement;
-   nsCOMPtr < nsIVariant > mValue;
+  nsCOMPtr<nsISOAPEncoding> mEncoding;
+  nsCOMPtr<nsISchemaType> mSchemaType;
+  nsCOMPtr<nsISOAPAttachments> mAttachments;
+  nsCOMPtr<nsIDOMElement> mElement;
+  nsCOMPtr<nsIVariant> mValue;
   nsresult mStatus;
   PRUint16 mVersion;
   PRPackedBool mComputeValue;

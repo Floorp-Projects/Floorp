@@ -48,12 +48,15 @@ nsSOAPParameter::nsSOAPParameter()
 
 NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPParameter, nsISOAPBlock,
                              nsISOAPParameter)
-    NS_IMPL_ADDREF_INHERITED(nsSOAPParameter, nsSOAPBlock)
-    NS_IMPL_RELEASE_INHERITED(nsSOAPParameter, nsSOAPBlock)
-    NS_INTERFACE_MAP_BEGIN(nsSOAPParameter)
-    NS_INTERFACE_MAP_ENTRY(nsISOAPParameter)
-    NS_IMPL_QUERY_CLASSINFO(nsSOAPParameter)
+
+NS_IMPL_ADDREF_INHERITED(nsSOAPParameter, nsSOAPBlock)
+NS_IMPL_RELEASE_INHERITED(nsSOAPParameter, nsSOAPBlock)
+
+NS_INTERFACE_MAP_BEGIN(nsSOAPParameter)
+  NS_INTERFACE_MAP_ENTRY(nsISOAPParameter)
+  NS_IMPL_QUERY_CLASSINFO(nsSOAPParameter)
 NS_INTERFACE_MAP_END_INHERITING(nsSOAPBlock)
-    nsSOAPParameter::~nsSOAPParameter()
+
+nsSOAPParameter::~nsSOAPParameter()
 {
 }

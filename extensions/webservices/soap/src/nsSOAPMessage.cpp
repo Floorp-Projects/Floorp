@@ -534,7 +534,8 @@ nsresult
     return rv;
   nsCOMPtr < nsIDOMElement > element = aFirst;
 
-//  Check for stray encodingStyle attributes.  If none found, then use empty string encoding style.
+  // Check for stray encodingStyle attributes.  If none found, then
+  // use empty string encoding style.
 
   nsAutoString style;
   for (;;) {
