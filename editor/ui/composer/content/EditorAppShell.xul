@@ -114,7 +114,7 @@
 		<titledbutton align="left" class="popup" value="Normal"/>
 		<titledbutton align="left" class="popup" value="Size"/>
 		<titledbutton align="left" class="popup" value="Color"/>
-	    <titledbutton src="chrome://editor/skin/ED_Bold.gif" align="bottom"
+	    <titledbutton src="chrome://editor/skin/images/ED_Bold.gif" align="bottom"
 	    	onclick="EditorApplyStyle('b')">
 		    <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
 	    </titledbutton>
