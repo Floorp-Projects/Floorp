@@ -917,7 +917,7 @@ Rights Reserved.
       <menuseparator/>
       <menuitem label="&searchMailCmd.label;" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages();"/>
       <menuseparator/>
-      <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://home.netscape.com/bookmark/6_0/ssearch.html')"/>
+      <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin(xlateURL('urn:clienturl:srchmenu:srchinternet'));"/>
       <menuitem label="&searchBookmarksCmd.label;" accesskey="&searchBookmarksCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable');"/>
     </menupopup>
   </menu>
