@@ -541,6 +541,17 @@ nsMsgIncomingServer::ToString(PRUnichar** aResult) {
 NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
 {
 	m_password = aPassword;
+	
+	nsresult rv;
+	PRBool rememberPassword = PR_FALSE;
+	
+	rv = GetRememberPassword(&rememberPassword);
+	if (NS_FAILED(rv)) return rv;
+
+	if (rememberPassword) {
+		rv = StorePassword();
+		if (NS_FAILED(rv)) return rv;
+	}
 
 	return NS_OK;
 }
@@ -617,6 +628,27 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 
     rv = GetPassword(aPassword);
 	return rv;
+}
+
+nsresult
+nsMsgIncomingServer::StorePassword()
+{
+    nsresult rv;
+
+    nsXPIDLCString pwd;
+    rv = GetPassword(getter_Copies(pwd));
+    if (NS_FAILED(rv)) return rv;
+
+    NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString serverUri;
+    rv = GetServerURI(getter_Copies(serverUri));
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString password = pwd;
+    rv = walletservice->SI_StorePassword((const char *)serverUri, PR_FALSE, nsnull, password.GetUnicode());
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -716,8 +748,12 @@ nsMsgIncomingServer::SetLocalPath(nsIFileSpec *spec)
 NS_IMETHODIMP
 nsMsgIncomingServer::SetRememberPassword(PRBool value)
 {
-    if (!value)
+    if (!value) {
         ForgetPassword();
+    }
+    else {
+	StorePassword();
+    }
     return SetBoolValue("remember_password", value);
 }
 

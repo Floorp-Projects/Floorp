@@ -65,6 +65,10 @@ extern PRBool
 SINGSIGN_RemoveUser
     (const char *URLName, const PRUnichar *userName, PRBool strip);
 
+extern PRBool
+SINGSIGN_StorePassword
+    (const char *URLName, const PRUnichar *userName, const PRUnichar *password, PRBool strip);
+
 extern nsresult
 SINGSIGN_HaveData(const char *url, const PRUnichar *userName, PRBool strip, PRBool *retval);
 

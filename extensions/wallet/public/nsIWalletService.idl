@@ -59,6 +59,8 @@ interface nsIWalletService : nsISupports {
   boolean PromptPasswordURL(in wstring text, out wstring pwd, in string urlname, in boolean stripUrl, in nsIPrompt dialog);
   boolean PromptURL(in wstring text, in wstring defaultText, out wstring result, in string urlname, in boolean stripUrl, in nsIPrompt dialog);
   void SI_RemoveUser(in string URLName, in boolean stripUrl, in wstring userName);
+  void SI_StorePassword(in string URLName, in boolean stripUrl, in wstring userName, in wstring pwd);
+
   boolean haveData(in string url, in wstring userName, in boolean stripUrl);
 
   [noscript] void WALLET_GetNopreviewListForViewer(in nsAutoStringRef aNopreviewList);

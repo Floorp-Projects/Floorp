@@ -129,6 +129,12 @@ NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *URLName, PRBool stri
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWalletlibService::SI_StorePassword(const char *URLName, PRBool stripUrl, const PRUnichar *userName, const PRUnichar *password) {
+  ::SINGSIGN_StorePassword(URLName, userName, password, stripUrl);
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsWalletlibService::WALLET_GetNopreviewListForViewer(nsAutoString& aNopreviewList){
   ::WLLT_GetNopreviewListForViewer(aNopreviewList);
   return NS_OK;

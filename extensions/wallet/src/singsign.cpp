@@ -911,8 +911,9 @@ si_RemoveUser(const char *URLName, nsAutoString userName, PRBool save, PRBool st
 
 PUBLIC PRBool
 SINGSIGN_RemoveUser(const char *URLName, const PRUnichar *userName, PRBool strip) {
-  return si_RemoveUser((char *)URLName, userName, PR_TRUE, strip);
+  return si_RemoveUser(URLName, nsAutoString(userName), PR_TRUE, strip);
 }
+
 
 /* Determine if a specified url/user exists */
 PRIVATE PRBool
@@ -2482,6 +2483,54 @@ si_RestoreOldSignonDataFromBrowser
     }
   }
   si_unlock_signon_list();
+}
+
+PUBLIC PRBool
+SINGSIGN_StorePassword(const char *URLName, const PRUnichar *user, const PRUnichar *password, PRBool strip) {
+  nsresult res;
+
+  nsAutoString userName(user);
+
+  /* convert URLName to a uri so we can parse out the username and hostname */
+  nsXPIDLCString host;
+  if (strip) {
+    if (URLName) {
+      nsCOMPtr<nsIURL> uri;
+      nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(uri));
+      res = uri->SetSpec(URLName);
+      if (NS_FAILED(res)) return PR_FALSE;
+
+      /* uri is of the form <scheme>://<username>:<password>@<host>:<portnumber>/<pathname>) */
+
+      /* get host part of the uri */
+      res = uri->GetHost(getter_Copies(host));
+      if (NS_FAILED(res)) {
+        return PR_FALSE;
+      }
+
+      /* if no username given, extract it from uri -- note: prehost is <username>:<password> */
+      if (userName.Length() == 0) {
+        nsXPIDLCString userName2;
+        res = uri->GetPreHost(getter_Copies(userName2));
+        if (NS_FAILED(res)) {
+          return PR_FALSE;
+        }
+        if ((const char *)userName2 && (PL_strlen((const char *)userName2))) {
+          userName = nsAutoString((const char *)userName2);
+          PRInt32 colon = userName.FindChar(':');
+          if (colon != -1) {
+            userName.Truncate(colon);
+          }
+        }
+      }
+    }
+  } else {
+    res = MangleUrl(URLName, getter_Copies(host));
+    if (NS_FAILED(res)) return PR_FALSE;
+  } 
+
+  si_RememberSignonDataFromBrowser ((const char *)host, userName, nsAutoString(password));
+  return PR_TRUE;
 }
 
 /* The following comments apply to the three prompt routines that follow

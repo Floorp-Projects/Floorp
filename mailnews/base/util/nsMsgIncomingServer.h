@@ -72,6 +72,7 @@ protected:
   nsresult getDefaultIntPref(const char *pref, PRInt32 *);
   
   nsresult CreateRootFolder();
+  nsresult StorePassword();  // stuff the password in the single signon database
 
   // pref callback to clear the user prefs
   static void clearPrefEnum(const char  *aPref, void *aClosure);

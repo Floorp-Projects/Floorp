@@ -44,7 +44,6 @@ Rights Reserved.
     </html:div>
   </box>
   <spring class="spacer"/>
-<!-- not doing remember password in the wizard for beta 1
   <box align="vertical">
     <html:div class="title">&passwordTitle.label;</html:div>
     <html:div>&savePasswordDesc.label;</html:div>
@@ -66,5 +65,4 @@ Rights Reserved.
       </html:div>
     </html:div>
   </box>
--->
 </window>
