@@ -161,8 +161,9 @@ nsLSParser::ParseURI(const nsAString & uri, nsIDOMDocument **_retval)
   NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv;
-  rv = mXMLHttpRequest->OpenRequest("GET", NS_ConvertUTF16toUTF8(uri).get(),
-                                    mIsAsync, nsnull, nsnull);
+  rv = mXMLHttpRequest->OpenRequest(NS_LITERAL_CSTRING("GET"),
+                                    NS_ConvertUTF16toUTF8(uri),
+                                    mIsAsync, EmptyString(), EmptyString());
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mXMLHttpRequest));
