@@ -604,6 +604,7 @@ nsresult nsCalendarContainer::LoadURL(const nsString& aURLSpec,
   pLayer->Init();
   pLayer->SetCurl(theURL.GetCurl());
   caluser->SetLayer(pLayer);
+  NS_RELEASE(pLayer);
 
 
   /*
@@ -630,6 +631,7 @@ nsresult nsCalendarContainer::LoadURL(const nsString& aURLSpec,
       pLayer->SetShell(shell);
       pLayer->FetchEventsByRange(&d,&d1,&EventList);
       pCalendar->addEventList(&EventList);
+      NS_RELEASE(pLayer);
     }
     break;
 

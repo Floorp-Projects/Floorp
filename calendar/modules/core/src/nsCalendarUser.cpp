@@ -118,6 +118,8 @@ nsresult nsCalendarUser::Init()
   if (NS_OK == res) 
     mpLayer->Init();
 
+  NS_RELEASE(supports);
+
   return res;
 }
 
@@ -131,7 +133,9 @@ NS_IMETHODIMP nsCalendarUser :: GetLayer(nsILayer *& aLayer)
 
 NS_IMETHODIMP nsCalendarUser :: SetLayer(nsILayer* aLayer)
 {
+  NS_IF_RELEASE(mpLayer);
   mpLayer = aLayer;
+  NS_ADDREF(mpLayer);
   return NS_OK;
 }
 

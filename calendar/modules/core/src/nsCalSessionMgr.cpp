@@ -254,6 +254,9 @@ nsresult nsCalSessionMgr::Find(CAPISession s, int iStart, int* piFound)
  */ 
 nsCalSession* nsCalSessionMgr::GetAt(int i)
 {
+  if (m_List.GetSize() == 0)
+    return nsnull;
+
   return (nsCalSession*) m_List.GetAt(i);
 }
 

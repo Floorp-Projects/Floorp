@@ -134,16 +134,19 @@ nsCalendarShell::nsCalendarShell()
 
 nsCalendarShell::~nsCalendarShell()
 {
-  mSessionMgr.GetAt(0L)->mCapi->CAPI_DestroyHandles(mCAPISession, &mCAPIHandle, 1, 0L);
+  nsCalSession * session = mSessionMgr.GetAt(0L);
+
+  if (session != nsnull)
+    session->mCapi->CAPI_DestroyHandles(mCAPISession, &mCAPIHandle, 1, 0L);
+
   Logoff();
 
   NS_IF_RELEASE(mObserverManager);
 
   if (mCAPIPassword)
     PR_Free(mCAPIPassword);
-  if (mpLoggedInUser)
-    delete mpLoggedInUser;
 
+  NS_IF_RELEASE(mpLoggedInUser);
   NS_IF_RELEASE(mDocumentContainer);
   NS_IF_RELEASE(mShellInstance);
   NS_IF_RELEASE(mCommandServer);
