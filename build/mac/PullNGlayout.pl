@@ -35,12 +35,6 @@ $pull{netlib} = 0;
 $pull{nglayout} = 0;
 $pull{mac} = 0;
 
-$build{all} = 1;
-$build{dist} = 0;
-$build{common}= 0;
-$build{nglayout}= 0;
-
-
 if ($pull{all})
 {
 	foreach $k (keys(%pull))

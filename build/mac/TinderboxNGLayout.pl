@@ -28,6 +28,7 @@ use Moz;
 # configuration variables
 
 $DEBUG = 1;
+$ALIAS_SYM_FILES = 0;
 
 $pull{all} = 0;
 $pull{lizard} = 0;
@@ -39,8 +40,13 @@ $pull{mac} = 0;
 
 $build{all} = 0;
 $build{dist} = 0;
-$build{common}= 0;
-$build{nglayout}= 0;
+$build{stubs} = 0;
+$build{common} = 0;
+$build{nglayout} = 0;
+$build{resources} = 0;
+$build{editor} = 0;
+$build{viewer} = 0;
+$build{xpapp} = 0;
 
 
 # script

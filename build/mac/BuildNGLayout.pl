@@ -27,7 +27,8 @@ use Moz;
 
 # configuration variables
 $DEBUG = 0;
-$SHARED = 0;
+$ALIAS_SYM_FILES = $DEBUG;
+
 $pull{all} = 0;
 $pull{lizard} = 0;
 $pull{xpcom} = 0;
@@ -36,10 +37,30 @@ $pull{netlib} = 0;
 $pull{nglayout} = 0;
 $pull{mac} = 0;
 
-$build{all} = 1;
-$build{dist} = 1;
-$build{common}= 1;
-$build{nglayout}= 1;
+$build{all} = 0;
+$build{dist} = 0;
+$build{stubs} = 0;
+$build{common} = 0;
+$build{nglayout} = 1;
+$build{resources} = 1;
+$build{editor} = 1;
+$build{viewer} = 1;
+$build{xpapp} = 1;
+
+if ($pull{all})
+{
+	foreach $k (keys(%pull))
+	{
+		$pull{$k} = 1;
+	}
+}
+if ($build{all})
+{
+	foreach $k (keys(%build))
+	{
+		$build{$k} = 1;
+	}
+}
 
 # do the work
 # you should not have to edit anything bellow
