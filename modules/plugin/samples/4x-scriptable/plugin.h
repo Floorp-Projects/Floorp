@@ -52,6 +52,7 @@ public:
 
   void showVersion();
   void clear();
+  void getVersion(char* *aVersion);
 
   nsI4xScriptablePlugin* getScriptablePeer();
 };

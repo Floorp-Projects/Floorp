@@ -26,4 +26,6 @@
 interface nsI4xScriptablePlugin : nsISupports {
   void showVersion();
   void clear();
+  
+  readonly attribute string version;
 };

@@ -81,8 +81,7 @@ protected:
 
 public:
   // native methods callable from JavaScript
-  NS_IMETHOD ShowVersion(); 
-  NS_IMETHOD Clear();
+  NS_DECL_NSI4XSCRIPTABLEPLUGIN
 
 protected:
   CPlugin* mPlugin;
