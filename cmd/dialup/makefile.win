@@ -29,6 +29,14 @@ install::
 	$(MAKE_INSTALL) \
 		as_html\signed\asw.jar \
 		$(DEPTH)\..\x86Dbg\asw
+#	$(MAKE_INSTALL) \
+#		as_html\metadata\html\compare.js \
+#		as_html
+!ifdef ASW_DEVMODE
+	$(MAKE_INSTALL) \
+		as_html\signed\asw.jar \
+		as_html
+!endif
 !ifdef MOZ_INSTALL_DIR
 	echo copying plugin to Communicator folder...
 	copy \
