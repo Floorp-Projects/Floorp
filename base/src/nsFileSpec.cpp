@@ -225,9 +225,33 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
     char* currentEnd = strchr(currentStart + kSkipFirst, kSeparator);
     if (currentEnd)
     {
+        nsFileSpec spec;
+
 		*currentEnd = '\0';
-		nsFileSpec spec(nsFilePath(pathCopy, PR_FALSE));
-		do
+        
+#ifdef XP_PC
+        /* 
+           if we have a drive letter path, we must make sure that the inital path has a '/' on it, or
+           Canonify will turn "/c|" into a path relative to the running executable.
+        */
+        if (pathCopy[0] == '/' && pathCopy[2] == '|')
+        {
+            char* startDir = nsFileSpecHelpers::StringDup( pathCopy, (strlen(pathCopy) + 1) );
+            strcat(startDir, "/");
+
+            spec = nsFilePath(startDir, PR_FALSE);
+		    
+            delete [] startDir;
+        }
+        else
+        {
+            spec = nsFilePath(pathCopy, PR_FALSE);
+
+        }
+#else
+        spec = nsFilePath(pathCopy, PR_FALSE);
+#endif        
+        do
 		{
 			// If the node doesn't exist, and it is not the initial node in a full path,
 			// then make a directory (We cannot make the initial (volume) node).
@@ -242,6 +266,9 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 			currentEnd = strchr(currentStart, kSeparator);
 			if (!currentEnd)
 				break;
+            
+            *currentEnd = '\0';
+
 			spec += currentStart; // "lengthen" the path, adding the next node.
 		} while (currentEnd);
     }
