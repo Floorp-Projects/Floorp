@@ -79,12 +79,18 @@ interface nsIProfileInternal : nsIProfile {
                        in wstring regOption);
     [noscript] string isRegStringSet(in wstring profileName);
     
+    void createNewProfileWithLocales(in wstring profileName,
+                          in wstring nativeProfileDir,
+                          in wstring UILocale,
+                          in wstring contentLocale,
+                          in boolean useExistingDir);
    /**
     * The remaining methods are deprecated. DO NOT USE THEM.
     */
     
     boolean isCurrentProfileAvailable();
     [noscript] void getCurrentProfileDir(out nsIFile profileDir);
+
 };
 
 #endif /* nsIProfileInternal_h__ */

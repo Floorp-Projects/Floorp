@@ -80,25 +80,6 @@ function onCancel()
   }
 }
 
-function selectLocale(langcode)
-{
-  try {
-    var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
-    if ( chromeRegistry ) {
-      chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
-    }
-    //var old_lang = chromeRegistry.getSelectedLocale("navigator");
-    //dump("\n --> createPrifleWizard.j sold_lang=" + old_lang + "--\n");	
-    chromeRegistry.selectLocale(langcode, true);
-    dump("\n --> createPrifleWizard.js langcode=" + langcode + "--\n");	
-  }
-  catch(e) {
-    dump("\n--> createPrifleWizard.js: selectLocale() failed!\n");
-    return false;
-  }
-  return true;	
-}
-
 function onFinish()
 {
 
@@ -118,12 +99,6 @@ function onFinish()
   proceed = processCreateProfileData(profName, profDir, profLang, profRegion); 
   
   if( proceed ) {
-
-    //select locale region
-    if (profRegion) {
-    selectLocale(profRegion);
-    }
-
     if( window.opener ) {
       window.opener.CreateProfile(profName, profDir);
     }
@@ -191,7 +166,7 @@ function processCreateProfileData( aProfName, aProfDir, langcode, regioncode)
       useExistingDir = true;
 
     dump("*** going to create a new profile called " + aProfName + " in folder: " + aProfDir + "\n");
-    profile.createNewProfile(aProfName, aProfDir, langcode, useExistingDir);
+    profile.createNewProfileWithLocales(aProfName, aProfDir, langcode, regioncode, useExistingDir);
 
     return true;
   }

@@ -102,7 +102,8 @@
 #define INSTALLER_CMD_LINE_ARG         "-installer"
 #define CREATE_PROFILE_CMD_LINE_ARG    "-CreateProfile"
 #define PROFILE_CMD_LINE_ARG "-P"   
-#define LANG_CMD_LINE_ARG "-lang"   
+#define UILOCALE_CMD_LINE_ARG "-UILocale"   
+#define CONTENTLOCALE_CMD_LINE_ARG "-contentLocale"   
 
 #define PREF_CONFIRM_AUTOMIGRATION     "profile.confirm_automigration"
 #define SHRIMP_PREF                    "shrimp.startup.enable"
@@ -127,6 +128,7 @@ const char* kDefaultOpenWindowParams = "centerscreen,chrome,modal,titlebar";
 #define DEBUG_profile_verbose 1
 #endif
 
+
 // ProfileAccess varaible (gProfileDataAccess) to access registry operations
 // gDataAccessInstCount is used to keep track of instance count to activate
 // destructor at the right time (count == 0)
@@ -134,8 +136,8 @@ static nsProfileAccess*    gProfileDataAccess = nsnull;
 static PRInt32          gInstanceCount = 0;
 
 // Profile database to remember which profile has been
-// created with UI lang on profileManager
-static nsHashtable *gLangProfiles = nsnull;
+// created with UILocale and contentLocale on profileManager
+static nsHashtable *gLocaleProfiles = nsnull;
 
 // Atoms for file locations
 static nsIAtom* sApp_PrefsDirectory50         = nsnull;
@@ -248,13 +250,14 @@ nsProfile::nsProfile()
     mDiskSpaceErrorQuitCalled = PR_FALSE;
     mCurrentProfileAvailable = PR_FALSE;
 
-    mIsLangSpecified = PR_FALSE;
+    mIsUILocaleSpecified = PR_FALSE;
+    mIsContentLocaleSpecified = PR_FALSE;
 
     if (gInstanceCount++ == 0) {
         
         gProfileDataAccess = new nsProfileAccess();
 
-        gLangProfiles = new nsHashtable();
+        gLocaleProfiles = new nsHashtable();
         
        // Make our directory atoms
         
@@ -303,7 +306,7 @@ nsProfile::~nsProfile()
         
       delete gProfileDataAccess;
 
-      delete gLangProfiles;
+      delete gLocaleProfiles;
 
       NS_IF_RELEASE(sApp_PrefsDirectory50);
       NS_IF_RELEASE(sApp_PreferencesFile50);
@@ -383,11 +386,13 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
         if (NS_FAILED(rv)) return rv;
     }
 
-    // check UI language is specified on profileManager, otherwise,
-    // when -lang option is specified, install the ui language
+    // check UILocale is specified on profileManager, otherwise,
+    // when -UILocale option is specified, install the UILocale
 
-    // -lang is not specified
-    if (mIsLangSpecified == PR_FALSE) return NS_OK;
+    // -UILocale or -contentLocale is not specified
+    if (mIsUILocaleSpecified == PR_FALSE && mIsContentLocaleSpecified == PR_FALSE) {
+        return NS_OK;
+    }
 
     nsCOMPtr<nsIFile> profileDir;
 
@@ -398,29 +403,52 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     rv = profileDir->GetPath(getter_Copies(pathBuf));
     if (NS_FAILED(rv)) return rv;
 
-    // -lang has been specified, but
-    // user has selected UI language and region for this profile
+    // -UILocale or -contentLocale has been specified, but
+    // user has selected UILocale and contentLocale for this profile
     // on profileManager
-    // We should use the language
+    // We should not set here
     nsCStringKey key((const char *)pathBuf);
-    if ((int)gLangProfiles->Get(&key) == PR_TRUE) {
+    if ((int)gLocaleProfiles->Get(&key) == PR_TRUE) {
+#ifdef DEBUG_profile_verbose
+        printf(" already set UILocale and contentLocale: %s\n", NS_STATIC_CAST(const char*, pathBuf));
+        printf(" will not install locale\n");
+#endif
         return NS_OK;
     }
-    gLangProfiles->Remove(&key);
+    gLocaleProfiles->Remove(&key);
 
-    // Install UI language to the profile
-    const PRUnichar* langcode = mLangName.GetUnicode() ;
-    if (langcode && nsCRT::strlen(langcode) != 0) {
-        nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID,
- &rv);
-        if (NS_SUCCEEDED(rv)) {
-            nsFileSpec fileSpec((const char *)pathBuf);
-            nsFileURL  fileURL(fileSpec);
-            const char* fileStr = fileURL.GetURLString();
-            rv = chromeRegistry->SelectLocaleForProfile(langcode,
-				NS_ConvertUTF8toUCS2(fileStr).get());
-            if (NS_FAILED(rv)) return rv;
-        }
+    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // Install to the profile
+    nsFileSpec fileSpec((const char *)pathBuf);
+    nsFileURL  fileURL(fileSpec);
+    const char* fileStr = fileURL.GetURLString();
+
+    // NEED TO FIX: when current UILocale and contentLocale are same with specified locales,
+    // we shouldn't install them again here. But chromeRegistry->GetSelectedLocale() doesn't
+    // work here properly. It always returns global and global-region of default not current
+    // profile
+    const PRUnichar* uilocale = mUILocaleName.GetUnicode() ;
+    if (uilocale && uilocale[0]) {
+#ifdef DEBUG_profile_verbose
+        nsCAutoString temp1; temp1.AssignWithConversion(uilocale);
+        printf(" install new UILocaleName: %s\n", NS_STATIC_CAST(const char*, temp1));
+#endif
+        rv = chromeRegistry->SelectLocaleForProfile(uilocale,
+                                          NS_ConvertUTF8toUCS2(fileStr).get());
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    const PRUnichar* contentlocale = mContentLocaleName.GetUnicode() ;
+    if (contentlocale && contentlocale[0]) {
+#ifdef DEBUG_profile_verbose
+        nsCAutoString temp2; temp2.AssignWithConversion(contentlocale);
+        printf(" install new mContentLocaleName: %s\n", NS_STATIC_CAST(const char*, temp2));
+#endif
+        rv = chromeRegistry->SelectLocaleForProfile(contentlocale,
+                                          NS_ConvertUTF8toUCS2(fileStr).get());
+        if (NS_FAILED(rv)) return rv;
     }
 
 #ifdef DEBUG_profile_verbose
@@ -620,23 +648,23 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #endif
  
     // check for command line arguments for profile manager
-    // -lang command
-    rv = cmdLineArgs->GetCmdLineValue(LANG_CMD_LINE_ARG, getter_Copies(cmdResult));
+    // -UILocale command
+    rv = cmdLineArgs->GetCmdLineValue(UILOCALE_CMD_LINE_ARG, getter_Copies(cmdResult));
     if (NS_SUCCEEDED(rv))
     {
         if (cmdResult) {
-	    mIsLangSpecified = PR_TRUE;
-            mLangName.AssignWithConversion(cmdResult);
+	    mIsUILocaleSpecified = PR_TRUE;
+            mUILocaleName.AssignWithConversion(cmdResult);
+        }
+    }
 
-            // update global locale if possible
-            // (in case when user-*.rdf can be updated)
-            // profilemanager will be invoked in the UI language
-            nsresult rv = NS_OK;
-            nsCOMPtr<nsIChromeRegistry> chromeRegistry =
-                do_GetService(kChromeRegistryCID, &rv);
-            if (NS_SUCCEEDED(rv)) {
-                rv = chromeRegistry->SelectLocale(mLangName.GetUnicode(), PR_FALSE);
-            }
+    // -contentLocale command
+    rv = cmdLineArgs->GetCmdLineValue(CONTENTLOCALE_CMD_LINE_ARG, getter_Copies(cmdResult));
+    if (NS_SUCCEEDED(rv))
+    {
+        if (cmdResult) {
+            mIsContentLocaleSpecified = PR_TRUE;
+            mContentLocaleName.AssignWithConversion(cmdResult);
         }
     }
 
@@ -1278,12 +1306,12 @@ nsresult nsProfile::SetProfileDir(const PRUnichar *profileName, nsIFile *profile
     return rv;
 }
 
-
-// Creates a new profile
+// Creates a new profile with UILocale and contentLocale
 NS_IMETHODIMP 
-nsProfile::CreateNewProfile(const PRUnichar* profileName, 
+nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName, 
                             const PRUnichar* nativeProfileDir,
-                            const PRUnichar* langcode,
+                            const PRUnichar* aUILocale,
+                            const PRUnichar* aContentLocale,
                             PRBool useExistingDir)
 {
     NS_ENSURE_ARG_POINTER(profileName);   
@@ -1292,7 +1320,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
 
 #if defined(DEBUG_profile)
     {
-      printf("ProfileManager : CreateNewProfile\n");
+      printf("ProfileManager : CreateNewProfileWithLocales\n");
 
       nsCAutoString temp1; temp1.AssignWithConversion(profileName);
       printf("Profile Name: %s\n", NS_STATIC_CAST(const char*, temp1));
@@ -1370,34 +1398,97 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
     rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, getter_AddRefs(profDefaultsDir));
     if (NS_FAILED(rv)) return rv;
 
-    if (langcode && nsCRT::strlen(langcode) != 0) {
-        // caller prefers locale subdir
-        nsCOMPtr<nsIFile> locProfDefaultsDir;
-        rv = profDefaultsDir->Clone(getter_AddRefs(locProfDefaultsDir));
-        if (NS_FAILED(rv)) return rv;
-        
-        locProfDefaultsDir->AppendUnicode(langcode);
-        rv = locProfDefaultsDir->Exists(&exists);
-        if (NS_SUCCEEDED(rv) && exists) {
-            profDefaultsDir = locProfDefaultsDir; // transfers ownership
+    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+
+        const PRUnichar* uiLocale = aUILocale;
+        const PRUnichar* contentLocale = aContentLocale;
+        nsXPIDLString currentUILocaleName;
+        nsXPIDLString currentContentLocaleName;
+
+        // When aUILocale == null or aContentLocale == null, set those from default values
+        // which are from default or from command line options
+
+        // This fallback is for CreateNewProfile() of CreateDefaultProfile() and ProcessArgs()
+        // Those functions call CreateNewProfile(locale=null). We should consider default values
+        // or specified values of locales for CreateDefaultProfile() and ProcessArgs().
+
+        // We can get preferred UILocale and contentLocale (specified -UILocale and -contentLocale)
+        // by GetSelectedLocale() which is done in nsAppRunner.cpp::InstallGlobalLocale()
+
+        if (!aUILocale || !aUILocale[0]) {
+            rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global").get(),
+                                           getter_Copies(currentUILocaleName));
+            if (NS_SUCCEEDED(rv)) {
+                uiLocale = currentUILocaleName.get();
+            }
         }
 
-        nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            nsXPIDLCString  pathBuf;
-            rv = profileDir->GetPath(getter_Copies(pathBuf));
-            NS_ENSURE_SUCCESS(rv, rv);
-            nsFileSpec fileSpec((const char *)pathBuf);
-            nsFileURL  fileURL(fileSpec);
-            const char* fileStr = fileURL.GetURLString();
-            rv = chromeRegistry->SelectLocaleForProfile(langcode, 
+        if (!aContentLocale || !aContentLocale[0]) {
+            rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(),
+                                           getter_Copies(currentContentLocaleName));
+            if (NS_SUCCEEDED(rv)) {
+                contentLocale = currentContentLocaleName.get();
+            }
+        }
+
+#if defined(DEBUG_profile_verbose)
+        nsCAutoString temp1; temp1.AssignWithConversion(uiLocale);
+        printf(" uiLocale=%s\n", NS_STATIC_CAST(const char*, temp1));
+
+        nsCAutoString temp2; temp2.AssignWithConversion(contentLocale);
+        printf(" contentLocale=%s\n", NS_STATIC_CAST(const char*, temp2));
+#endif
+
+        nsXPIDLCString  pathBuf;
+        rv = profileDir->GetPath(getter_Copies(pathBuf));
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsFileSpec fileSpec((const char *)pathBuf);
+        nsFileURL  fileURL(fileSpec);
+        const char* fileStr = fileURL.GetURLString();
+
+        if (uiLocale && uiLocale[0]) {
+            rv = chromeRegistry->SelectLocaleForProfile(uiLocale, 
                                                         NS_ConvertUTF8toUCS2(fileStr).get());
-            // Remeber which profile has been created with UI language
+            // Remember which profile has been created with the UILocale
             // didn't use gProfileDataAccess because just needed one time
-            nsCStringKey key((const char *)pathBuf);
-            gLangProfiles->Put(&key, (void*)PR_TRUE);
+            if (NS_SUCCEEDED(rv)) {
+                nsCStringKey key((const char *)pathBuf);
+                gLocaleProfiles->Put(&key, (void*)PR_TRUE);
+            }
+        }
+
+        if (contentLocale && contentLocale[0]) {
+            // caller prefers locale subdir
+            nsCOMPtr<nsIFile> locProfDefaultsDir;
+            rv = profDefaultsDir->Clone(getter_AddRefs(locProfDefaultsDir));
+            if (NS_FAILED(rv)) return rv;
+        
+            locProfDefaultsDir->AppendUnicode(contentLocale);
+            rv = locProfDefaultsDir->Exists(&exists);
+            if (NS_SUCCEEDED(rv) && exists) {
+                profDefaultsDir = locProfDefaultsDir; // transfers ownership
+#if defined(DEBUG_profile_verbose)
+                nsXPIDLString profilePath;
+                rv = profDefaultsDir->GetUnicodePath(getter_Copies(profilePath));
+                if (NS_SUCCEEDED(rv)) {
+                    nsCAutoString temp5; temp5.AssignWithConversion(profilePath);
+                    printf(" profDefaultsDir is set to: %s\n", NS_STATIC_CAST(const char*, temp5));
+                }
+#endif
+            }
+
+            rv = chromeRegistry->SelectLocaleForProfile(contentLocale, 
+                                                        NS_ConvertUTF8toUCS2(fileStr).get());
+            // Remember which profile has been created with the UILocale
+            // didn't use gProfileDataAccess because just needed one time
+            if (NS_SUCCEEDED(rv)) {
+                nsCStringKey key((const char *)pathBuf);
+                gLocaleProfiles->Put(&key, (void*)PR_TRUE);
+            }
         }
     }
+
     // Copy contents from defaults folder.
     rv = profDefaultsDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && exists && (!useExistingDir))
@@ -1410,6 +1501,20 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
     
     return NS_OK;
 }	
+
+
+// Rename a old profile to new profile.
+// Copies all the keys from old profile to new profile.
+
+// Creates a new profile
+NS_IMETHODIMP 
+nsProfile::CreateNewProfile(const PRUnichar* profileName, 
+                            const PRUnichar* nativeProfileDir,
+                            const PRUnichar* langcode,
+                            PRBool useExistingDir)
+{
+    return CreateNewProfileWithLocales(profileName,nativeProfileDir,langcode,nsnull,useExistingDir);
+}
 
 
 // Rename a old profile to new profile.

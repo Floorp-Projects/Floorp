@@ -92,6 +92,10 @@
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
+static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
+
+#define UILOCALE_CMD_LINE_ARG "-UILocale"
+#define CONTENTLOCALE_CMD_LINE_ARG "-contentLocale"
 
 extern "C" void ShowOSAlert(char* aMessage);
 
@@ -131,6 +135,9 @@ static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); } } gI
 
 // Initialize profile services for both standalone and regular profiles
 static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs);
+
+// Install global locale if possible
+static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs);
 
 class stTSMCloser
 {
@@ -769,6 +776,35 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
   return rv;
 }
 
+// update global locale if possible (in case when user-*.rdf can be updated)
+// so that any apps after this can be invoked in the UILocale and contentLocale
+static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        nsXPIDLCString cmdUI;
+        rv = cmdLineArgs->GetCmdLineValue(UILOCALE_CMD_LINE_ARG, getter_Copies(cmdUI));
+        if (NS_SUCCEEDED(rv)){
+            if (cmdUI) {
+                nsAutoString UILocaleName;
+                UILocaleName.AssignWithConversion(cmdUI);
+                rv = chromeRegistry->SelectLocale(UILocaleName.GetUnicode(), PR_FALSE);
+            }
+        }
+        nsXPIDLCString cmdContent;
+        rv = cmdLineArgs->GetCmdLineValue(CONTENTLOCALE_CMD_LINE_ARG, getter_Copies(cmdContent));
+        if (NS_SUCCEEDED(rv)){
+            if (cmdContent) {
+                nsAutoString ContentLocaleName;
+                ContentLocaleName.AssignWithConversion(cmdContent);
+                rv = chromeRegistry->SelectLocale(ContentLocaleName.GetUnicode(), PR_FALSE);
+            }
+        }
+    }
+    return NS_OK;
+}
+
 // Do the righe thing to provide locations depending on whether an
 // application is standalone or not 
 static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
@@ -1000,7 +1036,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 //  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF);
 #endif
 
-
 #ifndef XP_MAC
   // Unbuffer debug output (necessary for automated QA performance scripts).
   setbuf( stdout, 0 );
@@ -1077,6 +1112,10 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     PrintUsage();
     return rv;
   }
+
+  rv = InstallGlobalLocale(cmdLineArgs);
+  if(NS_FAILED(rv))
+    return rv;
 
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID, &rv));
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get the appshell service");
@@ -1220,7 +1259,8 @@ static void DumpHelp(char *appname)
   printf("%s-ProfileWizard%sStart with profile wizard.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-SelectProfile%sStart with profile selection dialog.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-lang <lang-region>%sStart with <lang-region> resources.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-UILocale <locale>%sStart with <locale> resources as UI Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-contentLocale <locale>%sStart with <locale> resources as content Locale.\n",HELP_SPACER_1,HELP_SPACER_2);
 #ifdef XP_WIN32
   printf("%s-console%sStart Mozilla with a debugging console.\n",HELP_SPACER_1,HELP_SPACER_2);
 #endif
