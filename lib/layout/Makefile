@@ -65,7 +65,7 @@ endif
 
 include $(DEPTH)/config/config.mk
 
-ifdef EDITOR
+ifdef MOZ_EDITOR
 CSRCS		+= layedit.c \
 		  layfree.c \
 		  layimage.c \
