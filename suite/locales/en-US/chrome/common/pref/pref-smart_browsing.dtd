@@ -1,7 +1,8 @@
 <!-- extracted from content/pref-smart_browsing.xul -->
 
 <!ENTITY  title.label "Smart Browsing">
-<!ENTITY  smartHeader.label "What's Related">
+<!ENTITY  lHeader "What's Related">
+<!ENTITY  rHeader "Configure browsing aids">
 <!ENTITY  enableRelatedRadio.label "Enable 'What's Related'">
 <!ENTITY  autoDecp.label "Automatically load 'Whats Related' information">
 <!ENTITY  neverRadio "Never">
