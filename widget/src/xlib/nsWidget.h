@@ -103,6 +103,8 @@ public:
   NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
   NS_IMETHOD              PreCreateWidget(nsWidgetInitData *aInitData);
+  NS_IMETHOD              SetBounds(const nsRect &aRect);
+  NS_IMETHOD              GetRequestedBounds(nsRect &aRect);
 
 #ifdef DEBUG
   void                    DebugPrintEvent(nsGUIEvent & aEvent,Window aWindow);
@@ -159,8 +161,8 @@ protected:
   // there's no geometry information here because that should be in the mBounds
   // in the widget
   void WidgetPut        (nsWidget *aWidget);
-  void WidgetMove       (nsWidget *aWidget, PRInt32 aX, PRInt32 aY);
-  void WidgetMoveResize (nsWidget *aWidget, PRInt32 aX, PRInt32 aY);
+  void WidgetMove       (nsWidget *aWidget);
+  void WidgetMoveResize (nsWidget *aWidget);
   void WidgetResize     (nsWidget *aWidget);
   void WidgetShow       (nsWidget *aWidget);
   // check to see whether or not a rect will intersect with the current scrolled area
@@ -186,6 +188,7 @@ protected:
   GC             mGC;             // until we get gc pooling working...
   nsString       mName;           // name of the type of widget
   PRBool         mIsToplevel;
+  nsRect         mRequestedSize;
 
 private:
   static       nsHashtable *          gsWindowList;

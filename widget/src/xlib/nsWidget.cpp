@@ -188,6 +188,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   }
   // set the bounds
   mBounds = aRect;
+  mRequestedSize = aRect;
 
 
 #ifdef TOOLKIT_EXORCISM
@@ -233,8 +234,10 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Move(x, y)\n"));
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY));
+  mRequestedSize.x = aX;
+  mRequestedSize.y = aY;
   if (mParentWidget) {
-    ((nsWidget*)mParentWidget)->WidgetMove(this, aX, aY);
+    ((nsWidget*)mParentWidget)->WidgetMove(this);
   } else {
     XMoveWindow(mDisplay, mBaseWindow, aX, aY);
   }
@@ -256,8 +259,8 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth,
     aHeight = 1;
   }
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight));
-  mBounds.width = aWidth;
-  mBounds.height = aHeight;
+  mRequestedSize.width = mBounds.width = aWidth;
+  mRequestedSize.height = mBounds.height = aHeight;
   if (mParentWidget) {
     ((nsWidget *)mParentWidget)->WidgetResize(this);
   } else {
@@ -294,10 +297,12 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aX,
          ("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight));
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
          ("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY));
-  mBounds.width = aWidth;
-  mBounds.height = aHeight;
+  mRequestedSize.x = aX;
+  mRequestedSize.y = aY;
+  mRequestedSize.width = mBounds.width = aWidth;
+  mRequestedSize.height = mBounds.height = aHeight;
   if (mParentWidget) {
-    ((nsWidget *)mParentWidget)->WidgetMoveResize(this, aX, aY);
+    ((nsWidget *)mParentWidget)->WidgetMoveResize(this);
   } else {
     XMoveResizeWindow(mDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
   }
@@ -684,8 +689,8 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
           mBaseWindow, aParent, (mIsToplevel ? "TopLevel" : "")));
   // XXX when we stop getting lame values for this remove it.
   // sometimes the dimensions have been corrected by the code above.
-  mBounds.height = height;
-  mBounds.width = width;
+  mRequestedSize.height = mBounds.height = height;
+  mRequestedSize.width = mBounds.width = width;
   // add the callback for this
   AddWindowCallback(mBaseWindow, this);
 }
@@ -962,13 +967,13 @@ void nsWidget::WidgetPut(nsWidget *aWidget)
   
 }
 
-void nsWidget::WidgetMove(nsWidget *aWidget, PRInt32 aX, PRInt32 aY)
+void nsWidget::WidgetMove(nsWidget *aWidget)
 {
   PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetMove()\n"));
-  if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
+  if (PR_TRUE == WidgetVisible(aWidget->mRequestedSize)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
     XMoveWindow(aWidget->mDisplay, aWidget->mBaseWindow,
-                aX, aY);
+                aWidget->mRequestedSize.x, aWidget->mRequestedSize.y);
     if (aWidget->mIsShown == PR_TRUE) {
       PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
       aWidget->Map();
@@ -985,11 +990,11 @@ void nsWidget::WidgetResize(nsWidget *aWidget)
 {
   PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetResize()\n"));
   // note that we do the resize before a map.
-  if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
+  if (PR_TRUE == WidgetVisible(aWidget->mRequestedSize)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
     XResizeWindow(aWidget->mDisplay, aWidget->mBaseWindow,
-                  aWidget->mBounds.width,
-                  aWidget->mBounds.height);
+                  aWidget->mRequestedSize.width,
+                  aWidget->mRequestedSize.height);
     if (aWidget->mIsShown == PR_TRUE) {
       PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
       aWidget->Map();
@@ -1002,16 +1007,16 @@ void nsWidget::WidgetResize(nsWidget *aWidget)
   }
 }
 
-void nsWidget::WidgetMoveResize(nsWidget *aWidget, PRInt32 aX, PRInt32 aY)
+void nsWidget::WidgetMoveResize(nsWidget *aWidget)
 {
   PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetMoveResize()\n"));
-  if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
+  if (PR_TRUE == WidgetVisible(aWidget->mRequestedSize)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
     XResizeWindow(aWidget->mDisplay,
                   aWidget->mBaseWindow,
-                  aWidget->mBounds.width, aWidget->mBounds.height);
+                  aWidget->mRequestedSize.width, aWidget->mRequestedSize.height);
     XMoveWindow(aWidget->mDisplay, aWidget->mBaseWindow,
-                aX, aY);
+                aWidget->mRequestedSize.x, aWidget->mRequestedSize.y);
     if (aWidget->mIsShown == PR_TRUE) {
       PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
       aWidget->Map();
@@ -1026,7 +1031,7 @@ void nsWidget::WidgetMoveResize(nsWidget *aWidget, PRInt32 aX, PRInt32 aY)
 
 void nsWidget::WidgetShow(nsWidget *aWidget)
 {
-  if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
+  if (PR_TRUE == WidgetVisible(aWidget->mRequestedSize)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
     aWidget->Map();
   }
@@ -1040,8 +1045,8 @@ PRBool nsWidget::WidgetVisible(nsRect &aBounds)
   nsRect scrollArea;
   scrollArea.x = 0;
   scrollArea.y = 0;
-  scrollArea.width = mBounds.width + 1;
-  scrollArea.height = mBounds.height + 1;
+  scrollArea.width = mRequestedSize.width + 1;
+  scrollArea.height = mRequestedSize.height + 1;
   if (scrollArea.Intersects(aBounds)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetVisible(): widget is visible\n"));
     return PR_TRUE;
@@ -1114,4 +1119,16 @@ nsWidget::SetUpWMHints(void) {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Setting up wm hints for window 0x%lx\n",
                                        mBaseWindow));
   XSetWMProtocols(mDisplay, mBaseWindow, WMProtocols, 2);
+}
+
+NS_METHOD nsWidget::SetBounds(const nsRect &aRect)
+{
+  mRequestedSize = aRect;
+  return nsBaseWidget::SetBounds(aRect);
+}
+
+NS_METHOD nsWidget::GetRequestedBounds(nsRect &aRect)
+{
+  aRect = mRequestedSize;
+  return NS_OK;
 }
