@@ -114,6 +114,7 @@ static long getSystemVersion()
     return version;
 }
 
+extern "C"
 nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const char *aClassName, const char *aContractID, nsIFactory **aFactory)
 {
     nsresult result = NS_OK;
