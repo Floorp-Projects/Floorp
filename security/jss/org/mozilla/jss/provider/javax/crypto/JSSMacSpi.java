@@ -81,7 +81,7 @@ class JSSMacSpi extends javax.crypto.MacSpi {
         SecretKeyFacade facade = (SecretKeyFacade)key;
         digest.initHMAC(facade.key);
       } catch(DigestException de) {
-        throw new InvalidAlgorithmParameterException(
+        throw new InvalidKeyException(
             "DigestException: " + de.getMessage());
       }
     }
