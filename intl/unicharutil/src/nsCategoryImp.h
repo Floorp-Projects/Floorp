@@ -38,7 +38,7 @@
 #ifndef nsCategoryImp_h__
 #define nsCategoryImp_h__
 
-#include "nsCom.h"
+#include "nscore.h"
 #include "nsISupports.h"
 #include "nsIUGenCategory.h"
 

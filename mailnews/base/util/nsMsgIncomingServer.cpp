@@ -38,7 +38,6 @@
 
 #include "nsMsgIncomingServer.h"
 #include "nscore.h"
-#include "nsCom.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"

@@ -40,7 +40,7 @@
 
 
 
-#include "nsCom.h"
+#include "nscore.h"
 #include "nsISupports.h"
 
 #include "nsILineBreakerFactory.h"

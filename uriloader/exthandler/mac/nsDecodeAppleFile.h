@@ -38,7 +38,6 @@
 #ifndef nsDecodeAppleFile_h__
 #define nsDecodeAppleFile_h__
 
-#include "nsCom.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"

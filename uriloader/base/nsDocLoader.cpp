@@ -48,7 +48,7 @@
 
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
-#include "nsCom.h"
+#include "nscore.h"
 #include "nsWeakPtr.h"
 
 #include "nsIDOMWindow.h"

@@ -39,7 +39,7 @@
 #define nsVector_h__
 
 #include "plvector.h"
-#include "nsCom.h"
+#include "nscore.h"
 
 class nsVector : public PLVector {
 public:

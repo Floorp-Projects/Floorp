@@ -38,7 +38,6 @@
 #ifndef __nsMsgAppCore_h
 #define __nsMsgAppCore_h
 
-#include "nsCom.h"
 #include "nscore.h"
 #include "nsIMessenger.h"
 #include "nsCOMPtr.h"
