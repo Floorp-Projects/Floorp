@@ -111,8 +111,6 @@ public class GeneralFrame extends JFrame
 
   private LAFListener     fLAFListener;
   private Properties      prop;
-  private Hashtable       widgets = new Hashtable();
-  private Hashtable       groups = new Hashtable();
 
   static Vector fFrameList = new Vector();
   static boolean sExternalShell = false;
@@ -271,15 +269,16 @@ public class GeneralFrame extends JFrame
    * @param file the XML file to build the menu from
    * @return a menubar built from the file
    */
-  protected JMenuBar buildMenu(String file) {
+  protected JMenuBar buildMenu(String file, UIAction[] actions) {
     JMenuBar menubar = null;
     URL url;
-    XMLMenuBuilder builder = new XMLMenuBuilder();
+    XMLMenuBuilder builder = 
+      new XMLMenuBuilder(this, actions);
 
     try {
       url = getClass().getResource(file);
       builder.buildFrom(url.openStream());
-      menubar = (JMenuBar)builder.getComponent();
+      menubar = builder.getComponent();
     } catch (Throwable t) {
       t.printStackTrace();
     }

@@ -182,7 +182,8 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     layoutPanels(layout);
 
-    fMenu = buildMenu("menus.xml");
+    fMenu = buildMenu("menus.xml",  
+                      Util.MergeActions(actions, Util.MergeActions(fFolders.getActions(), Util.MergeActions(fThreads.getActions(), fMessage.getActions()))));
 
     getRootPane().setJMenuBar(fMenu);
 
@@ -218,30 +219,6 @@ class UnifiedMessageFrame extends GeneralFrame {
     saveBounds();
 
     Preferences prefs = PreferencesFactory.Get();
-
-    String masterWeight = "1.0";
-    String folderWeight = "2.0";
-    String messageWeight = "2.0";
-    String splitWeight = "1.0";
-
-    // XXX store dimensions into preferences. NYI --giao
-    /*
-    if (fLayout.equals(UnifiedMessageDisplayManager.STACKED)) {
-      // masterWeight = splitter1.getWeight(fFolders).toString();
-      // folderWeight = splitter1.getWeight(fThreads).toString();
-      // messageWeight = splitter1.getWeight(fMessage).toString();
-    } else if (fLayout.equals(UnifiedMessageDisplayManager.SPLIT_RIGHT)) {
-      // masterWeight = splitter1.getWeight(fFolders).toString();
-      // folderWeight = splitter2.getWeight(fThreads).toString();
-      // messageWeight = splitter2.getWeight(fMessage).toString();
-      // splitWeight = splitter1.getWeight(splitter2).toString();
-    } else {
-      // masterWeight = splitter2.getWeight(fFolders).toString();
-      // folderWeight = splitter2.getWeight(fThreads).toString();
-      // messageWeight = splitter1.getWeight(fMessage).toString();
-      // splitWeight = splitter1.getWeight(splitter2).toString();
-    }
-    */
 
     prefs.putString("mail.multi_pane.folder_x",
 		    Integer.toString(fFolders.getSize().width));
@@ -284,32 +261,29 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     // read dimensions out of preferences
     try {
-      folderX = 
+      int tx, ty, fx, fy; // temporary dimensions
+      fx = 
 	Integer.parseInt(prefs.getString("mail.multi_pane.folder_x", 
 					 Integer.toString(folderX)));
-    } catch (NumberFormatException nf_fx) {}
-
-    try {
-      folderY =
+      fy =
 	Integer.parseInt(prefs.getString("mail.multi_pane.folder_y",
 					 Integer.toString(folderY)));
-    } catch (NumberFormatException nf_fy) {}
-
-    try {
-      threadX = 
+      tx = 
 	Integer.parseInt(prefs.getString("mail.multi_pane.thread_x",
 					 Integer.toString(threadX)));
-    } catch (NumberFormatException nf_tx) {}
-
-    try {
-      threadY =
+      ty =
 	Integer.parseInt(prefs.getString("mail.multi_pane.thread_y",
 					 Integer.toString(threadY)));
-    } catch (NumberFormatException nf_ty) {}
+      folderX = fx;
+      folderY = fy;
+      threadX = tx;
+      threadY = ty;
+      // if the try bails, we use default
+    } catch (NumberFormatException nf_ty) { 
+      nf_ty.printStackTrace();
+    }
 
 
-    prefs.getString("mail.multi_pane.folder_y",
-		    Integer.toString(folderY));
     if (layout.equals(UnifiedMessageDisplayManager.STACKED)) {
       splitter1.setOrientation(JSplitPane.VERTICAL_SPLIT);
       splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -319,8 +293,8 @@ class UnifiedMessageFrame extends GeneralFrame {
       splitter2.setTopComponent(fThreads);
       splitter2.setBottomComponent(fMessage);
 
-      fFolders.setPreferredSize(new Dimension(folderX, 100));
-      fThreads.setPreferredSize(new Dimension(threadX, 100));
+      fFolders.setPreferredSize(new Dimension(folderX, folderY));
+      fThreads.setPreferredSize(new Dimension(threadX, threadY));
 
       //      fStackedLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_LEFT)) {

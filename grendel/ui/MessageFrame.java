@@ -56,8 +56,10 @@ public class MessageFrame extends GeneralFrame {
     fPanel.add(fMessagePanel);
     //    fMenu = buildMenu("messageMain", Util.MergeActions(actions,
     //                                           fMessagePanel.getActions()));
-    fMenu = buildMenu("menus.xml");
-    getRootPane().setMenuBar(fMenu);
+    fMenu = buildMenu("menus.xml", 
+                      Util.MergeActions(actions,
+                                        fMessagePanel.getActions()));
+    getRootPane().setJMenuBar(fMenu);
 
     fToolBar = fMessagePanel.getToolBar();
     //    fToolBar.addItem(ToolbarFactory.MakeINSToolbarItem(ToolBarLayout.CreateSpring(),
@@ -126,6 +128,6 @@ public class MessageFrame extends GeneralFrame {
     return null;
   }
 
-  Object actions[] = { ActionFactory.GetExitAction(),
+  UIAction actions[] = { ActionFactory.GetExitAction(),
                        ActionFactory.GetComposeMessageAction() };
 }

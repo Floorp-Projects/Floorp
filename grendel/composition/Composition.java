@@ -84,9 +84,10 @@ public class Composition extends GeneralFrame {
         //create menubar (top)
         //  fMenu = buildMenu("mainMenubar",
         //                  mCompositionPanel.getActions());
-        fMenu = buildMenu("menus.xml");
+        fMenu = buildMenu("menus.xml",
+                          mCompositionPanel.getActions());
 
-        getRootPane().setMenuBar(fMenu);
+        getRootPane().setJMenuBar(fMenu);
 
         fToolBar = mCompositionPanel.getToolBar();
         fToolBar.add(fToolBar.makeNewSpring());
@@ -122,7 +123,7 @@ public class Composition extends GeneralFrame {
         //mCompositionPanel.add(BorderLayout.NORTH, mAddressBar);
         fPanel.add(mCompositionPanel);
 
-        restoreBounds();
+        restoreBounds();	
     }
 
     public void dispose() {
