@@ -1273,11 +1273,19 @@ NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, cons
 
 NS_IMETHODIMP  nsImapIncomingServer::FolderIsNoSelect(const char *aFolderName, PRBool *result) 
 {
-	if (!result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = PR_FALSE;
-	return NS_OK;
+   if (!result)
+      return NS_ERROR_NULL_POINTER;   
+   nsCOMPtr<nsIMsgFolder> msgFolder;
+   nsresult rv = GetFolder(aFolderName, getter_AddRefs(msgFolder));
+   if (NS_SUCCEEDED(rv) && msgFolder)
+   {
+     PRUint32 flags;
+     msgFolder->GetFlags(&flags);
+     *result = ((flags & MSG_FOLDER_FLAG_IMAP_NOSELECT) != 0);
+   }
+   else
+     *result = PR_FALSE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::SetFolderAdminURL(const char *aFolderName, const char *aFolderAdminUrl)
