@@ -111,6 +111,23 @@ struct nsStyleSpacing: public nsStyleStruct {
   PRUint8       mBorderStyle[4];  // See nsStyleConsts.h
   nscolor       mBorderColor[4];
 
+  void InvalidateMarginCache() {
+    mHasCachedMargin = PR_FALSE;
+  }
+
+  void InvalidateBorderCache() {
+    mHasCachedBorder = PR_FALSE;
+  }
+
+  void InvalidatePaddingCache() {
+    mHasCachedPadding = PR_FALSE;
+  }
+
+  void InvalidateBorderPaddingCache() {
+    mHasCachedBorder = PR_FALSE;
+    mHasCachedPadding = PR_FALSE;
+  }
+
   void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
   void CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const;
   void CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const;
