@@ -384,8 +384,6 @@ nsCommandLine::ResolveURI(const nsAString& aArgument, nsIURI* *aResult)
 {
   nsresult rv;
 
-  NS_ENSURE_TRUE(mWorkingDir, NS_ERROR_NOT_INITIALIZED);
-
   // First, we try to init the argument as an absolute file path. If this doesn't
   // work, it is an absolute or relative URI.
 
@@ -400,8 +398,9 @@ nsCommandLine::ResolveURI(const nsAString& aArgument, nsIURI* *aResult)
   }
 
   nsCOMPtr<nsIURI> workingDirURI;
-  rv = io->NewFileURI(mWorkingDir, getter_AddRefs(workingDirURI));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (mWorkingDir) {
+    io->NewFileURI(mWorkingDir, getter_AddRefs(workingDirURI));
+  }
 
   return io->NewURI(NS_ConvertUTF16toUTF8(aArgument),
                     nsnull,
