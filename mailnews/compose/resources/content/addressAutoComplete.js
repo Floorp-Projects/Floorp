@@ -1,5 +1,5 @@
 var AddressAutoCompleteListener = {
-	OnAutoCompleteResult: function(aItem, aOriginalString, aMatch) {
+	onAutoCompleteResult: function(aItem, aOriginalString, aMatch) {
 		dump("aItem = " + aItem + "\n");
 
 		if ( aItem )
@@ -39,5 +39,5 @@ function AutoCompleteAddress(inputElement)
 		ac = ac.QueryInterface(Components.interfaces.nsIAutoCompleteSession);
 	}
 
-	ac.AutoComplete(inputElement, inputElement.value, AddressAutoCompleteListener);
+	ac.autoComplete(inputElement, inputElement.value, AddressAutoCompleteListener);
 }
