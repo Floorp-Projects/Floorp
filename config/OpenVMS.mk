@@ -52,8 +52,12 @@ endif
 
 # This is where our Sharable Image trickery goes.
 AS		= vmsas $(OS_CFLAGS)
-LD		= vmsld MODULE=$(LIBRARY_NAME) DIST=$(DIST) \
-		  DISTNSPR=$(subst -L/,/,$(NSPR_LIBS:-l%=)) $(OS_LDFLAGS)
+ifdef IS_COMPONENT
+OS_LDFLAGS	+= IS_COMPONENT SRCDIR=$(srcdir)
+endif
+OS_LDFLAGS	+= MODULE=$(LIBRARY_NAME) DIST=$(DIST) \
+		  DISTNSPR=$(subst -L/,/,$(NSPR_LIBS:-l%=))
+LD		= vmsld $(OS_LDFLAGS)
 DSO_LDOPTS	=
 EXTRA_DSO_LDOPTS+= $(EXTRA_LIBS)
 MKSHLIB		= $(LD)
