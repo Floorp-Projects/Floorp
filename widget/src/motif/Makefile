@@ -44,6 +44,7 @@ EXTRA_DSO_LDOPTS+= -lXm -lXt -lX11 -lm
 endif
 
 CPPSRCS= \
+        nsWidgetSupport.cpp \
         nsObject.cpp \
 	nsWindow.cpp \
 	nsComboBox.cpp \
