@@ -1760,7 +1760,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
       mTableLayoutStrategy->Initialize(aPresContext, nsnull, NS_UNCONSTRAINEDSIZE, aReflowState);
 
       // Ask the strategy for the natural width of the content area 
-      aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxWidth();
+      aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxWidth(aReflowState);
      
       // Add in space for border
       nsMargin border;
@@ -2908,7 +2908,7 @@ nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState)
       nsTableFrame* table = (nsTableFrame*)GetFirstInFlow();
       tableLayoutStrategy = table->mTableLayoutStrategy;
     }
-    desiredWidth = tableLayoutStrategy->GetTableMaxWidth();
+    desiredWidth = tableLayoutStrategy->GetTableMaxWidth(aReflowState);
   }
   return desiredWidth;
 }
@@ -4240,7 +4240,7 @@ nscoord nsTableFrame::GetMaxTableWidth(const nsHTMLReflowState& aState)
       result = PR_MAX(aState.mComputedWidth, mTableLayoutStrategy->GetTableMinWidth());
     }
     else {
-      result = mTableLayoutStrategy->GetTableMaxWidth();
+      result = mTableLayoutStrategy->GetTableMaxWidth(aState);
     }
   }
   return result;
