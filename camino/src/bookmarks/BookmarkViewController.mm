@@ -750,7 +750,7 @@ const long kMinSearchPaneHeight = 80;
   id aRow;
   while ((aRow = [enumerator nextObject])) {
     rowVal = [aRow intValue];
-    if (rowVal > (int)firstUserCollection)
+    if (rowVal >= (int)firstUserCollection)
       [itemArray addObject:[mRootBookmarks objectAtIndex:rowVal]];
   }
   if ([itemArray count] == 0) {
