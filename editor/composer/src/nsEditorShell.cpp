@@ -620,29 +620,7 @@ nsresult nsEditorShell::GetDocumentEventReceiver(nsIDOMEventReceiver **aEventRec
   nsresult rv = editor->GetRootElement(getter_AddRefs(rootElement));
 
   nsCOMPtr<nsIDOMEventReceiver> erP;
-
-//(Copied from nsHTMLEditor::InstallEventListeners)
-//now hack to make sure we are not anonymous content if we are 
-  //  grabbing the parent of root element for our observer
-  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement);
-  if (content)
-  {
-    nsCOMPtr<nsIContent> parent;
-    if (NS_SUCCEEDED(content->GetParent(*getter_AddRefs(parent))) && parent)
-    {
-      PRInt32 index;
-      if (NS_FAILED(parent->IndexOf(content, index)) || index<0 )
-      {
-        rootElement = do_QueryInterface(parent);
-        rv = rootElement->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
-      }
-      else
-        rootElement = 0;
-    }
-  }
-  if (!rootElement && domDoc)
-    rv = domDoc->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
-//end hack
+  rv = rootElement->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
 
   if (erP)
   {

@@ -45,7 +45,7 @@
         persist="screenX screenY width height"
         >
 
-  <script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
+  <script language="JavaScript" src="chrome://editor/content/editor.js"/>
   <script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
   <script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
   <script language="javascript" src="chrome://global/content/strres.js"/>

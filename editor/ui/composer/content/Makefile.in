@@ -36,7 +36,7 @@ CHROME_TYPE=content
 CHROME_CONTENT = \
 		manifest.rdf \
 		editor.xul \
-		EditorCommands.js \
+		editor.js \
 		ComposerCommands.js \
 		EditorCommandsDebug.js \
 		EditorCommandsOverlay.xul \
