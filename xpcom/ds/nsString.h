@@ -42,6 +42,11 @@
   #define NEW_STRING_APIS 1
 #endif //NEW_STRING_APIS
 
+  // Need this to enable comparison profiling for a while
+#ifdef OLD_STRING_APIS
+  #undef NEW_STRING_APIS
+#endif
+
 #ifndef _nsCString_
 #define _nsCString_
 
@@ -795,6 +800,15 @@ private:
   void AppendWithConversion( char );
   void InsertWithConversion( char, PRUint32 );
 };
+
+#ifdef NEW_STRING_APIS
+inline
+nsPromiseConcatenation<char>
+operator+( const nsPromiseConcatenation<char>& lhs, const nsCString& rhs )
+  {
+    return nsPromiseConcatenation<char>(lhs, rhs);
+  }
+#endif
 
 #ifdef NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
