@@ -206,12 +206,12 @@ nsBoxToBlockAdaptor::NeedsRecalc()
 NS_IMETHODIMP
 nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
-
   if (!mPrefNeedsRecalc) {
      aSize = mPrefSize;
      return NS_OK;
   }
 
+  // if we are collapsed its easy our size on 0,0
   PRBool collapsed = PR_FALSE;
   IsCollapsed(aState, collapsed);
   if (collapsed) {
@@ -230,21 +230,41 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   PRBool completelyRedefined = nsIBox::AddCSSPrefSize(aState, this, mPrefSize);
 
   if (!completelyRedefined) {
+
+     // ok we are forced to compute the preferred size. This sucks. Why? well because you can't just ask 
+     // a html frame for its preferred size. And what is the definition of preferred size of an html block then?
+     // is the width and height of the block if it were given an infinite canvas to flow itself into. We can compute
+     // this by reflowing it with a computed size of (NS_INTRINSICSIZE, NS_INTRINSICSIZE).
+     //
+     // then the desired size that comes back is our pref size. But there are some problems we need to handle:
+     // 1) If we flow the child at its intrinsic size it is going to actually move all the children all onto a single
+     //    most likely. So here is the problem. Say you have div that contains a large sentence. And in css its width
+     //    was set to be 100px. So we reflowed with a computed size of 100px wide and set its rect and text now
+     //    is 100px wide and take up 3 lines of height. Well if we need to get its pref size then we have to 
+     //    flow it intrinsically. That would give it infinite space and it would all be in 1 line and be say 500px wide.
+     //    That would mean we need to flow it back to it original size after asking it for its preferred.
+     //
+     // 2) Block rely on max element size. So we need to compute it if it is asked for.
+ 
+     // if we do have a reflow state
      const nsHTMLReflowState* reflowState = aState.GetReflowState();
      if (reflowState) {
        nsIPresContext* presContext = aState.GetPresContext();
        nsReflowStatus status = NS_FRAME_COMPLETE;
        nsHTMLReflowMetrics desiredSize(nsnull);
 
+       // now are we dirty? When we reflow to get the preferred size that will undirty it. We need to set it 
+       // back to hold onto it here.
        PRBool isDirty = PR_FALSE;
        IsDirty(isDirty);
 
-       // if the size has already been set get the
-       // current size so we can set it back.
+       // remember item 1? Well we need to hold onto the old size so we can set it back if it changes.
        nsRect oldRect(0,0,0,0);
        if (mSizeSet)
           GetBounds(oldRect);
-       
+
+       // item 2. We need to handle max element size. If get were aske to get it then 
+       // create a size and pass it down.
        nsSize* currentSize = nsnull;
        aState.GetMaxElementSize(&currentSize);
        nsSize size(0,0);
@@ -253,6 +273,7 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
         desiredSize.maxElementSize = &size;
        }
 
+       // reflow our mFrame. Notice we are doing it intrinsically to get the pref size.
        rv = Reflow(aState,
                    presContext, 
                   desiredSize, 
@@ -264,6 +285,7 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
                   NS_INTRINSICSIZE,
                   PR_FALSE);
 
+     // set the max element size
      if (currentSize) {
         desiredSize.maxElementSize = nsnull;
 
@@ -276,17 +298,29 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
         mCachedMaxElementHeight = size.height;
       }
 
-     // set it back
+     // item 1. Someone may have already set the size. If so then set it back.
      if (mSizeSet) {
+          
           SetBounds(aState, oldRect);
+
+          // mark it dirty so it will be layed out ok. 
+          nsFrameState frameState = 0;
+          mFrame->GetFrameState(&frameState);
+          frameState |= NS_FRAME_IS_DIRTY;
+          mFrame->SetFrameState(frameState);
+
           Layout(aState);
      }
 
+     // make sure if we were originally dirty we put it back. Reflowing would have undone this flag.
+     if (isDirty) {
        nsFrameState frameState = 0;
        mFrame->GetFrameState(&frameState);
        frameState |= NS_FRAME_IS_DIRTY;
        mFrame->SetFrameState(frameState);
+     }
 
+     // store our preferred size.
        mPrefSize.width = desiredSize.width;
        mPrefSize.height = desiredSize.height;
        mAscent = desiredSize.ascent;
@@ -420,6 +454,8 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
       desiredSize.maxElementSize = &size;
     }
 
+    nscoord origWidth = ourRect.width;
+
      rv = Reflow(aState,
                  presContext, 
                   desiredSize, 
@@ -429,6 +465,11 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
                   ourRect.y,
                   ourRect.width,
                   ourRect.height);
+
+    if (desiredSize.width > origWidth && mMinWidth != desiredSize.width) {
+      mMinWidth = desiredSize.width;
+      SizeNeedsRecalc(mMinSize);
+    }
      
     if (currentSize) {
       desiredSize.maxElementSize = nsnull;
@@ -528,9 +569,8 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
   PRBool needsReflow = PR_FALSE;
 
   // get our frame its size and the reflow state
-
   nsReflowReason reason = aReflowState.reason;
-
+  
   nsFrameState childState;
   mFrame->GetFrameState(&childState);
  // childState |= NS_BLOCK_SPACE_MGR;
@@ -575,43 +615,38 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
       nsIFrame* incrementalChild = nsnull;
       aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
       
-      nsIFrame* targetFrame = nsnull;
-      aReflowState.reflowCommand->GetTarget(targetFrame);
-
-      if (incrementalChild == mFrame || targetFrame == mFrame) {
+      // if the increment child is out child then
+      // pop it off and continue sending it down
+      if (incrementalChild == mFrame ) {
           needsReflow = PR_TRUE;
+
+          //nsIFrame* targetFrame = nsnull;
+          //aReflowState.reflowCommand->GetTarget(targetFrame);
+
+          //if (targetFrame == mFrame) 
+          //  aState.mChainUnwound = PR_TRUE;
+
           aReflowState.reflowCommand->GetNext(incrementalChild);
+
+          // if we hit the target then we have used up the chain.
+          // next time a layout 
           break;
-      } 
+      } else if (incrementalChild == nsnull) {
+         
+          // if there are not more incremental children meaning we have completely
+          // unwound the chain then see if the target of the chain then see if the target
+          // was us. If it is then it should become a resize.
+          nsIFrame* targetFrame = nsnull;
+          aReflowState.reflowCommand->GetTarget(targetFrame);
 
-      // if incremental but we have already popped off all incremental children
-     // if (incrementalChild == nsnull) {
-        // see if its a StyleChange
-      /*
-        nsIReflowCommand::ReflowType  type;
-        aReflowState.reflowCommand->GetType(type);
-        if (type == nsIReflowCommand::StyleChanged) {
-            if (mStyleChange) {
-              // if it is and we need a style change reflow then
-              // reflow.
-              reason = eReflowReason_StyleChange;
+          /*
+          if (targetFrame == mFrame) {
+              reason = eReflowReason_Resize;
               needsReflow = PR_TRUE;
-              break;
-            }
-        }
-      //}
-      
-
-      // not us? then just reflow dirty stuff
-      reason = eReflowReason_Resize;
-
-      // get the frame state to see if it needs reflow
-      needsReflow = (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
-
-      break;
-      */
-
-      // fall into dirty
+          }
+          */    
+      }
+      // fall into dirty if the incremental child was use. It should be treated as a 
    }
 
    // if its dirty then see if the child we want to reflow is dirty. If it is then
@@ -643,9 +678,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
        needsReflow = PR_TRUE;
  
   }
-
-  //nsMargin margin(0,0,0,0);
- // GetMargin(margin);
 
   // if we don't need a reflow then 
   // lets see if we are already that size. Yes? then don't even reflow. We are done.
@@ -693,7 +725,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     nsSize size(aWidth, aHeight);
 
     // create a reflow state to tell our child to flow at the given size.
-
     if (size.height != NS_INTRINSICSIZE) {
         size.height -= (border.top + border.bottom);
         if (size.height < 0)
@@ -714,18 +745,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     // XXX this needs to subtract out the border and padding of mFrame since it is content size
     reflowState.mComputedWidth = size.width;
     reflowState.mComputedHeight = size.height;
-
-   // if (aMoveFrame) {
-   //       PlaceChild(aPresContext, mFrame, aX + margin.left, aY + margin.top);
-   // }
-
-    /*
-    // html doesn't like 0 sizes.
-    if (reflowState.mComputedWidth == 0)
-      reflowState.mComputedWidth = 1;
-    if (reflowState.mComputedHeight == 0)
-      reflowState.mComputedHeight = 1;
-    */
 
     // if we were marked for style change.
     // 1) see if we are just supposed to do a resize if so convert to a style change. Kill 2 birds
@@ -780,31 +799,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     mFrame->GetFrameState(&kidState);
 
    // printf("width: %d, height: %d\n", aDesiredSize.mCombinedArea.width, aDesiredSize.mCombinedArea.height);
-
-    // XXX EDV hack to fix bug in block
-   //if (reflowState.reason != eReflowReason_Initial) {
-
-
-    /*
-        if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
-             printf("OutsideChildren width=%d, height=%d\n", aDesiredSize.mOverflowArea.width, aDesiredSize.mOverflowArea.height);
-
-             if (aDesiredSize.mOverflowArea.width > aWidth)
-             {
-                 reflowState.mComputedWidth = aDesiredSize.mOverflowArea.width - (border.left + border.right);
-                 reflowState.availableWidth = reflowState.mComputedWidth;
-                 //Reflow(aPresContext, aDesiredSize, aReflowState, aStatus, aX, aY, aDesiredSize.mOverflowArea.width, aHeight, aMoveFrame);
-                 mFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
-                 mFrame->WillReflow(aPresContext);
-                 mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-                 mFrame->GetFrameState(&kidState);
-                 if (kidState & NS_FRAME_OUTSIDE_CHILDREN)
-                    aDesiredSize.height = aDesiredSize.mOverflowArea.height;
-             } else {
-                aDesiredSize.height = aDesiredSize.mOverflowArea.height;
-             }
-        }
-*/
 
     // see if the overflow option is set. If it is then if our child's bounds overflow then
     // we will set the child's rect to include the overflow size.
@@ -876,71 +870,19 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
         rv = NS_OK;
         aDesiredSize.ascent += rect.y;
 
-         /*
-         nsHTMLReflowMetrics d(nsnull);
-         nsHTMLReflowState lineReflowState(aPresContext, reflowState, firstFrame, nsSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE));
-         lineReflowState.mComputedWidth = rect.width - (lineReflowState.mComputedBorderPadding.left + lineReflowState.mComputedBorderPadding.right);
-         lineReflowState.mComputedHeight = NS_INTRINSICSIZE;
-         reason = eReflowReason_Resize;
-         firstFrame->WillReflow(aPresContext);
-         firstFrame->Reflow(aPresContext, d, lineReflowState, aStatus);
-         aDesiredSize.ascent = d.ascent + rect.y + border.top;
-         */
       }
     }
-
-      // look at the first child
-      /*
-      const nsStyleFont* font;
-      firstFrame->GetStyleData(eStyleStruct_Font,
-                          (const nsStyleStruct*&) font);
-      nsIRenderingContext& rc = *aReflowState.mReflowState.rendContext;
-      rc.SetFont(font->mFont);
-      nsIFontMetrics* fm;
-      rv = rc.GetFontMetrics(fm);
-      if (NS_SUCCEEDED(rv) && (nsnull != fm)) {
-        fm->GetMaxAscent(aDesiredSize.ascent);
-        NS_RELEASE(fm);
-      }
-      rv = NS_OK;
-      
-
-      // add top border and padding to the ascent
-      nsRect rect(0,0,0,0);
-      firstFrame->GetRect(&rect);
-
-      // now our max ascent is acent + the y offset of the the first child
-      aDesiredSize.ascent += rect.y;
-    }
-    */
 
     PRBool changedSize = PR_FALSE;
 
     if (mLastSize.width != aDesiredSize.width || mLastSize.height != aDesiredSize.height)
        changedSize = PR_TRUE;
   
-    // if the child got bigger then make sure the new size in our min max range
-    if (changedSize) {
-    
-      // redraw if we changed size.
-      //aRedraw = PR_TRUE;
-    }
-
     nsContainerFrame::FinishReflowChild(mFrame, aPresContext, aDesiredSize, aX, aY, NS_FRAME_NO_MOVE_FRAME);
 
 
-  } else {
-    /*
-      if (aMoveFrame) {
-           PlaceChild(aPresContext, mFrame, aX + margin.left, aY + margin.top);
-      }
-      */
   }    
   
-  // add the margin back in. The child should add its border automatically
-  //aDesiredSize.height += (margin.top + margin.bottom);
-  //aDesiredSize.width += (margin.left + margin.right);
-
 #ifdef DEBUG_REFLOW
   if (aHeight != NS_INTRINSICSIZE && aDesiredSize.height != aHeight)
   {
@@ -964,11 +906,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 
   mLastSize.width = aDesiredSize.width;
   mLastSize.height = aDesiredSize.height;
-
-  if (aDesiredSize.width > aWidth && mMinWidth != aDesiredSize.width) {
-    mMinWidth = aDesiredSize.width;
-    SizeNeedsRecalc(mMinSize);
-  }
 
 #ifdef DEBUG_REFLOW
   gIndent2--;
