@@ -960,9 +960,6 @@ CERT_GetCertificateNames(CERTCertificate *cert, PRArenaPool *arena)
     }
     altName = CERT_DecodeAltNameExtension(arena, &altNameExtension);
     PORT_Free(altNameExtension.data);
-    if (altName == NULL) {
-	goto loser;
-    }
     DN = cert_CombineNamesLists(DN, altName);
     return DN;
 loser:
