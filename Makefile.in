@@ -308,8 +308,6 @@ endif
 
 endif
 
-EXPORTS	= mozilla-config.h
-
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(BUILD_MODULES),all)
