@@ -75,7 +75,7 @@ _hash_pointer(const void* key)
     return PLHashNumber(key) >> 2;
 }
 
-// Must be single-threaded here, early  in primordial thread.
+// Must be single-threaded here, early in primordial thread.
 static void InitAutoLockStatics()
 {
     (void) PR_NewThreadPrivateIndex(&LockStackTPI, 0);
