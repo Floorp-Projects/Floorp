@@ -15,15 +15,37 @@ function handleCancelButton()
 
 function onLoad()
 {
-  bundle = srGetStrBundle("chrome://profile/locale/migration.properties");
+  try {
+    bundle = srGetStrBundle("chrome://profile/locale/migration.properties");
+  }
+  catch (ex) {
+    dump("please fix bug #26291\n");
+  }
+
 	doSetOKCancel(handleOKButton, handleCancelButton);
   var okButton = document.getElementById("ok");
   var cancelButton = document.getElementById("cancel");
   if( !okButton || !cancelButton )
     return false;
-  okButton.setAttribute( "value", bundle.GetStringFromName( "migrate" ) );
+
+  try {
+    okButton.setAttribute( "value", bundle.GetStringFromName( "migrate" ) );
+  }
+  catch (ex) {
+    dump("please fix bug #26291\n");
+    okButton.setAttribute( "value", "Migrate *");
+  }
+
   okButton.setAttribute( "class", ( okButton.getAttribute( "class" ) + " padded" ) );
-  cancelButton.setAttribute( "value", bundle.GetStringFromName( "newprofile" ) );
+
+  try {
+    cancelButton.setAttribute( "value", bundle.GetStringFromName( "newprofile" ) );
+  }
+  catch (ex) {
+    dump("please fix bug #26291\n");
+    cancelButton.setAttribute("value","New Profile *");
+  }
+
   cancelButton.setAttribute( "class", ( cancelButton.getAttribute( "class" ) + " padded" ) );
   centerWindowOnScreen();
 }
