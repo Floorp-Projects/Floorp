@@ -957,30 +957,19 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
    else 
       mCharsetReloadState = eCharsetReloadInit;
 
+   // Clear the LSHE reference in docshell to indicate document loading
+   // is done one way or another.
+   LSHE = nsnull;
+
    /* one of many safeguards that prevent death and destruction if
       someone is so very very rude as to bring this window down
       during this load handler. */
    nsCOMPtr<nsIWebShell> kungFuDeathGrip(this);
 
-   // Clear the LSHE reference in docshell to indicate document loading
-   // is done one way or another.
-   LSHE = nsnull;
-   if(mScriptGlobal && !mEODForCurrentDocument && NS_SUCCEEDED(aStatus))
-      {
-      if(mContentViewer)
-         {
-         nsCOMPtr<nsIPresContext> presContext;
-         GetPresContext(getter_AddRefs(presContext));
-         if(presContext)
-            {
-            nsEventStatus status = nsEventStatus_eIgnore;
-            nsMouseEvent event;
-            event.eventStructType = NS_EVENT;
-            event.message = NS_PAGE_LOAD;
-            rv = mScriptGlobal->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-            }
-         }
-      }
+   // Notify the ContentViewer that the Document has finished loading...
+   if (!mEODForCurrentDocument && mContentViewer) {
+     mContentViewer->LoadComplete(aStatus);
+   }
 
    mEODForCurrentDocument = PR_TRUE;
    nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
