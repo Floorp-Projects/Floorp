@@ -38,6 +38,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
+#include "nsIDocShell.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
@@ -217,11 +218,11 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
   if (NS_FAILED(rv) || (cont == nsnull)) {
     return rv;
   }
-  nsCOMPtr<nsIWebShell> ws(do_QueryInterface(cont));
-  NS_ENSURE_TRUE(ws, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(cont));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContentViewer> cv;
-  rv = ws->GetContentViewer(getter_AddRefs(cv));
+  rv = docShell->GetContentViewer(getter_AddRefs(cv));
   if (NS_FAILED(rv) || (cv == nsnull)) {
     return rv;
   }
@@ -344,13 +345,6 @@ nsWalletlibService::OnStatusURLLoad
 NS_IMETHODIMP
 nsWalletlibService::OnEndURLLoad
   (nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWalletlibService::HandleUnknownContentType
-  (nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType, const char *aCommand )
 {
   return NS_OK;
 }
