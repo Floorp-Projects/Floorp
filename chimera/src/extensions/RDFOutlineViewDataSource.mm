@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSString+Utils.h"
+
 #import "CHRDFOutlineViewDataSource.h"
 
 #include "nsIRDFDataSource.h"

@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSString+Utils.h"
+
 #import "nsCocoaBrowserService.h"
 #import "DownloadFactories.h"
 #import "CHBrowserView.h"
