@@ -76,10 +76,10 @@ CNsIWebNav::~CNsIWebNav()
 
 // Url table for web navigation
 NavElement UrlTable[] = {
+   {"http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
    {"http://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
-   {"http://www.oracle.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
+   {"http://www.oracle.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK},
    {"http://www.sun.com/", nsIWebNavigation::LOAD_FLAGS_IS_REFRESH},
-   {"http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK},
    {"http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY},
    {"https://www.yahoo.com/", nsIWebNavigation::LOAD_FLAGS_NONE},
 };
@@ -113,7 +113,7 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 			LoadUriandReload();
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_RELOAD  :
-			LoadUriandReload();
+			ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_STOP    :
 			StopUriTest("http://www.microsoft.com/");
