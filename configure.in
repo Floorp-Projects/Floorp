@@ -313,6 +313,10 @@ if test -z "$ZIP" || test "$ZIP" = ":"; then
     MOZ_DISABLE_JAR_PACKAGING=1
 fi
 AC_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
+AC_PATH_PROG(XARGS, xargs)
+if test -z "$XARGS" || test "$XARGS" = ":"; then
+    AC_MSG_ERROR([xargs not found in \$PATH .])
+fi
 
 dnl Be sure the make we use is GNU make.
 AC_PATH_PROGS(MAKE, gmake make, :)
