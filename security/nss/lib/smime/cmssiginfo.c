@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.20 2003/12/03 00:09:05 wchang0222%aol.com Exp $
+ * $Id: cmssiginfo.c,v 1.21 2003/12/03 02:42:08 jpierre%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -512,6 +512,12 @@ SECOidTag
 NSS_CMSSignerInfo_GetDigestAlgTag(NSSCMSSignerInfo *signerinfo)
 {
     SECOidData *algdata;
+
+    PORT_Assert(signerinfo);
+    if (!signerinfo) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        return SEC_OID_UNKNOWN;
+    }
 
     algdata = SECOID_FindOID (&(signerinfo->digestAlg.algorithm));
     if (algdata != NULL)
