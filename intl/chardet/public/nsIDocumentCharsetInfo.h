@@ -22,16 +22,32 @@
 
 #ifndef nsIDocumentCharsetInfo_h__
 #define nsIDocumentCharsetInfo_h__
-#include "nsISupports.h"
 
+#include "nsISupports.h"
+#include "nsIAtom.h"
 
 // {2D40B291-01E1-11d4-9D0E-0050040007B2}
 #define NS_IDOCUMENTCHARSETINFO_IID \
-{ 0x2d40b291, 0x1e1, 0x11d4, { 0x9d, 0xe, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2 } }
+  {0x2d40b291, 0x1e1, 0x11d4, {0x9d, 0xe, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
 
-class nsIDocumentCharsetInfo : public nsISupports {
+// {D25E0511-2BAE-11d4-9D10-0050040007B2}
+#define NS_DOCUMENTCHARSETINFO_CID \
+  {0xd25e0511, 0x2bae, 0x11d4, {0x9d, 0x10, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
+
+#define NS_DOCUMENTCHARSETINFO_PID \
+  "component://netscape/document-charset-info"
+
+// XXX doc me
+
+class nsIDocumentCharsetInfo : public nsISupports 
+{
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTCHARSETINFO_IID)
+
+  NS_IMETHOD SetForcedCharset(nsIAtom * aCharset) = 0;
+  NS_IMETHOD GetForcedCharset(nsIAtom ** aResult) = 0;
+  NS_IMETHOD SetForcedDetector(PRBool aForced) = 0;
+  NS_IMETHOD GetForcedDetector(PRBool * aResult) = 0;
 };
 
 #endif // nsIDocumentCharsetInfo_h__
