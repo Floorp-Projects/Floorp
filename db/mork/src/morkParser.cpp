@@ -60,6 +60,10 @@
 #include "morkCh.h"
 #endif
 
+#ifndef _MORKSTORE_
+#include "morkStore.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 // ````` ````` ````` ````` ````` 
@@ -543,7 +547,13 @@ morkParser::ReadCell(morkEnv* ev)
     }
     else
     {
-      cellBuf = this->ReadName(ev, c); 
+      if (mParser_InMeta && c == morkStore_kFormColumn)
+      {
+        ReadCellForm(ev, c);
+        return;
+      }
+      else
+        cellBuf = this->ReadName(ev, c); 
     }
     if ( ev->Good() )
     {
@@ -926,6 +936,77 @@ morkBuf* morkParser::ReadValue(morkEnv* ev)
   return outBuf; 
 }
 
+void morkParser::ReadDictForm(morkEnv *ev)
+{
+  int nextChar;
+  morkStream* s = mParser_Stream;
+  nextChar = this->NextChar(ev);
+  if (nextChar == '(')
+  {
+    nextChar = this->NextChar(ev);
+    if (nextChar == morkStore_kFormColumn)
+    {
+      int dictForm;
+
+      nextChar = this->NextChar(ev);
+      if (nextChar == '=')
+      {
+        dictForm = this->NextChar(ev);
+        nextChar = this->NextChar(ev);
+      }
+      else if (nextChar == '^')
+      {
+        dictForm = this->ReadHex(ev, &nextChar);
+      }
+      else
+      {
+        ev->NewWarning("unexpected byte in dict form");
+        return;
+      }
+      mParser_ValueCoil.mText_Form = dictForm;
+      if (nextChar == ')')
+      {
+        nextChar = this->NextChar(ev);
+        if (nextChar == '>')
+          return;
+      }
+    }
+  }
+  ev->NewWarning("unexpected byte in dict form");
+}
+
+void morkParser::ReadCellForm(morkEnv *ev, int c)
+{
+  MORK_ASSERT (c == morkStore_kFormColumn);
+  int nextChar;
+  morkStream* s = mParser_Stream;
+  nextChar = this->NextChar(ev);
+  int cellForm;
+
+  if (nextChar == '=')
+  {
+    cellForm = this->NextChar(ev);
+    nextChar = this->NextChar(ev);
+  }
+  else if (nextChar == '^')
+  {
+    cellForm = this->ReadHex(ev, &nextChar);
+  }
+  else
+  {
+    ev->NewWarning("unexpected byte in cell form");
+    return;
+  }
+  // ### not sure about this. Which form should we set?
+  //    mBuilder_CellForm = mBuilder_RowForm = cellForm;
+  if (nextChar == ')')
+  {
+    OnCellForm(ev, cellForm);
+    return;
+  }
+  ev->NewWarning("unexpected byte in cell form");
+}
+
 void morkParser::ReadAlias(morkEnv* ev)
 // zm:Alias     ::= zm:S? '(' ('#')? zm:Hex+ zm:S? zm:Value ')'
 // zm:Value   ::= '=' ([^)$\] | '\' zm:NonCRLF | zm:Continue | zm:Dollar)*
@@ -944,6 +1025,12 @@ void morkParser::ReadAlias(morkEnv* ev)
 
   if ( ev->Good() )
   {
+    if ( c == '<')
+    {
+      ReadDictForm(ev);
+      if (ev->Good())
+        c = this->NextChar(ev);
+    }
     if ( c == '=' )
     {
       mParser_Mid.mMid_Buf = this->ReadValue(ev);
@@ -951,6 +1038,9 @@ void morkParser::ReadAlias(morkEnv* ev)
       {
         // this->EndSpanOnThisByte(ev, &mParser_AliasSpan);
         this->OnAlias(ev, mParser_AliasSpan, mParser_Mid);
+        // need to reset this somewhere.
+        mParser_ValueCoil.mText_Form = 0;
+
       }
     }
     else

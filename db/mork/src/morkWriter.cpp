@@ -403,6 +403,8 @@ morkWriter::WriteYarn(morkEnv* ev, const mdbYarn* inYarn)
   // implies that escaped line breaks will make the size value smaller
   // than the entire yarn's size, since only part goes on a last line).
 {
+
+
   mork_size outSize = 0;
   mork_size lineSize = mWriter_LineSize;
   morkStream* stream = mWriter_Stream;
@@ -412,6 +414,7 @@ morkWriter::WriteYarn(morkEnv* ev, const mdbYarn* inYarn)
   {
     register int c;
     mork_fill fill = inYarn->mYarn_Fill;
+
     const mork_u1* end = b + fill;
     while ( b < end && ev->Good() )
     {
@@ -1561,7 +1564,7 @@ morkWriter::ChangeRowForm(morkEnv* ev, mork_cscode inNewForm)
     *p++ = (char) morkStore_kFormColumn;
 
     mork_size formSize = 1; // default to one byte
-    if ( inNewForm >= 0x80 )
+    if (! morkCh_IsValue(inNewForm))
     {
       *p++ = '^'; // indicates col is hex ID
       formSize = ev->TokenAsHex(p, inNewForm);
@@ -1603,7 +1606,7 @@ morkWriter::ChangeDictForm(morkEnv* ev, mork_cscode inNewForm)
     *p++ = (char) morkStore_kFormColumn;
 
     mork_size formSize = 1; // default to one byte
-    if ( inNewForm >= 0x80 )
+    if (! morkCh_IsValue(inNewForm))
     {
       *p++ = '^'; // indicates col is hex ID
       formSize = ev->TokenAsHex(p, inNewForm);

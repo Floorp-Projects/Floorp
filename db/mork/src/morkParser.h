@@ -495,6 +495,8 @@ protected: // protected parser helper methods
   morkBuf* ReadValue(morkEnv* ev);
   morkBuf* ReadName(morkEnv* ev, int c);
   mork_bool ReadMid(morkEnv* ev, morkMid* outMid);
+  void ReadDictForm(morkEnv *ev);
+  void ReadCellForm(morkEnv *ev, int c);
   
   mork_bool MatchPattern(morkEnv* ev, const char* inPattern);
   
