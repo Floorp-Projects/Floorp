@@ -518,13 +518,23 @@ public class Node implements Cloneable {
     }
 
     /** Can only be called when <tt>getType() == Token.NUMBER</tt> */
-    public double getDouble() {
+    public final double getDouble() {
         return ((NumberNode)this).number;
     }
 
+    public final void setDouble(double number) {
+        ((NumberNode)this).number = number;
+    }
+
     /** Can only be called when node has String context. */
-    public String getString() {
+    public final String getString() {
         return ((StringNode)this).str;
+    }
+
+    /** Can only be called when node has String context. */
+    public final void setString(String s) {
+        if (s == null) Kit.codeBug();
+        ((StringNode)this).str = s;
     }
 
     public Node cloneNode() {
