@@ -79,6 +79,9 @@ CRDFPushButton :: CRDFPushButton ( HT_Resource inNode )
 	AttachPaneEnabler();
 	
 	AssignCommand();
+	
+	// get ready to draw by caching all the graphic and title rects.
+	PrepareDrawButton();
 }
 
 
@@ -369,7 +372,25 @@ CRDFPushButton::NaturalSize( SDimension16 inAvailable ) const
 	*/
 {
 	SDimension16 desiredSpace;
-	desiredSpace.width = 50; desiredSpace.height = 50;		//еее for now
+
+	bool iconOnSide = true;
+	char* value = NULL;
+	PRBool success = HT_GetTemplateData ( HT_TopNode(HT_GetView(HTNode())), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &value );
+	if ( success && value ) {
+		if ( strcmp(value, "top") == 0 )
+			iconOnSide = false;
+	}
+	
+	if ( iconOnSide ) {
+		desiredSpace.width = (mCachedTitleFrame.right - mCachedTitleFrame.left) + 
+								(mCachedGraphicFrame.right - mCachedGraphicFrame.left) + 15;
+		desiredSpace.height = min ( max(mCachedGraphicFrame.bottom - mCachedGraphicFrame.top, 
+										mCachedTitleFrame.bottom - mCachedTitleFrame.top), 24);
+	}
+	else {
+		desiredSpace.width = 50;
+		desiredSpace.height = 50;		//еее for now
+	}
 	
 	return desiredSpace;
 }
@@ -798,7 +819,7 @@ CRDFSeparator :: DrawSelf ( )
 	Rect localRect;
 	CalcLocalFrameRect ( localRect );
 
-	::FrameRect ( &localRect );
+	::PaintRect ( &localRect );
 }
 
 
@@ -812,7 +833,8 @@ SDimension16
 CRDFSeparator :: NaturalSize( SDimension16 inAvailable ) const
 {
 	SDimension16 desiredSpace;
-	desiredSpace.width = 15; desiredSpace.height = 50;		//еее for now
+	desiredSpace.width = 5; 
+	desiredSpace.height = 24;
 	
 	return desiredSpace;
 	 
@@ -871,7 +893,7 @@ SDimension16
 CRDFURLBar::NaturalSize( SDimension16 inAvailable ) const
 {
 	SDimension16 desiredSpace;
-	desiredSpace.width = 50; desiredSpace.height = 25;		//еее is this enough?
+	desiredSpace.width = 100; desiredSpace.height = 50;		//еее is this enough?
 	
 	return desiredSpace;
 	 
