@@ -160,18 +160,10 @@ CEditImageElement* CEditElement::Image(){
 }
 
 XP_Bool CEditElement::IsIcon() { return FALSE; }
-CEditIconElement* CEditElement::Icon(){ XP_ASSERT(IsIcon());
-    return (CEditIconElement*)this;
-}
-
-CEditTargetElement* CEditElement::Target(){ XP_ASSERT(GetElementType() == eTargetElement);
-    return (CEditTargetElement*)this;
-}
-
-CEditHorizRuleElement* CEditElement::HorizRule(){ XP_ASSERT(m_tagType==P_HRULE);
-    return (CEditHorizRuleElement*)this;
-}
-
+CEditIconElement* CEditElement::Icon(){ XP_ASSERT(IsIcon()); return (CEditIconElement*)this;}
+XP_Bool CEditElement::IsTarget() { return FALSE; }
+CEditTargetElement* CEditElement::Target(){ XP_ASSERT(IsTarget()); return (CEditTargetElement*)this;}
+CEditHorizRuleElement* CEditElement::HorizRule(){ XP_ASSERT(m_tagType==P_HRULE); return (CEditHorizRuleElement*)this;}
 XP_Bool CEditElement::IsRootDoc() { return FALSE; }
 CEditRootDocElement* CEditElement::RootDoc() { XP_ASSERT(IsRootDoc()); return (CEditRootDocElement*) this; }
 XP_Bool CEditElement::IsSubDoc() { return FALSE; }

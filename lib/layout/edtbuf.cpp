@@ -8042,16 +8042,30 @@ char* CEditBuffer::GetTargetData(){
     return pInsertPoint->Target()->GetName( );
 }
 
-void CEditBuffer::SetTargetData( char* pData ){
+void CEditBuffer::SetTargetData( char* pData )
+{
     ClearSelection( TRUE, TRUE );
-    if ( m_pCurrent->GetElementType() == eTargetElement ){
+    if ( m_pCurrent->GetElementType() == eTargetElement )
+    {
+        // Get old string so we can search and replace links to changed target name
+        char *pOldName = m_pCurrent->Target()->GetName();
+        XP_Bool bFixupLinks = FALSE;
+        if( pOldName && *pOldName )
+            bFixupLinks = linkManager.FixupLinksToTarget(pOldName, pData);
+        XP_FREEIF(pOldName);
+
         m_pCurrent->Target()->SetName( pData, GetRAMCharSetID() );
-        Relayout( m_pCurrent->FindContainer(), 0, m_pCurrent, RELAYOUT_NOCARET );
+
+        // Easiest (laziest) way - relayout everything if link to target was found
+        if( bFixupLinks ) 
+            Relayout(m_pRoot, 0, m_pRoot->GetLastMostChild(), RELAYOUT_NOCARET);
+        else
+            Relayout( m_pCurrent->FindContainer(), 0, m_pCurrent, RELAYOUT_NOCARET );
+
         SelectCurrentElement();
     }
-    else {
+    else 
         XP_ASSERT(FALSE);
-    }
 }
 
 void CEditBuffer::InsertTarget( char* pData ){
@@ -8073,11 +8087,14 @@ char* CEditBuffer::GetAllDocumentTargets(){
     pBuf[0] = 0;
     pBuf[1] = 0;
 
-    while(NULL != (pNext = pNext->FindNextElement( &CEditElement::FindTarget, 0 )) ){
+    while(NULL != (pNext = pNext->FindNextElement( &CEditElement::FindTarget, 0 )) )
+    {
         char *pName = pNext->Target()->GetName();
-        if( pName && *pName ){
+        if( pName && *pName )
+        {
             int iLen = XP_STRLEN( pName );
-            if( iCur + iLen + 2 > iSize ){
+            if( iCur + iLen + 2 > iSize )
+            {
                 iSize = iSize + iSize;
                 pBuf = (char*)XP_REALLOC( pBuf, iSize );
             }
@@ -8091,7 +8108,13 @@ char* CEditBuffer::GetAllDocumentTargets(){
 
 #define LINE_BUFFER_SIZE  4096
 
-char* CEditBuffer::GetAllDocumentTargetsInFile(char *pHref){
+char* CEditBuffer::GetAllDocumentTargetsInFile(char *pHref)
+{
+    // Don't return a list for the file we are editing
+    char *pCurrentURL = LO_GetBaseURL(m_pContext);
+    if( EDT_IsSameURL(pHref,pCurrentURL, pCurrentURL,NULL) )
+        return NULL;
+
     intn iSize = 500;
     int iCur = 0;
     char *pBuf = (char*)XP_ALLOC( iSize );
@@ -8126,7 +8149,7 @@ char* CEditBuffer::GetAllDocumentTargetsInFile(char *pHref){
     else {
         // We probably have a URL,
         //  get absolute URL path then convert to local format
-        char *pAbsolute = NET_MakeAbsoluteURL( LO_GetBaseURL(m_pContext ), pHref );
+        char *pAbsolute = NET_MakeAbsoluteURL( pCurrentURL, pHref );
 
         if( !pAbsolute ||
             !XP_ConvertUrlToLocalFile(pAbsolute, &pFilename) ){
@@ -8153,7 +8176,7 @@ char* CEditBuffer::GetAllDocumentTargetsInFile(char *pHref){
 
         // We probably have a URL,
         //  get absolute URL path then convert to local format
-        char *pAbsolute = NET_MakeAbsoluteURL( LO_GetBaseURL(m_pContext ), pHref );
+        char *pAbsolute = NET_MakeAbsoluteURL( pCurrentURL, pHref );
 
         if( pAbsolute &&
             XP_ConvertUrlToLocalFile(pAbsolute,NULL) ) {
@@ -18102,6 +18125,76 @@ void CEditBuffer::SelectNextNonTextObject()
     }
     
 }
+
+XP_Bool EDT_ScrollToTarget(MWContext *pMWContext, char *pTargetURL)
+{
+    if( !pTargetURL || !*pTargetURL )
+        return FALSE;
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer) FALSE;
+    
+    // We are only interested in relative URLs to internal targets
+    char *pTarget = XP_STRCHR(pTargetURL, '#');
+    if( !pTarget )
+        return FALSE;
+
+    // If target is preceeded by other stuff,
+    //  be sure its to the current page    
+    if( pTarget != pTargetURL )
+    {
+        char *pCurrentURL = LO_GetBaseURL(pMWContext);
+        char *pAbsolute = NET_MakeAbsoluteURL(pTargetURL, pCurrentURL);
+        if( !pAbsolute )
+            return FALSE;
+
+        if( !EDT_IsSameURL(pAbsolute, pCurrentURL, 0, 0) )
+        {
+            XP_FREE(pAbsolute);
+            return FALSE;    
+        }
+        XP_FREE(pAbsolute);
+    }
+    // Point to first character in target name
+    pTarget++;
+
+    XP_Bool       bResult = FALSE;
+    CEditElement *pNext = pEditBuffer->m_pRoot;
+    pEditBuffer->ClearSelection();
+    
+    // Find the matching target element
+    while(NULL != (pNext = pNext->FindNextElement( &CEditElement::FindTarget, 0 )) )
+    {
+        char *pName = pNext->Target()->GetName();
+        if( pName && 0 == XP_STRCMP(pName, pTarget) )
+        {
+            CEditElement *pElement = pNext->NextLeaf();
+            if( pElement )
+            {
+                CEditInsertPoint ip(pElement, 0);
+                pEditBuffer->SetInsertPoint(ip);
+                bResult = TRUE;
+            }
+        }
+    }
+    return bResult;
+}
+
+char * EDT_GetTargetNameFromIcon(LO_ImageStruct *pIcon)
+{
+    CEditElement * pEdElement = 0;
+    char *pTargetMsg = 0;
+    if( pIcon && pIcon->is_icon && (pEdElement = pIcon->edit_element) != 0 
+        && pEdElement->GetElementType() == eTargetElement )
+    {
+        pTargetMsg = XP_STRDUP(XP_GetString(XP_EDT_TARGET_NAME));
+        char *pTargetName = ((CEditTargetElement*)pEdElement)->GetName();
+        if( pTargetName )
+            pTargetMsg = PR_sprintf_append(pTargetMsg, pTargetName);
+        else
+            XP_FREEIF(pTargetMsg);
+    }
+    return pTargetMsg;
+}
+
 
 #ifdef XP_WIN16
 // code segment is full, switch to a new segment

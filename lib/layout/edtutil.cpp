@@ -3998,6 +3998,43 @@ ED_Link* CEditLinkManager::MakeLink( char *pHREF, char *pExtra, intn iRefCount )
     return pNewLink;
 }
 
+// When a target name changes, call this to change links to that target
+XP_Bool CEditLinkManager::FixupLinksToTarget(char *pOldName, char *pNewName)
+{
+    // Check if both strings exist and are different
+    if( !pOldName || !pNewName || 0 == XP_STRCMP(pOldName, pNewName) )
+        return FALSE;
+
+    XP_Bool bResult = TRUE;
+    for (int i = 0; i < m_links.Size(); i++ )
+    {
+        ED_Link *pLink;
+        if( (pLink = m_links[i]) != 0 && *pLink->hrefStr == '#' )
+        {
+            // Point to 1 character past the #
+            char *pTarget = pLink->hrefStr + 1;
+            int   iNewLen = XP_STRLEN(pNewName); 
+            if( 0 == XP_STRCMP(pTarget, pOldName) )
+            {
+                if( iNewLen > XP_STRLEN(pOldName) )
+                {
+                    // New name is longer - allocate more space
+                    XP_FREE(pLink->hrefStr);
+                    pLink->hrefStr = (char*)XP_ALLOC(iNewLen + 2);
+                    if( pLink->hrefStr )
+                    {
+                        *pLink->hrefStr = '#';
+                        pTarget = pLink->hrefStr + 1;
+                    }
+                }
+                XP_STRCPY(pTarget, pNewName);
+                bResult = TRUE;
+            }
+        }
+    }
+    return bResult;
+}
+
 void CEditLinkManager::AdjustAllLinks( char *pOldURL, char* pNewURL, ED_HREFList *badLinks ){
     int i;
     for (i = 0; i < m_links.Size(); i++ ){

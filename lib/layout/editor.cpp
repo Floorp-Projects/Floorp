@@ -518,6 +518,18 @@ ED_FileError EDT_SaveFile( MWContext * pContext,
                            XP_Bool   bAutoAdjustLinks ) {
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) ED_ERROR_BLOCKED;
 
+#if 0
+    //TODO: SHOULD WE REPLACE SPACES FOR LOCAL FILES? (We do when publishing)
+    // Replace spaces with "_"
+    char *pTemp = pDestURL;
+    while( XP_STRLEN(pTemp) )
+    {
+        if( *pTemp == ' ' )
+            *pTemp = '_';
+        pTemp++;
+    }
+#endif
+
     // Create Abstract file system to write to disk.
     char *pDestPathURL = edt_GetPathURL(pDestURL);
     XP_ASSERT(pDestPathURL);
@@ -571,65 +583,117 @@ class CEditPublishData {
 // Return a STATIC string, don't free.
 PRIVATE int edt_CheckPublishURL(char *pURL) {
   // NULL or empty string.
-  if (!pURL || !(*pURL)) {
+  if (!pURL || !(*pURL))
     return XP_EDT_PUBLISH_BAD_URL;
-  }
-
-  // Bad characters.
-  char *p = pURL;
-  while (*p) {
-    if (XP_IS_CNTRL(*p) || XP_STRCHR(ED_BAD_PUBLISH_URL_CHARS,*p)) {
-      return XP_EDT_PUBLISH_BAD_CHAR;
-    }      
-    p++;
-  }
 
   // Must be ftp:// or http://
   int result = NET_URL_Type(pURL);
   if (result != FTP_TYPE_URL && 
       result != HTTP_TYPE_URL && 
-      result != SECURE_HTTP_TYPE_URL) {
+      result != SECURE_HTTP_TYPE_URL)
+  {
     return XP_EDT_PUBLISH_BAD_PROTOCOL;
   }
 
   // Must not end in a slash, i.e. no filename
-  if (pURL[XP_STRLEN(pURL)-1] == '/') {
+  if (pURL[XP_STRLEN(pURL)-1] == '/')
     return XP_EDT_PUBLISH_NO_FILE;
-  }
   
+  // Bad characters.
+  char *p = pURL;
+  while (*p)
+  {
+    if (XP_IS_CNTRL(*p) || XP_STRCHR(ED_BAD_PUBLISH_URL_CHARS,*p))
+      return XP_EDT_PUBLISH_BAD_CHAR;
+
+    p++;
+  }
+
   // The part of the URL after the last slash must have a file extension.
   // Maybe we should be more strict and require that the extension 
   // be .html, .htm, or .shtml.
   char *pLastSlash = XP_STRRCHR(pURL,'/');
-  if (!pLastSlash) {
+  if (!pLastSlash)
     return XP_EDT_PUBLISH_NO_EXTENSION;
-  }
 
   // Search for '.'.
-  if (!XP_STRCHR(pLastSlash,'.')) {
+  if (!XP_STRCHR(pLastSlash,'.'))
     return XP_EDT_PUBLISH_NO_EXTENSION;
-  }
 
   return 0;
 }
 
 
-/* Check the URL that will be passed into EDT_PublishFile. */
-XP_Bool EDT_CheckPublishURL( MWContext *pContext, char *pURL) {
+// Check the URL that will be passed into EDT_PublishFile.
+// Now corrects for bad characters and appending file extension while here,
+//  so supplied URL string may be changed
+// MAC AND UNIX -- REMOVE IFDEFs AFTER CHANGING FE CALLS TO USE ppURL
+#ifdef XP_WIN
+XP_Bool EDT_CheckPublishURL( MWContext *pContext, char **ppURL)
+{
+  char *pURL = *ppURL;
+#else
+XP_Bool EDT_CheckPublishURL( MWContext *pContext, char *pURL)
+{
+#endif
+
   XP_Bool bRetVal = TRUE;
 
   int xpStrId = edt_CheckPublishURL(pURL);
 
-  if (xpStrId) {
+  if (xpStrId)
+  {
     char *message = XP_GetString(xpStrId);
-    if (message) {
+    if (message)
+    {
       // Allocate memory for message.
       message = XP_STRDUP(message);
-
-      // Report the error, but give the user the option of trying to publish anyway.
-      StrAllocCat(message,"\n\n");
-      StrAllocCat(message,XP_GetString(XP_EDT_PUBLISH_ERROR_BODY));
-      bRetVal = FE_Confirm(pContext,message);
+      if( xpStrId == XP_EDT_PUBLISH_BAD_CHAR )
+      {
+          // Ask user if they want to replace bad chars with '_'
+          if( FE_Confirm(pContext, message) )
+          {
+              char *p = pURL;
+              while (*p) 
+              {
+                if (XP_IS_CNTRL(*p) || XP_STRCHR(ED_BAD_PUBLISH_URL_CHARS,*p))
+                    *p = '_';
+                p++;
+              }
+              XP_FREEIF(message);
+              // Check for any other errors
+              return EDT_CheckPublishURL(pContext, ppURL);
+          }
+      }
+      else if( xpStrId == XP_EDT_PUBLISH_NO_EXTENSION )
+      {
+          // Ask user if they want to replace bad chars with '_'
+          if( FE_Confirm(pContext, message) )
+          {
+#ifdef XP_WIN
+              char *pNewLocation = pURL;
+              // Append extension and reallocate if necessary
+              pNewLocation = PR_sprintf_append(pNewLocation, ".html");
+              *ppURL = pNewLocation;
+              XP_FREEIF(message);
+              // Prevent infinite loop if we had an allocation error
+              if( !pNewLocation )
+                return FALSE;
+              // Check for any other errors
+              return EDT_CheckPublishURL(pContext, ppURL);
+#else
+// TO MAC AND UNIX - DELETE THIS WHEN YOUR CALLS TO EDT_CheckPublishURL USE ppURL
+              return FALSE;
+#endif              
+          }
+      }
+      else
+      {
+          // Report the error, but give the user the option of trying to publish anyway.
+          StrAllocCat(message,"\n\n");
+          StrAllocCat(message,XP_GetString(XP_EDT_PUBLISH_ERROR_BODY));
+          bRetVal = FE_Confirm(pContext,message);
+      }
       XP_FREEIF(message);
     }
     else {
@@ -659,7 +723,18 @@ ED_FileError EDT_PublishFile( MWContext * pContext,
     // This also checks if the URL is complete garbage.
     if (!NET_ParseUploadURL( pDestFullURL, &pLocation, &pUsername, &pPassword ))
         return ED_ERROR_BAD_URL;
-    
+#if 0    
+    // WE NOW ASK USER IF THEY WANT TO DO THIS IN EDT_CheckPublishingURL()
+    // Replace spaces with "_"
+    char *pTemp = pLocation;
+    while( XP_STRLEN(pTemp) )
+    {
+        if( *pTemp = ' ' )
+            *pTemp = '_';
+        pTemp++;
+    }
+#endif
+
     // Assemble a URL that includes username, but not password and filename
     char * pDestDirectory = EDT_ReplaceFilename(pLocation, NULL, TRUE);
 

@@ -646,6 +646,7 @@ public:
     virtual XP_Bool IsIcon();
     CEditIconElement* Icon();
 
+    virtual XP_Bool IsTarget();
     CEditTargetElement* Target();
 
     CEditHorizRuleElement* HorizRule();
@@ -2071,6 +2072,7 @@ public:
     void StreamOut( IStreamOut *pOut);
     EEditElementType GetElementType(){ return eTargetElement; }
 
+    XP_Bool IsTarget() { return TRUE; }
     PA_Tag* TagOpen( int iEditOffset );
 
     char *GetName();
@@ -2319,6 +2321,10 @@ public:
     EDT_HREFData* GetHREFData( ED_LinkId id){ return id->GetData(); }
     void Free( ED_LinkId id );
     void AdjustAllLinks( char *pOldURL, char* pNewURL, ED_HREFList *badLinks );
+
+    // When a target name changes, call this change links to that target
+    // Returns TRUE if any links were changed
+    XP_Bool FixupLinksToTarget(char *pOldName, char *pNewName);
 
     // Wrapper for other AdjustLink function.
     void AdjustLink( ED_LinkId id, char *pOldURL, char* pNewURL, ED_HREFList *badLinks ) {
@@ -3663,7 +3669,6 @@ public:
     void SetHREFSelection( ED_LinkId eId );
 
     // Accessor functions
-
     ED_FileError SaveFile( ED_SaveFinishedOption finishedOpt,
                             char * pSourceURL, // used to resolve links in editor document.
                             ITapeFileSystem *tapeFS,  /* char *pDestURL, */
