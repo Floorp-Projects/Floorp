@@ -338,15 +338,20 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 
 -(IBAction) removeAllCookies: (id)aSender
 {
-  if (mCookieManager) {
-    // remove all cookies from cookie manager
-    mCookieManager->RemoveAll();
-    // create new cookie cache
-    delete mCachedCookies;
-    mCachedCookies = nsnull;
-    mCachedCookies = new nsCOMArray<nsICookie>;
+  if (NSRunCriticalAlertPanel(NSLocalizedString(@"RemoveAllCookiesWarningTitle", @"RemoveAllCookiesWarningTitle"),
+                              NSLocalizedString(@"RemoveAllCookiesWarning", @"RemoveAllCookiesWarning"),
+                              NSLocalizedString(@"Remove All Cookies", @"Remove All Cookies"),
+                              NSLocalizedString(@"CancelButtonText", @"Cancel"),
+                              nil) == NSAlertDefaultReturn) {
+    if (mCookieManager) {
+      // remove all cookies from cookie manager
+      mCookieManager->RemoveAll();
+      // create new cookie cache
+      delete mCachedCookies;
+      mCachedCookies = new nsCOMArray<nsICookie>;
+    }
+    [mCookiesTable reloadData];
   }
-  [mCookiesTable reloadData];
 }
 
 -(IBAction) editCookiesDone:(id)aSender
