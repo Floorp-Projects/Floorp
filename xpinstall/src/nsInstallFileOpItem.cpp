@@ -30,12 +30,13 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	mIObj    = aInstallObj;
-	mCommand = aCommand;
-	mFlags   = aFlags;
-	mSrc     = nsnull;
-  mParams  = nsnull;
-	mTarget  = new nsFileSpec(aTarget);
+	mIObj       = aInstallObj;
+	mCommand    = aCommand;
+	mFlags      = aFlags;
+	mSrc        = nsnull;
+  mParams     = nsnull;
+	mTarget     = new nsFileSpec(aTarget);
+  mStrTarget  = nsnull;
 
   *aReturn = NS_OK;
 }
@@ -47,12 +48,13 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	mIObj    = aInstallObj;
-	mCommand = aCommand;
-	mFlags   = 0;
-	mSrc     = new nsFileSpec(aSrc);
-  mParams  = nsnull;
-	mTarget  = new nsFileSpec(aTarget);
+	mIObj       = aInstallObj;
+	mCommand    = aCommand;
+	mFlags      = 0;
+	mSrc        = new nsFileSpec(aSrc);
+  mParams     = nsnull;
+	mTarget     = new nsFileSpec(aTarget);
+  mStrTarget  = nsnull;
 
   *aReturn = NS_OK;
 }
@@ -63,29 +65,50 @@ nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	mIObj    = aInstallObj;
-	mCommand = aCommand;
-	mFlags   = 0;
-	mSrc     = nsnull;
-  mParams  = nsnull;
-	mTarget  = new nsFileSpec(aTarget);
+	mIObj       = aInstallObj;
+	mCommand    = aCommand;
+	mFlags      = 0;
+	mSrc        = nsnull;
+  mParams     = nsnull;
+	mTarget     = new nsFileSpec(aTarget);
+  mStrTarget  = nsnull;
 
   *aReturn = NS_OK;
 }
 
 nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32        aCommand,
-                                         nsFileSpec&    aTarget,
-                                         nsString&      aParams,
+                                         nsFileSpec&    a1,
+                                         nsString&      a2,
                                          PRInt32*       aReturn)
 :nsInstallObject(aInstallObj)
 {
-	mIObj    = aInstallObj;
-	mCommand = aCommand;
-	mFlags   = 0;
-	mSrc     = nsnull;
-  mParams  = new nsString(aParams);
-	mTarget  = new nsFileSpec(aTarget);
+	mIObj       = aInstallObj;
+	mCommand    = aCommand;
+	mFlags      = 0;
+
+  switch(mCommand)
+  {
+    case NS_FOP_DIR_RENAME:
+    case NS_FOP_FILE_RENAME:
+    	mSrc        = new nsFileSpec(a1);
+	    mTarget     = nsnull;
+      mParams     = nsnull;
+      mStrTarget  = new nsString(a2);
+      break;
+    case NS_FOP_FILE_EXECUTE:
+    	mSrc        = nsnull;
+	    mTarget     = new nsFileSpec(a1);
+      mParams     = new nsString(a2);
+      mStrTarget  = nsnull;
+      break;
+    default:
+    	mSrc        = nsnull;
+	    mTarget     = new nsFileSpec(a1);
+      mParams     = new nsString(a2);
+      mStrTarget  = nsnull;
+      break;
+  }
 
   *aReturn = NS_OK;
 }
@@ -96,6 +119,10 @@ nsInstallFileOpItem::~nsInstallFileOpItem()
     delete mSrc;
   if(mTarget)
     delete mTarget;
+  if(mStrTarget)
+    delete mStrTarget;
+  if(mParams)
+    delete mParams;
 }
 
 PRInt32 nsInstallFileOpItem::Complete()
@@ -111,7 +138,7 @@ PRInt32 nsInstallFileOpItem::Complete()
       NativeFileOpDirRemove(mTarget, mFlags);
       break;
     case NS_FOP_DIR_RENAME:
-      NativeFileOpDirRename(mSrc, mTarget);
+      NativeFileOpDirRename(mSrc, mStrTarget);
       break;
     case NS_FOP_FILE_COPY:
       NativeFileOpFileCopy(mSrc, mTarget);
@@ -126,7 +153,7 @@ PRInt32 nsInstallFileOpItem::Complete()
       NativeFileOpFileMove(mSrc, mTarget);
       break;
     case NS_FOP_FILE_RENAME:
-      NativeFileOpFileRename(mSrc, mTarget);
+      NativeFileOpFileRename(mSrc, mStrTarget);
       break;
     case NS_FOP_WIN_SHORTCUT_CREATE:
       NativeFileOpWinShortcutCreate();
@@ -154,27 +181,27 @@ char* nsInstallFileOpItem::toString()
   switch(mCommand)
   {
     case NS_FOP_FILE_COPY:
-      result = "Copy file: ";
+      result = "Copy File: ";
       result.Append(mSrc->GetNativePathCString());
       result.Append(" to ");
       result.Append(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_DELETE:
-      result = "Delete file: ";
+      result = "Delete File: ";
       result.Append(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_MOVE:
-      result = "Move file: ";
+      result = "Move File: ";
       result.Append(mSrc->GetNativePathCString());
       result.Append(" to ");
       result.Append(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_RENAME:
-      result = "Rename file: ";
-      result.Append(mTarget->GetNativePathCString());
+      result = "Rename File: ";
+      result.Append(*mStrTarget);
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_DIR_CREATE:
@@ -187,16 +214,16 @@ char* nsInstallFileOpItem::toString()
       result.Append(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
+    case NS_FOP_DIR_RENAME:
+      result = "Rename Dir: ";
+      result.Append(*mStrTarget);
+      resultCString = result.ToNewCString();
+      break;
     case NS_FOP_WIN_SHORTCUT_CREATE:
       break;
     case NS_FOP_MAC_ALIAS_CREATE:
       break;
     case NS_FOP_UNIX_LINK_CREATE:
-      break;
-    case NS_FOP_FILE_SET_STAT:
-      result = "Set file stat: ";
-      result.Append(mTarget->GetNativePathCString());
-      resultCString = result.ToNewCString();
       break;
     default:
       result = "Unkown file operation command!";
@@ -255,9 +282,13 @@ nsInstallFileOpItem::NativeFileOpDirRemove(nsFileSpec* aTarget, PRInt32 aFlags)
 }
 
 PRInt32
-nsInstallFileOpItem::NativeFileOpDirRename(nsFileSpec* aSrc, nsFileSpec* aTarget)
+nsInstallFileOpItem::NativeFileOpDirRename(nsFileSpec* aSrc, nsString* aTarget)
 {
-  aSrc->Rename(*aTarget);
+  char* szTarget = aTarget->ToNewCString();
+
+  aSrc->Rename(szTarget);
+  delete [] szTarget;
+
   return NS_OK;
 }
 
@@ -290,9 +321,13 @@ nsInstallFileOpItem::NativeFileOpFileMove(nsFileSpec* aSrc, nsFileSpec* aTarget)
 }
 
 PRInt32
-nsInstallFileOpItem::NativeFileOpFileRename(nsFileSpec* aSrc, nsFileSpec* aTarget)
+nsInstallFileOpItem::NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget)
 {
-  aSrc->Rename(*aTarget);
+  char* szTarget = aTarget->ToNewCString();
+
+  aSrc->Rename(szTarget);
+  delete [] szTarget;
+
   return NS_OK;
 }
 

@@ -42,10 +42,8 @@ class nsInstallFileOpItem : public nsInstallObject
 
     // used by:
     //   FileOpDirRemove()
-    //   FileOpDirRename()
     //   FileOpFileCopy()
     //   FileOpFileMove()
-    //   FileOpFileRename()
     nsInstallFileOpItem(nsInstall*    installObj,
                         PRInt32       aCommand,
                         nsFileSpec&   aSrc,
@@ -60,11 +58,13 @@ class nsInstallFileOpItem : public nsInstallObject
                         PRInt32*      aReturn);
 
     // used by:
+    //   FileOpDirRename()
     //   FileOpFileExecute()
+    //   FileOpFileRename()
     nsInstallFileOpItem(nsInstall*    aInstallObj,
                         PRInt32       aCommand,
-                        nsFileSpec&   aTarget,
-                        nsString&     aParams,
+                        nsFileSpec&   a1,
+                        nsString&     a2,
                         PRInt32*      aReturn);
 
     ~nsInstallFileOpItem();
@@ -86,6 +86,7 @@ class nsInstallFileOpItem : public nsInstallObject
     nsInstall*    mIObj;        // initiating Install object
     nsFileSpec*   mSrc;
     nsFileSpec*   mTarget;
+    nsString*     mStrTarget;
     nsString*     mParams;
     long          mFStat;
     PRInt32       mFlags;
@@ -95,12 +96,12 @@ class nsInstallFileOpItem : public nsInstallObject
 
     PRInt32       NativeFileOpDirCreate(nsFileSpec* aTarget);
     PRInt32       NativeFileOpDirRemove(nsFileSpec* aTarget, PRInt32 aFlags);
-    PRInt32       NativeFileOpDirRename(nsFileSpec* aSrc, nsFileSpec* aTarget);
+    PRInt32       NativeFileOpDirRename(nsFileSpec* aSrc, nsString* aTarget);
     PRInt32       NativeFileOpFileCopy(nsFileSpec* aSrc, nsFileSpec* aTarget);
     PRInt32       NativeFileOpFileDelete(nsFileSpec* aTarget, PRInt32 aFlags);
     PRInt32       NativeFileOpFileExecute(nsFileSpec* aTarget, nsString* aParams);
     PRInt32       NativeFileOpFileMove(nsFileSpec* aSrc, nsFileSpec* aTarget);
-    PRInt32       NativeFileOpFileRename(nsFileSpec* aSrc, nsFileSpec* aTarget);
+    PRInt32       NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget);
     PRInt32       NativeFileOpWinShortcutCreate();
     PRInt32       NativeFileOpMacAliasCreate();
     PRInt32       NativeFileOpUnixLinkCreate();

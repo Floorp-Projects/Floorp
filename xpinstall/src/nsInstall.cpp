@@ -1100,7 +1100,7 @@ nsInstall::FileOpDirRemove(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn
 }
 
 PRInt32
-nsInstall::FileOpDirRename(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn)
+nsInstall::FileOpDirRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_RENAME, aSrc, aTarget, aReturn);
 
@@ -1255,7 +1255,7 @@ nsInstall::FileOpFileMove(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aRetur
 }
 
 PRInt32
-nsInstall::FileOpFileRename(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn)
+nsInstall::FileOpFileRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_RENAME, aSrc, aTarget, aReturn);
 
