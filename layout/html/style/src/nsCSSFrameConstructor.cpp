@@ -4955,7 +4955,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
           ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
         }
-        // XXX If image display is turned off, then use ConstructAlternateImageFrame()
+        // XXX If image display is turned off, then use ConstructAlternateFrame()
         // instead...
         rv = NS_NewImageFrame(aPresShell, &newFrame);
       }
@@ -10301,12 +10301,12 @@ GetAlternateTextFor(nsIContent* aContent,
 
 // Construct an alternate frame to use when the image can't be rendered
 nsresult
-nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresShell*    aPresShell, 
-                                                    nsIPresContext*  aPresContext,
-                                                    nsIContent*      aContent,
-                                                    nsIStyleContext* aStyleContext,
-                                                    nsIFrame*        aParentFrame,
-                                                    nsIFrame*&       aFrame)
+nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell, 
+                                               nsIPresContext*  aPresContext,
+                                               nsIContent*      aContent,
+                                               nsIStyleContext* aStyleContext,
+                                               nsIFrame*        aParentFrame,
+                                               nsIFrame*&       aFrame)
 {
   nsAutoString  altText;
 
@@ -10314,7 +10314,9 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresShell*    aPresShell,
   aFrame = nsnull;
 
   // Get the alternate text to use
-  GetAlternateTextFor(aContent, nsHTMLAtoms::img, altText);
+  nsCOMPtr<nsIAtom> tag;
+  aContent->GetTag(*getter_AddRefs(tag));
+  GetAlternateTextFor(aContent, tag, altText);
 
   // Create a text content element for the alternate text
   nsCOMPtr<nsIContent> altTextContent;
@@ -10397,6 +10399,55 @@ IsPlaceholderFrame(nsIFrame* aFrame)
 }
 #endif
 
+
+static PRBool
+HasDisplayableChildren(nsIPresContext* aPresContext, nsIFrame* aContainerFrame)
+{
+  // Returns 'true' if there are frames within aContainerFrame that
+  // could be displayed in the frame list.
+  NS_PRECONDITION(aContainerFrame != nsnull, "null ptr");
+  if (! aContainerFrame)
+    return PR_FALSE;
+
+  nsIFrame* frame;
+  aContainerFrame->FirstChild(aPresContext, nsnull, &frame);
+
+  while (frame) {
+    // If it's not a text frame, then assume that it's displayable.
+    nsCOMPtr<nsIAtom> frameType;
+    frame->GetFrameType(getter_AddRefs(frameType));
+    if (frameType != nsLayoutAtoms::textFrame)
+      return PR_TRUE;
+
+    // Get the text content...
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
+    
+    nsCOMPtr<nsITextContent> text = do_QueryInterface(content);
+    NS_ASSERTION(text != nsnull, "oops, not an nsITextContent");
+    if (! text)
+      return PR_TRUE;
+    
+    // Is it only whitespace?
+    PRBool onlyWhitespace;
+    text->IsOnlyWhitespace(&onlyWhitespace);
+    
+    // If not, then we have displayable content here.
+    if (! onlyWhitespace)
+      return PR_TRUE;
+    
+    // Otherwise, on to the next frame...
+    frame->GetNextSibling(&frame);
+  }
+
+  // If we get here, then we've iterated through all the child frames,
+  // and every one is a text frame containing whitespace. (Or, there
+  // weren't any frames at all!) There is nothing to diplay.
+  return PR_FALSE;
+}
+
+
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell, 
                                                  nsIPresContext* aPresContext,
@@ -10438,8 +10489,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
     // It's an IMG element. Try and construct an alternate frame to use when the
     // image can't be rendered
     nsIFrame* newFrame;
-    rv = ConstructAlternateImageFrame(aPresShell, aPresContext, content, styleContext,
-                                      parentFrame, newFrame);
+    rv = ConstructAlternateFrame(aPresShell, aPresContext, content, styleContext,
+                                 parentFrame, newFrame);
 
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIFrameManager> frameManager;
@@ -10521,9 +10572,24 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
     rv = ConstructFrameByDisplayType(aPresShell, aPresContext, state, display, content,
                                      inFlowParent, styleContext, frameItems);
 
-    if (NS_SUCCEEDED(rv)) {
-      nsIFrame* newFrame = frameItems.childList;
+    if (NS_FAILED(rv)) return rv;
 
+    nsIFrame* newFrame = frameItems.childList;
+
+    if (nsHTMLAtoms::applet == tag.get()
+        && !HasDisplayableChildren(aPresContext, newFrame))
+      // If it's an <applet> tag without any displayable content, then
+      // it may have "alt" text specified that we could use to render
+      // text. Nuke the frames we just created, and use
+      // ConstructAlternateFrame() to fix stuff up.
+      nsFrameList list(newFrame);
+      list.DestroyFrames(aPresContext);
+
+      rv = ConstructAlternateFrame(aPresShell, aPresContext, content, styleContext,
+                                   parentFrame, newFrame);
+    }
+
+    if (NS_SUCCEEDED(rv)) {
       if (placeholderFrame) {
         // Remove the association between the old frame and its placeholder
         // Note: ConstructFrameByDisplayType() will already have added an

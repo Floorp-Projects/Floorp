@@ -416,12 +416,12 @@ protected:
                                      nsIFrame*        aParentFrame,
                                      nsIFrame**       aPlaceholderFrame);
 
-  nsresult ConstructAlternateImageFrame(nsIPresShell* aPresShell, 
-                                        nsIPresContext*  aPresContext,
-                                        nsIContent*      aContent,
-                                        nsIStyleContext* aStyleContext,
-                                        nsIFrame*        aParentFrame,
-                                        nsIFrame*&       aFrame);
+  nsresult ConstructAlternateFrame(nsIPresShell* aPresShell, 
+                                   nsIPresContext*  aPresContext,
+                                   nsIContent*      aContent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*        aParentFrame,
+                                   nsIFrame*&       aFrame);
 
 	nsWidgetRendering GetFormElementRenderingMode(nsIPresContext*       aPresContext,
 																								nsWidgetType					aWidgetType);
