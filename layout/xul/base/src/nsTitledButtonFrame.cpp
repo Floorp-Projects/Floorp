@@ -205,32 +205,13 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   mRenderer.SetNameSpace(kNameSpaceID_None);
   mRenderer.SetFrame(this,aPresContext);
   
-
-  	 // place 4 pixels of spacing
+  // place 4 pixels of spacing
 	 float p2t;
 	 aPresContext.GetScaledPixelsToTwips(&p2t);
 	 mSpacing = NSIntPixelsToTwips(4, p2t);
 
-  // Set the image loader's source URL and base URL
-
-  // get src
   mHasImage = PR_FALSE;
-  nsAutoString src;
-  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src)) &&
-    (src.Length() > 0)) {
-     mHasImage = PR_TRUE;
-  } else {
-    // if no src then get the list style image
-      const nsStyleList* myList =
-    (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
-  
-    if (myList->mListStyleImage.Length() > 0) {
-      src = myList->mListStyleImage;
-      mHasImage = PR_TRUE;
-    }
-  }
-
-  // Always set the image loader's base URL, because someone may
+   // Always set the image loader's base URL, because someone may
   // decide to change a button _without_ an image to have an image
   // later.
   nsIURL* baseURL = nsnull;
@@ -249,20 +230,7 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   mImageLoader.SetBaseURL(baseURL);
   NS_IF_RELEASE(baseURL);
 
-  if (mHasImage == PR_TRUE) {
-    mImageLoader.SetURLSpec(src);
-  } else 
-    mHasImage = PR_FALSE;
-  
-   // get the alignment
-  nsAutoString value;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
-  setTitle(value); 
-
-   // get the alignment
-  nsAutoString align;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align);
-  setAlignment(align); 
+  UpdateAttributes(aPresContext);
 
   return rv;
 }
@@ -276,51 +244,91 @@ nsTitledButtonFrame::SetDisabled(nsAutoString aDisabled)
 	 mRenderer.SetDisabled(PR_FALSE, PR_TRUE);
 }
 
-void
-nsTitledButtonFrame::setTitle(nsAutoString aTitle)
-{
-  mTitle = aTitle;
-}
 
 void
-nsTitledButtonFrame::setAlignment(nsAutoString aAlignment)
+nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
 {
-  if (aAlignment.EqualsIgnoreCase(ALIGN_LEFT))
+	nsAutoString value;
+	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+
+  if (value.EqualsIgnoreCase(ALIGN_LEFT))
 	  mAlign = NS_SIDE_LEFT;
-  else if (aAlignment.EqualsIgnoreCase(ALIGN_RIGHT))
+  else if (value.EqualsIgnoreCase(ALIGN_RIGHT))
 	  mAlign = NS_SIDE_RIGHT;
-  else if (aAlignment.EqualsIgnoreCase(ALIGN_TOP))
+  else if (value.EqualsIgnoreCase(ALIGN_TOP))
 	  mAlign = NS_SIDE_TOP;
   else 
 	  mAlign = NS_SIDE_BOTTOM;
+
+	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
+  mTitle = value;
+
+  // see if the source changed
+   // get the old image src
+  nsString oldSrc ="";
+  mImageLoader.GetURLSpec(oldSrc);
+
+   // get the new image src
+   nsString src = "";
+   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src);
+
+   // if the new image is empty
+   if (src.Equals("")) {
+     // get the list-style-image
+            const nsStyleList* myList =
+          (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  
+          if (myList->mListStyleImage.Length() > 0) {
+            src = myList->mListStyleImage;
+          }
+   }
+
+   // see if the images are different
+   if (PR_FALSE == oldSrc.Equals(src)) {
+      // if they are and the new image is not empty set it and reload
+
+         // Get rid of old image loader and start a new image load going
+          mImageLoader.DestroyLoader();
+
+          // Fire up a new image load request
+          PRIntn loadStatus;
+
+          mImageLoader.SetURLSpec(src);
+
+          // only load the image if it is valid
+          if (PR_FALSE == src.Equals(""))
+          {
+            mImageLoader.StartLoadImage(&aPresContext, this, TitledUpdateImageFrame,
+                                        PR_TRUE, loadStatus);
+
+            mSizeFrozen = PR_FALSE;
+            mHasImage = PR_TRUE;
+          } else {
+            mSizeFrozen = PR_TRUE;
+            mHasImage = PR_FALSE;
+          }
+
+        // If the image is already ready then we need to trigger a
+        // redraw because the image loader won't.
+        if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
+          // XXX Stuff this into a method on nsIPresShell/Context
+          nsRect bounds;
+          nsPoint offset;
+          nsIView* view;
+          GetOffsetFromView(offset, &view);
+          nsIViewManager* vm;
+          view->GetViewManager(vm);
+          bounds.x = offset.x;
+          bounds.y = offset.y;
+          bounds.width = mRect.width;
+          bounds.height = mRect.height;
+          vm->UpdateView(view, bounds, 0);
+          NS_RELEASE(vm);
+        }
+   }
+
 }
 
-NS_IMETHODIMP
-nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
-                               nsIContent* aChild,
-                               nsIAtom* aAttribute,
-                               PRInt32 aHint)
-{
-  nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
-                                              aAttribute, aHint);
-
-  if (NS_OK != rv) {
-    return rv;
-  }
-  if (nsHTMLAtoms::src == aAttribute) {
-    ImageMayHaveChanged(aPresContext);
-  } else if (nsHTMLAtoms::value == aAttribute) {
-	  nsAutoString value;
-	  aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
-	  setTitle(value); 
-  } else if (nsHTMLAtoms::align == aAttribute) {
-	  nsAutoString align;
-	  aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, align);
-	  setAlignment(align); 
-  } 
-
-  return NS_OK;
-}
 
 
 NS_IMETHODIMP
@@ -666,8 +674,7 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-   // the list-style-image may have changed.
-  ImageMayHaveChanged(&aPresContext);
+  UpdateAttributes(aPresContext);
 
   mNeedsLayout = PR_TRUE;
   nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
@@ -1012,6 +1019,7 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+
 //
 // ReResolveStyleContext
 //
@@ -1035,301 +1043,3 @@ nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsI
   
 } // ReResolveStyleContext
 
-
-void 
-nsTitledButtonFrame::ImageMayHaveChanged(nsIPresContext* aPresContext)
-{
-   // see if the source changed
-   // get the old image src
-  nsString oldSrc ="";
-  mImageLoader.GetURLSpec(oldSrc);
-
-   // get the new image src
-   nsString src = "";
-   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src);
-
-   // if the new image is empty
-   if (src.Equals("")) {
-     // get the list-style-image
-            const nsStyleList* myList =
-          (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
-  
-          if (myList->mListStyleImage.Length() > 0) {
-            src = myList->mListStyleImage;
-          }
-   }
-
-   // see if the images are different
-   if (PR_FALSE == oldSrc.Equals(src)) {
-      // if they are and the new image is not empty set it and reload
-      if (PR_FALSE == src.Equals(""))
-      {
-         // Get rid of old image loader and start a new image load going
-          mImageLoader.DestroyLoader();
-
-          // Fire up a new image load request
-          PRIntn loadStatus;
-
-          mImageLoader.SetURLSpec(src);
-          mImageLoader.StartLoadImage(aPresContext, this, nsnull,
-                                      PR_FALSE, loadStatus);
-
-          mSizeFrozen = PR_FALSE;
-          mHasImage = PR_TRUE;
-
-        // If the image is already ready then we need to trigger a
-        // redraw because the image loader won't.
-        if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
-          // XXX Stuff this into a method on nsIPresShell/Context
-          nsRect bounds;
-          nsPoint offset;
-          nsIView* view;
-          GetOffsetFromView(offset, &view);
-          nsIViewManager* vm;
-          view->GetViewManager(vm);
-          bounds.x = offset.x;
-          bounds.y = offset.y;
-          bounds.width = mRect.width;
-          bounds.height = mRect.height;
-          vm->UpdateView(view, bounds, 0);
-          NS_RELEASE(vm);
-        }
-      } else {
-         // other wise unset the image.
-         mSizeFrozen = PR_TRUE;
-         mHasImage = PR_FALSE;
-      }
-      mNeedsLayout = PR_TRUE;
-   }
-
-}
-
-/*
-//----------------------------------------
-NS_IMETHODIMP nsTitledButtonFrame::CreateMenu(nsIPopUpMenu * aPopUpMenu, 
-                                            nsIDOMNode * aMenuNode, 
-                                           nsString   & aMenuName) 
-{
-  // Create and place back button
-  nsresult rv = nsComponentManager::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
-                                             (void**)&mPopUpMenu);
-  if (NS_OK != rv) 
-    return rv;
-  
-  nsIWidget * menuParentWidget;
-  if (NS_OK != this->QueryInterface(kIWidgetIID,(void**)&menuParentWidget)) {
-    return;
-  }
-
-  nsIWidget * popupWidget;
-  nsRect rect;
-  if (NS_OK == mPopUpMenu->QueryInterface(kIWidgetIID,(void**)&popupWidget)) {
-	  popupWidget->Create(menuParentWidget, rect, nsnull, nsnull);
-	  NS_RELEASE(popupWidget);
-  }
-  NS_RELEASE(menuParentWidget);
-  
-    // Begin menuitem inner loop
-    nsCOMPtr<nsIDOMNode> menuitemNode;
-    aMenuNode->GetFirstChild(getter_AddRefs(menuitemNode));
-    while (menuitemNode) {
-      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
-      if (menuitemElement) {
-        nsString menuitemNodeType;
-        nsString menuitemName;
-        menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType.Equals("menuitem")) {
-          // LoadMenuItem
-          LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.Equals("separator")) {
-          pnsMenu->AddSeparator();
-        } else if (menuitemNodeType.Equals("menu")) {
-          // Load a submenu
-          LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
-        }
-      }
-      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
-      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
-    } // end menu item innner loop
-  }
-
-  return NS_OK;
-}
-
-//----------------------------------------
-NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
-  nsIMenu *    pParentMenu,
-  nsIDOMElement * menuitemElement,
-  nsIDOMNode *    menuitemNode)
-{
-  nsString menuitemName;
-  nsString menuitemCmd;
-
-  menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
-  menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
-  // Create nsMenuItem
-  nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
-  if (NS_OK == rv) {
-    pnsMenuItem->Create(pParentMenu); //, menuitemName, 0);                 
-    // Set nsMenuItem Name
-    pnsMenuItem->SetLabel(menuitemName);
-    // Make nsMenuItem a child of nsMenu
-    pParentMenu->AddMenuItem(pnsMenuItem);
-          
-    // Create MenuDelegate - this is the intermediator inbetween 
-    // the DOM node and the nsIMenuItem
-    // The nsWebShellWindow wacthes for Document changes and then notifies the 
-    // the appropriate nsMenuDelegate object
-    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(menuitemNode));
-    if (!domElement) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsAutoString cmdAtom("onClick");
-    nsString cmdName;
-
-    domElement->GetAttribute(cmdAtom, cmdName);
-
-    nsXULCommand * menuDelegate = new nsXULCommand();
-    menuDelegate->SetCommand(cmdName);
-    menuDelegate->SetWebShell(mWebShell);
-    menuDelegate->SetDOMElement(domElement);
-    menuDelegate->SetMenuItem(pnsMenuItem);
-    nsIXULCommand * icmd;
-    if (NS_OK == menuDelegate->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
-      mMenuDelegates.AppendElement(icmd);
-      nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menuDelegate));
-      if (listener) {
-        pnsMenuItem->AddMenuListener(listener);
-        if (DEBUG_MENUSDEL) printf("Adding menu listener to [%s]\n", menuitemName.ToNewCString());
-      } else {
-        if (DEBUG_MENUSDEL) printf("*** NOT Adding menu listener to [%s]\n", menuitemName.ToNewCString());
-      }
-    }
-  } 
-  return NS_OK;
-}
-
-//----------------------------------------
-void nsWebShellWindow::LoadSubMenu(
-  nsIMenu *       pParentMenu,
-  nsIDOMElement * menuElement,
-  nsIDOMNode *    menuNode)
-{
-  nsString menuName;
-  menuElement->GetAttribute(nsAutoString("name"), menuName);
-  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
-
-  // Create nsMenu
-  nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
-  if (NS_OK == rv) {
-    // Call Create
-    pnsMenu->Create(pParentMenu, menuName);
-
-    // Set nsMenu Name
-    pnsMenu->SetLabel(menuName); 
-    // Make nsMenu a child of parent nsMenu
-    pParentMenu->AddMenu(pnsMenu);
-
-    // Begin menuitem inner loop
-    nsCOMPtr<nsIDOMNode> menuitemNode;
-    menuNode->GetFirstChild(getter_AddRefs(menuitemNode));
-    while (menuitemNode) {
-      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
-      if (menuitemElement) {
-        nsString menuitemNodeType;
-        menuitemElement->GetNodeName(menuitemNodeType);
-        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("separator"));
-        if (menuitemNodeType.Equals("menuitem")) {
-          // Load a menuitem
-          LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.Equals("separator")) {
-          pnsMenu->AddSeparator();
-        } else if (menuitemNodeType.Equals("menu")) {
-          // Add a submenu
-          LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
-        }
-      }
-      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
-      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
-    } // end menu item innner loop
-  }     
-}
-
-
-
-//------------------------------------------------------------
-void nsTitledButtonFrame::CreatePopUpMenu()
-{
-  if (nsnull != mPopUpMenu) {
-    return;
-  }
-
-  // Create and place back button
-  nsresult rv = nsComponentManager::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
-                                             (void**)&mPopUpMenu);
-  if (NS_OK == rv) {
-    nsIWidget * menuParentWidget;
-	  if (NS_OK != this->QueryInterface(kIWidgetIID,(void**)&menuParentWidget)) {
-      return;
-	  }
-
-    nsIWidget * popupWidget;
-    nsRect rect;
-	  if (NS_OK == mPopUpMenu->QueryInterface(kIWidgetIID,(void**)&popupWidget)) {
-	    popupWidget->Create(menuParentWidget, rect, nsnull, nsnull);
-		  NS_RELEASE(popupWidget);
-	  }
-    NS_RELEASE(menuParentWidget);
-  }
-
-
-  return;
-}
-
-//------------------------------------------------------------
-NS_METHOD nsTitledButtonFrame::GetPopUpMenu(nsIPopUpMenu *& aPopUpMenu)
-{
-  CreatePopUpMenu();
-
-  NS_ADDREF(mPopUpMenu);
-  aPopUpMenu = mPopUpMenu;
-  return NS_OK;
-}
-
-//------------------------------------------------------------
-NS_METHOD nsTitledButtonFrame::AddMenuItem(const nsString& aMenuLabel, PRInt32 aCommand)
-{
-  CreatePopUpMenu();
-
-  nsIMenuItem * menuItem = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull,  kIMenuItemIID,  (void**)&menuItem);
-  menuItem->Create(mPopUpMenu, aMenuLabel, aCommand);
-  if (NS_OK == rv) {
-    mPopUpMenu->AddItem(menuItem);
-    NS_RELEASE(menuItem);
-  }
-  return NS_OK;
-}
-
-
-//-----------------------------------------------------------------------------
-nsEventStatus nsTitledButtonFrame::OnLeftButtonDown()
-{
-  mState |= eButtonState_pressed;
-  Invalidate(PR_TRUE);
-
-  nsRect rect;
-  GetBounds(rect);
-
-  if (mPopUpMenu) {
-    mMenuIsPoppedUp = PR_TRUE;
-    mPopUpMenu->ShowMenu(0, rect.height);
-    mMenuIsPoppedUp = PR_FALSE;
-  }
-  return nsEventStatus_eIgnore;
-}
-
-*/
