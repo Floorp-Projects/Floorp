@@ -38,10 +38,6 @@ DEPTH = ..\..\..
 #//------------------------------------------------------------------------
 
 DLLNAME		= xppref$(MOZ_BITS)
-DLL1NAME	= xpref$(MOZ_BITS)
-PDBFILE		= $(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-RESFILE		= $(DLLNAME).res
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 MAKE_OBJ_TYPE	= DLL
 IS_COMPONENT=1
@@ -58,27 +54,10 @@ LINCS = -I$(PUBLIC)/js \
 
 LCFLAGS = -DMOZILLA_CLIENT
 
-# I'm hardcoding the directory name here to fix MOZ_LITE
-# it was $(DIST_PREFIX) instead of WIN, which is the same
-# in communicator, but breaks when MOZ_LITE sets $DIST to NAV
-# This will need to be fixed in a better way, but it depends
-# on the Security team to fix stuff in what is being passed here.
-# the same change was made in \ns\cmd\winfe\mkfiles32\mozilla.mak
-!if ("$(MOZ_BITS)" == "16" )
-BINREL_DIST = $(DIST)
-!else
-!ifndef MOZ_DEBUG
-BINREL_DIST=$(XPDIST)\WIN954.0_OPT.OBJ
-!else
-BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
-!endif
-!endif
-
 !ifdef MOZ_SECURITY
-HASHLIBS=$(BINREL_DIST)\lib\hash.lib $(BINREL_DIST)\lib\secutil.lib 
+HASHLIBS=$(DIST)\lib\hash.lib $(DIST)\lib\secutil.lib 
 !endif
 
-# DEFFILE	= $(DLLNAME).def
 LLIBS	= \
 	$(LIBNSPR) \
 	$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
