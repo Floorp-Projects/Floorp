@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Daniel Glazman <glazman@netscape.com>
  */
 #include "nsCSSScanner.h"
 #include "nsIInputStream.h"
@@ -501,10 +502,25 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
     }
 
     // INCLUDES ("~=") and DASHMATCH ("|=")
-    if (( ch == '|' ) || ( ch == '~')) {
+    if (( ch == '|' ) || ( ch == '~' ) || ( ch == '^' ) ||
+        ( ch == '$' ) || ( ch == '*' )) {
       PRInt32 nextChar = Read(aErrorCode);
       if ( nextChar == '=' ) {
-        aToken.mType = (ch == '~') ? eCSSToken_Includes : eCSSToken_Dashmatch;
+        if (ch == '~') {
+          aToken.mType = eCSSToken_Includes;
+        }
+        else if (ch == '|') {
+          aToken.mType = eCSSToken_Dashmatch;
+        }
+        else if (ch == '^') {
+          aToken.mType = eCSSToken_Beginsmatch;
+        }
+        else if (ch == '$') {
+          aToken.mType = eCSSToken_Endsmatch;
+        }
+        else if (ch == '*') {
+          aToken.mType = eCSSToken_Containsmatch;
+        }
         return PR_TRUE;
       } else {
         Pushback(nextChar);

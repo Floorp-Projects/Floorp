@@ -51,6 +51,9 @@ public:
 #define NS_ATTR_FUNC_EQUALS     1     // [attr=value]
 #define NS_ATTR_FUNC_INCLUDES   2     // [attr~=value] (space separated)
 #define NS_ATTR_FUNC_DASHMATCH  3     // [attr|=value] ('-' truncated)
+#define NS_ATTR_FUNC_BEGINSMATCH  4   // [attr^=value] (begins with)
+#define NS_ATTR_FUNC_ENDSMATCH  5     // [attr$=value] (ends with)
+#define NS_ATTR_FUNC_CONTAINSMATCH 6  // [attr*=value] (contains substring)
 
 struct nsAttrSelector {
 public:
