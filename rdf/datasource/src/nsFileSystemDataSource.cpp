@@ -52,8 +52,12 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsEnumeratorUtils.h"
 
-
 #ifdef	XP_WIN
+#include "nsIUnicodeDecoder.h"
+#include "nsIPlatformCharset.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
+
 #include "windef.h"
 #include "winbase.h"
 #endif
@@ -66,6 +70,7 @@
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 
 static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
 
@@ -91,6 +96,7 @@ private:
 #ifdef	XP_WIN
 	static nsIRDFResource		*kNC_IEFavoriteObject;
 	static char			*ieFavoritesDir;
+	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
 #endif
 
 #ifdef	XP_BEOS
@@ -257,6 +263,25 @@ FileSystemDataSource::FileSystemDataSource(void)
 			ieFavoritesDir = nsCRT::strdup(ieFavoritesURI);
 		}
 		gRDFService->GetResource(NC_NAMESPACE_URI "IEFavorite",       &kNC_IEFavoriteObject);
+
+		NS_WITH_SERVICE(nsIPlatformCharset, platformCharset, kPlatformCharsetCID, &rv);
+		if (NS_SUCCEEDED(rv) && (platformCharset))
+		{
+			nsAutoString	defaultCharset;
+			if (NS_SUCCEEDED(rv = platformCharset->GetCharset(kPlatformCharsetSel_4xBookmarkFile,
+				defaultCharset)))
+				{
+					// found the default platform charset
+					// now try and get a decoder from it to Unicode
+					NS_WITH_SERVICE(nsICharsetConverterManager, charsetConv,
+						kCharsetConverterManagerCID, &rv);
+					if (NS_SUCCEEDED(rv) && (charsetConv))
+					{
+						rv = charsetConv->GetUnicodeDecoder(&defaultCharset,
+							getter_AddRefs(mUnicodeDecoder));
+					}
+				}
+		}
 #endif
 
 		gRDFService->GetResource(kURINC_FileSystemRoot,               &kNC_FileSystemRoot);
