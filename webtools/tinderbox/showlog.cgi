@@ -161,11 +161,15 @@ print "
 <p> Click error to take you to the error in the log.
 <PRE>
 ";
-print foreach (@summary_output);
+foreach (@summary_output) {
+  print;
+}
 print "</PRE>\n";
 
 print "<H2>Build Error Log</H2>\n<pre>";
-print foreach (@log_output);
+foreach (@log_output) {
+  print;
+}
 print
 "</PRE>
 
