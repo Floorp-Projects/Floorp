@@ -978,6 +978,32 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext& aPresContext,
   // We need to make sure we update things when content gets removed.
   // Clear out our top and bottom frames.
   mTopFrame = mBottomFrame = nsnull;
+
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+
+  nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
+
+  // Go ahead and delete the frame.
+  mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, aChildFrame);
+  mFrames.DeleteFrame(aPresContext, aChildFrame);
+  treeFrame->InvalidateCellMap();
+  treeFrame->InvalidateColumnCache();
+
+  if (IsLazy() && !treeFrame->IsSlatedForReflow()) {
+    treeFrame->SlateForReflow();
+
+    // Schedule a reflow for us.
+    nsCOMPtr<nsIReflowCommand> reflowCmd;
+    
+    nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), treeFrame,
+                                          nsIReflowCommand::FrameRemoved, nsnull);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPresShell> presShell;
+      aPresContext.GetShell(getter_AddRefs(presShell));
+      presShell->AppendReflowCommand(reflowCmd);
+    }
+  }
 }
 
 void nsTreeRowGroupFrame::SetContentChain(nsISupportsArray* aContentChain)
