@@ -20,18 +20,14 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) .\SearchDialog.xul		$(DIST)\bin\chrome\messenger\locale\en-US
-	$(MAKE_INSTALL) .\SearchOptions.xul		$(DIST)\bin\chrome\messenger\locale\en-US
-	$(MAKE_INSTALL) .\SearchDialog.js			$(DIST)\bin\chrome\messenger\locale\en-US
-	$(MAKE_INSTALL) .\FilterListDialog.xul	$(DIST)\bin\chrome\messenger\locale\en-US
-	$(MAKE_INSTALL) .\FilterListDialog.js	$(DIST)\bin\chrome\messenger\locale\en-US
-	$(MAKE_INSTALL) .\FilterEditor.xul		$(DIST)\bin\chrome\messenger\locale\en-US
-	$(MAKE_INSTALL) .\FilterEditor.js			$(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) .\SearchDialog.dtd		$(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) .\SearchOptions.dtd		$(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) .\FilterListDialog.dtd	$(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) .\FilterEditor.dtd		$(DIST)\bin\chrome\messenger\locale\en-US
 
 clobber::
-	rm -f $(DIST)\chrome\messenger\locale\en-US\SearchDialog.xul
-	rm -f $(DIST)\chrome\messenger\locale\en-US\SearchDialog.js
-	rm -f $(DIST)\chrome\messenger\locale\en-US\FilterListDialog.xul
-	rm -f $(DIST)\chrome\messenger\locale\en-US\FilterListDialog.js
-	rm -f $(DIST)\chrome\messenger\locale\en-US\FilterEditor.xul
-	rm -f $(DIST)\chrome\messenger\locale\en-US\FilterEditor.js
+	rm -f $(DIST)\chrome\messenger\locale\en-US\SearchDialog.dtd
+	rm -f $(DIST)\chrome\messenger\locale\en-US\FilterListDialog.dtd
+	rm -f $(DIST)\chrome\messenger\locale\en-US\FilterEditor.dtd
+	rm -f $(DIST)\chrome\messenger\locale\en-US\SearchOptions.dtd
+

@@ -29,13 +29,10 @@ include $(topsrcdir)/config/rules.mk
 SAMPLES_DIR = $(DIST)/bin/chrome/messenger/locale/en-US
 
 EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/SearchDialog.xul	\
-	$(srcdir)/SearchOptions.xul	\
-	$(srcdir)/SearchDialog.js	\
-	$(srcdir)/FilterListDialog.xul	\
-	$(srcdir)/FilterListDialog.js	\
-	$(srcdir)/FilterEditor.xul		\
-	$(srcdir)/FilterEditor.js		\
+	$(srcdir)/FilterEditor.dtd		\
+	$(srcdir)/FilterListDialog.dtd		\
+	$(srcdir)/SearchDialog.dtd		\
+	$(srcdir)/SearchOptions.dtd		\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
