@@ -2183,6 +2183,7 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
         return NS_OK;
     }
 
+    SaveSortInfo(sortType, sortOrder);
     // figure out how much memory we'll need, and the malloc it
     PRUint16 maxLen;
     eFieldType fieldType;
