@@ -2329,10 +2329,9 @@ lo_BeginTextareaTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		PA_FREE(type_block);
 	}
 	else
-#else
+#endif /*ENDER*/
 	form_element = lo_form_textarea(context, state, tag,
 		FORM_TYPE_TEXTAREA);
-#endif /*ENDER*/
 
 	/*
 	 * Make a copy of the tag so that we can correctly reflect this
