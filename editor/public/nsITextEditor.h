@@ -288,6 +288,18 @@ public:
   NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
   NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
 
+  /** Get and set the body wrap width
+    * @param aWrapColumn - the column to wrap at. This is set as a COLS attribute
+    * on a PRE block.
+    * 
+    * Special values:
+    *    0  = wrap to window width
+    *    -1 = no wrap at all
+    * 
+    */
+  NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn)=0;
+  NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn)=0;
+
 // Miscellaneous Methods
   /*
   NS_IMETHOD CheckSpelling()=0;
