@@ -361,7 +361,7 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:layout:html:forms:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:layout:html:base:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:mailnews:jar.mn", $chrome_dir, \%jars);
-    if ($main::options{smime}) {
+    if ($main::options{smime} && $main::options{psm}) {
     	CreateJarFromManifest(":mozilla:mailnews:extensions:smime:jar.mn", $chrome_dir, \%jars);
     }
     CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
@@ -1167,7 +1167,7 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:mailnews:imap:macbuild:msgimapIDL.mcp",               "MsgImap");
     BuildIDLProject(":mozilla:mailnews:mime:macbuild:mimeIDL.mcp",                  "Mime");
     BuildIDLProject(":mozilla:mailnews:import:macbuild:msgImportIDL.mcp",           "msgImport");
-    if ($main::options{smime}) {
+    if ($main::options{smime} && $main::options(psm)) {
     	BuildIDLProject(":mozilla:mailnews:extensions:smime:macbuild:msgsmimeIDL.mcp",  "msgsmime");
     }
 
@@ -1991,7 +1991,7 @@ sub BuildMailNewsProjects()
     }
              
     InstallResources(":mozilla:mailnews:addrbook:src:MANIFEST_COMPONENTS",              "${dist_dir}Components");
-	if ($main::options{smime}) {
+	if ($main::options{smime} && $main::options{psm}) {
     	BuildOneProject(":mozilla:mailnews:extensions:smime:macbuild:smime.mcp",         "msgsmime$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     	InstallResources(":mozilla:mailnews:extensions:smime:src:MANIFEST",				 "${dist_dir}Components");
     } else {
