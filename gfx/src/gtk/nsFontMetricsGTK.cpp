@@ -741,6 +741,8 @@ SingleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
 
   return count;
 }
+
+/*
 static void 
 ReverseBuffer(char* aBuf, gint count)
 {
@@ -756,12 +758,14 @@ ReverseBuffer(char* aBuf, gint count)
        *tail-- = tmp;
     }
 }
+*/
 
 // the following code assume all the PRUnichar is draw in the same
 // direction- left to right, without mixing with characters which should
 // draw from right to left. This mean it should not be used untill the 
 // upper level code resolve bi-di and ensure this assumption. otherwise
 // it may break non-bidi pages on a system which have hebrew/arabic fonts
+/*
 static gint
 SingleByteConvertReverse(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
   PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen)
@@ -771,6 +775,7 @@ SingleByteConvertReverse(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
     ReverseBuffer(aDestBuf, count);
     return count;
 }
+*/
 
 static gint
 DoubleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
