@@ -308,22 +308,22 @@ BOOL CGetStoreFoldersIter::ExcludeFolderClass( const PRUnichar *pName)
 	BOOL bResult;
 	if (m_isMail) {
 		bResult = FALSE;
-		if (!nsCRT::strcasecmp( pName, L"IPF.Appointment"))
+        if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.Appointment")))
 			bResult = TRUE;
-		else if (!nsCRT::strcasecmp( pName, L"IPF.Contact"))
+		else if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.Contact")))
 			bResult = TRUE;
-		else if (!nsCRT::strcasecmp( pName, L"IPF.Journal"))
+		else if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.Journal")))
 			bResult = TRUE;
-		else if (!nsCRT::strcasecmp( pName, L"IPF.StickyNote"))
+        else if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.StickyNote")))
 			bResult = TRUE;
-		else if (!nsCRT::strcasecmp( pName, L"IPF.Task"))
+		else if (!Compare(nsDependentString(pName), NS_LITERAL_STRING("IPF.Task")))
 			bResult = TRUE;
 		// else if (!stricmp( pName, "IPF.Note"))
 		//	bResult = TRUE;
 	}
 	else {
 		bResult = TRUE;
-		if (!nsCRT::strcasecmp( pName, L"IPF.Contact"))
+		if (!Compare( nsDependentString(pName), NS_LITERAL_STRING("IPF.Contact")))
 			bResult = FALSE;
 	}
 
