@@ -177,7 +177,8 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_MENUITEM;
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No DOM element for menu node!");
+  if (!element)
+    return NS_ERROR_FAILURE;
   nsAutoString menuItemType;
   element->GetAttribute(NS_LITERAL_STRING("type"), menuItemType);
   if (menuItemType.EqualsIgnoreCase("radio"))
