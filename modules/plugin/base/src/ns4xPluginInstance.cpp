@@ -936,12 +936,14 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     // fill in window info structure 
     ws->type = 0; // OK, that was a guess!!
+#ifndef NO_X11
     ws->depth = gdk_window_get_visual(win)->depth;
     ws->display = GTK_XTBIN(mXtBin)->xtdisplay;
     ws->visual = GDK_VISUAL_XVISUAL(gdk_window_get_visual(win));
     ws->colormap = GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap(win));
 
     XFlush(ws->display);
+#endif
   } // !window->ws_info
 
   if (!mXtBin)
