@@ -1787,16 +1787,18 @@ nsAutoString2::nsAutoString2(const char* aCString,eCharSize aCharSize) : nsStrin
  * Copy construct from ascii c-string
  * @param   aCString is a ptr to a 1-byte cstr
  */
-nsAutoString2::nsAutoString2(char* aCString,PRUint32 aCapacity,eCharSize aCharSize,PRBool assumeOwnership) : nsString2(aCharSize) {
+nsAutoString2::nsAutoString2(char* aCString,PRInt32 aCapacity,eCharSize aCharSize,PRBool assumeOwnership) : nsString2(aCharSize) {
   mAgent=0;
-  if(assumeOwnership) {
-    nsStr::Initialize(*this,aCString,aCapacity,0,eOneByte,PR_TRUE);
+  if(assumeOwnership && aCString) {
+    aCapacity = (-1==aCapacity) ? strlen(aCString) : aCapacity-1;
+    nsStr::Initialize(*this,aCString,aCapacity,aCapacity,eOneByte,PR_TRUE);
+    AddNullTerminator(*this);
   }
   else {
     nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+    AddNullTerminator(*this);
+    Assign(aCString);
   }
-  AddNullTerminator(*this);
-  Assign(aCString);
 }
 
 /**
@@ -1814,16 +1816,18 @@ nsAutoString2::nsAutoString2(const PRUnichar* aString,eCharSize aCharSize) : nsS
  * Copy construct from uni-string
  * @param   aString is a ptr to a unistr
  */
-nsAutoString2::nsAutoString2(PRUnichar* aString,PRUint32 aCapacity,eCharSize aCharSize,PRBool assumeOwnership) : nsString2(aCharSize) {
+nsAutoString2::nsAutoString2(PRUnichar* aString,PRInt32 aCapacity,eCharSize aCharSize,PRBool assumeOwnership) : nsString2(aCharSize) {
   mAgent=0;
-  if(assumeOwnership) {
-    nsStr::Initialize(*this,(char*)aString,aCapacity,0,eTwoByte,PR_TRUE);
+  if(assumeOwnership && aString) {
+    aCapacity = (-1==aCapacity) ? nsCRT::strlen(aString) : aCapacity-1;
+    nsStr::Initialize(*this,(char*)aString,aCapacity,aCapacity,eTwoByte,PR_TRUE);
+    AddNullTerminator(*this);
   }
   else {
     nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+    AddNullTerminator(*this);
+    Assign(aString);
   }
-  AddNullTerminator(*this);
-  Assign(aString);
 }
 
 
@@ -1904,11 +1908,18 @@ nsSubsumeStr::nsSubsumeStr(nsStr& aString) : nsString2((eCharSize)aString.mCharS
   Subsume(*this,aString);
 }
 
-nsSubsumeStr::nsSubsumeStr(const PRUnichar* aString) : nsString2(aString,eTwoByte) {
+nsSubsumeStr::nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) : nsString2(eTwoByte) {
+  mUStr=aString;
+  mCapacity=mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength-1;
+  mOwnsBuffer=assumeOwnership;
 }
 
-nsSubsumeStr::nsSubsumeStr(const char* aString) : nsString2(aString,eOneByte) {
+nsSubsumeStr::nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength) : nsString2(eOneByte) {
+  mStr=aString;
+  mCapacity=mLength=(-1==aLength) ? strlen(aString) : aLength-1;
+  mOwnsBuffer=assumeOwnership;
 }
+
 
 #ifdef  RICKG_DEBUG
 /***********************************************************************
@@ -1926,6 +1937,14 @@ CStringTester::CStringTester() {
   {
     {
       nsString2 theString0("foo",theSize);  //watch it construct and destruct
+    }
+
+    {
+      //this test makes sure that autostrings who assume ownership of a buffer, 
+      //don't also try to copy that buffer onto itself... (was a bug)
+      char* theStr="hello rick";      
+      nsAutoString2(theStr,5,eOneByte,PR_FALSE);
+
     }
 
     {

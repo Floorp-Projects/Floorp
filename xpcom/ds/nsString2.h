@@ -52,8 +52,8 @@ class nsISizeOfHandler;
 #define nsAutoString2 nsAutoString
 #endif
 
-class NS_COM nsSubsumeStr;
 
+class NS_COM nsSubsumeStr;
 class NS_COM nsString2 : public nsStr {
 
   public: 
@@ -744,9 +744,9 @@ public:
 
 
     nsAutoString2(const char* aCString,eCharSize aCharSize=kDefaultCharSize);
-    nsAutoString2(char* aCString,PRUint32 aLength,eCharSize aCharSize=kDefaultCharSize,PRBool assumeOwnership=PR_FALSE);
+    nsAutoString2(char* aCString,PRInt32 aCapacity=-1,eCharSize aCharSize=kDefaultCharSize,PRBool assumeOwnership=PR_FALSE);
     nsAutoString2(const PRUnichar* aString,eCharSize aCharSize=kDefaultCharSize);
-    nsAutoString2(PRUnichar* aString,PRUint32 aLength,eCharSize aCharSize=kDefaultCharSize,PRBool assumeOwnership=PR_FALSE);
+    nsAutoString2(PRUnichar* aString,PRInt32 aCapacity=-1,eCharSize aCharSize=kDefaultCharSize,PRBool assumeOwnership=PR_FALSE);
     
     nsAutoString2(const nsStr& aString,eCharSize aCharSize=kDefaultCharSize);
     nsAutoString2(const nsString2& aString,eCharSize aCharSize=kDefaultCharSize);
@@ -790,8 +790,8 @@ class NS_COM nsSubsumeStr : public nsString2 {
 public:
   nsSubsumeStr(nsString2& aString);
   nsSubsumeStr(nsStr& aString);
-  nsSubsumeStr(const PRUnichar* aString);
-  nsSubsumeStr(const char* aString);
+  nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
+  nsSubsumeStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
 };
 
 #endif

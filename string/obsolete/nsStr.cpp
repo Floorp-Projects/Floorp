@@ -438,23 +438,31 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRUint32 aChar,PRBool aEli
 
 
 PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRUint32 anOffset) {
-  PRInt32 index=anOffset-1;
-  PRInt32 theMax=aDest.mLength-aTarget.mLength;
-  if((aDest.mLength>0) && (aTarget.mLength>0)){
-    PRInt32 theNewStartPos=-1;
-    PRUnichar theFirstTargetChar=GetCharAt(aTarget,0);
-    PRUnichar theLastTargetChar=GetCharAt(aTarget,aTarget.mLength-1);
-    PRInt32   theTargetMax=aTarget.mLength;
-    while(++index<=theMax) {
-      PRInt32 theSubIndex=-1;
-      PRBool  matches=PR_TRUE;
-      while((++theSubIndex<theTargetMax) && (matches)){
-        PRUnichar theChar=GetCharAt(aDest,index+theSubIndex);
-        PRUnichar theTargetChar=GetCharAt(aTarget,theSubIndex);
-        matches=PRBool(theChar==theTargetChar);
+  if((aDest.mLength>0) && (aTarget.mLength>0) && (anOffset<aTarget.mLength)){
+
+      //This little block of code builds up the boyer-moore skip table.
+      //It might be nicer if this could be generated externally as passed in to improve performance.
+    const int theSize=100;
+    int theSkipTable[theSize];
+    PRUint32 theIndex=0;
+    for (theIndex=0;theIndex<theSize;++theIndex) {
+      theSkipTable[theIndex]=aTarget.mLength;
+    }
+    for(theIndex=0;theIndex<aTarget.mLength-1;++theIndex) {
+      theSkipTable[(PRUint32)GetCharAt(aTarget,theIndex)]=(aTarget.mLength-theIndex-1);
+    }
+
+      //and now we do the actual searching.      
+    PRUint32 theMaxIndex=aDest.mLength-anOffset;
+    for (theIndex=aTarget.mLength-1; theIndex< theMaxIndex; theIndex+= theSkipTable[(unsigned char)GetCharAt(aDest,theIndex)]) {
+      int theBufIndex=theIndex;
+      int thePatIndex=aTarget.mLength-1;
+      while (thePatIndex >= 0 && GetCharAt(aDest,theBufIndex)==GetCharAt(aTarget,thePatIndex)){
+        --theBufIndex;
+        --thePatIndex;
       }
-      if(matches) {
-        return index;
+      if(-1==thePatIndex){
+        return anOffset+theBufIndex+1;
       }
     }
   }//if
@@ -514,12 +522,22 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
       if(anOffset+aTarget.mLength<=aDest.mLength) {
         while((++theSubIndex<theTargetMax) && (matches)){
           PRUnichar theChar=GetCharAt(aDest,index+theSubIndex);
+          if(theSubIndex>0) {
+            if(theFirstTargetChar==theChar){
+              PRUnichar theDestJumpChar=GetCharAt(aDest,index+theTargetMax);
+              if(theDestJumpChar==theLastTargetChar) {
+                theNewStartPos=index; //this lets us jump ahead during our search where possible.
+              }//if
+            }//if
+          }//if
           PRUnichar theTargetChar=GetCharAt(aTarget,theSubIndex);
           matches=PRBool(theChar==theTargetChar);
         } //while
       } //if
-      if(matches) {
+      if(matches)
         return index;
+      if(-1<theNewStartPos){
+        index=theNewStartPos-1;
       }
     }
   }//if
