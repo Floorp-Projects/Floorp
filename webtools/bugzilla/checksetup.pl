@@ -107,6 +107,14 @@ use vars qw(
 );
 
 
+# Trim whitespace from front and back.
+
+sub trim {
+    ($_) = (@_);
+    s/^\s+//g;
+    s/\s+$//g;
+    return $_;
+}
 
 
 
@@ -519,7 +527,6 @@ $table{bugs} =
     creation_ts datetime not null,
     delta_ts timestamp,
     short_desc mediumtext,
-    long_desc mediumtext,
     op_sys enum($opsys) not null,
     priority enum($priorities) not null,
     product varchar(64) not null,
@@ -559,6 +566,16 @@ $table{cc} =
 
     index(bug_id),
     index(who)';
+
+
+$table{longdescs} = 
+   'bug_id mediumint not null,
+    who mediumint not null,
+    bug_when datetime not null,
+    thetext mediumtext,
+
+    index(bug_id),
+    index(bug_when)';
 
 
 $table{components} =
@@ -1033,6 +1050,142 @@ if (!GetFieldDef('bugs', 'keywords')) {
 
 AddField('profiles', 'disabledtext',  'mediumtext not null');
 
+
+
+# 2000-01-20 Added a new "longdescs" table, which is supposed to have all the
+# long descriptions in it, replacing the old long_desc field in the bugs 
+# table.  The below hideous code populates this new table with things from
+# the old field, with ugly parsing and heuristics.
+
+sub WriteOneDesc {
+    my ($id, $who, $when, $buffer) = (@_);
+    $buffer = trim($buffer);
+    if ($buffer eq '') {
+        return;
+    }
+    $dbh->do("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
+             "($id, $who, " .  time2str("'%Y/%m/%d %H:%M:%S'", $when) .
+             ", " . $dbh->quote($buffer) . ")");
+}
+
+
+if (GetFieldDef('bugs', 'long_desc')) {
+    eval("use Date::Parse");
+    eval("use Date::Format");
+    my $sth = $dbh->prepare("SELECT count(*) FROM bugs");
+    $sth->execute();
+    my ($total) = ($sth->fetchrow_array);
+
+    print "Populating new long_desc table.  This is slow.  There are $total\n";
+    print "bugs to process; a line of dots will be printed for each 50.\n\n";
+    $| = 1;
+
+    $dbh->do("LOCK TABLES bugs write, longdescs write, profiles write");
+
+    $dbh->do('DELETE FROM longdescs');
+
+    $sth = $dbh->prepare("SELECT bug_id, creation_ts, reporter, long_desc " .
+                         "FROM bugs ORDER BY bug_id");
+    $sth->execute();
+    my $count = 0;
+    while (1) {
+        my ($id, $createtime, $reporterid, $desc) = ($sth->fetchrow_array());
+        if (!$id) {
+            last;
+        }
+        print ".";
+        $count++;
+        if ($count % 10 == 0) {
+            print " ";
+            if ($count % 50 == 0) {
+                print "$count/$total (" . int($count * 100 / $total) . "%)\n";
+            }
+        }
+        $desc =~ s/\r//g;
+        my $who = $reporterid;
+        my $when = str2time($createtime);
+        my $buffer = "";
+        foreach my $line (split(/\n/, $desc)) {
+            $line =~ s/\s+$//g;       # Trim trailing whitespace.
+            if ($line =~ /^------- Additional Comments From ([^\s]+)\s+(\d.+\d)\s+-------$/) {
+                my $name = $1;
+                my $date = str2time($2);
+                $date += 59;    # Oy, what a hack.  The creation time is
+                                # accurate to the second.  But we the long
+                                # text only contains things accurate to the
+                                # minute.  And so, if someone makes a comment
+                                # within a minute of the original bug creation,
+                                # then the comment can come *before* the
+                                # bug creation.  So, we add 59 seconds to
+                                # the time of all comments, so that they
+                                # are always considered to have happened at
+                                # the *end* of the given minute, not the
+                                # beginning.
+                if ($date >= $when) {
+                    WriteOneDesc($id, $who, $when, $buffer);
+                    $buffer = "";
+                    $when = $date;
+                    my $s2 = $dbh->prepare("SELECT userid FROM profiles " .
+                                           "WHERE login_name = " .
+                                           $dbh->quote($name));
+                    $s2->execute();
+                    ($who) = ($s2->fetchrow_array());
+                    if (!$who) {
+                        # This username doesn't exist.  Try a special
+                        # netscape-only hack (sorry about that, but I don't
+                        # think it will hurt any other installations).  We
+                        # have many entries in the bugsystem from an ancient
+                        # world where the "@netscape.com" part of the loginname
+                        # was omitted.  So, look up the user again with that
+                        # appended, and use it if it's there.
+                        if ($name !~ /\@/) {
+                            my $nsname = $name . "\@netscape.com";
+                            $s2 =
+                                $dbh->prepare("SELECT userid FROM profiles " .
+                                              "WHERE login_name = " .
+                                              $dbh->quote($nsname));
+                            $s2->execute();
+                            ($who) = ($s2->fetchrow_array());
+                        }
+                    }
+                            
+                    if (!$who) {
+                        # This username doesn't exist.  Maybe someone renamed
+                        # him or something.  Invent a new profile entry,
+                        # disabled, just to represent him.
+                        $dbh->do("INSERT INTO profiles " .
+                                 "(login_name, password, cryptpassword," .
+                                 " disabledtext) VALUES (" .
+                                 $dbh->quote($name) .
+                                 ", 'okthen', encrypt('okthen'), " .
+                                 "'Account created only to maintain database integrity')");
+                        $s2 = $dbh->prepare("SELECT LAST_INSERT_ID()");
+                        $s2->execute();
+                        ($who) = ($s2->fetchrow_array());
+                    }
+                    next;
+                } else {
+#                    print "\nDecided this line of bug $id has a date of " .
+#                        time2str("'%Y/%m/%d %H:%M:%S'", $date) .
+#                            "\nwhich is less than previous line:\n$line\n\n";
+                }
+
+            }
+            $buffer .= $line . "\n";
+        }
+        WriteOneDesc($id, $who, $when, $buffer);
+    }
+                
+
+    print "\n\n";
+
+    DropField('bugs', 'long_desc');
+
+    $dbh->do("UNLOCK TABLES");
+    print "Now regenerating the shadow database for all bugs.\n";
+    system("./processmail regenerate");
+
+}
 
 
 #

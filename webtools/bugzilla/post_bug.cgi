@@ -128,7 +128,7 @@ foreach my $f (@bug_fields) {
 }
 
 my $query = "insert into bugs (\n" . join(",\n", @used_fields) . ",
-creation_ts, long_desc )
+creation_ts )
 values (
 ";
 
@@ -142,7 +142,7 @@ $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
 $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
 $comment = trim($comment);
 
-$query .= "now(), " . SqlQuote($comment) . " )\n";
+$query .= "now())\n";
 
 
 my %ccids;
@@ -163,6 +163,9 @@ SendSQL($query);
 
 SendSQL("select LAST_INSERT_ID()");
 my $id = FetchOneColumn();
+
+SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
+        "($id, $::FORM{'reporter'}, now(), " . SqlQuote($comment) . ")");
 
 foreach my $person (keys %ccids) {
     SendSQL("insert into cc (bug_id, who) values ($id, $person)");

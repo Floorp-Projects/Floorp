@@ -476,7 +476,7 @@ sub LogDependencyActivity {
 #
 foreach my $id (@idlist) {
     my %dependencychanged;
-    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write, keywords write, keyworddefs read");
+    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write, keywords write, longdescs write, keyworddefs read");
     my @oldvalues = SnapShotBug($id);
 
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {

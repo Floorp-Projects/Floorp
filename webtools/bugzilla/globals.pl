@@ -51,6 +51,7 @@ sub globals_pl_sillyness {
 use Mysql;
 
 use Date::Format;               # For time2str().
+use Date::Parse;               # For str2time().
 # use Carp;                       # for confess
 
 # Contains the version string for the current running Bugzilla.
@@ -109,14 +110,11 @@ sub AppendComment {
     if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
         return;
     }
-    SendSQL("select long_desc from bugs where bug_id = $bugid");
-    
-    my $desc = FetchOneColumn();
-    my $now = time2str("%Y-%m-%d %H:%M", time());
-    $desc .= "\n\n------- Additional Comments From $who  $now -------\n";
-    $desc .= $comment;
-    SendSQL("update bugs set long_desc=" . SqlQuote($desc) .
-            " where bug_id=$bugid");
+
+    my $whoid = DBNameToIdAndCheck($who);
+
+    SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
+            "VALUES($bugid, $whoid, now(), " . SqlQuote($comment) . ")");
 }
 
 sub lsearch {
@@ -464,8 +462,25 @@ sub DBNameToIdAndCheck {
 
 sub GetLongDescription {
     my ($id) = (@_);
-    SendSQL("select long_desc from bugs where bug_id = $id");
-    return FetchOneColumn();
+    my $result = "";
+    SendSQL("SELECT profiles.login_name, longdescs.bug_when, " .
+            "       longdescs.thetext " .
+            "FROM longdescs, profiles " .
+            "WHERE profiles.userid = longdescs.who " .
+            "      AND longdescs.bug_id = $id " .
+            "ORDER BY longdescs.bug_when");
+    my $count = 0;
+    while (MoreSQLData()) {
+        my ($who, $when, $text) = (FetchSQLData());
+        if ($count) {
+            $result .= "\n\n------- Additional Comments From $who  " .
+                time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------\n";
+        }
+        $result .= $text;
+        $count++;
+    }
+
+    return $result;
 }
 
 
