@@ -67,6 +67,8 @@ public:
   NS_IMETHOD IsDispatchStopped(PRBool* aIsDispatchPrevented) = 0;
   NS_IMETHOD GetInternalNSEvent(nsEvent** aNSEvent) = 0;
   NS_IMETHOD HasOriginalTarget(PRBool* aResult)=0;
+  NS_IMETHOD IsTrustedEvent(PRBool* aResult)=0;
+  NS_IMETHOD SetTrusted(PRBool aTrusted)=0;
 };
 
 extern nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent);
