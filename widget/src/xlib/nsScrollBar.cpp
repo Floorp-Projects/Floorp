@@ -256,6 +256,8 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
                        attr_mask,
                        &attr);
   AddWindowCallback(mBar, this);
+  PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::CreateNative created window 0x%lx with bar 0x%lx\n",
+         mBaseWindow, mBar));
 }
 
 NS_IMETHODIMP nsScrollbar::Show(PRBool bState)
@@ -408,4 +410,9 @@ void nsScrollbar::LayoutBar(void)
   XMoveResizeWindow(mDisplay, mBar,
                     mBarBounds.x, mBarBounds.y,
                     mBarBounds.width, mBarBounds.height);
+}
+
+NS_IMETHODIMP nsScrollbar::Move(PRInt32 aX, PRInt32 aY)
+{
+  return nsWidget::Move(aX, aY);
 }

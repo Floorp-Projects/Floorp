@@ -872,13 +872,13 @@ void nsWidget::WidgetMove(nsWidget *aWidget)
                 aWidget->mBounds.x,
                 aWidget->mBounds.y);
     if (aWidget->mIsShown == PR_TRUE) {
-      PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
+      PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
       aWidget->Map();
     }
   }
   else {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
-    PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
+    PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", aWidget->mBaseWindow));
     aWidget->Unmap();
   }
 }
@@ -893,13 +893,13 @@ void nsWidget::WidgetResize(nsWidget *aWidget)
                   aWidget->mBounds.width,
                   aWidget->mBounds.height);
     if (aWidget->mIsShown == PR_TRUE) {
-      PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
+      PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
       aWidget->Map();
     }
   }
   else {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
-    PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
+    PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", aWidget->mBaseWindow));
     aWidget->Unmap();
   }
 }
@@ -916,13 +916,13 @@ void nsWidget::WidgetMoveResize(nsWidget *aWidget)
                 aWidget->mBounds.x,
                 aWidget->mBounds.y);
     if (aWidget->mIsShown == PR_TRUE) {
-      PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
+      PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
       aWidget->Map();
     }
   }
   else {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is not visible...\n"));
-    PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", mBaseWindow));
+    PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Unmapping window 0x%lx...\n", aWidget->mBaseWindow));
     aWidget->Unmap();
   }
 }
@@ -930,8 +930,7 @@ void nsWidget::WidgetMoveResize(nsWidget *aWidget)
 void nsWidget::WidgetShow(nsWidget *aWidget)
 {
   if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
-    PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window...\n"));
-    PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
+    PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
     aWidget->Map();
   }
   else {
@@ -944,8 +943,8 @@ PRBool nsWidget::WidgetVisible(nsRect &aBounds)
   nsRect scrollArea;
   scrollArea.x = 0;
   scrollArea.y = 0;
-  scrollArea.width = mBounds.width;
-  scrollArea.height = mBounds.height;
+  scrollArea.width = mBounds.width + 1;
+  scrollArea.height = mBounds.height + 1;
   if (scrollArea.Intersects(aBounds)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetVisible(): widget is visible\n"));
     return PR_TRUE;
