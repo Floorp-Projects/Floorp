@@ -60,7 +60,8 @@ Rights Reserved.
 	<broadcaster id="cmd_paste"/>
 	<broadcaster id="cmd_delete"
 				 valueAddressBook="&deleteAbCmd.label;"
-				 valueCard="&deleteCardCmd.label;"/>
+				 valueCard="&deleteCardCmd.label;"
+				 valueCards="&deleteCardsCmd.label;"/>
 	<broadcaster id='cmd_selectAll'/>
 </broadcasterset>
 

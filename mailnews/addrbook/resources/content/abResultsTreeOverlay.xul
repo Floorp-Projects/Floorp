@@ -28,11 +28,12 @@ Rights Reserved.
 		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<tree id="resultsTree"
+	<!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
+	 <tree id="resultsTree"
 		  class="abResults" 
 		  flex="100%"
 		  datasources="rdf:addressdirectory rdf:addresscard"
-		  onselect="top.ResultsPaneSelectionChange()"
+		  onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands();"
 		  ondblclick="top.AbEditCard()"
 		  containment="http://home.netscape.com/NC-rdf#CardChild">
 

@@ -40,6 +40,7 @@ Rights Reserved.
 <!-- Edit Menu -->
 <!ENTITY deleteAbCmd.label					"Delete Address Book">  
 <!ENTITY deleteCardCmd.label				"Delete Card">  
+<!ENTITY deleteCardsCmd.label				"Delete Selected Cards">  
 <!ENTITY searchCmd.label					".Search..."> 
 <!ENTITY htmlDomainCmd.label				".HTML Domains...">  
 <!ENTITY abPropsCmd.label					"Properties">  

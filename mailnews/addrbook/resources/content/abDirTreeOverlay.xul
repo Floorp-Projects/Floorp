@@ -28,40 +28,39 @@ Rights Reserved.
 		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-		<!-- onclick="ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)" -->
+	<!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
+	<tree id="dirTree" 
+		  class="abDirectory" 
+		  flex="100%"
+		  ref="abdirectory://"
+		  open="true"
+		  datasources="rdf:addressdirectory"
+		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands();">
+		
+		<template>
+			<rule>
+	          <treechildren>
+				<treeitem uri="...">
+				  <treerow >
+				    <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#DirName"/>
+				  </treerow>
+				</treeitem>
+	          </treechildren>
+			</rule>
+		</template>
 
-		<tree id="dirTree" 
-			  class="abDirectory" 
-			  flex="100%"
-			  ref="abdirectory://"
-			  open="true"
-			  datasources="rdf:addressdirectory"
-			  onselect="DirPaneSelectionChange()">
-			
-			<template>
-				<rule>
-		          <treechildren>
-					<treeitem uri="...">
-					  <treerow >
-					    <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#DirName"/>
-					  </treerow>
-					</treeitem>
-		          </treechildren>
-				</rule>
-			</template>
+		<treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName"/>
 
-			<treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName"/>
+		<treehead>
+			<treerow>
+				<treecell>&directoryColumn.label;</treecell>
+			</treerow>
+		</treehead>
 
-			<treehead>
-				<treerow>
-					<treecell>&directoryColumn.label;</treecell>
-				</treerow>
-			</treehead>
-
-			<treechildren id="dirTreeBody"
-						  rdf:containment="http://home.netscape.com/NC-rdf#child"
-						  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
-			</treechildren>
-		</tree>
+		<treechildren id="dirTreeBody"
+					  rdf:containment="http://home.netscape.com/NC-rdf#child"
+					  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
+		</treechildren>
+	</tree>
 
 </overlay>

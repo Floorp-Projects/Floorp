@@ -11,8 +11,15 @@ var ResultsPaneController =
 				return true;
 			
 			case "cmd_delete":
-				goSetMenuValue(command, 'valueCard');
-				return true;
+				var resultsTree = document.getElementById('resultsTree');
+				var numSelected = 0;
+				if ( resultsTree && resultsTree.selectedItems )
+					numSelected = resultsTree.selectedItems.length;
+				if ( numSelected < 2 )
+					goSetMenuValue(command, 'valueCard');
+				else
+					goSetMenuValue(command, 'valueCards');
+				return (numSelected > 0);
 			
 			default:
 				return false;
@@ -55,8 +62,12 @@ var DirPaneController =
 			case "cmd_selectAll":
 				return true;
 			case "cmd_delete":
+				var dirTree = document.getElementById('dirTree');
+				var numSelected = 0;
+				if ( dirTree && dirTree.selectedItems )
+					numSelected = dirTree.selectedItems.length;
 				goSetMenuValue(command, 'valueAddressBook');
-				return true;
+				return (numSelected > 0);
 			default:
 				return false;
 		}
@@ -183,6 +194,12 @@ function SelectFirstAddressBook()
 
 function DirPaneSelectionChange()
 {
+	// FIX ME - deselect the items in the results pane to work around tree bug
+	var resultsTree = document.getElementById('resultsTree');
+	if ( resultsTree )
+		resultsTree.clearItemSelection();
+	// ----
+	
 	var tree = document.getElementById('dirTree');
 	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
 		ChangeDirectoryByDOMNode(tree.selectedItems[0]);
@@ -196,12 +213,6 @@ function DirPaneSelectionChange()
 
 function ChangeDirectoryByDOMNode(dirNode)
 {
-	// FIX ME - deselect the items in the results pane to work around tree bug
-	var resultsTree = document.getElementById('resultsTree');
-	if ( resultsTree )
-		resultsTree.clearItemSelection();
-	// ----
-	
 	var uri = dirNode.getAttribute('id');
 	dump("uri = " + uri + "\n");
 	
