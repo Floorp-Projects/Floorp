@@ -107,10 +107,7 @@
 #include "nsEditorUtils.h"
 #include "nsISelectionDisplay.h"
 
-static NS_DEFINE_CID(kCRangeCID,            NS_RANGE_CID);
-static NS_DEFINE_CID(kCContentIteratorCID,  NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCDOMRangeCID,         NS_RANGE_CID);
-static NS_DEFINE_CID(kPrefServiceCID,       NS_PREF_CID);
 
 // transaction manager
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);

@@ -95,7 +95,6 @@
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsFileSpec.h"
-#include "nsIFile.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -136,13 +135,10 @@
 #include "nsITextContent.h"
 #include "nsWSRunObject.h"
 
-static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_IID(kRangeUtilsCID, NS_RANGEUTILS_CID);
-static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCTransitionalDTDCID,  NS_CTRANSITIONAL_DTD_CID);
 static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
