@@ -33,6 +33,13 @@
 #define _ATL_APARTMENT_THREADED
 #define _ATL_STATIC_REGISTRY
 
+// Comment these out as appropriate
+//#define USE_NGPREF
+
+#ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+#define USE_PLUGIN
+#endif
+
 // ATL headers
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override
@@ -42,6 +49,10 @@ extern CComModule _Module;
 #include <atlctl.h>
 #include <mshtml.h>
 #include <winsock2.h>
+
+#ifdef USE_PLUGIN
+#include <activscp.h>
+#endif
 
 // STL headers
 #include <vector>
@@ -53,13 +64,6 @@ typedef long int32;
 
 #include "jstypes.h"
 #include "prtypes.h"
-
-// Comment these out as appropriate
-//#define USE_NGPREF
-
-#ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
-#define USE_PLUGIN
-#endif
 
 // Mozilla headers
 #ifdef USE_NGPREF
@@ -82,11 +86,13 @@ typedef long int32;
 #include "nsViewsCID.h"
 #include "nsString.h"
 
+#include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsIContentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
+#include "nsIDocumentLoaderObserver.h" 
 #include "nsIStreamListener.h"
 #include "nsUnitConversion.h"
 #include "nsVoidArray.h"
@@ -101,12 +107,7 @@ typedef long int32;
 // Mozilla control headers
 #include "resource.h"
 
-// Define some string classes
-typedef std::basic_string<TCHAR> tstring;
-
-#define CIPtr(iface) \
-	CComQIPtr< iface, &IID_ ## iface >
-
+#include "ActiveXTypes.h"
 #include "BrowserDiagnostics.h"
 #include "PropertyList.h"
 #include "MozillaControl.h"
