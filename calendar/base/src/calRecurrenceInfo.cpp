@@ -152,9 +152,11 @@ calRecurrenceInfo::GetRecurCount(PRInt32 *aRecurCount)
 {
     NS_ENSURE_ARG_POINTER(aRecurCount);
 
-    if (mIcalRecur->count) {
+    if (mIcalRecur->count == 0 && icaltime_is_null_time(mIcalRecur->until)) {
+        *aRecurCount = -1;
+    } else if (mIcalRecur->count) {
         *aRecurCount = mIcalRecur->count;
-    } else if (!icaltime_is_null_time(mIcalRecur->until) && mRecurStart) {
+    } else if (mRecurStart) {
         icalrecur_iterator* recur_iter;
         struct icaltimetype dtstart;
         mRecurStart->ToIcalTime(&dtstart);
@@ -212,13 +214,13 @@ calRecurrenceInfo::GetRecurEnd(calIDateTime * *aRecurEnd)
 {
     NS_ENSURE_ARG_POINTER(aRecurEnd);
 
-    if (icaltime_is_null_time(mIcalRecur->until)) {
+    if (!icaltime_is_null_time(mIcalRecur->until)) {
         calDateTime *cdt = new calDateTime(&mIcalRecur->until);
         if (!cdt)
             return NS_ERROR_OUT_OF_MEMORY;
 
         NS_ADDREF (*aRecurEnd = cdt);
-    } else if (mRecurStart) {
+    } else if (mRecurStart && mIcalRecur->count != 0) {
         icalrecur_iterator* recur_iter;
         struct icaltimetype dtstart;
         mRecurStart->ToIcalTime(&dtstart);
@@ -240,7 +242,7 @@ calRecurrenceInfo::GetRecurEnd(calIDateTime * *aRecurEnd)
         calDateTime *cdt = new calDateTime(&last);
         NS_ADDREF(*aRecurEnd = cdt);
     } else {
-        return NS_ERROR_INVALID_ARG;
+        *aRecurEnd = nsnull;
     }
     return NS_OK;
 }
