@@ -136,7 +136,6 @@ OTHER_HFILES =		\
 	jscompat.h	\
 	jscpucfg.h	\
 	jsotypes.h	\
-	jsprhash.h	\
 	jsstddef.h	\
 	prmjtime.h	\
 	resource.h	\
