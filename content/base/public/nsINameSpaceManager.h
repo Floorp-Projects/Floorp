@@ -43,7 +43,6 @@
 
 class nsIAtom;
 class nsString;
-class nsINameSpace;
 
 #define kNameSpaceID_Unknown -1
 // 0 is special at C++, so use a static const PRInt32 for
@@ -68,8 +67,8 @@ static const PRInt32 kNameSpaceID_None = 0;
 #define NS_NAMESPACEMANAGER_CONTRACTID "@mozilla.org/content/namespacemanager;1"
 
 #define NS_INAMESPACEMANAGER_IID \
-  { 0x409cd4de, 0xb3ca, 0x11d8, \
-    { 0xb2, 0x67, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
+  { 0x30977ca5, 0xc6af, 0x4687, \
+    { 0x88, 0x43, 0xa9, 0x7d, 0x0f, 0x95, 0x00, 0x17 } }
 
 /**
  * The Name Space Manager tracks the associtation between a NameSpace
@@ -83,17 +82,12 @@ static const PRInt32 kNameSpaceID_None = 0;
  * The nsINameSpaceManager needs to have a live reference for as long as
  * the NameSpace IDs are needed.
  *
- * To create a stack of NameSpaces, call CreateRootNameSpace, and then create
- * child NameSpaces from the root.
- *
  */
 
 class nsINameSpaceManager : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INAMESPACEMANAGER_IID)
-
-  NS_IMETHOD CreateRootNameSpace(nsINameSpace** aRootNameSpace) = 0;
 
   NS_IMETHOD RegisterNameSpace(const nsAString& aURI, 
                                PRInt32& aNameSpaceID) = 0;

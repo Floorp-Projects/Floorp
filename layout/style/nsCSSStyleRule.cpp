@@ -61,7 +61,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
-#include "nsINameSpace.h"
+#include "nsNameSpaceMap.h"
 #include "nsILookAndFeel.h"
 #include "nsRuleNode.h"
 #include "nsUnicharUtils.h"
@@ -580,8 +580,7 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       // before it.
       aString.Append(PRUnichar('|'));
     } else {
-      nsCOMPtr<nsINameSpace> sheetNS;
-      aSheet->GetNameSpace(*getter_AddRefs(sheetNS));
+      nsNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
     
       // sheetNS is non-null if and only if we had an @namespace rule.  If it's
       // null, that means that the only namespaces we could have are the
@@ -589,11 +588,11 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       // namespace, which we handled above.  So no need to output anything when
       // sheetNS is null.
       if (sheetNS) {
-        nsCOMPtr<nsIAtom> prefixAtom;
+        nsIAtom *prefixAtom = nsnull;
         // prefixAtom is non-null if and only if we have a prefix other than
         // '*'
         if (mNameSpace != kNameSpaceID_Unknown) {
-          sheetNS->FindNameSpacePrefix(mNameSpace, getter_AddRefs(prefixAtom));
+          prefixAtom = sheetNS->FindPrefix(mNameSpace);
         }
         if (prefixAtom) {
           nsAutoString prefix;
@@ -603,8 +602,7 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
         } else if (mNameSpace == kNameSpaceID_Unknown) {
           // explicit *| or only non-default namespace rules and we're not
           // using any of those namespaces
-          aString.Append(PRUnichar('*'));
-          aString.Append(PRUnichar('|'));
+          aString.AppendLiteral("*|");
         }
         // else we are in the default namespace and don't need to output
         // anything
@@ -671,12 +669,9 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       aString.Append(PRUnichar('['));
       // Append the namespace prefix
       if (list->mNameSpace > 0) {
-        nsCOMPtr<nsINameSpace> sheetNS;
-        aSheet->GetNameSpace(*getter_AddRefs(sheetNS));
-        nsCOMPtr<nsIAtom> prefixAtom;
+        nsNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
         // will return null if namespace was the default
-        sheetNS->FindNameSpacePrefix(list->mNameSpace,
-                                     getter_AddRefs(prefixAtom));
+        nsIAtom *prefixAtom = sheetNS->FindPrefix(list->mNameSpace);
         if (prefixAtom) { 
           nsAutoString prefix;
           prefixAtom->ToString(prefix);

@@ -111,6 +111,7 @@ CPPSRCS		= \
 		nsImageLoadingContent.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \
+		nsNameSpaceMap.cpp \
 		nsNodeInfo.cpp \
 		nsNodeInfoManager.cpp \
 		nsParserUtils.cpp \

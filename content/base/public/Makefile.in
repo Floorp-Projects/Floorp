@@ -56,7 +56,7 @@ nsContentUtils.h \
 nsIDocument.h \
 nsIDocumentEncoder.h \
 nsIDocumentObserver.h \
-nsINameSpace.h \
+nsNameSpaceMap.h \
 nsINameSpaceManager.h \
 nsINodeInfo.h \
 nsIRangeUtils.h \

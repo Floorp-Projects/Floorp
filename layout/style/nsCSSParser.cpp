@@ -68,7 +68,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsINameSpaceManager.h"
-#include "nsINameSpace.h"
+#include "nsNameSpaceMap.h"
 #include "nsThemeConstants.h"
 #include "nsContentErrors.h"
 #include "nsUnitConversion.h"
@@ -367,7 +367,7 @@ protected:
   };
   nsCSSSection  mSection;
 
-  nsCOMPtr<nsINameSpace> mNameSpace;
+  nsNameSpaceMap *mNameSpaceMap;  // weak, mSheet owns it
 
   // After an UngetToken is done this flag is true. The next call to
   // GetToken clears the flag.
@@ -472,6 +472,7 @@ CSSParserImpl::CSSParserImpl()
     mScanner(),
     mChildLoader(nsnull),
     mSection(eCSSSection_Charset),
+    mNameSpaceMap(nsnull),
     mHavePushBack(PR_FALSE),
     mNavQuirkMode(PR_FALSE),
 #ifdef MOZ_SVG
@@ -505,7 +506,7 @@ CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
     // Switch to using the new sheet
     mGroupStack.Clear();
     mSheet = aSheet;
-    mSheet->GetNameSpace(*getter_AddRefs(mNameSpace));
+    mNameSpaceMap = mSheet->GetNameSpaceMap();
   }
 
   return NS_OK;
@@ -582,7 +583,10 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
   if (! mSheet) {
     NS_NewCSSStyleSheet(getter_AddRefs(mSheet));
+    NS_ENSURE_TRUE(mSheet, NS_ERROR_OUT_OF_MEMORY);
+
     mSheet->SetURIs(aSheetURI, aBaseURI);
+    mNameSpaceMap = nsnull;
   }
 #ifdef DEBUG
   else {
@@ -594,10 +598,6 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   }
 #endif
   
-  if (! mSheet) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   nsresult errorCode = NS_OK;
 
   nsresult result = InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI);
@@ -1429,7 +1429,12 @@ PRBool CSSParserImpl::ProcessNameSpace(nsresult& aErrorCode, const nsString& aPr
   NS_NewCSSNameSpaceRule(getter_AddRefs(rule), prefix, aURLSpec);
   if (rule) {
     (*aAppendFunc)(rule, aData);
-    mSheet->GetNameSpace(*getter_AddRefs(mNameSpace));
+
+    // If this was the first namespace rule encountered, it will trigger
+    // creation of a namespace map.
+    if (!mNameSpaceMap) {
+      mNameSpaceMap = mSheet->GetNameSpaceMap();
+    }
   }
 
   return result;
@@ -1903,12 +1908,9 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
     }
     else {  // was universal element selector
       aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
-      if (mNameSpace) { // look for default namespace
-        nsCOMPtr<nsINameSpace> defaultNameSpace;
-        mNameSpace->FindNameSpace(nsnull, getter_AddRefs(defaultNameSpace));
-        if (defaultNameSpace) {
-          PRInt32 defaultID;
-          defaultNameSpace->GetNameSpaceID(&defaultID);
+      if (mNameSpaceMap) { // look for default namespace
+        PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
+        if (defaultID != kNameSpaceID_None) {
           aSelector.SetNameSpace(defaultID);
         }
       }
@@ -1925,10 +1927,10 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was namespace
       aDataMask |= SEL_MASK_NSPACE;
       PRInt32 nameSpaceID = kNameSpaceID_Unknown;
-      if (mNameSpace) {
+      if (mNameSpaceMap) {
         ToLowerCase(buffer); // always case insensitive, since stays within CSS
         nsCOMPtr<nsIAtom> prefix = do_GetAtom(buffer);
-        mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
+        nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
       } // else, no declared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
         const PRUnichar *params[] = {
@@ -1965,12 +1967,9 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
     }
     else {  // was element name
       aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
-      if (mNameSpace) { // look for default namespace
-        nsCOMPtr<nsINameSpace> defaultNameSpace;
-        mNameSpace->FindNameSpace(nsnull, getter_AddRefs(defaultNameSpace));
-        if (defaultNameSpace) {
-          PRInt32 defaultID;
-          defaultNameSpace->GetNameSpaceID(&defaultID);
+      if (mNameSpaceMap) { // look for default namespace
+        PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
+        if (defaultID != kNameSpaceID_None) {
           aSelector.SetNameSpace(defaultID);
         }
       }
@@ -2023,12 +2022,9 @@ CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
     // no tag or namespace: implied universal selector
     // set namespace to unknown since it is not specified
     aSelector.SetNameSpace(kNameSpaceID_Unknown); // wildcard
-    if (mNameSpace) { // look for default namespace
-      nsCOMPtr<nsINameSpace> defaultNameSpace;
-      mNameSpace->FindNameSpace(nsnull, getter_AddRefs(defaultNameSpace));
-      if (defaultNameSpace) {
-        PRInt32 defaultID;
-        defaultNameSpace->GetNameSpaceID(&defaultID);
+    if (mNameSpaceMap) { // look for default namespace
+      PRInt32 defaultID = mNameSpaceMap->FindNameSpaceID(nsnull);
+      if (defaultID != kNameSpaceID_None) {
         aSelector.SetNameSpace(defaultID);
       }
     }
@@ -2096,10 +2092,10 @@ CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
     attr = mToken.mIdent; // hang on to it
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // was a namespace
       nameSpaceID = kNameSpaceID_Unknown;
-      if (mNameSpace) {
+      if (mNameSpaceMap) {
         ToLowerCase(attr); // always case insensitive, since stays within CSS
         nsCOMPtr<nsIAtom> prefix = do_GetAtom(attr);
-        mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
+        nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
       } // else, no declared namespaces
       if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
         const PRUnichar *params[] = {
@@ -3636,10 +3632,10 @@ PRBool CSSParserImpl::ParseAttr(nsresult& aErrorCode, nsCSSValue& aValue)
         nsAutoString  holdIdent(mToken.mIdent);
         if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {  // namespace
           PRInt32 nameSpaceID = kNameSpaceID_Unknown;
-          if (mNameSpace) {
+          if (mNameSpaceMap) {
             ToLowerCase(holdIdent); // always case insensitive, since stays within CSS
             nsCOMPtr<nsIAtom> prefix = do_GetAtom(holdIdent);
-            mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
+            nameSpaceID = mNameSpaceMap->FindNameSpaceID(prefix);
           } // else, no declared namespaces
           if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
             const PRUnichar *params[] = {
