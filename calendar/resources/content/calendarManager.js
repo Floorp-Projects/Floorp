@@ -338,7 +338,7 @@ function onError( )
 
 function removeCalendar( event )
 {
-   dump( "\nbutton is "+event.button );
+   dump( "\nRemoveCalendar in calendarManager.js: button is "+event.button );
    if (event.button != 0) 
    {
       return;
