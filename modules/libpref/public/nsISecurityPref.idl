@@ -140,3 +140,18 @@ interface nsISecurityPref : nsISupports {
   void securityClearUserPref(in string pref_name);
 
 };
+
+/**
+ * This interface allows checking whether getting capability prefs is allowed.
+ */
+[uuid(c73c9a05-92ce-46e1-8f69-90a2a3a36104)]
+interface nsIPrefSecurityCheck : nsISupports {
+  /**
+   * Checks whether the currently executing script (if any) can access security
+   * preferences. Corresponds to CapabilityPreferencesAccess.
+   *
+   * Exceptions from this method should be treated like a return value of false.
+   */
+  boolean canAccessSecurityPreferences();
+};
+
