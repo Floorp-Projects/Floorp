@@ -62,6 +62,7 @@ typedef struct PK11SlotListElementStr PK11SlotListElement;
 typedef struct PK11RSAGenParamsStr PK11RSAGenParams;
 typedef unsigned long SECMODModuleID;
 typedef struct PK11DefaultArrayEntryStr PK11DefaultArrayEntry;
+typedef struct PK11GenericObjectStr PK11GenericObject;
 
 struct SECMODModuleStr {
     PRArenaPool	*arena;
@@ -211,6 +212,17 @@ typedef enum {
     PK11_DIS_TOKEN_VERIFY_FAILED = 3,
     PK11_DIS_TOKEN_NOT_PRESENT = 4
 } PK11DisableReasons;
+
+/* types of PKCS #11 objects */
+typedef enum {
+   PK11_TypeGeneric = 0,
+   PK11_TypePrivKey = 1,
+   PK11_TypePubKey = 2,
+   PK11_TypeCert = 3,
+   PK11_TypeSymKey = 4
+} PK11ObjectType;
+
+
 
 /* function pointer type for password callback function.
  * This type is passed in to PK11_SetPasswordFunc() 

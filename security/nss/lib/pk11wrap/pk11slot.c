@@ -906,11 +906,23 @@ PK11_GetSlotPWValues(PK11SlotInfo *slot,int *askpw, int *timeout)
 }
 
 /*
+ * Returns true if the token is needLogin and isn't logged in.
+ * This function is used to determine if authentication is needed
+ * before attempting a potentially privelleged operation.
+ */
+PRBool
+pk11_LoginStillRequired(PK11SlotInfo *slot, void *wincx)
+{
+    return slot->needLogin && !PK11_IsLoggedIn(slot,wincx);
+}
+
+/*
  * make sure a slot is authenticated...
+ * This function only does the authentication if it is needed.
  */
 SECStatus
 PK11_Authenticate(PK11SlotInfo *slot, PRBool loadCerts, void *wincx) {
-    if (slot->needLogin && !PK11_IsLoggedIn(slot,wincx)) {
+    if (pk11_LoginStillRequired(slot,wincx)) {
 	return PK11_DoPassword(slot,loadCerts,wincx);
     }
     return SECSuccess;
@@ -2644,7 +2656,7 @@ PK11_GetAllTokens(CK_MECHANISM_TYPE type, PRBool needRW, PRBool loadCerts,
 		if (needRW &&  slot->readOnly) continue;
 		if ((type == CKM_INVALID_MECHANISM) 
 					|| PK11_DoesMechanism(slot, type)) {
-		    if (slot->needLogin && !PK11_IsLoggedIn(slot, wincx)) {
+		    if (pk11_LoginStillRequired(slot,wincx)) {
 			if (PK11_IsFriendly(slot)) {
 			    PK11_AddSlotToList(friendlyList, slot);
 			} else {

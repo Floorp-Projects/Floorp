@@ -652,6 +652,21 @@ PK11DefaultArrayEntry * PK11_GetDefaultArray(int *);
 SECStatus PK11_UpdateSlotAttribute(PK11SlotInfo *, PK11DefaultArrayEntry *,
 							PRBool );
 
+/**********************************************************************
+ * Functions to look at PKCS #11 dependent data
+ **********************************************************************/
+PK11GenericObject *PK11_FindGenericObjects(PK11SlotInfo *slot, 
+						CK_OBJECT_CLASS objClass);
+PK11GenericObject *PK11_GetNextGenericObject(PK11GenericObject *object);
+PK11GenericObject *PK11_GetPrevtGenericObject(PK11GenericObject *object);
+SECStatus PK11_UnlinkGenericObject(PK11GenericObject *object);
+SECStatus PK11_LinkGenericObject(PK11GenericObject *list,
+				 PK11GenericObject *object);
+SECStatus PK11_DestroyGenericObjects(PK11GenericObject *object);
+SECStatus PK11_DestroyGenericObject(PK11GenericObject *object);
+SECStatus PK11_ReadRawAttribute(PK11ObjectType type, void *object, 
+				CK_ATTRIBUTE_TYPE attr, SECItem *item);
+
 
 /**********************************************************************
  * New fucntions which are already depricated....

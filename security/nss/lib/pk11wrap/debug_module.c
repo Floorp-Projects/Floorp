@@ -152,11 +152,11 @@ static void get_attr_type_str(CK_ATTRIBUTE_TYPE atype, char *str, int len)
     }
 }
 
-static void get_obj_class(CK_OBJECT_CLASS class, char *str, int len)
+static void get_obj_class(CK_OBJECT_CLASS objClass, char *str, int len)
 {
 #define SETO(objc) \
     PR_snprintf(str, len, "%s", objc); break;
-    switch (class) {
+    switch (objClass) {
 #ifndef AIX_64BIT
     case CKO_DATA: SETO("CKO_DATA");
     case CKO_CERTIFICATE: SETO("CKO_CERTIFICATE");
@@ -170,7 +170,7 @@ static void get_obj_class(CK_OBJECT_CLASS class, char *str, int len)
     case CKO_NETSCAPE_TRUST: SETO("CKO_NETSCAPE_TRUST");
     case CKO_NETSCAPE_BUILTIN_ROOT_LIST: SETO("CKO_NETSCAPE_BUILTIN_ROOT_LIST");
 #endif
-    default: PR_snprintf(str, len, "0x%p", class); break;
+    default: PR_snprintf(str, len, "0x%p", objClass); break;
     }
 }
 
@@ -226,8 +226,8 @@ static void print_attr_value(CK_ATTRIBUTE_PTR attr)
 	}
     case CKA_CLASS:
 	if (attr->ulValueLen > 0 && attr->pValue) {
-	    CK_OBJECT_CLASS class = *((CK_OBJECT_CLASS *)attr->pValue);
-	    get_obj_class(class, valstr, sizeof valstr);
+	    CK_OBJECT_CLASS objClass = *((CK_OBJECT_CLASS *)attr->pValue);
+	    get_obj_class(objClass, valstr, sizeof valstr);
 	    PR_LOG(modlog, 4, ("    %s = %s [%d]", 
 	           atype, valstr, attr->ulValueLen));
 	    break;
