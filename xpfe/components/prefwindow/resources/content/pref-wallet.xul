@@ -32,12 +32,12 @@
   <html:script language="JavaScript">
     function viewSignons()
     {
-      window.openDialog("chrome://wallet/content/SignonViewer.xul","","chrome, resizable=no");
+      window.openDialog("chrome://wallet/content/SignonViewer.xul","","modal=yes,chrome,resizable=no");
     }
     
     function viewWallet()
     {
-      window.openDialog("chrome://wallet/content/WalletEditor.xul","","chrome, resizable=no");
+      window.openDialog("chrome://wallet/content/WalletEditor.xul","","modal=yes,chrome,resizable=no");
     }
   </html:script>
         

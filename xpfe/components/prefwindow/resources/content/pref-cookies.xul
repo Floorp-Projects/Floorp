@@ -32,7 +32,7 @@
   <html:script language="JavaScript">
     function viewCookies() 
     {
-      window.openDialog("chrome://wallet/content/CookieViewer.xul","","chrome, resizable=no");
+      window.openDialog("chrome://wallet/content/CookieViewer.xul","","modal=yes,chrome,resizable=no");
     }
   </html:script>
         
