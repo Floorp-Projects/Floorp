@@ -581,8 +581,8 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 			useQuotes = !reallyDredd ||
                 (nsAutoString(convertedValue).FindChar((PRUnichar)' ') != -1);
 			// now convert to char* and escape quoted_specials
-			ConvertFromUnicode(nsAutoString(convertedValue), nsAutoString(destCharset), &value);
-			if (value)
+			nsresult rv = ConvertFromUnicode(nsAutoString(destCharset), nsAutoString(convertedValue), &value);
+			if (NS_SUCCEEDED(rv) && value)
 			{
 				char *oldValue = value;
 				// max escaped length is one extra character for every character in the cmd.
@@ -602,9 +602,11 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 					*p = '\0';
 					value = nsCRT::strdup(newValue); // realloc down to smaller size
 					nsCRT::free(newValue);
+					nsCRT::free(oldValue);
 				}
-				nsCRT::free(oldValue);
 			}
+			else
+				value = nsCRT::strdup("");
 			nsCRT::free(convertedValue);
 			valueWasAllocated = PR_TRUE;
 
