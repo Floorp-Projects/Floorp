@@ -40,7 +40,7 @@ nsJARInputStream::Available(PRUint32 *_retval)
   if (mZip == 0)
     *_retval = 0;
   else
-    *_retval = mZip->Available();
+    *_retval = mZip->Available(mReadInfo);
 
   return NS_OK;
 }
@@ -52,7 +52,7 @@ nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *_retval)
     *_retval = 0;
   else
   {
-    if( (mZip->Read(buf, count, _retval)) != ZIP_OK )
+    if( (mZip->Read(mReadInfo, buf, count, _retval)) != ZIP_OK )
       return NS_ERROR_FAILURE;
   }
 
@@ -62,8 +62,8 @@ nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *_retval)
 NS_IMETHODIMP
 nsJARInputStream::Close()
 {
-  // In the future, this should tell mZip to free resources associated with reading
-  return NS_ERROR_NOT_IMPLEMENTED;
+  delete mReadInfo;
+  return NS_OK;
 }
 
 nsresult 
@@ -72,7 +72,8 @@ nsJARInputStream::Init(nsZipArchive* aZip, const char* aFilename)
   if (aZip == 0 || aFilename == nsnull)
     return NS_ERROR_NULL_POINTER;
   mZip = aZip;
-  PRInt32 result = mZip->ReadInit(aFilename);
+  PRInt32 result; 
+  result = mZip->ReadInit(aFilename, &mReadInfo);
   if (result != ZIP_OK)
     return NS_ERROR_FAILURE;
   else
@@ -95,15 +96,15 @@ nsJARInputStream::Create(nsISupports* ignored, const nsIID& aIID, void* *aResult
 // nsJARInputStream constructor and destructor
 //----------------------------------------------
 
-nsJARInputStream::nsJARInputStream()
+nsJARInputStream::nsJARInputStream(): mZip(0), mReadInfo(0)
 {
   NS_INIT_REFCNT();
-  mZip = 0;
 }
 
 nsJARInputStream::~nsJARInputStream()
 {
-  // In the future, this should tell mZip to free up resources associated with reading.
+  if (mReadInfo != 0)
+    delete mReadInfo;
 }
 
 
