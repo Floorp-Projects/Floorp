@@ -42,10 +42,8 @@
 #include "nsString.h"
 class nsIUnicharInputStream;
 
-// for testing
-#ifdef DEBUG
+// XXX turn this off for minimo builds
 #define CSS_REPORT_PARSE_ERRORS
-#endif
 
 // for #ifdef CSS_REPORT_PARSE_ERRORS
 #include "nsXPIDLString.h"
