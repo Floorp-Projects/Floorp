@@ -96,9 +96,7 @@ components/liburiloader.so
 components/uriloader.xpt
 components/libchrome.so                   
 components/chrome.xpt                   
-components/libmozbrwsr.so                 
-components/libwebbrwsr.so  ; wtf!  it is needed?!
-components/mozbrwsr.xpt                 
+components/libwebbrwsr.so
 components/webBrowser_core.xpt
 components/libembedcomponents.so
 components/windowwatcher.xpt
