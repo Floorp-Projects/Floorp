@@ -19,7 +19,11 @@ DEPTH = ../..
 
 include $(DEPTH)/config/config.mk
 
+ifeq ($(OS_TARGET),Rhapsody)
+DIRS = rhapsody
+else
 DIRS = motif
+endif
 
 LIBRARY_NAME = raptorgfx
 
