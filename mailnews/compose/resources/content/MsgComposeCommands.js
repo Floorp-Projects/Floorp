@@ -1663,6 +1663,22 @@ function GenericSendMessage( msgType )
             break;
            default: dump("\###SendMessage Error: invalid action value\n"); return;
         }
+
+        // Check if the headers of composing mail can be converted to a mail charset.
+        if (msgType == nsIMsgCompDeliverMode.Now || 
+          msgType == nsIMsgCompDeliverMode.Later ||
+          msgType == nsIMsgCompDeliverMode.Save || 
+          msgType == nsIMsgCompDeliverMode.SaveAsDraft || 
+          msgType == nsIMsgCompDeliverMode.SaveAsTemplate) 
+        {
+          if (gPromptService && !gMsgCompose.checkCharsetConversion(getCurrentIdentity())) 
+          {
+            var dlgTitle = sComposeMsgsBundle.getString("initErrorDlogTitle");
+            var dlgText = sComposeMsgsBundle.getString("12553");  // NS_ERROR_MSG_MULTILINGUAL_SEND
+            if (!gPromptService.confirm(window, dlgTitle, dlgText))
+              return;
+          }
+        }
       }
       try {
         gWindowLocked = true;

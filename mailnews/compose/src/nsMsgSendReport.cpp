@@ -294,6 +294,11 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
         case NS_MSG_UNABLE_TO_SAVE_TEMPLATE:
           //Ignore, don't need to repeat ourself.
           break;
+        case NS_ERROR_MSG_MULTILINGUAL_SEND:
+          // already displayed an alert, no additional message is needed
+          // return to the compose window
+          mAlreadyDisplayReport = PR_TRUE;
+          return NS_OK;
         default:
           nsAutoString errorMsg;
           nsMsgBuildErrorMessageByID(currError, errorMsg);

@@ -308,7 +308,7 @@ mime_generate_headers (nsMsgCompFields *fields,
   const char* pOtherHdr;
   char *convbuf;
 
-  nsCAutoString headerBuf;    // accumulate header strings for charset conversion check
+  nsCAutoString headerBuf;    // accumulate header strings to get length
   headerBuf.Truncate(0);
 
   NS_ASSERTION (fields, "null fields");
@@ -342,19 +342,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 
   /* Multiply by 3 here to make enough room for MimePartII conversion */
   size += 3 * headerBuf.Length();
-
-  const char *pBcc = fields->GetBcc();
-  if (pBcc)
-    headerBuf.Append(pBcc);
-  // alert the user if headers contain characters out of charset range (e.g. multilingual data)
-  if (!nsMsgI18Ncheck_data_in_charset_range(charset, NS_ConvertUTF8toUCS2(headerBuf.get()).get())) {
-    PRBool proceedTheSend;
-    rv = nsMsgAskBooleanQuestionByID(aPrompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
-    if (!proceedTheSend) {
-      *status = NS_ERROR_ABORT;
-      return nsnull;
-    }
-  }
 
   /* Add a bunch of slop for the static parts of the headers. */
   /* size += 2048; */

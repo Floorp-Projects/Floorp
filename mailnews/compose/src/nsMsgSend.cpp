@@ -1462,12 +1462,12 @@ nsMsgComposeAndSend::GetBodyFromEditor()
         PRBool proceedTheSend;
         nsCOMPtr<nsIPrompt> prompt;
         GetDefaultPrompt(getter_AddRefs(prompt));
-        rv = nsMsgAskBooleanQuestionByID(prompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+        rv = nsMsgAskBooleanQuestionByID(prompt, NS_ERROR_MSG_MULTILINGUAL_SEND, &proceedTheSend);
         if (!proceedTheSend) {
           PR_FREEIF(attachment1_body);
           PR_FREEIF(outCString);
           Recycle(bodyText);
-          return NS_ERROR_ABORT;
+          return NS_ERROR_MSG_MULTILINGUAL_SEND;
         }
       }
     }

@@ -958,10 +958,10 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
         // body contains multilingual data, confirm send to the user
         if (NS_ERROR_UENC_NOMAPPING == rv) {
           PRBool proceedTheSend;
-          rv = nsMsgAskBooleanQuestionByID(prompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+          rv = nsMsgAskBooleanQuestionByID(prompt, NS_ERROR_MSG_MULTILINGUAL_SEND, &proceedTheSend);
           if (!proceedTheSend) {
             PR_FREEIF(outCString);
-            return NS_ERROR_ABORT;
+            return NS_ERROR_MSG_MULTILINGUAL_SEND;
           }
         }
         m_compFields->SetBody(outCString);
@@ -4462,6 +4462,37 @@ nsresult nsMsgCompose::ResetNodeEventHandlers(nsIDOMNode *node)
     }
     
     return rv;
+}
+
+NS_IMETHODIMP nsMsgCompose::CheckCharsetConversion(nsIMsgIdentity *identity, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(identity);
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsresult rv = m_compFields->CheckCharsetConversion(_retval);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (*_retval) 
+  {
+    nsXPIDLString fullName;
+    nsXPIDLString organization;
+    nsAutoString identityStrings;
+
+    rv = identity->GetFullName(getter_Copies(fullName));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (fullName)
+      identityStrings.Append(fullName.get());
+
+    rv = identity->GetOrganization(getter_Copies(organization));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (organization)
+      identityStrings.Append(organization.get());
+
+    if (!identityStrings.IsEmpty())
+      *_retval = nsMsgI18Ncheck_data_in_charset_range(m_compFields->GetCharacterSet(), identityStrings.get());
+  }
+
+  return NS_OK;
 }
 
 NS_IMPL_ADDREF(nsMsgRecipient)

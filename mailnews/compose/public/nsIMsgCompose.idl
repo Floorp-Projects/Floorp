@@ -185,6 +185,10 @@ interface nsIMsgCompose : nsISupports {
   */
   void ResetNodeEventHandlers(in nsIDOMNode node);
 
+  /* Check if the composing mail headers (and identity) can be converted to a mail charset.
+  */
+  boolean checkCharsetConversion(in nsIMsgIdentity identity);
+
   /* Retreive the message send object */
   readonly attribute nsIMsgSend messageSend;
   

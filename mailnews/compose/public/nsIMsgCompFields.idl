@@ -104,6 +104,9 @@ interface nsIMsgCompFields : nsISupports {
   nsIMsgRecipientArray SplitRecipients(in wstring recipients, in boolean emailAddressOnly);    
   void ConvertBodyToPlainText();
 
+  // Check if the composing mail headers can be converted to a mail charset.
+  boolean checkCharsetConversion();
+
   attribute nsISupports securityInfo;
 };
 
