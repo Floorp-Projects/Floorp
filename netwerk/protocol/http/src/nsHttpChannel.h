@@ -76,7 +76,6 @@ class nsHttpResponseHead;
 class nsAHttpConnection;
 class nsIHttpAuthenticator;
 class nsIProxyInfo;
-class nsIResumableEntityID;
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel
@@ -232,7 +231,7 @@ private:
     nsHttpAuthIdentity                mProxyIdent;
 
     // Resumable channel specific data
-    nsCOMPtr<nsIResumableEntityID>    mEntityID;
+    nsCString                         mEntityID;
     PRUint64                          mStartPos;
 
     // redirection specific data.

@@ -335,19 +335,6 @@
     {0xa9, 0x04, 0xac, 0x1d, 0x6d, 0xa7, 0x7a, 0x02} \
 }
 
-// component implementing nsIResumableEntityID
-#define NS_RESUMABLEENTITYID_CLASSNAME \
-    "nsResumableEntityID"
-#define NS_RESUMABLEENTITYID_CONTRACTID \
-    "@mozilla.org/network/resumable-entity-id;1"
-#define NS_RESUMABLEENTITYID_CID \
-{ /* e744a9a6-1dd1-11b2-b95c-e5d67a34e6b3 */         \
-    0xe744a9a6,                                      \
-    0x1d11,                                          \
-    0x11b2,                                          \
-    {0xb9, 0x5c, 0xe5, 0xd6, 0x7a, 0x34, 0xe6, 0xb3} \
-}     
-
 // service implementing nsIStreamTransportService
 #define NS_STREAMTRANSPORTSERVICE_CLASSNAME \
     "nsStreamTransportService"

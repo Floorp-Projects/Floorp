@@ -64,7 +64,6 @@
 #include "nsCRT.h"
 #include "nsIChannel.h"
 #include "nsIResumableChannel.h"
-#include "nsIResumableEntityID.h"
 #include "nsIURL.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -104,9 +103,7 @@ static PRBool gAskUserForInput = PR_FALSE;
 static PRBool gResume = PR_FALSE;
 static PRUint64 gStartAt = 0;
 
-static const char* gLastMod = NULL;
-static const char* gETag = NULL;
-static PRUint32 gTotalSize = PR_UINT32_MAX;
+static const char* gEntityID = NULL;
 
 //-----------------------------------------------------------------------------
 // Set proxy preferences for testing
@@ -417,27 +414,13 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
   nsCOMPtr<nsIResumableChannel> resChannel = do_QueryInterface(request);
   if (resChannel) {
       LOG(("Resumable entity identification:\n"));
-      nsCOMPtr<nsIResumableEntityID> entityID;
-      nsresult rv = resChannel->GetEntityID(getter_AddRefs(entityID));
-      if (NS_SUCCEEDED(rv) && entityID) {
-          PRUint64 size;
-          if (NS_SUCCEEDED(entityID->GetSize(&size)) &&
-              LL_NE(size, LL_MaxUint()))
-              LOG(("\tSize: %llu\n", size));
-          else
-              LOG(("\tSize: Unknown\n"));
-          nsCAutoString lastModified;
-          if (NS_SUCCEEDED(entityID->GetLastModified(lastModified)) &&
-              !lastModified.IsEmpty())
-              LOG(("\tLast Modified: %s\n", lastModified.get()));
-          else
-              LOG(("\tLast Modified: Unknown\n"));
-          nsCAutoString etag;
-          if (NS_SUCCEEDED(entityID->GetEntityTag(etag)) &&
-                !etag.IsEmpty())
-              LOG(("\tETag: %s\n", etag.get()));
-          else
-              LOG(("\tEtag: Unknown\n"));
+      nsCAutoString entityID;
+      nsresult rv = resChannel->GetEntityID(entityID);
+      if (NS_SUCCEEDED(rv)) {
+          LOG(("\t|%s|\n", entityID.get()));
+      }
+      else {
+          LOG(("\t<none>\n"));
       }
   }
 
@@ -664,20 +647,10 @@ nsresult StartLoadingURL(const char* aUrlString)
                 NS_ERROR("Channel is not resumable!");
                 return NS_ERROR_UNEXPECTED;
             }
-            nsCOMPtr<nsIResumableEntityID> id;
-            if (gETag || gLastMod || gTotalSize != PR_UINT32_MAX) {
-                id = do_CreateInstance(NS_RESUMABLEENTITYID_CONTRACTID);
-                if (!id) {
-                    fprintf(stderr, "Error creating entityid\n");
-                }
-                else {
-                    if (gETag)
-                        id->SetEntityTag(nsDependentCString(gETag));
-                    if (gLastMod)
-                        id->SetLastModified(nsDependentCString(gLastMod));
-                    id->SetSize(gTotalSize);
-                }
-            }
+            nsCAutoString id;
+            if (gEntityID)
+                id = gEntityID;
+            LOG(("* resuming at %llu bytes, with entity id |%s|\n", gStartAt, id.get()));
             res->ResumeAt(gStartAt, id);
         }
         rv = pChannel->AsyncOpen(listener,  // IStreamListener consumer
@@ -759,7 +732,7 @@ main(int argc, char* argv[])
 {
     nsresult rv= (nsresult)-1;
     if (argc < 2) {
-        printf("usage: %s [-verbose] [-file <name>] [-resume <startoffset> [-etag <etag>] [-lastmod <lastmod (string)>] [-totalsize <size>] [-proxy <proxy>] [-console] <url> <url> ... \n", argv[0]);
+        printf("usage: %s [-verbose] [-file <name>] [-resume <startoffset> [-entityid <entityid>]] [-proxy <proxy>] [-console] <url> <url> ... \n", argv[0]);
         return -1;
     }
 
@@ -809,18 +782,8 @@ main(int argc, char* argv[])
                 continue;
             }
 
-            if (PL_strcasecmp(argv[i], "-etag") == 0) {
-                gETag = argv[++i];
-                continue;
-            }
-
-            if (PL_strcasecmp(argv[i], "-lastmod") == 0) {
-                gLastMod = argv[++i];
-                continue;
-            }
-
-            if (PL_strcasecmp(argv[i], "-totalsize") == 0) {
-                gTotalSize = atoi(argv[++i]);
+            if (PL_strcasecmp(argv[i], "-entityid") == 0) {
+                gEntityID = argv[++i];
                 continue;
             }
 

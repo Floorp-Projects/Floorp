@@ -84,7 +84,6 @@ XPIDLSRCS	= \
 		nsISocketTransportService.idl \
 		nsIServerSocket.idl \
 		nsIResumableChannel.idl \
-		nsIResumableEntityID.idl \
 		nsIRequestObserverProxy.idl \
 		nsIStreamListenerProxy.idl \
 		nsIStreamListenerTee.idl \
