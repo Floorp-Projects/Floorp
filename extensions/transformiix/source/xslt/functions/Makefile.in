@@ -38,6 +38,3 @@ INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../net \
   -I$(srcdir)/../../xslt
 
 install:: $(OBJS)
-ifdef MOZ_XSL
-DEFINES += -DMOZILLA
-endif

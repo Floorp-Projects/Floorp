@@ -29,7 +29,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.cpp,v 1.5 2000/05/25 22:52:23 Peter.VanderBeken%pandora.be Exp $
+ * $Id: URIUtils.cpp,v 1.6 2000/07/06 12:35:35 axel%pike.org Exp $
  */
 
 #include "URIUtils.h"
@@ -38,7 +38,7 @@
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/05/25 22:52:23 $
+ * @version $Revision: 1.6 $ $Date: 2000/07/06 12:35:35 $
 **/
 
 //- Constants -/
@@ -119,7 +119,7 @@ istream* URIUtils::getInputStream
 **/
 void URIUtils::getDocumentBase(String& href, String& dest) {
 
-#ifdef MOZILLA
+#ifdef MOZ_XSL
     String docBase("");
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
@@ -176,7 +176,7 @@ void URIUtils::getDocumentBase(String& href, String& dest) {
 void URIUtils::resolveHref(String& href, String& documentBase, String& dest) {
 
 
-#ifdef MOZILLA
+#ifdef MOZ_XSL
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
 

@@ -124,8 +124,6 @@ OBJS =../source/base/ArrayList.o \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DMOZILLA
-
 INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \
   -I$(srcdir)/../source/net \
   -I$(srcdir)/../source/xml -I$(srcdir)/../source/xml/dom \

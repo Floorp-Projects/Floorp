@@ -31,9 +31,5 @@ CPPSRCS = URIUtils.cpp
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../base
-ifdef MOZ_XSL
-DEFINES += -DMOZILLA
-endif
-
 
 install:: $(OBJS)

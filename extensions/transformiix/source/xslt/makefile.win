@@ -26,7 +26,7 @@ DIRS=util functions
 LIBRARY_NAME=transformix_xslt
 MODULE=transformix
 
-DEFINES=-DMOZILLA
+DEFINES=-DMOZ_XSL
 
 CPPSRCS=					\
 	Names.cpp				\

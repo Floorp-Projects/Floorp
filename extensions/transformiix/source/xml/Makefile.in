@@ -36,8 +36,5 @@ CPPSRCS	= XMLDOMUtils.cpp XMLUtils.cpp
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../base -I$(srcdir)/dom
-ifdef MOZ_XSL
-DEFINES += -DMOZILLA
-endif
 
 install:: $(OBJS)
