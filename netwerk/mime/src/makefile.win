@@ -54,4 +54,4 @@ install:: $(DLL)
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 
 clobber::
-        rv -f $(DLL) $(DIST)\bin\components
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
