@@ -233,8 +233,8 @@ nsInputStringStream::nsInputStringStream(const char* stringToRead)
 	nsISupports* stream;
 	if (NS_FAILED(NS_NewCharInputStream(&stream, stringToRead)))
 		return;
-	mInputStream = nsQueryInterface(stream);
-	mStore = nsQueryInterface(stream);
+	mInputStream = do_QueryInterface(stream);
+	mStore = do_QueryInterface(stream);
 	NS_RELEASE(stream);
 }
 
@@ -245,8 +245,8 @@ nsInputStringStream::nsInputStringStream(const nsString& stringToRead)
 	nsISupports* stream;
 	if (NS_FAILED(NS_NewStringInputStream(&stream, stringToRead)))
 		return;
-	mInputStream = nsQueryInterface(stream);
-	mStore = nsQueryInterface(stream);
+	mInputStream = do_QueryInterface(stream);
+	mStore = do_QueryInterface(stream);
 	NS_RELEASE(stream);
 }
 
@@ -261,8 +261,8 @@ nsOutputStringStream::nsOutputStringStream(char*& stringToChange)
 	nsISupports* stream;
 	if (NS_FAILED(NS_NewCharOutputStream(&stream, &stringToChange)))
 		return;
-	mOutputStream = nsQueryInterface(stream);
-	mStore = nsQueryInterface(stream);
+	mOutputStream = do_QueryInterface(stream);
+	mStore = do_QueryInterface(stream);
 	NS_RELEASE(stream);
 }
 
@@ -273,8 +273,8 @@ nsOutputStringStream::nsOutputStringStream(nsString& stringToChange)
 	nsISupports* stream;
 	if (NS_FAILED(NS_NewStringOutputStream(&stream, stringToChange)))
 		return;
-	mOutputStream = nsQueryInterface(stream);
-	mStore = nsQueryInterface(stream);
+	mOutputStream = do_QueryInterface(stream);
+	mStore = do_QueryInterface(stream);
 	NS_RELEASE(stream);
 }
 
@@ -311,10 +311,10 @@ nsInputFileStream::nsInputFileStream(nsIFileSpec* inSpec)
 void nsInputFileStream::AssignFrom(nsISupports* stream)
 //----------------------------------------------------------------------------------------
 {
-	mFile = nsQueryInterface(stream);
-	mInputStream = nsQueryInterface(stream);
-	mStore = nsQueryInterface(stream);
-	mFileInputStream = nsQueryInterface(stream);
+	mFile = do_QueryInterface(stream);
+	mInputStream = do_QueryInterface(stream);
+	mStore = do_QueryInterface(stream);
+	mFileInputStream = do_QueryInterface(stream);
 }
 
 //========================================================================================
@@ -338,10 +338,10 @@ nsOutputFileStream::nsOutputFileStream(nsIFileSpec* inSpec)
 void nsOutputFileStream::AssignFrom(nsISupports* stream)
 //----------------------------------------------------------------------------------------
 {
-    mFile = nsQueryInterface(stream);
-    mOutputStream = nsQueryInterface(stream);
-    mStore = nsQueryInterface(stream);
-    mFileOutputStream = nsQueryInterface(stream);
+    mFile = do_QueryInterface(stream);
+    mOutputStream = do_QueryInterface(stream);
+    mStore = do_QueryInterface(stream);
+    mFileOutputStream = do_QueryInterface(stream);
 }
 
 //----------------------------------------------------------------------------------------
