@@ -34,6 +34,7 @@ use Bugzilla::User;
 
 use Bugzilla::Error;
 use Bugzilla::Util;
+use Bugzilla::Config;
 
 # Note!  This module requires that its caller have said "require CGI.pl" 
 # to import relevant functions from that script and its companion globals.pl.
