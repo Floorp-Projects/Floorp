@@ -45,6 +45,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULDocument.obj             \
 	    .\$(OBJDIR)\nsXULDocumentInfo.obj	  \
 		.\$(OBJDIR)\nsXULPopupListener.obj  \
+		.\$(OBJDIR)\nsXULFocusTracker.obj \
         .\$(OBJDIR)\nsXULSortService.obj          \
         .\$(OBJDIR)\nsXULTreeElement.obj          \
 	$(NULL)
