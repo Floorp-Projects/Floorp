@@ -82,7 +82,7 @@ extensions/Makefile
 extensions/wallet/Makefile
 extensions/wallet/public/Makefile
 extensions/wallet/src/Makefile
-extensions/wallet/module/Makefile
+# extensions/wallet/module/Makefile
 gfx/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
