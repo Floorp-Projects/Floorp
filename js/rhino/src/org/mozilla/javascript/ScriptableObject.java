@@ -1482,7 +1482,13 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             throw ScriptRuntime.notFunctionError(obj, methodName);
         }
         Function fun = (Function)funObj;
-        Scriptable scope = fun.getParentScope();
+        Scriptable scope = ScriptableObject.getTopLevelScope(fun);
+        // XXX: The following is only necessary for dynamic scope setup,
+        // but to check for that Context instance is required.
+        // Since it should not harm non-dynamic scope setup, do it always
+        // for now.
+        Scriptable dynamicScope = ScriptableObject.getTopLevelScope(obj);
+        scope = ScriptRuntime.checkDynamicScope(dynamicScope, scope);
         if (cx != null) {
             return fun.call(cx, scope, obj, args);
         } else {

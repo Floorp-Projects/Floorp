@@ -1739,7 +1739,7 @@ public class ScriptRuntime {
                                        String name)
     {
         if (cx.useDynamicScope) {
-            scope = locateDynamicScope(cx, scope);
+            scope = checkDynamicScope(cx.topCallScope, scope);
         }
         return ScriptableObject.getProperty(scope, name);
     }
@@ -1798,7 +1798,7 @@ public class ScriptRuntime {
         }
         // scope here is top scope
         if (cx.useDynamicScope) {
-            scope = locateDynamicScope(cx, scope);
+            scope = checkDynamicScope(cx.topCallScope, scope);
         }
         if (ScriptableObject.hasProperty(scope, id)) {
             return scope;
@@ -1828,7 +1828,7 @@ public class ScriptRuntime {
             // Find the top scope by walking up the scope chain.
             bound = ScriptableObject.getTopLevelScope(scope);
             if (cx.useDynamicScope) {
-                bound = locateDynamicScope(cx, bound);
+                bound = checkDynamicScope(cx.topCallScope, bound);
             }
             bound.put(id, bound, value);
         }
@@ -2854,22 +2854,27 @@ public class ScriptRuntime {
         return result;
     }
 
-    private static Scriptable locateDynamicScope(Context cx, Scriptable scope)
+    /**
+     * Return <tt>possibleDynamicScope</tt> if <tt>staticTopScope</tt>
+     * is present on its prototype chain and return <tt>staticTopScope</tt>
+     * otherwise.
+     * Should only be called when <tt>staticTopScope</tt> is top scope.
+     */
+    static Scriptable checkDynamicScope(Scriptable possibleDynamicScope,
+                                        Scriptable staticTopScope)
     {
-        // Return cx.topCallScope if scope is present on its prototype chain
-        // and return scope otherwise.
-        // Should only be called when scope is top scope.
-        if (cx.topCallScope == scope) {
-            return scope;
+        // Return cx.topCallScope if scope
+        if (possibleDynamicScope == staticTopScope) {
+            return possibleDynamicScope;
         }
-        Scriptable proto = cx.topCallScope;
+        Scriptable proto = possibleDynamicScope;
         for (;;) {
             proto = proto.getPrototype();
-            if (proto == scope) {
-                return cx.topCallScope;
+            if (proto == staticTopScope) {
+                return possibleDynamicScope;
             }
             if (proto == null) {
-                return scope;
+                return staticTopScope;
             }
         }
     }
