@@ -1207,32 +1207,23 @@ public class Context
         NativeCall.init(this, scope, sealed);
         NativeScript.init(this, scope, sealed);
 
-        new LazilyLoadedCtor(scope,
-                             "RegExp",
-                             "org.mozilla.javascript.regexp.NativeRegExp",
-                             sealed);
-
-        // This creates the Packages and java package roots.
-        new LazilyLoadedCtor(scope,
-                             "Packages",
-                             "org.mozilla.javascript.NativeJavaTopPackage",
-                             sealed);
-        new LazilyLoadedCtor(scope,
-                             "java",
-                             "org.mozilla.javascript.NativeJavaTopPackage",
-                             sealed);
-        new LazilyLoadedCtor(scope,
-                             "getClass",
-                             "org.mozilla.javascript.NativeJavaTopPackage",
-                             sealed);
-
-        new LazilyLoadedCtor(scope,
-                             "JavaAdapter",
-                             "org.mozilla.javascript.JavaAdapter",
-                             sealed);
+        for (int i = 0; i != lazilyNames.length; i += 2) {
+            String topProperty = lazilyNames[i];
+            String className = lazilyNames[i + 1];
+            new LazilyLoadedCtor(scope, topProperty, className, sealed);
+        }
 
         return scope;
     }
+
+    private static final String[] lazilyNames = {
+        "RegExp",        "org.mozilla.javascript.regexp.NativeRegExp",
+        "Packages",      "org.mozilla.javascript.NativeJavaTopPackage",
+        "java",          "org.mozilla.javascript.NativeJavaTopPackage",
+        "getClass",      "org.mozilla.javascript.NativeJavaTopPackage",
+        "JavaAdapter",   "org.mozilla.javascript.JavaAdapter",
+        "JavaImporter",  "org.mozilla.javascript.ImporterTopLevel",
+    };
 
     /**
      * Get the singleton object that represents the JavaScript Undefined value.
