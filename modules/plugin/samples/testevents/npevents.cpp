@@ -123,12 +123,14 @@ public:
     RegisterSelf(nsIComponentManager* aCompMgr,
                  nsIFile* aPath,
                  const char* aRegistryLocation,
-                 const char* aComponentType);
+                 const char* aComponentType,
+                 const nsModuleComponentInfo *info);
 
     static NS_METHOD
     UnregisterSelf(nsIComponentManager* aCompMgr,
                    nsIFile* aPath,
-                   const char* aRegistryLocation);
+                   const char* aRegistryLocation,
+                   const nsModuleComponentInfo *info);
 
 
 	NS_DECL_ISUPPORTS
