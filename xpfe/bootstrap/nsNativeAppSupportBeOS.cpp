@@ -149,6 +149,7 @@ nsSplashScreenBeOS::Observe(nsISupports *aSubject,
                             const char *aTopic,
                             const PRUnichar *someData)
 {
+	if (!bitmap) return NS_OK;
 	nsCAutoString statusString;
 	statusString.AssignWithConversion(someData);
 	if (textView == NULL) {
