@@ -481,7 +481,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
       //XXX "aboutStrName" should be less hardcoded
       PRUnichar *ptrv = nsnull;
       bundle->GetStringFromName(NS_ConvertASCIItoUCS2("aboutStrName").GetUnicode(), &ptrv);
-      nsAutoString label = ptrv;
+      nsAutoString label(ptrv);
 		  nsCRT::free(ptrv);
 
       ::AppendMenu(appleMenu, "\pa");

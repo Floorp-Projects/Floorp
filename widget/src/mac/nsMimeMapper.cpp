@@ -89,7 +89,7 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
       format |= ('..MZ' << 16);     
  
       // stick it in the mapping list
-      mMappings.push_back ( MimePair(format, aMimeStr) );
+      mMappings.push_back ( MimePair(format, nsCAutoString(aMimeStr)) );
     }
   
   }
@@ -164,7 +164,7 @@ nsMimeMapperMac :: ParseMappings ( const char* inMappings )
     ResType flavor = nsnull;
 
     sscanf ( currPosition, "%ld %s ", &flavor, mimeType );
-    mMappings.push_back( MimePair(flavor, mimeType) );
+    mMappings.push_back( MimePair(flavor, nsCAutoString(mimeType)) );
 
     currPosition += 10 + 2 + strlen(mimeType);  // see ExportMapping() for explanation of this calculation
     
