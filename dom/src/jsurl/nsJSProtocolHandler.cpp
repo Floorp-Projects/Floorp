@@ -55,6 +55,7 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIStringStream.h"
@@ -229,21 +230,32 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         if (NS_FAILED(rv))
             return rv;
 
-        nsCOMPtr<nsIPrincipal> systemPrincipal;
-        securityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-        if (principal != systemPrincipal) {
-            rv = securityManager->CheckSameOriginPrincipal(principal,
-                                                           objectPrincipal);
-            if (NS_FAILED(rv)) {
-                nsCOMPtr<nsIConsoleService> console =
-                    do_GetService("@mozilla.org/consoleservice;1");
-                if (console) {
-                    // XXX Localize me!
-                    console->LogStringMessage(
-                        NS_LITERAL_STRING("Attempt to load a javascript: URL from one host\nin a window displaying content from another host\nwas blocked by the security manager.").get());
-                }
+        PRBool equals = PR_FALSE;
+        if ((NS_FAILED(objectPrincipal->Equals(principal, &equals)) || !equals)) {
+            // If the principals aren't equal
 
-                return NS_ERROR_DOM_RETVAL_UNDEFINED;
+            nsCOMPtr<nsIPrincipal> systemPrincipal;
+            securityManager->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+            if (principal.get() != systemPrincipal.get()) {
+                // and the script to be run does not have the system principal
+
+                nsCOMPtr<nsICodebasePrincipal> 
+                    objectCodebase(do_QueryInterface(objectPrincipal));
+                nsXPIDLCString objectOrigin;
+                rv = objectCodebase->GetOrigin(getter_Copies(objectOrigin));
+                if (PL_strcmp("about:blank", objectOrigin) != 0) {
+                    // and the target window is not about:blank, then
+                    // don't run the script. Print a message to the console and
+                    // return undefined.
+
+                    nsCOMPtr<nsIConsoleService> 
+                        console(do_GetService("@mozilla.org/consoleservice;1"));
+                    if (console) {
+                            console->LogStringMessage(
+                                NS_LITERAL_STRING("Attempt to load a javascript: URL from one host\nin a window displaying content from another host\nwas blocked by the security manager.").get());
+                    }
+                    return NS_ERROR_DOM_RETVAL_UNDEFINED;
+                }
             }
         }
     }
@@ -288,9 +300,9 @@ nsresult nsJSThunk::BringUpConsole(nsIDOMWindow *aDomWindow)
     nsresult rv;
 
     // First, get the Window Mediator service.
-    nsCOMPtr<nsIWindowMediator> windowMediator =
-        do_GetService(kWindowMediatorCID, &rv);
+    nsCOMPtr<nsIWindowMediator> windowMediator;
 
+    windowMediator = do_GetService(kWindowMediatorCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // Next, find out whether there's a console already open.

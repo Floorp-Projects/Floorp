@@ -36,9 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /* describes principals by their orginating uris*/
-
-#ifndef nsJSPrincipals_h__
-#define nsJSPrincipals_h__
+#ifndef _NS_JSPRINCIPALS_H_
+#define _NS_JSPRINCIPALS_H_
 #include "jsapi.h"
 #include "nsIPrincipal.h"
 
@@ -48,8 +47,8 @@ struct nsJSPrincipals : JSPrincipals {
   nsresult Init(char *prin);
   ~nsJSPrincipals(void);
 
-  nsIPrincipal *nsIPrincipalPtr; // [WEAK] it owns us.
+  nsIPrincipal *nsIPrincipalPtr;
 };
 
-#endif /* nsJSPrincipals_h__ */
+#endif /* _NS_JSPRINCIPALS_H_ */
 

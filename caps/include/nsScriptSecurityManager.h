@@ -22,7 +22,6 @@
  * Contributor(s):
  *  Norris Boyd  <nboyd@atg.com>
  *  Mitch Stoltz <mstoltz@netscape.com>
- *  Christopher A. Aillon <christopher@aillon.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,15 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsScriptSecurityManager_h__
-#define nsScriptSecurityManager_h__
+#ifndef _NS_SCRIPT_SECURITY_MANAGER_H_
+#define _NS_SCRIPT_SECURITY_MANAGER_H_
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "nsIXPCSecurityManager.h"
-#include "nsInterfaceHashtable.h"
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsIPrefService.h"
@@ -59,86 +57,44 @@
 class nsIDocShell;
 class nsString;
 class nsIClassInfo;
-class nsIIOService;
-class nsIXPConnect;
 class nsIStringBundle;
 class nsSystemPrincipal;
 struct ClassPolicy;
 
-#if defined(DEBUG_mstoltz) || defined(DEBUG_caillon)
-#define DEBUG_CAPS_HACKER
-#endif
-
-#ifdef DEBUG_CAPS_HACKER
-#define DEBUG_CAPS_CheckPropertyAccessImpl
-#define DEBUG_CAPS_LookupPolicy
-#define DEBUG_CAPS_CheckComponentPermissions
-#endif
-
-#if 0
-#define DEBUG_CAPS_CanCreateWrapper
-#define DEBUG_CAPS_CanCreateInstance
-#define DEBUG_CAPS_CanGetService
-#endif
-
 /////////////////////
-// PrincipalKey //
+// nsIPrincipalKey //
 /////////////////////
 
-class PrincipalKey : public PLDHashEntryHdr
+class nsIPrincipalKey : public nsHashKey
 {
 public:
-    typedef const nsIPrincipal* KeyType;
-    typedef const nsIPrincipal* KeyTypePointer;
-
-    PrincipalKey(const nsIPrincipal* key)
-      : mKey(NS_CONST_CAST(nsIPrincipal*, key))
-    {
+    nsIPrincipalKey(nsIPrincipal* key) {
+        mKey = key;
+        NS_IF_ADDREF(mKey);
     }
-
-    PrincipalKey(const PrincipalKey& toCopy)
-      : mKey(toCopy.mKey)
-    {
-    } 
-
-    ~PrincipalKey()
-    {
+    
+    ~nsIPrincipalKey(void) {
+        NS_IF_RELEASE(mKey);
     }
-
-    KeyType GetKey() const
-    {
-        return mKey;
+    
+    PRUint32 HashCode(void) const {
+        PRUint32 hash;
+        mKey->HashValue(&hash);
+        return hash;
     }
-
-    KeyTypePointer GetKeyPointer() const
-    {
-        return mKey;
-    }
-
-    PRBool KeyEquals(KeyTypePointer aKey) const
-    {
+    
+    PRBool Equals(const nsHashKey* aKey) const {
         PRBool eq;
-        mKey->Equals(NS_CONST_CAST(nsIPrincipal*, aKey),
-                     &eq);
+        mKey->Equals(((nsIPrincipalKey*) aKey)->mKey, &eq);
         return eq;
     }
-
-    static KeyTypePointer KeyToPointer(KeyType aKey)
-    {
-        return aKey;
+    
+    nsHashKey *Clone(void) const {
+        return new nsIPrincipalKey(mKey);
     }
 
-    static PLDHashNumber HashKey(KeyTypePointer aKey)
-    {
-        PRUint32 hash;
-        NS_CONST_CAST(nsIPrincipal*, aKey)->GetHashValue(&hash);
-        return PLDHashNumber(hash);
-    }
-
-    enum { ALLOW_MEMMOVE = PR_TRUE };
-
-private:
-    nsCOMPtr<nsIPrincipal> mKey;
+protected:
+    nsIPrincipal* mKey;
 };
 
 ////////////////////
@@ -258,12 +214,9 @@ class DomainPolicy : public PLDHashTable
 public:
     DomainPolicy() : mWildcardPolicy(nsnull),
                      mRefCount(0)
+                     
     {
-    }
-
-    PRBool Init()
-    {
-        static const PLDHashTableOps domainPolicyOps =
+        static PLDHashTableOps domainPolicyOps =
         {
             PL_DHashAllocTable,
             PL_DHashFreeTable,
@@ -276,8 +229,8 @@ public:
             InitClassPolicyEntry
         };
 
-        return PL_DHashTableInit(this, &domainPolicyOps, nsnull,
-                                 sizeof(ClassPolicy), 16);
+        PL_DHashTableInit(this, &domainPolicyOps, nsnull,
+                          sizeof(ClassPolicy), 16);
     }
 
     ~DomainPolicy()
@@ -446,7 +399,7 @@ private:
     nsresult
     CheckComponentPermissions(JSContext *cx, const nsCID &aCID);
 #endif
-#ifdef DEBUG_CAPS_HACKER
+#ifdef DEBUG_mstoltz
     void
     PrintPolicyDB();
 #endif
@@ -457,8 +410,8 @@ private:
     inline void
     JSEnabledPrefChanged(nsISecurityPref* aSecurityPref);
 
-    static const char sJSEnabledPrefName[];
-    static const char sJSMailEnabledPrefName[];
+    static const char* sJSEnabledPrefName;
+    static const char* sJSMailEnabledPrefName;
 
     nsObjectHashtable* mOriginToPolicyMap;
     DomainPolicy* mDefaultPolicy;
@@ -466,22 +419,20 @@ private:
 
     nsCOMPtr<nsIPrefBranch> mPrefBranch;
     nsCOMPtr<nsISecurityPref> mSecurityPref;
-    nsCOMPtr<nsIPrincipal> mSystemPrincipal;
+    nsIPrincipal* mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
-    nsInterfaceHashtable<PrincipalKey, nsIPrincipal> mPrincipals;
+    nsSupportsHashtable* mPrincipals;
+    PRBool mIsJavaScriptEnabled;
+    PRBool mIsMailJavaScriptEnabled;
+    PRBool mIsWritingPrefs;
     nsCOMPtr<nsIThreadJSContextStack> mJSContextStack;
-    PRPackedBool mIsJavaScriptEnabled;
-    PRPackedBool mIsMailJavaScriptEnabled;
-    PRPackedBool mIsWritingPrefs;
-    PRPackedBool mPolicyPrefsChanged;
+    PRBool mNameSetRegistered;
+    PRBool mPolicyPrefsChanged;
 #ifdef XPC_IDISPATCH_SUPPORT    
-    PRPackedBool mXPCDefaultGrantAll;
-    static const char sXPCDefaultGrantAllName[];
+    PRBool mXPCDefaultGrantAll;
+    static const char* sXPCDefaultGrantAllName;
 #endif
 
-    static nsIIOService    *sIOService;
-    static nsIXPConnect    *sXPConnect;
     static nsIStringBundle *sStrBundle;
 };
-
-#endif // nsScriptSecurityManager_h__
+#endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/

@@ -42,10 +42,10 @@
 #include "nsINodeInfo.h"
 #include "nsCOMPtr.h"
 #include "plhash.h"
+#include "nsIURI.h"
+#include "nsIPrincipal.h"
 
 class nsNodeInfo;
-class nsIPrincipal;
-class nsIURI;
 
 
 class nsNodeInfoManager : public nsINodeInfoManager

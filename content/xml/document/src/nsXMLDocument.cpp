@@ -76,8 +76,9 @@
 #include "nsICharsetAlias.h"
 #include "nsNetUtil.h"
 #include "nsDOMError.h"
-#include "nsIScriptSecurityManager.h"
+#include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
+#include "nsIAggregatePrincipal.h"
 #include "nsLayoutCID.h"
 #include "nsDOMAttribute.h"
 #include "nsGUIEvent.h"
@@ -331,7 +332,21 @@ nsXMLDocument::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
       return rv;
   }
 
-  return mPrincipal->SetURI(newLocation);
+  nsCOMPtr<nsIPrincipal> newCodebase;
+  rv = secMan->GetCodebasePrincipal(newLocation,
+                                    getter_AddRefs(newCodebase));
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAggregatePrincipal> agg = do_QueryInterface(mPrincipal, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Principal not an aggregate.");
+
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  rv = agg->SetCodebase(newCodebase);
+
+  return rv;
 }
 
 NS_IMETHODIMP

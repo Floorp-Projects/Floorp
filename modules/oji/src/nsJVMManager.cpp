@@ -68,10 +68,14 @@
 #include "nspr.h"
 #include "plstr.h"
 #include "nsCOMPtr.h"
-#include "nsIPrincipal.h"
+//#include "nsJSPrincipals.h"
+//#include "nsSystemPrincipal.h"
+//#include "nsCodebasePrincipal.h"
+#include "nsCertificatePrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISignatureVerifier.h"
 
+//#include "nsScriptSecurityManager.h"
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
@@ -967,8 +971,15 @@ nsJVMManager::IsAllPermissionGranted(
     rv = secMan->GetCertificatePrincipal(lastFP, &pIPrincipal);
     if (NS_FAILED(rv)) return PR_FALSE;
 
+    // Get the nsICertificatePrincipal interface so that we can set the
+    // common name. The common name is a user meaningful string.
+    
+    nsCOMPtr<nsICertificatePrincipal> pICertificate = do_QueryInterface(pIPrincipal, &rv);
+    if (NS_FAILED(rv) || !pICertificate) return PR_FALSE;
+
     // Set the common name.
-    rv = pIPrincipal->SetCommonName(lastCN);
+
+    rv = pICertificate->SetCommonName(lastCN);
 
     PRInt16 ret;
 

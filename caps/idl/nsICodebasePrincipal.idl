@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999-2000
+ * Portions created by the Initial Developer are Copyright (C) 1999
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,50 +35,22 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-/* Defines the abstract interface for a principal. */
-
-#include "nsISerializable.idl"
+/* Defines an interface for codebase principals. */
+#include "nsIPrincipal.idl"
+interface nsIURI;
 
 %{C++
-struct JSPrincipals;
+#define NS_CODEBASEPRINCIPAL_CONTRACTID "@mozilla.org/codebaseprincipal;1"
+#define NS_CODEBASEPRINCIPAL_CLASSNAME "codebaseprincipal"
 %}
 
-[ptr] native JSPrincipals(JSPrincipals);
+[uuid(829fe440-25e1-11d2-8160-006008119d7a)]
+interface nsICodebasePrincipal : nsISupports {
 
-[uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
-interface nsIPrincipal : nsISerializable
-{
-    // Values of capabilities for each principal. Order is
-    // significant: if an operation is performed on a set
-    // of capabilities, the minimum is computed.
-    const short ENABLE_DENIED                = 1;
-    const short ENABLE_UNKNOWN               = 2;
-    const short ENABLE_WITH_USER_PERMISSION  = 3;
-    const short ENABLE_GRANTED               = 4;
+	readonly attribute nsIURI URI;
 
-    string ToString();
+	readonly attribute string origin;
 
-    string ToUserVisibleString();
-
-    void GetPreferences(out string prefName, out string id, 
-                        out string grantedList, out string deniedList);
-
-    boolean Equals(in nsIPrincipal other);
-
-    unsigned long HashValue();
-
-    JSPrincipals GetJSPrincipals();
-
-    short CanEnableCapability(in string capability);
-
-    void SetCanEnableCapability(in string capability, in short canEnable);
-
-    boolean IsCapabilityEnabled(in string capability, in voidPtr annotation);
-    
-    void EnableCapability(in string capability, inout voidPtr annotation);
-
-    void RevertCapability(in string capability, inout voidPtr annotation);
-
-    void DisableCapability(in string capability, inout voidPtr annotation);
+	readonly attribute string spec;
 };
+

@@ -85,7 +85,8 @@
 #include "nsIXPConnect.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
-#include "nsIPrincipal.h"
+#include "nsICodebasePrincipal.h"
+#include "nsIAggregatePrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableView.h"
 
@@ -1896,10 +1897,11 @@ nsHTMLDocument::GetDomainURI(nsIURI **aURI)
   if (NS_FAILED(GetPrincipal(getter_AddRefs(principal))))
     return;
 
-  principal->GetDomain(aURI);
-  if (!*aURI) {
-    principal->GetURI(aURI);
-  }
+  nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+  if (!codebase)
+    return;
+
+  codebase->GetURI(aURI);
 }
 
 
@@ -1971,10 +1973,27 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   if (NS_FAILED(NS_NewURI(getter_AddRefs(newURI), newURIString)))
     return NS_ERROR_FAILURE;
 
-  nsresult rv = mPrincipal->SetDomain(newURI);
+  // Get codebase principal
+  nsresult rv;
+  nsCOMPtr<nsIScriptSecurityManager> securityManager =
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPrincipal> newCodebase;
+  rv = securityManager->GetCodebasePrincipal(newURI,
+                                             getter_AddRefs(newCodebase));
+    if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIAggregatePrincipal> agg = do_QueryInterface(mPrincipal, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Principal not an aggregate.");
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  rv = agg->SetCodebase(newCodebase);
 
   // Bug 13871: Frameset spoofing - note that document.domain was set
   if (NS_SUCCEEDED(rv)) {
+    agg->SetDomainChanged(PR_TRUE);
     mDomainWasSet = PR_TRUE;
   }
 
@@ -2238,15 +2257,22 @@ nsHTMLDocument::GetCookie(nsAString& aCookie)
   if (service) {
     // Get a URI from the document principal. We use the original
     // codebase in case the codebase was changed by SetDomain
-    nsCOMPtr<nsIURI> codebaseURI;
-    mPrincipal->GetURI(getter_AddRefs(codebaseURI));
+    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(mPrincipal, &rv));
+    // Document principal should always be an aggregate
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!codebaseURI) {
-      // Document's principal is not a codebase (may be system), so
-      // can't set cookies
-
+    nsCOMPtr<nsIPrincipal> originalPrincipal;
+    rv = agg->GetOriginalCodebase(getter_AddRefs(originalPrincipal));
+    nsCOMPtr<nsICodebasePrincipal> originalCodebase(
+        do_QueryInterface(originalPrincipal, &rv));
+    if (NS_FAILED(rv)) {
+      // Document's principal is not a codebase, so can't get cookies
       return NS_OK;
     }
+
+    nsCOMPtr<nsIURI> codebaseURI;
+    rv = originalCodebase->GetURI(getter_AddRefs(codebaseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLCString cookie;
       rv = service->GetCookieString(codebaseURI, mChannel, getter_Copies(cookie));
@@ -2283,15 +2309,24 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
       }
     }
 
-    nsCOMPtr<nsIURI> codebaseURI;
-    mPrincipal->GetURI(getter_AddRefs(codebaseURI));
+    // Get a URI from the document principal. We use the original
+    // codebase in case the codebase was changed by SetDomain
+    nsCOMPtr<nsIAggregatePrincipal> agg(do_QueryInterface(mPrincipal, &rv));
+    // Document principal should always be an aggregate
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!codebaseURI) {
-      // Document's principal is not a codebase (may be system), so
-      // can't set cookies
-
+    nsCOMPtr<nsIPrincipal> originalPrincipal;
+    rv = agg->GetOriginalCodebase(getter_AddRefs(originalPrincipal));
+    nsCOMPtr<nsICodebasePrincipal> originalCodebase(
+        do_QueryInterface(originalPrincipal, &rv));
+    if (NS_FAILED(rv)) {
+      // Document's principal is not a codebase, so can't set cookies
       return NS_OK;
     }
+
+    nsCOMPtr<nsIURI> codebaseURI;
+    rv = originalCodebase->GetURI(getter_AddRefs(codebaseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = NS_ERROR_OUT_OF_MEMORY;
     char* cookie = ToNewCString(aCookie);
@@ -2668,12 +2703,19 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (subject) {
-      nsCOMPtr<nsIURI> subjectURI;
-      subject->GetURI(getter_AddRefs(subjectURI));
+    // why is the above code duplicated below???
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      if (subjectURI) {
+    if (subject) {
+      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(subject);
+      if (codebase) {
+        nsCOMPtr<nsIURI> subjectURI;
+        rv = codebase->GetURI(getter_AddRefs(subjectURI));
+        NS_ENSURE_SUCCESS(rv, rv);
+
         mDocumentURL = subjectURI;
+
         mPrincipal = subject;
       }
     }

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Mitchell Stoltz <mstoltz@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -35,50 +36,18 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-/* Defines the abstract interface for a principal. */
-
-#include "nsISerializable.idl"
+/* Defines an interface for certificate principals. */
+#include "nsIPrincipal.idl"
+#include "nsIZipReader.idl"
 
 %{C++
-struct JSPrincipals;
+#define NS_CERTIFICATEPRINCIPAL_CONTRACTID "@mozilla.org/certificateprincipal;1"
+#define NS_CERTIFICATEPRINCIPAL_CLASSNAME "certificateprincipal"
 %}
 
-[ptr] native JSPrincipals(JSPrincipals);
+[uuid(ebfefcd0-25e1-11d2-8160-006008119d7a)]
+interface nsICertificatePrincipal : nsISupports {
 
-[uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
-interface nsIPrincipal : nsISerializable
-{
-    // Values of capabilities for each principal. Order is
-    // significant: if an operation is performed on a set
-    // of capabilities, the minimum is computed.
-    const short ENABLE_DENIED                = 1;
-    const short ENABLE_UNKNOWN               = 2;
-    const short ENABLE_WITH_USER_PERMISSION  = 3;
-    const short ENABLE_GRANTED               = 4;
-
-    string ToString();
-
-    string ToUserVisibleString();
-
-    void GetPreferences(out string prefName, out string id, 
-                        out string grantedList, out string deniedList);
-
-    boolean Equals(in nsIPrincipal other);
-
-    unsigned long HashValue();
-
-    JSPrincipals GetJSPrincipals();
-
-    short CanEnableCapability(in string capability);
-
-    void SetCanEnableCapability(in string capability, in short canEnable);
-
-    boolean IsCapabilityEnabled(in string capability, in voidPtr annotation);
-    
-    void EnableCapability(in string capability, inout voidPtr annotation);
-
-    void RevertCapability(in string capability, inout voidPtr annotation);
-
-    void DisableCapability(in string capability, inout voidPtr annotation);
+    readonly attribute string certificateID;
+    attribute string commonName;
 };

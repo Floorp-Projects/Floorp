@@ -68,7 +68,7 @@
 #include "nsDOMError.h"
 #include "nsIBoxObject.h"
 #include "nsIChromeRegistry.h"
-#include "nsIPrincipal.h"
+#include "nsICodebasePrincipal.h"
 #include "nsIContentSink.h" // for NS_CONTENT_ID_COUNTER_BASE
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"

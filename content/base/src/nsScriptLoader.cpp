@@ -875,16 +875,18 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     if (channel) {
       nsCOMPtr<nsISupports> owner;
       channel->GetOwner(getter_AddRefs(owner));
-      nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
-
-      if (principal) {
-        rv = mDocument->AddPrincipal(principal);
-        if (NS_FAILED(rv)) {
-          mPendingRequests.RemoveObject(request);
-          FireScriptAvailable(rv, request, NS_LITERAL_STRING(""));
-          ProcessPendingReqests();
-          return NS_OK;
-        }
+      nsCOMPtr<nsIPrincipal> prin;
+      
+      if (owner) {
+        prin = do_QueryInterface(owner, &rv);
+      }
+      
+      rv = mDocument->AddPrincipal(prin);
+      if (NS_FAILED(rv)) {
+        mPendingRequests.RemoveObject(request);
+        FireScriptAvailable(rv, request, NS_LITERAL_STRING(""));
+        ProcessPendingReqests();
+        return NS_OK;
       }
     }
   }

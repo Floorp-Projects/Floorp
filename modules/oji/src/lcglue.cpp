@@ -358,7 +358,7 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, v
                     rv = ssm->GetCodebasePrincipal(codebaseURI, getter_AddRefs(principal));
                     if (NS_SUCCEEDED(rv)) {
                         JSPrincipals* jsprincipals;
-                        principal->GetJsPrincipals(&jsprincipals);
+                        principal->GetJSPrincipals(&jsprincipals);
                         return jsprincipals;
                     }
                 }
@@ -368,7 +368,7 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, v
         nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(credentials);
         if (principal) {
             JSPrincipals* jsprincipals;
-            principal->GetJsPrincipals(&jsprincipals);
+            principal->GetJSPrincipals(&jsprincipals);
             return jsprincipals;
         }
     }
