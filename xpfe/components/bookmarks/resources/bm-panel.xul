@@ -35,15 +35,16 @@
   ondraggesture="return TopLevelDrag(event);"
   align="vertical">
 
-  <html:script src="chrome://communicator/content/bookmarks/bm-panel.js" />
-  <html:script src="chrome://communicator/content/bookmarks/bookmarks.js" />
-  <html:script src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
-  <html:script src="chrome://global/content/strres.js"/>
+  <script src="chrome://communicator/content/bookmarks/bm-panel.js" />
+  <script src="chrome://communicator/content/bookmarks/bookmarks.js" />
+  <script src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
+  <script src="chrome://global/content/strres.js"/>
+  <script src="chrome://global/content/nsJSComponentManager.js"/>
 
 <popupset>
-<popup id="contextual" oncreate="return fillContextMenu('contextual');" >
-	<menu />
-</popup>
+  <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+	  <menu />
+  </popup>
 </popupset>
 
     <tree id="bookmarksTree" class="bookmarks-panel-tree" context="contextual" ref="NC:BookmarksRoot"
@@ -94,8 +95,9 @@
 
   <treehead>
     <treerow id="headRow">
-      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.name.label;"
-      	onclick="return TriStateColumnSort('NameColumn');" observes="NameColumn" />
+      <treecell class="treecell-header treecell-header-sidebarpanel sortDirectionIndicator" 
+                value="&tree.header.name.label;" 
+                onclick="return TriStateColumnSort('NameColumn');" observes="NameColumn" />
     </treerow>
   </treehead>
   </tree>
