@@ -290,6 +290,29 @@ certImport()
   fi
 }
 
+################################ certImportn #############################
+# local shell function to import an incorrect Cert, calls certutil -A, 
+# writes action and options to stdout
+########################################################################
+certImportn()
+{
+  RET=0
+  if [ "$NSS_NO_PKITS_CRLS" -ne 1 ]; then
+    echo "certutil -d $PKITSdb -A -t \",,\" -n $* -i $certs/$*.crt"
+    certutil -d $PKITSdb -A -t ",," -n $* -i $certs/$*.crt > ${PKITSDIR}/cmdout.txt 2>&1
+    RET=$?
+    cat ${PKITSDIR}/cmdout.txt
+
+    if [ "$RET" -eq 0 ]; then
+	html_failed "<TR><TD>${VFY_ACTION} ($RET) "
+	pkits_log "ERROR: ${VFY_ACTION} failed $RET"
+    else
+	html_passed "<TR><TD>${VFY_ACTION} ($RET) "
+	pkits_log "SUCCESS: ${VFY_ACTION} returned as expected $RET"
+    fi
+  fi
+}
+
 ############################## pkits_tests_bySection ###################
 # running the various PKITS tests
 ########################################################################
@@ -1140,7 +1163,7 @@ pkits_RequireExplicitPolicy()
   break_table "NIST PKITS Section 4.9: Require Explicit Policy"
 
   VFY_ACTION="Valid RequireExplicitPolicy Test1"; log_banner
-  certImport requireExplicitPolicy10CACert
+  certImportn requireExplicitPolicy10CACert
   crlImportn requireExplicitPolicy10CACRL.crl
   certImport requireExplicitPolicy10subCACert
   crlImport requireExplicitPolicy10subCACRL.crl
@@ -1159,7 +1182,7 @@ pkits_RequireExplicitPolicy()
   delete requireExplicitPolicy10subsubsubCACert
 
   VFY_ACTION="Valid RequireExplicitPolicy Test2"; log_banner
-  certImport requireExplicitPolicy5CACert
+  certImportn requireExplicitPolicy5CACert
   crlImportn requireExplicitPolicy5CACRL.crl
   certImport requireExplicitPolicy5subCACert
   crlImport requireExplicitPolicy5subCACRL.crl
@@ -1178,7 +1201,7 @@ pkits_RequireExplicitPolicy()
   delete requireExplicitPolicy5subsubsubCACert
 
   VFY_ACTION="Invalid RequireExplicitPolicy Test3"; log_banner
-  certImport requireExplicitPolicy4CACert
+  certImportn requireExplicitPolicy4CACert
   crlImportn requireExplicitPolicy4CACRL.crl
   certImport requireExplicitPolicy4subCACert
   crlImport requireExplicitPolicy4subCACRL.crl
@@ -1197,7 +1220,7 @@ pkits_RequireExplicitPolicy()
   delete requireExplicitPolicy4subsubsubCACert
 
   VFY_ACTION="Valid RequireExplicitPolicy Test4"; log_banner
-  certImport requireExplicitPolicy0CACert
+  certImportn requireExplicitPolicy0CACert
   crlImportn requireExplicitPolicy0CACRL.crl
   certImport requireExplicitPolicy0subCACert
   crlImport requireExplicitPolicy0subCACRL.crl
@@ -1216,11 +1239,11 @@ pkits_RequireExplicitPolicy()
   delete requireExplicitPolicy0subsubsubCACert
 
   VFY_ACTION="Invalid RequireExplicitPolicy Test5"; log_banner
-  certImport requireExplicitPolicy7CACert
+  certImportn requireExplicitPolicy7CACert
   crlImportn requireExplicitPolicy7CACRL.crl
-  certImport requireExplicitPolicy7subCARE2Cert
+  certImportn requireExplicitPolicy7subCARE2Cert
   crlImportn requireExplicitPolicy7subCARE2CRL.crl
-  certImport requireExplicitPolicy7subsubCARE2RE4Cert
+  certImportn requireExplicitPolicy7subsubCARE2RE4Cert
   crlImportn requireExplicitPolicy7subsubCARE2RE4CRL.crl
   certImport requireExplicitPolicy7subsubsubCARE2RE4Cert
   crlImport requireExplicitPolicy7subsubsubCARE2RE4CRL.crl
@@ -1235,7 +1258,7 @@ pkits_RequireExplicitPolicy()
   delete requireExplicitPolicy7subsubsubCARE2RE4Cert
 
   VFY_ACTION="Valid Self-Issued RequireExplicitPolicy Test6"; log_banner
-  certImport requireExplicitPolicy2CACert
+  certImportn requireExplicitPolicy2CACert
   crlImportn requireExplicitPolicy2CACRL.crl
   pkits $certs/ValidSelfIssuedrequireExplicitPolicyTest6EE.crt \
       $certs/requireExplicitPolicy2SelfIssuedCACert.crt \
@@ -1243,7 +1266,7 @@ pkits_RequireExplicitPolicy()
   delete requireExplicitPolicy2CACert
 
   VFY_ACTION="Invalid Self-Issued RequireExplicitPolicy Test7"; log_banner
-  certImport requireExplicitPolicy2CACert
+  certImportn requireExplicitPolicy2CACert
   crlImportn requireExplicitPolicy2CACRL.crl
   certImport requireExplicitPolicy2subCACert
   crlImport requireExplicitPolicy2subCACRL.crl
@@ -1255,7 +1278,7 @@ pkits_RequireExplicitPolicy()
   delete requireExplicitPolicy2subCACert
 
   VFY_ACTION="Invalid Self-Issued RequireExplicitPolicy Test8"; log_banner
-  certImport requireExplicitPolicy2CACert
+  certImportn requireExplicitPolicy2CACert
   crlImportn requireExplicitPolicy2CACRL.crl
   certImport requireExplicitPolicy2subCACert
   crlImport requireExplicitPolicy2subCACRL.crl
@@ -1273,25 +1296,25 @@ pkits_PolicyMappings()
   break_table "NIST PKITS Section 4.10: Policy Mappings"
 
   VFY_ACTION="Valid Policy Mapping Test1"; log_banner
-  certImport Mapping1to2CACert
+  certImportn Mapping1to2CACert
   crlImportn Mapping1to2CACRL.crl
   pkits $certs/ValidPolicyMappingTest1EE.crt \
       $certs/Mapping1to2CACert.crt
   delete Mapping1to2CACert.crt
 
   VFY_ACTION="Invalid Policy Mapping Test2"; log_banner
-  certImport Mapping1to2CACert
+  certImportn Mapping1to2CACert
   crlImportn Mapping1to2CACRL.crl
   pkitsn $certs/InvalidPolicyMappingTest2EE.crt \
       $certs/Mapping1to2CACert.crt
   delete Mapping1to2CACert.crt
 
   VFY_ACTION="Valid Policy Mapping Test3"; log_banner
-  certImport P12Mapping1to3CACert
+  certImportn P12Mapping1to3CACert
   crlImportn P12Mapping1to3CACRL.crl
-  certImport P12Mapping1to3subCACert
+  certImportn P12Mapping1to3subCACert
   crlImportn P12Mapping1to3subCACRL.crl
-  certImport P12Mapping1to3subsubCACert
+  certImportn P12Mapping1to3subsubCACert
   crlImportn P12Mapping1to3subsubCACRL.crl
   pkits $certs/ValidPolicyMappingTest3EE.crt \
       $certs/P12Mapping1to3subsubCACert.crt \
@@ -1302,11 +1325,11 @@ pkits_PolicyMappings()
   delete P12Mapping1to3subsubCACert
 
   VFY_ACTION="Invalid Policy Mapping Test4"; log_banner
-  certImport P12Mapping1to3CACert
+  certImportn P12Mapping1to3CACert
   crlImportn P12Mapping1to3CACRL.crl
-  certImport P12Mapping1to3subCACert
+  certImportn P12Mapping1to3subCACert
   crlImportn P12Mapping1to3subCACRL.crl
-  certImport P12Mapping1to3subsubCACert
+  certImportn P12Mapping1to3subsubCACert
   crlImportn P12Mapping1to3subsubCACRL.crl
   pkitsn $certs/InvalidPolicyMappingTest4EE.crt \
       $certs/P12Mapping1to3subsubCACert.crt \
@@ -1317,9 +1340,9 @@ pkits_PolicyMappings()
   delete P12Mapping1to3subsubCACert
 
   VFY_ACTION="Valid Policy Mapping Test5"; log_banner
-  certImport P1Mapping1to234CACert
+  certImportn P1Mapping1to234CACert
   crlImportn P1Mapping1to234CACRL.crl
-  certImport P1Mapping1to234subCACert
+  certImportn P1Mapping1to234subCACert
   crlImportn P1Mapping1to234subCACRL.crl
   pkits $certs/ValidPolicyMappingTest5EE.crt \
       $certs/P1Mapping1to234subCACert.crt \
@@ -1328,9 +1351,9 @@ pkits_PolicyMappings()
   delete P1Mapping1to234subCACert
 
   VFY_ACTION="Valid Policy Mapping Test6"; log_banner
-  certImport P1Mapping1to234CACert
+  certImportn P1Mapping1to234CACert
   crlImportn P1Mapping1to234CACRL.crl
-  certImport P1Mapping1to234subCACert
+  certImportn P1Mapping1to234subCACert
   crlImportn P1Mapping1to234subCACRL.crl
   pkits $certs/ValidPolicyMappingTest6EE.crt \
       $certs/P1Mapping1to234subCACert.crt \
@@ -1339,14 +1362,14 @@ pkits_PolicyMappings()
   delete P1Mapping1to234subCACert
 
   VFY_ACTION="Invalid Mapping from anyPolicy Test7"; log_banner
-  certImport MappingFromanyPolicyCACert
+  certImportn MappingFromanyPolicyCACert
   crlImportn MappingFromanyPolicyCACRL.crl
   pkitsn $certs/InvalidMappingFromanyPolicyTest7EE.crt \
       $certs/MappingFromanyPolicyCACert.crt
   delete MappingFromanyPolicyCACert
 
   VFY_ACTION="Invalid Mapping to anyPolicy Test8"; log_banner
-  certImport MappingToanyPolicyCACert
+  certImportn MappingToanyPolicyCACert
   crlImportn MappingToanyPolicyCACRL.crl
   pkitsn $certs/InvalidMappingToanyPolicyTest8EE.crt \
       $certs/MappingToanyPolicyCACert.crt
@@ -1362,7 +1385,7 @@ pkits_PolicyMappings()
   VFY_ACTION="Invalid Policy Mapping Test10"; log_banner
   certImport GoodCACert
   crlImport GoodCACRL.crl
-  certImport GoodsubCAPanyPolicyMapping1to2CACert
+  certImportn GoodsubCAPanyPolicyMapping1to2CACert
   crlImportn GoodsubCAPanyPolicyMapping1to2CACRL.crl
   pkitsn $certs/InvalidPolicyMappingTest10EE.crt \
       $certs/GoodsubCAPanyPolicyMapping1to2CACert.crt \
@@ -1373,7 +1396,7 @@ pkits_PolicyMappings()
   VFY_ACTION="Valid Policy Mapping Test11"; log_banner
   certImport GoodCACert
   crlImport GoodCACRL.crl
-  certImport GoodsubCAPanyPolicyMapping1to2CACert
+  certImportn GoodsubCAPanyPolicyMapping1to2CACert
   crlImportn GoodsubCAPanyPolicyMapping1to2CACRL.crl
   pkits $certs/ValidPolicyMappingTest11EE.crt \
       $certs/GoodsubCAPanyPolicyMapping1to2CACert.crt \
@@ -1382,21 +1405,21 @@ pkits_PolicyMappings()
   delete GoodsubCAPanyPolicyMapping1to2CACert
 
   VFY_ACTION="Valid Policy Mapping Test12"; log_banner
-  certImport P12Mapping1to3CACert
+  certImportn P12Mapping1to3CACert
   crlImportn P12Mapping1to3CACRL.crl
   pkits $certs/ValidPolicyMappingTest12EE.crt \
       $certs/P12Mapping1to3CACert.crt
   delete P12Mapping1to3CACert
 
   VFY_ACTION="Valid Policy Mapping Test13"; log_banner
-  certImport P1anyPolicyMapping1to2CACert
+  certImportn P1anyPolicyMapping1to2CACert
   crlImportn P1anyPolicyMapping1to2CACRL.crl
   pkits $certs/ValidPolicyMappingTest13EE.crt \
       $certs/P1anyPolicyMapping1to2CACert.crt
   delete P1anyPolicyMapping1to2CA
 
   VFY_ACTION="Valid Policy Mapping Test14"; log_banner
-  certImport P1anyPolicyMapping1to2CACert
+  certImportn P1anyPolicyMapping1to2CACert
   crlImportn P1anyPolicyMapping1to2CACRL.crl
   pkits $certs/ValidPolicyMappingTest14EE.crt \
       $certs/P1anyPolicyMapping1to2CACert.crt
@@ -1409,9 +1432,9 @@ pkits_InhibitPolicyMapping()
   break_table "NIST PKITS Section 4.11: Inhibit Policy Mapping"
 
   VFY_ACTION="Invalid inhibitPolicyMapping Test1"; log_banner
-  certImport inhibitPolicyMapping0CACert
+  certImportn inhibitPolicyMapping0CACert
   crlImportn inhibitPolicyMapping0CACRL.crl
-  certImport inhibitPolicyMapping0subCACert
+  certImportn inhibitPolicyMapping0subCACert
   crlImportn inhibitPolicyMapping0subCACRL.crl
   pkitsn $certs/InvalidinhibitPolicyMappingTest1EE.crt \
       $certs/inhibitPolicyMapping0CACert.crt \
@@ -1420,9 +1443,9 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping0subCACert
 
   VFY_ACTION="Valid inhibitPolicyMapping Test2"; log_banner
-  certImport inhibitPolicyMapping1P12CACert
+  certImportn inhibitPolicyMapping1P12CACert
   crlImportn inhibitPolicyMapping1P12CACRL.crl
-  certImport inhibitPolicyMapping1P12subCACert
+  certImportn inhibitPolicyMapping1P12subCACert
   crlImportn inhibitPolicyMapping1P12subCACRL.crl
   pkits $certs/ValidinhibitPolicyMappingTest2EE.crt \
       $certs/inhibitPolicyMapping1P12CACert.crt \
@@ -1431,11 +1454,11 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping1P12subCACert
 
   VFY_ACTION="Invalid inhibitPolicyMapping Test3"; log_banner
-  certImport inhibitPolicyMapping1P12CACert
+  certImportn inhibitPolicyMapping1P12CACert
   crlImportn inhibitPolicyMapping1P12CACRL.crl
-  certImport inhibitPolicyMapping1P12subCACert
+  certImportn inhibitPolicyMapping1P12subCACert
   crlImportn inhibitPolicyMapping1P12subCACRL.crl
-  certImport inhibitPolicyMapping1P12subsubCACert
+  certImportn inhibitPolicyMapping1P12subsubCACert
   crlImportn inhibitPolicyMapping1P12subsubCACRL.crl
   pkitsn $certs/InvalidinhibitPolicyMappingTest3EE.crt \
       $certs/inhibitPolicyMapping1P12subsubCACert.crt \
@@ -1446,11 +1469,11 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping1P12subsubCACert
 
   VFY_ACTION="Valid inhibitPolicyMapping Test4"; log_banner
-  certImport inhibitPolicyMapping1P12CACert
+  certImportn inhibitPolicyMapping1P12CACert
   crlImportn inhibitPolicyMapping1P12CACRL.crl
-  certImport inhibitPolicyMapping1P12subCACert
+  certImportn inhibitPolicyMapping1P12subCACert
   crlImportn inhibitPolicyMapping1P12subCACRL.crl
-  certImport inhibitPolicyMapping1P12subsubCACert
+  certImportn inhibitPolicyMapping1P12subsubCACert
   crlImportn inhibitPolicyMapping1P12subsubCACRL.crl
   pkits $certs/ValidinhibitPolicyMappingTest4EE.crt \
       $certs/inhibitPolicyMapping1P12CACert.crt \
@@ -1460,9 +1483,9 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping1P12subsubCACert
 
   VFY_ACTION="Invalid inhibitPolicyMapping Test5"; log_banner
-  certImport inhibitPolicyMapping5CACert
+  certImportn inhibitPolicyMapping5CACert
   crlImportn inhibitPolicyMapping5CACRL.crl
-  certImport inhibitPolicyMapping5subCACert
+  certImportn inhibitPolicyMapping5subCACert
   crlImportn inhibitPolicyMapping5subCACRL.crl
   certImport inhibitPolicyMapping5subsubCACert
   crlImport inhibitPolicyMapping5subsubCACRL.crl
@@ -1475,9 +1498,9 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping5subsubCACert
 
   VFY_ACTION="Invalid inhibitPolicyMapping Test6"; log_banner
-  certImport inhibitPolicyMapping1P12CACert
+  certImportn inhibitPolicyMapping1P12CACert
   crlImportn inhibitPolicyMapping1P12CACRL.crl
-  certImport inhibitPolicyMapping1P12subCAIPM5Cert
+  certImportn inhibitPolicyMapping1P12subCAIPM5Cert
   crlImportn inhibitPolicyMapping1P12subCAIPM5CRL.crl
   certImport inhibitPolicyMapping1P12subsubCAIPM5Cert
   crlImportn inhibitPolicyMapping1P12subsubCAIPM5CRL.crl
@@ -1490,9 +1513,9 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping5subsubCAIPM5Cert
 
   VFY_ACTION="Valid Self-Issued inhibitPolicyMapping Test7"; log_banner
-  certImport inhibitPolicyMapping1P1CACert
+  certImportn inhibitPolicyMapping1P1CACert
   crlImportn inhibitPolicyMapping1P1CACRL.crl
-  certImport inhibitPolicyMapping1P1subCACert
+  certImportn inhibitPolicyMapping1P1subCACert
   crlImportn inhibitPolicyMapping1P1subCACRL.crl
   pkits $certs/ValidSelfIssuedinhibitPolicyMappingTest7EE.crt \
       $certs/inhibitPolicyMapping1P1subCACert.crt \
@@ -1502,9 +1525,9 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping1P1subCACert
 
   VFY_ACTION="Invalid Self-Issued inhibitPolicyMapping Test8"; log_banner
-  certImport inhibitPolicyMapping1P1CACert
+  certImportn inhibitPolicyMapping1P1CACert
   crlImportn inhibitPolicyMapping1P1CACRL.crl
-  certImport inhibitPolicyMapping1P1subCACert
+  certImportn inhibitPolicyMapping1P1subCACert
   crlImportn inhibitPolicyMapping1P1subCACRL.crl
   certImport inhibitPolicyMapping1P1subsubCACert
   crlImportn inhibitPolicyMapping1P1subsubCACRL.crl
@@ -1518,11 +1541,11 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping1P1subsubCACert
 
   VFY_ACTION="Invalid Self-Issued inhibitPolicyMapping Test9"; log_banner
-  certImport inhibitPolicyMapping1P1CACert
+  certImportn inhibitPolicyMapping1P1CACert
   crlImportn inhibitPolicyMapping1P1CACRL.crl
-  certImport inhibitPolicyMapping1P1subCACert
+  certImportn inhibitPolicyMapping1P1subCACert
   crlImportn inhibitPolicyMapping1P1subCACRL.crl
-  certImport inhibitPolicyMapping1P1subsubCACert
+  certImportn inhibitPolicyMapping1P1subsubCACert
   crlImportn inhibitPolicyMapping1P1subsubCACRL.crl
   pkitsn $certs/InvalidSelfIssuedinhibitPolicyMappingTest9EE.crt \
       $certs/inhibitPolicyMapping1P1subsubCACert.crt \
@@ -1534,9 +1557,9 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping1P1subsubCACert
 
   VFY_ACTION="Invalid Self-Issued inhibitPolicyMapping Test10"; log_banner
-  certImport inhibitPolicyMapping1P1CACert
+  certImportn inhibitPolicyMapping1P1CACert
   crlImportn inhibitPolicyMapping1P1CACRL.crl
-  certImport inhibitPolicyMapping1P1subCACert
+  certImportn inhibitPolicyMapping1P1subCACert
   crlImportn inhibitPolicyMapping1P1subCACRL.crl
   pkitsn $certs/InvalidSelfIssuedinhibitPolicyMappingTest10EE.crt \
       $certs/inhibitPolicyMapping1P1SelfIssuedsubCACert.crt \
@@ -1547,9 +1570,9 @@ pkits_InhibitPolicyMapping()
   delete inhibitPolicyMapping1P1subCACert
 
   VFY_ACTION="Invalid Self-Issued inhibitPolicyMapping Test11"; log_banner
-  certImport inhibitPolicyMapping1P1CACert
+  certImportn inhibitPolicyMapping1P1CACert
   crlImportn inhibitPolicyMapping1P1CACRL.crl
-  certImport inhibitPolicyMapping1P1subCACert
+  certImportn inhibitPolicyMapping1P1subCACert
   crlImportn inhibitPolicyMapping1P1subCACRL.crl
   pkitsn $certs/InvalidSelfIssuedinhibitPolicyMappingTest11EE.crt \
       $certs/inhibitPolicyMapping1P1SelfIssuedsubCACert.crt \
@@ -1566,21 +1589,21 @@ pkits_InhibitAnyPolicy()
   break_table "NIST PKITS Section 4.12: Inhibit Any Policy"
 
   VFY_ACTION="Invalid inhibitAnyPolicy Test1"; log_banner
-  certImport inhibitAnyPolicy0CACert
+  certImportn inhibitAnyPolicy0CACert
   crlImportn inhibitAnyPolicy0CACRL.crl
   pkitsn $certs/InvalidinhibitAnyPolicyTest1EE.crt \
       $certs/inhibitAnyPolicy0CACert.crt
   delete inhibitAnyPolicy0CACert
 
   VFY_ACTION="Valid inhibitAnyPolicy Test2"; log_banner
-  certImport inhibitAnyPolicy0CACert
+  certImportn inhibitAnyPolicy0CACert
   crlImportn inhibitAnyPolicy0CACRL.crl
   pkits $certs/ValidinhibitAnyPolicyTest2EE.crt \
       $certs/inhibitAnyPolicy0CACert.crt
   delete inhibitAnyPolicy0CACert
 
   VFY_ACTION="inhibitAnyPolicy Test3"; log_banner
-  certImport inhibitAnyPolicy1CACert
+  certImportn inhibitAnyPolicy1CACert
   crlImportn inhibitAnyPolicy1CACRL.crl
   certImport inhibitAnyPolicy1subCA1Cert
   crlImport inhibitAnyPolicy1subCA1CRL.crl
@@ -1591,7 +1614,7 @@ pkits_InhibitAnyPolicy()
   delete inhibitAnyPolicy1subCA1Cert
 
   VFY_ACTION="Invalid inhibitAnyPolicy Test4"; log_banner
-  certImport inhibitAnyPolicy1CACert
+  certImportn inhibitAnyPolicy1CACert
   crlImportn inhibitAnyPolicy1CACRL.crl
   certImport inhibitAnyPolicy1subCA1Cert
   crlImport inhibitAnyPolicy1subCA1CRL.crl
@@ -1602,9 +1625,9 @@ pkits_InhibitAnyPolicy()
   delete inhibitAnyPolicy1subCA1Cert
 
   VFY_ACTION="Invalid inhibitAnyPolicy Test5"; log_banner
-  certImport inhibitAnyPolicy5CACert
+  certImportn inhibitAnyPolicy5CACert
   crlImportn inhibitAnyPolicy5CACRL.crl
-  certImport inhibitAnyPolicy5subCACert
+  certImportn inhibitAnyPolicy5subCACert
   crlImportn inhibitAnyPolicy5subCACRL.crl
   certImport inhibitAnyPolicy5subsubCACert
   crlImport inhibitAnyPolicy5subsubCACRL.crl
@@ -1617,9 +1640,9 @@ pkits_InhibitAnyPolicy()
   delete inhibitAnyPolicy5subsubCACert
 
   VFY_ACTION="Invalid inhibitAnyPolicy Test6"; log_banner
-  certImport inhibitAnyPolicy1CACert
+  certImportn inhibitAnyPolicy1CACert
   crlImportn inhibitAnyPolicy1CACRL.crl
-  certImport inhibitAnyPolicy1subCAIAP5Cert
+  certImportn inhibitAnyPolicy1subCAIAP5Cert
   crlImportn inhibitAnyPolicy1subCAIAP5CRL.crl
   pkitsn $certs/InvalidinhibitAnyPolicyTest5EE.crt \
       $certs/inhibitAnyPolicy1CACert.crt \
@@ -1629,7 +1652,7 @@ pkits_InhibitAnyPolicy()
   delete inhibitAnyPolicy1subCAIAP5Cert
 
   VFY_ACTION="Valid Self-Issued inhibitAnyPolicy Test7"; log_banner
-  certImport inhibitAnyPolicy1CACert
+  certImportn inhibitAnyPolicy1CACert
   crlImportn inhibitAnyPolicy1CACRL.crl
   certImport inhibitAnyPolicy1subCA2Cert
   crlImport inhibitAnyPolicy1subCA2CRL.crl
@@ -1641,7 +1664,7 @@ pkits_InhibitAnyPolicy()
   delete inhibitAnyPolicy1subCA2Cert
 
   VFY_ACTION="Invalid Self-Issued inhibitAnyPolicy Test8"; log_banner
-  certImport inhibitAnyPolicy1CACert
+  certImportn inhibitAnyPolicy1CACert
   crlImportn inhibitAnyPolicy1CACRL.crl
   certImport inhibitAnyPolicy1subCA2Cert
   crlImport inhibitAnyPolicy1subCA2CRL.crl
@@ -1657,7 +1680,7 @@ pkits_InhibitAnyPolicy()
   delete inhibitAnyPolicy1subsubCA2Cert
 
   VFY_ACTION="Valid Self-Issued inhibitAnyPolicy Test9"; log_banner
-  certImport inhibitAnyPolicy1CACert
+  certImportn inhibitAnyPolicy1CACert
   crlImportn inhibitAnyPolicy1CACRL.crl
   certImport inhibitAnyPolicy1subCA2Cert
   crlImport inhibitAnyPolicy1subCA2CRL.crl
@@ -1670,7 +1693,7 @@ pkits_InhibitAnyPolicy()
   delete inhibitAnyPolicy1subCA2Cert
 
   VFY_ACTION="Invalid Self-Issued inhibitAnyPolicy Test10"; log_banner
-  certImport inhibitAnyPolicy1CACert
+  certImportn inhibitAnyPolicy1CACert
   crlImportn inhibitAnyPolicy1CACRL.crl
   certImport inhibitAnyPolicy1subCA2Cert
   crlImport inhibitAnyPolicy1subCA2CRL.crl
