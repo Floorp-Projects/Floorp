@@ -57,8 +57,6 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
     rv = aFile->GetPath(getter_Copies(ePath));
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString escPath;
-
     // Replace \ with / to convert to an url
     for (char *s = (char *) ePath.get(); *s; ++s) {
         // We need to call isleadbyte because
