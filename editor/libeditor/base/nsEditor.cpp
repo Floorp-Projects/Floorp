@@ -599,6 +599,11 @@ nsEditor::Undo(PRUint32 aCount)
   nsresult result = NS_OK;
   ForceCompositionEnd();
 
+  PRBool hasTxnMgr, hasTransaction = PR_FALSE;
+  CanUndo(&hasTxnMgr, &hasTransaction);
+  if (!hasTransaction)
+    return result;
+
   nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
 
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
@@ -647,6 +652,11 @@ nsEditor::Redo(PRUint32 aCount)
 #endif
 
   nsresult result = NS_OK;
+
+  PRBool hasTxnMgr, hasTransaction = PR_FALSE;
+  CanRedo(&hasTxnMgr, &hasTransaction);
+  if (!hasTransaction)
+    return result;
 
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
 
