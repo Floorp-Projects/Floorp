@@ -46,7 +46,9 @@ typedef int int32_t;
 typedef unsigned int uint32_t;
 #else
 #include <stdint.h>
+#ifndef __cplusplus
 #ifndef bool
 typedef int bool;
+#endif
 #endif
 #endif
