@@ -4540,10 +4540,11 @@ nsCSSFrameConstructor::StyleRuleRemoved(nsIPresContext* aPresContext,
 
 // Construct an alternate frame to use when the image can't be rendered
 nsresult
-nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext* aPresContext,
-                                                    nsIContent*     aContent,
-                                                    nsIFrame*       aParentFrame,
-                                                    nsIFrame*&      aFrame)
+nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContext,
+                                                    nsIContent*      aContent,
+                                                    nsIStyleContext* aStyleContext,
+                                                    nsIFrame*        aParentFrame,
+                                                    nsIFrame*&       aFrame)
 {
   nsIDOMHTMLImageElement*  imageElement;
   nsresult                 rv;
@@ -4603,36 +4604,41 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext* aPresContext
       domData->SetData(altText);
       NS_RELEASE(domData);
   
-      // Create an inline frame and a text frame to display the alt-text.
-      // XXX The only reason for the inline frame is so there's a frame that
-      // points to the IMG content element. Some day when we have a hash table
-      // for GetPrimaryFrameFor() we don't need the inline frame...
-      nsIFrame* inlineFrame;
-      nsIFrame* textFrame;
-      
-      NS_NewInlineFrame(inlineFrame);
-      NS_NewTextFrame(textFrame);
-  
-      // Use a special text pseudo element style context
-      nsCOMPtr<nsIStyleContext> textStyleContext;
-      nsCOMPtr<nsIStyleContext> parentStyleContext;
-      nsCOMPtr<nsIContent>      parentContent;
-  
-      aParentFrame->GetContent(getter_AddRefs(parentContent));
-      aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
-      aPresContext->ResolvePseudoStyleContextFor(parentContent, nsHTMLAtoms::textPseudo,
-                                                 parentStyleContext,
-                                                 PR_FALSE,
-                                                 getter_AddRefs(textStyleContext));
-  
-      // Initialize the frames
-      inlineFrame->Init(*aPresContext, aContent, aParentFrame, textStyleContext, nsnull);
-      textFrame->Init(*aPresContext, altTextContent, inlineFrame,
-                      textStyleContext, nsnull);
-      inlineFrame->SetInitialChildList(*aPresContext, nsnull, textFrame);
+      // Create either an inline frame, block frame, or area frame
+      nsIFrame* containerFrame;
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+        aStyleContext->GetStyleData(eStyleStruct_Display);
+      const nsStylePosition* position = (const nsStylePosition*)
+        aStyleContext->GetStyleData(eStyleStruct_Position);
 
-      // Return the inline frame
-      aFrame = inlineFrame;
+      if (position->IsAbsolutelyPositioned()) {
+        NS_NewAreaFrame(containerFrame, NS_BLOCK_MARGIN_ROOT);
+      } else if (display->IsFloating() || (NS_STYLE_DISPLAY_BLOCK == display->mDisplay)) {
+        NS_NewBlockFrame(containerFrame, 0);
+      } else {
+        NS_NewInlineFrame(containerFrame);
+      }
+      containerFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, containerFrame,
+                                               aStyleContext, PR_FALSE);
+
+      // Create a text frame to display the alt-text. It gets a pseudo-element
+      // style context
+      nsIFrame*        textFrame;
+      nsIStyleContext* textStyleContext;
+
+      NS_NewTextFrame(textFrame);
+      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::textPseudo,
+                                                 aStyleContext, PR_FALSE,
+                                                 &textStyleContext);
+  
+      textFrame->Init(*aPresContext, altTextContent, containerFrame,
+                      textStyleContext, nsnull);
+      NS_RELEASE(textStyleContext);
+      containerFrame->SetInitialChildList(*aPresContext, nsnull, textFrame);
+
+      // Return the container frame
+      aFrame = containerFrame;
     }
   }
 
@@ -4655,11 +4661,37 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
   aFrame->GetContent(getter_AddRefs(content));
   NS_ASSERTION(content, "null content object");
   content->GetTag(*getter_AddRefs(tag));
+  
+  // Get the style context and determine if the frame is floated or
+  // absolutely positioned
+  nsCOMPtr<nsIStyleContext> styleContext;
+  aFrame->GetStyleContext(getter_AddRefs(styleContext));
+  
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    styleContext->GetStyleData(eStyleStruct_Display);
+  const nsStylePosition* position = (const nsStylePosition*)
+    styleContext->GetStyleData(eStyleStruct_Position);
+  nsIAtom*  listName = nsnull;
+
+  if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+    listName = nsLayoutAtoms::absoluteList;
+  } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+    listName = nsLayoutAtoms::fixedList;
+  } else if (display->IsFloating()) {
+    listName = nsLayoutAtoms::floaterList;
+  }
+
+  // If the frame is out of the flow, then it has a placeholder frame.
+  nsIFrame* placeholderFrame = nsnull;
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (listName) {
+    presShell->GetPlaceholderFrameFor(aFrame, &placeholderFrame);
+  }
 
   // Get the previous sibling frame
-  // XXX Handle absolutely positioned and floated elements...
   nsIFrame*     firstChild;
-  parentFrame->FirstChild(nsnull, &firstChild);
+  parentFrame->FirstChild(listName, &firstChild);
   nsFrameList   frameList(firstChild);
   nsIFrame*     prevSibling = frameList.GetPrevSiblingFor(aFrame);
   
@@ -4668,27 +4700,37 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     // It's an IMG element. Try and construct an alternate frame to use when the
     // image can't be rendered
     nsIFrame* newFrame;
-    rv = ConstructAlternateImageFrame(aPresContext, content, parentFrame, newFrame);
+    rv = ConstructAlternateImageFrame(aPresContext, content, styleContext,
+                                      parentFrame, newFrame);
 
     if (NS_SUCCEEDED(rv)) {
       // Delete the current frame and insert the new frame
-      nsCOMPtr<nsIPresShell> presShell;
-      aPresContext->GetShell(getter_AddRefs(presShell));
-      parentFrame->RemoveFrame(*aPresContext, *presShell, nsnull, aFrame);
-      parentFrame->InsertFrames(*aPresContext, *presShell, nsnull, prevSibling, newFrame);
+      parentFrame->RemoveFrame(*aPresContext, *presShell, listName, aFrame);
+      if (placeholderFrame) {
+        // Remove the association between the old frame and its placeholder
+        presShell->SetPlaceholderFrameFor(aFrame, nsnull);
+
+        // Reuse the existing placeholder frame, and add an association to the
+        // new frame
+        presShell->SetPlaceholderFrameFor(newFrame, placeholderFrame);
+
+        if (nsLayoutAtoms::floaterList == listName) {
+          // Floaters have a special placeholder frame that points back to
+          // the anchored item
+          nsPlaceholderFrame* floaterPlaceholderFrame;
+           
+          floaterPlaceholderFrame = (nsPlaceholderFrame*)placeholderFrame;
+          floaterPlaceholderFrame->SetAnchoredItem(newFrame);
+        }
+      }
+      parentFrame->InsertFrames(*aPresContext, *presShell, listName, prevSibling, newFrame);
     }
 
   } else if ((nsHTMLAtoms::object == tag.get()) ||
              (nsHTMLAtoms::embed == tag.get()) ||
              (nsHTMLAtoms::applet == tag.get())) {
-    // It's an OBJECT element or APPLET, so we should display the contents instead
-    nsCOMPtr<nsIStyleContext> styleContext;
-    const nsStyleDisplay*     display;
-
-    aFrame->GetStyleContext(getter_AddRefs(styleContext));
-    display = (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
-
-    // Get the containing block for absolutely positioned elements
+    // It's an OBJECT element or APPLET, so we should display the contents
+    // instead. Get the containing block for absolutely positioned elements
     nsIFrame* absoluteContainingBlock =
       GetAbsoluteContainingBlock(aPresContext, parentFrame);
 
