@@ -4986,15 +4986,22 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
   const nsStyleDisplay* display = nsnull;
   aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
   NS_ASSERTION(display, "program error");
+  // find the containing block, this is either the parent or the grandparent
+  // if the parent is an inline frame
   nsIFrame* parent;
   aFrame->GetParent(&parent); 
-#ifdef DEBUG
-  NS_ASSERTION(parent, "program error");
   nsCOMPtr<nsIAtom> parentType;
   parent->GetFrameType(getter_AddRefs(parentType));
-  NS_ASSERTION((nsLayoutAtoms::blockFrame == parentType) ||
-               (nsLayoutAtoms::areaFrame == parentType), "program error");
-#endif
+  while (parent && (nsLayoutAtoms::blockFrame != parentType) &&
+                   (nsLayoutAtoms::areaFrame  != parentType)) {
+    parent->GetParent(&parent);
+    parent->GetFrameType(getter_AddRefs(parentType));
+  }
+  if (!parent) {
+    NS_ASSERTION(PR_FALSE, "null parent");
+    return;
+  }
+  
   nsBlockFrame* block = (nsBlockFrame*)parent;
   // Remove aFrame from the appropriate list. 
   if (display->IsAbsolutelyPositioned()) {
