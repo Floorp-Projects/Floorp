@@ -916,6 +916,40 @@ if [ "$MOZ_MAIL_NEWS" ]; then
     fi
 fi
 
+MAKEFILES_ipcd="
+ipc/ipcd/Makefile
+ipc/ipcd/daemon/public/Makefile
+ipc/ipcd/daemon/src/Makefile
+ipc/ipcd/client/public/Makefile
+ipc/ipcd/client/src/Makefile
+ipc/ipcd/shared/src/Makefile
+ipc/ipcd/test/Makefile
+ipc/ipcd/test/module/Makefile
+ipc/ipcd/extensions/Makefile
+ipc/ipcd/extensions/lock/Makefile
+ipc/ipcd/extensions/lock/public/Makefile
+ipc/ipcd/extensions/lock/src/Makefile
+ipc/ipcd/extensions/lock/src/module/Makefile
+ipc/ipcd/util/Makefile
+ipc/ipcd/util/public/Makefile
+ipc/ipcd/util/src/Makefile
+"
+
+MAKEFILES_transmngr="
+ipc/ipcd/extensions/transmngr/Makefile
+ipc/ipcd/extensions/transmngr/public/Makefile
+ipc/ipcd/extensions/transmngr/src/Makefile
+ipc/ipcd/extensions/transmngr/build/Makefile
+ipc/ipcd/extensions/transmngr/test/Makefile
+ipc/ipcd/extensions/transmngr/common/Makefile
+ipc/ipcd/extensions/transmngr/module/Makefile
+"
+
+MAKEFILES_profilesharingsetup="
+embedding/components/profilesharingsetup/Makefile
+embedding/components/profilesharingsetup/public/Makefile
+embedding/components/profilesharingsetup/src/Makefile
+"
 
     MAKEFILES_libpr0n="
         modules/libpr0n/Makefile
@@ -1315,6 +1349,15 @@ fi
 
 if test -n "$MOZ_THUNDERBIRD"; then
     add_makefiles "$MAKEFILES_thunderbird"
+fi
+
+if test -n "$MOZ_IPCD"; then
+    add_makefiles "$MAKEFILES_ipcd"
+fi
+
+if test -n "$MOZ_PROFILESHARING"; then
+    add_makefiles "$MAKEFILES_transmngr"
+    add_makefiles "$MAKEFILES_profilesharingsetup"
 fi
 
 else
