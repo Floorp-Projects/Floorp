@@ -59,22 +59,6 @@ class nsIRadioButton : public nsIButton {
      */
     virtual PRBool GetState() = 0;
 
-    /**
-     * Gets the RadioGroup associated with this radio button
-     *
-     * @return The Radio Group
-     *
-     */
-    virtual nsIRadioGroup* GetRadioGroup() = 0;
-
-    /**
-     * Sets the RadioGroup associated with this radio button
-     *
-     * @param aGroup the new RadioGroup
-     *
-     */
-    virtual void SetRadioGroup(nsIRadioGroup* aGroup) = 0;
-
 };
 
 #endif  // nsIRadioButton_h__
