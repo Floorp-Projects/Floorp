@@ -46,7 +46,7 @@ interface nsITreeSelection;
 interface nsITreeColumn;
 interface nsITreeColumns;
 
-[scriptable, uuid(44481385-B1DA-480a-9026-1F0232C4EE59)]
+[scriptable, uuid(55f3b431-1aa8-4e23-ad3d-a9f5644bdaa6)]
 interface nsITreeBoxObject : nsISupports
 {
   /**
