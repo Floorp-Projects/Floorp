@@ -211,7 +211,7 @@ js_ErrorFromException(JSContext *cx, jsval exn)
     JSExnPrivate *privateData;
     jsval private;
 
-    if (!JSVAL_IS_OBJECT(exn))
+    if (JSVAL_IS_PRIMITIVE(exn))
         return NULL;
     obj = JSVAL_TO_OBJECT(exn);
     if (OBJ_GET_CLASS(cx, obj) != &js_ErrorClass)
