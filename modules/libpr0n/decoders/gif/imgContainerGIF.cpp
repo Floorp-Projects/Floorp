@@ -38,8 +38,8 @@ NS_IMPL_ISUPPORTS3(imgContainerGIF, imgIContainer, nsITimerCallback, imgIDecoder
 
 //******************************************************************************
 imgContainerGIF::imgContainerGIF() :
-  mSize(0,0),
   mObserver(nsnull),
+  mSize(0,0),
   mCurrentDecodingFrameIndex(0),
   mCurrentAnimationFrameIndex(0),
   mCurrentFrameIsFinishedDecoding(PR_FALSE),
@@ -64,7 +64,8 @@ imgContainerGIF::~imgContainerGIF()
 
 //******************************************************************************
 /* void init (in nscoord aWidth, in nscoord aHeight, in imgIContainerObserver aObserver); */
-NS_IMETHODIMP imgContainerGIF::Init(nscoord aWidth, nscoord aHeight, imgIContainerObserver *aObserver)
+NS_IMETHODIMP imgContainerGIF::Init(nscoord aWidth, nscoord aHeight,
+                                    imgIContainerObserver *aObserver)
 {
   if (aWidth <= 0 || aHeight <= 0) {
     NS_WARNING("error - negative image size\n");
@@ -82,8 +83,7 @@ NS_IMETHODIMP imgContainerGIF::Init(nscoord aWidth, nscoord aHeight, imgIContain
 /* readonly attribute gfx_format preferredAlphaChannelFormat; */
 NS_IMETHODIMP imgContainerGIF::GetPreferredAlphaChannelFormat(gfx_format *aFormat)
 {
-  /* default.. platform's should probably overwrite this */
-  *aFormat = gfxIFormats::RGB_A8;
+  *aFormat = gfxIFormats::RGB_A1;
   return NS_OK;
 }
 
@@ -204,19 +204,20 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
 
   mCurrentFrameIsFinishedDecoding = PR_FALSE;
 
-  return NS_OK; 
+  return NS_OK;
 }
 
 //******************************************************************************
 /* void removeFrame (in gfxIImageFrame item); */
 NS_IMETHODIMP imgContainerGIF::RemoveFrame(gfxIImageFrame *item)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
 /* void endFrameDecode (in gfxIImageFrame item, in unsigned long timeout); */
-NS_IMETHODIMP imgContainerGIF::EndFrameDecode(PRUint32 aFrameNum, PRUint32 aTimeout)
+NS_IMETHODIMP imgContainerGIF::EndFrameDecode(PRUint32 aFrameNum,
+                                              PRUint32 aTimeout)
 {
   // It is now okay to start the timer for the next frame in the animation
   mCurrentFrameIsFinishedDecoding = PR_TRUE;
@@ -261,17 +262,21 @@ NS_IMETHODIMP imgContainerGIF::GetAnimationMode(PRUint16 *aAnimationMode)
   return NS_OK;
 }
 
+//******************************************************************************
 NS_IMETHODIMP imgContainerGIF::SetAnimationMode(PRUint16 aAnimationMode)
 {
   NS_ASSERTION(aAnimationMode == imgIContainer::kNormalAnimMode ||
                aAnimationMode == imgIContainer::kDontAnimMode ||
-               aAnimationMode == imgIContainer::kLoopOnceAnimMode, "Wrong Animation Mode is being set!");
+               aAnimationMode == imgIContainer::kLoopOnceAnimMode, 
+               "Wrong Animation Mode is being set!");
 
   if (mAnimationMode == kNormalAnimMode &&
-      (aAnimationMode == kDontAnimMode || aAnimationMode == kLoopOnceAnimMode)) {
+      (aAnimationMode == kDontAnimMode || 
+       aAnimationMode == kLoopOnceAnimMode)) {
     StopAnimation();
   } else if (aAnimationMode == kNormalAnimMode &&
-             (mAnimationMode == kDontAnimMode || mAnimationMode == kLoopOnceAnimMode)) {
+             (mAnimationMode == kDontAnimMode || 
+              mAnimationMode == kLoopOnceAnimMode)) {
     mAnimationMode = aAnimationMode;
     StartAnimation();
     return NS_OK;
@@ -498,7 +503,9 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
 //******************************************************************************
 // DoComposite gets called when the timer for animation get fired and we have to
 // update the composited frame of the animation.
-void imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect, PRInt32 aPrevFrame, PRInt32 aNextFrame)
+void imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
+                                  nsRect* aDirtyRect,
+                                  PRInt32 aPrevFrame, PRInt32 aNextFrame)
 {
   NS_ASSERTION(aDirtyRect, "DoComposite aDirtyRect is null");
   NS_ASSERTION(mCompositingFrame, "DoComposite mCompositingFrame is null");
@@ -678,28 +685,40 @@ void imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRe
 }
 //******************************************************************************
 /* void onStartDecode (in imgIRequest aRequest, in nsISupports cx); */
-NS_IMETHODIMP imgContainerGIF::OnStartDecode(imgIRequest *aRequest, nsISupports *cx)
+NS_IMETHODIMP imgContainerGIF::OnStartDecode(imgIRequest *aRequest,
+                                             nsISupports *cx)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
-/* void onStartContainer (in imgIRequest aRequest, in nsISupports cx, in imgIContainer aContainer); */
-NS_IMETHODIMP imgContainerGIF::OnStartContainer(imgIRequest *aRequest, nsISupports *cx, imgIContainer *aContainer)
+/* void onStartContainer (in imgIRequest aRequest, in nsISupports cx,
+                          in imgIContainer aContainer); */
+NS_IMETHODIMP imgContainerGIF::OnStartContainer(imgIRequest *aRequest,
+                                                nsISupports *cx,
+                                                imgIContainer *aContainer)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
-/* void onStartFrame (in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame); */
-NS_IMETHODIMP imgContainerGIF::OnStartFrame(imgIRequest *aRequest, nsISupports *cx, gfxIImageFrame *aFrame)
+/* void onStartFrame (in imgIRequest aRequest, in nsISupports cx,
+                      in gfxIImageFrame aFrame); */
+NS_IMETHODIMP imgContainerGIF::OnStartFrame(imgIRequest *aRequest,
+                                            nsISupports *cx,
+                                            gfxIImageFrame *aFrame)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
-/* [noscript] void onDataAvailable (in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame, [const] in nsRect aRect); */
-NS_IMETHODIMP imgContainerGIF::OnDataAvailable(imgIRequest *aRequest, nsISupports *cx, gfxIImageFrame *aFrame, const nsRect * aRect)
+/* [noscript] void onDataAvailable (in imgIRequest aRequest,
+                                    in nsISupports cx, in gfxIImageFrame aFrame,
+                                    [const] in nsRect aRect); */
+NS_IMETHODIMP imgContainerGIF::OnDataAvailable(imgIRequest *aRequest,
+                                               nsISupports *cx,
+                                               gfxIImageFrame *aFrame,
+                                               const nsRect * aRect)
 {
   if(mCompositingFrame && !mCurrentDecodingFrameIndex) {
     // Update the composite frame
@@ -712,39 +731,51 @@ NS_IMETHODIMP imgContainerGIF::OnDataAvailable(imgIRequest *aRequest, nsISupport
 }
 
 //******************************************************************************
-/* void onStopFrame (in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame); */
-NS_IMETHODIMP imgContainerGIF::OnStopFrame(imgIRequest *aRequest, nsISupports *cx, gfxIImageFrame *aFrame)
+/* void onStopFrame (in imgIRequest aRequest, in nsISupports cx,
+                     in gfxIImageFrame aFrame); */
+NS_IMETHODIMP imgContainerGIF::OnStopFrame(imgIRequest *aRequest,
+                                           nsISupports *cx,
+                                           gfxIImageFrame *aFrame)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
-/* void onStopContainer (in imgIRequest aRequest, in nsISupports cx, in imgIContainer aContainer); */
-NS_IMETHODIMP imgContainerGIF::OnStopContainer(imgIRequest *aRequest, nsISupports *cx, imgIContainer *aContainer)
+/* void onStopContainer (in imgIRequest aRequest, in nsISupports cx,
+                         in imgIContainer aContainer); */
+NS_IMETHODIMP imgContainerGIF::OnStopContainer(imgIRequest *aRequest,
+                                               nsISupports *cx,
+                                               imgIContainer *aContainer)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
-/* void onStopDecode (in imgIRequest aRequest, in nsISupports cx, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP imgContainerGIF::OnStopDecode(imgIRequest *aRequest, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
+/* void onStopDecode (in imgIRequest aRequest, in nsISupports cx,
+                      in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP imgContainerGIF::OnStopDecode(imgIRequest *aRequest,
+                                            nsISupports *cx,
+                                            nsresult status,
+                                            const PRUnichar *statusArg)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
-/* [noscript] void frameChanged (in imgIContainer aContainer, in nsISupports aCX, in gfxIImageFrame aFrame, in nsRect aDirtyRect); */
-NS_IMETHODIMP imgContainerGIF::FrameChanged(imgIContainer *aContainer, nsISupports *aCX, gfxIImageFrame *aFrame, nsRect * aDirtyRect)
+/* [noscript] void frameChanged (in imgIContainer aContainer,
+                                 in nsISupports aCX, in gfxIImageFrame aFrame,
+                                 in nsRect aDirtyRect); */
+NS_IMETHODIMP imgContainerGIF::FrameChanged(imgIContainer *aContainer,
+                                            nsISupports *aCX,
+                                            gfxIImageFrame *aFrame,
+                                            nsRect * aDirtyRect)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //******************************************************************************
-// Yet another thing that should be in a GIF specific container.
-// This takes the mask information from the passed in aOverlayFrame and inserts
-// that information into the aCompositingFrame's mask at the proper offsets. It
-// does *not* rebuild the entire mask.
-void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIImageFrame *aOverlayFrame)
+void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame,
+                                         gfxIImageFrame *aOverlayFrame)
 {
   if (!aCompositingFrame || !aOverlayFrame) return;
 
@@ -752,7 +783,8 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxI
   PRUint8* compositingAlphaData;
   PRUint32 compositingAlphaDataLength;
   aCompositingFrame->LockAlphaData();
-  res = aCompositingFrame->GetAlphaData(&compositingAlphaData, &compositingAlphaDataLength);
+  res = aCompositingFrame->GetAlphaData(&compositingAlphaData,
+                                        &compositingAlphaDataLength);
   if (!compositingAlphaData || !compositingAlphaDataLength || NS_FAILED(res)) {
     aCompositingFrame->UnlockAlphaData();
     return;
@@ -766,17 +798,13 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxI
   aOverlayFrame->GetX(&overlayXOffset);
   aOverlayFrame->GetY(&overlayYOffset);
 
-  // The current frame of the animation (overlay frame) is what
-  // determines the transparent color.
-  gfx_color color;
-  if (NS_FAILED(aOverlayFrame->GetTransparentColor(&color))) {
-    // set the region of the overlay frame to 1
-    SetMaskVisibility(aCompositingFrame, overlayXOffset, overlayYOffset, widthOverlay, heightOverlay, PR_TRUE);
+  if (NS_FAILED(aOverlayFrame->LockAlphaData())) {
+    // set the region of the overlay frame to visible in compositingFrame
+    SetMaskVisibility(aCompositingFrame, overlayXOffset, overlayYOffset,
+                      widthOverlay, heightOverlay, PR_TRUE);
     aCompositingFrame->UnlockAlphaData();
     return;
   }
-
-  aOverlayFrame->LockAlphaData();
 
   PRUint32 abprComposite;
   aCompositingFrame->GetAlphaBytesPerRow(&abprComposite);
@@ -784,6 +812,7 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxI
   PRUint32 abprOverlay;
   aOverlayFrame->GetAlphaBytesPerRow(&abprOverlay);
 
+  // Only the composite's width & height are needed.  x & y should always be 0.
   nscoord widthComposite;
   nscoord heightComposite;
   aCompositingFrame->GetWidth(&widthComposite);
@@ -795,105 +824,99 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxI
 
   gfx_format format;
   aCompositingFrame->GetFormat(&format);
+  if (format != gfxIFormats::RGB_A1 && format != gfxIFormats::BGR_A1) {
+    NS_NOTREACHED("GIFs only support 1 bit alpha");
+    aCompositingFrame->UnlockAlphaData();
+    aOverlayFrame->UnlockAlphaData();
+    return;
+  }
 
-    switch (format) {
-    case gfxIFormats::RGB_A1:
-    case gfxIFormats::BGR_A1:
-      {
-        const PRUint32 width  = PR_MIN(widthOverlay,(widthComposite-overlayXOffset));
-        const PRUint32 height = PR_MIN(heightOverlay,(heightComposite-overlayYOffset));
-        PRInt32 offset;
+  // Exit if overlay is beyond the area of the composite
+  if (widthComposite <= overlayXOffset || heightComposite <= overlayYOffset)
+    return;
+    
+  const PRUint32 width  = PR_MIN(widthOverlay,
+                                 widthComposite - overlayXOffset);
+  const PRUint32 height = PR_MIN(heightOverlay,
+                                 heightComposite - overlayYOffset);
 
 // Windows and OS/2 have the funky bottom up data storage we need to account for
 #if defined(XP_WIN) || defined(XP_OS2)
-        offset = ((heightComposite - 1) - overlayYOffset) * abprComposite;
+  PRInt32 offset = ((heightComposite - 1) - overlayYOffset) * abprComposite;
 #else
-        offset = overlayYOffset*abprComposite;
+  PRInt32 offset = overlayYOffset * abprComposite;
 #endif
-        PRUint8* alphaLine = compositingAlphaData + offset + (overlayXOffset>>3);
+  PRUint8* alphaLine = compositingAlphaData + offset + (overlayXOffset >> 3);
 
-// Windows and OS/2 have the funky bottom up data storage we need to account for
 #if defined(XP_WIN) || defined(XP_OS2)
-        offset = (heightOverlay - 1) * abprOverlay;
+  offset = (heightOverlay - 1) * abprOverlay;
 #else
-        offset = 0;
+  offset = 0;
 #endif
-        PRUint8* overlayLine = overlayAlphaData + offset;
+  PRUint8* overlayLine = overlayAlphaData + offset;
 
-        /*
-          This is the number of pixels of offset between alpha and overlay
-          (the number of bits at the front of alpha to skip when starting
-          a row).
-          I.e:, for a mask_offset of 3:
-          (these are representations of bits)
-          overlay 'pixels':   76543210 hgfedcba
-          alpha:              xxx76543 210hgfed ...
-          where 'x' is data already in alpha
-          the first 5 pixels of overlay are or'd into the low 5 bits of alpha
-        */
-        PRUint8 mask_offset = (overlayXOffset & 0x7);
+  /*
+    This is the number of pixels of offset between alpha and overlay
+    (the number of bits at the front of alpha to skip when starting a row).
+    I.e:, for a mask_offset of 3:
+    (these are representations of bits)
+    overlay 'pixels':   76543210 hgfedcba
+    alpha:              xxx76543 210hgfed ...
+    where 'x' is data already in alpha
+    the first 5 pixels of overlay are or'd into the low 5 bits of alpha
+  */
+  PRUint8 mask_offset = (overlayXOffset & 0x7);
 
-        for(PRUint32 i=0; i < height; i++) {
-          PRUint8 pixels;
-          PRUint32 j;
-          // use locals to avoid keeping track of how much we need to add
-          // at the end of a line.  we don't really need this since we may
-          // be able to calculate the ending offsets, but it's simpler and
-          // cheap.
-          PRUint8 *localOverlay = overlayLine;
-          PRUint8 *localAlpha   = alphaLine;
+  for(PRUint32 i = 0; i < height; i++) {
+    PRUint8 pixels;
+    PRUint32 j;
+    // use locals to avoid keeping track of how much we need to add
+    // at the end of a line.  we don't really need this since we may
+    // be able to calculate the ending offsets, but it's simpler and
+    // cheap.
+    PRUint8 *localOverlay = overlayLine;
+    PRUint8 *localAlpha   = alphaLine;
 
-          for (j = width; j >= 8; j -= 8) {
-            // don't do in for(...) to avoid reference past end of buffer
-            pixels = *localOverlay++;
+    for (j = width; j >= 8; j -= 8) {
+      // don't do in for(...) to avoid reference past end of buffer
+      pixels = *localOverlay++;
 
-            if (pixels == 0) {
-              // no bits to set - iterate and bump output pointer
-              localAlpha++;
-            }
-            else {
-              // for the last few bits of a line, we need to special-case it
-              if (mask_offset == 0) {
-                // simple case, no offset
-                *localAlpha++ |= pixels;
-              }
-              else {
-                *localAlpha++ |= (pixels >> mask_offset);
-                *localAlpha   |= (pixels << (8U-mask_offset));
-              }
-            }
-          }
-          if (j != 0) {
-            // handle the end of the line, 1 to 7 pixels
-            pixels = *localOverlay++;
-            if (pixels != 0) {
-              // last few bits have to be handled more carefully if
-              // width is not a multiple of 8.
-
-              // set bits we don't want to change to 0
-              pixels = (pixels >> (8U-j)) << (8U-j);
-              *localAlpha++ |= (pixels >> mask_offset);
-              // don't touch this byte unless we have bits for it
-              if (j > (8U - mask_offset))
-                *localAlpha |= (pixels << (8U-mask_offset));
-            }
-          }
-
-/// Windows and OS/2 have the funky bottom up data storage we need to account for
-#if defined(XP_WIN) || defined(XP_OS2)
-          alphaLine   -= abprComposite;
-          overlayLine -= abprOverlay;
-#else
-          alphaLine   += abprComposite;
-          overlayLine += abprOverlay;
-#endif
+      if (pixels == 0) // no bits to set - iterate and bump output pointer
+        localAlpha++;
+      else {
+        // for the last few bits of a line, we need to special-case it
+        if (mask_offset == 0) // simple case, no offset
+          *localAlpha++ |= pixels;
+        else {
+          *localAlpha++ |= (pixels >> mask_offset);
+          *localAlpha   |= (pixels << (8U-mask_offset));
         }
       }
-      break;
-    default:
-      break;
-
     }
+    if (j != 0) {
+      // handle the end of the line, 1 to 7 pixels
+      pixels = *localOverlay++;
+      if (pixels != 0) {
+        // last few bits have to be handled more carefully if
+        // width is not a multiple of 8.
+
+        // set bits we don't want to change to 0
+        pixels = (pixels >> (8U-j)) << (8U-j);
+        *localAlpha++ |= (pixels >> mask_offset);
+        // don't touch this byte unless we have bits for it
+        if (j > (8U - mask_offset))
+          *localAlpha |= (pixels << (8U-mask_offset));
+      }
+    }
+
+#if defined(XP_WIN) || defined(XP_OS2)
+    alphaLine   -= abprComposite;
+    overlayLine -= abprOverlay;
+#else
+    alphaLine   += abprComposite;
+    overlayLine += abprOverlay;
+#endif
+  }
 
   aCompositingFrame->UnlockAlphaData();
   aOverlayFrame->UnlockAlphaData();
@@ -902,7 +925,8 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxI
 
 //******************************************************************************
 void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
-                                        PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+                                        PRInt32 aX, PRInt32 aY,
+                                        PRInt32 aWidth, PRInt32 aHeight,
                                         PRBool aVisible)
 {
   if (!aFrame)
@@ -923,8 +947,8 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
   aFrame->GetWidth(&frameWidth);
   aFrame->GetHeight(&frameHeight);
 
-  const PRInt32 width  = PR_MIN(aWidth, (frameWidth - aX));
-  const PRInt32 height = PR_MIN(aHeight, (frameHeight - aY));
+  const PRInt32 width  = PR_MIN(aWidth, frameWidth - aX);
+  const PRInt32 height = PR_MIN(aHeight, frameHeight - aY);
 
   if (width <= 0 && height <= 0) {
     aFrame->UnlockAlphaData();
@@ -933,80 +957,77 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
 
   gfx_format format;
   aFrame->GetFormat(&format);
-  switch (format) {
-    case gfxIFormats::RGB_A1:
-    case gfxIFormats::BGR_A1:
-      {
-        PRUint32 abpr;
-        aFrame->GetAlphaBytesPerRow(&abpr);
+  if (format != gfxIFormats::RGB_A1 && format != gfxIFormats::BGR_A1) {
+    NS_NOTREACHED("GIFs only support 1 bit alpha");
+    aFrame->UnlockAlphaData();
+    return;
+  }
+
+  PRUint32 abpr;
+  aFrame->GetAlphaBytesPerRow(&abpr);
 
 // Windows and OS/2 have the funky bottom up data storage we need to account for
 #if defined(XP_WIN) || defined(XP_OS2)
-        // Start at the bottom (top in memory), go to the top (bottom in memory)
-        PRUint8* alphaLine = alphaData + ((frameHeight - aY - height) * abpr) + (aX >> 3);
+  // Start at the bottom (top in memory), go to the top (bottom in memory)
+  PRUint8* alphaLine = alphaData + ((frameHeight - aY - height) * abpr) +
+                       (aX >> 3);
 #else
-        PRUint8* alphaLine = alphaData + (aY * abpr) + (aX >> 3);
+  PRUint8* alphaLine = alphaData + (aY * abpr) + (aX >> 3);
 #endif
-        PRUint8 maskShiftStartBy = aX & 0x7;
-        PRUint8 numReplacingStart = 8U - maskShiftStartBy;
-        PRUint32 rowBytes;
-        PRUint8 maskStart = 0; // Init to shutup compiler; Only used if maskShiftStartBy != 0
-        PRUint8 maskEnd;
+  PRUint8 maskShiftStartBy = aX & 0x7;
+  PRUint8 numReplacingStart = 8U - maskShiftStartBy;
+  PRUint32 rowBytes;
+  PRUint8 maskStart = 0; // Init to shutup compiler; Only used if
+                         // maskShiftStartBy != 0
+  PRUint8 maskEnd;
 
-        if (width <= numReplacingStart) {
-          maskEnd = (0xFF >> (8U - width)) << (numReplacingStart - width);
-          // Don't write start bits, only end bits (which contain both start & end)
-          maskShiftStartBy = 0;
-          rowBytes = 0;
-        } else {
-          if (maskShiftStartBy == 0)
-            numReplacingStart = 0;
-          else
-            maskStart = 0xFF >> maskShiftStartBy;
+  if (width <= numReplacingStart) {
+    maskEnd = (0xFF >> (8U - width)) << (numReplacingStart - width);
+    // Don't write start bits, only end bits (which contain both start & end)
+    maskShiftStartBy = 0;
+    rowBytes = 0;
+  } else {
+    if (maskShiftStartBy == 0)
+      numReplacingStart = 0;
+    else
+      maskStart = 0xFF >> maskShiftStartBy;
 
-          PRUint8 maskShiftEndBy = (width - numReplacingStart) & 0x7;
-          maskEnd = ~(0xFF >> maskShiftEndBy);
-          rowBytes = (width - numReplacingStart - maskShiftEndBy) >> 3;
-        }
-
-        if (aVisible) {
-          for (PRInt32 i=0; i < height; i++) {
-            PRUint8 *localAlpha = alphaLine;
-
-            if (maskShiftStartBy != 0)
-              *localAlpha++ |= maskStart;
-
-            if (rowBytes > 0)
-              memset(localAlpha, 0xFF, rowBytes);
-
-            if (maskEnd != 0)
-              localAlpha[rowBytes] |= maskEnd;
-
-            alphaLine += abpr;
-          }
-        } else {
-          for (PRInt32 i=0; i < height; i++) {
-            PRUint8 *localAlpha = alphaLine;
-
-            if (maskShiftStartBy != 0)
-              *localAlpha++ &= ~maskStart;
-
-            if (rowBytes > 0)
-              memset(localAlpha, 0x00, rowBytes);
-
-            if (maskEnd != 0)
-              localAlpha[rowBytes] &= ~maskEnd;
-
-            alphaLine += abpr;
-          } // for
-        } // if aVisible
-      } // case
-      break;
-
-    default:
-      NS_NOTREACHED("GIFs only support 1 bit alpha");
-      break;
+    PRUint8 maskShiftEndBy = (width - numReplacingStart) & 0x7;
+    maskEnd = ~(0xFF >> maskShiftEndBy);
+    rowBytes = (width - numReplacingStart - maskShiftEndBy) >> 3;
   }
+
+  if (aVisible) {
+    for (PRInt32 i = 0; i < height; i++) {
+      PRUint8 *localAlpha = alphaLine;
+
+      if (maskShiftStartBy != 0)
+        *localAlpha++ |= maskStart;
+
+      if (rowBytes > 0)
+        memset(localAlpha, 0xFF, rowBytes);
+
+      if (maskEnd != 0)
+        localAlpha[rowBytes] |= maskEnd;
+
+      alphaLine += abpr;
+    }
+  } else {
+    for (PRInt32 i = 0; i < height; i++) {
+      PRUint8 *localAlpha = alphaLine;
+
+      if (maskShiftStartBy != 0)
+        *localAlpha++ &= ~maskStart;
+
+      if (rowBytes > 0)
+        memset(localAlpha, 0x00, rowBytes);
+
+      if (maskEnd != 0)
+        localAlpha[rowBytes] &= ~maskEnd;
+
+      alphaLine += abpr;
+    } // for
+  } // if aVisible
 
   aFrame->UnlockAlphaData();
   return;
@@ -1031,18 +1052,13 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame, PRBool aVisible)
 }
 
 //******************************************************************************
-// Yet another thing that should be in a GIF specific container.
 // Fill aFrame with black. Does not change the mask.
 void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame)
 {
-  if (!aFrame) return;
+  if (!aFrame)
+    return;
 
   aFrame->LockImageData();
-
-  nscoord width;
-  nscoord height;
-  aFrame->GetWidth(&width);
-  aFrame->GetHeight(&height);
 
   PRUint8* aData;
   PRUint32 aDataLength;
@@ -1052,6 +1068,11 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame)
 
   nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aFrame));
   if (ireq) {
+    nscoord width;
+    nscoord height;
+    aFrame->GetWidth(&width);
+    aFrame->GetHeight(&height);
+
     nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
     nsRect r(0, 0, width, height);
 
@@ -1062,9 +1083,12 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame)
 }
 
 //******************************************************************************
-void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
+                                   PRInt32 aX, PRInt32 aY,
+                                   PRInt32 aWidth, PRInt32 aHeight)
 {
-  if (!aFrame) return;
+  if (!aFrame)
+    return;
 
   aFrame->LockImageData();
 
@@ -1073,8 +1097,8 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame, PRInt32 aX, PRInt32 a
   aFrame->GetWidth(&widthFrame);
   aFrame->GetHeight(&heightFrame);
 
-  const PRInt32 width  = PR_MIN(aWidth,(widthFrame-aX));
-  const PRInt32 height = PR_MIN(aHeight,(heightFrame-aY));
+  const PRInt32 width  = PR_MIN(aWidth, (widthFrame - aX));
+  const PRInt32 height = PR_MIN(aHeight, (heightFrame - aY));
 
   if (width <= 0 || height <= 0) {
     aFrame->UnlockImageData();
@@ -1092,17 +1116,17 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame, PRInt32 aX, PRInt32 a
   const PRUint32 bprToWrite = width * bpp;
   const PRUint32 xOffset = aX * bpp; // offset into row to start writing
 
-  PRUint8* tmpRow = NS_STATIC_CAST(PRUint8*, nsMemory::Alloc(width * bpp));
+  PRUint8* tmpRow = NS_STATIC_CAST(PRUint8*, nsMemory::Alloc(bprToWrite));
 
   if (!tmpRow) {
     aFrame->UnlockImageData();
     return;
   }
 
-  memset(tmpRow, 0, width * bpp);
+  memset(tmpRow, 0, bprToWrite);
 
-  for (PRInt32 y=0; y<height; y++) {
-    aFrame->SetImageData(tmpRow, bprToWrite, ((y+aY) * bpr) + xOffset);
+  for (PRInt32 y = 0; y < height; y++) {
+    aFrame->SetImageData(tmpRow, bprToWrite, ((y + aY) * bpr) + xOffset);
   }
   nsMemory::Free(tmpRow);
 
