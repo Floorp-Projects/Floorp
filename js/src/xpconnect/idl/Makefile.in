@@ -31,6 +31,7 @@ XPIDLSRCS	= \
 		xpctest2.idl \
 		xpcexception.idl \
 		nsIJSContextStack.idl \
+		nsIJSRuntimeService.idl \
 		nsIXPCSecurityManager.idl \
 		$(NULL)
 
