@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Akhil Arora <akhil.arora@sun.com>
+ *   Tomi Leppikangas <Tomi.Leppikangas@oulu.fi>
  */
 
 /*
@@ -41,12 +43,33 @@ function debug(msg)
 // implementor of nsIProxyAutoConfig
 function nsProxyAutoConfig() {};
 
+// global variable that will hold the downloaded js 
+var pac = null;
+//hold PAC's URL, used in evalAsCodebase()
+var pacURL;
+// ptr to eval'ed FindProxyForURL function
+var LocalFindProxyForURL=null;
+// sendbox in which we eval loaded autoconfig js file
+var ProxySandBox = null;
+
 nsProxyAutoConfig.prototype = {
+    sis: null,
+    done: false,
 
     ProxyForURL: function(url, host, port, type) {
+        /* If we're not done loading the pac yet, wait (ideally). For
+           now, just return DIRECT to avoid loops. A simple mutex
+           between ProxyForURL and LoadPACFromURL locks-up the
+           browser. */
+        if (!this.done) {
+            host.value = null;
+            type.value = "direct";
+            return;
+        }
+
         var uri = url.QueryInterface(Components.interfaces.nsIURI);
         // Call the original function-
-        var proxy = FindProxyForURL(uri.spec, uri.host);
+        var proxy = LocalFindProxyForURL(uri.spec, uri.host);
         debug("Proxy = " + proxy);
         if (proxy == "DIRECT") {
             host.value = null;
@@ -54,7 +77,7 @@ nsProxyAutoConfig.prototype = {
         }
         else {
             // TODO warn about SOCKS
-            
+
             // we ignore everything else past the first proxy. 
             // we could theoretically check isResolvable now and continue 
             // parsing. but for now...
@@ -63,6 +86,42 @@ nsProxyAutoConfig.prototype = {
             port.value = hostport[2];
             type.value = "http"; //proxy (http, socks, direct, etc)
         }
+    },
+
+    LoadPACFromURL: function(uri, ioService) {
+        debug("Loading PAC from " + uri.spec);
+        this.done = false;
+        var channel = ioService.newChannelFromURI(uri);
+        pacURL = uri.spec;
+        channel.asyncOpen(this, null);
+    },
+
+    // nsIStreamListener interface
+    onStartRequest: function(request, ctxt) { 
+        pac = '';
+        LocalFindProxyForURL=null;
+        this.sis = 
+        Components.Constructor('@mozilla.org/scriptableinputstream;1',
+                               'nsIScriptableInputStream', 
+                               'init');
+    },
+
+    onStopRequest: function(request, ctxt, status, errorMsg) {
+        this.done = true;
+        if(!ProxySandBox) {
+           ProxySandBox = new Sandbox();
+        }
+        // add predefined functions to pac
+        var mypac = pacUtils + pac;
+        // evaluate loded js file
+        evalInSandbox(mypac, ProxySandBox, pacURL);
+        ProxySandBox.myIP = dns.myIPAddress;
+        LocalFindProxyForURL=ProxySandBox.FindProxyForURL;
+    },
+
+    onDataAvailable: function(request, ctxt, inStream, sourceOffset, count) {
+        var ins = new this.sis(inStream);
+        pac += ins.read(count);
     }
 }
 
@@ -102,7 +161,8 @@ pacFactory.createInstance =
             throw Components.results.NS_ERROR_NO_AGGREGATION;
 
         if (!iid.equals(nsIProxyAutoConfig) &&
-                !iid.equals(Components.interfaces.nsISupports)) {
+            !!iid.equals(Components.interfaces.nsIStreamListener) &&
+            !iid.equals(Components.interfaces.nsISupports)) {
             // shouldn't this be NO_INTERFACE?
             throw Components.results.NS_ERROR_INVALID_ARG;
         }
@@ -115,143 +175,228 @@ function NSGetModule(compMgr, fileSpec) {
 
 var PacMan = new nsProxyAutoConfig() ;
 
-// dumb hacks for "special" functions that should have long been 
-// deprecated. 
-
-var date = new Date();
-
-function dateRange(dmy) {
-    var intval = parseInt(dmy, 10);
-    if (isNaN(intval)) { // it's a month
-        return (date.toString().toLowerCase().search(dmy.toLowerCase()) != -1);
-    }
-    if (intval <= 31) {  // it's a day
-        return (date.getDate() == intval);
-    }
-    else { // it's an year
-        return (date.getFullYear() == intval);
-    }
-}
-
-function dateRange(dmy1, dmy2) {
-    dump("nsProxyAutoConfig.js: dateRange function deprecated or not implemented\n");
-    return false;
-}
-
-function dateRange(d1, m1, y1, d2, m2, y2) {
-    var date1 = new Date(y1,m1,d1);
-    var date2 = new Date(y2,m2,d2);
-
-    return (date >= date1) && (date <= date2);
-}
-
-function dnsDomainIs(host, domain) {
-    //TODO fix this later!
-    return (host.search(domain) != -1);
-}
-
-function dnsDomainLevels(host) {
-    return host.split('.').length-1;
-}
-
 var ios = Components.classes[kIOSERVICE_CONTRACTID].getService(nsIIOService);
 var dns = Components.classes[kDNS_CONTRACTID].getService(nsIDNSService);
 
-function dnsResolve(host) {
-    try {
-        var addr =  dns.resolve(host);
-        //debug(addr);
-        return addr;
-    }
-    catch (ex) {
-        debug (ex);
-        // ugh... return error!
-        return null;
-    }
-}
+var pacUtils = 
+"function dnsDomainIs(host, domain) {\n" +
+"    return (host.replace(/\\w*/, '') == domain);\n" +
+"}\n" +
 
-// This function could be done here instead of in nsDNSService...
-function isInNet(ipaddr, pattern, mask) {
-    var result = dns.isInNet(ipaddr, pattern, mask);
-    //debug(result);
-    return result;
-}
+"function dnsDomainLevels(host) {\n" +
+"    return host.split('.').length-1;\n" +
+"}\n" +
 
-function isPlainHostName(host) {
-    return (host.search("\.") == -1);
-}
+"function convert_addr(ipchars) {\n"+
+"    var bytes = ipchars.split('.');\n"+
+"    var result = ((bytes[0] & 0xff) << 24) |\n"+
+"                 ((bytes[1] & 0xff) << 16) |\n"+
+"                 ((bytes[2] & 0xff) <<  8) |\n"+
+"                  (bytes[3] & 0xff);\n"+
+"    return result;\n"+
+"}\n"+
 
-function isResolvable(host) {
-    var ip = dnsResolve(host);
-    return (ip != null) ? true: false;
-}
+"function isInNet(ipaddr, pattern, maskstr) {\n"+
+"    var test = /^(\\d{1,4})\\.(\\d{1,4})\\.(\\d{1,4})\\.(\\d{1,4})$/(ipaddr);\n"+
+"    if (test == null) {\n"+
+"        ipaddr = dnsResolve(ipaddr);\n"+
+"    } else if (test[1] > 255 || test[2] > 255 || \n"+
+"               test[3] > 255 || test[4] > 255) {\n"+
+"        return false;    // not an IP address\n"+
+"    }\n"+
+"    var host = convert_addr(ipaddr);\n"+
+"    var pat  = convert_addr(pattern);\n"+
+"    var mask = convert_addr(maskstr);\n"+
+"    return ((host & mask) == (pat & mask));\n"+
+"    \n"+
+"}\n"+
 
-function localHostOrDomainIs(host, hostdom) {
-    if (isPlainHostName(host)) {
-        return (hostdom.search("/^" + host + "/") != -1);
-    }
-    else {
-        return (host == hostdom); //TODO check 
-    }
-}
+"function isPlainHostName(host) {\n" +
+"    return (host.search('\\.') == -1);\n" +
+"}\n" +
 
-function myIpAddress() {
-    try {
-        // for now...
-        var ip = dnsResolve("localhost");
-        return ip;
-    }
-    catch (ex) {
-        debug(ex);
-    }
-    return null;
-}
+"function isResolvable(host) {\n" +
+"    var ip = dnsResolve(host);\n" +
+"    return (ip != null);\n" +
+"}\n" +
 
-function shExpMatch(str, shexp) {
-    dump("nsProxyAutoConfig.js: shExpMatch function deprecated or not implemented\n");
-    // this may be a tricky one to implement in JS. 
-    return false;
-}
+"function localHostOrDomainIs(host, hostdom) {\n" +
+"    if (isPlainHostName(host)) {\n" +
+"        return (hostdom.search('/^' + host + '/') != -1);\n" +
+"    }\n" +
+"    else {\n" +
+"        return (host == hostdom); //TODO check \n" +
+"    }\n" +
+"}\n" +
 
-function timeRange(hour) {
-    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
-    return false;
-}
+" var myIP;\n" +
+"function myIpAddress() {\n" +
+"    return (myIP) ? myIP : '127.0.0.1';\n" +
+"}\n" +
 
-function timeRange(h1, h2) {
-    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
-    return false;
-}
+"function shExpMatch(url, pattern) {\n" +
+"   pattern = pattern.replace(/\\./g, '\\\\.');\n" +
+"   pattern = pattern.replace(/\\*/g, '.*');\n" +
+"   pattern = pattern.replace(/\\?/g, '.');\n" +
+"   var newRe = new RegExp(pattern);\n" +
+"   return newRe.test(url);\n" +
+"}\n" +
 
-function timeRange(h1, m1, h2, m2) {
-    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
-    return false;
-}
+"var wdays = new Array('SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT');\n" +
 
-function timeRange(h1, m1, s1, h2, m2, s2) {
-    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
-    return false;
-}
+"var monthes = new Array('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC');\n"+
 
-function timeRange(h1, m1, s1, h2, m2, s2, gmt) {
-    dump("nsProxyAutoConfig.js: timeRange function deprecated or not implemented\n");
-    return false;
-}
+"function weekdayRange() {\n" +
+"    function getDay(weekday) {\n" +
+"        for (var i = 0; i < 6; i++) {\n" +
+"            if (weekday == wdays[i]) \n" +
+"                return i;\n" +
+"        }\n" +
+"        return -1;\n" +
+"    }\n" +
+"    var date = new Date();\n" +
+"    var argc = arguments.length;\n" +
+"    var wday;\n" +
+"    if (argc < 1)\n" +
+"        return false;\n" +
+"    if (arguments[argc - 1] == 'GMT') {\n" +
+"        argc--;\n" +
+"        wday = date.getUTCDay();\n" +
+"    } else {\n" +
+"        wday = date.getDay();\n" +
+"    }\n" +
+"    var wd1 = getDay(arguments[0]);\n" +
+"    var wd2 = (argc == 2) ? getDay(arguments[1]) : wd1;\n" +
+"    return (wd1 == -1 || wd2 == -1) ? false\n" +
+"                                    : (wd1 <= wday && wday <= wd2);\n" +
+"}\n" +
 
-function weekdayRange(wd1, wd2, gmt) {
-    dump("nsProxyAutoConfig.js: weekdayRange function deprecated or not implemented\n");
-    return false;
-}
+"function dateRange() {\n" +
+"    function getMonth(name) {\n" +
+"        for (var i = 0; i < 6; i++) {\n" +
+"            if (name == monthes[i])\n" +
+"                return i;\n" +
+"        }\n" +
+"        return -1;\n" +
+"    }\n" +
+"    var date = new Date();\n" +
+"    var argc = arguments.length;\n" +
+"    if (argc < 1) {\n" +
+"        return false;\n" +
+"    }\n" +
+"    var isGMT = (arguments[argc - 1] == 'GMT');\n" +
+"\n" +
+"    if (isGMT) {\n" +
+"        argc--;\n" +
+"    }\n" +
+"    // function will work even without explict handling of this case\n" +
+"    if (argc == 1) {\n" +
+"        var tmp = parseInt(arguments[0]);\n" +
+"        if (isNaN(tmp)) {\n" +
+"            return ((isGMT ? date.getUTCMonth() : date.getMonth()) ==\n" +
+"getMonth(arguments[0]));\n" +
+"        } else if (tmp < 32) {\n" +
+"            return ((isGMT ? date.getUTCDate() : date.getDate()) == tmp);\n" +
+"        } else { \n" +
+"            return ((isGMT ? date.getUTCFullYear() : date.getFullYear()) ==\n" +
+"tmp);\n" +
+"        }\n" +
+"    }\n" +
+"    var year = date.getFullYear();\n" +
+"    var date1, date2;\n" +
+"    date1 = new Date(year,  0,  1,  0,  0,  0);\n" +
+"    date2 = new Date(year, 11, 31, 23, 59, 59);\n" +
+"    var adjustMonth = false;\n" +
+"    for (var i = 0; i < (argc >> 1); i++) {\n" +
+"        var tmp = parseInt(arguments[i]);\n" +
+"        if (isNaN(tmp)) {\n" +
+"            var mon = getMonth(arguments[i]);\n" +
+"            date1.setMonth(mon);\n" +
+"        } else if (tmp < 32) {\n" +
+"            adjustMonth = (argc <= 2);\n" +
+"            date1.setDate(tmp);\n" +
+"        } else {\n" +
+"            date1.setFullYear(tmp);\n" +
+"        }\n" +
+"    }\n" +
+"    for (var i = (argc >> 1); i < argc; i++) {\n" +
+"        var tmp = parseInt(arguments[i]);\n" +
+"        if (isNaN(tmp)) {\n" +
+"            var mon = getMonth(arguments[i]);\n" +
+"            date2.setMonth(mon);\n" +
+"        } else if (tmp < 32) {\n" +
+"            date2.setDate(tmp);\n" +
+"        } else {\n" +
+"            date2.setFullYear(tmp);\n" +
+"        }\n" +
+"    }\n" +
+"    if (adjustMonth) {\n" +
+"        date1.setMonth(date.getMonth());\n" +
+"        date2.setMonth(date.getMonth());\n" +
+"    }\n" +
+"    if (isGMT) {\n" +
+"    var tmp = date;\n" +
+"        tmp.setFullYear(date.getUTCFullYear());\n" +
+"        tmp.setMonth(date.getUTCMonth());\n" +
+"        tmp.setDate(date.getUTCDate());\n" +
+"        tmp.setHours(date.getUTCHours());\n" +
+"        tmp.setMinutes(date.getUTCMinutes());\n" +
+"        tmp.setSeconds(date.getUTCSeconds());\n" +
+"        date = tmp;\n" +
+"    }\n" +
+"    return ((date1 <= date) && (date <= date2));\n" +
+"}\n" +
 
-///--------- replace everything below with your existing pac file ...
+"function timeRange() {\n" +
+"    var argc = arguments.length;\n" +
+"    var date = new Date();\n" +
+"    var isGMT= false;\n"+
+"\n" +
+"    if (argc < 1) {\n" +
+"        return false;\n" +
+"    }\n" +
+"    if (arguments[argc - 1] == 'GMT') {\n" +
+"        isGMT = true;\n" +
+"        argc--;\n" +
+"    }\n" +
+"\n" +
+"    var hour = isGMT ? date.getUTCHours() : date.getHours();\n" +
+"    var date1, date2;\n" +
+"    date1 = new Date();\n" +
+"    date2 = new Date();\n" +
+"\n" +
+"    if (argc == 1) {\n" +
+"        return (hour == arguments[0]);\n" +
+"    } else if (argc == 2) {\n" +
+"        return ((arguments[0] <= hour) && (hour <= arguments[1]));\n" +
+"    } else {\n" +
+"        switch (argc) {\n" +
+"        case 6:\n" +
+"            date1.setSeconds(arguments[2]);\n" +
+"            date2.setSeconds(arguments[5]);\n" +
+"        case 4:\n" +
+"            var middle = argc >> 1;\n" +
+"            date1.setHours(arguments[0]);\n" +
+"            date1.setMinutes(arguments[1]);\n" +
+"            date2.setHours(arguments[middle]);\n" +
+"            date2.setMinutes(arguments[middle + 1]);\n" +
+"            if (middle == 2) {\n" +
+"                date2.setSeconds(59);\n" +
+"            }\n" +
+"            break;\n" +
+"        default:\n" +
+"          throw 'timeRange: bad number of arguments'\n" +
+"        }\n" +
+"    }\n" +
+"\n" +
+"    if (isGMT) {\n" +
+"        date.setFullYear(date.getUTCFullYear());\n" +
+"        date.setMonth(date.getUTCMonth());\n" +
+"        date.setDate(date.getUTCDate());\n" +
+"        date.setHours(date.getUTCHours());\n" +
+"        date.setMinutes(date.getUTCMinutes());\n" +
+"        date.setSeconds(date.getUTCSeconds());\n" +
+"    }\n" +
+"    return ((date1 <= date) && (date <= date2));\n" +
+"}\n"
 
-// Sample implementation ...
-function FindProxyForURL(url, host) 
-{
-    if (isPlainHostName(host) || 
-        dnsDomainIs(host, ".mozilla.org") ||
-        isResolvable(host))
-        return "DIRECT";
-    else
-        return "PROXY tegu.mozilla.org:3130; DIRECT";
-}

@@ -23,12 +23,14 @@
 #ifndef __nsprotocolproxyservice___h___
 #define __nsprotocolproxyservice___h___
 
+#include "plevent.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsIProtocolProxyService.h"
+#include "nsIProxyAutoConfig.h"
 
 class nsProtocolProxyService : public nsIProtocolProxyService {
 public:
@@ -78,6 +80,12 @@ protected:
     
     nsXPIDLCString          mSOCKSProxyHost;
     PRInt32                 mSOCKSProxyPort;
+
+    nsCOMPtr<nsIProxyAutoConfig> mPAC;
+    nsXPIDLCString          mPACURL;
+
+    static void PR_CALLBACK HandlePACLoadEvent(PLEvent* aEvent);
+    static void PR_CALLBACK DestroyPACLoadEvent(PLEvent* aEvent);
 };
 
 #endif // __nsprotocolproxyservice___h___

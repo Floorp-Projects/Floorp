@@ -25,8 +25,12 @@
 #include "nsXPIDLString.h"
 #include "nsIProxyAutoConfig.h"
 #include "nsAutoLock.h"
+#include "nsNetCID.h"
+#include "nsIIOService.h"
+#include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static const char PROXY_PREFS[] = "network.proxy";
 static PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance)
@@ -43,7 +47,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtocolProxyService, nsIProtocolProxyService);
 
 nsProtocolProxyService::nsProtocolProxyService():
     mArrayLock(PR_NewLock()),
-    mUseProxy(0)
+    mUseProxy(0),
+    mPAC(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -116,16 +121,16 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
         mHTTPProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.http", 
                 getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv) && tempString && *tempString)
+        if (NS_SUCCEEDED(rv))
             mHTTPProxyHost = nsCRT::strdup(tempString);
     }
 
     if (!pref || !PL_strcmp(pref, "network.proxy.http_port"))
     {
         mHTTPProxyPort = -1;
-        PRInt32 proxyPort = -1;
+        PRInt32 proxyPort;
         rv = mPrefs->GetIntPref("network.proxy.http_port",&proxyPort);
-        if (NS_SUCCEEDED(rv) && proxyPort>0) 
+        if (NS_SUCCEEDED(rv)) 
             mHTTPProxyPort = proxyPort;
     }
 
@@ -134,16 +139,16 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
         mHTTPSProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.ssl", 
                 getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv) && tempString && *tempString)
+        if (NS_SUCCEEDED(rv))
             mHTTPSProxyHost = nsCRT::strdup(tempString);
     }
 
     if (!pref || !PL_strcmp(pref, "network.proxy.ssl_port"))
     {
         mHTTPSProxyPort = -1;
-        PRInt32 proxyPort = -1;
+        PRInt32 proxyPort;
         rv = mPrefs->GetIntPref("network.proxy.ssl_port",&proxyPort);
-        if (NS_SUCCEEDED(rv) && proxyPort>0) 
+        if (NS_SUCCEEDED(rv)) 
             mHTTPSProxyPort = proxyPort;
     }
 
@@ -152,16 +157,16 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
         mFTPProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.ftp", 
                 getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv) && tempString && *tempString)
+        if (NS_SUCCEEDED(rv))
             mFTPProxyHost = nsCRT::strdup(tempString);
     }
 
     if (!pref || !PL_strcmp(pref, "network.proxy.ftp_port"))
     {
         mFTPProxyPort = -1;
-        PRInt32 proxyPort = -1;
+        PRInt32 proxyPort;
         rv = mPrefs->GetIntPref("network.proxy.ftp_port",&proxyPort);
-        if (NS_SUCCEEDED(rv) && proxyPort>0) 
+        if (NS_SUCCEEDED(rv)) 
             mFTPProxyPort = proxyPort;
     }
 
@@ -188,16 +193,16 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
         mSOCKSProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.socks", 
                                   getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv) && tempString && *tempString)
+        if (NS_SUCCEEDED(rv))
             mSOCKSProxyHost = nsCRT::strdup(tempString);
     }
     
     if (!pref || !PL_strcmp(pref, "network.proxy.socks_port"))
     {
         mSOCKSProxyPort = -1;
-        PRInt32 proxyPort = -1;
+        PRInt32 proxyPort;
         rv = mPrefs->GetIntPref("network.proxy.socks_port",&proxyPort);
-        if (NS_SUCCEEDED(rv) && proxyPort>0) 
+        if (NS_SUCCEEDED(rv)) 
             mSOCKSProxyPort = proxyPort;
     }
     
@@ -205,9 +210,112 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     {
         rv = mPrefs->CopyCharPref("network.proxy.no_proxies_on",
                                   getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv) && tempString && *tempString)
+        if (NS_SUCCEEDED(rv))
             (void)LoadFilters((const char*)tempString);
     }
+
+    if (!pref || !PL_strcmp(pref, "network.proxy.autoconfig_url"))
+    {
+        rv = mPrefs->CopyCharPref("network.proxy.autoconfig_url", 
+                                  getter_Copies(tempString));
+        if (NS_SUCCEEDED(rv)) {
+            mPACURL = nsCRT::strdup(tempString);
+
+            // create pac js component
+            mPAC = do_CreateInstance(NS_PROXY_AUTO_CONFIG_CONTRACTID, &rv);
+            if (!mPAC || NS_FAILED(rv)) {
+                NS_ERROR("Cannot load PAC js component");
+                return;
+            }
+
+            /* now we need to setup a callback from the main ui thread
+               in which we will load the pac file from the specified
+               url. loading it now, in the current thread results in a
+               browser crash */
+
+            // get event queue service
+            nsCOMPtr<nsIEventQueueService> eqs = 
+                do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+            if (!eqs) {
+                NS_ERROR("Failed to get EventQueue service");
+                return;
+            }
+
+            // get ui thread's event queue
+            nsCOMPtr<nsIEventQueue> eq = nsnull;
+            rv = eqs->GetThreadEventQueue(NS_UI_THREAD, getter_AddRefs(eq));
+            if (NS_FAILED(rv) || !eqs) {
+                NS_ERROR("Failed to get UI EventQueue");
+                return;
+            }
+
+            // create an event
+            PLEvent* event = new PLEvent;
+            // AddRef this because it is being placed in the PLEvent struct
+            // It will be Released when DestroyPACLoadEvent is called
+            NS_ADDREF_THIS();
+            PL_InitEvent(event, 
+                         this,
+                         (PLHandleEventProc) 
+                         nsProtocolProxyService::HandlePACLoadEvent,
+                         (PLDestroyEventProc) 
+                         nsProtocolProxyService::DestroyPACLoadEvent);
+
+            // post the event into the ui event queue
+            rv = eq->PostEvent(event);
+            if (rv == PR_FAILURE) {
+                NS_ERROR("Failed to post PAC load event to UI EventQueue");
+                NS_RELEASE_THIS();
+                delete event;
+                return;
+            }
+        }
+    }
+}
+
+// this is the main ui thread calling us back, load the pac now
+void PR_CALLBACK nsProtocolProxyService::HandlePACLoadEvent(PLEvent* aEvent)
+{
+    nsresult rv = NS_OK;
+
+    nsProtocolProxyService *pps = 
+        (nsProtocolProxyService*) PL_GetEventOwner(aEvent);
+    if (!pps) {
+        NS_ERROR("HandlePACLoadEvent owner is null");
+        return;
+    }
+    if (!pps->mPAC) {
+        NS_ERROR("HandlePACLoadEvent: js PAC component is null");
+        return;
+    }
+
+    NS_WITH_SERVICE(nsIIOService, pIOService, kIOServiceCID, &rv);
+    if (!pIOService || NS_FAILED(rv)) {
+        NS_ERROR("Cannot get IO Service");
+        return;
+    }
+
+    nsCOMPtr<nsIURI> pURL;
+    rv = pIOService->NewURI((const char*) pps->mPACURL, nsnull, 
+                            getter_AddRefs(pURL));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("New URI failed");
+        return;
+    }
+     
+    rv = pps->mPAC->LoadPACFromURL(pURL, pIOService);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Load PAC failed");
+        return;
+    }
+}
+
+void PR_CALLBACK nsProtocolProxyService::DestroyPACLoadEvent(PLEvent* aEvent)
+{
+  nsProtocolProxyService *pps = 
+      (nsProtocolProxyService*) PL_GetEventOwner(aEvent);
+  NS_IF_RELEASE(pps);
+  delete aEvent;
 }
 
 PRBool
@@ -271,16 +379,18 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
     // Proxy auto config magic...
     if (2 == mUseProxy)
     {
-        // later on put this in a member variable TODO
-        nsCOMPtr<nsIProxyAutoConfig> pac = 
-            do_CreateInstance(NS_PROXY_AUTO_CONFIG_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv))
-        {
-            nsXPIDLCString p_host;
-            nsXPIDLCString p_type;
-            PRInt32 p_port;
-            if (NS_SUCCEEDED(rv = pac->ProxyForURL(aURI, getter_Copies(p_host),
-                                               &p_port, getter_Copies(p_type))))
+        if (!mPAC) {
+            NS_ERROR("ERROR: PAC js component is null");
+            return NS_ERROR_NULL_POINTER;
+        }
+
+        nsXPIDLCString p_host;
+        nsXPIDLCString p_type;
+        PRInt32 p_port;
+        if (NS_SUCCEEDED(rv = mPAC->ProxyForURL(aURI, 
+                                                getter_Copies(p_host),
+                                                &p_port, 
+                                                getter_Copies(p_type))))
             {
                 if (NS_FAILED(rv = aProxy->SetProxyHost(p_host))) 
                     return rv;
@@ -290,7 +400,6 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
                     return rv;
                 return NS_OK;
             }
-        }
         return rv;
     }
     
