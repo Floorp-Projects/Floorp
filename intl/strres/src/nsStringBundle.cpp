@@ -36,7 +36,6 @@
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
 #include "pratom.h"
 #include "prclist.h"
 #include "plarena.h"
@@ -48,7 +47,7 @@
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
 #include "nsAutoLock.h"
-
+#include "nsTextFormatter.h"
 #include "nsIChromeRegistry.h"
 
 #include "nsAcceptLang.h" // for nsIAcceptLang
@@ -84,6 +83,10 @@ protected:
   nsresult OpenInputStream(nsString& aURLStr, nsIInputStream*& in);
 public:
   static nsresult GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& country);
+
+  static nsresult FormatString(const PRUnichar *formatStr,
+                               const PRUnichar **aParams, PRUint32 aLength,
+                               PRUnichar **aResult);
  };
 
 nsStringBundle::nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult)
@@ -156,6 +159,32 @@ nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
   return ret;
 }
 
+NS_IMETHODIMP
+nsStringBundle::FormatStringFromID(PRInt32 aID,
+                                   const PRUnichar **aParams,
+                                   PRUint32 aLength,
+                                   PRUnichar ** aResult)
+{
+  nsAutoString idStr;
+  idStr.AppendInt(aID, 10);
+
+  return FormatStringFromName(idStr.GetUnicode(), aParams, aLength, aResult);
+}
+
+// this function supports at most 10 parameters.. see below for why
+NS_IMETHODIMP
+nsStringBundle::FormatStringFromName(const PRUnichar *aName,
+                                     const PRUnichar **aParams,
+                                     PRUint32 aLength,
+                                     PRUnichar **aResult)
+{
+  nsAutoString formatStr;
+  GetStringFromName(aName, formatStr);
+
+  return FormatString(formatStr.GetUnicode(), aParams, aLength, aResult);
+}
+                                     
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsStringBundle, nsIStringBundle)
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
@@ -163,7 +192,7 @@ NS_IMETHODIMP
 nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
 {
   *aResult = nsnull;
-  nsString tmpstr;
+  nsAutoString tmpstr;
 
   nsresult ret = GetStringFromID(aID, tmpstr);
   PRInt32 len =  tmpstr.Length()+1;
@@ -183,8 +212,8 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 {
   nsAutoCMonitor(this);
   *aResult = nsnull;
-  nsString tmpstr;
-  nsString nameStr(aName);
+  nsAutoString tmpstr;
+  nsAutoString nameStr(aName);
   nsresult ret = GetStringFromName(nameStr, tmpstr);
   PRInt32 len =  tmpstr.Length()+1;
   if (NS_FAILED(ret) || !len) {
@@ -230,7 +259,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
   nsresult ret = NS_OK;
 
   /* locale binding */
-  nsString  strFile2;
+  nsAutoString  strFile2;
 
 #if 1
    /* plan A: don't fallback; use aURLSpec: xxx.pro -> xxx.pro
@@ -238,17 +267,17 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
    strFile2.AssignWithConversion(aURLSpec);
    ret = OpenInputStream(strFile2, in);
 #else
-  nsString   lc_lang;
-  nsString   lc_country;
+  nsAutoString   lc_lang;
+  nsAutoString   lc_country;
 
   if (NS_OK == (ret = GetLangCountry(aLocale, lc_lang, lc_country))) {
     
     /* find the place to concatenate locale name 
      */
     PRInt32   count = 0;
-    nsString strFile(aURLSpec);
+    nsAutoString strFile(aURLSpec);
     PRInt32   mylen = strFile.Length();
-    nsString fileLeft;
+    nsAutoString fileLeft;
  
     /* assume the name always ends with this
      */
@@ -267,7 +296,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
 
     /* insert it
      */   
-    nsString fileRight;
+    nsAutoString fileRight;
     if (dot > 0) {
       count = strFile.Right(fileRight, mylen-dot);
       strFile2 += fileRight;
@@ -322,8 +351,8 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& cou
   }
 
   PRUnichar *lc_name_unichar;
-  nsString	  lc_name;
-  nsString  	category; category.AssignWithConversion("NSILOCALE_MESSAGES");
+  nsAutoString	  lc_name;
+  nsAutoString  	category; category.AssignWithConversion("NSILOCALE_MESSAGES");
   nsresult	  result	 = aLocale->GetCategory(category.GetUnicode(), &lc_name_unichar);
   lc_name.Assign(lc_name_unichar);
   nsMemory::Free(lc_name_unichar);
@@ -342,6 +371,35 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& cou
   else
     lang = lc_name;
 
+  return NS_OK;
+}
+
+nsresult
+nsStringBundle::FormatString(const PRUnichar *aFormatStr,
+                             const PRUnichar **aParams, PRUint32 aLength,
+                             PRUnichar **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG(aLength <= 10); // enforce 10-parameter limit
+
+  // implementation note: you would think you could use vsmprintf
+  // to build up an arbitrary length array.. except that there
+  // is no way to build up a va_list at runtime!
+  // Don't believe me? See:
+  //   http://www.eskimo.com/~scs/C-faq/q15.13.html
+  // -alecf
+  *aResult = 
+    nsTextFormatter::smprintf(aFormatStr,
+                              aLength >= 1 ? aParams[0] : nsnull,
+                              aLength >= 2 ? aParams[1] : nsnull,
+                              aLength >= 3 ? aParams[2] : nsnull,
+                              aLength >= 4 ? aParams[3] : nsnull,
+                              aLength >= 5 ? aParams[4] : nsnull,
+                              aLength >= 6 ? aParams[5] : nsnull,
+                              aLength >= 7 ? aParams[6] : nsnull,
+                              aLength >= 8 ? aParams[7] : nsnull,
+                              aLength >= 9 ? aParams[8] : nsnull,
+                              aLength >= 10 ? aParams[9] : nsnull);
   return NS_OK;
 }
 
@@ -367,11 +425,7 @@ public:
 
   //--------------------------------------------------------------------------
   // Interface nsIStringBundle [declaration]
-
-  NS_IMETHOD GetStringFromID(PRInt32 aID, PRUnichar ** aResult);
-  NS_IMETHOD GetStringFromName(const PRUnichar *aName, PRUnichar ** aResult);
-  NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator ** aResult); 
-  NS_IMETHOD GetSimpleEnumeration(nsISimpleEnumerator** elements);
+  NS_DECL_NSISTRINGBUNDLE
 };
 
 NS_IMPL_ISUPPORTS(nsExtensibleStringBundle, NS_GET_IID(nsIStringBundle));
@@ -538,6 +592,30 @@ done:
   }
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsExtensibleStringBundle::FormatStringFromID(PRInt32 aID,
+                                             const PRUnichar ** aParams,
+                                             PRUint32 aLength,
+                                             PRUnichar ** aResult)
+{
+  nsXPIDLString formatStr;
+  nsAutoString idStr;
+  idStr.AppendInt(aID, 10);
+  return FormatStringFromName(idStr.GetUnicode(), aParams, aLength, aResult);
+}
+
+NS_IMETHODIMP
+nsExtensibleStringBundle::FormatStringFromName(const PRUnichar *aName,
+                                               const PRUnichar ** aParams,
+                                               PRUint32 aLength,
+                                               PRUnichar ** aResult)
+{
+  nsXPIDLString formatStr;
+  GetStringFromName(aName, getter_Copies(formatStr));
+
+  return nsStringBundle::FormatString(formatStr, aParams, aLength, aResult);
 }
 
 nsresult nsExtensibleStringBundle::GetEnumeration(nsIBidirectionalEnumerator ** aResult)
@@ -741,7 +819,7 @@ nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
 #ifdef DEBUG_tao_
   printf("\n++ nsStringBundleService::CreateBundle ++\n");
   {
-    nsString aURLStr(aURLSpec);
+    nsAutoString aURLStr(aURLSpec);
     char *s = aURLStr.ToNewCString();
     printf("\n** nsStringBundleService::CreateBundle: %s\n", s?s:"null");
     delete s;
