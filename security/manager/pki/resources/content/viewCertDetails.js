@@ -56,19 +56,18 @@ function AddCertChain(node, chain, idPrefix)
     } else {
       addTwistie = true;
     }
-    child = addChildrenToTree(child, displayVal, null,addTwistie);
+    child = addChildrenToTree(child, displayVal, currCert.dbKey,addTwistie);
   }
 }
 
-function AddUsage(usage)
+function AddUsage(usage,verifyInfoBox)
 {
-  var tree = document.getElementById("usage");
-  var row  = document.createElement("treerow");
-  var cell = document.createElement("treecell");
-  cell.setAttribute("class", "propertylist");
-  cell.setAttribute("label", usage);
-  row.appendChild(cell);
-  tree.appendChild(row);
+  var text  = document.createElement("textbox");
+  text.setAttribute("value", usage);
+  text.setAttribute("style", "margin: 2px 5px");
+  text.setAttribute("readonly", "true");
+  text.setAttribute("class", "scrollfield");
+  verifyInfoBox.appendChild(text);
 }
 
 function setWindowName()
@@ -106,7 +105,6 @@ function setWindowName()
 
   //  The chain of trust
   var chain = cert.getChain();
-  AddCertChain("chain", chain,"");
   AddCertChain("chainDump", chain,"dump_");
   DisplayGeneralDataFromCert(cert);
   BuildPrettyPrint(cert);
@@ -214,8 +212,11 @@ function DisplayGeneralDataFromCert(cert)
   }
   var verified=document.getElementById('verified');
   verified.setAttribute("value", verifystr);
-  for (var i=0; i<count; i++) {
-    AddUsage(usageList[i]);
+  if (count > 0) {
+    var verifyInfoBox = document.getElementById('verify_info_box');
+    for (var i=0; i<count; i++) {
+      AddUsage(usageList[i],verifyInfoBox);
+    }
   }
 
   //  Common Name
@@ -224,16 +225,52 @@ function DisplayGeneralDataFromCert(cert)
   addAttributeFromCert('organization', cert.organization);
   //  Organizational Unit
   addAttributeFromCert('orgunit', cert.organizationalUnit);
-  //  Subject Name
-  addAttributeFromCert('subjectname',cert.subjectName);
-  //  Issuer Name
-  addAttributeFromCert('issuername',cert.issuerName);
   //  Serial Number
   addAttributeFromCert('serialnumber',cert.serialNumber);
-  //  RSA Public Modulus
-  addAttributeFromCert('rsapubmodulus',cert.rsaPubModulus);
   //  SHA1 Fingerprint
   addAttributeFromCert('sha1fingerprint',cert.sha1Fingerprint);
   //  MD5 Fingerprint
   addAttributeFromCert('md5fingerprint',cert.md5Fingerprint);
+  // Validity start
+  addAttributeFromCert('validitystart', cert.issuedDate);
+  // Validity end
+  addAttributeFromCert('validityend', cert.expiresDate);
+  
+  //Now to populate the fields that correspond to the issuer.
+  var issuer = cert.issuer;
+  var issuerCommonname, issuerOrg, issuerOrgUnit;
+  if (issuer) {
+    issuerCommonname = issuer.commonName;
+    issuerOrg        = issuer.organization;
+    issuerOrgUnit    = issuer.organizationalUnit;
+  } else {
+    var unknownIssuer = bundle.GetStringFromName('unknownIssuer');
+    issuerCommonname  = unknownIssuer;
+    issuerOrg         = unknownIssuer;
+    issuerOrgUnit     = unknownIssuer;
+  }
+  addAttributeFromCert('issuercommonname', issuerCommonname);
+  addAttributeFromCert('issuerorganization', issuerOrg);
+  addAttributeFromCert('issuerorgunit', issuerOrgUnit);
+}
+
+function updateCertDump()
+{
+  var asn1Outliner = document.getElementById('prettyDumpOutliner').
+                     outlinerBoxObject.view.QueryInterface(nsIASN1Outliner);
+
+  var tree = document.getElementById('treesetDump');
+  var items=tree.selectedItems;
+
+  if (items.length==0) {
+    alert("No items are selected."); //This should never happen.
+  } else {
+    var dbKey = items[0].firstChild.firstChild.getAttribute('display');
+    //  Get the cert from the cert database
+    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+    var cert = certdb.getCertByDBKey(dbKey,null);
+    asn1Outliner.loadASN1Structure(cert.ASN1Structure);
+    var certDumpVal = document.getElementById('certDumpVal');
+    removeChildrenInTree(certDumpVal);
+  }
 }

@@ -51,7 +51,29 @@ nsNSSASN1Outliner::~nsNSSASN1Outliner()
 NS_IMETHODIMP 
 nsNSSASN1Outliner::LoadASN1Structure(nsIASN1Object *asn1Object)
 {
+  //
+  // The outliner won't automatically re-draw if the contents
+  // have been changed.  So I do a quick test here to let
+  // me know if I should forced the outliner to redraw itself
+  // by calling RowCountChanged on it.
+  //
+  PRBool redraw = (mASN1Object && mOutliner);
+  PRInt32 rowsToDelete;
+
+  if (redraw) {
+    // This is the number of rows we will be deleting after
+    // the contents have changed.
+    rowsToDelete = 0-CountNumberOfVisibleRows(mASN1Object);
+  }
   mASN1Object = asn1Object;
+  if (redraw) {
+    // The number of rows in the new content.
+    PRInt32 newRows = CountNumberOfVisibleRows(mASN1Object);
+    // Erase all of the old rows.
+    mOutliner->RowCountChanged(0, rowsToDelete);
+    // Replace them with the new contents
+    mOutliner->RowCountChanged(0, newRows);
+  }
   return NS_OK;
 }
 

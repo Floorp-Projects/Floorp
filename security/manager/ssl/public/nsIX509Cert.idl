@@ -125,6 +125,7 @@ interface nsIX509Cert : nsISupports {
   readonly attribute wstring expiresDate;
   readonly attribute wstring tokenName;
   readonly attribute wstring issuerOrganization;
+  readonly attribute nsIX509Cert issuer;
 
   readonly attribute nsIX509CertValidity validity;
   readonly attribute string dbKey;

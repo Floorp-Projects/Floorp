@@ -59,7 +59,10 @@
         </tabbox>
       </row>
       <row>
-        <box orient="horizontal" flex="1">
+        <separator class="thin" />
+      </row>
+      <row>
+        <hbox align="right" flex="1">
           <button id="HelpButton" class="normal" 
                   label="&certmgr.help.label;" 
                   orient="horizontal" accesskey="h" />
@@ -68,7 +71,7 @@
                   orient="horizontal" accesskey="c"
                   onclick="window.close();"
                   onkeypress="window.close();"/>
-        </box>
+        </hbox>
       </row>
     </rows>
   </grid>
