@@ -25,6 +25,14 @@ USE_AUTOCONF 	= 1
 MOZILLA_CLIENT	= 1
 NO_MDUPDATE	= 1
 BUILD_MODULES	= @BUILD_MODULES@
+MOZILLA_VERSION = @MOZILLA_VERSION@
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+bindir		= @bindir@
+includedir	= @includedir@
+libdir		= @libdir@
+datadir		= @datadir@
 
 DIST		= $(DEPTH)/dist
 
