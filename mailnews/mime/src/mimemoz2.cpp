@@ -210,7 +210,7 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
       {
         PR_Free(converted); 
         *output_ret = convertedString;
-        *output_size_ret = PL_strlen(converted);
+        *output_size_ret = PL_strlen(convertedString);
       }
     }
   else
