@@ -1089,22 +1089,25 @@ nsFtpState::S_pass() {
     mResponseMsg = "";
 
     if (mAnonymous) {
-        char* anonPassword = nsnull;
-        PRBool useRealEmail = PR_FALSE;
-        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-        if (prefs) {
-            rv = prefs->GetBoolPref("advanced.mailftp", &useRealEmail);
-            if (NS_SUCCEEDED(rv) && useRealEmail)
-                prefs->GetCharPref("network.ftp.anonymous_password", &anonPassword);
-        }
-        if (useRealEmail && anonPassword && *anonPassword != '\0') {
-            passwordStr.Append(anonPassword);
-            nsMemory::Free(anonPassword);
-        }
-        else {
-            // We need to default to a valid email address - bug 101027
-            // example.com is reserved (rfc2606), so use that
-            passwordStr.Append("mozilla@example.com");
+        if (!mPassword.IsEmpty()) {
+            // XXX Is UTF-8 the best choice?
+            AppendUTF16toUTF8(mPassword, passwordStr);
+        } else {
+            nsXPIDLCString anonPassword;
+            PRBool useRealEmail = PR_FALSE;
+            nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+            if (prefs) {
+                rv = prefs->GetBoolPref("advanced.mailftp", &useRealEmail);
+                if (NS_SUCCEEDED(rv) && useRealEmail)
+                    prefs->GetCharPref("network.ftp.anonymous_password", getter_Copies(anonPassword));
+            }
+            if (!anonPassword.IsEmpty()) {
+                passwordStr.AppendASCII(anonPassword);
+            } else {
+                // We need to default to a valid email address - bug 101027
+                // example.com is reserved (rfc2606), so use that
+                passwordStr.AppendLiteral("mozilla@example.com");
+            }
         }
     } else {
         if (mPassword.IsEmpty() || mRetryPass) {
