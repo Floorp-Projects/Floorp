@@ -57,6 +57,7 @@
 #include "nsIHTTPChannel.h"
 #include "nsIDataChannel.h"
 #include "nsIProgressEventSink.h"
+#include "nsIWebProgress.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
@@ -138,6 +139,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
    NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -775,7 +777,7 @@ NS_IMETHODIMP nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 {
    // Don't automatically set the progress based on the tree owner for frames
   if (!IsFrame()) {
-    nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mLoadCookie));
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
     
     if (webProgress) {
       nsCOMPtr<nsIWebProgressListener> oldListener(do_QueryInterface(mTreeOwner));
@@ -1261,8 +1263,9 @@ NS_IMETHODIMP nsDocShell::Destroy()
    mScriptGlobal = nsnull;
    mScriptContext = nsnull;
    mSessionHistory = nsnull;
-   mLoadCookie = nsnull;
    SetTreeOwner(nsnull);
+
+  SetLoadCookie(nsnull);
 
    if(mInitInfo)
       {
@@ -2018,6 +2021,31 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
                                     nsISupports     * aExtraInfo)
 {
    return SetupNewViewer(aContentViewer);
+}
+
+//*****************************************************************************
+// nsDocShell::nsIWebProgressListener
+//*****************************************************************************   
+
+NS_IMETHODIMP
+nsDocShell::OnProgressChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
+                             PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress,
+                             PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
+                          PRInt32 aStateFlags, nsresult aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::OnLocationChange(nsIURI *aURI)
+{
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -3162,6 +3190,40 @@ NS_IMETHODIMP nsDocShell::UpdateCurrentGlobalHistory()
 //*****************************************************************************
 // nsDocShell: Helper Routines
 //*****************************************************************************   
+
+nsresult nsDocShell::SetLoadCookie(nsISupports *aCookie)
+{
+  // Remove the DocShell as a listener of the old WebProgress...
+  if (mLoadCookie) {
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+
+    if (webProgress) {
+      webProgress->RemoveProgressListener(this);
+    }
+  }
+
+  mLoadCookie = aCookie;
+
+  // Add the DocShell as a listener to the new WebProgress...
+  if (mLoadCookie) {
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+
+    if (webProgress) {
+      webProgress->AddProgressListener(this);
+    }
+  }
+  return NS_OK;
+}
+
+
+nsresult nsDocShell::GetLoadCookie(nsISupports **aResult)
+{
+  *aResult = mLoadCookie;
+  NS_IF_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
 
 nsDocShellInitInfo* nsDocShell::InitInfo()
 {

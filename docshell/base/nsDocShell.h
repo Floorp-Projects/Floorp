@@ -64,7 +64,6 @@
 #include "nsISupportsArray.h"
 #include "nsITimerCallback.h"
 #include "nsIWebNavigation.h"
-#include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 
 //*****************************************************************************
@@ -119,10 +118,10 @@ class nsDocShell : public nsIDocShell,
                    public nsIInterfaceRequestor,
                    public nsIScriptGlobalObjectOwner,
                    public nsIRefreshURI,
+                   public nsIWebProgressListener,
                    public nsSupportsWeakReference
 {
 friend class nsDSURIContentListener;
-friend class nsDSWebProgressListener;
 
 public:
    // Object Management
@@ -139,6 +138,7 @@ public:
    NS_DECL_NSITEXTSCROLL
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
+   NS_DECL_NSIWEBPROGRESSLISTENER
 
    // nsIRefreshURI
    NS_IMETHOD RefreshURI(nsIURI *aURI, PRInt32 aDelay, PRBool aRepeat);
@@ -150,6 +150,9 @@ public:
                    const char* aCommand,
                    nsISupports* aExtraInfo);
 
+
+  nsresult SetLoadCookie(nsISupports *aCookie);
+  nsresult GetLoadCookie(nsISupports **aResult);
 
 protected:
    // Object Management
