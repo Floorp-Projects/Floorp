@@ -176,9 +176,12 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 
 nsBlockReflowState::~nsBlockReflowState()
 {
-  // Restore the coordinate system
-  const nsMargin& borderPadding = BorderPadding();
-  mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
+  // Restore the coordinate system, unless the space manager is null,
+  // which means it was just destroyed.
+  if (mSpaceManager) {
+    const nsMargin& borderPadding = BorderPadding();
+    mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
+  }
 }
 
 nsLineBox*
@@ -471,6 +474,18 @@ nsBlockReflowState::ReconstructMarginAbove(nsLineList::iterator aLine)
   }
 }
 
+/**
+ * Everything done in this function is done O(N) times for each pass of
+ * reflow so it is O(N*M) where M is the number of incremental reflow
+ * passes.  That's bad.  Don't do stuff here.
+ *
+ * When this function is called, |aLine| has just been slid by |aDeltaY|
+ * and the purpose of RecoverStateFrom is to ensure that the
+ * nsBlockReflowState is in the same state that it would have been in
+ * had the line just been reflowed.
+ *
+ * Most of the state recovery that we have to do involves floaters.
+ */
 void
 nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
                                      nscoord aDeltaY)
