@@ -44,6 +44,8 @@ pref("general.useragent.vendorSub",
 // Overrides of the seamonkey suite mailnews.js prefs
 ///////////////////////////////////////////////////////////////// 
 pref("mail.showFolderPaneColumns", false); // setting to true will allow total/unread/size columns
+pref("mail.showCondensedAddresses", true); // show the friendly display name for people I know
+
 pref("mailnews.message_display.allow.plugins", false); // disable plugins by default
 
 // hidden pref for changing how we present attachments in the message pane

@@ -15,6 +15,7 @@
 
 <!-- General -->
 <!ENTITY generalSettings.label         "General Settings">
+<!ENTITY showCondensedAddresses.label  "Show only display name for people in my address book.">
 <!ENTITY markAsRead.label              "Mark message read after displaying for">
 <!ENTITY markAsReadEnd.label           "second(s).">
 <!ENTITY showFolderColumns.label       "Show expanded columns in the folder pane.">

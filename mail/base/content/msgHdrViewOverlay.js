@@ -65,6 +65,7 @@ var gMessengerBundle;
 var gProfileDirURL;
 var gIOService;
 var gFileHandler;  
+var gShowCondensedEmailAddresses = true; // show the friendly display names for people I know instead of the name + email address
 var gPersonalAddressBookDirectory; // used for determining if we want to show just the display name in email address nodes
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
@@ -219,6 +220,11 @@ function OnLoadMsgHeaderPane()
   gMinNumberOfHeaders = pref.getIntPref("mailnews.headers.minNumHeaders");
   gShowOrganization = pref.getBoolPref("mailnews.headers.showOrganization");
   gShowLargeAttachmentView = pref.getBoolPref("mailnews.attachments.display.largeView");
+  gShowCondensedEmailAddresses = pref.getBoolPref("mail.showCondensedAddresses");
+
+  // listen to the 
+  pref.addObserver("mail.showCondensedAddresses", MsgHdrViewObserver, false);
+
   initializeHeaderViewTables();
 
   var toggleHeaderView = document.getElementById("msgHeaderView");
@@ -235,12 +241,30 @@ function OnLoadMsgHeaderPane()
 
 function OnUnloadMsgHeaderPane()
 {
+  pref.removeObserver("mail.showCondensedAddresses", MsgHdrViewObserver);
+
   // dispatch an event letting any listeners know that we have unloaded the message pane
   var event = document.createEvent('Events');
   event.initEvent('messagepane-unloaded', false, true);
   var headerViewElement = document.getElementById("msgHeaderView");
   headerViewElement.dispatchEvent(event);
 }
+
+const MsgHdrViewObserver = 
+{
+  observe: function(subject, topic, prefName)
+  {
+    // verify that we're changing the mail pane config pref
+    if (topic == "nsPref:changed")
+    {
+      if (prefName == "mail.showCondensedAddresses")
+      {
+        gShowCondensedEmailAddresses = pref.getBoolPref("mail.showCondensedAddresses");
+        MsgReload();
+      }
+    }
+  }
+};
 
 // The messageHeaderSink is the class that gets notified of a message's headers as we display the message
 // through our mime converter. 
@@ -845,7 +869,7 @@ function AddExtraAddressProcessing(emailAddress, addressNode)
   var displayName = addressNode.getTextAttribute("displayName");  
   var emailAddress = addressNode.getTextAttribute("emailAddress");
 
-  if (displayName && useDisplayNameForAddress(emailAddress))
+  if (gShowCondensedEmailAddresses && displayName && useDisplayNameForAddress(emailAddress))
     addressNode.setAttribute('label', displayName); 
 } 
 
