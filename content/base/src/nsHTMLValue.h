@@ -35,7 +35,7 @@ enum nsHTMLUnit {
   eHTMLUnit_Percent    = 90,     // (float) 1.0 == 100%) value is percentage of something
 
   // Screen relative measure
-  eHTMLUnit_Pixel      = 600,    // (int) screen pixels
+  eHTMLUnit_Pixel      = 600    // (int) screen pixels
 };
 
 class nsHTMLValue {

@@ -1621,6 +1621,7 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
   // iterate children, tell all row groups to ShrinkWrap
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
 
+  PRInt32 rowIndex;
   PRInt32 tableHeight = 0;
 
   nsStyleSpacing* spacing = (nsStyleSpacing*)
@@ -1657,7 +1658,7 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
       rowGroupFrame->ChildCount(numRows);
       PRInt32 *rowHeights = new PRInt32[numRows];
       if (gsDebug==PR_TRUE) printf("Height Step 1...\n");
-      for (PRInt32 rowIndex = 0; rowIndex < numRows; rowIndex++)
+      for (rowIndex = 0; rowIndex < numRows; rowIndex++)
       {
         // get the height of the tallest cell in the row (excluding cells that span rows)
         nsTableRowFrame *rowFrame;

@@ -68,15 +68,15 @@ class nsTablePart : public nsHTMLContainer {
 public:
 
   /** known HTML tags */
-  static const char *nsTablePart::kCaptionTagString;
-  static const char *nsTablePart::kRowGroupBodyTagString;
-  static const char *nsTablePart::kRowGroupHeadTagString;
-  static const char *nsTablePart::kRowGroupFootTagString;
-  static const char *nsTablePart::kRowTagString;
-  static const char *nsTablePart::kColGroupTagString;
-  static const char *nsTablePart::kColTagString;
-  static const char *nsTablePart::kDataCellTagString;
-  static const char *nsTablePart::kHeaderCellTagString;
+  static const char *kCaptionTagString;
+  static const char *kRowGroupBodyTagString;
+  static const char *kRowGroupHeadTagString;
+  static const char *kRowGroupFootTagString;
+  static const char *kRowTagString;
+  static const char *kColGroupTagString;
+  static const char *kColTagString;
+  static const char *kDataCellTagString;
+  static const char *kHeaderCellTagString;
 
   /** constructor 
     * @param aTag the HTML tag that caused this content node to be instantiated

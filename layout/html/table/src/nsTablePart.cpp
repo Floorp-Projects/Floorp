@@ -547,6 +547,7 @@ PRBool nsTablePart::RemoveChildAt (PRInt32 aIndex)
 /** protected method for appending a column group to this table */
 PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
 {
+  PRInt32 childIndex;
   NS_PRECONDITION(nsnull!=aContent, "null arg.");
   PRBool result = PR_TRUE;
   if (gsDebug==PR_TRUE)
@@ -559,7 +560,7 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
   nsIAtom * tHeadTag = NS_NewAtom(kRowGroupHeadTagString); // tHeadTag: REFCNT++
   nsIAtom * tFootTag = NS_NewAtom(kRowGroupFootTagString); // tFootTag: REFCNT++
   nsIAtom * tBodyTag = NS_NewAtom(kRowGroupBodyTagString); // tBodyTag: REFCNT++
-  for (PRInt32 childIndex = 0; childIndex < childCount; childIndex++)
+  for (childIndex = 0; childIndex < childCount; childIndex++)
   {
     nsTableContent *tableChild = (nsTableContent *)ChildAt(childIndex); // tableChild: REFCNT++
     const int tableChildType = tableChild->GetType();
@@ -622,6 +623,7 @@ PRBool nsTablePart::AppendRowGroup (nsTableRowGroup *aContent)
 /** protected method for appending a column group to this table */
 PRBool nsTablePart::AppendColGroup(nsTableColGroup *aContent)
 {
+  PRInt32 childIndex;
   NS_PRECONDITION(nsnull!=aContent, "null arg.");
   if (gsDebug==PR_TRUE)
     printf ("nsTablePart::AppendColGroup -- adding a column group.\n");
@@ -629,7 +631,7 @@ PRBool nsTablePart::AppendColGroup(nsTableColGroup *aContent)
   // if there is no column group already in the table, make this the first child
   // after any caption
   int childCount = ChildCount ();
-  for (PRInt32 childIndex = 0; childIndex < childCount; childIndex++)
+  for (childIndex = 0; childIndex < childCount; childIndex++)
   {
     nsTableContent *tableChild = (nsTableContent *)ChildAt(childIndex); // tableChild: REFCNT++
     const int tableChildType = tableChild->GetType();
@@ -692,13 +694,14 @@ PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
 /** protected method for appending a column group to this table */
 PRBool nsTablePart::AppendCaption(nsTableCaption *aContent)
 {
+  PRInt32 childIndex;
   NS_PRECONDITION(nsnull!=aContent, "null arg.");
   if (gsDebug==PR_TRUE)
     printf ("nsTablePart::AppendCaption -- adding a caption.\n");
   // find the last caption and insert this caption after it.
   // if there is no caption already in the table, make this the first child
   int childCount = ChildCount ();
-  for (PRInt32 childIndex = 0; childIndex < childCount; childIndex++)
+  for (childIndex = 0; childIndex < childCount; childIndex++)
   {
     nsTableContent *tableChild = (nsTableContent *)ChildAt(childIndex);
     const int tableChildType = tableChild->GetType();

@@ -150,7 +150,8 @@ void nsTableContent::SetTableForTableContent(nsIContent* aContent, nsTablePart *
 
 void nsTableContent::List(FILE* out, PRInt32 aIndent) const
 {
-  for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
+  PRInt32 i;
+  for (i = aIndent; --i >= 0; ) fputs("  ", out);
   nsIAtom* tag = GetTag();
   if (tag != nsnull) {
     nsAutoString buf;

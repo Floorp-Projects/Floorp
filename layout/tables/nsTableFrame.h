@@ -297,7 +297,7 @@ protected:
   virtual NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
 
 private:
-  void nsTableFrame::DebugPrintCount() const; // Debugging routine
+  void DebugPrintCount() const; // Debugging routine
 
 
   /**  table reflow is a multi-pass operation.  Use these constants to keep track of

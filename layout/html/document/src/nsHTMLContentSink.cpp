@@ -625,11 +625,13 @@ PRBool HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
           // We just closed a child of the body off. Trigger a
           // content-appended reflow if enough time has elapsed
           PRTime now = PR_Now();
+          /* XXX this expression doesn't compile on the Mac
+             kipp said it had to do with a type issue.
           if (now - mLastUpdateTime >= mUpdateDelta) {
             mLastUpdateTime = now;
             mUpdateDelta += mUpdateDelta;
             ReflowNewContent();
-          }
+          }*/
         }
       }
       NS_RELEASE(container);
