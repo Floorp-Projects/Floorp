@@ -25,7 +25,8 @@
 #include "prenv.h"                // For PR_GetEnv()
 #include "nsFileSpec.h"           // For nsAutoCString
 
-/* static */ nsString * nsUnixToolkitService::sToolkitName = nsnull;
+/* static */ nsString * nsUnixToolkitService::sWidgetToolkitName = nsnull;
+/* static */ nsString * nsUnixToolkitService::sGfxToolkitName = nsnull;
 /* static */ nsString * nsUnixToolkitService::sWidgetDllName = nsnull;
 /* static */ nsString * nsUnixToolkitService::sGfxDllName = nsnull;
 
@@ -66,6 +67,7 @@ NS_IMETHODIMP
 nsUnixToolkitService::SetToolkitName(const nsString & aToolkitName)
 {
   PRBool isValid;
+  nsresult rv = NS_OK;
 
   IsValidToolkit(aToolkitName,&isValid);
 
@@ -75,7 +77,52 @@ nsUnixToolkitService::SetToolkitName(const nsString & aToolkitName)
   {
     Cleanup();
 
-    sToolkitName = new nsString(aToolkitName);
+    rv = SetWidgetToolkitName(aToolkitName);
+
+    if (NS_OK == rv)
+    {
+      rv = SetGfxToolkitName(aToolkitName);
+    }
+  }
+
+  return rv;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsUnixToolkitService::SetWidgetToolkitName(const nsString & aToolkitName)
+{
+  PRBool isValid;
+
+  IsValidWidgetToolkit(aToolkitName,&isValid);
+
+  NS_ASSERTION(isValid == PR_TRUE,"Invalid toolkit.");
+  
+  if (isValid)
+  {
+    Cleanup();
+
+    sWidgetToolkitName = new nsString(aToolkitName);
+    sGfxToolkitName = new nsString(aToolkitName);
+  }
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsUnixToolkitService::SetGfxToolkitName(const nsString & aToolkitName)
+{
+  PRBool isValid;
+
+  IsValidGfxToolkit(aToolkitName,&isValid);
+
+  NS_ASSERTION(isValid == PR_TRUE,"Invalid toolkit.");
+  
+  if (isValid)
+  {
+    Cleanup();
+
+    sWidgetToolkitName = new nsString(aToolkitName);
+    sGfxToolkitName = new nsString(aToolkitName);
   }
 
   return NS_OK;
@@ -89,9 +136,9 @@ nsUnixToolkitService::IsValidToolkit(const nsString & aToolkitName,
 
   *aResultOut = PR_FALSE;
 
-  if (aToolkitName == "gtk" ||
+  if (aToolkitName == "gtk"   ||
       aToolkitName == "motif" ||
-      aToolkitName == "xlib" ||
+      aToolkitName == "xlib"  ||
       aToolkitName == "qt")
   {
     *aResultOut = PR_TRUE;
@@ -101,11 +148,43 @@ nsUnixToolkitService::IsValidToolkit(const nsString & aToolkitName,
 }
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
+nsUnixToolkitService::IsValidWidgetToolkit(const nsString & aToolkitName,
+                                           PRBool *         aResultOut)
+{
+  return IsValidToolkit(aToolkitName, aResultOut);
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsUnixToolkitService::IsValidGfxToolkit(const nsString & aToolkitName,
+                                        PRBool *         aResultOut)
+{
+  return IsValidToolkit(aToolkitName, aResultOut);
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
 nsUnixToolkitService::GetToolkitName(nsString & aToolkitNameOut)
 {
   aToolkitNameOut = "";
 
-  GlobalGetToolkitName(aToolkitNameOut);
+  return GetWidgetToolkitName(aToolkitNameOut);
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsUnixToolkitService::GetWidgetToolkitName(nsString & aToolkitNameOut)
+{
+  aToolkitNameOut = "";
+
+  GlobalGetWidgetToolkitName(aToolkitNameOut);
+
+  return NS_OK;
+}
+//////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsUnixToolkitService::GetGfxToolkitName(nsString & aToolkitNameOut)
+{
+  aToolkitNameOut = "";
+
+  GlobalGetGfxToolkitName(aToolkitNameOut);
 
   return NS_OK;
 }
@@ -121,7 +200,7 @@ nsUnixToolkitService::GetWidgetDllName(nsString & aWidgetDllNameOut)
     nsAutoString  name;
     nsAutoString  toolkit;
     
-    nsresult rv2 = GlobalGetToolkitName(toolkit);
+    nsresult rv2 = GlobalGetWidgetToolkitName(toolkit);
 
     if (NS_OK == rv2)
     {
@@ -168,7 +247,7 @@ nsUnixToolkitService::GetGfxDllName(nsString & aGfxDllNameOut)
     nsAutoString  name;
     nsAutoString  toolkit;
     
-    nsresult rv2 = GlobalGetToolkitName(toolkit);
+    nsresult rv2 = GlobalGetGfxToolkitName(toolkit);
 
     if (NS_OK == rv2)
     {
@@ -179,7 +258,7 @@ nsUnixToolkitService::GetGfxDllName(nsString & aGfxDllNameOut)
       name += "_";
       
       name += toolkit;
-//       name += "xlib";
+//      name += "xlib";
       
       name += ksDllSuffix;
 
@@ -225,7 +304,7 @@ nsUnixToolkitService::GetTimerCID(nsCID ** aTimerCIDOut)
   {
     nsAutoString unixToolkitName;
     
-    GlobalGetToolkitName(unixToolkitName);
+    GlobalGetWidgetToolkitName(unixToolkitName);
     
     //
     // Aassume that unixToolkitName is valid.
@@ -264,13 +343,13 @@ nsUnixToolkitService::GetTimerCID(nsCID ** aTimerCIDOut)
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ nsresult
-nsUnixToolkitService::GlobalGetToolkitName(nsString & aStringOut)
+nsUnixToolkitService::GlobalGetWidgetToolkitName(nsString & aStringOut)
 {
-  nsresult rv = EnsureToolkitName();
+  nsresult rv = EnsureWidgetToolkitName();
 
   if (NS_OK == rv)
   {
-    aStringOut = *sToolkitName;
+    aStringOut = *sWidgetToolkitName;
   }
   else
   {
@@ -279,65 +358,164 @@ nsUnixToolkitService::GlobalGetToolkitName(nsString & aStringOut)
 
   return rv;
 }
+
 //////////////////////////////////////////////////////////////////////////
 /* static */ nsresult
-nsUnixToolkitService::EnsureToolkitName()
+nsUnixToolkitService::GlobalGetGfxToolkitName(nsString & aStringOut)
 {
-  // Initialize sToolkitName only once
-  if (nsnull != sToolkitName)
-    return NS_OK;
+  nsresult rv = EnsureGfxToolkitName();
 
-  sToolkitName = new nsString("unknown");
-
-  if (!sToolkitName)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  // The env variable
-  const char * MOZ_TOOLKIT = nsnull;
-
-  // Look in the invironment for MOZ_TOOLKIT.  A variable
-  // that controls the toolkit the user wants to use.
-  MOZ_TOOLKIT = PR_GetEnv("MOZ_TOOLKIT");
-
-  // If MOZ_TOOLKIT is not set, assume default
-  if (!MOZ_TOOLKIT)
+  if (NS_OK == rv)
   {
-    *sToolkitName = ksDefaultToolkit;
-  }
-  // Gtk
-  else if (nsCRT::strcasecmp(MOZ_TOOLKIT,"gtk") == 0)
-  {
-    *sToolkitName = "gtk";
-  }
-  // Xlib
-  else if (nsCRT::strcasecmp(MOZ_TOOLKIT,"xlib") == 0)
-  {
-    *sToolkitName = "xlib";
-  }
-  // Motif
-  else if (nsCRT::strcasecmp(MOZ_TOOLKIT,"motif") == 0)
-  {
-    *sToolkitName = "motif";
-  }
-  // Qt
-  else if (nsCRT::strcasecmp(MOZ_TOOLKIT,"qt") == 0)
-  {
-    *sToolkitName = "qt";
+    aStringOut = *sGfxToolkitName;
   }
   else
   {
-    *sToolkitName = ksDefaultToolkit;
+    aStringOut = "error";
+  }
+
+  return rv;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/* static */ nsresult
+nsUnixToolkitService::EnsureWidgetToolkitName()
+{
+  // Initialize sWidgetToolkitName only once
+  if (nsnull != sWidgetToolkitName)
+    return NS_OK;
+
+  sWidgetToolkitName = new nsString("unknown");
+
+  if (!sWidgetToolkitName)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  // The env variable
+  const char * MOZ_WIDGET_TOOLKIT = nsnull;
+
+  // Look in the environment for MOZ_WIDGET_TOOLKIT.  A variable
+  // that controls the widget toolkit the user wants to use.
+  MOZ_WIDGET_TOOLKIT = PR_GetEnv("MOZ_WIDGET_TOOLKIT");
+
+  // If MOZ_WIDGET_TOOLKIT is not set, look for MOZ_TOOLKIT.
+  if (!MOZ_WIDGET_TOOLKIT)
+  {
+    // Look in the environment for MOZ_TOOLKIT.  A variable
+    // that controls the toolkit the user wants to use.
+    MOZ_WIDGET_TOOLKIT = PR_GetEnv("MOZ_TOOLKIT");
+  }
+   
+  // If MOZ_TOOLKIT is not set, assume default
+  if (!MOZ_WIDGET_TOOLKIT)
+  {
+    *sWidgetToolkitName = ksDefaultToolkit;
+  }
+  // Gtk
+  else if (nsCRT::strcasecmp(MOZ_WIDGET_TOOLKIT,"gtk") == 0)
+  {
+    *sWidgetToolkitName = "gtk";
+  }
+  // Xlib
+  else if (nsCRT::strcasecmp(MOZ_WIDGET_TOOLKIT,"xlib") == 0)
+  {
+    *sWidgetToolkitName = "xlib";
+  }
+  // Motif
+  else if (nsCRT::strcasecmp(MOZ_WIDGET_TOOLKIT,"motif") == 0)
+  {
+    *sWidgetToolkitName = "motif";
+  }
+  // Qt
+  else if (nsCRT::strcasecmp(MOZ_WIDGET_TOOLKIT,"qt") == 0)
+  {
+    *sWidgetToolkitName = "qt";
+  }
+  else
+  {
+    *sWidgetToolkitName = ksDefaultToolkit;
     
 #ifdef NS_DEBUG
-    printf("nsUnixToolkitService: Unknown toolkit '%s'.  Using '%s'.\n",
-           (const char *) MOZ_TOOLKIT,
+    printf("nsUnixToolkitService: Unknown widget toolkit '%s'.  Using '%s'.\n",
+           (const char *) MOZ_WIDGET_TOOLKIT,
            (const char *) ksDefaultToolkit);
 #endif
   }
   
 #ifdef NS_DEBUG
-  printf("nsUnixToolkitService: Using '%s' for the Toolkit.\n",
-         (const char *) nsAutoCString(*sToolkitName));
+  printf("nsUnixToolkitService: Using '%s' for the Widget Toolkit.\n",
+         (const char *) nsAutoCString(*sWidgetToolkitName));
+#endif
+  
+  return NS_OK;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/* static */ nsresult
+nsUnixToolkitService::EnsureGfxToolkitName()
+{
+  // Initialize sGfxToolkitName only once
+  if (nsnull != sGfxToolkitName)
+    return NS_OK;
+
+  sGfxToolkitName = new nsString("unknown");
+
+  if (!sGfxToolkitName)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  // The env variable
+  const char * MOZ_GFX_TOOLKIT = nsnull;
+
+  // Look in the environment for MOZ_GFX_TOOLKIT.  A variable
+  // that controls the toolkit the user wants to use.
+  MOZ_GFX_TOOLKIT = PR_GetEnv("MOZ_GFX_TOOLKIT");
+
+  // If MOZ_GFX_TOOLKIT is not set, look for MOZ_TOOLKIT.
+  if (!MOZ_GFX_TOOLKIT)
+  {  
+    // Look in the environment for MOZ_TOOLKIT.  A variable
+    // that controls the toolkit the user wants to use.
+    MOZ_GFX_TOOLKIT = PR_GetEnv("MOZ_TOOLKIT");
+  }
+  
+  // If MOZ_TOOLKIT is not set, assume default
+  if (!MOZ_GFX_TOOLKIT)
+  {
+    *sGfxToolkitName = ksDefaultToolkit;
+  }
+  // Gtk
+  else if (nsCRT::strcasecmp(MOZ_GFX_TOOLKIT,"gtk") == 0)
+  {
+    *sGfxToolkitName = "gtk";
+  }
+  // Xlib
+  else if (nsCRT::strcasecmp(MOZ_GFX_TOOLKIT,"xlib") == 0)
+  {
+    *sGfxToolkitName = "xlib";
+  }
+  // Motif
+  else if (nsCRT::strcasecmp(MOZ_GFX_TOOLKIT,"motif") == 0)
+  {
+    *sGfxToolkitName = "motif";
+  }
+  // Qt
+  else if (nsCRT::strcasecmp(MOZ_GFX_TOOLKIT,"qt") == 0)
+  {
+    *sGfxToolkitName = "qt";
+  }
+  else
+  {
+    *sGfxToolkitName = ksDefaultToolkit;
+    
+#ifdef NS_DEBUG
+    printf("nsUnixToolkitService: Unknown gfx toolkit '%s'.  Using '%s'.\n",
+           (const char *) MOZ_GFX_TOOLKIT,
+           (const char *) ksDefaultToolkit);
+#endif
+  }
+  
+#ifdef NS_DEBUG
+  printf("nsUnixToolkitService: Using '%s' for the Gfx Toolkit.\n",
+         (const char *) nsAutoCString(*sGfxToolkitName));
 #endif
   
   return NS_OK;
@@ -346,11 +524,18 @@ nsUnixToolkitService::EnsureToolkitName()
 /* static */ nsresult
 nsUnixToolkitService::Cleanup()
 {
-  if (nsnull != sToolkitName)
+  if (nsnull != sWidgetToolkitName)
   {
-    delete sToolkitName;
+    delete sWidgetToolkitName;
     
-    sToolkitName = nsnull;
+    sWidgetToolkitName = nsnull;
+  }
+
+  if (nsnull != sGfxToolkitName)
+  {
+    delete sGfxToolkitName;
+    
+    sGfxToolkitName = nsnull;
   }
 
   if (nsnull != sWidgetDllName)
