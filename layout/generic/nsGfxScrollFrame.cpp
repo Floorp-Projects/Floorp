@@ -925,8 +925,8 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
            // there is a chance that by adding the horizonal scrollbar we will
            // suddenly need a vertical scrollbar. Is a special case but its 
            // important.
-           if (!mHasVerticalScrollbar && scrolledContentSize.height > scrollAreaRect.height - sbSize.height)
-             printf("****Gfx Scrollbar Special case hit!!*****\n");
+           //if (!mHasVerticalScrollbar && scrolledContentSize.height > scrollAreaRect.height - sbSize.height)
+           //  printf("****Gfx Scrollbar Special case hit!!*****\n");
            
       }
     } else {
