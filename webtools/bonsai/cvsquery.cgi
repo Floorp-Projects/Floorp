@@ -31,14 +31,21 @@ $| = 1;
 
 $sm_font_tag = "<font face='Arial,Helvetica' size=-2>";
 
-print "Content-type: text/html
+my $generateBackoutCVSCommands = 0;
+if (defined $form{'generateBackoutCVSCommands'}) {
+    $generateBackoutCVSCommands = 1;
+}
+
+if (!$generateBackoutCVSCommands) {
+    print "Content-type: text/html
 
 ";
 
-$script_str='';
-&setup_script;
+    $script_str='';
+    &setup_script;
 
-print "$script_str";
+    print "$script_str";
+}
 
 #print "<pre>";
 
@@ -164,7 +171,24 @@ my $menu = "
 <a href=cvsqueryform.cgi?$ENV{QUERY_STRING}>Modify Query</a>
 <br><a href=mailto:$s>Mail everyone on this page</a>
 <NOBR>($pCount people)</NOBR>
+<br><a href=cvsquery.cgi?$ENV{QUERY_STRING}&generateBackoutCVSCommands=1>I want to back out these changes</a>
 ";
+
+if (defined $form{'generateBackoutCVSCommands'}) {
+    print "Content-type: text/plain
+
+# This page can be saved as a shell script and executed.  It should be 
+# run at the top of your CVS work area.  It will update your workarea to 
+# backout the changes selected by your query.
+
+";
+    foreach my $ci (@{$result}) {
+        my $prev_revision = PrevRev($ci->[$CI_REV]);
+        print "cvs update -j$ci->[$CI_REV] -j$prev_revision $ci->[$CI_DIR]/$ci->[$CI_FILE]\n";
+    }
+    exit;
+}
+        
 
 EmitHtmlTitleAndHeader($t, "CVS Checkins", "$menu");
 
