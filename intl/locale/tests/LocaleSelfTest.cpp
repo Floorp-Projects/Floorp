@@ -691,7 +691,7 @@ static void TestDateTimeFormat(nsILocale *locale)
     cout << "\tnsIScriptableDateFormat CreateInstance failed\n";
   }
 
-  const PRUnichar *aUnichar;
+  PRUnichar *aUnichar;
   nsString aString;
   PRUnichar aLocaleUnichar[1];
   *aLocaleUnichar = 0;
