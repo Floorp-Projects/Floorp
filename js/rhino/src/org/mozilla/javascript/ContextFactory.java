@@ -66,6 +66,7 @@ package org.mozilla.javascript;
  *         ContextFactory.initGlobal(new MyFactory());
  *     }
  *
+ *     // Override {@link #makeContext()}
  *     protected Context makeContext()
  *     {
  *         MyContext cx = new MyContext();
@@ -76,6 +77,26 @@ package org.mozilla.javascript;
  *         // each 10000 bytecode instructions
  *         cx.setInstructionObserverThreshold(10000);
  *         return cx;
+ *     }
+ *
+ *     // Override {@link #hasFeature(Context, int)}
+ *     public boolean hasFeature(Context cx, int featureIndex)
+ *     {
+ *         // Turn on maximim compatibility with MSIE scripts
+ *         switch (featureIndex) {
+ *             case Context.FEATURE_NON_ECMA_GET_YEAR:
+ *                 return true;
+ *
+ *             case Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME:
+ *                 return true;
+ *
+ *             case Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER:
+ *                 return true;
+ *
+ *             case Context.FEATURE_PARENT_PROTO_PROPRTIES:
+ *                 return false;
+ *         }
+ *         return super.hasFeature(cx, featureIndex);
  *     }
  * }
  *
@@ -96,25 +117,6 @@ package org.mozilla.javascript;
  *         }
  *     }
  *
- *     // Override {@link Context#hasFeature(int)}
- *     public boolean hasFeature(int featureIndex)
- *     {
- *         // Turn on maximim compatibility with MSIE scripts
- *         switch (featureIndex) {
- *             case Context.FEATURE_NON_ECMA_GET_YEAR:
- *                 return true;
- *
- *             case Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME:
- *                 return true;
- *
- *             case Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER:
- *                 return true;
- *
- *             case Context.FEATURE_PARENT_PROTO_PROPRTIES:
- *                 return false;
- *         }
- *         return super.hasFeature(featureIndex);
- *     }
  * }
  * </pre>
  */
@@ -182,6 +184,54 @@ public class ContextFactory
     protected Context makeContext()
     {
         return new Context();
+    }
+
+    /**
+     * Implementation of {@link Context#hasFeature(int featureIndex)}.
+     * This can be used to customize {@link Context} without introducing
+     * additional subclasses.
+     */
+    protected boolean hasFeature(Context cx, int featureIndex)
+    {
+        int version;
+        switch (featureIndex) {
+          case Context.FEATURE_NON_ECMA_GET_YEAR:
+           /*
+            * During the great date rewrite of 1.3, we tried to track the
+            * evolving ECMA standard, which then had a definition of
+            * getYear which always subtracted 1900.  Which we
+            * implemented, not realizing that it was incompatible with
+            * the old behavior...  now, rather than thrash the behavior
+            * yet again, we've decided to leave it with the - 1900
+            * behavior and point people to the getFullYear method.  But
+            * we try to protect existing scripts that have specified a
+            * version...
+            */
+            version = cx.getLanguageVersion();
+            return (version == Context.VERSION_1_0
+                    || version == Context.VERSION_1_1
+                    || version == Context.VERSION_1_2);
+
+          case Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME:
+            return false;
+
+          case Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER:
+            return false;
+
+          case Context.FEATURE_TO_STRING_AS_SOURCE:
+            version = cx.getLanguageVersion();
+            return version == Context.VERSION_1_2;
+
+          case Context.FEATURE_PARENT_PROTO_PROPRTIES:
+            return true;
+
+          case Context.FEATURE_E4X:
+            version = cx.getLanguageVersion();
+            return (version == Context.VERSION_DEFAULT
+                    || version >= Context.VERSION_1_6);
+        }
+        // It is a bug to call the method with unknown featureIndex
+        throw new IllegalArgumentException(String.valueOf(featureIndex));
     }
 
     protected void onContextCreated(Context cx)

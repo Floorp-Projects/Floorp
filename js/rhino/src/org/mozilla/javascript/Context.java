@@ -2077,6 +2077,12 @@ public class Context
     /**
      * Controls certain aspects of script semantics.
      * Should be overwritten to alter default behavior.
+     * <p>
+     * The default implementation calls
+     * {@link ContextFactory#hasFeature(Context cx, int featureIndex)}
+     * that allows to customize Context behavior without introducing
+     * Context subclasses.  {@link ContextFactory} documentation gives
+     * an example of hasFeature implementation.
      * @param featureIndex feature index to check
      * @return true if the <code>featureIndex</code> feature is turned on
      * @see #FEATURE_NON_ECMA_GET_YEAR
@@ -2088,40 +2094,11 @@ public class Context
      */
     public boolean hasFeature(int featureIndex)
     {
-        switch (featureIndex) {
-            case FEATURE_NON_ECMA_GET_YEAR:
-               /*
-                * During the great date rewrite of 1.3, we tried to track the
-                * evolving ECMA standard, which then had a definition of
-                * getYear which always subtracted 1900.  Which we
-                * implemented, not realizing that it was incompatible with
-                * the old behavior...  now, rather than thrash the behavior
-                * yet again, we've decided to leave it with the - 1900
-                * behavior and point people to the getFullYear method.  But
-                * we try to protect existing scripts that have specified a
-                * version...
-                */
-                return (version == VERSION_1_0
-                        || version == VERSION_1_1
-                        || version == VERSION_1_2);
-
-            case FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME:
-                return false;
-
-            case FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER:
-                return false;
-
-            case FEATURE_TO_STRING_AS_SOURCE:
-                return version == VERSION_1_2;
-
-            case FEATURE_PARENT_PROTO_PROPRTIES:
-                return true;
-
-            case FEATURE_E4X:
-                return version == VERSION_DEFAULT || version >= VERSION_1_6;
+        ContextFactory f = factory;
+        if (f == null) {
+            f = ContextFactory.getGlobal();
         }
-        // It is a bug to call the method with unknown featureIndex
-        throw new IllegalArgumentException(String.valueOf(featureIndex));
+        return f.hasFeature(this, featureIndex);
     }
 
     /**
