@@ -353,7 +353,7 @@ nsresult nsFileSpec::Rename( const char *inNewName)
    return rc;
 }
 
-nsresult nsFileSpec::Copy( const nsFileSpec &inParentDirectory) const
+nsresult nsFileSpec::CopyToDir( const nsFileSpec &inParentDirectory) const
 {
    // Copy the file this filespec represents into the given directory.
    nsresult rc = NS_FILE_FAILURE;
@@ -381,10 +381,10 @@ nsresult nsFileSpec::Copy( const nsFileSpec &inParentDirectory) const
 }
 
 // XXX not sure about the semantics of this method...
-nsresult nsFileSpec::Move( const nsFileSpec &aParentDirectory)
+nsresult nsFileSpec::MoveToDir( const nsFileSpec &aParentDirectory)
 {
    // Copy first & then delete self to avoid drive-clashes
-   nsresult rc = Copy( aParentDirectory);
+   nsresult rc = CopyToDir( aParentDirectory);
    if( NS_SUCCEEDED(rc))
    {
       Delete( PR_FALSE); // XXX why no return code ?

@@ -278,7 +278,7 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 			newDir.CreateDirectory();
 		}
 
-        filePath.Copy(newDir);
+        filePath.CopyToDir(newDir);
     }
 } // nsFileSpec::RecursiveCopy
 
@@ -359,7 +359,7 @@ static int CrudeFileCopy(const char* in, const char* out)
 } // nsFileSpec::Rename
 
 //----------------------------------------------------------------------------------------
-nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
+nsresult nsFileSpec::CopyToDir(const nsFileSpec& inParentDirectory) const
 //----------------------------------------------------------------------------------------
 {
     // We can only copy into a directory, and (for now) can not copy entire directories
@@ -375,10 +375,10 @@ nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
         result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), destPath));
     }
     return result;
-} // nsFileSpec::Copy
+} // nsFileSpec::CopyToDir
 
 //----------------------------------------------------------------------------------------
-nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory)
+nsresult nsFileSpec::MoveToDir(const nsFileSpec& inNewParentDirectory)
 //----------------------------------------------------------------------------------------
 {
     // We can only copy into a directory, and (for now) can not copy entire directories

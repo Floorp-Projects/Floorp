@@ -228,14 +228,19 @@ REGERR ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedF
 
     if ( !doomedFile.Exists() )
     {
-        // Now that we have removed the existing file, we can move the mExtracedFile or mPatchedFile into place.
+        // Now that we have removed the existing file, we can move the replacement file into place.
         nsFileSpec parentofFinalFile;
         nsFileSpec parentofReplacementFile;
 
         doomedFile.GetParent(parentofFinalFile);
         replacementFile.GetParent(parentofReplacementFile);
+
+        // XXX looks dangerous, the replacement file name may NOT be unique in the
+        // target directory if we have to move it! Either we should never move the
+        // files like this (i.e. error if not in the same dir) or we need to take
+        // a little more care in the move.
         if(parentofReplacementFile != parentofFinalFile)
-            result = replacementFile.Move(parentofFinalFile);
+            result = replacementFile.MoveToDir(parentofFinalFile);
         else
         	result = NS_OK;
         	
@@ -249,6 +254,7 @@ REGERR ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedF
     else
     {
 #ifdef _WINDOWS
+        // XXX Holy cow! what the fsck is this? Fix it!
         if (DoWindowsReplaceExistingFileStuff(replacementFile.GetNativePathCString(), doomedFile.GetNativePathCString()) == 0)
             return 0;
 #endif
@@ -362,7 +368,7 @@ void ReplaceScheduledFiles(void)
                         nsFileSpec parentofTarget;
                         targetFile.GetParent(parentofTarget);                                           
                     
-                        nsresult result = replaceFile.Move(parentofTarget);
+                        nsresult result = replaceFile.MoveToDir(parentofTarget);
                         if ( NS_SUCCEEDED(result) )
                         {
                             char* leafName = targetFile.GetLeafName();

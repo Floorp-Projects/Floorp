@@ -398,7 +398,7 @@ nsInstallFileOpItem::NativeFileOpDirRename(nsFileSpec* aSrc, nsString* aTarget)
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileCopy(nsFileSpec* aSrc, nsFileSpec* aTarget)
 {
-  return aSrc->Copy(*aTarget);
+  return aSrc->CopyToDir(*aTarget);
 }
 
 PRInt32
@@ -417,7 +417,7 @@ nsInstallFileOpItem::NativeFileOpFileExecute(nsFileSpec* aTarget, nsString* aPar
 PRInt32
 nsInstallFileOpItem::NativeFileOpFileMove(nsFileSpec* aSrc, nsFileSpec* aTarget)
 {
-  return aSrc->Move(*aTarget);
+  return aSrc->MoveToDir(*aTarget);
 }
 
 PRInt32

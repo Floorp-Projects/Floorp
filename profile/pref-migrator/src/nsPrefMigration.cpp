@@ -1183,7 +1183,7 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
       }
       else {
         // copy the file
-        fileOrDirName.Copy(newPath);
+        fileOrDirName.CopyToDir(newPath);
 
         if (needToRenameFiles) {
           // rename the file, if it matches
@@ -1294,7 +1294,7 @@ nsPrefMigration::RenameAndMove4xPopFilterFile(nsIFileSpec * profilePath)
   PR_FREEIF(popServerName);
 
   // copy the 4.x file from <profile>/mailrule to the <profile>/Mail/<hostname>/mailrule
-  file.Copy(migratedPopDirectory);
+  file.CopyToDir(migratedPopDirectory);
   
   // make migratedPopDirectory point the the copied filter file,
   // <profile>/Mail/<hostname>/mailrule
@@ -1334,7 +1334,7 @@ nsPrefMigration::RenameAndMove4xImapFilterFile(nsIFileSpec * profilePath, const 
   migratedImapDirectory += hostname;
 
   // copy the 4.x file from "<profile>/<hostname> Rules" to <profile>/ImapMail/<hostname>/
-  file.Copy(migratedImapDirectory);
+  file.CopyToDir(migratedImapDirectory);
 
   // make migratedPopDirectory point the the copied filter file,
   // "<profile>/ImapMail/<hostname>/<hostname> Rules"
