@@ -68,7 +68,6 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 
     /* Check for existence of the newer	version	*/
     
-    PRBool versionNewer = PR_FALSE;  // Is this a newer version
     char* qualifiedRegNameString = inComponentName.ToNewCString();
 
     if ( (forceInstall == PR_FALSE ) && (inVInfo !=  "") && ( VR_ValidateComponent( qualifiedRegNameString ) == 0 ) ) 
