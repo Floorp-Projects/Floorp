@@ -41,6 +41,7 @@
 #include "nsXIFConverter.h"
 #include "nsISelection.h"
 #include "nsSelectionRange.h"
+#include "nsHTMLAtoms.h"
 
 #include "nsITextContent.h"
 #include "nsTextReflow.h"/* XXX rename to nsTextRun */
@@ -61,10 +62,6 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 #define WORD_BUF_SIZE 100
 #define TEXT_BUF_SIZE 1000
-
-// XXX PRE sections that are marked "display: inline" will not reflow
-// properly here because the post-measuring logic in ReflowNormal that
-// joins "words" together won't be executed.
 
 // XXX these are a copy of nsTextTransformer's version and they aren't I18N'd!
 #define XP_IS_LOWERCASE(_ch) \
@@ -153,6 +150,73 @@ public:
                             PRInt32* aIndicies, PRInt32 aTextLength,
                             SelectionInfo& aResult);
 
+  struct TextStyle {
+    const nsStyleFont* mFont;
+    const nsStyleText* mText;
+    const nsStyleColor* mColor;
+    nsIFontMetrics* mNormalFont;
+    nsIFontMetrics* mSmallFont;
+    nsIFontMetrics* mLastFont;
+    PRBool mSmallCaps;
+    nscoord mWordSpacing;
+    nscoord mLetterSpacing;
+    nscolor mSelectionTextColor;
+    nscolor mSelectionBGColor;
+    nscoord mSpaceWidth;
+
+    TextStyle(nsIPresContext& aPresContext,
+              nsIRenderingContext& aRenderingContext,
+              nsIStyleContext* sc)
+    {
+      // Get style data
+      mColor = (const nsStyleColor*) sc->GetStyleData(eStyleStruct_Color);
+      mFont = (const nsStyleFont*) sc->GetStyleData(eStyleStruct_Font);
+      mText = (const nsStyleText*) sc->GetStyleData(eStyleStruct_Text);
+      aRenderingContext.SetColor(mColor->mColor);
+
+      // Get the normal font
+      nsFont plainFont(mFont->mFont);
+      plainFont.decorations = NS_FONT_DECORATION_NONE;
+      mNormalFont = aPresContext.GetMetricsFor(plainFont);
+      aRenderingContext.SetFont(mNormalFont);
+      aRenderingContext.GetWidth(' ', mSpaceWidth);
+      mLastFont = mNormalFont;
+
+      // Get the small-caps font if needed
+      mSmallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == plainFont.variant;
+      if (mSmallCaps) {
+        plainFont.size = nscoord(0.7 * plainFont.size);
+        mSmallFont = aPresContext.GetMetricsFor(plainFont);
+      }
+      else {
+        mSmallFont = nsnull;
+      }
+
+      // XXX Get these from style
+      mSelectionBGColor = NS_RGB(0, 0, 0);
+      mSelectionTextColor = NS_RGB(255, 255, 255);
+
+      // Get the word and letter spacing
+      mWordSpacing = 0;
+      mLetterSpacing = 0;
+      if (NS_STYLE_WHITESPACE_PRE != mText->mWhiteSpace) {
+        PRIntn unit = mText->mWordSpacing.GetUnit();
+        if (eStyleUnit_Coord == unit) {
+          mWordSpacing = mText->mWordSpacing.GetCoordValue();
+        }
+        unit = mText->mLetterSpacing.GetUnit();
+        if (eStyleUnit_Coord == unit) {
+          mLetterSpacing = mText->mLetterSpacing.GetCoordValue();
+        }
+      }
+    }
+
+    ~TextStyle() {
+      NS_RELEASE(mNormalFont);
+      NS_IF_RELEASE(mSmallFont);
+    }
+  };
+
   void PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
                           nsTextTransformer& aTransformer,
                           PRInt32* aIndicies,
@@ -161,54 +225,44 @@ public:
                           nscoord& aNewWidth);
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
-                            PRUint8 aDecorations, 
+                            nsIStyleContext* aStyleContext,
+                            TextStyle& aStyle,
                             nscoord aX, nscoord aY, nscoord aWidth);
 
-  void PaintSmallCapsText(nsIPresContext& aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          nscolor aTextColor,
-                          PRUint8 aDecorations,
-                          nscolor aSelectionTextColor,
-                          nscolor aSelectionBGColor,
-                          nscoord dx, nscoord dy);
+  void PaintTextSlowly(nsIPresContext& aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       nsIStyleContext* aStyleContext,
+                       TextStyle& aStyle,
+                       nscoord aX, nscoord aY);
 
-  void RenderSmallCapsString(nsIRenderingContext& aRenderingContext,
-                             PRUint8 aDecorations,
-                             nsIFontMetrics* aNormalFont,
-                             nsIFontMetrics* aSmallFont,
-                             nsIFontMetrics*& aLastFont,
-                             PRUnichar* aBuffer, PRInt32 aLength,
-                             nscoord aX, nscoord aY,
-                             nscoord aWidth);
+  void RenderString(nsIRenderingContext& aRenderingContext,
+                    nsIStyleContext* aStyleContext,
+                    TextStyle& aStyle,
+                    PRUnichar* aBuffer, PRInt32 aLength,
+                    nscoord aX, nscoord aY,
+                    nscoord aWidth);
 
   void MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
-                            nsIFontMetrics* aNormalFont,
-                            nsIFontMetrics* aSmallFont,
+                            TextStyle& aStyle,
                             PRUnichar* aWord,
                             PRInt32 aWordLength,
                             nscoord& aWidthResult);
 
-  void GetWidthSmallCaps(nsIRenderingContext& aRenderingContext,
-                         nsIFontMetrics* aNormalFont,
-                         nsIFontMetrics* aSmallFont,
-                         nsIFontMetrics*& aLastFont,
-                         PRUnichar* aBuffer, PRInt32 aLength,
-                         nscoord& aWidthResult);
+  void GetWidth(nsIRenderingContext& aRenderingContext,
+                TextStyle& aStyle,
+                PRUnichar* aBuffer, PRInt32 aLength,
+                nscoord& aWidthResult);
 
   void PaintUnicodeText(nsIPresContext& aPresContext,
                         nsIRenderingContext& aRenderingContext,
-                        nscolor aTextColor,
-                        PRUint8 aDecorations,
-                        nscolor aSelectionTextColor,
-                        nscolor aSelectionBGColor,
+                        nsIStyleContext* aStyleContext,
+                        TextStyle& aStyle,
                         nscoord dx, nscoord dy);
 
   void PaintAsciiText(nsIPresContext& aPresContext,
                       nsIRenderingContext& aRenderingContext,
-                      nscolor aTextColor,
-                      PRUint8 aDecorations,
-                      nscolor aSelectionTextColor,
-                      nscolor aSelectionBGColor,
+                      nsIStyleContext* aStyleContext,
+                      TextStyle& aStyle,
                       nscoord dx, nscoord dy);
 
   nscoord ComputeTotalWordWidth(nsLineLayout& aLineLayout,
@@ -246,6 +300,10 @@ protected:
 #define TEXT_BLINK_ON        0x04
 
 #define TEXT_IN_WORD         0x08
+
+#define TEXT_FIRST_LINE      0x10
+
+#define TEXT_FIRST_LETTER    0x20
 
 //----------------------------------------------------------------------
 
@@ -438,52 +496,42 @@ TextFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  nsIStyleContext* sc = mStyleContext;
+  nsIStyleContext* firstLineStyle = nsnull;
+  if ((TEXT_FIRST_LETTER | TEXT_FIRST_LINE) & mFlags) {
+    firstLineStyle = aPresContext.
+      ProbePseudoStyleContextFor(nsHTMLAtoms::firstLinePseudo, mContentParent);
+    if (nsnull != firstLineStyle) {
+      sc = firstLineStyle;
+    }
+  }
+
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    sc->GetStyleData(eStyleStruct_Display);
 
   if (disp->mVisible) {
-    // Get style data
-    const nsStyleColor* color =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleFont* font =
-      (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-
-    // Set font and color
-    aRenderingContext.SetColor(color->mColor);
-    nsFont  plainFont(font->mFont);
-    plainFont.decorations = NS_FONT_DECORATION_NONE;
-    aRenderingContext.SetFont(plainFont); // don't let the system paint decorations
-
-    // XXX Get these from style
-    nscolor selbg = NS_RGB(0, 0, 0);
-    nscolor selfg = NS_RGB(255, 255, 255);
-
-    // Select rendering method and render
-    PRBool smallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == plainFont.variant;
-    if (smallCaps) {
-      PaintSmallCapsText(aPresContext, aRenderingContext,
-                         color->mColor, font->mFont.decorations,
-                         selfg, selbg, 0, 0);
+    TextStyle ts(aPresContext, aRenderingContext, sc);
+    if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) ||
+        (NS_STYLE_TEXT_ALIGN_JUSTIFY == ts.mText->mTextAlign)) {
+      PaintTextSlowly(aPresContext, aRenderingContext, sc, ts, 0, 0);
     }
     else {
+      // Choose rendering pathway based on rendering context
+      // performance hint.
       PRUint32 hints = 0;
       aRenderingContext.GetHints(hints);
       if ((TEXT_HAS_MULTIBYTE & mFlags) ||
           (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
         // Use PRUnichar rendering routine
-        PaintUnicodeText(aPresContext, aRenderingContext,
-                         color->mColor, font->mFont.decorations,
-                         selfg, selbg, 0, 0);
+        PaintUnicodeText(aPresContext, aRenderingContext, sc, ts, 0, 0);
       }
       else {
         // Use char rendering routine
-        PaintAsciiText(aPresContext, aRenderingContext,
-                       color->mColor, font->mFont.decorations,
-                       selfg, selbg, 0, 0);
+        PaintAsciiText(aPresContext, aRenderingContext, sc, ts, 0, 0);
       }
     }
   }
-
+  NS_IF_RELEASE(firstLineStyle);
   return NS_OK;
 }
 
@@ -778,7 +826,8 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 
 void 
 TextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
-                                PRUint8 aDecorations, 
+                                nsIStyleContext* aStyleContext,
+                                TextStyle& aTextStyle,
                                 nscoord aX, nscoord aY, nscoord aWidth)
 {
   nsIFontMetrics* fontMetrics = aRenderingContext.GetFontMetrics();
@@ -786,8 +835,9 @@ TextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
     nscolor overColor;
     nscolor underColor;
     nscolor strikeColor;
-    nsIStyleContext*  context = mStyleContext;
-    PRUint8 decorMask = aDecorations;
+    nsIStyleContext*  context = aStyleContext;
+    PRUint8 decorations = aTextStyle.mText->mTextDecoration;
+    PRUint8 decorMask = decorMask;
 
     NS_ADDREF(context);
     do {  // find decoration colors
@@ -821,18 +871,18 @@ TextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
     nscoord size;
     nscoord baseline;
     fontMetrics->GetMaxAscent(baseline);
-    if (aDecorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
+    if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
       fontMetrics->GetUnderline(offset, size);
-      if (aDecorations & NS_FONT_DECORATION_OVERLINE) {
+      if (decorations & NS_FONT_DECORATION_OVERLINE) {
         aRenderingContext.SetColor(overColor);
         aRenderingContext.FillRect(aX, aY, aWidth, size);
       }
-      if (aDecorations & NS_FONT_DECORATION_UNDERLINE) {
+      if (decorations & NS_FONT_DECORATION_UNDERLINE) {
         aRenderingContext.SetColor(underColor);
         aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
       }
     }
-    if (aDecorations & NS_FONT_DECORATION_LINE_THROUGH) {
+    if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
       fontMetrics->GetStrikeout(offset, size);
       aRenderingContext.SetColor(strikeColor);
       aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
@@ -844,10 +894,8 @@ TextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
 void
 TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
-                            nscolor aTextColor,
-                            PRUint8 aDecorations,
-                            nscolor aSelectionTextColor,
-                            nscolor aSelectionBGColor,
+                            nsIStyleContext* aStyleContext,
+                            TextStyle& aTextStyle,
                             nscoord dx, nscoord dy)
 {
   nsIPresShell* shell = aPresContext.GetShell();
@@ -880,17 +928,18 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.DrawString(text, textLength, dx, dy, width);
-      PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, width);
+      PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                           dx, dy, width);
     }
     else {
       SelectionInfo si;
       ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
 
       nscoord textWidth;
-      nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
       if (si.mEmptySelection) {
         aRenderingContext.DrawString(text, textLength, dx, dy, width);
-        PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, width);
+        PaintTextDecorations(aRenderingContext, aStyleContext,
+                             aTextStyle, dx, dy, width);
         aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
@@ -905,8 +954,8 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                                      textWidth);
           aRenderingContext.DrawString(text, si.mStartOffset,
                                        x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
-                               textWidth);
+          PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                               x, dy, textWidth);
           x += textWidth;
         }
         PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
@@ -916,14 +965,14 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                                      PRUint32(secondLen), textWidth);
 
           // Render second (selected) section
-          aRenderingContext.SetColor(aSelectionBGColor);
+          aRenderingContext.SetColor(aTextStyle.mSelectionBGColor);
           aRenderingContext.FillRect(x, dy, textWidth, mRect.height);
-          aRenderingContext.SetColor(aSelectionTextColor);
+          aRenderingContext.SetColor(aTextStyle.mSelectionTextColor);
           aRenderingContext.DrawString(text + si.mStartOffset, secondLen,
                                        x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
-                               textWidth);
-          aRenderingContext.SetColor(aTextColor);
+          PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                               x, dy, textWidth);
+          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
           x += textWidth;
         }
         if (textLength != si.mEndOffset) {
@@ -934,11 +983,10 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                                      textWidth);
           aRenderingContext.DrawString(text + si.mEndOffset,
                                        thirdLen, x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
-                               textWidth);
+          PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                               x, dy, textWidth);
         }
       }
-      NS_RELEASE(fm);
     }
   }
 
@@ -954,14 +1002,12 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
 }
 
 void
-TextFrame::RenderSmallCapsString(nsIRenderingContext& aRenderingContext,
-                                 PRUint8 aDecorations,
-                                 nsIFontMetrics* aNormalFont,
-                                 nsIFontMetrics* aSmallFont,
-                                 nsIFontMetrics*& aLastFont,
-                                 PRUnichar* aBuffer, PRInt32 aLength,
-                                 nscoord aX, nscoord aY,
-                                 nscoord aWidth)
+TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
+                        nsIStyleContext* aStyleContext,
+                        TextStyle& aTextStyle,
+                        PRUnichar* aBuffer, PRInt32 aLength,
+                        nscoord aX, nscoord aY,
+                        nscoord aWidth)
 {
   PRUnichar buf[TEXT_BUF_SIZE];
   PRUnichar* bp0 = buf;
@@ -970,85 +1016,129 @@ TextFrame::RenderSmallCapsString(nsIRenderingContext& aRenderingContext,
   }
   PRUnichar* bp = bp0;
 
-  nscoord smallY;
-  nscoord normalAscent, smallAscent;
-  aNormalFont->GetMaxAscent(normalAscent);
-  aSmallFont->GetMaxAscent(smallAscent);
-  if (normalAscent > smallAscent) {
-    smallY = aY + normalAscent - smallAscent;
+  PRBool spacing = (0 != aTextStyle.mLetterSpacing) ||
+    (0 != aTextStyle.mWordSpacing);
+  nscoord spacingMem[TEXT_BUF_SIZE];
+  PRIntn* sp0 = spacingMem; 
+  if (spacing && (aLength > TEXT_BUF_SIZE)) {
+    sp0 = new nscoord[aLength];
+  }
+  PRIntn* sp = sp0;
+
+  nscoord smallY = aY;
+  if (aTextStyle.mSmallCaps) {
+    nscoord normalAscent, smallAscent;
+    aTextStyle.mNormalFont->GetMaxAscent(normalAscent);
+    aTextStyle.mSmallFont->GetMaxAscent(smallAscent);
+    if (normalAscent > smallAscent) {
+      smallY = aY + normalAscent - smallAscent;
+    }
   }
 
-  nsIFontMetrics* lastFont = aLastFont;
-  nscoord w;
+  nsIFontMetrics* lastFont = aTextStyle.mLastFont;
+  nscoord lastY = aY;
+  if (lastFont == aTextStyle.mSmallFont) {
+    lastY = smallY;
+  }
   PRInt32 pendingCount;
   PRUnichar* runStart = bp;
+  nscoord charWidth, width = 0;
   for (; --aLength >= 0; aBuffer++) {
     nsIFontMetrics* nextFont;
+    nscoord nextY, glyphWidth;
     PRUnichar ch = *aBuffer;
-    if (XP_IS_LOWERCASE(ch)) {
-      nextFont = aSmallFont;
+    if (aTextStyle.mSmallCaps && XP_IS_LOWERCASE(ch)) {
+      nextFont = aTextStyle.mSmallFont;
+      nextY = smallY;
       ch = XP_TO_UPPER(ch);
+      if (lastFont != aTextStyle.mSmallFont) {
+        aRenderingContext.SetFont(aTextStyle.mSmallFont);
+        aRenderingContext.GetWidth(ch, charWidth);
+        aRenderingContext.SetFont(aTextStyle.mNormalFont);
+      }
+      else {
+        aRenderingContext.GetWidth(ch, charWidth);
+      }
+      glyphWidth = charWidth + aTextStyle.mLetterSpacing;
+    }
+    else if (ch == ' ') {
+      nextFont = aTextStyle.mNormalFont;
+      nextY = aY;
+      glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing;
     }
     else {
-      nextFont = aNormalFont;
+      if (lastFont != aTextStyle.mNormalFont) {
+        aRenderingContext.SetFont(aTextStyle.mNormalFont);
+        aRenderingContext.GetWidth(ch, charWidth);
+        aRenderingContext.SetFont(aTextStyle.mSmallFont);
+      }
+      else {
+        aRenderingContext.GetWidth(ch, charWidth);
+      }
+      nextFont = aTextStyle.mNormalFont;
+      nextY = aY;
+      glyphWidth = charWidth + aTextStyle.mLetterSpacing;
     }
     if (nextFont != lastFont) {
       pendingCount = bp - runStart;
       if (0 != pendingCount) {
         // Measure previous run of characters using the previous font
-        aRenderingContext.GetWidth(runStart, pendingCount, w);
-        aRenderingContext.DrawString(runStart, pendingCount, aX,
-                                     lastFont == aNormalFont ? aY : smallY,
-                                     w);
-        aX += w;
-        runStart = bp;
+        aRenderingContext.DrawString(runStart, pendingCount,
+                                     aX, lastY, width,
+                                     spacing ? sp0 : nsnull);
+        PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                             aX, lastY, width);
+        aX += width;
+        runStart = bp = bp0;
+        sp = sp0;
+        width = 0;
       }
       aRenderingContext.SetFont(nextFont);
       lastFont = nextFont;
+      lastY = nextY;
     }
     *bp++ = ch;
+    *sp++ = glyphWidth;
+    width += glyphWidth;
   }
   pendingCount = bp - runStart;
   if (0 != pendingCount) {
     // Measure previous run of characters using the previous font
-    aRenderingContext.GetWidth(runStart, pendingCount, w);
-    aRenderingContext.DrawString(runStart, pendingCount, aX,
-                                 lastFont == aNormalFont ? aY : smallY, w);
+    aRenderingContext.DrawString(runStart, pendingCount, aX, lastY, width,
+                                 spacing ? sp0 : nsnull);
+    PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                         aX, lastY, width);
   }
-  aLastFont = lastFont;
+  aTextStyle.mLastFont = lastFont;
 
   if (bp0 != buf) {
     delete [] bp0;
   }
-
-  PaintTextDecorations(aRenderingContext, aDecorations, aX, aY, aWidth);
+  if (sp0 != spacingMem) {
+    delete [] sp0;
+  }
 }
 
-void
+inline void
 TextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
-                                nsIFontMetrics* aNormalFont,
-                                nsIFontMetrics* aSmallFont,
+                                TextStyle& aTextStyle,
                                 PRUnichar* aWord,
                                 PRInt32 aWordLength,
                                 nscoord& aWidthResult)
 {
   nsIRenderingContext& rc = *aReflowState.rendContext;
-  nsIFontMetrics* lastFont = aNormalFont;
-  GetWidthSmallCaps(rc, aNormalFont, aSmallFont, lastFont,
-                    aWord, aWordLength,
-                    aWidthResult);
-  if (lastFont != aNormalFont) {
-    rc.SetFont(aNormalFont);
+  GetWidth(rc, aTextStyle, aWord, aWordLength, aWidthResult);
+  if (aTextStyle.mLastFont != aTextStyle.mNormalFont) {
+    rc.SetFont(aTextStyle.mNormalFont);
+    aTextStyle.mLastFont = aTextStyle.mNormalFont;
   }
 }
 
 void
-TextFrame::GetWidthSmallCaps(nsIRenderingContext& aRenderingContext,
-                             nsIFontMetrics* aNormalFont,
-                             nsIFontMetrics* aSmallFont,
-                             nsIFontMetrics*& aLastFont,
-                             PRUnichar* aBuffer, PRInt32 aLength,
-                             nscoord& aWidthResult)
+TextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
+                    TextStyle& aTextStyle,
+                    PRUnichar* aBuffer, PRInt32 aLength,
+                    nscoord& aWidthResult)
 {
   PRUnichar buf[TEXT_BUF_SIZE];
   PRUnichar* bp0 = buf;
@@ -1057,19 +1147,19 @@ TextFrame::GetWidthSmallCaps(nsIRenderingContext& aRenderingContext,
   }
   PRUnichar* bp = bp0;
 
-  nsIFontMetrics* lastFont = aLastFont;
+  nsIFontMetrics* lastFont = aTextStyle.mLastFont;
   nscoord w, sum = 0;
   PRInt32 pendingCount;
   PRUnichar* runStart = bp;
   for (; --aLength >= 0; aBuffer++) {
     nsIFontMetrics* nextFont;
     PRUnichar ch = *aBuffer;
-    if (XP_IS_LOWERCASE(ch)) {
-      nextFont = aSmallFont;
+    if (aTextStyle.mSmallCaps && XP_IS_LOWERCASE(ch)) {
+      nextFont = aTextStyle.mSmallFont;
       ch = XP_TO_UPPER(ch);
     }
     else {
-      nextFont = aNormalFont;
+      nextFont = aTextStyle.mNormalFont;
     }
     if (nextFont != lastFont) {
       pendingCount = bp - runStart;
@@ -1093,18 +1183,16 @@ TextFrame::GetWidthSmallCaps(nsIRenderingContext& aRenderingContext,
   if (bp0 != buf) {
     delete [] bp0;
   }
-  aLastFont = lastFont;
+  aTextStyle.mLastFont = lastFont;
   aWidthResult = sum;
 }
 
 void
-TextFrame::PaintSmallCapsText(nsIPresContext& aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              nscolor aTextColor,
-                              PRUint8 aDecorations,
-                              nscolor aSelectionTextColor,
-                              nscolor aSelectionBGColor,
-                              nscoord dx, nscoord dy)
+TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
+                           nsIRenderingContext& aRenderingContext,
+                           nsIStyleContext* aStyleContext,
+                           TextStyle& aTextStyle,
+                           nscoord dx, nscoord dy)
 {
   nsIPresShell* shell = aPresContext.GetShell();
   nsIDocument* doc = shell->GetDocument();
@@ -1130,40 +1218,24 @@ TextFrame::PaintSmallCapsText(nsIPresContext& aPresContext,
                      displaySelection ? ip : nsnull,
                      paintBuf, textLength, width);
 
-  nsIFontMetrics* normal;
-  nsIFontMetrics* small;
-  normal = aRenderingContext.GetFontMetrics();
-
-  // Get small-caps font that is 70% the size of the normal font
-  const nsFont* normalFont;
-  normal->GetFont(normalFont);
-  nsFont newFont(*normalFont);
-  newFont.size = nscoord(0.7 * newFont.size);
-  small = aPresContext.GetMetricsFor(newFont);
-
-  nsIFontMetrics* lastFont = normal;
-
   PRUnichar* text = paintBuf;
   if (0 != textLength) {
     if (!displaySelection) {
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
-      RenderSmallCapsString(aRenderingContext, aDecorations,
-                            normal, small, lastFont,
-                            text, textLength, dx, dy, width);
+      RenderString(aRenderingContext, aStyleContext, aTextStyle,
+                   text, textLength, dx, dy, width);
     }
     else {
       SelectionInfo si;
       ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
 
       nscoord textWidth;
-      nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
       if (si.mEmptySelection) {
-        RenderSmallCapsString(aRenderingContext, aDecorations,
-                              normal, small, lastFont,
-                              text, textLength, dx, dy, width);
-        GetWidthSmallCaps(aRenderingContext, normal, small, lastFont,
-                          text, PRUint32(si.mStartOffset), textWidth);
+        RenderString(aRenderingContext, aStyleContext, aTextStyle,
+                     text, textLength, dx, dy, width);
+        GetWidth(aRenderingContext, aTextStyle,
+                 text, PRUint32(si.mStartOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
                               CURSOR_COLOR);
@@ -1173,47 +1245,43 @@ TextFrame::PaintSmallCapsText(nsIPresContext& aPresContext,
 
         if (0 != si.mStartOffset) {
           // Render first (unselected) section
-          GetWidthSmallCaps(aRenderingContext, normal, small, lastFont,
-                            text, PRUint32(si.mStartOffset),
-                            textWidth);
-          RenderSmallCapsString(aRenderingContext, aDecorations,
-                                normal, small, lastFont,
-                                text, si.mStartOffset,
-                                x, dy, textWidth);
+          GetWidth(aRenderingContext, aTextStyle,
+                   text, PRUint32(si.mStartOffset),
+                   textWidth);
+          RenderString(aRenderingContext, aStyleContext, aTextStyle,
+                       text, si.mStartOffset,
+                       x, dy, textWidth);
           x += textWidth;
         }
         PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
         if (0 != secondLen) {
           // Get the width of the second (selected) section
-          GetWidthSmallCaps(aRenderingContext, normal, small, lastFont,
-                            text + si.mStartOffset,
-                            PRUint32(secondLen), textWidth);
+          GetWidth(aRenderingContext, aTextStyle,
+                   text + si.mStartOffset,
+                   PRUint32(secondLen), textWidth);
 
           // Render second (selected) section
-          aRenderingContext.SetColor(aSelectionBGColor);
+          aRenderingContext.SetColor(aTextStyle.mSelectionBGColor);
           aRenderingContext.FillRect(x, dy, textWidth, mRect.height);
-          aRenderingContext.SetColor(aSelectionTextColor);
-          RenderSmallCapsString(aRenderingContext, aDecorations,
-                                normal, small, lastFont,
-                                text + si.mStartOffset, secondLen,
-                                x, dy, textWidth);
-          aRenderingContext.SetColor(aTextColor);
+          aRenderingContext.SetColor(aTextStyle.mSelectionTextColor);
+          RenderString(aRenderingContext, aStyleContext, aTextStyle,
+                       text + si.mStartOffset, secondLen,
+                       x, dy, textWidth);
+          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
           x += textWidth;
         }
         if (textLength != si.mEndOffset) {
           PRInt32 thirdLen = textLength - si.mEndOffset;
 
           // Render third (unselected) section
-          GetWidthSmallCaps(aRenderingContext, normal, small, lastFont,
-                            text + si.mEndOffset, PRUint32(thirdLen),
-                            textWidth);
-          RenderSmallCapsString(aRenderingContext, aDecorations,
-                                normal, small, lastFont,
-                                text + si.mEndOffset,
-                                thirdLen, x, dy, textWidth);
+          GetWidth(aRenderingContext, aTextStyle,
+                   text + si.mEndOffset, PRUint32(thirdLen),
+                   textWidth);
+          RenderString(aRenderingContext, aStyleContext, aTextStyle,
+                       text + si.mEndOffset,
+                       thirdLen, x, dy, textWidth);
         }
       }
-      NS_RELEASE(fm);
     }
   }
 
@@ -1231,10 +1299,8 @@ TextFrame::PaintSmallCapsText(nsIPresContext& aPresContext,
 void
 TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,
-                          nscolor aTextColor,
-                          PRUint8 aDecorations,
-                          nscolor aSelectionTextColor,
-                          nscolor aSelectionBGColor,
+                          nsIStyleContext* aStyleContext,
+                          TextStyle& aTextStyle,
                           nscoord dx, nscoord dy)
 {
   nsIPresShell* shell = aPresContext.GetShell();
@@ -1278,17 +1344,18 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.DrawString(text, textLength, dx, dy, width);
-      PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, width);
+      PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                           dx, dy, width);
     }
     else {
       SelectionInfo si;
       ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
 
       nscoord textWidth;
-      nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
       if (si.mEmptySelection) {
         aRenderingContext.DrawString(text, textLength, dx, dy, width);
-        PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, width);
+        PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                             dx, dy, width);
         aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
@@ -1303,8 +1370,8 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                                      textWidth);
           aRenderingContext.DrawString(text, si.mStartOffset,
                                        x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
-                               textWidth);
+          PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                               x, dy, textWidth);
           x += textWidth;
         }
         PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
@@ -1314,14 +1381,14 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                                      PRUint32(secondLen), textWidth);
 
           // Render second (selected) section
-          aRenderingContext.SetColor(aSelectionBGColor);
+          aRenderingContext.SetColor(aTextStyle.mSelectionBGColor);
           aRenderingContext.FillRect(x, dy, textWidth, mRect.height);
-          aRenderingContext.SetColor(aSelectionTextColor);
+          aRenderingContext.SetColor(aTextStyle.mSelectionTextColor);
           aRenderingContext.DrawString(text + si.mStartOffset, secondLen,
                                        x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
-                               textWidth);
-          aRenderingContext.SetColor(aTextColor);
+          PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                               x, dy, textWidth);
+          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
           x += textWidth;
         }
         if (textLength != si.mEndOffset) {
@@ -1332,11 +1399,10 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                                      textWidth);
           aRenderingContext.DrawString(text + si.mEndOffset,
                                        thirdLen, x, dy, textWidth);
-          PaintTextDecorations(aRenderingContext, aDecorations, x, dy,
-                               textWidth);
+          PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
+                               x, dy, textWidth);
         }
       }
-      NS_RELEASE(fm);
     }
   }
 
@@ -1517,41 +1583,38 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
     startingOffset = prev->mContentOffset + prev->mContentLength;
   }
 
-  const nsStyleFont* font = (const nsStyleFont*)
-    mStyleContext->GetStyleData(eStyleStruct_Font);
-  const nsStyleText* text = (const nsStyleText*)
-    mStyleContext->GetStyleData(eStyleStruct_Text);
+  // Find out what style context should be used
+  nsLineLayout& lineLayout = *aReflowState.lineLayout;
+  nsIStyleContext* firstLineStyle = nsnull;
+  nsIStyleContext* sc = mStyleContext;
+  if (0 == lineLayout.GetLineNumber()) {
+    firstLineStyle = lineLayout.mPresContext.
+      ProbePseudoStyleContextFor(nsHTMLAtoms::firstLinePseudo, mContentParent);
+    if (nsnull != firstLineStyle) {
+      sc = firstLineStyle;
+    }
+  }
+
+  TextStyle ts(aPresContext, *aReflowState.rendContext, sc);
 
   // Initialize mFlags (without destroying the TEXT_BLINK_ON bit) bits
   // that are filled in by the reflow routines.
   mFlags &= TEXT_BLINK_ON;
-  if (font->mFont.decorations & NS_STYLE_TEXT_DECORATION_BLINK) {
+  if (ts.mFont->mFont.decorations & NS_STYLE_TEXT_DECORATION_BLINK) {
     if (0 == (mFlags & TEXT_BLINK_ON)) {
       mFlags |= TEXT_BLINK_ON;
       gTextBlinker->AddFrame(this);
     }
   }
-
-  nsLineLayout& lineLayout = *aReflowState.lineLayout;
-  nsIFontMetrics* fm = lineLayout.mPresContext.GetMetricsFor(font->mFont);
-  nscoord spaceWidth;
-  aReflowState.rendContext->SetFont(fm);
-  aReflowState.rendContext->GetWidth(' ', spaceWidth);
-  PRBool wrapping = NS_STYLE_WHITESPACE_NORMAL == text->mWhiteSpace;
-
-  // Prepare for small-font handling
-  nsIFontMetrics* smallFont = nsnull;
-  PRBool smallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == font->mFont.variant;
-  if (smallCaps) {
-    // Get small-caps font that is 70% the size of the normal font
-    nsFont newFont(font->mFont);
-    newFont.size = nscoord(0.7 * newFont.size);
-    smallFont = lineLayout.mPresContext.GetMetricsFor(newFont);
+  if (nsnull != firstLineStyle) {
+    mFlags |= TEXT_FIRST_LINE;
   }
+
+  PRBool wrapping = NS_STYLE_WHITESPACE_NORMAL == ts.mText->mWhiteSpace;
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
-  if (NS_STYLE_WHITESPACE_PRE != text->mWhiteSpace) {
+  if (NS_STYLE_WHITESPACE_PRE != ts.mText->mWhiteSpace) {
     if (lineLayout.GetSkipLeadingWhiteSpace()) {
       skipWhitespace = PR_TRUE;
     }
@@ -1563,6 +1626,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   nscoord prevMaxWordWidth = 0;
   PRBool endsInWhitespace = PR_FALSE;
   PRBool endsInNewline = PR_FALSE;
+  PRBool firstWord = PR_TRUE;
 
   // Setup text transformer to transform this frames text content
   nsTextRun* textRun = lineLayout.FindTextRunFor(this);
@@ -1621,17 +1685,20 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
       if ('\t' == bp[0]) {
         // Expand tabs to the proper width
         wordLen = 8 - (7 & column);
-        width = spaceWidth * wordLen;
+        width = ts.mSpaceWidth * wordLen;
       }
       else {
-        width = spaceWidth;
+        width = ts.mSpaceWidth + ts.mWordSpacing;/* XXX simplistic */
       }
     } else {
-      if (smallCaps) {
-        MeasureSmallCapsText(aReflowState, fm, smallFont, bp, wordLen, width);
+      if (ts.mSmallCaps) {
+        MeasureSmallCapsText(aReflowState, ts, bp, wordLen, width);
       }
       else {
         aReflowState.rendContext->GetWidth(bp, wordLen, width);
+      }
+      if (ts.mLetterSpacing) {
+        width += ts.mLetterSpacing * wordLen;
       }
       skipWhitespace = PR_FALSE;
       lastWordWidth = width;
@@ -1726,9 +1793,6 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
       }
     }
   }
-  if (smallCaps) {
-    NS_RELEASE(smallFont);
-  }
   lineLayout.SetColumn(column);
 
   if (0 == x) {
@@ -1749,9 +1813,9 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
     aMetrics.descent = 0;
   }
   else {
-    fm->GetHeight(aMetrics.height);
-    fm->GetMaxAscent(aMetrics.ascent);
-    fm->GetMaxDescent(aMetrics.descent);
+    ts.mNormalFont->GetHeight(aMetrics.height);
+    ts.mNormalFont->GetMaxAscent(aMetrics.ascent);
+    ts.mNormalFont->GetMaxDescent(aMetrics.descent);
   }
   if (!wrapping) {
     maxWordWidth = x;
@@ -1760,7 +1824,10 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
     aMetrics.maxElementSize->width = maxWordWidth;
     aMetrics.maxElementSize->height = aMetrics.height;
   }
-  NS_RELEASE(fm);
+
+  if (nsnull != firstLineStyle) {
+    NS_RELEASE(firstLineStyle);
+  }
 
   // Set content offset and length
   mContentOffset = startingOffset;
@@ -1867,32 +1934,25 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
   }
   aStop = contentLen < tx.GetContentLength();
 
-  const nsStyleFont* font;
-  aTextFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
-  if (nsnull != font) {
+  nsIStyleContext* sc;
+  if ((NS_OK == aTextFrame->GetStyleContext(&aLineLayout.mPresContext, sc)) &&
+      (nsnull != sc)) {
     // Measure the piece of text. Note that we have to select the
     // appropriate font into the text first because the rendering
     // context has our font in it, not the font that aText is using.
     nscoord width;
     nsIRenderingContext& rc = *aReflowState.rendContext;
     nsIFontMetrics* oldfm = rc.GetFontMetrics();
-    nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(font->mFont);
-    rc.SetFont(fm);
-    if (NS_STYLE_FONT_VARIANT_SMALL_CAPS == font->mFont.variant) {
-      // Get small-caps font that is 70% the size of the normal font
-      nsFont newFont(font->mFont);
-      newFont.size = nscoord(0.7 * newFont.size);
-      nsIFontMetrics* smallFont =
-        aLineLayout.mPresContext.GetMetricsFor(newFont);
-      MeasureSmallCapsText(aReflowState, fm, smallFont, buf, wordLen, width);
-      NS_RELEASE(smallFont);
+
+    TextStyle ts(aLineLayout.mPresContext, rc, sc);
+    if (ts.mSmallCaps) {
+      MeasureSmallCapsText(aReflowState, ts, buf, wordLen, width);
     }
     else {
       rc.GetWidth(buf, wordLen, width);
     }
     rc.SetFont(oldfm);
-    NS_RELEASE(oldfm);
-    NS_RELEASE(fm);
+    NS_RELEASE(sc);
 
 #ifdef DEBUG_WORD_WRAPPING
     nsAutoString tmp(bp, wordLen);
