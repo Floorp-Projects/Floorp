@@ -2401,6 +2401,21 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
           nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mDocument));
           nsDoc->SetBoxObjectFor(domElement, nsnull);
         }
+        
+        // mControllers can own objects that are implemented
+        // in JavaScript (such as some implementations of
+        // nsIControllers.  These objects prevent their global
+        // object's script object from being garbage collected,
+        // which means JS continues to hold an owning reference
+        // to the GlobalWindowImpl, which owns the document,
+        // which owns this content.  That's a cycle, so we break
+        // it here.  (It might be better to break this by releasing
+        // mDocument in GlobalWindowImpl::SetDocShell, but I'm not
+        // sure whether that would fix all possible cycles through
+        // mControllers.)
+        if (!aDocument && mSlots) {
+            mSlots->mControllers = nsnull; // Forces release
+        }
 
         if (mListenerManager)
           mListenerManager->SetListenerTarget(nsnull);
