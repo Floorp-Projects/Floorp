@@ -299,9 +299,9 @@ LibartGradient(ArtRender *render, nsIDOMSVGMatrix *aMatrix,
   PRUint32 type;
   aGrad->GetGradientType(&type);
   if (type == nsISVGGradient::SVG_LINEAR_GRADIENT)
-    return LibartLinearGradient(render, aGrad, affine);
+    LibartLinearGradient(render, aGrad, affine);
   else if (type == nsISVGGradient::SVG_RADIAL_GRADIENT)
-    return LibartRadialGradient(render, aGrad, affine);
+    LibartRadialGradient(render, aGrad, affine);
 
   return;
 }
