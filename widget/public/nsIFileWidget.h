@@ -27,10 +27,14 @@
 
 
 /**
- * File selector mode { load | save }
+ * File selector mode 
  */
 
-enum nsMode { eMode_load, eMode_save };
+enum nsMode {
+        /// Load a file or directory
+      eMode_load,
+        /// Save a file or directory
+      eMode_save };
 
 /**
  * File selector widget.
@@ -72,7 +76,7 @@ public:
  /**
   * Show File Dialog. The dialog is displayed modally.
   *
-  * @return     PR_TRUE if user selects <OK>, PR_FALSE if <CANCEL> is selected
+  * @return PR_TRUE if user selects OK, PR_FALSE if user selects CANCEL
   *
   */
 

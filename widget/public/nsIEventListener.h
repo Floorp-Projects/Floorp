@@ -21,7 +21,7 @@
 
 #include "nsGUIEvent.h"
 
-/*
+/**
  * Event listener interface.
  * Alternative to a callback for recieving events.
  */
@@ -33,7 +33,7 @@ public:
  /**
   * Processes all events. 
   * If a mouse listener is registered this method will not process mouse events. 
-  * @param anEvent the event to process. @see nsGUIEvent.h for event types.
+  * @param anEvent the event to process. See nsGUIEvent.h for event types.
   */
 
   virtual nsEventStatus ProcessEvent(const nsGUIEvent & anEvent) = 0;

@@ -35,7 +35,7 @@ class nsIListBox : public nsIListWidget {
 public:
 
     /**
-     * Set the ListBox to be multi-select.
+     * Set the listbox to be multi-select.
      * @param   aMultiple PR_TRUE can have multiple selections. PR_FALSE single
      *          selections only.
      * @return  void
