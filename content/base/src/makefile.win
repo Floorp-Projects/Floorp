@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  imglib2 \
 		  gfx2 \
+		  webBrowser_core\
 		  $(NULL)
 
 CPP_OBJS=					\

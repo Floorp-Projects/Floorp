@@ -41,6 +41,7 @@ REQUIRES = \
   webshell \
   widget \
   xpcom \
+  webBrowser_core \
   $(NULL)
 
 CPP_OBJS = \
