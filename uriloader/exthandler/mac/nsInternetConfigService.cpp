@@ -32,6 +32,22 @@
 #include "nsMimeTypes.h"
 #include <TextUtils.h>
 
+// helper converter function.....
+static void ConvertCharStringToStr255( char* inString, Str255& outString  )
+{
+		if ( inString == NULL )
+			return;
+		PRInt32 len = nsCRT::strlen(inString);
+		NS_ASSERTION( len<= 255 , " String is too big");
+		if ( len> 255 )
+		{
+			len = 255;
+			
+		}
+		memcpy(&outString[1], inString, len);
+		outString[0] = len;
+}
+
 /* Define Class IDs */
 static NS_DEFINE_CID(kICServiceCID, NS_INTERNETCONFIGSERVICE_CID);
 
@@ -181,25 +197,75 @@ OSStatus nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, co
   return err;
 }
 
-/* void FillInMIMEInfo (in string mimetype, in nsIURI uri, out nsIMIMEInfo mimeinfo); */
-NS_IMETHODIMP nsInternetConfigService::FillInMIMEInfo(const char *mimetype, nsIURL *url, nsIMIMEInfo **mimeinfo)
+nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIMIMEInfo ** mimeinfo)
+{
+  // create a mime info object and we'll fill it in based on the values from IC mapping entry
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMIMEInfo> info (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
+  if (info)
+  {
+    nsCAutoString mimetype ((char *)&entry.MIMEType[1], entry.MIMEType[0]);
+    info->SetMIMEType(mimetype.GetBuffer());
+    
+    // convert entry.extension which is a Str255 
+    // don't forget to remove the '.' in front of the file extension....
+    nsCAutoString temp((char *)&entry.extension[2], (int)entry.extension[0]-1);
+    info->AppendExtension(temp);
+    info->SetMacType(entry.fileType);
+    info->SetMacCreator(entry.fileCreator);
+    temp.Assign((char *) &entry.entryName[1], entry.entryName[0]);
+    info->SetDescription(NS_ConvertASCIItoUCS2(temp.GetBuffer()).get());
+    
+    temp.Assign((char *) &entry.postAppName[1], entry.postAppName[0]);
+    info->SetApplicationDescription(NS_ConvertASCIItoUCS2(temp.GetBuffer()).get());
+    
+    if (entry.flags & kICMapPostMask)
+    {
+       // there is a post processor app
+       info->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+       nsCID cid = NS_LOCAL_FILE_CID;
+       nsCOMPtr<nsILocalFileMac> file (do_CreateInstance(cid));
+       if (file)
+       {
+         rv = file->InitFindingAppByCreatorCode(entry.postCreator);
+         if (rv == NS_OK)
+         {
+           //info->SetAlwaysAskBeforeHandling(PR_FALSE);
+           nsCOMPtr<nsIFile> nsfile = do_QueryInterface(file, &rv);
+           if (rv == NS_OK)
+             info->SetPreferredApplicationHandler(nsfile);
+         }
+       }
+    } 
+    else
+    {
+      // there isn't a post processor app so set the preferred action to be save to disk.
+      info->SetPreferredAction(nsIMIMEInfo::saveToDisk);
+    }
+    
+    *mimeinfo = info;
+    NS_IF_ADDREF(*mimeinfo);
+ }
+ else // we failed to allocate the info object...
+   rv = NS_ERROR_FAILURE;
+   
+ return rv;
+}
+
+/* void FillInMIMEInfo (in string mimetype, in string fileExtension, out nsIMIMEInfo mimeinfo); */
+NS_IMETHODIMP nsInternetConfigService::FillInMIMEInfo(const char *mimetype, const char * aFileExtension, nsIMIMEInfo **mimeinfo)
 {
   nsresult rv;
   ICMapEntry entry;
-  nsCAutoString fileExtension;
   
   NS_ENSURE_ARG_POINTER(mimeinfo);
-  NS_ENSURE_ARG_POINTER(url);
   *mimeinfo = nsnull;
 
-  // if url is passed in, use it to get file extension  
-  if (url)
+  if (aFileExtension)
   {
-    nsXPIDLCString extension;
-    url->GetFileExtension(getter_Copies(extension));
-
+    nsCAutoString fileExtension;
     fileExtension.Assign(".");  
-    fileExtension.Append(extension);
+    fileExtension.Append(aFileExtension);
     rv = GetMappingForMIMEType(mimetype, fileExtension, &entry);
   }
   else
@@ -208,43 +274,8 @@ NS_IMETHODIMP nsInternetConfigService::FillInMIMEInfo(const char *mimetype, nsIU
   }
   if (rv == NS_OK)
   {
-    // create a mime info object and we'll fill it in based on the values from IC mapping entry
-    nsCOMPtr<nsIMIMEInfo> info (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
+	rv = FillMIMEInfoForICEntry(entry, mimeinfo);
 
-    if (info)
-    {
-      info->SetMIMEType(mimetype);
-      // convert entry.extension which is a Str255
-      nsCString temp((char *)&entry.extension[1], (int)entry.extension[0]);
-      info->AppendExtension(temp);
-      info->SetMacType(entry.fileType);
-      info->SetMacCreator(entry.fileCreator);
-
-      if (entry.flags & kICMapPostMask)
-      {
-        // there is a post processor app
-        info->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-        nsCID cid = NS_LOCAL_FILE_CID;
-        nsCOMPtr<nsILocalFileMac> file (do_CreateInstance(cid));
-        if (file)
-        {
-          rv = file->InitFindingAppByCreatorCode(entry.postCreator);
-          if (rv == NS_OK)
-          {
-            //info->SetAlwaysAskBeforeHandling(PR_FALSE);
-            nsCOMPtr<nsIFile> nsfile = do_QueryInterface(file, &rv);
-            if (rv == NS_OK)
-              info->SetPreferredApplicationHandler(nsfile);
-          }
-        }
-      }
-      *mimeinfo = info;
-      NS_IF_ADDREF(*mimeinfo);
-    }
-    else
-    {
-      rv = NS_ERROR_FAILURE;
-    }
   }
   else
   {
@@ -252,6 +283,48 @@ NS_IMETHODIMP nsInternetConfigService::FillInMIMEInfo(const char *mimetype, nsIU
   }
   return rv;
 }
+
+NS_IMETHODIMP nsInternetConfigService::GetMIMEInfoFromExtension(const char *aFileExt, nsIMIMEInfo **_retval)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  ICInstance instance = nsInternetConfig::GetInstance();
+  if ( instance )
+  {
+    nsCAutoString filename("foobar.");
+	filename+=aFileExt;
+	Str255 pFileName;
+	ConvertCharStringToStr255( filename, pFileName  );
+	ICMapEntry entry;
+	OSStatus err = ::ICMapFilename( instance, pFileName, &entry );
+	if( err == noErr )
+	{
+	  rv = FillMIMEInfoForICEntry(entry, _retval);
+	}
+  }   
+  
+  return rv;
+ }
+	
+	
+NS_IMETHODIMP nsInternetConfigService::GetMIMEInfoFromTypeCreator(PRUint32 aType, PRUint32 aCreator, const char *aFileExt, nsIMIMEInfo **_retval)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  ICInstance instance = nsInternetConfig::GetInstance();
+  if ( instance )
+  {
+	nsCAutoString filename("foobar.");
+	filename+=aFileExt;
+	Str255 pFileName;
+	ConvertCharStringToStr255( filename, pFileName  );
+	ICMapEntry entry;
+	OSStatus err = ::ICMapTypeCreator( instance, aType, aCreator, pFileName, &entry );
+	if( err == noErr )
+		rv = FillMIMEInfoForICEntry(entry,_retval);
+  }
+	
+  return rv;
+}
+
 
 /* void GetDownloadFolder (out FSSpec fsspec); */
 NS_IMETHODIMP nsInternetConfigService::GetDownloadFolder(FSSpec *fsspec)
