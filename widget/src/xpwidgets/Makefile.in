@@ -28,7 +28,6 @@ LIBRARY_NAME = raptorbasewidget_s
 #MODULES=widget
 #LCFLAGS=-D_IMPL_NS_WIDGET 
 
-#	nsXIFFormatConverter.cpp
 CPPSRCS= \
     nsBaseWidget.cpp         \
 	nsMenuButton.cpp         \
