@@ -373,7 +373,7 @@ EmbedPrivate::Destroy(void)
   DetachListeners();
   if (mEventReceiver)
     mEventReceiver = nsnull;
-  
+
   // destroy our child window
   mWindow->ReleaseChildren();
 
@@ -447,7 +447,7 @@ EmbedPrivate::ApplyChromeMask()
          if (scrollbars) {
 
             scrollbars->SetVisible
-               (mChromeMask & nsIWebBrowserChrome::CHROME_SCROLLBARS ? 
+               (mChromeMask & nsIWebBrowserChrome::CHROME_SCROLLBARS ?
                 PR_TRUE : PR_FALSE);
          }
       }
@@ -470,12 +470,12 @@ EmbedPrivate::PushStartup(void)
 {
   // increment the number of widgets
   sWidgetCount++;
-  
+
   // if this is the first widget, fire up xpcom
   if (sWidgetCount == 1) {
     nsresult rv;
     nsCOMPtr<nsILocalFile> binDir;
-    
+
     if (sCompPath) {
       rv = NS_NewNativeLocalFile(nsDependentCString(sCompPath), 1, getter_AddRefs(binDir));
       if (NS_FAILED(rv))
@@ -506,7 +506,7 @@ EmbedPrivate::PushStartup(void)
     // XXX startup appshell service?
     // XXX create offscreen window for appshell service?
     // XXX remove X prop from offscreen window?
-    
+
     nsCOMPtr<nsIAppShell> appShell;
     appShell = do_CreateInstance(kAppShellCID);
     if (!appShell) {
@@ -529,7 +529,7 @@ EmbedPrivate::PopStartup(void)
 
     // destroy the offscreen window
     DestroyOffscreenWindow();
-    
+
     // shut down the profiles
     ShutdownProfile();
 
@@ -582,17 +582,17 @@ EmbedPrivate::SetProfilePath(const char *aDir, const char *aName)
 
   if (aDir)
     sProfileDir = (char *)nsMemory::Clone(aDir, strlen(aDir) + 1);
-  
+
   if (aName)
-    sProfileName = (char *)nsMemory::Clone(aName, strlen(aDir) + 1);
+    sProfileName = (char *)nsMemory::Clone(aName, strlen(aName) + 1);
 }
 
-void 
-EmbedPrivate::SetDirectoryServiceProvider(nsIDirectoryServiceProvider * appFileLocProvider) 
+void
+EmbedPrivate::SetDirectoryServiceProvider(nsIDirectoryServiceProvider * appFileLocProvider)
 {
   if (sAppFileLocProvider)
     NS_RELEASE(sAppFileLocProvider);
-  
+
   if (appFileLocProvider) {
     sAppFileLocProvider = appFileLocProvider;
     NS_ADDREF(sAppFileLocProvider);
@@ -627,7 +627,7 @@ EmbedPrivate::AppendToStream(const PRUint8 *aData, PRUint32 aLen)
   nsCOMPtr<nsIWebBrowser> webBrowser;
   mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
 
-  nsCOMPtr<nsIWebBrowserStream> wbStream = do_QueryInterface(webBrowser); 
+  nsCOMPtr<nsIWebBrowserStream> wbStream = do_QueryInterface(webBrowser);
   if (!wbStream) return NS_ERROR_FAILURE;
 
   return wbStream->AppendToStream(aData, aLen);
@@ -639,7 +639,7 @@ EmbedPrivate::CloseStream(void)
   nsCOMPtr<nsIWebBrowser> webBrowser;
   mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
 
-  nsCOMPtr<nsIWebBrowserStream> wbStream = do_QueryInterface(webBrowser); 
+  nsCOMPtr<nsIWebBrowserStream> wbStream = do_QueryInterface(webBrowser);
   if (!wbStream) return NS_ERROR_FAILURE;
 
   return wbStream->CloseStream();
@@ -682,7 +682,7 @@ EmbedPrivate::ContentStateChange(void)
 
   if (!mEventReceiver)
     return;
-  
+
   AttachListeners();
 
 }
@@ -697,7 +697,7 @@ EmbedPrivate::ContentFinishedLoading(void)
     // get the web browser
     nsCOMPtr<nsIWebBrowser> webBrowser;
     mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
-    
+
     // get the content DOM window for that web browser
     nsCOMPtr<nsIDOMWindow> domWindow;
     webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
@@ -705,7 +705,7 @@ EmbedPrivate::ContentFinishedLoading(void)
       NS_WARNING("no dom window in content finished loading\n");
       return;
     }
-    
+
     // resize the content
     domWindow->SizeToContent();
 
@@ -901,7 +901,7 @@ EmbedPrivate::GetPIDOMWindow(nsPIDOMWindow **aPIWin)
   nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
   // and the root window for that DOM window
   *aPIWin = domWindowPrivate->GetPrivateRoot();
-  
+
   if (*aPIWin) {
     NS_ADDREF(*aPIWin);
     return NS_OK;
@@ -1020,7 +1020,7 @@ EmbedPrivate::RegisterAppComponents(void)
 
   return rv;
 }
-			     
+
 /* static */
 void
 EmbedPrivate::EnsureOffscreenWindow(void)

@@ -198,7 +198,7 @@ QGeckoGlobals::setProfilePath(const char *aDir, const char *aName)
         sProfileDir = (char *)nsMemory::Clone(aDir, strlen(aDir) + 1);
 
     if (aName)
-        sProfileName = (char *)nsMemory::Clone(aName, strlen(aDir) + 1);
+        sProfileName = (char *)nsMemory::Clone(aName, strlen(aName) + 1);
 }
 
 void
