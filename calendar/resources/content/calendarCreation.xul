@@ -8,13 +8,14 @@
 
 <wizard
 	id="calendar-wizard"
-	title="Mozilla Calendar Wizard"
+	title="Create New Calendar"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	onwizardfinish="return doCreateWizardFinish();"
 	persist="screenX screenY"
 	>
 
-   <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
+   <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+   <script type="application/x-javascript" src="chrome://calendar/content/calendarCreation.js"/>
 
    <wizardpage pageid="initialPage" description="Create new calendar" next="finish" onpageshow="">
       <hbox><label value="name:"/><textbox id="calendar-name"/></hbox>

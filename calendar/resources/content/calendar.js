@@ -308,11 +308,6 @@ function calendarFinish()
    gICalLib.removeObserver( gEventSource.alarmObserver );
 }
 
-function newCalendarDialog()
-{
-    openDialog("chrome://calendar/content/calendarCreation.xul", "caEditServer", "chrome,titlebar,modal" );
-}
-
 function launchPreferences()
 {
     if (applicationName == "Mozilla" || applicationName == "Firebird")
@@ -660,60 +655,6 @@ function newToDoCommand()
   newToDo( null, null ); // new task button defaults to undated todo
 }
 
-var calIDateTime = Components.interfaces.calIDateTime;
-
-var calIEvent = Components.interfaces.calIEvent;
-var calITodo = Components.interfaces.calITodo;
-
-var calIRecurrenceInfo = Components.interfaces.calIRecurrenceInfo;
-var calIRecurrenceRule = Components.interfaces.calIRecurrenceRule;
-var calIRecurrenceDate = Components.interfaces.calIRecurrenceDate;
-
-var calRecurrenceInfo = Components.Constructor("@mozilla.org/calendar/recurrence-info;1", calIRecurrenceInfo);
-var calRecurrenceRule = Components.Constructor("@mozilla.org/calendar/recurrence-rule;1", calIRecurrenceRule);
-var calRecurrenceDate = Components.Constructor("@mozilla.org/calendar/recurrence-date;1", calIRecurrenceDate);
-
-function createEvent()
-{
-    return Components.classes["@mozilla.org/calendar/event;1"].createInstance(Components.interfaces.calIEvent);
-}
-
-function createToDo()
-{
-    return Components.classes["@mozilla.org/calendar/todo;1"].createInstance(Components.interfaces.calITodo);
-}
-
-function createRecurrenceInfo()
-{
-    return Components.classes["@mozilla.org/calendar/recurrence-info;1"].createInstance(Components.interfaces.calIRecurrenceInfo);
-}
-
-function createDateTime()
-{
-    return Components.classes["@mozilla.org/calendar/datetime;1"].createInstance(Components.interfaces.calIDateTime);
-}
-
-function createAttendee()
-{
-    return Components.classes["@mozilla.org/calendar/attendee;1"].createInstance(Components.interfaces.calIAttendee);
-}
-
-function createAttachment()
-{
-    return Components.classes["@mozilla.org/calendar/attachment;1"].createInstance(Components.interfaces.calIAttachment);
-}
-
-function getCalendarManager()
-{
-    return Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
-}
-
-function makeURL(uriString)
-{
-    var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-    return ioservice.newURI(uriString, null, null);
-}
-
 function getCalendar()
 {
    var calendarList = document.getElementById("list-calendars-listbox");
@@ -725,6 +666,11 @@ function getCalendar()
        selectedCalendar = calendarList.currentItem.calendar;
        return selectedCalendar;
    }
+}
+
+function newCalendarDialog()
+{
+    openCalendarWizard(afterCreateWizardFinish);
 }
 
 var gDisplayComposite;
@@ -742,27 +688,6 @@ function getDisplayComposite()
     }
     return gDisplayComposite;
 }
-
-function isEvent(aObject)
-{
-   return aObject instanceof Components.interfaces.calIEvent;
-}
-
-
-function isToDo(aObject)
-{
-   return aObject instanceof Components.interfaces.calITodo;
-}
-
-
-function jsDateToDateTime(date)
-{
-    var newDate = createDateTime();
-    newDate.jsDate = date;
-    debug ("date: " + date + " newDate: " + newDate + " newDate.jsDate: "+ newDate.jsDate + "\n");
-    return newDate;
-}
-
 
 function appendCalendars(to, froms, listener)
 {
@@ -1337,13 +1262,6 @@ function closeCalendar()
 }
 
 
-function launchWizard()
-{
-   var args = new Object();
-
-   openDialog("chrome://calendar/content/wizard.xul", "caWizard", "chrome,titlebar,modal", args );
-}
-
 function reloadApplication()
 {
     gEventSource.calendarManager.refreshAllRemoteCalendars();
@@ -1696,30 +1614,10 @@ function calendarDefaultTimezone() {
     return gDefaultTimezone;
 }
 
-function doCreateWizardFinish()
+/* Called from doCreateWizardFinished after the calendar is created. */
+function afterCreateWizardFinish(newCalendar)
 {
-    var cal_name = document.getElementById("calendar-name").value;
-    var uri = document.getElementById("calendar-uri").value;
-    var sel_item=document.getElementById("initial-radiogroup").selectedItem;
-    var type = sel_item.value;
-
-    dump(cal_name + "\n");
-    dump(uri + "\n");
-    dump(type + "\n");
-    
-
-    var calManager = getCalendarManager();
-    try {
-        var newCalendar = calManager.createCalendar(cal_name, type, makeURL(uri));
-    } catch (ex) {
-        dump(ex);
-        return false;
-    }
-    calManager.registerCalendar(newCalendar);
-
     addCalendarToUI(window.opener.document, newCalendar);
-
-    return true;
 }
 
 function addCalendarToUI(doc, calendar)

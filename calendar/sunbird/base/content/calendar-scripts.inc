@@ -77,6 +77,7 @@
   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 
   <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendarSelection.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendarWindow.js"/>
