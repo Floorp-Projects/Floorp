@@ -56,6 +56,8 @@ class BookmarksService;
     
     // The bookmarks menu.
     IBOutlet id mBookmarksMenu;
+
+    IBOutlet id mBookmarksToolbarMenuItem;
     
     BOOL mOffline;
 

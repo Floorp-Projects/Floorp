@@ -714,7 +714,7 @@ private:
 NS_IMPL_ISUPPORTS1(nsHeaderSniffer, nsIWebProgressListener)
 
 // Implementation of nsIWebProgressListener
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in unsigned long aStatus); */
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
 NS_IMETHODIMP 
 nsHeaderSniffer::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, 
                                 PRUint32 aStatus)

@@ -33,6 +33,7 @@ class CHBookmarksButton;
   NSMutableArray* mButtons;
   CHBookmarksButton* mDragInsertionButton;
   int mDragInsertionPosition;
+  BOOL mIsShowing;
 }
 
 -(void)initializeToolbar;
@@ -46,6 +47,7 @@ class CHBookmarksButton;
 -(void)reflowButtons;
 -(void)reflowButtonsStartingAtIndex: (int)aIndex;
 
+-(BOOL)isShown;
 -(void)showBookmarksToolbar: (BOOL)aShow;
 
 - (void) setButtonInsertionPoint:(NSPoint)aPoint;

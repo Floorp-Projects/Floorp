@@ -310,7 +310,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
 	BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
   [browser loadURL: aURL];
-	[browser showWindow: self];
+  [browser showWindow: self];
   return browser;
 }
 
@@ -459,7 +459,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         action == @selector(printPage:) ||
         action == @selector(findInPage:) ||
         action == @selector(findAgain:) ||
-        action == @selector(toggleBookmarksToolbar:) ||
         action == @selector(doStop:) ||
         action == @selector(doReload:) ||
         action == @selector(biggerTextSize:) ||
@@ -472,7 +471,23 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
       return YES;
     return NO;
   }
-  
+
+  // check what the state of the toolbar should be, but only if there is a browser
+  // window open
+  if (action == @selector(toggleBookmarksToolbar:)) {
+    if ([[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]]) {
+      float height = [[[[mApplication mainWindow] windowController] bookmarksToolbar] frame].size.height;
+      BOOL toolbarShowing = (height > 0);
+      if (toolbarShowing)
+        [mBookmarksToolbarMenuItem setTitle: NSLocalizedString(@"Hide Bookmarks Toolbar",@"")];
+      else
+        [mBookmarksToolbarMenuItem setTitle: NSLocalizedString(@"Show Bookmarks Toolbar",@"")];
+      return YES;
+    }
+    else
+      return NO;
+  }
+
   // only activate if we've got multiple tabs open.
   if ((action == @selector(closeTab:) ||
        action == @selector (nextTab:) ||
@@ -483,12 +498,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
 
   if ( action == @selector(goBack:) || action == @selector(goForward:) ) {
-    NSWindow* mainWindow = [mApplication mainWindow];
-    if (mainWindow) {
+    if ([[[mApplication mainWindow] windowController] isMemberOfClass:[BrowserWindowController class]]) {
       if (action == @selector(goBack:))
-        return [[[[mainWindow windowController] getBrowserWrapper] getBrowserView] canGoBack];
+        return [[[[[mApplication mainWindow] windowController] getBrowserWrapper] getBrowserView] canGoBack];
       if (action == @selector(goForward:))
-        return [[[[mainWindow windowController] getBrowserWrapper] getBrowserView] canGoForward];
+        return [[[[[mApplication mainWindow] windowController] getBrowserWrapper] getBrowserView] canGoForward];
     }
     else
       return NO;
@@ -500,7 +514,20 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction) toggleBookmarksToolbar:(id)aSender
 {
-  //XXX do nothing for now
+  NSWindow* mainWindow = [mApplication mainWindow];
+  if (!mainWindow) {
+    [self openBrowserWindowWithURL: @"about:blank"];
+    mainWindow = [mApplication mainWindow];
+  }
+
+  float height = [[[mainWindow windowController] bookmarksToolbar] frame].size.height;
+  BOOL showToolbar = (BOOL)(!(height > 0));
+
+  [[[mainWindow windowController] bookmarksToolbar] showBookmarksToolbar: showToolbar];
+
+  // save prefs here
+  NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+  [defaults setObject: [NSNumber numberWithInt: ((showToolbar) ? 1 : 0)] forKey: @"Personal TB Is Shown"];
 }
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle
