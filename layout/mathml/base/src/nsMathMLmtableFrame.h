@@ -121,18 +121,19 @@ public:
   }
 
   NS_IMETHOD
-  UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
-                         PRBool  aDisplayStyle,
-                         PRBool  aCompressed)
+  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                         PRUint32 aFlagsValues,
+                         PRUint32 aFlagsToUpdate)
   {
     return NS_OK;
   }
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
-                                    PRInt32 aScriptLevelIncrement,
-                                    PRBool  aDisplayStyle,
-                                    PRBool  aCompressed)
+  UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
+                                    PRInt32  aLastIndex,
+                                    PRInt32  aScriptLevelIncrement,
+                                    PRUint32 aFlagsValues,
+                                    PRUint32 aFlagsToUpdate)
   {
     return NS_OK;
   }
