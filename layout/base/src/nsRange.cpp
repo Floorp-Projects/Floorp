@@ -411,13 +411,13 @@ nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
     aStartOffset = aEndOffset;
   }
   
-  if (mStartParent && (mStartParent != aStartN) && (mStartParent != aEndN))
+  if (mStartParent && (mStartParent.get() != aStartN) && (mStartParent.get() != aEndN))
   {
     // if old start parent no longer involved, remove range from that
     // node's range list.
     RemoveFromListOf(mStartParent);
   }
-  if (mEndParent && (mEndParent != aStartN) && (mEndParent != aEndN))
+  if (mEndParent && (mEndParent.get() != aStartN) && (mEndParent.get() != aEndN))
   {
     // if old end parent no longer involved, remove range from that
     // node's range list.
