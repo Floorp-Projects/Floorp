@@ -276,7 +276,9 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
   if (aGEK!=nsnull) {
     anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
     anEvent.charCode = nsConvertCharCodeToUnicode(aGEK->string);
+#ifdef DEBUG_pavlov
     g_print("%s\n", aGEK->string);
+#endif
     anEvent.time = aGEK->time;
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;

@@ -19,7 +19,7 @@
 #include "PlaceholderTxn.h"
 #include "nsVoidArray.h"
 
-#ifdef NS_DEBUG
+#if defined(NS_DEBUG) && defined(DEBUG_buster)
 static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
