@@ -44,5 +44,7 @@ public final class GeckoEmbed {
   public static native nsILocalFile NS_NewLocalFile(String aPath, boolean followLinks);
   public static native nsIComponentManager NS_GetComponentManager();
   public static native nsIServiceManager NS_GetServiceManager();
+
   public static native nsISimpleEnumerator NS_NewSingletonEnumerator(nsISupports aSingleton);
+  public static native nsIMutableArray NS_NewArray();
 }
