@@ -97,7 +97,9 @@ protected:
 	nsresult MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy );
 		
 	// Passing nsnull for the extension uses leaf name
-	nsresult SetOSTypeFromExtension(const char* extension = nsnull);
+	nsresult SetOSTypeAndCreatorFromExtension(const char* extension = nsnull);
+	
+	nsresult ExtensionIsOnExceptionList(const char *extension, PRBool *onList);
 	
 	static nsresult DetermineCurrentProcessCreator(); 
 					
