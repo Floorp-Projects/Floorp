@@ -52,8 +52,9 @@ public:
   virtual ~nsChromeUIDataSource();
 
 protected:
-  nsCOMPtr<nsIRDFDataSource> mComposite;
+  nsIRDFDataSource* mComposite; // [WEAK] We observe the composite source, which holds on to us strongly.
   nsCOMPtr<nsISupportsArray>	mObservers;
+  nsIRDFService* mRDFService;
 };
 
 nsresult NS_NewChromeUIDataSource(nsIRDFDataSource* aComposite, nsIRDFDataSource** aResult);

@@ -203,11 +203,6 @@ nsChromeRegistry::~nsChromeRegistry()
 {
   delete mDataSourceTable;
    
-  if (mUIDataSource) {
-    mRDFService->UnregisterDataSource(mUIDataSource);
-    mUIDataSource = nsnull;
-  }
-
   if (mRDFService) {
     nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
     mRDFService = nsnull;
@@ -1368,11 +1363,7 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
       return rv;
 
     // Also create and hold on to our UI data source.
-    if (mUIDataSource) {
-      mRDFService->UnregisterDataSource(mUIDataSource);
-      mUIDataSource = nsnull;
-    }
-    NS_NewChromeUIDataSource(mChromeDataSource, getter_AddRefs(mUIDataSource));
+    NS_NewChromeUIDataSource(mChromeDataSource, &mUIDataSource);
     mRDFService->RegisterDataSource(mUIDataSource, PR_FALSE);
   }
   
