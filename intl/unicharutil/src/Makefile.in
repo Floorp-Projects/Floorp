@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= unicharutil
 LIBRARY_NAME	= unicharutil
-SHORT_LIBNAME	= unicutil
+SHORT_LIBNAME	= ucharuti
 IS_COMPONENT	= 1
 REQUIRES	= xpcom uconv necko
 

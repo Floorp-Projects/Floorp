@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = vixen
 LIBRARY_NAME = vixen_s
-SHORT_LIBNAME = vixen_s
 
 CPPSRCS = \
 	nsVixenShell.cpp \
