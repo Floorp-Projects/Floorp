@@ -225,7 +225,7 @@ nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint,
   }
 
   nsIWidget* window;
-  aTargetFrame->GetWindow(window);
+  aTargetFrame->GetWindow(&window);
   window->SetCursor(c);
   NS_RELEASE(window);
 }

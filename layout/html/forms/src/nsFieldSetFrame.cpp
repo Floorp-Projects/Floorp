@@ -214,7 +214,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
 
   if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
     nsIView* view;
-    GetView(view);
+    GetView(&view);
     if (nsnull != view) {
       aRenderingContext.SetColor(NS_RGB(0,0,255));
     }

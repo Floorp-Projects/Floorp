@@ -706,7 +706,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   nsIView* parView;
   nsPoint origin;
-  GetOffsetFromView(origin, parView);  
+  GetOffsetFromView(origin, &parView);  
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 
   nsIViewManager* viewMan = presShell->GetViewManager();  

@@ -221,7 +221,7 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
   while (nsnull != kid) {
     nsIView *pView;
      
-    kid->GetView(pView);
+    kid->GetView(&pView);
     if (nsnull == pView) {
       PRBool clipState;
       nsRect kidRect;

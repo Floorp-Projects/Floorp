@@ -250,7 +250,7 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
 
   case nsImageNotification_kIsTransparent:
     // Mark the frame's view as having transparent areas
-    mTargetFrame->GetView(view);
+    mTargetFrame->GetView(&view);
     if (nsnull != view) {
       view->SetContentTransparency(PR_TRUE);
     }
@@ -339,9 +339,9 @@ nsFrameImageLoader::DamageRepairFrame(const nsRect* aDamageRect)
   // XXX We should tell the frame the damage area and let it invalidate
   // itself. Add some API calls to nsIFrame to allow a caller to invalidate
   // parts of the frame...
-  mTargetFrame->GetView(view);
+  mTargetFrame->GetView(&view);
   if (nsnull == view) {
-    mTargetFrame->GetOffsetFromView(offset, view);
+    mTargetFrame->GetOffsetFromView(offset, &view);
     bounds.x += offset.x;
     bounds.y += offset.y;
   }

@@ -1056,10 +1056,10 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aConte
   nsPoint   pt;
   nsresult  rv;
 
-  aFrame->GetView(view);
+  aFrame->GetView(&view);
 
   if (nsnull == view)
-    aFrame->GetOffsetFromView(pt, view);
+    aFrame->GetOffsetFromView(pt, &view);
 
   while (nsnull != view)
   {
@@ -1693,8 +1693,8 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
         // do have views, make sure the views are the same size. If the
         // views have widgets, make sure they both do or neither does. If
         // they do, make sure the widgets are the same size.
-        k1->GetView(v1);
-        k2->GetView(v2);
+        k1->GetView(&v1);
+        k2->GetView(&v2);
         if (((nsnull == v1) && (nsnull != v2)) ||
             ((nsnull != v1) && (nsnull == v2))) {
           LogVerifyMessage(k1, k2, "child views are not matched\n");

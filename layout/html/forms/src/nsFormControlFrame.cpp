@@ -195,7 +195,7 @@ nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
-    GetView(view);
+    GetView(&view);
     if (nsnull != view) {
       view->SetVisibility(nsViewVisibility_kShow);
     }
@@ -249,7 +249,7 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
 
       // absolutely positioned controls already have a view but not a widget
       nsIView* view = nsnull;
-      GetView(view);
+      GetView(&view);
       if (nsnull == view) {
         result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
 	      if (!NS_SUCCEEDED(result)) {
@@ -261,8 +261,8 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
         nsIFrame* parWithView;
 	      nsIView *parView;
 
-        GetParentWithView(parWithView);
-	      parWithView->GetView(parView);
+        GetParentWithView(&parWithView);
+	      parWithView->GetView(&parView);
 
 	      // initialize the view as hidden since we don't know the (x,y) until Paint
         result = view->Init(viewMan, boundBox, parView, nsnull, nsViewVisibility_kHide);
@@ -556,7 +556,7 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
     // XXX if there is no view, it could be an image button. Unfortunately,
     // every image button will get every event.
     nsIView* view;
-    GetView(view);
+    GetView(&view);
     if (view) {
       if (mWidget != aEvent->widget) {
         aEventStatus = nsEventStatus_eIgnore;

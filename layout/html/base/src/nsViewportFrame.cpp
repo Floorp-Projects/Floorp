@@ -163,7 +163,7 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext&          aPresC
   nsIFrame* kidFrame = mFrames.FirstChild();
   nsIView*  kidView;
 
-  kidFrame->GetView(kidView);
+  kidFrame->GetView(&kidView);
   if (nsnull != kidView) {
     nsIScrollableView* scrollingView;
     
@@ -398,7 +398,7 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
       // XXX Make sure the frame is repainted. For the time being, since we
       // have no idea what actually changed repaint it all...
       nsIView*  view;
-      nextFrame->GetView(view);
+      nextFrame->GetView(&view);
       if (nsnull != view) {
         nsIViewManager* viewMgr;
         view->GetViewManager(viewMgr);

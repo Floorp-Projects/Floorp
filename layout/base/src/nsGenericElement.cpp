@@ -854,7 +854,7 @@ nsGenericElement::RenderFrame()
       // XXX We should tell the frame the damage area and let it invalidate
       // itself. Add some API calls to nsIFrame to allow a caller to invalidate
       // parts of the frame...
-      frame->GetOffsetFromView(offset, view);
+      frame->GetOffsetFromView(offset, &view);
       view->GetViewManager(vm);
       bounds.x += offset.x;
       bounds.y += offset.y;

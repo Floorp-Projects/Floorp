@@ -69,7 +69,7 @@ nsContainerFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   // Prevent event dispatch during destruction
   nsIView* view;
-  GetView(view);
+  GetView(&view);
   if (nsnull != view) {
     view->SetClientData(nsnull);
   }
@@ -231,7 +231,7 @@ nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
                              nsFramePaintLayer    aWhichLayer)
 {
   nsIView *pView;
-  aFrame->GetView(pView);
+  aFrame->GetView(&pView);
   if (nsnull == pView) {
     nsRect kidRect;
     aFrame->GetRect(kidRect);
@@ -581,7 +581,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   ListTag(out);
 
   nsIView* view;
-  GetView(view);
+  GetView(&view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }

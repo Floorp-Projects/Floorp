@@ -527,7 +527,7 @@ NS_IMETHODIMP nsFrame::MoveTo(nscoord aX, nscoord aY)
       // parent frame (our parent frame may not have a view).
       nsIView* parentWithView;
       nsPoint origin;
-      GetOffsetFromView(origin, parentWithView);
+      GetOffsetFromView(origin, &parentWithView);
       nsIViewManager  *vm;
       mView->GetViewManager(vm);
       vm->MoveViewTo(mView, origin.x, origin.y);
@@ -1263,7 +1263,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
       // parent frame (our parent frame may not have a view).
       nsIView* parentWithView;
       nsPoint origin;
-      GetOffsetFromView(origin, parentWithView);
+      GetOffsetFromView(origin, &parentWithView);
       nsIViewManager  *vm;
       mView->GetViewManager(vm);
       vm->ResizeView(mView, mRect.width, mRect.height);
@@ -1425,9 +1425,10 @@ NS_IMETHODIMP nsFrame::BreakFromNextFlow()
 }
 
 // Associated view object
-NS_IMETHODIMP nsFrame::GetView(nsIView*& aView) const
+NS_IMETHODIMP nsFrame::GetView(nsIView** aView) const
 {
-  aView = mView;
+  NS_PRECONDITION(nsnull != aView, "null OUT parameter pointer");
+  *aView = mView;
   return NS_OK;
 }
 
@@ -1447,30 +1448,32 @@ NS_IMETHODIMP nsFrame::SetView(nsIView* aView)
 }
 
 // Find the first geometric parent that has a view
-NS_IMETHODIMP nsFrame::GetParentWithView(nsIFrame*& aParent) const
+NS_IMETHODIMP nsFrame::GetParentWithView(nsIFrame** aParent) const
 {
-  aParent = mParent;
+  NS_PRECONDITION(nsnull != aParent, "null OUT parameter pointer");
 
-  while (nsnull != aParent) {
+  nsIFrame* parent;
+  for (parent = mParent; nsnull != parent; parent->GetParent(&parent)) {
     nsIView* parView;
      
-    aParent->GetView(parView);
+    parent->GetView(&parView);
     if (nsnull != parView) {
       break;
     }
-    aParent->GetParent(&aParent);
   }
 
+  *aParent = parent;
   return NS_OK;
 }
 
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
-NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const
+NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const
 {
+  NS_PRECONDITION(nsnull != aView, "null OUT parameter pointer");
   nsIFrame* frame = (nsIFrame*)this;
 
-  aView = nsnull;
+  *aView = nsnull;
   aOffset.MoveTo(0, 0);
   do {
     nsPoint origin;
@@ -1481,28 +1484,29 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) cons
     if (nsnull != frame) {
       frame->GetView(aView);
     }
-  } while ((nsnull != frame) && (nsnull == aView));
+  } while ((nsnull != frame) && (nsnull == *aView));
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::GetWindow(nsIWidget*& aWindow) const
+NS_IMETHODIMP nsFrame::GetWindow(nsIWidget** aWindow) const
 {
-  nsIFrame* frame = (nsIFrame*)this;
-
-  aWindow = nsnull;
-  while (nsnull != frame) {
+  NS_PRECONDITION(nsnull != aWindow, "null OUT parameter pointer");
+  
+  nsIFrame*  frame;
+  nsIWidget* window = nsnull;
+  for (frame = (nsIFrame*)this; nsnull != frame; frame->GetParentWithView(&frame)) {
     nsIView* view;
      
-    frame->GetView(view);
+    frame->GetView(&view);
     if (nsnull != view) {
-      view->GetWidget(aWindow);
-      if (nsnull != aWindow) {
+      view->GetWidget(window);
+      if (nsnull != window) {
         break;
       }
     }
-    frame->GetParentWithView(frame);
   }
-  NS_POSTCONDITION(nsnull != aWindow, "no window in frame tree");
+  NS_POSTCONDITION(nsnull != window, "no window in frame tree");
+  *aWindow = window;
   return NS_OK;
 }
 
@@ -1530,7 +1534,7 @@ nsFrame::Invalidate(const nsRect& aDamageRect,
     nsPoint   offset;
     nsIView*  view;
   
-    GetOffsetFromView(offset, view);
+    GetOffsetFromView(offset, &view);
     NS_ASSERTION(nsnull != view, "no view");
     rect += offset;
     view->GetViewManager(viewManager);
@@ -2142,7 +2146,7 @@ void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
   nsRect    rect;
   nsIView * view;
   nsPoint   pnt;
-  aFrame->GetOffsetFromView(pnt, view);
+  aFrame->GetOffsetFromView(pnt, &view);
   aFrame->GetRect(rect);
   rect.x = pnt.x;
   rect.y = pnt.y;

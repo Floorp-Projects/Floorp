@@ -2078,7 +2078,7 @@ HTMLContentSink::ScrollToRef()
                 // coordinates that are relative to that.
                 nsPoint offset;
                 nsIView* view;
-                frame->GetOffsetFromView(offset, view);
+                frame->GetOffsetFromView(offset, &view);
                 if (view == rootView) {
 // XXX write me!
 // printf("view==rootView ");
