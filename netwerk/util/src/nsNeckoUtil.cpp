@@ -117,10 +117,13 @@ NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result)
 nsresult
 NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
 {
-    char* specStr = spec.ToNewCString();
     char* resultStr;
+    char* specStr = spec.ToNewCString();
+    if (!specStr) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
     nsresult rv = NS_MakeAbsoluteURI(specStr, baseURI, &resultStr);
-    nsCRT::free(specStr);
+    delete [] specStr;
     if (NS_FAILED(rv)) return rv;
 
     result = resultStr;
