@@ -17,8 +17,13 @@
  */
 
 #include "nsViewer.h"
+#include "nsMotifMenu.h"
 
+class nsMotifViewer : public nsViewer {
+    virtual void AddMenu(nsIWidget* aMainWindow);
+};
 
+//--------------------------------------------------------
 nsresult ExecuteViewer(nsViewer* aViewer, int argc, char **argv)
 {
   nsIWidget *mainWindow = nsnull;
@@ -29,11 +34,28 @@ nsresult ExecuteViewer(nsViewer* aViewer, int argc, char **argv)
   return result;
 }
 
+//--------------------------------------------------------
+nsMotifViewer * gViewer = nsnull;
+
+//--------------------------------------------------------
 void main(int argc, char **argv)
 {
-  nsViewer* viewer = new nsViewer();
-  SetViewer(viewer);
-  viewer->ProcessArguments(argc, argv);
-  ExecuteViewer(viewer, argc, argv);
+  gViewer = new nsMotifViewer();
+  SetViewer(gViewer);
+  gViewer->ProcessArguments(argc, argv);
+  ExecuteViewer(gViewer, argc, argv);
 }
+
+//--------------------------------------------------------
+void MenuProc(PRUint32 aId) 
+{
+  gViewer->DispatchMenuItem(aId);
+}
+
+//--------------------------------------------------------
+void nsMotifViewer::AddMenu(nsIWidget* aMainWindow)
+{
+  CreateViewerMenus(XtParent(aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
+}
+
 

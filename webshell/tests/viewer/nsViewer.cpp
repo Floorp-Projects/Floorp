@@ -84,6 +84,7 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 #define START_URL SAMPLES_BASE_URL "/test0.html"
 
 nsViewer* gTheViewer = nsnull;
+WindowData * gMainWindowData = nsnull;
 nsIAppShell *gAppShell= nsnull;
 static char* startURL;
 static nsVoidArray* gWindows;
@@ -890,126 +891,135 @@ void nsViewer::ExitViewer()
 nsEventStatus nsViewer::DispatchMenuItem(nsGUIEvent *aEvent)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
+  if (aEvent->message == NS_MENU_SELECTED) {
+    nsMenuEvent* menuEvent = (nsMenuEvent*)aEvent;
+    WindowData* wd = FindWindowData(aEvent->widget);
+    return ProcessMenu(menuEvent->menuItem, wd);
+  }
+  return result;
+}
+
+nsEventStatus nsViewer::DispatchMenuItem(PRUint32 aId)
+{
+  return ProcessMenu(aId, gMainWindowData);
+}
+
+nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
+{
+  nsEventStatus result = nsEventStatus_eIgnore;
+  switch(aId) {
+    case VIEWER_EXIT:
+      ExitViewer();
+      return nsEventStatus_eConsumeNoDefault;
+
+    case PREVIEW_CLOSE:
+      wd->windowWidget->Destroy();
+      return nsEventStatus_eConsumeNoDefault;
+
+    case VIEWER_FILE_OPEN:
+      OpenHTMLFile(wd);
+      break;
+
+    case VIEWER_EDIT_CUT:
+      break;
+
+    case VIEWER_EDIT_COPY:
+      CopySelection(wd);
+      break;
+
+    case VIEWER_EDIT_PASTE:
+      break;
+
+    case VIEWER_EDIT_SELECTALL:
+      SelectAll(wd);
+      break;
+
+    case VIEWER_EDIT_FINDINPAGE:
+      break;
  
-  switch(aEvent->message) {
-    case NS_MENU_SELECTED:
-      nsMenuEvent* menuEvent = (nsMenuEvent*)aEvent;
-      WindowData* wd = FindWindowData(aEvent->widget);
-      switch(menuEvent->menuItem) {
-        case VIEWER_EXIT:
-          ExitViewer();
-          return nsEventStatus_eConsumeNoDefault;
-
-        case PREVIEW_CLOSE:
-          aEvent->widget->Destroy();
-          return nsEventStatus_eConsumeNoDefault;
-
-        case VIEWER_FILE_OPEN:
-          OpenHTMLFile(wd);
-          break;
-
-        case VIEWER_EDIT_CUT:
-          break;
-
-        case VIEWER_EDIT_COPY:
-          CopySelection(wd);
-          break;
-
-        case VIEWER_EDIT_PASTE:
-          break;
-
-        case VIEWER_EDIT_SELECTALL:
-          SelectAll(wd);
-          break;
-
-        case VIEWER_EDIT_FINDINPAGE:
-          break;
- 
-        case VIEWER_DEMO0:
-        case VIEWER_DEMO1:
-        case VIEWER_DEMO2:
-        case VIEWER_DEMO3:
-        case VIEWER_DEMO4:
-        case VIEWER_DEMO5:
-        case VIEWER_DEMO6:
-        case VIEWER_DEMO7:
-        case VIEWER_DEMO8: 
-          if ((nsnull != wd) && (nsnull != wd->ww)) {
-            PRIntn ix = menuEvent->menuItem - VIEWER_DEMO0;
-            char* url = new char[500];
-            PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, ix);
-            wd->observer->LoadURL(url);
-            delete url;
-          }
-          break;
-
-        case VIEWER_VISUAL_DEBUGGING:
-          if ((nsnull != wd) && (nsnull != wd->ww)) {
-            wd->ww->ShowFrameBorders(PRBool(!wd->ww->GetShowFrameBorders()));
-          }
-          break;
-
-        case VIEWER_DUMP_CONTENT:
-          if ((nsnull != wd) && (nsnull != wd->ww)) {
-            wd->ww->DumpContent();
-          }
-          break;
-        case VIEWER_DUMP_FRAMES:
-          if ((nsnull != wd) && (nsnull != wd->ww)) {
-            wd->ww->DumpFrames();
-          }
-          break;
-        case VIEWER_DUMP_VIEWS:
-          if ((nsnull != wd) && (nsnull != wd->ww)) {
-            wd->ww->DumpViews();
-          }
-          break;
-        case VIEWER_DUMP_STYLE_SHEETS:
-          if ((nsnull != wd) && (nsnull != wd->ww)) {
-            wd->ww->DumpStyleSheets();
-          }
-          break;
-        case VIEWER_DUMP_STYLE_CONTEXTS:
-          if ((nsnull != wd) && (nsnull != wd->ww)) {
-            wd->ww->DumpStyleContexts();
-          }
-          break;
-
-        case VIEWER_DEBUGROBOT:
-          DoDebugRobot(wd);
-          break;
-
-        case VIEWER_SHOW_CONTENT_SIZE:
-          if (nsnull != wd) {
-            wd->ShowContentSize();
-          }
-          break;
-
-        case VIEWER_SHOW_FRAME_SIZE:
-          if (nsnull != wd) {
-            wd->ShowFrameSize();
-          }
-          break;
-
-        case VIEWER_SHOW_STYLE_SIZE:
-          if (nsnull != wd) {
-            wd->ShowStyleSize();
-          }
-          break;
-
-        case VIEWER_ONE_COLUMN:
-        case VIEWER_TWO_COLUMN:
-        case VIEWER_THREE_COLUMN:
-          if ((nsnull != wd) && (nsnull != wd->ww)) {
-            ShowPrintPreview(wd->ww, menuEvent->menuItem - VIEWER_ONE_COLUMN + 1);
-          }
-          break;
-
-        case JS_CONSOLE:
-            ShowConsole(wd);
-          break;
+    case VIEWER_DEMO0:
+    case VIEWER_DEMO1:
+    case VIEWER_DEMO2:
+    case VIEWER_DEMO3:
+    case VIEWER_DEMO4:
+    case VIEWER_DEMO5:
+    case VIEWER_DEMO6:
+    case VIEWER_DEMO7:
+    case VIEWER_DEMO8: 
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        PRIntn ix = aId - VIEWER_DEMO0;
+        char* url = new char[500];
+        PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, ix);
+        wd->observer->LoadURL(url);
+        delete url;
       }
-    break;
+      break;
+
+    case VIEWER_VISUAL_DEBUGGING:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        wd->ww->ShowFrameBorders(PRBool(!wd->ww->GetShowFrameBorders()));
+      }
+      break;
+
+    case VIEWER_DUMP_CONTENT:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        wd->ww->DumpContent();
+      }
+      break;
+    case VIEWER_DUMP_FRAMES:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        wd->ww->DumpFrames();
+      }
+      break;
+    case VIEWER_DUMP_VIEWS:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        wd->ww->DumpViews();
+      }
+      break;
+    case VIEWER_DUMP_STYLE_SHEETS:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        wd->ww->DumpStyleSheets();
+      }
+      break;
+    case VIEWER_DUMP_STYLE_CONTEXTS:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        wd->ww->DumpStyleContexts();
+      }
+      break;
+
+    case VIEWER_DEBUGROBOT:
+      DoDebugRobot(wd);
+      break;
+
+    case VIEWER_SHOW_CONTENT_SIZE:
+      if (nsnull != wd) {
+        wd->ShowContentSize();
+      }
+      break;
+
+    case VIEWER_SHOW_FRAME_SIZE:
+      if (nsnull != wd) {
+        wd->ShowFrameSize();
+      }
+      break;
+
+    case VIEWER_SHOW_STYLE_SIZE:
+      if (nsnull != wd) {
+        wd->ShowStyleSize();
+      }
+      break;
+
+    case VIEWER_ONE_COLUMN:
+    case VIEWER_TWO_COLUMN:
+    case VIEWER_THREE_COLUMN:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        ShowPrintPreview(wd->ww, aId - VIEWER_ONE_COLUMN + 1);
+      }
+      break;
+
+    case JS_CONSOLE:
+        ShowConsole(wd);
+      break;
   }
 
   return(result);
@@ -1070,6 +1080,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
     // Create a top level window for the WebWidget
   WindowData* wd = CreateTopLevel("Raptor HTML Viewer", 620, 400);
   *aMainWindow = wd->windowWidget;
+  gMainWindowData = wd;
 
     // Attach a menu to the top level window
   AddMenu(wd->windowWidget);

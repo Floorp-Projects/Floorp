@@ -104,17 +104,20 @@ $(OBJDIR)/nsDocLoader.o::	nsDocLoader.cpp
 $(OBJDIR)/nsViewer.o::	nsViewer.cpp
 	$(CCC) -o $@ -c $(CFLAGS) nsViewer.cpp $(LDFLAGS) 
 
+$(OBJDIR)/nsMotifMenu.o::	nsMotifMenu.cpp
+	$(CCC) -o $@ -c $(CFLAGS) nsMotifMenu.cpp $(LDFLAGS) 
+
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
 
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(EX_LIBS)
+$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
+	$(CCC) -rdynamic -o $@ $@.o $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -L/usr/X11R6/lib -lXm -lXt -lX11 -lXp -lXext
 else
-	$(CCC) -o $@ $@.o -woff 84,85 $(LDFLAGS) $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
+	$(CCC) -o $@ $@.o -woff 84,85 $(LDFLAGS) $(OBJDIR)/nsDocLoader.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsMotifMenu.o $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
 endif
 
 export::
