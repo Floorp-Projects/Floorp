@@ -71,7 +71,7 @@ sub ReadHeapDumpToHash($$)
         if ($zone eq "DefaultMallocZone") {
           $default_zone_bytes = $2;
         }
-        TinderUtils::print_log "  $line\n";
+        TinderUtils::print_log("  $line\n");
         next;
       }
       
@@ -127,8 +127,8 @@ sub DumpHashDiffs($$)
   my($name_width) = 50;
   my($print_format) = "%10s %-${name_width}s %8d %8d\n";
 
-  TinderUtils::print_log sprintf "%10s %-${name_width}s %8s %8s\n", "", "Class", "Count", "Bytes";
-  TinderUtils::print_log "--------------------------------------------------------------------------------\n";
+  TinderUtils::print_log(sprintf "%10s %-${name_width}s %8s %8s\n", "", "Class", "Count", "Bytes");
+  TinderUtils::print_log("--------------------------------------------------------------------------------\n");
   
   my($key);
   foreach $key (keys %{$beforehash})
@@ -144,16 +144,16 @@ sub DumpHashDiffs($$)
         my($bytes_change) = $aftervalue->{"bytes"} - $beforevalue->{"bytes"};
         
         if ($bytes_change > 0) {
-          TinderUtils::print_log sprintf $print_format, "Leaked", $key, $count_change, $bytes_change;
+          TinderUtils::print_log(sprintf $print_format, "Leaked", $key, $count_change, $bytes_change);
         } else {
-          TinderUtils::print_log sprintf $print_format, "Freed", $key, $count_change, $bytes_change;
+          TinderUtils::print_log(sprintf $print_format, "Freed", $key, $count_change, $bytes_change);
         }
       }
     }
     else
     {
       #$before_only{$key} = $beforevalue;
-      TinderUtils::print_log sprintf $print_format, "Freed", $key, $beforevalue->{'count'}, $beforevalue->{'bytes'};
+      TinderUtils::print_log(sprintf $print_format, "Freed", $key, $beforevalue->{'count'}, $beforevalue->{'bytes'});
     }
   }
 
@@ -165,11 +165,11 @@ sub DumpHashDiffs($$)
     if (!exists $beforehash->{$key})
     {
       #$after_only{$key} = $value;
-      TinderUtils::print_log sprintf $print_format, "Leaked", $key, $value->{'count'}, $value->{'bytes'};
+      TinderUtils::print_log(sprintf $print_format, "Leaked", $key, $value->{'count'}, $value->{'bytes'});
     }
   }
  
-  TinderUtils::print_log "--------------------------------------------------------------------------------\n";
+  TinderUtils::print_log("--------------------------------------------------------------------------------\n");
 
 }
 
@@ -178,23 +178,22 @@ sub ParseHeapOutput($$)
 {
   my($beforedump, $afterdump) = @_;
   
-  TinderUtils::print_log "Before window open:\n";
+  TinderUtils::print_log("Before window open:\n");
   my %before_data;
   my $before_heap = ReadHeapDumpToHash($beforedump, \%before_data);
   
-  TinderUtils::print_log "After window open and close:\n";
+  TinderUtils::print_log("After window open and close:\n");
   my %after_data;
   my $after_heap = ReadHeapDumpToHash($afterdump, \%after_data);
 
 #  DumpHash(\%before_data);
 #  DumpHash(\%after_data);
 
-  TinderUtils::print_log "Open/close window leaks:\n";
+  TinderUtils::print_log("Open/close window leaks:\n");
   DumpHashDiffs(\%before_data, \%after_data);
 
   my $heap_diff = $after_heap - $before_heap;
-  TinderUtils::print_log "TinderboxPrint:<acronym title=\"Per-window leaks\">Lw:".TinderUtils::PrintSize($heap_diff)."B</acronym>\n"
-
+  TinderUtils::print_log("TinderboxPrint:<acronym title=\"Per-window leaks\">Lw:".TinderUtils::PrintSize($heap_diff)."B</acronym>\n");
 }
 
 
@@ -225,7 +224,7 @@ tell application "Navigator"
 end tell
 END_SCRIPT
   
-    TinderUtils::print_log "Window leak test\n";
+    TinderUtils::print_log("Window leak test\n");
   
     my $binary_basename = File::Basename::basename($binary);
     my $binary_dir = File::Basename::dirname($binary);
@@ -260,7 +259,7 @@ END_SCRIPT
 sub main {
   my ($mozilla_build_dir) = @_;
 
-  TinderUtils::print_log "Starting chimera build.\n";
+  TinderUtils::print_log("Starting chimera build.\n");
 
   # Tell chimera to unbuffer stdio, otherwise when we kill the child process
   # stdout & stderr won't get flushed.
@@ -291,7 +290,7 @@ sub main {
     # Checkout/update the chimera code.
     # Chimera branch doing this for us, we will need this later.
     # $status = checkout($mozilla_build_dir);
-    # TinderUtils::print_log "Status from checkout: $status\n";
+    # TinderUtils::print_log("Status from checkout: $status\n");
     # if ($status != 0) {
     #   $post_status = 'busted';
     # }
@@ -307,7 +306,7 @@ sub main {
       
       if ($status == 0) {
         $status = TinderUtils::run_shell_command("make");
-        TinderUtils::print_log "Status from make: $status\n";
+        TinderUtils::print_log("Status from make: $status\n");
       }
       
       #
@@ -317,25 +316,25 @@ sub main {
       chdir $chimera_dir;
       
       if ($status == 0) {
-        TinderUtils::print_log "Deleting binary...\n";
+        TinderUtils::print_log("Deleting binary...\n");
         TinderUtils::DeleteBinary("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary");
           
         # Always do a clean build; gecko dependencies don't work correctly
         # for Chimera.
           
-        TinderUtils::print_log "Clobbering chimera...\n";
+        TinderUtils::print_log("Clobbering chimera...\n");
         TinderUtils::run_shell_command("make clean");
           
         $status = TinderUtils::run_shell_command("make");
-        TinderUtils::print_log "Status from pbxbuild: $status\n";
+        TinderUtils::print_log("Status from pbxbuild: $status\n");
       }
 
-      TinderUtils::print_log "Testing build status...\n";
+      TinderUtils::print_log("Testing build status...\n");
       if ($status != 0) {
-        TinderUtils::print_log "busted, pbxbuild status non-zero\n";
+        TinderUtils::print_log("busted, pbxbuild status non-zero\n");
         $post_status = 'busted';
       } elsif (not TinderUtils::BinaryExists("$chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary")) {
-        TinderUtils::print_log "Error: binary not found: $chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary\n";
+        TinderUtils::print_log("Error: binary not found: $chimera_dir/build/Navigator.app/Contents/MacOS/$chimera_binary\n");
         $post_status = 'busted';
       } else {
         $post_status = 'success';
@@ -354,12 +353,12 @@ sub main {
     my $chim_profile_dir = "$ENV{HOME}/Library/Application Support/Chimera";
     #my $chim_profile_dir = "$ENV{HOME}/Library/Application Support/Chimera/Profiles/default";
 
-    TinderUtils::print_log "Deleting $chim_profile_dir...\n";
+    TinderUtils::print_log("Deleting $chim_profile_dir...\n");
     print "Deleting $chim_profile_dir...\n";
     File::Path::rmtree([$chim_profile_dir], 0, 0);
 
     if (-e "$chim_profile_dir") {
-      TinderUtils::print_log "Error: rmtree('$chim_profile_dir') failed\n";
+      TinderUtils::print_log("Error: rmtree('$chim_profile_dir') failed\n");
     }
       
     # Re-create profile.  We have no -CreateProfile, so we instead
@@ -392,23 +391,23 @@ sub main {
       # Some tests need browser.dom.window.dump.enabled set to true, so
       # that JS dump() will work in optimized builds.
       if (system("\\grep -s browser.dom.window.dump.enabled $pref_file > /dev/null")) {
-	  TinderUtils::print_log "Setting browser.dom.window.dump.enabled\n";
+	  TinderUtils::print_log("Setting browser.dom.window.dump.enabled\n");
 	  open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
 	  print PREFS "user_pref(\"browser.dom.window.dump.enabled\", true);\n";
 	  close PREFS;
         } else {
-            TinderUtils::print_log "Already set browser.dom.window.dump.enabled\n";
+            TinderUtils::print_log("Already set browser.dom.window.dump.enabled\n");
         }
 
       # Set security prefs to allow us to close our own window,
       # pageloader test (and possibly other tests) needs this on.
       if (system("\\grep -s dom.allow_scripts_to_close_windows $pref_file > /dev/null")) {
-          TinderUtils::print_log "Setting dom.allow_scripts_to_close_windows to 2.\n";
+          TinderUtils::print_log("Setting dom.allow_scripts_to_close_windows to 2.\n");
           open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
           print PREFS "user_pref(\"dom.allow_scripts_to_close_windows\", 2);\n";
           close PREFS;
       } else {
-          TinderUtils::print_log "Already set dom.allow_scripts_to_close_windows\n";
+          TinderUtils::print_log("Already set dom.allow_scripts_to_close_windows\n");
       }
 
 
