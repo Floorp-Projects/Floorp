@@ -53,7 +53,8 @@ sub InitVars {
     $ConfigureArgs = '--with-nspr=/builds/tinderbox/SeaMonkey/nspr --cache-file=/dev/null --enable-editor';
     $ConfigGuess = './build/autoconf/config.guess';
     $Logfile = '${BuildDir}.log';
-    $NSPRArgs = 'DIST=/builds/tinderbox/SeaMonkey/nspr MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1';
+    $NSPRArgs = 'DIST=/builds/tinderbox/SeaMonkey/nspr MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1 ';
+    $Compiler = 'gcc';
 } #EndSub-InitVars
 
 sub ConditionalArgs {
@@ -86,6 +87,7 @@ sub SetupPath {
 	$ENV{'PATH'} = '/builds/local/bin:' . $ENV{'PATH'} . ':/usr/lpp/xlC/bin';
 	$ConfigureArgs .= '--x-includes=/usr/include/X11 --x-libraries=/usr/lib --disable-shared';
 	$ConfigureEnvArgs = 'CC=xlC_r CXX=xlC_r';
+	$Compiler = 'xlC_r';
 	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
     }
 
@@ -93,6 +95,7 @@ sub SetupPath {
 	$ENV{'PATH'} = '/usr/contrib/bin:/bin:/usr/bin:' . $ENV{'PATH'};
 	$ConfigureArgs .= '--disable-shared';
 	$ConfigureEnvArgs = 'CC=shlicc2 CXX=shlicc2';
+	$Compiler = 'shlicc2';
 	$mail = '/usr/ucb/mail';
 	$MakeOverrides = 'CPP_PROG_LINK=0 CCF=shlicc2'; # because ld dies if it encounters -include
 	$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
@@ -100,7 +103,10 @@ sub SetupPath {
 
     if ( $OS eq 'FreeBSD' ) {
 	$ENV{'PATH'} = '/bin:/usr/bin:' . $ENV{'PATH'};
-	$ConfigureEnvArgs = 'CC=egcc CXX=eg++';
+	if ( $ENV{'HOST'} eq 'angelus.mcom.com' ) {
+	    $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
+	    $Compiler = 'egcc';
+	}
 	$mail = '/usr/bin/mail';
     }
 
@@ -110,14 +116,23 @@ sub SetupPath {
 	$ENV{'SHLIB_PATH'} = $ENV{'LPATH'};
 	$ConfigureArgs .= '--disable-gtktest --x-includes=/usr/include/X11 --x-libraries=/usr/lib';
 	$ConfigureEnvArgs = 'CC="cc -Ae" CXX="aCC -ext"';
+	$Compiler = 'cc/aCC';
 	# Use USE_PTHREADS=1 instead of CLASSIC_NSPR if you've got DCE installed.
 	$NSPRArgs .= 'NS_USE_NATIVE=1 CLASSIC_NSPR=1';
+    }
+
+    if ( $OS eq 'NetBSD' ) {
+	$ENV{'PATH'} = '/bin:/usr/bin:' . $ENV{'PATH'};
+	$ConfigureEnvArgs = 'CC=egcc CXX=eg++';
+	$Compiler = 'egcc';
+	$mail = '/usr/bin/mail';
     }
 
     if ( $OS eq 'OSF1' ) {
 	$ENV{'PATH'} = '/usr/gnu/bin:' . $ENV{'PATH'};
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/gnu/lib';
 	$ConfigureEnvArgs = 'CC="cc -readonly_strings" CXX="cxx"';
+	$Compiler = 'cc/cxx';
 	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
     }
 
@@ -127,6 +142,7 @@ sub SetupPath {
 	    $ENV{'LD_LIBRARY_PATH'} = '/home/motif/usr/lib:' . $ENV{'LD_LIBRARY_PATH'};
 	    $ConfigureArgs .= '--x-includes=/home/motif/usr/include/X11 --x-libraries=/home/motif/usr/lib';
 	    $ConfigureEnvArgs = 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
+	    $Compiler = 'egcc';
 	} else {
 	    $ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
 	    $ConfigureArgs .= '--with-pthreads';
@@ -135,6 +151,7 @@ sub SetupPath {
 	    $ENV{'PATH'} = '/opt/gnu/bin:' . $ENV{'PATH'};
 	    $ENV{'LD_LIBRARY_PATH'} .= ':/opt/gnu/lib';
 	    $ConfigureEnvArgs = 'CC=egcc CXX=eg++';
+	    $Compiler = 'egcc';
 	    # This may just be an NSPR bug, but if USE_PTHREADS is defined, then
 	    # _PR_HAVE_ATOMIC_CAS gets defined (erroneously?) and libnspr21 doesn't work.
 	    $NSPRArgs .= 'CLASSIC_NSPR=1 NS_USE_GCC=1 NS_USE_NATIVE=';
@@ -144,12 +161,13 @@ sub SetupPath {
 		$ENV{'PATH'} = '/tools/ns/workshop/bin:/usrlocal/bin:' . $ENV{'PATH'};
 		$ENV{'LD_LIBRARY_PATH'} = '/tools/ns/workshop/lib:/usrlocal/lib:' . $ENV{'LD_LIBRARY_PATH'};
 		$ConfigureEnvArgs = 'CC=cc CXX=CC';
+		$Compiler = 'cc/CC (' . `cc -V 2>&1 | head -1` . ')';
 		$NSPRArgs .= 'NS_USE_NATIVE=1';
 	    } else {
 		$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
 	    }
 	    if ( $OSVerMajor eq '5' ) {
-		$NSPRArgs .= 'USE_PTHREADS=1';
+		$NSPRArgs .= ' USE_PTHREADS=1';
 	    }
 	}
     }
@@ -218,7 +236,7 @@ sub GetSystemInfo {
 
     if ( $OS eq 'FreeBSD' ) {
 	$ObjDir = 'obj-' . $CPU . '-unknown-freebsd' . $OSVer;
-	$ObjDir =~ s/(bsd[0-9]\.[0-9])(-[A-Za-z]*)$/$1/o;
+	$ObjDir =~ s/(bsd[0-9]\.[0-9])(-[A-Za-z0-9]*)$/$1/o;
 	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
     }
 
@@ -234,10 +252,18 @@ sub GetSystemInfo {
 	} elsif ( $CPU eq 'armv4l' || $CPU eq 'sa110' ) {
 	    $ObjDir = 'obj-arm-unknown-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/arm ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	} elsif ( $CPU eq 'ppc' ) {
+	    $ObjDir = 'obj-powerpc-unknown-linux-gnu';
+	    $BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	} else {
 	    $ObjDir = 'obj-' . $CPU . '-pc-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
 	}
+    }
+
+    if ( $OS eq 'NetBSD' ) {
+	$ObjDir = 'obj-' . $CPU . '-unknown-netbsd' . $OSVer;
+	$BuildName = $host . ' ' . $OS . '/' . $CPU . ' ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
     }
 
     if ( $OS eq 'OSF1' ) {
@@ -311,6 +337,15 @@ sub BuildIt {
 	print LOG "current dir is -- " . $ENV{'HOST'} . ":$CurrentDir\n";
 	print LOG "Build Administrator is $BuildAdministrator\n";
 	&PrintEnv;
+	if ( $Compiler ne '' ) {
+	    print LOG "===============================\n";
+	    if ( $Compiler eq 'gcc' || $Compiler eq 'egcc' ) {
+		print LOG "Compiler is -- $Compiler \(" . `$Compiler --version` . "\)\n";
+	    } else {
+		print LOG "Compiler is -- $Compiler\n";
+	    }
+	    print LOG "===============================\n";
+	}
 
 	$BuildStatus = 0;
 
@@ -525,7 +560,7 @@ sub BuildIt {
 
 sub CVSTime {
     my($StartTimeArg) = @_;
-    my($RetTime, $StartTimeArg, $sec, $minute, $hour, $mday, $mon, $year);
+    my($RetTime, $sec, $minute, $hour, $mday, $mon, $year);
 
     ($sec,$minute,$hour,$mday,$mon,$year) = localtime($StartTimeArg);
     $mon++; # month is 0 based.
