@@ -538,11 +538,15 @@ input[type="radio"]:focus {
 }
 
 input[type="radio"]:hover {
-  border : 2px solid black;
+ /* border : 2px solid black; */
+}
+
+input[type="radio"]:hover:active {
+  background-color: lightgray;
 }
 
 input[type="radio"]:active {
-  background-color: lightgray;
+  background-color: rgb(255, 255, 255);
 }
 
 input[type="radio"][disabled]:hover {
@@ -586,11 +590,15 @@ input[type="checkbox"]:focus {
 }
 
 input[type="checkbox"]:hover {
-  border : 2px solid black;
+/*  border : 2px solid black; */
+}
+
+input[type="checkbox"]:hover:active {
+  background-color: lightgray;
 }
 
 input[type="checkbox"]:active {
-  background-color: lightgray;
+  background-color: rgb(255, 255, 255);
 }
 
 input[type="checkbox"][disabled] {
