@@ -1250,8 +1250,9 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 
     /* else */
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-	SendData(url, "quit"CRLF); // send a quit command to close the connection with the server.
-	m_nextState = SMTP_DONE;
+       SendData(url, "QUIT"CRLF); // send a quit command to close the connection with the server.
+	m_nextState = SMTP_RESPONSE;
+	m_nextStateAfterResponse = SMTP_DONE;
 	return(0);
 }
 
