@@ -80,6 +80,10 @@
 #include "nsIRadioGroupContainer.h"
 #include "nsIScriptEventManager.h"
 
+// Put these here so all document impls get them automatically
+#include "nsIHTMLStyleSheet.h"
+#include "nsIHTMLCSSStyleSheet.h"
+
 #include "pldhash.h"
 
 
@@ -369,6 +373,22 @@ public:
                                             PRBool aApplicable);
 
   /**
+   * Get this document's attribute stylesheet.  May return null if
+   * there isn't one.
+   */
+  nsIHTMLStyleSheet* GetAttributeStyleSheet() const {
+    return mAttrStyleSheet;
+  }
+
+  /**
+   * Get this document's inline style sheet.  May return null if there
+   * isn't one
+   */
+  nsIHTMLCSSStyleSheet* GetInlineStyleSheet() const {
+    return mStyleAttrStyleSheet;
+  }
+  
+  /**
    * Set the object from which a document can get a script context.
    * This is the context within which all scripts (during document
    * creation and during event handling) will run.
@@ -587,6 +607,8 @@ protected:
   nsSupportsHashtable mContentWrapperHash;
 
   nsCOMPtr<nsICSSLoader> mCSSLoader;
+  nsCOMPtr<nsIHTMLStyleSheet> mAttrStyleSheet;
+  nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
   nsCOMPtr<nsIScriptEventManager> mScriptEventManager;
 
