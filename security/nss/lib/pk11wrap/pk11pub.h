@@ -499,6 +499,10 @@ PK11Context *PK11_CreateContextBySymKey(CK_MECHANISM_TYPE type,
 PK11Context *PK11_CreateDigestContext(SECOidTag hashAlg);
 PK11Context *PK11_CloneContext(PK11Context *old);
 SECStatus PK11_DigestBegin(PK11Context *cx);
+/*
+ * The output buffer 'out' must be big enough to hold the output of
+ * the hash algorithm 'hashAlg'.
+ */
 SECStatus PK11_HashBuf(SECOidTag hashAlg, unsigned char *out, unsigned char *in,
 					int32 len);
 SECStatus PK11_DigestOp(PK11Context *context, const unsigned char *in, 
