@@ -211,6 +211,10 @@
   <label id="TOOLTIP-tooltipText" class="tooltip-label" flex="1"/>
 </popup>
 
+<popup id="toolbar-context-menu">
+  <menuitem oncommand="CustomizeMailToolbar('compose-toolbox');" id="CustomizeMailToolbar" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
+</popup>
+
   <toolbox id="compose-toolbox" class="toolbox-top" mode="icons"> 
   <!-- Menu -->
   
@@ -480,6 +484,7 @@
            toolbarname="Compose" 
            fullscreentoolbar="true" mode="icons"
            customizable="true"
+           context="toolbar-context-menu"
            defaultset="button-send,spacer,button-address,spacer,spellingButton,spacer,button-attach,button-security,spacer,button-save,spring,throbber-box">
   </toolbar>
 
