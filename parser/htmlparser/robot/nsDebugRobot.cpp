@@ -111,11 +111,12 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
 
 extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir);
 
-class CStreamListener:  public nsIStreamListener 
+class CStreamListener:  public nsIStreamObserver
 {
 public:
   CStreamListener() {
     NS_INIT_REFCNT();
+
   }
 
   ~CStreamListener() {
@@ -123,10 +124,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetBindInfo(void) { return NS_OK; }
   NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg) { return NS_OK; }
   NS_IMETHOD OnStartBinding(const char *aContentType) { return NS_OK; }
-  NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)   { return NS_OK; }
   NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
 };
 
@@ -158,6 +157,7 @@ extern "C" NS_EXPORT int DebugRobot(
   int iCount = 1;
   CStreamListener * pl = new CStreamListener; 
   NS_ADDREF(pl);
+
   if (nsnull==workList)
      return -1;
   g_iMaxProcess = iMaxLoads;
