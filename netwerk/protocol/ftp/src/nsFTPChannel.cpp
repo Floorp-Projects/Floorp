@@ -116,6 +116,15 @@ NS_INTERFACE_MAP_BEGIN(nsFTPChannel)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
     NS_INTERFACE_MAP_ENTRY(nsICacheListener)
+    if (aIID.Equals(NS_GET_IID(nsIProperties))) {
+        if (!mProperties) {
+            mProperties =
+                do_CreateInstance(NS_PROPERTIES_CONTRACTID, (nsIChannel *) this);
+            NS_ENSURE_STATE(mProperties);
+        }
+        return mProperties->QueryInterface(aIID, aInstancePtr);
+    }
+    else
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
 NS_INTERFACE_MAP_END
 

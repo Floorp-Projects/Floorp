@@ -67,7 +67,7 @@ nsProperties::Get(const char* prop, const nsIID & uuid, void* *result)
     if (!nsProperties_HashBase::Get(prop, getter_AddRefs(value))) {
         return NS_ERROR_FAILURE;
     }
-    return value->QueryInterface(uuid, result);
+    return (value) ? value->QueryInterface(uuid, result) : NS_ERROR_NO_INTERFACE;
 }
 
 NS_IMETHODIMP

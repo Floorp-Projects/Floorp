@@ -146,36 +146,23 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         return NS_ERROR_ILLEGAL_VALUE;
 
 
-#ifdef NS_DEBUG
-    // XXX: if only the owner weren't always null this is what I'd want to do
-
-    // Get the owner of the channel to perform permission checks.
-    //
-    // It's OK if owner is null, this means it was a top level
-    // load and we want to allow installs in that case.
-    nsCOMPtr<nsISupports>  owner;
-    nsCOMPtr<nsIPrincipal> principal;
-    nsCOMPtr<nsIURI>       ownerURI;
-
-    channel->GetOwner( getter_AddRefs( owner ) );
-    if ( owner )
-    {
-        principal = do_QueryInterface( owner );
-        if ( principal )
-        {
-            principal->GetURI( getter_AddRefs( ownerURI ) );
-        }
-    }
-#endif
-
     // Save the referrer if any, for permission checks
+    static const char kReferrerProperty[] = "docshell.internalReferrer";
+    PRBool useReferrer = PR_FALSE;
     nsCOMPtr<nsIURI> referringURI;
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-    if ( httpChannel )
-    {
-        httpChannel->GetReferrer(getter_AddRefs(referringURI));
-    }
+    nsCOMPtr<nsIProperties> channelprops(do_QueryInterface(channel));
 
+    if (channelprops && 
+        NS_SUCCEEDED(channelprops->Has(kReferrerProperty, &useReferrer)) &&
+        useReferrer)
+    {
+        // channel may have the property but set to null. In that case we know
+        // it was a typed URL or bookmark and can bypass site whitelisting, as
+        // opposed to not knowing the origin and going with the fallback plan.
+        channelprops->Get(kReferrerProperty,
+                          NS_GET_IID(nsIURI),
+                          getter_AddRefs(referringURI));
+    }
 
     // Cancel the current request. nsXPInstallManager restarts the download
     // under its control (shared codepath with InstallTrigger)
@@ -198,14 +185,15 @@ nsInstallTrigger::HandleContent(const char * aContentType,
     // going to honor this request based on PermissionManager settings
     PRBool enabled = PR_FALSE;
 
-    if ( referringURI )
+    if ( useReferrer )
     {
-        // easiest and most common case: base decision on http referrer
+        // easiest and most common case: base decision on the page that
+        // contained the link
         //
         // NOTE: the XPI itself may be from elsewhere; the user can decide if
         // they trust the actual source when they get the install confirmation
         // dialog. The decision we're making here is whether the triggering
-        // site is one which is allowed to annoy the user with modal dialogs
+        // site is one which is allowed to annoy the user with modal dialogs.
 
         enabled = AllowInstall( referringURI );
     }

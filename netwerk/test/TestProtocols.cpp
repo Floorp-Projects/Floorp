@@ -390,6 +390,17 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
     LOG(("\tChannel Owner: %x\n", owner.get()));
   }
 
+  nsCOMPtr<nsIProperties> props = do_QueryInterface(request);
+  if (props) {
+      nsCOMPtr<nsIURI> foo;
+      props->Get("test.foo", NS_GET_IID(nsIURI), getter_AddRefs(foo));
+      if (foo) {
+          nsCAutoString spec;
+          foo->GetSpec(spec);
+          LOG(("\ttest.foo: %s\n", spec.get()));
+      }
+  }
+
   nsCOMPtr<nsIHttpChannelInternal> httpChannelInt(do_QueryInterface(request));
   if (httpChannelInt) {
       PRUint32 majorVer, minorVer;
@@ -610,6 +621,12 @@ nsresult StartLoadingURL(const char* aUrlString)
         if (NS_FAILED(rv)) {
             LOG(("ERROR: NS_OpenURI failed for %s [rv=%x]\n", aUrlString, rv));
             return rv;
+        }
+
+        nsCOMPtr<nsIProperties> props = do_QueryInterface(pChannel);
+        if (props) {
+            if (NS_SUCCEEDED(props->Set("test.foo", pURL)))
+                LOG(("set prop 'test.foo'\n"));
         }
 
         /* 
