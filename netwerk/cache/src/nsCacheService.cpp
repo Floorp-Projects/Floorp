@@ -53,7 +53,7 @@
 #endif
 
 #define DISK_CACHE_ENABLE_PREF      "browser.cache.disk.enable"
-#define DISK_CACHE_DIR_PREF         "browser.cache.disk.directory"
+#define DISK_CACHE_DIR_PREF         "browser.cache.disk.parent_directory"
 #define DISK_CACHE_CAPACITY_PREF    "browser.cache.disk.capacity"
 
 #define MEMORY_CACHE_ENABLE_PREF    "browser.cache.memory.enable"
@@ -814,6 +814,9 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     NS_ASSERTION(request != nsnull, "ActivateEntry called with no request");
     if (result) *result = nsnull;
     if ((!request) || (!result))  return NS_ERROR_NULL_POINTER;
+
+    if (!mEnableMemoryDevice && (!mEnableDiskDevice || !request->IsStreamBased() ))
+        return NS_ERROR_FAILURE;
 
 
     // search active entries (including those not bound to device)
