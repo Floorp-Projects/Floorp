@@ -82,6 +82,7 @@ extern js2val TypeError_Constructor(JS2Metadata *meta, const js2val thisValue, j
 extern js2val UriError_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val String_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+extern js2val RegExp_ConstructorOpt(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc, bool flat);
 extern js2val RegExp_exec(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val Boolean_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
@@ -1045,7 +1046,8 @@ class SpiderMonkeyInstance : public SimpleInstance {
 public:
     SpiderMonkeyInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
 
-    void *uData;
+    void *jsObject;
+    void *pluginInstance;
 
     virtual ~SpiderMonkeyInstance()    { }
 };

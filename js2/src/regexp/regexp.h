@@ -96,7 +96,7 @@ class JS2Metadata;
 REMatchResult *REExecute(JS2Metadata *meta, JS2RegExp *re, const jschar *str, uint32 index, uint32 length, bool globalMultiline);
 
 // Compile the source re, return NULL for failure (error functions called)
-JS2RegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 flags);
+JS2RegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 flags, bool flat);
 
 // Compile the flag source and build a flag bit set. Return true/false for success/failure
 bool parseFlags(JS2Metadata *meta, const jschar *flagStr, uint32 length, uint32 *flags);

@@ -283,19 +283,22 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
     js2val searchValue = JS2VAL_UNDEFINED;
     js2val replaceValue = JS2VAL_UNDEFINED;
 
-    if (argc > 0) searchValue = argv[0];
+    if (argc > 0) {
+        searchValue = argv[0];
+        if (meta->objectType(searchValue) != meta->regexpClass) {
+            js2val regexp = JS2VAL_NULL;
+		    js2val reArgs[2];
+		    reArgs[0] = searchValue;
+		    reArgs[1] = (argc > 2) ? argv[2] : JS2VAL_UNDEFINED;
+            regexp = RegExp_ConstructorOpt(meta, regexp, reArgs, 2, true);
+		    searchValue = regexp;
+	    }
+    }
+
     if (argc > 1) replaceValue = argv[1];
     const String *replaceStr = meta->toString(replaceValue);
     DEFINE_ROOTKEEPER(rk2, replaceStr);
 
-    if (meta->objectType(searchValue) != meta->regexpClass) {
-        js2val regexp = JS2VAL_NULL;
-		js2val reArgs[2];
-		reArgs[0] = argv[0];
-		reArgs[1] = (argc > 2) ? argv[2] : JS2VAL_UNDEFINED;
-        regexp = RegExp_Constructor(meta, regexp, reArgs, 2);
-		searchValue = regexp;
-	}
 
     RegExpInstance *reInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(searchValue)); 
     JS2RegExp *re = reInst->mRegExp;

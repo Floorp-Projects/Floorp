@@ -2887,7 +2887,7 @@ bool parseFlags(JS2Metadata *meta, const jschar *flagStr, uint32 length, uint32 
 #define JS_ROUNDUP(x,y) (JS_HOWMANY(x,y)*(y))
 
 // Compile the source re, return NULL for failure (error functions called)
-JS2RegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 flags)
+JS2RegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 flags, bool flat)
 {    
     JS2RegExp *re;
     CompilerState state;
@@ -2911,8 +2911,16 @@ JS2RegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32
         state.classCache[i].start = NULL;
 
     len = length;
-    if (!parseRegExp(&state))
-        goto out;
+    if (len != 0 && flat) {
+        state.result = NewRENode(&state, REOP_FLAT);
+        state.result->u.flat.chr = *state.cpbegin;
+        state.result->u.flat.length = length;                    
+        state.result->kid = (void *)(state.cpbegin);
+        state.progLength += 5;
+    }
+    else
+        if (!parseRegExp(&state))
+            goto out;
 
     resize = sizeof *re + state.progLength + 1;
     re = (JS2RegExp *) malloc(JS_ROUNDUP(resize, sizeof(uint32)));
