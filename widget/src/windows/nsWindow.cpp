@@ -3341,11 +3341,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         if(strcmp(className, WindowClass()))
           isMozWindowTakingFocus = PR_FALSE;
 
-        result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
         if(gJustGotDeactivate) {
           gJustGotDeactivate = PR_FALSE;
           result = DispatchFocus(NS_DEACTIVATE, isMozWindowTakingFocus);
         } 
+        result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
         break;
 
       case WM_WINDOWPOSCHANGED: 
