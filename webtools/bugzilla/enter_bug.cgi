@@ -173,11 +173,11 @@ sub pickos {
             /\(.*IBM.*\)/ && do {return "OS/2";};
             /\(.*QNX.*\)/ && do {return "Neutrino";};
             /\(.*VMS.*\)/ && do {return "OpenVMS";};
-#            /\(.*Windows XP.*\)/ && do {return "Windows XP";};
-#            /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
+            /\(.*Windows XP.*\)/ && do {return "Windows XP";};
+            /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
             /\(.*Windows 2000.*\)/ && do {return "Windows 2000";};
-            /Windows NT 5.*\)/ && do {return "Windows 2000";};
-            /\(Windows.*NT/ && do {return "Windows NT";};
+            /\(.*Windows NT 5.*\)/ && do {return "Windows 2000";};
+            /\(.*Windows.*NT.*\)/ && do {return "Windows NT";};
             /\(.*Win.*98.*4\.9.*\)/ && do {return "Windows ME";};
             /\(.*Win98.*\)/ && do {return "Windows 98";};
             /\(.*Win95.*\)/ && do {return "Windows 95";};

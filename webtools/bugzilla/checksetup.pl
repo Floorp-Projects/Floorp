@@ -442,6 +442,7 @@ LocalVar('opsys', '
         "Windows ME",  # Millenium Edition (upgrade of 98)
         "Windows 2000",
         "Windows NT",
+        "Windows XP",
         "Mac System 7",
         "Mac System 7.5",
         "Mac System 7.6.1",
