@@ -797,6 +797,12 @@ struct JSClass {
     JSReserveSlotsOp    reserveSlots;
 };
 
+struct JSExtendedClass {
+    JSClass             base;
+    JSEqualityOp        equality;
+    jsword              reserved[7];
+};
+
 #define JSCLASS_HAS_PRIVATE             (1<<0)  /* objects have private slot */
 #define JSCLASS_NEW_ENUMERATE           (1<<1)  /* has JSNewEnumerateOp hook */
 #define JSCLASS_NEW_RESOLVE             (1<<2)  /* has JSNewResolveOp hook */
@@ -808,7 +814,7 @@ struct JSClass {
                                                    parameter */
 #define JSCLASS_CONSTRUCT_PROTOTYPE     (1<<6)  /* call constructor on class
                                                    prototype */
-#define JSCLASS_W3C_XML_INFO_ITEM       (1<<7)  /* W3C XML Information Item */
+#define JSCLASS_DOCUMENT_OBSERVER       (1<<7)  /* DOM document observer */
 
 /*
  * To reserve slots fetched and stored via JS_Get/SetReservedSlot, bitwise-or
@@ -824,8 +830,15 @@ struct JSClass {
                                           >> JSCLASS_RESERVED_SLOTS_SHIFT)    \
                                          & JSCLASS_RESERVED_SLOTS_MASK)
 
+#define JSCLASS_HIGH_FLAGS_SHIFT        (JSCLASS_RESERVED_SLOTS_SHIFT +       \
+                                         JSCLASS_RESERVED_SLOTS_WIDTH)
+
+/* True if JSClass is really a JSExtendedClass. */
+#define JSCLASS_IS_EXTENDED             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+0))
+
 /* Initializer for unused members of statically initialized JSClass structs. */
 #define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,0
+#define JSCLASS_NO_RESERVED_MEMBERS     {0,0,0,0,0,0,0}
 
 /* For detailed comments on these function pointer types, see jspubtd.h. */
 struct JSObjectOps {
@@ -860,7 +873,7 @@ struct JSObjectOps {
 
 struct JSXMLObjectOps {
     JSObjectOps         base;
-    JSCallMethodOp      callMethod;
+    JSGetMethodOp       getMethod;
     JSEnumerateValuesOp enumerateValues;
     JSEqualityOp        equality;
     JSConcatenateOp     concatenate;
@@ -898,29 +911,8 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
  * The magic XML namespace id is int-tagged, but not a valid integer jsval.
  * Global object classes in embeddings that enable JS_HAS_XML_SUPPORT (E4X)
  * should handle this id specially before converting id via JSVAL_TO_INT.
- * XXXbe fix this to avoid preemption/collision
  */
-#define JS_DEFAULT_XML_NAMESPACE_ID INT_TO_JSVAL(JSVAL_INT_MIN)
-
-#define JSID_ATOM               0x0
-#define JSID_INT                0x1
-#define JSID_OBJECT             0x2
-#define JSID_TAGMASK            0x3
-#define JSID_TAG(id)            ((id) & JSID_TAGMASK)
-#define JSID_SETTAG(id,t)       ((id) | (t))
-#define JSID_CLRTAG(id)         ((id) & ~(jsid)JSID_TAGMASK)
-
-#define JSID_IS_ATOM(id)        (JSID_TAG(id) == JSID_ATOM)
-#define JSID_TO_ATOM(id)        ((JSAtom *)(id))
-#define ATOM_TO_JSID(atom)      ((jsid)(atom))
-
-#define JSID_IS_INT(id)         ((id) & JSID_INT)
-#define JSID_TO_INT(id)         ((jsint)(id) >> 1)
-#define INT_TO_JSID(i)          (((jsint)(i) << 1) | JSID_INT)
-
-#define JSID_IS_OBJECT(id)      (JSID_TAG(id) == JSID_OBJECT)
-#define JSID_TO_OBJECT(id)      ((JSObject *) JSID_CLRTAG(id))
-#define OBJECT_TO_JSID(obj)     ((jsid)(obj) | JSID_OBJECT)
+#define JS_DEFAULT_XML_NAMESPACE_ID ((jsid) JSVAL_VOID)
 
 /*
  * JSNewResolveOp flag bits.

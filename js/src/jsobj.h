@@ -257,8 +257,8 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		jsval *rval);
 
 extern JSBool
-js_obj_hasOwnProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                      jsval *rval);
+js_HasOwnPropertyHelper(JSContext *cx, JSObject *obj, JSLookupPropOp lookup,
+                        uintN argc, jsval *argv, jsval *rval);
 
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);

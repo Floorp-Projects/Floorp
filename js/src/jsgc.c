@@ -69,6 +69,10 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#if JS_HAS_XML_SUPPORT
+#include "jsxml.h"
+#endif
+
 /*
  * GC arena sizing depends on amortizing arena overhead using a large number
  * of things per arena, and on the thing/flags ratio of 8:1 on most platforms.
@@ -1355,6 +1359,9 @@ restart:
                 flagp += GC_THINGS_SIZE;
         }
     }
+#if JS_HAS_XML_SUPPORT
+    js_FinalizeDoomedXML(cx);
+#endif
 
     /*
      * Free phase.

@@ -1963,7 +1963,6 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     JSParseNode *pn2, *pndot, *pnup, *pndown;
     ptrdiff_t top;
-    JSAtomListElement *ale;
 
     pn2 = pn->pn_expr;
     if (op == JSOP_GETPROP &&
@@ -2008,10 +2007,8 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
                                CG_OFFSET(cg) - pndown->pn_offset) < 0) {
                 return JS_FALSE;
             }
-            ale = js_IndexAtom(cx, pndot->pn_atom, &cg->atomList);
-            if (!ale)
+            if (!EmitAtomOp(cx, pndot, pndot->pn_op, cg))
                 return JS_FALSE;
-            EMIT_ATOM_INDEX_OP(pndot->pn_op, ALE_INDEX(ale));
 
             /* Reverse the pn_expr link again. */
             pnup = pndot->pn_expr;
@@ -2030,10 +2027,8 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
         if (js_Emit1(cx, cg, op) < 0)
             return JS_FALSE;
     } else {
-        ale = js_IndexAtom(cx, pn->pn_atom, &cg->atomList);
-        if (!ale)
+        if (!EmitAtomOp(cx, pn, op, cg))
             return JS_FALSE;
-        EMIT_ATOM_INDEX_OP(op, ALE_INDEX(ale));
     }
     return JS_TRUE;
 }
@@ -2708,6 +2703,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JSCodeGenerator *cg2;
         JSFunction *fun;
 
+#if JS_HAS_XML_SUPPORT
+        if (pn->pn_arity == PN_NULLARY) {
+            if (js_Emit1(cx, cg, JSOP_GETFUNNS) < 0)
+                return JS_FALSE;
+            break;
+        }
+#endif
+
         /* Generate code for the function's body. */
         cg2mark = JS_ARENA_MARK(&cx->tempPool);
         JS_ARENA_ALLOCATE_TYPE(cg2, JSCodeGenerator, &cx->tempPool);
@@ -3022,6 +3025,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             top = CG_OFFSET(cg);
             SET_STATEMENT_TOP(&stmtInfo, top);
 
+#if JS_HAS_XML_SUPPORT
+            /* Emit a for each prefix. */
+            if (pn->pn_op != JSOP_NOP && js_Emit1(cx, cg, pn->pn_op) < 0)
+                return JS_FALSE;
+#endif
+
             /* Compile a JSOP_FOR* bytecode based on the left hand side. */
             switch (pn3->pn_type) {
               case TOK_VAR:
@@ -3096,6 +3105,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
               default:
                 JS_ASSERT(0);
             }
+
             if (pn3->pn_type != TOK_LB) {
                 /* Annotate so the decompiler can find the loop-closing jump. */
                 noteIndex = js_NewSrcNote(cx, cg, SRC_WHILE);
@@ -3706,7 +3716,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (pn->pn_arity == PN_UNARY) {
             if (!js_EmitTree(cx, cg, pn->pn_kid))
                 return JS_FALSE;
-            if (js_Emit1(cx, cg, JSOP_XMLEXPR) < 0)
+            if (js_Emit1(cx, cg, pn->pn_op) < 0)
                 return JS_FALSE;
             break;
         }
@@ -3739,7 +3749,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
             if (!useful) {
                 CG_CURRENT_LINE(cg) = pn2->pn_pos.begin.lineno;
-                if (!js_ReportCompileErrorNumber(cx, NULL, cg,
+                if (!js_ReportCompileErrorNumber(cx, cg,
+                                                 JSREPORT_CG |
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  JSMSG_USELESS_EXPR)) {
@@ -3752,11 +3763,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
             }
         }
-        break;
-
-      case TOK_DEFAULT:
-        if (js_Emit1(cx, cg, pn->pn_op) < 0)
-            return JS_FALSE;
         break;
 
       case TOK_COLON:
@@ -3857,12 +3863,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn2->pn_right))
                 return JS_FALSE;
-#if JS_HAS_XML_SUPPORT
-            if (TOKEN_TYPE_IS_XML(pn2->pn_right->pn_type) &&
-                js_Emit1(cx, cg, JSOP_BINDXMLPROP) < 0) {
-                return JS_FALSE;
-            }
-#endif
             break;
 #if JS_HAS_LVALUE_RETURN
           case TOK_LP:
@@ -4081,6 +4081,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         } else {
 #if JS_HAS_XML_SUPPORT
       case TOK_DBLCOLON:
+            if (pn->pn_arity == PN_NAME) {
+                if (!js_EmitTree(cx, cg, pn->pn_expr))
+                    return JS_FALSE;
+                if (!EmitAtomOp(cx, pn, pn->pn_op, cg))
+                    return JS_FALSE;
+                break;
+            }
 #endif
             /* Binary operators that evaluate both operands unconditionally. */
             if (!js_EmitTree(cx, cg, pn->pn_left))
@@ -4097,6 +4104,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
 #if JS_HAS_XML_SUPPORT
       case TOK_AT:
+      case TOK_DEFAULT:
+        JS_ASSERT(pn->pn_arity == PN_UNARY);
+        /* FALL THROUGH */
 #endif
       case TOK_UNARYOP:
         /* Unary op, including unary +/-. */
@@ -4201,6 +4211,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!EmitPropOp(cx, pn2, JSOP_DELPROP, cg))
                 return JS_FALSE;
             break;
+#if JS_HAS_XML_SUPPORT
+          case TOK_DBLDOT:
+            if (!EmitElemOp(cx, pn2, JSOP_DELDESC, cg))
+                return JS_FALSE;
+            break;
+#endif
           case TOK_LB:
             if (!EmitElemOp(cx, pn2, JSOP_DELELEM, cg))
                 return JS_FALSE;
@@ -4267,42 +4283,26 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * constructable object expression.
          *
          * For E4X, if calling rather than constructing (TOK_LP), and if this
-         * expression is a member reference, select JSOP_CALLMETHOD instead of
-         * JSOP_CALL.  ECMA-357 requires this to handle XML methods, which are
-         * not found via normal property lookup.
+         * expression is a member reference, select JSOP_GETMETHOD instead of
+         * JSOP_GETPROP.  ECMA-357 separates XML method lookup from the normal
+         * property lookup done for native objects.
          */
         pn2 = pn->pn_head;
+#if JS_HAS_XML_SUPPORT
         if (JS_HAS_XML_OPTION(cx) && pn2->pn_type == TOK_DOT) {
-            pn->pn_op = JSOP_CALLMETHOD;
-            if (!js_EmitTree(cx, cg, pn2->pn_expr))
-                return JS_FALSE;
-            ale = js_IndexAtom(cx, pn2->pn_atom, &cg->atomList);
-            if (!ale)
-                return JS_FALSE;
-            atomIndex = ALE_INDEX(ale);
-            pn2->pn_offset = top;
-
-            /*
-             * Dup the object whose method is being called, so the stack has
-             * the normal [callee, this, args...] structure.
-             */
-            if (js_Emit1(cx, cg, JSOP_DUP) < 0)
-                return JS_FALSE;
-        } else {
-            if (!js_EmitTree(cx, cg, pn2))
-                return JS_FALSE;
-
-            /*
-             * Push the virtual machine's "obj" register, which was set by a
-             * name, property, or element get (or set) bytecode.
-             */
-            if (js_Emit1(cx, cg, JSOP_PUSHOBJ) < 0)
-                return JS_FALSE;
-
-#ifdef __GNUC__
-            atomIndex = 0;      /* quell GCC overwarning */
-#endif
+            JS_ASSERT(pn2->pn_op == JSOP_GETPROP);
+            pn2->pn_op = JSOP_GETMETHOD;
         }
+#endif
+        if (!js_EmitTree(cx, cg, pn2))
+            return JS_FALSE;
+
+        /*
+         * Push the virtual machine's "obj" register, which was set by a
+         * name, property, or element get (or set) bytecode.
+         */
+        if (js_Emit1(cx, cg, JSOP_PUSHOBJ) < 0)
+            return JS_FALSE;
 
         /* Remember start of callable-object bytecode for decompilation hint. */
         off = top;
@@ -4320,19 +4320,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         argc = pn->pn_count - 1;
-        op = pn->pn_op;
-        if (op == JSOP_CALLMETHOD) {
-            off = js_EmitN(cx, cg, op, ARGNO_LEN+ATOM_INDEX_LEN);
-            if (off < 0)
-                return JS_FALSE;
-            pc = CG_CODE(cg, off);
-            SET_ARGNO(pc, argc);
-            pc += ARGNO_LEN;
-            SET_ATOM_INDEX(pc, atomIndex);
-        } else {
-            if (js_Emit3(cx, cg, op, ARGC_HI(argc), ARGC_LO(argc)) < 0)
-                return JS_FALSE;
-        }
+        if (js_Emit3(cx, cg, pn->pn_op, ARGC_HI(argc), ARGC_LO(argc)) < 0)
+            return JS_FALSE;
         break;
 
 #if JS_HAS_INITIALIZERS
@@ -4958,7 +4947,7 @@ void DumpSrcNoteSizeHist()
         fp = fopen("/tmp/srcnotes.hist", "w");
         if (!fp)
             return;
-        setlinebuf(fp);
+        setvbuf(fp, NULL, _IONBF, 0);
     }
     fprintf(fp, "SrcNote size histogram:\n");
     for (i = 0; i < NBINS; i++) {

@@ -42,12 +42,6 @@
 #include "jsstddef.h"
 #include "jspubtd.h"
 
-/* XXXbe move to jsprvtd.h or jspubtd.h */
-typedef struct JSXML            JSXML;
-typedef struct JSXMLNamespace   JSXMLNamespace;
-typedef struct JSXMLQName       JSXMLQName;
-typedef struct JSXMLArray       JSXMLArray;
-
 extern const char js_isXMLName_str[];
 extern const char js_Namespace_str[];
 extern const char js_QName_str[];
@@ -59,10 +53,21 @@ extern const char js_gt_entity_str[];
 extern const char js_lt_entity_str[];
 extern const char js_quot_entity_str[];
 
+/*
+ * Order matters: no and single owner cases < GC (potentially many) owners.
+ */
+typedef enum JSXMLMarkFlag {
+    JSXML_MARK_DOOMED = -2,             /* no owners, to be finalized */
+    JSXML_MARK_SINGLE_OWNER = -1,       /* single owner, manual destroy */
+    JSXML_MARK_CLEAR = 0,               /* GC owner, nominal state */
+    JSXML_MARK_LIVE = 1                 /* GC owner, known to be live */
+} JSXMLMarkFlag;
+
 struct JSXMLNamespace {
-    JSObject    *object;
-    JSString    *prefix;
-    JSString    *uri;
+    JSObject            *object;
+    JSString   	        *prefix;
+    JSString   	        *uri;
+    JSXMLMarkFlag       markflag;
 };
 
 extern JSXMLNamespace *
@@ -78,10 +83,11 @@ extern JSObject *
 js_GetXMLNamespaceObject(JSContext *cx, JSXMLNamespace *ns);
 
 struct JSXMLQName {
-    JSObject    *object;
-    JSString    *uri;
-    JSString    *prefix;
-    JSString    *localName;
+    JSObject            *object;
+    JSString            *uri;
+    JSString            *prefix;
+    JSString            *localName;
+    JSXMLMarkFlag       markflag;
 };
 
 extern JSXMLQName *
@@ -99,52 +105,80 @@ extern JSObject *
 js_GetXMLQNameObject(JSContext *cx, JSXMLQName *qn);
 
 extern JSObject *
-js_ConstructQNameObject(JSContext *cx, jsval nsval, jsval lnval);
+js_GetAttributeNameObject(JSContext *cx, JSXMLQName *qn);
+
+extern JSObject *
+js_ConstructXMLQNameObject(JSContext *cx, jsval nsval, jsval lnval);
 
 typedef JSBool
 (* JS_DLL_CALLBACK JSIdentityOp)(const void *a, const void *b);
 
 struct JSXMLArray {
-    uint32              count;
     uint32              length;
+    uint32              capacity;
     void                **vector;
+    JSXMLArrayCursor    *cursors;
 };
 
+struct JSXMLArrayCursor {
+    JSXMLArray          *array;
+    uint32              index;
+    JSXMLArrayCursor    *next;
+    JSXMLArrayCursor    **prevp;
+};
+
+/*
+ * NB: don't reorder this enum without changing all array initializers that
+ * depend on it in jsxml.c.
+ */ 
 typedef enum JSXMLClass {
     JSXML_CLASS_LIST,
     JSXML_CLASS_ELEMENT,
-    JSXML_CLASS_TEXT,
     JSXML_CLASS_ATTRIBUTE,
-    JSXML_CLASS_COMMENT,
     JSXML_CLASS_PROCESSING_INSTRUCTION,
+    JSXML_CLASS_TEXT,
+    JSXML_CLASS_COMMENT,
     JSXML_CLASS_LIMIT
 } JSXMLClass;
 
-#define JSXML_CLASS_HAS_KIDS(xml_class)  ((xml_class) < JSXML_CLASS_TEXT)
-#define JSXML_CLASS_HAS_VALUE(xml_class) ((xml_class) >= JSXML_CLASS_TEXT)
+#define JSXML_CLASS_HAS_KIDS(class_)    ((class_) < JSXML_CLASS_ATTRIBUTE)
+#define JSXML_CLASS_HAS_VALUE(class_)   ((class_) >= JSXML_CLASS_ATTRIBUTE)
+#define JSXML_CLASS_HAS_NAME(class_)                                          \
+    ((uintN)((class_) - JSXML_CLASS_ELEMENT) <=                               \
+     (uintN)(JSXML_CLASS_PROCESSING_INSTRUCTION - JSXML_CLASS_ELEMENT))
+
+#ifdef DEBUG_notme
+#include "jsclist.h"
+#endif
 
 struct JSXML {
+#ifdef DEBUG_notme
+    JSCList             links;
+    uint32              serial;
+#endif
     JSObject            *object;
     JSXML               *parent;
     JSXMLQName          *name;
-    jsrefcount          nrefs;          /* references from JSObjects */
-    uint32              flags;
-    JSXMLClass          xml_class;
+    int8                markflag;
+    uint8               xml_class;
+    uint16              xml_flags;
     union {
-        struct {
+        struct JSXMLListVar {
             JSXMLArray  kids;           /* NB: must come first */
             JSXML       *target;
             JSXMLQName  *targetprop;
         } list;
-        struct {
+        struct JSXMLVar {
             JSXMLArray  kids;           /* NB: must come first */
             JSXMLArray  namespaces;
             JSXMLArray  attrs;
         } elem;
         JSString        *value;
+        jsdouble        align;
     } u;
 };
 
+/* union member shorthands */
 #define xml_kids        u.list.kids
 #define xml_target      u.list.target
 #define xml_targetprop  u.list.targetprop
@@ -152,14 +186,16 @@ struct JSXML {
 #define xml_attrs       u.elem.attrs
 #define xml_value       u.value
 
+/* xml_flags values */
+#define XMLF_WHITESPACE_TEXT    0x1
+
+/* xml_class-testing macros */
 #define JSXML_HAS_KIDS(xml)     JSXML_CLASS_HAS_KIDS((xml)->xml_class)
 #define JSXML_HAS_VALUE(xml)    JSXML_CLASS_HAS_VALUE((xml)->xml_class)
+#define JSXML_HAS_NAME(xml)     JSXML_CLASS_HAS_NAME((xml)->xml_class)
 #define JSXML_LENGTH(xml)       (JSXML_CLASS_HAS_KIDS((xml)->xml_class)       \
-                                 ? (xml)->xml_kids.count                      \
+                                 ? (xml)->xml_kids.length                     \
                                  : 0)
-
-/* JSXML flag definitions. */
-#define XML_COPY_ON_WRITE       0x1
 
 extern JSXML *
 js_NewXML(JSContext *cx, JSXMLClass xml_class);
@@ -167,8 +203,11 @@ js_NewXML(JSContext *cx, JSXMLClass xml_class);
 extern void
 js_DestroyXML(JSContext *cx, JSXML *xml);
 
-extern JSXML *
-js_ParseNodeToXML(JSContext *cx, JSParseNode *pn, uint32 flags);
+extern void
+js_FinalizeDoomedXML(JSContext *cx);
+
+extern JSObject *
+js_ParseNodeToXMLObject(JSContext *cx, JSParseNode *pn);
 
 extern JSObject *
 js_NewXMLObject(JSContext *cx, JSXMLClass xml_class);
@@ -178,12 +217,16 @@ js_GetXMLObject(JSContext *cx, JSXML *xml);
 
 extern JS_FRIEND_DATA(JSXMLObjectOps)   js_XMLObjectOps;
 extern JS_FRIEND_DATA(JSClass)          js_XMLClass;
+extern JS_FRIEND_DATA(JSExtendedClass)  js_QNameClass;
+extern JS_FRIEND_DATA(JSClass)          js_AttributeNameClass;
+extern JS_FRIEND_DATA(JSClass)          js_AnyNameClass;
+extern JS_FRIEND_DATA(JSExtendedClass)  js_NamespaceClass;
 
 /*
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
 #define OBJECT_IS_XML(cx,obj)   ((obj)->map->ops == &js_XMLObjectOps.base)
-#define JSVAL_IS_XML(cx,v)      (!JSVAL_IS_PRIMITIVE(v) &&                    \
+#define VALUE_IS_XML(cx,v)      (!JSVAL_IS_PRIMITIVE(v) &&                    \
                                  OBJECT_IS_XML(cx, JSVAL_TO_OBJECT(v)))
 
 extern JSObject *
@@ -197,6 +240,9 @@ js_InitXMLClass(JSContext *cx, JSObject *obj);
 
 extern JSObject *
 js_InitXMLClasses(JSContext *cx, JSObject *obj);
+
+extern JSBool
+js_GetFunctionNamespace(JSContext *cx, jsval *vp);
 
 extern JSBool
 js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp);
@@ -222,11 +268,14 @@ extern JSString *
 js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str,
                     JSString *str2);
 
-extern JSBool
-js_GetAnyName(JSContext *cx, jsval *vp);
+extern JSString *
+js_EscapeElementValue(JSContext *cx, JSString *str);
+
+extern JSString *
+js_ValueToXMLString(JSContext *cx, jsval v);
 
 extern JSBool
-js_BindXMLProperty(JSContext *cx, jsval lval, jsval rval);
+js_GetAnyName(JSContext *cx, jsval *vp);
 
 extern JSBool
 js_FindXMLProperty(JSContext *cx, jsval name, JSObject **objp, jsval *namep);
@@ -241,6 +290,9 @@ extern JSBool
 js_GetXMLDescendants(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 extern JSBool
+js_DeleteXMLListElements(JSContext *cx, JSObject *listobj);
+
+extern JSBool
 js_FilterXMLList(JSContext *cx, JSObject *obj, jsbytecode *pc, uint32 len,
                  jsval *vp);
 
@@ -252,5 +304,9 @@ js_ValueToXMLListObject(JSContext *cx, jsval v);
 
 extern JSObject *
 js_CloneXMLObject(JSContext *cx, JSObject *obj);
+
+extern JSObject *
+js_NewXMLSpecialObject(JSContext *cx, JSXMLClass xml_class, JSString *name,
+                       JSString *value);
 
 #endif /* jsxml_h___ */

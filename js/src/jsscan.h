@@ -250,6 +250,9 @@ struct JSTokenStream {
 #define TSF_XMLTEXTMODE 0x400           /* scanning XMLText terminal from E4X */
 #define TSF_XMLONLYMODE 0x800           /* don't scan {expr} within text/tag */
 
+/* Flag indicating unexpected end of input, i.e. TOK_EOF not at top-level. */
+#define TSF_UNEXPECTED_EOF 0x1000
+
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
 #define PARA_SEPARATOR  0x2029
@@ -293,9 +296,14 @@ js_MapKeywords(void (*mapfun)(const char *));
  * Return true for a warning, false for an error.
  */
 extern JSBool
-js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
-                            JSCodeGenerator *cg, uintN flags,
-                            const uintN errorNumber, ...);
+js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
+                            uintN errorNumber, ...);
+
+/* Steal some JSREPORT_* bits (see jsapi.h) to tell handle's type. */
+#define JSREPORT_HANDLE 0x300
+#define JSREPORT_TS     0x000
+#define JSREPORT_CG     0x100
+#define JSREPORT_PN     0x200
 
 /*
  * Look ahead one token and return its type.

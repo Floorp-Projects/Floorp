@@ -112,6 +112,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_USES_NONLOCALS 0x40 /* function refers to non-local names */
 #define TCF_FUN_HEAVYWEIGHT    0x80 /* function needs Call object per call */
 #define TCF_FUN_FLAGS          0xE0 /* flags to propagate from FunctionBody */
+#define TCF_HAS_DEFXMLNS      0x100 /* default xml namespace = ...; parsed */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = (tc)->numGlobalVars = 0,                                   \

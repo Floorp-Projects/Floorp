@@ -1196,9 +1196,17 @@ obj_unwatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
  */
 
 /* Proposed ECMA 15.2.4.5. */
+static JSBool
+obj_hasOwnProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval)
+{
+    return js_HasOwnPropertyHelper(cx, obj, obj->map->ops->lookupProperty,
+                                   argc, argv, rval);
+}
+
 JSBool
-js_obj_hasOwnProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                      jsval *rval)
+js_HasOwnPropertyHelper(JSContext *cx, JSObject *obj, JSLookupPropOp lookup,
+                        uintN argc, jsval *argv, jsval *rval)
 {
     jsid id;
     JSObject *obj2;
@@ -1207,7 +1215,7 @@ js_obj_hasOwnProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_ValueToId(cx, argv[0], &id))
         return JS_FALSE;
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+    if (!lookup(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
     if (!prop) {
         *rval = JSVAL_FALSE;
@@ -1429,7 +1437,7 @@ static JSFunctionSpec object_methods[] = {
     {js_unwatch_str,              obj_unwatch,        1,0,0},
 #endif
 #if JS_HAS_NEW_OBJ_METHODS
-    {js_hasOwnProperty_str,       js_obj_hasOwnProperty,1,0,0},
+    {js_hasOwnProperty_str,       obj_hasOwnProperty, 1,0,0},
     {js_isPrototypeOf_str,        obj_isPrototypeOf,  1,0,0},
     {js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,0,0},
 #endif
@@ -2394,7 +2402,9 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
                 if (clasp->flags & JSCLASS_NEW_RESOLVE) {
                     newresolve = (JSNewResolveOp)resolve;
-                    if (cx->fp && (pc = cx->fp->pc)) {
+                    if (!(flags & JSRESOLVE_CLASSNAME) &&
+                        cx->fp &&
+                        (pc = cx->fp->pc)) {
                         cs = &js_CodeSpec[*pc];
                         format = cs->format;
                         if ((format & JOF_MODEMASK) != JOF_NAME)
@@ -3136,7 +3146,7 @@ js_GrowIdArray(JSContext *cx, JSIdArray *ida, jsint length)
 /* Private type used to iterate over all properties of a native JS object */
 typedef struct JSNativeIteratorState {
     jsint next_index;   /* index into jsid array */
-    JSIdArray *ida;     /* All property ids in enumeration */
+    JSIdArray *ida;     /* all property ids in enumeration */
 } JSNativeIteratorState;
 
 /*
@@ -3148,7 +3158,7 @@ JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp)
 {
-    JSObject *proto_obj;
+    JSObject *proto;
     JSClass *clasp;
     JSEnumerateOp enumerate;
     JSScopeProperty *sprop, *lastProp;
@@ -3163,10 +3173,9 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         return ((JSNewEnumerateOp) enumerate)(cx, obj, enum_op, statep, idp);
 
     switch (enum_op) {
-
-    case JSENUMERATE_INIT:
+      case JSENUMERATE_INIT:
         if (!enumerate(cx, obj))
-            goto init_error;
+            return JS_FALSE;
         length = 0;
 
         /*
@@ -3182,12 +3191,12 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
          * its properties.  Otherwise they will be enumerated a second time
          * when the prototype object is enumerated.
          */
-        proto_obj = OBJ_GET_PROTO(cx, obj);
-        if (proto_obj && scope == OBJ_SCOPE(proto_obj)) {
+        proto = OBJ_GET_PROTO(cx, obj);
+        if (proto && scope == OBJ_SCOPE(proto)) {
             ida = js_NewIdArray(cx, 0);
             if (!ida) {
                 JS_UNLOCK_OBJ(cx, obj);
-                goto init_error;
+                return JS_FALSE;
             }
         } else {
             /* Object has a private scope; Enumerate all props in scope. */
@@ -3207,7 +3216,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             ida = js_NewIdArray(cx, length);
             if (!ida) {
                 JS_UNLOCK_OBJ(cx, obj);
-                goto init_error;
+                return JS_FALSE;
             }
             i = length;
             for (sprop = lastProp; sprop; sprop = sprop->parent) {
@@ -3230,41 +3239,33 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             JS_malloc(cx, sizeof(JSNativeIteratorState));
         if (!state) {
             JS_DestroyIdArray(cx, ida);
-            goto init_error;
+            return JS_FALSE;
         }
         state->ida = ida;
         state->next_index = 0;
         *statep = PRIVATE_TO_JSVAL(state);
         if (idp)
             *idp = INT_TO_JSVAL(length);
-        return JS_TRUE;
+        break;
 
-    case JSENUMERATE_NEXT:
+      case JSENUMERATE_NEXT:
         state = (JSNativeIteratorState *) JSVAL_TO_PRIVATE(*statep);
         ida = state->ida;
         length = ida->length;
         if (state->next_index != length) {
             *idp = ida->vector[state->next_index++];
-            return JS_TRUE;
+            break;
         }
+        /* FALL THROUGH */
 
-        /* Fall through ... */
-
-    case JSENUMERATE_DESTROY:
+      case JSENUMERATE_DESTROY:
         state = (JSNativeIteratorState *) JSVAL_TO_PRIVATE(*statep);
         JS_DestroyIdArray(cx, state->ida);
         JS_free(cx, state);
         *statep = JSVAL_NULL;
-        return JS_TRUE;
-
-    default:
-        JS_ASSERT(0);
-        return JS_FALSE;
+        break;
     }
-
-init_error:
-    *statep = JSVAL_NULL;
-    return JS_FALSE;
+    return JS_TRUE;
 }
 
 JSBool
@@ -3813,14 +3814,16 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
         if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
             continue;
         MARK_SCOPE_PROPERTY(sprop);
-        if (!JSVAL_IS_INT(sprop->id))
-            GC_MARK_ATOM(cx, (JSAtom *)sprop->id, arg);
+        if (JSID_IS_ATOM(sprop->id))
+            GC_MARK_ATOM(cx, JSID_TO_ATOM(sprop->id), arg);
+        else if (JSID_IS_OBJECT(sprop->id))
+            GC_MARK(cx, JSID_TO_OBJECT(sprop->id), "id", arg);
 
 #if JS_HAS_GETTER_SETTER
         if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
 #ifdef GC_MARK_DEBUG
             char buf[64];
-            JSAtom *atom = (JSAtom *)sprop->id;
+            JSAtom *atom = JSID_TO_ATOM(sprop->id);
             const char *id = (atom && ATOM_IS_STRING(atom))
                              ? JS_GetStringBytes(ATOM_TO_STRING(atom))
                              : "unknown";

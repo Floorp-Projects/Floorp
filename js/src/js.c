@@ -406,7 +406,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-PswW] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-PswWx] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -509,6 +509,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 's':
             JS_ToggleOptions(cx, JSOPTION_STRICT);
+            break;
+
+        case 'x':
+            JS_ToggleOptions(cx, JSOPTION_XML);
             break;
 
         case 'P':
@@ -1207,11 +1211,14 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
         if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
             continue;
         fprintf(fp, "%3u %p", i, sprop);
-        if (JSVAL_IS_INT(sprop->id)) {
+        if (JSID_IS_INT(sprop->id)) {
             fprintf(fp, " [%ld]", (long)JSVAL_TO_INT(sprop->id));
+        } else if (JSID_IS_ATOM(sprop->id)) {
+            JSAtom *atom = JSID_TO_ATOM(sprop->id);
+            fprintf(fp, " \"%s\"", js_AtomToPrintableString(cx, atom));
         } else {
-            fprintf(fp, " \"%s\"",
-                    js_AtomToPrintableString(cx, (JSAtom *)sprop->id));
+            jsval v = OBJECT_TO_JSVAL(JSID_TO_OBJECT(sprop->id));
+            fprintf(fp, " \"%s\"", js_ValueToPrintableString(cx, v));
         }
 
 #define DUMP_ATTR(name) if (sprop->attrs & JSPROP_##name) fputs(" " #name, fp)

@@ -406,7 +406,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         slot = JSVAL_TO_INT(id);
         if (slot < MAXARGS(fp) && !ArgWasDeleted(cx, fp, slot)) {
             /* XXX ECMA specs DontEnum, contrary to other array-like objects */
-            if (!js_DefineProperty(cx, obj, INT_TO_JSID(JSVAL_TO_INT(id)),
+            if (!js_DefineProperty(cx, obj, INT_JSVAL_TO_JSID(id),
                                    fp->argv[slot],
                                    args_getProperty, args_setProperty,
                                    JSVERSION_IS_ECMA(cx->version)
@@ -1164,7 +1164,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                        : JSXDR_FUNVAR;
                 userid = INT_TO_JSVAL(sprop->shortid);
                 /* XXX lossy conversion, need new XDR version for ECMAv3 */
-                propname = JS_GetStringBytes(ATOM_TO_STRING((JSAtom *)sprop->id));
+                propname = JS_GetStringBytes(ATOM_TO_STRING(JSID_TO_ATOM(sprop->id)));
                 if (!propname ||
                     !JS_XDRUint32(xdr, &type) ||
                     !JS_XDRUint32(xdr, &userid) ||
@@ -1754,7 +1754,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                          */
                         JS_ASSERT(sprop->getter == js_GetArgument);
                         ok = name &&
-                             js_ReportCompileErrorNumber(cx, ts, NULL,
+                             js_ReportCompileErrorNumber(cx, ts,
+                                                         JSREPORT_TS |
                                                          JSREPORT_WARNING |
                                                          JSREPORT_STRICT,
                                                          JSMSG_DUPLICATE_FORMAL,

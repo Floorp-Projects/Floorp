@@ -1445,10 +1445,12 @@ DumpSubtree(JSScopeProperty *sprop, int level, FILE *fp)
 
     fprintf(fp, "%*sid %s g/s %p/%p slot %lu attrs %x flags %x shortid %d\n",
             level, "",
-            JSVAL_IS_INT(sprop->id)
-            ? (JS_snprintf(buf, sizeof buf, "%ld", JSVAL_TO_INT(sprop->id)),
+            JSID_IS_ATOM(sprop->id)
+            ? JS_GetStringBytes(ATOM_TO_STRING(JSID_TO_ATOM(sprop->id)))
+            : JSID_IS_OBJECT(sprop->id)
+            ? js_ValueToPrintableString(cx, OBJECT_JSID_TO_JSVAL(sprop->id))
+            : (JS_snprintf(buf, sizeof buf, "%ld", JSVAL_TO_INT(sprop->id)),
                buf)
-            : JS_GetStringBytes(ATOM_TO_STRING((JSAtom *) sprop->id)),
             (void *) sprop->getter, (void *) sprop->setter,
             (unsigned long) sprop->slot, sprop->attrs, sprop->flags,
             sprop->shortid);
