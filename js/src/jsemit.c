@@ -20,7 +20,9 @@
  * JS bytecode generation.
  */
 #include "jsstddef.h"
+#ifdef HAVE_MEMORY_H
 #include <memory.h>
+#endif
 #include <string.h>
 #include "jstypes.h"
 #include "jsarena.h" /* Added by JSIFY */
