@@ -744,7 +744,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent, nsIDownload* aDownload)
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OpenProgressDialogFor(const nsACString & aTargetPath, nsIDOMWindow* aParent)
+nsDownloadManager::OpenProgressDialogFor(const nsACString & aTargetPath, nsIDOMWindow* aParent, PRBool aCancelDownloadOnClose)
 {
   nsresult rv;
   nsCStringKey key(aTargetPath);
@@ -774,7 +774,7 @@ nsDownloadManager::OpenProgressDialogFor(const nsACString & aTargetPath, nsIDOMW
   nsCOMPtr<nsIProgressDialog> dialog(do_CreateInstance("@mozilla.org/progressdialog;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
-  dialog->SetCancelDownloadOnClose(PR_FALSE);
+  dialog->SetCancelDownloadOnClose(aCancelDownloadOnClose);
   
   nsCOMPtr<nsIDownload> dl = do_QueryInterface(dialog);
 
