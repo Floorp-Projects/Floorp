@@ -38,6 +38,28 @@
 * SUMMARY: Testing functions with double-byte names
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=58274
 *
+* Here is a sample of the problem:
+*
+*    js> function f\u02B1 () {}
+*
+*    js> f\u02B1.toSource();
+*    function f¦() {}
+*
+*    js> f\u02B1.toSource().toSource();
+*    (new String("function f\xB1() {}"))
+*
+*
+* See how the high-byte information (the 02) has been lost?
+* The same thing was happening with the toString() method:
+*
+*    js> f\u02B1.toString();
+*
+*    function f¦() {
+*    }
+*
+*    js> f\u02B1.toString().toSource();
+*    (new String("\nfunction f\xB1() {\n}\n"))
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
