@@ -27,6 +27,7 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
+!ifndef IDLSRCS
 IDLSRCS= \
 	AppCoresManager.idl \
 	BaseAppCore.idl     \
@@ -38,6 +39,7 @@ IDLSRCS= \
 	RDFCore.idl         \
 	Toolbar.idl         \
 	ToolkitCore.idl
+!endif
 
 
 XPCOM_DESTDIR=..\public
