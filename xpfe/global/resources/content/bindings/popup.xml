@@ -138,6 +138,26 @@
 
     <handlers>
       <handler event="contextmenu" action="event.preventDefault();"/>
+
+      <handler event="popupshowing" phase="target">
+        <![CDATA[
+          // XXX Remove when phase="target" works
+          if (event.target != this)
+            return;
+          var array = [];
+          var width = 0;
+          for (var menuitem = this.firstChild; menuitem; menuitem = menuitem.nextSibling) {
+            var accel = document.getAnonymousElementByAttribute(menuitem, "anonid", "accel");
+            if (accel && accel.label && accel.boxObject) {
+              array.push(accel);
+              if (accel.boxObject.width > width)
+                width = accel.boxObject.width;
+            }
+          }
+          for (var i = 0; i < array.length; i++)
+            array[i].setAttribute("width", width);
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
