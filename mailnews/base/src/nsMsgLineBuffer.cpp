@@ -194,7 +194,7 @@ PRInt32 nsMsgLineBuffer::ConvertAndSendBuffer()
      */
 
 	char *buf = m_buffer;
-	PRInt32 length = m_bufferPos - 1;
+	PRInt32 length = m_bufferPos;
 
     char* newline;
     
