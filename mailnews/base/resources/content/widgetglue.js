@@ -279,8 +279,36 @@ function MsgAccountWizard()
 }
 
 function MsgOpenAttachment() {}
-function MsgSaveAsFile() {}
-function MsgSaveAsTemplate() {}
+
+function MsgSaveAsFile() 
+{
+  dump("\MsgSaveAsFile from XUL\n");
+  var tree = GetThreadTree();
+  //get the selected elements
+  var messageList = tree.selectedItems;
+  if (messageList && messageList.length == 1)
+  {
+      var uri = messageList[0].getAttribute('id');
+      dump (uri);
+      if (uri)
+          messenger.saveAs(uri, true);
+  }
+}
+
+function MsgSaveAsTemplate() 
+{
+  dump("\MsgSaveAsTemplate from XUL\n");
+  var tree = GetThreadTree();
+  //get the selected elements
+  var messageList = tree.selectedItems;
+  if (messageList && messageList.length == 1)
+  {
+      var uri = messageList[0].getAttribute('id');
+      dump (uri);
+      if (uri)
+          messenger.saveAs(uri, false);
+  }
+}
 function MsgSendUnsentMsg() 
 {
 	messenger.SendUnsentMessages();
