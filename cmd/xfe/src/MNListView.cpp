@@ -127,7 +127,6 @@ XFE_MNListView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInf
 								  0, &selectable, NULL, NULL, NULL);
 		}/* else */
 		else
-#endif /* MOZ_MAIL_NEWS */
           if (count == 0 || 
 				 (m_pane && MSG_GetNumLines(m_pane) == 0))
 			{
@@ -137,6 +136,7 @@ XFE_MNListView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInf
 								  0, &selectable, NULL, NULL, NULL);
 			}
 		else
+#endif /* MOZ_MAIL_NEWS */
 			{
 				MSG_CommandStatus(m_pane, msg_cmd,
 								  (MSG_ViewIndex*)selected, count, 

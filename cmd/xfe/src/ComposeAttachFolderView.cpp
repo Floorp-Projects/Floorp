@@ -47,9 +47,11 @@
 #include "ThreadView.h"
 #include "BrowserFrame.h"
 
+#ifdef MOZ_MAIL_NEWS
 // from lib/libmsg
 extern "C" XP_Bool MSG_RequiresMailMsgWindow(const char*);
 extern "C" XP_Bool MSG_RequiresNewsMsgWindow(const char*);
+#endif /* MOZ_MAIL_NEWS */
 
 // Use API from XmP.h - moderately naughty, but implicitly supported for
 // widget-writers and happy hackers everywhere.
@@ -510,6 +512,7 @@ int XFE_ComposeAttachFolderView::validateAttachment(Widget widget,const char *ur
     // accept only URL's that resolve to a document
     // reject mailto:, mailbox: folders etc.
     if (NET_URL_Type(data)!=0) {
+#ifdef MOZ_MAIL_NEWS
         // reject addressbook add command, without error dialog
         if (XP_STRNCASECMP(url,"addbook:add?vcard=",18)==0)
             return FALSE;
@@ -523,7 +526,9 @@ int XFE_ComposeAttachFolderView::validateAttachment(Widget widget,const char *ur
             MSG_RequiresNewsMsgWindow(url) ||
             MSG_RequiresBrowserWindow(url))
             return TRUE;
-        else {
+        else
+#endif /* MOZ_MAIL_NEWS */
+        {
             char *msg=PR_smprintf(XP_GetString(XFE_MN_INVALID_ATTACH_URL),data);
             if (msg) {
                 fe_Alert_2(widget,msg);

@@ -90,6 +90,7 @@ extern int XFE_COMPOSE_NO_SUBJECT;
 extern int XFE_COMPOSE;
 extern int XFE_NETSCAPE_UNTITLED;
 extern int XFE_NETSCAPE;
+extern int XFE_COMMANDS_MAIL_TO_USAGE;
 
 extern char* help_menu_names[];
 extern char* directory_menu_names[];
@@ -1767,7 +1768,7 @@ fe_mailcompose_obeycb(MWContext *context, fe_MailComposeCallback cbid,
     }
 }
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 void
 FE_InsertMessageCompositionText(MSG_Pane* comppane,
 				const char* text,
@@ -1778,7 +1779,7 @@ FE_InsertMessageCompositionText(MSG_Pane* comppane,
   fe_InsertMessageCompositionText(context, text, leaveCursorAtBeginning);
   return;
 }
-#endif  /* MOZ_MAIL_NEWS */
+#endif  /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 /* rlogin 
  */
@@ -2364,7 +2365,7 @@ fe_open_url_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
     {
       URL_Struct *url_struct = NET_CreateURLStruct (av[0], FALSE);
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
       /* Dont create new windows for Compose. fe_GetURL will take care of it */
       if (MSG_RequiresComposeWindow(url_struct->address))
 	other_p = False;
@@ -2435,7 +2436,7 @@ fe_print_remote_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
     }
 }
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 static void
 fe_mailto_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
 {
@@ -2502,7 +2503,7 @@ fe_mailto_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
       fe_mailto_cb (widget, (XtPointer)context, (XtPointer)0);
     }
 }
-#endif  /* MOZ_MAIL_NEWS */
+#endif  /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 static void
 fe_html_help_action (Widget widget, XEvent *event, String *av, Cardinal *ac)
@@ -2561,7 +2562,7 @@ fe_undefined_key_action (Widget widget, XEvent *event,
 /* for the rest, look in src/Command.cpp -- for 'cmd_mapping mapping[]' */
 XtActionsRec fe_CommandActions [] =
 {
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
   { "mailto",		fe_mailto_action },
 #endif
 
