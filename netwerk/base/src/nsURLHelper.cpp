@@ -53,8 +53,8 @@ ExtractPortFrom(const char* src)
 
     char c;
     while ((c = *port++) != '\0') {
-        // stop if slash reached
-        if (c == '/')
+        // stop if slash or ? or # reached
+        if (c == '/' || c == '?' || c == '#')
             break;
         else if (!nsCRT::IsAsciiDigit(c))
             return returnValue;
