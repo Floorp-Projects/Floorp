@@ -303,7 +303,8 @@ nsHTMLTableRowElement::GetSectionRowIndex(PRInt32* aValue)
 }
 
 PR_STATIC_CALLBACK(PRBool)
-IsCell(nsIContent *aContent, nsString* aData)
+IsCell(nsIContent *aContent, PRInt32 aNamespaceID,
+       nsIAtom* aAtom, const nsAString& aData)
 {
   nsIAtom* tag = aContent->Tag();
 

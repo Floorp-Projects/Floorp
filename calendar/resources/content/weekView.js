@@ -151,9 +151,9 @@ WeekView.prototype.refreshEvents = function( )
    
    var eventBoxList = document.getElementsByAttribute( "eventbox", "weekview" );
 
-   for( var eventBoxIndex = 0;  eventBoxIndex < eventBoxList.length; ++eventBoxIndex )
+   while( eventBoxList.item(0) )
    {
-      var eventBox = eventBoxList[ eventBoxIndex ];
+      var eventBox = eventBoxList[ 0 ];
       
       eventBox.parentNode.removeChild( eventBox );
    }
@@ -774,9 +774,9 @@ WeekView.prototype.hiliteTodaysDate = function( )
 {
    //clear out the old today boxes.
    var OldTodayArray = document.getElementsByAttribute( "today", "true" );
-   for ( var i = 0; i < OldTodayArray.length; i++ ) 
+   while ( OldTodayArray.item(0) ) 
    {
-      OldTodayArray[i].removeAttribute( "today" );
+      OldTodayArray[0].removeAttribute( "today" );
    }
                                                       
 
@@ -821,9 +821,9 @@ WeekView.prototype.clearSelectedEvent = function( )
    //Event = gCalendarWindow.getSelectedEvent();
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
-   for( var i = 0; i < ArrayOfBoxes.length; i++ )
+   while( ArrayOfBoxes.item(0) )
    {
-      ArrayOfBoxes[i].removeAttribute( "eventselected" );   
+      ArrayOfBoxes[0].removeAttribute( "eventselected" );   
    }
 }
 
@@ -855,9 +855,9 @@ WeekView.prototype.clearSelectedDate = function( )
 {
    var SelectedBoxes = document.getElementsByAttribute( "weekselected", "true" );
    
-   for( var i = 0; i < SelectedBoxes.length; i++ )
+   while( SelectedBoxes.item(0) )
    {
-      SelectedBoxes[i].removeAttribute( "weekselected" );
+      SelectedBoxes[0].removeAttribute( "weekselected" );
    }
 }
 

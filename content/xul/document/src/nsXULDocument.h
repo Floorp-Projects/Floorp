@@ -164,6 +164,12 @@ public:
     // nsIDOMNSDocument
     NS_IMETHOD GetContentType(nsAString& aContentType);
 
+    static PRBool
+    MatchAttribute(nsIContent* aContent,
+                   PRInt32 aNameSpaceID,
+                   nsIAtom* aAttrName,
+                   const nsAString& aValue);
+
 protected:
     // Implementation methods
     friend nsresult
@@ -185,12 +191,6 @@ protected:
     RemoveElementsFromMapByContent(const PRUnichar* aID,
                                    nsIContent* aElement,
                                    void* aClosure);
-
-    static nsresult
-    GetElementsByAttribute(nsIDOMNode* aNode,
-                           const nsAString& aAttribute,
-                           const nsAString& aValue,
-                           nsRDFDOMNodeList* aElements);
 
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
 

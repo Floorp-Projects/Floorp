@@ -335,13 +335,13 @@ function onConfigLoad()
   }
 
   var descending = document.getElementsByAttribute("sortDirection", "descending");
-  if (descending.length) {
+  if (descending.item(0)) {
     gSortedColumn = descending[0].id;
     gSortDirection = -1;
   }
   else {
     var ascending = document.getElementsByAttribute("sortDirection", "ascending");
-    if (ascending.length)
+    if (ascending.item(0))
       gSortedColumn = ascending[0].id;
     else
       document.getElementById(gSortedColumn).setAttribute("sortDirection", "ascending");

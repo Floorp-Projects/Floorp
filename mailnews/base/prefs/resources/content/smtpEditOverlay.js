@@ -75,7 +75,7 @@ function initSmtpSettings(server) {
         gSmtpAuthMethod.setAttribute("value", server.authMethod);
 
         var elements = gSmtpTrySSL.getElementsByAttribute("value", server.trySSL);
-        if (elements.length == 0)
+        if (!elements.item(0))
             elements = gSmtpTrySSL.getElementsByAttribute("value", "1");
         gSmtpTrySSL.selectedItem = elements[0];
     } else {

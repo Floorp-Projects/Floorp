@@ -127,8 +127,8 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
       allDayBox.removeChild( allDayBox.firstChild );
    
    // remove eventboxes
-   for( var i = 0;  i < eventBoxList.length; i++ ) {
-      eventBox = eventBoxList[ i ];
+   while (eventBoxList.item(0)) {
+      eventBox = eventBoxList[0];
       eventBox.parentNode.removeChild( eventBox );
    }
    

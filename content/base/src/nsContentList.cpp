@@ -41,7 +41,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOM3Node.h"
 #include "nsIDocument.h"
-#include "nsINameSpaceManager.h"
 #include "nsGenericElement.h"
 
 #include "nsContentUtils.h"
@@ -348,10 +347,13 @@ nsContentList::nsContentList(nsIDocument *aDocument,
                              nsContentListMatchFunc aFunc,
                              const nsAString& aData,
                              nsIContent* aRootContent,
-                             PRBool aDeep)
+                             PRBool aDeep,
+                             nsIAtom* aMatchAtom,
+                             PRInt32 aMatchNameSpaceId)
   : nsBaseContentList(),
-    nsContentListKey(aDocument, nsnull, kNameSpaceID_Unknown, aRootContent),
+    nsContentListKey(aDocument, aMatchAtom, aMatchNameSpaceId, aRootContent),
     mFunc(aFunc),
+    mData(&EmptyString()),
     mMatchAll(PR_FALSE),
     mState(LIST_DIRTY),
     mDeep(aDeep)
@@ -360,9 +362,6 @@ nsContentList::nsContentList(nsIDocument *aDocument,
   if (!aData.IsEmpty()) {
     mData = new nsString(aData);
     // If this fails, fail silently
-  }
-  else {
-    mData = nsnull;
   }
   Init(aDocument);
 }
@@ -387,7 +386,10 @@ nsContentList::~nsContentList()
     mDocument->RemoveObserver(this);
   }
   
-  delete mData;
+  if (mData && mData != &EmptyString()) {
+    // We actually allocated mData ourselves
+    delete mData;
+  }
 }
 
 
@@ -521,6 +523,30 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
   *aReturn = nsnull;
 
   return NS_OK;
+}
+
+void
+nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                PRInt32 aModType)
+{
+  if (!mFunc || mState == LIST_DIRTY) {
+    // Either we're already dirty or this notification doesn't affect
+    // whether we might match aContent.
+    return;
+  }
+  
+  if (MayContainRelevantNodes(aContent->GetParent())) {
+    if (Match(aContent)) {
+      // We may now match a new node.  Just dirty ourselves.
+      mState = LIST_DIRTY;
+    } else {
+      // We no longer match aContent.  Remove it from our list.  If
+      // it's already not there, this is a no-op, which is fine.
+      // Either way, no change of mState is required here.
+      mElements.RemoveElement(aContent);
+    }
+  }
 }
 
 void
@@ -660,6 +686,10 @@ nsContentList::Match(nsIContent *aContent)
   if (!aContent)
     return PR_FALSE;
 
+  if (mFunc) {
+    return (*mFunc)(aContent, mMatchNameSpaceId, mMatchAtom, *mData);
+  }
+
   if (mMatchAtom) {
     if (!aContent->IsContentOfType(nsIContent::eELEMENT)) {
       return PR_FALSE;
@@ -674,9 +704,6 @@ nsContentList::Match(nsIContent *aContent)
 
     return ((mMatchAll && ni->NamespaceEquals(mMatchNameSpaceId)) ||
             ni->Equals(mMatchAtom, mMatchNameSpaceId));
-  }
-  else if (mFunc) {
-    return (*mFunc)(aContent, mData);
   }
 
   return PR_FALSE;
@@ -904,6 +931,11 @@ nsContentList::DisconnectFromDocument()
 void
 nsContentList::RemoveFromHashtable()
 {
+  if (mFunc) {
+    // This can't be in the table anyway
+    return;
+  }
+  
   if (!gContentListHashTable.ops)
     return;
 

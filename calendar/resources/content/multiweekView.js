@@ -234,9 +234,9 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
 
    var eventBox = null;
 
-   for( var eventBoxIndex = 0;  eventBoxIndex < eventBoxList.length; ++eventBoxIndex )
+   while( eventBoxList.item(0) )
    {
-      eventBox = eventBoxList[ eventBoxIndex ];
+      eventBox = eventBoxList[ 0 ];
       eventBox.parentNode.removeChild( eventBox );
    }
    
@@ -246,9 +246,9 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
    // remove old todo boxes
    var toDoBoxList = document.getElementsByAttribute( "todobox", "multiweekview" );
 
-   for( var toDoBoxIndex = 0;  toDoBoxIndex < toDoBoxList.length; ++toDoBoxIndex )
+   while( toDoBoxList.item(0) )
    {
-      eventBox = toDoBoxList[ toDoBoxIndex ];
+      eventBox = toDoBoxList[ 0 ];
       eventBox.parentNode.removeChild( eventBox );
    }
 
@@ -763,9 +763,9 @@ MultiweekView.prototype.clearSelectedDate = function multiweekView_clearSelected
 {
    var SelectedBoxes = document.getElementsByAttribute( "multiweekselected", "true" );
    
-   for( var i = 0; i < SelectedBoxes.length; i++ )
+   while( SelectedBoxes.item(0) )
    {
-      SelectedBoxes[i].removeAttribute( "multiweekselected" );
+      SelectedBoxes[0].removeAttribute( "multiweekselected" );
    }
 }
 
@@ -778,11 +778,11 @@ MultiweekView.prototype.clearSelectedDate = function multiweekView_clearSelected
 MultiweekView.prototype.hiliteTodaysDate = function multiweekView_hiliteTodaysDate( )
 {
    // Clear the old selection if there was one
-   var TodayBox = document.getElementsByAttribute( "today", "true" );
+   var TodayBoxes = document.getElementsByAttribute( "today", "true" );
    
-   for( var i = 0; i < TodayBox.length; i++ )
+   while( TodayBoxes.item(0) )
    {
-      TodayBox[i].removeAttribute( "today" );
+      TodayBoxes[0].removeAttribute( "today" );
    }
 
    //highlight today.
@@ -931,9 +931,9 @@ MultiweekView.prototype.clearSelectedEvent = function multiweekView_clearSelecte
 
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
-   for( i = 0; i < ArrayOfBoxes.length; i++ )
+   while( ArrayOfBoxes.item(0) )
    {
-      ArrayOfBoxes[i].removeAttribute( "eventselected" );   
+      ArrayOfBoxes[0].removeAttribute( "eventselected" );   
    }
 }
 

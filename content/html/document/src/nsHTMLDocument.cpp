@@ -1836,7 +1836,8 @@ GetHTMLDocumentNamespace(nsIContent *aContent)
 }
 
 PRBool
-nsHTMLDocument::MatchLinks(nsIContent *aContent, nsString* aData)
+nsHTMLDocument::MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
+                           nsIAtom* aAtom, const nsAString& aData)
 {
   nsINodeInfo *ni = aContent->GetNodeInfo();
 
@@ -1856,7 +1857,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 {
   if (!mLinks) {
-    mLinks = new nsContentList(this, MatchLinks, nsString());
+    mLinks = new nsContentList(this, MatchLinks, EmptyString());
     if (!mLinks) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1869,7 +1870,8 @@ nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 }
 
 PRBool
-nsHTMLDocument::MatchAnchors(nsIContent *aContent, nsString* aData)
+nsHTMLDocument::MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
+                             nsIAtom* aAtom, const nsAString& aData)
 {
   nsINodeInfo *ni = aContent->GetNodeInfo();
 
@@ -1888,7 +1890,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetAnchors(nsIDOMHTMLCollection** aAnchors)
 {
   if (!mAnchors) {
-    mAnchors = new nsContentList(this, MatchAnchors, nsString());
+    mAnchors = new nsContentList(this, MatchAnchors, EmptyString());
     if (!mAnchors) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2459,32 +2461,28 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 }
 
 PRBool
-nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, nsString* aData)
+nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
+                                   nsIAtom* aAtom, const nsAString& aData)
 {
-  // Most elements don't have a name attribute, so lets call the
-  // faster HasAttr() method before we create a string object and call
-  // GetAttr().
-
-  if (!aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::name) || !aData) {
+  NS_PRECONDITION(aContent, "Must have content node to work with!");
+  
+  // Getting attrs is expensive, so use HasAttr() first.
+  if (!aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::name)) {
     return PR_FALSE;
   }
 
-  nsAutoString name;
+  nsAutoString value;
+  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, value);
 
-  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
-
-  if (NS_SUCCEEDED(rv) && name.Equals(*aData)) {
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
+  return NS_SUCCEEDED(rv) && value.Equals(aData);
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::GetElementsByName(const nsAString& aElementName,
                                   nsIDOMNodeList** aReturn)
 {
-  nsContentList* elements = new nsContentList(this, MatchNameAttribute,
+  nsContentList* elements = new nsContentList(this,
+                                              MatchNameAttribute,
                                               aElementName);
   NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2513,7 +2511,8 @@ nsHTMLDocument::GetNumFormsSynchronous()
 }
 
 PRBool
-nsHTMLDocument::MatchFormControls(nsIContent* aContent, nsString* aData)
+nsHTMLDocument::MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
+                                  nsIAtom* aAtom, const nsAString& aData)
 {
   return aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
 }

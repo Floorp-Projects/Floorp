@@ -200,7 +200,7 @@ function removeAlarmBox( Event )
    //if there's no more events left, close the dialog
    EventAlarmBoxes = document.getElementsByAttribute( "eventbox", "true" );
       
-   if( EventAlarmBoxes.length > 0 )
+   if( EventAlarmBoxes.item(0) )
    {
       //there are still boxes left.
       return( false );

@@ -310,11 +310,10 @@ function initializeDialog(filter)
       {
         gChangePriorityCheckbox.checked = true;
         // initialize priority
-        var selectedPriority = gActionPriority.getElementsByAttribute("value", filterAction.priority);
+        var selectedPriority = gActionPriority.getElementsByAttribute("value", filterAction.priority).item(0);
 
-        if (selectedPriority && selectedPriority.length > 0) 
+        if (selectedPriority) 
         {
-          selectedPriority = selectedPriority[0];
           gActionPriority.selectedItem = selectedPriority;
         }
       }
@@ -322,10 +321,9 @@ function initializeDialog(filter)
       {
         gLabelCheckbox.checked = true;
         // initialize label
-        var selectedLabel = gActionLabel.getElementsByAttribute("value", filterAction.label);
-        if (selectedLabel && selectedLabel.length > 0) 
+        var selectedLabel = gActionLabel.getElementsByAttribute("value", filterAction.label).item(0);
+        if (selectedLabel) 
         {
-          selectedLabel = selectedLabel[0];
           gActionLabel.selectedItem = selectedLabel;
         }
       }
@@ -333,11 +331,10 @@ function initializeDialog(filter)
       {
         gChangeJunkScoreCheckbox.checked = true;
         // initialize junk score
-        var selectedJunkScore = gActionJunkScore.getElementsByAttribute("value", filterAction.junkScore);
+        var selectedJunkScore = gActionJunkScore.getElementsByAttribute("value", filterAction.junkScore).item(0);
 
-        if (selectedJunkScore && selectedJunkScore.length > 0) 
+        if (selectedJunkScore) 
         {
-          selectedJunkScore = selectedJunkScore[0];
           gActionJunkScore.selectedItem = selectedJunkScore;
         }
       }

@@ -1046,7 +1046,7 @@
           <![CDATA[
             var menulist = document.getAnonymousNodes(this)[0];
             var dataItems = menulist.getElementsByAttribute("value", val);
-            if (dataItems.length > 0)
+            if (dataItems.item(0))
                 menulist.selectedItem = dataItems[0];
 
             // now notify targets of new parent's value
@@ -1303,7 +1303,7 @@
               if (this.internalOperator != Components.interfaces.nsMsgSearchOp.IsntInAB &&
                   this.internalOperator != Components.interfaces.nsMsgSearchOp.IsInAB) {
                 var abs = children[4].getElementsByAttribute("value", "moz-abmdbdirectory://abook.mab");
-                if (abs.length > 0) 
+                if (abs.item(0)) 
                   children[4].selectedItem = abs[0];   
                 this.setAttribute("selectedIndex", "4");
               }
@@ -1358,7 +1358,7 @@
             {
               var children = document.getAnonymousNodes(this);
               var abs = children[5].getElementsByAttribute("value", "1");
-              if (abs.length > 0) 
+              if (abs.item(0)) 
                 children[5].selectedItem = abs[0];                 
               this.setAttribute("selectedIndex", "5");
             }
@@ -1388,13 +1388,13 @@
           if (attrib == nsMsgSearchAttrib.Priority) {
             var matchingPriority =
               children[1].getElementsByAttribute("value", val.priority);
-            if (matchingPriority.length > 0)
+            if (matchingPriority.item(0))
               children[1].selectedItem = matchingPriority[0];
           }
           else if (attrib == nsMsgSearchAttrib.MsgStatus) {
             var matchingStatus =
               children[2].getElementsByAttribute("value", val.status);
-            if (matchingStatus.length > 0) 
+            if (matchingStatus.item(0)) 
               children[2].selectedItem = matchingStatus[0];
           }
           else if (attrib == nsMsgSearchAttrib.AgeInDays)
@@ -1406,7 +1406,7 @@
             if (this.internalOperator == Components.interfaces.nsMsgSearchOp.IsntInAB ||
                 this.internalOperator == Components.interfaces.nsMsgSearchOp.IsInAB) {
               var abs = children[4].getElementsByAttribute("value", val.str);
-              if (abs.length > 0) 
+              if (abs.item(0)) 
                 children[4].selectedItem = abs[0];    
             }
             else
@@ -1415,19 +1415,19 @@
           else if (attrib == nsMsgSearchAttrib.Label)
           {
             var labelVal = children[5].getElementsByAttribute("value", val.label);
-            if (labelVal.length > 0)
+            if (labelVal.item(0))
               children[5].selectedItem = labelVal[0];
           }
           else if (attrib == nsMsgSearchAttrib.JunkStatus) {
             var junkStatus =
               children[6].getElementsByAttribute("value", val.junkStatus);
-            if (junkStatus.length > 0) 
+            if (junkStatus.item(0)) 
               children[6].selectedItem = junkStatus[0];
           }
           else if (attrib == nsMsgSearchAttrib.HasAttachmentStatus) {
             var hasAttachmentStatus =
               children[7].getElementsByAttribute("value", val.hasAttachmentStatus);
-            if (hasAttachmentStatus.length > 0) 
+            if (hasAttachmentStatus.item(0)) 
               children[7].selectedItem = hasAttachmentStatus[0];
           }
           else 

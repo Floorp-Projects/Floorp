@@ -434,7 +434,7 @@ function ReloadSmtpPanel()
   if (smtpAuthMethod.getAttribute("value") == "1")
     smtpUseUsername.checked = true;
   var elements = smtpTrySSL.getElementsByAttribute("value", defaultServer.trySSL);
-  if (elements.length == 0)
+  if (!elements.item(0))
     elements = smtpTrySSL.getElementsByAttribute("value", "1");
   smtpTrySSL.selectedItem = elements[0];
 }

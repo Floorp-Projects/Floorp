@@ -1310,17 +1310,20 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
                                      const nsAString& aValue,
                                      nsIDOMNodeList** aReturn)
 {
-    // XXX This should use nsContentList, but that does not support
-    // _two_ strings being passed to the match func.  Ah, the ability
-    // to create real closures, where art thou?
-    nsRDFDOMNodeList* elements = new nsRDFDOMNodeList();
-    NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(elements);
+    nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
+    NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    GetElementsByAttribute(this, aAttribute, aValue, elements);
+    nsCOMPtr<nsIContentList> list =
+        new nsContentList(GetDocument(),
+                          nsXULDocument::MatchAttribute,
+                          aValue,
+                          this,
+                          PR_TRUE,
+                          attrAtom,
+                          kNameSpaceID_None);
+    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-    *aReturn = elements;
-    return NS_OK;
+    return CallQueryInterface(list, aReturn);
 }
 
 
@@ -3006,65 +3009,6 @@ nsXULElement::EnsureContentsGenerated(void) const
 
         NS_ERROR("lazy state set with no XUL content builder in ancestor chain");
         return NS_ERROR_UNEXPECTED;
-    }
-
-    return NS_OK;
-}
-
-nsresult
-nsXULElement::GetElementsByAttribute(nsIDOMNode* aNode,
-                                       const nsAString& aAttribute,
-                                       const nsAString& aValue,
-                                       nsRDFDOMNodeList* aElements)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIDOMNodeList> children;
-    if (NS_FAILED(rv = aNode->GetChildNodes( getter_AddRefs(children) ))) {
-        NS_ERROR("unable to get node's children");
-        return rv;
-    }
-
-    // no kids: terminate the recursion
-    if (! children)
-        return NS_OK;
-
-    PRUint32 length;
-    if (NS_FAILED(children->GetLength(&length))) {
-        NS_ERROR("unable to get node list's length");
-        return rv;
-    }
-
-    for (PRUint32 i = 0; i < length; ++i) {
-        nsCOMPtr<nsIDOMNode> child;
-        if (NS_FAILED(rv = children->Item(i, getter_AddRefs(child) ))) {
-            NS_ERROR("unable to get child from list");
-            return rv;
-        }
-
-        nsCOMPtr<nsIDOMElement> element;
-        element = do_QueryInterface(child);
-        if (!element)
-          continue;
-
-        nsAutoString attrValue;
-        if (NS_FAILED(rv = element->GetAttribute(aAttribute, attrValue))) {
-            NS_ERROR("unable to get attribute value");
-            return rv;
-        }
-
-        if ((attrValue.Equals(aValue)) || (!attrValue.IsEmpty() && aValue.Equals(NS_LITERAL_STRING("*")))) {
-            if (NS_FAILED(rv = aElements->AppendNode(child))) {
-                NS_ERROR("unable to append element to node list");
-                return rv;
-            }
-        }
-
-        // Now recursively look for children
-        if (NS_FAILED(rv = GetElementsByAttribute(child, aAttribute, aValue, aElements))) {
-            NS_ERROR("unable to recursively get elements by attribute");
-            return rv;
-        }
     }
 
     return NS_OK;

@@ -230,9 +230,9 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
 
    var eventBox = null;
 
-   for( var eventBoxIndex = 0;  eventBoxIndex < eventBoxList.length; ++eventBoxIndex )
+   while ( eventBoxList.item(0) ) {
    {
-      eventBox = eventBoxList[ eventBoxIndex ];
+      eventBox = eventBoxList[ 0 ];
       eventBox.parentNode.removeChild( eventBox );
    }
    
@@ -637,9 +637,9 @@ MonthView.prototype.clearSelectedDate = function monthView_clearSelectedDate( )
 {
    var SelectedBoxes = document.getElementsByAttribute( "monthselected", "true" );
    
-   for( var i = 0; i < SelectedBoxes.length; i++ )
+   while( SelectedBoxes.item(0) )
    {
-      SelectedBoxes[i].removeAttribute( "monthselected" );
+      SelectedBoxes[0].removeAttribute( "monthselected" );
    }
 }
 
@@ -652,9 +652,9 @@ MonthView.prototype.clearSelectedBoxes = function monthView_clearSelectedBoxes( 
 {
    var SelectedBoxes = document.getElementsByAttribute( "eventselected", "true" );
    
-   for( var i = 0; i < SelectedBoxes.length; i++ )
+   while( SelectedBoxes.item(0) )
    {
-      SelectedBoxes[i].removeAttribute( "eventselected" );
+      SelectedBoxes[0].removeAttribute( "eventselected" );
    }
 }
 
@@ -666,11 +666,11 @@ MonthView.prototype.clearSelectedBoxes = function monthView_clearSelectedBoxes( 
 MonthView.prototype.hiliteTodaysDate = function monthView_hiliteTodaysDate( )
 {
    // Clear the old selection if there was one
-   var TodayBox = document.getElementsByAttribute( "today", "true" );
+   var TodayBoxes = document.getElementsByAttribute( "today", "true" );
    
-   for( var i = 0; i < TodayBox.length; i++ )
+   while( TodayBoxes.item(0) )
    {
-      TodayBox[i].removeAttribute( "today" );
+      TodayBoxes[0].removeAttribute( "today" );
    }
 
    //highlight today.
@@ -872,9 +872,9 @@ MonthView.prototype.clearSelectedEvent = function monthView_clearSelectedEvent( 
   debug("clearSelectedEvent");
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
-   for( i = 0; i < ArrayOfBoxes.length; i++ )
+   while( ArrayOfBoxes.item(0) )
    {
-      ArrayOfBoxes[i].removeAttribute( "eventselected" );   
+      ArrayOfBoxes[0].removeAttribute( "eventselected" );   
    }
 }
 

@@ -317,9 +317,10 @@ function viewRefreshCustomMailViews(aCurrentViewValue)
   // remove any existing entries...
   var menupopupNode = document.getElementById('viewMessageViewPopup');
   var userDefinedItems = menupopupNode.getElementsByAttribute("userdefined","true");
-  for (var i=0; i<userDefinedItems.length; i++)
+  for (var i=0; userDefinedItems.item(i); )
   {
-    menupopupNode.removeChild(userDefinedItems[i]);
+    if (!menupopupNode.removeChild(userDefinedItems[i]))
+      ++i;
   }
   
   // now rebuild the list

@@ -262,7 +262,7 @@
             if (kids[i].getAttribute(aAttr) == aVal)
               return kids[i];
             var kids2 = kids[i].getElementsByAttribute(aAttr, aVal);
-            if (kids2.length > 0)
+            if (kids2.item(0))
               return kids2[0];
           }
           return null;
