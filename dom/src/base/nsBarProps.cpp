@@ -48,6 +48,9 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsDOMClassInfo.h"
 
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+
 //
 //  Basic (virtual) BarProp class implementation
 //
@@ -237,6 +240,23 @@ StatusbarPropImpl::GetVisible(PRBool *aVisible)
 NS_IMETHODIMP
 StatusbarPropImpl::SetVisible(PRBool aVisible)
 {
+  if (!aVisible) {
+    // See if the user is forbidding sites from hiding the statusbar.
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPrefBranch> prefBranch;
+      rv = prefs->GetBranch("dom.disable_window_open_feature.", getter_AddRefs(prefBranch));
+      if (NS_SUCCEEDED(rv)) {
+        PRBool forceEnable = PR_FALSE;
+        rv = prefBranch->GetBoolPref("status", &forceEnable);
+        if (NS_SUCCEEDED(rv) && forceEnable && !GlobalWindowImpl::IsCallerChrome()) {
+          return NS_OK;
+        }
+      }
+    }
+  }
+
   return BarPropImpl::SetVisibleByFlag(aVisible,
                                        nsIWebBrowserChrome::CHROME_STATUSBAR);
 }
