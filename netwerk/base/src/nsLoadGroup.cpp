@@ -388,8 +388,7 @@ nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
     // Inherit the group load flags from the default load request
     if (mDefaultLoadRequest)
         mDefaultLoadRequest->GetLoadFlags(&mLoadFlags);
-    else
-        mLoadFlags = LOAD_NORMAL;
+    // Else, do not change the group's load flags (see bug 95981)
     return NS_OK;
 }
 
@@ -421,7 +420,12 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     }
 
     nsLoadFlags flags;
-    rv = MergeLoadFlags(request, flags);
+    // if the request is the default load request or if the default load request
+    // is null, then the load group should inherit its load flags from the request.
+    if (mDefaultLoadRequest == request || !mDefaultLoadRequest)
+        rv = request->GetLoadFlags(&flags);
+    else
+        rv = MergeLoadFlags(request, flags);
     if (NS_FAILED(rv)) return rv;
     
     //

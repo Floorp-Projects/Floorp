@@ -44,13 +44,21 @@ interface nsILoadGroup : nsIRequest
      * Accesses the default load request for the group.  Each time a number
      * of requests are added to a group, the defaultLoadRequest may be set
      * to indicate that all of the requests are related to a base request.
+     *
+     * The load group inherits its load flags from the default load request.
+     * If the default load request is NULL, then the group's load flags are
+     * not changed.
      */
     attribute nsIRequest defaultLoadRequest;
 
     /**
      * Adds a new request to the group.  This will cause the default load
-     * attributes to be applied to the request.  If this is a foreground
+     * flags to be applied to the request.  If this is a foreground
      * request then the groupObserver's onStartRequest will be called.
+     *
+     * If the request is the default load request or if the default load
+     * request is null, then the load group will inherit its load flags from
+     * the request.
      */
     void addRequest(in nsIRequest request,
                     in nsISupports ctxt);
