@@ -137,19 +137,22 @@ nsFormControlHelper::GetRepChars(nsIPresContext* aPresContext, char& char1, char
   }
 }
 
-void nsFormControlHelper::GetFrameFontFM(nsIPresContext* aPresContext, 
+nsresult nsFormControlHelper::GetFrameFontFM(nsIPresContext* aPresContext, 
                                          nsIFormControlFrame * aFrame,
                                          nsIFontMetrics** aFontMet)
 {
   // Initialize with default font
-  nsFont font(aPresContext->GetDefaultFixedFontDeprecated());
+  const nsFont * font = nsnull;
   // Get frame font
-  aFrame->GetFont(aPresContext, font);
-  nsCOMPtr<nsIDeviceContext> deviceContext;
-  aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
-  NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
-  // Get font metrics
-  deviceContext->GetMetricsFor(font, *aFontMet);
+  if (NS_SUCCEEDED(aFrame->GetFont(aPresContext, font))) {
+    nsCOMPtr<nsIDeviceContext> deviceContext;
+    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+    NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
+    if (font != nsnull) { // Get font metrics
+      return deviceContext->GetMetricsFor(*font, *aFontMet);
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -334,8 +337,8 @@ nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFra
                                 nsIRenderingContext *aRendContext)
 {
   nsCOMPtr<nsIFontMetrics> fontMet;
-  GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-  if (fontMet) {
+  nsresult res = GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
+  if (NS_SUCCEEDED(res) && fontMet) {
     aRendContext->SetFont(fontMet);
 
     // measure string
@@ -456,8 +459,8 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
       col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
       if (eCompatibility_NavQuirks == qMode) {
         nsCOMPtr<nsIFontMetrics> fontMet;
-        GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-        if (fontMet) {
+        nsresult res = GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
+        if (NS_SUCCEEDED(res) && fontMet) {
           aRendContext->SetFont(fontMet);
           aSpec.mColDefaultSize = col;
           charWidth = CalcNavQuirkSizing(aPresContext, aRendContext, fontMet, 
@@ -485,8 +488,8 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
     } else  {                                     // use default width in num characters
       if (eCompatibility_NavQuirks == qMode) {
         nsCOMPtr<nsIFontMetrics> fontMet;
-        GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-        if (fontMet) {
+        nsresult res = GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
+        if (NS_SUCCEEDED(res) && fontMet) {
           aRendContext->SetFont(fontMet);
           // this passes in a 
           charWidth = CalcNavQuirkSizing(aPresContext, aRendContext, fontMet, 
@@ -574,11 +577,11 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
 
 
 // this handles all of the input types rather than having them do it.
-void  
-nsFormControlHelper::GetFont(nsIFormControlFrame *   aFormFrame,
-                             nsIPresContext*         aPresContext, 
-                             nsIStyleContext * aStyleContext, 
-                             nsFont&                 aFont)
+nsresult  
+nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
+                             nsIPresContext*       aPresContext, 
+                             nsIStyleContext *     aStyleContext, 
+                             const nsFont*&        aFont)
 {
   const nsStyleFont* styleFont = (const nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font);
 
@@ -596,8 +599,8 @@ nsFormControlHelper::GetFont(nsIFormControlFrame *   aFormFrame,
       type!=NS_FORM_TEXTAREA   &&
       type!=NS_FORM_INPUT_PASSWORD) {
     if (PR_TRUE != requiresWidget && eWidgetRendering_Gfx == m) {
-      aFont = styleFont->mFont;
-      return;
+      aFont = &styleFont->mFont;
+      return NS_OK;
     }
   }
 
@@ -605,20 +608,22 @@ nsFormControlHelper::GetFont(nsIFormControlFrame *   aFormFrame,
   aPresContext->GetCompatibilityMode(&mode);
 
   if (eCompatibility_Standard == mode) {
-    aFont = styleFont->mFont;
-    return;
+    aFont = &styleFont->mFont;
+    return NS_OK;
   }
 
   switch (type) {
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_TEXTAREA:
     case NS_FORM_INPUT_PASSWORD:
-      aFont = styleFont->mFixedFont;
+      aFont = &styleFont->mFixedFont;
       break;
     case NS_FORM_INPUT_BUTTON:
     case NS_FORM_INPUT_SUBMIT:
     case NS_FORM_INPUT_RESET:
     case NS_FORM_SELECT:
+      NS_ASSERTION(0, "getting the font here has been predicated");
+#if 0
       if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
           (styleFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
         aFont = styleFont->mFixedFont;
@@ -640,8 +645,10 @@ nsFormControlHelper::GetFont(nsIFormControlFrame *   aFormFrame,
         PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(aFont.size, (PRInt32)normal.size, scaleFactor);
         aFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
       }
+#endif
       break;
   }
+  return NS_OK;
 }
 
 
@@ -1089,10 +1096,11 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext* aPresContext,
     context->GetAppUnitsToDevUnits(devUnits);
     context->GetDevUnitsToAppUnits(appUnits);
 
-    nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
-    formFrame->GetFont(aPresContext, font);
-
-    aRenderingContext.SetFont(font);
+    const nsFont * font = nsnull;
+    nsresult res = formFrame->GetFont(aPresContext, font);
+    if (NS_SUCCEEDED(res) && font != nsnull) {
+      aRenderingContext.SetFont(*font);
+    }
 
     nscoord ascent;
     nscoord descent;
@@ -1102,7 +1110,7 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext* aPresContext,
     aRenderingContext.GetWidth(aLabel, textWidth);
 
     nsIFontMetrics* metrics;
-    context->GetMetricsFor(font, metrics);
+    context->GetMetricsFor(*font, metrics);
     metrics->GetMaxAscent(ascent);
     metrics->GetMaxDescent(descent);
     textHeight = ascent + descent;

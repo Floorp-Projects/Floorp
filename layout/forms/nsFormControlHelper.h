@@ -113,15 +113,15 @@ public:
                              PRInt32 aNumChars, nsSize& aSize,
                              nsIRenderingContext *aRendContext);
 
-  static void GetFont(nsIFormControlFrame *   aFormFrame,
-                      nsIPresContext*        aPresContext, 
-                      nsIStyleContext * aStyleContext, 
-                      nsFont&                aFont);
+  static nsresult GetFont(nsIFormControlFrame *  aFormFrame,
+                          nsIPresContext*        aPresContext, 
+                          nsIStyleContext *      aStyleContext, 
+                          const nsFont*&         aFont);
 
   // returns the an addref'ed FontMetrics for the default font for the frame
-  static void GetFrameFontFM(nsIPresContext* aPresContext, 
-                             nsIFormControlFrame * aFrame,
-                             nsIFontMetrics** aFontMet);
+  static nsresult GetFrameFontFM(nsIPresContext* aPresContext, 
+                                 nsIFormControlFrame * aFrame,
+                                 nsIFontMetrics** aFontMet);
 
   static nscoord CalcNavQuirkSizing(nsIPresContext*      aPresContext, 
                                     nsIRenderingContext* aRendContext,
