@@ -1090,6 +1090,7 @@ option {
   display:block;
   font-family: sans-serif;
   font-size: small;
+  user-select: none;
 }
 
 /* we need to address the part where there is a label */
