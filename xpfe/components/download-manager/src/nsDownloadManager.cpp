@@ -61,7 +61,6 @@
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-#define PROFILE_DOWNLOAD_FILE "downloads.rdf"
 #define DOWNLOAD_MANAGER_FE_URL "chrome://communicator/content/downloadmanager/downloadmanager.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://communicator/locale/downloadmanager/downloadmanager.properties"
 
