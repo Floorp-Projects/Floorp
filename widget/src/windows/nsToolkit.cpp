@@ -91,11 +91,13 @@ DEFINE_GUID(IID_IActiveIMMMessagePumpOwner,
 IActiveIMMApp* nsToolkit::gAIMMApp   = NULL;
 PRInt32        nsToolkit::gAIMMCount = 0;
 
+#ifndef WINCE
 nsWindow     *MouseTrailer::mCaptureWindow  = NULL;
 nsWindow     *MouseTrailer::mHoldMouse      = NULL;
 MouseTrailer *MouseTrailer::theMouseTrailer = NULL;
 PRBool        MouseTrailer::gIgnoreNextCycle(PR_FALSE);
 PRBool        MouseTrailer::mIsInCaptureMode(PR_FALSE);
+#endif
 
 #if !defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_ENABLE_LIBXUL)
 //
@@ -107,6 +109,7 @@ PRBool        MouseTrailer::mIsInCaptureMode(PR_FALSE);
 extern "C" {
 #endif
 
+#ifndef WINCE
 BOOL APIENTRY DllMain(  HINSTANCE hModule, 
                         DWORD reason, 
                         LPVOID lpReserved )
@@ -130,6 +133,7 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
 
     return TRUE;
 }
+#endif //wince
 
 #if defined(__GNUC__)
 } // extern "C"
@@ -149,6 +153,7 @@ struct ThreadInitInfo {
 
 /* Detect when the user is moving a top-level window */
 
+#ifndef WINCE
 LRESULT CALLBACK DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
 {
     /* This msg filter is required to determine when the user has
@@ -171,9 +176,9 @@ LRESULT CALLBACK DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
         PL_FavorPerformanceHint(PR_TRUE, 0);
       }
     }
-
     return CallNextHookEx(nsMsgFilterHook, code, wParam, lParam);
 }
+#endif // WINCE
 
 
 
@@ -441,6 +446,7 @@ BOOL WINAPI nsUnregisterClass(LPCWSTR aClassW, HINSTANCE aInst)
   return FALSE;
 }
 
+#ifndef WINCE
 BOOL WINAPI nsSHGetPathFromIDList(LPCITEMIDLIST aIdList, LPWSTR aPathW)
 {
   char pathA[MAX_PATH+1];
@@ -485,6 +491,7 @@ LPITEMIDLIST WINAPI nsSHBrowseForFolder(LPBROWSEINFOW aBiW)
   }
   return itemIdList;
 }
+#endif
 
 HMODULE             nsToolkit::mShell32Module = NULL;
 NS_DefWindowProc    nsToolkit::mDefWindowProc = DefWindowProcA;
@@ -501,8 +508,11 @@ NS_GetClassName     nsToolkit::mGetClassName = nsGetClassName;
 NS_CreateWindowEx   nsToolkit::mCreateWindowEx = nsCreateWindowEx;
 NS_RegisterClass    nsToolkit::mRegisterClass = nsRegisterClass; 
 NS_UnregisterClass  nsToolkit::mUnregisterClass = nsUnregisterClass; 
+
+#ifndef WINCE
 NS_SHGetPathFromIDList  nsToolkit::mSHGetPathFromIDList = nsSHGetPathFromIDList; 
 NS_SHBrowseForFolder    nsToolkit::mSHBrowseForFolder = nsSHBrowseForFolder; 
+#endif
 
 void RunPump(void* arg)
 {
@@ -510,8 +520,10 @@ void RunPump(void* arg)
     ::PR_EnterMonitor(info->monitor);
 
     // Start Active Input Method Manager on this thread
+#ifndef WINCE
     if(nsToolkit::gAIMMApp)
         nsToolkit::gAIMMApp->Activate(TRUE);
+#endif
 
     // do registration and creation in this thread
     info->toolkit->CreateInternalWindow(PR_GetCurrentThread());
@@ -541,6 +553,7 @@ nsToolkit::nsToolkit()
     mGuiThread  = NULL;
     mDispatchWnd = 0;
 
+#ifndef WINCE
     //
     // Initialize COM since create Active Input Method Manager object
     //
@@ -551,8 +564,9 @@ nsToolkit::nsToolkit()
       ::CoCreateInstance(CLSID_CActiveIMM, NULL, CLSCTX_INPROC_SERVER, IID_IActiveIMMApp, (void**) &nsToolkit::gAIMMApp);
 
     nsToolkit::gAIMMCount++;
+#endif
 
-#ifdef MOZ_STATIC_COMPONENT_LIBS
+#if defined(MOZ_STATIC_COMPONENT_LIBS) || defined (WINCE)
     nsToolkit::Startup(GetModuleHandle(NULL));
 #endif
 }
@@ -567,6 +581,7 @@ nsToolkit::~nsToolkit()
 {
     NS_PRECONDITION(::IsWindow(mDispatchWnd), "Invalid window handle");
 
+#ifndef WINCE
     nsToolkit::gAIMMCount--;
 
     if (!nsToolkit::gAIMMCount) {
@@ -577,6 +592,7 @@ nsToolkit::~nsToolkit()
         }
         ::CoUninitialize();
     }
+#endif
 
     // Destroy the Dispatch Window
     ::DestroyWindow(mDispatchWnd);
@@ -590,12 +606,14 @@ nsToolkit::~nsToolkit()
 
     // Unhook the filter used to determine when
     // the user is moving a top-level window.
+#ifndef WINCE
     if (nsMsgFilterHook != NULL) {
       UnhookWindowsHookEx(nsMsgFilterHook);
       nsMsgFilterHook = NULL;
     }
+#endif
 
-#ifdef MOZ_STATIC_COMPONENT_LIBS
+#if defined (MOZ_STATIC_COMPONENT_LIBS) || defined(WINCE)
     nsToolkit::Shutdown();
 #endif
 }
@@ -604,6 +622,7 @@ nsToolkit::~nsToolkit()
 void
 nsToolkit::Startup(HMODULE hModule)
 {
+#ifndef WINCE
     //
     // Set flag of nsToolkit::mUseImeApiW due to using Unicode API.
     //
@@ -625,7 +644,9 @@ nsToolkit::Startup(HMODULE hModule)
     }
 
     nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
-    if (nsToolkit::mIsNT)  {
+    if (nsToolkit::mIsNT)  
+#endif    
+    {
       // For Windows 9x base OS nsFoo is already pointing to A functions
       // However on NT base OS we should point them to respective W functions
       nsToolkit::mDefWindowProc = DefWindowProcW;
@@ -644,6 +665,7 @@ nsToolkit::Startup(HMODULE hModule)
       nsToolkit::mUnregisterClass = UnregisterClassW; 
       // Explicit call of SHxxxW in Win95 makes moz fails to run (170969)
       // we use GetProcAddress() to hide
+#ifndef WINCE
       nsToolkit::mShell32Module = ::LoadLibrary("Shell32.dll");
       if (nsToolkit::mShell32Module) {
         nsToolkit::mSHGetPathFromIDList = (NS_SHGetPathFromIDList)GetProcAddress(nsToolkit::mShell32Module, "SHGetPathFromIDListW"); 
@@ -663,6 +685,7 @@ nsToolkit::Startup(HMODULE hModule)
           nsToolkit::mW2KXP_CP936 = PR_TRUE;
         }
       }
+#endif
     }
     nsToolkit::mDllInstance = hModule;
 
@@ -726,15 +749,16 @@ void nsToolkit::CreateInternalWindow(PRThread *aThread)
     //
     // create the internal window
     //
+
     mDispatchWnd = ::CreateWindow("nsToolkitClass",
-                                       "NetscapeDispatchWnd",
-                                       WS_DISABLED,
-                                       -50, -50,
-                                       10, 10,
-                                       NULL,
-                                       NULL,
-                                       nsToolkit::mDllInstance,
-                                       NULL);
+                                  "NetscapeDispatchWnd",
+                                  WS_DISABLED,
+                                  -50, -50,
+                                  10, 10,
+                                  NULL,
+                                  NULL,
+                                  nsToolkit::mDllInstance,
+                                  NULL);
 
     VERIFY(mDispatchWnd);
 }
@@ -785,20 +809,24 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
     // If no thread is provided create one
     if (NULL != aThread) {
         // Start Active Input Method Manager on this thread
+#ifndef WINCE
         if(nsToolkit::gAIMMApp)
             nsToolkit::gAIMMApp->Activate(TRUE);
+#endif
         CreateInternalWindow(aThread);
     } else {
         // create a thread where the message pump will run
         CreateUIThread();
     }
 
+#ifndef WINCE
     // Hook window move messages so the toolkit can report when
     // the user is moving a top-level window.
     if (nsMsgFilterHook == NULL) {
       nsMsgFilterHook = SetWindowsHookEx(WH_CALLWNDPROC, DetectWindowMove, 
                                                 NULL, GetCurrentThreadId());
     }
+#endif
 
     return NS_OK;
 }
@@ -839,12 +867,13 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
 
     }
 
+#ifndef WINCE
     if(nsToolkit::gAIMMApp) {
         LRESULT lResult;
         if (nsToolkit::gAIMMApp->OnDefWindowProc(hWnd, msg, wParam, lParam, &lResult) == S_OK)
             return lResult;
     }
-
+#endif
     return nsToolkit::mDefWindowProc(hWnd, msg, wParam, lParam);
 }
 
@@ -899,7 +928,7 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   return rv;
 }
 
-
+#ifndef WINCE
 //-------------------------------------------------------------------------
 //
 //
@@ -909,7 +938,6 @@ MouseTrailer * MouseTrailer::GetMouseTrailer(DWORD aThreadID) {
     MouseTrailer::theMouseTrailer = new MouseTrailer();
   }
   return MouseTrailer::theMouseTrailer;
-
 }
 
 //-------------------------------------------------------------------------
@@ -1045,5 +1073,5 @@ void CALLBACK MouseTrailer::TimerProc(HWND hWnd, UINT msg, UINT event, DWORD tim
     }
 }
 
-
+#endif
 

@@ -58,7 +58,10 @@ typedef HWND (WINAPI *NS_CreateWindowEx)
 typedef ATOM (WINAPI *NS_RegisterClass) (CONST WNDCLASSW *); 
 typedef BOOL (WINAPI *NS_UnregisterClass) (LPCWSTR, HINSTANCE); 
 typedef BOOL (WINAPI *NS_SHGetPathFromIDList) (LPCITEMIDLIST, LPWSTR);
+
+#ifndef WINCE
 typedef LPITEMIDLIST (WINAPI *NS_SHBrowseForFolder) (LPBROWSEINFOW);
+#endif
 
 // Avoid including windowsx.h to prevent macro pollution
 #ifndef GET_X_LPARAM

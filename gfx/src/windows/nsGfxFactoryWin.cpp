@@ -67,14 +67,17 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryWin)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableRegion)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeWin)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
+
+#ifndef WINCE
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
+#endif
 
 PRBool
 UseAFunctions()
@@ -199,11 +202,6 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/gfx/region;1",
     nsScriptableRegionConstructor },
 
-  { "nsPrintOptionsWin",
-    NS_PRINTSETTINGSSERVICE_CID,
-    "@mozilla.org/gfx/printsettings-service;1",
-    nsPrintOptionsWinConstructor },
-
   { "nsFontEnumeratorWin",
     NS_FONT_ENUMERATOR_CID,
     "@mozilla.org/gfx/fontenumerator;1",
@@ -218,11 +216,7 @@ static const nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
     nsScreenManagerWinConstructor },
-  { "Win Printer Enumerator",
-    NS_PRINTER_ENUMERATOR_CID,
-    //    "@mozilla.org/gfx/printer_enumerator/win;1",
-    "@mozilla.org/gfx/printerenumerator;1",
-    nsPrinterEnumeratorWinConstructor },
+
   { "Native Theme Renderer", 
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1", 
@@ -232,10 +226,25 @@ static const nsModuleComponentInfo components[] =
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",
     gfxImageFrameConstructor, },
+
+#ifndef WINCE
+  { "nsPrintOptionsWin",
+    NS_PRINTSETTINGSSERVICE_CID,
+    "@mozilla.org/gfx/printsettings-service;1",
+    nsPrintOptionsWinConstructor },
+
+  { "Win Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/printer_enumerator/win;1",
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorWinConstructor },
+
   { "Print Session",
     NS_PRINTSESSION_CID,
     "@mozilla.org/gfx/printsession;1",
     nsPrintSessionConstructor }
+#endif
+
 };
 
 NS_IMPL_NSGETMODULE(nsGfxModule, components)

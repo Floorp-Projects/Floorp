@@ -191,6 +191,7 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
+#ifndef WINCE
 ////////////////////////////////////////////////////
 // Manager for Registering and unregistering OLE
 // This is needed for drag & drop & Clipboard support
@@ -225,6 +226,7 @@ OleRegisterMgr::~OleRegisterMgr()
 #endif
   ::OleUninitialize();
 }
+#endif
 
 ////////////////////////////////////////////////////
 // nsWindow Class static variable definitions
@@ -655,8 +657,11 @@ public:
     TimerInfo *info = FindInfo(timerWindow);
     if (info) {
       // make sure it's unflashed and kill the timer
+
+#ifndef WINCE
       if (info->hasFlashed)
         ::FlashWindow(info->flashWindow, FALSE);
+#endif
       ::KillTimer(info->timerWindow, info->timerID);
       RemoveTimer(info);
       delete info;
@@ -861,7 +866,9 @@ nsWindow::nsWindow() : nsBaseWidget()
     nsWindow::uWM_MSIME_MOUSE     = ::RegisterWindowMessage(RWM_MOUSE);
 
     // Heap dump
+#ifndef WINCE
     nsWindow::uWM_HEAP_DUMP = ::RegisterWindowMessage(kMozHeapDumpMessageString);
+#endif
   }
 
   mNativeDragTarget = nsnull;
@@ -870,7 +877,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   sInstanceCount++;
 
-#ifndef __MINGW32__
+#if !defined (__MINGW32__) && !defined(WINCE) 
   if (!nsWindow::uMSH_MOUSEWHEEL)
     nsWindow::uMSH_MOUSEWHEEL = RegisterWindowMessage(MSH_MOUSEWHEEL);
 #endif
@@ -893,10 +900,12 @@ nsWindow::~nsWindow()
     gCurrentWindow = nsnull;
   }
 
+#ifndef WINCE
   MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
   if (mouseTrailer->GetMouseTrailerWindow() == this) {
     mouseTrailer->DestroyTimer();
   }
+#endif
 
   // If the widget was released without calling Destroy() then the native
   // window still exists, and we need to destroy it
@@ -929,10 +938,14 @@ nsWindow::~nsWindow()
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
   if (aCapture) {
+#ifndef WINCE
     MouseTrailer::SetCaptureWindow(this);
+#endif
     ::SetCapture(mWnd);
   } else {
+#ifndef WINCE
     MouseTrailer::SetCaptureWindow(NULL);
+#endif
     ::ReleaseCapture();
   }
   mIsInMouseCapture = aCapture;
@@ -1192,17 +1205,20 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     gRollupWidget = this;
     NS_ADDREF(this);
 
+#ifndef WINCE
+
     if (!gMsgFilterHook && !gCallProcHook && !gCallMouseHook) {
       RegisterSpecialDropdownHooks();
     }
     gProcessHook = PR_TRUE;
-
+    
   } else {
     NS_IF_RELEASE(gRollupListener);
     NS_IF_RELEASE(gRollupWidget);
-
+    
     gProcessHook = PR_FALSE;
     UnregisterSpecialDropdownHooks();
+#endif
   }
 
   return NS_OK;
@@ -1227,28 +1243,21 @@ nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
   return (PRBool) PtInRect(&r, mp);
 }
 
-static LPCTSTR GetNSWindowPropName() {
-  static ATOM atom = 0;
-
-  // this is threadsafe, even without locking;
-  // even if there's a race, GlobalAddAtom("MozillansIWidgetPtr")
-  // will just return the same value
-  if (!atom) {
-    atom = ::GlobalAddAtom("MozillansIWidgetPtr");
-  }
-  return MAKEINTATOM(atom);
+static char* sPropName = "MozillansIWidgetPtr"; 
+static char* GetNSWindowPropName() {
+   return sPropName;
 }
 
 nsWindow * nsWindow::GetNSWindowPtr(HWND aWnd) {
-  return (nsWindow *) ::GetProp(aWnd, GetNSWindowPropName());
+  return (nsWindow *) ::GetPropA(aWnd, GetNSWindowPropName());
 }
 
 BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
   if (ptr == NULL) {
-    ::RemoveProp(aWnd, GetNSWindowPropName());
+    ::RemovePropA(aWnd, GetNSWindowPropName());
     return TRUE;
   } else {
-    return ::SetProp(aWnd, GetNSWindowPropName(), (HANDLE)ptr);
+    return ::SetPropA(aWnd, GetNSWindowPropName(), (HANDLE)ptr);
   }
 }
 
@@ -1262,15 +1271,23 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
 {
   if ( gRollupListener && gRollupWidget) {
 
-    if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||
-        inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
-        inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE ||
-        inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL || inMsg == WM_ACTIVATEAPP ||
-        inMsg == WM_MENUSELECT || inMsg == WM_MOVING || inMsg == WM_SIZING ||
-        // Non-toplevel windows normally don't get WM_GETMINMAXINFO.
-        // Therefore if a non-toplevel window gets this message, we should ignore it.
+    if (inMsg == WM_ACTIVATE || inMsg == WM_LBUTTONDOWN ||
+      inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
+      inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL
+#ifndef WINCE
+        || 
+        inMsg == WM_NCRBUTTONDOWN || 
+        inMsg == WM_MOVING || 
+        inMsg == WM_SIZING || 
+        inMsg == WM_GETMINMAXINFO ||
+        inMsg == WM_NCLBUTTONDOWN || 
+        inMsg == WM_NCMBUTTONDOWN ||
+        inMsg == WM_MOUSEACTIVATE ||
+        inMsg == WM_ACTIVATEAPP ||
+        inMsg == WM_MENUSELECT ||
         (inMsg == WM_GETMINMAXINFO && !::GetParent(inWnd))
-       )
+#endif
+        )
     {
       // Rollup if the event is outside the popup.
       PRBool rollup = !nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)gRollupWidget);
@@ -1307,6 +1324,7 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
         } // if rollup listener knows about menus
       }
 
+#ifndef WINCE
       if (inMsg == WM_MOUSEACTIVATE) {
         // Prevent the click inside the popup from causing a change in window
         // activation. Since the popup is shown non-activated, we need to eat
@@ -1332,9 +1350,10 @@ nsWindow :: DealWithPopups ( HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inL
           }
         }
       }
-
       // if we've still determined that we should still rollup everything, do it.
-      else if ( rollup ) {
+      else 
+#endif
+     if ( rollup ) {
         gRollupListener->Rollup();
 
         // Tell hook to stop processing messages
@@ -1549,6 +1568,7 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
                                        (DLGPROC)DummyDialogProc,
                                        NULL);
   } else {
+
     mWnd = nsToolkit::mCreateWindowEx(extendedStyle,
                                       aInitData && aInitData->mDropShadow ?
                                       WindowPopupClassW() : WindowClassW(),
@@ -1801,8 +1821,10 @@ NS_METHOD nsWindow::Show(PRBool bState)
           case nsSizeMode_Maximized :
             mode = SW_SHOWMAXIMIZED;
             break;
+#ifndef WINCE
           case nsSizeMode_Minimized :
             mode = SW_SHOWMINIMIZED;
+#endif
             break;
           default :
             mode = SW_SHOWNORMAL;
@@ -1887,9 +1909,11 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
       case nsSizeMode_Maximized :
         mode = SW_MAXIMIZE;
         break;
+#ifndef WINCE
       case nsSizeMode_Minimized :
         mode = gTrimOnMinimize ? SW_MINIMIZE : SW_SHOWMINIMIZED;
         break;
+#endif
       default :
         mode = SW_RESTORE;
     }
@@ -2126,9 +2150,11 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     }
 
     UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE;
+#ifndef WINCE
     if (!aRepaint) {
       flags |= SWP_NOREDRAW;
     }
+#endif
 
     if (NULL != deferrer) {
       VERIFY(((nsWindow *)par)->mDeferredPositioner = ::DeferWindowPos(deferrer,
@@ -2178,10 +2204,11 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
     }
 
     UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE;
+#ifndef WINCE
     if (!aRepaint) {
       flags |= SWP_NOREDRAW;
     }
-
+#endif
     if (NULL != deferrer) {
       VERIFY(((nsWindow *)par)->mDeferredPositioner = ::DeferWindowPos(deferrer,
                             mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), flags));
@@ -2364,9 +2391,11 @@ NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
     ::DeleteObject(mBrush);
 
   mBrush = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
+#ifndef WINCE
   if (mWnd != NULL) {
     SetClassLong(mWnd, GCL_HBRBACKGROUND, (LONG)mBrush);
   }
+#endif
   return NS_OK;
 }
 
@@ -2955,7 +2984,7 @@ void nsWindow::SetUpForPaint(HDC aHDC)
 NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
 {
   nsresult rv = NS_ERROR_FAILURE;
-
+#ifndef WINCE
   if (aEnable) {
     if (nsnull == mNativeDragTarget) {
        mNativeDragTarget = new nsNativeDragTarget(this);
@@ -2977,7 +3006,7 @@ NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
       NS_RELEASE(mNativeDragTarget);
     }
   }
-
+#endif
   return rv;
 }
 
@@ -3695,7 +3724,9 @@ void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves)
 // Static helper functions for heap dumping
 static nsresult HeapDump(const char *filename, const char *heading)
 {
-
+#ifdef WINCE
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   // Make sure heapwalk() is available
   typedef BOOL WINAPI HeapWalkProc(HANDLE hHeap, LPPROCESS_HEAP_ENTRY lpEntry);
   typedef DWORD WINAPI GetProcessHeapsProc(DWORD NumberOfHeaps, PHANDLE ProcessHeaps);
@@ -3757,6 +3788,7 @@ static nsresult HeapDump(const char *filename, const char *heading)
 
   PR_Close(prfd);
   return NS_OK;
+#endif
 }
 
 // Recursively dispatch synchronous paints for nsIWidget
@@ -3847,9 +3879,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     }
     break;
 
+#ifndef WINCE
     case WM_DISPLAYCHANGE:
       DispatchStandardEvent(NS_DISPLAYCHANGED);
       break;
+#endif
 
     case WM_SYSCOLORCHANGE:
       // Note: This is sent for child windows as well as top-level windows.
@@ -3946,10 +3980,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       result = OnPaint();
       break;
 
+#ifndef WINCE
     case WM_PRINTCLIENT:
       result = OnPaint((HDC) wParam);
       break;
-
+#endif
+			
     case WM_SYSCHAR:
     case WM_CHAR:
     {
@@ -4034,7 +4070,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       }
       else
         result = PR_FALSE;
-
+#ifndef WINCE
       if (wParam == VK_MENU || (wParam == VK_F10 && !mIsShiftDown)) {
         // We need to let Windows handle this keypress,
         // by returning PR_FALSE, if there's a native menu
@@ -4052,6 +4088,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
         result = !hasNativeMenu;
       }
+#endif
       DispatchPendingEvents();
       break;
 
@@ -4229,6 +4266,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           PRBool result = DispatchWindowEvent(&event);
           NS_RELEASE(event.widget);
 
+#ifndef WINCE
           if (event.acceptActivation)
             *aRetValue = MA_ACTIVATE;
           else
@@ -4236,10 +4274,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
           if (gSwitchKeyboardLayout && mLastKeyboardLayout)
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
+#endif
         }
       }
       break;
 
+#ifndef WINCE
     case WM_MOUSEACTIVATE:
     {
       // This seems to be the only way we're
@@ -4261,6 +4301,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         info->flags &= ~SWP_SHOWWINDOW;
     }
     break;
+
+#endif
 
     case WM_SETFOCUS:
       result = DispatchFocus(NS_GOTFOCUS, isMozWindowTakingFocus);
@@ -4292,6 +4334,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       result = DispatchFocus(NS_LOSTFOCUS, isMozWindowTakingFocus);
       break;
 
+#ifndef WINCE
     case WM_WINDOWPOSCHANGED:
     {
 #ifdef MOZ_XUL
@@ -4415,6 +4458,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       }
     }
     break;
+#endif
 
     case WM_SETTINGCHANGE:
       getWheelInfo = PR_TRUE;
@@ -4450,6 +4494,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       result = PR_TRUE;
       break;
 
+#ifndef WINCE
     case WM_INPUTLANGCHANGEREQUEST:
       *aRetValue = TRUE;
       result = PR_FALSE;
@@ -4458,6 +4503,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_INPUTLANGCHANGE:
       result = OnInputLangChange((HKL)lParam, aRetValue);
       break;
+#endif
 
     case WM_IME_STARTCOMPOSITION:
       result = OnIMEStartComposition();
@@ -4494,6 +4540,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       result = OnIMESetContext(wParam, lParam);
       break;
 
+#ifndef WINCE
     case WM_DROPFILES:
     {
 #if 0
@@ -4519,6 +4566,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #endif
     }
     break;
+#endif 
 
     case WM_DESTROYCLIPBOARD:
     {
@@ -4558,6 +4606,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     }
 #endif
 
+#ifndef WINCE
     case WM_SYSCOMMAND:
       // prevent Windows from trimming the working set. bug 76831
       if (!gTrimOnMinimize && wParam == SC_MINIMIZE) {
@@ -4565,10 +4614,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         result = PR_TRUE;
       }
       break;
+#endif
 
     default:
     {
       // Handle both flavors of mouse wheel events.
+#ifndef WINCE
       if ((msg == WM_MOUSEWHEEL) || (msg == uMSH_MOUSEWHEEL)) {
         static int iDeltaPerLine;
         static ULONG ulScrollLines;
@@ -4749,6 +4800,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         HeapDump("c:\\heapdump.txt", "whatever");
         result = PR_TRUE;
       }
+#endif // WINCE
 
     }
     break;
@@ -4784,7 +4836,11 @@ LPCWSTR nsWindow::WindowClassW()
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
+#ifdef WINCE
+    wc.hIcon         = NULL;
+#else
     wc.hIcon         = ::LoadIconW(::GetModuleHandle(NULL), MAKEINTRESOURCEW(IDI_APPLICATION));
+#endif
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
@@ -4844,7 +4900,11 @@ LPCWSTR nsWindow::WindowPopupClassW()
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
+#ifdef WINCE
+    wc.hIcon         = NULL;
+#else
     wc.hIcon         = ::LoadIconW(::GetModuleHandle(NULL), MAKEINTRESOURCEW(IDI_APPLICATION));
+#endif
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
@@ -4862,7 +4922,7 @@ LPCWSTR nsWindow::WindowPopupClassW()
   return className;
 }
 
-LPCTSTR nsWindow::WindowClass()
+LPCSTR nsWindow::WindowClass()
 {
   // Call into the wide version to make sure things get
   // registered properly.
@@ -4886,7 +4946,7 @@ LPCTSTR nsWindow::WindowClass()
   return kClassNameGeneral;
 }
 
-LPCTSTR nsWindow::WindowPopupClass()
+LPCSTR nsWindow::WindowPopupClass()
 {
   // Call into the wide version to make sure things get
   // registered properly.
@@ -4904,6 +4964,9 @@ LPCTSTR nsWindow::WindowPopupClass()
 //-------------------------------------------------------------------------
 DWORD nsWindow::WindowStyle()
 {
+#ifdef WINCE
+  return WS_CHILD;
+#else
   DWORD style;
 
   switch (mWindowType) {
@@ -4971,6 +5034,7 @@ DWORD nsWindow::WindowStyle()
   }
 
   return style;
+#endif
 }
 
 
@@ -5435,9 +5499,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
       // So we use "WindowFromPoint" to find what window we are over and
       // set that window into the mouse trailer timer.
       if (!mIsInMouseCapture) {
+#ifndef WINCE
         MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
         MouseTrailer::SetMouseTrailerWindow(this);
         mouseTrailer->CreateTimer();
+#endif
       } else {
         POINT mp;
         DWORD pos = ::GetMessagePos();
@@ -5466,9 +5532,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
         }
         // only set the window into the mouse trailer if we have a good window
         if (nsnull != someWindow) {
+#ifndef WINCE
           MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
           MouseTrailer::SetMouseTrailerWindow(someWindow);
           mouseTrailer->CreateTimer();
+#endif
         }
       }
 
@@ -5480,7 +5548,9 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
       if (rect.Contains(event.point.x, event.point.y)) {
         if (gCurrentWindow == NULL || gCurrentWindow != this) {
           if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
+#ifndef WINCE
             MouseTrailer::IgnoreNextCycle();
+#endif
             gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, wParam, gCurrentWindow->GetLastPoint());
           }
           gCurrentWindow = this;
@@ -5710,6 +5780,10 @@ NS_METHOD nsWindow::SetIcon(const nsAString& aIconSpec)
   // XXX this should use MZLU (see bug 239279)
 
   ::SetLastError(0);
+#ifdef WINCE
+#define LR_LOADFROMFILE 0
+#endif
+
   HICON bigIcon = (HICON)::LoadImageW(NULL,
                                       (LPCWSTR)iconPath.get(),
                                       IMAGE_ICON,
@@ -6946,7 +7020,9 @@ static VOID CALLBACK nsGetAttentionTimerFunc(HWND hwnd, UINT uMsg, UINT idEvent,
     if (maxFlashCount > 0) {
       // We have a max flash count, if we haven't met it yet, flash again.
       if (flashCount < maxFlashCount) {
+#ifndef WINCE
         ::FlashWindow(flashwnd, TRUE);
+#endif
         gAttentionTimerMonitor->IncrementFlashCount(hwnd);
       }
       else
@@ -6954,7 +7030,9 @@ static VOID CALLBACK nsGetAttentionTimerFunc(HWND hwnd, UINT uMsg, UINT idEvent,
     }
     else {
       // The caller didn't specify a flash count.
+#ifndef WINCE
       ::FlashWindow(flashwnd, TRUE);
+#endif
     }
 
     gAttentionTimerMonitor->SetFlashed(hwnd);
@@ -7049,6 +7127,9 @@ MSGFEventMsgInfo gMSGFEvents[] = {
 #endif
 
 
+
+#ifndef WINCE
+
 //-------------------------------------------------------------------------
 // Schedules a timer for a window, so we can rollup after processing the hook event
 void nsWindow::ScheduleHookTimer(HWND aWnd, UINT aMsgId)
@@ -7069,6 +7150,7 @@ void nsWindow::ScheduleHookTimer(HWND aWnd, UINT aMsgId)
 //-------------------------------------------------------------------------
 // Process Menu messages
 // Rollup when when is clicked
+
 LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM lParam)
 {
 #ifdef DISPLAY_NOISY_MSGF_MSG
@@ -7146,6 +7228,7 @@ LRESULT CALLBACK nsWindow::MozSpecialWndProc(int code, WPARAM wParam, LPARAM lPa
 
 //-------------------------------------------------------------------------
 // Register the special "hooks" for dropdown processing
+
 void nsWindow::RegisterSpecialDropdownHooks()
 {
   NS_ASSERTION(!gMsgFilterHook, "gMsgFilterHook must be NULL!");
@@ -7191,6 +7274,7 @@ void nsWindow::RegisterSpecialDropdownHooks()
 
 //-------------------------------------------------------------------------
 // Unhook special message hooks for dropdowns
+
 void nsWindow::UnregisterSpecialDropdownHooks()
 {
   DISPLAY_NMM_PRT("***************** De-installing Msg Hooks ***************\n");
@@ -7220,6 +7304,7 @@ void nsWindow::UnregisterSpecialDropdownHooks()
   }
 }
 
+
 //-------------------------------------------------------------------------
 // This timer is designed to only fire one time at most each time a "hook" function
 // is used to rollup the dropdown
@@ -7247,6 +7332,7 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
     gRollupMsgWnd = NULL;
   }
 }
+#endif // WinCE
 
 
 #ifdef ACCESSIBILITY

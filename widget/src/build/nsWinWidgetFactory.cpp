@@ -64,17 +64,21 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
+
+#ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
+#endif
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -86,36 +90,16 @@ static const nsModuleComponentInfo components[] =
     NS_CHILD_CID,
     "@mozilla.org/widgets/child_window/win;1",
     ChildWindowConstructor },
+#ifndef WINCE
   { "File Picker",
     NS_FILEPICKER_CID,
     "@mozilla.org/filepicker;1",
     nsFilePickerConstructor },
-  { "AppShell",
-    NS_APPSHELL_CID,
-    "@mozilla.org/widget/appshell/win;1",
-    nsAppShellConstructor },
-  { "Toolkit",
-    NS_TOOLKIT_CID,
-    "@mozilla.org/widget/toolkit/win;1",
-    nsToolkitConstructor },
-  { "Look And Feel",
-    NS_LOOKANDFEEL_CID,
-    "@mozilla.org/widget/lookandfeel;1",
-    nsLookAndFeelConstructor },
   { "Sound",
     NS_SOUND_CID,
     //    "@mozilla.org/widget/sound/win;1"
     "@mozilla.org/sound;1",
     nsSoundConstructor },
-  { "Transferable",
-    NS_TRANSFERABLE_CID,
-    //    "@mozilla.org/widget/transferable/win;1",
-    "@mozilla.org/widget/transferable;1",
-    nsTransferableConstructor },
-  { "HTML Format Converter",
-    NS_HTMLFORMATCONVERTER_CID,
-    "@mozilla.org/widget/htmlformatconverter;1",
-    nsHTMLFormatConverterConstructor },
   { "Clipboard",
     NS_CLIPBOARD_CID,
     //    "@mozilla.org/widget/clipboard/win;1",
@@ -134,6 +118,28 @@ static const nsModuleComponentInfo components[] =
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
+#endif
+  { "AppShell",
+    NS_APPSHELL_CID,
+    "@mozilla.org/widget/appshell/win;1",
+    nsAppShellConstructor },
+  { "Toolkit",
+    NS_TOOLKIT_CID,
+    "@mozilla.org/widget/toolkit/win;1",
+    nsToolkitConstructor },
+  { "Look And Feel",
+    NS_LOOKANDFEEL_CID,
+    "@mozilla.org/widget/lookandfeel;1",
+    nsLookAndFeelConstructor },
+  { "Transferable",
+    NS_TRANSFERABLE_CID,
+    //    "@mozilla.org/widget/transferable/win;1",
+    "@mozilla.org/widget/transferable;1",
+    nsTransferableConstructor },
+  { "HTML Format Converter",
+    NS_HTMLFORMATCONVERTER_CID,
+    "@mozilla.org/widget/htmlformatconverter;1",
+    nsHTMLFormatConverterConstructor },
 };
 
 

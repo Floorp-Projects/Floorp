@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef WINCE
+
 /* Things To Do 11/8/00
 
 Check image metrics, can we support them? Do we need to?
@@ -105,3 +107,5 @@ private:
   BITMAPV4HEADER* mHeader;
 
 }; // nsImageFromClipboard
+
+#endif //WINCE

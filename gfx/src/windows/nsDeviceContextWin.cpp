@@ -410,6 +410,9 @@ nsresult nsDeviceContextWin::CopyLogFontToNSFont(HDC* aHDC, const LOGFONT* ptrLo
 
 nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsFont* aFont) const
 {
+#ifdef WINCE
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   NONCLIENTMETRICS ncm;
   HGDIOBJ hGDI;
 
@@ -498,6 +501,7 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemFontID anID, nsF
   aFont->systemFont = PR_TRUE;
 
   return CopyLogFontToNSFont(&aHDC, ptrLogFont, aFont);
+#endif
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
@@ -607,12 +611,14 @@ NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
   aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
   aPaletteInfo.numReserved = mPaletteInfo.numReserved;
 
+#ifndef WINCE
   if (NULL == mPaletteInfo.palette) {
     HWND    hwnd = (HWND)mWidget;
     HDC     hdc = ::GetDC(hwnd);
     mPaletteInfo.palette = ::CreateHalftonePalette(hdc);  
     ::ReleaseDC(hwnd, hdc);                                                     
   }
+#endif
 
   aPaletteInfo.palette = mPaletteInfo.palette;
                                          

@@ -1022,7 +1022,9 @@ nsImageWin::ProgressiveDoubleBlit(nsIDeviceContext *aContext,
   nsPaletteInfo palInfo;
   aContext->GetPaletteInfo(palInfo);
   if (palInfo.isPaletteDevice && palInfo.palette) {
+#ifndef WINCE
     ::SetStretchBltMode(imgDC, HALFTONE);
+#endif
     ::SelectPalette(imgDC, (HPALETTE)palInfo.palette, TRUE);
     ::RealizePalette(imgDC);
   }

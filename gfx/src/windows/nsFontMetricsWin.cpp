@@ -515,7 +515,11 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
     (mFont.decorations & NS_FONT_DECORATION_LINE_THROUGH)
     ? TRUE : FALSE;
   logFont->lfCharSet        = mIsUserDefined ? ANSI_CHARSET : DEFAULT_CHARSET;
+#ifndef WINCE
   logFont->lfOutPrecision   = OUT_TT_PRECIS;
+#else
+  logFont->lfOutPrecision   = OUT_DEFAULT_PRECIS;
+#endif
   logFont->lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
   logFont->lfQuality        = DEFAULT_QUALITY;
   logFont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
@@ -2317,7 +2321,6 @@ nsFontMetricsWin::CreateFontHandle(HDC aDC, const nsString& aName, LOGFONT* aLog
   PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
 
   FillLogFont(aLogFont, weight);
- 
   /*
    * XXX we are losing info by converting from Unicode to system code page
    * but we don't really have a choice since CreateFontIndirectW is
@@ -2458,9 +2461,11 @@ enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
       }
 
       // copy Unicode subrange bitfield (128bit) if it's a truetype font. 
+#ifndef WINCE
       if (fontType & hasFontSig) {
         memcpy(font->signature.fsUsb, ((NEWTEXTMETRICEX*)metrics)->ntmFontSig.fsUsb, 16);
       }
+#endif
       return 1;
     }
   }
@@ -2487,9 +2492,12 @@ enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
 
   if (fontType & hasFontSig) {
     font->flags |= NS_GLOBALFONT_TRUETYPE;
+#ifndef WINCE
     // copy Unicode subrange bitfield (128 bits = 16 bytes)
     memcpy(font->signature.fsUsb, ((NEWTEXTMETRICEX*)metrics)->ntmFontSig.fsUsb, 16);
+#endif
   }
+
   if (logFont->lfCharSet == SYMBOL_CHARSET) {
     font->flags |= NS_GLOBALFONT_SYMBOL;
   }
@@ -2667,6 +2675,10 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
   for (i = 0; i < count; ++i) {
     nsAutoString name;
     nsFontWin* font = (nsFontWin*)mLoadedFonts[i];
+
+    if (!font->mFont)
+      continue;
+
     HFONT oldFont = (HFONT)::SelectObject(aDC, font->mFont);
     eGetNameError res = GetNAME(aDC, &name);
     ::SelectObject(aDC, oldFont);
@@ -2716,7 +2728,6 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
       }
     }
   }
-
   // We are running out of resources if we reach here... Try a stock font
   NS_ASSERTION(::GetMapMode(aDC) == MM_TEXT, "mapping mode needs to be MM_TEXT");
   nsFontWin* font = LoadSubstituteFont(aDC, EmptyString());
@@ -5023,7 +5034,6 @@ nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUint32 aChar)
         return subset;
     }
   }
-
   return nsnull;
 }
 
@@ -5040,7 +5050,6 @@ nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUint32 aChar, const nsString& aNam
   if (font && font->HasGlyph(aChar)) {
     return font->FindSubset(aDC, (PRUnichar)aChar, this);
   }
-
   return nsnull;
 }
 
