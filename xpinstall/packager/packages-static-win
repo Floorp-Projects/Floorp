@@ -118,6 +118,8 @@ bin\components\gfx.xpt
 bin\components\gfx2.xpt
 bin\components\content_base.xpt
 bin\components\content_html.xpt
+bin\components\content_htmldoc.xpt
+bin\components\content_xmldoc.xpt
 bin\components\content_xslt.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt

@@ -135,6 +135,8 @@ bin/components/find.xpt
 bin/components/gfx.xpt
 bin/components/content_base.xpt
 bin/components/content_html.xpt
+bin/components/content_htmldoc.xpt
+bin/components/content_xmldoc.xpt
 bin/components/content_xslt.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
@@ -444,7 +446,6 @@ bin/res/inspector/search-registry.rdf
 ;Things that aren't packaged and why (or not why)
 ;accproxy.dll - I don't know
 ;accessproxy.xpt - I don't know
-;content.xpt - I don't know
 ;htmlparser.xpt - I don't know
 ;iiextras.dll - I don't know
 ;iiextras.xpt - I don't know

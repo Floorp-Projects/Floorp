@@ -100,7 +100,8 @@ viewer:Components:ChomeRegistry.shlb
 viewer:Components:chrome.xpt
 viewer:Components:Composer.shlb 
 viewer:Components:composer.xpt
-viewer:Components:content.xpt
+viewer:Components:content_htmldoc.xpt
+viewer:Components:content_xmldoc.xpt
 viewer:Components:cookie.xpt 
 viewer:Components:Cookie.shlb 
 viewer:Components:appcomps.shlb 
