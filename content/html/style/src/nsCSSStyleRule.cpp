@@ -436,7 +436,7 @@ nscoord CSSStyleRuleImpl::CalcLength(const nsCSSValue& aValue,
     case eCSSUnit_EN:
       return (aFont->mFont.size / 2);
     case eCSSUnit_XHeight:
-      NS_NOTYETIMPLEMENTED("x height unit");
+//      NS_NOTYETIMPLEMENTED("x height unit");
       return ((aFont->mFont.size / 3) * 2); // XXX HACK!
     case eCSSUnit_CapHeight:
       NS_NOTYETIMPLEMENTED("cap height unit");
