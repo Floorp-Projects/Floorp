@@ -40,10 +40,6 @@ use File::Basename;
 
 $DEPTH         = "../../../..";
 $topsrcdir     = GetTopSrcDir();
-$inStagePath   = "$topsrcdir/stage";
-$inDistPath    = "$topsrcdir/dist";
-$inXpiURL      = "ftp://not.supplied.invalid";
-$inRedirIniURL = $inXpiURL;
 
 # ensure that Packager.pm is in @INC, since we might not be called from
 # mozilla/xpinstall/packager
@@ -52,15 +48,19 @@ require StageUtils;
 
 ParseArgv(@ARGV);
 
-$DEPTH            = "$topsrcdir" if !defined($DEPTH);
+$topobjdir        = $topsrcdir                   if !defined($topobjdir);
+$inStagePath      = "$topobjdir/stage"           if !defined($inStagePath);
+$inDistPath       = "$topobjdir/dist"            if !defined($inDistPath);
+$inXpiURL         = "ftp://not.supplied.invalid" if !defined($inXpiURL);
+$inRedirIniURL    = $inXpiURL                    if !defined($inRedirIniURL);
 $builderPath      = "$topsrcdir/xpinstall/wizard/windows/builder";
 $gDistInstallPath = "$inDistPath/inst_mfcembed";
 $gPackagerPath    = "$topsrcdir/xpinstall/packager";
 
 chdir("$gPackagerPath/win_mfcembed");
-if(system("perl \"$gPackagerPath/win_mfcembed/makeall.pl\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
+if(system("perl \"$gPackagerPath/win_mfcembed/makeall.pl\" -objDir \"$topobjdir\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
 {
-  die "\n Error: perl \"$gPackagerPath/win_mfcembed/makeall.pl\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
+  die "\n Error: perl \"$gPackagerPath/win_mfcembed/makeall.pl\" -objDir \"$topobjdir\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
 }
 
 chdir($builderPath);
@@ -89,6 +89,8 @@ sub PrintUsage
        options available are:
 
            -h                - this usage.
+
+           -objDir <path>    - the build directory (defaults to a srcdir build)
 
            -stagePath <path> - Full path to where the mozilla stage dir is at.
                                Default path, if one is not set, is:
@@ -121,12 +123,22 @@ sub ParseArgv
     {
       PrintUsage();
     }
+    elsif($myArgv[$counter] =~ /^[-,\/]objDir$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $topobjdir = $myArgv[$counter];
+        $topobjdir =~ s/\\/\//g;
+      }
+    }
     elsif($myArgv[$counter] =~ /^[-,\/]stagePath$/i)
     {
       if($#myArgv >= ($counter + 1))
       {
         ++$counter;
         $inStagePath = $myArgv[$counter];
+        $inStagePath =~ s/\\/\//g;
       }
     }
     elsif($myArgv[$counter] =~ /^[-,\/]distPath$/i)
@@ -135,6 +147,7 @@ sub ParseArgv
       {
         ++$counter;
         $inDistPath = $myArgv[$counter];
+        $inDistPath =~ s/\\/\//g;
       }
     }
     elsif($myArgv[$counter] =~ /^[-,\/]aurl$/i)

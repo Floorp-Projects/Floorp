@@ -47,6 +47,19 @@ sub StageProduct
   my($dirMozRoot)                 = StageUtils::GetAbsPath("moz_root");
   my($dirMozPackager)             = StageUtils::GetAbsPath("moz_packager");
 
+  if(defined($ENV{DEBUG_INSTALLER_BUILD}))
+  {
+    print "\n stage_mozilla.pl\n";
+    print "   aDirSrcDist                 : $aDirSrcDist\n";
+    print "   aDirStage                   : $aDirStage\n";
+    print "   aProductName                : $aProductName\n";
+    print "   aOsPkg                      : $aOsPkg\n";
+    print "   dirDistPackagesProductName  : $dirDistPackagesProductName\n";
+    print "   dirStageProductName         : $dirStageProductName\n";
+    print "   dirMozRoot                  : $dirMozRoot\n";
+    print "   dirMozPackager              : $dirMozPackager\n";
+  }
+
   StageUtils::CleanupStage($aDirStage, $aProductName);
   StageUtils::CleanupDistPackages("$aDirSrcDist/packages", $aProductName);
   StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-win.pkg",                   $dirDistPackagesProductName);
