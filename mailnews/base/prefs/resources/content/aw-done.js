@@ -18,6 +18,8 @@
  * Rights Reserved.
  */
 
+var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
+
 function onInit() {
     var pageData = parent.wizardManager.WSM.PageData;
     var showMailServerDetails = true; 
@@ -30,16 +32,6 @@ function onInit() {
         // Change the username field description to email field label in aw-identity
         setUserNameDescField(currentAccountData.emailIDFieldTitle);
     }
-
-    var accountName="";
-    if (pageData.accname && pageData.accname.prettyName) {
-        accountName = pageData.accname.prettyName.value;
-        if (!accountName        && 
-             currentAccountData && 
-             currentAccountData.prettyName)
-            accountName = currentAccountData.prettyName;
-    }
-    setDivTextFromForm("account.name", accountName);
 
     var email = "";
     if (pageData.identity && pageData.identity.email) {
@@ -61,6 +53,27 @@ function onInit() {
         userName = emailData[0];
     }
     setDivTextFromForm("server.username", userName);
+
+    var accountName="";
+    if (pageData.accname && pageData.accname.prettyName) {
+        accountName = pageData.accname.prettyName.value;
+
+        // If the AccountData exists, tha means we have values read from rdf file.
+        // Get the pretty name and polish the account name
+        if ( currentAccountData && 
+             currentAccountData.incomingServer.prettyName)
+        {
+            var prettyName = currentAccountData.incomingServer.prettyName; 
+            // Get the polished account name 
+            accountName = Bundle.GetStringFromName("accountName")
+                                .replace(/%prettyName%/, prettyName)
+                                .replace(/%username%/, userName);  
+
+            // Set that to be the name in the pagedata 
+            pageData.accname.prettyName.value = accountName;
+        }
+    }
+    setDivTextFromForm("account.name", accountName);
 
     // Show mail servers (incoming&outgoing) detials
     // based on current account data. ISP can set 

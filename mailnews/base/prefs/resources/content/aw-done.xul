@@ -30,6 +30,7 @@ Rights Reserved.
         class="color-dialog"
         onload="parent.wizardManager.onPageLoad('done');">
 
+  <script src="chrome://global/content/strres.js"/>
   <script src="chrome://messenger/content/aw-done.js"/>
 
   <box class="box-header" title="&completionTitle.label;"/>
