@@ -214,6 +214,7 @@ bin\res\ua.css
 bin\res\forms.css
 bin\res\quirk.css
 bin\res\arrow.gif
+bin\defaults\wallet\VcardSchema.tbl
 bin\defaults\wallet\FieldSchema.tbl
 bin\defaults\wallet\SchemaConcat.tbl
 bin\defaults\wallet\DistinguishedSchema.tbl
