@@ -220,8 +220,14 @@ nsFtpControlConnection::Disconnect(nsresult status)
         mConnected = PR_FALSE;
     }
 
-    if (mWriteRequest) mWriteRequest->Cancel(status);    
-    if (mReadRequest) mReadRequest->Cancel(status);
+    if (mWriteRequest) {
+        mWriteRequest->Cancel(status);    
+        mWriteRequest = nsnull;
+    }
+    if (mReadRequest) {
+        mReadRequest->Cancel(status);
+        mReadRequest = nsnull;
+    }
     return NS_OK;
 }
 
