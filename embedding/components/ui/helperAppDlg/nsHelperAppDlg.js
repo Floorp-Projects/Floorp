@@ -302,6 +302,12 @@ nsHelperAppDialog.prototype = {
 
          // Set initial focus
          this.dialogElement( "mode" ).focus();
+
+         this.mDialog.document.documentElement.getButton("accept").disabled = true;
+         const nsITimer = Components.interfaces.nsITimer;
+         this._timer = Components.classes["@mozilla.org/timer;1"]
+                                 .createInstance(nsITimer);
+         this._timer.initWithCallback(this, 250, nsITimer.TYPE_ONE_SHOT);
     },
 
     // initIntro:
@@ -360,6 +366,34 @@ nsHelperAppDialog.prototype = {
         var location = this.dialogElement( "location" );
         location.value = pathString;
         location.setAttribute( "tooltiptext", this.mSourcePath );
+    },
+
+    _timer: null,
+    notify: function (aTimer) {
+        if (!this._blurred)
+          this.mDialog.document.documentElement.getButton('accept').disabled = false;
+        _timer = null;
+    },
+
+    _blurred: false,
+    onBlur: function(aEvent) {
+        if (aEvent.target != this.mDialog.document)
+          return;
+
+        this._blurred = true;
+        this.mDialog.document.documentElement.getButton("accept").disabled = true;
+    },
+
+    onFocus: function(aEvent) {
+        if (aEvent.target != this.mDialog.document)
+          return;
+
+        this._blurred = false;
+        if (!_timer) {
+          // Don't enable the button if the initial timer is running
+          var script = "document.documentElement.getButton('accept').disabled = false";
+          this.mDialog.setTimeout(script, 250);
+        }
     },
 
     // Returns true iff opening the default application makes sense.

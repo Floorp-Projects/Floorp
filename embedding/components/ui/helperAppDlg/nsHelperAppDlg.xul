@@ -51,6 +51,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="dialog.initDialog()"
+        onblur="dialog.onBlur(event);"
+        onfocus="dialog.onFocus(event);"
         onunload="if (dialog) dialog.onCancel()"
         style="width: 40em;"
         ondialogaccept="return dialog.onOK()"
