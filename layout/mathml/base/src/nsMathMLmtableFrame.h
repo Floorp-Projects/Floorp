@@ -75,10 +75,10 @@ protected:
 
 // --------------
 
-class nsMathMLmtdFrame : public nsBlockFrame,
-                         public nsMathMLFrame {
+class nsMathMLmtdInnerFrame : public nsBlockFrame,
+                              public nsMathMLFrame {
 public:
-  friend nsresult NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -101,10 +101,10 @@ public:
          nsReflowStatus&          aStatus);
 
 protected:
-  nsMathMLmtdFrame();
-  virtual ~nsMathMLmtdFrame();
+  nsMathMLmtdInnerFrame();
+  virtual ~nsMathMLmtdInnerFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }
-};  // class nsMathMLmtdFrame
+};  // class nsMathMLmtdInnerFrame
 
 #endif /* nsMathMLmtableFrame_h___ */
