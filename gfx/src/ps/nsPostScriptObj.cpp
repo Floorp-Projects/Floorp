@@ -63,7 +63,6 @@
 #include "prprf.h"
 #include "prerror.h"
 
-#include <locale.h>
 #include <errno.h>
 #include <sys/wait.h>
 
@@ -75,11 +74,17 @@
 static PRLogModuleInfo *nsPostScriptObjLM = PR_NewLogModule("nsPostScriptObj");
 #endif /* PR_LOGGING */
 
-// These set the location to standard C and back
-// which will keep the "." from converting to a "," 
-// in certain languages for floating point output to postscript
-#define XL_SET_NUMERIC_LOCALE() char* cur_locale = setlocale(LC_NUMERIC, "C")
-#define XL_RESTORE_NUMERIC_LOCALE() setlocale(LC_NUMERIC, cur_locale)
+/* A private class to format floating-point values into strings. This
+ * is used to write floating-point values into the postscript document.
+ * printf()-based functions can't be used because they may generate
+ * locale-ized output, e.g. using a comma for the decimal point, which
+ * isn't a valid postscript number.
+ */
+class fpCString : public nsCAutoString {
+  public:
+    inline fpCString(float aValue) { AppendFloat(aValue); }
+};
+
 
 #define NS_PS_RED(x) (((float)(NS_GET_R(x))) / 255.0) 
 #define NS_PS_GREEN(x) (((float)(NS_GET_G(x))) / 255.0) 
@@ -566,14 +571,13 @@ FILE *f;
   else
     orientation = "Portrait";
 
-  XL_SET_NUMERIC_LOCALE();
   f = mPrintContext->prSetup->out;
   fprintf(f, "%%!PS-Adobe-3.0\n");
-  fprintf(f, "%%%%BoundingBox: %g %g %g %g\n",
-    NSTwipsToFloatPoints(mPrintContext->prSetup->left),
-    NSTwipsToFloatPoints(mPrintContext->prSetup->bottom),
-    NSTwipsToFloatPoints(paper_width - mPrintContext->prSetup->right),
-    NSTwipsToFloatPoints(paper_height - mPrintContext->prSetup->top));
+  fprintf(f, "%%%%BoundingBox: %s %s %s %s\n",
+    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->left)).get(),
+    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->bottom)).get(),
+    fpCString(NSTwipsToFloatPoints(paper_width - mPrintContext->prSetup->right)).get(),
+    fpCString(NSTwipsToFloatPoints(paper_height - mPrintContext->prSetup->top)).get());
 
   fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n",
              "rv:" MOZILLA_VERSION, (unsigned long)NS_BUILD_ID);
@@ -618,16 +622,16 @@ FILE *f;
   fprintf(f,
     "/setpagedevice where\n"			// Test for the feature
     "{ pop 2 dict\n"				// Set up a dictionary
-    "  dup /PageSize [ %g %g ] put\n"		// Paper dimensions
-    "  dup /ImagingBBox [ %g %g %g %g ] put\n"	// Bounding box
+    "  dup /PageSize [ %s %s ] put\n"		// Paper dimensions
+    "  dup /ImagingBBox [ %s %s %s %s ] put\n"	// Bounding box
     "  setpagedevice\n"				// Install settings
     "} if\n", 
-    NSTwipsToFloatPoints(paper_width),
-    NSTwipsToFloatPoints(paper_height),
-    NSTwipsToFloatPoints(mPrintContext->prSetup->left),
-    NSTwipsToFloatPoints(mPrintContext->prSetup->bottom),
-    NSTwipsToFloatPoints(paper_width - mPrintContext->prSetup->right),
-    NSTwipsToFloatPoints(paper_height - mPrintContext->prSetup->top));
+    fpCString(NSTwipsToFloatPoints(paper_width)).get(),
+    fpCString(NSTwipsToFloatPoints(paper_height)).get(),
+    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->left)).get(),
+    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->bottom)).get(),
+    fpCString(NSTwipsToFloatPoints(paper_width - mPrintContext->prSetup->right)).get(),
+    fpCString(NSTwipsToFloatPoints(paper_height - mPrintContext->prSetup->top)).get());
 
   fprintf(f, "[");
   for (i = 0; i < 256; i++){
@@ -1966,7 +1970,6 @@ FILE *f;
   initlanggroup();
 
   fprintf(f, "%%%%EndProlog\n");
-  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
@@ -1990,7 +1993,6 @@ nsPostScriptObj::begin_page()
 {
 FILE *f;
 
-  XL_SET_NUMERIC_LOCALE();
   f = mPrintContext->prSetup->tmpBody;
   fprintf(f, "%%%%Page: %d %d\n", mPageNumber, mPageNumber);
   fprintf(f, "%%%%BeginPageSetup\n");
@@ -2000,8 +2002,7 @@ FILE *f;
   }
   fprintf(f,"/pagelevel save def\n");
   // Rescale the coordinate system from points to twips.
-  fprintf(f, "%g %g scale\n",
-    1.0 / TWIPS_PER_POINT_FLOAT, 1.0 / TWIPS_PER_POINT_FLOAT);
+  scale(1.0 / TWIPS_PER_POINT_FLOAT, 1.0 / TWIPS_PER_POINT_FLOAT);
   // Move the origin to the bottom left of the printable region.
   if (mPrintContext->prSetup->landscape){
     fprintf(f, "90 rotate %d -%d translate\n",
@@ -2025,7 +2026,6 @@ FILE *f;
 
   // need to reset all U2Ntable
   gLangGroups->Enumerate(ResetU2Ntable, nsnull);
-  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
@@ -2333,9 +2333,7 @@ nsPostScriptObj::show(const PRUnichar* txt, int len,
 void 
 nsPostScriptObj::moveto(nscoord x, nscoord y)
 {
-  XL_SET_NUMERIC_LOCALE();
   fprintf(mPrintContext->prSetup->tmpBody, "%d %d moveto\n", x, y);
-  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
@@ -2345,52 +2343,26 @@ nsPostScriptObj::moveto(nscoord x, nscoord y)
 void 
 nsPostScriptObj::lineto(nscoord aX, nscoord aY)
 {
-  XL_SET_NUMERIC_LOCALE();
   fprintf(mPrintContext->prSetup->tmpBody, "%d %d lineto\n", aX, aY);
-  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
- *	@update 2/1/99 dwc
- */
-void 
-nsPostScriptObj::ellipse(nscoord aWidth, nscoord aHeight)
-{
-  XL_SET_NUMERIC_LOCALE();
-
-  // Ellipse definition
-  fprintf(mPrintContext->prSetup->tmpBody,"%g %g ",
-                aWidth * 0.5, aHeight * 0.5);
-  fprintf(mPrintContext->prSetup->tmpBody,
-                " matrix currentmatrix currentpoint translate\n");
-  fprintf(mPrintContext->prSetup->tmpBody,
-          "     3 1 roll scale newpath 0 0 1 0 360 arc setmatrix  \n");
-  XL_RESTORE_NUMERIC_LOCALE();
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPostScriptObj.h
- *	@update 2/1/99 dwc
+ *    @param aWidth  Width of the ellipse implied by the arc
+ *           aHeight Height of the ellipse
+ *           aStartAngle  Angle for the start of the arc
+ *           aEndAngle    Angle for the end of the arc
  */
 void 
 nsPostScriptObj::arc(nscoord aWidth, nscoord aHeight,
   float aStartAngle,float aEndAngle)
 {
-
-  XL_SET_NUMERIC_LOCALE();
   // Arc definition
-  fprintf(mPrintContext->prSetup->tmpBody,"%g %g ",
-                aWidth * 0.5, aHeight * 0.5);
   fprintf(mPrintContext->prSetup->tmpBody,
-                " matrix currentmatrix currentpoint translate\n");
-  fprintf(mPrintContext->prSetup->tmpBody,
-          "     3 1 roll scale newpath 0 0 1 %g %g arc setmatrix  \n",aStartAngle,aEndAngle);
-
-  XL_RESTORE_NUMERIC_LOCALE();
-
-
-  
+      "%s %s matrix currentmatrix currentpoint translate\n"
+      " 3 1 roll scale newpath 0 0 1 %s %s arc setmatrix\n",
+      fpCString(aWidth * 0.5).get(), fpCString(aHeight * 0.5).get(),
+      fpCString(aStartAngle).get(), fpCString(aEndAngle).get());
 }
 
 /** ---------------------------------------------------
@@ -2400,10 +2372,8 @@ nsPostScriptObj::arc(nscoord aWidth, nscoord aHeight,
 void 
 nsPostScriptObj::box(nscoord aX, nscoord aY, nscoord aW, nscoord aH)
 {
-  XL_SET_NUMERIC_LOCALE();
   fprintf(mPrintContext->prSetup->tmpBody,
     "%d %d %d %d Mrect ", aX, aY, aW, aH);
-  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
@@ -2413,11 +2383,9 @@ nsPostScriptObj::box(nscoord aX, nscoord aY, nscoord aW, nscoord aH)
 void 
 nsPostScriptObj::box_subtract(nscoord aX, nscoord aY, nscoord aW, nscoord aH)
 {
-  XL_SET_NUMERIC_LOCALE();
   fprintf(mPrintContext->prSetup->tmpBody,
     "%d %d moveto 0 %d rlineto %d 0 rlineto 0 %d rlineto closepath ",
     aX, aY, aH, aW, -aH);
-  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
@@ -2488,13 +2456,11 @@ void
 nsPostScriptObj::line(nscoord aX1, nscoord aY1,
   nscoord aX2, nscoord aY2, nscoord aThick)
 {
-  XL_SET_NUMERIC_LOCALE();
   fprintf(mPrintContext->prSetup->tmpBody, "gsave %d setlinewidth\n ", aThick);
   fprintf(mPrintContext->prSetup->tmpBody, " %d %d moveto %d %d lineto\n",
     aX1, aY1, aX2, aY2);
   stroke();
   fprintf(mPrintContext->prSetup->tmpBody, "grestore\n");
-  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
@@ -2537,6 +2503,19 @@ nsPostScriptObj::graphics_restore()
   fprintf(mPrintContext->prSetup->tmpBody, " grestore \n");
 }
 
+
+/** ---------------------------------------------------
+ *  Output postscript to scale the current coordinate system
+ *    @param aX   X scale factor
+ *           aY   Y scale factor
+ */
+void
+nsPostScriptObj::scale(float aX, float aY)
+{
+  fprintf(mPrintContext->prSetup->tmpBody, "%s %s scale\n",
+      fpCString(aX).get(), fpCString(aX).get());
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
@@ -2544,9 +2523,7 @@ nsPostScriptObj::graphics_restore()
 void 
 nsPostScriptObj::translate(nscoord x, nscoord y)
 {
-    XL_SET_NUMERIC_LOCALE();
     fprintf(mPrintContext->prSetup->tmpBody, "%d %d translate\n", x, y);
-    XL_RESTORE_NUMERIC_LOCALE();
 }
 
 
@@ -2687,8 +2664,6 @@ nsPostScriptObj::setcolor(nscolor aColor)
 {
 float greyBrightness;
 
-  XL_SET_NUMERIC_LOCALE();
-
   /* For greyscale postscript, find the average brightness of red, green, and
    * blue.  Using this average value as the brightness for red, green, and
    * blue is a simple way to make the postscript greyscale instead of color.
@@ -2698,13 +2673,15 @@ float greyBrightness;
     greyBrightness=NS_PS_GRAY(NS_RGB_TO_GRAY(NS_GET_R(aColor),
                                              NS_GET_G(aColor),
                                              NS_GET_B(aColor)));
-    fprintf(mPrintContext->prSetup->tmpBody,"%3.2f setgray\n", greyBrightness);
+    fprintf(mPrintContext->prSetup->tmpBody, "%s setgray\n",
+      fpCString(greyBrightness).get());
   } else {
-    fprintf(mPrintContext->prSetup->tmpBody,"%3.2f %3.2f %3.2f setrgbcolor\n",
-    NS_PS_RED(aColor), NS_PS_GREEN(aColor), NS_PS_BLUE(aColor));
+    fprintf(mPrintContext->prSetup->tmpBody, "%s %s %s setrgbcolor\n",
+      fpCString(NS_PS_RED(aColor)).get(),
+      fpCString(NS_PS_GREEN(aColor)).get(),
+      fpCString(NS_PS_BLUE(aColor)).get());
   }
 
-  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 

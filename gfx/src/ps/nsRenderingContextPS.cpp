@@ -828,7 +828,7 @@ nsRenderingContextPS :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
   mPSObj->comment("ellipse");
   mPSObj->newpath();
   mPSObj->moveto(aX, aY);
-  mPSObj->ellipse(aWidth, aHeight);
+  mPSObj->arc(aWidth, aHeight, 0.0, 360.0);
   mPSObj->closepath();
   mPSObj->stroke();
 
@@ -852,7 +852,7 @@ NS_IMETHODIMP nsRenderingContextPS :: FillEllipse(nscoord aX, nscoord aY, nscoor
   mPSObj->comment("ellipse");
   mPSObj->newpath();
   mPSObj->moveto(aX, aY);
-  mPSObj->ellipse(aWidth, aHeight);
+  mPSObj->arc(aWidth, aHeight, 0.0, 360.0);
   mPSObj->closepath();
   mPSObj->fill();
 
@@ -1339,8 +1339,7 @@ NS_IMETHODIMP nsRenderingContextPS::RenderPostScriptDataFragment(const unsigned 
 
   // Reset the coordinate system to point-sized. The origin and Y axis
   // orientation are already correct.
-  fprintf(mPSObj->mPrintSetup->tmpBody, "%g %g scale\n",
-    TWIPS_PER_POINT_FLOAT, TWIPS_PER_POINT_FLOAT);
+  mPSObj->scale(TWIPS_PER_POINT_FLOAT, TWIPS_PER_POINT_FLOAT);
   fwrite(aData, aDatalen, 1, mPSObj->mPrintSetup->tmpBody);
 
   return NS_OK;
