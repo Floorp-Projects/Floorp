@@ -20,6 +20,7 @@
 #define nsClipboard_h__
 
 #include "nsBaseClipboard.h"
+#include <gtk/gtk.h>
 
 class nsITransferable;
 class nsIClipboardOwner;
@@ -45,13 +46,14 @@ public:
 protected:
   NS_IMETHOD SetNativeClipboardData();
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
+  void       SetTopLevelWidget(GtkWidget* w);
 
   PRBool              mIgnoreEmptyNotification;
 
-  nsIClipboardOwner * mClipboardOwner;
-  nsITransferable   * mTransferable;
-  nsIWidget         * mWindow;
-
+  nsIClipboardOwner *mClipboardOwner;
+  nsITransferable   *mTransferable;
+  nsIWidget         *mWindow;
+  GtkWidget         *mWidget;
 };
 
 #endif // nsClipboard_h__
