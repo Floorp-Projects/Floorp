@@ -46,36 +46,17 @@ XFE_RDFBase::XFE_RDFBase()
 /*virtual*/
 XFE_RDFBase::~XFE_RDFBase() 
 {
+    XFE_RDFBase *  xfe_view = (XFE_RDFBase *)HT_GetViewFEData(_ht_view);
+    if (xfe_view == this) 
+    {
+        // HT is holding onto a pointer to this class.
+        // Since this is going away, clear the pointer from HT.
+        HT_SetViewFEData(_ht_view, NULL);
+    }
+
     if (isPaneCreator())
     {
         deletePane();
-    }
-    else
-    {
-        HT_SetViewFEData(_ht_view, NULL);
-    }
-}
-//////////////////////////////////////////////////////////////////////////
-/*static*/ XP_Bool
-XFE_RDFBase::ht_IsFECommand(HT_Resource item)
-{
-    const char* url = HT_GetNodeURL(item);
-
-    return (XP_STRNCMP(url, "command:", 8) == 0);
-}
-//////////////////////////////////////////////////////////////////////////
-/*static*/ CommandType
-XFE_RDFBase::ht_GetFECommand(HT_Resource item)
-{
-    const char* url = HT_GetNodeURL(item);
-
-    if (url && XP_STRNCMP(url, "command:", 8) == 0)
-    {
-        return Command::convertOldRemote(url + 8);
-    }
-    else 
-    {
-        return NULL;
     }
 }
 //////////////////////////////////////////////////////////////////////////
@@ -121,6 +102,22 @@ XFE_RDFBase::newPaneFromResource(RDF_Resource node)
 }
 //////////////////////////////////////////////////////////////////////////
 void
+XFE_RDFBase::newBookmarksPane()
+{
+    newPane();
+    HT_View view = HT_GetViewType(_ht_pane, HT_VIEW_BOOKMARK);
+    HT_SetSelectedView(_ht_pane, view);
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFBase::newHistoryPane()
+{
+    newPane();
+    HT_View view = HT_GetViewType(_ht_pane, HT_VIEW_HISTORY);
+    HT_SetSelectedView(_ht_pane, view);
+}
+//////////////////////////////////////////////////////////////////////////
+void
 XFE_RDFBase::newToolbarPane()
 {
     startPaneCreate();
@@ -128,6 +125,75 @@ XFE_RDFBase::newToolbarPane()
     _ht_pane = HT_NewToolbarPane(_ht_ns);
 
     finishPaneCreate();
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFBase::startPaneCreate()
+{
+    deletePane();
+
+    // Setup the notification struct
+    _ht_ns = new HT_NotificationStruct;
+    XP_BZERO(_ht_ns, sizeof(HT_NotificationStruct));
+    _ht_ns->notifyProc = notify_cb;
+    _ht_ns->data = this;
+}
+//////////////////////////////////////////////////////////////////////
+void
+XFE_RDFBase::finishPaneCreate()
+{
+    HT_SetPaneFEData(_ht_pane, this);
+
+    _ht_view = HT_GetSelectedView(_ht_pane);
+}
+//////////////////////////////////////////////////////////////////////
+void
+XFE_RDFBase::deletePane()
+{
+    if (_ht_ns)
+    {
+        delete _ht_ns;
+        _ht_ns = NULL;
+
+        XP_ASSERT(_ht_pane);
+
+        if (_ht_pane)
+        {
+            HT_DeletePane(_ht_pane);
+        }
+    }
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFBase::setHTView(HT_View view)
+{
+    XP_ASSERT(view);
+
+    // Nothing to do
+    if (view == _ht_view) return;
+
+    _ht_view = view;
+
+    HT_Pane pane = HT_GetPane(_ht_view);
+
+    // It is an error to switch to a new pane in setHTView()
+    // if this object is the HT_Pane creator.
+    // Use the new pane methods instead.
+    XP_ASSERT(!isPaneCreator() || _ht_pane == pane);
+
+    _ht_pane = pane;
+
+    HT_SetViewFEData(view, this);
+
+    updateRoot();
+}
+//////////////////////////////////////////////////////////////////////////
+XP_Bool
+XFE_RDFBase::isPaneCreator()
+{
+    // Pane was created by this object if the notification struct is set.
+    // No nofication struct means the pane was created by another object.
+    return _ht_ns != NULL;
 }
 //////////////////////////////////////////////////////////////////////////
 HT_Resource
@@ -154,6 +220,29 @@ XFE_RDFBase::updateRoot()
 {
 }
 //////////////////////////////////////////////////////////////////////////
+/*static*/ XP_Bool
+XFE_RDFBase::ht_IsFECommand(HT_Resource item)
+{
+    const char* url = HT_GetNodeURL(item);
+
+    return (XP_STRNCMP(url, "command:", 8) == 0);
+}
+//////////////////////////////////////////////////////////////////////////
+/*static*/ CommandType
+XFE_RDFBase::ht_GetFECommand(HT_Resource item)
+{
+    const char* url = HT_GetNodeURL(item);
+
+    if (url && XP_STRNCMP(url, "command:", 8) == 0)
+    {
+        return Command::convertOldRemote(url + 8);
+    }
+    else 
+    {
+        return NULL;
+    }
+}
+//////////////////////////////////////////////////////////////////////////
 /*virtual*/ void
 XFE_RDFBase::notify(HT_Resource n, HT_Event whatHappened)
 {
@@ -170,7 +259,7 @@ XFE_RDFBase::notify(HT_Resource n, HT_Event whatHappened)
           HT_View        ht_view =   HT_GetView(n);
           XFE_RDFBase *  xfe_view =  (XFE_RDFBase *)HT_GetViewFEData(ht_view);
 
-          if (xfe_view)
+          if (xfe_view && xfe_view != this)
               xfe_view->notify(n, whatHappened);
       }
     break;
@@ -190,66 +279,6 @@ XFE_RDFBase::notify_cb(HT_Notification ns, HT_Resource n,
   XFE_RDFBase * xfe_rdfpane_obj = (XFE_RDFBase *)ns->data;
 
   xfe_rdfpane_obj->notify(n, whatHappened);
-}
-//////////////////////////////////////////////////////////////////////
-void
-XFE_RDFBase::startPaneCreate()
-{
-    deletePane();
-
-    // Setup the notification struct
-    _ht_ns = new HT_NotificationStruct;
-    XP_BZERO(_ht_ns, sizeof(HT_NotificationStruct));
-    _ht_ns->notifyProc = notify_cb;
-    _ht_ns->data = this;
-}
-//////////////////////////////////////////////////////////////////////
-void
-XFE_RDFBase::finishPaneCreate()
-{
-    HT_SetPaneFEData(_ht_pane, this);
-
-    //HT_SetNotificationMask(_ht_pane, NULL);
-}
-//////////////////////////////////////////////////////////////////////
-void
-XFE_RDFBase::deletePane()
-{
-    if (_ht_ns)
-    {
-        delete _ht_ns;
-
-        XP_ASSERT(_ht_pane);
-
-        if (_ht_pane)
-        {
-            HT_DeletePane(_ht_pane);
-        }
-    }
-}
-//////////////////////////////////////////////////////////////////////////
-void
-XFE_RDFBase::setHTView(HT_View view)
-{
-    XP_ASSERT(view);
-
-    // Nothing to do
-    if (view == _ht_view) return;
-
-    _ht_view = view;
-    _ht_pane = HT_GetPane(_ht_view);
-
-    HT_SetViewFEData(view, this);
-
-    updateRoot();
-}
-//////////////////////////////////////////////////////////////////////////
-XP_Bool
-XFE_RDFBase::isPaneCreator()
-{
-    // Pane was created by this object if the notification struct is set.
-    // No nofication struct means the pane was created by another object.
-    return _ht_ns != NULL;
 }
 //////////////////////////////////////////////////////////////////////////
 #ifdef DEBUG
@@ -299,7 +328,7 @@ XFE_RDFBase::debugEvent(HT_Resource n, HT_Event whatHappened,
         printf("    ");
 
 #ifdef DEBUG_slamm
-#define EVENTDEBUG(x) printf("%s: %-21s (0x%x) %s, %s\n",\
+#define EVENTDEBUG(x) printf("%s: %s (0x%x) %s, %s\n",\
                              label,(x),pane,viewName,nodeName);
 #else
 #define EVENTDEBUG(x)

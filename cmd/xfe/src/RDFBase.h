@@ -41,13 +41,10 @@ public:
 
 	virtual ~XFE_RDFBase ();
 
-    // Is the URL a 'special' command url that
-    //    translates to an FE command?
-    static XP_Bool        ht_IsFECommand        (HT_Resource  item);
-    static CommandType    ht_GetFECommand       (HT_Resource  item);
-
     // Pane creation methods.
     void                  newPane               ();
+    void                  newBookmarksPane      ();
+    void                  newHistoryPane        ();
     void                  newToolbarPane        ();
     void                  newPaneFromURL        (char * url, 
 												 int param_count = 0,
@@ -74,6 +71,13 @@ public:
     // Update the current view from the root.
     virtual void          updateRoot            ();
 
+
+    // Is the URL a 'special' command url that
+    //    translates to an FE command?
+    static XP_Bool        ht_IsFECommand        (HT_Resource  item);
+    static CommandType    ht_GetFECommand       (HT_Resource  item);
+
+
     // Handle HT events
     virtual void          notify      (HT_Resource n, HT_Event whatHappened);
 
@@ -84,10 +88,10 @@ protected:
                                        void *token, uint32 tokenType);
 
     // Called by the pane creation methods
-    void                  startPaneCreate       ();
-    void                  finishPaneCreate      ();
+    virtual void          startPaneCreate       ();
+    virtual void          finishPaneCreate      ();
     
-    void                  deletePane            ();
+    virtual void          deletePane            ();
 
 #ifdef DEBUG
     void                  debugEvent            (HT_Resource n, HT_Event e,
