@@ -552,7 +552,12 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
         } //for
 
       }
-      else theStyles->Append(aStyles);
+      else {
+        theStyles->Append(aStyles);
+        //  Delete aStyles since it has been copied to theStyles...
+        delete aStyles;
+        aStyles=0;
+      }
     } //if(theEntry )
     else if(mStack.mCount==0) {
       // If you're here it means that we have hit the rock bottom

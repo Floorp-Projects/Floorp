@@ -1339,6 +1339,12 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
       if(nsHTMLElement::IsSectionTag(theChildTag)){
         switch(theChildTag){
+          case eHTMLTag_html:
+            if(mBodyContext->GetCount()>0) {
+              result=OpenContainer(theNode,theChildTag,PR_FALSE);
+              isTokenHandled=PR_TRUE;
+            }
+            break;
           case eHTMLTag_body:
             if(mHasOpenBody) {
               result=OpenContainer(theNode,theChildTag,PR_FALSE);
@@ -2559,7 +2565,10 @@ nsresult CNavDTD::OpenHTML(const nsIParserNode *aNode){
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenHTML(), this=%p\n", this));
   START_TIMER();
 
-  mBodyContext->Push(aNode);
+  // Don't push more than one HTML tag into the stack...
+  if(mBodyContext->GetCount()==0) 
+    mBodyContext->Push(aNode); 
+
   return result;
 }
 
@@ -3161,6 +3170,8 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
               else{
                 //add code here to recycle styles...
                 RecycleNodes(theChildStyleStack);
+                delete theChildStyleStack; // XXX try to recycle this...
+                theChildStyleStack=0;
               }
             }
             else if (0==theNode->mUseCount) {

@@ -565,79 +565,102 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
  */
 nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
                                   nsString& aTerminalString,PRInt32 aMode,PRBool& aFlushTokens){
-  PRBool        done=PR_FALSE; 
-  nsresult      result=NS_OK; 
-  PRUnichar     theChar;
-  nsAutoString  theRight;
-  PRInt32       rpos=0;
+  nsresult      result=NS_OK;
+  PRInt32       theTermStrPos=0;;
+  nsString&     theBuffer=aScanner.GetBuffer();
+  PRInt32       theStartOffset=aScanner.GetOffset();
+  PRInt32       theCurrOffset=theStartOffset;  
+  PRInt32       theStartCommentPos=kNotFound;
+  PRInt32       theAltTermStrPos=kNotFound;
+  PRBool        done=PR_FALSE;
+  PRBool        theLastIteration=PR_FALSE;
+  PRInt32       termStrLen=aTerminalString.Length();
+
+  // ALGORITHM: *** The performance is based on correctness of the document ***
+  // 1. Look for a '<' character.  This could be
+  //    a) Start of a comment (<!--), b) Start of the terminal string, or c) a start of a tag.
+  //    We are interested in a) and b). c) is ignored because in CDATA we don't care for tags.
+  //    NOTE: Technically speaking in CDATA we should ignore the comments too!! But for compatibility
+  //          we don't.
+  // 2. Having the offset, for '<', search for the terminal string from there on and record its offset.
+  // 3. From the same '<' offset also search for start of a comment '<!--'. If found search for
+  //    end comment '-->' between the terminal string and '<!--'.  If you did not find the end
+  //    comment, then we have a malformed document, i.e., this section has a prematured terminal string
+  //    Ex. <SCRIPT><!-- document.write('</SCRIPT>') //--> </SCRIPT>. But anyway record terminal string's
+  //    offset and update the current offset to the terminal string (prematured) offset and goto step 1.
+  // 4. Amen...If you found a terminal string and '-->'. Otherwise goto step 1.
+  // 5. If the end of the document is reached and if we still don't have the condition in step 4. then
+  //    assume that the prematured terminal string is the actual terminal string and goto step 1. This
+  //    will be our last iteration.
 
 
-  //We're going to try a new algorithm here. Rather than scan for the matching 
- //end tag like we used to do, we're now going to scan for whitespace and comments. 
- //If we find either, just eat them. If we find text or a tag, then go to the 
- //target endtag, or the start of another comment. 
-
-
-  PRInt32 termStrLen=aTerminalString.Length();
-  while((!done) && (NS_OK==result)) { 
-    result=aScanner.GetChar(aChar); 
-    if((NS_OK==result) && (kLessThan==aChar)) { 
-      //we're reading a tag or a comment... 
-      //FYI: <STYLE> and <SCRIPT> should be treated as CDATA. So, 
-      //don't try to acknowledge "HTML COMMENTS"...just ignore 'em.
-      result=aScanner.GetChar(theChar); 
-      if((NS_OK==result) && (kExclamation==theChar) && (PR_FALSE==aIgnoreComments)) { 
-        //read a comment... 
-        static CCommentToken theComment; 
-        result=theComment.Consume(aChar,aScanner,aMode); 
-        if(NS_OK==result) { 
-          //result=aScanner.SkipWhitespace();
-          mTextValue.Append(theComment.GetStringValueXXX()); 
-        } 
-      } else { 
-        //read a tag... 
-        mTextValue+=aChar; 
-        mTextValue+=theChar; 
-        result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE); 
-      } 
-    } 
-    else if(('\b'==aChar) || ('\t'==aChar) || (' '==aChar)) {
-      static CWhitespaceToken theWS; 
-      result=theWS.Consume(aChar,aScanner,aMode); 
-      if(NS_OK==result) { 
-        mTextValue.Append(theWS.GetStringValueXXX()); 
-      } 
-    } 
-    else { 
-      mTextValue+=aChar; 
-      result=aScanner.ReadUntil(mTextValue,kLessThan,PR_FALSE); 
-    } 
-    mTextValue.Right(theRight,termStrLen+10); //first, get a wad of chars from the temp string
-    rpos=theRight.RFindChar('<');   //now scan for the '<'
-    if(-1<rpos) {
-      rpos=theRight.RFind(aTerminalString,PR_TRUE);
-      if(-1<rpos) {
-        nsAutoString temp(theRight);
-        temp.Cut(0,rpos);
-        if(aMode!=eParseMode_noquirks) {
-          temp.StripWhitespace();
+  // When is the disaster enabled?
+  // a) when the buffer runs out ot data.
+  // b) when the terminal string is not found.
+  PRBool disaster=PR_FALSE; 
+  while(result==NS_OK && !done) {
+    theCurrOffset=theBuffer.FindChar(kLessThan,PR_TRUE,theCurrOffset);
+    if(-1<theCurrOffset) {
+      PRInt32 tempOffset=theCurrOffset;
+      while(1) {
+        theTermStrPos=kNotFound;
+        tempOffset=theBuffer.FindChar(kGreaterThan,PR_TRUE,tempOffset);
+        if(tempOffset>-1) {
+          theTermStrPos=theBuffer.RFind(aTerminalString,PR_TRUE,tempOffset,termStrLen+2);
+          if(theTermStrPos>-1) break;
+          tempOffset++;
         }
-        PRUnichar ch=temp.CharAt(aTerminalString.Length());
-        rpos=(ch==kGreaterThan)? rpos:kNotFound;
-        aFlushTokens=(-1<rpos)?PR_TRUE:PR_FALSE; // We found </SCRIPT>...permit flushing -> Ref: Bug 22485
+        else break;
       }
+      //theTermStrPos=theBuffer.Find(aTerminalString,PR_TRUE,theCurrOffset);
+      if(theTermStrPos>kNotFound) {
+        if(aMode!=eParseMode_noquirks && !theLastIteration && !aIgnoreComments) {
+          theCurrOffset=theBuffer.Find("<!--",PR_TRUE,theCurrOffset,5);
+          if(theStartCommentPos==kNotFound && theCurrOffset>kNotFound) {
+            theStartCommentPos=theCurrOffset;
+          }
+          if(theStartCommentPos>kNotFound) {
+            // Search for --> between <!-- and </TERMINALSTRING>.
+            theCurrOffset=theBuffer.RFind("-->",PR_TRUE,theTermStrPos,theTermStrPos-theStartCommentPos);
+            if(theCurrOffset==kNotFound) {
+              // If you're here it means that we have a bogus terminal string.
+              theAltTermStrPos=(theAltTermStrPos>-1)? theAltTermStrPos:theTermStrPos; // This could be helpful in case we hit the rock bottom.
+              theCurrOffset=theTermStrPos+termStrLen; // We did not find '-->' so keep searching for terminal string.
+              continue;
+            }        
+          }
+            
+          PRInt32 thePos=theBuffer.FindChar(kGreaterThan,PR_TRUE,theTermStrPos,20);          
+          if(thePos>kNotFound && thePos>theTermStrPos+termStrLen) {
+              termStrLen +=(thePos-(theTermStrPos+termStrLen));
+          }
+        }
+      
+        disaster=PR_FALSE;
+        theCurrOffset=theTermStrPos; 
+        theBuffer.Mid(aTerminalString,theTermStrPos+2,termStrLen-2);
+        PRUnichar ch=theBuffer.CharAt(theTermStrPos+termStrLen);
+        theTermStrPos=(ch==kGreaterThan)? theTermStrPos+termStrLen:kNotFound;
+        if(theTermStrPos>kNotFound) {
+          theBuffer.Mid(mTextValue,theStartOffset,theCurrOffset-theStartOffset);
+          aScanner.Mark(theTermStrPos+1);   
+          aFlushTokens=PR_TRUE; // We found </SCRIPT>...permit flushing -> Ref: Bug 22485
+        }
+        done=PR_TRUE;
+      }
+      else  disaster=PR_TRUE;
     }
-    done=PRBool(-1<rpos); 
-  }  //while
-  if(NS_SUCCEEDED(result)) {
-    int len=mTextValue.Length();
-    mTextValue.Truncate(len-(theRight.Length()-rpos)); 
-   
-    // Make aTerminalString contain the name of the end tag ** as seen in **
-    // the document and not the made up one.
-    theRight.Cut(0,rpos+2);
-    theRight.Truncate(theRight.Length()-1);
-    aTerminalString = theRight;
+    else disaster=PR_TRUE;
+
+    if(disaster) {
+      if((!aScanner.IsIncremental()) && (theAltTermStrPos>kNotFound)) {
+        // If you're here it means..we hit the rock bottom and therefore switch to plan B.
+        theCurrOffset=theAltTermStrPos;
+        theLastIteration=PR_TRUE;
+      }
+      else
+       result=kEOF;
+    }
   }
   return result; 
 }
