@@ -5025,7 +5025,6 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   nsTimeoutImpl dummy_timeout;
   JSContext *cx;
   PRInt64 now, deadline;
-  nsresult rv;
   PRUint32 firingDepth = mTimeoutFiringDepth + 1;
 
   // Make sure that the window and the script context don't go away as
@@ -5124,10 +5123,10 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
       nsAutoString retval;
       PRBool is_undefined;
-      rv = mContext->EvaluateString(nsDependentString(script), mJSObject,
-                                    timeout->mPrincipal, timeout->mFileName,
-                                    timeout->mLineNo, timeout->mVersion,
-                                    retval, &is_undefined);
+      mContext->EvaluateString(nsDependentString(script), mJSObject,
+                               timeout->mPrincipal, timeout->mFileName,
+                               timeout->mLineNo, timeout->mVersion, retval,
+                               &is_undefined);
     } else {
       PRInt64 lateness64;
       PRInt32 lateness;
@@ -5140,9 +5139,8 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       timeout->mArgv[timeout->mArgc] = INT_TO_JSVAL((jsint) lateness);
 
       jsval dummy;
-      rv = mContext->CallEventHandler(mJSObject, timeout->mFunObj,
-                                      timeout->mArgc + 1, timeout->mArgv,
-                                      &dummy);
+      mContext->CallEventHandler(mJSObject, timeout->mFunObj,
+                                 timeout->mArgc + 1, timeout->mArgv, &dummy);
     }
 
     --mTimeoutFiringDepth;
@@ -5209,9 +5207,9 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       // Reschedule the OS timer. Don't bother returning any error
       // codes if this fails since nobody who cares about them is
       // listening anyways.
-      rv = timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout,
-                                                 delay32,
-                                                 nsITimer::TYPE_ONE_SHOT);
+      nsresult rv =
+        timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout, delay32,
+                                              nsITimer::TYPE_ONE_SHOT);
 
       if (NS_FAILED(rv)) {
         NS_ERROR("Error initializing timer for DOM timeout!");

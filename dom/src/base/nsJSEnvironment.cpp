@@ -1277,13 +1277,16 @@ nsJSContext::CallEventHandler(JSObject *aTarget, JSObject *aHandler,
 
       // Don't pass back results from failed calls.
       *rval = JSVAL_VOID;
+
+      // Tell the caller that the handler threw an error.
+      rv = NS_ERROR_FAILURE;
     }
   }
 
   if (NS_FAILED(stack->Pop(nsnull)))
     return NS_ERROR_FAILURE;
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
