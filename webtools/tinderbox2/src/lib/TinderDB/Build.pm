@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.66 $ 
-# $Date: 2003/08/17 01:37:52 $ 
+# $Revision: 1.67 $ 
+# $Date: 2003/08/17 16:05:42 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -1274,7 +1274,7 @@ sub buildcell_links {
       $index_links .= (
                  "\t\t\t". 
                  VCDisplay::query(
-                                   'linktxt'=> "Changes since last build",
+                                   'linktxt'=> "Check-ins since last build",
                                    'tree' => $tree,
                                    'mindate' => $mindate,
                                    'maxdate' => $maxdate,
