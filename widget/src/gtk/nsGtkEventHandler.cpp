@@ -245,6 +245,15 @@ int nsPlatformToDOMKeyCode(GdkEventKey *aGEK)
   }
 
   // function keys
+  // See bug 57262, Sun's Stop key generates F11 keysym code, in order to
+  // make Stop key stops the page loading while not sabotaging F11 key in
+  // all platforms, this code catches F11 keysym, then changes it into ESCAPE,
+  // which stops the page loading on all platforms.
+  // Now, Stop key has the same function as ESC in Solaris
+#if defined(SUNOS4) || defined(SOLARIS)
+  if (keysym == GDK_F11)
+    return NS_VK_ESCAPE;
+#endif
   if (keysym >= GDK_F1 && keysym <= GDK_F24)
     return keysym - GDK_F1 + NS_VK_F1;
 
@@ -367,7 +376,20 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
       // the isShift flag alone (probably not a printable character)
       // if none of the other modifier keys are pressed then we need to
       // clear isShift so the character can be inserted in the editor
-      if (!anEvent.isControl && !anEvent.isAlt && !anEvent.isMeta)
+
+      if ( anEvent.isControl || anEvent.isAlt || anEvent.isMeta ) {
+         // make Ctrl+uppercase functional as same as Ctrl+lowercase
+         // when Ctrl+uppercase(eg.Ctrl+C) is pressed,convert the charCode
+         // from uppercase to lowercase(eg.Ctrl+c),so do Alt and Meta Key
+         // It is hack code for bug 61355, there is same code snip for
+         // Windows platform in widget/src/windows/nsWindow.cpp: See bug 16486
+         // Note: if Shift is pressed at the same time, do not to_lower()
+         // Because Ctrl+Shift has different function with Ctrl
+         if ( !anEvent.isShift &&
+              anEvent.charCode >= GDK_A &&
+              anEvent.charCode <= GDK_Z )
+           anEvent.charCode = gdk_keyval_to_lower(anEvent.charCode);
+      } else
         anEvent.isShift = PR_FALSE;
     } else {
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
