@@ -1003,67 +1003,17 @@ nsFTPDirListingConv::InitPRExplodedTime(PRExplodedTime& aTime) {
     aTime.tm_params = params;
 }
 
-
-////////////////////////////////////////////////////////////////////////
-// Factory
-////////////////////////////////////////////////////////////////////////
-FTPDirListingFactory::FTPDirListingFactory(const nsCID &aClass, 
-                                   const char* className,
-                                   const char* progID)
-    : mClassID(aClass), mClassName(className), mProgID(progID)
+nsresult
+NS_NewFTPDirListingConv(nsFTPDirListingConv** aFTPDirListingConv)
 {
-    NS_INIT_ISUPPORTS();
-}
-
-FTPDirListingFactory::~FTPDirListingFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS(FTPDirListingFactory, NS_GET_IID(nsIFactory));
-
-NS_IMETHODIMP
-FTPDirListingFactory::CreateInstance(nsISupports *aOuter,
-                                 const nsIID &aIID,
-                                 void **aResult)
-{
-    if (! aResult)
+    NS_PRECONDITION(aFTPDirListingConv != nsnull, "null ptr");
+    if (! aFTPDirListingConv)
         return NS_ERROR_NULL_POINTER;
 
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
-    nsresult rv = NS_OK;
-
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kFTPDirListingConverterCID)) {
-        nsFTPDirListingConv *conv = new nsFTPDirListingConv();
-        if (!conv) return NS_ERROR_OUT_OF_MEMORY;
-        rv = conv->Init();
-        if (NS_FAILED(rv)) return rv;
-
-        rv = conv->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
-        if (NS_FAILED(rv)) return rv;
-    }
-    else {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    if (!inst)
+    *aFTPDirListingConv = new nsFTPDirListingConv();
+    if (! *aFTPDirListingConv)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(inst);
-    *aResult = inst;
-    NS_RELEASE(inst);
-    return rv;
+
+    NS_ADDREF(*aFTPDirListingConv);
+    return (*aFTPDirListingConv)->Init();
 }
-
-nsresult
-FTPDirListingFactory::LockFactory(PRBool aLock){
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
-// Factory END
-////////////////////////////////////////////////////////////////////////
-

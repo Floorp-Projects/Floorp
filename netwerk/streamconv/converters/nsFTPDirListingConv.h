@@ -157,30 +157,4 @@ private:
     nsIDateTimeFormat   *mDateTimeFormat;    // for the actual date time formatting.
 };
 
-//////////////////////////////////////////////////
-// FACTORY
-class FTPDirListingFactory : public nsIFactory
-{
-public:
-    FTPDirListingFactory(const nsCID &aClass, const char* className, const char* progID);
-
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-protected:
-    virtual ~FTPDirListingFactory();
-
-protected:
-    nsCID       mClassID;
-    const char* mClassName;
-    const char* mProgID;
-};
-
 #endif /* __nsftpdirlistingdconv__h__ */

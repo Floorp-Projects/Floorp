@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,100 +16,258 @@
  * Reserved.
  */
 
-#include "nsIGenericFactory.h"
 #include "nsCOMPtr.h"
-#include "nscore.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 #include "nsIStreamConverterService.h"
 #include "nsStreamConverterService.h"
-#include "nsStreamConvServiceFactory.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsXPComFactory.h"
 
-static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kStreamConvServiceCID,      NS_STREAMCONVERTERSERVICE_CID);
 
+nsresult NS_NewStreamConv(nsStreamConverterService** aStreamConv);
 
-////////////////////////////////////////////////////////////////////////
+// Module implementation
+class nsStreamConvModule : public nsIModule
+{
+public:
+    nsStreamConvModule();
+    virtual ~nsStreamConvModule();
 
+    NS_DECL_ISUPPORTS
 
+    NS_DECL_NSIMODULE
 
-// return the proper factory to the caller
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+protected:
+    nsresult Initialize();
+
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mStreamConvFactory;
+};
+
+//----------------------------------------------------------------------
+
+// Functions used to create new instances of a given object by the
+// generic factory.
+
+static NS_IMETHODIMP                 
+CreateNewStreamConv(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+    nsStreamConverterService* inst = nsnull;
+    nsresult rv = NS_NewStreamConv(&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;              
+}
+
+//----------------------------------------------------------------------
+
+nsStreamConvModule::nsStreamConvModule()
+    : mInitialized(PR_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsStreamConvModule::~nsStreamConvModule()
+{
+    Shutdown();
+}
+
+NS_IMPL_ISUPPORTS(nsStreamConvModule, NS_GET_IID(nsIModule))
+
+// Perform our one-time intialization for this module
+nsresult
+nsStreamConvModule::Initialize()
+{
+    if (mInitialized) {
+        return NS_OK;
+    }
+    mInitialized = PR_TRUE;
+    return NS_OK;
+}
+
+// Shutdown this module, releasing all of the module resources
+void
+nsStreamConvModule::Shutdown()
+{
+    // Release the factory objects
+    mStreamConvFactory = nsnull;
+}
+
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsStreamConvModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
 {
     nsresult rv;
-    if (aFactory == nsnull)
-        return NS_ERROR_NULL_POINTER;
 
-    nsIGenericFactory* fact;
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
     if (aClass.Equals(kStreamConvServiceCID)) {
-        rv = NS_NewGenericFactory(&fact, nsStreamConverterService::Create);
+        if (!mStreamConvFactory) {
+            // Create and save away the factory object for creating
+            // new instances of StreamConv. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mStreamConvFactory),
+                                      CreateNewStreamConv);
+        }
+        fact = mStreamConvFactory;
     }
     else {
-        rv = NS_ERROR_FAILURE;
+        rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsStreamConvModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
+#endif
     }
 
-    if (NS_SUCCEEDED(rv))
-        *aFactory = fact;
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
+    }
+
     return rv;
+}
 
-#if 0
-    if (! aFactory)
-        return NS_ERROR_NULL_POINTER;
+//----------------------------------------
 
-    nsStreamConvServiceFactory* factory = new nsStreamConvServiceFactory(aClass, aClassName, aProgID);
-    if (factory == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
 
-    NS_ADDREF(factory);
-    *aFactory = factory;
-    return NS_OK;
+// The list of components we register
+static Components gComponents[] = {
+    { "Stream Converter Service", &kStreamConvServiceCID,
+      "component:||netscape|streamConverters", },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP
+nsStreamConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                             nsIFileSpec* aPath,
+                             const char* registryLocation,
+                             const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG
+    printf("*** Registering StreamConv components\n");
 #endif
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsStreamConvModule: unable to register %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+            break;
+        }
+        cp++;
+    }
+
+    return rv;
 }
 
-
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
+NS_IMETHODIMP
+nsStreamConvModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                               nsIFileSpec* aPath,
+                               const char* registryLocation)
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->RegisterComponent(kStreamConvServiceCID,
-                                    "Stream Converter Service",
-                                    "component:||netscape|streamConverters",
-                                    aPath, PR_TRUE, PR_TRUE);
-
-    if (NS_FAILED(rv)) return rv;
+#ifdef DEBUG
+    printf("*** Unregistering StreamConv components\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsStreamConvModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
 
     return NS_OK;
 }
 
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
+NS_IMETHODIMP
+nsStreamConvModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 {
-    nsresult rv;
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
 
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
+//----------------------------------------------------------------------
 
-    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+static nsStreamConvModule *gModule = NULL;
 
-    rv = compMgr->UnregisterComponent(kStreamConvServiceCID, aPath);
-    if (NS_FAILED(rv)) return rv;
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
 
-    return NS_OK;
+    NS_ENSURE_ARG_POINTER(return_cobj);
+    NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+
+    // Create and initialize the module instance
+    nsStreamConvModule *m = new nsStreamConvModule();
+    if (!m) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
+    }
+    gModule = m;                  // WARNING: Weak Reference
+    return rv;
 }
