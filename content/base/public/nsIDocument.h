@@ -45,7 +45,6 @@
 #include "nsCOMArray.h"
 
 class nsIAtom;
-class nsIArena;
 class nsIContent;
 class nsIDocumentObserver;
 class nsIPresContext;
@@ -102,11 +101,6 @@ class nsIScriptEventManager;
 class nsIDocument : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
-
-  // All documents have a memory arena associated with them which is
-  // used for memory allocation during document creation. This call
-  // returns the arena associated with this document.
-  NS_IMETHOD GetArena(nsIArena** aArena) = 0;
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,

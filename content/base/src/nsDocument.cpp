@@ -44,7 +44,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsDocument.h"
-#include "nsIArena.h"
 #include "nsUnicharUtils.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIEventStateManager.h"
@@ -638,28 +637,14 @@ NS_IMPL_RELEASE(nsDocument)
 nsresult
 nsDocument::Init()
 {
-  if (mArena) {
+  if (mNodeInfoManager) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
-
-  nsresult rv = NS_NewHeapArena(getter_AddRefs(mArena), nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   mNodeInfoManager = new nsNodeInfoManager();
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
 
-  mNodeInfoManager->Init(this);
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsDocument::GetArena(nsIArena** aArena)
-{
-  *aArena = mArena;
-  NS_IF_ADDREF(*aArena);
-
-  return NS_OK;
+  return mNodeInfoManager->Init(this);
 }
 
 NS_IMETHODIMP
