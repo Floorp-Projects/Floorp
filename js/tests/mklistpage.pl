@@ -202,7 +202,7 @@ sub process_test {
       "[\"$test\"] = \"radio$uid\"\n";
     $html .= "      <input type='radio' value='$test' name='radio$uid' ".
       "onclick='onRadioClick(\"radio$uid\")'>" .
-	"<a href='$lxr_url$suite/$test_dir/$test' target='lxr_window'>" .
+	"<a href='$lxr_url$suite/$test_dir/$test' target='other_window'>" .
 	  "$test</a> $title<br>\n";
 
 }
