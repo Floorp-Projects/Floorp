@@ -48,10 +48,6 @@
 #include <stdlib.h>
 #include <gdk/gdkx.h>
 
-#ifdef MOZ_GLE
-#include <gle/gle.h>
-#endif
-
 #include "nsIWidget.h"
 #include "nsIPref.h"
 
