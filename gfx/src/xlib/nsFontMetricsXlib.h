@@ -69,26 +69,31 @@ struct nsFontStretchXlib;
 class nsFontXlibUserDefined;
 class nsFontMetricsXlib;
 
+typedef XFontStruct *XFontStructPtr;
+
 class nsFontXlib
 {
 public:
   nsFontXlib();
   virtual ~nsFontXlib();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+  
+  operator const XFontStructPtr() { return (const XFontStructPtr)mFont; }
 
   void LoadFont(void);
+  PRBool IsEmptyFont(XFontStruct*);
 
   inline int SupportsChar(PRUnichar aChar)
     { return mFont && FONT_HAS_GLYPH(mMap, aChar); };
     
-
+  virtual PRBool GetXlibFontIs10646(void);
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
 #ifndef _IMPL_NS_XPRINT
   virtual int DrawString(nsRenderingContextXlib* aContext,
                          nsDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY,
                          const PRUnichar* aString, PRUint32 aLength) = 0;
-#endif
+#endif /* !_IMPL_NS_XPRINT */
 #ifdef USE_XPRINT
    virtual int DrawString(nsRenderingContextXlib* aContext,
                           nsXPrintContext* aSurface,
@@ -109,11 +114,12 @@ public:
 
   XFontStruct           *mFont;
   PRUint32              *mMap;
-  nsFontCharSetXlibInfo     *mCharSetInfo;
+  nsFontCharSetXlibInfo *mCharSetInfo;
   char                  *mName;
   nsFontXlibUserDefined *mUserDefinedFont;
   PRUint16               mSize;
   PRInt16                mBaselineAdjust;
+  PRBool                 mAlreadyCalledLoadFont;
 };
 
 class nsFontMetricsXlib : public nsIFontMetrics
@@ -175,6 +181,7 @@ public:
   nsFontXlib* TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar);
   nsFontXlib* TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
 
+  nsFontXlib* AddToLoadedFontsList(nsFontXlib* aFont);
   nsFontXlib* PickASizeAndLoad(nsFontStretchXlib* aStretch,
                                nsFontCharSetXlibInfo* aCharSet,
                                PRUnichar aChar);
@@ -233,7 +240,7 @@ protected:
   PRUint16            mPixelSize;
   PRUint8             mStretchIndex;
   PRUint8             mStyleIndex;
-
+  nsFontCharSetXlibConverter mDocConverterType;
 #ifdef USE_XPRINT
 public:  
   static PRPackedBool mPrinterMode;
@@ -248,4 +255,6 @@ public:
   NS_DECL_NSIFONTENUMERATOR
 };
 
-#endif
+#endif /* !nsFontMetricsXlib_h__ */
+
+

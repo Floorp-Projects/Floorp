@@ -36,7 +36,9 @@
 
 #define IsFlagSet(a,b) ((a) & (b))
 
+#ifdef PR_LOGGING 
 static PRLogModuleInfo *ImageXlibLM = PR_NewLogModule("ImageXlib");
+#endif /* PR_LOGGING */ 
 
 /* XXX we are simply creating a GC and setting its function to Copy.
    we shouldn't be doing this every time this method is called.  this creates

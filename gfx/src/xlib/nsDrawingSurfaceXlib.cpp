@@ -30,7 +30,9 @@
 
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
 
+#ifdef PR_LOGGING 
 static PRLogModuleInfo *DrawingSurfaceXlibLM = PR_NewLogModule("DrawingSurfaceXlib");
+#endif /* PR_LOGGING */ 
 
 nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
 {
