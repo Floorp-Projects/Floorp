@@ -268,11 +268,39 @@ void nsTableCellMap::RemoveGroupCellMap(nsTableRowGroupFrame* aGroup)
 nsCellMap* 
 nsTableCellMap::GetMapFor(nsTableRowGroupFrame& aRowGroup)
 {
+  NS_ASSERTION(!aRowGroup.GetPrevInFlow(), "GetMapFor called with continuation");
   for (nsCellMap* map = mFirstMap; map; map = map->GetNextSibling()) {
     if (&aRowGroup == map->GetRowGroup()) {
       return map;
     }
   }
+  // if aRowGroup is a repeated header or footer find the header or footer it was repeated from
+  if (aRowGroup.IsRepeatable()) {
+    const nsStyleDisplay* rgDisplay;
+    ::GetStyleData(&aRowGroup, &rgDisplay);
+    nsTableFrame* fifTable = NS_STATIC_CAST(nsTableFrame*, mTableFrame.GetFirstInFlow());
+
+    nsAutoVoidArray rowGroups;
+    PRUint32 numRowGroups;
+    nsTableRowGroupFrame *thead, *tfoot;
+    nsIFrame *ignore;
+    // find the original header/footer 
+    fifTable->OrderRowGroups(rowGroups, numRowGroups, &ignore, &thead, &tfoot);
+
+    const nsStyleDisplay *display;
+    ::GetStyleData(&aRowGroup, &display);
+    nsTableRowGroupFrame* rgOrig = 
+      (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay) ? thead : tfoot; 
+    // find the row group cell map using the original header/footer
+    if (rgOrig) {
+      for (nsCellMap* map = mFirstMap; map; map = map->GetNextSibling()) {
+        if (rgOrig == map->GetRowGroup()) {
+          return map;
+        }
+      }
+    }
+  }
+
   return nsnull;
 }
 
