@@ -129,9 +129,9 @@ nsHttpConnection::SetTransaction(nsAHttpTransaction *transaction,
 
 // called from the socket thread
 nsresult
-nsHttpConnection::ProxyStepUp()
+nsHttpConnection::ProxyStartSSL()
 {
-    LOG(("nsHttpConnection::ProxyStepUp [this=%x]\n", this));
+    LOG(("nsHttpConnection::ProxyStartSSL [this=%x]\n", this));
 #ifdef DEBUG
     NS_PRECONDITION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
 #endif
@@ -143,7 +143,7 @@ nsHttpConnection::ProxyStepUp()
     nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    return ssl->ProxyStepUp();
+    return ssl->ProxyStartSSL();
 }
 
 PRBool
@@ -283,7 +283,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         if (responseHead->Status() == 200) {
             LOG(("SSL proxy CONNECT succeeded!\n"));
             *reset = PR_TRUE;
-            ProxyStepUp();
+            ProxyStartSSL();
             mWriteRequest->Resume();
         }
         else {

@@ -56,8 +56,8 @@ public:
   nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
 
-  nsresult SetForTLSStepUp(PRBool useTLS);
-  nsresult GetForTLSStepUp(PRBool *useTLS);
+  nsresult SetForSTARTTLS(PRBool aForSTARTTLS);
+  nsresult GetForSTARTTLS(PRBool *aForSTARTTLS);
 
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
@@ -71,8 +71,11 @@ public:
   nsresult GetPort(PRInt32 *aPort);
   nsresult SetPort(PRInt32 aPort);
 
-  nsresult GetTLSIntolerant(PRBool *aTLSIntolerant);
-  nsresult SetTLSIntolerant(PRBool aTLSIntolerant);
+  void SetCanceled(PRBool aCanceled);
+  PRBool GetCanceled();
+  
+  void SetHasCleartextPhase(PRBool aHasCleartextPhase);
+  PRBool GetHasCleartextPhase();
 
   nsresult RememberCAChain(CERTCertList *aCertList);
 
@@ -84,15 +87,18 @@ protected:
   PRFileDesc* mFd;
   PRUint32 mSecurityState;
   nsString mShortDesc;
-  PRBool mForTLSStepUp;
-  PRBool mFirstWrite;
-  PRBool mTLSIntolerant;
+  PRPackedBool mForSTARTTLS;
+  PRPackedBool mFirstWrite;
+  PRPackedBool mCanceled;
+  PRPackedBool mHasCleartextPhase;
   PRInt32 mPort;
   nsXPIDLCString mHostName;
   CERTCertList *mCAChain;
 
   /* SSL Status */
   nsCOMPtr<nsISSLStatus> mSSLStatus;
+
+  nsresult ActivateSSL();
 };
 
 nsresult nsSSLIOLayerNewSocket(const char *host,
@@ -101,7 +107,7 @@ nsresult nsSSLIOLayerNewSocket(const char *host,
                                PRInt32 proxyPort,
                                PRFileDesc **fd,
                                nsISupports **securityInfo,
-                               PRBool forTLSStepUp);
+                               PRBool forSTARTTLS);
 
 nsresult nsSSLIOLayerAddToSocket(const char *host,
                                  PRInt32 port,
@@ -109,7 +115,7 @@ nsresult nsSSLIOLayerAddToSocket(const char *host,
                                  PRInt32 proxyPort,
                                  PRFileDesc *fd,
                                  nsISupports **securityInfo,
-                                 PRBool forTLSStepUp);
+                                 PRBool forSTARTTLS);
 
 nsresult nsSSLIOLayerFreeTLSIntolerantSites();
 nsresult displayAlert(nsXPIDLString formattedString, nsNSSSocketInfo *infoObject);

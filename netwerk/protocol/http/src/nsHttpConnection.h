@@ -75,7 +75,7 @@ public:
     nsresult SetTransaction(nsAHttpTransaction *, PRUint8 capabilities);
 
     // called to cause the underlying socket to start speaking SSL
-    nsresult ProxyStepUp();
+    nsresult ProxyStartSSL();
 
     PRBool   SupportsPipelining() { return mSupportsPipelining; }
     PRBool   IsKeepAlive() { return mKeepAliveMask && mKeepAlive; }

@@ -31,7 +31,7 @@ interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
     attribute boolean                   forceHandshake; /* obsolete, unused */
 
-    void proxyStepUp();
-    void TLSStepUp();
+    void proxyStartSSL();
+    void StartTLS();
 };
 

@@ -32,10 +32,10 @@ interface nsISSLSocketProvider : nsISocketProvider {
 #define NS_ISSLSOCKETPROVIDER_CONTRACTID     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "ssl"
 #define NS_ISSLSOCKETPROVIDER_CLASSNAME  "Mozilla SSL Socket Provider Component"
 
-/* This code produces a normal socket which can be stepped up to TLS by
- * calling its nsISSLSocketControl->TLSStepUp()
+/* This code produces a normal socket which can be used to initiate the STARTTLS protocol
+ * by calling its nsISSLSocketControl->StartTLS()
  */
-#define NS_TLSSTEPUPSOCKETPROVIDER_CONTRACTID     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "tlsstepup"
-#define NS_TLSSTEPUPSOCKETPROVIDER_CLASSNAME  "Mozilla TLS Step-up Socket Provider Component"
+#define NS_STARTTLSSOCKETPROVIDER_CONTRACTID     NS_NETWORK_SOCKET_CONTRACTID_PREFIX "starttls"
+#define NS_STARTTLSSOCKETPROVIDER_CLASSNAME  "Mozilla STARTTLS Capable Socket Provider Component"
 
 %}
