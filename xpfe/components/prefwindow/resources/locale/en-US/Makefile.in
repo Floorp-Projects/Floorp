@@ -43,6 +43,8 @@ CHROME_L10N = \
 		pref-charset.dtd \
 		pref-cookies.dtd \
 		pref-debug.dtd \
+		pref-debug1.dtd \
+		pref-debug2.dtd \
 		pref-download.dtd \
 		pref-fonts.dtd \
 		pref-history.dtd \

@@ -1,0 +1,15 @@
+<!-- extracted from content/pref-debug.xul -->
+
+<!--LOCALIZATION NOTE : FILE DONT_TRANSLATE This file should not be translated -->
+<!ENTITY window.title "Debug">
+
+<!ENTITY lHeader "Debug Networking">
+<!ENTITY rHeader "Network debugging preferences">
+
+<!-- Network-->
+<!ENTITY debugNetworking.label        "Networking">
+<!ENTITY debugEnableKeepAlive.label   "Enable Keep Alive">
+<!ENTITY debugEnablePipelining.label  "Enable HTTP Pipelining">
+<!ENTITY acceptEncoding.label         "Accept-Encoding">
+<!ENTITY httpVersion.label            "HTTP Version">
+
