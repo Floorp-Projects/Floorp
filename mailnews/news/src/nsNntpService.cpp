@@ -587,8 +587,13 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
 
   char *urlstr = PR_smprintf("%s/%s",kNewsRootURI,host.GetBuffer());
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
-  if (mailnewsurl)
+  if (mailnewsurl) {
 	mailnewsurl->SetSpec(urlstr);
+    mailnewsurl->SetPort(NEWS_PORT);
+  }
+  else {
+    NS_ERROR_FAILURE;
+  }
   
   PR_FREEIF(urlstr);
   
