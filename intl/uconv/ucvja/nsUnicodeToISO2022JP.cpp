@@ -49,7 +49,7 @@ static PRInt16 g_uf0208Shift [] =  {
 
 static PRUint16 * g_ufMappingTables[4] = {
   g_ufAsciiMapping,
-  g_uf0201Mapping,
+  g_uf0201GLMapping,
   g_uf0208Mapping,
   g_uf0208Mapping,
 };

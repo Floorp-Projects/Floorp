@@ -32,6 +32,7 @@ extern PRUint16 g_ut0208Mapping[];
 extern PRUint16 g_ut0212Mapping[];
 
 extern PRUint16 g_uf0201Mapping[];
+extern PRUint16 g_uf0201GLMapping[];
 extern PRUint16 g_uf0208Mapping[];
 extern PRUint16 g_uf0212Mapping[];
 
