@@ -44,7 +44,10 @@
   <![CDATA[
     function viewWallet()
     {
-      window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog(
+          "chrome://communicator/content/wallet/WalletViewer.xul",
+          "WalletViewer",
+          "chrome,titlebar,modal=yes,resizable=yes");
     }
 
     function viewWalletSites()
