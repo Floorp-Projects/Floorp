@@ -107,15 +107,16 @@ function (iid) {
 }
 
 IRCContentHandler.prototype.handleContent =
-function (aContentType, aCommand, aWindowTarget, aSourceContext, aRequest)
+function (aContentType, aCommand, aWindowTarget, aRequest)
 {
     var e;
     var channel = aRequest.QueryInterface(nsIChannel);
-
-    dump ("ircLoader.handleContent (" + aContentType + ", " +
-          aCommand + ", " + aWindowTarget + ", " + aSourceContext + ", " +
-          channel.URI.spec + ")\n");
     
+    /*
+    dump ("ircLoader.handleContent (" + aContentType + ", " +
+          aCommand + ", " + aWindowTarget + ", " + channel.URI.spec + ")\n");
+    */
+
     var windowManager =
         Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
 
@@ -159,6 +160,12 @@ function IRCProtocolHandler()
 
 IRCProtocolHandler.prototype.scheme = "irc";
 IRCProtocolHandler.prototype.defaultPort = 6667;
+
+IRCProtocolHandler.prototype.allowPort =
+function (aPort, aScheme)
+{
+    return false;
+}
 
 IRCProtocolHandler.prototype.newURI =
 function (aSpec, aBaseURI)
