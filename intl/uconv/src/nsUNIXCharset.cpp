@@ -51,35 +51,42 @@ private:
 
 NS_IMPL_ISUPPORTS(nsUNIXCharset, kIPlatformCharsetIID);
 
+static nsURLProperties *gInfo = nsnull;
+static PRInt32 gCnt=0;
+
 nsUNIXCharset::nsUNIXCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
+  PR_AtomicIncrement(&gCnt);
 
   char* locale = setlocale(LC_CTYPE, "");
-  if(locale) 
+  NS_ASSERTION(locale, "cannot setlocale");
+
+  // XXX we should make the following block critical section
+  if(nsnull == gInfo)
   {
       nsAutoString propertyURL("resource:/res/unixcharset.properties");
-  
       nsURLProperties *info = new nsURLProperties( propertyURL );
-      if( info )
+      NS_ASSERTION( info, "cannot create nsURLProperties");
+      gInfo = info;
+  }
+
+  if(gInfo && locale)
+  {
+      nsAutoString platformLocaleKey("locale." OSTYPE ".");
+      platformLocaleKey.Append(locale);
+
+      nsresult res = gInfo->Get(platformLocaleKey, mCharset);
+      if(NS_FAILED(res)) 
       {
-          nsAutoString platformLocaleKey("locale." OSTYPE ".");
-          platformLocaleKey.Append(locale);
-
-          nsresult res = info->Get(platformLocaleKey, mCharset);
-          if(NS_FAILED(res)) {
-              nsAutoString localeKey("locale.all.");
-              localeKey.Append(locale);
-              res = info->Get(localeKey, mCharset);
-              if(NS_SUCCEEDED(res))  {
-                  delete info;
-                  return; // succeeded
-              }
-          }
-
-          delete info;
-      } 
+         nsAutoString localeKey("locale.all.");
+         localeKey.Append(locale);
+         res = gInfo->Get(localeKey, mCharset);
+         if(NS_SUCCEEDED(res))  {
+            return; // succeeded
+         }
+      }
    }
    mCharset = "ISO-8859-1";
    return; // failed
@@ -87,6 +94,11 @@ nsUNIXCharset::nsUNIXCharset()
 nsUNIXCharset::~nsUNIXCharset()
 {
   PR_AtomicDecrement(&g_InstanceCount);
+  PR_AtomicDecrement(&gCnt);
+  if(0 == gCnt) {
+     delete gInfo;
+     gInfo = nsnull;
+  }
 }
 
 NS_IMETHODIMP 
@@ -117,24 +129,21 @@ nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar
   //
   // convert from locale to charset
   //
-  nsAutoString property_url("resource:/res/unixcharset.properties"); 
-  nsURLProperties *charset_properties = new nsURLProperties(property_url);
   
-  if (!charset_properties) { *_retValue=charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
+  if (!gInfo) { *_retValue=charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
 
 
   nsAutoString locale_key("locale." OSTYPE "."); 
   locale_key.Append(posix_locale); 
  
-  rv = charset_properties->Get(locale_key,charset);
+  rv = gInfo->Get(locale_key,charset);
   if(NS_FAILED(rv)) { 
     locale_key="locale.all."; 
     locale_key.Append(posix_locale); 
-    rv = charset_properties->Get(locale_key,charset); 
+    rv = gInfo->Get(locale_key,charset); 
     if(NS_FAILED(rv)) { charset="ISO-8859-1";}
   }
 
-  delete charset_properties;
   *_retValue = charset.ToNewUnicode();
 	return rv;
 
