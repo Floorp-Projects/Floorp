@@ -4680,11 +4680,10 @@ nsFontMetricsWinA::LoadSubstituteFont(HDC aDC, nsString* aName)
             ::SelectObject(aDC, (HGDIOBJ)oldFont);
             return font;
           }
-          ::SelectObject(aDC, (HGDIOBJ)oldFont);
-          delete font; // will release hfont as well
-          return nsnull;
         }
-        delete font;
+        ::SelectObject(aDC, (HGDIOBJ)oldFont);
+        delete font; // will release hfont, and mSubsets if there, as well
+        return nsnull;
       }
     }
     ::SelectObject(aDC, (HGDIOBJ)oldFont);
