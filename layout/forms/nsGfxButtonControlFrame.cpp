@@ -278,6 +278,22 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
                                             fontMet, (nsIFormControlFrame*)this, 
                                             btnSpec, desiredSize);
 
+    // Note: The Quirks sizing includes a 2px border in its calculation of "desiredSize"
+    // So we must subtract off the 2 pixel border.
+    // Quirk sizing also assumes a 0px padding
+    float   p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
+    nscoord borderTwips = NSIntPixelsToTwips(4, p2t);
+    desiredSize.width  -= borderTwips;
+    desiredSize.height -= borderTwips;
+
+    // Now figure out how much vertical padding was added and 
+    // then subtract it, so we can add in the padding later
+    // horizontal pading is 0px;
+    nscoord hgt;
+    fontMet->GetHeight(hgt);
+    desiredSize.height -= PR_MAX(0, desiredSize.height - hgt);
+
     // This calculates the reflow size
     // get the css size and let the frame use or override it
     nsSize styleSize;
@@ -287,16 +303,20 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
       NS_ASSERTION(styleSize.width+aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right >= 0, "form control's computed width is < 0"); 
       if (NS_INTRINSICSIZE != styleSize.width) {
         desiredSize.width = styleSize.width;
-        desiredSize.width  += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+        desiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
       }
+    } else {
+      desiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
     }
 
     if (CSS_NOTSET != styleSize.height) {  // css provides height
       NS_ASSERTION(styleSize.height > 0, "form control's computed height is <= 0"); 
       if (NS_INTRINSICSIZE != styleSize.height) {
         desiredSize.height = styleSize.height;
-        desiredSize.height += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+        desiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
       }
+    } else {
+      desiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
     }
 
     aDesiredSize.width   = desiredSize.width;
@@ -362,15 +382,10 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
   firstKid->GetRect(kidRect);
   ReflowChild(firstKid, aPresContext, childReflowMetrics, reflowState, kidRect.x, kidRect.y, 0, aStatus);
 
-  // Now do the reverse calculation of the 
-  // NavQuirks button to get the size of the text
-  //nscoord textWidth  = (2 * aDesiredSize.width) / 3;
-  nscoord textHeight = (2 * aDesiredSize.height) / 3;
-
   // Center the child and add back in the border and badding
   // our inner area frame is already doing centering so we only need to center vertically.
   nsRect rect = nsRect(aReflowState.mComputedBorderPadding.left, 
-                       ((desiredSize.height - textHeight)/2) + aReflowState.mComputedBorderPadding.top, 
+                       aReflowState.mComputedBorderPadding.top, 
                        desiredSize.width, 
                        desiredSize.height);
   firstKid->SetRect(aPresContext, rect);
@@ -628,8 +643,8 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   } else { // Normal reflow.
 
-    nsCompatibility mode;
-    nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
+    nsCompatibility mode = eCompatibility_NavQuirks;
+    //nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
 
     if (mode == eCompatibility_NavQuirks) {
       // nsHTMLButtonControlFrame::Reflow registers it for Standard Mode
