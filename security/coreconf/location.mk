@@ -40,9 +40,15 @@
 #
 
 ifdef BUILD_TREE
+ifdef LIBRARY_NAME
 BUILD         = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
 OBJDIR        = $(BUILD_TREE)/nss/$(LIBRARY_NAME)
 DEPENDENCIES  = $(BUILD_TREE)/nss/$(LIBRARY_NAME)/.md
+else
+BUILD         = $(BUILD_TREE)/nss
+OBJDIR        = $(BUILD_TREE)/nss
+DEPENDENCIES  = $(BUILD_TREE)/nss/.md
+endif
 else
 BUILD         = $(PLATFORM)
 OBJDIR        = $(PLATFORM)
