@@ -122,6 +122,11 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 		}
 	}
 
+  // rhp: For a change, we will write out a separator after formatted text
+  //      bodies.
+  status = MimeObject_write_separator(obj);
+	if (status < 0) return status;
+
   return 0;
 }
 

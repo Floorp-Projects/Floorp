@@ -741,7 +741,7 @@ mime_image_make_image_html(void *image_closure)
     (struct mime_image_stream_data *) image_closure;
 
   
-  const char *prefix = "<hr WIDTH=\"75%%\"> <P><CENTER><IMG SRC=\"";
+  const char *prefix = "<P><CENTER><IMG SRC=\"";
   const char *suffix = "\"></CENTER><P>";
   const char *url;
   char *buf;

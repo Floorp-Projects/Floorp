@@ -157,6 +157,7 @@ MimeInlineTextVCard_parse_begin (MimeObject *obj)
 	/* initialize vcard string to empty; */
 	vCard_SACopy(&(clazz->vCardString), "");
 
+    obj->options->state->separator_suppressed_p = PR_TRUE;
     return 0;
 }
 
