@@ -844,7 +844,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 
     msg = ComposeGetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED);    
     if (NS_SUCCEEDED(mURL->GetSpec(getter_Copies(turl))) && (turl))
-      printfString = nsTextFormatter::smprintf(msg, turl);
+      printfString = nsTextFormatter::smprintf(msg, (const char*)turl);
     else
       printfString = nsTextFormatter::smprintf(msg, "?");
 
