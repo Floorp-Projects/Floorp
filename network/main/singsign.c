@@ -69,6 +69,16 @@ si_SaveSignonDataInKeychain();
 
 #endif
 
+/* the following is from the now-defunct lo_ele.h */
+struct LO_FormSubmitData_struct {
+    int32 value_cnt;
+    PA_Block name_array;
+    PA_Block value_array;
+    PA_Block type_array;
+};
+#define FORM_TYPE_TEXT          1
+#define FORM_TYPE_PASSWORD      7
+
 /* temporary */
 /*
  * Need this for now because the normal call to FE_Confirm goes through
@@ -79,9 +89,8 @@ si_SaveSignonDataInKeychain();
  * Same applies to FE_SelectDialog because context doesn't exist when
  * SI_RestoreSignonData is called
  */
-#undef FE_Confirm
 Bool
-FE_Confirm(MWContext* context, const char* szMessage)
+MyFE_Confirm(const char* szMessage)
 {
     char c;
     fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
@@ -96,10 +105,9 @@ FE_Confirm(MWContext* context, const char* szMessage)
     }
 }
 
-#undef FE_SelectDialog
 Bool
-FE_SelectDialog
-    (MWContext* context, const char* szMessage, const char** pList, int16* pCount)
+MyFE_SelectDialog
+    (const char* szMessage, const char** pList, int16* pCount)
 {
     char c;
     int i;
@@ -534,9 +542,7 @@ si_CheckForUser(char *URLName, char *userName) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetUser(
-        MWContext *context, char* URLName, Bool pickFirstUser,
-        char* userText) {
+si_GetUser(char* URLName, Bool pickFirstUser, char* userText) {
     si_SignonURLStruct* url;
     si_SignonUserStruct* user;
     si_SignonDataStruct* data;
@@ -598,8 +604,8 @@ si_GetUser(
             } else if (user_count == 1) {
                 /* only one user for this form at this url, so select it */
                 user = users[0];
-            } else if ((user_count > 1) && FE_SelectDialog(
-                    context, XP_GetString(MK_SIGNON_SELECTUSER),
+            } else if ((user_count > 1) && MyFE_SelectDialog(
+                    XP_GetString(MK_SIGNON_SELECTUSER),
                     list, &user_count)) {
                 /* user pressed OK */
                 if (user_count == -1) {
@@ -638,7 +644,7 @@ si_GetUser(
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetUserForChangeForm(MWContext *context, char* URLName, int messageNumber)
+si_GetUserForChangeForm(char* URLName, int messageNumber)
 {
     si_SignonURLStruct* url;
     si_SignonUserStruct* user;
@@ -661,7 +667,7 @@ si_GetUserForChangeForm(MWContext *context, char* URLName, int messageNumber)
                                   data->value,
                                   strippedURLName);
             XP_FREE(strippedURLName);
-            if (FE_Confirm(context, message)) {
+            if (MyFE_Confirm(message)) {
                 /*
                  * since this user node is now the most-recently-used one, move it
                  * to the head of the user list so that it can be favored for
@@ -688,7 +694,7 @@ si_GetUserForChangeForm(MWContext *context, char* URLName, int messageNumber)
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetURLAndUserForChangeForm(MWContext *context, char* password)
+si_GetURLAndUserForChangeForm(char* password)
 {
     si_SignonURLStruct* url;
     si_SignonUserStruct* user;
@@ -753,9 +759,8 @@ si_GetURLAndUserForChangeForm(MWContext *context, char* password)
     }
 
     /* query user */
-    if (user_count && FE_SelectDialog
-            (context,
-            XP_GetString(MK_SIGNON_CHANGE),
+    if (user_count && MyFE_SelectDialog
+            (XP_GetString(MK_SIGNON_CHANGE),
             list,
             &user_count)) {
         user = users[user_count];
@@ -895,7 +900,7 @@ si_PutReject(char * URLName, char * userName, Bool save) {
 
 /* Ask user if it is ok to save the signon data */
 PRIVATE Bool
-si_OkToSave(MWContext *context, char *URLName, char *userName) {
+si_OkToSave(char *URLName, char *userName) {
     Bool remember_checked = TRUE;
     char *strippedURLName = 0;
 
@@ -911,7 +916,7 @@ si_OkToSave(MWContext *context, char *URLName, char *userName) {
         SI_SaveSignonData(NULL);
         StrAllocCopy(notification, XP_GetString(MK_SIGNON_NOTIFICATION));
         StrAllocCat(notification, XP_GetString(MK_SIGNON_NOTIFICATION_1));
-        if (!FE_Confirm(context, notification)) {
+        if (!MyFE_Confirm(notification)) {
             XP_FREE (notification);
             PREF_SetBoolPref(pref_rememberSignons, FALSE);
             return FALSE;
@@ -925,7 +930,7 @@ si_OkToSave(MWContext *context, char *URLName, char *userName) {
         return FALSE;
     }
 
-    if (!FE_Confirm(context, XP_GetString(MK_SIGNON_NAG))) {
+    if (!MyFE_Confirm(XP_GetString(MK_SIGNON_NAG))) {
         si_PutReject(strippedURLName, userName, TRUE);
         XP_FREE(strippedURLName);
         return FALSE;
@@ -1916,12 +1921,18 @@ SI_RemoveAllSignonData() {
  * Check for a signon submission and remember the data if so
  */
 PUBLIC void
-SI_RememberSignonData(char* URLName, LO_FormSubmitData * submit)
+SI_RememberSignonData
+       (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)
 {
     int i, j;
     int passwordCount = 0;
     int pswd[3];
-    MWContext *context; /* not used -- just a hold-over from the old world order */
+
+    LO_FormSubmitData submit;
+    submit.name_array = (PA_Block)name_array;
+    submit.value_array = (PA_Block)value_array;
+    submit.type_array = (PA_Block)type_array;
+    submit.value_cnt = value_cnt;
 
     /* do nothing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()){
@@ -1929,8 +1940,8 @@ SI_RememberSignonData(char* URLName, LO_FormSubmitData * submit)
     }
 
     /* determine how many passwords are in the form and where they are */
-    for (i=0; i<submit->value_cnt; i++) {
-        if (((uint8 *)submit->type_array)[i] == FORM_TYPE_PASSWORD) {
+    for (i=0; i<submit.value_cnt; i++) {
+        if (((uint8 *)submit.type_array)[i] == FORM_TYPE_PASSWORD) {
             if (passwordCount < 3 ) {
                 pswd[passwordCount] = i;
             }
@@ -1943,16 +1954,15 @@ SI_RememberSignonData(char* URLName, LO_FormSubmitData * submit)
         /* one-password form is a log-in so remember it */
 
         /* obtain the index of the first input field (that is the username) */
-        for (j=0; j<submit->value_cnt; j++) {
-            if (((uint8 *)submit->type_array)[j] == FORM_TYPE_TEXT) {
+        for (j=0; j<submit.value_cnt; j++) {
+            if (((uint8 *)submit.type_array)[j] == FORM_TYPE_TEXT) {
                 break;
             }
         }
 
-        if (si_OkToSave(context,
-                URLName, /* urlname */
-                ((char **)submit->value_array)[j] /* username */)) {
-            si_PutData(URLName, submit, TRUE);
+        if (si_OkToSave(URLName, /* urlname */
+                ((char **)submit.value_array)[j] /* username */)) {
+            si_PutData(URLName, &submit, TRUE);
         }
     } else if (passwordCount == 2) {
         /* two-password form is a registration */
@@ -1965,17 +1975,17 @@ SI_RememberSignonData(char* URLName, LO_FormSubmitData * submit)
         si_SignonUserStruct* user;
 
         /* make sure all passwords are non-null and 2nd and 3rd are identical */
-        if (!submit->value_array[pswd[0]] || ! submit->value_array[pswd[1]] ||
-                !submit->value_array[pswd[2]] ||
-                XP_STRCMP(((char **)submit->value_array)[pswd[1]],
-                       ((char **)submit->value_array)[pswd[2]])) {
+        if (!submit.value_array[pswd[0]] || ! submit.value_array[pswd[1]] ||
+                !submit.value_array[pswd[2]] ||
+                XP_STRCMP(((char **)submit.value_array)[pswd[1]],
+                       ((char **)submit.value_array)[pswd[2]])) {
             return;
         }
 
         /* ask user if this is a password change */
         si_lock_signon_list();
         user = si_GetURLAndUserForChangeForm
-            (context, ((char **)submit->value_array)[pswd[0]]);
+            (((char **)submit.value_array)[pswd[0]]);
 
         /* return if user said no */
         if (!user) {
@@ -2000,10 +2010,10 @@ SI_RememberSignonData(char* URLName, LO_FormSubmitData * submit)
          * create a random password of exactly eight characters -- the
          * same length as "generate".)
          */
-        si_Randomize(((char **)submit->value_array)[pswd[1]]);
-        XP_STRCPY(((char **)submit->value_array)[pswd[2]],
-               ((char **)submit->value_array)[pswd[1]]);
-        StrAllocCopy(data->value, ((char **)submit->value_array)[pswd[1]]);
+        si_Randomize(((char **)submit.value_array)[pswd[1]]);
+        XP_STRCPY(((char **)submit.value_array)[pswd[2]],
+               ((char **)submit.value_array)[pswd[1]]);
+        StrAllocCopy(data->value, ((char **)submit.value_array)[pswd[1]]);
         si_signon_list_changed = TRUE;
         si_SaveSignonDataLocked(NULL);
         si_unlock_signon_list();
@@ -2014,7 +2024,6 @@ PUBLIC void
 SI_RestoreSignonData
     (char* URLName, char* name, char** value)
 {
-    MWContext *context; /* not used -- just a hold-over from the old world order */
     si_SignonUserStruct* user;
     si_SignonDataStruct* data;
     XP_List * data_ptr=0;
@@ -2035,13 +2044,13 @@ SI_RestoreSignonData
      */
     /* see if this is first item in form and is a password */
     /* get first saved user just so we can see the name of the first item on the form */
-    user = si_GetUser(context, URLName, TRUE, NULL); /* this is the first saved user */
+    user = si_GetUser(URLName, TRUE, NULL); /* this is the first saved user */
     if (user) {
         data_ptr = user->signonData_list; /* this is first item on form */
         data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
         if(data->isPassword && name && XP_STRCMP(data->name, name)==0) {
             /* current item is first item on form and is a password */
-            user = si_GetUserForChangeForm(context, URLName, MK_SIGNON_PASSWORDS_FETCH);
+            user = si_GetUserForChangeForm(URLName, MK_SIGNON_PASSWORDS_FETCH);
             if (user) {
                 /* user has confirmed it's a change-of-password form */
                 data_ptr = user->signonData_list;
@@ -2059,107 +2068,12 @@ SI_RestoreSignonData
 #endif
 
     /* restore the data from previous time this URL was visited */
-    user = si_GetUser(context, URLName, FALSE, name);
+    user = si_GetUser(URLName, FALSE, name);
     if (user) {
         data_ptr = user->signonData_list;
         while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
             if(name && XP_STRCMP(data->name, name)==0) {
                 *value = data->value;
-                si_unlock_signon_list();
-                return;
-            }
-        }
-    }
-    si_unlock_signon_list();
-}
-
-/*
- * Check for remembered data from a previous signon submission and
- * restore it if so
- */
-PUBLIC void
-SI_RestoreOldSignonData
-    (MWContext *context, LO_FormElementStruct *form_element, char* URLName)
-{
-    si_SignonURLStruct* url;
-    si_SignonUserStruct* user;
-    si_SignonDataStruct* data;
-    XP_List * data_ptr=0;
-
-    /* do nothing if signon preference is not enabled */
-    if (!si_GetSignonRememberingPref()){
-        return;
-    }
-
-    /* get URL */
-    si_lock_signon_list();
-    url = si_GetURL(URLName);
-
-    /* see if this is first item in form and is a password */
-    si_TagCount++;
-    if ((si_TagCount == 1) &&
-            (form_element->element_data->type == FORM_TYPE_PASSWORD)) {
-        /*
-         * it is so there's a good change its a password change form,
-         * let's ask user to confirm this
-         */
-        user = si_GetUserForChangeForm(context, URLName, MK_SIGNON_PASSWORDS_FETCH);
-        if (user) {
-            /* user has confirmed it's a change-of-password form */
-            data_ptr = user->signonData_list;
-            data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
-            while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
-                if (data->isPassword) {
-#ifdef XP_MAC
-                    StrAllocCopy(
-                        (char *)form_element->element_data->ele_text.default_text,
-                        data->value);
-#else
-                    char* default_text =
-                        (char*)(form_element->element_data->ele_text.default_text);
-                    StrAllocCopy(default_text, data->value);
-                    form_element->element_data->ele_text.default_text =
-                        (unsigned long *)default_text;
-#endif
-                    si_unlock_signon_list();
-                    return;
-                }
-            }
-        }
-    }
-
-    /* get the data from previous time this URL was visited */
-
-    if (si_TagCount == 1) {
-        user = si_GetUser(
-            context, URLName, FALSE,
-            (char*)(form_element->element_data->ele_text.name));
-    } else {
-        if (url) {
-            user = url->chosen_user;
-        } else {
-            user = NULL;
-        }
-    }
-    if (user) {
-
-        /* restore the data from previous time this URL was visited */
-        data_ptr = user->signonData_list;
-        while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
-            char * fieldName =
-                (char *)form_element->element_data->ele_text.name;
-            if(fieldName && XP_STRCMP(data->name, fieldName)==0) {
-#ifdef XP_MAC
-                StrAllocCopy(
-                    (char *)form_element->element_data->ele_text.default_text,
-                    data->value);
-#else
-                char* default_text =
-                    (char*)(form_element->element_data->ele_text.default_text);
-                StrAllocCopy(default_text, data->value);
-                form_element->element_data->ele_text.default_text =
-                    (unsigned long *)default_text;
-#endif
                 si_unlock_signon_list();
                 return;
             }
@@ -2212,9 +2126,9 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password)
 
 PUBLIC void
 SI_RememberSignonDataFromBrowser
-    (MWContext *context, char* URLName, char* username, char* password)
+    (char* URLName, char* username, char* password)
 {
-    if (si_OkToSave(context, URLName, username)) {
+    if (si_OkToSave(URLName, username)) {
         si_RememberSignonDataFromBrowser (URLName, username, password);
     }
 }
@@ -2225,7 +2139,7 @@ SI_RememberSignonDataFromBrowser
  */
 PRIVATE void
 si_RestoreOldSignonDataFromBrowser
-    (MWContext *context, char* URLName, Bool pickFirstUser,
+    (char* URLName, Bool pickFirstUser,
     char** username, char** password)
 {
     si_SignonUserStruct* user;
@@ -2234,7 +2148,7 @@ si_RestoreOldSignonDataFromBrowser
 
     /* get the data from previous time this URL was visited */
     si_lock_signon_list();
-    user = si_GetUser(context, URLName, pickFirstUser, "username");
+    user = si_GetUser(URLName, pickFirstUser, "username");
     if (!user) {
         /* leave original username and password from caller unchanged */
         /* username = 0; */
@@ -2253,17 +2167,6 @@ si_RestoreOldSignonDataFromBrowser
         }
     }
     si_unlock_signon_list();
-}
-
-PUBLIC void
-SI_RestoreOldSignonDataFromBrowser
-    (MWContext *context, char* URLName, Bool pickFirstUser,
-    char** username, char** password)
-{
-    if (si_GetSignonRememberingPref()){
-        si_RestoreOldSignonDataFromBrowser
-            (context, URLName, pickFirstUser, username, password);
-    }
 }
 
 /* Browser-generated prompt for user-name and password */
@@ -2288,14 +2191,14 @@ SI_PromptUsernameAndPassword
 
     /* prefill with previous username/password if any */
     si_RestoreOldSignonDataFromBrowser
-        (context, URLName, FALSE, username, password);
+        (URLName, FALSE, username, password);
 
     /* get new username/password from user */
     status = FE_PromptUsernameAndPassword
                  (context, copyOfPrompt, username, password);
 
     /* remember these values for next time */
-    if (status && si_OkToSave(context, URLName, *username)) {
+    if (status && si_OkToSave(URLName, *username)) {
         si_RememberSignonDataFromBrowser (URLName, *username, *password);
     }
 
@@ -2335,7 +2238,7 @@ SI_PromptPassword
 
     /* get previous password used with this username */
     si_RestoreOldSignonDataFromBrowser
-        (context, urlname, pickFirstUser, &username, &password);
+        (urlname, pickFirstUser, &username, &password);
 
     /* return if a password was found */
     /*
@@ -2377,7 +2280,7 @@ SI_PromptPassword
 
     /* remember these values for next time */
     if (password && XP_STRLEN(password) &&
-            si_OkToSave(context, urlname, username)) {
+            si_OkToSave(urlname, username)) {
         si_RememberSignonDataFromBrowser (urlname, username, password);
     }
 
@@ -2411,7 +2314,7 @@ SI_Prompt (MWContext *context, char *prompt,
     /* get previous username used */
     if (!defaultUsername || !XP_STRLEN(defaultUsername)) {
         si_RestoreOldSignonDataFromBrowser
-            (context, URLName, FALSE, &username, &password);
+            (URLName, FALSE, &username, &password);
     } else {
        StrAllocCopy(username, defaultUsername);
     }
@@ -3146,9 +3049,9 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     if ( dlg == NULL ) {
         return;
     }
-    dlg->parent_window = (void *)context;
+    dlg->parent_window = (void *)NULL;
     dlg->dialogUp = PR_TRUE;
-    dlg->state =XP_MakeRawHTMLDialog(context, &dialogInfo, MK_SIGNON_YOUR_SIGNONS,
+    dlg->state =XP_MakeRawHTMLDialog(NULL, &dialogInfo, MK_SIGNON_YOUR_SIGNONS,
                 strings, 1, (void *)dlg);
 
     return;
