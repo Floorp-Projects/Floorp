@@ -46,6 +46,6 @@ public:
 
 };
 
-extern NS_WEB nsresult NS_NewApplicationShell(nsIApplicationShell** aInstancePtrResult);
+extern NS_SHELL nsresult NS_NewApplicationShell(nsIApplicationShell** aInstancePtrResult);
 
 #endif /* nsIApplicationShell_h___ */
