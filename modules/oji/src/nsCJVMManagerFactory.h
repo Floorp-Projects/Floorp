@@ -44,9 +44,6 @@ public:
 
     nsCJVMManagerFactory(void);
     virtual ~nsCJVMManagerFactory(void);
-
-protected:
-    static nsIFactory  *m_pNSIFactory;  
 };
 
 #endif // nsCJVMManagerFactory_h___
