@@ -25,7 +25,11 @@
 #include "rdf.h"
 #include "nsCRT.h"
 
+#include "nsIMessenger.h"
 #include "nsMessenger.h"
+
+#include "nsIMsgGroupRecord.h"
+#include "nsMsgGroupRecord.h"
 
 /* Include all of the interfaces our factory can generate components for */
 #include "nsIMsgRFC822Parser.h"
@@ -37,10 +41,13 @@
 static NS_DEFINE_CID(kCUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
 static NS_DEFINE_CID(kCMessengerCID, NS_MESSENGER_CID);
-static NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGER_CID);
+static NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGERBOOTSTRAP_CID);
 
 static NS_DEFINE_CID(kCMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
 static NS_DEFINE_CID(kCMsgFolderEventCID, NS_MSGFOLDEREVENT_CID);
+
+static NS_DEFINE_CID(kCMsgGroupRecordCID, NS_MSGGROUPRECORD_CID);
+
 
 ////////////////////////////////////////////////////////////
 //
@@ -123,8 +130,8 @@ NS_IMPL_RELEASE(nsMsgFactory)
 
 nsresult
 nsMsgFactory::CreateInstance(nsISupports *aOuter,
-                                      const nsIID &aIID,
-                                      void **aResult)  
+                             const nsIID &aIID,
+                             void **aResult)  
 {  
 	nsresult res = NS_OK;
 
@@ -161,6 +168,13 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 		res = NS_NewMessenger((nsIMessenger**)&inst);
 		if (NS_FAILED(res)) return res;
 	}
+#if 0                           // not implemented yet
+  else if (mClassID.Equals(kCMsgGroupRecordCID))
+  {
+    res = NS_NewMsgGroupRecord((nsIMsgGroupRecord **)&inst);
+    if (NS_FAILED(res)) return res;
+  }
+#endif
 	else if (mClassID.Equals(kCUrlListenerManagerCID))
 	{
 		nsUrlListenerManager * listener = nsnull;
@@ -230,21 +244,38 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* path)
 
   // register the message folder factory
   rv = nsRepository::RegisterComponent(kCMsgFolderEventCID, 
-                                       nsnull, nsnull,
+                                       "Folder Event",
+                                       nsnull,
                                        path, PR_TRUE, PR_TRUE);
 
-  rv = nsRepository::RegisterComponent(kCUrlListenerManagerCID, nsnull, nsnull,
-									   path, PR_TRUE, PR_TRUE);
+  rv = nsRepository::RegisterComponent(kCUrlListenerManagerCID,
+                                       "UrlListenerManager",
+                                       nsnull,
+                                       path, PR_TRUE, PR_TRUE);
 
-  rv = nsRepository::RegisterComponent(kCMsgRFC822ParserCID, nsnull, nsnull,
-									   path, PR_TRUE, PR_TRUE);
-  
+  rv = nsRepository::RegisterComponent(kCMsgRFC822ParserCID,
+                                       "RFC822 Parser",
+                                       nsnull,
+                                       path, PR_TRUE, PR_TRUE);
+
   rv = nsRepository::RegisterComponent(kCMessengerCID,
                                        "Netscape Messenger",
+                                       "component://netscape/messenger/application",
+                                       path, PR_TRUE, PR_TRUE);
+  
+  rv = nsRepository::RegisterComponent(kCMessengerBootstrapCID,
+                                       "Netscape Messenger Bootstrapper",
                                        "component://netscape/messenger",
                                        path,
                                        PR_TRUE, PR_TRUE);
-
+#if 0
+  rv = nsRepository::RegisterComponent(kCMsgGroupRecordCID,
+                                       nsnull,
+                                       nsnull,
+                                       path,
+                                       PR_TRUE, PR_TRUE);
+#endif
+  printf("mailnews registering from %s\n",path);
   return rv;
 }
 
@@ -256,6 +287,10 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
   rv = nsRepository::UnregisterComponent(kCUrlListenerManagerCID, path);
   rv = nsRepository::UnregisterComponent(kCMsgRFC822ParserCID, path);
   rv = nsRepository::UnregisterComponent(kCMessengerCID, path);
+  rv = nsRepository::UnregisterComponent(kCMessengerBootstrapCID, path);
+#if 0
+  rv = nsRepository::UnregisterComponent(kCMsgGroupRecordCID, path);
+#endif
   rv = nsRepository::UnregisterComponent(kCMsgFolderEventCID, path);
   return rv;
 }
