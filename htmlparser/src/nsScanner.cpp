@@ -47,7 +47,7 @@ nsScannerString::InsertData(const PRUnichar* aDataStart,
    *  nor the work string will be invalidated.
    */
 {
-  mBufferList->SplitBuffer(mStart, nsSharedBufferList::kSplitCopyRightData);
+  BufferList()->SplitBuffer(StartPosition(), nsSharedBufferList::kSplitCopyRightData);
     // splitting to the right keeps the work string and any extant token pointing to and
     //  holding a reference count on the same buffer
 
@@ -56,7 +56,8 @@ nsScannerString::InsertData(const PRUnichar* aDataStart,
     //  BULLSHIT ALERT: we may have empty space to re-use in the split buffer, measure the cost
     //  of this and decide if we should do the work to fill it
 
-  mBufferList->LinkBuffer(mStart.mBuffer, new_buffer, mStart.mBuffer->mNext);
+  Buffer* buffer_to_split = StartPosition().mBuffer;
+  BufferList()->LinkBuffer(buffer_to_split, new_buffer, buffer_to_split->mNext);
 }
 
 void
