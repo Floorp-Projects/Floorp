@@ -34,7 +34,6 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
@@ -46,7 +45,6 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kINSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
@@ -675,48 +673,6 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
 
 //
-// Native method GetElementById
-//
-PR_STATIC_CALLBACK(JSBool)
-HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  nsIDOMElement* nativeRet;
-  nsAutoString b0;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTBYID, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    result = nativeThis->GetElementById(b0, &nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method GetElementsByName
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1202,7 +1158,6 @@ static JSPropertySpec HTMLDocumentProperties[] =
 static JSFunctionSpec HTMLDocumentMethods[] = 
 {
   {"close",          HTMLDocumentClose,     0},
-  {"getElementById",          HTMLDocumentGetElementById,     1},
   {"getElementsByName",          HTMLDocumentGetElementsByName,     1},
   {"getSelection",          NSHTMLDocumentGetSelection,     0},
   {"namedItem",          NSHTMLDocumentNamedItem,     0},

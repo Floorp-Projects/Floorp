@@ -35,9 +35,10 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMAttr.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMStyleSheetCollection.h"
 #include "nsIDOMText.h"
@@ -55,9 +56,10 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
+static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kICDATASectionIID, NS_IDOMCDATASECTION_IID);
 static NS_DEFINE_IID(kIStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
 static NS_DEFINE_IID(kITextIID, NS_IDOMTEXT_IID);
@@ -672,6 +674,232 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
 
 //
+// Native method ImportNode
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentImportNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsIDOMNode* nativeRet;
+  nsCOMPtr<nsIDOMNode> b0;
+  PRBool b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_IMPORTNODE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kINodeIID,
+                                           "Node",
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+    if (!nsJSUtils::nsConvertJSValToBool(&b1, cx, argv[1])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
+    }
+
+    result = nativeThis->ImportNode(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CreateElementNS
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentCreateElementNS(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsIDOMElement* nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEELEMENTNS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    result = nativeThis->CreateElementNS(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CreateAttributeNS
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentCreateAttributeNS(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsIDOMAttr* nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_CREATEATTRIBUTENS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    result = nativeThis->CreateAttributeNS(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetElementsByTagNameNS
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentGetElementsByTagNameNS(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsIDOMNodeList* nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_GETELEMENTSBYTAGNAMENS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    result = nativeThis->GetElementsByTagNameNS(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetElementById
+//
+PR_STATIC_CALLBACK(JSBool)
+DocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsIDOMElement* nativeRet;
+  nsAutoString b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOCUMENT_GETELEMENTBYID, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->GetElementById(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method CreateElementWithNameSpace
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -811,6 +1039,11 @@ static JSFunctionSpec DocumentMethods[] =
   {"createAttribute",          DocumentCreateAttribute,     1},
   {"createEntityReference",          DocumentCreateEntityReference,     1},
   {"getElementsByTagName",          DocumentGetElementsByTagName,     1},
+  {"importNode",          DocumentImportNode,     2},
+  {"createElementNS",          DocumentCreateElementNS,     2},
+  {"createAttributeNS",          DocumentCreateAttributeNS,     2},
+  {"getElementsByTagNameNS",          DocumentGetElementsByTagNameNS,     2},
+  {"getElementById",          DocumentGetElementById,     1},
   {"createElementWithNameSpace",          NSDocumentCreateElementWithNameSpace,     2},
   {"createRange",          NSDocumentCreateRange,     0},
   {0}

@@ -2733,6 +2733,33 @@ nsXULDocument::GetControls(nsIDOMHTMLCollection ** aResult) {
 }
 
 NS_IMETHODIMP
+nsXULDocument::ImportNode(nsIDOMNode* aImportedNode,
+                          PRBool aDeep,
+                          nsIDOMNode** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULDocument::CreateElementNS(const nsString& aNamespaceURI,
+                               const nsString& aQualifiedName,
+                               nsIDOMElement** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULDocument::CreateAttributeNS(const nsString& aNamespaceURI,
+                                 const nsString& aQualifiedName,
+                                 nsIDOMAttr** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsXULDocument::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 {
     nsresult rv;
@@ -2750,6 +2777,15 @@ nsXULDocument::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
     }
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsXULDocument::GetElementsByTagNameNS(const nsString& aNamespaceURI,
+                                      const nsString& aLocalName,
+                                      nsIDOMNodeList** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult

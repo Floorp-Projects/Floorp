@@ -68,6 +68,21 @@ public:
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, 
                                            const nsString& aNameSpace, 
                                            nsIDOMElement** aReturn);
+  NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode,
+                           PRBool aDeep,
+                           nsIDOMNode** aReturn);
+  NS_IMETHOD    CreateElementNS(const nsString& aNamespaceURI,
+                                const nsString& aQualifiedName,
+                                nsIDOMElement** aReturn);
+  NS_IMETHOD    CreateAttributeNS(const nsString& aNamespaceURI,
+                                  const nsString& aQualifiedName,
+                                  nsIDOMAttr** aReturn);
+  NS_IMETHOD    GetElementById(const nsString& aElementId,
+                               nsIDOMElement** aReturn);
+  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI,
+                                       const nsString& aLocalName,
+                                       nsIDOMNodeList** aReturn);
+
 
   // nsIXMLDocument interface
   NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);

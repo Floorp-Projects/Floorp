@@ -34,7 +34,6 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
@@ -45,7 +44,6 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IDOMXULCOMMANDDISPATCHER_IID);
 static NS_DEFINE_IID(kIXULDocumentIID, NS_IDOMXULDOCUMENT_IID);
@@ -244,48 +242,6 @@ ResolveXULDocument(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method GetElementById
-//
-PR_STATIC_CALLBACK(JSBool)
-XULDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMXULDocument *nativeThis = (nsIDOMXULDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  nsIDOMElement* nativeRet;
-  nsAutoString b0;
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULDOCUMENT_GETELEMENTBYID, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    result = nativeThis->GetElementById(b0, &nativeRet);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method GetElementsByAttribute
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -410,7 +366,6 @@ static JSPropertySpec XULDocumentProperties[] =
 //
 static JSFunctionSpec XULDocumentMethods[] = 
 {
-  {"getElementById",          XULDocumentGetElementById,     1},
   {"getElementsByAttribute",          XULDocumentGetElementsByAttribute,     2},
   {"persist",          XULDocumentPersist,     2},
   {0}

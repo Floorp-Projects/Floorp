@@ -30,8 +30,9 @@
 #include "nsIDOMNode.h"
 
 class nsIDOMElement;
-class nsIDOMProcessingInstruction;
 class nsIDOMAttr;
+class nsIDOMProcessingInstruction;
+class nsIDOMNode;
 class nsIDOMCDATASection;
 class nsIDOMText;
 class nsIDOMDOMImplementation;
@@ -72,6 +73,16 @@ public:
   NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn)=0;
 
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn)=0;
+
+  NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode, PRBool aDeep, nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    CreateElementNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMElement** aReturn)=0;
+
+  NS_IMETHOD    CreateAttributeNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMAttr** aReturn)=0;
+
+  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNodeList** aReturn)=0;
+
+  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn)=0;
 };
 
 
@@ -88,6 +99,11 @@ public:
   NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn);  \
   NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);  \
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);  \
+  NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode, PRBool aDeep, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    CreateElementNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    CreateAttributeNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMAttr** aReturn);  \
+  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNodeList** aReturn);  \
+  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn);  \
 
 
 
@@ -104,6 +120,11 @@ public:
   NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn) { return _to CreateAttribute(aName, aReturn); }  \
   NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn) { return _to CreateEntityReference(aName, aReturn); }  \
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn) { return _to GetElementsByTagName(aTagname, aReturn); }  \
+  NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode, PRBool aDeep, nsIDOMNode** aReturn) { return _to ImportNode(aImportedNode, aDeep, aReturn); }  \
+  NS_IMETHOD    CreateElementNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMElement** aReturn) { return _to CreateElementNS(aNamespaceURI, aQualifiedName, aReturn); }  \
+  NS_IMETHOD    CreateAttributeNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, nsIDOMAttr** aReturn) { return _to CreateAttributeNS(aNamespaceURI, aQualifiedName, aReturn); }  \
+  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNodeList** aReturn) { return _to GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn); }  \
+  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn) { return _to GetElementById(aElementId, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitDocumentClass(nsIScriptContext *aContext, void **aPrototype);

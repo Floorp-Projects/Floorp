@@ -205,17 +205,22 @@
     "cssstylesheet.parentstylesheet", \
     "cssstylesheet.title", \
     "document.createattribute", \
+    "document.createattributens", \
     "document.createcdatasection", \
     "document.createcomment", \
     "document.createdocumentfragment", \
     "document.createelement", \
+    "document.createelementns", \
     "document.createentityreference", \
     "document.createprocessinginstruction", \
     "document.createtextnode", \
     "document.doctype", \
     "document.documentelement", \
+    "document.getelementbyid", \
     "document.getelementsbytagname", \
+    "document.getelementsbytagnamens", \
     "document.implementation", \
+    "document.importnode", \
     "documenttype.entities", \
     "documenttype.internalsubset", \
     "documenttype.name", \
@@ -326,7 +331,6 @@
     "htmldocument.cookie", \
     "htmldocument.domain", \
     "htmldocument.forms", \
-    "htmldocument.getelementbyid", \
     "htmldocument.getelementsbyname", \
     "htmldocument.images", \
     "htmldocument.links", \

@@ -18,7 +18,6 @@
    void                      close();
    noscript void             write(in DOMString text);
    noscript void             writeln(in DOMString text);
-   Element                   getElementById(in DOMString elementId);
    NodeList                  getElementsByName(in DOMString elementName);
  };
 

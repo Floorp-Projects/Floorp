@@ -20,6 +20,24 @@
      EntityReference           createEntityReference(in DOMString name)
                                                      raises(DOMException);
      NodeList                  getElementsByTagName(in DOMString tagname);
+
+     // Introduced in DOM Level 2:
+     Node                      importNode(in Node importedNode,
+                                          in boolean deep)
+                                            raises(DOMException);
+     // Introduced in DOM Level 2:
+     Element                   createElementNS(in DOMString namespaceURI,
+                                               in DOMString qualifiedName)
+                                                 raises(DOMException);
+     // Introduced in DOM Level 2:
+     Attr                      createAttributeNS(in DOMString namespaceURI,
+                                                 in DOMString qualifiedName)
+                                                   raises(DOMException);
+     // Introduced in DOM Level 2:
+     NodeList                  getElementsByTagNameNS(in DOMString namespaceURI,
+                                                      in DOMString localName);
+     // Introduced in DOM Level 2:
+     Element                   getElementById(in DOMString elementId);
    };
 
    interface NSDocument {
@@ -30,6 +48,7 @@
      readonly attribute long height;
      readonly attribute StyleSheetCollection styleSheets;
      readonly attribute DOMString characterSet;
+// XXX This should be removed, the new createElementNS should be used in stead
      Element                   createElementWithNameSpace(in DOMString tagName,
                                                           in DOMString nameSpace)
                                                           raises(DOMException);     Range                     createRange();
