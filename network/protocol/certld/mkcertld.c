@@ -68,14 +68,12 @@ net_ProcessCertLdap(ActiveEntry *ce)
     CertLdapConnData *connData;
     
     connData = (CertLdapConnData *)ce->con_data;
-#endif
 
 #ifdef XP_UNIX
     NET_ClearConnectSelect(ce->window_id, connData->fd);
     NET_SetReadSelect(ce->window_id, connData->fd);
 #endif
 
-#ifdef MOZ_SECURITY
     err = SECNAV_CertLdapProcess(connData);
 #endif    
     if ( err ) {
@@ -112,7 +110,9 @@ net_InterruptCertLdap(ActiveEntry *ce)
     ce->status = MK_INTERRUPTED;
 
 #ifdef XP_UNIX
+#ifdef MOZ_SECURITY
     NET_ClearReadSelect(ce->window_id, connData->fd);
+#endif
     NET_TotalNumberOfOpenConnections--;
 #else
     NET_ClearCallNetlibAllTheTime(ce->window_id, "mkcertld");
