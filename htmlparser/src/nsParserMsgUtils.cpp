@@ -37,7 +37,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
-#include "nsISupportsArray.h"
 #include "nsXPIDLString.h"
 #include "nsParserMsgUtils.h"
 #include "nsNetCID.h"

@@ -156,8 +156,8 @@ protected:
     PRUint32 aByteIndex, nsString& aLine);
 
   // Load up an external stream to get external entity information
-  static nsresult OpenInputStream(const nsString& aURLStr, 
-                                  const nsString& aBaseURL, 
+  static nsresult OpenInputStream(const XML_Char* aURLStr, 
+                                  const XML_Char* aBaseURL, 
                                   nsIInputStream** in, 
                                   nsString* aAbsURL);
 
