@@ -114,7 +114,7 @@ NS_IMETHODIMP nsEditorController::SetContent(nsIHTMLContent *aContent)
 
 NS_IMETHODIMP nsEditorController::SetEditor(nsIEditor *aEditor)
 {
-  NS_ENSURE_ARG_POINTER(aEditor);
+  // null editors are allowed
   mEditor = aEditor;
   return NS_OK;
 }
