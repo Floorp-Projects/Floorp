@@ -733,9 +733,12 @@ thumb {
    list-style-image: url(chrome://global/skin/scroll-thumb-horiz.gif)
 }
 
+/*
+pinkerton - workaround. removed until bug 15722 can be fixed.
 thumb:hover {
    list-style-image: url(chrome://global/skin/scroll-thumb-horiz-hover.gif);
 }
+*/
 
 thumb[disabled="true"] {
    list-style-image: url(chrome://global/skin/scroll-thumb-horiz-disabled.gif);
@@ -745,10 +748,13 @@ slider[align="vertical"] thumb {
    list-style-image: url(chrome://global/skin/scroll-thumb-vert.gif)
 }
 
+/*
+pinkerton - workaround. removed until bug 15722 can be fixed.
 slider[align="vertical"] thumb:hover {
    list-style-image: url(chrome://global/skin/scroll-thumb-vert-hover.gif);
 
 }
+*/
 
 slider[align="vertical"] thumb[disabled="true"] {
    list-style-image: url(chrome://global/skin/scroll-thumb-vert-disabled.gif);
@@ -771,11 +777,10 @@ slider {
 }
 
 scrollbarbutton {
-  display: inline;
   vertical-align: bottom;
   cursor: default;
 
-  border: 2px outset rgb(156, 154, 156);
+  border: 1px outset black;
   background-color: rgb(206, 207, 206);
   color:black; 
 
@@ -795,9 +800,12 @@ scrollbarbutton[type="decrement"] {
    list-style-image: url(chrome://global/skin/scroll-left.gif)
 }
 
+/*
+pinkerton - workaround. removed until bug 15722 can be fixed.
 scrollbarbutton[type="decrement"]:hover {
    list-style-image: url(chrome://global/skin/scroll-left-hover.gif)
 }
+*/
 
 scrollbarbutton[type="decrement"][disabled="true"] {
    list-style-image: url(chrome://global/skin/scroll-left-disabled.gif) 
@@ -807,9 +815,12 @@ scrollbarbutton[type="increment"] {
    list-style-image: url(chrome://global/skin/scroll-right.gif)
 }
 
+/*
+pinkerton - workaround. removed until bug 15722 can be fixed.
 scrollbarbutton[type="increment"]:hover {
    list-style-image: url(chrome://global/skin/scroll-right-hover.gif)
 }
+*/
 
 scrollbarbutton[type="increment"][disabled="true"] {
    list-style-image: url(chrome://global/skin/scroll-right-disabled.gif) 
@@ -820,9 +831,12 @@ scrollbar[align="vertical"] scrollbarbutton[type="decrement"] {
    list-style-image: url(chrome://global/skin/scrollUp.gif)
 }
 
+/*
+pinkerton - workaround. removed until bug 15722 can be fixed.
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"]:hover {
    list-style-image: url(chrome://global/skin/scrollUp_mo.gif)
 }
+*/
 
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] {
    list-style-image: url(chrome://global/skin/scrollUp_dis.gif) 
@@ -832,17 +846,17 @@ scrollbar[align="vertical"] scrollbarbutton[type="increment"] {
    list-style-image: url(chrome://global/skin/scrollDown.gif)
 }
 
+/*
+pinkerton - workaround. removed until bug 15722 can be fixed.
 scrollbar[align="vertical"] scrollbarbutton[type="increment"]:hover {
    list-style-image: url(chrome://global/skin/scrollDown_mo.gif)
 }
+*/
 
 scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] {
    list-style-image: url(chrome://global/skin/scrollDown_dis.gif) 
 }
 
-scrollbar[value="hidden"] {
-   visibility: hidden;
-}
 
 /********* Splitter ********/
 
