@@ -156,9 +156,9 @@ public:
 
 // Internal member functions
 protected:
-  NS_IMETHOD InitClass(const nsCString& aClassName,
-                       nsIScriptContext* aContext, nsIDocument* aDocument,
-                       void** aScriptObject, void** aClassObject);
+  nsresult InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
+                     nsIDocument* aDocument, void** aScriptObject,
+                     void** aClassObject);
 
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
   PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);

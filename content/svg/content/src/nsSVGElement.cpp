@@ -424,26 +424,6 @@ nsSVGElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
 
 //----------------------------------------------------------------------
-// nsIXMLContent methods
-
-NS_IMETHODIMP
-nsSVGElement::SetContainingNameSpace(nsINameSpace* aNameSpace)
-{
-  mNameSpace = aNameSpace;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
-{
-  aNameSpace = mNameSpace;
-  NS_IF_ADDREF(aNameSpace);
-
-  return NS_OK;  
-}
-
-
-//----------------------------------------------------------------------
 // nsIStyledContent methods
 
 NS_IMETHODIMP

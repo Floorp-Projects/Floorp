@@ -292,12 +292,14 @@ private:
 
   PRBool HasRangeList() const
   {
-    return mParentPtrBits & PARENT_BIT_RANGELISTS;
+    return (mParentPtrBits & PARENT_BIT_RANGELISTS &&
+            nsGenericElement::sRangeListsHash.ops);
   }
 
   PRBool HasEventListenerManager() const
   {
-    return mParentPtrBits & PARENT_BIT_LISTENERMANAGER;
+    return (mParentPtrBits & PARENT_BIT_LISTENERMANAGER &&
+            nsGenericElement::sEventListenerManagersHash.ops);
   }
 
   // Weak parent pointer (nsIContent *) and bits for knowing if

@@ -57,6 +57,7 @@
 #include "nsINodeInfo.h"
 #include "nsIParser.h"
 #include "nsContentUtils.h"
+#include "pldhash.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -67,6 +68,32 @@ class nsIDOMCSSStyleDeclaration;
 class nsDOMAttributeMap;
 class nsIURI;
 class nsINodeInfo;
+
+typedef unsigned long PtrBits;
+
+// This bit will be set if the nsGenericElement has nsDOMSlots
+#define GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS   0x00000001U
+
+// This bit will be set if the element has a range list in the range
+// list hash
+#define GENERIC_ELEMENT_HAS_RANGELIST          0x00000002U
+
+// This bit will be set if the element has a listener manager in the
+// listener manager hash
+#define GENERIC_ELEMENT_HAS_LISTENERMANAGER    0x00000004U
+
+// The number of bits to shift the bit field to get at the content ID
+#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 3
+
+// This mask masks out the bits that are used for the content ID
+#define GENERIC_ELEMENT_CONTENT_ID_MASK \
+  ((~PtrBits(0)) << GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET)
+
+// The largest value for content ID that fits in
+// GENERIC_ELEMENT_CONTENT_ID_MASK
+#define GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE \
+  ((~PtrBits(0)) >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET)
+
 
 /**
  * Class that implements the nsIDOMNodeList interface (a list of children of
@@ -102,40 +129,89 @@ private:
  * in a side structure that's only allocated when the content is
  * accessed through the DOM.
  */
-struct nsDOMSlots
+class nsDOMSlots
 {
+public:
+  nsDOMSlots(PtrBits aFlags);
+  ~nsDOMSlots();
+
+  PRBool IsEmpty();
+
+  PtrBits mFlags;
+
   /**
    * An object implementing nsIDOMNodeList for this content (childNodes)
    * @see nsIDOMNodeList
    * @see nsGenericHTMLLeafElement::GetChildNodes
    */
   nsChildContentList *mChildNodes;
+
   /**
-   * The .style attribute (an interface that forwards to the actual style rules)
-   * @see nsGenericHTMLElement::GetStyle
-   */
+   * The .style attribute (an interface that forwards to the actual
+   * style rules)
+   * @see nsGenericHTMLElement::GetStyle */
   nsDOMCSSDeclaration *mStyle;
+
   /**
    * An object implementing nsIDOMNamedNodeMap for this content (attributes)
    * @see nsGenericElement::GetAttributes
    */
   nsDOMAttributeMap* mAttributeMap;
+
   /**
-   * A list of ranges whose endpoints are contained within this nsIContent.
-   * @see nsGenericElement::GetRangeList
-   * @see http://www.w3.org/TR/DOM-Level-2-Traversal-Range/
-   */
-  nsVoidArray *mRangeList;
-  /**
-   * The event listener manager for this content (contains a list of listeners)
-   * @see nsGenericElement::GetListenerManager
-   */
-  nsIEventListenerManager* mListenerManager;
-  /**
-   * The nearest enclosing content node with a binding that created us. [weak]
+   * The nearest enclosing content node with a binding that created us.
    * @see nsGenericElement::GetBindingParent
    */
-  nsIContent* mBindingParent;
+  nsIContent* mBindingParent; // [Weak]
+
+  // DEPRECATED, DON'T USE THIS
+  PRUint32 mContentID;
+};
+
+class RangeListMapEntry : public PLDHashEntryHdr
+{
+public:
+  RangeListMapEntry(const void *aKey)
+    : mKey(aKey), mRangeList(nsnull)
+  {
+  }
+
+  ~RangeListMapEntry()
+  {
+    delete mRangeList;
+  }
+
+private:
+  const void *mKey; // must be first to look like PLDHashEntryStub
+
+public:
+  // We want mRangeList to be an nsAutoVoidArray but we can't make an
+  // nsAutoVoidArray a direct member of RangeListMapEntry since it
+  // will be moved around in memory, and nsAutoVoidArray can't deal
+  // with that.
+  nsVoidArray *mRangeList;
+};
+
+class EventListenerManagerMapEntry : public PLDHashEntryHdr
+{
+public:
+  EventListenerManagerMapEntry(const void *aKey)
+    : mKey(aKey)
+  {
+  }
+
+  ~EventListenerManagerMapEntry()
+  {
+    if (mListenerManager) {
+      mListenerManager->SetListenerTarget(nsnull);
+    }
+  }
+
+private:
+  const void *mKey; // must be first, to look like PLDHashEntryStub
+
+public:
+  nsCOMPtr<nsIEventListenerManager> mListenerManager;
 };
 
 
@@ -329,8 +405,6 @@ public:
                                       PRInt32 aModType, PRInt32& aHint) const;
 
   // nsIXMLContent interface methods
-  NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
-  NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
   NS_IMETHOD GetXMLBaseURI(nsIURI **aURI);
 
@@ -424,9 +498,6 @@ public:
 
   //----------------------------------------
 
-  // XXX Unused.  Remove.
-  nsresult RenderFrame(nsIPresContext*);
-
   /**
    * Add a script event listener with the given attr name (like onclick)
    * and with the value as JS
@@ -495,35 +566,127 @@ public:
   static PRBool HasMutationListeners(nsIContent* aContent,
                                      PRUint32 aType);
 
+  static nsresult InitHashes();
+
+  static PLDHashTable sEventListenerManagersHash;
+  static PLDHashTable sRangeListsHash;
+
 protected:
 #ifdef DEBUG
   virtual PRUint32 BaseSizeOf(nsISizeOfHandler *aSizer) const;
 #endif
 
-  /**
-   * Get mDOMSlots, or create it if it doesn't exist
-   * @returen the DOMSlots for this content object
-   */
-  nsDOMSlots *GetDOMSlots();
-  /**
-   * Clear mDOMSlots if there is nothing in it.
-   */
+  PRBool HasDOMSlots() const
+  {
+    return !(mFlagsOrSlots & GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS);
+  }
+
+  nsDOMSlots *GetDOMSlots()
+  {
+    if (!HasDOMSlots()) {
+      nsDOMSlots *slots = new nsDOMSlots(mFlagsOrSlots);
+
+      if (!slots) {
+        return nsnull;
+      }
+
+      mFlagsOrSlots = NS_REINTERPRET_CAST(PtrBits, slots);
+    }
+
+    return NS_REINTERPRET_CAST(nsDOMSlots *, mFlagsOrSlots);
+  }
+
+  nsDOMSlots *GetExistingDOMSlots() const
+  {
+    if (!HasDOMSlots()) {
+      return nsnull;
+    }
+
+    return NS_REINTERPRET_CAST(nsDOMSlots *, mFlagsOrSlots);
+  }
+
   void MaybeClearDOMSlots();
 
-  /** The document for this content */
+  PtrBits GetFlags() const
+  {
+    if (HasDOMSlots()) {
+      return NS_REINTERPRET_CAST(nsDOMSlots *, mFlagsOrSlots)->mFlags;
+    }
+
+    return mFlagsOrSlots;
+  }
+
+  void SetFlags(PtrBits aFlagsToSet)
+  {
+    NS_ASSERTION(!((aFlagsToSet & GENERIC_ELEMENT_CONTENT_ID_MASK) &&
+                   (aFlagsToSet & ~GENERIC_ELEMENT_CONTENT_ID_MASK)),
+                 "Whaaa, don't set content ID bits and flags together!!!");
+
+    nsDOMSlots *slots = GetExistingDOMSlots();
+
+    if (slots) {
+      slots->mFlags |= aFlagsToSet;
+
+      return;
+    }
+
+    mFlagsOrSlots |= aFlagsToSet;
+  }
+
+  void UnsetFlags(PtrBits aFlagsToUnset)
+  {
+    NS_ASSERTION(!((aFlagsToUnset & GENERIC_ELEMENT_CONTENT_ID_MASK) &&
+                   (aFlagsToUnset & ~GENERIC_ELEMENT_CONTENT_ID_MASK)),
+                 "Whaaa, don't set content ID bits and flags together!!!");
+
+    nsDOMSlots *slots = GetExistingDOMSlots();
+
+    if (slots) {
+      slots->mFlags &= ~aFlagsToUnset;
+
+      return;
+    }
+
+    mFlagsOrSlots &= ~aFlagsToUnset;
+  }
+
+  PRBool HasRangeList() const
+  {
+    PtrBits flags = GetFlags();
+
+    return (flags & GENERIC_ELEMENT_HAS_RANGELIST && sRangeListsHash.ops);
+  }
+
+  PRBool HasEventListenerManager() const
+  {
+    PtrBits flags = GetFlags();
+
+    return (flags & GENERIC_ELEMENT_HAS_LISTENERMANAGER &&
+            sEventListenerManagersHash.ops);
+  }
+
+  /**
+   * The document for this content
+   */
   nsIDocument* mDocument;                   // WEAK
-  /** The parent content */
+
+  /**
+   * The parent content
+   */
   nsIContent* mParent;                      // WEAK
   
-  /** Information about this type of node */
-  nsINodeInfo* mNodeInfo;                   // OWNER
-  /** The DOMSlots for this content (see nsDOMSlots for info) */
-  nsDOMSlots *mDOMSlots;                    // OWNER
   /**
-   * A unique content ID (used for layout save/restore)
-   * @see FrameManager::GenerateStateKey
+   * Information about this type of node
    */
-  PRUint32 mContentID;
+  nsINodeInfo* mNodeInfo;                   // OWNER
+
+  /**
+   * Used for either storing flags for this element or a pointer to
+   * this elements nsDOMSlots. See the definition of the
+   * GENERIC_ELEMENT_* macros for the layout of the bits in this
+   * member.
+   */
+  PtrBits mFlagsOrSlots;
 };
 
 /**

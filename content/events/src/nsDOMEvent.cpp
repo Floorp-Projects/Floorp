@@ -336,7 +336,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
   if (targetContent) {    
     if (NS_OK == targetContent->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)&mTarget)) {
       *aTarget = mTarget;
-      NS_ADDREF(mTarget);
+      NS_ADDREF(*aTarget);
     }
   }
   else {

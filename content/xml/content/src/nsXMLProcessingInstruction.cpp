@@ -420,8 +420,6 @@ nsXMLProcessingInstruction::GetStyleSheetInfo(nsAString& aTitle,
                                               nsAString& aMedia,
                                               PRBool* aIsAlternate)
 {
-  nsresult rv = NS_OK;
-
   aTitle.Truncate();
   aType.Truncate();
   aMedia.Truncate();

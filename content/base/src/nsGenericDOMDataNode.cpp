@@ -57,71 +57,10 @@
 #include "pldhash.h"
 #include "prprf.h"
 
-static PLDHashTable *gEventListenerHash = nsnull;
-static PLDHashTable *gRangeListsHash = nsnull;
-
-
-class EventListenerManagerMapEntry : public PLDHashEntryHdr
-{
-public:
-  void *mKey; // must be first, to look like PLDHashEntryStub
-  nsIEventListenerManager *mListenerManager;
-};
-
-class RangeListMapEntry : public PLDHashEntryHdr
-{
-public:
-  void *mKey; // must be first, to look like PLDHashEntryStub
-  nsVoidArray *mRangeList;
-};
-
-
-PR_STATIC_CALLBACK(PLDHashOperator)
-EventListenerHashTeardownEnumFunc(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                                  PRUint32 number, void *arg)
-{
-  EventListenerManagerMapEntry *entry =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *, hdr);
-
-  NS_RELEASE(entry->mListenerManager);
-
-  return PL_DHASH_NEXT;
-}
-
-
-PR_STATIC_CALLBACK(PLDHashOperator)
-RangeListsHashTeardownEnumFunc(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                               PRUint32 number, void *arg)
-{
-  RangeListMapEntry *entry = NS_STATIC_CAST(RangeListMapEntry *, hdr);
-
-  delete entry->mRangeList;
-
-  return PL_DHASH_NEXT;
-}
-
-
 // static
 void
 nsGenericDOMDataNode::Shutdown()
 {
-  if (gEventListenerHash) {
-    PL_DHashTableEnumerate(gEventListenerHash,
-                           EventListenerHashTeardownEnumFunc, nsnull);
-
-    PL_DHashTableDestroy(gEventListenerHash);
-
-    gEventListenerHash = nsnull;
-  }
-
-  if (gRangeListsHash) {
-    PL_DHashTableEnumerate(gRangeListsHash, RangeListsHashTeardownEnumFunc,
-                           nsnull);
-
-    PL_DHashTableDestroy(gRangeListsHash);
-
-    gRangeListsHash = nsnull;
-  }
 }
 
 
@@ -135,34 +74,14 @@ nsGenericDOMDataNode::nsGenericDOMDataNode()
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
-  if (HasEventListenerManager() && gEventListenerHash) {
-    EventListenerManagerMapEntry *entry =
-      NS_STATIC_CAST(EventListenerManagerMapEntry*,
-                     PL_DHashTableOperate(gEventListenerHash, this,
-                                          PL_DHASH_LOOKUP));
-
-    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      entry->mListenerManager->SetListenerTarget(nsnull);
-
-      NS_RELEASE(entry->mListenerManager);
-
-      PL_DHashTableRawRemove(gEventListenerHash, entry);
-    }
+  if (HasEventListenerManager()) {
+    PL_DHashTableOperate(&nsGenericElement::sEventListenerManagersHash,
+                         this, PL_DHASH_REMOVE);
   }
 
-  if (HasRangeList() && gRangeListsHash) {
-    RangeListMapEntry *entry =
-      NS_STATIC_CAST(RangeListMapEntry*,
-                     PL_DHashTableOperate(gRangeListsHash, this,
-                                          PL_DHASH_LOOKUP));
-
-    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      NS_ASSERTION(entry->mRangeList, "No range list in entry!");
-
-      delete entry->mRangeList;
-
-      PL_DHashTableRawRemove(gRangeListsHash, entry);
-    }
+  if (HasRangeList()) {
+    PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
+                         this, PL_DHASH_REMOVE);
   }
 }
 
@@ -632,14 +551,9 @@ nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
     return NS_OK;
   }
 
-  if (!gEventListenerHash) {
-    gEventListenerHash =
-      PL_NewDHashTable(PL_DHashGetStubOps(), nsnull,
-                       sizeof(EventListenerManagerMapEntry), 16);
-
-    if (!gEventListenerHash) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (!nsGenericElement::sEventListenerManagersHash.ops) {
+    nsresult rv = nsGenericElement::InitHashes();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsresult rv = NS_NewEventListenerManager(aResult);
@@ -648,12 +562,11 @@ nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
   // Add a mapping to the hash table
   EventListenerManagerMapEntry *entry =
     NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                   PL_DHashTableOperate(gEventListenerHash, this,
+                   PL_DHashTableOperate(&nsGenericElement::
+                                        sEventListenerManagersHash, this,
                                         PL_DHASH_ADD));
 
-  entry->mKey = this;
   entry->mListenerManager = *aResult;
-  NS_ADDREF(entry->mListenerManager);
 
   entry->mListenerManager->SetListenerTarget(this);
 
@@ -1007,28 +920,31 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
 {
   // lazy allocation of range list
 
-  if (!gRangeListsHash) {
-    gRangeListsHash = PL_NewDHashTable(PL_DHashGetStubOps(), nsnull,
-                                       sizeof(RangeListMapEntry), 16);
-
-    if (!gRangeListsHash) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  if (!nsGenericElement::sRangeListsHash.ops) {
+    nsresult rv = nsGenericElement::InitHashes();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsVoidArray *range_list = LookupRangeList();
+  RangeListMapEntry *entry =
+    NS_STATIC_CAST(RangeListMapEntry *,
+                   PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
+                                        this, PL_DHASH_ADD));
+
+  if (!entry) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsVoidArray *range_list = entry->mRangeList;
 
   if (!range_list) {
     range_list = new nsAutoVoidArray();
-    NS_ENSURE_TRUE(range_list, NS_ERROR_OUT_OF_MEMORY);
 
-    // Add a mapping to the hash table
-    RangeListMapEntry *entry =
-      NS_STATIC_CAST(RangeListMapEntry *,
-                     PL_DHashTableOperate(gRangeListsHash, this,
-                                          PL_DHASH_ADD));
+    if (!range_list) {
+      PL_DHashTableRawRemove(&nsGenericElement::sRangeListsHash, entry);
 
-    entry->mKey = this;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     entry->mRangeList = range_list;
 
     SetHasRangeList(PR_TRUE);
@@ -1057,9 +973,10 @@ nsGenericDOMDataNode::RangeRemove(nsIDOMRange* aRange)
   RangeListMapEntry *entry = nsnull;
 
   if (HasRangeList()) {
-    entry = NS_STATIC_CAST(RangeListMapEntry*,
-                           PL_DHashTableOperate(gRangeListsHash, this,
-                                                PL_DHASH_LOOKUP));
+    entry =
+      NS_STATIC_CAST(RangeListMapEntry *,
+                     PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
+                                          this, PL_DHASH_LOOKUP));
   }
 
   if (entry && PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -1069,9 +986,7 @@ nsGenericDOMDataNode::RangeRemove(nsIDOMRange* aRange)
 
     if (rv) {
       if (entry->mRangeList->Count() == 0) {
-        delete entry->mRangeList;
-
-        PL_DHashTableRawRemove(gRangeListsHash, entry);
+        PL_DHashTableRawRemove(&nsGenericElement::sRangeListsHash, entry);
 
         SetHasRangeList(PR_FALSE);
       }
@@ -1439,8 +1354,9 @@ nsGenericDOMDataNode::LookupListenerManager(nsIEventListenerManager **aListenerM
   }
 
   EventListenerManagerMapEntry *entry =
-    NS_STATIC_CAST(EventListenerManagerMapEntry*,
-                   PL_DHashTableOperate(gEventListenerHash, this,
+    NS_STATIC_CAST(EventListenerManagerMapEntry *,
+                   PL_DHashTableOperate(&nsGenericElement::
+                                        sEventListenerManagersHash, this,
                                         PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -1457,9 +1373,9 @@ nsGenericDOMDataNode::LookupRangeList() const
   }
 
   RangeListMapEntry *entry =
-    NS_STATIC_CAST(RangeListMapEntry*,
-                   PL_DHashTableOperate(gRangeListsHash, this,
-                                        PL_DHASH_LOOKUP));
+    NS_STATIC_CAST(RangeListMapEntry *,
+                   PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
+                                        this, PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
     return entry->mRangeList;

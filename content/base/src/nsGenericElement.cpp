@@ -70,7 +70,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
-#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
@@ -115,6 +114,9 @@ DebugListContentTree(nsIContent* aElement)
 }
 
 #endif
+
+PLDHashTable nsGenericElement::sRangeListsHash;
+PLDHashTable nsGenericElement::sEventListenerManagersHash;
 
 //----------------------------------------------------------------------
 
@@ -701,15 +703,66 @@ nsDOMEventRTTearoff::DispatchEvent(nsIDOMEvent *evt, PRBool* _retval)
 
 //----------------------------------------------------------------------
 
-/* static */ void
+nsDOMSlots::nsDOMSlots(PtrBits aFlags)
+  : mFlags(aFlags), mChildNodes(nsnull), mStyle(nsnull), mAttributeMap(nsnull),
+    mBindingParent(nsnull), mContentID(0)
+{
+}
+
+nsDOMSlots::~nsDOMSlots()
+{
+  if (mChildNodes) {
+    mChildNodes->DropReference();
+    NS_RELEASE(mChildNodes);
+  }
+
+  if (mStyle) {
+    mStyle->DropReference();
+    NS_RELEASE(mStyle);
+  }
+
+  if (mAttributeMap) {
+    mAttributeMap->DropReference();
+    NS_RELEASE(mAttributeMap);
+  }
+}
+
+PRBool
+nsDOMSlots::IsEmpty()
+{
+  return (!mChildNodes && !mStyle && !mAttributeMap && !mBindingParent &&
+          mContentID < GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE);
+}
+
+// static
+void
 nsGenericElement::Shutdown()
 {
   nsDOMEventRTTearoff::Shutdown();
+
+  if (sRangeListsHash.ops) {
+    NS_ASSERTION(sRangeListsHash.entryCount == 0,
+                 "nsGenericElement's range hash not empty at shutdown!");
+
+    PL_DHashTableFinish(&sRangeListsHash);
+
+    sRangeListsHash.ops = nsnull;
+  }
+
+  if (sEventListenerManagersHash.ops) {
+    NS_ASSERTION(sEventListenerManagersHash.entryCount == 0,
+                 "nsGenericElement's event listener manager hash not empty "
+                 "at shutdown!");
+    
+    PL_DHashTableFinish(&sEventListenerManagersHash);
+
+    sEventListenerManagersHash.ops = nsnull;
+  }
 }
 
-nsGenericElement::nsGenericElement() : mDocument(nsnull), mParent(nsnull),
-                                       mNodeInfo(nsnull), mDOMSlots(nsnull),
-                                       mContentID(0)
+nsGenericElement::nsGenericElement()
+  : mDocument(nsnull), mParent(nsnull), mNodeInfo(nsnull),
+    mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
 {
   NS_INIT_REFCNT();
 }
@@ -718,71 +771,166 @@ nsGenericElement::~nsGenericElement()
 {
   // pop any enclosed ranges out
   // nsRange::OwnerGone(mContent); not used for now
-  if (mDOMSlots) {
-    if (mDOMSlots->mChildNodes) {
-      mDOMSlots->mChildNodes->DropReference();
-      NS_RELEASE(mDOMSlots->mChildNodes);
+
+  if (HasRangeList()) {
+#ifdef DEBUG
+    {
+      RangeListMapEntry *entry =
+        NS_STATIC_CAST(RangeListMapEntry *,
+                       PL_DHashTableOperate(&sRangeListsHash, this,
+                                            PL_DHASH_LOOKUP));
+
+      if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+        NS_ERROR("Huh, our bit says we have a range list, but there's nothing "
+                 "in the hash!?!!");
+      }
     }
+#endif
 
-    delete mDOMSlots->mRangeList;
+    PL_DHashTableOperate(&sRangeListsHash, this, PL_DHASH_REMOVE);
+  }
 
-    if (mDOMSlots->mStyle) {
-      mDOMSlots->mStyle->DropReference();
-      NS_RELEASE(mDOMSlots->mStyle);
+  if (HasEventListenerManager()) {
+#ifdef DEBUG
+    {
+      EventListenerManagerMapEntry *entry =
+        NS_STATIC_CAST(EventListenerManagerMapEntry *,
+                       PL_DHashTableOperate(&sEventListenerManagersHash, this,
+                                            PL_DHASH_LOOKUP));
+
+      if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+        NS_ERROR("Huh, our bit says we have a listener manager list, "
+                 "but there's nothing in the hash!?!!");
+      }
     }
+#endif
 
-    if (mDOMSlots->mAttributeMap) {
-      mDOMSlots->mAttributeMap->DropReference();
-      NS_RELEASE(mDOMSlots->mAttributeMap);
-    }
-
-    if (mDOMSlots->mListenerManager) {
-      mDOMSlots->mListenerManager->SetListenerTarget(nsnull);
-      NS_RELEASE(mDOMSlots->mListenerManager);
-    }
-
-    // XXX Should really be arena managed
-    delete mDOMSlots;
-    mDOMSlots = nsnull;
+    PL_DHashTableOperate(&sEventListenerManagersHash, this, PL_DHASH_REMOVE);
   }
 
   NS_IF_RELEASE(mNodeInfo);
-}
 
-nsDOMSlots *
-nsGenericElement::GetDOMSlots()
-{
-  if (!mDOMSlots) {
-    mDOMSlots = new nsDOMSlots;
+  if (HasDOMSlots()) {
+    nsDOMSlots *slots = GetDOMSlots();
 
-    if (!mDOMSlots)
-      return nsnull;
-
-    mDOMSlots->mChildNodes = nsnull;
-    mDOMSlots->mStyle = nsnull;
-    mDOMSlots->mAttributeMap = nsnull;
-    mDOMSlots->mRangeList = nsnull;
-    mDOMSlots->mListenerManager = nsnull;
-    mDOMSlots->mBindingParent = nsnull;
+    delete slots;
   }
 
-  return mDOMSlots;
+  // No calling GetFlags() beond this point...
 }
 
 void
 nsGenericElement::MaybeClearDOMSlots()
 {
-  if (mDOMSlots &&
-      !mDOMSlots->mChildNodes &&
-      !mDOMSlots->mStyle &&
-      !mDOMSlots->mAttributeMap &&
-      !mDOMSlots->mRangeList &&
-      !mDOMSlots->mListenerManager &&
-      !mDOMSlots->mBindingParent) {
+  nsDOMSlots *slots = GetExistingDOMSlots();
 
-    delete mDOMSlots;
-    mDOMSlots = nsnull;
+  if (!slots) {
+    return;
   }
+
+  if (slots->IsEmpty()) {
+    mFlagsOrSlots = slots->mFlags | GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS;
+
+    // Move the content id from the slots to mFlagsOrSlots too since
+    // it might have changed since we created the slots
+    SetContentID(slots->mContentID);
+
+    delete slots;
+  }
+}
+
+PR_STATIC_CALLBACK(void)
+RangeListHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+                       const void *key)
+{
+  // Inititlize the entry with placement new
+  new (entry) RangeListMapEntry(key);
+}
+
+PR_STATIC_CALLBACK(void)
+RangeListHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  RangeListMapEntry *r = NS_STATIC_CAST(RangeListMapEntry *, entry);
+
+  // Let the RangeListMapEntry clean itself up...
+  r->~RangeListMapEntry();
+}
+
+PR_STATIC_CALLBACK(void)
+EventListenerManagerHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+                                  const void *key)
+{
+  // Inititlize the entry with placement new
+  new (entry) EventListenerManagerMapEntry(key);
+}
+
+PR_STATIC_CALLBACK(void)
+EventListenerManagerHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  EventListenerManagerMapEntry *lm =
+    NS_STATIC_CAST(EventListenerManagerMapEntry *, entry);
+
+  // Let the EventListenerManagerMapEntry clean itself up...
+  lm->~EventListenerManagerMapEntry();
+}
+
+
+// static
+nsresult
+nsGenericElement::InitHashes()
+{
+  NS_ASSERTION(sizeof(PtrBits) == sizeof(void *),
+               "Eeek! You'll need to adjust the size of PtrBits to the size "
+               "of a pointer on your platform.");
+
+  if (!sRangeListsHash.ops) {
+    static PLDHashTableOps hash_table_ops =
+    {
+      PL_DHashAllocTable,
+      PL_DHashFreeTable,
+      PL_DHashGetKeyStub,
+      PL_DHashVoidPtrKeyStub,
+      PL_DHashMatchEntryStub,
+      PL_DHashMoveEntryStub,
+      RangeListHashClearEntry,
+      PL_DHashFinalizeStub,
+      RangeListHashInitEntry
+    };
+
+    if (!PL_DHashTableInit(&sRangeListsHash, &hash_table_ops, nsnull,
+                           sizeof(RangeListMapEntry), 16)) {
+      sRangeListsHash.ops = nsnull;
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  if (!sEventListenerManagersHash.ops) {
+    static PLDHashTableOps hash_table_ops =
+    {
+      PL_DHashAllocTable,
+      PL_DHashFreeTable,
+      PL_DHashGetKeyStub,
+      PL_DHashVoidPtrKeyStub,
+      PL_DHashMatchEntryStub,
+      PL_DHashMoveEntryStub,
+      EventListenerManagerHashClearEntry,
+      PL_DHashFinalizeStub,
+      EventListenerManagerHashInitEntry
+    };
+
+    if (!PL_DHashTableInit(&sEventListenerManagersHash, &hash_table_ops,
+                           nsnull, sizeof(EventListenerManagerMapEntry), 16)) {
+      sEventListenerManagersHash.ops = nsnull;
+
+      PL_DHashTableFinish(&sRangeListsHash);
+      sRangeListsHash.ops = nsnull;
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -793,7 +941,13 @@ nsGenericElement::Init(nsINodeInfo *aNodeInfo)
   mNodeInfo = aNodeInfo;
   NS_ADDREF(mNodeInfo);
 
-  return NS_OK;
+  nsresult rv = NS_OK;
+
+  if (!sRangeListsHash.ops) {
+    rv = InitHashes();
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -833,24 +987,21 @@ nsGenericElement::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
 {
-  nsresult res = NS_OK;
+  if (mParent) {
+    return CallQueryInterface(mParent, aParentNode);
+  }
 
-  if (nsnull != mParent) {
-    res = mParent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aParentNode);
-    NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
-  }
-  else if (nsnull == mDocument) {
-    *aParentNode = nsnull;
-  }
-  else {
+  if (mDocument) {
     // If we don't have a parent, but we're in the document, we must
     // be the root node of the document. The DOM says that the root
     // is the document.
-    res = mDocument->QueryInterface(NS_GET_IID(nsIDOMNode),
-                                    (void**)aParentNode);
+
+    return CallQueryInterface(mDocument, aParentNode);
   }
 
-  return res;
+  *aParentNode = nsnull;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -859,14 +1010,14 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
   nsIContent* sibling = nsnull;
   nsresult result = NS_OK;
 
-  if (nsnull != mParent) {
+  if (mParent) {
     PRInt32 pos;
     mParent->IndexOf(this, pos);
     if (pos > 0 ) {
       mParent->ChildAt(--pos, sibling);
     }
   }
-  else if (nsnull != mDocument) {
+  else if (mDocument) {
     // Nodes that are just below the document (their parent is the
     // document) need to go to the document to find their next sibling.
     PRInt32 pos;
@@ -876,7 +1027,7 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
     }
   }
 
-  if (nsnull != sibling) {
+  if (sibling) {
     result = sibling->QueryInterface(NS_GET_IID(nsIDOMNode),
                                      (void**)aPrevSibling);
     NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
@@ -895,14 +1046,14 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
   nsIContent* sibling = nsnull;
   nsresult result = NS_OK;
 
-  if (nsnull != mParent) {
+  if (mParent) {
     PRInt32 pos;
     mParent->IndexOf(this, pos);
     if (pos > -1 ) {
       mParent->ChildAt(++pos, sibling);
     }
   }
-  else if (nsnull != mDocument) {
+  else if (mDocument) {
     // Nodes that are just below the document (their parent is the
     // document) need to go to the document to find their next sibling.
     PRInt32 pos;
@@ -912,7 +1063,7 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
     }
   }
 
-  if (nsnull != sibling) {
+  if (sibling) {
     result = sibling->QueryInterface(NS_GET_IID(nsIDOMNode),
                                      (void**)aNextSibling);
     NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
@@ -994,30 +1145,45 @@ nsGenericElement::InternalIsSupported(const nsAString& aFeature,
   *aReturn = PR_FALSE;
   nsAutoString feature(aFeature);
 
-  if (feature.Equals(NS_LITERAL_STRING("XML"), nsCaseInsensitiveStringComparator()) ||
-      feature.Equals(NS_LITERAL_STRING("HTML"), nsCaseInsensitiveStringComparator())) {
+  if (feature.Equals(NS_LITERAL_STRING("XML"),
+                     nsCaseInsensitiveStringComparator()) ||
+      feature.Equals(NS_LITERAL_STRING("HTML"),
+                     nsCaseInsensitiveStringComparator())) {
     if (aVersion.IsEmpty() ||
         aVersion.Equals(NS_LITERAL_STRING("1.0")) ||
         aVersion.Equals(NS_LITERAL_STRING("2.0"))) {
       *aReturn = PR_TRUE;
     }
-  } else if (feature.Equals(NS_LITERAL_STRING("Views"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("StyleSheets"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("Core"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("CSS"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("CSS2"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("Events"), nsCaseInsensitiveStringComparator()) ||
-//           feature.Equals(NS_LITERAL_STRING("UIEvents"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("MouseEvents"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("MouseScrollEvents"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("HTMLEvents"), nsCaseInsensitiveStringComparator()) ||
-             feature.Equals(NS_LITERAL_STRING("Range"), nsCaseInsensitiveStringComparator())) {
+  } else if (feature.Equals(NS_LITERAL_STRING("Views"),
+                            nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("StyleSheets"),
+                            nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("Core"),
+                            nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("CSS"),
+                            nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("CSS2"),
+                            nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("Events"),
+                            nsCaseInsensitiveStringComparator()) ||
+//           feature.Equals(NS_LITERAL_STRING("UIEvents"),
+//                          nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("MouseEvents"),
+                            nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("MouseScrollEvents"),
+                            nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("HTMLEvents"),
+                            nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("Range"),
+                            nsCaseInsensitiveStringComparator())) {
     if (aVersion.IsEmpty() || aVersion.Equals(NS_LITERAL_STRING("2.0"))) {
       *aReturn = PR_TRUE;
     }
   } else if ((!gCheckedForXPathDOM || gHaveXPathDOM) &&
-             feature.Equals(NS_LITERAL_STRING("XPath"), nsCaseInsensitiveStringComparator()) &&
-             (aVersion.IsEmpty() || aVersion.Equals(NS_LITERAL_STRING("3.0")))) {
+             feature.Equals(NS_LITERAL_STRING("XPath"),
+                            nsCaseInsensitiveStringComparator()) &&
+             (aVersion.IsEmpty() ||
+              aVersion.Equals(NS_LITERAL_STRING("3.0")))) {
     if (!gCheckedForXPathDOM) {
       nsCOMPtr<nsIDOMXPathEvaluator> evaluator;
       evaluator = do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID);
@@ -1055,7 +1221,9 @@ NS_IMETHODIMP
 nsGenericElement::GetXMLBaseURI(nsIURI **aURI)
 {
   NS_ENSURE_ARG_POINTER(aURI);
-  aURI=nsnull;
+
+  *aURI = nsnull;
+
   return NS_OK;
 }
 
@@ -1067,23 +1235,21 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 
   if (nsnull == slots->mAttributeMap) {
     slots->mAttributeMap = new nsDOMAttributeMap(this);
-    if (nsnull == slots->mAttributeMap) {
+    if (!slots->mAttributeMap) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
     NS_ADDREF(slots->mAttributeMap);
   }
 
-  return slots->mAttributeMap->QueryInterface(NS_GET_IID(nsIDOMNamedNodeMap),
-                                              (void **)aAttributes);
+  return CallQueryInterface(slots->mAttributeMap, aAttributes);
 }
 
 NS_IMETHODIMP
 nsGenericElement::GetTagName(nsAString& aTagName)
 {
-  aTagName.Truncate();
-  if (mNodeInfo) {
-    mNodeInfo->GetName(aTagName);
-  }
+  mNodeInfo->GetName(aTagName);
+
   return NS_OK;
 }
 
@@ -1101,8 +1267,7 @@ nsGenericElement::GetAttribute(const nsAString& aName,
   ni->GetNamespaceID(nsid);
   ni->GetNameAtom(*getter_AddRefs(nameAtom));
 
-  nsresult rv = NS_STATIC_CAST(nsIContent *,
-                               this)->GetAttr(nsid, nameAtom, aReturn);
+  nsresult rv = GetAttr(nsid, nameAtom, aReturn);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE) {
     SetDOMStringToNull(aReturn);
@@ -1117,7 +1282,8 @@ nsGenericElement::SetAttribute(const nsAString& aName,
 {
   nsCOMPtr<nsINodeInfo> ni;
   NormalizeAttrString(aName, *getter_AddRefs(ni));
-  return NS_STATIC_CAST(nsIContent *, this)->SetAttr(ni, aValue, PR_TRUE);
+
+  return SetAttr(ni, aValue, PR_TRUE);
 }
 
 nsresult
@@ -1140,84 +1306,73 @@ nsresult
 nsGenericElement::GetAttributeNode(const nsAString& aName,
                                    nsIDOMAttr** aReturn)
 {
-  if (nsnull == aReturn) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIDOMNamedNodeMap* map;
-  nsresult result = GetAttributes(&map);
-
+  NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
-  if (NS_OK == result) {
-    nsIDOMNode* node;
-    result = map->GetNamedItem(aName, &node);
-    if ((NS_OK == result) && (nsnull != node)) {
-      result = node->QueryInterface(NS_GET_IID(nsIDOMAttr), (void **)aReturn);
-      NS_IF_RELEASE(node);
-    }
-    NS_RELEASE(map);
+
+  nsCOMPtr<nsIDOMNamedNodeMap> map;
+  nsresult rv = GetAttributes(getter_AddRefs(map));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> node;
+  rv = map->GetNamedItem(aName, getter_AddRefs(node));
+
+  if (NS_SUCCEEDED(rv) && node) {
+    rv = CallQueryInterface(node, aReturn);
   }
 
-  return result;
+  return rv;
 }
 
 nsresult
 nsGenericElement::SetAttributeNode(nsIDOMAttr* aAttribute,
                                    nsIDOMAttr** aReturn)
 {
-  if ((nsnull == aReturn) || (nsnull == aAttribute))  {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIDOMNamedNodeMap* map;
-  nsresult result = GetAttributes(&map);
+  NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ENSURE_ARG_POINTER(aAttribute);
 
   *aReturn = nsnull;
-  if (NS_OK == result) {
-    nsIDOMNode *node, *returnNode;
-    result = aAttribute->QueryInterface(NS_GET_IID(nsIDOMNode),
-                                        (void **)&node);
-    if (NS_OK == result) {
-      result = map->SetNamedItem(node, &returnNode);
-      if ((NS_OK == result) && (nsnull != returnNode)) {
-        result = returnNode->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                            (void **)aReturn);
-        NS_IF_RELEASE(returnNode);
-      }
-      NS_RELEASE(node);
-    }
-    NS_RELEASE(map);
+
+  nsCOMPtr<nsIDOMNamedNodeMap> map;
+  nsresult rv = GetAttributes(getter_AddRefs(map));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> returnNode;
+  rv = map->SetNamedItem(aAttribute, getter_AddRefs(returnNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (returnNode) {
+    rv = CallQueryInterface(returnNode, aReturn);
   }
 
-  return result;
+  return rv;
 }
 
 nsresult
 nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
                                       nsIDOMAttr** aReturn)
 {
-  if ((nsnull == aReturn) || (nsnull == aAttribute))  {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIDOMNamedNodeMap* map;
-  nsresult result = GetAttributes(&map);
+  NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ENSURE_ARG_POINTER(aAttribute);
 
   *aReturn = nsnull;
-  if (NS_OK == result) {
-    nsAutoString name;
 
-    result = aAttribute->GetName(name);
-    if (NS_OK == result) {
-      nsIDOMNode* node;
-      result = map->RemoveNamedItem(name, &node);
-      if ((NS_OK == result) && (nsnull != node)) {
-        result = node->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                      (void **)aReturn);
-        NS_RELEASE(node);
-      }
+  nsCOMPtr<nsIDOMNamedNodeMap> map;
+  nsresult rv = GetAttributes(getter_AddRefs(map));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString name;
+
+  rv = aAttribute->GetName(name);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDOMNode> node;
+    rv = map->RemoveNamedItem(name, getter_AddRefs(node));
+
+    if (NS_SUCCEEDED(rv) && node) {
+      rv = CallQueryInterface(node, aReturn);
     }
-    NS_RELEASE(map);
   }
 
-  return result;
+  return rv;
 }
 
 nsresult
@@ -1227,6 +1382,7 @@ nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
   nsCOMPtr<nsIAtom> nameAtom;
 
   nameAtom = dont_AddRef(NS_NewAtom(aTagname));
+  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIContentList> list;
   NS_GetContentList(mDocument, nameAtom, kNameSpaceID_Unknown, this,
@@ -1261,10 +1417,11 @@ nsGenericElement::GetAttributeNS(const nsAString& aNamespaceURI,
     // Unkonwn namespace means no attr...
 
     aReturn.Truncate();
+
     return NS_OK;
   }
 
-  NS_STATIC_CAST(nsIContent *, this)->GetAttr(nsid, name, aReturn);
+  GetAttr(nsid, name, aReturn);
 
   return NS_OK;
 }
@@ -1283,7 +1440,7 @@ nsGenericElement::SetAttributeNS(const nsAString& aNamespaceURI,
                                    *getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_STATIC_CAST(nsIContent *, this)->SetAttr(ni, aValue, PR_TRUE);
+  return SetAttr(ni, aValue, PR_TRUE);
 }
 
 nsresult
@@ -1322,50 +1479,44 @@ nsGenericElement::GetAttributeNodeNS(const nsAString& aNamespaceURI,
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
-  nsIDOMNamedNodeMap* map;
-  nsresult result = GetAttributes(&map);
-
   *aReturn = nsnull;
-  if (NS_OK == result) {
-    nsIDOMNode* node;
-    result = map->GetNamedItemNS(aNamespaceURI, aLocalName, &node);
-    if ((NS_OK == result) && (nsnull != node)) {
-      result = node->QueryInterface(NS_GET_IID(nsIDOMAttr), (void **)aReturn);
-      NS_IF_RELEASE(node);
-    }
-    NS_RELEASE(map);
+
+  nsCOMPtr<nsIDOMNamedNodeMap> map;
+  nsresult rv = GetAttributes(getter_AddRefs(map));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> node;
+  rv = map->GetNamedItemNS(aNamespaceURI, aLocalName, getter_AddRefs(node));
+
+  if (NS_SUCCEEDED(rv) && node) {
+    rv = CallQueryInterface(node, aReturn);
   }
 
-  return result;
+  return rv;
 }
 
 nsresult
 nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
                                      nsIDOMAttr** aReturn)
 {
-  if ((nsnull == aReturn) || (nsnull == aNewAttr))  {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIDOMNamedNodeMap* map;
-  nsresult result = GetAttributes(&map);
+  NS_ENSURE_ARG_POINTER(aReturn);
+  NS_ENSURE_ARG_POINTER(aNewAttr);
 
   *aReturn = nsnull;
-  if (NS_OK == result) {
-    nsIDOMNode *node, *returnNode;
-    result = aNewAttr->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&node);
-    if (NS_OK == result) {
-      result = map->SetNamedItemNS(node, &returnNode);
-      if ((NS_OK == result) && (nsnull != returnNode)) {
-        result = returnNode->QueryInterface(NS_GET_IID(nsIDOMAttr),
-                                            (void **)aReturn);
-        NS_IF_RELEASE(returnNode);
-      }
-      NS_RELEASE(node);
-    }
-    NS_RELEASE(map);
+
+  nsCOMPtr<nsIDOMNamedNodeMap> map;
+  nsresult rv = GetAttributes(getter_AddRefs(map));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> returnNode;
+  rv = map->SetNamedItemNS(aNewAttr, getter_AddRefs(returnNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (returnNode) {
+    rv = CallQueryInterface(returnNode, aReturn);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
@@ -1374,6 +1525,8 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                          nsIDOMNodeList** aReturn)
 {
   nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aLocalName)));
+  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
+
   PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
   nsCOMPtr<nsIContentList> list;
@@ -1449,10 +1602,12 @@ nsGenericElement::HasAttributeNS(const nsAString& aNamespaceURI,
     // Unkonwn namespace means no attr...
 
     *aReturn = PR_FALSE;
+
     return NS_OK;
   }
 
   *aReturn = HasAttr(nsid, name);
+
   return NS_OK;
 }
 
@@ -1554,8 +1709,9 @@ nsGenericElement::Normalize()
 nsresult
 nsGenericElement::GetDocument(nsIDocument*& aResult) const
 {
-  NS_IF_ADDREF(mDocument);
   aResult = mDocument;
+  NS_IF_ADDREF(aResult);
+
   return NS_OK;
 }
 
@@ -1565,14 +1721,15 @@ nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent,
                                           nsIDocument* aDocument,
                                           PRBool aCompileEventHandlers)
 {
+  nsCOMPtr<nsIContent> child;
   PRInt32 i, n;
   aContent->ChildCount(n);
+
   for (i = 0; i < n; i++) {
-    nsIContent* child;
-    aContent->ChildAt(i, child);
-    if (nsnull != child) {
+    aContent->ChildAt(i, *getter_AddRefs(child));
+
+    if (child) {
       child->SetDocument(aDocument, PR_TRUE, aCompileEventHandlers);
-      NS_RELEASE(child);
     }
   }
 }
@@ -1680,7 +1837,7 @@ nsresult
 nsGenericElement::GetNodeInfo(nsINodeInfo*& aResult) const
 {
   aResult = mNodeInfo;
-  NS_IF_ADDREF(aResult);
+  NS_ADDREF(aResult);
 
   return NS_OK;
 }
@@ -1760,7 +1917,8 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
         return ret;
       }
       nsAutoString empty;
-      if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent)))
+      if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent,
+                                                       empty, aDOMEvent)))
         return ret;
     }
 
@@ -1793,7 +1951,8 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
       aEvent->message != NS_SCROLL_EVENT) {
     //Initiate capturing phase.  Special case first call to document
     if (parent) {
-      parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+      parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                             NS_EVENT_FLAG_CAPTURE, aEventStatus);
     }
     else if (mDocument != nsnull) {
         ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
@@ -1809,22 +1968,50 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
       privateEvent->SetTarget(oldTarget);
   }
 
+  // Weak pointer, which is fine since the hash table owns the
+  // listener manager
+  nsIEventListenerManager *lm = nsnull;
+
+  if (HasEventListenerManager()) {
+    EventListenerManagerMapEntry *entry =
+      NS_STATIC_CAST(EventListenerManagerMapEntry *,
+                     PL_DHashTableOperate(&sEventListenerManagersHash, this,
+                                          PL_DHASH_LOOKUP));
+
+    if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+      NS_ERROR("Huh, our bit says we have an event listener manager, but "
+               "there's nothing in the hash!?!!");
+
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    lm = entry->mListenerManager;
+  }
+
   //Local handling stage
-  if (mDOMSlots && mDOMSlots->mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
-      !(NS_EVENT_FLAG_BUBBLE & aFlags && NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags)
+  if (lm && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
+      !(NS_EVENT_FLAG_BUBBLE & aFlags &&
+        NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags)
       && !(aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH)) {
     aEvent->flags |= aFlags;
-    nsCOMPtr<nsIDOMEventTarget> curTarg(do_QueryInterface(NS_STATIC_CAST(nsIHTMLContent *, this)));
-    mDOMSlots->mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, curTarg, aFlags, aEventStatus);
+
+    nsCOMPtr<nsIDOMEventTarget> curTarg =
+      do_QueryInterface(NS_STATIC_CAST(nsIHTMLContent *, this));
+
+    lm->HandleEvent(aPresContext, aEvent, aDOMEvent, curTarg, aFlags,
+                    aEventStatus);
+
     aEvent->flags &= ~aFlags;
-    // We don't want scroll events to bubble further after it has been 
+
+    // We don't want scroll events to bubble further after it has been
     // handled at the local stage.
     if (aEvent->message == NS_SCROLL_EVENT && aFlags == NS_EVENT_FLAG_BUBBLE)
       aEvent->flags = NS_EVENT_FLAG_CANT_BUBBLE;
   }
 
   if (retarget) {
-    // The event originated beneath us, and we need to perform a retargeting.
+    // The event originated beneath us, and we need to perform a
+    // retargeting.
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
     if (privateEvent) {
       nsCOMPtr<nsIDOMEventTarget> parentTarget(do_QueryInterface(mParent));
@@ -1836,26 +2023,27 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   if (NS_EVENT_FLAG_CAPTURE != aFlags && mDocument &&
       aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_SCRIPT_LOAD &&
       aEvent->message != NS_IMAGE_ERROR && aEvent->message != NS_IMAGE_LOAD &&
-      !(aEvent->message == NS_SCROLL_EVENT && aEvent->flags == NS_EVENT_FLAG_CANT_BUBBLE)) {
+      !(aEvent->message == NS_SCROLL_EVENT &&
+        aEvent->flags == NS_EVENT_FLAG_CANT_BUBBLE)) {
     if (parent) {
-      /*
-       * If there's a parent we pass the event to the parent...
-       */
+      // If there's a parent we pass the event to the parent...
+
       ret = parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                    NS_EVENT_FLAG_BUBBLE, aEventStatus);
     } else {
-      /*
-       * If there's no parent but there is a document (i.e. this is the
-       * root node) we pass the event to the document...
-       */
+      // If there's no parent but there is a document (i.e. this is
+      // the root node) we pass the event to the document...
+
       ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                       NS_EVENT_FLAG_BUBBLE, aEventStatus);
     }
   }
 
   if (retarget) {
-    // The event originated beneath us, and we performed a retargeting.
-    // We need to restore the original target of the event.
+    // The event originated beneath us, and we performed a
+    // retargeting.  We need to restore the original target of the
+    // event.
+
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
     if (privateEvent)
       privateEvent->SetTarget(oldTarget);
@@ -1863,8 +2051,9 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event,
-    // release here.  If externalDOMEvent is set the event was passed in
-    // and we don't own it
+    // release here.  If externalDOMEvent is set the event was passed
+    // in and we don't own it
+
     if (*aDOMEvent && !externalDOMEvent) {
       nsrefcnt rc;
       NS_RELEASE2(*aDOMEvent, rc);
@@ -1873,12 +2062,15 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
         // still has a ref to the DOM Event but the internal data
         // hasn't been malloc'd.  Force a copy of the data here so the
         // DOM Event is still valid.
-        nsIPrivateDOMEvent *privateEvent;
-        if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&privateEvent)) {
+
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
+          do_QueryInterface(*aDOMEvent);
+
+        if (privateEvent) {
           privateEvent->DuplicatePrivateData();
-          NS_RELEASE(privateEvent);
         }
       }
+
       aDOMEvent = nsnull;
     }
   }
@@ -1897,7 +2089,15 @@ nsGenericElement::BaseSizeOf(nsISizeOfHandler *aSizer) const
 NS_IMETHODIMP
 nsGenericElement::GetContentID(PRUint32* aID)
 {
-  *aID = mContentID;
+  nsDOMSlots *slots = GetExistingDOMSlots();
+
+  if (slots) {
+    *aID = slots->mContentID;
+  } else {
+    PtrBits flags = GetFlags();
+
+    *aID = flags >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET;
+  }
 
   return NS_OK;
 }
@@ -1905,21 +2105,19 @@ nsGenericElement::GetContentID(PRUint32* aID)
 NS_IMETHODIMP
 nsGenericElement::SetContentID(PRUint32 aID)
 {
-  mContentID = aID;
+  if (aID > GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE ||
+      HasDOMSlots()) {
+    nsDOMSlots *slots = GetDOMSlots();
 
-  return NS_OK;
-}
+    if (!slots) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-NS_IMETHODIMP
-nsGenericElement::SetContainingNameSpace(nsINameSpace* aNameSpace)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
-{
-  aNameSpace = nsnull;
+    slots->mContentID = aID;
+  } else {
+    UnsetFlags(GENERIC_ELEMENT_CONTENT_ID_MASK);
+    SetFlags(aID << GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET);
+  }
 
   return NS_OK;
 }
@@ -1964,7 +2162,8 @@ nsGenericElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType, 
+nsGenericElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                           PRInt32 aModType,
                                            PRInt32& aHint) const
 {
   aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
@@ -2030,79 +2229,139 @@ nsGenericElement::GetBaseTarget(nsAString& aBaseTarget) const
 nsresult
 nsGenericElement::RangeAdd(nsIDOMRange* aRange)
 {
-  if (!mDOMSlots)
-    GetDOMSlots();
+  if (!sRangeListsHash.ops) {
+    // We've already been shut down, don't bother adding a range...
 
-  // lazy allocation of range list
-  if (!mDOMSlots->mRangeList) {
-    mDOMSlots->mRangeList = new nsAutoVoidArray();
+    return NS_OK;
   }
-  if (!mDOMSlots->mRangeList) {
+
+  RangeListMapEntry *entry =
+    NS_STATIC_CAST(RangeListMapEntry *,
+                   PL_DHashTableOperate(&sRangeListsHash, this, PL_DHASH_ADD));
+
+  if (!entry) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // Make sure we don't add a range that is already
-  // in the list!
-  PRInt32 i = mDOMSlots->mRangeList->IndexOf(aRange);
+  // lazy allocation of range list
+  if (!entry->mRangeList) {
+    NS_ASSERTION(!(GetFlags() & GENERIC_ELEMENT_HAS_RANGELIST),
+                 "Huh, nsGenericElement flags don't reflect reality!!!");
+
+    entry->mRangeList = new nsAutoVoidArray();
+
+    if (!entry->mRangeList) {
+      PL_DHashTableRawRemove(&sRangeListsHash, entry);
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    SetFlags(GENERIC_ELEMENT_HAS_RANGELIST);
+  }
+
+  // Make sure we don't add a range that is already in the list!
+  PRInt32 i = entry->mRangeList->IndexOf(aRange);
+
   if (i >= 0) {
-    // Range is already in the list, so there
-    // is nothing to do!
+    // Range is already in the list, so there is nothing to do!
+
     return NS_OK;
   }
 
-  // dont need to addref - this call is made by the range object itself
-  PRBool rv = mDOMSlots->mRangeList->AppendElement(aRange);
-  if (rv)
-    return NS_OK;
+  // dont need to addref - this call is made by the range object
+  // itself
+  PRBool rv = entry->mRangeList->AppendElement(aRange);
+  if (!rv) {
+    if (entry->mRangeList->Count() == 0) {
+      // Fresh entry, remove it from the hash...
 
-  return NS_ERROR_FAILURE;
+      PL_DHashTableRawRemove(&sRangeListsHash, entry);
+    }
+
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
 }
 
 
 nsresult
 nsGenericElement::RangeRemove(nsIDOMRange* aRange)
 {
-  if (mDOMSlots && mDOMSlots->mRangeList) {
-    // dont need to release - this call is made by the range object itself
-    PRBool rv = mDOMSlots->mRangeList->RemoveElement(aRange);
-    if (rv) {
-      if (mDOMSlots->mRangeList->Count() == 0) {
-        delete mDOMSlots->mRangeList;
-        mDOMSlots->mRangeList = nsnull;
-        MaybeClearDOMSlots();
-      }
-      return NS_OK;
-    }
+  if (!HasRangeList()) {
+    return NS_ERROR_UNEXPECTED;
   }
-  return NS_ERROR_FAILURE;
+
+  RangeListMapEntry *entry =
+    NS_STATIC_CAST(RangeListMapEntry *,
+                   PL_DHashTableOperate(&sRangeListsHash, this,
+                                        PL_DHASH_LOOKUP));
+
+  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+    NS_ERROR("Huh, our bit says we have a range list, but there's nothing "
+             "in the hash!?!!");
+
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!entry->mRangeList) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // dont need to release - this call is made by the range object itself
+  PRBool rv = entry->mRangeList->RemoveElement(aRange);
+  if (!rv) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (entry->mRangeList->Count() == 0) {
+    PL_DHashTableRawRemove(&sRangeListsHash, entry);
+
+    UnsetFlags(GENERIC_ELEMENT_HAS_RANGELIST);
+  }
+
+  return NS_OK;
 }
 
 
 nsresult
 nsGenericElement::GetRangeList(nsVoidArray*& aResult) const
 {
-  if (mDOMSlots && mDOMSlots->mRangeList) {
-    aResult = mDOMSlots->mRangeList;
+  aResult = nsnull;
+
+  if (!HasRangeList()) {
+    return NS_OK;
   }
-  else {
-    aResult = nsnull;
+
+  RangeListMapEntry *entry =
+    NS_STATIC_CAST(RangeListMapEntry *,
+                   PL_DHashTableOperate(&sRangeListsHash, this,
+                                        PL_DHASH_LOOKUP));
+
+  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+    NS_ERROR("Huh, our bit says we have a range list, but there's nothing "
+             "in the hash!?!!");
+
+    return NS_ERROR_UNEXPECTED;
   }
+
+  aResult = entry->mRangeList;
+
   return NS_OK;
 }
 
 nsresult
 nsGenericElement::SetFocus(nsIPresContext* aPresContext)
 {
-  nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == NS_STATIC_CAST(nsIContent *, this)->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return NS_OK;
   }
  
-  nsIEventStateManager* esm;
-  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
-    
+  nsCOMPtr<nsIEventStateManager> esm;
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+
+  if (esm) {
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-    NS_RELEASE(esm);
   }
   
   return NS_OK;
@@ -2117,18 +2376,29 @@ nsGenericElement::RemoveFocus(nsIPresContext* aPresContext)
 nsresult
 nsGenericElement::GetBindingParent(nsIContent** aContent)
 {
-  *aContent = mDOMSlots ? mDOMSlots->mBindingParent : nsnull;
-  NS_IF_ADDREF(*aContent);
+  nsDOMSlots *slots = GetExistingDOMSlots();
+
+  if (slots) {
+    *aContent = slots->mBindingParent;
+
+    NS_IF_ADDREF(*aContent);
+  } else {
+    *aContent = nsnull;
+  }
+
   return NS_OK;
 }
 
 nsresult
 nsGenericElement::SetBindingParent(nsIContent* aParent)
 {
-  if (!mDOMSlots)
-    GetDOMSlots();
+  nsDOMSlots *slots = GetDOMSlots();
 
-  mDOMSlots->mBindingParent = aParent; // Weak, so no addref happens.
+  if (!slots) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  slots->mBindingParent = aParent; // Weak, so no addref happens.
 
   if (aParent) {
     PRInt32 count;
@@ -2152,65 +2422,46 @@ nsGenericElement::IsContentOfType(PRUint32 aFlags)
 //----------------------------------------------------------------------
 
 nsresult
-nsGenericElement::RenderFrame(nsIPresContext* aPresContext)
-{
-  nsPoint offset;
-  nsRect bounds;
-
-  // Trigger damage repairs for each frame that maps the given content
-  PRInt32 i, n;
-  n = mDocument->GetNumberOfShells();
-  for (i = 0; i < n; i++) {
-    nsCOMPtr<nsIPresShell> shell;
-    mDocument->GetShellAt(i, getter_AddRefs(shell));
-    nsIFrame* frame;
-    shell->GetPrimaryFrameFor(this, &frame);
-    while (nsnull != frame) {
-      nsIViewManager* vm;
-      nsIView* view;
-
-      // Determine damaged area and tell view manager to redraw it
-      frame->GetRect(bounds);
-      bounds.x = bounds.y = 0;
-
-      // XXX We should tell the frame the damage area and let it invalidate
-      // itself. Add some API calls to nsIFrame to allow a caller to invalidate
-      // parts of the frame...
-      frame->GetOffsetFromView(aPresContext, offset, &view);
-      view->GetViewManager(vm);
-      bounds.x += offset.x;
-      bounds.y += offset.y;
-
-      vm->UpdateView(view, bounds, NS_VMREFRESH_IMMEDIATE);
-      NS_RELEASE(vm);
-
-      // If frame has a next-in-flow, repaint it too
-      frame->GetNextInFlow(&frame);
-    }
-  }
-
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsresult
 nsGenericElement::GetListenerManager(nsIEventListenerManager** aResult)
 {
-  nsDOMSlots *slots = GetDOMSlots();
+  *aResult = nsnull;
 
-  if (nsnull != slots->mListenerManager) {
-    NS_ADDREF(slots->mListenerManager);
-    *aResult = slots->mListenerManager;
+  if (!sEventListenerManagersHash.ops) {
+    // We''re already shut down, don't bother creating a event
+    // listener manager.
+
     return NS_OK;
   }
-  nsresult rv = NS_NewEventListenerManager(aResult);
-  if (NS_OK == rv) {
-    slots->mListenerManager = *aResult;
-    NS_ADDREF(slots->mListenerManager);
-    slots->mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIHTMLContent *, this));
+
+  EventListenerManagerMapEntry *entry =
+    NS_STATIC_CAST(EventListenerManagerMapEntry *,
+                   PL_DHashTableOperate(&sEventListenerManagersHash, this,
+                                        PL_DHASH_ADD));
+
+  if (!entry) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  return rv;
+
+  if (!entry->mListenerManager) {
+    nsresult rv =
+      NS_NewEventListenerManager(getter_AddRefs(entry->mListenerManager));
+
+    if (NS_FAILED(rv)) {
+      PL_DHashTableRawRemove(&sEventListenerManagersHash, entry);
+
+      return rv;
+    }
+
+    entry->mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIHTMLContent *,
+                                                              this));
+
+    SetFlags(GENERIC_ELEMENT_HAS_LISTENERMANAGER);
+  }
+
+  *aResult = entry->mListenerManager;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
