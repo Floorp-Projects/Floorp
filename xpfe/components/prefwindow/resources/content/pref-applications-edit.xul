@@ -133,80 +133,80 @@
       doEnabling();
     }
 
-var gDS = null;
-function onOK()
-{
-  const mimeTypes = 66638;
-  var fileLocator = Components.classes["component://netscape/filelocator"].getService();
-  if (fileLocator)
-    fileLocator = fileLocator.QueryInterface(Components.interfaces.nsIFileLocator);
-  var file = fileLocator.GetFileLocation(mimeTypes);
-  if (file)
-    file = file.QueryInterface(Components.interfaces.nsIFileSpec);
-  gDS = gRDF.GetDataSource(file.URLString);
-  if (gDS)
-    gDS = gDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
-
-  // figure out if this mime type already exists. 
-  if (gMIMEField.value != gOldMIME) {
-    var exists = mimeHandlerExists(gMIMEField.value);
-    if (exists) {
-      var titleMsg = gBundle.GetStringFromName("handlerExistsTitle");
-      var dialogMsg = gBundle.GetStringFromName("handlerExists");
-      dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
-      var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
-                                                                "nsICommonDialogs");
-      var replace = commonDialogService.Confirm(window, titleMsg, dialogMsg);
-      if (!replace)
-        window.close();
+    var gDS = null;
+    function onOK()
+    {
+      const mimeTypes = 66638;
+      var fileLocator = Components.classes["component://netscape/filelocator"].getService();
+      if (fileLocator)
+        fileLocator = fileLocator.QueryInterface(Components.interfaces.nsIFileLocator);
+      var file = fileLocator.GetFileLocation(mimeTypes);
+      if (file)
+        file = file.QueryInterface(Components.interfaces.nsIFileSpec);
+      gDS = gRDF.GetDataSource(file.URLString);
+      if (gDS)
+        gDS = gDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    
+      // figure out if this mime type already exists. 
+      if (gMIMEField.value != gOldMIME) {
+        var exists = mimeHandlerExists(gMIMEField.value);
+        if (exists) {
+          var titleMsg = gBundle.GetStringFromName("handlerExistsTitle");
+          var dialogMsg = gBundle.GetStringFromName("handlerExists");
+          dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
+          var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
+                                                                    "nsICommonDialogs");
+          var replace = commonDialogService.Confirm(window, titleMsg, dialogMsg);
+          if (!replace)
+            window.close();
+        }
+      }
+      
+      // now save the information
+      var handlerInfo = new HandlerOverride(MIME_URI(gMIMEField.value));
+      handlerInfo.mUpdateMode = mimeHandlerExists(gMIMEField.value);
+      handlerInfo.mimeType = gMIMEField.value;
+    
+      // other info we need to set (not reflected in UI)
+      if (gHandlerGroup.data == "2") {
+        handlerInfo.appPath = gAppPath.value;
+        handlerInfo.setHandlerProcedure("saveToDisk", "false");
+        handlerInfo.setHandlerProcedure("handleInternal", "false");
+      }
+      else if (gHandlerGroup.data == "1")
+        handlerInfo.saveToDisk = true;
+      else
+        handlerInfo.handleInternal = true;
+    
+      handlerInfo.alwaysAsk = gAskBeforeOpen.checked;
+    
+      // need to make the following dynamic to track changes. otherwise the 
+      // app pretty name remains the same.
+      // better still, find a way to XP dynamically discover the pretty name of the app
+      // from the OS. 
+      var file = Components.classes["component://mozilla/file/local"].createInstance();
+      if (file)
+        file = file.QueryInterface(Components.interfaces.nsILocalFile);
+      if (file) {
+        try {
+          file.initWithPath(gAppPath.value);
+          handlerInfo.appDisplayName = file.unicodeLeafName;
+        }
+        catch(e) {
+          handlerInfo.appDisplayName = gAppPath.value;    
+        }
+      }
+      // do the rest of the work (ugly yes, but it works)
+      handlerInfo.buildLinks();
+      
+      // flush the ds to disk.   
+      gDS = gDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+      if (gDS)
+        gDS.Flush();
+      
+      window.opener.gUpdateTypeRV = true;
+      window.close();  
     }
-  }
-  
-  // now save the information
-  var handlerInfo = new HandlerOverride(MIME_URI(gMIMEField.value));
-  handlerInfo.mUpdateMode = mimeHandlerExists(gMIMEField.value);
-  handlerInfo.mimeType = gMIMEField.value;
-
-  // other info we need to set (not reflected in UI)
-  if (gHandlerGroup.data == "2") {
-    handlerInfo.appPath = gAppPath.value;
-    handlerInfo.setHandlerProcedure("saveToDisk", "false");
-    handlerInfo.setHandlerProcedure("handleInternal", "false");
-  }
-  else if (gHandlerGroup.data == "1")
-    handlerInfo.saveToDisk = true;
-  else
-    handlerInfo.handleInternal = true;
-
-  handlerInfo.alwaysAsk = gAskBeforeOpen.checked;
-
-  // need to make the following dynamic to track changes. otherwise the 
-  // app pretty name remains the same.
-  // better still, find a way to XP dynamically discover the pretty name of the app
-  // from the OS. 
-  var file = Components.classes["component://mozilla/file/local"].createInstance();
-  if (file)
-    file = file.QueryInterface(Components.interfaces.nsILocalFile);
-  if (file) {
-    try {
-      file.initWithPath(gAppPath.value);
-      handlerInfo.appDisplayName = file.unicodeLeafName;
-    }
-    catch(e) {
-      handlerInfo.appDisplayName = gAppPath.value;    
-    }
-  }
-  // do the rest of the work (ugly yes, but it works)
-  handlerInfo.buildLinks();
-  
-  // flush the ds to disk.   
-  gDS = gDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-  if (gDS)
-    gDS.Flush();
-  
-  window.opener.gUpdateTypeRV = true;
-  window.close();  
-}
   ]]>
   </script>
   
