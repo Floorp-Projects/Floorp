@@ -319,9 +319,13 @@ nsresult nsCopySupport::IsPlainTextContext(nsISelection *aSel, nsIDocument *aDoc
     }
   }
   
-  // also consider ourselves in a text widget if we can't find an html document
+  // also consider ourselves in a text widget if we can't find an html
+  // document. Note that XHTML is not counted as HTML here, because we can't
+  // copy it properly (all the copy code for non-plaintext assumes using HTML
+  // serializers and parsers is OK, and those mess up XHTML).
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDoc);
-  if (!htmlDoc) *aIsPlainTextContext = PR_TRUE;
+  if (!htmlDoc || aDoc->IsCaseSensitive())
+    *aIsPlainTextContext = PR_TRUE;
 
   return NS_OK;
 }
