@@ -379,13 +379,16 @@ int IPC_SendMsg(ipcClient *client, ipcMessage *msg)
         IPC_SendMsg(&clients[i], msg);
     }
     else {
-        client->EnqueueOutboundMsg(msg);
-        //
-        // since this client's Process method may have already been 
-        // called, we need to explicitly set the PR_POLL_WRITE flag.
-        //
-        int client_index = client - clients;
-        poll_fds[client_index].in_flags |= PR_POLL_WRITE;
+        if (client->EnqueueOutboundMsg(msg)) {
+            //
+            // the message was successfully enqueued...
+            //
+            // since this client's Process method may have already been 
+            // called, we need to explicitly set the PR_POLL_WRITE flag.
+            //
+            int client_index = client - clients;
+            poll_fds[client_index].in_flags |= PR_POLL_WRITE;
+        }
     }
     return 0;
 }
