@@ -7,17 +7,13 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgIncomingServer.h" /* interface nsIMsgIncomingServer */
-#include "nsISupportsArray.h" /* interface nsISupportsArray */
 #include "nsIMsgSignature.h" /* interface nsIMsgSignature */
-#include "nsICollection.h" /* interface nsICollection */
 #include "nsIMsgIdentity.h" /* interface nsIMsgIdentity */
 #include "nsIMsgVCard.h" /* interface nsIMsgVCard */
 #include "nsrootidl.h" /* interface nsrootidl */
-#include "nsIEnumerator.h" /* interface nsIEnumerator */
+class nsISupportsArray; /* forward decl */
+#include "nsISupportsArray.h"
 
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 
 /* starting interface:    nsIMsgAccount */
 
@@ -51,11 +47,6 @@ class nsIMsgAccount : public nsISupports {
 
   /* void removeIdentity (in nsIMsgIdentity identity); */
   NS_IMETHOD removeIdentity(nsIMsgIdentity *identity) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgAccount *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgAccount_h__ */

@@ -10,10 +10,6 @@
 #include "nsIMsgVCard.h" /* interface nsIMsgVCard */
 #include "nsrootidl.h" /* interface nsrootidl */
 
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-
 /* starting interface:    nsIMsgIdentity */
 
 /* {D3B4A420-D5AC-11d2-806A-006008128C4E} */
@@ -81,11 +77,6 @@ class nsIMsgIdentity : public nsISupports {
   /* attribute long wrapColumn; */
   NS_IMETHOD GetWrapColumn(PRInt32 *aWrapColumn) = 0;
   NS_IMETHOD SetWrapColumn(PRInt32 aWrapColumn) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgIdentity *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgIdentity_h__ */

@@ -19,13 +19,18 @@
 #include "nsISupports.idl"
 #include "nsIMsgIncomingServer.idl"
 #include "nsIMsgIdentity.idl"
-#include "nsISupportsArray.idl"
 
 /* an account consists of an incoming server and one or more
    outgoing identities
 */
 
-[object, uuid(da368bd0-e624-11d2-b7fc-00805f05ffa5)]
+interface nsISupportsArray;
+
+%{C++
+#include "nsISupportsArray.h"
+%}
+
+[scriptable, uuid(da368bd0-e624-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgAccount : nsISupports {
   
   /* internal key identifying itself */

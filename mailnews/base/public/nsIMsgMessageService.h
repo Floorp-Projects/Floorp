@@ -7,10 +7,6 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 class nsIURL; /* forward decl */
 class nsIUrlListener; /* forward decl */
 class nsIStreamListener; /* forward decl */
@@ -58,11 +54,6 @@ class nsIMsgMessageService : public nsISupports {
 
   /* void DisplayMessage (in string aMessageURI, in nsISupports aDisplayConsumer, in nsIUrlListener aUrlListener, out nsIURL aURL); */
   NS_IMETHOD DisplayMessage(const char *aMessageURI, nsISupports *aDisplayConsumer, nsIUrlListener *aUrlListener, nsIURL **aURL) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgMessageService *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgMessageService_h__ */

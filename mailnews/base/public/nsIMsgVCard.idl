@@ -19,7 +19,7 @@
 
 #include "nsISupports.idl"
 
-[object, uuid(e0e67ec0-e3df-11d2-b7fc-00805f05ffa5)]
+[scriptable, uuid(e0e67ec0-e3df-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgVCard : nsISupports {
 
 

@@ -18,7 +18,7 @@
 
 #include "nsISupports.idl"
 
-[uuid(14495572-E945-11d2-8A52-0060B0FC04D2)]
+[scriptable, uuid(14495572-E945-11d2-8A52-0060B0FC04D2)]
 
 /*  Use this for any object that wants to handle copying/moving messages to it */
 

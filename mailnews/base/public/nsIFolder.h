@@ -11,17 +11,13 @@
 #include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-
 /* starting interface:    nsIFolder */
 
-/* {361c89b0-c481-11d2-8614-000000000001} */
-#define NS_IFOLDER_IID_STR "361c89b0-c481-11d2-8614-000000000001"
+/* {75621650-0fce-11d3-8b49-006008948010} */
+#define NS_IFOLDER_IID_STR "75621650-0fce-11d3-8b49-006008948010"
 #define NS_IFOLDER_IID \
-  {0x361c89b0, 0xc481, 0x11d2, \
-    { 0x86, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}
+  {0x75621650, 0x0fce, 0x11d3, \
+    { 0x8b, 0x49, 0x00, 0x60, 0x08, 0x94, 0x80, 0x10 }}
 
 class nsIFolder : public nsICollection {
  public: 
@@ -55,10 +51,6 @@ class nsIFolder : public nsICollection {
 
   /* nsIFolder FindSubFolder (in string subFolderName); */
   NS_IMETHOD FindSubFolder(const char *subFolderName, nsIFolder **_retval) = 0;
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIFolder *priv);
-#endif
 };
 
 #endif /* __gen_nsIFolder_h__ */

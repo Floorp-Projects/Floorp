@@ -22,7 +22,6 @@ srcdir		= @srcdir@
 MODULE		= mailnews
 
 include $(DEPTH)/config/autoconf.mk
-NO_GEN_XPT=1
 XPIDLSRCS =				  \
 		nsIFolder.idl		\
 		nsIMsgHost.idl		  \
@@ -34,6 +33,13 @@ XPIDLSRCS =				  \
 		nsIMsgMessageService.idl \
 		nsIUrlListener.idl	\
 		nsIFolderListener.idl	\
+		nsIMsgIdentity.idl			\
+		nsIMsgIncomingServer.idl	\
+		nsIMsgAccount.idl			\
+		nsIMsgAccountManager.idl	\
+		nsIMsgMailSession.idl	\
+		nsIMsgSignature.idl		\
+		nsIMsgVCard.idl			\
 		$(NULL)
 
 EXPORTS =				\

@@ -19,7 +19,7 @@
 #include "nsICollection.idl"
 #include "nsIFolderListener.idl"
 
-[uuid(361c89b0-c481-11d2-8614-000000000001)]    /* XXX regenerate */
+[scriptable, uuid(75621650-0fce-11d3-8b49-006008948010)]
 interface nsIFolder : nsICollection {
 
         readonly attribute string URI;

@@ -9,10 +9,6 @@
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 class nsIMsgDBHdr; /* forward decl */
 #include "nsIMsgHdr.h"
 
@@ -66,11 +62,6 @@ class nsIMsgThread : public nsISupports {
 
   /* nsIEnumerator EnumerateMessages (in nsMsgKey parent); */
   NS_IMETHOD EnumerateMessages(nsMsgKey parent, nsIEnumerator **_retval) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgThread *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgThread_h__ */

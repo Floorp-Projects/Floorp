@@ -6,17 +6,13 @@
 #define __gen_nsIDOMMsgAppCore_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 class nsIDOMWindow; /* forward decl */
 class nsIDOMNodeList; /* forward decl */
 class nsIDOMXULTreeElement; /* forward decl */
 class nsIDOMXULElement; /* forward decl */
 class nsIRDFCompositeDataSource; /* forward decl */
-#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIDOMWindow.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULTreeElement.h"
@@ -80,11 +76,6 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
 
   /* void AccountManager (in nsIDOMWindow parent); */
   NS_IMETHOD AccountManager(nsIDOMWindow *parent) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMMsgAppCore *priv);
-#endif
 };
 extern "C" 
 nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype);

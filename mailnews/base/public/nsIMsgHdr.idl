@@ -21,6 +21,7 @@
 
 [ptr] native nsString(nsString);
 [ptr] native nsString2(nsString2);
+native nsMsgPriority(nsMsgPriority);
 
 %{C++
 class nsString;

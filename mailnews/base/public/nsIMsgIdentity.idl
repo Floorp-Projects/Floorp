@@ -20,7 +20,7 @@
 #include "nsIMsgSignature.idl"
 #include "nsIMsgVCard.idl"
 
-[object, uuid(D3B4A420-D5AC-11d2-806A-006008128C4E)]
+[scriptable, uuid(D3B4A420-D5AC-11d2-806A-006008128C4E)]
 interface nsIMsgIdentity : nsISupports {
   /* internal ID */
   attribute string key;

@@ -24,7 +24,7 @@ interface nsIURL;
 interface nsIUrlListener;
 interface nsIStreamListener;
 
-[uuid(F11009C1-F697-11d2-807F-006008128C4E)]
+[scriptable, uuid(F11009C1-F697-11d2-807F-006008128C4E)]
 interface nsIMsgMessageService : nsISupports {
 
 %{ C++

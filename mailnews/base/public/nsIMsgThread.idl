@@ -26,7 +26,7 @@ interface nsIMsgDBHdr;
 %}
 
 
-[object, uuid(df64af90-e2da-11d2-8d6c-00805f8a6617)]
+[scriptable, uuid(df64af90-e2da-11d2-8d6c-00805f8a6617)]
 interface nsIMsgThread : nsISupports {
   attribute nsMsgKey threadKey;
   attribute unsigned long flags;

@@ -20,7 +20,7 @@
 
 interface nsIFolder;
 
-[uuid(1c5ef9f0-d1c0-11d2-94CA-006097222B83)]    /* XXX regenerate */
+[scriptable, uuid(1c5ef9f0-d1c0-11d2-94CA-006097222B83)]    /* XXX regenerate */
 interface nsIFolderListener : nsISupports {
 
 	void OnItemAdded(in nsIFolder parentFolder, in nsISupports item);

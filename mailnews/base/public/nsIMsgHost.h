@@ -8,10 +8,6 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
 
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-
 /* starting interface:    nsIMsgHost */
 
 /* {ADFB3740-AA57-11d2-B7ED-00805F05FFA5} */
@@ -35,11 +31,6 @@ class nsIMsgHost : public nsISupports {
   /* attribute long port; */
   NS_IMETHOD GetPort(PRInt32 *aPort) = 0;
   NS_IMETHOD SetPort(PRInt32 aPort) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgHost *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgHost_h__ */

@@ -8,10 +8,6 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
 
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-
 /* starting interface:    nsIMsgSignature */
 
 /* {7e1531b0-e3df-11d2-b7fc-00805f05ffa5} */
@@ -31,11 +27,6 @@ class nsIMsgSignature : public nsISupports {
   /* attribute string signature; */
   NS_IMETHOD GetSignature(char * *aSignature) = 0;
   NS_IMETHOD SetSignature(char * aSignature) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgSignature *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgSignature_h__ */

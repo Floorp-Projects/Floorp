@@ -11,6 +11,7 @@
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIFolder.h" /* interface nsIFolder */
 #include "nsFileSpec.h"

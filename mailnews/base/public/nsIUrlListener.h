@@ -7,10 +7,6 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 class nsIURL; /* forward decl */
 #include "nsIURL.h"
 
@@ -32,11 +28,6 @@ class nsIUrlListener : public nsISupports {
 
   /* void OnStopRunningUrl (in nsIURL url, in nsresult aExitCode); */
   NS_IMETHOD OnStopRunningUrl(nsIURL *url, nsresult aExitCode) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIUrlListener *priv);
-#endif
 };
 
 #endif /* __gen_nsIUrlListener_h__ */

@@ -6,13 +6,8 @@
 #define __gen_nsIFolderListener_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-class nsIFolder; /* forward decl */
-
 #include "nsrootidl.h" /* interface nsrootidl */
+class nsIFolder; /* forward decl */
 
 /* starting interface:    nsIFolderListener */
 
@@ -37,11 +32,6 @@ class nsIFolderListener : public nsISupports {
 
   /* void OnItemPropertyFlagChanged (in nsISupports item, in string property, in unsigned long oldFlag, in unsigned long newFlag); */
   NS_IMETHOD OnItemPropertyFlagChanged(nsISupports *item, const char *property, PRUint32 oldFlag, PRUint32 newFlag) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIFolderListener *priv);
-#endif
 };
 
 #endif /* __gen_nsIFolderListener_h__ */

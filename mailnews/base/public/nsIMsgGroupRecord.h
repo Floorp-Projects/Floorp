@@ -8,10 +8,6 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
 
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-
 /* starting interface:    nsIMsgGroupRecord */
 
 /* {4ed03c60-b256-11d2-b7f0-00805f05ffa5} */
@@ -136,11 +132,6 @@ class nsIMsgGroupRecord : public nsISupports {
 
   /* readonly attribute char hierarchySeparator; */
   NS_IMETHOD GetHierarchySeparator(char *aHierarchySeparator) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgGroupRecord *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgGroupRecord_h__ */

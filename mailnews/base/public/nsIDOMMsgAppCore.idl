@@ -33,7 +33,7 @@ interface nsIRDFCompositeDataSource;
 #include "nsIRDFCompositeDataSource.h"
 %}
 
-[object, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
+[scriptable, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
 interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
 
     void GetNewMessages(in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder);

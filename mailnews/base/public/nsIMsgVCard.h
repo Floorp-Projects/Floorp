@@ -8,10 +8,6 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
 
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-
 /* starting interface:    nsIMsgVCard */
 
 /* {e0e67ec0-e3df-11d2-b7fc-00805f05ffa5} */
@@ -23,11 +19,6 @@
 class nsIMsgVCard : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGVCARD_IID)
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgVCard *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgVCard_h__ */

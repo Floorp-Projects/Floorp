@@ -22,7 +22,7 @@ interface nsIFolder;
 
 /* Interface for incoming mail/news host */
 
-[object, uuid(60dcb100-e3f2-11d2-b7fc-00805f05ffa5)]
+[scriptable, uuid(60dcb100-e3f2-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgIncomingServer : nsISupports {
 
   attribute string key;

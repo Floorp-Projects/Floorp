@@ -19,7 +19,7 @@
 #include "nsISupports.idl"
 
 
-[uuid(4ed03c60-b256-11d2-b7f0-00805f05ffa5)]
+[scriptable, uuid(4ed03c60-b256-11d2-b7f0-00805f05ffa5)]
 interface nsIMsgGroupRecord : nsISupports {
 
     /* making this a voidStar is really ugly, but it's a quick

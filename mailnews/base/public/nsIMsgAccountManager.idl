@@ -17,12 +17,18 @@
  */
 
 #include "nsISupports.idl"
-#include "nsISupportsArray.idl"
 #include "nsIMsgAccount.idl"
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgIncomingServer.idl"
 
-[object, uuid(6ed2cc00-e623-11d2-b7fc-00805f05ffa5)]
+interface nsISupportsArray;
+
+%{C++
+#include "nsISupportsArray.h"
+%}
+
+
+[scriptable, uuid(6ed2cc00-e623-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgAccountManager : nsISupports {
 
   /* createAccount creates a new account and assigns a new accountKey */
