@@ -1225,7 +1225,7 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
         nsAutoString tmp1 = GetString("Save");
         nsAutoString tmp2 = GetString("DontSave");
         nsAutoString title;
-        GetDocumentTitle(title);
+        GetDocumentTitleString(title);
         nsAutoString saveMsg = GetString("SaveFilePrompt")+" "+"\""+title+"\"";
         if (ReasonToSave.Length() > 0) 
         {
@@ -1419,6 +1419,19 @@ SkipFilters:
               return res;
             }
           }
+          // Set the new URL for the webshell
+          if (mContentAreaWebShell)
+          {
+            nsFileURL fileURL(docFileSpec);
+            nsAutoString fileURLString(fileURL.GetURLString());
+            PRUnichar *fileURLUnicode = fileURLString.ToNewUnicode();
+            if (fileURLUnicode)
+            {
+              mContentAreaWebShell->SetURL(fileURLUnicode);
+        			Recycle(fileURLUnicode);
+            }
+          }         
+          
           // Update window caption in case title has changed.
           if (bUpdateWindowTitle)
             UpdateWindowTitle();
@@ -1586,7 +1599,7 @@ nsEditorShell::UpdateWindowTitle()
     return res;
 
   nsAutoString windowCaption;
-  res = GetDocumentTitle(windowCaption);
+  res = GetDocumentTitleString(windowCaption);
 
   // Append just the 'leaf' filename to the Doc. Title for the window caption
   if (NS_SUCCEEDED(res))
@@ -1621,7 +1634,7 @@ nsEditorShell::UpdateWindowTitle()
 }
 
 NS_IMETHODIMP
-nsEditorShell::GetDocumentTitle(nsString& title)
+nsEditorShell::GetDocumentTitleString(nsString& title)
 {
   nsresult res = NS_ERROR_NOT_INITIALIZED;
 
@@ -1656,7 +1669,7 @@ nsEditorShell::GetDocumentTitle(PRUnichar **title)
     return NS_ERROR_NULL_POINTER;
 
   nsAutoString titleStr;
-  nsresult res = GetDocumentTitle(titleStr);
+  nsresult res = GetDocumentTitleString(titleStr);
   if (NS_SUCCEEDED(res))
   {
     *title = titleStr.ToNewUnicode();
@@ -2992,6 +3005,24 @@ nsEditorShell::DeleteTableCell(PRInt32 aNumber)
   return result;
 }
 
+NS_IMETHODIMP    
+nsEditorShell::DeleteTableCellContents()
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->DeleteTableCellContents();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
 
 NS_IMETHODIMP    
 nsEditorShell::DeleteTableRow(PRInt32 aNumber)

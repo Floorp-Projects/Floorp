@@ -65,6 +65,7 @@ public:
     */
   NS_IMETHOD DeleteTable()=0;
   NS_IMETHOD DeleteTableCell(PRInt32 aNumber)=0;
+  NS_IMETHOD DeleteTableCellContents()=0;
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber)=0;
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber)=0;
 
@@ -135,6 +136,47 @@ public:
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
                            PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected)=0;
 
+
+  /** Preferred direction to search for neighboring cell
+    * when trying to locate a cell to place caret in after
+    * a table editing action. 
+    * Used for aDirection param in SetCaretAfterTableEdit
+    */
+  enum { 
+    eNoSearch, 
+    ePreviousColumn, 
+    ePreviousRow 
+  };
+  /** Reset a collapsed selection (the caret) after table editing
+    *
+    * @param aTable      A table in the document
+    * @param aRow        The row ...
+    * @param aCol        ... and column defining the cell
+    *                    where we will try to place the caret
+    * @param aDirection  If cell at (aCol, aRow) is not found,
+    *                    search for previous cell in the same
+    *                    column (aPreviousColumn) or row (ePreviousRow)
+    *                    or don't search for another cell (aNoSearch)
+    *                    If no cell is found, caret is place just before table;
+    *                    and if that fails, at beginning of document.
+    *                    Thus we generally don't worry about the return value
+    *                     and can use the nsSetCaretAfterTableEdit stack-based 
+    *                     object to insure we reset the caret in a table-editing method.
+    */
+  NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, PRInt32 aDirection)=0;
+
+  /** Examine the current selection and find
+    *   a selected TABLE, TD or TH, or TR element.
+    *   or return the parent TD or TH if selection is inside a table cell
+    *   Returns null if no table element is found.
+    *
+    * @param aTableElement      The table element (table, row, or cell) returned
+    * @param aTagName           The tagname of returned element
+    *                           Note that "td" will be returned if name is actually "th"
+    * @param aIsSelected        Tells if element returned is a selected element 
+    *                           (false if element is a parent cell of selection)
+    */
+  NS_IMETHOD GetSelectedOrParentTableElement(nsCOMPtr<nsIDOMElement> &aTableElement, nsString& aTagName, PRBool &aIsSelected)=0;
 
 };
 
