@@ -27,7 +27,7 @@ PROG2 = .\$(OBJDIR)\RegFactory.exe
 PROG3 = .\$(OBJDIR)\TestArray.exe
 PROG4 = .\$(OBJDIR)\TestID.exe
 PROG5 = .\$(OBJDIR)\TestServMgr.exe
-PROG6 = .\$(OBJDIR)\test_COM_auto_ptr.exe
+PROG6 = .\$(OBJDIR)\TestCOMPtr.exe
 PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6)
 
 LCFLAGS=-DUSE_NSREG
@@ -73,5 +73,5 @@ $(PROG2): $(OBJDIR) RegFactory.cpp
 $(PROG3): $(OBJDIR) TestArray.cpp
 $(PROG4): $(OBJDIR) TestID.cpp
 $(PROG5): $(OBJDIR) TestServMgr.cpp
-$(PROG6): $(OBJDIR) test_COM_auto_ptr.cpp
+$(PROG6): $(OBJDIR) TestCOMPtr.cpp
 

@@ -2,7 +2,7 @@
 # This is a list of local files which get copied to the mozilla:dist directory
 #
 
-COM_auto_ptr.h
+nsCOMPtr.h
 nsCom.h
 nsAgg.h
 nsDebug.h
