@@ -831,6 +831,10 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
   mLibrary = nsnull;
   mCanUnloadLibrary = PR_TRUE;
   mEntryPoint = nsnull;
+
+#if TARGET_CARBON
+  mCanUnloadLibrary = !aPluginInfo->fBundle;
+#endif
   mFlags = NS_PLUGIN_FLAG_ENABLED;
   mXPConnected = PR_FALSE;
 }
