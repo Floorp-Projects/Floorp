@@ -19,19 +19,23 @@
 #include "nsInputStreamChannel.h"
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
+#include "nsCOMPtr.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsInputStreamChannel methods:
 
 nsInputStreamChannel::nsInputStreamChannel()
-    : mContentType(nsnull)
+    : mURI(nsnull), mContentType(nsnull), mInputStream(nsnull), mLoadGroup(nsnull)
 {
     NS_INIT_REFCNT(); 
 }
 
 nsInputStreamChannel::~nsInputStreamChannel()
 {
+    NS_IF_RELEASE(mURI);
     if (mContentType) nsCRT::free(mContentType);
+    NS_IF_RELEASE(mInputStream);
+    NS_IF_RELEASE(mLoadGroup);
 }
 
 NS_METHOD
@@ -51,11 +55,13 @@ nsresult
 nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
                            nsIInputStream* in)
 {
-    mURI = uri; // addrefs
+    mURI = uri;
+    NS_IF_ADDREF(mURI);
     mContentType = nsCRT::strdup(contentType);
     if (mContentType == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    mInputStream = in;  // addrefs
+    mInputStream = in;
+    NS_IF_ADDREF(mInputStream);
     return NS_OK;
 }
 
@@ -193,7 +199,9 @@ nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsInputStreamChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
-    mLoadGroup = aLoadGroup;    // releases and addrefs
+    NS_IF_RELEASE(mLoadGroup);
+    mLoadGroup = aLoadGroup;
+    NS_IF_ADDREF(mLoadGroup);
     return NS_OK;
 }
 
