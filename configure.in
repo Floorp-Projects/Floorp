@@ -440,7 +440,7 @@ LDFLAGS="$_SAVE_LDFLAGS"
 dnl Check for toolkit libs
 dnl ========================================================
 useRhapsody=`echo $target_os | egrep "^Rhapsody"`
-MOZ_ARG_ENABLE_STRING(toolkit,
+AC_ARG_ENABLE(toolkit,
 [  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
   [if test "$enableval" = "motif" \
         -o "$enableval" = "gtk" \
