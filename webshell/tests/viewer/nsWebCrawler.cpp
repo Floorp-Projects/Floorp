@@ -295,9 +295,33 @@ EndsWith(const nsString& aDomain, const char* aHost, PRInt32 aHostLen)
   return PR_TRUE;
 }
 
+static PRBool
+StartsWith(const nsString& s1, const char* s2)
+{
+  PRInt32 s1len = s1.Length();
+  PRInt32 s2len = strlen(s2);
+  if (s1len < s2len) {
+    return PR_FALSE;
+  }
+  const PRUnichar* uc = s1.GetUnicode();
+  const PRUnichar* end = uc + s2len;
+  while (uc < end) {
+    unsigned char uch = (unsigned char) ((*uc++) & 0xff);
+    unsigned char ch = (unsigned char) ((*s2++) & 0xff);
+    if (kLowerLookup[uch] != kLowerLookup[ch]) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
 PRBool
 nsWebCrawler::OkToLoad(const nsString& aURLSpec)
 {
+  if (!StartsWith(aURLSpec, "http:") && !StartsWith(aURLSpec, "ftp:")) {
+    return PR_FALSE;
+  }
+
   PRBool ok = PR_TRUE;
   nsIURL* url;
   nsresult rv = NS_NewURL(&url, aURLSpec);
