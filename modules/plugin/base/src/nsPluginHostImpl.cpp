@@ -120,7 +120,7 @@
 #include "nsIInterfaceInfoManager.h"
 #include "xptinfo.h"
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include "windows.h"
 #include "winbase.h"
 #endif
