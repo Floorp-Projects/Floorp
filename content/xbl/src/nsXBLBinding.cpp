@@ -771,6 +771,9 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
                                         PR_FALSE,
                                         &myFunc);
         }
+        for (PRUint32 l = 0; l < argCount; l++) {
+          nsAllocator::Free(args[l]);
+        }
       }
       else if (tagName.get() == kPropertyAtom) {
         // Obtain our name attribute.
