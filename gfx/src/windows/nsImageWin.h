@@ -176,7 +176,8 @@ private:
                         PRUint8 *aImageAlpha, PRUint32 aStrideAlpha,
                         int aWidth, int aHeight);
   nsresult DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
-                          int aSX, int aSY, int aSWidth, int aSHeight);
+                          int aSX, int aSY, int aSWidth, int aSHeight,
+                          int aOrigDWidth, int aOrigDHeight);
   static PRBool CanAlphaBlend(void);
 
   /** 
