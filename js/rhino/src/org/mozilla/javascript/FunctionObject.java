@@ -219,6 +219,18 @@ public class FunctionObject extends BaseFunction
         return getArity();
     }
 
+    /**
+     * Get Java method or constructor this function represent.
+     */
+    public Member getMethodOrConstructor()
+    {
+        if (method != null) {
+            return method;
+        } else {
+            return ctor;
+        }
+    }
+
     static Method findSingleMethod(Method[] methods, String name)
     {
         Method found = null;
