@@ -56,7 +56,7 @@
 <P>These actions do not require a certificate to be selected:</P>
 <UL>
 
-  <LI><b>Restore:</b> Restore a file containing one or more certificates that were previously backed up. When you click Restore, Certificate Manager first asks you to locate the file that contains the backup. The names of certificate backup files typically end in <tt>.p12</tt>; for example, <tt>MyCert.p12</tt>. After you select the file to be restored, Certificate Manager asks you to enter the password that you set when you backed up the certificate.</LI>
+  <LI><b>Import:</b> Import a file containing one or more certificates that were previously backed up. When you click Import, Certificate Manager first asks you to locate the file that contains the backup. The names of certificate backup files typically end in <tt>.p12</tt>; for example, <tt>MyCert.p12</tt>. After you select the file to be imported, Certificate Manager asks you to enter the password that you set when you backed up the certificate.</LI>
 
   <LI><b>Backup All:</b> Initiate the process of saving all the certificates stored in the <a href="glossary.html#software_security_device">Software Security Device</a>. 
 
@@ -71,7 +71,7 @@
 
 <P>A certificate backup password protects one or more certificates that you are backing up from the <a href="#My_Certificates">Your Certificates</a> tab in the Certificate Manager. 
 
-<p>The Certificate Manager asks you to set this password when you back up certificates, and requests it when you attempt to restore certificates that have previously been backed up.</P>
+<p>The Certificate Manager asks you to set this password when you back up certificates, and requests it when you attempt to import certificates that have previously been backed up.</P>
 
 <ul>
 <li><b>Certificate backup password:</b> Type your backup password into this field.
@@ -79,11 +79,11 @@
 <li><b>Certificate backup password (again):</b> Type your backup password again. If you don't type it the second time exactly as you did the first time, the OK button remains inactive. If this happens, try typing the new password again. 
 </ul>
 
-<p>If someone obtains the file containing a certificate that you have backed up and successfully restores the certificate, that person can send messages or access web sites while pretending to be you. This can be a problem, for example, if you digitally sign important email messages or manage your bank or investment accounts over the Internet. 
+<p>If someone obtains the file containing a certificate that you have backed up and successfully imports the certificate, that person can send messages or access web sites while pretending to be you. This can be a problem, for example, if you digitally sign important email messages or manage your bank or investment accounts over the Internet. 
 
 <p>Therefore, it's important to select a certificate backup password that is difficult to guess. The <b>password quality meter</b> gives you a rough idea of the quality of your password as you type it based on factors such as length and the use of uppercase letters, lowercase letters, numbers, and symbols. <p>For further guidelines, see the online document <a href="http://home.netscape.com/security/basics/passwords.html"  TARGET="_blank">Choosing a Good Password</a>. 
 
-<p>It's also important to record the password in a safe place—and not anywhere that's easily accessible to someone else. If you forget this password, you can't restore the backup of your certificate.</p>
+<p>It's also important to record the password in a safe place—and not anywhere that's easily accessible to someone else. If you forget this password, you can't import the backup of your certificate.</p>
 
 
 <p>&nbsp;</p>
@@ -297,7 +297,7 @@ Here you specify whether you want to trust the selected certificate for identify
 </ul>
 
 <hr>
-<p><i>14 March 2002</i></p>
+<p><i>19 March 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
