@@ -96,7 +96,7 @@ xpi::
 
 	echo "Building xpi..."
 
-	./createBuildId.pl ./resources/content/about.html
+	$(srcdir)/createBuildId.pl $(srcdir)/resources/content/about.html
 	make
 	mkdir -p ./xpi/bin/components
 	mkdir -p ./xpi/bin/chrome
@@ -104,10 +104,10 @@ xpi::
 	cp $(DEPTH)/dist/bin/chrome/calendar.jar ./xpi/bin/chrome
 	cp libxpical/$(LIB_PREFIX)xpical$(DLL_SUFFIX) ./xpi/bin/components
 	cp libxpical/_xpidlgen/calendar.xpt ./xpi/bin/components
-	cp resources/content/calendarService.js ./xpi/bin/components
-	cp -r resources/locale ./xpi/resources
-	cp -r $(calplatform)/icons ./xpi
-	cp install.js ./xpi
+	cp $(srcdir)/resources/content/calendarService.js ./xpi/bin/components
+	cp -r $(srcdir)/resources/locale ./xpi/resources
+	cp -r $(srcdir)/$(calplatform)/icons ./xpi
+	cp $(srcdir)/install.js ./xpi
 	cd xpi; find bin/ resources/ icons/ install.js \( -name CVS -o -name en-US \) -prune -o -print | xargs zip calendar.xpi
 
 	echo "Done."
