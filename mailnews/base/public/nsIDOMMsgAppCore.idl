@@ -18,11 +18,20 @@
 
 #include "nsISupports.idl"
 #include "nsIDOMBaseAppCore.idl"
-#include "nsIDOMWindow.idl"
-#include "nsIDOMNodeList.idl"
-#include "nsIDOMXULTreeElement.idl"
-#include "nsIDOMXULElement.idl"
-#include "nsRDFInterfaces.idl"
+
+interface nsIDOMWindow;
+interface nsIDOMNodeList;
+interface nsIDOMXULTreeElement;
+interface nsIDOMXULElement;
+interface nsIRDFCompositeDataSource;
+
+%{C++
+#include "nsIDOMWindow.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMXULTreeElement.h"
+#include "nsIDOMXULElement.h"
+#include "nsIRDFCompositeDataSource.h"
+%}
 
 [object, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
 interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
