@@ -251,8 +251,8 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
-      nsCSSContainerFrame* parent;
-      aKidFrame->GetGeometricParent((nsIFrame*&)parent);
+      nsIFrame* parent;
+      aKidFrame->GetGeometricParent(parent);
       parent->DeleteChildsNextInFlow(aKidFrame);
     }
   }
