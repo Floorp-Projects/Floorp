@@ -489,8 +489,8 @@ SWITCH: for ($::FORM{'knob'}) {
         SendSQL("select initialowner from components where program=" .
                 SqlQuote($::FORM{'product'}) . " and value=" .
                 SqlQuote($::FORM{'component'}));
-        my $newname = FetchOneColumn();
-        my $newid = DBNameToIdAndCheck($newname, 1);
+        my $newid = FetchOneColumn();
+        my $newname = DBID_to_name($newid);
         DoComma();
         $::query .= "assigned_to = $newid";
         if (Param("useqacontact")) {
@@ -498,10 +498,9 @@ SWITCH: for ($::FORM{'knob'}) {
                     SqlQuote($::FORM{'product'}) .
                     " and value=" . SqlQuote($::FORM{'component'}));
             my $qacontact = FetchOneColumn();
-            if (defined $qacontact && $qacontact ne "") {
-                my $newqa = DBNameToIdAndCheck($qacontact, 1);
+            if (defined $qacontact && $qacontact != 0) {
                 DoComma();
-                $::query .= "qa_contact = $newqa";
+                $::query .= "qa_contact = $qacontact";
             }
         }
         last SWITCH;

@@ -116,7 +116,10 @@ sub CheckComponent ($$)
 
 sub EmitFormElements ($$$$$)
 {
-    my ($product, $component, $initialowner, $initialqacontact, $description) = @_;
+    my ($product, $component, $initialownerid, $initialqacontactid, $description) = @_;
+
+    my ($initialowner, $initialqacontact) = ($initialownerid ? DBID_to_name ($initialownerid) : '',
+                                             $initialqacontactid ? DBID_to_name ($initialqacontactid) : '');
 
     print "  <TH ALIGN=\"right\">Component:</TH>\n";
     print "  <TD><INPUT SIZE=64 MAXLENGTH=255 NAME=\"component\" VALUE=\"" .
@@ -288,11 +291,16 @@ unless ($action) {
         if $dobugcounts;
     print "  <TH ALIGN=\"left\">Delete</TH>\n";
     print "</TR>";
-    while ( MoreSQLData() ) {
-        my ($component,$desc,$initialowner,$initialqacontact, $bugs) = FetchSQLData();
+    my @data;
+    while (MoreSQLData()) {
+        push @data, [FetchSQLData()];
+    }
+    foreach (@data) {
+        my ($component,$desc,$initialownerid,$initialqacontactid, $bugs) = @$_;
+
         $desc             ||= "<FONT COLOR=\"red\">missing</FONT>";
-        $initialowner     ||= "<FONT COLOR=\"red\">missing</FONT>";
-        $initialqacontact ||= "<FONT COLOR=\"red\">none</FONT>";
+        my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : "<FONT COLOR=\"red\">missing</FONT>";
+        my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : "<FONT COLOR=\"red\">missing</FONT>";
         print "<TR>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "&component=", url_quote($component), "&action=edit\"><B>$component</B></A></TD>\n";
         print "  <TD VALIGN=\"top\">$desc</TD>\n";
@@ -338,7 +346,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editcomponents.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($product, '', '', '', '');
+    EmitFormElements($product, '', 0, 0, '');
 
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -398,10 +406,27 @@ if ($action eq 'new') {
         exit;
     }
 
+    my $initialownerid = DBname_to_id ($initialowner);
+    if (!$initialownerid) {
+        print "You must use an existing Bugzilla account as initial owner for the component
+'$component'. Please press\n";
+        print "<b>Back</b> and try again.\n";
+        PutTrailer($localtrailer);
+        exit;
+      }
+
     my $initialqacontact = trim($::FORM{initialqacontact} || '');
+    my $initialqacontactid = DBname_to_id ($initialqacontact);
     if (Param('useqacontact')) {
         if ($initialqacontact eq '') {
             print "You must enter an initial QA contact for the component '$component'. Please press\n";
+            print "<b>Back</b> and try again.\n";
+            PutTrailer($localtrailer);
+            exit;
+        }
+
+        if (!$initialqacontactid) {
+            print "You must use an existing Bugzilla account as initial QA contact for the component '$component'. Please press\n";
             print "<b>Back</b> and try again.\n";
             PutTrailer($localtrailer);
             exit;
@@ -419,8 +444,8 @@ if ($action eq 'new') {
           SqlQuote($product) . "," .
           SqlQuote($component) . "," .
           SqlQuote($description) . "," .
-          SqlQuote($initialowner) . "," .
-          SqlQuote($initialqacontact) . ")");
+          SqlQuote($initialownerid) . "," .
+          SqlQuote($initialqacontactid) . ")");
 
     # Make versioncache flush
     unlink "data/versioncache";
@@ -458,13 +483,14 @@ if ($action eq 'del') {
 
 
     my ($product,$pdesc,$milestoneurl,$disallownew,
-        $dummy,$component,$initialowner,$initialqacontact,$cdesc) = FetchSQLData();
+        $dummy,$component,$initialownerid,$initialqacontactid,$cdesc) = FetchSQLData();
+
+    my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : "<FONT COLOR=\"red\">missing</FONT>";
+    my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : "<FONT COLOR=\"red\">missing</FONT>";
 
     $pdesc            ||= "<FONT COLOR=\"red\">missing</FONT>";
     $milestoneurl     ||= "<FONT COLOR=\"red\">missing</FONT>";
     $disallownew        = $disallownew ? 'closed' : 'open';
-    $initialowner     ||= "<FONT COLOR=\"red\">missing</FONT>";
-    $initialqacontact ||= "<FONT COLOR=\"red\">missing</FONT>";
     $cdesc            ||= "<FONT COLOR=\"red\">missing</FONT>";
     
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
@@ -637,14 +663,17 @@ if ($action eq 'edit') {
                AND   value=" . SqlQuote($component) );
 
     my ($product,$pdesc,$milestoneurl,$disallownew,
-        $dummy,$component,$initialowner,$initialqacontact,$cdesc) = FetchSQLData();
+        $dummy,$component,$initialownerid,$initialqacontactid,$cdesc) = FetchSQLData();
+
+    my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : '';
+    my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : '';
 
     print "<FORM METHOD=POST ACTION=editcomponents.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
     #+++ display product/product description
 
-    EmitFormElements($product, $component, $initialowner, $initialqacontact, $cdesc);
+    EmitFormElements($product, $component, $initialownerid, $initialqacontactid, $cdesc);
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Bugs:</TH>\n";
@@ -701,7 +730,7 @@ if ($action eq 'update') {
     # them, be sure to test for WHERE='$component' or WHERE='$componentold'
 
     SendSQL("LOCK TABLES bugs WRITE,
-                         components WRITE");
+                         components WRITE, profiles READ");
 
     if ($description ne $descriptionold) {
         unless ($description) {
@@ -721,14 +750,21 @@ if ($action eq 'update') {
     if ($initialowner ne $initialownerold) {
         unless ($initialowner) {
             print "Sorry, I can't delete the initial owner.";
-            PutTrailer($localtrailer);
 	    SendSQL("UNLOCK TABLES");
+            PutTrailer($localtrailer);
             exit;
         }
-        #+++
-        #DBNameToIdAndCheck($initialowner, 0);
+
+        my $initialownerid = DBname_to_id($initialowner);
+        unless ($initialownerid) {
+            print "Sorry, you must use an existing Bugzilla account as initial owner.";
+            SendSQL("UNLOCK TABLES");
+            PutTrailer($localtrailer);
+            exit;
+        }
+
         SendSQL("UPDATE components
-                 SET initialowner=" . SqlQuote($initialowner) . "
+                 SET initialowner=" . SqlQuote($initialownerid) . "
                  WHERE program=" . SqlQuote($product) . "
                    AND value=" . SqlQuote($componentold));
         print "Updated initial owner.<BR>\n";
@@ -737,14 +773,21 @@ if ($action eq 'update') {
     if (Param('useqacontact') && $initialqacontact ne $initialqacontactold) {
         unless ($initialqacontact) {
             print "Sorry, I can't delete the initial QA contact.";
-            PutTrailer($localtrailer);
 	    SendSQL("UNLOCK TABLES");
+            PutTrailer($localtrailer);
             exit;
         }
-        #+++
-        #DBNameToIdAndCheck($initialqacontact, 0);
+
+        my $initialqacontactid = DBname_to_id($initialqacontact);
+        unless ($initialqacontactid) {
+            print "Sorry, you must use an existing Bugzilla account as initial QA contact.";
+            SendSQL("UNLOCK TABLES");
+            PutTrailer($localtrailer);
+            exit;
+        }
+
         SendSQL("UPDATE components
-                 SET initialqacontact=" . SqlQuote($initialqacontact) . "
+                 SET initialqacontact=" . SqlQuote($initialqacontactid) . "
                  WHERE program=" . SqlQuote($product) . "
                    AND value=" . SqlQuote($componentold));
         print "Updated initial QA contact.<BR>\n";

@@ -101,7 +101,6 @@ if ($::FORM{'assigned_to'} eq "") {
     $forceAssignedOK = 1;
 }
 
-$::FORM{'assigned_to'} = DBNameToIdAndCheck($::FORM{'assigned_to'}, $forceAssignedOK);
 $::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
 
 
@@ -115,8 +114,8 @@ if (Param("useqacontact")) {
             SqlQuote($::FORM{'product'}) .
             " and value=" . SqlQuote($::FORM{'component'}));
     my $qacontact = FetchOneColumn();
-    if (defined $qacontact && $qacontact ne "") {
-        $::FORM{'qa_contact'} = DBNameToIdAndCheck($qacontact, 1);
+    if (defined $qacontact && $qacontact != 0) {
+        $::FORM{'qa_contact'} = $qacontact;
         push(@bug_fields, "qa_contact");
     }
 }

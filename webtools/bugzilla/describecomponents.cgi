@@ -78,9 +78,15 @@ print "</tr>";
 
 SendSQL("select value, initialowner, initialqacontact, description from components where program = " . SqlQuote($product) . " order by value");
 
+my @data;
 while (MoreSQLData()) {
-    my @row = FetchSQLData();
-    my ($component, $initialowner, $initialqacontact, $description) = (@row);
+    push @data, [FetchSQLData()];
+}
+foreach (@data) {
+    my ($component, $initialownerid, $initialqacontactid, $description) = @$_;
+
+    my ($initialowner, $initialqacontact) = ($initialownerid ? DBID_to_name ($initialownerid) : '',
+                                             $initialqacontactid ? DBID_to_name ($initialqacontactid) : '');
 
     print qq|
 <tr><td colspan=$cols><hr></td></tr>

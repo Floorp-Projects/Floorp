@@ -566,7 +566,7 @@ if ($action eq 'del') {
 
     SendSQL("SELECT program, value
 	     FROM components
-	     WHERE initialowner=" . SqlQuote($user));
+             WHERE initialowner=" . DBname_to_id($user));
     $found = 0;
     while (MoreSQLData()) {
 	if ($found) {
@@ -590,7 +590,7 @@ if ($action eq 'del') {
 
     SendSQL("SELECT program, value
 	     FROM components
-	     WHERE initialqacontact=" . SqlQuote($user));
+             WHERE initialqacontact=" . DBname_to_id($user));
     $found = 0;
     while (MoreSQLData()) {
 	if ($found) {

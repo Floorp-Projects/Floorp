@@ -755,8 +755,8 @@ $table{longdescs} =
 $table{components} =
    'value tinytext,
     program varchar(64),
-    initialowner tinytext not null,     # Should arguably be a mediumint!
-    initialqacontact tinytext not null, # Should arguably be a mediumint!
+    initialowner mediumint not null,
+    initialqacontact mediumint not null,
     description mediumtext not null';
 
 
@@ -1823,6 +1823,66 @@ AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 my @resolutions = ("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND",
                   "DUPLICATE", "WORKSFORME", "MOVED");
 CheckEnumField('bugs', 'resolution', @resolutions);
+
+if (($_ = GetFieldDef('components', 'initialowner')) and ($_->[1] eq 'tinytext')) {
+    $sth = $dbh->prepare("SELECT program, value, initialowner, initialqacontact FROM components");
+    $sth->execute();
+    while (my ($program, $value, $initialowner) = $sth->fetchrow_array()) {
+        $initialowner =~ s/([\\\'])/\\$1/g; $initialowner =~ s/\0/\\0/g;
+        $program =~ s/([\\\'])/\\$1/g; $program =~ s/\0/\\0/g;
+        $value =~ s/([\\\'])/\\$1/g; $value =~ s/\0/\\0/g;
+
+        my $s2 = $dbh->prepare("SELECT userid FROM profiles WHERE login_name = '$initialowner'");
+        $s2->execute();
+
+        my $initialownerid = $s2->fetchrow_array();
+
+        unless (defined $initialownerid) {
+            print "Warning: You have an invalid initial owner '$initialowner' in program '$program', component '$value'!\n";
+            $initialownerid = 0;
+        }
+
+        my $update = "UPDATE components SET initialowner = $initialownerid ".
+            "WHERE program = '$program' AND value = '$value'";
+        my $s3 = $dbh->prepare("UPDATE components SET initialowner = $initialownerid ".
+                               "WHERE program = '$program' AND value = '$value';");
+        $s3->execute();
+    }
+
+    ChangeFieldType('components','initialowner','mediumint');
+}
+
+if (($_ = GetFieldDef('components', 'initialqacontact')) and ($_->[1] eq 'tinytext')) {
+    $sth = $dbh->prepare("SELECT program, value, initialqacontact, initialqacontact FROM components");
+    $sth->execute();
+    while (my ($program, $value, $initialqacontact) = $sth->fetchrow_array()) {
+        $initialqacontact =~ s/([\\\'])/\\$1/g; $initialqacontact =~ s/\0/\\0/g;
+        $program =~ s/([\\\'])/\\$1/g; $program =~ s/\0/\\0/g;
+        $value =~ s/([\\\'])/\\$1/g; $value =~ s/\0/\\0/g;
+
+        my $s2 = $dbh->prepare("SELECT userid FROM profiles WHERE login_name = '$initialqacontact'");
+        $s2->execute();
+
+        my $initialqacontactid = $s2->fetchrow_array();
+
+        unless (defined $initialqacontactid) {
+            if ($initialqacontact ne '') {
+                print "Warning: You have an invalid initial QA contact '$initialqacontact' in program '$program', component '$value'!\n";
+            }
+            $initialqacontactid = 0;
+        }
+
+        my $update = "UPDATE components SET initialqacontact = $initialqacontactid ".
+            "WHERE program = '$program' AND value = '$value'";
+        my $s3 = $dbh->prepare("UPDATE components SET initialqacontact = $initialqacontactid ".
+                               "WHERE program = '$program' AND value = '$value';");
+        $s3->execute();
+    }
+
+    ChangeFieldType('components','initialqacontact','mediumint');
+}
+
+
 
 my @states = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED",
               "VERIFIED", "CLOSED");
