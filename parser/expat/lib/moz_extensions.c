@@ -51,16 +51,16 @@ int MOZ_byte_type(unsigned char p)
 #define BYTE_TYPE(p) \
   ((p)[1] == 0 ? \
     MOZ_byte_type((unsigned char)*(p)) : unicode_byte_type((p)[1], (p)[0]))
-#define IS_NAME_CHAR_MINBPC(p) LITTLE2_IS_NAME_CHAR_MINBPC(nsnull, p)
-#define IS_NMSTRT_CHAR_MINBPC(p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(nsnull, p)
+#define IS_NAME_CHAR_MINBPC(p) LITTLE2_IS_NAME_CHAR_MINBPC(0, p)
+#define IS_NMSTRT_CHAR_MINBPC(p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(0, p)
 
 #else
 
 #define BYTE_TYPE(p) \
   ((p)[0] == 0 ? \
     MOZ_byte_type((unsigned char)(p)[1]) : unicode_byte_type((p)[0], (p)[1]))
-#define IS_NAME_CHAR_MINBPC(p) BIG2_IS_NAME_CHAR_MINBPC(nsnull, p)
-#define IS_NMSTRT_CHAR_MINBPC(p) BIG2_IS_NMSTRT_CHAR_MINBPC(nsnull, p)
+#define IS_NAME_CHAR_MINBPC(p) BIG2_IS_NAME_CHAR_MINBPC(0, p)
+#define IS_NMSTRT_CHAR_MINBPC(p) BIG2_IS_NMSTRT_CHAR_MINBPC(0, p)
 
 #endif
 
