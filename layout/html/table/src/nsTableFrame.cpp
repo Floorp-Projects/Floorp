@@ -398,6 +398,11 @@ PRInt32 nsTableFrame::GetRowCount ()
 // return the rows spanned by aCell starting at aRowIndex
 // note that this is different from just the rowspan of aCell
 // (that would be GetEffectiveRowSpan (indexOfRowThatContains_aCell, aCell)
+//
+// XXX This code should be in the table row group frame instead, and it
+// should clip rows spans so they don't extend past a row group rather than
+// clip to the table itself. Before that can happen the code that builds the
+// cell map needs to take row groups into account
 PRInt32 nsTableFrame::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCellFrame *aCell)
 {
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");

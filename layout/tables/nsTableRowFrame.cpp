@@ -105,6 +105,42 @@ nsTableRowFrame::~nsTableRowFrame()
 {
 }
 
+/**
+ * Post-reflow hook. This is where the table row does its post-processing
+ */
+NS_METHOD
+nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
+                           nsDidReflowStatus aStatus)
+{
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    // Resize and re-align the cell frames based on our row height
+    nscoord           cellHeight = mRect.height - mCellMaxTopMargin - mCellMaxBottomMargin;
+    nsTableCellFrame *cellFrame = (nsTableCellFrame*)mFirstChild;
+    nsTableFrame*     tableFrame;
+    mContentParent->GetContentParent((nsIFrame*&)tableFrame);
+    while (nsnull != cellFrame)
+    {
+      PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(mRowIndex, cellFrame);
+      if (1==rowSpan)
+      {
+        // resize the cell's height
+        nsSize  cellFrameSize;
+        cellFrame->GetSize(cellFrameSize);
+        cellFrame->SizeTo(cellFrameSize.width, cellHeight);
+  
+        // realign cell content based on the new height
+        cellFrame->VerticallyAlignChild(&aPresContext);
+      }
+  
+      // Get the next cell
+      cellFrame->GetNextSibling((nsIFrame*&)cellFrame);
+    }
+  }
+
+  // Let our base class do the usual work
+  return nsContainerFrame::DidReflow(aPresContext, aStatus);
+}
+
 void nsTableRowFrame::ResetMaxChildHeight()
 {
   mTallestCell=0;

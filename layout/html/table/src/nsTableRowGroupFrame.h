@@ -123,13 +123,6 @@ protected:
                           nsReflowMetrics& aDesiredSize,
                           nsSize* aMaxElementSize);
 
-  void SetRowHeight(nsIPresContext* aPresContext,
-                    nsIFrame*       aRowFrame,
-                    PRInt32         aRowIndex,
-                    nscoord         aRowHeight,
-                    nscoord         aMaxCellHeight,
-                    PRBool&         aHasRowSpanningCell);
-
   /**
    * Reflow the frames we've already created
    *
