@@ -1,6 +1,6 @@
 [General]
 Subfolder=Mozilla Folder
-URL=ftp://ftp.mozilla.org/pub/mozilla/nightly/<#buildID>/mac-xpi/
+URL0=ftp://ftp.mozilla.org/pub/mozilla/nightly/<#buildID>/mac-xpi/
 
 
 [Dialog License]

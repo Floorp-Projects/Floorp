@@ -179,7 +179,10 @@ PopulateInstallKeys(char *instText)
 OSErr
 PopulateGeneralKeys(char *cfgText)
 {
-    OSErr err = noErr;
+    short rv;
+    int i;
+    char cSection[255], cKeyRoot[255], cKey[255];
+    Str255 pSection, pKeyRoot;
     
     /* General section: subdir */
     gControls->cfg->targetSubfolder = NewHandleClear(kValueMaxLen);
@@ -193,17 +196,29 @@ PopulateGeneralKeys(char *cfgText)
     FillKeyValueUsingResID(sGeneral, sSubfolder, gControls->cfg->targetSubfolder, cfgText);
     
     /* General section: global URL */
-    gControls->cfg->globalURL = NewHandleClear(kValueMaxLen);
-    if (!gControls->cfg->globalURL)
+    GetIndString(pSection, rParseKeys, sGeneral);
+    GetIndString(pKeyRoot, rParseKeys, sURL);
+    CopyPascalStrToC(pKeyRoot, cKeyRoot);
+    CopyPascalStrToC(pSection, cSection);
+    gControls->cfg->numGlobalURLs = 0;
+    for (i = 0; i < kMaxGlobalURLs; ++i)
     {
-        ErrorHandler(eMem);
-        return eParseFailed;
+        gControls->cfg->globalURL[i] = NewHandleClear(kValueMaxLen);
+        if (!gControls->cfg->globalURL[i])
+        {
+            ErrorHandler(eMem);
+            return eParseFailed;
+        }
+
+        /* not compulsory */
+        sprintf(cKey, "%s%d", cKeyRoot, i);  // URL0, URL1, ... URL4
+        rv  = FillKeyValueUsingName(cSection, cKey, gControls->cfg->globalURL[i], cfgText);
+        if (rv == false)
+            break;
+        gControls->cfg->numGlobalURLs++;
     }
     
-    /* not compulsory since mozilla doesn't download */
-    FillKeyValueUsingResID(sGeneral, sURL, gControls->cfg->globalURL, cfgText);
-
-    return err;
+    return noErr;
 }
 
 OSErr
