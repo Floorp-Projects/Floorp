@@ -106,11 +106,6 @@ public:
     return mInner->GetDisplayName(aDisplayName);
   }
   
-  NS_IMETHODIMP SetDisplayName(const PRUnichar* aDisplayName)
-  {
-    return mInner->SetDisplayName(aDisplayName);
-  }
-  
   NS_IMETHODIMP GetMIMEInfo(nsIMIMEInfo** aMIMEInfo)
   {
     return mInner->GetMIMEInfo(aMIMEInfo);
