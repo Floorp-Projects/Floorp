@@ -70,12 +70,6 @@ static char sccsid[] = "@(#)hash.c	8.9 (Berkeley) 6/16/94";
 #include "hash.h"
 #include "page.h"
 
-#ifndef NSPR20
-#if defined(__sun)
-# include "sunos4.h"
-#endif /* __sun */
-#endif /* NSPR20 */
-
 /*
 #include "extern.h"
 */

@@ -76,12 +76,6 @@ static char sccsid[] = "@(#)hash_bigkey.c	8.3 (Berkeley) 5/31/94";
 #include "page.h"
 /* #include "extern.h" */
 
-#ifndef NSPR20
-#if defined(__sun)
-# include "sunos4.h"
-#endif /* __sun */
-#endif /* NSPR20 */
-
 static int collect_key __P((HTAB *, BUFHEAD *, int, DBT *, int));
 static int collect_data __P((HTAB *, BUFHEAD *, int, int));
 

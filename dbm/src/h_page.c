@@ -86,12 +86,6 @@ static char sccsid[] = "@(#)hash_page.c	8.7 (Berkeley) 8/16/94";
 #include "page.h"
 /* #include "extern.h" */
 
-#ifndef NSPR20
-#if defined(__sun)
-# include "sunos4.h"
-#endif /* __sun */
-#endif /* NSPR20 */
-
 static uint32	*fetch_bitmap __P((HTAB *, uint32));
 static uint32	 first_free __P((uint32));
 static int	 open_temp __P((HTAB *));
