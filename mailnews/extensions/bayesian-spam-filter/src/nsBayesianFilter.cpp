@@ -40,13 +40,11 @@
 #include "nsBayesianFilter.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
-#include "nsIMsgHdr.h"
-#include "nsIMsgFilterHitNotify.h"
-#include "nsIByteBuffer.h"
 #include "nsNetUtil.h"
 #include "nsQuickSort.h"
 #include "nsIProfileInternal.h"
 #include "nsIStreamConverterService.h"
+#include "prnetdb.h"
 
 static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>?@[\\]^_`{|}~";
 
@@ -219,21 +217,24 @@ public:
 protected:
     nsCString mTokenSource;
     TokenAnalyzer* mAnalyzer;
-    nsCOMPtr<nsIByteBuffer> mBuffer;
+    char* mBuffer;
     PRUint32 mBufferSize;
     PRUint32 mLeftOverCount;
     Tokenizer mTokenizer;
 };
 
+const PRUint32 kBufferSize = 16384;
+
 TokenStreamListener::TokenStreamListener(const char* tokenSource, TokenAnalyzer* analyzer)
     :   mTokenSource(tokenSource), mAnalyzer(analyzer),
-        mBufferSize(8192), mLeftOverCount(0)
+        mBuffer(NULL), mBufferSize(kBufferSize), mLeftOverCount(0)
 {
     NS_INIT_ISUPPORTS();
 }
 
 TokenStreamListener::~TokenStreamListener()
 {
+    delete[] mBuffer;
     delete mAnalyzer;
 }
 
@@ -242,7 +243,9 @@ NS_IMPL_ISUPPORTS2(TokenStreamListener, nsIRequestObserver, nsIStreamListener)
 /* void onStartRequest (in nsIRequest aRequest, in nsISupports aContext); */
 NS_IMETHODIMP TokenStreamListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
-    return NS_NewByteBuffer(getter_AddRefs(mBuffer), NULL, mBufferSize);
+    mBuffer = new char[mBufferSize];
+    if (!mBuffer) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
 /* void onDataAvailable (in nsIRequest aRequest, in nsISupports aContext, in nsIInputStream aInputStream, in unsigned long aOffset, in unsigned long aCount); */
@@ -250,40 +253,62 @@ NS_IMETHODIMP TokenStreamListener::OnDataAvailable(nsIRequest *aRequest, nsISupp
 {
     nsresult rv;
 
-    PRUint32 newBufferLength = (aCount + mLeftOverCount);
-    if (newBufferLength > mBufferSize) {
-        PRUint32 newBufferSize = newBufferLength * 2;
-        rv = mBuffer->Grow(newBufferSize);
+    while (aCount > 0) {
+        PRUint32 readCount, totalCount = (aCount + mLeftOverCount);
+        if (totalCount >= mBufferSize) {
+#if GROWABLE_BUFFER
+            PRUint32 newBufferSize = mBufferSize * 2;
+            while (totalCount >= newBufferSize)
+                newBufferSize *= 2;
+            char* newBuffer = new char[newBufferSize];
+            if (!newBuffer) return NS_ERROR_OUT_OF_MEMORY;
+            memcpy(newBuffer, mBuffer, mLeftOverCount);
+            delete[] mBuffer;
+            mBuffer = newBuffer;
+            mBufferSize = newBufferSize;
+#else
+            readCount = mBufferSize - mLeftOverCount - 1;
+#endif
+        } else {
+            readCount = aCount;
+        }
+        
+        char* buffer = mBuffer;
+        rv = aInputStream->Read(buffer + mLeftOverCount, readCount, &readCount);
         if (NS_FAILED(rv))
-            return rv;
-        mBufferSize = newBufferSize;
-    }
-    
-    char* buffer = mBuffer->GetBuffer();
-    rv = aInputStream->Read(buffer + mLeftOverCount, aCount, &aCount);
-
-    /* consume the tokens up to the last legal token delimiter in the buffer. */
-    newBufferLength = (aCount + mLeftOverCount);
-    buffer[newBufferLength] = '\0';
-    char* last_delimiter = NULL;
-    char* scan = buffer + newBufferLength;
-    while (scan > buffer) {
-        if (strchr(kBayesianFilterTokenDelimiters, *--scan)) {
-            last_delimiter = scan;
             break;
+
+        if (readCount == 0) {
+            rv = NS_ERROR_UNEXPECTED;
+            NS_WARNING("failed to tokenize");
+            break;
+        }
+            
+        aCount -= readCount;
+        
+        /* consume the tokens up to the last legal token delimiter in the buffer. */
+        totalCount = (readCount + mLeftOverCount);
+        buffer[totalCount] = '\0';
+        char* last_delimiter = NULL;
+        char* scan = buffer + totalCount;
+        while (scan > buffer) {
+            if (strchr(kBayesianFilterTokenDelimiters, *--scan)) {
+                last_delimiter = scan;
+                break;
+            }
+        }
+        
+        if (last_delimiter) {
+            *last_delimiter = '\0';
+            mTokenizer.tokenize(buffer);
+
+            PRUint32 consumedCount = 1 + (last_delimiter - buffer);
+            mLeftOverCount = totalCount - consumedCount;
+            if (mLeftOverCount)
+                memmove(buffer, buffer + consumedCount, mLeftOverCount);
         }
     }
     
-    if (last_delimiter) {
-        *last_delimiter = '\0';
-        mTokenizer.tokenize(buffer);
-
-        PRUint32 consumedCount = 1 + (last_delimiter - buffer);
-        mLeftOverCount = newBufferLength - consumedCount;
-        if (mLeftOverCount)
-            memmove(buffer, buffer + consumedCount, mLeftOverCount);
-    }
-
     return rv;
 }
 
@@ -292,7 +317,7 @@ NS_IMETHODIMP TokenStreamListener::OnStopRequest(nsIRequest *aRequest, nsISuppor
 {
     if (mLeftOverCount) {
         /* assume final buffer is complete. */
-        char* buffer = mBuffer->GetBuffer();
+        char* buffer = mBuffer;
         buffer[mLeftOverCount] = '\0';
         mTokenizer.tokenize(buffer);
     }
@@ -409,11 +434,12 @@ void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* mes
     double ngood = mGoodCount, nbad = mBadCount;
     for (i = 0; i < count; ++i) {
         Token* token = tokens[i];
+        const char* word = token->mWord.get();
         // ((g (* 2 (or (gethash word good) 0)))
-        Token* t = mGoodTokens.get(token->mWord.get());
+        Token* t = mGoodTokens.get(word);
         double g = 2.0 * ((t != NULL) ? t->mCount : 0);
         // (b (or (gethash word bad) 0)))
-        t = mBadTokens.get(token->mWord.get());
+        t = mBadTokens.get(word);
         double b = ((t != NULL) ? t->mCount : 0);
         if ((g + b) > 5) {
             // (max .01
@@ -493,7 +519,13 @@ NS_IMETHODIMP nsBayesianFilter::ClassifyMessage(const char *aMessageURL, nsIJunk
 /* void classifyMessages (in unsigned long aCount, [array, size_is (aCount)] in string aMsgURLs, in nsIJunkMailClassificationListener aListener); */
 NS_IMETHODIMP nsBayesianFilter::ClassifyMessages(PRUint32 aCount, const char **aMsgURLs, nsIJunkMailClassificationListener *aListener)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+    for (PRUint32 i = 0; i < aCount; ++i) {
+        rv = ClassifyMessage(aMsgURLs[i], aListener);
+        if (NS_FAILED(rv))
+            break;
+    }
+    return rv;
 }
 
 class MessageObserver : public TokenAnalyzer {
@@ -584,7 +616,7 @@ void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* mess
         writeTrainingData();
 }
 
-static nsresult getTrainingFile(nsCOMPtr<nsIFile>& file)
+static nsresult getTrainingFile(nsCOMPtr<nsILocalFile>& file)
 {
     // should we cache the profile manager's directory?
     nsresult rv;
@@ -595,10 +627,15 @@ static nsresult getTrainingFile(nsCOMPtr<nsIFile>& file)
     rv = profileManager->GetCurrentProfile(getter_Copies(currentProfile));
     if (NS_FAILED(rv)) return rv;
     
-    rv = profileManager->GetProfileDir(currentProfile.get(), getter_AddRefs(file));
+    nsCOMPtr<nsIFile> profileDir;
+    rv = profileManager->GetProfileDir(currentProfile.get(), getter_AddRefs(profileDir));
     if (NS_FAILED(rv)) return rv;
     
-    return file->Append(NS_LITERAL_STRING("training.dat"));
+    rv = profileDir->Append(NS_LITERAL_STRING("training.dat"));
+    if (NS_FAILED(rv)) return rv;
+    
+    file = do_QueryInterface(profileDir, &rv);
+    return rv;
 }
 
 /*
@@ -613,10 +650,25 @@ static nsresult getTrainingFile(nsCOMPtr<nsIFile>& file)
     ...
  */
 
+inline int writeUInt32(FILE* stream, PRUint32 value)
+{
+    value = PR_htonl(value);
+    return fwrite(&value, sizeof(PRUint32), 1, stream);
+}
+
+inline int readUInt32(FILE* stream, PRUint32* value)
+{
+    int n = fread(value, sizeof(PRUint32), 1, stream);
+    if (n == 1) {
+        *value = PR_ntohl(*value);
+    }
+    return n;
+}
+
 static bool writeTokens(FILE* stream, Tokenizer& tokenizer)
 {
     PRUint32 tokenCount = tokenizer.countTokens();
-    if (fwrite(&tokenCount, sizeof(tokenCount), 1, stream) != 1)
+    if (writeUInt32(stream, tokenCount) != 1)
         return false;
 
     if (tokenCount > 0) {
@@ -626,10 +678,10 @@ static bool writeTokens(FILE* stream, Tokenizer& tokenizer)
         for (PRUint32 i = 0; i < tokenCount; ++i) {
             Token* token = tokens[i];
             PRUint32 count = token->mCount;
-            if (fwrite(&count, sizeof(count), 1, stream) != 1)
+            if (writeUInt32(stream, count) != 1)
                 break;
             PRUint32 size = token->mWord.Length();
-            if (fwrite(&size, sizeof(size), 1, stream) != 1)
+            if (writeUInt32(stream, size) != 1)
                 break;
             if (fwrite(token->mWord.get(), size, 1, stream) != 1)
                 break;
@@ -644,7 +696,7 @@ static bool writeTokens(FILE* stream, Tokenizer& tokenizer)
 static bool readTokens(FILE* stream, Tokenizer& tokenizer)
 {
     PRUint32 tokenCount;
-    if (fread(&tokenCount, sizeof(tokenCount), 1, stream) != 1)
+    if (readUInt32(stream, &tokenCount) != 1)
         return false;
 
     PRUint32 bufferSize = 4096;
@@ -653,15 +705,15 @@ static bool readTokens(FILE* stream, Tokenizer& tokenizer)
 
     for (PRUint32 i = 0; i < tokenCount; ++i) {
         PRUint32 count;
-        if (fread(&count, sizeof(count), 1, stream) != 1)
+        if (readUInt32(stream, &count) != 1)
             break;
         PRUint32 size;
-        if (fread(&size, sizeof(size), 1, stream) != 1)
+        if (readUInt32(stream, &size) != 1)
             break;
-        if (size > (bufferSize - 1)) {
+        if (size >= bufferSize) {
             delete[] buffer;
             PRUint32 newBufferSize = 2 * bufferSize;
-            while (size > (newBufferSize - 1))
+            while (size >= newBufferSize)
                 newBufferSize *= 2;
             buffer = new char[newBufferSize];
             if (!buffer) return false;
@@ -682,51 +734,51 @@ static const char kMagicCookie[] = { '\xFE', '\xED', '\xFA', '\xCE' };
 
 void nsBayesianFilter::writeTrainingData()
 {
-    nsCOMPtr<nsIFile> file;
+    nsCOMPtr<nsILocalFile> file;
     nsresult rv = getTrainingFile(file);
     if (NS_FAILED(rv)) return;
  
     // open the file, and write out training data using fprintf for now.
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
-    if (NS_FAILED(rv)) return;
-    
     FILE* stream;
-    rv = localFile->OpenANSIFileDesc("w", &stream);
+    rv = file->OpenANSIFileDesc("wb", &stream);
     if (NS_FAILED(rv)) return;
 
     if (!((fwrite(kMagicCookie, sizeof(kMagicCookie), 1, stream) == 1) &&
-          (fwrite(&mGoodCount, sizeof(mGoodCount), 1, stream) == 1) &&
-          (fwrite(&mBadCount, sizeof(mBadCount), 1, stream) == 1) &&
+          (writeUInt32(stream, mGoodCount) == 1) &&
+          (writeUInt32(stream, mBadCount) == 1) &&
            writeTokens(stream, mGoodTokens) &&
            writeTokens(stream, mBadTokens))) {
         NS_WARNING("failed to write training data.");
+        fclose(stream);
+        // delete the training data file, since it is potentially corrupt.
+        file->Remove(PR_FALSE);
+    } else {
+        fclose(stream);
+        mTrainingDataDirty = PR_FALSE;
     }
-    
-    fclose(stream);
-    
-    mTrainingDataDirty = PR_FALSE;
 }
 
 void nsBayesianFilter::readTrainingData()
 {
-    nsCOMPtr<nsIFile> file;
+    nsCOMPtr<nsILocalFile> file;
     nsresult rv = getTrainingFile(file);
     if (NS_FAILED(rv)) return;
+    
+    PRBool exists;
+    rv = file->Exists(&exists);
+    if (NS_FAILED(rv) || !exists) return;
 
     // open the file, and write out training data using fprintf for now.
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
-    if (NS_FAILED(rv)) return;
-    
     FILE* stream;
-    rv = localFile->OpenANSIFileDesc("r", &stream);
+    rv = file->OpenANSIFileDesc("rb", &stream);
     if (NS_FAILED(rv)) return;
 
     // FIXME:  should make sure that the tokenizers are empty.
     char cookie[4];
     if (!((fread(cookie, sizeof(cookie), 1, stream) == 1) &&
           (memcmp(cookie, kMagicCookie, sizeof(cookie)) == 0) &&
-          (fread(&mGoodCount, sizeof(mGoodCount), 1, stream) == 1) &&
-          (fread(&mBadCount, sizeof(mBadCount), 1, stream) == 1) &&
+          (readUInt32(stream, &mGoodCount) == 1) &&
+          (readUInt32(stream, &mBadCount) == 1) &&
            readTokens(stream, mGoodTokens) &&
            readTokens(stream, mBadTokens))) {
         NS_WARNING("failed to read training data.");
