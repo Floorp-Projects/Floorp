@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.52 $ 
-# $Date: 2002/05/07 22:50:46 $ 
+# $Revision: 1.53 $ 
+# $Date: 2002/05/08 22:30:12 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -152,6 +152,7 @@ use BuildStatus;
 use TinderDB::BasicTxtDB;
 use VCDisplay;
 use Utils;
+use TinderConfig;
 
 $VERSION = '#tinder_version#';
 
@@ -529,12 +530,8 @@ sub event_times_vec {
       my ($num_recs) = $#{ $DATABASE{$tree}{$buildname}{'recs'} };
       foreach $i (0 .. $num_recs) {
 
-          # By convention we only show the start times since people
-          # are only interested in what made it into builds.  Do not
-          # also push the $rec->{'endtime'};
-
           my $rec = $DATABASE{$tree}{$buildname}{'recs'}[$i];
-          push @times, $rec->{'starttime'};
+          push @times, $rec->{'starttime'}, $rec->{'endtime'};
 
       }
   }
