@@ -1082,6 +1082,9 @@ wallet_WriteToList(
   PRBool added_to_list = PR_FALSE;
 
   wallet_MapElement * mapElement = new wallet_MapElement;
+  if (!mapElement) {
+    return;
+  }
 
   item1.ToLowerCase();
   mapElement->item1 = item1;
@@ -1657,10 +1660,16 @@ wallet_ReadFromFile
         break;
       }
       wallet_Sublist * sublist = new wallet_Sublist;
-      sublist->item = nsAutoString (item2);
+      if (!sublist) {
+        break;
+      }
+      sublist->item = item2;
       itemList->AppendElement(sublist);
       sublist = new wallet_Sublist;
-      sublist->item = nsAutoString (item3);
+      if (!sublist) {
+        break;
+      }
+      sublist->item = item3;
       itemList->AppendElement(sublist);
       /* add any following items to sublist up to next blank line */
       nsAutoString dummy2;
@@ -1680,6 +1689,9 @@ wallet_ReadFromFile
         }
         /* add item to sublist */
         sublist = new wallet_Sublist;
+        if (!sublist) {
+          break;
+        }
         sublist->item = nsAutoString (item3);
         itemList->AppendElement(sublist);
       }
