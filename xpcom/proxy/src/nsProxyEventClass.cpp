@@ -69,11 +69,22 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
 
     nsProxyEventClass* clazz = nsnull;
     nsIDKey key(aIID);
-    
+
+#ifdef PROXYEVENTCLASS_DEBUG 
+	char* iidStr = aIID.ToString();
+	printf("GetNewOrUsedClass  %s\n", iidStr);
+	nsCRT::free(iidStr);
+#endif
+
     if(iidToClassMap->Exists(&key))
     {
         clazz = (nsProxyEventClass*) iidToClassMap->Get(&key);
         NS_ADDREF(clazz);
+#ifdef PROXYEVENTCLASS_DEBUG
+		char* iidStr = aIID.ToString();
+		printf("GetNewOrUsedClass  %s hit\n", iidStr);
+		nsCRT::free(iidStr);
+#endif
     }
     else
     {
@@ -140,9 +151,14 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
 
 	nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
     
-    if (iidToClassMap == nsnull)
+    if (iidToClassMap != nsnull)
     {
         iidToClassMap->Put(&key, this);
+#ifdef PROXYEVENTCLASS_DEBUG
+		char* iidStr = aIID.ToString();
+		printf("GetNewOrUsedClass  %s put\n", iidStr);
+		nsCRT::free(iidStr);
+#endif
     }
 
     uint16 methodCount;
@@ -178,6 +194,11 @@ nsProxyEventClass::~nsProxyEventClass()
     if (iidToClassMap != nsnull)
     {
         iidToClassMap->Remove(&key);
+#ifdef PROXYEVENTCLASS_DEBUG
+		char* iidStr = mIID.ToString();
+		printf("GetNewOrUsedClass  %s remove\n", iidStr);
+		nsCRT::free(iidStr);
+#endif
     }
 }
 
