@@ -30,16 +30,23 @@
 
 <!-- Publish Tab Panel -->
 <!ENTITY siteList.label           "Site Name:">
+<!ENTITY siteList.tooltip         "Choose the site that you want to publish to">
 <!ENTITY newSiteButton.label      "New Site">
 <!ENTITY siteDirList.label        "Select or type a directory name in your publishing site:">
+<!ENTITY siteDirList.tooltip      "Choose or enter the name of the remote subdirectory to publish to">
 <!ENTITY docDirList.label         "Site subdirectory for this page:">
 <!ENTITY publishImgCheckbox.label "Include images and other files">
+<!ENTITY publishImgCheckbox.tooltip "Publish images and other files referenced by this page">
 <!ENTITY sameLocationRadio.label  "Use same location as page">
+<!ENTITY sameLocationRadio.tooltip "Publish files to the same location as the page">
 <!ENTITY useSubdirRadio.label     "Use this site subdirectory:">
+<!ENTITY useSubdir.tooltip        "Choose or enter name of remote subdirectory where files will be published">
 <!ENTITY chooseDirButton.label    "Choose...">
 <!ENTITY pageTitle.label          "Page Title:">
+<!ENTITY pageTitle.tooltip        "Enter a title to identify the page in the window and in bookmarks">
 <!ENTITY pageTitleExample.label   "e.g.: &quot;My Web Page&quot;">
 <!ENTITY filename.label           "Filename:">
+<!ENTITY filename.tooltip         "Enter a name for this file, including '.html' for a web page">
 <!ENTITY filenameExample.label    "e.g,: &quot;mypage.html&quot;">
 <!ENTITY relatedDocs.label        "Other files to publish">
 <!ENTITY setDefaultButton.label   "Set as Default">
@@ -51,8 +58,14 @@
 <!ENTITY serverInfo.label     "Server Information">
 <!ENTITY loginInfo.label      "Login Information">
 <!ENTITY siteName.label       "Site Name:">
-<!ENTITY siteUrl.label        "Publishing URL (provided by your ISP or Sys Admin.):">
-<!ENTITY browseUrl.label      "HTTP address to browse to:">
+<!ENTITY siteName.tooltip     "A nickname that identifies this publishing site (e.g.: 'MySite')">
+<!ENTITY siteUrl.label        "Publishing address (e.g.: 'ftp://ftp.myisp.com/myusername'):">
+<!ENTITY siteUrl.tooltip      "The FTP:// or HTTP:// address provided by your ISP or web hosting service">
+<!ENTITY browseUrl.label      "HTTP address of your homepage (e.g.: 'http://www.myisp.com/myusername'):">
+<!ENTITY browseUrl.tooltip    "The HTTP:// address of your home directory (don't include filename)">
 <!ENTITY username.label       "User name:">
+<!ENTITY username.tooltip     "The user name you use to log in to your ISP or web hosting service">
 <!ENTITY password.label       "Password:">
+<!ENTITY password.tooltip     "The password associated with your user name">
 <!ENTITY savePassword.label   "Save Password">
+<!ENTITY savePassword.tooltip "Select this to save your password securely using Password Manager">
