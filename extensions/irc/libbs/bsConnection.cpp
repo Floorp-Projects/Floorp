@@ -46,8 +46,8 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD init(const char *hostname);
-    NS_IMETHOD destroy();
+    NS_IMETHOD Init(const char *hostname);
+    NS_IMETHOD Destroy();
     
     NS_IMETHOD GetIsConnected(PRBool *aIsConnected);
     NS_IMETHOD SetIsConnected(PRBool aIsConnected);
@@ -58,17 +58,16 @@ public:
     NS_IMETHOD GetPort(PRUint16 *aPort);
     NS_IMETHOD SetPort(PRUint16 aPort);
 
-    NS_IMETHOD disconnect(PRBool *rval);
+    NS_IMETHOD Disconnect(PRBool *rval);
 
-    NS_IMETHOD connect(PRUint16 port, const char *bindIP, PRBool tcpFlag,
+    NS_IMETHOD Connect(PRUint16 port, const char *bindIP, PRBool tcpFlag,
                        PRBool *rval);
 
-    NS_IMETHOD sendData(const char *data);
+    NS_IMETHOD SendData(const char *data);
 
-    NS_IMETHOD hasData(PRBool *_retval);
+    NS_IMETHOD HasData(PRBool *_retval);
 
-    NS_IMETHOD readData(PRUint32 timeout, char **aData);
-
+    NS_IMETHOD ReadData(PRUint32 timeout, char **aData);
     
 private:
     BSConnectionClass  *connection;
@@ -112,7 +111,7 @@ bsConnection::~bsConnection()
 NS_IMPL_ISUPPORTS(bsConnection, bsIConnection::GetIID());
 
 NS_IMETHODIMP
-bsConnection::init(const char *hostname)
+bsConnection::Init(const char *hostname)
 {
     if (mInitializedFlag)
         return NS_ERROR_FAILURE;
@@ -129,7 +128,7 @@ bsConnection::init(const char *hostname)
 }
 
 NS_IMETHODIMP
-bsConnection::destroy()
+bsConnection::Destroy()
 {
     if (mInitializedFlag)
         bs_server_free (server);
@@ -201,7 +200,7 @@ bsConnection::SetPort(PRUint16 aPort)
 }
 
 NS_IMETHODIMP
-bsConnection::disconnect(PRBool *rval)
+bsConnection::Disconnect(PRBool *rval)
 {
     BS_INIT_CHECK;
 
@@ -215,7 +214,7 @@ bsConnection::disconnect(PRBool *rval)
 }
 
 NS_IMETHODIMP
-bsConnection::connect(PRUint16 port, const char *bindIP, PRBool tcpFlag,
+bsConnection::Connect(PRUint16 port, const char *bindIP, PRBool tcpFlag,
                       PRBool *rval)
 {
     BS_INIT_CHECK;
@@ -229,7 +228,7 @@ bsConnection::connect(PRUint16 port, const char *bindIP, PRBool tcpFlag,
 }
 
 NS_IMETHODIMP
-bsConnection::sendData(const char *data)
+bsConnection::SendData(const char *data)
 {
     BS_INIT_CHECK;
 
@@ -244,7 +243,7 @@ bsConnection::sendData(const char *data)
 }
 
 NS_IMETHODIMP
-bsConnection::hasData (PRBool *result)
+bsConnection::HasData (PRBool *result)
 {
     PRPollDesc polld;
     
@@ -269,7 +268,7 @@ bsConnection::hasData (PRBool *result)
 }
 
 NS_IMETHODIMP
-bsConnection::readData(PRUint32 timeout, char **aData)
+bsConnection::ReadData(PRUint32 timeout, char **aData)
 {
     NS_PRECONDITION (aData, "null ptr");
     bschar *data;
@@ -298,6 +297,3 @@ bsConnection::readData(PRUint32 timeout, char **aData)
     return NS_OK;
     
 }
-
-    
-    
