@@ -264,6 +264,9 @@ protected:
     PRInt16                         mSelectFlags;
     nsresult                        mStatus;
 
+    // last status reported via OnStatus (eg. NS_NET_STATUS_RESOLVING_HOST)
+    nsresult                        mLastOnStatusMsg;
+
     PRFileDesc*                     mSocketFD;
     PRUint32                        mSocketRef;  // if non-zero, keep the socket open unless there is an error
     PRUint32                        mSocketLock; // if non-zero, do not close the socket even if there is an error

@@ -156,6 +156,7 @@ nsSocketTransport::nsSocketTransport():
     mReadWriteState(0),
     mSelectFlags(0),
     mStatus(NS_OK),
+    mLastOnStatusMsg(0),
     mSocketFD(nsnull),
     mSocketRef(0),
     mSocketLock(0),
@@ -1840,6 +1841,12 @@ nsSocketTransport::OnStatus(nsSocketRequest *req, nsISupports *ctxt, nsresult me
 {
     if (!mProgressSink)
         return NS_ERROR_FAILURE;
+
+    // no reason to report this status message again.
+    if (message == mLastOnStatusMsg)
+        return NS_OK;
+
+    mLastOnStatusMsg = message;
 
     nsAutoString host; host.AssignWithConversion(mHostName);
     return mProgressSink->OnStatus(req, ctxt, message, host.get());
