@@ -31,6 +31,7 @@ CSRCS		=  \
 CPPSRCS		= \
                   nsGB2312ToUnicode.cpp \
                   nsUnicodeToGB2312.cpp \
+                  nsUnicodeToGB2312GL.cpp \
 		  nsUCvCnSupport.cpp \
                   nsUCvCnDll.cpp \
 		  $(NULL)
