@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.41 $ $Date: 2002/04/22 19:09:01 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.42 $ $Date: 2002/04/26 14:34:05 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1035,6 +1035,13 @@ NSSTrustDomain_FindUserCertificatesForEmailSigning
     return NULL;
 }
 
+static PRStatus
+collector(nssCryptokiObject *instance, void *arg)
+{
+    nssPKIObjectCollection *collection = (nssPKIObjectCollection *)arg;
+    return nssPKIObjectCollection_AddInstanceAsObject(collection, instance);
+}
+
 NSS_IMPLEMENT PRStatus *
 NSSTrustDomain_TraverseCertificates
 (
@@ -1052,6 +1059,7 @@ NSSTrustDomain_TraverseCertificates
     nssUpdateLevel updateLevel;
     NSSCertificate **cached = NULL;
     nssList *certList;
+
     certList = nssList_Create(NULL, PR_FALSE);
     if (!certList) return NULL;
     (void *)nssTrustDomain_GetCertsFromCache(td, certList);
@@ -1073,7 +1081,6 @@ NSSTrustDomain_TraverseCertificates
 	token = nssSlot_GetToken(*slotp);
 	if (token) {
 	    nssSession *session;
-	    nssCryptokiObject **instances;
 	    nssTokenSearchType tokenOnly = nssTokenSearchType_TokenOnly;
 	    /* get a session for the token */
 	    session = nssTrustDomain_GetSessionForToken(td, token);
@@ -1082,18 +1089,12 @@ NSSTrustDomain_TraverseCertificates
 		goto loser;
 	    }
 	    /* perform the traversal */
-	    instances = nssToken_FindCertificates(token,
-	                                          session,
-	                                          tokenOnly,
-	                                          0, &status);
+	    status = nssToken_TraverseCertificates(token,
+	                                           session,
+	                                           tokenOnly,
+	                                           collector,
+	                                           collection);
 	    nssToken_Destroy(token);
-	    if (status != PR_SUCCESS) {
-		goto loser;
-	    }
-	    /* add the found certificates to the collection */
-	    status = nssPKIObjectCollection_AddInstances(collection, 
-	                                                 instances, 0);
-	    nss_ZFreeIf(instances);
 	    if (status != PR_SUCCESS) {
 		goto loser;
 	    }

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.20 $ $Date: 2002/04/25 20:49:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.21 $ $Date: 2002/04/26 14:33:59 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -1545,5 +1545,115 @@ nssToken_IsPresent
 )
 {
     return nssSlot_IsTokenPresent(token->slot);
+}
+
+/* Sigh.  The methods to find objects declared above cause problems with
+ * the low-level object cache in the softoken -- the objects are found in 
+ * toto, then one wave of GetAttributes is done, then another.  Having a 
+ * large number of objects causes the cache to be thrashed, as the objects 
+ * are gone before there's any chance to ask for their attributes.
+ * So, for now, bringing back traversal methods for certs.  This way all of 
+ * the cert's attributes can be grabbed immediately after finding it,
+ * increasing the likelihood that the cache takes care of it.
+ */
+NSS_IMPLEMENT PRStatus
+nssToken_TraverseCertificates
+(
+  NSSToken *token,
+  nssSession *sessionOpt,
+  nssTokenSearchType searchType,
+  PRStatus (* callback)(nssCryptokiObject *instance, void *arg),
+  void *arg
+)
+{
+    CK_RV ckrv;
+    CK_ULONG count;
+    CK_OBJECT_HANDLE *objectHandles;
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE cert_template[2];
+    CK_ULONG ctsize;
+    NSSArena *arena;
+    PRStatus status;
+    PRUint32 arraySize, numHandles;
+    nssCryptokiObject **objects;
+    void *epv = nssToken_GetCryptokiEPV(token);
+    nssSession *session = (sessionOpt) ? sessionOpt : token->defaultSession;
+
+    /* template for all certs */
+    NSS_CK_TEMPLATE_START(cert_template, attr, ctsize);
+    if (searchType == nssTokenSearchType_SessionOnly) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+    } else if (searchType == nssTokenSearchType_TokenOnly ||
+               searchType == nssTokenSearchType_TokenForced) {
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    }
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
+    NSS_CK_TEMPLATE_FINISH(cert_template, attr, ctsize);
+
+    /* the arena is only for the array of object handles */
+    arena = nssArena_Create();
+    if (!arena) {
+	return PR_FAILURE;
+    }
+    arraySize = OBJECT_STACK_SIZE;
+    numHandles = 0;
+    objectHandles = nss_ZNEWARRAY(arena, CK_OBJECT_HANDLE, arraySize);
+    if (!objectHandles) {
+	goto loser;
+    }
+    nssSession_EnterMonitor(session); /* ==== session lock === */
+    /* Initialize the find with the template */
+    ckrv = CKAPI(epv)->C_FindObjectsInit(session->handle, 
+                                         cert_template, ctsize);
+    if (ckrv != CKR_OK) {
+	nssSession_ExitMonitor(session);
+	goto loser;
+    }
+    while (PR_TRUE) {
+	/* Issue the find for up to arraySize - numHandles objects */
+	ckrv = CKAPI(epv)->C_FindObjects(session->handle, 
+	                                 objectHandles + numHandles, 
+	                                 arraySize - numHandles, 
+	                                 &count);
+	if (ckrv != CKR_OK) {
+	    nssSession_ExitMonitor(session);
+	    goto loser;
+	}
+	/* bump the number of found objects */
+	numHandles += count;
+	if (numHandles < arraySize) {
+	    break;
+	}
+	/* the array is filled, double it and continue */
+	arraySize *= 2;
+	objectHandles = nss_ZREALLOCARRAY(objectHandles, 
+	                                  CK_OBJECT_HANDLE, 
+	                                  arraySize);
+	if (!objectHandles) {
+	    nssSession_ExitMonitor(session);
+	    goto loser;
+	}
+    }
+    ckrv = CKAPI(epv)->C_FindObjectsFinal(session->handle);
+    nssSession_ExitMonitor(session); /* ==== end session lock === */
+    if (ckrv != CKR_OK) {
+	goto loser;
+    }
+    if (numHandles > 0) {
+	objects = create_objects_from_handles(token, session,
+	                                      objectHandles, numHandles);
+	if (objects) {
+	    nssCryptokiObject **op;
+	    for (op = objects; *op; op++) {
+		status = (*callback)(*op, arg);
+	    }
+	    nss_ZFreeIf(objects);
+	}
+    }
+    nssArena_Destroy(arena);
+    return PR_SUCCESS;
+loser:
+    nssArena_Destroy(arena);
+    return PR_FAILURE;
 }
 

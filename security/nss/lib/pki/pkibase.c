@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.4 $ $Date: 2002/04/18 19:26:17 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.5 $ $Date: 2002/04/26 14:34:04 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -716,7 +716,7 @@ find_object_in_collection
     return (pkiObjectCollectionNode *)NULL;
 }
 
-static PRStatus
+static pkiObjectCollectionNode *
 add_object_instance
 (
   nssPKIObjectCollection *collection,
@@ -740,7 +740,7 @@ add_object_instance
 	 * are not using it, it must be destroyed.
 	 */
 	nssCryptokiObject_Destroy(instance);
-	return PR_SUCCESS;
+	return node;
     }
     mark = nssArena_Mark(collection->arena);
     if (!mark) {
@@ -780,13 +780,13 @@ add_object_instance
 	status = PR_SUCCESS;
     }
     nssArena_Unmark(collection->arena, mark);
-    return status;
+    return node;
 loser:
     if (mark) {
 	nssArena_Release(collection->arena, mark);
     }
     nssCryptokiObject_Destroy(instance);
-    return PR_FAILURE;
+    return (pkiObjectCollectionNode *)NULL;
 }
 
 NSS_IMPLEMENT PRStatus
@@ -799,13 +799,14 @@ nssPKIObjectCollection_AddInstances
 {
     PRStatus status = PR_SUCCESS;
     PRUint32 i = 0;
+    pkiObjectCollectionNode *node;
     if (instances) {
 	for (; *instances; instances++, i++) {
 	    if (numInstances > 0 && i == numInstances) {
 		break;
 	    }
-	    status = add_object_instance(collection, *instances);
-	    if (status != PR_SUCCESS) {
+	    node = add_object_instance(collection, *instances);
+	    if (node == NULL) {
 		goto loser;
 	    }
 	}
@@ -888,6 +889,35 @@ nssPKIObjectCollection_Traverse
 	}
 	link = PR_NEXT_LINK(link);
     }
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT PRStatus
+nssPKIObjectCollection_AddInstanceAsObject
+(
+  nssPKIObjectCollection *collection,
+  nssCryptokiObject *instance
+)
+{
+    pkiObjectCollectionNode *node;
+    node = add_object_instance(collection, instance);
+    if (node == NULL) {
+	return PR_FAILURE;
+    }
+    if (!node->haveObject) {
+	node->object = (*collection->createObject)(node->object);
+	node->haveObject = PR_TRUE;
+    }
+#ifdef NSS_3_4_CODE
+    else {
+	/* The instance was added to a pre-existing node.  This
+	 * function is *only* being used for certificates, and having
+	 * multiple instances of certs in 3.X requires updating the
+	 * CERTCertificate.
+	 */
+	STAN_ForceCERTCertificateUpdate((NSSCertificate *)node->object);
+    }
+#endif
     return PR_SUCCESS;
 }
 
