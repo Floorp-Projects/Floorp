@@ -27,6 +27,7 @@ use Moz;
 
 # configuration variables
 $DEBUG = 1;
+$SHARED = 0;
 $pull{all} = 0;
 $pull{lizard} = 0;
 $pull{xpcom} = 0;
