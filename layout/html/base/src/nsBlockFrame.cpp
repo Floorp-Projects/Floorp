@@ -63,12 +63,14 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #undef NOISY_FIRST_LETTER
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_RUNIN
+#undef NOISY_FLOATER_CLEARING
 #else
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
 #undef NOISY_FIRST_LETTER
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_RUNIN
+#undef NOISY_FLOATER_CLEARING
 #endif
 
 /* 52b33130-0b99-11d2-932e-00805f8add32 */
@@ -1964,6 +1966,9 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
     if (aState.mNoWrap) {
       maxWidth = 0;
       maxHeight = 0;
+
+      // Find the maximum line-box width and use that as the
+      // max-element width
       LineData* line = mLines;
       while (nsnull != line) {
         nscoord xm = line->mBounds.XMost();
@@ -1972,6 +1977,7 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
         }
         line = line->mNext;
       }
+
       // XXX winging it!
       maxHeight = aState.mMaxElementSize.height +
         aState.mBorderPadding.top + aState.mBorderPadding.bottom;
@@ -1981,56 +1987,50 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
         aState.mBorderPadding.left + aState.mBorderPadding.right;
       maxHeight = aState.mMaxElementSize.height +
         aState.mBorderPadding.top + aState.mBorderPadding.bottom;
-    }
 
-    // Factor in any left and right floaters as well
-    LineData* line = mLines;
-    PRInt32 maxLeft = 0, maxRight = 0;
-    while (nsnull != line) {
-      if (nsnull != line->mFloaters) {
-        nsRect r;
-        nsMargin floaterMargin;
-        PRInt32 leftSum = 0, rightSum = 0;
-        PRInt32 n = line->mFloaters->Count();
-        for (PRInt32 i = 0; i < n; i++) {
-          nsPlaceholderFrame* placeholder = (nsPlaceholderFrame*)
-            line->mFloaters->ElementAt(i);
-          nsIFrame* floater = placeholder->GetAnchoredItem();
-          floater->GetRect(r);
-          const nsStyleDisplay* floaterDisplay;
-          const nsStyleSpacing* floaterSpacing;
-          floater->GetStyleData(eStyleStruct_Display,
-                                (const nsStyleStruct*&)floaterDisplay);
-          floater->GetStyleData(eStyleStruct_Spacing,
-                                (const nsStyleStruct*&)floaterSpacing);
-          floaterSpacing->CalcMarginFor(floater, floaterMargin);
-          nscoord width = r.width + floaterMargin.left + floaterMargin.right;
-          NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
-                       (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
-                       "invalid float type");
-          if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
-            leftSum += width;
+      // XXX This is still an approximation of the truth:
+
+      // 1. it doesn't take into account that after a floater is
+      // placed we always place at least *something* on the line.
+
+      // 2. if a floater doesn't start at the left margin (because
+      // it's placed relative to a floater on a preceeding line, say),
+      // then we get the wrong answer.
+
+      LineData* line = mLines;
+      while (nsnull != line) {
+        if (nsnull != line->mFloaters) {
+          nsRect r;
+          nsMargin floaterMargin;
+
+          // Sum up the widths of the floaters on this line
+          PRInt32 sum = 0;
+          PRInt32 n = line->mFloaters->Count();
+          for (PRInt32 i = 0; i < n; i++) {
+            nsPlaceholderFrame* placeholder = (nsPlaceholderFrame*)
+              line->mFloaters->ElementAt(i);
+            nsIFrame* floater = placeholder->GetAnchoredItem();
+            floater->GetRect(r);
+            const nsStyleDisplay* floaterDisplay;
+            const nsStyleSpacing* floaterSpacing;
+            floater->GetStyleData(eStyleStruct_Display,
+                                  (const nsStyleStruct*&)floaterDisplay);
+            floater->GetStyleData(eStyleStruct_Spacing,
+                                  (const nsStyleStruct*&)floaterSpacing);
+            floaterSpacing->CalcMarginFor(floater, floaterMargin);
+            nscoord width = r.width + floaterMargin.left + floaterMargin.right;
+            NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
+                         (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
+                         "invalid float type");
+            sum += width;
           }
-          else {
-            rightSum += width;
+
+          // See if we need a larger max-element width
+          if (sum > maxWidth) {
+            maxWidth = sum;
           }
         }
-        if (leftSum > maxLeft) maxLeft = leftSum;
-        if (rightSum > maxRight) maxRight = rightSum;
-      }
-      line = line->mNext;
-    }
-
-    // XXX this part is an approximation
-    if (aState.mNoWrap) {
-      maxWidth += maxLeft + maxRight;
-    }
-    else {
-      if (maxLeft > maxWidth) {
-        maxWidth = maxLeft;
-      }
-      if (maxRight > maxWidth) {
-        maxWidth = maxRight;
+        line = line->mNext;
       }
     }
 
@@ -4721,8 +4721,6 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
 
   // Reflow the floater if it's targetted for a reflow
   if (nsnull != reflowCommand) {
-//XXX    nsIFrame* target;
-//XXX    reflowCommand->GetTarget(target);
     if (floater == mNextRCFrame) {
       nsSize kidAvailSize(0, 0);
       // XXX the choice of constructors is confusing and non-obvious
@@ -4780,6 +4778,14 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
     // band will be the height of the shortest floater, therefore we
     // adjust mY by that distance and keep trying until we have enough
     // space for this floater.
+#ifdef NOISY_FLOATER_CLEARING
+    mBlock->ListTag(stdout);
+    printf(": clearing floater during floater placement: ");
+    printf("availWidth=%d regionWidth=%d,%d(w/o margins) contentWidth=%d\n",
+           mCurrentBand.availSpace.width, region.width,
+           region.width - floaterMargin.left - floaterMargin.right,
+           mContentArea.width);
+#endif
     mY += mCurrentBand.availSpace.height;
     GetAvailableSpace();
   }
