@@ -91,16 +91,24 @@ function toOpenWindow( aWindow )
 
 function toOpenWindowByType( inType, uri )
 {
-	var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
+  // Recently opened one.
+  if (uri in window)
+    return;
 
-	var	windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
+  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(nsIWindowMediator);
 
-	var topWindow = windowManagerInterface.getMostRecentWindow( inType );
-	
-	if ( topWindow )
-		toOpenWindow(topWindow);
-	else
-		window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+  var topWindow = windowManager.getMostRecentWindow( inType );
+
+  if ( topWindow )
+    toOpenWindow( topWindow );
+  else
+  {
+    function newWindowLoaded(event) {
+      delete window[uri];
+    }
+    window[uri] = window.openDialog(uri, "", "all,dialog=no");
+    window[uri].addEventListener("load", newWindowLoaded, false);
+  }
 }
 
 
