@@ -16,13 +16,22 @@
  * Reserved.
  */
 #include "nsCOMPtr.h"
-#include "nsIHTMLContentSink.h"
+#include "nsIHTMLFragmentContentSink.h"
 #include "nsIParser.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLTokens.h"  
 #include "nsHTMLEntities.h" 
 #include "nsHTMLParts.h"
+#include "nsIDOMComment.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMDocumentFragment.h"
+#include "nsVoidArray.h"
+#include "nsITextContent.h"
+#include "nsINameSpace.h"
+#include "nsINameSpaceManager.h"
+#include "nsIDocument.h"
+#include "prmem.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -31,7 +40,13 @@
 // at some pointe really soon!
 //
 
-class nsHTMLFragmentContentSink : public nsIHTMLContentSink {
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
+static NS_DEFINE_IID(kIHTMLFragmentContentSinkIID, NS_IHTML_FRAGMENT_CONTENT_SINK_IID);
+static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
+static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
+
+class nsHTMLFragmentContentSink : public nsIHTMLFragmentContentSink {
 public:
   nsHTMLFragmentContentSink();
   virtual ~nsHTMLFragmentContentSink();
@@ -70,19 +85,18 @@ public:
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD DoFragment(PRBool aFlag);
 
+  // nsIHTMLFragmentContentSink
+  NS_IMETHOD GetFragment(nsIDOMDocumentFragment** aFragment);
 
   nsIContent* GetCurrentContent();
   PRInt32 PushContent(nsIContent *aContent);
   nsIContent* PopContent();
 
   nsresult AddAttributes(const nsIParserNode& aNode,
-                         nsIContent* aContent,
-                         PRBool aIsHTML);
+                         nsIContent* aContent);
 
   nsresult AddText(const nsString& aString);
-  nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
-                     PRBool* aDidFlush=nsnull);
-
+  nsresult FlushText();
 
   PRBool mHitSentinel;
 
@@ -99,8 +113,24 @@ public:
 };
 
 
+nsresult
+NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsHTMLFragmentContentSink* it;
+  NS_NEWXPCOM(it, nsHTMLFragmentContentSink);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kIHTMLFragmentContentSinkIID, (void **)aResult);
+}
+
 nsHTMLFragmentContentSink::nsHTMLFragmentContentSink()
 {
+  NS_INIT_REFCNT();
   mHitSentinel = PR_FALSE;
   mRoot = nsnull;
   mParser = nsnull;
@@ -132,13 +162,55 @@ nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsHTMLFragmentContentSink, kIHTMLContentSinkIID)
+NS_IMPL_ADDREF(nsHTMLFragmentContentSink)
+NS_IMPL_RELEASE(nsHTMLFragmentContentSink)
+
+NS_IMETHODIMP 
+nsHTMLFragmentContentSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                         
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
+  if (aIID.Equals(kIHTMLFragmentContentSinkIID)) {
+    nsIHTMLFragmentContentSink* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  } 
+  if (aIID.Equals(kIHTMLContentSinkIID)) {
+    nsIHTMLContentSink* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  } 
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*) ((nsISupports*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
 
 
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::WillBuildModel(void)
 {
-  return NS_OK;
+  nsresult result = NS_OK;
+
+  if (nsnull == mRoot) {
+    nsIDOMDocumentFragment* frag;
+
+    result = NS_NewDocumentFragment(&frag, nsnull);
+    if (NS_SUCCEEDED(result)) {
+      result = frag->QueryInterface(kIContentIID, (void**)&mRoot);
+      NS_RELEASE(frag);
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP 
@@ -202,7 +274,7 @@ nsHTMLFragmentContentSink::CloseHTML(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::OpenHead(const nsIParserNode& aNode)
 {
-  // XXX Not likely to get a head in the paste
+  // XXX Not likely to get a head in the fragment
   return OpenContainer(aNode);
 }
 
@@ -266,6 +338,7 @@ NS_IMETHODIMP
 nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsAutoString tag;
+  nsresult result = NS_OK;
 
   tag = aNode.GetText();
   if (tag.EqualsIgnoreCase(kSentinelStr)) {
@@ -281,25 +354,25 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
       result = AddAttributes(aNode, content);
       if (NS_OK == result) {
         nsIContent *parent = GetCurrentContent();
-	
-	if (nsnull == parent) {
-	  parent = mRoot;
-	}
-
+        
+        if (nsnull == parent) {
+          parent = mRoot;
+        }
+        
         parent->AppendChildTo(content, PR_FALSE);
         PushContent(content);
       }
     }
   }
 
-  return NS_OK;
+  return result;
 }
 
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::CloseContainer(const nsIParserNode& aNode)
 {
-  if (mHitSentinel && (nsnull != GetCurrentContent()) {
-    nsIContent content;
+  if (mHitSentinel && (nsnull != GetCurrentContent())) {
+    nsIContent* content;
     FlushText();
     content = PopContent();
     NS_RELEASE(content);
@@ -311,31 +384,30 @@ NS_IMETHODIMP
 nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
-  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
-  switch (nodeType) {
+  switch (aNode.GetTokenType()) {
     case eToken_start:
       {
-	FlushText();
-	
-	// Create new leaf content object
-	nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-	nsIHTMLContent* content;
-	result = NS_CreateHTMLElement(&content, tag);
-	
-	if (NS_OK == result) {
-	  result = AddAttributes(aNode, content);
-	  if (NS_OK == result) {
-	    nsIContent *parent = GetCurrentContent();
-	    
-	    if (nsnull == parent) {
-	      parent = mRoot;
-	    }
-	    
-	    parent->AppendChildTo(content, PR_FALSE);
-	  }
-	  NS_RELEASE(content);
-	}
+        FlushText();
+        
+        // Create new leaf content object
+        nsIHTMLContent* content;
+        nsAutoString tag = aNode.GetText();
+        result = NS_CreateHTMLElement(&content, tag);
+        
+        if (NS_OK == result) {
+          result = AddAttributes(aNode, content);
+          if (NS_OK == result) {
+            nsIContent *parent = GetCurrentContent();
+            
+            if (nsnull == parent) {
+              parent = mRoot;
+            }
+            
+            parent->AppendChildTo(content, PR_FALSE);
+          }
+          NS_RELEASE(content);
+        }
       }
       break;
     case eToken_text:
@@ -343,21 +415,21 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
     case eToken_newline:
       result = AddText(aNode.GetText());
       break;
-
+      
     case eToken_entity:
       {
-	nsAutoString tmp;
-	PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
-	if (unicode < 0) {
-	  result = AddText(aNode.GetText());
-	}
-	else {
-	  result = AddText(tmp);
-	}
+        nsAutoString tmp;
+        PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+        if (unicode < 0) {
+          result = AddText(aNode.GetText());
+        }
+        else {
+          result = AddText(tmp);
+        }
       }
       break;
   }
-
+  
   return result;
 }
 
@@ -387,7 +459,7 @@ nsHTMLFragmentContentSink::AddComment(const nsIParserNode& aNode)
       nsIContent *parent = GetCurrentContent();
       
       if (nsnull == parent) {
-	parent = mRoot;
+        parent = mRoot;
       }
       
       parent->AppendChildTo(comment, PR_FALSE);
@@ -410,6 +482,17 @@ nsHTMLFragmentContentSink::DoFragment(PRBool aFlag)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsHTMLFragmentContentSink::GetFragment(nsIDOMDocumentFragment** aFragment)
+{
+  if (nsnull != mRoot) {
+    return mRoot->QueryInterface(kIDOMDocumentFragmentIID, (void**)aFragment);
+  }
+  else {
+    *aFragment = nsnull;
+    return NS_OK;
+  }
+}
 
 nsIContent* 
 nsHTMLFragmentContentSink::GetCurrentContent()
@@ -442,4 +525,236 @@ nsHTMLFragmentContentSink::PopContent()
     mContentStack->RemoveElementAt(index);
   }
   return content;
+}
+
+#define NS_ACCUMULATION_BUFFER_SIZE 4096
+
+nsresult
+nsHTMLFragmentContentSink::AddText(const nsString& aString)
+{
+  PRInt32 addLen = aString.Length();
+  if (0 == addLen) {
+    return NS_OK;
+  }
+
+  // Create buffer when we first need it
+  if (0 == mTextSize) {
+    mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * NS_ACCUMULATION_BUFFER_SIZE);
+    if (nsnull == mText) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mTextSize = NS_ACCUMULATION_BUFFER_SIZE;
+  }
+
+  // Copy data from string into our buffer; flush buffer when it fills up
+  PRInt32 offset = 0;
+  while (0 != addLen) {
+    PRInt32 amount = mTextSize - mTextLength;
+    if (amount > addLen) {
+      amount = addLen;
+    }
+    if (0 == amount) {
+      nsresult rv = FlushText();
+      if (NS_OK != rv) {
+        return rv;
+      }
+    }
+    memcpy(&mText[mTextLength], aString.GetUnicode() + offset,
+           sizeof(PRUnichar) * amount);
+    mTextLength += amount;
+    offset += amount;
+    addLen -= amount;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLFragmentContentSink::FlushText()
+{
+  nsresult rv = NS_OK;
+  if (0 != mTextLength) {
+    nsIContent* content;
+    rv = NS_NewTextNode(&content);
+    if (NS_OK == rv) {
+      
+      // Set the text in the text node
+      static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
+      nsITextContent* text = nsnull;
+      content->QueryInterface(kITextContentIID, (void**) &text);
+      text->SetText(mText, mTextLength, PR_FALSE);
+      NS_RELEASE(text);
+
+      // Add text to its parent
+      nsIContent *parent = GetCurrentContent();
+      
+      if (nsnull == parent) {
+        parent = mRoot;
+      }
+      
+      parent->AppendChildTo(content, PR_FALSE);
+
+      NS_RELEASE(content);
+    }
+
+    mTextLength = 0;
+  }
+
+  return rv;
+}
+
+// XXX Code copied from nsHTMLContentSink. It should be shared.
+static void
+GetAttributeValueAt(const nsIParserNode& aNode,
+                    PRInt32 aIndex,
+                    nsString& aResult)
+{
+  // Copy value
+  const nsString& value = aNode.GetValueAt(aIndex);
+  aResult.Truncate();
+  aResult.Append(value);
+
+  // Strip quotes if present
+  PRUnichar first = aResult.First();
+  if ((first == '\"') || (first == '\'')) {
+    if (aResult.Last() == first) {
+      aResult.Cut(0, 1);
+      PRInt32 pos = aResult.Length() - 1;
+      if (pos >= 0) {
+        aResult.Cut(pos, 1);
+      }
+    } else {
+      // Mismatched quotes - leave them in
+    }
+  }
+
+  // Reduce any entities
+  // XXX Note: as coded today, this will only convert well formed
+  // entities.  This may not be compatible enough.
+  // XXX there is a table in navigator that translates some numeric entities
+  // should we be doing that? If so then it needs to live in two places (bad)
+  // so we should add a translate numeric entity method from the parser...
+  char cbuf[100];
+  PRInt32 index = 0;
+  while (index < aResult.Length()) {
+    // If we have the start of an entity (and it's not at the end of
+    // our string) then translate the entity into it's unicode value.
+    if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
+      PRInt32 start = index - 1;
+      PRUnichar e = aResult.CharAt(index);
+      if (e == '#') {
+        // Convert a numeric character reference
+        index++;
+        char* cp = cbuf;
+        char* limit = cp + sizeof(cbuf) - 1;
+        PRBool ok = PR_FALSE;
+        PRInt32 slen = aResult.Length();
+        while ((index < slen) && (cp < limit)) {
+          PRUnichar e = aResult.CharAt(index);
+          if (e == ';') {
+            index++;
+            ok = PR_TRUE;
+            break;
+          }
+          if ((e >= '0') && (e <= '9')) {
+            *cp++ = char(e);
+            index++;
+            continue;
+          }
+          break;
+        }
+        if (!ok || (cp == cbuf)) {
+          continue;
+        }
+        *cp = '\0';
+        if (cp - cbuf > 5) {
+          continue;
+        }
+        PRInt32 ch = PRInt32( ::atoi(cbuf) );
+        if (ch > 65535) {
+          continue;
+        }
+
+        // Remove entity from string and replace it with the integer
+        // value.
+        aResult.Cut(start, index - start);
+        aResult.Insert(PRUnichar(ch), start);
+        index = start + 1;
+      }
+      else if (((e >= 'A') && (e <= 'Z')) ||
+               ((e >= 'a') && (e <= 'z'))) {
+        // Convert a named entity
+        index++;
+        char* cp = cbuf;
+        char* limit = cp + sizeof(cbuf) - 1;
+        *cp++ = char(e);
+        PRBool ok = PR_FALSE;
+        PRInt32 slen = aResult.Length();
+        while ((index < slen) && (cp < limit)) {
+          PRUnichar e = aResult.CharAt(index);
+          if (e == ';') {
+            index++;
+            ok = PR_TRUE;
+            break;
+          }
+          if (((e >= '0') && (e <= '9')) ||
+              ((e >= 'A') && (e <= 'Z')) ||
+              ((e >= 'a') && (e <= 'z'))) {
+            *cp++ = char(e);
+            index++;
+            continue;
+          }
+          break;
+        }
+        if (!ok || (cp == cbuf)) {
+          continue;
+        }
+        *cp = '\0';
+        PRInt32 ch = NS_EntityToUnicode(cbuf);
+        if (ch < 0) {
+          continue;
+        }
+
+        // Remove entity from string and replace it with the integer
+        // value.
+        aResult.Cut(start, index - start);
+        aResult.Insert(PRUnichar(ch), start);
+        index = start + 1;
+      }
+      else if (e == '{') {
+        // Convert a script entity
+        // XXX write me!
+      }
+    }
+  }
+}
+
+// XXX Code copied from nsHTMLContentSink. It should be shared.
+nsresult
+nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
+                                         nsIContent* aContent)
+{
+  // Add tag attributes to the content attributes
+  nsAutoString k, v;
+  PRInt32 ac = aNode.GetAttributeCount();
+  for (PRInt32 i = 0; i < ac; i++) {
+    // Get upper-cased key
+    const nsString& key = aNode.GetKeyAt(i);
+    k.Truncate();
+    k.Append(key);
+    k.ToLowerCase();
+
+    nsIAtom*  keyAtom = NS_NewAtom(k);
+    
+    if (NS_CONTENT_ATTR_NOT_THERE == 
+        aContent->GetAttribute(kNameSpaceID_HTML, keyAtom, v)) {
+      // Get value and remove mandatory quotes
+      GetAttributeValueAt(aNode, i, v);
+
+      // Add attribute to content
+      aContent->SetAttribute(kNameSpaceID_HTML, keyAtom, v, PR_FALSE);
+    }
+    NS_RELEASE(keyAtom);
+  }
+  return NS_OK;
 }
