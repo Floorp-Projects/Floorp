@@ -24,6 +24,8 @@
 #define nsKeywordProtocolHandler_h___
 
 #include "nsIProtocolHandler.h"
+#include "nsString2.h"
+#include "prtypes.h"
 
 #define NS_KEYWORDPROTOCOLHANDLER_CID                  \
 { /* 2E4233C0-6FB4-11d3-A180-0050041CAF44 */         \
@@ -51,6 +53,8 @@ public:
     nsresult Init();
 
 protected:
+    PRBool              mEnabled;
+    nsCAutoString       mKeywordURL;
 };
 
 #endif /* nsKeywordProtocolHandler_h___ */
