@@ -103,7 +103,13 @@ nsresult newsTestDriver::RunDriver()
         newMsgHdr->Release();
         newMsgHdr = nsnull;
        
-        m_newsDB->Commit(kSmallCommit);
+	/* closing the newsDB isn't enough.  something still has
+	 * reference to it.  (need to look into this, bienvenu 
+	 * suggests nsMsgFolderInfo?)
+	 * for now, we need to Commit() to force the changes
+	 * to the disk
+	 */
+        m_newsDB->Commit(kSessionCommit);
         m_newsDB->Close(PR_TRUE);
     }
 
