@@ -216,7 +216,32 @@ nsHTMLButtonElement::GetType(nsString& aType)
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
-NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
+//NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
+NS_IMETHODIMP                                                       
+nsHTMLButtonElement::GetDisabled(PRBool* aValue)                                
+{                                                                   
+  nsHTMLValue val;                                                  
+  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::disabled, val);   
+  *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;                        
+  return NS_OK;                                                     
+}                                                                   
+NS_IMETHODIMP                                                       
+nsHTMLButtonElement::SetDisabled(PRBool aValue)                                
+{                                                                   
+  nsHTMLValue empty(eHTMLUnit_Empty);                              
+  if (aValue) {                                                     
+    nsresult status = mInner.SetHTMLAttribute(nsHTMLAtoms::disabled, empty, PR_TRUE); 
+    mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "DISABLED", PR_TRUE);
+    return status;
+
+  }                                                                 
+  else {                                                            
+    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, PR_TRUE);  
+    mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "", PR_TRUE);
+    return NS_OK;                                                   
+  }                                                                 
+}
+
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Name, name)
 NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
@@ -334,11 +359,13 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
         if (activeLink == this) {
           if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-            nsAutoString href, target;
+            nsAutoString href, target, disabled;
             nsIURL* baseURL = nsnull;
             GetBaseURL(baseURL);
             GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
             GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
+            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled); 
+            
             if (target.Length() == 0) {
               GetBaseTarget(target);
             }
