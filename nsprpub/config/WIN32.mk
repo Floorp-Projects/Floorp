@@ -67,31 +67,20 @@ DLL_SUFFIX = dll
 
 OS_CFLAGS = -W3 -nologo -GF -Gy
 
-ifdef MOZ_PROF
-
-#
-# compile with debug symbols, but without DEBUG code and ASSERTs
-#
-ifdef USE_DEBUG_RTL
-OS_CFLAGS += -MDd
-else
-OS_CFLAGS += -MD
-endif
-OPTIMIZER = -Od -Z7
-#OPTIMIZER = -Zi -Fd$(OBJDIR)/ -Od
-DEFINES = -UDEBUG -U_DEBUG -DNDEBUG
-DLLFLAGS = -DEBUG -DEBUGTYPE:CV -OUT:"$@"
-OBJDIR_TAG = _DBG
-LDFLAGS = -DEBUG -DEBUGTYPE:CV
-
-else
-
 ifdef BUILD_OPT
 OS_CFLAGS += -MD
 OPTIMIZER = -O2
 DEFINES = -UDEBUG -U_DEBUG -DNDEBUG
 DLLFLAGS = -OUT:"$@"
 OBJDIR_TAG = _OPT
+
+# Add symbolic information for use by a profiler
+ifdef MOZ_PROF
+OPTIMIZER += -Z7
+DLLFLAGS += -DEBUG -DEBUGTYPE:CV
+LDFLAGS += -DEBUG -DEBUGTYPE:CV
+endif
+
 else
 #
 # Define USE_DEBUG_RTL if you want to use the debug runtime library
@@ -117,7 +106,6 @@ endif
 
 OBJDIR_TAG = _DBG
 LDFLAGS = -DEBUG -DEBUGTYPE:CV
-endif
 endif
 
 DEFINES += -DWIN32
