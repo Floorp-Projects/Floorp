@@ -26,20 +26,20 @@
 #
 
 
-<?xml-stylesheet href="chrome://messenger/skin/addressbook/abSelectAddresses-panel.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/abContactsPanel.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressPanes.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/abResultsPane.css" type="text/css"?>
 
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
 
 <!DOCTYPE page [
-<!ENTITY % abSelectAddressesDialogDTD SYSTEM "chrome://messenger/locale/addressbook/abSelectAddressesDialog.dtd" >
-%abSelectAddressesDialogDTD;
 <!ENTITY % abResultsPaneOverlayDTD SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd" >
 %abResultsPaneOverlayDTD;
+<!ENTITY % abContactsPanelDTD SYSTEM "chrome://messenger/locale/addressbook/abContactsPanel.dtd" >
+%abContactsPanelDTD;
 ]>
 
-<page id="abSelectAddresses-panel"
+<page id="abContactsPanel"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="AbPanelLoad();"
       onunload="AbPanelUnload();"
@@ -53,9 +53,11 @@
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abResultsPane.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abSelectAddresses-panel.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abContactsPanel.js"/>
     
-  <vbox id="results_box" flex="1">     
+  <vbox id="results_box" flex="1">   
+    <separator class="thin"/>  
+    <label value="&addressbookPicker.label;"/> 
     <hbox id="panel-bar" class="toolbar" align="center">
       <menulist id="addressbookList" 
                 oncommand="DirPaneSelectionChangeMenulist(); AbPanelOnChange(event)" flex="1"
@@ -77,11 +79,14 @@
       </menulist>
     </hbox>
 
-    <hbox align="center">
-	    <label value="Search:"/> 
-      <spacer class="thin"/>
+    <separator class="thin"/> 
+
+    <vbox>      
+	    <label value="&searchInput.label;"/> 
 	    <textbox id="searchInput" flex="1"  oninput="onAbSearchInput(false);"  onkeypress="onAbSearchKeyPress(event);"/>
-	  </hbox>
+	  </vbox>
+
+    <separator class="thin"/> 
 
     <tree id="abResultsTree" flex="1" class="plain" sortCol="GeneratedName" persist="sortCol" ondblclick="addSelectedAddresses('addr_to')">
       <treecols>
@@ -95,14 +100,18 @@
       </treecols>
       <treechildren ondraggesture="nsDragAndDrop.startDrag(event, abResultsPaneObserver);"/>
     </tree>
-    <spacer/>
+    
+    <separator class="thin"/> 
+
     <hbox>
       <spring flex="1"/>
-      <button id="toButton" label="To:" oncommand="addSelectedAddresses('addr_to')"/> 
+      <button id="toButton" label="&toButton.label;" oncommand="addSelectedAddresses('addr_to')"/> 
       <spacer class="thin"/>
-      <button id="ccButton" label="Cc:" oncommand="addSelectedAddresses('addr_cc')"/> 
+      <button id="ccButton" label="&ccButton.label;" oncommand="addSelectedAddresses('addr_cc')"/> 
       <spring flex="1"/>
     </hbox>
+    
+    <separator class="thin"/> 
 
   </vbox>
 </page>

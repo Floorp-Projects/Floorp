@@ -25,11 +25,12 @@
   == Styles for the Address Book sidebar panel.
   ======================================================================= */
 
+@import url("chrome://messenger/skin/");
 @import url("chrome://messenger/skin/addressbook/addressbook.css");
   
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#abSelectAddresses-panel 
+#abContactsPanel 
 {
   -moz-appearance: toolbox;
   background-color: -moz-Dialog;

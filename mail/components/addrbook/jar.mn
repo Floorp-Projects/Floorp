@@ -1,6 +1,6 @@
 classic.jar:
 +   skin/classic/messenger/addressbook/addressbook.css          (skin/addressbook.css)
-+   skin/classic/messenger/addressbook/abSelectAddresses-panel.css (skin/abSelectAddresses-panel.css)
++   skin/classic/messenger/addressbook/abContactsPanel.css      (skin/abContactsPanel.css)
 +   skin/classic/messenger/addressbook/cardDialog.css           (skin/cardDialog.css)
 
 messenger.jar:
@@ -14,9 +14,10 @@ messenger.jar:
 *+  content/messenger/addressbook/abEditListDialog.xul          (content/abEditListDialog.xul)
 *+  content/messenger/addressbook/abMailListDialog.xul          (content/abMailListDialog.xul)
 *+  content/messenger/addressbook/abNewCardDialog.xul           (content/abNewCardDialog.xul)
-*   content/messenger/addressbook/abSelectAddresses-panel.xul   (content/abSelectAddresses-panel.xul)
-*   content/messenger/addressbook/abSelectAddresses-panel.js    (content/abSelectAddresses-panel.js)
+*   content/messenger/addressbook/abContactsPanel.xul           (content/abContactsPanel.xul)
+*   content/messenger/addressbook/abContactsPanel.js            (content/abContactsPanel.js)
 
 en-US.jar:
 +  locale/en-US/messenger/addressbook/abMainWindow.dtd          (locale/abMainWindow.dtd)
 +  locale/en-US/messenger/addressbook/abNewCardDialog.dtd       (locale/abNewCardDialog.dtd)
+   locale/en-US/messenger/addressbook/abContactsPanel.dtd       (locale/abContactsPanel.dtd)
