@@ -1004,7 +1004,10 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     PR_FREEIF(printfString);
 
     if (keepOnGoing)
+    {
       status = 0;
+      m_bogus_attachment = PR_TRUE; //That will cause this attachment to be ignored.
+    }
     else
     {
       status = NS_ERROR_ABORT;
