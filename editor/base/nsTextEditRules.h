@@ -151,8 +151,23 @@ protected:
   /** creates a bogus text node if the document has no editable content */
   nsresult CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection);
 
-  /** enforce selection must be inside PRE node */
-  nsresult PinSelectionInPRE(nsIDOMSelection *aSelection);
+  /** returns a truncated insertion string if insertion would place us
+      over aMaxLength */
+  nsresult TruncateInsertionIfNeeded(nsIDOMSelection *aSelection, 
+                                           const nsString  *aInString,
+                                           nsString        *aOutString,
+                                           PRInt32          aMaxLength);
+  
+  /** Echo's the insertion text into the password buffer, and converts
+      insertion text to '*'s */                                        
+  nsresult EchoInsertionToPWBuff(nsIDOMSelection *aSelection, nsString *aOutString);
+
+  /** do the actual text insertion */
+  nsresult DoTextInsertion(nsIDOMSelection *aSelection, 
+                           PRBool          *aCancel,
+                           PlaceholderTxn **aTxn,
+                           const nsString  *aInString,
+                           TypeInState      aTypeInState);
   
   // data
   nsHTMLEditor *mEditor;  // note that we do not refcount the editor

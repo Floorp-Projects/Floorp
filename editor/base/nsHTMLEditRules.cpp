@@ -146,14 +146,16 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
                                 TypeInState    typeInState,
                                 PRInt32         aMaxLength)
 {  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+
   // initialize out param
-  *aCancel = PR_FALSE;
+  *aCancel = PR_TRUE;
   nsresult res;
 
   char specialChars[] = {'\t',' ',nbsp,'\n',0};
   
-  mEditor->BeginTransaction();  // we have to batch this in case there are returns
-                                // Insert Break txns don't auto merge with insert text txns
+  // we have to batch this in case there are returns
+  // Insert Break txns don't auto merge with insert text txns
+  nsAutoEditBatch beginBatching(mEditor);
 
   // strategy: there are simple cases and harder cases.  The harder cases
   // we handle recursively by breaking them into a series of simple cases.
@@ -165,54 +167,52 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
   // 5) a run of chars containing no spaces, nbsp's, tabs, or returns
   char nbspStr[2] = {nbsp, 0};
   
-  // is it a solo tab?
-  if (*inString == "\t" )
-  {
-    res = InsertTab(aSelection,aCancel,aTxn,outString);
-  }
-  // is it a solo space?
-  else if (*inString == " ")
-  {
-    res = InsertSpace(aSelection,aCancel,aTxn,outString);
-  }
-  // is it a solo nbsp?
-  else if (*inString == nbspStr)
-  {
-    res = InsertSpace(aSelection,aCancel,aTxn,outString);
-  }
-  // is it a solo return?
-  else if (*inString == "\n")
-  {
-    // special case - cancel default handling
-    *aCancel = PR_TRUE;
-    res = mEditor->InsertBreak();
-  }
-  else
-  {
     // is it an innocous run of chars?  no spaces, nbsps, returns, tabs?
-    PRInt32 pos = inString->FindCharInSet(specialChars);
-    if (pos == -1)
+    nsString theString(*inString);  // copy instr for now
+    PRInt32 pos = theString.FindCharInSet(specialChars);
+    while (theString.Length())
     {
-      // no special chars, easy case
-      res = nsTextEditRules::WillInsertText(aSelection, aCancel, aTxn, inString, outString, typeInState, aMaxLength);
-    }
-    else
-    {
-      // else we need to break it up into two parts and recurse
-      *aCancel = PR_TRUE;
-      nsString firstString;
-      nsString restOfString(*inString);
+      PRBool bCancel;
+      nsString partialString;
       // if first char is special, then use just it
       if (pos == 0) pos = 1;
-      inString->Left(firstString, pos);
-      restOfString.Cut(0, pos);
-      if (NS_SUCCEEDED(mEditor->InsertText(firstString)))
-      {
-        res = mEditor->InsertText(restOfString);
-      }
+      if (pos == -1) pos = theString.Length();
+      theString.Left(partialString, pos);
+      theString.Cut(0, pos);
+	  // is it a solo tab?
+	  if (partialString == "\t" )
+	  {
+	    res = InsertTab(aSelection,&bCancel,aTxn,outString);
+	    if (NS_FAILED(res)) return res;
+        res = DoTextInsertion(aSelection, aCancel, aTxn, outString, typeInState);
+	  }
+	  // is it a solo space?
+	  else if (partialString == " ")
+	  {
+	    res = InsertSpace(aSelection,&bCancel,aTxn,outString);
+	    if (NS_FAILED(res)) return res;
+        res = DoTextInsertion(aSelection, aCancel, aTxn, outString, typeInState);
+	  }
+	  // is it a solo nbsp?
+	  else if (partialString == nbspStr)
+	  {
+	    res = InsertSpace(aSelection,&bCancel,aTxn,outString);
+	    if (NS_FAILED(res)) return res;
+        res = DoTextInsertion(aSelection, aCancel, aTxn, outString, typeInState);
+	  }
+	  // is it a solo return?
+	  else if (partialString == "\n")
+	  {
+	    res = mEditor->InsertBreak();
+	  }
+	  else
+	  {
+	    res = DoTextInsertion(aSelection, aCancel, aTxn, &partialString, typeInState);
+	  }
+	  if (NS_FAILED(res)) return res;
+      pos = theString.FindCharInSet(specialChars);
     }
-  }
-  mEditor->EndTransaction();
+  
   return res;
 }
 
@@ -224,6 +224,8 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
   *aCancel = PR_FALSE;
   
   nsresult res;
+  res = WillInsert(aSelection, aCancel);
+  if (NS_FAILED(res)) return res;
   
   // if the selection isn't collapsed, delete it.
   PRBool bCollapsed;
@@ -235,7 +237,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
     if (NS_FAILED(res)) return res;
   }
   
-  //smart splitting rules
+  // smart splitting rules
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
   PRBool isPRE;
@@ -251,7 +253,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
   {
     nsString theString = "\n";
     *aCancel = PR_TRUE;
-    return mEditor->InsertText(theString);
+    return mEditor->InsertTextImpl(theString);
   }
 
   nsCOMPtr<nsIDOMNode> blockParent;
@@ -263,7 +265,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
     
   if (!blockParent) return NS_ERROR_FAILURE;
   
-  // headers: put selection after the header
+  // headers: close (or split) header
   if (IsHeader(blockParent))
   {
     res = ReturnInHeader(aSelection, blockParent, node, offset);
@@ -286,8 +288,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
     return NS_OK;
   }
   
-  
-  return WillInsert(aSelection, aCancel);
+  return res;
 }
 
 
@@ -426,10 +427,9 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
         return NS_OK;
         
       }
-    
-      // else do default
-      return NS_OK;
     }
+    // else do default
+    return NS_OK;
   }
   
   // else we have a non collapsed selection
@@ -829,21 +829,16 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel)
     if (NS_FAILED(res)) return res;
     
     // some logic for putting list items into nested lists...
-    if (IsListItem(curNode))
+    if (IsList(curParent))
     {
       if (!curList || transitionList[i])
       {
-        nsAutoString quoteType("ol");  // XXX - get correct list type
-        if (mEditor->CanContainTag(curParent,quoteType))
-        {
-          res = mEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curList));
-          if (NS_FAILED(res)) return res;
-          // curQuote is now the correct thing to put curNode in
-        }
-        else
-        {
-          printf("trying to put a list in a bad place\n");     
-        }
+        nsAutoString listTag;
+        nsEditor::GetTagString(curParent,listTag);
+        // create a new nested list of correct type
+        res = mEditor->CreateNode(listTag, curParent, offset, getter_AddRefs(curList));
+        if (NS_FAILED(res)) return res;
+        // curList is now the correct thing to put curNode in
       }
       // tuck the node into the end of the active list
       PRUint32 listLen;
@@ -935,7 +930,78 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel)
     res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
     if (NS_FAILED(res)) return res;
     
-    if (transitionList[i])
+    if (IsList(curParent))  // move node out of list
+    {
+      if (IsList(curNode))  // just unwrap this sublist
+      {
+        res = RemoveContainer(curNode);
+        if (NS_FAILED(res)) return res;
+      }
+      else  // we are moving a list item, but not whole list
+      {
+        // if it's first or last list item, dont need to split the list
+        // otherwise we do.
+        nsCOMPtr<nsIDOMNode> curParPar;
+        PRInt32 parOffset;
+        res = nsEditor::GetNodeLocation(curParent, &curParPar, &parOffset);
+        if (NS_FAILED(res)) return res;
+        
+        PRBool bIsFirstListItem;
+        res = IsFirstEditableChild(curNode, &bIsFirstListItem);
+        if (NS_FAILED(res)) return res;
+
+        PRBool bIsLastListItem;
+        res = IsLastEditableChild(curNode, &bIsLastListItem);
+        if (NS_FAILED(res)) return res;
+      
+        if (!bIsFirstListItem && !bIsLastListItem)
+        {
+          // split the list
+          nsCOMPtr<nsIDOMNode> newBlock;
+          res = mEditor->SplitNode(curParent, offset, getter_AddRefs(newBlock));
+          if (NS_FAILED(res)) return res;
+        }
+        
+        if (!bIsFirstListItem) parOffset++;
+        
+        res = mEditor->DeleteNode(curNode);
+        if (NS_FAILED(res)) return res;
+        res = mEditor->InsertNode(curNode, curParPar, parOffset);
+        if (NS_FAILED(res)) return res;
+      
+        // convert list items to divs if we promoted them out of list
+        if (!IsList(curParPar) && IsListItem(curNode)) 
+        {
+          nsAutoString blockType("div");
+          nsCOMPtr<nsIDOMNode> newBlock;
+          res = ReplaceContainer(curNode,&newBlock,blockType);
+          if (NS_FAILED(res)) return res;
+        }
+      }
+    }
+    else if (IsList(curNode)) // node is a list, but parent is non-list: move list items out
+    {
+      nsCOMPtr<nsIDOMNode> child;
+      curNode->GetLastChild(getter_AddRefs(child));
+
+      while (child)
+      {
+        res = mEditor->DeleteNode(child);
+        if (NS_FAILED(res)) return res;
+        res = mEditor->InsertNode(child, curParent, offset);
+        if (NS_FAILED(res)) return res;
+        
+        if (IsListItem(child))
+        {
+          nsAutoString blockType("div");
+          nsCOMPtr<nsIDOMNode> newBlock;
+          res = ReplaceContainer(child,&newBlock,blockType);
+          if (NS_FAILED(res)) return res;
+        }
+        curNode->GetLastChild(getter_AddRefs(child));
+      }
+    }
+    else if (transitionList[i])  // not list related - look for enclosing blockquotes and remove
     {
       // look for a blockquote somewhere above us and remove it.
       // this is a hack until i think about outdent for real.
@@ -2391,4 +2457,65 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
 }
 
 
+nsresult 
+nsHTMLEditRules::IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst)
+{
+  // check parms
+  if (!aOutIsFirst || !aNode) return NS_ERROR_NULL_POINTER;
+  
+  // init out parms
+  *aOutIsFirst = PR_FALSE;
+  
+  // find first editable child and compare it to aNode
+  nsCOMPtr<nsIDOMNode> parent;
+  nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
+  if (NS_FAILED(res)) return res;
+  if (!parent) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMNode> child;
+  parent->GetFirstChild(getter_AddRefs(child));
+  if (!child) return NS_ERROR_FAILURE;
 
+  if (!mEditor->IsEditable(child))
+  {
+    nsCOMPtr<nsIDOMNode> tmp;
+    res = mEditor->GetNextNode(child, PR_TRUE, getter_AddRefs(tmp));
+    if (NS_FAILED(res)) return res;
+    if (!tmp) return NS_ERROR_FAILURE;
+    child = tmp;
+  }
+  
+  *aOutIsFirst = (child == aNode);
+  return res;
+}
+
+
+nsresult 
+nsHTMLEditRules::IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast)
+{
+  // check parms
+  if (!aOutIsLast || !aNode) return NS_ERROR_NULL_POINTER;
+  
+  // init out parms
+  *aOutIsLast = PR_FALSE;
+  
+  // find last editable child and compare it to aNode
+  nsCOMPtr<nsIDOMNode> parent;
+  nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
+  if (NS_FAILED(res)) return res;
+  if (!parent) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMNode> child;
+  parent->GetLastChild(getter_AddRefs(child));
+  if (!child) return NS_ERROR_FAILURE;
+
+  if (!mEditor->IsEditable(child))
+  {
+    nsCOMPtr<nsIDOMNode> tmp;
+    res = mEditor->GetPriorNode(child, PR_TRUE, getter_AddRefs(tmp));
+    if (NS_FAILED(res)) return res;
+    if (!tmp) return NS_ERROR_FAILURE;
+    child = tmp;
+  }
+  
+  *aOutIsLast = (child == aNode);
+  return res;
+}

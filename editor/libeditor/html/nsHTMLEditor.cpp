@@ -3507,18 +3507,19 @@ nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
     nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
     range->GetCommonParent(getter_AddRefs(parentNode));
   }
-  else {
-		parentNode = do_QueryInterface(startNode);
-	}
+  else 
+  {
+    parentNode = do_QueryInterface(startNode);
+  }
 
 
   nsCOMPtr<nsIContentIterator> iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
                                               nsIContentIterator::GetIID(), 
                                               getter_AddRefs(iter));
-	if (NS_FAILED(result)) return result;
-	if (!iter) return NS_ERROR_NULL_POINTER;
-
+  if (NS_FAILED(result)) return result;
+  if (!iter) return NS_ERROR_NULL_POINTER;
+    
   PRUint32 totalLength=0;
   nsCOMPtr<nsIDOMCharacterData>textNode;
   nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(parentNode);
