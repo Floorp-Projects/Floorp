@@ -77,6 +77,47 @@ static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_I
 #endif //ifdef USE_FAST_CACHE
 
 
+#ifdef USE_FAST_CACHE
+
+PRBool PR_CALLBACK HashTableEnumDestroy(nsHashKey *aKey, void *aData, void* closure);
+PRBool PR_CALLBACK HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure);
+PRBool PR_CALLBACK HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure);
+
+class StyleContextCache
+{
+  // friendship for the Destroy method...
+  friend PRBool PR_CALLBACK HashTableEnumDestroy(nsHashKey *aKey, void *aData, void* closure);
+
+public :
+  StyleContextCache(void);
+  ~StyleContextCache(void);
+
+  nsresult AddContext(scKey aKey, nsIStyleContext *aContext);
+  nsresult RemoveContext(scKey aKey, nsIStyleContext *aContext);
+  nsresult RemoveAllContexts(scKey aKey);
+  nsresult GetContexts(scKey aKey, nsVoidArray **aResults); // do not munge list
+  PRUint32 Count(void);
+private:
+  StyleContextCache(StyleContextCache &aNoSrcAllowed); // Not Implemented
+
+  void DumpStats(void);
+  void Tickle(const char *msg = nsnull);
+
+  // make sure there is a list for the specified key (allocates one if necessary)
+  nsresult VerifyList(scKey aKey);
+  // returns the list for the key, may be null
+  nsVoidArray *GetList(scKey aKey);
+
+  // allocate / destroy the list
+  static nsVoidArray *AllocateList(void);
+  static nsresult DestroyList(nsVoidArray* aList);
+  
+  nsObjectHashtable mHashTable;
+  PRUint32    mCount;
+};
+#endif /* USE_FSAT_CACHE */
+
+
 class StyleSetImpl : public nsIStyleSet 
 #ifdef MOZ_PERF_METRICS
                    , public nsITimeRecorder
@@ -1489,14 +1530,16 @@ StyleSetImpl::PrintTimer(PRUint32 aTimerID)
 MOZ_DECL_CTOR_COUNTER(StyleContextCache);
 
 StyleContextCache::StyleContextCache(void)
-:mCount(0)
+:mHashTable(nsnull, nsnull, HashTableEnumDestroy, nsnull),
+ mCount(0)
 {
   MOZ_COUNT_CTOR(StyleContextCache);
 }
 
-StyleContextCache:: ~StyleContextCache(void)
+StyleContextCache::~StyleContextCache(void)
 {
-  mHashTable.Reset();
+  // mHashTable memeber is reset automatically in nsObjectHashTable's dtor
+
   MOZ_COUNT_DTOR(StyleContextCache);
 }
 
@@ -1606,7 +1649,7 @@ nsresult StyleContextCache::VerifyList(scKey aKey)
   nsresult rv = NS_OK;
   nsVoidKey key((void *)aKey);
   if (GetList(aKey) == nsnull) {
-    nsVoidArray *pList = new nsVoidArray();
+    nsVoidArray *pList = AllocateList();
     if (pList) {
       mHashTable.Put(&key,pList);
     } else {
@@ -1616,6 +1659,21 @@ nsresult StyleContextCache::VerifyList(scKey aKey)
   return rv;
 }
 
+nsVoidArray *StyleContextCache::AllocateList(void)
+{
+  // we allocate it using 'new'
+  return new nsVoidArray();
+}
+ 
+nsresult StyleContextCache::DestroyList(nsVoidArray* aList)
+{
+  if(aList) {
+    // we free it using 'delete'
+    delete aList;
+  }
+  return NS_OK;
+}
+
 // returns the list for the key, may be null
 nsVoidArray *StyleContextCache::GetList(scKey aKey)
 {
@@ -1623,8 +1681,19 @@ nsVoidArray *StyleContextCache::GetList(scKey aKey)
   return (nsVoidArray *)mHashTable.Get(&key);
 }
 
-PRBool HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure);
-PRBool HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure)
+
+// called to destroy each list in the hash table: 
+// - must free the list passed in as aData
+PRBool PR_CALLBACK HashTableEnumDestroy(nsHashKey *aKey, void *aData, void* closure)
+{
+  if(aData) {
+    StyleContextCache::DestroyList((nsVoidArray*)aData);
+  }
+  return PR_TRUE;
+}
+
+
+PRBool PR_CALLBACK HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure)
 {
   static PRUint32 nTotal, nCount, nMax, nMin, nUnary;
   if (nsnull == aKey && nsnull == aData && nsnull == closure) {
@@ -1657,7 +1726,6 @@ PRBool HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure)
   return PR_TRUE;
 }
 
-PRBool PR_CALLBACK HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure);
 PRBool PR_CALLBACK HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure)
 {
   PRUint32 nCount = 0;
