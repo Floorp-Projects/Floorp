@@ -275,9 +275,9 @@ function getContentAreaFrameCount()
 // When a content area frame is focused, update the focused frame URL
 function contentAreaFrameFocus()
 {
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (isContentFrame(focusedWindow)) {
-    gFocusedURL = Components.lookupMethod(focusedWindow, 'location').call(focusedWindow).href;
+  var focusedWindow = new XPCNativeWrapper(document.commandDispatcher.focusedWindow, "top", "document", "location");
+  if (focusedWindow.top == window.content) {
+    gFocusedURL = focusedWindow.location.href;
     gFocusedDocument = focusedWindow.document;
   }
 }
@@ -2271,9 +2271,9 @@ function maybeInitPopupContext()
       // return our opener's URI
       const IOS = Components.classes["@mozilla.org/network/io-service;1"]
                   .getService(CI.nsIIOService);
-      var spec = Components.lookupMethod(window.content.opener, "location")
-                 .call();
-      return IOS.newURI(spec, null, null);
+      var opener = new XPCNativeWrapper(window.content, "opener").opener;
+      var location = new XPCNativeWrapper(opener, "location").location;
+      return IOS.newURI(location.href, null, null);
     }
   } catch(e) {
   }

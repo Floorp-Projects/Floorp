@@ -103,10 +103,14 @@
       }
     }
 
-    function sendLink(pageUrl, pageTitle)
+    function sendLink(aDocument)
     {
+      if (!aDocument)
+        aDocument = window.content.document;
+
       try {
-        openComposeWindow(pageUrl, pageTitle, 0, null);
+        aDocument = new XPCNativeWrapper(aDocument, "URL", "title");
+        openComposeWindow(aDocument.URL, aDocument.title, 0, null);
       } catch(ex) { dump("Cannot Send Link: " + ex + "\n"); }
     }
 
@@ -123,12 +127,10 @@
       if (!aDocument)
         aDocument = window._content.document;
         
-      var charset =  getCharsetforSave(aDocument);
-      var pageUrl = aDocument.URL;
-      var pageTitle = Components.lookupMethod(aDocument, 'title').call(aDocument);
-
       try {
-        openComposeWindow(pageUrl, pageTitle, 1, charset);
+        var charset = getCharsetforSave(aDocument);
+        aDocument = new XPCNativeWrapper(aDocument, "URL", "title");
+        openComposeWindow(aDocument.URL, aDocument.title, 1, charset);
       } catch(ex) { dump("Cannot Send Page: " + ex + "\n"); }
     }
 
@@ -175,9 +177,7 @@
     <command id="cmd_newMessage" oncommand="goOpenNewMessage();"/>
     <command id="cmd_newCard" oncommand="openNewCardDialog()"/>
     <command id="cmd_sendPage" oncommand="sendPage();"/>
-    <command id="Browser:SendLink"
-             oncommand="sendLink(Components.lookupMethod(window._content, 'location').call(window._content).href,
-                                 Components.lookupMethod(window._content.document, 'title').call(window._content.document));"/>
+    <command id="Browser:SendLink" oncommand="sendLink();"/>
   </commandset>
   <keyset id="tasksKeys">
     <key id="key_newMessage" key="&newMessageCmd.key;" command="cmd_newMessage" modifiers="accel"/>
@@ -227,7 +227,7 @@
       <menuitem insertafter="saveframeas"
                 label="&contextSendFrame.label;"
                 accesskey="&contextSendFrame.accesskey;"
-                oncommand="sendPage(gContextMenu.target.ownerDocument);"/>
+                oncommand="sendPage(new XPCNativeWrapper(gContextMenu.target, 'ownerDocument').ownerDocument);"/>
     </menupopup>
     </menu>
   </popup>
