@@ -829,6 +829,20 @@ sub do_quickparse {
 
 sub do_rdf {
     my $mainurl = "http://$ENV{SERVER_NAME}$ENV{SCRIPT_NAME}?tree=$tree";
+    my $dirurl = $mainurl;
+    $dirurl =~ s@/[^/]*$@@;
+    my %build;
+    my %times;
+    loadquickparseinfo($tree, \%build, \%times);
+    my $image = "channelok.gif";
+    my $imagetitle = "OK";
+    for my $buildname (sort(keys %build)) {
+        if ($build{$buildname} eq 'busted') {
+            $image = "channelflames.gif";
+            my $imagetitle = "Bad";
+            last;
+        }
+    }
     print qq{
 <?xml version="1.0"?>
 <rdf:RDF 
@@ -839,17 +853,20 @@ xmlns="http://my.netscape.com/rdf/simple/0.9/">
 <description>Build bustages for $tree</description>
 <link>$mainurl</link>
 </channel>
-};
+<image>
+<title>$imagetitle</title>
+<url>$dirurl/$image</url>
+<link>$mainurl</link>
+</image>
+};    
+    
     $bonsai_tree = "";
     require "$tree/treedata.pl";
     if ($bonsai_tree ne "") {
         my $state = tree_open() ? "OPEN" : "CLOSED";
         print "<item><title>The tree is currently $state</title><link>$mainurl</link></item>\n";
     }
-    my %build;
-    my %times;
-    loadquickparseinfo($tree, \%build, \%times);
-    
+
     for my $buildname (sort(keys %build)) {
         if ($build{$buildname} eq 'busted') {
             print "<item><title>$buildname is in flames</title><link>$mainurl</link></item>\n";
