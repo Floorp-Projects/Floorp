@@ -1254,7 +1254,7 @@ NS_IMETHODIMP nsWebShell::Create()
   // Set the webshell as the default IContentViewerContainer for the loader...
   mDocLoader->SetContainer(shellAsContainer);
 
-  return nsDocShell::Create();
+   return nsDocShell::Create();
 }
 
 NS_IMETHODIMP nsWebShell::Destroy()
