@@ -103,6 +103,7 @@ class nsXPInstallManager : public nsIXPIListener,
         PRBool              mSelectChrome;
         PRInt32             mContentLength;
         PRTime              mLastUpdate;
+        PRBool              mNeedsShutdown;
 
         nsCOMPtr<nsIXPIProgressDlg>  mDlg;
         nsCOMPtr<nsIDOMWindowInternal> mParentWindow;

@@ -172,6 +172,7 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
 
     mTriggers = aTriggers;
     mChromeType = aChromeType;
+    mNeedsShutdown = PR_TRUE;
 
     if ( !mTriggers || mTriggers->Size() == 0 )
     {
@@ -545,22 +546,28 @@ nsXPInstallManager::CancelInstall()
 void nsXPInstallManager::Shutdown()
 {
     if (mDlg)
-        mDlg->Close();
-
-    // Clean up downloaded files, regular XPInstall only not chrome installs
-    nsXPITriggerItem* item;
-    nsCOMPtr<nsIFile> tmpSpec;
-    if ( mChromeType == 0 )
     {
-        for (PRUint32 i = 0; i < mTriggers->Size(); i++ )
-        {
-            item = NS_STATIC_CAST(nsXPITriggerItem*, mTriggers->Get(i));
-            if ( item && item->mFile && !item->IsFileURL() )
-                item->mFile->Delete(PR_FALSE);
-        }
+        mDlg->Close();
+        mDlg = nsnull;
     }
+    if (mNeedsShutdown)
+    {
+        mNeedsShutdown = PR_FALSE;
+        // Clean up downloaded files, regular XPInstall only not chrome installs
+        nsXPITriggerItem* item;
+        nsCOMPtr<nsIFile> tmpSpec;
+        if ( mChromeType == 0 )
+        {
+            for (PRUint32 i = 0; i < mTriggers->Size(); i++ )
+            {
+                item = NS_STATIC_CAST(nsXPITriggerItem*, mTriggers->Get(i));
+                if ( item && item->mFile && !item->IsFileURL() )
+                    item->mFile->Delete(PR_FALSE);
+            }
+        }
 
-    NS_RELEASE_THIS();
+        NS_RELEASE_THIS();
+    }
 }
 
 /*-----------------------------------------------------
