@@ -31,6 +31,7 @@
 #include "nsEUCKRToUnicode.h"
 #include "nsUnicodeToEUCKR.h"
 #include "nsUnicodeToKSC5601.h"
+#include "nsUnicodeToX11Johab.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -96,6 +97,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToKSC5601::CreateInstance,
     "Unicode",
     "ks_c_5601-1987"
+  },
+  {
+    &kUnicodeToX11JohabCID,
+    nsUnicodeToX11Johab::CreateInstance,
+    "Unicode",
+    "x-x11johab"
   }
 };
 
