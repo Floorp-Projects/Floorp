@@ -23,6 +23,9 @@
 #include "nsDeque.h"
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
+#include "nsIStreamConverter.h"
 
 ////////////////////////////////////////////////////////////
 // nsISupports methods
@@ -36,6 +39,7 @@ NS_IMPL_ISUPPORTS(nsStreamConverterService, nsCOMTypeInfo<nsIStreamConverterServ
 // nsStreamConverterService methods
 nsStreamConverterService::nsStreamConverterService() {
     NS_INIT_REFCNT();
+    mAdjacencyList = nsnull;
 }
 
 nsStreamConverterService::~nsStreamConverterService() {
@@ -130,21 +134,12 @@ nsStreamConverterService::BuildGraph() {
 // XXX right now.
 nsresult
 nsStreamConverterService::AddAdjacency(const char *aProgID) {
-
+    nsresult rv;
     // first parse out the FROM and TO MIME-types.
 
-    nsString2 ProgIDStr(aProgID, eOneByte);
-    PRInt32 fromLoc = ProgIDStr.Find("from=") + 5;
-    PRInt32 toLoc   = ProgIDStr.Find("to=") + 3;
-    if (-1 == fromLoc || -1 == toLoc ) return NS_ERROR_FAILURE;
-
     nsString2 fromStr(eOneByte), toStr(eOneByte);
-    PRInt32 fromLen = toLoc - 4 - fromLoc;
-    PRInt32 toLen = ProgIDStr.Length() - toLoc;
-
-    ProgIDStr.Mid(fromStr, fromLoc, fromLen);
-    ProgIDStr.Mid(toStr, toLoc, toLen);
-
+    rv = ParseFromTo(aProgID, fromStr, toStr);
+    if (NS_FAILED(rv)) return rv;
 
     // Each MIME-type is a vertex in the graph, so first lets make sure
     // each MIME-type is represented as a key in our hashtable.
@@ -192,6 +187,26 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
     return NS_OK;
 }
 
+nsresult
+nsStreamConverterService::ParseFromTo(const char *aProgID, nsString2 &aFromRes, nsString2 &aToRes) {
+
+    nsString2 ProgIDStr(aProgID, eOneByte);
+
+    PRInt32 fromLoc = ProgIDStr.Find("from=") + 5;
+    PRInt32 toLoc   = ProgIDStr.Find("to=") + 3;
+    if (-1 == fromLoc || -1 == toLoc ) return NS_ERROR_FAILURE;
+
+    nsString2 fromStr(eOneByte), toStr(eOneByte);
+
+    ProgIDStr.Mid(fromStr, fromLoc, toLoc - 4 - fromLoc);
+    ProgIDStr.Mid(toStr, toLoc, ProgIDStr.Length() - toLoc);
+
+    aFromRes.SetString(fromStr);
+    aToRes.SetString(toStr);
+
+    return NS_OK;
+}
+
 // nsHashtable enumerator functions.
 // Initializes the color table.
 PRBool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
@@ -225,7 +240,7 @@ PRBool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
 // converter rather than walking the graph.
 nsresult
 nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdgeList) {
-
+    nsresult rv;
     if (!aEdgeList) return NS_ERROR_NULL_POINTER;
 
     // walk the graph in search of the appropriate converter.
@@ -297,22 +312,12 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
 
     // first parse out the FROM and TO MIME-types being registered.
 
-    nsString2 ProgIDStr(aProgID, eOneByte);
-    PRInt32 fromLoc = ProgIDStr.Find("from=") + 5;
-    PRInt32 toLoc   = ProgIDStr.Find("to=") + 3;
-    if (-1 == fromLoc || -1 == toLoc ) return NS_ERROR_FAILURE;
-
     nsString2 fromStr(eOneByte), toStr(eOneByte);
-    PRInt32 fromLen = toLoc - 4 - fromLoc;
-    PRInt32 toLen = ProgIDStr.Length() - toLoc;
-
-    ProgIDStr.Mid(fromStr, fromLoc, fromLen);
-    ProgIDStr.Mid(toStr, toLoc, toLen);
-
+    rv = ParseFromTo(aProgID, fromStr, toStr);
+    if (NS_FAILED(rv)) return rv;
 
     // get the root PROGID
-    nsString2 ProgIDPrefix(ProgIDStr);
-    ProgIDPrefix.Truncate(fromLoc - 5);
+    nsString2 ProgIDPrefix(NS_ISTREAMCONVERTER_KEY);
     nsVoidArray *shortestPath = new nsVoidArray();
     nsStringKey *toMIMEType = new nsStringKey(toStr);
     data = (SCTableData*)lBFSTable.Get(toMIMEType);
@@ -356,6 +361,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
     return NS_ERROR_FAILURE; // couldn't find a stream converter or chain.
 
 }
+
 
 /////////////////////////////////////////////////////
 // nsIStreamConverter methods
@@ -401,54 +407,153 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         PRInt32 edgeCount = converterChain->Count();
         NS_ASSERTION(edgeCount > 0, "findConverter should have failed");
 
+
         // convert the stream using each edge of the graph as a step.
         // this is our stream conversion traversal.
+        nsIInputStream *dataToConvert = aFromStream;
+        nsIInputStream *convertedData = nsnull;
+        NS_ADDREF(dataToConvert);
+
         for (int i = 0; i < edgeCount; i++) {
             nsString2 *progIDStr = (nsString2*)converterChain->ElementAt(i);
             char * lProgID = progIDStr->ToNewCString();
             if (!lProgID) return NS_ERROR_OUT_OF_MEMORY;
             rv = nsServiceManager::GetService(lProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
             NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a progid that wasn't registered");
-            
-            // now we have the converter. Convert!
-            // XXX do the conversion.
+
+            nsString2 fromStr(eOneByte), toStr(eOneByte);
+            rv = ParseFromTo(lProgID, fromStr, toStr);
+            delete [] lProgID;
+            if (NS_FAILED(rv)) return rv;
+
+            nsIStreamConverter *conv = nsnull;
+            rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
+            NS_RELEASE(converter);
+            if (NS_FAILED(rv)) return rv;
+            rv = conv->Convert(dataToConvert, fromStr.GetUnicode(), toStr.GetUnicode(), &convertedData);
+            NS_RELEASE(conv);
+            NS_RELEASE(dataToConvert);
+            dataToConvert = convertedData;
+            if (NS_FAILED(rv)) return rv;
         }
+        *_retval = convertedData;
+
     } else {
-        // we found a direct conversion. use it.
-        // XXX do the conversion.
+        // we're going direct.
+        nsIStreamConverter *conv = nsnull;
+        rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
+        NS_RELEASE(converter);
+        if (NS_FAILED(rv)) return rv;
+        rv = conv->Convert(aFromStream, aFromType, aToType, _retval);
+        NS_RELEASE(conv);
     }
-
-    return NS_OK;
+    
+    return rv;
 }
+
 
 NS_IMETHODIMP
-nsStreamConverterService::AsyncConvertStream(nsIInputStream *aFromStream, const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType, 
+                                           const PRUnichar *aToType, 
+                                           nsIStreamListener *aListener, 
+                                           nsIStreamListener **_retval) {
+    if (!aFromType || !aToType || !aListener || !_retval) return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    // first determine whether we can even handle this covnversion
+    // build a PROGID
+    nsString2 progID(NS_ISTREAMCONVERTER_KEY);
+    progID.Append("?from=");
+    progID.Append(aFromType);
+    progID.Append("?to=");
+    progID.Append(aToType);
+    char * cProgID = progID.ToNewCString();
+    if (!cProgID) return NS_ERROR_OUT_OF_MEMORY;
+
+    nsISupports *converter = nsnull;
+    rv = nsServiceManager::GetService(cProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
+    if (NS_FAILED(rv)) {
+        // couldn't go direct, let's try walking the graph of converters.
+        rv = BuildGraph();
+        if (NS_FAILED(rv)) {
+            delete [] cProgID;
+            return rv;
+        }
+
+        nsVoidArray *converterChain = nsnull;
+
+        rv = FindConverter(cProgID, &converterChain);
+        delete [] cProgID;
+        cProgID = nsnull;
+        if (NS_FAILED(rv)) {
+            // can't make this conversion.
+            // XXX should have a more descriptive error code.
+            return NS_ERROR_FAILURE;
+        }
+
+        PRInt32 edgeCount = converterChain->Count();
+        NS_ASSERTION(edgeCount > 0, "findConverter should have failed");
+
+        // convert the stream using each edge of the graph as a step.
+        // this is our stream conversion traversal.
+
+        nsIStreamListener *forwardListener = aListener;
+        nsIStreamListener *fromListener = nsnull;
+        NS_ADDREF(forwardListener);
+
+        for (int i = 0; i < edgeCount; i++) {
+            nsString2 *progIDStr = (nsString2*)converterChain->ElementAt(i);
+            char * lProgID = progIDStr->ToNewCString();
+            if (!lProgID) return NS_ERROR_OUT_OF_MEMORY;
+            rv = nsServiceManager::GetService(lProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a progid that wasn't registered");
+
+            nsString2 fromStr(eOneByte), toStr(eOneByte);
+            rv = ParseFromTo(lProgID, fromStr, toStr);
+            delete [] lProgID;
+            if (NS_FAILED(rv)) return rv;
+
+            nsIStreamConverter *conv = nsnull;
+            rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
+            NS_RELEASE(converter);
+            if (NS_FAILED(rv)) return rv;
+            rv = conv->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(), forwardListener);
+
+            nsIStreamListener *listener = nsnull;
+            rv = conv->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
+            if (NS_FAILED(rv)) return rv;
+
+            // store the listener of the first converter in the chain.
+            if (!fromListener) {
+                fromListener = listener;
+                NS_ADDREF(fromListener);
+            }
+            NS_RELEASE(conv);
+            NS_RELEASE(forwardListener);
+            forwardListener = listener;
+            if (NS_FAILED(rv)) return rv;
+        }
+        // return the first listener in the chain.
+        *_retval = fromListener;
+
+    } else {
+        // we're going direct.
+        nsIStreamListener *listener= nsnull;
+        rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
+        if (NS_FAILED(rv)) return rv;
+        *_retval = listener;
+
+        nsIStreamConverter *conv = nsnull;
+        rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
+        NS_RELEASE(converter);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = conv->AsyncConvertData(aFromType, aToType, aListener);
+        NS_RELEASE(conv);
+    }
+    
+    return rv;
+
 }
 
-NS_IMETHODIMP
-nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-/////////////////////////////////////////////////////
-// nsIStreamListener methods
-
-NS_IMETHODIMP
-nsStreamConverterService::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-/////////////////////////////////////////////////////
-// nsIStreamObserver methods
-NS_IMETHODIMP
-nsStreamConverterService::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsStreamConverterService::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}

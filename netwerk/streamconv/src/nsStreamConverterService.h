@@ -33,23 +33,8 @@ public:
 
     /////////////////////////////////////////////////////
     // nsIStreamConverterService methods
-
-    /////////////////////////////////////////////////////
-    // nsIStreamConverter methods
     NS_IMETHOD Convert(nsIInputStream *aFromStream, const PRUnichar *aFromType, const PRUnichar *aToType, nsIInputStream **_retval);
-    NS_IMETHOD AsyncConvertStream(nsIInputStream *aFromStream, const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener);
-    NS_IMETHOD AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener);
-
-
-    /////////////////////////////////////////////////////
-    // nsIStreamListener methods
-    NS_IMETHOD OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
-
-
-    /////////////////////////////////////////////////////
-    // nsIStreamObserver methods
-    NS_IMETHOD OnStartRequest(nsIChannel *channel, nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    NS_IMETHOD AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener, nsIStreamListener **_retval);
 
     /////////////////////////////////////////////////////
     // nsStreamConverterService methods
@@ -64,6 +49,7 @@ private:
     nsresult FindConverter(const char *aProgID, nsVoidArray **aEdgeList);
     nsresult BuildGraph(void);
     nsresult AddAdjacency(const char *aProgID);
+    nsresult ParseFromTo(const char *aProgID, nsString2 &aFromRes, nsString2 &aToRes);
 
     // member variables
     nsHashtable              *mAdjacencyList;
