@@ -393,7 +393,9 @@ nsSHEntry::GetChildAt(PRInt32 aIndex, nsISHEntry ** aResult)
 {
   if (aIndex >= 0 && aIndex < mChildren.Count()) {
     *aResult = mChildren[aIndex];
-    NS_ADDREF(*aResult);
+    // yes, mChildren can have holes in it.  AddChild's offset parameter makes
+    // that possible.
+    NS_IF_ADDREF(*aResult);
   } else {
     *aResult = nsnull;
   }
