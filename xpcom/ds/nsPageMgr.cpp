@@ -39,6 +39,9 @@
 #endif
 
 #if defined(VMS)
+#if defined(DEBUG)
+#include <stdio.h>
+#endif
 #include <starlet.h>
 #include <ssdef.h>
 #include <vadef.h>
@@ -326,13 +329,27 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
     int status;
 
     /*
+    ** The default is 32767 pages. This is quite a lot (the pages are 4k).
+    ** Let's at least make it configurable.
+    */
+
+    char *tmp;
+    tmp = getenv("VMS_PAGE_MANAGER_SIZE");
+    if (tmp)
+       size=atoi(tmp);
+#if defined(DEBUG)
+    printf("Requested page manager size is %d 4k pages\n",size);
+#endif
+
+    /*
     ** $EXPREG will extend the virtual address region by the requested
     ** number of pages (or pagelets on Alpha). The process must have
     ** sufficient PGFLQUOTA for the operation, otherwise SS$_EXQUOTA will
     ** be returned. However, in the case of SS$_EXQUOTA, $EXPREG will have
     ** grown the region by the largest possible amount. In this case we will
-    ** take what we could get, just so long as its over our minimum
-    ** threshold.
+    ** put back the maximum amount and repeat the $EXPREG requesting half of
+    ** maximum (so as to leave some memory for others), just so long as its 
+    ** over our minimum threshold.
     */
 
     status = sys$expreg(size << (NS_PAGEMGR_PAGE_BITS-VA$C_PAGELET_SHIFT_SIZE),
@@ -344,14 +361,28 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
             size = ( (int)retadr.va_range$ps_end_va -
                      (int)retadr.va_range$ps_start_va + 1
                    ) >> NS_PAGEMGR_PAGE_BITS;
+            status=sys$deltva(&retadr,&retadr2,0);
+           size=size/2;
             if (size < minPages) {
-                status=sys$deltva(&retadr,&retadr2,0);
                 return PR_FAILURE;
             }
+           status = sys$expreg(
+               size << (NS_PAGEMGR_PAGE_BITS-VA$C_PAGELET_SHIFT_SIZE),
+                &retadr,0,0);
+           if (status != SS$_NORMAL) {
+               status=sys$deltva(&retadr,&retadr2,0);
+                return PR_FAILURE;
+           }
+            size = ( (int)retadr.va_range$ps_end_va -
+                     (int)retadr.va_range$ps_start_va + 1
+                   ) >> NS_PAGEMGR_PAGE_BITS;
             break;
         default:
             return PR_FAILURE;
     }
+#if defined(DEBUG)
+    printf("Actual page manager size is %d 4k pages\n",size);
+#endif
 
     /* We got at least something */
     addr = (nsPage *)retadr.va_range$ps_start_va;
