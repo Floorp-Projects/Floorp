@@ -204,15 +204,16 @@
     </nc:subheadings>
   </rdf:Description>
 
+
 <rdf:Description about="#cust-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="chrome://help/locale/customize_help.html#cust_font"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar" nc:name="My Sidebar"  nc:link="chrome://help/locale/customize_help.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
- <rdf:Description about="#cust-doc">
+ <rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is My Sidebar?"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_define"/> </rdf:li>
@@ -220,7 +221,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#cust-doc">
+<rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using My Sidebar"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_using"/> </rdf:li>
@@ -228,7 +229,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#cust-doc">
+<rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_adding"/> </rdf:li>
@@ -236,7 +237,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#cust-doc">
+<rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_indiv"/> </rdf:li>
@@ -244,7 +245,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#cust-doc">
+<rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_reorg"/> </rdf:li>
@@ -252,7 +253,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#cust-doc">
+<rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing My Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_removing"/> </rdf:li>
@@ -260,7 +261,7 @@
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#cust-doc">
+<rdf:Description about="#cust-sidebar">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="cust-sidebar-openclose" nc:name="Opening, Closing, and Resizing"  nc:link="chrome://help/locale/customize_help.html#cust_sidebar_openclose"/> </rdf:li>
@@ -269,12 +270,205 @@
   </rdf:Description>
 
 
-<!-- PRIVACY HELP CONTENT -->
+<rdf:Description about="#cust-doc">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-font" nc:name="Changing Fonts, Colors, and Themes"  nc:link="chrome://help/locale/customize_help.html#cust_font"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-font">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-fonts" nc:name="Changing the Default Font"  nc:link="chrome://help/locale/customize_help.html#cust_fonts"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-font">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-colors" nc:name="Changing the Default Colors"  nc:link="chrome://help/locale/customize_help.html#cust_colors"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-font">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-themes" nc:name="Changing the Theme"  nc:link="chrome://help/locale/customize_help.html#cust_themes"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#cust-doc">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-toolbar" nc:name="Toolbars"  nc:link="chrome://help/locale/customize_help.html#cust_toolbar"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-toolbar">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-main" nc:name="Navigation Toolbar"  nc:link="chrome://help/locale/customize_help.html#cust_main"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-toolbar">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-personal" nc:name="Personal Toolbar"  nc:link="chrome://help/locale/customize_help.html#cust_personal"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-toolbar">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-taskbar" nc:name="Taskbar"  nc:link="chrome://help/locale/customize_help.html#cust_taskbar"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-toolbar">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-hide" nc:name="Hiding a Toolbar"  nc:link="chrome://help/locale/customize_help.html#cust_hide"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#cust-doc">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-bkmk" nc:name="Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-bkmk">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-bkmk-intro" nc:name="What Are Bookmarks?"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_intro"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-bkmk">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-bkmk-use" nc:name="Using Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_use"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-bkmk">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-bkmk-create" nc:name="Creating New Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_create"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-bkmk">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-bkmk-organize" nc:name="Organizing Your Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_organize"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-bkmk">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-bkmk-change" nc:name="Changing Individual Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_change"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-bkmk">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-bkmk-search" nc:name="Searching Your Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_search"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-bkmk">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-bkmk-multiple" nc:name="Exporting or Importing a Bookmark List"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_multiple"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-bkmk">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-bkmk-pre" nc:name="About the Pre-Selected Bookmarks"  nc:link="chrome://help/locale/customize_help.html#cust_bkmk_pre"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#cust-doc">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-page" nc:name="Specifying How Netscape Starts Up"  nc:link="chrome://help/locale/customize_help.html#cust_page"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-page">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-startpage" nc:name="Specifying a Starting Page"  nc:link="chrome://help/locale/customize_help.html#cust_startpage"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#cust-page">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-home" nc:name="Changing Your Home Page"  nc:link="chrome://help/locale/customize_help.html#cust_home"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#cust-page">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="cust-start" nc:name="Specifying Which Components Open at Launch"  nc:link="chrome://help/locale/customize_help.html#cust_start"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+
+<!-- USING PRIVACY FEATURES CONTENT -->
+
 
 <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.html"/> </rdf:li>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help" nc:name="Using Privacy Features"
+  		nc:link="chrome://help/locale/privacy_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.html#sec_maintain"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -326,61 +520,215 @@
   </rdf:Description>
 
 
-
-
-<!-- USING PRIVACY FEATURES CONTENT -->
-
-
-<rdf:Description about="urn:root">
+<rdf:Description about="#using-priv-help">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="using-help" nc:name="Using Privacy Features"
-  		nc:link="chrome://help/locale/using_priv_help.html"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
-
-<rdf:Description about="#using-help">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li> 
-	<rdf:Description ID="using-help-cookies" nc:name="Using the Cookie Manager"
+	<rdf:Description ID="using-priv-help-cookies" nc:name="Using the Cookie Manager"
   		nc:link="chrome://help/locale/using_priv_help.html#using_cookies"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-<rdf:Description about="#using-help">
+<rdf:Description about="#using-priv-help-cookies">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="using-help-password" nc:name="Using the Password Manager"
+	<rdf:Description ID="using-priv-help-cookies-manage" nc:name="Specifying How Your Browser Should Handle Cookies"
+  		nc:link="chrome://help/locale/using_priv_help.html#cookies_manage"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-cookies">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-cookies-site" nc:name="Managing Cookies Site-By-Site"
+  		nc:link="chrome://help/locale/using_priv_help.html#cookies_site"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-cookies">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-cookies-view" nc:name="Viewing Cookies"
+  		nc:link="chrome://help/locale/using_priv_help.html#cookies_view"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-cookies">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-cookies-remove" nc:name="Removing Cookies"
+  		nc:link="chrome://help/locale/using_priv_help.html#cookies_remove"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#using-priv-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-password" nc:name="Using the Password Manager"
   		nc:link="chrome://help/locale/using_priv_help.html#using_password"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
-
-
-<rdf:Description about="#using-help">
+<rdf:Description about="#using-priv-help-password">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="using-help-forms" nc:name="Using the Form Manager"
-  		nc:link="chrome://help/locale/using_priv_help.html#using_forms"/> </rdf:li>
+	<rdf:Description ID="using-priv-help-password-manage" nc:name="Remembering User Names and Passwords"
+  		nc:link="chrome://help/locale/using_priv_help.html#passwords_manage"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-password">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-password-auto" nc:name="Entering Names and Passwords Automatically"
+  		nc:link="chrome://help/locale/using_priv_help.html#passwords_auto"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-password">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-password-onoff" nc:name="Turning On and Off"
+  		nc:link="chrome://help/locale/using_priv_help.html#passwords_onoff"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-password">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-password-view" nc:name="Managing Stored Passwords"
+  		nc:link="chrome://help/locale/using_priv_help.html#passwords_view"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
 
 
-<rdf:Description about="#using-help">
+<rdf:Description about="#using-priv-help">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="using-help-encrypt" nc:name="Encrypting Stored Sensitive Information"
+	<rdf:Description ID="using-priv-help-forms" nc:name="Using the Form Manager"
+  		nc:link="chrome://help/locale/using_priv_help.html#using_forms"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-forms">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-forms-saveinfo" nc:name="Saving Information From Forms"
+  		nc:link="chrome://help/locale/using_priv_help.html#form_saveinfo"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-forms">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-forms-auto" nc:name="Filling Out Forms Automatically"
+  		nc:link="chrome://help/locale/using_priv_help.html#form_auto"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-forms">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-forms-notify" nc:name="Form Manager's Automatic Notification Feature"
+  		nc:link="chrome://help/locale/using_priv_help.html#form_notify"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-forms">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-forms-forms" nc:name="What Happens If I Provide Personal Information to a Web Site?"
+  		nc:link="chrome://help/locale/using_priv_help.html#form_forms"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#using-priv-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-encrypt" nc:name="Encrypting Stored Sensitive Information"
   		nc:link="chrome://help/locale/using_priv_help.html#using_encrypt"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-encrypt">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-encrypt-on" nc:name="Encrypting Stored Sensitive Information"
+  		nc:link="chrome://help/locale/using_priv_help.html#encrypt_on"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-encrypt">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-encrypt-master" nc:name="Setting a Master Password"
+  		nc:link="chrome://help/locale/using_priv_help.html#encrypt_master"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-encrypt">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-encrypt-change" nc:name="Changing Your Master Password"
+  		nc:link="chrome://help/locale/using_priv_help.html#encrypt_change"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-encrypt">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-encrypt-logout" nc:name="Logging Out of Your Master Password"
+  		nc:link="chrome://help/locale/using_priv_help.html#encrypt_logout"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-priv-help-encrypt">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-priv-help-encrypt-forget" nc:name="What to Do If You Forget Your Master Password"
+  		nc:link="chrome://help/locale/using_priv_help.html#encrypt_forget"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -429,6 +777,38 @@
     </nc:subheadings>
   </rdf:Description>
 
+
+<rdf:Description about="#using-help-certs-manage">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-manage-my" nc:name="That Identify You"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_my"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs-manage">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-manage-sites" nc:name="That Identify Web Sites"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_sites"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs-manage">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-manage-cas" nc:name="That Identify CAs"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_cas"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
 <rdf:Description about="#using-help-certs">
     <nc:subheadings>
       <rdf:Seq>
@@ -439,12 +819,52 @@
     </nc:subheadings>
   </rdf:Description>
 
+<rdf:Description about="#using-help-certs-devices">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-devices-about" nc:name="About Security Devices and Modules"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_devices_about"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs-devices">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-devices-devices" nc:name="Work with Security Devices"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_devices_devices"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs-devices">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-devices-modules" nc:name="Work with Security Modules"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_devices_modules"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs-devices">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-devices-fips" nc:name="Enable FIPS Mode"
+  		nc:link="chrome://help/locale/using_certs_help.html#using_certs_devices_fips"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
 
 <rdf:Description about="#using-help-certs">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="using-help-certs-ssl" nc:name="Edit SSL Settings"
+	<rdf:Description ID="using-help-certs-ssl" nc:name="Manage SSL Warnings and Ciphers"
   		nc:link="chrome://help/locale/using_certs_help.html#using_certs_ssl"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -454,8 +874,52 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="using-help-certs-validation" nc:name="Edit Validation Settings"
+	<rdf:Description ID="using-help-certs-validation" nc:name="Manage Validation Settings"
   		nc:link="chrome://help/locale/using_certs_help.html#using_certs_validation"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs-validation">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-validation-how" nc:name="How Validation Works"
+  		nc:link="chrome://help/locale/using_certs_help.html#How_Certificate_Validation_Works"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#using-help-certs-validation">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-validation-crls" nc:name="Manage CRLs"
+  		nc:link="chrome://help/locale/using_certs_help.html#Managing_CRLs"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<rdf:Description about="#using-help-certs-validation">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="using-help-certs-validation-ocsp" nc:name="Configure OCSP"
+  		nc:link="chrome://help/locale/using_certs_help.html#Configuring_Certificate_Manager_for_OCSP"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+<!-- DIALOG BOX HELP CONTENT STARTS-->
+
+<rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="context-help" nc:name="Dialog Box Help"
+  		nc:link="chrome://help/locale/context_help.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -463,7 +927,7 @@
 <!-- SSL PAGE INFO CONTENT -->
 
 
-<rdf:Description about="urn:root">
+<rdf:Description about="#context-help">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -530,7 +994,7 @@
 <!-- CERTIFICATE MANAGER CONTENT -->
 
 
-<rdf:Description about="urn:root">
+<rdf:Description about="#context-help">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -540,13 +1004,13 @@
     </nc:subheadings>
   </rdf:Description>
 
-<!-- MY CERTIFICATES CONTENT -->
+<!-- YOUR CERTIFICATES CONTENT -->
 
 <rdf:Description about="#certs-help">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="certs-help-my" nc:name="My Certificates"
+	<rdf:Description ID="certs-help-my" nc:name="Your Certificates"
   		nc:link="chrome://help/locale/certs_help.html#My_Certificates"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -566,7 +1030,7 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="certs-help-my-delete" nc:name="Delete My Certificate"
+	<rdf:Description ID="certs-help-my-delete" nc:name="Delete Your Certificate"
   		nc:link="chrome://help/locale/certs_help.html#Delete_My_Certificate"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -643,11 +1107,11 @@
 
 
 
-<rdf:Description about="#certs-help">
+<rdf:Description about="#context-help">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="certs-help-devices" nc:name="Security Devices"
+	<rdf:Description ID="certs-help-devices" nc:name="Device Manager"
   		nc:link="chrome://help/locale/certs_help.html#Security_Devices"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -657,7 +1121,7 @@
 <!-- CERTIFICATE INFORMATION AND DECISIONS HELP CONTENT -->
 
 
-<rdf:Description about="urn:root">
+<rdf:Description about="#context-help">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -816,7 +1280,7 @@
 <!-- PREFERENCES CONTENT -->
 
 
-<rdf:Description about="urn:root">
+<rdf:Description about="#context-help">
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
@@ -833,8 +1297,8 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="appear-cs-help" nc:name="Appearance Settings"
-  		nc:link="chrome://help/locale/appear_cs_help.html"/> </rdf:li>
+	<rdf:Description ID="cs_nav_prefs_appearance.html" nc:name="Appearance Settings"
+  		nc:link="chrome://help/locale/cs_nav_prefs_appearance.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -847,7 +1311,7 @@
       <rdf:Seq>
         <rdf:li> 
 	<rdf:Description ID="nav-cs-help" nc:name="Navigator Settings"
-  		nc:link="chrome://help/locale/nav_cs_help.html"/> </rdf:li>
+  		nc:link="chrome://help/locale/cs_nav_prefs_navigator.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -940,6 +1404,20 @@
     </nc:subheadings>
   </rdf:Description>
 
+<!-- CERTIFICATE SETTINGS CONTENT -->
+
+
+<rdf:Description about="#privsec-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> 
+	<rdf:Description ID="cert-settings" nc:name="Certificate Settings"
+  		nc:link="chrome://help/locale/certs_prefs_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
 <!-- VALIDATION SETTINGS CONTENT -->
 
 
@@ -985,10 +1463,11 @@
       <rdf:Seq>
         <rdf:li> 
 	<rdf:Description ID="advanced-cs-help" nc:name="Advanced Settings"
-  		nc:link="chrome://help/locale/advanced_cs_help.html"/> </rdf:li>
+  		nc:link="chrome://help/locale/cs_nav_prefs_advanced.html"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
+
 
 
 
