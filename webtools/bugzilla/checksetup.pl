@@ -452,14 +452,94 @@ my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
 unless (-d 'data') {
     print "Creating data directory ...\n";
-    mkdir 'data', 0770;
-    if ($my_webservergroup eq "") {
-        chmod 01777, 'data';
-    }
+	# permissions for non-webservergroup are fixed later on
+    mkdir 'data', 0770; 
+    mkdir 'data/mimedump-tmp', 01777; 
     open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
     open FILE, '>>data/mail'; close FILE;
-    chmod 0666, glob('data/*');
+}
+
+# 2000-12-14 New graphing system requires a directory to put the graphs in
+# This code copied from what happens for the 'data' dir above.
+# If the graphs dir is not present, we assume that they have been using
+# a Bugzilla with the old data format, and so upgrade their data files.
+unless (-d 'graphs') {
+    print "Creating graphs directory...\n";
+	# permissions for non-webservergroup are fixed later on
+    mkdir 'graphs', 0770; 
+    # Upgrade data format
+    foreach my $in_file (glob("data/mining/*"))
+    {
+        # Don't try and upgrade image or db files!
+        if (($in_file =~ /\.gif$/i) || 
+            ($in_file =~ /\.png$/i) ||
+            ($in_file =~ /\.db$/i) ||
+            ($in_file =~ /\.orig$/i)) {
+            next;
+        }
+
+        rename("$in_file", "$in_file.orig") or next;        
+        open(IN, "$in_file.orig") or next;
+        open(OUT, ">$in_file") or next;
+        
+        # Fields in the header
+        my @declared_fields = ();
+
+        # Fields we changed to half way through by mistake
+        # This list comes from an old version of collectstats.pl
+        # This part is only for people who ran later versions of 2.11 (devel)
+        my @intermediate_fields = qw(DATE UNCONFIRMED NEW ASSIGNED REOPENED 
+                                     RESOLVED VERIFIED CLOSED);
+
+        # Fields we actually want (matches the current collectstats.pl)                             
+        my @out_fields = qw(DATE NEW ASSIGNED REOPENED UNCONFIRMED RESOLVED
+                            VERIFIED CLOSED FIXED INVALID WONTFIX LATER REMIND
+                            DUPLICATE WORKSFORME MOVED);
+
+        while (<IN>) {
+            if (/^# fields?: (.*)\s$/) {
+                @declared_fields = map uc, (split /\||\r/, $1);
+                print OUT "# fields: ", join('|', @out_fields), "\n";
+            }
+            elsif (/^(\d+\|.*)/) {
+                my @data = split /\||\r/, $1;
+                my %data = ();
+                if (@data == @declared_fields) {
+                    # old format
+                    for my $i (0 .. $#declared_fields) {
+                        $data{$declared_fields[$i]} = $data[$i];
+                    }
+                }
+                elsif (@data == @intermediate_fields) {
+                    # Must have changed over at this point 
+                    for my $i (0 .. $#intermediate_fields) {
+                        $data{$intermediate_fields[$i]} = $data[$i];
+                    }
+                }
+                elsif (@data == @out_fields) {
+                    # This line's fine - it has the right number of entries 
+                    for my $i (0 .. $#out_fields) {
+                        $data{$out_fields[$i]} = $data[$i];
+                    }
+                }
+                else {
+                    print "Oh dear, input line $. of $in_file had " . scalar(@data) . " fields\n";
+                    print "This was unexpected. You may want to check your data files.\n";
+                }
+
+                print OUT join('|', map { 
+                              defined ($data{$_}) ? ($data{$_}) : "" 
+                                                          } @out_fields), "\n";
+            }
+            else {
+                print OUT;
+            }
+        }
+
+        close(IN);
+        close(OUT);
+    }    
 }
 
 
@@ -500,6 +580,12 @@ unlink "data/versioncache";
 #
 # (end changes, 03/14/00 by SML)
 #
+# Changes 15/06/01 kiko@async.com.br
+# 
+# Fix file permissions for non-webservergroup installations (see
+# http://bugzilla.mozilla.org/show_bug.cgi?id=71555). I'm setting things
+# by default to world readable/executable for all files, and
+# world-writeable (with sticky on) to data and graphs.
 #
 
 # These are the files which need to be marked executable
@@ -523,31 +609,45 @@ sub isExecutableFile {
   return undef;
 }
 
-if ($my_webservergroup) {
-    # Funny! getgrname returns the GID if fed with NAME ...
-    my $webservergid = getgrnam($my_webservergroup);
-    # chmod needs to be called with a valid uid, not 0.  $< returns the
-    # caller's uid.  Maybe there should be a $bugzillauid, and call with that
-    # userid.
-    chown $<, $webservergid, glob('*');
-    my @files = glob('*');
+# fix file (or files - wildcards ok) permissions 
+sub fixPerms {
     my $file;
+    my @files = glob($_[0]);
+    my $exeperm = 0777 & ~ $_[1];
+    my $normperm = 0666 & ~ $_[1];
     foreach $file (@files) {
       # do not change permissions on directories here
       if (!(-d $file)) {
         # check if the file is executable.
         if (isExecutableFile($file)) {
-          chmod 0750, $file;
+	  #printf ("Changing $file to %o",$exeperm);
+          chmod $exeperm, $file;
         } else {
-          chmod 0640, $file;
+	  #print ("Changing $file to %o", $normperm);
+          chmod $normperm, $file;
         }
       }
     }
+}
 
-    # make sure that contrib keeps the permissions it had (don't touch it)
-    chmod 0770, 'data', 'graphs';
-    chmod 0666, glob('data/*');
-    chmod 01777, glob('data/*/'); # directories stay executable
+if ($my_webservergroup) {
+    # Funny! getgrname returns the GID if fed with NAME ...
+    my $webservergid = getgrnam($my_webservergroup);
+    # chown needs to be called with a valid uid, not 0.  $< returns the
+    # caller's uid.  Maybe there should be a $bugzillauid, and call with that
+    # userid.
+    chown $<, $webservergid, glob('*');
+    fixPerms('*',027);
+    chmod 0644, 'globals.pl';
+    chmod 0644, 'RelationSet.pm';
+    chmod 0771, 'data';
+    chmod 0770, 'graphs';
+} else {
+    # get current gid from $( list
+    my $gid = (split " ", $()[0];
+    chown $<, $gid, glob('*');
+    fixPerms('*',022);
+    chmod 01777, 'data', 'graphs';
 }
 
 
@@ -2053,91 +2153,6 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 		$dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
 		#					 BugItsADupeOf   Dupe
 	}
-}
-
-# 2000-12-14 New graphing system requires a directory to put the graphs in
-# This code copied from what happens for the 'data' dir above.
-# If the graphs dir is not present, we assume that they have been using
-# a Bugzilla with the old data format, and so upgrade their data files.
-unless (-d 'graphs') {
-    print "Creating graphs directory...\n";
-    mkdir 'graphs', 0770; 
-    if ($my_webservergroup eq "") {
-        chmod 01777, 'graphs';
-    } 
-    
-    # Upgrade data format
-    foreach my $in_file (glob("data/mining/*"))
-    {
-        # Don't try and upgrade image or db files!
-        if (($in_file =~ /\.gif$/i) || 
-            ($in_file =~ /\.png$/i) ||
-            ($in_file =~ /\.db$/i) ||
-            ($in_file =~ /\.orig$/i)) {
-            next;
-        }
-
-        rename("$in_file", "$in_file.orig") or next;        
-        open(IN, "$in_file.orig") or next;
-        open(OUT, ">$in_file") or next;
-        
-        # Fields in the header
-        my @declared_fields = ();
-
-        # Fields we changed to half way through by mistake
-        # This list comes from an old version of collectstats.pl
-        # This part is only for people who ran later versions of 2.11 (devel)
-        my @intermediate_fields = qw(DATE UNCONFIRMED NEW ASSIGNED REOPENED 
-                                     RESOLVED VERIFIED CLOSED);
-
-        # Fields we actually want (matches the current collectstats.pl)                             
-        my @out_fields = qw(DATE NEW ASSIGNED REOPENED UNCONFIRMED RESOLVED
-                            VERIFIED CLOSED FIXED INVALID WONTFIX LATER REMIND
-                            DUPLICATE WORKSFORME MOVED);
-
-        while (<IN>) {
-            if (/^# fields?: (.*)\s$/) {
-                @declared_fields = map uc, (split /\||\r/, $1);
-                print OUT "# fields: ", join('|', @out_fields), "\n";
-            }
-            elsif (/^(\d+\|.*)/) {
-                my @data = split /\||\r/, $1;
-                my %data = ();
-                if (@data == @declared_fields) {
-                    # old format
-                    for my $i (0 .. $#declared_fields) {
-                        $data{$declared_fields[$i]} = $data[$i];
-                    }
-                }
-                elsif (@data == @intermediate_fields) {
-                    # Must have changed over at this point 
-                    for my $i (0 .. $#intermediate_fields) {
-                        $data{$intermediate_fields[$i]} = $data[$i];
-                    }
-                }
-                elsif (@data == @out_fields) {
-                    # This line's fine - it has the right number of entries 
-                    for my $i (0 .. $#out_fields) {
-                        $data{$out_fields[$i]} = $data[$i];
-                    }
-                }
-                else {
-                    print "Oh dear, input line $. of $in_file had " . scalar(@data) . " fields\n";
-                    print "This was unexpected. You may want to check your data files.\n";
-                }
-
-                print OUT join('|', map { 
-                              defined ($data{$_}) ? ($data{$_}) : "" 
-                                                          } @out_fields), "\n";
-            }
-            else {
-                print OUT;
-            }
-        }
-
-        close(IN);
-        close(OUT);
-    }    
 }
 
 # 2000-12-18.  Added an 'emailflags' field for storing preferences about
