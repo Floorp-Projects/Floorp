@@ -169,7 +169,7 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
             path[len + 1] = '\0';
         }
 
-        return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
+        return NS_NewNativeLocalFile(nsDependentCString(path), 
                                      PR_TRUE, 
                                      aFile);
     }
@@ -202,7 +202,7 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
     pBuffer[len + 1] = '\0';
 
     // Assign the directory
-    rv = NS_NewNativeLocalFile(nsDependentCString(CharUpper(pBuffer)), 
+    rv = NS_NewNativeLocalFile(nsDependentCString(pBuffer), 
                                PR_TRUE, 
                                aFile);
 
@@ -246,7 +246,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                     path[3] = 0;
             }
 
-            return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
+            return NS_NewNativeLocalFile(nsDependentCString(path), 
                                          PR_TRUE, 
                                          aFile);
         }
@@ -278,7 +278,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             char path[_MAX_PATH];
             DWORD len = GetTempPath(_MAX_PATH, path);
-            return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
+            return NS_NewNativeLocalFile(nsDependentCString(path), 
                                          PR_TRUE, 
                                          aFile);
         }
@@ -414,7 +414,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             path[len]   = '\\';
             path[len+1] = '\0';
 
-            return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
+            return NS_NewNativeLocalFile(nsDependentCString(path), 
                                          PR_TRUE, 
                                          aFile);
         }
@@ -431,7 +431,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             path[len]   = '\\';
             path[len+1] = '\0';
 
-            return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
+            return NS_NewNativeLocalFile(nsDependentCString(path), 
                                          PR_TRUE, 
                                          aFile);
         }
@@ -449,7 +449,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                 path[len]   = '\\';
                 path[len+1] = '\0';
 
-                return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
+                return NS_NewNativeLocalFile(nsDependentCString(path), 
                                              PR_TRUE, 
                                              aFile);
             }
@@ -469,7 +469,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                 path[len]   = '\\';
                 path[len+1] = '\0';
                 
-                return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
+                return NS_NewNativeLocalFile(nsDependentCString(path), 
                                              PR_TRUE, 
                                              aFile);
             }
