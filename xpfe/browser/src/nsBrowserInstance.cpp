@@ -1639,7 +1639,7 @@ nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader,
 
    nsCOMPtr<nsISupports> xpConnectObj;
    nsAutoString xulBrowserWinId("XULBrowserWindow");
-   piDOMWindow->GetXPConnectObject(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
    if(xulBrowserWindow)

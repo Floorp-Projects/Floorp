@@ -2160,8 +2160,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetLocation(nsIDOMLocation** aLocation)
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetXPConnectObject(const PRUnichar* aProperty, 
-   nsISupports* aXPConnectObj)
+NS_IMETHODIMP GlobalWindowImpl::SetObjectProperty(const PRUnichar* aProperty, 
+   nsISupports* aObject)
 {
    // Get JSContext from stack.
    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
@@ -2178,8 +2178,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetXPConnectObject(const PRUnichar* aProperty,
 
    jsval propertyVal = nsnull;
 
-   NS_IF_ADDREF(aXPConnectObj); // Convert Releases it (I know it's bad)
-   nsJSUtils::nsConvertXPCObjectToJSVal(aXPConnectObj, NS_GET_IID(nsISupports), 
+   NS_IF_ADDREF(aObject); // Convert Releases it (I know it's bad)
+   nsJSUtils::nsConvertXPCObjectToJSVal(aObject, NS_GET_IID(nsISupports), 
       cx, (JSObject*)mScriptObject, &propertyVal);
    
    NS_ENSURE_TRUE(JS_FALSE != JS_SetUCProperty(cx, (JSObject*)mScriptObject,
@@ -2188,8 +2188,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetXPConnectObject(const PRUnichar* aProperty,
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetXPConnectObject(const PRUnichar* aProperty, 
-   nsISupports** aXPConnectObj)
+NS_IMETHODIMP GlobalWindowImpl::GetObjectProperty(const PRUnichar* aProperty, 
+   nsISupports** aObject)
 {
    // Get JSContext from stack.
    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
@@ -2210,7 +2210,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetXPConnectObject(const PRUnichar* aProperty,
       nsCRT::strlen(aProperty), &propertyVal))
       return NS_ERROR_FAILURE;
 
-   if(JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(aXPConnectObj, 
+   if(JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(aObject, 
       NS_GET_IID(nsISupports), cx, propertyVal))
       return NS_ERROR_FAILURE;
 

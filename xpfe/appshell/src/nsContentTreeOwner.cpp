@@ -203,7 +203,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetJSStatus(const PRUnichar* aStatus)
 
    nsCOMPtr<nsISupports> xpConnectObj;
    nsAutoString xulBrowserWinId("XULBrowserWindow");
-   piDOMWindow->GetXPConnectObject(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
 
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
    if(xulBrowserWindow)
@@ -221,7 +221,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetJSDefaultStatus(const PRUnichar* aStatus)
 
    nsCOMPtr<nsISupports> xpConnectObj;
    nsAutoString xulBrowserWinId("XULBrowserWindow");
-   piDOMWindow->GetXPConnectObject(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
    if(xulBrowserWindow)
@@ -239,7 +239,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetOverLink(const PRUnichar* aLink)
 
    nsCOMPtr<nsISupports> xpConnectObj;
    nsAutoString xulBrowserWinId("XULBrowserWindow");
-   piDOMWindow->GetXPConnectObject(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
    if(xulBrowserWindow)
