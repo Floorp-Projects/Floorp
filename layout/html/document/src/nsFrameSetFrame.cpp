@@ -276,7 +276,7 @@ void nsHTMLFramesetFrame::Scale(nscoord  aDesired,
     actual += aItems[j];
   }
 
-  if (aDesired != actual) {
+  if ((aNumIndicies > 0) && (aDesired != actual)) {
     PRInt32 unit = (aDesired > actual) ? 1 : -1;
     i = 0;
     while (aDesired != actual) {
