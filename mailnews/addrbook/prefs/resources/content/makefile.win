@@ -20,7 +20,7 @@ DEPTH=..\..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) pref-addressing.html $(DIST)\bin\chrome\addressbook\content\default
+	$(MAKE_INSTALL) pref-addressing.xul $(DIST)\bin\chrome\addressbook\content\default
 
 clobber::
-	rm -f $(DIST)\chrome\addressbook\content\default\pref-addressing.html
+	rm -f $(DIST)\chrome\addressbook\content\default\pref-addressing.xul
