@@ -167,9 +167,6 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
 {
   int   rasterCaps = ::GetDeviceCaps(aDC, RASTERCAPS);
 
-  mPixelsToTwips = NSToIntRound((float)NSIntPointsToTwips(72) / ((float)::GetDeviceCaps(aDC, LOGPIXELSY)));
-  mTwipsToPixels = 1.0 / mPixelsToTwips;
-
   mDepth = (PRUint32)::GetDeviceCaps(aDC, BITSPIXEL);
   mPaletteInfo.isPaletteDevice = RC_PALETTE == (rasterCaps & RC_PALETTE);
   mPaletteInfo.sizePalette = (PRUint16)::GetDeviceCaps(aDC, SIZEPALETTE);
@@ -178,8 +175,12 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
   mWidth = ::GetDeviceCaps(aDC, HORZRES);
   mHeight = ::GetDeviceCaps(aDC, VERTRES);
 
+  mPixelsToTwips = (float)NSIntPointsToTwips(72) / ((float)::GetDeviceCaps(aDC, LOGPIXELSY));
   if (::GetDeviceCaps(aDC, TECHNOLOGY) == DT_RASDISPLAY)
   {
+    // Ensure that, for screens, pixels-to-twips is an integer
+    mPixelsToTwips = NSToIntRound(mPixelsToTwips);
+
     // init the screen manager and compute our client rect based on the
     // screen objects. We'll save the result 
     nsresult ignore;
@@ -187,6 +188,7 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
     if ( !sNumberOfScreens )
       mScreenManager->GetNumberOfScreens(&sNumberOfScreens);
   } // if this dc is not a print device
+  mTwipsToPixels = 1.0 / mPixelsToTwips;
 
   DeviceContextImpl::CommonInit();
 }
