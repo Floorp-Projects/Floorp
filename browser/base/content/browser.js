@@ -403,7 +403,7 @@ function Shutdown()
   }
 
   try {
-    getBrowser().removeProgressListener(window.XULBrowserWindow);
+    gBrowser.removeProgressListener(window.XULBrowserWindow);
   } catch (ex) {
   }
 
@@ -560,10 +560,6 @@ function enableBookmarks()
 
 function BrowserEditBookmarks()
 {
-  // Use a single sidebar bookmarks dialog
-  var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                .getService(Components.interfaces.nsIWindowMediator);
-
   var bookmarksWindow = windowManager.getMostRecentWindow("bookmarks:manager");
 
   if (bookmarksWindow) {
@@ -1578,7 +1574,7 @@ function getMarkupDocumentViewer()
 /**
  * Content area tooltip.
  * XXX - this must move into XBL binding/equiv! Do not want to pollute
- *       navigator.js with functionality that can be encapsulated into
+ *       browser.js with functionality that can be encapsulated into
  *       browser widget. TEMPORARY!
  *
  * NOTE: Any changes to this routine need to be mirrored in ChromeListener::FindTitleText()
@@ -1643,21 +1639,6 @@ var proxyIconDNDObserver = {
 }
 
 var homeButtonObserver = {
-  onDragStart: function (aEvent, aXferData, aDragAction)
-    {
-      var homepage = nsPreferences.getLocalizedUnicharPref("browser.startup.homepage", "about:blank");
-
-      if (homepage)
-        {
-          // XXX find a readable title string for homepage, perhaps do a history lookup.
-          var htmlString = "<a href=\"" + homepage + "\">" + homepage + "</a>";
-          aXferData.data = new TransferData();
-          aXferData.data.addDataForFlavour("text/x-moz-url", homepage + "\n" + homepage);
-          aXferData.data.addDataForFlavour("text/html", htmlString);
-          aXferData.data.addDataForFlavour("text/unicode", homepage);
-        }
-    },
-
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var url = transferUtils.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
