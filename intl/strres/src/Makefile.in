@@ -27,10 +27,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= intl
-LIBRARY_NAME	= strres
+LIBRARY_NAME	= strres_s
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsStringBundleModule
+FORCE_STATIC_LIB = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  necko \
@@ -38,9 +38,5 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= nsStringBundle.cpp
 
-EXTRA_DSO_LDOPTS =\
-		$(MOZ_NECKO_UTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

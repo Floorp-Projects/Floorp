@@ -42,7 +42,6 @@ bin/libxpistub.so
 bin/libmozz.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
-bin/components/libunicharutil.so
 
 [browser]
 bin/mozilla
@@ -105,7 +104,6 @@ bin/components/jar.xpt
 bin/components/jsconsole-clhandler.js
 bin/components/libnsappshell.so
 bin/components/libcaps.so
-bin/components/libchardet.so
 bin/components/libchrome.so
 bin/components/libcookie.so
 bin/components/libcomposer.so
@@ -118,10 +116,9 @@ bin/components/libgfxxprint.so
 bin/components/libimglib2.so
 bin/components/libimgmng.so
 bin/components/libjsurl.so
-bin/components/liblwbrk.so
+bin/components/libi18n.so
 bin/components/libmork.so
 bin/components/libmozfind.so
-bin/components/libnslocale.so
 bin/components/liboji.so
 bin/components/libpref.so
 bin/components/libautoconfig.so
@@ -136,7 +133,6 @@ bin/components/libhtmlpars.so
 bin/components/libgkview.so
 bin/components/librdf.so
 bin/components/libshistory.so
-bin/components/libstrres.so
 bin/components/libtxmgr.so
 bin/components/libuconv.so
 bin/components/libucvmath.so

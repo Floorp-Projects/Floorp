@@ -1749,17 +1749,12 @@ sub BuildInternationalProjects()
 
     StartBuildModule("intl");
 
-    BuildOneProject(":mozilla:intl:chardet:macbuild:chardet.xml",               "chardet$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:intl:macbuild:i18n.xml",               "i18n$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.xml",                   "uconv$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     if ($main::options{mathml})
     {
         BuildOneProject(":mozilla:intl:uconv:macbuild:ucvmath.xml",             "ucvmath$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
-    BuildOneProject(":mozilla:intl:unicharutil:macbuild:unicharutil.xml",       "unicharutil$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:locale:macbuild:locale.xml",                 "nslocale$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:lwbrk:macbuild:lwbrk.xml",                   "lwbrk$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:intl:strres:macbuild:strres.xml",                 "strres$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-
     EndBuildModule("intl");
 } # intl
 
