@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 require 5.000;
 
@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 
-$::Version = '$Revision: 1.70 $ ';
+$::Version = '$Revision: 1.71 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -198,7 +198,7 @@ sub BuildIt {
         mail_build_started_message($start_time) if $Settings::ReportStatus;
         
         chdir $build_dir;
-        my $logfile = "$Settins::DirName.log";
+        my $logfile = "$Settings::DirName.log";
         print "Opening $logfile\n";
         open LOG, ">$logfile"
           or die "Cannot open logfile, $logfile: $?\n";
@@ -272,7 +272,7 @@ sub mail_build_finished_message {
     my ($start_time, $build_status, $logfile) = @_;
 
     # Rewrite LOG to OUTLOG, shortening lines.
-    open OUTLOG, ">$logfile.last" or die "Couldn't open logfile: $!\n";
+    open OUTLOG, ">$logfile.last" or die "Unable to open logfile, $logfile: $!";
         
     # Put the status at the top of the log, so the server will not
     # have to search through the entire log to find it.
@@ -292,7 +292,7 @@ sub mail_build_finished_message {
     # Sendmail interprets that as the end of the mail, and truncates the
     # log before it gets to Tinderbox.  (terry weismann, chris yeh)
     
-    open LOG, "$logfile" or die "Couldn't open logfile: $!\n";
+    open LOG, "$logfile" or die "Couldn't open logfile, $logfile: $!";
     while (<LOG>) {
         for (my $offset = 0; ; $offset += 1000) {
             my $output = substr $_, $offset, 1000;
