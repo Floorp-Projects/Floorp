@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h"
 #include "nsIChromeRegistry.h"
+#include "nsIIOService.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 
@@ -208,14 +209,19 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
   NS_WITH_SERVICE(nsIChromeRegistry, reg, kChromeRegistryCID, &rv);
   if (NS_FAILED(rv)) 
 	return rv;
-  nsCOMPtr<nsIURI> chromeURI;
-  rv = aURI->Clone(getter_AddRefs(chromeURI)); // don't mangle the original
-  if (NS_FAILED(rv)) 
-	return rv;
-  rv = reg->ConvertChromeURL(chromeURI);
-  if (NS_FAILED(rv)) 
-	return rv;
+  
+  sCOMPtr<nsIURI> chromeURI;
+  rv = aURI->Clone(getter_AddRefs(chromeURI));        // don't mangle the original
+  if (NS_FAILED(rv)) return rv;
 
+  nsXPIDLCString spec;
+  rv = reg->ConvertChromeURL(chromeURI, getter_Copies(spec));
+  if (NS_FAILED(rv)) return rv;
+
+  NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+  serv->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
+  if (NS_FAILED(rv)) return rv;
+  
   if (elib && alib)
   {
     EsdPlayStreamFallbackType EsdPlayStreamFallback = (EsdPlayStreamFallbackType) PR_FindSymbol(elib, "esd_play_stream_fallback");
