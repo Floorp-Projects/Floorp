@@ -295,7 +295,6 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
           PRUint32 ignore;
           text->SetText(value, ignore);
           nsFormFrame::StyleChangeReflow(aPresContext, this);
-        }
       } else if (nsHTMLAtoms::size == aAttribute) {
         nsFormFrame::StyleChangeReflow(aPresContext, this);
       } else if (nsHTMLAtoms::maxlength == aAttribute) {
@@ -306,6 +305,7 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         }
       }
       NS_RELEASE(text);
+    }
   }
 
   return result;
