@@ -40,7 +40,9 @@ public:
                           const nsStyleSpacing& aBorderStyle,
                           nsIStyleContext* aStyleContext,
                           PRIntn aSkipSides,
-                          nsRect* aGap = 0);
+                          nsRect* aGap = 0,
+                          nscoord aHardBorderSize = 0,
+                          PRBool aShouldIgnoreRounded = PR_FALSE);
 
   /**
    * Render the outline for an element using css rendering rules
