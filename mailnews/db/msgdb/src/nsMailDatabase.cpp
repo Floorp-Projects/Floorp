@@ -146,7 +146,7 @@ nsresult nsMailDatabase::OnNewPath (nsFilePath &newPath)
 nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray &nsMsgKeys, nsIDBChangeListener *instigator)
 {
 	nsresult ret = NS_OK;
-	m_folderStream = new nsIOFileStream(m_dbName);
+	m_folderStream = new nsIOFileStream(nsFileSpec(m_dbName));
 	ret = nsMsgDatabase::DeleteMessages(nsMsgKeys, instigator);
 	if (m_folderStream)
 		delete m_folderStream;
@@ -218,7 +218,7 @@ void nsMailDatabase::UpdateFolderFlag(nsMsgHdr *mailHdr, PRBool bSet,
 		
 		if (fileStream == NULL) 
 		{
-			fileStream = new nsIOFileStream(m_folderName);
+			fileStream = new nsIOFileStream(nsFileSpec(m_folderName));
 		}
 		if (fileStream) 
 		{

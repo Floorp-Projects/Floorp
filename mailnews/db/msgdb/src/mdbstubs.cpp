@@ -77,11 +77,10 @@ nsIMdbThumb** acqThumb)
 //	nsVoidArray		m_tables;
 //	nsStringArray	m_tokenStrings;
 
-	m_fileStream = new nsIOFileStream(m_backingFile);
+	m_fileStream = new nsIOFileStream(nsFileSpec(m_backingFile));
 	WriteTokenList();
 	WriteTableList();
-	m_fileStream->close();
-	delete m_fileStream;
+	delete m_fileStream;  // delete closes the stream.
 	m_fileStream = NULL;
 	return 0;
 }
@@ -464,7 +463,7 @@ mdb_err nsIMdbFactory::OpenFileStore(class nsIMdbEnv *, nsIMdbHeap* , char const
 
 	*retThumb = new nsIMdbThumb;
 	nsFilePath filePath(fileName);
-	(*retThumb)->m_fileStream = new nsIOFileStream(filePath);
+	(*retThumb)->m_fileStream = new nsIOFileStream(nsFileSpec(filePath));
 	(*retThumb)->m_backingFile = fileName;
 
 	return 0;
