@@ -267,7 +267,11 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 
 nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
+#ifdef MOZ_UNICODE
+  nsToolkit::mDispatchMessage((MSG *)aEvent);
+#else
   DispatchMessage((MSG *)aEvent);
+#endif /* MOZ_UNICODE */
   return NS_OK;
 }
 
