@@ -3763,7 +3763,7 @@ PresShell::CancelAllReflowCommands()
   nsHTMLReflowCommand* rc;
   PRInt32 i;
   for (i = 0; i < n; i++) {
-    rc = NS_STATIC_CAST(nsHTMLReflowCommand*, mReflowCommands.ElementAt(0));
+    rc = NS_STATIC_CAST(nsHTMLReflowCommand*, mReflowCommands.ElementAt(i));
     ReflowCommandRemoved(rc);
     delete rc;
   }
@@ -3772,7 +3772,7 @@ PresShell::CancelAllReflowCommands()
 
   n = mTimeoutReflowCommands.Count();
   for (i = 0; i < n; i++) {
-    rc = NS_STATIC_CAST(nsHTMLReflowCommand*, mTimeoutReflowCommands.ElementAt(0));
+    rc = NS_STATIC_CAST(nsHTMLReflowCommand*, mTimeoutReflowCommands.ElementAt(i));
     ReflowCommandRemoved(rc);
     delete rc;
   }
