@@ -63,6 +63,12 @@ const unsigned char nbsp = 160;
 #include "nsJSEditorLog.h"
 #endif // ENABLE_JS_EDITOR_LOG
 
+// HACK - CID for NavDTD until we can get at dtd via the document
+// {a6cf9107-15b3-11d2-932e-00805f8add32}
+#define NS_CNAVDTD_CID \
+{ 0xa6cf9107, 0x15b3, 0x11d2, { 0x93, 0x2e, 0x0, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
+static NS_DEFINE_CID(kCNavDTDCID,	  NS_CNAVDTD_CID);
+
 static NS_DEFINE_CID(kEditorCID,      NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,  NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
@@ -129,7 +135,16 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   nsresult res=NS_ERROR_NULL_POINTER;
   if ((nsnull!=aDoc) && (nsnull!=aPresShell))
   {
-    return nsTextEditor::Init(aDoc, aPresShell);
+    res = nsTextEditor::Init(aDoc, aPresShell);
+    if (NS_SUCCEEDED(res))
+    {
+      // Set up a DTD    XXX XXX 
+      // HACK: This should have happened in a document specific way
+      //       in nsEditor::Init(), but we dont' have a way to do that yet
+      res = nsComponentManager::CreateInstance(kCNavDTDCID, nsnull,
+                                              nsIDTD::GetIID(), getter_AddRefs(mDTD));
+      if (!mDTD) res = NS_ERROR_FAILURE;
+    }
   }
   return res;
 }
@@ -2234,12 +2249,6 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::CanContainElement(nsIDOMNode* aParent, nsIDOMElement* aElement)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
 #ifdef ENABLE_JS_EDITOR_LOG
@@ -2751,55 +2760,6 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
   return res;
 #endif
 }
-
-PRBool 
-nsHTMLEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
-{
-  if (!aParent) return PR_FALSE;
-  
-  static nsAutoString ulTag = "ul";
-  static nsAutoString olTag = "ol";
-  static nsAutoString liTag = "li";
-  static nsAutoString bodyTag = "body";
-  static nsAutoString tdTag = "td";
-  static nsAutoString thTag = "th";
-  static nsAutoString bqTag = "blockquote";
-
-  nsCOMPtr<nsIAtom> pTagAtom = GetTag(aParent);
-  nsAutoString pTag;
-  pTagAtom->ToString(pTag);
-
-  // flesh this out...
-  // for now, only lists and blockquotes are using this funct
-  
-  if (aTag.EqualsIgnoreCase(ulTag) ||
-      aTag.EqualsIgnoreCase(olTag) )
-  {
-    if (pTag.EqualsIgnoreCase(bodyTag) ||
-        pTag.EqualsIgnoreCase(tdTag) ||
-        pTag.EqualsIgnoreCase(thTag) ||
-        pTag.EqualsIgnoreCase(ulTag) ||
-        pTag.EqualsIgnoreCase(olTag) ||
-        pTag.EqualsIgnoreCase(liTag) ||
-        pTag.EqualsIgnoreCase(bqTag) )
-    {
-      return PR_TRUE;
-    }
-  }
-  else if (aTag.EqualsIgnoreCase(bqTag) )
-  {
-    if (pTag.EqualsIgnoreCase(bodyTag) ||
-        pTag.EqualsIgnoreCase(tdTag) ||
-        pTag.EqualsIgnoreCase(thTag) ||
-        pTag.EqualsIgnoreCase(liTag) ||
-        pTag.EqualsIgnoreCase(bqTag) )
-    {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
 
 NS_IMETHODIMP
 nsHTMLEditor::IsRootTag(nsString &aTag, PRBool &aIsTag)

@@ -230,6 +230,13 @@ class CValidDTD : public nsIDTD {
      * @return  ptr to recycler (or null)
      */
     virtual nsITokenRecycler* GetTokenRecycler(void);
+
+    /**
+     * Give rest of world access to our tag enums, so that CanContain(), etc,
+     * become useful.
+     */
+    NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
+
     
 protected:
 

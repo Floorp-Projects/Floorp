@@ -215,6 +215,12 @@ class CViewSourceHTML: public nsIDTD {
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
 
     /**
+     * Give rest of world access to our tag enums, so that CanContain(), etc,
+     * become useful.
+     */
+    NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
+
+    /**
      *  This method gets called to determine whether a given 
      *  tag is itself a container
      *  

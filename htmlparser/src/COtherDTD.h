@@ -122,6 +122,12 @@ class COtherDTD : public CNavDTD {
     virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild)const;
 
     /**
+     * Give rest of world access to our tag enums, so that CanContain(), etc,
+     * become useful.
+     */
+    NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag)const;
+
+    /**
      * This method gets called when a start token has been consumed and needs 
      * to be handled (possibly added to content model via sink).
      * @update	gess5/11/98

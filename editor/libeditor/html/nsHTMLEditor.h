@@ -155,7 +155,6 @@ public:
   // This should replace InsertLink and InsertImage once it is working
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
-  NS_IMETHOD CanContainElement(nsIDOMNode* aParent, nsIDOMElement* aElement);
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection);
   NS_IMETHOD SaveHLineSettings(nsIDOMElement* aElement);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
@@ -185,10 +184,9 @@ public:
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
   NS_IMETHOD JoinTableCells(PRBool aCellToRight);
 
-// Data members
 
 protected:
-
+  
 // rules initialization
 
   virtual void  InitRules();
@@ -216,8 +214,6 @@ protected:
   
   NS_IMETHOD RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRange *aRange);
 
-  PRBool     CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
-  
   NS_IMETHOD IsRootTag(nsString &aTag, PRBool &aIsTag);
 
   NS_IMETHOD IsSubordinateBlock(nsString &aTag, PRBool &aIsTag);

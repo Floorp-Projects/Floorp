@@ -371,6 +371,15 @@ PRBool CRtfDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const{
 }
 
 /**
+ * Give rest of world access to our tag enums, so that CanContain(), etc,
+ * become useful.
+ */
+NS_IMETHODIMP CRtfDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/**
  *  
  *  @update  gess 3/25/98
  *  @param   aToken -- token object to be put into content model

@@ -18,6 +18,7 @@
 
 #include "nsHTMLEditRules.h"
 #include "nsEditor.h"
+#include "nsHTMLEditor.h"
 #include "nsTextEditor.h"
 #include "PlaceholderTxn.h"
 #include "InsertTextTxn.h"
@@ -747,9 +748,16 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel)
     if (!curQuote || transitionList[i])
     {
       nsAutoString quoteType("blockquote");
-      res = mEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
-      if (NS_FAILED(res)) return res;
-      // curQuote is now the correct thing to put curNode in
+      if (mEditor->CanContainTag(curParent,quoteType))
+      {
+        res = mEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
+        if (NS_FAILED(res)) return res;
+        // curQuote is now the correct thing to put curNode in
+      }
+      else
+      {
+        printf("trying to put a blockquote in a bad place\n");     
+      }
     }
         
     // tuck the node into the end of the active blockquote
