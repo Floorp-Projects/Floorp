@@ -72,7 +72,8 @@ nsMsgBiffManager::~nsMsgBiffManager()
 	NS_IF_RELEASE(mBiffTimer);
 
 	PRInt32 count = mBiffArray->Count();
-	for(PRInt32 i; i < count; i++)
+    PRInt32 i;
+	for(i=0; i < count; i++)
 	{
 		nsBiffEntry *biffEntry = (nsBiffEntry*)mBiffArray->ElementAt(i);
 		delete biffEntry;
