@@ -38,9 +38,16 @@ public:
 
   NS_DECL_ISUPPORTS
   
-  //nsIMenuListener interface
+  // nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent,
+                              nsIWidget         * aParentWindow, 
+                              void              * menubarNode,
+                              void              * aWebShell);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
+
   
   NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);
 
@@ -67,6 +74,11 @@ public:
   NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
   NS_IMETHOD InsertSeparator(const PRUint32 aCount);
+
+  NS_IMETHOD SetDOMNode(nsIDOMNode * menuNode);
+  NS_IMETHOD SetDOMElement(nsIDOMElement * menuElement);
+  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+
 
   // Native Impl Methods
   // These are not ref counted
