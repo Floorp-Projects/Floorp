@@ -3985,8 +3985,14 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
         }
     }
 
-    /* Shrinking reallocs can't fail, can they? */
-    (void) JS_realloc(cx, R->chars, (R->length + 1) * sizeof(jschar));
+    /*
+     * Shrinking realloc can fail (e.g., with a BSD-style allocator), but we
+     * don't worry about that case here.  Worst case, R hangs onto URI_CHUNK-1
+     * more jschars than it needs.
+     */
+    chars = (jschar *) JS_realloc(cx, R->chars, (R->length+1) * sizeof(jschar));
+    if (chars)
+        R->chars = chars;
     *rval = STRING_TO_JSVAL(R);
     return JS_TRUE;
 }
@@ -4067,8 +4073,14 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
         }
     }
 
-    /* Shrinking reallocs can't fail, can they? */
-    (void) JS_realloc(cx, R->chars, (R->length + 1) * sizeof(jschar));
+    /*
+     * Shrinking realloc can fail (e.g., with a BSD-style allocator), but we
+     * don't worry about that case here.  Worst case, R hangs onto URI_CHUNK-1
+     * more jschars than it needs.
+     */
+    chars = (jschar *) JS_realloc(cx, R->chars, (R->length+1) * sizeof(jschar));
+    if (chars)
+        R->chars = chars;
     *rval = STRING_TO_JSVAL(R);
     return JS_TRUE;
 
