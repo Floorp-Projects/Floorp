@@ -1306,12 +1306,17 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
 
         NS_ASSERTION(loadGroup, "A stylesheet was unable to locate a load group. This means the onload is going to fire too early!");
 
+        nsCOMPtr<nsIURI> document_uri;
+        mDocument->GetDocumentURL(getter_AddRefs(document_uri));
+
 #ifdef MOZ_TIMELINE
         NS_TIMELINE_MARK_URI("Loading style sheet: %s", urlClone);
         NS_TIMELINE_INDENT();
 #endif
-        result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull, loadGroup,
-                                    nsnull, nsIChannel::LOAD_NORMAL);
+        result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull,
+                                    loadGroup, nsnull, nsIChannel::LOAD_NORMAL,
+                                    document_uri,
+                                    nsIHttpChannel::REFERRER_INLINES);
 #ifdef NS_DEBUG
         mSyncCallback = PR_FALSE;
 #endif
