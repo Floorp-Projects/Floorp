@@ -133,18 +133,24 @@ XPTInterfaceDescriptor nsISupportsInterfaceDescriptor =
 XPTInterfaceDescriptor nsITestXPCFooInterfaceDescriptor =
     {NULL, 2, nsITestXPCFooMethods, 3, nsITestXPCFooConstants};
 
+XPTInterfaceDescriptor nsITestXPCFoo2InterfaceDescriptor =
+    {NULL, 0, NULL, 0, NULL};
+
 XPTInterfaceDirectoryEntry InterfaceDirectoryEntryTable[] = {
  {NS_ISUPPORTS_IID, "nsISupports", "", &nsISupportsInterfaceDescriptor},
  {NS_ITESTXPC_FOO_IID, "nsITestXPCFoo", "", &nsITestXPCFooInterfaceDescriptor},
- {NS_ITESTXPC_FOO2_IID, "nsITestXPCFoo2", "", &nsITestXPCFooInterfaceDescriptor}
+ {NS_ITESTXPC_FOO2_IID, "nsITestXPCFoo2", "", &nsITestXPCFoo2InterfaceDescriptor}
 };
 
 #define ENTRY_COUNT (sizeof(InterfaceDirectoryEntryTable)/sizeof(InterfaceDirectoryEntryTable[0]))
-#define TABLE_INDEX(p) ((p-InterfaceDirectoryEntryTable)/sizeof(InterfaceDirectoryEntryTable[0]))
+#define TABLE_INDEX(p) ((p)-InterfaceDirectoryEntryTable)
 
 static BogusTableInit()
 {
     nsITestXPCFooInterfaceDescriptor.parent_interface =
+        &InterfaceDirectoryEntryTable[0];
+
+    nsITestXPCFoo2InterfaceDescriptor.parent_interface =
         &InterfaceDirectoryEntryTable[1];
 }
 
@@ -154,7 +160,7 @@ static BogusTableInit()
 nsIInterfaceInfo*
 nsXPTParamInfo::GetInterface() const
 {
-    NS_PRECONDITION(GetType() == nsXPTType::T_INTERFACE,"not an interface");
+    NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,"not an interface");
 
     nsIInterfaceInfoManager* mgr;
     if(!(mgr = InterfaceInfoManagerImpl::GetInterfaceInfoManager()))
@@ -171,7 +177,7 @@ nsXPTParamInfo::GetInterface() const
 nsIID*
 nsXPTParamInfo::GetInterfaceIID() const
 {
-    NS_PRECONDITION(GetType() == nsXPTType::T_INTERFACE,"not an interface");
+    NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE,"not an interface");
     return &InterfaceDirectoryEntryTable[type.type.interface].iid;
 }
 

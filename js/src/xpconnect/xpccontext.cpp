@@ -32,7 +32,6 @@ XPCContext::newXPCContext(JSContext* aJSContext,
     XPCContext* xpcc;
 
     NS_PRECONDITION(aJSContext,"bad param");
-    NS_PRECONDITION(aGlobalObj,"bad param");
     NS_PRECONDITION(WrappedJSMapSize,"bad param");
     NS_PRECONDITION(WrappedNativeMapSize,"bad param");
     NS_PRECONDITION(WrappedJSClassMapSize,"bad param");
@@ -50,10 +49,7 @@ XPCContext::newXPCContext(JSContext* aJSContext,
        xpcc->GetWrappedJSMap()          &&
        xpcc->GetWrappedNativeMap()      &&
        xpcc->GetWrappedJSClassMap()     &&
-       xpcc->GetWrappedNativeClassMap() &&
-       xpc_InitIDClass(xpcc)            &&
-       nsXPCWrappedJSClass::InitForContext(xpcc) &&
-       nsXPCWrappedNativeClass::InitForContext(xpcc))
+       xpcc->GetWrappedNativeClassMap())
     {
         return xpcc;
     }
@@ -90,3 +86,13 @@ XPCContext::~XPCContext()
     if(mWrappedNativeClassMap)
         delete mWrappedNativeClassMap;
 }
+
+JSBool 
+XPCContext::Init(JSObject* aGlobalObj /*= NULL*/)
+{
+    if(aGlobalObj)
+        mGlobalObj = aGlobalObj;
+    return xpc_InitIDClass(this)            &&
+           nsXPCWrappedJSClass::InitForContext(this) &&
+           nsXPCWrappedNativeClass::InitForContext(this);
+}        
