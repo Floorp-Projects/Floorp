@@ -1036,7 +1036,7 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     }
     else 
     {
-      ParseValue(aValue, 1, val, eHTMLUnit_Pixel);
+      ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
     }
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
