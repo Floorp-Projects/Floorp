@@ -264,6 +264,7 @@ void nsIMEPreedit::SetPreeditString(const XIMText *aText,
         break;
       case XIMHighlight:
         *pFeedbackAttr = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+        break;
       default:
         *pFeedbackAttr = NS_TEXTRANGE_RAWINPUT;
       }
