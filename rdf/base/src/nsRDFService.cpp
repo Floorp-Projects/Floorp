@@ -750,7 +750,11 @@ ServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool replace)
             return NS_ERROR_FAILURE;    // already registered
     }
 
-    PL_HashTableAdd(mNamedDataSources, uri, aDataSource);
+    const char* key = PL_strdup(uri);
+    if (! key)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_HashTableAdd(mNamedDataSources, key, aDataSource);
     return NS_OK;
 }
 
@@ -774,6 +778,7 @@ ServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
         if (! ds)
             return NS_ERROR_ILLEGAL_VALUE;
 
+        // XXXwaterson LEAK! remember to free the key
         PL_HashTableRemove(mNamedDataSources, uri);
     }
     return NS_OK;
