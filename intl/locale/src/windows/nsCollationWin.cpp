@@ -48,7 +48,12 @@
 #include "prmem.h"
 #include "plstr.h"
 #include <windows.h>
+
+#ifdef WINCE
+#include <Winnls.h>
+#else
 #undef CompareString
+#endif
 
 NS_IMPL_ISUPPORTS1(nsCollationWin, nsICollation)
 
@@ -133,26 +138,34 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
 }
 
 
-nsresult nsCollationWin::CompareString(PRInt32 strength,
-                                       const nsAString& string1, const nsAString& string2, PRInt32* result)
+NS_IMETHODIMP nsCollationWin::CompareString(PRInt32 strength, 
+                                            const nsAString & string1, 
+                                            const nsAString & string2, 
+                                            PRInt32 *result)
 {
   int retval;
   nsresult res;
   DWORD dwMapFlags = 0;
 
+#ifndef WINCE // NORM_IGNORECASE is not supported on WINCE
   if (strength == kCollationCaseInSensitive)
     dwMapFlags |= NORM_IGNORECASE;
 
   if (mW_API) {
-    retval = CompareStringW(mLCID, dwMapFlags,
-                            (LPCWSTR) PromiseFlatString(string1).get(), -1,
-                            (LPCWSTR) PromiseFlatString(string2).get(), -1);
+#endif
+    retval = ::CompareStringW(mLCID, 
+                              dwMapFlags,
+                              (LPCWSTR) PromiseFlatString(string1).get(), 
+                              -1,
+                              (LPCWSTR) PromiseFlatString(string2).get(), 
+                              -1);
     if (retval) {
       res = NS_OK;
       *result = retval - 2;
     } else {
       res = NS_ERROR_FAILURE;
     }
+#ifndef WINCE // Always use wide APIs on Win CE.
   } else {
     char *Cstr1 = nsnull, *Cstr2 = nsnull;
     res = mCollation->UnicodeToChar(string1, &Cstr1);
@@ -169,6 +182,7 @@ nsresult nsCollationWin::CompareString(PRInt32 strength,
       PR_Free(Cstr1);
     }
   }
+#endif //WINCE
 
   return res;
 }
@@ -185,7 +199,9 @@ nsresult nsCollationWin::AllocateRawSortKey(PRInt32 strength,
   if (strength == kCollationCaseInSensitive)
     dwMapFlags |= NORM_IGNORECASE;
 
+#ifndef WINCE // Always use wide APIs on Win CE.
   if (mW_API) {
+#endif
     byteLen = LCMapStringW(mLCID, dwMapFlags, 
                            (LPCWSTR) PromiseFlatString(stringIn).get(),
                            -1, NULL, 0);
@@ -198,6 +214,7 @@ nsresult nsCollationWin::AllocateRawSortKey(PRInt32 strength,
                              (LPCWSTR) PromiseFlatString(stringIn).get(),
                              -1, (LPWSTR) buffer, byteLen);
     }
+#ifndef WINCE // Always use wide APIs on Win CE.
   }
   else {
     char *Cstr = nsnull;
@@ -214,7 +231,7 @@ nsresult nsCollationWin::AllocateRawSortKey(PRInt32 strength,
       PR_Free(Cstr);
     }
   }
-
+#endif
   return res;
 }
 
