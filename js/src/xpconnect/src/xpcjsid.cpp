@@ -66,9 +66,9 @@ nsJSID::nsJSID()
 nsJSID::~nsJSID()
 {
     if(mNumber && mNumber != gNoString)
-        delete [] mNumber;
+        PR_Free(mNumber);
     if(mName && mName != gNoString)
-        delete [] mName;
+        PR_Free(mName);
 }
 
 void nsJSID::Reset()
@@ -76,9 +76,9 @@ void nsJSID::Reset()
     mID = GetInvalidIID();
 
     if(mNumber && mNumber != gNoString)
-        delete [] mNumber;
+        PR_Free(mNumber);
     if(mName && mName != gNoString)
-        delete [] mName;
+        PR_Free(mName);
 
     mNumber = mName = nsnull;
 }
@@ -89,7 +89,7 @@ nsJSID::SetName(const char* name)
     NS_ASSERTION(!mName || mName == gNoString ,"name already set");
     NS_ASSERTION(name,"null name");
     int len = strlen(name)+1;
-    mName = new char[len];
+    mName = (char*)PR_Malloc(len);
     if(!mName)
         return PR_FALSE;
     memcpy(mName, name, len);
@@ -1065,7 +1065,7 @@ xpc_NewIDObject(JSContext *cx, const nsID& aID)
     if(idString)
     {
         nsJSID* iid = nsJSID::NewID(idString);
-        delete [] idString;
+        nsCRT::free(idString);
         if(iid)
         {
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();

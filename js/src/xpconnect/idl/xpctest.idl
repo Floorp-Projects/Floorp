@@ -188,5 +188,10 @@ interface nsIXPCTestArray : nsISupports {
                            [array, size_is(count)] inout string valueArray);
     void ReverseStringArray(in PRUint32 count, 
                             [array, size_is(count)] inout string valueArray);
+
+    void PrintStringWithSize(in PRUint32 count, 
+                             [size_is(count)] in string str);
+    void DoubleString(inout PRUint32 count, 
+                      [size_is(count)] inout string str);
 };
 

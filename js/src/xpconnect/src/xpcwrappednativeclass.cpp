@@ -648,6 +648,11 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             JSBool useAllocator = JS_FALSE;
             PRBool isArray = type.IsArray();
 
+            PRBool isSizedString = isArray ? 
+                    JS_FALSE :
+                    type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
+                    type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
+
             nsXPTCVariant* dp = &dispatchParams[i];
             dp->type = type;
 
@@ -711,8 +716,13 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                 }
             }
 
+            if(datum_type.IsInterfacePointer() &&
+               !GetInterfaceTypeFromParam(cx, info, desc, param, vtblIndex,
+                                          i, datum_type, dispatchParams,
+                                          &conditional_iid))
+                goto done;
 
-            if(isArray)
+            if(isArray || isSizedString)
             {
                 if(!GetArraySizeFromParam(cx, info, desc, param, vtblIndex, i,
                                           GET_SIZE, dispatchParams, 
@@ -722,32 +732,37 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                                           &array_count))
                     goto done;
 
-                if(datum_type.IsInterfacePointer() &&
-                   !GetInterfaceTypeFromParam(cx, info, desc, param, vtblIndex,
-                                              i, datum_type, dispatchParams,
-                                              &conditional_iid))
-                    goto done;
-
-                if(!XPCConvert::JSArray2Native(cx, (void**)&dp->val, src,
-                                               array_count, array_capacity,
-                                               datum_type,
-                                               useAllocator, conditional_iid, &err))
+                if(isArray)
                 {
-                    // XXX need exception scheme for arrays to indicate bad element
-                    ThrowBadParamException(err, cx, desc, i);
-                    goto done;
+                    if(!XPCConvert::JSArray2Native(cx, (void**)&dp->val, src,
+                                                   array_count, array_capacity,
+                                                   datum_type,
+                                                   useAllocator, 
+                                                   conditional_iid, &err))
+                    {
+                        // XXX need exception scheme for arrays to indicate bad element
+                        ThrowBadParamException(err, cx, desc, i);
+                        goto done;
+                    }
+                }
+                else // if(isSizedString)
+                {
+                    if(!XPCConvert::JSStringWithSize2Native(cx, (void*)&dp->val, 
+                                                   src,
+                                                   array_count, array_capacity,
+                                                   datum_type, useAllocator, 
+                                                   &err))
+                    {
+                        ThrowBadParamException(err, cx, desc, i);
+                        goto done;
+                    }
                 }
             }
             else
             {
-                if(datum_type.IsInterfacePointer() &&
-                   !GetInterfaceTypeFromParam(cx, info, desc, param, vtblIndex,
-                                              i, datum_type, dispatchParams,
-                                              &conditional_iid))
-                    goto done;
-
                 if(!XPCConvert::JSData2Native(cx, &dp->val, src, type,
-                                              useAllocator, conditional_iid, &err))
+                                              useAllocator, conditional_iid, 
+                                              &err))
                 {
                     ThrowBadParamException(err, cx, desc, i);
                     goto done;
@@ -785,6 +800,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         JSUint32 array_count;
         nsXPTType datum_type;
         PRBool isArray = type.IsArray();
+        PRBool isSizedString = isArray ? 
+                JS_FALSE :
+                type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
+                type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
         if(isArray)
         {
@@ -798,7 +817,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         else
             datum_type = type;
 
-        if(isArray)
+        if(isArray || isSizedString)
         {
             if(!GetArraySizeFromParam(cx, info, desc, param, vtblIndex, i,
                                       GET_LENGTH, dispatchParams,
@@ -819,6 +838,17 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                                            array_count, &err))
             {
                 // XXX need exception scheme for arrays to indicate bad element
+                ThrowBadParamException(err, cx, desc, i);
+                goto done;
+            }
+        }
+        else if (isSizedString)
+        {
+            if(!XPCConvert::NativeStringWithSize2JS(cx, &v, 
+                                           (const void*)&dp->val,
+                                           datum_type,
+                                           array_count, &err))
+            {
                 ThrowBadParamException(err, cx, desc, i);
                 goto done;
             }

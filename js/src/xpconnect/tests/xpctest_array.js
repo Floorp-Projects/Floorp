@@ -130,6 +130,18 @@ var jsobj =  {
 
         result.value = [this, this];
         count.value = 2;
+    },
+    PrintStringWithSize : function(len, a) {
+        print("\""+a+"\""+" ; "+len);
+    },
+    DoubleString : function(len, s) {
+        var out = "";
+        for(var k = 0; k < s.value.length; k++) {
+            out += s.value.charAt(k);
+            out += s.value.charAt(k);
+        }
+        len.value *= 2;
+        s.value = out;
     }
 };
 
@@ -201,3 +213,26 @@ for(i = 0; i < count.value; i++)
     ifaces.value[i].PrintIntegerArray(a.length, a);
 
 print("-------------------------------------------");
+print("-------------------------------------------");
+print("-------------------------------------------");
+
+obj.SetReceiver(null);
+str = "This is a string";
+obj.PrintStringWithSize(str.length, str);
+obj.SetReceiver(jsobj);
+obj.PrintStringWithSize(str.length, str);
+
+var str2 = {value : "double me baby"};
+var len2 = {value : str2.value.length};
+obj.SetReceiver(null);
+print("\""+str2.value+"\""+" : "+len2.value);
+obj.DoubleString(len2, str2);
+print("\""+str2.value+"\""+" : "+len2.value);
+
+var str2 = {value : "double me baby"};
+var len2 = {value : str2.value.length};
+obj.SetReceiver(jsobj);
+print("\""+str2.value+"\""+" ; "+len2.value);
+obj.DoubleString(len2, str2);
+print("\""+str2.value+"\""+" ; "+len2.value);
+

@@ -49,7 +49,7 @@ struct ResultMap {nsresult rv; const char* name; const char* format;} map[] = {
 #define XPC_MSG_DEF(val, format) \
     {(val), #val, format},
 #include "xpc.msg"
-#undef MSG_DEF
+#undef XPC_MSG_DEF
     {0,0,0}   // sentinel to mark end of array
 };
 
