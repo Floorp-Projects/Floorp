@@ -80,6 +80,7 @@
 #define JS_HAS_EXCEPTIONS       0       /* has exception handling */
 #define JS_HAS_UNDEFINED        0       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         0       /* has Object/Array toSource method */
+#define JS_HAS_TOSOURCE_FUN     0       /* has ToSource top-level function */
 #define JS_HAS_IN_OPERATOR      0       /* has in operator ('p' in {p:1}) */
 #define JS_HAS_INSTANCEOF       0       /* has {p:1} instanceof Object */
 #define JS_HAS_ARGS_OBJECT      0       /* has minimal ECMA arguments object */
@@ -133,6 +134,7 @@
 #define JS_HAS_EXCEPTIONS       0       /* has exception handling */
 #define JS_HAS_UNDEFINED        0       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         0       /* has Object/Array toSource method */
+#define JS_HAS_TOSOURCE_FUN     0       /* has ToSource top-level function */
 #define JS_HAS_IN_OPERATOR      0       /* has in operator ('p' in {p:1}) */
 #define JS_HAS_INSTANCEOF       0       /* has {p:1} instanceof Object */
 #define JS_HAS_ARGS_OBJECT      0       /* has minimal ECMA arguments object */
@@ -186,6 +188,7 @@
 #define JS_HAS_EXCEPTIONS       0       /* has exception handling */
 #define JS_HAS_UNDEFINED        0       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         0       /* has Object/Array toSource method */
+#define JS_HAS_TOSOURCE_FUN     0       /* has ToSource top-level function */
 #define JS_HAS_IN_OPERATOR      0       /* has in operator ('p' in {p:1}) */
 #define JS_HAS_INSTANCEOF       0       /* has {p:1} instanceof Object */
 #define JS_HAS_ARGS_OBJECT      0       /* has minimal ECMA arguments object */
@@ -239,6 +242,7 @@
 #define JS_HAS_EXCEPTIONS       0       /* has exception handling */
 #define JS_HAS_UNDEFINED        1       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
+#define JS_HAS_TOSOURCE_FUN     0       /* has ToSource top-level function */
 #define JS_HAS_IN_OPERATOR      0       /* has in operator ('p' in {p:1}) */
 #define JS_HAS_INSTANCEOF       0       /* has {p:1} instanceof Object */
 #define JS_HAS_ARGS_OBJECT      1       /* has minimal ECMA arguments object */
@@ -292,6 +296,7 @@
 #define JS_HAS_EXCEPTIONS	1	/* has exception handling */
 #define JS_HAS_UNDEFINED        1       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
+#define JS_HAS_TOSOURCE_FUN     0       /* has ToSource top-level function */
 #define JS_HAS_IN_OPERATOR      1       /* has in operator ('p' in {p:1}) */
 #define JS_HAS_INSTANCEOF       1       /* has {p:1} instanceof Object */
 #define JS_HAS_ARGS_OBJECT      1       /* has minimal ECMA arguments object */
@@ -345,6 +350,7 @@
 #define JS_HAS_EXCEPTIONS       1       /* has exception handling */
 #define JS_HAS_UNDEFINED        1       /* has global "undefined" property */
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
+#define JS_HAS_TOSOURCE_FUN     1       /* has ToSource top-level function */
 #define JS_HAS_IN_OPERATOR      1       /* has in operator ('p' in {p:1}) */
 #define JS_HAS_INSTANCEOF       1       /* has {p:1} instanceof Object */
 #define JS_HAS_ARGS_OBJECT      1       /* has minimal ECMA arguments object */
