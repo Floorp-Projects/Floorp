@@ -18,7 +18,8 @@
 
 #include "nsISupports.idl"
 
-interface nsIMsgGroupRecord {
+[uuid(4ed03c60-b256-11d2-b7f0-00805f05ffa5)]
+interface nsIMsgGroupRecord : nsISupports {
 
     void InitializeSibling();
     short GroupNameCompare(in string name1,

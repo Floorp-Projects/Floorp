@@ -9,7 +9,14 @@
 
 
 /* starting interface nsIMsgGroupRecord */
-class nsIMsgGroupRecord {
+
+/* {4ed03c60-b256-11d2-b7f0-00805f05ffa5} */
+#define NS_IMSGGROUPRECORD_IID_STR "4ed03c60-b256-11d2-b7f0-00805f05ffa5"
+#define NS_IMSGGROUPRECORD_IID \
+  {0x4ed03c60, 0xb256, 0x11d2, \
+    { 0xb7, 0xf0, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5 }}
+
+class nsIMsgGroupRecord : public nsISupports {
  private:
   void operator delete(void *); // NOT TO BE IMPLEMENTED
 
