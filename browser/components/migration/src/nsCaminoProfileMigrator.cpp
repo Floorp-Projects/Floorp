@@ -77,6 +77,21 @@ nsCaminoProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnich
 }
 
 NS_IMETHODIMP
+nsCaminoProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+{
+  *aResult = 0; // XXXben implement me
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCaminoProfileMigrator::GetSourceExists(PRBool* aResult)
+{
+  *aResult = PR_FALSE; // XXXben implement me
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCaminoProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
 {
   *aResult = PR_FALSE;

@@ -78,6 +78,8 @@ protected:
   nsresult CopyBookmarks(PRBool aReplace);
   nsresult MigrateDogbertBookmarks();
 
+  void     GetSourceProfile(const PRUnichar* aProfile);
+
 private:
   nsCOMPtr<nsISupportsArray> mProfiles;
 };

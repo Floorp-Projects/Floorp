@@ -95,18 +95,10 @@ nsSeamonkeyProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUn
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
 
-  if (aReplace)
-    CreateTemplateProfile(aProfile);
-  else {
-    nsCOMPtr<nsIProfileInternal> pmi(do_GetService("@mozilla.org/profile/manager;1"));
-    nsXPIDLString currProfile;
-    pmi->GetCurrentProfile(getter_Copies(currProfile));
-    nsCOMPtr<nsIFile> dir;
-    pmi->GetProfileDir(currProfile.get(), getter_AddRefs(dir));
-    mTargetProfile = do_QueryInterface(dir);
-  }
-
-  GetSourceProfile(aProfile);
+  if (!mTargetProfile) 
+    GetTargetProfile(aProfile, aReplace);
+  if (!mSourceProfile)
+    GetSourceProfile(aProfile);
 
   COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS,  NS_LITERAL_STRING("settings").get());
   COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES,   NS_LITERAL_STRING("cookies").get());
@@ -118,6 +110,54 @@ nsSeamonkeyProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUn
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+{
+  if (!mSourceProfile) 
+    GetSourceProfile(aProfile);
+
+  PRBool exists;
+  const nsAString fileNames[] = { FILE_NAME_PREFS, 
+                                  FILE_NAME_COOKIES,
+                                  FILE_NAME_HISTORY,
+                                  FILE_NAME_BOOKMARKS,
+                                  FILE_NAME_DOWNLOADS,
+                                  FILE_NAME_MIMETYPES };
+  const PRUint32 sourceFlags[] = { nsIBrowserProfileMigrator::SETTINGS, 
+                                   nsIBrowserProfileMigrator::COOKIES,
+                                   nsIBrowserProfileMigrator::HISTORY,
+                                   nsIBrowserProfileMigrator::BOOKMARKS,
+                                   nsIBrowserProfileMigrator::OTHERDATA,
+                                   nsIBrowserProfileMigrator::OTHERDATA };
+  nsCOMPtr<nsIFile> sourceFile; 
+  for (PRInt32 i = 0; i < 6; ++i) {
+    mSourceProfile->Clone(getter_AddRefs(sourceFile));
+    sourceFile->Append(fileNames[i]);
+    sourceFile->Exists(&exists);
+    if (exists)
+      *aResult |= sourceFlags[i];
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSeamonkeyProfileMigrator::GetSourceExists(PRBool* aResult)
+{
+  nsCOMPtr<nsISupportsArray> profiles;
+  GetSourceProfiles(getter_AddRefs(profiles));
+
+  if (profiles) { 
+    PRUint32 count;
+    profiles->Count(&count);
+    *aResult = count > 0;
+  }
+  else
+    *aResult = PR_FALSE;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

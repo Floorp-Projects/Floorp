@@ -120,6 +120,49 @@ nsOperaProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnicha
 }
 
 NS_IMETHODIMP
+nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+{
+  if (!mOperaProfile)
+    GetOperaProfile(aProfile, getter_AddRefs(mOperaProfile));
+
+  PRBool exists;
+  const nsAString fileNames[] = { OPERA_PREFERENCES_FILE_NAME, 
+                                  OPERA_COOKIES_FILE_NAME, 
+                                  OPERA_HISTORY_FILE_NAME,
+                                  OPERA_BOOKMARKS_FILE_NAME };
+  const PRUint32 sourceFlags[] = { nsIBrowserProfileMigrator::SETTINGS, 
+                                   nsIBrowserProfileMigrator::COOKIES, 
+                                   nsIBrowserProfileMigrator::HISTORY,
+                                   nsIBrowserProfileMigrator::BOOKMARKS };
+  nsCOMPtr<nsIFile> sourceFile; 
+  for (PRInt32 i = 0; i < 4; ++i) {
+    mOperaProfile->Clone(getter_AddRefs(sourceFile));
+    sourceFile->Append(fileNames[i]);
+    sourceFile->Exists(&exists);
+    if (exists)
+      *aResult |= sourceFlags[i];
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOperaProfileMigrator::GetSourceExists(PRBool* aResult)
+{
+  nsCOMPtr<nsISupportsArray> profiles;
+  GetSourceProfiles(getter_AddRefs(profiles));
+
+  if (profiles) { 
+    PRUint32 count;
+    profiles->Count(&count);
+    *aResult = count > 0;
+  }
+  else
+    *aResult = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsOperaProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
 {
   nsCOMPtr<nsISupportsArray> profiles;
@@ -151,7 +194,7 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
     fileLocator->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(file));
 
     // Opera profile lives under %APP_DATA%\Opera\<operaver>\profile 
-    file->Append(NS_LITERAL_STRING(OPERA_PREFERENCES_FOLDER_NAME));
+    file->Append(OPERA_PREFERENCES_FOLDER_NAME);
 
     nsCOMPtr<nsISimpleEnumerator> e;
     file->GetDirectoryEntries(getter_AddRefs(e));

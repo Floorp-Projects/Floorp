@@ -115,19 +115,10 @@ nsDogbertProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnic
 
   NOTIFY_OBSERVERS(MIGRATION_STARTED, nsnull);
 
-  if (aReplace)
-    CreateTemplateProfile(aProfile);
-  else {
-    nsCOMPtr<nsIProfileInternal> pmi(do_GetService("@mozilla.org/profile/manager;1"));
-    nsXPIDLString currProfile;
-    pmi->GetCurrentProfile(getter_Copies(currProfile));
-    nsCOMPtr<nsIFile> dir;
-    pmi->GetProfileDir(currProfile.get(), getter_AddRefs(dir));
-    mTargetProfile = do_QueryInterface(dir);
-  }
-
-  nsCOMPtr<nsIProfileInternal> pmi(do_GetService("@mozilla.org/profile/manager;1"));
-  pmi->GetOriginalProfileDir(aProfile, getter_AddRefs(mSourceProfile));
+  if (!mTargetProfile) 
+    GetTargetProfile(aProfile, aReplace);
+  if (!mSourceProfile)
+    GetSourceProfile(aProfile);
 
   COPY_DATA(CopyPreferences,  aReplace, nsIBrowserProfileMigrator::SETTINGS,  NS_LITERAL_STRING("settings").get());
   COPY_DATA(CopyCookies,      aReplace, nsIBrowserProfileMigrator::COOKIES,   NS_LITERAL_STRING("cookies").get());
@@ -136,6 +127,57 @@ nsDogbertProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnic
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 
   return rv;
+}
+
+void
+nsDogbertProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
+{
+  // XXXben I would actually prefer we do this by reading the 4.x registry, rather than
+  // relying on the 5.x registry knowing about 4.x profiles, in case we remove profile
+  // manager support from Firefox. 
+  nsCOMPtr<nsIProfileInternal> pmi(do_GetService("@mozilla.org/profile/manager;1"));
+  pmi->GetOriginalProfileDir(aProfile, getter_AddRefs(mSourceProfile));
+}
+
+NS_IMETHODIMP
+nsDogbertProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+{
+  if (!mSourceProfile) 
+    GetSourceProfile(aProfile);
+
+  PRBool exists;
+  const nsAString fileNames[] = { PREF_FILE_NAME_IN_4x, 
+                                  COOKIES_FILE_NAME_IN_4x, 
+                                  BOOKMARKS_FILE_NAME_IN_4x };
+  const PRUint32 sourceFlags[] = { nsIBrowserProfileMigrator::SETTINGS, 
+                                   nsIBrowserProfileMigrator::COOKIES, 
+                                   nsIBrowserProfileMigrator::BOOKMARKS };
+  nsCOMPtr<nsIFile> sourceFile; 
+  for (PRInt32 i = 0; i < 3; ++i) {
+    mSourceProfile->Clone(getter_AddRefs(sourceFile));
+    sourceFile->Append(fileNames[i]);
+    sourceFile->Exists(&exists);
+    if (exists)
+      *aResult |= sourceFlags[i];
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDogbertProfileMigrator::GetSourceExists(PRBool* aResult)
+{
+  nsCOMPtr<nsISupportsArray> profiles;
+  GetSourceProfiles(getter_AddRefs(profiles));
+
+  if (profiles) { 
+    PRUint32 count;
+    profiles->Count(&count);
+    *aResult = count > 0;
+  }
+  else
+    *aResult = PR_FALSE;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

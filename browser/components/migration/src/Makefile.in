@@ -60,7 +60,7 @@ REQUIRES	= \
 		  unicharutil \
 		  windowwatcher \
 		  dom \
-      docshell \
+		  docshell \
 		  cookie \
 		  $(NULL)
 

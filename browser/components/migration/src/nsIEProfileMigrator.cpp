@@ -446,6 +446,25 @@ nsIEProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* 
 }
 
 NS_IMETHODIMP
+nsIEProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+{
+  // There's no harm in assuming everything is available.
+  *aResult = nsIBrowserProfileMigrator::SETTINGS | nsIBrowserProfileMigrator::COOKIES | 
+             nsIBrowserProfileMigrator::HISTORY | nsIBrowserProfileMigrator::FORMDATA |
+             nsIBrowserProfileMigrator::PASSWORDS | nsIBrowserProfileMigrator::BOOKMARKS;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIEProfileMigrator::GetSourceExists(PRBool* aResult)
+{
+  // IE always exists. 
+  *aResult = PR_TRUE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsIEProfileMigrator::GetSourceHasMultipleProfiles(PRBool* aResult)
 {
   *aResult = PR_FALSE;

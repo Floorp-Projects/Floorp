@@ -70,7 +70,22 @@ nsNetscapeProfileMigratorBase::nsNetscapeProfileMigratorBase()
   bundleService->CreateBundle(MIGRATION_BUNDLE, getter_AddRefs(mBundle));
 }
 
-nsresult
+void
+nsNetscapeProfileMigratorBase::GetTargetProfile(const PRUnichar* aSuggestedName, PRBool aReplace)
+{
+  if (aReplace)
+    CreateTemplateProfile(aSuggestedName);
+  else {
+    nsCOMPtr<nsIProfileInternal> pmi(do_GetService("@mozilla.org/profile/manager;1"));
+    nsXPIDLString currProfile;
+    pmi->GetCurrentProfile(getter_Copies(currProfile));
+    nsCOMPtr<nsIFile> dir;
+    pmi->GetProfileDir(currProfile.get(), getter_AddRefs(dir));
+    mTargetProfile = do_QueryInterface(dir);
+  }
+}
+
+void
 nsNetscapeProfileMigratorBase::CreateTemplateProfile(const PRUnichar* aSuggestedName)
 {
   nsCOMPtr<nsIFile> profilesDir;
@@ -89,8 +104,6 @@ nsNetscapeProfileMigratorBase::CreateTemplateProfile(const PRUnichar* aSuggested
   nsCOMPtr<nsIFile> target;
   pmi->GetProfileDir(profileName.get(), getter_AddRefs(target));
   mTargetProfile = do_QueryInterface(target);
-
-  return NS_OK;
 }
 
 void
