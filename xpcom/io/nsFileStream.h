@@ -503,7 +503,7 @@ protected:
 
 // DATA
 protected:
-    nsCOMPtr<nsIFileInputStream>      mFileInputStream;
+    nsCOMPtr<nsIFileSpecInputStream>      mFileInputStream;
 }; // class nsInputFileStream
 
 //========================================================================================
@@ -637,7 +637,7 @@ protected:
 
 // DATA
 protected:
-    nsCOMPtr<nsIFileOutputStream>     mFileOutputStream;
+    nsCOMPtr<nsIFileSpecOutputStream>     mFileOutputStream;
 }; // class nsOutputFileStream
 
 //========================================================================================
@@ -757,7 +757,7 @@ public:
 
     // DATA
 protected:
-    nsCOMPtr<nsIFileOutputStream>     mFileOutputStream;
+    nsCOMPtr<nsIFileSpecOutputStream>     mFileOutputStream;
 }; // class nsIOFileStream
  
 //========================================================================================

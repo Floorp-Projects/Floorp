@@ -170,7 +170,7 @@ protected:
 	char* mTarget;
 	nsFileURL mFileURL;
 	nsFileSpec mFileSpec;
-	nsCOMPtr<nsIFileOutputStream> mFileThing;
+	nsCOMPtr<nsIFileSpecOutputStream> mFileThing;
 	nsIPluginInstanceOwner* mOwner;
 };
 

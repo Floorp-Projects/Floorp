@@ -43,8 +43,8 @@
 //========================================================================================
 class FileImpl
     : public nsIRandomAccessStore
-    , public nsIFileOutputStream
-    , public nsIFileInputStream
+    , public nsIFileSpecOutputStream
+    , public nsIFileSpecInputStream
     , public nsIOpenFile
 //========================================================================================
 {
@@ -112,8 +112,8 @@ NS_IMPL_QUERY_HEAD(FileImpl)
   NS_IMPL_QUERY_BODY(nsIRandomAccessStore)
   NS_IMPL_QUERY_BODY(nsIOutputStream)
   NS_IMPL_QUERY_BODY(nsIInputStream)
-  NS_IMPL_QUERY_BODY(nsIFileInputStream)
-  NS_IMPL_QUERY_BODY(nsIFileOutputStream)
+  NS_IMPL_QUERY_BODY(nsIFileSpecInputStream)
+  NS_IMPL_QUERY_BODY(nsIFileSpecOutputStream)
 NS_IMPL_QUERY_TAIL(nsIOutputStream)
 
 
