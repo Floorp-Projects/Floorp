@@ -2,18 +2,19 @@
  * Sanity test.
  */
 
-const result = 'okay';
-
 function title() {
     return "sanity";
 }
 
-
-function run() {
+function g(a,b) {
+    return a+b;
 }
 
-result;
+function run() {
+    return g(1,2);
+}
 
-/**
- * Copyright (c) 1999, Mountain View Compiler Company. All rights reserved.
+/*
+ * Copyright (c) 1999-2001, Mountain View Compiler Company. 
+ * All rights reserved.
  */

@@ -32,6 +32,7 @@ public class Node {
 
     Block block;
     int position;
+	Store store;
 
     public Node() {
     }

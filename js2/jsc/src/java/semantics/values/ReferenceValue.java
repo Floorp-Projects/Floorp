@@ -45,7 +45,7 @@ public class ReferenceValue extends Value {
 
         if( debug ) {
             Debugger.trace( "creating reference scope = " + scope + 
-                            " name = " + name + " namespaces = " + namespaces );
+                            " name = " + name + " used_namespaces = " + namespaces );
         }
 
         this.scope      = scope;
@@ -91,6 +91,10 @@ public class ReferenceValue extends Value {
                     break;
                 }
             }
+
+			if( slot==null ) {
+                slot = scope.get(qualifier/*=null*/,name);
+			}
         }
         if( debug ) {
             Debugger.trace("leaving getSlotInScope() with slot="+slot);

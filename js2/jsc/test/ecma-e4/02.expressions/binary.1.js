@@ -60,5 +60,6 @@ function run() {
 }
 
 /*
- * Copyright (c) 1999, Mountain View Compiler Company. All rights reserved.
+ * Copyright (c) 1999-2001, Mountain View Compiler Company. 
+ * All rights reserved.
  */

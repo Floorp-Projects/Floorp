@@ -95,6 +95,10 @@ abstract public class Value implements Scope {
 */
     }
 
+    int size() {
+	    return 0;
+	}
+
     public Value construct(Context context, Value args) throws Exception {
         throw new Exception("Constructor object expected in new expression");
     }

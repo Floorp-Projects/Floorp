@@ -86,6 +86,7 @@ final class AssignmentExpressionNode extends Node implements Tokens {
 
     Node lhs, rhs;
     int  op;
+	/*Reference*/Value ref;
 
     AssignmentExpressionNode( Node lhs, int op, Node rhs ) {
         this.lhs = lhs;
@@ -139,6 +140,8 @@ final class BinaryExpressionNode extends Node {
 
     protected Node lhs, rhs;
     protected int  op;
+    Value     lhs_ref,rhs_ref;
+	Slot      lhs_slot,rhs_slot;
 
     BinaryExpressionNode( int op, Node lhs, Node rhs ) {
         this.op  = op;
@@ -331,6 +334,7 @@ final class ClassofExpressionNode extends Node {
 final class CoersionExpressionNode extends Node {
 
     Node expr, type;
+    String typename;
 
     CoersionExpressionNode( Node expr, Node type, int pos ) {
 	    super(pos);
@@ -427,11 +431,11 @@ final class DoStatementNode extends Node {
 
 final class ElementListNode extends Node {
 
-    Node list, expr;
+    Node list, item;
 
-    ElementListNode( Node list, Node expr ) {
+    ElementListNode( Node list, Node item ) {
         this.list = list;
-        this.expr = expr;
+        this.item = item;
     }
 
     public Value evaluate( Context context, Evaluator evaluator ) throws Exception {
@@ -439,7 +443,7 @@ final class ElementListNode extends Node {
     }
 
     public String toString() {
-        return "elementlist( " + list + ", " + expr + " )";
+        return "elementlist( " + list + ", " + item + " )";
     }
 }
 
@@ -476,27 +480,6 @@ final class ExpressionStatementNode extends Node {
 
     public String toString() {
         return "expressionstatement( " + expr + " )";
-    }
-}
-
-/**
- * EvalExpressionNode
- */
-
-final class EvalExpressionNode extends Node {
-
-    Node expr;
-
-    EvalExpressionNode( Node expr ) {
-        this.expr = expr;
-    }
-
-    public Value evaluate( Context context, Evaluator evaluator ) throws Exception {
-        return evaluator.evaluate( context, this );
-    }
-
-    public String toString() {
-        return "evalexpression( " + expr + " )";
     }
 }
 
@@ -726,6 +709,7 @@ final class FunctionDeclarationNode extends Node {
 
     Node name, signature;
     Slot slot;
+	/*Reference*/Value ref;
 
     FunctionDeclarationNode( Node name, Node signature ) {
         this.name      = name;
@@ -748,6 +732,7 @@ final class FunctionDeclarationNode extends Node {
 final class FunctionDefinitionNode extends Node {
 
     Node decl, body;
+	int fixedCount;
 
     FunctionDefinitionNode( Node decl, Node body ) {
         this.decl = decl;
@@ -782,7 +767,7 @@ final class FunctionNameNode extends Node {
 
     FunctionNameNode( int kind, Node name ) {
 	    this.kind = kind;
-        this.name = name;
+        this.name = (IdentifierNode)name;
     }
 
     public Value evaluate( Context context, Evaluator evaluator ) throws Exception {
@@ -802,6 +787,7 @@ final class FunctionSignatureNode extends Node {
 
     Node parameter, result;
     Slot slot;
+    Value ref;
 
     FunctionSignatureNode( Node parameter, Node result ) {
         this.parameter = parameter;
@@ -824,6 +810,7 @@ final class FunctionSignatureNode extends Node {
 class IdentifierNode extends Node {
 
     String name;
+	/*Reference*/Value ref;
 
     IdentifierNode( String name, int pos ) {
         super(pos);
@@ -1128,6 +1115,7 @@ final class ListNode extends Node {
 final class LiteralArrayNode extends Node {
 
     Node elementlist;
+	/*List*/Value value;
 
     LiteralArrayNode( Node elementlist ) {
         this.elementlist = elementlist;
@@ -1171,6 +1159,7 @@ final class LiteralFieldNode extends Node {
 
     Node name;
     Node value;
+	/*Reference*/Value ref;
 
     LiteralFieldNode( Node name, Node value ) {
         this.name  = name;
@@ -1232,6 +1221,7 @@ final class LiteralNumberNode extends Node {
 final class LiteralObjectNode extends Node {
 
     Node fieldlist;
+	/*Object*/Value value;
 
     LiteralObjectNode( Node fieldlist ) {
         this.fieldlist = fieldlist;
@@ -1334,6 +1324,7 @@ final class LiteralUndefinedNode extends Node {
 final class MemberExpressionNode extends Node {
 
     Node base, name;
+	/*Reference*/Value ref;
 
     MemberExpressionNode( Node base, Node name, int pos ) {
 	    super(pos);
@@ -1474,6 +1465,7 @@ final class ParameterNode extends Node {
     Node identifier;
     Node type;
     Slot slot;
+    String name;
 
     ParameterNode( Node identifier, Node type ) {
         this.identifier  = identifier;

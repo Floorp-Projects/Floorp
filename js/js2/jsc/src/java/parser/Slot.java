@@ -31,9 +31,10 @@ public class Slot {
     Value type;
     Value value;
     Block block;
+	Store store;
 
     public String toString() {
-        return "{ "+attrs+", "+type+", "+value+" }";
+        return "{ "+attrs+", "+type+", "+value+", "+store+" }";
     }
 }
 

@@ -32,5 +32,5 @@ unit const liter = makeLiter;
 showerrors unit const liter = Unit.dm.pow(3);
 
 /*
- * Copyright (c) 1999, Mountain View Compiler Company. All rights reserved.
+ * Copyright (c) 1999-2001, Mountain View Compiler Company. All rights reserved.
  */

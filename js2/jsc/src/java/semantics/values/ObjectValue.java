@@ -180,6 +180,14 @@ public class ObjectValue extends Value implements Attributes, Scope {
      *
      */
 
+    int size() {
+	    return slots.size();
+	}
+
+    /**
+     *
+     */
+
     public Value construct(Context context, Value args) throws Exception {
 
         Scope thisScope = context.getThisClass();
