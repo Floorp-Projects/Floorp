@@ -2601,40 +2601,63 @@ PresShell::EndObservingDocument()
 char* nsPresShell_ReflowStackPointerTop;
 #endif
 
-static void CheckForFocus(nsPIDOMWindow* aOurWindow, nsIFocusController* aFocusController, nsIDocument* aDocument)
+static void CheckForFocus(nsPIDOMWindow* aOurWindow,
+                          nsIFocusController* aFocusController,
+                          nsIDocument* aDocument)
 {
-  // Now that we have a root frame, set focus in to the presshell, but
-  // only do this if our window is currently focused
-  // Restore focus if we're the active window or a parent of a previously
-  // active window.
-  if (aFocusController) {
-    nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
-    aFocusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
-    
-    // See if the command dispatcher is holding on to an orphan window.
-    // This happens when you move from an inner frame to an outer frame
-    // (e.g., _parent, _top)
-    if (focusedWindow) {
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      focusedWindow->GetDocument(getter_AddRefs(domDoc));
-      if (!domDoc) {
-        // We're pointing to garbage. Go ahead and let this
-        // presshell take the focus.
-        focusedWindow = do_QueryInterface(aOurWindow);
-        aFocusController->SetFocusedWindow(focusedWindow);
-      }
-    }
+  // Now that we have a root frame, we can set focus on the presshell.
+  // We do this only if our DOM window is currently focused or is an
+  // an ancestor of a previously focused window.
 
-    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(aOurWindow);
-    if (domWindow == focusedWindow) {
-      PRBool active;
-      aFocusController->GetActive(&active);
-      if(active) {
-        // We need to restore focus to the window.
-        domWindow->Focus();
-      }
-    }
+  if (!aFocusController)
+    return;
+
+  nsCOMPtr<nsIDOMWindowInternal> ourWin = do_QueryInterface(aOurWindow);
+
+  nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+  aFocusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+  if (!focusedWindow) {
+    // This should never really happen, but if it does, assume
+    // we can focus ourself to keep the window from being keydead.
+    focusedWindow = ourWin;
   }
+
+  // Walk up the document chain, starting with focusedWindow's document.
+  // We stop walking when we find a document that has a null DOMWindow
+  // (meaning that the DOMWindow has a new document now) or find ourWin
+  // as the document's window.
+
+  nsCOMPtr<nsIDOMDocument> focusedDOMDoc;
+  focusedWindow->GetDocument(getter_AddRefs(focusedDOMDoc));
+
+  nsCOMPtr<nsIDocument> curDoc = do_QueryInterface(focusedDOMDoc);
+  while (curDoc) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    curDoc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    nsCOMPtr<nsIDOMWindowInternal> curWin = do_QueryInterface(globalObject);
+    if (curWin == ourWin || !curWin)
+      break;
+
+    nsCOMPtr<nsIDocument> parentDoc;
+    curDoc->GetParentDocument(getter_AddRefs(parentDoc));
+    curDoc = parentDoc;
+  }
+
+  if (!curDoc) {
+    // We reached the top of the document chain, and did not encounter ourWin
+    // or a windowless document. So, focus should be unaffected by this
+    // document load.
+    return;
+  }
+
+  PRBool active;
+  aFocusController->GetActive(&active);
+  if (active)
+    ourWin->Focus();
+
+  // We need to ensure that the focus controller is updated, since it may be
+  // suppressed when this function is called.
+  aFocusController->SetFocusedWindow(ourWin);
 }
 
 nsresult
