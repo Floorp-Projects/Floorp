@@ -82,8 +82,16 @@ xptiInterfaceInfo::~xptiInterfaceInfo()
         delete mInterface;        
 }        
 
+
 PRBool 
-xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet)
+xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet /* = nsnull */)
+{
+    nsAutoLock lock(xptiInterfaceInfoManager::GetResolveLock());
+    return ResolveLocked(aWorkingSet);
+}
+
+PRBool 
+xptiInterfaceInfo::ResolveLocked(xptiWorkingSet* aWorkingSet /* = nsnull */)
 {
     int resolvedState = GetResolveState();
 
@@ -93,7 +101,7 @@ xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet)
         return PR_FALSE;
 
     xptiInterfaceInfoManager* mgr = 
-        xptiInterfaceInfoManager::GetInterfaceInfoManager();
+        xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
 
     if(!mgr)
         return PR_FALSE;
@@ -109,17 +117,16 @@ xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet)
         // Make a copy of mTypelib because the underlying memory will change!
         xptiTypelib typelib = mTypelib;
         
-        // We expect our PartiallyResolve() to get called before this returns. 
+        // We expect our PartiallyResolveLocked() to get called before 
+        // this returns. 
         if(!mgr->LoadFile(typelib, aWorkingSet))
         {
-            NS_RELEASE(mgr);
             SetResolvedState(RESOLVE_FAILED);
             return PR_FALSE;    
         }
         // The state was changed by LoadFile to PARTIALLY_RESOLVED, so this 
         // ...falls through...
     }
-    NS_IF_RELEASE(mgr);
 
     NS_ASSERTION(GetResolveState() == PARTIALLY_RESOLVED, "bad state!");    
 
@@ -134,7 +141,7 @@ xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet)
             aWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
                                 GetInfoAtNoAddRef(parent_index - 1);
         
-        if(!parent || !parent->EnsureResolved())
+        if(!parent || !parent->EnsureResolvedLocked())
         {
             xptiTypelib aTypelib = mInterface->mTypelib;
             delete mInterface;
@@ -160,9 +167,10 @@ xptiInterfaceInfo::Resolve(xptiWorkingSet* aWorkingSet)
     return PR_TRUE;
 }        
 
+// This *only* gets called by xptiInterfaceInfoManager::LoadFile (while locked).
 PRBool 
-xptiInterfaceInfo::PartiallyResolve(XPTInterfaceDescriptor*  aDescriptor,
-                                    xptiWorkingSet*          aWorkingSet)
+xptiInterfaceInfo::PartiallyResolveLocked(XPTInterfaceDescriptor*  aDescriptor,
+                                          xptiWorkingSet*          aWorkingSet)
 {
     NS_ASSERTION(GetResolveState() == NOT_RESOLVED, "bad state");
 
@@ -213,16 +221,9 @@ xptiInterfaceInfo::IsScriptable(PRBool* result)
 {
     NS_ASSERTION(result, "bad bad caller!");
 
-/*
-    if(!EnsureResolved())
-    {
-        EnsureResolved();
-        return NS_ERROR_UNEXPECTED;
-    }
-*/
+    // It is not necessary to Resolve because this info is read from manifest.
 
     NS_ASSERTION(ScriptableFlagIsValid(), "scriptable flag out of sync!");   
-
     *result = GetScriptableFlag();
     return NS_OK;
 }

@@ -30,35 +30,36 @@ static xptiInterfaceInfoManager* gInterfaceInfoManager = nsnull;
 
 // static
 xptiInterfaceInfoManager*
-xptiInterfaceInfoManager::GetInterfaceInfoManager()
+xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef()
 {
     if(!gInterfaceInfoManager)
     {
         gInterfaceInfoManager = new xptiInterfaceInfoManager();
         if(gInterfaceInfoManager)
             NS_ADDREF(gInterfaceInfoManager);
-        if(!gInterfaceInfoManager->mWorkingSet.IsValid())
-            NS_RELEASE(gInterfaceInfoManager);
-
-
-        PRBool mustAutoReg = 
-                !xptiManifest::Read(gInterfaceInfoManager, 
-                                    &gInterfaceInfoManager->mWorkingSet);
-#ifdef DEBUG
+        if(!gInterfaceInfoManager->IsValid())
         {
-        // This sets what will be returned by GetOpenLogFile().
-        xptiAutoLog autoLog(gInterfaceInfoManager, 
-                            gInterfaceInfoManager->mAutoRegLogFile, PR_TRUE);
-        LOG_AUTOREG(("debug build forced autoreg after %s load of manifest\n", mustAutoReg ? "FAILED" : "successful"));
-        
-        mustAutoReg = PR_TRUE;
+            NS_RELEASE(gInterfaceInfoManager);
         }
+        else
+        {
+            PRBool mustAutoReg = 
+                    !xptiManifest::Read(gInterfaceInfoManager, 
+                                        &gInterfaceInfoManager->mWorkingSet);
+#ifdef DEBUG
+            {
+            // This sets what will be returned by GetOpenLogFile().
+            xptiAutoLog autoLog(gInterfaceInfoManager, 
+                                gInterfaceInfoManager->mAutoRegLogFile, PR_TRUE);
+            LOG_AUTOREG(("debug build forced autoreg after %s load of manifest\n", mustAutoReg ? "FAILED" : "successful"));
+        
+            mustAutoReg = PR_TRUE;
+            }
 #endif // DEBUG
-        if(mustAutoReg)
-            gInterfaceInfoManager->AutoRegisterInterfaces();
+            if(mustAutoReg)
+                gInterfaceInfoManager->AutoRegisterInterfaces();
+        }
     }
-    if(gInterfaceInfoManager)
-        NS_ADDREF(gInterfaceInfoManager);
     return gInterfaceInfoManager;
 }
 
@@ -71,9 +72,20 @@ xptiInterfaceInfoManager::FreeInterfaceInfoManager()
     NS_IF_RELEASE(gInterfaceInfoManager);
 }
 
+
+PRBool 
+xptiInterfaceInfoManager::IsValid()
+{
+    return mWorkingSet.IsValid() &&
+           mResolveLock &&
+           mAutoRegLock;
+}        
+
 xptiInterfaceInfoManager::xptiInterfaceInfoManager()
     :   mWorkingSet(),
-        mOpenLogFile(nsnull)
+        mOpenLogFile(nsnull),
+        mResolveLock(PR_NewLock()),
+        mAutoRegLock(PR_NewLock())
 {
     NS_INIT_ISUPPORTS();
 
@@ -361,7 +373,7 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
         XPTInterfaceDescriptor* descriptor = iface->interface_descriptor;
 
         if(descriptor && aTypelibRecord.Equals(info->GetTypelibRecord()))
-            info->PartiallyResolve(descriptor, aWorkingSet);
+            info->PartiallyResolveLocked(descriptor, aWorkingSet);
     }
     return PR_TRUE;
 }
@@ -1059,27 +1071,32 @@ PRBool
 xptiInterfaceInfoManager::MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
                                            xptiWorkingSet* aSrcWorkingSet)
 {
-    // Combine file lists.
 
     PRUint32 i;
+
+    // Combine file lists.
+
     PRUint32 originalFileCount = aDestWorkingSet->GetFileCount();
     PRUint32 additionalFileCount = aSrcWorkingSet->GetFileCount();
 
     // Create a new array big enough to hold both lists and copy existing files
 
-    if(!aDestWorkingSet->ExtendFileArray(originalFileCount +
-                                         additionalFileCount))
-        return PR_FALSE;
-
-    // Now we are where we started, but we know we have enough space.
-
-    // Prepare offset array for later fixups. 
-    // NOTE: Storing with dest, but alloc'ing from src. This is intentional.
-    aDestWorkingSet->mFileMergeOffsetMap = (PRUint32*)
-        XPT_CALLOC(aSrcWorkingSet->GetStructArena(),
-                   additionalFileCount * sizeof(PRUint32)); 
-    if(!aDestWorkingSet->mFileMergeOffsetMap)
-        return PR_FALSE;
+    if(additionalFileCount)
+    {
+        if(!aDestWorkingSet->ExtendFileArray(originalFileCount +
+                                             additionalFileCount))
+            return PR_FALSE;
+    
+        // Now we are where we started, but we know we have enough space.
+    
+        // Prepare offset array for later fixups. 
+        // NOTE: Storing with dest, but alloc'ing from src. This is intentional.
+        aDestWorkingSet->mFileMergeOffsetMap = (PRUint32*)
+            XPT_CALLOC(aSrcWorkingSet->GetStructArena(),
+                       additionalFileCount * sizeof(PRUint32)); 
+        if(!aDestWorkingSet->mFileMergeOffsetMap)
+            return PR_FALSE;
+    }
 
     for(i = 0; i < additionalFileCount; ++i)
     {
@@ -1117,20 +1134,22 @@ xptiInterfaceInfoManager::MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
 
     // Create a new array big enough to hold both lists and copy existing ZipItems
 
-    if(!aDestWorkingSet->ExtendZipItemArray(originalZipItemCount +
-                                            additionalZipItemCount))
-        return PR_FALSE;
-
-    // Now we are where we started, but we know we have enough space.
-
-    // Prepare offset array for later fixups. 
-    // NOTE: Storing with dest, but alloc'ing from src. This is intentional.
-    aDestWorkingSet->mZipItemMergeOffsetMap = (PRUint32*)
-        XPT_CALLOC(aSrcWorkingSet->GetStructArena(),
-                   additionalZipItemCount * sizeof(PRUint32)); 
-    if(!aDestWorkingSet->mZipItemMergeOffsetMap)
-        return PR_FALSE;
-
+    if(additionalZipItemCount)
+    {
+        if(!aDestWorkingSet->ExtendZipItemArray(originalZipItemCount +
+                                                additionalZipItemCount))
+            return PR_FALSE;
+    
+        // Now we are where we started, but we know we have enough space.
+    
+        // Prepare offset array for later fixups. 
+        // NOTE: Storing with dest, but alloc'ing from src. This is intentional.
+        aDestWorkingSet->mZipItemMergeOffsetMap = (PRUint32*)
+            XPT_CALLOC(aSrcWorkingSet->GetStructArena(),
+                       additionalZipItemCount * sizeof(PRUint32)); 
+        if(!aDestWorkingSet->mZipItemMergeOffsetMap)
+            return PR_FALSE;
+    }
 
     for(i = 0; i < additionalZipItemCount; ++i)
     {
@@ -1439,6 +1458,8 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
     AutoRegMode mode;
     PRBool ok;
 
+    nsAutoLock lock(xptiInterfaceInfoManager::GetAutoRegLock());
+
     if(!workingSet.IsValid())
         return NS_ERROR_UNEXPECTED;
 
@@ -1515,7 +1536,10 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
 XPTI_PUBLIC_API(nsIInterfaceInfoManager*)
 XPTI_GetInterfaceInfoManager()
 {
-    return xptiInterfaceInfoManager::GetInterfaceInfoManager();
+    nsIInterfaceInfoManager* iim =
+        xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
+    NS_IF_ADDREF(iim);
+    return iim;
 }
 
 XPTI_PUBLIC_API(void)
