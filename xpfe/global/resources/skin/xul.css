@@ -200,8 +200,8 @@ input[type=password] {
 }
 
 input {
-  vertical-align: bottom;
-  border: 2px inset rgb(192, 192, 192);
+  /*vertical-align: bottom;*/
+  /*border: 2px inset rgb(192, 192, 192);*/
   background-color: transparent;
   color: black;
 }
