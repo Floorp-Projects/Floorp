@@ -4699,7 +4699,9 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
       } // switch
     } else {
       // FrameSets skip page eject only if printing AsIs
-      skipPageEjectOnly = aPO->mPrintAsIs;
+      // Also note, that when printing selection is a single document
+      // we do not want to skip page ejects
+      skipPageEjectOnly = aPO->mPrintAsIs && printRangeType != nsIPrintSettings::kRangeSelection;
     }
 
     // That we are all configured,
