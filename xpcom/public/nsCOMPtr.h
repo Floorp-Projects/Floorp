@@ -275,6 +275,10 @@
   #define NSCAP_NO_BOOL
 #endif
 
+#if defined(HPUX)
+  #define NSCAP_NO_MEMBER_USING_DECLARATIONS
+  #define NSCAP_NO_NEW_CASTS
+#endif
 
 #ifdef NSCAP_NO_EXPLICIT
   #define explicit
