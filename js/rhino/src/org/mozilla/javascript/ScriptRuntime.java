@@ -1092,19 +1092,19 @@ public class ScriptRuntime {
      * See ECMA 10.1.4
      */
     public static Scriptable bind(Scriptable scope, String id) {
-        Scriptable obj = scope;
-        while (obj != null && !ScriptableObject.hasProperty(obj, id)) {
-            obj = obj.getParentScope();
+        while (!ScriptableObject.hasProperty(scope, id)) {
+            scope = scope.getParentScope();
+            if (scope == null) {
+                break;
+            }
         }
-        return obj;
+        return scope;
     }
 
     public static Scriptable getBase(Scriptable scope, String id) {
-        Scriptable obj = scope;
-        while (obj != null) {
-            if (ScriptableObject.hasProperty(obj, id))
-                return obj;
-            obj = obj.getParentScope();
+        Scriptable base = bind(scope, id);
+        if (base != null) {
+            return base;
         }
         throw NativeGlobal.constructError(
                     Context.getContext(), "ReferenceError",
