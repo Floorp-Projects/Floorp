@@ -64,9 +64,8 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 	cb = moz->new_window_cb;
 	nwin.window_flags = aChromeFlags;
 
-	if( aChromeFlags == nsIWebBrowserChrome::CHROME_ALL ) /* the CHROME_ALL is passed when there are features specified for the new window */
-		nwin.window_size.w = nwin.window_size.h = 0; /* the size will be the same as the main window */
-	else nwin.window_size.w = nwin.window_size.h = 1; /* the window will be resized by Pt_CB_WEB_NEW_AREA */
+	/* the size will be the same as the main window, and it might be resized later by Pt_CB_WEB_NEW_AREA */
+	nwin.window_size.w = nwin.window_size.h = 0;
 
 	PtSetParentWidget(NULL);
 	if (PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo) == Pt_CONTINUE)
