@@ -222,7 +222,7 @@ void String::append(const char* source)
 //
 void String::append(const UNICODE_CHAR* source)
 {
-  ptrNSString->Append((PRUnichar *)source, UnicodeLength(source));
+  ptrNSString->Append(source);
 }
 
 //
@@ -296,7 +296,7 @@ void String::insert(PRInt32 offset, const char* source)
 //
 void String::insert(PRInt32 offset, const UNICODE_CHAR* source)
 {
-  ptrNSString->Insert((PRUnichar *)source, offset, UnicodeLength(source));
+  ptrNSString->Insert((PRUnichar *)source, offset);
 }
 
 //
@@ -599,7 +599,17 @@ PRInt32 String::lastIndexOf(const String& data, PRInt32 offset) const
   return ptrNSString->RFind(nsData, PR_FALSE, offset);
 }
 
+//
+//Checks whether the string is empty
+//
+MBool String::isEmpty() const
+{
+    return ptrNSString->IsEmpty();
+}
+
+//
 //Return the length of this string ( PRInt32 nsString::Length() )
+//
 PRInt32 String::length() const
 {
   if (ptrNSString){
@@ -815,10 +825,3 @@ const nsString& String::getConstNSString() const
 {
   return *ptrNSString;
 }
-
-//
-//String copies itself to the destination
-//
-//void String::copyString(SPECIAL_CHAR* dest)
-//{
-//}

@@ -254,7 +254,7 @@ void XSLTProcessor::parseStylesheetPI(String& data, String& type, String& href) 
     bufferMap.put("href", &href);
     int ccount = 0;
     MBool inLiteral = MB_FALSE;
-    char matchQuote = '"';
+    UNICODE_CHAR matchQuote = '"';
     String sink;
     String* buffer = &sink;
 
@@ -268,7 +268,7 @@ void XSLTProcessor::parseStylesheetPI(String& data, String& type, String& href) 
                 break;
             case '=':
                 if ( inLiteral ) buffer->append(ch);
-                else if ( buffer->length() > 0 ) {
+                else if (!buffer->isEmpty()) {
                     buffer = (String*)bufferMap.get(*buffer);
                     if ( !buffer ) {
                         sink.clear();
@@ -478,7 +478,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                         // Add error to ErrorObserver
                         String fName = element->getAttribute(NAME_ATTR);
                         String err("unable to add ");
-                        if (fName.length() == 0)
+                        if (fName.isEmpty())
                             err.append("default");
                         else {
                             err.append("\"");
@@ -493,7 +493,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                 case XSLType::PARAM :
                 {
                     String name = element->getAttribute(NAME_ATTR);
-                    if ( name.length() == 0 ) {
+                    if (name.isEmpty()) {
                         notifyError("missing required name attribute for xsl:param");
                         break;
                     }
@@ -534,26 +534,26 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                     OutputFormat* format = aPs->getOutputFormat();
 
                     String attValue = element->getAttribute(METHOD_ATTR);
-                    if (attValue.length() > 0) aPs->setOutputMethod(attValue);
+                    if (!attValue.isEmpty()) aPs->setOutputMethod(attValue);
 
                     attValue = element->getAttribute(VERSION_ATTR);
-                    if (attValue.length() > 0) format->setVersion(attValue);
+                    if (!attValue.isEmpty()) format->setVersion(attValue);
 
                     attValue = element->getAttribute(ENCODING_ATTR);
-                    if (attValue.length() > 0) format->setEncoding(attValue);
+                    if (!attValue.isEmpty()) format->setEncoding(attValue);
 
                     attValue = element->getAttribute(INDENT_ATTR);
-                    if (attValue.length() > 0) {
+                    if (!attValue.isEmpty()) {
                         MBool allowIndent = attValue.isEqual(YES_VALUE);
                        format->setIndent(allowIndent);
                     }
 
                     attValue = element->getAttribute(DOCTYPE_PUBLIC_ATTR);
-                    if (attValue.length() > 0)
+                    if (!attValue.isEmpty())
                         format->setDoctypePublic(attValue);
 
                     attValue = element->getAttribute(DOCTYPE_SYSTEM_ATTR);
-                    if (attValue.length() > 0)
+                    if (!attValue.isEmpty())
                         format->setDoctypeSystem(attValue);
 
                     break;
@@ -564,7 +564,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                 case XSLType::VARIABLE :
                 {
                     String name = element->getAttribute(NAME_ATTR);
-                    if ( name.length() == 0 ) {
+                    if (name.isEmpty()) {
                         notifyError("missing required name attribute for xsl:variable");
                         break;
                     }
@@ -575,7 +575,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                 case XSLType::PRESERVE_SPACE :
                 {
                     String elements = element->getAttribute(ELEMENTS_ATTR);
-                    if ( elements.length() == 0 ) {
+                    if (elements.isEmpty()) {
                         //-- add error to ErrorObserver
                         String err("missing required 'elements' attribute for ");
                         err.append("xsl:preserve-space");
@@ -591,7 +591,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                 case XSLType::STRIP_SPACE :
                 {
                     String elements = element->getAttribute(ELEMENTS_ATTR);
-                    if ( elements.length() == 0 ) {
+                    if (elements.isEmpty()) {
                         //-- add error to ErrorObserver
                         String err("missing required 'elements' attribute for ");
                         err.append("xsl:strip-space");
@@ -1021,7 +1021,7 @@ void XSLTProcessor::processAction
         }
         //-- create new text node and add it to the result tree
         //-- if necessary
-        if ( textValue.length() > 0)
+        if (!textValue.isEmpty())
             ps->addToResultTree(resultDoc->createTextNode(textValue));
         return;
     }
@@ -1043,9 +1043,14 @@ void XSLTProcessor::processAction
                 const String& mode =
                     actionElement->getAttribute(MODE_ATTR);
                 String selectAtt  = actionElement->getAttribute(SELECT_ATTR);
-                if ( selectAtt.length() == 0 ) selectAtt = "node()";
-                pExpr = ps->getPatternExpr(selectAtt);
-                ExprResult* exprResult = pExpr->evaluate(node, ps);
+                if (selectAtt.isEmpty())
+                    selectAtt = "node()";
+                expr = ps->getExpr(selectAtt);
+                if (!expr) {
+                    // XXX ErrorReport: out of memory
+                    break;
+                }
+                ExprResult* exprResult = expr->evaluate(node, ps);
                 NodeSet* nodeSet = 0;
                 if ( exprResult->getResultType() == ExprResult::NODESET ) {
                     nodeSet = (NodeSet*)exprResult;
@@ -1138,7 +1143,7 @@ void XSLTProcessor::processAction
             case XSLType::CALL_TEMPLATE :
             {
                 String templateName = actionElement->getAttribute(NAME_ATTR);
-                if ( templateName.length() > 0 ) {
+                if (!templateName.isEmpty()) {
                     Element* xslTemplate = ps->getNamedTemplate(templateName);
                     if ( xslTemplate ) {
                         //-- new code from OG
@@ -1281,7 +1286,7 @@ void XSLTProcessor::processAction
             {
                 String selectAtt  = actionElement->getAttribute(SELECT_ATTR);
 
-                if (selectAtt.length() == 0)
+                if (selectAtt.isEmpty())
                 {
                     notifyError("missing required select attribute for xsl:for-each");
                     break;
@@ -1505,7 +1510,7 @@ void XSLTProcessor::processAction
                     break;
                 }
                 exprResult->stringValue(value);
-                if (value.length()>0)
+                if (!value.isEmpty())
                     ps->addToResultTree(resultDoc->createTextNode(value));
                 delete exprResult;
                 break;
@@ -1513,7 +1518,7 @@ void XSLTProcessor::processAction
             case XSLType::VARIABLE :
             {
                 String name = actionElement->getAttribute(NAME_ATTR);
-                if ( name.length() == 0 ) {
+                if (name.isEmpty()) {
                     notifyError("missing required name attribute for xsl:variable");
                     break;
                 }
@@ -1527,7 +1532,7 @@ void XSLTProcessor::processAction
                 // Find out if we have a new default namespace
                 MBool newDefaultNS = MB_FALSE;
                 String nsURI = actionElement->getAttribute(XMLUtils::XMLNS);
-                if ( nsURI.length() != 0 ) {
+                if (!nsURI.isEmpty()) {
                     // Set the default namespace
                     ps->setDefaultNameSpaceURIForResult(nsURI);
                     newDefaultNS = MB_TRUE;
@@ -1602,7 +1607,7 @@ void XSLTProcessor::processAction
 void XSLTProcessor::processAttributeSets
     (const String& names, Node* node, ProcessorState* ps)
 {
-    if (names.length() == 0) return;
+    if (names.isEmpty()) return;
 
     //-- split names
     Tokenizer tokenizer(names);
@@ -1662,7 +1667,7 @@ NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, Pr
             short xslType = getElementType(actionName, ps);
             if ( xslType == XSLType::WITH_PARAM ) {
                 String name = action->getAttribute(NAME_ATTR);
-                if ( name.length() == 0 ) {
+                if (name.isEmpty()) {
                     notifyError("missing required name attribute for xsl:with-param");
                 }
                 else {
@@ -1840,7 +1845,7 @@ void XSLTProcessor::processTemplateParams
                 short xslType = getElementType(actionName, ps);
                 if ( xslType == XSLType::PARAM ) {
                     String name = action->getAttribute(NAME_ATTR);
-                    if ( name.length() == 0 ) {
+                    if (name.isEmpty()) {
                         notifyError("missing required name attribute for xsl:param");
                     }
                     else {
@@ -1932,7 +1937,7 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
             // Find out if we have a new default namespace
             MBool newDefaultNS = MB_FALSE;
             String nsURI = element->getAttribute(XMLUtils::XMLNS);
-            if ( nsURI.length() != 0 ) {
+            if (!nsURI.isEmpty()) {
                 // Set the default namespace
                 ps->setDefaultNameSpaceURIForResult(nsURI);
                 newDefaultNS = MB_TRUE;

@@ -94,7 +94,7 @@ void URIUtils::getDocumentBase(const String& href, String& dest) {
     //-- use temp str so the subString method doesn't destroy dest
     String docBase("");
 
-    if (href.length() != 0) {
+    if (!href.isEmpty()) {
 
         int idx = -1;
         //-- check for URL
@@ -124,11 +124,11 @@ void URIUtils::getDocumentBase(const String& href, String& dest) {
 **/
 void URIUtils::resolveHref(const String& href, const String& base,
                            String& dest) {
-    if (base.length() == 0) {
+    if (base.isEmpty()) {
         dest.append(href);
         return;
     }
-    if (href.length() == 0) {
+    if (href.isEmpty()) {
         dest.append(base);
         return;
     }
@@ -156,7 +156,7 @@ void URIUtils::resolveHref(const String& href, const String& base,
 
     //-- join document base + href
     String xHref;
-    if (documentBase.length() > 0) {
+    if (!documentBase.isEmpty()) {
         xHref.append(documentBase);
         if (documentBase.charAt(documentBase.length()-1) != HREF_PATH_SEP)
             xHref.append(HREF_PATH_SEP);
@@ -263,7 +263,7 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
             case '/' :
                 switch ( mode ) {
                     case HOST_MODE :
-                        if ( buffer.length() != 0 ) {
+                        if (!buffer.isEmpty()) {
                             mode = PATH_MODE;
                             buffer.append(ch);
                         }
@@ -290,7 +290,7 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
         uriTokens->isMalformed = MB_TRUE;
     }
     //-- finish remaining mode
-    if ( buffer.length() > 0 ) {
+    if (!buffer.isEmpty()) {
         switch ( mode ) {
             case PROTOCOL_MODE :
                 uriTokens->protocol.append(buffer);

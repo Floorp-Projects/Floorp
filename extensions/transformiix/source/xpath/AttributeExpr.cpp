@@ -135,7 +135,7 @@ MBool AttributeExpr::matches(Node* node, Node* context, ContextState* cs) {
             XMLDOMUtils::getNameSpace(prefixForNode, (Element*)parent,
                                       nsForNode);
         String nsForTest;
-        if (prefix.length())
+        if (!prefix.isEmpty())
             cs->getNameSpaceURIFromPrefix(prefix, nsForTest);
         if (!nsForTest.isEqual(nsForNode)) return MB_FALSE;
         return localName.isEqual(this->name);
@@ -143,9 +143,10 @@ MBool AttributeExpr::matches(Node* node, Node* context, ContextState* cs) {
     else {
         if (isNamespaceWild) return nodeName.isEqual(this->name);
         String nsForTest;
-        if (prefix.length())
+        if (!prefix.isEmpty())
             cs->getNameSpaceURIFromPrefix(prefix, nsForTest);
-        if (nsForTest.length() > 0) return MB_FALSE;
+        if (!nsForTest.isEmpty())
+            return MB_FALSE;
         return nodeName.isEqual(this->name);
     }
     return MB_FALSE;

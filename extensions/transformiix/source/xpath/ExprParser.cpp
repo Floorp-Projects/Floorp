@@ -62,10 +62,10 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
 
     AttributeValueTemplate* avt = new AttributeValueTemplate();
 
-    PRInt32 size = attValue.length();
-    if (size == 0)
+    if (attValue.isEmpty())
         return avt; //XXX should return 0, but that causes crash in lre12
 
+    PRInt32 size = attValue.length();
     int cc = 0;
     UNICODE_CHAR nextCh;
     UNICODE_CHAR ch;
@@ -104,7 +104,7 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
                         nextCh = cc != size ? attValue.charAt(cc) : 0;
                     }
                     else {
-                        if (buffer.length() > 0)
+                        if (!buffer.isEmpty())
                             avt->addExpr(new StringExpr(buffer));
                         buffer.clear();
                         inExpr = MB_TRUE;
@@ -147,7 +147,7 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
         return 0;
     }
 
-    if (buffer.length() > 0)
+    if (!buffer.isEmpty())
         avt->addExpr(new StringExpr(buffer));
 
     return avt;

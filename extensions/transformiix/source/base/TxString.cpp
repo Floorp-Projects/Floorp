@@ -906,6 +906,14 @@ PRInt32 String::lastIndexOf(const String& data, PRInt32 offset) const
 }
 
 //
+//Checks whether the string is empty
+//
+MBool String::isEmpty() const
+{
+    return (strLength == 0);
+}
+
+//
 //Returns the length of the String
 //
 PRInt32 String::length() const

@@ -234,8 +234,15 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
             break;
         case TRANSLATE:
             if ( requireParams(3, 3, cs) ) {
-                String src, oldChars, newChars;
+                String src;
                 evaluateToString((Expr*)iter->next(),context, cs, src);
+
+                if (src.isEmpty()) { 
+                    result = new StringResult("");
+                    break;
+                }
+
+                String oldChars, newChars;
                 evaluateToString((Expr*)iter->next(),context, cs, oldChars);
                 evaluateToString((Expr*)iter->next(),context, cs, newChars);
                 PRInt32 size = src.length();
@@ -245,10 +252,12 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 for (i = 0; i < size; i++) {
                     PRInt32 idx = oldChars.indexOf(chars[i]);
                     if (idx >= 0) {
-                        if (idx<newChars.length())
+                        if (idx < newChars.length())
                             src.append(newChars.charAt(idx));
                     }
-                    else src.append(chars[i]);
+                    else {
+                        src.append(chars[i]);
+                    }
                 }
                 delete chars;
                 result = new StringResult(src);

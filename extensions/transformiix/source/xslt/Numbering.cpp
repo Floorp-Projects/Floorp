@@ -41,7 +41,7 @@ void Numbering::doNumbering
 
     String valueAttr = xslNumber->getAttribute(VALUE_ATTR);
     //-- check for expr
-    if (valueAttr.length() > 0) {
+    if (!valueAttr.isEmpty()) {
         Expr* expr = ps->getExpr(valueAttr);
         nbrOfCounts = 1;
         counts = new int[1];
@@ -57,7 +57,9 @@ void Numbering::doNumbering
         String countAttr = xslNumber->getAttribute(COUNT_ATTR);
 
         PatternExpr* countExpr = 0;
-        if (countAttr.length() > 0) countExpr = ps->getPatternExpr(countAttr);
+        if (!countAttr.isEmpty()) {
+            countExpr = ps->getPatternExpr(countAttr);
+        }
         else {
             switch(context->getNodeType()) {
                 case Node::ATTRIBUTE_NODE:
