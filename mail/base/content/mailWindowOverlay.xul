@@ -1712,7 +1712,7 @@
 
       <toolbarbutton id="button-address" class="toolbarbutton-1" label="&addressBookButton.label;" oncommand="toAddressBook();" tooltiptext="&addressBookButton.tooltip;"/>
 
-      <toolbaritem id="throbber-box" align="center" pack="center">
+      <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
         <button id="navigator-throbber" oncommand="loadThrobberUrl('messenger.throbber.url')" tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
 

@@ -466,7 +466,7 @@
       <toolbarbutton class="toolbarbutton-1" id="button-newim" label="&newIM.label;" tooltiptext="&newIM.tooltip;" oncommand="AbIMSelected();"/>
       <toolbarbutton class="toolbarbutton-1" id="button-abdelete" observes="button_delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
-      <toolbaritem id="throbber-box" align="center" pack="center">
+      <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
         <button id="navigator-throbber" oncommand="loadThrobberUrl('addressbook.throbber.url')" tooltiptext="&throbber.tooltip;">
           <observes element="broadcaster_throbber" attribute="busy"/>
         </button>

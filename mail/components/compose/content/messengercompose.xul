@@ -576,7 +576,7 @@
       </menulist>
     </toolbaritem>
 
-    <toolbaritem id="throbber-box" align="center" pack="center">
+    <toolbaritem id="throbber-box" title="&throbberItem.title;" align="center" pack="center">
       <button id="navigator-throbber" oncommand="loadThrobberUrl('compose.throbber.url')" tooltiptext="&throbber.tooltip;">
           <observes element="broadcaster_throbber" attribute="busy"/>
       </button>
