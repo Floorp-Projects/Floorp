@@ -34,7 +34,6 @@ EXPORTS		= \
 		nsMsgHeaderMasks.h \
 		nsMsgMessageFlags.h \
 		nsMsgLocalFolderHdrs.h \
-		nsMsgMD5.h \
 		$(NULL)
 
 XPIDLSRCS	= \

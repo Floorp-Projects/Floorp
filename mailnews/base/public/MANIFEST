@@ -25,4 +25,3 @@ nsMsgFolderFlags.h
 nsMsgHeaderMasks.h
 nsMsgLocalFolderHdrs.h
 nsMsgMessageFlags.h
-nsMsgMD5.h

@@ -35,7 +35,6 @@ CPPSRCS		= \
 		nsMessengerBootstrap.cpp \
 		nsUrlListenerManager.cpp \
 		nsMsgMailSession.cpp \
-		nsMsgMD5.cpp \
 		nsMsgAccountManager.cpp \
 		nsMsgAccount.cpp \
 		nsCopyMessageStreamListener.cpp \
