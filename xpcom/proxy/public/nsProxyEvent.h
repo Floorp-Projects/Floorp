@@ -71,6 +71,7 @@ public:
                         
     NS_DECL_ISUPPORTS
         NS_DEFINE_STATIC_IID_ACCESSOR(nsCOMTypeInfo<nsISupports>::GetIID())    
+    nsProxyObject();
     nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject);
     nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID);
 
