@@ -2031,6 +2031,7 @@ _pr_find_getaddrinfo(void)
 typedef struct PRAddrInfoFB {
     char      buf[PR_NETDB_BUF_SIZE];
     PRHostEnt hostent;
+    PRBool    has_cname;
 } PRAddrInfoFB;
 
 static PRAddrInfo *
@@ -2051,6 +2052,8 @@ pr_GetAddrInfoByNameFB(const char  *hostname,
         PR_Free(ai);
         return NULL;
     }
+    ai->has_cname = !(flags & PR_AI_NOCANONNAME);
+
     return (PRAddrInfo *) ai;
 }
 
@@ -2059,7 +2062,8 @@ PR_IMPLEMENT(PRAddrInfo *) PR_GetAddrInfoByName(const char  *hostname,
                                                 PRIntn       flags)
 {
     /* restrict input to supported values */
-    if ((af != PR_AF_INET && af != PR_AF_UNSPEC) || flags != PR_AI_ADDRCONFIG) {
+    if ((af != PR_AF_INET && af != PR_AF_UNSPEC) ||
+        (flags & ~ PR_AI_NOCANONNAME) != PR_AI_ADDRCONFIG) {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return NULL;
     }
@@ -2085,7 +2089,7 @@ PR_IMPLEMENT(PRAddrInfo *) PR_GetAddrInfoByName(const char  *hostname,
          */
 
         memset(&hints, 0, sizeof(hints));
-        hints.ai_flags = AI_CANONNAME;
+        hints.ai_flags = (flags & PR_AI_NOCANONNAME) ? 0: AI_CANONNAME;
         hints.ai_family = (af == PR_AF_INET) ? AF_INET : AF_UNSPEC;
 
         /*
@@ -2172,11 +2176,14 @@ PR_IMPLEMENT(const char *) PR_GetCanonNameFromAddrInfo(const PRAddrInfo *ai)
 {
 #if defined(_PR_HAVE_GETADDRINFO)
 #if defined(_PR_INET6_PROBE)
-    if (!_pr_ipv6_is_present)
-        return ((const PRAddrInfoFB *) ai)->hostent.h_name;
+    if (!_pr_ipv6_is_present) {
+        const PRAddrInfoFB *fb = (const PRAddrInfoFB *) ai;
+        return fb->has_cname ? fb->hostent.h_name : NULL;
+    } 
 #endif
     return ((const PRADDRINFO *) ai)->ai_canonname;
 #else
-    return ((const PRAddrInfoFB *) ai)->hostent.h_name;
+    const PRAddrInfoFB *fb = (const PRAddrInfoFB *) ai;
+    return fb->has_cname ? fb->hostent.h_name : NULL;
 #endif
 }

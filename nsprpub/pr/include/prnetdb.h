@@ -137,10 +137,11 @@ NSPR_API(PRStatus) PR_GetHostByName(
 ***********************************************************************/
 
 
-#define PR_AI_ALL        0x08
-#define PR_AI_V4MAPPED   0x10
-#define PR_AI_ADDRCONFIG 0x20
-#define PR_AI_DEFAULT    (PR_AI_V4MAPPED | PR_AI_ADDRCONFIG)
+#define PR_AI_ALL         0x08
+#define PR_AI_V4MAPPED    0x10
+#define PR_AI_ADDRCONFIG  0x20
+#define PR_AI_NOCANONNAME 0x8000
+#define PR_AI_DEFAULT     (PR_AI_V4MAPPED | PR_AI_ADDRCONFIG)
 
 NSPR_API(PRStatus) PR_GetIPNodeByName(
     const char *hostname,
@@ -396,8 +397,11 @@ NSPR_API(PRStatus) PR_GetProtoByNumber(
 **
 ** INPUTS:
 **  char *hostname      Character string defining the host name of interest
-**  PRUint16 af         Must be PR_AF_UNSPEC
-**  PRIntn flags        Must be PR_AI_ADDRCONFIG
+**  PRUint16 af         May be PR_AF_UNSPEC or PR_AF_INET.
+**  PRIntn flags        May be either PR_AI_ADDRCONFIG or
+**                      PR_AI_ADDRCONFIG | PR_AI_NOCANONNAME. Include
+**                      PR_AI_NOCANONNAME to suppress the determination of
+**                      the canonical name corresponding to hostname.
 ** RETURN:
 **  PRAddrInfo*         Handle to a data structure containing the results
 **                      of the host lookup. Use PR_EnumerateAddrInfo to
