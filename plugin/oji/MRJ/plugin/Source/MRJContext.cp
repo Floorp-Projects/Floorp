@@ -76,7 +76,7 @@ void LocalPort::Exit()
 MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
 	:	mPluginInstance(instance), mSession(session), mSessionRef(session->getSessionRef()), mPeer(NULL),
 		mLocator(NULL), mContext(NULL), mViewer(NULL), mViewerFrame(NULL), mIsActive(false),
-		mPluginWindow(NULL), mPluginClipping(NULL),	mCodeBase(NULL), mPage(NULL)
+		mPluginWindow(NULL), mPluginClipping(NULL),	mPluginPort(NULL), mCodeBase(NULL), mPage(NULL)
 {
 	instance->GetPeer(&mPeer);
 	
@@ -93,6 +93,7 @@ MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
     						/* Is this a window or a drawable? */
 
 	mPluginClipping = ::NewRgn();
+	mPluginPort = getEmptyPort();
 }
 
 MRJContext::~MRJContext()
@@ -106,12 +107,17 @@ MRJContext::~MRJContext()
 		::JMDisposeAppletViewer(mViewer);
 		mViewer = NULL;
 	}
-	
+
+#if 0
 	// hack:  see if this allows the applet viewer to terminate gracefully.
 	for (int i = 0; i < 100; i++)
 		::JMIdle(mSessionRef, kDefaultJMTime);
+#endif
 
 	if (mContext != NULL) {
+		// hack:  release any frames that we still see in the AWT context, before tossing it.
+		releaseFrames();
+
 		::JMDisposeAWTContext(mContext);
 		mContext = NULL;
 	}
@@ -801,10 +807,9 @@ void MRJContext::drawApplet()
 	// We assume the proper coordinate system for the frame has
 	// already been set up.
 	if (appletLoaded()) {
+#if DEBUG_CLIPPING
 		nsPluginPort* npPort = (nsPluginPort*) mCache.window;
 		GrafPtr framePort = GrafPtr(npPort->port);
-
-#if DEBUG_CLIPPING
 		RgnHandle oldClip = NewRgn();
 		if (oldClip != NULL) {
 			CopyRgn(framePort->clipRgn, oldClip);
@@ -908,6 +913,12 @@ void MRJContext::setWindow(nsPluginWindow* pluginWindow)
 			mPluginWindow = pluginWindow;
 			mCache.window = NULL;
 
+			// establish the GrafPort the plugin will draw in.
+			mPluginPort = pluginWindow->window->port;
+
+			// set up the clipping region based on width & height.
+			::SetRectRgn(mPluginClipping, 0, 0, pluginWindow->width, pluginWindow->height);
+
 			if (! appletLoaded())
 				loadApplet();
 
@@ -917,6 +928,10 @@ void MRJContext::setWindow(nsPluginWindow* pluginWindow)
 		// tell MRJ the window has gone away.
 		mPluginWindow = NULL;
 		
+		// use a single, 0x0, empty port for all future drawing.
+		mPluginPort = getEmptyPort();
+		
+		// perhaps we should set the port to something quite innocuous, no? say a 0x0, empty port?
 		::SetEmptyRgn(mPluginClipping);
 		setVisibility();
 	}
@@ -999,11 +1014,15 @@ MRJFrame* MRJContext::findFrame(WindowRef window)
 
 GrafPtr MRJContext::getPort()
 {
+#if 0
 	if (mPluginWindow != NULL) {
 		nsPluginPort* npPort = (nsPluginPort*) mPluginWindow->window;
 		return GrafPtr(npPort->port);
 	}
 	return NULL;
+#endif
+
+	return GrafPtr(mPluginPort);
 }
 
 void MRJContext::localToFrame(Point* pt)
@@ -1020,8 +1039,9 @@ void MRJContext::ensureValidPort()
 {
 	if (mPluginWindow != NULL) {
 		nsPluginPort* npPort = (nsPluginPort*) mPluginWindow->window;
-		if (npPort != NULL)
-			::SetPort(GrafPtr(npPort->port));
+		if (npPort == NULL)
+			mPluginPort = getEmptyPort();
+		::SetPort(GrafPtr(mPluginPort));
 	}
 }
 
@@ -1043,13 +1063,12 @@ void MRJContext::setVisibility()
 		nsPluginWindow* npWindow = &mCache;
 		
 		// compute the frame's origin and clipping.
-		nsPluginPort* npPort = (nsPluginPort*) npWindow->window;
 		
 		// JManager wants the origin expressed in window coordinates.
 		Point frameOrigin = { npWindow->y, npWindow->x };
 		
 		// The clipping region is now maintained by a new browser event.
-		OSStatus status = ::JMSetFrameVisibility(mViewerFrame, GrafPtr(npPort->port),
+		OSStatus status = ::JMSetFrameVisibility(mViewerFrame, GrafPtr(mPluginPort),
 												frameOrigin, mPluginClipping);
 	}
 }
@@ -1091,6 +1110,25 @@ void MRJContext::hideFrames()
 	}
 }
 
+/**
+ * Ensure that any frames Java still has a reference to are no longer valid, so that we won't crash
+ * after a plugin instance gets shut down. This is called by the destructor just in case, to avoid
+ * some hard freeze crashes I've seen.
+ */
+void MRJContext::releaseFrames()
+{
+	UInt32 frameCount;
+	OSStatus status = ::JMCountAWTContextFrames(mContext, &frameCount);
+	if (status == noErr) {
+		for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+			JMFrameRef frameRef = NULL;
+			status = ::JMGetAWTContextFrame(mContext, frameIndex, &frameRef);
+			if (status == noErr)
+				releaseFrame(mContext, frameRef);
+		}
+	}
+}
+
 const char* MRJContext::getCodeBase()
 {
 	return mCodeBase;
@@ -1114,4 +1152,26 @@ MRJPage* MRJContext::findPage(const MRJPageAttributes& attributes)
 	page = new MRJPage(mSession, attributes);
 	page->AddRef();
 	return page;
+}
+
+struct EmptyPort : public CGrafPort {
+	EmptyPort() {
+		GrafPtr oldPort;
+		::GetPort(&oldPort);
+		::OpenCPort(this);
+		::PortSize(0, 0);
+		::SetEmptyRgn(this->visRgn);
+		::SetEmptyRgn(this->clipRgn);
+		::SetPort(oldPort);
+	}
+	
+	~EmptyPort() {
+		::CloseCPort(this);
+	}
+};
+
+CGrafPtr MRJContext::getEmptyPort()
+{
+	static EmptyPort emptyPort;
+	return &emptyPort;
 }
