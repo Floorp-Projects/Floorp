@@ -394,7 +394,33 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  * that match a template. */
  CK_RV FC_FindObjectsInit(CK_SESSION_HANDLE hSession,
     			CK_ATTRIBUTE_PTR pTemplate,CK_ULONG usCount) {
-    PK11_FIPSCHECK();
+    /* let publically readable object be found */
+    int i;
+    CK_RV rv;
+    PRBool needLogin = PR_FALSE;
+
+    PK11_FIPSFATALCHECK();
+
+    for (i=0; i < usCount; i++) {
+	CK_OBJECT_CLASS class;
+	if (pTemplate[i].type != CKA_CLASS) {
+	    continue;
+	}
+	if (pTemplate[i].ulValueLen != sizeof(CK_OBJECT_CLASS)) {
+	    continue;
+	}
+	if (pTemplate[i].pValue == NULL) {
+	    continue;
+	}
+	class = *(CK_OBJECT_CLASS *)pTemplate[i].pValue;
+	if ((class == CKO_PRIVATE_KEY) || (class == CKO_SECRET_KEY)) {
+	    needLogin = PR_TRUE;
+	    break;
+	}
+    }
+    if (needLogin) {
+	if ((rv = pk11_fipsCheck()) != CKR_OK) return rv;
+    }
     return NSC_FindObjectsInit(hSession,pTemplate,usCount);
 }
 
@@ -404,7 +430,8 @@ CK_RV FC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
  CK_RV FC_FindObjects(CK_SESSION_HANDLE hSession,
     CK_OBJECT_HANDLE_PTR phObject,CK_ULONG usMaxObjectCount,
     					CK_ULONG_PTR pusObjectCount) {
-    PK11_FIPSCHECK();
+    /* let publically readable object be found */
+    PK11_FIPSFATALCHECK();
     return NSC_FindObjects(hSession,phObject,usMaxObjectCount,
     							pusObjectCount);
 }
@@ -840,7 +867,8 @@ CK_RV FC_SetOperationState(CK_SESSION_HANDLE hSession,
 
 /* FC_FindObjectsFinal finishes a search for token and session objects. */
 CK_RV FC_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
-    PK11_FIPSCHECK();
+    /* let publically readable object be found */
+    PK11_FIPSFATALCHECK();
     return NSC_FindObjectsFinal(hSession);
 }
 
