@@ -319,13 +319,15 @@ typedef struct dlgProgramFolder
   LPSTR szMessage0;
 } diPF;
 
-typedef struct dlgDownloadOptions
+typedef struct dlgAdditionalOptions
 {
   BOOL  bShowDialog;
   LPSTR szTitle;
   LPSTR szMessage0;
   LPSTR szMessage1;
   BOOL  bSaveInstaller;
+  BOOL  bRecaptureHomepage;
+  BOOL  bShowHomepageOption;
   DWORD dwUseProtocol;
   BOOL  bUseProtocolSettings;
   BOOL  bShowProtocols;

@@ -1022,7 +1022,7 @@ void UpdateJSProxyInfo()
       ZeroMemory(szBuf, sizeof(szBuf));
       if(*diAdvancedSettings.szProxyServer != '\0')
       {
-        if(diDownloadOptions.dwUseProtocol == UP_FTP)
+        if(diAdditionalOptions.dwUseProtocol == UP_FTP)
           wsprintf(szBuf,
                    "pref(\"network.proxy.ftp\", \"%s\");\n",
                    diAdvancedSettings.szProxyServer);
@@ -1034,7 +1034,7 @@ void UpdateJSProxyInfo()
 
       if(*diAdvancedSettings.szProxyPort != '\0')
       {
-        if(diDownloadOptions.dwUseProtocol == UP_FTP)
+        if(diAdditionalOptions.dwUseProtocol == UP_FTP)
           wsprintf(szBuf,
                    "pref(\"network.proxy.ftp_port\", %s);\n",
                    diAdvancedSettings.szProxyPort);
@@ -1260,6 +1260,7 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
   char  szTarget[MAX_BUF];
   char  szParameters[MAX_BUF];
   char  szWorkingDir[MAX_BUF];
+  BOOL  bRunApp;
   BOOL  bWait;
 
   dwIndex = 0;
@@ -1272,32 +1273,56 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
       DecryptString(szTarget, szBuf);
       GetPrivateProfileString(szSection, "Parameters", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szParameters, szBuf);
+
+      // If we are given a criterion to test against, we expect also to be told whether we should run
+      //    the app when that criterion is true or when it is false.  If we are not told, we assume that
+      //    we are to run the app when the criterion is true.
+      bRunApp = TRUE;
+      GetPrivateProfileString(szSection, "Criterion ID", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      if(lstrcmpi(szBuf, "RecaptureHP") == 0)
+      {
+        GetPrivateProfileString(szSection, "Run App If Criterion", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        if(lstrcmpi(szBuf, "FALSE") == 0)
+        {
+          if(diAdditionalOptions.bRecaptureHomepage == TRUE)
+             bRunApp = FALSE;
+        }
+        else
+        {
+          if(diAdditionalOptions.bRecaptureHomepage == FALSE)
+             bRunApp = FALSE;
+        }
+      }
+
       GetPrivateProfileString(szSection, "WorkingDir", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szWorkingDir, szBuf);
-      GetPrivateProfileString(szSection, "Wait", "", szBuf, sizeof(szBuf), szFileIniConfig);
 
+      GetPrivateProfileString(szSection, "Wait", "", szBuf, sizeof(szBuf), szFileIniConfig);
       if(lstrcmpi(szBuf, "FALSE") == 0)
         bWait = FALSE;
       else
         bWait = TRUE;
 
-      if((dwTiming == T_DEPEND_REBOOT) && (NeedReboot() == TRUE))
+      if (bRunApp == TRUE)
       {
-        lstrcat(szTarget, " ");
-        lstrcat(szTarget, szParameters);
-        SetWinReg(HKEY_CURRENT_USER,
-                  "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
-                  TRUE,
-                  "Netscape",
-                  TRUE,
-                  REG_SZ,
-                  szTarget,
-                  lstrlen(szTarget),
-                  FALSE,
-                  FALSE);
+        if((dwTiming == T_DEPEND_REBOOT) && (NeedReboot() == TRUE))
+        {
+          lstrcat(szTarget, " ");
+          lstrcat(szTarget, szParameters);
+          SetWinReg(HKEY_CURRENT_USER,
+                    "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+                    TRUE,
+                    "Netscape",
+                    TRUE,
+                    REG_SZ,
+                    szTarget,
+                    lstrlen(szTarget),
+                    FALSE,
+                    FALSE);
+        }
+        else
+          WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
       }
-      else
-        WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
     }
 
     ++dwIndex;

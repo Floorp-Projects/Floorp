@@ -84,7 +84,7 @@ extern diSC             diSelectComponents;
 extern diSC             diSelectAdditionalComponents;
 extern diWI             diWindowsIntegration;
 extern diPF             diProgramFolder;
-extern diDO             diDownloadOptions;
+extern diDO             diAdditionalOptions;
 extern diAS             diAdvancedSettings;
 extern diSI             diStartInstall;
 extern diD              diDownload;

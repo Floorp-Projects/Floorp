@@ -1128,11 +1128,11 @@ void SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize)
   char szFtp[]    = "ftp://";
   char szHttp[]   = "http://";
 
-  if((!szInUrl) || !diDownloadOptions.bUseProtocolSettings)
+  if((!szInUrl) || !diAdditionalOptions.bUseProtocolSettings)
     return;
 
   ZeroMemory(szTmpBuf, sizeof(szTmpBuf));
-  switch(diDownloadOptions.dwUseProtocol)
+  switch(diAdditionalOptions.dwUseProtocol)
   {
     case UP_HTTP:
       if((strncmp(szInUrl, szFtp, FTPSTR_LEN) == 0) &&
@@ -1656,8 +1656,8 @@ long RetrieveArchives()
       LogISComponentsFailedCRC(NULL, W_DOWNLOAD);
   }
 
-  LogISDownloadProtocol(diDownloadOptions.dwUseProtocol);
-  LogMSDownloadProtocol(diDownloadOptions.dwUseProtocol);
+  LogISDownloadProtocol(diAdditionalOptions.dwUseProtocol);
+  LogMSDownloadProtocol(diAdditionalOptions.dwUseProtocol);
 
   if(lResult == WIZ_OK)
   {
@@ -2379,10 +2379,12 @@ void DeInitDlgProgramFolder(diPF *diDialog)
   FreeMemory(&(diDialog->szMessage0));
 }
 
-HRESULT InitDlgDownloadOptions(diDO *diDialog)
+HRESULT InitDlgAdditionalOptions(diDO *diDialog)
 {
   diDialog->bShowDialog           = FALSE;
   diDialog->bSaveInstaller        = FALSE;
+  diDialog->bRecaptureHomepage    = FALSE;
+  diDialog->bShowHomepageOption   = FALSE;
   diDialog->dwUseProtocol         = UP_FTP;
   diDialog->bUseProtocolSettings  = TRUE;
   diDialog->bShowProtocols        = TRUE;
@@ -2396,7 +2398,7 @@ HRESULT InitDlgDownloadOptions(diDO *diDialog)
   return(0);
 }
 
-void DeInitDlgDownloadOptions(diDO *diDialog)
+void DeInitDlgAdditionalOptions(diDO *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
   FreeMemory(&(diDialog->szMessage0));
@@ -5375,7 +5377,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgProgramFolder(&diProgramFolder))
     return(1);
-  if(InitDlgDownloadOptions(&diDownloadOptions))
+  if(InitDlgAdditionalOptions(&diAdditionalOptions))
     return(1);
   if(InitDlgAdvancedSettings(&diAdvancedSettings))
     return(1);
@@ -5610,18 +5612,26 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diProgramFolder.bShowDialog = TRUE;
 
-  /* Download Options dialog */
-  GetPrivateProfileString("Dialog Download Options",       "Show Dialog",    "", szShowDialog,                     sizeof(szShowDialog), szFileIniConfig);
-  GetPrivateProfileString("Dialog Download Options",       "Title",          "", diDownloadOptions.szTitle,        MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Download Options",       "Message0",       "", diDownloadOptions.szMessage0,     MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Download Options",       "Message1",       "", diDownloadOptions.szMessage1,     MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Download Options",       "Save Installer", "", szBuf,                            sizeof(szBuf), szFileIniConfig);
+  /* Additional Options dialog */
+  GetPrivateProfileString("Dialog Additional Options",       "Show Dialog",    "", szShowDialog,                     sizeof(szShowDialog), szFileIniConfig);
+  GetPrivateProfileString("Dialog Additional Options",       "Title",          "", diAdditionalOptions.szTitle,        MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Additional Options",       "Message0",       "", diAdditionalOptions.szMessage0,     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Additional Options",       "Message1",       "", diAdditionalOptions.szMessage1,     MAX_BUF, szFileIniConfig);
 
+  GetPrivateProfileString("Dialog Additional Options",       "Save Installer", "", szBuf,                            sizeof(szBuf), szFileIniConfig);
   if(lstrcmpi(szBuf, "TRUE") == 0)
-    diDownloadOptions.bSaveInstaller = TRUE;
+    diAdditionalOptions.bSaveInstaller = TRUE;
+
+  GetPrivateProfileString("Dialog Additional Options",       "Recapture Homepage", "", szBuf,                            sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diAdditionalOptions.bRecaptureHomepage = TRUE;
+
+  GetPrivateProfileString("Dialog Additional Options",       "Show Homepage Option", "", szBuf,                            sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diAdditionalOptions.bShowHomepageOption = TRUE;
 
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
-    diDownloadOptions.bShowDialog = TRUE;
+    diAdditionalOptions.bShowDialog = TRUE;
 
   /* Advanced Settings dialog */
   GetPrivateProfileString("Dialog Advanced Settings",       "Show Dialog",    "", szShowDialog,                     sizeof(szShowDialog), szFileIniConfig);
@@ -5636,15 +5646,15 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 
   GetPrivateProfileString("Dialog Advanced Settings",       "Use Protocol",   "", szBuf,                            sizeof(szBuf), szFileIniConfig);
   if(lstrcmpi(szBuf, "HTTP") == 0)
-    diDownloadOptions.dwUseProtocol = UP_HTTP;
+    diAdditionalOptions.dwUseProtocol = UP_HTTP;
   else
-    diDownloadOptions.dwUseProtocol = UP_FTP;
+    diAdditionalOptions.dwUseProtocol = UP_FTP;
 
   GetPrivateProfileString("Dialog Advanced Settings",       "Use Protocol Settings", "", szBuf,                     sizeof(szBuf), szFileIniConfig);
   if(lstrcmpi(szBuf, "DISABLED") == 0)
-    diDownloadOptions.bUseProtocolSettings = FALSE;
+    diAdditionalOptions.bUseProtocolSettings = FALSE;
   else
-    diDownloadOptions.bUseProtocolSettings = TRUE;
+    diAdditionalOptions.bUseProtocolSettings = TRUE;
 
   GetPrivateProfileString("Dialog Advanced Settings",
                           "Show Protocols",
@@ -5652,9 +5662,9 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
                           szBuf,
                           sizeof(szBuf), szFileIniConfig);
   if(lstrcmpi(szBuf, "FALSE") == 0)
-    diDownloadOptions.bShowProtocols = FALSE;
+    diAdditionalOptions.bShowProtocols = FALSE;
   else
-    diDownloadOptions.bShowProtocols = TRUE;
+    diAdditionalOptions.bShowProtocols = TRUE;
 
    /* Program Folder dialog */
   GetPrivateProfileString("Dialog Quick Launch",      "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
@@ -5754,7 +5764,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       diWindowsIntegration.bShowDialog          = FALSE;
       diProgramFolder.bShowDialog               = FALSE;
       diQuickLaunch.bShowDialog                 = FALSE;
-      diDownloadOptions.bShowDialog             = FALSE;
+      diAdditionalOptions.bShowDialog             = FALSE;
       diAdvancedSettings.bShowDialog            = FALSE;
       diStartInstall.bShowDialog                = FALSE;
       diDownload.bShowDialog                    = FALSE;
@@ -7049,7 +7059,7 @@ void DeInitialize()
   DeInitDlgReboot(&diReboot);
   DeInitDlgDownload(&diDownload);
   DeInitDlgStartInstall(&diStartInstall);
-  DeInitDlgDownloadOptions(&diDownloadOptions);
+  DeInitDlgAdditionalOptions(&diAdditionalOptions);
   DeInitDlgAdvancedSettings(&diAdvancedSettings);
   DeInitDlgProgramFolder(&diProgramFolder);
   DeInitDlgWindowsIntegration(&diWindowsIntegration);
@@ -7574,3 +7584,13 @@ DWORD GetTitleIdx(HWND hWnd, LPTSTR Title[], DWORD LastIndex, LPTSTR Name)
   return 0;
 }
 
+BOOL ShowAdditionalOptionsDialog(void)
+{
+  if(diAdditionalOptions.bShowDialog == FALSE)
+    return(FALSE);
+
+  if( (diAdditionalOptions.bShowHomepageOption == FALSE) && (GetTotalArchivesToDownload() < 1) )
+    return(FALSE);
+
+  return(TRUE);
+}
