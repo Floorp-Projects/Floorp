@@ -18,6 +18,7 @@
 
 addrshell.xul
 addrshell.css
+addressbook.js
 dirPane.xul
 dirPane.css
 resultPane.xul
@@ -28,3 +29,4 @@ newcard.gif
 newlist.gif
 property.gif
 abnewmsg.gif
+editcard.xul
