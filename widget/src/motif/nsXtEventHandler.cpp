@@ -309,12 +309,12 @@ void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
       if (attrs.width > 0 && 
         rect.width != attrs.width) {   
         rect.width = attrs.width;
-        doResize = true;
+        doResize = PR_TRUE;
       }
       if (attrs.height > 0 &&
           rect.height != attrs.height) {  
         rect.height = attrs.height;
-        doResize = true;
+        doResize = PR_TRUE;
       }
 
       if (doResize) {
