@@ -25,7 +25,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 MODULE=raptor 
 
-DEFINES =-D_IMPL_NS_GFXNONXP
+DEFINES =-D_IMPL_NS_GFXNONXP -DWIN32_LEAN_AND_MEAN
 
 OBJS =                                  \
 	.\$(OBJDIR)\nsDeviceContextWin.obj   \

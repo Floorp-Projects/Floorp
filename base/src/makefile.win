@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 
 DIRS = windows
 
-DEFINES=-D_IMPL_NS_BASE 
+DEFINES=-D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 LIBRARY_NAME=raptorbase 
 
 CPPSRCS=nsArena.cpp nsAtomTable.cpp nsBTree.cpp nsByteBuffer.cpp nsCRT.cpp \

@@ -22,7 +22,7 @@ MAKE_OBJ_TYPE = DLL
 DLLNAME = jsdom
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-DEFINES=-D_IMPL_NS_DOM
+DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 CPPSRCS =				\
 	nsJSEnvironment.cpp		\
 	nsJSNode.cpp		\

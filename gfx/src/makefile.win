@@ -24,7 +24,7 @@ LIBRARY_NAME=gmgfx
 MODULE=raptor 
 REQUIRES=util img xpcom raptor 
 
-DEFINES=-D_IMPL_NS_GFX 
+DEFINES=-D_IMPL_NS_GFX -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=nsColor.cpp nsColorNames.cpp nsColorNamesRGB.cpp nsFont.cpp \
     nsImageGroup.cpp nsImageManager.cpp nsImageNetContext.cpp \
