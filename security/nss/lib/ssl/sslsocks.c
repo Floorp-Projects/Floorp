@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsocks.c,v 1.2 2000/09/12 20:15:44 jgmyers%netscape.com Exp $
+ * $Id: sslsocks.c,v 1.3 2000/09/19 06:05:28 wtc%netscape.com Exp $
  */
 #include "prtypes.h"
 #include "prnetdb.h"
@@ -711,11 +711,15 @@ SocksStartGather(sslSocket *ss)
 /************************************************************************/
 
 
-/* BSDI ain't got no cuserid() */
-#ifdef __386BSD__
+/* BSDI etc. ain't got no cuserid() */
+#if defined(__386BSD__) || defined(FREEBSD)
+#define NEED_CUSERID 1
+#endif
+
+#ifdef NEED_CUSERID
 #include <pwd.h>
-char *
-bsdi_cuserid(char *b)
+static char *
+my_cuserid(char *b)
 {
     struct passwd *pw = getpwuid(getuid());
 
@@ -785,8 +789,8 @@ ssl_SocksConnect(sslSocket *ss, const PRNetAddr *sa)
     if (!direct) {
 	/* Find user */
 #ifdef XP_UNIX
-#ifdef __386BSD__
-	user = bsdi_cuserid(NULL);
+#ifdef NEED_CUSERID
+	user = my_cuserid(NULL);
 #else
 	user = cuserid(NULL);
 #endif
@@ -911,8 +915,8 @@ ssl_SocksBind(sslSocket *ss, const PRNetAddr *sa)
 
 	/* Find user */
 #ifdef XP_UNIX
-#ifdef __386BSD__
-	user = bsdi_cuserid(NULL);
+#ifdef NEED_CUSERID
+	user = my_cuserid(NULL);
 #else
 	user = cuserid(NULL);
 #endif
