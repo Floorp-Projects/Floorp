@@ -152,9 +152,7 @@ final class MemberBox implements Serializable
                 // Retry after recovery
                 return method.invoke(target, args);
             }
-        } catch (IllegalAccessException ex) {
-            throw Context.throwAsScriptRuntimeEx(ex);
-        } catch (InvocationTargetException ex) {
+        } catch (Exception ex) {
             throw Context.throwAsScriptRuntimeEx(ex);
         }
     }
@@ -171,11 +169,7 @@ final class MemberBox implements Serializable
                 }
             }
             return ctor.newInstance(args);
-        } catch (IllegalAccessException ex) {
-            throw Context.throwAsScriptRuntimeEx(ex);
-        } catch (InvocationTargetException ex) {
-            throw Context.throwAsScriptRuntimeEx(ex);
-        } catch (InstantiationException ex) {
+        } catch (Exception ex) {
             throw Context.throwAsScriptRuntimeEx(ex);
         }
     }
