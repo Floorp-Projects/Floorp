@@ -69,7 +69,8 @@ CPPSRCS		= \
 
 JAVA_SRCS = \
 		XPCOM.java \
-		XPCOMPrivate.java \
+		XPCOMJavaProxy.java \
+		XPCOMJavaProxyBase.java \
 		XPCOMException.java \
 		GeckoEmbed.java \
 		AppFileLocProvider.java \

@@ -760,8 +760,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         }
 
         /* don't create/open file here for Java */
-        if (strcmp(mode->mode, "java") == 0 ||
-            strcmp(mode->mode, "javastub") == 0)
+        if (strcmp(mode->mode, "java") == 0)
         {
             state.filename = real_outname;
         } else {
@@ -785,8 +784,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     if (emitter->emit_epilog)
         emitter->emit_epilog(&state);
 
-    if (strcmp(mode->mode, "java") != 0 &&
-        strcmp(mode->mode, "javastub") != 0)
+    if (strcmp(mode->mode, "java") != 0)
     {
         if (state.file != stdout)
             fclose(state.file);

@@ -53,13 +53,14 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
 {
   mJavaObject = aJavaEnv->NewGlobalRef(aJavaObject);
 
-#ifdef DEBUG_pedemonte
+#ifdef DEBUG_JAVAXPCOM
   jstring name;
   const char* javaObjectName = nsnull;
   jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   if (clazz) {
     name = (jstring) mJavaEnv->CallObjectMethod(clazz, getNameMID);
-    javaObjectName = mJavaEnv->GetStringUTFChars(name, nsnull);
+    if (name)
+      javaObjectName = mJavaEnv->GetStringUTFChars(name, nsnull);
   }
 
   nsID* iid = nsnull;
@@ -75,7 +76,8 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
   LOG(("+++ nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s iid=%s)\n", (int) this,
        mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID),
        javaObjectName ? javaObjectName : "<-->", iid_str ? iid_str : "NULL"));
-  mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
+  if (name)
+    mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
   if (iid_str)
     nsMemory::Free(iid_str);
 #endif
@@ -83,19 +85,21 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
 
 nsJavaXPTCStub::~nsJavaXPTCStub()
 {
-#ifdef DEBUG_pedemonte
+#ifdef DEBUG_JAVAXPCOM
   jstring name;
   const char* javaObjectName = nsnull;
   jclass clazz = mJavaEnv->GetObjectClass(mJavaObject);
   if (clazz) {
     name = (jstring) mJavaEnv->CallObjectMethod(clazz, getNameMID);
-    javaObjectName = mJavaEnv->GetStringUTFChars(name, nsnull);
+    if (name)
+      javaObjectName = mJavaEnv->GetStringUTFChars(name, nsnull);
   }
 
   LOG(("--- ~nsJavaXPTCStub(this=0x%08x java_obj=0x%08x %s)\n", (int) this,
        mJavaEnv->CallIntMethod(mJavaObject, hashCodeMID),
        javaObjectName ? javaObjectName : "<-->"));
-  mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
+  if (name)
+    mJavaEnv->ReleaseStringUTFChars(name, javaObjectName);
 #endif
 
   if (!mMaster) {
@@ -309,7 +313,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
                            const nsXPTMethodInfo *aMethodInfo,
                            nsXPTCMiniVariant *aParams)
 {
-#ifdef DEBUG_pedemonte
+#ifdef DEBUG_JAVAXPCOM
   const char* ifaceName;
   mIInfo->GetNameShared(&ifaceName);
   LOG(("nsJavaXPTCStub::CallMethod [%s::%s]\n", ifaceName, aMethodInfo->GetName()));
@@ -1346,7 +1350,23 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
       nsISupports** variant = NS_STATIC_CAST(nsISupports**, aVariant.val.p);
       if (java_obj) {
         // Check if we already have a corresponding XPCOM object
-        void* inst = gBindings->GetXPCOMObject(mJavaEnv, java_obj);
+        jboolean isProxy;
+        isProxy = mJavaEnv->CallStaticBooleanMethod(xpcomJavaProxyClass,
+                                                    isXPCOMJavaProxyMID,
+                                                    java_obj);
+        if (mJavaEnv->ExceptionCheck()) {
+          rv = NS_ERROR_FAILURE;
+          break;
+        }
+
+        void* inst;
+        if (isProxy) {
+          rv = GetXPCOMInstFromProxy(mJavaEnv, java_obj, &inst);
+          if (NS_FAILED(rv))
+            break;
+        } else {
+          inst = gBindings->GetXPCOMObject(mJavaEnv, java_obj);
+        }
 
         // Get IID for this param
         nsID iid;

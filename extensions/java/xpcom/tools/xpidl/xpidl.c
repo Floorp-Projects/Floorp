@@ -46,7 +46,6 @@ static ModeData modes[] = {
     {"typelib", "Generate XPConnect typelib",  "xpt",  xpidl_typelib_dispatch},
     {"doc",     "Generate HTML documentation", "html", xpidl_doc_dispatch},
     {"java",    "Generate Java interface",     "java", xpidl_java_dispatch},
-    {"javastub","Generate Java Stub",          "java", xpidl_javastub_dispatch},
     {0,         0,                             0,      0}
 };
 
