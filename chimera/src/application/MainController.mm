@@ -108,7 +108,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   // Now open the new window.
   BrowserWindowController* controller = [self openBrowserWindowWithURLString: [mPreferenceManager homePage]];
-  [controller focusURLBar];
+  if ([[mPreferenceManager homePage] isEqualToString: @"about:blank"])
+    [controller focusURLBar];
+  else
+    [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
 }	
 
 -(IBAction)newTab:(id)aSender
