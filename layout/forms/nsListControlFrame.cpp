@@ -23,9 +23,7 @@
 #include "nsBlockReflowContext.h"
 #include "nsBlockBandData.h"
 #include "nsBulletFrame.h"
-#include "nsLineBox.h"
 
-#include "nsLineLayout.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLIIDs.h"
