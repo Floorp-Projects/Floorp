@@ -1324,7 +1324,9 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
           result = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
           aAction = eNone;
           break;
-        default: break;       // avoid compiler warnings
+        default:       // avoid several compiler warnings
+          result = NS_OK;
+          break;
     }
     if (NS_FAILED(result))
     {
@@ -4601,7 +4603,7 @@ void nsHTMLEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
 {
   if (!aParent || !aSelection) { return; }  // XXX: should return an error
   nsCOMPtr<nsIDOMNode> startNode, endNode;
-  PRInt32 startOffset, endOffset;
+  PRInt32 startOffset=0, endOffset=0;
 
   nsresult result;
   nsCOMPtr<nsIContentIterator> iter;

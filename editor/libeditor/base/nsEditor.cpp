@@ -1447,7 +1447,7 @@ nsEditor::EndComposition(void)
 {
   if (!mInIMEMode) return NS_OK; // nothing to do
   
-  nsresult result;
+  nsresult result = NS_OK;
 
   // commit the IME transaction..we can get at it via the transaction mgr.
   // Note that this means IME won't work without an undo stack!
@@ -2159,7 +2159,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
   {
     // get selection
     nsCOMPtr<nsIDOMSelection> selection;
-    GetSelection(getter_AddRefs(selection));
+    result = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) return result;
     if (!selection) return NS_ERROR_NULL_POINTER;
 
