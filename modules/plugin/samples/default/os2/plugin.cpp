@@ -217,7 +217,7 @@ BOOL CPlugin::init(HWND hWndParent)
                              (PVOID)this,
                              0);
 
-    WinSetPresParam(m_hWnd, PP_FONTNAMESIZE, 10, "9.WarpSans");
+    WinSetPresParam(m_hWnd, PP_FONTNAMESIZE, 10, (PVOID)"9.WarpSans");
 
     assert(m_hWnd != NULL);
     if((m_hWnd == NULL) || (!WinIsWindow((HAB)0, m_hWnd)))
