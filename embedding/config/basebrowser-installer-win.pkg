@@ -222,3 +222,7 @@ components\xmlextras_interfaceinfo.xpt
 ;
 components\ucvmath.dll
 
+; p3p
+components\p3p.dll
+components\p3p.xpt
+

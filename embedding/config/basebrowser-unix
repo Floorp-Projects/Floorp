@@ -271,3 +271,8 @@ res/entityTables/transliterate.properties
 ;res/fonts/mathfontPUA.properties
 ;res/fonts/mathfontSymbol.properties
 ;components/libucvmath.so
+
+; p3p
+components/libp3p.so
+components/p3p.xpt
+
