@@ -86,7 +86,7 @@ ToUpperCase( nsAString& aString )
 PRBool
 CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
 {
-    return FindInReadable(aPattern, aStart, aEnd, nsCaseInsensitiveStringComparator());
+    return FindInReadable(aPattern, aSearchStart, aSearchEnd, nsCaseInsensitiveStringComparator());
 }
 
 
