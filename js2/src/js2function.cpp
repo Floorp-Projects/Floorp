@@ -80,7 +80,18 @@ namespace MetaData {
             DEFINE_ROOTKEEPER(rk, fnExpr->obj);
             JS2Class *exprType;
             meta->ValidateExpression(&meta->cxt, meta->env, fnExpr);
-            meta->SetupExprNode(meta->env, RunPhase, fnExpr, &exprType);
+            Arena *oldArena = meta->referenceArena;
+            meta->referenceArena = new Arena;
+            try {
+                meta->SetupExprNode(meta->env, RunPhase, fnExpr, &exprType);
+            }
+            catch (Exception &x) {
+                meta->referenceArena->clear();
+                meta->referenceArena = oldArena;
+                throw x;
+            }
+            meta->referenceArena->clear();
+            meta->referenceArena = oldArena;
             ASSERT(fnExpr);
             return OBJECT_TO_JS2VAL(fnExpr->obj);
         }
