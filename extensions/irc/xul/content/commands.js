@@ -453,6 +453,152 @@ function dispatchCommand (command, e, flags)
         return null;
     }
 
+    function parseAlias(aliasLine, e) {
+        /* Only 1 of these will be presented to the user. Math.max is used to 
+           supply the 'worst' error */
+        const ALIAS_ERR_REQ_PRMS = 1;
+        const ALIAS_ERR_REQ_SRV = 2;
+        const ALIAS_ERR_REQ_RECIP = 3;
+
+        /* double slashes because of the string to regexp conversion, which
+           turns these into single slashes */
+        const SIMPLE_REPLACE = "\\$\\((\\d+)\\)";
+        const CUMUL_REPLACE = "\\$\\((\\d+)\\+\\)";
+        const RANGE_REPLACE = "\\$\\((\\d+)\\-(\\d+)\\)";
+        const NICK_REPLACE = "\\$\\((nick)\\)";
+        const RECIP_REPLACE = "\\$\\((recip)\\)";
+        const ALL_REPLACE = "\\$\\((all)\\)";
+        if (!aliasLine.match(/\$/))
+        {
+            if (e.inputData)
+                display(getMsg(MSG_EXTRA_PARAMS, e.inputData), MT_WARN);
+            return aliasLine;
+        }
+
+        function replaceAll(match, single, cumulative, start, end, nick, recip, all)
+        {
+            if (single)
+            {
+                // Simple 1-parameter replace
+                if (arrayHasElementAt(parameters, single - 1)) 
+                {
+                    paramsUsed = Math.max(paramsUsed, single);
+                    return parameters[single-1];
+                }
+                maxParamsAsked = Math.max(maxParamsAsked, single);
+                errorMsg = Math.max(ALIAS_ERR_REQ_PRMS, errorMsg);
+                return match;
+            }
+            if (cumulative)
+            {
+                // Cumulative Replace: parameters cumulative and up
+                if (arrayHasElementAt(parameters, cumulative - 1)) 
+                {
+                    paramsUsed = parameters.length; 
+                    // there are never leftover parameters for $(somenumber+)
+                    return parameters.slice(cumulative - 1).join(" ");
+                } 
+                maxParamsAsked = Math.max(maxParamsAsked, cumulative);
+                errorMsg = Math.max(ALIAS_ERR_REQ_PRMS, errorMsg);
+                return match;
+            }
+            if (start && end)
+            {
+                // Ranged replace: parameters start through end
+                //'decrement to correct 0-based index.
+                if (start > end) 
+                {
+                    var iTemp = end;
+                    end = start;
+                    start = iTemp;
+                    // We obviously have a very stupid user, but we're nice
+                }
+                start--;
+                if (arrayHasElementAt(parameters, start) && 
+                    arrayHasElementAt(parameters, end - 1)) 
+                {
+                    paramsUsed = Math.max(paramsUsed,end);
+                    return parameters.slice(start, end).join(" ");
+                } 
+                maxParamsAsked = Math.max(maxParamsAsked, end);
+                errorMsg = Math.max(ALIAS_ERR_REQ_PRMS, errorMsg);
+                return match;
+            }
+            if (nick)
+            {
+                // Replace with own nickname
+                if (e.network && e.server && e.network.state == NET_ONLINE)
+                    return e.server.me.unicodeName;
+
+                errorMsg = Math.max(ALIAS_ERR_REQ_SRV, errorMsg);
+                return null;
+            }
+            if (recip)
+            {
+                // Replace with current recipient
+                if (e.channel)
+                    return e.channel.unicodeName;
+
+                if (e.user) 
+                    return e.user.unicodeName;
+
+                errorMsg = ALIAS_ERR_REQ_RECIP;
+                return null;
+             }
+             // Replace with all parameters
+             paramsUsed = parameters.length;
+             return parameters.join(" ");
+        };
+
+        // If the replace function has a problem, this is an error constant:
+        var errorMsg = 0;
+
+        var paramsUsed = 0;
+        var maxParamsAsked = 0;
+        
+        /* set parameters array and escaping \ and ; in parameters so the 
+         * parameters don't get split up by the command list split later on */
+        e.inputData = e.inputData.replace(/([\\;])/g, "\\$1");
+        var parameters = e.inputData.match(/\S+/g);
+        if (!parameters)
+            parameters = [];
+
+        // replace in the command line.
+        var expr = [SIMPLE_REPLACE, CUMUL_REPLACE, RANGE_REPLACE, NICK_REPLACE,
+                    RECIP_REPLACE, ALL_REPLACE].join("|");
+        aliasLine = aliasLine.replace(new RegExp(expr, "gi"), replaceAll);
+
+        if (errorMsg)
+        {
+            switch (errorMsg)
+            {
+                case ALIAS_ERR_REQ_PRMS:
+                    display(getMsg(MSG_ERR_REQUIRED_NR_PARAM, 
+                                   [maxParamsAsked - parameters.length, 
+                                    maxParamsAsked]), MT_ERROR);
+                    break;
+                case ALIAS_ERR_REQ_SRV:
+                    display(getMsg(MSG_ERR_NEED_SERVER, e.command.name), 
+                            MT_ERROR);
+                    break;
+                case ALIAS_ERR_REQ_RECIP:
+                    display(getMsg(MSG_ERR_NEED_RECIP, e.command.name), 
+                            MT_ERROR);
+                    break;
+            }
+            return null;
+        }
+        
+        // return the revised command line.
+        if (paramsUsed < parameters.length)
+        {
+            var pmstring = parameters.slice(paramsUsed, 
+                                            parameters.length).join(" ");
+            display(getMsg(MSG_EXTRA_PARAMS, pmstring), MT_WARN);
+        }
+        return aliasLine;
+    };
+
     var h, i;
 
     if (typeof e.command.func == "function")
@@ -498,17 +644,39 @@ function dispatchCommand (command, e, flags)
         /* dispatch an alias (semicolon delimited list of subcommands) */
         if ("beforeHooks" in e.command)
             callHooks (e.command, true);
+        
+        var commandList;
+        //Don't make use of e.inputData if we have multiple commands in 1 alias
+        if (e.command.func.match(/\$\(.*\)|(?:^|[^\\])(?:\\\\)*;/))
+            commandList = parseAlias(e.command.func, e);
+        else
+            commandList = e.command.func + " " + e.inputData; 
+        
+        if (commandList == null) 
+            return null;
+        commandList = commandList.split(";");
 
-        var commandList = e.command.func.split(";");
+        var i = 0;
+        while (i < commandList.length) {
+            if (commandList[i].match(/(?:^|[^\\])(?:\\\\)*$/) || 
+                (i == commandList.length - 1)) 
+            {
+                commandList[i] = commandList[i].replace(/\\(.)/g, "$1");
+                i++;
+            } 
+            else 
+            {
+                commandList[i] = commandList[i] + ";" + commandList[i + 1];
+                commandList.splice(i + 1, 1);
+            }
+        }
+        
         for (i = 0; i < commandList.length; ++i)
         {
             var newEvent = Clone(e);
             delete newEvent.command;
             commandList[i] = stringTrim(commandList[i]);
-            if (i == commandList.length - 1)
-                dispatch(commandList[i] + " " + e.inputData, newEvent, flags);
-            else
-                dispatch(commandList[i], newEvent, flags);
+            dispatch(commandList[i], newEvent, flags);
         }
     }
     else
