@@ -1,3 +1,6 @@
+Allow the build script to use a single process and alternate builds 
+of different types.
+
 Add a sample /etc/rc.d/init.d file for the RedHat Build machines.
 
 Mail processing programs were not writing error files correctly.  
