@@ -70,6 +70,10 @@ typedef struct Hammer_s {
     Problem problem;
 } Hammer_t;
 
+#define DEFAULT_LIMIT		10
+#define DEFAULT_THREADS		2
+#define DEFAULT_LOOPS		1
+
 static PRInt32 pageSize = 1024;
 static const char* baseName = "./";
 static const char *programName = "Random File";
@@ -313,9 +317,9 @@ int main (int argc,      char   *argv[])
     ml = PR_NewLock();
     cv = PR_NewCondVar(ml);
 
-    if (loops == 0) loops = 2;
-    if (limit == 0) limit = 57;
-    if (threads == 0) threads = 10;
+    if (loops == 0) loops = DEFAULT_LOOPS;
+    if (limit == 0) limit = DEFAULT_LIMIT;
+    if (threads == 0) threads = DEFAULT_THREADS;
 
     if (debug_mode) printf(
         "%s: Using loops = %d, threads = %d, limit = %d and %s threads\n",
