@@ -71,6 +71,7 @@ var gIsHTMLEditor = false;
 var gColorObj = new Object();
 var gDefaultTextColor = "";
 var gDefaultBackgroundColor = "";
+var gPrefs;
 
 // These must be kept in synch with the XUL <options> lists
 var gFontSizeNames = new Array("xx-small","x-small","small","medium","large","x-large","xx-large");
@@ -295,8 +296,7 @@ function EditorSharedStartup()
   // hide UI that we don't have components for
   RemoveInapplicableUIElements();
 
-  // gPrefs and GetPrefsService() are in editorUtilities.js
-  gPrefs = GetPrefsService();
+  gPrefs = GetPrefs();
 
   // Use browser colors as initial values for editor's default colors
   var BrowserColors = GetDefaultBrowserColors();
@@ -1268,7 +1268,7 @@ function SetDisplayMode(mode)
     if (mode == DisplayModeAllTags) selectedTab = gTagModeButton;
     if (mode == DisplayModeSource) selectedTab = gSourceModeButton;
     if (selectedTab)
-      document.getElementById("EditModeTabs").selectedTab = selectedTab;
+      document.getElementById("EditModeTabs").selectedItem = selectedTab;
 
     if (mode == DisplayModeSource)
     {
