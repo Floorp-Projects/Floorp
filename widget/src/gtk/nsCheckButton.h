@@ -19,14 +19,14 @@
 #ifndef nsCheckButton_h__
 #define nsCheckButton_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsICheckButton.h"
 
 /**
  * Native Motif Checkbox wrapper
  */
 
-class nsCheckButton : public nsWindow,
+class nsCheckButton : public nsWidget,
                       public nsICheckButton
 {
 
@@ -71,7 +71,7 @@ public:
 protected:
   GtkWidget *mWidget;
   GtkWidget *mLabel;
-  
+
 private:
   PRBool mInitialState;
   PRBool mNewValue;

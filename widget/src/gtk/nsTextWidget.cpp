@@ -60,7 +60,7 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
                       nsIDeviceContext *aContext,
                       nsIAppShell *aAppShell,
                       nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData) 
+                      nsWidgetInitData *aInitData)
 {
 #if 0
   aParent->AddChild(this);
@@ -78,7 +78,7 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
   InitDeviceContext(aContext, parentWidget);
 
   mWidget = ::XtVaCreateManagedWidget("button",
-                                    xmTextWidgetClass, 
+                                    xmTextWidgetClass,
                                     parentWidget,
                                     XmNwidth, aRect.width,
                                     XmNheight, aRect.height,
@@ -86,7 +86,7 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
                                     XmNhighlightOnEnter, False,
                                     XmNeditable, mMakeReadOnly?False:True,
 		                    XmNx, aRect.x,
-		                    XmNy, aRect.y, 
+		                    XmNy, aRect.y,
                                     nsnull);
 
   // save the event callback function
@@ -125,7 +125,7 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
 //-------------------------------------------------------------------------
 nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
+    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsTextWidgetIID, NS_ITEXTWIDGET_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsTextWidgetIID)) {
@@ -193,5 +193,3 @@ NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
   nsTextHelper::SetPassword(aIsPassword);
   return NS_OK;
 }
-
-

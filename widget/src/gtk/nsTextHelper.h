@@ -20,15 +20,15 @@
 
 #include "nsITextWidget.h"
 #include "nsITextAreaWidget.h"
-#include "nsWindow.h"
+#include "nsWidget.h"
 
 /**
  * Base class for nsTextAreaWidget and nsTextWidget
  */
 
-class nsTextHelper : public nsWindow,
+class nsTextHelper : public nsWidget,
                      public nsITextAreaWidget,
-                     public nsITextWidget 
+                     public nsITextWidget
 {
 
 public:

@@ -19,14 +19,14 @@
 #ifndef nsListBox_h__
 #define nsListBox_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsIListBox.h"
 
 /**
  * Native Motif Listbox wrapper
  */
 
-class nsListBox :   public nsWindow,
+class nsListBox :   public nsWidget,
                     public nsIListWidget,
                     public nsIListBox
 {
@@ -50,7 +50,7 @@ public:
               nsWidgetInitData *aInitData = nsnull);
 
     NS_IMETHOD Create(nsNativeWidget aParent,
-              const nsRect &aRect, 
+              const nsRect &aRect,
               EVENT_CALLBACK aHandleEventFunction,
               nsIDeviceContext *aContext = nsnull,
               nsIAppShell *aAppShell = nsnull,

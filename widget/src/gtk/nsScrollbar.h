@@ -19,15 +19,15 @@
 #ifndef nsScrollbar_h__
 #define nsScrollbar_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 
 #include "nsIScrollbar.h"
 
 /**
- * Native Motif scrollbar wrapper. 
+ * Native Motif scrollbar wrapper.
  */
 
-class nsScrollbar : public nsWindow,
+class nsScrollbar : public nsWidget,
                     public nsIScrollbar
 {
 

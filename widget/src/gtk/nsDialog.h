@@ -19,13 +19,13 @@
 #ifndef nsDialog_h__
 #define nsDialog_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsIDialog.h"
 
 /**
  * Native Motif Dialog wrapper
  */
-class nsDialog :  public nsWindow,
+class nsDialog :  public nsWidget,
                   public nsIDialog
 {
 

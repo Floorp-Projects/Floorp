@@ -34,7 +34,7 @@
 //
 //-------------------------------------------------------------------------
 
-nsTextHelper::nsTextHelper() : nsWindow(), nsITextAreaWidget(), nsITextWidget()
+nsTextHelper::nsTextHelper() : nsWidget(), nsITextAreaWidget(), nsITextWidget()
 {
   mIsReadOnly = PR_FALSE;
   mIsPassword = PR_FALSE;
@@ -59,7 +59,7 @@ NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize) 
+NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize)
 {
 #if 0
   if (!mIsPassword) {
@@ -81,7 +81,7 @@ NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PR
 
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
-{ 
+{
 #if 0
   if (!mIsPassword) {
     NS_ALLOC_STR_BUF(buf, aText, 512);
@@ -105,7 +105,7 @@ NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
 
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize)
-{ 
+{
 #if 0
   if (!mIsPassword) {
     NS_ALLOC_STR_BUF(buf, aText, 512);
@@ -151,7 +151,7 @@ NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 NS_METHOD  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyFlag)
 {
 #if 0
-  NS_ASSERTION(nsnull != mWidget, 
+  NS_ASSERTION(nsnull != mWidget,
                "SetReadOnly - Widget is NULL, Create may not have been called!");
   aOldReadOnlyFlag = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag;
@@ -160,7 +160,7 @@ NS_METHOD  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldReadOnlyF
   return NS_OK;
 }
 
-  
+
 //-------------------------------------------------------------------------
 NS_METHOD nsTextHelper::SelectAll()
 {
@@ -223,7 +223,3 @@ NS_METHOD  nsTextHelper::GetCaretPosition(PRUint32& aPosition)
 #endif
   return NS_OK;
 }
-
-
-
-

@@ -17,7 +17,6 @@
  */
 
 #include "nsToolkit.h"
-#include "nsWindow.h"
 #include "nsGUIEvent.h"
 
 void RunPump(void* arg)
@@ -29,25 +28,25 @@ void RunPump(void* arg)
 // constructor
 //
 //-------------------------------------------------------------------------
-//int nsToolkitErrorHandler (Display * mydisplay, XErrorEvent * myerr) 
-//{ 
-//  char msg[80] ; 
+//int nsToolkitErrorHandler (Display * mydisplay, XErrorEvent * myerr)
+//{
+//  char msg[80] ;
 
-//  XGetErrorText (mydisplay, myerr->error_code, msg, 80) ; 
+//  XGetErrorText (mydisplay, myerr->error_code, msg, 80) ;
 //  fprintf (stderr, "-------------------------------------\n");
-//  fprintf (stderr, "Error code %s\n", msg) ; 
+//  fprintf (stderr, "Error code %s\n", msg) ;
 //  fprintf (stderr, "-------------------------------------\n");
   //exit() ;
 //  return 0;
-//} 
-  
+//}
+
 
 //-------------------------------------------------------------------------
 //
 // constructor
 //
 //-------------------------------------------------------------------------
-nsToolkit::nsToolkit() 
+nsToolkit::nsToolkit()
 {
   NS_INIT_REFCNT();
   /* XSetErrorHandler(nsToolkitErrorHandler); */

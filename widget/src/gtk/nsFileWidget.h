@@ -22,16 +22,16 @@
 #include "nsToolkit.h"
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
-#include "nsWindow.h"
+#include "nsWidget.h"
 
 /**
  * Native Motif FileSelector wrapper
  */
 
-class nsFileWidget : public nsWindow, public nsIFileWidget
+class nsFileWidget : public nsWidget, public nsIFileWidget
 {
   public:
-                            nsFileWidget(); 
+                            nsFileWidget();
     virtual                 ~nsFileWidget();
 
 
@@ -57,7 +57,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
                 nsWidgetInitData *aInitData = nsnull);
 
     // nsIWidget interface
-  
+
     NS_IMETHOD            Create( nsIWidget *aParent,
                                     nsString& aTitle,
                                     nsMode aMode,
@@ -83,7 +83,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
      nsString               mTitle;
      nsMode                 mMode;
      nsString               mFile;
-     PRUint32               mNumberOfFilters;  
+     PRUint32               mNumberOfFilters;
      const nsString*        mTitles;
      const nsString*        mFilters;
      nsString               mDefault;

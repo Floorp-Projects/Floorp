@@ -19,14 +19,14 @@
 #ifndef nsComboBox_h__
 #define nsComboBox_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsIComboBox.h"
 
 /**
  * Native Motif Listbox wrapper
  */
 
-class nsComboBox : public nsWindow,
+class nsComboBox : public nsWidget,
                    public nsIListWidget,
                    public nsIComboBox
 {
@@ -38,7 +38,7 @@ public:
     NS_IMETHOD_(nsrefcnt) AddRef();
     NS_IMETHOD_(nsrefcnt) Release();
     NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-   
+
     // nsIComboBox interface
     NS_IMETHOD      AddItemAt(nsString &aItem, PRInt32 aPosition);
     virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);
@@ -59,7 +59,7 @@ public:
                      nsWidgetInitData *aInitData = nsnull);
 
     NS_IMETHOD      Create(nsNativeWidget aParent,
-                     const nsRect &aRect, 
+                     const nsRect &aRect,
                      EVENT_CALLBACK aHandleEventFunction,
                      nsIDeviceContext *aContext,
                      nsIAppShell *aAppShell = nsnull,
@@ -82,7 +82,7 @@ protected:
     GtkWidget  *mPullDownMenu;
     GtkWidget  *mOptionMenu;
     PRBool  mMultiSelect;
-    GtkWidget  *mItems; 
+    GtkWidget  *mItems;
     int     mMaxNumItems;
     int     mNumItems;
 };
