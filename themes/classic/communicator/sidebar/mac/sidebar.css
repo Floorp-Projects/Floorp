@@ -31,6 +31,7 @@
     background-color      : #DDDDDD;
     padding               : 3px 5px 3px 6px;
     background-image      : url("chrome://communicator/skin/smallheader-bg.gif");
+    color                 : black;
   }
 
 .sidebar-header-text  

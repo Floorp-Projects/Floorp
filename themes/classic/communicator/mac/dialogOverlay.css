@@ -13,6 +13,7 @@
     padding               : 0px 0px 3px 0px;
     min-height            : 0px;
     background-image      : url(chrome://communicator/skin/smallheader-bg.gif);
+    color                 : black;
   }
 
 .box-smallheader-left 
@@ -42,6 +43,7 @@
     border-bottom         : 1px solid #FFFFFF;
     background-color      : #FFFFFF;
     background-image      : url(chrome://communicator/skin/smallheader-bg.gif);
+    color                 : black;
   }
 
 .box-header-header 
