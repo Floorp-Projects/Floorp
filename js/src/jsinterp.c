@@ -2223,6 +2223,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
 #if JS_HAS_IN_OPERATOR
           case JSOP_IN:
+            SAVE_SP(fp);
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval)) {
                 str = js_DecompileValueGenerator(cx, -1, rval, NULL);
@@ -2234,12 +2235,12 @@ js_Interpret(JSContext *cx, jsval *result)
                 ok = JS_FALSE;
                 goto out;
             }
-            sp--;
             obj = JSVAL_TO_OBJECT(rval);
-            FETCH_ELEMENT_ID(-1, id);
+            FETCH_ELEMENT_ID(-2, id);
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
             if (!ok)
                 goto out;
+            sp--;
             STORE_OPND(-1, BOOLEAN_TO_JSVAL(prop != NULL));
             if (prop)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
