@@ -65,21 +65,25 @@ NS_INTERFACE_MAP_END_THREADSAFE
 nsresult
 nsViewSourceChannel::Init(nsIURI* uri)
 {
-    nsresult rv;
+    mOriginalURI = uri;
 
     nsCAutoString path;
-    rv = uri->GetPath(path);
+    nsresult rv = uri->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIIOService> pService(do_GetIOService(&rv));
     if (NS_FAILED(rv)) return rv;
-   
+
     rv = pService->NewChannel(path, nsnull, nsnull, getter_AddRefs(mChannel));
+    if (NS_FAILED(rv))
+      return rv;
+ 
+    mChannel->SetOriginalURI(mOriginalURI);
     mHttpChannel = do_QueryInterface(mChannel);
     mCachingChannel = do_QueryInterface(mChannel);
     mUploadChannel = do_QueryInterface(mChannel);
     
-    return rv;
+    return NS_OK;
 }
 
 NS_METHOD
@@ -149,17 +153,17 @@ nsViewSourceChannel::Resume(void)
 NS_IMETHODIMP
 nsViewSourceChannel::GetOriginalURI(nsIURI* *aURI)
 {
-    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
-
-    return mChannel->GetOriginalURI(aURI);
+    NS_ASSERTION(aURI, "Null out param!");
+    *aURI = mOriginalURI;
+    NS_IF_ADDREF(*aURI);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsViewSourceChannel::SetOriginalURI(nsIURI* aURI)
 {
-    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
-
-    return mChannel->SetOriginalURI(aURI);
+    mOriginalURI = aURI;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -444,6 +448,12 @@ NS_IMETHODIMP
 nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
+    // The channel may have gotten redirected... Time to update our info
+    mChannel = do_QueryInterface(aRequest);
+    mHttpChannel = do_QueryInterface(aRequest);
+    mCachingChannel = do_QueryInterface(aRequest);
+    mUploadChannel = do_QueryInterface(aRequest);
+    
     if (mHttpChannel) {
       // we don't want view-source following Refresh: headers, so clear it
       mHttpChannel->SetResponseHeader(NS_LITERAL_CSTRING("Refresh"),
