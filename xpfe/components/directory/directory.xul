@@ -31,39 +31,41 @@
 
   <html:script src="directory.js" />
 
-  <tree id="tree" datasources="rdf:null" flex="1">
-    <template>
-      <treechildren>
-        <!-- We force the 'container="true"' onto the treeitem, even
-             though this _should_ be a value that is computed by the
-             template engine. We need to hack it this way because,
-             if we don't, the tree control will assume that the item
-             shouldn't have a twisty next to it -->
-        <treeitem uri="..." type="rdf:urn:http-index-format:File-Type" container="true">
-          <treerow>
-            <treecell class="filename" indent="true"
-                      value="rdf:urn:http-index-format:Filename"/>
+  <html:div flex="1">
+    <tree id="tree" datasources="rdf:null" style="height:100%;">
+      <template>
+        <treechildren>
+          <!-- We force the 'container="true"' onto the treeitem, even
+               though this _should_ be a value that is computed by the
+               template engine. We need to hack it this way because,
+               if we don't, the tree control will assume that the item
+               shouldn't have a twisty next to it -->
+          <treeitem uri="..." type="rdf:urn:http-index-format:File-Type" container="true">
+            <treerow>
+              <treecell class="filename" indent="true"
+                        value="rdf:urn:http-index-format:Filename"/>
 
-            <treecell value="rdf:urn:http-index-format:Content-Length" />
-            <treecell value="rdf:urn:http-index-format:Last-Modified" />
-          </treerow>
-        </treeitem>
-      </treechildren>
-    </template>
+              <treecell value="rdf:urn:http-index-format:Content-Length" />
+              <treecell value="rdf:urn:http-index-format:Last-Modified" />
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </template>
 
-    <treehead>
-      <treerow>
-        <treecell>&directoryWindow.filename.label;</treecell>
-        <treecell>&directoryWindow.contentlength.label;</treecell>
-        <treecell>&directoryWindow.lastmodified.label;</treecell>
-      </treerow>
-    </treehead>
+      <treehead>
+        <treerow>
+          <treecell>&directoryWindow.filename.label;</treecell>
+          <treecell>&directoryWindow.contentlength.label;</treecell>
+          <treecell>&directoryWindow.lastmodified.label;</treecell>
+        </treerow>
+      </treehead>
 
-    <!-- Create the treechildren here so we can attach event handlers
-         at this level (rather than at the tree level -->
-    <treechildren
-        onclick="OnClick(event);"
-        ondblclick="OnDblClick(event);" />
+      <!-- Create the treechildren here so we can attach event handlers
+           at this level (rather than at the tree level -->
+      <treechildren
+          onclick="OnClick(event);"
+          ondblclick="OnDblClick(event);" />
 
-  </tree>
+    </tree>
+  </html:div>
 </window>
