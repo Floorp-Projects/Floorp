@@ -105,7 +105,6 @@ MakeXpiFile("mail");
 MakeXpiFile("chatzilla");
 MakeXpiFile("deflenus");
 MakeXpiFile("langenus");
-MakeXpiFile("langende");
 
 MakeUninstall();
 MakeConfigFile();

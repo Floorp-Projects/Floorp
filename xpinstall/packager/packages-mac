@@ -8,12 +8,6 @@
 ; ; file comment 
 ; 
 
-[langende]
-;
-; en-DE 
-viewer:defaults:profile:en-DE:*
-viewer:chrome:locales:en-DE:*
-
 [langenus]
 ;
 ; en-US 

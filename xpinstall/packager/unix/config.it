@@ -151,16 +151,6 @@ $InstallSize$:langenus
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 
-[Component7]
-Description Short=English German Language Pack
-; *** LOCALIZE ME BABY ***
-Description Long=English German Language Pack
-Archive=langende.xpi
-$InstallSize$:langende
-Attributes=SELECTED|INVISIBLE
-URL0=$URLPath$
-
-
 ;-------------------------------------------------------------------------
 [Dialog Start Install]
 ;-------------------------------------------------------------------------

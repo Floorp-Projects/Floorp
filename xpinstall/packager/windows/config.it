@@ -182,7 +182,6 @@ C3=Component3
 C4=Component4
 C5=Component5
 C6=Component6
-C7=Component7
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -202,7 +201,6 @@ C3=Component3
 C4=Component4
 C5=Component5
 C6=Component6
-C7=Component7
 
 ;[Setup Type3]
 ;Description Short=C&ustom
@@ -424,22 +422,6 @@ $InstallSizeArchive$:langenus.xpi
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|INVISIBLE
 Parameter=
-
-[Component7]
-Description Short=English-German language pack
-;*** LOCALIZE ME BABY ***
-Description Long=English-German language pack
-Archive=langende.xpi
-$InstallSize$:langende
-$InstallSizeSystem$
-$InstallSizeArchive$:langende.xpi
-;Dependency0=
-; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED|INVISIBLE
-Parameter=
-
 
 
 [Core]

@@ -15,12 +15,6 @@ bin\defaults\profile\en-US\*
 bin\chrome\locales\en-US.jar
 bin\searchplugins\*
 
-[langende]
-;
-; en-DE 
-bin\defaults\profile\en-DE\*
-bin\chrome\locales\en-DE\*
-
 [deflenus]
 ;
 ; default files for en-US

@@ -104,17 +104,6 @@ Domain0=http://sweetlou.mcom.com/
 Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
 Attributes=SELECTED|INVISIBLE
 
-[Component6]
-Description Short=English German Language Pack
-; *** LOCALIZE ME BABY ***
-Description Long=English German Language Pack
-Archive=langende.xpi
-Install Size=(#langende_size)
-Domain0=http://sweetlou.mcom.com/
-Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
-Attributes=SELECTED|INVISIBLE
-
-
 [Dialog Start Install]
 ; *** LOCALIZE ME BABY ***
 Message0=Click the Install button to download and install the selected components.  
