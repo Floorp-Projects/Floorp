@@ -151,6 +151,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
   mNeedsLayout = PR_TRUE;
   UpdateAttributes(*aPresContext);
 
+#if 0
   // reflow
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -160,6 +161,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIReflowCommand::StyleChanged);
   if (NS_SUCCEEDED(rv)) 
     shell->AppendReflowCommand(reflowCmd);
+#endif
 
   // redraw
   mRenderer.Redraw();
