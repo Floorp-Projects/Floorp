@@ -15,7 +15,7 @@
     #(
         <$ExeCA
 	    EXE="[INSTALLDIR]setup.exe"
-	    Args="-ma -ira -nosplash -setDefaultBrowser"
+	    Args="-ms -nosplash -setDefaultBrowser"
 	    Seq="6401" ;; Run this between PublishProduct and InstallFinalize
 	    Type="AnyRC"
 	>
