@@ -21,6 +21,7 @@
 #include "rdf.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFNode.h"
+#include "nsIRDFDataSource.h"
 #include "nsString.h"
 
 // this is used for notification of observers using nsVoidArray
@@ -31,23 +32,23 @@ typedef struct _nsMsgRDFNotification {
 } nsMsgRDFNotification;
 
 //Some property declarations
-#define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Subject);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Sender);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Date);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Status);
+#define NC_RDF_SUBJECT				"http://home.netscape.com/NC-rdf#Subject"
+#define NC_RDF_SENDER				"http://home.netscape.com/NC-rdf#Sender"
+#define NC_RDF_DATE					"http://home.netscape.com/NC-rdf#Date"
+#define NC_RDF_STATUS				"http://home.netscape.com/NC-rdf#Status"
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, MessageChild);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, SpecialFolder);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, TotalMessages);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, TotalUnreadMessages);
+#define NC_RDF_CHILD				"http://home.netscape.com/NC-rdf#child"
+#define NC_RDF_MESSAGECHILD			"http://home.netscape.com/NC-rdf#MessageChild"
+#define NC_RDF_NAME					"http://home.netscape.com/NC-rdf#Name"
+#define NC_RDF_FOLDER				"http://home.netscape.com/NC-rdf#Folder"
+#define NC_RDF_SPECIALFOLDER		"http://home.netscape.com/NC-rdf#SpecialFolder"
+#define NC_RDF_TOTALMESSAGES		"http://home.netscape.com/NC-rdf#TotalMessages"
+#define NC_RDF_TOTALUNREADMESSAGES	"http://home.netscape.com/NC-rdf#TotalUnreadMessages"
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Delete);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, NewFolder);
+#define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
+#define NC_RDF_NEWFOLDER			"http://home.netscape.com/NC-rdf#NewFolder"
+#define NC_RDF_GETNEWMESSAGES		"http://home.netscape.com/NC-rdf#GetNewMessages"
 
 
 //Returns PR_TRUE if r1 is equal to r2
@@ -63,4 +64,11 @@ nsresult createNode(nsString& str, nsIRDFNode **node);
 
 //Given a PRUint32, create an nsiIRDFNode.
 nsresult createNode(PRUint32 value, nsIRDFNode **node);
+
+//Has Assertion for a datasource that will just call GetTarget on property.  When all of our 
+//datasource derive from our datasource baseclass, this should be moved there and the first
+//parameter will no longer be needed.
+nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* folderResource,
+							   nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion);
+
 

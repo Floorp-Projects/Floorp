@@ -101,3 +101,28 @@ nsresult createNode(PRUint32 value, nsIRDFNode **node)
 	rv = createNode(str, node);
 	return rv;
 }
+
+nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* folderResource,
+							   nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion)
+{
+	nsresult rv;
+	if(!hasAssertion)
+		return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsIRDFNode> currentTarget;
+
+	rv = dataSource->GetTarget(folderResource, property,tv, getter_AddRefs(currentTarget));
+	if(NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIRDFLiteral> value1(do_QueryInterface(target));
+		nsCOMPtr<nsIRDFLiteral> value2(do_QueryInterface(currentTarget));
+		if(value1 && value2)
+			//If the two values are equal then it has this assertion
+			rv = value1->EqualsLiteral(value2, hasAssertion);
+	}
+	else
+		rv = NS_NOINTERFACE;
+
+	return rv;
+
+}

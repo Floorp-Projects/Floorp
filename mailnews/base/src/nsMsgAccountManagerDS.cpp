@@ -143,8 +143,8 @@ nsMsgAccountManagerDataSource::Init(const char *uri)
     }
     
     if (! kNC_Child) {
-      getRDFService()->GetResource(kURINC_child, &kNC_Child);
-      getRDFService()->GetResource(kURINC_Name, &kNC_Name);
+      getRDFService()->GetResource(NC_RDF_CHILD, &kNC_Child);
+      getRDFService()->GetResource(NC_RDF_NAME, &kNC_Name);
       getRDFService()->GetResource(kURINC_Account, &kNC_Account);
       getRDFService()->GetResource(kURINC_Server, &kNC_Server);
       getRDFService()->GetResource(kURINC_Identity, &kNC_Identity);

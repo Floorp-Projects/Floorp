@@ -118,11 +118,11 @@ NS_IMETHODIMP nsMessageViewDataSource::Init(const char* uri)
 	mRDFService->RegisterDataSource(this, PR_FALSE);
 
 	if (! kNC_MessageChild) {
-		mRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
-		mRDFService->GetResource(kURINC_Subject,		&kNC_Subject);
-		mRDFService->GetResource(kURINC_Date,			&kNC_Date);
-		mRDFService->GetResource(kURINC_Sender,			&kNC_Sender);
-		mRDFService->GetResource(kURINC_Status		,   &kNC_Status);
+		mRDFService->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
+		mRDFService->GetResource(NC_RDF_SUBJECT,		&kNC_Subject);
+		mRDFService->GetResource(NC_RDF_DATE,			&kNC_Date);
+		mRDFService->GetResource(NC_RDF_SENDER,			&kNC_Sender);
+		mRDFService->GetResource(NC_RDF_STATUS		,   &kNC_Status);
 	}
 	mInitialized = PR_TRUE;
 
