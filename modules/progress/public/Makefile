@@ -17,6 +17,8 @@
 
 DEPTH	= ../../..
 
+include $(DEPTH)/config/config.mk
+
 MODULE	= progress
 
 EXPORTS	= pw_public.h
