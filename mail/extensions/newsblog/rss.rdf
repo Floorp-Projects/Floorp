@@ -22,7 +22,7 @@
           <NC:nsIMsgIncomingServer>
             <NC:hostName>&rss.hostName;</NC:hostName>
             <NC:type>rss</NC:type>
-            <NC:biffMinutes>45</NC:biffMinutes>
+            <NC:biffMinutes>100</NC:biffMinutes>
             <NC:username>nobody</NC:username>
           </NC:nsIMsgIncomingServer>
         </NC:incomingServer>
