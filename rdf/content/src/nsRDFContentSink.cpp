@@ -19,8 +19,8 @@
 
 /*
 
-  This is an NGLayout-style content sink that knows how to build an
-  RDF content model from XML-serialized RDF.
+  An implementation for an NGLayout-style content sink that knows how
+  to build an RDF content model from XML-serialized RDF.
 
   For more information on RDF, see http://www.w3.org/TR/WDf-rdf-syntax.
 

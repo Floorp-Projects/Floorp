@@ -17,6 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  Class declaration for a "pseudo content element" that acts as a
+  proxy to the RDF graph.
+
+ */
+
 #ifndef nsRDFElement_h___
 #define nsRDFElement_h___
 

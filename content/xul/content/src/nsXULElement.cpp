@@ -19,7 +19,8 @@
 
 /*
 
-  A "pseudo content element" that acts as a proxy to RDF.
+  Implementation for a "pseudo content element" that acts as a proxy
+  to the RDF graph.
 
   Unfortunately, there is no one right way to transform RDF into a
   document model. Ideally, one would like to use something like XSL to
