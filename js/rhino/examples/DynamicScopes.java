@@ -79,7 +79,7 @@ public class DynamicScopes {
         // Initialize the standard objects (Object, Function, etc.)
         // This must be done before scripts can be executed. The call
         // returns a new scope that we will share.
-        ScriptableObject scope = cx.initStandardObjects(true);
+        ScriptableObject scope = cx.initStandardObjects(null, true);
 
         // Now we can evaluate a script and functions will be compiled to
         // use dynamic scope if the Context is so initialized.
