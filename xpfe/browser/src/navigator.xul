@@ -30,6 +30,10 @@
     if ( window.frames[0].frames[1] ) {
         dump("Setting content window\n");
         appCore.setContentWindow( window.frames[0].frames[1] );
+// I have spoken to David. This method s'dn't cause any problems in DOM
+// anymore. This is needed now until we replace it with better ways of 
+// achieving this functionality.
+        appCore.loadInitialPage();
     } else {
         // Try again.
         dump("Scheduling later attempt to set content window\n");
