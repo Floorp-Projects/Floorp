@@ -138,13 +138,13 @@ AdjustEmbeddingLevel(nsIFrame* aFrame,
   NS_ASSERTION(text, "Couldn't get text StyleData in nsBidiPresUtils::AdjustEmbeddingLevel");
 
   if (NS_STYLE_UNICODE_BIDI_OVERRIDE == text->mUnicodeBidi) {
-    const nsStyleDisplay* display;
+    const nsStyleVisibility* vis;
 
-    aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+    aFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
           
     NS_ASSERTION(text, "Couldn't get display StyleData in nsBidiPresUtils::AdjustEmbeddingLevel");
     
-    if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
+    if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
       // ensure embedding level is odd
       aEmbeddingLevel = (aEmbeddingLevel - 1) | 0x01;
     }
@@ -178,14 +178,14 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
     mSuccess = NS_OK;
     return mSuccess;
   }
-  const nsStyleDisplay* display;
-  aBlockFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  const nsStyleVisibility* vis;
+  aBlockFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
 
   PRInt32 runCount;
   PRUint8 embeddingLevel;
 
   nsBidiLevel paraLevel = embeddingLevel =
-    (NS_STYLE_DIRECTION_RTL == display->mDirection)
+    (NS_STYLE_DIRECTION_RTL == vis->mDirection)
     ? NSBIDI_RTL : NSBIDI_LTR;
 
   mSuccess = mBidiEngine->SetPara(mBuffer.GetUnicode(), bufferLength, paraLevel, nsnull);
@@ -366,14 +366,22 @@ nsBidiPresUtils::InitLogicalArray(nsIPresContext* aPresContext,
       // be ensured by nsBidiPresUtils::FormatUnicodeText (which would reverse "HEBREW"
       // due to inconsistency between its Bidi category (U_RIGHT_TO_LEFT) and the
       // parity of its EL (even).
-      if (NS_STYLE_DIRECTION_RTL == display->mExplicitDirection) {
-        rv = NS_NewDirectionalFrame(&directionalFrame, kRLE);
-      }
-      else if (NS_STYLE_DIRECTION_LTR == display->mExplicitDirection) {
-        rv = NS_NewDirectionalFrame(&directionalFrame, kLRE);
-      }
-      if (NS_SUCCEEDED(rv) ) {
-        mLogicalFrames.AppendElement(directionalFrame);
+      nsCOMPtr<nsIStyleContext> styleContext;
+      frame->GetStyleContext(getter_AddRefs(styleContext));
+      const nsStyleVisibility* vis;
+      frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
+      PRUint32 bits;
+      styleContext->GetStyleBits(&bits);
+      if (bits & NS_STYLE_INHERIT_VISIBILITY) {
+        if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+          rv = NS_NewDirectionalFrame(&directionalFrame, kRLE);
+        }
+        else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
+          rv = NS_NewDirectionalFrame(&directionalFrame, kLRE);
+        }
+        if (NS_SUCCEEDED(rv) ) {
+          mLogicalFrames.AppendElement(directionalFrame);
+        }
       }
     } // if (aAddMarkers)
 

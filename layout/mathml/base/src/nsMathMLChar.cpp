@@ -1295,16 +1295,17 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // Set default font and get the default bounding metrics
   // mStyleContext is a leaf context used only when stretching happens.
   // For the base size, the default font should come from the parent context
-  nsStyleFont font;
   nsAutoString fontName;
   nsCOMPtr<nsIStyleContext> parentContext(dont_AddRef(mStyleContext->GetParent()));
-  parentContext->GetStyle(eStyleStruct_Font, font);
+  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+    parentContext->GetStyleData(eStyleStruct_Font));
+  nsFont theFont(font->mFont);
   PRUnichar uchar = mData[0];
   if (kSqrChar == uchar) {                        // Special to the sqrt char. Due to
     fontName.Assign(NS_LITERAL_STRING("CMSY10")); // assumptions in the sqrt code, we need
-    SetFirstFamily(font.mFont, fontName);         // to force precedence on this TeX font
+    SetFirstFamily(theFont, fontName);         // to force precedence on this TeX font
   }
-  aRenderingContext.SetFont(font.mFont);
+  aRenderingContext.SetFont(theFont);
   rv = aRenderingContext.GetBoundingMetrics(mData.GetUnicode(),
                                             PRUint32(mData.Length()),
                                             mBoundingMetrics);
@@ -1366,7 +1367,9 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   nsBoundingMetrics bestbm = mBoundingMetrics;
 
   // use our stretchy style context now that stretching is in progress
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
+  font = NS_STATIC_CAST(const nsStyleFont*,
+    mStyleContext->GetStyleData(eStyleStruct_Font));
+  theFont = font->mFont;
 
   // initialize the search list for this char
   PRBool alreadyCSS = PR_FALSE;
@@ -1377,7 +1380,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   gGlyphTableList->GetPreferredListAt(aPresContext, t, &tableList, &count);
   if (!count) {
     // get a list that attempts to honor the css font-family
-    gGlyphTableList->GetListFor(aPresContext, this, &font.mFont, &tableList);
+    gGlyphTableList->GetListFor(aPresContext, this, &theFont, &tableList);
     alreadyCSS = PR_TRUE;
   }
 
@@ -1396,8 +1399,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       size = 2;
     }
     glyphTable->GetPrimaryFontName(fontName);
-    SetFirstFamily(font.mFont, fontName);
-    aRenderingContext.SetFont(font.mFont);
+    SetFirstFamily(theFont, fontName);
+    aRenderingContext.SetFont(theFont);
 #ifdef NOISY_SEARCH
     char str[50];
     fontName.ToCString(str, sizeof(str));
@@ -1406,7 +1409,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     ch = glyphTable->BigOf(aPresContext, this, size++);
     while (ch) {
       NS_ASSERTION(ch != uchar, "glyph table incorrectly set -- duplicate found");
-      rv = glyphTable->GetBoundingMetrics(aRenderingContext, font.mFont, ch, bm);
+      rv = glyphTable->GetBoundingMetrics(aRenderingContext, theFont, ch, bm);
       if (NS_SUCCEEDED(rv)) {
         charSize = (isVertical)
                  ? bm.ascent + bm.descent
@@ -1455,7 +1458,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   if (!count && !alreadyCSS) {
     // we didn't do this earlier... so we need to do it here:
     // get a list that attempts to honor the css font-family
-    gGlyphTableList->GetListFor(aPresContext, this, &font.mFont, &tableList);
+    gGlyphTableList->GetListFor(aPresContext, this, &theFont, &tableList);
   }
 
 #ifdef NOISY_SEARCH
@@ -1493,8 +1496,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 
     // See if the parts of this table fit in the desired space ///////////////////////
     glyphTable->GetPrimaryFontName(fontName);
-    SetFirstFamily(font.mFont, fontName);
-    aRenderingContext.SetFont(font.mFont);
+    SetFirstFamily(theFont, fontName);
+    aRenderingContext.SetFont(theFont);
     // Compute the bounding metrics of all partial glyphs
     PRInt32 i;
     nsGlyphCode chdata[4];
@@ -1514,7 +1517,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         bm.Clear();
       }
       else {
-        rv = glyphTable->GetBoundingMetrics(aRenderingContext, font.mFont, ch, bm);
+        rv = glyphTable->GetBoundingMetrics(aRenderingContext, theFont, ch, bm);
         if (NS_FAILED(rv)) {
           // stop if we failed to compute the bounding metrics of a part.
           NS_WARNING("GetBoundingMetrics failed");
@@ -1696,41 +1699,44 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     styleContext = parentContext;
   }
 
-  nsStyleDisplay display;
-  nsStyleColor color;
-  styleContext->GetStyle(eStyleStruct_Display, display);
-  styleContext->GetStyle(eStyleStruct_Color, color);
+  const nsStyleVisibility *visib = NS_STATIC_CAST(const nsStyleVisibility*,
+    styleContext->GetStyleData(eStyleStruct_Visibility));
 
-  if (display.IsVisible() && NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
+  if (visib->IsVisible() && NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
   {
     if (mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = 0; //aForFrame->GetSkipSides();
-      nsStyleBorder border;
-      styleContext->GetStyle(eStyleStruct_Border, border);
-      nsStyleOutline outline;
-      styleContext->GetStyle(eStyleStruct_Outline, outline);
+      const nsStyleBorder *border = NS_STATIC_CAST(const nsStyleBorder*,
+        styleContext->GetStyleData(eStyleStruct_Border));
+      const nsStyleOutline *outline = NS_STATIC_CAST(const nsStyleOutline*,
+        styleContext->GetStyleData(eStyleStruct_Outline));
+      const nsStyleBackground *backg = NS_STATIC_CAST(const nsStyleBackground*,
+        styleContext->GetStyleData(eStyleStruct_Background));
 
       nsRect rect(mRect); //0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
-                                      aDirtyRect, rect, color, border, 0, 0);
+                                      aDirtyRect, rect, *backg, *border, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
-                                  aDirtyRect, rect, border, styleContext, skipSides);
+                                  aDirtyRect, rect, *border, styleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, aForFrame,
-                                   aDirtyRect, rect, border, outline, styleContext, 0);
+                                   aDirtyRect, rect, *border, *outline, styleContext, 0);
     }
   }
 
-  if (display.IsVisible() && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
+  if (visib->IsVisible() && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
   {
     // Set color ...
-    aRenderingContext.SetColor(color.mColor);
+    const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
+      styleContext->GetStyleData(eStyleStruct_Color));
+    aRenderingContext.SetColor(color->mColor);
 
-    nsStyleFont font;
     nsAutoString fontName;
     nscoord fontAscent;
     nsCOMPtr<nsIFontMetrics> fm;
-    styleContext->GetStyle(eStyleStruct_Font, font);
+    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+      styleContext->GetStyleData(eStyleStruct_Font));
+    nsFont theFont(font->mFont);
 
     if (NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
       // normal drawing if there is nothing special about this char ...
@@ -1739,9 +1745,9 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
       PRUnichar uchar = mData[0];
       if ((1 == len) && (kSqrChar == uchar)) {        // Special to the sqrt char. Due to
         fontName.Assign(NS_LITERAL_STRING("CMSY10")); // assumptions in the sqrt code, we need
-        SetFirstFamily(font.mFont, fontName);         // to force precedence on this TeX font
+        SetFirstFamily(theFont, fontName);        // to force precedence on this TeX font
       }
-      aRenderingContext.SetFont(font.mFont);
+      aRenderingContext.SetFont(theFont);
       aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
       fm->GetMaxAscent(fontAscent);
 //printf("Painting %04X like a normal char\n", mData[0]);
@@ -1752,15 +1758,15 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     else {
       // Set the stretchy font and grab some metrics to adjust the placements ...
       mGlyphTable->GetPrimaryFontName(fontName);
-      SetFirstFamily(font.mFont, fontName);
-      aRenderingContext.SetFont(font.mFont);
+      SetFirstFamily(theFont, fontName);
+      aRenderingContext.SetFont(theFont);
       aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
       fm->GetMaxAscent(fontAscent);
       // if there is a glyph of appropriate size, paint that glyph
       if (mGlyph) {
 //printf("Painting %04X with a glyph of appropriate size\n", mData[0]);
 //aRenderingContext.SetColor(NS_RGB(0,0,255));
-        mGlyphTable->DrawGlyph(aRenderingContext, font.mFont, fontAscent, mGlyph,
+        mGlyphTable->DrawGlyph(aRenderingContext, theFont, fontAscent, mGlyph,
                                mRect.x, mRect.y - (fontAscent - mBoundingMetrics.ascent));
       }
       else { // paint by parts
@@ -1776,10 +1782,10 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
         }
 //aRenderingContext.SetColor(NS_RGB(0,255,0));
         if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
-          rv = PaintVertically(aPresContext, aRenderingContext, font.mFont, fontAscent,
+          rv = PaintVertically(aPresContext, aRenderingContext, theFont, fontAscent,
                                styleContext, mGlyphTable, this, mRect);
         else if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-          rv = PaintHorizontally(aPresContext, aRenderingContext, font.mFont, fontAscent,
+          rv = PaintHorizontally(aPresContext, aRenderingContext, theFont, fontAscent,
                                  styleContext, mGlyphTable, this, mRect);
       }
     }

@@ -185,6 +185,12 @@ void nsCSSValue::SetInheritValue(void)
   mUnit = eCSSUnit_Inherit;
 }
 
+void nsCSSValue::SetInitialValue(void)
+{
+  Reset();
+  mUnit = eCSSUnit_Initial;
+}
+
 void nsCSSValue::SetNoneValue(void)
 {
   Reset();
@@ -281,6 +287,7 @@ void nsCSSValue::AppendToString(nsAWritableString& aBuffer,
     case eCSSUnit_Null:         break;
     case eCSSUnit_Auto:         aBuffer.Append(NS_LITERAL_STRING("auto"));     break;
     case eCSSUnit_Inherit:      aBuffer.Append(NS_LITERAL_STRING("inherit"));  break;
+    case eCSSUnit_Initial:      aBuffer.Append(NS_LITERAL_STRING("initial"));  break;
     case eCSSUnit_None:         aBuffer.Append(NS_LITERAL_STRING("none"));     break;
     case eCSSUnit_Normal:       aBuffer.Append(NS_LITERAL_STRING("normal"));   break;
     case eCSSUnit_String:       break;
@@ -310,6 +317,7 @@ void nsCSSValue::AppendToString(nsAWritableString& aBuffer,
     case eCSSUnit_CapHeight:    aBuffer.Append(NS_LITERAL_STRING("cap"));  break;
     case eCSSUnit_Char:         aBuffer.Append(NS_LITERAL_STRING("ch"));   break;
     case eCSSUnit_Pixel:        aBuffer.Append(NS_LITERAL_STRING("px"));   break;
+    case eCSSUnit_Proportional: aBuffer.Append(NS_LITERAL_STRING("*"));    break;
     case eCSSUnit_Degree:       aBuffer.Append(NS_LITERAL_STRING("deg"));  break;
     case eCSSUnit_Grad:         aBuffer.Append(NS_LITERAL_STRING("grad")); break;
     case eCSSUnit_Radian:       aBuffer.Append(NS_LITERAL_STRING("rad"));  break;

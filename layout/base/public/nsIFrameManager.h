@@ -106,6 +106,7 @@ public:
   NS_IMETHOD ClearPlaceholderFrameMap() = 0;
 
   // Mapping undisplayed content
+  NS_IMETHOD GetUndisplayedContent(nsIContent* aContent, nsIStyleContext** aStyleContext)=0;
   NS_IMETHOD SetUndisplayedContent(nsIContent* aContent, nsIStyleContext* aStyleContext) = 0;
   NS_IMETHOD SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext, 
                                     nsIContent* aParentContent) = 0;

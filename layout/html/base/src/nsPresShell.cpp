@@ -1187,7 +1187,7 @@ protected:
   nsCOMPtr<nsITimer> mPaintSuppressionTimer; // This timer controls painting suppression.  Until it fires
                                              // or all frames are constructed, we won't paint anything but
                                              // our <body> background and scrollbars.
-#define PAINTLOCK_EVENT_DELAY 1000 // 1000 ms.  This is actually pref-controlled, but we use this
+#define PAINTLOCK_EVENT_DELAY 1200 // 1200 ms.  This is actually pref-controlled, but we use this
                                    // value if we fail to get the pref for any reason.
 
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell); // A callback for the timer.
@@ -1490,6 +1490,9 @@ PresShell::~PresShell()
     mFrameManager->Destroy();
     NS_RELEASE(mFrameManager);
   }
+
+  // Let the style set do its cleanup.
+  mStyleSet->Shutdown();
 
   // We hold a reference to the pres context, and it holds a weak link back
   // to us. To avoid the pres context having a dangling reference, set its 
@@ -2547,8 +2550,6 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       mStyleSet->ConstructRootFrame(mPresContext, root, rootFrame);
       mFrameManager->SetRootFrame(rootFrame);
     }
-
-    CheckForFocus(mDocument);
 
     // Have the style sheet processor construct frame for the root
     // content object down
@@ -4486,6 +4487,8 @@ PresShell::UnsuppressAndInvalidate()
     rootFrame->GetRect(rect);
     ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
   }
+
+  CheckForFocus(mDocument);
 }
 
 NS_IMETHODIMP
@@ -5177,14 +5180,12 @@ SetClipRect(nsIRenderingContext& aRenderingContext, nsIFrame* aFrame)
   PRBool clipState;
   const nsStyleDisplay* display;
   aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
-  const nsStylePosition* position;
-  aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) position);
-
+  
   // 'clip' only applies to absolutely positioned elements, and is
   // relative to the element's border edge. 'clip' applies to the entire
   // element: border, padding, and content areas, and even scrollbars if
   // there are any.
-  if (position->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT)) {
+  if (display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT)) {
     nsSize  size;
 
     // Start with the 'auto' values and then factor in user specified values

@@ -262,9 +262,9 @@ nsImageControlFrame::Init(nsIPresContext*  aPresContext,
     viewMan->InsertChild(parView, view, 0);
     SetView(aPresContext, view);
 
-    const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleVisibility* vis = (const nsStyleVisibility*) mStyleContext->GetStyleData(eStyleStruct_Visibility);
     // set the opacity
-    viewMan->SetViewOpacity(view, color->mOpacity);
+    viewMan->SetViewOpacity(view, vis->mOpacity);
   }
 
   return rv;
@@ -433,12 +433,9 @@ nsImageControlFrame::GetCursor(nsIPresContext* aPresContext,
 {
   // Use style defined cursor if one is provided, otherwise when
   // the cursor style is "auto" we use the pointer cursor.
-  const nsStyleColor* styleColor;
-  GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
-  NS_ASSERTION(styleColor,"null color style struct");
-
-  if (styleColor) {
-    aCursor = styleColor->mCursor;
+  const nsStyleUserInterface* ui = (const nsStyleUserInterface*) mStyleContext->GetStyleData(eStyleStruct_UserInterface);
+  if (ui) {
+    aCursor = ui->mCursor;
     if (NS_STYLE_CURSOR_AUTO == aCursor) {
       aCursor = NS_STYLE_CURSOR_POINTER;
     }

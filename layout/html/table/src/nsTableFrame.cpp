@@ -26,7 +26,6 @@
 #include "nsTableBorderCollapser.h"
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsCellMap.h"
@@ -660,6 +659,9 @@ PRBool nsTableFrame::HasGroupRules() const
 // this won't work until bug 12948 is resolved and col groups are considered 
 void nsTableFrame::ProcessGroupRules(nsIPresContext* aPresContext)
 {
+#if 0
+  // The RULES code below has been disabled because collapsing borders have been disabled 
+  // and RULES depend on collapsing borders
   PRInt32 numCols = GetColCount();
 
   // process row groups
@@ -682,18 +684,16 @@ void nsTableFrame::ProcessGroupRules(nsIPresContext* aPresContext)
           if (originates) {
             nsCOMPtr<nsIStyleContext> styleContext;
             cell->GetStyleContext(getter_AddRefs(styleContext));
-            {
-              nsMutableStyleBorder border(styleContext);
-              if (rowX == startRow) { 
-                border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-              }
-              else if (rowX == endRow) { 
-                border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-              }
-              else {
-                border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-                border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-              }
+            nsStyleBorder* border = (nsStyleBorder*)styleContext->GetMutableStyleData(eStyleStruct_Border);
+            if (rowX == startRow) { 
+              border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+            }
+            else if (rowX == endRow) { 
+              border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+            }
+            else {
+              border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+              border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
             }
             styleContext->RecalcAutomaticData(aPresContext);
           }
@@ -702,6 +702,7 @@ void nsTableFrame::ProcessGroupRules(nsIPresContext* aPresContext)
     }
     NS_IF_RELEASE(frameType);
   }
+#endif
 }
 
 
@@ -1444,13 +1445,13 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
 {
   // table paint code is concerned primarily with borders and bg color
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    const nsStyleDisplay* disp =
-      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisibleOrCollapsed()) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (vis->IsVisibleOrCollapsed()) {
       const nsStyleBorder* border =
         (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-      const nsStyleColor* color =
-        (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleBackground* color =
+        (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
         
@@ -2065,10 +2066,10 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
                                           const nscoord& aYTotalOffset,
                                           nscoord& aYGroupOffset, PRInt32& aRowX)
 {
-  const nsStyleDisplay* groupDisplay;
-  aRowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
+  const nsStyleVisibility* groupVis;
+  aRowGroupFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)groupVis));
   
-  PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupDisplay->mVisible);
+  PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   nsIFrame* rowFrame;
   aRowGroupFrame->FirstChild(aPresContext, nsnull, &rowFrame);
 
@@ -2076,9 +2077,11 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
     const nsStyleDisplay* rowDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
+      const nsStyleVisibility* rowVis;
+      rowFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)rowVis));
       nsRect rowRect;
       rowFrame->GetRect(rowRect);
-      if (collapseGroup || (NS_STYLE_VISIBILITY_COLLAPSE == rowDisplay->mVisible)) {
+      if (collapseGroup || (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible)) {
         aYGroupOffset += rowRect.height;
         rowRect.height = 0;
         rowFrame->SetRect(aPresContext, rowRect);
@@ -2179,9 +2182,10 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
   PRInt32 direction = (groupIter.IsLeftToRight()) ? 1 : -1; 
   // iterate over the col groups
   while (nsnull != groupFrame) {
-    const nsStyleDisplay* groupDisplay;
-    groupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
-    PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupDisplay->mVisible);
+    const nsStyleVisibility* groupVis;
+    groupFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)groupVis));
+    
+    PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
     nsTableIterator colIter(aPresContext, *groupFrame, eTableDIR);
     nsIFrame* colFrame = colIter.First();
     // iterate over the cols in the col group
@@ -2189,7 +2193,9 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
       const nsStyleDisplay* colDisplay;
       colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
       if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
-        PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colDisplay->mVisible);
+        const nsStyleVisibility* colVis;
+        colFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)colVis));
+        PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
         PRInt32 colWidth = GetColumnWidth(colX);
         if (collapseGroup || collapseCol) {
           xOffset += colWidth + cellSpacingX;
@@ -3651,8 +3657,8 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBord
   aBorderStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_BG_OUTSET);
 
   nsIStyleContext* styleContext = mStyleContext; 
-  const nsStyleColor* colorData = (const nsStyleColor*)
-    styleContext->GetStyleData(eStyleStruct_Color);
+  const nsStyleBackground* colorData = (const nsStyleBackground*)
+    styleContext->GetStyleData(eStyleStruct_Background);
 
   // Look until we find a style context with a NON-transparent background color
   while (styleContext) {
@@ -3661,7 +3667,7 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBord
       styleContext = styleContext->GetParent();
       if (temp != mStyleContext)
         NS_RELEASE(temp);
-      colorData = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
+      colorData = (const nsStyleBackground*)styleContext->GetStyleData(eStyleStruct_Background);
     }
     else {
       break;
@@ -3707,44 +3713,6 @@ PRBool nsTableFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, 
 
 void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
 {
-#if 0
-  // Check to see if the table has either cell padding or 
-  // Cell spacing defined for the table. If true, then
-  // this setting overrides any specific border, margin or 
-  // padding information in the cell. If these attributes
-  // are not defined, the the cells attributes are used
-  
-  nsHTMLValue padding_value;
-  nsHTMLValue spacing_value;
-  nsHTMLValue border_value;
-
-
-  nsresult border_result;
-
-  nscoord   padding = 0;
-  nscoord   spacing = 0;
-  nscoord   border  = 1;
-
-  float     p2t = aPresContext->GetPixelsToTwips();
-
-  nsIHTMLContent*  table = (nsIHTMLContent*)mContent;
-
-  NS_ASSERTION(table,"Table Must not be null");
-  if (!table)
-    return;
-
-  nsMutableStyleBorder borderData(mStyleContext);
-
-  border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
-  if (border_result == NS_CONTENT_ATTR_HAS_VALUE)
-  {
-    PRInt32 intValue = 0;
-
-    if (ConvertToPixelValue(border_value,1,intValue)) //XXX this is busted if this code is ever used again. MMP
-      border = NSIntPixelsToTwips(intValue, p2t); 
-  }
-  MapHTMLBorderStyle(*borderData,border);
-#endif
 }
 
 nscoord 
@@ -3846,8 +3814,8 @@ PRUint8 nsTableFrame::GetBorderCollapseStyle()
 // XXX: could cache this.  But be sure to check style changes if you do!
 nscoord nsTableFrame::GetCellSpacingX()
 {
-  const nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  const nsStyleTableBorder* tableStyle;
+  GetStyleData(eStyleStruct_TableBorder, (const nsStyleStruct *&)tableStyle);
   nscoord cellSpacing = 0;
   PRUint8 borderCollapseStyle = GetBorderCollapseStyle();
   if (NS_STYLE_BORDER_COLLAPSE != borderCollapseStyle) {
@@ -3861,8 +3829,8 @@ nscoord nsTableFrame::GetCellSpacingX()
 // XXX: could cache this. But be sure to check style changes if you do!
 nscoord nsTableFrame::GetCellSpacingY()
 {
-  const nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  const nsStyleTableBorder* tableStyle;
+  GetStyleData(eStyleStruct_TableBorder, (const nsStyleStruct *&)tableStyle);
   nscoord cellSpacing = 0;
   PRUint8 borderCollapseStyle = GetBorderCollapseStyle();
   if (NS_STYLE_BORDER_COLLAPSE != borderCollapseStyle) {
@@ -3872,19 +3840,6 @@ nscoord nsTableFrame::GetCellSpacingY()
   }
   return cellSpacing;
 }
-
-// Get the cellpadding defined on the table. Each cell can override this with style
-nscoord nsTableFrame::GetCellPadding()
-{
-  const nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  nscoord cellPadding = -1;
-  if (tableStyle->mCellPadding.GetUnit() == eStyleUnit_Coord) {
-    cellPadding = tableStyle->mCellPadding.GetCoordValue();
-  }
-  return cellPadding;
-}
-
 
 /* ----- global methods ----- */
 
@@ -4249,9 +4204,9 @@ void nsTableIterator::Init(nsIFrame*        aFirstChild,
     nsTableFrame* table = nsnull;
     nsresult rv = nsTableFrame::GetTableFrame(mFirstChild, table);
     if (NS_SUCCEEDED(rv) && (table != nsnull)) {
-      const nsStyleDisplay* display;
-      table->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-      mLeftToRight = (NS_STYLE_DIRECTION_LTR == display->mDirection);
+      const nsStyleVisibility* vis;
+      table->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+      mLeftToRight = (NS_STYLE_DIRECTION_LTR == vis->mDirection);
     }
     else {
       NS_ASSERTION(PR_FALSE, "source of table iterator is not part of a table");

@@ -233,11 +233,11 @@ nsSVGPathFrame::Paint(nsIPresContext* aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-  mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleVisibility* visib = NS_STATIC_CAST(const nsStyleVisibility*,
+    mStyleContext->GetStyleData(eStyleStruct_Visibility));
 
   // if we aren't visible then we are done.
-  if (!disp->IsVisibleOrCollapsed()) 
+  if (!visib->IsVisibleOrCollapsed()) 
 	   return NS_OK;  
 
   // if we are visible then tell our superclass to paint

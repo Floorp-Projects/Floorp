@@ -224,16 +224,16 @@ nsTextBoxFrame::Paint(nsIPresContext*      aPresContext,
                       const nsRect&        aDirtyRect,
                       nsFramePaintLayer    aWhichLayer)
 {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (!disp->IsVisible())
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (!vis->IsVisible())
         return NS_OK;
 
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
 
         // remove the border and padding
         nsStyleBorderPadding  bPad;
-        mStyleContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+        mStyleContext->GetBorderPaddingFor(bPad);
         nsMargin border(0,0,0,0);
         bPad.GetBorderPadding(border);
 
@@ -267,7 +267,84 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
         return NS_OK;
 
     // paint the title
-    const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+    nscolor overColor;
+    nscolor underColor;
+    nscolor strikeColor;
+    nsIStyleContext*  context = mStyleContext;
+  
+    PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE; // Begin with no decorations
+    PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | NS_STYLE_TEXT_DECORATION_OVERLINE |
+                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH; // A mask of all possible decorations.
+    PRBool hasDecorations = context->HasTextDecorations();
+
+    NS_ADDREF(context);
+    do {  // find decoration colors
+      const nsStyleTextReset* styleText = 
+        (const nsStyleTextReset*)context->GetStyleData(eStyleStruct_TextReset);
+      
+      if (decorMask & styleText->mTextDecoration) {  // a decoration defined here
+        const nsStyleColor* styleColor =
+          (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
+    
+        if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decorMask & styleText->mTextDecoration) {
+          underColor = styleColor->mColor;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
+          decorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        }
+        if (NS_STYLE_TEXT_DECORATION_OVERLINE & decorMask & styleText->mTextDecoration) {
+          overColor = styleColor->mColor;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
+          decorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
+        }
+        if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decorMask & styleText->mTextDecoration) {
+          strikeColor = styleColor->mColor;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+          decorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+        }
+      }
+      if (0 != decorMask) {
+        nsIStyleContext*  lastContext = context;
+        context = context->GetParent();
+        hasDecorations = context->HasTextDecorations();
+        NS_RELEASE(lastContext);
+      }
+    } while ((nsnull != context) && hasDecorations && (0 != decorMask));
+    NS_IF_RELEASE(context);
+
+    nsStyleFont* fontStyle = (nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+    
+    nscoord offset;
+    nscoord size;
+    nscoord baseline;
+    if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
+      nsCOMPtr<nsIDeviceContext> deviceContext;
+      aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+
+      nsCOMPtr<nsIFontMetrics> fontMet;
+      deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
+      fontMet->GetMaxAscent(baseline);
+      fontMet->GetUnderline(offset, size);
+      if (decorations & NS_FONT_DECORATION_OVERLINE) {
+        aRenderingContext.SetColor(overColor);
+        aRenderingContext.FillRect(textRect.x, textRect.y, mRect.width, size);
+      }
+      if (decorations & NS_FONT_DECORATION_UNDERLINE) {
+        aRenderingContext.SetColor(underColor);
+        aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, mRect.width, size);
+      }
+    }
+    if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
+      nsCOMPtr<nsIDeviceContext> deviceContext;
+      aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+
+      nsCOMPtr<nsIFontMetrics> fontMet;
+      deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
+      fontMet->GetMaxAscent(baseline);
+      fontMet->GetStrikeout(offset, size);
+      aRenderingContext.SetColor(strikeColor);
+      aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, mRect.width, size);
+    }
+ 
     aRenderingContext.SetFont(fontStyle->mFont);
 
     CalculateUnderline(aRenderingContext);
@@ -287,12 +364,12 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
         bidiUtils->GetBidiEngine(getter_AddRefs(bidiEngine));
         
         if (bidiEngine) {
-          const nsStyleDisplay* display;
-          GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+          const nsStyleVisibility* vis;
+          GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
           PRUnichar* buffer = (PRUnichar*) mCroppedTitle.GetUnicode();
           PRInt32 runCount;
           nsBidiDirection direction =
-                                    (NS_STYLE_DIRECTION_RTL == display->mDirection)
+                                    (NS_STYLE_DIRECTION_RTL == vis->mDirection)
                                     ? NSBIDI_RTL : NSBIDI_LTR;
 
           rv = bidiEngine->SetPara(buffer, mCroppedTitle.Length(), direction, nsnull);

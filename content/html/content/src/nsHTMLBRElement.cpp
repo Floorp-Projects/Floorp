@@ -26,11 +26,10 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
-
+#include "nsIRuleNode.h"
 
 class nsHTMLBRElement : public nsGenericHTMLLeafElement,
                         public nsIDOMHTMLBRElement
@@ -62,8 +61,7 @@ public:
                                nsAWritableString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
@@ -189,18 +187,22 @@ nsHTMLBRElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                      nsRuleData* aData)
 {
-  nsHTMLValue value;
-  aAttributes->GetAttribute(nsHTMLAtoms::clear, value);
-  if (value.GetUnit() == eHTMLUnit_Enumerated) {
-    nsMutableStyleDisplay display(aContext);
-    display->mBreakType = value.GetIntValue();
+  if (!aData || !aAttributes)
+    return;
+
+  if (aData->mSID == eStyleStruct_Display) {
+    if (aData->mDisplayData->mClear.GetUnit() == eCSSUnit_Null) {
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::clear, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated)
+        aData->mDisplayData->mClear.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+    }
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
-                                                aPresContext);
+
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP
@@ -219,11 +221,9 @@ nsHTMLBRElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLBRElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                              nsMapAttributesFunc& aMapFunc) const
+nsHTMLBRElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
+  aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
 

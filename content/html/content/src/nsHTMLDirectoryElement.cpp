@@ -26,10 +26,10 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIRuleNode.h"
 
 // XXX nav4 has type= start= (same as OL/UL)
 
@@ -66,8 +66,7 @@ public:
                                nsAWritableString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
@@ -193,30 +192,24 @@ nsHTMLDirectoryElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (nsnull != aAttributes) {
-    nsHTMLValue value;
-    nsMutableStyleList list(aContext);
+  if (!aData || !aAttributes)
+    return;
 
-    // type: enum
-    aAttributes->GetAttribute(nsHTMLAtoms::type, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      list->mListStyleType = value.GetIntValue();
-    }
-    else if (value.GetUnit() != eHTMLUnit_Null) {
-      list->mListStyleType = NS_STYLE_LIST_STYLE_BASIC;
-    }
-
-    // compact: empty
-    aAttributes->GetAttribute(nsHTMLAtoms::compact, value);
-    if (value.GetUnit() == eHTMLUnit_Empty) {
-      // XXX set
+  if (aData->mListData) {
+    if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
+      nsHTMLValue value;
+      // type: enum
+      aAttributes->GetAttribute(nsHTMLAtoms::type, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated)
+        aData->mListData->mType.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+      else if (value.GetUnit() != eHTMLUnit_Null)
+        aData->mListData->mType.SetIntValue(NS_STYLE_LIST_STYLE_BASIC, eCSSUnit_Enumerated);
     }
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP
@@ -237,11 +230,9 @@ nsHTMLDirectoryElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 
 
 NS_IMETHODIMP
-nsHTMLDirectoryElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                     nsMapAttributesFunc& aMapFunc) const
+nsHTMLDirectoryElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
+  aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
 

@@ -34,7 +34,6 @@ nslayout.h
 nsStyleChangeList.h
 nsStyleConsts.h
 nsIStyleFrameConstruction.h
-nsStyleStruct.h
 nsIFrameTraversal.h
 nsIObjectFrame.h
 nsIImageFrame.h

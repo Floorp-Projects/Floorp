@@ -253,7 +253,7 @@ static const nsCSSProperty queryableProperties[] = {
   eCSSProperty_text_align,
   eCSSProperty_text_decoration,
   
-  eCSSProperty_behavior,
+  eCSSProperty_binding,
 };
 
 nsresult
@@ -407,7 +407,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
   nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
 
   switch (prop) {
-    case eCSSProperty_behavior :
+    case eCSSProperty_binding :
       rv = GetBehavior(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_display :
       rv = GetDisplay(frame, *getter_AddRefs(val)); break;
@@ -629,12 +629,12 @@ nsComputedDOMStyle::GetBehavior(nsIFrame *aFrame,
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleUserInterface* ui = nsnull;
+  const nsStyleDisplay* display = nsnull;
 
-  GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)ui, aFrame);
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
 
-  if (ui) {
-    val->SetString(ui->mBehavior);
+  if (display) {
+    val->SetString(display->mBinding);
   }
   else {
     val->SetString("");
@@ -955,8 +955,8 @@ nsComputedDOMStyle::GetBackgroundColor(nsIFrame *aFrame,
   nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleColor* color=nsnull;
-  GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)color, aFrame);
+  const nsStyleBackground* color=nsnull;
+  GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)color, aFrame);
 
   if(color) {
     nsAutoString hex;
@@ -978,8 +978,8 @@ nsComputedDOMStyle::GetBackgroundImage(nsIFrame *aFrame,
   nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleColor* color=nsnull;
-  GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)color, aFrame);
+  const nsStyleBackground* color=nsnull;
+  GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)color, aFrame);
 
   if(color) {
       val->SetString(color->mBackgroundImage);
@@ -1035,8 +1035,8 @@ nsComputedDOMStyle::GetBorderCollapse(nsIFrame *aFrame,
   nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleTable* table = nsnull;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct*&)table, aFrame);
+  const nsStyleTableBorder* table = nsnull;
+  GetStyleData(eStyleStruct_TableBorder, (const nsStyleStruct*&)table, aFrame);
 
   if(table) {
     const nsCString& ident=
@@ -1366,8 +1366,8 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
   nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsStyleText* text=nsnull;
-  GetStyleData(eStyleStruct_Text,(const nsStyleStruct*&)text,aFrame);
+  const nsStyleTextReset* text=nsnull;
+  GetStyleData(eStyleStruct_TextReset,(const nsStyleStruct*&)text,aFrame);
   
   if(text) {
     const nsCString& decoration=
@@ -2267,11 +2267,20 @@ nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide,
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
   const nsStyleBorder* border = nsnull;
-  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border, aFrame);
-
+  GetStyleData(eStyleStruct_Border,(const nsStyleStruct*&)border,aFrame);
+  
   if(border) {
-    nscolor color;
-    border->GetBorderColor(aSide, color);
+    nscolor color; 
+    PRBool transparent;
+    PRBool foreground;
+    border->GetBorderColor(aSide, color, transparent, foreground);
+    if (foreground) {
+      const nsStyleColor* colorStruct = nsnull;
+      GetStyleData(eStyleStruct_Color,(const nsStyleStruct*&)colorStruct,
+                   aFrame);
+      color = colorStruct->mColor;
+    }
+
     nsAutoString hex;
     ColorToHex(color, hex);
     val->SetString(hex);

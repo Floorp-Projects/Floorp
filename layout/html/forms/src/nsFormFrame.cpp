@@ -50,7 +50,6 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsHTMLIIDs.h"
 #include "nsDebug.h"
@@ -165,16 +164,6 @@ nsFormFrame::~nsFormFrame()
     fcFrame->SetFormFrame(nsnull);
     mFormControls.RemoveElement(fcFrame);
   }
-}
-
-NS_METHOD nsFormFrame::DidSetStyleContext(nsIPresContext* aPresContext)
-{
-  // we can't yet support anything but display:block on a form, 
-  // so make sure that the display is block
-  nsMutableStyleDisplay displayData(mStyleContext);
-  displayData->mDisplay = NS_STYLE_DISPLAY_BLOCK;
-
-  return NS_OK;
 }
 
 PRBool 

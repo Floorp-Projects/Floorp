@@ -457,10 +457,10 @@ nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
 //
 //------------------------------------------------------------------------------
 
-const nsStyleColor* nsStyleUtil::FindNonTransparentBackground(nsIStyleContext* aContext,
-                                                              PRBool aStartAtParent /*= PR_FALSE*/)
+const nsStyleBackground* nsStyleUtil::FindNonTransparentBackground(nsIStyleContext* aContext,
+                                                                   PRBool aStartAtParent /*= PR_FALSE*/)
 {
-  const nsStyleColor* result = nsnull;
+  const nsStyleBackground* result = nsnull;
   nsIStyleContext*    context;
   if (aStartAtParent) {
     context = aContext->GetParent();  // balance ending release
@@ -471,7 +471,7 @@ const nsStyleColor* nsStyleUtil::FindNonTransparentBackground(nsIStyleContext* a
   NS_ASSERTION( context != nsnull, "Cannot find NonTransparentBackground in a null context" );
   
   while (nsnull != context) {
-    result = (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
+    result = (const nsStyleBackground*)context->GetStyleData(eStyleStruct_Background);
 
     if (0 == (result->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
       break;

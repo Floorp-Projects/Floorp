@@ -211,7 +211,7 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
           // When neither margin is auto then the block is said to
           // be over constrained, Depending on the direction, choose
           // which margin to treat as auto.
-          PRUint8 direction = mOuterReflowState.mStyleDisplay->mDirection;
+          PRUint8 direction = mOuterReflowState.mStyleVisibility->mDirection;
           if (NS_STYLE_DIRECTION_RTL == direction) {
             // The left margin becomes auto
             aAlign.mXOffset += remainingSpace;
@@ -504,7 +504,7 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   }
 
   // If the element is relatively positioned, then adjust x and y accordingly
-  if (NS_STYLE_POSITION_RELATIVE == aReflowState.mStylePosition->mPosition) {
+  if (NS_STYLE_POSITION_RELATIVE == aReflowState.mStyleDisplay->mPosition) {
     x += aReflowState.mComputedOffsets.left;
     y += aReflowState.mComputedOffsets.top;
   }
@@ -760,10 +760,10 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       // Note that this must be done after changing aCombinedRect
       // since relatively positioned elements should act as if they
       // were at their original position.
-      const nsStylePosition* stylePos;
-      mFrame->GetStyleData(eStyleStruct_Position,
-                           (const nsStyleStruct*&)stylePos);
-      if (NS_STYLE_POSITION_RELATIVE == stylePos->mPosition) {
+      const nsStyleDisplay* styleDisp;
+      mFrame->GetStyleData(eStyleStruct_Display,
+                           (const nsStyleStruct*&)styleDisp);
+      if (NS_STYLE_POSITION_RELATIVE == styleDisp->mPosition) {
         x += aComputedOffsets.left;
         y += aComputedOffsets.top;
       }

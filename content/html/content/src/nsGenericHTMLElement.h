@@ -41,7 +41,6 @@ class nsIFrame;
 class nsIHTMLAttributes;
 class nsIHTMLMappedAttributes;
 class nsIHTMLContent;
-class nsIMutableStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
 class nsChildContentList;
@@ -151,8 +150,8 @@ public:
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
   NS_IMETHOD HasClass(nsIAtom* aClass) const;
-  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
-  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD WalkContentStyleRules(nsIRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkInlineStyleRules(nsIRuleWalker* aRuleWalker);
   NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const;
   NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const;
 
@@ -162,8 +161,7 @@ public:
                                nsAWritableString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
-                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
   void ListAttributes(FILE* out) const;
 
@@ -285,33 +283,28 @@ public:
    */
 
   static void MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                      nsIMutableStyleContext* aStyleContext,
-                                      nsIPresContext* aPresContext);
+                                      nsRuleData* aRuleData);
   static PRBool GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
                                                 PRInt32& aHint);
 
-  static void MapImageAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                     nsIMutableStyleContext* aContext,
-                                     nsIPresContext* aPresContext);
   static PRBool GetImageMappedAttributesImpact(const nsIAtom* aAttribute,
                                                PRInt32& aHint);
-
-  static void MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                         nsIMutableStyleContext* aContext,
-                                         nsIPresContext* aPresContext);
   static PRBool GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32& aHint);
 
-  static void MapImageBorderAttributeInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                          nsIMutableStyleContext* aContext,
-                                          nsIPresContext* aPresContext,
-                                          nscolor aBorderColors[4]);
+  static void MapAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                    nsRuleData* aData);
+  static void MapImageBorderAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                          nsRuleData* aData);
+  static void MapImageMarginAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                          nsRuleData* aData);
+  static void MapImagePositionAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                            nsRuleData* aData);
   static PRBool GetImageBorderAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);
 
-  static void MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
-                                          nsIMutableStyleContext* aContext,
-                                          nsIPresContext* aPresContext);
+  static void MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
+                                          nsRuleData* aData);
   static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);
 

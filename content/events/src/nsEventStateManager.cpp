@@ -2894,8 +2894,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
     nsCOMPtr<nsIContent> child;
     currentFrame->GetContent(getter_AddRefs(child));
 
-    const nsStyleDisplay* disp;
-    currentFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
+    const nsStyleVisibility* vis;
+    currentFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
 
     const nsStyleUserInterface* ui;
     currentFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
@@ -2924,8 +2924,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
 
     // if collapsed or hidden, we don't get tabbed into.
     if (viewShown &&
-        (disp->mVisible != NS_STYLE_VISIBILITY_COLLAPSE) &&
-        (disp->mVisible != NS_STYLE_VISIBILITY_HIDDEN) && 
+        (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE) &&
+        (vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN) && 
         (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
         (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) && element) {
       nsCOMPtr<nsIAtom> tag;

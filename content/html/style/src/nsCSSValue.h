@@ -34,8 +34,9 @@ enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified
   eCSSUnit_Auto         = 1,      // (n/a) value is algorithmic
   eCSSUnit_Inherit      = 2,      // (n/a) value is inherited
-  eCSSUnit_None         = 3,      // (n/a) value is none
-  eCSSUnit_Normal       = 4,      // (n/a) value is normal (algorithmic, different than auto)
+  eCSSUnit_Initial      = 3,      // (n/a) value is default UA value
+  eCSSUnit_None         = 4,      // (n/a) value is none
+  eCSSUnit_Normal       = 5,      // (n/a) value is normal (algorithmic, different than auto)
   eCSSUnit_String       = 10,     // (nsString) a string value
   eCSSUnit_URL          = 11,     // (nsString) a URL value
   eCSSUnit_Attr         = 12,     // (nsString) a attr(string) value
@@ -77,6 +78,9 @@ enum nsCSSUnit {
 
   // Screen relative measure
   eCSSUnit_Pixel        = 900,    // (float)
+
+  // Proportional Unit (for columns in tables)
+  eCSSUnit_Proportional = 950, 
 
   // Angular units
   eCSSUnit_Degree       = 1000,    // (float) 360 per circle
@@ -122,11 +126,11 @@ public:
 
   nsCSSUnit GetUnit(void) const { return mUnit; };
   PRBool    IsLengthUnit(void) const
-    { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Pixel)); }
+    { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Proportional)); }
   PRBool    IsFixedLengthUnit(void) const  
     { return PRBool((eCSSUnit_Inch <= mUnit) && (mUnit <= eCSSUnit_Cicero)); }
   PRBool    IsRelativeLengthUnit(void) const  
-    { return PRBool((eCSSUnit_EM <= mUnit) && (mUnit <= eCSSUnit_Pixel)); }
+    { return PRBool((eCSSUnit_EM <= mUnit) && (mUnit <= eCSSUnit_Proportional)); }
   PRBool    IsAngularUnit(void) const  
     { return PRBool((eCSSUnit_Degree <= mUnit) && (mUnit <= eCSSUnit_Radian)); }
   PRBool    IsFrequencyUnit(void) const  
@@ -209,6 +213,7 @@ public:
   void  SetColorValue(nscolor aValue);
   void  SetAutoValue(void);
   void  SetInheritValue(void);
+  void  SetInitialValue(void);
   void  SetNoneValue(void);
   void  SetNormalValue(void);
 

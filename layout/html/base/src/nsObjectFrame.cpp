@@ -1190,10 +1190,10 @@ PRBool
 nsObjectFrame::IsHidden() const
 {
     // check the style visibility first
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp != nsnull)
+  const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+  if (vis != nsnull)
   {
-    if(!disp->IsVisibleOrCollapsed())
+    if(!vis->IsVisibleOrCollapsed())
       return PR_TRUE;
   }
 
@@ -1333,8 +1333,8 @@ nsObjectFrame::Paint(nsIPresContext* aPresContext,
   }
 
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if ((disp != nsnull) && !disp->IsVisibleOrCollapsed()) {
+  const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+  if ((vis != nsnull) && !vis->IsVisibleOrCollapsed()) {
     return NS_OK;
   }
   

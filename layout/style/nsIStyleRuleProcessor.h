@@ -36,6 +36,7 @@ class nsIContent;
 class nsISupportsArray;
 class nsIAtom;
 class nsICSSPseudoComparator;
+class nsIRuleWalker;
 
 // IID for the nsIStyleRuleProcessor interface {015575fe-7b6c-11d3-ba05-001083023c2b}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
@@ -51,13 +52,13 @@ class nsIStyleRuleProcessor : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ISTYLE_RULE_PROCESSOR_IID; return iid; }
 
-  // populate supports array with nsIStyleRule*
-  // rules are ordered, those with higher precedence come last
+  // populate rule node tree with nsIStyleRule*
+  // rules are ordered, those with higher precedence are farthest from the root of the tree
   NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
                            nsIAtom* aMedium, 
                            nsIContent* aContent,
                            nsIStyleContext* aParentContext,
-                           nsISupportsArray* aResults) = 0;
+                           nsIRuleWalker* aRuleWalker) = 0;
 
   NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
                            nsIAtom* aMedium, 
@@ -65,7 +66,7 @@ public:
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
                            nsICSSPseudoComparator* aComparator,
-                           nsISupportsArray* aResults) = 0;
+                           nsIRuleWalker* aRuleWalker) = 0;
 
   // Test if style is dependent on content state
   NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,

@@ -28,11 +28,12 @@
 #include "nsHTMLIIDs.h"
 #include "nsIDeviceContext.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
+#include "nsICSSDeclaration.h"
+#include "nsIRuleNode.h"
 
 // MJA: bug 31816
 #include "nsIPresShell.h"
@@ -69,8 +70,7 @@ public:
                                nsAWritableString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
@@ -223,205 +223,84 @@ nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                      nsIMutableStyleContext* aContext,
-                      nsIPresContext* aPresContext)
+MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                      nsRuleData* aData)
 {
-  if (nsnull != aAttributes) {
+  if (!aData)
+    return;
+
+  if (aData->mFontData) {
+    nsCSSFont& font = *(aData->mFontData);
     nsHTMLValue value;
-    nsMutableStyleFont font(aContext);
-    const nsStyleFont* parentFont = font.get();
-    nsIStyleContext* parentContext = aContext->GetParent();
-    if (nsnull != parentContext) {
-      parentFont = (const nsStyleFont*)
-        parentContext->GetStyleData(eStyleStruct_Font);
-    }
-    const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated(); 
-    const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFontDeprecated(); 
-
+    
     // face: string list
-    aAttributes->GetAttribute(nsHTMLAtoms::face, value);
-
-    if (value.GetUnit() == eHTMLUnit_String) {
-      nsCOMPtr<nsIDeviceContext> dc;
-      aPresContext->GetDeviceContext(getter_AddRefs(dc));
-      if (dc) {
-        nsAutoString  familyList;
-
+    if (font.mFamily.GetUnit() == eCSSUnit_Null) {
+      aAttributes->GetAttribute(nsHTMLAtoms::face, value);
+      if (value.GetUnit() == eHTMLUnit_String) {
+        nsAutoString familyList;
         value.GetStringValue(familyList);
-          
-        font->mFont.name = familyList;
-        nsAutoString face;
-
-        // MJA: bug 31816 if we are not using document fonts, but this
-        // is a xul document, then we set the chromeOverride bit so we
-        // use the document fonts anyway
-        PRBool chromeOverride = PR_FALSE;
-        PRBool useDocumentFonts = PR_TRUE;
-        aPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts,
-                                        useDocumentFonts);
-        if (!useDocumentFonts) {
-          // check if the prefs have been disabled for this shell
-          // - if prefs are disabled then we use the document fonts
-          // anyway (yet another override)
-          PRBool prefsEnabled = PR_TRUE;
-          nsCOMPtr<nsIPresShell> shell;
-          aPresContext->GetShell(getter_AddRefs(shell));
-          if (shell) {
-            shell->ArePrefStyleRulesEnabled(prefsEnabled);
-          }
-
-          if (!prefsEnabled) {
-            useDocumentFonts = PR_TRUE;
-          } else {
-            // see if we are in the chrome, if so, use the document fonts (override the useDocFonts setting)
-            nsresult result = NS_OK;
-            nsCOMPtr<nsISupports> container;
-            result = aPresContext->GetContainer(getter_AddRefs(container));
-            if (NS_SUCCEEDED(result) && container) {
-              nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
-              if (NS_SUCCEEDED(result) && docShell){
-                PRInt32 docShellType;
-                result = docShell->GetItemType(&docShellType);
-                if (NS_SUCCEEDED(result)){
-                  if (nsIDocShellTreeItem::typeChrome == docShellType){
-                    chromeOverride = PR_TRUE;
-                  }
-                }      
-              }
-            }
-          }
-        }
-
-        // find the correct font if we are usingDocumentFonts OR we
-        // are overriding for XUL
-        // MJA: bug 31816
-        PRBool fontFaceOK = PR_TRUE;
-        PRBool isMozFixed = font->mFont.name.EqualsIgnoreCase("-moz-fixed");
-        if ((chromeOverride || useDocumentFonts)) {
-          fontFaceOK = (NS_OK == dc->FirstExistingFont(font->mFont, face));
-        }
-
-        if (!fontFaceOK || !(chromeOverride || useDocumentFonts)) {
-          // now set to defaults
-          font->mFont.name = defaultFont.name;
-          font->mFixedFont.name= defaultFixedFont.name;
-        }
-
-        // set to monospace if using moz-fixed
-        if (isMozFixed) {
-          font->mFlags |= NS_STYLE_FONT_USE_FIXED;
-        } else {
-          font->mFlags &= ~NS_STYLE_FONT_USE_FIXED;
-        }
-
-        font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
+        if (!familyList.IsEmpty())
+          font.mFamily.SetStringValue(familyList, eCSSUnit_String);
       }
     }
 
     // pointSize: int, enum
-    aAttributes->GetAttribute(nsHTMLAtoms::pointSize, value);
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      // XXX should probably sanitize value
-      font->mFont.size = parentFont->mFont.size +
-        NSIntPointsToTwips(value.GetIntValue());
-      font->mFixedFont.size = parentFont->mFixedFont.size +
-        NSIntPointsToTwips(value.GetIntValue());
-      font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
-    }
-    else if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      font->mFont.size = NSIntPointsToTwips(value.GetIntValue());
-      font->mFixedFont.size = NSIntPointsToTwips(value.GetIntValue());
-      font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
-    }
-    else {
-      // size: int, enum , NOTE: this does not count as an explicit size
-      // also this has no effect if font is already explicit (quirk mode)
-      //
-      // NOTE: we now do not emulate this quirk - it is too stupid, IE does it right, and it
-      //       messes up other blocks (ie. Headings) when implemented... see bug 25810
-
-#if 0 // removing the quirk...
-      nsCompatibility mode;
-      aPresContext->GetCompatibilityMode(&mode);
-      if ((eCompatibility_Standard == mode) || 
-          (0 == (font->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT))) {
-#else
-      if (1) {
-#endif
+    if (font.mSize.GetUnit() == eCSSUnit_Null) {
+      aAttributes->GetAttribute(nsHTMLAtoms::pointSize, value);
+      if (value.GetUnit() == eHTMLUnit_Integer ||
+          value.GetUnit() == eHTMLUnit_Enumerated) {
+        PRInt32 val = value.GetIntValue();
+        font.mSize.SetFloatValue((float)val, eCSSUnit_Point);
+      }
+      else {
+        // size: int, enum , 
         aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-
         if ((value.GetUnit() == eHTMLUnit_Integer) ||
             (value.GetUnit() == eHTMLUnit_Enumerated)) { 
           PRInt32 size = value.GetIntValue();
-        
-          if (size != 0) {  // bug 32063: ignore <font size="">
-	          if (value.GetUnit() == eHTMLUnit_Integer) { // int (+/-)
+          if (size) {
+            if (value.GetUnit() == eHTMLUnit_Integer) // int (+/-)
 	            size = 3 + size;  // XXX should be BASEFONT, not three
-	          }
-	          size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
-	          PRInt32 scaler;
-	          aPresContext->GetFontScaler(&scaler);
-	          float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-	          font->mFont.size =
-	            nsStyleUtil::CalcFontPointSize(size, (PRInt32)defaultFont.size,
-	                                           scaleFactor, aPresContext);
-	          font->mFixedFont.size =
-	            nsStyleUtil::CalcFontPointSize(size,
-	                                           (PRInt32)defaultFixedFont.size,
-	                                           scaleFactor, aPresContext);
-					}
+	            
+            size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
+            font.mSize.SetIntValue(size, eCSSUnit_Enumerated);
+          }
         }
       }
     }
 
     // fontWeight: int, enum
-    aAttributes->GetAttribute(nsHTMLAtoms::fontWeight, value);
-    if (value.GetUnit() == eHTMLUnit_Integer) { // +/-
-      PRInt32 intValue = (value.GetIntValue() / 100);
-      PRInt32 weight = nsStyleUtil::ConstrainFontWeight(parentFont->mFont.weight + 
-                                                        (intValue * NS_STYLE_FONT_WEIGHT_BOLDER));
-      font->mFont.weight = weight;
-      font->mFixedFont.weight = weight;
+    if (font.mWeight.GetUnit() == eCSSUnit_Null) {
+      aAttributes->GetAttribute(nsHTMLAtoms::fontWeight, value);
+      if (value.GetUnit() == eHTMLUnit_Integer) // +/-
+        font.mWeight.SetIntValue(value.GetIntValue(), eCSSUnit_Integer);
+      else if (value.GetUnit() == eHTMLUnit_Enumerated)
+        font.mWeight.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
     }
-    else if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      PRInt32 weight = value.GetIntValue();
-      weight = nsStyleUtil::ConstrainFontWeight((weight / 100) * 100);
-      font->mFont.weight = weight;
-      font->mFixedFont.weight = weight;
-    }
-
-    NS_IF_RELEASE(parentContext);
   }
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  if (nsnull != aAttributes) {
-    nsHTMLValue value;
-
-    // color: color
-    if (NS_CONTENT_ATTR_NOT_THERE !=
-        aAttributes->GetAttribute(nsHTMLAtoms::color, value)) {
-      const nsStyleFont* font = (const nsStyleFont*)
-        aContext->GetStyleData(eStyleStruct_Font);
-      nsMutableStyleColor color(aContext);
-      nsMutableStyleText text(aContext);
-      if (((eHTMLUnit_Color == value.GetUnit())) ||
-          (eHTMLUnit_ColorName == value.GetUnit())) {
-        color->mColor = value.GetColorValue();
-
-        // re-apply inherited text decoration, so colors sync
-        text->mTextDecoration = font->mFont.decorations;
+  else if (aData->mColorData && aData->mSID == eStyleStruct_Color) {
+    if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
+      // color: color
+      nsHTMLValue value;
+      if (NS_CONTENT_ATTR_NOT_THERE !=
+          aAttributes->GetAttribute(nsHTMLAtoms::color, value)) {
+        if (((eHTMLUnit_Color == value.GetUnit())) ||
+            (eHTMLUnit_ColorName == value.GetUnit()))
+          aData->mColorData->mColor.SetColorValue(value.GetColorValue());
       }
     }
   }
+  else if (aData->mTextData && aData->mSID == eStyleStruct_TextReset) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_NOT_THERE !=
+        aAttributes->GetAttribute(nsHTMLAtoms::color, value)) {
+      if (((eHTMLUnit_Color == value.GetUnit())) ||
+          (eHTMLUnit_ColorName == value.GetUnit()))
+        aData->mTextData->mDecoration.SetIntValue(NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL, eCSSUnit_Enumerated);
+    }
+  }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
-                                                aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP
@@ -446,11 +325,9 @@ nsHTMLFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 
 
 NS_IMETHODIMP
-nsHTMLFontElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                nsMapAttributesFunc& aMapFunc) const
+nsHTMLFontElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aFontMapFunc = &MapFontAttributesInto;
-  aMapFunc = &MapAttributesInto;
+  aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
 

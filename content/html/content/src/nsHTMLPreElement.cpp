@@ -26,10 +26,11 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIRuleNode.h"
+#include "nsICSSDeclaration.h"
 
 // XXX wrap, variable, cols, tabstop
 
@@ -62,8 +63,7 @@ public:
                                nsHTMLValue& aResult);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
@@ -186,68 +186,63 @@ nsHTMLPreElement::StringToAttribute(nsIAtom* aAttribute,
 }
 
 static void
-MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                      nsIMutableStyleContext* aContext,
-                      nsIPresContext* aPresContext)
+MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                      nsRuleData* aData)
 {
-  if (nsnull != aAttributes) {
-    nsHTMLValue value;
+  if (!aData)
+    return;
 
-    // variable: empty
-    aAttributes->GetAttribute(nsHTMLAtoms::variable, value);
-    if (value.GetUnit() == eHTMLUnit_Empty) {
-      nsMutableStyleFont font(aContext);
-      font->mFont.name.AssignWithConversion("serif");
+  if (aData->mFontData) {
+    nsCSSFont& font = *(aData->mFontData);
+
+    if (nsnull != aAttributes) {
+      nsHTMLValue value;
+
+      // variable: empty
+      aAttributes->GetAttribute(nsHTMLAtoms::variable, value);
+      if (value.GetUnit() == eHTMLUnit_Empty)
+        font.mFamily.SetStringValue(NS_LITERAL_STRING("serif"), eCSSUnit_String);
     }
   }
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  if (nsnull != aAttributes) {
-    nsHTMLValue value;
-
-    // wrap: empty
-    aAttributes->GetAttribute(nsHTMLAtoms::wrap, value);
-    if (value.GetUnit() != eHTMLUnit_Null) {
-      nsMutableStyleText text(aContext);
-      text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
-    }
-      
+  else if (aData->mPositionData) {
     // cols: int (nav4 attribute)
-    aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      nsMutableStylePosition position(aContext);
-      position->mWidth.SetIntValue(value.GetIntValue(), eStyleUnit_Chars);
-      // Force wrap property on since we want to wrap at a width
-      // boundary not just a newline.
-      nsMutableStyleText text(aContext);
-      text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
-    }
+    nsHTMLValue value;
+    if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
+      aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
+      if (value.GetUnit() == eHTMLUnit_Integer)
+        aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Char);
 
-    // width: int (html4 attribute == nav4 cols)
-    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      nsMutableStylePosition position(aContext);
-      position->mWidth.SetIntValue(value.GetIntValue(), eStyleUnit_Chars);
-      // Force wrap property on since we want to wrap at a width
-      // boundary not just a newline.
-      nsMutableStyleText text(aContext);
-      text->mWhiteSpace = NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
+      // width: int (html4 attribute == nav4 cols)
+      aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+      if (value.GetUnit() == eHTMLUnit_Integer)
+        aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Char);
     }
-
-    // tabstop: int
-    aAttributes->GetAttribute(nsHTMLAtoms::tabstop, value);
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      // XXX set
+  }
+  else if (aData->mTextData && aData->mSID == eStyleStruct_Text) {
+    if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
+      nsHTMLValue value;
+      // wrap: empty
+      aAttributes->GetAttribute(nsHTMLAtoms::wrap, value);
+      if (value.GetUnit() != eHTMLUnit_Null)
+        aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_MOZ_PRE_WRAP, eCSSUnit_Enumerated);
+      
+      // cols: int (nav4 attribute)
+      aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
+      if (value.GetUnit() == eHTMLUnit_Integer)
+        // Force wrap property on since we want to wrap at a width
+        // boundary not just a newline.
+        aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_MOZ_PRE_WRAP, eCSSUnit_Enumerated);
+      
+      // width: int (html4 attribute == nav4 cols)
+      aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+      if (value.GetUnit() == eHTMLUnit_Integer)
+        // Force wrap property on since we want to wrap at a width
+        // boundary not just a newline.
+        aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_MOZ_PRE_WRAP, eCSSUnit_Enumerated);
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
-                                                aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP
@@ -271,11 +266,9 @@ nsHTMLPreElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 
 
 NS_IMETHODIMP
-nsHTMLPreElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                               nsMapAttributesFunc& aMapFunc) const
+nsHTMLPreElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aFontMapFunc = &MapFontAttributesInto;
-  aMapFunc = &MapAttributesInto;
+  aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
 

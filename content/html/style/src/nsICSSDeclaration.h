@@ -142,8 +142,6 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValue      mBackAttachment;
   nsCSSValue      mBackPositionX;
   nsCSSValue      mBackPositionY;
-  nsCSSValueList* mCursor;
-  nsCSSValue      mOpacity;
 };
 
 struct nsCSSShadow {
@@ -168,11 +166,11 @@ struct nsCSSText : public nsCSSStruct  {
 
   nsCSSValue mWordSpacing;
   nsCSSValue mLetterSpacing;
-  nsCSSValue mDecoration;
   nsCSSValue mVerticalAlign;
   nsCSSValue mTextTransform;
   nsCSSValue mTextAlign;
   nsCSSValue mTextIndent;
+  nsCSSValue mDecoration;
   nsCSSShadow* mTextShadow; // NEW
   nsCSSValue mUnicodeBidi;  // NEW
   nsCSSValue mLineHeight;
@@ -202,11 +200,14 @@ struct nsCSSDisplay : public nsCSSStruct  {
 
   nsCSSValue mDirection;
   nsCSSValue mDisplay;
+  nsCSSValue mBinding;
+  nsCSSValue mPosition;
   nsCSSValue mFloat;
   nsCSSValue mClear;
   nsCSSRect* mClip;
   nsCSSValue mOverflow;
   nsCSSValue mVisibility;
+  nsCSSValue mOpacity;
 };
 
 struct nsCSSMargin : public nsCSSStruct  {
@@ -238,7 +239,6 @@ struct nsCSSPosition : public nsCSSStruct  {
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
-  nsCSSValue  mPosition;
   nsCSSValue  mWidth;
   nsCSSValue  mMinWidth;
   nsCSSValue  mMaxWidth;
@@ -276,7 +276,12 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
   nsCSSValue mBorderSpacingY;
   nsCSSValue mCaptionSide;
   nsCSSValue mEmptyCells;
+  
   nsCSSValue mLayout;
+  nsCSSValue mFrame; // Not mappable via CSS, only using HTML4 table attrs.
+  nsCSSValue mRules; // Not mappable via CSS, only using HTML4 table attrs.
+  nsCSSValue mSpan; // Not mappable via CSS, only using HTML4 table attrs.
+  nsCSSValue mCols; // Not mappable via CSS, only using HTML4 table attrs.
 };
 
 struct nsCSSBreaks : public nsCSSStruct  { // NEW
@@ -357,7 +362,8 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSValueList* mKeyEquivalent;
   nsCSSValue      mUserFocus;
   nsCSSValue      mResizer;
-  nsCSSValue      mBehavior;
+  
+  nsCSSValueList* mCursor;
 };
 
 struct nsCSSAural : public nsCSSStruct  { // NEW

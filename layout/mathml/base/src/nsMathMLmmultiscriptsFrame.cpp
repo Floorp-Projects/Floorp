@@ -133,9 +133,9 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   fm->GetXHeight (xHeight);
 #endif
 
-  nsStyleFont font;
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
-  aRenderingContext.SetFont(font.mFont);
+  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+    mStyleContext->GetStyleData(eStyleStruct_Font));
+  aRenderingContext.SetFont(font->mFont);
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 
@@ -384,7 +384,6 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
 
   if (aPlaceOrigin) {
     nscoord dx = 0, dy = 0;
-    nsRect aRect;
 
     count = 0;
     childFrame = mprescriptsFrame;

@@ -35,12 +35,13 @@
 #include "nsICSSStyleRule.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsCOMPtr.h"
 
 #include "nsIStyleSet.h"
+#include "nsIRuleWalker.h"
+
 #include "nsISizeOfHandler.h"
 
 
@@ -55,10 +56,10 @@ public:
   NS_IMETHOD HashValue(PRUint32& aValue) const;
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
-  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
-                          nsIPresContext* aPresContext);
-  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext,
-                              nsIPresContext* aPresContext);
+  
+  // The new mapping function.
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
+
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
@@ -109,72 +110,24 @@ CSSFirstLineRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-CSSFirstLineRule::MapFontStyleInto(nsIMutableStyleContext* aContext,
-                                   nsIPresContext* aPresContext)
+CSSFirstLineRule::MapRuleInfoInto(nsRuleData* aData)
 {
-  return NS_OK;
-}
+  if (!aData)
+    return NS_OK;
 
-// Fixup the style context so that all of the properties that don't
-// apply (CSS2 spec section 5.12.1) don't apply.
-//
-// The properties that apply: font-properties, color-properties,
-// backgorund-properties, word-spacing, letter-spacing,
-// text-decoration, vertical-align, text-transform, line-height,
-// text-shadow, and clear.
-//
-// Everything else doesn't apply.
-NS_IMETHODIMP
-CSSFirstLineRule::MapStyleInto(nsIMutableStyleContext* aContext,
-                               nsIPresContext* aPresContext)
-{
-  nsIStyleContext* parentContext;
-  parentContext = aContext->GetParent();
-
-  // Disable border
-  nsMutableStyleBorder border(aContext);
-  border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-  border->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-  border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-  border->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
-
-  // Undo any change made to "direction"
-  if (parentContext) {
-    const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
-      parentContext->GetStyleData(eStyleStruct_Display);
-    if (parentDisplay) {
-      nsMutableStyleDisplay display(aContext);
-      display->mDirection = parentDisplay->mDirection;
-    }
+  if (aData->mSID == eStyleStruct_Border && aData->mMarginData) {
+    // Disable the border.
+    nsCSSValue styleVal(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
+    if (aData->mMarginData->mBorderStyle->mLeft.GetUnit() == eCSSUnit_Null)
+      aData->mMarginData->mBorderStyle->mLeft = styleVal;
+    if (aData->mMarginData->mBorderStyle->mRight.GetUnit() == eCSSUnit_Null)
+      aData->mMarginData->mBorderStyle->mRight = styleVal;
+    if (aData->mMarginData->mBorderStyle->mTop.GetUnit() == eCSSUnit_Null)
+      aData->mMarginData->mBorderStyle->mTop = styleVal;
+    if (aData->mMarginData->mBorderStyle->mBottom.GetUnit() == eCSSUnit_Null)
+      aData->mMarginData->mBorderStyle->mBottom = styleVal;
   }
 
-  // Undo any change made to "cursor"
-  if (parentContext) {
-    const nsStyleColor* parentColor = (const nsStyleColor*)
-      parentContext->GetStyleData(eStyleStruct_Color);
-    if (parentColor) {
-      nsMutableStyleColor color(aContext);
-      color->mCursor = parentColor->mCursor;
-    }
-  }
-
-  // Undo any change to quotes
-  if (parentContext) {
-    const nsStyleContent* parentContent = (const nsStyleContent*)
-      parentContext->GetStyleData(eStyleStruct_Content);
-    if (parentContent) {
-      nsMutableStyleContent content(aContext);
-      nsAutoString open, close;
-      PRUint32 i, n = parentContent->QuotesCount();
-      content->AllocateQuotes(n);
-      for (i = 0; i < n; i++) {
-        parentContent->GetQuotesAt(i, open, close);
-        content->SetQuotesAt(i, open, close);
-      }
-    }
-  }
-
-  NS_RELEASE(parentContext);
   return NS_OK;
 }
 
@@ -227,71 +180,11 @@ void CSSFirstLineRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 class CSSFirstLetterRule : public CSSFirstLineRule {
 public:
   CSSFirstLetterRule(nsIHTMLCSSStyleSheet* aSheet);
-
-  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
-                          nsIPresContext* aPresContext);
 };
 
 CSSFirstLetterRule::CSSFirstLetterRule(nsIHTMLCSSStyleSheet* aSheet)
   : CSSFirstLineRule(aSheet)
 {
-}
-
-// Fixup the style context so that all of the properties that don't
-// apply (CSS2 spec section 5.12.2) don't apply.
-//
-// These properties apply: font-properties, color-properties,
-// backgorund-properties, text-decoration, vertical-align,
-// text-transform, line-height, margin-properties,
-// padding-properties, border-properties, float, text-shadow and
-// clear.
-//
-// Everything else doesn't apply.
-NS_IMETHODIMP
-CSSFirstLetterRule::MapStyleInto(nsIMutableStyleContext* aContext,
-                                 nsIPresContext* aPresContext)
-{
-  nsIStyleContext* parentContext;
-  parentContext = aContext->GetParent();
-
-  // Undo any change made to "direction"
-  if (parentContext) {
-    const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
-      parentContext->GetStyleData(eStyleStruct_Display);
-    if (parentDisplay) {
-      nsMutableStyleDisplay display(aContext);
-      display->mDirection = parentDisplay->mDirection;
-    }
-  }
-
-  // Undo any change made to "cursor"
-  if (parentContext) {
-    const nsStyleColor* parentColor = (const nsStyleColor*)
-      parentContext->GetStyleData(eStyleStruct_Color);
-    if (parentColor) {
-      nsMutableStyleColor color(aContext);
-      color->mCursor = parentColor->mCursor;
-    }
-  }
-
-  // Undo any change to quotes
-  if (parentContext) {
-    const nsStyleContent* parentContent = (const nsStyleContent*)
-      parentContext->GetStyleData(eStyleStruct_Content);
-    if (parentContent) {
-      nsMutableStyleContent content(aContext);
-      nsAutoString open, close;
-      PRUint32 i, n = parentContent->QuotesCount();
-      content->AllocateQuotes(n);
-      for (i = 0; i < n; i++) {
-        parentContent->GetQuotesAt(i, open, close);
-        content->SetQuotesAt(i, open, close);
-      }
-    }
-  }
-
-  NS_RELEASE(parentContext);
-  return NS_OK;
 }
 
 // -----------------------------------------------------------
@@ -335,7 +228,7 @@ public:
                            nsIAtom* aMedium,
                            nsIContent* aContent,
                            nsIStyleContext* aParentContext,
-                           nsISupportsArray* aResults);
+                           nsIRuleWalker* aRuleWalker);
 
   NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
                            nsIAtom* aMedium,
@@ -343,7 +236,7 @@ public:
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
                            nsICSSPseudoComparator* aComparator,
-                           nsISupportsArray* aResults);
+                           nsIRuleWalker* aRuleWalker);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
                                     nsIAtom*        aMedium,
@@ -485,38 +378,17 @@ HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                      nsIAtom* aMedium,
                                      nsIContent* aContent,
                                      nsIStyleContext* aParentContext,
-                                     nsISupportsArray* aResults)
+                                     nsIRuleWalker* aRuleWalker)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
-  NS_PRECONDITION(nsnull != aResults, "null arg");
+  NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
 
-  nsIStyledContent* styledContent;
-
-  // just get the one and only style rule from the content's STYLE attribute
-  if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
-    PRUint32 index = 0;
-    aResults->Count(&index);
-    if (NS_SUCCEEDED(styledContent->GetInlineStyleRules(aResults))) {
-      PRUint32 postCount = 0;
-      aResults->Count(&postCount);
-      while (index < postCount) {
-        nsIStyleRule* rule = (nsIStyleRule*)aResults->ElementAt(index++);
-        nsICSSStyleRule*  cssRule;
-        if (NS_SUCCEEDED(rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule))) {
-          nsIStyleRule* important = cssRule->GetImportantRule();
-          if (nsnull != important) {
-            aResults->AppendElement(important);
-            NS_RELEASE(important);
-          }
-          NS_RELEASE(cssRule);
-        }
-        NS_RELEASE(rule);
-      }
-    }
-
-    NS_RELEASE(styledContent);
-  }
+  nsCOMPtr<nsIStyledContent> styledContent(do_QueryInterface(aContent));
+  
+  if (styledContent) 
+    // just get the one and only style rule from the content's STYLE attribute
+    styledContent->WalkInlineStyleRules(aRuleWalker);
 
   return NS_OK;
 }
@@ -528,12 +400,12 @@ HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                      nsIAtom* aPseudoTag,
                                      nsIStyleContext* aParentContext,
                                      nsICSSPseudoComparator* aComparator,
-                                     nsISupportsArray* aResults)
+                                     nsIRuleWalker* aRuleWalker)
 {
   if (aPseudoTag == nsHTMLAtoms::firstLinePseudo) {
-    PRUint32 cnt;
-    nsresult rv = aResults->Count(&cnt);
-    if (NS_SUCCEEDED(rv) && cnt) { 
+    PRBool atRoot = PR_FALSE;
+    aRuleWalker->AtRoot(&atRoot);
+    if (!atRoot) {
       if (nsnull == mFirstLineRule) {
         mFirstLineRule = new CSSFirstLineRule(this);
         if (mFirstLineRule) {
@@ -541,15 +413,15 @@ HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         }
       }
       if (mFirstLineRule) {
-        aResults->AppendElement(mFirstLineRule); 
+        aRuleWalker->Forward(mFirstLineRule);
         return NS_OK; 
       }
     } 
   }
   if (aPseudoTag == nsHTMLAtoms::firstLetterPseudo) {
-    PRUint32 cnt;
-    nsresult rv = aResults->Count(&cnt);
-    if (NS_SUCCEEDED(rv) && cnt) { 
+    PRBool atRoot = PR_FALSE;
+    aRuleWalker->AtRoot(&atRoot);
+    if (!atRoot) {
       if (nsnull == mFirstLetterRule) {
         mFirstLetterRule = new CSSFirstLetterRule(this);
         if (mFirstLetterRule) {
@@ -557,7 +429,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         }
       }
       if (mFirstLetterRule) {
-        aResults->AppendElement(mFirstLetterRule); 
+        aRuleWalker->Forward(mFirstLetterRule);
         return NS_OK; 
       }
     } 

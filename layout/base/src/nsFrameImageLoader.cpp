@@ -615,8 +615,8 @@ nsFrameImageLoader::DamageRepairFrames(const nsRect* aDamageRect)
   
       nsCOMPtr<nsIStyleContext> styleContext;
       frame->GetStyleContext(getter_AddRefs(styleContext));
-      const nsStyleColor* color = (const nsStyleColor*)
-      styleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleBackground* color = (const nsStyleBackground*)
+      styleContext->GetStyleData(eStyleStruct_Background);
 
       if ((color->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) ||
           (color->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT) ||

@@ -242,8 +242,6 @@ private:
 protected:
 
   friend class nsTableRowFrame;
-  // Subclass hook for style post processing
-  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
   void      MapBorderPadding(nsIPresContext* aPresContext);
 
   void      MapHTMLBorderStyle(nsIPresContext* aPresContext,
@@ -256,7 +254,7 @@ protected:
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
   nsresult  DecorateForSelection(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
-                                 const nsStyleColor* aStyleColor);
+                                 const nsStyleBackground* aStyleColor);
   const nsStyleColor * GetColorStyleFromSelection(const nsStyleColor *aStyleColor);
 
 protected:

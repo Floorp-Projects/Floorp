@@ -27,19 +27,18 @@
 class nsString;
 class nsIFrame;
 class nsIStyleRule;
-class nsIMutableStyleContext;
 class nsIPresContext;
 class nsIHTMLMappedAttributes;
 class nsIURI;
+struct nsRuleData;
 
 // IID for the nsIHTMLContent class
 #define NS_IHTMLCONTENT_IID   \
 { 0xb9e110b0, 0x94d6, 0x11d1, \
   {0x89, 0x5c, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
-typedef void (*nsMapAttributesFunc)(const nsIHTMLMappedAttributes* aAttributes, 
-                                    nsIMutableStyleContext* aContext, 
-                                    nsIPresContext* aPresContext);
+typedef void (*nsMapRuleToAttributesFunc)(const nsIHTMLMappedAttributes* aAttributes, 
+                                          nsRuleData* aData);
 
 // Abstract interface for all html content
 class nsIHTMLContent : public nsIXMLContent
@@ -59,8 +58,7 @@ public:
 
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,
                               nsHTMLValue& aValue) const = 0;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                          nsMapAttributesFunc& aMapFunc) const = 0;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const = 0;
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,

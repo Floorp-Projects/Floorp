@@ -95,9 +95,9 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (!disp->IsVisible()) {
+  const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)((nsIStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
+  if (!vis->IsVisible()) {
     return NS_OK;
   }
 
@@ -128,14 +128,14 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
   // printing (which we already have) and the "Black Lines" setting in
   // the page setup dialog
 
-  const nsStyleColor* color;
+  const nsStyleBackground* color;
   // Draw a "shadowed" box around the rule area
   if (!noShadeAttribute) {
     nsRect rect(x0, y0, width, height);
 
     const nsStyleBorder* border = (const nsStyleBorder*)
       mStyleContext->GetStyleData(eStyleStruct_Border);
-    color = (nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    color = (nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
     
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
                                     this,aDirtyRect, rect, *color, 

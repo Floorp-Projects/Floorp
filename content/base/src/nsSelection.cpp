@@ -329,8 +329,7 @@ public:
 
   NS_IMETHOD GetTableCellSelection(PRBool *aState){if (aState){*aState = mSelectingTableCellMode != 0; return NS_OK;}return NS_ERROR_NULL_POINTER;}
   NS_IMETHOD ClearTableCellSelection(){mSelectingTableCellMode = 0; return NS_OK;}
-  NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
-
+  
   NS_IMETHOD GetSelection(SelectionType aType, nsISelection **aDomSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
@@ -498,7 +497,6 @@ public:
   static nsIAtom *sCellAtom;
   static nsIAtom *sTbodyAtom;
   static PRInt32 sInstanceCount;
-  static nsStyleColor *sTableStyleColor;
 };
 
 class nsSelectionIterator : public nsIBidirectionalEnumerator
@@ -681,7 +679,6 @@ nsIAtom *nsSelection::sRowAtom = 0;
 nsIAtom *nsSelection::sCellAtom = 0;
 nsIAtom *nsSelection::sTbodyAtom = 0;
 PRInt32 nsSelection::sInstanceCount = 0;
-nsStyleColor *nsSelection::sTableStyleColor = 0;
 
 static PRInt8
 GetIndexFromSelectionType(SelectionType aType)
@@ -904,16 +901,6 @@ nsSelection::nsSelection()
     sRowAtom   = NS_NewAtom("tr");
     sCellAtom  = NS_NewAtom("td");
     sTbodyAtom = NS_NewAtom("tbody");
-    sTableStyleColor = new nsStyleColor();
-    sTableStyleColor->mColor =  NS_RGB(128,0,0);
-    sTableStyleColor->mBackgroundColor =  NS_RGB(128,0,0);
-    sTableStyleColor->mOpacity=  (float)1;
-    sTableStyleColor->mBackgroundAttachment=0;
-    sTableStyleColor->mBackgroundFlags=NS_STYLE_BG_IMAGE_NONE;
-    sTableStyleColor->mBackgroundRepeat=1;
-    sTableStyleColor->mBackgroundXPosition=0;
-    sTableStyleColor->mBackgroundYPosition=0;
-    sTableStyleColor->mCursor=1;
   }
   mHint = HINTLEFT;
   sInstanceCount ++;
@@ -960,7 +947,6 @@ nsSelection::~nsSelection()
     NS_IF_RELEASE(sRowAtom);
     NS_IF_RELEASE(sCellAtom);
     NS_IF_RELEASE(sTbodyAtom);
-    delete sTableStyleColor;
   }
   PRInt32 i;
   for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
@@ -2804,19 +2790,6 @@ nsSelection::GetMouseDownState(PRBool *aState)
   return NS_OK;
 }
 
-
-
-NS_IMETHODIMP
-nsSelection::GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)
-{
-  if (!aStyleColor)
-    return NS_ERROR_NULL_POINTER;
-  *aStyleColor = sTableStyleColor;
-  return NS_OK;
-}
-
-
-
 NS_IMETHODIMP
 nsSelection::GetSelection(SelectionType aType, nsISelection **aDomSelection)
 {
@@ -3092,8 +3065,8 @@ nsSelection::FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSe
   
   while (thisFrame)
   {
-	  const nsStyleUserInterface* userinterface;
-	  thisFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+	  const nsStyleUIReset* userinterface;
+	  thisFrame->GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&)userinterface);
   
     if (userinterface->mUserSelect == aSelectionStyle)
     {

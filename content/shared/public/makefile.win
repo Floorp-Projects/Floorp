@@ -36,6 +36,7 @@ EXPORTS =				\
   nsLayoutAtoms.h \
   nsStyleCoord.h \
   nsStyleUtil.h \
+  nsStyleStruct.h \
   nsTextFragment.h \
   nsXULAtomList.h \
   nsXULAtoms.h \

@@ -1328,9 +1328,9 @@ nsIBox::AddCSSCollapsed(nsBoxLayoutState& aState, nsIBox* aBox, PRBool& aCollaps
 {
   nsIFrame* frame = nsnull;
   aBox->GetFrame(&frame);
-  const nsStyleDisplay* disp;
-  frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
-  aCollapsed = disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE;
+  const nsStyleVisibility* vis;
+  frame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
+  aCollapsed = vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE;
   return PR_TRUE;
 }
 

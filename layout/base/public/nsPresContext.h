@@ -213,6 +213,9 @@ public:
                                   nsIStyleContext* aNewParentContext) = 0;
 
 
+  NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult) = 0;
+  NS_IMETHOD FreeToShell(size_t aSize, void* aFreeChunk) = 0;
+
   /**
    * Get the font metrics for a given font.
    */

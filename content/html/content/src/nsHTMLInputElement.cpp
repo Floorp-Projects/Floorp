@@ -37,7 +37,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
@@ -67,6 +66,8 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsMutationEvent.h"
+
+#include "nsIRuleNode.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -195,8 +196,7 @@ public:
                                nsAWritableString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
@@ -1351,83 +1351,27 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                      nsRuleData* aData)
 {
+  if (!aData)
+    return;
+
   nsHTMLValue value;
-
-  aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-  if (eHTMLUnit_Enumerated == value.GetUnit()) {
-    nsMutableStyleDisplay display(aContext);
-    nsMutableStyleText text(aContext);
-    switch (value.GetIntValue()) {
-    case NS_STYLE_TEXT_ALIGN_LEFT:
-      display->mFloats = NS_STYLE_FLOAT_LEFT;
-      break;
-    case NS_STYLE_TEXT_ALIGN_RIGHT:
-      display->mFloats = NS_STYLE_FLOAT_RIGHT;
-      break;
-    default:
-      text->mVerticalAlign.SetIntValue(value.GetIntValue(),
-                                       eStyleUnit_Enumerated);
-      break;
-    }
-  }
-
   aAttributes->GetAttribute(nsHTMLAtoms::type, value);
   if (eHTMLUnit_Enumerated == value.GetUnit()) {  
     switch (value.GetIntValue()) {
-//XXX when there exists both a Standard and Quirks ua.css, remove this code 
-//XXX it may be needed again if we don't have 2 ua.css files
-//XXX this is now handled by attribute selectors in ua.css
-#if 0
-    case NS_FORM_INPUT_CHECKBOX:
-    case NS_FORM_INPUT_RADIO:
-      {
-        float p2t;
-        aPresContext->GetScaledPixelsToTwips(&p2t);
-        nscoord pad = NSIntPixelsToTwips(3, p2t);
-
-        // add left and right padding around the radio button via css
-	      nsMutableStyleMargin margin(aContext);
-        if (eStyleUnit_Null == margin->mMargin.GetLeftUnit()) {
-          nsStyleCoord left(pad);
-          margin->mMargin.SetLeft(left);
-        }
-        if (eStyleUnit_Null == margin->mMargin.GetRightUnit()) {
-          nsStyleCoord right(NSIntPixelsToTwips(5, p2t));
-          margin->mMargin.SetRight(right);
-        }
-        // add bottom padding if backward mode
-        // XXX why isn't this working?
-        nsCompatibility mode;
-        aPresContext->GetCompatibilityMode(&mode);
-        if (eCompatibility_NavQuirks == mode) {
-          if (eStyleUnit_Null == margin->mMargin.GetBottomUnit()) {
-            nsStyleCoord bottom(pad);
-            margin->mMargin.SetBottom(bottom);
-          }
-        }
-        break;
-      }
-#endif
-      case NS_FORM_INPUT_IMAGE:
-      {
-        nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes,
-                                                          aContext,
-                                                          aPresContext,
-                                                          nsnull);
-
-        nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext,
-                                                     aPresContext);
+      case NS_FORM_INPUT_IMAGE: {
+        nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
+        nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
+        nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
         break;
       }
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
-                                                aPresContext);
+  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP
@@ -1454,11 +1398,9 @@ nsHTMLInputElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                 nsMapAttributesFunc& aMapFunc) const
+nsHTMLInputElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
+  aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
 

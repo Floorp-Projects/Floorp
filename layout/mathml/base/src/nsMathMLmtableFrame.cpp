@@ -481,10 +481,11 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   if (!alignAttribute) {
     // by default, center about the axis
 
-    nsStyleFont font;
-    mStyleContext->GetStyle(eStyleStruct_Font, font);
+    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+      mStyleContext->GetStyleData(eStyleStruct_Font));
     nsCOMPtr<nsIFontMetrics> fm;
-    aPresContext->GetMetricsFor(font.mFont, getter_AddRefs(fm));
+    aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+
     nscoord axisHeight;
     nsMathMLContainerFrame::GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
 

@@ -296,8 +296,10 @@ nsListControlFrame::Paint(nsIPresContext* aPresContext,
                           nsFramePaintLayer aWhichLayer)
 {
   nsIStyleContext* sc = mStyleContext;
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)sc->GetStyleData(eStyleStruct_Display);
-  if (!disp->IsVisible()) {
+  const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+      
+  if (!vis->IsVisible()) {
     return PR_FALSE;
   }
 
@@ -870,10 +872,10 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // Convert to nscoord's by rounding
   nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
 
-  const nsStyleDisplay* display;
-  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  const nsStyleVisibility* vis;
+  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
 
-  if (display->mDirection == NS_STYLE_DIRECTION_RTL)
+  if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
   {
     nscoord bidiScrolledAreaWidth = scrolledAreaDesiredSize.maxElementSize->width;
     firstPassState.reason = eReflowReason_StyleChange;
@@ -2799,7 +2801,7 @@ nsListControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 //---------------------------------------------------------
 // Create a Borderless top level widget for drop-down lists.
 nsresult 
-nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosition* aPosition)
+nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay* aDisplay)
 {
   if (IsInDropDownMode() == PR_TRUE) {
     nsWidgetInitData widgetData;
@@ -2816,7 +2818,7 @@ nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosit
 #endif   
     return NS_OK;
   } else {
-    return nsScrollFrame::CreateScrollingViewWidget(aView, aPosition);
+    return nsScrollFrame::CreateScrollingViewWidget(aView, aDisplay);
   }
 }
 
@@ -2894,10 +2896,10 @@ nsListControlFrame::SyncViewWithFrame(nsIPresContext* aPresContext)
   nsViewVisibility visibility;
 
   view->GetVisibility(visibility);
-  const nsStyleDisplay* disp; 
-  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
+  const nsStyleVisibility* vis; 
+  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
 
-  if (visibility != disp->mVisible) {
+  if (visibility != vis->mVisible) {
     //view->SetVisibility(NS_STYLE_VISIBILITY_VISIBLE == disp->mVisible ?nsViewVisibility_kShow:nsViewVisibility_kHide); 
   }
 
@@ -3184,8 +3186,10 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (!disp->IsVisible()) {
+  const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+      
+  if (!vis->IsVisible()) {
     REFLOW_DEBUG_MSG(">>>>>> Select is NOT visible");
     return NS_OK;
   }

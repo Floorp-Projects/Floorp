@@ -233,11 +233,6 @@ public:
    */
   NS_IMETHOD GetTableCellSelection(PRBool *aState)=0;
 
-  /** GetTableCellSelectionStyleColor
-   *  this holds the color of the selection for table cells when they are selected.
-   */
-  NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)=0;
-
   /** GetSelection
    * no query interface for selection. must use this method now.
    * @param aSelectionType enum value defined in nsISelection for the seleciton you want.

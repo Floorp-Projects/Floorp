@@ -62,7 +62,6 @@ nsFrameList.h \
 nsFrameTraversal.h \
 nsStyleChangeList.h \
 nsStyleConsts.h \
-nsStyleStruct.h \
 nsILayoutHistoryState.h \
 nsIStatefulFrame.h \
 nsIScrollableFrame.h \

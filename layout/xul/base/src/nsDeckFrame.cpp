@@ -298,17 +298,17 @@ nsDeckFrame::Paint(nsIPresContext* aPresContext,
                                 nsFramePaintLayer aWhichLayer)
 {
   // if a tab is hidden all its children are too.
- 	const nsStyleDisplay* disp = (const nsStyleDisplay*)
-	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (!disp->mVisible)
+ 	const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+	if (!vis->mVisible)
 		return NS_OK;
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (disp->IsVisible() && mRect.width && mRect.height) {
+    if (vis->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();
-      const nsStyleColor* color = (const nsStyleColor*)
-        mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleBackground* color = (const nsStyleBackground*)
+        mStyleContext->GetStyleData(eStyleStruct_Background);
       const nsStyleBorder* border = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
 

@@ -328,7 +328,7 @@ protected:
    // nsScrollFrame overrides
    // Override the widget created for the list box so a Borderless top level widget is created
    // for drop-down lists.
-  virtual  nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
+  virtual  nsresult CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay* aDisplay);
   virtual  nsresult GetScrollingParentView(nsIPresContext* aPresContext,
                                            nsIFrame* aParent,
                                            nsIView** aParentView);

@@ -697,16 +697,10 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIC
   nsresult rv = NS_OK;
   nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
   if (NS_SUCCEEDED(rv) && content) {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsHTMLValue value;
     content->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
-    if (eHTMLUnit_Pixel == value.GetUnit()) { 
-      marginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-      if (marginWidth < 0) {
-        marginWidth = 0;
-      }
-    }
+    if (eHTMLUnit_Pixel == value.GetUnit())
+      return value.GetPixelValue();
   }
   return marginWidth;
 }
@@ -717,16 +711,10 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
   nsresult rv = NS_OK;
   nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
   if (NS_SUCCEEDED(rv) && content) {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsHTMLValue value;
     content->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
-    if (eHTMLUnit_Pixel == value.GetUnit()) { 
-      marginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-      if (marginHeight < 0) {
-        marginHeight = 0;
-      }
-    }
+    if (eHTMLUnit_Pixel == value.GetUnit())
+      return value.GetPixelValue();
   }
   return marginHeight;
 }
@@ -836,8 +824,8 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext*      aPresContext,
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
    if (!mSubShell && !isPaginated) {
-    const nsStyleColor* color =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleBackground* color =
+      (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
     aRenderingContext.SetColor(color->mBackgroundColor);
     aRenderingContext.FillRect(mRect);
   }
@@ -869,9 +857,9 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext* aPresContext,
     nsIView* view = nsnull;
     GetView(aPresContext, &view);
     if (view) {
-      const nsStyleDisplay* display;
-      GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-      nsViewVisibility newVis = display->IsVisible() ? nsViewVisibility_kShow : nsViewVisibility_kHide;
+      const nsStyleVisibility* vis;
+      GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
+      nsViewVisibility newVis = vis->IsVisible() ? nsViewVisibility_kShow : nsViewVisibility_kHide;
       nsViewVisibility oldVis;
       // only change if different.
       view->GetVisibility(oldVis);
@@ -1055,9 +1043,9 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
   SetView(aPresContext, view);
 
   // if the visibility is hidden, reflect that in the view
-  const nsStyleDisplay* display;
-  GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  if (!display->IsVisible()) {
+  const nsStyleVisibility* vis;
+  GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
+  if (!vis->IsVisible()) {
     view->SetVisibility(nsViewVisibility_kHide);
   }
 

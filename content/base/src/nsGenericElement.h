@@ -273,8 +273,8 @@ public:
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
   NS_IMETHOD HasClass(nsIAtom* aClass) const;
-  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
-  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD WalkContentStyleRules(nsIRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkInlineStyleRules(nsIRuleWalker* aRuleWalker);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
 
@@ -291,8 +291,7 @@ public:
                               PRBool aNotify);
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,
                               nsHTMLValue& aValue) const;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAWritableString& aResult) const;

@@ -1215,9 +1215,9 @@ nsImageFrame::GetCursor(nsIPresContext* aPresContext,
     if (map->IsInside(p.x, p.y)) {
       // Use style defined cursor if one is provided, otherwise when
       // the cursor style is "auto" we use the pointer cursor.
-      const nsStyleColor* styleColor;
-      GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
-      aCursor = styleColor->mCursor;
+      const nsStyleUserInterface* styleUserInterface;
+      GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)styleUserInterface);
+      aCursor = styleUserInterface->mCursor;
       if (NS_STYLE_CURSOR_AUTO == aCursor) {
         aCursor = NS_STYLE_CURSOR_POINTER;
       }

@@ -27,7 +27,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -63,6 +62,8 @@
 #else
 #include "nsIFrameImageLoader.h"
 #endif
+
+#include "nsIRuleNode.h"
 
 #include "nsIJSContextStack.h"
 
@@ -118,8 +119,7 @@ public:
                                nsAWritableString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
@@ -526,38 +526,18 @@ nsHTMLImageElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                      nsRuleData* aData)
 {
-  if (nsnull != aAttributes) {
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      PRUint8 align = value.GetIntValue();
-      nsMutableStyleDisplay display(aContext);
-      nsMutableStyleText text(aContext);
-      switch (align) {
-      case NS_STYLE_TEXT_ALIGN_LEFT:
-        display->mFloats = NS_STYLE_FLOAT_LEFT;
-        break;
-      case NS_STYLE_TEXT_ALIGN_RIGHT:
-        display->mFloats = NS_STYLE_FLOAT_RIGHT;
-        break;
-      default:
-        text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
-        break;
-      }
-    }
-  }
-
-  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext,
-                                               aPresContext);
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext,
-                                                    aPresContext, nsnull);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
-                                                aPresContext);
+  if (!aData || !aAttributes)
+    return;
+  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
+
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
@@ -581,11 +561,9 @@ nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 
 
 NS_IMETHODIMP
-nsHTMLImageElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                 nsMapAttributesFunc& aMapFunc) const
+nsHTMLImageElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
+  aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
 

@@ -416,7 +416,7 @@ AdjustForBorderPadding(nsIStyleContext* aContext, nsRect& aRect)
 {
   nsMargin m(0,0,0,0);
   nsStyleBorderPadding  bPad;
-  aContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+  aContext->GetBorderPaddingFor(bPad);
   bPad.GetBorderPadding(m);
   aRect.Deflate(m);
 }
@@ -987,7 +987,7 @@ nsOutlinerBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID,
     fm->GetHeight(height);
 
     nsStyleBorderPadding borderPadding;
-    textContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)borderPadding);
+    textContext->GetBorderPaddingFor(borderPadding);
     nsMargin bp(0,0,0,0);
     borderPadding.GetBorderPadding(bp);
     
@@ -1333,7 +1333,7 @@ nsRect nsOutlinerBodyFrame::GetImageSize(PRInt32 aRowIndex, const PRUnichar* aCo
   nsRect r(0,0,0,0);
   nsMargin m(0,0,0,0);
   nsStyleBorderPadding  bPad;
-  aStyleContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+  aStyleContext->GetBorderPaddingFor(bPad);
   bPad.GetBorderPadding(m);
   r.Inflate(m);
 
@@ -1436,7 +1436,7 @@ nsRect nsOutlinerBodyFrame::GetInnerBox()
   nsRect r(0,0,mRect.width, mRect.height);
   nsMargin m(0,0,0,0);
   nsStyleBorderPadding  bPad;
-  mStyleContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+  mStyleContext->GetBorderPaddingFor(bPad);
   bPad.GetBorderPadding(m);
   r.Deflate(m);
   return r;
@@ -1457,9 +1457,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
       aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND)
     return NS_OK;
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (!disp->IsVisibleOrCollapsed())
+  const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+  if (!vis->IsVisibleOrCollapsed())
     return NS_OK; // We're invisible.  Don't paint.
 
   // Handles painting our background, border, and outline.
@@ -1686,18 +1686,20 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int                  aRowIndex,
     // Resolve the style to use for the connecting lines.
     nsCOMPtr<nsIStyleContext> lineContext;
     GetPseudoStyleContext(nsXULAtoms::mozoutlinerline, getter_AddRefs(lineContext));
-    const nsStyleDisplay* displayStyle = (const nsStyleDisplay*)lineContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)lineContext->GetStyleData(eStyleStruct_Visibility);
     
     PRInt32 level;
     mView->GetLevel(aRowIndex, &level);
-
-    if (displayStyle->IsVisibleOrCollapsed() && level && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+    if (vis->IsVisibleOrCollapsed() && level && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
       // Paint the connecting lines.
       aRenderingContext.PushState();
 
       const nsStyleBorder* borderStyle = (const nsStyleBorder*)lineContext->GetStyleData(eStyleStruct_Border);
       nscolor color;
-      borderStyle->GetBorderColor(NS_SIDE_LEFT, color);
+      PRBool transparent; PRBool foreground;
+      borderStyle->GetBorderColor(NS_SIDE_LEFT, color, transparent, foreground);
+
       aRenderingContext.SetColor(color);
       PRUint8 style;
       style = borderStyle->GetBorderStyle(NS_SIDE_LEFT);
@@ -2098,8 +2100,8 @@ nsOutlinerBodyFrame::PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPre
                                           const nsRect& aRect, const nsRect& aDirtyRect)
 {
 
-  const nsStyleColor* myColor = (const nsStyleColor*)
-      aStyleContext->GetStyleData(eStyleStruct_Color);
+  const nsStyleBackground* myColor = (const nsStyleBackground*)
+      aStyleContext->GetStyleData(eStyleStruct_Background);
   const nsStyleBorder* myBorder = (const nsStyleBorder*)
       aStyleContext->GetStyleData(eStyleStruct_Border);
   const nsStyleOutline* myOutline = (const nsStyleOutline*)
@@ -2224,8 +2226,8 @@ nsOutlinerBodyFrame::ScrollInternal(PRInt32 aRow)
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
   // See if we have a background image.  If we do, then we cannot blit.
-  const nsStyleColor* myColor = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
+  const nsStyleBackground* myColor = (const nsStyleBackground*)
+      mStyleContext->GetStyleData(eStyleStruct_Background);
   PRBool hasBackground = myColor->mBackgroundImage.Length() > 0;
 
   PRInt32 absDelta = delta > 0 ? delta : -delta;

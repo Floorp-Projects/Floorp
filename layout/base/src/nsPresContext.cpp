@@ -787,6 +787,21 @@ nsPresContext::ReParentStyleContext(nsIFrame* aFrame,
   return rv;
 }
 
+NS_IMETHODIMP
+nsPresContext::AllocateFromShell(size_t aSize, void** aResult)
+{
+  if (mShell)
+    return mShell->AllocateFrame(aSize, aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::FreeToShell(size_t aSize, void* aFreeChunk)
+{
+  if (mShell)
+    return mShell->FreeFrame(aSize, aFreeChunk);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)

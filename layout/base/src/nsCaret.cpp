@@ -548,11 +548,11 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 #ifdef IBMBIDI
   PRUint8 bidiLevel=0;
   // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
-  const nsStyleDisplay* display;
-  theFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  const nsStyleVisibility* vis;
+  theFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
   //
   // Direction Style from this->GetStyleData()
-  // now in (display->mDirection)
+  // now in (visibility->mDirection)
   // ------------------
   // NS_STYLE_DIRECTION_LTR : LTR or Default
   // NS_STYLE_DIRECTION_RTL
@@ -573,7 +573,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
       bidiLevel &= ~BIDI_LEVEL_UNDEFINED;
       // There has been a reflow, so we reset the cursor Bidi level to the level of the current frame
       if (!presContext) // Use the style default or default to 0
-        newBidiLevel = (display) ? display->mDirection : 0;
+        newBidiLevel = (vis) ? vis->mDirection : 0;
       else
       {
         theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,

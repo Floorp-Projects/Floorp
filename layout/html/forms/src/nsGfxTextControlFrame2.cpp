@@ -614,7 +614,6 @@ public:
   NS_IMETHOD GetDelayedCaretData(nsMouseEvent **aMouseEvent);
   NS_IMETHOD GetLimiter(nsIContent **aLimiterContent);
   NS_IMETHOD GetTableCellSelection(PRBool *aState);
-  NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
   NS_IMETHOD AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
       nsIContent** outContent, PRInt32* outStartOffset, PRInt32* outEndOffset);
@@ -1154,13 +1153,6 @@ NS_IMETHODIMP
 nsTextInputSelectionImpl::GetTableCellSelection(PRBool *aState)
 {
   return mFrameSelection->GetTableCellSelection(aState);
-}
-
-
-NS_IMETHODIMP
-nsTextInputSelectionImpl::GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor)
-{
-  return mFrameSelection->GetTableCellSelectionStyleColor(aStyleColor);
 }
 
 

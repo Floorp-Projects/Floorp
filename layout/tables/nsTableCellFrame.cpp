@@ -26,7 +26,6 @@
 #include "nsTableFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
@@ -247,53 +246,10 @@ inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
 }
 
 
-
-#ifdef OLD_TABLE_SELECTION      
-const nsStyleColor *
-nsTableCellFrame::GetColorStyleFromSelection(const nsStyleColor *aStyleColor)
-{
-  PRInt16 displaySelection;
-  const nsStyleColor *retval = aStyleColor;
-  displaySelection = DisplaySelection(aPresContext);
-  if (displaySelection) {
-    nsFrameState  frameState;
-    PRBool        isSelected;
-    GetFrameState(&frameState);
-    isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-    if (isSelected) {
-      nsCOMPtr<nsIPresShell> shell;
-      nsresult result = aPresContext->GetShell(getter_AddRefs(shell));
-      if (NS_FAILED(result))
-        return result;
-      nsCOMPtr<nsIFrameSelection> frameSelection;
-      result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
-      if (NS_SUCCEEDED(result)) {
-        PRBool tableCellSelectionMode;
-        result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
-        if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
-          frameSelection->GetTableCellSelectionStyleColor(&retval); 
-          if(displaySelection == nsISelectionController::SELECTION_DISABLED) {
-            ((nsStyleColor *)retval)->mBackgroundColor = NS_RGB(176,176,176);// disabled color
-          }
-          else {
-  	        nsILookAndFeel* look = nsnull;
-	          if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
-	            look->GetColor(nsILookAndFeel::eColor_TextSelectBackground, ((nsStyleColor *)retval)->mBackgroundColor);
-	            NS_RELEASE(look);
-	          }
-          }
-        }
-      }
-    }
-  }
-  return retval;
-}
-#else //OLD_TABLE_SELECTION
-
 nsresult
 nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
                                        nsIRenderingContext& aRenderingContext,
-                                       const nsStyleColor *aStyleColor)
+                                       const nsStyleBackground *aStyleColor)
 {
   PRInt16 displaySelection;
   displaySelection = DisplaySelection(aPresContext);
@@ -352,8 +308,6 @@ nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-#endif //OLD_TABLE_SELECTION
-
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
@@ -365,10 +319,13 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
   }
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+ 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (disp->IsVisibleOrCollapsed()) {
+    if (vis->IsVisibleOrCollapsed()) {
 
-      const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleBackground* myColor = (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
 #ifdef OLD_TABLE_SELECTION
       myColor = GetColorStyleFromSelection(myColor);
 #endif
@@ -379,8 +336,8 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
       NS_ASSERTION(nsnull!=myBorder, "bad style spacing");
 
 
-      const nsStyleTable* cellTableStyle;
-      GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)cellTableStyle)); 
+      const nsStyleTableBorder* cellTableStyle;
+      GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)cellTableStyle)); 
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
 
@@ -395,8 +352,8 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
         nsTableFrame* tableFrame = nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
         nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
         if ((NS_SUCCEEDED(rv)) && tableFrame) {
-          const nsStyleTable* tableStyle;
-          tableFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)tableStyle)); 
+          const nsStyleTableBorder* tableStyle;
+          tableFrame->GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)tableStyle)); 
           if (NS_STYLE_BORDER_SEPARATE == tableFrame->GetBorderCollapseStyle()) {
             nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *myBorder, mStyleContext, skipSides);
@@ -545,8 +502,8 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
                                             const nsHTMLReflowState& aReflowState,
                                             nscoord                  aMaxAscent)
 {
-  const nsStyleText* textStyle =
-      (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
+  const nsStyleTextReset* textStyle =
+      (const nsStyleTextReset*)mStyleContext->GetStyleData(eStyleStruct_TextReset);
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame = nsnull;
   (void) nsTableFrame::GetTableFrame(this, tableFrame);
@@ -622,8 +579,8 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
 PRBool
 nsTableCellFrame::HasVerticalAlignBaseline()
 {
-  const nsStyleText* textStyle;
-  GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
+  const nsStyleTextReset* textStyle;
+  GetStyleData(eStyleStruct_TextReset, (const nsStyleStruct*&)textStyle);
   if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
     PRUint8 verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
     if (verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_TOP ||
@@ -962,7 +919,6 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
 
   /* The RULES code below has been disabled because collapsing borders have been disabled 
      and RULES depend on collapsing borders
-     NOTE: The place where this function was called has been disabled too.
 
   const nsStyleTable* tableStyle;
   aTableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
@@ -1023,39 +979,10 @@ void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
   // get the table frame style context, and from it get cellpadding, cellspacing, and border info
   const nsStyleTable* tableStyle;
   tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  const nsStylePadding* tablePaddingStyle;
-  tableFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct *&)tablePaddingStyle);
-  {
-    nsMutableStylePadding paddingData(mStyleContext);
+ 
+  float p2t;
+  aPresContext->GetPixelsToTwips(&p2t);
 
-    float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
-
-    // Get the table's cellpadding or use 2 pixels as the default if it is not set.
-    // This assumes that ua.css does not set padding for the cell.
-    nscoord defaultPadding = tableFrame->GetCellPadding();
-    if (-1 == defaultPadding) { // not set in table
-      defaultPadding = NSIntPixelsToTwips(1, p2t);
-    }
-
-    // if the padding is not already set, set it to the table's cellpadding
-    if (eStyleUnit_Null == paddingData->mPadding.GetTopUnit()) 
-      paddingData->mPadding.SetTop(defaultPadding);
-    if (eStyleUnit_Null == paddingData->mPadding.GetRightUnit()) 
-      paddingData->mPadding.SetRight(defaultPadding); 
-    if (eStyleUnit_Null == paddingData->mPadding.GetBottomUnit())
-      paddingData->mPadding.SetBottom(defaultPadding);
-    if (eStyleUnit_Null == paddingData->mPadding.GetLeftUnit()) 
-      paddingData->mPadding.SetLeft(defaultPadding);
-  }
-  /* MapHTMLBorderStyle() has been disabled because collapsing borders have been disabled 
-     and the rules in MapHTMLBorderStyle() depend on collapsing borders
-
-  {
-    nsMutableStyleBorder borderData(mStyleContext);
-    MapHTMLBorderStyle(aPresContext, *borderData, tableFrame);
-  }
-  */
 
   MapVAlignAttribute(aPresContext, tableFrame);
   MapHAlignAttribute(aPresContext, tableFrame);
@@ -1066,8 +993,9 @@ void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
  * as outlined in Bugzilla bug report 1802 and 915 */
 void nsTableCellFrame::MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame)
 {
-  const nsStyleText* textStyle;
-  GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)textStyle);
+#if 0
+  const nsStyleTextReset* textStyle;
+  GetStyleData(eStyleStruct_TextReset,(const nsStyleStruct *&)textStyle);
   // check if valign is set on the cell
   // this condition will also be true if we inherited valign from the row or rowgroup
   if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
@@ -1079,18 +1007,19 @@ void nsTableCellFrame::MapVAlignAttribute(nsIPresContext* aPresContext, nsTableF
   GetColIndex(colIndex);
   nsTableColFrame* colFrame = aTableFrame->GetColFrame(colIndex);
   if (colFrame) {
-    const nsStyleText* colTextStyle;
-    colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
+    const nsStyleTextReset* colTextStyle;
+    colFrame->GetStyleData(eStyleStruct_TextReset,(const nsStyleStruct *&)colTextStyle);
     if (colTextStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-      nsMutableStyleText cellTextStyle(mStyleContext);
+      nsStyleTextReset* cellTextStyle = (nsStyleTextReset*)mStyleContext->GetMutableStyleData(eStyleStruct_TextReset);
       cellTextStyle->mVerticalAlign.SetIntValue(colTextStyle->mVerticalAlign.GetIntValue(), eStyleUnit_Enumerated);
       return; // valign set from COL info
     }
   }
 
   // otherwise, set the vertical align attribute to the HTML default
-  nsMutableStyleText cellTextStyle(mStyleContext);
+  nsStyleTextReset* cellTextStyle = (nsStyleTextReset*)mStyleContext->GetMutableStyleData(eStyleStruct_TextReset);
   cellTextStyle->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_MIDDLE, eStyleUnit_Enumerated);
+#endif
 }
 
 /* XXX: this code will not work properly until the style and layout code has been updated 
@@ -1114,7 +1043,7 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
   const nsStyleText* rowTextStyle;
   rowFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)rowTextStyle);
   if (NS_STYLE_TEXT_ALIGN_DEFAULT != rowTextStyle->mTextAlign) {
-    nsMutableStyleText cellTextStyle(mStyleContext);
+    nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
     cellTextStyle->mTextAlign = rowTextStyle->mTextAlign;
     return; // halign set from ROW info
   }
@@ -1127,18 +1056,18 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
     const nsStyleText* colTextStyle;
     colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
     if (NS_STYLE_TEXT_ALIGN_DEFAULT != colTextStyle->mTextAlign) {
-      nsMutableStyleText cellTextStyle(mStyleContext);
+      nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
       cellTextStyle->mTextAlign = colTextStyle->mTextAlign;
       return; // halign set from COL info
     }
   }
 
   // otherwise, set the text align to the HTML default (center for TH, left for TD)
+  nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
   nsIAtom* tag;
   if (mContent) {
     mContent->GetTag(tag);
     if (tag) {
-      nsMutableStyleText cellTextStyle(mStyleContext);
       cellTextStyle->mTextAlign = (nsHTMLAtoms::th == tag)
                                   ? NS_STYLE_TEXT_ALIGN_CENTER 
                                   : NS_STYLE_TEXT_ALIGN_LEFT;
@@ -1147,18 +1076,6 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
   }
 #endif
 }  
-
-// Subclass hook for style post processing
-NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
-{
-#ifdef NOISY_STYLE
-  printf("nsTableCellFrame::DidSetStyleContext \n");
-#endif
-
-  MapBorderPadding(aPresContext);
-  mStyleContext->RecalcAutomaticData(aPresContext);
-  return NS_OK;
-}
 
 /* ----- global methods ----- */
 

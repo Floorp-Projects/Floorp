@@ -24,7 +24,6 @@
 #include "nsTableFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
@@ -151,24 +150,9 @@ nsTableOuterFrame::IsPercentageBase(PRBool& aBase) const
 NS_IMETHODIMP
 nsTableOuterFrame::AdjustZeroWidth()
 {
-  // a 0 width table becomes auto
-  PRBool makeAuto = PR_FALSE;
-  nsStylePosition* posData = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-  if (posData->mWidth.GetUnit() == eStyleUnit_Coord) {
-    if (0 >= posData->mWidth.GetCoordValue()) {
-      makeAuto= PR_TRUE;
-    }
-  }
-  else if (posData->mWidth.GetUnit() == eStyleUnit_Percent) {
-    if (0.0f >= posData->mWidth.GetPercentValue()) {
-      makeAuto= PR_TRUE;
-    }
-  }
-
-  if (makeAuto) {
-    nsMutableStylePosition position(mStyleContext);
-    position->mWidth = nsStyleCoord(eStyleUnit_Auto);
-  }
+  /* It does not appear that this function is needed any longer, since
+   the content node handles the deprecated width="0" attribute case. -- dwh
+  */
   return NS_OK;
 }
 
@@ -689,9 +673,9 @@ nsTableOuterFrame::GetMaxWidth(PRUint8         aCaptionSide,
 PRUint8
 nsTableOuterFrame::GetCaptionSide()
 {
-  const nsStyleTable* tableStyle;
+  const nsStyleTableBorder* tableStyle;
   if (mCaptionFrame) {
-    mCaptionFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)tableStyle));
+    mCaptionFrame->GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)tableStyle));
     return tableStyle->mCaptionSide;
   }
   else {

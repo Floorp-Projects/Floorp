@@ -282,9 +282,9 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
   }
 
   if ( inThisFrame && aConsiderSelf ) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisible()) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (vis->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }
@@ -497,23 +497,25 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       }
     }
   
-    const nsStyleColor* color;
+    const nsStyleBackground* bg;
+    const nsStyleVisibility* vis;
     const nsStyleDisplay* display;
-    aFrame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)color);
+    aFrame->GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)bg);
+    aFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
     aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
     // Set the view's opacity
-    vm->SetViewOpacity(aView, color->mOpacity);
+    vm->SetViewOpacity(aView, vis->mOpacity);
 
     // See if the view should be hidden or visible
     PRBool  viewIsVisible = PR_TRUE;
-    PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
+    PRBool  viewHasTransparentContent = (bg->mBackgroundFlags &
               NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
 
-    if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
+    if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
       viewIsVisible = PR_FALSE;
     }
-    else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+    else if (NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) {
       // If it has a widget, hide the view because the widget can't deal with it
       nsIWidget* widget = nsnull;
       aView->GetWidget(widget);
@@ -600,7 +602,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     //   in the style context...
     PRBool  hasClip, hasOverflowClip;
     PRBool  isBlockLevel = display->IsBlockLevel() || (0 != (kidState & NS_FRAME_OUT_OF_FLOW));
-    hasClip = position->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
+    hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
     hasOverflowClip = isBlockLevel && (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN);
     if (hasClip || hasOverflowClip) {
       nsRect  clipRect, overflowClipRect;

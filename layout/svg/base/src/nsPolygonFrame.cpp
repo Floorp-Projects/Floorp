@@ -336,9 +336,9 @@ nsPolygonFrame::Paint(nsIPresContext* aPresContext,
 {
 
   // if we aren't visible then we are done.
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-  mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (!disp->IsVisibleOrCollapsed()) 
+  const nsStyleVisibility* visib = NS_STATIC_CAST(const nsStyleVisibility*,
+    mStyleContext->GetStyleData(eStyleStruct_Visibility));
+  if (!visib->IsVisibleOrCollapsed()) 
 	   return NS_OK;  
 
   if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) {

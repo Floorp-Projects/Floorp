@@ -321,14 +321,14 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   // adjust the origin of children.
 
   PRInt32 i;
-  nsStyleFont font;
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
+  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+    mStyleContext->GetStyleData(eStyleStruct_Font));
   nsCOMPtr<nsIFontMetrics> fm;
-  aReflowState.rendContext->SetFont(font.mFont);
+  aReflowState.rendContext->SetFont(font->mFont);
   aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
   nscoord axisHeight, em;
   GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
-  em = NSToCoordRound(float(font.mFont.size));
+  em = NSToCoordRound(float(font->mFont.size));
  
   nscoord fontAscent, fontDescent;
   fm->GetMaxAscent(fontAscent);

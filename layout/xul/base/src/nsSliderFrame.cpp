@@ -291,11 +291,11 @@ nsSliderFrame::Paint(nsIPresContext* aPresContext,
     if (crect.width < thumbRect.width || crect.height < thumbRect.height)
     {
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-      const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-      if (disp->IsVisibleOrCollapsed()) {
-        const nsStyleColor* myColor = (const nsStyleColor*)
-        mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+      if (vis->IsVisibleOrCollapsed()) {
+        const nsStyleBackground* myColor = (const nsStyleBackground*)
+        mStyleContext->GetStyleData(eStyleStruct_Background);
         const nsStyleBorder* myBorder = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
         nsRect rect(0, 0, mRect.width, mRect.height);
@@ -785,9 +785,9 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     return NS_OK;
 
   // always return us (if visible)
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->IsVisible()) {
+  const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+  if (vis->IsVisible()) {
     *aFrame = this;
     return NS_OK;
   }

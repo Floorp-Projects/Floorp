@@ -28,7 +28,7 @@
 #include "nsILinkHandler.h" // for nsLinkState
 
 class nsIStyleContext;
-struct nsStyleColor;
+struct nsStyleBackground;
 
 enum nsFontSizeType {
   eFontSize_HTML  	= 1,
@@ -56,8 +56,8 @@ public:
 
   static PRInt32 ConstrainFontWeight(PRInt32 aWeight);
 
-  static const nsStyleColor* FindNonTransparentBackground(nsIStyleContext* aContext,
-                                                          PRBool aStartAtParent = PR_FALSE);
+  static const nsStyleBackground* FindNonTransparentBackground(nsIStyleContext* aContext,
+                                                               PRBool aStartAtParent = PR_FALSE);
 
   static PRBool IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresContext *aPresContext, nsLinkState *aState);
   static PRBool IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresContext, nsLinkState *aState);

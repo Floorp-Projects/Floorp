@@ -504,8 +504,8 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
 
   
              // look at vertical alignment
-      const nsStyleText* textStyle =
-        (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
+      const nsStyleTextReset* textStyle =
+        (const nsStyleTextReset*)mStyleContext->GetStyleData(eStyleStruct_TextReset);
 
       if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
 
@@ -1272,13 +1272,12 @@ nsBoxFrame::Paint(nsIPresContext* aPresContext,
                             nsFramePaintLayer aWhichLayer)
 {
 
-   const nsStyleDisplay* disp = 
-     NS_STATIC_CAST(const nsStyleDisplay*,
-       mStyleContext->GetStyleData(eStyleStruct_Display));
+  const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
 
-   // if collapsed nothing is drawn
-   if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
-     return NS_OK;
+  // if collapsed nothing is drawn
+  if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
+    return NS_OK;
 
   if (NS_FRAME_IS_UNFLOWABLE & mState) {
     return NS_OK;
@@ -1288,11 +1287,11 @@ nsBoxFrame::Paint(nsIPresContext* aPresContext,
   GetFrameType(getter_AddRefs(frameType));
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (disp->IsVisible() && mRect.width && mRect.height) {
+    if (vis->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();
-      const nsStyleColor* color = (const nsStyleColor*)
-        mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleBackground* color = (const nsStyleBackground*)
+        mStyleContext->GetStyleData(eStyleStruct_Background);
       const nsStyleBorder* border = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
       const nsStyleOutline* outline = (const nsStyleOutline*)
@@ -1354,11 +1353,11 @@ nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
                              nsIFrame*            aFrame,
                              nsFramePaintLayer    aWhichLayer)
 {
-  const nsStyleDisplay* disp;
-  aFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
+  const nsStyleVisibility* vis;
+  aFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
 
   // if collapsed don't paint the child.
-  if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
+  if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
      return;
 
   nsIView *pView;
@@ -1669,9 +1668,9 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   if (!mRect.Contains(aPoint))
     return NS_ERROR_FAILURE;
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-  mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
+  const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+  if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
     return NS_ERROR_FAILURE;
 
   nsIView* view = nsnull;
@@ -1732,7 +1731,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   }
 
   // if no kids were hit then select us
-  if (disp->IsVisible()) {
+  if (vis->IsVisible()) {
       *aFrame = this;
       return NS_OK;
   }
@@ -2343,21 +2342,20 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
     PRBool  autoZIndex = PR_FALSE;
     PRBool  fixedBackgroundAttachment = PR_FALSE;
 
-    // Get nsStyleColor and nsStyleDisplay
-    const nsStyleColor* color = (const nsStyleColor*)
-      aStyleContext->GetStyleData(eStyleStruct_Color);
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      aStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleBackground* bg = (const nsStyleBackground*)
+      aStyleContext->GetStyleData(eStyleStruct_Background);
+    const nsStyleVisibility* vis = (const nsStyleVisibility*)
+      aStyleContext->GetStyleData(eStyleStruct_Visibility);
 
-    if (color->mOpacity != 1.0f) {
+    if (vis->mOpacity != 1.0f) {
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-        ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p opacity=%g",
-         aFrame, color->mOpacity));
+        ("nsBoxFrame::CreateViewForFrame: frame=%p opacity=%g",
+         aFrame, vis->mOpacity));
       aForce = PR_TRUE;
     }
 
     // See if the frame has a fixed background attachment
-    if (NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
+    if (NS_STYLE_BG_ATTACHMENT_FIXED == bg->mBackgroundAttachment) {
       aForce = PR_TRUE;
       fixedBackgroundAttachment = PR_TRUE;
     }
@@ -2368,7 +2366,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
       aStyleContext->GetPseudoType(pseudoTag);
       if (pseudoTag == nsLayoutAtoms::scrolledContentPseudo) {
         NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-          ("nsHTMLContainerFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
+          ("nsBoxFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
         aForce = PR_TRUE;
       }
       NS_IF_RELEASE(pseudoTag);
@@ -2425,13 +2423,13 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 
         // See if the view should be hidden
         PRBool  viewIsVisible = PR_TRUE;
-        PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
+        PRBool  viewHasTransparentContent = (bg->mBackgroundFlags &
                   NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
 
-        if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
+        if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
           viewIsVisible = PR_FALSE;
         }
-        else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+        else if (NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) {
           // If it has a widget, hide the view because the widget can't deal with it
           nsIWidget* widget = nsnull;
           view->GetWidget(widget);
@@ -2476,7 +2474,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
           view->SetVisibility(nsViewVisibility_kHide);
         }
 
-        viewManager->SetViewOpacity(view, color->mOpacity);
+        viewManager->SetViewOpacity(view, vis->mOpacity);
         NS_RELEASE(viewManager);
       }
 
