@@ -313,6 +313,10 @@ public:
   nsVoidArray   mPendingAlternateSheets;  // alternates waiting for load to start
 
   nsHashtable   mSheetMapTable;  // map to insertion index arrays
+
+#ifdef NS_DEBUG
+  PRBool  mSyncCallback;
+#endif
 };
 
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
@@ -764,6 +768,10 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
                             SheetLoadData* aLoadData,
                             nsresult aStatus)
 {
+#ifdef NS_DEBUG
+  NS_ASSERTION(! mSyncCallback, "getting synchronous callback from netlib");
+#endif
+
   if (NS_SUCCEEDED(aStatus) && (0 < aStyleData.Length()) && (mDocument)) {
     nsresult result;
     nsIUnicharInputStream* uin = nsnull;
@@ -1069,11 +1077,17 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
     nsIURI* urlClone = CloneURL(aKey.mURL); // don't give the key to netlib, it munges it
     if (urlClone) {
 #endif
+#ifdef NS_DEBUG
+      mSyncCallback = PR_TRUE;
+#endif
       result = NS_NewUnicharStreamLoader(&loader, urlClone, 
 #ifdef NECKO
                                          nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
 #endif
                                          DoneLoadingStyle, aData);
+#ifdef NS_DEBUG
+      mSyncCallback = PR_FALSE;
+#endif
       NS_RELEASE(urlClone);
       if (NS_SUCCEEDED(result)) {
         mLoadingSheets.Put(&aKey, aData);
