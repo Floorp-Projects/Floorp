@@ -38,7 +38,6 @@ OBJS=										\
 LLIBS=										\
 			$(LLIBS)						\
 			$(LIBNSPR)						\
-			$(DIST)\lib\xppref32.lib		\
 			$(DIST)\lib\xpcom.lib       	\
       $(DIST)\lib\abstat_s.lib    \
 			$(NULL)

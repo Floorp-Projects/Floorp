@@ -46,7 +46,6 @@ OBJS=										\
 LLIBS=										\
 			$(LLIBS)						\
 			$(LIBNSPR)						\
-			$(DIST)\lib\xppref32.lib		\
 			$(DIST)\lib\xpcom.lib       	\
 			$(DIST)\lib\emitterutils_s.lib  \
 			$(NULL)
