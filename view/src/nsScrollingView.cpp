@@ -496,8 +496,10 @@ NS_IMETHODIMP nsScrollingView::SetDimensions(nscoord width, nscoord height, PRBo
   clipRect.Deflate(mInsets);
 
   // Size and position the clip view
-  if (nsnull != mClipView)
+  if (nsnull != mClipView) {
     mClipView->SetBounds(clipRect, aPaint);
+     UpdateScrollControls(aPaint);
+  }
 
   NS_RELEASE(dx);
   return NS_OK;
