@@ -29,7 +29,7 @@ void main(int argc, char* argv[])
 {
     nsresult rv;
     nsIServiceManager* servMgr;
-    rv = NS_InitXPCOM(&servMgr, NULL, NULL);
+    rv = NS_InitXPCOM(&servMgr, NULL);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
 
     // try loading a component and releasing it to see if it leaks

@@ -2251,7 +2251,7 @@ NS_GetGlobalComponentManager(nsIComponentManager* *result)
     if (nsComponentManagerImpl::gComponentManager == NULL)
     {
         // XPCOM needs initialization.
-        rv = NS_InitXPCOM(NULL, NULL, NULL);
+        rv = NS_InitXPCOM(NULL, NULL);
     }
 
     if (NS_SUCCEEDED(rv))

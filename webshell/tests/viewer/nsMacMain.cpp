@@ -394,7 +394,7 @@ int main(int argc, char **argv)
 	NS_ASSERTION((err==noErr), "AEInstallEventHandler failed");
 
 	// Start up XPCOM?
- 	nsresult rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
+ 	nsresult rv = NS_InitXPCOM(nsnull, nsnull);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
  
 	// Hack to get il_ss set so it doesn't fail in xpcompat.c

@@ -93,36 +93,23 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     OSErr      err = noErr;
     long       xpiStubDirID = 0;
     Boolean    isDir = false;
-    FSSpec     fsRegFile;
     
     FSpGetDirectoryID(&aXPIStubDir, &xpiStubDirID, &isDir);
-    err = FSMakeFSSpec(aXPIStubDir.vRefNum, xpiStubDirID, COMPONENT_REG, &fsRegFile);
-    if (err!=noErr)
-        return NS_ERROR_UNEXPECTED;
-    	
-    nsfsRegFile = fsRegFile;
     nsfsDirectory = aXPIStubDir;
-    rv = NS_InitXPCOM(&gServiceMgr, &nsfsRegFile, &nsfsDirectory);
+    rv = NS_InitXPCOM(&gServiceMgr, &nsfsDirectory);
 #elif defined(XP_PC)
     char componentPath[_MAX_PATH];
 
     getcwd(componentPath, _MAX_PATH);
-    nsfsDirectory   = componentPath;
-    nsfsRegFile     = componentPath;
-    nsfsDirectory  += "\\components";
-    nsfsRegFile    += "\\";
-    nsfsRegFile    += COMPONENT_REG;
+    nsfsDirectory = componentPath;
 
-    rv = NS_InitXPCOM(&gServiceMgr, &nsfsRegFile, &nsfsDirectory);
+    rv = NS_InitXPCOM(&gServiceMgr, &nsfsDirectory);
 #elif defined(XP_UNIX)
-    nsfsDirectory   = aProgramDir;
-    nsfsRegFile     = aProgramDir;
-    nsfsRegFile    += "/";
-    nsfsRegFile    += COMPONENT_REG;
+    nsfsDirectory = aProgramDir;
  
-    rv = NS_InitXPCOM(&gServiceMgr, &nsfsRegFile, &nsfsDirectory);
+    rv = NS_InitXPCOM(&gServiceMgr, &nsfsDirectory);
 #else
-    rv = NS_InitXPCOM(&gServiceMgr, NULL, NULL);
+    rv = NS_InitXPCOM(&gServiceMgr, NULL);
 #endif
 
     if (!NS_SUCCEEDED(rv))

@@ -643,7 +643,7 @@ main(int argc, char **argv)
     gErrFile = stderr;
     gOutFile = stdout;
 
-    rv = NS_InitXPCOM(NULL, NULL, NULL);
+    rv = NS_InitXPCOM(NULL, NULL);
     NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
     SetupRegistry();

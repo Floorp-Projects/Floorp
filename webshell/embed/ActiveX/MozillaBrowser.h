@@ -326,10 +326,8 @@ protected:
 	// List of registered browser helper objects
 	ObjectList				m_cBrowserHelperList;
 
-	// Pointer to the component folder
-	nsFileSpec			   *m_pComponentPath;
-	// Pointer to the component file
-	nsFileSpec			   *m_pComponentFile;
+	// Pointer to the bin directory
+	nsFileSpec			   *m_pBinDirPath;
 
 	virtual HRESULT CreateWebShell();
 	virtual HRESULT InitWebShell();
