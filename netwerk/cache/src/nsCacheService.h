@@ -53,10 +53,10 @@ public:
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& iid, void* *result);
 
-    // service accessor for related classes (nsCacheSession, nsCacheEntry, etc.)
-    static nsCacheService *
-    GlobalInstance(void) { return gService; };
 
+    /**
+     * Methods called by nsCacheSession
+     */
     nsresult       OpenCacheEntry(nsCacheSession *           session,
                                   const char *               clientKey, 
                                   nsCacheAccessMode          accessRequested,
@@ -67,10 +67,28 @@ public:
                                        nsCacheAccessMode  accessRequested,
                                        nsICacheListener * listener);
 
+    /**
+     * Methods called by nsCacheEntryDescriptor
+     */
+
+    nsresult       GetTransportForEntry(nsCacheEntry * entry, nsITransport **result);
     void           CloseDescriptor(nsCacheEntryDescriptor * descriptor);
+
+
+    /**
+     * Methods called by any cache classes
+     */
+
+    static
+    nsCacheService * GlobalInstance(void) { return gService; };
+
+    nsresult         DoomEntry(nsCacheEntry * entry);
 
 private:
 
+    /**
+     * Internal Methods
+     */
     nsresult       CreateRequest(nsCacheSession *   session,
                                  const char *       clientKey,
                                  nsCacheAccessMode  accessRequested,
@@ -78,10 +96,11 @@ private:
                                  nsCacheRequest **  request);
 
     nsresult       ActivateEntry(nsCacheRequest * request, nsCacheEntry ** entry);
+    nsresult       BindEntry(nsCacheEntry * entry);
 
     nsCacheEntry * SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy);
 
-    nsresult       Doom(nsCacheEntry * entry);
+    nsresult       DoomEntry_Internal(nsCacheEntry * entry);
 
 
     void           DeactivateEntry(nsCacheEntry * entry);
