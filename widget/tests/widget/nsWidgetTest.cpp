@@ -49,6 +49,7 @@
 #include "nsITabWidget.h"
 #include "nsITooltipWidget.h"
 #include "nsIAppShell.h"
+#include "nsWidgetSupport.h"
 
 #include <stdio.h>
 
@@ -57,13 +58,13 @@ FILE *  gFD             = nsnull;
 PRInt32 gOverallStatus   = 0;
 PRInt32 gNonVisualStatus = 0;
 
-nsIWidget     *window = NULL;
-nsITextWidget *statusText = NULL;
-nsITextWidget *textWidgetInstance = NULL;
-nsITextWidget *passwordText  = NULL;
+nsIWidget         *window = NULL;
+nsITextWidget     *statusText = NULL;
+nsITextAreaWidget *textWidgetInstance = NULL;
+nsITextWidget     *passwordText  = NULL;
 
-nsIListWidget *comboBox      = NULL;
-nsIListWidget *listBox       = NULL;
+nsIComboBox   *comboBox      = NULL;
+nsIListBox    *listBox       = NULL;
 nsIListBox    *gMultiListBox = NULL;
 
 nsIWidget     *movingWidget  = NULL;
@@ -143,7 +144,9 @@ static NS_DEFINE_IID(kCTooltipWidgetCID, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 
 
+
 // interface ids
+static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWidgetIID,         NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIButtonIID,         NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIScrollbarIID,      NS_ISCROLLBAR_IID);
@@ -152,6 +155,7 @@ static NS_DEFINE_IID(kITextWidgetIID,     NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 static NS_DEFINE_IID(kIRadioButtonIID,    NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kIListBoxIID,        NS_ILISTBOX_IID);
+static NS_DEFINE_IID(kIListWidgetIID,     NS_ILISTWIDGET_IID);
 static NS_DEFINE_IID(kIComboBoxIID,       NS_ICOMBOBOX_IID);
 static NS_DEFINE_IID(kIFileWidgetIID,     NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kITabWidgetIID,      NS_ITABWIDGET_IID);
@@ -265,7 +269,8 @@ void textSelfTest(FILE * fd, char * aTitle, nsITextWidget * aTextWidget) {
   fprintf(fd, "%s self test\n", aTitle);
   fprintf(fd, "-----------------------------\n\n");
 
-  aTextWidget->SetText(nsString("1234567890"));
+  PRUint32 actualSize;
+  aTextWidget->SetText(nsString("1234567890"),actualSize);
   PRUint32 start = 1;
   PRUint32 end   = 5;
   aTextWidget->SetSelection(start, end);
@@ -279,12 +284,12 @@ void textSelfTest(FILE * fd, char * aTitle, nsITextWidget * aTextWidget) {
   start = 5;
   aTextWidget->SetCaretPosition(start);
 
-  start2 = aTextWidget->GetCaretPosition();
+  aTextWidget->GetCaretPosition(start2);
 
   fprintf(fd, "Tested SetCaretPosition and GetCaretPosition Test [%s]\n", eval(start == start2));
-  aTextWidget->InsertText(nsString("xxx"),1,3);
+  aTextWidget->InsertText(nsString("xxx"),1,3,actualSize);
   nsString str;
-  aTextWidget->GetText(str,256);
+  aTextWidget->GetText(str,256,actualSize);
   char * s = str.ToNewCString();
   char * s2 = "1xxx234567890";
   fprintf(fd, "Tested InsertText Test [%s] is [%s] [%s]\n", s2, s, eval(!strcmp(s2, s)));
@@ -398,11 +403,8 @@ int createTestButton(nsIWidget * aWin,
   nsIButton *button;
   nsRect rect(aX, aY, aWidth, 25);  
   nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void **) &button);
-  button->Create(window, rect, aHandleEventFunction, NULL);
-  nsString label(aTitle);
-  button->SetLabel(label);
-  button->Show(PR_TRUE);
-  //NS_RELEASE(button);
+  NS_CreateButton(aWin,button,rect,aHandleEventFunction);
+  button->SetLabel(aTitle);
   return aX + aWidth;
 }
 
@@ -418,11 +420,8 @@ nsIButton* createSimpleButton(nsIWidget * aWin,
   nsIButton *button;
   nsRect rect(aX, aY, aWidth, 25);  
   nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
-  button->Create(aWin, rect, aHandleEventFunction, NULL);
-  nsString label(aTitle);
-  button->SetLabel(label);
-  button->Show(PR_TRUE);
-//  NS_RELEASE(button);
+  NS_CreateButton(aWin,button,rect,aHandleEventFunction);
+  button->SetLabel(aTitle);
   return button;
 }
 
@@ -439,9 +438,14 @@ nsITooltipWidget* createTooltipWindow(nsIWidget * aWin,
   nsITooltipWidget *tooltip;
   nsRect rect(aX, aY, aWidth, 40);  
   nsRepository::CreateInstance(kCTooltipWidgetCID, nsnull, kITooltipWidgetIID, (void**)&tooltip);
-  tooltip->Create((nsIWidget*)NULL, rect, aHandleEventFunction, NULL);
-  nsIButton *toolTipButton = createSimpleButton(tooltip, "tooltip",5, 5, 80, 0);
-  tooltip->Show(PR_TRUE);
+  NS_CreateTooltipWidget((nsISupports*)nsnull,tooltip,rect,aHandleEventFunction);
+  
+  nsIWidget* toolTipWidget;
+  if (NS_OK == tooltip->QueryInterface(kIWidgetIID,(void**)&toolTipWidget))
+  {
+    nsIButton *toolTipButton = createSimpleButton(toolTipWidget, "tooltip",5, 5, 80, 0);
+    NS_RELEASE(toolTipWidget);
+  }
   return tooltip;
 }
 
@@ -460,6 +464,7 @@ nsEventStatus PR_CALLBACK GenericListHandleEvent(nsGUIEvent *aEvent, char * aTit
   }
   nsString str(aTitle);
   fprintf(gFD, "\nVisually tested nsIListWidget\n");
+  PRUint32 actualSize;
 
   if (NS_OK == aEvent->widget->QueryInterface(kIButtonIID, (void**)&btn)) {
     nsAutoString strBuf;
@@ -471,7 +476,7 @@ nsEventStatus PR_CALLBACK GenericListHandleEvent(nsGUIEvent *aEvent, char * aTit
       aListWidget->SelectItem(2);
       fprintf(gFD, "\tTested SelectItem(2)\n");
       str.Append(" should show 'List Item 2'");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "List::SelectItem";
     } else if (!strcmp(title, kRemoveSelection)) {
       nsString item2("List Item 2");
@@ -484,7 +489,7 @@ nsEventStatus PR_CALLBACK GenericListHandleEvent(nsGUIEvent *aEvent, char * aTit
       }
       fprintf(gFD, "\tTested FindItem(...)\n");
       str.Append(" should show empty");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "List::RemoveItemAt && FindItem";
     }
     delete title;
@@ -499,7 +504,14 @@ nsEventStatus PR_CALLBACK GenericListHandleEvent(nsGUIEvent *aEvent, char * aTit
  */
 nsEventStatus PR_CALLBACK ComboTestHandleEvent(nsGUIEvent *aEvent) 
 {
-  return GenericListHandleEvent(aEvent, "ComboBox", comboBox);
+  nsEventStatus   result = nsEventStatus_eIgnore;
+  nsIListWidget*  widget = nsnull;
+  if (comboBox != nsnull && NS_OK == comboBox->QueryInterface(kIListWidgetIID,(void**)&widget))
+  {
+    result = GenericListHandleEvent(aEvent, "ComboBox", widget);
+    NS_RELEASE(comboBox);
+  }
+  return result;
 }
 
 
@@ -509,7 +521,14 @@ nsEventStatus PR_CALLBACK ComboTestHandleEvent(nsGUIEvent *aEvent)
  */
 nsEventStatus PR_CALLBACK ListBoxTestHandleEvent(nsGUIEvent *aEvent)
 {
-  return GenericListHandleEvent(aEvent, "ListBox", listBox);
+  nsEventStatus   result = nsEventStatus_eIgnore;
+  nsIListWidget*  widget = nsnull;
+  if (listBox != nsnull && NS_OK == listBox->QueryInterface(kIListWidgetIID,(void**)&widget))
+  {
+    result = GenericListHandleEvent(aEvent, "ListBox", widget);
+    NS_RELEASE(listBox);
+  }
+  return result;
 }
 
 /**--------------------------------------------------------------------------------
@@ -531,6 +550,8 @@ nsEventStatus PR_CALLBACK MultiListBoxTestHandleEvent(nsGUIEvent *aEvent)
     char * title = strBuf.ToNewCString();
     //fprintf(gFD, "Title is [%s]\n", title);
 
+    PRUint32 actualSize;
+ 
     if (!strcmp(title, kSetSelection)) {
       gMultiListBox->Deselect();
 
@@ -543,7 +564,7 @@ nsEventStatus PR_CALLBACK MultiListBoxTestHandleEvent(nsGUIEvent *aEvent)
       }
       fprintf(gFD, "\tTested SelectItem()\n");
       str.Append(" should show 'List Item 0,2,5'");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "Multi-List::SelectItem";
     } else if (!strcmp(title, kSetSelectedIndices)) {
       PRInt32 inxs[] = {0,2,4};
@@ -558,7 +579,7 @@ nsEventStatus PR_CALLBACK MultiListBoxTestHandleEvent(nsGUIEvent *aEvent)
       }
       fprintf(gFD, "\tTested FindItem(...)\n");
       str.Append(" should show 0,5");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "Multi-List::FindItem && RemoveItemAt";
     }
     delete title;
@@ -582,7 +603,9 @@ nsEventStatus PR_CALLBACK CheckButtonTestHandleEvent(nsGUIEvent *aEvent)
 
   if (NS_OK == aEvent->widget->QueryInterface(kICheckButtonIID, (void**)&chkBtn)) {
     fprintf(gFD, "\tGetState and SetState tested.\n");
-    chkBtn->SetState((PRBool)!chkBtn->GetState());
+    PRBool state = PR_FALSE;
+    chkBtn->GetState(state);
+    chkBtn->SetState((PRBool)!state);
     //NS_RELEASE(chkBtn);
     gFailedMsg = "CheckButton::SetState & GetState";
   }
@@ -660,9 +683,10 @@ nsEventStatus PR_CALLBACK GenericTextTestHandleEvent(char           *aTitle,
     nsString     str;
     btn->GetLabel(strBuf);
     char * title = strBuf.ToNewCString();
-
+    
+    PRUint32 actualSize;
     if (!strcmp(title, kSetText)) {
-      aTextWidget->SetText(aTestStr);
+      aTextWidget->SetText(aTestStr,actualSize);
 
       fprintf(gFD, "\nVisually Testing Text\n");
 
@@ -670,11 +694,11 @@ nsEventStatus PR_CALLBACK GenericTextTestHandleEvent(char           *aTitle,
       str.Append(aStrToShow);
       str.Append("]");
 
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "nsITextWidget::SetText";
     } else if (!strcmp(title, kGetText)) {
       nsString getStr;
-      aTextWidget->GetText(getStr, 256);
+      aTextWidget->GetText(getStr, 256,actualSize);
       
       fprintf(gFD, "\tTested GetText(...) \n");
 
@@ -685,18 +709,19 @@ nsEventStatus PR_CALLBACK GenericTextTestHandleEvent(char           *aTitle,
         str.Append(" Test FAILED");
         fprintf(gFD, "Test FAILED");
       }
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "nsITextWidget::GetText";
     } else if (!strcmp(title, kSetCaret)) {
       nsString getStr;
       aTextWidget->SetCaretPosition(1);
       fprintf(gFD, "\tTested SetCaretPosition(1) \n");
       str.Append(" should show caret in position 1");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "nsITextWidget::SetCaretPosition";
     } else if (!strcmp(title, kGetCaret)) {
       nsString getStr;
-      PRUint32 pos = aTextWidget->GetCaretPosition();
+      PRUint32 pos = 0;
+      aTextWidget->GetCaretPosition(pos);
 
       fprintf(gFD, "Visually tested GetCaretPosition(1) \n");
 
@@ -707,17 +732,17 @@ nsEventStatus PR_CALLBACK GenericTextTestHandleEvent(char           *aTitle,
         str.Append(" Test FAILED");
         fprintf(gFD, "Test FAILED\n");
       }
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "nsITextWidget::GetCaretPosition";
     } else if (!strcmp(title, kClearSelection)) {
       aTextWidget->SetSelection(0,0);
       //aTextWidget->SetCaretPosition(0);
       str.Append(" selection should be cleared");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
     } else if (!strcmp(title, kSelectAll)) {
       aTextWidget->SelectAll();
       str.Append(" Everything should be selected");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
     } else if (!strcmp(title, kSetSelection)) {
       nsString getStr;
       aTextWidget->SetSelection(1,5);
@@ -725,7 +750,7 @@ nsEventStatus PR_CALLBACK GenericTextTestHandleEvent(char           *aTitle,
       fprintf(gFD, "\tTested SetSelection(1,5) \n");
 
       str.Append(" should show selection from 1 to 5");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "nsITextWidget::SetSelection";
     }
     delete title;
@@ -747,6 +772,7 @@ nsEventStatus PR_CALLBACK ButtonTestHandleEvent(nsGUIEvent *aEvent)
     return nsEventStatus_eIgnore;
   }
 
+  PRUint32 actualSize;
   if (NS_OK == aEvent->widget->QueryInterface(kIButtonIID, (void**)&btn)) {
     nsAutoString strBuf;
     nsString     str("Tesing ");
@@ -756,12 +782,12 @@ nsEventStatus PR_CALLBACK ButtonTestHandleEvent(nsGUIEvent *aEvent)
     if (!strcmp(title, kHideBtn)) {
       movingWidget->Show(PR_FALSE);
       str.Append("nsIWidget::Show(FALSE)");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "nsIWidget::Show(FALSE)";
     } else if (!strcmp(title, kShowBtn)) {
       movingWidget->Show(PR_TRUE);
       str.Append("nsIWidget::Show(TRUE)");
-      statusText->SetText(str);
+      statusText->SetText(str,actualSize);
       gFailedMsg = "nsIWidget::Show(TRUE)";
     }
 
@@ -822,41 +848,42 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 { 
 	//  printf("aEvent->message %d\n", aEvent->message);
     nsEventStatus result = nsEventStatus_eIgnore;
-    switch(aEvent->message) {
+   PRUint32 actualSize;
+   switch(aEvent->message) {
 
         case NS_SHOW_TOOLTIP:
           {
             char buf[256];
             nsTooltipEvent* tEvent = (nsTooltipEvent*)aEvent;
             sprintf(buf,"Show tooltip %d", tEvent->tipIndex);
-            statusText->SetText(buf);
+            statusText->SetText(buf,actualSize);
             nsRect oldPos;
             oldPos.x = aEvent->point.x;
             oldPos.y = aEvent->point.y;
             nsRect newPos;
             window->WidgetToScreen(oldPos, newPos);
-            tooltipWindow->Move(newPos.x + 5, newPos.y + 5);
-            tooltipWindow->Show(PR_TRUE);
+            NS_MoveWidget(tooltipWindow,newPos.x + 5, newPos.y + 5);
+            NS_ShowWidget(tooltipWindow,PR_TRUE);
           }
           break;
 
         case NS_HIDE_TOOLTIP:
-          statusText->SetText("Hide tooltip");
-          tooltipWindow->Show(PR_FALSE);
+          statusText->SetText("Hide tooltip",actualSize);
+          NS_ShowWidget(tooltipWindow,PR_FALSE);
           break;
         
         case NS_MOVE:
             char str[256];
             sprintf(str, "Moved window to %d,%d", aEvent->point.x, aEvent->point.y);
-            statusText->SetText(str);
+            statusText->SetText(str,actualSize);
             break;
 
         case NS_MOUSE_LEFT_DOUBLECLICK:
-            statusText->SetText("Left button double click");
+            statusText->SetText("Left button double click",actualSize);
             break;
 
         case NS_MOUSE_RIGHT_DOUBLECLICK:
-            statusText->SetText("Right button double click");
+            statusText->SetText("Right button double click",actualSize);
             break;
 
         case NS_MOUSE_ENTER:
@@ -930,8 +957,9 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
         case NS_SCROLLBAR_LINE_NEXT:
         case NS_SCROLLBAR_LINE_PREV:
             if (nsnull != movingWidget) {
-              PRUint32  pos = scrollbar->GetPosition();
-              movingWidget->Move(10, pos);
+              PRUint32  pos = 0;
+              scrollbar->GetPosition(pos);
+              NS_MoveWidget(movingWidget,10,pos);
             }
             break;
 
@@ -944,7 +972,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
               (ke->isControl?"Pressed":"Released"),
               (ke->isAlt?"Pressed":"Released"));
             printf("%s\n", str);
-            statusText->SetText(nsString(str));
+            statusText->SetText(nsString(str),actualSize);
             }
             break;
 
@@ -961,6 +989,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
 nsEventStatus PR_CALLBACK HandleFileButtonEvent(nsGUIEvent *aEvent)
 {
+  PRUint32 actualSize;
   switch(aEvent->message) {
            
     case NS_MOUSE_LEFT_BUTTON_UP:
@@ -976,19 +1005,17 @@ nsEventStatus PR_CALLBACK HandleFileButtonEvent(nsGUIEvent *aEvent)
       fileWidget->SetFilterList(3, titles, filters);
       fileWidget->Create(window,
                          title,
-                         eMode_save,
-                         nsnull,
-                         nsnull);
+                         eMode_save);
   
       PRUint32 result = fileWidget->Show();
       if (result) {
         nsString file;
         fileWidget->GetFile(file);
         printf("file widget contents %s\n", file.ToNewCString());
-        statusText->SetText(file.ToNewCString());
+        statusText->SetText(file.ToNewCString(),actualSize);
       }
       else
-        statusText->SetText("Cancel selected");
+        statusText->SetText("Cancel selected",actualSize);
 
 
       //NS_RELEASE(fileWidget);
@@ -1005,13 +1032,15 @@ nsEventStatus PR_CALLBACK HandleFileButtonEvent(nsGUIEvent *aEvent)
 
 nsEventStatus PR_CALLBACK HandleTabEvent(nsGUIEvent *aEvent)
 {
+  PRUint32 actualSize;
   switch(aEvent->message) {
            
     case NS_TABCHANGE:
-      PRUint32 tab = tabWidget->GetSelectedTab();
+      PRUint32 tab = 0;
+      tabWidget->GetSelectedTab(tab);
       char buf[256];
       sprintf(buf, "Selected tab %d", tab);
-      statusText->SetText(buf);
+      statusText->SetText(buf,actualSize);
     break;
   }
 
@@ -1035,9 +1064,8 @@ void SetTooltipPos(int pos, nsIWidget *aWidget, nsIButton *aButton1, nsIButton *
                         kTooltip1_width / 2,
                         kTooltip1_height);
       aWidget->SetTooltips(2, tips1);
-      aButton1->Move(kTooltip1_x, kTooltip1_y);
-      aButton2->Move(kTooltip1_x + kTooltip1_width,
-                     kTooltip1_y + kTooltip1_height);
+      NS_MoveWidget(aButton1,kTooltip1_x, kTooltip1_y);
+      NS_MoveWidget(aButton2,kTooltip1_x + kTooltip1_width, kTooltip1_y + kTooltip1_height);
       delete tips1[0];
       delete tips1[1];
             }
@@ -1059,9 +1087,9 @@ void SetTooltipPos(int pos, nsIWidget *aWidget, nsIButton *aButton1, nsIButton *
 
       aWidget->UpdateTooltips(tips2); // Put it in the correct position
 
-      aButton1->Move(kTooltip2_x, kTooltip2_y);
-      aButton2->Move(kTooltip2_x + kTooltip2_width,
-                     kTooltip2_y + kTooltip2_height);
+      NS_MoveWidget(aButton1,kTooltip2_x, kTooltip2_y);
+      NS_MoveWidget(aButton2,kTooltip2_x + kTooltip2_width, kTooltip2_y + kTooltip2_height);
+
       delete tips2[0];
       delete tipsDummy[0];
       }
@@ -1102,8 +1130,18 @@ nsEventStatus PR_CALLBACK DoSelfTests(nsGUIEvent *aEvent)
   }
 
   textSelfTest(gFD, "Password Text", passwordText);
-  listSelfTest(gFD, "ListBox", listBox);
-  listSelfTest(gFD, "ComboBox", comboBox);
+  
+  nsIListWidget* widget;
+  if (NS_OK == listBox->QueryInterface(kIListWidgetIID,(void**)&widget))
+  {
+    listSelfTest(gFD, "ListBox", widget);
+    NS_RELEASE(widget);
+  }
+  if (NS_OK == comboBox->QueryInterface(kIListWidgetIID,(void**)&widget))
+  {
+    listSelfTest(gFD, "ComboBox", widget);
+    NS_RELEASE(widget);
+  }
   multiListSelfTest(gFD, "Multi-ListBox", gMultiListBox);
 
   return nsEventStatus_eIgnore;
@@ -1122,6 +1160,7 @@ nsresult WidgetTest(int *argc, char **argv)
       exit(1);
     }
 
+    
     // register widget classes
     nsRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     
@@ -1194,7 +1233,7 @@ nsresult WidgetTest(int *argc, char **argv)
 
 #ifdef XP_PC
     tooltipWindow = createTooltipWindow(window, "INSERT <tooltip> here", 0, 0, 150, 0);
-    tooltipWindow->Show(PR_FALSE);
+    NS_ShowWidget(tooltipWindow,PR_FALSE);
     toolTipButton1 = createSimpleButton(window, "Tooltip \\/\\/",400, 100, 100, 0);
     toolTipButton2 = createSimpleButton(window, "Tooltip /\\/\\",500, 200, 100, 0);
     createTestButton(window, "Move Tooltip pos 1", 450, 150, 130, TooltipPos1);
@@ -1235,15 +1274,14 @@ nsresult WidgetTest(int *argc, char **argv)
     nsIButton *button;
     rect.SetRect(x, y, 60, 25);  
     nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
-    button->Create(window, rect, HandleEvent, NULL);
+    NS_CreateButton(window,button,rect,HandleEvent);
     nsString label("Slider");
     button->SetLabel(label);
 
     nsAutoString strBuf;
     button->GetLabel(strBuf);
-    button->Show(PR_TRUE);
 
-    movingWidget = button;
+    button->QueryInterface(kIWidgetIID,(void**)&movingWidget);
     y += rect.height + 5;
 
     x = 5;
@@ -1264,36 +1302,39 @@ nsresult WidgetTest(int *argc, char **argv)
     rect.SetRect(x, y, 100, 25);  
 
     nsRepository::CreateInstance(kCCheckButtonCID, nsnull, kICheckButtonIID, (void**)&checkButton);
-    checkButton->Create(window, rect, CheckButtonTestHandleEvent, NULL);
+    NS_CreateCheckButton(window,checkButton,rect,CheckButtonTestHandleEvent);
     nsString cbLabel("CheckButton");
     checkButton->SetLabel(cbLabel);
-    checkButton->Show(PR_TRUE);
-    //NS_RELEASE(checkButton);
     y += rect.height + 5;
 
     //
     // create a text widget
     //
 
-    nsITextWidget * textWidget;
+    nsIWidget*      widget = nsnull;
+    nsITextWidget*  textWidget = nsnull;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
 
-    nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&textWidget);
-    textWidget->Create(window, rect, HandleEvent, deviceContext);
-
-
+    PRUint32 actualSize;
     nsFont font("Times", NS_FONT_STYLE_NORMAL,
                          NS_FONT_VARIANT_NORMAL,
                          NS_FONT_WEIGHT_BOLD,
                          0,
                          12);
 
-    textWidget->SetFont(font);
-    nsString initialText("0123456789");
-    textWidget->SetText(initialText);
-    textWidget->SetMaxTextLength(12);
-    textWidget->SelectAll();
-    textWidget->Show(PR_TRUE);
+    nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&textWidget);
+    if (NS_OK == textWidget->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+      widget->Create(window, rect, HandleEvent, deviceContext);
+      widget->SetFont(font);
+
+      nsString initialText("0123456789");
+      textWidget->SetText(initialText,actualSize);
+      textWidget->SetMaxTextLength(12);
+      textWidget->SelectAll();
+      widget->Show(PR_TRUE);
+      NS_IF_RELEASE(widget);
+    }
 
     //NS_RELEASE(textWidget); 
     y += rect.height + 5;
@@ -1306,10 +1347,15 @@ nsresult WidgetTest(int *argc, char **argv)
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&ptextWidget);
     ptextWidget->SetPassword(PR_TRUE);
-    ptextWidget->Create(window, rect, HandleEvent, NULL);
-    nsString pinitialText("password text");
-    ptextWidget->SetText(pinitialText);
-    passwordText = ptextWidget;
+    
+    if (NS_OK == ptextWidget->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+      widget->Create(window, rect, HandleEvent, NULL);
+      nsString pinitialText("password text");
+      ptextWidget->SetText(pinitialText,actualSize);
+      passwordText = ptextWidget;
+      NS_IF_RELEASE(widget);
+    }
 
     x = x+180;
     int saveX = x;
@@ -1336,10 +1382,10 @@ nsresult WidgetTest(int *argc, char **argv)
     nsITextWidget * rtextWidget;
     rect.SetRect(x, y, 100, TEXT_HEIGHT);  
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&rtextWidget);
-    rtextWidget->SetReadOnly(PR_TRUE);
-    rtextWidget->Create(window, rect, HandleEvent, NULL);
+    PRBool old;
+    rtextWidget->SetReadOnly(PR_TRUE,old);
     nsString rinitialText("This is readonly");
-    rtextWidget->SetText(rinitialText);
+    rtextWidget->SetText(rinitialText,actualSize);
     //NS_RELEASE(rtextWidget); 
     y += rect.height + 5;
 
@@ -1350,10 +1396,10 @@ nsresult WidgetTest(int *argc, char **argv)
     nsITextAreaWidget * textAreaWidget;
     rect.SetRect(x, y, 150, 100);  
     nsRepository::CreateInstance(kCTextAreaCID, nsnull, kITextAreaWidgetIID, (void**)&textAreaWidget);
-    textAreaWidget->Create(window, rect, HandleEvent, NULL);
+    NS_CreateTextAreaWidget(window,textAreaWidget,rect,HandleEvent);
     nsString textAreaInitialText("Text Area Widget");
     textWidgetInstance = textAreaWidget;
-    textAreaWidget->SetText(textAreaInitialText);
+    textAreaWidget->SetText(textAreaInitialText,actualSize);
     //NS_RELEASE(textAreaWidget); 
     //y += rect.height + 5;
     x += rect.width + 5;
@@ -1367,7 +1413,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     rect.SetRect(x, 10, 25, 300);  
     nsRepository::CreateInstance(kCVertScrollbarCID, nsnull, kIScrollbarIID, (void**)&scrollbar);
-    scrollbar->Create(window, rect, HandleEvent, NULL);
+    NS_CreateScrollBar(window,scrollbar,rect,HandleEvent);
     scrollbar->SetMaxRange(300);
     scrollbar->SetThumbSize(50);
     scrollbar->SetPosition(100);
@@ -1379,8 +1425,9 @@ nsresult WidgetTest(int *argc, char **argv)
     y = 10;
     rect.SetRect(x, y, 350, TEXT_HEIGHT);  
     nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&statusText);
-    statusText->Create(window, rect, HandleEvent, deviceContext);
-    statusText->Show(PR_TRUE);
+    statusText->QueryInterface(kIWidgetIID,(void**)&widget);
+    widget->Create(window, rect, HandleEvent, deviceContext);
+    widget->Show(PR_TRUE);
     y += rect.height + 5;
 
     //
@@ -1388,18 +1435,15 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     rect.SetRect(x, y, 100, 25);  
     nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
-    button->Create(window, rect, FailedButtonHandleEvent, NULL);
+    NS_CreateButton(window,button,rect,FailedButtonHandleEvent);
     nsString failedLabel("Failed");
     button->SetLabel(failedLabel);
-    button->Show(PR_TRUE);
-    //NS_RELEASE(button);
 
     rect.SetRect(x, y+30, 150, 25);  
     nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
-    button->Create(window, rect, DoSelfTests, NULL);
+    NS_CreateButton(window,button,rect,DoSelfTests);
     nsString selfTestLabel("Perform Self Tests");
     button->SetLabel(selfTestLabel);
-    button->Show(PR_TRUE);
     x += rect.width + 5;
 
     //
@@ -1407,11 +1451,9 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     rect.SetRect(x, y, 100, 25);  
     nsRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
-    button->Create(window, rect, SucceededButtonHandleEvent, NULL);
+    NS_CreateButton(window,button,rect,SucceededButtonHandleEvent);
     nsString succeededLabel("Succeeded");
     button->SetLabel(succeededLabel);
-    button->Show(PR_TRUE);
-    //NS_RELEASE(button);
     
 
     //
@@ -1421,8 +1463,7 @@ nsresult WidgetTest(int *argc, char **argv)
     x = saveX;
     rect.SetRect(x, y, 150, 100);  
     nsRepository::CreateInstance(kCListBoxCID, nsnull, kIListBoxIID, (void**)&listBox);
-    listBox->Create(window, rect, HandleEvent, NULL);
-    listBox->Show(PR_TRUE);
+    NS_CreateListBox(window,listBox,rect,HandleEvent);
     char str[256];
     int i;
     for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
@@ -1448,13 +1489,12 @@ nsresult WidgetTest(int *argc, char **argv)
       // Notice the extra agrument PR_TRUE below which indicates that
       // the list widget is multi-select
     gMultiListBox->SetMultipleSelection(PR_TRUE);
-    gMultiListBox->Create(window, rect, HandleEvent, NULL);
+    NS_CreateListBox(window,gMultiListBox,rect,HandleEvent);
     for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
       sprintf(str, "%s %d", "Multi List Item", i);
       nsString listStr1(str);
       gMultiListBox->AddItemAt(listStr1, i);
     }
-    gMultiListBox->Show(PR_TRUE);
 //#endif
 
     x = createTestButton(window, kSetSelection,    x+150, y, 125, MultiListBoxTestHandleEvent);
@@ -1470,11 +1510,10 @@ nsresult WidgetTest(int *argc, char **argv)
     rect.SetRect(300, 500, 200, 50);  
 #ifdef XP_PC
     nsRepository::CreateInstance(kCTabWidgetCID, nsnull, kITabWidgetIID, (void**)&tabWidget);
-    tabWidget->Create(window, rect, HandleTabEvent, NULL);
+    NS_CreateTabWidget(window,tabWidget,rect,HandleTabEvent);
     nsString tabs[] = {"low", "medium", "high" };
    
     tabWidget->SetTabs(3, tabs);
-    tabWidget->Show(PR_TRUE);
 #endif
 
     //
@@ -1484,12 +1523,10 @@ nsresult WidgetTest(int *argc, char **argv)
     rect.SetRect(x, y, 120, 25);  
 
     nsRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&radioButton);
-    radioButton->Create(window, rect, HandleEvent, NULL);
+    NS_CreateRadioButton(window,radioButton,rect,HandleEvent);
     nsString rbLabel("RadioButton1");
     radioButton->SetLabel(rbLabel);
-    radioButton->Show(PR_TRUE);
     gRadioBtns[gNumRadioBtns++] = radioButton;
-    //NS_RELEASE(radioButton);
     y += rect.height + 5;
 
     //
@@ -1498,12 +1535,10 @@ nsresult WidgetTest(int *argc, char **argv)
     rect.SetRect(x, y, 120, 25);  
 
     nsRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&radioButton);
-    radioButton->Create(window, rect, HandleEvent, NULL);
+    NS_CreateRadioButton(window,radioButton,rect,HandleEvent);
     nsString rbLabel2("RadioButton2");
     radioButton->SetLabel(rbLabel2);
-    radioButton->Show(PR_TRUE);
     gRadioBtns[gNumRadioBtns++] = radioButton;
-    //NS_RELEASE(radioButton);
     y += rect.height + 5;
 
     //window->SetBackgroundColor(NS_RGB(0,255,0));
@@ -1514,8 +1549,7 @@ nsresult WidgetTest(int *argc, char **argv)
     rect.SetRect(x, y, 120, 100);  
 
     nsRepository::CreateInstance(kCComboBoxCID, nsnull, kIComboBoxIID, (void**)&comboBox);
-    comboBox->Create(window, rect, HandleEvent, NULL);
-    comboBox->Show(PR_TRUE);
+    NS_CreateComboBox(window,comboBox,rect,HandleEvent);
     for (i=0;i<NUM_COMBOBOX_ITEMS;i++) {
       sprintf(str, "%s %d", "List Item", i);
       nsString listStr1(str);
@@ -1535,7 +1569,7 @@ nsresult WidgetTest(int *argc, char **argv)
 
     gNonVisualStatus = gOverallStatus;
 
-    statusText->SetText(status);
+    statusText->SetText(status,actualSize);
 
     // show
     window->Show(PR_TRUE);
