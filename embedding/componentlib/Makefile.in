@@ -136,6 +136,10 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= ole32.lib shell32.lib
 endif
 
+ifeq ($(OS_ARCH),BeOS)
+OS_LIBS += -ltracker
+endif
+
 GARBAGE += $(CPPSRCS)
 
 ifdef _NO_AUTO_VARS
