@@ -92,6 +92,8 @@ endif
 			! -name "*.xpt" \
 			! -name "*.gif" \
 			! -name "*.jpg" \
+			! -name "*.png" \
+			! -name "*.xpm" \
 			! -name "*.txt" \
 			! -name "*.rdf" \
 			! -name "*.sh" \
@@ -101,6 +103,11 @@ endif
 			! -name "*.xul" \
 			! -name "*.css" \
 			! -name "*.xml" \
+			! -name "*.jar" \
+			! -name "*.dat" \
+			! -name "*.tbl" \
+			! -name "*.src" \
+			! -name "*.reg" \
 			-exec strip $(STRIP_FLAGS) {} \;
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 	cd $(DIST); tar -cvhf - package | gzip -vf9 > $@
