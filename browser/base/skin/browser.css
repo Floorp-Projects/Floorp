@@ -22,6 +22,7 @@
  *   Joe Hewitt (hewitt@netscape.com)
  *   Jason Kersey (kerz@netscape.com)
  *   Pierre Chanial (chanial@noos.fr)
+ *   Dean Tessman (dean_tessman@hotmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -301,6 +302,38 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(64px 224px 96px 192px);
 }
 
+#cut-button {
+  -moz-image-region: rect(0px 384px 32px 352px);
+}
+#cut-button:hover,
+#cut-button[checked="true"] {
+  -moz-image-region: rect(32px 384px 64px 352px);
+}
+#cut-button[disabled="true"] {
+  -moz-image-region: rect(64px 384px 96px 352px);
+}
+
+#copy-button {
+  -moz-image-region: rect(0px 416px 32px 384px);
+}
+#copy-button:hover,
+#copy-button[checked="true"] {
+  -moz-image-region: rect(32px 416px 64px 384px);
+}
+#copy-button[disabled="true"] {
+  -moz-image-region: rect(64px 416px 96px 384px);
+}
+
+#paste-button {
+  -moz-image-region: rect(0px 448px 32px 416px);
+}
+#paste-button:hover,
+#paste-button[checked="true"] {
+  -moz-image-region: rect(32px 448px 64px 416px);
+}
+#paste-button[disabled="true"] {
+  -moz-image-region: rect(64px 448px 96px 416px);
+}
 
 /* ::::: small primary toolbar buttons ::::: */
 
@@ -420,6 +453,38 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
   -moz-image-region: rect(40px 140px 60px 120px) !important;
 }
 
+toolbar[iconsize="small"] #cut-button {
+  -moz-image-region: rect(0px 240px 20px 220px);
+}
+toolbar[iconsize="small"] #cut-button:hover,
+toolbar[iconsize="small"] #cut-button[checked="true"] {
+  -moz-image-region: rect(20px 240px 40px 220px);
+}
+toolbar[iconsize="small"] #cut-button[disabled="true"] {
+  -moz-image-region: rect(40px 240px 60px 220px) !important;
+}
+
+toolbar[iconsize="small"] #copy-button {
+  -moz-image-region: rect(0px 260px 20px 240px);
+}
+toolbar[iconsize="small"] #copy-button:hover,
+toolbar[iconsize="small"] #copy-button[checked="true"] {
+  -moz-image-region: rect(20px 260px 40px 240px);
+}
+toolbar[iconsize="small"] #copy-button[disabled="true"] {
+  -moz-image-region: rect(40px 260px 60px 240px) !important;
+}
+
+toolbar[iconsize="small"] #paste-button {
+  -moz-image-region: rect(0px 280px 20px 260px);
+}
+toolbar[iconsize="small"] #paste-button:hover,
+toolbar[iconsize="small"] #paste-button[checked="true"] {
+  -moz-image-region: rect(20px 280px 40px 260px);
+}
+toolbar[iconsize="small"] #paste-button[disabled="true"] {
+  -moz-image-region: rect(40px 280px 60px 260px) !important;
+}
 
 /* ::::: fullscreen window controls ::::: */
 
