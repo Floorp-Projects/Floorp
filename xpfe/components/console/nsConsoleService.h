@@ -24,11 +24,13 @@
  * 'lil description of this file.
  */
 
-#include "nsIConsoleService.h"
 #include "nsSupportsArray.h"
 #include "nsCOMPtr.h"
 
-class nsConsoleService : public nsIConsoleService
+#include "nsIConsoleService.h"
+#include "nsIScriptErrorLogger.h"
+
+class nsConsoleService : public nsIConsoleService, nsIScriptErrorLogger
 {
 public:
     nsConsoleService();
@@ -36,6 +38,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLESERVICE
+    NS_DECL_NSISCRIPTERRORLOGGER
 
 private:
     // Circular buffer of saved messages
