@@ -46,7 +46,6 @@ MODULE		= nkgnomevfs
 LIBRARY_NAME	= nkgnomevfs
 SHORT_LIBNAME	= nkgnomevfs
 IS_COMPONENT	= 1
-MODULE_NAME	= nkgnomevfs
 REQUIRES	= xpcom \
 		  string \
 		  necko \
