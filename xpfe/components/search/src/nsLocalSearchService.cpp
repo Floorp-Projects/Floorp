@@ -96,9 +96,7 @@ LocalSearchDataSource::LocalSearchDataSource(void)
 {
 	if (gRefCnt++ == 0)
 	{
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-		                           NS_GET_IID(nsIRDFService),
-		                           (nsISupports**) &gRDFService);
+		nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
 
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
@@ -137,8 +135,7 @@ LocalSearchDataSource::~LocalSearchDataSource (void)
 		NS_RELEASE(kRDF_type);
 
 		gLocalSearchDataSource = nsnull;
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-		gRDFService = nsnull;
+		NS_RELEASE(gRDFService);
 	}
 }
 
