@@ -123,13 +123,13 @@ function buildPalette(paletteBox, toolbar, currentSet)
   var rowMax = 4;
 
   // Add the toolbar separator first.
-  var node = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+  var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                       "toolbarseparator");
-  node.setAttribute("id", "separator");
+  sep.setAttribute("id", "separator");
 
-  createEnclosure(node, currentRow);
+  createEnclosure(sep, currentRow);
 
-  node = toolbar.palette.firstChild;
+  var node = toolbar.palette.firstChild;
   var isOnToolbar = false;
   while (node) {
     for (var i = 0; i < currentSet.length; ++i) {
@@ -169,6 +169,7 @@ function buildPalette(paletteBox, toolbar, currentSet)
       var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "spacer");
       spring.setAttribute("flex", remainingFlex);
+      spring.setAttribute("height", currentRow.boxObject.height);
       currentRow.appendChild(spring);
     }
 
@@ -302,6 +303,7 @@ var toolbarDNDObserver = {
           var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "spacer");
           spring.setAttribute("flex", "1");
+          spring.setAttribute("height", currentRow.boxObject.height);
           currentRow.appendChild(spring);
         }
         return;
