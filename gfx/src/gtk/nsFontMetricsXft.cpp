@@ -1926,7 +1926,9 @@ nsFontXft::GetTextExtents32(const FcChar32 *aString, PRUint32 aLen,
     if (!mXftFont && !GetXftFont())
             return NS_ERROR_NOT_AVAILABLE;
 
-    XftTextExtents32(GDK_DISPLAY(), mXftFont, aString, aLen, &aGlyphInfo);
+    // NS_CONST_CAST needed for older versions of Xft
+    XftTextExtents32(GDK_DISPLAY(), mXftFont,
+                     NS_CONST_CAST(FcChar32*, aString), aLen, &aGlyphInfo);
 
     return NS_OK;
 }
