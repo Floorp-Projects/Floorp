@@ -54,6 +54,9 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#ifdef INCLUDE_XUL
+#include "nsXULAtoms.h"
+#endif
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -299,17 +302,23 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
       mHandlerElement->GetAttribute(kNameSpaceID_None, kOnCommandAtom, handlerText);
       if (handlerText.IsEmpty()) {
         // Maybe the receiver is a <command> elt.
-        if (isReceiverCommandElement) {
+        if (isReceiverCommandElement)
           // It is!  See if it has an oncommand attribute.
           content->GetAttribute(kNameSpaceID_None, kOnCommandAtom, handlerText);
-          if (handlerText.IsEmpty())
-            return NS_ERROR_FAILURE; // For whatever reason, they didn't give us anything to do.
-        }
+        
+        if (handlerText.IsEmpty())
+          return NS_ERROR_FAILURE; // For whatever reason, they didn't give us anything to do.
       }
-      aEvent->PreventDefault(); // Preventing default for XUL key handlers
     }
   }
   
+#ifdef INCLUDE_XUL
+  nsCOMPtr<nsIAtom> tag;
+  mHandlerElement->GetTag(*getter_AddRefs(tag));
+  if (tag.get() == nsXULAtoms::key)
+    aEvent->PreventDefault(); // Preventing default for XUL key handlers
+#endif
+
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
   nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aReceiver));
