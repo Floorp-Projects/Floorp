@@ -2590,6 +2590,7 @@ MapDeclarationPrintInto(nsICSSDeclaration* aDeclaration,
 				case eCSSUnit_Enumerated:	print->mPageBreakBefore = ourBreaks->mPageBreakBefore.GetIntValue();	break;
 				case eCSSUnit_Auto:				print->mPageBreakBefore = NS_STYLE_PAGE_BREAK_AUTO;										break;
 				case eCSSUnit_Inherit:		print->mPageBreakBefore = parentPrint->mPageBreakBefore;							break;
+				default:			break;
 			}
 
 			// page-break-after: enum, auto, inherit
@@ -2597,6 +2598,7 @@ MapDeclarationPrintInto(nsICSSDeclaration* aDeclaration,
 				case eCSSUnit_Enumerated:	print->mPageBreakAfter = ourBreaks->mPageBreakAfter.GetIntValue();		break;
 				case eCSSUnit_Auto:				print->mPageBreakAfter = NS_STYLE_PAGE_BREAK_AUTO;										break;
 				case eCSSUnit_Inherit:		print->mPageBreakAfter = parentPrint->mPageBreakAfter;								break;
+				default:			break;
 			}
 
 			// page-break-inside: enum, auto, inherit
@@ -2604,24 +2606,28 @@ MapDeclarationPrintInto(nsICSSDeclaration* aDeclaration,
 				case eCSSUnit_Enumerated:	print->mPageBreakInside = ourBreaks->mPageBreakInside.GetIntValue();	break;
 				case eCSSUnit_Auto:				print->mPageBreakInside = NS_STYLE_PAGE_BREAK_AUTO;										break;
 				case eCSSUnit_Inherit:		print->mPageBreakInside = parentPrint->mPageBreakInside;							break;
+				default:			break;
 			}
 
 			// page: string, auto
 			switch (ourBreaks->mPage.GetUnit()) {
 				case eCSSUnit_String:			ourBreaks->mPage.GetStringValue(print->mPage);					break;
 				case eCSSUnit_Auto:				print->mPage.SetLength(0);															break;
+				default:			break;
 			}
 
 			// widows: int, inherit
 			switch (ourBreaks->mWidows.GetUnit()) {
 				case eCSSUnit_Integer:		print->mWidows = ourBreaks->mWidows.GetIntValue();			break;
 				case eCSSUnit_Inherit:		print->mWidows = parentPrint->mWidows;									break;
+				default:			break;
 			}
 
 			// orphans: int, inherit
 			switch (ourBreaks->mOrphans.GetUnit()) {
 				case eCSSUnit_Integer:		print->mOrphans = ourBreaks->mOrphans.GetIntValue();		break;
 				case eCSSUnit_Inherit:		print->mOrphans = parentPrint->mOrphans;								break;
+				default:			break;
 			}
 
     }
@@ -2635,6 +2641,7 @@ MapDeclarationPrintInto(nsICSSDeclaration* aDeclaration,
 			switch (ourPage->mMarks.GetUnit()) {
 				case eCSSUnit_Enumerated:	print->mMarks = ourPage->mMarks.GetIntValue();					break;
 				case eCSSUnit_None:				print->mMarks = NS_STYLE_PAGE_MARKS_NONE;								break;
+				default:				break;
 			}
 
 			// size-width: length, enum, auto
