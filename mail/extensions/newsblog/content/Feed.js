@@ -244,6 +244,26 @@ Feed.prototype =
       ds.Assert(this.resource, FZ_QUICKMODE, aNewQuickMode, true);
   },
 
+  get link ()
+  {
+    var ds = getSubscriptionsDS(this.server);
+    var link = ds.GetTarget(this.resource, RSS_LINK, true);
+    if(link)
+      link = link.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    return link;
+  },
+
+  set link (aNewLink)
+  {
+    var ds = getSubscriptionsDS(this.server);
+    aNewLink = rdf.GetLiteral(aNewLink);
+    var old_link = ds.GetTarget(this.resource, RSS_LINK, true);
+    if (old_link)
+      ds.Change(this.resource, RSS_LINK, old_link, aNewLink);
+    else
+      ds.Assert(this.resource, RSS_LINK, aNewLink, true);
+  },
+
   parse: function() 
   {
     // Figures out what description language (RSS, Atom) and version this feed

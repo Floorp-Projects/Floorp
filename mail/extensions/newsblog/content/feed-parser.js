@@ -62,7 +62,7 @@ FeedParser.prototype =
       debug(aFeed.url + " is an RSS 1.x (RDF-based) feed");
       return this.parseAsRSS1(aFeed, aSource, aBaseURI);
     } 
-    else if (aDOM.documentElement.namespaceURI == "http://purl.org/atom/ns#")
+    else if (aDOM.documentElement.namespaceURI == ATOM_03_NS)
     {
       debug(aFeed.url + " is an Atom feed");
       return this.parseAsAtom(aFeed, aDOM);
@@ -96,6 +96,7 @@ FeedParser.prototype =
 
     aFeed.title = aFeed.title || getNodeValue(channel.getElementsByTagName("title")[0]);
     aFeed.description = getNodeValue(channel.getElementsByTagName("description")[0]);
+    aFeed.link = getNodeValue(channel.getElementsByTagName("link")[0]);
 
     if (!aFeed.parseItems)
       return parsedItems;
@@ -184,6 +185,7 @@ FeedParser.prototype =
 
     aFeed.title = aFeed.title || getRDFTargetValue(ds, channel, RSS_TITLE);
     aFeed.description = getRDFTargetValue(ds, channel, RSS_DESCRIPTION);
+    aFeed.link = getRDFTargetValue(ds, channel, RSS_LINK);
 
     if (!aFeed.parseItems)
       return parsedItems;
@@ -252,6 +254,7 @@ FeedParser.prototype =
 
     aFeed.title = aFeed.title || getNodeValue(channel.getElementsByTagName("title")[0]);
     aFeed.description = getNodeValue(channel.getElementsByTagName("tagline")[0]);
+    aFeed.link = this.findAtomLink("alternate",channel.getElementsByTagNameNS(ATOM_03_NS,"link"));
 
     if (!aFeed.parseItems)
       return parsedItems;
@@ -268,16 +271,7 @@ FeedParser.prototype =
       item.characterSet = "UTF-8";
 
       var url;
-      var links = itemNode.getElementsByTagName("link");
-      for (var j=0; j < links.length; j++) 
-      {
-        var alink = links[j];
-        if (alink && alink.getAttribute('rel') && alink.getAttribute('rel') == 'alternate' && alink.getAttribute('href')) 
-        {
-          url = alink.getAttribute('href');
-          break;
-        }
-      }
+      url = this.findAtomLink("alternate",itemNode.getElementsByTagNameNS(ATOM_03_NS,"link"));
 
       item.url = url;
       item.id = getNodeValue(itemNode.getElementsByTagName("id")[0]);
@@ -346,5 +340,18 @@ FeedParser.prototype =
       parsedItems[i] = item;
     }
     return parsedItems;
+  },
+
+  findAtomLink: function(linkRel, linkElements)
+  {
+    // XXX Need to check for MIME type and hreflang
+    for ( var j=0 ; j<linkElements.length ; j++ ) {
+      var alink = linkElements[j];
+      if (alink && alink.getAttribute('rel') 
+          && alink.getAttribute('rel') == linkRel && alink.getAttribute('href')) 
+      {
+        return alink.getAttribute('href');
+      }
+    }
   }
 };
