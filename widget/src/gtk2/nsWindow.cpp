@@ -1216,8 +1216,10 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     nsEventStatus status;
 
     // check to see if we should rollup
-    gJustGotActivate = PR_TRUE;
-    SetFocus(PR_FALSE);
+    if (gJustGotActivate) {
+        gJustGotActivate = PR_FALSE;
+        DispatchActivateEvent();
+    }
     if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
                          PR_FALSE))
         return;
@@ -1299,6 +1301,7 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
         mFocusChild->LoseFocus();
         mFocusChild->DispatchDeactivateEvent();
         mFocusChild = nsnull;
+        gJustGotActivate = PR_TRUE;
     }
 }
 
