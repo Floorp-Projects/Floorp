@@ -136,17 +136,19 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
         eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mConsumerEventQ));
 
     // build a proxy for the progress event sink
-    if (mCallbacks && mConsumerEventQ) {
-        nsCOMPtr<nsIProgressEventSink> temp = do_GetInterface(mCallbacks);
-        if (temp) {
-            nsCOMPtr<nsIProxyObjectManager> mgr;
-            nsHttpHandler::get()->GetProxyObjectManager(getter_AddRefs(mgr));
-            if (mgr)
-                mgr->GetProxyForObject(mConsumerEventQ,
-                                       NS_GET_IID(nsIProgressEventSink),
-                                       temp,
-                                       PROXY_ASYNC | PROXY_ALWAYS,
-                                       getter_AddRefs(mProgressSink));
+    if (!(mCapabilities & NS_HTTP_DONT_REPORT_PROGRESS)) {
+        if (mCallbacks && mConsumerEventQ) {
+            nsCOMPtr<nsIProgressEventSink> temp = do_GetInterface(mCallbacks);
+            if (temp) {
+                nsCOMPtr<nsIProxyObjectManager> mgr;
+                nsHttpHandler::get()->GetProxyObjectManager(getter_AddRefs(mgr));
+                if (mgr)
+                    mgr->GetProxyForObject(mConsumerEventQ,
+                                           NS_GET_IID(nsIProgressEventSink),
+                                           temp,
+                                           PROXY_ASYNC | PROXY_ALWAYS,
+                                           getter_AddRefs(mProgressSink));
+            }
         }
     }
 

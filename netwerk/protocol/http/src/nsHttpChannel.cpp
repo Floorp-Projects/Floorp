@@ -392,6 +392,9 @@ nsHttpChannel::SetupTransaction()
         LOG(("nsHttpChannel::SetupTransaction [this=%x] pipelining disallowed\n", this));
         caps &= ~NS_HTTP_ALLOW_PIPELINING;
     }
+    
+    if (mLoadFlags & nsIRequest::LOAD_BACKGROUND)
+        caps |= NS_HTTP_DONT_REPORT_PROGRESS;
 
     // create the transaction object
     mTransaction = new nsHttpTransaction(listenerProxy, this, caps);
