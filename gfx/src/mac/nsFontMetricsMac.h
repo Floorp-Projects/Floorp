@@ -80,7 +80,6 @@ public:
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
   NS_IMETHOD  GetWidths(const nscoord *&aWidths);
-  NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
   NS_IMETHOD  GetSpaceWidth(nscoord& aSpaceCharWidth);
@@ -104,7 +103,6 @@ protected:
   nscoord           mSpaceWidth;
   nscoord           mXHeight;
   nsCOMPtr<nsIAtom> mLangGroup;
-  nsFont            *mFont;
   nsIDeviceContext  *mContext;
 };
 

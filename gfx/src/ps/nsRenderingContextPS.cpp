@@ -1080,14 +1080,14 @@ nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
 
   if (aLength == 0)
     return NS_OK;
-  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], *metrics->GetFont(), metrics);
+  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], metrics->Font(), metrics);
   NS_ENSURE_TRUE(fontPS, NS_ERROR_FAILURE);
   fontPS->SetupFont(this);
 
   PRUint32 i, start = 0;
   for (i=0; i<aLength; i++) {
     nsFontPS* fontThisChar;
-    fontThisChar = nsFontPS::FindFont(aString[i], *metrics->GetFont(), metrics);
+    fontThisChar = nsFontPS::FindFont(aString[i], metrics->Font(), metrics);
     NS_ENSURE_TRUE(fontThisChar, NS_ERROR_FAILURE);
     if (fontThisChar != fontPS) {
       // draw text up to this point
@@ -1132,14 +1132,14 @@ nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
 
   if (aLength == 0)
     return NS_OK;
-  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], *metrics->GetFont(), metrics);
+  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], metrics->Font(), metrics);
   NS_ENSURE_TRUE(fontPS, NS_ERROR_FAILURE);
   fontPS->SetupFont(this);
 
   PRUint32 i, start = 0;
   for (i=0; i<aLength; i++) {
     nsFontPS* fontThisChar;
-    fontThisChar = nsFontPS::FindFont(aString[i], *metrics->GetFont(), metrics);
+    fontThisChar = nsFontPS::FindFont(aString[i], metrics->Font(), metrics);
     NS_ENSURE_TRUE(fontThisChar, NS_ERROR_FAILURE);
     if (fontThisChar != fontPS) {
       // draw text up to this point

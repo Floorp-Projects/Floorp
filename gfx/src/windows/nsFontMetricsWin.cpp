@@ -3834,13 +3834,6 @@ nsFontMetricsWin::GetAveCharWidth(nscoord &aAveCharWidth)
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin::GetFont(const nsFont *&aFont)
-{
-  aFont = &mFont;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFontMetricsWin::GetLangGroup(nsIAtom** aLangGroup)
 {
   NS_ENSURE_ARG_POINTER(aLangGroup);

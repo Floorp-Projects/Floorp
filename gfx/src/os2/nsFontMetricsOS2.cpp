@@ -1537,12 +1537,6 @@ NS_IMETHODIMP nsFontMetricsOS2::GetMaxAdvance( nscoord &aAdvance)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsOS2::GetFont( const nsFont *&aFont)
-{
-  aFont = &mFont;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsFontMetricsOS2::GetFontHandle( nsFontHandle &aHandle)
 {
   aHandle = mFontHandle;

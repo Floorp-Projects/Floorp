@@ -61,7 +61,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 nsFontMetricsPh::nsFontMetricsPh()
 {
 	mDeviceContext = nsnull;
-	mFont = nsnull;
 
 	mHeight = 0;
 	mAscent = 0;
@@ -118,11 +117,6 @@ static void FreeGlobals()
 
 nsFontMetricsPh :: ~nsFontMetricsPh( )
 {
-	if( nsnull != mFont )
-	  {
-		  delete mFont;
-		  mFont = nsnull;
-	  }
 	if (mFontHandle)
 	   free (mFontHandle);
   if (mDeviceContext) {
@@ -148,7 +142,7 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 		if( NS_FAILED(res) ) return res;
 		}
 	
-	mFont = new nsFont(aFont);
+	mFont = aFont;
 	mLangGroup = aLangGroup;
 	
 	mDeviceContext = aContext;
@@ -186,9 +180,9 @@ printf( "\n\n\t\t\tIn nsFontMetricsPh::Init str=%s\n", str );
 	app2dev = mDeviceContext->AppUnitsToDevUnits();
 
 	PRInt32 sizePoints;
-	if( mFont->systemFont == PR_TRUE )
-		sizePoints = NSToIntRound( app2dev * mFont->size * 0.68 );
-	else sizePoints = NSToIntRound( app2dev * mFont->size * 0.74 );
+	if( mFont.systemFont == PR_TRUE )
+		sizePoints = NSToIntRound( app2dev * mFont.size * 0.68 );
+	else sizePoints = NSToIntRound( app2dev * mFont.size * 0.74 );
 	
 	char NSFullFontName[MAX_FONT_TAG];
 

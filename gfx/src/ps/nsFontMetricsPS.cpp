@@ -92,11 +92,6 @@ nsFontMetricsPS :: nsFontMetricsPS()
  */
 nsFontMetricsPS :: ~nsFontMetricsPS()
 {
-  if (nsnull != mFont){
-    delete mFont;
-    mFont = nsnull;
-  }
-  
   if (mFontsPS) {
     int i;
     for (i=0; i<mFontsPS->Count(); i++) {
@@ -145,7 +140,7 @@ nsFontMetricsPS :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
 {
   mLangGroup = aLangGroup;
 
-  mFont = new nsFont(aFont);
+  mFont = aFont;
 
   //don't addref this to avoid circular refs
   mDeviceContext = (nsDeviceContextPS *)aContext;
@@ -178,14 +173,14 @@ nsFontMetricsPS :: Destroy()
 void
 nsFontMetricsPS::RealizeFont()
 {
-  if (mFont && mDeviceContext) {
+  if (mDeviceContext) {
     float dev2app;
     dev2app = mDeviceContext->DevUnitsToAppUnits();
     fontps *font = (fontps*)mFontsPS->ElementAt(0);
 #if defined(MOZ_ENABLE_FREETYPE2) || defined(MOZ_ENABLE_XFT)
     NS_ASSERTION(font && font->entry, "no font available");
     if (font && !font->fontps && font->entry)
-      font->fontps = CreateFontPS(font->entry, *mFont, this);
+      font->fontps = CreateFontPS(font->entry, mFont, this);
 #endif
     NS_ASSERTION(font && font->fontps, "no font available");
     if (font && font->fontps)
@@ -373,17 +368,6 @@ nsFontMetricsPS :: GetSpaceWidth(nscoord &aSpaceWidth)
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsFontMetricsPS.h
- *	@update 2/26/99 dwc
- */
-NS_IMETHODIMP
-nsFontMetricsPS :: GetFont(const nsFont *&aFont)
-{
-  aFont = mFont;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsFontMetricsPS :: GetLangGroup(nsIAtom** aLangGroup)
 {
@@ -418,12 +402,12 @@ nsFontMetricsPS :: GetStringWidth(const char *aString,nscoord& aWidth,nscoord aL
   aWidth = 0;
   if (aLength == 0)
     return NS_OK;
-  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], *mFont, this);
+  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], mFont, this);
   NS_ENSURE_TRUE(fontPS, NS_ERROR_FAILURE);
 
   nscoord i, start = 0;
   for (i=0; i<aLength; i++) {
-    nsFontPS* fontThisChar = nsFontPS::FindFont(aString[i], *mFont, this);
+    nsFontPS* fontThisChar = nsFontPS::FindFont(aString[i], mFont, this);
     NS_ASSERTION(fontThisChar,"failed to find a font");
     NS_ENSURE_TRUE(fontThisChar, NS_ERROR_FAILURE);
     if (fontThisChar != fontPS) {
@@ -451,12 +435,12 @@ nsFontMetricsPS :: GetStringWidth(const PRUnichar *aString,nscoord& aWidth,nscoo
   aWidth = 0;
   if (aLength == 0)
     return NS_OK;
-  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], *mFont, this);
+  nsFontPS* fontPS = nsFontPS::FindFont(aString[0], mFont, this);
   NS_ENSURE_TRUE(fontPS, NS_ERROR_FAILURE);
 
   nscoord i, start = 0;
   for (i=0; i<aLength; i++) {
-    nsFontPS* fontThisChar = nsFontPS::FindFont(aString[i], *mFont, this);
+    nsFontPS* fontThisChar = nsFontPS::FindFont(aString[i], mFont, this);
     NS_ASSERTION(fontThisChar,"failed to find a font");
     NS_ENSURE_TRUE(fontThisChar, NS_ERROR_FAILURE);
     if (fontThisChar != fontPS) {

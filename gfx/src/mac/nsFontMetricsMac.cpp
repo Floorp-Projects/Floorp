@@ -49,18 +49,12 @@
 
 nsFontMetricsMac :: nsFontMetricsMac()
 {
-  mFont = nsnull;
   mFontNum = BAD_FONT_NUM;
   mFontMapping = nsnull;
 }
   
 nsFontMetricsMac :: ~nsFontMetricsMac()
 {
-  if (nsnull != mFont)
-  {
-    delete mFont;
-    mFont = nsnull;
-  }
   if (mContext) {
     // Notify our device context that owns us so that it can update its font cache
     mContext->FontMetricsDeleted(this);
@@ -80,7 +74,7 @@ NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, n
 {
   NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
 
-  mFont = new nsFont(aFont);
+  mFont = aFont;
   mLangGroup = aLangGroup;
   mContext = aCX;
   RealizeFont();
@@ -247,7 +241,7 @@ void nsFontMetricsMac::RealizeFont()
 		theScriptCode = GetScriptManagerVariable (smSysScript);
 
 	FontEnumData  fontData(mContext, fontName, theScriptCode);
-	mFont->EnumerateFamilies(FontEnumCallback, &fontData);
+	mFont.EnumerateFamilies(FontEnumCallback, &fontData);
   
 	nsDeviceContextMac::GetMacFontNumber(fontName, mFontNum);
 }
@@ -383,11 +377,6 @@ nsresult nsFontMetricsMac :: GetSpaceWidth(nscoord &aSpaceWidth)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsMac :: GetFont(const nsFont *&aFont)
-{
-  aFont = mFont;
-  return NS_OK;
-}
 NS_IMETHODIMP nsFontMetricsMac::GetLangGroup(nsIAtom** aLangGroup)
 {
   if (!aLangGroup) {

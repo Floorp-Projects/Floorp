@@ -300,14 +300,8 @@ STDMETHODIMP nsTextAccessibleWrap::get_fontFamily(
     return E_FAIL;
   }
 
-  const nsFont *actualFont = nsnull;
-  fm->GetFont(actualFont);
-  if (!actualFont) {
-    return E_FAIL;
-  }
-
   nsAutoString fontFamily;
-  deviceContext->FirstExistingFont(*actualFont, fontFamily);
+  deviceContext->FirstExistingFont(fm->Font(), fontFamily);
   
   *aFontFamily = ::SysAllocString(fontFamily.get());
   return S_OK;

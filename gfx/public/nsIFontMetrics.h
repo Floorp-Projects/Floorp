@@ -40,8 +40,8 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
+#include "nsFont.h"
 
-struct nsFont;
 class nsString;
 class nsIDeviceContext;
 class nsIAtom;
@@ -208,9 +208,10 @@ public:
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance) = 0;
 
   /**
-   * Returns the font associated with these metrics
+   * Returns the font associated with these metrics. The return value
+   * is only defined after Init() has been called.
    */
-  NS_IMETHOD  GetFont(const nsFont *&aFont) = 0;
+  const nsFont &Font() { return mFont; }
 
   /**
    * Returns the language group associated with these metrics
@@ -231,6 +232,10 @@ public:
    * Returns the often needed width of the space character
    */
   NS_IMETHOD  GetSpaceWidth(nscoord& aSpaceCharWidth) = 0;
+
+protected:
+
+  nsFont mFont;		// The font for this metrics object.
 };
 
 #endif /* nsIFontMetrics_h___ */

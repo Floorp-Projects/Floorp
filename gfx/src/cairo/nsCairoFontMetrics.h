@@ -74,7 +74,6 @@ public:
     NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
     NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
     NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
-    NS_IMETHOD  GetFont(const nsFont *&aFont);
     NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
     NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
     NS_IMETHOD  GetAveCharWidth(nscoord& aAveCharWidth);
@@ -88,7 +87,6 @@ public:
 
 private:
     FT_Face mFace;
-    nsFont *mFont;
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
     nsCOMPtr<nsIAtom> mLangGroup;
     float mDev2App;

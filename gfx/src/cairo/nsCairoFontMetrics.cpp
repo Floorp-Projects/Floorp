@@ -59,7 +59,6 @@ static FT_Library ftlib = nsnull;
 NS_IMPL_ISUPPORTS1(nsCairoFontMetrics, nsIFontMetrics)
 
 nsCairoFontMetrics::nsCairoFontMetrics() :
-    mFont(nsnull),
     mMaxAscent(0),
     mMaxDescent(0),
     mMaxAdvance(0),
@@ -75,7 +74,6 @@ nsCairoFontMetrics::nsCairoFontMetrics() :
 nsCairoFontMetrics::~nsCairoFontMetrics()
 {
     FT_Done_Face(mFace);
-    delete mFont;
 }
 
 static char *
@@ -97,7 +95,7 @@ NS_IMETHODIMP
 nsCairoFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
                          nsIDeviceContext *aContext)
 {
-    mFont = new nsFont(aFont);
+    mFont = aFont;
     mLangGroup = aLangGroup;
 
     mDeviceContext = aContext;
@@ -126,8 +124,6 @@ nsCairoFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 NS_IMETHODIMP
 nsCairoFontMetrics::Destroy()
 {
-    delete mFont;
-    mFont = nsnull;
     return NS_OK;
 }
 
@@ -277,13 +273,6 @@ nsCairoFontMetrics::GetMaxAdvance(nscoord &aAdvance)
 {
     aAdvance = FT_CEIL(FT_MulFix(mMaxAdvance, mFace->size->metrics.x_scale));
     aAdvance = NSToCoordRound(aAdvance * mDev2App);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCairoFontMetrics::GetFont(const nsFont *&aFont)
-{
-    aFont = mFont;
     return NS_OK;
 }
 

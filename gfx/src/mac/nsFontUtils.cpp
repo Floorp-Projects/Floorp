@@ -77,10 +77,8 @@ void
 nsFontUtils::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 		const nsIDeviceContext& inDevContext, TextStyle &outStyle)
 {
-	
-	const nsFont *aFont;
-	inMetrics.GetFont(aFont);
-	
+	const nsFont *aFont = &inMetrics.Font();
+
 	nsFontHandle	fontNum;
 	inMetrics.GetFontHandle(fontNum);
 	

@@ -70,7 +70,6 @@ public:
     NS_IMETHOD  Init                 (const nsFont& aFont, nsIAtom* aLangGroup,
                                       nsIDeviceContext *aContext);
     NS_IMETHOD  Destroy();
-    NS_IMETHOD  GetFont              (const nsFont *&aFont);
     NS_IMETHOD  GetLangGroup         (nsIAtom** aLangGroup);
     NS_IMETHOD  GetFontHandle        (nsFontHandle &aHandle);
 
@@ -274,7 +273,6 @@ private:
     nsIDeviceContext    *mDeviceContext;
     nsCOMPtr<nsIAtom>    mLangGroup;
     nsCString           *mGenericFont;
-    nsFont              *mFont;
     float                mPixelSize;
 
     nsCAutoString        mDefaultFont;

@@ -65,12 +65,11 @@
 
 nsFontQt::nsFontQt(const nsFont &aFont, nsIAtom *aLangGroup, nsIDeviceContext *aContext)
 {
-    mFont = aFont;
     mLangGroup = aLangGroup;
     mDeviceContext = aContext;
 
     float a2d = aContext->AppUnitsToDevUnits();
-    mPixelSize = NSToIntRound(a2d * mFont.size);
+    mPixelSize = NSToIntRound(a2d * aFont.size);
 
     if (mLangGroup) {
         nsCAutoString name("font.min-size.variable.");
@@ -93,10 +92,10 @@ nsFontQt::nsFontQt(const nsFont &aFont, nsIAtom *aLangGroup, nsIDeviceContext *a
         }
     }
 
-    font.setFamily(QString::fromUcs2(mFont.name.get()));
+    font.setFamily(QString::fromUcs2(aFont.name.get()));
     font.setPixelSize(mPixelSize);
-    font.setWeight(mFont.weight/10);
-    font.setItalic(mFont.style != NS_FONT_STYLE_NORMAL);
+    font.setWeight(aFont.weight/10);
+    font.setItalic(aFont.style != NS_FONT_STYLE_NORMAL);
 
     RealizeFont();
 }
@@ -152,6 +151,7 @@ NS_IMPL_ISUPPORTS1(nsFontMetricsQt,nsIFontMetrics)
 {
     NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
 
+    mFont = aFont;
     qFont = new nsFontQt(aFont, aLangGroup, aContext);
     return NS_OK;
 }
@@ -264,12 +264,6 @@ NS_IMETHODIMP nsFontMetricsQt::GetAveCharWidth(nscoord &aAveCharWidth)
 NS_IMETHODIMP nsFontMetricsQt::GetSpaceWidth(nscoord &aSpaceWidth)
 {
     aSpaceWidth = qFont->mSpaceWidth;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsFontMetricsQt::GetFont(const nsFont *&aFont)
-{
-    aFont = &qFont->mFont;
     return NS_OK;
 }
 

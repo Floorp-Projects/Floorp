@@ -1882,11 +1882,6 @@ nsFontMetricsXlib::~nsFontMetricsXlib()
 {
   // do not free mGeneric here
 
-  if (nsnull != mFont) {
-    delete mFont;
-    mFont = nsnull;
-  }
-
   if (mLoadedFonts) {
     PR_Free(mLoadedFonts);
     mLoadedFonts = nsnull;
@@ -1964,21 +1959,21 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
  
   NS_STATIC_CAST(nsDeviceContextX *, mDeviceContext)->GetFontMetricsContext(mFontMetricsContext);
   
-  mFont = new nsFont(aFont);
+  mFont = aFont;
   mLangGroup = aLangGroup;
 
   float app2dev;
   app2dev = mDeviceContext->AppUnitsToDevUnits();
 
-  mPixelSize = NSToIntRound(app2dev * mFont->size);
+  mPixelSize = NSToIntRound(app2dev * mFont.size);
   // Make sure to clamp the pixel size to something reasonable so we
   // don't make the X server blow up.
   mPixelSize = PR_MIN(XHeightOfScreen(xxlib_rgb_get_screen(mFontMetricsContext->mXlibRgbHandle)) * FONT_MAX_FONT_SCALE, mPixelSize);
 
   mStretchIndex = 4; // Normal
-  mStyleIndex = mFont->style;
+  mStyleIndex = mFont.style;
 
-  mFont->EnumerateFamilies(FontEnumCallback, this);
+  mFont.EnumerateFamilies(FontEnumCallback, this);
   nsXPIDLCString value;
   if (!mGeneric) {
     mFontMetricsContext->mPref->CopyCharPref("font.default", getter_Copies(value));
@@ -2362,13 +2357,6 @@ NS_IMETHODIMP  nsFontMetricsXlib::GetMaxAdvance(nscoord &aAdvance)
 NS_IMETHODIMP nsFontMetricsXlib::GetAveCharWidth(nscoord &aAveCharWidth)
 {
   aAveCharWidth = mAveCharWidth;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP  nsFontMetricsXlib::GetFont(const nsFont*& aFont)
-{
-  aFont = mFont;
   return NS_OK;
 }
 
@@ -4311,7 +4299,7 @@ nsFontMetricsXlib::SearchNode(nsFontNodeXlib* aNode, PRUnichar aChar)
   nsFontStyleXlib* style = aNode->mStyles[mStyleIndex];
 
   nsFontWeightXlib** weights = style->mWeights;
-  int weight = mFont->weight;
+  int weight = mFont.weight;
   int steps = (weight % 100);
   int weightIndex;
   if (steps) {
