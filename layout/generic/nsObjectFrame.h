@@ -119,8 +119,13 @@ public:
     return mFullURL;
   }
 
-  static PRBool IsSupportedImage(nsIContent* aContent);
-  static PRBool IsSupportedDocument(nsIContent* aContent);
+  /**
+   * Get the MIME type used for rendering content for this frame.
+   * This may get the type via the URL's extension.
+   */
+  NS_HIDDEN_(nsresult) GetMIMEType(nsACString& aType);
+
+
 
   // for a given aRoot, this walks the frame tree looking for the next outFrame
   static nsIObjectFrame* GetNextObjectFrame(nsPresContext* aPresContext,
@@ -143,7 +148,6 @@ public:
 
     return IsBroken();
   }
-
 
 protected:
   // nsISupports
