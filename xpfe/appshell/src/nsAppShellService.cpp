@@ -933,5 +933,5 @@ nsAppShellService::GetNativeAppSupport( nsINativeAppSupport **aResult ) {
     NS_ENSURE_ARG( aResult );
     *aResult = mNativeAppSupport;
     NS_IF_ADDREF( *aResult );
-    return NS_OK;
+    return *aResult ? NS_OK : NS_ERROR_NULL_POINTER;
 }
