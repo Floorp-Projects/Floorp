@@ -68,22 +68,32 @@ function sidebar_customize_init()
     // This will load the datasource, if it isn't already.
     var datasource = RDF.GetDataSource(allPanelsObj.datasources[ii]);
     all_panels.database.AddDataSource(datasource);
-    current_panels.database.AddDataSource(datasource);
   }
 
   // Add the datasource for current list of panels. It selects panels out
   // of the other datasources.
   debug("Init: Adding current panels, "+sidebarObj.datasource_uri);
   sidebarObj.datasource = RDF.GetDataSource(sidebarObj.datasource_uri);
-  current_panels.database.AddDataSource(sidebarObj.datasource);
 
   // Root the customize dialog at the correct place.
   debug("Init: reset all panels ref, "+allPanelsObj.resource);
   all_panels.setAttribute('ref', allPanelsObj.resource);
-  debug("Init: reset current panels ref, "+sidebarObj.resource);
-  current_panels.setAttribute('ref', sidebarObj.resource);
-  save_initial_panels();
-  enable_buttons_for_current_panels();
+
+  // Create a "container" wrapper around the current panels to
+  // manipulate the RDF:Seq more easily.
+  var panel_list = sidebarObj.datasource.GetTarget(RDF.GetResource(sidebarObj.resource), RDF.GetResource(NC + "panel-list"), true);
+  sidebarObj.container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
+  sidebarObj.container.Init(sidebarObj.datasource, panel_list);
+
+  // Add all the current panels to the tree
+  current_panels = sidebarObj.container.GetElements();
+  while (current_panels.hasMoreElements()) {
+    var panel = current_panels.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+    if (add_node_to_current_list(sidebarObj.datasource, panel) >= 0) {
+      original_panels.push(panel.Value);
+      original_panels[panel.Value] = true;
+    }
+  }
 
   var links =
     all_panels.database.GetSources(RDF.GetResource(NC + "haslink"),
@@ -98,23 +108,6 @@ function sidebar_customize_init()
   }
 
   sizeToContent();
-}
-
-// Remember the original list of panels so that
-// the save button can be enabled when something changes.
-function save_initial_panels()
-{
-  var tree = document.getElementById('current-panels');
-  if (!tree.view) {
-    // The tempate didn't build a treechildren, create one now
-    tree.appendChild(document.createElement('treechildren'));
-    setTimeout(save_initial_panels, 0);
-  } else {
-    for (var i = 0; i < tree.view.rowCount; ++i) {
-      var item = tree.contentView.getItemAtIndex(i);
-      original_panels.push(item.id);
-    }
-  }
 }
 
 function sidebar_customize_destruct()
@@ -233,7 +226,7 @@ function ClickOnOtherPanels(event)
 
   // Remove the selection in the "current" panels list
   var current_panels = document.getElementById('current-panels');
-  current_panels.treeBoxObject.selection.clearSelection();
+  current_panels.view.selection.clearSelection();
   enable_buttons_for_current_panels();
 }
 
@@ -262,33 +255,31 @@ function add_datasource_to_other_panels(link) {
 function SelectChangeForCurrentPanels() {
   // Remove the selection in the available panels list
   var all_panels = document.getElementById('other-panels');
-  all_panels.treeBoxObject.selection.clearSelection();
+  all_panels.view.selection.clearSelection();
 
   enable_buttons_for_current_panels();
-  enable_buttons_for_other_panels();
 }
 
 // Move the selected item up the the current panels list.
 function MoveUp() {
   var tree = document.getElementById('current-panels');
-  if (tree.treeBoxObject.selection.count == 1) {
+  if (tree.view.selection.count == 1) {
     var index = tree.currentIndex;
     var selected = tree.contentView.getItemAtIndex(index);
     var before = selected.previousSibling;
     if (before) {
       before.parentNode.removeChild(selected);
       before.parentNode.insertBefore(selected, before);
-      tree.treeBoxObject.selection.select(index-1);
+      tree.view.selection.select(index-1);
       tree.treeBoxObject.ensureRowIsVisible(index-1);
     }
   }
-  enable_buttons_for_current_panels();
 }
 
 // Move the selected item down the the current panels list.
 function MoveDown() {
   var tree = document.getElementById('current-panels');
-  if (tree.treeBoxObject.selection.count == 1) {
+  if (tree.view.selection.count == 1) {
     var index = tree.currentIndex;
     var selected = tree.contentView.getItemAtIndex(index);
     if (selected.nextSibling) {
@@ -296,18 +287,17 @@ function MoveDown() {
         selected.parentNode.insertBefore(selected, selected.nextSibling.nextSibling);
       else
         selected.parentNode.appendChild(selected);
-      tree.treeBoxObject.selection.select(index+1);
+      tree.view.selection.select(index+1);
       tree.treeBoxObject.ensureRowIsVisible(index+1);
     }
   }
-  enable_buttons_for_current_panels();
 }
 
 function PreviewPanel()
 {
   var tree = document.getElementById('other-panels');
   var database = tree.database;
-  var sel = tree.treeBoxObject.selection;
+  var sel = tree.view.selection;
   var rangeCount = sel.getRangeCount();
   for (var range = 0; range < rangeCount; ++range) {
     var min = {}, max = {};
@@ -330,11 +320,11 @@ function PreviewPanel()
 // Add the selected panel(s).
 function AddPanel()
 {
-  var added = 0;
+  var added = -1;
   
   var tree = document.getElementById('other-panels');
   var database = tree.database;
-  var sel = tree.treeBoxObject.selection;
+  var sel = tree.view.selection;
   var ranges = sel.getRangeCount();
   for (var range = 0; range < ranges; ++range) {
     var min = {}, max = {};
@@ -344,20 +334,19 @@ function AddPanel()
       if (item.getAttribute("container") != "true") {
         var res = RDF.GetResource(item.id);
         // Add the panel to the current list.
-        add_node_to_current_list(database, res);
-        ++added;
+        added = add_node_to_current_list(database, res);
       }
     }
   }
 
-  if (added) {
+  if (added >= 0) {
     // Remove the selection in the other list.
     // Selection will move to "current" list.
-    var all_panels = document.getElementById('other-panels');
-    all_panels.treeBoxObject.selection.clearSelection();
+    tree.view.selection.clearSelection();
 
-    enable_buttons_for_current_panels();
-    enable_buttons_for_other_panels();
+    var current_panels = document.getElementById('current-panels');
+    current_panels.view.selection.select(added);
+    current_panels.treeBoxObject.ensureRowIsVisible(added);
   }
 }
 
@@ -370,20 +359,19 @@ function add_node_to_current_list(registry, service)
   var option_title     = get_attr(registry, service, 'title');
   var option_customize = get_attr(registry, service, 'customize');
   var option_content   = get_attr(registry, service, 'content');
+  if (!option_title || !option_content)
+    return -1;
 
   var tree = document.getElementById('current-panels');
-  var tree_root = tree.getElementsByTagName("treechildren")[1];
+  var tree_root = tree.lastChild;
   
   // Check to see if the panel already exists...
   var i = 0;
   for (var treeitem = tree_root.firstChild; treeitem; treeitem = treeitem.nextSibling) {
-    if (treeitem.id == service.Value) {
+    if (treeitem.id == service.Value)
       // The panel is already in the current panel list.
       // Avoid adding it twice.
-      tree.treeBoxObject.selection.select(i);
-      tree.treeBoxObject.ensureRowIsVisible(i);
-      return;
-    }
+      return i;
     ++i;
   }
 
@@ -400,18 +388,14 @@ function add_node_to_current_list(registry, service)
   item.appendChild(row);
   row.appendChild(cell);
   tree_root.appendChild(item);
-  
-  // Select is only if the caller wants to.
-  var newIndex = tree_root.getElementsByTagName("treeitem").length - 1;
-  tree.treeBoxObject.selection.select(newIndex);
-  tree.treeBoxObject.ensureRowIsVisible(newIndex);
+  return i;
 }
 
 // Remove the selected panel(s) from the current list tree.
 function RemovePanel()
 {
   var tree = document.getElementById('current-panels');
-  var sel = tree.treeBoxObject.selection;
+  var sel = tree.view.selection;
   
   var nextNode = -1;
   var rangeCount = sel.getRangeCount();
@@ -427,8 +411,6 @@ function RemovePanel()
 
   if (nextNode >= 0)
     sel.select(nextNode);
-    
-  enable_buttons_for_current_panels();
 }
 
 // Bring up a new window with the customize url
@@ -436,7 +418,7 @@ function RemovePanel()
 function CustomizePanel()
 {
   var tree  = document.getElementById('current-panels');
-  var numSelected = tree.treeBoxObject.selection ? tree.treeBoxObject.selection.count : 0;
+  var numSelected = tree.view.selection.count;
 
   if (numSelected == 1) {
     var index = tree.currentIndex;
@@ -480,8 +462,6 @@ function customize_getBrowserURL()
   return url;
 }
 
-var panel;
-
 // Serialize the new list of panels.
 function Save()
 {
@@ -491,59 +471,32 @@ function Save()
   var current_panels = document.getElementById('current-panels');
 
   // See if list membership has changed
-  var root = current_panels.getElementsByTagName("treechildren")[1];
-  var panels = root.childNodes;
-  var list_unchanged = (panels.length == original_panels.length);
-  for (var i = 0; i < panels.length && list_unchanged; i++) {
-    if (original_panels[i] != panels[i].id)
+  var panels = [];
+  var tree_root = current_panels.lastChild.childNodes;
+  var list_unchanged = (tree_root.length == original_panels.length);
+  for (var i = 0; i < tree_root.length; i++) {
+    var panel = tree_root[i].id;
+    panels.push(panel);
+    panels[panel] = true;
+    if (list_unchanged && original_panels[i] != panel)
       list_unchanged = false;
   }
   if (list_unchanged)
     return;
 
-  // Iterate through the 'current-panels' tree to collect the panels
-  // that the user has chosen. We need to do this _before_ we remove
-  // the panels from the datasource, because the act of removing them
-  // from the datasource will change the tree!
-  panels = [];
-  for (var node = root.firstChild; node != null; node = node.nextSibling)
-    panels.push(node.id);
-
-  // Cut off the connection between the dialog and the datasource.
-  // The dialog is closed at the end of this function.
-  // Without this, the dialog tries to update as it is being destroyed.
-  current_panels.setAttribute('ref', 'rdf:null');
-
-  // Create a "container" wrapper around the current panels to
-  // manipulate the RDF:Seq more easily.
-  var panel_list = sidebarObj.datasource.GetTarget(RDF.GetResource(sidebarObj.resource), RDF.GetResource(NC+"panel-list"), true);
-  if (panel_list) {
-    panel_list.QueryInterface(Components.interfaces.nsIRDFResource);
-  } else {
-    // Datasource is busted. Start over.
-    debug("Sidebar datasource is busted\n");
-  }
-
-  var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance();
-  container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
-  container.Init(sidebarObj.datasource, panel_list);
-
   // Remove all the current panels from the datasource.
-  var have_panel_attributes = [];
-  current_panels = container.GetElements();
+  current_panels = sidebarObj.container.GetElements();
   while (current_panels.hasMoreElements()) {
-    panel = current_panels.getNext();
-    id = panel.QueryInterface(Components.interfaces.nsIRDFResource).Value;
-    if (has_element(panels, id)) {
+    panel = current_panels.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+    if (panel.Value in panels) {
       // This panel will remain in the sidebar.
       // Remove the resource, but keep all the other attributes.
       // Removing it will allow it to be added in the correct order.
       // Saving the attributes will preserve things such as the exclude state.
-      have_panel_attributes[id] = true;
-      container.RemoveElement(panel, false);
+      sidebarObj.container.RemoveElement(panel, false);
     } else {
       // Kiss it goodbye.
-      delete_resource_deeply(container, panel);
+      delete_resource_deeply(sidebarObj.container, panel);
     }
   }
 
@@ -551,10 +504,10 @@ function Save()
   for (var ii = 0; ii < panels.length; ++ii) {
     var id = panels[ii];
     var resource = RDF.GetResource(id);
-    if (id in have_panel_attributes && have_panel_attributes[id]) {
-      container.AppendElement(resource);
+    if (id in original_panels) {
+      sidebarObj.container.AppendElement(resource);
     } else {
-      copy_resource_deeply(all_panels.database, resource, container);
+      copy_resource_deeply(all_panels.database, resource, sidebarObj.container);
     }
   }
   refresh_all_sidebars();
@@ -602,7 +555,7 @@ function delete_resource_deeply(container, resource) {
       container.DataSource.Unassert(resource, arc, target, true);
     }
   }
-  container.RemoveElement(panel, false);
+  container.RemoveElement(resource, false);
 }
 
 // Copy a resource and all its arcs out to a new container.
@@ -625,7 +578,7 @@ function enable_buttons_for_other_panels()
   var preview_button = document.getElementById('preview_button');
   var all_panels = document.getElementById('other-panels');
 
-  var sel = all_panels.treeBoxObject.selection;
+  var sel = all_panels.view.selection;
   var num_selected = sel ? sel.count : 0;
   if (sel) {
     var ranges = sel.getRangeCount();
@@ -657,44 +610,20 @@ function enable_buttons_for_current_panels() {
   var customize = document.getElementById('customize-button');
   var remove    = document.getElementById('remove-button');
 
-  var numSelected = tree.treeBoxObject.selection ? tree.treeBoxObject.selection.count : 0;
+  var numSelected = tree.view.selection.count;
+  var canMoveUp = false, canMoveDown = false, customizeURL = '';
 
-  var noneSelected, isFirst, isLast, selectedNode
-
-  if (numSelected > 0) {
-    selectedNode = tree.contentView.getItemAtIndex(tree.currentIndex);
-    isFirst = selectedNode == selectedNode.parentNode.firstChild
-    isLast  = selectedNode == selectedNode.parentNode.lastChild
-  }
-
-  // up /\ button
-  if (numSelected != 1 || isFirst) {
-    up.setAttribute('disabled', 'true');
-  } else {
-    up.removeAttribute('disabled');
-  }
-  // down \/ button
-  if (numSelected != 1 || isLast) {
-    down.setAttribute('disabled', 'true');
-  } else {
-    down.removeAttribute('disabled');
-  }
-  // "Customize..." button
-  var customizeURL = null;
-  if (numSelected == 1) {
+  if (numSelected == 1 && tree.view.selection.isSelected(tree.currentIndex)) {
+    var selectedNode = tree.view.getItemAtIndex(tree.currentIndex);
     customizeURL = selectedNode.getAttribute('customize');
+    canMoveUp = selectedNode != selectedNode.parentNode.firstChild;
+    canMoveDown = selectedNode != selectedNode.parentNode.lastChild;
   }
-  if (customizeURL == null || customizeURL == '') {
-    customize.setAttribute('disabled','true');
-  } else {
-    customize.removeAttribute('disabled');
-  }
-  // "Remove" button
-  if (numSelected == 0) {
-    remove.setAttribute('disabled','true');
-  } else {
-    remove.removeAttribute('disabled');
-  }
+
+  up.disabled = !canMoveUp;
+  down.disabled = !canMoveDown;
+  customize.disabled = !customizeURL;
+  remove.disabled = !numSelected;
 }
 
 function persist_dialog_dimensions() {
