@@ -1360,7 +1360,7 @@ public:
     void ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
-    FunctionInstance *validateStaticFunction(Context *cxt, Environment *env, FunctionDefinition *fnDef, bool prototype, bool unchecked, size_t pos);
+    FunctionInstance *validateStaticFunction(Context *cxt, Environment *env, FunctionDefinition *fnDef, bool prototype, bool unchecked, bool isConstructor, size_t pos);
 
     void validateStatic(Context *cxt, Environment *env, FunctionDefinition *fnDef, CompoundAttribute *a, bool unchecked, bool hoisted, size_t pos);
     void validateConstructor(Context *cxt, Environment *env, FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, size_t pos);
@@ -1400,7 +1400,7 @@ public:
 
     js2val invokeFunction(const char *fname);
     bool invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result);
-    js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc);
+    js2val invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc, ParameterFrame *runtimeFrame);
     void invokeInit(JS2Class *c, js2val thisValue, js2val* argv, uint32 argc);
 
     void createDynamicProperty(JS2Object *obj, QualifiedName *qName, js2val initVal, Access access, bool sealed, bool enumerable);

@@ -58,6 +58,9 @@ static const char *const kindStrings[] = {
     "Property access error",                // you're at the wrong house 
     "Uninitialized error",                  // read before write
     "Argument mismatch error",              // bad argument type/number
+    "Attribute error",                      // illegal attribute error
+    "Constant error",                       // it just won't go away
+    "Arguments error"                       // an error in the arguments
 };
 
 // Return a null-terminated string describing the exception's kind.

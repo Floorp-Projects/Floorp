@@ -85,7 +85,7 @@ namespace MetaData {
         }
     }
 
-    FunctionInstance *JS2Metadata::validateStaticFunction(Context *cxt, Environment *env, FunctionDefinition *fnDef, bool prototype, bool unchecked, size_t pos)
+    FunctionInstance *JS2Metadata::validateStaticFunction(Context *cxt, Environment *env, FunctionDefinition *fnDef, bool prototype, bool unchecked, bool isConstructor, size_t pos)
     {
         js2val compileThis = JS2VAL_VOID; 
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
@@ -116,6 +116,7 @@ namespace MetaData {
             }
             createDynamicProperty(result, engine->length_StringAtom, INT_TO_JS2VAL(pCount), ReadAccess, true, false);
             result->fWrap->length = pCount;
+            compileFrame->isConstructor = isConstructor;
             ValidateStmt(cxt, env, Plural, fnDef->body);
             env->removeTopFrame();
         }
@@ -134,7 +135,7 @@ namespace MetaData {
         DEFINE_ROOTKEEPER(rk1, fnInst);
         switch (fnDef->prefix) {
         case FunctionName::normal:
-            fnInst = validateStaticFunction(cxt, env, fnDef, a->prototype, unchecked, pos);
+            fnInst = validateStaticFunction(cxt, env, fnDef, a->prototype, unchecked, false, pos);
             if (hoisted)
                 defineHoistedVar(env, fnDef->name, OBJECT_TO_JS2VAL(fnInst), false, pos);
             else {
@@ -148,7 +149,7 @@ namespace MetaData {
                     reportError(Exception::attributeError, "A getter cannot have the prototype attribute", pos);
                 ASSERT(!(unchecked || hoisted));
                 // XXX shouldn't be using validateStaticFunction
-                fnInst = validateStaticFunction(cxt, env, fnDef, false, false, pos);
+                fnInst = validateStaticFunction(cxt, env, fnDef, false, false, false, pos);
                 Getter *g = new Getter(fnInst);
                 defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, ReadAccess, g, pos, true);
             }
@@ -159,7 +160,7 @@ namespace MetaData {
                     reportError(Exception::attributeError, "A setter cannot have the prototype attribute", pos);
                 ASSERT(!(unchecked || hoisted));
                 // XXX shouldn't be using validateStaticFunction
-                fnInst = validateStaticFunction(cxt, env, fnDef, false, false, pos);
+                fnInst = validateStaticFunction(cxt, env, fnDef, false, false, false, pos);
                 Setter *s = new Setter(fnInst);
                 defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, WriteAccess, s, pos, true);
             }
@@ -174,8 +175,7 @@ namespace MetaData {
         if (fnDef->prefix != FunctionName::normal)
             reportError(Exception::syntaxError, "A class constructor cannot be a getter or a setter", pos);
         // XXX shouldn't be using validateStaticFunction
-        c->init = validateStaticFunction(cxt, env, fnDef, false, false, pos);
-        c->init->fWrap->compileFrame->isConstructor = true;
+        c->init = validateStaticFunction(cxt, env, fnDef, false, false, true, pos);
     }
 
     void JS2Metadata::validateInstance(Context *cxt, Environment *env, FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, bool final, size_t pos)
@@ -185,7 +185,7 @@ namespace MetaData {
         // XXX shouldn't be using validateStaticFunction
         FunctionInstance *fnInst = NULL;
         DEFINE_ROOTKEEPER(rk1, fnInst);
-        fnInst = validateStaticFunction(cxt, env, fnDef, false, false, pos);
+        fnInst = validateStaticFunction(cxt, env, fnDef, false, false, false, pos);
         Multiname *mn = new Multiname(fnDef->name, a->namespaces);
         InstanceMember *m;
         switch (fnDef->prefix) {
@@ -695,6 +695,8 @@ namespace MetaData {
                         ASSERT(env->getTopFrame() == c);
                         env->removeTopFrame();
                     }
+                    if (c->init == NULL)
+                        c->init = superClass->init;
                     c->complete = true;
                 }
                 break;
@@ -1421,7 +1423,9 @@ namespace MetaData {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                 Reference *r = SetupExprNode(env, phase, e->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(ePopv, p->pos);
+                // superStmt expressions don't produce any result value
+                if (e->expr->getKind() != ExprNode::superStmt)
+                    bCon->emitOp(ePopv, p->pos);
             }
             break;
         case StmtNode::Namespace:
@@ -1912,7 +1916,7 @@ namespace MetaData {
         case ExprNode::functionLiteral:
             {
                 FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
-                f->obj = validateStaticFunction(cxt, env, &f->function, true, true, p->pos);
+                f->obj = validateStaticFunction(cxt, env, &f->function, true, true, false, p->pos);
             }
             break;
         case ExprNode::superStmt:
@@ -1922,7 +1926,6 @@ namespace MetaData {
                     reportError(Exception::syntaxError, "A super statement is meaningful only inside a constructor", p->pos);
 
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
-                ValidateExpression(cxt, env, i->op);
                 ExprPairList *args = i->pairs;
                 while (args) {
                     ValidateExpression(cxt, env, args->value);
@@ -4161,7 +4164,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         case Member::InstanceGetterMember:
             {
                 InstanceGetter *ig = checked_cast<InstanceGetter *>(m);
-                *rval = invokeFunction(ig->fInst, containerVal, NULL, 0);
+                *rval = invokeFunction(ig->fInst, containerVal, NULL, 0, NULL);
                 return true;
             }
         default:
@@ -4186,7 +4189,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         case Member::InstanceSetterMember:
             {
                 InstanceSetter *is = checked_cast<InstanceSetter *>(m);
-                invokeFunction(is->fInst, containerVal, &newValue, 1);
+                invokeFunction(is->fInst, containerVal, &newValue, 1, NULL);
                 return true;
             }
         default:
@@ -4248,7 +4251,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         case LocalMember::GetterMember:
             {
                 Getter *g = checked_cast<Getter *>(m);
-                *rval = invokeFunction(g->code, JS2VAL_VOID, NULL, 0);
+                *rval = invokeFunction(g->code, JS2VAL_VOID, NULL, 0, NULL);
             }
             return true;
         case LocalMember::SetterMember:
@@ -4313,7 +4316,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         case LocalMember::SetterMember:
             {
                 Setter *s = checked_cast<Setter *>(m);
-                invokeFunction(s->code, JS2VAL_VOID, &newValue, 1);
+                invokeFunction(s->code, JS2VAL_VOID, &newValue, 1, NULL);
             }
             return true;
         }
@@ -4585,7 +4588,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKOBJECT(super)
         GCMARKVALUE(prototype);
         GCMARKOBJECT(privateNamespace)
+        GCMARKOBJECT(init)
         if (typeofString) JS2Object::mark(typeofString);
+        if (name) JS2Object::mark(name);
         GCMARKVALUE(defaultValue);
         for (InstanceBindingIterator rib = instanceBindings.begin(), riend = instanceBindings.end(); (rib != riend); rib++) {
             InstanceBindingEntry *ibe = *rib;

@@ -549,7 +549,7 @@ static int32 sort_compare(js2val *a, js2val *b, CompareArgs *arg)
         js2val argv[2];
         argv[0] = av;
         argv[1] = bv;
-        js2val v = meta->invokeFunction(ca->target, JS2VAL_NULL, argv, 2);
+        js2val v = meta->invokeFunction(ca->target, JS2VAL_NULL, argv, 2, NULL);
         float64 f = meta->toFloat64(v);
         if (JSDOUBLE_IS_NaN(f) || (f == 0))
             result = 0;

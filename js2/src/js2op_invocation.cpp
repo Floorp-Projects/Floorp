@@ -189,6 +189,7 @@
             ASSERT(c);
             ASSERT(!JS2VAL_IS_VOID(pFrame->thisObject));
             meta->invokeInit(c->super, pFrame->thisObject, base(argCount), argCount);
+            pFrame->superConstructorCalled = true;
         }
         break;
 

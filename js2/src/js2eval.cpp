@@ -231,7 +231,7 @@ namespace MetaData {
                 JS2Object *fnObj = JS2VAL_TO_OBJECT(fnVal);
                 if ((fnObj->kind == SimpleInstanceKind)
                         && ((checked_cast<SimpleInstance *>(fnObj))->type == functionClass)) {
-                    result = invokeFunction(fnObj, thisValue, NULL, 0);
+                    result = invokeFunction(fnObj, thisValue, NULL, 0, NULL);
                     return true;
                 }
             }
@@ -268,16 +268,29 @@ namespace MetaData {
         return retval;
     }
 
-    // Invoke the constructor function for a class, calling the super constructor as necessary
+    // Invoke the constructor function for a class
     void JS2Metadata::invokeInit(JS2Class *c, js2val thisValue, js2val *argv, uint32 argc)
     {
-        if (c->init) {
-            invokeFunction(c->init, thisValue, argv, argc);            
+        FunctionInstance *init = NULL;
+        if (c) init = c->init;
+        if (init) {
+            ParameterFrame *runtimeFrame;
+            DEFINE_ROOTKEEPER(rk, runtimeFrame);
+            runtimeFrame = new ParameterFrame(init->fWrap->compileFrame);
+            if (!init->fWrap->compileFrame->callsSuperConstructor) {
+                invokeInit(c->super, thisValue, NULL, 0);
+                runtimeFrame->superConstructorCalled = true;
+            }
+            invokeFunction(init, thisValue, argv, argc, runtimeFrame);
+            if (!runtimeFrame->superConstructorCalled)
+                reportError(Exception::uninitializedError, "The superconstuctor must be called before returning normally from a constructor", engine->errorPos());
         }
-        
+        else
+            if (argc)
+                reportError(Exception::argumentsError, "The default constructor does not take any arguments", engine->errorPos());
     }
 
-    js2val JS2Metadata::invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc)
+    js2val JS2Metadata::invokeFunction(JS2Object *fnObj, js2val thisValue, js2val *argv, uint32 argc, ParameterFrame *runtimeFrame)
     {
         js2val result = JS2VAL_UNDEFINED;
 
@@ -297,8 +310,9 @@ namespace MetaData {
                 BytecodeContainer *bCon = fWrap->bCon;
 
                 CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
-                ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                 DEFINE_ROOTKEEPER(rk, runtimeFrame);
+                if (runtimeFrame == NULL)
+                    runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                 runtimeFrame->instantiate(fWrap->env);
                 runtimeFrame->thisObject = thisValue;
                 runtimeFrame->assignArguments(this, fnObj, argv, argc, argc);
