@@ -170,7 +170,7 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
 }
 
 nsImapProtocol::nsImapProtocol() : 
-    m_parser(*this), m_currentCommand("",eOneByte), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
+    m_currentCommand("",eOneByte),m_parser(*this), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
 {
 	NS_INIT_REFCNT();
 	m_flags = 0;
@@ -371,9 +371,9 @@ nsImapProtocol::SetupSinkProxy()
             res = m_runningUrl->GetImapLog(getter_AddRefs(aImapLog));
             if (NS_SUCCEEDED(res) && aImapLog)
             {
-                nsImapLogProxy * log = new nsImapLogProxy (aImapLog, this,
+                nsImapLogProxy * alog = new nsImapLogProxy (aImapLog, this,
                                                 m_sinkEventQueue, m_thread);
-				m_imapLog = do_QueryInterface(log);
+				m_imapLog = do_QueryInterface(alog);
             }
         }
                 
@@ -2790,15 +2790,15 @@ PRBool nsImapProtocol::CheckNewMail()
 
 void nsImapProtocol::AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString)
 {
-	PRInt32 startSequence = (msgCount > 0) ? msgUids[0] : -1;
-	PRInt32 curSequenceEnd = startSequence;
+	PRUint32 startSequence = (msgCount > 0) ? msgUids[0] : 0xFFFFFFFF;
+	PRUint32 curSequenceEnd = startSequence;
 	PRUint32 total = msgCount;
 
 	for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
 	{
-		PRInt32 curKey = msgUids[keyIndex];
-		PRInt32 nextKey = (keyIndex + 1 < total) ? msgUids[keyIndex + 1] : -1;
-		PRBool lastKey = (nextKey == -1);
+		PRUint32 curKey = msgUids[keyIndex];
+		PRUint32 nextKey = (keyIndex + 1 < total) ? msgUids[keyIndex + 1] : 0xFFFFFFFF;
+		PRBool lastKey = (nextKey == 0xFFFFFFFF);
 
 		if (lastKey)
 			curSequenceEnd = curKey;
