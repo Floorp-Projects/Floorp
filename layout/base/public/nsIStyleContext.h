@@ -83,6 +83,8 @@ struct nsStyleSpacing: public nsStyleStruct {
 
   PRUint8       mFloatEdge;       // [reset] see nsStyleConsts.h
 
+  nsStyleCoord  mCompatFloaterMargin; // [reset] length, percent, auto, inherit
+
   PRBool GetMargin(nsMargin& aMargin) const;
   PRBool GetPadding(nsMargin& aPadding) const;
   PRBool GetBorder(nsMargin& aBorder) const;

@@ -37,9 +37,9 @@
 
 CSS_KEY(_moz_bg_inset)
 CSS_KEY(_moz_bg_outset)
-CSS_KEY(_moz_pre_wrap)
 CSS_KEY(_moz_center)
 CSS_KEY(_moz_right)
+CSS_KEY(_moz_pre_wrap)
 CSS_KEY(above)
 CSS_KEY(absolute)
 CSS_KEY(activeborder)
