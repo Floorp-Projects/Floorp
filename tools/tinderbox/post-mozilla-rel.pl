@@ -378,7 +378,7 @@ sub packit {
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
         TinderUtils::run_shell_command "mkdir -p $stagedir/linux-xpi/" if ( ! -e "$stagedir/linux-xpi/" );
-        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/linux-xpi/" if ( ! -e "$stagedir/linux-xpi/" );
+        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/linux-xpi/";
       }
     }
   }
