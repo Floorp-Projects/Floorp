@@ -2245,11 +2245,17 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         text->SetText(mText, mTextLength, PR_FALSE);
         NS_RELEASE(text);
         
+        // Eat up the rest of the text up in state.
+        mLastTextNode = content;
+        mLastTextNodeSize += mTextLength;
+        mTextLength = 0;
+
         // Add text to its parent
         NS_ASSERTION(mStackPos > 0, "leaf w/o container");
         if (mStackPos <= 0) {
           return NS_ERROR_FAILURE;
         }
+
         nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
         if (mStack[mStackPos-1].mInsertionPoint != -1) {
           parent->InsertChildAt(content, 
@@ -2260,11 +2266,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
           parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
         }
 
-        mLastTextNode = content;
-
-        mLastTextNodeSize += mTextLength;
-		    mTextLength = 0;
-    		didFlush = PR_TRUE;
+        didFlush = PR_TRUE;
 
         DidAddContent(content, PR_FALSE);
       }
