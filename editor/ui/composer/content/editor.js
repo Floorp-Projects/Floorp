@@ -3369,16 +3369,34 @@ function GetSelectionContainer()
 
 function FillInHTMLTooltip(tooltip)
 {
+  const XLinkNS = "http://www.w3.org/1999/xlink";
   var tooltipText = null;
-  for (var node = document.tooltipNode; node; node = node.parentNode) {
-    if (node instanceof Components.interfaces.nsIDOMHTMLImageElement ||
-        node instanceof Components.interfaces.nsIDOMHTMLInputElement)
-      tooltipText = node.getAttribute("src");
-    else if (node instanceof Components.interfaces.nsIDOMHTMLAnchorElement)
-      tooltipText = node.getAttribute("href") || node.name;
-    if (tooltipText) {
-      tooltip.setAttribute("label", tooltipText);
-      return true;
+  if (gEditorDisplayMode == kDisplayModePreview) {
+    for (var node = document.tooltipNode; node; node = node.parentNode) {
+      if (node.nodeType == Node.ELEMENT_NODE) {
+        tooltipText = node.getAttributeNS(XLinkNS, "title");
+        if (tooltipText && /\S/.test(tooltipText)) {
+          tooltip.setAttribute("label", tooltipText);
+          return true;
+        }
+        tooltipText = node.getAttribute("title");
+        if (tooltipText && /\S/.test(tooltipText)) {
+          tooltip.setAttribute("label", tooltipText);
+          return true;
+        }
+      }
+    }
+  } else {
+    for (var node = document.tooltipNode; node; node = node.parentNode) {
+      if (node instanceof Components.interfaces.nsIDOMHTMLImageElement ||
+          node instanceof Components.interfaces.nsIDOMHTMLInputElement)
+        tooltipText = node.getAttribute("src");
+      else if (node instanceof Components.interfaces.nsIDOMHTMLAnchorElement)
+        tooltipText = node.getAttribute("href") || node.name;
+      if (tooltipText) {
+        tooltip.setAttribute("label", tooltipText);
+        return true;
+      }
     }
   }
   return false;
