@@ -16,7 +16,7 @@ LOCKFILE=/var/lock/subsys/build
 
 
 build_args="--daemonize --buildcf $BUILDCF"
-build_args="$build_args --build construct -- --tree $TREE"
+build_args="$build_args --build construct --tree $TREE"
 
 
 # Source function library.
@@ -28,7 +28,7 @@ build_args="$build_args --build construct -- --tree $TREE"
 RETVAL=0
 
 start () {
-	echo -n $"Starting Build: "
+	echo -n "Starting Build: "
         daemon --user build $BUILDSCRIPT $build_args
 	RETVAL=$?
 	echo
@@ -36,14 +36,17 @@ start () {
 }
 
 test () {
-	# print out the build script for examination
+	# print out the build command and the build script for examination
+	echo
+        echo $BUILDSCRIPT --test $build_args
+	echo
         $BUILDSCRIPT --test $build_args
 	RETVAL=$?
 	echo
 }
 
 stop () {
-	echo -n $"Stopping Build: "
+	echo -n "Stopping Build: "
 	killproc $BUILDSCRIPT
 	RETVAL=$?
 	echo
@@ -80,7 +83,7 @@ case "$1" in
     	status build
 	;;
     *)
-    	echo $"Usage: build {start|stop|restart|reload|condrestart|status|test}"
+    	echo "Usage: build {start|stop|restart|reload|condrestart|status|test}"
 	exit 1
 esac
 
