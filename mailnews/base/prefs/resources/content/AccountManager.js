@@ -482,6 +482,7 @@ function onSetDefault(event) {
   if (!account) return;
 
   accountManager.defaultAccount = account;
+  setEnabled(setDefaultButton, false);
 }
 
 function onRemoveAccount(event) {
