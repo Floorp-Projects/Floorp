@@ -1851,9 +1851,6 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
 #ifdef NS_DEBUG
         printf("Adding LOCAL attachment %d: %s\n", newLoc, str.get());
 #endif
-#ifdef XP_WIN
-        str.ReplaceChar('|', ':');
-#endif
         //
         // Now we have to setup the m_attachments entry for the file://
         // URL that is passed in...
