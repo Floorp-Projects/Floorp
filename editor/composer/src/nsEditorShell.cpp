@@ -5200,7 +5200,7 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
     }
     // Network code pops up an alert dialog if file wasn't found,
     //  so we don't need to
-    //TODO: Would it be possible to simple change channel URL to "about:blank"
+    //TODO: Would it be possible to simply change channel URL to "about:blank"
     //      so we leave window up with empty page instead of closing it?
     if (mCantEditReason != eCantEditFileNotFound)
     {
