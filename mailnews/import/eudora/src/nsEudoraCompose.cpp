@@ -962,27 +962,22 @@ nsresult nsEudoraCompose::CopyComposedMessage( nsCString& fromLine, nsIFileSpec 
 
 	if (NS_SUCCEEDED( rv)) {
     rv = EscapeFromSpaceLine(pDst, copy.m_pBuffer + copy.m_writeOffset, copy.m_pBuffer+copy.m_bytesInBuf);
-    NS_ENSURE_SUCCESS(rv,rv);
 		if (copy.m_bytesInBuf)
 			lastChar = copy.m_pBuffer[copy.m_bytesInBuf - 1];
-		copy.m_writeOffset = copy.m_bytesInBuf;
+    if (NS_SUCCEEDED(rv))
+		  copy.m_writeOffset = copy.m_bytesInBuf;
 	}
 
 	while ((state.offset < state.size) && NS_SUCCEEDED( rv)) {
 		rv = FillMailBuffer( &state, copy);
 		if (NS_SUCCEEDED( rv)) {
-			rv = pDst->Write( copy.m_pBuffer, copy.m_bytesInBuf, &written);
+      rv = EscapeFromSpaceLine(pDst, copy.m_pBuffer + copy.m_writeOffset, copy.m_pBuffer+copy.m_bytesInBuf);
 			lastChar = copy.m_pBuffer[copy.m_bytesInBuf - 1];
-			if (NS_SUCCEEDED( rv)) {
-				if (written != copy.m_bytesInBuf) {
-					rv = NS_ERROR_FAILURE;
-					IMPORT_LOG0( "*** Error writing to destination mailbox\n");
-				}
-				else
-					copy.m_writeOffset = copy.m_bytesInBuf;
-			}
+			if (NS_SUCCEEDED( rv))
+		    copy.m_writeOffset = copy.m_bytesInBuf;
+	    else
+        IMPORT_LOG0( "*** Error writing to destination mailbox\n");
 		}
-
 	}
 
 	pSrc->CloseStream();
