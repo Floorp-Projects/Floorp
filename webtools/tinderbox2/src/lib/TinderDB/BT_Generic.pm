@@ -69,7 +69,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -251,13 +251,15 @@ sub status_table_row {
 
 	# display all the interesting fields
 	
-        $table .= "Ticket updated at: ".localtime($time)."<br>\n";
 	foreach $field (@BTData::DISPLAY_FIELDS) {
 
 	  # we display all fields even the empty ones, so that users
 	  # can see which fields are empty.
 
 	  my ($value) = $rec->{$field};
+
+          ($value) || 
+            next;
 
           # $max_length = main::max($max_length , length($value));
 	  $num_rows++;
@@ -268,7 +270,17 @@ sub status_table_row {
 		     $value.
 		     "<br>\n".
 		     "");
-	}
+	} # foreach $field 
+
+        ($table) ||
+          next;
+
+        $table = (
+                  "Ticket updated at: ".
+                  localtime($time).
+                  "<br>\n".
+                  $table.
+                  "");
 
         # fix the size so that long summaries do not cause our window
         # to get too large.
