@@ -175,6 +175,19 @@ typedef JNIEXPORT void (JNICALL * fpDestroyPropertiesObjectType)
 
 /**
 
+ * Called when webclient wants to clear a  "Properties" object it created
+ * with fpCreatePropertiesObject
+
+ * @param propertiesObject the propertiesObject created with
+ * fpCreatePropertiesObject
+
+ */
+
+typedef JNIEXPORT void (JNICALL * fpClearPropertiesObjectType) 
+    (JNIEnv *env, jobject propertiesObject, jobject reserved_NotUsed);
+
+/**
+
  * Called after webclient has called fpCreatePropertiesObjectType when
  * webclient wants to store values into the properties object.
 
@@ -189,7 +202,8 @@ typedef JNIEXPORT void (JNICALL * fpDestroyPropertiesObjectType)
  */
 
 typedef JNIEXPORT void (JNICALL * fpStoreIntoPropertiesObjectType) 
-    (JNIEnv *env, jobject propertiesObject, jobject name, jobject value);
+    (JNIEnv *env, jobject propertiesObject, jobject name, jobject value, 
+     jobject reserved);
 
 /**
 
@@ -240,6 +254,16 @@ JNIEXPORT void JNICALL util_SetCreatePropertiesObjectFunction(fpCreateProperties
  */
 
 JNIEXPORT void JNICALL util_SetDestroyPropertiesObjectFunction(fpDestroyPropertiesObjectType fp);
+
+/**
+
+ * This function must be called at app initialization.
+
+ * @see fpDestroyPropertiesObjectType
+
+ */
+
+JNIEXPORT void JNICALL util_SetClearPropertiesObjectFunction(fpDestroyPropertiesObjectType fp);
 
 /**
 
@@ -302,6 +326,16 @@ extern fpCreatePropertiesObjectType externalCreatePropertiesObject;
  */
 
 extern fpDestroyPropertiesObjectType externalDestroyPropertiesObject;
+
+/**
+
+ * defined in jni_util_export.cpp
+
+ * The function pointer set with util_SetClearPropertiesObjectFunction
+
+ */
+
+extern fpClearPropertiesObjectType externalClearPropertiesObject;
 
 /**
 

@@ -86,6 +86,7 @@ struct WebShellInitContext {
         int                                     gtkWinPtr;
   nsCOMPtr<nsISearchContext> searchContext;
   nsCOMPtr<nsIDOMDocument> currentDocument;
+    jclass propertiesClass;
 };
 
 enum {
@@ -204,13 +205,23 @@ void util_DestroyPropertiesObject(JNIEnv *env, jobject propertiesObject,
 
 /**
 
+ * A JNI wrapper to clear the object from CreatePropertiesObject
+
+ */
+
+void util_ClearPropertiesObject(JNIEnv *env, jobject propertiesObject,
+                                jobject reserved_NotUsed);
+
+/**
+
  * A JNI wrapper for storing a name/value pair into the Properties
  * object created by CreatePropertiesObject
 
  */
 
 void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
-                                    jobject name, jobject value);
+                                    jobject name, jobject value, 
+                                    jobject reserved);
 
 
 //

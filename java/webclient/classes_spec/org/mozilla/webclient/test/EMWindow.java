@@ -45,14 +45,13 @@ import org.mozilla.util.Assert;
 
 import org.w3c.dom.Document;
 
-
 /**
  *
 
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.13 2000/06/05 19:11:22 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.14 2000/06/08 02:16:06 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -236,7 +235,6 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
             EventRegistration eventRegistration = 
                 (EventRegistration)
                 browserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
-            System.out.println("debug: edburns: adding DocumentLoadListener");
             eventRegistration.addDocumentLoadListener(this);
             eventRegistration.addMouseListener(this);
 
@@ -310,9 +308,7 @@ public void delete()
     }
     BrowserControlFactory.deleteBrowserControl(browserControl);
     browserControl = null;
-    System.out.println("debug: edburns: about to hide");
     this.hide();
-    System.out.println("debug: edburns: about to dispose");
     this.dispose();
     urlField = null;
     browserCanvas = null;
@@ -530,9 +526,11 @@ public void eventDispatched(WebclientEvent event)
             forwardButton.setEnabled(history.canForward());
             statusLabel.setText("Done.");
             currentDocument = currentPage.getDOM();
+            // add the new document to the domViewer
             if (null != domViewer) {
                 domViewer.setDocument(currentDocument);
             }
+
             break;
         }
     }
@@ -544,18 +542,38 @@ public void eventDispatched(WebclientEvent event)
 
 public void mouseClicked(java.awt.event.MouseEvent e)
 {
-    System.out.println("mouseClicked");
+    int modifiers = e.getModifiers();
+     if (0 != (modifiers & InputEvent.BUTTON1_MASK)) {
+        System.out.println("Button1 ");
+    }
+    if (0 != (modifiers & InputEvent.BUTTON2_MASK)) {
+        System.out.println("Button2 ");
+    }
+    if (0 != (modifiers & InputEvent.BUTTON3_MASK)) {
+        System.out.println("Button3 ");
+    }
 }
 
 public void mouseEntered(java.awt.event.MouseEvent e)
 {
-    System.out.println("mouseEntered");
     if (e instanceof WCMouseEvent) {
         WCMouseEvent wcMouseEvent = (WCMouseEvent) e;
         Properties eventProps = 
             (Properties) wcMouseEvent.getWebclientEvent().getEventData();
         if (null == eventProps) {
             return;
+        }
+        if (e.isAltDown()) {
+            System.out.println("Alt ");
+        }
+        if (e.isControlDown()) {
+            System.out.println("Ctrl ");
+        }
+        if (e.isShiftDown()) {
+            System.out.println("Shift ");
+        }
+        if (e.isMetaDown()) {
+            System.out.println("Meta ");
         }
         String href = eventProps.getProperty("href");
         if (null != href) {
@@ -569,7 +587,6 @@ public void mouseEntered(java.awt.event.MouseEvent e)
                     href = currentURL.substring(0, lastSlashIndex) + "/"+ href;
                 }
             }
-            System.out.println(href);
             statusLabel.setText(href);
         }
     }
@@ -578,18 +595,16 @@ public void mouseEntered(java.awt.event.MouseEvent e)
 public void mouseExited(java.awt.event.MouseEvent e)
 {
     statusLabel.setText("");
-    System.out.println("mouseExited");
 }
 
 public void mousePressed(java.awt.event.MouseEvent e)
 {
-    System.out.println("mousePressed");
 }
 
 public void mouseReleased(java.awt.event.MouseEvent e)
 {
-    System.out.println("mouseReleased");
 }
+
 
 //
 // Package methods

@@ -28,10 +28,13 @@ import org.mozilla.util.ParameterCheck;
 
 import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.InputEvent;
 import java.awt.Component;
 import org.mozilla.webclient.WCMouseEvent;
 import org.mozilla.webclient.WebclientEvent;
 import org.mozilla.webclient.WebclientEventListener;
+
+import java.util.Properties;
 
 /**
 
@@ -109,48 +112,90 @@ public void eventDispatched(WebclientEvent event)
 {
     ParameterCheck.nonNull(event);
     WCMouseEvent mouseEvent;
-    
+    Properties props = (Properties) event.getEventData();
+    int modifiers = 0, x = -1, y = -1, clickCount = 0;
+    String str;
+    boolean bool;
+    if (null != (str = props.getProperty("ClientX"))) {
+        x = Integer.valueOf(str).intValue();
+    }
+    if (null != (str = props.getProperty("ClientY"))) {
+        y = Integer.valueOf(str).intValue();
+    }
+    if (null != (str = props.getProperty("ClickCount"))) {
+        clickCount = Integer.valueOf(str).intValue();
+    }
+    if (null != (str = props.getProperty("Button"))) {
+        int button = Integer.valueOf(str).intValue();
+        if (1 == button) {
+            modifiers += InputEvent.BUTTON1_MASK;
+        }
+        if (2 == button) {
+            modifiers += InputEvent.BUTTON2_MASK;
+        }
+        if (3 == button) {
+            modifiers += InputEvent.BUTTON3_MASK;
+        }
+    }
+    if (null != (str = props.getProperty("Alt"))) {
+        bool = Boolean.valueOf(str).booleanValue();
+        if (bool) {
+            modifiers += InputEvent.ALT_MASK;
+        }
+    }
+    if (null != (str = props.getProperty("Ctrl"))) {
+        bool = Boolean.valueOf(str).booleanValue();
+        if (bool) {
+            modifiers += InputEvent.CTRL_MASK;
+        }
+    }
+    if (null != (str = props.getProperty("Meta"))) {
+        bool = Boolean.valueOf(str).booleanValue();
+        if (bool) {
+            modifiers += InputEvent.META_MASK;
+        }
+    }
+    if (null != (str = props.getProperty("Shift"))) {
+        bool = Boolean.valueOf(str).booleanValue();
+        if (bool) {
+            modifiers += InputEvent.SHIFT_MASK;
+        }
+    }
     switch ((int) event.getType()) {
     case (int) WCMouseEvent.MOUSE_DOWN_EVENT_MASK:
         mouseEvent = 
             new WCMouseEvent((Component) event.getSource(),
                              MouseEvent.MOUSE_PRESSED, -1,
-                             -1, -1, -1, -1, false, event);
+                             modifiers, x, y, clickCount, false, event);
         mouseListener.mousePressed(mouseEvent);
         break;
     case (int) WCMouseEvent.MOUSE_UP_EVENT_MASK:
         mouseEvent = 
             new WCMouseEvent((Component) event.getSource(),
                              MouseEvent.MOUSE_RELEASED, -1,
-                             -1, -1, -1, -1, false, event);
+                             modifiers, x, y, clickCount, false, event);
         mouseListener.mouseReleased(mouseEvent);
         break;
     case (int) WCMouseEvent.MOUSE_CLICK_EVENT_MASK:
-        mouseEvent = 
-            new WCMouseEvent((Component) event.getSource(),
-                             MouseEvent.MOUSE_CLICKED, -1,
-                             -1, -1, -1, 1, false, event);
-        mouseListener.mouseClicked(mouseEvent);
-        break;
     case (int) WCMouseEvent.MOUSE_DOUBLE_CLICK_EVENT_MASK:
         mouseEvent = 
             new WCMouseEvent((Component) event.getSource(),
                              MouseEvent.MOUSE_CLICKED, -1,
-                             -1, -1, -1, 2, false, event);
+                             modifiers, x, y, clickCount, false, event);
         mouseListener.mouseClicked(mouseEvent);
         break;
     case (int) WCMouseEvent.MOUSE_OVER_EVENT_MASK:
         mouseEvent = 
             new WCMouseEvent((Component) event.getSource(),
                              MouseEvent.MOUSE_ENTERED, -1,
-                             -1, -1, -1, -1, false, event);
+                             modifiers, x, y, clickCount, false, event);
         mouseListener.mouseEntered(mouseEvent);
         break;
     case (int) WCMouseEvent.MOUSE_OUT_EVENT_MASK:
         mouseEvent = 
             new WCMouseEvent((Component) event.getSource(),
                              MouseEvent.MOUSE_EXITED, -1,
-                             -1, -1, -1, -1, false, event);
+                             modifiers, x, y, clickCount, false, event);
         mouseListener.mouseExited(mouseEvent);
         break;
     }

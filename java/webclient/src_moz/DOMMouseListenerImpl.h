@@ -75,6 +75,8 @@ static char *maskNames [];
     
     DOMMouseListenerImpl();
 
+    virtual ~DOMMouseListenerImpl();
+
     /* nsIDOMEventListener methods */
     nsresult HandleEvent(nsIDOMEvent* aEvent);
 
@@ -96,8 +98,11 @@ static char *maskNames [];
 //
 // Local methods
 //
+protected:
 
 jobject JNICALL getPropertiesFromEvent(nsIDOMEvent *aMouseEvent);
+
+void JNICALL addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent);
 
 static  nsresult JNICALL takeActionOnNode(nsCOMPtr<nsIDOMNode> curNode, 
                                           void *yourObject);

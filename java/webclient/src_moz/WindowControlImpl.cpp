@@ -95,6 +95,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     initContext->h = height;
     initContext->searchContext = nsnull;
     initContext->currentDocument = nsnull;
+    initContext->propertiesClass = nsnull;
 
 #ifdef XP_UNIX
     initContext->gtkWinPtr = 
@@ -149,6 +150,7 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitCo
     initContext->gtkWinPtr = nsnull;
     initContext->searchContext = nsnull;
     initContext->currentDocument = nsnull;
+    initContext->propertiesClass = nsnull;
 
     delete initContext;
 }

@@ -44,6 +44,8 @@ fpCreatePropertiesObjectType externalCreatePropertiesObject = nsnull; // jni_uti
 
 fpDestroyPropertiesObjectType externalDestroyPropertiesObject = nsnull; // jni_util_export.h
 
+fpClearPropertiesObjectType externalClearPropertiesObject = nsnull; // jni_util_export.h
+
 fpStoreIntoPropertiesObjectType externalStoreIntoPropertiesObject = nsnull; // jni_util_export.h
 
 JNIEXPORT const char * JNICALL util_GetStringUTFChars(JNIEnv *env, 
@@ -201,6 +203,11 @@ JNIEXPORT void JNICALL util_SetCreatePropertiesObjectFunction(fpCreateProperties
 JNIEXPORT void JNICALL util_SetDestroyPropertiesObjectFunction(fpDestroyPropertiesObjectType fp)
 {
     externalDestroyPropertiesObject = fp;
+}
+
+JNIEXPORT void JNICALL util_SetClearPropertiesObjectFunction(fpClearPropertiesObjectType fp)
+{
+    externalClearPropertiesObject = fp;
 }
 
 JNIEXPORT void JNICALL util_SetStoreIntoPropertiesObjectFunction(fpStoreIntoPropertiesObjectType fp)

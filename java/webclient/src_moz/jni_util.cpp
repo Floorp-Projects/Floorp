@@ -36,9 +36,9 @@ JavaVM *gVm = nsnull; // declared in ns_globals.h, which is included in
 // Local cache variables of JNI data items
 //
 
-static jclass gPropertiesClass = nsnull;
 static jmethodID gPropertiesInitMethodID = nsnull;
 static jmethodID gPropertiesSetPropertyMethodID = nsnull;
+static jmethodID gPropertiesClearMethodID = nsnull;
 
 void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 {
@@ -368,30 +368,37 @@ void util_SetIntValueForInstance(JNIEnv *env, jobject obj,
 #endif;
 }
 
-jobject util_CreatePropertiesObject(JNIEnv *env, jobject reserved_NotUsed)
+jobject util_CreatePropertiesObject(JNIEnv *env, jobject initContextObj)
 {
     jobject result = nsnull;
 #ifdef BAL_INTERFACE
     if (nsnull != externalCreatePropertiesObject) {
-        result = externalCreatePropertiesObject(env, reserved_NotUsed);
+        result = externalCreatePropertiesObject(env, initContextObj);
     }
 #else
-    // For some reason, we have to do FindClass each time.  If we try to
-    // cache the class, it crashes.  I think this may have something to
-    // do with threading issues.
-    if (nsnull == (gPropertiesClass 
-                   = ::util_FindClass(env, "java/util/Properties"))) {
-        return result;
-    }
-    
-    if (nsnull == gPropertiesInitMethodID) {
-        if (nsnull == (gPropertiesInitMethodID = 
-                       env->GetMethodID(gPropertiesClass, "<init>", "()V"))) {
+    PR_ASSERT(initContextObj);
+    WebShellInitContext *initContext = (WebShellInitContext *) initContextObj;
+
+    if (nsnull == initContext->propertiesClass) {
+        if (nsnull == (initContext->propertiesClass =
+                       ::util_FindClass(env, "java/util/Properties"))) {
             return result;
         }
     }
 
-    result = env->NewObject(gPropertiesClass, gPropertiesInitMethodID);
+    if (nsnull == gPropertiesInitMethodID) {
+        PR_ASSERT(initContext->propertiesClass);
+        if (nsnull == (gPropertiesInitMethodID = 
+                       env->GetMethodID(initContext->propertiesClass, 
+                                        "<init>", "()V"))) {
+            return result;
+        }
+    }
+    PR_ASSERT(gPropertiesInitMethodID);
+    
+    result = ::util_NewGlobalRef(env, 
+                                 env->NewObject(initContext->propertiesClass, 
+                                                gPropertiesInitMethodID));
 
 #endif
     return result;
@@ -406,21 +413,52 @@ void util_DestroyPropertiesObject(JNIEnv *env, jobject propertiesObject,
                                         reserved_NotUsed);
     }
 #else
+    ::util_DeleteGlobalRef(env, propertiesObject);
+#endif
+}
+
+void util_ClearPropertiesObject(JNIEnv *env, jobject propertiesObject,
+                                jobject initContextObj)
+{
+#ifdef BAL_INTERFACE
+    if (nsnull != externalClearPropertiesObject) {
+        externalClearPropertiesObject(env, propertiesObject, initContextObj);
+    }
+#else
+    PR_ASSERT(initContextObj);
+    WebShellInitContext *initContext = (WebShellInitContext *) initContextObj;
+    
+    if (nsnull == gPropertiesClearMethodID) {
+        PR_ASSERT(initContext->propertiesClass);
+        if (nsnull == (gPropertiesClearMethodID = 
+                       env->GetMethodID(initContext->propertiesClass, "clear", "()V"))) {
+            return;
+        }
+    }
+    PR_ASSERT(gPropertiesClearMethodID);
+    env->CallVoidMethod(propertiesObject, gPropertiesClearMethodID);
+    
+    return;
 #endif
 }
 
 void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
-                                    jobject name, jobject value)
+                                    jobject name, jobject value, 
+                                    jobject initContextObj)
 {
 #ifdef BAL_INTERFACE
     if (nsnull != externalStoreIntoPropertiesObject) {
-        externalStoreIntoPropertiesObject(env, propertiesObject, name, value);
+        externalStoreIntoPropertiesObject(env, propertiesObject, name, value,
+                                          initContextObj);
     }
 #else
+    PR_ASSERT(initContextObj);
+    WebShellInitContext *initContext = (WebShellInitContext *) initContextObj;
+    
     if (nsnull == gPropertiesSetPropertyMethodID) {
-        PR_ASSERT(gPropertiesClass);
+        PR_ASSERT(initContext->propertiesClass);
         if (nsnull == (gPropertiesSetPropertyMethodID = 
-                       env->GetMethodID(gPropertiesClass, 
+                       env->GetMethodID(initContext->propertiesClass, 
                                         "setProperty",
                                         "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;"))) {
             return;

@@ -79,16 +79,40 @@ static jobject FALSE_VALUE = nsnull;
 
 jboolean initPropertiesKeys();
 
-NS_IMPL_ADDREF(DOMMouseListenerImpl);
-NS_IMPL_RELEASE(DOMMouseListenerImpl);  
+//NS_IMPL_ADDREF(DOMMouseListenerImpl);
+//NS_IMPL_RELEASE(DOMMouseListenerImpl);  
 
-DOMMouseListenerImpl::DOMMouseListenerImpl(){
+NS_IMETHODIMP_(nsrefcnt) DOMMouseListenerImpl::AddRef()
+{
+    mRefCnt++;
+    return mRefCnt;
+}
+
+NS_IMETHODIMP_(nsrefcnt) DOMMouseListenerImpl::Release()
+{
+    mRefCnt--;
+
+   if (mRefCnt == 0) {
+       mRefCnt = 1; /* stabilize */
+       NS_DELETEXPCOM(this);
+       return 0;
+   }                                                       
+   return mRefCnt;
+}
+
+
+
+DOMMouseListenerImpl::DOMMouseListenerImpl() : mJNIEnv(nsnull), 
+    mInitContext(nsnull), mTarget(nsnull), 
+    inverseDepth(-1), properties(nsnull), currentDOMEvent(nsnull)
+{
 }
 
 DOMMouseListenerImpl::DOMMouseListenerImpl(JNIEnv *env,
                                            WebShellInitContext *yourInitContext,
                                            jobject yourTarget) :
-    mJNIEnv(env), mInitContext(yourInitContext), mTarget(yourTarget)
+    mJNIEnv(env), mInitContext(yourInitContext), mTarget(yourTarget), 
+    inverseDepth(-1), properties(nsnull), currentDOMEvent(nsnull)
 {
     if (nsnull == gVm) { // declared in jni_util.h
         ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
@@ -101,7 +125,18 @@ DOMMouseListenerImpl::DOMMouseListenerImpl(JNIEnv *env,
         util_InitializeEventMaskValuesFromClass("org/mozilla/webclient/WCMouseEvent",
                                                 maskNames, maskValues);
     }
-    mRefCnt = 1; // PENDING(edburns): not sure about how right this is to do.
+    mRefCnt = 0; // PENDING(edburns): not sure about how right this is to do.
+}
+
+DOMMouseListenerImpl::~DOMMouseListenerImpl()
+{
+    if (properties) {
+        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+        util_DestroyPropertiesObject(env, properties, (jobject) mInitContext);
+        properties = nsnull;
+    }
+    currentDOMEvent = nsnull;
+
 }
 
 NS_IMETHODIMP DOMMouseListenerImpl::QueryInterface(REFNSIID aIID, void** aInstance)
@@ -134,7 +169,7 @@ nsresult DOMMouseListenerImpl::MouseDown(nsIDOMEvent *aMouseEvent)
 {
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
+        PR_LOG(prLogModuleInfo, 4, 
                ("!DOMMouseListenerImpl::MouseDown\n"));
     }
 #endif
@@ -146,7 +181,6 @@ nsresult DOMMouseListenerImpl::MouseDown(nsIDOMEvent *aMouseEvent)
                          mTarget, 
                          maskValues[MOUSE_DOWN_EVENT_MASK], 
                          properties);
-    util_DestroyPropertiesObject(mInitContext->env, properties, nsnull);
     return NS_OK;
 }
 
@@ -154,7 +188,7 @@ nsresult DOMMouseListenerImpl::MouseUp(nsIDOMEvent *aMouseEvent)
 {
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
+        PR_LOG(prLogModuleInfo, 4, 
                ("!DOMMouseListenerImpl::MouseUp\n"));
     }
 #endif
@@ -166,7 +200,6 @@ nsresult DOMMouseListenerImpl::MouseUp(nsIDOMEvent *aMouseEvent)
                          mTarget, 
                          maskValues[MOUSE_UP_EVENT_MASK], 
                          properties);
-    util_DestroyPropertiesObject(mInitContext->env, properties, nsnull);
     return NS_OK;
 }
 
@@ -174,7 +207,7 @@ nsresult DOMMouseListenerImpl::MouseClick(nsIDOMEvent *aMouseEvent)
 {
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
+        PR_LOG(prLogModuleInfo, 4, 
                ("!DOMMouseListenerImpl::MouseClick\n"));
     }
 #endif
@@ -186,7 +219,6 @@ nsresult DOMMouseListenerImpl::MouseClick(nsIDOMEvent *aMouseEvent)
                          mTarget, 
                          maskValues[MOUSE_CLICK_EVENT_MASK], 
                          properties);
-    util_DestroyPropertiesObject(mInitContext->env, properties, nsnull);
     return NS_OK;
 }
 
@@ -194,7 +226,7 @@ nsresult DOMMouseListenerImpl::MouseDblClick(nsIDOMEvent *aMouseEvent)
 {
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
+        PR_LOG(prLogModuleInfo, 4, 
                ("!DOMMouseListenerImpl::MouseDoubleClick\n"));
     }
 #endif
@@ -206,7 +238,6 @@ nsresult DOMMouseListenerImpl::MouseDblClick(nsIDOMEvent *aMouseEvent)
                          mTarget, 
                          maskValues[MOUSE_DOUBLE_CLICK_EVENT_MASK], 
                          properties);
-    util_DestroyPropertiesObject(mInitContext->env, properties, nsnull);
     return NS_OK;
 }
 
@@ -214,7 +245,7 @@ nsresult DOMMouseListenerImpl::MouseOver(nsIDOMEvent *aMouseEvent)
 {
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
+        PR_LOG(prLogModuleInfo, 4, 
                ("!DOMMouseListenerImpl::MouseOver\n"));
     }
 #endif
@@ -226,7 +257,6 @@ nsresult DOMMouseListenerImpl::MouseOver(nsIDOMEvent *aMouseEvent)
                          mTarget, 
                          maskValues[MOUSE_OVER_EVENT_MASK], 
                          properties);
-    util_DestroyPropertiesObject(mInitContext->env, properties, nsnull);
 
     return NS_OK;
 }
@@ -235,7 +265,7 @@ nsresult DOMMouseListenerImpl::MouseOut(nsIDOMEvent *aMouseEvent)
 {
 #if DEBUG_RAPTOR_CANVAS
     if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 3, 
+        PR_LOG(prLogModuleInfo, 4, 
                ("!DOMMouseListenerImpl::MouseOut\n"));
     }
 #endif
@@ -247,7 +277,6 @@ nsresult DOMMouseListenerImpl::MouseOut(nsIDOMEvent *aMouseEvent)
                          mTarget, 
                          maskValues[MOUSE_OUT_EVENT_MASK], 
                          properties);
-    util_DestroyPropertiesObject(mInitContext->env, properties, nsnull);
     return NS_OK;
 }
 
@@ -266,114 +295,140 @@ jobject JNICALL DOMMouseListenerImpl::getPropertiesFromEvent(nsIDOMEvent *event)
     }
     inverseDepth = 0;
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
-    
-    properties = util_CreatePropertiesObject(env, nsnull);
-    dom_iterateToRoot(currentNode, DOMMouseListenerImpl::takeActionOnNode, 
-                      (void *)this);
-    if (properties) {
-        // Add to the properties table, the modifiers and such
-        nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
 
-        rv = aMouseEvent->QueryInterface(nsIDOMMouseEvent::GetIID(),
-                                         getter_AddRefs(mouseEvent));
-        if (NS_FAILED(rv)) {
+    if (properties) {
+        util_ClearPropertiesObject(env, properties, (jobject) mInitContext);
+    }
+    else {
+        if (!(properties = 
+              util_CreatePropertiesObject(env, (jobject)mInitContext))) {
             return properties;
         }
-        // initialize the standard properties keys
-        if (!PROPERTIES_KEYS_INITED) {
-            // if the initialization failed, don't modify the properties
-            if (!initPropertiesKeys()) {
-                return properties;
-            }
-        }
-        PRInt32 intVal;
-        PRUint16 int16Val;
-        PRBool boolVal;
-        char buf[20];
-        jstring strVal;
-        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
-
-        // PENDING(edburns): perhaps use a macro to speed this up?
-        rv = mouseEvent->GetScreenX(&intVal);
-        if (NS_SUCCEEDED(rv)) {
-            itoa(intVal, buf, 10);
-            strVal = ::util_NewStringUTF(env, buf);
-            ::util_StoreIntoPropertiesObject(env, properties, SCREEN_X_KEY,
-                                             (jobject) strVal);
-        }
-
-        rv = mouseEvent->GetScreenY(&intVal);
-        if (NS_SUCCEEDED(rv)) {
-            itoa(intVal, buf, 10);
-            strVal = ::util_NewStringUTF(env, buf);
-            ::util_StoreIntoPropertiesObject(env, properties, SCREEN_Y_KEY,
-                                             (jobject) strVal);
-        }
-
-        rv = mouseEvent->GetClientX(&intVal);
-        if (NS_SUCCEEDED(rv)) {
-            itoa(intVal, buf, 10);
-            strVal = ::util_NewStringUTF(env, buf);
-            ::util_StoreIntoPropertiesObject(env, properties, CLIENT_X_KEY,
-                                             (jobject) strVal);
-        }
-
-        rv = mouseEvent->GetClientY(&intVal);
-        if (NS_SUCCEEDED(rv)) {
-            itoa(intVal, buf, 10);
-            strVal = ::util_NewStringUTF(env, buf);
-            ::util_StoreIntoPropertiesObject(env, properties, CLIENT_Y_KEY,
-                                             (jobject) strVal);
-        }
-
-        int16Val = 0;
-        rv = mouseEvent->GetButton(&int16Val);
-        if (NS_SUCCEEDED(rv)) {
-            itoa(int16Val, buf, 10);
-            strVal = ::util_NewStringUTF(env, buf);
-            ::util_StoreIntoPropertiesObject(env, properties, BUTTON_KEY,
-                                             (jobject) strVal);
-        }
-
-        int16Val = 0;
-        rv = mouseEvent->GetClickCount(&int16Val);
-        if (NS_SUCCEEDED(rv)) {
-            itoa(int16Val, buf, 10);
-            strVal = ::util_NewStringUTF(env, buf);
-            ::util_StoreIntoPropertiesObject(env, properties, CLICK_COUNT_KEY,
-                                             (jobject) strVal);
-        }
-
-        rv = mouseEvent->GetAltKey(&boolVal);
-        if (NS_SUCCEEDED(rv)) {
-            strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
-            ::util_StoreIntoPropertiesObject(env, properties, ALT_KEY,
-                                             (jobject) strVal);
-        }
-
-        rv = mouseEvent->GetCtrlKey(&boolVal);
-        if (NS_SUCCEEDED(rv)) {
-            strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
-            ::util_StoreIntoPropertiesObject(env, properties, CTRL_KEY,
-                                             (jobject) strVal);
-        }
-
-        rv = mouseEvent->GetShiftKey(&boolVal);
-        if (NS_SUCCEEDED(rv)) {
-            strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
-            ::util_StoreIntoPropertiesObject(env, properties, SHIFT_KEY,
-                                             (jobject) strVal);
-        }
-
-        rv = mouseEvent->GetMetaKey(&boolVal);
-        if (NS_SUCCEEDED(rv)) {
-            strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
-            ::util_StoreIntoPropertiesObject(env, properties, META_KEY,
-                                             (jobject) strVal);
-        }
-        
     }
+    dom_iterateToRoot(currentNode, DOMMouseListenerImpl::takeActionOnNode, 
+                      (void *)this);
+    addMouseEventDataToProperties(aMouseEvent);
+
     return properties;
+}
+
+void JNICALL DOMMouseListenerImpl::addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent)
+{
+    if (!properties) {
+        return;
+    }
+    nsresult rv;
+
+    // Add modifiers, keys, mouse buttons, etc, to the properties table
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
+    
+    rv = aMouseEvent->QueryInterface(nsIDOMMouseEvent::GetIID(),
+                                     getter_AddRefs(mouseEvent));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+    // initialize the standard properties keys
+    if (!PROPERTIES_KEYS_INITED) {
+        // if the initialization failed, don't modify the properties
+        if (!initPropertiesKeys()) {
+            return;
+        }
+    }
+    PRInt32 intVal;
+    PRUint16 int16Val;
+    PRBool boolVal;
+    char buf[20];
+    jstring strVal;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    
+    // PENDING(edburns): perhaps use a macro to speed this up?
+    rv = mouseEvent->GetScreenX(&intVal);
+    if (NS_SUCCEEDED(rv)) {
+        itoa(intVal, buf, 10);
+        strVal = ::util_NewStringUTF(env, buf);
+        ::util_StoreIntoPropertiesObject(env, properties, SCREEN_X_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) mInitContext);
+    }
+    
+    rv = mouseEvent->GetScreenY(&intVal);
+    if (NS_SUCCEEDED(rv)) {
+        itoa(intVal, buf, 10);
+        strVal = ::util_NewStringUTF(env, buf);
+        ::util_StoreIntoPropertiesObject(env, properties, SCREEN_Y_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) mInitContext);
+    }
+    
+    rv = mouseEvent->GetClientX(&intVal);
+    if (NS_SUCCEEDED(rv)) {
+        itoa(intVal, buf, 10);
+        strVal = ::util_NewStringUTF(env, buf);
+        ::util_StoreIntoPropertiesObject(env, properties, CLIENT_X_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) mInitContext);
+    }
+    
+    rv = mouseEvent->GetClientY(&intVal);
+    if (NS_SUCCEEDED(rv)) {
+        itoa(intVal, buf, 10);
+        strVal = ::util_NewStringUTF(env, buf);
+        ::util_StoreIntoPropertiesObject(env, properties, CLIENT_Y_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) mInitContext);
+    }
+    
+    int16Val = 0;
+    rv = mouseEvent->GetButton(&int16Val);
+    if (NS_SUCCEEDED(rv)) {
+        itoa(int16Val, buf, 10);
+        strVal = ::util_NewStringUTF(env, buf);
+        ::util_StoreIntoPropertiesObject(env, properties, BUTTON_KEY,
+                                         (jobject) strVal,
+                                         (jobject) mInitContext);
+    }
+    
+    int16Val = 0;
+    rv = mouseEvent->GetClickCount(&int16Val);
+    if (NS_SUCCEEDED(rv)) {
+        itoa(int16Val, buf, 10);
+        strVal = ::util_NewStringUTF(env, buf);
+        ::util_StoreIntoPropertiesObject(env, properties, CLICK_COUNT_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) mInitContext);
+    }
+    
+    rv = mouseEvent->GetAltKey(&boolVal);
+    if (NS_SUCCEEDED(rv)) {
+        strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
+        ::util_StoreIntoPropertiesObject(env, properties, ALT_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) mInitContext);
+    }
+    
+    rv = mouseEvent->GetCtrlKey(&boolVal);
+    if (NS_SUCCEEDED(rv)) {
+        strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
+        ::util_StoreIntoPropertiesObject(env, properties, CTRL_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) mInitContext);
+    }
+    
+    rv = mouseEvent->GetShiftKey(&boolVal);
+    if (NS_SUCCEEDED(rv)) {
+        strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
+        ::util_StoreIntoPropertiesObject(env, properties, SHIFT_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) mInitContext);
+    }
+    
+    rv = mouseEvent->GetMetaKey(&boolVal);
+    if (NS_SUCCEEDED(rv)) {
+        strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
+        ::util_StoreIntoPropertiesObject(env, properties, META_KEY,
+                                         (jobject) strVal, 
+                                         (jobject) mInitContext);
+    }
 }
 
 nsresult JNICALL DOMMouseListenerImpl::takeActionOnNode(nsCOMPtr<nsIDOMNode> currentNode,
@@ -413,7 +468,7 @@ nsresult JNICALL DOMMouseListenerImpl::takeActionOnNode(nsCOMPtr<nsIDOMNode> cur
         
         if (prLogModuleInfo) {
             nsAutoCString nodeInfoCStr(nodeName);
-            PR_LOG(prLogModuleInfo, 3, ("%s", (const char *)nodeInfoCStr));
+            PR_LOG(prLogModuleInfo, 4, ("%s", (const char *)nodeInfoCStr));
         }
         
         rv = currentNode->GetNodeValue(nodeInfo);
@@ -426,7 +481,7 @@ nsresult JNICALL DOMMouseListenerImpl::takeActionOnNode(nsCOMPtr<nsIDOMNode> cur
         
         if (prLogModuleInfo) {
             nsAutoCString nodeInfoCStr(nodeValue);
-            PR_LOG(prLogModuleInfo, 3, ("%s", (const char *)nodeInfoCStr));
+            PR_LOG(prLogModuleInfo, 4, ("%s", (const char *)nodeInfoCStr));
         }
         
         jNodeName = ::util_NewString(env, nodeName.GetUnicode(), 
@@ -435,7 +490,9 @@ nsresult JNICALL DOMMouseListenerImpl::takeActionOnNode(nsCOMPtr<nsIDOMNode> cur
                                       nodeValue.Length());
         
         util_StoreIntoPropertiesObject(env, (jobject) curThis->properties,
-                                       (jobject) jNodeName, (jobject) jNodeValue);
+                                       (jobject) jNodeName, 
+                                       (jobject) jNodeValue, 
+                                       (jobject) curThis->mInitContext);
         if (jNodeName) {
             ::util_DeleteString(env, jNodeName);
         }
@@ -473,7 +530,7 @@ nsresult JNICALL DOMMouseListenerImpl::takeActionOnNode(nsCOMPtr<nsIDOMNode> cur
 
             if (prLogModuleInfo) {
                 nsAutoCString nodeInfoCStr(nodeName);
-                PR_LOG(prLogModuleInfo, 3, 
+                PR_LOG(prLogModuleInfo, 4, 
                        ("attribute[%d], %s", i, (const char *)nodeInfoCStr));
             }
             
@@ -487,7 +544,7 @@ nsresult JNICALL DOMMouseListenerImpl::takeActionOnNode(nsCOMPtr<nsIDOMNode> cur
             
             if (prLogModuleInfo) {
                 nsAutoCString nodeInfoCStr(nodeValue);
-                PR_LOG(prLogModuleInfo, 3, 
+                PR_LOG(prLogModuleInfo, 4, 
                        ("attribute[%d] %s", i,(const char *)nodeInfoCStr));
             }
             jNodeName = ::util_NewString(env, nodeName.GetUnicode(), 
@@ -496,7 +553,9 @@ nsresult JNICALL DOMMouseListenerImpl::takeActionOnNode(nsCOMPtr<nsIDOMNode> cur
                                           nodeValue.Length());
             
             util_StoreIntoPropertiesObject(env, (jobject) curThis->properties,
-                                           (jobject) jNodeName, (jobject) jNodeValue);
+                                           (jobject) jNodeName, 
+                                           (jobject) jNodeValue, 
+                                           (jobject) curThis->mInitContext);
             if (jNodeName) {
                 ::util_DeleteString(env, jNodeName);
             }
@@ -517,41 +576,65 @@ jboolean initPropertiesKeys()
 {
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
 
-    if (nsnull == (SCREEN_X_KEY = (jobject) ::util_NewStringUTF(env, "ScreenX"))) {
+    if (nsnull == (SCREEN_X_KEY = 
+                   ::util_NewGlobalRef(env, (jobject) 
+                                       ::util_NewStringUTF(env, "ScreenX")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (SCREEN_Y_KEY = (jobject) ::util_NewStringUTF(env, "ScreenY"))) {
+    if (nsnull == (SCREEN_Y_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "ScreenY")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (CLIENT_X_KEY = (jobject) ::util_NewStringUTF(env, "ClientX"))) {
+    if (nsnull == (CLIENT_X_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "ClientX")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (CLIENT_Y_KEY = (jobject) ::util_NewStringUTF(env, "ClientY"))) {
+    if (nsnull == (CLIENT_Y_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "ClientY")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (ALT_KEY = (jobject) ::util_NewStringUTF(env, "Alt"))) {
+    if (nsnull == (ALT_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Alt")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (CTRL_KEY = (jobject) ::util_NewStringUTF(env, "Ctrl"))) {
+    if (nsnull == (CTRL_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Ctrl")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (SHIFT_KEY = (jobject) ::util_NewStringUTF(env, "Shift"))) {
+    if (nsnull == (SHIFT_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Shift")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (META_KEY = (jobject) ::util_NewStringUTF(env, "Meta"))) {
+    if (nsnull == (META_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Meta")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (BUTTON_KEY = (jobject) ::util_NewStringUTF(env, "Button"))) {
+    if (nsnull == (BUTTON_KEY = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "Button")))) {
         return JNI_FALSE;
     }
     if (nsnull == (CLICK_COUNT_KEY = 
-                   ::util_NewStringUTF(env, "ClickCount"))) {
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, 
+                                                           "ClickCount")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (TRUE_VALUE = (jobject) ::util_NewStringUTF(env, "true"))) {
+    if (nsnull == (TRUE_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "true")))) {
         return JNI_FALSE;
     }
-    if (nsnull == (FALSE_VALUE = (jobject) ::util_NewStringUTF(env, "false"))) {
+    if (nsnull == (FALSE_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "false")))) {
         return JNI_FALSE;
     }
 
