@@ -533,7 +533,6 @@ readAttribute(App *app, Buf *buf, HTMLState *state, unsigned short c)
 			(
 				(c != 256) &&
 				(c != '>') &&
-				(c != '/') &&
 				(c != ' ') &&
 				(c != '\t') &&
 				(c != '\r') &&
