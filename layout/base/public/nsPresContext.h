@@ -31,6 +31,7 @@ class nsIDocument;
 class nsIDeviceContext;
 class nsIFontMetrics;
 class nsIFrame;
+class nsIImage;
 class nsIImageGroup;
 class nsILinkHandler;
 class nsIPresShell;
@@ -190,17 +191,22 @@ public:
    */
   NS_IMETHOD StartLoadImage(const nsString& aURL,
                             const nscolor* aBackgroundColor,
+                            const nsSize* aDesiredSize,
                             nsIFrame* aTargetFrame,
-                            const nsSize& aDesiredSize,
-                            nsFrameImageLoaderCB aCallBack,
-                            PRBool aNeedSizeUpdate,
-                            PRBool aNeedErrorNotification,
-                            nsIFrameImageLoader** aLoaderResult) = 0;
+                            nsIFrameImageLoaderCB aCallBack,
+                            void* aClosure,
+                            nsIFrameImageLoader** aResult) = 0;
+
+  /**
+   * Stop a specific image load being done on behalf of the argument frame.
+   */
+  NS_IMETHOD StopLoadImage(nsIFrame* aForFrame,
+                           nsIFrameImageLoader* aLoader) = 0;
 
   /**
    * Stop any image loading being done on behalf of the argument frame.
    */
-  NS_IMETHOD StopLoadImage(nsIFrame* aForFrame) = 0;
+  NS_IMETHOD StopAllLoadImagesFor(nsIFrame* aForFrame) = 0;
 
   NS_IMETHOD SetContainer(nsISupports* aContainer) = 0;
 
