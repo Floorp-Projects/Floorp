@@ -624,6 +624,9 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
         mBorderlessParent = parent;
          // Don't set the parent of a popup window. 
         parent = NULL;
+         // WS_EX_TOOLWINDOW prevents a button from being placed on 
+         // the taskbar for the popup window.
+        extendedStyle |= WS_EX_TOOLWINDOW;
       }
 
       if (aInitData->mBorderStyle == eBorderStyle_default) {
@@ -2356,6 +2359,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             NS_RELEASE(event.widget);
           }
         }
+        break;
+
+        case WM_DISPLAYCHANGE:
+          DispatchStandardEvent(NS_DISPLAYCHANGED);
         break;
 
         

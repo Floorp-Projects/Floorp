@@ -266,6 +266,9 @@ enum nsDragDropEventStatus {
 // directly to a mouse click or a key press.
 #define NS_CONTROL_CHANGE                (NS_WINDOW_START + 39)
 
+// Indicates the display has changed depth
+#define NS_DISPLAYCHANGED                (NS_WINDOW_START + 40)
+
 
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
