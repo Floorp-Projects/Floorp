@@ -86,7 +86,7 @@
 // A single tab in a tab widget.
 #define NS_THEME_TAB                                       61
 
-// The tab panel
+// A single pane (inside the tabpanels container)
 #define NS_THEME_TAB_PANEL                                 62
 
 // The tab just before the selection
@@ -94,6 +94,9 @@
 
 // The tab just after the selection
 #define NS_THEME_TAB_RIGHT_EDGE                            64
+
+// The tab panels container.
+#define NS_THEME_TAB_PANELS                                65
 
 // A tooltip
 #define NS_THEME_TOOLTIP                                   71
