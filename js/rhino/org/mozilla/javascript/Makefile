@@ -51,6 +51,7 @@ SOURCES =						\
 	$(PATH_PREFIX)/DeepNewObjectHook.java		\
 	$(PATH_PREFIX)/DeepScriptHook.java		\
 	$(PATH_PREFIX)/DefaultErrorReporter.java	\
+	$(PATH_PREFIX)/EcmaError.java			\
 	$(PATH_PREFIX)/ErrorReporter.java		\
 	$(PATH_PREFIX)/EvaluatorException.java		\
 	$(PATH_PREFIX)/FlattenedObject.java		\
@@ -76,6 +77,7 @@ SOURCES =						\
 	$(PATH_PREFIX)/NativeBoolean.java		\
 	$(PATH_PREFIX)/NativeCall.java			\
 	$(PATH_PREFIX)/NativeDate.java			\
+	$(PATH_PREFIX)/NativeError.java			\
 	$(PATH_PREFIX)/NativeFunction.java		\
 	$(PATH_PREFIX)/NativeGlobal.java		\
 	$(PATH_PREFIX)/NativeJavaArray.java		\
