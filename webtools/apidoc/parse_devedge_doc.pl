@@ -62,7 +62,7 @@ my @TAGS = ("API", "ENTRY", "TYPE", "SUMMARY", "SYNTAX", "PARAM", "RETVAL",
 
 my $NAMESPACE = ""; # "APIDOC";
 
-my $TAB = "    ";
+my $TAB = "  ";
 my $indent_pfx = "";
 
 die ("I said, dont use this script!  Don't you read the comments?\n");
@@ -190,9 +190,10 @@ sub parse_entry {
                     &open_container ($TAGS[$mode]);
                 } elsif (($mode == $NOTE) && ($line =~ /<\/BLOCKQUOTE>/)) {
                     # note over
-                    $partialline = '<H4><A NAME="Head3;"></A>';
-                    # dirty little hack to get it to execute the 
-                    # 'figure out next mode' logic above.
+                    output ("<P/>\n");
+                    &close_container ($TAGS[$mode]);
+                    $mode = $DESCRIPTION;
+                    &open_container ($TAGS[$mode]);
                 } elsif (($mode == $SYNTAX) || ($mode == $EXAMPLE)) {
                     if (($mode == $SYNTAX) && 
                         ($line =~ /(.*)<TABLE BORDER="0">/)) {
@@ -271,10 +272,11 @@ sub parse_entry {
         } elsif ($mode == $SEE_ALSO) {
             if ($line =~ /(.*)<\/P>/) {
                 my $list = &fixup ($1);
-                my @refs = split(/,\s*/, $list);
+                my @refs = split(/\s*,\s*/, $list);
                 for (@refs) {
                     if ($_) {
-                        &tag ($TAGS[$mode], "value", $_);
+                        $_ =~ /^\s*(\S+)\s*$/;
+                        &tag ($TAGS[$mode], "value", $1);
                     }
                 }
                 $mode = $COMPLETED;

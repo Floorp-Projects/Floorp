@@ -375,7 +375,9 @@ sub EndTag {
     if (grep(/^$tagname$/, @CDATA_TAGS)) {
         $iscontainer = 1;
         if ($pending_text eq "") {
-            $expat->xpcroak ("Empty container '$tagname'.");
+            print STDERR "WARNING: Empty container '$tagname' at line " . 
+              $expat->current_line . " ignored.\n";
+            #$expat->xpcroak ("Empty container '$tagname'.");
         }
     }
 
@@ -492,7 +494,7 @@ sub EndTag {
         } elsif ($tagname eq $TAGS[$FOOT]) {
             $user_foot .= $result_text;
         } else {
-            $c->{$tagname} = $result_text;
+            $c->{$tagname} .= $result_text;
         }
 
         $pending_text = pop (@text_stack);
