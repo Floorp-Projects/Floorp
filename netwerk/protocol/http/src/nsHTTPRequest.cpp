@@ -862,6 +862,7 @@ nsHTTPPipelinedRequest::AddToPipeline (nsHTTPRequest *aRequest)
     if (! ( mCapabilities & (nsIHTTPProtocolHandler::ALLOW_PROXY_PIPELINING|nsIHTTPProtocolHandler::ALLOW_PIPELINING) ))
         mMustCommit = PR_TRUE;
 
+    aRequest  -> mPipelinedRequest = this;
     mRequests -> AppendElement (aRequest);
 
     if (mBufferSegmentSize < aRequest -> mBufferSegmentSize)
