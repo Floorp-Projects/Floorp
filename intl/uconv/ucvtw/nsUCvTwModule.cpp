@@ -85,14 +85,16 @@ PRUint16 g_utBig5HKSCSMapping[] = {
 #include "hkscs.ut"
 };
 
-NS_IMPL_NSUCONVERTERREGSELF
+NS_CONVERTER_REGISTRY_START
+NS_UCONV_REG_UNREG("Big5", "Unicode" , NS_BIG5TOUNICODE_CID)
+NS_UCONV_REG_UNREG("Unicode", "x-x-big5",  NS_UNICODETOBIG5NOASCII_CID)
+NS_UCONV_REG_UNREG("Unicode", "Big5" , NS_UNICODETOBIG5_CID)
+NS_UCONV_REG_UNREG("Big5-HKSCS", "Unicode" , NS_BIG5HKSCSTOUNICODE_CID)
+NS_UCONV_REG_UNREG("Unicode", "Big5-HKSCS" , NS_UNICODETOBIG5HKSCS_CID)
+NS_UCONV_REG_UNREG("Unicode", "hkscs-1" , NS_UNICODETOHKSCS_CID)
+NS_CONVERTER_REGISTRY_END
 
-NS_UCONV_REG_UNREG(nsBIG5ToUnicode, "Big5", "Unicode" , NS_BIG5TOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToBIG5NoAscii, "Unicode", "x-x-big5",  NS_UNICODETOBIG5NOASCII_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToBIG5, "Unicode", "Big5" , NS_UNICODETOBIG5_CID);
-NS_UCONV_REG_UNREG(nsBIG5HKSCSToUnicode, "Big5-HKSCS", "Unicode" , NS_BIG5HKSCSTOUNICODE_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToBIG5HKSCS, "Unicode", "Big5-HKSCS" , NS_UNICODETOBIG5HKSCS_CID);
-NS_UCONV_REG_UNREG(nsUnicodeToHKSCS, "Unicode", "hkscs-1" , NS_UNICODETOHKSCS_CID);
+NS_IMPL_NSUCONVERTERREGSELF
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBIG5ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToBIG5);
@@ -106,38 +108,34 @@ static const nsModuleComponentInfo components[] =
   { 
     ENCODER_NAME_BASE "Big5" , NS_UNICODETOBIG5_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "Big5",
-    nsUnicodeToBIG5Constructor, 
-    nsUnicodeToBIG5RegSelf, nsUnicodeToBIG5UnRegSelf
+    nsUnicodeToBIG5Constructor,
+    // global converter registration
+    nsUConverterRegSelf, nsUConverterUnregSelf,
   },
   { 
     ENCODER_NAME_BASE "x-x-big5" , NS_UNICODETOBIG5NOASCII_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-x-big5",
     nsUnicodeToBIG5NoAsciiConstructor,
-    nsUnicodeToBIG5NoAsciiRegSelf, nsUnicodeToBIG5NoAsciiUnRegSelf
   },
   { 
     DECODER_NAME_BASE "Big5" , NS_BIG5TOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "Big5",
     nsBIG5ToUnicodeConstructor ,
-    nsBIG5ToUnicodeRegSelf , nsBIG5ToUnicodeUnRegSelf 
   },
   {
     ENCODER_NAME_BASE "Big5-HKSCS" , NS_UNICODETOBIG5HKSCS_CID,
     NS_UNICODEENCODER_CONTRACTID_BASE "Big5-HKSCS",
     nsUnicodeToBIG5HKSCSConstructor,
-    nsUnicodeToBIG5HKSCSRegSelf, nsUnicodeToBIG5HKSCSUnRegSelf
   },
   {
     ENCODER_NAME_BASE "hkscs-1" , NS_UNICODETOHKSCS_CID,
     NS_UNICODEENCODER_CONTRACTID_BASE "hkscs-1",
     nsUnicodeToHKSCSConstructor,
-    nsUnicodeToHKSCSRegSelf, nsUnicodeToHKSCSUnRegSelf
   },
   {
     DECODER_NAME_BASE "Big5-HKSCS" , NS_BIG5HKSCSTOUNICODE_CID,
     NS_UNICODEDECODER_CONTRACTID_BASE "Big5-HKSCS",
     nsBIG5HKSCSToUnicodeConstructor ,
-    nsBIG5HKSCSToUnicodeRegSelf , nsBIG5HKSCSToUnicodeUnRegSelf
   }
 };
 
