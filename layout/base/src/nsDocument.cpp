@@ -3220,7 +3220,7 @@ nsDocument::SaveFile(nsFileSpec*     aFileSpec,
 	     charsetStr.AssignWithConversion("ISO-8859-1"); 
 	  }
   }
-  encoder->SetCharset(aSaveCharset);
+  encoder->SetCharset(charsetStr);
 
   rv = encoder->EncodeToStream(stream.GetIStream());
 
