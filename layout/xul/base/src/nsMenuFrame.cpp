@@ -18,12 +18,14 @@
 
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
+#include "nsHTMLParts.h"
 #include "nsMenuFrame.h"
 #include "nsBoxFrame.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
+#include "nsIPresShell.h"
 #include "nsIStyleContext.h"
 #include "nsIReflowCommand.h"
 #include "nsCSSRendering.h"
@@ -401,7 +403,26 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
     } else if (aAttribute == nsXULAtoms::acceltext) {
       /* update content in accel-text */
       aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
-      mAccelText->SetData(value);
+      mAccelText->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value,
+                               PR_TRUE);
+    }
+
+    /* we need to reflow, if these change */
+    if (aAttribute == nsHTMLAtoms::value ||
+        aAttribute == nsXULAtoms::acceltext) {
+
+      nsCOMPtr<nsIPresShell> shell;
+      nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+      if (NS_FAILED(rv))
+        return rv;
+
+      nsCOMPtr<nsIReflowCommand> reflowCmd;
+      rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                                   nsIReflowCommand::StyleChanged);
+      if (NS_FAILED(rv))
+        return rv;
+
+      shell->AppendReflowCommand(reflowCmd);
     }
   }
 
@@ -833,22 +854,27 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   if (!onMenuBar) {
     nsDocument->CreateElementWithNameSpace("spring", xulNamespace, getter_AddRefs(node));
     content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100", PR_FALSE);
+    content->SetAttribute(kNameSpaceID_None, classAtom, "menu-spring",
+                          PR_FALSE);
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100",
+                          PR_FALSE);
     aAnonymousChildren.AppendElement(content);
   
     // Build the accelerator out of the corresponding key node.
     nsAutoString accelString;
     BuildAcceleratorText(accelString);
     if (accelString != "") {
-      // Create the accelerator (it's a div)
-      nsDocument->CreateElementWithNameSpace("div", htmlNamespace, getter_AddRefs(node));
+      // Create the accelerator (a titledbutton)
+      nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace,
+                                             getter_AddRefs(node));
       content = do_QueryInterface(node);
+      mAccelText = content;
+      content->SetAttribute(kNameSpaceID_None, classAtom, "menu-accel",
+                            PR_FALSE);
+      content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, accelString,
+                            PR_FALSE);
       aAnonymousChildren.AppendElement(content);
 
-      nsCOMPtr<nsIDOMText> accelNode;
-      document->CreateTextNode(accelString, getter_AddRefs(accelNode));
-      mAccelText = accelNode;
-      node->AppendChild(accelNode, getter_AddRefs(dummyResult));
     }
 
     // Create the "menu-right" object.  It's a titledbutton.

@@ -328,7 +328,7 @@ popup > menuitem[menuactive="true"] {
   margin-right: 2px;
 }
 
-.menu-text {
+.menu-text, .menu-accel {
   color: inherit;
   padding: 0px;
   border: 0px;
@@ -348,6 +348,18 @@ menuitem > .menu-right {
 
 menuitem > .menu-left {
   list-style-image: none;
+}
+
+menuitem[checked="true"] > .menu-left {
+  list-style-image: url("chrome://global/skin/menu-check.gif");
+}
+
+menuitem[checked="true"][disabled="true"] > .menu-left {
+  list-style-image: url("chrome://global/skin/menu-check-disabled.gif");
+}
+
+menuitem[checked="true"][menuactive="true"] > .menu-left {
+  list-style-image: url("chrome://global/skin/menu-check-hover.gif");
 }
 
 menu > .menu-right {

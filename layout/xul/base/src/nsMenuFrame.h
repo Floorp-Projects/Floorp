@@ -176,7 +176,7 @@ protected:
   PRBool mMenuOpen;
   PRBool mHasAnonymousContent;  // Do we have anonymous content frames?
   nsCOMPtr<nsIContent> mMenuText;
-  nsCOMPtr<nsIDOMText> mAccelText;
+  nsCOMPtr<nsIContent> mAccelText;
   nsIMenuParent* mMenuParent; // Our parent menu.
   nsCOMPtr<nsITimer> mOpenTimer;
   nsIPresContext* mPresContext; // Our pres context.
