@@ -471,6 +471,12 @@ tbx_dirs()
         echo $QASCRIPT_DIR | grep 64  >/dev/null && TBX_NOBITS=64
         TRD="${HOST}${TBX_NOBITS}-`date +%Y%m%d-%H.%M`"
         RESULTDIR="${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
+        if [ ${DOMSUF} = "mcom.com" -o  ${DOMSUF} = "netscape.com" -o ${DOMSUF} = "nscp.aoltw.net" ] ; then
+            URL="sbs-rel.nscp.aoltw.net"
+            RESULTDIRURL="http://${URL}${NSS_VER_DIR}/tinderbox/tests_results/security/${TRD}"
+        else
+            RESULTDIRURL=${RESULTDIR} 
+        fi
     fi
     TBX_DAILY_BUILD=`cd ../../../../..;pwd`
     NSS_VER_DIR="${TBX_DAILY_BUILD}/../.." 
@@ -536,6 +542,7 @@ init_mcom()
         BC_MASTER=$BC_UX_MASTER
     fi
     UX_D0=/share/builds/sbsrel2/nss
+    URL="sbs-rel.nscp.aoltw.net"
 }
 ################################### init_dirs ###########################
 # global shell function, sets the directories for standard QA
@@ -543,7 +550,7 @@ init_mcom()
 ########################################################################
 init_dirs()
 {
-    if [ ${DOMSUF} = "mcom.com" -o  ${DOMSUF} = "netscape.com" ] ; then
+    if [ ${DOMSUF} = "mcom.com" -o  ${DOMSUF} = "netscape.com" -o ${DOMSUF} = "nscp.aoltw.net" ] ; then
         init_mcom
     fi
     if [ $O_WIN = "ON" ] ; then
@@ -676,7 +683,7 @@ init_files()
         Debug "About to touch $NEWFILENAME "
         touch $NEWFILENAME || Exit "Error: can't touch $NEWFILENAME"
         if [ "$O_TBX" = "ON" ] ; then
-             echo "QA results in $RESULTDIR" >>$NEWFILENAME || Exit "Error: can't write to $NEWFILENAME"
+             echo "QA results in $RESULTDIRURL" >>$NEWFILENAME || Exit "Error: can't write to $NEWFILENAME"
         fi
         Debug "About to cat $FILENAME >>$NEWFILENAME "
         cat $FILENAME >>$NEWFILENAME || Exit "Error: can't append $FILENAME to $NEWFILENAME"
