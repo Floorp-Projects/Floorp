@@ -39,8 +39,7 @@ function makeCall(syncCall, faultCall) {
   var s = new SOAPCall();
   // The targetObjectURI, methodName and destinatioName are mandatory.
   // The actionURI is optional.
-  s.targetObjectURI = "uri:some-namespace";
-  s.methodName = "GetLastTradePrice";
+
   if (faultCall) {
     s.transportURI = "http://blueviper/cgi-bin/soapfault.cgi";
   }
@@ -52,8 +51,8 @@ function makeCall(syncCall, faultCall) {
   // Create parameter objects. This is needed if we want named parameters.
   // If we don't want them to be named, we can just pass the
   // raw JavaScript values into the setParameters method.
-  var p1 = new SOAPParameter("foo", "a string");
-  var p2 = new SOAPParameter("bar", 4);
+  var p1 = new SOAPParameter("a string", "foo");
+  var p2 = new SOAPParameter(4, "bar");
   var p3 = new SOAPParameter();
   p3.name = "baz";
   p3.value = true;
@@ -71,7 +70,7 @@ function makeCall(syncCall, faultCall) {
   // the last parameter is an object that will be serialized into
   // a struct parameter. It does not have a parameter wrapper because 
   // we don't need it to be named
-  s.setParameters(p1, p2, p3, p4, new Dog("Fido", "Lab", "Black"));
+  s.encode("GetLastTradePrice", "uri:some-namespace", 0, null, 5, new Array(5, p1, p2, p3, p4, new SOAPParameter(new Dog("Fido", "Lab", "Black"))));
 
   if (syncCall) {
     var r = s.invoke();
