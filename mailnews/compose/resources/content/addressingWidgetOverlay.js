@@ -175,24 +175,21 @@ function awSetInputAndPopupFromArray(firstRow, inputArray, popupValue)
 	return(firstRow);		
 }
 
-function awClickRow()
+function awNotAnEmptyArea(event)
 {
-	dump("awClickRow\n");
-	if (! top.notAnEmptyArea)
-		awClickEmptySpace(true);
-	top.notAnEmptyArea=false;
-	return;
-}
-
-function awNotAnEmptyArea()
-{
+	//This is temporary until i figure out how to ensure to always having an empty space after the last row
 	dump("awNotAnEmptyArea\n");
-	top.notAnEmptyArea=true;
-	return;
+
+	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
+	if ( lastInput && lastInput.value )
+		awAppendNewRow(false);
+
+	event.preventBubble();
 }
 
 function awClickEmptySpace(setFocus)
 {
+	dump("awClickEmptySpace\n");
 	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 
 	if ( lastInput && lastInput.value )
@@ -220,8 +217,12 @@ function awInputChanged(inputElement)
 {
 	dump("awInputChanged\n");
 	AutoCompleteAddress(inputElement);
-	//call awClickEmptySpace to add a new row if needed
-	awClickEmptySpace(false);
+
+	//Do we need to add a new row?
+	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
+	if ( lastInput && lastInput.value && !top.doNotCreateANewRow)
+		awAppendNewRow(false);
+	top.doNotCreateANewRow = false;
 }
 
 function awAppendNewRow(setFocus)
@@ -455,12 +456,11 @@ function _awSetFocus()
 	var tree = document.getElementById('addressingWidgetTree');
 	try
 	{
+		theNewRow = awGetTreeRow(top.awRow);
 		//temporary patch for bug 26344
-		//top.awInputElement.setAttribute("onclick", top.awInputElement.getAttribute("onclick"));
-		//top.awInputElement.setAttribute("onkeyup", top.awInputElement.getAttribute("onkeyup"));
-		//end of patch
+		awFinishCopyNode(theNewRow);
 
-		tree.ensureElementIsVisible(awGetTreeRow(top.awRow));
+		tree.ensureElementIsVisible(theNewRow);
 		top.awInputElement.focus();
 	}
 	catch(ex)
@@ -474,4 +474,48 @@ function _awSetFocus()
 		else
 			dump("_awSetFocus failed, forget about it!\n");
 	}
+}
+
+
+//temporary patch for bug 26344
+function awFinishCopyNode(node)
+{
+//	dump ("awFinishCopyNode, node name=" + node.nodeName + "\n");
+	// Because event handler attributes set into a node before this node is inserted 
+	// into the DOM are not recognised (in fact not compiled), we need to parsed again
+	// the whole node and reset event handlers.
+
+	var attributes = node.attributes;
+	if ( attributes && attributes.length )
+	{
+		var attrNode, name;
+		
+		for ( var index = 0; index < attributes.length; index++ )
+		{
+			attrNode = attributes.item(index);
+			name = attrNode.nodeName;
+			if (name.substring(0, 2) == 'on')
+			{
+				node.setAttribute(name, attrNode.nodeValue);
+//				dump("  -->reset attribute " + name + "\n");
+			}
+		}
+	}
+
+	// children of nodes
+	if ( node.childNodes )
+	{
+		var childNode;
+				
+		for ( var child = 0; child < node.childNodes.length; child++ )
+			childNode = awFinishCopyNode(node.childNodes[child]);
+	}
+}
+
+
+function awTabFromRecipient(element, event)
+{
+	//If we are le last element in the tree, we don't want to create a new row.
+	if (element == awGetInputElement(top.MAX_RECIPIENTS))
+		top.doNotCreateANewRow = true;
 }

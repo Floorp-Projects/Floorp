@@ -36,7 +36,7 @@ Rights Reserved.
 			<tree id="addressingWidgetTree"		
 				  class="addressingWidget"
 				  rows="3"
-				  onclick="awClickRow()"
+				  onclick="awClickEmptySpace(true)"
 				  style="width:0px;height:0px;border:solid black 1px">
 				  
 				<treecol style="width:9em"/>
@@ -45,7 +45,7 @@ Rights Reserved.
 				<treechildren id="addressWidgetBody">
 					<treeitem>
 						<treerow>
-							<treecell allowevents="true" onclick="awNotAnEmptyArea()">
+							<treecell allowevents="true" onclick="awNotAnEmptyArea(event)">
 								<html:select id="msgRecipientType#1">
 									<html:option value="addr_to">&toAddr.label;</html:option>
 									<html:option value="addr_cc">&ccAddr.label;</html:option>
@@ -56,17 +56,18 @@ Rights Reserved.
 								</html:select>
 							</treecell>
 							
-							<treecell onclick="awNotAnEmptyArea()">
+							<treecell onclick="awNotAnEmptyArea(event)">
 								<titledbutton/>
 							</treecell>
 							
-							<treecell allowevents="true" onclick="awNotAnEmptyArea();">
+							<treecell allowevents="true" onclick="awNotAnEmptyArea(event);">
 								<html:input id="msgRecipient#1"
 											flex="100%"
 											class="addressingWidget"
 											type="text"
 											onkeyup="if (event.which == 13)
 											{ AutoCompleteAddress(this); awReturnHit(this); }"
+											onkeydown="if (event.which == 9) awTabFromRecipient(this, event);"
 											onchange="awInputChanged(this);"
 											/>
 							</treecell>
