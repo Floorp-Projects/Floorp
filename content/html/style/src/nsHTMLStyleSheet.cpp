@@ -1154,13 +1154,18 @@ HTMLStyleSheetImpl::GetVisitedLinkColor(nscolor& aColor)
 NS_IMETHODIMP
 HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
 {
-  if (!mLinkRule) {
-    mLinkRule = new HTMLColorRule(this);
-    if (!mLinkRule) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mLinkRule);
+  if (mLinkRule) {
+    if (mLinkRule->mColor == aColor)
+      return NS_OK;
+    mLinkRule->mSheet = nsnull;
+    NS_RELEASE(mLinkRule);
   }
+
+  mLinkRule = new HTMLColorRule(this);
+  if (!mLinkRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mLinkRule);
+
   mLinkRule->mColor = aColor;
   return NS_OK;
 }
@@ -1169,13 +1174,18 @@ HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
 NS_IMETHODIMP
 HTMLStyleSheetImpl::SetActiveLinkColor(nscolor aColor)
 {
-  if (!mActiveRule) {
-    mActiveRule = new HTMLColorRule(this);
-    if (!mActiveRule) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mActiveRule);
+  if (mActiveRule) {
+    if (mActiveRule->mColor == aColor)
+      return NS_OK;
+    mActiveRule->mSheet = nsnull;
+    NS_RELEASE(mActiveRule);
   }
+
+  mActiveRule = new HTMLColorRule(this);
+  if (!mActiveRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mActiveRule);
+
   mActiveRule->mColor = aColor;
   return NS_OK;
 }
@@ -1183,13 +1193,18 @@ HTMLStyleSheetImpl::SetActiveLinkColor(nscolor aColor)
 NS_IMETHODIMP
 HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
 {
-  if (!mVisitedRule) {
-    mVisitedRule = new HTMLColorRule(this);
-    if (!mVisitedRule) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(mVisitedRule);
+  if (mVisitedRule) {
+    if (mVisitedRule->mColor == aColor)
+      return NS_OK;
+    mVisitedRule->mSheet = nsnull;
+    NS_RELEASE(mVisitedRule);
   }
+
+  mVisitedRule = new HTMLColorRule(this);
+  if (!mVisitedRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mVisitedRule);
+
   mVisitedRule->mColor = aColor;
   return NS_OK;
 }
