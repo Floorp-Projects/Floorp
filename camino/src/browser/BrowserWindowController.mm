@@ -269,6 +269,7 @@ static NSArray* sToolbarDefaults = nil;
     mProgressSuperview = nil;
     mBookmarkToolbarItem = nil;
     mSidebarToolbarItem = nil;
+    mSavedTitle = nil;
   
     // register for services
     NSArray* sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
@@ -438,6 +439,7 @@ static NSArray* sToolbarDefaults = nil;
   //if (mSidebarBrowserView)
   //  [mSidebarBrowserView windowClosed];
 
+  [mSavedTitle release];
   [mProgress release];
   [mPopupBlocked release];
   [mSearchBar release];
@@ -2566,6 +2568,19 @@ static NSArray* sToolbarDefaults = nil;
   return sBrokenIcon;
 }
 
+// return the window's saved title
+- (NSString *)savedTitle
+{
+  return mSavedTitle;
+}
+
+// save the window title before showing
+// bookmark manager or History manager 
+- (void)setSavedTitle:(NSString *)aTitle
+{
+  [mSavedTitle autorelease];
+  mSavedTitle = [aTitle retain];
+}
 
 + (NSDictionary *)searchURLDictionary
 {
@@ -2654,12 +2669,16 @@ static NSArray* sToolbarDefaults = nil;
     // cancel all pending loads. safari does this, i think we should too
     [self stopAllPendingLoads];
     
+    // save window title
+    [self setSavedTitle:[[self window] title]];
+    [[self window] setTitle:NSLocalizedString(@"Bookmark Manager",@"Bookmark Manager")];
     [mBookmarkViewController selectLastContainer];
 
     // set focus to appropriate area of bm manager
     [mBookmarkViewController focus];
   }
   else {
+    [[self window] setTitle:[self savedTitle]];
     CHBrowserView* browserView = [mBrowserView getBrowserView];
     if (browserView)
       [browserView setActive:YES];

@@ -177,6 +177,9 @@ typedef enum
   
   nsIURIFixup* mURIFixer;                   // [STRONG] should be nsCOMPtr, but can't
   nsIBrowserHistory* mGlobalHistory;        // [STRONG] should be nsCOMPtr, but can't
+  
+  // saving window titles when opening the bookmark manager
+  NSString* mSavedTitle;
 }
 
 - (void)dealloc;
@@ -353,6 +356,7 @@ typedef enum
 
 - (void)toggleBookmarkManager:(id)sender;
 - (void)ensureBrowserVisible:(id)sender;
+- (NSString*)savedTitle;
+- (void)setSavedTitle:(NSString *)aTitle;
 
 @end
-
