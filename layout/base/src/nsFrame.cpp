@@ -1337,6 +1337,9 @@ NS_METHOD nsFrame::List(FILE* out, PRInt32 aIndent) const
 
   // Output the tag and rect
   ListTag(out);
+  if (nsnull != mView) {
+    fprintf(out, " [view=%p]", mView);
+  }
   fputs(" ", out);
   out << mRect;
   if (0 != mState) {
