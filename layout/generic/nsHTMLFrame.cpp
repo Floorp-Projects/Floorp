@@ -49,11 +49,8 @@ static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
  * Root frame class.
  *
  * The root frame is the parent frame for the document element's frame.
- * It only supports having a single child frame which must be one of the
- * following:
- * - scroll frame
- * - area frame
- * - page sequence frame
+ * It only supports having a single child frame which must be an area
+ * frame
  */
 class RootFrame : public nsHTMLContainerFrame {
 public:
@@ -113,8 +110,11 @@ RootFrame::SetRect(const nsRect& aRect)
 {
   nsresult  rv = nsHTMLContainerFrame::SetRect(aRect);
 
-  // Make sure our child's frame is adjusted as well
-  // Note: only do this if it's 'height' is 'auto'
+  // If our height is larger than our natural height (the height we returned
+  // as our desired height), then make sure the document element's frame is
+  // increased as well. This happens because the scroll frame will make sure
+  // that our height fills the entire scroll area.
+  // Note: only do this if the document element's 'height' is 'auto'
   nsIFrame* kidFrame = mFrames.FirstChild();
   if (nsnull != kidFrame) {
     nsStylePosition*  kidPosition;
@@ -148,6 +148,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   PRBool  isStyleChange = PR_FALSE;
 
   // Check for an incremental reflow
+  // XXX This needs to use the new reflow command handling instead...
   if (eReflowReason_Incremental == aReflowState.reason) {
     // See if we're the target frame
     nsIFrame* targetFrame;
@@ -216,8 +217,8 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   } else {
     nsIFrame* kidFrame = mFrames.FirstChild();
 
-    // We must pass in that the available height is unconstrained, because
-    // constrained is only for when we're paginated...
+    // We must specify an unconstrained available height, because constrained
+    // is only for when we're paginated...
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                      nsSize(aReflowState.availableWidth,
                                             NS_UNCONSTRAINEDSIZE));
@@ -235,19 +236,49 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                   aStatus);
 
-      // Get the total size including any space needed for absolute positioned
-      // elements
-      // XXX It would be nice if this were part of the reflow metrics...
+      // The document element's background should cover the entire canvas, so
+      // take into account the combined area and any space taken up by
+      // absolutely positioned elements
+      nsMargin      border;
+      nsFrameState  kidState;
+
+      kidReflowState.mStyleSpacing->GetBorder(border);
+      kidFrame->GetFrameState(&kidState);
+
+      // First check the combined area
+      if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
+        // The background covers the content area and padding area, so check
+        // for children sticking outside the child frame's padding edge
+        nscoord paddingEdgeX = kidDesiredSize.width - border.right;
+        nscoord paddingEdgeY = kidDesiredSize.height - border.bottom;
+
+        if (kidDesiredSize.mCombinedArea.XMost() > paddingEdgeX) {
+          kidDesiredSize.width = kidDesiredSize.mCombinedArea.XMost() +
+                                 border.right;
+        }
+        if (kidDesiredSize.mCombinedArea.YMost() > paddingEdgeY) {
+          kidDesiredSize.height = kidDesiredSize.mCombinedArea.YMost() +
+                                  border.bottom;
+        }
+      }
+
+      // XXX It would be nice if this were also part of the reflow metrics...
       nsIAreaFrame* areaFrame;
       if (NS_SUCCEEDED(kidFrame->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
-        nscoord xMost, yMost;
+        // Get the x-most and y-most of the absolutely positioned children
+        nscoord positionedXMost, positionedYMost;
+        areaFrame->GetPositionedInfo(positionedXMost, positionedYMost);
+        
+        // The background covers the content area and padding area, so check
+        // for children sticking outside the padding edge
+        nscoord paddingEdgeX = kidDesiredSize.width - border.right;
+        nscoord paddingEdgeY = kidDesiredSize.height - border.bottom;
 
-        areaFrame->GetPositionedInfo(xMost, yMost);
-        if (xMost > kidDesiredSize.width) {
-          kidDesiredSize.width = xMost;
+        if (positionedXMost > paddingEdgeX) {
+          kidDesiredSize.width = positionedXMost + border.right;
         }
-        if (yMost > kidDesiredSize.height) {
-          kidDesiredSize.height = yMost;
+        if (positionedYMost > paddingEdgeY) {
+          kidDesiredSize.height = positionedYMost + border.bottom;
         }
       }
 
@@ -261,12 +292,14 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
           kidDesiredSize.height += aReflowState.computedHeight - totalHeight;
         }
       }
+
+      // Position and size the child frame
       nsRect  rect(kidReflowState.computedMargin.left, kidReflowState.computedMargin.top,
                    kidDesiredSize.width, kidDesiredSize.height);
       kidFrame->SetRect(rect);
     }
 
-    // If this is a resize reflow then do a repaint
+    // If this is a resize reflow, then do a repaint
     if (eReflowReason_Resize == aReflowState.reason) {
       nsRect  damageRect(0, 0, aReflowState.availableWidth, aReflowState.availableHeight);
       Invalidate(damageRect, PR_FALSE);
@@ -279,32 +312,11 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       kidReflowState.computedMargin.bottom;
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
+    // XXX Don't completely ignore NS_FRAME_OUTSIDE_CHILDREN for child frames
+    // that stick out on the left or top edges...
 
-    // Set NS_FRAME_OUTSIDE_CHILDREN flag, or reset it, as appropriate
-    nsFrameState  kidState;
-    kidFrame->GetFrameState(&kidState);
-    if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
-      nscoord kidXMost = kidReflowState.computedMargin.left +
-                         kidDesiredSize.mCombinedArea.XMost();
-      nscoord kidYMost = kidReflowState.computedMargin.top +
-                         kidDesiredSize.mCombinedArea.YMost();
-
-      if ((kidXMost > aDesiredSize.width) || (kidYMost > aDesiredSize.height)) {
-        aDesiredSize.mCombinedArea.x = 0;
-        aDesiredSize.mCombinedArea.y = 0;
-        aDesiredSize.mCombinedArea.width = PR_MAX(aDesiredSize.width, kidXMost);
-        aDesiredSize.mCombinedArea.height = PR_MAX(aDesiredSize.height, kidYMost);
-        mState |= NS_FRAME_OUTSIDE_CHILDREN;
-
-      } else {
-        mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-      }
-
-    } else {
-      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-    }
-
-    // XXX Temporary hack. Remember this for later when our parent resizes us
+    // XXX Temporary hack. Remember this for later when our parent resizes us.
+    // See SetRect()
     mNaturalHeight = aDesiredSize.height;
   }
 
