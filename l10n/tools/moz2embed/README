@@ -38,9 +38,27 @@
 # Author: Tao Cheng <tao@netscape.com>
 # Date  : July 22, 2002
 #
-# Run the main script, "make-l10n-jar.sh", to leverage translations from the 
-#   language packs of existing localized Netscape 7.0 client.
+# Instructions: leverage translations from de-FG into English embed.jar
+#   1. create a working directory, "workspace". Change directory to it.
+#   2. expand the English embed.jar into a subdirectory, "embed_jar".
+#   3. expand the localized jars, says de-FG.jar and de-win.jar into 
+#      "de-FG_jar".
+#   4. expand the en-US.jar and en-win.jar (from which the de-FG.jar and 
+#      de-win.jar localized from) into "en-US_jar".
+#   5. update the jar manifest template, "jar.mn-ab-CD":
+#      a. compare files between "embed_jar/" and "en-US_jar/".
+#      b. ignore the files exist in "en-US_jar/" only.
+#      c. look at the list of differed files to see they do need localization. 
+#      d. update the template, "jar.mn-ab-CD", to reflect what files can be 
+#         copied from "embed_jar/" into the "embed_jar-de-FG/" and what files 
+#         to be leveraged from "de-FG_jar/"
+#   6. Run the main script, "make-l10n-jar.sh", to leverage translations from the 
+#      language packs of existing localized Netscape 7.0 client.
 #
-run> make-l10n-jar.sh ${langcode} ver1 ver2 
-   # this will produce  embed.jar-${langcode} & installed-chrome.txt-${langcode}
-   # and leverage ... see comments in make-l10n-jar.sh
+#        run> make-l10n-jar.sh de-FG ver1 ver2
+#                 where ver1 is the localeVersion # of the de-FG.jar
+#                       ver2 is the localeVersion # of the English embed.jar
+#      This will produce embed.jar-${langcode} & installed-chrome.txt-${langcode}
+#           and leverage ... see comments in make-l10n-jar.sh
+#
+#   Please refer to lev-xlation.html for details.
