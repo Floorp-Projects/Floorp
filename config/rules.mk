@@ -78,11 +78,14 @@ include $(topsrcdir)/config/config.mk
 endif
 
 ifdef INTERNAL_TOOLS
+ifdef CROSS_COMPILE
 CC=$(HOST_CC)
 CXX=$(HOST_CXX)
 CFLAGS=$(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS)
 CXXFLAGS=$(HOST_CXXFLAGS) -I$(DIST)/include $(NSPR_CFLAGS)
 RANLIB=$(HOST_RANLIB)
+AR=$(HOST_AR)
+endif
 endif
 
 #
