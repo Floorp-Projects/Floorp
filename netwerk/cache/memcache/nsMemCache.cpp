@@ -334,3 +334,9 @@ nsMemCache::RemoveAll(void)
         return NS_ERROR_FAILURE;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMemCache::RecoveryCleanup(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

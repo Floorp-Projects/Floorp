@@ -109,6 +109,8 @@
 
 #include "nsIDocShellHistory.h"
 
+#include "nsINetDataCacheManager.h"
+
 // Interface for "unknown content type handler" component/service.
 #include "nsIUnkContentTypeHandler.h"
 
@@ -1530,6 +1532,13 @@ nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* cha
         fflush(stdout);
     }
   } //if (!isFrame)
+
+   // Get the cache manager service
+   NS_WITH_SERVICE(nsINetDataCacheManager, cacheManager,
+                   NS_NETWORK_CACHE_MANAGER_PROGID, &rv);
+   if (NS_SUCCEEDED(rv)) {
+       cacheManager->RecoveryCleanup(); 
+   }
 
 #ifdef DEBUG_warren
   char* urls;

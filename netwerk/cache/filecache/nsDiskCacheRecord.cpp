@@ -432,7 +432,14 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
 
   PRInt32 id ;
   mDB->GetID(mKey, mKeyLength, &id) ;
-  NS_ASSERTION(id==mRecordID, "\t ++++++ bad record, somethings wrong\n") ;
+  //NS_ASSERTION(id==mRecordID, "\t ++++++ bad record, somethings wrong\n") ;
+  if (id != mRecordID) {
+    /* id is not equal to mRecordID, ++++++ bad record, somethings wrong,
+    we need to do a DBRecovery(), since the database is corrupted. This is
+    a hack for bug 40084.*/
+    mDiskCache->DBRecovery();
+    return NS_ERROR_FAILURE ;
+  }
 
   // set mMetaDataLength
   COPY_INT32(&mMetaDataLength, cur_ptr) ;

@@ -144,6 +144,11 @@ interface nsINetDataCacheManager : nsISupports
       */
     void clear( in PRUint32 aCacheToClear );
 
+	/**
+	 * This routine will called periodically to cleanup a corrupted database.
+	 */
+	void recoveryCleanup();
+
     /**
      * The disk cache is made up of the file cache (for stream-as-file
      * requests) and a (possibly independent) persistent cache that handles all
