@@ -48,6 +48,10 @@ NET_LIBS	= \
 		-lnetwork \
 		-lsockstuburl \
 		$(NULL)
+else
+NET_LIBS = \
+		$(DIST)/lib/libneckoutil_s.a \
+		$(NULL)
 endif
 
 GECKO_LIBS = \
