@@ -761,8 +761,8 @@
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("chrome://messengercompose/content/",
-                             window);
+      // We need to use ShowWindowWithArgs because message compose depend on callback
+      toolkitCore.ShowWindowWithArgs("chrome://messengercompose/content/", window, "");
     }
   }
   
