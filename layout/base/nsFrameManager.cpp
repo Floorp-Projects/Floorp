@@ -164,7 +164,6 @@ PrimaryFrameMapGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
   PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*, hdr);
   return entry->frame->GetContent();
-  // and then release it, but we know the frame still owns it :-)
 }
 
 PR_STATIC_CALLBACK(PRBool)
