@@ -52,8 +52,8 @@ nsToolkit::~nsToolkit()
     gdk_gc_destroy(mSharedGC);
   }
 
-  // Remove the TLS reference to the toolkit...
-  PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
+    // Remove the TLS reference to the toolkit...
+    PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
 
 //-------------------------------------------------------------------------
@@ -71,9 +71,10 @@ void nsToolkit::CreateSharedGC(void)
   if (mSharedGC)
     return;
 
-  pixmap = gdk_pixmap_new(NULL, 1, 1, gdk_rgb_get_visual()->depth);
-  mSharedGC = gdk_gc_new(pixmap);
-  gdk_pixmap_unref(pixmap);
+  pixmap = ::gdk_pixmap_new (NULL, 1, 1, gdk_rgb_get_visual()->depth);
+  mSharedGC = ::gdk_gc_new (pixmap);
+  gdk_pixmap_unref (pixmap);
+  mSharedGC = gdk_gc_ref(mSharedGC);
 }
 
 GdkGC *nsToolkit::GetSharedGC(void)
