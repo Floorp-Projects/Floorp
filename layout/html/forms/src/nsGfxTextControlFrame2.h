@@ -180,6 +180,9 @@ public: //for methods who access nsGfxTextControlFrame2 directly
   void SubmitAttempt();
   NS_IMETHOD InternalContentChanged();//notify that we have some kind of change.
   NS_IMETHOD CallOnChange();
+  virtual PRBool IsSingleLineTextControl() const;
+  virtual PRBool IsPlainTextControl() const;
+  virtual PRBool IsPasswordTextControl() const;
 
 protected:
 
@@ -192,9 +195,6 @@ protected:
   NS_IMETHOD DoesAttributeExist(nsIAtom *aAtt);
 
 //helper methods
-  virtual PRBool IsSingleLineTextControl() const;
-  virtual PRBool IsPlainTextControl() const;
-  virtual PRBool IsPasswordTextControl() const;
   nsresult GetSizeFromContent(PRInt32* aSize) const;
   PRInt32 GetDefaultColumnWidth() const { return (PRInt32)(20); } // this was DEFAULT_PIXEL_WIDTH
 
