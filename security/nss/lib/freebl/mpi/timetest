@@ -40,7 +40,7 @@
 ## the GPL.  If you do not delete the provisions above, a recipient
 ## may use your version of this file under either the MPL or the GPL.
 ## 
-# $Id: timetest,v 1.4 2000/08/22 01:15:41 nelsonb%netscape.com Exp $
+# $Id: timetest,v 1.5 2000/09/14 00:32:24 nelsonb%netscape.com Exp $
 #
 
 # Avoid using built-in shell echoes
@@ -125,5 +125,7 @@ done
 
 $ECHO "<done>"
 
+trap 'rm -f tt*.tmp timing-results.txt' INT HUP
+
 exit 0
-    
+
