@@ -959,8 +959,6 @@ splitter {
   border: 1px solid transparent; 
 }
 
-
-
 #searchBox {
 	padding: 2px 0px;
         margin: 0px;
@@ -992,7 +990,7 @@ splitter {
 	-moz-appearance: none;
   font: icon;
   height: 22px !important;
-  width: 182px !important;
+  width: 100px !important;
   border: none !important;
 }
 
