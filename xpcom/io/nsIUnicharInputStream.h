@@ -74,12 +74,14 @@ public:
 /**
  * Create a nsIUnicharInputStream that wraps up a string. Data is fed
  * from the string out until the done. When this object is destroyed
- * it destroyes the string (so make a copy if you don't want it doing
- * that)
+ * it destroys the string by calling |delete| on the pointer if
+ * aTakeOwnership is set.  If aTakeOwnership is not set, you must
+ * ensure that the string outlives the stream!
  */
 extern NS_COM nsresult
   NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
-                                 nsString* aString);
+                                 const nsAString* aString,
+                                 PRBool aTakeOwnerhip);
 
 /** Create a new nsUnicharInputStream that provides a converter for the
  * byte input stream aStreamToWrap. If no converter can be found then

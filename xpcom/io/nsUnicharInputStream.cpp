@@ -52,7 +52,8 @@
 
 class StringUnicharInputStream : public nsIUnicharInputStream {
 public:
-  StringUnicharInputStream(nsString* aString);
+  StringUnicharInputStream(const nsAString* aString,
+                           PRBool aTakeOwnership);
 
   NS_DECL_ISUPPORTS
 
@@ -64,25 +65,30 @@ public:
                           PRUint32 aCount, PRUint32* aReadCount);
   NS_IMETHOD Close();
 
-  nsString* mString;
+  const nsAString* mString;
   PRUint32 mPos;
   PRUint32 mLen;
+  PRBool mOwnsString;
 
 private:
   ~StringUnicharInputStream();
 };
 
-StringUnicharInputStream::StringUnicharInputStream(nsString* aString)
+StringUnicharInputStream::StringUnicharInputStream(const nsAString* aString,
+                                                   PRBool aTakeOwnership)
+  : mString(aString),
+    mPos(0),
+    mLen(aString->Length()),
+    mOwnsString(aTakeOwnership)
 {
-  mString = aString;
-  mPos = 0;
-  mLen = aString->Length();
 }
 
 StringUnicharInputStream::~StringUnicharInputStream()
 {
-  if (nsnull != mString) {
-    delete mString;
+  if (mString && mOwnsString) {
+    // Some compilers dislike deleting const pointers
+    nsAString* mutable_string = NS_CONST_CAST(nsAString*, mString);
+    delete mutable_string;
   }
 }
 
@@ -95,7 +101,9 @@ StringUnicharInputStream::Read(PRUnichar* aBuf,
     *aReadCount = 0;
     return NS_OK;
   }
-  const PRUnichar* us = mString->get();
+  nsAString::const_iterator iter;
+  mString->BeginReading(iter);
+  const PRUnichar* us = iter.get();
   NS_ASSERTION(mLen >= mPos, "unsigned madness");
   PRUint32 amount = mLen - mPos;
   if (amount > aCount) {
@@ -118,8 +126,11 @@ StringUnicharInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
   nsresult rv;
   aCount = PR_MIN(mString->Length() - mPos, aCount);
   
+  nsAString::const_iterator iter;
+  mString->BeginReading(iter);
+  
   while (aCount) {
-    rv = aWriter(this, aClosure, mString->get() + mPos,
+    rv = aWriter(this, aClosure, iter.get() + mPos,
                  totalBytesWritten, aCount, &bytesWritten);
     
     if (NS_FAILED(rv)) {
@@ -140,10 +151,12 @@ StringUnicharInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
 nsresult StringUnicharInputStream::Close()
 {
   mPos = mLen;
-  if (nsnull != mString) {
-    delete mString;
-    mString = 0;
+  if (mString && mOwnsString) {
+    // Some compilers dislike deleting const pointers
+    nsAString* mutable_string = NS_CONST_CAST(nsAString*, mString);
+    delete mutable_string;
   }
+  mString = nsnull;
   return NS_OK;
 }
 
@@ -151,21 +164,20 @@ NS_IMPL_ISUPPORTS1(StringUnicharInputStream, nsIUnicharInputStream)
 
 NS_COM nsresult
 NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
-                               nsString* aString)
+                               const nsAString* aString,
+                               PRBool aTakeOwnership)
 {
-  NS_PRECONDITION(nsnull != aString, "null ptr");
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if ((nsnull == aString) || (nsnull == aInstancePtrResult)) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aString);
+  NS_PRECONDITION(aInstancePtrResult, "null ptr");
 
-  StringUnicharInputStream* it = new StringUnicharInputStream(aString);
-  if (nsnull == it) {
+  StringUnicharInputStream* it = new StringUnicharInputStream(aString,
+                                                              aTakeOwnership);
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(NS_GET_IID(nsIUnicharInputStream),
-                            (void**) aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult = it);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
