@@ -445,6 +445,8 @@ function onEnterInSearchBar()
     searchURI += gQueryURIFormat.replace(/@V/g, encodeURIComponent(gSearchInput.value));
   }
 
+  if (!sortColumn.Length)
+    sortColumn = "GeneratedName";
   SetAbView(searchURI, true, sortColumn, sortDirection);
   
   SelectFirstCard();
