@@ -151,8 +151,8 @@ NS_IMETHODIMP nsDeviceContextXlib::GetScrollBarDimensions(float &aWidth, float &
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::GetScrollBarDimensions()\n"));
   // XXX Oh, yeah.  These are hard coded.
-  aWidth = 5 * mPixelsToTwips;
-  aHeight = 5 * mPixelsToTwips;
+  aWidth = 15 * mPixelsToTwips;
+  aHeight = 15 * mPixelsToTwips;
 
   return NS_OK;
 }
@@ -206,10 +206,10 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, Syste
     // Size
     //---------
     case eSystemAttr_Size_ScrollbarHeight:
-        aInfo->mSize = 20;
+        aInfo->mSize = 15;
         break;
     case eSystemAttr_Size_ScrollbarWidth: 
-        aInfo->mSize = 20;
+        aInfo->mSize = 15;
         break;
     case eSystemAttr_Size_WindowTitleHeight:
         aInfo->mSize = 0;
