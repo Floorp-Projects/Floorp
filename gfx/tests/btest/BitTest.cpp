@@ -601,8 +601,11 @@ SYSTEMTIME  thetime;
   seconds = thetime.wSecond;
   milli = thetime.wMilliseconds;
 
-  if(aOptimize==PR_TRUE)
-    aTheImage->Optimize(aSurface);
+  if(aOptimize==PR_TRUE) {
+    nsIDeviceContext* deviceContext = aSurface->GetDeviceContext();
+    aTheImage->Optimize(deviceContext);
+    NS_RELEASE(deviceContext);
+  }
 
   for(i=0;i<200;i++)
     aSurface->DrawImage(aTheImage,aX,aY,aWidth,aHeight);
@@ -843,14 +846,14 @@ char *str;
 
     if (gImageGroup == NULL) 
       {
-      nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
-      if (NS_NewImageGroup(&gImageGroup) != NS_OK || gImageGroup->Init(drawCtx) != NS_OK) 
+      nsIDeviceContext *deviceCtx = gWindow->GetDeviceContext();
+      if (NS_NewImageGroup(&gImageGroup) != NS_OK || gImageGroup->Init(deviceCtx) != NS_OK) 
         {
         ::MessageBox(NULL, "Couldn't create image group",class1Name, MB_OK);
-        NS_RELEASE(drawCtx);
+        NS_RELEASE(deviceCtx);
         return;
         }
-      NS_RELEASE(drawCtx);
+      NS_RELEASE(deviceCtx);
       }
 
     strcpy(fileURL, FILE_URL_PREFIX);
