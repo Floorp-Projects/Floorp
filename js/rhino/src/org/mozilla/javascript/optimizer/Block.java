@@ -467,53 +467,52 @@ class Block
     private static int findExpressionType(Node n, int[] varTypes)
     {
         switch (n.getType()) {
-            case Token.NUMBER :
-                return Optimizer.NumberType;
+          case Token.NUMBER :
+              return Optimizer.NumberType;
 
-            case Token.NEW :
-            case Token.CALL :
-                return Optimizer.NoType;
+          case Token.NEW :
+          case Token.CALL :
+              return Optimizer.NoType;
 
-            case Token.GETELEM :
-               return Optimizer.AnyType;
+          case Token.GETELEM :
+             return Optimizer.AnyType;
 
-            case Token.GETVAR :
-                return varTypes[getVarIndex(n)];
+          case Token.GETVAR :
+              return varTypes[getVarIndex(n)];
 
-            case Token.INC :
-            case Token.DEC :
-            case Token.DIV:
-            case Token.MOD:
-            case Token.BITOR:
-            case Token.BITXOR:
-            case Token.BITAND:
-            case Token.LSH:
-            case Token.RSH:
-            case Token.URSH:
-            case Token.SUB :
-                return Optimizer.NumberType;
+          case Token.INC :
+          case Token.DEC :
+          case Token.DIV:
+          case Token.MOD:
+          case Token.BITOR:
+          case Token.BITXOR:
+          case Token.BITAND:
+          case Token.LSH:
+          case Token.RSH:
+          case Token.URSH:
+          case Token.SUB :
+              return Optimizer.NumberType;
 
-            case Token.ADD : {
-                    // if the lhs & rhs are known to be numbers, we can be sure that's
-                    // the result, otherwise it could be a string.
-                    Node child = n.getFirstChild();
-                    int lType = findExpressionType(child, varTypes);
-                    int rType = findExpressionType(child.getNext(), varTypes);
-                    return lType | rType;       // we're not distinguishng strings yet
-                }
-            default : {
-                    Node child = n.getFirstChild();
-                    if (child == null)
-                        return Optimizer.AnyType;
-                    else {
-                        int result = Optimizer.NoType;
-                        while (child != null) {
-                            result |= findExpressionType(child, varTypes);
-                            child = child.getNext();
-                        }
-                        return result;
-                    }
-                }
+          case Token.ADD : {
+              // if the lhs & rhs are known to be numbers, we can be sure that's
+              // the result, otherwise it could be a string.
+              Node child = n.getFirstChild();
+              int lType = findExpressionType(child, varTypes);
+              int rType = findExpressionType(child.getNext(), varTypes);
+              return lType | rType;    // we're not distinguishng strings yet
+          }
+        }
+
+        Node child = n.getFirstChild();
+        if (child == null) {
+            return Optimizer.AnyType;
+        } else {
+            int result = Optimizer.NoType;
+            while (child != null) {
+                result |= findExpressionType(child, varTypes);
+                child = child.getNext();
+            }
+            return result;
         }
     }
 
@@ -522,43 +521,38 @@ class Block
         boolean result = false;
         Node child = n.getFirstChild();
         switch (n.getType()) {
-            default : {
-                    while (child != null) {
-                        result |= findDefPoints(child, varTypes);
-                        child = child.getNext();
-                    }
-                }
-                break;
-            case Token.DEC :
-            case Token.INC : {
-                    if (child.getType() == Token.GETVAR) {
-                        // theVar is a Number now
-                        int i = getVarIndex(child);
-                        result |= assignType(varTypes, i, Optimizer.NumberType);
-                    }
-                }
-                break;
-
-            case Token.SETPROP :
-            case Token.SETPROP_OP : {
-                    if (child.getType() == Token.GETVAR) {
-                        int i = getVarIndex(child);
-                        assignType(varTypes, i, Optimizer.AnyType);
-                    }
-                    while (child != null) {
-                        result |= findDefPoints(child, varTypes);
-                        child = child.getNext();
-                    }
-                }
-                break;
-
-            case Token.SETVAR : {
-                    Node rValue = child.getNext();
-                    int theType = findExpressionType(rValue, varTypes);
-                    int i = getVarIndex(n);
-                    result |= assignType(varTypes, i, theType);
-                }
-                break;
+          default :
+            while (child != null) {
+                result |= findDefPoints(child, varTypes);
+                child = child.getNext();
+            }
+            break;
+          case Token.DEC :
+          case Token.INC :
+            if (child.getType() == Token.GETVAR) {
+                // theVar is a Number now
+                int i = getVarIndex(child);
+                result |= assignType(varTypes, i, Optimizer.NumberType);
+            }
+            break;
+          case Token.SETPROP :
+          case Token.SETPROP_OP :
+            if (child.getType() == Token.GETVAR) {
+                int i = getVarIndex(child);
+                assignType(varTypes, i, Optimizer.AnyType);
+            }
+            while (child != null) {
+                result |= findDefPoints(child, varTypes);
+                child = child.getNext();
+            }
+            break;
+          case Token.SETVAR : {
+            Node rValue = child.getNext();
+            int theType = findExpressionType(rValue, varTypes);
+            int i = getVarIndex(n);
+            result |= assignType(varTypes, i, theType);
+            break;
+          }
         }
         return result;
     }

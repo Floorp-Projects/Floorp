@@ -1636,9 +1636,6 @@ class BodyCodegen
                 break;
 
               case Token.INC:
-                visitIncDec(node, true);
-                break;
-
               case Token.DEC:
                 visitIncDec(node, false);
                 break;
@@ -2704,29 +2701,56 @@ class BodyCodegen
 
     private void visitIncDec(Node node, boolean isInc)
     {
+        int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
         Node child = node.getFirstChild();
         switch (child.getType()) {
           case Token.GETVAR:
             if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
+                boolean post = (incrDecrType == Node.POST_INC
+                                || incrDecrType == Node.POST_DEC);
                 OptLocalVariable lVar = OptLocalVariable.get(child);
                 short reg = lVar.getJRegister();
                 cfw.addDLoad(reg);
-                cfw.add(ByteCode.DUP2);
+                if (post) {
+                    cfw.add(ByteCode.DUP2);
+                }
                 cfw.addPush(1.0);
-                cfw.add((isInc) ? ByteCode.DADD : ByteCode.DSUB);
+                if (incrDecrType == Node.PRE_INC
+                    || incrDecrType == Node.POST_INC)
+                {
+                    cfw.add(ByteCode.DADD);
+                } else {
+                    cfw.add(ByteCode.DSUB);
+                }
+                if (!post) {
+                    cfw.add(ByteCode.DUP2);
+                }
                 cfw.addDStore(reg);
                 break;
             } else if (hasVarsInRegs) {
+                boolean post = (incrDecrType == Node.POST_INC
+                                || incrDecrType == Node.POST_DEC);
                 OptLocalVariable lVar = OptLocalVariable.get(child);
                 if (lVar == null)
                     lVar = fnCurrent.getVar(child.getString());
                 short reg = lVar.getJRegister();
                 cfw.addALoad(reg);
-                cfw.add(ByteCode.DUP);
+                if (post) {
+                    cfw.add(ByteCode.DUP);
+                }
                 addObjectToDouble();
                 cfw.addPush(1.0);
-                cfw.add((isInc) ? ByteCode.DADD : ByteCode.DSUB);
+                if (incrDecrType == Node.PRE_INC
+                    || incrDecrType == Node.POST_INC)
+                {
+                    cfw.add(ByteCode.DADD);
+                } else {
+                    cfw.add(ByteCode.DSUB);
+                }
                 addDoubleWrap();
+                if (!post) {
+                    cfw.add(ByteCode.DUP);
+                }
                 cfw.addAStore(reg);
                 break;
             }
@@ -2734,14 +2758,13 @@ class BodyCodegen
           case Token.NAME:
             cfw.addALoad(variableObjectLocal);
             cfw.addPush(child.getString());          // push name
-            cfw.addPush(isInc);
-            addScriptRuntimeInvoke("postIncrDecr",
+            cfw.addPush(incrDecrType);
+            addScriptRuntimeInvoke("nameIncrDecr",
                 "(Lorg/mozilla/javascript/Scriptable;"
                 +"Ljava/lang/String;"
-                +"Z)Ljava/lang/Object;");
+                +"I)Ljava/lang/Object;");
             break;
           case Token.GETPROP: {
-            int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
             Node getPropChild = child.getFirstChild();
             generateCodeFromNode(getPropChild, node);
             generateCodeFromNode(getPropChild.getNext(), node);
@@ -2755,7 +2778,6 @@ class BodyCodegen
             break;
           }
           case Token.GETELEM: {
-            int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
             Node getElemChild = child.getFirstChild();
             generateCodeFromNode(getElemChild, node);
             generateCodeFromNode(getElemChild.getNext(), node);
@@ -2769,7 +2791,6 @@ class BodyCodegen
             break;
           }
           case Token.GET_REF: {
-            int incrDecrType = node.getExistingIntProp(Node.INCRDECR_PROP);
             Node refChild = child.getFirstChild();
             generateCodeFromNode(refChild, node);
             cfw.addPush(incrDecrType);

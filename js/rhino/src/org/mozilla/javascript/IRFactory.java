@@ -822,29 +822,10 @@ class IRFactory
         Node childNode = (Node)child;
         int childType = childNode.getType();
 
-        if (childType == Token.NAME) {
-            if (post) {
-                return new Node(nodeType, childNode);
-            }
-
-            /*
-             * Transform INC/DEC ops to +=1, -=1,
-             * expecting later optimization of all +/-=1 cases to INC, DEC.
-             */
-            Node rhs = (Node) createNumber(1.0);
-
-            String s = childNode.getString();
-            Node opLeft = Node.newString(Token.NAME, s);
-            opLeft = new Node(Token.POS, opLeft);
-
-            int opType = (nodeType == Token.INC) ? Token.ADD : Token.SUB;
-            Node op = new Node(opType, opLeft, rhs);
-            Node lvalueLeft = Node.newString(Token.BINDNAME, s);
-            return new Node(Token.SETNAME, lvalueLeft, op);
-
-        } else if (childType == Token.GETPROP
-                   || childType == Token.GETELEM
-                   || childType == Token.GET_REF)
+        if (childType == Token.NAME
+            || childType == Token.GETPROP
+            || childType == Token.GETELEM
+            || childType == Token.GET_REF)
         {
             Node n = new Node(nodeType, childNode);
             int type;

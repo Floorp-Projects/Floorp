@@ -1696,50 +1696,53 @@ public class ScriptRuntime {
         return toString(val1).concat(toString(val2));
     }
 
-    public static Object postIncrDecr(Scriptable scopeChain, String id, boolean increment)
+    public static Object nameIncrDecr(Scriptable scopeChain, String id,
+                                      int type)
     {
-        Scriptable obj = scopeChain;
-        while (obj != null) {
-            Scriptable m = obj;
+        Scriptable target;
+        Object value;
+      search: {
             do {
-                Object value = m.get(id, obj);
-                if (value != Scriptable.NOT_FOUND) {
-                    double number;
-                    if (value instanceof Number) {
-                        number = ((Number)value).doubleValue();
-                    } else {
-                        number = toNumber(value);
-                        // convert result to number
-                        value = new Double(number);
+                target = scopeChain;
+                do {
+                    value = target.get(id, scopeChain);
+                    if (value != Scriptable.NOT_FOUND) {
+                        break search;
                     }
-                    if (increment) { ++number; }
-                    else { --number; }
-                    m.put(id, obj, new Double(number));
-                    return value;
-                }
-                m = m.getPrototype();
-            } while (m != null);
-            obj = obj.getParentScope();
+                    target = target.getPrototype();
+                } while (target != null);
+                scopeChain = scopeChain.getParentScope();
+            } while (scopeChain != null);
+            throw notFoundError(scopeChain, id);
         }
-        throw notFoundError(scopeChain, id);
+        return doScriptableIncrDecr(target, id, scopeChain, value, type);
     }
 
     public static Object propIncrDecr(Object obj, String id,
                                       Scriptable scope, int type)
     {
         Scriptable start = toObject(scope, obj);
-        Scriptable m = start;
+        Scriptable target = start;
         Object value;
       search: {
             do {
-                value = m.get(id, start);
+                value = target.get(id, start);
                 if (value != Scriptable.NOT_FOUND) {
                     break search;
                 }
-                m = m.getPrototype();
-            } while (m != null);
+                target = target.getPrototype();
+            } while (target != null);
             return Undefined.instance;
         }
+        return doScriptableIncrDecr(target, id, start, value, type);
+    }
+
+    private static Object doScriptableIncrDecr(Scriptable target,
+                                               String id,
+                                               Scriptable protoChainStart,
+                                               Object value,
+                                               int type)
+    {
         boolean post = (type == Node.POST_INC || type == Node.POST_DEC);
         double number;
         if (value instanceof Number) {
@@ -1757,7 +1760,7 @@ public class ScriptRuntime {
             --number;
         }
         Number result = new Double(number);
-        m.put(id, start, result);
+        target.put(id, protoChainStart, result);
         if (post) {
             return value;
         } else {
