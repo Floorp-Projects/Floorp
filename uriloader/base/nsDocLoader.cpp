@@ -248,6 +248,7 @@ public:
                                  nsIURI* aURL, 
                                  const char* aCommand);
     void FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
+                               nsIChannel *aDocChannel,
                                nsresult aStatus);
 							   
 
@@ -747,17 +748,26 @@ nsDocLoaderImpl::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: Is now idle...\n", this));
 
-    //
-    // Only fire the OnEndDocumentLoad(...) if the document loader 
-    // has initiated a load...
-    //
-    if (mIsLoadingDocument) {
-        mIsLoadingDocument = PR_FALSE;
-        FireOnEndDocumentLoad(this, status);
-    }
+  //
+  // Only fire the OnEndDocumentLoad(...) if the document loader 
+  // has initiated a load...
+  //
+  if (mIsLoadingDocument) {
+    nsCOMPtr<nsIChannel> docChannel(mDocumentChannel);
 
-	mDocumentChannel = null_nsCOMPtr();
-    return NS_OK;
+    mDocumentChannel = null_nsCOMPtr();
+
+    mIsLoadingDocument = PR_FALSE;
+
+    //
+    // Do nothing after firing the OnEndDocumentLoad(...). The document
+    // loader may be loading a *new* document - if LoadDocument()
+    // was called from a handler!
+    //
+    FireOnEndDocumentLoad(this, docChannel, status);
+  }
+
+  return NS_OK;
 }
 
 
@@ -838,14 +848,15 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
 }
 
 void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
+                                            nsIChannel *aDocChannel,
                                             nsresult aStatus)
 									
 {
 #if defined(DEBUG)
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_OK;
-    if (aLoadInitiator->mDocumentChannel)
-        rv = aLoadInitiator->mDocumentChannel->GetURI(getter_AddRefs(uri));
+    if (aDocChannel)
+        rv = aDocChannel->GetURI(getter_AddRefs(uri));
     if (NS_SUCCEEDED(rv)) {
         char* buffer = nsnull;
         if (uri)
@@ -869,14 +880,14 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
         nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)
             mDocObservers.ElementAt(index);
         observer->OnEndDocumentLoad(aLoadInitiator, 
-                                    aLoadInitiator->mDocumentChannel,
+                                    aDocChannel,
                                     aStatus, observer);
     }
     /*
      * Next notify the parent...
      */
     if (mParent) {
-        mParent->FireOnEndDocumentLoad(aLoadInitiator, aStatus);
+        mParent->FireOnEndDocumentLoad(aLoadInitiator, aDocChannel, aStatus);
     }
 }
 
