@@ -31,7 +31,6 @@ CPPSRCS=                         \
 	nsUInt32Array.cpp        \
 	nsMsgKeyArray.cpp        \
 	nsMsgFolder.cpp          \
-	nsMsgLocalMailFolder.cpp \
 	nsMsgImapMailFolder.cpp  \
 	nsMsgGroupRecord.cpp     \
 	nsLocalFolderSummarySpec.cpp	\
@@ -45,7 +44,6 @@ CPP_OBJS=                                    \
 	.\$(OBJDIR)\nsMsgKeyArray.obj        \
 	.\$(OBJDIR)\nsMsgFolder.obj          \
 	.\$(OBJDIR)\nsLocalFolderSummarySpec.obj	\
-	.\$(OBJDIR)\nsMsgLocalMailFolder.obj \
 	.\$(OBJDIR)\nsMsgImapMailFolder.obj  \
 	.\$(OBJDIR)\nsMsgGroupRecord.obj     \
 	.\$(OBJDIR)\nsNewsSet.obj            \
@@ -60,8 +58,8 @@ EXPORTS=                    \
 	nsMsgLineBuffer.h \
 	nsMsgGroupRecord.h  \
 	nsLocalFolderSummarySpec.h \
+	nsMsgFolder.h		\
 	$(NULL)
-
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\rdf
 

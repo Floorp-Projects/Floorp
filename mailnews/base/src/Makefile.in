@@ -33,13 +33,13 @@ EXPORTS = \
 	nsLocalFolderSummarySpec.h	\
 	nsUInt32Array.h \
 	nsMsgLineBuffer.h	\
+	nsMsgFolder.h	\
 	$(NULL)
 
 CPPSRCS = \
 	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
 	nsMsgFolder.cpp \
-	nsMsgLocalMailFolder.cpp \
 	nsMsgImapMailFolder.cpp \
 	nsNewsSet.cpp \
 	nsLocalFolderSummarySpec.cpp	\
