@@ -52,9 +52,10 @@ NS_IMPL_QUERY_INTERFACE(nsKeygenFormProcessor, kFormProcessorIID);
 
 MOZ_DECL_CTOR_COUNTER(nsKeygenFormProcessor);
 
-nsKeygenFormProcessor::nsKeygenFormProcessor() 
+nsKeygenFormProcessor::nsKeygenFormProcessor()
+	:	mPSM(0)
 { 
-   NS_INIT_REFCNT(); 
+   NS_INIT_REFCNT();
    getPSMComponent(&mPSM);
    MOZ_COUNT_CTOR(nsKeygenFormProcessor);
 } 
