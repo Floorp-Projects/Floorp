@@ -41,6 +41,15 @@ nsLabel::nsLabel() : nsWidget(), nsILabel()
   mAlignment = eAlign_Left;
 }
 
+//-------------------------------------------------------------------------
+//
+// nsLabel destructor
+//
+//-------------------------------------------------------------------------
+nsLabel::~nsLabel()
+{
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -78,18 +87,13 @@ NS_METHOD nsLabel::PreCreateWidget(nsWidgetInitData *aInitData)
 //-------------------------------------------------------------------------
 NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 {
+  GtkJustification align;
+
   mAlignment = aAlignment;
+
+  align = GetNativeAlignment();
+  gtk_misc_set_alignment(GTK_MISC(mWidget), 0.0, align);
   return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// nsLabel destructor
-//
-//-------------------------------------------------------------------------
-nsLabel::~nsLabel()
-{
 }
 
 //-------------------------------------------------------------------------
@@ -118,7 +122,7 @@ nsresult nsLabel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //
 //
 //-------------------------------------------------------------------------
-unsigned char nsLabel::GetNativeAlignment()
+GtkJustification nsLabel::GetNativeAlignment()
 {
   switch (mAlignment) {
     case eAlign_Right : return GTK_JUSTIFY_RIGHT;

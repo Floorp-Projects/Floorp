@@ -332,6 +332,14 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
   if (mFontMetrics) {
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
+    // FIXME avoid fontset problems....
+    if (((GdkFont*)fontHandle)->type == GDK_FONT_FONTSET)
+    {
+      g_print("nsWidget:SetFont - got a FontSet.. ignoring\n");
+      NS_RELEASE(mFontMetrics);
+      return NS_ERROR_FAILURE;
+    }
+
     gtk_widget_ensure_style(mWidget);
 
     GtkStyle *style = gtk_style_copy(mWidget->style);
@@ -552,6 +560,28 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
+#ifdef NS_GTK_REF
+void nsWidget::ReleaseNativeData(PRUint32 aDataType)
+{
+  switch(aDataType) {
+    case NS_NATIVE_WINDOW:
+      gdk_window_unref(mWidget->window);
+      break;
+    case NS_NATIVE_DISPLAY:
+      break;
+    case NS_NATIVE_WIDGET:
+      gtk_widget_unref(mWidget);
+      break;
+    case NS_NATIVE_GRAPHIC:
+      gdk_gc_unref(((nsToolkit *)mToolkit)->GetSharedGC());
+      break;
+    default:
+      g_print("nsWidget::ReleaseNativeData(%i) - weird value\n", aDataType);
+      break;
+  }
+}
+#endif
+
 //-------------------------------------------------------------------------
 //
 // Set the colormap of the window
@@ -654,7 +684,11 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   InitCallbacks();
 
 #ifdef NS_GTK_REF
-  gtk_widget_unref(parentWidget);
+  if (aNativeParent) {
+    gtk_widget_unref(GTK_WIDGET(aNativeParent));
+  } else if (aParent) {
+    aParent->ReleaseNativeData(NS_NATIVE_WIDGET);
+  }
 #endif
 
   return NS_OK;

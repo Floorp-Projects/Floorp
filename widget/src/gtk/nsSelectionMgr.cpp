@@ -50,24 +50,9 @@
 //
 
 #include "nsSelectionMgr.h"
-
 #include <strstream.h>
-
-#include <X11/X.h>          // type Atom
-//#include <X11/Xlib.h>       // XConvertSelection
-#include <X11/Xatom.h>      // XA_STRING and other predefined types
-
-//#include <gdk/gdkx.h>       // GDK_DISPLAY
-#include <gtk/gtksignal.h>
-#include <gtk/gtkentry.h>
-#include <gtk/gtkmain.h>     // gtk_main_iteration_do
-
+#include <gtk/gtk.h>
 #include "nsString.h"
-
-#ifdef HAVE_STRINGS_H
-#include <strings.h>        // bcopy, Solaris/CC.
-#endif
-
 #include <stdio.h>
 
 // XXX BWEEP BWEEP This is ONLY TEMPORARY until the service manager
@@ -86,7 +71,6 @@ GetSelectionMgr()
 // nsISelectionMgr interface
 //
 NS_IMPL_ADDREF(nsSelectionMgr)
-
 NS_IMPL_RELEASE(nsSelectionMgr)
 
 // The class statics:
@@ -193,7 +177,8 @@ void nsSelectionMgr::SetTopLevelWidget(GtkWidget* w)
   // Hmm, sometimes we need this, sometimes not.  I'm not clear why:
   // Register all the target types we handle:
   gtk_selection_add_target(sWidget, GDK_SELECTION_PRIMARY,
-                           XA_STRING, XA_STRING);
+                           GDK_SELECTION_TYPE_STRING,
+			   GDK_SELECTION_TYPE_STRING);
   // Need to add entries for whatever it is that emacs uses
   // Need to add entries for XIF and HTML
 }
@@ -238,18 +223,19 @@ void nsSelectionMgr::SelectionRequestCB( GtkWidget        *widget,
 // This is the routine which gets called when another app
 // requests the selection
 //
-void nsSelectionMgr::SelectionRequestor( GtkWidget        *widget, 
-                                         GtkSelectionData *selection_data )
+void nsSelectionMgr::SelectionRequestor(GtkWidget *widget, 
+					GtkSelectionData *selection_data)
 {
   if (!mCopyStream)
     return;
 
   guchar* str = (guchar*)(mCopyStream->str());
 
-  // Currently we only offer the data in XA_STRING format.
+  // Currently we only offer the data in GDK_SELECTION_TYPE_STRING format.
   if(str) {
-    gtk_selection_data_set(selection_data, XA_STRING,
-                           8, str, strlen((char*)str));
+    gtk_selection_data_set(selection_data,
+			   GDK_SELECTION_TYPE_STRING,
+			   8, str, strlen((char*)str));
   }
   // the format arg, "8", indicates string data with no endianness
 }
@@ -284,11 +270,13 @@ nsresult nsSelectionMgr::CopyToClipboard()
   return NS_OK;
 }
 
-nsresult nsSelectionMgr::PasteTextBlocking(nsString* aPastedText)
+nsresult nsSelectionMgr::PasteTextBlocking(nsString *aPastedText)
 {
   mBlocking = PR_TRUE;
-  gtk_selection_convert(sWidget, GDK_SELECTION_PRIMARY, XA_STRING,
-                        GDK_CURRENT_TIME);
+  gtk_selection_convert(sWidget,
+			GDK_SELECTION_PRIMARY,
+			GDK_SELECTION_TYPE_STRING,
+			GDK_CURRENT_TIME);
 #if 0
   // Tried to use straight Xlib call but this would need more work:
   XConvertSelection(GDK_WINDOW_XDISPLAY(sWidget->window),
@@ -306,7 +294,8 @@ nsresult nsSelectionMgr::PasteTextBlocking(nsString* aPastedText)
   mBlocking = PR_FALSE;
 
   *aPastedText = (char*)(mSelectionData.data);
-  delete[] mSelectionData.data;
+  g_free(mSelectionData.data);
+  mSelectionData.data = nsnull;
   return NS_OK;
 }
 
@@ -334,21 +323,21 @@ nsSelectionMgr::SelectionReceiver (GtkWidget *aWidget,
   }
 
   switch (data->type)
-	{
-	case XA_STRING:
-    mSelectionData = *data;
-    mSelectionData.data = new unsigned char[data->length + 1];
-    bcopy(data->data, mSelectionData.data, data->length);
-    mSelectionData.data[data->length] = '\0';
-    mBlocking = PR_FALSE;
-	  return;
+  {
+    case GDK_SELECTION_TYPE_STRING:
+      mSelectionData = *data;
+      mSelectionData.data = g_new(guchar, data->length + 1);
+      memcpy(mSelectionData.data, data->data, data->length);
+      mSelectionData.data[data->length] = '\0';
+      mBlocking = PR_FALSE;
+      return;
 
-  default:
+    default:
 #ifdef DEBUG_akkana
-    printf("Can't convert type %s (%ld) to string\n",
-           gdk_atom_name (data->type), data->type);
+      printf("Can't convert type %s (%ld) to string\n",
+             gdk_atom_name (data->type), data->type);
 #endif
-    return;
-	}
+      return;
+  }
 }
 

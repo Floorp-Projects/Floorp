@@ -95,7 +95,9 @@ NS_METHOD nsAppShell::Create(int *argc, char **argv)
 #endif
 
 {
+  gchar *home;
   gchar *path;
+  
 #ifdef CMDLINEARGS
   int *argc;
   char **argv;
@@ -117,8 +119,10 @@ NS_METHOD nsAppShell::Create(int *argc, char **argv)
 
   gdk_rgb_init();
 
-  path = g_strdup_printf("%s%s", g_get_home_dir(),"/.gtkrc");
+  home = g_get_home_dir();
+  path = g_strdup_printf("%s%c%s", home, G_DIR_SEPARATOR, ".gtkrc");
   gtk_rc_parse(path);
+  g_free(home);
   g_free(path);
 
 //  gtk_rc_init();

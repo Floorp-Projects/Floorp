@@ -327,7 +327,7 @@ NS_METHOD nsListBox::CreateNative(GtkWidget *parentWindow)
   mWidget = gtk_scrolled_window_new (nsnull, nsnull);
   gtk_widget_set_name(mWidget, "nsListBox");
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mWidget),
-                                  GTK_POLICY_AUTOMATIC,
+                                  GTK_POLICY_NEVER,
 				  GTK_POLICY_AUTOMATIC);
 
   mCList = ::gtk_clist_new(1);

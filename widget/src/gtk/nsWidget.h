@@ -84,6 +84,9 @@ class nsWidget : public nsBaseWidget
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
 
     void* GetNativeData(PRUint32 aDataType);
+#ifdef NS_GTK_REF
+    void ReleaseNativeData(PRUint32 aDataType);
+#endif
 
     NS_IMETHOD WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
     NS_IMETHOD ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect);
