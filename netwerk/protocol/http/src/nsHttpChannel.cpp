@@ -2100,8 +2100,11 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         mTransaction = nsnull;
     }
     
+    // we don't support overlapped i/o (bug 82418)
+#if 0
     if (mCacheEntry && NS_SUCCEEDED(status))
         mCacheEntry->MarkValid();
+#endif
 
     if (mListener) {
         mListener->OnStopRequest(this, mListenerContext, status);
