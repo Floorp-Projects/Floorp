@@ -2879,16 +2879,11 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
 
     if (!iim)
         return NS_ERROR_UNEXPECTED;    
-
-    // Startup any category observers that may want to listen to autoreg
-    NS_CreateServicesFromCategory("xpcom-observers",
-                                  nsnull,
-                                  NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);    
-
+    
     // Notify observers of xpcom autoregistration start
     nsCOMPtr<nsIObserverService> observerService = 
              do_GetService("@mozilla.org/observer-service;1", &rv);
-    if (NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
     {
         // NO COMPtr as we dont release the service manager
         nsIServiceManager *mgr = NS_STATIC_CAST(nsIServiceManager*, this);
