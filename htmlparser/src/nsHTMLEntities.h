@@ -43,7 +43,7 @@
 class nsHTMLEntities {
 public:
 
-  static void AddRefTable(void);
+  static nsresult AddRefTable(void);
   static void ReleaseTable(void);
 
 /**
