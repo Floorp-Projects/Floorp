@@ -259,6 +259,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
   float               scale;
+  nsDrawingSurface    ds = nsnull;
 
   if (PR_FALSE == mRefreshEnabled)
     return;
@@ -293,7 +294,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
     mRootWindow->GetBounds(wrect);
-    nsDrawingSurface  ds = GetDrawingSurface(*localcx, wrect);
+    ds = GetDrawingSurface(*localcx, wrect);
     localcx->SelectOffScreenDrawingSurface(ds);
   }
 
@@ -314,7 +315,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
-    localcx->CopyOffScreenBits(wrect);
+    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
 
   if (localcx != aContext)
     NS_RELEASE(localcx);
@@ -340,6 +341,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 {
   nsRect              wrect;
   nsIRenderingContext *localcx = nsnull;
+  nsDrawingSurface    ds = nsnull;
 
   if (PR_FALSE == mRefreshEnabled)
     return;
@@ -376,7 +378,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
     mRootWindow->GetBounds(wrect);
-    nsDrawingSurface  ds = GetDrawingSurface(*localcx, wrect);
+    ds = GetDrawingSurface(*localcx, wrect);
     localcx->SelectOffScreenDrawingSurface(ds);
   }
 
@@ -389,7 +391,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
-    localcx->CopyOffScreenBits(wrect);
+    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
 
   if (localcx != aContext)
     NS_RELEASE(localcx);
@@ -397,6 +399,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   // Subtract the area we just painted from the dirty region
   nsIRegion *dirtyRegion;
   aView->GetDirtyRegion(dirtyRegion);
+
   if ((nsnull != dirtyRegion) && !dirtyRegion->IsEmpty())
   {
     nsRect  pixrect = trect;
@@ -959,58 +962,19 @@ NS_IMETHODIMP nsViewManager :: GetViewClipAbsolute(nsIView *aView, nsRect *rect,
 
 NS_IMETHODIMP nsViewManager :: SetViewContentTransparency(nsIView *aView, PRBool aTransparent)
 {
-  PRBool  hasTransparency;
-  aView->HasTransparency(hasTransparency);
-  if (aTransparent != hasTransparency)
-  {
-    if (aTransparent == PR_FALSE)
-    {
-      //going opaque
-      mTransCnt--;
-    }
-    else
-    {
-      //going transparent
-      mTransCnt++;
-    }
+  UpdateTransCnt(aView, nsnull);
+  aView->SetContentTransparency(aTransparent);
+  UpdateTransCnt(nsnull, aView);
 
-    aView->SetContentTransparency(aTransparent);
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: SetViewOpacity(nsIView *aView, float aOpacity)
 {
-  PRBool  newopaque, oldopaque;
-  float   oldopacity;
-
-  if ((aOpacity == 1.0f) || (aOpacity == 0.0f))
-    newopaque = PR_TRUE;
-  else
-    newopaque = PR_FALSE;
-
-  aView->GetOpacity(oldopacity);
-
-  if ((oldopacity == 1.0f) || (oldopacity == 0.0f))
-    oldopaque = PR_TRUE;
-  else
-    oldopaque = PR_FALSE;
-
-  if (newopaque != oldopaque)
-  {
-    if (newopaque == PR_FALSE)
-    {
-      //going transparent
-      mTransCnt++;
-    }
-    else
-    {
-      //going opaque
-      mTransCnt--;
-    }
-  }
-
+  UpdateTransCnt(aView, nsnull);
   aView->SetOpacity(aOpacity);
+  UpdateTransCnt(nsnull, aView);
+
   return NS_OK;
 }
 
@@ -1050,7 +1014,7 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
       aContext.DestroyDrawingSurface(mDrawingSurface);
     }
 
-    mDrawingSurface = aContext.CreateDrawingSurface(&aBounds);
+    mDrawingSurface = aContext.CreateDrawingSurface(&aBounds, 0);
     mDSBounds = aBounds;
   }
 
@@ -1177,7 +1141,8 @@ void nsViewManager :: AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) 
 
 void nsViewManager :: UpdateTransCnt(nsIView *oldview, nsIView *newview)
 {
-  if (nsnull != oldview) {
+  if (nsnull != oldview)
+  {
     PRBool  hasTransparency;
     float   opacity;
 
@@ -1188,7 +1153,8 @@ void nsViewManager :: UpdateTransCnt(nsIView *oldview, nsIView *newview)
       mTransCnt--;
   }
 
-  if (nsnull != newview) {
+  if (nsnull != newview)
+  {
     PRBool  hasTransparency;
     float   opacity;
 
