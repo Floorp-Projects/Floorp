@@ -912,7 +912,8 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
     }
 
 #ifndef NO_LINK_CYCLE_ON_SAME_CHAR
-    if (NS_FAILED(rv) && !mLiteralTextSearchOnly && mAllTheSameChar) {
+    if (NS_FAILED(rv) && !mLiteralTextSearchOnly && mAllTheSameChar && 
+        mTypeAheadBuffer.Length() > 1) {
       mRepeatingMode = eRepeatingChar;
       mDontTryExactMatch = PR_TRUE;  // Repeated character find mode
       rv = FindItNow(nsnull, PR_TRUE, PR_TRUE, mIsFirstVisiblePreferred);
@@ -1345,7 +1346,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
           break;
         }
       }
-      else if (!hasTriedFirstDoc) {  // Avoid potential infinite loop
+      else if (hasTriedFirstDoc) {  // Avoid potential infinite loop
         return NS_ERROR_FAILURE;  // No content doc shells
       }
 
