@@ -40,7 +40,10 @@
 #include "nsMenu.h"
 #include "nsMenuItem.h"
 #include "nsPopUpMenu.h"
+
+#if 0
 #include "nsFontRetrieverService.h"
+#endif
 
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
