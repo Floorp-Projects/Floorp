@@ -323,5 +323,7 @@ menu.push[disabled="true"]:active {
 box#messagepanebox
 {
    min-height: 10px;
+   height: 0px;
 }
+
 
