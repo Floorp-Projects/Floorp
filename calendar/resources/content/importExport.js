@@ -240,7 +240,7 @@ function addEventsToCalendar( calendarEventArray, silent, ServerName )
 
       // the start time is in zulu time, need to convert to current time
       if(calendarEvent.allDay != true)
-        convertZuluToLocal( calendarEvent );
+        convertZuluToLocalEvent( calendarEvent );
 
       // open the event dialog with the event to add
       if( silent )
@@ -280,60 +280,48 @@ function addEventsToCalendar( calendarEventArray, silent, ServerName )
    gICalLib.batchMode = false;   
 }
 
-const ZULU_OFFSET_MILLIS = new Date().getTimezoneOffset() * 60 * 1000;
-
-function convertZuluToLocal( calendarEvent )
+/** oeDateTime is an oeDateTime object, not a javascript date **/
+function convertZuluToLocalOEDateTime( oeDateTime )
 {
-   if( calendarEvent.start.utc == true )
-   {
-   var zuluStartTime = calendarEvent.start.getTime();
-   calendarEvent.start.setTime( zuluStartTime  - ZULU_OFFSET_MILLIS );
-      calendarEvent.start.utc = false;
-   }
-   if( calendarEvent.end.utc == true )
-   {
-      var zuluEndTime = calendarEvent.end.getTime();
-   calendarEvent.end.setTime( zuluEndTime  - ZULU_OFFSET_MILLIS );
-      calendarEvent.end.utc = false;
-   }
+  if (oeDateTime.utc == true)
+  {
+    // At zulu (utc) time, compute offset from zulu time to local time.
+    // Offset depends on datetime because of daylight-time/summer-time changes.
+    var zuluMillis = oeDateTime.getTime();
+    var offsetMillisAtZuluTime = new Date(zuluMillis).getTimezoneOffset() * 60 * 1000;
+    oeDateTime.setTime(oeDateTime.getTime() - offsetMillisAtZuluTime);
+    oeDateTime.utc = false;
+  }
+}
+/** oeDateTime is an oeDateTime object, not a javascript date **/
+function convertLocalToZuluOEDateTime( oeDateTime )
+{
+  if (oeDateTime.utc == false)
+  {
+    // At local time, compute offset from zulu time to local time.
+    // Offset depends on datetime because of daylight-time/summer-time changes.
+    var localJSDate = new Date(oeDateTime.year,
+                               oeDateTime.month,
+                               oeDateTime.day,
+                               oeDateTime.hour,
+                               oeDateTime.minute);
+    var offsetMillisAtLocalTime = localJSDate.getTimezoneOffset() * 60 * 1000;
+    oeDateTime.setTime(oeDateTime.getTime() + offsetMillisAtLocalTime);
+    oeDateTime.utc = true;
+  }
 }
 
-function convertLocalToZulu( calendarEvent )
+function convertZuluToLocalEvent( calendarEvent )
 {
-   if( calendarEvent.start.utc == false )
-   {
-   var zuluStartTime = calendarEvent.start.getTime();
-   calendarEvent.start.setTime( zuluStartTime  + ZULU_OFFSET_MILLIS );
-      calendarEvent.start.utc = true;
-   }
-   if( calendarEvent.end.utc == false )
-   {
-      var zuluEndTime = calendarEvent.end.getTime();
-   calendarEvent.end.setTime( zuluEndTime  + ZULU_OFFSET_MILLIS );
-      calendarEvent.end.utc = true;
-   }
+  convertZuluToLocalOEDateTime(calendarEvent.start);
+  convertZuluToLocalOEDateTime(calendarEvent.end);
 }
 
-// Can something from dateUtils be used here?
-function formatDateTime( oeDateTime )
+function convertLocalToZuluEvent( calendarEvent )
 {
-   var date = new Date(oeDateTime.getTime());
-   return dateService.FormatDateTime("", dateService.dateFormatLong, 
-          dateService.timeFormatSeconds, date.getFullYear(), date.getMonth()+1, 
-          date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds());  
-//   return( gCalendarWindow.dateFormater.getFormatedDate( date ) + " " +
-//           gCalendarWindow.dateFormater.getFormatedTime( date ) );
+  convertLocalToZuluOEDateTime(calendarEvent.start);
+  convertLocalToZuluOEDateTime(calendarEvent.end);
 }
-
-
-function formatDateTimeInterval( oeDateStart, oeDateEnd )
-{
-   // TODO: Extend this function to create pretty looking strings
-   // When: Thursday, November 09, 2000 11:00 PM-11:30 PM (GMT-08:00) Pacific Time (US & Canada); Tijuana.
-   // When: 7/1/1997 10:00AM PDT - 7/1/97 10:30AM PDT
-   return formatDateTime(oeDateStart) + " - " + formatDateTime(oeDateEnd);
-}
-
 
 /** 
 * Initialize an event with a start and end date.
@@ -599,13 +587,12 @@ function parseIcalData( icalStr )
 {
    var calendarEventArray =  new Array();
 
-   var i,j;
    while( icalStr.indexOf("BEGIN:VEVENT") != -1 )
    { 
       // try to find the begin and end of an event. ParseIcalString does not support VCALENDAR
-      i = icalStr.indexOf("BEGIN:VEVENT");
-      j = icalStr.indexOf("END:VEVENT") + 10;
-      eventData = icalStr.substring(i, j);
+      var i = icalStr.indexOf("BEGIN:VEVENT");
+      var j = icalStr.indexOf("END:VEVENT") + 10;
+      var eventData = icalStr.substring(i, j);
 
       calendarEvent = createEvent();
 
@@ -656,23 +643,19 @@ function readDataFromFile( aFilePath, charset )
    const nsIFileInputStream = Components.interfaces.nsIFileInputStream;
    const nsIScriptableInputStream = Components.interfaces.nsIScriptableInputStream;
 
-   var localFileInstance;
-   var inputStream;
-   var scriptableInputStream;
-   var tmp; // not sure what the use is for this
-   
-   LocalFileInstance = Components.classes[LOCALFILE_CTRID].createInstance( nsILocalFile );
-   LocalFileInstance.initWithPath( aFilePath );
+   var localFileInstance = Components.classes[LOCALFILE_CTRID].createInstance( nsILocalFile );
+   localFileInstance.initWithPath( aFilePath );
 
-   inputStream = Components.classes[FILEIN_CTRID].createInstance( nsIFileInputStream );
+   var inputStream = Components.classes[FILEIN_CTRID].createInstance( nsIFileInputStream );
    try
    {
-      inputStream.init( LocalFileInstance, MODE_RDONLY, 0444, tmp );
+      var tmp; // not sure what the use is for this
+      inputStream.init( localFileInstance, MODE_RDONLY, 0444, tmp );
       
-      scriptableInputStream = Components.classes[SCRIPTSTREAM_CTRID].createInstance( nsIScriptableInputStream);
+      var scriptableInputStream = Components.classes[SCRIPTSTREAM_CTRID].createInstance( nsIScriptableInputStream);
       scriptableInputStream.init( inputStream );
 
-      aDataStream = scriptableInputStream.read( -1 );
+      var aDataStream = scriptableInputStream.read( -1 );
       scriptableInputStream.close();
       inputStream.close();
       
@@ -705,7 +688,7 @@ function saveEventsToFile( calendarEventArray )
       return;
    }
 
-   // No show the 'Save As' dialog and ask for a filename to save to
+   // Show the 'Save As' dialog and ask for a filename to save to
    const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
@@ -788,6 +771,7 @@ function saveEventsToFile( calendarEventArray )
  * Converts a array of events to iCalendar text
  * If doPatchForExport is true:
  * - If all events have same method, merges components into one VCALENDAR.
+ *   Times converted to Zulu, so no VTIMEZONEs expected (so no dup VTIMEZONES).
  * - Patches TRIGGER syntax for Outlook compatibility. 
  * - Converts line terminators to full \r\n as specified by RFC2445.
  */
@@ -798,11 +782,12 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
       calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
 
    var doMerge = doPatchForExport;
+   var eventArrayIndex;
    if (doPatchForExport && calendarEventArray.length > 0) 
    {
      // will merge into one VCALENDAR if all events have same method
      var firstMethod = calendarEventArray[0].method;
-     for( var eventArrayIndex = 1;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
+     for( eventArrayIndex = 1;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
      {
        if (calendarEventArray[eventArrayIndex].method != firstMethod)
        {
@@ -813,13 +798,13 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
    }
 
    var eventStrings = new Array(calendarEventArray.length);
-   for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
+   for( eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ].clone();
       
       // convert time to represent local to produce correct DTSTART and DTEND
       if(calendarEvent.allDay != true)
-         convertLocalToZulu( calendarEvent );
+         convertLocalToZuluEvent( calendarEvent );
       
       // check if all required properties are available
       if( calendarEvent.method == 0 )
@@ -1078,11 +1063,10 @@ function saveDataToFile(aFilePath, aDataStream, charset)
    const nsILocalFile = Components.interfaces.nsILocalFile;
    const nsIFileOutputStream = Components.interfaces.nsIFileOutputStream;
 
-   var localFileInstance;
    var outputStream;
    
-   var LocalFileInstance = Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-   LocalFileInstance.initWithPath(aFilePath);
+   var localFileInstance = Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+   localFileInstance.initWithPath(aFilePath);
 
    outputStream = Components.classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
    try
@@ -1090,7 +1074,7 @@ function saveDataToFile(aFilePath, aDataStream, charset)
       if(charset)
          aDataStream = convertFromUnicode( charset, aDataStream );
 
-      outputStream.init(LocalFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
+      outputStream.init(localFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
       outputStream.write(aDataStream, aDataStream.length);
       // outputStream.flush();
       outputStream.close();
