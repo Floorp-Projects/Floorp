@@ -92,6 +92,8 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #define VIEW_TRANSPARENT  0x00000008
 #define VIEW_TRANSLUCENT  0x00000010
 #define VIEW_CLIPPED      0x00000020
+// used only by CanScrollWithBitBlt
+#define VIEW_ISSCROLLED   0x00000080
 
 #define SUPPORT_TRANSLUCENT_VIEWS
 
@@ -1049,7 +1051,11 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
 
   ReapplyClipInstructions(PR_FALSE, fakeClipRect, index);
     
-  OptimizeDisplayList(aRect, finalTransparentRect);
+  if (nsnull != mOpaqueRgn) {
+    mOpaqueRgn->SetTo(0, 0, 0, 0);
+    AddCoveringWidgetsToOpaqueRegion(mOpaqueRgn, mContext, aRootView);
+    OptimizeDisplayList(aRect, finalTransparentRect);
+  }
 
   // ShowDisplayList(mDisplayListCount);
 
@@ -1433,8 +1439,16 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
 
   nsPoint origin(0, 0);
   ComputeViewOffset(view, &origin);
+
+  // Look at the view's clipped rect. It may be that part of the view is clipped out
+  // in which case we don't need to worry about invalidating the clipped-out part.
   nsRect damageRect;
-  view->GetBounds(damageRect);
+  PRBool isClipped;
+  PRBool isEmpty;
+  view->GetClippedRect(damageRect, isClipped, isEmpty);
+  if (isEmpty) {
+    return NS_OK;
+  }
   view->ConvertFromParentCoords(&damageRect.x, &damageRect.y);
   damageRect.x += origin.x;
   damageRect.y += origin.y;
@@ -1550,14 +1564,13 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   if (isEmpty) {
     return NS_OK;
   }
+  view->ConvertFromParentCoords(&clippedRect.x, &clippedRect.y);
 
   nsRect damagedRect;
   damagedRect.x = aRect.x;
   damagedRect.y = aRect.y;
   damagedRect.width = aRect.width;
   damagedRect.height = aRect.height;
-  clippedRect.x = 0;
-  clippedRect.y = 0;
   damagedRect.IntersectRect(aRect, clippedRect);
 
    // If the rectangle is not visible then abort
@@ -1891,6 +1904,19 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
   return NS_OK;
 }
 
+/*
+  Fills mDisplayList with DisplayListElement2* pointers. The caller is responsible
+  for freeing these structs. The display list elements are ordered by z-order so
+  that the first element of the array is at the bottom in z-order and the last element
+  in the array is at the top in z-order.
+
+  This should be changed so that the display list array is passed in as a parameter. There
+  is no need to have the display list as a member of nsViewManager.
+
+  aRect is the area in aView which we want to build a display list for.
+  Set aEventProcesing when the list is required for event processing.
+  Set aCaptured if the event is being captured by the given view.
+*/
 void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
   PRBool aCaptured) {
   // compute this view's origin
@@ -1918,11 +1944,6 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
   }
     
   DisplayZTreeNode *zTree;
-
-  if (!aEventProcessing && nsnull != mOpaqueRgn) {
-    mOpaqueRgn->SetTo(0, 0, 0, 0);
-    AddCoveringWidgetsToOpaqueRegion(mOpaqueRgn, mContext, aView);
-  }
 
   nsPoint displayRootOrigin(0, 0);
   ComputeViewOffset(displayRoot, &displayRootOrigin);
@@ -2386,6 +2407,14 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
         InvalidateRectDifference(parentView, oldDimensions, r, NS_VMREFRESH_NO_SYNC);
       } 
     }
+
+    // nsIClipViews clip everything, including their child views. So we note that explicitly.
+    // This means nsView::GetClippedRect will now take account of the clipping effects of
+    // nsIClipViews.
+    if (IsClipView(view)) {
+      view->SetViewFlags(view->GetViewFlags() | NS_VIEW_FLAG_CLIPCHILDREN);
+      view->SetChildClip(0, 0, aRect.width, aRect.height);
+    }
   }
   
   return NS_OK;
@@ -2409,6 +2438,149 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, nsIRegion *a
   }
  
   return NS_OK;
+}
+
+/*
+  Returns PR_TRUE if and only if aView is a (possibly indirect) child of aAncestor.
+*/
+static PRBool IsAncestorOf(nsView* aAncestor, nsView* aView) 
+{
+  while (nsnull != aView) {
+    aView = aView->GetParent();
+    if (aView == aAncestor) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+/*
+  This function returns TRUE only if we are sure that scrolling
+  aView's widget and moving its child widgets, followed by
+  UpdateViewAfterScroll, will result in correct painting (i.e. the
+  same results as just invalidating the entire view). If we're not
+  sure then we return FALSE to cause a full update of the view's area.
+
+  The way we check this is quite subtle, because there are all sorts
+  of complicated things that can happen.
+
+  Conceptually what we do is compute the display list for the "after
+  scrolling" situation and compare it to a translation of the display
+  list for the "before scrolling" situation.  If the two lists are
+  equal then we return TRUE.
+
+  We could implement this directly, but that would be rather
+  complex. In particular it's hard to build the display list for the
+  "before scrolling" situation since this function is called after
+  scrolling. So instead we just build the "after scrolling" display
+  list and do some analysis of it, making some approximations along
+  the way.
+
+  Display list elements for aView's descendants will always be the
+  same "before" (plus translation) and "after", because they get
+  scrolled by the same amount as the translation. Display list
+  elements for other views will be in different positions "before"
+  (plus translation) and "after" because they don't get
+  scrolled. These elements are the ones that force us to return
+  PR_FALSE. Unfortunately we can't just scan the "after" display list
+  and ensure no elements are not descendants of aView: there could
+  have been some non-aView-descendant which appeared in the "before"
+  list but does not show up in the "after" list because it ended up
+  completely hidden by some opaque aView-descendant.
+
+  So here's what we have to do: we compute an "after" display list but
+  before performing the optimization pass to eliminate completely
+  covered views, we mark all aView-descendant display list elements as
+  transparent. Thus we can be sure that any non-aView-descendant
+  display list elements that would have shown up in the translated "before"
+  list will still show up in the "after" list (since the only views which
+  can cover them are non-aView-descendants, which haven't moved). Then
+  we check the final display list to make sure only aView-descendant
+  display list elements are included.
+
+  NOTE: We also scan the "after" display list to find views whose contents
+  depend on their scroll position (e.g., CSS attachment-fixed backgrounds),
+  which are flagged with NS_VIEW_FLAG_DONT_BITBLT. If any are found, we return
+  PR_FALSE.
+
+  XXX Post-1.0 we should consider instead of returning a boolean,
+  actually computing a rectangle or region which can be safely
+  scrolled with bitblt.  This would be the area which is aView's
+  rectangle minus the area covered by any non-aView-descendant views
+  in the translated "before" or "after" lists. Then we could scroll
+  that area and explicitly invalidate the rest. This would give us
+  high performance scrolling even in the presence of overlapping
+  content and eliminate the need for native widgets for fixed position
+  elements.
+*/
+PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
+{
+  NS_ASSERTION(!mPainting, "View manager shouldn't be scrolling during a paint");
+  if (mPainting) {
+    return PR_FALSE; // do the safe thing
+  }
+
+  nsRect r;
+  nsRect fakeClipRect;
+  PRInt32 index = 0;
+
+  // Only check the area that intersects the view's non clipped rectangle
+  PRBool isClipped;
+  PRBool isEmpty;
+  aView->GetClippedRect(r, isClipped, isEmpty);
+  if (isEmpty) {
+    return PR_TRUE; // nothing to scroll
+  }
+  aView->ConvertFromParentCoords(&r.x, &r.y);
+
+  BuildDisplayList(aView, r, PR_FALSE, PR_FALSE);
+  ReapplyClipInstructions(PR_FALSE, fakeClipRect, index);
+
+  for (PRInt32 i = 0; i < mDisplayListCount; i++) {
+    DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(i));
+    if ((element->mFlags & VIEW_RENDERED) != 0) {
+      if (IsAncestorOf(aView, element->mView)) {
+        element->mFlags |= (VIEW_ISSCROLLED | VIEW_TRANSPARENT);
+      }
+    }
+  }
+
+  if (nsnull != mOpaqueRgn) {
+    nsRect finalTransparentRect;
+
+    mOpaqueRgn->SetTo(0, 0, 0, 0);
+    // We DON'T use AddCoveringWidgetsToOpaqueRegion here. Our child widgets are going to be moved
+    // as if they were scrolled, so we need to examine the display list elements that might be covered by
+    // child widgets.
+
+    // We DO need to use OptimizeDisplayList here to eliminate views that are covered by views we know
+    // are opaque. Typically aView itself is opaque and we want to eliminate views behind aView, such as
+    // aView's parent, that aren't being scrolled and would otherwise cause us to decide not to blit.
+
+    // (Of course it's possible that aView's parent is actually in front of aView (if aView has a negative
+    // z-index) but if so, this code still does the right thing. Yay for the display list based approach!)
+    OptimizeDisplayList(r, finalTransparentRect);
+  }
+  
+  PRBool anyUnscrolledViews = PR_FALSE;
+  PRBool anyUnblittableViews = PR_FALSE;
+
+  for (PRInt32 i = 0; i < mDisplayListCount; i++) {
+    DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(i));
+    if ((element->mFlags & VIEW_RENDERED) != 0) {
+      if ((element->mFlags & VIEW_ISSCROLLED) == 0 && element->mView != aView) {
+        anyUnscrolledViews = PR_TRUE;
+      } else if ((element->mView->GetViewFlags() & NS_VIEW_FLAG_DONT_BITBLT) != 0) {
+        anyUnblittableViews = PR_TRUE;
+      }
+    }
+      
+    delete element;
+  }
+
+  mDisplayList.Clear();
+
+  return !anyUnscrolledViews && !anyUnblittableViews;
 }
 
 NS_IMETHODIMP nsViewManager::SetViewBitBltEnabled(nsIView *aView, PRBool aEnable)

@@ -272,7 +272,7 @@ private:
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
 
   nsresult CreateBlendingBuffers(nsIRenderingContext &aRC);
-          
+  
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing, PRBool aCaptured);
   void BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
 
@@ -356,6 +356,8 @@ public: // NOT in nsIViewManager, so private to the view module
 	nsView* GetKeyEventGrabber() const { return mKeyGrabber; }
 
   nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
+
+  PRBool CanScrollWithBitBlt(nsView* aView);
 
 private:
   nsIDeviceContext  *mContext;

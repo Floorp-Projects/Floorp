@@ -1028,7 +1028,6 @@ PRBool nsView::PointIsInside(nsView& aView, nscoord x, nscoord y) const
   } 
 }
 
-
 NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const
 {
   // Keep track of the view's offset
