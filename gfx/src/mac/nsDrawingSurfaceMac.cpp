@@ -234,7 +234,7 @@ GrafPtr 	savePort;
 	}
 
 	// create offscreen
-  QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, 0);
+  QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, useTempMem);
   if (osErr != noErr)
   	return NS_ERROR_FAILURE;
 
