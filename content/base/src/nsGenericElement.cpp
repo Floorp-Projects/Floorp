@@ -1800,13 +1800,13 @@ nsGenericElement::HasClass(nsIAtom* aClass) const
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetContentStyleRules(nsISupportsArray* aRules)
+nsGenericElement::WalkContentStyleRules(nsIRuleWalker* aRuleWalker)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetInlineStyleRules(nsISupportsArray* aRules)
+nsGenericElement::WalkInlineStyleRules(nsIRuleWalker* aRuleWalker)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1842,8 +1842,7 @@ nsGenericElement::GetHTMLAttribute(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                               nsMapAttributesFunc& aMapFunc) const
+nsGenericElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

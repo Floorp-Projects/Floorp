@@ -262,9 +262,10 @@ nsLabelFrame::GetFrameForPoint(nsIPresContext* aPresContext,
           nsIStyleContext *psc;
           parent->GetStyleContext(&psc);
           if (psc) {
-            const nsStyleDisplay* disp = (const nsStyleDisplay*)
-              psc->GetStyleData(eStyleStruct_Display);
-            if (disp->IsVisible()) {
+            const nsStyleVisibility* vis = 
+             (const nsStyleVisibility*)psc->GetStyleData(eStyleStruct_Visibility);
+      
+            if (vis->IsVisible()) {
               *aFrame = parent;
               return NS_OK;
             }
@@ -272,9 +273,10 @@ nsLabelFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         }
         parent->GetParent(&parent);
       }
-      const nsStyleDisplay* disp = (const nsStyleDisplay*)
-        mStyleContext->GetStyleData(eStyleStruct_Display);
-      if (disp->IsVisible()) {
+      const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+      
+      if (vis->IsVisible()) {
         *aFrame = this;
         return NS_OK;
       }
@@ -421,14 +423,11 @@ nsLabelFrame::SetInitialChildList(nsIPresContext* aPresContext,
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
-  const nsStylePosition* position;
-  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) position);
-
   PRUint32 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
 
-  flags |= position->IsAbsolutelyPositioned() ? NS_BLOCK_SPACE_MGR : 0;
+  flags |= styleDisplay->IsAbsolutelyPositioned() ? NS_BLOCK_SPACE_MGR : 0;
 
   nsIFrame* areaFrame;
   NS_NewAreaFrame(shell, &areaFrame, flags);

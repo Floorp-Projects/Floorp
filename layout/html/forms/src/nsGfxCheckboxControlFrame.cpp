@@ -392,8 +392,8 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
     PRBool doDefaultPainting = PR_TRUE;
     // Paint the checkmark 
     if (nsnull != mCheckButtonFaceStyle  && GetCheckboxState() == eOn) {
-      const nsStyleColor* myColor = (const nsStyleColor*)
-          mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Color);
+      const nsStyleBackground* myColor = (const nsStyleBackground*)
+          mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Background);
 
       if (myColor->mBackgroundImage.Length() > 0) {
         const nsStyleBorder* myBorder = (const nsStyleBorder*)

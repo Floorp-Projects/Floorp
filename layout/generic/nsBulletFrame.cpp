@@ -152,7 +152,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     nsCharType charType = eCharType_LeftToRight;
     PRUint8 level = 0;
     PRBool isBidiSystem = PR_FALSE;
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
     PRUint32 hints = 0;
 #endif // IBMBIDI
 
@@ -202,7 +202,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
         level = 1;
         GetListItemText(aPresContext, *myList, text);
 
-        if (NS_STYLE_DIRECTION_RTL == disp->mDirection) {
+        if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
           nsStr::Delete(text, 0, 1);
           text.AppendWithConversion(".");
         }
@@ -849,9 +849,10 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
                                nsString& result)
 {
 #ifdef IBMBIDI
-  const nsStyleDisplay* display;
-  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
-  if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
+  const nsStyleVisibility* vis;
+  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+
+  if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
     result.AppendWithConversion(".");
   }
 #endif // IBMBIDI
@@ -1014,7 +1015,7 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
       break;
   }
 #ifdef IBMBIDI
-  if (NS_STYLE_DIRECTION_RTL != display->mDirection)
+  if (NS_STYLE_DIRECTION_RTL != vis->mDirection)
 #endif // IBMBIDI
   result.AppendWithConversion(".");
 }

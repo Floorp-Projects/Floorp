@@ -471,7 +471,7 @@ public:
     const nsStyleFont* mFont;
     const nsStyleText* mText;
     const nsStyleColor* mColor;
-    const nsStyleDisplay* mDisplay;
+    const nsStyleVisibility* mVisibility;
     nsIFontMetrics* mNormalFont;
     nsIFontMetrics* mSmallFont;
     nsIFontMetrics* mLastFont;
@@ -504,7 +504,7 @@ public:
       mColor = (const nsStyleColor*) sc->GetStyleData(eStyleStruct_Color);
       mFont = (const nsStyleFont*) sc->GetStyleData(eStyleStruct_Font);
       mText = (const nsStyleText*) sc->GetStyleData(eStyleStruct_Text);
-      mDisplay = (const nsStyleDisplay*) sc->GetStyleData(eStyleStruct_Display);
+      mVisibility = (const nsStyleVisibility*) sc->GetStyleData(eStyleStruct_Visibility);
 
       // Cache the original decorations and reuse the current font
       // to query metrics, rather than creating a new font which is expensive.
@@ -514,8 +514,8 @@ public:
       nsCOMPtr<nsIDeviceContext> deviceContext;
       aRenderingContext.GetDeviceContext(*getter_AddRefs(deviceContext));
       nsCOMPtr<nsIAtom> langGroup;
-      if (mDisplay->mLanguage) {
-        mDisplay->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
+      if (mVisibility->mLanguage) {
+        mVisibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
       }
       deviceContext->GetMetricsFor(*plainFont, langGroup, mNormalFont);
       aRenderingContext.SetFont(mNormalFont);
@@ -1270,9 +1270,9 @@ nsTextFrame::GetCursor(nsIPresContext* aPresContext,
                        nsPoint& aPoint,
                        PRInt32& aCursor)
 {
-  const nsStyleColor* styleColor;
-  GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
-  aCursor = styleColor->mCursor;
+  const nsStyleUserInterface*    ui = (const nsStyleUserInterface*)
+      mStyleContext->GetStyleData(eStyleStruct_UserInterface);
+  aCursor = ui->mCursor;
   if (NS_STYLE_CURSOR_AUTO == aCursor) {
     aCursor = NS_STYLE_CURSOR_TEXT;
   }
@@ -1667,35 +1667,55 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
   nscolor underColor;
   nscolor strikeColor;
   nsIStyleContext*  context = aStyleContext;
-  PRUint8 decorations = aTextStyle.mFont->mFont.decorations;
-  PRUint8 decorMask = decorations;
+  
+  PRBool useOverride = PR_FALSE;
+  nscolor overrideColor;
+
+  PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE; // Begin with no decorations
+  PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | NS_STYLE_TEXT_DECORATION_OVERLINE |
+                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH; // A mask of all possible decorations.
+  PRBool hasDecorations = context->HasTextDecorations();
 
   NS_ADDREF(context);
   do {  // find decoration colors
-    const nsStyleText* styleText = 
-      (const nsStyleText*)context->GetStyleData(eStyleStruct_Text);
+    const nsStyleTextReset* styleText = 
+      (const nsStyleTextReset*)context->GetStyleData(eStyleStruct_TextReset);
+    if (!useOverride && (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & styleText->mTextDecoration)) {
+      // This handles the <a href="blah.html"><font color="green">La la la</font></a> case.
+      // The link underline should be green.
+      const nsStyleColor* styleColor =
+        (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
+      useOverride = PR_TRUE;
+      overrideColor = styleColor->mColor;          
+    }
+
     if (decorMask & styleText->mTextDecoration) {  // a decoration defined here
       const nsStyleColor* styleColor =
         (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
+    
       if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decorMask & styleText->mTextDecoration) {
-        underColor = styleColor->mColor;
+        underColor = useOverride ? overrideColor : styleColor->mColor;
         decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        decorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
       }
       if (NS_STYLE_TEXT_DECORATION_OVERLINE & decorMask & styleText->mTextDecoration) {
-        overColor = styleColor->mColor;
+        overColor = useOverride ? overrideColor : styleColor->mColor;
         decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
+        decorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
       }
       if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decorMask & styleText->mTextDecoration) {
-        strikeColor = styleColor->mColor;
+        strikeColor = useOverride ? overrideColor : styleColor->mColor;
         decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+        decorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
       }
     }
     if (0 != decorMask) {
       nsIStyleContext*  lastContext = context;
       context = context->GetParent();
+      hasDecorations = context->HasTextDecorations();
       NS_RELEASE(lastContext);
     }
-  } while ((nsnull != context) && (0 != decorMask));
+  } while ((nsnull != context) && hasDecorations && (0 != decorMask));
   NS_IF_RELEASE(context);
 
   nscoord offset;
@@ -2050,8 +2070,9 @@ nsTextFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
 {
   if (aCheckVis) {
     nsIStyleContext* sc = mStyleContext;
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)sc->GetStyleData(eStyleStruct_Display);
-    if (!disp->IsVisible()) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (!vis->IsVisible()) {
       *aIsVisible = PR_FALSE;
       return NS_OK;
     }
@@ -5077,9 +5098,8 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
       aData.Mid(aText, mContentOffset, mContentLength);
 
       // Set the font
-      nsStyleFont font;
-      mStyleContext->GetStyle(eStyleStruct_Font, font);
-      aReflowState.rendContext->SetFont(font.mFont);
+      const nsStyleFont* font = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+      aReflowState.rendContext->SetFont(font->mFont);
 
       // Now get the exact bounding metrics of the text
       nsBoundingMetrics bm;

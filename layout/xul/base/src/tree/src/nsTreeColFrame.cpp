@@ -139,9 +139,9 @@ nsOutlinerColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     }
   }
   if (mRect.Contains(aPoint)) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisible()) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (vis->IsVisible()) {
       *aFrame = this; // Capture all events.
       return NS_OK;
     }

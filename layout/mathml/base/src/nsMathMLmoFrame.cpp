@@ -424,9 +424,9 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   // ignore our default left/right space
 
   // Get the value of 'em'
-  nsStyleFont font;
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
-  float em = float(font.mFont.size);
+  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+    mStyleContext->GetStyleData(eStyleStruct_Font));
+  float em = float(font->mFont.size);
 
   // lspace = number h-unit | namedspace
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
@@ -565,10 +565,10 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   InitData(aPresContext);
 
   // get the axis height;
-  nsStyleFont font;
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
+  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+    mStyleContext->GetStyleData(eStyleStruct_Font));
   nsCOMPtr<nsIFontMetrics> fm;
-  aRenderingContext.SetFont(font.mFont);
+  aRenderingContext.SetFont(font->mFont);
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
   nscoord leading, axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
@@ -731,7 +731,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
         // get the leading to be left at the top and the bottom of the stretched char
         // this seems more reliable than using fm->GetLeading() on suspicious fonts               
-        float em = float(font.mFont.size);                                            
+        float em = float(font->mFont.size);
         leading = nscoord(0.2f * em); 
 
         aDesiredStretchSize.ascent = mBoundingMetrics.ascent + leading;
@@ -765,7 +765,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   if (!NS_MATHML_OPERATOR_HAS_EMBELLISH_ANCESTOR(mFlags)) {
 
     // Get the value of 'em'
-    nscoord em = NSToCoordRound(float(font.mFont.size));
+    nscoord em = NSToCoordRound(float(font->mFont.size));
 
     // Account the spacing
     aDesiredStretchSize.width += nscoord((mLeftSpace + mRightSpace) * em);

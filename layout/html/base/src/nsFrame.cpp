@@ -496,7 +496,7 @@ NS_IMETHODIMP nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& 
   return NS_OK;
 }
 
-NS_IMETHODIMP  nsFrame::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const {
+NS_IMETHODIMP  nsFrame::GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct) const {
   NS_ASSERTION(mStyleContext!=nsnull,"null style context");
   if (mStyleContext) {
     return mStyleContext->GetStyle(aSID, aStruct);
@@ -507,7 +507,9 @@ NS_IMETHODIMP  nsFrame::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) c
 NS_IMETHODIMP  nsFrame::CalcBorderPadding(nsMargin& aBorderPadding) const {
   NS_ASSERTION(mStyleContext!=nsnull,"null style context");
   if (mStyleContext) {
-    mStyleContext->CalcBorderPaddingFor(this, aBorderPadding);
+    nsStyleBorderPadding bpad;
+    mStyleContext->GetBorderPaddingFor(bpad);
+    bpad.GetBorderPadding(aBorderPadding);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -996,8 +998,8 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
   nsIFrame* frame      = (nsIFrame*)this;
 
   while (frame && NS_SUCCEEDED(result)) {
-    const nsStyleUserInterface* userinterface;
-    frame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+    const nsStyleUIReset* userinterface;
+    frame->GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&)userinterface);
     if (userinterface) {
       switch (userinterface->mUserSelect) {
         case NS_STYLE_USER_SELECT_NONE:
@@ -1778,9 +1780,9 @@ nsFrame::GetCursor(nsIPresContext* aPresContext,
                    nsPoint& aPoint,
                    PRInt32& aCursor)
 {
-  const nsStyleColor* styleColor;
-  GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
-  aCursor = styleColor->mCursor;
+  const nsStyleUserInterface* styleUserInterface;
+  GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)styleUserInterface);
+  aCursor = styleUserInterface->mCursor;
   if (NS_STYLE_CURSOR_AUTO == aCursor) {
     aCursor = NS_STYLE_CURSOR_DEFAULT;
   }
@@ -1795,9 +1797,9 @@ nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 {
   if ((aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) &&
       (mRect.Contains(aPoint))) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisible()) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)((nsIStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
+    if (vis->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }
@@ -2222,14 +2224,13 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
 // Style sizing methods
 NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
 {
-  const nsStylePosition* position;
-  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-  if (position->mPosition != NS_STYLE_POSITION_NORMAL) {
+  const nsStyleDisplay* display;
+    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+    
+  if (display->mPosition != NS_STYLE_POSITION_NORMAL) {
     aBase = PR_TRUE;
   }
   else {
-    const nsStyleDisplay* display;
-    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
     if ((display->mDisplay == NS_STYLE_DISPLAY_BLOCK) || 
         (display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM) ||
         (display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)) {
@@ -2440,8 +2441,9 @@ nsFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
 {
   // first check to see if we are visible
   if (aCheckVis) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)((nsIStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Display);
-    if (!disp->IsVisible()) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)((nsIStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
+    if (!vis->IsVisible()) {
       *aIsVisible = PR_FALSE;
       return NS_OK;
     }
@@ -4039,10 +4041,10 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
 void
 nsFrame::SetDefaultBackgroundColor(nsIPresContext* aPresContext)
 {
-  nsStyleColor color;
-  mStyleContext->GetStyle(eStyleStruct_Color, color);
+  const nsStyleBackground* bg = 
+    (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
 
-  if ((color.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) != 0) {
+  if ((bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) != 0) {
     NS_WARNING("Frame setting default background color but it has transparent background!");
   } else {
     nsCOMPtr<nsIPresShell> shell;
@@ -4053,7 +4055,7 @@ nsFrame::SetDefaultBackgroundColor(nsIPresContext* aPresContext)
       shell->GetViewManager(getter_AddRefs(vm));
 
       if (vm) {
-        vm->SetDefaultBackgroundColor(color.mBackgroundColor);
+        vm->SetDefaultBackgroundColor(bg->mBackgroundColor);
       }
     }
   }

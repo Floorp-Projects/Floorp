@@ -22,10 +22,10 @@
  * Contributor(s): 
  */
 #include "nsCOMPtr.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
 #include "nsIOutlinerBoxObject.h"
 #include "nsBoxObject.h"
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
 #include "nsIFrame.h"
 #include "nsOutlinerBodyFrame.h"
 #include "nsIAtom.h"

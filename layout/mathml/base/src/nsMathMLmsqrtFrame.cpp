@@ -129,9 +129,9 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
     {
       // paint the overline bar
-      nsStyleColor color;
-      mStyleContext->GetStyle(eStyleStruct_Color, color);
-      aRenderingContext.SetColor(color.mColor);
+      const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
+        mStyleContext->GetStyleData(eStyleStruct_Color));
+      aRenderingContext.SetColor(color->mColor);
       aRenderingContext.FillRect(mBarRect);
     }
 
@@ -182,9 +182,9 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   // Prepare the radical symbol and the overline bar
 
   nsIRenderingContext& renderingContext = *aReflowState.rendContext;
-  nsStyleFont font;
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
-  renderingContext.SetFont(font.mFont);
+  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+    mStyleContext->GetStyleData(eStyleStruct_Font));
+  renderingContext.SetFont(font->mFont);
   nsCOMPtr<nsIFontMetrics> fm;
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
 
@@ -193,7 +193,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
 
   // get the leading to be left at the top of the resulting frame
   // this seems more reliable than using fm->GetLeading() on suspicious fonts               
-  float em = float(font.mFont.size);                                            
+  float em = float(font->mFont.size);
   leading = nscoord(0.2f * em); 
 
   // Rule 11, App. G, TeXbook

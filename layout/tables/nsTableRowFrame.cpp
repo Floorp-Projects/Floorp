@@ -466,13 +466,13 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext* aPresContext,
     nsCompatibility mode;
     aPresContext->GetCompatibilityMode(&mode);
     if (eCompatibility_Standard == mode) {
-      const nsStyleDisplay* disp =
-        (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-      if (disp->IsVisibleOrCollapsed()) {
+      const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+      if (vis->IsVisibleOrCollapsed()) {
         const nsStyleBorder* border =
           (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-        const nsStyleColor* color =
-          (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+        const nsStyleBackground* color =
+          (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
         nsTableFrame* tableFrame = nsnull;
         rv = nsTableFrame::GetTableFrame(this, tableFrame);
         if (NS_FAILED(rv) || (nsnull == tableFrame)) {
@@ -599,9 +599,9 @@ nsTableRowFrame::GetFrameForPoint(nsIPresContext*        aPresContext,
   }
 
   if ( inThisFrame && (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND)) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisible()) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (vis->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }

@@ -58,6 +58,8 @@ CPPSRCS=				\
 	nsDOMCSSDeclaration.cpp		\
 	nsComputedDOMStyle.cpp		\
 	nsROCSSPrimitiveValue.cpp	\
+  nsRuleNode.cpp \
+  nsRuleWalker.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
@@ -76,6 +78,8 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
 	.\$(OBJDIR)\nsComputedDOMStyle.obj 	\
 	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\
+  .\$(OBJDIR)\nsRuleNode.obj \
+  .\$(OBJDIR)\nsRuleWalker.obj \
 	$(NULL)
 
 LINCS=  -I..\..\..\base\src \

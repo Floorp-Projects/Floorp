@@ -27,7 +27,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -51,7 +50,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIView.h"
 #include "nsLayoutAtoms.h"
-
+#include "nsIRuleWalker.h"
 
 //----------------------------------------------------------------------
 
@@ -71,10 +70,8 @@ public:
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext,
-                              nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
-                          nsIPresContext* aPresContext);
+  // The new mapping function.
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -99,17 +96,12 @@ public:
   // Strength is an out-of-band weighting, always maxint here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, 
-                              nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, 
-                          nsIPresContext* aPresContext);
+  // The new mapping function.
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
-
-  void HandleFixedBackground(nsIPresContext* aPresContext,
-                             nsIPresShell *aPresShell, PRBool aIsFixed);
 
   nsHTMLBodyElement*    mPart;  // not ref-counted, cleared by content 
   nsIHTMLCSSStyleSheet* mSheet; // not ref-counted, cleared by content 
@@ -201,10 +193,9 @@ public:
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
                                nsHTMLValue& aResult);
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
-                                          nsMapAttributesFunc& aMapFunc) const;
-  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
-  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+  NS_IMETHOD WalkContentStyleRules(nsIRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkInlineStyleRules(nsIRuleWalker* aRuleWalker);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -268,113 +259,84 @@ BodyRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-BodyRule::MapFontStyleInto(nsIMutableStyleContext* aContext,
-                           nsIPresContext* aPresContext)
+BodyRule::MapRuleInfoInto(nsRuleData* aData)
 {
-  // set up the basefont (defaults to 3)
-  nsMutableStyleFont font(aContext);
-  PRInt32 scaler;
-  aPresContext->GetFontScaler(&scaler);
-  float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-  // apply font scaling to the body
-  font->mFont.size = NSToCoordFloor(float(font->mFont.size) * scaleFactor);
-  if (font->mFont.size < 1) {
-    font->mFont.size = 1;
+  if (!aData || (aData->mSID != eStyleStruct_Margin) || !aData->mMarginData || !mPart)
+    return NS_OK; // We only care about margins.
+
+  nsHTMLValue   value;
+  PRInt32       attrCount;
+  mPart->GetAttributeCount(attrCount);
+  
+  PRInt32 bodyMarginWidth  = -1;
+  PRInt32 bodyMarginHeight = -1;
+
+  if (attrCount > 0) {
+    // if marginwidth/marginheight are set, reflect them as 'margin'
+    mPart->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
+    if (eHTMLUnit_Pixel == value.GetUnit()) {
+      bodyMarginWidth = value.GetPixelValue();
+      if (bodyMarginWidth < 0) bodyMarginWidth = 0;
+      nsCSSRect* margin = aData->mMarginData->mMargin;
+      if (margin->mLeft.GetUnit() == eCSSUnit_Null)
+        margin->mLeft.SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
+      if (margin->mRight.GetUnit() == eCSSUnit_Null)
+        margin->mRight.SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
+    }
+
+    mPart->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
+    if (eHTMLUnit_Pixel == value.GetUnit()) {
+      bodyMarginHeight = value.GetPixelValue();
+      if (bodyMarginHeight < 0) bodyMarginHeight = 0;
+      nsCSSRect* margin = aData->mMarginData->mMargin;
+      if (margin->mTop.GetUnit() == eCSSUnit_Null)
+        margin->mTop.SetFloatValue((float)bodyMarginHeight, eCSSUnit_Pixel);
+      if (margin->mBottom.GetUnit() == eCSSUnit_Null)
+        margin->mBottom.SetFloatValue((float)bodyMarginHeight, eCSSUnit_Pixel);
+    }
   }
-  font->mFixedFont.size = NSToCoordFloor(float(font->mFixedFont.size) * scaleFactor);
-  if (font->mFixedFont.size < 1) {
-    font->mFixedFont.size = 1;
-  }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BodyRule::MapStyleInto(nsIMutableStyleContext* aContext,
-                       nsIPresContext* aPresContext)
-{
-  if (mPart) {
-    nsMutableStyleMargin marginStyle(aContext);
-
-    {
-      nsHTMLValue   value;
-      PRInt32       attrCount;
-      float         p2t;
-      mPart->GetAttributeCount(attrCount);
-      aPresContext->GetScaledPixelsToTwips(&p2t);
-      nscoord bodyMarginWidth  = -1;
-      nscoord bodyMarginHeight = -1;
-
-      if (0 < attrCount) {
-        // if marginwidth/marginheigth is set reflect them as 'margin'
-        mPart->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
-        if (eHTMLUnit_Pixel == value.GetUnit()) {
-          bodyMarginWidth = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-          if (bodyMarginWidth < 0) {
-            bodyMarginWidth = 0;
+  // if marginwidth or marginheight is set in the <frame> and not set in the <body>
+  // reflect them as margin in the <body>
+  if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
+    nsCOMPtr<nsISupports> container;
+    aData->mPresContext->GetContainer(getter_AddRefs(container));
+    if (container) {
+      nsCompatibility mode;
+      aData->mPresContext->GetCompatibilityMode(&mode);
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+      if (docShell) {
+        nscoord frameMarginWidth=-1;  // default value
+        nscoord frameMarginHeight=-1; // default value
+        docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set   
+        docShell->GetMarginHeight(&frameMarginHeight); 
+        if ((frameMarginWidth >= 0) && (bodyMarginWidth == -1)) { // set in <frame> & not in <body> 
+          if (eCompatibility_NavQuirks == mode) {
+            if ((bodyMarginHeight == -1) && (0 > frameMarginHeight)) // nav quirk 
+              frameMarginHeight = 0;
           }
-          nsStyleCoord  widthCoord(bodyMarginWidth);
-          marginStyle->mMargin.SetLeft(widthCoord);
-          marginStyle->mMargin.SetRight(widthCoord);
+        }
+        if ((frameMarginHeight >= 0) && (bodyMarginHeight == -1)) { // set in <frame> & not in <body> 
+          if (eCompatibility_NavQuirks == mode) {
+            if ((bodyMarginWidth == -1) && (0 > frameMarginWidth)) // nav quirk
+              frameMarginWidth = 0;
+          }
         }
 
-        mPart->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
-        if (eHTMLUnit_Pixel == value.GetUnit()) {
-          bodyMarginHeight = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-          if (bodyMarginHeight < 0) {
-            bodyMarginHeight = 0;
-          }
-      
-          nsStyleCoord  heightCoord(bodyMarginHeight);
-          marginStyle->mMargin.SetTop(heightCoord);
-          marginStyle->mMargin.SetBottom(heightCoord);
+        if ((bodyMarginWidth == -1) && (frameMarginWidth >= 0)) {
+          nsCSSRect* margin = aData->mMarginData->mMargin;
+          if (margin->mLeft.GetUnit() == eCSSUnit_Null)
+            margin->mLeft.SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
+          if (margin->mRight.GetUnit() == eCSSUnit_Null)
+            margin->mRight.SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
         }
-      }
 
-      // XXX This is all pretty hokey...
-
-      // if marginwidth or marginheight is set in the <frame> and not set in the <body>
-      // reflect them as margin in the <body>
-      if ((0 > bodyMarginWidth) || (0 > bodyMarginHeight)) {
-        nsISupports* container;
-        aPresContext->GetContainer(&container);
-        if (nsnull != container) {
-          nsCompatibility mode;
-          aPresContext->GetCompatibilityMode(&mode);
-          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-          if (docShell) {
-            nscoord frameMarginWidth=-1;  // default value
-            nscoord frameMarginHeight=-1; // default value
-            docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set   
-            docShell->GetMarginHeight(&frameMarginHeight); 
-            if ((frameMarginWidth >= 0) && (0 > bodyMarginWidth)) { // set in <frame> & not in <body> 
-              if (eCompatibility_NavQuirks == mode) {
-                if ((0 > bodyMarginHeight) && (0 > frameMarginHeight)) { // nav quirk 
-                  frameMarginHeight = 0;
-                }
-              }
-            }
-            if ((frameMarginHeight >= 0) && (0 > bodyMarginHeight)) { // set in <frame> & not in <body> 
-              if (eCompatibility_NavQuirks == mode) {
-                if ((0 > bodyMarginWidth) && (0 > frameMarginWidth)) { // nav quirk
-                  frameMarginWidth = 0;
-                }
-              }
-            }
-
-            if ((0 > bodyMarginWidth) && (frameMarginWidth >= 0)) {
-              nsStyleCoord widthCoord(frameMarginWidth);
-              marginStyle->mMargin.SetLeft(widthCoord);
-              marginStyle->mMargin.SetRight(widthCoord);
-            }
-
-            if ((0 > bodyMarginHeight) && (frameMarginHeight >= 0)) {
-              nsStyleCoord heightCoord(frameMarginHeight);
-              marginStyle->mMargin.SetTop(heightCoord);
-              marginStyle->mMargin.SetBottom(heightCoord);
-            }
-          }
-          NS_RELEASE(container);
+        if ((bodyMarginHeight == -1) && (frameMarginHeight >= 0)) {
+          nsCSSRect* margin = aData->mMarginData->mMargin;
+          if (margin->mTop.GetUnit() == eCSSUnit_Null)
+            margin->mTop.SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
+          if (margin->mBottom.GetUnit() == eCSSUnit_Null)
+            margin->mBottom.SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
         }
       }
     }
@@ -481,166 +443,10 @@ BodyFixupRule::GetStrength(PRInt32& aStrength) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BodyFixupRule::MapFontStyleInto(nsIMutableStyleContext* aContext,
-                                nsIPresContext* aPresContext)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
-                            nsIPresContext* aPresContext)
-{
-  NS_ENSURE_ARG(aContext);
-  NS_ENSURE_ARG(aPresContext);
-
-  // get the context data for the BODY, HTML element, and CANVAS
-  nsCOMPtr<nsIStyleContext> parentContext;
-  nsCOMPtr<nsIStyleContext> canvasContext;
-  // this is used below to hold the default canvas style. Since we may need the color data
-  // until the end of this function, we declare the nsCOMPtr here.
-  nsCOMPtr<nsIStyleContext> recalculatedCanvasStyle;
-  parentContext = dont_AddRef(aContext->GetParent());
-
-  if (parentContext){
-    canvasContext = getter_AddRefs(parentContext->GetParent());
-  }
-
-  if (!(parentContext && canvasContext && aContext)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // get the context data for the background information
-  PRBool bFixedBackground = PR_FALSE;
-
-  nsMutableStyleColor canvasStyleColor(canvasContext.get());
-  nsMutableStyleColor htmlStyleColor(parentContext.get());
-  nsMutableStyleColor bodyStyleColor(aContext);
-
-  nsStyleColor* styleColor = bodyStyleColor.get(); // default to BODY
-
-  // Use the CSS precedence rules for dealing with background: if the value
-  // of the 'background' property for the HTML element is different from
-  // 'transparent' then use it, else use the value of the 'background' property
-  // for the BODY element
-
-  // See if the BODY or HTML has a non-transparent background 
-  // or if the HTML element was previously propagated from its child (the BODY)
-  //
-  // Also, check if the canvas has a non-transparent background in case it is being
-  // cleared via the DOM
-  if ((!bodyStyleColor->BackgroundIsTransparent()) || 
-      (!htmlStyleColor->BackgroundIsTransparent()) || 
-      (!canvasStyleColor->BackgroundIsTransparent()) ||
-      (NS_STYLE_BG_PROPAGATED_FROM_CHILD == (htmlStyleColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD)) ) {
-
-    // if HTML background is not transparent then we use its background for the canvas,
-    // otherwise we use the BODY's background
-    if (!(htmlStyleColor->BackgroundIsTransparent())) {
-      styleColor = htmlStyleColor.get();
-    } else if (!(bodyStyleColor->BackgroundIsTransparent())) {
-      styleColor = bodyStyleColor.get();
-    } else {
-      PRBool isPaginated = PR_FALSE;
-      aPresContext->IsPaginated(&isPaginated);
-      nsIAtom* rootPseudo = isPaginated ? nsLayoutAtoms::pageSequencePseudo : nsLayoutAtoms::canvasPseudo;
-
-      nsCOMPtr<nsIStyleContext> canvasParentStyle = getter_AddRefs(canvasContext->GetParent());
-      aPresContext->ResolvePseudoStyleContextFor(nsnull, rootPseudo, canvasParentStyle,
-           PR_TRUE, // IMPORTANT don't share; otherwise things go wrong
-           getter_AddRefs(recalculatedCanvasStyle));
-
-      styleColor = (nsStyleColor*)recalculatedCanvasStyle->GetStyleData(eStyleStruct_Color);
-    }
-
-    // set the canvas bg values
-    canvasStyleColor->mBackgroundAttachment = styleColor->mBackgroundAttachment;
-    canvasStyleColor->mBackgroundRepeat = styleColor->mBackgroundRepeat;
-    canvasStyleColor->mBackgroundColor = styleColor->mBackgroundColor;
-    canvasStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
-    canvasStyleColor->mBackgroundYPosition = styleColor->mBackgroundYPosition;
-    canvasStyleColor->mBackgroundImage = styleColor->mBackgroundImage;
-    canvasStyleColor->mBackgroundFlags = (styleColor->mBackgroundFlags & ~NS_STYLE_BG_PROPAGATED_TO_PARENT);
-    canvasStyleColor->mBackgroundFlags |= NS_STYLE_BG_PROPAGATED_FROM_CHILD;
-
-    bFixedBackground = 
-      canvasStyleColor->mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED ? PR_TRUE : PR_FALSE;
-
-    // only reset the background values if we used something other than the default canvas style
-    if (styleColor == htmlStyleColor.get() || styleColor == bodyStyleColor.get()) {
-      // reset the background values for the context that was propogated
-      styleColor->mBackgroundImage.SetLength(0);
-      styleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-      styleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
-        NS_STYLE_BG_IMAGE_NONE |
-        NS_STYLE_BG_PROPAGATED_TO_PARENT;  
-      // NOTE: if this was the BODY then this flag is somewhat erroneous
-      // as it was propogated to the GRANDPARENT!  We patch this next by
-      // marking the HTML's background as propagated too, so we can walk
-      // up the chain of contexts that have to propagation bit set (see
-      // nsCSSStyleRule.cpp MapDeclarationColorInto)
-    }
-
-    if (styleColor == bodyStyleColor.get()) {
-      htmlStyleColor->mBackgroundFlags |= NS_STYLE_BG_PROPAGATED_TO_PARENT;
-    }
-  }
-
-  // To fix the regression in bug 70831 caused by the fix to bug 67478,
-  // use the nsStyleColor that we would have used before the fix to
-  // bug 67478.
-  nsStyleColor* documentStyleColor = styleColor;
-  if (bodyStyleColor.get() != styleColor && htmlStyleColor.get() != styleColor) {
-    nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
-    if (eCompatibility_NavQuirks == mode)
-      documentStyleColor = bodyStyleColor.get();
-  }
-
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  if (presShell) {
-    nsCOMPtr<nsIDocument> doc;
-    presShell->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-
-      if (htmlContainer) {
-        nsCOMPtr<nsIHTMLStyleSheet> styleSheet;
-        htmlContainer->GetAttributeStyleSheet(getter_AddRefs(styleSheet));
-
-        if (styleSheet) {
-          styleSheet->SetDocumentForegroundColor(documentStyleColor->mColor);
-          if (!(documentStyleColor->mBackgroundFlags &
-                NS_STYLE_BG_COLOR_TRANSPARENT)) {
-            styleSheet->SetDocumentBackgroundColor(
-                          documentStyleColor->mBackgroundColor);
-          }
-        }
-      }
-    }
-
-    // take care of some special requirements for fixed backgrounds
-    HandleFixedBackground(aPresContext, presShell, bFixedBackground);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BodyFixupRule::List(FILE* out, PRInt32 aIndent) const
-{
-  // Indent
-  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
- 
-  fputs("Special BODY tag fixup rule\n", out);
-  return NS_OK;
-}
-
-void BodyFixupRule::HandleFixedBackground(nsIPresContext* aPresContext, 
-                                          nsIPresShell *aPresShell, 
-                                          PRBool aIsFixed)
+static void 
+HandleFixedBackground(nsIPresContext* aPresContext, 
+                      nsIPresShell *aPresShell, 
+                      PRBool aIsFixed)
 {
   // we have to tell the canvas' view if we want to bitblt on scroll or not
   // - if we have a fixed background we cannot bitblt when we scroll,
@@ -664,6 +470,165 @@ void BodyFixupRule::HandleFixedBackground(nsIPresContext* aPresContext,
       viewportView->ClearViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
     }
   }
+}
+
+static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
+{
+  // get the context data for the BODY, HTML element, and CANVAS
+  nsCOMPtr<nsIStyleContext> parentContext;
+  nsCOMPtr<nsIStyleContext> canvasContext;
+  // this is used below to hold the default canvas style. Since we may need the color data
+  // until the end of this function, we declare the nsCOMPtr here.
+  nsCOMPtr<nsIStyleContext> recalculatedCanvasStyle;
+  parentContext = dont_AddRef(aRuleData->mStyleContext->GetParent());
+
+  if (parentContext){
+    canvasContext = getter_AddRefs(parentContext->GetParent());
+  }
+
+  if (!(parentContext && canvasContext))
+    return;
+
+  // get the context data for the background information
+  PRBool bFixedBackground = PR_FALSE;
+  nsStyleBackground* canvasStyleBackground;
+  nsStyleBackground* htmlStyleBackground;
+  nsStyleBackground* bodyStyleBackground;
+  bodyStyleBackground = 
+    (nsStyleBackground*)aRuleData->mStyleContext->GetUniqueStyleData(aRuleData->mPresContext, eStyleStruct_Background);
+  htmlStyleBackground = 
+    (nsStyleBackground*)parentContext->GetUniqueStyleData(aRuleData->mPresContext, eStyleStruct_Background);
+  canvasStyleBackground = 
+    (nsStyleBackground*)canvasContext->GetUniqueStyleData(aRuleData->mPresContext, eStyleStruct_Background);
+  nsStyleBackground* styleBackground = bodyStyleBackground; // default to BODY
+
+  NS_ASSERTION(bodyStyleBackground && htmlStyleBackground && canvasStyleBackground, "null context data");
+  if (!(bodyStyleBackground && htmlStyleBackground && canvasStyleBackground))
+    return;
+ 
+  // Use the CSS precedence rules for dealing with background: if the value
+  // of the 'background' property for the HTML element is different from
+  // 'transparent' then use it, else use the value of the 'background' property
+  // for the BODY element
+
+  // See if the BODY or HTML has a non-transparent background 
+  // or if the HTML element was previously propagated from its child (the BODY)
+  //
+  // Also, check if the canvas has a non-transparent background in case it is being
+  // cleared via the DOM
+  if ((!bodyStyleBackground->BackgroundIsTransparent()) || 
+      (!htmlStyleBackground->BackgroundIsTransparent()) || 
+      (!canvasStyleBackground->BackgroundIsTransparent()) ||
+      (NS_STYLE_BG_PROPAGATED_FROM_CHILD == (htmlStyleBackground->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD)) ) {
+
+    // if HTML background is not transparent then we use its background for the canvas,
+    // otherwise we use the BODY's background
+    if (!(htmlStyleBackground->BackgroundIsTransparent())) {
+      styleBackground = htmlStyleBackground;
+    } else if (!(bodyStyleBackground->BackgroundIsTransparent())) {
+      styleBackground = bodyStyleBackground;
+    } else {
+      PRBool isPaginated = PR_FALSE;
+      aRuleData->mPresContext->IsPaginated(&isPaginated);
+      nsIAtom* rootPseudo = isPaginated ? nsLayoutAtoms::pageSequencePseudo : nsLayoutAtoms::canvasPseudo;
+
+      nsCOMPtr<nsIStyleContext> canvasParentStyle = getter_AddRefs(canvasContext->GetParent());
+      aRuleData->mPresContext->ResolvePseudoStyleContextFor(nsnull, rootPseudo, canvasParentStyle,
+           PR_TRUE, // IMPORTANT don't share; otherwise things go wrong
+           getter_AddRefs(recalculatedCanvasStyle));
+
+      styleBackground = (nsStyleBackground*)recalculatedCanvasStyle->GetStyleData(eStyleStruct_Background);
+    }
+
+    // set the canvas bg values
+    canvasStyleBackground->mBackgroundAttachment = styleBackground->mBackgroundAttachment;
+    canvasStyleBackground->mBackgroundRepeat = styleBackground->mBackgroundRepeat;
+    canvasStyleBackground->mBackgroundColor = styleBackground->mBackgroundColor;
+    canvasStyleBackground->mBackgroundXPosition = styleBackground->mBackgroundXPosition;
+    canvasStyleBackground->mBackgroundYPosition = styleBackground->mBackgroundYPosition;
+    canvasStyleBackground->mBackgroundImage = styleBackground->mBackgroundImage;
+    canvasStyleBackground->mBackgroundFlags = (styleBackground->mBackgroundFlags & ~NS_STYLE_BG_PROPAGATED_TO_PARENT);
+    canvasStyleBackground->mBackgroundFlags |= NS_STYLE_BG_PROPAGATED_FROM_CHILD;
+
+    bFixedBackground = 
+      canvasStyleBackground->mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED ? PR_TRUE : PR_FALSE;
+
+    // only reset the background values if we used something other than the default canvas style
+    if (styleBackground == htmlStyleBackground || styleBackground == bodyStyleBackground) {
+      // reset the background values for the context that was propagated
+      styleBackground->mBackgroundImage.SetLength(0);
+      styleBackground->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+      styleBackground->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
+        NS_STYLE_BG_IMAGE_NONE |
+        NS_STYLE_BG_PROPAGATED_TO_PARENT;  
+      // NOTE: if this was the BODY then this flag is somewhat erroneous
+      // as it was propagated to the GRANDPARENT!  We patch this next by
+      // marking the HTML's background as propagated too, so we can walk
+      // up the chain of contexts that have to propagation bit set (see
+      // nsCSSStyleRule.cpp MapDeclarationColorInto)
+    }
+
+    if (styleBackground == bodyStyleBackground) {
+      htmlStyleBackground->mBackgroundFlags |= NS_STYLE_BG_PROPAGATED_TO_PARENT;
+    }
+  }
+
+  // To fix the regression in bug 70831 caused by the fix to bug 67478,
+  // use the nsStyleBackground that we would have used before the fix to
+  // bug 67478.
+  nsStyleBackground* documentStyleBackground = styleBackground;
+  if (bodyStyleBackground != styleBackground && htmlStyleBackground != styleBackground) {
+    nsCompatibility mode;
+    aRuleData->mPresContext->GetCompatibilityMode(&mode);
+    if (eCompatibility_NavQuirks == mode)
+      documentStyleBackground = bodyStyleBackground;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aRuleData->mPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsCOMPtr<nsIDocument> doc;
+    presShell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
+
+      if (htmlContainer) {
+        nsCOMPtr<nsIHTMLStyleSheet> styleSheet;
+        htmlContainer->GetAttributeStyleSheet(getter_AddRefs(styleSheet));
+
+        if (styleSheet) {
+          const nsStyleColor* bodyStyleColor = (const nsStyleColor*)aRuleData->mStyleContext->GetStyleData(eStyleStruct_Color);
+          styleSheet->SetDocumentForegroundColor(bodyStyleColor->mColor);
+          if (!(documentStyleBackground->mBackgroundFlags &
+                NS_STYLE_BG_COLOR_TRANSPARENT)) {
+            styleSheet->SetDocumentBackgroundColor(
+                          documentStyleBackground->mBackgroundColor);
+          }
+        }
+      }
+    }
+
+    // take care of some special requirements for fixed backgrounds
+    HandleFixedBackground(aRuleData->mPresContext, presShell, bFixedBackground);
+  }
+}
+
+NS_IMETHODIMP
+BodyFixupRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData && aRuleData->mSID == eStyleStruct_Background)
+    aRuleData->mPostResolveCallback = &PostResolveCallback;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyFixupRule::List(FILE* out, PRInt32 aIndent) const
+{
+  // Indent
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+ 
+  fputs("Special BODY tag fixup rule\n", out);
+  return NS_OK;
 }
 
 /******************************************************************************
@@ -829,14 +794,14 @@ nsHTMLBodyElement::GetBgColor(nsAWritableString& aBgColor)
     }
 
     if (frame) {
-      const nsStyleColor* styleColor;
-      result = frame->GetStyleData(eStyleStruct_Color,
-                                   (const nsStyleStruct*&)styleColor);
+      const nsStyleBackground* StyleBackground;
+      result = frame->GetStyleData(eStyleStruct_Background,
+                                   (const nsStyleStruct*&)StyleBackground);
       if (NS_FAILED(result)) {
         return result;
       }
 
-      nsHTMLValue value(styleColor->mBackgroundColor);
+      nsHTMLValue value(StyleBackground->mBackgroundColor);
       ColorToString(value, aBgColor);
     }
   }
@@ -875,25 +840,18 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+static 
+void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (nsnull != aAttributes) {
+  if (!aAttributes || !aData)
+    return;
+  
+  if (aData->mDisplayData && aData->mSID == eStyleStruct_Display) {
+    // When display if first asked for, go ahead and get our colors set up.
     nsHTMLValue value;
-    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext,
-                                                      aPresContext);
-
-    aAttributes->GetAttribute(nsHTMLAtoms::text, value);
-    if ((eHTMLUnit_Color == value.GetUnit()) || 
-        (eHTMLUnit_ColorName == value.GetUnit())){
-      nsMutableStyleColor color(aContext);
-      color->mColor = value.GetColorValue();
-    }
-
+    
     nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
+    aData->mPresContext->GetShell(getter_AddRefs(presShell));
     if (presShell) {
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));
@@ -926,18 +884,27 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         }
       }
     }
-
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
-                                                aPresContext);
+
+  if (aData->mColorData && aData->mSID == eStyleStruct_Color) {
+    if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
+      // color: color
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::text, value);
+      if (((eHTMLUnit_Color == value.GetUnit())) ||
+          (eHTMLUnit_ColorName == value.GetUnit()))
+        aData->mColorData->mColor.SetColorValue(value.GetColorValue());
+    }
+  }
+
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
-                                                nsMapAttributesFunc& aMapFunc) const
+nsHTMLBodyElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
+  aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
 
@@ -959,9 +926,9 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::GetContentStyleRules(nsISupportsArray* aRules)
+nsHTMLBodyElement::WalkContentStyleRules(nsIRuleWalker* aRuleWalker)
 {
-  nsBodySuper::GetContentStyleRules(aRules);
+  nsBodySuper::WalkContentStyleRules(aRuleWalker);
 
   if (!mContentStyleRule) {
     nsCOMPtr<nsIHTMLStyleSheet> sheet;
@@ -973,8 +940,8 @@ nsHTMLBodyElement::GetContentStyleRules(nsISupportsArray* aRules)
     mContentStyleRule = new BodyRule(this, sheet);
     NS_IF_ADDREF(mContentStyleRule);
   }
-  if (aRules && mContentStyleRule) {
-    aRules->AppendElement(mContentStyleRule);
+  if (aRuleWalker && mContentStyleRule) {
+    aRuleWalker->Forward(mContentStyleRule);
   }
   return NS_OK;
 }
@@ -996,11 +963,11 @@ static nsIHTMLCSSStyleSheet* GetInlineStyleSheet(nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::GetInlineStyleRules(nsISupportsArray* aRules)
+nsHTMLBodyElement::WalkInlineStyleRules(nsIRuleWalker* aRuleWalker)
 {
   PRBool useBodyFixupRule = PR_FALSE;
 
-  nsGenericHTMLContainerElement::GetInlineStyleRules(aRules);
+  nsGenericHTMLContainerElement::WalkInlineStyleRules(aRuleWalker);
 
   // The BodyFixupRule only applies when we have HTML as the parent of the BODY
   // and we are in an HTML doc (as opposed to an XML doc)
@@ -1034,8 +1001,8 @@ nsHTMLBodyElement::GetInlineStyleRules(nsISupportsArray* aRules)
     NS_IF_ADDREF(mInlineStyleRule);
   }
 
-  if (aRules && mInlineStyleRule) {
-    aRules->AppendElement(mInlineStyleRule);
+  if (aRuleWalker && mInlineStyleRule) {
+    aRuleWalker->Forward(mInlineStyleRule);
   }
 
   return NS_OK;

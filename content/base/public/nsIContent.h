@@ -304,7 +304,8 @@ public:
     eTEXT                = 0x00000001,
     eELEMENT             = 0x00000002,
     eHTML                = 0x00000004,
-    eHTML_FORM_CONTROL   = 0x00000008
+    eHTML_FORM_CONTROL   = 0x00000008,
+    eXUL                 = 0x00000010
   };
 
   /**

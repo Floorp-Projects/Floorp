@@ -928,15 +928,15 @@ nsGfxScrollFrameInner::AddHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& 
 #ifdef IBMBIDI
   if (mHScrollbarBox) {
     PRInt32 dir = GetIntegerAttribute(mHScrollbarBox, nsXULAtoms::dir, -1);
-    const nsStyleDisplay* disp;
-    mOuter->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)disp);
+    const nsStyleVisibility* vis;
+    mOuter->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
 
     // when creating the scrollbar for the first time, or whenever 
     // display direction is changed, scroll the view horizontally
-    if (dir != disp->mDirection) {
+    if (dir != vis->mDirection) {
       SetAttribute(mHScrollbarBox, nsXULAtoms::curpos,
-                   (NS_STYLE_DIRECTION_LTR == disp->mDirection) ? 0 : 0x7FFFFFFF);
-      SetAttribute(mHScrollbarBox, nsXULAtoms::dir, disp->mDirection * mOnePixel);
+                   (NS_STYLE_DIRECTION_LTR == vis->mDirection) ? 0 : 0x7FFFFFFF);
+      SetAttribute(mHScrollbarBox, nsXULAtoms::dir, vis->mDirection * mOnePixel);
     }
   }
 #endif // IBMBIDI
@@ -1066,18 +1066,19 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   PRBool scrollBarBottom = PR_TRUE;
 
 #ifdef IBMBIDI
-  const nsStyleDisplay* display;
-  mOuter->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  const nsStyleVisibility* vis;
+  mOuter->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+
   //
   // Direction Style from this->GetStyleData()
-  // now in (display->mDirection)
+  // now in (vis->mDirection)
   // ------------------
   // NS_STYLE_DIRECTION_LTR : LTR or Default
   // NS_STYLE_DIRECTION_RTL
   // NS_STYLE_DIRECTION_INHERIT
   //
 
-  if (display->mDirection == NS_STYLE_DIRECTION_RTL){
+  if (vis->mDirection == NS_STYLE_DIRECTION_RTL){
     // if true places the vertical scrollbar on the right false puts it on the left.
     scrollBarRight = PR_FALSE;
 
@@ -1209,7 +1210,10 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
            
       }
 #ifdef IBMBIDI
-      if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
+      const nsStyleVisibility* ourVis;
+      frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)ourVis);
+
+      if (NS_STYLE_DIRECTION_RTL == ourVis->mDirection) {
         nsCOMPtr<nsIGfxTextControlFrame2> textControl(
           do_QueryInterface(mOuter->mParent) );
         if (textControl) {

@@ -255,7 +255,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
     psd->mNoWrap = PR_FALSE;
     break;
   }
-  psd->mDirection = mBlockReflowState->mStyleDisplay->mDirection;
+  psd->mDirection = mBlockReflowState->mStyleVisibility->mDirection;
   psd->mChangedFrameDirection = PR_FALSE;
 }
 
@@ -477,7 +477,7 @@ nsLineLayout::BeginSpan(nsIFrame* aFrame,
         psd->mNoWrap = PR_FALSE;
         break;
     }
-    psd->mDirection = aSpanReflowState->mStyleDisplay->mDirection;
+    psd->mDirection = aSpanReflowState->mStyleVisibility->mDirection;
     psd->mChangedFrameDirection = PR_FALSE;
 
     // Switch to new span
@@ -867,7 +867,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   pfd->mBorderPadding = reflowState.mComputedBorderPadding;
   pfd->mFrameType = reflowState.mFrameType;
   pfd->SetFlag(PFD_RELATIVEPOS,
-               (reflowState.mStylePosition->mPosition == NS_STYLE_POSITION_RELATIVE));
+               (reflowState.mStyleDisplay->mPosition == NS_STYLE_POSITION_RELATIVE));
   if (pfd->GetFlag(PFD_RELATIVEPOS)) {
     pfd->mOffsets = reflowState.mComputedOffsets;
   }
@@ -1017,11 +1017,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     if (nsLayoutAtoms::placeholderFrame == frameType.get()) {
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
       if (outOfFlowFrame) {
-        const nsStylePosition*  position;
+        const nsStyleDisplay*  display;
 
         // Make sure it's floated and not absolutely positioned
-        outOfFlowFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-        if (!position->IsAbsolutelyPositioned()) {
+        outOfFlowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+        if (!display->IsAbsolutelyPositioned()) {
           if (eReflowReason_Incremental == reason) {
             InitFloater((nsPlaceholderFrame*)aFrame);
           }
@@ -2173,8 +2173,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     }
 
     // Get vertical-align property
-    const nsStyleText* textStyle;
-    frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
+    const nsStyleTextReset* textStyle;
+    frame->GetStyleData(eStyleStruct_TextReset, (const nsStyleStruct*&)textStyle);
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
 #ifdef DEBUG
     if (eStyleUnit_Inherit == verticalAlignUnit) {
@@ -3242,10 +3242,8 @@ PRBool
 nsLineLayout::TreatFrameAsBlock(nsIFrame* aFrame)
 {
   const nsStyleDisplay* display;
-  const nsStylePosition* position;
   aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
-  aFrame->GetStyleData(eStyleStruct_Position,(const nsStyleStruct*&) position);
-  if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+  if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition) {
     return PR_FALSE;
   }
   if (NS_STYLE_FLOAT_NONE != display->mFloats) {

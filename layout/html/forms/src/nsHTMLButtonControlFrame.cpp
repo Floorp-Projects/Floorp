@@ -421,9 +421,10 @@ nsHTMLButtonControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                            nsIFrame** aFrame)
 {
   if (mRect.Contains(aPoint)) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisible()) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+      
+    if (vis->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }

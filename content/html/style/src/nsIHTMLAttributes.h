@@ -29,6 +29,7 @@
 class nsIAtom;
 class nsISupportsArray;
 class nsIHTMLStyleSheet;
+class nsIRuleWalker;
 
 // IID for the nsIHTMLAttributes interface {a18f85f0-c058-11d1-8031-006008159b5a}
 #define NS_IHTML_ATTRIBUTES_IID     \
@@ -78,7 +79,7 @@ public:
 
   NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet) = 0;
 
-  NS_IMETHOD GetMappedAttributeStyleRules(nsISupportsArray* aArray) const = 0;
+  NS_IMETHOD WalkMappedAttributeStyleRules(nsIRuleWalker* aRuleWalker) const = 0;
 
 #ifdef UNIQUE_ATTR_SUPPORT
   NS_IMETHOD Equals(const nsIHTMLAttributes* aAttributes, PRBool& aResult) const = 0;

@@ -440,9 +440,9 @@ CanvasFrame::Paint(nsIPresContext* aPresContext,
       /////////////////////
       // draw focus
       // XXX This is only temporary
-      const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+      const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
       // Only paint the focus if we're visible
-      if (disp->IsVisible()) {
+      if (vis->IsVisible()) {
         nsCOMPtr<nsIEventStateManager> stateManager;
         nsresult rv = aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
         if (NS_SUCCEEDED(rv)) {

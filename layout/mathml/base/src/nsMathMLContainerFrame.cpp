@@ -283,16 +283,16 @@ nsMathMLContainerFrame::CalcLength(nsIPresContext*   aPresContext,
     return NSFloatPixelsToTwips(aCSSValue.GetFloatValue(), p2t);
   }
   else if (eCSSUnit_EM == unit) {
-    nsStyleFont font;
-    aStyleContext->GetStyle(eStyleStruct_Font, font);
-    return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font.mFont.size);
+    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+      aStyleContext->GetStyleData(eStyleStruct_Font));
+    return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font->mFont.size);
   }
   else if (eCSSUnit_XHeight == unit) {
     nscoord xHeight;
-    nsStyleFont font;
-    aStyleContext->GetStyle(eStyleStruct_Font, font);
+    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+      aStyleContext->GetStyleData(eStyleStruct_Font));
     nsCOMPtr<nsIFontMetrics> fm;
-    aPresContext->GetMetricsFor(font.mFont, getter_AddRefs(fm));
+    aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
     fm->GetXHeight(xHeight);
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
@@ -380,9 +380,9 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
 
   ///////////////
   // Set font
-  nsStyleFont font;
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
-  aRenderingContext.SetFont(font.mFont);
+  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+    mStyleContext->GetStyleData(eStyleStruct_Font));
+  aRenderingContext.SetFont(font->mFont);
 
   // bounding metrics
   nsAutoString errorMsg(PRUnichar(0xFFFD));
@@ -425,12 +425,12 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
     NS_ASSERTION(NS_MATHML_HAS_ERROR(mPresentationData.flags),
                  "There is nothing wrong with this frame!");
     // Set color and font ...
-    nsStyleFont font;
-    nsStyleColor color;
-    mStyleContext->GetStyle(eStyleStruct_Font, font);
-    mStyleContext->GetStyle(eStyleStruct_Color, color);
-    aRenderingContext.SetColor(color.mColor);
-    aRenderingContext.SetFont(font.mFont);
+    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+      mStyleContext->GetStyleData(eStyleStruct_Font));
+    const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
+      mStyleContext->GetStyleData(eStyleStruct_Color));
+    aRenderingContext.SetColor(color->mColor);
+    aRenderingContext.SetFont(font->mFont);
 
     nsAutoString errorMsg(PRUnichar(0xFFFD));
     aRenderingContext.DrawString(errorMsg.GetUnicode(),
@@ -548,9 +548,9 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
 
         if (!IsEmbellishOperator(mParent)) {
 
-          nsStyleFont font;
-          mStyleContext->GetStyle(eStyleStruct_Font, font);
-          nscoord em = NSToCoordRound(float(font.mFont.size));
+          const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+            mStyleContext->GetStyleData(eStyleStruct_Font));
+          nscoord em = NSToCoordRound(float(font->mFont.size));
 
           nsEmbellishData coreData;
           mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
@@ -828,9 +828,9 @@ nsMathMLContainerFrame::ReResolveScriptStyle(nsIPresContext*  aPresContext,
     }
     fontsize.AppendInt(gap, 10);
     // we want to make sure that the size will stay readable
-    nsStyleFont font;
-    aParentContext->GetStyle(eStyleStruct_Font, font);
-    nscoord newFontSize = font.mFont.size;
+    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+      aParentContext->GetStyleData(eStyleStruct_Font));
+    nscoord newFontSize = font->mFont.size;
     while (0 < gap--) {
       newFontSize = (nscoord)((float)(newFontSize) * scriptsizemultiplier);
     }
@@ -1450,9 +1450,9 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
   mBoundingMetrics.Clear();
 
   // cache away thinspace
-  nsStyleFont font;
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
-  nscoord thinSpace = NSToCoordRound(float(font.mFont.size)*float(3) / float(18));
+  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+    mStyleContext->GetStyleData(eStyleStruct_Font));
+  nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
 
   PRInt32 count = 0;
   nsHTMLReflowMetrics childSize (nsnull);
@@ -1559,11 +1559,11 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsIPresContext*      aPresContext,
         NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
       if (NS_SUCCEEDED(res) && mathMLFrame) {
          // get thinspace
-         nsStyleFont font;
          nsCOMPtr<nsIStyleContext> parentContext;
          mParent->GetStyleContext(getter_AddRefs(parentContext));
-         parentContext->GetStyle(eStyleStruct_Font, font);
-         nscoord thinSpace = NSToCoordRound(float(font.mFont.size)*float(3) / float(18));
+         const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+           parentContext->GetStyleData(eStyleStruct_Font));
+         nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
          // add inter frame spacing to our width
          nsCOMPtr<nsIAtom> frameType;
          GetFrameType(getter_AddRefs(frameType));

@@ -82,7 +82,6 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPresShell.h"
@@ -119,6 +118,7 @@
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
 #include "nsXULDocument.h"
+#include "nsIRuleWalker.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsXULAtoms.h"
@@ -4215,18 +4215,18 @@ nsXULElement::HasClass(nsIAtom* aClass) const
 }
 
 NS_IMETHODIMP
-nsXULElement::GetContentStyleRules(nsISupportsArray* aRules)
+nsXULElement::WalkContentStyleRules(nsIRuleWalker* aRuleWalker)
 {
     return NS_OK;
 }
     
 NS_IMETHODIMP
-nsXULElement::GetInlineStyleRules(nsISupportsArray* aRules)
+nsXULElement::WalkInlineStyleRules(nsIRuleWalker* aRuleWalker)
 {
     // Fetch the cached style rule from the attributes.
     nsresult result = NS_ERROR_NULL_POINTER;
     nsCOMPtr<nsIStyleRule> rule;
-    if (aRules) {
+    if (aRuleWalker) {
         if (Attributes()) {
             result = Attributes()->GetInlineStyleRule(*getter_AddRefs(rule));
         }
@@ -4235,9 +4235,9 @@ nsXULElement::GetInlineStyleRules(nsISupportsArray* aRules)
             result = NS_OK;
         }
     }
-    if (rule) {
-        aRules->AppendElement(rule);
-    }
+
+    if (rule)
+        aRuleWalker->Forward(rule);
     return result;
 }
 
@@ -4524,7 +4524,7 @@ nsXULElement::SetBindingParent(nsIContent* aParent)
 NS_IMETHODIMP_(PRBool)
 nsXULElement::IsContentOfType(PRUint32 aFlags)
 {
-  return !(aFlags & ~eELEMENT);
+  return !(aFlags & ~(eELEMENT | eXUL));
 }
 
 void nsXULElement::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)

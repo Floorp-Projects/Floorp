@@ -26,7 +26,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -43,7 +42,7 @@
 #include "nsIWebShell.h"
 #include "nsIFrame.h"
 #include "nsLayoutAtoms.h"
-
+#include "nsIRuleNode.h"
 
 // XXX nav attrs: suppress
 
@@ -72,8 +71,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAWritableString& aResult) const;
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
-                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -203,88 +201,81 @@ nsHTMLSpacerElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                      nsRuleData* aData)
 {
-  NS_PRECONDITION(aContext, "no style context");
-  NS_PRECONDITION(aPresContext, "no pres context");
+  if (!aAttributes || !aData)
+    return;
 
-  if (aAttributes && aPresContext && aContext) {
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
+
+  if (aData->mPositionData) {
     nsHTMLValue value;
-    nsMutableStyleDisplay display(aContext);
-    nsMutableStylePosition position(aContext);
-    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (eHTMLUnit_Enumerated == value.GetUnit()) {
-      switch (value.GetIntValue()) {
-      case NS_STYLE_TEXT_ALIGN_LEFT:
-        display->mFloats = NS_STYLE_FLOAT_LEFT;
-        break;
-      case NS_STYLE_TEXT_ALIGN_RIGHT:
-        display->mFloats = NS_STYLE_FLOAT_RIGHT;
-        break;
-      default:
-        break;
-      }
-    }
-
-    nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext,
-                                                 aPresContext);
-
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    PRBool typeIsBlock = PR_FALSE;
-    aAttributes->GetAttribute(nsHTMLAtoms::type, value);
-    if (eHTMLUnit_String == value.GetUnit()) {
-      nsAutoString tmp;
-      value.GetStringValue(tmp);
-      if (tmp.EqualsIgnoreCase("line") ||
-          tmp.EqualsIgnoreCase("vert") ||
-          tmp.EqualsIgnoreCase("vertical") ||
-          tmp.EqualsIgnoreCase("block")) {
-        // This is not strictly 100% compatible: if the spacer is given
-        // a width of zero then it is basically ignored.
-        display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
-        if (tmp.EqualsIgnoreCase("block")) {
-          typeIsBlock = PR_TRUE;
-        }
-      }
-    }
-
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      aData->mStyleContext->GetStyleData(eStyleStruct_Display);
+    
+    PRBool typeIsBlock = (display->mDisplay == NS_STYLE_DISPLAY_BLOCK);
     if (typeIsBlock) {
       // width: value
-      aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel) {
-        nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-        position->mWidth.SetCoordValue(twips);
-      }
-      else if (value.GetUnit() == eHTMLUnit_Percent) {
-        position->mWidth.SetPercentValue(value.GetPercentValue());
+      if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
+        aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+        if (value.GetUnit() == eHTMLUnit_Pixel)
+          aData->mPositionData->mWidth.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+        else if (value.GetUnit() == eHTMLUnit_Percent)
+          aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
       }
 
       // height: value
-      aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel) {
-        nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-        position->mHeight.SetCoordValue(twips);
-      }
-      else if (value.GetUnit() == eHTMLUnit_Percent) {
-        position->mHeight.SetPercentValue(value.GetPercentValue());
+      if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
+        aAttributes->GetAttribute(nsHTMLAtoms::height, value);
+        if (value.GetUnit() == eHTMLUnit_Pixel)
+          aData->mPositionData->mHeight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);   
+        else if (value.GetUnit() == eHTMLUnit_Percent)
+          aData->mPositionData->mHeight.SetPercentValue(value.GetPercentValue());
       }
     }
     else
     {
       // size: value
-      aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel) {
-        nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-        position->mWidth.SetCoordValue(twips);
+      if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
+        aAttributes->GetAttribute(nsHTMLAtoms::size, value);
+        if (value.GetUnit() == eHTMLUnit_Pixel) 
+          aData->mPositionData->mWidth.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);  
       }
     }
   }
+  else if (aData->mDisplayData) {
+    nsHTMLValue value;
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      PRUint8 align = (PRUint8)(value.GetIntValue());
+      if (aData->mDisplayData && aData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
+        if (align == NS_STYLE_TEXT_ALIGN_LEFT)
+          aData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_LEFT, eCSSUnit_Enumerated);
+        else if (align == NS_STYLE_TEXT_ALIGN_RIGHT)
+          aData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_RIGHT, eCSSUnit_Enumerated);
+      }
+    }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
-                                                aPresContext);
+    if (aData->mDisplayData->mDisplay == eCSSUnit_Null) {
+      aAttributes->GetAttribute(nsHTMLAtoms::type, value);
+      if (eHTMLUnit_String == value.GetUnit()) {
+        nsAutoString tmp;
+        value.GetStringValue(tmp);
+        if (tmp.EqualsIgnoreCase("line") ||
+            tmp.EqualsIgnoreCase("vert") ||
+            tmp.EqualsIgnoreCase("vertical") ||
+            tmp.EqualsIgnoreCase("block")) {
+          // This is not strictly 100% compatible: if the spacer is given
+          // a width of zero then it is basically ignored.
+          aData->mDisplayData->mDisplay = NS_STYLE_DISPLAY_BLOCK;
+        }
+      }
+    }
+  }
+  
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 
@@ -311,11 +302,9 @@ nsHTMLSpacerElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLSpacerElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                 nsMapAttributesFunc& aMapFunc) const
+nsHTMLSpacerElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
+  aMapRuleFunc = &MapAttributesIntoRule;
   return NS_OK;
 }
 

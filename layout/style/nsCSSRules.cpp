@@ -47,21 +47,18 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const; \
 NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet); \
 NS_IMETHOD GetStrength(PRInt32& aStrength) const; \
-NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext); \
-NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext); \
+NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
 NS_IMETHODIMP _class::SetStyleSheet(nsICSSStyleSheet* aSheet) { return super::SetStyleSheet(aSheet); }  \
 NS_IMETHODIMP _class::GetStrength(PRInt32& aStrength) const { return super::GetStrength(aStrength); }   \
-NS_IMETHODIMP _class::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext) { return NS_OK; } \
-NS_IMETHODIMP _class::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext) { return NS_OK; } 
+NS_IMETHODIMP _class::MapRuleInfoInto(nsRuleData* aRuleData) { return NS_OK; } 
 
 #define IMPL_STYLE_RULE_INHERIT2(_class, super) \
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
 NS_IMETHODIMP _class::GetStrength(PRInt32& aStrength) const { return super::GetStrength(aStrength); }   \
-NS_IMETHODIMP _class::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext) { return NS_OK; } \
-NS_IMETHODIMP _class::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext) { return NS_OK; } 
+NS_IMETHODIMP _class::MapRuleInfoInto(nsRuleData* aRuleData) { return NS_OK; } 
 
 // -------------------------------------------
 // nsICSSCharsetRule

@@ -37,6 +37,7 @@ class nsIFrame;
 class nsIDocument;
 class nsIFrameManager;
 class nsISupportsArray;
+class nsIRuleNode;
 struct nsFindFrameHint;
 
 #include "nsVoidArray.h"
@@ -44,23 +45,9 @@ class nsISizeOfHandler;
 
 class nsICSSPseudoComparator;
 
-//#define SHARE_STYLECONTEXTS
-
-#ifdef SHARE_STYLECONTEXTS
-#define USE_FAST_CACHE
-// - Fast cache uses a CRC32 on the style context to quickly find sharing candidates.
-//   Enabling it by defining USE_FAST_CACHE makes style sharing significantly faster
-//   but introduces more code and logic, and is thus potentially more error-prone
-#endif
-
-
 // IID for the nsIStyleSet interface {e59396b0-b244-11d1-8031-006008159b5a}
 #define NS_ISTYLE_SET_IID     \
 {0xe59396b0, 0xb244, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-#ifdef SHARE_STYLECONTEXTS
-typedef PRUint32 scKey; // key for style contexts: it is a CRC32 value actually...
-#endif
 
 class nsIStyleSet : public nsISupports {
 public:
@@ -93,6 +80,8 @@ public:
   virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex) = 0;
   virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets) = 0;
   
+  virtual nsresult GetRuleTree(nsIRuleNode** aResult) = 0;
+
   // enable / disable the Quirk style sheet: 
   // returns NS_FAILURE if none is found, otherwise NS_OK
   NS_IMETHOD EnableQuirkStyleSheet(PRBool aEnable) = 0;
@@ -122,6 +111,8 @@ public:
                                                nsIAtom* aPseudoTag,
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique = PR_FALSE) = 0;
+
+  NS_IMETHOD Shutdown()=0;
 
   // Get a new style context that lives in a different parent
   // The new context will be the same as the old if the new parent == the old parent
@@ -232,17 +223,6 @@ public:
   // will be PR_FALSE on return.
   NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
                                    PRBool &aAffects) = 0;
-
-#ifdef SHARE_STYLECONTEXTS
-  // add and remove from the cache of all contexts
-  NS_IMETHOD AddStyleContext(nsIStyleContext *aNewStyleContext) = 0;
-  NS_IMETHOD RemoveStyleContext(nsIStyleContext *aNewStyleContext) = 0;
-  // find another context with the same style data
-  // - if an exact match is found, the out-param aMatchingContext is set (AddRef'd)
-  NS_IMETHOD FindMatchingContext(nsIStyleContext *aStyleContextToMatch, 
-                                 nsIStyleContext **aMatchingContext) = 0;
-  NS_IMETHOD UpdateStyleContextKey(scKey aOldKey, scKey aNewKey) = 0;
-#endif
 };
 
 extern NS_LAYOUT nsresult

@@ -144,7 +144,7 @@ protected:
 
    // Creation of the widget for the scrolling view is factored into a virtual method so
    // that sub-classes may control widget creation.
-  virtual nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
+  virtual nsresult CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay* aDisplay);
    // Getting the view for scollframe may be overriden to provide a parent view for te scroll frame
   virtual nsresult GetScrollingParentView(nsIPresContext* aPresContext,
                                           nsIFrame*       aParent,

@@ -59,6 +59,7 @@
 #include "nsDOMError.h"
 #include "nsIPresShell.h"
 #include "nsICSSParser.h"
+#include "nsIRuleWalker.h"
 #include "nsCSSAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
@@ -439,7 +440,7 @@ public:
                            nsIAtom* aMedium, 
                            nsIContent* aContent,
                            nsIStyleContext* aParentContext,
-                           nsISupportsArray* aResults);
+                           nsIRuleWalker* aRuleWalker);
 
   NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
                            nsIAtom* aMedium, 
@@ -447,7 +448,7 @@ public:
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
                            nsICSSPseudoComparator* aComparator,
-                           nsISupportsArray* aResults);
+                           nsIRuleWalker* aRuleWalker);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
                                     nsIAtom* aMedium, 
@@ -2523,14 +2524,16 @@ MOZ_DECL_CTOR_COUNTER(SelectorMatchesData)
 
 struct SelectorMatchesData {
   SelectorMatchesData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                  nsISupportsArray* aResults, nsCompatibility* aCompat = nsnull);
+                  nsIRuleWalker* aRuleWalker, nsCompatibility* aCompat = nsnull);
   
-  ~SelectorMatchesData() 
+  virtual ~SelectorMatchesData() 
   {
     MOZ_COUNT_DTOR(SelectorMatchesData);
 
-    delete mPreviousSiblingData;
-    delete mParentData;
+    if (mPreviousSiblingData)
+      mPreviousSiblingData->Destroy(mPresContext);
+    if (mParentData)
+      mParentData->Destroy(mPresContext);
 
     NS_IF_RELEASE(mParentContent);
     NS_IF_RELEASE(mContentTag);
@@ -2538,10 +2541,20 @@ struct SelectorMatchesData {
     NS_IF_RELEASE(mStyledContent);
   }
 
+  void* operator new(size_t sz, nsIPresContext* aContext) {
+    void* result = nsnull;
+    aContext->AllocateFromShell(sz, &result);
+    return result;
+  }
+  void Destroy(nsIPresContext* aContext) {
+    this->~SelectorMatchesData();
+    aContext->FreeToShell(sizeof(SelectorMatchesData), this);
+  };
+
   nsIPresContext*   mPresContext;
   nsIContent*       mContent;
   nsIContent*       mParentContent; // if content, content->GetParent()
-  nsISupportsArray* mResults;
+  nsCOMPtr<nsIRuleWalker>        mRuleWalker; // Used to add rules to our results.
   nsCOMPtr<nsIStyleRuleSupplier> mStyleRuleSupplier; // used to query for the current scope
   
   nsIAtom*          mContentTag;    // if content, then content->GetTag()
@@ -2560,7 +2573,7 @@ struct SelectorMatchesData {
 };
 
 SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                nsISupportsArray* aResults,
+                nsIRuleWalker* aRuleWalker,
                 nsCompatibility* aCompat /*= nsnull*/)
 {
   MOZ_COUNT_CTOR(SelectorMatchesData);
@@ -2568,7 +2581,7 @@ SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIConten
   mPresContext = aPresContext;
   mContent = aContent;
   mParentContent = nsnull;
-  mResults = aResults;
+  mRuleWalker = aRuleWalker;
 
   mContentTag = nsnull;
   mContentID = nsnull;
@@ -2622,28 +2635,9 @@ SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIConten
     aContent->GetAttributeCount(attrCount);
     mHasAttributes = PRBool(attrCount > 0);
 
-    PRBool isXUL = PR_FALSE;
-
     // check for HTMLContent and Link status
-    //
-#ifdef MOZ_XUL
-#ifndef DONT_OPTIMIZE_ISHTMLCONTENT_FOR_XUL
-    // check for HTML content
-    // NOTE: optimization to first check for XULContent since asking a XUL element to 
-    //       QI for HTMLContent is very slow
-    nsIXULContent *xc;
-    if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIXULContent), (void**)&xc))) {
-      NS_RELEASE(xc);
-      isXUL = PR_TRUE;
-    }
-#endif
-#endif
-    nsIHTMLContent* hc;
-    if (PR_FALSE == isXUL &&
-        NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**)&hc))) {
+    if (aContent->IsContentOfType(nsIContent::eHTML)) 
       mIsHTMLContent = PR_TRUE;
-      NS_RELEASE(hc);
-    } 
 
     // if HTML content and it has some attributes, check for an HTML link
     // NOTE: optimization: cannot be a link if no attributes (since it needs an href)
@@ -2657,7 +2651,8 @@ SelectorMatchesData::SelectorMatchesData(nsIPresContext* aPresContext, nsIConten
     // if not an HTML link, check for a simple xlink (cannot be both HTML link and xlink)
     // NOTE: optimization: cannot be an XLink if no attributes (since it needs an 
     if(PR_FALSE == mIsHTMLLink &&
-       mHasAttributes &&
+       mHasAttributes && 
+       !(aContent->IsContentOfType(nsIContent::eHTML) || aContent->IsContentOfType(nsIContent::eXUL)) && 
        nsStyleUtil::IsSimpleXlink(aContent, mPresContext, &mLinkState)) {
       mIsSimpleXLink = PR_TRUE;
     } 
@@ -3104,8 +3099,8 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
 
 struct ContentEnumData : public SelectorMatchesData {
   ContentEnumData(nsIPresContext* aPresContext, nsIContent* aContent, 
-                  nsISupportsArray* aResults)
-  : SelectorMatchesData(aPresContext,aContent,aResults)
+                  nsIRuleWalker* aRuleWalker)
+  : SelectorMatchesData(aPresContext,aContent,aRuleWalker)
   {}
 };
 
@@ -3144,8 +3139,8 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
                   (tag != nsLayoutAtoms::commentTagName)) {
                 NS_IF_RELEASE(tag);
                 newdata =
-                    new SelectorMatchesData(curdata->mPresContext, content,
-                                            curdata->mResults, &compat);
+                    new (curdata->mPresContext) SelectorMatchesData(curdata->mPresContext, content,
+                                                                    curdata->mRuleWalker, &compat);
                 curdata->mPreviousSiblingData = newdata;    
                 break;
               }
@@ -3166,8 +3161,8 @@ static PRBool SelectorMatchesTree(SelectorMatchesData &data,
         if (!newdata) {
           lastContent->GetParent(content);
           if (content) {
-            newdata = new SelectorMatchesData(curdata->mPresContext, content,
-                                              curdata->mResults, &compat);
+            newdata = new (curdata->mPresContext) SelectorMatchesData(curdata->mPresContext, content,
+                                                                      curdata->mRuleWalker, &compat);
             curdata->mParentData = newdata;    
           }
         } else {
@@ -3228,13 +3223,14 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
     if (SelectorMatchesTree(*data, selector)) {
       nsIStyleRule* iRule;
       if (NS_OK == aRule->QueryInterface(NS_GET_IID(nsIStyleRule), (void**)&iRule)) {
-        data->mResults->AppendElement(iRule);
+        data->mRuleWalker->Forward(iRule);
         NS_RELEASE(iRule);
+        /*
         iRule = aRule->GetImportantRule();
         if (nsnull != iRule) {
-          data->mResults->AppendElement(iRule);
+          data->mRuleWalker->Forward(iRule); // XXXdwh Deal with !important rules!
           NS_RELEASE(iRule);
-        }
+        }*/
       }
     }
   }
@@ -3253,11 +3249,11 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
                                 nsIAtom* aMedium, 
                                 nsIContent* aContent,
                                 nsIStyleContext* aParentContext,
-                                nsISupportsArray* aResults)
+                                nsIRuleWalker* aRuleWalker)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
-  NS_PRECONDITION(nsnull != aResults, "null arg");
+  NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
 
   RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
@@ -3266,7 +3262,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
     nsAutoVoidArray classArray;
 
     // setup the ContentEnumData 
-    ContentEnumData data(aPresContext, aContent, aResults);
+    ContentEnumData data(aPresContext, aContent, aRuleWalker);
 
     nsIStyledContent* styledContent;
     if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
@@ -3300,8 +3296,8 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
 struct PseudoEnumData : public SelectorMatchesData {
   PseudoEnumData(nsIPresContext* aPresContext, nsIContent* aParentContent,
                  nsIAtom* aPseudoTag, nsICSSPseudoComparator* aComparator,
-                 nsISupportsArray* aResults)
-  : SelectorMatchesData(aPresContext, aParentContent, aResults)
+                 nsIRuleWalker* aRuleWalker)
+  : SelectorMatchesData(aPresContext, aParentContent, aRuleWalker)
   {
     mPseudoTag = aPseudoTag;
     mComparator = aComparator;
@@ -3345,13 +3341,8 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
 
     nsIStyleRule* iRule;
     if (NS_OK == aRule->QueryInterface(NS_GET_IID(nsIStyleRule), (void**)&iRule)) {
-      data->mResults->AppendElement(iRule);
+      data->mRuleWalker->Forward(iRule);
       NS_RELEASE(iRule);
-      iRule = aRule->GetImportantRule();
-      if (nsnull != iRule) {
-        data->mResults->AppendElement(iRule);
-        NS_RELEASE(iRule);
-      }
     }
   }
 }
@@ -3371,16 +3362,16 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
                                 nsIAtom* aPseudoTag,
                                 nsIStyleContext* aParentContext,
                                 nsICSSPseudoComparator* aComparator,
-                                nsISupportsArray* aResults)
+                                nsIRuleWalker* aRuleWalker)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aPseudoTag, "null arg");
-  NS_PRECONDITION(nsnull != aResults, "null arg");
+  NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
 
   RuleCascadeData* cascade = GetRuleCascade(aMedium);
 
   if (cascade) {
-    PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aComparator, aResults);
+    PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aComparator, aRuleWalker);
     cascade->mRuleHash.EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
 
 #ifdef DEBUG_RULES

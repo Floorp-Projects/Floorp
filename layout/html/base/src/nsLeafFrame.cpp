@@ -46,11 +46,12 @@ nsLeafFrame::Paint(nsIPresContext* aPresContext,
       return NS_OK;               // not visibility
     }
 
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisibleOrCollapsed()) {
-      const nsStyleColor* myColor = (const nsStyleColor*)
-        mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    
+    if (vis->IsVisibleOrCollapsed()) {
+      const nsStyleBackground* myColor = (const nsStyleBackground*)
+        mStyleContext->GetStyleData(eStyleStruct_Background);
       const nsStyleBorder* myBorder = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
       const nsStyleOutline* myOutline = (const nsStyleOutline*)

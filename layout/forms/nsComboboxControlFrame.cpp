@@ -985,8 +985,8 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   kidReflowState.mComputedHeight = dispHeight;
 
 #ifdef IBMBIDI
-  const nsStyleDisplay* display;
-  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  const nsStyleVisibility* vis;
+  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
 
   // M14 didn't calculate the RightEdge in the reflow
   // Unless we set the width to some thing other than unrestricted
@@ -996,7 +996,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   // Reflow display + button
   // nsAreaFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
 
-  if (display->mDirection == NS_STYLE_DIRECTION_RTL)
+  if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
   {
     kidReflowState.mComputedWidth = 0;
   }
@@ -1070,7 +1070,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   buttonRect.height  = insideHeight;
   buttonRect.width   = aBtnWidth;
 #ifdef IBMBIDI
-  if (display->mDirection == NS_STYLE_DIRECTION_RTL)
+  if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
   {
     if (buttonRect.x > displayRect.x)
     {
@@ -1795,9 +1795,9 @@ nsComboboxControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
   if ( mRect.Contains(aPoint) &&
        (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) ) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisible()) {
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (vis->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }
@@ -2567,9 +2567,10 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
       /////////////////////
       // draw focus
       // XXX This is only temporary
-      const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+      const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
       // Only paint the focus if we're visible
-      if (disp->IsVisible()) {
+      if (vis->IsVisible()) {
         nsCOMPtr<nsIEventStateManager> stateManager;
         nsresult rv = mPresContext->GetEventStateManager(getter_AddRefs(stateManager));
         if (NS_SUCCEEDED(rv)) {
@@ -2577,7 +2578,8 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
             aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
             aRenderingContext.SetColor(0);
           } else {
-            const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+            const nsStyleBackground* myColor =
+              (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
             aRenderingContext.SetColor(myColor->mBackgroundColor);
             aRenderingContext.SetLineStyle(nsLineStyle_kSolid);
           }

@@ -344,10 +344,7 @@ public:
 
   /** helper to get the cell spacing Y style value */
   virtual nscoord GetCellSpacingY();
-
-  /** helper to get the cell padding style value */
-  virtual nscoord GetCellPadding();
-          
+        
   /** return the row span of a cell, taking into account row span magic at the bottom
     * of a table. The row span equals the number of rows spanned by aCell starting at
     * aStartRowIndex, and can be smaller if aStartRowIndex is greater than the row

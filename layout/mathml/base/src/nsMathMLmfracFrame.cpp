@@ -173,9 +173,9 @@ nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.SetColor(colors[0]);
 */
 //  solid line with the current text color
-    nsStyleColor color;
-    mStyleContext->GetStyle(eStyleStruct_Color, color);
-    aRenderingContext.SetColor(color.mColor);
+    const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
+      mStyleContext->GetStyleData(eStyleStruct_Color));
+    aRenderingContext.SetColor(color->mColor);
 
 //  draw the line, there is 1 pixel padding at either end
     aRenderingContext.FillRect(mLineRect.x, mLineRect.y, 
@@ -194,8 +194,6 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
 			  PRBool               aPlaceOrigin,
 			  nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsresult rv = NS_OK;
-
   ////////////////////////////////////
   // Get the children's desired sizes
 
@@ -235,9 +233,9 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
-  nsStyleFont font;
-  mStyleContext->GetStyle(eStyleStruct_Font, font);
-  aRenderingContext.SetFont(font.mFont);
+  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
+    mStyleContext->GetStyleData(eStyleStruct_Font));
+  aRenderingContext.SetFont(font->mFont);
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

@@ -171,6 +171,8 @@ public:
   nsresult RemoveNodeFor(nsIContent* aParentContent, UndisplayedNode* aNode);
   nsresult RemoveNodesFor(nsIContent* aParentContent);
 
+  nsresult GetNodeFor(nsIContent* aContent, nsIStyleContext** aResult);
+
   // Removes all entries from the hash table
   void  Clear(void);
 
@@ -233,6 +235,7 @@ public:
   NS_IMETHOD ClearPlaceholderFrameMap();
 
   // Undisplayed content functions
+  NS_IMETHOD GetUndisplayedContent(nsIContent* aContent, nsIStyleContext** aStyleContext);
   NS_IMETHOD SetUndisplayedContent(nsIContent* aContent, nsIStyleContext* aStyleContext);
   NS_IMETHOD SetUndisplayedPseudoIn(nsIStyleContext* aPseudoContext, 
                                     nsIContent* aParentContent);
@@ -708,6 +711,20 @@ FrameManager::ClearPlaceholderFrameMap()
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP
+FrameManager::GetUndisplayedContent(nsIContent* aContent, nsIStyleContext** aResult)
+{
+  if (!aContent || !aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = nsnull;  // initialize out param
+
+  if (mUndisplayedMap)
+    mUndisplayedMap->GetNodeFor(aContent, aResult);
+    
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
 FrameManager::SetUndisplayedContent(nsIContent* aContent, 
                                     nsIStyleContext* aStyleContext)
 {
@@ -1124,6 +1141,8 @@ DumpContext(nsIFrame* aFrame, nsIStyleContext* aContext)
       NS_RELEASE(pseudoTag);
     }
 
+/* XXXdwh fix debugging here.  Need to add a List method to nsIRuleNode
+   and have the context call list on its rule node.
     PRInt32 count = aContext->GetStyleRuleCount();
     if (0 < count) {
       fputs("{\n", stdout);
@@ -1137,7 +1156,9 @@ DumpContext(nsIFrame* aFrame, nsIStyleContext* aContext)
       NS_RELEASE(rules);
       fputs("}\n", stdout);
     }
-    else {
+    else 
+    */
+    {
       fputs("{}\n", stdout);
     }
   }
@@ -1663,12 +1684,11 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         }
         // if old context had image and new context does not have the same image, 
         // stop the image load for the frame
-        nsStyleColor oldColor;
-        nsStyleColor newColor;
-        oldContext->GetStyle(eStyleStruct_Color, (nsStyleColor &)oldColor);
-        newContext->GetStyle(eStyleStruct_Color, (nsStyleColor &)newColor);
-        if(oldColor.mBackgroundImage.Length() > 0 &&
-          oldColor.mBackgroundImage != newColor.mBackgroundImage ){
+        const nsStyleBackground* oldColor = (const nsStyleBackground*)oldContext->GetStyleData(eStyleStruct_Background); 
+        const nsStyleBackground* newColor = (const nsStyleBackground*)newContext->GetStyleData(eStyleStruct_Background);
+
+        if(oldColor->mBackgroundImage.Length() > 0 &&
+          oldColor->mBackgroundImage != newColor->mBackgroundImage ){
           // stop the image loading for the frame, the image has changed
           aPresContext->StopAllLoadImagesFor(aFrame, aFrame);
         }
@@ -1875,10 +1895,10 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         }
         // if old context had image and new context does not have the same image, 
         // stop the image load for the frame
-        nsStyleColor oldColor;
-        nsStyleColor newColor;
-        oldContext->GetStyle(eStyleStruct_Color, (nsStyleColor &)oldColor);
-        newContext->GetStyle(eStyleStruct_Color, (nsStyleColor &)newColor);
+        nsStyleColor* oldColor;
+        nsStyleColor* newColor;
+        oldContext->GetStyle(eStyleStruct_Color, &oldColor);
+        newContext->GetStyle(eStyleStruct_Color, &newColor);
         if(oldColor.mBackgroundImage.Length() > 0 &&
           oldColor.mBackgroundImage != newColor.mBackgroundImage ){
           // stop the image loading for the frame, the image has changed
@@ -2753,6 +2773,20 @@ UndisplayedMap::AddNodeFor(nsIContent* aParentContent, nsIStyleContext* aPseudoS
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return AppendNodeFor(node, aParentContent);
+}
+
+nsresult 
+UndisplayedMap::GetNodeFor(nsIContent* aContent, nsIStyleContext** aResult)
+{
+  PLHashEntry** entry = GetEntryFor(aContent);
+  if (*entry) {
+    UndisplayedNode* node = (UndisplayedNode*)((*entry)->value);
+    *aResult = node->mStyle;
+    NS_IF_ADDREF(*aResult);
+  }
+  else
+    *aResult = nsnull;
+  return NS_OK;
 }
 
 nsresult 

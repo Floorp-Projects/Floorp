@@ -697,7 +697,9 @@ protected:
 
 
   nsresult RecreateFramesForContent(nsIPresContext* aPresContext,
-                                    nsIContent* aContent);
+                                    nsIContent* aContent, PRBool aInlineStyle = PR_FALSE,
+                                    nsIStyleRule* aRule = nsnull,
+                                    nsIStyleContext* aContext = nsnull);
 
   nsresult RecreateFramesOnAttributeChange(nsIPresContext* aPresContext,
                                            nsIContent* aContent,

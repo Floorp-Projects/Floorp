@@ -101,7 +101,7 @@ public:
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,
                               const nsRect& aBorderArea,
-                              const nsStyleColor& aColor,
+                              const nsStyleBackground& aColor,
                               const nsStyleBorder& aBorder,
                               nscoord aDX,
                               nscoord aDY);
@@ -119,6 +119,7 @@ public:
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,
                               const nsRect& aDirtyRect,
+                              const nsStyleColor* aColorStyle,
                               const nsStyleBorder* aBorderStyle,  
                               const nsStyleOutline* aOutlineStyle,  
                               PRBool aDoOutline,
@@ -175,7 +176,7 @@ protected:
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,
                               const nsRect& aBorderArea,
-                              const nsStyleColor& aColor,
+                              const nsStyleBackground& aColor,
                               nscoord aDX,
                               nscoord aDY,
                               PRInt16 aTheRadius[4]);

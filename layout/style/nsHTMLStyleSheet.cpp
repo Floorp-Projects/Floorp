@@ -44,7 +44,6 @@
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
 #include "nsIEventStateManager.h"
@@ -59,6 +58,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
+
+#include "nsIRuleWalker.h"
 
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
@@ -80,8 +81,8 @@ public:
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+  // The new mapping function.
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -96,7 +97,7 @@ public:
   HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet);
   virtual ~HTMLDocumentColorRule();
 
-  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
@@ -148,16 +149,12 @@ HTMLColorRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-HTMLColorRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLColorRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
-{
-  nsMutableStyleColor styleColor(aContext);
-  styleColor->mColor = mColor;
+  if (aRuleData->mSID == eStyleStruct_Color && aRuleData->mColorData) {
+    if (aRuleData->mColorData->mColor.GetUnit() == eCSSUnit_Null)
+      aRuleData->mColorData->mColor = nsCSSValue(mColor);
+  }
   return NS_OK;
 }
 
@@ -217,15 +214,15 @@ HTMLDocumentColorRule::~HTMLDocumentColorRule()
 }
 
 NS_IMETHODIMP
-HTMLDocumentColorRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+HTMLDocumentColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  nsMutableStyleColor styleColor(aContext);
-  if (mForegroundSet) {
-    styleColor->mColor = mColor;
+  if (mForegroundSet && aRuleData->mSID == eStyleStruct_Color && aRuleData->mColorData) {
+    nsCSSValue val; val.SetColorValue(mColor);
+    aRuleData->mColorData->mColor = val;
   }
-  if (mBackgroundSet) {
-    styleColor->mBackgroundColor = mBackgroundColor;
-    styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+  else if (mBackgroundSet && aRuleData->mSID == eStyleStruct_Background && aRuleData->mColorData) {
+    nsCSSValue val; val.SetColorValue(mBackgroundColor);
+    aRuleData->mColorData->mBackColor = val;
   }
   return NS_OK;
 }
@@ -282,10 +279,8 @@ public:
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
-  NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext,
-                              nsIPresContext* aPresContext);
-  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
-                          nsIPresContext* aPresContext);
+  // The new mapping function.
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -337,14 +332,9 @@ GenericTableRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-GenericTableRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+GenericTableRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GenericTableRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
-{
+  // Nothing to do.
   return NS_OK;
 }
 
@@ -392,54 +382,6 @@ void GenericTableRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   }
 }
 
-
-// -----------------------------------------------------------
-// this rule only applies in NavQuirks mode
-// -----------------------------------------------------------
-class TableBackgroundRule: public GenericTableRule {
-public:
-  TableBackgroundRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~TableBackgroundRule();
-
-  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
-                          nsIPresContext* aPresContext);
-};
-
-TableBackgroundRule::TableBackgroundRule(nsIHTMLStyleSheet* aSheet)
-: GenericTableRule(aSheet)
-{
-}
-
-TableBackgroundRule::~TableBackgroundRule()
-{
-}
-
-NS_IMETHODIMP
-TableBackgroundRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
-{
-  nsIStyleContext* parentContext = aContext->GetParent();
-
-  if (parentContext) {
-    nsMutableStyleColor styleColor(aContext);
-
-    const nsStyleColor* parentStyleColor;
-    parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
-
-    if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
-      styleColor->mBackgroundColor = parentStyleColor->mBackgroundColor;
-      styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    }
-
-    if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE)) {
-      styleColor->mBackgroundImage = parentStyleColor->mBackgroundImage;
-      styleColor->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
-    }
-
-    NS_RELEASE(parentContext);
-  }
-  return NS_OK;
-}
-
 // -----------------------------------------------------------
 // this rule handles <th> inheritance
 // -----------------------------------------------------------
@@ -448,8 +390,7 @@ public:
   TableTHRule(nsIHTMLStyleSheet* aSheet);
   virtual ~TableTHRule();
 
-  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
-                          nsIPresContext* aPresContext);
+  NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 };
 
 TableTHRule::TableTHRule(nsIHTMLStyleSheet* aSheet)
@@ -461,24 +402,29 @@ TableTHRule::~TableTHRule()
 {
 }
 
-NS_IMETHODIMP
-TableTHRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
 {
-  nsIStyleContext* parentContext = aContext->GetParent();
+  nsStyleText* text = (nsStyleText*)aStyleStruct;
+  if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_DEFAULT) {
+    nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aRuleData->mStyleContext->GetParent());
 
-  if (parentContext) {
-    nsMutableStyleText styleText(aContext);
-
-    if (NS_STYLE_TEXT_ALIGN_DEFAULT == styleText->mTextAlign) {
+    if (parentContext) {
       const nsStyleText* parentStyleText = 
-        (const nsStyleText*)parentContext->GetStyleData(eStyleStruct_Text);
+          (const nsStyleText*)parentContext->GetStyleData(eStyleStruct_Text);
       PRUint8 parentAlign = parentStyleText->mTextAlign;
-      styleText->mTextAlign = (NS_STYLE_TEXT_ALIGN_DEFAULT == parentAlign)
+      text->mTextAlign = (NS_STYLE_TEXT_ALIGN_DEFAULT == parentAlign)
                               ? NS_STYLE_TEXT_ALIGN_CENTER : parentAlign;
     }
-    NS_RELEASE(parentContext);
   }
+}
 
+NS_IMETHODIMP
+TableTHRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (aRuleData && aRuleData->mSID == eStyleStruct_Text) {
+    aRuleData->mCanStoreInRuleTree = PR_FALSE;
+    aRuleData->mPostResolveCallback = &PostResolveCallback;
+  }
   return NS_OK;
 }
 
@@ -595,7 +541,7 @@ public:
                            nsIAtom* aMedium,
                            nsIContent* aContent,
                            nsIStyleContext* aParentContext,
-                           nsISupportsArray* aResults);
+                           nsIRuleWalker* aRuleWalker);
 
   NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
                            nsIAtom* aMedium,
@@ -603,7 +549,7 @@ public:
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
                            nsICSSPseudoComparator* aComparator,
-                           nsISupportsArray* aResults);
+                           nsIRuleWalker* aRuleWalker);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
                                     nsIAtom*        aMedium,
@@ -670,7 +616,6 @@ protected:
   HTMLColorRule*       mVisitedRule;
   HTMLColorRule*       mActiveRule;
   HTMLDocumentColorRule* mDocumentColorRule;
-  TableBackgroundRule* mTableBackgroundRule;
   TableTHRule*         mTableTHRule;
     // NOTE: if adding more rules, be sure to update 
     // the SizeOf method to include them
@@ -723,8 +668,6 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mDocumentColorRule(nsnull)
 {
   NS_INIT_REFCNT();
-  mTableBackgroundRule = new TableBackgroundRule(this);
-  NS_ADDREF(mTableBackgroundRule);
   mTableTHRule = new TableTHRule(this);
   NS_ADDREF(mTableTHRule);
 }
@@ -754,10 +697,6 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
   if (nsnull != mDocumentColorRule) {
     mDocumentColorRule->mSheet = nsnull;
     NS_RELEASE(mDocumentColorRule);
-  }
-  if (nsnull != mTableBackgroundRule) {
-    mTableBackgroundRule->mSheet = nsnull;
-    NS_RELEASE(mTableBackgroundRule);
   }
   if (nsnull != mTableTHRule) {
     mTableTHRule->mSheet = nsnull;
@@ -827,11 +766,11 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                   nsIAtom* aMedium,
                                   nsIContent* aContent,
                                   nsIStyleContext* aParentContext,
-                                  nsISupportsArray* aResults)
+                                  nsIRuleWalker* aRuleWalker)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
-  NS_PRECONDITION(nsnull != aResults, "null arg");
+  NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
 
   nsIStyledContent* styledContent;
   if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledContent))) {
@@ -847,14 +786,12 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
           if (nsStyleUtil::IsHTMLLink(aContent, tag, aPresContext, &linkState)) {
             switch (linkState) {
               case eLinkState_Unvisited:
-                if (nsnull != mLinkRule) {
-                  aResults->AppendElement(mLinkRule);
-                }
+                if (mLinkRule)
+                  aRuleWalker->Forward(mLinkRule);
                 break;
               case eLinkState_Visited:
-                if (nsnull != mVisitedRule) {
-                  aResults->AppendElement(mVisitedRule);
-                }
+                if (mVisitedRule)
+                  aRuleWalker->Forward(mVisitedRule);
                 break;
               default:
                 break;
@@ -867,9 +804,8 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                   (nsnull != eventStateManager)) {
                 PRInt32 state;
                 if (NS_OK == eventStateManager->GetContentState(aContent, state)) {
-                  if (0 != (state & NS_EVENT_STATE_ACTIVE)) {
-                    aResults->AppendElement(mActiveRule);
-                  }
+                  if (state & NS_EVENT_STATE_ACTIVE)
+                    aRuleWalker->Forward(mActiveRule);
                 }
                 NS_RELEASE(eventStateManager);
               }
@@ -887,27 +823,26 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                (tag == nsHTMLAtoms::tfoot)) {
         // add the rule to handle text-align for a <th>
         if (tag == nsHTMLAtoms::th) {
-          aResults->AppendElement(mTableTHRule);
+          aRuleWalker->Forward(mTableTHRule);
         }
         nsCompatibility mode;
         aPresContext->GetCompatibilityMode(&mode);
         if (eCompatibility_NavQuirks == mode) {
           if (mDocumentColorRule) {
-            aResults->AppendElement(mDocumentColorRule);
+            aRuleWalker->Forward(mDocumentColorRule);
           }
-          aResults->AppendElement(mTableBackgroundRule);
         }
       }
       else if (tag == nsHTMLAtoms::html) {
         if (mDocumentColorRule) {
-          aResults->AppendElement(mDocumentColorRule);
+          aRuleWalker->Forward(mDocumentColorRule);
         }
       }
       NS_IF_RELEASE(tag);
     } // end html namespace
 
     // just get the style rules from the content
-    styledContent->GetContentStyleRules(aResults);
+    styledContent->WalkContentStyleRules(aRuleWalker);
 
     NS_RELEASE(styledContent);
   }
@@ -956,7 +891,7 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                   nsIAtom* aPseudoTag,
                                   nsIStyleContext* aParentContext,
                                   nsICSSPseudoComparator* aComparator,
-                                  nsISupportsArray* aResults)
+                                  nsIRuleWalker* aRuleWalker)
 {
   // no pseudo frame style
   return NS_OK;
@@ -1078,10 +1013,6 @@ NS_IMETHODIMP HTMLStyleSheetImpl::Reset(nsIURI* aURL)
   if (mDocumentColorRule) {
     mDocumentColorRule->mSheet = nsnull;
     NS_RELEASE(mDocumentColorRule);
-  }
-  if (mTableBackgroundRule) {
-    mTableBackgroundRule->mSheet = nsnull;
-    NS_RELEASE(mTableBackgroundRule);
   }
   if (mTableTHRule) {
     mTableTHRule->mSheet = nsnull;
@@ -1386,7 +1317,6 @@ PRBool PR_CALLBACK MappedSizeAttributes(nsHashKey *aKey, void *aData, void* clos
 *       - mVisitedRule
 *       - mActiveRule
 *       - mDocumentColorRule
-*       - mTableBackgroundRule
 *       - mTableTHRule
 *       - mMappedAttrTable
 *    2) Delegates (really) to the MappedAttributes in the mMappedAttrTable
@@ -1420,7 +1350,6 @@ void HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
   // - mVisitedRule  : sizeof object
   // - mActiveRule  : sizeof object
   // - mDocumentColorRule  : sizeof object
-  // - mTableBackgroundRule  : sizeof object
   // - mTableTHRule : sizeof object
   // - mMappedAttrTable
 
@@ -1442,11 +1371,6 @@ void HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
   if(mDocumentColorRule && uniqueItems->AddItem((void*)mDocumentColorRule)){
     localSize = sizeof(*mDocumentColorRule);
     tag = getter_AddRefs(NS_NewAtom("DocumentColorRule"));
-    aSizeOfHandler->AddSize(tag,localSize);
-  }
-  if(mTableBackgroundRule && uniqueItems->AddItem((void*)mTableBackgroundRule)){
-    localSize = sizeof(*mTableBackgroundRule);
-    tag = getter_AddRefs(NS_NewAtom("TableBackgroundRule"));
     aSizeOfHandler->AddSize(tag,localSize);
   }
   if(mTableTHRule && uniqueItems->AddItem((void*)mTableTHRule)){

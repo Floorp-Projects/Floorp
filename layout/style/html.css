@@ -108,6 +108,10 @@ h6 {
   margin: 2.33em 0;
 }
 
+form {
+  display: block !important;
+}
+
 listing {
   display: block;
   font-family: -moz-fixed;
@@ -133,6 +137,15 @@ table, :table {
   margin-top: 0;
   margin-bottom: 0;
   -moz-box-sizing: border-box;
+}
+
+table[align="left"] {
+  float: left;
+}
+
+table[align="right"] {
+  float: right;
+  text-align: start;
 }
 
 :table-outer {
@@ -196,20 +209,23 @@ tfoot {
   display: table-row-group;
 }
 
-td { /* must never set padding on TD */
+td { 
   display: table-cell;
   vertical-align: inherit;
   text-align: inherit; 
+  padding: 1px;
 }
 
-th { /* must never set padding on TH */
+th {
   display: table-cell;
   vertical-align: inherit;
   font-weight: bold;
+  padding: 1px;
 }
 
 :table-cell {
   display: table-cell;
+  padding: 1px;
 }
 
 

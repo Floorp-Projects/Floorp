@@ -294,8 +294,12 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
   if (PR_TRUE == checked) {
     // Paint the button for the radio button using CSS background rendering code
    if (nsnull != mRadioButtonFaceStyle) {
-     const nsStyleColor* myColor = (const nsStyleColor*)
+     const nsStyleBackground* myColor = (const nsStyleBackground*)
+          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Background);
+
+     const nsStyleColor* color = (const nsStyleColor*)
           mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Color);
+
      const nsStyleBorder* myBorder = (const nsStyleBorder*)
           mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Border);
      const nsStylePosition* myPosition = (const nsStylePosition*)
@@ -311,8 +315,8 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
      // So we will use the PaintBackground to paint the dot, 
      // but it uses the mBackgroundColor for painting and we need to use the mColor
      // so create a temporary style color struct and set it up appropriately
-     nsStyleColor tmpColor     = *myColor;
-     tmpColor.mBackgroundColor = myColor->mColor;
+     nsStyleBackground tmpColor     = *myColor;
+     tmpColor.mBackgroundColor = color->mColor;
      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, tmpColor, *myBorder, 0, 0);
      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,

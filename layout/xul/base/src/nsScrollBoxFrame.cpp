@@ -196,11 +196,11 @@ nsScrollBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsScrollBoxFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosition* aPosition)
+nsScrollBoxFrame::CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay* aDisplay)
 {
   nsresult rv = NS_OK;
    // If it's fixed positioned, then create a widget 
-  if (NS_STYLE_POSITION_FIXED == aPosition->mPosition) {
+  if (NS_STYLE_POSITION_FIXED == aDisplay->mPosition) {
     rv = aView->CreateWidget(kWidgetCID);
   }
 
@@ -248,14 +248,14 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
   
 
   if (NS_OK == rv) {
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
     const nsStylePosition* position = (const nsStylePosition*)
       mStyleContext->GetStyleData(eStyleStruct_Position);
-    const nsStyleColor*    color = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
     const nsStyleBorder*  borderStyle = (const nsStyleBorder*)
       mStyleContext->GetStyleData(eStyleStruct_Border);
-    const nsStyleDisplay*  display = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
 
     // Get the z-index
     PRInt32 zIndex = 0;
@@ -265,21 +265,21 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
     }
 
     // Initialize the scrolling view
-    view->Init(viewManager, mRect, parentView, display->IsVisibleOrCollapsed() ?
+    view->Init(viewManager, mRect, parentView, vis->IsVisibleOrCollapsed() ?
                nsViewVisibility_kShow : nsViewVisibility_kHide);
 
     // Insert the view into the view hierarchy
     viewManager->InsertChild(parentView, view, zIndex);
 
     // Set the view's opacity
-    viewManager->SetViewOpacity(view, color->mOpacity);
+    viewManager->SetViewOpacity(view, vis->mOpacity);
 
     // Because we only paint the border and we don't paint a background,
     // inform the view manager that we have transparent content
     viewManager->SetViewContentTransparency(view, PR_TRUE);
 
     // If it's fixed positioned, then create a widget too
-    CreateScrollingViewWidget(view, position);
+    CreateScrollingViewWidget(view, display);
 
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;
@@ -622,12 +622,12 @@ nsScrollBoxFrame::Paint(nsIPresContext*      aPresContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer)
 {
-    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Only paint the border and background if we're visible
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleVisibility* vis = 
+      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
 
-    if (display->IsVisibleOrCollapsed()) {
+    if (vis->IsVisibleOrCollapsed()) {
       // Paint our border only (no background)
       const nsStyleBorder* border = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);

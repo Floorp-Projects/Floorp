@@ -87,6 +87,8 @@ public:
   NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
                                   nsIStyleContext* aNewParentContext);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
+  NS_IMETHOD AllocateFromShell(size_t aSize, void** aResult);
+  NS_IMETHOD FreeToShell(size_t aSize, void* aFreeChunk);
   NS_IMETHOD GetDefaultFont(nsFont& aResult);
   NS_IMETHOD SetDefaultFont(const nsFont& aFont);
   virtual const nsFont& GetDefaultFontDeprecated();

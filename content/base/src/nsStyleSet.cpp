@@ -24,6 +24,7 @@
 #include "nsIStyleSheet.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
+#include "nsICSSStyleRule.h"
 #include "nsIStyleContext.h"
 #include "nsISupportsArray.h"
 #include "nsIFrame.h"
@@ -37,7 +38,8 @@
 #include "nsICSSStyleSheet.h"
 #include "nsNetUtil.h"
 #include "nsIStyleRuleSupplier.h"
-#include "nsISizeOfHandler.h"
+#include "nsRuleNode.h"
+#include "nsIRuleWalker.h"
 
 #ifdef MOZ_PERF_METRICS
   #include "nsITimeRecorder.h"
@@ -50,85 +52,9 @@
   #define STYLESET_STOP_TIMER(a) ((void)0)
 #endif
 
+#include "nsISizeOfHandler.h"
+
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
-
-#ifdef USE_FAST_CACHE
-///////////////////////////////////////
-// DEBUG defines for the fast cache:
-///////////////////////////////////////
-
-//  - define DUMP_CACHE_STATS to get a dump of the cache's depth and breadth
-//#define DUMP_CACHE_STATS
-
-// - define ENABLE_FAST_CACHE_TICKLE to enable tickling of each element in the cache
-//   whenever the cache is accessed (to find stale pointers)
-//#define ENABLE_FAST_CACHE_TICKLE
-
-#endif //ifdef USE_FAST_CACHE
-
-
-#ifdef USE_FAST_CACHE
-
-#include "nsHashtable.h"
-PRBool PR_CALLBACK HashTableEnumDestroy(nsHashKey *aKey, void *aData, void* closure);
-PRBool PR_CALLBACK HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure);
-PRBool PR_CALLBACK HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure);
-
-class StyleContextCache
-{
-  // friendship for the Destroy method...
-  friend PRBool PR_CALLBACK HashTableEnumDestroy(nsHashKey *aKey, void *aData, void* closure);
-
-public :
-  StyleContextCache(void);
-  ~StyleContextCache(void);
-
-  nsresult AddContext(scKey aKey, nsIStyleContext *aContext);
-  nsresult RemoveContext(scKey aKey, nsIStyleContext *aContext);
-  nsresult RemoveAllContexts(scKey aKey);
-  nsresult GetContexts(scKey aKey, nsVoidArray **aResults); // do not munge list
-  nsresult UpdateCRC(scKey aOldKey, scKey aNewKey);
-  PRUint32 Count(void);
-
-  void SuspendInvariants(void) { mEnforceInvariants = PR_FALSE; }
-  void ResumeInvariants(void) { mEnforceInvariants = PR_TRUE; }
-  PRBool IsEnforcingInvariants(void) const { return mEnforceInvariants; }
-  
-private:
-  StyleContextCache(StyleContextCache &aNoSrcAllowed); // Not Implemented
-
-  void DumpStats(void);
-  void Tickle(const char *msg = nsnull);
-
-  // make sure there is a list for the specified key (allocates one if necessary)
-  nsresult VerifyList(scKey aKey);
-  // returns the list for the key, may be null
-  nsVoidArray *GetList(scKey aKey);
-
-  // allocate / destroy the list
-  static nsVoidArray *AllocateList(void);
-  static nsresult DestroyList(nsVoidArray* aList);
-
-  nsObjectHashtable mHashTable;
-  PRUint32          mCount;
-  PRPackedBool      mEnforceInvariants;
-
-  // nested class to block invariants within a function call (or scoping block)
-  // - instantiate a nsAutoInvariantBlocker instance to Suspend/Resume invariants according 
-  //   to scoping of the instance
-  class nsAutoInvariantBlocker {
-  public:
-    nsAutoInvariantBlocker(StyleContextCache& cache)
-      :mCache(cache)
-    { mCache.SuspendInvariants(); }
-    ~nsAutoInvariantBlocker(void)
-    { mCache.ResumeInvariants(); }
-  private:
-    StyleContextCache& mCache;
-  };
-};
-#endif /* USE_FAST_CACHE */
-
 
 class StyleSetImpl : public nsIStyleSet 
 #ifdef MOZ_PERF_METRICS
@@ -185,6 +111,10 @@ public:
                                                nsIAtom* aPseudoTag,
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique = PR_FALSE);
+
+  NS_IMETHOD Shutdown();
+
+  virtual nsresult GetRuleTree(nsIRuleNode** aResult);
 
   NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext,
                                   nsIStyleContext* aStyleContext, 
@@ -270,18 +200,7 @@ public:
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
   virtual void ResetUniqueStyleItems(void);
 
-#ifdef SHARE_STYLECONTEXTS
-  // add and remove from the cache of all contexts
-  NS_IMETHOD AddStyleContext(nsIStyleContext *aNewStyleContext);
-  NS_IMETHOD RemoveStyleContext(nsIStyleContext *aNewStyleContext);
-  // find a context that matches the source context 
-  // eg. it has the same data and can be shared 
-  NS_IMETHOD FindMatchingContext(nsIStyleContext *aStyleContextToMatch, 
-                                 nsIStyleContext **aMatchingContext);
-  // update all entries for oldKey and change their key to newKey
-  // - this will remove the entries at oldKey and re-add them at newKey
-  NS_IMETHOD UpdateStyleContextKey(scKey aOldKey,scKey aNewKey);
-#endif
+  void AddImportantRules(nsIRuleNode* aRuleNode);
 
 #ifdef MOZ_PERF_METRICS
   NS_DECL_NSITIMERECORDER
@@ -306,6 +225,8 @@ protected:
   PRBool EnsureArray(nsISupportsArray** aArray);
   void RecycleArray(nsISupportsArray** aArray);
   
+  void EnsureRuleWalker(nsIPresContext* aPresContext);
+
   void ClearRuleProcessors(void);
   void ClearOverrideRuleProcessors(void);
   void ClearBackstopRuleProcessors(void);
@@ -313,9 +234,10 @@ protected:
 
   nsresult  GatherRuleProcessors(void);
 
-  nsIStyleContext* GetContext(nsIPresContext* aPresContext, nsIStyleContext* aParentContext, 
-                              nsIAtom* aPseudoTag, nsISupportsArray* aRules, PRBool aForceUnique, 
-                              PRBool& aUsedRules);
+  nsIStyleContext* GetContext(nsIPresContext* aPresContext, 
+                              nsIStyleContext* aParentContext,
+                              nsIAtom* aPseudoTag, 
+                              PRBool aForceUnique);
   void  List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets);
   void  ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent);
 
@@ -334,16 +256,10 @@ protected:
 
   nsCOMPtr<nsIStyleRuleSupplier> mStyleRuleSupplier; 
 
-#ifdef SHARE_STYLECONTEXTS
-
-#ifdef USE_FAST_CACHE
-  // a cache of all style contexts for faster searching
-  // when we want to find style contexts in GetContext
-  StyleContextCache mStyleContextCache;
-#else
-  nsVoidArray       mStyleContextCache;
-#endif
-#endif
+  nsCOMPtr<nsIRuleNode> mRuleTree; // This is the root of our rule tree.  It is a lexicographic tree of
+                                   // matched rules that style contexts use to look up properties.
+  nsCOMPtr<nsIRuleWalker> mRuleWalker; // This is an instance of a rule walker that can be used
+                                       // to navigate through our tree.
 
   MOZ_TIMER_DECLARE(mStyleResolutionWatch)
 
@@ -367,13 +283,6 @@ StyleSetImpl::StyleSetImpl()
     mFrameConstructor(nsnull),
     mQuirkStyleSheet(nsnull),
     mStyleRuleSupplier(nsnull)
-#ifdef SHARE_STYLECONTEXTS
-#ifdef USE_FAST_CACHE
-    ,mStyleContextCache()
-#else
-    ,mStyleContextCache(0)
-#endif // USE_FAST_CACHE
-#endif
 #ifdef MOZ_PERF_METRICS
     ,mTimerEnabled(PR_FALSE)
 #endif
@@ -384,7 +293,7 @@ StyleSetImpl::StyleSetImpl()
     const char kQuirk_href[] = "resource:/res/quirk.css";
     NS_NewURI (&gQuirkURI, kQuirk_href);
     NS_ASSERTION (gQuirkURI != 0, "Cannot allocate nsStyleSetImpl::gQuirkURI");
-  }  
+  }
 }
 
 StyleSetImpl::~StyleSetImpl()
@@ -398,14 +307,6 @@ StyleSetImpl::~StyleSetImpl()
   NS_IF_RELEASE(mFrameConstructor);
   NS_IF_RELEASE(mRecycler);
   NS_IF_RELEASE(mQuirkStyleSheet);
-#ifdef SHARE_STYLECONTEXTS
- #ifdef DEBUG
-  NS_ASSERTION( mStyleContextCache.Count() == 0, "StyleContextCache is not empty in StyleSet destructor: style contexts are being leaked");
-  if (mStyleContextCache.Count() > 0) {
-    printf("*** Leaking %d style context instances (reported by the StyleContextCache) ***\n", mStyleContextCache.Count());
-  }
- #endif
-#endif
   if (--gInstances == 0)
   {
     NS_IF_RELEASE (gQuirkURI);
@@ -807,19 +708,19 @@ struct RulesMatchingData {
                     nsIAtom* aMedium,
                     nsIContent* aContent,
                     nsIStyleContext* aParentContext,
-                    nsISupportsArray* aResults)
+                    nsIRuleWalker* aRuleWalker)
     : mPresContext(aPresContext),
       mMedium(aMedium),
       mContent(aContent),
       mParentContext(aParentContext),
-      mResults(aResults)
+      mRuleWalker(aRuleWalker)
   {
   }
   nsIPresContext*   mPresContext;
   nsIAtom*          mMedium;
   nsIContent*       mContent;
   nsIStyleContext*  mParentContext;
-  nsISupportsArray* mResults;
+  nsCOMPtr<nsIRuleWalker> mRuleWalker;
 };
 
 static PRBool
@@ -829,35 +730,28 @@ EnumRulesMatching(nsISupports* aProcessor, void* aData)
   RulesMatchingData* data = (RulesMatchingData*)aData;
 
   processor->RulesMatching(data->mPresContext, data->mMedium, data->mContent, 
-                           data->mParentContext, data->mResults);
+                           data->mParentContext, data->mRuleWalker);
   return PR_TRUE;
 }
 
-#ifdef SHARE_STYLECONTEXTS
-  #ifdef NOISY_DEBUG
-    static int gNewCount=0;
-    static int gSharedCount=0;
-  #endif
-#endif
-
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, 
-                                          nsIStyleContext* aParentContext, nsIAtom* aPseudoTag, 
-                                          nsISupportsArray* aRules,
-                                          PRBool aForceUnique, PRBool& aUsedRules)
+                                          nsIStyleContext* aParentContext, 
+                                          nsIAtom* aPseudoTag, 
+                                          PRBool aForceUnique)
 {
   nsIStyleContext* result = nsnull;
-  aUsedRules = PR_FALSE;
-
+  
+  nsCOMPtr<nsIRuleNode> ruleNode;
+  mRuleWalker->GetCurrentNode(getter_AddRefs(ruleNode));
+      
   if ((PR_FALSE == aForceUnique) && (nsnull != aParentContext)) {
-    aParentContext->FindChildWithRules(aPseudoTag, aRules, result);
+    aParentContext->FindChildWithRules(aPseudoTag, ruleNode, result);
   }
 
   if (nsnull == result) {
-    if (NS_SUCCEEDED(NS_NewStyleContext(&result, aParentContext, aPseudoTag, aRules, aPresContext))) {
-      if (PR_TRUE == aForceUnique) {
+    if (NS_SUCCEEDED(NS_NewStyleContext(&result, aParentContext, aPseudoTag, ruleNode, aPresContext))) {
+      if (PR_TRUE == aForceUnique)
         result->ForceUnique();
-      }
-      aUsedRules = PRBool(nsnull != aRules);
     }
 #ifdef NOISY_DEBUG
     fprintf(stdout, "+++ NewSC %d +++\n", ++gNewCount);
@@ -872,30 +766,23 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
   return result;
 }
 
-// XXX for now only works for strength 0 & 1
-static void SortRulesByStrength(nsISupportsArray* aRules)
+void
+StyleSetImpl::AddImportantRules(nsIRuleNode* aCurrNode)
 {
-  PRUint32 cnt;
-  nsresult rv = aRules->Count(&cnt);
-  if (NS_FAILED(rv)) return;    // XXX error?
-  PRInt32 count = (PRInt32)cnt;
+  // XXX Note: this is still incorrect from a cascade standpoint, but
+  // it preserves the existing incorrect cascade behavior.
+  nsCOMPtr<nsIRuleNode> parent;
+  aCurrNode->GetParent(getter_AddRefs(parent));
+  if (parent)
+    AddImportantRules(parent);
 
-  if (1 < count) {
-    PRInt32 index;
-    PRInt32 strength;
-    for (index = 0; index < count; ) {
-      nsIStyleRule* rule = (nsIStyleRule*)aRules->ElementAt(index);
-      rule->GetStrength(strength);
-      if (0 < strength) {
-        aRules->RemoveElementAt(index);
-        aRules->AppendElement(rule);
-        count--;
-      }
-      else {
-        index++;
-      }
-      NS_RELEASE(rule);
-    }
+  nsCOMPtr<nsIStyleRule> rule;;
+  aCurrNode->GetRule(getter_AddRefs(rule));
+  nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(rule));
+  if (cssRule) {
+    nsCOMPtr<nsIStyleRule> impRule = getter_AddRefs(cssRule->GetImportantRule());
+    if (impRule)
+      mRuleWalker->Forward(impRule);
   }
 }
 
@@ -908,6 +795,15 @@ static void SortRulesByStrength(nsISupportsArray* aRules)
 #else
 #define NS_ASSERT_REFCOUNT(ptr,cnt,msg) {}
 #endif
+
+void StyleSetImpl::EnsureRuleWalker(nsIPresContext* aPresContext)
+{ 
+  if (mRuleWalker)
+    return;
+
+  nsRuleNode::CreateRootNode(aPresContext, getter_AddRefs(mRuleTree));
+  NS_NewRuleWalker(mRuleTree, getter_AddRefs(mRuleWalker));
+}
 
 nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
                                                nsIContent* aContent,
@@ -925,35 +821,20 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
   if (aContent && aPresContext) {
     GatherRuleProcessors();
     if (mBackstopRuleProcessors || mDocRuleProcessors || mOverrideRuleProcessors) {
-      nsISupportsArray*  rules = nsnull;
-      if (EnsureArray(&rules)) {
-        nsIAtom* medium = nsnull;
-        aPresContext->GetMedium(&medium);
-        RulesMatchingData data(aPresContext, medium, aContent, aParentContext, rules);
-        WalkRuleProcessors(EnumRulesMatching, &data, aContent);
-        
-        PRBool usedRules = PR_FALSE;
-        PRUint32 ruleCount = 0;
-        rules->Count(&ruleCount);
-        if (0 < ruleCount) {
-          SortRulesByStrength(rules);
-          result = GetContext(aPresContext, aParentContext, nsnull, rules, aForceUnique, usedRules);
-          if (usedRules) {
-            NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
-            NS_RELEASE(rules);
-          }
-          else {
-            NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-            RecycleArray(&rules);
-          }
-        }
-        else {
-          NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-          RecycleArray(&rules);
-          result = GetContext(aPresContext, aParentContext, nsnull, nsnull, aForceUnique, usedRules);
-        }
-        NS_RELEASE(medium);
-      }
+      EnsureRuleWalker(aPresContext);
+      nsCOMPtr<nsIAtom> medium;
+      aPresContext->GetMedium(getter_AddRefs(medium));
+      RulesMatchingData data(aPresContext, medium, aContent, aParentContext, mRuleWalker);
+      WalkRuleProcessors(EnumRulesMatching, &data, aContent);
+      
+      // Walk all of the rules and add in the !important counterparts.
+      nsCOMPtr<nsIRuleNode> ruleNode;
+      mRuleWalker->GetCurrentNode(getter_AddRefs(ruleNode));
+      AddImportantRules(ruleNode);
+      result = GetContext(aPresContext, aParentContext, nsnull, aForceUnique);
+     
+      // Now reset the walker back to the root of the tree.
+      mRuleWalker->Reset();
     }
   }
 
@@ -969,14 +850,14 @@ struct PseudoRulesMatchingData {
                           nsIAtom* aPseudoTag,
                           nsIStyleContext* aParentContext,
                           nsICSSPseudoComparator* aComparator,
-                          nsISupportsArray* aResults)
+                          nsIRuleWalker* aWalker)
     : mPresContext(aPresContext),
       mMedium(aMedium),
       mParentContent(aParentContent),
       mPseudoTag(aPseudoTag),
       mParentContext(aParentContext),
       mComparator(aComparator),
-      mResults(aResults)
+      mRuleWalker(aWalker)
   {
   }
   nsIPresContext*         mPresContext;
@@ -985,7 +866,7 @@ struct PseudoRulesMatchingData {
   nsIAtom*                mPseudoTag;
   nsIStyleContext*        mParentContext;
   nsICSSPseudoComparator* mComparator;
-  nsISupportsArray*       mResults;
+  nsCOMPtr<nsIRuleWalker> mRuleWalker;
 };
 
 static PRBool
@@ -996,7 +877,7 @@ EnumPseudoRulesMatching(nsISupports* aProcessor, void* aData)
 
   processor->RulesMatching(data->mPresContext, data->mMedium,
                            data->mParentContent, data->mPseudoTag, 
-                           data->mParentContext, data->mComparator, data->mResults);
+                           data->mParentContext, data->mComparator, data->mRuleWalker);
   return PR_TRUE;
 }
 
@@ -1018,37 +899,21 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
   if (aPseudoTag && aPresContext) {
     GatherRuleProcessors();
     if (mBackstopRuleProcessors || mDocRuleProcessors || mOverrideRuleProcessors) {
-      nsISupportsArray*  rules = nsnull;
-      if (EnsureArray(&rules)) {
-        nsIAtom* medium = nsnull;
-        aPresContext->GetMedium(&medium);
-        PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                     aPseudoTag, aParentContext, aComparator, rules);
-        WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
-        
-        PRBool usedRules = PR_FALSE;
-        PRUint32 ruleCount = 0;
-        rules->Count(&ruleCount);
-        if (0 < ruleCount) {
-          SortRulesByStrength(rules);
-          result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
-          if (usedRules) {
-            NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
-            NS_RELEASE(rules);
-          }
-          else {
-            NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-            rules->Clear();
-            RecycleArray(&rules);
-          }
-        }
-        else {
-          NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-          RecycleArray(&rules);
-          result = GetContext(aPresContext, aParentContext, aPseudoTag, nsnull, aForceUnique, usedRules);
-        }
-        NS_IF_RELEASE(medium);
-      }
+      nsCOMPtr<nsIAtom> medium;
+      aPresContext->GetMedium(getter_AddRefs(medium));
+      EnsureRuleWalker(aPresContext);
+      PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
+                                   aPseudoTag, aParentContext, aComparator, mRuleWalker);
+      WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
+      
+      // Walk all of the rules and add in the !important counterparts.
+      nsCOMPtr<nsIRuleNode> ruleNode;
+      mRuleWalker->GetCurrentNode(getter_AddRefs(ruleNode));
+      AddImportantRules(ruleNode);
+      result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
+     
+      // Now reset the walker back to the root of the tree.
+      mRuleWalker->Reset();
     }
   }
 
@@ -1074,36 +939,24 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   if (aPseudoTag && aPresContext) {
     GatherRuleProcessors();
     if (mBackstopRuleProcessors || mDocRuleProcessors || mOverrideRuleProcessors) {
-      nsISupportsArray*  rules = nsnull;
-      if (EnsureArray(&rules)) {
-        nsIAtom* medium = nsnull;
-        aPresContext->GetMedium(&medium);
-        PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                     aPseudoTag, aParentContext, nsnull, rules);
-        WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
-        
-        PRBool usedRules = PR_FALSE;
-        PRUint32 ruleCount;
-        rules->Count(&ruleCount);
-        if (0 < ruleCount) {
-          SortRulesByStrength(rules);
-          result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
-          if (usedRules) {
-            NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
-            NS_RELEASE(rules);
-          }
-          else {
-            NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-            rules->Clear();
-            RecycleArray(&rules);
-          }
-        }
-        else {
-          NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-          RecycleArray(&rules);
-        }
-        NS_IF_RELEASE(medium);
-      }
+      nsCOMPtr<nsIAtom> medium;
+      aPresContext->GetMedium(getter_AddRefs(medium));
+      EnsureRuleWalker(aPresContext);
+      PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
+                                   aPseudoTag, aParentContext, nsnull, mRuleWalker);
+      WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
+    
+      // Walk all of the rules and add in the !important counterparts.
+      nsCOMPtr<nsIRuleNode> ruleNode;
+      mRuleWalker->GetCurrentNode(getter_AddRefs(ruleNode));
+      AddImportantRules(ruleNode);
+      PRBool isAtRoot = PR_FALSE;
+      mRuleWalker->AtRoot(&isAtRoot);
+      if (!isAtRoot)
+        result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
+ 
+      // Now reset the walker back to the root of the tree.
+      mRuleWalker->Reset();
     }
   }
   
@@ -1112,6 +965,21 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   return result;
 }
 
+NS_IMETHODIMP
+StyleSetImpl::Shutdown()
+{
+  mRuleWalker = nsnull; // Drop our ref.  This destroys all rule nodes.
+  mRuleTree = nsnull;
+  return NS_OK;
+}
+
+nsresult
+StyleSetImpl::GetRuleTree(nsIRuleNode** aResult)
+{
+  *aResult = mRuleTree;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
@@ -1137,26 +1005,20 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
       nsIStyleContext*  newChild = nsnull;
       nsIAtom*  pseudoTag = nsnull;
       aStyleContext->GetPseudoType(pseudoTag);
-      nsISupportsArray* rules = aStyleContext->GetStyleRules();
+
+      nsCOMPtr<nsIRuleNode> ruleNode;
+      aStyleContext->GetRuleNode(getter_AddRefs(ruleNode));
       if (aNewParentContext) {
-        result = aNewParentContext->FindChildWithRules(pseudoTag, rules, newChild);
+        result = aNewParentContext->FindChildWithRules(pseudoTag, ruleNode, newChild);
       }
       if (newChild) { // new parent already has one
         *aNewStyleContext = newChild;
       }
       else {  // need to make one in the new parent
-        nsISupportsArray*  newRules = nsnull;
-        if (rules) {
-          if (EnsureArray(&newRules)) {
-            newRules->AppendElements(rules);
-          }
-        }
         result = NS_NewStyleContext(aNewStyleContext, aNewParentContext, pseudoTag,
-                                    newRules, aPresContext);
-        NS_IF_RELEASE(newRules);
+                                    ruleNode, aPresContext);
       }
 
-      NS_IF_RELEASE(rules);
       NS_IF_RELEASE(pseudoTag);
     }
 
@@ -1535,516 +1397,6 @@ StyleSetImpl::PrintTimer(PRUint32 aTimerID)
 }
 
 #endif
-
-//-----------------------------------------------------------------------------
-
-#ifdef SHARE_STYLECONTEXTS
-#ifdef USE_FAST_CACHE
-// StyleContextCache is a hash table based data structure that maintains
-// a list of entries on each hashkey. Thus, multiple items with the same
-// ID (key) can be stored in the hash table. The hash-lookup gets the list of
-// items having that ID (key). The list is unsorted and vector-based so it is
-// best if kept short.
-//
-// This choice of data structures was based upon knowledge that there are not
-// many items sharing the same ID, and that there are many unique IDs, so
-// this is a comprimise between a sorted-list based lookup and a hash-type 
-// lookup which is not possible due to non-guaranteed-unique keys.
-
-MOZ_DECL_CTOR_COUNTER(StyleContextCache)
-
-StyleContextCache::StyleContextCache(void)
-:mHashTable(nsnull, nsnull, HashTableEnumDestroy, nsnull),
- mCount(0), mEnforceInvariants(PR_TRUE)
-{
-  MOZ_COUNT_CTOR(StyleContextCache);
-}
-
-StyleContextCache::~StyleContextCache(void)
-{
-  // mHashTable memeber is reset automatically in nsObjectHashTable's dtor
-
-  MOZ_COUNT_DTOR(StyleContextCache);
-}
-
-PRUint32 StyleContextCache::Count(void)
-{ 
-#ifdef ENABLE_FAST_CACHE_TICKLE
-  // Tickle will test the integrity of the elements in the chace...
-  //  - use if it is in question (has already been tested so it is now being commented-out)
-  Tickle("From Count()");
-#endif
-
-#ifdef NOISY_DEBUG
-  printf("StyleContextCache count: %ld\n", (long)mCount);
-#endif
-
-  return mCount;
-}
-
-nsresult StyleContextCache::AddContext(scKey aKey, nsIStyleContext *aContext)
-{
-#ifdef ENABLE_FAST_CACHE_TICKLE
-  // Tickle will test the integrity of the elements in the chace...
-  //  - use if it is in question (has already been tested so it is now being commented-out)
-  Tickle("From AddContext - before");
-#endif
-
-  // verify we have a list
-  nsresult rv = VerifyList(aKey);
-  if (NS_SUCCEEDED(rv)){
-    nsVoidArray *pList = GetList(aKey);
-    NS_ASSERTION(pList != nsnull, "VerifyList failed me!");
-    NS_ASSERTION(pList->IndexOf(aContext) == -1, "Context already in list");
-    if (!(pList->AppendElement(aContext))) {
-      rv = NS_ERROR_FAILURE;
-    } else {
-      mCount++;
-    }
-    DumpStats();
-  }
-
-#ifdef ENABLE_FAST_CACHE_TICKLE
-  // Tickle will test the integrity of the elements in the chace...
-  //  - use if it is in question (has already been tested so it is now being commented-out)
-  Tickle("From AddContext - after");
-#endif
-
-  return rv;
-}
-
-nsresult StyleContextCache::RemoveContext(scKey aKey, nsIStyleContext *aContext)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  nsVoidArray *pResults = nsnull;
-
-#ifdef ENABLE_FAST_CACHE_TICKLE
-  // Tickle will test the integrity of the elements in the chace...
-  //  - use if it is in question (has already been tested so it is now being commented-out)
-  Tickle("From RemoveContext - before");
-#endif
-
-  if (NS_SUCCEEDED(GetContexts(aKey,&pResults)) && pResults) {
-    PRUint32 nCountBefore = Count();
-    if (nCountBefore > 0){
-      if(pResults->RemoveElement(aContext)) {
-        mCount--;
-        rv = NS_OK;
-      } 
-#ifdef DEBUG
-      else {
-        NS_ASSERTION(PR_FALSE,"Failure to remove context at provided key!");
-      }
-#endif
-    }
-    DumpStats();
-
-    static PRBool bRemoveEmptyLists = PR_FALSE;
-    // if no more entries left, remove the list and all...
-    if (bRemoveEmptyLists && pResults->Count() == 0) {
-      rv = RemoveAllContexts(aKey);
-      if (NS_SUCCEEDED(rv)) {
-        NS_ASSERTION(GetList(aKey) == nsnull, "Failed to delete list in StyleContextCache::RemoveContext");
-      } 
-#ifdef DEBUG
-      else {
-        printf( "Error removing all contexts in StyleContextCache::RemoveContext\n");
-      }
-#endif
-    }
-  } 
-#ifdef DEBUG
-  else {
-    NS_ASSERTION(PR_FALSE, "Failure to find any contexts at provided key!");
-  }
-#endif
-
-#ifdef ENABLE_FAST_CACHE_TICKLE
-  // Tickle will test the integrity of the elements in the chace...
-  //  - use if it is in question (has already been tested so it is now being commented-out)
-  Tickle("From RemoveContext - after");
-#endif
-
-  return rv;
-}
-
-nsresult StyleContextCache::RemoveAllContexts(scKey aKey)
-{
-#ifdef ENABLE_FAST_CACHE_TICKLE
-  // Tickle will test the integrity of the elements in the chace...
-  //  - use if it is in question (has already been tested so it is now being commented-out)
-  Tickle("From RemoveAllContext");
-#endif
-
-  nsresult rv = NS_OK;
-  nsVoidKey key((void *)aKey);
-  nsVoidArray *pResults = (nsVoidArray *)mHashTable.Remove(&key);
-  if (pResults) {
-    delete pResults;
-  }
-  return rv;
-}
-
-nsresult StyleContextCache::GetContexts(scKey aKey, nsVoidArray **aResults)
-{
-#ifdef ENABLE_FAST_CACHE_TICKLE
-  // Tickle will test the integrity of the elements in the chace...
-  //  - use if it is in question (has already been tested so it is now being commented-out)
-  Tickle("From GetContexts");
-#endif
-
-  nsresult rv = NS_OK;
-  *aResults = GetList(aKey);
-  if (nsnull==aResults) rv = NS_ERROR_FAILURE;
-  return rv;
-}
-
-// Update all entries that are mapped to aOldKey by removing them and re-adding them
-// at aNewKey.
-// NOTE: there are (potentially) multiple style contexts mapped to any given CRC,
-//       and furthermore there are (potentially) several contexts sharing the same styleData
-//       instance in which the CRC is located, so we have to go over ALL contexts at the 
-//       old key and look for the ones that now have the new key - these are the shared
-//       contexts, and they all have to be moved.
-nsresult StyleContextCache::UpdateCRC(scKey aOldKey, scKey aNewKey)
-{
-  NS_ASSERTION(aOldKey != aNewKey, 
-               "oldKey and newKey match: call to UpdateCRC is a waste of a function call");
-  if (aOldKey == aNewKey) {
-    // This is not an error, but it is a waste of a fcn call so should be avoided
-    return NS_OK;
-  }
-
-  nsresult rv = NS_OK;
-  PRBool didUpdate = PR_FALSE;
-
-  // block invariants from being run during the process
-  nsAutoInvariantBlocker invariantBlocker(*this);
-
-  // loop over each context mapped to the oldKey looking for contexts that now have the newKey
-  // repeat until there are none found. This construct is to handle the fact that we are removing
-  // elements from the list mapped to the oldKey and as such have to re-fetch the list after
-  // each context is updated
-  do {
-    nsVoidArray *contexts;
-
-    // assume we do nothing, set to true if we actually do update something
-    didUpdate = PR_FALSE;
-  
-    // get the contexts at the old key and update those with the new key
-    // NOTE that we do not directly munge the context list here, we use RemoveContext to do it
-    //      to promote consistency and to avoid duplicating the logic in there. It is less efficient, 
-    //      but much safer
-    rv = GetContexts(aOldKey, &contexts);
-    if(NS_SUCCEEDED(rv)) {
-      PRInt32 count = contexts->Count();
-      for (PRInt32 i=0; i<count; i++) {
-        nsIStyleContext *pContext = NS_STATIC_CAST(nsIStyleContext*, contexts->ElementAt(i));
-        scKey key;
-        pContext->GetStyleContextKey(key);
-        if (pContext && key == aNewKey) {
-          // update the context by removing it adding it again
-          // - NOTE: this is not optimal for performance, but the RemoveContext method
-          //         does a bit of housekeeping that is best left there, so we end up
-          //         looking up the list twice (once here, and once in RemoveContext)
-          rv = RemoveContext(aOldKey, pContext);
-          if(NS_SUCCEEDED(rv)){
-            rv = AddContext(aNewKey, pContext);
-            if(NS_SUCCEEDED(rv)){
-              didUpdate = PR_TRUE;
-              break;
-            } else {
-              NS_WARNING("Error adding updated context to context cache: aborting");
-              return rv;
-            }
-          } else {
-            NS_WARNING("Error removing context from context cache while updating: aborting");
-            return rv;
-          }
-        }
-      }          
-    }
-  }
-  while(didUpdate);
-
-  return NS_OK;
-}
-
-// make sure there is a list for the specified key
-nsresult StyleContextCache::VerifyList(scKey aKey)
-{
-  nsresult rv = NS_OK;
-  nsVoidKey key((void *)aKey);
-  if (GetList(aKey) == nsnull) {
-    nsVoidArray *pList = AllocateList();
-    if (pList) {
-      mHashTable.Put(&key,pList);
-    } else {
-      rv = NS_ERROR_FAILURE;
-    }
-  }
-  return rv;
-}
-
-nsVoidArray *StyleContextCache::AllocateList(void)
-{
-  // we allocate it using 'new'
-  return new nsVoidArray();
-}
- 
-nsresult StyleContextCache::DestroyList(nsVoidArray* aList)
-{
-  if(aList) {
-    // we free it using 'delete'
-    delete aList;
-  }
-  return NS_OK;
-}
-
-// returns the list for the key, may be null
-nsVoidArray *StyleContextCache::GetList(scKey aKey)
-{
-  nsVoidKey key((void *)aKey);
-  return (nsVoidArray *)mHashTable.Get(&key);
-}
-
-
-// called to destroy each list in the hash table: 
-// - must free the list passed in as aData
-PRBool PR_CALLBACK HashTableEnumDestroy(nsHashKey *aKey, void *aData, void* closure)
-{
-  if(aData) {
-    StyleContextCache::DestroyList((nsVoidArray*)aData);
-  }
-  return PR_TRUE;
-}
-
-
-PRBool PR_CALLBACK HashTableEnumDump(nsHashKey *aKey, void *aData, void* closure)
-{
-  static PRUint32 nTotal, nCount, nMax, nMin, nUnary;
-  if (nsnull == aKey && nsnull == aData && nsnull == closure) {
-    // reset the counters
-    nTotal = nCount = nMax = nMin = nUnary = 0;
-    return PR_TRUE;
-  }
-  if (nsnull == aKey && nsnull == aData && closure != nsnull) {
-    // dump the cumulatives
-    printf("----------------------------------------------------------------------------------\n");
-    printf("(%d lists, %ld contexts) List Lengths: Min=%ld Max=%ld Average=%ld Unary=%ld\n", 
-           (int)nCount, (long)nTotal, (long)nMin, (long)nMax, (long)(nCount>0 ? nTotal/nCount : 0), (long)nUnary);
-    printf("----------------------------------------------------------------------------------\n");
-    return PR_TRUE;
-  }
-
-  // actually do the dump
-  nsVoidArray *pList = (nsVoidArray *)aData;
-  if (pList) {
-    PRUint32 count = pList->Count();
-    printf("List Length at key %lu:\t%ld\n", 
-           (unsigned long)aKey->HashCode(),
-           (long)count );
-    nCount++;
-    nTotal += count;
-    if (count > nMax) nMax = count;
-    if (count < nMin) nMin = count;
-    if (count == 1) nUnary++;
-  }
-  return PR_TRUE;
-}
-
-PRBool PR_CALLBACK HashTableEnumTickle(nsHashKey *aKey, void *aData, void* closure)
-{
-  PRUint32 nCount = 0;
-
-  // each entry is a list
-  nsVoidArray *pList = (nsVoidArray *)aData;
-  if (pList) {
-    PRUint32 count = pList->Count();
-    PRUint32 i;
-    // walk the list and get each context's key (just a way to tickle it)
-    for (i=0; i < count; i++) {
-      nsIStyleContext *pContext = (nsIStyleContext *)pList->ElementAt(i);
-      if (pContext) {
-        scKey key;
-        pContext->GetStyleContextKey(key);
-        if((PRUint32)key != (PRUint32)aKey->HashCode()){
-          NS_ASSERTION(PR_FALSE,"Key Changed in context!");
-        }
-        // printf( "%p tickled\n", pContext);
-      }
-    }
-  }
-  return PR_TRUE;
-}
-
-void StyleContextCache::DumpStats(void)
-{
-#ifdef DUMP_CACHE_STATS
-  printf("StyleContextCache DumpStats BEGIN\n");
-  HashTableEnumDump(nsnull, nsnull, nsnull);
-  mHashTable.Enumerate(HashTableEnumDump);
-  HashTableEnumDump(nsnull, nsnull, "HACK!");
-  printf("StyleContextCache DumpStats END\n");
-#endif
-}
-
-void StyleContextCache::Tickle(const char *msg)
-{
-  // only tickle if we can enforce our invariants
-  if(!IsEnforcingInvariants()) return;
-
-#ifdef DEBUG
-  // printf("Tickling: %s\n", msg ? msg : "");
-  mHashTable.Enumerate(HashTableEnumTickle);
-  // printf("Tickle done.\n");
-#endif
-}
-
-#endif // USE_FASTCACHE
-
-NS_IMETHODIMP
-StyleSetImpl::AddStyleContext(nsIStyleContext *aNewStyleContext)
-{
-  nsresult rv = NS_OK;
-
-  // ASSERT the input is valid
-  NS_ASSERTION(aNewStyleContext != nsnull, "NULL style context not allowed in AddStyleContext");
-
-#ifdef USE_FAST_CACHE
-
-  if (aNewStyleContext) {
-    scKey key;
-    aNewStyleContext->GetStyleContextKey(key);
-    rv = mStyleContextCache.AddContext(key,aNewStyleContext);
-#ifdef NOISY_DEBUG
-    printf( "StyleContextCount: %ld\n", (long)mStyleContextCache.Count());
-#endif
-  }
-
-#else // DONT USE_FAST_CACHE
-
-  // ASSERT it is not already in the collection
-  NS_ASSERTION((mStyleContextCache.IndexOf(aNewStyleContext) == -1), "StyleContext added in AddStyleContext is already in cache");
-  if (aNewStyleContext) {
-    rv = mStyleContextCache.AppendElement(aNewStyleContext);
-#ifdef NOISY_DEBUG
-    printf( "StyleContextCount: %ld\n", (long)mStyleContextCache.Count());
-#endif
-  }
-
-#endif // USE_FAST_CACHE
-
-  return rv;
-}
-
-NS_IMETHODIMP
-StyleSetImpl::RemoveStyleContext(nsIStyleContext *aNewStyleContext)
-{
-  nsresult rv = NS_OK;
-
-  // ASSERT the input is valid
-  NS_ASSERTION(aNewStyleContext != nsnull, "NULL style context not allowed in RemoveStyleContext");
-
-#ifdef USE_FAST_CACHE
-
-  if (aNewStyleContext) {
-    scKey key;
-    aNewStyleContext->GetStyleContextKey(key);
-    rv = mStyleContextCache.RemoveContext(key,aNewStyleContext);
-#ifdef NOISY_DEBUG
-    printf( "StyleContextCount: %ld\n", (long)mStyleContextCache.Count());
-#endif
-  }
-
-#else //DONT USE_FAST_CACHE
-
-  // ASSERT it is already in the collection
-  NS_ASSERTION((mStyleContextCache.IndexOf(aNewStyleContext) != -1), "StyleContext removed in AddStyleContext is not in cache");
-  if (aNewStyleContext) {
-    rv = mStyleContextCache.RemoveElement(aNewStyleContext);
-#ifdef NOISY_DEBUG
-    printf( "StyleContextCount: %ld\n", (long)mStyleContextCache.Count());
-#endif
-  }
-
-#endif //#ifdef USE_FAST_CACHE
-
-  return rv;
-}
-
-NS_IMETHODIMP
-StyleSetImpl::FindMatchingContext(nsIStyleContext *aStyleContextToMatch, 
-                                  nsIStyleContext **aMatchingContext)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  *aMatchingContext = nsnull;
-  scKey key;
-
-#ifdef USE_FAST_CACHE
-  nsVoidArray* pList;
-  aStyleContextToMatch->GetStyleContextKey(key);
-  if (NS_SUCCEEDED(mStyleContextCache.GetContexts(key, &pList)) && pList) {
-    PRInt32 count = pList->Count();
-    PRInt32 i;
-    for (i=0; i<count;i++) {
-      nsIStyleContext *pContext = (nsIStyleContext *)pList->ElementAt(i);
-      if (pContext && pContext != aStyleContextToMatch) {
-        PRBool bMatches = PR_FALSE;
-        NS_ADDREF(pContext);
-        if (NS_SUCCEEDED(pContext->StyleDataMatches(aStyleContextToMatch, &bMatches)) && 
-            bMatches) {
-          *aMatchingContext = pContext;
-          rv = NS_OK;
-          break;
-        } else {
-          NS_RELEASE(pContext);
-        }
-      }
-    }
-  }
-
-#else // DONT USE_FAST_CACHE
-
-  PRInt32 count = mStyleContextCache.Count();
-  PRInt32 i;
-  for (i=0; i<count;i++) {
-    nsIStyleContext *pContext = (nsIStyleContext *)mStyleContextCache.ElementAt(i);
-    if (pContext && pContext != aStyleContextToMatch) {
-      PRBool bMatches = PR_FALSE;
-      NS_ADDREF(pContext);
-      if (NS_SUCCEEDED(pContext->StyleDataMatches(aStyleContextToMatch, &bMatches)) && 
-          bMatches) {
-        *aMatchingContext = pContext;
-        rv = NS_OK;
-        break;
-      } else {
-        NS_RELEASE(pContext);
-      }
-    }
-  }
-
-#endif // #ifdef USE_FAST_CACHE
-
-  return rv;
-}
-
-
-NS_IMETHODIMP 
-StyleSetImpl::UpdateStyleContextKey(scKey aOldKey, scKey aNewKey)
-{
-#ifdef USE_FAST_CACHE
-  nsresult rv = mStyleContextCache.UpdateCRC(aOldKey, aNewKey);
-  return rv;
-#else
-  // nothing to do if not using CRC-based cache
-  return NS_OK;
-#endif
-  NS_ASSERTION(PR_FALSE, "Illegal Code Path");
-  return NS_ERROR_FAILURE;
-}
-
-#endif // SHARE_STYLECONTEXTS
 
 //-----------------------------------------------------------------------------
 

@@ -395,11 +395,11 @@ nsSVGContainerFrame::Paint ( nsIPresContext* aPresContext,
                       const nsRect& aDirtyRect,
                       nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-  mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleVisibility* visib = (const nsStyleVisibility*)
+  mStyleContext->GetStyleData(eStyleStruct_Visibility);
 
   // if we aren't visible then we are done.
-  if (!disp->IsVisibleOrCollapsed()) 
+  if (!visib->IsVisibleOrCollapsed()) 
 	   return NS_OK;  
   //printf("nsSVGContainerFrame::Paint Start\n");
   // if we are visible then tell our superclass to paint
@@ -418,11 +418,11 @@ nsSVGContainerFrame::PaintChild(nsIPresContext*      aPresContext,
                              nsIFrame*            aFrame,
                              nsFramePaintLayer    aWhichLayer)
 {
-      const nsStyleDisplay* disp;
-      aFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
+      const nsStyleVisibility* visib;
+      aFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)visib));
 
       // if collapsed don't paint the child.
-      if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
+      if (visib->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
          return;
 
       nsHTMLContainerFrame::PaintChild(aPresContext, aRenderingContext, aDirtyRect, aFrame, aWhichLayer);
@@ -452,9 +452,9 @@ nsSVGContainerFrame::PaintChildren(nsIPresContext*      aPresContext,
     nsMargin im(0,0,0,0);
     GetInset(im);
     nsMargin border(0,0,0,0);
-    const nsStyleBorderPadding* borderpadding = (const nsStyleBorderPadding*)
-      mStyleContext->GetStyleData(eStyleStruct_BorderPaddingShortcut);
-    borderpadding->GetBorderPadding(border);
+    nsStyleBorderPadding borderpadding;
+    mStyleContext->GetBorderPaddingFor(borderpadding);
+    borderpadding.GetBorderPadding(border);
     r.Deflate(im);
     //r.Deflate(dm);
     r.Deflate(border);    

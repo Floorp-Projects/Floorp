@@ -287,14 +287,14 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
                             const nsRect&        aDirtyRect,
                             nsFramePaintLayer    aWhichLayer)
 {
-  const nsStyleDisplay* disp = 
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleVisibility* visib = NS_STATIC_CAST(const nsStyleVisibility*,
+    mStyleContext->GetStyleData(eStyleStruct_Visibility));
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (disp->IsVisible() && mRect.width && mRect.height) {
+    if (visib->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();
-      const nsStyleColor* color = (const nsStyleColor*)
-        mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleBackground* backg = (const nsStyleBackground*)
+        mStyleContext->GetStyleData(eStyleStruct_Background);
       const nsStyleBorder* border = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
       const nsStyleOutline* outline = (const nsStyleOutline*)
@@ -302,7 +302,7 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, *border, 0, 0);
+                                      aDirtyRect, rect, *backg, *border, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *border, mStyleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,

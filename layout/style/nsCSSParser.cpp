@@ -2753,6 +2753,10 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
           aValue.SetInheritValue();
           return PR_TRUE;
         }
+        else if (eCSSKeyword__moz_initial == keyword) { // anything that can inherit can also take an initial val.
+          aValue.SetInitialValue();
+          return PR_TRUE;
+        }
       }
       if ((aVariantMask & VARIANT_NONE) != 0) {
         if (eCSSKeyword_none == keyword) {
@@ -3091,10 +3095,20 @@ PRInt32 CSSParserImpl::ParseChoice(PRInt32& aErrorCode, nsCSSValue aValues[],
         }
         found = ((1 << aNumIDs) - 1);
       }
+      else if (eCSSUnit_Initial == aValues[0].GetUnit()) { // one initial, all initial
+        for (loop = 1; loop < aNumIDs; loop++) {
+          aValues[loop].SetInitialValue();
+        }
+        found = ((1 << aNumIDs) - 1);
+      }
     }
-    else {  // more than one value, verify no inherits
+    else {  // more than one value, verify no inherits or initials
       for (loop = 0; loop < aNumIDs; loop++) {
         if (eCSSUnit_Inherit == aValues[loop].GetUnit()) {
+          found = -1;
+          break;
+        }
+        else if (eCSSUnit_Initial == aValues[loop].GetUnit()) {
           found = -1;
           break;
         }
@@ -3150,9 +3164,10 @@ PRBool CSSParserImpl::ParseBoxProperties(PRInt32& aErrorCode,
     return PR_FALSE;
   }
 
-  if (1 < count) { // verify no more than single inherit
+  if (1 < count) { // verify no more than single inherit or initial
     for (index = 0; index < 4; index++) {
-      if (eCSSUnit_Inherit == values[index].GetUnit()) {
+      if (eCSSUnit_Inherit == values[index].GetUnit() ||
+          eCSSUnit_Initial == values[index].GetUnit()) {
         return PR_FALSE;
       }
     }
@@ -3376,7 +3391,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_background_y_position:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKLP,
                         kBackgroundXYPositionKTable);
-  case eCSSProperty_behavior:
+  case eCSSProperty_binding:
     return ParseVariant(aErrorCode, aValue, VARIANT_HUO, nsnull);
   case eCSSProperty_border_collapse:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
@@ -3718,6 +3733,9 @@ PRBool CSSParserImpl::ParseBackground(PRInt32& aErrorCode, nsICSSDeclaration* aD
       else if (eCSSUnit_Inherit == values[4].GetUnit()) {
         values[5].SetInheritValue();
       }
+      else if (eCSSUnit_Initial == values[4].GetUnit()) {
+        values[5].SetInitialValue();
+      }
       else {
         values[5].SetPercentValue(0.5f);
       }
@@ -3813,7 +3831,8 @@ PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32& aErrorCode,
   // First try a number or a length value
   nsCSSValue  xValue;
   if (ParseVariant(aErrorCode, xValue, VARIANT_HLP, nsnull)) {
-    if (eCSSUnit_Inherit == xValue.GetUnit()) {  // both are inherited
+    if (eCSSUnit_Inherit == xValue.GetUnit() ||
+        eCSSUnit_Initial == xValue.GetUnit()) {  // both are inherited or both are set to initial
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
         AppendValue(aDeclaration, eCSSProperty_background_x_position, xValue, aChangeHint);
         AppendValue(aDeclaration, eCSSProperty_background_y_position, xValue, aChangeHint);
@@ -4088,6 +4107,16 @@ PRBool CSSParserImpl::ParseClip(PRInt32& aErrorCode, nsICSSDeclaration* aDeclara
       }
       return PR_TRUE;
     }
+  } 
+  else if ((eCSSToken_Ident == mToken.mType) && 
+             mToken.mIdent.EqualsIgnoreCase("-moz-initial")) {
+    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      nsCSSValue  initial(eCSSUnit_Initial);
+      for (index = 0; index < 4; index++) {
+        AppendValue(aDeclaration, kClipIDs[index], initial, aChangeHint);
+      }
+      return PR_TRUE;
+    }
   } else if ((eCSSToken_Function == mToken.mType) && 
              mToken.mIdent.EqualsIgnoreCase("rect")) {
     if (!ExpectSymbol(aErrorCode, '(', PR_TRUE)) {
@@ -4126,7 +4155,7 @@ PRBool CSSParserImpl::ParseContent(PRInt32& aErrorCode, nsICSSDeclaration* aDecl
   nsCSSValue  value;
   if (ParseVariant(aErrorCode, value, VARIANT_CONTENT | VARIANT_INHERIT, 
                    nsCSSProps::kContentKTable)) {
-    if (eCSSUnit_Inherit == value.GetUnit()) {
+    if (eCSSUnit_Inherit == value.GetUnit() || eCSSUnit_Initial == value.GetUnit()) {
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
         AppendValue(aDeclaration, eCSSProperty_content, value, aChangeHint);
         return PR_TRUE;
@@ -4185,6 +4214,13 @@ PRBool CSSParserImpl::ParseCounterData(PRInt32& aErrorCode, nsICSSDeclaration* a
   else if (ident->EqualsIgnoreCase("inherit")) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       AppendValue(aDeclaration, aPropID, nsCSSValue(eCSSUnit_Inherit), aChangeHint);
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+  else if (ident->EqualsIgnoreCase("-moz-initial")) {
+    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
+      AppendValue(aDeclaration, aPropID, nsCSSValue(eCSSUnit_Initial), aChangeHint);
       return PR_TRUE;
     }
     return PR_FALSE;
@@ -4360,7 +4396,8 @@ PRBool CSSParserImpl::ParseFont(PRInt32& aErrorCode, nsICSSDeclaration* aDeclara
   const PRInt32 numProps = 3;
   nsCSSValue  values[numProps];
   PRInt32 found = ParseChoice(aErrorCode, values, fontIDs, numProps);
-  if ((found < 0) || (eCSSUnit_Inherit == values[0].GetUnit())) { // illegal data
+  if ((found < 0) || (eCSSUnit_Inherit == values[0].GetUnit()) || 
+      (eCSSUnit_Initial == values[0].GetUnit())) { // illegal data
     return PR_FALSE;
   }
   if ((found & 1) == 0) {
@@ -4395,7 +4432,8 @@ PRBool CSSParserImpl::ParseFont(PRInt32& aErrorCode, nsICSSDeclaration* aDeclara
 
   // Get final mandatory font-family
   if (ParseFamily(aErrorCode, family)) {
-    if ((eCSSUnit_Inherit != family.GetUnit()) && ExpectEndProperty(aErrorCode, PR_TRUE)) {
+    if ((eCSSUnit_Inherit != family.GetUnit()) && (eCSSUnit_Initial != family.GetUnit()) &&
+        ExpectEndProperty(aErrorCode, PR_TRUE)) {
       AppendValue(aDeclaration, eCSSProperty_font_family, family, aChangeHint);
       AppendValue(aDeclaration, eCSSProperty_font_style, values[0], aChangeHint);
       AppendValue(aDeclaration, eCSSProperty_font_variant, values[1], aChangeHint);
@@ -4436,6 +4474,10 @@ PRBool CSSParserImpl::ParseFamily(PRInt32& aErrorCode, nsCSSValue& aValue)
       if (firstOne) {
         if (tk->mIdent.EqualsIgnoreCase("inherit")) {
           aValue.SetInheritValue();
+          return PR_TRUE;
+        }
+        else if (tk->mIdent.EqualsIgnoreCase("initial")) {
+          aValue.SetInitialValue();
           return PR_TRUE;
         }
       }
@@ -4609,7 +4651,7 @@ PRBool CSSParserImpl::ParsePause(PRInt32& aErrorCode,
 {
   nsCSSValue  before;
   if (ParseSingleValueProperty(aErrorCode, before, eCSSProperty_pause_before)) {
-    if (eCSSUnit_Inherit != before.GetUnit()) {
+    if (eCSSUnit_Inherit != before.GetUnit() && eCSSUnit_Initial != before.GetUnit()) {
       nsCSSValue after;
       if (ParseSingleValueProperty(aErrorCode, after, eCSSProperty_pause_after)) {
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {

@@ -912,11 +912,8 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
 
   // Grab the floater's display information
   const nsStyleDisplay* floaterDisplay;
-  const nsStylePosition* floaterPosition;
   floater->GetStyleData(eStyleStruct_Display,
                         (const nsStyleStruct*&)floaterDisplay);
-  floater->GetStyleData(eStyleStruct_Position,
-                        (const nsStyleStruct*&)floaterPosition);
 
   // This will hold the floater's geometry when we've found a place
   // for it to live.
@@ -1049,7 +1046,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   nscoord y = borderPadding.top + aFloaterCache->mMargins.top + region.y;
 
   // If floater is relatively positioned, factor that in as well
-  if (NS_STYLE_POSITION_RELATIVE == floaterPosition->mPosition) {
+  if (NS_STYLE_POSITION_RELATIVE == floaterDisplay->mPosition) {
     x += aFloaterCache->mOffsets.left;
     y += aFloaterCache->mOffsets.top;
   }
