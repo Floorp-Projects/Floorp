@@ -82,7 +82,7 @@
                 value="&stopCmd.label;"
                 accesskey=""
                 oncommand="BrowserStop();"/>
-      <menuseparator/>
+      <menuseparator id="context-sep-navigation"/>
       <!-- View ==================================== -->
       <menuitem id="context-viewsource"
                 value="&viewPageSourceCmd.label;"
@@ -120,7 +120,7 @@
                 accesskey="&bookmarkLinkCmd.accesskey;"
                 oncommand="addBookmark(contextMenu.linkURL(),
                                        contextMenu.linkText());"/>
-      <menuseparator/>
+      <menuseparator id="context-sep-bookmark"/>
       <!-- Save ==================================== -->
       <menuitem id="context-savepage"
                 value="&savePageCmd.label;"
