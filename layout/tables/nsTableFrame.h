@@ -22,6 +22,8 @@
 #include "nsContainerFrame.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
+#include "nsIFrameReflow.h"   // for nsReflowReason enum
+
 
 class nsCellMap;
 class nsVoidArray;
@@ -269,13 +271,17 @@ protected:
     * Pass 1 only needs to be executed once no matter how many times the table is resized, 
     * as long as content and style don't change.  This is managed in the member variable mFirstPassIsValid.
     * The layout information for each cell is cached in mColumLayoutData.
+    * Incremental layout can take advantage of aStartingFrame to pick up where a previous
+    * ResizeReflowPass1 left off.
     *
     * @see Reflow
     */
   NS_IMETHOD ResizeReflowPass1(nsIPresContext&          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
-                               nsReflowStatus&          aStatus);
+                               nsReflowStatus&          aStatus,
+                               nsTableRowGroupFrame *   aStartingFrame,
+                               nsReflowReason           aReason);
 
   /** second pass of ResizeReflow.
     * lays out all table content with aMaxSize(computed_table_width, given_table_height) 
@@ -298,10 +304,10 @@ protected:
     *
     * @see Reflow
     */
-  NS_IMETHOD IncrementalReflow(nsIPresContext&      aPresContext,
-                               nsHTMLReflowMetrics& aDesiredSize,
+  NS_IMETHOD IncrementalReflow(nsIPresContext&          aPresContext,
+                               nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
-                               nsReflowStatus&      aStatus);
+                               nsReflowStatus&          aStatus);
 
   NS_IMETHOD IR_TargetIsChild(nsIPresContext&        aPresContext,
                               nsHTMLReflowMetrics&   aDesiredSize,

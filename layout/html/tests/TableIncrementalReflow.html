@@ -67,10 +67,33 @@ function deleteCol() {
   table.removeChild(col);
 }
 
+
 function insertRowGroup() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var refRowGroup = document.getElementsByTagName("TBODY")[0];
+  var rowGroup = document.createElement("TBODY", null);
+  table.insertBefore(rowGroup, refRowGroup);
+  dump("inserted empty ROWGROUP as first rowgroup in table");
+}
+
+function appendRowGroup() {
   var table = document.getElementsByTagName("TABLE")[0];
   var rowGroup = document.createElement("TBODY", null);
   table.appendChild(rowGroup);
+  dump("appended empty ROWGROUP");
+}
+
+function appendRowGroupWithContent() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var rowGroup = document.createElement("TBODY", null);
+  var row = document.createElement("TR", null);
+  var cell = document.createElement("TD", null);
+  var text = document.createTextNode("here is content in the cell from the script");
+  cell.appendChild(text);
+  row.appendChild(cell);
+  rowGroup.appendChild(row);  
+  table.appendChild(rowGroup);
+  dump("appended ROWGROUP with 1 row and 1 cell");
 }
 
 function deleteRowGroup() {
@@ -122,6 +145,7 @@ all delete buttons currently remove the first item of <type> found
 <INPUT TYPE="button" NAME="Ins RowGroup" VALUE="InsertRG" onClick="insertRowGroup()" width=100>
 <INPUT TYPE="button" NAME="App RowGroup" VALUE="AppendRG" onClick="appendRowGroup()" width=100>
 <INPUT TYPE="button" NAME="Del RowGroup" VALUE="DeleteRG" onClick="deleteRowGroup()" width=100>
+<INPUT TYPE="button" NAME="App RowGroup with content" VALUE="AppendRG with content" onClick="appendRowGroupWithContent()" width=100>
 <br>
 <INPUT TYPE="button" NAME="Ins Row" VALUE="InsertRow" onClick="insertRow()" width=100>
 <INPUT TYPE="button" NAME="App Row" VALUE="AppendRow" onClick="appendRow()" width=100>
