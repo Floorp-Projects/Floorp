@@ -1,0 +1,28 @@
+<!-- -*- Mode: SGML -*- -->
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <RDF:Seq ID="NC:BrowserSidebarRoot">
+    <RDF:li>
+       <RDF:Description ID="bookmarks">
+         <NC:title>Bookmarks</NC:title>
+         <NC:content>chrome://res/rdf/bm-panel.xul</NC:content>
+         <NC:customize>chrome://res/rdf/bm-panel-cust.xul</NC:customize>
+       </RDF:Description>
+    </RDF:li>
+    <RDF:li>
+       <RDF:Description ID="flash">
+         <NC:title>Flashes</NC:title>
+         <NC:content>chrome://res/rdf/flash.xul</NC:content>
+         <NC:customize>chrome://res/rdf/flash-cust.xul</NC:customize>
+       </RDF:Description>
+    </RDF:li>
+    <RDF:li>
+       <RDF:Description ID="tinderbox">
+         <NC:title>Mozilla Tinderbox</NC:title>
+         <NC:content>http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi?tree=SeaMonkey&amp;panel=1</NC:content>
+       </RDF:Description>
+    </RDF:li>
+  </RDF:Seq>
+</RDF:RDF>

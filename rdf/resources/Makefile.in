@@ -35,6 +35,7 @@ FILES = \
 	bookmark-folder-open.gif	\
 	bookmark-item.gif		\
 	bookmarks.css			\
+	bookmarks.js			\
 	bookmarks.xul			\
 	document.gif			\
 	dom-test-1.css			\
@@ -59,13 +60,15 @@ FILES = \
 	remote-flash-2.rdf		\
 	remote-flash-3.rdf		\
 	sidebar.css			\
+	sidebar.js			\
 	sidebar.xul			\
+	sidebar-browser.rdf		\
+	sidebar-browser.xul		\
 	sidebarcontainer.xul		\
 	stock.gif			\
 	unread.gif			\
 	xpidl-test-1.xul		\
 	$(NULL)
-
 
 FILES := $(addprefix $(srcdir)/, $(FILES))
 
