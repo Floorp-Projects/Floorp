@@ -133,6 +133,7 @@
 #define PREF_NETWORK_HOSTS_POP_SERVER "network.hosts.pop_server"
 #define PREF_4X_NETWORK_HOSTS_IMAP_SERVER "network.hosts.imap_servers"  
 #define PREF_MAIL_SERVER_TYPE	"mail.server_type"
+#define PREF_BROWSER_CACHE_DIRECTORY "browser.cache.directory"
 #define POP_4X_MAIL_TYPE 0
 #define IMAP_4X_MAIL_TYPE 1
 #ifdef HAVE_MOVEMAIL
@@ -1041,6 +1042,10 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     return NS_ERROR_FAILURE;
   }
   
+  // Don't inherit the 4.x cache file location for mozilla!
+  // The cache pref later gets set with a default in nsAppRunner::InitCachePrefs().
+  m_prefs->ClearUserPref(PREF_BROWSER_CACHE_DIRECTORY);
+
   rv=DoSpecialUpdates(newProfilePath);
   if (NS_FAILED(rv)) return rv;
   PR_FREEIF(popServerName);
