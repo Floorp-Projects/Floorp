@@ -1271,7 +1271,7 @@ NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
     aMsgFolder->GetName(getter_Copies(newsgroupName));
     if (NS_FAILED(rv)) return rv;
 
-    nsCString searchUrl = serverUri;
+    nsCString searchUrl = (const char *) serverUri;
     nsCString asciiNewsgroupName;
     asciiNewsgroupName.AssignWithConversion(newsgroupName);
     searchUrl.Append(aSearchUri);
