@@ -32,6 +32,11 @@
  * file under either the NPL or the GPL.
  */
 
+/* build on macs with low memory */
+#if defined(XP_MAC) && defined(MOZ_MAC_LOWMEM)
+#pragma optimization_level 1
+#endif
+
 /*
  * JavaScript bytecode interpreter.
  */

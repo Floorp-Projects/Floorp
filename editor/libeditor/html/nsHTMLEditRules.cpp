@@ -21,6 +21,11 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+/* build on macs with low memory */
+#if defined(XP_MAC) && defined(MOZ_MAC_LOWMEM)
+#pragma optimization_level 1
+#endif
+
 #include "nsHTMLEditRules.h"
 
 #include "nsEditor.h"
