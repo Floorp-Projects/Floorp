@@ -31,7 +31,8 @@
 # Contributor(s):
 #  Robert Ginda <rginda@netscape.com>, Initial development.
 #  Pavel Hlavnicka <pavel@gingerall.cz>, seperate tocs, param linking.
-#  Petr Cimprich <petr@gingerall.cz>, nested frameset fix.
+#  Petr Cimprich <petr@gingerall.cz>, nested frameset fix, encoded URLs.
+#  Petr Cimprich <petr@gingerall.cz>, Mozilla sidebar generated from TOC
 #
 
 use strict;
@@ -109,7 +110,7 @@ my $WARNING = "<!--\n" .
 
 my $JS_COMPLETE = ("\n<script>\n" .
                    "function navToEntry(entry) {\n" .
-                   "  window.document.location.hash=entry;\n" .
+                   "  window.location.hash=entry;\n" .
                    "}\n" .
                    "function navToGroup(group) {\n" .
                    "  var f = parent.frames['toc-container'];\n" .
@@ -127,7 +128,7 @@ my $JS_COMPLETE = ("\n<script>\n" .
 
 my $JS_SPARSE = ("\n<script>\n" .
                  "function navToEntry(entry) {\n" .
-                 "  window.document.location.href='api-' + entry + '.html';\n" .
+                 "  window.location.href='api-' + entry + '.html';\n" .
                  "}\n" .
                  "function navToGroup(group) {\n" .
                  "  var f = parent.frames['toc-container'];\n" .
@@ -160,6 +161,9 @@ open (SPARSE_TOC_ABC, ">" . $outdir . "/sparse-toc-abc.html") ||
   die ("Couldn't open $outdir/sparse-toc-abc.html.\n");
 open (SPARSE_TOC_GRP, ">" . $outdir . "/sparse-toc-grp.html") ||
   die ("Couldn't open $outdir/sparse-toc-grp.html.\n");
+
+open (SIDEBAR_TOC, ">" . $outdir . "/sidebar-toc.html") ||
+  die ("Couldn't open $outdir/sidebar-toc.html.\n");
 
 
 &main();
@@ -556,7 +560,8 @@ sub EndDocument {
 sub get_type_links {
     my @types = split /\s*,\s*/, shift;
     foreach my $type (@types) {
-	$type =~ m|(&\s*)*(\S+)(\s*\*)*|;
+	#_PH_ - fix to better parse C pointer types - a bit unsafe
+	$type =~ m|(&\s*)*([^ *]+)(\s*\*)*|;
 	my ($pre, $realtype, $post) = ($1, $2, $3);
 	if (exists $entries{$realtype}) {
 	    if (!grep (/^$realtype$/, @{$c->{$TAGS[$SEE_ALSO]}})) {
@@ -778,6 +783,7 @@ sub write_toc_groups {
     print COMPLETE_TOC_GRP $head;
     print SPARSE_TOC $head;
     print SPARSE_TOC_GRP $head;
+    #print SIDEBAR_TOC $head;
 
     for $g (@groups) {
         $head = "<tr><td class='";
@@ -793,6 +799,7 @@ sub write_toc_groups {
         print COMPLETE_TOC_GRP $head;
         print SPARSE_TOC $head;
         print SPARSE_TOC_GRP $head;
+	print SIDEBAR_TOC $head;
         my $e;
         for $e (sort(@{$groups{$g}})) {
             $c = $entries{$e};
@@ -800,12 +807,14 @@ sub write_toc_groups {
             &add_toc_complete(*COMPLETE_TOC_GRP);
             &add_toc_sparse(*SPARSE_TOC);
             &add_toc_sparse(*SPARSE_TOC_GRP);
+            &add_toc_sparse(*SIDEBAR_TOC, 1);
         }
         $head = "</table></center><br></td></tr>\n";
         print COMPLETE_TOC $head;
         print COMPLETE_TOC_GRP $head;
         print SPARSE_TOC $head;
         print SPARSE_TOC_GRP $head;
+	print SIDEBAR_TOC $head;
         $even *= -1;
     }
 
@@ -820,23 +829,24 @@ sub add_toc_complete {
 
 sub add_toc_sparse {
     local (*G) = shift;
+    my $sidebar = shift;
     # add the current entry ($c) to the sparse toc
     #print SPARSE_TOC &add_toc(1);
-    print G &add_toc(1);
+    print G &add_toc(1,$sidebar);
 }
 
 sub add_toc {
     # add the current entry ($c) to the either the complete or sparse toc,
     # based on the is_sparse parameter.  Should only be called from
     # add_toc_sparse or add_toc_complete.
-    my ($is_sparse) = @_;
+    my ($is_sparse, $sidebar) = @_;
     my $html;
     my $classsuffix = $c->{$TAGS[$DEPRECATED]} ? "-deprecated" : "";
 
     $html = "<tr><td class='toc-row$classsuffix'>";
 
     $html .= &get_toc_link($c->{$TAGS[$ENTRY]}, $is_sparse,
-                           "toc-entry$classsuffix")
+                           "toc-entry$classsuffix", $sidebar)
       . "</td>";
 
     if ($classsuffix) {
@@ -855,19 +865,23 @@ sub get_link {
     # get a link for use in a content page.  Works in both sparse and complete
     # pages (because of the navToEntry call.)
     my ($entry) = @_;
-    return ("<a href='javascript:navToEntry(\"$entry\");'>$entry</a>");
+    my $entryE = _encode($entry); #_PC_
+    return ("<a href='javascript:navToEntry(\"$entryE\");'>$entry</a>");
 }
 
 sub get_toc_link {
     # get a link for use in a toc page.
-    my ($entry, $is_sparse, $class) = @_;
+    my ($entry, $is_sparse, $class, $sidebar) = @_;
+
+    my $entryE = _encode($entry); #_PC_
+    my $contentTarget = $sidebar ? '_content' : 'content-container';
 
     if ($is_sparse) {
-        return "<a class='$class' href='api-$entry.html' " .
-          "target='content-container'>$entry</a>\n";
+        return "<a class='$class' href='api-$entryE.html' " .
+          "target='$contentTarget'>$entry</a>\n";
     } else {
-        return "<a href='complete.html#$entry' class='$class' " .
-          "target='content-container'>$entry</a>";
+        return "<a href='complete.html#$entryE' class='$class' " .
+          "target='$contentTarget'>$entry</a>";
     }
 }
 
@@ -921,6 +935,9 @@ sub init_files {
        "<center><table class='toc-abc' border='0' cellspacing='0' " .
        "cellpadding='0' width='100%'>\n");
 
+    my $sidebar1 = $tocstr1;
+    $sidebar1 =~ s/api\-toc\.css/sidebar.css/;
+
     print COMPLETE_TOC $tocstr1;
     print COMPLETE_TOC &get_menu("full-compl");
     print COMPLETE_TOC $tocstr2;
@@ -949,14 +966,18 @@ sub init_files {
     print SPARSE_TOC_GRP &get_menu("grp-sparse");
     print SPARSE_TOC_GRP $tocstr2;
 
+    print SIDEBAR_TOC $sidebar1;
+    #print SIDEBAR_TOC &get_menu("grp-sparse");
+    print SIDEBAR_TOC $tocstr2;
 }
 
 sub close_toc {
     local (*G) = shift;
     my $menu = shift;
+    my $sidebar = shift;
 
     print G "</table></center>\n";
-    print G &get_menu($menu) . "<p>\n";
+    print G &get_menu($menu) . "<p>\n" unless $sidebar;
     print G $user_foot . "\n";
     print G $footstr;
     close G;
@@ -976,7 +997,7 @@ sub close_files {
     &close_toc(*SPARSE_TOC, "full-sparse");
     &close_toc(*SPARSE_TOC_ABC, "abc-sparse");
     &close_toc(*SPARSE_TOC_GRP, "grp-sparse");
-
+    &close_toc(*SIDEBAR_TOC, "grp-sparse", 1);
 }
 
 sub add_leading_nbsp {
@@ -1034,4 +1055,12 @@ sub croak_attr {
     my ($expat, $tagname, $attr) = @_;
 
     $expat->xpcroak ("Tag $tagname needs an $attr attribute");
+}
+
+#_PC_ - subroutine to encode URLs
+sub _encode {
+    my ($entry) = @_;
+
+    $entry =~ s/(\W)/sprintf("%%%x", ord($1))/eg;
+    return $entry;
 }
