@@ -26,12 +26,9 @@
 #include "nsIHTTPChannel.h"
 #include "nsIAtom.h"
 #include "nsIServiceManager.h"
-#include "nsIGenericFactory.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIByteArrayInputStream.h"
-
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // nsISupports implementation
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiMixedConv,
@@ -83,7 +80,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
     if (NS_FAILED(rv)) return rv;
     
     buffer = (char*)nsMemory::Alloc(bufLen);
-    if (!buffer) ERR_OUT
+    if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
     rv = inStr->Read(buffer, bufLen, &read);
     if (NS_FAILED(rv) || read == 0) return rv;
@@ -92,10 +89,10 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
     if (mBufLen) {
 		// incorporate any buffered data into the parsing
         char *tmp = (char*)nsMemory::Alloc(mBufLen + bufLen);
-		if (!tmp) {
-			nsMemory::Free(buffer);
-			return NS_ERROR_OUT_OF_MEMORY;
-		}
+        if (!tmp) {
+            nsMemory::Free(buffer);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         nsCRT::memcpy(tmp, mBuffer, mBufLen);
         nsMemory::Free(mBuffer);
         mBuffer = nsnull;
@@ -106,9 +103,41 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
         mBufLen = 0;
     }
 
+    if (mFirstOnData) {
+        // this is the first OnData() for this request. some servers
+        // don't bother sending a token in the first "part." This is
+        // illegal, but we'll handle the case anyway by shoving the
+        // boundary token in for the server.
+        mFirstOnData = PR_FALSE;
+        NS_ASSERTION(!mBufLen, "this is our first time through, we can't have buffered data");
+        const char * token = mToken;
+
+        if (bufLen < mTokenLen+2) {
+            // we don't have enough data yet to make this comparison.
+            // skip this check, and try again the next time OnData()
+            // is called.
+            mFirstOnData = PR_TRUE;
+        } else if (!PL_strnstr(buffer, token, mTokenLen+2)) {
+            bufLen = read + mTokenLen + 1;
+            char *tmp = (char*)nsMemory::Alloc(bufLen);
+            if (!tmp) {
+                nsMemory::Free(buffer);
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+            nsCRT::memcpy(tmp, token, mTokenLen);
+            nsCRT::memcpy(tmp+mTokenLen, "\n", 1);
+            nsCRT::memcpy(tmp+mTokenLen+1, buffer, read);
+            nsMemory::Free(buffer);
+            buffer = tmp;
+        }
+    }
+
     char *cursor = buffer, *token = nsnull;
 
     if (mProcessingHeaders) {
+        // we were not able to process all the headers
+        // for this "part" given the previous buffer given to 
+        // us in the previous OnDataAvailable callback.
         PRBool done = PR_FALSE;
 		rv = ParseHeaders(channel, cursor, bufLen, &done);
 		if (NS_FAILED(rv)) ERR_OUT
@@ -128,15 +157,15 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             bufLen = token - cursor;
             rv = SendData(cursor, bufLen);
             nsMemory::Free(buffer);
+            if (NS_FAILED(rv)) return rv;
             buffer = nsnull;
             bufLen = 0;
-            return SendStop();
+            return SendStop(NS_OK, nsnull);
         }
 
         if (!mNewPart && token > cursor) {
 			// headers are processed, we're pushing data now.
 			NS_ASSERTION(!mProcessingHeaders, "we should be pushing raw data");
-            NS_ASSERTION(mPartChannel, "implies we're processing");
             rv = SendData(cursor, token - cursor);
             bufLen -= token - cursor;
             if (NS_FAILED(rv)) ERR_OUT
@@ -163,7 +192,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             }
         } else {
             mNewPart = PR_TRUE;
-            rv = SendStop();
+            rv = SendStop(NS_OK, nsnull);
             if (NS_FAILED(rv)) ERR_OUT
             // reset to the token to front.
             // this allows us to treat the token
@@ -217,6 +246,8 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     nsresult rv = NS_OK;
     mContext = ctxt;
 
+    mFirstOnData = PR_TRUE;
+
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
     if (NS_FAILED(rv)) return rv;
     
@@ -259,64 +290,43 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
 NS_IMETHODIMP
 nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                 nsresult aStatus, const PRUnichar* aStatusArg) {
-    nsresult rv = NS_OK;
-
-    if (NS_FAILED(aStatus)) {
-        if (mPartChannel) {
-            // we've already fired an onstart.
-            // push any buffered data out and then push
-            // an onstop out.
-            if (mBufLen > 0) {
-                rv = SendData(mBuffer, mBufLen);
-                if (NS_FAILED(rv)) return rv;
-                nsMemory::Free(mBuffer);
-                mBuffer = nsnull;
-                mBufLen = 0;
-            }
-            rv = mFinalListener->OnStopRequest(mPartChannel, mContext, aStatus, aStatusArg);
-        } else {
-            rv = mFinalListener->OnStartRequest(request, ctxt);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = mFinalListener->OnStopRequest(request, ctxt, aStatus, aStatusArg);
-        }
-    }
-    else {
-        if (mBufLen > 0 && mBuffer)
-        {
-            SendData(mBuffer, mBufLen);
+    if (mPartChannel) {
+        // we've already called SendStart() (which sets up the mPartChannel,
+        // and fires an OnStart()) send any data left over, and then fire the stop.
+        if (mBufLen > 0 && mBuffer) {
+            (void) SendData(mBuffer, mBufLen);
+            // don't bother checking the return value here, if the send failed
+            // we're done anyway as we're in the OnStop() callback.
             nsMemory::Free(mBuffer);
             mBuffer = nsnull;
             mBufLen = 0;
-            rv = SendStop ();
         }
+        (void) SendStop(aStatus, aStatusArg);
+    } else if (NS_FAILED(aStatus)) {
+        // underlying data production problem. we should not be in
+        // the middle of sending data. if we were, mPartChannel,
+        // above, would have been true.
+        (void) mFinalListener->OnStartRequest(request, ctxt);
+        (void) mFinalListener->OnStopRequest(request, ctxt, aStatus, aStatusArg);
     }
-    return rv;
+
+    return NS_OK;
 }
 
 
 // nsMultiMixedConv methods
 nsMultiMixedConv::nsMultiMixedConv() {
     NS_INIT_ISUPPORTS();
-    mTokenLen           = mPartCount = 0;
+    mTokenLen           = 0;
     mNewPart            = PR_TRUE;
     mContentLength      = -1;
     mBuffer             = nsnull;
     mBufLen             = 0;
     mProcessingHeaders  = PR_FALSE;
-    mEndingNewline      = PR_FALSE;
 }
 
 nsMultiMixedConv::~nsMultiMixedConv() {
     NS_ASSERTION(!mBuffer, "all buffered data should be gone");
-}
-
-nsresult
-nsMultiMixedConv::Init() {
-	nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
-    mIOService = ioService;
-    return rv;
 }
 
 nsresult
@@ -344,6 +354,10 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
 
     if (mContentType.IsEmpty())
         mContentType = UNKNOWN_CONTENT_TYPE;
+
+    // if we already have an mPartChannel, that means we never sent a Stop()
+    // before starting up another "part." that would be bad.
+    NS_ASSERTION(!mPartChannel, "tisk tisk, shouldn't be overwriting a channel");
 
     rv = NS_NewInputStreamChannel(getter_AddRefs(mPartChannel), 
                                                  partURI, 
@@ -374,16 +388,19 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
 
 
 nsresult
-nsMultiMixedConv::SendStop() {
-    nsresult rv = mFinalListener->OnStopRequest(mPartChannel, mContext, NS_OK, nsnull);
-    if (NS_FAILED(rv)) return rv;
+nsMultiMixedConv::SendStop(nsresult aStatus, const PRUnichar* aStatusArg) {
+    
+    nsresult rv = NS_OK;
+    if (mPartChannel) {
+        rv = mFinalListener->OnStopRequest(mPartChannel, mContext, aStatus, aStatusArg);
+        // don't check for failure here, we need to remove the channel from 
+        // the loadgroup.
 
-    // Remove the channel from its load group (if any)
-    nsCOMPtr<nsILoadGroup> loadGroup;
-
-    (void) mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-    if (loadGroup) {
-        loadGroup->RemoveRequest(mPartChannel, mContext, NS_OK, nsnull);
+        // Remove the channel from its load group (if any)
+        nsCOMPtr<nsILoadGroup> loadGroup;
+        (void) mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+        if (loadGroup) 
+            (void) loadGroup->RemoveRequest(mPartChannel, mContext, aStatus, aStatusArg);
     }
 
     mPartChannel = 0;
@@ -394,10 +411,9 @@ nsresult
 nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
 
     nsresult rv = NS_OK;
-    // if we hit this assert, it's likely that the data producer isn't sticking
-    // headers after a token to delineate a new part. This is required. If
-    // the server's not sending those headers, the server's broken.
-	NS_ASSERTION(mPartChannel, "our channel went away :-(");
+    
+    if (!mPartChannel) return NS_ERROR_FAILURE; // something went wrong w/ processing
+
     char *tmp = (char*)nsMemory::Alloc(aLen); // byteArray stream owns this mem
     if (!tmp) return NS_ERROR_OUT_OF_MEMORY;
     
@@ -461,7 +477,6 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             cursor = newLine;
 
             done = PR_TRUE;
-            mPartCount++;
             break;
         }
 
@@ -553,6 +568,6 @@ NS_NewMultiMixedConv(nsMultiMixedConv** aMultiMixedConv)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aMultiMixedConv);
-    return (*aMultiMixedConv)->Init();
+    return NS_OK;
 }
 
