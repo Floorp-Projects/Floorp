@@ -558,6 +558,8 @@ string/Makefile
 string/obsolete/Makefile
 string/public/Makefile
 string/src/Makefile
+string/embed/Makefile
+string/embed/standalone/Makefile
 xpcom/Makefile
 xpcom/base/Makefile
 xpcom/build/Makefile
