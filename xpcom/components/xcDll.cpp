@@ -136,6 +136,7 @@ nsDll::Init(const char *libPersistentDescriptor)
     }
 
     Init(dllSpec);
+    NS_RELEASE(dllSpec);
 }
 
 
