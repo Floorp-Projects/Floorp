@@ -43,8 +43,8 @@ ShowLicenseWin(void)
 	gCurrWin = kLicenseID; 
 	/* gControls->lw = (LicWin *) NewPtrClear(sizeof(LicWin)); */
 	
-	GetIndString(accept, rStringList, sAcceptBtn);
-	GetIndString(decline, rStringList, sDeclineBtn);
+	GetResourcedString(accept, rInstList, sAcceptBtn);
+	GetResourcedString(decline, rInstList, sDeclineBtn);
 	
 	gControls->lw->scrollBar = GetNewControl( rLicScrollBar, gWPtr);
 	gControls->lw->licBox = GetNewControl( rLicBox, gWPtr);
@@ -107,7 +107,7 @@ InitLicTxt(void)
 	}
 	else /* assume default license filename from str rsrc */
 	{	
-		GetIndString(pLicFName, rStringList, sLicenseFName);
+		GetResourcedString(pLicFName, rInstList, sLicenseFName);
 		ERR_CHECK(FSMakeFSSpec(vRefNum, dirID, pLicFName, &licFile));
 	}
 	HUnlock(gControls->cfg->licFileName);

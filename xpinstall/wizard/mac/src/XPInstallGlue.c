@@ -138,7 +138,7 @@ xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 					{
 						EraseRect(&r);
 						
-						GetIndString(installingStr, rStringList, sProcessing);
+						GetResourcedString(installingStr, rInstList, sProcessing);
 						leaf = strrchr(msg, ':');
 						if (leaf)
 						{
@@ -173,9 +173,9 @@ xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 				
 				if (gControls->tw->xpiProgressMsg)
 				{
-					GetIndString(installingStr, rStringList, sProcessing);
-					GetIndString(fileStr, rStringList, sFileSp);
-					GetIndString(ofStr, rStringList, sSpOfSp);
+					GetResourcedString(installingStr, rInstList, sProcessing);
+					GetResourcedString(fileStr, rInstList, sFileSp);
+					GetResourcedString(ofStr, rInstList, sSpOfSp);
 					HLock((Handle)gControls->tw->xpiProgressMsg);
 					SetRect(&r, (*gControls->tw->xpiProgressMsg)->viewRect.left,
 								(*gControls->tw->xpiProgressMsg)->viewRect.top,
@@ -293,7 +293,7 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 						if (gControls->tw->allProgressMsg)
 						{
 							ProgressMsgInit();
-							GetIndString(installingStr, rStringList, sInstalling);
+							GetResourcedString(installingStr, rInstList, sInstalling);
 							TEInsert(&installingStr[1], installingStr[0], gControls->tw->allProgressMsg);
 							HLock(gControls->cfg->comp[i].shortDesc);
 							len = strlen(*gControls->cfg->comp[i].shortDesc);

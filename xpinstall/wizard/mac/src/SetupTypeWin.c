@@ -57,8 +57,8 @@ ShowSetupTypeWin(void)
 		gCurrWin = kSetupTypeID; 
 		/* gControls->stw = (SetupTypeWin *) NewPtrClear(sizeof(SetupTypeWin));	*/
 
-		GetIndString(next, rStringList, sNextBtn);
-		GetIndString(back, rStringList, sBackBtn);
+		GetResourcedString(next, rInstList, sNextBtn);
+		GetResourcedString(back, rInstList, sBackBtn);
 	
 		// malloc and get controls
 		gControls->stw->instType = GetNewControl( rInstType, gWPtr);
@@ -127,9 +127,9 @@ ShowSetupTypeWin(void)
 	SetControlMaximum(gControls->stw->destLoc, numVols+2); // 2 extra for divider and "Select Folder..." item
 	SetControlValue(gControls->stw->destLoc, 1);
 */
-		GetIndString(selectFolder, rStringList, sSelectFolder);
+		GetResourcedString(selectFolder, rInstList, sSelectFolder);
 		SetControlTitle(gControls->stw->destLoc, selectFolder);
-		GetIndString(instLocTitle, rStringList, sInstLocTitle);
+		GetResourcedString(instLocTitle, rInstList, sInstLocTitle);
 		SetControlTitle(gControls->stw->destLocBox, instLocTitle);	
 	
 		// show controls
@@ -258,7 +258,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		cntlVal = GetControlValue(currCntl);
 		
 		err = NavGetDefaultDialogOptions(&dlgOpts);
-		GetIndString( dlgOpts.message, rStringList, sFolderDlgMsg );
+		GetResourcedString( dlgOpts.message, rInstList, sFolderDlgMsg );
 		eventProc = NewNavEventProc( (ProcPtr) OurNavEventFunction );
 		
 		if (!bFirstFolderSelection)
@@ -422,7 +422,7 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 	
 		if ( (bCmp = pstrcmp(folder, volName)) == 0)
 		{
-			GetIndString( inFolderMsg, rStringList, sInFolder);
+			GetResourcedString( inFolderMsg, rInstList, sInFolder);
 			cstr = PascalToC(inFolderMsg);
 			TEInsert(cstr, strlen(cstr), pathInfo); 
 			DisposePtr(cstr);	
@@ -434,7 +434,7 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 				cstr = "\"\r\0"; 	TEInsert(cstr, strlen(cstr), pathInfo);
 		}
 		
-		GetIndString( onDiskMsg,   rStringList, sOnDisk);
+		GetResourcedString( onDiskMsg,   rInstList, sOnDisk);
 		cstr = PascalToC(onDiskMsg);
 		TEInsert(cstr, strlen(cstr), pathInfo);
 		DisposePtr(cstr);
@@ -514,7 +514,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	}
 	
 	/* Get the "Disk Space Available: " string */
-	GetIndString( msg, rStringList, sDiskSpcAvail );
+	GetResourcedString( msg, rInstList, sDiskSpcAvail );
 	cstr = PascalToC(msg);
 	msglen = strlen(cstr);
 	cmsg = (char*)malloc(msglen+255);
@@ -528,7 +528,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	cmsg[msglen] = '\0';
 	
 	/* tack on the "kilobyte" string: generally "K" but is rsrc'd */
-	GetIndString( kb, rStringList, sKilobytes );
+	GetResourcedString( kb, rInstList, sKilobytes );
 	ckb = PascalToC(kb);
 	msglen += strlen(ckb);
 	strcat( cmsg, ckb );
@@ -557,7 +557,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	}
 	
 	/* Get the "Disk Space Needed: " string */
-	GetIndString( msg, rStringList, sDiskSpcNeeded );
+	GetResourcedString( msg, rInstList, sDiskSpcNeeded );
 	cstr = PascalToC(msg);
 	msglen = strlen(cstr);
 	cmsg = (char*)malloc(msglen+255);
@@ -571,7 +571,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	cmsg[msglen] = '\0';
 	
 	/* tack on the "kilobyte" string: generally "K" but is rsrc'd */
-	GetIndString( kb, rStringList, sKilobytes );
+	GetResourcedString( kb, rInstList, sKilobytes );
 	ckb = PascalToC(kb);
 	msglen += strlen(ckb);
 	strcat( cmsg, ckb );
@@ -816,6 +816,7 @@ LegacyFileCheck(short vRefNum, long dirID)
 	OSErr		err = noErr;
 	short		dlgRV = 0;
 	char		cFilepath[1024];
+	AlertStdAlertParamRec *alertdlg;
 	
 	for (i = 0; i < gControls->cfg->numLegacyChecks; i++)
 	{
@@ -857,10 +858,15 @@ LegacyFileCheck(short vRefNum, long dirID)
 				HUnlock(gControls->cfg->checks[i].message);
 				if (!pMessage)
 					continue;
-				ParamText(pMessage, "\p", "\p", "\p");
 				
 				/* set bRetry to retval of show message dlg */
-				dlgRV = CautionAlert(rAlrtDelOldInst, nil);
+				alertdlg = (AlertStdAlertParamRec *)NewPtrClear(sizeof(AlertStdAlertParamRec));
+				alertdlg->defaultButton = kAlertStdAlertOKButton;
+				alertdlg->defaultText = (ConstStringPtr)NewPtrClear(kKeyMaxLen);
+				alertdlg->cancelText = (ConstStringPtr)NewPtrClear(kKeyMaxLen);
+			    GetResourcedString((unsigned char *)alertdlg->defaultText, rInstList, sDeleteBtn);
+			    GetResourcedString((unsigned char *)alertdlg->cancelText, rInstList, sCancel);
+				StandardAlert(kAlertCautionAlert, pMessage, nil, alertdlg, &dlgRV);
 				if (dlgRV == 1) /* default button id  ("Delete") */
 				{			
 					/* delete and move on to next screen */
@@ -1025,14 +1031,30 @@ VerifyDiskSpace(void)
 {
     char dsNeededStr[255], dsAvailStr[255];
     short alertRV;
+    Str255 pMessage, pStr;
+    AlertStdAlertParamRec *alertdlg;
     
     if (sDSNeededK > sDSAvailK)
     {
         sprintf(dsNeededStr, "%d", sDSNeededK);
         sprintf(dsAvailStr, "%d", sDSAvailK);
 
-        ParamText(c2pstr(dsNeededStr), c2pstr(dsAvailStr), "\p", "\p");
-        alertRV = CautionAlert(rWarnLessSpace, nil);
+        GetResourcedString(pMessage, rInstList, sSpaceMsg1);
+        pstrcat(pMessage, CToPascal(dsNeededStr));
+        pstrcat(pMessage, CToPascal("KB. \r"));
+        GetResourcedString(pStr, rInstList, sSpaceMsg2);
+        pstrcat(pStr, CToPascal(dsAvailStr));
+        pstrcat(pStr, CToPascal("KB. \r\r"));
+        pstrcat(pMessage, pStr);
+        GetResourcedString(pStr, rInstList, sSpaceMsg3);
+        pstrcat(pMessage, pStr);
+        alertdlg = (AlertStdAlertParamRec *)NewPtrClear(sizeof(AlertStdAlertParamRec));
+        alertdlg->defaultButton = kAlertStdAlertCancelButton;
+        alertdlg->defaultText = (ConstStringPtr)NewPtrClear(kKeyMaxLen);
+        alertdlg->cancelText = (ConstStringPtr)NewPtrClear(kKeyMaxLen);
+        GetResourcedString((unsigned char *)alertdlg->defaultText, rInstList, sOKBtn);
+        GetResourcedString((unsigned char *)alertdlg->cancelText, rInstList, sQuitBtn);
+        StandardAlert(kAlertCautionAlert, pMessage, nil, alertdlg, &alertRV);
         if (alertRV == 2)
         {
             gDone = true;

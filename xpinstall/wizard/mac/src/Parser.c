@@ -41,7 +41,7 @@ ParseConfig(void)
 		return;
 	}
 	
-	if (!ReadConfigFile(&cfgText))
+	if (!ReadINIFile(sConfigFName, &cfgText))
 	{
 	    ErrorHandler(eCfgRead);
 	    return;
@@ -62,8 +62,34 @@ ParseConfig(void)
 	    DisposePtr(cfgText);
 }
 
+void
+ParseInstall(void)
+{ 	
+    OSErr 				err;
+    char 	*instText;
+
+    gStrings = (InstINIRes*) NewPtrClear(sizeof(InstINIRes));			
+
+    if(!gStrings)
+    {
+        ErrorHandler(eMem);
+    	return;
+    }
+    
+    if (!ReadINIFile(sInstallFName, &instText))
+    {
+        ErrorHandler(eInstRead);
+        return;
+    }
+    
+    ERR_CHECK(PopulateInstallKeys(instText));
+    
+    if (instText)
+        DisposePtr(instText);
+}
+
 Boolean
-ReadConfigFile(char **text)
+ReadINIFile(int sINIFName, char **text)
 {
     Boolean				bSuccess = false, isDir = false;
 	OSErr 				err;
@@ -82,8 +108,8 @@ ReadConfigFile(char **text)
 	if (!isDir)		/* bail if we can't find the "Installer Modules" dir */
 		return false;
 		
-	/* open config.ini file */
-	GetIndString(fname, rStringList, sConfigFName);
+    /* open config.ini or install.ini file */
+    GetIndString(fname, rStringList, sINIFName);
 	if ((err = FSMakeFSSpec(vRefNum, dirID, fname, &cfgFile)) != noErr )
 		return false;
 	if ((err = FSpOpenDF( &cfgFile, fsRdPerm, &fileRefNum)) != noErr)
@@ -113,6 +139,42 @@ ReadConfigFile(char **text)
 }	
 
 #pragma mark -
+
+ OSErr
+PopulateInstallKeys(char *instText)
+{
+    OSErr err = noErr;
+    Handle tmp;
+    int i;
+    
+    tmp = NewHandleClear(kValueMaxLen);
+    if (!tmp)
+    {
+   	    ErrorHandler(eMem);
+       	return eParseFailed;
+    }
+
+    for( i = 1; i < instKeysNum + 1; i++ )
+    {
+        FillKeyValueUsingSLID(rInstList, sInstGeneral, i, tmp, instText);
+        my_c2pstrcpy(*tmp, gStrings->iKey[i]);
+    }
+
+    for( i = 1; i < instMenuNum + 1; i++ )
+    {
+        FillKeyValueUsingSLID(rInstMenuList, sMenuGeneral, i, tmp, instText);
+        my_c2pstrcpy(*tmp, gStrings->iMenu[i]);
+    }
+    
+    for( i = 1; i < instErrsNum + 1; i++ )
+    {
+        FillKeyValueUsingSLID(rErrorList, eErrorMessage, i, tmp, instText);
+        my_c2pstrcpy(*tmp, gStrings->iErr[i]);
+    }
+
+    DisposePtr((char *)tmp);
+    return err;
+}
 
 OSErr
 PopulateGeneralKeys(char *cfgText)
@@ -1258,4 +1320,26 @@ void CopyPascalStrToC(ConstStr255Param srcPString, char* dest)
 {
     BlockMoveData(&srcPString[1], dest, srcPString[0]);
     dest[srcPString[0]] = '\0';
+}
+
+/* Get strings from install.ini */
+Boolean GetResourcedString(Str255 skey, int nList, int nIndex)
+{
+	if( nList == rInstList && nIndex < instKeysNum + 1 )
+	{
+		pstrcpy(skey, gStrings->iKey[nIndex]);
+		return true;
+	}
+	else if( nList == rErrorList && nIndex < instErrsNum + 1 )
+	{
+		pstrcpy(skey, gStrings->iErr[nIndex]);
+		return true;
+	}
+	else if( nList == rInstMenuList && nIndex < instMenuNum + 1 )
+	{
+		pstrcpy(skey, gStrings->iMenu[nIndex]);
+		return true;
+	}
+	else
+		return false;
 }

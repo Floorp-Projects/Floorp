@@ -42,8 +42,8 @@ ShowWelcomeWin(void)
 
 		gCurrWin = kWelcomeID; 
 	
-		GetIndString(next, rStringList, sNextBtn);
-		GetIndString(back, rStringList, sBackBtn);
+		GetResourcedString(next, rInstList, sNextBtn);
+		GetResourcedString(back, rInstList, sBackBtn);
 
         ShowWelcomeMsg();
 		ShowNavButtons(back, next);
@@ -150,7 +150,7 @@ ShowCancelButton(void)
 {
 	Str255 cancelStr;
 	
-	GetIndString(cancelStr, rStringList, sCancel);
+	GetResourcedString(cancelStr, rInstList, sCancel);
 	gControls->cancelB = GetNewControl(rCancelBtn, gWPtr);
 	if (gControls->cancelB != NULL)
 	{
@@ -164,7 +164,7 @@ ShowReadmeButton(void)
 {
 	Str255 readme;
 	
-	GetIndString(readme, rStringList, sReadme);
+	GetResourcedString(readme, rInstList, sReadme);
 	gControls->ww->readmeButton = GetNewControl(rReadmeBtn, gWPtr);
 	if (gControls->ww->readmeButton != NULL)
 	{

@@ -212,45 +212,16 @@ if (err) 								\
 #define rAboutBox		128
 
 
-#define	rStringList 	140		/* i18n strings */
-#define sBackBtn 		1 
-#define sNextBtn 		2
-#define sDeclineBtn 	3
-#define sAcceptBtn	 	4
-#define sInstallBtn		6
-#define sLicenseFName	7
-#define sInstLocTitle	8
-#define sSelectFolder	9
-#define	sOnDisk			10
-#define	sInFolder		11
-#define sCompDescTitle	12
-#define sConfigFName	14		
-#define sSDLib			15
-#define sTempIDIName	16		
-#define	sConfigIDIName	17		
-#define sFolderDlgMsg	18
-#define sDiskSpcAvail	19
-#define sDiskSpcNeeded	20		
-#define sKilobytes		21 	
-#define sExtracting		23		
-#define sInstalling		24
-#define	sFileSp			25
-#define sSpOfSp			26	
-#define sProcessing		27		
-#define sReadme			28
-#define sInstModules	29
-#define sCancel         30
-#define sProxySettings  31
-#define sDLSettings     32
-#define sSiteSelMsg     33
-#define sLabDloading    34
-#define sLabFrom        35
-#define sLabTo          36
-#define sLabRate        37
-#define sTimeLeft       38
+#define	rStringList 	140		// common strings
+#define sConfigFName	1
+#define sInstallFName	2		
+#define sTempIDIName	3		
+#define sConfigIDIName	4		
+#define sInstModules	5
+#define eInstRead		6		//install.ini read failed
 
 #define rTitleStrList	170
-#define sNSInstTitle	1		/* end i18n strings */
+#define sNSInstTitle	1
 
 
 #define rParseKeys		141		/* parse keys in config.ini */
@@ -332,16 +303,91 @@ if (err) 								\
 #define sADDITIONAL		47	/* end parse keys */
 
 #define rErrorList      144 /* errors */
-#define eParam          1
-#define eMem            2
-#define	eParseFailed	3
-#define eLoadLib        4
-#define eUnknownDlgID   5   
-#define eSpawn          6
-#define eMenuHdl        7
-#define eCfgRead        8
-#define eDownload       9
-                            /* end errors */
+#define eErrorMessage	1
+#define eErr1			2
+#define eErr2			3
+#define eErr3			4
+#define eParam          5
+#define eMem            6
+#define	eParseFailed	7
+#define eLoadLib        8
+#define eUnknownDlgID   9   
+#define eSpawn          10
+#define eMenuHdl        11
+#define eCfgRead        12
+#define eDownload       13
+
+#define instErrsNum		13	/* number of the install.ini errors */
+
+#define	rInstList 		145		// install.ini strings
+#define sInstGeneral	1
+#define sNsTitle		2
+#define sMoTitle		3
+#define sBackBtn 		4 
+#define sNextBtn 		5
+#define sCancel         6
+#define sDeclineBtn 	7
+#define sAcceptBtn	 	8
+#define sInstallBtn		9
+#define sLicenseFName	10
+#define sReadme			11
+#define sInstLocTitle	12
+#define sSelectFolder	13
+#define	sOnDisk			14
+#define	sInFolder		15
+#define sCompDescTitle	16
+#define sFolderDlgMsg	17
+#define sDiskSpcAvail	18
+#define sDiskSpcNeeded	19		
+#define sKilobytes		20 	
+#define sExtracting		21		
+#define sInstalling		22
+#define	sFileSp			23
+#define sSpOfSp			24	
+#define sProcessing		25		
+#define sProxySettings  26
+#define sProxyDlg		27
+#define sProxyHost		28
+#define sProxyPort		29
+#define sProxyUsername	30
+#define sProxyPassword	31
+#define sOKBtn			32
+#define sDLSettings     33
+#define sSiteSelMsg     34
+#define sLabDloading    35
+#define sLabFrom        36
+#define sLabTo          37
+#define sLabRate        38
+#define sTimeLeft       39
+#define sDownloadKB		40
+#define sDeleteBtn		41
+#define sQuitBtn		42
+#define sSpaceMsg1		43
+#define sSpaceMsg2		44
+#define sSpaceMsg3		45
+
+#define instKeysNum		45	/* number of the install.ini keys */
+
+#define rInstMenuList	146
+#define sMenuGeneral	1
+#define sMenuAboutNs	2
+#define sMenuAboutMo	3
+#define sMenuFile		4
+#define sMenuQuit		5
+#define sMenuQuitHot	6
+#define sMenuEdit		7
+#define sMenuUndo		8
+#define sMenuUndoHot	9
+#define sMenuCut		10
+#define sMenuCutHot		11
+#define sMenuCopy		12
+#define sMenuCopyHot	13
+#define sMenuPaste		14
+#define sMenuPasteHot	15
+#define sMenuClear		16
+#define sMenuClearHot	17
+ 
+#define instMenuNum		17
 
 
 /*-----------------------------------------------------------*
@@ -563,6 +609,11 @@ typedef struct InstWiz {
 	ControlHandle cancelB;
 } InstWiz;
 
+typedef struct InstINIRes {
+    Str255	iKey[instKeysNum+1];
+    Str255	iErr[instErrsNum+1];
+    Str255	iMenu[instMenuNum+1];
+} InstINIRes;
 
 /*-----------------------------------------------------------*
  *   globals 
@@ -570,6 +621,7 @@ typedef struct InstWiz {
 extern WindowPtr 	gWPtr;
 extern short 		gCurrWin;
 extern InstWiz		*gControls;
+extern InstINIRes	*gStrings;
 extern Boolean 		gDone;
 extern Boolean      gInstallStarted;
 
@@ -599,7 +651,10 @@ void		Shutdown(void);
  *   Parser 
  *-----------------------------------------------------------*/
 void		ParseConfig(void);
-Boolean		ReadConfigFile(char **);
+void		ParseInstall(void);
+Boolean		ReadINIFile(int, char **);
+OSErr       PopulateInstallKeys(char *);
+Boolean		GetResourcedString(Str255, int, int);
 OSErr       PopulateGeneralKeys(char *);
 OSErr		PopulateLicWinKeys(char *);
 OSErr		PopulateWelcWinKeys(char *);
@@ -673,7 +728,7 @@ static OSErr FindAppOnVolume (OSType, short, FSSpec *);
 OSErr 		GetSysVolume (short *);
 OSErr 		GetIndVolume (short, short *);
 OSErr 		GetLastModDateTime(const FSSpec *, unsigned long *);
-
+void		InitNewMenu();
 
 /*-----------------------------------------------------------*
  *   SetupTypeWin
@@ -698,6 +753,7 @@ int			CompareVersion(Handle, FSSpecPtr);
 Boolean     VerifyDiskSpace(void);
 void		EnableSetupTypeWin(void);
 void		DisableSetupTypeWin(void);
+void		strtran(char*, const char*, const char*); 
 
 /*-----------------------------------------------------------*
  *   ComponentsWin

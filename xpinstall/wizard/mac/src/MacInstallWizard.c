@@ -31,6 +31,7 @@ Boolean 	gDone = false;
 WindowPtr 	gWPtr = NULL;
 short		gCurrWin = 0;
 InstWiz		*gControls = NULL;
+InstINIRes  *gStrings = NULL;
 Boolean     gInstallStarted = false;
 
 
@@ -85,14 +86,24 @@ void Init(void)
 {
 	Str255		 	winTitle;
 	OSErr			err = noErr;
+    Str255			instMode;
+    Ptr				pinstMode;
 	
 	gDone = false;
 	InitManagers();
 	InitControlsObject();	
 	CleanTemp();
 
+	ParseInstall();
+
 	gWPtr = GetNewCWindow(rRootWin, NULL, (WindowPtr) -1);	
-    GetIndString( winTitle, rTitleStrList, sNSInstTitle);
+    GetIndString( instMode, rTitleStrList, sNSInstTitle);
+    pinstMode = PascalToC(instMode);
+#if MOZILLA == 0
+    GetResourcedString(winTitle, rInstList, sNsTitle);
+#else
+    GetResourcedString(winTitle, rInstList, sMoTitle);
+#endif
 	SetWTitle( gWPtr, winTitle );	
 	SetWRefCon(gWPtr, kMIWMagic);
 	MakeMenus();
@@ -102,6 +113,9 @@ void Init(void)
 	
 	ShowWelcomeWin();	
 	SetThemeWindowBackground(gWPtr, kThemeBrushDialogBackgroundActive, true); 
+	
+	/* Set menu */
+	InitNewMenu();
 }
 
 OSErr
@@ -353,11 +367,6 @@ void MakeMenus(void)
 	else
 		ErrorHandler(eMenuHdl); 
 
-	if ( (menuHdl = GetMenuHandle(mEdit)) != nil)
-		DisableItem(menuHdl, 0);
-	else
-		ErrorHandler(eMenuHdl);
-	
 	ERR_CHECK(HMGetHelpMenuHandle(&menuHdl));
 	DisableItem(menuHdl, 1);
 
@@ -398,6 +407,12 @@ void ErrorHandler(short errCode)
 // TO DO
 //		* handle a "fatality" parameter for recovery
 
+    Str255      pErrorStr;
+    Str255      pMessage;
+    char        *cErrNo = 0;
+    StringPtr   pErrNo = 0;
+    AlertStdAlertParamRec *alertdlg;
+
     // only throw up the error dialog once (since we have no fatality param)
     static Boolean bErrHandled = false;
     if (bErrHandled)
@@ -405,30 +420,41 @@ void ErrorHandler(short errCode)
     else
         bErrHandled = true;
         
-    Str255      pErrorStr = "\pUnexpected error!";
-    Str255      pMessage = "\pError ";
-    char        *cErrNo = 0;
-    StringPtr   pErrNo = 0;
+    // if install.ini read failed
+    if( errCode == eInstRead )
+    {
+        GetIndString(pErrorStr, rStringList, errCode);
+        ParamText(pErrorStr, "\p", "\p", "\p");
+        StopAlert(rAlrtError, nil);
+        SysBeep(10);
+        gDone = true;
+        return;
+    }
+	
+    GetResourcedString(pMessage, rErrorList, eErr1);
+    GetResourcedString(pErrorStr, rErrorList, eErr2);
     
     cErrNo = ltoa(errCode);
     pErrNo = CToPascal(cErrNo);
     
     if (errCode > 0)    // negative errors are definitely from the system so we don't interpret
     {
-        GetIndString(pErrorStr, rErrorList, errCode);
+        GetResourcedString(pErrorStr, rErrorList, errCode);
         pstrcat(pMessage, pErrNo);
         pstrcat(pMessage, "\p: ");
         pstrcat(pMessage, pErrorStr);
     }
     else
     {
-        pstrcpy(pMessage, "\pInstallation failed due to error: ");
+        GetResourcedString(pMessage, rErrorList, eErr3);
         pstrcat(pMessage, pErrNo);
     }  
         
-    ParamText(pMessage, "\p", "\p", "\p");
-    
-    StopAlert(rAlrtError, nil);
+    alertdlg = (AlertStdAlertParamRec *)NewPtrClear(sizeof(AlertStdAlertParamRec));
+    alertdlg->defaultButton = kAlertStdAlertOKButton;
+    alertdlg->defaultText = (ConstStringPtr)NewPtrClear(kKeyMaxLen);
+    GetResourcedString((unsigned char *)alertdlg->defaultText, rInstList, sOKBtn);
+    StandardAlert(kAlertStopAlert, pMessage, nil, alertdlg, 0);
 	SysBeep(10);
 	
     if (cErrNo)
@@ -542,4 +568,56 @@ void Shutdown(void)
 		HideWindow(gWPtr);
 		DisposeWindow(gWPtr);
 	}
+}
+
+//set new menu groups and items from install.ini
+void InitNewMenu()
+{
+    MenuHandle		instMenu=0;
+    MenuRef			fileMenu, editMenu;
+    Str255			menuText;
+
+    instMenu = GetMenuHandle(mApple);
+#if MOZILLA == 0
+    	GetResourcedString(menuText, rInstMenuList, sMenuAboutNs);
+#else
+    	GetResourcedString(menuText, rInstMenuList, sMenuAboutMo);
+#endif
+    SetMenuItemText(instMenu, iAbout, menuText);
+    
+    GetResourcedString(menuText, rInstMenuList, sMenuFile);
+    fileMenu = NewMenu(mFile, menuText);
+    InsertMenu(fileMenu, mFile);
+    GetResourcedString(menuText, rInstMenuList, sMenuEdit);
+    editMenu = NewMenu(mEdit, menuText);
+    InsertMenu(editMenu, mEdit);
+    DrawMenuBar();
+
+    GetResourcedString(menuText, rInstMenuList, sMenuQuit);
+    AppendMenu(fileMenu, menuText);
+    GetResourcedString(menuText, rInstMenuList, sMenuQuitHot);
+    SetItemCmd(fileMenu, iQuit, menuText[1]);
+    
+    GetResourcedString(menuText, rInstMenuList, sMenuUndo);
+    AppendMenu(editMenu, menuText);
+    GetResourcedString(menuText, rInstMenuList, sMenuUndoHot);
+    SetItemCmd(editMenu, iUndo, menuText[1]);
+    pstrcpy(menuText, CToPascal("-"));
+    AppendMenu(editMenu, menuText);
+    GetResourcedString(menuText, rInstMenuList, sMenuCut);
+    AppendMenu(editMenu, menuText);
+    GetResourcedString(menuText, rInstMenuList, sMenuCutHot);
+    SetItemCmd(editMenu, iCut, menuText[1]);
+    GetResourcedString(menuText, rInstMenuList, sMenuCopy);
+    AppendMenu(editMenu, menuText);
+    GetResourcedString(menuText, rInstMenuList, sMenuCopyHot);
+    SetItemCmd(editMenu, iCopy, menuText[1]);
+    GetResourcedString(menuText, rInstMenuList, sMenuPaste);
+    AppendMenu(editMenu, menuText);
+    GetResourcedString(menuText, rInstMenuList, sMenuPasteHot);
+    SetItemCmd(editMenu, iPaste, menuText[1]);
+    GetResourcedString(menuText, rInstMenuList, sMenuClear);
+    AppendMenu(editMenu, menuText);
+    GetResourcedString(menuText, rInstMenuList, sMenuClearHot);
+    SetItemCmd(editMenu, iClear, menuText[1]);
 }

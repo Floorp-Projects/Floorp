@@ -51,8 +51,8 @@ ShowComponentsWin(void)
 	gCurrWin = kComponentsID; 
 	/* gControls->cw = (CompWin *) NewPtrClear(sizeof(CompWin)); */
 	
-	GetIndString(next, rStringList, sNextBtn);
-	GetIndString(back, rStringList, sBackBtn);
+	GetResourcedString(next, rInstList, sNextBtn);
+	GetResourcedString(back, rInstList, sBackBtn);
 
 	// get controls
 	listBoxRect = Get1Resource('RECT', rCompListBox);
@@ -117,7 +117,7 @@ ShowComponentsWin(void)
 	bCellSelected = PopulateCompInfo();
 	
 	// show controls
-	GetIndString(compDescTitle, rStringList, sCompDescTitle);
+	GetResourcedString(compDescTitle, rInstList, sCompDescTitle);
 	SetControlTitle(gControls->cw->compDescBox, compDescTitle);
 	
 	MoveTo( gControls->cw->compListBox.left, gControls->cw->compListBox.top - kInterWidgetPad);

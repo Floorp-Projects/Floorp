@@ -511,6 +511,8 @@ DLProgressCB(int aBytesSoFar, int aTotalFinalSize)
     float rate = 0;
     time_t now;
     Rect teRect;
+    Str255 dlStr;
+    char tmp[kKeyMaxLen];
       
     if (aTotalFinalSize != sCurrTotalDLSize)
     {
@@ -585,8 +587,16 @@ DLProgressCB(int aBytesSoFar, int aTotalFinalSize)
             now = time(NULL);
             rate = ComputeRate(aBytesSoFar, sCurrStartTime, now);
             
-            sprintf(compressedStr, "%d KB of %d KB  (%.2f KB/sec)", 
-                aBytesSoFar/1024, aTotalFinalSize/1024, rate);
+            // create processing string "%d KB of %d KB  (%.2f KB/sec)"
+            GetResourcedString(dlStr, rInstList, sDownloadKB);
+            strcpy(compressedStr, PascalToC(dlStr));
+            sprintf(tmp, "%d", aBytesSoFar/1024);
+            strtran(compressedStr, "%d1", tmp);
+            sprintf(tmp, "%d", aTotalFinalSize/1024);
+            strtran(compressedStr, "%d2", tmp);
+            sprintf(tmp, "%.2f", rate);
+            strtran(compressedStr, "%.2f", tmp);
+            
             HLock((Handle)gControls->tw->dlProgressMsgs[3]);
             teRect = (**(gControls->tw->dlProgressMsgs[3])).viewRect;
             HUnlock((Handle)gControls->tw->dlProgressMsgs[3]);
@@ -1059,7 +1069,7 @@ InitDLProgControls(void)
                 gControls->tw->dlLabels[i] = GetNewControl(rLabDloading + i, gWPtr);
                 if (gControls->tw->dlLabels[i])
                 {
-                    GetIndString(labelStr, rStringList, sLabDloading + i);
+                    GetResourcedString(labelStr, rInstList, sLabDloading + i);
                     SetControlData(gControls->tw->dlLabels[i], kControlNoPart, 
                                 kControlStaticTextTextTag, labelStr[0], (Ptr)&labelStr[1]); 
                     ShowControl(gControls->tw->dlLabels[i]);
@@ -1157,7 +1167,7 @@ InitProgressBar(void)
 			gControls->tw->allProgressMsg = TENew(&r, &r);
 			if (gControls->tw->allProgressMsg)
 			{
-				GetIndString(extractingStr, rStringList, sExtracting);
+				GetResourcedString(extractingStr, rInstList, sExtracting);
 				TEInsert(&extractingStr[1], extractingStr[0], gControls->tw->allProgressMsg);	
 			}
 			
@@ -1188,3 +1198,21 @@ InitProgressBar(void)
 	SetPort(oldPort);
 }
 
+/* replace a substring "srch" (first found), with a new string "repl" */
+void strtran(char* str, const char* srch, const char* repl) 
+{
+    int lsrch=strlen(srch);
+    char *p;
+    char tmp[kKeyMaxLen];
+
+	p = strstr(str, srch);
+	if( p == nil )
+		return;
+	strcpy(tmp, p);
+	*p = '\0';
+	strcat(str, repl);
+	p = tmp;
+	p = p + lsrch;
+	strcat(str, p);
+	
+}
