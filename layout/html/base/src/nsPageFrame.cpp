@@ -154,40 +154,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    // We don't expect the target of the reflow command to be page frame
-#ifdef NS_DEUG
-    NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
-
-    nsIFrame* target;
-    aReflowState.reflowCommand->GetTarget(target);
-    NS_ASSERTION(target != this, "page frame is reflow command target");
-#endif
-  
-    // Verify the next reflow command frame is our one and only child frame
-    nsIFrame* next;
-    aReflowState.reflowCommand->GetNext(next);
-    NS_ASSERTION(next == mFrames.FirstChild(), "bad reflow frame");
-
-    // Dispatch the reflow command to our frame
-    nsSize            maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState,
-                                     mFrames.FirstChild(), maxSize);
-  
-    kidReflowState.isTopOfPage = PR_TRUE;
-    ReflowChild(mFrames.FirstChild(), aPresContext, aDesiredSize,
-                kidReflowState, 0, 0, 0, aStatus);
-  
-    // Place and size the child. Make sure the child is at least as
-    // tall as our max size (the containing window)
-    if (aDesiredSize.height < aReflowState.availableHeight) {
-      aDesiredSize.height = aReflowState.availableHeight;
-    }
-
-    FinishReflowChild(mFrames.FirstChild(), aPresContext, aDesiredSize,
-                      0, 0, 0);
-
-  } else {
+  if (eReflowReason_Incremental != aReflowState.reason) {
     // Do we have any children?
     // XXX We should use the overflow list instead...
     if (mFrames.IsEmpty() && (nsnull != mPrevInFlow)) {
@@ -219,15 +186,16 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       kidReflowState.availableWidth  = maxSize.width;
       kidReflowState.availableHeight = maxSize.height;
 
+      // calc location of frame
+      nscoord xc = mPD->mReflowMargin.left + mPD->mDeadSpaceMargin.left + mPD->mExtraMargin.left;
+      nscoord yc = mPD->mReflowMargin.top + mPD->mDeadSpaceMargin.top + mPD->mExtraMargin.top;
+
       // Get the child's desired size
-      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 
-                  mPD->mReflowMargin.left+mPD->mExtraMargin.left, 
-                  mPD->mReflowMargin.top+mPD->mExtraMargin.top, 0, aStatus);
+      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, xc, yc, 0, aStatus);
+
 
       // Place and size the child
-      FinishReflowChild(frame, aPresContext, aDesiredSize, 
-                        mPD->mReflowMargin.left+mPD->mExtraMargin.left, 
-                        mPD->mReflowMargin.top+mPD->mExtraMargin.top, 0);
+      FinishReflowChild(frame, aPresContext, aDesiredSize, xc, yc, 0);
 
       // Make sure the child is at least as tall as our max size (the containing window)
       if (aDesiredSize.height < aReflowState.availableHeight) {
@@ -443,7 +411,7 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
   nscoord x = aRect.x;
   switch (aJust) {
     case nsIPrintOptions::kJustLeft:
-      // do nothing, already set
+      x += mPD->mExtraMargin.left + mPD->mHeadFooterGap;
       break;
 
     case nsIPrintOptions::kJustCenter:
@@ -451,10 +419,12 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
       break;
 
     case nsIPrintOptions::kJustRight:
-      x += aRect.width - width;
+      x += aRect.width - width - mPD->mExtraMargin.right - mPD->mHeadFooterGap;
       break;
   } // switch
 
+  NS_ASSERTION(x >= 0, "x can't be less than zero");
+  x = PR_MAX(x, 0);
   return x;
 }
 
@@ -520,6 +490,8 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                               nscoord              aWidth)
 {
 
+  nscoord contentWidth = aWidth - (mPD->mHeadFooterGap * 2);
+
   // first make sure we have a vaild string and that the height of the
   // text will fit in the margin
   if (aStr.Length() > 0 && 
@@ -534,7 +506,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     PRBool addEllipse = PR_FALSE;
 
     // trim the text and add the elipses if it won't fit
-    while (width >= aWidth && str.Length() > 1) {
+    while (width >= contentWidth && str.Length() > 1) {
       str.SetLength(str.Length()-1);
       aRenderingContext.GetWidth(str, width);
       addEllipse = PR_TRUE;
@@ -550,9 +522,9 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     nscoord x = GetXPosition(aRenderingContext, rect, aJust, str);
     nscoord y;
     if (aHeaderFooter == eHeader) {
-      y = rect.y;
+      y = rect.y + mPD->mExtraMargin.top + mPD->mHeadFooterGap;
     } else {
-      y = rect.y + rect.height - aHeight;
+      y = rect.y + rect.height - aHeight - mPD->mExtraMargin.bottom - mPD->mHeadFooterGap;
     }
 
     // set up new clip and draw the text
@@ -646,10 +618,10 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     nsRect r;
-    fprintf(mDebugFD, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d]\n", this, 
-            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height);
-    fprintf(stdout, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d]\n", this, 
-            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height);
+    fprintf(mDebugFD, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
+            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height, specialClipIsSet?"Yes":"No");
+    fprintf(stdout, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
+            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height, specialClipIsSet?"Yes":"No");
   }
 #endif
 
@@ -665,7 +637,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     // XXX Paint a one-pixel border around the page so it's easy to see where
     // each page begins and ends when we're
     rct.Deflate(mMargin);
-    rct.Deflate(mPD->mExtraMargin);
+    rct.Deflate(mPD->mDeadSpaceMargin);
     //float   p2t;
     //aPresContext->GetPixelsToTwips(&p2t);
     //rect.Deflate(NSToCoordRound(p2t), NSToCoordRound(p2t));

@@ -52,6 +52,8 @@
 #include "nsPageFrame.h"
 #include "nsIPrintPreviewContext.h"
 
+#include "nsIPref.h" // for header/footer gap & ExtraMargin for Print Preview
+
 // DateTime Includes
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
@@ -105,6 +107,7 @@ nsSharedPageData::nsSharedPageData() :
   mReflowRect(0,0,0,0),
   mReflowMargin(0,0,0,0),
   mShadowSize(0,0),
+  mDeadSpaceMargin(0,0,0,0),
   mExtraMargin(0,0,0,0)
 {
 }
@@ -218,115 +221,6 @@ nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsIPresContext* aPresContex
   return rv;
 }
 
-// Handles incremental reflow
-nsresult
-nsSimplePageSequenceFrame::IncrementalReflow(nsIPresContext*          aPresContext,
-                                             const nsHTMLReflowState& aReflowState,
-                                             nsSize&                  aPageSize,
-                                             nscoord                  aX,
-                                             nscoord&                 aY)
-{
-  // We don't expect the target of the reflow command to be the simple
-  // page sequence frame
-#ifdef NS_DEBUG
-  nsIFrame* targetFrame;
-  aReflowState.reflowCommand->GetTarget(targetFrame);
-  NS_ASSERTION(targetFrame != this, "simple page sequence frame is reflow command target");
-#endif
-
-  // Get the next child frame in the target chain
-  nsIFrame* nextFrame;
-  aReflowState.reflowCommand->GetNext(nextFrame);
-
-  // Compute the y-offset of this page
-  for (nsIFrame* f = mFrames.FirstChild(); f != nextFrame; f->GetNextSibling(&f)) {
-    nsSize  size;
-    f->GetSize(size);
-    aY += size.height + mMargin.top + mMargin.bottom;
-  }
-
-  // Reflow the page
-  nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
-                                     nextFrame, aPageSize);
-  nsHTMLReflowMetrics kidSize(nsnull);
-  nsReflowStatus      status;
-
-  // Dispatch the reflow command to our child frame. Allow it to be as high
-  // as it wants
-  ReflowChild(nextFrame, aPresContext, kidSize, kidReflowState, aX, aY, 0, status);
-
-  // Place and size the page. If the page is narrower than our max width, then
-  // center it horizontally
-  FinishReflowChild(nextFrame, aPresContext, kidSize, aX, aY, 0);
-  aY += kidSize.height + mMargin.top + mMargin.bottom;
-
-  // Check if the page is complete...
-  nsIFrame* kidNextInFlow;
-  nextFrame->GetNextInFlow(&kidNextInFlow);
-
-  if (NS_FRAME_IS_COMPLETE(status)) {
-    NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
-  } else {
-    nsReflowReason  reflowReason = eReflowReason_Resize;
-    
-    if (!kidNextInFlow) {
-      // The page isn't complete and it doesn't have a next-in-flow so
-      // create a continuing page
-      nsIFrame* continuingPage;
-      CreateContinuingPageFrame(aPresContext, nextFrame, &continuingPage);
-
-      // Add it to our child list
-      nextFrame->SetNextSibling(continuingPage);
-      reflowReason = eReflowReason_Initial;
-    }
-
-    // Reflow the remaining pages
-    // XXX Ideally we would only reflow the next page if the current page indicated
-    // its next-in-flow was dirty...
-    nsIFrame* kidFrame;
-    nextFrame->GetNextSibling(&kidFrame);
-
-    while (kidFrame) {
-      // Reflow the page
-      nsHTMLReflowMetrics childSize(nsnull);
-      nsHTMLReflowState childReflowState(aPresContext, aReflowState, kidFrame,
-                                         aPageSize, reflowReason);
-
-      // Place and size the page. If the page is narrower than our
-      // max width then center it horizontally
-      ReflowChild(kidFrame, aPresContext, childSize, childReflowState,
-                  aX, aY, 0, status);
-
-      FinishReflowChild(kidFrame, aPresContext, childSize, aX, aY, 0);
-      aY += childSize.height;
-
-      // Leave a slight gap between the pages
-      aY += mMargin.top + mMargin.bottom;
-
-      // Is the page complete?
-      kidFrame->GetNextInFlow(&kidNextInFlow);
-
-      if (NS_FRAME_IS_COMPLETE(status)) {
-        NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
-      } else if (nsnull == kidNextInFlow) {
-        // The page isn't complete and it doesn't have a next-in-flow, so
-        // create a continuing page
-        nsIFrame*     continuingPage;
-        CreateContinuingPageFrame(aPresContext, kidFrame, &continuingPage);
-
-        // Add it to our child list
-        kidFrame->SetNextSibling(continuingPage);
-        reflowReason = eReflowReason_Initial;
-      }
-
-      // Get the next page
-      kidFrame->GetNextSibling(&kidFrame);
-    }
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
@@ -359,12 +253,31 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   nsRect  adjSize;
   aPresContext->GetPageDim(&pageSize, &adjSize);
 
-  nscoord quarterInch = NS_INCHES_TO_TWIPS(0.25);
+  nscoord extraGap = 0;
+  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
+  if (pref) {
+    nscoord inchInTwips = NS_INCHES_TO_TWIPS(1.0);
+    PRInt32 gapInTwips;
+    if (NS_SUCCEEDED(pref->GetIntPref("print.print_headerfooter_gap", &gapInTwips))) {
+      gapInTwips = PR_MAX(gapInTwips, 0);
+      gapInTwips = PR_MIN(gapInTwips, inchInTwips); // an inch is still probably excessive
+      mPageData->mHeadFooterGap = nscoord(gapInTwips);
+    }
+    if (NS_SUCCEEDED(pref->GetIntPref("print.print_extra_margin", &gapInTwips))) {
+      gapInTwips = PR_MAX(gapInTwips, 0);
+      gapInTwips = PR_MIN(gapInTwips, inchInTwips); // an inch is still probably excessive
+      extraGap = nscoord(gapInTwips);
+    }
+  }
+
+  nscoord  quarterInch = NS_INCHES_TO_TWIPS(0.25);
+  nsMargin deadSpaceMargin(0,0,0,0);
   nsMargin extraMargin(0,0,0,0);
-  nsSize shadowSize(0,0);
+  nsSize   shadowSize(0,0);
   if (ppContext) {
     if (adjSize.width == width && adjSize.height == height) {
-      extraMargin.SizeTo(quarterInch, quarterInch, quarterInch, quarterInch);
+      deadSpaceMargin.SizeTo(quarterInch, quarterInch, quarterInch, quarterInch);
+      extraMargin.SizeTo(extraGap, extraGap, extraGap, extraGap);
       float p2t;
       aPresContext->GetScaledPixelsToTwips(&p2t);
       nscoord fourPixels = NSIntPixelsToTwips(4, p2t);
@@ -372,8 +285,9 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  mPageData->mShadowSize  = shadowSize;
-  mPageData->mExtraMargin = extraMargin;
+  mPageData->mShadowSize      = shadowSize;
+  mPageData->mExtraMargin     = extraMargin;
+  mPageData->mDeadSpaceMargin = deadSpaceMargin;
 
   // absolutely ignore all other types of reflows
   // we only want to have done the Initial Reflow
@@ -430,14 +344,13 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
                   suppressRightMargin?0:mMargin.right,
                   suppressBottomMargin?0:mMargin.bottom);
 
-  nscoord x = extraMargin.left;
-  nscoord y = extraMargin.top;// Running y-offset for each page
+  nscoord x = deadSpaceMargin.left;
+  nscoord y = deadSpaceMargin.top;// Running y-offset for each page
 
   // See if it's an incremental reflow command
   if (eReflowReason_Incremental == aReflowState.reason) {
     // XXX Skip Incremental reflow, 
     // in fact, all we want is the initial reflow
-    //IncrementalReflow(aPresContext, aReflowState, pageSize, x, y);
     y = mRect.height;
   } else {
     nsReflowReason  reflowReason = aReflowState.reason;
@@ -448,8 +361,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     nsHTMLReflowMetrics kidSize(nsnull);
     for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
       // Reflow the page
-      nsSize availSize(pageSize.width+extraMargin.right+extraMargin.left+shadowSize.width, 
-                       pageSize.height+extraMargin.top+extraMargin.bottom+shadowSize.height);
+      nsSize availSize(pageSize.width+deadSpaceMargin.right+deadSpaceMargin.left+shadowSize.width+extraMargin.right+extraMargin.left, 
+                       pageSize.height+deadSpaceMargin.top+deadSpaceMargin.bottom+shadowSize.height+extraMargin.top+extraMargin.bottom);
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                        availSize, reflowReason);
       nsReflowStatus  status;
@@ -540,7 +453,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Return our desired size
   aDesiredSize.height  = y;
-  aDesiredSize.width   = pageSize.width+extraMargin.left+shadowSize.width;
+  aDesiredSize.width   = pageSize.width+deadSpaceMargin.left+shadowSize.width;
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 

@@ -57,8 +57,10 @@ public:
 
   nsRect      mReflowRect;
   nsMargin    mReflowMargin;
-  nsSize      mShadowSize;
-  nsMargin    mExtraMargin;
+  nsSize      mShadowSize;       // shadow of page in PrintPreview
+  nsMargin    mDeadSpaceMargin;  // Extra dead space around outside of Page in PrintPreview
+  nsMargin    mExtraMargin;      // Extra Margin between the printable area and the edge of the page
+  nscoord     mHeadFooterGap;    // In twips, gap between H/F from edge of page
 
   nsCOMPtr<nsIPrintOptions> mPrintOptions;
 };
@@ -121,12 +123,6 @@ public:
 protected:
   nsSimplePageSequenceFrame();
   virtual ~nsSimplePageSequenceFrame();
-
-  nsresult IncrementalReflow(nsIPresContext*          aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nsSize&                  aPageSize,
-                             nscoord                  aX,
-                             nscoord&                 aY);
 
   nsresult CreateContinuingPageFrame(nsIPresContext* aPresContext,
                                      nsIFrame*       aPageFrame,
