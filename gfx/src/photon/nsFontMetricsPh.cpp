@@ -156,8 +156,6 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 	
 	float app2dev;
 	mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-	float textZoom = 1.0;
-	mDeviceContext->GetTextZoom(textZoom);
 
 	result = aContext->FirstExistingFont(aFont, firstFace);
 
@@ -202,9 +200,8 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 
 	mDeviceContext->GetAppUnitsToDevUnits(app2dev);
 	mDeviceContext->GetCanonicalPixelScale(scale);
-	mDeviceContext->GetTextZoom(textZoom);
 
-	PRInt32 sizePoints = NSToIntRound(app2dev * textZoom * mFont->size * 0.8);
+	PRInt32 sizePoints = NSToIntRound(app2dev * mFont->size * 0.8);
 	
 	char NSFontSuffix[5];
 	char NSFullFontName[MAX_FONT_TAG];

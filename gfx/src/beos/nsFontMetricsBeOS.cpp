@@ -138,11 +138,9 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   float       app2dev, app2twip;
   aContext->GetAppUnitsToDevUnits(app2dev);
   aContext->GetDevUnitsToTwips(app2twip);
-  float textZoom = 1.0;
-  aContext->GetTextZoom(textZoom);
 
   app2twip *= app2dev;
-  float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip * textZoom)))) / app2twip;
+  float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
 
 
   // process specified fonts from first item of the array.

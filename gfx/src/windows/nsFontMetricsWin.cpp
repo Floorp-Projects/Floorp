@@ -483,14 +483,10 @@ nsFontMetricsWin::Destroy()
 
 void
 nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
-  PRBool aSizeOnly, PRBool aSkipZoom)
+  PRBool aSizeOnly)
 {
   float app2dev, app2twip, scale;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  float textZoom = 1.0;
-  if (!aSkipZoom) {
-    mDeviceContext->GetTextZoom(textZoom);
-  }
   if (nsDeviceContextWin::gRound) {
     mDeviceContext->GetDevUnitsToTwips(app2twip);
     mDeviceContext->GetCanonicalPixelScale(scale);
@@ -503,13 +499,13 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
 
     // round font size off to floor point size to be windows compatible
     // this is proper (windows) rounding
-    logFont->lfHeight = - NSToIntRound(rounded * app2dev * textZoom);
+    logFont->lfHeight = - NSToIntRound(rounded * app2dev);
 
     // this floor rounding is to make ours compatible with Nav 4.0
-    //logFont->lfHeight = - LONG(rounded * app2dev * textZoom);
+    //logFont->lfHeight = - LONG(rounded * app2dev);
   }
   else {
-    logFont->lfHeight = - NSToIntRound(mFont.size * app2dev * textZoom);
+    logFont->lfHeight = - NSToIntRound(mFont.size * app2dev);
   }
 
   // Quick return if we came here just to compute the font size
@@ -1962,7 +1958,7 @@ nsFontMetricsWin::CreateFontAdjustHandle(HDC aDC, LOGFONT* aLogFont)
   nscoord size72 = NSIntPointsToTwips(72); // large value improves accuracy
   mFont.size = size72;
   nscoord baselfHeight = aLogFont->lfHeight;
-  FillLogFont(aLogFont, dummy, PR_TRUE, PR_TRUE);
+  FillLogFont(aLogFont, dummy, PR_TRUE);
 
   HFONT hfont = ::CreateFontIndirect(aLogFont);
   mFont.size = baseSize;

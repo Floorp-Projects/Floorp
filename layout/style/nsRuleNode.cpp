@@ -1583,6 +1583,16 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   return res;
 }
 
+static nscoord
+ZoomFont(nsIPresContext* aPresContext, nscoord aInSize)
+{
+  nsCOMPtr<nsIDeviceContext> dc;
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
+  float textZoom;
+  dc->GetTextZoom(textZoom);
+  return nscoord(aInSize * textZoom);
+}
+
 const nsStyleStruct*
 nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aContext)
 {
@@ -1592,6 +1602,8 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aConte
       const nsFont* defaultFont;
       mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, &defaultFont);
       nsStyleFont* fontData = new (mPresContext) nsStyleFont(*defaultFont);
+      fontData->mSize = fontData->mFont.size =
+          ZoomFont(mPresContext, fontData->mFont.size);
       aContext->SetStyle(eStyleStruct_Font, *fontData);
       return fontData;
     }
@@ -1766,7 +1778,7 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
         nscoord aMinFontSize, PRBool aUseDocumentFonts, PRBool aChromeOverride,
         PRBool aIsGeneric, const nsCSSFont& aFontData,
         const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
-        nsStyleFont* aFont, PRBool& aInherited)
+        nsStyleFont* aFont, PRBool aZoom, PRBool& aInherited)
 {
   const nsFont* defaultVariableFont;
   const nsFont* defaultFixedFont;
@@ -1994,13 +2006,14 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
   }
 
   // font-size: enum, length, percent, inherit
+  PRBool zoom = aZoom;
   if (eCSSUnit_Enumerated == aFontData.mSize.GetUnit()) {
     PRInt32 value = aFontData.mSize.GetIntValue();
     PRInt32 scaler;
     aPresContext->GetFontScaler(&scaler);
     float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
 
-    aInherited = PR_TRUE;
+    zoom = PR_TRUE;
     if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
         (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
       aFont->mSize = nsStyleUtil::CalcFontPointSize(value, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
@@ -2009,31 +2022,58 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       // <font size="7"> is not specified in CSS, so we don't use eFontSize_CSS.
       aFont->mSize = nsStyleUtil::CalcFontPointSize(value, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext);
     }
-    else if (NS_STYLE_FONT_SIZE_LARGER == value) {
-      PRInt32 index = nsStyleUtil::FindNextLargerFontSize(aParentFont->mSize, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
-      nscoord largerSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
-      aFont->mSize = PR_MAX(largerSize, aParentFont->mSize);
-    }
-    else if (NS_STYLE_FONT_SIZE_SMALLER == value) {
-      PRInt32 index = nsStyleUtil::FindNextSmallerFontSize(aParentFont->mSize, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
-      nscoord smallerSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
-      aFont->mSize = PR_MIN(smallerSize, aParentFont->mSize);
+    else if (NS_STYLE_FONT_SIZE_LARGER == value ||
+             NS_STYLE_FONT_SIZE_SMALLER == value) {
+
+      aInherited = PR_TRUE;
+
+      // Un-zoom so we use the tables correctly.  We'll then rezoom due
+      // to the |zoom = PR_TRUE| above.
+      nsCOMPtr<nsIDeviceContext> dc;
+      aPresContext->GetDeviceContext(getter_AddRefs(dc));
+      float textZoom;
+      dc->GetTextZoom(textZoom);
+
+      nscoord parentSize = nscoord(aParentFont->mSize / textZoom);
+
+      if (NS_STYLE_FONT_SIZE_LARGER == value) {
+        PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentSize, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+        nscoord largerSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+        aFont->mSize = PR_MAX(largerSize, aParentFont->mSize);
+      } else {
+        PRInt32 index = nsStyleUtil::FindNextSmallerFontSize(parentSize, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+        nscoord smallerSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)aDefaultFont.size, scaleFactor, aPresContext, eFontSize_CSS);
+        aFont->mSize = PR_MIN(smallerSize, aParentFont->mSize);
+      }
+    } else {
+      NS_NOTREACHED("unexpected value");
     }
   }
   else if (aFontData.mSize.IsLengthUnit()) {
     aFont->mSize = CalcLength(aFontData.mSize, &aParentFont->mFont, nsnull, aPresContext, aInherited);
+    zoom = aFontData.mSize.IsFixedLengthUnit() ||
+           aFontData.mSize.GetUnit() == eCSSUnit_Pixel;
   }
   else if (eCSSUnit_Percent == aFontData.mSize.GetUnit()) {
     aInherited = PR_TRUE;
     aFont->mSize = (nscoord)((float)(aParentFont->mSize) * aFontData.mSize.GetPercentValue());
+    zoom = PR_FALSE;
   }
   else if (eCSSUnit_Inherit == aFontData.mSize.GetUnit()) {
     aInherited = PR_TRUE;
     aFont->mSize = aParentFont->mSize;
+    zoom = PR_FALSE;
   }
   else if (eCSSUnit_Initial == aFontData.mSize.GetUnit()) {
     aFont->mSize = aDefaultFont.size;
+    zoom = PR_TRUE;
   }
+
+  // We want to zoom the cascaded size so that em-based measurements,
+  // line-heights, etc., work.
+  if (zoom)
+    aFont->mSize = ZoomFont(aPresContext, aFont->mSize);
+
   // enforce the user' specified minimum font-size on the value that we expose
   if (aChromeOverride) {
     // the chrome is unconstrained, it always uses our cascading size
@@ -2067,7 +2107,7 @@ static void
 SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
                const nsCSSFont& aFontData, PRUint8 aGenericFontID,
                nscoord aMinFontSize, PRBool aUseDocumentFonts,
-               PRBool aChromeOverride, nsStyleFont* aFont)
+               PRBool aChromeOverride, nsStyleFont* aFont, PRBool aZoom)
 {
   // walk up the contexts until a context with the desired generic font
   nsAutoVoidArray contextPath;
@@ -2135,7 +2175,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
 
     SetFont(aPresContext, context, aMinFontSize,
             aUseDocumentFonts, aChromeOverride, PR_TRUE,
-            fontData, *defaultFont, &parentFont, aFont, dummy);
+            fontData, *defaultFont, &parentFont, aFont, aZoom, dummy);
 
     // XXX Not sure if we need to do this here
     // If we have a post-resolve callback, handle that now.
@@ -2152,7 +2192,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
   // can just compute the delta from the parent.
   SetFont(aPresContext, aContext, aMinFontSize,
           aUseDocumentFonts, aChromeOverride, PR_TRUE,
-          aFontData, *defaultFont, &parentFont, aFont, dummy);
+          aFontData, *defaultFont, &parentFont, aFont, aZoom, dummy);
 }
 
 const nsStyleStruct* 
@@ -2185,10 +2225,12 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     }
   }
 
+  PRBool zoom = PR_FALSE;
   const nsFont* defaultFont;
   if (!font) {
     mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, &defaultFont);
     font = new (mPresContext) nsStyleFont(*defaultFont);
+    zoom = PR_TRUE;
   }
   if (!parentFont)
     parentFont = font;
@@ -2257,14 +2299,14 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     mPresContext->GetDefaultFont(generic, &defaultFont);
     SetFont(mPresContext, aContext, minimumFontSize,
             useDocumentFonts, chromeOverride, PR_FALSE,
-            fontData, *defaultFont, parentFont, font, inherited);
+            fontData, *defaultFont, parentFont, font, zoom, inherited);
   }
   else {
     // re-calculate the font as a generic font
     inherited = PR_TRUE;
     SetGenericFont(mPresContext, aContext, fontData,
                    generic, minimumFontSize, useDocumentFonts,
-                   chromeOverride, font);
+                   chromeOverride, font, zoom);
   }
   // Set our generic font's bit to inform our descendants
   font->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
@@ -2332,10 +2374,15 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
                                     aContext->GetStyleData(eStyleStruct_Font));
     text->mLineHeight.SetCoordValue((nscoord)((float)(font->mSize) *
                                      textData.mLineHeight.GetPercentValue()));
-  } else
+  } else {
     SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
              SETCOORD_LH | SETCOORD_FACTOR | SETCOORD_NORMAL,
              aContext, mPresContext, inherited);
+    if (textData.mLineHeight.IsFixedLengthUnit() ||
+        textData.mLineHeight.GetUnit() == eCSSUnit_Pixel)
+      text->mLineHeight.SetCoordValue(
+                    ZoomFont(mPresContext, text->mLineHeight.GetCoordValue()));
+  }
 
 
   // text-align: enum, string, inherit

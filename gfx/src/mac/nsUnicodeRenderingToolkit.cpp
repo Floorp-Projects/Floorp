@@ -1109,10 +1109,8 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
       {
         const nsFont *font;
         mGS->mFontMetrics->GetFont(font);
-        float textZoom;
-        mContext->GetTextZoom(textZoom);
         fallbackDone = ATSUIFallbackGetDimensions(aString, segDim, fontNum, 
-                                                  font->size * textZoom, 
+                                                  font->size, 
                                                   (font->weight > NS_FONT_WEIGHT_NORMAL), 
                                                   ((NS_FONT_STYLE_ITALIC ==  font->style) || 
                                                    (NS_FONT_STYLE_OBLIQUE ==  font->style)),
@@ -1271,10 +1269,8 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 		  if(! fallbackDone)  {
 		  	const nsFont *font;
 			  mGS->mFontMetrics->GetFont(font);
-			  float textZoom;
-			  mContext->GetTextZoom(textZoom);
 		  	fallbackDone = ATSUIFallbackDrawChar(aString, x, y, thisWidth, fontNum, 
-									  		font->size * textZoom, 
+									  		font->size, 
 									  		(font->weight > NS_FONT_WEIGHT_NORMAL), 
 									  		((NS_FONT_STYLE_ITALIC ==  font->style) || (NS_FONT_STYLE_OBLIQUE ==  font->style)),
 									  		mGS->mColor );
