@@ -60,6 +60,7 @@
 #include "prenv.h"
 
 #include <locale.h>
+#include <errno.h>
 
 #ifdef VMS
 #include <stdlib.h>
@@ -2120,6 +2121,9 @@ nsPostScriptObj::end_document()
 
     pclose(pipe);
     PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("piping done, copied %ld bytes.\n", job_size));
+    if (errno != 0) {
+      return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+    }
   }
   
   return NS_OK;

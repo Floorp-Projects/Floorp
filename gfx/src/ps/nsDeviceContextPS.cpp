@@ -373,12 +373,12 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
   NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
   
   /* Finish the document and print it... */  
-  mPSObj->end_document();
+  nsresult rv = mPSObj->end_document();
 
   delete mPSObj;
   mPSObj = nsnull;
 
-  return NS_OK;
+  return rv;
 }
 
 /** ---------------------------------------------------
