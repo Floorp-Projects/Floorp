@@ -575,147 +575,144 @@ NS_IMETHODIMP
 nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aBinding)
 {
   // Don't install handlers if scripts aren't allowed.
-  if (!AllowScripts())
-    return NS_OK;
+  if (AllowScripts()) {
+    // Fetch the handlers prototypes for this binding.
+    nsCOMPtr<nsIXBLDocumentInfo> info;
+    gXBLService->GetXBLDocumentInfo(mDocURI, mBoundElement, getter_AddRefs(info));
+    if (!info)
+      return NS_ERROR_FAILURE;
 
-  // Fetch the handlers prototypes for this binding.
-  nsCOMPtr<nsIXBLDocumentInfo> info;
-  gXBLService->GetXBLDocumentInfo(mDocURI, mBoundElement, getter_AddRefs(info));
-  if (!info)
-    return NS_OK;
-
-  nsCOMPtr<nsIXBLPrototypeHandler> handlerChain;
-  info->GetPrototypeHandler(mID, getter_AddRefs(handlerChain));
-  if (!handlerChain)
-    return NS_OK;
-
-  nsCOMPtr<nsIXBLPrototypeHandler> curr = handlerChain;
-  nsXBLEventHandler* currHandler = nsnull;
-
-  while (curr) {
-    nsCOMPtr<nsIContent> child;
-    curr->GetHandlerElement(getter_AddRefs(child));
-
-    // Fetch the type attribute.
-    // XXX Deal with a comma-separated list of types
-    nsAutoString type;
-    child->GetAttribute(kNameSpaceID_None, kEventAtom, type);
+    nsCOMPtr<nsIXBLPrototypeHandler> handlerChain;
+    info->GetPrototypeHandler(mID, getter_AddRefs(handlerChain));
   
-    if (!type.IsEmpty()) {
-      nsIID iid;
-      PRBool found = PR_FALSE;
-      PRBool special = PR_FALSE;
-      nsCOMPtr<nsIAtom> eventAtom = getter_AddRefs(NS_NewAtom(type));
-      if (eventAtom.get() == kBindingAttachedAtom) {
-        *aBinding = this;
-        NS_ADDREF(*aBinding);
-        special = PR_TRUE;
-      }
-      else
-        GetEventHandlerIID(eventAtom, &iid, &found);
+    nsCOMPtr<nsIXBLPrototypeHandler> curr = handlerChain;
+    nsXBLEventHandler* currHandler = nsnull;
 
-      if (found || special) { 
-        nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
-        nsAutoString attachType;
-        child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
-        if (attachType == NS_LITERAL_STRING("_document") || 
-            attachType == NS_LITERAL_STRING("_window"))
-        {
-          nsCOMPtr<nsIDocument> boundDoc;
-          mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
-          if (attachType == NS_LITERAL_STRING("_window")) {
-            nsCOMPtr<nsIScriptGlobalObject> global;
-            boundDoc->GetScriptGlobalObject(getter_AddRefs(global));
-            receiver = do_QueryInterface(global);
+    while (curr) {
+      nsCOMPtr<nsIContent> child;
+      curr->GetHandlerElement(getter_AddRefs(child));
+
+      // Fetch the type attribute.
+      // XXX Deal with a comma-separated list of types
+      nsAutoString type;
+      child->GetAttribute(kNameSpaceID_None, kEventAtom, type);
+  
+      if (!type.IsEmpty()) {
+        nsIID iid;
+        PRBool found = PR_FALSE;
+        PRBool special = PR_FALSE;
+        nsCOMPtr<nsIAtom> eventAtom = getter_AddRefs(NS_NewAtom(type));
+        if (eventAtom.get() == kBindingAttachedAtom) {
+          *aBinding = this;
+          NS_ADDREF(*aBinding);
+          special = PR_TRUE;
+        }
+        else
+          GetEventHandlerIID(eventAtom, &iid, &found);
+
+        if (found || special) { 
+          nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
+          nsAutoString attachType;
+          child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
+          if (attachType == NS_LITERAL_STRING("_document") || 
+              attachType == NS_LITERAL_STRING("_window"))
+          {
+            nsCOMPtr<nsIDocument> boundDoc;
+            mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
+            if (attachType == NS_LITERAL_STRING("_window")) {
+              nsCOMPtr<nsIScriptGlobalObject> global;
+              boundDoc->GetScriptGlobalObject(getter_AddRefs(global));
+              receiver = do_QueryInterface(global);
+            }
+            else receiver = do_QueryInterface(boundDoc);
           }
-          else receiver = do_QueryInterface(boundDoc);
-        }
-        else if (!attachType.IsEmpty() && !attachType.Equals(NS_LITERAL_STRING("_element"))) {
-          nsCOMPtr<nsIDocument> boundDoc;
-          mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
-          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(boundDoc));
-          nsCOMPtr<nsIDOMElement> otherElement;
-          domDoc->GetElementById(attachType, getter_AddRefs(otherElement));
-          receiver = do_QueryInterface(otherElement);
-        }
+          else if (!attachType.IsEmpty() && !attachType.Equals(NS_LITERAL_STRING("_element"))) {
+            nsCOMPtr<nsIDocument> boundDoc;
+            mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
+            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(boundDoc));
+            nsCOMPtr<nsIDOMElement> otherElement;
+            domDoc->GetElementById(attachType, getter_AddRefs(otherElement));
+            receiver = do_QueryInterface(otherElement);
+          }
 
-        // Add an event listener for mouse and key events only.
-        PRBool mouse, key, focus, xul, scroll, form;
-        mouse = key = focus = xul = scroll = form = PR_FALSE;
+          // Add an event listener for mouse and key events only.
+          PRBool mouse, key, focus, xul, scroll, form;
+          mouse = key = focus = xul = scroll = form = PR_FALSE;
 
-        if (!special) {
-          key = IsKeyHandler(type);
-          if (!key) {
-            mouse = IsMouseHandler(type);
-            if (!mouse) {
-              focus = IsFocusHandler(type);
-              if (!focus) {
-                xul = IsXULHandler(type);
-                if (!xul) {
-                  scroll = IsScrollHandler(type);
-                  if (!scroll) 
-                    form = IsFormHandler(type);
+          if (!special) {
+            key = IsKeyHandler(type);
+            if (!key) {
+              mouse = IsMouseHandler(type);
+              if (!mouse) {
+                focus = IsFocusHandler(type);
+                if (!focus) {
+                  xul = IsXULHandler(type);
+                  if (!xul) {
+                    scroll = IsScrollHandler(type);
+                    if (!scroll) 
+                      form = IsFormHandler(type);
+                  }
                 }
               }
             }
           }
-        }
 
-        if (mouse || key || focus || xul || scroll || form || special) {
-          // Create a new nsXBLEventHandler.
-          nsXBLEventHandler* handler;
-          NS_NewXBLEventHandler(receiver, curr, type, &handler);
+          if (mouse || key || focus || xul || scroll || form || special) {
+            // Create a new nsXBLEventHandler.
+            nsXBLEventHandler* handler;
+            NS_NewXBLEventHandler(receiver, curr, type, &handler);
 
-          // We chain all our event handlers together for easy
-          // removal later (if/when the binding dies).
-          if (!currHandler)
-            mFirstHandler = handler;
-          else 
-            currHandler->SetNextHandler(handler);
+            // We chain all our event handlers together for easy
+            // removal later (if/when the binding dies).
+            if (!currHandler)
+              mFirstHandler = handler;
+            else 
+              currHandler->SetNextHandler(handler);
 
-          currHandler = handler;
+            currHandler = handler;
 
-          // Figure out if we're using capturing or not.
-          PRBool useCapture = PR_FALSE;
-          nsAutoString capturer;
-          child->GetAttribute(kNameSpaceID_None, kPhaseAtom, capturer);
-          if (capturer == NS_LITERAL_STRING("capturing"))
-            useCapture = PR_TRUE;
+            // Figure out if we're using capturing or not.
+            PRBool useCapture = PR_FALSE;
+            nsAutoString capturer;
+            child->GetAttribute(kNameSpaceID_None, kPhaseAtom, capturer);
+            if (capturer == NS_LITERAL_STRING("capturing"))
+              useCapture = PR_TRUE;
 
-          // Add the event listener.
-          if (mouse)
-            receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
-          else if(key)
-            receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
-          else if(focus)
-            receiver->AddEventListener(type, (nsIDOMFocusListener*)handler, useCapture);
-          else if (xul)
-            receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
-          else if (scroll)
-            receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
-          else if (form)
-            receiver->AddEventListener(type, (nsIDOMFormListener*)handler, useCapture);
+            // Add the event listener.
+            if (mouse)
+              receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
+            else if(key)
+              receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
+            else if(focus)
+              receiver->AddEventListener(type, (nsIDOMFocusListener*)handler, useCapture);
+            else if (xul)
+              receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
+            else if (scroll)
+              receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
+            else if (form)
+              receiver->AddEventListener(type, (nsIDOMFormListener*)handler, useCapture);
 
-          if (!special) // Let the listener manager hold on to the handler.
-            NS_RELEASE(handler);
-        }
-        else {
-          // Call AddScriptEventListener for other IID types
-          // XXX Want this to all go away!
-          NS_WARNING("***** Non-compliant XBL event listener attached! *****");
-          nsAutoString value;
-          child->GetAttribute(kNameSpaceID_None, kActionAtom, value);
-          if (value.IsEmpty())
-              GetTextData(child, value);
+            if (!special) // Let the listener manager hold on to the handler.
+              NS_RELEASE(handler);
+          }
+          else {
+            // Call AddScriptEventListener for other IID types
+            // XXX Want this to all go away!
+            NS_WARNING("***** Non-compliant XBL event listener attached! *****");
+            nsAutoString value;
+            child->GetAttribute(kNameSpaceID_None, kActionAtom, value);
+            if (value.IsEmpty())
+                GetTextData(child, value);
 
-          AddScriptEventListener(mBoundElement, eventAtom, value, iid);
+            AddScriptEventListener(mBoundElement, eventAtom, value, iid);
+          }
         }
       }
-    }
 
-    nsCOMPtr<nsIXBLPrototypeHandler> next;
-    curr->GetNextHandler(getter_AddRefs(next));
-    curr = next;
+      nsCOMPtr<nsIXBLPrototypeHandler> next;
+      curr->GetNextHandler(getter_AddRefs(next));
+      curr = next;
+    }
   }
 
   if (mNextBinding) {
