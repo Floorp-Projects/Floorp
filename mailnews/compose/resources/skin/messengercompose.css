@@ -1,5 +1,5 @@
 @import url(chrome://global/skin/);
-@import url(chrome://editor/skin/);
+@import url(chrome://editor/skin/EditorToolbars.css);
 @import url(chrome://messenger/skin/);
 
 spring.spacer {
