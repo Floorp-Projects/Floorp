@@ -43,7 +43,7 @@
                 onget="return this.treeBoxObject.view;"
                 onset="return this.treeBoxObject.view=val;"/>
       <property name="contentView"
-                onget="return this.view.QueryInterface(Components.interfaces.nsITreeContentView);"
+                onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
                 readonly="true"/>
       <property name="builderView"
                 onget="return this.view.QueryInterface(Components.interfaces.nsIXULTreeBuilder);"
