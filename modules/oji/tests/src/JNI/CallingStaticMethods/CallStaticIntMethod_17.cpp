@@ -29,7 +29,7 @@ JNI_OJIAPITest(JNIEnv_CallStaticIntMethod_17)
   IMPLEMENT_GetStaticMethodID_METHOD("Test11", "Test1_method3_native_static", "(ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)I");
   char *path = "asdf";
   jstring jpath=env->NewStringUTF("sdsadasdasd");
-  jvalue *args  = new jvalue[9];
+  jvalue *args  = new jvalue[10];
   args[0].z = JNI_TRUE;
   args[1].b = 0;
   args[2].c = 'a';
@@ -49,7 +49,10 @@ JNI_OJIAPITest(JNIEnv_CallStaticIntMethod_17)
 
 }
 
-JNIEXPORT jint JNICALL Java_Test1_Test1_1method3_1native_1static
+#if defined(__cplusplus)
+extern "C" 
+#endif
+JNIEXPORT jint JNICALL Java_Test11_Test1_1method3_1native_1static
   (JNIEnv *, jobject, jboolean, jbyte, jchar, jshort, jint, jlong, jfloat, jdouble, jstring, jobjectArray){
 
   printf("Test1_method3_native_static passed!\n");

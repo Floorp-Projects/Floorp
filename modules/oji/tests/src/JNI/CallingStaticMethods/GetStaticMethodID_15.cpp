@@ -37,7 +37,10 @@ JNI_OJIAPITest(JNIEnv_GetStaticMethodID_15)
   }
 }
 
-JNIEXPORT void JNICALL Java_Test1_mprint_1static
+#if defined(__cplusplus)
+extern "C" 
+#endif
+JNIEXPORT void JNICALL Java_Test11_mprint_1static
   (JNIEnv * env, jclass clazz, jint jInt){
 
   jclass clazz1 = env->FindClass("Test11");

@@ -64,10 +64,10 @@ CPP =   CallBooleanMethod_1.cpp \
         CallLongMethod_2.cpp \
         CallLongMethod_3.cpp \
         CallLongMethod_4.cpp \
-        CallNonvirtualBooleanMethod_1.cpp \
-        CallNonvirtualBooleanMethod_2.cpp \
-        CallNonvirtualBooleanMethod_3.cpp \
-        CallNonvirtualBooleanMethod_4.cpp \
+        CallNVBooleanMethod_1.cpp \
+        CallNVBooleanMethod_2.cpp \
+        CallNVBooleanMethod_3.cpp \
+        CallNVBooleanMethod_4.cpp \
         CallNonvirtualByteMethod_1.cpp \
         CallNonvirtualByteMethod_2.cpp \
         CallNonvirtualByteMethod_3.cpp \
@@ -76,10 +76,10 @@ CPP =   CallBooleanMethod_1.cpp \
         CallNonvirtualCharMethod_2.cpp \
         CallNonvirtualCharMethod_3.cpp \
         CallNonvirtualCharMethod_4.cpp \
-        CallNonvirtualDoubleMethod_1.cpp \
-        CallNonvirtualDoubleMethod_2.cpp \
-        CallNonvirtualDoubleMethod_3.cpp \
-        CallNonvirtualDoubleMethod_4.cpp \
+        CallNVDoubleMethod_1.cpp \
+        CallNVDoubleMethod_2.cpp \
+        CallNVDoubleMethod_3.cpp \
+        CallNVDoubleMethod_4.cpp \
         CallNonvirtualFloatMethod_1.cpp \
         CallNonvirtualFloatMethod_2.cpp \
         CallNonvirtualFloatMethod_3.cpp \
@@ -120,13 +120,13 @@ CPP =   CallBooleanMethod_1.cpp \
         CallNonvirtualLongMethod_2.cpp \
         CallNonvirtualLongMethod_3.cpp \
         CallNonvirtualLongMethod_4.cpp \
-        CallNonvirtualObjectMethod_1.cpp \
-        CallNonvirtualObjectMethod_2.cpp \
-        CallNonvirtualObjectMethod_3.cpp \
-        CallNonvirtualObjectMethod_4.cpp \
-        CallNonvirtualObjectMethod_5.cpp \
-        CallNonvirtualObjectMethod_6.cpp \
-        CallNonvirtualObjectMethod_7.cpp \
+        CallNVObjectMethod_1.cpp \
+        CallNVObjectMethod_2.cpp \
+        CallNVObjectMethod_3.cpp \
+        CallNVObjectMethod_4.cpp \
+        CallNVObjectMethod_5.cpp \
+        CallNVObjectMethod_6.cpp \
+        CallNVObjectMethod_7.cpp \
         CallNonvirtualShortMethod_1.cpp \
         CallNonvirtualShortMethod_2.cpp \
         CallNonvirtualShortMethod_3.cpp \
@@ -233,10 +233,10 @@ OBJS =  $(OBJ_DIR)/CallBooleanMethod_1.obj \
         $(OBJ_DIR)/CallLongMethod_2.obj \
         $(OBJ_DIR)/CallLongMethod_3.obj \
         $(OBJ_DIR)/CallLongMethod_4.obj \
-        $(OBJ_DIR)/CallNonvirtualBooleanMethod_1.obj \
-        $(OBJ_DIR)/CallNonvirtualBooleanMethod_2.obj \
-        $(OBJ_DIR)/CallNonvirtualBooleanMethod_3.obj \
-        $(OBJ_DIR)/CallNonvirtualBooleanMethod_4.obj \
+        $(OBJ_DIR)/CallNVBooleanMethod_1.obj \
+        $(OBJ_DIR)/CallNVBooleanMethod_2.obj \
+        $(OBJ_DIR)/CallNVBooleanMethod_3.obj \
+        $(OBJ_DIR)/CallNVBooleanMethod_4.obj \
         $(OBJ_DIR)/CallNonvirtualByteMethod_1.obj \
         $(OBJ_DIR)/CallNonvirtualByteMethod_2.obj \
         $(OBJ_DIR)/CallNonvirtualByteMethod_3.obj \
@@ -245,10 +245,10 @@ OBJS =  $(OBJ_DIR)/CallBooleanMethod_1.obj \
         $(OBJ_DIR)/CallNonvirtualCharMethod_2.obj \
         $(OBJ_DIR)/CallNonvirtualCharMethod_3.obj \
         $(OBJ_DIR)/CallNonvirtualCharMethod_4.obj \
-        $(OBJ_DIR)/CallNonvirtualDoubleMethod_1.obj \
-        $(OBJ_DIR)/CallNonvirtualDoubleMethod_2.obj \
-        $(OBJ_DIR)/CallNonvirtualDoubleMethod_3.obj \
-        $(OBJ_DIR)/CallNonvirtualDoubleMethod_4.obj \
+        $(OBJ_DIR)/CallNVDoubleMethod_1.obj \
+        $(OBJ_DIR)/CallNVDoubleMethod_2.obj \
+        $(OBJ_DIR)/CallNVDoubleMethod_3.obj \
+        $(OBJ_DIR)/CallNVDoubleMethod_4.obj \
         $(OBJ_DIR)/CallNonvirtualFloatMethod_1.obj \
         $(OBJ_DIR)/CallNonvirtualFloatMethod_2.obj \
         $(OBJ_DIR)/CallNonvirtualFloatMethod_3.obj \
@@ -289,13 +289,13 @@ OBJS =  $(OBJ_DIR)/CallBooleanMethod_1.obj \
         $(OBJ_DIR)/CallNonvirtualLongMethod_2.obj \
         $(OBJ_DIR)/CallNonvirtualLongMethod_3.obj \
         $(OBJ_DIR)/CallNonvirtualLongMethod_4.obj \
-        $(OBJ_DIR)/CallNonvirtualObjectMethod_1.obj \
-        $(OBJ_DIR)/CallNonvirtualObjectMethod_2.obj \
-        $(OBJ_DIR)/CallNonvirtualObjectMethod_3.obj \
-        $(OBJ_DIR)/CallNonvirtualObjectMethod_4.obj \
-        $(OBJ_DIR)/CallNonvirtualObjectMethod_5.obj \
-        $(OBJ_DIR)/CallNonvirtualObjectMethod_6.obj \
-        $(OBJ_DIR)/CallNonvirtualObjectMethod_7.obj \
+        $(OBJ_DIR)/CallNVObjectMethod_1.obj \
+        $(OBJ_DIR)/CallNVObjectMethod_2.obj \
+        $(OBJ_DIR)/CallNVObjectMethod_3.obj \
+        $(OBJ_DIR)/CallNVObjectMethod_4.obj \
+        $(OBJ_DIR)/CallNVObjectMethod_5.obj \
+        $(OBJ_DIR)/CallNVObjectMethod_6.obj \
+        $(OBJ_DIR)/CallNVObjectMethod_7.obj \
         $(OBJ_DIR)/CallNonvirtualShortMethod_1.obj \
         $(OBJ_DIR)/CallNonvirtualShortMethod_2.obj \
         $(OBJ_DIR)/CallNonvirtualShortMethod_3.obj \

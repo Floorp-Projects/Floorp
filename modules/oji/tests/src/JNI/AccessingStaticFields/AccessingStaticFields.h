@@ -45,21 +45,3 @@
         jmethodID MethodID = env->GetStaticMethodID(clazz, func_name, returnType);\
         printf("ID of static %s method = %d\n", func_name, (int)MethodID); 
 
-#ifdef XP_UNIX
-#define MAX_JLONG jlong_MAXINT  // from jri_md.h
-#define MIN_JLONG jlong_MININT
-#else
-#define MAX_JLONG 9223372036854775807
-#define MIN_JLONG -9223372036854775808
-#endif
-
-#define MAX_JINT 2147483647
-#define MIN_JINT -2147483648
-#define MAX_JDOUBLE 1.7976931348623157e308
-#define MIN_JDOUBLE 4.9e-324
-#define MAX_JBYTE 255
-#define MIN_JBYTE -256
-#define MAX_JFLOAT 3.4028235e38
-#define MIN_JFLOAT 1.4e-45
-#define MAX_JSHORT 32767
-#define MIN_JSHORT -32768

@@ -191,6 +191,8 @@ sub constructHTMLBody() {
     close( MYLOG );
     
     my $line;
+    my $f_cnt = 0;
+    my $p_cnt = 0;
     foreach $line ( sort @all_lines ) {
         # avoid linebreaks
 	chop $line;
@@ -203,13 +205,18 @@ sub constructHTMLBody() {
 	if ($status =~ /(.*?) \((.*?)\)$/) {
 		$status = $1;
 		$comment = $2 ? $2 : "---";
+		$p_cnt++;
 	}
 	if ($status =~ /FAIL/) {
 		$status = "<font color=\"red\">".$status;
 		$status = $status."<\/font>";
+		$f_cnt++;
 	}
 	print LOGHTML "<tr><td><a target=\"$TARGET_WINDOW\" href=\"$TEST_DESCRIPTIONS#$class\">",$class,"</a></td><td>",$status,"</td><td>",$comment,"</td></tr>\n";
     } 
+    my $pp = sprintf "%.2f", $p_cnt/($p_cnt+$f_cnt)*100;  
+    my $pf = sprintf "%.2f", $f_cnt/($p_cnt+$f_cnt)*100;
+    print LOGHTML "<tr><td colspan=3>Total: $p_cnt($pp\%) tests passed and $f_cnt($pf\%) tests failed.</td></tr>\n";
 }
 		
 #########################################################################

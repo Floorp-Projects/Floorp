@@ -28,7 +28,7 @@ JNI_OJIAPITest(JNIEnv_CallNonvirtualIntMethod_17)
   IMPLEMENT_GetMethodID_METHOD("Test11", "Test1_method3_native", "(ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)I");
   char *path = "asdf";
   jstring jpath=env->NewStringUTF("sdsadasdasd");
-  jvalue *args  = new jvalue[9];
+  jvalue *args  = new jvalue[10];
   args[0].z = JNI_TRUE;
   args[1].b = 0;
   args[2].c = 'a';
