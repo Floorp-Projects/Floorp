@@ -75,7 +75,7 @@
 
           var myEvent = document.createEvent("Events");
           myEvent.initEvent("RadioStateChange", true, true);
-          this.selectedItem.dispatchEvent(myEvent);
+          val.dispatchEvent(myEvent);
 
           return val;
         ]]>
