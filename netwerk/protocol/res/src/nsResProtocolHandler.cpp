@@ -76,8 +76,8 @@ static PRLogModuleInfo *gResLog;
 // nsResURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
 //----------------------------------------------------------------------------
 
-NS_IMETHODIMP
-nsResURL::GetFile(nsIFile **result)
+nsresult
+nsResURL::EnsureFile()
 {
     nsresult rv;
 
@@ -87,11 +87,11 @@ nsResURL::GetFile(nsIFile **result)
     rv = gResHandler->ResolveURI(this, spec);
     if (NS_FAILED(rv)) return rv;
 
-    rv = net_GetFileFromURLSpec(spec, result);
+    rv = net_GetFileFromURLSpec(spec, getter_AddRefs(mFile));
 #ifdef DEBUG_bsmedberg
     if (NS_SUCCEEDED(rv)) {
         PRBool exists = PR_TRUE;
-        (*result)->Exists(&exists);
+        mFile->Exists(&exists);
         if (!exists) {
             printf("resource %s doesn't exist!\n", spec.get());
         }

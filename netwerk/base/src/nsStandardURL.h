@@ -143,6 +143,11 @@ public: /* internal -- HPUX compiler can't handle this being private */
 protected:
     virtual nsStandardURL* StartClone();
 
+    // Helper for subclass implementation of GetFile().  Subclasses that map
+    // URIs to files in a special way should implement this method.  It should
+    // ensure that our mFile is initialized, if it's possible.
+    virtual nsresult EnsureFile();
+
 private:
     PRInt32  Port() { return mPort == -1 ? mDefaultPort : mPort; }
 
@@ -157,8 +162,6 @@ private:
     PRUint32 AppendToBuf(char *, PRUint32, const char *, PRUint32);
 
     nsresult BuildNormalizedSpec(const char *spec);
-
-    PRBool   HostsAreEquivalent(nsStandardURL *other);
 
     PRBool   SegmentIs(const URLSegment &s1, const char *val);
     PRBool   SegmentIs(const char* spec, const URLSegment &s1, const char *val);
@@ -234,7 +237,12 @@ private:
 
     nsCString              mOriginCharset;
     nsCOMPtr<nsIURLParser> mParser;
+
+    // mFile is protected so subclasses can access it directly
+protected:
     nsCOMPtr<nsIFile>      mFile;  // cached result for nsIFileURL::GetFile
+    
+private:
     char                  *mHostA; // cached result for nsIURI::GetHostA
 
     enum {
