@@ -137,6 +137,7 @@ _XFUNCPROTOBEGIN
 int XpuCheckExtension( Display *pdpy );
 
 /* Create/destroy connection to printer */
+Bool XpuXprintServersAvailable( void );
 int XpuGetPrinter( const char *printername, Display **pdpyptr, XPContext *pcontextptr );
 void XpuClosePrinterDisplay(Display *pdpy, XPContext pcontext);
 

@@ -144,7 +144,9 @@ typedef void * nsNativeDeviceContext;
 /* The was wasn't any Print Prompt service registered (this shouldn't happen) */
 #define NS_ERROR_GFX_NO_PRINTROMPTSERVICE \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+29)
-
+/* Xprint module specific: No Xprint servers found */
+#define NS_ERROR_GFX_PRINTER_XPRINT_NO_XPRINT_SERVERS_FOUND \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+30)
 
 /**
  * Conts need for Print Preview

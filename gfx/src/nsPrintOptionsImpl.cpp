@@ -800,13 +800,12 @@ NS_IMETHODIMP nsPrintOptions::AvailablePrinters(nsISimpleEnumerator **aPrinterEn
    nsCOMPtr<nsPrinterListEnumerator> printerListEnum = new nsPrinterListEnumerator();
    NS_ENSURE_TRUE(printerListEnum.get(), NS_ERROR_OUT_OF_MEMORY);
 
-   // if Init fails NS_OK is return (script needs NS_OK) but the enumerator will be null
    nsresult rv = printerListEnum->Init();
    if (NS_SUCCEEDED(rv)) {
      *aPrinterEnumerator = NS_STATIC_CAST(nsISimpleEnumerator*, printerListEnum);
      NS_ADDREF(*aPrinterEnumerator);
    }
-   return NS_OK;
+   return rv;
 }
 
 NS_IMETHODIMP nsPrintOptions::DisplayJobProperties( const PRUnichar *aPrinter, nsIPrintSettings* aPrintSettings, PRBool *aDisplayed)
