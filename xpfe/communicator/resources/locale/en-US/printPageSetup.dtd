@@ -30,3 +30,4 @@
 <!ENTITY scalingGroup.label "Page Scaling">
 <!ENTITY scalingInput.label "Percent:">
 <!ENTITY scalingInputPost.label "(Values in range 50-100)">
+<!ENTITY shrinkToFitInput.label "Shrink To Fit Page Width">
