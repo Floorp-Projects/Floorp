@@ -75,6 +75,7 @@ extern BOOL             gbIgnoreProgramFolderX;
 extern BOOL             gbRestrictedAccess;
 extern BOOL             gbDownloadTriggered;
 extern BOOL             gbAllowMultipleInstalls;
+extern BOOL             gbForceInstall;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;
