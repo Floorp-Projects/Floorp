@@ -60,7 +60,7 @@ protected:
                                          const nsXPTParamInfo& param,
                                          uint16 methodIndex,
                                          uint8 paramIndex,
-                                         nsXPTCMiniVariant* nativeParams,
+                                         nsXPTCVariant* nativeParams,
                                          SizeMode mode,
                                          PRUint32* result);
 };  
