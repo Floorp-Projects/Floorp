@@ -785,6 +785,8 @@ nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* a
 NS_IMETHODIMP
 nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult)
 {
+  *aResult = nsnull;
+
   PRUint32 length;
 
   // Retrieve the anonymous content that we should build.
@@ -798,9 +800,12 @@ nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aRe
   // We may have an altered list of children from XBL insertion points.
   // If we don't have any anonymous kids, we next check to see if we have 
   // insertion points.
-  if (! *aResult)
-    GetContentListFor(aContent, aResult);
-
+  if (! *aResult) {
+    if (mContentListTable) {
+      nsISupportsKey key(aContent);
+      *aResult = NS_STATIC_CAST(nsIDOMNodeList*, mContentListTable->Get(&key));
+    }
+  }
   return NS_OK;
 }
 

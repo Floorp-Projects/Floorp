@@ -49,6 +49,7 @@
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
 #include "nsIXMLDocument.h"
+#include "nsIDOMXULElement.h"
 #include "nsIWebShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
@@ -814,6 +815,11 @@ struct ChildIterator
     mBindingManager->GetXBLChildNodesFor(mContent, getter_AddRefs(mNodes));
     if (mNodes)
       mNodes->GetLength(&mLength);
+    else {
+      PRInt32 l;
+      mContent->ChildCount(l);
+      mLength = l;
+    }
   }
 
   PRBool HasMoreChildren() {
@@ -826,6 +832,8 @@ struct ChildIterator
       mNodes->Item(mIndex, getter_AddRefs(node));
       node->QueryInterface(NS_GET_IID(nsIContent), (void**)aChild);
     }
+    else 
+      mContent->ChildAt(mIndex, *aChild); // Addref happens here.
     mIndex++;
   }
 };
