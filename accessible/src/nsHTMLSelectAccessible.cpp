@@ -346,7 +346,7 @@ nsMenuListenerAccessible::~nsMenuListenerAccessible()
   if (mRegistered) {
      nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(mDOMNode));
      if (eventReceiver) 
-       eventReceiver->RemoveEventListener(NS_LITERAL_STRING("create"), this, PR_TRUE);   
+       eventReceiver->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), this, PR_TRUE);   
   }
 }
 
@@ -388,7 +388,7 @@ nsMenuListenerAccessible::SetupMenuListener()
        return;
      }
 
-     nsresult rv = eventReceiver->AddEventListener(NS_LITERAL_STRING("create"), this, PR_TRUE);   
+     nsresult rv = eventReceiver->AddEventListener(NS_LITERAL_STRING("popupshowing"), this, PR_TRUE);   
 
      if (NS_FAILED(rv)) {
        return;

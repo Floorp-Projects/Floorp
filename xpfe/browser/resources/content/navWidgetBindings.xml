@@ -94,7 +94,7 @@
       </handler>
 
       <!-- Location Bar Type-In History -->
-      <handler event="create">
+      <handler event="popupshowing">
       <![CDATA[
         if (event.originalTarget.getAttribute("emattr") == "menupopup")
           this.createUBHistory();

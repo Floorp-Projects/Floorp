@@ -165,7 +165,7 @@
           this.selectedItem = event.target;
       ]]>
       </handler>
-      <handler event="create">
+      <handler event="popupshowing">
       <![CDATA[
         if (event.target.parentNode == this && this.selectedItem) {
           // Not ready for auto-setting the active child in hierarchies yet.
@@ -296,7 +296,7 @@
           this.selectedIndex = event.target.index;
       ]]>
       </handler>
-      <handler event="create">
+      <handler event="popupshowing">
       <![CDATA[
         if (event.target == this && this._selectArray.length) {
           // Not ready for auto-setting the active child in hierarchies yet.

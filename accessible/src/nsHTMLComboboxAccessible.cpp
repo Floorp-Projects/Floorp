@@ -55,7 +55,7 @@ nsHTMLComboboxAccessible::~nsHTMLComboboxAccessible()
   if (mRegistered) {
     nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(mDOMNode));
     if (eventReceiver) 
-      eventReceiver->RemoveEventListener(NS_LITERAL_STRING("create"), this, PR_TRUE);   
+      eventReceiver->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), this, PR_TRUE);   
   }
 }
 
@@ -194,7 +194,7 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::Close(nsIDOMEvent* aEvent)
 
 /**
   * If we aren't already registered, register ourselves as a
-  *     listener to "create" events on our DOM node. Set our
+  *     listener to "popupshowing" events on our DOM node. Set our
   *     state to registered, but don't notify MSAA as they 
   *     don't need to know about this state.
   */
@@ -204,7 +204,7 @@ nsHTMLComboboxAccessible::SetupMenuListener()
   // if not already registered as a popup listener, register ourself
   if (!mRegistered) {
     nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(mDOMNode));
-    if (eventReceiver && NS_SUCCEEDED(eventReceiver->AddEventListener(NS_LITERAL_STRING("create"), this, PR_TRUE)))
+    if (eventReceiver && NS_SUCCEEDED(eventReceiver->AddEventListener(NS_LITERAL_STRING("popupshowing"), this, PR_TRUE)))
       mRegistered = PR_TRUE;
   }
 }

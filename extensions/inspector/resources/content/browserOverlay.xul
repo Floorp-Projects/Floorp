@@ -19,7 +19,7 @@
       document.getElementById("menu_inspectPage").setAttribute("hidden", "true");
     } else {
       var popup = document.getElementById("contentAreaContextMenu");
-      popup.addEventListener("create", inspectorContextCreate, false);
+      popup.addEventListener("popupshowing", inspectorContextCreate, false);
     }
   }
   
