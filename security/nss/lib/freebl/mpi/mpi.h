@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.3 2000/07/19 23:18:08 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.4 2000/07/20 04:47:24 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -232,11 +232,11 @@ int    mp_tovalue(char ch, int r);
 const  char  *mp_strerror(mp_err ec);
 
 /* Octet string conversion functions */
-mp_err mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, int len);
+mp_err mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, unsigned int len);
 int    mp_unsigned_octet_size(const mp_int *mp);
-mp_err mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, int maxlen);
-mp_err mp_to_signed_octets(const mp_int *mp, unsigned char *str, int maxlen);
-mp_err mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, int len);
+mp_err mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen);
+mp_err mp_to_signed_octets(const mp_int *mp, unsigned char *str, unsigned int maxlen);
+mp_err mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, unsigned int len);
 
 #if defined(MP_API_COMPATIBLE)
 #define NEG             MP_NEG
