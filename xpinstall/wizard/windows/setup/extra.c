@@ -292,8 +292,11 @@ void OutputTitle(HDC hDC, LPSTR szString)
 
 HRESULT SdArchives(LPSTR szFileIdi, LPSTR szDownloadDir)
 {
+  /* 2 indicates that sdinst.dll does not exist */
+  HRESULT hResult = 2;
+
+#ifndef MOZILLA_CLIENT
   SDISTRUCT sdistruct;
-  HRESULT   hResult;
 
   if((hResult = InitializeSmartDownload()) == 0)
   {
@@ -307,6 +310,7 @@ HRESULT SdArchives(LPSTR szFileIdi, LPSTR szDownloadDir)
     hResult = pfnNetInstall(&sdistruct);
     DeInitializeSmartDownload();
   }
+#endif
 
   return(hResult);
 }

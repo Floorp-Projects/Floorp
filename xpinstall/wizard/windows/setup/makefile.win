@@ -35,8 +35,6 @@ OBJS =                          \
     .\$(OBJDIR)\xpi.obj         \
     $(NULL)
 
-LCFLAGS= -UMOZILLA_CLIENT
-
 LLIBS=                          \
     $(DIST)\lib\jar_s.lib       \
     $(DIST)\lib\zlib_s.lib      \
