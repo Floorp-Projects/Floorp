@@ -312,7 +312,7 @@ int initCategories(STGlobals* g)
     PRBool inrule, leaf;
     STCategoryRule rule;
 
-    fp = fopen(g->mOptions.mCategoryFile, "r");
+    fp = fopen(g->mCommandLineOptions.mCategoryFile, "r");
     if (!fp)
     {
         /* It isnt an error to not have a categories file */
@@ -508,7 +508,7 @@ STCategoryNode* matchAllocation(STGlobals* g, STAllocation* aAllocation)
 ** The root of the tree is in the globls as the tree is dependent on the
 ** category file (options) rather than the run.
 */
-int categorizeAllocation(STAllocation* aAllocation, STGlobals* g)
+int categorizeAllocation(STOptions* inOptions, STAllocation* aAllocation, STGlobals* g)
 {
     /* Run through the rules in order to see if this allcation matches
     ** any of them.
@@ -560,7 +560,7 @@ int categorizeAllocation(STAllocation* aAllocation, STGlobals* g)
     ** at this time. That will happen when we focus on this category. This updating of
     ** stats will provide us fast categoryreports.
     */
-    recalculateAllocationCost(node->run, aAllocation, PR_FALSE);
+    recalculateAllocationCost(inOptions, node->run, aAllocation, PR_FALSE);
 
     /* Propogate upwards the statistics */
     /* XXX */
@@ -570,9 +570,9 @@ int categorizeAllocation(STAllocation* aAllocation, STGlobals* g)
     return 0;
 }
 
-typedef PRBool STCategoryNodeProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node);
+typedef PRBool STCategoryNodeProcessor(STRequest* inRequest, STOptions* inOptions, void* clientData, STCategoryNode* node);
 
-PRBool freeNodeRunProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node)
+PRBool freeNodeRunProcessor(STRequest* inRequest, STOptions* inOptions, void* clientData, STCategoryNode* node)
 {
     if (node->run)
     {
@@ -583,7 +583,7 @@ PRBool freeNodeRunProcessor(STRequest* inRequest, void* clientData, STCategoryNo
 }
 
 #if defined(DEBUG_dp)
-PRBool printNodeProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node)
+PRBool printNodeProcessor(STRequest* inRequest, STOptions* inOptions, void* clientData, STCategoryNode* node)
 {
     STCategoryNode* root = (STCategoryNode*) clientData;
     fprintf(stderr, "%-25s [ %9s size", node->categoryName,
@@ -608,8 +608,9 @@ int compareNode(const void* aNode1, const void* aNode2, void* aContext)
     int retval = 0;
     STCategoryNode* node1, * node2;
     PRUint32 a, b;
+    STOptions* inOptions = (STOptions*)aContext;
 
-    if (!aNode1 || !aNode2)
+    if (!aNode1 || !aNode2 || !inOptions)
         return 0;
 
     node1 = *((STCategoryNode **) aNode1);
@@ -617,7 +618,7 @@ int compareNode(const void* aNode1, const void* aNode2, void* aContext)
 
     if (node1 && node2)
     {
-        if (globals.mOptions.mOrderBy == ST_COUNT)
+        if (inOptions->mOrderBy == ST_COUNT)
         {
             a = (node1->run) ? node1->run->mStats.mCompositeCount : 0;
             b = (node2->run) ? node2->run->mStats.mCompositeCount : 0;
@@ -636,10 +637,10 @@ int compareNode(const void* aNode1, const void* aNode2, void* aContext)
     return retval;
 }
 
-PRBool sortNodeProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node)
+PRBool sortNodeProcessor(STRequest* inRequest, STOptions* inOptions, void* clientData, STCategoryNode* node)
 {
     if (node->nchildren)
-        NS_QuickSort(node->children, node->nchildren, sizeof(STCategoryNode *), compareNode, NULL);
+        NS_QuickSort(node->children, node->nchildren, sizeof(STCategoryNode *), compareNode, inOptions);
 
     return PR_TRUE;
 }
@@ -654,7 +655,7 @@ PRBool sortNodeProcessor(STRequest* inRequest, void* clientData, STCategoryNode*
 */
 #define MODINC(n, mod) ((n+1) % mod)
 
-void walkTree(STCategoryNode* root, STCategoryNodeProcessor func, STRequest* inRequest, void *clientData, int maxdepth)
+void walkTree(STCategoryNode* root, STCategoryNodeProcessor func, STRequest* inRequest, STOptions* inOptions, void *clientData, int maxdepth)
 {
     STCategoryNode* nodes[1024], *node;
     PRUint32 begin, end, i;
@@ -667,7 +668,7 @@ void walkTree(STCategoryNode* root, STCategoryNodeProcessor func, STRequest* inR
     while (begin != end)
     {
         node = nodes[begin];
-        ret = (*func)(inRequest, clientData, node);
+        ret = (*func)(inRequest, inOptions, clientData, node);
         if (ret == PR_FALSE)
         {
             /* Abort */
@@ -714,7 +715,7 @@ int freeRule(STCategoryRule* rule)
 
 void freeNodeRun(STCategoryNode* root)
 {
-   walkTree(root, freeNodeRunProcessor, NULL, NULL, 0);
+   walkTree(root, freeNodeRunProcessor, NULL, NULL, NULL, 0);
 }
 
 void freeNodeMap(STGlobals* g)
@@ -763,7 +764,7 @@ int freeCategories(STGlobals* g)
 ** categorize all the allocations of the run using the rules into
 ** a tree rooted at globls.mCategoryRoot
 */
-int categorizeRun(const STRun* aRun, STGlobals* g)
+int categorizeRun(STOptions* inOptions, const STRun* aRun, STGlobals* g)
 {
     PRUint32 i;
 #if defined(DEBUG_dp)
@@ -774,13 +775,13 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     /*
     ** First, cleanup our tree
     */
-    walkTree(&g->mCategoryRoot, freeNodeRunProcessor, NULL, NULL, 0);
+    walkTree(&g->mCategoryRoot, freeNodeRunProcessor, NULL, inOptions, NULL, 0);
 
     if (g->mNCategoryMap > 0)
     {
         for (i = 0; i < aRun->mAllocationCount; i++)
         {
-            categorizeAllocation(aRun->mAllocations[i], g);
+            categorizeAllocation(inOptions, aRun->mAllocations[i], g);
         }
     }
 
@@ -801,10 +802,10 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
     /*
     ** sort the tree based on our sort criterion
     */
-    walkTree(&g->mCategoryRoot, sortNodeProcessor, NULL, NULL, 0);
+    walkTree(&g->mCategoryRoot, sortNodeProcessor, NULL, inOptions, NULL, 0);
 
 #if defined(DEBUG_dp)
-    walkTree(&g->mCategoryRoot, printNodeProcessor, NULL, &g->mCategoryRoot, 0);
+    walkTree(&g->mCategoryRoot, printNodeProcessor, NULL, inOptions, &g->mCategoryRoot, 0);
 #endif
 
     return 0;
@@ -817,7 +818,7 @@ int categorizeRun(const STRun* aRun, STGlobals* g)
 ** Generate the category report - a list of all categories and details about each
 ** depth parameter controls how deep we traverse the category tree.
 */
-PRBool displayCategoryNodeProcessor(STRequest* inRequest, void* clientData, STCategoryNode* node)
+PRBool displayCategoryNodeProcessor(STRequest* inRequest, STOptions* inOptions, void* clientData, STCategoryNode* node)
 {
     STCategoryNode* root = (STCategoryNode *) clientData;
     PRUint32 byteSize = 0, heapCost = 0, count = 0;
@@ -855,7 +856,7 @@ PRBool displayCategoryNodeProcessor(STRequest* inRequest, void* clientData, STCa
                "  <td>");
 
     /* a link to topcallsites report with focus on category */
-    memcpy(&customOps, &inRequest->mOptions, sizeof(customOps));
+    memcpy(&customOps, inOptions, sizeof(customOps));
     PR_snprintf(customOps.mCategoryName, sizeof(customOps.mCategoryName), "%s", node->categoryName);
 
     htmlAnchor(inRequest, "top_callsites.html", node->categoryName, NULL, &customOps);
@@ -886,7 +887,7 @@ int displayCategoryReport(STRequest* inRequest, STCategoryNode *root, int depth)
                " </tr>\n"
                );
 
-    walkTree(root, displayCategoryNodeProcessor, inRequest, root, depth);
+    walkTree(root, displayCategoryNodeProcessor, inRequest, &inRequest->mOptions, root, depth);
 
     PR_fprintf(inRequest->mFD, "</table>\n");
 
