@@ -63,12 +63,16 @@ endif
 ifeq ($(OS_ARCH),UNIX_System_V)
 OS_ARCH		:= NEC
 endif
+ifeq ($(OS_ARCH),QNX)
+OS_RELEASE	:= $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
+endif
 ifeq ($(OS_ARCH),SCO_SV)
 OS_ARCH		:= SCOOS
 OS_RELEASE	:= 5.0
 endif
-ifneq (,$(filter SINIX-N SINIX-Y ReliantUNIX-M,$(OS_ARCH)))
+ifneq (,$(filter SINIX-N SINIX-Y SINIX-Z ReliantUNIX-M,$(OS_ARCH)))
 OS_ARCH		:= SINIX
+OS_TEST		:= $(shell uname -p)
 endif
 ifeq ($(OS_ARCH),UnixWare)
 OS_ARCH		:= UNIXWARE
@@ -475,7 +479,6 @@ DEFINES		+= -DDEVELOPER_DEBUG
 #
 # For the standalone image lib
 #
-
 ifdef STANDALONE_IMAGE_LIB
 DEFINES		+= -DSTANDALONE_IMAGE_LIB
 endif
