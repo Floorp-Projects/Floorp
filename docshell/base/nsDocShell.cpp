@@ -434,9 +434,9 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
     }
     else if (aIID.Equals(NS_GET_IID(nsIClipboardDragDropHookList)) 
             && NS_SUCCEEDED(EnsureTransferableHookData())) {
-      *aSink = mTransferableHookData;
-      NS_ADDREF((nsISupports *)*aSink);
-      return NS_OK;
+        *aSink = mTransferableHookData;
+        NS_ADDREF((nsISupports *)*aSink);
+        return NS_OK;
     }
     else if (aIID.Equals(NS_GET_IID(nsISelectionDisplay))) {
       nsCOMPtr<nsIPresShell> shell;
@@ -6740,10 +6740,10 @@ nsDocShell::EnsureEditorData()
 nsresult
 nsDocShell::EnsureTransferableHookData()
 {
-  if (!mTransferableHookData) {
-    mTransferableHookData = new nsTransferableHookData();   // owning addref
-    if (!mTransferableHookData) return NS_ERROR_OUT_OF_MEMORY;
-  }
+    if (!mTransferableHookData) {
+        mTransferableHookData = new nsTransferableHookData();
+        if (!mTransferableHookData) return NS_ERROR_OUT_OF_MEMORY;
+    }
 
   return NS_OK;
 }
