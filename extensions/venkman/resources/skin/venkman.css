@@ -215,13 +215,17 @@ outlinerbody:-moz-outliner-image(current-frame-flag){
     list-style-image: url("chrome://venkman/skin/images/current-frame.gif");
 }
 
-outlinerbody:-moz-outliner-image(proj-col-0,pj-breakpoints){
-    list-style-image: url("chrome://venkman/skin/images/proj-breakpoints.png");
-}
-
 outlinerbody:-moz-outliner-cell(script-name,fn-guessed) {
     color: red;
     font-style: italic;
+}
+
+outlinerbody:-moz-outliner-image(project-col-0,pj-blacklist){
+    list-style-image: url("chrome://venkman/skin/images/proj-blacklist.png");
+}
+
+outlinerbody:-moz-outliner-image(project-col-0,pj-bl-item){
+    list-style-image: url("chrome://venkman/skin/images/proj-bl-item.png");
 }
 
 outlinerbody:-moz-outliner-image(project-col-0,pj-breakpoints){
