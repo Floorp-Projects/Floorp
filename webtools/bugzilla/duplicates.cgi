@@ -25,7 +25,7 @@
 
 use diagnostics;
 use strict;
-use CGI "param";
+
 use AnyDBM_File;
 
 use lib qw(.);
@@ -33,260 +33,156 @@ use lib qw(.);
 require "globals.pl";
 require "CGI.pl";
 
+# Use global templatisation variables.
+use vars qw($template $vars);
+
 ConnectToDatabase(1);
 GetVersionTable();
 
 quietly_check_login();
 
-# Silly used-once warnings
-$::userid = $::userid;
-$::usergroupset = $::usergroupset;
+use vars qw (%FORM $userid $usergroupset @legal_product);
 
 my %dbmcount;
 my %count;
-my $dobefore = 0;
-my $before = "";
 my %before;
 
 # Get params from URL
-
-my $changedsince = 7;     # default one week
-my $maxrows = 100;        # arbitrary limit on max number of rows
-my $sortby = "dup_count"; # default to sorting by dup count
-
-if (defined(param("sortby")))
-{
-  $sortby = param("sortby");
+sub formvalue {
+    my ($name, $default) = (@_);
+    return $FORM{$name} || $default || "";
 }
 
-# Check for changedsince param, and see if it's a positive integer
-if (defined(param("changedsince")) && param("changedsince") =~ /^\d{1,4}$/) 
-{
-  $changedsince = param("changedsince");
-}
+my $sortby = formvalue("sortby");
+my $changedsince = formvalue("changedsince", 7);
+my $maxrows = formvalue("maxrows", 100);
+my $openonly = formvalue("openonly");
+my $reverse = formvalue("reverse");
+my $product = formvalue("product");
+my $sortvisible = formvalue("sortvisible");
+my @buglist = (split(/[:,]/, formvalue("bug_id")));
 
-# check for max rows param, and see if it's a positive integer
-if (defined(param("maxrows")) && param("maxrows") =~ /^\d{1,4}$/)
-{
-  $maxrows = param("maxrows");
-}
-
-# Start the page
-print "Content-type: text/html\n";
-print "\n";
-PutHeader("Most Frequently Reported Bugs");
+# Small backwards-compatibility hack, dated 2002-04-10.
+$sortby = "count" if $sortby eq "dup_count";
 
 # Open today's record of dupes
-my $today = &days_ago(0);
+my $today = days_ago(0);
+my $yesterday = days_ago(1);
 
-if (<data/duplicates/dupes$today*>)
-{
-  dbmopen(%dbmcount, "data/duplicates/dupes$today", 0644) || 
-                            &die_politely("Can't open today's dupes file: $!");
+if (<data/duplicates/dupes$today*>) {
+    dbmopen(%dbmcount, "data/duplicates/dupes$today", 0644) 
+      || DisplayError("Can't open today ($today)'s dupes file: $!")
+      && exit;
 }
-else
-{
-  # Try yesterday's, then (in case today's hasn't been created yet)
-  $today = &days_ago(1);
-  if (<data/duplicates/dupes$today*>)
-  {
-    dbmopen(%dbmcount, "data/duplicates/dupes$today", 0644) || 
-                        &die_politely("Can't open yesterday's dupes file: $!");
-  }
-  else
-  {
-    &die_politely("There are no duplicate statistics for today ($today) or yesterday.");
-  }
+elsif (<data/duplicates/dupes$yesterday*>) {
+    dbmopen(%dbmcount, "data/duplicates/dupes$yesterday", 0644) 
+      || DisplayError("Can't open yesterday ($yesterday)'s dupes file: $!")
+      && exit;
+}
+else {
+    DisplayError("There are no duplicate statistics for today ($today) or
+                yesterday.");
+    exit;
 }
 
 # Copy hash (so we don't mess up the on-disk file when we remove entries)
 %count = %dbmcount;
-my $key;
-my $value;
+
+# Remove all those dupes under the threshold parameter. 
+# We do this, before the sorting, for performance reasons.
 my $threshold = Param("mostfreqthreshold");
 
-# Remove all those dupes under the threshold (for performance reasons)
-while (($key, $value) = each %count)
-{
-  if ($value < $threshold)
-  {
-    delete $count{$key};
-  } 
+while (my ($key, $value) = each %count) {
+    delete $count{$key} if ($value < $threshold);
 }
 
 # Try and open the database from "changedsince" days ago
-$before = &days_ago($changedsince);    
-
-if (<data/duplicates/dupes$before*>) 
-{
-  dbmopen(%before, "data/duplicates/dupes$before", 0644) && ($dobefore = 1);
-}
-
-print Param("mostfreqhtml");
-
+my $dobefore = 0;
 my %delta;
+my $whenever = days_ago($changedsince);    
 
-if ($dobefore) 
-{
-  # Calculate the deltas if we are doing a "before"
-  foreach (keys(%count))
-  {
-    $delta{$_} = $count{$_} - $before{$_};
-  }
+if (<data/duplicates/dupes$whenever*>) {
+    dbmopen(%before, "data/duplicates/dupes$whenever", 0644) 
+      || DisplayError("Can't open $changedsince days ago ($whenever)'s " .
+                      "dupes file: $!");
+
+    # Calculate the deltas
+    ($delta{$_} = $count{$_} - $before{$_}) foreach (keys(%count));
+
+    $dobefore = 1;
 }
 
-# Sort, if required
-my @sortedcount;
+# Don't add CLOSED, and don't add VERIFIED unless they are INVALID or 
+# WONTFIX. We want to see VERIFIED INVALID and WONTFIX because common 
+# "bugs" which aren't bugs end up in this state.
+my $generic_query = "
+  SELECT component, bug_severity, op_sys, target_milestone,
+         short_desc, bug_status, resolution
+  FROM bugs 
+  WHERE (bug_status != 'CLOSED') 
+  AND   ((bug_status = 'VERIFIED' AND resolution IN ('INVALID', 'WONTFIX')) 
+         OR (bug_status != 'VERIFIED'))
+  AND ";
 
-if    ($sortby eq "delta")
-{
-  @sortedcount = sort by_delta keys(%count);
-}
-elsif ($sortby eq "bug_no")
-{
-  @sortedcount = reverse sort by_bug_no keys(%count);
-}
-elsif ($sortby eq "dup_count")
-{
-  @sortedcount = sort by_dup_count keys(%count);
-}
+# Limit to a single product if requested             
+$generic_query .= (" product = " . SqlQuote($product) . " AND ") if $product;
+ 
+my @bugs;
+my @bug_ids; 
+my $loop = 0;
 
-my $i = 0;
+foreach my $id (keys(%count)) {
+    # Maximum row count is dealt with in the template.
+    # If there's a buglist, restrict the bugs to that list.
+    next if $sortvisible && $buglist[0] && (lsearch(\@buglist, $id) == -1);
 
-# Produce a string of bug numbers for a Bugzilla buglist.
-my $commabugs = "";
-foreach (@sortedcount) 
-{
-  last if ($i == $maxrows);
+    SendSQL(SelectVisible("$generic_query bugs.bug_id = $id", 
+                           $userid, 
+                           $usergroupset));
+                           
+    next unless MoreSQLData();
+    my ($component, $bug_severity, $op_sys, $target_milestone, 
+        $short_desc, $bug_status, $resolution) = FetchSQLData();
 
-  $commabugs .= ($_ . ",");
-  $i++;  
-}
+    # Limit to open bugs only if requested
+    next if $openonly && ($resolution ne "");
 
-# Avoid having a comma at the end - Bad Things happen.
-chop $commabugs; 
-
-print qq|
-
-<form method="POST" action="buglist.cgi">
-<input type="hidden" name="bug_id" value="$commabugs">
-<input type="hidden" name="order" value="Reuse same sort as last time">
-Give this to me as a <input type="submit" value="Bug List">. (Note: the order may not be the same.)
-</form>
-
-<table BORDER>
-<tr BGCOLOR="#CCCCCC">
-
-<td><center><b>
-<a href="duplicates.cgi?sortby=bug_no&maxrows=$maxrows&changedsince=$changedsince">Bug #</a>
-</b></center></td>
-<td><center><b>
-<a href="duplicates.cgi?sortby=dup_count&maxrows=$maxrows&changedsince=$changedsince">Dupe<br>Count</a>
-</b></center></td>\n|;
-
-if ($dobefore) 
-{
-  print "<td><center><b>
-  <a href=\"duplicates.cgi?sortby=delta&maxrows=$maxrows&changedsince=$changedsince\">Change in
-  last<br>$changedsince day(s)</a></b></center></td>";
+    push (@bugs, { id => $id,
+                   count => $count{$id},
+                   delta => $delta{$id}, 
+                   component => $component,
+                   bug_severity => $bug_severity,
+                   op_sys => $op_sys,
+                   target_milestone => $target_milestone,
+                   short_desc => $short_desc,
+                   bug_status => $bug_status, 
+                   resolution => $resolution });
+    push (@bug_ids, $id); 
+    $loop++;                
 }
 
-print "
-<td><center><b>Component</b></center></td>
-<td><center><b>Severity</b></center></td>
-<td><center><b>Op Sys</b></center></td>
-<td><center><b>Target<br>Milestone</b></center></td>
-<td><center><b>Summary</b></center></td>
-</tr>\n\n";
+$vars->{'bugs'} = \@bugs;
+$vars->{'bug_ids'} = \@bug_ids;
 
-$i = 0;
+$vars->{'dobefore'} = $dobefore;
+$vars->{'sortby'} = $sortby;
+$vars->{'sortvisible'} = $sortvisible;
+$vars->{'changedsince'} = $changedsince;
+$vars->{'maxrows'} = $maxrows;
+$vars->{'openonly'} = $openonly;
+$vars->{'reverse'} = $reverse;
+$vars->{'product'} = $product;
+$vars->{'products'} = \@::legal_product;
 
-foreach (@sortedcount)
-{
-  my $id = $_;
-  SendSQL(SelectVisible("SELECT component, bug_severity, op_sys, target_milestone, short_desc, bug_status, resolution" .
-                 " FROM bugs WHERE bugs.bug_id = $id", $::userid, $::usergroupset));
-  next unless MoreSQLData();
-  my ($component, $severity, $op_sys, $milestone, $summary, $bug_status, $resolution) = FetchSQLData();
-  $summary = html_quote($summary);
+print "Content-type: text/html\n\n";
 
-  # Show all bugs except those CLOSED _OR_ VERIFIED but not INVALID or WONTFIX.
-  # We want to see VERIFIED INVALID and WONTFIX because common "bugs" which aren't
-  # bugs end up in this state.
-  unless ( ($bug_status eq "CLOSED") || ( ($bug_status eq "VERIFIED") &&
-          ! ( ($resolution eq "INVALID") || ($resolution eq "WONTFIX") ) ) ) {
-    print "<tr>";
-    print '<td><center>';
-    if  ( ($bug_status eq "RESOLVED") || ($bug_status eq "VERIFIED") ) {
-      print "<strike>";
-    }
-    print "<A HREF=\"show_bug.cgi?id=" . $id . "\">";
-    print $id . "</A>";
-    if  ( ($bug_status eq "RESOLVED") || ($bug_status eq "VERIFIED") ) {
-      print "</strike>";
-    }
-    print "</center></td>";
-    print "<td><center>$count{$id}</center></td>";
-    if ($dobefore) 
-    {
-      print "<td><center>$delta{$id}</center></td>";
-    }
-    print "<td>$component</td>\n    ";
-    print "<td><center>$severity</center></td>";
-    print "<td><center>$op_sys</center></td>";
-    print "<td><center>$milestone</center></td>";
-    print "<td>$summary</td>";
-    print "</tr>\n";
-
-    $i++;
-  }
-
-  if ($i == $maxrows)
-  {
-    last;
-  }
-}
-
-print "</table><br><br>";
-PutFooter();
+# Generate and return the UI (HTML page) from the appropriate template.
+$template->process("report/duplicates.html.tmpl", $vars)
+  || DisplayError("Template process failed: " . $template->error())
+  && exit;
 
 
-sub by_bug_no 
-{
-  return ($a <=> $b);
-}
-
-sub by_dup_count 
-{
-  return -($count{$a} <=> $count{$b});
-}
-
-sub by_delta 
-{
-  return -($delta{$a} <=> $delta{$b});
-}
-
-sub days_ago 
-{
-  my ($dom, $mon, $year) = (localtime(time - ($_[0]*24*60*60)))[3, 4, 5];
-  return sprintf "%04d-%02d-%02d", 1900 + $year, ++$mon, $dom;
-}
-
-sub die_politely {
-  my $msg = shift;
-
-  print <<FIN;
-<p>
-<table border=1 cellpadding=10>
-<tr>
-<td align=center>
-<font color=blue>$msg</font>
-</td>
-</tr>
-</table>
-<p>
-FIN
-    
-  PutFooter();
-  exit;
+sub days_ago {
+    my ($dom, $mon, $year) = (localtime(time - ($_[0]*24*60*60)))[3, 4, 5];
+    return sprintf "%04d-%02d-%02d", 1900 + $year, ++$mon, $dom;
 }
