@@ -1393,20 +1393,6 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
     printService->GetPrintRange(&printRangeType);
   }
 
-#ifdef DEBUG_rods
-  PRUnichar * docStr = GetWebShellTitle(aParent);
-  if (docStr) {
-    printService->SetTitle(docStr);
-    nsString str;
-    str = docStr;
-    char * s = str.ToNewCString();
-    printf("***** Printing: %p - %s\n", aParent, s);
-    nsMemory::Free(s);
-    nsMemory::Free(docStr);
-  } else {
-    printf("***** Printing: %p - No Title\n", aParent);
-  }
-#endif
 
   PRBool doesContainFrameSet;
   PRBool isIFrameSelection = IsThereAnIFrameSelected(aParent, domWinIntl, doesContainFrameSet);
@@ -1418,7 +1404,11 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
 #if SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
                      // (this part needs to be added)
   if (aIsSubDoc == nsnull) {
-    NS_ENSURE_SUCCESS( aDContext->BeginDocument(nsnull), NS_ERROR_FAILURE );
+    PRUnichar *docTitleStr = GetWebShellTitle(aparent);
+    NS_ENSURE_SUCCESS( aDContext->BeginDocument(docTitleStr), NS_ERROR_FAILURE );
+    if(docTitleStr) {
+      nsMemory::Free(docTitleStr);
+    }
   }
 #endif
 
@@ -1512,23 +1502,19 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
     }
   }
 
-  // Get WebShell's Document title String 
-  PRUnichar * docTitleStr = GetWebShellTitle(aParent);
-  if (docTitleStr) {
-    printService->SetTitle(docTitleStr);
-  }
 
   PRBool canPrintFrame = printAllPages || printEachFrame || printSelectedFrame || printSelectedIFrame;                                                          
 
   if (!aIsSubDoc || (aIsSubDoc && canPrintFrame)) {
 #ifndef SPOOL_TO_ONE_DOC // this will fix all frames being painted to the same spooling document
                          // (this part needs to be removed)
-    NS_ENSURE_SUCCESS( aDContext->BeginDocument(nsnull), NS_ERROR_FAILURE );
-#endif
 
+    PRUnichar * docTitleStr = GetWebShellTitle(aParent);
+    NS_ENSURE_SUCCESS( aDContext->BeginDocument(docTitleStr), NS_ERROR_FAILURE );
     if (docTitleStr != nsnull) {
       nsMemory::Free(docTitleStr);
     }
+#endif
 
     aDContext->GetDeviceSurfaceDimensions(width, height);
 
