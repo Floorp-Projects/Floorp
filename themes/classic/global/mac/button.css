@@ -103,14 +103,13 @@
 /** All .button-* styles also apply to dialog exit buttons (OK/Cancel) (as seen in XBL binding) **/
 
 button, .exit-dialog {
-	-moz-binding			: url(chrome://global/skin/buttonBindings.xml#nine-slice-button);
-	border				: 0px; 
-	/** new button rules 011601 ***/
-	/** border: 2px solid blue !important;**/ 
-	-moz-user-focus			: ignore;
-	min-width			: 60px;
-	color				: #000000;
-	background-color	: transparent !important;  /* Greatly increases responsiveness and 'feel' */
+	-moz-binding        : url(chrome://global/skin/buttonBindings.xml#nine-slice-button);
+	border              : 0px; 
+	-moz-user-focus     : ignore;
+	min-width           : 60px;
+	min-height          : 20px;
+	color               : #000000;
+	background-color    : transparent !important;  /* Greatly increases responsiveness and 'feel' */
 }
 
 button {
@@ -335,8 +334,12 @@ button:hover:active {
   
   /* .......... default normal state .......... */
 
-  button[default="true"] {
-    margin          : 2px;
+  button[default="true"], button[default="true"].exit-dialog {
+    margin              : 2px;
+    min-height          : 26px;
+    min-width           : 66px;
+	padding             : 0px;
+
   }
 
   .button-box-left[default="true"] {
