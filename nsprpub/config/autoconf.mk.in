@@ -56,6 +56,7 @@ CC		= @CC@
 CCC		= @CXX@
 NS_USE_GCC	= @GNU_CC@
 GCC_USE_GNU_LD	= @GCC_USE_GNU_LD@
+MSC_VER		= @MSC_VER@
 AR		= @AR@
 AR_FLAGS	= @AR_FLAGS@
 LD		= @LD@
