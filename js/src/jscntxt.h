@@ -76,10 +76,10 @@ struct JSRuntime {
     JSRuntimeState      state;
 
     /* Garbage collector state, used by jsgc.c. */
-    JSArenaPool         gcArenaPool;
+    JSArenaPool         gcArenaPool[GC_NUM_FREELISTS];
+    JSGCThing           *gcFreeList[GC_NUM_FREELISTS];
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
-    JSGCThing           *gcFreeList;
     jsrefcount          gcKeepAtoms;
     uint32              gcBytes;
     uint32              gcLastBytes;
@@ -90,6 +90,20 @@ struct JSRuntime {
     JSPackedBool        gcRunning;
     JSGCCallback        gcCallback;
     uint32              gcMallocBytes;
+
+    /*
+     * API compatibility requires keeping GCX_PRIVATE bytes separate from the
+     * original GC types' byte tally.  Otherwise embeddings that configure a
+     * good limit for pre-GCX_PRIVATE versions of the engine will see memory
+     * over-pressure too often, possibly leading to failed last-ditch GCs.
+     *
+     * The new XML GC-thing types do add to gcBytes, and they're larger than
+     * the original GC-thing type size (8 bytes on most architectures).  So a
+     * user who enables E4X may want to increase the maxbytes value passed to
+     * JS_NewRuntime.  TODO: Note this in the API docs.
+     */
+    uint32              gcPrivateBytes;
+
 #if JS_HAS_XML_SUPPORT
     /* Lists of JSXML private data structures to be finalized. */
     JSXMLNamespace      *gcDoomedNamespaces;

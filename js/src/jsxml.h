@@ -55,22 +55,11 @@ extern const char js_gt_entity_str[];
 extern const char js_lt_entity_str[];
 extern const char js_quot_entity_str[];
 
-/*
- * Order matters: no and single owner cases < GC (potentially many) owners.
- */
-typedef enum JSXMLMarkFlag {
-    JSXML_MARK_DOOMED = -2,             /* no owners, to be finalized */
-    JSXML_MARK_SINGLE_OWNER = -1,       /* single owner, manual destroy */
-    JSXML_MARK_CLEAR = 0,               /* GC owner, nominal state */
-    JSXML_MARK_LIVE = 1                 /* GC owner, known to be live */
-} JSXMLMarkFlag;
-
 struct JSXMLNamespace {
     JSObject            *object;
     JSString            *prefix;
     JSString            *uri;
-    int8                markflag;       /* JSXMLMarkflag, see above */
-    JSPackedBool        declared;       /* true if declared in its XML tag */
+    JSBool              declared;       /* true if declared in its XML tag */
 };
 
 extern JSXMLNamespace *
@@ -78,7 +67,10 @@ js_NewXMLNamespace(JSContext *cx, JSString *prefix, JSString *uri,
                    JSBool declared);
 
 extern void
-js_DestroyXMLNamespace(JSContext *cx, JSXMLNamespace *ns);
+js_MarkXMLNamespace(JSContext *cx, JSXMLNamespace *ns, void *arg);
+
+extern void
+js_FinalizeXMLNamespace(JSContext *cx, JSXMLNamespace *ns);
 
 extern JSObject *
 js_NewXMLNamespaceObject(JSContext *cx, JSString *prefix, JSString *uri,
@@ -92,7 +84,6 @@ struct JSXMLQName {
     JSString            *uri;
     JSString            *prefix;
     JSString            *localName;
-    JSXMLMarkFlag       markflag;
 };
 
 extern JSXMLQName *
@@ -100,7 +91,10 @@ js_NewXMLQName(JSContext *cx, JSString *uri, JSString *prefix,
                JSString *localName);
 
 extern void
-js_DestroyXMLQName(JSContext *cx, JSXMLQName *qn);
+js_MarkXMLQName(JSContext *cx, JSXMLQName *qn, void *arg);
+
+extern void
+js_FinalizeXMLQName(JSContext *cx, JSXMLQName *qn);
 
 extern JSObject *
 js_NewXMLQNameObject(JSContext *cx, JSString *uri, JSString *prefix,
@@ -165,8 +159,7 @@ struct JSXML {
     void                *domnode;       /* DOM node if mapped info item */
     JSXML               *parent;
     JSXMLQName          *name;
-    int8                markflag;
-    uint8               xml_class;      /* discriminates u, below */
+    uint16              xml_class;      /* discriminates u, below */
     uint16              xml_flags;      /* flags, see below */
     union {
         struct JSXMLListVar {
@@ -208,10 +201,10 @@ extern JSXML *
 js_NewXML(JSContext *cx, JSXMLClass xml_class);
 
 extern void
-js_DestroyXML(JSContext *cx, JSXML *xml);
+js_MarkXML(JSContext *cx, JSXML *xml, void *arg);
 
 extern void
-js_FinalizeDoomedXML(JSContext *cx);
+js_FinalizeXML(JSContext *cx, JSXML *xml);
 
 extern JSObject *
 js_ParseNodeToXMLObject(JSContext *cx, JSParseNode *pn);
