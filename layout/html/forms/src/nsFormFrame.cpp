@@ -96,7 +96,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "prlong.h"
 
 // Rewrite of Multipart form posting
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIFileSpec.h"
 #include "nsFileSpec.h"
 #include "nsIProtocolHandler.h"
@@ -725,19 +725,17 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     aFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   }
 
-  nsIFileSpec* multipartDataFile = nsnull;
+  nsCOMPtr<nsIFile> multipartDataFile;
   if (isURLEncoded) {
     result = ProcessAsURLEncoded(formProcessor, isPost, data, fcFrame);
   }
   else {
-    result = ProcessAsMultipart(formProcessor, multipartDataFile, fcFrame);
+    result = ProcessAsMultipart(formProcessor, getter_AddRefs(multipartDataFile), fcFrame);
   }
 
   // Don't bother submitting form if we failed to generate a valid submission
-  if (NS_FAILED(result)) {
-    NS_IF_RELEASE(multipartDataFile);
+  if (NS_FAILED(result))
     return result;
-  }
 
   // make the url string
   nsCOMPtr<nsILinkHandler> handler;
@@ -917,7 +915,8 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
         nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID));
         if (serv && multipartDataFile) {
           nsCOMPtr<nsIInputStream> rawStream;
-          multipartDataFile->GetInputStream(getter_AddRefs(rawStream));
+          NS_NewLocalFileInputStream(getter_AddRefs(rawStream),
+                                     multipartDataFile);
           if (rawStream) {
               NS_NewBufferedInputStream(getter_AddRefs(postDataStream),
                                         rawStream, 8192);
@@ -1345,8 +1344,13 @@ nsFormFrame::GetContentType(char* aPathName, char** aContentType)
 #define MULTIPART "multipart/form-data"
 #define SEP "--"
 
-nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFileSpec*& aMultipartDataFile, nsIFormControlFrame* aFrame)
+nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,
+                                         nsIFile** aMultipartDataFile,
+                                         nsIFormControlFrame* aFrame)
 {
+  *aMultipartDataFile = nsnull;
+
+  nsresult rv;
   PRBool compatibleSubmit = PR_TRUE;
   nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
   if (prefService)
@@ -1357,20 +1361,59 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
   PRInt32 numChildren = mFormControls.Count();
 
   // Create a temporary file to write the form post data to
-  nsSpecialSystemDirectory tempDir(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  tempDir += "formpost";
-  tempDir.MakeUnique();
-  nsIFileSpec* postDataFile = nsnull;
-  nsresult rv = NS_NewFileSpecWithSpec(tempDir, &postDataFile);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Post data file couldn't be created!");
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIFile> postDataFileName;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR,
+                              getter_AddRefs(postDataFileName));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to get special directory for file upload");
+    return rv;
+  }
+
+  if (!postDataFileName) {
+    NS_WARNING("Failed to get special directory for file upload");
+    return NS_ERROR_FAILURE;
+  }
+
+  // append the name that we want to use
+  rv = postDataFileName->Append("formpost");
+  if (NS_FAILED(rv))
+    return rv;
+
+  // this file should be private
+  rv = postDataFileName->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE,
+                                      0600);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to create unique file for post data!");
+    return rv;
+  }
+
+  // create a stream from that file.
+  nsCOMPtr<nsIOutputStream> postDataLocalFile;
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(postDataLocalFile),
+                                   postDataFileName,
+                                   -1, /* default */
+                                   0600); /* should be private */
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Post data file stream couldn't be opened!");
+    return rv;
+  }
+
+  // create a buffered output stream
+  nsCOMPtr<nsIOutputStream> postDataFile;
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(postDataFile),
+                                  postDataLocalFile,
+                                  8192);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Post data buffered file stream couldn't be opened!");
+    return rv;
+  }
 
   // write the content-type, boundary to the tmp file
   char boundary[80];
   sprintf(boundary, "---------------------------%d%d%d", 
           rand(), rand(), rand());
   sprintf(buffer, "Content-type: %s; boundary=%s" CRLF, MULTIPART, boundary);
-  PRInt32 wantbytes = 0, gotbytes = 0;
+  PRUint32 wantbytes = 0, gotbytes = 0;
   rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
   if (NS_FAILED(rv) || (wantbytes != gotbytes)) return rv;
 
@@ -1536,7 +1579,8 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
         delete [] values;
       }
 
-      aMultipartDataFile = postDataFile;
+      *aMultipartDataFile = postDataFileName.get();
+      NS_ADDREF(*aMultipartDataFile);
     }
   }
 
@@ -1721,7 +1765,16 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
     sprintf(buffer, SEP "%s" SEP CRLF, boundary);
     rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
     if (NS_SUCCEEDED(rv) && (wantbytes == gotbytes)) {
-      rv = postDataFile->CloseStream();
+      rv = postDataFile->Close();
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to close post data file stream!");
+        return rv;
+      }
+      rv = postDataLocalFile->Close();
+      if (NS_FAILED(rv)) {
+        NS_WARNING("FAiled to close post data file!");
+        return rv;
+      }
     }
   }
 

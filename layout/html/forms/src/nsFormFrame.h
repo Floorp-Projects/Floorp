@@ -114,7 +114,9 @@ protected:
 
   nsresult ProcessValue(nsIFormProcessor& aFormProcessor, nsIFormControlFrame* aFrameControl, const nsString& aName, nsString& aNewValue);
   nsresult ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBool aIsPost, nsString& aData, nsIFormControlFrame* aFrame);
-  nsresult ProcessAsMultipart(nsIFormProcessor* aFormProcessor, nsIFileSpec*& aMultipartDataFile, nsIFormControlFrame* aFrame);
+  nsresult ProcessAsMultipart(nsIFormProcessor* aFormProcessor,
+                              nsIFile** aMultipartDataFile,
+                              nsIFormControlFrame* aFrame);
   PRUint32 GetFileNameWithinPath(nsString aPathName);
   nsresult GetContentType(char* aPathName, char** aContentType);
   
