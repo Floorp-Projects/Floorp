@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.4 2001/06/21 20:50:06 wtc%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.5 2001/08/17 16:48:50 thayes%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -361,7 +361,8 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
     SECItem *enckey;
     int error;
 
-    ri->cert = cert;	/* mark the recipientInfo so we can find it later */
+    ri->cert = CERT_DupCertificate(cert);
+        	/* mark the recipientInfo so we can find it later */
 
     switch (ri->recipientInfoType) {
     case NSSCMSRecipientInfoID_KeyTrans:
