@@ -582,11 +582,6 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
                             nsViewVisibility_kHide);
     }
 
-    // Make sure content transparency is correct
-    if (viewIsVisible) {
-      vm->SetViewContentTransparency(aView, viewHasTransparentContent);
-    }
-
     // Make sure z-index is correct
     PRInt32                zIndex = 0;
     PRBool                 autoZIndex = PR_FALSE;
@@ -626,15 +621,27 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
         if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
           if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
             clipRect.y = display->mClip.y;
+            if (clipRect.y > 0) {
+              viewHasTransparentContent = PR_TRUE;
+            }
           }
           if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
             clipRect.x = display->mClip.x;
+            if (clipRect.x > 0) {
+              viewHasTransparentContent = PR_TRUE;
+            }
           }
           if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
             clipRect.width = display->mClip.width;
+            if (clipRect.width < frameSize.width) {
+              viewHasTransparentContent = PR_TRUE;
+            }
           }
           if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
             clipRect.height = display->mClip.height;
+            if (clipRect.height < frameSize.height) {
+              viewHasTransparentContent = PR_TRUE;
+            }
           }
         }
       }
@@ -679,6 +686,11 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     } else {
       // Remove clipping of child views.
       vm->SetViewChildClipRegion(aView, nsnull);
+    }
+
+    // Make sure content transparency is correct
+    if (viewIsVisible) {
+      vm->SetViewContentTransparency(aView, viewHasTransparentContent);
     }
 
     NS_RELEASE(vm);
