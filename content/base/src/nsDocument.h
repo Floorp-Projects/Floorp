@@ -219,6 +219,7 @@ public:
   virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex);
   virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet);
   virtual void AddStyleSheet(nsIStyleSheet* aSheet);
+  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify);
   virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                           PRBool mDisabled);
 
@@ -437,7 +438,8 @@ protected:
 
 protected:
 
-  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
+  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hooks for sheet ordering
+  virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
 
   nsDocument();
   virtual ~nsDocument(); 

@@ -663,6 +663,9 @@ nsDocument::~nsDocument()
   for (index = 0; index < mObservers.Count(); index++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
     observer->DocumentWillBeDestroyed(this);
+    if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
+      index--;
+    }
   }
 
   if (nsnull != mDocumentTitle) {
@@ -1308,9 +1311,56 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
     for (index = 0; index < mObservers.Count(); index++) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
       observer->StyleSheetAdded(this, aSheet);
+      if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
+        index--;
+      }
     }
   }
 }
+
+void 
+nsDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
+{ // subclass hook for sheet ordering
+  mStyleSheets.InsertElementAt(aSheet, aIndex);
+}
+
+NS_IMETHODIMP
+nsDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify)
+{
+  NS_PRECONDITION(nsnull != aSheet, "null ptr");
+  InternalInsertStyleSheetAt(aSheet, aIndex);
+
+  NS_ADDREF(aSheet);
+  aSheet->SetOwningDocument(this);
+
+  PRBool enabled = PR_TRUE;
+  aSheet->GetEnabled(enabled);
+
+  PRInt32 count;
+  PRInt32 index;
+  if (enabled) {
+    count = mPresShells.Count();
+    for (index = 0; index < count; index++) {
+      nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
+      nsCOMPtr<nsIStyleSet> set;
+      shell->GetStyleSet(getter_AddRefs(set));
+      if (set) {
+        set->AddDocStyleSheet(aSheet, this);
+      }
+    }
+  }
+  if (aNotify) {  // notify here even if disabled, there may have been others that weren't notified
+    for (index = 0; index < mObservers.Count(); index++) {
+      nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
+      observer->StyleSheetAdded(this, aSheet);
+      if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
+        index--;
+      }
+    }
+  }
+  return NS_OK;
+}
+
 
 void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
                                             PRBool aDisabled)
@@ -1340,6 +1390,9 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
   for (index = 0; index < mObservers.Count(); index++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
     observer->StyleSheetDisabledStateChanged(this, aSheet, aDisabled);
+    if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
+      index--;
+    }
   }
 }
 
