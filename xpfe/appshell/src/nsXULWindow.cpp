@@ -947,7 +947,6 @@ void nsXULWindow::OnChromeLoaded()
     if(mContentTreeOwner)
       mContentTreeOwner->ApplyChromeFlags();
 
-    LoadTitleFromXUL();
     LoadWindowClassFromXUL();
     LoadIconFromXUL();
     LoadSizeFromXUL();
@@ -1323,23 +1322,6 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
       }
     } while(1);
   } while (keepTrying);
-}
-
-NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
-{
-   nsCOMPtr<nsIDOMElement> docShellElement;
-   GetWindowDOMElement(getter_AddRefs(docShellElement));
-   NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
-
-   nsAutoString windowTitle;
-   docShellElement->GetAttribute(NS_LITERAL_STRING("title"), windowTitle);
-   if(windowTitle.IsEmpty())
-      return NS_OK;
-
-   NS_ENSURE_SUCCESS(EnsureChromeTreeOwner(), NS_ERROR_FAILURE);
-   mChromeTreeOwner->SetTitle(windowTitle.get());
-
-   return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::LoadWindowClassFromXUL()
