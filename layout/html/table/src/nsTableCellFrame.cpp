@@ -146,24 +146,7 @@ void nsTableCellFrame::SetPass1MaxElementSize(nscoord       aMaxWidth,
                                               const nsSize& aMaxElementSize)
 { 
   mPass1MaxElementSize.height = aMaxElementSize.height;
-  nscoord maxElemWidth = aMaxElementSize.width;
-  // the following can be removed when blocks handle nowrap - use regression test bug57828 after removing
-  // the max elem width needs to take into account a cell that is NOWRAP
-  const nsStyleText* styleText;
-  GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);
-  if (NS_STYLE_WHITESPACE_NOWRAP == styleText->mWhiteSpace) {
-    const nsStylePosition* stylePosition;
-    GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)stylePosition));
-    if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord) {
-      nscoord styleWidth = stylePosition->mWidth.GetCoordValue();
-      // Nav and IE only honor the nowrap up to the style width, if present
-      maxElemWidth = PR_MAX(maxElemWidth, styleWidth);
-    }
-    else {
-      maxElemWidth = PR_MAX(maxElemWidth, aMaxWidth);
-    }
-  }
-  mPass1MaxElementSize.width = maxElemWidth;
+  mPass1MaxElementSize.width = aMaxElementSize.width;
 }
 
 NS_IMETHODIMP

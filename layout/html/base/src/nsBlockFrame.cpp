@@ -1188,9 +1188,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         // When no-wrap is true the max-element-size.width is the
         // width of the widest line plus the right border. Note that
         // aState.mKidXMost already has the left border factored in
-        //maxWidth = aState.mKidXMost + borderPadding.right;
-        maxWidth = aState.mMaxElementSize.width +
-          borderPadding.left + borderPadding.right;
+        maxWidth = aState.mKidXMost + borderPadding.right;
       }
       else {
         // Add in border and padding dimensions to already computed
