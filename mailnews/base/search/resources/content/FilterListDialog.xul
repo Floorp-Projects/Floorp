@@ -27,13 +27,14 @@ Rights Reserved.
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
+  onload="onLoad();"
   title="&window.title;">
 
 <script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
 
   <box orient="horizontal">
     <text value="Filters for:"/>
-    <menulist>
+    <menulist oncommand="onServerClick(event);" id="serverMenu">
       <menupopup rdf:datasources="rdf:msgaccountmanager"
                  rdf:containment="http://home.netscape.com/NC-rdf#child"
                  ref="msgaccounts:/">
@@ -47,7 +48,22 @@ Rights Reserved.
     <box orient="vertical" style="width:100%;" >
     <text value="&filterHeader.label;"/>
     <box orient="horizontal">
-    <tree id="filterTree" class="inset" style="width: 35em">
+    <tree id="filterTree" class="inset" style="width: 35em"
+       rdf:datasources="rdf:msgaccountmanager rdf:msgfilters"
+       rdf:containment="http://home.netscape.com/NC-rdf#child">
+          <template>
+          <rule>
+            <treechildren>
+			<treeitem uri="..." open="true"
+                IsEnabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
+		  		<treerow >
+					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    <treecell value="rdf:http://home.netscape.com/NC-rdf#Enabled"/>
+		  		</treerow>
+			</treeitem>
+            </treechildren>
+          </rule>
+          </template>
 
       <treecol style="width: 85%" rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
       <treecol style="width: 15%" id="activeColumn"/>
@@ -58,34 +74,9 @@ Rights Reserved.
            <treecell persist="hidden width" value="&activeColumn.label;"/>
         </treerow>
       </treehead>
-      <treechildren>
-        <treeitem>
-          <treerow indent="true">
-            <treecell value="People from work"/>
-            <treecell><checkbox/></treecell>
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow indent="true">
-            <treecell value="People from work"/>
-            <treecell><checkbox/></treecell>
-	    </treerow>
-      </treeitem>
-      <treeitem>
-        <treerow indent="true">
-          <treecell value="People from college"/>
-          <treecell><checkbox/></treecell>
-		</treerow>
-      </treeitem>
-      <treeitem>
-		<treerow indent="true">
-          <treecell value="SPAM"/>
-          <treecell><checkbox/></treecell>
-	    </treerow>
-      </treeitem>
-    </treechildren>
+      </tree>
 
-    </tree>
+>
     <box orient="vertical">
       <scrollbarbutton type="increment">
         <image src="chrome://global/skin/scroll-up.gif"/>

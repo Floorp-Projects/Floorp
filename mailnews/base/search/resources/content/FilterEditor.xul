@@ -8,63 +8,61 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
+  orient="vertical"
   onload="filterEditorOnLoad('msgFccFolderPicker');">
 
-<html:script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
+<script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 
-<box align="vertical" style="width: 100%;">
   <box align="horizontal" class="padded">
-    <html:div>Filter Name:</html:div>
-    <html:input type="text" flex="100%"/>
+    <text value="&filterName.label;"/>
+    <textfield flex="1"/>
   </box>
-  <box align="vertical" class="cleanborder" flex="100%">
-    <html:div>
-      <html:input type="radio" checked="1" name="andor" value="and"/>
-      &matchAll.label;
-    </html:div>
-    <html:div>
-      <html:input type="radio" name="andor" value="or"/>
-      &matchAny.label;
-    </html:div>
+  <titledbox orient="vertical">
+    <title>
+      <text value="&conditions.label;"/>
+    </title>
+    <text value="&conditionDesc.label;"/>
+    <radiogroup>
+      <radio value="&matchAll.label;"/>
+      <radio value="&matchAny.label;"/>
+    </radiogroup>
+
     <spring class="spacer"/>
-    <box id="rulebox" alignment="vertical" flex="100%">
-      <box id="rule1" alignment="horizontal" flex="100%">
-        <html:select id="rule1-attribute"
-                     onchange="updateRule(this.parentNode);">
-          <html:option value="subject">&subject.label;</html:option>
-          <html:option value="sender">&sender.label;</html:option>
-          <html:option value="date">&date.label;</html:option>
-          <html:option value="any">&anyText.label;</html:option>
-          <html:option value="keyword">&keyword.label;</html:option>
-          <html:option value="age">&age.label;</html:option>
-          <html:option value="priority">&priority.label;</html:option>
-          <html:option value="status">&status.label;</html:option>
-          <html:option value="to">&to.label;</html:option>
-          <html:option value="cc">&cc.label;</html:option>
-          <html:option value="toOrCc">&toOrCc.label;</html:option>
-          <html:option value="body">&body.label;</html:option>
-        </html:select>
-        <box align="horizontal" id="rule1-verb">
-        <spring name="preverb" class="spacer"/>
-        <html:select>
-          <html:option>&contains.label;</html:option>
-          <html:option>&nocontains.label;</html:option>
-        </html:select>
-        <spring class="spacer"/>
-        <html:input type="text" flex="100%"/>
-        </box>
-      </box>
-    </box>
-    <spring class="spacer"/>
-    <box alignment="horizontal">
-      <titledbutton class="push" value="&more.label;"/>
-      <titledbutton class="push" value="&less.label;"/>
-    </box>
+
+    <box>
+    <tree class="inset" flex="1">
+      <treecol id="a" />
+      <treecol id="b"/>
+      <treecol id="c"/>
+
+        
+      <treechildren>
+        <treeitem>
+          <treerow>
+            <treecell value="the.."/>
+            <treecell value="contains.."/>
+            <treecell value="text here"/>
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell value="the.."/>
+            <treecell value="contains.."/>
+            <treecell value="text here"/>
+          </treerow>
+        </treeitem>
+       </treechildren>
+      
+    </tree>
   </box>
-  <html:div>&filterAction.label;</html:div>
-  <box alignment="horizontal" class="cleanborder">
+  <text value="bottom"/>
+  </titledbox>
+  <titledbox>
+    <title>
+      <text value="&filterAction.label;"/>
+    </title>
     <html:select>
       <html:option>&moveToFolder.label;</html:option>
       <html:option>&changePriority.label;</html:option>
@@ -79,10 +77,5 @@
 	<menu id="msgFccFolderPicker"/>
 	<spring flex="100%"/>
     </box>
-  </box>
-  <box alignment="vertical" class="cleanborder">
-    <html:div>&description.label;</html:div>
-    <html:textarea flex="100%"/>
-  </box>
-</box>
+  </titledbox>
 </window>

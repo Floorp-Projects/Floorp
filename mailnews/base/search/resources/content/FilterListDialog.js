@@ -18,30 +18,61 @@
  * Rights Reserved.
  */
 
-function GetSelectedFilter() {
-    var filterTree = document.getElementById("filterTree");
-    var selectedRows = filterTree.getElementsByAttribute("selected", "true");
+function onLoad()
+{
+    dump("Loading..\n");
     
-    var selectedURIs = new Array();
+    var firstitem;
+    var args = window.arguments;
+    if (args && args[0])
+        firstItem = args[0].initialServerUri;
     
-    for (var i=0; i<selectedRows.length; i++) {
-      selectedURIs[i] = selectedRows[i].getAttribute("id");
+    else {
+        var serverMenu = document.getElementById("serverMenu");
+        var menuitems = serverMenu.getElementsByTagName("menuitem");
+        firstItem = menuitems[1].id;
     }
+    
+    dump("selecting item " + firstItem + "\n");
+    selectServer(firstItem);
+}
 
-    return selectedURIs[0];
+function onServerClick(event)
+{
+    var item = event.target;
+    setServer(item.id);
+}
+
+// roots the tree at the specified server
+function setServer(uri)
+{
+    var tree = document.getElementById("filterTree");
+    tree.setAttribute("ref", uri);
+}
+
+// sets up the menulist and the tree
+function selectServer(uri)
+{
+    // update the server menu
+    var serverMenu = document.getElementById("serverMenu");
+    var menuitems = serverMenu.getElementsByAttribute("id", uri);
+    
+    serverMenu.selectedItem = menuitems[0];
+    
+    setServer(uri);
 }
 
 function EditFilter() {
-  var uri = GetSelectedFilter();
-  dump("Editing filter " + uri + "\n");
-  if (uri)
-    window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome");
+
+    var tree = document.getElementById("filterTree");
+    var selectedFilter = tree.selectedItems[0];
+
+    var args = {selectedFilter: selectedFilter};
+    
+    window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome", args);
 }
 
 function NewFilter() {
-  var uri = GetSelectedFilter();
-  dump("Editing filter " + uri + "\n");
-
   // pass the URI too, so that we know what filter to put this before
   window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome");
 
