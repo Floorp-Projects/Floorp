@@ -15,6 +15,7 @@ TestDBMAccess
 TestMCTransport
 TestHttp
 TestPageLoad
+TestPerf
 TestIDN
 TestURLParser
 TestStandardURL
