@@ -52,8 +52,6 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
 #endif
 };
 extern "C" NS_DOM
-NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype, JSObject * aParentProto);
- 
-
+nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype, JSObject * aParentProto);
 
 #endif /* __gen_nsIDOMMsgAppCore_h__ */
