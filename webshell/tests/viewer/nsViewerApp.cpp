@@ -46,6 +46,7 @@
 #include "plstr.h"
 #include "prenv.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsAppFileLocationProvider.h"
 
 // Needed for Dialog GUI
 #include "nsICheckButton.h"
@@ -305,6 +306,25 @@ nsresult
 nsViewerApp::Initialize(int argc, char** argv)
 {
   nsresult rv;
+
+  // Create and register a directory service provider
+  nsAppFileLocationProvider* appFileLocProvider;
+  appFileLocProvider = new nsAppFileLocationProvider;
+  if (!appFileLocProvider) {
+    NS_ASSERTION(PR_FALSE, "Could not create nsAppFileLocationProvider\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+  if (!directoryService) {
+    NS_ASSERTION(PR_FALSE, "failed to get directory service");
+    return rv;
+  }
+  // RegisterProvider will AddRef it and own it - notice we have not AddRef'd it
+  rv = directoryService->RegisterProvider(appFileLocProvider);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION(PR_FALSE, "Could not register directory service provider\n");
+    return rv;
+  }
 
   rv = SetupRegistry();
   if (NS_OK != rv) {
