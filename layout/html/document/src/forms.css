@@ -325,12 +325,14 @@ input[type="file"] > input[type="text"] {
   color: inherit;
   font-size: inherit;
   height: inherit;
+  letter-spacing: inherit;
 }
 
 /* button part of file selector */
 input[type="file"] > input[type="button"] {
   height: inherit;
   font-size: inherit;
+  letter-spacing: inherit;
 }
 
 /* radio buttons */
