@@ -40,8 +40,6 @@
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.key "P">
 <!ENTITY printCmd.accesskey "P">
-<!ENTITY printSetupCmd.label "Page Setup...">
-<!ENTITY printSetupCmd.accesskey "u">
 <!ENTITY closeCmd.label "Close">
 
 <!-- Edit menu items -->
