@@ -296,7 +296,44 @@
 <!ENTITY  tinderboxButton.label "Tinderbox">
 
 <!-- Statusbar -->
-<!ENTITY  notifCom.label "[Notification Component]">
+<!ENTITY  notifCom.label "[Context Menu Proxy]">
 <!ENTITY  statusText.label "Document: Done">
 <!ENTITY  buildId.label "Build ID: 1999082316">
 
+<!-- Context Menu -->                 
+<!ENTITY openLinkCmd.label            "Open link in new window">
+<!ENTITY openLinkCmd.accesskey        "o">
+<!ENTITY editLinkCmd.label            "Edit link in composer">
+<!ENTITY editLinkCmd.accesskey        "e">
+<!ENTITY openFrameCmd.label           "Open frame in new window">
+<!ENTITY openFrameCmd.accesskey       "o">
+<!ENTITY viewPageSourceCmd.label      "View page source">
+<!ENTITY viewPageSourceCmd.accesskey  "v">
+<!ENTITY viewFrameSourceCmd.label     "View frame source">
+<!ENTITY viewFrameSourceCmd.accesskey "v">
+<!ENTITY viewPageInfoCmd.label        "View page info">
+<!ENTITY viewPageInfoCmd.accesskey    "i">
+<!ENTITY viewFrameInfoCmd.label       "View frame info">
+<!ENTITY viewFrameInfoCmd.accesskey   "i">
+<!ENTITY viewImageCmd.label           "View image">
+<!ENTITY viewImageCmd.accesskey       "w">
+<!ENTITY bookmarkPageCmd.label        "Bookmark this page">
+<!ENTITY bookmarkPageCmd.accesskey    "b">
+<!ENTITY savePageCmd.label            "Save page as...">
+<!ENTITY savePageCmd.accesskey        "s">
+<!ENTITY saveFrameCmd.label           "Save frame as...">
+<!ENTITY saveFrameCmd.accesskey       "s">
+<!ENTITY saveLinkCmd.label            "Save link as...">
+<!ENTITY saveLinkCmd.accesskey        "s">
+<!ENTITY saveImageCmd.label           "Save image as...">
+<!ENTITY saveImageCmd.accesskey       "a">
+<!ENTITY saveBGImageCmd.label         "Save background image as...">
+<!ENTITY saveBGImageCmd.accesskey     "a">
+<!ENTITY copyCmd.label                "Copy">
+<!ENTITY copyCmd.accesskey            "c">
+<!ENTITY selectAllCmd.label           "Select all">
+<!ENTITY selectAllCmd.accesskey       "l">
+<!ENTITY copyLinkCmd.label            "Copy link location">
+<!ENTITY copyLinkCmd.accesskey        "l">
+<!ENTITY copyImageCmd.label           "Copy image location">
+<!ENTITY copyImageCmd.accesskey       "m">
