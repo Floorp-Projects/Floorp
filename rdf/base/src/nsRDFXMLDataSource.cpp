@@ -63,6 +63,14 @@
      handle containers that have been assigned URIs outside of the
      local document.
 
+
+  Logging
+  -------
+
+  To turn on logging for this module, set
+
+    NSPR_LOG_MODULES=nsRDFXMLDataSource:5
+
  */
 
 #include "nsFileSpec.h"
