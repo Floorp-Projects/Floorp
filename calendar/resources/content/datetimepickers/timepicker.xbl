@@ -149,8 +149,9 @@
 
 	// Make the function a member of the picker 
 	// so that 'this' will be the picker
+        this.kCallback = null;
 	val = this.getAttribute("onchange");
-	if (val) this.mCallback = function() { eval( val ) };
+	if (val) this.kCallback = function() { eval( val ) };
       ]]></constructor>
 
       <method name="update">
@@ -163,8 +164,9 @@
 	  // set textBox.value property, not attribute
 	  this.kTextBox.value = this.formatTime(this.mValue);
 
-	  if (aValue != null && this.mCallback && aRefresh != false) {
-	    this.mCallback();
+          // may be called before constructor, so check aRefresh before kCallBack
+	  if (aValue != null && this.mCallback && aRefresh != false && this.kCallback ) {
+	    this.kCallback();
 	  }
 	]]></body>
       </method>
