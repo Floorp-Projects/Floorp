@@ -29,9 +29,6 @@ struct nsBorder
   nsMargin mWidths;
   PRUint8  mStyle[4];  
   nscolor  mColor[4];
-
-  nsBorder();
-  ~nsBorder();
 };
 
 #endif
