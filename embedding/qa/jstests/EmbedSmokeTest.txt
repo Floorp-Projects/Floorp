@@ -35,9 +35,11 @@
 var linkclick = "Fail";
 var urlload = "Fail";
 var fileurlload = "Fail";
-var dirurlload = "Fail";
 var mozload  = "Fail";
 var seamonkeyload = "Fail";
+executeAllTestCases = "false";
+mozimageload = "false";
+seamonkeyimageload = "false";
 
 function createCookie(name,value,days)
 {
@@ -71,87 +73,83 @@ function eraseCookie(name)
   createCookie(name,"",-1);
 }
 
-function link()
+function linkfun()
 {
-  linkclick = "Pass";
-  win.close();
+ try{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  var val = win.document.getElementsByTagName("title").item(0);
+  if(val)
+  {
+   var val1 = val.firstChild.data;
+   if(val1)
+   {
+     linkclick = "Pass";
+   }
+  }
+ }
+ catch(e)
+ {
+  alert("exception: " + e);
+ }
+ win.close();
+ linkwin.close();
 }
 
 function urlloaded()
 {
-  if(scrollbarsvisible)
-    urlload = "Pass";
-  newwin.close();
+// if(scrollbarsvisible)
+// {
+  try{
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+   var val = loadurlwin.document.getElementsByTagName("title").item(0);
+   if(val)
+   {
+     var val1 = val.firstChild.data;
+     if(val1)
+     {
+       urlload = "Pass";
+     }
+   }
+  }
+  catch(e)
+  {
+    alert("exception: " + e);
+  }
+// }
+ loadurlwin.close();
 }
 
 function fileurlloaded()
 {
-  var file = fileurl.document.getElementsByTagName("h2").item(0);
-  if(file)
+  try{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var file = fileurl.document.getElementsByTagName("h2").item(0);
+    if(file)
+    {
+      if(file.firstChild.data == "This is a test file")
+        fileurlload = "Pass";
+    }
+  }
+  catch(e)
   {
-    if(file.firstChild.data == "This is a test file")
-      fileurlload = "Pass";
+    alert("exception: " + e);
   }
   fileurl.close();
 }
 
-function dirurlloaded()
-{
-  dirurlload = "Pass";
-//  dirurl.close();
-}
-
 function mozillaimageLoaded()
 {
-  mozload = "Pass";
+  mozimageload = "true";
 }
 
 function seamonkeyimageLoaded()
 {
-  seamonkeyload = "Pass";
-}
-
-function onSubmit()
-{
- if (document.form1.linkclickcheckbox.checked)
-   val = "true";
- else
-   val = "false";
- if (document.form1.loadurlcheckbox.checked)
-   val = val + "," + "true";
- else
-   val = val + "," + "false";
- if (document.form1.loadfileurlcheckbox.checked)
-   val = val + "," + "true";
- else
-   val = val + "," + "false";
- if (document.form1.loaddireurlcheckbox.checked)
-   val = val + "," + "true";
- else
-   val = val + "," + "false";
- if (document.form1.mozillaloadcheckbox.checked)
-   val = val + "," + "true";
- else
-   val = val + "," + "false";
- if (document.form1.seamonkeyloadcheckbox.checked)
-   val = val + "," + "true";
- else
-   val = val + "," + "false";
-
- submit();
-}
-
-function onSubmitAll()
-{
-  val = "true,true,true,true,true,true";
-  submit();
-}
-
-function submit()
-{
-  val = val + ",";
-  createCookie("embedsmoketest", val, 14);
-  window.location.reload();
+  seamonkeyimageload = "true";
 }
 
 function constructResults()
@@ -160,7 +158,6 @@ function constructResults()
   var linkclickcolor = "white";
   var urlloadcolor = "white";
   var fileurlloadcolor = "white";
-  var dirurlloadcolor = "white";
   var mozloadcolor  = "white";
   var seamonkeyloadcolor = "white";
 
@@ -173,7 +170,7 @@ function constructResults()
   results = results + "      <td> <b> Result </b> </td>";
   results = results + "      <td> <b> Comments </b> </td>";
   results = results + "    </tr>";
-  if(linkclickchecked == "true")
+  if( (document.form1.linkclickcheckbox.checked==true) || (executeAllTestCases=="true") )
   {
     if (linkclick == "Fail") linkclickcolor = "red";
     results = results + "    <tr bgcolor = '" + linkclickcolor + "'>";
@@ -183,7 +180,7 @@ function constructResults()
      results = results + "      <td>" + "Link could not be clicked" + "</td>";
     results = results + "    </tr>";
   }
-  if(urlloadchecked == "true")
+  if( (document.form1.loadurlcheckbox.checked==true) || (executeAllTestCases=="true") )
   {
     if (urlload == "Fail") urlloadcolor = "red";
     results = results + "    <tr bgcolor = '" + urlloadcolor + "'>";
@@ -193,7 +190,7 @@ function constructResults()
       results = results + "      <td>" + "Either the URL could not be loaded or the Scrollbars donot appear" + "</td>";
     results = results + "    </tr>";
   }
-  if(fileurlloadchecked == "true")
+  if( (document.form1.loadfileurlcheckbox.checked==true) || (executeAllTestCases=="true") )
   {
     if (fileurlload == "Fail") fileurlloadcolor = "red";
     results = results + "    <tr bgcolor = '" + fileurlloadcolor + "'>";
@@ -203,15 +200,7 @@ function constructResults()
       results = results + "      <td>" + "Either the file could not be found or the content is not displayed" + "</td>";
     results = results + "    </tr>";
   }
-  if(dirurlloadchecked == "true")
-  {
-    if (dirurlload == "Fail") dirurlloadcolor = "red";
-    results = results + "    <tr bgcolor = '" + dirurlloadcolor + "'>";
-    results = results + "      <td> Directory URL Loading </td>";
-    results = results + "      <td>" + dirurlload + "</td>";
-    results = results + "    </tr>";
-  }
-  if(mozillaloadchecked == "true")
+  if( (document.form1.mozillaloadcheckbox.checked==true) || (executeAllTestCases=="true") )
   {
     if (mozload == "Fail") mozloadcolor = "red";
     results = results + "    <tr bgcolor = '" + mozloadcolor + "'>";
@@ -221,7 +210,7 @@ function constructResults()
       results = results + "      <td>" + "Image could not be found or Image could not be loaded properly" + "</td>";
     results = results + "    </tr>";
   }
-  if(seamonkeyloadchecked == "true")
+  if( (document.form1.seamonkeyloadcheckbox.checked==true) || (executeAllTestCases=="true") )
   {
     if (seamonkeyload == "Fail") seamonkeyloadcolor = "red";
     results = results + "    <tr bgcolor = '" + seamonkeyloadcolor + "'>";
@@ -236,7 +225,8 @@ function constructResults()
   results = results + "  </table>";
   results = results + "</html>";
 
-  displayResults(results);
+  createCookie("embedsmoketest", results, 14);
+  window.location.reload();
 }
 
 function displayResults(results)
@@ -252,62 +242,82 @@ function displayResults(results)
   }
 }
 
-function loadTestCases()
+function onSubmitAll()
 {
- if(linkclickchecked == "true")
+  executeAllTestCases = "true";
+  onSubmit();
+}
+
+function onSubmit()
+{
+ if( (document.form1.linkclickcheckbox.checked==true) || (executeAllTestCases=="true") )
  {
-   // link clicking
-   document.write('<a href="http://www.mozilla.org"> Click here to go to Mozilla site </a><br><br>');
-   var link = document.getElementsByTagName("a").item(0);
-   if (link)
+  // link clicking
+  try
+  {
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+   linkwin = window.open("");
+   if(linkwin)
    {
-     win = window.open(link);
+    linkwin.document.write("<a href='http://www.mozilla.org'> Click here to go to Mozilla site </a><br><br>");
+    var link1 = linkwin.document.getElementsByTagName("a").item(0);
+    if (link1)
+    {
+     win = window.open(link1);
      if (win)
      {
-       win.onload = setTimeout("link();", 1000);
+      win.onload = setTimeout("linkfun();", 1000);
      }
+    }
    }
+  }
+  catch(e)
+  {
+   alert("exception:" + e);
+  }
  }
- if(urlloadchecked == "true")
+ if( (document.form1.loadurlcheckbox.checked==true) || (executeAllTestCases=="true") )
  {
-   // Loading new window
-   newwin = window.open("http://www.yahoo.com");
-   scrollbarsvisible = newwin.scrollbars.visible;
-   if (newwin)
+  // Loading new window
+  try
+  {
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+   loadurlwin = window.open("http://www.mozilla.org");
+   if (loadurlwin)
    {
-     newwin.onload = setTimeout("urlloaded();", 1000);
+    //scrollbarsvisible = loadurlwin.scrollbars.visible;
+    loadurlwin.onload = setTimeout("urlloaded();", 1000);
    }
+  }
+  catch(e)
+  {
+   alert("exception:" + e);
+  }
  }
- if(fileurlloadchecked == "true")
+ if( (document.form1.loadfileurlcheckbox.checked==true) || (executeAllTestCases=="true") )
  {
-   fileurl = window.open("file://D:/suites/embedding/test.html");
-   if (fileurl)
-   {
-     fileurl.onload = setTimeout("fileurlloaded();", 1000);
-   }
+  fileurl = window.open("test.html");
+  if (fileurl)
+  {
+   fileurl.onload = setTimeout("fileurlloaded();", 1000);
+  }
  }
- if(dirurlloadchecked == "true")
+ if( (document.form1.mozillaloadcheckbox.checked==true) || (executeAllTestCases=="true") )
  {
-   dirurl = window.open("file://D:/suites/embedding");
-   if (dirurl)
-   {
-     dirurl.onload = setTimeout("dirurlloaded();", 1000);
-   }
+   if(mozimageload=="true")
+     mozload = "Pass";
  }
- if(mozillaloadchecked == "true")
+ if( (document.form1.seamonkeyloadcheckbox.checked==true) || (executeAllTestCases=="true") )
  {
-   // gif image
-   document.write('<center><img src="images/mozilla-banner.gif" height=58 width=600 onLoad = "mozillaimageLoaded();"></center>');
- }
- if(seamonkeyloadchecked == "true")
- {
-   // jpg image
-   document.write('<center>');
-   document.write('<img SRC="images/seamonkey.jpg" height=183 width=300 onLoad = "seamonkeyimageLoaded();">');
-   document.write('</center>');
+   if(seamonkeyimageload=="true")
+     seamonkeyload = "Pass";
  }
 
- setTimeout("constructResults();", 3000);
+ setTimeout("constructResults();", 6000);
 }
 
 </script>
@@ -325,46 +335,51 @@ document.write('<input name="resultsfile" type="hidden" value="' + window.opener
 <script TYPE="text/javascript">
 if(readCookie("embedsmoketest") == null)
 {
- document.write("<h2> Choose the test cases you want to run: </h2>");
- document.write("<br><br>");
- document.write("<form NAME='form1'>");
- document.write("<input type='checkbox' name='linkclickcheckbox'><b> Click a Link on a Page </b></input><br>");
- document.write("<input type='checkbox' name='loadurlcheckbox'><b> Load a URL </b></input><br>");
- document.write("<input type='checkbox' name='loadfileurlcheckbox'><b> Load a File URL [Content Loading]</b></input><br>");
- document.write("<input type='checkbox' name='loaddireurlcheckbox'><b> Load a File URL [Directory Loading]</b></input><br>");
- document.write("<input type='checkbox' name='mozillaloadcheckbox'><b> Load GIF Image</b></input><br>");
- document.write("<input type='checkbox' name='seamonkeyloadcheckbox'><b> Load JPEG Image</b></input><br>");
- document.write("</form>");
- document.write("<br>");
- document.write("<button type='button' onClick='onSubmit()'> Execute Selected Testcases </button>");
- document.write("  ");
- document.write("<button type='button' onClick='onSubmitAll()'> Execute All Testcases </button>");
+  document.write("<h2> Choose the test cases you want to run: </h2>");
+  document.write("<br><br>");
+  document.write("<form NAME='form1'>");
+  document.write("<input type='checkbox' name='linkclickcheckbox'><b> Click a Link on a Page </b></input>");
+  document.write("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+  document.write(" [");
+  document.write("<a href='http://mozilla.org/quality/embed/plans/EmbedSmokeTestPlan.html#first'>Click to see description</a> ");
+  document.write("]<br>");
+  document.write("<input type='checkbox' name='loadurlcheckbox'><b> Load a URL </b></input>");
+  document.write("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+  document.write(" [");
+  document.write("<a href='http://mozilla.org/quality/embed/plans/EmbedSmokeTestPlan.html#second'>Click to see description</a> ");
+  document.write("]<br>");
+  document.write("<input type='checkbox' name='loadfileurlcheckbox'><b> Load a File URL [Content Loading]</b></input>");
+  document.write("&nbsp;");
+  document.write(" [");
+  document.write("<a href='http://mozilla.org/quality/embed/plans/EmbedSmokeTestPlan.html#third'>Click to see description</a> ");
+  document.write("]<br>");
+  document.write("<input type='checkbox' name='mozillaloadcheckbox'><b> Load GIF Image</b></input>");
+  document.write("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+  document.write(" [");
+  document.write("<a href='http://mozilla.org/quality/embed/plans/EmbedSmokeTestPlan.html#fourth'>Click to see description</a> ");
+  document.write("]<br>");
+  document.write("<input type='checkbox' name='seamonkeyloadcheckbox'><b> Load JPEG Image</b></input>");
+  document.write("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+  document.write(" [");
+  document.write("<a href='http://mozilla.org/quality/embed/plans/EmbedSmokeTestPlan.html#fifth'>Click to see description</a> ");
+  document.write("]<br>");
+  document.write("</form>");
+  document.write("<br>");
+  document.write("<button type='button' onClick='onSubmit()'> Execute Selected Testcases </button>");
+  document.write("  ");
+  document.write("<button type='button' onClick='onSubmitAll()'> Execute All Testcases </button>");
+
+  document.write('<img src="images/mozilla-banner.gif" height=0 width=0 onLoad = "mozillaimageLoaded();">');
+  document.write('<img src="images/seamonkey.jpg" height=0 width=0 onLoad = "seamonkeyimageLoaded();">');
+
 }
 else
 {
- cookieValue = readCookie("embedsmoketest");
- startindex = 0;
- endindex = cookieValue.indexOf(',', startindex);
- linkclickchecked = cookieValue.substring(startindex, endindex);
- startindex = endindex + 1;
- endindex = cookieValue.indexOf(',', startindex);
- urlloadchecked = cookieValue.substring(startindex, endindex);
- startindex = endindex + 1;
- endindex = cookieValue.indexOf(',', startindex);
- fileurlloadchecked = cookieValue.substring(startindex, endindex);
- startindex = endindex + 1;
- endindex = cookieValue.indexOf(',', startindex);
- dirurlloadchecked = cookieValue.substring(startindex, endindex);
- startindex = endindex + 1;
- endindex = cookieValue.indexOf(',', startindex);
- mozillaloadchecked = cookieValue.substring(startindex, endindex);
- startindex = endindex + 1;
- endindex = cookieValue.indexOf(',', startindex);
- seamonkeyloadchecked = cookieValue.substring(startindex, endindex);
-
- eraseCookie("embedsmoketest");
- loadTestCases();
+  cookieValue = readCookie("embedsmoketest");
+  eraseCookie("embedsmoketest");
+  displayResults(cookieValue);
 }
+
 </script>
 </body>
 </html>
