@@ -30,6 +30,21 @@
         onload="return StartUp('Composer');"  align="vertical" title="&title.label;">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+
+<html:script>
+  function setColorWell(menu)
+  {
+    // Find the colorWell and colorPicker in the hierarchy.
+    var colorWell = menu.firstChild.nextSibling;
+    var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
+
+    // Extract color from colorPicker and assign to colorWell.
+    var color = colorPicker.getAttribute('color');
+    colorWell.style.backgroundColor = color;
+  }
+</html:script>
+
+
 <html:div flex="100%">
 	<box id="header" style="width:100%" align="horizontal">  
 		  <spring style="width:20px"/>
@@ -109,36 +124,75 @@
 	
 	<box align="horizontal" flex="100%" >
 	<box align="vertical" flex="100%" >
-		<html:div>
+		<box>
 			<html:input name="text" type="checkbox" id="pref:0:int:editor.text_color" />
 			<html:label for="pref:0:int:editor.text_color" accesskey="t" tabindex="0">			
-			&colorPick; &NormalText.label; 
 			</html:label>
-		</html:div>
-		<html:div>
+			<menu>
+				<titledbutton value="&NormalText.label;" class="popup" align="right"/>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+			</menu>
+		</box>
+
+		<box>
 			<html:input name="link" type="checkbox" id="pref:0:int:editor.link_color" />
-			<html:label for="pref:0:int:editor.link_color" accesskey="l" tabindex="0">			
-			&colorPick; &LinkText.label; 
+			<html:label for="pref:0:int:editor.link_color" accesskey="l" tabindex="0">
 			</html:label>
-		</html:div>
-		<html:div>
+			<menu>
+				<titledbutton value="&LinkText.label;" class="popup" align="right"/>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+			</menu>
+		</box>
+
+		<box>
 			<html:input name="active" type="checkbox" id="pref:0:int:editor.active_link_color" />
 			<html:label for="pref:0:int:editor.active_link_color" accesskey="c" tabindex="0">			
-			&colorPick; &ActiveLinkText.label; 
 			</html:label>
-		</html:div>
-		<html:div>
+			<menu>
+				<titledbutton value="&ActiveLinkText.label;" class="popup" align="right"/>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+			</menu>
+
+		</box>
+
+		<box>
 			<html:input name="followed" type="checkbox" id="pref:0:int:editor.followed_link_color" />
 			<html:label for="pref:0:int:editor.followed_link_color" accesskey="f" tabindex="0">			
-			&colorPick; &FollowedLinkText.label; 
 			</html:label>
-		</html:div>
-		<html:div>
+			<menu>
+				<titledbutton value="&FollowedLinkText.label;" class="popup" align="right"/>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+			</menu>
+		</box>
+
+		<box>
 			<html:input name="background" type="checkbox" id="pref:0:int:editor.background_color" />
 			<html:label for="pref:0:int:editor.background_color" accesskey="b" tabindex="0">			
-			&colorPick; &BackgroundColor.label;
 			</html:label>
-		</html:div>
+
+			&colorPick; &BackgroundColor.label;
+			<menu>
+				<titledbutton value="&BackgroundColor.label;" class="popup" align="right"/>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+			</menu>
+
+		</box>
+
 	</box>
 
 	<box align="vertical" flex="100%" id="colorpreview" style="min-width:100px; min-height:50px; background-color:gray">
