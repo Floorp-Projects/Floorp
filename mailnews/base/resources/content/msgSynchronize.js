@@ -205,6 +205,21 @@ function onSynchronizeClick(event)
     }
 }  
 
+function onSynchronizeTreeKeyPress(event)
+{
+    // for now, only do something on space key
+    if (event.charCode != KeyEvent.DOM_VK_SPACE)
+      return;
+
+    var treeSelection = gSynchronizeTree.view.selection; 
+    for (var i=0;i<treeSelection.getRangeCount();i++) {
+      var start = {}, end = {};
+      treeSelection.getRangeAt(i,start,end);
+      for (var k=start.value;k<=end.value;k++)
+        UpdateNode(GetFolderResource(gSynchronizeTree, k), k);
+    }
+}
+
 function UpdateNode(resource, row)
 {
     var folder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);

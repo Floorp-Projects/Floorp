@@ -73,6 +73,7 @@
 
     <tree id="synchronizeTree" flex="1" hidecolumnpicker="true"
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" flags="dont-build-content"
+              onkeypress="onSynchronizeTreeKeyPress(event);"
               onclick="onSynchronizeClick(event);">
       <template>
         <rule>
