@@ -166,15 +166,15 @@ const gPopupPrefListener =
 
     var hosts = [];
 
-    var popupManager = Components.classes["@mozilla.org/PopupWindowManager;1"]
-                                 .getService(Components.interfaces.nsIPopupWindowManager);
+    var permManager = Components.classes["@mozilla.org/permissionmanager;1"]
+                                .getService(Components.interfaces.nsIPermissionManager);
     
-    var enumerator = popupManager.getEnumerator();
+    var enumerator = permManager.enumerator;
     var count=0;
     while (enumerator.hasMoreElements()) {
       var permission = enumerator.getNext()
                                  .QueryInterface(Components.interfaces.nsIPermission);
-      if (permission.capability == policy)
+      if (permission.type == POPUP_TYPE && permission.capability == policy)
         hosts[permission.host] = permission.host;
     }
 
