@@ -1,4 +1,4 @@
-
+var total="";
 print("math_bench");
 
 function math_V()

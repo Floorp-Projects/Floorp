@@ -1,3 +1,4 @@
+var total="";
 print("branch_bench");
 
 

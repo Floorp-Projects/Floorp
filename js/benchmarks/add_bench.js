@@ -1,4 +1,5 @@
 
+var total="";
 print("add_bench");
 
 // add two double parameters
@@ -106,7 +107,6 @@ function addDouble_V()
 function addDouble_VK(d1)
 {
     var t;
-    var d1 = 2.781828;
     var startTime = new Date();
 
     for (var i = 0; i < 5000; i++) {

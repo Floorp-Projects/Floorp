@@ -1,4 +1,4 @@
-
+var total="";
 print("inc_bench");
 
 // increment a parameter

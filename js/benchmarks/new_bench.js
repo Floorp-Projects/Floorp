@@ -1,4 +1,4 @@
-
+var total="";
 print("new_bench");
 
 // construct (and release) lots of objects

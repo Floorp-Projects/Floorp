@@ -1,4 +1,4 @@
-
+var total="";
 print("setProp_bench");
 
 // set the same property into the same object, passed as a parameter
@@ -478,9 +478,9 @@ deepSet_2();
     var t7 = { };
     var t8 = { };
     var t9 = { };
-    var startTime = new Date();
+    startTime = new Date();
 
-    for (var i = 0; i < 5000; i++) {
+    for (i = 0; i < 5000; i++) {
         gP.prop0 = t0; gP.prop1 = t1; gP.prop2 = t2; gP.prop3 = t3; gP.prop4 = t4; gP.prop5 = t5; gP.prop6 = t6; gP.prop7 = t7; gP.prop8 = t8; gP.prop9 = t9;
         gP.prop0 = t0; gP.prop1 = t1; gP.prop2 = t2; gP.prop3 = t3; gP.prop4 = t4; gP.prop5 = t5; gP.prop6 = t6; gP.prop7 = t7; gP.prop8 = t8; gP.prop9 = t9;
         gP.prop0 = t0; gP.prop1 = t1; gP.prop2 = t2; gP.prop3 = t3; gP.prop4 = t4; gP.prop5 = t5; gP.prop6 = t6; gP.prop7 = t7; gP.prop8 = t8; gP.prop9 = t9;
@@ -502,25 +502,25 @@ deepSet_2();
         gP.prop0 = t0; gP.prop1 = t1; gP.prop2 = t2; gP.prop3 = t3; gP.prop4 = t4; gP.prop5 = t5; gP.prop6 = t6; gP.prop7 = t7; gP.prop8 = t8; gP.prop9 = t9;
         gP.prop0 = t0; gP.prop1 = t1; gP.prop2 = t2; gP.prop3 = t3; gP.prop4 = t4; gP.prop5 = t5; gP.prop6 = t6; gP.prop7 = t7; gP.prop8 = t8; gP.prop9 = t9;
     }
-    var elapsedTime = (new Date()).getTime() - startTime.getTime();
+    elapsedTime = (new Date()).getTime() - startTime.getTime();
     print("setProp_Sa : " + elapsedTime);
     total += elapsedTime;
 
 
 // set different properties into different objects in script scope, at script scope
-    var t0 = { };
-    var t1 = { };
-    var t2 = { };
-    var t3 = { };
-    var t4 = { };
-    var t5 = { };
-    var t6 = { };
-    var t7 = { };
-    var t8 = { };
-    var t9 = { };
-    var startTime = new Date();
+    t0 = { };
+    t1 = { };
+    t2 = { };
+    t3 = { };
+    t4 = { };
+    t5 = { };
+    t6 = { };
+    t7 = { };
+    t8 = { };
+    t9 = { };
+    startTime = new Date();
 
-    for (var i = 0; i < 5000; i++) {
+    for (i = 0; i < 5000; i++) {
         gP0.prop0 = t0; gP1.prop1 = t1; gP2.prop2 = t2; gP3.prop3 = t3; gP4.prop4 = t4; gP5.prop5 = t5; gP6.prop6 = t6; gP7.prop7 = t7; gP8.prop8 = t8; gP9.prop9 = t9;
         gP0.prop0 = t0; gP1.prop1 = t1; gP2.prop2 = t2; gP3.prop3 = t3; gP4.prop4 = t4; gP5.prop5 = t5; gP6.prop6 = t6; gP7.prop7 = t7; gP8.prop8 = t8; gP9.prop9 = t9;
         gP0.prop0 = t0; gP1.prop1 = t1; gP2.prop2 = t2; gP3.prop3 = t3; gP4.prop4 = t4; gP5.prop5 = t5; gP6.prop6 = t6; gP7.prop7 = t7; gP8.prop8 = t8; gP9.prop9 = t9;
@@ -542,6 +542,6 @@ deepSet_2();
         gP0.prop0 = t0; gP1.prop1 = t1; gP2.prop2 = t2; gP3.prop3 = t3; gP4.prop4 = t4; gP5.prop5 = t5; gP6.prop6 = t6; gP7.prop7 = t7; gP8.prop8 = t8; gP9.prop9 = t9;
         gP0.prop0 = t0; gP1.prop1 = t1; gP2.prop2 = t2; gP3.prop3 = t3; gP4.prop4 = t4; gP5.prop5 = t5; gP6.prop6 = t6; gP7.prop7 = t7; gP8.prop8 = t8; gP9.prop9 = t9;
     }
-    var elapsedTime = (new Date()).getTime() - startTime.getTime();
+    elapsedTime = (new Date()).getTime() - startTime.getTime();
     print("setProp_Sb : " + elapsedTime);
     total += elapsedTime;

@@ -1,4 +1,4 @@
-
+var total="";
 print("array_bench");
 
 

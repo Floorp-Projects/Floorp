@@ -1,3 +1,4 @@
+var total="";
 print("eval_bench.js");
 
 // assign to a var from within an eval

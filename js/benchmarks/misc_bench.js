@@ -1,7 +1,7 @@
-
+var total="";
 print("misc_bench");
 
-document_1 = { };
+var document_1 = { };
 document_1.live = { };
 document_1.live.age = { };
 document_1.live.age.value = "june 18, 1961";
@@ -9,30 +9,30 @@ document_1.live.time1 = { };
 document_1.live.time2 = { };
 document_1.live.time3 = { };
 
-window = { };
+var window = { };
 
 function setTimeout()
 {
 }
 
 function lifetimer(){
-        today = new Date()
-        BirthDay = new Date(document_1.live.age.value)
+        var today = new Date()
+        var BirthDay = new Date(document_1.live.age.value)
+        var timeold = (today.getTime() - BirthDay.getTime());
+        var sectimeold = timeold / 1000;
+        var secondsold = Math.floor(sectimeold);
+        var msPerDay = 24 * 60 * 60 * 1000 ;
         timeold = (today.getTime() - BirthDay.getTime());
-        sectimeold = timeold / 1000;
-        secondsold = Math.floor(sectimeold);
-        msPerDay = 24 * 60 * 60 * 1000 ;
-        timeold = (today.getTime() - BirthDay.getTime());
-        e_daysold = timeold / msPerDay;
-        daysold = Math.floor(e_daysold);
-        e_hrsold = (e_daysold - daysold)*24;
-        hrsold = Math.floor(e_hrsold);
-        minsold = Math.floor((e_hrsold - hrsold)*60);
+        var e_daysold = timeold / msPerDay;
+        var daysold = Math.floor(e_daysold);
+        var e_hrsold = (e_daysold - daysold)*24;
+        var hrsold = Math.floor(e_hrsold);
+        var minsold = Math.floor((e_hrsold - hrsold)*60);
         document_1.live.time1.value = daysold
         document_1.live.time2.value = hrsold
         document_1.live.time3.value = minsold
         window.status = "Well at the moment you are " + secondsold + "............ seconds old.";
-        timerID = setTimeout("lifetimer()",1000)
+        var timerID = setTimeout("lifetimer()",1000)
 }
 
 function misc_1()
@@ -40,7 +40,7 @@ function misc_1()
     var startTime = new Date();
     for (var i = 0; i < 5000; i++)
         lifetimer();
-    elapsedTime = (new Date()).getTime() - startTime.getTime();
+    var elapsedTime = (new Date()).getTime() - startTime.getTime();
     print("misc_1 : ", elapsedTime);
     total += elapsedTime;
 }
@@ -54,7 +54,7 @@ function MakeArray(n) {
 }
 
 //Initialize Days of Week Array
-days = new MakeArray(7);
+var days = new MakeArray(7);
 days[0] = "Saturday"
 days[1] = "Sunday"
 days[2] = "Monday"
@@ -64,7 +64,7 @@ days[5] = "Thursday"
 days[6] = "Friday"
 
 //Initialize Months Array
-months = new MakeArray(12);
+var months = new MakeArray(12);
 months[1] = "January"
 months[2] = "February"
 months[3] = "March"
@@ -78,7 +78,7 @@ months[10] = "October"
 months[11] = "November"
 months[12] = "December"
 
-form = { };
+var form = { };
 form.day = { };
 form.day.value = "14";
 form.month = { };
@@ -128,7 +128,7 @@ function misc_2()
     for (var i = 0; i < 5000; i++) {
         compute(form); compute(form);
     }
-    elapsedTime = (new Date()).getTime() - startTime.getTime();
+    var elapsedTime = (new Date()).getTime() - startTime.getTime();
     print("misc_2 : ", elapsedTime);
     total += elapsedTime;
 }
@@ -138,7 +138,7 @@ function misc_2()
 // http://www.geocities.com/SiliconValley/Heights/2052
 // Copyright 1996 Chris Englmeier
 
-Input = { };
+var Input = { };
 Input.value = 4096;
 
 function Newton(Input){
@@ -160,7 +160,7 @@ function misc_3()
     for (var i = 0; i < 5000; i++) {
         Newton(Input); Newton(Input); Newton(Input); Newton(Input); Newton(Input); Newton(Input);
     }
-    elapsedTime = (new Date()).getTime() - startTime.getTime();
+    var elapsedTime = (new Date()).getTime() - startTime.getTime();
     print("misc_3 : ", elapsedTime);
     total += elapsedTime;
 }
@@ -181,8 +181,8 @@ var al=" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 var ns="0123456789";
 
 function iA(){
- this.length=iA.arguments.length;
- for (var i=0;i<this.length;i++){
+ // this.length=iA.arguments.length; // strict warning: deprecated arguments usage
+ for (var i=0;i<arguments.length;i++){
   this[i]=iA.arguments[i];
  }
 }
@@ -314,7 +314,7 @@ b[1]=10;
 b[2]=100;
 b[3]=1000;
 
-document_2 = { };
+var document_2 = { };
 document_2.isn = { };
 document_2.isn.isn1 = { };
 document_2.isn.isn1.selectedIndex = 60;
@@ -332,17 +332,17 @@ document_2.isn.rb[1].checked = false;
 document_2.isn.disp = { };
 
 function getMiles(form){
- lf=(document_2.isn.isn1.options[document_2.isn.isn1.selectedIndex].value);
- rf=(document_2.isn.isn2.options[document_2.isn.isn2.selectedIndex].value);
- l=al.indexOf(lf);
- r=al.indexOf(rf);
+ var lf=(document_2.isn.isn1.options[document_2.isn.isn1.selectedIndex].value);
+ var rf=(document_2.isn.isn2.options[document_2.isn.isn2.selectedIndex].value);
+ var l=al.indexOf(lf);
+ var r=al.indexOf(rf);
  if (r<l){
   l=r;
   r=al.indexOf(lf);
   }
- ls=a[l];
- pos=ls.indexOf("*")
- ls1="From "+ls.substring(0,pos)+" to "
+ var ls=a[l];
+ var pos=ls.indexOf("*")
+ var ls1="From "+ls.substring(0,pos)+" to "
  +a[r].substring(0,a[r].indexOf("*"))+" is about ";
  ls=ls.substring(pos+1,ls.length);
  tc=ls.substring(((r*2)-(l*2)),ls.length);
@@ -354,7 +354,8 @@ function getMiles(form){
   }
 }
 function dispMi(){
- ch=tc.charAt(0);
+ var ls1="";
+ var ch=tc.charAt(0);
  ls1+=al.indexOf(ch);
  ch=tc.charAt(1);
  if (ch!=" "){
@@ -398,7 +399,7 @@ function misc_4()
     for (var i = 0; i < 1000; i++) {
         getMiles();
     }
-    elapsedTime = (new Date()).getTime() - startTime.getTime();
+    var elapsedTime = (new Date()).getTime() - startTime.getTime();
     print("misc_4 : ", elapsedTime);
     total += elapsedTime;
 }

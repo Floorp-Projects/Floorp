@@ -1,3 +1,4 @@
+var total;
 
 if (typeof total == "undefined")
     total = 0;
@@ -261,6 +262,10 @@ function getProp_3()
 // get different properties from the this object
 function getProp_3a()
 {
+    //for(var list in this.prop1)
+      //print(list);
+    //return;
+
     var t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
     var startTime = new Date();
 
@@ -395,7 +400,16 @@ getProp_2b();
 var tP = { };
 tP.doit = getProp_3;
 tP.doit2 = getProp_3a;
+tP.prop0 = { };
 tP.prop1 = { };
+tP.prop2 = { };
+tP.prop3 = { };
+tP.prop4 = { };
+tP.prop5 = { };
+tP.prop6 = { };
+tP.prop7 = { };
+tP.prop8 = { };
+tP.prop9 = { };
 tP.doit();
 tP.doit2();
 
@@ -436,9 +450,9 @@ deepGet_2();
 // get different properties from the same object in script scope, at script scope
 
     var t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
-    var startTime = new Date();
+    startTime = new Date();
 
-    for (var i = 0; i < 5000; i++) {
+    for (i = 0; i < 5000; i++) {
         t0 = gP.prop0; t1 = gP.prop1; t2 = gP.prop2; t3 = gP.prop3; t4 = gP.prop4; t5 = gP.prop5; t6 = gP.prop6; t7 = gP.prop7; t8 = gP.prop8; t9 = gP.prop9;
         t0 = gP.prop0; t1 = gP.prop1; t2 = gP.prop2; t3 = gP.prop3; t4 = gP.prop4; t5 = gP.prop5; t6 = gP.prop6; t7 = gP.prop7; t8 = gP.prop8; t9 = gP.prop9;
         t0 = gP.prop0; t1 = gP.prop1; t2 = gP.prop2; t3 = gP.prop3; t4 = gP.prop4; t5 = gP.prop5; t6 = gP.prop6; t7 = gP.prop7; t8 = gP.prop8; t9 = gP.prop9;
@@ -460,16 +474,16 @@ deepGet_2();
         t0 = gP.prop0; t1 = gP.prop1; t2 = gP.prop2; t3 = gP.prop3; t4 = gP.prop4; t5 = gP.prop5; t6 = gP.prop6; t7 = gP.prop7; t8 = gP.prop8; t9 = gP.prop9;
         t0 = gP.prop0; t1 = gP.prop1; t2 = gP.prop2; t3 = gP.prop3; t4 = gP.prop4; t5 = gP.prop5; t6 = gP.prop6; t7 = gP.prop7; t8 = gP.prop8; t9 = gP.prop9;
     }
-    var elapsedTime = (new Date()).getTime() - startTime.getTime();
+    elapsedTime = (new Date()).getTime() - startTime.getTime();
     print("getProp_Sa : " + elapsedTime);
     total += elapsedTime;
 
 // get different properties from different objects in script scope, at script scope
 
-    var t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
-    var startTime = new Date();
+    //var t1, t2, t3, t4, t5, t6, t7, t8, t9;
+    startTime = new Date();
 
-    for (var i = 0; i < 5000; i++) {
+    for (i = 0; i < 5000; i++) {
         t0 = gP0.prop0; t1 = gP1.prop1; t2 = gP2.prop2; t3 = gP3.prop3; t4 = gP4.prop4; t5 = gP5.prop5; t6 = gP6.prop6; t7 = gP7.prop7; t8 = gP8.prop8; t9 = gP9.prop9;
         t0 = gP0.prop0; t1 = gP1.prop1; t2 = gP2.prop2; t3 = gP3.prop3; t4 = gP4.prop4; t5 = gP5.prop5; t6 = gP6.prop6; t7 = gP7.prop7; t8 = gP8.prop8; t9 = gP9.prop9;
         t0 = gP0.prop0; t1 = gP1.prop1; t2 = gP2.prop2; t3 = gP3.prop3; t4 = gP4.prop4; t5 = gP5.prop5; t6 = gP6.prop6; t7 = gP7.prop7; t8 = gP8.prop8; t9 = gP9.prop9;
@@ -491,6 +505,6 @@ deepGet_2();
         t0 = gP0.prop0; t1 = gP1.prop1; t2 = gP2.prop2; t3 = gP3.prop3; t4 = gP4.prop4; t5 = gP5.prop5; t6 = gP6.prop6; t7 = gP7.prop7; t8 = gP8.prop8; t9 = gP9.prop9;
         t0 = gP0.prop0; t1 = gP1.prop1; t2 = gP2.prop2; t3 = gP3.prop3; t4 = gP4.prop4; t5 = gP5.prop5; t6 = gP6.prop6; t7 = gP7.prop7; t8 = gP8.prop8; t9 = gP9.prop9;
     }
-    var elapsedTime = (new Date()).getTime() - startTime.getTime();
+    elapsedTime = (new Date()).getTime() - startTime.getTime();
     print("getProp_Sb : " + elapsedTime);
     total += elapsedTime;

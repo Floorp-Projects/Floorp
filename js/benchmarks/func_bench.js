@@ -1,4 +1,4 @@
-
+var total="";
 print("func_bench");
 
 // call a function with zero parameters, returning nothing
