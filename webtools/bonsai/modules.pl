@@ -153,9 +153,10 @@ sub get_line {
         chop($l);
         if( $l =~ /^[ \t]*\#/ 
                 || $l =~ /^[ \t]*$/ ){
-            $l='';
+            $l='';              # Starts with a "#", or is only whitespace.
         }
-        elsif( $l =~ /\\[ \t]*$/ ){
+        if( $l =~ /\\[ \t]*$/ ){
+            # Ends with a slash, so append it to the last line.
             chop ($l);
             $save .= $l . ' ';
         }
