@@ -180,10 +180,11 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
       nsresult  isCss = sheet->QueryInterface(kICSSStyleSheetIID, (void**)&cssSheet);
       if ((isCss == NS_OK) && (cssSheet != nsnull))
       {
-        PRInt32           ruleCount = cssSheet->StyleRuleCount();
-        PRInt32           ruleIndex;
-        nsICSSStyleRule*  rule = nsnull;
+        PRInt32       ruleCount;
+        PRInt32       ruleIndex;
+        nsICSSRule*   rule = nsnull;
 
+        cssSheet->StyleRuleCount(ruleCount);
         aConverter.BeginCSSStyleSheet();
         for (ruleIndex = 0; ruleIndex < ruleCount; ruleIndex++)
         {
@@ -193,13 +194,19 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
 
               if (nsnull != rule)
               {
-                CSSSelectorsToXIF(aConverter,*rule);
+                PRInt32 type;
+                rule->GetType(type);
+                if (nsICSSRule::STYLE_RULE == type) {
+                  nsICSSStyleRule*  styleRule = (nsICSSStyleRule*)rule;
+                  CSSSelectorsToXIF(aConverter,*styleRule);
   
-                nsICSSDeclaration* declaration = rule->GetDeclaration();
-                if (nsnull != declaration)
-                  CSSDeclarationToXIF(aConverter,*declaration);
+                  nsICSSDeclaration* declaration = styleRule->GetDeclaration();
+                  if (nsnull != declaration)
+                    CSSDeclarationToXIF(aConverter,*declaration);
 
-                NS_IF_RELEASE(declaration);
+                  NS_IF_RELEASE(declaration);
+                }
+                // XXX other rule types
                 NS_IF_RELEASE(rule);
               } // ruleAt
 
