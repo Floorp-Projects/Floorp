@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -53,11 +53,11 @@ interface nsIMsgFilter : nsISupports {
                  out string arbitraryHeader);
 
     void appendTerm(in nsIMsgSearchTerm term);
-    
-    void getSearchTerms(out unsigned long length,
-                        [array, size_is(length), retval]
-                        out nsIMsgSearchTerm termList);
-    
+
+
+    // this is the actual array of search terms, and is thus modifyable
+    readonly attribute nsISupportsArray searchTerms;
+
     attribute nsIMsgSearchScopeTerm scope;
 
     attribute nsMsgRuleActionType action;

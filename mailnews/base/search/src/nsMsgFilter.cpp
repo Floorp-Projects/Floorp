@@ -191,24 +191,12 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::GetSearchTerms(PRUint32 *aLength,
-                                          nsIMsgSearchTerm ***aResult)
+NS_IMETHODIMP nsMsgFilter::GetSearchTerms(nsISupportsArray **aResult)
 {
-    NS_ENSURE_ARG_POINTER(aLength);
     NS_ENSURE_ARG_POINTER(aResult);
-    
-    PRUint32 terms; m_termList->Count(&terms);
-    
-    nsIMsgSearchTerm** resultList = (nsIMsgSearchTerm**)
-        nsAllocator::Alloc(sizeof(nsIMsgSearchTerm*) * terms);
-    *aLength = terms;
 
-    PRUint32 i;
-    for (i=0; i<terms; i++)
-        m_termList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
-                                   (void **)resultList[i]);
-
-    *aResult = resultList;
+    *aResult = m_termList;
+    NS_IF_ADDREF(*aResult);
     return NS_OK;
 }
 
