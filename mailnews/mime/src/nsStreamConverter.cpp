@@ -1082,4 +1082,5 @@ NS_IMETHODIMP nsStreamConverter::FirePendingStartRequest()
     mPendingChannel = nsnull;
     mPendingContext = nsnull; 
   }
+  return NS_OK;
 }
