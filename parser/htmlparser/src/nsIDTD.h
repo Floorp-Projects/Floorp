@@ -44,7 +44,15 @@ class nsIDTDDebug;
 class nsIURL;
 class nsString;
 
+
 enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
+
+
+class nsITokenRecycler {
+public:
+    virtual void RecycleToken(CToken* aToken)=0;
+};
+
 
 class nsIDTD : public nsISupports {
   public:
@@ -177,7 +185,17 @@ class nsIDTD : public nsISupports {
      */
     virtual PRBool Verify(nsString& aURLRef)=0;
 
+    /**
+     * Retrieve a ptr to the global token recycler...
+     * @update	gess8/4/98
+     * @return  ptr to recycler (or null)
+     */
+    virtual nsITokenRecycler* GetTokenRecycler(void)=0;
+
+
 };
+
+
 
 #endif /* nsIDTD_h___ */
 

@@ -19,6 +19,13 @@
 #include "nsToken.h"
 #include "nsScanner.h"
 
+static int TokenCount=0;
+
+
+/**************************************************************
+  And now for the CToken...
+ **************************************************************/
+
 /**
  *  Default constructor
  *  
@@ -27,6 +34,7 @@
 CToken::CToken(PRInt32 aTag) : mTextValue() {
   mTypeID=aTag;
   mAttrCount=0;
+  TokenCount++;
 }
 
 /**
@@ -38,6 +46,7 @@ CToken::CToken(PRInt32 aTag) : mTextValue() {
 CToken::CToken(const nsString& aName) : mTextValue(aName) {
   mTypeID=0;
   mAttrCount=0;
+  TokenCount++;
 }
 
 /**
@@ -49,6 +58,7 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
 CToken::CToken(const char* aName) : mTextValue(aName) {
   mTypeID=0;
   mAttrCount=0;
+  TokenCount++;
 }
  
 /**
@@ -69,7 +79,11 @@ CToken::~CToken() {
  * @param   aString
  */
 void CToken::Reinitialize(PRInt32 aTag, const nsString& aString){
-  mTypeID=0;
+  if(0==aString.Length()) 
+    mTextValue.Truncate(0);
+  else mTextValue.SetString(aString);
+  mAttrCount=0;
+  mTypeID=aTag;
   mAttrCount=0;
 }
  
@@ -210,6 +224,7 @@ PRInt32  CToken::GetTokenType(void) {
 const char*  CToken::GetClassName(void) {
   return "token";
 }
+
 
 /**
  *  

@@ -26,6 +26,7 @@
 #include "prtypes.h"
 #include "nsDebug.h"
 #include "nsHTMLTags.h"
+#include "nsCRT.h"
 
 //#define GESS_MACHINE
 #ifdef GESS_MACHINE
@@ -94,6 +95,11 @@ static StrToUnicodeStruct gStrToUnicodeTable[] =
   {"yuml",  0x00ff}
 };
 
+
+/**************************************************************
+  And now for the token classes...
+ **************************************************************/
+
 /*
  *  default constructor
  *  
@@ -128,6 +134,7 @@ void CHTMLToken::SetStringValue(const char* name){
   }
 }
 
+
 /*
  *  constructor from tag id
  *  
@@ -152,6 +159,18 @@ CStartToken::CStartToken(nsString& aString) : CHTMLToken(aString) {
   mEmpty=PR_FALSE;
 }
 
+
+/**
+ * 
+ * @update	gess8/4/98
+ * @param 
+ * @return
+ */
+void CStartToken::Reinitialize(PRInt32 aTag, const nsString& aString){
+  CToken::Reinitialize(aTag,aString);
+  mAttributed=PR_FALSE;
+  mEmpty=PR_FALSE;
+}
 
 /*
  *  This method returns the typeid (the tag type) for this token.
@@ -682,6 +701,18 @@ CAttributeToken::CAttributeToken(const nsString& aKey, const nsString& aName) : 
   mLastAttribute=PR_FALSE;
 }
 
+/**
+ * 
+ * @update	gess8/4/98
+ * @param 
+ * @return
+ */
+void CAttributeToken::Reinitialize(PRInt32 aTag, const nsString& aString){
+  CHTMLToken::Reinitialize(aTag,aString);
+  mTextKey.Truncate();
+  mLastAttribute=PR_FALSE;
+}
+
 /*
  *  
  *  
@@ -948,6 +979,7 @@ CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
   }
 #endif
 }
+
 
 /*
  *  Consume the rest of the entity. We've already eaten the "&".
@@ -1328,6 +1360,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar,CScanner& aScanner) {
   mTextValue=temp;
   return result;
 }
+
 
 #if 0
 /*

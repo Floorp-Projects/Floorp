@@ -356,3 +356,13 @@ NS_IMETHODIMP CValidDTD::HandleToken(CToken* aToken) {
   return result;
 }
 
+/**
+ * 
+ * @update	gess8/4/98
+ * @param 
+ * @return
+ */
+nsITokenRecycler* CValidDTD::GetTokenRecycler(void){
+  return 0;
+}
+

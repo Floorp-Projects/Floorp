@@ -160,7 +160,7 @@ eXIFTags DetermineXIFTagType(const nsString& aString)
   
   while(low<=high){
     middle=(PRInt32)(low+high)/2;
-    result=aString.Compare(gXIFTagTable[middle].mName, PR_TRUE);
+    result=aString.Compare(gXIFTagTable[middle].mName, PR_TRUE); 
     if (result==0)
       return gXIFTagTable[middle].fTagID; 
     if (result<0)
@@ -1736,16 +1736,6 @@ PRInt32 nsXIFDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
   return result;
 }
 
-/**
- * 
- * @update  gpk 06/18/98
- * @param 
- * @return
- */
-CToken* nsXIFDTD::CreateTokenOfType(eHTMLTokenTypes aType) {
-  return 0;
-}
-
 
 /**
  * 
@@ -1988,4 +1978,14 @@ void nsXIFDTD::AddCSSDeclaration(const nsIParserNode& aNode)
     }
 }
 
+
+/**
+ * 
+ * @update	gess8/4/98
+ * @param 
+ * @return
+ */
+nsITokenRecycler* nsXIFDTD::GetTokenRecycler(void){
+  return 0;
+}
 

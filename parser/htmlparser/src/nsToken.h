@@ -41,6 +41,7 @@
 
 class CScanner;
 
+
 /**
  *  Token objects represent sequences of characters as they
  *  are consumed from the input stream (URL). While they're

@@ -938,16 +938,6 @@ nsresult COtherDTD::ConsumeToken(CToken*& aToken){
   return CNavDTD::ConsumeToken(aToken);
 }
 
-/**
- * 
- * @update  gess4/11/98
- * @param 
- * @return
- */
-CToken* COtherDTD::CreateTokenOfType(eHTMLTokenTypes aType) {
-  return CNavDTD::CreateTokenOfType(aType);
-}
-
 
 /**
  * 

@@ -208,25 +208,28 @@ eHTMLTags CTagStack::Last() const {
   return eHTMLTag_unknown;
 }
 
-
+/**************************************************************
+  Now define the tokenrecycler class...
+ **************************************************************/
 
 /************************************************************************
-  CTokenFactory class implementation.
-  This class is used to create and destroy our tokens. 
+  CTokenRecycler class implementation.
+  This class is used to recycle tokens. 
   By using this simple class, we cut WAY down on the number of tokens
   that get created during the run of the system.
  ************************************************************************/
-class CTokenFactory {
+class nsCTokenRecycler : public nsITokenRecycler {
 public:
   
-      enum {eCacheSize=50}; 
+      enum {eCacheMaxSize=50}; 
 
-            CTokenFactory();
-            ~CTokenFactory();
-    CToken* CreateToken(eHTMLTokenTypes aType, eHTMLTags aTag, const nsString& aString);
-    void    RecycleToken(CToken* aToken);
+                  nsCTokenRecycler();
+  virtual         ~nsCTokenRecycler();
+  virtual void    RecycleToken(CToken* aToken);
+  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString);
+
 protected:
-    CToken* mTokenCache[eToken_last-1][eCacheSize];
+    CToken* mTokenCache[eToken_last-1][eCacheMaxSize];
     PRInt32 mCount[eToken_last-1];
 };
 
@@ -236,7 +239,7 @@ protected:
  * @update  gess7/25/98
  * @param 
  */
-CTokenFactory::CTokenFactory() {
+nsCTokenRecycler::nsCTokenRecycler() : nsITokenRecycler() {
   nsCRT::zero(mTokenCache,sizeof(mTokenCache));
   nsCRT::zero(mCount,sizeof(mCount));    
 }
@@ -245,29 +248,49 @@ CTokenFactory::CTokenFactory() {
  * Destructor for the token factory
  * @update  gess7/25/98
  */
-CTokenFactory::~CTokenFactory() {
+nsCTokenRecycler::~nsCTokenRecycler() {
 }
 
+
 /**
- * This method is used as the factory for all HTML tokens. 
- * There will be a corresponding recycler method, so that we can
- * cut down on the number of tokens we create.
+ * This method gets called when someone wants to recycle a token
  * @update  gess7/24/98
- * @param   aType
- * @param   aTag
- * @param   aString
- * @return  newly created token or null
+ * @param   aToken -- token to be recycled.
+ * @return  nada
  */
-CToken* CTokenFactory::CreateToken(eHTMLTokenTypes aType, eHTMLTags aTag, const nsString& aString) {
+void nsCTokenRecycler::RecycleToken(CToken* aToken) {
+  if(aToken) {
+    PRInt32 theType=aToken->GetTokenType();
+    if(mCount[theType-1]<eCacheMaxSize) {
+      mTokenCache[theType-1][mCount[theType-1]]=aToken;
+      mCount[theType-1]++;
+    } else {
+        //this is an overflow condition. More tokens of a given 
+        //type have been created than we can store in our recycler.
+        //In this case, just destroy the extra token.
+      delete aToken;
+    }
+  }
+}
+
+
+/**
+ * 
+ * @update	gess8/4/98
+ * @param 
+ * @return
+ */
+CToken* nsCTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString) {
+
   CToken* result;
 
-  if(mCount[aType-1]>0){
-    result=mTokenCache[aType-1][--mCount[aType-1]];
-    mTokenCache[aType-1][mCount[aType-1]]=0;
+  if(0<mCount[aType-1]) {
+    result=mTokenCache[aType-1][mCount[aType-1]-1];
     result->Reinitialize(aTag,aString);
+    mTokenCache[aType-1][mCount[aType-1]-1]=0;
+    mCount[aType-1]--;
   }
-  else 
-  {
+  else {
     switch(aType){
       case eToken_start:      result=new CStartToken(aTag); break;
       case eToken_end:        result=new CEndToken(aTag); break;
@@ -287,29 +310,9 @@ CToken* CTokenFactory::CreateToken(eHTMLTokenTypes aType, eHTMLTags aTag, const 
   return result;
 }
 
-/**
- * This method gets called when the DTD wants to recycle a token
- * it has finished using.
- * @update  gess7/24/98
- * @param   aToken -- token to be recycled.
- * @return  nada
- */
-void CTokenFactory::RecycleToken(CToken* aToken) {
-  if(aToken) {
-    eHTMLTokenTypes aType=(eHTMLTokenTypes)aToken->GetTokenType();
-    if(mCount[aType-1]<eCacheSize) {
-      mTokenCache[aType-1][mCount[aType-1]]=aToken;
-      mCount[aType-1]++;
-    } else {
-        //this is an overflow condition. More tokens of a given 
-        //type have been created than we can store in our recycler.
-        //In this case, just destroy the extra token.
-      delete aToken;
-    }
-  }
-}
 
-CTokenFactory gTokenFactory;
+nsCTokenRecycler gTokenRecycler;
+
 
 /************************************************************************
   And now for the main class -- CNavDTD...
@@ -495,6 +498,18 @@ CNavDTD::~CNavDTD(){
  */
 nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
   return NS_NewNavHTMLDTD(aInstancePtrResult);
+}
+
+
+/**
+ * 
+ * @update	gess8/4/98
+ * @param 
+ * @return
+ */
+nsITokenRecycler* CNavDTD::GetTokenRecycler(void){
+  return 0;
+  return &gTokenRecycler;
 }
 
 /**
@@ -1352,7 +1367,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     return CanContainFormElement((eHTMLTags)aParent,(eHTMLTags)aChild);
   }
 
-  if (0 != strchr(gStyleTags, aParent)) {
+  if((aParent) && (0 != strchr(gStyleTags, aParent))) {
     if(eHTMLTag_li == aChild) {
       //This code was added to enforce the rule that listitems
       //autoclose prior listitems.  Stylistic tags (including <A>)
@@ -2730,7 +2745,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
     int i=0;
     for(i=pos;i<cnt;i++) {
 //      CStartToken* st=new CStartToken((eHTMLTags)theVector[cnt-1-i]);
-      CToken* theToken=gTokenFactory.CreateToken(eToken_start,(eHTMLTags)theVector[cnt-1-i],gEmpty);
+      CToken* theToken=gTokenRecycler.CreateTokenOfType(eToken_start,(eHTMLTags)theVector[cnt-1-i],gEmpty);
       HandleStartToken(theToken);
     }
   }
@@ -2856,12 +2871,12 @@ CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
         result=aScanner.Peek(ch);
         if(NS_OK==result) {
           if(nsString::IsAlpha(ch))
-            aToken=gTokenFactory.CreateToken(eToken_end,eHTMLTag_unknown,gEmpty);
-          else aToken=gTokenFactory.CreateToken(eToken_comment,eHTMLTag_unknown,gEmpty);
+            aToken=gTokenRecycler.CreateTokenOfType(eToken_end,eHTMLTag_unknown,gEmpty);
+          else aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_unknown,gEmpty);
         }//if
         break;
       case kExclamation:
-        aToken=gTokenFactory.CreateToken(eToken_comment,eHTMLTag_unknown,gEmpty);
+        aToken=gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_unknown,gEmpty);
         break;
       default:
         if(nsString::IsAlpha(aChar))
@@ -2899,7 +2914,7 @@ CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToke
   PRInt16 theAttrCount=0;
 
   while((!done) && (result==NS_OK)) {
-    CAttributeToken* theToken= (CAttributeToken*)gTokenFactory.CreateToken(eToken_attribute,eHTMLTag_unknown,gEmpty);
+    CAttributeToken* theToken= (CAttributeToken*)gTokenRecycler.CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,gEmpty);
     if(theToken){
       result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
 
@@ -2957,7 +2972,7 @@ CNavDTD::ConsumeContentToEndTag(const nsString& aString,
   nsAutoString endTag("</");
   endTag.Append(aString);
   endTag.Append(">");
-  aToken=gTokenFactory.CreateToken(eToken_skippedcontent,aChildTag,endTag);
+  aToken=gTokenRecycler.CreateTokenOfType(eToken_skippedcontent,aChildTag,endTag);
   return aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
 }
 
@@ -2979,7 +2994,7 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   PRInt32 theDequeSize=mTokenDeque.GetSize();
   nsresult result=NS_OK;
 
-  aToken=gTokenFactory.CreateToken(eToken_start,eHTMLTag_unknown,gEmpty);
+  aToken=gTokenRecycler.CreateTokenOfType(eToken_start,eHTMLTag_unknown,gEmpty);
   
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
@@ -3012,7 +3027,7 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
             //In the case that we just read a given tag, we should go and
             //consume all the tag content itself (and throw it all away).
 
-            CToken* endtoken=gTokenFactory.CreateToken(eToken_end,theTag,gEmpty);
+            CToken* endtoken=gTokenRecycler.CreateTokenOfType(eToken_end,theTag,gEmpty);
             mTokenDeque.Push(endtoken);
           } //if
         } //if
@@ -3053,11 +3068,11 @@ CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
    if(NS_OK==result) {
      if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
-       aToken = gTokenFactory.CreateToken(eToken_entity,eHTMLTag_unknown,gEmpty);
+       aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_unknown,gEmpty);
        result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
      }
      else if(kHashsign==ch) {
-       aToken = gTokenFactory.CreateToken(eToken_entity,eHTMLTag_unknown,gEmpty);
+       aToken = gTokenRecycler.CreateTokenOfType(eToken_entity,eHTMLTag_unknown,gEmpty);
        result=aToken->Consume(0,aScanner);
      }
      else {
@@ -3084,7 +3099,7 @@ nsresult
 CNavDTD::ConsumeWhitespace(PRUnichar aChar,
                            CScanner& aScanner,
                            CToken*& aToken) {
-  aToken = gTokenFactory.CreateToken(eToken_whitespace,eHTMLTag_unknown,gEmpty);
+  aToken = gTokenRecycler.CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown,gEmpty);
   nsresult result=kNoError;
   if(aToken) {
      result=aToken->Consume(aChar,aScanner);
@@ -3103,7 +3118,7 @@ CNavDTD::ConsumeWhitespace(PRUnichar aChar,
  *  @return new token or null 
  */
 nsresult CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken = gTokenFactory.CreateToken(eToken_comment,eHTMLTag_unknown,gEmpty);
+  aToken = gTokenRecycler.CreateTokenOfType(eToken_comment,eHTMLTag_unknown,gEmpty);
   nsresult result=NS_OK;
   if(aToken) {
      result=aToken->Consume(aChar,aScanner);
@@ -3123,7 +3138,7 @@ nsresult CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  */
 nsresult CNavDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
   nsresult result=NS_OK;
-  aToken=gTokenFactory.CreateToken(eToken_text,eHTMLTag_text,aString);
+  aToken=gTokenRecycler.CreateTokenOfType(eToken_text,eHTMLTag_text,aString);
   if(aToken) {
     PRUnichar ch=0;
     result=aToken->Consume(ch,aScanner);
@@ -3148,7 +3163,7 @@ nsresult CNavDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*
  *  @return error code
  */
 nsresult CNavDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken=gTokenFactory.CreateToken(eToken_newline,eHTMLTag_newline,gEmpty);
+  aToken=gTokenRecycler.CreateTokenOfType(eToken_newline,eHTMLTag_newline,gEmpty);
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner);
@@ -3228,16 +3243,6 @@ nsresult CNavDTD::ConsumeToken(CToken*& aToken){
   return result;
 }
 
-/**
- * 
- * @update  gess4/11/98
- * @param 
- * @return
- */
-CToken* CNavDTD::CreateTokenOfType(eHTMLTokenTypes aType) {
-  return 0;
-}
-
 
 /**
  * 
@@ -3254,10 +3259,10 @@ nsresult CNavDTD::WillResumeParse(void){
 }
 
 /**
- * 
+ * This method gets called when the parsing process is interrupted
+ * due to lack of data (waiting for netlib).
  * @update  gess5/18/98
- * @param 
- * @return
+ * @return  error code
  */
 nsresult CNavDTD::WillInterruptParse(void){
   nsresult result = NS_OK;

@@ -542,6 +542,16 @@ nsresult CRtfDTD::HandleToken(CToken* aToken) {
 
 
 
+/**
+ * 
+ * @update	gess8/4/98
+ * @param 
+ * @return
+ */
+nsITokenRecycler* CRtfDTD::GetTokenRecycler(void){
+  return 0;
+}
+
 /***************************************************************
   Heres's the RTFControlWord subclass...
  ***************************************************************/
