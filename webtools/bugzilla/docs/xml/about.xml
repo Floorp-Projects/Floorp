@@ -1,5 +1,6 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
 <!ENTITY conventions SYSTEM "conventions.xml"> ] > -->
+<!-- $Id: about.xml,v 1.17 2004/12/13 03:15:22 jake%bugzilla.org Exp $ -->
 
 <chapter id="about">
 <title>About This Guide</title>
@@ -7,7 +8,7 @@
   <section id="copyright">
     <title>Copyright Information</title>
 
-    <para>This document is copyright (c) 2000-2004 by the various
+    <para>This document is copyright (c) 2000-&current-year; by the various
     Bugzilla contributors who wrote it.</para>
     
     <blockquote>
@@ -114,23 +115,88 @@
       contribution to the Bugzilla community:
     </para>
 
+    <!-- TODO: This is evil... there has to be a valid way to get this look -->
+    <variablelist>
+      <varlistentry>
+        <term>Matthew P. Barnson <email>mbarnson@sisna.com</email></term>
+        <listitem>
+          <para>for the Herculaean task of pulling together the Bugzilla Guide
+          and shepherding it to 2.14.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Terry Weissman <email>terry@mozilla.org</email></term>
+        <listitem>
+          <para>for initially writing Bugzilla and creating the README upon
+          which the UNIX installation documentation is largely based.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Tara Hernandez <email>tara@tequilarists.org</email></term>
+        <listitem>
+          <para>for keeping Bugzilla development going strong after Terry left
+          mozilla.org and for running landfill.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Dave Lawrence <email>dkl@redhat.com</email></term>
+        <listitem>
+          <para>for providing insight into the key differences between Red
+          Hat's customized Bugzilla.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Dawn Endico <email>endico@mozilla.org</email></term>
+        <listitem>
+          <para>for being a hacker extraordinaire and putting up with Matthew's
+          incessant questions and arguments on irc.mozilla.org in #mozwebtools
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Jacob Steenhagen <email>jake@bugzilla.org</email></term>
+        <listitem>
+          <para>for taking over documentation during the 2.17 development
+          period.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>Dave Miller <email>justdave@bugzilla.org</email></term>
+	<listitem>
+          <para>for taking over as project lead when Tara stepped down and
+	  continually pushing for the documentation to be the best it can be.
+          </para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
+
+
     <para>
+      Thanks also go to the following people for significant contributions 
+      to this documentation:
       <simplelist type="inline">
-        <member>Matthew P. Barnson</member>
         <member>Kevin Brannen</member>
-        <member>Dawn Endico</member>
         <member>Ben FrantzDale</member>
         <member>Eric Hanson</member>
-        <member>Tara Hernandez</member>
-        <member>Dave Lawrence</member>
         <member>Zach Lipton</member>
         <member>Gervase Markham</member>
         <member>Andrew Pearson</member>
         <member>Joe Robins</member>
         <member>Spencer Smith</member>
-        <member>Jacob Steenhagen</member>
         <member>Ron Teitelbaum</member>
-        <member>Terry Weissman</member>
+        <member>Shane Travis</member>
         <member>Martin Wulffeld</member>
       </simplelist>.
     </para>
@@ -167,3 +233,4 @@ sgml-parent-document:("Bugzilla-Guide.xml" "book" "chapter")
 sgml-shorttag:t 
 sgml-tag-region-if-active:t 
 End: -->
+
