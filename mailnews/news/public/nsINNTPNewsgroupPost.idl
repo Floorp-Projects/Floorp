@@ -41,7 +41,7 @@ interface nsINNTPNewsgroupPost : nsISupports {
     readonly attribute string messageID;
     attribute string path;
 
-    boolean isValid();
+    boolean IsValid();
     
     /* Secion 2.2 - optional headers */
     attribute string replyTo;
