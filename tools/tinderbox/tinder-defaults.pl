@@ -20,7 +20,6 @@ $ResetHomeDirForTests     = 1;
 $ProductName              = "Mozilla";
 
 $RunMozillaTests          = 1;  # Allow turning off of all tests if needed.
-                                # renamed from RunTest, to be more descriptive.
 $RegxpcomTest             = 1;
 $AliveTest                = 1;
 $JavaTest                 = 0;
