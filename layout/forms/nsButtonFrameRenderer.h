@@ -66,15 +66,14 @@ public:
 
 	virtual void SetNameSpace(PRInt32 aNameSpace);
 	virtual void SetFrame(nsIFrame* aFrame, nsIPresContext& aPresContext);
-    virtual void Update(PRBool notify);
+ 
+    virtual void SetState(ButtonState state, PRBool notify);
+	virtual void SetFocus(PRBool aFocus, PRBool notify);
+	virtual void SetDisabled(PRBool aDisabled, PRBool notify);
 
-	virtual void SetState(ButtonState state);
-	virtual void SetFocus(PRBool focus);
-	virtual void SetEnabled(PRBool enabled);
-
-	ButtonState GetState()  { return mState; }
-	PRBool isEnabled()      { return mEnabled; }
-	PRBool isFocus()        { return mFocus;    }
+	ButtonState GetState();
+	PRBool isDisabled();
+	PRBool isFocus();
 
 	virtual void GetButtonOutlineRect(const nsRect& aRect, nsRect& aResult);
 	virtual void GetButtonOuterFocusRect(const nsRect& aRect, nsRect& aResult);
@@ -87,7 +86,7 @@ public:
     virtual nsMargin GetButtonInnerFocusBorderAndPadding();
     virtual nsMargin GetButtonOutlineBorderAndPadding();
 
-	virtual void UpdateStyles(nsIPresContext& aPresContext);
+	virtual void ReResolveStyles(nsIPresContext& aPresContext);
 
 	/**
 	* Subroutine to add in borders and padding
@@ -100,12 +99,14 @@ public:
 
 protected:
 
+    virtual nsString GetPseudoClassAttribute();
+    virtual void SetPseudoClassAttribute(const nsString& value, PRBool notify);
+    virtual void ToggleClass(PRBool aEnabled, const nsString& c, PRBool notify);
+    virtual void AddClass(nsString& pseudoclass, const nsString newClass);
+    virtual void RemoveClass(nsString& pseudoclass, const nsString newClass);
+    virtual PRInt32 IndexOfClass(nsString& pseudoclass, const nsString& c);
+
 private:
-
-    ButtonState mState;
-
-	PRBool      mFocus;
-	PRBool      mEnabled;
 
 	// cached styles for focus and outline.
 	nsCOMPtr<nsIStyleContext> mBorderStyle;
