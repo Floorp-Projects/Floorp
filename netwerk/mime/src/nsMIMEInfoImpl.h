@@ -36,9 +36,10 @@ class nsMIMEInfoImpl : public nsIMIMEInfo {
     // nsMIMEInfoImpl methods
     nsMIMEInfoImpl(const char *aMIMEType);
     virtual ~nsMIMEInfoImpl() {};
+    PRUint32 GetExtCount();           // returns the number of extensions associated.
 
     // member variables
-    nsStringArray       mExtensions;  // array of file extensions associated w/ this MIME obj
+    nsCStringArray       mExtensions; // array of file extensions associated w/ this MIME obj
     nsAutoString        mDescription; // human readable description
     nsCOMPtr<nsIURI>    mURI;         // URI pointing to data associated w/ this obj      
 
