@@ -1583,14 +1583,17 @@ nsresult nsExternalHelperAppService::AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo)
   nsresult rv = NS_OK;
 
   // Next add the new root MIME mapping.
-  nsXPIDLCString mimeType; 
-  aMIMEInfo->GetMIMEType(getter_Copies(mimeType));
+  nsXPIDLCString mimeType;
+  nsIMIMEInfo* oldInfo;
+  rv = aMIMEInfo->GetMIMEType(getter_Copies(mimeType));
+  
+  if (NS_SUCCEEDED(rv)) {
+    nsCStringKey key(mimeType);
+    oldInfo = (nsIMIMEInfo*)mMimeInfoCache->Put(&key, aMIMEInfo);
 
-  nsCStringKey key(mimeType);
-  nsIMIMEInfo * oldInfo = (nsIMIMEInfo*)mMimeInfoCache->Put(&key, aMIMEInfo);
-
-  // add a reference for the hash table entry....
-  NS_ADDREF(aMIMEInfo); 
+    // add a reference for the hash table entry....
+    NS_ADDREF(aMIMEInfo); 
+  }
 
   // now we need to add entries for each file extension 
   char** extensions;
@@ -1600,7 +1603,7 @@ nsresult nsExternalHelperAppService::AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo)
 
   for ( PRUint32 i = 0; i < count; i++ )
   {
-     key = extensions[i];
+     nsCStringKey key(extensions[i]);
      oldInfo = (nsIMIMEInfo*) mMimeInfoCache->Put(&key, aMIMEInfo);
      NS_ADDREF(aMIMEInfo); // addref this new entry in the table
      nsMemory::Free( extensions[i] );
