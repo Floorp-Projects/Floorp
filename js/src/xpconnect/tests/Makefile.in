@@ -38,7 +38,10 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-TEST_FILES	= $(srcdir)/testxpc.js $(srcdir)/xpctest_echo.js
+TEST_FILES	= $(srcdir)/testxpc.js \
+              $(srcdir)/xpctest_echo.js \
+              $(srcdir)/xpctest_primitives.js
+
 
 include $(topsrcdir)/config/rules.mk
 
