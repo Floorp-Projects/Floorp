@@ -280,7 +280,7 @@ typedef struct {
   XML_ExternalEntityRefHandler externalEntityRefHandler;
   void *externalEntityRefHandlerArg;
   XML_UnknownEncodingHandler unknownEncodingHandler;
-  const ENCODING *encoding;
+  const ENCODING *parserEncoding;
   INIT_ENCODING initEncoding;
   const XML_Char *protocolEncodingName;
   int ns;
@@ -336,7 +336,7 @@ typedef struct {
 #define externalEntityRefHandler (((Parser *)parser)->externalEntityRefHandler)
 #define externalEntityRefHandlerArg (((Parser *)parser)->externalEntityRefHandlerArg)
 #define unknownEncodingHandler (((Parser *)parser)->unknownEncodingHandler)
-#define encoding (((Parser *)parser)->encoding)
+#define encoding (((Parser *)parser)->parserEncoding)
 #define initEncoding (((Parser *)parser)->initEncoding)
 #define unknownEncodingMem (((Parser *)parser)->unknownEncodingMem)
 #define unknownEncodingData (((Parser *)parser)->unknownEncodingData)
