@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
  *   Neil Rashbrook <neil@parkwaycc.co.uk>
+ *   Ben Goodger <ben@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,10 +56,12 @@
 #include "nsIFileURL.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
+#include "nsDirectoryServiceDefs.h"
 
 // we need windows.h to read out registry information...
 #include <windows.h>
 #include <shellapi.h>
+#include <shlobj.h>
 
 struct ICONFILEHEADER {
   PRUint16 ifhReserved;
@@ -234,6 +237,40 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   return rv;
 }
 
+static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFO* aSFI, UINT aInfoFlags)
+{
+  DWORD shellResult = 0;
+
+  if (!aFile)
+    return shellResult;
+
+  char fileNativePath[MAX_PATH];
+  nsCAutoString fileNativePathStr;
+  aFile->GetNativePath(fileNativePathStr);
+  ::GetShortPathName(fileNativePathStr.get(), fileNativePath, sizeof(fileNativePath));
+
+  char specialNativePath[MAX_PATH];
+  ::SHGetSpecialFolderPath(NULL, specialNativePath, aFolder, FALSE);
+  ::GetShortPathName(specialNativePath, specialNativePath, sizeof(specialNativePath));
+  
+  if (nsDependentCString(fileNativePath).EqualsIgnoreCase(specialNativePath)) {
+    LPITEMIDLIST idList;
+    HRESULT hr = ::SHGetSpecialFolderLocation(NULL, aFolder, &idList);
+    if (SUCCEEDED(hr)) {
+      aInfoFlags |= (SHGFI_PIDL | SHGFI_SYSICONINDEX);
+      shellResult = ::SHGetFileInfo((LPCTSTR)(LPCITEMIDLIST)idList, 0, aSFI, 
+                                    sizeof(SHFILEINFO), aInfoFlags);
+      IMalloc* pMalloc;
+      hr = ::SHGetMalloc(&pMalloc);
+      if (SUCCEEDED(hr)) {
+        pMalloc->Free(idList);
+        pMalloc->Release();
+      }
+    }
+  }
+  return shellResult;
+}
+
 nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBlocking)
 {
   nsXPIDLCString contentType;
@@ -279,8 +316,24 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   }
 
   rv = NS_ERROR_NOT_AVAILABLE;
-  // (1) get an hIcon for the file
-  if (SHGetFileInfo(filePath.get(), FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags) && sfi.hIcon)
+
+  // Is this the "Desktop" folder?
+  DWORD shellResult = GetSpecialFolderIcon(localFile, CSIDL_DESKTOP, &sfi, infoFlags);
+  if (!shellResult) {
+    // Is this the "My Documents" folder?
+    shellResult = GetSpecialFolderIcon(localFile, CSIDL_PERSONAL, &sfi, infoFlags);
+  }
+
+  // There are other "Special Folders" and Namespace entities that we are not 
+  // fetching icons for, see: 
+  // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/reference/enums/csidl.asp
+  // If we ever need to get them, code to do so would be inserted here. 
+
+  // Not a special folder, or something else failed above.
+  if (!shellResult)
+    shellResult = ::SHGetFileInfo(filePath.get(), FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags);
+
+  if (shellResult && sfi.hIcon)
   {
     // we got a handle to an icon. Now we want to get a bitmap for the icon using GetIconInfo....
     ICONINFO iconInfo;
