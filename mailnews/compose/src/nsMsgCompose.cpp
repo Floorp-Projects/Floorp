@@ -1352,7 +1352,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
                 ++ptr2;
               }
 
-              compFields->SetCharacterSet(nsString(ptr).GetUnicode());
+              // Re-label "us-ascii" to "ISO-8859-1" since the original body may contain
+              // non us-ascii characters with eitity encoded.
+              nsAutoString aCharset(ptr);
+              if (aCharset.EqualsIgnoreCase("us-ascii"))
+                aCharset.Assign("ISO-8859-1");
+              compFields->SetCharacterSet(aCharset.GetUnicode());
             }
 
             PR_FREEIF(workContentType);
