@@ -8,7 +8,7 @@ using namespace std;
 #include "atypes.hxx"
 #include "baseaffix.hxx"
 #include "hashmgr.hxx"
-#include <cstdio>
+#include <stdio.h> 
 
 class AffixMgr
 {
