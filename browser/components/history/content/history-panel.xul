@@ -32,7 +32,9 @@
 
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="HistoryCommonInit();" elementtofocus="historyTree">
+      onload="HistoryCommonInit();"
+      onunload="onUnload();"
+      elementtofocus="historyTree">
 
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
