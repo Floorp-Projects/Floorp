@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Brodie Thiesfield <brofield@jellycan.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -92,7 +93,7 @@ bridge_create_stream(nsIMimeEmitter      *newEmitter,
                      nsStreamConverter   *newPluginObj2,
                      nsIURI              *uri,
                      nsMimeOutputType    format_out,
-		                 PRUint32		         whattodo,
+                     PRUint32            whattodo,
                      nsIChannel          *aChannel)
 {
   if  ( (format_out == nsMimeOutput::nsMimeMessageDraftOrTemplate) ||
@@ -205,15 +206,15 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
             if (aOutputType != nsMimeOutput::nsMimeMessageDraftOrTemplate &&
                 aOutputType != nsMimeOutput::nsMimeMessageEditorTemplate)
             {
-            nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(aURI));
-            if (msgurl)
-            {
-              nsCOMPtr<nsIMsgWindow> msgWindow;
-              msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
-              if (msgWindow)
+              nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(aURI));
+              if (msgurl)
               {
-                msgWindow->SetMailCharacterSet(*default_charset);
-                msgWindow->SetCharsetOverride(*override_charset);
+                nsCOMPtr<nsIMsgWindow> msgWindow;
+                msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
+                if (msgWindow)
+                {
+                  msgWindow->SetMailCharacterSet(*default_charset);
+                  msgWindow->SetCharsetOverride(*override_charset);
                 }
               }
             }
@@ -319,71 +320,85 @@ bridge_set_mime_stream_converter_listener(void *bridgeStream, nsIMimeStreamConve
   return NS_OK;
 }
 
+// find a query element in a url and return a pointer to it's data
+// (query must be in the form "query=")
+static const char * 
+FindQueryElementData(const char * aUrl, const char * aQuery)
+{
+  if (aUrl && aQuery)
+  {
+    size_t queryLen = 0; // we don't call strlen until we need to
+    aUrl = PL_strcasestr(aUrl, aQuery);
+    while (aUrl)
+    {
+      if (!queryLen) 
+        queryLen = strlen(aQuery);
+      if (*(aUrl-1) == '&' || *(aUrl-1) == '?')
+        return aUrl + queryLen;
+      aUrl = PL_strcasestr(aUrl + queryLen, aQuery);
+    }
+  }
+  return nsnull;
+}
 
+// case-sensitive test for string prefixing. If |string| is prefixed
+// by |prefix| then a pointer to the next character in |string| following
+// the prefix is returned. If it is not a prefix then |nsnull| is returned.
+static const char * 
+SkipPrefix(const char *aString, const char *aPrefix)
+{
+  while (*aPrefix)
+    if (*aPrefix++ != *aString++)
+       return nsnull;
+  return aString;
+}
 
 //
-// Utility routines needed by this interface...
+// Utility routines needed by this interface
 //
 nsresult
-nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNewType)
+nsStreamConverter::DetermineOutputFormat(const char *aUrl, nsMimeOutputType *aNewType)
 {
-  // Default to html the entire document...
-	*aNewType = nsMimeOutput::nsMimeMessageQuoting;
-
-  // Do sanity checking...
-  if ( (!url) || (!*url) )
+  // sanity checking
+  NS_ENSURE_ARG_POINTER(aNewType);
+  if (!aUrl || !*aUrl)
   {
-    CRTFREEIF(mOutputFormat);
-    mOutputFormat = nsCRT::strdup("text/html");
+    // default to html for the entire document
+    *aNewType = nsMimeOutput::nsMimeMessageQuoting;
+    mOutputFormat = "text/html";
     return NS_OK;
   }
 
-  char *format = PL_strcasestr(url, "?outformat=");
-  char *part   = PL_strcasestr(url, "?part=");
-  char *header = PL_strcasestr(url, "?header=");
-
-  if (!format) format = PL_strcasestr(url, "&outformat=");
-  if (!part) part = PL_strcasestr(url, "&part=");
-  if (!header) header = PL_strcasestr(url, "&header=");
+  // shorten the url that we test for the query strings by skipping directly
+  // to the part where the query strings begin.
+  const char *queryPart = PL_strchr(aUrl, '?');
 
   // First, did someone pass in a desired output format. They will be able to
   // pass in any content type (i.e. image/gif, text/html, etc...but the "/" will
   // have to be represented via the "%2F" value
+  const char *format = FindQueryElementData(queryPart, "outformat=");
   if (format)
   {
-    format += strlen("?outformat=");
+    //NOTE: I've done a file contents search of every file (*.*) in the mozilla 
+    // directory tree and there is not a single location where the string "outformat"
+    // is added to any URL. It appears that this code has been orphaned off by a change 
+    // elsewhere and is no longer required. It will be removed in the future unless 
+    // someone complains.
+    NS_ABORT_IF_FALSE(PR_FALSE, "Is this code actually being used?");
+
     while (*format == ' ')
       ++format;
 
-    if ((format) && (*format))
+    if (*format)
     {
-      char *ptr;
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup(format);
-      CRTFREEIF(mOverrideFormat);
-      mOverrideFormat = nsCRT::strdup("raw");
-      ptr = mOutputFormat;
-      do
-      {
-        if ( (*ptr == '?') || (*ptr == '&') || 
-             (*ptr == ';') || (*ptr == ' ') )
-        {
-          *ptr = '\0';
-          break;
-        }
-        else if (*ptr == '%')
-        {
-          if ( (*(ptr+1) == '2') &&
-               ( (*(ptr+2) == 'F') || (*(ptr+2) == 'f') )
-              )
-          {
-            *ptr = '/';
-            memmove(ptr+1, ptr+3, strlen(ptr+3));
-            *(ptr + strlen(ptr+3) + 1) = '\0';
-            ptr += 3;
-          }
-        }
-      } while (*ptr++);
+      mOverrideFormat = "raw";
+
+      // set mOutputFormat to the supplied format, ensure that we replace any
+      // %2F strings with the slash character
+      const char *nextField = PL_strpbrk(format, "&; ");
+      mOutputFormat.Assign(format, nextField ? nextField - format : -1);
+      mOutputFormat.ReplaceSubstring("%2F", "/");
+      mOutputFormat.ReplaceSubstring("%2f", "/");
   
       // Don't muck with this data!
       *aNewType = nsMimeOutput::nsMimeMessageRaw;
@@ -391,126 +406,83 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
     }
   }
 
-  if (!part)
+  // is this is a part that should just come out raw
+  const char *part = FindQueryElementData(queryPart, "part=");
+  if (part)
   {
-    if (header)
-    {
-      PRInt32 lenOfHeader = strlen("?header=");
+    // default for parts
+    mOutputFormat = "raw";
+    *aNewType = nsMimeOutput::nsMimeMessageRaw;
 
-      char *ptr2 = PL_strcasestr ("only", (header+lenOfHeader));
-      char *ptr3 = PL_strcasestr ("quote", (header+lenOfHeader));
-      char *ptr4 = PL_strcasestr ("quotebody", (header+lenOfHeader));
-      char *ptr5 = PL_strcasestr ("none", (header+lenOfHeader));
-      char *ptr6 = PL_strcasestr ("print", (header+lenOfHeader));
-      char *ptr7 = PL_strcasestr ("saveas", (header+lenOfHeader));
-      char *ptr8 = PL_strcasestr ("src", (header+lenOfHeader));
-      char *ptr9 = PL_strcasestr ("filter", (header+lenOfHeader));
-      if (ptr5)
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/html");
-        *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
-      }
-      else if (ptr2)
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/xml");
-        *aNewType = nsMimeOutput::nsMimeMessageHeaderDisplay;
-      }
-      else if (ptr3)
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/html");
-        *aNewType = nsMimeOutput::nsMimeMessageQuoting;
-      }
-      else if (ptr4)
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/html");
-        *aNewType = nsMimeOutput::nsMimeMessageBodyQuoting;
-      }
-      else if (ptr6)
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/html");
-        *aNewType = nsMimeOutput::nsMimeMessagePrintOutput;
-      }
-      else if (ptr7)
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/html");
-        *aNewType = nsMimeOutput::nsMimeMessageSaveAs;
-      }
-      else if (ptr8)
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/plain");
-        *aNewType = nsMimeOutput::nsMimeMessageSource;
-      }
-      else if (ptr9)
-      {
-        CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/html");
-        *aNewType = nsMimeOutput::nsMimeMessageFilterSniffer;
-      }
-    }
-    else
-    {
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("text/html");
-      *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
-    }
-  }
-  else // this is a part that should just come out raw!
-  {
     // if we are being asked to fetch a part....it should have a 
     // content type appended to it...if it does, we want to remember
     // that as mOutputFormat
-
-    if (part)
+    const char * typeField = FindQueryElementData(queryPart, "type=");
+    if (typeField)
     {
-      char * typeField   = PL_strcasestr(url, "&type=");
-      if (typeField)
+      // store the real content type...mOutputFormat gets deleted later on...
+      // and make sure we only get our own value.
+      char *nextField = PL_strchr(typeField, '&');
+      mRealContentType.Assign(typeField, nextField ? nextField - typeField : -1);
+
+      if (mRealContentType.EqualsIgnoreCase("message/rfc822"))
       {
-        // store the real content type...mOutputFormat gets deleted later on...
-		// and make sure we only get our own value.
-		char *nextField = PL_strcasestr(typeField + strlen("&type="),"&");
-		if (nextField)
-		{
-			*nextField = 0;
-        mRealContentType = typeField + strlen("&type=");
-			*nextField = '&';
-		}
-		else
-          mRealContentType = typeField + strlen("&type=");
-        if (mRealContentType.EqualsIgnoreCase("message/rfc822"))
-        {
-          mRealContentType = "x-message-display";
-          CRTFREEIF(mOutputFormat);
-          mOutputFormat = nsCRT::strdup("text/html");
-          *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
-        }
-        else if (mRealContentType.EqualsIgnoreCase("x-message-display"))
-        {
-          mRealContentType = "";
-          CRTFREEIF(mOutputFormat);
-          mOutputFormat = nsCRT::strdup("text/html");
-          *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
-        }
-        else
-        {
-          CRTFREEIF(mOutputFormat);
-          mOutputFormat = nsCRT::strdup("raw");
-          *aNewType = nsMimeOutput::nsMimeMessageRaw;
-        }
-        return NS_OK;
+        mRealContentType = "x-message-display";
+        mOutputFormat = "text/html";
+        *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
+      }
+      else if (mRealContentType.EqualsIgnoreCase("x-message-display"))
+      {
+        mRealContentType = "";
+        mOutputFormat = "text/html";
+        *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
       }
     }
 
-    CRTFREEIF(mOutputFormat);
-    mOutputFormat = nsCRT::strdup("raw");
-    *aNewType = nsMimeOutput::nsMimeMessageRaw;
+    return NS_OK;
   }
+
+  // if using the header query
+  const char *header = FindQueryElementData(queryPart, "header=");
+  if (header)
+  {
+    struct HeaderType {
+      const char * headerType;
+      const char * outputFormat;
+      nsMimeOutputType mimeOutputType;
+    };
+
+    // place most commonly used options at the top
+    static const struct HeaderType rgTypes[] = 
+    {
+      { "filter",    "text/html",  nsMimeOutput::nsMimeMessageFilterSniffer },
+      { "quotebody", "text/html",  nsMimeOutput::nsMimeMessageBodyQuoting },
+      { "print",     "text/html",  nsMimeOutput::nsMimeMessagePrintOutput },
+      { "only",      "text/xml",   nsMimeOutput::nsMimeMessageHeaderDisplay },
+      { "none",      "text/html",  nsMimeOutput::nsMimeMessageBodyDisplay },
+      { "quote",     "text/html",  nsMimeOutput::nsMimeMessageQuoting },
+      { "saveas",    "text/html",  nsMimeOutput::nsMimeMessageSaveAs },
+      { "src",       "text/plain", nsMimeOutput::nsMimeMessageSource }
+    };
+
+    // find the requested header in table, ensure that we don't match on a prefix
+    // by checking that the following character is either null or the next query element
+    const char * remainder;
+    for (int n = 0; n < NS_ARRAY_LENGTH(rgTypes); ++n)
+    {
+      remainder = SkipPrefix(header, rgTypes[n].headerType);
+      if (remainder && (*remainder == '\0' || *remainder == '&'))
+      {
+        mOutputFormat = rgTypes[n].outputFormat;
+        *aNewType = rgTypes[n].mimeOutputType;
+        return NS_OK;
+      }
+    }
+  }
+  
+  // default to html for just the body
+  mOutputFormat = "text/html";
+  *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
 
   return NS_OK;
 }
@@ -518,9 +490,6 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
 nsresult 
 nsStreamConverter::InternalCleanup(void)
 {
-  CRTFREEIF(mOutputFormat);
-  CRTFREEIF(mDesiredOutputType);
-  CRTFREEIF(mOverrideFormat);
   if (mBridgeStream)
   {
     bridge_destroy_stream(mBridgeStream);
@@ -536,18 +505,13 @@ nsStreamConverter::InternalCleanup(void)
 nsStreamConverter::nsStreamConverter()
 {
   // Init member variables...
-  mOverrideFormat = nsnull;
-
   mWrapperOutput = PR_FALSE;
   mBridgeStream = NULL;
-  mTotalRead = 0;
-  mOutputFormat = nsCRT::strdup("text/html");
-  mDoneParsing = PR_FALSE;
+  mOutputFormat = "text/html";
   mAlreadyKnowOutputType = PR_FALSE;
   mForwardInline = PR_FALSE;
-  mDesiredOutputType = nsnull;
   
-  mPendingChannel = nsnull;
+  mPendingRequest = nsnull;
   mPendingContext = nsnull;
 }
 
@@ -577,72 +541,58 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 
   nsresult rv = NS_OK; 
   mOutListener = aOutListener;
-  CRTFREEIF(mDesiredOutputType);
   
   // mscott --> we need to look at the url and figure out what the correct output type is...
-  nsMimeOutputType newType;
-  
+  nsMimeOutputType newType = mOutputType;
   if (!mAlreadyKnowOutputType)
   {
     nsCAutoString urlSpec;
     rv = aURI->GetSpec(urlSpec);
     DetermineOutputFormat(urlSpec.get(), &newType);
     mAlreadyKnowOutputType = PR_TRUE;
+    mOutputType = newType;  
   }
-  else
-    newType = mOutputType;
   
-  mOutputType = newType;  
   switch (newType)
   {
-		case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
+    case nsMimeOutput::nsMimeMessageSplitDisplay:    // the wrapper HTML output to produce the split header/body display
       mWrapperOutput = PR_TRUE;
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("text/html");
+      mOutputFormat = "text/html";
       break;
     case nsMimeOutput::nsMimeMessageHeaderDisplay:   // the split header/body display
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("text/xml");
+      mOutputFormat = "text/xml";
       break;
     case nsMimeOutput::nsMimeMessageBodyDisplay:   // the split header/body display
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("text/html");
+      mOutputFormat = "text/html";
       break;
       
-    case nsMimeOutput::nsMimeMessageQuoting:   		// all HTML quoted output
-    case nsMimeOutput::nsMimeMessageSaveAs:   		// Save as operation
-    case nsMimeOutput::nsMimeMessageBodyQuoting: 	// only HTML body quoted output
+    case nsMimeOutput::nsMimeMessageQuoting:      // all HTML quoted output
+    case nsMimeOutput::nsMimeMessageSaveAs:       // Save as operation
+    case nsMimeOutput::nsMimeMessageBodyQuoting:  // only HTML body quoted output
     case nsMimeOutput::nsMimeMessagePrintOutput:  // all Printing output
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("text/html");
+      mOutputFormat = "text/html";
       break;
       
     case nsMimeOutput::nsMimeMessageDecrypt:  
-    case nsMimeOutput::nsMimeMessageRaw:       // the raw RFC822 data (view source) and attachments
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("raw");
+    case nsMimeOutput::nsMimeMessageRaw:              // the raw RFC822 data and attachments
+      mOutputFormat = "raw";
       break;
       
     case nsMimeOutput::nsMimeMessageSource:      // the raw RFC822 data (view source) and attachments
-      CRTFREEIF(mOutputFormat);
-      CRTFREEIF(mOverrideFormat);
-      mOutputFormat = nsCRT::strdup("text/plain");
-      mOverrideFormat = nsCRT::strdup("raw");
+      mOutputFormat = "text/plain";
+      mOverrideFormat = "raw";
       break;
       
     case nsMimeOutput::nsMimeMessageDraftOrTemplate:       // Loading drafts & templates
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("message/draft");
+      mOutputFormat = "message/draft";
       break;
       
     case nsMimeOutput::nsMimeMessageEditorTemplate:       // Loading templates into editor
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("text/html");
+      mOutputFormat = "text/html";
       break;
 
     case nsMimeOutput::nsMimeMessageFilterSniffer: // output all displayable part as raw 
-      CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("text/html");
+      mOutputFormat = "text/html";
       break;
 
     default:
@@ -650,8 +600,8 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   }
   
   
-	// the following output channel stream is used to fake the content type for people who later
-	// call into us..
+  // the following output channel stream is used to fake the content type for people who later
+  // call into us..
   nsXPIDLCString contentTypeToUse;
   GetContentType(getter_Copies(contentTypeToUse));
   // mscott --> my theory is that we don't need this fake outgoing channel. Let's use the
@@ -674,7 +624,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
     (newType != nsMimeOutput::nsMimeMessageEditorTemplate) )
   {
     nsCAutoString categoryName ("@mozilla.org/messenger/mimeemitter;1?type=");
-    if (mOverrideFormat)
+    if (!mOverrideFormat.IsEmpty())
       categoryName += mOverrideFormat;
     else
       categoryName += mOutputFormat;
@@ -699,7 +649,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   // now we want to create a pipe which we'll use for converting the data...
   rv = NS_NewPipe(getter_AddRefs(mInputStream), getter_AddRefs(mOutputStream),
                   NS_STREAM_CONVERTER_SEGMENT_SIZE,
-                  NS_STREAM_CONVERTER_BUFFER_SIZE,
+                  /* PR_UINT32_MAX */  NS_STREAM_CONVERTER_BUFFER_SIZE, 
                   PR_TRUE, PR_TRUE);
   
   // initialize our emitter
@@ -720,12 +670,12 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
     rv = pPrefBranch->GetBoolPref(PREF_MAIL_DISPLAY_GLYPH,&enable_emoticons);
     if (NS_FAILED(rv) || enable_emoticons) 
     {
-    	whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
+      whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
     }
     rv = pPrefBranch->GetBoolPref(PREF_MAIL_DISPLAY_STRUCT,&enable_structs);
     if (NS_FAILED(rv) || enable_structs) 
     {
-    	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
+      whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
     }
   }
 
@@ -751,19 +701,21 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 
 NS_IMETHODIMP nsStreamConverter::GetContentType(char **aOutputContentType)
 {
-	if (!aOutputContentType)
-		return NS_ERROR_NULL_POINTER;
+  if (!aOutputContentType)
+    return NS_ERROR_NULL_POINTER;
 
-	// since this method passes a string through an IDL file we need to use nsMemory to allocate it 
-	// and not nsCRT::strdup!
+  // since this method passes a string through an IDL file we need to use nsMemory to allocate it 
+  // and not nsCRT::strdup!
   //  (1) check to see if we have a real content type...use it first...
   if (!mRealContentType.IsEmpty())
     *aOutputContentType = ToNewCString(mRealContentType);
-  else if (nsCRT::strcasecmp(mOutputFormat, "raw") == 0)
-		*aOutputContentType = (char *) nsMemory::Clone(UNKNOWN_CONTENT_TYPE, strlen(UNKNOWN_CONTENT_TYPE) + 1);
-	else
-		*aOutputContentType = (char *) nsMemory::Clone(mOutputFormat, strlen(mOutputFormat) + 1);
-	return NS_OK;
+  else if (mOutputFormat.EqualsIgnoreCase("raw"))
+  {
+    *aOutputContentType = (char *) nsMemory::Clone(UNKNOWN_CONTENT_TYPE, sizeof(UNKNOWN_CONTENT_TYPE));
+  }
+  else
+    *aOutputContentType = ToNewCString(mOutputFormat);
+  return NS_OK;
 }
 
 // 
@@ -782,13 +734,13 @@ nsStreamConverter::SetMimeOutputType(nsMimeOutputType aType)
 
 NS_IMETHODIMP nsStreamConverter::GetMimeOutputType(nsMimeOutputType *aOutFormat)
 {
-	nsresult rv = NS_OK;
-	if (aOutFormat)
-		*aOutFormat = mOutputType;
-	else
-		rv = NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_OK;
+  if (aOutFormat)
+    *aOutFormat = mOutputType;
+  else
+    rv = NS_ERROR_NULL_POINTER;
 
-	return rv;
+  return rv;
 }
 
 // 
@@ -833,19 +785,19 @@ nsStreamConverter::GetIdentity(nsIMsgIdentity * *aIdentity)
 {
   if (!aIdentity) return NS_ERROR_NULL_POINTER;
   /*
-	We don't have an identity for the local folders account,
+  We don't have an identity for the local folders account,
     we will return null but it is not an error!
   */
-  	*aIdentity = mIdentity;
-  	NS_IF_ADDREF(*aIdentity);
+    *aIdentity = mIdentity;
+    NS_IF_ADDREF(*aIdentity);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsStreamConverter::SetIdentity(nsIMsgIdentity * aIdentity)
 {
-	mIdentity = aIdentity;
-	return NS_OK;
+  mIdentity = aIdentity;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -872,7 +824,8 @@ nsStreamConverter::GetOriginalMsgURI(char ** result)
 // networking library...
 //
 nsresult 
-nsStreamConverter::OnDataAvailable(nsIRequest *request, nsISupports    *ctxt, 
+nsStreamConverter::OnDataAvailable(nsIRequest     *request, 
+                                   nsISupports    *ctxt, 
                                    nsIInputStream *aIStream, 
                                    PRUint32       sourceOffset, 
                                    PRUint32       aLength)
@@ -902,7 +855,6 @@ const char output[] = "\
     
     if (mEmitter)
       mEmitter->Write(outBuf, strlen(outBuf), &written);
-    mTotalRead += written;
 
     // rhp: will this stop the stream???? Not sure.    
     return NS_ERROR_FAILURE;
@@ -912,7 +864,6 @@ const char output[] = "\
   if (!buf)
     return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 
-  mTotalRead += aLength;
   readLen = aLength;
   aIStream->Read(buf, aLength, &readLen);
 
@@ -953,8 +904,6 @@ const char output[] = "\
   }
 
   PR_FREEIF(buf);
-  if (NS_FAILED(rc))
-    mDoneParsing = PR_TRUE;
   return rc;
 }
 
@@ -991,10 +940,20 @@ nsStreamConverter::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     }
   }
 
-	// forward the start rquest to any listeners
-  if (mOutListener)
-  	mOutListener->OnStartRequest(request, ctxt);
-	return NS_OK;
+  // forward the start request to any listeners                                 
+  if (mOutListener) 
+  {
+    if (mOutputType == nsMimeOutput::nsMimeMessageRaw)
+    {
+      //we need to delay the on start request until we have figure out the real content type
+      mPendingRequest = request;
+      mPendingContext = ctxt;
+    }
+    else
+      mOutListener->OnStartRequest(request, ctxt);
+  }
+
+  return NS_OK;                                                                 
 }
 
 //
@@ -1093,30 +1052,33 @@ nsStreamConverter::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresul
 
 nsresult nsStreamConverter::Close()
 {
-	mOutgoingChannel = nsnull;
-	mEmitter = nsnull;
-	mOutListener = nsnull;
-	return NS_OK;
+  mOutgoingChannel = nsnull;
+  mEmitter = nsnull;
+  mOutListener = nsnull;
+  return NS_OK;
 }
 
 // nsIStreamConverter implementation
 
 // No syncronous conversion at this time.
-NS_IMETHODIMP nsStreamConverter::Convert(nsIInputStream *aFromStream,
-                          const PRUnichar *aFromType,
-                          const PRUnichar *aToType,
-                          nsISupports *aCtxt, nsIInputStream **_retval) 
+NS_IMETHODIMP nsStreamConverter::Convert(nsIInputStream  *aFromStream,
+                                         const PRUnichar *aFromType,
+                                         const PRUnichar *aToType,
+                                         nsISupports     *aCtxt, 
+                                         nsIInputStream **_retval) 
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Stream converter service calls this to initialize the actual stream converter (us).
-NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType,
-                                   nsIStreamListener *aListener, nsISupports *aCtxt) 
+NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar   *aFromType, 
+                                                  const PRUnichar   *aToType,
+                                                  nsIStreamListener *aListener, 
+                                                  nsISupports       *aCtxt) 
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgQuote> aMsgQuote = do_QueryInterface(aCtxt, &rv);
-	nsCOMPtr<nsIChannel> aChannel;
+  nsCOMPtr<nsIChannel> aChannel;
   
   if (aMsgQuote)
   {
@@ -1131,26 +1093,20 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
     aChannel = do_QueryInterface(aCtxt, &rv);
   }
 
-  if (aToType)
-  {  
-    CRTFREEIF(mDesiredOutputType);
-    mDesiredOutputType = nsCRT::strdup(aToType);
-  }
+  NS_ASSERTION(aChannel && NS_SUCCEEDED(rv), "mailnews mime converter has to have the channel passed in...");
+  if (NS_FAILED(rv)) return rv;
 
-	NS_ASSERTION(aChannel && NS_SUCCEEDED(rv), "mailnews mime converter has to have the channel passed in...");
-	if (NS_FAILED(rv)) return rv;
-
-	nsCOMPtr<nsIURI> aUri;
-	aChannel->GetURI(getter_AddRefs(aUri));
-	return Init(aUri, aListener, aChannel);
+  nsCOMPtr<nsIURI> aUri;
+  aChannel->GetURI(getter_AddRefs(aUri));
+  return Init(aUri, aListener, aChannel);
 }
 
 NS_IMETHODIMP nsStreamConverter::FirePendingStartRequest()
 {
-  if (mPendingChannel && mOutListener)
+  if (mPendingRequest && mOutListener)
   {
-  	mOutListener->OnStartRequest(mPendingChannel, mPendingContext);
-    mPendingChannel = nsnull;
+  	mOutListener->OnStartRequest(mPendingRequest, mPendingContext);
+    mPendingRequest = nsnull;
     mPendingContext = nsnull; 
   }
   return NS_OK;

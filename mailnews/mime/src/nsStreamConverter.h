@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Brodie Thiesfield <brofield@jellycan.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -82,38 +83,35 @@ private:
 
   // the input and output streams form a pipe...they need to be passed around together..
   nsCOMPtr<nsIOutputStream>     mOutputStream;     // output stream
-  nsCOMPtr<nsIInputStream>	    mInputStream;
+  nsCOMPtr<nsIInputStream>      mInputStream;
 
   nsCOMPtr<nsIStreamListener>   mOutListener;   // output stream listener
-  nsCOMPtr<nsIChannel>			    mOutgoingChannel;
+  nsCOMPtr<nsIChannel>          mOutgoingChannel;
 
-  nsCOMPtr<nsIMimeEmitter>      mEmitter;       // emitter being used...
-  nsCOMPtr<nsIURI>              mURI;           // URI being processed
-  nsMimeOutputType              mOutputType;    // the output type we should use for the operation
-  PRBool						            mAlreadyKnowOutputType;
-  PRUnichar *                   mDesiredOutputType; // the output content type passed into AsyncConvertData..
+  nsCOMPtr<nsIMimeEmitter>      mEmitter;         // emitter being used...
+  nsCOMPtr<nsIURI>              mURI;             // URI being processed
+  nsMimeOutputType              mOutputType;      // the output type we should use for the operation
+  PRBool                        mAlreadyKnowOutputType;
 
-  void                          *mBridgeStream; // internal libmime data stream
-  PRInt32                       mTotalRead;     // Counter variable
+  void                          *mBridgeStream;   // internal libmime data stream
 
   // Type of output, entire message, header only, body only
-  char                          *mOutputFormat;
+  nsCString                     mOutputFormat;
   nsCString                     mRealContentType; // if we know the content type for real, this will be set (used by attachments)
 
-  char                          *mOverrideFormat; // this is a possible override for emitter creation
+  nsCString                     mOverrideFormat;  // this is a possible override for emitter creation
   PRBool                        mWrapperOutput;   // Should we output the frame split message display 
-  PRBool                        mDoneParsing;     // If this is true, we've already been told by libmime to stop sending
-                                                  // data so don't feed the parser any more!
-  nsCOMPtr<nsIMimeStreamConverterListener>	mMimeStreamConverterListener;
-  PRBool 						            mForwardInline;
-  nsCOMPtr<nsIMsgIdentity>		  mIdentity;
+
+  nsCOMPtr<nsIMimeStreamConverterListener>  mMimeStreamConverterListener;
+  PRBool                        mForwardInline;
+  nsCOMPtr<nsIMsgIdentity>      mIdentity;
   nsCString                     mOriginalMsgURI;
 
 #ifdef DEBUG_mscott  
   PRTime mConvertContentTime;
 #endif
-  nsIChannel *                  mPendingChannel;  //Will be use whenn we need to delay to fire onStartRequest
-  nsISupports *                 mPendingContext;  //Will be use whenn we need to delay to fire onStartRequest
+  nsIRequest *                  mPendingRequest;  // used when we need to delay to fire onStartRequest
+  nsISupports *                 mPendingContext;  // used when we need to delay to fire onStartRequest
 }; 
 
 #endif /* nsStreamConverter_h_ */
