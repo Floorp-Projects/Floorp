@@ -1999,34 +1999,34 @@ pk11_HashSign(PK11HashSignInfo *info,unsigned char *sig,unsigned int *sigLen,
 }
 
 static SECStatus
-nsc_DSA_Verify_Stub(void *ctx, void *pSignature, unsigned int ulSignatureLen,
-                               void *pData, unsigned int ulDataLen)
+nsc_DSA_Verify_Stub(void *ctx, void *sigBuf, unsigned int sigLen,
+                               void *dataBuf, unsigned int dataLen)
 {
     SECItem signature, digest;
     SECKEYLowPublicKey *key = (SECKEYLowPublicKey *)ctx;
 
-    signature.data = (unsigned char *)pSignature;
-    signature.len = ulSignatureLen;
-    digest.data = (unsigned char *)pData;
-    digest.len = ulDataLen;
+    signature.data = (unsigned char *)sigBuf;
+    signature.len = sigLen;
+    digest.data = (unsigned char *)dataBuf;
+    digest.len = dataLen;
     return DSA_VerifyDigest(&(key->u.dsa), &signature, &digest);
 }
 
 static SECStatus
-nsc_DSA_Sign_Stub(void *ctx, void *pSignature,
-                  unsigned int *ulSignatureLen, unsigned int maxulSignatureLen,
-                  void *pData, unsigned int ulDataLen)
+nsc_DSA_Sign_Stub(void *ctx, void *sigBuf,
+                  unsigned int *sigLen, unsigned int maxSigLen,
+                  void *dataBuf, unsigned int dataLen)
 {
     SECItem signature = { 0 }, digest;
     SECStatus rv;
     SECKEYLowPrivateKey *key = (SECKEYLowPrivateKey *)ctx;
 
-    (void)SECITEM_AllocItem(NULL, &signature, maxulSignatureLen);
-    digest.data = (unsigned char *)pData;
-    digest.len = ulDataLen;
+    (void)SECITEM_AllocItem(NULL, &signature, maxSigLen);
+    digest.data = (unsigned char *)dataBuf;
+    digest.len = dataLen;
     rv = DSA_SignDigest(&(key->u.dsa), &signature, &digest);
-    *ulSignatureLen = signature.len;
-    PORT_Memcpy((unsigned char *)pSignature, signature.data, signature.len);
+    *sigLen = signature.len;
+    PORT_Memcpy(sigBuf, signature.data, signature.len);
     SECITEM_FreeItem(&signature, PR_FALSE);
     return rv;
 }
@@ -2480,8 +2480,8 @@ CK_RV NSC_VerifyInit(CK_SESSION_HANDLE hSession,
 			   CK_MECHANISM_PTR pMechanism,CK_OBJECT_HANDLE hKey) 
 {
     PK11Session *session;
-    PK11Object *key = NULL;
-    PK11SessionContext *context = NULL;
+    PK11Object *key;
+    PK11SessionContext *context;
     CK_KEY_TYPE key_type;
     CK_RV crv = CKR_OK;
     SECKEYLowPublicKey *pubKey;
