@@ -1,16 +1,8 @@
 -- MySQL dump 9.08
 --
--- Host: localhost    Database: logs
+-- Host: mecha    Database: downloadstats
 ---------------------------------------------------------
 -- Server version	4.0.14-standard-log
-
---
--- Current Database: logs
---
-
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ logs;
-
-USE logs;
 
 --
 -- Table structure for table 'entries'
@@ -28,7 +20,8 @@ CREATE TABLE entries (
   bytes int(11) default NULL,
   site_id tinyint(4) default NULL,
   log_id int(11) default NULL,
-  PRIMARY KEY  (id)
+  PRIMARY KEY  (id),
+  KEY file_id (file_id,date_time,bytes)
 ) TYPE=MyISAM;
 
 --
