@@ -481,9 +481,9 @@ real_checkout:
 	cvs_co $(CVSCO_NSPR) && \
 	cvs_co $(CVSCO_NSS) && \
 	cvs_co $(CVSCO_PSM) && \
-        cvs_co $(CVSCO_LDAPCSDK) && \
-        cvs_co $(CVSCO_ACCESSIBLE) && \
-        cvs_co $(CVSCO_IMGLIB2) && \
+	cvs_co $(CVSCO_LDAPCSDK) && \
+	cvs_co $(CVSCO_ACCESSIBLE) && \
+	cvs_co $(CVSCO_IMGLIB2) && \
 	cvs_co $(CVSCO_IPC) && \
 	cvs_co $(CVSCO_CALENDAR) && \
 	$(CHECKOUT_LIBART) && \
@@ -493,6 +493,10 @@ real_checkout:
 	$(CHECKOUT_CODESIGHS) && \
 	cvs_co $(CVSCO_SEAMONKEY)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
+# update the NSS checkout timestamp
+	@if test `egrep -c '^(U|C) mozilla/security/(nss|coreconf)' $(CVSCO_LOGFILE) 2>/dev/null` != 0; then \
+		touch $(TOPSRCDIR)/security/manager/.nss.checkout; \
+	fi
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
@@ -555,6 +559,10 @@ real_fast-update:
 	$(FASTUPDATE_CODESIGHS) && \
 	fast_update $(CVSCO_SEAMONKEY)
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)
+# update the NSS checkout timestamp
+	@if test `egrep -c '^(U|C) mozilla/security/(nss|coreconf)' $(CVSCO_LOGFILE) 2>/dev/null` != 0; then \
+		touch $(TOPSRCDIR)/security/manager/.nss.checkout \
+	fi
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
 	if test "$$conflicts" ; then \
