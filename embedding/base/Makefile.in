@@ -76,7 +76,7 @@ CPPSRCS         = \
                 nsEmbedAPI.cpp \
                 $(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 CPPSRCS		+= nsEmbedWin32.cpp
 endif
 

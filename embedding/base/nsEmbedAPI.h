@@ -108,9 +108,8 @@ extern "C" nsresult NS_TermEmbedding();
 #undef MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
 
 /* Win32 specific stuff */
-#ifdef WIN32
+#if defined (WIN32) || defined (WINCE)
 #include "windows.h"
-
 /**
  * @var typedef MSG nsEmbedNativeEvent
  * 
