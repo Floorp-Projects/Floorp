@@ -30,8 +30,7 @@
 #include "nsFileStream.h"
 #include "nsString2.h"
 
-#include "nsIMimeHeaderConverter.h"
-//#include "nsMimeHeaderConverter.h"
+#include "nsIMimeConverter.h"
 
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
@@ -49,7 +48,7 @@
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
   
-static   NS_DEFINE_CID(kCMimeHeaderConverterCID, NS_MIME_HEADER_CONVERTER_CID);
+static   NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
@@ -1900,9 +1899,9 @@ nsresult nsMsgDatabase::RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_to
 	{
  
 		// apply mime decode
-		nsIMimeHeaderConverter *converter;
-		err = nsComponentManager::CreateInstance(kCMimeHeaderConverterCID, nsnull, 
-                                            nsIMimeHeaderConverter::GetIID(), (void **)&converter);
+		nsIMimeConverter *converter;
+		err = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                            nsIMimeConverter::GetIID(), (void **)&converter);
 
 		if (NS_SUCCEEDED(err) && nsnull != converter) 
 		{
