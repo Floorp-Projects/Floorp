@@ -202,15 +202,19 @@ jss_test()
 
 jss_init
 jss_mode_init
-if [ -z "O_CRON" -o "$O_CRON" != "ON" -a  "$O_WIN" != "ON" ]
-then
-    tail -f ${JSS_LOGFILE}  &
-    TAILPID=$!
-fi
 
-jss_test >>$JSS_LOGFILE  2>&1
+if [ "$O_CRON" = "ON" -o "$O_WIN" = "ON" ]
+then
+    jss_test >>$JSS_LOGFILE  2>&1
+else
+    jss_test 2>&1 | tee -a $JSS_LOGFILE
+fi
 BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
 jss_mode_init
-jss_test >>$JSS_LOGFILE  2>&1
-kill $TAILPID
+if [ "$O_CRON" = "ON" -o "$O_WIN" = "ON" ]
+then
+    jss_test >>$JSS_LOGFILE  2>&1
+else
+    jss_test 2>&1 | tee -a $JSS_LOGFILE
+fi
 Exit "jssqa completed. Done `uname -n` $QA_OS_STRING"
