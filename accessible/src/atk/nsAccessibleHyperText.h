@@ -43,7 +43,7 @@
 #include "nsAccessibleText.h"
 #include "nsIAccessibleHyperText.h"
 #include "nsIAccessibleText.h"
-#include "nsISupportsArray.h"
+#include "nsArray.h"
 #include "nsTextAccessible.h"
 
 class nsAccessibleHyperText : public nsIAccessibleHyperText,
@@ -62,7 +62,7 @@ public:
   PRInt32 GetIndex();
 
 protected:
-  nsCOMPtr<nsISupportsArray> mTextChildren;
+  nsCOMPtr<nsIMutableArray> mTextChildren;
   PRInt32 mIndex;
 
   PRBool GetAllTextChildren(nsPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave);
