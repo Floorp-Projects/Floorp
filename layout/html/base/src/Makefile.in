@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  java \
 		  exthandler \
+		  intl \
 		  $(NULL)
 
 # Sun's Complex Text Layout support

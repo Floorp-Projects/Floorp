@@ -63,13 +63,18 @@
 #include "nsIViewManager.h"
 #include "nsCoord.h"
 #include "nsIImageMap.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+#include "nsIStringBundle.h"
+
+static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 class Area {
 public:
   Area(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL);
   virtual ~Area();
 
-  void ParseCoords(const nsString& aSpec);
+  virtual void ParseCoords(const nsString& aSpec);
 
   virtual PRBool IsInside(nscoord x, nscoord y) = 0;
   virtual void Draw(nsIPresContext* aCX,
@@ -436,6 +441,7 @@ public:
   RectArea(nsIContent* aArea, PRBool aSuppress, PRBool aHasURL);
   ~RectArea();
 
+  virtual void ParseCoords(const nsString& aSpec);
   virtual PRBool IsInside(nscoord x, nscoord y);
   virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC);
@@ -452,6 +458,82 @@ RectArea::~RectArea()
 {
 }
 
+void RectArea::ParseCoords(const nsString& aSpec)
+{
+  Area::ParseCoords(aSpec);
+
+  PRBool saneRect = PR_TRUE;
+  PRInt32 flag = nsIScriptError::warningFlag;
+  if (mNumCoords >= 4) {
+    if (mCoords[0] > mCoords[2]) {
+      // x-coords in reversed order
+      nscoord x = mCoords[2];
+      mCoords[2] = mCoords[0];
+      mCoords[0] = x;
+      saneRect = PR_FALSE;
+    }
+  
+    if (mCoords[1] > mCoords[3]) {
+      // y-coords in reversed order
+      nscoord y = mCoords[3];
+      mCoords[3] = mCoords[1];
+      mCoords[1] = y;
+      saneRect = PR_FALSE;
+    }
+
+    if (mNumCoords > 4) {
+      // Someone missed the concept of a rect here
+      saneRect = PR_FALSE;
+    }
+  } else {
+    saneRect = PR_FALSE;
+    flag = nsIScriptError::errorFlag;
+  }
+
+  if (!saneRect) {
+    // Report the error to the console.
+    nsresult rv;
+    nsCOMPtr<nsIConsoleService> consoleService =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return;
+    nsCOMPtr<nsIScriptError> errorObject =
+      do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return;
+    nsCOMPtr<nsIStringBundleService> stringBundleService =
+      do_GetService(kCStringBundleServiceCID, &rv);
+    if (NS_FAILED(rv))
+      return;
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = stringBundleService->CreateBundle(
+           "chrome://global/locale/layout_errors.properties",
+           getter_AddRefs(bundle));
+    if (NS_FAILED(rv))
+      return;
+    nsXPIDLString errorText;
+    const PRUnichar* flatSpec = aSpec.get();
+    rv =
+      bundle->FormatStringFromName(NS_LITERAL_STRING("ImageMapRectBoundsError").get(),
+                                   &flatSpec, 1,
+                                   getter_Copies(errorText));
+    if (NS_FAILED(rv))
+      return;
+
+    rv = errorObject->Init(errorText.get(),
+                           NS_LITERAL_STRING("").get(), /* file name */
+                           NS_LITERAL_STRING("").get(), /* source line */
+                           0, /* line number */
+                           0, /* column number */
+                           flag,
+                           "ImageMap");
+    if (NS_FAILED(rv))
+      return;
+
+    consoleService->LogMessage(errorObject);
+  }
+}
+
 PRBool RectArea::IsInside(nscoord x, nscoord y)
 {
   if (mNumCoords >= 4) {       // Note: > is for nav compatabilty
@@ -459,10 +541,8 @@ PRBool RectArea::IsInside(nscoord x, nscoord y)
     nscoord y1 = mCoords[1];
     nscoord x2 = mCoords[2];
     nscoord y2 = mCoords[3];
-    if ((x1 > x2)|| (y1 > y2)) {
-      // Can't be inside a screwed up rect
-      return PR_FALSE;
-    }
+    NS_ASSERTION(x1 <= x2 && y1 <= y2,
+                 "Someone screwed up RectArea::ParseCoords");
     if ((x >= x1) && (x <= x2) && (y >= y1) && (y <= y2)) {
       return PR_TRUE;
     }
@@ -480,9 +560,8 @@ void RectArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
       nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
       nscoord x2 = NSIntPixelsToTwips(mCoords[2], p2t);
       nscoord y2 = NSIntPixelsToTwips(mCoords[3], p2t);
-      if ((x1 > x2)|| (y1 > y2)) {
-        return;
-      }
+      NS_ASSERTION(x1 <= x2 && y1 <= y2,
+                   "Someone screwed up RectArea::ParseCoords");
       aRC.DrawLine(x1, y1, x1, y2);
       aRC.DrawLine(x1, y2, x2, y2);
       aRC.DrawLine(x1, y1, x2, y1);
@@ -500,9 +579,8 @@ void RectArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
     nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
     nscoord x2 = NSIntPixelsToTwips(mCoords[2], p2t);
     nscoord y2 = NSIntPixelsToTwips(mCoords[3], p2t);
-    if ((x1 > x2)|| (y1 > y2)) {
-      return;
-    }
+    NS_ASSERTION(x1 <= x2 && y1 <= y2,
+                 "Someone screwed up RectArea::ParseCoords");
 
     nsRect tmp(x1, y1, x2, y2);
     aRect = tmp;
@@ -961,9 +1039,15 @@ nsImageMap::AddArea(nsIContent* aArea)
            shape.EqualsIgnoreCase("circ")) {
     area = new CircleArea(aArea, suppress, hasURL);
   }
-  else {
+  else if (shape.EqualsIgnoreCase("default")) {
     area = new DefaultArea(aArea, suppress, hasURL);
   }
+  else {
+    // Unknown area type; bail
+    return NS_OK;
+  }
+  if (!area)
+    return NS_ERROR_OUT_OF_MEMORY;
   area->ParseCoords(coords);
   mAreas.AppendElement(area);
   return NS_OK;
