@@ -3912,18 +3912,12 @@ if (TableExists("user_series_map")) {
     # auto-incrementing sequence (Oracle again).
     RenameField('series_categories', 'category_id', 'id');
     
-    # We nuke all the chart data and re-import it, partly because there were 
-    # several data corruption bugs in the initial cut of the code, and partly 
-    # because otherwise migration is too complex.
-    print "Deleting possibly-corrupt new-chart data " . 
-           "(it will be re-migrated) ...\n" unless $silent;
-    $dbh->do("DELETE FROM series");
-    $dbh->do("DELETE FROM series_data");
-    $dbh->do("DELETE FROM series_categories");
-
-    # No need to migrate the "publicness" from user_series_map, as we've just
-    # deleted all the series!
     AddField("series", "public", "tinyint(1) not null default 0");
+    
+    # Migrate public-ness across from user_series_map to new field
+    $dbh->do("UPDATE series SET series.public = 1 " .
+             "WHERE series.series_id = user_series_map.series_id " .
+             "  AND user_series_map.user_id = 0");
 
     $dbh->do("DROP TABLE user_series_map");
 }    
