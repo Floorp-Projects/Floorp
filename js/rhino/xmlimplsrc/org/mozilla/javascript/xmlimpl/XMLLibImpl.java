@@ -639,12 +639,4 @@ public final class XMLLibImpl extends XMLLib
     {
         return constructNamespace(cx, uriValue);
     }
-
-    public Scriptable wrapAsXMLOrNull(Context cx, Object javaObject)
-    {
-        if (javaObject instanceof XmlObject) {
-            return XML.createFromXmlObject(this, (XmlObject)javaObject);
-        }
-        return super.wrapAsXMLOrNull(cx, javaObject);
-    }
 }

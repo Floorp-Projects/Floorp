@@ -144,14 +144,8 @@ public class WrapFactory
     public Scriptable wrapAsJavaObject(Context cx, Scriptable scope,
                                        Object javaObject, Class staticType)
     {
-        Scriptable wrap = null;
-        XMLLib lib = XMLLib.extractFromScopeOrNull(scope);
-        if (lib != null) {
-            wrap = lib.wrapAsXMLOrNull(cx, javaObject);
-        }
-        if (wrap == null) {
-            wrap = new NativeJavaObject(scope, javaObject, staticType);
-        }
+        Scriptable wrap;
+        wrap = new NativeJavaObject(scope, javaObject, staticType);
         return wrap;
     }
 
