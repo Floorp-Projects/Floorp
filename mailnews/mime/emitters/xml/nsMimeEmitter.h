@@ -88,7 +88,7 @@ protected:
     PRUint32      mAttachCount;
 
     nsIPref       *mPrefs;          /* Connnection to prefs service manager */
-    int32         mHeaderDisplayType; 
+    PRInt32       mHeaderDisplayType; 
 
 #ifdef DEBUG
     PRBool        mReallyOutput;

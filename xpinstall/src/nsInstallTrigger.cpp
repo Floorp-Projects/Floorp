@@ -118,7 +118,7 @@ nsInstallTrigger::SetScriptObject(void *aScriptObject)
 NS_IMETHODIMP    
 nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 {
-    PREF_GetBoolPref( (const char*) AUTOUPDATE_ENABLE_PREF, (XP_Bool*)aReturn);
+    PREF_GetBoolPref( (const char*) AUTOUPDATE_ENABLE_PREF, aReturn);
     return NS_OK;
 }
 

@@ -155,17 +155,17 @@ GetSilentDownloadDefaults(PRBool* enabled, PRInt32 *bytes_range, PRInt32 *interv
     *bytes_range = 0;
     *interval   = 0;
 
-    PREF_GetBoolPref( "SilentDownload.enabled", (XP_Bool*)enabled);
+    PREF_GetBoolPref( "SilentDownload.enabled", enabled);
     if (*enabled == PR_FALSE)
        return;
 
    
-    if (PREF_OK != PREF_GetIntPref("SilentDownload.range", (int32*)*bytes_range)) 
+    if (PREF_OK != PREF_GetIntPref("SilentDownload.range", bytes_range)) 
     {
         *bytes_range = 3000;
     }
 
-    if (PREF_OK != PREF_GetIntPref("SilentDownload.interval", (int32*)*interval)) 
+    if (PREF_OK != PREF_GetIntPref("SilentDownload.interval", interval)) 
     {
         *interval = 10000;
     }

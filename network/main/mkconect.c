@@ -318,7 +318,7 @@ NET_SetDNSExpirationPref(int32 n)
 MODULE_PRIVATE int PR_CALLBACK
 NET_DNSExpirationPrefChanged(const char * newpref, void * data)
 {
-	int32 n;
+	PRInt32 n;
     if (PREF_OK != PREF_GetIntPref(pref_dnsExpiration, &n) )
         n = DEF_DNS_EXPIRATION;
 	NET_SetDNSExpirationPref((int32)n);
@@ -1036,7 +1036,7 @@ NET_BeginConnect (CONST char   *url,
 {
 
 	char * proxy=NULL;
-	int32 iPort=0;
+	PRInt32 iPort=0;
 	char text[MAXHOSTNAMELEN + 8];
     CONST char *host; 
     char *althost=0; 

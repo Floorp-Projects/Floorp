@@ -1105,8 +1105,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 									MimeDisplayOptions *opt,
 									PRBool mail_header_p)
 {
-//  static PRInt32       nHeaderDisplayLen = 15;  /* rhp: for new header wrap functionality */
-  static int32 nHeaderDisplayLen = 15;  /* rhp: for new header wrap functionality */
+  static PRInt32       nHeaderDisplayLen = 15;  /* rhp: for new header wrap functionality */
   nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
 
   int status = 0;

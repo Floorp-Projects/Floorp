@@ -1577,7 +1577,7 @@ NET_GetCookieScriptPref(void)
 MODULE_PRIVATE int PR_CALLBACK
 NET_CookieBehaviorPrefChanged(const char * newpref, void * data)
 {
-	int32	n;
+	PRInt32	n;
     if ( (PREF_OK != PREF_GetIntPref(pref_cookieBehavior, &n)) ) {
         n = DEF_COOKIE_BEHAVIOR;
     }
@@ -1588,7 +1588,7 @@ NET_CookieBehaviorPrefChanged(const char * newpref, void * data)
 MODULE_PRIVATE int PR_CALLBACK
 NET_CookieWarningPrefChanged(const char * newpref, void * data)
 {
-	Bool	x;
+	PRBool	x;
     if ( (PREF_OK != PREF_GetBoolPref(pref_warnAboutCookies, &x)) ) {
         x = FALSE;
     }
@@ -1680,8 +1680,8 @@ NET_CookiePermission(char* URLName) {
 PUBLIC void
 NET_RegisterCookiePrefCallbacks(void)
 {
-	int32	n;
-	Bool	x;
+	PRInt32	n;
+	PRBool	x;
     char    s[64];
     int len = sizeof(s);
     *s = '\0';

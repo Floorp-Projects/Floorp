@@ -244,7 +244,7 @@ wallet_SetFormsCapturingPref(Bool x)
 MODULE_PRIVATE int PR_CALLBACK
 wallet_FormsCapturingPrefChanged(const char * newpref, void * data)
 {
-    Bool x;
+    PRBool x;
     PREF_GetBoolPref(pref_captureForms, &x);
     wallet_SetFormsCapturingPref(x);
     return PREF_NOERROR;
@@ -253,7 +253,7 @@ wallet_FormsCapturingPrefChanged(const char * newpref, void * data)
 void
 wallet_RegisterCapturePrefCallbacks(void)
 {
-    Bool x = TRUE; /* initialize to default value in case PREF_GetBoolPref fails */
+    PRBool x = PR_TRUE; /* initialize to default value in case PREF_GetBoolPref fails */
     static Bool first_time = TRUE;
 
     if(first_time)
@@ -291,7 +291,7 @@ wallet_SetUsingDialogsPref(Bool x)
 MODULE_PRIVATE int PR_CALLBACK
 wallet_UsingDialogsPrefChanged(const char * newpref, void * data)
 {
-    Bool x;
+    PRBool x;
     PREF_GetBoolPref(pref_useDialogs, &x);
     wallet_SetUsingDialogsPref(x);
     return PREF_NOERROR;
@@ -300,7 +300,7 @@ wallet_UsingDialogsPrefChanged(const char * newpref, void * data)
 void
 wallet_RegisterUsingDialogsPrefCallbacks(void)
 {
-    Bool x = FALSE; /* initialize to default value in case PREF_GetBoolPref fails */
+    PRBool x = PR_FALSE; /* initialize to default value in case PREF_GetBoolPref fails */
     static Bool first_time = TRUE;
 
     if(first_time)

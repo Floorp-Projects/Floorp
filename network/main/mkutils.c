@@ -1701,7 +1701,7 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 #endif /* MOZILLA_CLIENT */
 
 static MSG_FONT CitationFont = MSG_ItalicFont;
-static int32 CitationSize = 0;
+static PRInt32 CitationSize = 0;
 static char *CitationColor = 0;
 static int CitationDataValid = -1; /* -1=first time, 0=changed; 1=data ok  */
 
@@ -1745,7 +1745,7 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
     {
 #ifdef MOZILLA_CLIENT
       if (CitationDataValid != 1) {
-          int32 value = (int32) MSG_ItalicFont;
+          PRInt32 value = (PRInt32) MSG_ItalicFont;
           if (CitationDataValid < 0) {
               PREF_RegisterCallback("mail.quoted_style",
                                     net_citation_style_changed,
