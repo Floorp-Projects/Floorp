@@ -1,10 +1,25 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #sidebar-splitter 
   {
-    border-top            : 1px solid ThreeDHighlight;
     border-bottom         : 1px solid ThreeDShadow;
   }
+  
+  #sidebar-splitter > .splitter-internal-box {
+    border-top: 1px solid ThreeDHighlight;
+  }  
+  
+  #sidebar-splitter[state="collapsed"] {
+    border-left: 1px solid ThreeDShadow;
+  }
+  
+  #sidebar-splitter[state="collapsed"] > .splitter-internal-box {
+    border-left: 1px solid ThreeDHighlight;
+  }
 
+
+  
+  
 #sidebar-box 
   {
     border-left           : 1px solid ThreeDShadow;
