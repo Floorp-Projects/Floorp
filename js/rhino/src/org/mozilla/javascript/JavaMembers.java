@@ -95,7 +95,7 @@ class JavaMembers
         try {
             if (member instanceof BeanProperty) {
                 BeanProperty bp = (BeanProperty) member;
-                rval = bp.getter.invoke(javaObject, null);
+                rval = bp.getter.invoke(javaObject, Context.emptyArgs);
                 type = bp.getter.method().getReturnType();
             } else {
                 Field field = (Field) member;
