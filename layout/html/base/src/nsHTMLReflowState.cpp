@@ -972,17 +972,15 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
 
         // Take into account any min and max values
         if (computedWidth > mComputedMaxWidth) {
-          // Apply the rules again, but this time using 'max-width' as the value
-          // for 'width'
+          // Apply the rules again, but this time using 'max-width' as
+          // the value for 'width'
           computedWidth = mComputedMaxWidth;
-          CalculateLeftRightMargin(cbrs, computedWidth);
-        
         } else if (computedWidth < mComputedMinWidth) {
-          // Apply the rules again, but this time using 'min-width' as the value
-          // for 'width'
+          // Apply the rules again, but this time using 'min-width' as
+          // the value for 'width'
           computedWidth = mComputedMinWidth;
-          CalculateLeftRightMargin(cbrs, computedWidth);
         }
+        CalculateLeftRightMargin(cbrs, computedWidth);
       }
     }
   } else {
@@ -1046,7 +1044,7 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
                          mStylePosition->mHeight, computedHeight);
   }
   if (computedHeight > mComputedMaxHeight) {
-    computedWidth = mComputedMaxHeight;
+    computedHeight = mComputedMaxHeight;
   } else if (computedHeight < mComputedMinHeight) {
     computedHeight = mComputedMinHeight;
   }
