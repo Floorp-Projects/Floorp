@@ -291,7 +291,7 @@ CalendarEventDataSource.prototype.getEventsForDay = function( date )
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
 
-   eventDisplays.sort( this.orderEventsByDate );
+   eventDisplays.sort( this.orderEventsByDisplayDate );
 
    return eventDisplays;
 }
@@ -332,7 +332,7 @@ CalendarEventDataSource.prototype.getEventsForWeek = function( date )
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
 
-   eventDisplays.sort( this.orderEventsByDate );
+   eventDisplays.sort( this.orderEventsByDisplayDate );
 
    return eventDisplays;
 }
@@ -371,7 +371,7 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
 
-   eventDisplays.sort( this.orderEventsByDate );
+   eventDisplays.sort( this.orderEventsByDisplayDate );
 
    return eventDisplays;
 }
@@ -515,19 +515,32 @@ CalendarEventDataSource.prototype.getAllToDos = function()
       
       eventArray[ eventArray.length ] = tmpevent;
    }
-   //eventArray.sort( this.orderRawEventsByDate );
+   eventArray.sort( this.orderToDosByDueDate );
 
    return eventArray;
 }
 
 /** PACKAGE STATIC
-*   CalendarEvent orderEventsByDate.
+*   CalendarEvent orderToDosByDueDate.
 * 
 * NOTES
 *   Used to sort table by date
 */
 
-CalendarEventDataSource.prototype.orderEventsByDate = function( eventA, eventB )
+CalendarEventDataSource.prototype.orderToDosByDueDate = function( toDoA, toDoB )
+{
+    return( toDoA.due.getTime() - toDoB.due.getTime() );
+}
+
+
+/** PACKAGE STATIC
+*   CalendarEvent orderEventsByDisplayDate.
+* 
+* NOTES
+*   Used to sort table by date
+*/
+
+CalendarEventDataSource.prototype.orderEventsByDisplayDate = function( eventA, eventB )
 {
     /*
     return( eventA.event.start.getTime() - eventB.event.start.getTime() );
