@@ -22,6 +22,8 @@
 * SUMMARY: Testing Number.prototype.toFixed(fractionDigits)
 * See EMCA 262 Edition 3 Section 15.7.4.5
 *
+* Also see http://bugzilla.mozilla.org/show_bug.cgi?id=90551
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
