@@ -1760,7 +1760,7 @@ PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
             return NULL;
         }
         /* If buffer is too small, loadquery fails with ENOMEM. */
-        if (loadquery(L_GETINFO, info, info_length) != -1) {
+        if (loadquery(L_GETINFO | L_IGNOREUNLOAD, info, info_length) != -1) {
             break;
         }
         PR_Free(info);
@@ -1776,7 +1776,9 @@ PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
     for (infop = info;
          ;
          infop = (struct ld_info *)((char *)infop + infop->ldinfo_next)) {
-        if (strstr(infop->ldinfo_filename, name) != NULL) {
+        unsigned long start = (unsigned long)infop->ldinfo_dataorg;
+        unsigned long end = start + infop->ldinfo_datasize;
+        if (start <= (unsigned long)addr && end > (unsigned long)addr) {
             result = PR_Malloc(strlen(infop->ldinfo_filename)+1);
             if (result != NULL) {
                 strcpy(result, infop->ldinfo_filename);
