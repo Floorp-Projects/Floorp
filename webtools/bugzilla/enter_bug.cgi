@@ -124,34 +124,37 @@ sub pickplatform {
         #Intel x86
             /\(.*[ix0-9]86.*\)/ && do {return "PC";};
         #Versions of Windows that only run on Intel x86
-            /\(.*Windows 9.*\)/ && do {return "PC";};
-            /\(.*Win9.*\)/ && do {return "PC";};
-            /\(.*Windows 3.*\)/ && do {return "PC";};
-            /\(.*Win16.*\)/ && do {return "PC";};
+            /\(.*Win(?:dows )[39M].*\)/ && do {return "PC";};
+            /\(.*Win(?:dows )16.*\)/ && do {return "PC";};
         #Sparc
             /\(.*sparc.*\)/ && do {return "Sun";};
             /\(.*sun4.*\)/ && do {return "Sun";};
         #Alpha
-            /\(.*Alpha.*\)/i && do {return "DEC";};
+            /\(.*AXP.*\)/i && do {return "DEC";};
+            /\(.*[ _]Alpha.\D/i && do {return "DEC";};
+            /\(.*[ _]Alpha\)/i && do {return "DEC";};
         #MIPS
             /\(.*IRIX.*\)/i && do {return "SGI";};
             /\(.*MIPS.*\)/i && do {return "SGI";};
         #68k
             /\(.*68K.*\)/ && do {return "Macintosh";};
             /\(.*680[x0]0.*\)/ && do {return "Macintosh";};
+        #HP
+            /\(.*9000.*\)/ && do {return "HP";};
         #ARM
 #            /\(.*ARM.*\) && do {return "ARM";};
         #Stereotypical and broken
             /\(.*Macintosh.*\)/ && do {return "Macintosh";};
             /\(.*Mac OS [89].*\)/ && do {return "Macintosh";};
             /\(Win.*\)/ && do {return "PC";};
-            /\(.*Windows NT.*\)/ && do {return "PC";};
+            /\(.*Win(?:dows[ -])NT.*\)/ && do {return "PC";};
             /\(.*OSF.*\)/ && do {return "DEC";};
             /\(.*HP-?UX.*\)/i && do {return "HP";};
             /\(.*IRIX.*\)/i && do {return "SGI";};
             /\(.*(SunOS|Solaris).*\)/ && do {return "Sun";};
         #Braindead old browsers who didn't follow convention:
             /Amiga/ && do {return "Macintosh";};
+            /WinMosaic/ && do {return "PC";};
         }
     }
     # default
@@ -170,7 +173,7 @@ sub pickos {
             /\(.*SunOS 5.*\)/ && do {return "Solaris";};
             /\(.*SunOS.*\)/ && do {return "SunOS";};
             /\(.*HP-?UX.*\)/ && do {return "HP-UX";};
-            /\(.*BSD\/OS.*\)/ && do {return "BSDI";};
+            /\(.*BSD\/(?:OS|386).*\)/ && do {return "BSDI";};
             /\(.*FreeBSD.*\)/ && do {return "FreeBSD";};
             /\(.*OpenBSD.*\)/ && do {return "OpenBSD";};
             /\(.*NetBSD.*\)/ && do {return "NetBSD";};
@@ -184,12 +187,13 @@ sub pickos {
             /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
             /\(.*Windows 2000.*\)/ && do {return "Windows 2000";};
             /\(.*Windows NT 5.*\)/ && do {return "Windows 2000";};
-            /\(.*Windows.*NT.*\)/ && do {return "Windows NT";};
             /\(.*Win.*9[8x].*4\.9.*\)/ && do {return "Windows ME";};
-            /\(.*Win98.*\)/ && do {return "Windows 98";};
-            /\(.*Win95.*\)/ && do {return "Windows 95";};
-            /\(.*Win16.*\)/ && do {return "Windows 3.1";};
-            /\(.*WinNT.*\)/ && do {return "Windows NT";};
+            /\(.*Win(?:dows )M[Ee].*\)/ && do {return "Windows ME";};
+            /\(.*Win(?:dows )98.*\)/ && do {return "Windows 98";};
+            /\(.*Win(?:dows )95.*\)/ && do {return "Windows 95";};
+            /\(.*Win(?:dows )16.*\)/ && do {return "Windows 3.1";};
+            /\(.*Win(?:dows[ -])NT.*\)/ && do {return "Windows NT";};
+            /\(.*Windows.*NT.*\)/ && do {return "Windows NT";};
             /\(.*32bit.*\)/ && do {return "Windows 95";};
             /\(.*16bit.*\)/ && do {return "Windows 3.1";};
             /\(.*Mac OS 9.*\)/ && do {return "Mac System 9.x";};
@@ -208,6 +212,7 @@ sub pickos {
             /\(.*Mac.*68k.*\)/ && do {return "Mac System 8.0";};
         # Evil
             /Amiga/i && do {return "other";};
+            /WinMosaic/ && do {return "Windows 95";};
             /\(.*PowerPC.*\)/ && do {return "Mac System 9.x";};
             /\(.*PPC.*\)/ && do {return "Mac System 9.x";};
             /\(.*68K.*\)/ && do {return "Mac System 8.0";};
