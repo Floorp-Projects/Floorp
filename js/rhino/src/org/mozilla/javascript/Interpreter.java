@@ -1278,7 +1278,7 @@ public class Interpreter extends LabelTable {
     {
         fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
         fn.setParentScope(scope);
-        if (fn.itsData.itsName.length() > 0)
+        if ((fn.itsData.itsName.length() > 0) && (fn.itsClosure == null))
             ScriptRuntime.setName(scope, fn, scope, fn.itsData.itsName);
     }
     
@@ -1808,14 +1808,19 @@ public class Interpreter extends LabelTable {
                     case TokenStream.CLOSURE :
                         i = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);
                         if (theData.itsNestedFunctions[i] 
-                                    instanceof InterpretedFunction)
+                                    instanceof InterpretedFunction) {
                             stack[++stackTop] 
                                 = new InterpretedFunction(
                                        (InterpretedFunction)
                                                (theData.itsNestedFunctions[i]),
-                                        scope);
+                                        scope, cx);
+                            createFunctionObject(
+                                  (InterpretedFunction)stack[stackTop], scope);
+                        }
                         else
-                            stack[++stackTop] = ScriptRuntime.createFunctionObject(scope, theData.itsNestedFunctions[i].getClass(), cx);
+                            stack[++stackTop] 
+                                = ScriptRuntime.createFunctionObject(scope,
+                                 theData.itsNestedFunctions[i].getClass(), cx);
                         pc += 2;
                         break;
                     case TokenStream.OBJECT :

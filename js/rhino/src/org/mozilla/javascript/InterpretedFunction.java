@@ -40,7 +40,11 @@ class InterpretedFunction extends NativeFunction {
     InterpretedFunction(InterpreterData theData, Context cx)
     {
         itsData = theData;
-
+        init(cx);
+    }
+    
+    void init(Context cx)
+    {
 // probably too much copying going on from theData to the InterpretedFunction object
 // should pass them as parameters - unless we need them in the data block anyway?
 
@@ -51,13 +55,16 @@ class InterpretedFunction extends NativeFunction {
         argCount = (short)itsData.itsVariableTable.getParameterCount();
         source = itsData.itsSource;
         nestedFunctions = itsData.itsNestedFunctions;
-        version = (short)cx.getLanguageVersion();   
+        if (cx != null)
+            version = (short)cx.getLanguageVersion();   
     }
     
-    InterpretedFunction(InterpretedFunction theOther, Scriptable theScope)
+    InterpretedFunction(InterpretedFunction theOther,
+                                Scriptable theScope, Context cx)
     {
         itsData = theOther.itsData;
         itsClosure = theScope;
+        init(cx);
     }
     
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -78,5 +85,6 @@ class InterpretedFunction extends NativeFunction {
 
     InterpreterData itsData;
     Scriptable itsClosure;
+    InterpretedFunction itsOtherSelf;
 }
     
