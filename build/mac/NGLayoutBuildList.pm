@@ -518,6 +518,147 @@ sub InstallSkinFiles($)
 }
 
 #//--------------------------------------------------------------------------------------------------
+#// Recurse into the provider directories
+#//--------------------------------------------------------------------------------------------------
+
+sub ProScanForManifestFiles($$$$$)
+{
+       ## diff from ScanForManifestFiles()
+       my($dir, $theme_root, $provider, $theme_name, $dist_dir) = @_;
+
+       opendir(DIR, $dir) or die "Cannot open dir $dir\n";
+       my @files = readdir(DIR);
+       closedir DIR;
+
+       my $file;
+
+       foreach $file (@files)
+       {        
+               my $filepath = $dir.":".$file;
+
+               if (-d $filepath)
+               {
+                       # print "Looking for MANIFEST files in $filepath\n";            
+                       ## diff from ScanForManifestFiles()
+                       ProScanForManifestFiles($filepath, $theme_root, $provider, $theme_name, $dist_dir);
+               }
+               elsif ($file eq "MANIFEST")
+               {
+                       # print "Doing manifest file $filepath\n";
+
+                       # Get the dest path from the first line of the file
+
+                       open(MANIFEST, $filepath) || die "Could not open file $file";
+                       # Read in the path if available
+                       my($dest_line) = <MANIFEST>;
+                       chomp $dest_line;
+                       close MANIFEST;
+
+                       $dest_line =~ s|^#!dest[\t ]+|| || die "No destination line found in $filepath\n";
+
+                       ## diff from ScanForManifestFiles()
+                       my($dest_path) = $dist_dir."chrome:$provider:$theme_name:$dest_line";
+                       # print " Destination is $dest_path\n";
+                       
+                       InstallResources($filepath, "$dest_path", 0);
+               }
+       }
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Install Provider files
+#//--------------------------------------------------------------------------------------------------
+
+sub InstallProviderFiles($$)
+{
+       ## diff from InstallSkinFiles() - new arg: provider
+       my($provider, $theme_name) = @_;
+
+       # unless( $main::build{resources} ) { return; }
+       _assertRightDirectory();
+
+       my($dist_dir) = _getDistDirectory();
+
+       ## diff from InstallSkinFiles()
+       my($themes_dir) = ":mozilla:l10n:langpacks:".$theme_name.":chrome:".$theme_name;
+
+       print "Installing $provider files from $themes_dir\n";
+
+       ## diff from InstallSkinFiles()
+       ProScanForManifestFiles($themes_dir, $themes_dir, $provider, $theme_name, $dist_dir);
+}
+
+### defaults
+#//--------------------------------------------------------------------------------------------------
+#// Recurse into the defaults directories
+#//--------------------------------------------------------------------------------------------------
+
+sub DefScanForManifestFiles($$$$)
+{
+       my($dir, $theme_root, $theme_name, $dist_dir) = @_;
+
+       opendir(DIR, $dir) or die "Cannot open dir $dir\n";
+       my @files = readdir(DIR);
+       closedir DIR;
+
+       my $file;
+
+       foreach $file (@files)
+       {        
+               my $filepath = $dir.":".$file;
+
+               if (-d $filepath)
+               {
+                       # print "Looking for MANIFEST files in $filepath\n";            
+                       ## diff from ScanForManifestFiles()
+                       DefScanForManifestFiles($filepath, $theme_root, $theme_name, $dist_dir);
+                                      }
+               elsif ($file eq "MANIFEST")
+               {
+                       # print "Doing manifest file $filepath\n";
+
+                       # Get the dest path from the first line of the file
+
+                       open(MANIFEST, $filepath) || die "Could not open file $file";
+                       # Read in the path if available
+                       my($dest_line) = <MANIFEST>;
+                       chomp $dest_line;
+                       close MANIFEST;
+
+                       $dest_line =~ s|^#!dest[\t ]+|| || die "No destination line found in $filepath\n";
+
+                       ## diff from ScanForManifestFiles()
+                       my($dest_path) = $dist_dir."defaults:$dest_line:$theme_name";
+                       # print " Destination is $dest_path\n";
+
+                       InstallResources($filepath, "$dest_path", 0);
+               }
+       }
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Install defaults files
+#//--------------------------------------------------------------------------------------------------
+
+sub InstallDefaultsFiles($)
+{
+       my($theme_name) = @_;
+       
+       # unless( $main::build{resources} ) { return; }
+       _assertRightDirectory();
+
+       my($dist_dir) = _getDistDirectory();
+
+       ## diff from InstallSkinFiles()
+       my($themes_dir) = ":mozilla:l10n:langpacks:".$theme_name.":defaults";
+
+       print "Installing default files from $themes_dir\n";
+
+       ## diff from InstallSkinFiles()
+       DefScanForManifestFiles($themes_dir, $themes_dir, $theme_name, $dist_dir);
+}
+
+#//--------------------------------------------------------------------------------------------------
 #// Make resource aliases
 #//--------------------------------------------------------------------------------------------------
 
@@ -962,6 +1103,13 @@ sub MakeResourceAliases()
     if ($main::INCLUDE_CLASSIC_SKIN) {
     		InstallSkinFiles("classic"); # fix me
     }
+
+    # install locale provider
+    InstallProviderFiles("locales", "en-DE");
+    # install defaults
+    InstallDefaultsFiles("en-DE");
+    # mozilla:l10n
+    _InstallManifestRDF(":mozilla:l10n:langpacks:en-DE:chrome:en-DE:manifest.rdf",$dist_dir, $chrome_subdir, "locales:en-DE:", "locale");
 
     print("--- Resource copying complete ----\n");
 }
