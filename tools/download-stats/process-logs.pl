@@ -11,9 +11,6 @@ use Socket; # DNS queries
 use File::Find; # grabbing the list of log files from the filesystem
 #use Fcntl ':flock'; # import LOCK_* constants for locking log files
 
-# The place to put the results of running this script.
-my $LOG = "/var/log/last-process-logs.log";
-
 # XXX Probably should use File::Basename for splitting paths up into paths and filenames.
 
 # Stuff that should really go into a config file.
@@ -94,9 +91,7 @@ my %files;
 ################################################################################
 # main body
 
-open(LOG, ">", $LOG) or die "Can't open $LOG: $!";
 find(\&process_log, $root_dir);
-close(LOG);
 
 ################################################################################
 # functions
@@ -119,7 +114,7 @@ sub process_log {
 
     # Don't process the file if it's a directory.
     if (-d $logfile) {
-	print LOG "Not processing $File::Find::name; directory\n";
+	print "Not processing $File::Find::name; directory\n";
 	return;
     }
 
@@ -128,7 +123,7 @@ sub process_log {
     # and file structure.  It does, however, deal with HTTP logs
     # which aren't in an http/ subdirectory of the site directory.
     if ($File::Find::name !~ m|^$root_dir/($sites)/(http/)?$logfile$|) {
-	print LOG "Not processing $File::Find::name; not an HTTP log file.\n";
+	print "Not processing $File::Find::name; not an HTTP log file.\n";
 	return;
     }
 
@@ -136,7 +131,7 @@ sub process_log {
     my $site = $1;
     my ($site_id) = $dbh->selectrow_array($get_site_id_sth, {}, $site);
     if (!$site_id) {
-	print LOG "Not processing $File::Find::name; couldn't find an entry " . 
+	print "Not processing $File::Find::name; couldn't find an entry " . 
 	             "in the sites table for $site.\n";
 	return;
     }
@@ -154,7 +149,7 @@ sub process_log {
 	$dbh->selectrow_array($get_log_status_sth, {}, $relative_path, $basename);
 
     if (!$log_id) {
-	print LOG "Creating entry in database for log $File::Find::name.\n";
+	print "Creating entry in database for log $File::Find::name.\n";
 	#$dbh->do("LOCK TABLES logs WRITE");
 	($log_id) = $dbh->selectrow_array("SELECT MAX(id) FROM logs");
 	$log_id = ($log_id || 0) + 1;
@@ -162,15 +157,15 @@ sub process_log {
 	#$dbh->do("UNLOCK TABLES");
     }
     elsif ($status eq "processed") {
-	print LOG "Not processing log $File::Find::name; already processed.\n";
+	print "Not processing log $File::Find::name; already processed.\n";
 	return;
     }
     elsif ($status eq "processing") {
-	print LOG "Not processing log $File::Find::name; already being processed.\n";
+	print "Not processing log $File::Find::name; already being processed.\n";
 	return;
     }
 
-    print LOG "Processing $File::Find::name.\n";
+    print "Processing $File::Find::name.\n";
 
     $update_log_sth->execute("processing", $log_id) || die $dbh->errstr;
 
@@ -191,7 +186,7 @@ sub process_log {
         # so users know if the script has frozen or is going slowly.
         ++$seen;
         ++$log_seen;
-        print LOG "Processed $log_entered/$log_seen entries for $relative_path/$logfile ($entered/$seen total).\n"
+        print "Processed $log_entered/$log_seen entries for $relative_path/$logfile ($entered/$seen total).\n"
 	    if ($seen % 1000 == 0) && $verbose;
 
 	if ($File::Find::name =~ /\.http_trans$/) {
@@ -203,7 +198,7 @@ sub process_log {
 	    ($client, $date_time, $method, $file, $protocol, $protocol_version, 
              $status, $bytes, $referer, $user_agent) = ($_ =~ $common_log_regex);
 	}
-	#print LOG "$client, $date_time, $method, $file, $protocol, $protocol_version, $status, $bytes, $referer, $user_agent\n";
+	#print "$client, $date_time, $method, $file, $protocol, $protocol_version, $status, $bytes, $referer, $user_agent\n";
 
         # Count only successful requests (whether partial or full).
         next unless $status == 200 || $status == 206;
@@ -253,7 +248,7 @@ sub process_log {
 	else {
 	    $host = $client;
 	}
-	#print LOG "$client = $host\n";
+	#print "$client = $host\n";
 
         # Insert the log entry into the database.  We increment
         # the ID so this entry has the next unique ID, and we make
