@@ -113,11 +113,14 @@ TimerImpl::Init(nsTimerCallbackFunc aFunc,
     mClosure = aClosure;
     // mRepeat = aRepeat;
 
-  if ((aDelay > 10000) || (aDelay < 0)) {
-    printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
-           aDelay);
-    return Init(aDelay);
-  }
+// This is ancient debug code that is making it impossible to have timeouts
+// greater than 10 seconds. -re
+
+//   if ((aDelay > 10000) || (aDelay < 0)) {
+//     printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
+//            aDelay);
+//     return Init(aDelay);
+//   }
 
     mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
 
@@ -133,11 +136,15 @@ TimerImpl::Init(nsITimerCallback *aCallback,
     mCallback = aCallback;
     NS_ADDREF(mCallback);
     // mRepeat = aRepeat;
-  if ((aDelay > 10000) || (aDelay < 0)) {
-    printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
-           aDelay);
-    return Init(aDelay);
-  }
+
+// This is ancient debug code that is making it impossible to have timeouts
+// greater than 10 seconds. -re
+
+//   if ((aDelay > 10000) || (aDelay < 0)) {
+//     printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
+//            aDelay);
+//     return Init(aDelay);
+//   }
 
     mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
 
