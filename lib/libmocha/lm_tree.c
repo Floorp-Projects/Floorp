@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -28,9 +28,19 @@
 #include "prlog.h"
 #include "htrdf.h"
 
+/* XXXbe move to layout.h */
+extern uint
+LO_EnumerateBuiltins(MWContext *context, int32 layer_id);
+
+/* Global XXX #1: don't hold LO_BuiltinStruct pointers, use ids, to avoid
+   dangling refs when mocha thread races with doc-discard */
+
+/* Global XXX #2: don't hold the layout lock across JS_* callouts, or if not
+   necesary to fondle LO_BuiltinStruct etc. (see above) */
+
 extern PRLogModuleInfo* Moja;
-#define warn	PR_LOG_WARN
-#define debug	PR_LOG_DEBUG
+#define warn    PR_LOG_WARN
+#define debug   PR_LOG_DEBUG
 
 enum builtins_array_slot {
     BUILTINS_ARRAY_LENGTH = -1
@@ -83,13 +93,13 @@ enum builtins_node_slot {
 
 static JSPropertySpec builtins_array_props[] = {
     {lm_length_str, BUILTINS_ARRAY_LENGTH,
-		    JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT},
+                    JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT},
     {0}
 };
 
 static JSPropertySpec builtin_element_array_props[] = {
     {lm_length_str, BUILTIN_ELEMENT_ARRAY_LENGTH,
-		    JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT},
+                    JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT},
     {0}
 };
 
@@ -170,11 +180,11 @@ lm_GetBuiltinsArray(MochaDecoder *decoder, JSObject *document)
 
     doc = JS_GetPrivate(cx, document);
     if (!doc)
-	return NULL;
+        return NULL;
 
     obj = doc->builtins;
     if (obj)
-	return obj;
+        return obj;
 
     array = JS_malloc(cx, sizeof *array);
     if (!array)
@@ -183,12 +193,12 @@ lm_GetBuiltinsArray(MochaDecoder *decoder, JSObject *document)
 
     obj = JS_NewObject(cx, &lm_builtins_array_class, NULL, document);
     if (!obj || !JS_SetPrivate(cx, obj, array)) {
-	JS_free(cx, array);
-	return NULL;
+        JS_free(cx, array);
+        return NULL;
     }
 
     if (!JS_DefineProperties(cx, obj, builtins_array_props))
-	return NULL;
+        return NULL;
 
     array->decoder = HOLD_BACK_COUNT(decoder);
     array->length = 0;
@@ -199,14 +209,14 @@ lm_GetBuiltinsArray(MochaDecoder *decoder, JSObject *document)
 
 JSObject *
 LM_ReflectBuiltin(MWContext *context, LO_BuiltinStruct *lo_builtin,
-                PA_Tag * tag, int32 layer_id, uint index)
+                  PA_Tag * tag, int32 layer_id, uint index)
 {
     JSObject *obj, *array_obj, *outer_obj, *document;
     JSBuiltin *builtin;
     MochaDecoder *decoder;
     JSContext *cx;
     char *name;
-    int i;
+    uint32 i;
 
     obj = lo_builtin->mocha_object;
     if (obj)
@@ -233,7 +243,7 @@ LM_ReflectBuiltin(MWContext *context, LO_BuiltinStruct *lo_builtin,
         LM_PutMochaDecoder(decoder);
         return NULL;
     }
-    
+
     array_obj = lm_GetBuiltinsArray(decoder, document);
     if (!array_obj) {
         LM_PutMochaDecoder(decoder);
@@ -249,35 +259,35 @@ LM_ReflectBuiltin(MWContext *context, LO_BuiltinStruct *lo_builtin,
 
     builtin = JS_malloc(cx, sizeof *builtin);
     if (!builtin)
-    	goto out;
+        goto out;
     builtin->decoder = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
     builtin->decoder = HOLD_BACK_COUNT(decoder);
     builtin->builtin = lo_builtin;
     if (!JS_SetPrivate(cx, obj, builtin))
     {
-    	obj = NULL;
-    	goto out;
+        obj = NULL;
+        goto out;
     }
 
     /* put it in the builtin array */
     if (!lm_AddObjectToArray(cx, array_obj, name, index, obj)) {
-	obj = NULL;
-	goto out;
+        obj = NULL;
+        goto out;
     }
 
     if (!JS_DefineProperties(cx, obj, builtins_props))
     {
-    	obj = NULL;
-    	goto out;
+        obj = NULL;
+        goto out;
     }
 
     /* put it in the document scope */
     if (name && !JS_DefineProperty(cx, outer_obj, name, OBJECT_TO_JSVAL(obj),
-				   NULL, NULL,
-				   JSPROP_ENUMERATE | JSPROP_READONLY)) {
-	PR_LOG(Moja, warn, ("failed to define builtin 0x%x as %s\n",
-			    lo_builtin, name));
-	/* XXX remove it altogether? */
+                                   NULL, NULL,
+                                   JSPROP_ENUMERATE | JSPROP_READONLY)) {
+        PR_LOG(Moja, warn, ("failed to define builtin 0x%x as %s\n",
+                            lo_builtin, name));
+        /* XXX remove it altogether? */
     }
 
     /* cache it in layout data structure */
@@ -296,57 +306,53 @@ builtins_array_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     MWContext *context;
     jsint count, slot;
     LO_BuiltinStruct *builtin_data;
+    JSObject *newobj;
 
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+        return JS_TRUE;
 
     slot = JSVAL_TO_INT(id);
 
     array = JS_GetPrivate(cx, obj);
     if (!array)
-	return JS_TRUE;
+        return JS_TRUE;
     decoder = array->decoder;
     context = decoder->window_context;
 
-    if (!context) return JS_TRUE;
-
-#if 0
-    if (LM_MOJA_OK != ET_InitMoja(context))
-        return JS_FALSE;
-#endif
+    if (!context)
+        return JS_TRUE;
 
     LO_LockLayout();
     switch (slot) {
       case BUILTINS_ARRAY_LENGTH:
-	count = LO_EnumerateBuiltins(context, array->layer_id);
-	if (count > array->length)
-	    array->length = count;
+        count = LO_EnumerateBuiltins(context, array->layer_id);
+        if (count > array->length)
+            array->length = count;
         *vp = INT_TO_JSVAL(array->length);
-	break;
+        break;
 
       default:
-	if (slot < 0) {
-	    /* Don't mess with user-defined or method properties. */
-	    LO_UnlockLayout();
-	    return JS_TRUE;
-	}
-	builtin_data = LO_GetBuiltinByIndex(context, array->layer_id, (uint)slot);
-	if (builtin_data) {
-            JSObject *mo = LM_ReflectBuiltin(context, builtin_data, NULL,
-					   array->layer_id, (uint)slot);
-            if (!mo) {
-                JS_ReportError(cx,
-                 "unable to reflect builtin with index %d - not loaded yet?",
-                 (uint) slot);
-                goto err;
-            }
-            *vp = OBJECT_TO_JSVAL(mo);
-            XP_ASSERT(slot < array->length);
-	} else {
+        if (slot < 0) {
+            /* Don't mess with user-defined or method properties. */
+            LO_UnlockLayout();
+            return JS_TRUE;
+        }
+        builtin_data = LO_GetBuiltinByIndex(context, array->layer_id, (uint)slot);
+        if (!builtin_data) {
             JS_ReportError(cx, "no builtin with index %d\n");
             goto err;
         }
-	break;
+        newobj = LM_ReflectBuiltin(context, builtin_data, NULL,
+                                   array->layer_id, (uint)slot);
+        if (!newobj) {
+            JS_ReportError(cx,
+             "unable to reflect builtin with index %d - not loaded yet?",
+             (uint) slot);
+            goto err;
+        }
+        *vp = OBJECT_TO_JSVAL(newobj);
+        XP_ASSERT(slot < array->length);
+        break;
     }
     LO_UnlockLayout();
     return JS_TRUE;
@@ -368,67 +374,68 @@ builtin_element_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     element = JS_GetPrivate(cx, obj);
     if (!element)
-	return JS_TRUE;
+        return JS_TRUE;
     decoder = element->decoder;
     context = decoder->window_context;
-    if (!context) return JS_TRUE;
+    if (!context)
+        return JS_TRUE;
 
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+        return JS_TRUE;
     slot = JSVAL_TO_INT(id);
 
-	switch(slot)
-	{
-		case BUILTINS_ELEMENT_SELECTED:
-		if (!JSVAL_IS_BOOLEAN(*vp))	return JS_TRUE;
+    switch (slot) {
+      case BUILTINS_ELEMENT_SELECTED:
+        if (!JSVAL_IS_BOOLEAN(*vp))
+            return JS_TRUE;
 
-		if ((pane = element->builtin->htPane) != NULL)
-		{
-			if ((view = HT_GetNthView(pane, 0)) != NULL)
-			{
-				if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-				{
-					HT_SetSelectedState(node, JSVAL_TO_BOOLEAN(*vp));
-				}
-			}
-		}
-		break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                    HT_SetSelectedState(node, JSVAL_TO_BOOLEAN(*vp));
+                }
+            }
+        }
+        break;
 
-		case	BUILTINS_ELEMENT_CONTAINER_OPEN:
-		if (!JSVAL_IS_BOOLEAN(*vp))	return JS_TRUE;
+      case BUILTINS_ELEMENT_CONTAINER_OPEN:
+        if (!JSVAL_IS_BOOLEAN(*vp))
+            return JS_TRUE;
 
-		if ((pane = element->builtin->htPane) != NULL)
-		{
-			if ((view = HT_GetNthView(pane, 0)) != NULL)
-			{
-				if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-				{
-					HT_SetOpenState(node, JSVAL_TO_BOOLEAN(*vp));
-				}
-			}
-		}
-		break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                    HT_SetOpenState(node, JSVAL_TO_BOOLEAN(*vp));
+                }
+            }
+        }
+        break;
 
-		case	BUILTINS_ELEMENT_ENABLED:
-		if (!JSVAL_IS_BOOLEAN(*vp))	return JS_TRUE;
+      case BUILTINS_ELEMENT_ENABLED:
+        if (!JSVAL_IS_BOOLEAN(*vp))
+            return JS_TRUE;
 
-		if ((pane = element->builtin->htPane) != NULL)
-		{
-			if ((view = HT_GetNthView(pane, 0)) != NULL)
-			{
-				if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-				{
-					HT_SetEnabledState(node, JSVAL_TO_BOOLEAN(*vp));
-				}
-			}
-		}
-		break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                    HT_SetEnabledState(node, JSVAL_TO_BOOLEAN(*vp));
+                }
+            }
+        }
+        break;
 
-		default:
-		return(JS_FALSE);
-		break;
-	}
-	return(JS_TRUE);
+      default:;
+    }
+    return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
@@ -445,138 +452,128 @@ builtin_element_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     char *name;
 
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+        return JS_TRUE;
 
     slot = JSVAL_TO_INT(id);
 
     element = JS_GetPrivate(cx, obj);
     if (!element)
-	return JS_TRUE;
+        return JS_TRUE;
     decoder = element->decoder;
     context = decoder->window_context;
 
-    if (!context) return JS_TRUE;
-
-#if 0
-    if (LM_MOJA_OK != ET_InitMoja(context))
-        return JS_FALSE;
-#endif
+    if (!context)
+        return JS_TRUE;
 
     LO_LockLayout();
     switch (slot) {
       case BUILTINS_ELEMENT_NAME:
-	if ((pane = element->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-			{
-				if ((name = HT_GetNodeName(node)) != NULL)
-				{
-					if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
-					{
-					        *vp = STRING_TO_JSVAL(jstr);
-					}
-				}
-			}
-		}
-	}
-	break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                    if ((name = HT_GetNodeName(node)) != NULL)
+                    {
+                        if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
+                        {
+                            *vp = STRING_TO_JSVAL(jstr);
+                        }
+                    }
+                }
+            }
+        }
+        break;
 
       case BUILTINS_ELEMENT_URL:
-	if ((pane = element->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-			{
-				if ((name = HT_GetNodeURL(node)) != NULL)
-				{
-					if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
-					{
-					        *vp = STRING_TO_JSVAL(jstr);
-					}
-				}
-			}
-		}
-	}
-	break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                    if ((name = HT_GetNodeURL(node)) != NULL)
+                    {
+                        if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
+                        {
+                            *vp = STRING_TO_JSVAL(jstr);
+                        }
+                    }
+                }
+            }
+        }
+        break;
 
       case BUILTINS_ELEMENT_SELECTED:
-	if ((pane = element->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-			{
-				*vp = BOOLEAN_TO_JSVAL(HT_IsSelected(node));
-			}
-		}
-	}
-      break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                    *vp = BOOLEAN_TO_JSVAL(HT_IsSelected(node));
+                }
+            }
+        }
+        break;
 
       case BUILTINS_ELEMENT_CONTAINER:
-	if ((pane = element->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-			{
-				*vp = BOOLEAN_TO_JSVAL(HT_IsContainer(node));
-			}
-		}
-	}
-      break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                    *vp = BOOLEAN_TO_JSVAL(HT_IsContainer(node));
+                }
+            }
+        }
+        break;
 
       case BUILTINS_ELEMENT_CONTAINER_OPEN:
-	if ((pane = element->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-			{
-				*vp = BOOLEAN_TO_JSVAL(HT_IsContainerOpen(node));
-			}
-		}
-	}
-      break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                        *vp = BOOLEAN_TO_JSVAL(HT_IsContainerOpen(node));
+                }
+            }
+        }
+        break;
 
       case BUILTINS_ELEMENT_SEPARATOR:
-	if ((pane = element->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-			{
-				*vp = BOOLEAN_TO_JSVAL(HT_IsSeparator(node));
-			}
-		}
-	}
-      break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                    *vp = BOOLEAN_TO_JSVAL(HT_IsSeparator(node));
+                }
+            }
+        }
+        break;
 
       case BUILTINS_ELEMENT_ENABLED:
-	if ((pane = element->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-			{
-				*vp = BOOLEAN_TO_JSVAL(HT_IsEnabled(node));
-			}
-		}
-	}
-      break;
+        if ((pane = element->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+                {
+                    *vp = BOOLEAN_TO_JSVAL(HT_IsEnabled(node));
+                }
+            }
+        }
+        break;
 
-      default:
-	    LO_UnlockLayout();
-	    return JS_FALSE;
-	    break;
+      default:;
     }
     LO_UnlockLayout();
     return JS_TRUE;
-  err:
-    LO_UnlockLayout();
-    return JS_FALSE;
 }
 
 PR_STATIC_CALLBACK(void)
@@ -586,7 +583,7 @@ builtin_element_finalize(JSContext *cx, JSObject *obj)
 
     array = JS_GetPrivate(cx, obj);
     if (!array)
-	return;
+        return;
     DROP_BACK_COUNT(array->decoder);
     JS_free(cx, array);
 }
@@ -612,63 +609,60 @@ builtin_element_array_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
     HT_View view;
 
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+        return JS_TRUE;
 
     slot = JSVAL_TO_INT(id);
 
     builtin = JS_GetPrivate(cx, obj);
     if (!builtin)
-	return JS_TRUE;
+        return JS_TRUE;
     decoder = builtin->decoder;
     context = decoder->window_context;
 
-    if (!context) return JS_TRUE;
-
-#if 0
-    if (LM_MOJA_OK != ET_InitMoja(context))
-        return JS_FALSE;
-#endif
+    if (!context)
+        return JS_TRUE;
 
     LO_LockLayout();
     switch (slot) {
       case BUILTIN_ELEMENT_ARRAY_LENGTH:
-	theIndex = 0;
-	if ((pane = builtin->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			theIndex = HT_GetItemListCount(view);
-		}
-	}
-	*vp = INT_TO_JSVAL(theIndex);
-	break;
+        theIndex = 0;
+        if ((pane = builtin->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                theIndex = HT_GetItemListCount(view);
+            }
+        }
+        *vp = INT_TO_JSVAL(theIndex);
+        break;
 
       default:
-	if (slot < 0) {
-	    /* Don't mess with user-defined or method properties. */
-	    LO_UnlockLayout();
-	    return JS_TRUE;
-	}
-	element = JS_malloc(cx, sizeof *element);
-	if (!element)	return(JS_FALSE);
-	element_obj = JS_NewObject(cx, &lm_builtin_element_class,
-				decoder->builtin_element_prototype, obj);
-	if (!element_obj || !JS_SetPrivate(cx, element_obj, element))
-	{
-		JS_free(cx, element);
-		return JS_FALSE;
-	}
-	if (!JS_DefineProperties(cx, obj, builtin_element_props))
-	{
-		JS_free(cx, element);
-		return NULL;
-	}
-	element->decoder = HOLD_BACK_COUNT(decoder);
-	element->builtin = builtin->builtin;
-	element->slot = slot;
-	*vp = OBJECT_TO_JSVAL(element_obj);
-	
-	break;
+        if (slot < 0) {
+            /* Don't mess with user-defined or method properties. */
+            LO_UnlockLayout();
+            return JS_TRUE;
+        }
+        element = JS_malloc(cx, sizeof *element);
+        if (!element)
+            goto err;
+        element_obj = JS_NewObject(cx, &lm_builtin_element_class,
+                                   decoder->builtin_element_prototype, obj);
+        if (!element_obj || !JS_SetPrivate(cx, element_obj, element))
+        {
+            JS_free(cx, element);
+            goto err;
+        }
+        if (!JS_DefineProperties(cx, obj, builtin_element_props))
+        {
+            JS_free(cx, element);
+            goto err;
+        }
+        element->decoder = HOLD_BACK_COUNT(decoder);
+        element->builtin = builtin->builtin;
+        element->slot = slot;
+        *vp = OBJECT_TO_JSVAL(element_obj);
+
+        break;
     }
     LO_UnlockLayout();
     return JS_TRUE;
@@ -688,49 +682,49 @@ builtin_node_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     jsNode = JS_GetPrivate(cx, obj);
     if (!jsNode)
-	return JS_TRUE;
+        return JS_TRUE;
     decoder = jsNode->decoder;
     context = decoder->window_context;
     if (!context) return JS_TRUE;
 
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+        return JS_TRUE;
     slot = JSVAL_TO_INT(id);
 
-	switch(slot)
-	{
-		case BUILTINS_NODE_SELECTED:
-		if (!JSVAL_IS_BOOLEAN(*vp))	return JS_TRUE;
+    switch (slot) {
+      case BUILTINS_NODE_SELECTED:
+        if (!JSVAL_IS_BOOLEAN(*vp))
+            return JS_TRUE;
 
-		if ((node = jsNode->node) != NULL)
-		{
-			HT_SetSelectedState(node, JSVAL_TO_BOOLEAN(*vp));
-		}
-		break;
+        if ((node = jsNode->node) != NULL)
+        {
+            HT_SetSelectedState(node, JSVAL_TO_BOOLEAN(*vp));
+        }
+        break;
 
-		case	BUILTINS_NODE_CONTAINER_OPEN:
-		if (!JSVAL_IS_BOOLEAN(*vp))	return JS_TRUE;
+      case BUILTINS_NODE_CONTAINER_OPEN:
+        if (!JSVAL_IS_BOOLEAN(*vp))
+            return JS_TRUE;
 
-		if ((node = jsNode->node) != NULL)
-		{
-			HT_SetOpenState(node, JSVAL_TO_BOOLEAN(*vp));
-		}
-		break;
+        if ((node = jsNode->node) != NULL)
+        {
+            HT_SetOpenState(node, JSVAL_TO_BOOLEAN(*vp));
+        }
+        break;
 
-		case	BUILTINS_NODE_ENABLED:
-		if (!JSVAL_IS_BOOLEAN(*vp))	return JS_TRUE;
+      case BUILTINS_NODE_ENABLED:
+        if (!JSVAL_IS_BOOLEAN(*vp))
+            return JS_TRUE;
 
-		if ((node = jsNode->node) != NULL)
-		{
-			HT_SetEnabledState(node, JSVAL_TO_BOOLEAN(*vp));
-		}
-		break;
+        if ((node = jsNode->node) != NULL)
+        {
+            HT_SetEnabledState(node, JSVAL_TO_BOOLEAN(*vp));
+        }
+        break;
 
-		default:
-		return(JS_FALSE);
-		break;
-	}
-	return(JS_TRUE);
+      default:;
+    }
+    return(JS_TRUE);
 }
 
 PR_STATIC_CALLBACK(JSBool)
@@ -745,210 +739,212 @@ builtin_node_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     char *name;
 
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+        return JS_TRUE;
 
     slot = JSVAL_TO_INT(id);
 
     jsNode = JS_GetPrivate(cx, obj);
     if (!jsNode)
-	return JS_TRUE;
+        return JS_TRUE;
     decoder = jsNode->decoder;
     context = decoder->window_context;
 
-    if (!context) return JS_TRUE;
-
-#if 0
-    if (LM_MOJA_OK != ET_InitMoja(context))
-        return JS_FALSE;
-#endif
+    if (!context)
+        return JS_TRUE;
 
     LO_LockLayout();
     switch (slot) {
+      case BUILTINS_NODE_NAME:
+        if ((node = jsNode->node) != NULL)
+        {
+            if ((name = HT_GetNodeName(node)) != NULL)
+            {
+                if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
+                {
+                    *vp = STRING_TO_JSVAL(jstr);
+                }
+            }
+        }
+        break;
 
-    case BUILTINS_NODE_NAME:
-	if ((node = jsNode->node) != NULL)
-	{
-		if ((name = HT_GetNodeName(node)) != NULL)
-		{
-			if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
-			{
-			        *vp = STRING_TO_JSVAL(jstr);
-			}
-		}
-	}
-    break;
+      case BUILTINS_NODE_URL:
+        if ((node = jsNode->node) != NULL)
+        {
+            if ((name = HT_GetNodeURL(node)) != NULL)
+            {
+                if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
+                {
+                    *vp = STRING_TO_JSVAL(jstr);
+                }
+            }
+        }
+        break;
 
-    case BUILTINS_NODE_URL:
-	if ((node = jsNode->node) != NULL)
-	{
-		if ((name = HT_GetNodeURL(node)) != NULL)
-		{
-			if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
-			{
-			        *vp = STRING_TO_JSVAL(jstr);
-			}
-		}
-	}
-    break;
+      case BUILTINS_NODE_SELECTED:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsSelected(node));
+        }
+        break;
 
-    case BUILTINS_NODE_SELECTED:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsSelected(node));
-	}
-    break;
+      case BUILTINS_NODE_CONTAINER:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsContainer(node));
+        }
+        break;
 
-    case BUILTINS_NODE_CONTAINER:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsContainer(node));
-	}
-    break;
+      case BUILTINS_NODE_CONTAINER_OPEN:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsContainerOpen(node));
+        }
+        break;
 
-    case BUILTINS_NODE_CONTAINER_OPEN:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsContainerOpen(node));
-	}
-    break;
+      case BUILTINS_NODE_SEPARATOR:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsSeparator(node));
+        }
+        break;
 
-    case BUILTINS_NODE_SEPARATOR:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsSeparator(node));
-	}
-    break;
+      case BUILTINS_NODE_ENABLED:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsEnabled(node));
+        }
+        break;
 
-    case BUILTINS_NODE_ENABLED:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsEnabled(node));
-	}
-    break;
-
-    default:
-	    LO_UnlockLayout();
-	    return JS_FALSE;
-	    break;
+      default:;
     }
     LO_UnlockLayout();
     return JS_TRUE;
-  err:
-    LO_UnlockLayout();
-    return JS_FALSE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
-builtin_node_children(JSContext *cx, JSObject *obj,
-           uint argc, jsval *argv, jsval *rval)
+builtin_node_children(JSContext *cx, JSObject *obj, uint argc, jsval *argv,
+                      jsval *rval)
 {
-    JSNode	*jsNode, *newJSNode;
-    JSObject	*jsnode_obj;
+    JSNode      *jsNode, *newJSNode;
+    JSObject    *jsnode_obj;
     MochaDecoder *decoder;
-    HT_Resource	node;
+    HT_Resource  node;
 
-    if (!(jsNode = JS_GetPrivate(cx, obj)))
+    if (!JS_InstanceOf(cx, obj, &lm_builtin_node_class, argv))
         return JS_FALSE;
+    jsNode = JS_GetPrivate(cx, obj);
+    if (!jsNode)
+        return JS_TRUE;
     decoder = jsNode->decoder;
 
-    if ((node = jsNode->node) == NULL)	return(JS_FALSE);
-    if (!HT_IsContainer(node))		*rval = JSVAL_NULL;
-    else if (!HT_IsContainerOpen(node))	*rval = JSVAL_NULL;
+    if ((node = jsNode->node) == NULL)
+        return JS_TRUE; /* XXXbe no silent error */
+
+    if (!HT_IsContainer(node))
+        *rval = JSVAL_NULL;
+    else if (!HT_IsContainerOpen(node))
+        *rval = JSVAL_NULL;
     else
     {
-	newJSNode = JS_malloc(cx, sizeof *newJSNode);
-	if (!newJSNode)	return(JS_FALSE);
-	jsnode_obj = JS_NewObject(cx, &lm_builtin_node_array_class,
-				decoder->builtin_node_prototype, obj);
-	if (!jsnode_obj || !JS_SetPrivate(cx, jsnode_obj, newJSNode))
-	{
-		JS_free(cx, newJSNode);
-		return JS_FALSE;
-	}
-	if (!JS_DefineProperties(cx, jsnode_obj, builtin_node_array_props))
-	{
-		JS_free(cx, newJSNode);
-		return JS_FALSE;
-	}
-	newJSNode->decoder = HOLD_BACK_COUNT(decoder);
-	newJSNode->builtin = jsNode->builtin;
-	newJSNode->node = node;
-	*rval = OBJECT_TO_JSVAL(jsnode_obj);
+        newJSNode = JS_malloc(cx, sizeof *newJSNode);
+        if (!newJSNode)
+            return JS_FALSE;
+        jsnode_obj = JS_NewObject(cx, &lm_builtin_node_array_class,
+                                  decoder->builtin_node_prototype, obj);
+        if (!jsnode_obj || !JS_SetPrivate(cx, jsnode_obj, newJSNode))
+        {
+            JS_free(cx, newJSNode);
+            return JS_FALSE;
+        }
+        if (!JS_DefineProperties(cx, jsnode_obj, builtin_node_array_props))
+        {
+            JS_free(cx, newJSNode);
+            return JS_FALSE;
+        }
+        newJSNode->decoder = HOLD_BACK_COUNT(decoder);
+        newJSNode->builtin = jsNode->builtin;
+        newJSNode->node = node;
+        *rval = OBJECT_TO_JSVAL(jsnode_obj);
     }
-    return(JS_TRUE);
+    return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
-builtin_node_parent(JSContext *cx, JSObject *obj,
-           uint argc, jsval *argv, jsval *rval)
+builtin_node_parent(JSContext *cx, JSObject *obj, uint argc, jsval *argv,
+                    jsval *rval)
 {
-    JSNode	*jsNode, *newJSNode;
-    JSObject	*jsnode_obj;
+    JSNode      *jsNode, *newJSNode;
+    JSObject    *jsnode_obj;
     MochaDecoder *decoder;
-    HT_Resource	node;
+    HT_Resource  node;
 
-    if (!(jsNode = JS_GetPrivate(cx, obj)))
+    if (!JS_InstanceOf(cx, obj, &lm_builtin_node_class, argv))
         return JS_FALSE;
+    jsNode = JS_GetPrivate(cx, obj);
+    if (!jsNode)
+        return JS_TRUE;
     decoder = jsNode->decoder;
 
-    if ((node = jsNode->node) == NULL)	return(JS_FALSE);
-    else
+    if ((node = jsNode->node) == NULL)
+        return JS_TRUE; /* XXXbe no silent error */
+
+    newJSNode = JS_malloc(cx, sizeof *newJSNode);
+    if (!newJSNode)
+        return(JS_FALSE);
+    jsnode_obj = JS_NewObject(cx, &lm_builtin_node_array_class,
+                              decoder->builtin_node_prototype, obj);
+    if (!jsnode_obj || !JS_SetPrivate(cx, jsnode_obj, newJSNode))
     {
-	newJSNode = JS_malloc(cx, sizeof *newJSNode);
-	if (!newJSNode)	return(JS_FALSE);
-	jsnode_obj = JS_NewObject(cx, &lm_builtin_node_array_class,
-				decoder->builtin_node_prototype, obj);
-	if (!jsnode_obj || !JS_SetPrivate(cx, jsnode_obj, newJSNode))
-	{
-		JS_free(cx, newJSNode);
-		return JS_FALSE;
-	}
-	if (!JS_DefineProperties(cx, jsnode_obj, builtin_node_array_props))
-	{
-		JS_free(cx, newJSNode);
-		return JS_FALSE;
-	}
-	newJSNode->decoder = HOLD_BACK_COUNT(decoder);
-	newJSNode->builtin = jsNode->builtin;
-	newJSNode->node = HT_GetParent(node);
-	*rval = OBJECT_TO_JSVAL(jsnode_obj);
+        JS_free(cx, newJSNode);
+        return JS_FALSE;
     }
+    if (!JS_DefineProperties(cx, jsnode_obj, builtin_node_array_props))
+    {
+        JS_free(cx, newJSNode);
+        return JS_FALSE;
+    }
+    newJSNode->decoder = HOLD_BACK_COUNT(decoder);
+    newJSNode->builtin = jsNode->builtin;
+    newJSNode->node = HT_GetParent(node);
+    *rval = OBJECT_TO_JSVAL(jsnode_obj);
     return(JS_TRUE);
 }
 
 PR_STATIC_CALLBACK(JSBool)
 builtin_element_parentIndex(JSContext *cx, JSObject *obj,
-           uint argc, jsval *argv, jsval *rval)
+                            uint argc, jsval *argv, jsval *rval)
 {
-    JSElement	*element;
+    JSElement    *element;
     MochaDecoder *decoder;
-    HT_Pane	pane;
-    HT_View	view;
-    HT_Resource	node, parent;
-    int32	parentIndex = -1;
+    HT_Pane        pane;
+    HT_View        view;
+    HT_Resource        node, parent;
+    int32        parentIndex = -1;
 
-    if (!(element = JS_GetPrivate(cx, obj)))
+    if (!JS_InstanceOf(cx, obj, &lm_builtin_element_class, argv))
         return JS_FALSE;
+    if (!(element = JS_GetPrivate(cx, obj)))
+        return JS_TRUE;
     decoder = element->decoder;
 
-	if ((pane = element->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			if ((node = HT_GetNthItem(view, element->slot)) != NULL)
-			{
-				if ((parent = HT_GetParent(node)) != NULL)
-				{
-					if (parent != HT_TopNode(view))
-					{
-						parentIndex = HT_GetNodeIndex(view, parent);
-					}
-				}
-				*rval = INT_TO_JSVAL(parentIndex);
-			}
-		}
-	}
-    return(JS_TRUE);
+    if ((pane = element->builtin->htPane) != NULL)
+    {
+        if ((view = HT_GetNthView(pane, 0)) != NULL)
+        {
+            if ((node = HT_GetNthItem(view, element->slot)) != NULL)
+            {
+                if ((parent = HT_GetParent(node)) != NULL)
+                {
+                    if (parent != HT_TopNode(view))
+                    {
+                        parentIndex = HT_GetNodeIndex(view, parent);
+                    }
+                }
+            }
+        }
+    }
+    *rval = INT_TO_JSVAL(parentIndex);
+    return JS_TRUE;
 }
 
 static JSFunctionSpec builtin_element_methods[] = {
@@ -969,7 +965,7 @@ builtin_node_finalize(JSContext *cx, JSObject *obj)
 
     array = JS_GetPrivate(cx, obj);
     if (!array)
-	return;
+        return;
     DROP_BACK_COUNT(array->decoder);
     JS_free(cx, array);
 }
@@ -995,120 +991,117 @@ builtin_node_array_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     HT_Resource node;
 
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+        return JS_TRUE;
 
     slot = JSVAL_TO_INT(id);
 
     jsNode = JS_GetPrivate(cx, obj);
     if (!jsNode)
-	return JS_TRUE;
+        return JS_TRUE;
     decoder = jsNode->decoder;
     context = decoder->window_context;
 
-    if (!context) return JS_TRUE;
-
-#if 0
-    if (LM_MOJA_OK != ET_InitMoja(context))
-        return JS_FALSE;
-#endif
+    if (!context)
+        return JS_TRUE;
 
     LO_LockLayout();
     switch (slot) {
-	case BUILTIN_NODE_ARRAY_LENGTH:
-	if ((node = jsNode->node) != NULL)
-	{
-		theCount = HT_GetCountDirectChildren(jsNode->node);
-		*vp = INT_TO_JSVAL(theCount);
-	}
-	break;
+      case BUILTIN_NODE_ARRAY_LENGTH:
+        if ((node = jsNode->node) != NULL)
+        {
+            theCount = HT_GetCountDirectChildren(jsNode->node);
+            *vp = INT_TO_JSVAL(theCount);
+        }
+        break;
 
-	case BUILTINS_NODE_ARRAY_NAME:
-	if ((node = jsNode->node) != NULL)
-	{
-		if ((name = HT_GetNodeName(node)) != NULL)
-		{
-			if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
-			{
-				*vp = STRING_TO_JSVAL(jstr);
-			}
-		}
-	}
-	break;
+      case BUILTINS_NODE_ARRAY_NAME:
+        if ((node = jsNode->node) != NULL)
+        {
+            if ((name = HT_GetNodeName(node)) != NULL)
+            {
+                if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
+                {
+                    *vp = STRING_TO_JSVAL(jstr);
+                }
+            }
+        }
+        break;
 
-	case BUILTINS_NODE_ARRAY_URL:
-	if ((node = jsNode->node) != NULL)
-	{
-		if ((name = HT_GetNodeURL(node)) != NULL)
-		{
-			if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
-			{
-				*vp = STRING_TO_JSVAL(jstr);
-			}
-		}
-	}
-	break;
+      case BUILTINS_NODE_ARRAY_URL:
+        if ((node = jsNode->node) != NULL)
+        {
+            if ((name = HT_GetNodeURL(node)) != NULL)
+            {
+                if ((jstr = lm_LocalEncodingToStr(context, name)) != NULL)
+                {
+                    *vp = STRING_TO_JSVAL(jstr);
+                }
+            }
+        }
+        break;
 
-	case BUILTINS_NODE_ARRAY_SELECTED:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsSelected(node));
-	}
-	break;
+      case BUILTINS_NODE_ARRAY_SELECTED:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsSelected(node));
+        }
+        break;
 
-	case BUILTINS_NODE_ARRAY_CONTAINER:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsContainer(node));
-	}
-	break;
+      case BUILTINS_NODE_ARRAY_CONTAINER:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsContainer(node));
+        }
+        break;
 
-	case BUILTINS_NODE_ARRAY_CONTAINER_OPEN:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsContainerOpen(node));
-	}
-	break;
+      case BUILTINS_NODE_ARRAY_CONTAINER_OPEN:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsContainerOpen(node));
+        }
+        break;
 
-	case BUILTINS_NODE_ARRAY_SEPARATOR:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsSeparator(node));
-	}
-	break;
+      case BUILTINS_NODE_ARRAY_SEPARATOR:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsSeparator(node));
+        }
+        break;
 
-	case BUILTINS_NODE_ARRAY_ENABLED:
-	if ((node = jsNode->node) != NULL)
-	{
-		*vp = BOOLEAN_TO_JSVAL(HT_IsEnabled(node));
-	}
-	break;
+      case BUILTINS_NODE_ARRAY_ENABLED:
+        if ((node = jsNode->node) != NULL)
+        {
+            *vp = BOOLEAN_TO_JSVAL(HT_IsEnabled(node));
+        }
+        break;
 
       default:
-	if (slot < 0) {
-	    /* Don't mess with user-defined or method properties. */
-	    LO_UnlockLayout();
-	    return JS_TRUE;
-	}
-	newJSNode = JS_malloc(cx, sizeof *newJSNode);
-	if (!newJSNode)	return(JS_FALSE);
-	jsnode_obj = JS_NewObject(cx, &lm_builtin_node_class,
-				decoder->builtin_node_prototype, obj);
-	if (!jsnode_obj || !JS_SetPrivate(cx, jsnode_obj, newJSNode))
-	{
-		JS_free(cx, newJSNode);
-		return JS_FALSE;
-	}
-	if (!JS_DefineProperties(cx, obj, builtin_node_props))
-	{
-		JS_free(cx, newJSNode);
-		return NULL;
-	}
-	newJSNode->decoder = HOLD_BACK_COUNT(decoder);
-	newJSNode->builtin = jsNode->builtin;
-	newJSNode->node = HT_GetContainerItem(jsNode->node, slot);
-	*vp = OBJECT_TO_JSVAL(jsnode_obj);
-	
-	break;
+        if (slot < 0) {
+            /* Don't mess with user-defined or method properties. */
+            LO_UnlockLayout();
+            return JS_TRUE;
+        }
+        newJSNode = JS_malloc(cx, sizeof *newJSNode);
+        if (!newJSNode)
+            goto err;
+        jsnode_obj = JS_NewObject(cx, &lm_builtin_node_class,
+                                  decoder->builtin_node_prototype, obj);
+        if (!jsnode_obj || !JS_SetPrivate(cx, jsnode_obj, newJSNode))
+        {
+            JS_free(cx, newJSNode);
+            goto err;
+        }
+        if (!JS_DefineProperties(cx, obj, builtin_node_props))
+        {
+            JS_free(cx, newJSNode);
+            goto err;
+        }
+        newJSNode->decoder = HOLD_BACK_COUNT(decoder);
+        newJSNode->builtin = jsNode->builtin;
+        newJSNode->node = HT_GetContainerItem(jsNode->node, slot);
+        *vp = OBJECT_TO_JSVAL(jsnode_obj);
+
+        break;
     }
     LO_UnlockLayout();
     return JS_TRUE;
@@ -1124,7 +1117,7 @@ builtin_element_array_finalize(JSContext *cx, JSObject *obj)
 
     array = JS_GetPrivate(cx, obj);
     if (!array)
-	return;
+        return;
     DROP_BACK_COUNT(array->decoder);
     JS_free(cx, array);
 }
@@ -1136,7 +1129,7 @@ builtin_node_array_finalize(JSContext *cx, JSObject *obj)
 
     array = JS_GetPrivate(cx, obj);
     if (!array)
-	return;
+        return;
     DROP_BACK_COUNT(array->decoder);
     JS_free(cx, array);
 }
@@ -1165,151 +1158,143 @@ builtin_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     MWContext *context;
     jsint slot;
     JSString *jstr;
-    int i, theIndex;
+    uint32 i;
+    int theIndex;
     HT_Pane pane;
     HT_View view;
     HT_Resource node = NULL;
 
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+        return JS_TRUE;
 
     slot = JSVAL_TO_INT(id);
 
     builtin = JS_GetPrivate(cx, obj);
     if (!builtin)
-	return JS_TRUE;
+        return JS_TRUE;
     decoder = builtin->decoder;
     context = decoder->window_context;
 
-    if (!context) return JS_TRUE;
-
-#if 0
-    if (LM_MOJA_OK != ET_InitMoja(context))
-        return JS_FALSE;
-#endif
+    if (!context)
+        return JS_TRUE;
 
     LO_LockLayout();
     switch (slot) {
       case BUILTINS_NAME:
-	for (i = 0; i < builtin->builtin->attributes.n; i++)
-	{
-		if (!XP_STRCASECMP(builtin->builtin->attributes.names[i], "name"))
-		{
-			if ((jstr = lm_LocalEncodingToStr(context,
-				builtin->builtin->attributes.values[i])) != NULL)
-			{
-			        *vp = STRING_TO_JSVAL(jstr);
-			}
-			break;
-		}
-	}
-	break;
+        for (i = 0; i < builtin->builtin->attributes.n; i++)
+        {
+            if (!XP_STRCASECMP(builtin->builtin->attributes.names[i], "name"))
+            {
+                if ((jstr = lm_LocalEncodingToStr(context,
+                        builtin->builtin->attributes.values[i])) != NULL)
+                {
+                    *vp = STRING_TO_JSVAL(jstr);
+                }
+                break;
+            }
+        }
+        break;
 
       case BUILTINS_DATA:
-	for (i = 0; i < builtin->builtin->attributes.n; i++)
-	{
-		if (!XP_STRCASECMP(builtin->builtin->attributes.names[i], "data"))
-		{
-			if ((jstr = JS_NewStringCopyZ(cx,
-				builtin->builtin->attributes.values[i])) != NULL)
-			{
-			        *vp = STRING_TO_JSVAL(jstr);
-			}
-			break;
-		}
-	}
-	break;
+        for (i = 0; i < builtin->builtin->attributes.n; i++)
+        {
+            if (!XP_STRCASECMP(builtin->builtin->attributes.names[i], "data"))
+            {
+                if ((jstr = JS_NewStringCopyZ(cx,
+                        builtin->builtin->attributes.values[i])) != NULL)
+                {
+                    *vp = STRING_TO_JSVAL(jstr);
+                }
+                break;
+            }
+        }
+        break;
 
       case BUILTINS_TARGET:
-	for (i = 0; i < builtin->builtin->attributes.n; i++)
-	{
-		if (!XP_STRCASECMP(builtin->builtin->attributes.names[i], "target"))
-		{
-			if ((jstr = JS_NewStringCopyZ(cx,
-				builtin->builtin->attributes.values[i])) != NULL)
-			{
-			        *vp = STRING_TO_JSVAL(jstr);
-			}
-			break;
-		}
-	}
-	break;
+        for (i = 0; i < builtin->builtin->attributes.n; i++)
+        {
+            if (!XP_STRCASECMP(builtin->builtin->attributes.names[i], "target"))
+            {
+                if ((jstr = JS_NewStringCopyZ(cx,
+                        builtin->builtin->attributes.values[i])) != NULL)
+                {
+                    *vp = STRING_TO_JSVAL(jstr);
+                }
+                break;
+            }
+        }
+        break;
 
-	case BUILTINS_LENGTH:
-	theIndex = 0;
-	if ((pane = builtin->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			theIndex = HT_GetItemListCount(view);
-		}
-	}
-	*vp = INT_TO_JSVAL(theIndex);
-	break;
+      case BUILTINS_LENGTH:
+        theIndex = 0;
+        if ((pane = builtin->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                theIndex = HT_GetItemListCount(view);
+            }
+        }
+        *vp = INT_TO_JSVAL(theIndex);
+        break;
 
-	case BUILTINS_SELECTEDINDEX:
-	theIndex = -1;
-	if ((pane = builtin->builtin->htPane) != NULL)
-	{
-		if ((view = HT_GetNthView(pane, 0)) != NULL)
-		{
-			node = NULL;
-		    	if ((node = HT_GetNextSelection(view, node)) != NULL)
-		    	{
-		    		theIndex = HT_GetNodeIndex(view, node);
-		    	}
-		}
-	}
-	*vp = INT_TO_JSVAL(theIndex);
-	break;
+      case BUILTINS_SELECTEDINDEX:
+        theIndex = -1;
+        if ((pane = builtin->builtin->htPane) != NULL)
+        {
+            if ((view = HT_GetNthView(pane, 0)) != NULL)
+            {
+                node = NULL;
+                if ((node = HT_GetNextSelection(view, node)) != NULL)
+                {
+                    theIndex = HT_GetNodeIndex(view, node);
+                }
+            }
+        }
+        *vp = INT_TO_JSVAL(theIndex);
+        break;
 
-	case BUILTINS_ELEMENTS:
-	element = JS_malloc(cx, sizeof *element);
-	if (!element)	return(JS_FALSE);
-	element_obj = JS_NewObject(cx, &lm_builtin_element_array_class, decoder->builtin_prototype, obj);
-	if (!element_obj || !JS_SetPrivate(cx, element_obj, element))
-	{
-		JS_free(cx, element);
-		return JS_FALSE;
-	}
-	if (!JS_DefineProperties(cx, element_obj, builtin_element_array_props))
-	{
-		JS_free(cx, element);
-		return NULL;
-	}
-	element->decoder = HOLD_BACK_COUNT(decoder);
-	element->builtin = builtin->builtin;
-	*vp = OBJECT_TO_JSVAL(element_obj);
-	break;
+      case BUILTINS_ELEMENTS:
+        element = JS_malloc(cx, sizeof *element);
+        if (!element)
+            goto err;
+        element_obj = JS_NewObject(cx, &lm_builtin_element_array_class, decoder->builtin_prototype, obj);
+        if (!element_obj || !JS_SetPrivate(cx, element_obj, element))
+        {
+            JS_free(cx, element);
+            goto err;
+        }
+        if (!JS_DefineProperties(cx, element_obj, builtin_element_array_props))
+        {
+            JS_free(cx, element);
+            goto err;
+        }
+        element->decoder = HOLD_BACK_COUNT(decoder);
+        element->builtin = builtin->builtin;
+        *vp = OBJECT_TO_JSVAL(element_obj);
+        break;
 
-	case BUILTINS_NODES:
-	jsNode = JS_malloc(cx, sizeof *jsNode);
-	if (!jsNode)	return(JS_FALSE);
-	jsNode_obj = JS_NewObject(cx, &lm_builtin_node_array_class, decoder->builtin_node_prototype, obj);
-	if (!jsNode_obj || !JS_SetPrivate(cx, jsNode_obj, jsNode))
-	{
-		JS_free(cx, jsNode);
-		return JS_FALSE;
-	}
-	if (!JS_DefineProperties(cx, jsNode_obj, builtin_node_array_props))
-	{
-		JS_free(cx, jsNode);
-		return NULL;
-	}
-	jsNode->decoder = HOLD_BACK_COUNT(decoder);
-	jsNode->builtin = builtin->builtin;
-	jsNode->node = HT_TopNode(HT_GetNthView(builtin->builtin->htPane, 0));
-	*vp = OBJECT_TO_JSVAL(jsNode_obj);
-	break;
+      case BUILTINS_NODES:
+        jsNode = JS_malloc(cx, sizeof *jsNode);
+        if (!jsNode)
+            goto err;
+        jsNode_obj = JS_NewObject(cx, &lm_builtin_node_array_class, decoder->builtin_node_prototype, obj);
+        if (!jsNode_obj || !JS_SetPrivate(cx, jsNode_obj, jsNode))
+        {
+            JS_free(cx, jsNode);
+            goto err;
+        }
+        if (!JS_DefineProperties(cx, jsNode_obj, builtin_node_array_props))
+        {
+            JS_free(cx, jsNode);
+            goto err;
+        }
+        jsNode->decoder = HOLD_BACK_COUNT(decoder);
+        jsNode->builtin = builtin->builtin;
+        jsNode->node = HT_TopNode(HT_GetNthView(builtin->builtin->htPane, 0));
+        *vp = OBJECT_TO_JSVAL(jsNode_obj);
+        break;
 
-      default:
-	if (slot < 0) {
-	    /* Don't mess with user-defined or method properties. */
-	    LO_UnlockLayout();
-	    return JS_TRUE;
-	}
-	return JS_FALSE;
-	break;
+      default:;
     }
     LO_UnlockLayout();
     return JS_TRUE;
@@ -1325,7 +1310,7 @@ builtins_array_finalize(JSContext *cx, JSObject *obj)
 
     array = JS_GetPrivate(cx, obj);
     if (!array)
-	return;
+        return;
     DROP_BACK_COUNT(array->decoder);
     JS_free(cx, array);
 }
@@ -1337,7 +1322,7 @@ builtin_finalize(JSContext *cx, JSObject *obj)
 
     array = JS_GetPrivate(cx, obj);
     if (!array)
-	return;
+        return;
     DROP_BACK_COUNT(array->decoder);
     JS_free(cx, array);
 }
@@ -1357,22 +1342,20 @@ JSClass lm_builtins_class = {
 };
 
 PR_STATIC_CALLBACK(JSBool)
-Builtin(JSContext *cx, JSObject *obj,
-         uint argc, jsval *argv, jsval *rval)
+Builtin(JSContext *cx, JSObject *obj, uint argc, jsval *argv, jsval *rval)
 {
     return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
-BuiltinElement(JSContext *cx, JSObject *obj,
-         uint argc, jsval *argv, jsval *rval)
+BuiltinElement(JSContext *cx, JSObject *obj, uint argc, jsval *argv,
+               jsval *rval)
 {
     return JS_TRUE;
 }
 
 PR_STATIC_CALLBACK(JSBool)
-BuiltinNode(JSContext *cx, JSObject *obj,
-         uint argc, jsval *argv, jsval *rval)
+BuiltinNode(JSContext *cx, JSObject *obj, uint argc, jsval *argv, jsval *rval)
 {
     return JS_TRUE;
 }
@@ -1384,25 +1367,25 @@ lm_InitBuiltinClass(MochaDecoder *decoder)
     JSObject *prototype;
 
     cx = decoder->js_context;
-    prototype = JS_InitClass(cx, decoder->window_object, 
-			     decoder->event_receiver_prototype, &lm_builtins_class,
-			     Builtin, 0, builtins_props, NULL, NULL, NULL);
+    prototype = JS_InitClass(cx, decoder->window_object,
+                             decoder->event_receiver_prototype, &lm_builtins_class,
+                             Builtin, 0, builtins_props, NULL, NULL, NULL);
     if (!prototype)
-	return JS_FALSE;
+        return JS_FALSE;
     decoder->builtin_prototype = prototype;
 
-    prototype = JS_InitClass(cx, decoder->window_object, 
-			     decoder->event_receiver_prototype, &lm_builtin_element_class,
-			     BuiltinElement, 0, builtin_element_props, builtin_element_methods, NULL, NULL);
+    prototype = JS_InitClass(cx, decoder->window_object,
+                             decoder->event_receiver_prototype, &lm_builtin_element_class,
+                             BuiltinElement, 0, builtin_element_props, builtin_element_methods, NULL, NULL);
     if (!prototype)
-	return JS_FALSE;
+        return JS_FALSE;
     decoder->builtin_element_prototype = prototype;
 
-    prototype = JS_InitClass(cx, decoder->window_object, 
-			     decoder->event_receiver_prototype, &lm_builtin_node_class,
-			     BuiltinNode, 0, builtin_node_props, builtin_node_methods, NULL, NULL);
+    prototype = JS_InitClass(cx, decoder->window_object,
+                             decoder->event_receiver_prototype, &lm_builtin_node_class,
+                             BuiltinNode, 0, builtin_node_props, builtin_node_methods, NULL, NULL);
     if (!prototype)
-	return JS_FALSE;
+        return JS_FALSE;
     decoder->builtin_node_prototype = prototype;
     return JS_TRUE;
 }
