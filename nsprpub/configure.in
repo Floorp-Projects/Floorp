@@ -105,7 +105,7 @@ case "$target" in
 *-msvc*)
     _WIN32_MSVC=1
     ;;
-*-mksnt*)
+*-mks*)
     _WIN32_MSVC=1
     ;;
 esac
@@ -342,7 +342,7 @@ if test -n "$MOZ_DEBUG"; then
     beos*)
         DEFINES="$DEFINES -DDEBUG_${USER}"
         ;;
-    msvc*|mksnt*|cygwin*|mingw*)
+    msvc*|mks*|cygwin*|mingw*)
         DEFINES="$DEFINES -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
@@ -676,7 +676,7 @@ dnl ========================================================
 dnl Override of system specific host options
 dnl ========================================================
 case "$host" in
-*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
     ;;
 *-beos*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE"
@@ -1225,7 +1225,7 @@ case "$target" in
     esac    
     ;;
 
-*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
     AC_DEFINE(XP_PC)
     AC_DEFINE(WIN32)
     PR_MD_ARCH_DIR=windows
@@ -2257,7 +2257,7 @@ case "$target" in
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     ;;
-*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
     dnl win32 does not use pthreads
     USE_PTHREADS=
     _PTHREAD_LDFLAGS=
@@ -2343,7 +2343,7 @@ dnl ========================================================
 dnl Use cygwin wrapper for win32 builds
 dnl ========================================================
 case "$target_os" in
-mingw*|cygwin*|msvc*|mksnt*)
+mingw*|cygwin*|msvc*|mks*)
     CC="\$(CYGWIN_WRAPPER) $CC"
     CXX="\$(CYGWIN_WRAPPER) $CXX"
     RC="\$(CYGWIN_WRAPPER) $RC"
