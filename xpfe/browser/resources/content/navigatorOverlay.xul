@@ -394,7 +394,7 @@
        </menupopup>
       </menu>
 
-      <menu label="XBL Demos">
+      <menu label="XBL Test Suite">
        <menupopup>
         <menuitem label="#0 Remote XBL"  oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test0/test.xul'"/>
         <menuitem label="#1 Technicolor DIV" oncommand="window._content.location.href='http://www.mozilla.org/projects/xbl/test1/test.html'"/>
@@ -405,18 +405,12 @@
        </menupopup>
       </menu>
 
-      <menu label="&xptkMenu.label;">
+      <menu label="XUL Test Suite">
        <menupopup>
-        <menuitem label="&xptk1Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/checkboxTest.xul'"/>
-        <menuitem label="&xptk2Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/toolbarTest1.xul'"/>
-        <menuitem label="&xptk3Cmd.label;" oncommand="BrowserReallyReload(0)"/>
-        <menuitem label="&xptk4Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/dexopenchrome.xul'"/>
-        <menuitem label="&xptk7Cmd.label;" oncommand="BrowserReallyReload(0)"/>
-        <menuitem label="&xptk8Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/beeptest.html'"/>
-        <menuitem label="&xptk9Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/soundtest.html'"/>
-        <menuitem label="&xptk10Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/xpmenu.xul'"/>
-        <menuitem label="&xptk11Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/colorpicker.xul'"/>
-       </menupopup>
+         <menuitem label="#1 Popups" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/popups.xul'"/>
+         <menuitem label="#2 Descriptions and Labels" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/label.xul'"/>
+         <menuitem label="#3 Dialog Buttons" oncommand="window._content.location.href='http://www.mozilla.org/projects/xul/tests/buttons.xul'"/>
+        </menupopup>
       </menu>
 
      <menuitem label="Form Manager Samples" oncommand="window._content.location.href='chrome://communicator/locale/wallet/index.html';"/>
