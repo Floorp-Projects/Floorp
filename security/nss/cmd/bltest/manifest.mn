@@ -36,6 +36,8 @@ MODULE = security
 
 REQUIRES = seccmd dbm
 
+INCLUDES += -I$(CORE_DEPTH)/nss/lib/softoken
+
 PROGRAM = bltest
 
  USE_STATIC_LIBS = 1
