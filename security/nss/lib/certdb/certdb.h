@@ -339,10 +339,10 @@ PRBool
 SEC_CertDBKeyConflict(SECItem *derCert, CERTCertDBHandle *handle);
 
 SECStatus
-SEC_GetCrlTimes(CERTCrl *dates, int64 *notBefore, int64 *notAfter);
+SEC_GetCrlTimes(CERTCrl *dates, PRTime *notBefore, PRTime *notAfter);
 
 SECCertTimeValidity
-SEC_CheckCrlTimes(CERTCrl *crl, int64 t);
+SEC_CheckCrlTimes(CERTCrl *crl, PRTime t);
 
 PRBool
 SEC_CrlIsNewer(CERTCrl *inNew, CERTCrl *old);

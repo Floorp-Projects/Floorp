@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.11 2001/06/06 23:40:50 relyea%netscape.com Exp $
+ * $Id: cert.h,v 1.12 2001/06/21 03:20:09 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -524,7 +524,7 @@ extern void CERT_ClosePermCertDB(CERTCertDBHandle *handle);
 **		been overridden by the user.
 */
 extern SECCertTimeValidity CERT_CheckCertValidTimes(CERTCertificate *cert,
-						    int64 t,
+						    PRTime t,
 						    PRBool allowOverride);
 
 /*
@@ -544,7 +544,7 @@ extern SECStatus CERT_CertTimesValid(CERTCertificate *cert);
 **	"notAfter" is the end of the validity period
 */
 extern SECStatus
-CERT_GetCertTimes (CERTCertificate *c, int64 *notBefore, int64 *notAfter);
+CERT_GetCertTimes (CERTCertificate *c, PRTime *notBefore, PRTime *notAfter);
 
 /*
 ** Extract the issuer and serial number from a certificate

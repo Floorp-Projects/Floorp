@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.12 2001/06/06 23:40:51 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.13 2001/06/21 03:20:09 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -855,17 +855,17 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
 ** valid. The slop is designed to allow for some variance in the clocks
 ** of the machine checking the certificate.
 */
-#define PENDING_SLOP (24L*60L*60L)
-static PRInt32 pendingSlop = PENDING_SLOP;
+#define PENDING_SLOP (24L*60L*60L)		/* seconds per day */
+static PRInt32 pendingSlop = PENDING_SLOP;	/* seconds */
 
 PRInt32
 CERT_GetSlopTime(void)
 {
-    return pendingSlop;
+    return pendingSlop;			/* seconds */
 }
 
 SECStatus
-CERT_SetSlopTime(PRInt32 slop)
+CERT_SetSlopTime(PRInt32 slop)		/* seconds */
 {
     if (slop < 0)
 	return SECFailure;
@@ -874,7 +874,7 @@ CERT_SetSlopTime(PRInt32 slop)
 }
 
 SECStatus
-CERT_GetCertTimes(CERTCertificate *c, int64 *notBefore, int64 *notAfter)
+CERT_GetCertTimes(CERTCertificate *c, PRTime *notBefore, PRTime *notAfter)
 {
     int rv;
     
@@ -897,9 +897,9 @@ CERT_GetCertTimes(CERTCertificate *c, int64 *notBefore, int64 *notAfter)
  * Check the validity times of a certificate
  */
 SECCertTimeValidity
-CERT_CheckCertValidTimes(CERTCertificate *c, int64 t, PRBool allowOverride)
+CERT_CheckCertValidTimes(CERTCertificate *c, PRTime t, PRBool allowOverride)
 {
-    int64 notBefore, notAfter, llPendingSlop;
+    PRTime notBefore, notAfter, llPendingSlop, tmp1;
     SECStatus rv;
 
     /* if cert is already marked OK, then don't bother to check */
@@ -914,6 +914,9 @@ CERT_CheckCertValidTimes(CERTCertificate *c, int64 t, PRBool allowOverride)
     }
     
     LL_I2L(llPendingSlop, pendingSlop);
+    /* convert to micro seconds */
+    LL_I2L(tmp1, PR_USEC_PER_SEC);
+    LL_MUL(llPendingSlop, llPendingSlop, tmp1);
     LL_SUB(notBefore, notBefore, llPendingSlop);
     if ( LL_CMP( t, <, notBefore ) ) {
 	PORT_SetError(SEC_ERROR_EXPIRED_CERTIFICATE);
@@ -928,7 +931,7 @@ CERT_CheckCertValidTimes(CERTCertificate *c, int64 t, PRBool allowOverride)
 }
 
 SECStatus
-SEC_GetCrlTimes(CERTCrl *date, int64 *notBefore, int64 *notAfter)
+SEC_GetCrlTimes(CERTCrl *date, PRTime *notBefore, PRTime *notAfter)
 {
     int rv;
     
@@ -955,8 +958,8 @@ SEC_GetCrlTimes(CERTCrl *date, int64 *notBefore, int64 *notAfter)
  * routines using an common extraction routine.
  */
 SECCertTimeValidity
-SEC_CheckCrlTimes(CERTCrl *crl, int64 t) {
-    int64 notBefore, notAfter, llPendingSlop;
+SEC_CheckCrlTimes(CERTCrl *crl, PRTime t) {
+    PRTime notBefore, notAfter, llPendingSlop, tmp1;
     SECStatus rv;
 
     rv = SEC_GetCrlTimes(crl, &notBefore, &notAfter);
@@ -966,6 +969,9 @@ SEC_CheckCrlTimes(CERTCrl *crl, int64 t) {
     }
 
     LL_I2L(llPendingSlop, pendingSlop);
+    /* convert to micro seconds */
+    LL_I2L(tmp1, PR_USEC_PER_SEC);
+    LL_MUL(llPendingSlop, llPendingSlop, tmp1);
     LL_SUB(notBefore, notBefore, llPendingSlop);
     if ( LL_CMP( t, <, notBefore ) ) {
 	return(secCertTimeNotValidYet);
@@ -987,8 +993,8 @@ SEC_CheckCrlTimes(CERTCrl *crl, int64 t) {
 
 PRBool
 SEC_CrlIsNewer(CERTCrl *inNew, CERTCrl *old) {
-    int64 newNotBefore, newNotAfter;
-    int64 oldNotBefore, oldNotAfter;
+    PRTime newNotBefore, newNotAfter;
+    PRTime oldNotBefore, oldNotAfter;
     SECStatus rv;
 
     /* problems with the new CRL? reject it */
@@ -1714,7 +1720,7 @@ CERT_IsCADERCert(SECItem *derCert, unsigned int *type) {
 PRBool
 CERT_IsNewer(CERTCertificate *certa, CERTCertificate *certb)
 {
-    int64 notBeforeA, notAfterA, notBeforeB, notAfterB, now;
+    PRTime notBeforeA, notAfterA, notBeforeB, notAfterB, now;
     SECStatus rv;
     PRBool newerbefore, newerafter;
     
@@ -2121,13 +2127,13 @@ CERT_SortCBValidity(CERTCertificate *certa,
 		    CERTCertificate *certb,
 		    void *arg)
 {
-    int64 sorttime;
-    int64 notBeforeA, notAfterA, notBeforeB, notAfterB;
+    PRTime sorttime;
+    PRTime notBeforeA, notAfterA, notBeforeB, notAfterB;
     SECStatus rv;
     PRBool newerbefore, newerafter;
     PRBool aNotValid = PR_FALSE, bNotValid = PR_FALSE;
 
-    sorttime = *(int64 *)arg;
+    sorttime = *(PRTime *)arg;
     
     rv = CERT_GetCertTimes(certa, &notBeforeA, &notAfterA);
     if ( rv != SECSuccess ) {
