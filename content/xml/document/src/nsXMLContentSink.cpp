@@ -1561,7 +1561,7 @@ NS_IMETHODIMP
 nsXMLContentSink::ResumeParsing()
 {
   if (mParser) {
-    mParser->EnableParser(PR_TRUE);
+    mParser->ResumeParsing();
   }
 
   return NS_OK;
@@ -1674,6 +1674,11 @@ nsXMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
       if (channel) {
         channel->GetURI(getter_AddRefs(url));
       }
+      
+      if(mParser) {
+        mParser->UnblockParser(); // make sure to unblock the parser before evaluating the script
+      }
+
       rv = EvaluateScript(aData, url, 1, mScriptLanguageVersion);
     }
     if (NS_FAILED(rv)) return rv;
