@@ -158,7 +158,31 @@ typedef PRUint16 PRUnichar;
 #else
 #define NS_STATIC_CAST(__type, __ptr)      ((__type)(__ptr))
 #define NS_CONST_CAST(__type, __ptr)       ((__type)(__ptr))
-#define NS_REINTERPRET_CAST(__type, __ptr) ((__type)(__ptr))
+
+  /* Note: the following is only appropriate for pointers. */
+#define NS_REINTERPRET_CAST(__type, __ptr) ((__type)((void*)(__ptr)))
+  /*
+  	Why cast to a |void*| first?  Well, when old-style casting from
+  	a pointer to a base to a pointer to a derived class, the cast will be
+  	ambiguous if the source pointer type appears multiple times in the
+  	destination, e.g.,
+  	
+  	  class Base {};
+  	  class Derived : public Base, public Base {};
+  	  
+  	  void foo( Base* b )
+  	    {
+  	      ((Derived*)b)->some_deried_member ... // Error: Ambiguous, expand from which |Base|?
+  	    }
+
+		an old-style cast (like |static_cast|) will change the pointer, but
+		here, doesn't know how.  The cast to |void*| prevents it from thinking
+		it needs to expand the original pointer.
+
+    The cost is, |NS_REINTERPRET_CAST| is no longer appropriate for non-pointer
+    conversions.  Also, mis-applying |NS_REINTERPRET_CAST| to cast |this| to something
+    will still expand the pointer to the outer object in standards complying compilers.
+  */
 #endif
 
 /* No sense in making an NS_DYNAMIC_CAST() macro: you can't duplicate
