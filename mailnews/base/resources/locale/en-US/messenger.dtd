@@ -113,9 +113,9 @@ Rights Reserved.
 <!ENTITY threadsWithUnreadMsgsCmd.label ".Threads with Unread">  
 <!ENTITY watchedThreadsMsgsCmd.label ".Watched Threads with Unread">  
 <!ENTITY ignoreThreadMsgsCmd.label ".Ignore Thread">  
-<!ENTITY headersMenu.label ".Headers"> 
-<!ENTITY headersAllCmd.label ".All">  
-<!ENTITY headersNormalCmd.label ".Normal">  
+<!ENTITY headersMenu.label "Headers"> 
+<!ENTITY headersAllCmd.label "All">  
+<!ENTITY headersNormalCmd.label "Normal">  
 <!ENTITY headersBriefCmd.label ".Brief">  
 <!ENTITY viewAttachmentsInlineCmd.label ".View Attachments Inline">  
 <!ENTITY wrapLongLinesCmd.label ".Wrap Long Lines">  
