@@ -2866,14 +2866,14 @@ nsContextMenu.prototype = {
         this.showItem( "context-reload", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
         
         this.showItem( "context-stop", !( this.isTextSelected || this.onLink || this.onImage || this.onTextInput ) );
-        this.showItem( "context-sep-stop", !( this.isTextSelected || this.onLink || this.onTextInput ) );
+        this.showItem( "context-sep-stop", !( this.isTextSelected || this.onLink || this.onTextInput || this.onImage ) );
 
         // XXX: Stop is determined in navigator.js; the canStop broadcaster is broken
         //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
     },
     initSaveItems : function () {
-        this.showItem( "context-savepage", !( this.inDirList || this.isTextSelected || this.onTextInput || this.onLink ));
-        this.showItem( "context-sendpage", !( this.inDirList || this.isTextSelected || this.onTextInput || this.onLink ));
+        this.showItem( "context-savepage", !( this.inDirList || this.isTextSelected || this.onTextInput || this.onLink || this.onImage ));
+        this.showItem( "context-sendpage", !( this.inDirList || this.isTextSelected || this.onTextInput || this.onLink || this.onImage ));
 
         // Save link depends on whether we're in a link.
         this.showItem( "context-savelink", this.onSaveableLink );
@@ -2912,7 +2912,7 @@ nsContextMenu.prototype = {
     },
     initMiscItems : function () {
         // Use "Bookmark This Link" if on a link.
-        this.showItem( "context-bookmarkpage", !( this.isTextSelected || this.onTextInput || this.onLink ) );
+        this.showItem( "context-bookmarkpage", !( this.isTextSelected || this.onTextInput || this.onLink || this.onImage ) );
         this.showItem( "context-bookmarklink", this.onLink && !this.onMailtoLink );
         this.showItem( "context-searchselect", this.isTextSelected );
         this.showItem( "context-keywordfield", this.onTextInput && this.onKeywordField );
