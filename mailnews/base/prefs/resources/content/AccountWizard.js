@@ -77,11 +77,11 @@ var nsIMsgIdentity = Components.interfaces.nsIMsgIdentity;
 var nsIMsgIncomingServer = Components.interfaces.nsIMsgIncomingServer;
 
 // the current nsIMsgAccount
-var currentAccount;
+var gCurrentAccount;
 
 // the current associative array that
 // will eventually be dumped into the account
-var currentAccountData;
+var gCurrentAccountData;
 
 // event handlers
 function onLoad() {
@@ -105,7 +105,7 @@ function onLoad() {
     updateMap(pageData, gWizardMap);
 
     // skip the first page if we have an account
-    if (currentAccount) {
+    if (gCurrentAccount) {
         // skip past first pane
         gWizardMap.identity.previous = null;
         wizardManager.LoadPage("identity", false);
@@ -123,7 +123,7 @@ function onFinish() {
 
     //    dump(parent.wizardManager.WSM);
 
-    var accountData= currentAccountData;
+    var accountData= gCurrentAccountData;
     
     if (!accountData)
         accountData = new Object;
@@ -133,13 +133,13 @@ function onFinish() {
     FixupAccountDataForIsp(accountData);
     
     // we might be simply finishing another account
-    if (!currentAccount)
-        currentAccount = createAccount(accountData);
+    if (!gCurrentAccount)
+        gCurrentAccount = createAccount(accountData);
 
     // transfer all attributes from the accountdata
-    finishAccount(currentAccount, accountData);
+    finishAccount(gCurrentAccount, accountData);
     
-    verifyLocalFoldersAccount(currentAccount);
+    verifyLocalFoldersAccount(gCurrentAccount);
 
     // hack hack - save the prefs file NOW in case we crash
     try {
@@ -381,6 +381,7 @@ function copyObjectToInterface(dest, src) {
         catch (ex) {
             dump("Error copying the " +
                  i + " attribute: " + ex + "\n");
+            dump("(This is ok if this is a ServerType-* attribute)\n");
         }
     }
 }
@@ -502,18 +503,38 @@ function checkForInvalidAccounts()
     if (firstInvalidAccount) {
         var pageData = GetPageData();
         dump("We have an invalid account, " + firstInvalidAccount + ", let's use that!\n");
-        currentAccount = firstInvalidAccount;
+        gCurrentAccount = firstInvalidAccount;
 
-        var accountData = AccountToAccountData(firstInvalidAccount);
+        // there's a possibility that the invalid account has ISP defaults
+        // as well.. so first pre-fill accountData with ISP info, then
+        // overwrite it with the account data
+
+
+        var identity =
+            firstInvalidAccount.identities.QueryElementAt(0, nsIMsgIdentity);
+
+        dump("Invalid account: trying to get ISP data for " + identity.email + "\n");
+        var accountData = getIspDefaultsForEmail(identity.email);
+        dump("Invalid account: Got " + accountData + "\n");
         
+        // account -> accountData -> pageData
+        AccountToAccountData(firstInvalidAccount, accountData);
         AccountDataToPageData(accountData, pageData);
+
+        gCurrentAccountData = accountData;
+        
         dump(parent.wizardManager.WSM);
     }
 }
 
-function AccountToAccountData(account)
+function AccountToAccountData(account, defaultAccountData)
 {
-    var accountData = new Object;
+    dump("AccountToAccountData(" + account + ", " +
+         defaultAccountData + ")\n");
+    var accountData = defaultAccountData;
+    if (!accountData)
+        accountData = new Object;
+    
     accountData.incomingServer = account.incomingServer;
     accountData.identity = account.identities.QueryElementAt(0, nsIMsgIdentity);
     accountData.smtp = smtpService.defaultServer;
@@ -579,7 +600,7 @@ function updateMap(pageData, wizardMap) {
 
             wizardMap.accname.previous = "login";
             
-            if (currentAccountData && currentAccountData.wizardSkipPanels) {
+            if (gCurrentAccountData && gCurrentAccountData.wizardSkipPanels) {
                 wizardMap.identity.next = "done";
                 wizardMap.done.previous = "identity";
             }
@@ -614,7 +635,7 @@ function PrefillAccountForIsp(ispName)
 
     // prefill the rest of the wizard
     dump("PrefillAccountForISP: filling with " + ispData + "\n");
-    currentAccountData = ispData;
+    SetCurrentAccountData(ispData);
     AccountDataToPageData(ispData, pageData);
 }
 
@@ -645,8 +666,8 @@ function FixupAccountDataForIsp(accountData)
 
 function SetCurrentAccountData(accountData)
 {
-    dump("Setting current account data (" + currentAccountData + ") to " + accountData + "\n");
-    currentAccountData = accountData;
+    //    dump("Setting current account data (" + gCurrentAccountData + ") to " + accountData + "\n");
+    gCurrentAccountData = accountData;
 }
 
 function getInterfaceForType(type) {

@@ -94,7 +94,7 @@ function onInit()
 // and update the UI to add the @domain static text
 function checkForDomain()
 {
-  var accountData = parent.currentAccountData;
+  var accountData = parent.gCurrentAccountData;
   if (!accountData) return;
   if (!accountData.domain) return;
 

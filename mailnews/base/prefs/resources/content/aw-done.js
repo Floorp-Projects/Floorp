@@ -25,8 +25,8 @@ function onInit() {
     if (pageData.identity && pageData.identity.email) {
         // fixup the email
         email = pageData.identity.email.value;
-        if (email.split('@').length < 2 && parent.currentAccountData.domain)
-            email += "@" + parent.currentAccountData.domain;
+        if (email.split('@').length < 2 && parent.gCurrentAccountData.domain)
+            email += "@" + parent.gCurrentAccountData.domain;
     }
     setDivTextFromForm("identity.email", email);
 
