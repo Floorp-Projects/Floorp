@@ -622,7 +622,7 @@ nsHTMLAnchorElement::GetHash(nsAWritableString& aHash)
         result = url->GetRef(getter_Copies(ref));
       }
 
-      if (result == NS_OK && (nsnull != ref.get()) && ('\0' != *ref)) {
+      if (result == NS_OK && (nsnull != ref.get()) && ('\0' != *ref.get())) {
         aHash.Assign(PRUnichar('#'));
         aHash.Append(NS_ConvertASCIItoUCS2(ref));
       }
