@@ -748,7 +748,7 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
 #endif
     if (count == 0) {
       *aDefaultAccount=nsnull;
-      return NS_OK;
+      return NS_ERROR_FAILURE;
     }
 
     nsCOMPtr<nsISupports> element;
