@@ -860,8 +860,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
                   if (NS_SUCCEEDED(rv) && atom) {
                     // define behavior for each type of XUL element:
-                    if (atom == nsXULAtoms::textbox) {
-                      // if it's a text box, give it focus
+                    if (atom == nsXULAtoms::textbox || atom == nsXULAtoms::menulist) {
+                      // if it's a text box or menulist, give it focus
                       element->Focus();
                     } else {
                       // otherwise, focus and click in it
