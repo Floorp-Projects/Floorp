@@ -31,6 +31,7 @@ nsIAtom* nsHTMLAtoms::accept;
 nsIAtom* nsHTMLAtoms::acceptcharset;
 nsIAtom* nsHTMLAtoms::accesskey;
 nsIAtom* nsHTMLAtoms::action;
+nsIAtom* nsHTMLAtoms::afterPseudo;
 nsIAtom* nsHTMLAtoms::align;
 nsIAtom* nsHTMLAtoms::alink;
 nsIAtom* nsHTMLAtoms::alt;
@@ -39,6 +40,7 @@ nsIAtom* nsHTMLAtoms::archive;
 nsIAtom* nsHTMLAtoms::area;
 nsIAtom* nsHTMLAtoms::axis;
 nsIAtom* nsHTMLAtoms::background;
+nsIAtom* nsHTMLAtoms::beforePseudo;
 nsIAtom* nsHTMLAtoms::below;
 nsIAtom* nsHTMLAtoms::bgcolor;
 nsIAtom* nsHTMLAtoms::blockFrame;
@@ -288,6 +290,7 @@ void nsHTMLAtoms::AddrefAtoms()
     acceptcharset = NS_NewAtom("acceptcharset");
     accesskey = NS_NewAtom("accesskey");
     action = NS_NewAtom("action");
+    afterPseudo = NS_NewAtom(":after");
     align = NS_NewAtom("align");
     alink = NS_NewAtom("alink");
     alt = NS_NewAtom("alt");
@@ -296,6 +299,7 @@ void nsHTMLAtoms::AddrefAtoms()
     area = NS_NewAtom("area");
     axis = NS_NewAtom("axis");
     background = NS_NewAtom("background");
+    beforePseudo = NS_NewAtom(":before");
     below = NS_NewAtom("below");
     bgcolor = NS_NewAtom("bgcolor");
     blockFrame = NS_NewAtom("BlockFrame");
@@ -543,6 +547,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(abbr);
     NS_RELEASE(above);
     NS_RELEASE(action);
+    NS_RELEASE(afterPseudo);
     NS_RELEASE(align);
     NS_RELEASE(alink);
     NS_RELEASE(alt);
@@ -551,6 +556,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(area);
     NS_RELEASE(axis);
     NS_RELEASE(background);
+    NS_RELEASE(beforePseudo);
     NS_RELEASE(below);
     NS_RELEASE(bgcolor);
     NS_RELEASE(blockFrame);
