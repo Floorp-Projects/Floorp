@@ -54,6 +54,15 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefetchService, Init)
 
 ////////////////////////////////////////////////////////////////////////
+// Define the contructor function for the Mac specific objects
+#ifdef XP_MAC
+#include "nsMacMIMEDataSource.h"
+#include "nsInternetConfigService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacMIMEDataSource);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService);
+#endif
+
+////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
 // information like the function to create an instance, contractid, and
 // class name.
@@ -73,6 +82,12 @@ static const nsModuleComponentInfo components[] = {
      nsExternalProtocolHandlerConstructor, },
   {  NS_PREFETCHSERVICE_CLASSNAME, NS_PREFETCHSERVICE_CID, NS_PREFETCHSERVICE_CONTRACTID,
      nsPrefetchServiceConstructor, },
+#ifdef XP_MAC
+  { "MacMIME data source", NS_NATIVEMIMEDATASOURCE_CID, NS_NATIVEMIMEDATASOURCE_CONTRACTID,
+    nsMacMIMEDataSourceConstructor, },
+  { "Internet Config Service", NS_INTERNETCONFIGSERVICE_CID, NS_INTERNETCONFIGSERVICE_CONTRACTID,
+    nsInternetConfigServiceConstructor, },
+#endif
 };
 
 

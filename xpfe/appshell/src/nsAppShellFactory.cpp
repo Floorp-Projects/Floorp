@@ -51,13 +51,6 @@
 #include "nsWindowMediator.h"
 #include "nsTimingService.h"
 
-#ifdef XP_MAC
-#include "nsMacMIMEDataSource.h"
-#include "nsInternetConfigService.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacMIMEDataSource);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService);
-#endif
-
 #include "nsUserInfo.h"
 
 /* extern the factory entry points for each component... */
@@ -101,18 +94,6 @@ static const nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_TIMINGSERVICE_CONTRACTID,
     nsTimingServiceConstructor,
   },
-#if XP_MAC
-   { "MacMIME data source",
-    NS_NATIVEMIMEDATASOURCE_CID,
-    NS_NATIVEMIMEDATASOURCE_CONTRACTID,
-    nsMacMIMEDataSourceConstructor,
-  },
-   { "Internet Config Service",
-   NS_INTERNETCONFIGSERVICE_CID,
-   NS_INTERNETCONFIGSERVICE_CONTRACTID,
-   nsInternetConfigServiceConstructor,
-   },
-#endif
 };
 
 NS_IMPL_NSGETMODULE(appshell, gAppShellModuleInfo)
