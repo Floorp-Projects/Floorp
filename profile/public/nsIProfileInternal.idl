@@ -1,0 +1,80 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsIProfile.idl"
+
+interface nsICmdLineService;
+
+[scriptable, uuid(2f977d42-5485-11d4-87e2-0010a4e75ef2)]
+interface nsIProfileInternal : nsIProfile {
+    
+    [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
+    void startup(in wstring filename);
+ 
+    long get4xProfileCount();
+
+   /**
+    * The following values are used with getProfileListX
+    *
+    * LIST_ONLY_NEW     - the list will contain only migrated profiles
+    * LIST_ONLY_OLD     - the list will contain only un-migrated profiles
+    * LIST_ALL          - the list will contain all profiles
+    * 
+    */
+    
+    const unsigned long LIST_ONLY_NEW  = 1;
+    const unsigned long LIST_ONLY_OLD  = 2;
+    const unsigned long LIST_ALL       = 3;
+    
+    void getProfileListX(in unsigned long which, out unsigned long length, [retval, array, size_is(length)] out wstring profileNames);
+   
+    void startApprunner(in wstring profileName);
+
+    void migrateProfileInfo();
+    void migrateAllProfiles();
+    void migrateProfile(in wstring profileName, in boolean showProgressAsModalWindow);
+    void forgetCurrentProfile();
+    
+   /**
+    * The following 3 methods are deprecated. DO NOT USE THEM.
+    */
+    
+    boolean isCurrentProfileAvailable();
+    [noscript] void getProfileDir(in wstring profileName,
+                                  out nsIFile profileDir);
+    [noscript] void getCurrentProfileDir(out nsIFile profileDir);
+
+    attribute boolean automigrate;
+    readonly attribute nsIFile defaultProfileParentDir;
+    readonly attribute wstring firstProfile;
+
+    [noscript] void updateRegistry(in nsIFile regName);
+    [noscript] void setRegStrings(in wstring profileName, 
+                       in wstring regString,
+                       in wstring regName,
+                       in wstring regEmail,
+                       in wstring regOption);
+    [noscript] string isRegStringSet(in wstring profileName); 
+
+};
+
+#endif /* nsIProfileInternal_h__ */
