@@ -37,6 +37,20 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
+/* bidi */
+
+[dir="rtl"] {
+  direction: rtl;
+  unicode-bidi: embed;
+}
+[dir="ltr"] {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+bdo[dir] {
+  unicode-bidi: bidi-override;
+}
+
 /* blocks */
 
 html, div, map, dt, isindex {
