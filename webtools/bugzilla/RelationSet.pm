@@ -196,6 +196,20 @@ sub toArray {
   return keys(%$self);
 }
 
+# return this set as an array of strings
+#
+sub toArrayOfStrings {
+  ($#_ == 0) || confess("invalid number of arguments");
+  my $self = shift();
+
+  my @result = ();
+  foreach my $i ( keys %$self ) {
+    push @result, &::DBID_to_name($i);
+  }
+
+  return sort(@result);
+}  
+
 # return this set in string form (comma-separated and sorted)
 #
 sub toString {
