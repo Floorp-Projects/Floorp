@@ -1,14 +1,19 @@
 // All the definition here after are temporary and must be removed in the future when be defined somewhere else...
 
+
+#define NS_IMPL_IDS
+#include "nsISupports.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIPref.h"
+#include "nsIMimeHeaderConverter.h"
+  
 #include "rosetta_mailnews.h"
 #include "nsMsgCompose.h"
 
 #include "msgCore.h"
 
-#include "nsISupports.h"
-#include "nsIPref.h"
-#include "nsIMimeHeaderConverter.h"
-  
+
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeHeaderConverterCID, NS_MIME_HEADER_CONVERTER_CID);
@@ -64,24 +69,128 @@ int16				INTL_DefaultMailCharSetID(int16 csid) {return 2;}
 int16				INTL_DefaultNewsCharSetID(int16 csid) {return 2;}
 void				INTL_MessageSendToNews(XP_Bool toNews) {return;}
 
-// MIME encoder, output string should be freed by PR_FREE
-char *				INTL_EncodeMimePartIIStr(const char *header, const char *charset, XP_Bool bUseMime) 
+//
+// Begin international functions.
+//
+
+// Convert an unicode string to a C string with a given charset.
+nsresult ConvertFromUnicode(const nsString aCharset, 
+                            const nsString inString,
+                            char** outCString)
 {
+  nsICharsetConverterManager * ccm = nsnull;
+  nsresult res;
+
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                     kICharsetConverterManagerIID, 
+                                     (nsISupports**)&ccm);
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsIUnicodeEncoder* encoder = nsnull;
+
+    // get an unicode converter
+    res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+    if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
+      const PRUnichar *unichars = inString.GetUnicode();
+      PRInt32 unicharLength = inString.Length();
+      PRInt32 dstLength;
+      res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
+      // allocale an output buffer
+      *outCString = (char *) PR_Malloc(dstLength + 1);
+      if (*outCString != nsnull) {
+        // convert from unicode
+        res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
+        (*outCString)[dstLength] = '\0';
+      }
+      else {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      NS_IF_RELEASE(encoder);
+    }    
+    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+  }
+  return res;
+}
+
+// Convert a C string to an unicode string.
+nsresult ConvertToUnicode(const nsString aCharset, 
+                          const char *inCString, 
+                          nsString &outString)
+{
+  nsICharsetConverterManager * ccm = nsnull;
+  nsresult res;
+
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                     kICharsetConverterManagerIID, 
+                                     (nsISupports**)&ccm);
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsIUnicodeDecoder* decoder = nsnull;
+    PRUnichar *unichars;
+    PRInt32 unicharLength;
+
+    // get an unicode converter
+    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+      PRInt32 srcLen = PL_strlen(inCString);
+      res = decoder->Length(inCString, 0, srcLen, &unicharLength);
+      // allocale an output buffer
+      unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
+      if (unichars != nsnull) {
+        // convert to unicode
+        res = decoder->Convert(unichars, 0, &unicharLength, inCString, 0, &srcLen);
+        outString.SetString(unichars, unicharLength);
+      }
+      else {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      NS_IF_RELEASE(decoder);
+    }    
+    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+  }  
+  return res;
+}
+
+// Charset to be used for the internatl processing.
+const char *msgCompHeaderInternalCharset()
+{
+  // UTF-8 is a super set of us-ascii. 
+  // We can use the same string manipulation methods as us-ascii without breaking non us-ascii characters. 
+  return "UTF-8";
+}
+
+// MIME encoder, output string should be freed by PR_FREE
+char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime) 
+{
+  nsString aCharset(msgCompHeaderInternalCharset());
+  nsString aString;
+  char *outCString = (char *) header; // initialize
+  nsresult res;
+#if 0 // Enable this when appcore hooks up the converter.
+  // utf-8 to ucs2 this conversion is inexpensive.
+  res = ConvertToUnicode(aCharset, header, aString);
+  if (NS_SUCCEEDED(res)) {
+    aCharset.SetString(charset);
+    // Convert to the mail charset
+    res = ConvertFromUnicode(aCharset, aString, &outCString);
+  }
+#endif
+
+  // No MIME, just duplicate the string.
   if (PR_FALSE == bUseMime) {
     return PL_strdup(header);
   }
 
   char *encodedString = nsnull;
   nsIMimeHeaderConverter *converter;
-  nsresult res = nsComponentManager::CreateInstance(kCMimeHeaderConverterCID, nsnull, 
-                                                    nsIMimeHeaderConverter::GetIID(), (void **)&converter);
+  res = nsComponentManager::CreateInstance(kCMimeHeaderConverterCID, nsnull, 
+                                           nsIMimeHeaderConverter::GetIID(), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
-    res = converter->EncodeMimePartIIStr(header, charset, kMIME_ENCODED_WORD_SIZE, &encodedString);
+    res = converter->EncodeMimePartIIStr(outCString, charset, kMIME_ENCODED_WORD_SIZE, &encodedString);
     NS_RELEASE(converter);
   }
   return NS_SUCCEEDED(res) ? encodedString : nsnull;
 }
 
+// Get a default mail character set.
 char * INTL_GetDefaultMailCharset()
 {
   char * retVal = nsnull;
@@ -108,16 +217,25 @@ char * INTL_GetDefaultMailCharset()
   return (nsnull != retVal) ? retVal : PL_strdup("us-ascii");
 }
 
+// Return True if a charset is stateful (e.g. JIS).
 PRBool INTL_stateful_charset(const char *charset)
 {
   //TODO: use charset manager's service
   return (PL_strcasecmp(charset, "iso-2022-jp") == 0);
 }
 
+// Obsolescent
 int					INTL_IsLeadByte(int charSetID,unsigned char ch) {return 0;}
+// Obsolescent
 CCCDataObject		INTL_CreateDocToMailConverter(iDocumentContext context, XP_Bool isHTML, unsigned char *buffer,uint32 buffer_size) {return NULL;}
+// Obsolescent
 char *				INTL_GetAcceptLanguage() {return "en";}
+// Obsolescent
 void				INTL_CharSetIDToName(int16 charSetID,char *charset_return) {PL_strcpy (charset_return,"us-ascii"); return;}
+
+//
+// End international functions.
+//
 
 MimeEncoderData *	MimeB64EncoderInit(int (*output_fn) (const char *buf, int32 size, void *closure), void *closure) {return NULL;}
 MimeEncoderData *	MimeQPEncoderInit (int (*output_fn) (const char *buf, int32 size, void *closure), void *closure) {return NULL;}
