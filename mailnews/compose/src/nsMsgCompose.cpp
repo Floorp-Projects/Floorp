@@ -1407,7 +1407,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   // mark any disposition flags like replied or forwarded on the message.
   mOriginalMsgURI = originalMsgURI;
 
-  char *uriList = PL_strdup(originalMsgURI);
+  char *uriList = strdup(originalMsgURI);
   if (!uriList)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1425,10 +1425,25 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   }
 
   PRBool isFirstPass = PR_TRUE;
-  char *newStr = uriList;
-  char *uri;
-  while (nsnull != (uri = nsCRT::strtok(newStr, ",", &newStr)))
+  char *uri = uriList;
+  char *nextUri;
+  do 
   {
+    nextUri = strstr(uri, "://");
+    if (nextUri)
+    {
+      // look for next ://, and then back up to previous ','
+      nextUri = strstr(nextUri + 1, "://");
+      if (nextUri)
+      {
+        *nextUri = '\0';
+        char *saveNextUri = nextUri;
+        nextUri = strrchr(uri, ',');
+        if (nextUri)
+          *nextUri = '\0';
+        *saveNextUri = ':';
+      }
+    }
     nsCOMPtr <nsIMsgDBHdr> msgHdr;
     rv = GetMsgDBHdrFromURI(uri, getter_AddRefs(msgHdr));
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1539,7 +1554,9 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       }
     }
     isFirstPass = PR_FALSE;
+    uri = nextUri + 1;
   }
+  while (nextUri);
   PR_Free(uriList);
   return rv;
 }
