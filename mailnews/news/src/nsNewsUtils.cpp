@@ -215,9 +215,7 @@ nsresult nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri)
   if (tailURI.Find(kNewsRootURI) == 0)
     tailURI.Cut(0, kNewsRootURILen);
   
-  const char *tail = tailURI.ToNewCString();
-    
-	*uri = PR_smprintf("%s%s#%d", kNewsMessageRootURI, tail, key);
+	*uri = PR_smprintf("%s%s#%d", kNewsMessageRootURI, (const char *)nsAutoCString(tailURI), key);
   
 	return NS_OK;
 }
