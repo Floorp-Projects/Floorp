@@ -145,12 +145,6 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 
 nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
 {
-  nsresult rv;
-  // remove self from form post notifications:
-  nsCOMPtr<nsIObserverService> svc(do_GetService("@mozilla.org/observer-service;1", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    svc->RemoveObserver(this, NS_FORMSUBMIT_SUBJECT);
-  }
   if (mTransferringRequests.ops) {
     PL_DHashTableFinish(&mTransferringRequests);
     mTransferringRequests.ops = nsnull;
