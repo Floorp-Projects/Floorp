@@ -303,7 +303,7 @@ AnISupportsPtrPtrContext( nsISupports** )
 #define TEST_EXCEPTIONS 1
 
 // HAVE_CPP_EXCEPTIONS is defined automagically on unix
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
 #if !defined(HAVE_CPP_EXCEPTIONS)
 #undef TEST_EXCEPTIONS
 #endif
