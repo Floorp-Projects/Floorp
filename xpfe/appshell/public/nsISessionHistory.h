@@ -119,6 +119,17 @@ public:
    */
   NS_IMETHOD SetLoadingHistoryEntry(nsHistoryEntry * aHistoryEntry) = 0;
 
+  /**
+   * Get the URL of the index
+   */
+  NS_IMETHOD GetURLForIndex(PRInt32 aIndex, const PRUnichar ** aURL) = 0;
+
+
+  /**
+   * Set the URL of the index
+   */
+  NS_IMETHOD SetURLForIndex(PRInt32 aIndex, const PRUnichar * aURL) = 0;
+
 };
 
 extern "C" NS_APPSHELL nsresult
