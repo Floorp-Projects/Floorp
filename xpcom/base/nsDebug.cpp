@@ -32,6 +32,8 @@
 #if defined(XP_BEOS)
 /* For DEBUGGER macros */
 #include <Debug.h>
+/* for getenv() */
+#include <stdlib.h>
 #endif
 
 #if defined(XP_UNIX) || defined(_WIN32)

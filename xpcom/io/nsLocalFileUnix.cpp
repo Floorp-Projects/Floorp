@@ -40,6 +40,7 @@
 #include <ctype.h>
 #ifdef XP_BEOS
 #include <Path.h>
+#include <Entry.h>
 #endif
 
 #include "nsCRT.h"
