@@ -2,14 +2,14 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.9 $ 
-# $Date: 2000/11/09 19:21:44 $ 
+# $Revision: 1.10 $ 
+# $Date: 2001/01/04 00:26:16 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
 
-# tinder - the main tinderbox program.  This program make all the HTML
-# pages.
+# tinder.cgi - the main tinderbox program.  This program make all the 
+# 		HTML pages.
 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file

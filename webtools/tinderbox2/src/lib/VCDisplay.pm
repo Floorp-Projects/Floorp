@@ -1,6 +1,6 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# The VCDisplay module describes how tinderbox should prepeare URLS to
+# VCDisplay.pm - describes how tinderbox should prepeare URLS to
 # show the source tree allow VC queries.  Currently there are two
 # implementations one for users of the bonsai system (cvsquery,
 # cvsguess, cvsblame) and one for users who have no web based access
@@ -8,8 +8,8 @@
 # VCDisplay module for CVSWeb.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/11/09 19:28:42 $ 
+# $Revision: 1.4 $ 
+# $Date: 2001/01/04 00:23:24 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay.pm,v $ 
 # $Name:  $ 

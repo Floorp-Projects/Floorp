@@ -2,8 +2,12 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.4 $ 
-# $Date: 2000/11/09 19:19:32 $ 
+# addnote.cgi - the webform which users enter notices to be displayed
+#		 on the tinderbox status page.
+
+
+# $Revision: 1.5 $ 
+# $Date: 2001/01/04 00:24:50 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 

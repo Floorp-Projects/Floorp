@@ -3,18 +3,23 @@
 #
 
 # processmail_bugs - The 'bug tracking' mail processing engine for
-# tinderbox.  The bug tracking server (bugzilla, aim, remedy) send
-# mail to the tinderbox server, when bug tickets change state. This
-# program will parse the most common mail formats and and tell the
-# tinderbox server about the tickets.  Tinderbox will display summary
+# tinderbox.  The bug tracking server (bugzilla, aim, remedy, etc.)
+# send mail to the tinderbox server, when bug tickets change
+# state. This program will parse the most common mail formats and and
+# tell the tinderbox server about the tickets.  This program should be
+# run by the MTA (Sendmail) when ever mail for the tinderboxs
+# bugtracking mail account arrives.  Tinderbox will display summary
 # information about these tickets on the same page as the build and
 # version control information.  The Bug Tracking modules are designed
 # to be very flexible and work with any bug tracking system, they may
-# require technical configurations.
+# require technical configurations.  No locks are used by the mail
+# processes, data is passed to the tinderbox server in a maildir like
+# format.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/11/28 00:35:37 $ 
+
+# $Revision: 1.5 $ 
+# $Date: 2001/01/04 00:25:39 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 

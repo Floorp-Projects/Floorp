@@ -3,11 +3,11 @@
 # FileStructure.pm - The lookup for where different file/directories,
 # for each tree, are stored on the filesystem.  Local system
 # administrator may need to put different trees onto different disk
-# partitions and this will require making get_filename() less regular
-# then we have defined it here.
+# partitions and this will require making directory structure in
+# get_filename() less regular then we have defined it here.
 
-# $Revision: 1.1 $ 
-# $Date: 2000/11/29 20:53:25 $ 
+# $Revision: 1.2 $ 
+# $Date: 2001/01/04 00:24:36 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/FileStructure.pm,v $ 
 # $Name:  $ 
