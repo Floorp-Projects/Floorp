@@ -243,7 +243,14 @@ static int PR_CALLBACK colorPrefChanged (const char *newpref, void *data)
     rv = prefService->CopyCharPref(newpref, getter_Copies(colorStr));
     if (NS_SUCCEEDED(rv) && colorStr[0]) {
       nscolor thecolor;
-      if (NS_SUCCEEDED(NS_ColorNameToRGB(NS_ConvertASCIItoUCS2(colorStr),
+      if (colorStr[0] == '#') {
+        if (NS_SUCCEEDED(NS_HexToRGB(NS_ConvertASCIItoUCS2(Substring(colorStr, 1, colorStr.Length() - 1)),
+                                     &thecolor))) {
+          PRInt32 id = NS_PTR_TO_INT32(data);
+          CACHE_COLOR(id, thecolor);
+        }
+      }
+      else if (NS_SUCCEEDED(NS_ColorNameToRGB(NS_ConvertASCIItoUCS2(colorStr),
                                          &thecolor))) {
         PRInt32 id = NS_PTR_TO_INT32(data);
         CACHE_COLOR(id, thecolor);
@@ -294,7 +301,15 @@ nsXPLookAndFeel::InitColorFromPref(PRInt32 i, nsIPref* aPrefService)
   {
     nsAutoString colorNSStr; colorNSStr.AssignWithConversion(colorStr);
     nscolor thecolor;
-    if (NS_SUCCEEDED(NS_ColorNameToRGB(colorNSStr, &thecolor)))
+    if (colorNSStr[0] == '#') {
+      nsAutoString hexString;
+      colorNSStr.Right(hexString, colorNSStr.Length() - 1);
+      if (NS_SUCCEEDED(NS_HexToRGB(hexString, &thecolor))) {
+        CACHE_COLOR(i, thecolor);
+        PL_strfree(colorStr);
+      }
+    }
+    else if (NS_SUCCEEDED(NS_ColorNameToRGB(colorNSStr, &thecolor)))
     {
       CACHE_COLOR(i, thecolor);
       PL_strfree(colorStr);
