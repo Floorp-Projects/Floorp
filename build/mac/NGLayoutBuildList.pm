@@ -167,7 +167,13 @@ sub Checkout()
 	if ($main::pull{mac})
 	{
 		$session->checkout("mozilla/build/mac") || die "checkout failure";
-		$session->checkout("mozilla/cmd/macfe") || die "checkout failure";
+		$session->checkout("mozilla/cmd/macfe/applevnt") || die "checkout failure";
+		$session->checkout("mozilla/cmd/macfe/central") || die "checkout failure";
+		$session->checkout("mozilla/cmd/macfe/gui") || die "checkout failure";
+		$session->checkout("mozilla/cmd/macfe/include") || die "checkout failure";
+		$session->checkout("mozilla/cmd/macfe/pch") || die "checkout failure";
+		$session->checkout("mozilla/cmd/macfe/projects") || die "checkout failure";
+		$session->checkout("mozilla/cmd/macfe/utility") || die "checkout failure";
 		$session->checkout("mozilla/lib/mac/MacMemoryAllocator") || die "checkout failure";
 		$session->checkout("mozilla/lib/mac/NSStdLib") || die "checkout failure";
 		$session->checkout("mozilla/lib/mac/MoreFiles") || die "checkout failure";
