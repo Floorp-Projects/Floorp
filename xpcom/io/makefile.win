@@ -40,7 +40,7 @@ EXPORTS =                          \
         $(NULL)			
 
 NO_XPT_GEN=1
-XPILD_MODULE = xpcom_io
+XPIDL_MODULE = xpcom_io
 
 XPIDLSRCS =                     \
         .\nsIFileSpec.idl       \
