@@ -68,6 +68,9 @@ public:
     nsIWidget* GetParent(void);
 
     NS_IMETHOD Show(PRBool state);
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, 
+                                   PRBool aDoCapture, 
+                                   PRBool aConsumeRollupEvent);
     NS_IMETHOD IsVisible(PRBool &aState);
 
     NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
@@ -105,6 +108,10 @@ public:
 
     NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+
+    // Use this to set the name of a widget for normal widgets.. not the same 
+    // as the nsWindow version
+    NS_IMETHOD SetTitle(const nsString& aTitle);
 
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 

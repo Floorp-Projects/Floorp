@@ -18,7 +18,7 @@
 
 #include "nsWidget.h"
 #include "nsIDeviceContext.h"
-#include "nsIAppShell.h"
+#include "nsAppShell.h"
 #include "nsGfxCIID.h"
 #include "nsIComponentManager.h"
 #include "nsIFontMetrics.h"
@@ -27,14 +27,15 @@
 
 #include <qpainter.h>
 #include <qpixmap.h>
+#include <qapplication.h>
 
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-
 //#define DBG 1
 
 PRLogModuleInfo * QtWidgetsLM   = PR_NewLogModule("QtWidgets");
-PRLogModuleInfo * QtScrollingLM = PR_NewLogModule("QtScrolling");
 
 //=============================================================================
 //
@@ -229,6 +230,18 @@ NS_METHOD nsWidget::Show(PRBool bState)
 
     mShown = bState;
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, 
+                                            PRBool aDoCapture, 
+                                            PRBool aConsumeRollupEvent)
+{
+    PR_LOG(QtWidgetsLM, 
+           PR_LOG_DEBUG, 
+           ("nsWidget::CaptureRollupEvents %s\n",
+            mWidget ? mWidget->name() : "(null)"));
+  
     return NS_OK;
 }
 
@@ -478,9 +491,41 @@ NS_METHOD nsWidget::SetFont(const nsFont &aFont)
         nsFontHandle  fontHandle;
         mFontMetrics->GetFontHandle(fontHandle);
 
-        QFont * font = (QFont *)fontHandle;
-        
-        mWidget->setFont(*font);
+        nsAppShell::GfxToolkit aGfxToolkit = nsAppShell::GetGfxToolkit();
+
+        if (aGfxToolkit == nsAppShell::eQtGfxToolkit)
+        {
+            QFont * font = (QFont *)fontHandle;
+            mWidget->setFont(*font);
+        }
+        else if (aGfxToolkit == nsAppShell::eXlibGfxToolkit)
+        {
+            float app2dev;
+            mContext->GetAppUnitsToDevUnits(app2dev);
+
+            char * family = aFont.name.ToNewCString();
+            PRInt32 size = (PRInt32) (aFont.size * app2dev);
+            PRInt32 weight = (aFont.weight > NS_FONT_WEIGHT_NORMAL) ? 
+                QFont::Bold : QFont::Normal;
+            bool italic = (aFont.style & NS_FONT_STYLE_ITALIC);
+            PR_LOG(QtWidgetsLM, 
+                   PR_LOG_DEBUG, 
+                   ("nsWidget::SetFont: family=%s, size=%d, weight=%d\n", 
+                    family, size, weight));
+            QFont font(family, size, weight, italic);
+            mWidget->setFont(font);
+            unsigned long pr = 0;
+            if (::XGetFontProperty((XFontStruct *)fontHandle, 
+                                   XA_FULL_NAME, 
+                                   &pr))
+            {
+                PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("font name=%d\n", pr));
+            }
+        }
+        else
+        {
+            NS_ASSERTION(PR_FALSE, "Invalid toolkit");
+        }
     }
     NS_RELEASE(mFontMetrics);
     return NS_OK;
@@ -517,10 +562,12 @@ NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 {
+#if 0
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
-           ("nsWidget::SetCursor %s\n",
-            mWidget ? mWidget->name() : "(null)"));
+           ("nsWidget::SetCursor %s(%p) to %d\n",
+            mWidget ? mWidget->name() : "(null)", mWidget, aCursor));
+#endif
     if (!mWidget)
     {
         return NS_ERROR_FAILURE;
@@ -549,14 +596,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
             newCursor = QWidget::arrowCursor;
             break;
 
-        case eCursor_sizeWE:
-            newCursor = QWidget::sizeBDiagCursor;
-            break;
-
         case eCursor_sizeNS:
-            newCursor = QWidget::sizeFDiagCursor;
-            break;
-
         case eCursor_arrow_south:
         case eCursor_arrow_south_plus:
         case eCursor_arrow_north:
@@ -564,6 +604,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
             newCursor = QWidget::sizeVerCursor;
             break;
 
+        case eCursor_sizeWE:
         case eCursor_arrow_east:
         case eCursor_arrow_east_plus:
         case eCursor_arrow_west:
@@ -577,7 +618,15 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
         }
         
         mCursor = aCursor;
+#if 1
+        // Since nsEventStateManager::UpdateCursor() doesn't use the same
+        // nsWidget * that is given in DispatchEvent().
+        qApp->restoreOverrideCursor();
+        qApp->setOverrideCursor(newCursor);
+#else
         mWidget->setCursor(newCursor);
+        mWidget->repaint(true);
+#endif
     }
 
     return NS_OK;
@@ -702,58 +751,85 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
            PR_LOG_DEBUG, 
            ("nsWidget::GetNativeData %s\n",
             mWidget ? mWidget->name() : "(null)"));
+
+    nsAppShell::GfxToolkit aGfxToolkit = nsAppShell::GetGfxToolkit();
+
     switch(aDataType) 
     {
     case NS_NATIVE_WINDOW:
-#if 0
-        // Return Drawable.
-        if (!mPixmap && mBounds.width && mBounds.height)
+        switch (aGfxToolkit)
         {
-            PR_LOG(QtWidgetsLM, 
-                   PR_LOG_DEBUG, 
-                   ("nsWidget::GetNativeData %s creating pixmap %dx%d\n",
-                    mWidget ? mWidget->name() : "(null)",
-                    mBounds.width, 
-                    mBounds.height));
-            mPixmap = new QPixmap(mBounds.width, mBounds.height);
+        case nsAppShell::eQtGfxToolkit:
+            if (!mPixmap && mBounds.width && mBounds.height)
+            {
+                PR_LOG(QtWidgetsLM, 
+                       PR_LOG_DEBUG, 
+                       ("nsWidget::GetNativeData %s creating pixmap %dx%d\n",
+                        mWidget ? mWidget->name() : "(null)",
+                        mBounds.width, 
+                        mBounds.height));
+                //
+                // BAD !!!!!!
+                //
+                mPixmap  = new QPixmap(mBounds.width, mBounds.height);
+            }
+            return (void *)mPixmap;
+            break;
+        case nsAppShell::eXlibGfxToolkit:
+#if 1
+            return (void *)mWidget->winId();
+#else
+            // Return Drawable.
+            if (!mPixmap && mBounds.width && mBounds.height)
+            {
+                PR_LOG(QtWidgetsLM, 
+                       PR_LOG_DEBUG, 
+                       ("nsWidget::GetNativeData %s creating pixmap %dx%d\n",
+                        mWidget ? mWidget->name() : "(null)",
+                        mBounds.width, 
+                        mBounds.height));
+                mPixmap = new QPixmap(mBounds.width, mBounds.height);
+            }
+            if (mPixmap)
+            {
+                return (void *)mPixmap->handle();
+            }
+            else
+            {
+                NS_ASSERTION(0, "Couldn't allocated QPixmap");
+                return nsnull;
+            }
+#endif
+            break;
+        default:
+            NS_ASSERTION(PR_FALSE, "Invalid toolkit");
+            break;
         }
-        if (mPixmap)
+    case NS_NATIVE_DISPLAY:
+        if (aGfxToolkit == nsAppShell::eXlibGfxToolkit)
         {
-            return mPixmap->handle();
+            return (void *)mWidget->x11Display();
         }
         else
         {
-            NS_ASSERTION(0, "Couldn't allocated QPixmap");
-            return nsnull;
+            NS_ASSERTION(PR_FALSE, "Invalid toolkit");
         }
-#else
-        if (!mPixmap && mBounds.width && mBounds.height)
-        {
-            PR_LOG(QtWidgetsLM, 
-                   PR_LOG_DEBUG, 
-                   ("nsWidget::GetNativeData %s creating pixmap %dx%d\n",
-                    mWidget ? mWidget->name() : "(null)",
-                    mBounds.width, 
-                    mBounds.height));
-            //
-            // BAD !!!!!!
-            //
-            mPixmap  = new QPixmap(mBounds.width, mBounds.height);
-        }
-        return (void *)mPixmap;
-        //case NS_NATIVE_DISPLAY:
-        //return (void *)GDK_DISPLAY();
-#endif
     case NS_NATIVE_WIDGET:
         return (void *)mWidget;
     case NS_NATIVE_GRAPHIC:
-#if 0
-        // Return GC.
-        return qt_xget_temp_gc();
-#else
-        return mPainter;
-#endif
-        //return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
+        switch (aGfxToolkit)
+        {
+        case nsAppShell::eQtGfxToolkit:
+            return mPainter;
+        break;
+        case nsAppShell::eXlibGfxToolkit:
+            // Return GC.
+            return qt_xget_temp_gc();
+            break;
+        default:
+            NS_ASSERTION(PR_FALSE, "Invalid toolkit");
+            break;
+        }
     default:
         PR_LOG(QtWidgetsLM, 
                PR_LOG_DEBUG, 
@@ -826,6 +902,26 @@ NS_METHOD nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
             mWidget ? mWidget->name() : "(null)"));
     mPreferredWidth  = aWidth;
     mPreferredHeight = aHeight;
+    return NS_OK;
+}
+
+NS_METHOD nsWidget::SetTitle(const nsString &aTitle)
+{
+    PR_LOG(QtWidgetsLM, 
+           PR_LOG_DEBUG, 
+           ("nsWidget::SetTitle %s\n",
+            mWidget ? mWidget->name() : "(null)"));
+    
+    if (mWidget)
+    {
+        char * title = aTitle.ToNewCString();
+
+        mWidget->setCaption(title);
+
+        delete [] title;
+    }
+
+
     return NS_OK;
 }
 
@@ -913,6 +1009,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
     {
         parentWidget = (QWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
     } 
+#if 0
     else if (aAppShell) 
     {
         nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
@@ -921,6 +1018,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
             parentWidget = (QWidget *) shellWidget;
         }
     }
+#endif
 
     if (parentWidget)
     {
@@ -1167,10 +1265,12 @@ void nsWidget::InitEvent(nsGUIEvent& event,
 
 PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
 {
+#if 0
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsWidget::ConvertStatus %s\n",
             mWidget ? mWidget->name() : "(null)"));
+#endif
     switch(aStatus) 
     {
     case nsEventStatus_eIgnore:
@@ -1188,10 +1288,12 @@ PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
 
 PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
 {
+#if 0
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsWidget::DispatchWindowEvent %s\n",
             mWidget ? mWidget->name() : "(null)"));
+#endif
     nsEventStatus status;
     DispatchEvent(event, status);
     return ConvertStatus(status);
@@ -1205,10 +1307,12 @@ PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
 
 PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
 {
+#if 0
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsWidget::DispatchStandardEvent %s\n",
             mWidget ? mWidget->name() : "(null)"));
+#endif
     nsGUIEvent event;
     event.eventStructType = NS_GUI_EVENT;
     InitEvent(event, aMsg);
@@ -1228,10 +1332,12 @@ PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
 NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
                                       nsEventStatus &aStatus)
 {
+#if 0
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
-           ("nsWidget::DispatchEvent: %s: event listener=%p\n",
-            mWidget ? mWidget->name() : "(null)", mEventListener));
+           ("nsWidget::DispatchEvent: %s(%p): event listener=%p\n",
+            mWidget ? mWidget->name() : "(null)", mWidget, mEventListener));
+#endif
     NS_ADDREF(event->widget);
 
     if (nsnull != mMenuListener) 
@@ -1246,27 +1352,33 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
     aStatus = nsEventStatus_eIgnore;
     if (nsnull != mEventCallback) 
     {
+#if 0
         PR_LOG(QtWidgetsLM, 
                PR_LOG_DEBUG, 
                ("nsWidget::DispatchEvent %s: calling callback function\n",
                 mWidget ? mWidget->name() : "(null)"));   
+#endif
         aStatus = (*mEventCallback)(event);
     }
 
     // Dispatch to event listener if event was not consumed
     if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) 
     {
+#if 0
         PR_LOG(QtWidgetsLM, 
                PR_LOG_DEBUG, 
                ("nsWidget::DispatchEvent %s: calling event listener\n",
                 mWidget ? mWidget->name() : "(null)", aStatus));   
+#endif
         aStatus = mEventListener->ProcessEvent(*event);
     }
 
+#if 0
      PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsWidget::DispatchEvent %s: status=%d\n",
             mWidget ? mWidget->name() : "(null)", aStatus));   
+#endif
 
     NS_RELEASE(event->widget);
     return NS_OK;
@@ -1279,16 +1391,17 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
 //-------------------------------------------------------------------------
 PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 {
+#if 0
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsWidget::DispatchMouseEvent %s\n",
             mWidget ? mWidget->name() : "(null)"));
+#endif
     PRBool result = PR_FALSE;
     if (nsnull == mEventCallback && nsnull == mMouseListener) 
     {
         return result;
     }
-
 
     // call the event callback
     if (nsnull != mEventCallback) 
@@ -1345,6 +1458,12 @@ NS_METHOD nsWidget::CreateNative(QWidget *parentWindow)
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsWidget::CreateNative()\n"));
+
+    if (mWidget)
+    {
+        mWidget->setMouseTracking(true);
+        mWidget->setBackgroundMode(QWidget::PaletteBase);
+    }
 
     mEventHandler = nsQEventHandler::Instance(mWidget, this);
 
