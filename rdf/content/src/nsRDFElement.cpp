@@ -2858,16 +2858,18 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     }
 
     //Bubbling stage
-    if ((NS_EVENT_FLAG_CAPTURE != aFlags) && (mParent != nsnull)) {
+    if (NS_EVENT_FLAG_CAPTURE != aFlags) {
+        if (mParent != nsnull) {
         // We have a parent. Let them field the event.
         ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                       NS_EVENT_FLAG_BUBBLE, aEventStatus);
-    }
-    else if ((NS_EVENT_FLAG_CAPTURE != aFlags) && (mDocument != nsnull)) {
+        }
+        else if (mDocument != nsnull) {
         // We must be the document root. The event should bubble to the
         // document.
         ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                         NS_EVENT_FLAG_BUBBLE, aEventStatus);
+        }
     }
 
     if (NS_EVENT_FLAG_INIT == aFlags) {
