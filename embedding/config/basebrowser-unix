@@ -75,6 +75,7 @@ components/editor.xpt
 
 ; embedding                   
 components/libmozbrwsr.so                 
+components/libwebbrwsr.so  ; wtf!  it is needed?!
 components/mozbrwsr.xpt                 
 components/webBrowser_core.xpt
 components/webBrowser_setup.xpt
