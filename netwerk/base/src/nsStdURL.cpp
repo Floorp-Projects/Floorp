@@ -971,6 +971,11 @@ nsStdURL::GetFile(nsIFile * *aFile)
     if (mDirectory)
     {
         rv = AppendString(path,mDirectory,ESCAPED,nsIIOService::url_Directory);
+#if defined( XP_MAC )
+        // Now Swap the / and colons to convert back to a mac path
+        // Do this only on the mDirectory portion - not mFileBaseName or mFileExtension
+        SwapSlashColon( (char*)path.GetBuffer() );
+#endif
     }
 
     rv = AppendFileName(path,mFileBaseName,mFileExtension,ESCAPED);
@@ -997,9 +1002,7 @@ nsStdURL::GetFile(nsIFile * *aFile)
 
     nsUnescape((char*)path.GetBuffer());
 #if defined( XP_MAC )
- 	// Now Swap the / and colons to convert back to a mac path
-    SwapSlashColon( (char*)path.GetBuffer() );
-// and wack off leading :'s
+    // wack off leading :'s
     if (path.CharAt(0) == ':')
         path.Cut(0, 1);
 #endif
