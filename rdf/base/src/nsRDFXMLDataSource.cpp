@@ -1231,10 +1231,12 @@ static const char kRDFAlt[] = "RDF:Alt";
 
     nsXPIDLCString s;
     if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
+        static const char kIDEquals[] = " ID=\"";
+
         nsAutoString uri(s);
         rdf_PossiblyMakeRelative((const char*) docURI, uri);
         rdf_EscapeAmpersands(uri);
-        rdf_BlockingWrite(aStream, " ID=\"", 9);
+        rdf_BlockingWrite(aStream, kIDEquals, sizeof(kIDEquals) - 1);
         rdf_BlockingWrite(aStream, uri);
         rdf_BlockingWrite(aStream, "\"", 1);
     }
