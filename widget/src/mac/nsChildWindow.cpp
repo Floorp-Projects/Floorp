@@ -16,8 +16,6 @@
  * Reserved.
  */
 
-#if 0 //¥¥¥Êwill be enabled later - pierre
-
 #include "nsChildWindow.h"
 #include "nsCOMPtr.h"
 
@@ -77,8 +75,10 @@ nsresult nsChildWindow::StandardCreate(nsIWidget *aParent,
 
 void nsChildWindow::CalcWindowRegions(nsIWidget* aParent, nsRect& aBounds)
 {
-	Inherited::CalcWindowRegions(aParent, aBounds);
+	Inherited::CalcWindowRegions();
 
+#if 0	//¥REVISIT: this code can probably be removed: the children 
+		// are already clipped out in nsWindow::CalcWindowRegions()
 	// clip the children out of the visRgn
 	if (mClipChildren)
 	{
@@ -106,9 +106,10 @@ void nsChildWindow::CalcWindowRegions(nsIWidget* aParent, nsRect& aBounds)
 					::DiffRgn(mVisRegion, childRgn, mVisRegion);
 				}
 			} while (NS_SUCCEEDED(children->Next()));
-			::DisposeRgn(childRgn);
 		}
+		::DisposeRgn(childRgn);
 	}
+#endif
 
 	// clip the siblings out of the visRgn
 	if (mClipSiblings && mParent)
@@ -140,10 +141,8 @@ void nsChildWindow::CalcWindowRegions(nsIWidget* aParent, nsRect& aBounds)
 					}
 				}
 			} while (NS_SUCCEEDED(children->Next()));
-			::DisposeRgn(siblingRgn);
 		}
+		::DisposeRgn(siblingRgn);
 	}
 }
-
-#endif //¥¥¥Êwill be enabled later - pierre
 
