@@ -404,7 +404,6 @@ sub CheckOutFile
     
     DisplayError("I could not check the file out from the repository.<br> 
                   <strong>Command:</strong> <em>$command</em><br>
-                  <strong>Error Code:</strong> <em>$error_code</em><br> 
                   <strong>Error Message:</strong><b><pre>$errors</pre>");
     
     DeleteTempDir();
@@ -477,7 +476,6 @@ sub DiffFile
     DisplayError("I could not diff your version of the file against 
                   the version in the repository.<br>
                   <strong>Command:</strong> <em>$command</em><br>
-                  <strong>Error Code:</strong> <em>$error_code</em><br> 
                   <strong>Error Message:</strong><b><pre>$errors</pre>");
     
     DeleteTempDir();
@@ -528,7 +526,6 @@ sub CheckInFile
     DisplayError("I could not check your version of the file
                   into the repository.<br>
                   <strong>Command:</strong> <em>$command</em><br>
-                  <strong>Error Code:</strong> <em>$error_code</em><br> 
                   <strong>Error Message:</strong><br><pre>$errors</pre>");
     
     DeleteTempDir();
