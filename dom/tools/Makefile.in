@@ -45,7 +45,7 @@ CPPSRCS =  \
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
-PROGS = $(OBJDIR)/idlc
+PROGRAM = $(OBJDIR)/idlc
 
 TARGETS = $(PROGS)
 
@@ -54,28 +54,14 @@ INCLUDES += \
 			-I$(PUBLIC)/xpcom \
 			$(NULL)
 
-EX_LIBS = \
-			-L$(DIST)/bin \
-			-lraptorbase
-
+LIBS+=\
+	-lraptorbase	\
+	-lplc21	\
+	-lplds21	\
+	-lxpcom	\
+	-lreg	\
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-$(PROGS): $(OBJS) # $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
-else
-ifeq ($(OS_ARCH),IRIX)
-	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
-else
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
-endif
-endif
-
-export::
-
-install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
 
 
