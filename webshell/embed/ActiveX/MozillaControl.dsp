@@ -82,6 +82,10 @@ CFG=MozillaControl - Win32 Debug
 # PROP Default_Filter "*.cpp,*.c,*.idl,*.rc"
 # Begin Source File
 
+SOURCE=.\ActiveScriptSite.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ActiveXPlugin.cpp
 # End Source File
 # Begin Source File
@@ -170,11 +174,19 @@ SOURCE=.\WebShellContainer.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\ActiveScriptSite.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\ActiveXPlugin.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\ActiveXPluginInstance.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ActiveXTypes.h
 # End Source File
 # Begin Source File
 
