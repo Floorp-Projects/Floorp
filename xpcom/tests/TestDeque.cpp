@@ -44,7 +44,7 @@
  **************************************************************/
 class _TestDeque: public nsDequeFunctor{
 public:
-  _TestDeque::_TestDeque() {
+  _TestDeque() {
     SelfTest();
   }
   int SelfTest();
