@@ -19,7 +19,6 @@ locale/en-US/messenger-smime,                             en-US/locale/en-US/mes
 # xpfe extensions (ldap, wallet, etc)
 #################################################################################################
 locale/en-US/mozldap,                                     en-US/locale/en-US/mozldap
-locale/en-US/wallet,                                      en-US/locale/en-US/wallet
 locale/en-US/necko,                                       en-US/locale/en-US/necko
 locale/en-US/mozapps/downloads,                           en-US/locale/en-US/mozapps/downloads
 locale/en-US/mozapps/contents.rdf,                        en-US/locale/en-US/mozapps/contents.rdf
