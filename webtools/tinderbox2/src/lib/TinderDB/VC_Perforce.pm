@@ -123,12 +123,7 @@ use Time::Local;
 
 # Load Tinderbox libraries
 
-use lib '/tmp/tinderbox2/bin/local_conf',
-   '/tmp/tinderbox2/bin/default_conf',
-   '/tmp/tinderbox2/bin/lib',
-   '/tmp/t/tinderbox2/./build/local_conf',
-   '/tmp/t/tinderbox2/./build/default_conf',
-   '/tmp/t/tinderbox2/./build/lib';
+use lib '#tinder_libdir#';
 
 
 use TinderDB::BasicTxtDB;
@@ -138,7 +133,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -600,7 +595,6 @@ sub apply_db_updates {
   while (1) {
 
         my $change_num = $METADATA{$tree}{'next_change_num'};
-        $ENV{'PATH'}=$ENV{'PATH'}.':/usr/src/perforce';
         my (@cmd) = ('p4', 'describe', '-s', $change_num);
 
         store_cmd_output(@cmd);        
@@ -1012,3 +1006,6 @@ sub list2table_row {
     
     return $row;
 }
+
+
+1;
