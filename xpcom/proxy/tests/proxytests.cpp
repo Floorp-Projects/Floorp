@@ -278,9 +278,8 @@ void TestCase_NestedLoop(void *arg)
     
     if (proxyObject)
     {
-    // release ownership of the real object. 
+        // release ownership of the real object. 
         
-        PRInt32 a;
         nsresult rv;
         PRInt32 threadNumber = argsStruct->threadNumber;
         
