@@ -22,7 +22,7 @@
  *  Should only be built for the editor.
  *  Created: David Williams <djw@netscape.com>, Mar-12-1996
  *
- *  RCSID: "$Id: editordialogs.c,v 3.6 1998/09/03 21:43:52 akkana%netscape.com Exp $"
+ *  RCSID: "$Id: editordialogs.c,v 3.7 1998/10/08 21:36:20 akkana%netscape.com Exp $"
  */
 
 #include "mozilla.h"
@@ -4472,20 +4472,21 @@ fe_image_edit_image_do(MWContext* context,
 	char buf[512];
 
     if (hist_ent == NULL || hist_ent->address == NULL)
-		return; /* should not happen */
+        return; /* should not happen */
 
-	image = fe_TextFieldGetString(image_widget);
+    image = fe_TextFieldGetString(image_widget);
 
-	if (image == NULL || image[0] == '\0')
-		return; /* also shouldn't happen */
+    if (image == NULL || image[0] == '\0')
+        return; /* also shouldn't happen */
 
-	if (NET_IsHTTP_URL(image)) { /* remote url */
-		fe_error_dialog(context, widget,
-						XP_GetString(XFE_EDITOR_IMAGE_IS_REMOTE));
+    url = NET_MakeAbsoluteURL(hist_ent->address, image); /* alloc */
+
+    if (NET_IsHTTP_URL(url)) { /* remote url */
+        fe_error_dialog(context, widget,
+                        XP_GetString(XFE_EDITOR_IMAGE_IS_REMOTE));
         return;
     }
 
-	url = NET_MakeAbsoluteURL(hist_ent->address, image); /* alloc */
     if (XP_ConvertUrlToLocalFile(url, &local_name)) {
 		fe_EditorEditImage(context, local_name);
 	} else {
@@ -4783,7 +4784,7 @@ fe_editor_image_properties_validate(MWContext* context,
 
 static void
 fe_editor_image_properties_set(MWContext* context,
-								  fe_EditorImagePropertiesWidgets* w_data)
+                               fe_EditorImagePropertiesWidgets* w_data)
 {
 	EDT_ImageData* old;
 
@@ -4800,6 +4801,11 @@ fe_editor_image_properties_set(MWContext* context,
 
 	if ((w_data->properties->changed & PROP_IMAGE_ALT_TEXT) != 0)
 		fe_copy_string_over(&old->pAlt, w_data->alt_text);
+        else if (old->pAlt == 0) {
+            old->pAlt = XP_STRDUP(EDT_GetFilename(old->pSrc, FALSE));
+            fe_set_text_field(w_data->alt_text, w_data->image_data.pAlt,
+                              fe_image_alt_text_cb, (XtPointer)w_data);
+        }
 	
 	fe_editor_image_properties_common_set(context, old, w_data);
 
