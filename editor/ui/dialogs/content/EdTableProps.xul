@@ -46,13 +46,14 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
 
-  <tabcontrol orient="vertical">
-	  <tabbox flex="1">
+  <tabcontrol align="vertical" orient="vertical">
+	  <tabbox flex="1" align="horizontal">
 		  <tab id="TableTab" selected="true" oncommand="SelectTableTab()" value="&tableTab.label;"/>
 		  <tab id="CellTab" oncommand="SelectCellTab()" value="&cellTab.label;"/>
 	  	<spring flex="1"/>
 	  </tabbox>
     <tabpanel orient="vertical" id="TabPanel">
+
       <!-- TABLE PANEL -->
       <box id="TablePanel" orient="vertical">
         <titledbox><title><text value="&size.label;"/></title>
@@ -143,7 +144,7 @@
         <grid>
           <columns><column/><column/></columns>
           <rows>
-            <row valign="middle">
+            <row valign="middle" autostretch="never">
               <checkbox id="TableColorCheckbox" value="&color.label;"/>
               <box valign="middle">
                 <menu class="colorpicker">
@@ -152,12 +153,14 @@
                     <image class="popup-trigger"/>
                   </box>
     	            <menupopup>
-                    <colorpicker id="tableBackgroundCP" palettename="standard" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this);"/>
-                    <button class="dialog" value="&defaultColor.label;" oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this)"/>
+                    <colorpicker id="tableBackgroundCP" palettename="standard" 
+                      onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW','TableColorCheckbox', this.parentNode);"/>
+                    <button class="dialog" value="&defaultColor.label;" 
+                      oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW','TableColorCheckbox', this.parentNode)"/>
     	            </menupopup>
                 </menu>
                 <spring class="spacer"/>
-                <text class="label" id="TableInheritColor" value="&tableInheritColor.label;" hidden="true"/>
+                <text class="label" id="TableInheritColor" value="&tableInheritColor.label;" collapsed="true"/>
               </box>
             </row>
             <row valign="middle">
@@ -181,23 +184,26 @@
     	<box id="CellPanel" orient="vertical">
         <titledbox autostretch="never" valign="middle">
           <title><text align="left" value="&cellSelection.label;"/></title>
-          <grid>
-            <columns><column flex="1"/><column flex="1"/><column flex="1"/></columns>
-            <rows>
-              <row valign="middle" autostretch="never">
-                <menulist id="SelectionList" oncommand="ChangeSelection('event.target.id');">
-                  <menupopup>
-                    <menuitem id="SelectCellItem"   value="&cellSelectionCell.label;"/>
-                    <menuitem id="SelectRowItem"    value="&cellSelectionRow.label;"/>
-                    <menuitem id="SelectColumnItem" value="&cellSelectionColumn.label;"/>
-                  </menupopup>
-                </menulist>
-                <button class="dialog" value="&cellSelectionPrevious.label;" oncommand="SelectPrevious()"/>
-                <button class="dialog" value="&cellSelectionNext.label;" oncommand="SelectNext()"/>
-              </row>
-            </rows>
-          </grid>          
-          <spring flex="1"/>
+          <box orient="vertical">
+            <menulist id="SelectionList" oncommand="ChangeSelection(event.target.data)" flex="1">
+              <menupopup>
+                <!-- JS code assumes order is Cell, Row, Column -->
+                <menuitem value="&cellSelectCell.label;"   data="1"/>
+                <menuitem value="&cellSelectRow.label;"    data="2"/>
+                <menuitem value="&cellSelectColumn.label;" data="3"/>
+              </menupopup>
+            </menulist>
+            <box flex="1">
+              <button id="PreviousButton" class="dialog"       value="&cellSelectPrevious.label;" oncommand="MoveSelection(0)" flex="1"/>
+              <button id="NextButton"     class="dialog right" value="&cellSelectNext.label;"     oncommand="MoveSelection(1)" flex="1"/>
+            </box>
+          </box>
+          <spring class="bigspacer"/>
+          <box orient="vertical" flex="1">
+            <text value="&cellChangeSelectionMsg.label;"/>
+            <checkbox value="&cellApplyBeforeMove.label;" id="ApplyBeforeMove" checked="true" persist="checked"/>
+            <checkbox value="&cellKeepCurrentData.label;" id="KeepCurrentData" persist="checked"/>
+          </box>
         </titledbox>
         <!-- cell size titledbox -->
         <titledbox><title><text align="left" value="&size.label;"/></title>
@@ -227,7 +233,7 @@
               </row>
               <row valign="middle" autostretch="never">
                 <spring/>
-                <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeIntTextfield(this.id,'ColSpanInput');"/>
+                <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeIntTextfield(this.id,'SpanCheckbox');"/>
                 <text align="left" value="&cellSpanCols.label;"/>
               </row>
             </rows>
@@ -241,7 +247,7 @@
               <rows>
                 <row valign="middle" autostretch="never">
                   <checkbox id="CellHAlignCheckbox" value="&cellHorizontal.label;"/>
-                  <menulist id="CellHAlignList"  oncommand="SelectCellHAlign('CellHAlignCheckbox')">
+                  <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
                     <menupopup>
                       <menuitem value="&AlignLeft.label;"        data="left"/>
                       <menuitem value="&AlignCenter.label;"      data="center"/>
@@ -250,8 +256,9 @@
                       <menuitem value="&cellAlignAtChar.label;"  data="char"/>
                     </menupopup>
                   </menulist>
-                  <textfield id="CellAlignCharInput" maxlength="2" style="width: 1em" visibility="hidden"/>
+                  <textfield id="CellAlignCharInput" style="width: 2em"/>
                 </row>
+                <spring class="bigspacer"/>
                 <row valign="middle" autostretch="never">
                   <checkbox id="CellVAlignCheckbox" value="&cellVertical.label;"/>
                   <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
@@ -269,7 +276,7 @@
           <spring class="spacer"/>
           <box orient="vertical">
             <checkbox id="CellStyleCheckbox" value="&cellStyle.label;"/>
-            <menulist id="CellStyleList" >
+            <menulist id="CellStyleList" oncommand="SetCheckbox('CellStyleCheckbox');">
               <menupopup>
                 <menuitem value="&cellNormal.label;" data="td"/>
                 <menuitem value="&cellHeader.label;" data="th"/>
@@ -299,13 +306,13 @@
                   </box>
     	            <menupopup>
                     <colorpicker id="cellBackgroundCP" palettename="standard"
-                        onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
+                        onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW', 'CellColorCheckbox', this.parentNode)"/>
                     <button class="dialog" value="&defaultColor.label;"
-                        oncommand="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
+                        oncommand="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW', 'CellColorCheckbox', this.parentNode)"/>
     	            </menupopup>
                 </menu>
                 <spring class="spacer"/>
-                <text class="label" id="CellInheritColor" value="&cellInheritColor.label;" hidden="true"/>
+                <text class="label" id="CellInheritColor" value="&cellInheritColor.label;" collapsed="true"/>
               </box>
             </row>
             <row valign="middle" autostretch="never">
@@ -322,7 +329,8 @@
           <!-- From EdDialogOvlerlay.xul -->
           <button class="dialog" id="AdvancedEditButton2"/>
         </box>
-      </box>
+      </box><!-- Cell Panel -->
+
     </tabpanel> 
     <spring class="spacer"/>
     <!-- from EdDialogOverlay -->

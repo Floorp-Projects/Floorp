@@ -64,7 +64,9 @@
       </row>
       <row>
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
-        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()" onclick="SelectSuggestedWord()"/>
+        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()" onclick="SelectSuggestedWord()">
+          <treecolgroup><treecol flex="1"/></treecolgroup>
+        </tree>
         <grid flex="1">
           <columns><column flex="1"/><column flex="1"/></columns>
           <rows>

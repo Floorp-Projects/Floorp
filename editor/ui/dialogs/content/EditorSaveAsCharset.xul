@@ -58,7 +58,9 @@
     <titledbox orient="vertical"><title><text class="label" value="&documentCharsetTitle.label;"/></title>
       <text class="label" value="&documentCharsetDesc.label;"/>
       <box flex="1">
-        <tree class="list" id="CharsetTree" rows="10" flex="1" onselect="SelectCharset();"/>
+        <tree class="list" id="CharsetTree" rows="10" flex="1" onselect="SelectCharset();">
+          <treecolgroup><treecol flex="1"/></treecolgroup>
+        </tree>
       </box>
     </titledbox>
   </box>
