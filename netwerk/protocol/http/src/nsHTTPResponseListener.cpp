@@ -136,8 +136,8 @@ nsHTTPCacheListener::OnStartRequest(nsIChannel *aChannel,
                                     nsISupports *aContext)
 {
     PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPCacheListener::OnStartRequest [this=%x]\n", this));
-  
-    return mChannel -> AssureResponseOnStartFired ();
+
+    return mResponseDataListener->OnStartRequest(mChannel, aContext);
 }
 
 NS_IMETHODIMP
@@ -153,7 +153,9 @@ nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel,
     // is no socket transport involved nsnull is passed as the
     // transport...
     //
-    return mChannel -> ResponseCompleted (aStatus, aErrorMsg);
+    return mChannel->ResponseCompleted(mResponseDataListener, 
+                                     aStatus, 
+                                     aErrorMsg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,7 +342,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
             if (statusCode == 304)  // no content
             {
-                rv = mChannel -> FinishedResponseHeaders ();
+                rv = FinishedResponseHeaders ();
                 if (NS_FAILED (rv))
                     return rv;
 
@@ -379,7 +381,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
             }
             else
             {
-                rv = mChannel -> FinishedResponseHeaders ();
+                rv = FinishedResponseHeaders ();
                 if (NS_FAILED (rv))
                     return rv;
             }
@@ -508,7 +510,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
                         if (status != 304 || !mChannel -> mCachedResponse)
                         {
-                            mChannel -> ResponseCompleted (NS_OK, nsnull);
+                            mChannel -> ResponseCompleted (mResponseDataListener, NS_OK, nsnull);
                             mChannel -> mHTTPServerListener = 0;
                         }
 
@@ -610,8 +612,8 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
         // Ignore the return code, since the request is being completed...
         //
         mHeadersDone = PR_TRUE;
-        if (mResponse) {
-            mChannel -> FinishedResponseHeaders();
+        if (mResponse && mResponseDataListener) {
+            FinishedResponseHeaders();
         }
     }
 
@@ -625,12 +627,14 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
 
         if (status != 304 || !mChannel -> mCachedResponse)
         {
-            mChannel -> ResponseCompleted (i_Status, i_pMsg);
-
+            mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
             mChannel -> mHTTPServerListener = 0;
         }
 
         PRUint32 capabilities = 0;
+
+        PRUint32 keepAliveTimeout = 0;
+        PRInt32  keepAliveMaxCon = -1;
 
         if (mResponse && channel)   // this is the actual response from the transport
         {
@@ -672,6 +676,18 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
                         capabilities = (usingProxy ? NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE) : NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_KEEPALIVE));
                 }
 
+                nsXPIDLCString keepAliveHeader;
+                rv = mResponse -> GetHeader (nsHTTPAtoms::Keep_Alive, getter_Copies (keepAliveHeader));
+
+                const char *
+                cp = PL_strstr (keepAliveHeader, "max=");
+
+                if (cp)
+                    keepAliveMaxCon = atoi (cp + 4);
+
+                cp = PL_strstr (keepAliveHeader, "timeout=");
+                if (cp)
+                    keepAliveTimeout = (PRUint32) atoi (cp + 8);
             }
         }
 
@@ -680,7 +696,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
             while (NS_SUCCEEDED (mPipelinedRequest -> AdvanceToNextRequest ()))
             {
                 OnStartRequest (nsnull, nsnull);
-                mChannel -> ResponseCompleted (i_Status, i_pMsg);
+                mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
                 mChannel -> mHTTPServerListener = 0;
             }
 
@@ -689,7 +705,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
         }
 
         if (channel)
-            mHandler -> ReleaseTransport (channel, capabilities);
+            mHandler -> ReleaseTransport (channel, capabilities, PR_FALSE, keepAliveTimeout, keepAliveMaxCon);
     }
 
     NS_IF_RELEASE (mChannel );
@@ -722,7 +738,7 @@ nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener,
     nsresult rv;
 
     if (mHeadersDone) {
-        rv = mChannel -> FinishedResponseHeaders();
+        rv = FinishedResponseHeaders();
         if (NS_FAILED(rv)) return rv;
         
         if (mBytesReceived && mResponseDataListener) {
@@ -940,4 +956,28 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
   }
 
   return mResponse->ParseHeader(mHeaderBuffer);
+}
+
+nsresult
+nsHTTPServerListener::FinishedResponseHeaders ()
+{
+    nsresult rv;
+
+    rv = mChannel -> FinishedResponseHeaders ();
+    if (NS_FAILED(rv)) return rv;
+
+    //
+    // Fire the OnStartRequest notification - now that user data is available
+    //
+    if (NS_SUCCEEDED(rv) && mResponseDataListener)
+    {
+        rv = mResponseDataListener -> OnStartRequest (mChannel, mChannel -> mResponseContext);
+        if (NS_FAILED(rv))
+        {
+            PR_LOG(gHTTPLog, PR_LOG_ERROR, ("\tOnStartRequest [this=%x]. Consumer failed!"
+                        "Status: %x\n", this, rv));
+        }
+    } 
+
+    return rv;
 }

@@ -64,7 +64,7 @@ class nsHTTPChannel;
 #define DEFAULT_HTTP_REQUEST_TIMEOUT    30
 #define DEFAULT_HTTP_CONNECT_TIMEOUT    30
 #define DEFAULT_MAX_ALLOWED_KEEPALIVES  30
-
+#define DEFAULT_MAX_ALLOWED_KEEPALIVES_PER_SERVER   8
 
 typedef struct  BrokenServersTable_s
         {
@@ -108,7 +108,7 @@ public:
                                      nsIChannel** o_pTrans);
     
     /* Remove this transport from the list. */
-    virtual nsresult ReleaseTransport(nsIChannel* i_pTrans, PRUint32 capabilies = 0, PRBool aDontRestartChannels = PR_FALSE);
+    virtual nsresult ReleaseTransport(nsIChannel* i_pTrans, PRUint32 capabilies = 0, PRBool aDontRestartChannels = PR_FALSE, PRUint32 aKeepAliveTimeout = 0, PRInt32 aKeepAliveMaxCon = -1);
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
     PRTime GetSessionStartTime() { return mSessionStartTime; }
 
@@ -148,6 +148,7 @@ protected:
     PRInt32             mKeepAliveTimeout;
     PRInt32             mMaxConnections;
     PRInt32             mMaxAllowedKeepAlives;
+    PRInt32             mMaxAllowedKeepAlivesPerServer;
 
     nsCOMPtr<nsIPref>   mPrefs;
     nsCOMPtr<nsIProtocolProxyService>       mProxySvc;

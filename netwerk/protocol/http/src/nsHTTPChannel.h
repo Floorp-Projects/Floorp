@@ -90,8 +90,8 @@ public:
     nsresult            Redirect(const char *aURL,
                                  nsIChannel **aResult);
 
-    nsresult            AssureResponseOnStartFired ();
-    nsresult            ResponseCompleted(nsresult aStatus,
+    nsresult            ResponseCompleted(nsIStreamListener *aListener,
+                                          nsresult aStatus,
                                           const PRUnichar* aMsg);
 
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
@@ -104,6 +104,8 @@ public:
     nsresult            FinishedResponseHeaders();
 
     nsresult            Abort();
+
+    PRUint32            getChannelState ();
 
 protected:
     nsresult            CheckCache();
@@ -154,8 +156,6 @@ protected:
     
     // Called mOpenObserver->OnStartRequest
     PRBool                              mFiredOpenOnStartRequest;
-    PRBool                              mFiredResponseOnStartRequest;
-    PRBool                              mResponseCompleted;
 
     // Auth related stuff-
     /* 

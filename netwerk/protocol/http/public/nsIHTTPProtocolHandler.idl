@@ -159,6 +159,9 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
 	 * such server
 	 */
 	unsigned long Check4BrokenHTTPServers (in string serverHeader);
+
+	unsigned long GetServerCapabilities   (in string host, in long port, in unsigned long defaultCapabilities);
+	void SetServerCapabilities   (in string host, in long port, in unsigned long capabilities);
 };
 
 %{C++
