@@ -57,7 +57,7 @@ namespace Silverstone.Manticore.LayoutAbstraction
     public WebBrowser()
     {
       this.Dock = DockStyle.Fill;
-    }
+	}
 
     public void RealizeLayoutEngine()
     {
@@ -123,6 +123,24 @@ namespace Silverstone.Manticore.LayoutAbstraction
         gecko.Navigate(url, ref o, ref o, ref o, ref o);
       else if (trident != null)
         trident.Navigate(url, ref o, ref o, ref o, ref o);
+    }
+
+    public void GoBack()
+    {
+      RealizeLayoutEngine();
+      if (gecko != null)
+        gecko.GoBack();
+      else if (trident != null)
+        trident.GoBack();
+    }
+
+    public void GoForward()
+    {
+      RealizeLayoutEngine();
+      if (gecko != null)
+        gecko.GoForward();
+      else if (trident != null)
+        trident.GoForward();
     }
 
     public void GoHome()

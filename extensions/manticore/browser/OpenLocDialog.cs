@@ -107,7 +107,7 @@ namespace Silverstone.Manticore.OpenDialog
 			this.AcceptButton = this.openButton;
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
 			this.CancelButton = this.cancelButton;
-			this.ClientSize = new System.Drawing.Size(546, 96);
+			this.ClientSize = new System.Drawing.Size(550, 98);
 			this.ControlBox = false;
 			this.Controls.AddRange(new System.Windows.Forms.Control[] {
 																		  this.cancelButton,
@@ -118,7 +118,6 @@ namespace Silverstone.Manticore.OpenDialog
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.Name = "OpenDialog";
-			this.Opacity = 0.9;
 			this.ShowInTaskbar = false;
 			this.Text = "Open Location";
 			this.Load += new System.EventHandler(this.OpenDialog_Load);

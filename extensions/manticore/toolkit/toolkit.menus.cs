@@ -44,7 +44,7 @@ namespace Silverstone.Manticore.Toolkit.Menus
   using System.IO;
   using System.Xml;
 
-  public class MenuBuilder
+  public abstract class MenuBuilder
   {
     protected internal String menuDefinitionFile;
 
@@ -119,19 +119,16 @@ namespace Silverstone.Manticore.Toolkit.Menus
       }
     }
 
-    public virtual void OnCommand(Object sender, EventArgs e)
-    { 
-      // Implement in derived classes
-    }
+    public abstract void OnCommand(Object sender, EventArgs e);
   }
 
   public class CommandMenuItem : MenuItem
   {
-    private string command;
+    private string mCommand;
     public string Command 
     {
       get {
-        return command;
+        return mCommand;
       }
     }
 
@@ -139,7 +136,7 @@ namespace Silverstone.Manticore.Toolkit.Menus
                            EventHandler handler, 
                            String cmd) : base(label, handler)
     {
-      command = cmd;
+      mCommand = cmd;
     }
   }
 }

@@ -44,28 +44,18 @@ namespace Silverstone.Manticore.Toolkit.Toolbars
   using System.IO;
   using System.Xml;
 
-  /*
-  // We want to replace use of Coolbar with our own widget, just
-  // not right now.
-  using stdole;
-  using AxComCtl3;
-  using MSDATASRC;
-  using StdFormat;
-  using VBRUN;
-  //using ComCtl3;
-  */
-  
-  public class ToolbarBuilder
+  public abstract class ToolbarBuilder
   {
     private String mToolbarFile;
+    private Form mForm;
+    private ToolBar mCurrentToolbar;
 
-    //public AxCoolBar mToolbar;
     public Hashtable mItems;
-
-    public ToolbarBuilder(String file)
-    {
+   
+    public ToolbarBuilder(String file, Form form)
+	{
       mToolbarFile = file;
-      // mToolbar = new AxCoolBar();
+	    mForm = form;
       mItems = new Hashtable();
     }
 
@@ -76,60 +66,84 @@ namespace Silverstone.Manticore.Toolkit.Toolbars
       reader.WhitespaceHandling = WhitespaceHandling.None;
       reader.MoveToContent();
 
-//      NameTable nt = new NameTable();
-//      XmlNamespaceManager nsmgr = new XmlNamespaceManager(nt);
-//      XmlParserContext ctxt = new XmlParserContext(null, nsmgr, null, XmlSpace.None);
-//      XmlTextReader reader = new XmlTextReader(inner, XmlNodeType.Element, ctxt);
-
-      int bandIndex = 0;
-      Boolean needNewRow = true;
       while (reader.Read()) {
         if (reader.NodeType == XmlNodeType.Element) {
-          switch (reader.LocalName) {
-          case "toolstrip":
-            // The next <toolbar/> we encounter should be created on a new row. 
-            needNewRow = true;
-            break;
-          case "toolbar":
-            // 
-            String[] tbvalues = new String[4] {"", "", "",  ""};
-            String[] tbnames = new String[4] {"id", "label", "description", "visible"};
-            for (Byte i = 0; i < tbnames.Length; ++i) {
-              if (reader.MoveToAttribute(tbnames[i]) &&
-                  reader.ReadAttributeValue())
-                tbvalues[i] = reader.Value; // XXX need to handle entities
-              reader.MoveToElement();
-            }
+			switch (reader.LocalName) 
+			{
+				case "toolstrip":
+					// The next <toolbar/> we encounter should be created on a new row. 
+					break;
+				case "toolbar":
+					// 
+					String[] tbvalues = new String[4] {"", "", "",  ""};
+					String[] tbnames = new String[4] {"id", "label", "description", "visible"};
+					for (Byte i = 0; i < tbnames.Length; ++i) 
+					{
+						if (reader.MoveToAttribute(tbnames[i]) &&
+							reader.ReadAttributeValue())
+							tbvalues[i] = reader.Value; // XXX need to handle entities
+						reader.MoveToElement();
+					}
 
-            String key = tbvalues[0];
-            String label = tbvalues[1];
-            String visible = tbvalues[3];
-      //      mToolbar.Bands.Add(bandIndex++, key, label, null, needNewRow, null, visible != "false");
-            needNewRow = false;
-            break;
-          case "toolbarbutton":
+					String key = tbvalues[0];
+					String label = tbvalues[1];
+					String visible = tbvalues[3];
+      
+					// Create and add a new toolbar.
+					mCurrentToolbar = new ToolBar();
+					mCurrentToolbar.Dock = DockStyle.Top;
+					mCurrentToolbar.Appearance = ToolBarAppearance.Flat;
+					mForm.Controls.Add(mCurrentToolbar);
 
-            String[] tbbvalues = new String[2] {"", ""};
-            String[] tbbnames = new String[2] {"label", "command"};
-            for (Byte i = 0; i < tbbnames.Length; ++i) {
-              if (reader.MoveToAttribute(tbbnames[i]) &&
-                  reader.ReadAttributeValue())
-                tbbvalues[i] = reader.Value; // XXX need to handle entities
-              reader.MoveToElement();
-            }
-            Console.WriteLine(tbbvalues[0]);
-            break;
-          }
+          mCurrentToolbar.ButtonClick += new ToolBarButtonClickEventHandler(this.OnCommand);
+					break;
+				case "toolbarseparator": 
+				{
+					ToolBarButton button = new ToolBarButton();
+					button.Style = ToolBarButtonStyle.Separator;
+					mCurrentToolbar.Buttons.Add(button);
+					break;
+				}
+				case "toolbarbutton":
+				{
+					String[] tbbvalues = new String[2] {"", ""};
+					String[] tbbnames = new String[2] {"label", "command"};
+					for (Byte i = 0; i < tbbnames.Length; ++i) 
+					{
+						if (reader.MoveToAttribute(tbbnames[i]) &&
+							reader.ReadAttributeValue())
+							tbbvalues[i] = reader.Value; // XXX need to handle entities
+						reader.MoveToElement();
+					}
+       
+					ToolBarButton button = new CommandButtonItem(tbbvalues[1]);
+					button.Text = tbbvalues[0];
+					mCurrentToolbar.Buttons.Add(button);
+					break;
+				}
+			}
         }
       }
     }
 
-    public virtual void OnCommand(Object sender, EventArgs e)
-    { 
-      // Implement in derived classes
+    public abstract void OnCommand(Object sender, ToolBarButtonClickEventArgs e);
+  }
+
+  public class CommandButtonItem : ToolBarButton
+  {
+    private string mCommand;
+    public string Command 
+    {
+      get 
+      {
+        return mCommand;
+      }
     }
 
-
+    public CommandButtonItem(String cmd) : base()
+    {
+      mCommand = cmd;
+    }
   }
 }
 

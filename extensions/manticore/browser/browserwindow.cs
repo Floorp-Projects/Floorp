@@ -53,6 +53,7 @@ namespace Silverstone.Manticore.BrowserWindow
 
     private BrowserMenuBuilder mMenuBuilder;
     private BrowserToolbarBuilder mToolbarBuilder;
+    private BrowserCommandHandler mCommandHandler;
 
     protected internal WebBrowser webBrowser;
 
@@ -85,21 +86,14 @@ namespace Silverstone.Manticore.BrowserWindow
       
       this.Text = "Manticore"; // XXX localize
 
-      mMenuBuilder = new BrowserMenuBuilder("browser\\browser-menu.xml", this);
+      mCommandHandler = new BrowserCommandHandler(this);
+
+      mMenuBuilder = new BrowserMenuBuilder("browser\\browser-menu.xml", mCommandHandler);
       mMenuBuilder.Build();
       this.Menu = mMenuBuilder.mainMenu;
-      Console.WriteLine("foopy");
-
-      mToolbarBuilder = new BrowserToolbarBuilder("browser\\browser-toolbar.xml", this);
-//      mToolbarBuilder.Build();
-//      this.Controls.Add(mToolbarBuilder.mToolbar);
-//    mToolbarBuilder.mToolbar.Dock = DockStyle.Fill;
       
       // Show the resize handle
       this.SizeGripStyle = SizeGripStyle.Auto;
-
-      webBrowser = new WebBrowser();
-      this.Controls.Add(webBrowser);
 
       // Set up the Status Bar
       statusBar = new StatusBar();
@@ -115,10 +109,17 @@ namespace Silverstone.Manticore.BrowserWindow
       statusPanel.Text = "Document Done";
       statusPanel.AutoSize = StatusBarPanelAutoSize.Spring;
       
+
       statusBar.Panels.AddRange(new StatusBarPanel[] {docStatePanel, statusPanel, progressPanel, zonePanel});
       statusBar.ShowPanels = true;
 
+      webBrowser = new WebBrowser();
+      this.Controls.Add(webBrowser);
+
       this.Controls.Add(statusBar);
+      
+	    mToolbarBuilder = new BrowserToolbarBuilder("browser\\browser-toolbar.xml", mCommandHandler, this);
+	    mToolbarBuilder.Build();
     }
 
     private void LayoutStartup()
@@ -144,53 +145,76 @@ namespace Silverstone.Manticore.BrowserWindow
     }
   }
 
+  public class BrowserCommandHandler
+  {
+    private BrowserWindow mBrowserWindow;
+    
+    public BrowserCommandHandler(BrowserWindow window)
+    {
+      mBrowserWindow = window;
+    }
+
+    public void DoCommand(String s) {
+      switch (s) 
+      {
+        case "file-new-window":
+          mBrowserWindow.OpenNewBrowser();
+          break;
+        case "file-open":
+          mBrowserWindow.Open();
+          break;
+        case "view-go-back":
+          mBrowserWindow.webBrowser.GoBack();
+          break;
+        case "view-go-forward":
+          mBrowserWindow.webBrowser.GoForward();
+          break;
+        case "view-go-home":
+          mBrowserWindow.webBrowser.GoHome();
+          break;
+        case "view-layout-gecko":
+          mBrowserWindow.webBrowser.SwitchLayoutEngine("gecko");
+          break;
+        case "view-layout-ie":
+          mBrowserWindow.webBrowser.SwitchLayoutEngine("trident");
+          break;
+        case "help-about":
+          AboutDialog dlg = new AboutDialog(mBrowserWindow);
+          break;
+      }
+    }
+  }
+
   public class BrowserMenuBuilder : MenuBuilder
   {
-    private BrowserWindow browserWindow;
+    private BrowserCommandHandler mCommandHandler;
 
-    public BrowserMenuBuilder(String file, BrowserWindow window) : base(file)
+    public BrowserMenuBuilder(String file, BrowserCommandHandler handler) : base(file)
     {
-      browserWindow = window;
+      mCommandHandler = handler;
     }
 
     public override void OnCommand(Object sender, EventArgs e)
     {
-      CommandMenuItem menuitem = (CommandMenuItem) sender;
-      Console.WriteLine(menuitem.Command);
-      switch (menuitem.Command) {
-      case "file-new-window":
-        browserWindow.OpenNewBrowser();
-        break;
-      case "file-open":
-        browserWindow.Open();
-        break;
-      case "view-go-home":
-        browserWindow.webBrowser.GoHome();
-        break;
-      case "view-layout-gecko":
-        browserWindow.webBrowser.SwitchLayoutEngine("gecko");
-        break;
-      case "view-layout-ie":
-        browserWindow.webBrowser.SwitchLayoutEngine("trident");
-        break;
-      case "help-about":
-        AboutDialog dlg = new AboutDialog(browserWindow);
-        break;
-      }
+      CommandMenuItem item = sender as CommandMenuItem;
+      mCommandHandler.DoCommand(item.Command);
     }
   }
 
   public class BrowserToolbarBuilder : ToolbarBuilder
   {
-    private BrowserWindow mBrowserWindow;
+    private BrowserCommandHandler mCommandHandler;
 
-    public BrowserToolbarBuilder(String file, BrowserWindow window) : base(file)
+    public BrowserToolbarBuilder(String file, BrowserCommandHandler handler, 
+                                 BrowserWindow window) : base(file, window)
     {
-      mBrowserWindow = window;
+      mCommandHandler = handler;
     }
 
-    public override void OnCommand(Object sender, EventArgs e)
+    public override void OnCommand(Object sender, ToolBarButtonClickEventArgs e)
     {
+      CommandButtonItem item = e.Button as CommandButtonItem;
+      mCommandHandler.DoCommand(item.Command);
     }
   }
 }
