@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.15 2002/12/12 06:05:28 nelsonb%netscape.com Exp $
+ * $Id: ocsp.c,v 1.16 2003/09/30 01:15:43 jpierre%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -2478,8 +2478,10 @@ ocsp_CheckSignature(ocspSignature *signature, void *tbs,
      */
     rv = CERT_VerifyCert(handle, signerCert, PR_TRUE, certUsage, checkTime,
 			 pwArg, NULL);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
+        PORT_SetError(SEC_ERROR_OCSP_INVALID_SIGNING_CERT);
 	goto finish;
+    }
 
     /*
      * Now get the public key from the signer's certificate; we need
