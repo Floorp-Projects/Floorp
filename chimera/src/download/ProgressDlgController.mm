@@ -100,12 +100,16 @@ NS_IMPL_ISUPPORTS1(nsDownloadListener, nsIWebProgressListener)
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
 NS_IMETHODIMP 
 nsDownloadListener::OnProgressChange(nsIWebProgress *aWebProgress, 
-					 nsIRequest *aRequest, 
-					 PRInt32 aCurSelfProgress, 
-					 PRInt32 aMaxSelfProgress, 
-					 PRInt32 aCurTotalProgress, 
-					 PRInt32 aMaxTotalProgress)
+                                      nsIRequest *aRequest, 
+                                      PRInt32 aCurSelfProgress, 
+                                      PRInt32 aMaxSelfProgress, 
+                                      PRInt32 aCurTotalProgress, 
+                                      PRInt32 aMaxTotalProgress)
 {
+  NSProgressIndicator *progressBar= [mController progressBar];
+  if ([progressBar doubleValue] == 0.0)
+    [progressBar setMaxValue:aMaxSelfProgress];
+  [progressBar setDoubleValue:aCurSelfProgress];
   return NS_OK;
 }
 
@@ -251,6 +255,10 @@ static NSString *LeaveOpenToolbarItemIdentifier		= @"Leave Open Toggle Toolbar I
                                                aDestination, aContentType,
                                                aInputStream, aBypassCache);
     NS_ADDREF(mDownloadListener);
+}
+-(id) progressBar
+{
+    return mProgressBar;
 }
 
 -(void) setSourceURL: (const char*)aSource
