@@ -294,7 +294,7 @@ NS_IMPL_ISUPPORTS(nsRadioGroup::Enumerator, NS_IENUMERATOR_IID);
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRadioGroup::Enumerator::Next()
 {
     if (mCurrentPosition < (mArraySize -1) )
@@ -306,7 +306,7 @@ nsRadioGroup::Enumerator::Next()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRadioGroup::Enumerator::Prev()
 {
     if (mCurrentPosition > 0 )
@@ -318,7 +318,7 @@ nsRadioGroup::Enumerator::Prev()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRadioGroup::Enumerator::CurrentItem(nsISupports **aItem)
 {
     if (!aItem)
@@ -335,7 +335,7 @@ nsRadioGroup::Enumerator::CurrentItem(nsISupports **aItem)
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRadioGroup::Enumerator::First()
 {
     if (mArraySize && mChildrens[0]) {
@@ -350,7 +350,7 @@ nsRadioGroup::Enumerator::First()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRadioGroup::Enumerator::Last()
 {
     if (mArraySize && mChildrens[0]) {
@@ -365,7 +365,7 @@ nsRadioGroup::Enumerator::Last()
 
 
  
-nsresult
+NS_IMETHODIMP
 nsRadioGroup::Enumerator::IsDone()
 {
     if ((mCurrentPosition == (mArraySize -1)) || mArraySize <= 0 ){ //empty lists always return done
