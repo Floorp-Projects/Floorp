@@ -121,7 +121,7 @@
 	 by the crypto_closure.  output_fn may not be called.
 
 
-   int (*parse_decoded_buffer) (char *buf, int32 size, MimeObject *obj)
+   int (*parse_decoded_buffer) (const char *buf, int32 size, MimeObject *obj)
 
      This method, of the same name as one in MimeLeaf, is a part of the
 	 afforementioned leaf/container hybridization.  This method is invoked
@@ -139,7 +139,7 @@ struct MimeEncryptedClass {
 
   /* Duplicated from MimeLeaf, see comments above.
      This is the callback that is handed to the decoder. */
-  int (*parse_decoded_buffer) (char *buf, PRInt32 size, MimeObject *obj);
+  int (*parse_decoded_buffer) (const char *buf, PRInt32 size, MimeObject *obj);
 
 
   /* Callbacks used by decryption module. */

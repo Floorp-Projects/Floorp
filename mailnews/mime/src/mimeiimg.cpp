@@ -54,7 +54,7 @@ static void MimeInlineImage_finalize (MimeObject *);
 static int MimeInlineImage_parse_begin (MimeObject *);
 static int MimeInlineImage_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineImage_parse_eof (MimeObject *, PRBool);
-static int MimeInlineImage_parse_decoded_buffer (char *, PRInt32, MimeObject *);
+static int MimeInlineImage_parse_decoded_buffer (const char *, PRInt32, MimeObject *);
 
 static int
 MimeInlineImageClassInitialize(MimeInlineImageClass *clazz)
@@ -209,7 +209,7 @@ MimeInlineImage_parse_eof (MimeObject *obj, PRBool abort_p)
 
 
 static int
-MimeInlineImage_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
+MimeInlineImage_parse_decoded_buffer (const char *buf, PRInt32 size, MimeObject *obj)
 {
   /* This is called (by MimeLeafClass->parse_buffer) with blocks of data
 	 that have already been base64-decoded.  Pass this raw image data

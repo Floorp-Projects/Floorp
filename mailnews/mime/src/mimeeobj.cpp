@@ -54,9 +54,9 @@ MimeDefClass(MimeExternalObject, MimeExternalObjectClass,
 static int MimeExternalObject_initialize (MimeObject *);
 static void MimeExternalObject_finalize (MimeObject *);
 static int MimeExternalObject_parse_begin (MimeObject *);
-static int MimeExternalObject_parse_buffer (char *, PRInt32, MimeObject *);
+static int MimeExternalObject_parse_buffer (const char *, PRInt32, MimeObject *);
 static int MimeExternalObject_parse_line (char *, PRInt32, MimeObject *);
-static int MimeExternalObject_parse_decoded_buffer (char*, PRInt32, MimeObject*);
+static int MimeExternalObject_parse_decoded_buffer (const char*, PRInt32, MimeObject*);
 static PRBool MimeExternalObject_displayable_inline_p (MimeObjectClass *clazz,
 														MimeHeaders *hdrs);
 
@@ -210,7 +210,7 @@ GOTTA STILL DO THIS FOR QUOTING!
 }
 
 static int
-MimeExternalObject_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
+MimeExternalObject_parse_buffer (const char *buffer, PRInt32 size, MimeObject *obj)
 {
   NS_ASSERTION(!obj->closed_p, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (obj->closed_p) return -1;
@@ -233,7 +233,7 @@ MimeExternalObject_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
 
 
 static int
-MimeExternalObject_parse_decoded_buffer (char *buf, PRInt32 size,
+MimeExternalObject_parse_decoded_buffer (const char *buf, PRInt32 size,
 										 MimeObject *obj)
 {
   /* This is called (by MimeLeafClass->parse_buffer) with blocks of data

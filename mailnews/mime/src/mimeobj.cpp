@@ -48,7 +48,7 @@ MimeDefClass (MimeObject, MimeObjectClass, mimeObjectClass, NULL);
 static int MimeObject_initialize (MimeObject *);
 static void MimeObject_finalize (MimeObject *);
 static int MimeObject_parse_begin (MimeObject *);
-static int MimeObject_parse_buffer (char *, PRInt32, MimeObject *);
+static int MimeObject_parse_buffer (const char *, PRInt32, MimeObject *);
 static int MimeObject_parse_line (char *, PRInt32, MimeObject *);
 static int MimeObject_parse_eof (MimeObject *, PRBool);
 static int MimeObject_parse_end (MimeObject *, PRBool);
@@ -237,7 +237,7 @@ MimeObject_parse_begin (MimeObject *obj)
 }
 
 static int
-MimeObject_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
+MimeObject_parse_buffer (const char *buffer, PRInt32 size, MimeObject *obj)
 {
   NS_ASSERTION(!obj->closed_p, "object shouldn't be closed");
   if (obj->closed_p) return -1;

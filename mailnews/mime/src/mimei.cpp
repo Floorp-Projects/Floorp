@@ -229,7 +229,7 @@ mime_locate_external_content_handler(const char *content_type,
 
 /* This is necessary to expose the MimeObject method outside of this DLL */
 int
-MIME_MimeObject_write(MimeObject *obj, char *output, PRInt32 length, PRBool user_visible_p)
+MIME_MimeObject_write(MimeObject *obj, const char *output, PRInt32 length, PRBool user_visible_p)
 {
   return MimeObject_write(obj, output, length, user_visible_p);
 }
@@ -1764,7 +1764,7 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
  */
 
 int
-MimeOptions_write(MimeDisplayOptions *opt, char *data, PRInt32 length,
+MimeOptions_write(MimeDisplayOptions *opt, const char *data, PRInt32 length,
 				  PRBool user_visible_p)
 {
   int status = 0;
@@ -1803,7 +1803,7 @@ MimeOptions_write(MimeDisplayOptions *opt, char *data, PRInt32 length,
 }
 
 int
-MimeObject_write(MimeObject *obj, char *output, PRInt32 length,
+MimeObject_write(MimeObject *obj, const char *output, PRInt32 length,
 				 PRBool user_visible_p)
 {
   if (!obj->output_p) return 0;

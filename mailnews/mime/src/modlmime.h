@@ -249,7 +249,7 @@ public:
 						 void *stream_closure);
 
   /* How the MIME parser feeds its output (HTML or raw) back to the caller. */
-  int (*output_fn) (char *buf, PRInt32 size, void *closure);
+  int (*output_fn) (const char *buf, PRInt32 size, void *closure);
 
   /* Closure to pass to the above output_fn.  If NULL, then the
 	 stream_closure is used. */
@@ -333,7 +333,7 @@ public:
   void (*image_end) (void *image_closure, int status);
 
   /* Dump some raw image data down the stream. */
-  int (*image_write_buffer) (char *buf, PRInt32 size, void *image_closure);
+  int (*image_write_buffer) (const char *buf, PRInt32 size, void *image_closure);
 
   /* What HTML should be dumped out for this image. */
   char *(*make_image_html) (void *image_closure);
@@ -380,7 +380,7 @@ public:
   nsresult (*decompose_file_init_fn) (void *stream_closure, 
 								 MimeHeaders *headers );
 
-  nsresult (*decompose_file_output_fn) (char *buf, PRInt32 size,
+  nsresult (*decompose_file_output_fn) (const char *buf, PRInt32 size,
 								   void *stream_closure);
 
   nsresult (*decompose_file_close_fn) (void *stream_closure);

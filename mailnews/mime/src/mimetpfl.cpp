@@ -64,16 +64,16 @@ static int MimeInlineTextPlainFlowed_parse_eof (MimeObject *, PRBool);
 static MimeInlineTextPlainFlowedExData *MimeInlineTextPlainFlowedExDataList = nsnull;
 
 // From mimetpla.cpp
-extern "C" char *MimeTextBuildPrefixCSS(
+extern "C" void MimeTextBuildPrefixCSS(
                        PRInt32 quotedSizeSetting,      // mail.quoted_size
                        PRInt32    quotedStyleSetting,  // mail.quoted_style
-                       char       *citationColor);     // mail.citation_color
-
+                       char       *citationColor,      // mail.citation_color
+                       nsACString &style);
 // Definition below
-extern "C"
-nsresult Line_convert_whitespace(const nsString& a_line,
+static
+nsresult Line_convert_whitespace(const nsAFlatString& a_line,
                                  const PRBool a_convert_all_whitespace,
-                                 nsString& a_out_line);
+                                 nsAFlatString& a_out_line);
 
 static int
 MimeInlineTextPlainFlowedClassInitialize(MimeInlineTextPlainFlowedClass *clazz)
@@ -195,7 +195,7 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
       openingDiv += '\"';
     }
     openingDiv += ">";
-    status = MimeObject_write(obj, NS_CONST_CAST(char*, openingDiv.get()), openingDiv.Length(), PR_FALSE);
+    status = MimeObject_write(obj, openingDiv.get(), openingDiv.Length(), PR_FALSE);
     if (status < 0) return status;
   }
 
@@ -331,16 +331,14 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   PRBool skipConversion = !conv ||
                           (obj->options && obj->options->force_user_charset);
 
-  nsString lineSource;
-  nsString lineResult;
-  lineSource.SetCapacity(kInitialBufferSize);
-  lineResult.SetCapacity(kInitialBufferSize);
+  nsAutoString lineSource;
+  nsXPIDLString lineResult;
     
+  char *mailCharset = NULL;
+  nsresult rv;
+
   if (!skipConversion)
   {
-    lineSource.AssignWithConversion(linep, (length - (linep - line)) );
-    PRUnichar* wresult = nsnull;
-    nsresult rv = NS_OK;
     PRBool whattodo = obj->options->whattodo;
     if (plainHTML)
     {
@@ -353,60 +351,36 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
                       might not be able to display the glyphs. */
     }
 
-    // Get a mail charset of this message.
-    MimeInlineText  *inlinetext = (MimeInlineText *) obj;
-    char *mailCharset = NULL;
-    if (inlinetext->charset && *(inlinetext->charset))
+    nsDependentCString inputStr(linep, length - (linep - line));
+
+    // For 'SaveAs', |line| is in |mailCharset|.
+    // convert |line| to UTF-16 before 'html'izing (calling ScanTXT())
+    if (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs)
+    {
+      // Get the mail charset of this message.
+      MimeInlineText  *inlinetext = (MimeInlineText *) obj;
+      if (!inlinetext->initializeCharset)
+         ((MimeInlineTextClass*)&mimeInlineTextClass)->initialize_charset(obj);
       mailCharset = inlinetext->charset;
-
-    if (obj->options->format_out != nsMimeOutput::nsMimeMessageSaveAs ||
-        !mailCharset || !nsMsgI18Nstateful_charset(mailCharset))
-    {
-      /* This is the main TXT to HTML conversion:
-	       escaping (very important), eventually recognizing etc. */
-      rv = conv->ScanTXT(lineSource.get(), whattodo, &wresult);
-      if (NS_FAILED(rv)) return -1;
-      lineResult = wresult;
-      Recycle(wresult);
-    }
-    else
-    {
-      // If nsMimeMessageSaveAs, the string is in mail charset (and stateful, e.g. ISO-2022-JP).
-      // convert to unicode so it won't confuse ScanTXT.
-      char *newcstr;
-
-      newcstr = ToNewCString(lineSource);      // lineSource uses nsString but the string is NOT unicode
-      if (!newcstr) return -1;
-
-      nsAutoString ustr;
-      nsCAutoString cstr;
-      nsCAutoString mailCharsetStr(mailCharset);
-
-      cstr.Assign(newcstr);
-      Recycle(newcstr);
-
-      rv = nsMsgI18NConvertToUnicode(mailCharsetStr, cstr, ustr);
-      if (NS_SUCCEEDED(rv))
-      {
-        PRUnichar *u;
-        rv = conv->ScanTXT(ustr.get(), whattodo, &u);
-        if (NS_SUCCEEDED(rv))
-        {
-          ustr.Assign(u);
-          Recycle(u);
-          rv = nsMsgI18NConvertFromUnicode(mailCharsetStr, ustr, cstr);
-          if (NS_SUCCEEDED(rv))
-            lineResult.AssignWithConversion(cstr.get());   // create nsString which contains NON unicode 
-                                                           // as the following code expecting it
-        }
+      if (mailCharset && *mailCharset) {
+        rv = nsMsgI18NConvertToUnicode(nsDependentCString(mailCharset), 
+                                       inputStr, lineSource);
+        NS_ENSURE_SUCCESS(rv, -1);
       }
-      if (NS_FAILED(rv))
-        return -1;
+      else // this probably never happens...
+        CopyUTF8toUTF16(inputStr, lineSource);
     }
+    else   // line is in UTF-8
+      CopyUTF8toUTF16(inputStr, lineSource);
+
+    // This is the main TXT to HTML conversion:
+    // escaping (very important), eventually recognizing etc.
+    rv = conv->ScanTXT(lineSource.get(), whattodo, getter_Copies(lineResult));
+    NS_ENSURE_SUCCESS(rv, -1);
   }
   else
   {
-    lineResult.AssignWithConversion(line, length);
+    CopyUTF8toUTF16(nsDependentCString(line, length), lineResult);
     status = NS_OK;
   }
 
@@ -427,16 +401,16 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     preface += "<blockquote type=cite";
     // This is to have us observe the user pref settings for citations
     MimeInlineTextPlainFlowed *tObj = (MimeInlineTextPlainFlowed *) obj;
-    char *style = MimeTextBuildPrefixCSS(tObj->mQuotedSizeSetting,
-                                         tObj->mQuotedStyleSetting,
-                                         tObj->mCitationColor);
-    if (!plainHTML && style && strlen(style))
+
+    nsCAutoString style;
+    MimeTextBuildPrefixCSS(tObj->mQuotedSizeSetting, tObj->mQuotedStyleSetting,
+                           tObj->mCitationColor, style);
+    if (!plainHTML && !style.IsEmpty())
     {
       preface += " style=\"";
       preface += style;
       preface += '"';
     }
-    PR_FREEIF(style);
     preface += '>';
   }
   while(quoteleveldiff<0) {
@@ -445,8 +419,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   }
   exdata->quotelevel = linequotelevel;
 
-  nsString lineResult2;
-  lineResult2.SetCapacity(kInitialBufferSize);
+  nsAutoString lineResult2;
 
   if(flowed) {
     // Check RFC 2646 "4.3. Usenet Signature Convention": "-- "+CRLF is
@@ -489,12 +462,19 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
   if (!(exdata->isSig && quoting))
   {
-    char* tmp = ToNewCString(preface);
-    status = MimeObject_write(obj, tmp, preface.Length(), PR_TRUE);
-    Recycle(tmp);
-    tmp = ToNewCString(lineResult2);
-    status = MimeObject_write(obj, tmp, lineResult2.Length(), PR_TRUE);
-    Recycle(tmp);
+    status = MimeObject_write(obj, preface.get(), preface.Length(), PR_TRUE);
+    if (status < 0) return status;
+    nsCAutoString outString;
+    if (obj->options->format_out != nsMimeOutput::nsMimeMessageSaveAs ||
+        !mailCharset || !*mailCharset)
+      CopyUTF16toUTF8(lineResult2, outString);
+    else
+    { // convert back to mailCharset before writing.       
+      rv = nsMsgI18NConvertFromUnicode(nsDependentCString(mailCharset), 
+                                       lineResult2, outString);
+      NS_ENSURE_SUCCESS(rv, -1);
+    }
+    status = MimeObject_write(obj, outString.get(), outString.Length(), PR_TRUE);
     return status;
   }
   else
@@ -575,7 +555,7 @@ static void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
 static void Convert_whitespace(const PRUnichar a_current_char,
                                const PRUnichar a_next_char,
                                const PRBool a_convert_all_whitespace,
-                               nsString& a_out_string)
+                               nsAFlatString& a_out_string)
 {
   NS_ASSERTION('\t' == a_current_char || ' ' == a_current_char,
                "Convert_whitespace got something else than a whitespace!");
@@ -615,10 +595,10 @@ static void Convert_whitespace(const PRUnichar a_current_char,
  *                                     converted.
  * @param out a_out_string, result will be appended.
 */
-extern "C"
-nsresult Line_convert_whitespace(const nsString& a_line,
+static
+nsresult Line_convert_whitespace(const nsAFlatString& a_line,
                                  const PRBool a_convert_all_whitespace,
-                                 nsString& a_out_line)
+                                 nsAFlatString& a_out_line)
 {
   PRBool in_tag = PR_FALSE;
   PRBool in_quote_in_tag = PR_FALSE;

@@ -82,7 +82,7 @@ struct MimeMultipartRelated {
 
 	PLHashTable		*hash;
 
-	int (*real_output_fn) (char *buf, PRInt32 size, void *stream_closure);
+	int (*real_output_fn) (const char *buf, PRInt32 size, void *stream_closure);
 	void* real_output_closure;
 
 	char* curtag;

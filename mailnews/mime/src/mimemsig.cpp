@@ -730,7 +730,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 		  status = MimePartBufferRead (sig->part_buffer,
 							   /* The (nsresult (*) ...) cast is to turn the
 								  `void' argument into `MimeObject'. */
-							   ((nsresult (*) (char *, PRInt32, void *))
+							   ((nsresult (*) (const char *, PRInt32, void *))
 							   body->options->decompose_file_output_fn),
 							   body->options->stream_closure);
 	  else
@@ -739,7 +739,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 	  status = MimePartBufferRead (sig->part_buffer,
 							   /* The (nsresult (*) ...) cast is to turn the
 								  `void' argument into `MimeObject'. */
-							   ((nsresult (*) (char *, PRInt32, void *))
+							   ((nsresult (*) (const char *, PRInt32, void *))
 								body->clazz->parse_buffer),
 								body);
 	  if (status < 0) return status;

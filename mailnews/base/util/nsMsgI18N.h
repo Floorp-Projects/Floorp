@@ -120,9 +120,9 @@ NS_MSG_BASE const char * nsMsgI18NFileSystemCharset(void);
  * @param outString   [OUT] Converted output string.
  * @return            nsresult.
  */
-NS_MSG_BASE nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset, 
-                                     const nsString& inString,
-                                     nsCString& outString);
+NS_MSG_BASE nsresult nsMsgI18NConvertFromUnicode(const nsAFlatCString& aCharset, 
+                                     const nsAFlatString& inString,
+                                     nsACString& outString);
 
 /**
  * Convert from charset to unicode.
@@ -132,9 +132,9 @@ NS_MSG_BASE nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
  * @param outString   [OUT] Output unicode string.
  * @return            nsresult.
  */
-NS_MSG_BASE nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset, 
-                                   const nsCString& inString, 
-                                   nsString& outString);
+NS_MSG_BASE nsresult nsMsgI18NConvertToUnicode(const nsAFlatCString& aCharset, 
+                                   const nsAFlatCString& inString, 
+                                   nsAString& outString);
 
 /**
  * Convert from unicode to target charset.

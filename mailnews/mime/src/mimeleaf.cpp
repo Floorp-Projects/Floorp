@@ -50,7 +50,7 @@ MimeDefClass(MimeLeaf, MimeLeafClass, mimeLeafClass, &MIME_SUPERCLASS);
 static int MimeLeaf_initialize (MimeObject *);
 static void MimeLeaf_finalize (MimeObject *);
 static int MimeLeaf_parse_begin (MimeObject *);
-static int MimeLeaf_parse_buffer (char *, PRInt32, MimeObject *);
+static int MimeLeaf_parse_buffer (const char *, PRInt32, MimeObject *);
 static int MimeLeaf_parse_line (char *, PRInt32, MimeObject *);
 static int MimeLeaf_parse_eof (MimeObject *, PRBool);
 static PRBool MimeLeaf_displayable_inline_p (MimeObjectClass *clazz,
@@ -149,7 +149,7 @@ MimeLeaf_parse_begin (MimeObject *obj)
 
 
 static int
-MimeLeaf_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
+MimeLeaf_parse_buffer (const char *buffer, PRInt32 size, MimeObject *obj)
 {
   MimeLeaf *leaf = (MimeLeaf *) obj;
 

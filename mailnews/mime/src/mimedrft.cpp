@@ -80,7 +80,7 @@
 //
 extern "C" char     *MIME_StripContinuations(char *original);
 nsresult            mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers );
-nsresult            mime_decompose_file_output_fn ( char *buf, PRInt32 size, void *stream_closure );
+nsresult            mime_decompose_file_output_fn ( const char *buf, PRInt32 size, void *stream_closure );
 nsresult            mime_decompose_file_close_fn ( void *stream_closure );
 extern int          MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
@@ -1973,7 +1973,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
 }
 
 nsresult 
-mime_decompose_file_output_fn (char     *buf,
+mime_decompose_file_output_fn (const char     *buf,
                                PRInt32  size,
                                void     *stream_closure )
 {

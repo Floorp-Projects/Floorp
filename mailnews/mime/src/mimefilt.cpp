@@ -213,7 +213,7 @@ test_image_make_image_html(void *image_data)
   return buf;
 }
 
-static int test_image_write_buffer(char *buf, PRInt32 size, void *image_closure)
+static int test_image_write_buffer(const char *buf, PRInt32 size, void *image_closure)
 {
   return 0;
 }

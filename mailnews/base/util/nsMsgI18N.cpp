@@ -71,9 +71,9 @@ static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 // International functions necessary for composition
 //
 
-nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset, 
-                                     const nsString& inString,
-                                     nsCString& outString)
+nsresult nsMsgI18NConvertFromUnicode(const nsAFlatCString& aCharset, 
+                                     const nsAFlatString& inString,
+                                     nsACString& outString)
 {
   if (inString.IsEmpty()) {
     outString.Truncate(0);
@@ -82,36 +82,23 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
   // Note: this will hide a possible error when the unicode text may contain more than one charset.
   // (e.g. Latin1 + Japanese). Use nsMsgI18NSaveAsCharset instead to avoid that problem.
   else if (aCharset.IsEmpty() ||
-      aCharset.EqualsIgnoreCase("us-ascii") ||
-      aCharset.EqualsIgnoreCase("ISO-8859-1")) {
-    outString.AssignWithConversion(inString);
+      aCharset.Equals("us-ascii", nsCaseInsensitiveCStringComparator()) ||
+      aCharset.Equals("ISO-8859-1", nsCaseInsensitiveCStringComparator())) {
+    LossyCopyUTF16toASCII(inString, outString);
     return NS_OK;
   }
-  else if (aCharset.EqualsIgnoreCase("UTF-8")) {
-    char *s = ToNewUTF8String(inString);
-    if (NULL == s)
-      return NS_ERROR_OUT_OF_MEMORY;
-    outString.Assign(s);
-    Recycle(s);
+  else if (aCharset.Equals("UTF-8", nsCaseInsensitiveCStringComparator())) {
+    CopyUTF16toUTF8(inString, outString);
     return NS_OK;
   }
-  nsCAutoString convCharset(NS_LITERAL_CSTRING("ISO-8859-1"));
+
   nsresult res;
-
-  // Resolve charset alias
-  nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
-  if (NS_SUCCEEDED(res)) {
-    if (!aCharset.IsEmpty()) {
-      res = calias->GetPreferred(aCharset, convCharset);
-    }
-  }
-
   nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   if(NS_SUCCEEDED(res)) {
     nsCOMPtr <nsIUnicodeEncoder> encoder;
 
     // get an unicode converter
-    res = ccm->GetUnicodeEncoderRaw(convCharset.get(), getter_AddRefs(encoder));
+    res = ccm->GetUnicodeEncoder(aCharset.get(), getter_AddRefs(encoder));
     if(NS_SUCCEEDED(res)) {
       res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
       if (NS_SUCCEEDED(res)) {
@@ -147,41 +134,34 @@ nsresult nsMsgI18NConvertFromUnicode(const nsCString& aCharset,
   return res;
 }
 
-nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset, 
-                                   const nsCString& inString, 
-                                   nsString& outString)
+nsresult nsMsgI18NConvertToUnicode(const nsAFlatCString& aCharset, 
+                                   const nsAFlatCString& inString, 
+                                   nsAString& outString)
 {
   if (inString.IsEmpty()) {
     outString.Truncate();
     return NS_OK;
   }
   else if (aCharset.IsEmpty() ||
-      aCharset.EqualsIgnoreCase("us-ascii") ||
-      aCharset.EqualsIgnoreCase("ISO-8859-1")) {
-    outString.AssignWithConversion(inString.get());
+      aCharset.Equals("us-ascii", nsCaseInsensitiveCStringComparator()) ||
+      aCharset.Equals("ISO-8859-1", nsCaseInsensitiveCStringComparator())) {
+    // Despite its name, it also works for Latin-1.
+    CopyASCIItoUTF16(inString, outString);
+    return NS_OK;
+  }
+  else if (aCharset.Equals("UTF-8", nsCaseInsensitiveCStringComparator())) {
+    CopyUTF8toUTF16(inString, outString);
     return NS_OK;
   }
 
-  nsCAutoString convCharset;
   nsresult res;
-
-  // Resolve charset alias
-  nsCOMPtr <nsICharsetAlias> calias = do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
-  if (NS_SUCCEEDED(res)) {
-    if (!aCharset.IsEmpty()) {
-      res = calias->GetPreferred(aCharset, convCharset);
-    }
-  }
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
   nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+
   if(NS_SUCCEEDED(res)) {
     nsCOMPtr <nsIUnicodeDecoder> decoder;
 
     // get an unicode converter
-    res = ccm->GetUnicodeDecoderRaw(convCharset.get(), getter_AddRefs(decoder));
+    res = ccm->GetUnicodeDecoder(aCharset.get(), getter_AddRefs(decoder));
     if(NS_SUCCEEDED(res)) {
 
       const char *originalSrcPtr = inString.get();

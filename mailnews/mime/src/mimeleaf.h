@@ -47,7 +47,7 @@
    applied to their data.  This class provides that service in its 
    parse_buffer() method:
 
-     int (*parse_decoded_buffer) (char *buf, PRInt32 size, MimeObject *obj)
+     int (*parse_decoded_buffer) (const char *buf, PRInt32 size, MimeObject *obj)
 
    The `parse_buffer' method of MimeLeaf passes each block of data through
    the appropriate decoder (if any) and then calls `parse_decoded_buffer'
@@ -66,7 +66,7 @@ typedef struct MimeLeaf      MimeLeaf;
 struct MimeLeafClass {
   MimeObjectClass object;
   /* This is the callback that is handed to the decoder. */
-  int (*parse_decoded_buffer) (char *buf, PRInt32 size, MimeObject *obj);
+  int (*parse_decoded_buffer) (const char *buf, PRInt32 size, MimeObject *obj);
 };
 
 extern MimeLeafClass mimeLeafClass;

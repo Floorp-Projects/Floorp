@@ -93,7 +93,7 @@ extern int MimePartBufferWrite (MimePartBufferData *data,
  */
 extern int
 MimePartBufferRead (MimePartBufferData *data,
-					nsresult (*read_fn) (char *buf, PRInt32 size, void *closure),
+					nsresult (*read_fn) (const char *buf, PRInt32 size, void *closure),
 					void *closure);
 
 #endif /* _MIMEPBUF_H_ */

@@ -57,7 +57,7 @@
      should be finalized as well (by calling mime_free(), not by calling
      their finalize() methods directly.)
 
-   int parse_buffer (char *buf, PRInt32 size, MimeObject *obj)
+   int parse_buffer (const char *buf, PRInt32 size, MimeObject *obj)
 
      This is the method by which you feed arbitrary data into the parser
      for this object.  Most subclasses will probably inherit this method
@@ -144,7 +144,7 @@ struct MimeObjectClass {
   int (*initialize) (MimeObject *obj);
   void (*finalize) (MimeObject *obj);
   int (*parse_begin) (MimeObject *obj);
-  int (*parse_buffer) (char *buf, PRInt32 size, MimeObject *obj);
+  int (*parse_buffer) (const char *buf, PRInt32 size, MimeObject *obj);
   int (*parse_line) (char *line, PRInt32 length, MimeObject *obj);
   int (*parse_eof) (MimeObject *obj, PRBool abort_p);
   int (*parse_end) (MimeObject *obj, PRBool abort_p);

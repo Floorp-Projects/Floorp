@@ -271,7 +271,7 @@ MimePartBufferWrite (MimePartBufferData *data,
 
 int
 MimePartBufferRead (MimePartBufferData *data,
-					nsresult (*read_fn) (char *buf, PRInt32 size, void *closure),
+					nsresult (*read_fn) (const char *buf, PRInt32 size, void *closure),
 					void *closure)
 {
   int status = 0;

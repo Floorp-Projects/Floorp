@@ -155,21 +155,6 @@ public:
   char        *m_url;
 };
 
-
-/* Stupid utility function.  Really ought to be part of the standard string
-   package if you ask me...*/
-
-static char* mime_strnchr(char* str, char c, int length)
-{
-  int i;
-  for (i=0 ; i<length ; i++) {
-    if (*str == c) return str;
-    str++;
-  }
-  return NULL;
-}
-
-
 static int
 MimeMultipartRelated_initialize(MimeObject* obj)
 {
@@ -735,7 +720,7 @@ MimeMultipartRelated_parse_child_line (MimeObject *obj,
 
 
 static int
-real_write(MimeMultipartRelated* relobj, char* buf, PRInt32 size)
+real_write(MimeMultipartRelated* relobj, const char* buf, PRInt32 size)
 {
   MimeObject* obj = (MimeObject*) relobj;
   void* closure = relobj->real_output_closure;
@@ -832,7 +817,7 @@ flush_tag(MimeMultipartRelated* relobj)
     if (!*buf) break;
     if (isquote) 
     {
-      ptr = mime_strnchr(buf, '"', length - (buf - relobj->curtag));
+      ptr = PL_strnchr(buf, '"', length - (buf - relobj->curtag));
     } else {
       for (ptr = buf; *ptr ; ptr++) {
         if (*ptr == '>' || nsCRT::IsAsciiSpace(*ptr)) break;
@@ -952,7 +937,7 @@ flush_tag(MimeMultipartRelated* relobj)
 
 
 static int
-mime_multipart_related_output_fn(char* buf, PRInt32 size, void *stream_closure)
+mime_multipart_related_output_fn(const char* buf, PRInt32 size, void *stream_closure)
 {
   MimeMultipartRelated *relobj = (MimeMultipartRelated *) stream_closure;
   char* ptr;
@@ -960,7 +945,7 @@ mime_multipart_related_output_fn(char* buf, PRInt32 size, void *stream_closure)
   int status;
   while (size > 0) {
     if (relobj->curtag_length > 0) {
-      ptr = mime_strnchr(buf, '>', size);
+      ptr = PL_strnchr(buf, '>', size);
       if (!ptr) {
         return push_tag(relobj, buf, size);
       }
@@ -972,7 +957,7 @@ mime_multipart_related_output_fn(char* buf, PRInt32 size, void *stream_closure)
       buf += delta;
       size -= delta;
     }
-    ptr = mime_strnchr(buf, '<', size);
+    ptr = PL_strnchr(buf, '<', size);
     if (ptr && ptr - buf >= size) ptr = 0;
     if (!ptr) {
       return real_write(relobj, buf, size);

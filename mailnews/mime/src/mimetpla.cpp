@@ -73,26 +73,24 @@ MimeInlineTextPlainClassInitialize(MimeInlineTextPlainClass *clazz)
 }
 
 extern "C"
-char *
+void 
 MimeTextBuildPrefixCSS(PRInt32    quotedSizeSetting,   // mail.quoted_size
                        PRInt32    quotedStyleSetting,  // mail.quoted_style
-                       char       *citationColor)      // mail.citation_color
+                       char       *citationColor,      // mail.citation_color
+                       nsACString &style)               
 {
-  char        *formatCstr = nsnull;
-  nsCString   formatString;
-  
   switch (quotedStyleSetting)
   {
   case 0:     // regular
     break;
   case 1:     // bold
-    formatString.Append("font-weight: bold; ");
+    style.Append("font-weight: bold; ");
     break;
   case 2:     // italic
-    formatString.Append("font-style: italic; ");
+    style.Append("font-style: italic; ");
     break;
   case 3:     // bold-italic
-    formatString.Append("font-weight: bold; font-style: italic; ");
+    style.Append("font-weight: bold; font-style: italic; ");
     break;
   }
   
@@ -101,22 +99,19 @@ MimeTextBuildPrefixCSS(PRInt32    quotedSizeSetting,   // mail.quoted_size
   case 0:     // regular
     break;
   case 1:     // large
-    formatString.Append("font-size: large; ");
+    style.Append("font-size: large; ");
     break;
   case 2:     // small
-    formatString.Append("font-size: small; ");
+    style.Append("font-size: small; ");
     break;
   }
   
   if (citationColor && *citationColor)
   {
-    formatString += "color: ";
-    formatString += citationColor;
-    formatString += ';';
+    style += "color: ";
+    style += citationColor;
+    style += ';';
   }
-
-  formatCstr = ToNewCString(formatString);
-  return formatCstr;
 }
 
 static int
@@ -234,7 +229,7 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
         }
         else
           openingDiv = "<pre wrap>";
-	    status = MimeObject_write(obj, NS_CONST_CAST(char*, openingDiv.get()), openingDiv.Length(), PR_FALSE);
+	    status = MimeObject_write(obj, openingDiv.get(), openingDiv.Length(), PR_FALSE);
 	    if (status < 0) return status;
 
 	    /* text/plain objects always have separators before and after them.
@@ -335,11 +330,33 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   PRBool skipConversion = !conv || rawPlainText ||
                           (obj->options && obj->options->force_user_charset);
 
+  char *mailCharset = NULL;
+  nsresult rv;
+
   if (!skipConversion)
   {
-    nsString lineSourceStr;
-    lineSourceStr.AssignWithConversion(line, length);
-    nsresult rv;
+    nsDependentCString inputStr(line, length);
+    nsAutoString lineSourceStr;
+
+    // For 'SaveAs', |line| is in |mailCharset|.
+    // convert |line| to UTF-16 before 'html'izing (calling ScanTXT())
+    if (obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs)
+    { // Get the mail charset of this message.
+      MimeInlineText  *inlinetext = (MimeInlineText *) obj;
+      if (!inlinetext->initializeCharset)
+         ((MimeInlineTextClass*)&mimeInlineTextClass)->initialize_charset(obj);
+      mailCharset = inlinetext->charset;
+      if (mailCharset && *mailCharset) {
+        rv = nsMsgI18NConvertToUnicode(nsDependentCString(mailCharset), 
+                                       inputStr, lineSourceStr);
+        NS_ENSURE_SUCCESS(rv, -1);
+      }
+      else // this probably never happens ...
+        CopyUTF8toUTF16(inputStr, lineSourceStr);
+    }
+    else  // line is in UTF-8
+      CopyUTF8toUTF16(inputStr, lineSourceStr);
+
     nsCAutoString prefaceResultStr;  // Quoting stuff before the real text
 
     // Recognize quotes
@@ -347,8 +364,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     PRUint32 logicalLineStart = 0;
     rv = conv->CiteLevelTXT(lineSourceStr.get(),
                             &logicalLineStart, &(text->mCiteLevel));
-    if (NS_FAILED(rv))
-      return -1;
+    NS_ENSURE_SUCCESS(rv, -1);
 
     // Find out, which recognitions to do
     PRBool whattodo = obj->options->whattodo;
@@ -371,10 +387,10 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
       prefaceResultStr += "</pre>";
       for (PRUint32 i = 0; i < text->mCiteLevel - oldCiteLevel; i++)
       {
-        char *style = MimeTextBuildPrefixCSS(text->mQuotedSizeSetting,
-                                             text->mQuotedStyleSetting,
-                                             text->mCitationColor);
-        if (!plainHTML && style && strlen(style))
+        nsCAutoString style;
+        MimeTextBuildPrefixCSS(text->mQuotedSizeSetting, text->mQuotedStyleSetting,
+                               text->mCitationColor, style);
+        if (!plainHTML && !style.IsEmpty())
         {
           prefaceResultStr += "<blockquote type=cite style=\"";
           prefaceResultStr += style;
@@ -382,7 +398,6 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
         }
         else
           prefaceResultStr += "<blockquote type=cite>";
-        Recycle(style);
       }
       prefaceResultStr += "<pre wrap>";
     }
@@ -405,11 +420,6 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
       nsAutoString citeTagsSource;
       lineSourceStr.Mid(citeTagsSource, 0, logicalLineStart);
-      NS_ASSERTION(citeTagsSource.IsASCII(), "Non-ASCII-Chars are about to be "
-                   "added to nsCAutoString prefaceResultStr. "
-                   "Change the latter to nsAutoString.");
-        /* I'm currently using nsCAutoString, because currently citeTagsSource
-           is always ASCII and I save 2 conversions this way. */
 
       // Convert to HTML
       nsXPIDLString citeTagsResultUnichar;
@@ -417,10 +427,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
                          getter_Copies(citeTagsResultUnichar));
       if (NS_FAILED(rv)) return -1;
 
-      // Convert to char* and write out
-      nsCAutoString citeTagsResultCStr;
-      CopyUCS2toASCII(citeTagsResultUnichar, citeTagsResultCStr);
-      prefaceResultStr += citeTagsResultCStr;
+      AppendUTF16toUTF8(citeTagsResultUnichar, prefaceResultStr);
       if (!plainHTML)
         prefaceResultStr += "</span>";
     }
@@ -437,62 +444,31 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
         prefaceResultStr += "<div class=\"moz-txt-sig\">";
     }
 
-    // Get a mail charset of this message.
-    MimeInlineText  *inlinetext = (MimeInlineText *) obj;
-    char *mailCharset = NULL;
-    if (inlinetext->charset && *(inlinetext->charset))
-      mailCharset = inlinetext->charset;
 
     /* This is the main TXT to HTML conversion:
        escaping (very important), eventually recognizing etc. */
     nsXPIDLString lineResultUnichar;
 
-    if (obj->options->format_out != nsMimeOutput::nsMimeMessageSaveAs ||
-        !mailCharset || !nsMsgI18Nstateful_charset(mailCharset))
-    {
-      rv = conv->ScanTXT(lineSourceStr.get() + logicalLineStart,
-                         whattodo, getter_Copies(lineResultUnichar));
-      if (NS_FAILED(rv)) return -1;
-    }
-    else
-    {
-      // If nsMimeMessageSaveAs, the string is in mail charset (and stateful, e.g. ISO-2022-JP).
-      // convert to unicode so it won't confuse ScanTXT.
-      nsAutoString ustr;
-      nsCAutoString cstr(line, length);
-      nsCAutoString mailCharsetStr(mailCharset);
-
-      rv = nsMsgI18NConvertToUnicode(mailCharsetStr, cstr, ustr);
-      if (NS_SUCCEEDED(rv))
-      {
-        nsXPIDLString u;
-        rv = conv->ScanTXT(ustr.get() + logicalLineStart, whattodo, getter_Copies(u));
-        if (NS_SUCCEEDED(rv))
-        {
-          ustr.Assign(u);
-          rv = nsMsgI18NConvertFromUnicode(mailCharsetStr, ustr, cstr);
-          if (NS_SUCCEEDED(rv))
-          {
-            // create PRUnichar* which contains NON unicode 
-            // as the following code expecting it
-            lineResultUnichar.Adopt(ToNewUnicode(cstr));
-            if (!lineResultUnichar) return -1;
-          }
-        }
-      }
-      if (NS_FAILED(rv))
-        return -1;
-    }
-
+    rv = conv->ScanTXT(lineSourceStr.get() + logicalLineStart,
+                       whattodo, getter_Copies(lineResultUnichar));
+    NS_ENSURE_SUCCESS(rv, -1);
 
     if (!(text->mIsSig && quoting))
     {
-      status = MimeObject_write(obj, NS_CONST_CAST(char*, prefaceResultStr.get()), prefaceResultStr.Length(), PR_TRUE);
+      status = MimeObject_write(obj, prefaceResultStr.get(), prefaceResultStr.Length(), PR_TRUE);
       if (status < 0) return status;
-      nsCAutoString lineResultCStr;
-      CopyUCS2toASCII(lineResultUnichar, lineResultCStr);
-      status = MimeObject_write(obj, NS_CONST_CAST(char*, lineResultCStr.get()), lineResultCStr.Length(), PR_TRUE);
-      if (status < 0) return status;
+      nsCAutoString outString;
+      if (obj->options->format_out != nsMimeOutput::nsMimeMessageSaveAs ||
+          !mailCharset || !*mailCharset)
+        CopyUTF16toUTF8(lineResultUnichar, outString);
+      else
+      { // convert back to mailCharset before writing.       
+        rv = nsMsgI18NConvertFromUnicode(nsDependentCString(mailCharset), 
+                                         lineResultUnichar, outString);
+        NS_ENSURE_SUCCESS(rv, -1);
+      }
+
+      status = MimeObject_write(obj, outString.get(), outString.Length(), PR_TRUE);
     }
     else
     {
@@ -502,7 +478,6 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   else
   {
     status = MimeObject_write(obj, line, length, PR_TRUE);
-    if (status < 0) return status;
   }
 
   return status;

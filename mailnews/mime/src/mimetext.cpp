@@ -49,7 +49,7 @@ static void MimeInlineText_finalize (MimeObject *);
 static int MimeInlineText_rot13_line (MimeObject *, char *line, PRInt32 length);
 static int MimeInlineText_parse_eof (MimeObject *obj, PRBool abort_p);
 static int MimeInlineText_parse_end  (MimeObject *, PRBool);
-static int MimeInlineText_parse_decoded_buffer (char *, PRInt32, MimeObject *);
+static int MimeInlineText_parse_decoded_buffer (const char *, PRInt32, MimeObject *);
 static int MimeInlineText_rotate_convert_and_parse_line(char *, PRInt32,
                  MimeObject *);
 static int MimeInlineText_open_dam(char *line, PRInt32 length, MimeObject *obj);
@@ -305,7 +305,7 @@ MimeInlineText_rot13_line (MimeObject *obj, char *line, PRInt32 length)
 
 
 static int
-MimeInlineText_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
+MimeInlineText_parse_decoded_buffer (const char *buf, PRInt32 size, MimeObject *obj)
 {
   PR_ASSERT(!obj->closed_p);
   if (obj->closed_p) return -1;

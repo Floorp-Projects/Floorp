@@ -115,7 +115,7 @@ printf(" B2\n");
       charsetline += charset;
       charsetline += "\">\n";
       int status = MimeObject_write(obj,
-                                    NS_CONST_CAST(char*, charsetline.get()),
+                                    charsetline.get(),
                                     charsetline.Length(),
                                     PR_TRUE);
       PR_Free(charset);

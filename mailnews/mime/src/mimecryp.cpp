@@ -54,9 +54,9 @@ MimeDefClass(MimeEncrypted, MimeEncryptedClass, mimeEncryptedClass,
 static int MimeEncrypted_initialize (MimeObject *);
 static void MimeEncrypted_finalize (MimeObject *);
 static int MimeEncrypted_parse_begin (MimeObject *);
-static int MimeEncrypted_parse_buffer (char *, PRInt32, MimeObject *);
+static int MimeEncrypted_parse_buffer (const char *, PRInt32, MimeObject *);
 static int MimeEncrypted_parse_line (char *, PRInt32, MimeObject *);
-static int MimeEncrypted_parse_decoded_buffer (char *, PRInt32, MimeObject *);
+static int MimeEncrypted_parse_decoded_buffer (const char *, PRInt32, MimeObject *);
 static int MimeEncrypted_parse_eof (MimeObject *, PRBool);
 static int MimeEncrypted_parse_end (MimeObject *, PRBool);
 static int MimeEncrypted_add_child (MimeObject *, MimeObject *);
@@ -144,7 +144,7 @@ MimeEncrypted_parse_begin (MimeObject *obj)
 
 
 static int
-MimeEncrypted_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
+MimeEncrypted_parse_buffer (const char *buffer, PRInt32 size, MimeObject *obj)
 {
   /* (Duplicated from MimeLeaf, see comments in mimecryp.h.)
    */
@@ -175,7 +175,7 @@ MimeEncrypted_parse_line (char *line, PRInt32 length, MimeObject *obj)
 }
 
 static int
-MimeEncrypted_parse_decoded_buffer (char *buffer, PRInt32 size, MimeObject *obj)
+MimeEncrypted_parse_decoded_buffer (const char *buffer, PRInt32 size, MimeObject *obj)
 {
   MimeEncrypted *enc = (MimeEncrypted *) obj;
   return
@@ -546,7 +546,7 @@ MimeEncrypted_emit_buffered_child(MimeObject *obj)
 		status = MimePartBufferRead(enc->part_buffer,
 								/* The (nsresult (*) ...) cast is to turn the `void'
 								   argument into `MimeObject'. */
-								 ((nsresult (*) (char *, PRInt32, void *))
+								 ((nsresult (*) (const char *, PRInt32, void *))
 								obj->options->decompose_file_output_fn),
 								obj->options->stream_closure);
     else
@@ -555,7 +555,7 @@ MimeEncrypted_emit_buffered_child(MimeObject *obj)
 	status = MimePartBufferRead(enc->part_buffer,
 								/* The (nsresult (*) ...) cast is to turn the `void'
 								   argument into `MimeObject'. */
-								 ((nsresult (*) (char *, PRInt32, void *))
+								 ((nsresult (*) (const char *, PRInt32, void *))
 								 body->clazz->parse_buffer),
 								body);
   if (status < 0) return status;

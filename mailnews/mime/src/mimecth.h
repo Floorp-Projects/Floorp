@@ -120,7 +120,8 @@
 /*
  * This is the write call for outputting processed stream data.
  */ 
-extern int                        MIME_MimeObject_write(MimeObject *, char *data, 
+extern int                        MIME_MimeObject_write(MimeObject *, 
+                                                        const char *data, 
                                                         PRInt32 length, 
                                                         PRBool user_visible_p);
 /*

@@ -66,7 +66,7 @@ MimeInlineTextRichtextClassInitialize(MimeInlineTextRichtextClass *clazz)
  */
 int
 MimeRichtextConvert (char *line, PRInt32 length,
-					 int (*output_fn) (char *buf, PRInt32 size, void *closure),
+					 int (*output_fn) (const char *buf, PRInt32 size, void *closure),
 					 void *closure,
 					 char **obufferP,
 					 PRInt32 *obuffer_sizeP,

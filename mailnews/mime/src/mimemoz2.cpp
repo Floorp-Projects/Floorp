@@ -825,7 +825,7 @@ mime_convert_charset (const char *input_line, PRInt32 input_length,
 }
 
 static int
-mime_output_fn(char *buf, PRInt32 size, void *stream_closure)
+mime_output_fn(const char *buf, PRInt32 size, void *stream_closure)
 {
   PRUint32  written = 0;
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
@@ -857,7 +857,7 @@ mime_output_fn(char *buf, PRInt32 size, void *stream_closure)
 
 #ifdef XP_MAC
 static int
-compose_only_output_fn(char *buf, PRInt32 size, void *stream_closure)
+compose_only_output_fn(const char *buf, PRInt32 size, void *stream_closure)
 {
     return 0;
 }
@@ -1051,7 +1051,7 @@ static void   *mime_image_begin(const char *image_url, const char *content_type,
                               void *stream_closure);
 static void   mime_image_end(void *image_closure, int status);
 static char   *mime_image_make_image_html(void *image_data);
-static int    mime_image_write_buffer(char *buf, PRInt32 size, void *image_closure);
+static int    mime_image_write_buffer(const char *buf, PRInt32 size, void *image_closure);
 
 /* Interface between libmime and inline display of images: the abomination
    that is known as "internal-external-reconnect".
@@ -1196,7 +1196,7 @@ mime_image_make_image_html(void *image_closure)
 }
 
 static int
-mime_image_write_buffer(char *buf, PRInt32 size, void *image_closure)
+mime_image_write_buffer(const char *buf, PRInt32 size, void *image_closure)
 {
   mime_image_stream_data *mid =
                 (mime_image_stream_data *) image_closure;
