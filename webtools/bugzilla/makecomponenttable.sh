@@ -44,6 +44,16 @@ insert into components (value, program, initialowner) values ("UI", "Calendar", 
 insert into components (value, program, initialowner) values ("Test", "Calendar", "sman@netscape.com");
 insert into components (value, program, initialowner) values ("Install", "Calendar", "sman@netscape.com");
 
+insert into components (value, program, initialowner) values ("CCK-Wizard", "CCK", "selmer@netscape.com");
+insert into components (value, program, initialowner) values ("CCK-Installation", "CCK", "selmer@netscape.com");
+insert into components (value, program, initialowner) values ("CCK-Shell", "CCK", "selmer@netscape.com");
+insert into components (value, program, initialowner) values ("CCK-Whitebox", "CCK", "selmer@netscape.com");
+insert into components (value, program, initialowner) values ("Dialup-Install", "CCK", "selmer@netscape.com");
+insert into components (value, program, initialowner) values ("Dialup-Account Setup", "CCK", "selmer@netscape.com");
+insert into components (value, program, initialowner) values ("Dialup-Mup/Muc", "CCK", "selmer@netscape.com");
+insert into components (value, program, initialowner) values ("Dialup-Upgrade", "CCK", "selmer@netscape.com");
+insert into components (value, program, initialowner) values ("AS-Whitebox", "CCK", "selmer@netscape.com");
+
 insert into components (value, program, initialowner) values ("LDAP C SDK", "Directory", "chuckb@netscape.com");
 insert into components (value, program, initialowner) values ("LDAP Java SDK", "Directory", "chuckb@netscape.com");
 insert into components (value, program, initialowner) values ("PerLDAP", "Directory", "leif@netscape.com");
