@@ -290,7 +290,9 @@ GetAttributeValueAt(const nsIParserNode& aNode,
   char cbuf[100];
   PRInt32 index = 0;
   while (index < aResult.Length()) {
-    if (aResult.CharAt(index++) == '&') {
+    // If we have the start of an entity (and it's not at the end of
+    // our string) then translate the entity into it's unicode value.
+    if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
       PRInt32 start = index - 1;
       PRUnichar e = aResult.CharAt(index);
       if (e == '#') {
