@@ -36,15 +36,6 @@ private:
 	static LO_AnchorData*	sMouseOverMapArea;		// AREA tag the cursor is over
 
 public:
-	static void ClearSelectionForContext( MWContext* context )
-	{
-		if (context == sMouseOverElementContext)
-		{
-			sMouseOverElement = NULL;
-			sMouseOverElementContext = NULL;
-			sMouseOverMapArea = NULL;
-		}
-	}
 	static void SendOutOfElementEvent(MWContext * winContext, CL_Layer* layer, SPoint32 where); // add layer param 1997-03-02 mjc
 	static void SendOutOfMapAreaEvent(MWContext * winContext, CL_Layer* layer, SPoint32 where); // add layer param 1997-03-02 mjc
 	static void	ResetMochaMouse();
@@ -62,7 +53,13 @@ public:
 	static void RemoveReferenceToMouseOverElementContext(MWContext *context)
 	{
 		if (sMouseOverElementContext == context)
+		{
 			sMouseOverElementContext = NULL;
+			// It stands to reason that if the context is going away so is the element
+			sMouseOverElement = NULL;
+			// What the heck, null the map area also
+			sMouseOverMapArea = NULL;
+		}
 	}
 	static void	SetMouseOverMapArea(LO_AnchorData* inAnchorData)
 				{	sMouseOverMapArea = inAnchorData;	}

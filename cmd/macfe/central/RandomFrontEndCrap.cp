@@ -506,7 +506,6 @@ void FE_DestroyWindow( MWContext* context )
 				}
 			}
 		}
-		CMochaHacks::ClearSelectionForContext( context );
 	}
 }
 
