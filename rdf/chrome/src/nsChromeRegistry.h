@@ -87,6 +87,8 @@ protected:
   nsresult GetFormSheetURL(nsCString& aURL);
   
   nsresult LoadProfileDataSource();
+  
+  nsresult FlushCaches();
 
 private:
   NS_IMETHOD LoadDataSource(const nsCString &aFileName, nsIRDFDataSource **aResult,

@@ -1091,12 +1091,8 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 {
   nsresult rv;
 
-  // Flush the style sheet cache completely.
-  // XXX For now flush everything.  need a better call that only flushes style sheets.
-  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "@mozilla.org/xul/xul-prototype-cache;1", &rv);
-  if (NS_SUCCEEDED(rv) && xulCache) {
-    xulCache->Flush();
-  }
+  rv = FlushCaches();
+  if (NS_FAILED(rv)) return rv;
   
   // Get the window mediator
   NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
@@ -1124,6 +1120,21 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     }
   }
 
+  return rv;
+}
+
+
+nsresult nsChromeRegistry::FlushCaches()
+{
+  nsresult rv;
+
+  // Flush the style sheet cache completely.
+  // XXX For now flush everything.  need a better call that only flushes style sheets.
+  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "@mozilla.org/xul/xul-prototype-cache;1", &rv);
+  if (NS_SUCCEEDED(rv) && xulCache) {
+    xulCache->Flush();
+  }
+  
   // Flush the old image cache.
   NS_WITH_SERVICE(nsIImageManager, imageManager, kImageManagerCID, &rv);
   if (imageManager)
@@ -2873,7 +2884,7 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
     if (NS_FAILED(rv)) return rv;
 
     // We have to flush the chrome cache!
-    rv = RefreshSkins();
+    rv = FlushCaches();
     if (NS_FAILED(rv)) return rv;
 
     rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
