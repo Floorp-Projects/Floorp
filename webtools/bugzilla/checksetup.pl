@@ -167,10 +167,10 @@ sub have_vers {
   $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
   $vnum = -1 if $@;
 
-  if ($vnum < 0) {
+  if ($vnum eq "-1") { # string compare just in case it's non-numeric
     $vstr = "not found";
   }
-  elsif ($vnum > 0) {
+  elsif (vers_cmp($vnum,"0") > -1) {
     $vstr = "found v$vnum";
   }
   else {
