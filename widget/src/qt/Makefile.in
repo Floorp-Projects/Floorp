@@ -36,7 +36,6 @@ MOCSRCS = \
 	moc_nsTextAreaWidget.cpp \
 	moc_nsCheckButton.cpp \
 	moc_nsTextWidget.cpp \
-	moc_nsTabWidget.cpp \
 	moc_nsQEventHandler.cpp \
 	moc_nsRadioButton.cpp \
 	moc_nsWindow.cpp \
@@ -60,7 +59,6 @@ CPPSRCS		= \
 	nsTextWidget.cpp \
 	nsFileWidget.cpp \
 	nsMenuItem.cpp \
-	nsTabWidget.cpp \
 	nsToolkit.cpp \
 	nsQEventHandler.cpp \
 	nsRadioButton.cpp \
