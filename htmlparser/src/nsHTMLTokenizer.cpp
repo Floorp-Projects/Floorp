@@ -47,7 +47,6 @@
 #include "nsHTMLTokenizer.h"
 #include "nsScanner.h"
 #include "nsElementTable.h"
-#include "nsHTMLEntities.h"
 #include "CParserContext.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
