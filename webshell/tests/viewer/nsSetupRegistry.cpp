@@ -35,7 +35,7 @@
 #include "nsDOMCID.h"
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
-#if defined(XP_PC) && defined(XP_MAC)
+#if defined(XP_PC) || defined(XP_MAC)
 #include "nsICapsManager.h"
 #include "nsILiveconnect.h"
 #include "nsIJVMManager.h"
@@ -56,6 +56,7 @@
 #include "nsLWBrkCIID.h"
 
 #include "nsIEditor.h"
+#include "nsIAllocator.h"
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
@@ -146,6 +147,7 @@
 
 // Class ID's
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
@@ -177,7 +179,7 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
-//static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
+static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -219,7 +221,7 @@ static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
 static NS_DEFINE_CID(kCEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 
 static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
-#if defined(XP_PC) && defined(XP_MAC)
+#if defined(XP_PC) || defined(XP_MAC)
 static NS_DEFINE_CID(kCapsManagerCID,             NS_CCAPSMANAGER_CID);
 static NS_DEFINE_CID(kLiveconnectCID,             NS_CLIVECONNECT_CID);
 static NS_DEFINE_CID(kJVMManagerCID,              NS_JVMMANAGER_CID);
@@ -247,6 +249,7 @@ extern "C" void
 NS_SetupRegistry()
 {
   nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kAllocatorCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -279,7 +282,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCDocLoaderServiceCID, WEB_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
- // nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kWellFormedDTDCID, PARSER_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCDOMScriptObjectFactory, DOM_DLL, PR_FALSE, PR_FALSE);
@@ -344,7 +347,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kLWBrkCID,        LWBRK_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kCPluginManagerCID, PLUGIN_DLL,      PR_FALSE, PR_FALSE);
-#if defined(XP_PC) && defined(XP_MAC)
+#if defined(XP_PC) || defined(XP_MAC)
   nsRepository::RegisterFactory(kCapsManagerCID, CAPS_DLL,          PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kLiveconnectCID, LIVECONNECT_DLL,   PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kJVMManagerCID,  OJI_DLL,           PR_FALSE, PR_FALSE);
