@@ -174,6 +174,7 @@ endif
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib/ \
+	-lsoftokn3 \
 	-lssl3 \
 	-lsmime3 \
 	-lnss3 \
