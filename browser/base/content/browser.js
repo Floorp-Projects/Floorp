@@ -354,8 +354,6 @@ function prepareForStartup()
 
 function delayedStartup()
 {
-  gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
-
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
   gPrefService = gPrefService.getBranch(null);
@@ -364,6 +362,8 @@ function delayedStartup()
   
   if (gIsLoadingBlank)
     prepareForStartup();
+
+  gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
 
   // loads the services
   initServices();
