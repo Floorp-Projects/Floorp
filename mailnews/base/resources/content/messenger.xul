@@ -562,8 +562,7 @@ Rights Reserved.
           
           <box id="sidebar-box">
 		    <splitter class="sidebar-main-header" collapse="after"
-		              persist="state"
-		              onclick="sidebarOpenClosePanel(this)"> 
+		              persist="state">
 		 		<html:div class="panel-bar">&mail-sidebar-header.label;</html:div>
 		    </splitter>
             <tree id="folderTree"/>
