@@ -114,7 +114,6 @@ oeICalContainerImpl::AddCalendar( const char *server ) {
         return NS_ERROR_FAILURE;
     }
 
-    calendar->SetServer( server );
     m_calendarArray->AppendElement( calendar );
 
     PRUint32 num;
@@ -132,6 +131,8 @@ oeICalContainerImpl::AddCalendar( const char *server ) {
         m_todoobserverArray->GetElementAt( i, (nsISupports **)&tmpobserver );
         calendar->AddTodoObserver( tmpobserver );
     }
+
+    calendar->SetServer( server );
 
     return NS_OK;
 }
