@@ -1876,7 +1876,7 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
 
   // make sure the the form registers itself on the initial/first reflow
   if (mState & NS_FRAME_FIRST_REFLOW) {
-    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, this, PR_TRUE);
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
   }
 
@@ -2995,16 +2995,6 @@ nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
   // incremental reflows to be initiated at the scroll frame, rather
   // than descending from the root frame of the frame hierarchy.
   first->AddStateBits(NS_FRAME_REFLOW_ROOT);
-
-//we must turn off scrollbars for singleline text controls
-  if (IsSingleLineTextControl()) 
-  {
-    nsIScrollableFrame *scrollableFrame = nsnull;
-    if (first)
-      first->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **) &scrollableFrame);
-    if (scrollableFrame)
-      scrollableFrame->SetScrollbarVisibility(aPresContext,PR_FALSE,PR_FALSE);
-  }
 
   //register keylistener
   nsCOMPtr<nsIDOMEventReceiver> erP;

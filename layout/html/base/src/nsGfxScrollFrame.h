@@ -244,10 +244,6 @@ public:
   NS_IMETHOD GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const;
   NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
-  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
-                                    PRBool aVerticalVisible,
-                                    PRBool aHorizontalVisible);
-
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
 
   NS_IMETHOD CurPosAttributeChanged(nsPresContext* aPresContext,
@@ -376,10 +372,6 @@ public:
 
   NS_IMETHOD GetScrollPosition(nsPresContext* aContext, nscoord &aX, nscoord& aY) const;
   NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
-
-  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
-                                    PRBool aVerticalVisible,
-                                    PRBool aHorizontalVisible);
 
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
 
