@@ -96,7 +96,7 @@ static PRUintn gToolkitTLSIndex = 0;
   mEventQueueService = service.get();
   NS_IF_ADDREF(mEventQueueService);  
 
-  mEventTimer = [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(eventTimer:) userInfo:nil
+  mEventTimer = [NSTimer scheduledTimerWithTimeInterval:0.005 target:self selector:@selector(eventTimer:) userInfo:nil
                            repeats:YES];
   NS_ASSERTION(mEventTimer, "UH OH! couldn't create periodic event processing timer");
   
@@ -129,14 +129,20 @@ printf("shutting down event queue\n");
 //
 // Called periodically to process PLEvents from the queue on the current thread
 //
+
+#define LOOP_THRESHOLD 10
+
 - (void)eventTimer:(NSTimer *)theTimer
 {
   if ( mEventQueueService ) {
     nsCOMPtr<nsIEventQueue> queue;
     mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
     if (queue) {
-      nsresult rv = queue->ProcessPendingEvents();
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
+      nsresult rv = NS_OK;
+      for (PRInt32 i = 0; i < LOOP_THRESHOLD; i++) {
+        queue->ProcessPendingEvents();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
+      }
     }
   }
   
