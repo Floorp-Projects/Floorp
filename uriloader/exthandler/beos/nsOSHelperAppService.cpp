@@ -329,7 +329,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
 
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar* platformAppPath, nsIFile ** aFile)
 {
-	LOG(("-- nsOSHelperAppService::GetFileTokenForPath: '%s'\n", NS_ConvertUCS2toUTF8(platformAppPath)));
+	LOG(("-- nsOSHelperAppService::GetFileTokenForPath: '%s'\n", NS_ConvertUCS2toUTF8(platformAppPath).get()));
 	nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
 	nsresult rv = NS_OK;
 
