@@ -36,7 +36,7 @@
 /*
  * certi.h - private data structures for the certificate library
  *
- * $Id: certi.h,v 1.12 2005/02/15 06:26:42 julien.pierre.bugs%sun.com Exp $
+ * $Id: certi.h,v 1.13 2005/02/15 19:26:28 julien.pierre.bugs%sun.com Exp $
  */
 #ifndef _CERTI_H_
 #define _CERTI_H_
@@ -100,7 +100,7 @@ struct CRLEntryCacheStr {
 
 typedef enum {
     CRL_OriginToken = 0,    /* CRL came from PKCS#11 token */
-    CRL_OriginExplicit = 1, /* CRL was explicitly added to the cache, from RAM */
+    CRL_OriginExplicit = 1  /* CRL was explicitly added to the cache, from RAM */
 } CRLOrigin;
 
 struct CachedCrlStr {
