@@ -48,6 +48,7 @@ public:
   static nsIAtom* align;
   static nsIAtom* alink;
   static nsIAtom* alt;
+  static nsIAtom* applet;
   static nsIAtom* archive;
 
   static nsIAtom* background;
@@ -81,6 +82,7 @@ public:
   static nsIAtom* div;
   static nsIAtom* dl;
 
+  static nsIAtom* embed;
   static nsIAtom* encoding;
   static nsIAtom* enctype;
 
@@ -132,6 +134,7 @@ public:
   static nsIAtom* noshade;
   static nsIAtom* nowrap;
 
+  static nsIAtom* object;
   static nsIAtom* ol;
   static nsIAtom* onabort;
   static nsIAtom* onblur;
