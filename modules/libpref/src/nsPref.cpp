@@ -98,6 +98,7 @@ protected:
     virtual ~nsPref();
 
     nsresult useDefaultPrefFile();
+    nsresult useUserPrefFile();
     static nsPref *gInstance;
     
     nsIFileSpec*                    mFileSpec;
@@ -190,6 +191,37 @@ nsresult nsPref::useDefaultPrefFile()
 
     return rv;
 } // nsPref::useDefaultPrefFile
+
+//----------------------------------------------------------------------------------------
+nsresult nsPref::useUserPrefFile()
+//----------------------------------------------------------------------------------------
+{
+    nsresult rv = NS_OK;
+    nsIFileSpec* userPrefFile;
+    static const char* userFiles[] = {"user.js"};
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_SUCCEEDED(rv) && locator)
+    {
+        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50,
+                        &userPrefFile);
+        if (NS_SUCCEEDED(rv) && userPrefFile) 
+        {
+            if NS_SUCCEEDED(userPrefFile->AppendRelativeUnixPath((char*)userFiles[0]))
+            {
+	            if (Exists(userPrefFile)) {
+                  rv = ReadUserPrefsFrom(userPrefFile);
+                  NS_RELEASE(userPrefFile);
+                  return rv;
+              }
+              NS_RELEASE(userPrefFile);
+              return rv;
+            }
+            NS_RELEASE(userPrefFile);
+            return rv;
+        }
+    }
+    return rv;
+} // nsPref::useUserPrefFile
 
 //----------------------------------------------------------------------------------------
 nsPref* nsPref::GetInstance()
@@ -296,8 +328,10 @@ NS_IMETHODIMP nsPref::ReadUserPrefs()
 //----------------------------------------------------------------------------------------
 {
     nsresult rv = StartUp(); // just to be sure
-	if (NS_SUCCEEDED(rv))
-		rv = useDefaultPrefFile();  // really should return a value...
+	  if (NS_SUCCEEDED(rv))
+		  rv = useDefaultPrefFile();  // really should return a value...
+    if (NS_SUCCEEDED(rv))
+		  useUserPrefFile(); 
     return rv;
 }
 
