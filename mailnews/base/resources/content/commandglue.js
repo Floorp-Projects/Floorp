@@ -385,11 +385,13 @@ function SetSentFolderColumns(isSentFolder)
   var searchCriteria = document.getElementById("searchCriteria");
   if(isSentFolder)
   {
+    senderOrRecipientColumn.setAttribute("tooltiptext", gMessengerBundle.getString("recipientColumnTooltip"));
     senderOrRecipientColumn.setAttribute("label", gMessengerBundle.getString("recipientColumnHeader"));
     searchCriteria.setAttribute("value", gMessengerBundle.getString("recipientSearchCriteria"));
   }
   else
   {
+    senderOrRecipientColumn.setAttribute("tooltiptext", gMessengerBundle.getString("senderColumnTooltip"));
     senderOrRecipientColumn.setAttribute("label", gMessengerBundle.getString("senderColumnHeader"));
     searchCriteria.setAttribute("value", gMessengerBundle.getString("senderSearchCriteria"));
   }
@@ -400,9 +402,11 @@ function SetNewsFolderColumns(isNewsFolder)
   var sizeColumn = document.getElementById("sizeCol");
 
   if (isNewsFolder) {
+     sizeColumn.setAttribute("tooltiptext",gMessengerBundle.getString("linesColumnTooltip"));
      sizeColumn.setAttribute("label",gMessengerBundle.getString("linesColumnHeader"));
   }
   else {
+     sizeColumn.setAttribute("tooltiptext", gMessengerBundle.getString("sizeColumnTooltip"));
      sizeColumn.setAttribute("label", gMessengerBundle.getString("sizeColumnHeader"));
   }
 }

@@ -18,13 +18,17 @@ The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
+
+Contributors:
+  Neil Rashbrook <neil@parkwaycc.co.uk>
+
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/threadPane.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/threadPaneExtras.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/threadPaneLabels.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/threadpane.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/threadpane.dtd">
 
 <overlay
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -35,36 +39,52 @@ Rights Reserved.
     onkeypress="ThreadPaneKeyPress(event);"
     onselect="ThreadPaneSelectionChanged();">
   <treecols>
-    <treecol id="threadCol" display="&threadColumn.label;" class="treecol-image threadColumnHeader" currentView="unthreaded" cycler="true" persist="hidden ordinal" fixed="true" />
-    <treecol id="subjectCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="7" label="&subjectColumn.label;" ignoreincolumnpicker="true"/>
+    <treecol id="threadCol" persist="hidden ordinal" fixed="true" cycler="true" class="treecol-image threadColumnHeader" currentView="unthreaded"
+             display="&threadColumn.label;" tooltiptext="&threadColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="senderOrRecipientCol" class="sortDirectionIndicator" persist="hidden ordinal width"  flex="4" label="&senderColumn.label;"/>
+    <treecol id="subjectCol" persist="hidden ordinal width" flex="7" ignoreincolumnpicker="true"
+             label="&subjectColumn.label;" tooltiptext="&subjectColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="unreadButtonColHeader" fixed="true" persist="hidden ordinal" class="treecol-image readColumnHeader" display="&readColumn.label;" cycler="true"/> 
+    <treecol id="senderOrRecipientCol" persist="hidden ordinal width" flex="4"
+             label="&senderColumn.label;" tooltiptext="&senderColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="dateCol" class="sortDirectionIndicator" persist="hidden ordinal width"  flex="2" label="&dateColumn.label;"/>
+    <treecol id="unreadButtonColHeader" persist="hidden ordinal" fixed="true" cycler="true" class="treecol-image readColumnHeader"
+             display="&readColumn.label;" tooltiptext="&readColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="statusCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&statusColumn.label;"/>
+    <treecol id="dateCol" persist="hidden ordinal width" flex="2"
+             label="&dateColumn.label;" tooltiptext="&dateColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="sizeCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1"  label="&sizeColumn.label;"/>
+    <treecol id="statusCol" persist="hidden ordinal width" flex="1" hidden="true"
+             label="&statusColumn.label;" tooltiptext="&statusColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="junkStatusCol" fixed="true" persist="hidden ordinal width" class="treecol-image junkStatusHeader" display="&junkStatusColumn.label;" cycler="true"/>
+    <treecol id="sizeCol" persist="hidden ordinal width" flex="1" hidden="true"
+             label="&sizeColumn.label;" tooltiptext="&sizeColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="flaggedCol" fixed="true" persist="hidden ordinal" class="treecol-image flagColumnHeader" display="&flagColumn.label;" cycler="true"/>
+    <treecol id="junkStatusCol" persist="hidden ordinal width" fixed="true" cycler="true" hidden="true" class="treecol-image junkStatusHeader"
+             display="&junkStatusColumn.label;" tooltiptext="&junkStatusColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="labelCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&labelColumn.label;"/>
+    <treecol id="flaggedCol" persist="hidden ordinal" fixed="true" cycler="true" hidden="true" class="treecol-image flagColumnHeader"
+             display="&flagColumn.label;" tooltiptext="&flagColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="priorityCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&priorityColumn.label;"/>
+    <treecol id="labelCol" persist="hidden ordinal width" flex="1" hidden="true"
+             label="&labelColumn.label;" tooltiptext="&labelColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="unreadCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&unreadColumn.label;"/>
+    <treecol id="priorityCol" persist="hidden ordinal width" flex="1"
+             label="&priorityColumn.label;" tooltiptext="&priorityColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="totalCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&totalColumn.label;"/>
+    <treecol id="unreadCol" persist="hidden ordinal width" flex="1" hidden="true"
+             label="&unreadColumn.label;" tooltiptext="&unreadColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="locationCol" class="sortDirectionIndicator" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true" label="&locationColumn.label;"/>
+    <treecol id="totalCol" persist="hidden ordinal width" flex="1" hidden="true"
+             label="&totalColumn.label;" tooltiptext="&totalColumn.tooltip;"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="locationCol" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true"
+             label="&locationColumn.label;" tooltiptext="&locationColumn.tooltip;"/>
 <!-- not enabled yet.  note, Mail.app has it.  useful for debugging.
-     if we were going to turn it on, we'd need to add "View | Sort By | ID", too
+     users can still sort by ID via the menu (Order Received)
     <splitter class="tree-splitter"/>
-    <treecol id="idCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&idColumn.label;"/>
+    <treecol id="idCol" persist="hidden ordinal width" flex="1" hidden="true"
+             label="&idColumn.label;" display="&orderReceivedColumn.label;" tooltiptext="&idColumn.tooltip;"/>
 -->
   </treecols>
   <treechildren ondraggesture="BeginDragThreadPane(event);"/>
