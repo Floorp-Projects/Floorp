@@ -45,9 +45,9 @@
 #include "nsMaiUtil.h"
 #include "nsMaiAppRoot.h"
 
-gboolean mai_init(void);
-gboolean mai_shutdown(void);
-void mai_delete_root(void);
+static gboolean mai_shutdown(void);
+static void mai_delete_root(void);
+static MaiAppRoot *mai_create_root(void);
 
 static void mai_util_class_init(MaiUtilClass *klass);
 
@@ -77,7 +77,7 @@ typedef struct _MaiUtilListenerInfo MaiUtilListenerInfo;
 
 /* supporting */
 static int mai_initialized = FALSE;
-static MaiHook maiHook;
+static MaiHook sMaiHook;
 PRLogModuleInfo *gMaiLog = NULL;
 
 struct _MaiUtilListenerInfo
@@ -220,7 +220,7 @@ mai_util_get_root(void)
     static AtkObject *gRootAtkObject = NULL;
     MaiAppRoot *root;
 
-    if (!gRootAtkObject && (root = mai_get_root()))
+    if (!gRootAtkObject && (root = mai_create_root()))
         gRootAtkObject = root->GetAtkObject();
     return gRootAtkObject;
 }
@@ -303,15 +303,6 @@ mai_init(void)
     /* Initialize the MAI Utility class */
     g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
 
-    /* initialize the MAI hook
-     * MAI provide the functions of "startup", "shutdown", "add toplvel"
-     * "remove toplevel", which are used by Mozilla through the MAI hook.
-     */
-    gMaiHook = &maiHook;
-    maiHook.MaiShutdown = mai_shutdown;
-    maiHook.MaiStartup = mai_init;
-    maiHook.AddTopLevelAccessible = mai_add_toplevel_accessible;
-    maiHook.RemoveTopLevelAccessible = mai_remove_toplevel_accessible;
 
     return TRUE;
 }
@@ -338,27 +329,44 @@ gtk_module_init(gint *argc, char **argv[])
 
 /* supporting funcs */
 
-static MaiAppRoot *gRootAccessible = NULL;
+static MaiAppRoot *sRootAccessible = NULL;
 
 MaiAppRoot *
-mai_get_root(void)
+mai_create_root(void)
 {
     if (!mai_initialized) {
         return NULL;
     }
-    if (!gRootAccessible) {
-        gRootAccessible = new MaiAppRoot();
-        NS_ASSERTION(gRootAccessible, "Fail to create MaiAppRoot");
+    if (!sRootAccessible) {
+        sRootAccessible = new MaiAppRoot();
+        NS_ASSERTION(sRootAccessible, "Fail to create MaiAppRoot");
+
+        /* initialize the MAI hook
+         * MAI provide the functions of "startup", "shutdown", "add toplvel"
+         * "remove toplevel", which are used by Mozilla through the MAI hook.
+         */
+
+        gMaiHook = &sMaiHook;
+        sMaiHook.MaiShutdown = mai_shutdown;
+        sMaiHook.MaiStartup = mai_init;
+        sMaiHook.AddTopLevelAccessible = mai_add_toplevel_accessible;
+        sMaiHook.RemoveTopLevelAccessible = mai_remove_toplevel_accessible;
     }
-    return gRootAccessible;
+    return sRootAccessible;
+}
+
+MaiAppRoot *
+mai_get_root(void)
+{
+    return sRootAccessible;
 }
 
 void
 mai_delete_root(void)
 {
-    if (gRootAccessible) {
-        delete gRootAccessible;
-        gRootAccessible = NULL;
+    if (sRootAccessible) {
+        delete sRootAccessible;
+        sRootAccessible = NULL;
     }
 }
 
