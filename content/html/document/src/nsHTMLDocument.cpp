@@ -2126,7 +2126,8 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, PRBool aReplace)
   }
 
   // Add a wyciwyg channel request into the document load group
-  NS_ASSERTION(mWyciwygChannel == nsnull, "nsHTMLDocument::OpenCommon(): wyciwyg channel already exists!");
+  NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::OpenCommon(): wyciwyg "
+               "channel already exists!");
   CreateAndAddWyciwygChannel();
 
   return rv;
@@ -2208,9 +2209,11 @@ nsHTMLDocument::Close()
     // that we added in OpenCommon().  If all other requests between
     // document.open() and document.close() have completed, then this
     // method should cause the firing of an onload event.
-    NS_ASSERTION(mWyciwygChannel, "nsHTMLDocument::Close(): Trying to remove non-existent wyciwyg channel!");
+    NS_ASSERTION(mWyciwygChannel, "nsHTMLDocument::Close(): Trying to remove "
+                 "non-existent wyciwyg channel!");
     RemoveWyciwygChannel();
-    NS_ASSERTION(mWyciwygChannel == nsnull, "nsHTMLDocument::Close(): nsIWyciwyg Channel could not be removed!");
+    NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::Close(): "
+                 "nsIWyciwygChannel could not be removed!");
   }
 
   return NS_OK;
@@ -2247,7 +2250,7 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
 
   // Save the data in cache
   if (mWyciwygChannel) {
-    mWyciwygChannel->WriteToCacheEntry(NS_ConvertUCS2toUTF8(text));
+    mWyciwygChannel->WriteToCacheEntry(text);
   }
 
   rv = mParser->Parse(text ,

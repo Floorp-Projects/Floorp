@@ -54,10 +54,10 @@ PRLogModuleInfo * gWyciwygLog = nsnull;
 
 // nsWyciwygChannel methods 
 nsWyciwygChannel::nsWyciwygChannel()
-  : mContentLength(-1)
-  , mLoadFlags(LOAD_NORMAL)
-  , mStatus(NS_OK)
-  , mIsPending(PR_FALSE)
+  : mStatus(NS_OK),
+    mIsPending(PR_FALSE),
+    mContentLength(-1),
+    mLoadFlags(LOAD_NORMAL)
 {
 }
 
@@ -139,7 +139,6 @@ nsWyciwygChannel::Resume()
 NS_IMETHODIMP
 nsWyciwygChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
-  NS_ENSURE_ARG_POINTER(aLoadGroup);
   *aLoadGroup = mLoadGroup;
   NS_IF_ADDREF(*aLoadGroup);
   return NS_OK;
@@ -162,7 +161,6 @@ nsWyciwygChannel::SetLoadFlags(PRUint32 aLoadFlags)
 NS_IMETHODIMP
 nsWyciwygChannel::GetLoadFlags(PRUint32 * aLoadFlags)
 {
-  NS_ENSURE_ARG_POINTER(aLoadFlags);
   *aLoadFlags = mLoadFlags;
   return NS_OK;
 }
@@ -193,7 +191,6 @@ nsWyciwygChannel::SetOriginalURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsWyciwygChannel::GetURI(nsIURI* *aURI)
 {
-  NS_ENSURE_ARG_POINTER(aURI);
   *aURI = mURI;
   NS_IF_ADDREF(*aURI);
   return NS_OK;
@@ -206,7 +203,9 @@ nsWyciwygChannel::GetOwner(nsISupports **aOwner)
 
   if (!mOwner) {
     // Create codebase principal with URI of original document, not our URI
-    NS_ENSURE_TRUE(mOriginalURI, NS_ERROR_FAILURE); // without an owner or an original URI!
+
+    // without an owner or an original URI!
+    NS_ENSURE_TRUE(mOriginalURI, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIPrincipal> principal;
     nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
@@ -265,7 +264,7 @@ nsWyciwygChannel::SetContentType(const nsACString &aContentType)
 NS_IMETHODIMP
 nsWyciwygChannel::GetContentCharset(nsACString &aContentCharset)
 {
-  aContentCharset.Truncate();
+  aContentCharset.Assign("UTF-16");
   return NS_OK;
 }
 
@@ -284,7 +283,9 @@ nsWyciwygChannel::GetContentLength(PRInt32 *aContentLength)
 NS_IMETHODIMP
 nsWyciwygChannel::SetContentLength(PRInt32 aContentLength)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mContentLength = aContentLength;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -335,7 +336,7 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 //////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsWyciwygChannel::WriteToCacheEntry(const nsACString &aScript)
+nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
 {
   nsresult rv;
 
@@ -354,7 +355,8 @@ nsWyciwygChannel::WriteToCacheEntry(const nsACString &aScript)
   }
 
   PRUint32 out;
-  return mCacheOutputStream->Write(PromiseFlatCString(aScript).get(), aScript.Length(), &out);
+  return mCacheOutputStream->Write((char *)PromiseFlatString(aData).get(),
+                                   aData.Length() * sizeof(PRUnichar), &out);
 }
 
 
@@ -430,8 +432,8 @@ nsWyciwygChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor * aCacheEntry, n
 
 NS_IMETHODIMP
 nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
-                               nsIInputStream *input,
-                               PRUint32 offset, PRUint32 count)
+                                  nsIInputStream *input,
+                                  PRUint32 offset, PRUint32 count)
 {
   LOG(("nsWyciwygChannel::OnDataAvailable [this=%x request=%x offset=%u count=%u]\n",
       this, request, offset, count));
@@ -487,50 +489,54 @@ nsWyciwygChannel::OnStopRequest(nsIRequest *request, nsISupports *ctx, nsresult 
 //////////////////////////////////////////////////////////////////////////////
 
 nsresult
-nsWyciwygChannel::OpenCacheEntry(const char * aCacheKey, nsCacheAccessMode aAccessMode, PRBool * aDelayFlag )
+nsWyciwygChannel::OpenCacheEntry(const char * aCacheKey,
+                                 nsCacheAccessMode aAccessMode,
+                                 PRBool * aDelayFlag)
 {
   nsresult rv = NS_ERROR_FAILURE;
   // Get cache service
-  nsCOMPtr<nsICacheService>  cacheService(do_GetService(NS_CACHESERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsICacheService> cacheService =
+    do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_SUCCEEDED(rv) && cacheService) {
-    nsXPIDLCString spec;    
-    nsAutoString newURIString;    
-    nsCOMPtr<nsICacheSession> cacheSession;
+  nsXPIDLCString spec;    
+  nsAutoString newURIString;    
+  nsCOMPtr<nsICacheSession> cacheSession;
 
-    // honor security settings
-    nsCacheStoragePolicy storagePolicy;
-    if (mLoadFlags & INHIBIT_PERSISTENT_CACHING)
-      storagePolicy = nsICache::STORE_IN_MEMORY;
-    else
-      storagePolicy = nsICache::STORE_ANYWHERE;
+  // honor security settings
+  nsCacheStoragePolicy storagePolicy;
+  if (mLoadFlags & INHIBIT_PERSISTENT_CACHING)
+    storagePolicy = nsICache::STORE_IN_MEMORY;
+  else
+    storagePolicy = nsICache::STORE_ANYWHERE;
  
-    // Open a stream based cache session.
-    rv = cacheService->CreateSession("wyciwyg", storagePolicy, PR_TRUE, getter_AddRefs(cacheSession));
-    if (!cacheSession) 
-      return NS_ERROR_FAILURE;
+  // Open a stream based cache session.
+  rv = cacheService->CreateSession("wyciwyg", storagePolicy, PR_TRUE,
+                                   getter_AddRefs(cacheSession));
+  if (!cacheSession) 
+    return NS_ERROR_FAILURE;
 
-    /* we'll try to synchronously open the cache entry... however, it may be
-     * in use and not yet validated, in which case we'll try asynchronously
-     * opening the cache entry.
-     */
+  /* we'll try to synchronously open the cache entry... however, it
+   * may be in use and not yet validated, in which case we'll try
+   * asynchronously opening the cache entry.
+   */
     
-    rv = cacheSession->OpenCacheEntry(aCacheKey, aAccessMode, PR_FALSE,
-                                 getter_AddRefs(mCacheEntry));
+  rv = cacheSession->OpenCacheEntry(aCacheKey, aAccessMode, PR_FALSE,
+                                    getter_AddRefs(mCacheEntry));
 
-    if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-      // access to the cache entry has been denied. Let's try
-      // opening it async. 
-      rv = cacheSession->AsyncOpenCacheEntry(aCacheKey, aAccessMode, this);
-      if (NS_FAILED(rv)) 
-        return rv;
-      if (aDelayFlag)
-        *aDelayFlag = PR_TRUE;
-    }
-    else if (rv == NS_OK) {
-      LOG(("nsWyciwygChannel::OpenCacheEntry got cache entry \n"));
-    }
-  } 
+  if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
+    // access to the cache entry has been denied. Let's try opening it
+    // async.
+    rv = cacheSession->AsyncOpenCacheEntry(aCacheKey, aAccessMode, this);
+    if (NS_FAILED(rv)) 
+      return rv;
+    if (aDelayFlag)
+      *aDelayFlag = PR_TRUE;
+  }
+  else if (rv == NS_OK) {
+    LOG(("nsWyciwygChannel::OpenCacheEntry got cache entry \n"));
+  }
+
   return rv;
 }
 
