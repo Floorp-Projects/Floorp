@@ -141,7 +141,7 @@ NS_IMETHODIMP nsPrintSettingsMac::ReadPageSetupFromPrefs()
     return rv;
 
   // decode the base64
-  PRInt32   encodedDataLen = nsCRT::strlen(encodedData.get());
+  PRInt32   encodedDataLen = strlen(encodedData.get());
   char* decodedData = ::PL_Base64Decode(encodedData.get(), encodedDataLen, nsnull);
   if (!decodedData)
     return NS_ERROR_FAILURE;
