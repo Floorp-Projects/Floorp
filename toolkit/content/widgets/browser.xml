@@ -590,7 +590,9 @@
            el.style.width = imageWidth + "px";
            el.style.height = imageHeight + "px";
            el.style.cursor = scrollCursor[scrollType];
-           
+           el.style.zIndex = 2147483647; //Max Int
+           el.style.borderStyle = "none";
+
            this._clientFrameBody.appendChild(el);
            
            this._autoScrollMarkerImage = el;
