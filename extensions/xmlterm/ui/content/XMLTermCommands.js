@@ -244,62 +244,56 @@ function UpdateSettings(selectName) {
 
    //dump("UpdateSettings: "+selectName+"\n");
 
+   var selectedIndex = document.xmltform1[selectName].selectedIndex;
+   var selectedOption = document.xmltform1[selectName].options[selectedIndex].value;
+
+   //dump("UpdateSettings: selectedOption=="+selectedOption+"\n");
+
    switch(selectName) {
-      case "level":
-         // Change icon display style in the style sheet
-         var oldUserLevel = window.userLevel;
-         window.userLevel = document.xmltform1.level.options[document.xmltform1.level.selectedIndex].value;
+      case "userLevel":
+         // Change user level
 
-         if (window.userLevel != oldUserLevel) {
-            //dump("UpdateSettings: userLevel="+window.userLevel+"\n");
-
-            if (window.userLevel == "advanced") {
-              AlterStyle("DIV.beginner",     "display", "none");
-              AlterStyle("DIV.intermediate", "display", "none");
-         
-            } else if (window.userLevel == "intermediate") {
-              AlterStyle("DIV.intermediate", "display", "block");
-              AlterStyle("DIV.beginner",     "display", "none");
-         
-            } else {
-              AlterStyle("DIV.beginner",     "display", "block");
-              AlterStyle("DIV.intermediate", "display", "block");
-            }
+         if (selectedOption == "advanced") {
+           AlterStyle("DIV.beginner",     "display", "none");
+           AlterStyle("DIV.intermediate", "display", "none");
+      
+         } else if (selectedOption == "intermediate") {
+           AlterStyle("DIV.intermediate", "display", "block");
+           AlterStyle("DIV.beginner",     "display", "none");
+      
+         } else {
+           AlterStyle("DIV.beginner",     "display", "block");
+           AlterStyle("DIV.intermediate", "display", "block");
          }
-         break;
+      break;
 
-      case "icons":
-         var oldShowIcons = window.showIcons;
-         window.showIcons = document.xmltform1.icons.options[document.xmltform1.icons.selectedIndex].value;
-
-         if (window.showIcons != oldShowIcons) {
-            //dump("UpdateSettings: showIcons="+window.showIcons+"\n");
-         
-            if (window.showIcons == "on") {
-               AlterStyle("SPAN.noicons", "display", "none");
-               AlterStyle("SPAN.icons",   "display", "inline");
-               AlterStyle("IMG.icons",    "display", "inline");
-               AlterStyle("TR.icons",     "display", "table-row");
-
-            } else {
-               AlterStyle("SPAN.noicons", "display", "inline");
-               AlterStyle("SPAN.icons",   "display", "none");
-               AlterStyle("IMG.icons",    "display", "none");
-               AlterStyle("TR.icons",     "display", "none");
-            }
-         }
-         break;
-
-      case "windows":
+      case "showIcons":
          // Change icon display style in the style sheet
-         window.windowsMode = document.xmltform1.windows.options[document.xmltform1.windows.selectedIndex].value;
-         //dump("UpdateSettings: windowsMode="+window.windowsMode+"\n");
+
+         if (selectedOption == "on") {
+            AlterStyle("SPAN.noicons", "display", "none");
+            AlterStyle("SPAN.icons",   "display", "inline");
+            AlterStyle("IMG.icons",    "display", "inline");
+            AlterStyle("TR.icons",     "display", "table-row");
+
+         } else {
+            AlterStyle("SPAN.noicons", "display", "inline");
+            AlterStyle("SPAN.icons",   "display", "none");
+            AlterStyle("IMG.icons",    "display", "none");
+            AlterStyle("TR.icons",     "display", "none");
+         }
+      break;
+
+      case "windowsMode":
          break;
 
       default:
          //dump("UpdateSettings: Unknown selectName "+selectName+"\n");
          break;
    }
+
+   window.xmltform1Index[selectName] = selectedIndex;
+   window.xmltform1Option[selectName] = selectedOption;
 
    return false;
 }
@@ -389,7 +383,7 @@ function DisplayAllOutput(flag) {
 //   prompt    - command prompt
 //   command   - command line
 //
-//   (Following are inline or in new window depending upon window.windowsMode)
+//   (Following are inline or in new window depending upon window.xmltform1Option.windowsMode)
 //   cdxls     - change directory and list contents   (doubleclick)
 //   xcat      - display file                         (doubleclick)
 //   exec      - execute file                         (doubleclick)
@@ -497,7 +491,7 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
                                  window.xmlterm.currentEntryNumber);
 
          if ( (arg2 != null) && 
-              (!isCurrentCommand || (window.windowsMode === "on")) ) {
+              (!isCurrentCommand || (window.xmltform1Option.windowsMode === "on")) ) {
            // Full pathname
            filename = arg2+arg1;
          } else {
@@ -522,7 +516,7 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
            suffix = "";
          }
 
-         if (shiftClick || (window.windowsMode === "on")) {
+         if (shiftClick || (window.xmltform1Option.windowsMode === "on")) {
            action = "createln";
            sendStr = prefix + filename + suffix;
 
@@ -669,12 +663,20 @@ function LoadHandler() {
   gStyleRuleNames = styleText.match(/\b[\w-.]+(?=\s*\{)/g);
   //dump("gStyleRuleNames.length="+gStyleRuleNames.length+"\n");
 
-  // Update settings
-  UpdateSettings('level');
-  UpdateSettings('icons');
-  UpdateSettings('windows');
+  //NewTip();
 
-  NewTip();
+  // Update settings
+  window.xmltform1Index  = new Object();
+  window.xmltform1Option = new Object();
+
+  window.xmltform1Index.userLevel = 1;
+  window.xmltform1Option.userLevel = "intermediate";
+
+  window.xmltform1Index.showIcons = 0;
+  window.xmltform1Option.showIcons = "off";
+
+  window.xmltform1Index.windowsMode = 0;
+  window.xmltform1Option.windowsMode = "off";
 
   return false;
 

@@ -38,6 +38,6 @@ NOTE: Put all the skin stuff in the content directory for the moment
   <script src="chrome://xmlterm/content/XMLTermChrome.js"></script>
 
   <iframe id="content-frame" type="content" name="content"
-          src="telnet:xmlterm" flex="100%"/>
+          src="terminal:xmlterm" flex="100%"/>
 
 </window>

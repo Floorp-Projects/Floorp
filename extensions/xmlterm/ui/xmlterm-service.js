@@ -25,27 +25,27 @@
 /*
  * This file contains the following xmlterm related components:
  * 1. Command line handler service, for responding to the -terminal command line
- *    option. (CLineHandler)
- * 2. Content handler for responding to content of type x-application-telnet
- *    (TelnetContentHandler)
- * 3. Protocol handler for supplying a channel to the browser when an telnet://
- *    link is clicked. (TelnetProtocolHandler)
+ *    option. (XMLTermCLineHandler)
+ * 2. Content handler for responding to content of type x-application-terminal
+ *    (XMLTermContentHandler)
+ * 3. Protocol handler for supplying a channel to the browser when an terminal://
+ *    link is clicked. (XMLTermProtocolHandler)
  * 4. A (nearly empty) imeplementation of nsIChannel for telling the browser
- *    that telnet:// links have the content type x-application-telnet (BogusChannel)
+ *    that terminal:// links have the content type x-application-terminal (BogusChannel)
  */
 
 /* components defined in this file */
-const CLINE_SERVICE_CONTRACTID =
+const XMLTERMCLINE_SERVICE_CONTRACTID =
     "@mozilla.org/commandlinehandler/general-startup;1?type=terminal";
-const CLINE_SERVICE_CID =
+const XMLTERMCLINE_SERVICE_CID =
     Components.ID("{0eb82bE0-43a2-11d3-8e76-006008948af5}");
-const TELNETCNT_HANDLER_CONTRACTID =
-    "@mozilla.org/uriloader/content-handler;1?type=x-application-telnet";
-const TELNETCNT_HANDLER_CID =
+const XMLTERMCNT_HANDLER_CONTRACTID =
+    "@mozilla.org/uriloader/content-handler;1?type=x-application-terminal";
+const XMLTERMCNT_HANDLER_CID =
     Components.ID("{0eb82bE1-43a2-11d3-8e76-006008948af5}");
-const TELNETPROT_HANDLER_CONTRACTID =
-    "@mozilla.org/network/protocol;1?name=telnet";
-const TELNETPROT_HANDLER_CID =
+const XMLTERMPROT_HANDLER_CONTRACTID =
+    "@mozilla.org/network/protocol;1?name=terminal";
+const XMLTERMPROT_HANDLER_CID =
     Components.ID("{0eb82bE2-43a2-11d3-8e76-006008948af5}");
 
 /* components used in this file */
@@ -75,21 +75,21 @@ const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
 const nsISupports        = Components.interfaces.nsISupports;
 
 /* Command Line handler service */
-function CLineService()
+function XMLTermCLineService()
 {}
 
-CLineService.prototype.commandLineArgument = "-terminal";
-CLineService.prototype.prefNameForStartup = "general.startup.terminal";
-CLineService.prototype.chromeUrlForTask="chrome://xmlterm/content";
-CLineService.prototype.helpText = "Start with a command line terminal";
-CLineService.prototype.handlesArgs=false;
-CLineService.prototype.defaultArgs ="";
-CLineService.prototype.openWindowWithArgs=false;
+XMLTermCLineService.prototype.commandLineArgument = "-terminal";
+XMLTermCLineService.prototype.prefNameForStartup = "general.startup.terminal";
+XMLTermCLineService.prototype.chromeUrlForTask="chrome://xmlterm/content";
+XMLTermCLineService.prototype.helpText = "Start with a command line terminal";
+XMLTermCLineService.prototype.handlesArgs=false;
+XMLTermCLineService.prototype.defaultArgs ="";
+XMLTermCLineService.prototype.openWindowWithArgs=false;
 
-/* factory for command line handler service (CLineService) */
-CLineFactory = new Object();
+/* factory for command line handler service (XMLTermCLineService) */
+XMLTermCLineFactory = new Object();
 
-CLineFactory.createInstance =
+XMLTermCLineFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -97,14 +97,14 @@ function (outer, iid) {
     if (!iid.equals(nsICmdLineHandler) && !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
-    return new CLineService();
+    return new XMLTermCLineService();
 }
 
-/* x-application-telnet content handler */
-function TelnetContentHandler ()
+/* x-application-terminal content handler */
+function XMLTermContentHandler ()
 {}
 
-TelnetContentHandler.prototype.queryInterface =
+XMLTermContentHandler.prototype.QueryInterface =
 function (iid) {
 
     if (!iid.equals(nsIContentHandler))
@@ -113,44 +113,30 @@ function (iid) {
     return this;
 }
 
-TelnetContentHandler.prototype.handleContent =
-function (aContentType, aCommand, aWindowTarget, aSourceContext, aRequest)
+XMLTermContentHandler.prototype.handleContent =
+function (aContentType, aCommand, aWindowContext, aRequest)
 {
     var e;
 
-	var aChannel  = aRequest.QueryInterface(Components.interfaces.nsIChannel);
+    var aChannel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
 		
-    dump ("telnetLoader.handleContent (" + aContentType + ", " +
-          aCommand + ", " + aWindowTarget + ", " + aSourceContext + ", " +
+    dump("XMLTermContentHandler.handleContent (" + aContentType + ", " +
+          aCommand + ", " + aWindowContext + ", " +
           aChannel.URI.spec + ")\n");
 
     var xmltermChromeURL = "chrome://xmlterm/content/xmlterm.xul?"+aChannel.URI.spec;
-    //dump("telnetLoader:xmltermChromeURL = " + xmltermChromeURL + "\n");
-
-    var windowManager =
-        Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
-
-    var w = windowManager.getMostRecentWindow("terminal:xmlterm");
-
-//    Commented out because unlike chatzilla, xmlterm is not really a service
-//    if (w)
-//    {
-//        // Shift focus to XMLterm window
-//        w.focus();
-//        w.gotoTelnetURL(aChannel.URI.spec);
-//    } else
+    //dump("XMLTermContentHandler:xmltermChromeURL = " + xmltermChromeURL + "\n");
 
     // Create new XMLterm window
-    var ass = Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
-    var w = ass.getHiddenDOMWindow();
-    w.open(xmltermChromeURL, "_blank", "chrome,menubar,toolbar,resizable");
-    
+    var appShellSvc = Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
+    var domWin = appShellSvc.getHiddenDOMWindow();
+    domWin.open(xmltermChromeURL,"_blank", "chrome,menubar,toolbar,resizable");
 }
 
-/* content handler factory object (TelnetContentHandler) */
-TelnetContentHandlerFactory = new Object();
+/* content handler factory object (XMLTermContentHandler) */
+XMLTermContentHandlerFactory = new Object();
 
-TelnetContentHandlerFactory.createInstance =
+XMLTermContentHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -158,23 +144,23 @@ function (outer, iid) {
     if (!iid.equals(nsIContentHandler) && !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
-    return new TelnetContentHandler();
+    return new XMLTermContentHandler();
 }
 
-/* telnet protocol handler component */
-function TelnetProtocolHandler()
+/* xmlterm protocol handler component */
+function XMLTermProtocolHandler()
 {
 }
 
-TelnetProtocolHandler.prototype.scheme = "telnet";
-TelnetProtocolHandler.prototype.defaultPort = -1;
+XMLTermProtocolHandler.prototype.scheme = "terminal";
+XMLTermProtocolHandler.prototype.defaultPort = -1;
 
-TelnetProtocolHandler.prototype.newURI =
+XMLTermProtocolHandler.prototype.newURI =
 function (aSpec, aBaseURI)
 {
     if (aBaseURI)
     {
-        dump ("-*- telnetHandler: aBaseURI passed to newURI, bailing.\n");
+        dump("XMLTermProtocolHandler: aBaseURI passed to newURI, bailing.\n");
         return null;
     }
     
@@ -187,14 +173,14 @@ function (aSpec, aBaseURI)
 // "Global" variable
 var gSystemPrincipal = null;
 
-TelnetProtocolHandler.prototype.newChannel =
+XMLTermProtocolHandler.prototype.newChannel =
 function (aURI)
 {
     var uriSpec = aURI.spec
-    //dump("TelnetProtocolHandler.newChannel: uriSpec="+uriSpec+"\n");
+    //dump("XMLTermProtocolHandler.newChannel: uriSpec="+uriSpec+"\n");
 
-    if (uriSpec != "telnet:xmlterm")
-       return new BogusChannel (aURI);
+    if (uriSpec != "terminal:xmlterm")
+       return new BogusChannel(aURI);
 
     // Re-direct to chrome HTML document, but with system principal
 
@@ -211,7 +197,7 @@ function (aURI)
 
     if (!gSystemPrincipal) {
        if (!xulOwner) {
-          dump("xmlterm: Internal error; unable to obtain system principal\n");
+          dump("XMLTermProtocolHandler: Internal error; unable to obtain system principal\n");
           throw Components.results.NS_ERROR_FAILURE;
        }
        gSystemPrincipal = xulOwner;
@@ -252,10 +238,10 @@ function (aURI)
     return newChannel;
 }
 
-/* protocol handler factory object (TelnetProtocolHandler) */
-TelnetProtocolHandlerFactory = new Object();
+/* protocol handler factory object (XMLTermProtocolHandler) */
+XMLTermProtocolHandlerFactory = new Object();
 
-TelnetProtocolHandlerFactory.createInstance =
+XMLTermProtocolHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -263,17 +249,17 @@ function (outer, iid) {
     if (!iid.equals(nsIProtocolHandler) && !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
-    return new TelnetProtocolHandler();
+    return new XMLTermProtocolHandler();
 }
 
-/* bogus Telnet channel used by the TelnetProtocolHandler */
+/* bogus XMLTerm channel used by the XMLTermProtocolHandler */
 function BogusChannel (aURI)
 {
     this.URI = aURI;
     this.originalURI = aURI;
 }
 
-BogusChannel.prototype.queryInterface =
+BogusChannel.prototype.QueryInterface =
 function (iid) {
 
     if (!iid.equals(nsIChannel) && !iid.equals(nsIRequest) &&
@@ -285,7 +271,7 @@ function (iid) {
 
 /* nsIChannel */
 BogusChannel.prototype.loadAttributes = null;
-BogusChannel.prototype.contentType = "x-application-telnet";
+BogusChannel.prototype.contentType = "x-application-terminal";
 BogusChannel.prototype.contentLength = 0;
 BogusChannel.prototype.owner = null;
 BogusChannel.prototype.loadGroup = null;
@@ -335,27 +321,27 @@ XMLtermModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
     dump("*** Registering -terminal handler.\n");
-    compMgr.registerComponentWithType(CLINE_SERVICE_CID,
+    compMgr.registerComponentWithType(XMLTERMCLINE_SERVICE_CID,
                                       "XMLterm CommandLine Service",
-                                      CLINE_SERVICE_CONTRACTID, fileSpec,
+                                      XMLTERMCLINE_SERVICE_CONTRACTID, fileSpec,
                                       location, true, true, type);
     
-	catman = Components.classes["@mozilla.org/categorymanager;1"]
-        .getService(nsICategoryManager);
-	catman.addCategoryEntry("command-line-argument-handlers",
-                            "xmlterm command line handler",
-                            CLINE_SERVICE_CONTRACTID, true, true);
+    catman = Components.classes["@mozilla.org/categorymanager;1"]
+               .getService(nsICategoryManager);
+               	catman.addCategoryEntry("command-line-argument-handlers",
+                             "terminal command line handler",
+                 XMLTERMCLINE_SERVICE_CONTRACTID, true, true);
 
-    dump("*** Registering x-application-telnet handler.\n");
-    compMgr.registerComponentWithType(TELNETCNT_HANDLER_CID,
-                                      "Telnet Content Handler",
-                                      TELNETCNT_HANDLER_CONTRACTID, fileSpec,
+    dump("*** Registering x-application-terminal handler.\n");
+    compMgr.registerComponentWithType(XMLTERMCNT_HANDLER_CID,
+                                      "XMLTerm Content Handler",
+                                      XMLTERMCNT_HANDLER_CONTRACTID, fileSpec,
                                       location, true, true, type);
 
-    dump("*** Registering telnet protocol handler.\n");
-    compMgr.registerComponentWithType(TELNETPROT_HANDLER_CID,
-                                      "Telnet protocol handler",
-                                      TELNETPROT_HANDLER_CONTRACTID, fileSpec, location,
+    dump("*** Registering terminal protocol handler.\n");
+    compMgr.registerComponentWithType(XMLTERMPROT_HANDLER_CID,
+                                      "XMLTerm protocol handler",
+                                      XMLTERMPROT_HANDLER_CONTRACTID, fileSpec, location,
                                       true, true, type);
 
 }
@@ -363,23 +349,23 @@ function (compMgr, fileSpec, location, type)
 XMLtermModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
-    compMgr.unregisterComponentSpec(CLINE_SERVICE_CID, fileSpec);
+    compMgr.unregisterComponentSpec(XMLTERMCLINE_SERVICE_CID, fileSpec);
 	catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);
 	catman.deleteCategoryEntry("command-line-argument-handlers",
-                               CLINE_SERVICE_CONTRACTID, true);
+                                   XMLTERMCLINE_SERVICE_CONTRACTID, true);
 }
 
 XMLtermModule.getClassObject =
 function (compMgr, cid, iid) {
-    if (cid.equals(CLINE_SERVICE_CID))
-        return CLineFactory;
+    if (cid.equals(XMLTERMCLINE_SERVICE_CID))
+        return XMLTermCLineFactory;
 
-    if (cid.equals(TELNETCNT_HANDLER_CID))
-        return TelnetContentHandlerFactory;
+    if (cid.equals(XMLTERMCNT_HANDLER_CID))
+        return XMLTermContentHandlerFactory;
 
-    if (cid.equals(TELNETPROT_HANDLER_CID))
-        return TelnetProtocolHandlerFactory;
+    if (cid.equals(XMLTERMPROT_HANDLER_CID))
+        return XMLTermProtocolHandlerFactory;
     
     if (!iid.equals(Components.interfaces.nsIFactory))
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
