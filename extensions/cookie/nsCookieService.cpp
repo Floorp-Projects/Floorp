@@ -120,26 +120,25 @@ nsresult nsCookieService::Init() {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsIEventQueue* eventQ; 
   NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv); 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv)) 
+  {
     rv = eventQService->CreateThreadEventQueue();
     if (NS_FAILED(rv)) {
       return rv;
     }
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ); 
   } 
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv))
     return rv;
-  }
+  
   if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&mCookieHTTPNotify))) {
     return rv;
   }
-  rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, eventQ, mCookieHTTPNotify, &kCookieHTTPNotifyCID);
+  rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, mCookieHTTPNotify);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, eventQ, mCookieHTTPNotify, &kCookieHTTPNotifyCID);
+  rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, mCookieHTTPNotify);
   if (NS_FAILED(rv)) {
     return rv;
   }
