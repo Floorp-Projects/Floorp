@@ -1717,7 +1717,6 @@ dnl      AC_MSG_ERROR(Test for QT failed.))
         #if (QT_VERSION < $QT_VERSION_NUM)
             #error  "QT_VERSION too old"
         #endif
-        exit(0);
     ],result="yes",result="no")
 
     AC_MSG_RESULT("$result")
