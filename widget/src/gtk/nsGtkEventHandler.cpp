@@ -50,6 +50,7 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_CANCEL,     GDK_Cancel },
   { NS_VK_BACK,       GDK_BackSpace },
   { NS_VK_TAB,        GDK_Tab },
+  { NS_VK_TAB,        GDK_ISO_Left_Tab },
   { NS_VK_CLEAR,      GDK_Clear },
   { NS_VK_RETURN,     GDK_Return },
   { NS_VK_SHIFT,      GDK_Shift_L },
