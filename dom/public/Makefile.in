@@ -33,6 +33,7 @@ DIRS		= base coreDom coreEvents range events html css
 XPIDLSRCS	= domstubs.idl \
 				  nsIScriptContextOwner.idl \
 				  nsIScriptGlobalObjectOwner.idl \
+				  nsIEntropyCollector.idl \
 				  $(NULL)
 
 EXPORTS		= \
