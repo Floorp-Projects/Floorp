@@ -25,7 +25,10 @@ var tagName = "hr";
 var hLineElement;
 var tempLineElement;
 var percentChar = "";
-var shading = true;
+var width;
+var height;
+var align;
+var shading;
 
 // dialog initialization code
 function Startup()
@@ -92,8 +95,47 @@ function onSaveDefault()
   // "false" means set attributes on the tempLineElement,
   //   not the real element being edited
   if (ValidateData(false)) {
-    editorShell.SaveHLineSettings(tempLineElement);
-    dump("Saving HLine settings to preferences\n");
+    var prefs = Components.classes['component://netscape/preferences'];
+    if (prefs) {
+      prefs = prefs.getService();
+    }
+    if (prefs) {
+      prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+    }
+    if (prefs) {
+      dump("Setting HLine prefs\n");
+
+      var alignInt;
+      if (align == "left") {
+        alignInt = 0;
+      } else if (align == "right") {
+        alignInt = 2;
+      } else {
+        alignInt = 1;
+      }
+      prefs.SetIntPref("editor.hrule.align", alignInt);
+
+      var percentIndex = width.search(/%/);
+      var percent;
+      var widthInt;
+      if (percentIndex > 0) {
+        percent = true;
+        widthInt = Number(width.substr(0, percentIndex));
+      } else {
+        percent = false;
+        widthInt = Number(width);
+      }
+      prefs.SetIntPref("editor.hrule.width", widthInt);
+      prefs.SetBoolPref("editor.hrule.width_percent", percent);
+
+      // Convert string to number
+      prefs.SetIntPref("editor.hrule.height", Number(height));
+
+      prefs.SetBoolPref("editor.hrule.shading", shading);
+
+      // Write the prefs out NOW!
+      prefs.SavePrefFile();
+    }    
   }
 }
 
@@ -142,7 +184,6 @@ function ValidateData(setAttributes)
     tempLineElement.setAttribute("width", width);
   }
 
-
   align = "left";
   if (dialog.centerAlign.checked) {
     align = "center";
@@ -156,12 +197,14 @@ function ValidateData(setAttributes)
   }
 
   if (dialog.shading.checked) {
+    shading = true;
     if (setAttributes) {
       hLineElement.removeAttribute("noshade");
     } else {
       tempLineElement.removeAttribute("noshade");
     }
   } else {
+    shading = false;
     if (setAttributes) {
       hLineElement.setAttribute("noshade", "");
     } else {

@@ -148,7 +148,6 @@ nsEditor::nsEditor()
 ,  mActionListeners(nsnull)
 ,  mDocDirtyState(-1)
 ,  mDocWeak(nsnull)
-,  mPrefs(nsnull)
 {
   //initialize member variables here
   NS_INIT_REFCNT();
@@ -176,11 +175,6 @@ nsEditor::~nsEditor()
     delete mActionListeners;
     mActionListeners = 0;
   }
-
-  // Release service pointers
-  if (mPrefs)
-    nsServiceManager::ReleaseService(kPrefCID, mPrefs);
-
 }
 
 
@@ -277,44 +271,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
     caret->SetCaretVisible(PR_TRUE);
     caret->SetCaretReadOnly(PR_FALSE);
   }
-
-  // NOTE: We don't fail if we can't get prefs or string bundles
-  //  since we could still be used as the text edit widget without prefs
-
-  // Get the prefs service (Note: can't use nsCOMPtr for service pointers)
-  nsresult ignoredResult = nsServiceManager::GetService(kPrefCID, 
-                                                        nsIPref::GetIID(), 
-                                                        (nsISupports**)&mPrefs);
-  if (NS_FAILED(ignoredResult) || !mPrefs)
-  {
-    if (gNoisy) { printf("ERROR: Failed to get Prefs Service instance.\n");}
-  }
-
-  // TODO: Cache basic preferences?
-  //       Register callbacks for preferences that we need to 
-  //       respond to while running
-
-  nsIStringBundleService* service;
-  ignoredResult = nsServiceManager::GetService(kStringBundleServiceCID,
-                                               nsIStringBundleService::GetIID(), 
-                                               (nsISupports**)&service);
-
-  if (NS_SUCCEEDED(ignoredResult) && service)
-  {
-    nsILocale* locale = nsnull;
-    ignoredResult = service->CreateBundle(EDITOR_BUNDLE_URL, locale, 
-                                          getter_AddRefs(mStringBundle));
-    // We don't need to keep service around once we created the bundle
-    nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
-  } else {
-    if (gNoisy) printf("ERROR: Failed to get StringBundle Service instance.\n");
-  }
-
-/*
- Example of getting a string:
-  nsString value;
-  ret = mStringBundle->GetStringFromName("editor.foo", value);
-*/
 
   // Set the selection to the beginning:
   BeginningOfDocument();

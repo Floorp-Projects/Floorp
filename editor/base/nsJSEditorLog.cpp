@@ -700,12 +700,6 @@ nsJSEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 }
 
 NS_IMETHODIMP
-nsJSEditorLog::SaveHLineSettings(nsIDOMElement* aElement)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsJSEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
   if (!aAnchorElement)

@@ -21,6 +21,7 @@
 var toolbar;
 var documentModified;
 var EditorDisplayStyle = true;
+var prefs = null;
 
 var gTagToFormat = {
     "P"          : "Normal",	// these should really be entities. Not sure how to do that from JS
@@ -552,7 +553,59 @@ function EditorInsertHLine()
     window.openDialog("chrome://editor/content/EdHLineProps.xul", "HLineDlg", "chrome,close,titlebar,modal");
   } else {
     hLine = editorShell.CreateElementWithDefaults(tagName);
+
     if (hLine) {
+      // We change the default attributes to those saved in the user prefs
+      var prefs = Components.classes['component://netscape/preferences'];
+      if (prefs) {
+        prefs = prefs.getService();
+      }
+      if (prefs) {
+        prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+      }
+      if (prefs) {
+        dump(" We found the Prefs Service\n");
+        var percent;
+        var height;
+        var shading;
+        var ud = "undefined";
+
+        try {
+          var align = prefs.GetIntPref("editor.hrule.align");
+          dump("Align pref: "+align+"\n");
+          if (align == 0 ) {
+            hLine.setAttribute("align", "left");
+          } else if (align == 2) {
+            hLine.setAttribute("align", "right");
+          } else  {
+            // Default is center
+            hLine.setAttribute("align", "center");
+          }
+	  
+          var width = prefs.GetIntPref("editor.hrule.width");
+          var percent = prefs.GetBoolPref("editor.hrule.width_percent");
+          dump("Width pref: "+width+", percent:"+percent+"\n");
+          if (percent)
+            width = width +"%";
+
+          hLine.setAttribute("width", width);
+
+          var height = prefs.GetIntPref("editor.hrule.height");
+          dump("Size pref: "+height+"\n");
+          hLine.setAttribute("size", String(height));
+
+          var shading = prefs.GetBoolPref("editor.hrule.shading");
+          dump("Shading pref:"+shading+"\n");
+          if (shading) {
+            hLine.removeAttribute("noshade");
+          } else {
+            hLine.setAttribute("noshade", "");
+          }
+        }
+        catch (ex) {
+          dump("failed to get HLine prefs\n");
+        }
+      }
       editorShell.InsertElement(hLine, false);
     }
   }

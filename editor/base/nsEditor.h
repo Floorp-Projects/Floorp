@@ -607,8 +607,6 @@ protected:
 
   nsWeakPtr        mDocWeak;  // weak reference to the nsIDOMDocument
   nsCOMPtr<nsIDTD> mDTD;
-  // Services are not nsCOMPtr friendly
-  nsIPref         *mPrefs;
 
   static PRInt32 gInstanceCount;
 

@@ -108,13 +108,12 @@ static PRBool gNoisy = PR_FALSE;
 static const PRBool gNoisy = PR_FALSE;
 #endif
 
-// Some utilities to handle stupid overloading of "A" tag for link and named anchor
+// Some utilities to handle annoying overloading of "A" tag for link and named anchor
 static char hrefText[] = "href";
-static char linkText[] = "link";
 static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 
-#define IsLink(s) (s.EqualsIgnoreCase(hrefText) || s.EqualsIgnoreCase(linkText))
+#define IsLink(s) (s.EqualsIgnoreCase(hrefText))
 #define IsNamedAnchor(s) (s.EqualsIgnoreCase(anchorTxt) || s.EqualsIgnoreCase(namedanchorText))
 
 static PRBool IsLinkNode(nsIDOMNode *aNode)
@@ -1277,7 +1276,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
     {
       // Collapse selection to just after desired element,
       res = selection->Collapse(parent, offsetInParent+1);
-#ifdef DEBUG_cmanske
+#if 0 //def DEBUG_cmanske
       {
       nsAutoString name;
       parent->GetNodeName(name);
@@ -2127,64 +2126,10 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   // Set default values for new elements
   if (TagName.Equals("hr"))
   {
-    // Hard coded defaults in case there's no prefs
-    nsAutoString align("center");
-    nsAutoString width("100%");
-    nsAutoString height("2");
-    PRBool bNoShade = PR_FALSE;
-
-    if (mPrefs)
-    {
-      char buf[16];
-      PRInt32 iAlign;
-      // Currently using 0=left, 1=center, and 2=right
-			// XXX: ERROR_HANDLING  if these results are intentionally thrown away, it should be documented here
-      if( NS_SUCCEEDED(mPrefs->GetIntPref("editor.hrule.align", &iAlign)))
-      {
-        switch (iAlign) {
-          case 0:
-            align = "left";
-            break;
-          case 2:
-            align = "right";
-            break;
-        }
-      }
-      PRInt32 iHeight;
-      PRUint32 count;
-      if( NS_SUCCEEDED(mPrefs->GetIntPref("editor.hrule.height", &iHeight)))
-      {
-        count = PR_snprintf(buf, 16, "%d", iHeight);
-        if (count > 0)
-        {
-          height = buf;
-        }
-      }
-      PRInt32 iWidth;
-      PRBool  bPercent;
-      if( NS_SUCCEEDED(mPrefs->GetIntPref("editor.hrule.width", &iWidth)) &&
-          NS_SUCCEEDED(mPrefs->GetBoolPref("editor.hrule.width_percent", &bPercent)))
-      {
-        count = PR_snprintf(buf, 16, "%d", iWidth);
-        if (count > 0)
-        {
-          width = buf;
-          if (bPercent)
-            width.Append("%");
-        }
-      }
-      PRBool  bShading;
-      if (NS_SUCCEEDED(mPrefs->GetBoolPref("editor.hrule.shading", &bShading)))
-      {
-        bNoShade = !bShading;
-      }
-    }
-    newElement->SetAttribute("align", align);
-    newElement->SetAttribute("height", height);
-    newElement->SetAttribute("width", width);
-    if (bNoShade)    
-      newElement->SetAttribute("noshade", "");
-
+    // Note that we read the user's attributes for these from prefs (in InsertHLine JS)
+    newElement->SetAttribute("align","center");
+    newElement->SetAttribute("width","100%");
+    newElement->SetAttribute("height","2");
   } else if (TagName.Equals("table"))
   {
     newElement->SetAttribute("cellpadding","2");
@@ -2224,49 +2169,6 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     *aReturn = newElement;
   }
 
-  return res;
-}
-
-NS_IMETHODIMP
-nsHTMLEditor::SaveHLineSettings(nsIDOMElement* aElement)
-{
-  nsresult res=NS_ERROR_NOT_INITIALIZED;
-  if (!aElement || !mPrefs)
-    return res;
-
-  nsAutoString align, width, height, noshade;
-  res = NS_ERROR_UNEXPECTED;
-	// XXX: ERROR_HANDLING  if return codes are intentionally thrown away, it should be documented here
-	//                      it looks like if any GetAttribute call failes, an error is returned
-	//                      is that the desired behavior?
-  if (NS_SUCCEEDED(aElement->GetAttribute("align", align)) &&
-      NS_SUCCEEDED(aElement->GetAttribute("height", height)) &&
-      NS_SUCCEEDED(aElement->GetAttribute("width", width)) &&
-      NS_SUCCEEDED(aElement->GetAttribute("noshade", noshade)))
-  {
-    PRInt32 iAlign = 0;
-    if (align == "center")
-      iAlign = 1;
-    else if (align == "right")
-      iAlign = 2;
-    mPrefs->SetIntPref("editor.hrule.align", iAlign);
-
-    PRInt32 errorCode;
-    PRInt32 iHeight = height.ToInteger(&errorCode);
-    
-    if (errorCode == NS_OK && iHeight > 0)
-      mPrefs->SetIntPref("editor.hrule.height", iHeight);
-
-    PRInt32 iWidth = width.ToInteger(&errorCode);
-    if (errorCode == NS_OK && iWidth > 0) {
-      mPrefs->SetIntPref("editor.hrule.width", iWidth);
-      mPrefs->SetBoolPref("editor.hrule.width_percent", (width.Find("%") > 0));
-    }
-
-    mPrefs->SetBoolPref("editor.hrule.shading", (noshade == ""));
-    res = NS_OK;
-  }
-        
   return res;
 }
 
@@ -2325,16 +2227,10 @@ DELETE_ANCHOR:
   return res;
 }
 
-// XXX: this method sets the attribute on the body element directly, 
-//      and is not undoable.  It should go through the transaction system!
 NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
 {
-//  nsresult result;
   NS_PRECONDITION(mDocWeak, "Missing Editor DOM Document");
   
-  // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
-  // For initial testing, just set the background on the BODY tag (the document's background)
-
   // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
   // For initial testing, just set the background on the BODY tag (the document's background)
 
@@ -2344,9 +2240,8 @@ NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
   if (!bodyElement) res = NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(res))
   {
-    nsAutoEditBatch beginBatching(this);
-		// XXX: ERROR_HANDLING  should this be "res = SetAttribute..."
-    bodyElement->SetAttribute("bgcolor", aColor);
+    // Use the editor method that goes through the transaction system
+    res = SetAttribute(bodyElement, "bgcolor", aColor);
   }
   
   return res;
@@ -2366,9 +2261,8 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const n
   if (!bodyElement) res = NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(res))
   {
-    // Use the editor's method which goes through the transaction system
-    // XXX: ERROR_HANDLING  should this be "res = SetAttribute..."
-    SetAttribute(bodyElement, aAttribute, aValue);
+    // Use the editor method that goes through the transaction system
+    res = SetAttribute(bodyElement, aAttribute, aValue);
   }
   return res;
 }
