@@ -64,6 +64,7 @@ protected:
     HRESULT GetIDispatch(IDispatch **pdisp);
     HRESULT ConvertVariants(nsIVariant *aIn, VARIANT *aOut);
     HRESULT ConvertVariants(VARIANT *aIn, nsIVariant **aOut);
+    nsresult HR2NS(HRESULT hr) const;
     NS_IMETHOD InternalInvoke(const char *aMethod, unsigned int aNumArgs, nsIVariant *aArgs[]);
 };
 
