@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.10 2001/03/21 03:37:48 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.11 2001/03/21 05:35:58 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -527,7 +527,7 @@ nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
 NS_IMETHODIMP
 nsNSSCertificate::GetNickname(PRUnichar **_nickname)
 {
-  char *nickname = (mCert->nickname) ? mCert->nickname : "(no nickname)";
+  const char *nickname = (mCert->nickname) ? mCert->nickname : "(no nickname)";
   nsAutoString nn = NS_ConvertASCIItoUCS2(nickname);
   *_nickname = nn.ToNewUnicode();
   return NS_OK;
@@ -537,7 +537,7 @@ nsNSSCertificate::GetNickname(PRUnichar **_nickname)
 NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddress(PRUnichar **_emailAddress)
 {
-  char *email = (mCert->emailAddr) ? mCert->emailAddr : "(no email address)";
+  const char *email = (mCert->emailAddr) ? mCert->emailAddr : "(no email address)";
   nsAutoString em = NS_ConvertASCIItoUCS2(email);
   *_emailAddress = em.ToNewUnicode();
   return NS_OK;
