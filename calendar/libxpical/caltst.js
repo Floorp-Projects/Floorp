@@ -35,6 +35,21 @@
  * 
 */
 
+const DEFAULT_TITLE="Lunch Time";
+const DEFAULT_DESCRIPTION = "Will be out for one hour";
+const DEFAULT_LOCATION = "Restaurant";
+const DEFAULT_CATEGORY = "Personal";
+const DEFAULT_EMAIL = "mostafah@oeone.com";
+const DEFAULT_PRIVATE = false;
+const DEFAULT_ALLDAY = false;
+const DEFAULT_ALARM = true;
+const DEFAULT_ALARMUNITS = "minutes";
+const DEFAULT_ALARMLENGTH = 5;
+const DEFAULT_RECUR = true;
+const DEFAULT_RECURINTERVAL = 7;
+const DEFAULT_RECURUNITS = "days";
+const DEFAULT_RECURFOREVER = true;
+
 function Test()
 {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -42,10 +57,20 @@ function Test()
     
     this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
     
-    this.iCalLib.SetServer( "/home/mostafah/calendar" );
+    this.iCalLib.SetServer( "/tmp/.oecalendar" );
     
     this.iCalLib.Test();
+}
 
+function TestAll()
+{
+    var id = TestAddEvent();
+    var iCalEvent = TestFetchEvent( id );
+    id = TestUpdateEvent( iCalEvent );
+//    TestSearchEvent();
+    TestDeleteEvent( id );
+    TestRecurring();
+    alert( "Test Successfull" );
 }
 
 function TestAddEvent()
@@ -55,57 +80,78 @@ function TestAddEvent()
     
     this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
     
-    var iCalLibEvent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
+    var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
     
-    this.iCalLibEvent = iCalLibEvent.QueryInterface(Components.interfaces.oeIICalEvent);
+    this.iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
 
-    this.iCalLib.SetServer( "/home/mostafah/calendar" );
+    this.iCalLib.SetServer( "/tmp/.oecalendar" );
     
-    iCalLibEvent.Title = "Lunch Time";
-    iCalLibEvent.Description = "Will be out for one hour";
-    iCalLibEvent.Location = "Restaurant";
-    iCalLibEvent.Category = "Personal";
-    iCalLibEvent.PrivateEvent = false;
-    iCalLibEvent.AllDay = true;
-    iCalLibEvent.AlarmLength = 55;
-    iCalLibEvent.Alarm = true;
-//    iCalLibEvent.AlarmWentOff = false;
-    iCalLibEvent.AlarmEmailAddress = "mostafah@oeone.com";
-    iCalLibEvent.InviteEmailAddress = "mostafah@oeone.com";
-    iCalLibEvent.SnoozeTime = "5";
-    iCalLibEvent.RecurType = 3;
-    iCalLibEvent.RecurInterval = 7;
-    iCalLibEvent.RepeatUnits = "days";
-    iCalLibEvent.RepeatForever = true;
-    iCalLibEvent.SetStartDate( 2001, 9, 22, 12, 24 );
-    iCalLibEvent.SetEndDate( 2001, 9, 22, 13, 24 );
-    iCalLibEvent.SetRecurInfo( 1, 1, 2002, 9, 21 );
-//    iCalLibEvent.SetAlarm( 2001, 9, 21, 12, 26 );
+    iCalEvent.title = DEFAULT_TITLE;
+    iCalEvent.description = DEFAULT_DESCRIPTION;
+    iCalEvent.location = DEFAULT_LOCATION;
+    iCalEvent.category = DEFAULT_CATEGORY;
+    iCalEvent.privateEvent = DEFAULT_PRIVATE;
+    iCalEvent.allDay = DEFAULT_ALLDAY;
+    iCalEvent.alarm = DEFAULT_ALARM;
+    iCalEvent.alarmUnits = DEFAULT_ALARMUNITS;
+    iCalEvent.alarmLength = DEFAULT_ALARMLENGTH;
+    iCalEvent.alarmEmailAddress = DEFAULT_EMAIL;
+    iCalEvent.inviteEmailAddress = DEFAULT_EMAIL;
+
+    iCalEvent.recur = DEFAULT_RECUR;
+    iCalEvent.recurInterval = DEFAULT_RECURINTERVAL;
+    iCalEvent.recurUnits = DEFAULT_RECURUNITS;
+    iCalEvent.recurForever = DEFAULT_RECURFOREVER;
+
+    iCalEvent.start.year = 2001;
+    iCalEvent.start.month = 10; //November
+    iCalEvent.start.day = 1;
+    iCalEvent.start.hour = 12;
+    iCalEvent.start.minute = 24;
+
+    iCalEvent.end.year = 2001;
+    iCalEvent.end.month = 10; //November
+    iCalEvent.end.day = 1;
+    iCalEvent.end.hour = 13;
+    iCalEvent.end.minute = 24;
+
+    var id = this.iCalLib.addEvent( iCalEvent );
     
-    var id = this.iCalLib.AddEvent( iCalLibEvent );
-    
-//    alert( "Id:"+id );
-//    alert( "Title:"+iCalLibEvent.Title );
-//    alert( "Description:"+iCalLibEvent.Description );
-//    alert( "Location:"+iCalLibEvent.Location );
-//    alert( "Category:"+iCalLibEvent.Category );
-//    alert( "IsPrivate:"+iCalLibEvent.PrivateEvent );
-//    alert( "AllDay:"+iCalLibEvent.AllDay );
-//    alert( "Alarm:"+iCalLibEvent.Alarm );
-//    alert( "AlarmWentOff:"+iCalLibEvent.AlarmWentOff );
-//    alert( "AlarmLength:"+iCalLibEvent.AlarmLength );
-//    alert( "AlarmEmailAddress:"+iCalLibEvent.AlarmEmailAddress );
-//    alert( "InviteEmailAddress:"+iCalLibEvent.InviteEmailAddress );
-//    alert( "SnoozeTime:"+iCalLibEvent.SnoozeTime );
-//    alert( "RecurType:"+iCalLibEvent.RecurType );
-//    alert( "RecurInterval:"+iCalLibEvent.RecurInterval );
-//    alert( "RepeatUnits:"+iCalLibEvent.RepeatUnits );
-//    alert( "RepeatForever:"+iCalLibEvent.RepeatForever );
-//    alert( "StartDate:"+iCalLibEvent.GetStartDate() );
-//    alert( "EndDate:"+iCalLibEvent.GetEndDate() );
-//    alert( "EndDate:"+iCalLibEvent.GetRecurEndDate() );
-//    var result = iCalLibEvent.GetNextRecurrence( 2001, 8, 28 );
-//    alert( result );
+    if( id == null )
+       alert( "Invalid Id" );
+    if( iCalEvent.title != DEFAULT_TITLE )
+       alert( "Invalid Title" );
+    if( iCalEvent.description != DEFAULT_DESCRIPTION )
+       alert( "Invalid Description" );
+    if( iCalEvent.location != DEFAULT_LOCATION )
+       alert( "Invalid Location" );
+    if( iCalEvent.category != DEFAULT_CATEGORY )
+       alert( "Invalid Category" );
+    if( iCalEvent.privateEvent != DEFAULT_PRIVATE )
+       alert( "Invalid PrivateEvent Setting" );
+    if( iCalEvent.allDay != DEFAULT_ALLDAY )
+       alert( "Invalid AllDay Setting" );
+    if( iCalEvent.alarm != DEFAULT_ALARM )
+       alert( "Invalid Alarm Setting" );
+    if( iCalEvent.alarmUnits != DEFAULT_ALARMUNITS )
+       alert( "Invalid Alarm Units" );
+    if( iCalEvent.alarmLength != DEFAULT_ALARMLENGTH )
+       alert( "Invalid Alarm Length" );
+    if( iCalEvent.alarmEmailAddress != DEFAULT_EMAIL )
+       alert( "Invalid Alarm Email Address" );
+    if( iCalEvent.inviteEmailAddress != DEFAULT_EMAIL )
+       alert( "Invalid Invite Email Address" );
+    if( iCalEvent.recur != DEFAULT_RECUR )
+       alert( "Invalid Recur Setting" );
+    if( iCalEvent.recurInterval != DEFAULT_RECURINTERVAL )
+       alert( "Invalid Recur Interval" );
+    if( iCalEvent.recurUnits != DEFAULT_RECURUNITS )
+       alert( "Invalid Recur Units" );
+    if( iCalEvent.recurForever != DEFAULT_RECURFOREVER )
+       alert( "Invalid Recur Forever" );
+
+    //TODO: Check for start and end date
+
     return id;
 }
 
@@ -116,74 +162,102 @@ function TestFetchEvent( id )
     
     this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
     
-    this.iCalLib.SetServer( "/home/mostafah/calendar" );
-    var iCalLibEventFetched = iCalLib.FetchEvent( id );
-//    alert( "Title:"+iCalLibEventFetched.Title );
-//    alert( "Description:"+iCalLibEventFetched.Description );
-//    alert( "Location:"+iCalLibEventFetched.Location );
-//    alert( "Category:"+iCalLibEventFetched.Category );
-//    alert( "IsPrivate:"+iCalLibEventFetched.PrivateEvent );
-//    alert( "AllDay:"+iCalLibEventFetched.AllDay );
-//    alert( "Alarm:"+iCalLibEventFetched.Alarm );
-//    alert( "AlarmWentOff:"+iCalLibEventFetched.AlarmWentOff );
-//    alert( "AlarmLength:"+iCalLibEventFetched.AlarmLength );
-//    alert( "AlarmEmailAddress:"+iCalLibEventFetched.AlarmEmailAddress );
-//    alert( "InviteEmailAddress:"+iCalLibEventFetched.InviteEmailAddress );
-//    alert( "SnoozeTime:"+iCalLibEventFetched.SnoozeTime );
-//    alert( "RecurType:"+iCalLibEventFetched.RecurType );
-//    alert( "RecurInterval:"+iCalLibEventFetched.RecurInterval );
-//    alert( "RepeatUnits:"+iCalLibEventFetched.RepeatUnits );
-//    alert( "RepeatForever:"+iCalLibEventFetched.RepeatForever );
-//    alert( "StartDate:"+iCalLibEventFetched.GetStartDate() );
-//    alert( "EndDate:"+iCalLibEventFetched.GetEndDate() );
+    this.iCalLib.SetServer( "/tmp/.oecalendar" );
+
+    var iCalEvent = iCalLib.fetchEvent( id );
+    if( id == null )
+       alert( "Invalid Id" );
+    if( iCalEvent.title != DEFAULT_TITLE )
+       alert( "Invalid Title" );
+    if( iCalEvent.description != DEFAULT_DESCRIPTION )
+       alert( "Invalid Description" );
+    if( iCalEvent.location != DEFAULT_LOCATION )
+       alert( "Invalid Location" );
+    if( iCalEvent.category != DEFAULT_CATEGORY )
+       alert( "Invalid Category" );
+    if( iCalEvent.privateEvent != DEFAULT_PRIVATE )
+       alert( "Invalid PrivateEvent Setting" );
+    if( iCalEvent.allDay != DEFAULT_ALLDAY )
+       alert( "Invalid AllDay Setting" );
+    if( iCalEvent.alarm != DEFAULT_ALARM )
+       alert( "Invalid Alarm Setting" );
+    if( iCalEvent.alarmUnits != DEFAULT_ALARMUNITS )
+       alert( "Invalid Alarm Units" );
+    if( iCalEvent.alarmLength != DEFAULT_ALARMLENGTH )
+       alert( "Invalid Alarm Length" );
+    if( iCalEvent.alarmEmailAddress != DEFAULT_EMAIL )
+       alert( "Invalid Alarm Email Address" );
+    if( iCalEvent.inviteEmailAddress != DEFAULT_EMAIL )
+       alert( "Invalid Invite Email Address" );
+    if( iCalEvent.recur != DEFAULT_RECUR )
+       alert( "Invalid Recur Setting" );
+    if( iCalEvent.recurInterval != DEFAULT_RECURINTERVAL )
+       alert( "Invalid Recur Interval" );
+    if( iCalEvent.recurUnits != DEFAULT_RECURUNITS )
+       alert( "Invalid Recur Units" );
+    if( iCalEvent.recurForever != DEFAULT_RECURFOREVER )
+       alert( "Invalid Recur Forever" );
+
+    //TODO: Check for start and end date
+
+    return iCalEvent;
 }
 
-function TestUpdateEvent( iCalLibEvent )
+function TestUpdateEvent( iCalEvent )
 {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
     
     this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
     
-    this.iCalLib.SetServer( "/home/mostafah/calendar" );
+    this.iCalLib.SetServer( "/tmp/.oecalendar" );
     
-    iCalLibEvent.Title = "Lunch & Learn";
-    iCalLibEvent.Location = "Conference Room";
+    iCalEvent.title = DEFAULT_TITLE+"*NEW*";
+    iCalEvent.description = DEFAULT_DESCRIPTION+"*NEW*";
+    iCalEvent.location = DEFAULT_LOCATION+"*NEW*";
+    iCalEvent.category = DEFAULT_CATEGORY+"*NEW*";
+    iCalEvent.privateEvent = !DEFAULT_PRIVATE;
+    iCalEvent.allDay = !DEFAULT_ALLDAY;
+    iCalEvent.alarm = !DEFAULT_ALARM;
+
+    iCalEvent.recur = !DEFAULT_RECUR;
+
+    iCalEvent.start.year = 2002;
+    iCalEvent.start.month = 11; //December
+    iCalEvent.start.day = 2;
+    iCalEvent.start.hour = 13;
+    iCalEvent.start.minute = 25;
+
+    iCalEvent.end.year = 2002;
+    iCalEvent.end.month = 11; //December
+    iCalEvent.end.day = 2;
+    iCalEvent.end.hour = 14;
+    iCalEvent.end.minute = 25;
+
+    var id = this.iCalLib.modifyEvent( iCalEvent );
     
-    var id = this.iCalLib.UpdateEvent( iCalLibEvent );
-    
-//    alert( "Id:"+id );
-//    alert( "Title:"+iCalLibEvent.Title );
-//    alert( "Description:"+iCalLibEvent.Description );
-//    alert( "Location:"+iCalLibEvent.Location );
-//    alert( "Category:"+iCalLibEvent.Category );
-//    alert( "IsPrivate:"+iCalLibEvent.PrivateEvent );
-//    alert( "AllDay:"+iCalLibEvent.AllDay );
-//    alert( "Alarm:"+iCalLibEvent.Alarm );
-//    alert( "AlarmWentOff:"+iCalLibEvent.AlarmWentOff );
-//    alert( "AlarmLength:"+iCalLibEvent.AlarmLength );
-//    alert( "AlarmEmailAddress:"+iCalLibEvent.AlarmEmailAddress );
-//    alert( "InviteEmailAddress:"+iCalLibEvent.InviteEmailAddress );
-//    alert( "SnoozeTime:"+iCalLibEvent.SnoozeTime );
-//    alert( "RecurType:"+iCalLibEvent.RecurType );
-//    alert( "RecurInterval:"+iCalLibEvent.RecurInterval );
-//    alert( "RepeatUnits:"+iCalLibEvent.RepeatUnits );
-//    alert( "RepeatForever:"+iCalLibEvent.RepeatForever );
-//    alert( "StartDate:"+iCalLibEvent.GetStartDate() );
-//    alert( "EndDate:"+iCalLibEvent.GetEndDate() );
+    if( id == null )
+       alert( "Invalid Id" );
+    if( iCalEvent.title != DEFAULT_TITLE+"*NEW*" )
+       alert( "Invalid Title" );
+    if( iCalEvent.description != DEFAULT_DESCRIPTION+"*NEW*" )
+       alert( "Invalid Description" );
+    if( iCalEvent.location != DEFAULT_LOCATION+"*NEW*" )
+       alert( "Invalid Location" );
+    if( iCalEvent.category != DEFAULT_CATEGORY+"*NEW*" )
+       alert( "Invalid Category" );
+    if( iCalEvent.privateEvent != !DEFAULT_PRIVATE )
+       alert( "Invalid PrivateEvent Setting" );
+    if( iCalEvent.allDay != !DEFAULT_ALLDAY )
+       alert( "Invalid AllDay Setting" );
+    if( iCalEvent.alarm != !DEFAULT_ALARM )
+       alert( "Invalid Alarm Setting" );
+    if( iCalEvent.recur != !DEFAULT_RECUR )
+       alert( "Invalid Recur Setting" );
+
+    //TODO check start and end dates
+
     return id;
-}
-
-function TestDeleteEvent( id )
-{
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
-    
-    this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
-    
-    this.iCalLib.SetServer( "/home/mostafah/calendar" );
-    
-    iCalLib.DeleteEvent( id );
 }
 
 function TestSearchEvent()
@@ -193,19 +267,69 @@ function TestSearchEvent()
     
     this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
     
-    this.iCalLib.SetServer( "/home/mostafah/calendar" );
+    this.iCalLib.SetServer( "/tmp/.oecalendar" );
     
-    var result = this.iCalLib.SearchEvent( 2000,01,01,00,00,2002,01,01,00,00 );
-    result = this.iCalLib.SearchForEvent( "SELECT * FROM VEVENT WHERE CATEGORIES = 'Personal'" );
+    var result = this.iCalLib.SearchByDate( 2000,01,01,00,00,2002,01,01,00,00 );
+    result = this.iCalLib.SearchBySQL( "SELECT * FROM VEVENT WHERE CATEGORIES = 'Personal'" );
     result = this.iCalLib.SearchAlarm( 2001,9,22,11,30 );
-    alert( "Result : " + result );
+//    alert( "Result : " + result );
 }
 
-function TestAll()
+function TestDeleteEvent( id )
 {
-    var id = TestAddEvent();
-    var iCalLibEventFetched = TestFetchEvent( id );
-    id = TestUpdateEvent( iCalLibEvent );
-    TestSearchEvent();
-    TestDeleteEvent( id );
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
+    
+    this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
+    
+    this.iCalLib.SetServer( "/tmp/.oecalendar" );
+    
+    iCalLib.deleteEvent( id );
+
+    var iCalEvent = iCalLib.fetchEvent( id );
+
+    if( iCalEvent != null )
+       alert( "Delete failed" );
+}
+
+function TestRecurring() {
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+   var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
+
+   this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
+
+   var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
+
+   this.iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+
+   this.iCalLib.SetServer( "/tmp/.oecalendar" );
+
+   iCalEvent.allDay = true;
+   iCalEvent.recur = true;
+   iCalEvent.recurInterval = 1;
+   iCalEvent.recurUnits = "years";
+   iCalEvent.recurForever = true;
+
+   iCalEvent.start.year = 2001;
+   iCalEvent.start.month = 0;
+   iCalEvent.start.day = 1;
+   iCalEvent.start.hour = 0;
+   iCalEvent.start.minute = 0;
+
+   iCalEvent.end.year = 2001;
+   iCalEvent.end.month = 0;
+   iCalEvent.end.day = 1;
+   iCalEvent.end.hour = 23;
+   iCalEvent.end.minute = 59;
+
+   this.iCalLib.addEvent( iCalEvent );
+
+   var displayDates =  new Object();
+   var checkdate = new Date( 2002, 0, 1, 0, 0, 0 );
+   var eventList = gICalLib.GetEventsForDay( checkdate, displayDates );
+
+   if( !eventList.hasMoreElements() )
+      alert( "Yearly Recur Test Failed" );
+   
+   var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
 }

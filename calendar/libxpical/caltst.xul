@@ -50,11 +50,11 @@
         <hbox>
         
           <box align="left">
-            <button id="test_btn" label="Test1" onclick="Test();"/>
-            <button id="test2_btn" label="Test2" onclick="TestAll();"/>
+            <button label="Test Libical" onclick="Test();"/>
+            <button label="Test XPIcal" onclick="TestAll();"/>
           </box>
           
-          <spring flex="1"/>
+          <spacer flex="1"/>
 
         </hbox> 
 </window>
