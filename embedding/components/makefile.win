@@ -26,6 +26,7 @@ DIRS= \
 	find \
 	jsconsole \
 	ui \
+        webbrowserpersist \
 	build \
 	$(NULL)
 

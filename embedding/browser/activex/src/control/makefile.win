@@ -57,6 +57,7 @@ REQUIRES = \
 	embed_base \
 	necko \
 	windowwatcher \
+        webbrowserpersist \
 	$(NULL)
 
 MAKE_OBJ_TYPE = DLL

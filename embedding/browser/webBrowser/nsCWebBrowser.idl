@@ -51,10 +51,4 @@ nsIInterfaceRequestor
 { 0xf1eac761, 0x87e9, 0x11d3, { 0xaf, 0x80, 0x00, 0xa0, 0x24, 0xff, 0xc0, 0x8c } }
 #define NS_WEBBROWSER_CONTRACTID \
 "@mozilla.org/embedding/browser/nsWebBrowser;1"
-
-// {7E677795-C582-4cd1-9E8D-8271B3474D2A}
-#define NS_WEBBROWSERPERSIST_CID \
-{ 0x7e677795, 0xc582, 0x4cd1, { 0x9e, 0x8d, 0x82, 0x71, 0xb3, 0x47, 0x4d, 0x2a } }
-#define NS_WEBBROWSERPERSIST_CONTRACTID \
-"@mozilla.org/embedding/browser/nsWebBrowserPersist;1"
 %}

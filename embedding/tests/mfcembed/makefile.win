@@ -38,6 +38,7 @@ REQUIRES = \
 	gfx \
 	windowwatcher \
 	layout \
+	webbrowserpersist \
 	$(NULL)
 
 DIRS=components \

@@ -22,7 +22,6 @@
 
 // Local Includes
 #include "nsWebBrowser.h"
-#include "nsWebBrowserPersist.h"
 
 // Helper Classes
 #include "nsGfxCIID.h"
@@ -51,6 +50,9 @@
 #include "nsIURIContentListener.h"
 #include "nsGUIEvent.h"
 #include "nsISHistoryListener.h"
+#include "nsIURI.h"
+#include "nsIWebBrowserPersist.h"
+#include "nsCWebBrowserPersist.h"
 
 // for painting the background window
 #include "nsIRenderingContext.h"
@@ -71,6 +73,7 @@ static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_CID(kChildCID, NS_CHILD_CID);
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+
 
 //*****************************************************************************
 //***    nsWebBrowser: Object Management
@@ -884,12 +887,13 @@ NS_IMETHODIMP nsWebBrowser::SaveURI(nsIURI *aURI, nsIInputStream *aPostData, nsI
     }
 
     // Create a throwaway persistence object to do the work
-    nsWebBrowserPersist *persist = new nsWebBrowserPersist();
-    mPersist = do_QueryInterface(NS_STATIC_CAST(nsIWebBrowserPersist *, persist));
+    nsresult rv;
+    mPersist = do_CreateInstance(NS_WEBBROWSERPERSIST_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     mPersist->SetProgressListener(this);
     mPersist->SetPersistFlags(mPersistFlags);
     mPersist->GetCurrentState(&mPersistCurrentState);
-    nsresult rv = mPersist->SaveURI(uri, aPostData, aFile);
+    rv = mPersist->SaveURI(uri, aPostData, aFile);
     if (NS_FAILED(rv))
     {
         mPersist = nsnull;
@@ -933,12 +937,13 @@ NS_IMETHODIMP nsWebBrowser::SaveDocument(nsIDOMDocument *aDocument, nsILocalFile
     }
 
     // Create a throwaway persistence object to do the work
-    nsWebBrowserPersist *persist = new nsWebBrowserPersist();
-    mPersist = do_QueryInterface(NS_STATIC_CAST(nsIWebBrowserPersist *, persist));
+    nsresult rv;
+    mPersist = do_CreateInstance(NS_WEBBROWSERPERSIST_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     mPersist->SetProgressListener(this);
     mPersist->SetPersistFlags(mPersistFlags);
     mPersist->GetCurrentState(&mPersistCurrentState);
-    nsresult rv = mPersist->SaveDocument(doc, aFile, aDataPath);
+    rv = mPersist->SaveDocument(doc, aFile, aDataPath);
     if (NS_FAILED(rv))
     {
         mPersist = nsnull;

@@ -107,7 +107,6 @@ interface nsIWebBrowserChrome : nsISupports
     nsIWebBrowser createBrowserWindow(in unsigned long chromeFlags,
 	                  in long aX, in long aY, in long aCX, in long aCY);
 
-
     /*
         Asks the implementer to destroy the window associated with this
         webbrowser object.
