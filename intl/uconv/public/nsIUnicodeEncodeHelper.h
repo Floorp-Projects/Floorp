@@ -32,6 +32,8 @@
 // {D8E6B700-CA9D-11d2-8AA9-00600811A836}
 NS_DECLARE_ID(kIUnicodeEncodeHelperIID,
   0xd8e6b700, 0xca9d, 0x11d2, 0x8a, 0xa9, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+#define NS_IUNICODEENCODEHELPER_IID \
+{ 0xd8e6b700, 0xca9d, 0x11d2, {0x8a, 0xa9, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
 
 // Class ID for our UnicodeEncoderHelper implementation
 // {1767FC50-CAA4-11d2-8AA9-00600811A836}
@@ -59,7 +61,7 @@ class nsIUnicodeEncodeHelper : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(kIUnicodeEncodeHelperIID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICODEENCODEHELPER_IID)
 
   /**
    * Converts data using a lookup table.
