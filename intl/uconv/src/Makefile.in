@@ -113,7 +113,7 @@ CFLAGS		+= -DUSE_NSREG -D_IMPL_NS_INTL
 
 # Reserved name __STDC__ cannot be defined as a macro name on AIX or OpenVMS.
 # QNX simply objects to the way it's being redefined.
-ifeq (,$(filter AIX OpenVMS QNX,$(OS_ARCH)))
+ifeq (,$(filter AIX OpenVMS QNX HP-UX,$(OS_ARCH)))
 CFLAGS		+= -D__STDC__
 endif
 
