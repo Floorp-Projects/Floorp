@@ -25,6 +25,31 @@
 #include "nsHTMLImageLoader.h"
 #include "nsLeafBoxFrame.h"
 
+#ifdef USE_IMG2
+#include "imgILoader.h"
+#include "imgIRequest.h"
+#include "imgIContainer.h"
+#include "imgIDecoderObserver.h"
+
+class nsImageBoxFrame;
+
+class nsImageBoxListener : imgIDecoderObserver
+{
+public:
+  nsImageBoxListener();
+  virtual ~nsImageBoxListener();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGIDECODEROBSERVER
+  NS_DECL_IMGICONTAINEROBSERVER
+
+  void SetFrame(nsImageBoxFrame *frame) { mFrame = frame; }
+
+private:
+  nsImageBoxFrame *mFrame;
+};
+#endif
+
 class nsImageBoxFrame : public nsLeafBoxFrame
 {
 public:
@@ -67,6 +92,20 @@ public:
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
 
+
+#ifdef USE_IMG2
+  NS_IMETHOD OnStartDecode(imgIRequest *request, nsIPresContext *cx);
+  NS_IMETHOD OnStartContainer(imgIRequest *request, nsIPresContext *cx, imgIContainer *image);
+  NS_IMETHOD OnStartFrame(imgIRequest *request, nsIPresContext *cx, gfxIImageFrame *frame);
+  NS_IMETHOD OnDataAvailable(imgIRequest *request, nsIPresContext *cx, gfxIImageFrame *frame, const nsRect * rect);
+  NS_IMETHOD OnStopFrame(imgIRequest *request, nsIPresContext *cx, gfxIImageFrame *frame);
+  NS_IMETHOD OnStopContainer(imgIRequest *request, nsIPresContext *cx, imgIContainer *image);
+  NS_IMETHOD OnStopDecode(imgIRequest *request, nsIPresContext *cx, nsresult status, const PRUnichar *statusArg);
+  NS_IMETHOD FrameChanged(imgIContainer *container, nsIPresContext *cx, gfxIImageFrame *newframe, nsRect * dirtyRect);
+#endif
+
+
+
   virtual ~nsImageBoxFrame();
 protected:
 
@@ -88,11 +127,25 @@ protected:
 
   void GetImageSource(nsString& aResult);
 
+  void GetBaseURI(nsIURI **uri);
+
+#ifdef USE_IMG2
+  void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **group);
+#endif
+
   virtual void GetImageSize(nsIPresContext* aPresContext);
 
 private:
 
+#ifdef USE_IMG2
+  nsCOMPtr<imgIRequest> mImageRequest;
+  nsCOMPtr<imgIDecoderObserver> mListener;
+
+  nsSize mIntrinsicSize;
+#else
   nsHTMLImageLoader mImageLoader;
+#endif
+
   PRBool mSizeFrozen;
   nsSize mImageSize;
   PRBool mHasImage;
