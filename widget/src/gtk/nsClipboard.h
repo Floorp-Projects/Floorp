@@ -72,6 +72,7 @@ private:
   void RegisterFormat(const char *aMimeStr, GdkAtom aSelectionAtom);
   PRBool DoRealConvert(GdkAtom type, GdkAtom aSelectionAtom);
   PRBool DoConvert(const char *aMimeStr, GdkAtom aSelectionAtom);
+  PRBool GetTargets(GdkAtom aSelectionAtom);
 
   nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
   nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
