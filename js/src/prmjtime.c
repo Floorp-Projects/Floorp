@@ -234,7 +234,7 @@ PRMJ_ToExtendedTime(JSInt32 time)
 
     JSLL_UI2L(g1970GMTMicroSeconds,G1970GMTMICROHI);
     JSLL_UI2L(low,G1970GMTMICROLOW);
-#ifndef HAVE_LONG_LONG
+#ifndef JS_HAVE_LONG_LONG
     JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
     JSLL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
 #else

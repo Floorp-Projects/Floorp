@@ -25,9 +25,9 @@
 #ifdef XP_PC
 
 #ifdef _WIN32
-#define HAVE_LONG_LONG
+#define JS_HAVE_LONG_LONG
 #else
-#undef HAVE_LONG_LONG
+#undef JS_HAVE_LONG_LONG
 #endif
 #endif /* XP_PC */
 
@@ -51,31 +51,31 @@ JS_END_EXTERN_C
  * Get OS specific header information.
  */
 #if defined(AIXV3)
-#define HAVE_LONG_LONG
+#define JS_HAVE_LONG_LONG
 
 #elif defined(BSDI)
-#define HAVE_LONG_LONG
+#define JS_HAVE_LONG_LONG
 
 #elif defined(HPUX)
-#undef HAVE_LONG_LONG
+#undef JS_HAVE_LONG_LONG
 
 #elif defined(IRIX)
-#define HAVE_LONG_LONG
+#define JS_HAVE_LONG_LONG
 
 #elif defined(linux)
-#undef HAVE_LONG_LONG
+#define JS_HAVE_LONG_LONG
 
 #elif defined(OSF1)
-#define HAVE_LONG_LONG
+#define JS_HAVE_LONG_LONG
 
 #elif defined(SCO)
-#undef HAVE_LONG_LONG
+#undef JS_HAVE_LONG_LONG
 
 #elif defined(SOLARIS)
-#define HAVE_LONG_LONG
+#define JS_HAVE_LONG_LONG
 
 #elif defined(SUNOS4)
-#undef HAVE_LONG_LONG
+#undef JS_HAVE_LONG_LONG
 
 /*
 ** Missing function prototypes
@@ -84,7 +84,7 @@ JS_END_EXTERN_C
 extern void *sbrk(int);
 
 #elif defined(UNIXWARE)
-#undef HAVE_LONG_LONG
+#undef JS_HAVE_LONG_LONG
 #endif
 
 #endif /* XP_UNIX */

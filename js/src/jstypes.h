@@ -254,7 +254,7 @@ typedef long JSInt32;
 **      64 bit values. The only guaranteed portability requires the use of
 **      the JSLL_ macros (see jslong.h).
 ************************************************************************/
-#ifdef HAVE_LONG_LONG
+#ifdef JS_HAVE_LONG_LONG
 #if JS_BYTES_PER_LONG == 8
 typedef long JSInt64;
 typedef unsigned long JSUint64;
@@ -268,7 +268,7 @@ typedef unsigned __int64 JSUint64;
 typedef long long JSInt64;
 typedef unsigned long long JSUint64;
 #endif /* JS_BYTES_PER_LONG == 8 */
-#else  /* !HAVE_LONG_LONG */
+#else  /* !JS_HAVE_LONG_LONG */
 typedef struct {
 #ifdef IS_LITTLE_ENDIAN
     JSUint32 lo, hi;
@@ -277,7 +277,7 @@ typedef struct {
 #endif
 } JSInt64;
 typedef JSInt64 JSUint64;
-#endif /* !HAVE_LONG_LONG */
+#endif /* !JS_HAVE_LONG_LONG */
 
 /************************************************************************
 ** TYPES:       JSUintn
