@@ -4620,7 +4620,25 @@ nsXULTemplateBuilder::OnChange(nsIRDFResource* aSource,
 
     nsresult rv;
 
+    LOG("onchange", aSource, aProperty, aNewTarget);
 
+    if (aOldTarget) {
+        // Pull any old rules that were relying on aOldTarget
+        rv = Retract(aSource, aProperty, aOldTarget);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (aNewTarget) {
+        // Fire any new rules that are activated by aNewTarget
+        ClusterKeySet newkeys;
+        rv = Propogate(aSource, aProperty, aNewTarget, newkeys);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = FireNewlyMatchedRules(newkeys);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // Synchronize any of the content model that may have changed.
     rv = SynchronizeAll(aSource, aProperty, aOldTarget, aNewTarget);
     if (NS_FAILED(rv)) return rv;
 
