@@ -940,6 +940,7 @@ nsresult nsParser::Tokenize(){
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
   while(NS_SUCCEEDED(result)) {
     mParserContext->mScanner->Mark();
+    ++mMinorIteration;
     result=theTokenizer->ConsumeToken(*mParserContext->mScanner);
     if(!NS_SUCCEEDED(result)) {
       mParserContext->mScanner->RewindToMark();
