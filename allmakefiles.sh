@@ -67,6 +67,7 @@ dom/public/coreDom/Makefile
 dom/public/coreEvents/Makefile
 dom/public/css/Makefile
 dom/public/events/Makefile
+dom/public/range/Makefile
 dom/public/html/Makefile
 dom/src/Makefile
 dom/src/base/Makefile
