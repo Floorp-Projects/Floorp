@@ -1462,7 +1462,7 @@ endif # SDK_BINARY
 
 JAR_MANIFEST := $(srcdir)/jar.mn
 
-ifeq (flat,$(MOZ_CHROME_FILE_FORMAT))
+ifneq (,$(filter flat symlink,$(MOZ_CHROME_FILE_FORMAT)))
 _JAR_REGCHROME_DISABLE_JAR=1
 else
 _JAR_REGCHROME_DISABLE_JAR=0
