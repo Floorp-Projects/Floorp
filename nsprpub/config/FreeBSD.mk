@@ -37,6 +37,7 @@ OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe $(THREAD_FLAG) -DF
 
 ifeq ($(USE_PTHREADS),1)
 IMPL_STRATEGY		= _PTH
+DEFINES			+= -D_THREAD_SAFE
 THREAD_FLAG		+= -pthread
 else
 IMPL_STRATEGY		= _EMU
