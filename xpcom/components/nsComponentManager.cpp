@@ -614,10 +614,6 @@ nsComponentManagerImpl::PlatformRegister(const char *cidString,
         rv = mRegistry->SetStringUTF8(progIDKey, classIDValueName, cidString);
     }
 
-    // XXX Gross. LongLongs dont have a serialization format. This makes
-    // XXX the registry non-xp. Someone beat on the nspr people to get
-    // XXX a longlong serialization function please!
-    
     nsRegistryKey dllPathKey;
     rv = mRegistry->AddSubtreeRaw(mXPCOMKey,dll->GetPersistentDescriptorString(), &dllPathKey);
 
@@ -1059,12 +1055,6 @@ nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass)
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 
 #ifdef USE_REGISTRY
-    // XXX This isn't quite the best way to do this: we should
-    // probably move an nsArray<ProgID> into the FactoryEntry class,
-    // and then have the construct/destructor of the factory entry
-    // keep the ProgID to CID cache up-to-date. However, doing this
-    // significantly improves performance, so it'll do for now.
-
     nsStringKey key(aProgID);
     nsCID* cid = (nsCID*) mProgIDs->Get(&key);
     if (cid) {
@@ -1120,7 +1110,7 @@ nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass)
  * Translates a classID to a {ProgID, Class Name}. Does direct registry
  * access to do the translation.
  *
- * XXX Would be nice to hook in a cache here too.
+ * NOTE: Since this isn't heavily used, we arent caching this.
  */
 nsresult
 nsComponentManagerImpl::CLSIDToProgID(const nsCID &aClass,
@@ -1334,7 +1324,7 @@ nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
         
         if (NS_FAILED(rv)) return rv;
         
-        rv = file->Append(aLocation + 4);
+        rv = file->AppendRelativePath(aLocation + 4);
         *aSpec = file;
         return rv;
     }
@@ -1777,28 +1767,11 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
 
 nsresult
 nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
-                                            const char *aLibrary)
+                                            const char *registryName)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
-    // Convert the persistent descriptor into a nsIFile
-    nsLocalFile* libSpec = new nsLocalFile;
-    if (!libSpec) return NS_ERROR_FAILURE;
-        
-    rv = libSpec->InitWithPath((char *)aLibrary);
-            
-    if (NS_FAILED(rv)) return rv;
-    
-    return UnregisterComponentSpec(aClass, libSpec);
-}
-
-nsresult
-nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
-                                                nsIFile *aLibrarySpec)
-{
-    nsXPIDLCString registryName;
-    nsresult rv = RegistryLocationForSpec(aLibrarySpec, getter_Copies(registryName));
-    if (NS_FAILED(rv)) return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG_POINTER(registryName);
 
     PR_EnterMonitor(mMon);
 
@@ -1821,10 +1794,20 @@ nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
     PR_ExitMonitor(mMon);
     	
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("nsComponentManager: Factory unregister(%s) %s.", (const char *)registryName,
+           ("nsComponentManager: Factory unregister(%s) %s.", registryName,
             NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
 
     return rv;
+}
+
+nsresult
+nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
+                                                nsIFile *aLibrarySpec)
+{
+    nsXPIDLCString registryName;
+    nsresult rv = RegistryLocationForSpec(aLibrarySpec, getter_Copies(registryName));
+    if (NS_FAILED(rv)) return rv;
+    return UnregisterComponent(aClass, registryName);
 }
 
 struct CanUnload_closure {
@@ -1955,6 +1938,11 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
     nsCOMPtr<nsIFile> dir;
     nsresult rv;
 
+#ifdef DEBUG
+    // testing release behaviour
+    if (getenv("XPCOM_NO_AUTOREG"))
+        return NS_OK;
+#endif
     if (inDirSpec) 
     {
         // Use supplied components' directory   
