@@ -21,7 +21,7 @@
 #include "nsIDOMHTMLTableSectionElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsGenericDOMHTMLCollection.h"
+#include "GenericElementCollection.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
@@ -34,7 +34,6 @@
 /* for collections */
 #include "nsIDOMElement.h"
 #include "nsGenericHTMLElement.h"
-extern const nsIID kIDOMElementIID;
 /* end for collections */
 
 static NS_DEFINE_IID(kIDOMHTMLTableElementIID, NS_IDOMHTMLTABLEELEMENT_IID);
@@ -42,7 +41,7 @@ static NS_DEFINE_IID(kIDOMHTMLTableCaptionElementIID, NS_IDOMHTMLTABLECAPTIONELE
 static NS_DEFINE_IID(kIDOMHTMLTableSectionElementIID, NS_IDOMHTMLTABLESECTIONELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 
-class TableElementCollection;
+class GenericElementCollection;
 class TableRowsCollection;
 
 class nsHTMLTableElement :  public nsIDOMHTMLTableElement,
@@ -116,137 +115,10 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
-  TableElementCollection *mTBodies;
+  GenericElementCollection *mTBodies;
   TableRowsCollection *mRows;
 };
 
-
-
-/* ------------------------------ TableElementCollection ------------------------------ */
-/**
- * This class provides a late-bound collection of elements that are
- * direct decendents of a table.
- * mParent is NOT ref-counted to avoid circular references
- */
-class TableElementCollection : public nsGenericDOMHTMLCollection 
-{
-public:
-  TableElementCollection(nsIContent *aParent, 
-                         nsIAtom *aTag);
-  virtual ~TableElementCollection();
-
-  NS_IMETHOD    GetLength(PRUint32* aLength);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn);
-
-  NS_IMETHOD    ParentDestroyed();
-
-protected:
-  nsIContent * mParent;
-  nsIAtom * mTag;
-};
-
-
-TableElementCollection::TableElementCollection(nsIContent *aParent, 
-                                               nsIAtom *aTag)
-  : nsGenericDOMHTMLCollection()
-{
-  mParent = aParent;
-  mTag = aTag;
-}
-
-TableElementCollection::~TableElementCollection()
-{
-  // we do NOT have a ref-counted reference to mParent, so do NOT release it!
-  // this is to avoid circular references.  The instantiator who provided mParent
-  // is responsible for managing our reference for us.
-  NS_IF_RELEASE(mTag);
-}
-
-// we re-count every call.  A better implementation would be to set ourselves up as
-// an observer of contentAppended, contentInserted, and contentDeleted
-NS_IMETHODIMP 
-TableElementCollection::GetLength(PRUint32* aLength)
-{
-  if (nsnull==aLength)
-    return NS_ERROR_NULL_POINTER;
-  *aLength=0;
-  nsresult result = NS_OK;
-  if (nsnull!=mParent)
-  {
-    nsIContent *child=nsnull;
-    PRUint32 childIndex=0;
-    mParent->ChildAt(childIndex, child);
-    while (nsnull!=child)
-    {
-      nsIAtom *childTag;
-      child->GetTag(childTag);
-      if (mTag==childTag)
-      {
-        (*aLength)++;
-      }
-      NS_RELEASE(childTag);
-      NS_RELEASE(child);
-      childIndex++;
-      mParent->ChildAt(childIndex, child);
-    }
-  }
-  return result;
-}
-
-NS_IMETHODIMP 
-TableElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
-{
-  *aReturn=nsnull;
-  PRUint32 index = 0;
-  nsresult rv = NS_OK;
-  if (nsnull!=mParent)
-  {
-    nsIContent *child=nsnull;
-    PRUint32 childIndex=0;
-    mParent->ChildAt(childIndex, child);
-    while (nsnull!=child)
-    {
-      nsIAtom *childTag;
-      child->GetTag(childTag);
-      if (mTag==childTag)
-      {
-        if (aIndex==index)
-        {
-          child->QueryInterface(kIDOMNodeIID, (void**)aReturn);   // out-param addref
-          NS_ASSERTION(nsnull!=aReturn, "content element must be an nsIDOMNode");
-          NS_RELEASE(childTag);
-          NS_RELEASE(child);
-          break;
-        }
-        index++;
-      }
-      NS_RELEASE(childTag);
-      NS_RELEASE(child);
-      childIndex++;
-      mParent->ChildAt(childIndex, child);
-    }
-  }
-  return rv;
-}
-
-NS_IMETHODIMP 
-TableElementCollection::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
-{
-  nsresult rv = NS_OK;
-  if (nsnull!=mParent)
-  {
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-TableElementCollection::ParentDestroyed()
-{
-  // see comment in destructor, do NOT release mParent!
-  mParent = nsnull;
-  return NS_OK;
-}
 
 /* ------------------------------ TableRowsCollection -------------------------------- */
 /**
@@ -300,7 +172,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
     {
       nsIContent *content=nsnull;
       rowGroup->QueryInterface(kIContentIID, (void **)&content);
-      TableElementCollection head(content, nsHTMLAtoms::tr);
+      GenericElementCollection head(content, nsHTMLAtoms::tr);
       PRUint32 rows;
       head.GetLength(&rows);
       *aLength = rows;
@@ -312,7 +184,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
     {
       nsIContent *content=nsnull;
       rowGroup->QueryInterface(kIContentIID, (void **)&content);
-      TableElementCollection foot(content, nsHTMLAtoms::tr);
+      GenericElementCollection foot(content, nsHTMLAtoms::tr);
       PRUint32 rows;
       foot.GetLength(&rows);
       *aLength += rows;
@@ -331,7 +203,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
       {
         nsIContent *content=nsnull;
         node->QueryInterface(kIContentIID, (void **)&content);
-        TableElementCollection body(content, nsHTMLAtoms::tr);
+        GenericElementCollection body(content, nsHTMLAtoms::tr);
         PRUint32 rows;
         body.GetLength(&rows);
         *aLength += rows;
@@ -361,7 +233,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     {
       nsIContent *content=nsnull;
       rowGroup->QueryInterface(kIContentIID, (void **)&content);
-      TableElementCollection head(content, nsHTMLAtoms::tr);
+      GenericElementCollection head(content, nsHTMLAtoms::tr);
       head.GetLength(&rowsInHead);
       count = rowsInHead;
       if (count>aIndex)
@@ -384,7 +256,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       {
         nsIContent *content=nsnull;
         node->QueryInterface(kIContentIID, (void **)&content);
-        TableElementCollection body(content, nsHTMLAtoms::tr);
+        GenericElementCollection body(content, nsHTMLAtoms::tr);
         PRUint32 rows;
         body.GetLength(&rows);
         if ((count+rows)>aIndex)
@@ -405,7 +277,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     {
       nsIContent *content=nsnull;
       rowGroup->QueryInterface(kIContentIID, (void **)&content);
-      TableElementCollection foot(content, nsHTMLAtoms::tr);
+      GenericElementCollection foot(content, nsHTMLAtoms::tr);
       foot.Item(aIndex-count, aReturn);
       NS_RELEASE(content);
       NS_RELEASE(rowGroup);
@@ -657,7 +529,7 @@ nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
   if (nsnull==mTBodies)
   {
     NS_ADDREF(nsHTMLAtoms::tbody);
-    mTBodies = new TableElementCollection((nsIContent*)this, nsHTMLAtoms::tbody);
+    mTBodies = new GenericElementCollection((nsIContent*)this, nsHTMLAtoms::tbody);
     NS_ADDREF(mTBodies); // this table's reference, released in the destructor
   }
   mTBodies->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);  // caller's addref 
