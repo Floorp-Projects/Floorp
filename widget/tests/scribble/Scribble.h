@@ -25,6 +25,7 @@
 #include "nsITextWidget.h"
 #include "nsPoint.h"
 #include "nsIDeviceContext.h"
+#include "nsIAppShell.h"
 
 struct ScribbleApp {
     nsIWidget *mainWindow;
@@ -42,9 +43,14 @@ struct ScribbleApp {
 
     nsPoint mousePos;
 
-    nsIDeviceContext  *mContext;
+    nsIDeviceContext    *mContext;
 };
 
+class polllistener:public nsDispatchListener
+{
+
+  virtual void AfterDispatch();
+};
 
 nsresult CreateApplication(int * argc, char ** argv);
 

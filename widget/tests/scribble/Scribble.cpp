@@ -42,39 +42,42 @@
 #include "nsIImageManager.h"
 #include "nsIImageRequest.h"
 #include "nsIImageObserver.h"
-
-
-
-#ifdef XP_MAC
-#include <quickdraw.h>
-#endif
+#include "nsIImageGroup.h"
+#include "net.h"
 
 ScribbleApp scribbleData;
+
+static nsIImageManager  *gImageManager = nsnull;
+static nsIImageGroup    *gImageGroup = nsnull;
+static nsIImageRequest  *gImageReq = nsnull;
 
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFX_DLL "raptorgfxwin.dll"
 #define TEXT_HEIGHT 25
+#define FILE_URL_PREFIX "file://"
 #endif
 
 #ifdef XP_UNIX
 #define WIDGET_DLL "libwidgetunix.so"
 #define GFX_DLL "libgfxunix.so"
 #define TEXT_HEIGHT 30
+#define FILE_URL_PREFIX "file://"
 #endif
 
 #ifdef XP_MAC
 #define WIDGET_DLL "WIDGET_DLL"
 #define GFX_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
+#define FILE_URL_PREFIX "file:///"
 #endif
 
 
 
 static nsIImage		*gImage = nsnull;
 static PRBool			gInstalledColorMap = PR_FALSE;
-static nsIWidget	*gWindow = nsnull;
 
+void  MyLoadImage(char *aFileName);
 
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
@@ -364,13 +367,10 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
                         else 
                         	if (buf.Equals(image)) 
 	                        	{
-	                        	rect.SizeTo(50,50);
-	                        	for(int i=0;i<100;i++)
-			                       	{
-			                        drawCtx->SetColor((nscolor)rand());
-			                        rect.MoveTo(x+2*i,y+2*i);
-			                        drawCtx->DrawRect(rect);
-			                        }
+                            char szFile[256] = "S:\\mozilla\\dist\\WIN32_D.OBJ\\bin\\res\\samples\\raptor.jpg";
+
+                            // put up an image
+                            MyLoadImage(szFile);
 	                        	}
 
                         NS_RELEASE(drawCtx);
@@ -678,6 +678,8 @@ nsresult CreateApplication(int * argc, char ** argv)
 
     //laf->Release();
 
+    polllistener *plistener = new polllistener;
+    appShell->SetDispatchListener(plistener);
     return(appShell->Run());
 }
 
@@ -748,12 +750,13 @@ MyObserver::Notify(nsIImageRequest *aImageRequest,
 
 	      if (cmap != nsnull && cmap->NumColors > 0) 
 	        { 
-	        gWindow->SetColorMap(cmap); 
+	        //gWindow->SetColorMap(cmap); 
 	        } 
 	      gInstalledColorMap = PR_TRUE; 
 	      } 
 	    nsRect *rect = (nsRect *)aParam3; 
-	    nsIRenderingContext *drawCtx = gWindow->GetRenderingContext(); 
+
+      nsIRenderingContext *drawCtx = scribbleData.drawPane->GetRenderingContext();
 
 	    if (gImage) 
 	      { 
@@ -773,3 +776,72 @@ MyObserver::NotifyError(nsIImageRequest *aImageRequest,
   //::MessageBox(NULL, "Image loading error!",class1Name, MB_OK); 
 } 
   
+//------------------------------------------------------------
+
+void
+MyInterrupt()
+{
+  if (gImageGroup) 
+    {
+    gImageGroup->Interrupt();
+    }
+}
+
+//------------------------------------------------------------
+
+
+void
+MyLoadImage(char *aFileName)
+{
+char fileURL[256];
+char *str;
+
+    MyInterrupt();
+
+   if (gImageReq) 
+    {
+    NS_RELEASE(gImageReq);
+    gImageReq = NULL;
+    }
+
+   if (gImage) 
+      {
+      NS_RELEASE(gImage);
+      gImage = NULL;
+      }
+
+    if (gImageGroup == NULL) 
+      {
+      nsIDeviceContext *deviceCtx = scribbleData.mContext;
+      if (NS_NewImageGroup(&gImageGroup) != NS_OK || gImageGroup->Init(deviceCtx) != NS_OK) 
+        {
+        NS_RELEASE(deviceCtx);
+        return;
+        }
+      NS_RELEASE(deviceCtx);
+      }
+
+    strcpy(fileURL, FILE_URL_PREFIX);
+    strcpy(fileURL + strlen(FILE_URL_PREFIX), aFileName);
+
+#ifdef XP_PC
+    str = fileURL;
+    while ((str = strchr(str, '\\')) != NULL)
+        *str = '/';
+#endif
+
+    nscolor white;
+
+    MyObserver *observer = new MyObserver();
+    NS_ColorNameToRGB("white", &white);
+    gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
+}
+
+
+void
+polllistener::AfterDispatch()
+{
+
+  NET_PollSockets();
+
+}
