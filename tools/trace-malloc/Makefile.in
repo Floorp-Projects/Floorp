@@ -31,6 +31,7 @@ REQUIRES	= string xpcom
 CSRCS		+= \
 		bloatblame.c \
 		leakstats.c \
+		spacetrace.c \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CSRCS:.c=$(BIN_SUFFIX))
@@ -41,6 +42,16 @@ LIBS		+= \
 		$(NSPR_LIBS) \
 		tmreader.o \
 		$(NULL)
+
+ifdef HAVE_BOUTELL_GD
+LIBS		+= \
+		-lgd \
+		$(NULL)
+
+DEFINES		+= \
+		-DHAVE_BOUTELL_GD \
+		$(NULL)
+endif
 
 EXTRA_DEPS      = tmreader.o
 

@@ -65,8 +65,11 @@ struct tmevent {
             uint32  offset;
         } site;
         struct {
+            uint32  interval;
+            uint32  ptr;
             uint32  size;
             uint32  oldserial;
+            uint32  oldptr;
             uint32  oldsize;
         } alloc;
         struct {
@@ -139,6 +142,9 @@ struct tmcallsite {
     uint32          offset;     /* pc offset from start of method */
     tmallcounts     allocs;
     tmallcounts     frees;
+    void            *data;      /* tmreader clients can stick arbitrary
+                                 *  data onto a callsite.
+                                 */
 };
 
 struct tmreader {
