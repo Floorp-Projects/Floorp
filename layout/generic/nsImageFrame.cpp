@@ -287,9 +287,14 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
       mLoadBrokenImageFailed = PR_TRUE;
     }
     else {
+#ifdef _WIN32
+      // Display broken icon along with alt-text
+      mLoadImageFailed = PR_TRUE;
+#else
       // Try again, this time using the broke-image url
       mLoadImageFailed = PR_TRUE;
       return StartLoadImage(aPresContext, aForFrame, aNeedSizeUpdate, aLoadStatus);
+#endif
     }
   }
   return NS_OK;
@@ -671,9 +676,11 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
 
     nsIImage* image = mImageLoader.GetImage();
     if (nsnull == image) {
-      // No image yet. Draw the icon that indicates we're loading, and display
-      // the alt-text
-      DisplayAltFeedback(aPresContext, aRenderingContext, NS_ICON_LOADING_IMAGE);
+      // No image yet, or image load failed. Draw the alt-text and an icon
+      // indicating the status
+      DisplayAltFeedback(aPresContext, aRenderingContext,
+                         mImageLoader.GetLoadImageFailed() ? NS_ICON_BROKEN_IMAGE :
+                                                             NS_ICON_LOADING_IMAGE);
       return NS_OK;
     }
 
