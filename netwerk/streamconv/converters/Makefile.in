@@ -43,9 +43,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		ParseFTPList.cpp \
-		nsFTPDirListingConv.cpp \
-		nsGopherDirListingConv.cpp \
 		mozTXTToHTMLConv.cpp \
 		nsUnknownDecoder.cpp \
 		nsHTTPCompressConv.cpp \
@@ -56,6 +53,22 @@ CPPSRCS		= \
 		nsMultiMixedConv.cpp \
 		$(NULL)
 
+# only include FTP directory listing support if the FTP
+# protocol is being built.
+ifneq (,$(filter ftp,$(NECKO_PROTOCOLS)))
+CPPSRCS += \
+		ParseFTPList.cpp \
+		nsFTPDirListingConv.cpp \
+        $(NULL)
+endif
+
+# only include Gopher directory listing support if the Gopher
+# protocol is being built.
+ifneq (,$(filter gopher,$(NECKO_PROTOCOLS)))
+CPPSRCS += \
+		nsGopherDirListingConv.cpp \
+        $(NULL)
+endif
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += \
