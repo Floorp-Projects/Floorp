@@ -26,6 +26,7 @@ else
 CPU_ARCH		:= $(OS_TEST)
 endif
 
+IMPL_STRATEGY		= _EMU
 DEFAULT_COMPILER		= gcc
 CC				= gcc
 CXX				= g++
