@@ -42,7 +42,7 @@
   </broadcasterset>    
 
   <keyset id="keyset">
-  	<key id="key_newMessage" xulkey="true" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
+  	<key id="key_newMessage" xulkey="true" shift="false" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
   </keyset>
          
 </overlay>
