@@ -2,7 +2,7 @@
 
 <!ENTITY accountManagerTitle.label "Mail &amp; Newsgroups Account Settings">
 
-<!ENTITY newAccountButton.label "Add Account">
+<!ENTITY newAccountButton.label "Add Account...">
 <!ENTITY setDefaultButton.label "Set as Default">
 <!ENTITY duplicateButton.label "Duplicate">
 <!ENTITY deleteButton.label "Remove Account">
