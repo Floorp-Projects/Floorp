@@ -515,7 +515,9 @@ nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode)
     // See bug 20246: the html tag doesn't have "html" in its text,
     // so AddStartTag will do the wrong thing
     Write(kLessThan);
-    nsAutoCString tagname( nsString(nsHTMLTags::GetStringValue(tag)) );
+    
+    nsString temp; temp.AssignWithConversion(nsHTMLTags::GetStringValue(tag));
+    nsAutoCString tagname(temp);
     Write(tagname);
     Write(kGreaterThan);
   }
