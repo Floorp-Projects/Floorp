@@ -460,8 +460,7 @@ _TreeCellAction(XmLGridCell cell,
 			else
 				ret = cellActionProc(cell, w, cbs);
 			break;
-		case XmCR_EDIT_BEGIN: /* Fall through */
-		case XmCR_EDIT_INSERT:
+		case XmCR_CONF_TEXT:
             if (isTreeCell)
             {
                 int iconOffset;
@@ -859,6 +858,13 @@ BtnPress(Widget w,
 	if (be->x > x2 || be->x < x1 || be->y > y2 || be->y < y1)
 		return;
 	SwitchRowState(t, row, event);
+
+    /* Avoid having a cell edited when expand/collapse is done.
+     * Yes, this is a hack. By setting this to zero, Grid.c:Select()
+     * will ignore this click are a second click that would trigger
+     * inplace editing.
+     */
+    ((XmLGridWidget)w)->grid.lastSelectTime = 0;
 	}
 
 static void

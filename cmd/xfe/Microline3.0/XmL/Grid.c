@@ -220,6 +220,7 @@ static void TextModifyVerify(Widget w, XtPointer clientData,
 static void Traverse(Widget w, XEvent *event, String *, Cardinal *);
 
 /* XFE Additions */
+static void EditTimer(XtPointer, XtIntervalId *);
 static void CreateHideUnhideButtons(XmLGridWidget g);
 static void HideAction(Widget w, XEvent *event, String *, Cardinal *);
 static void UnhideAction(Widget w, XEvent *event, String *, Cardinal *);
@@ -1504,6 +1505,7 @@ Initialize(Widget reqW,
 	g->grid.lastSelectCol = -1;
 	g->grid.lastSelectTime = 0;
 	g->grid.dragTimerSet = 0;
+	g->grid.editTimerSet = 0;
 	g->grid.gc = 0;
 	reg = g->grid.reg;
 	for (i = 0; i < 9; i++)
@@ -1600,6 +1602,8 @@ Destroy(Widget w)
 	dpy = XtDisplay(w);
 	if (g->grid.dragTimerSet)
 		XtRemoveTimeOut(g->grid.dragTimerId);
+	if (g->grid.editTimerSet)
+		XtRemoveTimeOut(g->grid.editTimerId);
 	DefineCursor(g, CursorNormal);
 	XFreeCursor(dpy, g->grid.hResizeCursor);
 	XFreeCursor(dpy, g->grid.vResizeCursor);
@@ -6898,6 +6902,7 @@ ButtonMotion(Widget w,
 	if (g->grid.inMode == InSelect && XYToRowCol(g, me->x, me->y,
 		&row, &col) != -1)
 		{
+		TextAction(g, TEXT_EDIT_CANCEL);
 		if (g->grid.selectionPolicy == XmSELECT_MULTIPLE_ROW &&
 			RowPosToType(g, row) == XmCONTENT)
 			ExtendSelect(g, event, False, row, col);
@@ -7324,7 +7329,7 @@ Select(Widget w,
 	static int quarksValid = 0;
 	XrmQuark q;
 	int isVert;
-	int row, col, clickTime, resizeRow, resizeCol;
+	int row, col, resizeRow, resizeCol;
 	XButtonEvent *be;
 	XRectangle rect;
 	XmLGridRow rowp;
@@ -7366,18 +7371,36 @@ Select(Widget w,
 			col = -1;
 			}
 		}
+
 	/* double click activate check */
 	if (q == qBEGIN && be)
 		{
-		clickTime = XtGetMultiClickTime(dpy);
 		if (row != -1 && col != -1 &&
 			row == g->grid.lastSelectRow && col == g->grid.lastSelectCol)
-            if ((be->time - g->grid.lastSelectTime) < clickTime)
-                q = qACTIVATE;
-            else
             {
-                TextAction(g,TEXT_EDIT_INSERT);
-                return;
+            int doubleClickTime = XtGetMultiClickTime(dpy);
+            Time timeSinceLastClick = be->time - g->grid.lastSelectTime;
+            if (timeSinceLastClick < doubleClickTime)
+                {
+                /* Clear inplace editing if some other event happens */
+                if (g->grid.editTimerSet)
+                    {
+                    XtRemoveTimeOut(g->grid.editTimerId);
+                    g->grid.editTimerSet = 0;
+                    }
+
+                /* Second click came within double click time */
+                q = qACTIVATE;
+                }
+            else if (!g->grid.editTimerSet && g->grid.lastSelectTime != 0)
+                {
+                /* Only begin an edit when we are sure we don't
+                   have a double click */
+                g->grid.editTimerId =
+                    XtAppAddTimeOut(XtWidgetToApplicationContext(w),
+                                    doubleClickTime*2, EditTimer, (caddr_t)g);
+                g->grid.editTimerSet = 1;
+                }
             }
 		g->grid.lastSelectRow = row;
 		g->grid.lastSelectCol = col;
@@ -7427,8 +7450,11 @@ Select(Widget w,
 			{
 			flag = True;
 			rowp = (XmLGridRow)XmLArrayGet(g->grid.rowArray, row);
+#if 0
+/* Don't want single click to unselect something. -slamm */
 			if (q == qBEGIN && rowp && XmLGridRowIsSelected(rowp) == True)
 				flag = False;
+#endif /* 0 -slamm */
 			if (q == qTOGGLE && rowp && XmLGridRowIsSelected(rowp) == True)
 				flag = False;
 			if (q == qBEGIN)
@@ -8967,12 +8993,6 @@ _XmLGridCellBeginTextEdit(XmLGridCell cell,
 	{
         XmLGridWidget g = (XmLGridWidget)w;
 	Widget text;
-
-    if (g->grid.debugLevel)
-        fprintf(stderr,"type=%s editable=%s useTextWidget=%s\n",
-                (cell->cell.refValues->type == XmSTRING_CELL ? "XmSTRING_CELL" : cell->cell.refValues->type == XmICON_CELL ? "XmICON_CELL" : "other"),
-                (cell->cell.refValues->editable ? "yes":"no"),
-                (g->grid.useTextWidget ? "yes":"no"));
 
 	if ((cell->cell.refValues->type != XmSTRING_CELL &&
          cell->cell.refValues->type != XmICON_CELL)
@@ -10639,6 +10659,19 @@ XmLGridPastePos(Widget w,
 	}
 
 /* XFE Additions below here */
+static void
+EditTimer(XtPointer clientData,
+          XtIntervalId *intervalId)
+{
+	XmLGridWidget g;
+
+	g = (XmLGridWidget)clientData;
+
+    g->grid.editTimerSet = 0;
+    g->grid.lastSelectTime = 0;
+    TextAction(g,TEXT_EDIT_INSERT);
+}
+
 void
 XmLGridSetVisibleColumnCount(Widget w, int new_num_visible)
 {
@@ -10869,7 +10902,7 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
 		{
 			int col_width;
 			int col_delta;
-			int new_col_width;
+			Dimension new_col_width;
 
             colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, ii);
             col_width = colp->grid.width;

@@ -398,6 +398,11 @@ typedef struct _XmLGridPart
 	Boolean colSelected;
 	XtPointer colUserData;
         Boolean colResizable;
+
+    /* xfe additions */
+    /* Edit timer is used for inplace editing */
+	char editTimerSet;
+	XtIntervalId editTimerId;
 	} XmLGridPart;
 
 typedef struct _XmLGridRec
