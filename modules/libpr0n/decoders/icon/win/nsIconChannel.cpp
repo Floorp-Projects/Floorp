@@ -33,6 +33,8 @@
 #include "nsNetUtil.h"
 #include "nsIFile.h"
 #include "nsIFileChannel.h"
+#include "nsIMIMEService.h"
+#include "nsCExternalHandlerService.h"
 
 // we need windows.h to read out registry information...
 #include <windows.h>
@@ -277,6 +279,25 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     infoFlags |= SHGFI_LARGEICON;
   else
     infoFlags |= SHGFI_SMALLICON;
+
+  if ( (!filePath.get()) && (contentType.get() && *contentType.get()) ) // if we have a content type without a file extension...then use it!
+  {
+    nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
+    nsCOMPtr<nsIMIMEInfo> mimeObject;
+    NS_ENSURE_SUCCESS(rv, rv);
+     
+    mimeService->GetFromMIMEType(contentType.get(), getter_AddRefs(mimeObject));
+    if (mimeObject)
+    {
+      nsXPIDLCString fileExt;
+      mimeObject->FirstExtension(getter_Copies(fileExt));
+      // we need to insert a '.' b4 the extension...
+      nsCAutoString formattedFileExt;
+      formattedFileExt = ".";
+      formattedFileExt.Append(fileExt.get());
+      *((char **)getter_Copies(filePath)) = formattedFileExt.ToNewCString(); // yuck...shove it into our xpidl string...
+    }
+  }
 
   // (1) get an hIcon for the file
   LONG result= SHGetFileInfo(filePath.get(), FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags);
