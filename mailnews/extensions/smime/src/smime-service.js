@@ -39,7 +39,7 @@
 
 /* components defined in this file */
 const SMIME_EXTENSION_SERVICE_CONTRACTID =
-    "@mozilla.org/accounmanager/extension;1?name=smime";
+    "@mozilla.org/accountmanager/extension;1?name=smime";
 const SMIME_EXTENSION_SERVICE_CID =
     Components.ID("{f2809796-1dd1-11b2-8c1b-8f15f007c699}");
 
