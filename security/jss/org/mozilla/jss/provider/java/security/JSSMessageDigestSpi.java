@@ -41,7 +41,7 @@ import org.mozilla.jss.crypto.*;
 import org.mozilla.jss.CryptoManager;
 import java.security.MessageDigestSpi;
 
-abstract class JSSMessageDigestSpi extends MessageDigestSpi {
+public abstract class JSSMessageDigestSpi extends MessageDigestSpi {
 
     private JSSMessageDigest digest;
 
