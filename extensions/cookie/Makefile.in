@@ -56,6 +56,7 @@ CPPSRCS		= \
 		nsCookieService.cpp \
 		nsImgManager.cpp \
 		nsPermissionManager.cpp \
+		nsPopupWindowManager.cpp \
 		nsCookies.cpp \
 		nsImages.cpp \
 		nsPermissions.cpp \
@@ -72,6 +73,7 @@ XPIDLSRCS	= \
 		nsICookieConsent.idl \
 		nsIImgManager.idl \
 		nsIPermissionManager.idl \
+		nsIPopupWindowManager.idl \
 		nsIPermission.idl \
 		$(NULL)
 
