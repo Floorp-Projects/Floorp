@@ -174,6 +174,7 @@ char *argv[];
 	XtVaSetValues(tree,
 		XmNcellDefaults, True,
 		XtVaTypedArg, XmNcellBackground, XmRString, "white", 6,
+        XmNcellEditable, True,
 		XmNcellLeftBorderType, XmBORDER_NONE,
 		XmNcellRightBorderType, XmBORDER_NONE,
 		XmNcellTopBorderType, XmBORDER_NONE,
@@ -212,7 +213,6 @@ char *argv[];
 		XmLGridSetStringsPos(tree, XmCONTENT, i, XmCONTENT, 1, "1032|1123");
 	}
 	free((char *)rows);
-
 	XtRealizeWidget(shell);
 	XtAppMainLoop(app);
 }

@@ -220,8 +220,8 @@ static void Traverse(Widget w, XEvent *event, String *, Cardinal *);
 
 /* XFE Additions */
 static void CreateHideUnhideButtons(XmLGridWidget g);
-static void HideColumn(Widget w, XEvent *event, String *, Cardinal *);
-static void UnhideColumn(Widget w, XEvent *event, String *, Cardinal *);
+static void HideAction(Widget w, XEvent *event, String *, Cardinal *);
+static void UnhideAction(Widget w, XEvent *event, String *, Cardinal *);
 static void MenuArm(Widget w, XEvent *event, String *, Cardinal *);
 static void MenuDisarm(Widget w, XEvent *event, String *, Cardinal *);
 static int SizeColumnsToFit(XmLGridWidget g, int start_at);
@@ -310,8 +310,8 @@ static XtActionsRec actions[] =
 	{ "XmLGridDragStart",    DragStart    },
 	{ "XmLGridTraverse",     Traverse     },
 	/* XFE Additions */
-	{ "XmLGridHideColumn",   HideColumn   },
-	{ "XmLGridUnhideColumn", UnhideColumn },
+	{ "XmLGridHideColumn",   HideAction   },
+	{ "XmLGridUnhideColumn", UnhideAction },
 	{ "MenuArm", MenuArm },
 	{ "MenuDisarm", MenuDisarm },
 	};
@@ -426,7 +426,8 @@ static char editTranslations[] =
 ~Ctrl Shift <Key>Tab:	        XmLGridEditComplete(LEFT)\n\
 ~Ctrl ~Shift <Key>Tab:	        XmLGridEditComplete(RIGHT)\n\
 ~Ctrl ~Shift <Key>osfUp:        XmLGridEditComplete(UP)\n\
-<Key>osfCancel:                 XmLGridEditCancel()";
+<Key>osfCancel:                 XmLGridEditCancel()\n\
+<Key>Escape:                    XmLGridEditCancel()";
 
 #if 0
 static char hideButtonTranslations[] =
@@ -1119,7 +1120,7 @@ static XtResource resources[] =
 		XmNcellType, XmCCellType,
 		XmRCellType, sizeof(unsigned char),
 		XtOffset(XmLGridWidget, grid.cellValues.type),
-		XmRImmediate, (XtPointer)0,
+		XmRImmediate, (XtPointer)XmSTRING_CELL,
 		},
 		{
 		XmNcellUserData, XmCUserData,
@@ -7358,9 +7359,14 @@ Select(Widget w,
 		{
 		clickTime = XtGetMultiClickTime(dpy);
 		if (row != -1 && col != -1 &&
-			row == g->grid.lastSelectRow && col == g->grid.lastSelectCol &&
-			(be->time - g->grid.lastSelectTime) < clickTime)
-			q = qACTIVATE;
+			row == g->grid.lastSelectRow && col == g->grid.lastSelectCol)
+            if ((be->time - g->grid.lastSelectTime) < clickTime)
+                q = qACTIVATE;
+            else
+            {
+                TextAction(g,TEXT_EDIT_INSERT);
+                return;
+            }
 		g->grid.lastSelectRow = row;
 		g->grid.lastSelectCol = col;
 		g->grid.lastSelectTime = be->time;
@@ -8884,8 +8890,15 @@ _XmLGridCellBeginTextEdit(XmLGridCell cell,
         XmLGridWidget g = (XmLGridWidget)w;
 	Widget text;
 
-	if (cell->cell.refValues->type != XmSTRING_CELL ||
-		cell->cell.refValues->editable != True
+    if (g->grid.debugLevel)
+        fprintf(stderr,"type=%s editable=%s useTextWidget=%s\n",
+                (cell->cell.refValues->type == XmSTRING_CELL ? "XmSTRING_CELL" : cell->cell.refValues->type == XmICON_CELL ? "XmICON_CELL" : "other"),
+                (cell->cell.refValues->editable ? "yes":"no"),
+                (g->grid.useTextWidget ? "yes":"no"));
+
+	if ((cell->cell.refValues->type != XmSTRING_CELL &&
+         cell->cell.refValues->type != XmICON_CELL)
+        || cell->cell.refValues->editable != True
 	    || g->grid.useTextWidget != True)
 		return 0;
 	XtVaGetValues(w,
@@ -8907,8 +8920,9 @@ _XmLGridCellCompleteTextEdit(XmLGridCell cell,
 	char *s;
 	int i, len;
 
-	if (cell->cell.refValues->type != XmSTRING_CELL ||
-		cell->cell.refValues->editable != True 
+	if ((cell->cell.refValues->type != XmSTRING_CELL &&
+         cell->cell.refValues->type != XmICON_CELL)
+        || cell->cell.refValues->editable != True
 	    || g->grid.useTextWidget != True)
 		return;
 	XtVaGetValues(w,
@@ -8922,7 +8936,11 @@ _XmLGridCellCompleteTextEdit(XmLGridCell cell,
 			s[i] = '\n';
 			strcpy(&s[i + 1], &s[i + 2]);
 			}
-	if (XmLGridCellIsValueSet(cell) == True)
+    XmLGridCellSetString(cell,
+                         XmStringCreateLtoR(s, XmSTRING_DEFAULT_CHARSET),
+                         False);
+#if 0
+    if (XmLGridCellIsValueSet(cell) == True)
 		XmStringFree((XmString)cell->cell.value);
 	if (strlen(s))
 		{
@@ -8932,6 +8950,7 @@ _XmLGridCellCompleteTextEdit(XmLGridCell cell,
 		}
 	else
 		XmLGridCellSetValueSet(cell, False);
+#endif /*0*/
 	XtFree(s);
 	}
 
@@ -8944,16 +8963,16 @@ _XmLGridCellInsertText(XmLGridCell cell,
 	char *s;
 	Widget text;
 
-	if (cell->cell.refValues->type != XmSTRING_CELL ||
-		cell->cell.refValues->editable != True
+	if ((cell->cell.refValues->type != XmSTRING_CELL &&
+         cell->cell.refValues->type != XmICON_CELL)
+        || cell->cell.refValues->editable != True
 	    || g->grid.useTextWidget != True)
-		return;
 	XtVaGetValues(w,
 		XmNtextWidget, &text,
 		NULL);
 	s = 0;
 	if (XmLGridCellIsValueSet(cell) == True)
-		s = CvtXmStringToStr((XmString)cell->cell.value);
+		s = CvtXmStringToStr(XmLGridCellGetString(cell));
 	if (s)
 		{
 		XmTextSetString(text, s);
@@ -10580,14 +10599,14 @@ XmLGridSetVisibleColumnCount(Widget w, int new_num_visible)
 }
 
 static void
-hide_cb(Widget w, XtPointer clientData, XtPointer cb_data)
+HideColumn(Widget w, XtPointer clientData, XtPointer callData)
 {
 	Widget g = (Widget) clientData;
 
     XmLGridHideRightColumn(g);
 }
 static void
-unhide_cb(Widget w, XtPointer clientData, XtPointer cb_data)
+UnhideColumn(Widget w, XtPointer clientData, XtPointer callData)
 {
 	Widget g = (Widget) clientData;
 
@@ -10632,9 +10651,9 @@ CreateHideUnhideButtons(XmLGridWidget g)
                           XmDRAWNB_SMALLARROW,
                           XmDRAWNB_LEFT);
     XtAddCallback(g->grid.hideButton, XmNactivateCallback,
-                  hide_cb, (XtPointer)g);
+                  HideColumn, (XtPointer)g);
     XtAddCallback(g->grid.unhideButton, XmNactivateCallback,
-                  unhide_cb, (XtPointer)g);
+                  UnhideColumn, (XtPointer)g);
 #if 0
     XtOverrideTranslations(g->grid.unhideButton,
                            g->grid.unhideButtonTrans);
@@ -10644,7 +10663,7 @@ CreateHideUnhideButtons(XmLGridWidget g)
 }
 
 static void 
-HideColumn(Widget w, 
+HideAction(Widget w, 
 	   XEvent *event, 
 	   String *params, 
 	   Cardinal *num_params)
@@ -10653,7 +10672,7 @@ HideColumn(Widget w,
 }
 
 static void 
-UnhideColumn(Widget w, 
+UnhideAction(Widget w, 
 	     XEvent *event, 
 	     String *params, 
 	     Cardinal *num_params)

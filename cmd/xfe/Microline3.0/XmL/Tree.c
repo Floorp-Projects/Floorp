@@ -33,7 +33,7 @@ static void Destroy(Widget w);
 static Boolean SetValues(Widget curW, Widget, Widget newW, 
 	ArgList args, Cardinal *nargs);
 static int _PreLayout(XmLGridWidget g, int isVert);
-static int _CellAction(XmLGridCell cell, Widget w,
+static int _TreeCellAction(XmLGridCell cell, Widget w,
 	XmLGridCallbackStruct *cbs);
 static void DrawIconCell(XmLGridCell cell, Widget w,
 	int row, XRectangle *clipRect, XmLGridDrawStruct *ds);
@@ -194,7 +194,7 @@ XmLTreeClassRec xmlTreeClassRec =
 		XmInheritGridGetColumnValue,              /* get column value   */
 		XmInheritGridSetColumnValues,             /* set column values  */
 		_SetCellValuesResize,                     /* set cell vl resize */
-		_CellAction,                              /* cell action        */
+		_TreeCellAction,                          /* cell action        */
 		},
 		{ /* tree_class */
 		0,                                        /* unused             */
@@ -416,7 +416,7 @@ _PreLayout(XmLGridWidget g,
 	}
 
 static int
-_CellAction(XmLGridCell cell,
+_TreeCellAction(XmLGridCell cell,
             Widget w,
             XmLGridCallbackStruct *cbs)
 	{
@@ -459,6 +459,30 @@ _CellAction(XmLGridCell cell,
 				DrawIconCell(cell, w, cbs->row, cbs->clipRect, cbs->drawInfo);
 			else
 				ret = cellActionProc(cell, w, cbs);
+			break;
+		case XmCR_EDIT_BEGIN: /* Fall through */
+		case XmCR_EDIT_INSERT:
+            if (isTreeCell)
+            {
+                int iconOffset;
+				cellValues = cell->cell.refValues;
+				row = (XmLTreeRow)XmLGridGetRow(w, XmCONTENT, cbs->row);
+				icon = (XmLGridCellIcon *)cell->cell.value;
+                iconOffset = 4 + cellValues->leftMargin
+                    + t->tree.levelSpacing * 2 * row->tree.level;
+				if (!icon)
+ 					iconOffset += default_icon_width;
+				else if (icon->pix.pixmap == XmUNSPECIFIED_PIXMAP)
+ 					iconOffset += default_icon_width;
+				else
+					iconOffset += icon->pix.width;
+                cbs->clipRect->x += iconOffset;
+                if (cbs->clipRect->width > iconOffset)
+                    cbs->clipRect->width -= iconOffset;
+                else
+                    cbs->clipRect->width = 0;
+            }
+            ret = cellActionProc(cell, w, cbs);
 			break;
 		case XmCR_PREF_HEIGHT:
 			ret = cellActionProc(cell, w, cbs);
