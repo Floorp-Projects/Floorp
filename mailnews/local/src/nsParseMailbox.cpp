@@ -917,12 +917,14 @@ int nsParseMailMessageState::ParseHeaders ()
     case 'X':
       if (X_MOZILLA_STATUS2_LEN == end - buf &&
         !nsCRT::strncasecmp(X_MOZILLA_STATUS2, buf, end - buf) &&
-        !m_IgnoreXMozillaStatus)
+        !m_IgnoreXMozillaStatus && !m_mozstatus2.length)
         header = &m_mozstatus2;
       else if ( X_MOZILLA_STATUS_LEN == end - buf &&
-        !nsCRT::strncasecmp(X_MOZILLA_STATUS, buf, end - buf) && !m_IgnoreXMozillaStatus)
+        !nsCRT::strncasecmp(X_MOZILLA_STATUS, buf, end - buf) && !m_IgnoreXMozillaStatus
+        && !m_mozstatus.length)
         header = &m_mozstatus;
-      else if (!nsCRT::strncasecmp(HEADER_X_MOZILLA_ACCOUNT_KEY, buf, end - buf))
+      else if (!nsCRT::strncasecmp(HEADER_X_MOZILLA_ACCOUNT_KEY, buf, end - buf)
+        && !m_account_key.length)
         header = &m_account_key;
       // we could very well care what the priority header was when we 
       // remember its value. If so, need to remember it here. Also, 
