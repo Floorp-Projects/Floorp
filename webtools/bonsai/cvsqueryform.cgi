@@ -103,6 +103,9 @@ else {
 # Print out all the Different Modules
 #
 for my $k  (sort( keys( %$::modules ) ) ){
+	if ($k eq $::FORM{module}) { 
+		next; 
+	}
     print "<OPTION value='$k'>$k\n";
 }
 
