@@ -193,7 +193,6 @@ PRInt32               i;
 nsPathPoint           pts[20];
 nsPathPoint           *pp0,*np=0,*pp;
 QBezierCurve          thecurve;
-nsPathIter            *thePathIter;
 nsPathIter::eSegType  curveType;
 
 
@@ -213,8 +212,8 @@ nsPathIter::eSegType  curveType;
 		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
 	}
 
-  thePathIter = new nsPathIter(pp0,aNumPts);
-	while ( thePathIter->NextSeg(thecurve,curveType) ) {
+  nsPathIter thePathIter (pp0,aNumPts);
+	while ( thePathIter.NextSeg(thecurve,curveType) ) {
     // draw the curve we found
     if(nsPathIter::eLINE == curveType){
       DrawStdLine(NSToCoordRound(thecurve.mAnc1.x),NSToCoordRound(thecurve.mAnc1.y),NSToCoordRound(thecurve.mAnc2.x),NSToCoordRound(thecurve.mAnc2.y));
@@ -225,7 +224,7 @@ nsPathIter::eSegType  curveType;
 
   // Release temporary storage if necessary
   if (pp0 != pts)
-    delete pp0;
+    delete [] pp0;
 
   return NS_OK;
 }
@@ -244,7 +243,6 @@ PRInt32               i;
 nsPathPoint           pts[20];
 nsPathPoint           *pp0,*np=0,*pp;
 QBezierCurve          thecurve;
-nsPathIter            *thePathIter;
 nsPathIter::eSegType  curveType;
 nsPoint               thePath[MAXPATHSIZE];
 PRInt16               curPoint=0;
@@ -265,8 +263,8 @@ PRInt16               curPoint=0;
 		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
 	}
 
-  thePathIter = new nsPathIter(pp0,aNumPts);
-	while ( thePathIter->NextSeg(thecurve,curveType) ) {
+  nsPathIter thePathIter (pp0,aNumPts);
+	while ( thePathIter.NextSeg(thecurve,curveType) ) {
     // build a polygon with the points
     if(nsPathIter::eLINE == curveType){
       thePath[curPoint++].MoveTo(NSToCoordRound(thecurve.mAnc1.x),NSToCoordRound(thecurve.mAnc1.y));
@@ -280,7 +278,7 @@ PRInt16               curPoint=0;
 
   // Release temporary storage if necessary
   if (pp0 != pts)
-    delete pp0;
+    delete [] pp0;
 
   return NS_OK;
 }
@@ -371,6 +369,9 @@ const nsPoint *np;
 
   delete[] ind;
   delete[] mActive;
+
+  if (pp0 != pts)
+    delete [] pp0;
 
   return NS_OK;
 }
