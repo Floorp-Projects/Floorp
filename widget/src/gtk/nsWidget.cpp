@@ -1054,9 +1054,9 @@ nsWidget::InstallButtonReleaseSignal(GtkWidget * aWidget)
 /* virtual */ void 
 nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 {
-//   static int i = 0;
-//   printf("nsWidget::OnMotionNotifySignal(%d,%p,%d,%d)\n",
-// 		 i++,this,(int) aGdkMotionEvent->x,(int) aGdkMotionEvent->y);
+//   static int x=0;
+//   printf("%4d nsWidget::OnMotionNotifySignal(%p,%d,%d)\n",
+//  		 x++,this,(int) aGdkMotionEvent->x,(int) aGdkMotionEvent->y);
 
   nsMouseEvent event;
 
@@ -1131,7 +1131,7 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
 /* virtual */ void
 nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 {
-//   printf("nsWidget::OnButtonPressSignal(%p)\n",this);
+  //  printf("nsWidget::OnButtonPressSignal(%p)\n",this);
 
   nsMouseEvent event;
   PRUint32 eventType = 0;
@@ -1208,7 +1208,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 /* virtual */ void
 nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 {
-//   printf("nsWidget::OnButtonReleaseSignal(%p)\n",this);
+  //  printf("nsWidget::OnButtonReleaseSignal(%p)\n",this);
 
   nsMouseEvent event;
   PRUint32 eventType = 0;
@@ -1308,6 +1308,32 @@ nsWidget::DropEvent(GtkWidget * aWidget,
   NS_ASSERTION( nsnull != aEventWindow, "event window is null");
 
 #if 0
+  static int count = 0;
+
+  if (GTK_IS_LAYOUT(aWidget))
+  {
+	GtkLayout * layout = GTK_LAYOUT(aWidget);
+
+	printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p,bin_win=%p)\n",
+		   count++,
+		   this,
+		   aWidget,
+		   aEventWindow,
+		   aWidget->window,
+		   layout->bin_window);
+  }
+  else
+  {
+	printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p)\n",
+		   count++,
+		   this,
+		   aWidget,
+		   aEventWindow,
+		   aWidget->window);
+  }
+#endif
+
+
   // For gtklayout widgets, we dont want to handle events
   // that occur in the sub windows.  Check the window member
   // of the GdkEvent, if it is not the gtklayout's bin_window,
@@ -1321,7 +1347,6 @@ nsWidget::DropEvent(GtkWidget * aWidget,
 	  return PR_TRUE;
 	}
   }
-#endif
 
   return PR_FALSE;
 }
@@ -1404,6 +1429,8 @@ nsWidget::ButtonPressSignal(GtkWidget *      aWidget,
 							GdkEventButton * aGdkButtonEvent, 
 							gpointer         aData)
 {
+  //  printf("nsWidget::ButtonPressSignal(%p)\n",aData);
+
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   NS_ASSERTION( nsnull != aGdkButtonEvent, "event is null");
 
@@ -1426,6 +1453,8 @@ nsWidget::ButtonReleaseSignal(GtkWidget *      aWidget,
 							GdkEventButton * aGdkButtonEvent, 
 							gpointer         aData)
 {
+  //  printf("nsWidget::ButtonReleaseSignal(%p)\n",aData);
+
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   NS_ASSERTION( nsnull != aGdkButtonEvent, "event is null");
 

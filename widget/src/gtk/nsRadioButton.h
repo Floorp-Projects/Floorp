@@ -57,6 +57,8 @@ public:
 
 protected:
   NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
+  virtual void InitCallbacks(char * aName = nsnull);
+
   GtkWidget *mLabel;
   GtkWidget *mRadioButton;
 
