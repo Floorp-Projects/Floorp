@@ -40,7 +40,8 @@ extern "C" char * strsignal(int);
 
 static char _progname[1024] = "huh?";
 
-#ifdef DEBUG_ramiro
+//#ifdef DEBUG_ramiro
+#if 0
 #define CRAWL_STACK_ON_SIGSEGV
 #endif // DEBUG_ramiro
  
