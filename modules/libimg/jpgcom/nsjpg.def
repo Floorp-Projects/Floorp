@@ -2,7 +2,7 @@
 ; temp def file for nsjpg dll
 ;
 
-LIBRARY		nsjpg3250.dll
+LIBRARY		nsjpg.dll
 DESCRIPTION  	'test dll'
 
 EXPORTS		

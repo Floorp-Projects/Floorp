@@ -19,17 +19,15 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.c Colormap and colorspace utilities.
  *             
- *   $Id: il_util.cpp,v 3.3 1999/10/21 22:16:59 pnunn%netscape.com Exp $
+ *   $Id: il_util.cpp,v 3.4 1999/10/22 21:04:28 pnunn%netscape.com Exp $
  */
 
 
-//#include "xpcompat.h"
 #include "nsCRT.h"
 #include "ntypes.h"             /* typedefs for commonly used Netscape data
                                    structures. */
 #include "prtypes.h"
 #include "prmem.h"
-
 
 #include "il_util.h"            /* Public API. */
 #include "il_utilp.h"           /* Private header file. */
@@ -94,24 +92,24 @@ il_NewColorCube(uint32 red_size, uint32 green_size, uint32 blue_size,
         for (j = 0; j < LOOKUP_TABLE_GREEN; j++)
             for (k = 0; k < LOOKUP_TABLE_BLUE; k++) {
                 /* Scale indices down to cube coordinates. */
-                r = CUBE_SCALE(i, dcrm1, trm1, dtrm1);
-                g = CUBE_SCALE(j, dcgm1, tgm1, dtgm1);
-                b = CUBE_SCALE(k, dcbm1, tbm1, dtbm1);
+                r = (uint8) (CUBE_SCALE(i, dcrm1, trm1, dtrm1));
+                g = (uint8) (CUBE_SCALE(j, dcgm1, tgm1, dtgm1));
+                b = (uint8) (CUBE_SCALE(k, dcbm1, tbm1, dtbm1));
 
                 /* Compute the colormap index. */
-                map_index = r * red_offset + g * green_offset + b +
-                    base_offset;
+                map_index =(uint8)( r * red_offset + g * green_offset + b +
+                    base_offset);
 
                 /* Fill out the colormap entry for this index if we haven't
                    already done so. */
                 if (!done[map_index]) {
                     /* Scale from cube coordinates up to 8-bit RGB values. */
                     map[map_index].red =
-                        CUBE_SCALE(r, dmax_val, crm1, dcrm1);
+                        (uint8) (CUBE_SCALE(r, dmax_val, crm1, dcrm1));
                     map[map_index].green = 
-                        CUBE_SCALE(g, dmax_val, cgm1, dcgm1);
+                        (uint8) (CUBE_SCALE(g, dmax_val, cgm1, dcgm1));
                     map[map_index].blue =
-                        CUBE_SCALE(b, dmax_val, cbm1, dcbm1);
+                        (uint8) (CUBE_SCALE(b, dmax_val, cbm1, dcbm1));
 
                     /* Mark as done. */
                     done[map_index] = 1;
@@ -297,7 +295,7 @@ IL_AddColorToColorMap(IL_ColorMap *cmap, IL_IRGB *new_color)
     map_entry->green = new_color->green;
     map_entry->blue = new_color->blue;
 
-    new_color->index = num_colors;
+    new_color->index = (PRUint8) num_colors;
 
     cmap->num_colors++;
 
