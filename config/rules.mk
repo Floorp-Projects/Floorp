@@ -194,6 +194,9 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 
+ifdef MOZ_PROFILE
+PDBFILE=NONE
+else
 ifdef LIBRARY_NAME
 PDBFILE=$(LIBRARY_NAME).pdb
 ifdef MOZ_DEBUG
@@ -204,6 +207,7 @@ PDBFILE=$*.pdb
 ifdef MOZ_DEBUG
 MAPFILE=$*.map
 CODFILE=$*.cod
+endif
 endif
 endif
 
