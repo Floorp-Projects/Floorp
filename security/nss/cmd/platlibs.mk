@@ -179,22 +179,11 @@ ifeq ($(OS_ARCH), AIX)
 EXTRA_SHARED_LIBS += -brtl 
 endif
 
-# On Linux we must use the -rpath-link option to tell the linker
-# where to find libsoftokn3.so, an implicit dependency of libnss3.so.
-ifeq ($(OS_ARCH), Linux) 
+# If GNU ld is used, we must use the -rpath-link option to tell
+# the linker where to find libsoftokn3.so, an implicit dependency
+# of libnss3.so.
+ifeq (,$(filter-out BSD_OS FreeBSD Linux NetBSD, $(OS_ARCH)))
 EXTRA_SHARED_LIBS += -Wl,-rpath-link,$(DIST)/lib
-endif
-
-ifeq ($(OS_ARCH), BSD_OS) 
-EXTRA_SHARED_LIBS += -Wl,-rpath-link,$(DIST)/lib
-endif
-
-ifeq ($(OS_ARCH), FreeBSD)
-EXTRA_SHARED_LIBS += -Wl,-rpath-link,$(DIST)/lib
-endif
-
-ifeq ($(OS_ARCH), Darwin)
-EXTRA_SHARED_LIBS += -dylib_file @executable_path/libsoftokn3.dylib:$(DIST)/lib/libsoftokn3.dylib
 endif
 
 ifeq ($(OS_ARCH), SunOS)
@@ -203,6 +192,10 @@ ifdef GCC_USE_GNU_LD
 EXTRA_SHARED_LIBS += -Wl,-rpath-link,$(DIST)/lib
 endif
 endif
+endif
+
+ifeq ($(OS_ARCH), Darwin)
+EXTRA_SHARED_LIBS += -dylib_file @executable_path/libsoftokn3.dylib:$(DIST)/lib/libsoftokn3.dylib
 endif
 
 
