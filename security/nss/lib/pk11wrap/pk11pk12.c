@@ -191,7 +191,7 @@ PK11_ImportDERPrivateKeyInfo(PK11SlotInfo *slot, SECItem *derPKI,
 	SECItem *nickname, SECItem *publicValue, PRBool isPerm, 
 	PRBool isPrivate, unsigned int keyUsage, void *wincx) 
 {
-    return PK11_ImportDERPrivateKeyAndReturnKey(slot, derPKI,
+    return PK11_ImportDERPrivateKeyInfoAndReturnKey(slot, derPKI,
 	nickname, publicValue, isPerm, isPrivate, keyUsage, NULL, wincx);
 }
 
