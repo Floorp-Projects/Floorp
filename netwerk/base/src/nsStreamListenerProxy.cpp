@@ -80,7 +80,10 @@ nsresult
 nsStreamListenerProxy::GetListener(nsIStreamListener **listener)
 {
     NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
-    return CallQueryInterface(mObserverProxy->Observer(), listener);
+    nsIRequestObserver* obs = mObserverProxy->Observer();
+    if (!obs)
+        return NS_ERROR_NULL_POINTER;
+    return CallQueryInterface(obs, listener);
 }
 
 PRUint32
