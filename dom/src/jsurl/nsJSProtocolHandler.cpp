@@ -120,7 +120,7 @@ public:
         // The event sink must be a script context owner or we fail.
         nsIScriptContextOwner* owner;
         rv = mEventSinkGetter->GetEventSink(mVerb,
-                                            nsCOMTypeInfo<nsIScriptContextOwner>::GetIID(),
+                                            NS_GET_IID(nsIScriptContextOwner),
                                             (nsISupports**)&owner);
         if (NS_FAILED(rv))
             return rv;
@@ -170,7 +170,7 @@ protected:
     PRUint32            mReadCursor;
 };
 
-NS_IMPL_ISUPPORTS(nsJSInputStream, nsCOMTypeInfo<nsIInputStream>::GetIID());
+NS_IMPL_ISUPPORTS(nsJSInputStream, NS_GET_IID(nsIInputStream));
 
 nsresult
 NS_NewJSInputStream(const char* verb, nsIURI* uri,
@@ -208,7 +208,7 @@ nsJSProtocolHandler::~nsJSProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsJSProtocolHandler, nsCOMTypeInfo<nsIProtocolHandler>::GetIID());
+NS_IMPL_ISUPPORTS(nsJSProtocolHandler, NS_GET_IID(nsIProtocolHandler));
 
 NS_METHOD
 nsJSProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -276,7 +276,7 @@ nsJSProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
         rv = aBaseURI->Clone(&url);
     } else {
         rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
-                                                nsCOMTypeInfo<nsIURI>::GetIID(),
+                                                NS_GET_IID(nsIURI),
                                                 (void**)&url);
     }
     if (NS_FAILED(rv))
