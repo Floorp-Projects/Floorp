@@ -25,7 +25,9 @@ function goDoCommand()
 function Stop()
 {
 	//dump("Stop()\n")
-    gSubscribableServer.stopPopulating(msgWindow);
+    if (gSubscribableServer) {
+        gSubscribableServer.stopPopulating(msgWindow);
+    }
 }
 
 var Bundle = srGetStrBundle("chrome://messenger/locale/subscribe.properties");
