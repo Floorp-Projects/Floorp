@@ -880,7 +880,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 
 		nsresult rv;
         nsINNTPNewsgroup *newsgroup;
-        rv = m_newsHost->GetNewsGroupAndNumberOfID(m_path, &newsgroup, &number);
+        rv = m_newsHost->GetNewsgroupAndNumberOfID(m_path,
+                                                   &newsgroup,
+                                                   &number);
 		if (NS_SUCCEEDED(rv) && newsgroup && number)
 		  {
 			m_articleNumber = number;
@@ -1755,10 +1757,13 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 		rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
 		if (NS_SUCCEEDED(rv) && xactive)
 		{
+          char *groupName;
           nsresult rv;
-          rv = m_newsHost->GetFirstGroupNeedingExtraInfo(&m_newsgroup);
+          rv = m_newsHost->GetFirstGroupNeedingExtraInfo(&groupName);
 		  if (NS_SUCCEEDED(rv) && m_newsgroup)
 		  {
+                rv = m_newsHost->FindGroup(groupName, &m_newsgroup);
+                PR_ASSERT(NS_SUCCEEEDED(rv));
 				m_nextState = NNTP_LIST_XACTIVE;
 #ifdef DEBUG_bienvenu1
 				PR_LogPrint("listing xactive for %s\n", m_groupName);
@@ -3073,7 +3078,11 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
               NS_SUCCEEDED(rv) && xactive)
 			{
                 nsINNTPNewsgroup* old_newsgroup = m_newsgroup;
-                m_newsHost->GetFirstGroupNeedingExtraInfo(&m_newsgroup);
+                char *groupName;
+                
+                m_newsHost->GetFirstGroupNeedingExtraInfo(&groupName);
+                m_newsHost->FindGroup(groupName, &m_newsgroup);
+                // see if we got a different group
                 if (old_newsgroup && m_newsgroup &&
                     old_newsgroup != m_newsgroup)
                 /* make sure we're not stuck on the same group */
