@@ -314,6 +314,7 @@ nsFileChannel::AsyncRead(nsIStreamListener *listener,
     if (mFileTransport)
         return NS_ERROR_IN_PROGRESS;
 
+    NS_ASSERTION(listener, "null listener");
     mRealListener = listener;
     nsCOMPtr<nsIStreamListener> tempListener = this;
 
@@ -630,7 +631,11 @@ nsFileChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* context
                  "wrong thread calling this routine");
 #endif
     NS_ASSERTION(mRealListener, "No listener...");
-    return mRealListener->OnStartRequest(this, context);
+    nsresult rv = NS_OK;
+    if (mRealListener) {
+        rv = mRealListener->OnStartRequest(this, context);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -642,10 +647,11 @@ nsFileChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
                  "wrong thread calling this routine");
 #endif
 
-    nsresult rv;
-
-    rv = mRealListener->OnStopRequest(this, context, aStatus, aStatusArg);
-
+    nsresult rv = NS_OK;
+    if (mRealListener) {
+        rv = mRealListener->OnStopRequest(this, context, aStatus, aStatusArg);
+    }
+    
     if (mLoadGroup) {
         if (NS_SUCCEEDED(rv)) {
             mLoadGroup->RemoveChannel(this, context, aStatus, aStatusArg);
@@ -668,10 +674,11 @@ nsFileChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* contex
                  "wrong thread calling this routine");
 #endif
 
-    nsresult rv;
-    rv = mRealListener->OnDataAvailable(this, context, aIStream,
-                                        aSourceOffset, aLength);
-
+    nsresult rv = NS_OK;
+    if (mRealListener) {
+        rv = mRealListener->OnDataAvailable(this, context, aIStream,
+                                            aSourceOffset, aLength);
+    }
     //
     // If the connection is being aborted cancel the transport.  This will
     // insure that the transport will go away even if it is blocked waiting
