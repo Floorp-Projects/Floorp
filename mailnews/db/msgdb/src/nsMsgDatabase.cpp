@@ -519,7 +519,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 
 			if (m_mdbEnv)
 				m_mdbEnv->SetAutoClear(PR_TRUE);
-			m_dbName = nsCRT::strdup(dbName);
+			m_dbName = dbName;
 #if defined(XP_PC) || defined(XP_MAC)
 			UnixToNative(nativeFileName);
 #endif
