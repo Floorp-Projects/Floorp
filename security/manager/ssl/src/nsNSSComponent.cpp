@@ -34,6 +34,7 @@
 #include "nsIStringBundle.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsIProxyObjectManager.h"
 #include "nsINSSDialogs.h"
 #include "prlog.h"
 
@@ -499,13 +500,23 @@ getNSSDialogs(void **_result, REFNSIID aIID)
 {
   nsresult rv;
   nsISupports *result;
+  nsCOMPtr<nsISupports> proxiedResult;
 
   rv = nsServiceManager::GetService(kNSSDialogsContractId, 
                                     NS_GET_IID(nsINSSDialogs),
                                     &result);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) 
+    return rv;
 
-  rv = result->QueryInterface(aIID, _result);
+  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+  if (!proxyman)
+    return NS_ERROR_FAILURE;
+ 
+  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                              aIID, result, PROXY_SYNC,
+                              getter_AddRefs(proxiedResult));
+
+  rv = proxiedResult->QueryInterface(aIID, _result);
 
   NS_RELEASE(result);
 
