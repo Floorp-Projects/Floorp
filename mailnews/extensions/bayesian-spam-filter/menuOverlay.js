@@ -56,21 +56,21 @@ function analyze(aMessage, aNextFunction)
     }
 
     callback.prototype = 
-    {
-	onMessageScored: function processNext(aScore)
-	{
-	    if (aMessage) {
-		//if (aScore == -1) debugger;
-		if (aScore == 0) {
-		    aMessage.label = 3;
-		}
-		else if (aScore == 1) {
-		    aMessage.label = 1;
-		}
-	    }
-	    aNextFunction();
-	}
-    };
+        {
+            onMessageScored: function processNext(aScore)
+            {
+                if (aMessage) {
+                    //if (aScore == -1) debugger;
+                    if (aScore == 0) {
+                        aMessage.setStringProperty("score", "0");
+                    }
+                    else if (aScore == 1) {
+                        aMessage.setStringProperty("score", "100");
+                    }
+                }
+                aNextFunction();
+            }
+        };
 
 
     // Pffft, jumping through hoops here.
@@ -140,7 +140,7 @@ function analyzeMessages()
     processNext();
 }
 
-function mark(aMessage, aSpam, aNextFunction)
+function markMessage(aMessage, aSpam, aNextFunction)
 {
     // Pffft, jumping through hoops here.
     var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
@@ -148,29 +148,29 @@ function mark(aMessage, aSpam, aNextFunction)
     var action;
     if (aSpam) {
         action = kUnknownToSpam;
-        if (aMessage.label == 1) {
+        if (aMessage.getStringProperty("score") == "100") {
             // Marking a spam message as spam does nothing
             aNextFunction();
             return;
         }
-        if (aMessage.label == 3) {
+        if (aMessage.getStringProperty("score") == "0") {
             // Marking a non-spam message as spam
             action = kNoSpamToSpam;
         }
-        aMessage.label = 1;
+        aMessage.setStringProperty("score","100");
     }
     else {
         action = kUnknownToNoSpam;
-        if (aMessage.label == 3) {
+        if (aMessage.getStringProperty("score") == "0") {
             // Marking a non-spam message as non-spam does nothing
             aNextFunction();
             return;
         }
-        if (aMessage.label == 1) {
+        if (aMessage.getStringProperty("score") == "100") {
             // Marking a spam message as non-spam
             action = kSpamToNoSpam;
         }
-        aMessage.label = 3;
+        aMessage.setStringProperty("score", "0");
     }
     gJunkmailComponent.mark(messageURL, action, aNextFunction);
 }
@@ -182,7 +182,7 @@ function markFolder(aSpam)
         if (messages.hasMoreElements()) {
             // Pffft, jumping through hoops here.
             var message = messages.getNext().QueryInterface(nsIMsgDBHdr);
-            mark(message, aSpam, processNext);
+            markMessage(message, aSpam, processNext);
         }
         else {
             gJunkmailComponent.batchUpdate = false;
@@ -206,7 +206,7 @@ function markMessages(aSpam)
             var message = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
 
             ++counter;
-            mark(message, aSpam, processNext);
+            markMessage(message, aSpam, processNext);
         }
         else {
             gJunkmailComponent.batchUpdate = false;
