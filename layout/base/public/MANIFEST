@@ -6,6 +6,7 @@ nsIContent.h
 nsIDocument.h
 nsIDocumentContainer.h
 nsIDocumentObserver.h
+nsIDOMSelection.h
 nsIFocusTracker.h
 nsIFrame.h
 nsIFrameUtil.h

@@ -15,6 +15,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+/* NOTE This should be renamed asap to nsIFrameSelection
+ * -- it's not a general class, but specific to frames.
+ * nsIDOMSelection is the more general selection interface.
+ */
+
 #ifndef nsISelection_h___
 #define nsISelection_h___
 

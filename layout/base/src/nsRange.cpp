@@ -954,7 +954,7 @@ nsresult nsRange::DeleteContents()
         return NS_ERROR_UNEXPECTED;
       }
       // delete the text
-      res = textNode->DeleteData(mStartOffset, mEndOffset);
+      res = textNode->DeleteData(mStartOffset, mEndOffset - mStartOffset);
       if (!NS_SUCCEEDED(res)) 
       {
         NS_NOTREACHED("nsRange::DeleteContents");
@@ -964,6 +964,10 @@ nsresult nsRange::DeleteContents()
         return res;
       }
       NS_IF_RELEASE(textNode);
+
+      // collapse range endpoints; gravity should do this, but just in case ...
+      mEndOffset = mStartOffset;
+
       return NS_OK;
     }
   } 
@@ -1009,6 +1013,12 @@ nsresult nsRange::DeleteContents()
   
   NS_IF_RELEASE(cStart);
   NS_IF_RELEASE(cEnd);
+
+  // Collapse to start point:
+  NS_IF_RELEASE(mEndParent);
+  mEndParent = mStartParent;
+  mEndOffset = mStartOffset;
+
   return NS_OK;
 }
 

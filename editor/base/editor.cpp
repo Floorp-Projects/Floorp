@@ -35,6 +35,7 @@
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
 #include "nsISelection.h"
+#include "nsIDOMSelection.h"
 #include "nsICollection.h"
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
@@ -59,6 +60,7 @@ static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
 static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMElementIID,       NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,          NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMSelectionIID,     NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kIDOMRangeIID,         NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,      NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
@@ -463,9 +465,7 @@ nsEditor::Commit(PRBool aCtrlKey)
 }
  
 
- 
 //END nsIEditorInterfaces
-
 
 
 //BEGIN nsEditor Private methods
@@ -717,6 +717,8 @@ nsresult nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aParent,
 nsresult 
 nsEditor::InsertText(const nsString& aStringToInsert)
 {
+  DeleteSelection(eLTR);
+
   InsertTextTxn *txn;
   nsresult result = CreateTxnForInsertText(aStringToInsert, &txn);
   if (NS_SUCCEEDED(result))  {
@@ -759,7 +761,8 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
               result = TransactionFactory::GetNewTransaction(kInsertTextTxnIID, (EditTxn **)aTxn);
               if (nsnull!=*aTxn)
               {
-                result = (*aTxn)->Init(nodeAsText, offset, aStringToInsert);
+                result = (*aTxn)->Init(nodeAsText, offset, aStringToInsert,
+                                       mPresShell);
               }
               else
                 result = NS_ERROR_OUT_OF_MEMORY;
@@ -888,11 +891,29 @@ nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
 nsresult 
 nsEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
+#if SELECTION_DOESNT_GO_THROUGH_RANGE
   EditAggregateTxn *txn;
   nsresult result = CreateTxnForDeleteSelection(aDir, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
+#else
+  // XXX Warning, this should be moved to a transaction since
+  // calling it this way means undo won't work.
+  nsCOMPtr<nsISelection> frameSelection;
+  nsresult result = mPresShell->GetSelection(getter_AddRefs(frameSelection));
+  if (!NS_SUCCEEDED(result))
+    return result;
+
+  nsCOMPtr<nsIDOMSelection> domSelection;
+  result = frameSelection->QueryInterface(kIDOMSelectionIID,
+                                          getter_AddRefs(domSelection));
+  if (!NS_SUCCEEDED(result))
+    return result;
+
+  result = domSelection->DeleteFromDocument();
+#endif
+
   return result;
 }
 

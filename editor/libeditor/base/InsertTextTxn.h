@@ -28,6 +28,8 @@
 0x93276f00, 0xab2c, 0x11d2, \
 {0x8f, 0xb4, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc} }
 
+class nsIPresShell;
+
 /**
  * A transaction that changes an attribute of a content node. 
  * This transaction covers add, remove, and change attribute.
@@ -40,7 +42,8 @@ public:
 	
   virtual nsresult Init(nsIDOMCharacterData *aElement,
                         PRUint32 aOffset,
-                        const nsString& aStringToInsert);
+                        const nsString& aStringToInsert,
+                        nsIPresShell* aPresShell);
 
 private:
 	
@@ -84,6 +87,9 @@ protected:
 
   /** the text to insert into mElement at mOffset */
   nsString mStringToInsert;
+
+  /** the presentation shell, which we'll need to get the selection */
+  nsIPresShell* mPresShell;
 
   friend class TransactionFactory;
 

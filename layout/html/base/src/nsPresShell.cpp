@@ -1098,6 +1098,9 @@ PresShell::ContentChanged(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentChanged(mPresContext, aContent, aSubContent);
   ExitReflowLock();
+  if (mSelection)
+    mSelection->ResetSelection(this, mRootFrame);
+
   return rv;
 }
 
