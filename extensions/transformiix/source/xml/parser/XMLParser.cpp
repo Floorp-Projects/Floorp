@@ -34,7 +34,7 @@
  *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
  *       were not working on Windows properly
  *
- * $Id: XMLParser.cpp,v 1.8 2000/06/27 10:40:57 axel%pike.org Exp $
+ * $Id: XMLParser.cpp,v 1.9 2000/07/25 15:12:04 axel%pike.org Exp $
  */
 
 #include "XMLParser.h"
@@ -168,9 +168,6 @@ void charData(void* userData, const XML_Char* s, int len)
     Node* prevSib = ps->currentNode->getLastChild();
     if (prevSib && prevSib->getNodeType()==Node::TEXT_NODE){
       ((CharacterData*)prevSib)->appendData(data);
-#ifdef DEBUG
-      cout<< "Another abundant text object spared?" << endl;
-#endif
     } else {
       ps->currentNode->appendChild(ps->document->createTextNode(data));
     };
