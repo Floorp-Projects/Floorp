@@ -1453,19 +1453,20 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
     {
       if (insertAfter)
       {
+        // New cell isn't first in row,
+        // so stop after we find the cell just before new cell's column
+        if ((startColIndex2 + actualColSpan2) == startColIndex)
+          break;
+
         // If cell found is AFTER desired new cell colum,
         //  we have multiple cells with rowspan > 1 that
         //  prevented us from finding a cell to insert after...
-        if (startColIndex2 > aColIndex)
+        if (startColIndex2 > startColIndex)
         {
           // ... so instead insert before the cell we found
           insertAfter = PR_FALSE;
           break;
         }
-        // New cell isn't first in row,
-        // so stop after we find the last cell before new cell's column
-        if ((startColIndex2 + actualColSpan2) >= startColIndex)
-          break;
       }
       else
       {
