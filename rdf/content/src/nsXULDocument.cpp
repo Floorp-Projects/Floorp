@@ -434,7 +434,7 @@ public:
     NS_IMETHOD ContentChanged(nsIContent* aContent,
                               nsISupports* aSubContent);
 
-    NS_IMETHOD ContentStateChanged(nsIContent* aContent);
+    NS_IMETHOD ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2);
 
     NS_IMETHOD AttributeChanged(nsIContent* aChild,
                                 nsIAtom* aAttribute,
@@ -1557,12 +1557,12 @@ XULDocumentImpl::ContentChanged(nsIContent* aContent,
 }
 
 NS_IMETHODIMP 
-XULDocumentImpl::ContentStateChanged(nsIContent* aContent)
+XULDocumentImpl::ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2)
 {
     PRInt32 count = mObservers.Count();
     for (PRInt32 i = 0; i < count; i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-        observer->ContentStateChanged(this, aContent);
+        observer->ContentStatesChanged(this, aContent1, aContent2);
     }
     return NS_OK;
 }
