@@ -56,29 +56,27 @@ function HistoryInit() {
         gHistoryTree.selectItem(children.firstChild);
     gHistoryTree.focus();
 
-    dump("Updating sort..\n");
     // do a sort
     RefreshSort();
 }
 
 function updateHistoryCommands()
 {
-    dump("Updating history commands..\n");
     goUpdateCommand("cmd_deleteByHostname");
     goUpdateCommand("cmd_deleteByDomain");
 }
 
 function historyOnSelect(event)
 {
-    dump("History selection has changed..\n");
     // every time selection changes, save the last hostname
     gLastHostname = "";
     gLastDomain = "";
+    var match;
     var selection = gHistoryTree.selectedItems;
     if (selection && selection.length > 0) {
         var url = selection[0].id;
         // matches scheme://(hostname)...
-        var match = url.match(/.*:\/\/([^\/:]*)/);
+        match = url.match(/.*:\/\/([^\/:]*)/);
         
         if (match && match.length>1)
             gLastHostname = match[1];
@@ -86,7 +84,7 @@ function historyOnSelect(event)
 
     if (gLastHostname) {
         // matches the last foo.bar in foo.bar or baz.foo.bar
-        var match = gLastHostname.match(/([^.]+\.[^.]+$)/);
+        match = gLastHostname.match(/([^.]+\.[^.]+$)/);
         if (match)
             gLastDomain = match[1];
     }
@@ -120,7 +118,6 @@ nsHistoryController.prototype =
         var text;
         switch(command) {
         case "cmd_deleteByHostname":
-            dump("Updating cmd_deleteByHostname..\n");
             if (gLastHostname) {
                 stringId = "deleteHost";
                 enabled = true;
@@ -130,7 +127,6 @@ nsHistoryController.prototype =
             text =
                 gHistoryBundle.stringBundle.formatStringFromName(stringId,
                                                                  [ gLastHostname ], 1);
-            dump("Setting value to " + text + "\n");
             gDeleteByHostname.setAttribute("value", text);
             
             break;
