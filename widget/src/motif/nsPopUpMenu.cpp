@@ -66,7 +66,7 @@ NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
   mParent = aParent;
   NS_ADDREF(mParent);
 
-  Widget parentWidget = mParent->GetNativeData(NS_NATIVE_WINDOW);
+  Widget parentWidget = (Widget) mParent->GetNativeData(NS_NATIVE_WINDOW);
 
   mMenu = XmCreatePopupMenu(parentWidget, "_popup", NULL, 0);
     
