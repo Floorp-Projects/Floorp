@@ -56,6 +56,7 @@
 #include "nsWidgetsCID.h"
 
 #include "nsIHTMLEditor.h"
+#include "nsIEditorMailSupport.h"
 #include "nsEditorCID.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -105,6 +106,9 @@ static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
 
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
+
+nsAutoString kTextControl_Wrap_Soft = "SOFT";
+nsAutoString kTextControl_Wrap_Off  = "OFF";
 
 
 /************************************** MODULE NOTES ***********************************
@@ -255,6 +259,40 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
 
   // this will be a leak -- NS_IF_RELEASE(mDummyFrame);
 }
+
+NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+                                             nsGUIEvent* aEvent,
+                                             nsEventStatus& aEventStatus)
+{
+  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+    return NS_OK;
+  }
+
+  aEventStatus = nsEventStatus_eConsumeDoDefault;   // this is the default
+  
+  switch (aEvent->message) {
+     case NS_MOUSE_LEFT_CLICK:
+        MouseClicked(&aPresContext);
+     break;
+
+	   case NS_KEY_PRESS:
+	    if (NS_KEY_EVENT == aEvent->eventStructType) {
+	      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+	      if (NS_VK_RETURN == keyEvent->keyCode) 
+        {
+	        EnterPressed(aPresContext);
+          aEventStatus = nsEventStatus_eConsumeNoDefault;
+	      }
+	      else if (NS_VK_SPACE == keyEvent->keyCode) 
+        {
+	        MouseClicked(&aPresContext);
+	      }
+	    }
+	    break;
+  }
+  return NS_OK;
+}
+
 
 void
 nsGfxTextControlFrame::EnterPressed(nsIPresContext& aPresContext) 
@@ -562,13 +600,31 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
   }
 }
 
+//XXX: this needs to be fixed for HTML output
 void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
 {
   aValue = "";  // initialize out param
   
-  if (PR_TRUE==IsInitialized()) {
+  if (PR_TRUE==IsInitialized()) 
+  {
     nsString format ("text/plain");
-    mEditor->OutputToString(aValue, format, nsIEditor::EditorOutputNoDoctype);
+    PRUint32 flags = 0;
+
+    if (PR_TRUE==IsPlainTextControl()) {
+      flags |= nsIEditor::EditorOutputNoDoctype;
+    }
+
+    nsString wrap;
+    nsresult result = GetWrapProperty(wrap);
+    if (NS_CONTENT_ATTR_NOT_THERE != result) 
+    {
+      if (kTextControl_Wrap_Soft.EqualsIgnoreCase(wrap))
+      {
+        flags |= nsIEditor::EditorOutputFormatted;
+      }
+    }
+
+    mEditor->OutputToString(aValue, format, flags);
   }
 }     
 
@@ -1113,16 +1169,20 @@ nsGfxTextControlFrame::InstallEditor()
     if (IsPasswordTextControl())
       editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
       
+    // initialize the editor
     result = mEditor->Init(mDoc, presShell, editorFlags);
-		if (NS_SUCCEEDED(result)) {
-			mEditor->PostCreate();
-		}
+    // set data from the text control into the editor
     if (NS_SUCCEEDED(result)) {
       result = InitializeTextControl(presShell, mDoc);
     }
+    // install our own event handlers before the editor's event handlers
     if (NS_SUCCEEDED(result)) {
       result = InstallEventListeners();
     }
+    // finish editor initialization, including event handler installation
+		if (NS_SUCCEEDED(result)) {
+			mEditor->PostCreate();
+		}
   }
   return result;
 }
@@ -1211,9 +1271,9 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     if (!presContext) { return NS_ERROR_NULL_POINTER; }
 
     /* set all style that propogates from the text control to its content
-	 * into the presContext for the webshell.
+  	 * into the presContext for the webshell.
      * what I would prefer to do is hand the webshell my own 
-	 * pres context at creation, rather than having it create its own.
+     * pres context at creation, rather than having it create its own.
      */
 
     nsFont font(presContext->GetDefaultFixedFontDeprecated()); 
@@ -1233,7 +1293,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     presContext->SetDefaultBackgroundImage(controlColor->mBackgroundImage);
 
     /* HACK:
-	 * since I don't yet have a hook for setting info on the pres context before style is
+     * since I don't yet have a hook for setting info on the pres context before style is
      * resolved, I need to call remap style on the root frame's style context.
      * The above code for setting presContext data should happen on a presContext that
      * I create and pass into the webshell, rather than having the webshell create its own
@@ -1243,7 +1303,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     if (NS_FAILED(result)) { return result; }
     if (nsnull==sc) { return NS_ERROR_NULL_POINTER; }
     sc->RemapStyle(presContext);
-	// end HACK
+	  // end HACK
 
     // now that the style context is initialized, initialize the content
     nsAutoString value;
@@ -1254,6 +1314,20 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     result = GetMaxLength(&maxLength);
     if (NS_CONTENT_ATTR_NOT_THERE != result) {
       htmlEditor->SetMaxTextLength(maxLength);
+    }
+
+    nsCOMPtr<nsIEditorMailSupport> mailEditor = do_QueryInterface(mEditor);
+    if (mailEditor)
+    {
+      nsString wrap;
+      result = GetWrapProperty(wrap);
+      if (NS_CONTENT_ATTR_NOT_THERE != result) 
+      {
+        if (kTextControl_Wrap_Off.EqualsIgnoreCase(wrap))
+        {
+          mailEditor->SetBodyWrapWidth(-1);
+        }
+      }
     }
 
     nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);

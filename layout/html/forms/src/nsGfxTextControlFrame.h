@@ -411,6 +411,14 @@ public:
 
   NS_IMETHOD GetText(nsString* aValue, PRBool aInitialValue);
 
+  /** 
+    * Respond to a gui event
+    * @see nsNativeFormControlFrame::HandleEvent
+    */
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent* aEvent,
+                         nsEventStatus& aEventStatus);
+
   virtual void EnterPressed(nsIPresContext& aPresContext) ;
 
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
