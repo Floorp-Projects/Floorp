@@ -207,8 +207,10 @@ mng_retcode mngjpeg_cleanup (mng_datap pData)
     MNG_ERRORJ (pData, iRetcode)       /* then IJG-lib issued an error */
 #endif    
 
+#ifdef MNG_SUPPORT_WRITE
   if (pData->bJPEGcompress)            /* still compressing something ? */
     jpeg_destroy_compress (pData->pJPEGcinfo);
+#endif
 
   if (pData->bJPEGdecompress)          /* still decompressing something ? */
     jpeg_destroy_decompress (pData->pJPEGdinfo);
