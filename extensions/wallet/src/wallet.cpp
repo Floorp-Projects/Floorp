@@ -937,6 +937,49 @@ char * wallet_GetString(char * szMessage)
 #endif
 }
 
+char * wallet_GetDoubleString(char * szMessage, char * szMessage2, PRBool& matched)
+{
+  nsString password, password2;
+  PRBool retval;
+
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    return NULL;     // XXX should return the error
+  }
+
+  const nsString message = szMessage;
+  const nsString message2 = szMessage2;
+  PRUnichar* pwd;
+  PRUnichar* pwd2;
+  retval = PR_FALSE; /* in case user exits dialog by clicking X */
+
+#ifdef PROMPT_DOUBLE_PASSWORD
+  res = dialog->PromptDoublePassword
+    (message.GetUnicode(), message2.GetUnicode(), &pwd, &pwd2, &retval);
+#else
+  res = dialog->PromptPassword(message.GetUnicode(), &pwd, &retval);
+  if (NS_FAILED(res)) {
+    return NULL;
+  }
+  res = dialog->PromptPassword(message2.GetUnicode(), &pwd2, &retval);
+#endif
+  if (NS_FAILED(res)) {
+    return NULL;
+  }
+  password = pwd;
+  password2 = pwd2;
+  delete[] pwd;
+  delete[] pwd2;
+  matched = (password == password2);
+
+  if (retval) {
+    return password.ToNewCString();
+  } else {
+    return NULL; /* user pressed cancel */
+  }
+}
+
 /**********************************************************************************/
 /* The following routines are for locking the data base.  They are not being used */
 /**********************************************************************************/
@@ -1241,8 +1284,8 @@ wallet_InitKeyFileName() {
 }
 
 /* returns -1 if key does not exist, 0 if key is of length 0, 1 otherwise */
-PRIVATE PRInt32
-wallet_KeySize() {
+PUBLIC PRInt32
+Wallet_KeySize() {
 
   wallet_InitKeyFileName();
   nsFileSpec dirSpec;
@@ -1266,41 +1309,60 @@ Wallet_SetKey(PRBool isNewkey) {
   if (Wallet_KeySet() && !isNewkey) {
     return PR_TRUE;
   }
-
   Wallet_RestartKey();
-
-  /* ask the user for his key */
-  char * password;
-  if (wallet_KeySize() < 0) { /* no password has yet been established */
-    password = Wallet_Localize("firstPassword");
-  } else if (isNewkey) {
-    password = Wallet_Localize("newPassword");
-  } else {
-    password = Wallet_Localize("password");
-  }
 
   char * newkey;
   PRBool useDefaultKey = PR_FALSE;
 
-  if ((wallet_KeySize() == 0) && !isNewkey) {
-    useDefaultKey = PR_TRUE;
-    newkey = PL_strdup("~");
-  } else {
-    newkey = wallet_GetString(password);
+  if (Wallet_KeySize() < 0) { /* no key has yet been established */
+    char * message = Wallet_Localize("firstPassword");
+    char * message2 = Wallet_Localize("confirmPassword");
+    char * mismatch = Wallet_Localize("confirmFailed_TryAgain?");
+    PRBool matched;
+    for (;;) {
+      newkey = wallet_GetDoubleString(message, message2, matched);
+      if (matched) {
+        break; /* break out of loop if both passwords matched */
+      }
+      /* password confirmation failed, ask user if he wants to try again */
+      if (!Wallet_Confirm(mismatch)) {
+        PR_FREEIF(mismatch);
+        PR_FREEIF(message);
+        PR_FREEIF(message2);
+        return FALSE; /* user does not want to try again */
+      }    
+    }
+    PR_FREEIF(mismatch);
+    PR_FREEIF(message);
+    PR_FREEIF(message2);
+  } else { /* key has previously been established */
+    char * message;
+    if (isNewkey) { /* user is changing his key */
+      message = Wallet_Localize("newPassword");
+    } else {
+      message = Wallet_Localize("password");
+    }
+    if ((Wallet_KeySize() == 0) && !isNewkey) { /* prev-established key is default key */
+      useDefaultKey = PR_TRUE;
+      newkey = PL_strdup("~");
+    } else { /* ask the user for his key */
+      newkey = wallet_GetString(message);
+    }
+    PR_FREEIF(message);
   }
+
   keyCancel = PR_FALSE;
   if (newkey == NULL) { /* user hit cancel button */
     useDefaultKey = PR_TRUE;
-    if (wallet_KeySize() < 0) { /* no password file existed before */
-      newkey  = PL_strdup("~"); /* use zero-length password */
-    } else if (isNewkey) { /* user is changing the password */
-      newkey  = PL_strdup("~"); /* use zero-length password */
+    if (Wallet_KeySize() < 0) { /* no key file existed before */
+      newkey  = PL_strdup("~"); /* use zero-length key */
+    } else if (isNewkey) { /* user is changing the key */
+      newkey  = PL_strdup("~"); /* use zero-length key */
     } else {
       keyCancel = PR_TRUE;
-      return PR_FALSE; /* user could not supply the correct password */
+      return PR_FALSE; /* user could not supply the correct key */
     }
   }
-  PR_FREEIF(password);
   for (; (keyPosition < PL_strlen(newkey) && keyPosition < maxKeySize); keyPosition++) {
     key[keyPosition] = newkey[keyPosition];
   }
@@ -1309,7 +1371,7 @@ Wallet_SetKey(PRBool isNewkey) {
   Wallet_RestartKey();
 
   /* verify this with the saved key */
-  if (isNewkey || (wallet_KeySize() < 0)) {
+  if (isNewkey || (Wallet_KeySize() < 0)) {
 
     /*
      * Either key is to be changed or the file containing the saved key doesn' exist.
@@ -1357,7 +1419,7 @@ Wallet_SetKey(PRBool isNewkey) {
      */
 
     /* test for a null key */
-    if (useDefaultKey && (wallet_KeySize() == 0) ) {
+    if (useDefaultKey && (Wallet_KeySize() == 0) ) {
       Wallet_RestartKey();
       keySet = PR_TRUE;
       keyExpiresTime = time(NULL) + keyDuration;
@@ -1989,7 +2051,7 @@ wallet_Initialize() {
     Wallet_RestartKey();
     char * message = Wallet_Localize("IncorrectKey_TryAgain?");
     while (!Wallet_SetKey(PR_FALSE)) {
-      if (Wallet_CancelKey() || !Wallet_Confirm(message)) {
+      if (Wallet_CancelKey() || (Wallet_KeySize() < 0) || !Wallet_Confirm(message)) {
         PR_FREEIF(message);
         return;
       }
@@ -2032,7 +2094,7 @@ PUBLIC
 void WLLT_ChangePassword() {
 
   /* do nothing if password was never set */
-  if (wallet_KeySize() < 0) {
+  if (Wallet_KeySize() < 0) {
     return;
   }
 
@@ -2720,6 +2782,11 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
         NS_RELEASE(url);
       }
       wallet_Initialize();
+      if (!Wallet_KeySet()) {
+        NS_RELEASE(doc);
+        NS_RELEASE(shell);
+        return NS_ERROR_FAILURE;
+      }
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
       result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
@@ -2878,6 +2945,11 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
     result = shell->GetDocument(&doc);
     if (NS_SUCCEEDED(result)) {
       wallet_Initialize();
+      if (!Wallet_KeySet()) {
+        NS_RELEASE(doc);
+        NS_RELEASE(shell);
+        return;
+      }
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
       result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
