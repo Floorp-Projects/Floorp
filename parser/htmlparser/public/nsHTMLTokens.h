@@ -283,7 +283,7 @@ public:
   CTextToken(const nsAString& aString);
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
   nsresult ConsumeUntil(PRUnichar aChar, PRBool aIgnoreComments,
-                        nsScanner& aScanner, nsString& aEndTagName,
+                        nsScanner& aScanner, const nsAString& aEndTagName,
                         PRInt32 aFlag, PRBool& aFlushTokens);
   virtual PRInt32 GetTokenType(void);
   virtual PRInt32 GetTextLength(void);

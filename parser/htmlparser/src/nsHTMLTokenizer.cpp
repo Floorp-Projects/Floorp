@@ -752,12 +752,17 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         
         //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         if(gHTMLElements[theTag].CanContainType(kCDATA)) {
-          nsAutoString endTagName; 
-          endTagName.Assign(nsHTMLTags::GetStringValue(theTag));
+          nsDependentString endTagName(nsHTMLTags::GetStringValue(theTag)); 
 
           CToken*     text=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
           CTextToken* textToken=NS_STATIC_CAST(CTextToken*,text);
-          result=textToken->ConsumeUntil(0,theTag!=eHTMLTag_script,aScanner,endTagName,mFlags,aFlushTokens);  //tell new token to finish consuming text...    
+
+          //tell new token to finish consuming text...    
+          result=textToken->ConsumeUntil(0,theTag!=eHTMLTag_script,
+                                         aScanner,
+                                         endTagName,
+                                         mFlags,
+                                         aFlushTokens);
           
           // Fix bug 44186
           // Support XML like syntax, i.e., <script src="external.js"/> == <script src="external.js"></script>
@@ -768,10 +773,31 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           // it is.
           if((!(mFlags & NS_IPARSER_FLAG_PRESERVE_CONTENT) &&
               !theStartToken->IsEmpty()) || aFlushTokens) {
-            theStartToken->SetEmpty(PR_FALSE); // Setting this would make cases like <script/>d.w("text");</script> work.
-            CToken* endToken=theAllocator->CreateTokenOfType(eToken_end,theTag,endTagName);
+            // Setting this would make cases like <script/>d.w("text");</script> work.
+            theStartToken->SetEmpty(PR_FALSE);
+            // do this up here so we can just add the end token later on
             AddToken(text,result,&mTokenDeque,theAllocator);
-            AddToken(endToken,result,&mTokenDeque,theAllocator);
+
+            CToken* endToken=nsnull;
+            
+            if (NS_SUCCEEDED(result) && aFlushTokens) {
+              PRUnichar theChar;
+              // Get the <
+              result = aScanner.GetChar(theChar);
+              NS_ASSERTION(NS_SUCCEEDED(result) && theChar == kLessThan,
+                           "CTextToken::ConsumeUntil is broken!");
+#ifdef DEBUG
+              // Ensure we have a /
+              PRUnichar tempChar;  // Don't change non-debug vars in debug-only code
+              result = aScanner.Peek(tempChar);
+              NS_ASSERTION(NS_SUCCEEDED(result) && theChar == kForwardSlash,
+                           "CTextToken::ConsumeUntil is broken!");
+#endif
+              result = ConsumeEndTag(PRUnichar('/'),endToken,aScanner);
+            } else if (!(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+              endToken=theAllocator->CreateTokenOfType(eToken_end,theTag,endTagName);
+              AddToken(endToken,result,&mTokenDeque,theAllocator);
+            }
           }
           else {
             IF_FREE(text, mTokenAllocator);
