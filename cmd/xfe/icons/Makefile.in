@@ -158,7 +158,6 @@ MKICONS_LIB	=  \
 		  $(JAVA_JMC) \
 		  $(DIST)/lib/libutil.a \
 		  $(DIST)/lib/libxp.a \
-		  $(DIST)/lib/libplc21.a \
 		  $(DIST)/lib/libxpcom.a
 endif
 
