@@ -13,23 +13,16 @@
 <!ENTITY bidi.label "Bidi Options">
 <!ENTITY languages.label "Languages">
 <!ENTITY applications.label "Helper Applications">
-<!--LOCALIZATION NOTE (smartBrowse.label): DONT_TRANSLATE -->
-<!ENTITY smartBrowse.label "Smart Browsing">
 <!ENTITY tabWindows.label "Tabbed Browsing">
-<!ENTITY compose.label "Composer">
-<!ENTITY editing.label "New Page Settings">
-<!ENTITY publish.label "Publish">
-<!ENTITY offline.label "Offline &amp; Disk Space">
-<!ENTITY security.label "Privacy &amp; Security">
 <!ENTITY advance.label "Advanced">
-<!ENTITY down.label "Download">
+<!ENTITY down.label "Downloads">
 <!ENTITY cache.label "Cache">
 <!ENTITY proxies.label "Proxies">
 <!ENTITY smart.label "Software Installation">
 <!ENTITY debug.label  "Debug">
 <!ENTITY debug1.label "Events">
 <!ENTITY debug2.label "Networking">
-<!ENTITY search.label "Internet Search">
+<!ENTITY search.label "Search">
 <!ENTITY policies.label "Security Policies">
 <!ENTITY mousewheel.label "Mouse Wheel">
 <!ENTITY scriptsAndWindows.label "Scripts &amp; Windows">
