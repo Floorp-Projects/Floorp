@@ -28,6 +28,8 @@ CPPSRCS =                       \
     editor.cpp                  \
     editorInterfaces.cpp        \
     nsEditFactory.cpp           \
+    ChangeAttributeTxn.cpp      \
+    EditTxn.cpp                 \
     $(NULL)
 
 MODULE = editor
