@@ -91,7 +91,9 @@ Rights Reserved.
       </hbox>
     </groupbox>
     
-    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"/>
+    <splitter id="gray_horizontal_splitter" collapse="after" persist="state">
+      <grippy/>
+    </splitter>
     
     <groupbox orient="horizontal" flex="1">
        <caption label="&results.label;"/>
