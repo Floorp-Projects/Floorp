@@ -259,9 +259,13 @@ public:
 
   // If the listener has implemented the nsIMsgCopyServiceListener interface, I will drive it from 
   // here
-  NS_IMETHOD  NotifyListenersOnStartCopy(nsISupports *listenerData); 
-  NS_IMETHOD  NotifyListenersOnProgressCopy(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData);
-  NS_IMETHOD  NotifyListenersOnStopCopy(nsresult aStatus, nsISupports *listenerData);
+  NS_IMETHOD  NotifyListenersOnStartCopy(); 
+  NS_IMETHOD  NotifyListenersOnProgressCopy(PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD  NotifyListenersOnStopCopy(nsresult aStatus);
+  NS_IMETHOD  SetMessageKey(PRUint32 aMessageKey);
+  NS_IMETHOD  GetMessageId(nsString2* aMessageId);
+
+  nsMsgKey m_messageKey; // jt -- Draft/Template support; newly created key
 
   //
   // Attachment processing...

@@ -45,32 +45,48 @@ CopyListener::~CopyListener(void)
 }
 
 nsresult
-CopyListener::OnStartCopy(nsISupports *listenerData)
+CopyListener::OnStartCopy()
 {
 #ifdef NS_DEBUG
   printf("CopyListener::OnStartCopy()\n");
 #endif
 
   if (mComposeAndSend)
-    mComposeAndSend->NotifyListenersOnStartCopy(listenerData);
+    mComposeAndSend->NotifyListenersOnStartCopy();
   return NS_OK;
 }
   
 nsresult
-CopyListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData)
+CopyListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #ifdef NS_DEBUG
   printf("CopyListener::OnProgress() %d of %d\n", aProgress, aProgressMax);
 #endif
 
   if (mComposeAndSend)
-    mComposeAndSend->NotifyListenersOnProgressCopy(aProgress, aProgressMax, listenerData);
+    mComposeAndSend->NotifyListenersOnProgressCopy(aProgress, aProgressMax);
 
   return NS_OK;
 }
 
 nsresult
-CopyListener::OnStopCopy(nsresult aStatus, nsISupports *listenerData)
+CopyListener::SetMessageKey(PRUint32 aMessageKey)
+{
+    if (mComposeAndSend)
+        mComposeAndSend->SetMessageKey(aMessageKey);
+    return NS_OK;
+}
+
+nsresult
+CopyListener::GetMessageId(nsString2* aMessageId)
+{
+    if (mComposeAndSend)
+        mComposeAndSend->GetMessageId(aMessageId);
+    return NS_OK;
+}
+
+nsresult
+CopyListener::OnStopCopy(nsresult aStatus)
 {
   if (NS_SUCCEEDED(aStatus))
   {
@@ -86,7 +102,7 @@ CopyListener::OnStopCopy(nsresult aStatus, nsISupports *listenerData)
   }
 
   if (mComposeAndSend)
-    mComposeAndSend->NotifyListenersOnStopCopy(aStatus, listenerData);
+    mComposeAndSend->NotifyListenersOnStopCopy(aStatus);
 
   return NS_OK;
 }
@@ -191,8 +207,8 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
       return NS_ERROR_OUT_OF_MEMORY;
 
     mCopyListener->SetMsgComposeAndSendObject(aMsgSendObj);
-    rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, aIsDraft, 
-                                      mCopyListener, nsnull, txnMgr);
+    rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace,
+                                      aIsDraft, mCopyListener, txnMgr);
 	}
 
 	return rv;

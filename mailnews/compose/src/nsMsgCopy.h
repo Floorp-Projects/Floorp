@@ -49,11 +49,15 @@ public:
   // nsISupports interface
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD OnStartCopy(nsISupports *listenerData);
+  NS_IMETHOD OnStartCopy();
   
-  NS_IMETHOD OnProgress(PRUint32 aProgress, PRUint32 aProgressMax, nsISupports *listenerData);
+  NS_IMETHOD OnProgress(PRUint32 aProgress, PRUint32 aProgressMax);
+
+  NS_IMETHOD SetMessageKey(PRUint32 aMessageKey);
   
-  NS_IMETHOD OnStopCopy(nsresult aStatus, nsISupports *listenerData);
+  NS_IMETHOD GetMessageId(nsString2* aMessageId);
+  
+  NS_IMETHOD OnStopCopy(nsresult aStatus);
 
   NS_IMETHOD SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj);
 

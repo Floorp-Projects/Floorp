@@ -1611,7 +1611,7 @@ nsMsgComposeAndSend::DoFcc()
     //
     char    *eMsg = ComposeBEGetStringByID(rv);
     Fail(rv, eMsg);
-    NotifyListenersOnStopCopy(rv, nsnull);
+    NotifyListenersOnStopCopy(rv);
     PR_FREEIF(eMsg);
   }
 
@@ -1665,8 +1665,9 @@ nsMsgComposeAndSend::Clear()
     if (aFileSpec.Valid())
       aFileSpec.Delete(PR_FALSE);
 
-    delete mCopyFileSpec;
-    mCopyFileSpec = nsnull;
+    // jt -- *don't* use delete someone may still holding the nsIFileSpec
+    // pointer
+    NS_IF_RELEASE(mCopyFileSpec);
   }
 
 	if (mTempFileSpec) 
@@ -1737,7 +1738,8 @@ nsMsgComposeAndSend::Clear()
   DeleteListeners();
 }
 
-nsMsgComposeAndSend::nsMsgComposeAndSend()
+nsMsgComposeAndSend::nsMsgComposeAndSend() : 
+    m_messageKey(0xffffffff)
 {
 	mCompFields = nsnull;			/* Where to send the message once it's done */
   mListenerArray = nsnull;
@@ -1924,7 +1926,7 @@ nsMsgComposeAndSend::NotifyListenersOnStopSending(const char *aMsgID, nsresult a
 }
 
 nsresult
-nsMsgComposeAndSend::NotifyListenersOnStartCopy(nsISupports *listenerData)
+nsMsgComposeAndSend::NotifyListenersOnStartCopy()
 {
   nsCOMPtr<nsIMsgCopyServiceListener> copyListener;
 
@@ -1935,7 +1937,7 @@ nsMsgComposeAndSend::NotifyListenersOnStartCopy(nsISupports *listenerData)
     {
       copyListener = do_QueryInterface(mListenerArray[i]);
       if (copyListener)
-        copyListener->OnStartCopy(listenerData);      
+        copyListener->OnStartCopy();      
     }
   }
 
@@ -1943,8 +1945,8 @@ nsMsgComposeAndSend::NotifyListenersOnStartCopy(nsISupports *listenerData)
 }
 
 nsresult
-nsMsgComposeAndSend::NotifyListenersOnProgressCopy(PRUint32 aProgress, PRUint32 aProgressMax, 
-                                               nsISupports *listenerData)
+nsMsgComposeAndSend::NotifyListenersOnProgressCopy(PRUint32 aProgress,
+                                                   PRUint32 aProgressMax)
 {
   nsCOMPtr<nsIMsgCopyServiceListener> copyListener;
 
@@ -1955,7 +1957,7 @@ nsMsgComposeAndSend::NotifyListenersOnProgressCopy(PRUint32 aProgress, PRUint32 
     {
       copyListener = do_QueryInterface(mListenerArray[i]);
       if (copyListener)
-        copyListener->OnProgress(aProgress, aProgressMax, listenerData);
+        copyListener->OnProgress(aProgress, aProgressMax);
     }
   }
 
@@ -1963,7 +1965,25 @@ nsMsgComposeAndSend::NotifyListenersOnProgressCopy(PRUint32 aProgress, PRUint32 
 }
 
 nsresult
-nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus, nsISupports *listenerData)
+nsMsgComposeAndSend::SetMessageKey(PRUint32 aMessageKey)
+{
+    m_messageKey = aMessageKey;
+    return NS_OK;
+}
+
+nsresult
+nsMsgComposeAndSend::GetMessageId(nsString2* aMessageId)
+{
+    if (aMessageId && mCompFields)
+    {
+        *aMessageId = mCompFields->GetMessageId();
+        return NS_OK;
+    }
+    return NS_ERROR_NULL_POINTER;
+}
+
+nsresult
+nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
 {
   nsCOMPtr<nsIMsgCopyServiceListener> copyListener;
 
@@ -1974,7 +1994,7 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus, nsISupports *li
     {
       copyListener = do_QueryInterface(mListenerArray[i]);
       if (copyListener)
-        copyListener->OnStopCopy(aStatus, listenerData);
+        copyListener->OnStopCopy(aStatus);
     }
   }
 
@@ -2225,7 +2245,7 @@ nsMsgComposeAndSend::SendToMagicFolder(nsMsgDeliverMode mode)
       // RICHIE_TODO: message loss here
       char    *eMsg = ComposeBEGetStringByID(rv);
       Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
-      NotifyListenersOnStopCopy(rv, nsnull);
+      NotifyListenersOnStopCopy(rv);
       PR_FREEIF(eMsg);
     }
     
