@@ -4139,7 +4139,7 @@ pk11_P_hash(SECOidTag alg, const SECItem *secret, const char *label,
 	if (status != SECSuccess)
 	    goto loser;
 
-	chunk_size = MIN(outbuf_len, remaining);
+	chunk_size = PR_MIN(outbuf_len, remaining);
 	PORT_Memcpy(res, &outbuf, chunk_size);
 	res += chunk_size;
 	remaining -= chunk_size;
@@ -4894,7 +4894,7 @@ key_and_mac_derive_fail:
 	break;
     case CKM_XOR_BASE_AND_DATA:
 	stringPtr = (CK_KEY_DERIVATION_STRING_DATA *)pMechanism->pParameter;
-	tmpKeySize = MIN(att->attrib.ulValueLen,stringPtr->ulLen);
+	tmpKeySize = PR_MIN(att->attrib.ulValueLen,stringPtr->ulLen);
 	if (keySize == 0) keySize = tmpKeySize;
 	if (keySize > tmpKeySize) {
 	    crv = CKR_TEMPLATE_INCONSISTENT;
