@@ -262,24 +262,86 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
       nsIAtom*  listName;
+      PRBool    isAbsoluteChild;
 
+      // See if it's for an absolutely positioned child frame
       aReflowState.reflowCommand->GetChildListName(listName);
-      if (nsLayoutAtoms::absoluteList == listName) {
+      isAbsoluteChild = nsLayoutAtoms::absoluteList == listName;
+      NS_IF_RELEASE(listName);
+
+      if (isAbsoluteChild) {
         nsIReflowCommand::ReflowType  type;
 
         aReflowState.reflowCommand->GetType(type);
-        NS_ASSERTION(nsIReflowCommand::FrameAppended == type, "unexpected reflow type");
 
-        // Add the frames to our list of absolutely position frames
-        nsIFrame* childFrames;
-        aReflowState.reflowCommand->GetChildFrame(childFrames);
-        NS_ASSERTION(nsnull != childFrames, "null child list");
-        AddAbsoluteFrame(childFrames);
+        // Handle each specific type
+        if (nsIReflowCommand::FrameAppended == type) {
+          // Add the frames to our list of absolutely position frames
+          nsIFrame* childFrames;
+          aReflowState.reflowCommand->GetChildFrame(childFrames);
+          NS_ASSERTION(nsnull != childFrames, "null child list");
+          AddAbsoluteFrame(childFrames);
 
-        // Indicate we handled the reflow command
-        wasHandled = PR_TRUE;      
+          // Indicate we handled the reflow command
+          wasHandled = PR_TRUE;      
+
+        } else if (nsIReflowCommand::FrameRemoved == type) {
+          // Get the new frame
+          nsIFrame* childFrame;
+          aReflowState.reflowCommand->GetChildFrame(childFrame);
+          
+          // Find the frame in our list of absolutely positioned children
+          // and remove it
+          if (mAbsoluteFrames == childFrame) {
+            childFrame->GetNextSibling(mAbsoluteFrames);
+
+          } else {
+            nsIFrame* prevSibling = nsnull;
+            for (nsIFrame* f = mAbsoluteFrames; nsnull != f; f->GetNextSibling(f)) {
+              if (f == childFrame) {
+                break;
+              }
+              prevSibling = f;
+            }
+  
+            NS_ASSERTION(nsnull != prevSibling, "didn't find frame");
+            nsIFrame* nextSibling;
+            childFrame->GetNextSibling(nextSibling);
+            prevSibling->SetNextSibling(nextSibling);
+          }
+
+          // Now go ahead and delete the child frame
+          childFrame->DeleteFrame(aPresContext);
+
+          // XXX We don't need to reflow all the absolutely positioned
+          // frames. Compute the desired size and exit...
+          wasHandled = PR_TRUE;
+
+        } else if (nsIReflowCommand::FrameInserted == type) {
+          // Get the new frame
+          nsIFrame* childFrame;
+          aReflowState.reflowCommand->GetChildFrame(childFrame);
+
+          // Get the previous sibling
+          nsIFrame* prevSibling;
+          aReflowState.reflowCommand->GetPrevSiblingFrame(prevSibling);
+
+          // Insert the frame
+          if (nsnull == prevSibling) {
+            mAbsoluteFrames = childFrame;
+          } else {
+            nsIFrame* nextSibling;
+
+            prevSibling->GetNextSibling(nextSibling);
+            prevSibling->SetNextSibling(childFrame);
+            childFrame->SetNextSibling(nextSibling);
+          }
+          wasHandled = PR_TRUE;
+
+        } else {
+          NS_ASSERTION(PR_FALSE, "unexpected reflow type");
+        }
       }
-      NS_IF_RELEASE(listName);
     }
   }
 
