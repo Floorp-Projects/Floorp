@@ -147,7 +147,7 @@
     <toolbox>
       <toolbar>
 		    <titledbutton id="ParagraphPopup" value="Paragraph" class="popup" align="left" popup="ParagraphMenu"/>
-		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popup="FontFaceWindow"/>
+		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popup="FontFaceMenu"/>
 		    <titledbutton id="FontSizePopup" value="Size" class="popup" align="left" popup="FontSizeMenu"/>
 		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu"/>
 		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu"/>
