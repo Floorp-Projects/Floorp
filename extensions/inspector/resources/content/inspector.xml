@@ -394,7 +394,7 @@
       </xul:toolbox>
       <xul:box class="viewer-pane-box-1" flex="1">
         <xul:box class="viewer-pane-box-2" flex="1">
-          <xul:browser anonid="viewer-iframe" disableHistory="true" class="viewer-iframe" flex="1"/>
+          <xul:browser anonid="viewer-iframe" disablehistory="true" class="viewer-iframe" flex="1"/>
         </xul:box>
       </xul:box>
     </content>
