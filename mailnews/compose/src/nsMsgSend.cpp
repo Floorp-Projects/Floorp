@@ -3162,8 +3162,6 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 	if(NS_FAILED(rv))
 		return rv;
 
-	if (!msgWindow) return NS_ERROR_FAILURE;
-
     rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mCompFields->GetNewspostUrl(),
                                   uriListener, msgWindow, nsnull);
 	if (NS_FAILED(rv)) return rv;

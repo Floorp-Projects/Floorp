@@ -882,9 +882,9 @@ nsNntpService::GenerateNewsHeaderValsForPosting(const char *newsgroupsList, char
 NS_IMETHODIMP
 nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, const char *newspostingUrl, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
-  NS_ENSURE_ARG_POINTER(aMsgWindow);
+  // aMsgWindow might be null
   NS_ENSURE_ARG_POINTER(newsgroupsNames);
-  
+ 
   if (*newsgroupsNames == '\0') return NS_ERROR_INVALID_ARG;
     
   NS_LOCK_INSTANCE();
