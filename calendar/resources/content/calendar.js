@@ -207,8 +207,10 @@ function calendarInit()
 
    }
    // CofC Calendar Coloring Change
-
-   if( ("arguments" in window) && ("channel" in window.arguments[0]) )
+   if( ("arguments" in window) &&
+       (window.arguments.length) &&
+       (typeof(window.arguments[0]) == "object") &&
+       ("channel" in window.arguments[0]) )
    {
       gCalendarWindow.calendarManager.checkCalendarURL( window.arguments[0].channel );
    }
