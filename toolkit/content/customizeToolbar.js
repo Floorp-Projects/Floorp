@@ -25,7 +25,7 @@ const kRowMax = 4;
 const kWindowWidth = 600;
 const kWindowHeight = 400;
 const kAnimateIncrement = 50;
-const kAnimateSteps = kWindowHeight / kAnimateIncrement;
+const kAnimateSteps = kWindowHeight / kAnimateIncrement - 1;
 
 var gToolboxDocument = null;
 var gToolbox = null;
@@ -46,7 +46,7 @@ function onLoad()
 
   repositionDialog();
   window.outerWidth = kWindowWidth;
-  window.outerHeight = 0;
+  window.outerHeight = 50;
   slideOpen(0);
 }
 
