@@ -80,12 +80,12 @@ namespace Debugger {
     }
 
     bool
-    Shell::doCommand (Interpreter::Context */*context*/, const String &source)
+    Shell::doCommand (Interpreter::Context * /*context*/, const String &source)
     {
         Lexer lex (mWorld, source, widenCString("debugger console"), 0);
         const String *cmd;
         ShellCommand match = COMMAND_COUNT;
-        int ambig_matches = 0;
+        uint32 ambig_matches = 0;
         
         const Token &t = lex.get(true);
 
@@ -137,7 +137,7 @@ namespace Debugger {
             }
         else
             mErr << "Ambiguous command '" << *cmd << "', " <<
-                (uint)(ambig_matches + 1) << " similar commands.\n";
+                (ambig_matches + 1) << " similar commands.\n";
 
         return  (ambig_matches == 0);
         

@@ -591,7 +591,8 @@ int main(int argc, char **argv)
 #endif
 
 #if 1
-    using namespace JavaScript::Shell;
+    using namespace JavaScript;
+    using namespace Shell;
     
     assert(testFactorial(world, 5) == 120);
     assert(testObjects(world, 5) == 5);

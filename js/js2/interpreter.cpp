@@ -34,6 +34,8 @@
 #include "interpreter.h"
 #include "world.h"
 
+#include <assert.h>
+
 namespace JavaScript {
 namespace JSTypes {
 
