@@ -718,8 +718,6 @@ protected:
                              PRBool *aAll,
                              nsAWritableString *outValue);
 
-  nsresult SelectParentOfSelection();
-
 // Data members
 protected:
 

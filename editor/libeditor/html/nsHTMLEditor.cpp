@@ -1177,14 +1177,9 @@ NS_IMETHODIMP nsHTMLEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
     }
     else if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE)
     {
-      if (isShift) {
-        return SelectParentOfSelection();
-      }
-      else {
-        // pass escape keypresses through as empty strings: needed forime support
-        nsString empty;
-        return TypedText(empty, eTypedText);
-      }
+      // pass escape keypresses through as empty strings: needed forime support
+      nsString empty;
+      return TypedText(empty, eTypedText);
     }
     
     // if we got here we either fell out of the tab case or have a normal character.
@@ -5332,85 +5327,5 @@ nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
     }
   }
   return PR_FALSE;
-}
-
-nsresult
-nsHTMLEditor::SelectParentOfSelection()
-{
-  // get selection
-  nsCOMPtr<nsISelection>selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-  if (!selPriv)
-    return NS_ERROR_FAILURE;
-
-  PRBool bCollapsed;
-  res = selection->GetIsCollapsed(&bCollapsed);
-  if (NS_FAILED(res)) return res;
-  
-  if (bCollapsed) {
-    // get selection location
-    nsCOMPtr<nsIDOMNode> node, parent;
-    PRInt32 offset;
-    res = GetStartNodeAndOffset(selection, address_of(node), &offset);
-    if (NS_FAILED(res)) return res;
-
-    res = node->GetParentNode(getter_AddRefs(parent));
-    if (NS_FAILED(res) || !parent) return res;
-    nsCOMPtr<nsIDOMElement> resultElement = do_QueryInterface(parent);
-    if (!resultElement) return NS_OK;
-    res = SelectElement(resultElement);
-    return res;
-  }
-
-  nsCOMPtr<nsIEnumerator> enumerator;
-  res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
-  if (NS_FAILED(res)) return res;
-  if (!enumerator) return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  // make a array
-  res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
-  if (NS_FAILED(res)) return res;
-  nsCOMPtr<nsISupports> isupports;
-
-  for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
-  {
-    nsCOMPtr<nsISupports> currentItem;
-    res = enumerator->CurrentItem(getter_AddRefs(currentItem));
-    if (NS_FAILED(res)) return res;
-    if (!currentItem) return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-    nsCOMPtr<nsIDOMNode> commonParent;
-    range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
-
-    isupports = do_QueryInterface(commonParent);
-    res = arrayOfNodes->AppendElement(isupports);
-    if (NS_FAILED(res)) return res;
-  }
-  PRUint32 listCount;
-  arrayOfNodes->Count(&listCount);
-  // res = ClearSelection();
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIDOMElement> element;
-  PRUint32 j;
-
-  for (j = 0; j < listCount; j++)
-  {
-    isupports = dont_AddRef(arrayOfNodes->ElementAt(j));
-    node = do_QueryInterface(isupports);
-    element = do_QueryInterface(node);
-    if (IsElementInBody(element))
-    {
-      res = AppendNodeToSelectionAsRange(node);
-      if (NS_FAILED(res)) return res;
-    }
-  }
-  return res;
 }
 
