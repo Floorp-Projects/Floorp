@@ -719,7 +719,10 @@ var nsEditHTMLCommand =
   },
   doCommand: function(aCommand)
   {
-    _EditorNotImplemented(); //TODO: IMPLEMENT ME!
+    if (gEditorDisplayMode === DisplayModeSource)
+      SetEditMode(DisplayModeNormal);
+    else
+      SetEditMode(DisplayModeSource);
   }
 };
 
@@ -736,7 +739,11 @@ function EditorInitTableMenu()
   //       table border? Try to figure out all cells
   //       included in the selection?
   var menuText;
-  if (editorShell.GetFirstSelectedCell())
+
+  // Use "Join selected cells if there's more than 1 cell selected
+  var tagNameObj = new Object;
+  var countObj = new Object;
+  if (window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj) && countObj.value > 1)
     menuText = GetString("JoinSelectedCells");
   else
     menuText = GetString("JoinCellToRight");
@@ -765,10 +772,8 @@ function EditorInitTableMenu()
 
 function goUpdateTableMenuItems(commandset)
 {
-  // Insert table can be done any time (if editable document)
-  goUpdateCommand("cmd_InsertTable");
-
   var enabled = false; 
+
   var enabledIfTable = false;
   if (window.editorShell && window.editorShell.documentEditable)
   {
@@ -777,8 +782,7 @@ function goUpdateTableMenuItems(commandset)
     var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);  
     if (element)
     {
-      // We can delete or normalize table if inside a table 
-      //  or any table element is selected
+      // Value when we need to have a selected table or inside a table
       enabledIfTable = true;  
 
       // All others require being inside a cell or selected cell
@@ -786,19 +790,27 @@ function goUpdateTableMenuItems(commandset)
     }
   }
 
-  goSetCommandEnabled("cmd_DeleteTable", enabledIfTable);
-  goSetCommandEnabled("cmd_NormalizeTable", enabledIfTable);
-
-  // Loop through command nodes to set all the others
+  // Loop through command nodes
   for (var i = 0; i < commandset.childNodes.length; i++)
   {
     var commandID = commandset.childNodes[i].getAttribute("id");
-    if (commandID && 
-        commandID != "cmd_InsertTable" && 
-        commandID != "cmd_DeleteTable" &&
-        commandID != "cmd_NormalizeTable")
+    if (commandID)
     {
-    	goSetCommandEnabled(commandID, enabled);
+      if (commandID == "cmd_InsertTable" ||
+          commandID == "cmd_tableJoinCells" ||
+          commandID == "cmd_tableSplitCell")
+      {
+        // Call the update method in the command class
+        goUpdateCommand(commandID);
+      } 
+      // Directly set with the values calculated here
+      else if (commandID == "cmd_DeleteTable" ||
+               commandID == "cmd_NormalizeTable")
+      {
+        goSetCommandEnabled(commandID, enabledIfTable);
+      } else {
+        goSetCommandEnabled(commandID, enabled);
+      }
     }
   }
 }
@@ -991,7 +1003,7 @@ var nsInsertTableRowAboveCommand =
   {
     if (this.isCommandEnabled(aCommand))
     {
-      window.editorShell.InsertTableRow(false);
+      window.editorShell.InsertTableRow(1, false);
       window.content.focus();
     }
   }
@@ -1007,7 +1019,7 @@ var nsInsertTableRowBelowCommand =
   {
     if (this.isCommandEnabled(aCommand))
     {
-      window.editorShell.InsertTableRow(true);
+      window.editorShell.InsertTableRow(1,true);
       window.content.focus();
     }
   }
@@ -1023,7 +1035,7 @@ var nsInsertTableColumnBeforeCommand =
   {
     if (this.isCommandEnabled(aCommand))
     {
-      window.editorShell.InsertTableColumn(false);
+      window.editorShell.InsertTableColumn(1, false);
       window.content.focus();
     }
   }
@@ -1039,7 +1051,7 @@ var nsInsertTableColumnAfterCommand =
   {
     if (this.isCommandEnabled(aCommand))
     {
-      window.editorShell.InsertTableColumn(true);
+      window.editorShell.InsertTableColumn(1, true);
       window.content.focus();
     }
   }
@@ -1054,7 +1066,7 @@ var nsInsertTableCellBeforeCommand =
   doCommand: function(aCommand)
   {
     if (this.isCommandEnabled(aCommand))
-      window.editorShell.InsertTableCell(false);
+      window.editorShell.InsertTableCell(1, false);
   }
 };
 
@@ -1068,7 +1080,7 @@ var nsInsertTableCellAfterCommand =
   {
     if (this.isCommandEnabled(aCommand))
     {
-      window.editorShell.InsertTableCell(true);
+      window.editorShell.InsertTableCell(1, true);
       window.content.focus();
     }
   }
@@ -1177,8 +1189,22 @@ var nsJoinTableCellsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    //TODO: This should really only be allowed if there's a cell to the right
-    return IsInTableCell();
+    if (window.editorShell && window.editorShell.documentEditable)
+    {
+      var tagNameObj = new Object;
+      var countObj = new Object;
+      var cell = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
+
+      // We need a cell and either > 1 selected cell or a sibling cell to the right
+      // (Note that editorShell returns "td" for "th" also)
+      // (This is a pain! Editor and gecko use lowercase tagNames, JS uses uppercase!)
+      if (cell && tagNameObj.value != "td")
+        return ( (countObj.value > 1) ||
+                 (cell.nextSibling && 
+                  (cell.nextSibling.tagName == "TD" ||
+                   cell.nextSibling.tagName == "TH")) );
+    }
+    return false;
   },
   doCommand: function(aCommand)
   {
@@ -1195,8 +1221,12 @@ var nsSplitTableCellCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    //TODO: This should be allowed only if rowspan or colspan > 0;
-    return IsInTableCell();
+    if (window.editorShell && window.editorShell.documentEditable)
+    {
+      var cell = window.editorShell.GetElementOrParentByTagName("td", null);
+      return (cell != null && (cell.colSpan > 1 || cell.rowSpan > 1));
+    }
+    return false;
   },
   doCommand: function(aCommand)
   {

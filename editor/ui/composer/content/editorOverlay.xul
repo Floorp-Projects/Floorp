@@ -545,18 +545,19 @@
     </menu>
 -->
 
+    <menuseparator position="6"/>
     <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
                 accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
-                oncommand="goDoCommand('cmd_removeStyles')" position="6"/>
+                oncommand="goDoCommand('cmd_removeStyles')" position="7"/>
     <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
                 accesskey="&formatremovelinks.accesskey;"
-                oncommand="EditorRemoveLinks()" position="7"/>
-    <menuseparator position="8"/>
+                oncommand="EditorRemoveLinks()" position="8"/>
+    <menuseparator position="9"/>
 
     <!-- Heading submenu -->
     <menu id="headingMenu" value="&headingMenu.label;"
           accesskey="&formatheadingmenu.accesskey;"
-          position="9">
+          position="10">
       <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
         <menuitem value="&normalCmd.label;"   accesskey="&normal.accesskey;"   data=""/>
         <menuitem value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="H1"/>
@@ -571,7 +572,7 @@
     <!-- Paragraph Style submenu -->
     <menu id="paragraphMenu" value="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
-          position="10">
+          position="11">
       <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
         <menuitem value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
         <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="P"/>
@@ -584,8 +585,10 @@
     </menu>
 
     <!-- List Style (opens dialog)  -->
-    <menuitem id="listProps" value="&listProps.label;"  accesskey="&formatlistmenu.accesskey;"  position="11" observes="cmd_listProperties"/>
-    <menu id="alignMenu" value="&alignMenu.label;"      accesskey="&formatalignmenu.accesskey;" position="12">
+    <menuitem id="listProps" value="&listProps.label;"  accesskey="&formatlistmenu.accesskey;"
+        position="12" observes="cmd_listProperties"/>
+    <menu id="alignMenu" value="&alignMenu.label;"      accesskey="&formatalignmenu.accesskey;"
+        position="13">
       <!-- Align submenu -->
       <menupopup oncommand="EditorAlign('cmd_align', event.target.getAttribute('data'))">
         <menuitem value="&alignLeft.label;"    accesskey="&alignleft.accesskey;"    data="left"/>
@@ -594,13 +597,13 @@
         <menuitem value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" data="justify"/>
       </menupopup>
     </menu>
-    <menuseparator position="13"/>
+    <menuseparator position="14"/>
 
     <menuitem id="increaseIndent" value="&increaseIndent.label;"  accesskey="&increaseindent.accesskey;"  key="increaseindentkb"
-                observes="cmd_indent" position="14"/>
+                observes="cmd_indent" position="15"/>
     <menuitem id="decreaseIndent" value="&decreaseIndent.label;"  accesskey="&decreaseindent.accesskey;"  key="decreaseindentkb"
-              observes="cmd_outdent"  position="15"/>
-    <menuseparator position="16"/>
+              observes="cmd_outdent"  position="16"/>
+    <menuseparator position="17"/>
     <!-- Merge Table Menu and separator in Messenger Composer here -->
     <!-- Merge property items here -->
   </menupopup>
@@ -616,16 +619,6 @@
 
   <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
     <menupopup  oncreate="EditorInitTableMenu()">
-      <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
-              accesskey="&tableselectmenu.accesskey;">
-        <menupopup>
-            <menuitem id="menu_SelectTable"    value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    observes="cmd_SelectTable"    />
-            <menuitem id="menu_SelectRow"      value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      observes="cmd_SelectRow"      />
-            <menuitem id="menu_SelectColumn"   value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   observes="cmd_SelectColumn"   />
-            <menuitem id="menu_SelectCell"     value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     observes="cmd_SelectCell"     />
-            <menuitem id="menu_SelectAllCells" value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" observes="cmd_SelectAllCells" />
-        </menupopup>
-      </menu>
       <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
         <menupopup>
           <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"        observes="cmd_InsertTable"/>
@@ -638,6 +631,16 @@
           <menuseparator />
           <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"         observes="cmd_InsertCellBefore"/>
           <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"    observes="cmd_InsertCellAfter"/>
+        </menupopup>
+      </menu>
+      <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
+              accesskey="&tableselectmenu.accesskey;">
+        <menupopup>
+            <menuitem id="menu_SelectTable"    value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    observes="cmd_SelectTable"    />
+            <menuitem id="menu_SelectRow"      value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      observes="cmd_SelectRow"      />
+            <menuitem id="menu_SelectColumn"   value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   observes="cmd_SelectColumn"   />
+            <menuitem id="menu_SelectCell"     value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     observes="cmd_SelectCell"     />
+            <menuitem id="menu_SelectAllCells" value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" observes="cmd_SelectAllCells" />
         </menupopup>
       </menu>
       <menu id="tableDeleteMenu" value="&tableDeleteMenu.label;" accesskey="&tabledeletemenu.accesskey;">
