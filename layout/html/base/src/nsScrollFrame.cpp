@@ -33,6 +33,9 @@
 #include "nsIAreaFrame.h"
 #include "nsScrollFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsIWebShell.h"
+
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -56,7 +59,7 @@ nsScrollFrame::Init(nsIPresContext&  aPresContext,
                                             aPrevInFlow);
 
   // Create the scrolling view
-  CreateScrollingView();
+  CreateScrollingView(aPresContext);
   return rv;
 }
   
@@ -129,7 +132,7 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
 }
 
 nsresult
-nsScrollFrame::CreateScrollingView()
+nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
 {
   nsIView*  view;
 
@@ -197,6 +200,31 @@ nsScrollFrame::CreateScrollingView()
     nsScrollPreference scrollPref = (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow)
                                     ? nsScrollPreference_kAlwaysScroll :
                                       nsScrollPreference_kAuto;
+    // if this is a scroll frame for a viewport and its webshell 
+    // has its scrolling set, use that value
+    nsIFrame* parentFrame = nsnull;
+    GetParent(&parentFrame);
+    nsCOMPtr<nsIAtom> frameType;
+    parent->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::viewportFrame == frameType) {
+      nsCOMPtr<nsISupports> container;
+      rv = aPresContext.GetContainer(getter_AddRefs(container));
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIWebShell> webShell;
+        rv = container->QueryInterface(kIWebShellIID, getter_AddRefs(webShell));
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 scrolling = -1; // -1 indicates not set
+          webShell->GetScrolling(scrolling);
+          if (-1 != scrolling) {
+            if (NS_STYLE_OVERFLOW_SCROLL == scrolling) {
+              scrollPref = nsScrollPreference_kAlwaysScroll;
+            } else if (NS_STYLE_OVERFLOW_AUTO == scrolling) {
+              scrollPref = nsScrollPreference_kAuto;
+            }
+          }
+        }
+      }
+    }
     scrollingView->SetScrollPreference(scrollPref);
 
     // Set the scrolling view's insets to whatever our border is
