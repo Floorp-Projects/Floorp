@@ -32,7 +32,7 @@
 
 class nsMathMLmtdFrame : public nsAreaFrame {
 public:
-  friend nsresult NS_NewMathMLmtdFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,

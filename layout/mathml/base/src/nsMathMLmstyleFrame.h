@@ -42,7 +42,7 @@
 
 class nsMathMLmstyleFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmstyleFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,

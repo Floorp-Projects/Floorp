@@ -44,13 +44,13 @@
 //
 
 nsresult
-NS_NewMathMLmfencedFrame(nsIFrame** aNewFrame)
+NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMathMLmfencedFrame* it = new nsMathMLmfencedFrame;
+  nsMathMLmfencedFrame* it = new (aPresShell) nsMathMLmfencedFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -126,7 +126,7 @@ nsMathMLmfencedFrame::ReCreateFencesAndSeparators()
   // see if the opening fence is there ...
   data = '('; // default as per the MathML REC
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                   nsMathMLAtoms::open, value)) {
+                   nsMathMLAtoms::open_, value)) {
     value.Trim(" ");
     data = value;
   }
@@ -139,7 +139,7 @@ nsMathMLmfencedFrame::ReCreateFencesAndSeparators()
   // see if the closing fence is there ...
   data = ')'; // default as per the MathML REC
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                   nsMathMLAtoms::close, value)) {
+                   nsMathMLAtoms::close_, value)) {
     value.Trim(" ");
     data = value;
   }
@@ -152,7 +152,7 @@ nsMathMLmfencedFrame::ReCreateFencesAndSeparators()
   // see if separators are there ...
   data = ','; // default as per the MathML REC
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                   nsMathMLAtoms::separators, value)) {
+                   nsMathMLAtoms::separators_, value)) {
     value.Trim(" ");
     data = value;
   }
@@ -263,14 +263,14 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   // Ask stretchy children to stretch themselves
   
   nsStretchDirection stretchDir = NS_STRETCH_DIRECTION_VERTICAL;
-  nsCharMetrics parentSize(aDesiredSize);
+  nsStretchMetrics parentSize(aDesiredSize);
   aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
     
   childFrame = mFrames.FirstChild();
   while (childFrame) {
     // retrieve the metrics that was stored at the previous pass
     childFrame->GetRect(rect);
-    nsCharMetrics childSize(rect.x, rect.y, rect.width, rect.height);
+    nsStretchMetrics childSize(rect.x, rect.y, rect.width, rect.height);
     //////////
     // Stretch ...
     // Only directed at frames that implement the nsIMathMLFrame interface
@@ -312,7 +312,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   fm->GetMaxAscent(fontAscent);
   fm->GetMaxDescent(fontDescent);
   em = NSToCoordRound(float(font.mFont.size));
-  parentSize = nsCharMetrics(aDesiredSize);
+  parentSize = nsStretchMetrics(aDesiredSize);
 
   nscoord dx = 0; // running x-origin of children ...
 
@@ -351,7 +351,12 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   while (childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
       childFrame->GetRect(rect);
-      childFrame->MoveTo(aPresContext, rect.x, aDesiredSize.ascent - rect.y);
+
+      // childFrame->MoveTo(aPresContext, rect.x, aDesiredSize.ascent - rect.y);
+      nsHTMLReflowMetrics childSize(nsnull);
+      childSize.width = rect.width;
+      childSize.height = rect.height;
+      FinishReflowChild(childFrame, aPresContext, childSize, rect.x, aDesiredSize.ascent - rect.y, 0);
     }
     childFrame->GetNextSibling(&childFrame);
   }
@@ -387,12 +392,12 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
                                  nscoord              fontAscent,
                                  nscoord              fontDescent,
                                  nscoord              em,
-                                 nsCharMetrics&       aContainerSize,
+                                 nsStretchMetrics&    aContainerSize,
                                  nsHTMLReflowMetrics& aDesiredSize,
                                  nscoord&             aX)
 {
   if (aMathMLChar && 0 < aMathMLChar->Length()) {
-    nsCharMetrics aCharSize(fontDescent, fontAscent, 0, fontDescent + fontAscent);
+    nsStretchMetrics aCharSize(fontDescent, fontAscent, 0, fontDescent + fontAscent);
     aRenderingContext.GetWidth(aMathMLChar->GetUnicode(), 
                                PRUint32(aMathMLChar->Length()), 
                                aCharSize.width);

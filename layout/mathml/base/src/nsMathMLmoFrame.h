@@ -32,7 +32,7 @@
 
 class nsMathMLmoFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmoFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmoFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
   
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
@@ -40,6 +40,11 @@ public:
        nsIFrame*        aParent,
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD
+  SetInitialChildList(nsIPresContext* aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList);
 
   NS_IMETHOD
   Paint(nsIPresContext*      aPresContext,
@@ -53,12 +58,12 @@ public:
   Stretch(nsIPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
-          nsCharMetrics&       aContainerSize,
-          nsCharMetrics&       aDesiredStretchSize);
+          nsStretchMetrics&    aContainerSize,
+          nsStretchMetrics&    aDesiredStretchSize);
 
   // helper method to lookup the operator dictionary and initialize our member data
   void InitData();
-  
+
 protected:
   nsMathMLmoFrame();
   virtual ~nsMathMLmoFrame();

@@ -56,7 +56,7 @@ TODO:
 
 class nsMathMLmsqrtFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmsqrtFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,

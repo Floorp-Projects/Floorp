@@ -44,13 +44,13 @@
 //
 
 nsresult
-NS_NewMathMLmstyleFrame(nsIFrame** aNewFrame)
+NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMathMLmstyleFrame* it = new nsMathMLmstyleFrame;
+  nsMathMLmstyleFrame* it = new (aPresShell) nsMathMLmstyleFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -82,7 +82,7 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
   // see if the displaystyle attribute is there
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                   nsMathMLAtoms::displaystyle, value)) {
+                   nsMathMLAtoms::displaystyle_, value)) {
     if (value == "true") {
       mDisplayStyle = PR_TRUE;
       mFlags |= NS_MATHML_MSTYLE_DISPLAYSTYLE;
@@ -95,7 +95,7 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
 
   // see if the scriptlevel attribute is there
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                   nsMathMLAtoms::scriptlevel, value)) {
+                   nsMathMLAtoms::scriptlevel_, value)) {
     PRInt32 aErrorCode, aUserValue;
     aUserValue = value.ToInteger(&aErrorCode); 
     if (NS_SUCCEEDED(aErrorCode)) {

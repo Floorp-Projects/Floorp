@@ -23,13 +23,9 @@
 #define nsMathMLChar_h___
 
 #include "nsMathMLOperators.h"
+#include "nsIMathMLFrame.h"
 
-typedef PRUint32 nsStretchDirection;
-
-#define NS_STRETCH_DIRECTION_HORIZONTAL   0
-#define NS_STRETCH_DIRECTION_VERTICAL     1
-
-// chars that we know how to stretch
+// chars that we know how something about
 enum nsMathMLCharEnum {
   eMathMLChar_DONT_STRETCH = -1,
   eMathMLChar_LeftParenthesis,
@@ -44,57 +40,12 @@ enum nsMathMLCharEnum {
   eMathMLChar_LeftArrow, 
   eMathMLChar_RightArrow,   
   eMathMLChar_RadicalBar,
+  eMathMLChar_Radical,
+  eMathMLChar_VerticalBar,
   eMathMLChar_COUNT
 };
 
-// Structure used for a char's size and alignment information.
-struct nsCharMetrics {
-//  nscoord leading;
-  nscoord descent, ascent;
-  nscoord width, height;
-
-  nsCharMetrics(nscoord aDescent=0, nscoord aAscent=0, 
-                nscoord aWidth=0, nscoord aHeight=0) {
-    width = aWidth; 
-    height = aHeight;
-    ascent = aAscent; 
-    descent = aDescent;
-  }
-
-  nsCharMetrics(const nsCharMetrics& aCharMetrics) {
-    width = aCharMetrics.width; 
-    height = aCharMetrics.height;
-    ascent = aCharMetrics.ascent; 
-    descent = aCharMetrics.descent;
-  }
-
-  nsCharMetrics(const nsHTMLReflowMetrics& aReflowMetrics) {
-    width = aReflowMetrics.width; 
-    height = aReflowMetrics.height;
-    ascent = aReflowMetrics.ascent; 
-    descent = aReflowMetrics.descent;
-  }
-
-#if 0
-  void 
-  operator=(const nsCharMetrics& aCharMetrics) {
-    width = aCharMetrics.width; 
-    height = aCharMetrics.height;
-    ascent = aCharMetrics.ascent; 
-    descent = aCharMetrics.descent;
-  }
-#endif
-
-  PRBool
-  operator==(const nsCharMetrics& aCharMetrics) {
-    return (width == aCharMetrics.width &&
-            height == aCharMetrics.height &&
-            ascent == aCharMetrics.ascent &&
-            descent == aCharMetrics.descent);
-  }
-};
-
-// class used to handle stretchy symbols (accent and boundary symbols)
+// class used to handle stretchy symbols (accent and boundary symbol)
 class nsMathMLChar
 {
 public:
@@ -103,47 +54,57 @@ public:
   {
   }
 
-/*
-  nsMathMLChar() : mData(),
-                   mGlyph(0)
-  {
-    nsStr::Initialize(mData, eTwoByte); // with MathML, we are two-byte by default
-  }
-*/
-
   virtual ~nsMathMLChar()
   {
   }
  
-  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   nsIStyleContext*     aStyleContext);
+  NS_IMETHOD
+  Paint(nsIPresContext*      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        nsIStyleContext*     aStyleContext);
 
   // This is the method called to ask the char to stretch itself.
   // aDesiredStretchSize is an IN/OUT parameter.
   // On input  - it contains our current size.
   // On output - the same size or the new size that the char wants.
-  NS_IMETHOD Stretch(nsIPresContext*      aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     nsIStyleContext*     aStyleContext,
-                     nsStretchDirection   aStretchDirection,
-                     nsCharMetrics&       aContainerSize,
-                     nsCharMetrics&       aDesiredStretchSize);
+  NS_IMETHOD
+  Stretch(nsIPresContext*      aPresContext,
+          nsIRenderingContext& aRenderingContext,
+          nsIStyleContext*     aStyleContext,
+          nsStretchDirection   aStretchDirection,
+          nsStretchMetrics&    aContainerSize,
+          nsStretchMetrics&    aDesiredStretchSize);
+
+  // If you call SetData(), it will lookup the enum of the data
+  // and set mEnum for you. If the data is an arbitrary string for 
+  // which no enum is defined, mEnum is set to eMathMLChar_DONT_STRETCH
+  // and the data is interpreted as a normal string.
+  void
+  SetData(nsString& aData);
 
   void
-  SetData(nsString& aData) {
-    mData = aData;
-    SetEnum();
-  }
-
-  void 
   GetData(nsString& aData) {
     aData = mData;
+  }
+
+  // If you call SetEnum(), it will lookup the actual value of the data and
+  // set it for you. All the enums listed above have their corresponding data.
+  void
+  SetEnum(nsMathMLCharEnum aEnum);
+
+  nsMathMLCharEnum
+  Enum() {
+    return mEnum;
   }
 
   PRInt32
   Length() {
     return mData.Length();
+  }
+
+  nsStretchDirection
+  GetStretchDirection() {
+    return mDirection;
   }
 
   // Sometimes we only want to pass the data to another routine,
@@ -164,22 +125,20 @@ public:
   }
 
 private:
-  nsString         mData;
-  PRUnichar        mGlyph;
-  nsRect           mRect;
-  PRInt32          mDirection;
-  nsMathMLCharEnum mEnum;
+  nsString           mData;
+  PRUnichar          mGlyph;
+  nsRect             mRect;
+  nsStretchDirection mDirection;
+  nsMathMLCharEnum   mEnum;
 
   // helper methods
-  void             
-  SetEnum();
 
   static void
-  DrawChar(nsIRenderingContext& aRenderingContext, 
-           PRUnichar            aChar, 
-           nscoord              aX,
-           nscoord              aY,
-           nsRect&              aClipRect);
+  DrawGlyph(nsIRenderingContext& aRenderingContext, 
+            PRUnichar            aChar, 
+            nscoord              aX,
+            nscoord              aY,
+            nsRect&              aClipRect);
 
   static nsresult
   PaintVertically(nsIPresContext*      aPresContext,

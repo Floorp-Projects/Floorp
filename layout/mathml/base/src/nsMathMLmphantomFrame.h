@@ -32,7 +32,7 @@
 
 class nsMathMLmphantomFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmphantomFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
   Paint(nsIPresContext*      aPresContext,

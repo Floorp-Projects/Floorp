@@ -48,6 +48,7 @@
 // XXX Error-prone stuff. See how it can be automated.
 
 /* Structure of the table gMathMLCharGlyph[]:
+   ------------------------------------------
    The table is divided into sections, each corresponding to a
    stretchy symbol. Each section itself is divided into two blocks
    that are separated with the special null code 0x0000.
@@ -58,8 +59,8 @@
    Another separate table, gMathMLCharIndex[], is used to store 
    pointers to the beginning of each section.
 
-   3 steps are needed to extend the table:
-   ---------------------------------------
+   Three steps are needed to extend the table:
+   ---------------------------------------=---
    1. Append your new section in gMathMLCharGlyph[].
    2. Append your new enum in nsMathMLCharEnum, and  kMathMLChar
    3. Append a new pointer in gMathMLCharIndex[], so that 
@@ -222,17 +223,29 @@ static PRUnichar gMathMLCharGlyph[] = {
   //------------
   //index = 66
   //Section for: square-root bar
-  0xF8E5, // RADICAL EXTENDER	# radicalex (CUS)
+  0x00AF, // RADICAL EXTENDER	# radicalex (CUS) -- formerly 0xF8E5
 
   0x0000, // That's all folks ...
   //Block of partial glyphs in the order top/left, middle, bottom/right, glue
-  0xF8E5, // RADICAL EXTENDER	# radicalex (CUS)
-  0xF8E5, // RADICAL EXTENDER	# radicalex (CUS)
-  0xF8E5, // RADICAL EXTENDER	# radicalex (CUS)
-  0xF8E5, // RADICAL EXTENDER	# radicalex (CUS)
+  0x00AF, // RADICAL EXTENDER	# radicalex (CUS)
+  0x00AF, // RADICAL EXTENDER	# radicalex (CUS)
+  0x00AF, // RADICAL EXTENDER	# radicalex (CUS)
+  0x00AF, // RADICAL EXTENDER	# radicalex (CUS)
 
   //------------
   //index = 72
+  //Section for: vertical bar (0x2223)
+  '|',
+
+  0x0000, // That's all folks ...
+  //Block of partial glyphs in the order top/left, middle, bottom/right, glue
+  '|',
+  '|',
+  '|',
+  '|',
+
+  //------------
+  //index = 78
   //end of table ...
   0x0000, 
 };
@@ -251,45 +264,82 @@ static PRInt32 gMathMLCharIndex[] = {
   54,  // eMathMLChar_LeftArrow, 
   60,  // eMathMLChar_RightArrow, 
   66,  // eMathMLChar_RadicalBar, 
-  72,  // safeguard, *must* always point at the *end* of gMathMLCharGlyph[]  
+  72,  // eMathMLChar_Radical,  -- placeholder for now
+  72,  // eMathMLChar_VerticalBar, 
+  78,  // safeguard, *must* always point at the *end* of gMathMLCharGlyph[]  
 };
 
 // data to enable a clean architecture and extensibility
 
+#define STRETCH_UNSUPPORTED NS_STRETCH_DIRECTION_UNSUPPORTED
+#define STRETCH_HORIZONTAL  NS_STRETCH_DIRECTION_HORIZONTAL
+#define STRETCH_VERTICAL    NS_STRETCH_DIRECTION_VERTICAL
+
 static const PRInt32 kMathMLChar[] = {
-  eMathMLChar_LeftParenthesis  ,  '(',
-  eMathMLChar_RightParenthesis ,  ')',
-  eMathMLChar_Integral         , 0x222B,
-  eMathMLChar_LeftSquareBracket,  '[',
-  eMathMLChar_RightSquareBracket, ']',
-  eMathMLChar_LeftCurlyBracket,   '{',
-  eMathMLChar_RightCurlyBracket,  '}',
-  eMathMLChar_DownArrow,         0x2193,
-  eMathMLChar_UpArrow,           0x2191,
-  eMathMLChar_LeftArrow,         0x2190,
-  eMathMLChar_RightArrow,        0x2192,
-  eMathMLChar_RadicalBar,        0xF8E5,
-//  eMathMLChar_Radical,           0x221A,
+  eMathMLChar_LeftParenthesis  ,  '(',   STRETCH_VERTICAL,
+  eMathMLChar_RightParenthesis ,  ')',   STRETCH_VERTICAL,
+  eMathMLChar_Integral         , 0x222B, STRETCH_VERTICAL,
+  eMathMLChar_LeftSquareBracket,  '[',   STRETCH_VERTICAL,
+  eMathMLChar_RightSquareBracket, ']',   STRETCH_VERTICAL,
+  eMathMLChar_LeftCurlyBracket,   '{',   STRETCH_VERTICAL,
+  eMathMLChar_RightCurlyBracket,  '}',   STRETCH_VERTICAL,
+  eMathMLChar_DownArrow,         0x2193, STRETCH_VERTICAL,
+  eMathMLChar_UpArrow,           0x2191, STRETCH_VERTICAL,
+  eMathMLChar_LeftArrow,         0x2190, STRETCH_HORIZONTAL,
+  eMathMLChar_RightArrow,        0x2192, STRETCH_HORIZONTAL,
+  eMathMLChar_RadicalBar,        0x00AF, STRETCH_HORIZONTAL,
+  eMathMLChar_Radical,           0x221A, STRETCH_UNSUPPORTED,
+  eMathMLChar_VerticalBar,        '|',   STRETCH_VERTICAL,
 };
+
+#undef STRETCH_UNSUPPORTED
+#undef STRETCH_HORIZONTAL
+#undef STRETCH_VERTICAL
 
 //---------------------------------------------
 
-// Helper method that detects a new enum and cache it for you.
-// You do not have to call this method. SetData() will call it
-// for you whenever mData changes.
+// If you call SetData(), it will lookup the enum
+// of the char and set it for you.
 void
-nsMathMLChar::SetEnum() {
+nsMathMLChar::SetData(nsString& aData) {
+  mData = aData;
+  // some assumptions until proven otherwise!
   mEnum = eMathMLChar_DONT_STRETCH;
+  mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  // lookup the enum ...
   if (1 == mData.Length()) {
     PRUnichar ch = mData[0];
     PRInt32 count = sizeof(kMathMLChar) / sizeof(kMathMLChar[0]);
-    for (PRInt32 i = 0; i < count; i += 2) {
+    for (PRInt32 i = 0; i < count; i += 3) {
       if (ch == kMathMLChar[i+1]) {
         mEnum = nsMathMLCharEnum(kMathMLChar[i]);
+        mDirection = kMathMLChar[i+2];
         break;
       }
     }
   }
+}
+
+// If you call SetEnum(), it will lookup the actual value  
+// of the char and set it for you.
+void
+nsMathMLChar::SetEnum(nsMathMLCharEnum aEnum) {
+  mEnum = aEnum;
+  // some assumptions until proven otherwise!
+  mData = "";
+  mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  // lookup the data ...
+  if (mEnum != eMathMLChar_DONT_STRETCH) {
+    PRInt32 count = sizeof(kMathMLChar) / sizeof(kMathMLChar[0]);
+    for (PRInt32 i = 0; i < count; i += 3) {
+      if (mEnum == kMathMLChar[i]) {
+        mData = PRUnichar(kMathMLChar[i+1]);
+        mDirection = kMathMLChar[i+2];
+        break;
+      }
+    }
+  }
+  NS_ASSERTION(mData.Length(), "Something is wrong somewhere");
 }
 
 /*
@@ -328,46 +378,47 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       nsIStyleContext*     aStyleContext,
                       nsStretchDirection   aStretchDirection,
-                      nsCharMetrics&       aContainerSize,
-                      nsCharMetrics&       aDesiredStretchSize)
+                      nsStretchMetrics&    aContainerSize,
+                      nsStretchMetrics&    aDesiredStretchSize)
 {
   nsresult rv = NS_OK;
+  nsStretchDirection aDirection = aStretchDirection;
+
+  if (aDirection == NS_STRETCH_DIRECTION_DEFAULT) {
+    aDirection = mDirection;
+  }
 
   // quick return if there is nothing special about this char
-  if (eMathMLChar_DONT_STRETCH == mEnum) {
+  if (eMathMLChar_DONT_STRETCH == mEnum || aDirection != mDirection) {
     return NS_OK;
   }
 
   // check the common situations where stretching is not actually needed
   // XXX need better criteria
-  if (aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) {
+  if (aDirection == NS_STRETCH_DIRECTION_VERTICAL) {
     if (aContainerSize.height <= aDesiredStretchSize.height) {
-      mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
+      mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char later behaves like a normal char
       return NS_OK;
     }
   }
-  else if (aStretchDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
+  else if (aDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
     if (aContainerSize.width <= aDesiredStretchSize.width) {
-      mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
+      mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char later behaves like a normal char
       return NS_OK;
     }
   }
 
-//  printf("Container height:%d  ascent:%d  descent:%d\n contains height:%d  ascent:%d  descent:%d\n",
-//         aContainerSize.height, aContainerSize.ascent, aContainerSize.descent,
-//         aDesiredStretchSize.height, aDesiredStretchSize.ascent, 
+//  printf("Container height:%d  width:%d  ascent:%d  descent:%d\n contains height:%d  width:%d  ascent:%d  descent:%d\n",
+//         aContainerSize.height, aContainerSize.width, aContainerSize.ascent, aContainerSize.descent,
+//         aDesiredStretchSize.height, aDesiredStretchSize.width, aDesiredStretchSize.ascent, 
 //         aDesiredStretchSize.descent);
 
   // XXX Note: there are other symbols that just need to slightly
   //           increase their size, like \Sum
 
+  // Set font
   nsStyleFont font;
-  nsStyleColor color;
   aStyleContext->GetStyle(eStyleStruct_Font, font);
-  aStyleContext->GetStyle(eStyleStruct_Color, color);
-
-  // Set color and font
-  aRenderingContext.SetColor(color.mColor);
   aRenderingContext.SetFont(font.mFont);
 
   nscoord height = aDesiredStretchSize.height;
@@ -383,24 +434,25 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   PRBool sizeOK = PR_FALSE; 
   PRUnichar ch = gMathMLCharGlyph[index++];
   nsBoundingMetrics bm;
+
   while (ch && index <= limit) {
     // printf("Checking size of:%c  index:%d\n", ch & 0x00FF, index);
     rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
     if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
     h = bm.ascent - bm.descent;
-    w = bm.width;
+    w = bm.rightBearing - bm.leftBearing;
  
     // printf("height:%d  width:%d  ascent:%d  descent:%d\n", 
     //         height, bm.width, bm.ascent, bm.descent);
 
     // XXX temp hack -- need better criteria
-    if ((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL && h > height) || 
-        (aStretchDirection == NS_STRETCH_DIRECTION_HORIZONTAL && w > width)) {
+    if ((aDirection == NS_STRETCH_DIRECTION_VERTICAL && h > height) || 
+        (aDirection == NS_STRETCH_DIRECTION_HORIZONTAL && w > width)) {
       sizeOK = PR_TRUE;
       descent = -bm.descent; // flip the sign, as expected by Gecko
       ascent = bm.ascent;
       height = bm.ascent - bm.descent;
-      width = bm.width;
+      width = bm.rightBearing - bm.leftBearing;
       mGlyph = ch;
       break;
     }
@@ -413,7 +465,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     nscoord a, d;
     h = w = a = d = 0;
     float flex[3] = {0.7f, 0.3f, 0.7f}; // XXX hack!
-    if (aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) {
+    if (aDirection == NS_STRETCH_DIRECTION_VERTICAL) {
       // default is to fill-up the area given to us
       width = aDesiredStretchSize.width;
       height = aContainerSize.height;
@@ -434,7 +486,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         return NS_OK;
       }
     }
-    else if (aStretchDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
+    else if (aDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
       // default is to fill-up the area given to us
       width = aContainerSize.width;
       height = aDesiredStretchSize.height;
@@ -450,6 +502,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
         if (i < 3) w += nscoord(flex[i]*(bm.rightBearing-bm.leftBearing)); // sum widths of the parts...
       }
       if (w <= aContainerSize.width) { // can nicely fit in the available space...
+//printf("%04X can nicely fit in the available space...\n", ch);
 //        ascent = a;
 //        height = a - d;
       } else { // sum of parts doesn't fit in the space... will use a single glyph
@@ -458,9 +511,6 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       }
     }
   }
-
-  // cache the stretch direction to be used later at the painting stage
-  mDirection = aStretchDirection;
 
   aDesiredStretchSize.width = width;
   aDesiredStretchSize.height = height;
@@ -486,13 +536,13 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
   aRenderingContext.SetColor(color.mColor);
   aRenderingContext.SetFont(font.mFont);
 
-  // quick return if there is nothing special about this char ...
-  if (eMathMLChar_DONT_STRETCH == mEnum) {
+  if (eMathMLChar_DONT_STRETCH == mEnum || NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
+    // normal drawing if there is nothing special about this char ...
     aRenderingContext.DrawString(mData.GetUnicode(), PRUint32(mData.Length()), mRect.x, mRect.y);
-    return NS_OK;
+//printf("Painting %04X like a normal char\n", mData[0]);
   }
-
-  if (0 < mGlyph) { // wow, there is a glyph of appropriate size!
+  else if (0 < mGlyph) { // wow, there is a glyph of appropriate size!
+//printf("Painting %04X with a glyph of appropriate size\n", mData[0]);
     aRenderingContext.DrawString(&mGlyph, PRUint32(1), mRect.x, mRect.y);
   }
   else { // paint by parts
@@ -503,10 +553,10 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
     fm->GetMaxAscent(fontAscent);
     fm->GetMaxDescent(fontDescent);
     // do the painting ...
-    if (mDirection == NS_STRETCH_DIRECTION_VERTICAL)
+    if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
       return PaintVertically(aPresContext, aRenderingContext, aStyleContext,
                              fontAscent, fontDescent, mEnum, mRect);
-    else if (mDirection == NS_STRETCH_DIRECTION_HORIZONTAL)
+    else if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
       return PaintHorizontally(aPresContext, aRenderingContext, aStyleContext,
                                fontAscent, fontDescent, mEnum, mRect);
   }
@@ -519,16 +569,16 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
 
 // draw a glyph in a clipped area so that we don't have hairy chars pending outside
 void
-nsMathMLChar::DrawChar(nsIRenderingContext& aRenderingContext, 
-                       PRUnichar            aChar, 
-                       nscoord              aX,
-                       nscoord              aY,
-                       nsRect&              aClipRect) 
+nsMathMLChar::DrawGlyph(nsIRenderingContext& aRenderingContext, 
+                        PRUnichar            aGlyph, 
+                        nscoord              aX,
+                        nscoord              aY,
+                        nsRect&              aClipRect) 
 {
   PRBool clipState;
   aRenderingContext.PushState();
   aRenderingContext.SetClipRect(aClipRect, nsClipCombine_kIntersect, clipState);
-  aRenderingContext.DrawString(&aChar, PRUint32(1), aX, aY);
+  aRenderingContext.DrawString(&aGlyph, PRUint32(1), aX, aY);
   aRenderingContext.PopState(clipState);
 }
 
@@ -548,10 +598,10 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
   // jump past the glyphs of various size...
   PRUnichar ch = gMathMLCharGlyph[index++];
   while (ch && index <= limit) {
-   ch = gMathMLCharGlyph[index++];
+    ch = gMathMLCharGlyph[index++];
   }
   // return if there are no partial glyphs (an erroneous table!)
-  if (!gMathMLCharGlyph[index]) return NS_OK;
+  if (!gMathMLCharGlyph[index]) { printf("Erroneous gMathMLCharGlyph table!\n"); return NS_OK; }
 
   nscoord dx = aRect.x;
   nscoord dy = aRect.y;
@@ -628,7 +678,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
 
     if (!clipRect.IsEmpty()) {
       clipRect.Inflate(onePixel, onePixel);
-      DrawChar(aRenderingContext, ch, dx, dy, clipRect);
+      DrawGlyph(aRenderingContext, ch, dx, dy, clipRect);
     }
   }
 
@@ -653,7 +703,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
       }
       count++;
       dy += stride;
-      DrawChar(aRenderingContext, ch, dx, dy, clipRect);
+      DrawGlyph(aRenderingContext, ch, dx, dy, clipRect);
 //    NS_ASSERTION(5000 == count, "Error - gMathMLCharGlyph is incorrectly set");
       if (1000 == count) return NS_ERROR_UNEXPECTED;
     }
@@ -686,7 +736,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
    ch = gMathMLCharGlyph[index++];
   }
   // return if there are no partial glyphs (an erroneous table!)
-  if (!gMathMLCharGlyph[index]) return NS_OK;
+  if (!gMathMLCharGlyph[index]) { printf("Erroneous gMathMLCharGlyph table!\n"); return NS_OK; }
 
   nscoord dx = aRect.x;
   nscoord dy = aRect.y;
@@ -757,7 +807,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
 //  getchar();
     if (!clipRect.IsEmpty()) {
       clipRect.Inflate(onePixel, onePixel);
-      DrawChar(aRenderingContext, ch, dx, dy, clipRect);
+      DrawGlyph(aRenderingContext, ch, dx, dy, clipRect);
     }
   }
 
@@ -784,7 +834,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
       }
       count++;
       dx += stride;
-      DrawChar(aRenderingContext, ch, dx, dy, clipRect);
+      DrawGlyph(aRenderingContext, ch, dx, dy, clipRect);
 //    NS_ASSERTION(5000 == count, "Error - gMathMLCharGlyph is incorrectly set");
       if (1000 == count) return NS_ERROR_UNEXPECTED;
 //    printf("Drawing %04X ascent:%d descent:%d  at position dx:%d dy:%d\n",
