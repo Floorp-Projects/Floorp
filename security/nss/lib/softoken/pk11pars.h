@@ -235,7 +235,7 @@ pk11_argParseModuleSpec(char *modulespec, char **lib, char **mod,
     int next;
     modulespec = pk11_argStrip(modulespec);
 
-    *lib = *mod = *parameters = 0;
+    *lib = *mod = *parameters = *nss = 0;
 
     while (*modulespec) {
 	PK11_HANDLE_STRING_ARG(modulespec,*lib,PK11_ARG_LIBRARY_PARAMETER,;)
