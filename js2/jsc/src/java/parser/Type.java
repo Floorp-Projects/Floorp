@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * 
+ * The interfaces for all types.
  */
 
 public interface Type extends Init {

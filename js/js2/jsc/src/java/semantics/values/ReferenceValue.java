@@ -25,12 +25,12 @@ import java.util.Vector;
 import java.util.Enumeration;
 
 /**
- * class ReferenceValue
+ * A reference value.
  */
 
 public class ReferenceValue extends Value {
 
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     Scope  scope;
     Vector namespaces;
@@ -101,7 +101,7 @@ public class ReferenceValue extends Value {
     public Slot getSlot(Context context) throws Exception {
 
         if( debug ) {
-            Debugger.trace("ReferenceType.getSlot() with context = " + context );
+            Debugger.trace("ReferenceValue.getSlot() with namespaces = " + namespaces + ", name = " + name );
         }
 
         Slot slot = null;
@@ -140,7 +140,7 @@ public class ReferenceValue extends Value {
     public Value getValue(Context context) throws Exception {
 
         if( debug ) {
-            Debugger.trace("ReferenceType.getValue() with context = " + context );
+            Debugger.trace("ReferenceValue.getValue() with namespaces = " + namespaces + ", name = " + name );
         }
 
         Value value = UndefinedValue.undefinedValue;
@@ -169,7 +169,7 @@ public class ReferenceValue extends Value {
     public Value getType(Context context) throws Exception {
 
         if( debug ) {
-            Debugger.trace("ReferenceType.getValue() with context = " + context );
+            Debugger.trace("ReferenceValue.getType() with namespaces = " + namespaces + ", name = " + name );
         }
 
         Value type = ObjectType.type;
@@ -183,7 +183,7 @@ public class ReferenceValue extends Value {
     Value getAttrs(Context context) throws Exception {
 
         if( debug ) {
-            Debugger.trace("ReferenceType.getAttrs() with context = " + context );
+            Debugger.trace("ReferenceValue.getAttrs() with namespaces = " + namespaces + ", name = " + name );
         }
 
         Value attrs = null;

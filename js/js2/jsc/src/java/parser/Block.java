@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * class Block
+ * Represents a basic block for flow analysis.
  */
 
 public class Block {

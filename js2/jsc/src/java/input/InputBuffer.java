@@ -21,9 +21,7 @@
  */
 
 /**
- * InputBuffer.java
- *
- * Filters and buffers characters from a Reader.
+ * Filters and buffers characters from a input reader.
  */
 
 package com.compilercompany.ecmascript;
@@ -490,13 +488,13 @@ public class InputBuffer implements CharacterClasses {
     }
 
     public int getColPos(int pos) {
-        Debugger.trace("pos " + pos);
+        //Debugger.trace("pos " + pos);
         int i,len;
         for(i = 0; line_breaks[i] <= pos && i <= lnNum; i++)
             ;
         
         int offset = line_breaks[i-1];
-        Debugger.trace("offset " + offset);
+        //Debugger.trace("offset " + offset);
         
         return pos-offset;
     }

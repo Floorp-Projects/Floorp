@@ -20,6 +20,10 @@
  * Jeff Dyer <jeff@compilercompany.com>
  */
 
+/*
+ * Unicode character classes.
+ */
+
 package com.compilercompany.ecmascript;
 
 interface CharacterClasses {

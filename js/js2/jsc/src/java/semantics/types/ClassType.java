@@ -29,7 +29,7 @@ import java.util.Vector;
 
 public final class ClassType extends ObjectType implements Type {
 
-    boolean debug = false;
+    private static final boolean debug = false;
   
     public static final TypeValue type = new TypeValue(new ClassType());
 
@@ -47,7 +47,7 @@ public final class ClassType extends ObjectType implements Type {
 
     private ClassType() {
 	    super("class");
-        TypeType.type.addSub(this);
+        ObjectType.type.addSub(this);
     }
 
     private Type superType;

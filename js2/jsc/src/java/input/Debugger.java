@@ -23,11 +23,9 @@
 package com.compilercompany.ecmascript;
 import java.io.*;
 
-/**
- *
- * class Debugger
- *
-**/
+/*
+ * Debugging tool.
+ */
 
 public final class Debugger {
 

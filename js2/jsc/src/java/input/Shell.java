@@ -26,7 +26,7 @@ import sun.tools.javac.*;
 import java.io.*;
 
 /**
- * class Shell
+ * A test shell.
  */
 
 public final class Shell {

@@ -25,8 +25,8 @@ import java.lang.reflect.*;
 import sun.tools.javac.*;
 import java.io.*;
 
-/**
- * class Shell
+/*
+ * A test tool.
  */
 
 public final class Shell implements Tokens {

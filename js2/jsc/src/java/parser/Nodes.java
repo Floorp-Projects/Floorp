@@ -20,6 +20,10 @@
  * Jeff Dyer <jeff@compilercompany.com>
  */
 
+/*
+ * Parse tree nodes.
+ */
+
 package com.compilercompany.ecmascript;
 
 /**

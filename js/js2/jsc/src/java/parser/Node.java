@@ -23,9 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * class Node
- *
- * To be a node you need to implement this interface. 
+ * The base Node class.
  */
 
 public class Node {

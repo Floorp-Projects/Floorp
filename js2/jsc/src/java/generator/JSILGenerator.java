@@ -24,7 +24,7 @@ package com.compilercompany.ecmascript;
 import java.io.*;
 
 /**
- * JSILGenerator
+ * Generates psuedo intermediate code.
  */
 
 public class JSILGenerator extends Evaluator implements Tokens {

@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * Scope
+ * A scope, which contains slots.
  */
 
 public interface Scope {

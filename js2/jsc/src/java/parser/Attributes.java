@@ -20,6 +20,10 @@
  * Jeff Dyer <jeff@compilercompany.com>
  */
 
+/*
+ * Not used.
+ */
+
 package com.compilercompany.ecmascript;
 
 interface Attributes {

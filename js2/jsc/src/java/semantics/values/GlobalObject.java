@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * GlobalObject
+ * The global object initializer.
  *
  * An instance of this class is used to initialize a global
  * object.

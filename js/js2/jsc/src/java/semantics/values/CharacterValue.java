@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * class CharacterValue
+ * A character value.
  */
 
 public class CharacterValue extends ObjectValue {

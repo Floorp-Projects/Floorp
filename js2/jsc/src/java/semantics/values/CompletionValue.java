@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * class CompletionValue
+ * A completion value (intermediate).
  */
 
 public class CompletionValue extends Value {

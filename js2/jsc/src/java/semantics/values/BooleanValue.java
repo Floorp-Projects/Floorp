@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * class BooleanValue
+ * A boolean value: true or false.
  */
 
 public class BooleanValue extends ObjectValue {

@@ -25,9 +25,7 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 /**
- * Value
- *
- * This is the value class from which all other values derive.
+ * The value class from which all other values derive.
  */
 
 abstract public class Value implements Scope {

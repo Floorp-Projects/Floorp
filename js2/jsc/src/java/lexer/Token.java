@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * Token.java
+ * Represents token instances: literals and identifiers.
  *
  * This file implements the class Token that is used to carry
  * information from the Scanner to the Parser.

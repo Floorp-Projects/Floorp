@@ -23,7 +23,7 @@
 package com.compilercompany.ecmascript;
 
 /**
- * Tokens.java
+ * Defines token classes and their print names.
  *
  * This interface defines values for each token class that occurs in
  * ECMAScript 4. All but numericliteral, stringliteral, regexpliteral, and

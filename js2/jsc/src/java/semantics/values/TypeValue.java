@@ -25,7 +25,7 @@ import java.util.Vector;
 import java.util.Enumeration;
 
 /**
- * class TypeValue
+ * A type value.
  *
  * TypeValues have an internal property valueType that is
  * the type that this value represents. The type of a TypeValue

@@ -24,8 +24,10 @@ import com.compilercompany.ecmascript.*;
 import sun.tools.util.CommandLine;
 import java.io.*;
 
-/**
+/*
+ * The main driver.
  */
+
 public class Main {
 
     String[] classes;

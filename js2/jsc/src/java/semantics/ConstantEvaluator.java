@@ -25,7 +25,7 @@ import java.util.*;
 import java.io.StringReader;
 
 /**
- * ConstantEvaluator
+ * Computes the compile-time values of a program.
  *
  * The ConstantEvaluator evaluates all expressions to either Undefined or
  * a definite constant value. Each statement evaluates to a CompletionValue
@@ -38,7 +38,7 @@ import java.io.StringReader;
 
 public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
 
-    private static final boolean debug = false;
+    private static final boolean debug = true;
 
     // Expressions
 
@@ -81,7 +81,7 @@ public class ConstantEvaluator extends Evaluator implements Tokens, Attributes {
         }
 
         if( qualifier != null && 
-            !(NamespaceType.type.includes(qualifier) || ClassType.type.includes(qualifier)) ) {
+            !(NamespaceType.type.includes(qualifier) || TypeType.type.includes(qualifier)) ) {
             error(context,0,"Identifier qualifier must evaluate to a namespace or type.",node.qualifier.pos());
             return UndefinedValue.undefinedValue;
         } 

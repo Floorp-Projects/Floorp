@@ -42,7 +42,7 @@ parser, semantics, and generator) of the compiler. Thus, a useful idiom
 is to give 'make' two targets, the component you just modified followed
 by the sanity test target like this:
 
-    make parser sanity
+	make parser sanity
 
 To automatically rebuild the parser and run the sanity test. What's
 missing is any kind of dependency rules, so using the root target 

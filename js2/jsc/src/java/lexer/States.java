@@ -22,8 +22,9 @@
 
 package com.compilercompany.ecmascript;
 
-/**
-**/
+/*
+ * The states of the scanner.
+ */
 
 interface States {
 

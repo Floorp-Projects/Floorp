@@ -26,9 +26,7 @@ import java.io.*;
 import java.lang.reflect.*;
 
 /**
- * class Parser
- *
- * Parses ES4 programs.
+ * Parse JS2 programs.
  */
 
 public class Parser implements Tokens, Errors {

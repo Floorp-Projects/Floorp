@@ -25,7 +25,7 @@ import java.util.Vector;
 import java.util.Enumeration;
 
 /**
- * class ListValue
+ * A list value (intermediate).
  */
 
 public class ListValue extends ObjectValue {
