@@ -31,6 +31,7 @@
 #define NS_FRAME_NO_MOVE_FRAME        (0x0002 | NS_FRAME_NO_MOVE_VIEW)
 #define NS_FRAME_NO_SIZE_VIEW         0x0004
 #define NS_FRAME_NO_MOVE_CHILD_VIEWS  0x0008
+#define NS_FRAME_NO_VISIBILITY        0x0010
 
 /**
  * Implementation of a container frame.

@@ -535,8 +535,10 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     }
 
     // Make sure visibility is correct
-    vm->SetViewVisibility(aView, viewIsVisible ? nsViewVisibility_kShow :
-                          nsViewVisibility_kHide);
+    if (0 == (aFlags & NS_FRAME_NO_VISIBILITY)) {
+      vm->SetViewVisibility(aView, viewIsVisible ? nsViewVisibility_kShow :
+                            nsViewVisibility_kHide);
+    }
 
     // Make sure content transparency is correct
     if (viewIsVisible) {
