@@ -304,7 +304,7 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
     
   </target>
 
-  <target name="run.test.browser" description="Run the test browser">
+  <target name="run.test.browser" depends="main" description="Run the test browser">
 
     <ant antfile="build-tests.xml" target="run.test.browser"/>
     

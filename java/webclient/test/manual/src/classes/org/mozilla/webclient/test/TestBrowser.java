@@ -92,7 +92,10 @@ public class TestBrowser extends JPanel {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 	    BrowserControlFactory.setAppData(System.getProperty("BROWSER_BIN_DIR"));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+	    System.out.println("Can't init test browser, exception: " + e + " "
+			       + e.getMessage());
+	}
 
         JFrame frame = new JFrame("Webclient API Demo - Browser");
 

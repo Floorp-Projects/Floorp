@@ -92,7 +92,9 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     
     nsXPIDLCString uriString;
     RequestToURIString(aRequest, getter_Copies(uriString));
-    jstring uriJstr = ::util_NewStringUTF(env, (const char *) uriString);
+    const char * uriCStr = (const char *) uriString;
+    jstring uriJstr = ::util_NewStringUTF(env, (nsnull != uriCStr 
+						? uriCStr : ""));
     
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
 	   ("EmbedProgress::OnStateChange: URI: %s\n",
