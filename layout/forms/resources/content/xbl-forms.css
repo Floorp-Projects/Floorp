@@ -84,9 +84,9 @@ xul|*.select-menupopup {
   display:-moz-popup!important;
 }
 
-input[type="checkbox"] {
-  -moz-binding: url("chrome://forms/content/checkbox.xml#checkbox");
-  display: -moz-box;
+input[type="checkbox"],
+input[type="radio"] {
+  display: -moz-inline-box;
   margin: 3px 3px 3px 4px;
 
   /* override these values from the input rule */
@@ -99,6 +99,14 @@ input[type="checkbox"] {
   padding-top: 0px;
   padding-bottom: 0px;
   -moz-box-sizing: border-box;
+}
+
+input[type="checkbox"] {
+  -moz-binding: url("chrome://forms/content/checkbox.xml#checkbox");
+}
+
+input[type="radio"] {
+  -moz-binding: url("chrome://forms/content/radio.xml#radio");
 }
 
 button {
