@@ -74,6 +74,8 @@ public:
 	nsGraphicState*	GetGS(void) {return mGS;}
 
 private:
+	nsresult SetupPixelFormat(PixMapHandle pixmap);
+
 	GrafPtr					mPort;						// the onscreen or offscreen GrafPtr;	
 	
   PRUint32      	mWidth;
@@ -85,6 +87,8 @@ private:
 	PRBool					mIsLocked;
 
 	nsGraphicState*	mGS;						// a graphics state for the surface
+	
+	nsPixelFormat	mPixFormat;
 };
 
 #endif

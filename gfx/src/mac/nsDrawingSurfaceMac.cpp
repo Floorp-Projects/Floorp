@@ -62,7 +62,6 @@ nsDrawingSurfaceMac :: nsDrawingSurfaceMac()
   mLockFlags = 0;
 	mIsOffscreen = PR_FALSE;
 	mIsLocked = PR_FALSE;
-
 }
 
 /** --------------------------------------------------- 
@@ -203,8 +202,7 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: IsPixelAddressable(PRBool *aAddressable)
  */
 NS_IMETHODIMP nsDrawingSurfaceMac :: GetPixelFormat(nsPixelFormat *aFormat)
 {
-  //*aFormat = mPixFormat;
-
+  *aFormat = mPixFormat;
   return NS_OK;
 }
 
@@ -224,8 +222,7 @@ GrafPtr	gport;
 	mPort = gport;
 	mGS->Init(surface);
 	
-	
-  return NS_OK;
+	return SetupPixelFormat((reinterpret_cast<CGrafPtr>(mPort))->portPixMap);
 }
 
 /** --------------------------------------------------- 
@@ -239,7 +236,8 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(GrafPtr aPort)
 	// set our grafPtr to the passed in port
   mPort = aPort;
 	mGS->Init(aPort);
-  return NS_OK;
+
+	return SetupPixelFormat((reinterpret_cast<CGrafPtr>(mPort))->portPixMap);
 }
 
 /** --------------------------------------------------- 
@@ -252,7 +250,8 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(nsIWidget *aTheWidget)
 	// get our native graphics port from the widget
  	mPort = reinterpret_cast<GrafPtr>(aTheWidget->GetNativeData(NS_NATIVE_GRAPHIC));
 	mGS->Init(aTheWidget);
-  return NS_OK;
+
+	return SetupPixelFormat((reinterpret_cast<CGrafPtr>(mPort))->portPixMap);
 }
 
 /** --------------------------------------------------- 
@@ -331,6 +330,87 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(PRUint32 aDepth,PRUint32 aWidth,PRUint
 
 	this->Init((GrafPtr)offscreenGWorld);
 	mIsOffscreen = PR_TRUE;
-  return NS_OK;
+	
+	// setup the pixel format
+	return SetupPixelFormat(::GetGWorldPixMap(offscreenGWorld));
 }
 
+#pragma mark -
+
+nsresult nsDrawingSurfaceMac::SetupPixelFormat(PixMapHandle pixmap)
+{
+	long masks[3];
+	
+	switch ((*pixmap)->pixelSize) {
+
+	case 16:
+		// QuickDraw specified a 16-bit surfaces is 5/5/5 with the highest bit unused
+		masks[0] = 0x7C00;
+		masks[1] = 0x03e0;
+		masks[2] = 0x001f;
+		
+		mPixFormat.mRedZeroMask = 0x1f;
+		mPixFormat.mGreenZeroMask = 0x1f;
+		mPixFormat.mBlueZeroMask = 0x1f;
+		mPixFormat.mAlphaZeroMask = 0;
+		mPixFormat.mRedMask = masks[0];
+		mPixFormat.mGreenMask = masks[1];
+		mPixFormat.mBlueMask = masks[2];
+		mPixFormat.mAlphaMask = 0;
+		mPixFormat.mRedCount = 5;
+		mPixFormat.mGreenCount = 5;
+		mPixFormat.mBlueCount = 5;
+		mPixFormat.mAlphaCount = 0;
+		mPixFormat.mRedShift = 10;
+		mPixFormat.mGreenShift = 5;
+		mPixFormat.mBlueShift = 0;
+		mPixFormat.mAlphaShift = 0;
+		
+		return NS_OK;
+	case 32:
+		masks[0] = 0xff0000;
+		masks[1] = 0x00ff00;
+		masks[2] = 0x0000ff;
+		
+		mPixFormat.mRedZeroMask = 0xff;
+		mPixFormat.mGreenZeroMask = 0xff;
+		mPixFormat.mBlueZeroMask = 0xff;
+		
+		mPixFormat.mRedMask = masks[0];
+		mPixFormat.mGreenMask = masks[1];
+		mPixFormat.mBlueMask = masks[2];
+		
+		mPixFormat.mRedCount = 8;
+		mPixFormat.mGreenCount = 8;
+		mPixFormat.mBlueCount = 8;
+		
+		mPixFormat.mRedShift = 16;
+		mPixFormat.mGreenShift = 8;
+		mPixFormat.mBlueShift = 0;
+		
+		/* jturner - I'm not sure if this is strictly necessary, but I'd be worried
+		about some weak OS 8/9 video driver getting upset becuase the high byte wasn't
+		zero. IM is a bit vauge about if this matters, so I'm being paranoid */
+		
+		#ifdef CARBON
+			mPixFormat.mAlphaZeroMask = 0xff;
+			mPixFormat.mAlphaMask = 0xff000000;
+			mPixFormat.mAlphaShift = 24;
+			mPixFormat.mAlphaCount = 8;
+		#else
+			mPixFormat.mAlphaZeroMask = 0;
+			mPixFormat.mAlphaMask = 0;
+			mPixFormat.mAlphaShift = 0;
+			mPixFormat.mAlphaCount = 0;
+		#endif
+		
+		return NS_OK;
+
+	default:
+		/** originally, I had this returning NS_ERROR_NOT_IMPLEMENTED; however, that's
+		going to break the Init() methods for 8-bit depths (and lower). Instead we leave the
+		PixelFormat wit it's default state, i.e all zeroes. Every single gfx implementation has
+		different behaviour for these cases! */
+		return NS_OK;
+	}
+}
