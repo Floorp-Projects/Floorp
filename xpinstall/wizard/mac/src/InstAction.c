@@ -270,6 +270,7 @@ DownloadXPIs(short destVRefNum, long destDirID)
     int markedIndex = 0, currGlobalURLIndex = 0;
     CONN myConn;
     int crcPass;
+    int count = 0;
     
     GetFullPath(destVRefNum, destDirID, "\p", &dlPathLen, &dlPath);
 	DLMarkerGetCurrent(&markedIndex, &compsDone);
@@ -305,6 +306,8 @@ DownloadXPIs(short destVRefNum, long destDirID)
 			            continue;  
 			    }
 			    
+			    count++;
+			    
 			    // set up vars for dl callback to use
                 sCurrComp = i;
                 sCurrFullPath = dlPath;
@@ -329,7 +332,8 @@ TRY_DOWNLOAD:
                         
                     ErrorHandler(rv);
                     break;
-                }
+                } else
+                	currGlobalURLIndex = 0;
                 resPos = 0; // reset after first file was resumed in the middle 
                 gControls->state = eDownloading;
                 compsDone++;
@@ -340,7 +344,7 @@ TRY_DOWNLOAD:
     } // end for
     
         if ( rv != nsFTPConn::E_USER_CANCEL ) {   // XXX cancel is also paused :-)
-    	    bDone = CRCCheckDownloadedArchives(dlPath, dlPathLen); 
+    	    bDone = CRCCheckDownloadedArchives(dlPath, dlPathLen, count); 
     	    if ( bDone == false ) {
     	        compsDone = 0;
     	        crcPass++;   
@@ -538,6 +542,12 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos, 
     
     if (bGetTried && rv != 0)
     {
+    	// Connection was closed for us, clear out the Conn information
+    	
+ //   	myConn->type = TYPE_UNDEF;
+ //   	free( myConn->URL );
+ //   	myConn->URL = (char *) NULL;
+    	
         if (++urlIndex < gControls->cfg->numGlobalURLs)
             return eDLFailed;  // don't pase yet: continue trying failover URLs
             
@@ -1772,7 +1782,7 @@ VerifyArchive(char *szArchive)
 */
 
 Boolean 
-CRCCheckDownloadedArchives(Handle dlPath, short dlPathlen)
+CRCCheckDownloadedArchives(Handle dlPath, short dlPathlen, int count)
 {
     int i, len;
     Rect teRect;
@@ -1781,6 +1791,7 @@ CRCCheckDownloadedArchives(Handle dlPath, short dlPathlen)
     char validatingBuf[ 128 ];
     Boolean indeterminateFlag = true;
 	Str255	validatingStr;
+	int compsDone = 0, instChoice = gControls->opt->instChoice-1;
 
     isClean = true;
 
@@ -1795,46 +1806,56 @@ CRCCheckDownloadedArchives(Handle dlPath, short dlPathlen)
     }
     if ( gControls->tw->dlProgressBar) {
         SetControlValue(gControls->tw->dlProgressBar, 0);
-        SetControlMaximum(gControls->tw->dlProgressBar, kMaxComponents);
+        SetControlMaximum(gControls->tw->dlProgressBar, count);
     } 
 
     GetResourcedString(validatingStr, rInstList, sValidating);
     strncpy( validatingBuf, (const char *) &validatingStr[1], (unsigned char) validatingStr[0] ); 
 	for(i = 0; i < kMaxComponents; i++) {
 	    BreathFunc();
-        if (gControls->cfg->comp[i].shortDesc)
-        {
-            HLock(gControls->cfg->comp[i].shortDesc);
-            if (*(gControls->cfg->comp[i].shortDesc) && gControls->tw->dlProgressMsgs[0])
-            {
-                HLock((Handle)gControls->tw->dlProgressMsgs[0]);
-                teRect = (**(gControls->tw->dlProgressMsgs[0])).viewRect;
-                HUnlock((Handle)gControls->tw->dlProgressMsgs[0]);                
-                sprintf( buf, validatingBuf, *(gControls->cfg->comp[i].shortDesc));
-                len = strlen( buf );
-                TESetText(buf, len, 
-                    gControls->tw->dlProgressMsgs[0]);
-                TEUpdate(&teRect, gControls->tw->dlProgressMsgs[0]);
+		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+			 (compsDone < gControls->cfg->st[instChoice].numComps) && 
+			 gControls->cfg->comp[i].dirty == true)
+		{ 
+			// if custom and selected -or- not custom setup type
+			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
+				  (gControls->cfg->comp[i].selected == true)) ||
+				 (instChoice < gControls->cfg->numSetupTypes-1) ) {
+                if (gControls->cfg->comp[i].shortDesc)
+                {
+                    HLock(gControls->cfg->comp[i].shortDesc);
+                    if (*(gControls->cfg->comp[i].shortDesc) && gControls->tw->dlProgressMsgs[0])
+                    {
+                        HLock((Handle)gControls->tw->dlProgressMsgs[0]);
+                        teRect = (**(gControls->tw->dlProgressMsgs[0])).viewRect;
+                        HUnlock((Handle)gControls->tw->dlProgressMsgs[0]);                
+                        sprintf( buf, validatingBuf, *(gControls->cfg->comp[i].shortDesc));
+                        len = strlen( buf );
+                        TESetText(buf, len, 
+                            gControls->tw->dlProgressMsgs[0]);
+                        TEUpdate(&teRect, gControls->tw->dlProgressMsgs[0]);
+                    }
+                    HUnlock(gControls->cfg->comp[sCurrComp].shortDesc);
+                }
+	            if ( gControls->cfg->comp[i].dirty == true ) {
+	                HLock(dlPath);
+                    HLock(gControls->cfg->comp[i].archive);
+                    strncpy( buf, *dlPath, dlPathlen );
+                    buf[ dlPathlen ] = '\0';
+                    strcat( buf, *(gControls->cfg->comp[i].archive) );
+	                HUnlock(dlPath);
+                    HUnlock(gControls->cfg->comp[i].archive);
+                    if (VerifyArchive( buf ) == ZIP_OK) 
+                        gControls->cfg->comp[i].dirty = false;
+                    else
+                        isClean = false;
+                }
+                if ( gControls->tw->dlProgressBar) {
+                    SetControlValue(gControls->tw->dlProgressBar, 
+                        GetControlValue(gControls->tw->dlProgressBar) + 1);
+                }  
             }
-            HUnlock(gControls->cfg->comp[sCurrComp].shortDesc);
-        }
-	    if ( gControls->cfg->comp[i].dirty == true ) {
-	        HLock(dlPath);
-            HLock(gControls->cfg->comp[i].archive);
-            strncpy( buf, *dlPath, dlPathlen );
-            buf[ dlPathlen ] = '\0';
-            strcat( buf, *(gControls->cfg->comp[i].archive) );
-	        HUnlock(dlPath);
-            HUnlock(gControls->cfg->comp[i].archive);
-            if (VerifyArchive( buf ) == ZIP_OK) 
-                gControls->cfg->comp[i].dirty = false;
-            else
-                isClean = false;
-        }
-        if ( gControls->tw->dlProgressBar) {
-            SetControlValue(gControls->tw->dlProgressBar, 
-                GetControlValue(gControls->tw->dlProgressBar) + 1);
-        }    
+        }  
     }
     
     InitDLProgControls( true );
