@@ -50,7 +50,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsIEventStateManager.h"
 #include "nsISelection.h"
-#include "nsISelectionPrivate.h"
 #include "nsIFrameSelection.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
@@ -786,7 +785,7 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEvent *aMouseEvent, 
-                                  nsIContent **aParentContent, PRInt32 *aContentOffset, PRInt32 *aTarget)
+                                  nsIContent **aParentContent, PRInt32 *aContentOffset, PRUint32 *aTarget)
 {
   if (!aFrameSelection || !aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
     return NS_ERROR_NULL_POINTER;
@@ -895,15 +894,15 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEve
 
 #if 0
   if (selectRow)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_ROW;
+    *aTarget = TABLESELECTION_ROW;
   else if (selectColumn)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_COLUMN;
+    *aTarget = TABLESELECTION_COLUMN;
   else 
 #endif
   if (foundCell)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_CELL;
+    *aTarget = TABLESELECTION_CELL;
   else if (foundTable)
-    *aTarget = nsISelectionPrivate::TABLESELECTION_TABLE;
+    *aTarget = TABLESELECTION_TABLE;
 
   return NS_OK;
 }
@@ -1130,7 +1129,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   // Let Ctrl/Cmd+mouse down do table selection instead of drag initiation
   nsCOMPtr<nsIContent>parentContent;
   PRInt32  contentOffset;
-  PRInt32 target;
+  PRUint32 target;
   rv = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
   if (NS_SUCCEEDED(rv) && parentContent)
   {
@@ -1382,7 +1381,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
     // Check if we are dragging in a table cell
     nsCOMPtr<nsIContent> parentContent;
     PRInt32 contentOffset;
-    PRInt32 target;
+    PRUint32 target;
     nsMouseEvent *me = (nsMouseEvent *)aEvent;
     result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
     if (NS_SUCCEEDED(result) && parentContent)
@@ -1491,7 +1490,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
         me = (nsMouseEvent *)aEvent;
         nsCOMPtr<nsIContent>parentContent;
         PRInt32  contentOffset;
-        PRInt32 target;
+        PRUint32 target;
         result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
 
         if (NS_SUCCEEDED(result) && parentContent)

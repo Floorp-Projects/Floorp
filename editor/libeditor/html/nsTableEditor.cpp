@@ -41,7 +41,7 @@
 #include "nsITableCellLayout.h" // For efficient access to table cell
 #include "nsITableLayout.h"     //  data owned by the table and cell frames
 #include "nsHTMLEditor.h"
-#include "nsISelectionPrivate.h"  // For nsISelectionPrivate::TABLESELECTION_ defines
+#include "nsIFrameSelection.h"  // For TABLESELECTION_ defines
 #include "nsVoidArray.h"
 
 #include "nsEditorUtils.h"
@@ -254,7 +254,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)
   if (!tableNode) return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIDOMNode> tableChild;
-  res = GetFirstEditableChild(tableNode, &tableChild);
+  res = tableNode->GetFirstChild(getter_AddRefs(tableChild));
   if (NS_FAILED(res)) return res;
 
   while (tableChild)
@@ -283,7 +283,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)
       {
         nsCOMPtr<nsIDOMNode> rowNode;
         // All children should be rows
-        res = GetFirstEditableChild(tableChild, &rowNode);
+        res = tableChild->GetFirstChild(getter_AddRefs(rowNode));
         if (NS_FAILED(res)) return res;
         if (rowNode && IsRowNode(rowNode))
         {
@@ -300,11 +300,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)
     // Here if table child was a CAPTION or COLGROUP
     //  or child of a row-conainer wasn't a row (bad HTML)
     // Look in next table child
-    nsCOMPtr<nsIDOMNode> nextChild;
-    res = tableChild->GetNextSibling(getter_AddRefs(nextChild));
-    if (NS_FAILED(res)) return res;
-    //Note that if nextChild is null it will simply abort the loop
-    tableChild = nextChild;
+    res = tableChild->GetNextSibling(getter_AddRefs(tableChild));
   };
   return res;
 }
@@ -426,11 +422,6 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
   if (startColIndex >= colCount)
     NormalizeTable(table);
 
-#ifdef DEBUG_cmanske
-    printf("GetFirstRow: aTableElement = %x\n\n", table);
-#endif
-
-
   nsCOMPtr<nsIDOMElement> rowElement;
   for ( rowIndex = 0; rowIndex < rowCount; rowIndex++)
   {
@@ -472,7 +463,7 @@ nsHTMLEditor::InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
 
       nsCOMPtr<nsIDOMNode> lastCell;
       nsCOMPtr<nsIDOMNode> rowNode = do_QueryInterface(rowElement);
-      if (!rowNode) return NS_ERROR_FAILURE;
+      if (!rowElement) return NS_ERROR_FAILURE;
       
       res = rowElement->GetLastChild(getter_AddRefs(lastCell));
       if (NS_FAILED(res)) return res;
@@ -3250,7 +3241,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
   if (res == NS_EDITOR_ELEMENT_NOT_FOUND) return NS_OK;
   
   // We have at least one selected cell, so set return value
-  aSelectionType = nsISelectionPrivate::TABLESELECTION_CELL;
+  aSelectionType = TABLESELECTION_CELL;
 
   // Store indexes of each row/col to avoid duplication of searches
   nsVoidArray indexArray;
@@ -3276,7 +3267,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
 
   if (allCellsInRowAreSelected)
   {
-    aSelectionType = nsISelectionPrivate::TABLESELECTION_ROW;
+    aSelectionType = TABLESELECTION_ROW;
     return NS_OK;
   }
   // Test for columns
@@ -3303,7 +3294,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelection
     res = GetNextSelectedCell(getter_AddRefs(selectedCell), nsnull);
   }
   if (allCellsInColAreSelected)
-    aSelectionType = nsISelectionPrivate::TABLESELECTION_COLUMN;
+    aSelectionType = TABLESELECTION_COLUMN;
 
   return NS_OK;
 }
