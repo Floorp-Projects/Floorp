@@ -2631,7 +2631,7 @@ si_DoDialogIfPrefIsOff(
     PRUint32 savePassword,
     DialogType dlg) {
 
-  nsresult res;
+  nsresult res = NS_ERROR_FAILURE;
   const PRUnichar * prompt_string = dialogTitle;
   if (dialogTitle == nsnull || !dialogTitle[0]) {
     prompt_string = Wallet_Localize("PromptForData");
@@ -2664,8 +2664,7 @@ si_DoDialogIfPrefIsOff(
 #ifdef DEBUG
       break;
     default:
-      NS_ASSERTION(PR_FALSE, "Undefined DialogType in si_DoDialogIfPrefIsOff");
-      res = NS_ERROR_FAILURE;
+      NS_ERROR("Undefined DialogType in si_DoDialogIfPrefIsOff");
 #endif
   }
 
