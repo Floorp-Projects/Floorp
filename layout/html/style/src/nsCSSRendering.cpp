@@ -1848,15 +1848,14 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
 {
   PRInt16       theRadius;
   nsStyleCoord  borderRadius;
-
+  PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
+                                (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
 
   if (0 < aColor.mBackgroundImage.Length()) {
     // Lookup the image
     nsSize imageSize;
     nsIImage* image = nsnull;
     nsIFrameImageLoader* loader = nsnull;
-    PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
-      (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
     nsresult rv = aPresContext.StartLoadImage(aColor.mBackgroundImage,
                                               transparentBG
                                               ? nsnull
@@ -1869,6 +1868,8 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       NS_IF_RELEASE(loader);
       // Redraw will happen later
       if (!transparentBG) {
+        // The background color is rendered over the 'border' 'padding' and
+        // 'content' areas
         aRenderingContext.SetColor(aColor.mBackgroundColor);
         aRenderingContext.FillRect(aBorderArea);
       }
@@ -1876,20 +1877,6 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     }
     loader->GetSize(imageSize);
     NS_RELEASE(loader);
-
-    PRBool needBackgroundColor = PR_FALSE;
-#if XXX
-    // XXX enable this code as soon as nsIImage can support it
-    if (image->NeedsBlend()) {
-      needBackgroundColor = PR_TRUE;
-    }
-#endif
-
-    nscoord tileWidth = imageSize.width;
-    nscoord tileHeight = imageSize.height;
-    if ((tileWidth == 0) || (tileHeight == 0)) {
-      return;
-    }
 
     // Background images are tiled over the 'content' and 'padding' areas
     // only (not the 'border' area)
@@ -1904,45 +1891,51 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     // The actual dirty rect is the intersection of the padding area and the
     // dirty rect we were given
     nsRect  dirtyRect;
-
-    if (!dirtyRect.IntersectRect(paddingArea, aDirtyRect)) {
-      // Nothing to paint
-      return;
-    }
+    dirtyRect.IntersectRect(paddingArea, aDirtyRect);
 
     // Based on the repeat setting, compute how many tiles we should
     // lay down for each axis. The value computed is the maximum based
     // on the dirty rect before accounting for the background-position.
-    PRIntn repeat = aColor.mBackgroundRepeat;
+    nscoord tileWidth = imageSize.width;
+    nscoord tileHeight = imageSize.height;
+    PRBool  needBackgroundColor = PR_TRUE;
+    PRIntn  repeat = aColor.mBackgroundRepeat;
     nscoord xDistance, yDistance;
+
     switch (repeat) {
     case NS_STYLE_BG_REPEAT_OFF:
     default:
       xDistance = tileWidth;
       yDistance = tileHeight;
-      needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_X:
       xDistance = dirtyRect.width;
       yDistance = tileHeight;
-      needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_Y:
       xDistance = tileWidth;
       yDistance = dirtyRect.height;
-      needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_XY:
       xDistance = dirtyRect.width;
       yDistance = dirtyRect.height;
+      // We need to render the background color if the image is transparent
+      PRUint8*  alphaBits = image->GetAlphaBits();
+      needBackgroundColor = alphaBits != nsnull;
       break;
     }
 
     // The background color is rendered over the 'border' 'padding' and
     // 'content' areas
-    if (needBackgroundColor) {
+    if (!transparentBG && needBackgroundColor) {
       aRenderingContext.SetColor(aColor.mBackgroundColor);
       aRenderingContext.FillRect(aBorderArea);
+    }
+
+    // See if there's nothing left to do
+    if ((tileWidth == 0) || (tileHeight == 0) || dirtyRect.IsEmpty()) {
+      // Nothing to paint
+      return;
     }
 
     // If it's a fixed background attachment, then get the nearest scrolling
@@ -2138,11 +2131,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
   } else {
     // See if there's a background color specified. The background color
     // is rendered over the 'border' 'padding' and 'content' areas
-    if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
-      // XXX This step can be avoided if we have an image and it doesn't
-      // have any transparent pixels, and the image is tiled in both
-      // the x and the y
-
+    if (!transparentBG) {
       // check to see if we have a radius
       borderRadius = aSpacing.mBorderRadius;
       theRadius = 0;
