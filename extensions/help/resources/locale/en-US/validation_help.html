@@ -8,13 +8,42 @@
 
 <body bgcolor="white">
 
+<a NAME="validation_settings"></a>
+<a NAME="validation:settingsIDX"></a>
+<a NAME="settings:validationIDX"></a>
+
+<hr><h1>Validation Settings</h1>
+
+<p>This section describes how to set validation preferences and how to control Certificate Revocation List (CRL) settings.
+
+<p>For step-by-step descriptions of various tasks related to validation and CRLs, see <a href="using_certs_help.html#using_certs_validation">How Certificate Validation Works</a>.
+<p>&nbsp;</p>
+
+<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<tr>
+<td class="inthissection">
+<p>In this section:</p>
+<p><a href="#validation_first">Privacy &amp; Security Preferences - Validation</a></p>
+<p><a href="#manage_CRLs_dialog">Manage CRLs</a></p>
+<p><a href="#crl_import_status">CRL Import Status</a></p>
+<p><a href="#auto_crl_update_prefs">Automatic CRL Update Preferences</a></p>
+</td>
+</tr>
+</table>
+<p>&nbsp;</p>
+
+
+
+
+
+
 <a NAME="validation_first"></a>
 <a NAME="validation_of_certificates:OCSPIDX"></a>
 <a NAME="validation_of_certificates:CRLsIDX"></a>
 <a NAME="OCSP:preferencesIDX"></a>
 <a NAME="CRLs:preferencesIDX"></a>
 
-<h2>Privacy &amp; Security Preferences - Validation</h2>
+<h2><hr>Privacy &amp; Security Preferences - Validation</h2>
 
 <p>This section describes how to use the Validation Settings panel. If you are not already viewing the panel, follow these steps:
 
@@ -33,9 +62,7 @@
 
 <p>Click Manage CRLs to see a list of the CRLs available to Certificate Manager. 
 
-<p>To delete a CRL, select it and then click Delete.
-
-<p>For more information about CRLs, see <a href="using_certs_help.html#Managing_CRLs">Managing CRLs</a>.
+<p>For more information about managing CRLs, see <a href="using_certs_help.html#Managing_CRLs">Managing CRLs</a>.
 
 
 <p>&nbsp;
@@ -55,14 +82,102 @@
 </ul>
 
 
+<a NAME="manage_CRLs_dialog"></a>
+<a NAME="validation:managing_CRLsIDX"></a>
+<a NAME="CRLs:managingIDX"></a>
+<hr><h2>Manage CRLs</h2>
 
-<p>
-[&nbsp;<A HREF="#validation_first">Return to beginning of Validation section</A>&nbsp;]
-</p>
+<p>This section describes how to use the Manage CRLs dialog box. To view it, follow these steps:
+<ol>
+   <li>Open the Edit menu and choose Preferences.
+   <li>Under the Privacy &amp; Security category, click Validation. (If no subcategories are visible, double-click the category to expand the list.) 
+   <li>Click Manage CRLs.
+</ol>
+
+<p>This dialog box displays a list of the <a href="glossary.html#certificate_revocation_list_(CRL)">CRLs</a> that you have downloaded for use by your browser. Typically, you download a CRL by clicking a URL. FOr information about how CRLs work, see <a href="using_certs_help.html#Managing_CRLs">Managing CRLs</a>.
+
+<p>To select a CRL, click it. You can then perform any of these actions:
+
+<ul>
+	<li><b>Delete:</b> Deletes the CRL permanently from your hard disk. Don't do this unless you're sure you no longer need the CRL for validating certificates. If in doubt, consult your system administrator.
+	<li><b>Settings:</b> Opens the <a href="#auto_crl_update_prefs">Automatic CRL Update Preferences</a> dialog box, which allows you to activate automatic CRL updates  for the selected CRL and specify how frequently they should be performed.  
+	<li><b>Update:</b> Immediately updates the selected CRL (if possible).
+</ul>
+<p>The Manage CRLs dialog box provides the following information about each CRL:
+
+<ul>
+	<li><b>Organization (O):</b> The name of the organization that issued the CRL.
+	<li><b>Organizational Unit (OU):</b> The name of the organizational unit that issued the CRL (such as the root CA for a particular kind of certificate).
+	<li><b>Last Update:</b> The date on which the browser's copy of this CRL was last updated.
+	<li><b>Next Update:</b> The next date on which an updated version of this CRL will be published by the CRL issuer.
+	<li><b>Auto Update:</b> Indicates whether Auto Update has been enabled for this CRL. To view the settings that control auto updating, select the CRL and click Settings.
+	<li><b>Auto Update Status:</b>
+		<ul>
+			<li>If Auto Update has not been enabled, or if it has been enabled but the next scheduled update has not yet occurrred, this field will be blank. 
+			<li>After at least one auto update has occurred, this field shows "failed" if the most recent auto update failed, or "OK" if the most recent auto update was successful.
+</ul></ul>
+
+<a NAME="crl_import_status"></a>
+<a NAME="validation:managing_CRLsIDX"></a>
+<a NAME="CRLs:import_status_of"></a>
+<hr><h2>CRL Import Status</h2>
+
+<p>This section describes how to use the CRL Import Status dialog box, which appears when you first attempt to import a CRL or when you successfully update it manually.
+
+<p>This dialog box informs you 
+<ul>
+	<li>whether your attempt to import or update the CRL was successful
+	<li>what organization issued the CRL
+	<li>when the next update of this CRL will be published
+	<li>whether Automatic Update is enabled for this CRL
+</ul>
+
+<p>If Automatic Update is not enabled, you can turn it on from here:
+														
+<ul>
+	<li><b>Yes:</b> Click Yes to enable automatic updating of this CRL. If you click this button, the Automatic CRL Update Preferences dialog box appears next. The next section describes how to set these preferences.
+	<li><b>No:</b> Click No if you wish to leave Automatic Update disabled. 
+</ul>
+
+<a NAME="auto_crl_update_prefs"></a>
+<a NAME="validation:auto_updating_CRLsIDX"></a>
+<a NAME="CRLs:auto_upates_forIDX"></a>
+<hr><h2>Automatic CRL Update Preferences</h2>
+
+<p>This section describes how to use the Automatic CRL Update Preferences dialog box. If you are not already viewing it, follow these steps:
+<ol>
+   <li>Open the Edit menu and choose Preferences.
+   <li>Under the Privacy &amp; Security category, click Validation. (If no subcategories are visible, double-click the category to expand the list.) 
+   <li>Click Manage CRLs, then select the CRL whose auto update preferences you want to view or change.
+   <li>Click Settings.
+</ol>
+
+<p>This dialog box displays the following options and information:
+
+<ul>
+	<li><b>Enable Automatic Update for this CRL:</b> Select this option if you want the CRL you selected to be updated automatically according to the schedule you set here.
+	<p>If you enable Automatic Update, you must select one of these radio buttons: 
+	<ul>
+		<li><b>Update X days before Next Update date.</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
+		<li><b>Update every X days.</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.
+	</ul>
+	<li><b>CRL would be imported from:</b> Indicates the URL from which the browser originally imported the CRL. This setting cannot be changed. To specify a different location, delete the CRL and re-import it from the new location.
+	<li><b>Previous Consecutive Update Failures:</b> Indicates how many times update attempts for this CRL have failed consecutively, including the most recent failure:
+	<ul>
+		<li> If the most recent attempt was successful, this reads "None" even if there were previous unsuccessful attempts. 
+		<li>If the most recent attempt failed, this indicates the number of consecutive failures and the error message for the most recent failure.
+</ul></ul>
+
+<p>Click OK to confirm your choices.
+
+
+
 
 <hr>
-<p><i>8/31/2001</i></p>
-<p>Copyright &copy; 1998-2001 The Mozilla Organization.</p>
+
+
+<p><i>25 January 2002</i></p>
+<p>Copyright &copy; 1998-2002 The Mozilla Organization.</p>
 
 </body>
 </html>

@@ -26,7 +26,7 @@
 <p><a href="#using_certs_manage">Managing Certificates</a></p>
 <p><a href="#using_certs_devices">Managing Smart Cards and Other Security Devices</a></p>
 <p><a href="#using_certs_ssl">Managing SSL Warnings and Settings</a></p>
-<p><a href="#using_certs_validation">Managing Validation Settings</a></p>
+<p><a href="#using_certs_validation">Controlling Validation</a></p>
 <p><a href="#using_certs_settings">Certificate Settings</a></p>
 </td>
 </tr>
@@ -334,7 +334,7 @@
 <a NAME="certificates:validationIDX"></a>
 <a NAME="validation,_of_certificates:aboutIDX"></a>
 
-<hr><h1>Managing Validation Settings</h1>
+<hr><h1>Controlling Validation</h1>
 
 <p>As discussed above under <a href="#using_certs_get">Get Your Own Certificate</a>, a certificate is a form of identification, much like a driver's license, that you can use to identify yourself over the Internet and other networks. However, also like a driver's license, a certificate may be expired or invalid for some other reason. Therefore, your browser software needs to confirm the validity of any given certificate in some way before trusting it for identification purposes. 
 
@@ -347,6 +347,7 @@
 <p><a href="#How_Certificate_Validation_Works">How Validation Works</a></p>
 <p><a href="#Managing_CRLs">Managing CRLs</a></p>
 <p><a href="#Configuring_Certificate_Manager_for_OCSP">Configuring OCSP</a></p>
+<p><a href="validation_help.html">Validation Settings</a></p>
 </td>
 </tr>
 </table>
@@ -361,43 +362,102 @@
 
 <p>Whenever you use or view a certificate stored by Certificate Manager, it takes several steps to verify the certificate. At a minimum, it confirms that the CA's digital signature on the certificate was created by a CA whose own certificate is (1) present in the Certificate Manager's list of available CA certificates and (2) marked as trusted for issuing the kind of certificate being verified. 
 
-<p>If the CA certificate is not itself present, the <a href="glossary.html#certificate_chain">certificate chain</a> for the CA certificate must include a higher-level CA certificate that is present and correctly trusted. Certificate Manager also confirms that the certificate being verified has not been marked as untrusted in the certificate store. If any one of these checks fails, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.
+<p>If the CA certificate is not itself present, the <a href="glossary.html#certificate_chain">certificate chain</a> for the CA certificate must include a higher-level CA certificate that is present and correctly trusted. Certificate Manager also confirms that the certificate being verified is currently marked as trusted in the certificate store. If any one of these checks fails, Certificate Manager marks the certificate as unverified and won't recognize the identity it certifies.
 
 <p>A certificate can pass all these tests and still be compromised in some way; for example, the certificate be revoked because an unauthorized person has gained access to the certificate's private key. A compromised certificate can allow an unauthorized person (or web site) to pretend to be the certificate owner.
 
-<p>One way to combat this threat is for Certificate Manager to check a certificate revocation list (CRL) as part of the verification process (see <a href="#Managing_CRLs">Managing CRLs</a>, below). Typically, you download a CRL to your browser by clicking a link. If a CRL is present, Certificate Manager checks each certificate issued by the same CA against the list. The reliability of CRLs is subject to the frequency with which they are both updated by a server and checked by a client, and their size can sometimes cause delays in the verification process that may not be acceptable to some people.
+<p>One way to combat this threat is for Certificate Manager to check a certificate revocation list (CRL) as part of the verification process (see <a href="#Managing_CRLs">Managing CRLs</a>, below). Typically, you download a CRL to your browser by clicking a link. If a CRL is present, Certificate Manager checks any certificate issued by the same CA against the list as part of the verification process. 
 
-<p>Another way to combat this threat is to use a special server that supports the Online Certificate Status Protocol (OCSP). Such a server can answer client queries about individual certificates (see <a href="#Configuring_Certificate_Manager_for_OCSP">Configuring Certificate Manager for OCSP</a>, below). The server, called an OCSP responder, receives an updated CRL periodically from the CA that issues the certificates to be verified. You can configure Certificate Manager to submit a status request for a certificate to the OCSP responder, and the OCSP responder confirms whether the certificate is valid.  
+<p>The reliability of CRLs is subject to the frequency with which they are both updated by a server and checked by a client. You can configure your <a href="validation_help.html#auto_crl_update_prefs">Automatic CRL Update Preferences</a> so that a CRL will be updated automatically at regular intervals with the version currently on the server.
+
+<p>Another way to combat the threat of compromised certificates is to use a special server that supports the Online Certificate Status Protocol (OCSP). Such a server can answer client queries about individual certificates (see <a href="#Configuring_Certificate_Manager_for_OCSP">Configuring OCSP</a>, below). 
+
+<p>The server, called an OCSP responder, receives an updated CRL periodically from the CA that issues the certificates to be verified. You can configure Certificate Manager to submit a status request for a certificate to the OCSP responder, and the OCSP responder confirms whether the certificate is valid.  
 
 
 <p>&nbsp;</p>
 <a name="Managing_CRLs"><h2>Managing CRLs</h2></a>
 
 
-<p>A certificate revocation list (CRL) is list of revoked certificates.  A <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a>  might revoke a certificate, for example, if it has been compromised in some way&#151;much the way a credit card company might revoke your credit card if you report that it's been stolen. 
+<p>A certificate revocation list (CRL) is list of revoked certificates.  A <a href="glossary.html#certificate_authority (CA)">certificate authority (CA)</a>  might revoke a certificate, for example, if it has been compromised in some way&#151;much the way a credit card company might revoke your credit card if you report that it's been stolen.
+</p>
 
-<h3>Downloading and Updating CRLs</h3>
-<p> You can download the latest CRL from a CA to your browser. To download a CRL, you typically go to a URL (specified by the CA or by your system administrator) and click a link. 
+<p>This section describes how to import and manage CRLs. <p>For background information, see <a href="#How_Certificate_Validation_Works">How Validation Works</a>. 
+
+<p>For detailed descriptions of CRL settings that you can control, see <a href=#validation_settings">Validation Settings</a>.</p>
+
+<table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
+<tr>
+<td class="inthissection">
+<p>In this section:</p>
+<p><a href="#next_update">About the "Next Update" Date</a></p>
+<p><a href="#Importing_CRLs">Importing CRLs</a></p>
+<p><a href="#view_manage_CRLs">Viewing and Managing CRLs</a></p>
+</td>
+</tr>
+</table>
+ 
+
+<p>&nbsp;</p>
+<a name ="next_update"></a><h3>About the "Next Update" Date</h3>
 
 <p>The browser uses the CRLs it has available to check the validity of certificates issued by the corresponding CAs. If a certificate is listed as revoked, the browser won't accept it as evidence of identity.
 
-<p>A CA typically publishes an updated CRL at regular intervals.  Every CRL includes a date, specified in the Next Update field, by which the CA will publish the next update of that CRL. If the date in the Next Update field is earlier than the current date, you should obtain the most recent version of the CRL. 
+<p>A CA typically publishes an updated CRL at regular intervals. Every CRL includes a date, specified in the Next Update field, by which the CA will publish the next update of that CRL. In general, if the date in the Next Update field is earlier than the current date, you should obtain the most recent version of the CRL. To view CRL information and set up automatic CRL updating, see <a href="#view_manage_CRLs">Viewing and Managing CRLs</a>.
 
 <p>Although the absence of the most recent CRL does not by itself invalidate a certificate, the browser may not handle such certificates correctly. In some situations, you may want to delete CRLs with Next Update dates earlier than the present. Speak to your system administrator for guidance on CRL management. 
 
-<h3>Viewing and Deleting CRLs</h3>
 
-<p>You can view and delete CRLs available to the browser, including Next Update dates, through the browser's Validation preferences:
+
+<p>&nbsp;</p>
+<a name="Importing_CRLs"><h3>Importing CRLs</h3>
+
+<p> You can import the latest CRL from a CA into your browser. To import a CRL, follow these steps:
+<ol>
+	<li>Go to the URL specified by the CA or by your system administrator and click the link for the CRL that you want to import. 
+
+	<p>The Import Status dialog box appears.	
+
+	<li>Confirm that the CRL was imported successfully and that it's the one you wanted. In most cases you should also click Yes, which enables automatic updating of the CRL you just imported.
+	<li>The next step depends on whether you click Yes or No in the Import Status dialog box:
+<ul>
+	<p><b>Yes:</b> The Automatic CRL Update Preferences dialog box appears. In this case, go on to step 4.
+
+	<p><b>No:</b> The Import Status dialog box closes. If you change your mind and decide to enable automatic updates after all, see <a href="#view_manage_CRLs">Viewing and Managing CRLs</a>.</p>
+</ul>
+	<li>Select the option labeled &quot;Enable Automatic Update for this CRL&quot;.
+	<li>Decide how you want to schedule the automatic updates:</li>
+	<ul>
+		<li><b>Update X days before Next Update date.</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
+		<li><b>Update every X days.</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.
+	</ul>
+	<li>Click OK to confirm your choices.
+</ol>
+
+
+<p>&nbsp;</p>
+<a name="view_manage_CRLs"><h3>Viewing and Managing CRLs</h3>
+
+<p>You can view and manage CRLs available to the browser through the browser's Validation preferences:
 
 <ol>
 	<li>Open the Edit menu and choose Preferences.
 	<li>Under the Privacy &amp; Security category, choose Validation. (If no subcategories are visible, double-click the category to expand the list.)
+	<li>Click Manage CRLs in the Validation panel to see a list of the CRLs available to Certificate Manager.
 </ol>
 
-<p>Click Manage CRLs in the Validation panel to see a list of the CRLs available to Certificate Manager. 
+<p>To delete or update a CRL, select it and click the appropriate button.
 
-<p>To delete a CRL, select it, then click Delete.
-
+<p>To set up automatic updates for a CRL, select the CRL and click Settings. The Automatic CRL Update Preferences dialog box appears:
+<ol>
+	<li>Select the option labeled &quot;Enable Automatic Update for this CRL&quot;.
+	<li>Decide how you want to schedule the automatic updates:</li>
+	<ul>
+		<li><b>Update X days before Next Update date.</b> Select this option if you want to base the update frequency on the frequency with which the CRL publisher publishes a new version of the CRL.
+		<li><b>Update every X days.</b> Select this option if you want to specify an update interval unrelated to the CRL's Next Update date.
+	</ul>
+	<li>Click OK to confirm your choices.
+</ol>
 
 
 <p>&nbsp;</p>
@@ -411,7 +471,7 @@
 	<li>Under the Privacy &amp; Security category, choose Validation. (If no subcategories are visible, double-click the category to expand the list.)
 </ol>
 
-<p>For information about the OCSP options available, see <a href="validation_help.html">Validation Settings</a>.
+<p>For information about the OCSP options available, see <a href="validation_help.html#OCSP">OCSP</a>.
 
 <p>
 [&nbsp;<A HREF="#using_certs_first">Return to beginning of Using Certificates section</A>&nbsp;]
@@ -419,7 +479,7 @@
 
 
 <hr>
-<p><i>January 11 2002</i></p>
+<p><i>25 January 2002</i></p>
 <p>Copyright &copy; 1998-2002 The Mozilla Organization.</p>
 
 </body>
