@@ -55,6 +55,9 @@
     <!-- Browser menu -->
     <object class="wxMenuBar" name="mainmenu">
       <style>wxMB_DOCKABLE</style>
+      
+      <!-- File menu -->
+      
       <object class="wxMenu" name="menu_file">
         <label>_File</label>
         <object class="wxMenuItem" name="menu_about">
@@ -72,6 +75,9 @@
           <label>E_xit\tAlt-Q</label>
         </object>
       </object>
+      
+      <!-- Edit menu -->
+      
       <object class="wxMenu" name="menu_edit">
         <label>_Edit</label>
         <object class="wxMenuItem" name="edit_cut">
@@ -87,6 +93,18 @@
           <label>Select _All</label>
         </object>
       </object>
+      
+      <!-- View menu -->
+      
+      <object class="wxMenu" name="menu_view">
+        <label>_View</label>
+         <object class="wxMenuItem" name="view_pagesource">
+          <label>_View Page Source</label>
+        </object>
+      </object>
+      
+      <!-- Go menu -->
+      
       <object class="wxMenu" name="menu_go">
         <label>_Go</label>
         <object class="wxMenuItem" name="browse_back">
@@ -102,6 +120,9 @@
           <label>Stop</label>
         </object>
       </object>
+      
+      <!-- Other apps menu -->
+      
       <object class="wxMenu" name="menu_other_apps">
         <label>_Other Apps</label>
         <object class="wxMenuItem" name="menu_mail">

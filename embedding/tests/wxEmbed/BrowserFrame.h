@@ -44,17 +44,25 @@ protected:
 
     void OnBrowserUrl(wxCommandEvent &event);
     void OnBrowserGo(wxCommandEvent &event);
-    void OnBrowserBack(wxCommandEvent &event);
-    void OnBrowserForward(wxCommandEvent &event);
-    void OnBrowserReload(wxCommandEvent &event);
-    void OnBrowserStop(wxCommandEvent &event);
     void OnBrowserHome(wxCommandEvent &event);
     void OnBrowserOpenLinkInNewWindow(wxCommandEvent & event);
+
+    void OnBrowserBack(wxCommandEvent &event);
     void OnUpdateBrowserBack(wxUpdateUIEvent &event);
+
+    void OnBrowserForward(wxCommandEvent &event);
     void OnUpdateBrowserForward(wxUpdateUIEvent &event);
+
+    void OnBrowserReload(wxCommandEvent &event);
+
+    void OnBrowserStop(wxCommandEvent &event);
     void OnUpdateBrowserStop(wxUpdateUIEvent &event);
+
     void OnFileSave(wxCommandEvent &event);
     void OnFilePrint(wxCommandEvent &event);
+
+    void OnViewPageSource(wxCommandEvent &event);
+    void OnUpdateViewPageSource(wxUpdateUIEvent &event);
 
 public :
     BrowserFrame(wxWindow* aParent);
