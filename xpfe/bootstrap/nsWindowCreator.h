@@ -40,8 +40,6 @@
 
 #include "nsIWindowCreator2.h"
 
-class nsIURI;
-
 class nsWindowCreator :
       public nsIWindowCreator2
 {

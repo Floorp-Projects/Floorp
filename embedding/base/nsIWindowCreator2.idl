@@ -32,6 +32,7 @@
 
 #include "nsIWindowCreator.idl"
 
+interface nsIURI;
 interface nsIWebBrowserChrome;
 
 // This interface is not generally scriptable: only the const(s)
@@ -49,16 +50,27 @@ interface nsIWindowCreator2 : nsIWindowCreator {
 
   /** Create a new window. Gecko will/may call this method, if made
       available to it, to create new windows.
-      @param parent parent window, if any. null if not. the newly created
+      @param parent Parent window, if any. Null if not. The newly created
                     window should be made a child/dependent window of
                     the parent, if any (and if the concept applies
                     to the underlying OS).
-      @param chromeFlags chrome features from nsIWebBrowserChrome
-      @param contextFlags flags about the context of the window being created.
-      @return the new window
+      @param chromeFlags Chrome features from nsIWebBrowserChrome
+      @param contextFlags Flags about the context of the window being created.
+      @param uri The URL for which this window is intended. It can be null
+                 or zero-length. The implementation of this interface
+                 may use the URL to help determine what sort of window
+                 to open or whether to cancel window creation. It will not
+                 load the URL.
+      @param cancel Return |true| to reject window creation. If true the
+                    implementation has determined the window should not
+                    be created at all. The caller should not default
+                    to any possible backup scheme for creating the window.
+      @return the new window. Will be null if canceled or an error occurred.
   */
   [noscript]
   nsIWebBrowserChrome createChromeWindow2(in nsIWebBrowserChrome parent,
                                           in PRUint32 chromeFlags,
-                                          in PRUint32 contextFlags);
+                                          in PRUint32 contextFlags,
+                                          in nsIURI uri,
+                                          out boolean cancel);
 };

@@ -610,8 +610,14 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
         if (popupConditions)
           contextFlags |= nsIWindowCreator2::PARENT_IS_LOADING_OR_RUNNING_TIMEOUT;
 
+        PRBool cancel = PR_FALSE;
         rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
-                               contextFlags, getter_AddRefs(newChrome));
+                               contextFlags, uriToLoad, &cancel,
+                               getter_AddRefs(newChrome));
+        if (NS_SUCCEEDED(rv) && cancel) {
+          newChrome = 0; // just in case
+          rv = NS_ERROR_ABORT;
+        }
       }
       else
         rv = mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
