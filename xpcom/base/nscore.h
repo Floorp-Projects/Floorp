@@ -169,6 +169,7 @@ typedef PRUint16 PRUnichar;
   #define HAVE_CPP_EXPLICIT
   #define HAVE_CPP_BOOL
   #define HAVE_CPP_NAMESPACE_STD
+  #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 #endif
 
 #ifdef HAVE_CPP_NAMESPACE_STD
@@ -198,6 +199,7 @@ typedef PRUint16 PRUnichar;
   #endif
 
   #define HAVE_CPP_NAMESPACE_STD
+  #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 
   /* VC++ is special and doesn't use naked min() and max() */
   #undef NS_MIN
