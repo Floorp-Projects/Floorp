@@ -520,12 +520,18 @@ function lv_init ()
     
     console.prefManager.addPrefs(prefs);
 
+    this.cmdary =
+        [
+         ["copy-qual-name", cmdCopyQualName, 0]
+        ];
+
     console.menuSpecs["context:locals"] = {
         getContext: this.getContext,
         items:
         [
          ["change-value", {enabledif: "cx.parentValue"}],
          ["watch-expr"],
+         ["copy-qual-name", {enabledif: "has('expression')"}],
          ["-"],
          ["set-eval-obj", {type: "checkbox",
                            checkedif: "has('jsdValue') && " +
@@ -557,6 +563,17 @@ function lv_init ()
     this.jsdFrame = null;
     this.savedStates = new Object();
     this.stateTags = new Array();
+}
+
+function cmdCopyQualName (e)
+{
+    const CLIPBOARD_CTRID = "@mozilla.org/widget/clipboardhelper;1";
+    const nsIClipboardHelper = Components.interfaces.nsIClipboardHelper;
+
+    var clipboardHelper =
+        Components.classes[CLIPBOARD_CTRID].getService(nsIClipboardHelper);
+
+    clipboardHelper.copyString(e.expression);
 }
 
 console.views.locals.clear =

@@ -33,8 +33,8 @@
  *
  */
 
-const __vnk_version        = "0.9.80";
-const __vnk_requiredLocale = "0.9.78";
+const __vnk_version        = "0.9.81";
+const __vnk_requiredLocale = "0.9.81";
 var   __vnk_versionSuffix  = "";
 
 const __vnk_counter_url = 
