@@ -666,6 +666,7 @@ void CNetscapeApp::MakeDefaultBrowser()
         // Ask if "default browser" dialog is required and display it if so.
         if ( !pDefaultBrowser->IsDefaultBrowser() ) {
             if ( pDefaultBrowser->DisplayDialog() == IDC_SHOW_DESKTOP_PREFS ) {
+                theApp.m_splash.ShowWindow(SW_HIDE);
                 wfe_DisplayPreferences(NULL);
             }
         }
