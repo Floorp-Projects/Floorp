@@ -23,6 +23,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "MailNewsTypes.h"
+#include "nsIAllocator.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,		NS_RDFINMEMORYDATASOURCE_CID); 
@@ -233,9 +234,14 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	//If there's currently a notification for this folder, remove it.
 	RemoveNewMailNotification(folder);
 
+	nsAutoString2 newMailURI("", eOneByte);
+	rv = BuildNewMailURI(folder, newMailURI);
+	if(NS_FAILED(rv))
+		return rv;
+
 
 	nsCOMPtr<nsIRDFResource> notificationResource;
-	rv = rdfService->GetResource("newmail:test", getter_AddRefs(notificationResource));
+	rv = rdfService->GetResource(newMailURI.GetBuffer(), getter_AddRefs(notificationResource));
 	if(NS_FAILED(rv))
 		return rv;
 
@@ -303,8 +309,13 @@ nsresult nsMsgNotificationManager::RemoveNewMailNotification(nsIMsgFolder *folde
 	if(NS_FAILED(rv))
 		return rv;
 
+	nsAutoString2 newMailURI("", eOneByte);
+	rv = BuildNewMailURI(folder, newMailURI);
+	if(NS_FAILED(rv))
+		return rv;
+
 	nsCOMPtr<nsIRDFResource> notificationResource;
-	rv = rdfService->GetResource("newmail:test", getter_AddRefs(notificationResource));
+	rv = rdfService->GetResource(newMailURI.GetBuffer(), getter_AddRefs(notificationResource));
 	if(NS_FAILED(rv))
 		return rv;
 	RemoveOldValues(notificationResource);
@@ -343,4 +354,19 @@ nsresult nsMsgNotificationManager::RemoveOldValues(nsIRDFResource *notificationR
 
 }
 
+nsresult nsMsgNotificationManager::BuildNewMailURI(nsIMsgFolder *folder, nsAutoString2 &newMailURI)
+{
+	nsresult rv;
+	nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
+	if(!folderResource)
+		return NS_ERROR_NO_INTERFACE;
 
+	char *folderURI;
+	rv = folderResource->GetValue(&folderURI);
+	if(!(NS_SUCCEEDED(rv) && folderURI))
+		return rv;
+
+	newMailURI += folderURI;
+	nsAllocator::Free(folderURI);
+	return NS_OK;
+}
