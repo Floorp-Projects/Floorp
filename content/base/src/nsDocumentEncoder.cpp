@@ -718,11 +718,11 @@ nsresult
 nsDocumentEncoder::SerializeRangeContextStart(const nsVoidArray& aAncestorArray,
                                               nsAWritableString& aString)
 {
-  PRInt32 i = 0;
+  PRInt32 i = aAncestorArray.Count();
   nsresult rv = NS_OK;
 
-  while (1) {
-    nsIDOMNode *node = (nsIDOMNode *)aAncestorArray.ElementAt(i++);
+  while (i) {
+    nsIDOMNode *node = (nsIDOMNode *)aAncestorArray.ElementAt(--i);
 
     if (!node)
       break;
@@ -742,11 +742,11 @@ nsresult
 nsDocumentEncoder::SerializeRangeContextEnd(const nsVoidArray& aAncestorArray,
                                             nsAWritableString& aString)
 {
-  PRInt32 i = aAncestorArray.Count();
+  PRInt32 i = 0;
   nsresult rv = NS_OK;
 
-  while (i) {
-    nsIDOMNode *node = (nsIDOMNode *)aAncestorArray.ElementAt(--i);
+  while (1) {
+    nsIDOMNode *node = (nsIDOMNode *)aAncestorArray.ElementAt(i++);
 
     if (!node)
       break;
