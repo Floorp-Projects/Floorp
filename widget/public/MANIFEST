@@ -22,7 +22,6 @@ nsIMenu.h
 nsIMenuBar.h
 nsIMenuItem.h
 nsIPopUpMenu.h
-nsIKeyBindMgr.h
 nsStringUtil.h
 nsWidgetAtoms.h
 nsWidgetAtomList.h
