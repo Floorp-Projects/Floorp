@@ -243,10 +243,10 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                         
                         nsCOMPtr<nsIScriptGlobalObject> globalObject;
                         gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-                        if(!globalObject) break;
-                    
-                        globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-						gLastFocusedDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+                        if(globalObject) {
+                          globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+                          gLastFocusedDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+                        }   
                       }   
                   }
                 //}
@@ -280,10 +280,10 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                 // fire focus on window, not document
                 nsCOMPtr<nsIScriptGlobalObject> globalObject;
                 mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-                if(!globalObject) break;
-                     
-                globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
-				mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
+                if (globalObject) {
+                  globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
+                  mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
+                }
 
                 NS_IF_RELEASE(gLastFocusedDocument);
                 gLastFocusedDocument = mDocument;
@@ -334,8 +334,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       }
 
       if (mDocument) {
-        NS_IF_RELEASE(gLastFocusedContent);
-        mCurrentTarget->GetContent(&gLastFocusedContent);
+        // NS_IF_RELEASE(gLastFocusedContent);
+        // mCurrentTarget->GetContent(&gLastFocusedContent);
                 
         mCurrentTarget = nsnull;
 
