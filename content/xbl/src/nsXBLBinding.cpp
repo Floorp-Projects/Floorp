@@ -184,6 +184,8 @@ nsXBLBinding::kEventHandlerMap[] = {
     { "command",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "broadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "commandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "overflow",      nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "underflow",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
 
     { "focus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
     { "blur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
@@ -1428,7 +1430,9 @@ PRBool
 nsXBLBinding::IsXULHandler(const nsString& aName)
 {
   return ((aName.EqualsWithConversion("create")) || (aName.EqualsWithConversion("destroy")) || (aName.EqualsWithConversion("broadcast")) ||
-          (aName.EqualsWithConversion("command")) || (aName.EqualsWithConversion("commandupdate")) || (aName.EqualsWithConversion("close")));
+          (aName.EqualsWithConversion("command")) || (aName.EqualsWithConversion("commandupdate")) || (aName.EqualsWithConversion("close")) ||
+          (aName.EqualsWithConversion("overflow")) ||
+          (aName.EqualsWithConversion("underflow")) );
 }
 
 NS_IMETHODIMP

@@ -160,6 +160,8 @@ public:
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 
+    void CacheAttributes();
+
     nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
 
     nsBoxFrame::Halignment GetHAlign();
@@ -170,6 +172,8 @@ public:
 
     nsBoxFrame::Valignment mValign;
     nsBoxFrame::Halignment mHalign;
+
+    PRBool mAttributesCached;
     
     nsIPresContext* mPresContext;
 
@@ -202,6 +206,8 @@ NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot,
 nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal):nsContainerBox(aPresShell)
 {
   mInner = new (aPresShell) nsBoxFrameInner(aPresShell, this);
+
+  mInner->mAttributesCached = PR_FALSE;
 
   // if not otherwise specified boxes by default are horizontal.
   if (aIsHorizontal) {
@@ -317,43 +323,8 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
            view->CreateWidget(kWidgetCID);   
     }
   }
-  
-  mInner->mValign = nsBoxFrame::vAlign_Top;
-  mInner->mHalign = nsBoxFrame::hAlign_Left;
 
-  GetInitialVAlignment(mInner->mValign);
-  GetInitialHAlignment(mInner->mHalign);
-  
-  PRBool orient = PR_FALSE;
-  if (mState & NS_STATE_DEFAULT_HORIZONTAL)
-     orient = PR_TRUE;
-
-  GetInitialOrientation(orient); 
-  if (orient)
-        mState |= NS_STATE_IS_HORIZONTAL;
-    else
-        mState &= ~NS_STATE_IS_HORIZONTAL;
-
-
-  PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
-  GetInitialAutoStretch(autostretch);
-  if (autostretch)
-        mState |= NS_STATE_AUTO_STRETCH;
-     else
-        mState &= ~NS_STATE_AUTO_STRETCH;
-
-
-  PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
-  PRBool debugSet = mInner->GetInitialDebug(debug); 
-  if (debugSet) {
-        mState |= NS_STATE_DEBUG_WAS_SET;
-        if (debug)
-            mState |= NS_STATE_SET_TO_DEBUG;
-        else
-            mState &= ~NS_STATE_SET_TO_DEBUG;
-  } else {
-        mState &= ~NS_STATE_DEBUG_WAS_SET;
-  }
+  mInner->CacheAttributes();
 
     // if we are root and this
   if (mState & NS_STATE_IS_ROOT) 
@@ -374,6 +345,60 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
   }
 
   return rv;
+}
+
+void
+nsBoxFrameInner::CacheAttributes()
+{
+  /*
+  printf("Caching: ");
+  mOuter->DumpBox(stdout);
+  printf("\n");
+   */
+
+  mValign = nsBoxFrame::vAlign_Top;
+  mHalign = nsBoxFrame::hAlign_Left;
+
+
+  mOuter->GetInitialVAlignment(mValign);
+  mOuter->GetInitialHAlignment(mHalign);
+  
+  PRBool orient = PR_FALSE;
+  if (mOuter->mState & NS_STATE_DEFAULT_HORIZONTAL)
+     orient = PR_TRUE;
+
+  mOuter->GetInitialOrientation(orient); 
+  if (orient)
+        mOuter->mState |= NS_STATE_IS_HORIZONTAL;
+    else
+        mOuter->mState &= ~NS_STATE_IS_HORIZONTAL;
+
+  PRBool equalSize = PR_FALSE;
+  mOuter->GetInitialEqualSize(equalSize); 
+  if (equalSize)
+        mOuter->mState |= NS_STATE_EQUAL_SIZE;
+    else
+        mOuter->mState &= ~NS_STATE_EQUAL_SIZE;
+
+  PRBool autostretch = mOuter->mState & NS_STATE_AUTO_STRETCH;
+  mOuter->GetInitialAutoStretch(autostretch);
+  if (autostretch)
+        mOuter->mState |= NS_STATE_AUTO_STRETCH;
+     else
+        mOuter->mState &= ~NS_STATE_AUTO_STRETCH;
+
+
+  PRBool debug = mOuter->mState & NS_STATE_SET_TO_DEBUG;
+  PRBool debugSet = GetInitialDebug(debug); 
+  if (debugSet) {
+        mOuter->mState |= NS_STATE_DEBUG_WAS_SET;
+        if (debug)
+            mOuter->mState |= NS_STATE_SET_TO_DEBUG;
+        else
+            mOuter->mState &= ~NS_STATE_SET_TO_DEBUG;
+  } else {
+        mOuter->mState &= ~NS_STATE_DEBUG_WAS_SET;
+  }
 }
 
 PRBool
@@ -556,6 +581,31 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 /* Returns true if it was set.
  */
 PRBool
+nsBoxFrame::GetInitialEqualSize(PRBool& aEqualSize)
+{
+ // see if we are a vertical or horizontal box.
+  nsAutoString value;
+
+  nsCOMPtr<nsIContent> content;
+  GetContentOf(getter_AddRefs(content));
+
+  if (!content)
+     return PR_FALSE;
+
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::equalsize, value))
+  {
+      if (value.EqualsIgnoreCase("always")) {
+         aEqualSize = PR_TRUE;
+         return PR_TRUE;
+      }
+  } 
+
+  return PR_FALSE;
+}
+
+/* Returns true if it was set.
+ */
+PRBool
 nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
 {
   nsAutoString value;
@@ -662,10 +712,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   else
      computedSize.height += m.top + m.bottom;
 
-  nsRect r(0,0,computedSize.width, computedSize.height);
-  //r.Inflate(m);
-  r.x = mRect.x;
-  r.y = mRect.y;
+  nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);
 
   SetBounds(state, r);
  
@@ -773,6 +820,14 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
      return NS_OK;
   }
 
+  /*
+    // @@@ hack to fix bug in xbl where it won't set flex -EDV
+  if ((mState & NS_FRAME_FIRST_REFLOW) && !mInner->mAttributesCached) {
+    mInner->CacheAttributes();
+    mInner->mAttributesCached = PR_TRUE;
+  }
+  */
+
   PropagateDebug(aBoxLayoutState);
 
   nsresult rv = NS_OK;
@@ -819,6 +874,7 @@ nsBoxFrame::PropagateDebug(nsBoxLayoutState& aState)
 NS_IMETHODIMP
 nsBoxFrame::Layout(nsBoxLayoutState& aState)
 {
+
   // mark ourselves as dirty so no child under us 
   // can post an incremental layout.
   mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
@@ -1012,6 +1068,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsHTMLAtoms::valign ||
         aAttribute == nsXULAtoms::flex ||
         aAttribute == nsXULAtoms::orient ||
+        aAttribute == nsXULAtoms::equalsize ||
         aAttribute == nsXULAtoms::autostretch) {
 
         if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
@@ -1021,13 +1078,20 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
           GetInitialVAlignment(mInner->mValign);
           GetInitialHAlignment(mInner->mHalign);
   
-          PRBool orient = mState & NS_STATE_IS_HORIZONTAL;
+          PRBool orient = mState & NS_STATE_DEFAULT_HORIZONTAL;
           GetInitialOrientation(orient); 
           if (orient)
                 mState |= NS_STATE_IS_HORIZONTAL;
             else
                 mState &= ~NS_STATE_IS_HORIZONTAL;
-   
+ 
+          PRBool equalSize = PR_FALSE;
+          GetInitialEqualSize(equalSize); 
+          if (equalSize)
+                mState |= NS_STATE_EQUAL_SIZE;
+            else
+                mState &= ~NS_STATE_EQUAL_SIZE;
+ 
           PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
           PRBool debugSet = mInner->GetInitialDebug(debug); 
           if (debugSet) {

@@ -50,7 +50,7 @@ static char* mEventNames[] = {
   "submit", "reset", "change", "select", "input", "paint" ,"text",
   "create", "close", "destroy", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture", "resize",
-  "scroll"
+  "scroll","overflow", "underflow"
 }; 
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsString& aEventType) {
@@ -311,29 +311,48 @@ nsDOMEvent::GetDetail(PRInt32* aDetail)
 {
   //detail is valid for more than just mouseevents but we don't
   //use it for anything else right now
-  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+
+  if (!mEvent) {
     *aDetail = 0;
     return NS_OK;
   }
 
-  switch (mEvent->message) {
-  case NS_MOUSE_LEFT_BUTTON_UP:
-  case NS_MOUSE_LEFT_BUTTON_DOWN:
-  case NS_MOUSE_LEFT_CLICK:
-  case NS_MOUSE_LEFT_DOUBLECLICK:
-  case NS_MOUSE_MIDDLE_BUTTON_UP:
-  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-  case NS_MOUSE_MIDDLE_CLICK:
-  case NS_MOUSE_MIDDLE_DOUBLECLICK:
-  case NS_MOUSE_RIGHT_BUTTON_UP:
-  case NS_MOUSE_RIGHT_BUTTON_DOWN:
-  case NS_MOUSE_RIGHT_CLICK:
-  case NS_MOUSE_RIGHT_DOUBLECLICK:
-    *aDetail = ((nsMouseEvent*)mEvent)->clickCount;
-    break;
-  default:
-    break;
+  switch(mEvent->eventStructType)
+  {
+    case NS_SCROLLPORT_EVENT:
+    {
+      nsScrollPortEvent* scrollEvent = (nsScrollPortEvent*)mEvent;
+      *aDetail = (PRInt32)scrollEvent->orient;
+      return NS_OK;
+    }
+
+    case NS_MOUSE_EVENT:
+    {
+      switch (mEvent->message) {
+      case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      case NS_MOUSE_LEFT_CLICK:
+      case NS_MOUSE_LEFT_DOUBLECLICK:
+      case NS_MOUSE_MIDDLE_BUTTON_UP:
+      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      case NS_MOUSE_MIDDLE_CLICK:
+      case NS_MOUSE_MIDDLE_DOUBLECLICK:
+      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      case NS_MOUSE_RIGHT_CLICK:
+      case NS_MOUSE_RIGHT_DOUBLECLICK:
+        *aDetail = ((nsMouseEvent*)mEvent)->clickCount;
+        break;
+      default:
+        break;
+      }
+    }
+
+    default:
+      *aDetail = 0;
+      return NS_OK;
   }
+
   return NS_OK;
 }
 
@@ -1123,6 +1142,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_dragdrop];
   case NS_DRAGDROP_GESTURE:
     return mEventNames[eDOMEvents_draggesture];
+  case NS_SCROLLPORT_OVERFLOW:
+    return mEventNames[eDOMEvents_overflow];
+  case NS_SCROLLPORT_UNDERFLOW:
+    return mEventNames[eDOMEvents_underflow];
   default:
     break;
   }

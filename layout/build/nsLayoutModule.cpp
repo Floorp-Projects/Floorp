@@ -368,6 +368,7 @@ static Components gComponents[] = {
   { "XUL Browser Box Object", NS_BROWSERBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-browser" },
   { "XUL Editor Box Object", NS_EDITORBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-editor" },
   { "XUL Iframe Object", NS_IFRAMEBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-iframe" },
+  { "XUL ScrollBox Object", NS_SCROLLBOXOBJECT_CID, "component://netscape/layout/xul-boxobject-scrollbox" },
 
   { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "component://netscape/autocopy" },
   { "Content policy service", NS_CONTENTPOLICY_CID, NS_CONTENTPOLICY_PROGID },

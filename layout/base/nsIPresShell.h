@@ -95,6 +95,12 @@ class nsIArena;
 #define VERIFY_REFLOW_INCLUDE_SPACE_MANAGER 0x40
 #define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x80
 
+// for PostAttributeChanged
+enum nsAttributeChangeType {
+  eChangeType_Set = 0,       // Set attribute
+  eChangeType_Remove = 1,    // Remove attribute
+};
+
 /**
  * Presentation shell interface. Presentation shells are the
  * controlling point for managing the presentation of a document. The
@@ -251,6 +257,21 @@ public:
   NS_IMETHOD FlushPendingNotifications() = 0;
 
   /**
+   * Post a request to handle a DOM event after Reflow has finished.
+   */
+  NS_IMETHOD PostDOMEvent(nsIContent* aContent, nsEvent* aEvent)=0;
+
+  /**
+   * Post a request to set and attribute after reflow has finished.
+   */
+  NS_IMETHOD PostAttributeChange(nsIContent* aContent,
+                                 PRInt32 aNameSpaceID, 
+                                 nsIAtom* aName,
+                                 const nsString& aValue,
+                                 PRBool aNotify,
+                                 nsAttributeChangeType aType) = 0;
+
+ /**
    * Reflow batching
    */   
   NS_IMETHOD BeginReflowBatching() = 0;

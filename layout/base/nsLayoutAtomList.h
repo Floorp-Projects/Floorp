@@ -159,6 +159,11 @@ LAYOUT_ATOM(onselect, "onselect")
 LAYOUT_ATOM(onsubmit, "onsubmit")
 LAYOUT_ATOM(onunload, "onunload")
 
+// scrolling
+LAYOUT_ATOM(onoverflow, "onoverflow")
+LAYOUT_ATOM(onunderflow, "onunderflow")
+
+
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code
 LAYOUT_ATOM(cellMap, "TableCellMap")

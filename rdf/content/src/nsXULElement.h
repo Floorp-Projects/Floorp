@@ -330,6 +330,7 @@ protected:
     static PRInt32              kNameSpaceID_RDF;
     static PRInt32              kNameSpaceID_XUL;
 
+
 public:
     static nsresult
     Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument, PRBool aIsScriptable, nsIContent** aResult);

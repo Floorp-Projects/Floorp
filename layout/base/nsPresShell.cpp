@@ -553,6 +553,24 @@ private:
   PRInt32       mCallCount;
 };
 
+struct nsDOMEventRequest 
+{
+  nsIContent* content;
+  nsEvent* event;
+  nsDOMEventRequest* next;
+};
+
+struct nsAttributeChangeRequest 
+{
+  nsIContent* content;
+  PRInt32 nameSpaceID;
+  nsIAtom* name;
+  nsAutoString value;
+  PRBool notify;
+  nsAttributeChangeType type;
+  nsAttributeChangeRequest* next;
+};
+
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
                   public nsISelectionController,
@@ -618,6 +636,20 @@ public:
   NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame, nsIReflowCommand::ReflowType* aCmdType);  
   NS_IMETHOD FlushPendingNotifications();
 
+  /**
+   * Post a request to handle a DOM event after Reflow has finished.
+   */
+  NS_IMETHOD PostDOMEvent(nsIContent* aContent, nsEvent* aEvent);
+
+  /**
+   * Post a request to set and attribute after reflow has finished.
+   */
+  NS_IMETHOD PostAttributeChange(nsIContent* aContent,
+                                 PRInt32 aNameSpaceID, 
+                                 nsIAtom* aName,
+                                 const nsString& aValue,
+                                 PRBool aNotify,
+                                 nsAttributeChangeType aType);
   /**
    * Reflow batching
    */   
@@ -753,6 +785,9 @@ public:
 protected:
   virtual ~PresShell();
 
+  void HandlePostedDOMEvents();
+  void HandlePostedAttributeChanges();
+
   /** notify all external reflow observers that reflow of type "aData" is about
     * to begin.
     */
@@ -819,7 +854,14 @@ protected:
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
   nsCOMPtr<nsIObserverService>  mObserverService; // Observer service for reflow events
   nsCOMPtr<nsIDragService>      mDragService;
-  
+
+  // used for list of posted events and attribute changes. To be done
+  // after reflow.
+  nsDOMEventRequest* mFirstDOMEventRequest;
+  nsDOMEventRequest* mLastDOMEventRequest;
+  nsAttributeChangeRequest* mFirstAttributeRequest;
+  nsAttributeChangeRequest* mLastAttributeRequest;
+
   // subshell map
   nsDST*            mSubShellMap;  // map of content/subshell pairs
   nsDST::NodeArena* mDSTNodeArena; // weak link. DST owns (mSubShellMap object)
@@ -942,7 +984,11 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
                             (void **) aInstancePtrResult);
 }
 
-PresShell::PresShell():mStackArena(nsnull)
+PresShell::PresShell():mStackArena(nsnull),
+                       mFirstDOMEventRequest(nsnull),
+                       mLastDOMEventRequest(nsnull),
+                       mFirstAttributeRequest(nsnull),
+                       mLastAttributeRequest(nsnull)
 {
   NS_INIT_REFCNT();
   mIsDestroying = PR_FALSE;
@@ -1828,6 +1874,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #endif
   
   mViewManager->CacheWidgetChanges(PR_FALSE);
+  HandlePostedDOMEvents();
+  HandlePostedAttributeChanges();
 
   //Send resize event from here.
   nsEvent event;
@@ -3052,6 +3100,114 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
   return rv;
 }
 
+/**
+* Post a request to handle a DOM event after Reflow has finished.
+* The event must have been created with the "new" operator.
+*/
+NS_IMETHODIMP
+PresShell::PostDOMEvent(nsIContent* aContent, nsEvent* aEvent)
+{
+ // ok we have a list of events to handle. Queue them up and handle them
+ // after we finish reflow.
+  nsDOMEventRequest* request = nsnull;
+  void* result = nsnull;
+  AllocateFrame(sizeof(nsDOMEventRequest), &result);
+  request = (nsDOMEventRequest*)result;
+
+  request->content = aContent;
+  NS_ADDREF(aContent);
+
+  request->event = aEvent;
+  request->next = nsnull;
+
+  if (mLastDOMEventRequest) {
+    mLastDOMEventRequest = mLastDOMEventRequest->next = request;
+  } else {
+    mFirstDOMEventRequest = request;
+    mLastDOMEventRequest = request;
+  }
+ 
+  return NS_OK;
+}
+
+
+/**
+ * Post a request to set and attribute after reflow has finished.
+ */
+NS_IMETHODIMP
+PresShell::PostAttributeChange(nsIContent* aContent,
+                               PRInt32 aNameSpaceID, 
+                               nsIAtom* aName,
+                               const nsString& aValue,
+                               PRBool aNotify,
+                               nsAttributeChangeType aType)
+{
+ // ok we have a list of events to handle. Queue them up and handle them
+ // after we finish reflow.
+  nsAttributeChangeRequest* request = nsnull;
+
+  void* result = nsnull;
+  AllocateFrame(sizeof(nsAttributeChangeRequest), &result);
+  request = (nsAttributeChangeRequest*)result;
+
+  request->content = aContent;
+  NS_ADDREF(aContent);
+
+  request->nameSpaceID = aNameSpaceID;
+  request->name = aName;
+  request->value = aValue;
+  request->notify = aNotify;
+  request->type = aType;
+  request->next = nsnull;
+
+  if (mLastAttributeRequest) {
+    mLastAttributeRequest = mLastAttributeRequest->next = request;
+  } else {
+    mFirstAttributeRequest = request;
+    mLastAttributeRequest = request;
+  }
+
+  return NS_OK;
+}
+
+void
+PresShell::HandlePostedDOMEvents()
+{
+   nsDOMEventRequest* node = mFirstDOMEventRequest;
+   while(node)
+   {
+      nsEventStatus status = nsEventStatus_eIgnore;
+      node->content->HandleDOMEvent(mPresContext, node->event, nsnull, NS_EVENT_FLAG_INIT, &status);   
+      NS_RELEASE(node->content);
+      delete node->event;
+      nsDOMEventRequest* toFree = node;
+      node = node->next;
+      FreeFrame(sizeof(nsDOMEventRequest), toFree);
+   }
+
+   mFirstDOMEventRequest = mLastDOMEventRequest = nsnull;
+}
+
+void
+PresShell::HandlePostedAttributeChanges()
+{
+   nsAttributeChangeRequest* node = mFirstAttributeRequest;
+   while(node)
+   {
+      if (node->type == eChangeType_Set)
+         node->content->SetAttribute(node->nameSpaceID, node->name, node->value, node->notify);   
+      else
+         node->content->UnsetAttribute(node->nameSpaceID, node->name, node->notify);   
+
+      NS_RELEASE(node->content);
+      nsAttributeChangeRequest* toFree = node;
+      node = node->next;
+      FreeFrame(sizeof(nsAttributeChangeRequest), toFree);
+   }
+
+   mFirstAttributeRequest = mLastAttributeRequest = nsnull;
+}
+
 NS_IMETHODIMP 
 PresShell::FlushPendingNotifications()
 {
@@ -4001,8 +4157,8 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   MOZ_TIMER_STOP(mReflowWatch);  
 
-  // if we allocated any stack memory during reflow free it.
-  //FreeDynamicStack();
+  HandlePostedDOMEvents();
+  HandlePostedAttributeChanges();
   return NS_OK;
 }
 

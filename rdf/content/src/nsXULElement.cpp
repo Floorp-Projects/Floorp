@@ -344,6 +344,7 @@ nsXULElement::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_FAILED(rv)) return rv;
        
+
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
                                                 kINameSpaceManagerIID,
@@ -397,6 +398,7 @@ nsXULElement::~nsXULElement()
             gRDFService = nsnull;
         }
         
+
         NS_IF_RELEASE(gNameSpaceManager);
 
         if (gXULUtils) {
@@ -4035,6 +4037,9 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
     progID += "-popupset";
   else if (tag.get() == nsXULAtoms::tree)
     progID += "-tree";
+  else if (tag.get() == nsXULAtoms::scrollbox)
+    progID += "-scrollbox";
+
 
   mBoxObject = do_CreateInstance(progID);
   if (!mBoxObject)

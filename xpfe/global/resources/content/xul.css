@@ -99,15 +99,25 @@ iframe {
   behavior: url(chrome://global/content/xulBindings.xml#iframe);
 }
 
+/******** ScrollBox ********/
+
+scrollbox {
+  behavior: url(chrome://global/content/xulBindings.xml#scrollbox);
+}
+
+.scrollbox-innerbox {
+  text-align: inherit;
+  vertical-align: inherit;
+}
+
+
+/******** ArrowScrollBox ******/
+
+arrowscrollbox {
+  behavior: url(chrome://global/content/xulBindings.xml#arrowscrollbox);
+}
+
 /******** Box *******/
-
-hbox {
-  behavior: url(chrome://global/content/xulBindings.xml#hbox);
-}
-
-vbox {
-  behavior: url(chrome://global/content/xulBindings.xml#vbox);
-}
 
 /******** TitledBox *******/
 
@@ -554,3 +564,18 @@ statusbarpanel
     user-focus            : ignore;
     behavior              : url("chrome://global/content/xulBindings.xml#statusbar-panel");
   }
+
+/**
+* AutoRepeater
+*/
+autorepeater {
+    user-focus            : ignore;
+}
+
+autorepeatbutton.up {
+    behavior              : url("chrome://global/content/xulBindings.xml#autorepeatbutton-up");  
+}
+
+autorepeatbutton.down {
+    behavior              : url("chrome://global/content/xulBindings.xml#autorepeatbutton-down");  
+}

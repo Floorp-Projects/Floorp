@@ -84,7 +84,9 @@ public:
     eDOMEvents_dragdrop,
     eDOMEvents_draggesture,
     eDOMEvents_resize,
-    eDOMEvents_scroll
+    eDOMEvents_scroll,
+    eDOMEvents_overflow,
+    eDOMEvents_underflow
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsString& aEventType);

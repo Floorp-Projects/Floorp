@@ -218,6 +218,8 @@ nsXULContentUtils::kEventHandlerMap[] = {
     { "oncommand",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "onbroadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "oncommandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "onoverflow",      nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "onunderflow",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
 
     { "onfocus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
     { "onblur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },

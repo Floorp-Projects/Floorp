@@ -185,6 +185,29 @@ menuitem[checked="true"][menuactive="true"]
     font                  : smaller;
     padding               : 3px;
   }
+
+/*
+ * Autorepeatbutton
+ */
+.autorepeatbutton-up {
+    list-style-image: url("chrome://global/skin/scroll-up.gif")
+}
+
+.autorepeatbutton-down {
+    list-style-image: url("chrome://global/skin/scroll-down.gif")
+}
+
+autorepeatbutton {
+  text-align: center;
+  vertical-align: middle;
+}
+
+autorepeatbutton:hover {
+  background-color: #336699;
+}
+
+
+
   
   
   
