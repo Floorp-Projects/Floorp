@@ -185,7 +185,7 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
 
       // Read the URL data
       char      buf[2048];
-      PRInt32   count;
+      PRUint32  count;
       nsresult  result;
       PRBool    first = PR_TRUE;
 
@@ -194,7 +194,7 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
         if (first == PR_TRUE) {
           PRInt32 ilErr;
   
-          ilErr = aReader->FirstWrite((const unsigned char *)buf, count);
+          ilErr = aReader->FirstWrite((const unsigned char *)buf, (int32)count);
           first = PR_FALSE;
           // If FirstWrite fails then the image type cannot be determined
           if (ilErr != 0) {
@@ -203,7 +203,7 @@ ImageNetContextSyncImpl::GetURL(ilIURL*          aURL,
           }
         }
                  
-        aReader->Write((const unsigned char *)buf, count);
+        aReader->Write((const unsigned char *)buf, (int32)count);
   
         // Get the next block
         result = stream->Read(buf, 0, sizeof(buf), &count);

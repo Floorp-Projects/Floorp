@@ -35,7 +35,7 @@ DIRS	= \
 	util
 
 ifdef MODULAR_NETLIB
-DIRS	+= module
+DIRS	+= public module
 endif
 
 ifdef NU_CACHE

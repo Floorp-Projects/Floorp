@@ -199,7 +199,7 @@ class CScanner {
        *  @param   
        *  @return  
        */
-      PRInt32 Mark(void);
+      PRUint32 Mark(void);
 
       /**
        *  Resets current offset position of input stream to marked position. 
@@ -211,7 +211,7 @@ class CScanner {
        *  @param   
        *  @return  
        */
-      PRInt32 RewindToMark(void);
+      PRUint32 RewindToMark(void);
 
 
       /**
@@ -230,7 +230,7 @@ class CScanner {
        *  @param   
        *  @return  
        */
-      PRBool Append(const char* aBuffer, PRInt32 aLen);
+      PRBool Append(const char* aBuffer, PRUint32 aLen);
 
       PRBool Append(const PRUnichar* aBuffer, PRInt32 aLen);
 
@@ -270,9 +270,9 @@ class CScanner {
       fstream*        mFileStream;
       nsString        mBuffer;
       nsString        mFilename;
-      PRInt32         mOffset;
-      PRInt32         mMarkPos;
-      PRInt32         mTotalRead;
+      PRUint32        mOffset;
+      PRUint32        mMarkPos;
+      PRUint32        mTotalRead;
       PRBool          mOwnsStream;
       PRBool          mIncremental;
 };

@@ -35,7 +35,7 @@ public:
      *  @return error status
      */
     NS_IMETHOD
-    GetLength(PRInt32 *aLength) = 0;
+    GetLength(PRUint32 *aLength) = 0;
 
     /** Read data from the stream.
      *  @param aErrorCode the error code if an error occurs
@@ -48,7 +48,7 @@ public:
      *  @return error status
      */   
     NS_IMETHOD
-    Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aReadCount) = 0; 
+    Read(char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aReadCount) = 0; 
 };
 
 #endif /* nsInputStream_h___ */

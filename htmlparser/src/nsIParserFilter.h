@@ -41,7 +41,7 @@ class CToken;
 class nsIParserFilter : public nsISupports {
   public:
       
-   NS_IMETHOD RawBuffer(char * buffer, int * buffer_length) = 0;
+   NS_IMETHOD RawBuffer(char * buffer, PRUint32 * buffer_length) = 0;
 
    NS_IMETHOD WillAddToken(CToken & token) = 0;
 

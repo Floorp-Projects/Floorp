@@ -32,10 +32,12 @@ static NS_DEFINE_IID(kIImageURLIID, IL_IURL_IID);
 
 class ImageURLImpl : public ilIURL {
 public:
-  ImageURLImpl(const char *aURL, nsIURLGroup* aURLGroup);
+  ImageURLImpl(void);
   ~ImageURLImpl();
 
   NS_DECL_ISUPPORTS
+
+  nsresult Init(const char *aURL, nsIURLGroup* aURLGroup);
 
   virtual void SetReader(ilINetReader *aReader);
 
@@ -58,15 +60,22 @@ private:
   ilINetReader *mReader;
 };
 
-ImageURLImpl::ImageURLImpl(const char *aURL, nsIURLGroup* aURLGroup)
+ImageURLImpl::ImageURLImpl(void)
+    : mURL(nsnull), mReader(nsnull)
 {
     NS_INIT_REFCNT();
-    if (nsnull != aURLGroup) {
-      aURLGroup->CreateURL(&mURL, nsnull, aURL, nsnull);
-    } else {
-      NS_NewURL(&mURL, nsnull, aURL);
-    }
-    mReader = nsnull;
+}
+
+nsresult 
+ImageURLImpl::Init(const char *aURL, nsIURLGroup* aURLGroup)
+{
+  nsresult rv;
+  if (nsnull != aURLGroup) {
+    rv = aURLGroup->CreateURL(&mURL, nsnull, aURL, nsnull);
+  } else {
+    rv = NS_NewURL(&mURL, aURL);
+  }
+  return rv;
 }
 
 ImageURLImpl::~ImageURLImpl()
@@ -143,7 +152,9 @@ const char*
 ImageURLImpl::GetAddress()
 {
     if (mURL != nsnull) {
-        return mURL->GetSpec();
+        const char* spec;
+        mURL->GetSpec(&spec);
+        return spec;
     }
     else {
         return nsnull;
@@ -162,8 +173,8 @@ ImageURLImpl::SetBackgroundLoad(PRBool aBgload)
   nsILoadAttribs* loadAttributes;
 
   if (nsnull != mURL) {
-    loadAttributes = mURL->GetLoadAttribs();
-    if (nsnull != loadAttributes) {
+    nsresult rv = mURL->GetLoadAttribs(&loadAttributes);
+    if (rv == NS_OK && nsnull != loadAttributes) {
       if (aBgload) {
         loadAttributes->SetLoadType(nsURLLoadBackground);
       } else {
@@ -194,9 +205,14 @@ NS_NewImageURL(ilIURL **aInstancePtrResult, const char *aURL,
     return NS_ERROR_NULL_POINTER;
   }
   
-  ilIURL *url = new ImageURLImpl(aURL, aURLGroup);
+  ImageURLImpl *url = new ImageURLImpl();
   if (url == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsresult rv = url->Init(aURL, aURLGroup);
+  if (rv != NS_OK) {
+    delete url;
+    return rv;
   }
 
   return url->QueryInterface(kIImageURLIID, (void **) aInstancePtrResult);

@@ -228,8 +228,11 @@ rdf_FullyQualifyURI(const nsIURL* base, nsString& spec)
     // This is a fairly heavy-handed way to do this, but...I don't
     // like typing.
     nsIURL* url;
-    if (NS_SUCCEEDED(NS_NewURL(&url, base, spec))) {
-        url->ToString(spec);
+    if (NS_SUCCEEDED(NS_NewURL(&url, spec, base))) {
+        PRUnichar* str;
+        url->ToString(&str);
+        spec = str;
+        delete str;
         url->Release();
     }
 }
@@ -702,7 +705,10 @@ nsRDFContentSink::GetIdAboutAttribute(const nsIParserNode& aNode,
         }
 
         if (attr.Equals(kTagRDF_ID)) {
-            mDocumentURL->ToString(rResource);
+            PRUnichar* str;
+            mDocumentURL->ToString(&str);
+            rResource = str;
+            delete str;
             nsAutoString tag = aNode.GetValueAt(i);
             rdf_StripAndConvert(tag);
 
@@ -717,7 +723,10 @@ nsRDFContentSink::GetIdAboutAttribute(const nsIParserNode& aNode,
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...
-    mDocumentURL->ToString(rResource);
+    PRUnichar* str;
+    mDocumentURL->ToString(&str);
+    rResource = str;
+    delete str;
     rResource.Append("#anonymous$");
     rResource.Append(mGenSym++, 10);
     return NS_OK;

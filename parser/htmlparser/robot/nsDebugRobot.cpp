@@ -126,13 +126,13 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax) { return NS_OK; }
-  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMsg) { return NS_OK; }
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax) { return NS_OK; }
+  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) { return NS_OK; }
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType) { return NS_OK; }
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
 };
 
-NS_IMETHODIMP CStreamListener::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
+NS_IMETHODIMP CStreamListener::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
 {
    fputs("done.\n",stdout);
    g_bReadyForNextUrl = PR_TRUE;
@@ -242,16 +242,24 @@ extern "C" NS_EXPORT int DebugRobot(
 
     parser->Parse(url, pl,PR_TRUE);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
-       if (yieldProc != NULL)
-          (*yieldProc)(url->GetSpec());
+      if (yieldProc != NULL) {
+        const char* spec;
+        (void)url->GetSpec(&spec);
+        (*yieldProc)(spec);
+      }
     }
     g_bReadyForNextUrl = PR_FALSE;
     if (ww) {
       ww->SetObserver(pl);
-      ww->LoadURL(nsString(url->GetSpec()));/* XXX hook up stream listener here! */
+      const char* spec;
+      (void)url->GetSpec(&spec);
+      ww->LoadURL(nsString(spec));/* XXX hook up stream listener here! */
       while (!g_bReadyForNextUrl) {
-         if (yieldProc != NULL)
-            (*yieldProc)(url->GetSpec());
+        if (yieldProc != NULL) {
+          const char* spec;
+          (void)url->GetSpec(&spec);
+          (*yieldProc)(spec);
+        }
       }
     }  
 

@@ -471,14 +471,14 @@ nsFrameUtil::LoadFrameRegressionData(nsIURL* aURL, nsIXMLContent** aResult)
 
   // XXX since the parser can't sync load data, we do it right here
   nsAutoString theWholeDarnThing;
-  PRInt32 ec;
-  nsIInputStream* iin = aURL->Open(&ec);
-  if (nsnull == iin) {
-    return (nsresult) ec;/* XXX fix url->Open */
+  nsIInputStream* iin;
+  rv = NS_OpenURL(aURL, &iin);
+  if (NS_OK != rv) {
+    return rv;
   }
   for (;;) {
     char buf[4000];
-    PRInt32 rc;
+    PRUint32 rc;
     rv = iin->Read(buf, 0, sizeof(buf), &rc);
     if (NS_FAILED(rv) || (rc <= 0)) {
       break;

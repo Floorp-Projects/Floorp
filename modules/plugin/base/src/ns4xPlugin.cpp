@@ -481,12 +481,12 @@ ns4xPlugin::_write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 
     nsIOutputStream* stream = wrapper->GetStream();
 
-    PRInt32 count = 0;
+    PRUint32 count = 0;
     nsresult rv = stream->Write((char *)buffer, 0, len, &count);
 
     NS_RELEASE(stream);
 
-    return count;
+    return (int32)count;
 }
 
 nsresult NP_EXPORT

@@ -568,9 +568,7 @@ nsDocument::StartDocumentLoad(nsIURL *aURL,
   mDocumentURL = aURL;
   NS_ADDREF(aURL);
 
-  mDocumentURLGroup = aURL->GetURLGroup();
-
-  return NS_OK;
+  return aURL->GetURLGroup(&mDocumentURLGroup);
 }
 
 const nsString* nsDocument::GetDocumentTitle() const

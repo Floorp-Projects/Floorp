@@ -23,7 +23,7 @@
 
 class UnicharBufferImpl : public nsIUnicharBuffer {
 public:
-  UnicharBufferImpl(PRInt32 aBufferSize);
+  UnicharBufferImpl(PRUint32 aBufferSize);
   ~UnicharBufferImpl();
 
   NS_DECL_ISUPPORTS
@@ -35,13 +35,13 @@ public:
                        PRInt32 aKeep);
 
   PRUnichar* mBuffer;
-  PRInt32 mSpace;
-  PRInt32 mLength;
+  PRUint32 mSpace;
+  PRUint32 mLength;
 };
 
-UnicharBufferImpl::UnicharBufferImpl(PRInt32 aBufferSize)
+UnicharBufferImpl::UnicharBufferImpl(PRUint32 aBufferSize)
 {
-  if (PRUint32(aBufferSize) < MIN_BUFFER_SIZE) {
+  if (aBufferSize < MIN_BUFFER_SIZE) {
     aBufferSize = MIN_BUFFER_SIZE;
   }
   mSpace = aBufferSize;
@@ -115,8 +115,10 @@ PRInt32 UnicharBufferImpl::Fill(nsresult* aErrorCode,
   // Read in some new data
   mLength = aKeep;
   PRInt32 amount = mSpace - aKeep;
-  PRInt32 nb;
-  *aErrorCode = aStream->Read(mBuffer, aKeep, amount, &nb);
+  PRUint32 nb;
+  NS_ASSERTION(aKeep >= 0, "unsigned madness");
+  NS_ASSERTION(amount >= 0, "unsigned madness");
+  *aErrorCode = aStream->Read(mBuffer, (PRUint32)aKeep, (PRUint32)amount, &nb);
   if (NS_SUCCEEDED(*aErrorCode)) {
     mLength += nb;
   }
@@ -127,7 +129,7 @@ PRInt32 UnicharBufferImpl::Fill(nsresult* aErrorCode,
 
 NS_BASE nsresult NS_NewUnicharBuffer(nsIUnicharBuffer** aInstancePtrResult,
                                      nsISupports* aOuter,
-                                     PRInt32 aBufferSize)
+                                     PRUint32 aBufferSize)
 {
   if (nsnull != aOuter) {
     return NS_ERROR_NO_AGGREGATION;

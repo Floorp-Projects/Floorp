@@ -1783,13 +1783,16 @@ nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell)
 
 NS_IMETHODIMP
 nsBrowserWindow::OnProgress(nsIURL* aURL,
-			    PRInt32 aProgress,
-			    PRInt32 aProgressMax)
+                            PRUint32 aProgress,
+                            PRUint32 aProgressMax)
 {
   if (mStatus) {
     nsAutoString url;
     if (nsnull != aURL) {
-      aURL->ToString(url);
+      PRUnichar* str;
+      aURL->ToString(&str);
+      url = str;
+      delete str;
     }
     url.Append(": progress ");
     url.Append(aProgress, 10);
@@ -1805,7 +1808,7 @@ nsBrowserWindow::OnProgress(nsIURL* aURL,
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::OnStatus(nsIURL* aURL, const nsString& aMsg)
+nsBrowserWindow::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   if (mStatus) {
     PRUint32 size;
@@ -1820,7 +1823,10 @@ nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
   if (mStatus) {
     nsAutoString url;
     if (nsnull != aURL) {
-      aURL->ToString(url);
+      PRUnichar* str;
+      aURL->ToString(&str);
+      url = str;
+      delete str;
     }
     url.Append(": start");
     PRUint32 size;
@@ -1831,13 +1837,16 @@ nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 nsBrowserWindow::OnStopBinding(nsIURL* aURL,
-                               PRInt32 status,
-                               const nsString& aMsg)
+                               nsresult status,
+                               const PRUnichar* aMsg)
 {
   if (mStatus) {
     nsAutoString url;
     if (nsnull != aURL) {
-      aURL->ToString(url);
+      PRUnichar* str;
+      aURL->ToString(&str);
+      url = str;
+      delete str;
     }
     url.Append(": stop");
     PRUint32 size;
@@ -2587,7 +2596,8 @@ nsBrowserWindow::DoDebugSave()
   
   if (rv == NS_OK)
   {
-    const char* name = url->GetFile();
+    const char* name;
+    rv = url->GetFile(&name);
     path = name;
 
     doSave = GetSaveFileNameFromFileSelector(mWindow, path);

@@ -85,9 +85,10 @@ NS_IMETHODIMP nsPluginStreamPeer :: GetURL(const char* *result)
   {
     if (nsnull == mURLSpec)
     {
-      nsString  string;
-
-      mURL->ToString(string);
+      PRUnichar* str;
+      mURL->ToString(&str);
+      nsString string = str;
+      delete str;
 
       mURLSpec = (char *)PR_Malloc(string.Length() + 1);
 

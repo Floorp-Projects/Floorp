@@ -366,6 +366,15 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRInt32 n)
   return 0;
 }
 
+PRUnichar* nsCRT::strdup(const PRUnichar* str)
+{
+  PRInt32 len = nsCRT::strlen(str) + 1; // add one for null
+  PRUnichar* rslt = new PRUnichar[len];
+  if (rslt == NULL) return NULL;
+  nsCRT::memcpy(rslt, str, len * sizeof(PRUnichar));
+  return rslt;
+}
+
 PRUint32 nsCRT::HashValue(const PRUnichar* us)
 {
   PRUint32 rv = 0;

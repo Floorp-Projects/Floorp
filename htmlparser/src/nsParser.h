@@ -202,12 +202,12 @@ friend class CTokenHandler;
       // These methods are callback methods used by
       // net lib to let us know about our inputstream.
       //*********************************************
-    NS_IMETHOD GetBindInfo(nsIURL* aURL);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMmsg);
+    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
+    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMmsg);
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
+    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
 
 protected:
 

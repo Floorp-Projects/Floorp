@@ -227,10 +227,11 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-  rv = nsRepository::CreateInstance(kCParserCID, 
-                                    nsnull, 
-                                    kCParserIID, 
-                                    (void **)&mParser);
+  if (rv == NS_OK)
+    rv = nsRepository::CreateInstance(kCParserCID, 
+                                      nsnull, 
+                                      kCParserIID, 
+                                      (void **)&mParser);
 
   if (NS_OK == rv) { 
     nsIHTMLContentSink* sink;
@@ -615,7 +616,8 @@ nsHTMLDocument::GetDomain(nsString& aDomain)
   // PCB: This is the domain name of the server that produced this document. Can we just
   // extract it from the URL? What about proxy servers, etc.?
   if (nsnull != mDocumentURL) {
-    const char* hostName = mDocumentURL->GetHost();
+    const char* hostName;
+    nsresult rslt = mDocumentURL->GetHost(&hostName);
     aDomain.SetString(hostName);
   } else {
     aDomain.SetLength(0);
@@ -627,7 +629,10 @@ NS_IMETHODIMP
 nsHTMLDocument::GetURL(nsString& aURL)
 {
   if (nsnull != mDocumentURL) {
-    mDocumentURL->ToString(aURL);
+    PRUnichar* str;
+    mDocumentURL->ToString(&str);
+    aURL = str;
+    delete str;
   }
   return NS_OK;
 }

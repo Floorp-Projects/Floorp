@@ -76,12 +76,12 @@ public:
     
     TestConsumer();
 
-    NS_IMETHOD GetBindInfo(nsIURL* aURL);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMsg);
+    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info);
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
+    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
+    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
 
 protected:
     ~TestConsumer();
@@ -106,7 +106,7 @@ TestConsumer::~TestConsumer()
 }
 
 
-NS_IMETHODIMP TestConsumer::GetBindInfo(nsIURL* aURL)
+NS_IMETHODIMP TestConsumer::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::GetBindInfo: URL: %p\n", aURL);
@@ -115,8 +115,8 @@ NS_IMETHODIMP TestConsumer::GetBindInfo(nsIURL* aURL)
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnProgress(nsIURL* aURL, PRInt32 Progress, 
-                                       PRInt32 ProgressMax)
+NS_IMETHODIMP TestConsumer::OnProgress(nsIURL* aURL, PRUint32 Progress, 
+                                       PRUint32 ProgressMax)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnProgress: URL: %p - %d of total %d\n", aURL, Progress, ProgressMax);
@@ -125,11 +125,14 @@ NS_IMETHODIMP TestConsumer::OnProgress(nsIURL* aURL, PRInt32 Progress,
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnStatus(nsIURL* aURL, const nsString& aMsg)
+NS_IMETHODIMP TestConsumer::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStatus: ");
-        fputs(aMsg, stdout);
+        nsString str(aMsg);
+        char* c = str.ToNewCString();
+        fputs(c, stdout);
+        free(c);
         fputs("\n", stdout);
     }
 
@@ -146,9 +149,9 @@ NS_IMETHODIMP TestConsumer::OnStartBinding(nsIURL* aURL, const char *aContentTyp
 }
 
 
-NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length) 
+NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length) 
 {
-    PRInt32 len;
+    PRUint32 len;
 
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnDataAvailable: URL: %p, %d bytes available...\n", aURL, length);
@@ -157,7 +160,7 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStre
     do {
         nsresult err;
         char buffer[80];
-        int i;
+        PRUint32 i;
 
         err = pIStream->Read(buffer, 0, 80, &len);
         if (err == NS_OK) {
@@ -171,7 +174,7 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStre
 }
 
 
-NS_IMETHODIMP TestConsumer::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
+NS_IMETHODIMP TestConsumer::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
 {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStopBinding... URL: %p status: %d\n", aURL, status);
@@ -189,10 +192,10 @@ nsresult ReadStreamSynchronously(nsIInputStream* aIn)
     char buffer[1024];
 
     if (nsnull != aIn) {
-        int len;
+        PRUint32 len;
 
         do {
-            int i;
+            PRUint32 i;
 
             rv = aIn->Read(buffer, 0, sizeof(buffer), &len);
             for (i=0; i<len; i++) {
@@ -273,7 +276,7 @@ int main(int argc, char **argv)
         
         // Start the URL load...
         if (PR_TRUE == bLoadAsync) {
-            result = pURL->Open(pConsumer);
+            result = NS_OpenURL(pURL, pConsumer);
 
             /* If the open failed, then do not drop into the message loop... */
             if (NS_OK != result) {
@@ -284,7 +287,7 @@ int main(int argc, char **argv)
         else {
             nsIInputStream *in;
 
-            in = pURL->Open((PRInt32*)&result);
+            result = NS_OpenURL(pURL, &in);
             ReadStreamSynchronously(in);
             NS_IF_RELEASE(in);
             urlLoaded = 1;

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -153,18 +153,18 @@ public:
 
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
 
-  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
 
-  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
 
-  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
   //nsIStreamListener interface
 
-  NS_IMETHOD GetBindInfo(nsIURL* aURL);
+  NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
 
   NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
-                             PRInt32 aLength);
+                             PRUint32 aLength);
 
   //locals
 
@@ -189,7 +189,7 @@ private:
   PRUint32                mBufSize;
   void                    *mNotifyData;
   nsIPluginHost           *mHost;
-  PRInt32                 mLength;
+  PRUint32                mLength;
   PRBool                  mGotProgress;
   nsPluginStreamType      mStreamType;
 #ifdef USE_CACHE
@@ -227,7 +227,9 @@ nsPluginStreamListener :: nsPluginStreamListener()
 nsPluginStreamListener :: ~nsPluginStreamListener()
 {
 #ifdef NS_DEBUG
-printf("killing stream for %s\n", mURL ? mURL->GetSpec() : "(unknown URL)");
+  const char* spec;
+  (void)mURL->GetSpec(&spec);
+  printf("killing stream for %s\n", mURL ? spec : "(unknown URL)");
 #endif
   NS_IF_RELEASE(mURL);
   NS_IF_RELEASE(mOwner);
@@ -304,7 +306,9 @@ nsresult nsPluginStreamListener :: QueryInterface(const nsIID& aIID,
 nsresult nsPluginStreamListener :: Initialize(nsIURL *aURL, nsIPluginInstance *aInstance, void *aNotifyData)
 {
 #ifdef NS_DEBUG
-printf("created stream for %s\n", aURL->GetSpec());
+  const char* spec;
+  (void)aURL->GetSpec(&spec);
+  printf("created stream for %s\n", spec);
 #endif
   mURL = aURL;
   NS_ADDREF(mURL);
@@ -321,7 +325,9 @@ nsresult nsPluginStreamListener :: Initialize(nsIURL *aURL, nsIPluginInstanceOwn
                                               nsIPluginHost *aHost, void *aNotifyData)
 {
 #ifdef NS_DEBUG
-printf("created stream for %s\n", aURL->GetSpec());
+  const char* spec;
+  (void)aURL->GetSpec(&spec);
+  printf("created stream for %s\n", spec);
 #endif
   mURL = aURL;
   NS_ADDREF(mURL);
@@ -401,7 +407,6 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
       (nsnull != instance) && (PR_FALSE == mBound))
 	rv = SetUpStreamPeer(aURL, instance, aContentType);
 		
-
   NS_IF_RELEASE(instance);
 
   mBound = PR_TRUE;
@@ -409,7 +414,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
   return rv;
 }
 
-NS_IMETHODIMP nsPluginStreamListener :: OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+NS_IMETHODIMP nsPluginStreamListener :: OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   nsresult rv = NS_OK;
   if ((aProgress == 0) && (nsnull == mPeer))
@@ -439,12 +444,12 @@ NS_IMETHODIMP nsPluginStreamListener :: OnProgress(nsIURL* aURL, PRInt32 aProgre
   return rv;
 }
 
-NS_IMETHODIMP nsPluginStreamListener :: OnStatus(nsIURL* aURL, const nsString &aMsg)
+NS_IMETHODIMP nsPluginStreamListener :: OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
+NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
 {
   nsresult rv;
   nsPluginReason  reason = nsPluginReason_NoReason;
@@ -533,12 +538,13 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, PRInt32 aSta
         const char  *url;
 
         if (nsnull != mURL)
-          url = mURL->GetSpec();
+          rv = mURL->GetSpec(&url);
         else
           url = "";
 
         //XXX target is bad. MMP
-        instance->URLNotify(url, "", reason, mNotifyData);
+        if (url)
+          instance->URLNotify(url, "", reason, mNotifyData);
       }
 
       NS_RELEASE(instance);
@@ -548,15 +554,15 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, PRInt32 aSta
   return rv;
 }
 
-NS_IMETHODIMP nsPluginStreamListener :: GetBindInfo(nsIURL* aURL)
+NS_IMETHODIMP nsPluginStreamListener :: GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginStreamListener :: OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
-                                                        PRInt32 aLength)
+                                                        PRUint32 aLength)
 {
-  if ((PRUint32)aLength > mBufSize)
+  if (aLength > mBufSize)
   {
     if (nsnull != mBuffer)
       PR_Free((void *)mBuffer);
@@ -567,7 +573,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnDataAvailable(nsIURL* aURL, nsIInputSt
 
   if ((nsnull != mBuffer) && (nsnull != mStream))
   {
-    PRInt32 readlen;
+    PRUint32 readlen;
     aIStream->Read((char *)mBuffer, 0, aLength, &readlen);
 
 #ifdef USE_CACHE
@@ -1326,7 +1332,9 @@ nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIURL *aU
 
   if ((nsnull == plugins) && (nsnull != aURL))
   {
-    const char  *name = aURL->GetSpec();
+    const char  *name;
+    nsresult rv = aURL->GetSpec(&name);
+    if (rv != NS_OK) return rv;
     PRInt32     len = PL_strlen(name);
 
     //find the plugin by filename extension.
@@ -1583,6 +1591,8 @@ NS_IMETHODIMP nsPluginHostImpl :: NewPluginStream(const nsString& aURL,
 {
   nsIURL                  *url;
   nsPluginStreamListener  *listener = (nsPluginStreamListener *)new nsPluginStreamListener();
+  if (listener == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
   nsresult                rv;
 
   if (aURL.Length() <= 0)
@@ -1594,8 +1604,9 @@ NS_IMETHODIMP nsPluginHostImpl :: NewPluginStream(const nsString& aURL,
   {
     rv = listener->Initialize(url, aInstance, aNotifyData);
 
-    if (NS_OK == rv)
-      rv = url->Open(listener);
+    if (NS_OK == rv) {
+      rv = NS_OpenURL(url, listener);
+    }
 
     NS_RELEASE(url);
   }
@@ -1620,8 +1631,9 @@ NS_IMETHODIMP nsPluginHostImpl :: NewPluginStream(const nsString& aURL,
   {
     rv = listener->Initialize(url, aOwner, (nsIPluginHost *)this, aNotifyData);
 
-    if (NS_OK == rv)
-      rv = url->Open(listener);
+    if (NS_OK == rv) {
+      rv = NS_OpenURL(url, listener);
+    }
 
     NS_RELEASE(url);
   }

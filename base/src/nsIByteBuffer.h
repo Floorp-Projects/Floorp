@@ -31,26 +31,27 @@ class nsIInputStream;
 class nsIByteBuffer : public nsISupports {
 public:
   /** @return length of buffer, i.e. how many bytes are currently in it. */
-  virtual PRInt32 GetLength() const = 0;
+  virtual PRUint32 GetLength(void) const = 0;
 
   /** @return number of bytes allocated in the buffer */
-  virtual PRInt32 GetBufferSize() const = 0;
+  virtual PRUint32 GetBufferSize(void) const = 0;
 
   /** @return the buffer */
-  virtual char* GetBuffer() const = 0;
+  virtual char* GetBuffer(void) const = 0;
 
   /** Grow buffer to aNewSize bytes. */
-  virtual PRBool Grow(PRInt32 aNewSize) = 0;
+  virtual PRBool Grow(PRUint32 aNewSize) = 0;
 
   /** Fill the buffer with data from aStream.  Don't grow the buffer, only
    *  read until length of buffer equals buffer size. */
   virtual PRInt32 Fill(nsresult* aErrorCode, nsIInputStream* aStream,
-                       PRInt32 aKeep) = 0;
+                        PRUint32 aKeep) = 0;
 };
 
 /** Create a new byte buffer using the given buffer size. */
 extern NS_BASE nsresult NS_NewByteBuffer(nsIByteBuffer** aInstancePtrResult,
                                          nsISupports* aOuter,
-                                         PRInt32 aBufferSize = 0);
+                                         PRUint32 aBufferSize = 0);
 
 #endif /* nsIByteBuffer_h___ */
+

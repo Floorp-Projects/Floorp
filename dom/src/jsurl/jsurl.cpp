@@ -145,7 +145,7 @@ evaluate_script(URL_Struct* urls, const char *what, JSConData *con_data)
     NS_RELEASE(con_info);
 
     if (nsnull != url) {
-      viewer = url->GetContainer();
+      (void)url->GetContainer(&viewer);
       NS_RELEASE(url);
     }
     // Now see if the container supports nsIScriptContextOwner...

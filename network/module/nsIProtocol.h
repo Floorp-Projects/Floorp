@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,30 +16,27 @@
  * Reserved.
  */
 
-#ifndef nsIPostToServer_h___
-#define nsIPostToServer_h___
+#ifndef nsIProtocol_h___
+#define nsIProtocol_h___
 
-#include "nscore.h"
 #include "nsISupports.h"
+#include "nscore.h"
 
-#include "nspr.h"
+#define NS_IPROTOCOL_IID                             \
+{ /* 677d9a90-93ee-11d2-816a-006008119d7a */         \
+    0x677d9a90,                                      \
+    0x93ee,                                          \
+    0x11d2,                                          \
+    {0x81, 0x6a, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
 
-
-/* EADF7B41-EBC0-11d1-BEAE-00805F8A66DC */
-#define NS_IPOSTTOSERVER_IID                            \
-{ 0xeadf7b41, 0xebc0, 0x11d1,                           \
-    { 0xbe, 0xae, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0xdc } }
-
-
-
-struct nsIPostToServer : public nsISupports
+class nsIProtocol : public nsISupports
 {
-    NS_IMETHOD  SendFile(const char *aFile) = 0;
-    NS_IMETHOD  SendData(const char *aBuffer, PRInt32 aLength) = 0;
-    NS_IMETHOD  SendDataFromFile(const char *aFile) = 0;
+public:
+
+    // XXX Other methods will follow when we work out pluggable protocols,
+    // but for now, this is just a means to parse and construct URL objects.
+
 };
 
-#define NS_IPOSTTOSERVER_ALREADY_POSTING    1
-
-
-#endif /* nsIPostToServer_h___ */
+#endif /* nsIIProtocol_h___ */

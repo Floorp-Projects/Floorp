@@ -16,11 +16,6 @@
 # Reserved.
 
 DEPTH			= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
 
 MODULE			= netlib
 LIBRARY_NAME		= netlib
@@ -51,25 +46,23 @@ EXPORTS = nsINetService.h               \
           nsIProtocolURLFactory.h       \
           $(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+include $(DEPTH)/config/config.mk
 
-include $(topsrcdir)/config/config.mk
-
-include $(topsrcdir)/config/rules.mk
+include $(DEPTH)/config/rules.mk
 
 $(LIBRARY): \
 	$(OBJS)
 
 install::
-	$(INSTALL) $(srcdir)/res/gopher-audio.gif   $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-binary.gif  $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-find.gif    $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-image.gif   $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-menu.gif    $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-movie.gif   $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-telnet.gif  $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-text.gif    $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-unknown.gif $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-audio.gif   $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-binary.gif  $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-find.gif    $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-image.gif   $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-menu.gif    $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-movie.gif   $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-telnet.gif  $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-text.gif    $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-unknown.gif $(DIST)/bin/res/network
 
 clobber::
 	rm -f $(DIST)/bin/res/network/gopher-audio.gif

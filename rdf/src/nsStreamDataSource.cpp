@@ -119,7 +119,7 @@ StreamDataSourceImpl::Init(const nsString& uri)
     if (NS_FAILED(parser->Parse(mURL)))
         goto done;
 
-    if (NS_FAILED(mURL->Open(lsnr)))
+    if (NS_FAILED(NS_OpenURL(mURL, lsnr)))
         goto done;
 
 done:

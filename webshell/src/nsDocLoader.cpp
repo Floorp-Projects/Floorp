@@ -123,12 +123,12 @@ public:
     nsresult Stop(void);
 
     /* nsIStreamListener interface methods... */
-    NS_IMETHOD GetBindInfo(nsIURL* aURL);
-    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-    NS_IMETHOD OnStatus(nsIURL* aURL, const nsString& aMsg);
+    NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg);
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aStream, PRInt32 aLength);
-    NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString& aMsg);
+    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aStream, PRUint32 aLength);
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
     nsresult GetStatus(void) { return mStatus; }
 
@@ -590,12 +590,12 @@ nsresult nsDocFactoryImpl::InitUAStyleSheet()
 
   if (nsnull == gUAStyleSheet) {  // snarf one
     nsIURL* uaURL;
-    rv = NS_NewURL(&uaURL, nsnull, nsString(UA_CSS_URL)); // XXX this bites, fix it
+    rv = NS_NewURL(&uaURL, nsString(UA_CSS_URL)); // XXX this bites, fix it
     if (NS_OK == rv) {
       // Get an input stream from the url
-      PRInt32 ec;
-      nsIInputStream* in = uaURL->Open(&ec);
-      if (nsnull != in) {
+      nsIInputStream* in;
+      rv = NS_OpenURL(uaURL, &in);
+      if (rv == NS_OK) {
         // Translate the input using the argument character set id into unicode
         nsIUnicharInputStream* uin;
         rv = NS_NewConverterStream(&uin, nsnull, in);
@@ -615,7 +615,7 @@ nsresult nsDocFactoryImpl::InitUAStyleSheet()
         NS_RELEASE(in);
       }
       else {
-        printf("open of %s failed: error=%x\n", UA_CSS_URL, ec);
+        printf("open of %s failed: error=%x\n", UA_CSS_URL, rv);
         rv = NS_ERROR_ILLEGAL_VALUE;  // XXX need a better error code here
       }
 
@@ -978,12 +978,12 @@ nsDocLoaderImpl::CreateURL(nsIURL** aInstancePtrResult,
   if (nsnull == aInstancePtrResult) {
     rv = NS_ERROR_NULL_POINTER;
   } else {
-    rv = NS_NewURL(&url, aBaseURL, aURLSpec, aContainer, this);
+    rv = NS_NewURL(&url, aURLSpec, aBaseURL, aContainer, this);
     if (NS_SUCCEEDED(rv)) {
       nsILoadAttribs* loadAttributes;
 
-      loadAttributes = url->GetLoadAttribs();
-      if (nsnull != loadAttributes) {
+      rv = url->GetLoadAttribs(&loadAttributes);
+      if (rv == NS_OK) {
         loadAttributes->Clone(m_LoadAttrib);
         NS_RELEASE(loadAttributes);
       }
@@ -1019,8 +1019,8 @@ nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
   /* Update the URL counters... */
   nsILoadAttribs* loadAttributes;
 
-  loadAttributes = aUrl->GetLoadAttribs();
-  if (nsnull != loadAttributes) {
+  rv = aUrl->GetLoadAttribs(&loadAttributes);
+  if (rv == NS_OK) {
     rv = loadAttributes->GetLoadType(&loadType);
     if (NS_FAILED(rv)) {
       loadType = nsURLLoadNormal;
@@ -1103,8 +1103,8 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
     nsILoadAttribs* loadAttributes;
     nsURLLoadType loadType = nsURLLoadNormal;
 
-    loadAttributes = aURL->GetLoadAttribs();
-    if (nsnull != loadAttributes) {
+    rv = aURL->GetLoadAttribs(&loadAttributes);
+    if (rv == NS_OK) {
       rv = loadAttributes->GetLoadType(&loadType);
       if (NS_FAILED(rv)) {
         loadType = nsURLLoadNormal;
@@ -1374,9 +1374,13 @@ nsresult nsDocumentBindInfo::Stop(void)
 {
   nsresult rv;
   nsINetService* inet;
+  const char* spec;
 
-  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-         ("DocLoader - Stop(...) called for %s.\n", m_Url->GetSpec()));
+  if (m_Url == nsnull) return NS_OK;
+  rv = m_Url->GetSpec(&spec);
+  if (rv == NS_OK)
+      PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+             ("DocLoader - Stop(...) called for %s.\n", spec));
 
   /* 
    * Mark the IStreamListener as being aborted...  If more data is pushed
@@ -1397,28 +1401,30 @@ nsresult nsDocumentBindInfo::Stop(void)
 }
 
 
-NS_METHOD nsDocumentBindInfo::GetBindInfo(nsIURL* aURL)
+NS_METHOD nsDocumentBindInfo::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)
 {
     nsresult rv = NS_OK;
 
     NS_PRECONDITION(nsnull !=m_NextStream, "DocLoader: No stream for document");
 
     if (nsnull != m_NextStream) {
-        rv = m_NextStream->GetBindInfo(aURL);
+        rv = m_NextStream->GetBindInfo(aURL, aInfo);
     }
 
     return rv;
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRInt32 aProgress, 
-                                         PRInt32 aProgressMax)
+NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRUint32 aProgress, 
+                                         PRUint32 aProgressMax)
 {
     nsresult rv = NS_OK;
+    const char* spec;
+    (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader - OnProgress(...) called for %s.  Progress: %d.  ProgressMax: %d\n", 
-           aURL->GetSpec(), aProgress, aProgressMax));
+            spec, aProgress, aProgressMax));
 
     /* Pass the notification out to the next stream listener... */
     if (nsnull != m_NextStream) {
@@ -1435,7 +1441,7 @@ NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRInt32 aProgress,
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnStatus(nsIURL* aURL, const nsString& aMsg)
+NS_METHOD nsDocumentBindInfo::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
     nsresult rv = NS_OK;
 
@@ -1458,10 +1464,12 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
 {
     nsresult rv = NS_OK;
     nsIContentViewer* viewer = nsnull;
+    const char* spec;
+    (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader - OnStartBinding(...) called for %s.  Content-type is %s\n",
-           aURL->GetSpec(), aContentType));
+            spec, aContentType));
 
     /* If the binding has been canceled via Stop() then abort the load... */
     if (NS_BINDING_ABORTED == mStatus) {
@@ -1524,13 +1532,15 @@ done:
 
 
 NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURL* aURL, 
-                                              nsIInputStream *aStream, PRInt32 aLength)
+                                              nsIInputStream *aStream, PRUint32 aLength)
 {
     nsresult rv = NS_OK;
+    const char* spec;
+    (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader - OnDataAvailable(...) called for %s.  Bytes available: %d.\n", 
-           aURL->GetSpec(), aLength));
+            spec, aLength));
 
     /* If the binding has been canceled via Stop() then abort the load... */
     if (NS_BINDING_ABORTED == mStatus) {
@@ -1561,14 +1571,16 @@ done:
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, 
-                                            const nsString& aMsg)
+NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
+                                            const PRUnichar* aMsg)
 {
     nsresult rv = NS_OK;
+    const char* spec;
+    (void)aURL->GetSpec(&spec);
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader - OnStopBinding(...) called for %s.  Status: %d.\n", 
-           aURL->GetSpec(), aStatus));
+            spec, aStatus));
 
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnStopBinding(aURL, aStatus, aMsg);

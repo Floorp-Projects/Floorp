@@ -22,18 +22,14 @@ IGNORE_MANIFEST = 1
 #//
 #//------------------------------------------------------------------------
 MODULE  = netlib
-EXPORTS = nsIStreamListener.h           \
-          nsINetService.h               \
+EXPORTS = nsINetService.h               \
           nsINetSupport.h               \
-          nsIURL.h                      \
-          nsIPostToServer.h             \
-          nsIHttpUrl.h                  \
           nsIRelatedLinks.h             \
-          nsIRefreshUrl.h               \
-          nsIConnectionInfo.h           \
-          nsINetFile.h                  \
-          nsILoadAttribs.h              \
+          nsINetlibURL.h                \
           nsIURLGroup.h                 \
+          nsIConnectionInfo.h           \
+          nsIRefreshUrl.h               \
+          nsIProtocolURLFactory.h       \
           $(NULL)
 
 DIRS = tests
@@ -67,7 +63,6 @@ OBJS=                                   \
         .\$(OBJDIR)\nsNetThread.obj     \
         .\$(OBJDIR)\nsNetStream.obj     \
         .\$(OBJDIR)\nsRelatedLinks.obj  \
-        .\$(OBJDIR)\nsURL.obj           \
         .\$(OBJDIR)\nsHttpUrl.obj       \
         .\$(OBJDIR)\nsStubContext.obj   \
         .\$(OBJDIR)\nsNetStubs.obj      \
@@ -75,6 +70,7 @@ OBJS=                                   \
         .\$(OBJDIR)\nsNetFile.obj       \
         .\$(OBJDIR)\nsLoadAttribs.obj   \
         .\$(OBJDIR)\nsNetFactory.obj    \
+        .\$(OBJDIR)\nsHttpURLFactory.obj  \
         $(NULL)
 
 #//------------------------------------------------------------------------
@@ -127,6 +123,7 @@ LLIBS=$(LLIBS)  $(LIBNSPR)                  \
 		$(NULL)
 
 LINCS=$(LINCS)  -I.                         \
+                -I..\public          \
                 -I$(PUBLIC)\raptor          \
                 -I$(PUBLIC)\security        \
                 -I$(PUBLIC)\pref            \
@@ -145,6 +142,7 @@ LINCS=$(LINCS)  -I.                         \
 		-I$(PUBLIC)\gophurl	    \
                 -I$(PUBLIC)\httpurl	    \
                 -I$(PUBLIC)\remoturl	    \
+                -I$(PUBLIC)\netlib	    \
                 $(NULL)
 
 # clobber and clobber_all will remove the following garbage:

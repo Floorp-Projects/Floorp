@@ -449,7 +449,7 @@ public:
 PRUint32 StringKey::HashValue(void) const
 {
   PRUint32 hash = 0;
-  PRUnichar*  string = mString;
+  PRUnichar* string = mString;
   PRUnichar ch;
   while ((ch = *string++) != 0) {
     // FYI: hash = hash*37 + ch

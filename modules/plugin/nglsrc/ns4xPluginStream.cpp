@@ -156,11 +156,11 @@ NS_IMETHODIMP ns4xPluginStream::Initialize(ns4xPluginInstance* instance,
     return error;
 }
 
-NS_IMETHODIMP ns4xPluginStream::Write(const char* buffer, PRInt32 offset, PRInt32 len, PRInt32 *aWriteCount)
+NS_IMETHODIMP ns4xPluginStream::Write(const char* buffer, PRUint32 offset, PRUint32 len, PRUint32 *aWriteCount)
 {
     const NPPluginFuncs *callbacks;
     NPP                 npp;
-    PRInt32             remaining = len;
+    PRUint32            remaining = len;
 
     fInstance->GetCallbacks(&callbacks);
     fInstance->GetNPP(&npp);
@@ -170,7 +170,7 @@ NS_IMETHODIMP ns4xPluginStream::Write(const char* buffer, PRInt32 offset, PRInt3
 
     while (remaining > 0)
     {
-      PRInt32 numtowrite;
+      PRUint32 numtowrite;
 
       if (callbacks->writeready != NULL)
       {
@@ -182,7 +182,7 @@ NS_IMETHODIMP ns4xPluginStream::Write(const char* buffer, PRInt32 offset, PRInt3
           numtowrite = remaining;
       }
       else
-        numtowrite = len;
+        numtowrite = (int32)len;
 
       *aWriteCount = CallNPP_WriteProc(callbacks->write,
                                        npp,

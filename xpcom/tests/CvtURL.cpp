@@ -55,8 +55,9 @@ int main(int argc, char** argv)
   }
 
   // Get an input stream from the url
-  PRInt32 ec;
-  nsIInputStream* in = url->Open(&ec);
+  nsresult ec;
+  nsIInputStream* in;
+  ec = NS_OpenURL(url, &in);
   if (nsnull == in) {
     printf("open of url('%s') failed: error=%x\n", urlName, ec);
     return -1;
@@ -75,7 +76,7 @@ int main(int argc, char** argv)
   PRInt32 count = 0;
   for (;;) {
     PRUnichar buf[1000];
-    PRInt32 nb;
+    PRUint32 nb;
     ec = uin->Read(buf, 0, 1000, &nb);
     if (ec < 0) {
       if (ec != NS_BASE_STREAM_EOF) {

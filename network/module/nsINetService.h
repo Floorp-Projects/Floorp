@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -23,10 +23,12 @@
 #include "nsISupports.h"
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
-
 #ifdef SingleSignon
 #include "lo_ele.h"
 #endif
+
+class nsIProtocolURLFactory;
+class nsIProtocol;
 
  /* XXX: This should be moved to ns/xpcom/src/nserror.h */
 #define NS_OK    0
@@ -207,6 +209,25 @@ struct nsINetService : public nsISupports
      * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
      */
     NS_IMETHOD SetCustomUserAgent(nsString aCustom)=0;
+
+    // Managing pluggable protocols:
+
+    NS_IMETHOD RegisterProtocol(const nsString& aName, 
+                                nsIProtocolURLFactory* aProtocolURLFactory,
+                                nsIProtocol* aProtocol) = 0;
+
+    NS_IMETHOD UnregisterProtocol(const nsString& aName) = 0;
+
+    NS_IMETHOD GetProtocol(const nsString& aName,
+                           nsIProtocolURLFactory* *aProtocolURLFactory,
+                           nsIProtocol* *aProtocol) = 0;
+
+    NS_IMETHOD CreateURL(nsIURL* *aURLResult, 
+                         const nsString& aSpec, 
+                         const nsIURL* aContextURL = nsnull,
+                         nsISupports* aContainer = nsnull,
+                         nsIURLGroup* aGroup = nsnull) = 0;
+
 };
 
 

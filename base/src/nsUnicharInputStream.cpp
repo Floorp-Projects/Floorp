@@ -37,14 +37,14 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Read(PRUnichar* aBuf,
-                  PRInt32 aOffset,
-                  PRInt32 aCount,
-                  PRInt32 *aReadCount);
+                  PRUint32 aOffset,
+                  PRUint32 aCount,
+                  PRUint32 *aReadCount);
   NS_IMETHOD Close();
 
   nsString* mString;
-  PRInt32 mPos;
-  PRInt32 mLen;
+  PRUint32 mPos;
+  PRUint32 mLen;
 };
 
 StringUnicharInputStream::StringUnicharInputStream(nsString* aString)
@@ -63,16 +63,17 @@ StringUnicharInputStream::~StringUnicharInputStream()
 }
 
 nsresult StringUnicharInputStream::Read(PRUnichar* aBuf,
-                                        PRInt32 aOffset,
-                                        PRInt32 aCount,
-                                        PRInt32 *aReadCount)
+                                        PRUint32 aOffset,
+                                        PRUint32 aCount,
+                                        PRUint32 *aReadCount)
 {
   if (mPos >= mLen) {
     *aReadCount = 0;
     return (nsresult)-1;
   }
   const PRUnichar* us = mString->GetUnicode();
-  PRInt32 amount = mLen - mPos;
+  NS_ASSERTION(mLen >= mPos, "unsigned madness");
+  PRUint32 amount = mLen - mPos;
   if (amount > aCount) {
     amount = aCount;
   }
@@ -119,12 +120,12 @@ public:
   IsoLatin1Converter();
 
   NS_DECL_ISUPPORTS
-  virtual PRInt32 Convert(PRUnichar* aDst,
-                          PRInt32 aDstOffset,
-                          PRInt32& aDstLen,
-                          const char* aSrc,
-                          PRInt32 aSrcOffset,
-                          PRInt32& aSrcLen);
+  NS_IMETHOD Convert(PRUnichar* aDst,
+                     PRUint32 aDstOffset,
+                     PRUint32& aDstLen,
+                     const char* aSrc,
+                     PRUint32 aSrcOffset,
+                     PRUint32& aSrcLen);
 };
 
 IsoLatin1Converter::IsoLatin1Converter()
@@ -135,14 +136,14 @@ IsoLatin1Converter::IsoLatin1Converter()
 NS_DEFINE_IID(kIB2UConverterIID, NS_IB2UCONVERTER_IID);
 NS_IMPL_ISUPPORTS(IsoLatin1Converter,kIB2UConverterIID);
 
-PRInt32 IsoLatin1Converter::Convert(PRUnichar* aDst,
-                                    PRInt32 aDstOffset,
-                                    PRInt32& aDstLen,
+nsresult IsoLatin1Converter::Convert(PRUnichar* aDst,
+                                    PRUint32 aDstOffset,
+                                    PRUint32& aDstLen,
                                     const char* aSrc,
-                                    PRInt32 aSrcOffset,
-                                    PRInt32& aSrcLen)
+                                    PRUint32 aSrcOffset,
+                                    PRUint32& aSrcLen)
 {
-  PRInt32 amount = aSrcLen;
+  PRUint32 amount = aSrcLen;
   if (aSrcLen > aDstLen) {
     amount = aDstLen;
   }
@@ -181,14 +182,14 @@ class ConverterInputStream : public nsIUnicharInputStream {
 public:
   ConverterInputStream(nsIInputStream* aStream,
                        nsIB2UConverter* aConverter,
-                       PRInt32 aBufSize);
+                       PRUint32 aBufSize);
   ~ConverterInputStream();
 
   NS_DECL_ISUPPORTS
   NS_IMETHOD Read(PRUnichar* aBuf,
-                  PRInt32 aOffset,
-                  PRInt32 aCount,
-                  PRInt32 *aReadCount);
+                  PRUint32 aOffset,
+                  PRUint32 aCount,
+                  PRUint32 *aReadCount);
   NS_IMETHOD Close();
 
 protected:
@@ -197,15 +198,15 @@ protected:
   nsIInputStream* mInput;
   nsIB2UConverter* mConverter;
   nsIByteBuffer* mByteData;
-  PRInt32 mByteDataOffset;
+  PRUint32 mByteDataOffset;
   nsIUnicharBuffer* mUnicharData;
-  PRInt32 mUnicharDataOffset;
-  PRInt32 mUnicharDataLength;
+  PRUint32 mUnicharDataOffset;
+  PRUint32 mUnicharDataLength;
 };
 
 ConverterInputStream::ConverterInputStream(nsIInputStream* aStream,
                                            nsIB2UConverter* aConverter,
-                                           PRInt32 aBufferSize)
+                                           PRUint32 aBufferSize)
 {
   NS_INIT_REFCNT();
   mInput = aStream; aStream->AddRef();
@@ -250,11 +251,12 @@ nsresult ConverterInputStream::Close()
 }
 
 nsresult ConverterInputStream::Read(PRUnichar* aBuf,
-                                    PRInt32 aOffset,
-                                    PRInt32 aCount,
-                                    PRInt32 *aReadCount)
+                                    PRUint32 aOffset,
+                                    PRUint32 aCount,
+                                    PRUint32 *aReadCount)
 {
-  PRInt32 rv = mUnicharDataLength - mUnicharDataOffset;
+  NS_ASSERTION(mUnicharDataLength >= mUnicharDataOffset, "unsigned madness");
+  PRUint32 rv = mUnicharDataLength - mUnicharDataOffset;
   nsresult errorCode;
   if (0 == rv) {
     // Fill the unichar buffer
@@ -282,7 +284,8 @@ PRInt32 ConverterInputStream::Fill(nsresult * aErrorCode)
     return -1;
   }
 
-  PRInt32 remainder = mByteData->GetLength() - mByteDataOffset;
+  NS_ASSERTION(mByteData->GetLength() >= mByteDataOffset, "unsigned madness");
+  PRUint32 remainder = mByteData->GetLength() - mByteDataOffset;
   mByteDataOffset = remainder;
   PRInt32 nb = mByteData->Fill(aErrorCode, mInput, remainder);
   if (nb <= 0) {
@@ -296,8 +299,8 @@ PRInt32 ConverterInputStream::Fill(nsresult * aErrorCode)
   NS_ASSERTION(remainder + nb == mByteData->GetLength(), "bad nb");
 
   // Now convert as much of the byte buffer to unicode as possible
-  PRInt32 dstLen = mUnicharData->GetBufferSize();
-  PRInt32 srcLen = remainder + nb;
+  PRUint32 dstLen = mUnicharData->GetBufferSize();
+  PRUint32 srcLen = remainder + nb;
   *aErrorCode = mConverter->Convert(mUnicharData->GetBuffer(), 0, dstLen,
                                     mByteData->GetBuffer(), 0, srcLen);
   mUnicharDataOffset = 0;

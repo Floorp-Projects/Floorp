@@ -472,8 +472,10 @@ nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
 
 
     // Initialize the image group
-    nsIURLGroup* urlGroup = mBaseURL->GetURLGroup();
-    rv = mImageGroup->Init(mDeviceContext, urlGroup);
+    nsIURLGroup* urlGroup;
+    rv = mBaseURL->GetURLGroup(&urlGroup);
+    if (rv == NS_OK)
+      rv = mImageGroup->Init(mDeviceContext, urlGroup);
     NS_IF_RELEASE(urlGroup);
     if (NS_OK != rv) {
       return rv;

@@ -315,16 +315,16 @@ HTMLCSSStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
 
 void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
-  nsAutoString buffer;
+  PRUnichar* buffer;
 
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("HTML CSS Style Sheet: ", out);
-  mURL->ToString(buffer);
+  mURL->ToString(&buffer);
   fputs(buffer, out);
   fputs("\n", out);
-
+  delete buffer;
 }
 
 

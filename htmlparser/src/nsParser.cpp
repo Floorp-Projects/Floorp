@@ -626,7 +626,10 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerify
   mDTDVerification=aVerifyEnabled;
  
   if(aURL) {
-    nsAutoString theName(aURL->GetSpec());
+    const char* spec;
+    nsresult rv = aURL->GetSpec(&spec);
+    if (rv != NS_OK) return rv;
+    nsAutoString theName(spec);
     CParserContext* cp=new CParserContext(new CScanner(theName,PR_FALSE),aURL,aListener);
     PushContext(*cp);
     status=NS_OK;
@@ -841,7 +844,7 @@ CToken* nsParser::PushToken(CToken* theToken) {
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::GetBindInfo(nsIURL* aURL){
+nsresult nsParser::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo){
   nsresult result=0;
   return result;
 }
@@ -854,7 +857,7 @@ nsresult nsParser::GetBindInfo(nsIURL* aURL){
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
-nsParser::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
+nsParser::OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
   nsresult result=0;
   if (nsnull != mObserver) {
@@ -871,7 +874,7 @@ nsParser::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult
-nsParser::OnStatus(nsIURL* aURL, const nsString &aMsg)
+nsParser::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 {
   nsresult result=0;
   if (nsnull != mObserver) {
@@ -908,7 +911,7 @@ nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
  *  @param   length is the number of bytes waiting input
  *  @return  error code (usually 0)
  */
-nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length){
+nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length){
 /*  if (nsnull != mListener) {
       //Rick potts removed this.
       //Does it need to be here?
@@ -924,7 +927,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
     }
   }
 
-  int len=1; //init to a non-zero value
+  PRUint32 len=1; //init to a non-zero value
 
   if(!mParserContext->mTransferBuffer)
     mParserContext->mTransferBuffer = new char[CParserContext::eTransferBufferSize+1];
@@ -979,7 +982,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
  *  @param   
  *  @return  
  */
-nsresult nsParser::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg){
+nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg){
   mStreamListenerState=eOnStop;
   mStreamStatus=status;
   nsresult result;

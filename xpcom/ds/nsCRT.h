@@ -71,6 +71,10 @@ public:
     return PRInt32(PL_strncasecmp(s1, s2, aMaxLen));
   }
 
+  static char* strdup(const char* str) {
+    return PL_strdup(str);
+  }
+
   /// Like strlen except for ucs2 strings
   static PRInt32 strlen(const PRUnichar* s);
 
@@ -97,6 +101,8 @@ public:
   /// Like strncasecmp with a char* and a ucs2 string
   static PRInt32 strncasecmp(const PRUnichar* s1, const char* s2,
                              PRInt32 aMaxLen);
+
+  static PRUnichar* strdup(const PRUnichar* str);
 
   /// Compute a hashcode for a ucs2 string
   static PRUint32 HashValue(const PRUnichar* s1);

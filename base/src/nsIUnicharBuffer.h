@@ -41,6 +41,6 @@ public:
 extern NS_BASE nsresult
   NS_NewUnicharBuffer(nsIUnicharBuffer** aInstancePtrResult,
                       nsISupports* aOuter,
-                      PRInt32 aBufferSize = 0);
+                      PRUint32 aBufferSize = 0);
 
 #endif /* nsIUnicharBuffer_h___ */

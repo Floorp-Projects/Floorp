@@ -886,7 +886,7 @@ nsString& nsString::Append(float aFloat){
  *  @param   aCount -- number of chars to copy
  *  @return  number of chars copied
  */
-PRInt32 nsString::Left(nsString& aCopy,PRInt32 aCount) {
+PRInt32 nsString::Left(nsString& aCopy,PRInt32 aCount) const {
   return Mid(aCopy,0,aCount);
 }
 
@@ -901,7 +901,7 @@ PRInt32 nsString::Left(nsString& aCopy,PRInt32 aCount) {
  *  @param   anOffset -- position where copying begins
  *  @return  number of chars copied
  */
-PRInt32 nsString::Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsString::Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) const {
   if(anOffset<mLength) {
     aCount=(anOffset+aCount<=mLength) ? aCount : mLength-anOffset;
 
@@ -928,7 +928,7 @@ PRInt32 nsString::Mid(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
  *  @param  aCount -- number of chars to copy
  *  @return number of chars copied
  */
-PRInt32 nsString::Right(nsString& aCopy,PRInt32 aCount) {
+PRInt32 nsString::Right(nsString& aCopy,PRInt32 aCount) const {
   PRInt32 offset=(mLength-aCount<0) ? 0 : mLength-aCount;
   return Mid(aCopy,offset,aCount);
 }

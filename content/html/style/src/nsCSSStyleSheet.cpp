@@ -1547,16 +1547,17 @@ nsresult CSSStyleSheetImpl::GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& a
 
 void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
-  nsAutoString buffer;
+  PRUnichar* buffer;
   PRInt32 index;
 
   // Indent
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
   fputs("CSS Style Sheet: ", out);
-  mURL->ToString(buffer);
+  mURL->ToString(&buffer);
   fputs(buffer, out);
   fputs("\n", out);
+  delete buffer;
 
   const nsICSSStyleSheet*  child = mFirstChild;
   while (nsnull != child) {
@@ -1659,7 +1660,10 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::GetHref(nsString& aHref)
 {
   if (mURL.IsNotNull()) {
-    mURL->ToString(aHref);
+    PRUnichar* str;
+    mURL->ToString(&str);
+    aHref = str;
+    delete str;
   }
   else {
     aHref.SetLength(0);
