@@ -353,6 +353,8 @@ public class FunctionObject extends NativeFunction {
             return new Double(ScriptRuntime.toNumber(arg));
         else if (desired == ScriptRuntime.ScriptableClass)
             return ScriptRuntime.toObject(scope, arg);
+        else if (desired == ScriptRuntime.ObjectClass)
+            return arg;
         // Note that the long type is not supported; see the javadoc for
         // the constructor for this class
         else {
