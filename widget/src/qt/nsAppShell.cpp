@@ -263,62 +263,6 @@ done:
 
 //-------------------------------------------------------------------------
 //
-// PushThreadEventQueue - begin processing events from a new queue
-//   note this is the Windows implementation and may suffice, but
-//   this is untested with Qt.
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsAppShell::PushThreadEventQueue()
-{
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::PushThreadEventQueue()\n"));
-    nsresult rv;
-
-    // push a nested event queue for event processing from netlib
-    // onto our UI thread queue stack.
-    NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-        rv = eQueueService->PushThreadEventQueue();
-    }
-    else
-    {
-        NS_ERROR("Appshell unable to obtain eventqueue service.");
-    }
-
-    return rv;
-}
-
-//-------------------------------------------------------------------------
-//
-// PopThreadEventQueue - stop processing on a previously pushed event queue
-//   note this is the Windows implementation and may suffice, but
-//   this is untested with Qt.
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsAppShell::PopThreadEventQueue()
-{
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::PopThreadEventQueue()\n"));
-    nsresult rv;
-
-    NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-        rv = eQueueService->PopThreadEventQueue();
-    }
-    else
-    {
-        NS_ERROR("Appshell unable to obtain eventqueue service.");
-    }
-
-    return rv;
-}
-
-//-------------------------------------------------------------------------
-//
 // Exit a message handler loop
 //
 //-------------------------------------------------------------------------

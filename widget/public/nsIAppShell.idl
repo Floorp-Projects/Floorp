@@ -82,16 +82,6 @@ interface nsIAppShell : nsISupports
   void Spindown();
 
  /**
-  * Push event queue onto current thread and begin processing events from it
-  */
-  void PushThreadEventQueue();
-
- /**
-  * Pop event queue from current thread's stack
-  */
-  void PopThreadEventQueue();
-
- /**
   * After event dispatch execute app specific code
   */
   

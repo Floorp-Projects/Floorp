@@ -78,44 +78,6 @@ NS_METHOD nsAppShell::Run()
   return msg.wParam;
 }
 
-//-------------------------------------------------------------------------
-//
-// PushThreadEventQueue - begin processing events from a new queue
-//                        (simple wrapper function on Windows)
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsAppShell::PushThreadEventQueue()
-{
-  nsresult rv;
-
-  // push a nested event queue for event processing from netlib
-  // onto our UI thread queue stack.
-  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = eQueueService->PushThreadEventQueue();
-  else
-    NS_ERROR("Appshell unable to obtain eventqueue service.");
-  return rv;
-}
-
-//-------------------------------------------------------------------------
-//
-// PopThreadEventQueue - stop processing on a previously pushed event queue
-//                        (simple wrapper function on Windows)
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsAppShell::PopThreadEventQueue()
-{
-  nsresult rv;
-
-  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = eQueueService->PopThreadEventQueue();
-  else
-    NS_ERROR("Appshell unable to obtain eventqueue service.");
-  return rv;
-}
-
 NS_METHOD
 nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
