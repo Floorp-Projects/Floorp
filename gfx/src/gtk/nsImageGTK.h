@@ -57,7 +57,6 @@ public:
   virtual PRInt32     GetAlphaWidth()     { return mAlphaWidth; }
   virtual PRInt32     GetAlphaHeight()    { return mAlphaHeight; }
   virtual PRInt32     GetAlphaLineStride(){ return mAlphaRowBytes; }
-  virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
   virtual nsIImage*   DuplicateImage() {return(nsnull);}
 
   /**
