@@ -67,6 +67,9 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
                      GtkReliefStyle relief);
 
 void
+moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing);
+
+void
 moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style, GdkRectangle *rect,
                        GdkRectangle* cliprect, GtkWidgetState* state, 
                        gboolean selected, gboolean isradio);
