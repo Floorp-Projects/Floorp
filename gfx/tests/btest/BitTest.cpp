@@ -54,27 +54,36 @@ static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
 static char* class1Name = "ImageTest";
 
-static HANDLE gInstance, gPrevInstance;
-static nsIImageManager *gImageManager = nsnull;
-static nsIImageGroup *gImageGroup = nsnull;
-static nsIImageRequest *gImageReq = nsnull;
-static HWND gHwnd;
-static nsIWidget *gWindow = nsnull;
-static nsIImage *gImage = nsnull;
-static nsIImage *gBlendImage = nsnull;
-static nsIImage *gMaskImage = nsnull;
-static PRBool gInstalledColorMap = PR_FALSE;
-static PRInt32  gXOff,gYOff,gTestNum;
-static nsITextWidget  *gBlendMessage;
-static nsITextWidget  *gQualMessage;
+static HANDLE           gInstance, gPrevInstance;
+static nsIImageManager  *gImageManager = nsnull;
+static nsIImageGroup    *gImageGroup = nsnull;
+static nsIImageRequest  *gImageReq = nsnull;
+static HWND             gHwnd;
+static nsIWidget        *gWindow = nsnull;
+static nsIImage         *gImage = nsnull;
+static nsIImage         *gBlendImage = nsnull;
+static nsIImage         *gMaskImage = nsnull;
+static PRBool           gInstalledColorMap = PR_FALSE;
+static PRInt32          gXOff,gYOff;
+static nsITextWidget    *gBlendMessage;
+static nsITextWidget    *gQualMessage;
+static nsIBlender       *gImageblender;
+static PRBool           gCanBlend = PR_FALSE;
+static HBITMAP          gDobits,gSobits,gSrcbits,gDestbits;
+static HDC              gDestdc,gSrcdc,gScreendc;
 
-
-extern void    Compositetest(nsIImage *aImage,PRInt32 aTestNum,HDC aSrcDC,HDC aDestDC);
-extern PRInt32 speedtest(nsIImage *aTheImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-extern PRInt32 drawtest(nsIRenderingContext *aSurface);
-extern PRInt32 filltest(nsIRenderingContext *aSurface);
-extern PRInt32 arctest(nsIRenderingContext *aSurface);
-extern PRBool  IsImageLoaded();
+extern void     Compositetest(nsIBlender *aBlender,nsIImage *aImage,
+                              PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth,PRInt32 aHeight,
+                              PRInt32 aDX,PRInt32 aDY,
+                              float aBlendAmount,PRBool aBuff);
+extern void     InterActiveBlend(nsIBlender *aBlender,nsIImage *aImage);
+extern PRInt32  speedtest(nsIImage *aTheImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+extern PRInt32  drawtest(nsIRenderingContext *aSurface);
+extern PRInt32  filltest(nsIRenderingContext *aSurface);
+extern PRInt32  arctest(nsIRenderingContext *aSurface);
+extern PRBool   IsImageLoaded();
+extern void     SetUpBlend();
+extern void     CleanUpBlend();
 extern nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth);
 extern PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
 
@@ -140,37 +149,9 @@ MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
           NS_ADDREF(aImage);
           }
 
-        if ( gBlendImage && (aNotificationType == nsImageNotification_kImageComplete) )
+        if ( gBlendImage && (aNotificationType == nsImageNotification_kImageComplete) && gImage )
           {
-          nsColorMap *cmap = (*mImage)->GetColorMap();
-          nsRect *rect = (nsRect *)aParam3;
-          HBITMAP           dobits,sobits,srcbits,destbits;
-          HDC               destdc,srcdc,screendc;
-          void              *bits1,*bits2;
-
-          screendc = ::GetDC(gHwnd);
-
-          // create everything we need from this DC
-          srcdc = ::CreateCompatibleDC(screendc);
-          destdc = ::CreateCompatibleDC(screendc);
-
-          bits1 = gBlendImage->GetBits();
-          bits2 = gImage->GetBits();
-          srcbits = ::CreateDIBitmap(screendc,(BITMAPINFOHEADER*)gBlendImage->GetBitInfo(), CBM_INIT, bits1, (LPBITMAPINFO)gBlendImage->GetBitInfo(), DIB_RGB_COLORS);
-          destbits = ::CreateDIBitmap(screendc,(BITMAPINFOHEADER*)gImage->GetBitInfo(), CBM_INIT, bits2, (LPBITMAPINFO)gImage->GetBitInfo(), DIB_RGB_COLORS);
-          sobits = ::SelectObject(srcdc, srcbits);
-          dobits = ::SelectObject(destdc, destbits);
-
-          Compositetest(gImage,gTestNum,srcdc,destdc);
-
-          ::SelectObject(srcdc, sobits);
-          ::SelectObject(destdc,dobits);
-
-          DeleteDC(srcdc);
-          DeleteDC(destdc);
-          DeleteObject(srcbits);
-          DeleteObject(destbits);
-          ReleaseDC(gHwnd,screendc);
+          SetUpBlend();
           }
        }
        break;
@@ -280,212 +261,81 @@ MyObserver::NotifyError(nsIImageRequest *aImageRequest,
 
 //------------------------------------------------------------
 
-#ifdef OLDWAY
-// This tests the compositing for the image
+// this just sets up 2 DC's for blending, 
 void
-Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY)
+SetUpBlend()
 {
-nsPoint         location;
-PRUint32        min,seconds,milli,i,h,w;
-PRInt32         numtemp,numerror;
-nsBlendQuality  quality=nsMedQual;
-SYSTEMTIME      thetime;
-nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
-nsIImage        *theimage;
-nsString        str;
-
-    // get the quality that we are going to blend to
-    gQualMessage->GetText(str,3);
-    quality = (nsBlendQuality)str.ToInteger(&numerror);
-    if(quality < nsLowQual)
-      quality = nsLowQual;
-    if(quality > nsHighQual)
-      quality = nsHighQual;
-
-    // set the blend amount
-    gBlendMessage->GetText(str,3);
-    numtemp = str.ToInteger(&numerror);
-    if(numtemp < 0)
-      numtemp = 0;
-    if(numtemp > 100)
-      numtemp = 100;
-    aBImage->SetAlphaLevel(numtemp);
-
-    location.x=0;
-    location.y=0;
-
-    if(aTestNum == 1)
-    {
-    
-    if(aMImage)
-      {
-      aBImage->SetAlphaMask(aMImage);
-      aBImage->MoveAlphaMask(rand() % aImage->GetWidth(),rand() % aImage->GetHeight());
-      }
-
-    theimage = aImage->DuplicateImage();
-    nsIDeviceContext  *dx = drawCtx->GetDeviceContext();
-    theimage->ImageUpdated(dx, nsImageUpdateFlags_kColorMapChanged, nsnull);
-    theimage->CompositeImage(aBImage,&location,quality);
-    drawCtx->DrawImage(theimage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
-    }
-
-  // speed test
-  if(aTestNum == 2)
-    {
-    printf("\nSTARTING Blending TEST\n");
-    ::GetSystemTime(&thetime);
-    min = thetime.wMinute;
-    seconds = thetime.wSecond;
-    milli = thetime.wMilliseconds;
-    location.x = aX;
-    location.y = aY;
-    w = gImage->GetWidth();
-    h = gImage->GetHeight();
-
-    if(aMImage)
-      {
-      aBImage->SetAlphaMask(aMImage);
-      for(i=0;i<200;i++)
-        {
-        aBImage->MoveAlphaMask(rand()%w,rand()%h);
-        theimage = aImage->DuplicateImage();
-        theimage->CompositeImage(aBImage,&location,quality);
-        drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
-        NS_RELEASE(theimage);
-
-        // non buffered
-        //aImage->CompositeImage(aBImage,location,quality);
-        //drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
-        }
-      }
-    else
-      {
-      nsIDeviceContext  *dx = drawCtx->GetDeviceContext();
-      for(i=0;i<200;i++)
-        {
-        aBImage->MoveAlphaMask(rand()%w,rand()%h);
-        //theimage = aImage->DuplicateImage();
-        //theimage->CompositeImage(aBImage,location,quality);
-        //drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
-        //NS_RELEASE(theimage);
-
-        // non buffered
-        aImage->CompositeImage(aBImage,&location,quality);
-        // let everyone know that the colors have changed
-        aImage->ImageUpdated(dx, nsImageUpdateFlags_kColorMapChanged, nsnull);
-        //drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
-        }
-      NS_IF_RELEASE(dx);
-      }
-
-    ::GetSystemTime(&thetime);
-    min = thetime.wMinute-min;
-    if(min>0)
-      min = min*60;
-    seconds = min+thetime.wSecond-seconds;
-    if(seconds>0)
-      seconds = (seconds*1000)+thetime.wMilliseconds;
-    else
-      seconds = thetime.wMilliseconds;
-    milli=seconds-milli;
-
-    printf("The composite Time was %lu Milliseconds\n",milli);
-    }
-
-  
-    if(aTestNum == 3)
-    {
-    location.x = aX;
-    location.y = aY;
-
-    if(aMImage)
-      {
-      aBImage->SetAlphaMask(aMImage);
-      for(i=0;i<200;i++)
-        {
-        DWORD pos = ::GetMessagePos();
-        POINT cpos;
-
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
-
-        ::ScreenToClient(gHwnd, &cpos);
-
-        aBImage->MoveAlphaMask(cpos.x,cpos.y);
-
-        theimage = aImage->DuplicateImage();
-        theimage->CompositeImage(aBImage,&location,quality);
-        drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
-        NS_RELEASE(theimage);
-
-        MSG msg;
-        if (GetMessage(&msg, NULL, 0, 0)) 
-          {
-          TranslateMessage(&msg);
-          DispatchMessage(&msg);
-          }
-        }
-      }
-    else
-      for(i=0;i<200;i++)
-        {
-        aBImage->MoveAlphaMask(rand()%w,rand()%h);
-        theimage = aImage->DuplicateImage();
-        theimage->CompositeImage(aBImage,&location,quality);
-        drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
-        NS_RELEASE(theimage);
-        }
-    }
-
-  drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
-
-  // we are finished with this
-  if (gBlendImage) 
-    {
-    NS_RELEASE(gBlendImage);
-    gBlendImage = NULL;
-    }
-
-}
-#else
-void
-Compositetest(nsIImage *aImage,PRInt32 aTestNum,HDC aSrcHDC,HDC aDstHDC)
-{
-PRUint8             *thebytes,*curbyte,*srcbytes,*cursourcebytes;
-PRInt32             w,h,ls,x,y,numbytes,sls,numerror;
-float               blendamount;
-nsIBlender          *imageblender;
-nsresult            rv;
-HBITMAP             srcbits,tb1;
-BITMAP              srcinfo;
-LPBITMAPINFOHEADER  srcbinfo;
-nsString            str;
-nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
+void              *bits1,*bits2;
+nsresult          rv;
 
   static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
   static NS_DEFINE_IID(kBlenderIID, NS_IBLENDER_IID);
 
-  gBlendMessage->GetText(str,3);
-  blendamount = (float)(str.ToInteger(&numerror))/100.0f;
-  if(blendamount < 0.0)
-    blendamount = 0.0f;
-  if(blendamount > 1.0)
-    blendamount = 1.0f;
+  gScreendc = ::GetDC(gHwnd);
 
-  rv = NSRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&imageblender);
-  imageblender->Init(aSrcHDC,aDstHDC);
-  imageblender->Blend(aSrcHDC,0,0,0,0,aDstHDC,0, 0,blendamount);
-  imageblender->CleanUp();
+  // create everything we need from this DC
+  gSrcdc = ::CreateCompatibleDC(gScreendc);
+  gDestdc = ::CreateCompatibleDC(gScreendc);
 
+  if(gBlendImage && gImage)
+    {
+    bits1 = gBlendImage->GetBits();
+    bits2 = gImage->GetBits();
+    gSrcbits = ::CreateDIBitmap(gScreendc,(BITMAPINFOHEADER*)gBlendImage->GetBitInfo(), CBM_INIT, bits1, (LPBITMAPINFO)gBlendImage->GetBitInfo(), DIB_RGB_COLORS);
+    gDestbits = ::CreateDIBitmap(gScreendc,(BITMAPINFOHEADER*)gImage->GetBitInfo(), CBM_INIT, bits2, (LPBITMAPINFO)gImage->GetBitInfo(), DIB_RGB_COLORS);
+    gSobits = ::SelectObject(gSrcdc, gSrcbits);
+    gDobits = ::SelectObject(gDestdc, gDestbits);
+
+    rv = NSRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&gImageblender);
+    gImageblender->Init(gSrcdc,gDestdc);
+
+  }
+
+}
+
+//------------------------------------------------------------
+
+void
+CleanUpBlend()
+{
+  ::SelectObject(gSrcdc, gSobits);
+  ::SelectObject(gDestdc,gDobits);
+
+  DeleteDC(gSrcdc);
+  DeleteDC(gDestdc);
+  DeleteObject(gSrcbits);
+  DeleteObject(gDestbits);
+  ReleaseDC(gHwnd,gScreendc);
+
+}
+
+//------------------------------------------------------------
+
+void
+Restore(nsIBlender *aBlender,nsIImage *aImage)
+{
+PRUint8             *thebytes,*curbyte,*srcbytes,*cursourcebytes;
+PRInt32             w,h,ls,x,y,numbytes,sls;
+HDC                 dstdc;
+HBITMAP             srcbits,tb1;
+BITMAP              srcinfo;
+LPBITMAPINFOHEADER  srcbinfo;
+nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
+
+  dstdc = aBlender->GetDstDS();
+
+  aBlender->RestoreImage(dstdc);
 
   // this takes the Destination DC and copies the information into aImage
-  tb1 = CreateCompatibleBitmap(aDstHDC,3,3);
-  srcbits = ::SelectObject(aDstHDC, tb1);
+  tb1 = CreateCompatibleBitmap(dstdc,3,3);
+  srcbits = ::SelectObject(dstdc, tb1);
   numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
   // put into a DIB
   BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
-  numbytes = ::GetDIBits(aDstHDC,srcbits,0,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
+  numbytes = ::GetDIBits(dstdc,srcbits,0,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
+  
+  ::SelectObject(dstdc,srcbits);
+  DeleteObject(tb1);
 
   // copy the information back into the source
   thebytes = aImage->GetBits();
@@ -505,9 +355,113 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
       }
     }
 
+  delete [] srcbytes;
+  delete srcbinfo;
+
   drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
 }
-#endif
+
+//------------------------------------------------------------
+
+void
+InterActiveBlend(nsIBlender *aBlender,nsIImage *aImage)
+{
+float     blendamount;
+nsString  str;
+PRInt32   numerror,i,height,width;
+POINT     cpos;
+DWORD     pos;
+MSG       msg;
+
+  if(aBlender && aImage)
+    {
+    gBlendMessage->GetText(str,3);
+    blendamount = (float)(str.ToInteger(&numerror))/100.0f;
+    if(blendamount < 0.0)
+      blendamount = 0.0f;
+    if(blendamount > 1.0)
+      blendamount = 1.0f;
+
+    for(i=0;i<200;i++)
+      {
+      pos = ::GetMessagePos();
+
+      cpos.x = LOWORD(pos);
+      cpos.y = HIWORD(pos);
+      ::ScreenToClient(gHwnd,&cpos);
+
+      width = gBlendImage->GetWidth();
+      height = gBlendImage->GetHeight();
+      Compositetest(aBlender,aImage,cpos.x,cpos.y,width,height,0,0,blendamount,PR_TRUE);
+      Restore(aBlender,aImage);
+
+      if(GetMessage(&msg,NULL,0,0))
+        {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+        }
+      }
+    }
+}
+
+//------------------------------------------------------------
+
+void
+Compositetest(nsIBlender *aBlender,nsIImage *aImage,
+                  PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth,PRInt32 aHeight,
+                  PRInt32 aDX, PRInt32 aDY,
+                  float aBlendAmount,PRBool aBuff)
+{
+PRUint8             *thebytes,*curbyte,*srcbytes,*cursourcebytes;
+PRInt32             w,h,ls,x,y,numbytes,sls;
+HDC                 srcdc,dstdc;
+HBITMAP             srcbits,tb1;
+BITMAP              srcinfo;
+LPBITMAPINFOHEADER  srcbinfo;
+nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
+
+
+  srcdc = aBlender->GetSrcDS();
+  dstdc = aBlender->GetDstDS();
+
+  aBlender->Blend(srcdc,aSX,aSY,aWidth,aHeight,dstdc,0, 0,aBlendAmount,aBuff);
+
+  // this takes the Destination DC and copies the information into aImage
+  tb1 = CreateCompatibleBitmap(dstdc,3,3);
+  srcbits = ::SelectObject(dstdc, tb1);
+  numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
+  // put into a DIB
+  BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
+  numbytes = ::GetDIBits(dstdc,srcbits,0,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
+
+  ::SelectObject(dstdc,srcbits);
+  DeleteObject(tb1);
+
+
+  // copy the information back into the source
+  thebytes = aImage->GetBits();
+  h = aImage->GetHeight();
+  w = aImage->GetWidth();
+  ls = aImage->GetLineStride();
+  sls = CalcBytesSpan(srcinfo.bmWidth,srcinfo.bmBitsPixel);
+  for(y=0;y<h;y++)
+    {
+    curbyte = thebytes + (y*ls);
+    cursourcebytes = srcbytes + (y*sls);
+    for(x=0;x<ls;x++)
+      {
+      *curbyte = *cursourcebytes;
+      curbyte++;
+      cursourcebytes++;
+      }
+    }
+
+  delete [] srcbytes;
+  delete srcbinfo;
+
+  drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
+}
+
 //------------------------------------------------------------
 
 // This tests the speed for the bliting,
@@ -867,29 +821,37 @@ IsImageLoaded()
 long PASCAL
 WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 {
-  HMENU hMenu;
-  char szFile[256];
+HMENU     hMenu;
+char      szFile[256];
+float     blendamount;
+nsString  str;
+PRInt32   numerror;
 
   switch (msg) 
     {
     case WM_COMMAND:
       hMenu = GetMenu(hWnd);
-
       switch (LOWORD(param)) 
         {
         case TIMER_OPEN: 
-          {
-
-          if (!OpenFileDialog(szFile, 256))
-              return 0L;
-          MyLoadImage(szFile,PR_FALSE,NULL);
-          break;
-          }
+          if (OpenFileDialog(szFile, 256))
+            MyLoadImage(szFile,PR_FALSE,NULL);
+        case OPENBLD:
+          if (OpenFileDialog(szFile, 256))
+            {
+            if (gBlendImage!=nsnull) 
+              {
+              NS_RELEASE(gBlendImage);
+              gBlendImage = nsnull;
+              }
+            MyLoadImage(szFile,PR_TRUE,&gBlendImage);
+            }
+          break;          
         case TIMER_EXIT:
           ::DestroyWindow(hWnd);
           exit(0);
           break;
-        case RDMSK:
+        case RDMSK:           // read mask
             if (gMaskImage!=nsnull) 
               {
               NS_RELEASE(gMaskImage);
@@ -898,28 +860,23 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
             if (OpenFileDialog(szFile, 256))
               MyLoadImage(szFile,PR_TRUE,&gMaskImage);
           break;
-        case COMPINT:
-          gTestNum = 3;
-        case COMPTST:
-          if(LOWORD(param) == COMPTST)
-             gTestNum = 1; 
-        case COMPTSTSPEED:
-          if(LOWORD(param) == COMPTSTSPEED)
-            gTestNum = 2;
+        case COMPRESET:
+            Restore(gImageblender,gImage);
+          break;
+        case COMPINT:         // compostite interactive
+          InterActiveBlend(gImageblender,gImage);
+          break;
+        case COMPTST:         // composite
+        case COMPTSTSPEED:    // composit speed test
           IsImageLoaded();
-          if(gImage)
-            {   
-            if (gBlendImage!=nsnull) 
-              {
-              NS_RELEASE(gBlendImage);
-              gBlendImage = nsnull;
-              }
+          gBlendMessage->GetText(str,3);
+          blendamount = (float)(str.ToInteger(&numerror))/100.0f;
+          if(blendamount < 0.0)
+            blendamount = 0.0f;
+          if(blendamount > 1.0)
+            blendamount = 1.0f;
 
-            gXOff = 100;
-            gYOff = 100;
-            if (OpenFileDialog(szFile, 256))
-              MyLoadImage(szFile,PR_TRUE,&gBlendImage);
-            }
+          Compositetest(gImageblender,gImage,0,0,0,0,0,0,blendamount,PR_TRUE);
           break;
         case BSTNOOPT:
         case BSTOPT:
@@ -973,6 +930,8 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
     case WM_DESTROY:
       MyInterrupt();
       MyReleaseImages();
+      CleanUpBlend();
+      
       if (gImageGroup != nsnull) 
         {
         NS_RELEASE(gImageGroup);

@@ -64,7 +64,24 @@ public:
    */
   virtual void Blend(nsDrawingSurface aSrc,
                      PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
-                     nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity) = 0;
+                     nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea) = 0;
+
+  /**
+   * Return the source drawing surface that the blending it going to
+   * @return The platform specific drawing surface
+   */
+  virtual nsDrawingSurface GetSrcDS()=0;
+
+  /**
+   * Return the destination drawing surface that the blending it going to
+   * @return The platform specific drawing surface
+   */
+  virtual nsDrawingSurface GetDstDS()=0;
+
+  /**
+   * Restore the the blended area of the image if one was save on a previous blend.
+   */
+  virtual PRBool  RestoreImage(nsDrawingSurface aDst)=0;
 };
 
 #endif
