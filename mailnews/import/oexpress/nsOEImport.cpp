@@ -444,81 +444,81 @@ void ImportOEMailImpl::SetLogs( nsString& success, nsString& error, PRUnichar **
 }
 
 NS_IMETHODIMP ImportOEMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource, 
-												nsIFileSpec *pDestination, 
-												PRUnichar **pErrorLog,
-												PRUnichar **pSuccessLog,
-												PRBool *fatalError)
+                                              nsIFileSpec *pDestination, 
+                                              PRUnichar **pErrorLog,
+                                              PRUnichar **pSuccessLog,
+                                              PRBool *fatalError)
 {
-    NS_PRECONDITION(pSource != nsnull, "null ptr");
-    NS_PRECONDITION(pDestination != nsnull, "null ptr");
-    NS_PRECONDITION(fatalError != nsnull, "null ptr");
-
-	nsCOMPtr<nsIStringBundle>	bundle( dont_AddRef( nsOEStringBundle::GetStringBundleProxy()));
-
-	nsString	success;
-	nsString	error;
-    if (!pSource || !pDestination || !fatalError) {
-		nsOEStringBundle::GetStringByID( OEIMPORT_MAILBOX_BADPARAM, error, bundle);
-		if (fatalError)
-			*fatalError = PR_TRUE;
-		SetLogs( success, error, pErrorLog, pSuccessLog);
-	    return NS_ERROR_NULL_POINTER;
-	}
-      
-    PRBool		abort = PR_FALSE;
-    nsString	name;
-    nsXPIDLString pName;
-    if (NS_SUCCEEDED( pSource->GetDisplayName( getter_Copies(pName)))) {
-    	name = pName;
-    }
-    
-	PRUint32 mailSize = 0;
-	pSource->GetSize( &mailSize);
-	if (mailSize == 0) {
-		ReportSuccess( name, 0, &success);
-		SetLogs( success, error, pErrorLog, pSuccessLog);
-		return( NS_OK);
-	}
-
-    nsIFileSpec	*	inFile;
-    if (NS_FAILED( pSource->GetFileSpec( &inFile))) {
-		ReportError( OEIMPORT_MAILBOX_BADSOURCEFILE, name, &error);
-		SetLogs( success, error, pErrorLog, pSuccessLog);		
-    	return( NS_ERROR_FAILURE);
-    }
-
+  NS_PRECONDITION(pSource != nsnull, "null ptr");
+  NS_PRECONDITION(pDestination != nsnull, "null ptr");
+  NS_PRECONDITION(fatalError != nsnull, "null ptr");
+  
+  nsCOMPtr<nsIStringBundle>	bundle( dont_AddRef( nsOEStringBundle::GetStringBundleProxy()));
+  
+  nsString	success;
+  nsString	error;
+  if (!pSource || !pDestination || !fatalError) {
+    nsOEStringBundle::GetStringByID( OEIMPORT_MAILBOX_BADPARAM, error, bundle);
+    if (fatalError)
+      *fatalError = PR_TRUE;
+    SetLogs( success, error, pErrorLog, pSuccessLog);
+    return NS_ERROR_NULL_POINTER;
+  }
+  
+  PRBool		abort = PR_FALSE;
+  nsString	name;
+  nsXPIDLString pName;
+  if (NS_SUCCEEDED( pSource->GetDisplayName( getter_Copies(pName)))) {
+    name = pName;
+  }
+  
+  PRUint32 mailSize = 0;
+  pSource->GetSize( &mailSize);
+  if (mailSize == 0) {
+    ReportSuccess( name, 0, &success);
+    SetLogs( success, error, pErrorLog, pSuccessLog);
+    return( NS_OK);
+  }
+  
+  nsIFileSpec	*	inFile;
+  if (NS_FAILED( pSource->GetFileSpec( &inFile))) {
+    ReportError( OEIMPORT_MAILBOX_BADSOURCEFILE, name, &error);
+    SetLogs( success, error, pErrorLog, pSuccessLog);		
+    return( NS_ERROR_FAILURE);
+  }
+  
   nsXPIDLCString pPath; 
   inFile->GetNativePath(getter_Copies(pPath));
-	IMPORT_LOG1( "Importing Outlook Express mailbox: %s\n", pPath.get());
-    
-	m_bytesDone = 0;
-	PRUint32	msgCount = 0;
-    nsresult rv;
-	if (nsOE5File::IsLocalMailFile( inFile)) {
-		IMPORT_LOG1( "Importing OE5 mailbox: %S!\n", name.get());
-		rv = nsOE5File::ImportMailbox( &m_bytesDone, &abort, name, inFile, pDestination, &msgCount);
-	}
-	else {
-		if (CImportMailbox::ImportMailbox( &m_bytesDone, &abort, name, inFile, pDestination, &msgCount)) {
+  IMPORT_LOG1( "Importing Outlook Express mailbox: %s\n", pPath.get());
+  
+  m_bytesDone = 0;
+  PRUint32	msgCount = 0;
+  nsresult rv;
+  if (nsOE5File::IsLocalMailFile( inFile)) {
+    IMPORT_LOG1( "Importing OE5 mailbox: %S!\n", name.get());
+    rv = nsOE5File::ImportMailbox( &m_bytesDone, &abort, name, inFile, pDestination, &msgCount);
+  }
+  else {
+    if (CImportMailbox::ImportMailbox( &m_bytesDone, &abort, name, inFile, pDestination, &msgCount)) {
     		rv = NS_OK;
-		}
-		else {
+    }
+    else {
     		rv = NS_ERROR_FAILURE;
-		}
-	}
-	    
-    inFile->Release();
-    
-	if (NS_SUCCEEDED( rv)) {
-		ReportSuccess( name, msgCount, &success);
-	}
-	else {
-		ReportError( OEIMPORT_MAILBOX_CONVERTERROR, name, &error);
-	}
-
-	SetLogs( success, error, pErrorLog, pSuccessLog);
-
-    return( rv);
+    }
+  }
+  
+  inFile->Release();
+  
+  if (NS_SUCCEEDED( rv)) {
+    ReportSuccess( name, msgCount, &success);
+  }
+  else {
+    ReportError( OEIMPORT_MAILBOX_CONVERTERROR, name, &error);
+  }
+  
+  SetLogs( success, error, pErrorLog, pSuccessLog);
+  
+  return( rv);
 }
 
 
