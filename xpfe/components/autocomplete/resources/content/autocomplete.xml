@@ -13,9 +13,8 @@
     <content context="_child">
         <xul:box class="textfield-internal-box" flex="1">
             <html:input class="textfield-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
-        <xul:popupset ignorekeys="true" oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);">
-                <xul:popup oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false';">
-                </xul:popup>
+            <xul:popupset ignorekeys="true" oncommand="var me = this.parentNode.parentNode; me.privatefunc.onMenuCommand(me, this);">
+                <xul:popup class="textfield-popup" oncreate="this.parentNode.parentNode.parentNode.menuOpen='true'" ondestroy="this.parentNode.parentNode.parentNode.menuOpen='false';"/>
             </xul:popupset>
         </xul:box>
       <xul:popupset>
@@ -141,33 +140,33 @@
                     return;
 
                 var item = null;
-				if (result.defaultItemIndex != -1)
-				{
-					item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
-					var match = item.value.toLowerCase();
-					var entry = inputElement.value.toLowerCase();
-					if (entry != match)
-					{
-            me.ignoreInputEvent = true;
-						if (match.substring(0, entry.length) == entry)
-						{
-							inputElement.value = inputElement.value + item.value.substring(entry.length, match.length);
-							inputElement.setSelectionRange(entry.length, match.length);
-							me.noDirectMatch = false;
-						}
-						else
-						{
-							inputElement.value = inputElement.value + " >> " + item.value;
-							inputElement.setSelectionRange(entry.length, inputElement.value.length);
-							me.noDirectMatch = true;
-						}
-            me.ignoreInputEvent = false;
-					}
-				}
+        				if (result.defaultItemIndex != -1)
+        				{
+        					item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
+        					var match = item.value.toLowerCase();
+        					var entry = inputElement.value.toLowerCase();
+        					if (entry != match)
+        					{
+                    me.ignoreInputEvent = true;
+        						if (match.substring(0, entry.length) == entry)
+        						{
+        							inputElement.value = inputElement.value + item.value.substring(entry.length, match.length);
+        							inputElement.setSelectionRange(entry.length, match.length);
+        							me.noDirectMatch = false;
+        						}
+        						else
+        						{
+        							inputElement.value = inputElement.value + " >> " + item.value;
+        							inputElement.setSelectionRange(entry.length, inputElement.value.length);
+        							me.noDirectMatch = true;
+        						}
+                    me.ignoreInputEvent = false;
+        					}
+        				}
                 
                 //Now, build the popup content
-				if (me.displayMenu == "false")
-					return;
+        				if (me.displayMenu == "false")
+        					return;
 
                 var popupset = document.getAnonymousNodes(me)[0].childNodes[1];
                 var popupElement = popupset.firstChild;
@@ -188,15 +187,15 @@
                 }
 //				dump("  count=" + result.items.Count() + ", default=" + result.defaultItemIndex + "\n");
 				
-				me.privatefunc.selectedItemIndex = result.defaultItemIndex;
-				if (result.defaultItemIndex != 0 || result.items.Count() != 1)
-				{
-//					me.privatefunc.closePopupMenu(me); //Close it first as openPopup seems to work as a toggle!
-					popupset.firstChild.openPopup(document.getAnonymousNodes(me)[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
-				  
-          if (result.defaultItemIndex != -1)
-				    popupElement.activeChild = popupElement.childNodes[result.defaultItemIndex];
-        }
+        				me.privatefunc.selectedItemIndex = result.defaultItemIndex;
+        				if (result.defaultItemIndex != 0 || result.items.Count() != 1)
+        				{
+        //					me.privatefunc.closePopupMenu(me); //Close it first as openPopup seems to work as a toggle!
+        					popupset.firstChild.openPopup(document.getAnonymousNodes(me)[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
+        				  
+                  if (result.defaultItemIndex != -1)
+        				    popupElement.activeChild = popupElement.childNodes[result.defaultItemIndex];
+                }
             },
 
             param: this
