@@ -196,8 +196,12 @@ NS_METHOD nsLabel::GetBounds(nsRect &aRect)
 //-------------------------------------------------------------------------
 NS_METHOD nsLabel::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
+  if (nsnull == mContext) {
+    return NS_ERROR_FAILURE;
+  }
   //nsIFontMetrics * fm = GetFont();;
  // mDeviceContext->GetMetricsFor(mFont, &fm);
+
   nsIFontMetrics* metrics;
   mContext->GetMetricsFor(*mFont, metrics);
 
