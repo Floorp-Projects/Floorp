@@ -23,9 +23,9 @@
 
 ###############################################################################
 # This CGI is a general template display engine. To display templates using it,
-# add them to the %pages hash in localconfig with a tag to refer to them by,
-# then call page.cgi?page=<tag> . Tags may only contain the letters A-Z (in
-# either case), numbers 0-9, the underscore "_" and the hyphen "-".
+# put them in the "pages" subdirectory of template/en/default, call them
+# "foo.<ctype>.tmpl" and use the URL page.cgi?id=foo.<ctype> , where <ctype> is
+# a content-type, e.g. html.
 ###############################################################################
 
 use strict;
@@ -33,21 +33,23 @@ use strict;
 use lib ".";
 require "CGI.pl";
 
-use vars qw($template $vars %pages);
+use vars qw($template $vars);
 
 ConnectToDatabase();
 
 quietly_check_login();
 
 if (defined $::FORM{'id'}) {
-    $::FORM{'id'} =~ s/[^\w-]//g;
+    $::FORM{'id'} =~ s/[^\w-\.]//g;
+    $::FORM{'id'} =~ /(.*)(\.(.*))?/;
 
-    if ($pages{$::FORM{'id'}}) {
-        print "Content-Type: text/html\n\n"; 
-        $template->process($pages{$::FORM{'id'}}, $vars)
-          || ThrowTemplateError($template->error());
-        exit;
-    }
+    my $format = GetFormat($1, undef, $3);
+    
+    print "Content-Type: $format->{'ctype'}\n\n";
+
+    $template->process("pages/$format->{'template'}", $vars)
+      || ThrowTemplateError($template->error());
 }
-
-ThrowUserError("page_not_found");
+else {
+    ThrowUserError("no_page_specified");
+}

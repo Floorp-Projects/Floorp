@@ -217,9 +217,9 @@
     [% title = "No New Quips" %]
     This site does not permit the addition of new quips.
     
-  [% ELSIF error == "page_not_found" %]
-    [% title = "Page not found" %]
-    The page you requested cannot be found.
+  [% ELSIF error == "no_page_specified" %]
+    [% title = "No Page Specified" %]
+    You did not specify the id of a page to display.
 
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]

@@ -568,17 +568,6 @@ $contenttypes = {
 
 
 
-LocalVar('pages', '
-#
-# A mapping from tags to template names for the general page display system,
-# page.cgi.
-#
-%pages = (
-);
-');
-
-
-
 if ($newstuff ne "") {
     print "\nThis version of Bugzilla contains some variables that you may want\n",
           "to change and adapt to your local settings. Please edit the file\n",

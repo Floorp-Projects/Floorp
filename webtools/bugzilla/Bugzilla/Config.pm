@@ -51,9 +51,9 @@ Bugzilla::Config - Configuration parameters for Bugzilla
   use Bugzilla::Config qw(:db);
   print "Connecting to $db_name as $db_user with $db_pass\n";
 
-  # These variables do not belong in localconfig, and need to go
+  # This variable does not belong in localconfig, and needs to go
   # somewhere better
-  use Bugzilla::Config($contenttypes $pages)
+  use Bugzilla::Config($contenttypes)
 
 =head1 DESCRIPTION
 
@@ -75,7 +75,7 @@ use Bugzilla::Util;
 # when it shouldn't
 # ChmodDataFile is here until that stuff all moves out of globals.pl
 # into this file
-@Bugzilla::Config::EXPORT_OK = qw($contenttypes $pages ChmodDataFile);
+@Bugzilla::Config::EXPORT_OK = qw($contenttypes ChmodDataFile);
 %Bugzilla::Config::EXPORT_TAGS =
   (
    admin => [qw(GetParamList UpdateParams SetParam WriteParams)],
