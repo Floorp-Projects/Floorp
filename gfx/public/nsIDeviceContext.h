@@ -364,11 +364,21 @@ public:
 
   /**
    * Get the size of the content area of the output device in app units.
+   * This corresponds on a screen device, for instance, to the entire screen.
+   * @param aRect out parameter for full rect. Position (x,y) will be (0,0) or
+   *              relative to the primary monitor if this is not the primary.
+   * @return error status
+   */
+  NS_IMETHOD GetRect ( nsRect &aRect ) = 0;
+
+  /**
+   * Get the size of the content area of the output device in app units.
    * This corresponds on a screen device, for instance, to the area reported
    * by GetDeviceSurfaceDimensions, minus the taskbar (Windows) or menubar
    * (Macintosh).
    * @param aRect out parameter for client rect. Position (x,y) will be (0,0)
-   *              adjusted for any upper/left non-client space if present.
+   *              adjusted for any upper/left non-client space if present or
+   *              relative to the primary monitor if this is not the primary.
    * @return error status
    */
   NS_IMETHOD GetClientRect(nsRect &aRect) = 0;

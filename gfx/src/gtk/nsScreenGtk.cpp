@@ -46,22 +46,26 @@ nsScreenGtk :: ~nsScreenGtk()
 NS_IMPL_ISUPPORTS(nsScreenGtk, NS_GET_IID(nsIScreen))
 
 
-NS_IMETHODIMP 
-nsScreenGtk :: GetWidth(PRInt32 *aWidth)
+NS_IMETHODIMP
+nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *aWidth = gdk_screen_width();
-  return NS_OK;
+  *outTop = 0;
+  *outLeft = 0;
+  *outWidth = gdk_screen_width();
+  *outHeight = gdk_screen_height();
 
-} // GetWidth
+} // GetRect
 
 
-NS_IMETHODIMP 
-nsScreenGtk :: GetHeight(PRInt32 *aHeight)
+NS_IMETHODIMP
+nsScreenGtk :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *aHeight = gdk_screen_height();
-  return NS_OK;
+  *outTop = 0;
+  *outLeft = 0;
+  *outWidth = gdk_screen_width();
+  *outHeight = gdk_screen_height();
 
-} // GetHeight
+} // GetAvailRect
 
 
 NS_IMETHODIMP 
@@ -82,37 +86,4 @@ nsScreenGtk :: GetColorDepth(PRInt32 *aColorDepth)
 
 } // GetColorDepth
 
-
-NS_IMETHODIMP 
-nsScreenGtk :: GetAvailWidth(PRInt32 *aAvailWidth)
-{
-  return GetWidth(aAvailWidth);
-
-} // GetAvailWidth
-
-
-NS_IMETHODIMP 
-nsScreenGtk :: GetAvailHeight(PRInt32 *aAvailHeight)
-{
-  return GetHeight(aAvailHeight);
-
-} // GetAvailHeight
-
-
-NS_IMETHODIMP 
-nsScreenGtk :: GetAvailLeft(PRInt32 *aAvailLeft)
-{
-  *aAvailLeft = 0;
-  return NS_OK;
-
-} // GetAvailLeft
-
-
-NS_IMETHODIMP 
-nsScreenGtk :: GetAvailTop(PRInt32 *aAvailTop)
-{
-  *aAvailTop = 0;
-  return NS_OK;
-
-} // GetAvailTop
 

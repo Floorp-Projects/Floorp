@@ -47,22 +47,34 @@ nsScreenMac :: ~nsScreenMac()
 NS_IMPL_ISUPPORTS(nsScreenMac, NS_GET_IID(nsIScreen))
 
 
-NS_IMETHODIMP 
-nsScreenMac :: GetWidth(PRInt32 *aWidth)
+NS_IMETHODIMP
+nsScreenMac :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *aWidth = (**mScreen).gdRect.right - (**mScreen).gdRect.left;
+  *outLeft = (**mScreen).gdRect.left;
+  *outTop = (**mScreen).gdRect.top;  
+  *outWidth = (**mScreen).gdRect.right - (**mScreen).gdRect.left;
+  *outHeight = (**mScreen).gdRect.bottom - (**mScreen).gdRect.top;
+
   return NS_OK;
 
-} // GetWidth
+} // GetRect
 
 
 NS_IMETHODIMP 
-nsScreenMac :: GetHeight(PRInt32 *aHeight)
+nsScreenMac :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
-  *aHeight = (**mScreen).gdRect.bottom - (**mScreen).gdRect.top;
-  return NS_OK;
+  Rect adjustedRect;
+  SubtractMenuBar ( (**mScreen).gdRect, &adjustedRect );
 
-} // GetHeight
+  *outLeft = adjustedRect.left;
+  *outTop = adjustedRect.top;  
+  *outWidth = adjustedRect.right - adjustedRect.left;
+  *outHeight = adjustedRect.bottom - adjustedRect.top;
+
+  return NS_OK;
+  
+} // GetRect
+
 
 
 NS_IMETHODIMP 
@@ -82,47 +94,6 @@ nsScreenMac :: GetColorDepth(PRInt32 *aColorDepth)
 
 } // GetColorDepth
 
-
-NS_IMETHODIMP 
-nsScreenMac :: GetAvailWidth(PRInt32 *aAvailWidth)
-{
-  GetWidth(aAvailWidth);
-  return NS_OK;
-
-} // GetAvailWidth
-
-
-NS_IMETHODIMP 
-nsScreenMac :: GetAvailHeight(PRInt32 *aAvailHeight)
-{
-  Rect adjustedRect;
-  SubtractMenuBar ( (**mScreen).gdRect, &adjustedRect );
-  *aAvailHeight = adjustedRect.bottom - adjustedRect.top;
-  
-  return NS_OK;
-
-} // GetAvailHeight
-
-
-NS_IMETHODIMP 
-nsScreenMac :: GetAvailLeft(PRInt32 *aAvailLeft)
-{
-  *aAvailLeft = (**mScreen).gdRect.left;
-  return NS_OK;
-
-} // GetAvailLeft
-
-
-NS_IMETHODIMP 
-nsScreenMac :: GetAvailTop(PRInt32 *aAvailTop)
-{
-  Rect adjustedRect;
-  SubtractMenuBar ( (**mScreen).gdRect, &adjustedRect );
-  *aAvailTop = adjustedRect.top;
-  
-  return NS_OK;
-
-} // GetAvailTop
 
 
 //

@@ -271,7 +271,7 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRI
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  */
-NS_IMETHODIMP nsDeviceContextPS::GetClientRect(nsRect &aRect)
+NS_IMETHODIMP nsDeviceContextPS::GetRect(nsRect &aRect)
 {
   PRInt32 width, height;
   nsresult rv;
@@ -281,6 +281,14 @@ NS_IMETHODIMP nsDeviceContextPS::GetClientRect(nsRect &aRect)
   aRect.width = width;
   aRect.height = height;
   return rv;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ */
+NS_IMETHODIMP nsDeviceContextPS::GetClientRect(nsRect &aRect)
+{
+  return GetRect(aRect);
 }
 
 /** ---------------------------------------------------

@@ -174,10 +174,7 @@ nsDeviceContextWin :: ComputeClientRectUsingScreen ( nsRect* outRect )
     FindScreen ( getter_AddRefs(screen) );
     if ( screen ) {
       PRInt32 x, y, width, height;
-      screen->GetAvailTop ( &y );
-      screen->GetAvailLeft ( &x );
-      screen->GetAvailWidth ( &width );
-      screen->GetAvailHeight ( &height );
+      screen->GetAvailRect ( &x, &y, &width, &height );
     
       // convert to device units
       outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
@@ -206,13 +203,12 @@ nsDeviceContextWin :: ComputeFullAreaUsingScreen ( nsRect* outRect )
     nsCOMPtr<nsIScreen> screen;
     FindScreen ( getter_AddRefs(screen) );
     if ( screen ) {
-      PRInt32 width, height;
-      screen->GetWidth ( &width );
-      screen->GetHeight ( &height );
+      PRInt32 x, y, width, height;
+      screen->GetRect ( &x, &y, &width, &height );
     
       // convert to device units
-      outRect->y = 0;
-      outRect->x = 0;
+      outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
+      outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
       outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
       outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
 
@@ -696,6 +692,23 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, 
     aWidth = area.width;
     aHeight = area.height;
   }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsDeviceContextWin :: GetRect(nsRect &aRect)
+{
+  if ( mSpec )
+  {
+	  // we have a printer device
+	  aRect.x = 0;
+	  aRect.y = 0;
+		aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+		aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+  }
+  else
+    ComputeFullAreaUsingScreen ( &aRect );
 
   return NS_OK;
 }

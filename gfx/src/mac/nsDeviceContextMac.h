@@ -52,7 +52,6 @@ public:
 	void 				SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
-
   NS_IMETHOD 	CheckFontExistence(const nsString& aFontName);
   NS_IMETHOD 	CreateILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHODIMP GetILColorSpace(IL_ColorSpace*& aColorSpace);
@@ -60,6 +59,7 @@ public:
   NS_IMETHOD 	ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
   NS_IMETHOD 	GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+  NS_IMETHOD  GetRect(nsRect &aRect);
   NS_IMETHOD  GetClientRect(nsRect &aRect);
 
   NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
