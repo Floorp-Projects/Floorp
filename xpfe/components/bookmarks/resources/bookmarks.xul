@@ -273,14 +273,13 @@
       <rule>
         <treechildren>
           <treeitem uri="rdf:*" persist="open" class="bookmark-item"
-                    web:status="rdf:http://home.netscape.com/WEB-rdf#status"
+                    status="rdf:http://home.netscape.com/WEB-rdf#status"
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
               <treecell class="treecell-indent" editable="true" 
                         label="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                        web:status="rdf:http://home.netscape.com/WEB-rdf#status"
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading" />
               <treecell crop="right" class="treecell-editable" editable="true"
