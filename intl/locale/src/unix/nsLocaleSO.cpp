@@ -67,10 +67,6 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	nsIFactory*	factoryInstance;
 	nsresult		res;
 
-#ifdef DEBUG_tague
-  fprintf(stderr,"nsLocale: NSGetFactory\n");
-#endif
-
 	if (aFactory == NULL) return NS_ERROR_NULL_POINTER;
 
 	//
@@ -91,9 +87,6 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	}
   if (aClass.Equals(kPosixLocaleFactoryCID))
   {
-#ifdef DEBUG_tague
-      fprintf(stderr,"nsLocale: reuqest for kPosixLocaleFactory\n");
-#endif
       nsPosixLocaleFactory *posix_factory = new nsPosixLocaleFactory();
       res = posix_factory->QueryInterface(kIFactoryIID,(void**)aFactory);
       if (NS_FAILED(res))
@@ -101,8 +94,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
           *aFactory = NULL;
           delete posix_factory;
       }
-      
-      return res;
+     return res;
   }
 	
 	//
