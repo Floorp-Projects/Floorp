@@ -29,6 +29,18 @@
 // (c) 2000, ActiveState corp.
 #include "PyXPCOM_std.h"
 
+PyObject *PyObject_FromXPTType( const nsXPTType *d)
+{
+	if (d==nsnull) {
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+    // build an object using the same format as a TypeDescriptor.
+	return Py_BuildValue("bzzz", 
+		d->flags,
+		NULL, NULL, NULL);
+}
+
 PyObject *PyObject_FromXPTTypeDescriptor( const XPTTypeDescriptor *d)
 {
 	if (d==nsnull) {
