@@ -91,9 +91,11 @@ void DestroyConsole()
 
 void nsWin32Viewer::CrtSetDebug(PRUint32 aNewFlags)
 {
+#ifndef MOZ_NO_DEBUG_RTL
   int oldFlags = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
   _CrtSetDbgFlag(aNewFlags);
   printf("Note: crt flags: old=%x new=%x\n", oldFlags, aNewFlags);
+#endif
 }
 
 
