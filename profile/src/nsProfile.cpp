@@ -69,11 +69,6 @@ static int	g_numOldProfiles = 0;
 
 static PRBool renameCurrProfile = PR_FALSE;
 
-
-extern "C" NS_EXPORT nsresult
-NS_RegistryGetFactory(const nsCID &cid, nsISupports* servMgr, nsIFactory** aFactory );
-
-
 // IID and CIDs of all the services needed
 static NS_DEFINE_IID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
