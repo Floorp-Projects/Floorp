@@ -2621,6 +2621,7 @@ nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
                            nsIFrame*              aKidFrame,
                            nsSize*                aMaxElementSize)
 {
+  nscoord cellSpacingY = GetCellSpacingY();
   // Walk the list of children looking for aKidFrame
   for (nsIFrame* childFrame = mFrames.FirstChild(); childFrame; childFrame->GetNextSibling(&childFrame)) {
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(childFrame);
@@ -2636,9 +2637,13 @@ nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
         !aReflowState.footerFrame && !aReflowState.firstBodySection) {
       aReflowState.footerFrame = childFrame;
     
-    } else if ((NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay) &&
-               !aReflowState.firstBodySection) {
-      aReflowState.firstBodySection = childFrame;
+    } 
+    else {
+      if ((NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay) &&
+          !aReflowState.firstBodySection) {
+        aReflowState.firstBodySection = childFrame;
+      }
+      aReflowState.y += cellSpacingY;
     }
     
     // See if this is the frame we're looking for
@@ -2720,7 +2725,7 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
   FinishReflowChild(aNextFrame, aPresContext, desiredSize, x, y, 0);
 
   // Adjust the running y-offset
-  aReflowState.y += desiredSize.height;
+  aReflowState.y += desiredSize.height + GetCellSpacingY();
 
   // If our height is constrained, then update the available height
   if (PR_FALSE == aReflowState.unconstrainedHeight) {
@@ -3457,11 +3462,10 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
         nsIFrame* childFrame = mFrames.FirstChild();
         nsIFrame* firstRowGroupFrame = nsnull;
         while (nsnull != childFrame) {
-          const nsStyleDisplay* childDisplay;
-          childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-          if (IsRowGroup(childDisplay->mDisplay)) {
-            if (((nsTableRowGroupFrame*)childFrame)->RowGroupReceivesExcessSpace()) { 
-              ((nsTableRowGroupFrame*)childFrame)->GetHeightOfRows(aPresContext, sumOfRowHeights);
+          nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(childFrame);
+          if (rgFrame) {
+            if (((nsTableRowGroupFrame*)rgFrame)->RowGroupReceivesExcessSpace()) { 
+              ((nsTableRowGroupFrame*)rgFrame)->GetHeightOfRows(aPresContext, sumOfRowHeights);
             }
             if (!firstRowGroupFrame) {
               nsMargin borderPadding = aReflowState.mComputedBorderPadding;
@@ -3474,28 +3478,28 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
   
         childFrame = mFrames.FirstChild();
         while (childFrame) {
-          const nsStyleDisplay* childDisplay;
-          childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-          if (IsRowGroup(childDisplay->mDisplay)) {
-            if (((nsTableRowGroupFrame*)childFrame)->RowGroupReceivesExcessSpace()) {
+          nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(childFrame);
+          if (rgFrame) {
+            if (((nsTableRowGroupFrame*)rgFrame)->RowGroupReceivesExcessSpace()) {
               nscoord excessForGroup = 0;
               const nsStyleTable* tableStyle;
               GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-              DistributeSpaceToRows(aPresContext, aReflowState, childFrame, sumOfRowHeights, 
+              DistributeSpaceToRows(aPresContext, aReflowState, rgFrame, sumOfRowHeights, 
                                     excess, excessForGroup, rowGroupYPos);
   
               // Make sure child views are properly positioned
+              // XXX what happens if childFrame is a scroll frame and this gets skipped?
               nsIView*  view;
-              childFrame->GetView(aPresContext, &view);
+              rgFrame->GetView(aPresContext, &view);
               if (view) {
-                nsContainerFrame::PositionFrameView(aPresContext, childFrame, view);
+                nsContainerFrame::PositionFrameView(aPresContext, rgFrame, view);
               } else {
-                nsContainerFrame::PositionChildViews(aPresContext, childFrame);
+                nsContainerFrame::PositionChildViews(aPresContext, rgFrame);
               }
             }
             else {
               nsRect rowGroupRect;
-              childFrame->GetRect(rowGroupRect);
+              rgFrame->GetRect(rowGroupRect);
               rowGroupYPos += rowGroupRect.height;
             }
           }
