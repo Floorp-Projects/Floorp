@@ -56,6 +56,7 @@
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIEventListenerManager.h"
+#include "nsIFocusController.h"
 #include "nsHTMLAttributes.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLDocument.h"
@@ -1438,6 +1439,23 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
           nsCOMPtr<nsILinkHandler> handler;
           nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
           if (NS_SUCCEEDED(rv) && handler) {
+            // If the window is not active, do not allow the focus to bring the
+            // window to the front.  We update the focus controller, but do
+            // nothing else.
+            nsCOMPtr<nsIFocusController> focusController;
+            nsCOMPtr<nsIScriptGlobalObject> globalObj;
+            mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+            nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
+            win->GetRootFocusController(getter_AddRefs(focusController));
+            PRBool isActive = PR_FALSE;
+            focusController->GetActive(&isActive);
+            if (!isActive) {
+              nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(this);
+              if(domElement)
+                focusController->SetFocusedElement(domElement);
+              break;
+            }
+  
             nsCOMPtr<nsIEventStateManager> stateManager;
             if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(stateManager))) {
               stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE |
