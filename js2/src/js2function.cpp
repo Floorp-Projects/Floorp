@@ -87,6 +87,7 @@ namespace MetaData {
         else {  // construct an empty function wrapper
             js2val thatValue = OBJECT_TO_JS2VAL(new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass));
             FunctionInstance *fnInst = checked_cast<FunctionInstance *>(JS2VAL_TO_OBJECT(thatValue));
+            DEFINE_ROOTKEEPER(rk, fnInst);
             fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
             fnInst->fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
             meta->createDynamicProperty(fnInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
@@ -123,7 +124,12 @@ namespace MetaData {
             { NULL }
         };
 
-        meta->functionClass->prototype = OBJECT_TO_JS2VAL(new FunctionInstance(meta, meta->objectClass->prototype, meta->functionClass));
+        FunctionInstance *fnInst = new FunctionInstance(meta, meta->objectClass->prototype, meta->functionClass);
+        DEFINE_ROOTKEEPER(rk, fnInst);
+        fnInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), meta->env);
+        fnInst->fWrap->bCon->emitOp(eReturnVoid, 0);
+
+        meta->functionClass->prototype = OBJECT_TO_JS2VAL(fnInst);
         meta->initBuiltinClass(meta->functionClass, &prototypeFunctions[0], NULL, Function_Constructor, Function_Constructor);
     }
 

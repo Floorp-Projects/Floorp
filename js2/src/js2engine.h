@@ -275,6 +275,7 @@ public:
         js2val retval;
         uint32 execStackBase;
         Environment *env;
+        Environment *newEnv;
         Frame *topFrame;
     };
     void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env);

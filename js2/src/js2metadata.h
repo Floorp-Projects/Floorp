@@ -229,6 +229,8 @@ public:
     void operator delete(void *p)   { unalloc(p); }
 
     virtual void markChildren()     { } // XXX !!!! XXXX these are supposed to not have vtables !!!!
+    virtual void finalize()         { }
+
     bool isMarked()                 { return ((PondScum *)this)[-1].isMarked(); }
     void markObject()               { ((PondScum *)this)[-1].mark(); }
 
@@ -274,6 +276,7 @@ public:
 
 
     Attribute(AttributeKind akind) : JS2Object(AttributeObjectKind), attrKind(akind) { }
+    virtual void markChildren()     { }
 
     static Attribute *combineAttributes(Attribute *a, Attribute *b);
     static CompoundAttribute *toCompoundAttribute(Attribute *a);
@@ -289,6 +292,7 @@ public:
     Namespace(const String *name) : Attribute(NamespaceAttr), name(name) { }
 
     virtual CompoundAttribute *toCompoundAttribute();
+    virtual void markChildren()     { if (name) JS2Object::mark(name); }
 
     const String *name;       // The namespace's name (used by toString)
 };
@@ -464,6 +468,8 @@ public:
 // The qualified name is to be inferred from the map where this binding is kept
 //    QualifiedName qname;        // The qualified name bound by this binding
 
+    virtual ~LocalBinding() { delete content; }
+
     AccessSet accesses;
     LocalMember *content;       // The member to which this qualified name was bound
     bool xplicit;               // true if this binding should not be imported into the global scope by an import statement
@@ -525,6 +531,7 @@ public:
 class InstanceBinding {
 public:
     InstanceBinding(AccessSet accesses, InstanceMember *content) : accesses(accesses), content(content) { }
+    virtual ~InstanceBinding() { delete content; }
 
 // The qualified name is to be inferred from the map where this binding is kept
 //    QualifiedName qname;         // The qualified name bound by this binding
@@ -762,6 +769,7 @@ public:
     FunctionWrapper *fWrap;
 
     virtual void markChildren();
+    virtual void finalize();
     virtual ~SimpleInstance()            { }
 };
 

@@ -870,8 +870,9 @@ namespace MetaData {
         activationStackTop->phase = phase;
         activationStackTop->execStackBase = stackBase;
         activationStackTop->retval = returnVal;
-        activationStackTop->env = meta->env;    // save current env.
-        activationStackTop->topFrame = env->getTopFrame();  // remember how big the new env. is supposed to be
+        activationStackTop->env = meta->env;    // save current environment, to be restored on rts
+        activationStackTop->newEnv = env;       // and save the new environment, if an exception occurs, we can't depend on meta->env
+        activationStackTop->topFrame = env->getTopFrame();  // remember how big the new env. is supposed to be so that local frames don't accumulate
         activationStackTop++;
         if (new_bCon) {
             bCon = new_bCon;
@@ -900,8 +901,8 @@ namespace MetaData {
         pc = activationStackTop->pc;
         phase = activationStackTop->phase;
         // reset the env. top
-        while (meta->env->getTopFrame() != activationStackTop->topFrame)
-            meta->env->removeTopFrame();
+        while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
+            activationStackTop->newEnv->removeTopFrame();
         // reset to previous env.
         meta->env = activationStackTop->env;
         sp = execStack + activationStackTop->execStackBase;
@@ -921,6 +922,7 @@ namespace MetaData {
             bCon->mark();
         for (ActivationFrame *f = activationStack; (f < activationStackTop); f++) {
             GCMARKOBJECT(f->env);
+            GCMARKOBJECT(f->newEnv);
             if (f->bCon)
                 f->bCon->mark();
         }

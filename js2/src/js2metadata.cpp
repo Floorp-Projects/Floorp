@@ -3255,6 +3255,11 @@ static const uint8 urlCharType[256] =
         }
     }
     
+    static js2val Object_valueOf(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
+    {
+        return thisValue;
+    }
+    
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true; c->defaultValue = defaultVal;
 
     JS2Metadata::JS2Metadata(World &world) : JS2Object(MetaDataKind),
@@ -3349,6 +3354,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString, env);
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->toString_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
+        // and 'valueOf'
+        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_valueOf, env);
+        createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->valueOf_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
+        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
+
 
 /*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Date"]), JS2VAL_NULL);
@@ -4067,9 +4078,21 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             LocalBindingEntry *lbe = *bi;
             for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
+                if (ns.first->name) JS2Object::mark(ns.first->name);
                 ns.second->content->mark();
             }
         }            
+    }
+
+    void SimpleInstance::finalize()
+    {
+        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+            LocalBindingEntry *lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceBinding ns = *i;
+                delete ns.second->content;
+            }
+        }
     }
 
  /************************************************************************************
@@ -4501,7 +4524,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // Allocate from this or the next Pond (make a new one if necessary)
     void *Pond::allocFromPond(size_t sz, bool isJS2Object)
     {
-
         // See if there's room left...
         if (sz > pondSize) {
             // If not, try the free list...
@@ -4531,9 +4553,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             // ok, then try the next Pond
             if (nextPond == NULL) {
                 // there isn't one; run the gc
-            uint32 released = JS2Object::gc();
-            if (released > sz)
-                return JS2Object::alloc(sz - sizeof(PondScum), isJS2Object);
+                uint32 released = JS2Object::gc();
+                if (released > sz)
+                    return JS2Object::alloc(sz - sizeof(PondScum), isJS2Object);
                 nextPond = new Pond(sz, nextPond);
             }
             return nextPond->allocFromPond(sz, isJS2Object);
@@ -4586,8 +4608,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         uint8 *t = pondBottom;
         while (t != pondTop) {
             PondScum *p = (PondScum *)t;
-            if (!p->isMarked() && (p->owner == this))   // (owner != this) ==> already on free list
+            if (!p->isMarked() && (p->owner == this)) {   // (owner != this) ==> already on free list
+                if (p->isJS2Object()) {
+                    JS2Object *obj = (JS2Object *)(p + 1);
+                    obj->finalize();
+                }
                 released += returnToPond(p);
+            }
             t += p->getSize();
         }
         if (nextPond)
