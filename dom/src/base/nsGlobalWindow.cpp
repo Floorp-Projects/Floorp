@@ -146,7 +146,10 @@ GlobalWindowImpl::GlobalWindowImpl() :
   mMutationBits(0), mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
-  if (gRefCnt++ == 0) {
+  // We could have failed the first time through trying
+  // to create the entropy collector, so we should
+  // try to get one until we succeed.
+  if (gRefCnt++ == 0 || !gEntropyCollector) {
     nsCOMPtr<nsIEntropyCollector> enCol =
       do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID);
 
@@ -516,6 +519,7 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult ret = NS_OK;
   PRBool externalDOMEvent = PR_FALSE;
   nsIDOMEvent *domEvent = nsnull;
+  static PRUint32 count = 0;
 
   /* mChromeEventHandler and mContext go dangling in the middle of this
      function under some circumstances (events that destroy the window)
@@ -526,19 +530,28 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   /* If this is a mouse event, use the struct to provide entropy for 
    * the system.
    */
-  if (gEntropyCollector && !mChromeEventHandler &&
+  if (gEntropyCollector && 
       (NS_EVENT_FLAG_BUBBLE != aFlags) && 
-      (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)) {
-    //Since the high bits seem to be zero's most of the time, 
-    //let's only take the lowest half of the point structure.
-    PRInt16 myCoord[4];
+      (aEvent->message == NS_MOUSE_MOVE)) {
+    //I'd like to not come in here if there is a mChromeEventHandler
+    //present, but there is always one when the message is 
+    //NS_MOUSE_MOVE.
+    //
+    //Chances are this counter will overflow during the life of the
+    //process, but that's OK for our case.  Means we get a little 
+    //more entropy.
+    if (count++ % 100 == 0) {
+      //Since the high bits seem to be zero's most of the time, 
+      //let's only take the lowest half of the point structure.
+      PRInt16 myCoord[4];
 
-    myCoord[0] = aEvent->point.x;
-    myCoord[1] = aEvent->point.y;
-    myCoord[2] = aEvent->refPoint.x;
-    myCoord[3] = aEvent->refPoint.y;
-    gEntropyCollector->RandomUpdate((void*)myCoord, sizeof(myCoord));
-    gEntropyCollector->RandomUpdate((void*)&aEvent->time, sizeof(PRUint32));
+      myCoord[0] = aEvent->point.x;
+      myCoord[1] = aEvent->point.y;
+      myCoord[2] = aEvent->refPoint.x;
+      myCoord[3] = aEvent->refPoint.y;
+      gEntropyCollector->RandomUpdate((void*)myCoord, sizeof(myCoord));
+      gEntropyCollector->RandomUpdate((void*)&aEvent->time, sizeof(PRUint32));
+    }
   }
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
