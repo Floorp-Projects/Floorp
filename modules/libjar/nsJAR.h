@@ -116,7 +116,7 @@ class nsJAR : public nsIZipReader, public nsIJAR
     PRIntervalTime           mReleaseTime;    // used by nsZipReaderCache for flushing entries
     nsZipReaderCache*        mCache;          // if cached, this points to the cache it's contained in
 	PRLock*					 mLock;	
-
+    PRInt32                  mTotalItemsInManifest;
     //-- Private functions
     nsresult ParseManifest(nsISignatureVerifier* verifier);
     void     ReportError(const char* aFilename, PRInt16 errorCode);

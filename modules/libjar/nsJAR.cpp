@@ -151,7 +151,8 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 // The following initialization makes a guess of 10 entries per jarfile.
 nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
                 mParsedManifest(PR_FALSE), mGlobalStatus(nsIJAR::NOT_SIGNED),
-                mReleaseTime(PR_INTERVAL_NO_TIMEOUT), mCache(nsnull), mLock(nsnull)
+                mReleaseTime(PR_INTERVAL_NO_TIMEOUT), mCache(nsnull), mLock(nsnull),
+                mTotalItemsInManifest(0)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -407,6 +408,13 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsJAR::GetManifestEntriesCount(PRUint32* count)
+{
+  *count = mTotalItemsInManifest;
+  return NS_OK;
+}
+
 //----------------------------------------------
 // nsJAR private implementation
 //----------------------------------------------
@@ -565,13 +573,13 @@ nsJAR::ParseManifest(nsISignatureVerifier* verifier)
     mParsedManifest = PR_TRUE;
     return NS_OK;
   }
-  
+
   //-- Verify that the signature file is a valid signature of the SF file
   PRInt32 verifyError;
   rv = verifier->VerifySignature(sigBuffer, sigLen, manifestBuffer, manifestLen, 
                                  &verifyError, getter_AddRefs(mPrincipal));
   if (NS_FAILED(rv)) return rv;
-  if (mPrincipal)
+  if (mPrincipal && verifyError == 0)
     mGlobalStatus = nsIJAR::VALID;
   else if (verifyError == nsISignatureVerifier::VERIFY_ERROR_UNKNOWN_CA)
     mGlobalStatus = nsIJAR::INVALID_UNKNOWN_CA;
@@ -629,6 +637,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
     {
       if (aFileType == JAR_MF)
       {
+        mTotalItemsInManifest++;
         if (curItemMF->mType != JAR_INVALID)
         { 
           //-- Did this section have a name: line?
