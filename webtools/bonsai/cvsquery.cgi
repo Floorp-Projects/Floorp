@@ -221,10 +221,14 @@ my $menu = "
 <p align=center>$e
 <p align=left>
 <a href=cvsqueryform.cgi?$ENV{QUERY_STRING}>Modify Query</a>
+";
+if ($pCount) {
+    $menu .= "
 <br><a href=mailto:$s>Mail everyone on this page</a>
 <NOBR>($pCount people)</NOBR>
 <br><a href=cvsquery.cgi?$ENV{QUERY_STRING}&generateBackoutCVSCommands=1>Show commands which could be used to back out these changes</a>
 ";
+}
 
 if (defined $::FORM{'generateBackoutCVSCommands'}) {
     print "Content-type: text/plain
@@ -234,6 +238,17 @@ if (defined $::FORM{'generateBackoutCVSCommands'}) {
 # backout the changes selected by your query.
 
 ";
+    unless ($pCount) {
+        print "
+#
+# No changes occurred during this interval.
+# There is nothing to back out.
+#
+
+";
+        exit;
+    }
+
     foreach my $ci (reverse @{$result}) {
         if ($ci->[$::CI_REV] eq "") {
             print "echo 'Changes made to $ci->[$::CI_DIR]/$ci->[$::CI_FILE] need to be backed out by hand'\n";
