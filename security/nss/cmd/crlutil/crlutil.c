@@ -196,14 +196,16 @@ SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type,
     SECItem crlDER;
     PK11SlotInfo* slot = NULL;
     int rv;
+#if defined(DEBUG_jpierre)
     PRIntervalTime starttime, endtime, elapsed;
     PRUint32 mins, secs, msecs;
+#endif
 
     crlDER.data = NULL;
 
 
     /* Read in the entire file specified with the -f argument */
-	rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE);
+    rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "unable to read input file");
 	return (SECFailure);
@@ -213,27 +215,32 @@ SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type,
 
     slot = PK11_GetInternalKeySlot();
  
+#if defined(DEBUG_jpierre)
     starttime = PR_IntervalNow();
+#endif
     crl = PK11_ImportCRL(slot, &crlDER, url, type,
           NULL, importOptions, NULL, decodeOptions);
+#if defined(DEBUG_jpierre)
     endtime = PR_IntervalNow();
     elapsed = endtime - starttime;
     mins = PR_IntervalToSeconds(elapsed) / 60;
     secs = PR_IntervalToSeconds(elapsed) % 60;
     msecs = PR_IntervalToMilliseconds(elapsed) % 1000;
     printf("Elapsed : %2d:%2d.%3d\n", mins, secs, msecs);
+#endif
     if (!crl) {
 	const char *errString;
 
+	rv = SECFailure;
 	errString = SECU_Strerror(PORT_GetError());
 	if ( errString && PORT_Strlen (errString) == 0)
-	    SECU_PrintError
-		    (progName, "CRL is not imported (error: input CRL is not up to date.)");
+	    SECU_PrintError (progName, 
+	        "CRL is not imported (error: input CRL is not up to date.)");
 	else    
-	    SECU_PrintError
-		    (progName, "unable to import CRL");
+	    SECU_PrintError (progName, "unable to import CRL");
+    } else {
+	SEC_DestroyCrl (crl);
     }
-    SEC_DestroyCrl (crl);
     if (slot) {
         PK11_FreeSlot(slot);
     }
@@ -474,8 +481,8 @@ int main(int argc, char **argv)
 #endif    
     }
     if (NSS_Shutdown() != SECSuccess) {
-        exit(1);
+        rv = SECFailure;
     }
 
-    return (rv);
+    return (rv != SECSuccess);
 }
