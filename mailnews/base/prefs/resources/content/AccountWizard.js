@@ -121,7 +121,7 @@ function onFinish() {
         return;
     var pageData = GetPageData();
 
-    dump(parent.wizardManager.WSM);
+    //    dump(parent.wizardManager.WSM);
 
     var accountData= currentAccountData;
     
@@ -304,8 +304,33 @@ function createAccount(accountData)
 function finishAccount(account, accountData) {
 
     if (accountData.incomingServer) {
-        copyObjectToInterface(account.incomingServer,
-                              accountData.incomingServer);
+        dump("*** copyObjectToInterface:\n");
+        for (var i in account.incomingServer) {
+            if (typeof(account.incomingServer[i]) != "function")
+                dump("account.incomingServer." + i + " = " +
+                     account.incomingServer[i] + "\n");
+        }
+
+        var destServer = account.incomingServer;
+        var srcServer = accountData.incomingServer;
+        copyObjectToInterface(destServer, srcServer);
+
+        // see if there are any protocol-specific attributes
+        // if so, we use the type to get the IID, QueryInterface
+        // as appropriate, then copy the data over
+        dump("srcServer.ServerType-" + srcServer.type + " = " +
+             srcServer["ServerType-" + srcServer.type] + "\n");
+        if (srcServer["ServerType-" + srcServer.type]) {
+            // handle server-specific stuff
+            var IID = getInterfaceForType(srcServer.type);
+            if (IID) {
+                destProtocolServer = destServer.QueryInterface(IID);
+                srcProtocolServer = srcServer["ServerType-" + srcServer.type];
+
+                dump("Copying over " + srcServer.type + "-specific data\n");
+                copyObjectToInterface(destProtocolServer, srcProtocolServer);
+            }
+        }
         account.incomingServer.valid=true;
     }
 
@@ -616,4 +641,19 @@ function SetCurrentAccountData(accountData)
 {
     dump("Setting current account data (" + currentAccountData + ") to " + accountData + "\n");
     currentAccountData = accountData;
+}
+
+function getInterfaceForType(type) {
+    try {
+        var protocolInfoProgIDPrefix = "component://netscape/messenger/protocol/info;type=";
+        
+        var thisProgID = protocolInfoProgIDPrefix + type;
+        
+        var protoInfo = Components.classes[thisProgID].getService(Components.interfaces.nsIMsgProtocolInfo);
+        
+        return protoInfo.serverIID;
+    } catch (ex) {
+        dump("could not get IID for " + type + ": " + ex + "\n");
+        return undefined;
+    }
 }
