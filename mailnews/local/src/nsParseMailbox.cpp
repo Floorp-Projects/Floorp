@@ -142,9 +142,6 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
                     m_mailDB->AddListener(this);
             }
             NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
-#ifdef DEBUG_mscott
-            printf("url file = %s\n", fileName.get());
-#endif
         }
     }
 
