@@ -695,7 +695,10 @@ nsStreamListenerProxy::OnProgress(nsIURL* aURL, PRUint32 aProgress,
 
   if (PR_GetCurrentThread() == gNetlibThread) {
     OnProgressProxyEvent* ev;
-
+    /*
+     * Only fire the OnProgress notification if the connection is still valid.
+     * ie. A previous call did not fail...
+     */
     rv = GetStatus();
     if (NS_SUCCEEDED(rv)) {
       ev = new OnProgressProxyEvent(this, aURL, aProgress, aProgressMax);
@@ -718,7 +721,10 @@ nsStreamListenerProxy::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
 
   if (PR_GetCurrentThread() == gNetlibThread) {
     OnStatusProxyEvent* ev;
-
+    /*
+     * Only fire the OnStatus notification if the connection is still valid.
+     * ie. A previous call did not fail...
+     */
     rv = GetStatus();
     if (NS_SUCCEEDED(rv)) {
       ev = new OnStatusProxyEvent(this, aURL, aMsg);
@@ -738,19 +744,18 @@ NS_IMETHODIMP
 nsStreamListenerProxy::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
                                      const PRUnichar* aMsg)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (PR_GetCurrentThread() == gNetlibThread) {
     OnStopBindingProxyEvent* ev;
-
-    rv = GetStatus();
-    if (NS_SUCCEEDED(rv)) {
-      ev = new OnStopBindingProxyEvent(this, aURL, aStatus, aMsg);
-      if (nsnull == ev) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      } else {
-        ev->Fire(mEventQ);
-      }
+    /*
+     * Always fire the OnStopBinding notification...
+     */
+    ev = new OnStopBindingProxyEvent(this, aURL, aStatus, aMsg);
+    if (nsnull == ev) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+      ev->Fire(mEventQ);
     }
   } else {
     rv = mRealListener->OnStopBinding(aURL, aStatus, aMsg);
@@ -782,7 +787,10 @@ nsStreamListenerProxy::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream,
 
   if (PR_GetCurrentThread() == gNetlibThread) {
     OnDataAvailableProxyEvent* ev;
-
+    /*
+     * Only fire the OnDataAvailable notification if the connection is still valid.
+     * ie. A previous call did not fail...
+     */
     rv = GetStatus();
     if (NS_SUCCEEDED(rv)) {
       ev = new OnDataAvailableProxyEvent(this, aURL, aIStream, aLength);
