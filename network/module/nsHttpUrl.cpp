@@ -521,20 +521,22 @@ nsresult nsHttpUrlImpl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         mProtocol[plen] = 0;
         cp++;                               // eat : in protocol
 
-        // skip over one, two or three slashes
-        if (*cp == '/') {
-            cp++;
+        // skip over one, two or three slashes if it isn't about:
+        if (PL_strcmp(mProtocol, "about") != 0) {
             if (*cp == '/') {
                 cp++;
                 if (*cp == '/') {
                     cp++;
+                    if (*cp == '/') {
+                        cp++;
+                    }
                 }
+            } else {
+                delete cSpec;
+                
+                NS_UNLOCK_INSTANCE();
+                return NS_ERROR_ILLEGAL_VALUE;
             }
-        } else {
-            delete cSpec;
-
-            NS_UNLOCK_INSTANCE();
-            return NS_ERROR_ILLEGAL_VALUE;
         }
 
 
@@ -555,7 +557,8 @@ nsresult nsHttpUrlImpl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 
         const char* cp0 = cp;
         if ((PL_strcmp(mProtocol, "resource") == 0) ||
-            (PL_strcmp(mProtocol, "file") == 0)) {
+            (PL_strcmp(mProtocol, "file") == 0) ||
+            (PL_strcmp(mProtocol, "about") == 0)) {
             // resource/file url's do not have host names.
             // The remainder of the string is the file name
             PRInt32 flen = PL_strlen(cp);
@@ -642,9 +645,13 @@ nsHttpUrlImpl::ReconstructSpec(void)
     }
 
     mSpec = (char *) PR_Malloc(plen + 1);
-    PR_snprintf(mSpec, plen, "%s://%s%s%s", 
-                mProtocol, ((nsnull != mHost) ? mHost : ""), portBuffer,
-                mFile);
+    if (PL_strcmp(mProtocol, "about") == 0) {
+        PR_snprintf(mSpec, plen, "%s:%s", mProtocol, mFile);
+    } else {
+        PR_snprintf(mSpec, plen, "%s://%s%s%s", 
+                    mProtocol, ((nsnull != mHost) ? mHost : ""), portBuffer,
+                    mFile);
+    }
 
     if (mRef) {
         PL_strcat(mSpec, "#");
@@ -910,6 +917,10 @@ nsresult nsHttpUrlImpl::ToString(PRUnichar* *unichars) const
     // protocol-specific parsing.
     if (PL_strcmp(mProtocol, "javascript") == 0) {
         string.SetString(mSpec);
+    } else if (PL_strcmp(mProtocol, "about") == 0) { 
+        string.SetString(mProtocol);
+        string.Append(':');
+        string.Append(mFile);
     } else {
         string.SetLength(0);
         string.Append(mProtocol);

@@ -108,8 +108,10 @@ NS_InitializeHttpURLFactory(nsINetService* inet)
     if (rv != NS_OK) goto done;
     inet->RegisterProtocol(*new nsString("javascript"), urlf, NULL);
     if (rv != NS_OK) goto done;
-	inet->RegisterProtocol(*new nsString("sockstub"), urlf, NULL);
-	if (rv != NS_OK) goto done;
+    inet->RegisterProtocol(*new nsString("sockstub"), urlf, NULL);
+    if (rv != NS_OK) goto done;
+    inet->RegisterProtocol(*new nsString("about"), urlf, NULL);
+    if (rv != NS_OK) goto done;
 
   done:
 #if 0
