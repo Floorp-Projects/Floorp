@@ -136,7 +136,7 @@ XLIB_LIBS		= -lviewer_xlib_s $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
 GTK_LIBS		= -lviewer_gtk_s -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
 
 EXTRA_DEPS		= \
-			$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
+			$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
 			$(UNIX_VIEWER_TK_LIBS) \
 			$(XP_NS_UNDERBAR_CRAP) \
 			$(NULL)
