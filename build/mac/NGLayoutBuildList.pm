@@ -594,7 +594,7 @@ sub BuildXPAppProjects()
 
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES);
 
-	BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:XPAppViewer.mcp",			"XPAppViewer$D", "XPAppViewer.toc", 0, 0);
+	BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",			"apprunner$D", "apprunner.toc", 0, 0);
 
 }
 
