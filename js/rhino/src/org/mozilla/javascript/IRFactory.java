@@ -577,12 +577,13 @@ public class IRFactory {
         Node temp = createNewTemp(result);
         result = temp;
 
-        java.util.Enumeration children = ((Node) obj).getChildIterator();
-
         Node elem = null;
         int i = 0;
-        while (children.hasMoreElements()) {
-            elem = (Node) children.nextElement();
+        for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
+            // Move cursor to cursor.next before elem.next can be 
+            // altered in new Node constructor
+            elem = cursor;
+            cursor = cursor.getNextSibling();
             if (elem.getType() == TokenStream.PRIMARY &&
                 elem.getInt() == TokenStream.UNDEFINED)
             {
@@ -640,16 +641,16 @@ public class IRFactory {
         Node temp = createNewTemp(result);
         result = temp;
 
-        java.util.Enumeration children = ((Node) obj).getChildIterator();
-
-        while (children.hasMoreElements()) {
-            Node elem = (Node)children.nextElement();
-
-            int op = (elem.getType() == TokenStream.NAME)
+        for (Node cursor = ((Node) obj).getFirstChild(); cursor != null;) {
+            Node n = cursor;
+            cursor = cursor.getNextSibling();
+            int op = (n.getType() == TokenStream.NAME)
                    ? TokenStream.SETPROP
                    : TokenStream.SETELEM;
-            Node addelem = new Node(op, createUseTemp(temp),
-                                    elem, (Node)children.nextElement());
+            // Move cursor before next.next can be altered in new Node
+            Node next = cursor;
+            cursor = cursor.getNextSibling();
+            Node addelem = new Node(op, createUseTemp(temp), n, next);
             result = new Node(TokenStream.COMMA, result, addelem);
         }
         return new Node(TokenStream.COMMA, result, createUseTemp(temp));
@@ -693,7 +694,7 @@ public class IRFactory {
             result.addChildToBack(ifNotTarget);
         }
 
-    	return result;
+        return result;
     }
 
     public Object createTernary(Object cond, Object ifTrue, Object ifFalse) {
@@ -728,7 +729,7 @@ public class IRFactory {
             }
             return new Node(nodeType, left, right);
         }
-    	return new Node(nodeType, childNode);
+        return new Node(nodeType, childNode);
     }
 
     public Object createUnary(int nodeType, int nodeOp, Object child) {
@@ -810,7 +811,7 @@ public class IRFactory {
             return createTernary(temp, createUseTemp(temp), right);
 */            
         }
-    	return new Node(nodeType, (Node)left, (Node)right);
+        return new Node(nodeType, (Node)left, (Node)right);
     }
 
     public Object createBinary(int nodeType, int nodeOp, Object left,

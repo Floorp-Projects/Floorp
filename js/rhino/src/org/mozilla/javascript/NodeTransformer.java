@@ -407,10 +407,12 @@ public class NodeTransformer {
 
               case TokenStream.VAR:
               {
-                ShallowNodeIterator i = node.getChildIterator();
                 Node result = new Node(TokenStream.BLOCK);
-                while (i.hasMoreElements()) {
-                    Node n = i.nextNode();
+                for (Node cursor = node.getFirstChild(); cursor != null;) {
+                    // Move cursor to next before createAssignment get chance
+                    // to change n.next
+                    Node n = cursor;
+                    cursor = cursor.getNextSibling();
                     if (!n.hasChildren())
                         continue;
                     Node init = n.getFirstChild();
@@ -519,11 +521,11 @@ public class NodeTransformer {
             }
             if (nodeType != TokenStream.VAR)
                 continue;
-            ShallowNodeIterator i = node.getChildIterator();
-            while (i.hasMoreElements()) {
-                Node n = i.nextNode();
-                if (ht == null || ht.get(n.getString()) == null)
-                    vars.addLocal(n.getString());
+            for (Node cursor = node.getFirstChild(); cursor != null;
+                 cursor = cursor.getNextSibling()) 
+            {
+                if (ht == null || ht.get(cursor.getString()) == null)
+                    vars.addLocal(cursor.getString());
             }
         }
         String name = tree.getString();
@@ -554,10 +556,10 @@ public class NodeTransformer {
         if (args.getType() == TokenStream.LP && vars.getParameterCount() == 0)
         {
             // Add parameters
-            ShallowNodeIterator i = args.getChildIterator();
-            while (i.hasMoreElements()) {
-                Node n = i.nextNode();
-                String arg = n.getString();
+            for (Node cursor = args.getFirstChild(); cursor != null;
+                 cursor = cursor.getNextSibling()) 
+            {
+                String arg = cursor.getString();
                 vars.addParameter(arg);
             }
         }

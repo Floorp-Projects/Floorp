@@ -147,10 +147,6 @@ public class Node implements Cloneable {
         return n;
     }
 
-    public ShallowNodeIterator getChildIterator() {
-        return new ShallowNodeIterator(first);
-    }
-
     public PreorderNodeIterator getPreorderIterator() {
         return new PreorderNodeIterator(this);
     }
@@ -484,17 +480,16 @@ public class Node implements Cloneable {
             }
             s.append(toString());
             s.append('\n');
-            ShallowNodeIterator iterator = getChildIterator();
-            if (iterator != null) {
-                while (iterator.hasMoreElements()) {
-                    Node n = (Node) iterator.nextElement();
-                    if (n.getType() == TokenStream.FUNCTION) {
-                        Node p = (Node) n.getProp(Node.FUNCTION_PROP);
-                        if (p != null)
-                            n = p;
-                    }
-                    s.append(n.toStringTreeHelper(level+1));
+            for (Node cursor = getFirstChild(); cursor != null;
+                 cursor = cursor.getNextSibling()) 
+            {
+                Node n = cursor;
+                if (cursor.getType() == TokenStream.FUNCTION) {
+                    Node p = (Node) cursor.getProp(Node.FUNCTION_PROP);
+                    if (p != null)
+                        n = p;
                 }
+                s.append(n.toStringTreeHelper(level+1));
             }
             return s.toString();
         }
