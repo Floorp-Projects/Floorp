@@ -659,7 +659,6 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIXMLContentSink> sink;
-  PRBool hasDocShell(PR_TRUE);
     
   if (aSink) {
     sink = do_QueryInterface(aSink);
@@ -670,9 +669,6 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
       docShell = do_QueryInterface(aContainer);
       NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
     }
-
-    if (!docShell)
-      hasDocShell = PR_FALSE;
     rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, docShell,
                               aChannel);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -685,11 +681,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   SetDocumentCharacterSet(charset);
   parser->SetDocumentCharset(charset, charsetSource);
   parser->SetCommand(aCommand);
-  // XXX This is a fix for bug #206947 
-  // Handing the sink to the parser when there is
-  // no docshell causes rampant leaks --pete 
-  if (hasDocShell)
-    parser->SetContentSink(sink);
+  parser->SetContentSink(sink);
   parser->Parse(aUrl, nsnull, PR_FALSE, (void *)this);
 
   return NS_OK;
