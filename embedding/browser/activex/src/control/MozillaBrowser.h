@@ -157,7 +157,12 @@ BEGIN_MSG_MAP(CMozillaBrowser)
 	COMMAND_ID_HANDLER(ID_CUT, OnCut)
 	COMMAND_ID_HANDLER(ID_COPY, OnCopy)
 	COMMAND_ID_HANDLER(ID_PASTE, OnPaste)
-	COMMAND_ID_HANDLER(ID_SELECTALL, OnSelectAll)\
+	COMMAND_ID_HANDLER(ID_SELECTALL, OnSelectAll)
+    COMMAND_ID_HANDLER(ID_DOCUMENT_BACK, OnDocumentBack)
+    COMMAND_ID_HANDLER(ID_DOCUMENT_FORWARD, OnDocumentForward)
+    COMMAND_ID_HANDLER(ID_DOCUMENT_PRINT, OnDocumentPrint)
+    COMMAND_ID_HANDLER(ID_DOCUMENT_PROPERTIES, OnDocumentProperties)
+    COMMAND_ID_HANDLER(ID_LINK_OPEN, OnLinkOpen)
 END_MSG_MAP()
 
 	static HRESULT _stdcall EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
@@ -295,6 +300,13 @@ END_OLECOMMAND_TABLE()
 	LRESULT OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 	LRESULT OnSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
+	LRESULT OnDocumentBack(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnDocumentForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnDocumentPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnDocumentProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	
+    LRESULT OnLinkOpen(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
 // ISupportsErrorInfo
 	STDMETHOD(InterfaceSupportsErrorInfo)(REFIID riid);
 
@@ -321,14 +333,7 @@ protected:
     
 	nsIPref             *   mPrefs;
 	nsIEditor			*	mEditor;
-    nsIServiceManager   *   mServiceManager;
 
-	// Flag to prevent multiple object registrations
-	static BOOL mRegistryInitializedFlag;
-#ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
-	// Flag that stops XPCOM from blowing up when called multiple times
-	static BOOL             mXPCOMInitializedFlag;
-#endif
 	// System registry key for various control settings
 	CRegKey                 mSystemRegKey;
 	// User registry key for various control settings
@@ -352,21 +357,26 @@ protected:
 	// Post data from last navigate operation
 	CComVariant             mLastPostData;
 
+	virtual BOOL IsValid();
 	virtual HRESULT Initialize();
 	virtual HRESULT Terminate();
 	virtual HRESULT CreateBrowser();
 	virtual HRESULT DestroyBrowser();
+	virtual HRESULT CheckBinDirPath();
+    virtual HRESULT SetStartupErrorMessage(UINT nStringID);
 	virtual HRESULT SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr);
 	virtual HRESULT GetPresShell(nsIPresShell **pPresShell);
+    virtual HRESULT GetEditInterface(nsIContentViewerEdit** aEditInterface);
 	virtual HRESULT GetDOMDocument(nsIDOMDocument **pDocument);
 	virtual HRESULT SetEditorMode(BOOL bEnabled);
 	virtual HRESULT OnEditorCommand(DWORD nCmdID);
-	virtual BOOL IsValid();
-	virtual int MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption = _T(""), UINT nType = MB_OK);
-	virtual HRESULT CheckBinDirPath();
 
-	virtual HRESULT LoadBrowserHelpers();
+    virtual HRESULT LoadBrowserHelpers();
 	virtual HRESULT UnloadBrowserHelpers();
+
+    // User interface methods
+    virtual int MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption = _T(""), UINT nType = MB_OK);
+    virtual void ShowContextMenu(PRUint32 aContextFlags);
 
 public:
 // IOleObjectImpl overrides
