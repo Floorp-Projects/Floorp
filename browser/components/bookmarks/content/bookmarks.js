@@ -612,13 +612,6 @@ var BookmarksCommand = {
     }
   },
 
-  findBookmark: function ()
-  {
-    openDialog("chrome://browser/content/bookmarks/findBookmark.xul",
-               "FindBookmarksWindow",
-               "centerscreen,resizable=no,chrome,dependent");
-  },
-
   createNewFolder: function (aTarget)
   {
     var name      = BookmarksUtils.getLocaleString("ile_newfolder");
@@ -749,7 +742,6 @@ var BookmarksController = {
     case "cmd_bm_newbookmark":
     case "cmd_bm_newfolder":
     case "cmd_bm_newseparator":
-    case "cmd_bm_find":
     case "cmd_bm_properties":
     case "cmd_bm_rename":
     case "cmd_bm_setnewbookmarkfolder":
@@ -836,7 +828,6 @@ var BookmarksController = {
         }
       }
       return false;
-    case "cmd_bm_find":
     case "cmd_bm_import":
     case "cmd_bm_export":
       return true;
@@ -902,9 +893,6 @@ var BookmarksController = {
     case "cmd_bm_rename":
     case "cmd_bm_properties":
       BookmarksCommand.openBookmarkProperties(aSelection);
-      break;
-    case "cmd_bm_find":
-      BookmarksCommand.findBookmark();
       break;
     case "cmd_bm_cut":
       BookmarksCommand.cutBookmark(aSelection);
