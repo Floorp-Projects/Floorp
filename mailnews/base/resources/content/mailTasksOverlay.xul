@@ -62,12 +62,14 @@
   <statusbarpanel id="component-bar">
     <toolbarbutton class="taskbutton" id="mini-mail" oncommand="toMessengerWindow()" 
             position="2" tooltiptext="&taskMessenger.tooltip;"/>
+    <toolbarbutton id="mini-comp" position="3"/>
     <toolbarbutton class="taskbutton" id="mini-addr" oncommand="toAddressBook();"
             position="4" tooltiptext="&taskAddressBook.tooltip;"/>
   </statusbarpanel>
   
   <menupopup id="taskPopup">
     <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail" id="tasksMenuMail" insertafter="tasksMenuNavigator"/>
+    <menuitem id="tasksMenuEditor" insertafter="tasksMenuMail"/>
     <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook" id="tasksMenuAddressBook" insertafter="tasksMenuEditor"/>
   </menupopup>
   

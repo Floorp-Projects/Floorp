@@ -36,6 +36,7 @@ comm.jar:
 	content/editor/editorPrefsOverlay.xul                    (ui/composer/content/editorPrefsOverlay.xul) 
 	content/editor/editorNavigatorOverlay.xul                (ui/composer/content/editorNavigatorOverlay.xul) 
 	content/editor/editorMailOverlay.xul                     (ui/composer/content/editorMailOverlay.xul) 
+	content/editor/editorTasksOverlay.xul                    (ui/composer/content/editorTasksOverlay.xul) 
 	content/editor/editorApplicationOverlay.js               (ui/composer/content/editorApplicationOverlay.js) 
 	content/editor/images/tag-anchor.gif                     (ui/composer/content/images/tag-anchor.gif)
 	content/editor/images/tag-abr.gif                        (ui/composer/content/images/tag-abr.gif)

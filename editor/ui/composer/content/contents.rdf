@@ -18,10 +18,16 @@
   
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
+    <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/pref-appearance.xul"/>
     <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
     <RDF:li resource="chrome://messenger/content/mailWindowOverlay.xul"/>
+  </RDF:Seq>
+
+  <!-- editor tasks overlay -->
+  <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
+    <RDF:li>chrome://editor/content/editorTasksOverlay.xul</RDF:li>
   </RDF:Seq>
 
   <!-- editor preferences branches -->
