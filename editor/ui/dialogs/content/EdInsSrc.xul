@@ -47,6 +47,8 @@
 <dialog title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
+    buttonlabelaccept="&insertButton.label;"
+    buttonaccesskeyaccept="&insertButton.accesskey;"
     ondialogaccept="return onAccept();"
     ondialogcancel="return onCancel();">
 

@@ -36,6 +36,9 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY tableWindow.title                "Table Properties">
+<!ENTITY applyButton.label                "Apply">
+<!ENTITY applyButton.accesskey            "A">
+<!ENTITY closeButton.label                "Close">
 <!ENTITY tableTab.label                   "Table">
 <!ENTITY cellTab.label                    "Cells">
 <!ENTITY tableRows.label                  "Rows:">

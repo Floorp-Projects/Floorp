@@ -294,7 +294,10 @@ function SetProgressFinished(filename, networkStatus)
   else if (!filename)
   {
     gFinished = true;
-    gDialog.Close.setAttribute("label", GetString("Close"));
+
+    document.documentElement.setAttribute("buttonlabelcancel",
+      document.documentElement.getAttribute("buttonlabelclose"));
+
     if (!gStatusMessage)
       gStatusMessage = GetString(gPublishingFailed ? "UnknownPublishError" : "AllFilesPublished");
 

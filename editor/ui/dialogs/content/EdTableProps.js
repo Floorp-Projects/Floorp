@@ -292,14 +292,6 @@ function Startup()
 
 function InitDialog()
 {
-// turn on extra1 to be "apply"
-  var applyButton = document.documentElement.getButton("extra1");
-  if (applyButton)
-  {
-    applyButton.label = GetString("Apply");
-    applyButton.setAttribute("accesskey", GetString("ApplyAccessKey"));
-  }
-  
   // Get Table attributes
   gDialog.TableRowsInput.value = gRowCount;
   gDialog.TableColumnsInput.value = gColCount;
@@ -1285,7 +1277,8 @@ function SetCloseButton()
   // Change text on "Cancel" button after Apply is used
   if (!gApplyUsed)
   {
-    document.documentElement.getButton("cancel").setAttribute("label",GetString("Close"));
+    document.documentElement.setAttribute("buttonlabelcancel",
+      document.documentElement.getAttribute("buttonlabelclose"));
     gApplyUsed = true;
   }
 }

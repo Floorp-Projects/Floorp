@@ -49,6 +49,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup()"
         buttons="accept,cancel,help"
+        buttonlabelaccept="&publishButton.label;"
         ondialogaccept="return onAccept();"
         ondialogcancel="return onCancel();"
         ondialoghelp="return doHelpButton();">

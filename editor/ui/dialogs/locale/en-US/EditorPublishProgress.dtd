@@ -51,3 +51,4 @@
 <!ENTITY troubleshooting.accessKey "T">
 
 <!ENTITY keepOpen              "Keep this window open after publishing is complete.">
+<!ENTITY closeButton.label     "Close">

@@ -97,7 +97,6 @@ function Startup()
   }
 
   gDialog.LinksList = document.getElementById("LinksList");
-  gDialog.Close     = document.documentElement.getButton("cancel");
 
   // Set window location relative to parent window (based on persisted attributes)
   SetWindowLocation();
@@ -176,7 +175,6 @@ function LinkCheckTimeOut()
         break;
     }
   }
-  gDialog.Close.setAttribute("label", GetString("Close"));
 }
 
 // Add url to list of links to check

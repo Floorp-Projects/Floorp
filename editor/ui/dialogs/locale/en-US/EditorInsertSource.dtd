@@ -44,3 +44,5 @@
 <!-- LOCALIZATION NOTE (exampleCloseTag.label): DONT_TRANSLATE: they are text for HTML tagnames: "<i>" and "</i>" -->
 <!ENTITY exampleCloseTag.label "&lt;/i&gt;">
 <!ENTITY exampleText.label "Hello World!">
+<!ENTITY insertButton.label "Insert">
+<!ENTITY insertButton.accesskey "I">

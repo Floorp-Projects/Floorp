@@ -47,6 +47,7 @@
 <dialog title=""
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     buttons="cancel"
+    buttonlabelclose="&closeButton.label;"
     onload="Startup()"
     ondialogaccept="return onEnterKey();"
     ondialogcancel="return onClose();">
