@@ -37,6 +37,8 @@
 
 #include <windows.h>
 
+#include "prthread.h"
+
 #include "ipcConfig.h"
 #include "ipcLog.h"
 #include "ipcMessage.h"
@@ -49,12 +51,13 @@
 //
 // declared in ipcdPrivate.h
 //
-ipcClient *ipcClients;
-int        ipcClientCount;
+ipcClient *ipcClients = NULL;
+int        ipcClientCount = 0;
 
 static ipcClient ipcClientArray[IPC_MAX_CLIENTS];
 
-static HWND ipcHwnd;
+static HWND   ipcHwnd = NULL;
+static PRBool ipcShutdown = PR_FALSE;
 
 #define IPC_PURGE_TIMER_ID 1
 #define IPC_WM_SENDMSG  (WM_USER + 1)
@@ -71,7 +74,7 @@ RemoveClient(ipcClient *client)
 
     int clientIndex = client - ipcClientArray;
 
-    client->Finalize(); // XXX pick another name.. 
+    client->Finalize();
 
     //
     // move last ipcClient object down into the spot occupied by this client.
@@ -89,7 +92,8 @@ RemoveClient(ipcClient *client)
     if (ipcClientCount == 0) {
         LOG(("  shutting down...\n"));
         KillTimer(ipcHwnd, IPC_PURGE_TIMER_ID);
-        PostMessage(ipcHwnd, IPC_WM_SHUTDOWN, 0, 0);
+        PostQuitMessage(0);
+        ipcShutdown = PR_TRUE;
     }
 }
 
@@ -142,7 +146,7 @@ AddClient(HWND hwnd, PRUint32 pid)
     ipcClient *client = &ipcClientArray[ipcClientCount];
     client->Init();
     client->SetHwnd(hwnd);
-    client->SetPID(pid);    // XXX one funhction instead of 3
+    client->SetPID(pid);    // XXX one function instead of 3
 
     ++ipcClientCount;
     LOG(("  num clients = %u\n", ipcClientCount));
@@ -167,12 +171,13 @@ GetClientByPID(PRUint32 pid)
 // message processing
 //-----------------------------------------------------------------------------
 
-void
+static void
 ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
 {
     LOG(("ProcessMsg [pid=%u len=%u]\n", pid, msg->MsgLen()));
 
     ipcClient *client = GetClientByPID(pid);
+
     if (client) {
         //
         // if this is an IPCM "client hello" message, then reset the client
@@ -181,15 +186,15 @@ ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
         if (msg->Target().Equals(IPCM_TARGET) &&
             IPCM_GetMsgType(msg) == IPCM_MSG_TYPE_CLIENT_HELLO) {
             RemoveClient(client);
-            client = AddClient(hwnd, pid);
+            client = NULL;
         }
     }
-    else
-        client = AddClient(hwnd, pid);
 
-    // XXX add logging
-    if (client == NULL)
-        return;
+    if (client == NULL) {
+        client = AddClient(hwnd, pid);
+        if (!client)
+            return;
+    }
 
     IPC_DispatchMsg(client, msg);
 }
@@ -225,6 +230,10 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     LOG(("got message [msg=%x wparam=%x lparam=%x]\n", uMsg, wParam, lParam));
 
     if (uMsg == WM_COPYDATA) {
+        if (ipcShutdown) {
+            LOG(("ignoring message b/c daemon is shutting down\n"));
+            return TRUE;
+        }
         COPYDATASTRUCT *cd = (COPYDATASTRUCT *) lParam;
         if (cd && cd->lpData) {
             ipcMessage msg;
@@ -237,18 +246,12 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 //
                 // grab client PID and hwnd.
                 //
-                ProcessMsg((HWND) wParam, cd->dwData, &msg);
+                ProcessMsg((HWND) wParam, (PRUint32) cd->dwData, &msg);
             }
             else
                 LOG(("ignoring malformed message\n"));
         }
         return TRUE;
-    }
-
-    // XXX don't check wParam
-    if (uMsg == WM_TIMER && wParam == IPC_PURGE_TIMER_ID) {
-        PurgeStaleClients();
-        return 0;
     }
 
     if (uMsg == IPC_WM_SENDMSG) {
@@ -265,14 +268,28 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         LOG(("  done.\n"));
 
         delete msg;
-    }
-
-    if (uMsg == IPC_WM_SHUTDOWN) {
-        DestroyWindow(hWnd);  // XXX possibly move out... think about shutdown sync
-        ipcHwnd = NULL;
-        PostQuitMessage(0);
         return 0;
     }
+
+    if (uMsg == WM_TIMER) {
+        PurgeStaleClients();
+        return 0;
+    }
+
+#if 0
+    if (uMsg == IPC_WM_SHUTDOWN) {
+        //
+        // since this message is handled asynchronously, it is possible
+        // that other clients may have come online since this was issued.
+        // in which case, we need to ignore this message.
+        //
+        if (ipcClientCount == 0) {
+            ipcShutdown = PR_TRUE;
+            PostQuitMessage(0);
+        }
+        return 0;
+    }
+#endif
 
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
@@ -307,6 +324,7 @@ static void
 ReleaseLock()
 {
     if (ipcSyncEvent) {
+        LOG(("releasing lock...\n"));
         CloseHandle(ipcSyncEvent);
         ipcSyncEvent = NULL;
     }
@@ -326,13 +344,12 @@ main(int argc, char **argv)
     if (!AcquireLock())
         return 0;
 
-    // XXX add comments
+    // initialize global data
+    memset(ipcClientArray, 0, sizeof(ipcClientArray));
     ipcClients = ipcClientArray;
     ipcClientCount = 0;
 
-    //
     // create message window up front...
-    //
     WNDCLASS wc;
     memset(&wc, 0, sizeof(wc));
     wc.lpfnWndProc = WindowProc;
@@ -345,21 +362,30 @@ main(int argc, char **argv)
     if (!ipcHwnd)
         return -1;
 
-    //
     // load modules
-    //
     IPC_InitModuleReg(argv[0]);
 
-    //
-    // process messages
-    //
     LOG(("entering message loop...\n"));
-
     MSG msg;
     while (GetMessage(&msg, ipcHwnd, 0, 0))
         DispatchMessage(&msg);
 
+    // unload modules
+    IPC_ShutdownModuleReg();
+
+    //
+    // we release the daemon lock before destroying the window because the
+    // absence of our window is what will cause clients to try to spawn the
+    // daemon.
+    //
     ReleaseLock();
+
+    //LOG(("sleeping 5 seconds...\n"));
+    //PR_Sleep(PR_SecondsToInterval(5));
+
+    LOG(("destroying message window...\n"));
+    DestroyWindow(ipcHwnd);
+    ipcHwnd = NULL;
 
     LOG(("exiting\n"));
     return 0;

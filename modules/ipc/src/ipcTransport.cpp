@@ -210,13 +210,14 @@ ipcTransport::Observe(nsISupports *subject, const char *topic, const PRUnichar *
     LOG(("ipcTransport::Observe [topic=%s]\n", topic));
 
     if (strcmp(topic, "timer-callback") == 0) {
-        // 
-        // try reconnecting to the daemon
-        //
-        Shutdown();
-        Connect();
-
         mTimer = nsnull;
+        if (!mHaveConnection) {
+            // 
+            // try reconnecting to the daemon
+            //
+            Shutdown();
+            Connect();
+        }
     }
     else if (strcmp(topic, "xpcom-shutdown") == 0 ||
              strcmp(topic, "profile-change-net-teardown") == 0)

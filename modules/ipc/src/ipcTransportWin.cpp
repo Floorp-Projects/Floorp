@@ -60,12 +60,12 @@
 #define IPC_WM_SHUTDOWN   (WM_USER + 0x2)
 
 static nsresult       ipcThreadStatus = NS_OK;
-static PRThread      *ipcThread;
-static PRMonitor     *ipcMonitor;
-static nsIEventQueue *ipcEventQ;
-static HWND           ipcDaemonHwnd;
-static HWND           ipcHwnd;       // not accessed on message thread!!
-static ipcTransport  *ipcTrans;      // not accessed on message thread!!
+static PRThread      *ipcThread = NULL;
+static PRMonitor     *ipcMonitor = NULL;
+static nsIEventQueue *ipcEventQ = NULL;
+static HWND           ipcDaemonHwnd = NULL;
+static HWND           ipcLocalHwnd = NULL;  // not accessed on message thread!!
+static ipcTransport  *ipcTrans = NULL;      // not accessed on message thread!!
 
 //-----------------------------------------------------------------------------
 // event proxy to main thread
@@ -164,8 +164,6 @@ ipcThreadWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 
     if (uMsg == IPC_WM_SHUTDOWN) {
-        DestroyWindow(hWnd);
-        ipcHwnd = NULL;
         PostQuitMessage(0);
         return 0;
     }
@@ -193,21 +191,24 @@ ipcThreadFunc(void *arg)
     char wName[sizeof(IPC_CLIENT_WINDOW_NAME_PREFIX) + 20];
     PR_snprintf(wName, sizeof(wName), "%s%u", IPC_CLIENT_WINDOW_NAME_PREFIX, pid);
 
-    ipcHwnd = CreateWindow(IPC_CLIENT_WINDOW_CLASS, wName,
-                           0, 0, 0, 10, 10, NULL, NULL, NULL, NULL);
+    ipcLocalHwnd = CreateWindow(IPC_CLIENT_WINDOW_CLASS, wName,
+                                0, 0, 0, 10, 10, NULL, NULL, NULL, NULL);
 
     {
         nsAutoMonitor mon(ipcMonitor);
-        if (!ipcHwnd)
+        if (!ipcLocalHwnd)
             ipcThreadStatus = NS_ERROR_FAILURE;
         mon.Notify();
     }
 
-    if (ipcHwnd) {
+    if (ipcLocalHwnd) {
         MSG msg;
-        while (GetMessage(&msg, ipcHwnd, 0, 0))
+        while (GetMessage(&msg, ipcLocalHwnd, 0, 0))
             DispatchMessage(&msg);
     }
+
+    DestroyWindow(ipcLocalHwnd);
+    ipcLocalHwnd = NULL;
 
     LOG(("exiting message thread\n"));
     return;
@@ -240,7 +241,7 @@ ipcThreadInit(ipcTransport *transport)
     // wait for hidden window to be created
     {
         nsAutoMonitor mon(ipcMonitor);
-        while (!ipcHwnd && NS_SUCCEEDED(ipcThreadStatus))
+        while (!ipcLocalHwnd && NS_SUCCEEDED(ipcThreadStatus))
             mon.Wait();
     }
 
@@ -255,8 +256,7 @@ ipcThreadInit(ipcTransport *transport)
 static PRStatus
 ipcThreadShutdown()
 {
-    PostMessage(ipcHwnd, IPC_WM_SHUTDOWN, 0, 0);
-    ipcHwnd = NULL; // don't access this anymore
+    PostMessage(ipcLocalHwnd, IPC_WM_SHUTDOWN, 0, 0);
 
     PR_JoinThread(ipcThread);
     ipcThread = NULL;
@@ -287,6 +287,8 @@ ipcTransport::Shutdown()
     if (ipcThread)
         ipcThreadShutdown();
 
+    // clear our reference to the daemon's HWND.
+    ipcDaemonHwnd = NULL;
     return NS_OK;
 }
 
@@ -323,7 +325,16 @@ ipcTransport::Connect()
     SendMsg_Internal(new ipcmMessageClientHello());
     mSentHello = PR_TRUE;
 
-    return NS_OK;
+    //
+    // begin a timer.  if the timer fires before we get a CLIENT_ID, then
+    // assume the connection attempt failed.
+    //
+    nsresult rv;
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = mTimer->Init(this, 1000, nsITimer::TYPE_ONE_SHOT);
+
+    return rv;
 }
 
 nsresult
@@ -331,10 +342,9 @@ ipcTransport::SendMsg_Internal(ipcMessage *msg)
 {
     LOG(("ipcTransport::SendMsg_Internal\n"));
 
-    NS_ENSURE_TRUE(ipcDaemonHwnd, NS_ERROR_NOT_INITIALIZED);
-    NS_ENSURE_TRUE(ipcHwnd, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_TRUE(ipcLocalHwnd, NS_ERROR_NOT_INITIALIZED);
 
-    if (!PostMessage(ipcHwnd, IPC_WM_SENDMSG, 0, (LPARAM) msg)) {
+    if (!PostMessage(ipcLocalHwnd, IPC_WM_SENDMSG, 0, (LPARAM) msg)) {
         LOG(("  PostMessage failed w/ error = %u\n", GetLastError()));
         delete msg;
         return NS_ERROR_FAILURE;
