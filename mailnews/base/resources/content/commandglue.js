@@ -223,6 +223,7 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection, viewType)
 	}
 	catch(ex)
 	{
+        SetBusyCursor(window, false);
         dump("Error loading with many headers to download: " + ex + "\n");
 	}
   }
