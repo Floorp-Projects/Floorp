@@ -30,7 +30,7 @@
  * Use: map the handler functions to the 'ondraggesture', 'ondragover' and 
  *      'ondragdrop' event handlers on your XML element, e.g.
  *      <xmlelement ondraggesture="nsDragAndDrop.startDrag(event, observer);"
- *                  ondragover="nsDragAndDrop.startDrag(event, observer);"
+ *                  ondragover="nsDragAndDrop.dragOver(event, observer);"
  *                  ondragdrop="nsDragAndDrop.drop(event, observer);"/>
  *
  *      You need to create an observer js object with the following member
