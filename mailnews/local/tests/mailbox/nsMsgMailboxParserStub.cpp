@@ -82,9 +82,7 @@ NS_IMETHODIMP nsMsgMailboxParserStub::OnStatus(nsIURL* aURL, const PRUnichar* aM
 {
 	printf("\n+++ nsMsgMailboxParserStub::OnStatus: ");
     nsString str(aMsg);
-    char* c = str.ToNewCString();
-    fputs(c, stdout);
-    delete [] c;
+    fputs(nsAutoCString(str), stdout);
     fputs("\n", stdout);
     
     return 0;
