@@ -47,7 +47,6 @@ public:
 	nsWindow*		GetFocus() {return(mFocusedWidget);}
 
 private:
-	static PRBool		mInit;
 	static nsWindow*	mFocusedWidget;
 
 };

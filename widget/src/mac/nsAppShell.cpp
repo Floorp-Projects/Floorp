@@ -31,8 +31,17 @@
 #include "nsMacMessageSink.h"	//еее until this is moved into webshell(?)
 #include "nsMacMessagePump.h"
 #include "nsToolKit.h"
+#include <Quickdraw.h>
+#include <Fonts.h>
+#include <TextEdit.h>
+#include <Dialogs.h>
+#include <Traps.h>
+#include <Events.h>
+#include <Menus.h>
 
 #include <stdlib.h>
+
+PRBool nsAppShell::mInitializedToolbox = PR_FALSE;
 
 
 //-------------------------------------------------------------------------
@@ -112,6 +121,19 @@ NS_IMETHODIMP nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 { 
+	// once only, macintosh specific initialization
+	if (mInitializedToolbox == PR_FALSE)
+	{
+		mInitializedToolbox = PR_TRUE;
+		InitGraf(&qd.thePort);
+		InitFonts();
+		InitWindows();
+		InitMenus();
+		TEInit();
+		InitDialogs(0);
+		InitCursor();	
+	}
+
   mRefCnt = 0;
   mExitCalled = PR_FALSE;
 }
