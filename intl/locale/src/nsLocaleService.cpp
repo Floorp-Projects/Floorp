@@ -44,6 +44,7 @@
 #include "nsIComponentManager.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "prprf.h"
 
 #include <ctype.h>
 
@@ -432,7 +433,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
       qvalue[countLang] = 1.0f;
       /* add extra parens to get rid of warning */
       if ((cPtr1 = strchr(cPtr,';')) != nsnull) {
-        sscanf(cPtr1,";q=%f",&qvalue[countLang]);
+        PR_sscanf(cPtr1,";q=%f",&qvalue[countLang]);
         *cPtr1 = '\0';
       }
       if (strlen(cPtr)<NSILOCALE_MAX_ACCEPT_LANGUAGE) {     /* ignore if too long */

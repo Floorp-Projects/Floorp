@@ -1,3 +1,5 @@
+
+#include "prprf.h"
 #include "nsReadableUtils.h"
 #include "mozSqlResultPgsql.h"
 
@@ -38,7 +40,7 @@ mozSqlResultPgsql::GetColType(PRInt32 aColumnIndex)
   for (PRInt32 i = 0; i < PQntuples(mTypes); i++) {
     char* value = PQgetvalue(mTypes, i, 0);
     PRInt32 o;
-    sscanf(value, "%d", &o);
+    PR_sscanf(value, "%d", &o);
     if (o == oid) {
       char* type = PQgetvalue(mTypes, i, 1);
       if (! strcmp(type, "int2"))
@@ -106,11 +108,11 @@ mozSqlResultPgsql::BuildRows()
         if (type == mozISqlResult::TYPE_STRING)
           cell->SetString(ToNewUnicode(NS_ConvertUTF8toUCS2(value)));
         else if (type == mozISqlResult::TYPE_INT)
-          sscanf(value, "%d", &cell->mInt);
+          PR_sscanf(value, "%d", &cell->mInt);
         else if (type == mozISqlResult::TYPE_FLOAT)
-          sscanf(value, "%f", &cell->mFloat);
+          PR_sscanf(value, "%f", &cell->mFloat);
         else if (type == mozISqlResult::TYPE_DECIMAL)
-          sscanf(value, "%f", &cell->mFloat);
+          PR_sscanf(value, "%f", &cell->mFloat);
         else if (type == mozISqlResult::TYPE_DATE ||
                  type == mozISqlResult::TYPE_TIME ||
                  type == mozISqlResult::TYPE_DATETIME)

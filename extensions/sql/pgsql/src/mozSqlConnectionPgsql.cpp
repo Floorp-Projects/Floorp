@@ -210,7 +210,7 @@ mozSqlConnectionPgsql::RealExec(const nsAString& aQuery,
   else if (stat == PGRES_COMMAND_OK) {
     if (!aAffectedRows)
       return NS_ERROR_NULL_POINTER;
-    sscanf(PQcmdTuples(r), "%d", aAffectedRows);
+    PR_sscanf(PQcmdTuples(r), "%d", aAffectedRows);
     mLastID = PQoidValue(r);
   }
   else {
