@@ -18,31 +18,3 @@
 
 // Unimplemented code temporarily lives here
 
-#include "fe_proto.h"
-#include "xp_file.h"
-#include "prlog.h"
-
-
-/* Netlib utility routine, should be ripped out */
-void	FE_FileType(char * path, Bool * useDefault, char ** fileType, char ** encoding)
-{
-	if ((path == NULL) || (fileType == NULL) || (encoding == NULL))
-		return;
-
-	*useDefault = TRUE;
-	*fileType = NULL;
-	*encoding = NULL;
-}
-
-#include "mcom_db.h"
-DB * dbopen(const char *fname, int flags,int mode, DBTYPE type, const void *openinfo)
-{
-	PR_ASSERT(FALSE);
-	return NULL;
-}
-
-char * XP_FileReadLine(char * dest, int32 bufferSize, XP_File file)
-{
-	PR_ASSERT(FALSE);
-	return NULL;
-}
