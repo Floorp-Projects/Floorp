@@ -152,7 +152,7 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
   appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
-                               nsnull, nsnull, 615, 650);
+                               nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
   if (window != nsnull)
@@ -186,7 +186,7 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
   appShell->CreateTopLevelWindow(parent, urlObj, controllerCID, window,
-                               nsnull, nsnull, 615, 650);
+                               nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
   if (window != nsnull)
@@ -220,7 +220,7 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
   appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
-                               nsnull, nsnull, 615, 650);
+                               nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
   if (window != nsnull) {
