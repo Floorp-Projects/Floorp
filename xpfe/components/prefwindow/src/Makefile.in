@@ -22,8 +22,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=mozsampl
-LIBRARY_NAME=mozsampl
+MODULE=prefwindow
+LIBRARY_NAME=prefwindow
 IS_COMPONENT=1
 CPPSRCS= \
 		nsPrefWindow.cpp \
