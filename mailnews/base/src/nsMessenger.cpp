@@ -398,8 +398,6 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
 			docLoaderListener->SetWebShell(mWebShell, mWindow);
 			mWebShell->SetDocLoaderObserver(m_docLoaderObserver);
 
-			nsresult rv;
-
 			NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
 
 			if(NS_SUCCEEDED(rv))
@@ -409,7 +407,6 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
 	}
     NS_RELEASE(rootWebShell);
   }
-
 
   NS_RELEASE(webShell);
 
