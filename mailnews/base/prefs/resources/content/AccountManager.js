@@ -608,7 +608,7 @@ function getFormElementValue(formElement) {
     if (formElement.value) {
       var localfile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 
-      localfile.unicodePath = formElement.value;
+      localfile.initWithUnicodePath(formElement.value);
       return localfile;
     }
     else {
