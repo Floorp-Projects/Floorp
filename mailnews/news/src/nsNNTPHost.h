@@ -21,6 +21,8 @@
 
 #include "nsINNTPHost.h"
 
+#include "msgCore.h"    // precompiled header...
+
 /* some platforms (like Windows and Mac) use a map file, because of
  * file name length limitations. */
 #ifndef XP_UNIX
@@ -30,8 +32,6 @@
 #error do_you_need_a_newsrc_map_file
 #endif /* XP_MAC || XP_WIN */
 #endif /* XP_UNIX */
-
-#include "msgCore.h"    // precompiled header...
 
 #include "nsMsgFolderFlags.h"
 
