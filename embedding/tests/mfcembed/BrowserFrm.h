@@ -40,16 +40,16 @@
 class CUrlBar : public CComboBoxEx
 {
 public:
-	inline GetEnteredURL(CString& url) {
+	inline void GetEnteredURL(CString& url) {
 		GetEditCtrl()->GetWindowText(url);
 	}
-	inline GetSelectedURL(CString& url) {
+	inline void GetSelectedURL(CString& url) {
 		GetLBText(GetCurSel(), url);
 	}
-	inline SetCurrentURL(LPCTSTR pUrl) {
+	inline void SetCurrentURL(LPCTSTR pUrl) {
 		SetWindowText(pUrl);
 	}
-	inline AddURLToList(CString& url, bool bAddToMRUList = true) {
+	inline void AddURLToList(CString& url, bool bAddToMRUList = true) {
 		COMBOBOXEXITEM ci;
 		ci.mask = CBEIF_TEXT; ci.iItem = -1;
 		ci.pszText = (LPTSTR)(LPCTSTR)url;
@@ -58,7 +58,7 @@ public:
         if(bAddToMRUList)
             m_MRUList.AddURL((LPTSTR)(LPCTSTR)url);
 	}
-    inline LoadMRUList() {
+    inline void LoadMRUList() {
         for (int i=0;i<m_MRUList.GetNumURLs();i++) 
         {
             CString urlStr(_T(m_MRUList.GetURL(i)));
