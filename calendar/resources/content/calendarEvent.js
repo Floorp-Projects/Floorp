@@ -97,21 +97,15 @@
 
 function CalendarEventDataSource( observer, UserPath, syncPath )
 {
-      var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
-            
-      if( !iCalLibComponent )
-      {
-         alert( "The ICAL Componenet is not registered properly. Please quit Mozilla, remove your component.reg file and restart Mozilla." );
-         return;
+      try {
+          var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
+      } catch ( e ) {
+          alert( "The ICAL Componenet is not registered properly. Please file a bug at http://bugzilla.mozilla.org and add in the following information.\nError returned:"+e+"\n" );
+          return;
       }
-
+            
       this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
         
-      if( !this.gICalLib )
-      {
-         alert( "The ICAL Componenet is not registered properly. Please quit Mozilla, remove your component.reg file and restart Mozilla." );
-         return;
-      }
       /*
       ** FROM HERE TO "<<HERE" IS A HACK FROM JSLIB, REPLACE THIS IF YOU KNOW HOW
       */
@@ -362,7 +356,7 @@ CalendarEventDataSource.prototype.getEventsForMonth = function( date )
    }
 
    eventDisplays.sort( this.orderEventsByDate );
-
+   
    return eventDisplays;
 }
 
@@ -560,14 +554,6 @@ CalendarAlarmObserver.prototype.firePendingAlarms = function( observer )
     
 }
 
-CalendarAlarmObserver.prototype.onStartBatch = function()
-{
-}
-
-CalendarAlarmObserver.prototype.onEndBatch = function()
-{
-}
-
 CalendarAlarmObserver.prototype.onLoad = function( calendarEvent )
 {
 }
@@ -587,7 +573,7 @@ CalendarAlarmObserver.prototype.onDeleteItem = function( calendarEvent )
 
 CalendarAlarmObserver.prototype.onAlarm = function( calendarEvent )
 {
-    debug( "caEvent.alarmWentOff is "+ calendarEvent );
+   debug( "caEvent.alarmWentOff is "+ calendarEvent );
     
     if( this.addToPending )
     {
@@ -617,7 +603,7 @@ CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
 }
 
 
-function debug(str )
+function debug( str )
 {
     dump( "\n CalendarEvent.js DEBUG: "+ str + "\n");
 }
