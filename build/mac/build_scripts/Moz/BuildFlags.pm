@@ -1,4 +1,4 @@
-
+#!perl -w
 package Moz::BuildFlags;
 
 require 5.004;
@@ -45,11 +45,18 @@ my($progress_file) = "¥ÊBuild progress";
 # 
 # Set a flag in the array
 #-------------------------------------------------------------------------------
-sub appendArrayFlag($$$)
+sub appendArrayFlag(@)
 {
-  my($array_name, $setting, $value) = @_;
+  my($array_name) = shift;
+  my($setting) = shift;
+  my($value) = shift;
   
-  my(@this_flag) = [$setting, $value];
+  my(@optional_values);
+  foreach (@_) {
+    push(@optional_values, $_);
+  }
+
+  my(@this_flag) = [$setting, $value, @optional_values];
   my($flags_array) = $arrays_list{$array_name};
   if ($flags_array)
   {
@@ -104,12 +111,11 @@ sub readFlagsFile($)
         
         appendArrayFlag($cur_array, $flag, $setting);
       }
-      elsif ($line =~ /^([^#\s]+)\s+([^#\s]+)(\s+#.+)?$/)   # two-word line, possible comment
+      elsif ($line =~ /^([^#\s]+)((\s+[^#\s]+)+)(\s+#.+)?$/)  # multiple word line, possible comment
       {
         my($flag) = $1;
-        my($setting) = $2;
         
-        appendArrayFlag($cur_array, $flag, $setting);
+        appendArrayFlag($cur_array, $flag, split(' ', $2));
       }
       else
       {
@@ -215,17 +221,12 @@ sub SetOptionDefines($)
 {
   my($optiondefines) = @_;
 
-  # These should remain unchanged
-  $optiondefines->{"mathml"}{"MOZ_MATHML"}    = 1;
-  $optiondefines->{"svg"}{"MOZ_SVG"}          = 1;
-  $optiondefines->{"carbon"}{"TARGET_CARBON"} = 1;
-  $optiondefines->{"cache"}{"MOZ_NEW_CACHE"}  = 1;
-  $optiondefines->{"soap"}{"MOZ_SOAP"}        = 1;
-  $optiondefines->{"lowmem"}{"MOZ_MAC_LOWMEM"} = 1;
-  $optiondefines->{"ldap_experimental"}{"MOZ_LDAP_XPCOM_EXPERIMENTAL"} = 1;
-  $optiondefines->{"useimg2"}{"USE_IMG2"}     = 1;
-  $optiondefines->{"bidi"}{"IBMBIDI"}         = 1;
-  $optiondefines->{"ldap"}{"MOZ_LDAP_XPCOM"}  = 1;
+  foreach my $entry (@options_flags)
+  {
+    if (defined($entry->[2])) {
+      $optiondefines->{$entry->[0]}{$entry->[2]} = 1;
+    }
+  }
 }
 
 

@@ -39,13 +39,13 @@ chrome_jars     1
 chrome_files    0
 use_jars        1
 transformiix    1
-mathml          0
-svg             0
+mathml          0      MOZ_MATHML
+svg             0      MOZ_SVG
 mng             1
-ldap            1
-ldap_experimental 0
+ldap            1      MOZ_LDAP_XPCOM
+ldap_experimental 0    MOZ_LDAP_XPCOM_EXPERIMENTAL
 xmlextras       1
-soap            0
+soap            0      MOZ_SOAP
 vixen           0
 inspector       0
 mailextras      1
@@ -53,12 +53,12 @@ xptlink         0
 psm             0
 psm2            0
 embedding_test  1
-carbon          0
-cache           1
-useimg2         1
-lowmem          0
+carbon          0      TARGET_CARBON
+cache           1      MOZ_NEW_CACHE
+useimg2         1      USE_IMG2
+lowmem          0      MOZ_MAC_LOWMEM
 accessible      1
-bidi            1
+bidi            1      IBMBIDI
 p3p             0
 jsdebugger      0
 moz_logging     1
