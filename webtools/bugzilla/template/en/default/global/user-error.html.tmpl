@@ -917,10 +917,6 @@
     [% title = "Query Name Too Long" %]
     The name of the query must be less than 64 characters long.
 
-  [% ELSIF error == "quips_disabled" %]
-    [% title = "Quips Disabled" %]
-    Quips are disabled.
-
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]
     To reassign [% terms.abug %], you must provide an address for

@@ -57,7 +57,7 @@
     <p>[% query FILTER html %]</p>
   [% END %]
 
-  [% IF Param('enablequips') != 'off' %]
+  [% IF user.settings.display_quips.value == 'on' %]
     [% DEFAULT quip = "$terms.Bugzilla would like to put a random quip here, but no one has entered any." %]
     <a href="quips.cgi"><i>[% quip FILTER html %]</i></a>
   [% END %]

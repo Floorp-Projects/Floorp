@@ -390,16 +390,16 @@ sub find_languages {
   },
 
   {
-   name => 'enablequips',
-   desc => 'Controls the appearance of quips at the top of buglists.<ul> ' .
-           '<li>on - Bugzilla will display a quip, and lets users add to ' .
-           'the list.</li><li>approved - quips can be entered, but need ' .
-           'be approved before shown</li><li>frozen - Bugzilla will display ' .
-           'a quip but not permit new additions.</li><li>off - Bugzilla ' .
-           'will not display quips.</li></ul>',
+   name => 'quip_list_entry_control',
+   desc => 'Controls how easily users can add entries to the quip list.' .
+           '<ul><li>open - Users may freely add to the quip list, and ' .
+           'their entries will immediately be available for viewing.</li>' .
+           '<li>moderated - quips can be entered, but need to be approved ' .
+           'by an admin before they will be shown</li><li>closed - no new ' .
+           'additions to the quips list are allowed.</li></ul>',
    type => 's',
-   choices => ['on', 'approved', 'frozen', 'off'],
-   default => 'on',
+   choices => ['open', 'moderated', 'closed'],
+   default => 'open',
    checker => \&check_multi
   },
 

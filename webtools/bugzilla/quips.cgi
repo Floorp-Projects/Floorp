@@ -41,10 +41,6 @@ Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 
-if (Param('enablequips') eq "off") {
-    ThrowUserError("quips_disabled");
-}
-    
 my $action = $cgi->param('action') || "";
 
 if ($action eq "show") {
@@ -75,12 +71,12 @@ if ($action eq "show") {
 }
 
 if ($action eq "add") {
-    (Param('enablequips') eq "on" or Param('enablequips') eq "approved")
-      || ThrowUserError("no_new_quips");
-    
+    (Param('quip_list_entry_control') eq "closed") &&
+      ThrowUserError("no_new_quips");
+
     # Add the quip 
-    my $approved = (Param('enablequips') eq "on") ? '1' : '0';
-    $approved = 1 if(UserInGroup('admin'));
+    my $approved = 
+      (Param('quip_list_entry_control') eq "open") || (UserInGroup('admin')) || 0;
     my $comment = $cgi->param("quip");
     $comment || ThrowUserError("need_quip");
     $comment !~ m/</ || ThrowUserError("no_html_in_quips");

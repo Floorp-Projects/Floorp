@@ -4136,6 +4136,9 @@ if (!defined $dbh->bz_get_index_def('bugs_activity','who')) {
     $dbh->do('ALTER TABLE bugs_activity ADD INDEX (who)');
 }
 
+# 2005-03-03 travis@sedsystems.ca -- Bug 41972
+add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
+
 #
 # Final checks...
 

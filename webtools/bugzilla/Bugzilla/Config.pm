@@ -237,6 +237,19 @@ sub UpdateParams {
         delete $param{'loginmethod'};
     }
 
+    # Remove quip-display control from parameters
+    # and give it to users via User Settings (Bug 41972)
+    if ( exists $param{'enablequips'} 
+         && !exists $param{'quip_list_entry_control'}) 
+    {
+        my $new_value;
+        ($param{'enablequips'} eq 'on')       && do {$new_value = 'open';};
+        ($param{'enablequips'} eq 'approved') && do {$new_value = 'moderated';};
+        ($param{'enablequips'} eq 'frozen')   && do {$new_value = 'closed';};
+        $param{'quip_list_entry_control'} = $new_value;
+        delete $param{'enablequips'};
+    }
+
     # --- DEFAULTS FOR NEW PARAMS ---
 
     foreach my $item (@param_list) {

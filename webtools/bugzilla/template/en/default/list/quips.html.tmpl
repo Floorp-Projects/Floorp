@@ -37,7 +37,7 @@
   <p>
     <font color="red">
       Your quip '<tt>[% added_quip FILTER html %]</tt>' has been added.
-      [% IF Param("enablequips") == "approved" AND !user.groups.admin %]
+      [% IF Param("quip_list_entry_control") == "moderated" AND !user.groups.admin %]
         It will be used as soon as it gets approved.
       [% END %]
     </font>
@@ -60,7 +60,7 @@
   [% terms.Bugzilla %] will pick a random quip for the headline on each [% terms.bug %] list, and
   you can extend the quip list. Type in something clever or funny or boring
   (but not obscene or offensive, please) and bonk on the button.
-  [% IF Param("enablequips") == "approved" AND !user.groups.admin %]
+  [% IF Param("quip_list_entry_control") == "moderated" AND !user.groups.admin %]
     Note that your quip has to be approved before it is used.
   [% END %]
 </p>
@@ -88,8 +88,8 @@
     <h2>Edit existing quips:</h2>
     <p>
       <strong>Note:</strong> Only approved quips will be shown.
-      If enablequips is set to <q>on</q>, entered quips are automatically
-      approved.
+      If the parameter 'quip_list_entry_control' is set to <q>open</q>, 
+      entered quips are automatically approved.
     </p>
     <form name="editform" method="post" action="quips.cgi">
       <input type="hidden" name="action" value="approve">
