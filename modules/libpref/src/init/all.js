@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 
-// SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
+// SYNTAX HINTS:  dashes are delimiters.  Use underscores instead. 
 //  The first character after a period must be alphabetic.
 
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
