@@ -34,7 +34,7 @@
 /*
  * CMS attributes.
  *
- * $Id: cmsattr.c,v 1.6 2003/09/19 04:14:50 jpierre%netscape.com Exp $
+ * $Id: cmsattr.c,v 1.7 2003/12/02 05:05:30 jpierre%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -217,9 +217,12 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
 
     attribute = (NSSCMSAttribute *)src_or_dest;
 
-    if (encoding && attribute->encoded)
-	/* we're encoding, and the attribute value is already encoded. */
-	return SEC_ASN1_GET(SEC_AnyTemplate);
+    if (encoding && (!attribute->values || !attribute->values[0] ||
+        attribute->encoded)) {
+        /* we're encoding, and the attribute has no value or the attribute
+         * value is already encoded. */
+       return SEC_ASN1_GET(SEC_AnyTemplate);
+    }
 
     /* get attribute's typeTag */
     oiddata = attribute->typeTag;
