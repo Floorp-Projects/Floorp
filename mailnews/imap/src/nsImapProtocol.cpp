@@ -5123,12 +5123,17 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
   {
     command.Append(" append \"");
     command.Append(escapedName);
-    command.Append("\" (");
+    command.Append("\"");
+    if (flags)
+    {
+      command.Append(" (");
     
-    SetupMessageFlagsString(flagString, flags,
-      GetServerStateParser().SupportsUserFlags());
-    command.Append(flagString);
-    command.Append(") {");
+      SetupMessageFlagsString(flagString, flags,
+        GetServerStateParser().SupportsUserFlags());
+      command.Append(flagString);
+      command.Append(")");
+    }
+    command.Append(" {");
     
     dataBuffer = (char*) PR_CALLOC(COPY_BUFFER_SIZE+1);
     if (!dataBuffer) goto done;
