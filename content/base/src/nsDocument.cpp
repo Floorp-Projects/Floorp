@@ -4234,7 +4234,9 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
   }
 
   if (!have_contentLanguage) {
-    mContentLanguage = nsContentUtils::GetCharPref("intl.accept_languages");
+    const nsAdoptingString& defLanguage =
+      nsContentUtils::GetLocalizedStringPref("intl.accept_languages");
+    CopyUTF16toUTF8(defLanguage, mContentLanguage);
   }
 }
 
