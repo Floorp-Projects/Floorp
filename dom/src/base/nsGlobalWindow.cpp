@@ -2671,7 +2671,7 @@ NS_IMETHODIMP GlobalWindowImpl::Activate()
   guiEvent.point.y = 0;
   guiEvent.time = PR_IntervalNow();
   guiEvent.nativeMsg = nsnull;
-  guiEvent.message = NS_DEACTIVATE;
+  guiEvent.message = NS_ACTIVATE;
   guiEvent.widget = widget;
 
   vm->DispatchEvent(&guiEvent, &status);
