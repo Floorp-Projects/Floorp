@@ -45,6 +45,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsILayoutDebugger.h"
 #include "nsIHTMLElementFactory.h"
+#include "nsIDocumentEncoder.h"
 #include "nsCOMPtr.h"
 
 class nsIDocumentLoaderFactory;
@@ -77,6 +78,7 @@ static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
+static NS_DEFINE_CID(kHTMLEncoderCID, NS_HTML_ENCODER_CID);
 
 extern nsresult NS_NewRangeList(nsIDOMSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
@@ -87,6 +89,7 @@ extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 extern nsresult NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 extern nsresult NS_NewHTMLElementFactory(nsIHTMLElementFactory** aResult);
+extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
 
 ////////////////////////////////////////////////////////////
 
@@ -371,6 +374,14 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewHTMLElementFactory((nsIHTMLElementFactory**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewHTMLElementFactory", res);
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kHTMLEncoderCID)) {
+    res = NS_NewHTMLEncoder((nsIDocumentEncoder**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewHTMLEncoder", res);
       return res;
     }
     refCounted = PR_TRUE;
@@ -688,6 +699,12 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
       LOG_REGISTER_FAILURE("kHTMLElementFactoryCID", rv);
       break;
     }
+    rv = cm->RegisterComponent(kHTMLEncoderCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kHTMLEncoderCID", rv);
+      break;
+    }
     break;
   } while (PR_FALSE);
 
@@ -733,7 +750,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
   rv = cm->UnregisterComponent(kSubtreeIteratorCID, aPath);
   rv = cm->UnregisterComponent(kFrameUtilCID, aPath);
   rv = cm->UnregisterComponent(kLayoutDebuggerCID, aPath);
-  rv = cm->UnregisterComponent(kHTMLElementFactoryCID, aPath);
+  rv = cm->UnregisterComponent(kHTMLEncoderCID, aPath);
 
 // XXX why the heck are these exported???? bad bad bad bad
 #if 1

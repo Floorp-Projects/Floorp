@@ -23,8 +23,15 @@
 #include "nsIContent.h"
 #include "nsFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDOMSelection.h"
+#include "nsXIFConverter.h"
+#include "nsIDocument.h"
+#include "nsIEnumerator.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMRange.h"
 
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
+static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 
 class nsCommentNode : public nsIDOMComment,
                       public nsIScriptObjectOwner,
@@ -53,7 +60,104 @@ public:
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
+  //NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
+
+  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
+    return mInner.GetDocument(aResult);
+  }
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep) {
+    return mInner.SetDocument(aDocument, aDeep);
+  }
+  NS_IMETHOD GetParent(nsIContent*& aResult) const {
+    return mInner.GetParent(aResult);
+  }
+  NS_IMETHOD SetParent(nsIContent* aParent) {
+    return mInner.SetParent(aParent);
+  }
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const {
+    return mInner.CanContainChildren(aResult);
+  }
+  NS_IMETHOD ChildCount(PRInt32& aResult) const {
+    return mInner.ChildCount(aResult);
+  }
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
+    return mInner.ChildAt(aIndex, aResult);
+  }
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
+    return mInner.IndexOf(aPossibleChild, aResult);
+  }
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                           PRBool aNotify) {
+    return mInner.InsertChildAt(aKid, aIndex, aNotify);
+  }
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                            PRBool aNotify) {
+    return mInner.ReplaceChildAt(aKid, aIndex, aNotify);
+  }
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) {
+    return mInner.AppendChildTo(aKid, aNotify);
+  }
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
+    return mInner.RemoveChildAt(aIndex, aNotify);
+  }
+  NS_IMETHOD IsSynthetic(PRBool& aResult) {
+    return mInner.IsSynthetic(aResult);
+  }
+  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const {
+    return mInner.GetNameSpaceID(aID);
+  }
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+  NS_IMETHOD ParseAttributeString(const nsString& aStr,
+                                  nsIAtom*& aName,
+                                  PRInt32& aNameSpaceID) {
+    return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);
+  }
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
+                                nsIAtom*& aPrefix) {
+    return mInner.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);
+  }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                          nsString &aResult) const {
+    return mInner.GetAttribute(aNameSpaceID, aAttribute, aResult);
+  }
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                          const nsString& aValue, PRBool aNotify) {
+    return mInner.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);
+  }
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                            PRBool aNotify) {
+    return mInner.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);
+  }
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
+                                PRInt32& aNameSpaceID,
+                                nsIAtom*& aName) const {
+    return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName);
+  }
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {
+    return mInner.GetAttributeCount(aResult);
+  }
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {
+    return mInner.BeginConvertToXIF(aConverter);
+  }
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {
+    return mInner.FinishConvertToXIF(aConverter);
+  }
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+                            nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus& aEventStatus);
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange){
+    return mInner.RangeAdd(aRange);
+  }
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange){
+    return mInner.RangeRemove(aRange);
+  }
+  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {
+    return mInner.GetRangeList(aResult);
+  }                                                                        
 
 protected:
   nsGenericDOMDataNode mInner;
@@ -147,8 +251,8 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
 
-  PRInt32 index;
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  PRInt32 indx;
+  for (indx = aIndent; --indx >= 0; ) fputs("  ", out);
 
   fprintf(out, "Comment refcount=%d<", mRefCnt);
 
@@ -183,3 +287,84 @@ NS_NewCommentFrame(nsIFrame*& aResult)
   aResult = frame;
   return NS_OK;
 }
+
+/**
+ * Translate the content object into the (XIF) XML Interchange Format
+ * XIF is an intermediate form of the content model, the buffer
+ * will then be parsed into any number of formats including HTML, TXT, etc.
+ */
+nsresult
+nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
+{
+  const nsIContent* content = this;
+  nsIDOMSelection* sel = aConverter.GetSelection();
+
+  nsIDocument* document;
+  nsresult res;
+  res = GetDocument(document);
+  if (!NS_SUCCEEDED(res))
+    return res;
+
+  nsTextFragment* textFrag;
+  PRInt32 numFragments;
+  res = mInner.GetText(textFrag, numFragments);
+  if (!NS_SUCCEEDED(res))
+    return res;
+#ifdef DEBUG_akkana
+  if (numFragments == 0)
+    printf("numFragments is zero!  Go figure!\n");
+#endif
+  if (sel != nsnull && document->IsInSelection(sel,content))
+  {
+    nsIEnumerator *enumerator;
+    if (NS_SUCCEEDED(sel->QueryInterface(kIEnumeratorIID, (void **)&enumerator))) {
+      for (enumerator->First();NS_OK != enumerator->IsDone(); enumerator->Next()) {
+        nsIDOMRange* range = nsnull;
+        if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range))) {
+      
+          nsCOMPtr<nsIDOMNode> startNode;
+          nsCOMPtr<nsIDOMNode> endNode;
+          PRInt32 startOffset = 0;
+          PRInt32 endOffset = 0;
+
+          range->GetStartParent(getter_AddRefs(startNode));
+          range->GetEndParent(getter_AddRefs(endNode));
+
+          range->GetStartOffset(&startOffset);
+          range->GetEndOffset(&endOffset);
+
+          nsCOMPtr<nsIContent> startContent;
+          nsCOMPtr<nsIContent> endContent;
+          startContent = do_QueryInterface(startNode);
+          endContent = do_QueryInterface(endNode);
+
+
+          nsString  buffer;
+          textFrag->AppendTo(buffer);
+          if (startContent.get() == content || endContent.get() == content)
+          { 
+            // NOTE: ORDER MATTERS!
+            // This must go before the Cut
+            if (endContent.get() == content)
+              buffer.Truncate(endOffset);            
+      
+            // This must go after the Trunctate
+            if (startContent.get() == content)
+             buffer.Cut(0,startOffset); 
+          }
+          aConverter.AddComment(buffer);
+        }
+      }
+    }
+  }
+  else  
+  {
+    nsString  buffer;
+    textFrag->AppendTo(buffer);
+    aConverter.AddComment(buffer);
+  }
+  NS_IF_RELEASE(document);
+  // XXX Possible mem leak: Do we need to delete textFrag?
+  return NS_OK;
+}
+
