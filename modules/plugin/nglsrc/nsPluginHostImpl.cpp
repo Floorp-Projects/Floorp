@@ -44,6 +44,12 @@
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
 
+// for the dialog
+#include "nsIStringBundle.h"
+#include "nsINetSupportDialogService.h"
+#include "nsIPrompt.h"
+#include "nsILocale.h"
+
 #include "nsIServiceManager.h"
 #include "nsICookieStorage.h"
 #include "nsICookieService.h"
@@ -88,6 +94,97 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static NS_DEFINE_IID(kIFileUtilitiesIID, NS_IFILEUTILITIES_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
+
+// for the dialog
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+#define PLUGIN_PROPERTIES_URL "chrome://global/locale/downloadProgress.properties"
+void DisplayNoDefaultPluginDialog(void);
+
+void DisplayNoDefaultPluginDialog(void)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrompt> prompt(do_GetService(kNetSupportDialogCID));
+  nsCOMPtr<nsIIOService> io(do_GetService(kIOServiceCID));
+  nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIURI> uri;
+  char *spec = nsnull;
+  nsILocale* locale = nsnull;
+  nsCAutoString titleKey("noDefaultPluginTitle");
+  nsCAutoString messageKey("noDefaultPluginMessage");
+  PRInt32 buttonPressed;
+
+  if (!prompt || !io || !strings) {
+    return;
+  }
+
+  // Taken from mozilla\extensions\wallet\src\wallet.cpp
+  // WalletLocalize().
+
+  rv = io->NewURI(PLUGIN_PROPERTIES_URL, nsnull, getter_AddRefs(uri));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  rv = uri->GetSpec(&spec);
+  if (NS_FAILED(rv)) {
+    nsCRT::free(spec);
+    return;
+  }
+
+  rv = strings->CreateBundle(spec, locale, getter_AddRefs(bundle));
+  nsCRT::free(spec);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  PRUnichar *titleUni = nsnull;
+  PRUnichar *messageUni = nsnull;
+  PRUnichar *titleKeyUni = titleKey.ToNewUnicode();
+  PRUnichar *messageKeyUni = messageKey.ToNewUnicode();
+  if (!titleKeyUni || !messageKeyUni) {
+    return;
+  }
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginTitle"), 
+                                 &titleUni);
+  if (NS_FAILED(rv)) {
+    goto EXIT_DNDPD;
+  }
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noDefaultPluginMessage"), 
+                                 &messageUni);
+  if (NS_FAILED(rv)) {
+    goto EXIT_DNDPD;
+  }
+
+  rv = prompt->UniversalDialog(
+                               nsnull, /* title message */
+                               titleUni, /* title text in top line of window */
+                               messageUni, /* this is the main message */
+                               nsnull, /* This is the checkbox message */
+                               nsnull, /* first button text, becomes OK by default */
+                               nsnull, /* second button text, becomes CANCEL by default */
+                               nsnull, /* third button text */
+                               nsnull, /* fourth button text */
+                               nsnull, /* first edit field label */
+                               nsnull, /* second edit field label */
+                               nsnull, /* first edit field initial and final value */
+                               nsnull, /* second edit field initial and final value */
+                               nsnull,  /* icon: question mark by default */
+                               PR_FALSE, /* initial and final value of checkbox */
+                               1, /* number of buttons */
+                               0, /* number of edit fields */
+                               0, /* is first edit field a password field */
+                               
+                               &buttonPressed);
+ EXIT_DNDPD:
+  nsMemory::Free((void *)titleKeyUni);
+  nsMemory::Free((void *)messageKeyUni);
+  nsMemory::Free((void *)titleUni);
+  nsMemory::Free((void *)messageUni);
+  return;
+}
 
 nsActivePlugin::nsActivePlugin(nsIPluginInstance* aInstance, char * url)
 {
@@ -1660,6 +1757,23 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 {
   nsresult  rv;
   nsIPluginInstance *instance = nsnull;
+  nsCOMPtr<nsIPluginTagInfo2> pti2 = nsnull;
+  nsPluginTagType tagType;
+  PRBool isJavaEnabled = PR_TRUE;
+  
+  rv = aOwner->QueryInterface(kIPluginTagInfo2IID, getter_AddRefs(pti2));
+  
+  if(rv != NS_OK) {
+    return rv;
+  }
+  
+  rv = pti2->GetTagType(&tagType);
+
+  // PENDING(edburns): do we need to check for nsPluginTagType_Object?
+  if((rv != NS_OK) || !((tagType == nsPluginTagType_Embed) ||
+                        (tagType == nsPluginTagType_Applet))) {
+    return rv;
+  }
 
 #ifdef NS_DEBUG
   if(!aMimeType)
@@ -1690,8 +1804,11 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
   if(rv == NS_OK)
 	  rv = aOwner->GetInstance(instance);
-  else if (aMimeType)
+  else 
   {
+    // We may not have a mime type, but that's ok.  Let's try to render
+    // the default plugin.  See bug 41197
+
     // We were unable to find a plug-in yet we 
     // really do have mime type. Return the error
     // so that the nsObjectFrame can render any 
@@ -1701,29 +1818,17 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     // for <embed> tag leaving <object> to play with its alt content.
     // but before we return an error let's see if this is an <embed>
     // tag and try to launch the default plugin
-    nsIPluginTagInfo2 *pti2;
-
-    nsresult result = aOwner->QueryInterface(kIPluginTagInfo2IID, (void **)&pti2);
-
-    if(result != NS_OK)
-      return rv;
-
-    nsPluginTagType tagType;
-
-    result = pti2->GetTagType(&tagType);
-
-    NS_RELEASE(pti2);
-
-    if((result != NS_OK) || (tagType != nsPluginTagType_Embed))
-      return rv;
+    nsresult result;
 
     result = SetUpDefaultPluginInstance(aMimeType, aURL, aOwner);
 
     if(result == NS_OK)
 	    result = aOwner->GetInstance(instance);
 
-    if(result != NS_OK)
-      return rv;
+    if(result != NS_OK) {
+      DisplayNoDefaultPluginDialog();
+      return NS_ERROR_FAILURE;
+    }
 
     rv = NS_OK;
   }
@@ -1789,7 +1894,24 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 {
   nsresult  rv;
   nsIURI    *url;
+  nsCOMPtr<nsIPluginTagInfo2> pti2 = nsnull;
+  nsPluginTagType tagType;
+  PRBool isJavaEnabled = PR_TRUE;
 
+  rv = aOwner->QueryInterface(kIPluginTagInfo2IID, getter_AddRefs(pti2));
+  
+  if(rv != NS_OK) {
+    return rv;
+  }
+  
+  rv = pti2->GetTagType(&tagType);
+  
+  // PENDING(edburns): do we need to check for nsPluginTagType_Object?
+  if((rv != NS_OK) || !((tagType == nsPluginTagType_Embed) ||
+                        (tagType == nsPluginTagType_Applet))) {
+    return rv;
+  }
+  
 #ifdef NS_DEBUG
   printf("InstantiateFullPagePlugin for %s\n",aMimeType);
 #endif
