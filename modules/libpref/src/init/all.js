@@ -62,7 +62,7 @@ pref("browser.startup.homepage",	   "chrome://navigator-region/locale/region.pro
 pref("browser.startup.homepage_override.1", true);
 pref("browser.startup.autoload_homepage",   true);
 
-pref("browser.cache.enable",                true);
+pref("browser.cache.enable",                true); // see also network.http.use-cache
 pref("browser.cache.disk.enable",           true);
 pref("browser.cache.disk.capacity",         50000);
 pref("browser.cache.memory.enable",         true);
@@ -306,8 +306,11 @@ pref("network.http.version", "1.1");	  // default
 // keep-alive option is effectively obsolete. Nevertheless it'll work with
 // some older 1.0 servers:
 
+// enable caching of http documents
+pref("network.http.use-cache", true);
+
 pref("network.http.keep-alive", true); // set it to false in case of problems
-pref("network.http.proxy.keep-alive", true );
+pref("network.http.proxy.keep-alive", true);
 pref("network.http.keep-alive.timeout", 300);
 
 // limit the absolute number of http connections.
