@@ -83,8 +83,13 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsPluginsDirOS2.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
 else
+ifeq ($(OS_ARCH),Darwin)
+	CPPSRCS += nsPluginsDirDarwin.cpp
+	CPPSRCS += nsPluginNativeWindow.cpp
+else
 	CPPSRCS += nsPluginsDirUnix.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
+endif
 endif
 endif
 endif
@@ -93,11 +98,12 @@ EXPORTS		= \
     nsPluginViewer.h \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT Darwin,$(OS_ARCH)))
 EXTRA_DSO_LIBS	+= gkgfx
 endif
 
 EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \

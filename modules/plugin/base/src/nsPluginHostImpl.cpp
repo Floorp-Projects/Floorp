@@ -159,6 +159,10 @@
 #include "nsIDocShell.h"
 #include "nsPluginNativeWindow.h"
 
+#if defined(XP_MAC) && TARGET_CARBON
+#include "nsIClassicPluginFactory.h"
+#endif
+
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
@@ -167,10 +171,6 @@
 #elif defined(MOZ_WIDGET_XLIB)
 #include "xlibrgb.h" // for xlib_rgb_get_display()
 #endif
-#endif
-
-#if defined(XP_MAC) && TARGET_CARBON
-#include "nsIClassicPluginFactory.h"
 #endif
 
 #if defined(XP_MAC) || defined (XP_MACOSX)
@@ -3881,7 +3881,7 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
     isJavaPlugin = PR_TRUE;
   }
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_OS2)
   // This is a work-around on Unix for a LiveConnect problem (bug 83698).
   // The problem:
   // The proxy JNI needs to be created by the browser. If it is created by
@@ -4346,7 +4346,7 @@ public:
     {
       // only show the full path if people have set the pref,
       // the default should not reveal path information (bug 88183)
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
       return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFullPath, aFilename);
 #else
       return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFileName, aFilename);
@@ -4356,7 +4356,7 @@ public:
     nsFileSpec spec;
     if (mPluginTag.mFullPath)
     {
-#ifndef XP_MAC
+#if !(defined(XP_MAC) || defined(XP_MACOSX))
       NS_ERROR("Only MAC should be using nsPluginTag::mFullPath!");
 #endif
       spec = mPluginTag.mFullPath;
@@ -4486,6 +4486,96 @@ nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType,
   return NS_ERROR_FAILURE;
 }
 
+#if defined(XP_MACOSX)
+/**
+ * The following code examines the format of a Mac OS X binary, and determines whether it
+ * is compatible with the current executable. One trick to make this portable might be
+ * to compare the headers of the main executable we are part of with the header of the
+ * binary in question, but for a quick and dirty solution, this just checks to see
+ * if the specified binary is itself a MACH-O binary with a 4 byte header of 0xFEEDFACE.
+ */
+
+#include <sys/stat.h>
+#include <sys/fcntl.h>
+#include <unistd.h>
+
+inline PRBool is_directory(const char* path)
+{
+  struct stat sb;
+  if (stat(path, &sb) == 0 && (sb.st_mode & S_IFDIR)) {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+static int open_executable(const char* path)
+{
+  int fd = 0;
+  // if this is a directory, it must be a bundle, so get the true path using CFBundle...
+  if (is_directory(path)) {
+    CFBundleRef bundle = NULL;
+    CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
+    if (pathRef) {
+      CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
+      CFRelease(pathRef);
+      if (bundleURL != NULL) {
+        bundle = CFBundleCreate(NULL, bundleURL);
+        CFRelease(bundleURL);
+        if (bundle) {
+          CFURLRef executableURL = CFBundleCopyExecutableURL(bundle);
+          if (executableURL) {
+            pathRef = CFURLCopyFileSystemPath(executableURL, kCFURLPOSIXPathStyle);
+            CFRelease(executableURL);
+            if (pathRef) {
+              CFIndex bufferSize = CFStringGetMaximumSizeForEncoding(CFStringGetLength(pathRef), kCFStringEncodingUTF8) + 1;
+              char* executablePath = new char[bufferSize];
+              if (executablePath && CFStringGetCString(pathRef, executablePath, bufferSize, kCFStringEncodingUTF8)) {
+                fd = open(executablePath, O_RDONLY, 0);
+                delete[] executablePath;
+                            }
+              CFRelease(pathRef);
+            }
+          }
+          CFRelease(bundle);
+        }
+      }
+    }
+  } else {
+    fd = open(path, O_RDONLY, 0);
+  }
+  return fd;
+}
+
+static PRBool IsCompatibleExecutable(const char* path)
+{
+  int fd = open_executable(path);
+  if (fd) {
+    // open the file, look at the header. if the first 8-bytes are "Joy!peff" then we have
+    // a CFM/PEFF library, which isn't compatible with MACH-O. If it is 0xfeedface, then it
+    // is MACH-O. Look in /etc/magic for other valid MACH-O header signatures. Should we
+    // just use the contents of /etc/magic like the "file" command does? man 1 file for more info.
+    char magic_cookie[8];
+    ssize_t n = read(fd, magic_cookie, sizeof(magic_cookie));
+    close(fd);
+    if (n == sizeof(magic_cookie)) {
+      const char mach_o_cookie[] = { 0xFE, 0xED, 0xFA, 0xCE };
+      if (memcmp(magic_cookie, mach_o_cookie, sizeof(mach_o_cookie)) == 0)
+        return PR_TRUE;
+      const char cfm_cookie[] = { 'J', 'o', 'y', '!', 'p', 'e', 'f', 'f' };
+      if (memcmp(magic_cookie, cfm_cookie, sizeof(cfm_cookie)) == 0)
+        return PR_FALSE;
+    }
+  }
+  return PR_FALSE;
+}
+
+#else
+
+inline PRBool IsCompatibleExecutable(const char* path) { return PR_TRUE; }
+
+#endif
+
+
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)
 {
@@ -4512,7 +4602,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
     if (nsnull == pluginTag->mLibrary)  // if we haven't done this yet
     {
-#ifndef XP_MAC
+#if !(defined(XP_MAC) || defined(XP_MACOSX))
       nsFileSpec file(pluginTag->mFileName);
 #else
       if (nsnull == pluginTag->mFullPath)
@@ -4565,7 +4655,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       // need to get the plugin factory from this plugin.
       nsFactoryProc nsGetFactory = nsnull;
       nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
-      if(nsGetFactory != nsnull)
+      if(nsGetFactory != nsnull && IsCompatibleExecutable(pluginTag->mFullPath))
       {
         rv = nsGetFactory(serviceManager, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ContractID
                           (nsIFactory**)&pluginTag->mEntryPoint);

@@ -62,7 +62,7 @@ nsPluginNativeWindowPLATFORM::nsPluginNativeWindowPLATFORM() : nsPluginNativeWin
   width = 0; 
   height = 0; 
   memset(&clipRect, 0, sizeof(clipRect));
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
   ws_info = nsnull;
 #endif
   type = nsPluginWindowType_Window;

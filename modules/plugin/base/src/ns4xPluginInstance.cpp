@@ -1024,6 +1024,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     // XXX In the old code, we'd just ignore any errors coming
     // back from the plugin's SetWindow(). Is this the correct
     // behavior?!?
+
   }
   return NS_OK;
 }
@@ -1123,12 +1124,11 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
 
   PRInt16 result = 0;
   
-  if (fCallbacks->event)
-    {
-#ifdef XP_MAC
-      result = CallNPP_HandleEventProc(fCallbacks->event,
-                                    &fNPP,
-                                    (void*) event->event);
+  if (fCallbacks->event) {
+#if defined(XP_MAC) || defined(XP_MACOSX)
+    result = CallNPP_HandleEventProc(fCallbacks->event,
+                                     &fNPP,
+                                     (void*) event->event);
 #endif
 
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -1249,9 +1249,13 @@ NS_IMETHODIMP ns4xPluginInstance :: GetScriptablePeer(void * *aScriptablePeer)
 /* readonly attribute nsIIDPtr scriptableInterface; */
 NS_IMETHODIMP ns4xPluginInstance :: GetScriptableInterface(nsIID * *aScriptableInterface)
 {
+#if !defined(XP_MACOSX) // Workaround suspected bug
   if (!aScriptableInterface)
     return NS_ERROR_NULL_POINTER;
 
   *aScriptableInterface = nsnull;
   return GetValue(nsPluginInstanceVariable_ScriptableIID, (void*)aScriptableInterface);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }

@@ -270,7 +270,7 @@ struct nsPluginWindow {
     PRUint32      height;
     nsPluginRect  clipRect;     /* Clipping rectangle in port coordinates */
                                 /* Used by MAC only.			  */
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     void*         ws_info;      /* Platform-dependent additonal data */
 #endif /* XP_UNIX */
     nsPluginWindowType type;    /* Is this a window or a drawable? */

@@ -96,6 +96,12 @@ ifdef MOZ_SVG
 EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS)
 endif
 
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LDOPTS += \
+	$(TK_LIBS) \
+	$(NULL)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORT_OBJS	= 1
 endif

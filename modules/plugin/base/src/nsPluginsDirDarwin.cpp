@@ -53,15 +53,7 @@
 #include <TextUtils.h>
 #include <Aliases.h>
 #include <string.h>
-#if TARGET_CARBON && (UNIVERSAL_INTERFACES_VERSION < 0x0340)
-enum {
-    kLocalDomain                  = -32765, /* All users of a single machine have access to these resources.*/
-    kUserDomain                   = -32763, /* Read/write. Resources that are private to the user.*/
-    kClassicDomain                = -32762 /* Domain referring to the currently configured Classic System Folder*/
-};
-#endif
 
-#if TARGET_CARBON
 #include <CFURL.h>
 #include <CFBundle.h>
 #include <CFString.h>
@@ -71,51 +63,19 @@ enum {
 ** Returns a CFBundleRef if the FSSpec refers to a Mac OS X bundle directory.
 ** The caller is responsible for calling CFRelease() to deallocate.
 */
-static CFBundleRef getPluginBundle(const FSSpec& spec)
+static CFBundleRef getPluginBundle(const char* path)
 {
     CFBundleRef bundle = NULL;
-    FSRef ref;
-    OSErr err = FSpMakeFSRef(&spec, &ref);
-    char path[512];
-    if (err == noErr && (UInt32(FSRefMakePath) != kUnresolvedCFragSymbolAddress)) {
-        err = FSRefMakePath(&ref, (UInt8*)path, sizeof(path) - 1);
-        if (err == noErr) {
-            CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
-            if (pathRef) {
-                CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
-                if (bundleURL != NULL) {
-                    bundle = CFBundleCreate(NULL, bundleURL);
-                    CFRelease(bundleURL);
-                }
-                CFRelease(pathRef);
-            }
+    CFStringRef pathRef = CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8);
+    if (pathRef) {
+        CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
+        if (bundleURL != NULL) {
+            bundle = CFBundleCreate(NULL, bundleURL);
+            CFRelease(bundleURL);
         }
+        CFRelease(pathRef);
     }
     return bundle;
-}
-
-extern "C" {
-    // Not yet in Universal Interfaces that I'm using.
-    EXTERN_API_C( SInt16 )
-        CFBundleOpenBundleResourceMap(CFBundleRef bundle);
-
-    EXTERN_API_C( void )
-        CFBundleGetPackageInfo(CFBundleRef bundle, UInt32 * packageType, UInt32 * packageCreator);
-}
-
-#endif
-
-static nsresult getApplicationSpec(FSSpec& outAppSpec)
-{
-    // Use the process manager to get the application's FSSpec,
-    // then construct an nsFileSpec that encapsulates it.
-    ProcessInfoRec info;
-    info.processInfoLength = sizeof(info);
-    info.processName = NULL;
-    info.processAppSpec = &outAppSpec;
-    ProcessSerialNumber psn = { 0, kCurrentProcess };
-    OSErr result = GetProcessInformation(&psn, &info);
-    return (result == noErr ? NS_OK : NS_ERROR_FAILURE);
 }
 
 static OSErr toFSSpec(const nsFileSpec& inFileSpec, FSSpec& outSpec)
@@ -127,11 +87,11 @@ static OSErr toFSSpec(const nsFileSpec& inFileSpec, FSSpec& outSpec)
     return err;
 }
 
-#undef printf
-
 PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
+#ifdef DEBUG
     printf("nsPluginsDir::IsPluginFile:  checking %s\n", fileSpec.GetCString());
+#endif
     // look at file's creator/type and make sure it is a code fragment, etc.
     FSSpec spec;
     OSErr err = toFSSpec(fileSpec, spec);
@@ -142,17 +102,18 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
     err = FSpGetFInfo(&spec, &info);
     if (err == noErr && ((info.fdType == 'shlb' && info.fdCreator == 'MOSS') ||
                          info.fdType == 'NSPL')) {
+#ifdef DEBUG
         printf("found plugin '%s'.\n", fileSpec.GetCString());
+#endif
         return PR_TRUE;
     }
 
-#if TARGET_CARBON
     // Some additional plugin types for Carbon/Mac OS X
     if (err == noErr && (info.fdType == 'BRPL' || info.fdType == 'IEPL'))
         return PR_TRUE;
 
-  // for Mac OS X bundles.
-    CFBundleRef bundle = getPluginBundle(spec);
+    // for Mac OS X bundles.
+    CFBundleRef bundle = getPluginBundle(fileSpec.GetCString());
     if (bundle) {
         UInt32 packageType, packageCreator;
         CFBundleGetPackageInfo(bundle, &packageType, &packageCreator);
@@ -161,10 +122,12 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
         case 'BRPL':
         case 'IEPL':
         case 'NSPL':
+#ifdef DEBUG
+            printf("found bundled plugin '%s'.\n", fileSpec.GetCString());
+#endif
             return PR_TRUE;
         }
     }
-#endif
 
     return PR_FALSE;
 }
@@ -184,6 +147,12 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
     const char* path = this->GetCString();
     outLibrary = PR_LoadLibrary(path);
+    if (!outLibrary) {
+        return NS_ERROR_FAILURE;
+    }
+#ifdef DEBUG
+    printf("[loaded plugin %s]\n", path);
+#endif
     return NS_OK;
 }
 
@@ -215,15 +184,13 @@ short nsPluginFile::OpenPluginResource()
     err = ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
     short refNum = ::FSpOpenResFile(&spec, fsRdPerm);
   
-#if TARGET_CARBON
     if (refNum == -1) {
-        CFBundleRef bundle = getPluginBundle(spec);
+        CFBundleRef bundle = getPluginBundle(this->GetCString());
         if (bundle) {
             refNum = CFBundleOpenBundleResourceMap(bundle);
             CFRelease(bundle);
         }
     }
-#endif
   
     return refNum;
 }
@@ -264,14 +231,12 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
             info.fFileName = p2cstrdup(spec.name);
             info.fFullPath = PL_strdup(this->GetCString());
       
-#if TARGET_CARBON
-            CFBundleRef bundle = getPluginBundle(spec);
+            CFBundleRef bundle = getPluginBundle(this->GetCString());
             if (bundle) {
                 info.fBundle = PR_TRUE;
                 CFRelease(bundle);
             } else
                 info.fBundle = PR_FALSE;
-#endif
 
             short mimeIndex = 1, descriptionIndex = 1;
             for (int i = 0; i < variantCount; i++) {
