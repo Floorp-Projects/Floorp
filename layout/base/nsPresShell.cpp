@@ -6049,7 +6049,7 @@ NS_IMETHODIMP
 PresShell::CountReflows(const char * aName, PRUint32 aType)
 {
   if (mReflowCountMgr) {
-    //mReflowCountMgr->Add(aName, (nsReflowReason)aType);
+    mReflowCountMgr->Add(aName, (nsReflowReason)aType);
   }
   return NS_OK;
 }
