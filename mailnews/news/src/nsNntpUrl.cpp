@@ -435,26 +435,9 @@ nsNntpUrl::SetOriginalSpec(const char *aSpec)
 
 NS_IMETHODIMP nsNntpUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
 {
-  // if we have a RDF URI, then try to get the folder for that URI and then ask the folder
-  // for it's charset....
 
-  nsXPIDLCString uri;
-  GetUri(getter_Copies(uri));
-  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_PROGID "/rdf-service"); 
-  nsCOMPtr<nsIRDFResource> resource;
-  rdfService->GetResource(uri, getter_AddRefs(resource));
-
-  NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIMessage> msg (do_QueryInterface(resource));
-  NS_ENSURE_TRUE(msg, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIMsgFolder> folder;
-  msg->GetMsgFolder(getter_AddRefs(folder));
-  NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
-  nsXPIDLString charset; 
-  folder->GetCharset(getter_Copies(charset));
-  *aCharacterSet = nsCRT::strdup(charset);
-
+  // news folders don't have charset associated with them..
+  *aCharacterSet = nsnull;
   return NS_OK;
 }
 
