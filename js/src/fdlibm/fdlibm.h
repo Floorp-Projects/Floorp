@@ -52,6 +52,10 @@
 #define __LITTLE_ENDIAN
 #endif
 
+#ifdef XP_OS2
+#define __LITTLE_ENDIAN
+#endif
+
 #if defined(linux) && defined(__i386__)
 #define __LITTLE_ENDIAN
 #endif
