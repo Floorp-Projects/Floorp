@@ -125,8 +125,6 @@ nsCSSKeywords::LookupKeyword(const nsStr& aKeyword)
 const nsCString& 
 nsCSSKeywords::GetStringValue(nsCSSKeyword aKeyword)
 {
-  nsString* value = nsnull;
-
   NS_ASSERTION(gKeywordArray, "no lookup table, needs addref");
   if ((eCSSKeyword_UNKNOWN < aKeyword) && 
       (aKeyword < eCSSKeyword_COUNT) && gKeywordArray) {

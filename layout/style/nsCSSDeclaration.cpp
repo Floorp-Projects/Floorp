@@ -38,6 +38,7 @@ static NS_DEFINE_IID(kCSSTableSID, NS_CSS_TABLE_SID);
 static NS_DEFINE_IID(kCSSBreaksSID, NS_CSS_BREAKS_SID);
 static NS_DEFINE_IID(kCSSPageSID, NS_CSS_PAGE_SID);
 static NS_DEFINE_IID(kCSSContentSID, NS_CSS_CONTENT_SID);
+static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
 static NS_DEFINE_IID(kCSSAuralSID, NS_CSS_AURAL_SID);
 static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 
@@ -379,7 +380,8 @@ nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
     mBorderRadius(aCopy.mBorderRadius),
     mOutlineWidth(aCopy.mOutlineWidth),
     mOutlineColor(aCopy.mOutlineColor),
-    mOutlineStyle(aCopy.mOutlineStyle)
+    mOutlineStyle(aCopy.mOutlineStyle),
+    mFloatEdge(aCopy.mFloatEdge)
 {
   CSS_IF_COPY(mMargin, nsCSSRect);
   CSS_IF_COPY(mPadding, nsCSSRect);
@@ -445,6 +447,7 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   mOutlineWidth.AppendToString(buffer, eCSSProperty_outline_width);
   mOutlineColor.AppendToString(buffer, eCSSProperty_outline_color);
   mOutlineStyle.AppendToString(buffer, eCSSProperty_outline_style);
+  mFloatEdge.AppendToString(buffer, eCSSProperty_float_edge);
   fputs(buffer, out);
 }
 
@@ -463,6 +466,7 @@ nsCSSPosition::nsCSSPosition(const nsCSSPosition& aCopy)
     mHeight(aCopy.mHeight),
     mMinHeight(aCopy.mMinHeight),
     mMaxHeight(aCopy.mMaxHeight),
+    mBoxSizing(aCopy.mBoxSizing),
     mOffset(nsnull),
     mZIndex(aCopy.mZIndex)
 {
@@ -492,6 +496,7 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
   mHeight.AppendToString(buffer, eCSSProperty_height);
   mMinHeight.AppendToString(buffer, eCSSProperty_min_height);
   mMaxHeight.AppendToString(buffer, eCSSProperty_max_height);
+  mBoxSizing.AppendToString(buffer, eCSSProperty_box_sizing);
   mZIndex.AppendToString(buffer, eCSSProperty_z_index);
   fputs(buffer, out);
 
@@ -765,6 +770,55 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
   fputs(buffer, out);
 }
 
+// --- nsCSSUserInterface -----------------
+
+nsCSSUserInterface::nsCSSUserInterface(void)
+  : mKeyEquivalent(nsnull)
+{
+}
+
+nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
+  : mUserInput(aCopy.mUserInput),
+    mModifyContent(aCopy.mModifyContent),
+    mSelectionStyle(aCopy.mSelectionStyle),
+    mAutoSelect(aCopy.mAutoSelect),
+    mKeyEquivalent(nsnull),
+    mAutoTab(aCopy.mAutoTab),
+    mResizer(aCopy.mResizer)
+{
+  CSS_IF_COPY(mKeyEquivalent, nsCSSValueList);
+}
+
+nsCSSUserInterface::~nsCSSUserInterface(void)
+{
+  CSS_IF_DELETE(mKeyEquivalent);
+}
+
+const nsID& nsCSSUserInterface::GetID(void)
+{
+  return kCSSUserInterfaceSID;
+}
+
+void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
+{
+  for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  nsAutoString buffer;
+
+  mUserInput.AppendToString(buffer, eCSSProperty_user_input);
+  mModifyContent.AppendToString(buffer, eCSSProperty_modify_content);
+  mSelectionStyle.AppendToString(buffer, eCSSProperty_selection_style);
+  mAutoSelect.AppendToString(buffer, eCSSProperty_auto_select);
+  nsCSSValueList*  keyEquiv = mKeyEquivalent;
+  while (nsnull != keyEquiv) {
+    keyEquiv->mValue.AppendToString(buffer, eCSSProperty_key_equivalent);
+    keyEquiv= keyEquiv->mNext;
+  }
+  mAutoTab.AppendToString(buffer, eCSSProperty_auto_tab);
+  mResizer.AppendToString(buffer, eCSSProperty_resizer);
+  fputs(buffer, out);
+}
+
 // --- nsCSSAural -----------------
 
 nsCSSAural::nsCSSAural(void)
@@ -893,6 +947,7 @@ protected:
   nsCSSBreaks*    mBreaks;
   nsCSSPage*      mPage;
   nsCSSContent*   mContent;
+  nsCSSUserInterface* mUserInterface;
   nsCSSAural*     mAural;
 
   CSSDeclarationImpl* mImportant;
@@ -934,6 +989,7 @@ CSSDeclarationImpl::CSSDeclarationImpl(const CSSDeclarationImpl& aCopy)
   DECL_IF_COPY(Breaks);
   DECL_IF_COPY(Page);
   DECL_IF_COPY(Content);
+  DECL_IF_COPY(UserInterface);
   DECL_IF_COPY(Aural);
 
   if (aCopy.mImportant) {
@@ -970,6 +1026,7 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
   CSS_IF_DELETE(mBreaks);
   CSS_IF_DELETE(mPage);
   CSS_IF_DELETE(mContent);
+  CSS_IF_DELETE(mUserInterface);
   CSS_IF_DELETE(mAural);
 
   NS_IF_RELEASE(mImportant);
@@ -1005,6 +1062,7 @@ CSSDeclarationImpl::GetData(const nsID& aSID, nsCSSStruct** aDataPtr)
   CSS_IF_GET_ELSE(aSID, Breaks, aDataPtr)
   CSS_IF_GET_ELSE(aSID, Page, aDataPtr)
   CSS_IF_GET_ELSE(aSID, Content, aDataPtr)
+  CSS_IF_GET_ELSE(aSID, UserInterface, aDataPtr)
   CSS_IF_GET_ELSE(aSID, Aural, aDataPtr) {
     return NS_NOINTERFACE;
   }
@@ -1035,6 +1093,7 @@ CSSDeclarationImpl::EnsureData(const nsID& aSID, nsCSSStruct** aDataPtr)
   CSS_IF_ENSURE_ELSE(aSID, Breaks, aDataPtr)
   CSS_IF_ENSURE_ELSE(aSID, Page, aDataPtr)
   CSS_IF_ENSURE_ELSE(aSID, Content, aDataPtr)
+  CSS_IF_ENSURE_ELSE(aSID, UserInterface, aDataPtr)
   CSS_IF_ENSURE_ELSE(aSID, Aural, aDataPtr) {
     return NS_NOINTERFACE;
   }
@@ -1071,6 +1130,8 @@ CSSDeclarationImpl::EnsureData(const nsID& aSID, nsCSSStruct** aDataPtr)
   }                                   \
   else
 
+#define CSS_BOGUS_DEFAULT   default: NS_ERROR("should never happen"); break;
+
 NS_IMETHODIMP
 CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue)
 {
@@ -1094,7 +1155,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
           case eCSSProperty_font_size:        mFont->mSize = aValue;        break;
           case eCSSProperty_font_size_adjust: mFont->mSizeAdjust = aValue;  break;
           case eCSSProperty_font_stretch:     mFont->mStretch = aValue;     break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1125,7 +1186,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             }
             break;
           case eCSSProperty_opacity:                mColor->mOpacity = aValue;         break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1153,7 +1214,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
           case eCSSProperty_unicode_bidi:     mText->mUnicodeBidi = aValue;    break;
           case eCSSProperty_line_height:      mText->mLineHeight = aValue;     break;
           case eCSSProperty_white_space:      mText->mWhiteSpace = aValue;     break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1169,7 +1230,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             case eCSSProperty_text_shadow_radius: mText->mTextShadow->mRadius = aValue;   break;
             case eCSSProperty_text_shadow_x:      mText->mTextShadow->mXOffset = aValue;  break;
             case eCSSProperty_text_shadow_y:      mText->mTextShadow->mYOffset = aValue;  break;
-            default: break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
           }
           CSS_IF_DELETE(mText->mTextShadow->mNext);
         }
@@ -1191,7 +1252,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
           case eCSSProperty_direction:  mDisplay->mDirection = aValue;  break;
           case eCSSProperty_visibility: mDisplay->mVisibility = aValue; break;
           case eCSSProperty_overflow:   mDisplay->mOverflow = aValue;   break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1207,7 +1268,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             case eCSSProperty_clip_right:   mDisplay->mClip->mRight = aValue;   break;
             case eCSSProperty_clip_bottom:  mDisplay->mClip->mBottom = aValue;  break;
             case eCSSProperty_clip_left:    mDisplay->mClip->mLeft = aValue;    break;
-            default: break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
           }
         }
       }
@@ -1225,7 +1286,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             case eCSSProperty_margin_right:   mMargin->mMargin->mRight = aValue;   break;
             case eCSSProperty_margin_bottom:  mMargin->mMargin->mBottom = aValue;  break;
             case eCSSProperty_margin_left:    mMargin->mMargin->mLeft = aValue;    break;
-            default: break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
           }
         }
       }
@@ -1242,7 +1303,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             case eCSSProperty_padding_right:  mMargin->mPadding->mRight = aValue;  break;
             case eCSSProperty_padding_bottom: mMargin->mPadding->mBottom = aValue; break;
             case eCSSProperty_padding_left:   mMargin->mPadding->mLeft = aValue;   break;
-            default: break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
           }
         }
       }
@@ -1259,7 +1320,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             case eCSSProperty_border_right_width:   mMargin->mBorderWidth->mRight = aValue;   break;
             case eCSSProperty_border_bottom_width:  mMargin->mBorderWidth->mBottom = aValue;  break;
             case eCSSProperty_border_left_width:    mMargin->mBorderWidth->mLeft = aValue;    break;
-            default: break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
           }
         }
       }
@@ -1276,7 +1337,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             case eCSSProperty_border_right_color:   mMargin->mBorderColor->mRight = aValue;  break;
             case eCSSProperty_border_bottom_color:  mMargin->mBorderColor->mBottom = aValue; break;
             case eCSSProperty_border_left_color:    mMargin->mBorderColor->mLeft = aValue;   break;
-            default: break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
           }
         }
       }
@@ -1293,7 +1354,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             case eCSSProperty_border_right_style:   mMargin->mBorderStyle->mRight = aValue;  break;
             case eCSSProperty_border_bottom_style:  mMargin->mBorderStyle->mBottom = aValue; break;
             case eCSSProperty_border_left_style:    mMargin->mBorderStyle->mLeft = aValue;   break;
-            default: break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
           }
         }
       }
@@ -1303,13 +1364,15 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
     case eCSSProperty_outline_width:
     case eCSSProperty_outline_color:
     case eCSSProperty_outline_style:
+    case eCSSProperty_float_edge:
       CSS_ENSURE(Margin) {
         switch (aProperty) {
           case eCSSProperty__moz_border_radius: mMargin->mBorderRadius = aValue;  break;
           case eCSSProperty_outline_width:      mMargin->mOutlineWidth = aValue;  break;
           case eCSSProperty_outline_color:      mMargin->mOutlineColor = aValue;  break;
           case eCSSProperty_outline_style:      mMargin->mOutlineStyle = aValue;  break;
-          default: break;
+          case eCSSProperty_float_edge:         mMargin->mFloatEdge = aValue;     break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1322,6 +1385,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
     case eCSSProperty_height:
     case eCSSProperty_min_height:
     case eCSSProperty_max_height:
+    case eCSSProperty_box_sizing:
     case eCSSProperty_z_index:
       CSS_ENSURE(Position) {
         switch (aProperty) {
@@ -1332,8 +1396,9 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
           case eCSSProperty_height:     mPosition->mHeight = aValue;     break;
           case eCSSProperty_min_height: mPosition->mMinHeight = aValue;  break;
           case eCSSProperty_max_height: mPosition->mMaxHeight = aValue;  break;
+          case eCSSProperty_box_sizing: mPosition->mBoxSizing = aValue;  break;
           case eCSSProperty_z_index:    mPosition->mZIndex = aValue;     break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1349,7 +1414,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             case eCSSProperty_right:  mPosition->mOffset->mRight= aValue;   break;
             case eCSSProperty_bottom: mPosition->mOffset->mBottom = aValue; break;
             case eCSSProperty_left:   mPosition->mOffset->mLeft = aValue;   break;
-            default: break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
           }
         }
       }
@@ -1364,7 +1429,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
           case eCSSProperty_list_style_type:      mList->mType = aValue;     break;
           case eCSSProperty_list_style_image:     mList->mImage = aValue;    break;
           case eCSSProperty_list_style_position:  mList->mPosition = aValue; break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1384,7 +1449,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
           case eCSSProperty_caption_side:     mTable->mCaptionSide = aValue;    break;
           case eCSSProperty_empty_cells:      mTable->mEmptyCells = aValue;     break;
           case eCSSProperty_table_layout:     mTable->mLayout = aValue;         break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1404,7 +1469,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
           case eCSSProperty_page_break_after:   mBreaks->mPageBreakAfter = aValue;  break;
           case eCSSProperty_page_break_before:  mBreaks->mPageBreakBefore = aValue; break;
           case eCSSProperty_page_break_inside:  mBreaks->mPageBreakInside = aValue; break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1418,7 +1483,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
           case eCSSProperty_marks:        mPage->mMarks = aValue; break;
           case eCSSProperty_size_width:   mPage->mSizeWidth = aValue;  break;
           case eCSSProperty_size_height:  mPage->mSizeHeight = aValue;  break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1463,8 +1528,34 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
               CSS_IF_DELETE(mContent->mQuotes->mNext);
             }
             break;
-          default:
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+    // nsCSSUserInterface
+    case eCSSProperty_user_input:
+    case eCSSProperty_modify_content:
+    case eCSSProperty_selection_style:
+    case eCSSProperty_auto_select:
+    case eCSSProperty_key_equivalent:
+    case eCSSProperty_auto_tab:
+    case eCSSProperty_resizer:
+      CSS_ENSURE(UserInterface) {
+        switch (aProperty) {
+          case eCSSProperty_user_input:       mUserInterface->mUserInput = aValue;      break;
+          case eCSSProperty_modify_content:   mUserInterface->mModifyContent = aValue;  break;
+          case eCSSProperty_selection_style:  mUserInterface->mSelectionStyle = aValue; break;
+          case eCSSProperty_auto_select:      mUserInterface->mAutoSelect = aValue;     break;
+          case eCSSProperty_key_equivalent:
+            CSS_ENSURE_DATA(mUserInterface->mKeyEquivalent, nsCSSValueList) {
+              mUserInterface->mKeyEquivalent->mValue = aValue;
+              CSS_IF_DELETE(mUserInterface->mKeyEquivalent->mNext);
+            }
             break;
+          case eCSSProperty_auto_tab:         mUserInterface->mAutoTab = aValue;        break;
+          case eCSSProperty_resizer:          mUserInterface->mResizer = aValue;        break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1510,7 +1601,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
           case eCSSProperty_stress:             mAural->mStress = aValue;           break;
           case eCSSProperty_voice_family:       mAural->mVoiceFamily = aValue;      break;
           case eCSSProperty_volume:             mAural->mVolume = aValue;           break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -1539,7 +1630,9 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
     case eCSSProperty_border_style:
     case eCSSProperty_border_width:
       NS_ERROR("can't append shorthand properties");
-    default:
+//    default:  // XXX explicitly removing default case so compiler will help find missed props
+    case eCSSProperty_UNKNOWN:
+    case eCSSProperty_COUNT:
       result = NS_ERROR_ILLEGAL_VALUE;
       break;
   }
@@ -1612,6 +1705,13 @@ CSSDeclarationImpl::AppendStructValue(nsCSSProperty aProperty, void* aStruct)
       }
       break;
 
+    case eCSSProperty_key_equivalent:
+      CSS_ENSURE(UserInterface) {
+        CSS_IF_DELETE(mUserInterface->mKeyEquivalent);
+        mUserInterface->mKeyEquivalent = (nsCSSValueList*)aStruct;
+      }
+      break;
+
     default:
       NS_ERROR("not a struct property");
       result = NS_ERROR_ILLEGAL_VALUE;
@@ -1680,7 +1780,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_font_size, mFont->mSize);
               CSS_CASE_IMPORTANT(eCSSProperty_font_size_adjust, mFont->mSizeAdjust);
               CSS_CASE_IMPORTANT(eCSSProperty_font_stretch, mFont->mStretch);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -1706,7 +1806,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_background_x_position,  mColor->mBackPositionX);
               CSS_CASE_IMPORTANT(eCSSProperty_background_y_position,  mColor->mBackPositionY);
               CSS_CASE_IMPORTANT(eCSSProperty_opacity,                mColor->mOpacity);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -1748,7 +1848,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_unicode_bidi,     mText->mUnicodeBidi);
               CSS_CASE_IMPORTANT(eCSSProperty_line_height,      mText->mLineHeight);
               CSS_CASE_IMPORTANT(eCSSProperty_white_space,      mText->mWhiteSpace);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -1782,7 +1882,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_clear,      mDisplay->mClear);
               CSS_CASE_IMPORTANT(eCSSProperty_overflow,   mDisplay->mOverflow);
               CSS_CASE_IMPORTANT(eCSSProperty_visibility, mDisplay->mVisibility);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -1801,7 +1901,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
                   CSS_CASE_IMPORTANT(eCSSProperty_clip_right,   mDisplay->mClip->mRight);
                   CSS_CASE_IMPORTANT(eCSSProperty_clip_bottom,  mDisplay->mClip->mBottom);
                   CSS_CASE_IMPORTANT(eCSSProperty_clip_left,    mDisplay->mClip->mLeft);
-                  default: break;
+                  CSS_BOGUS_DEFAULT; // make compiler happy
                 }
               }
             }
@@ -1823,7 +1923,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
                   CSS_CASE_IMPORTANT(eCSSProperty_margin_right,   mMargin->mMargin->mRight);
                   CSS_CASE_IMPORTANT(eCSSProperty_margin_bottom,  mMargin->mMargin->mBottom);
                   CSS_CASE_IMPORTANT(eCSSProperty_margin_left,    mMargin->mMargin->mLeft);
-                  default: break;
+                  CSS_BOGUS_DEFAULT; // make compiler happy
                 }
               }
             }
@@ -1844,7 +1944,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
                   CSS_CASE_IMPORTANT(eCSSProperty_padding_right,  mMargin->mPadding->mRight);
                   CSS_CASE_IMPORTANT(eCSSProperty_padding_bottom, mMargin->mPadding->mBottom);
                   CSS_CASE_IMPORTANT(eCSSProperty_padding_left,   mMargin->mPadding->mLeft);
-                  default: break;
+                  CSS_BOGUS_DEFAULT; // make compiler happy
                 }
               }
             }
@@ -1865,7 +1965,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
                   CSS_CASE_IMPORTANT(eCSSProperty_border_right_width,   mMargin->mBorderWidth->mRight);
                   CSS_CASE_IMPORTANT(eCSSProperty_border_bottom_width,  mMargin->mBorderWidth->mBottom);
                   CSS_CASE_IMPORTANT(eCSSProperty_border_left_width,    mMargin->mBorderWidth->mLeft);
-                  default: break;
+                  CSS_BOGUS_DEFAULT; // make compiler happy
                 }
               }
             }
@@ -1886,7 +1986,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
                   CSS_CASE_IMPORTANT(eCSSProperty_border_right_color,   mMargin->mBorderColor->mRight);
                   CSS_CASE_IMPORTANT(eCSSProperty_border_bottom_color,  mMargin->mBorderColor->mBottom);
                   CSS_CASE_IMPORTANT(eCSSProperty_border_left_color,    mMargin->mBorderColor->mLeft);
-                  default: break;
+                  CSS_BOGUS_DEFAULT; // make compiler happy
                 }
               }
             }
@@ -1907,7 +2007,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
                   CSS_CASE_IMPORTANT(eCSSProperty_border_right_style,   mMargin->mBorderStyle->mRight);
                   CSS_CASE_IMPORTANT(eCSSProperty_border_bottom_style,  mMargin->mBorderStyle->mBottom);
                   CSS_CASE_IMPORTANT(eCSSProperty_border_left_style,    mMargin->mBorderStyle->mLeft);
-                  default: break;
+                  CSS_BOGUS_DEFAULT; // make compiler happy
                 }
               }
             }
@@ -1919,6 +2019,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
       case eCSSProperty_outline_width:
       case eCSSProperty_outline_color:
       case eCSSProperty_outline_style:
+      case eCSSProperty_float_edge:
         if (nsnull != mMargin) {
           CSS_ENSURE_IMPORTANT(Margin) {
             switch (aProperty) {
@@ -1926,7 +2027,8 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_outline_width,      mMargin->mOutlineWidth);
               CSS_CASE_IMPORTANT(eCSSProperty_outline_color,      mMargin->mOutlineColor);
               CSS_CASE_IMPORTANT(eCSSProperty_outline_style,      mMargin->mOutlineStyle);
-              default: break;
+              CSS_CASE_IMPORTANT(eCSSProperty_float_edge,         mMargin->mFloatEdge);
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -1940,6 +2042,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
       case eCSSProperty_height:
       case eCSSProperty_min_height:
       case eCSSProperty_max_height:
+      case eCSSProperty_box_sizing:
       case eCSSProperty_z_index:
         if (nsnull != mPosition) {
           CSS_ENSURE_IMPORTANT(Position) {
@@ -1951,8 +2054,9 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_height,     mPosition->mHeight);
               CSS_CASE_IMPORTANT(eCSSProperty_min_height, mPosition->mMinHeight);
               CSS_CASE_IMPORTANT(eCSSProperty_max_height, mPosition->mMaxHeight);
+              CSS_CASE_IMPORTANT(eCSSProperty_box_sizing, mPosition->mBoxSizing);
               CSS_CASE_IMPORTANT(eCSSProperty_z_index,    mPosition->mZIndex);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -1971,7 +2075,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
                   CSS_CASE_IMPORTANT(eCSSProperty_right,  mPosition->mOffset->mRight);
                   CSS_CASE_IMPORTANT(eCSSProperty_bottom, mPosition->mOffset->mBottom);
                   CSS_CASE_IMPORTANT(eCSSProperty_left,   mPosition->mOffset->mLeft);
-                  default: break;
+                  CSS_BOGUS_DEFAULT; // make compiler happy
                 }
               }
             }
@@ -1989,7 +2093,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_list_style_type,      mList->mType);
               CSS_CASE_IMPORTANT(eCSSProperty_list_style_image,     mList->mImage);
               CSS_CASE_IMPORTANT(eCSSProperty_list_style_position,  mList->mPosition);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -2011,7 +2115,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_caption_side,     mTable->mCaptionSide);
               CSS_CASE_IMPORTANT(eCSSProperty_empty_cells,      mTable->mEmptyCells);
               CSS_CASE_IMPORTANT(eCSSProperty_table_layout,     mTable->mLayout);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -2033,7 +2137,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_page_break_after,   mBreaks->mPageBreakAfter);
               CSS_CASE_IMPORTANT(eCSSProperty_page_break_before,  mBreaks->mPageBreakBefore);
               CSS_CASE_IMPORTANT(eCSSProperty_page_break_inside,  mBreaks->mPageBreakInside);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -2049,7 +2153,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_marks,        mPage->mMarks);
               CSS_CASE_IMPORTANT(eCSSProperty_size_width,   mPage->mSizeWidth);
               CSS_CASE_IMPORTANT(eCSSProperty_size_height,  mPage->mSizeHeight);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -2097,7 +2201,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
           CSS_ENSURE_IMPORTANT(Content) {
             switch (aProperty) {
               CSS_CASE_IMPORTANT(eCSSProperty_marker_offset,  mContent->mMarkerOffset);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -2110,6 +2214,40 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_IF_DELETE(mImportant->mContent->mQuotes);
               mImportant->mContent->mQuotes = mContent->mQuotes;
               mContent->mQuotes = nsnull;
+            }
+          }
+        }
+        break;
+
+      // nsCSSUserInterface
+      case eCSSProperty_user_input:
+      case eCSSProperty_modify_content:
+      case eCSSProperty_selection_style:
+      case eCSSProperty_auto_select:
+      case eCSSProperty_auto_tab:
+      case eCSSProperty_resizer:
+        if (nsnull != mUserInterface) {
+          CSS_ENSURE_IMPORTANT(UserInterface) {
+            switch (aProperty) {
+              CSS_CASE_IMPORTANT(eCSSProperty_user_input,       mUserInterface->mUserInput);
+              CSS_CASE_IMPORTANT(eCSSProperty_modify_content,   mUserInterface->mModifyContent);
+              CSS_CASE_IMPORTANT(eCSSProperty_selection_style,  mUserInterface->mSelectionStyle);
+              CSS_CASE_IMPORTANT(eCSSProperty_auto_select,      mUserInterface->mAutoSelect);
+              CSS_CASE_IMPORTANT(eCSSProperty_auto_tab,         mUserInterface->mAutoTab);
+              CSS_CASE_IMPORTANT(eCSSProperty_resizer,          mUserInterface->mResizer);
+              CSS_BOGUS_DEFAULT; // make compiler happy
+            }
+          }
+        }
+        break;
+
+      case eCSSProperty_key_equivalent:
+        if (nsnull != mUserInterface) {
+          if (nsnull != mUserInterface->mKeyEquivalent) {
+            CSS_ENSURE_IMPORTANT(UserInterface) {
+              CSS_IF_DELETE(mImportant->mUserInterface->mKeyEquivalent);
+              mImportant->mUserInterface->mKeyEquivalent = mUserInterface->mKeyEquivalent;
+              mUserInterface->mKeyEquivalent = nsnull;
             }
           }
         }
@@ -2153,7 +2291,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
               CSS_CASE_IMPORTANT(eCSSProperty_stress,             mAural->mStress);
               CSS_CASE_IMPORTANT(eCSSProperty_voice_family,       mAural->mVoiceFamily);
               CSS_CASE_IMPORTANT(eCSSProperty_volume,             mAural->mVolume);
-              default: break;
+              CSS_BOGUS_DEFAULT; // make compiler happy
             }
           }
         }
@@ -2336,7 +2474,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_font_size:        aValue = mFont->mSize;        break;
           case eCSSProperty_font_size_adjust: aValue = mFont->mSizeAdjust;  break;
           case eCSSProperty_font_stretch:     aValue = mFont->mStretch;     break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2369,7 +2507,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
             }
             break;
           case eCSSProperty_opacity:                aValue = mColor->mOpacity;         break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2400,7 +2538,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_unicode_bidi:     aValue = mText->mUnicodeBidi;    break;
           case eCSSProperty_line_height:      aValue = mText->mLineHeight;     break;
           case eCSSProperty_white_space:      aValue = mText->mWhiteSpace;     break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2418,7 +2556,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_text_shadow_x:      aValue = mText->mTextShadow->mXOffset;  break;
           case eCSSProperty_text_shadow_y:      aValue = mText->mTextShadow->mYOffset;  break;
           case eCSSProperty_text_shadow_radius: aValue = mText->mTextShadow->mRadius;   break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       break;
@@ -2438,7 +2576,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_direction:  aValue = mDisplay->mDirection;  break;
           case eCSSProperty_visibility: aValue = mDisplay->mVisibility; break;
           case eCSSProperty_overflow:   aValue = mDisplay->mOverflow;   break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2456,8 +2594,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_clip_right:   aValue = mDisplay->mClip->mRight;   break;
           case eCSSProperty_clip_bottom:  aValue = mDisplay->mClip->mBottom;  break;
           case eCSSProperty_clip_left:    aValue = mDisplay->mClip->mLeft;    break;
-        default:
-          break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2476,7 +2613,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_margin_right:   aValue = mMargin->mMargin->mRight;   break;
           case eCSSProperty_margin_bottom:  aValue = mMargin->mMargin->mBottom;  break;
           case eCSSProperty_margin_left:    aValue = mMargin->mMargin->mLeft;    break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2494,7 +2631,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_padding_right:  aValue = mMargin->mPadding->mRight;  break;
           case eCSSProperty_padding_bottom: aValue = mMargin->mPadding->mBottom; break;
           case eCSSProperty_padding_left:   aValue = mMargin->mPadding->mLeft;   break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2512,7 +2649,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_border_right_width:   aValue = mMargin->mBorderWidth->mRight;   break;
           case eCSSProperty_border_bottom_width:  aValue = mMargin->mBorderWidth->mBottom;  break;
           case eCSSProperty_border_left_width:    aValue = mMargin->mBorderWidth->mLeft;    break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2530,7 +2667,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_border_right_color:   aValue = mMargin->mBorderColor->mRight;  break;
           case eCSSProperty_border_bottom_color:  aValue = mMargin->mBorderColor->mBottom; break;
           case eCSSProperty_border_left_color:    aValue = mMargin->mBorderColor->mLeft;   break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2548,7 +2685,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_border_right_style:   aValue = mMargin->mBorderStyle->mRight;  break;
           case eCSSProperty_border_bottom_style:  aValue = mMargin->mBorderStyle->mBottom; break;
           case eCSSProperty_border_left_style:    aValue = mMargin->mBorderStyle->mLeft;   break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2560,13 +2697,15 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
     case eCSSProperty_outline_width:
     case eCSSProperty_outline_color:
     case eCSSProperty_outline_style:
+    case eCSSProperty_float_edge:
       if (nsnull != mMargin) {
         switch (aProperty) {
           case eCSSProperty__moz_border_radius: aValue = mMargin->mBorderRadius; break;
           case eCSSProperty_outline_width:      aValue = mMargin->mOutlineWidth; break;
           case eCSSProperty_outline_color:      aValue = mMargin->mOutlineColor; break;
           case eCSSProperty_outline_style:      aValue = mMargin->mOutlineStyle; break;
-          default: break;
+          case eCSSProperty_float_edge:         aValue = mMargin->mFloatEdge;    break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2582,6 +2721,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
     case eCSSProperty_height:
     case eCSSProperty_min_height:
     case eCSSProperty_max_height:
+    case eCSSProperty_box_sizing:
     case eCSSProperty_z_index:
       if (nsnull != mPosition) {
         switch (aProperty) {
@@ -2592,8 +2732,9 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_height:     aValue = mPosition->mHeight;     break;
           case eCSSProperty_min_height: aValue = mPosition->mMinHeight;  break;
           case eCSSProperty_max_height: aValue = mPosition->mMaxHeight;  break;
+          case eCSSProperty_box_sizing: aValue = mPosition->mBoxSizing;  break;
           case eCSSProperty_z_index:    aValue = mPosition->mZIndex;     break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2611,7 +2752,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_right:  aValue = mPosition->mOffset->mRight;  break;
           case eCSSProperty_bottom: aValue = mPosition->mOffset->mBottom; break;
           case eCSSProperty_left:   aValue = mPosition->mOffset->mLeft;   break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2628,7 +2769,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_list_style_type:      aValue = mList->mType;     break;
           case eCSSProperty_list_style_image:     aValue = mList->mImage;    break;
           case eCSSProperty_list_style_position:  aValue = mList->mPosition; break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2651,7 +2792,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_caption_side:     aValue = mTable->mCaptionSide;    break;
           case eCSSProperty_empty_cells:      aValue = mTable->mEmptyCells;     break;
           case eCSSProperty_table_layout:     aValue = mTable->mLayout;         break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2674,7 +2815,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_page_break_after:   aValue = mBreaks->mPageBreakAfter;  break;
           case eCSSProperty_page_break_before:  aValue = mBreaks->mPageBreakBefore; break;
           case eCSSProperty_page_break_inside:  aValue = mBreaks->mPageBreakInside; break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2691,7 +2832,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_marks:        aValue = mPage->mMarks;       break;
           case eCSSProperty_size_width:   aValue = mPage->mSizeWidth;   break;
           case eCSSProperty_size_height:  aValue = mPage->mSizeHeight;  break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2734,8 +2875,36 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
               aValue = mContent->mQuotes->mClose;
             }
             break;
-          default:
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      else {
+        aValue.Reset();
+      }
+      break;
+
+    // nsCSSUserInterface
+    case eCSSProperty_user_input:
+    case eCSSProperty_modify_content:
+    case eCSSProperty_selection_style:
+    case eCSSProperty_auto_select:
+    case eCSSProperty_key_equivalent:
+    case eCSSProperty_auto_tab:
+    case eCSSProperty_resizer:
+      if (nsnull != mUserInterface) {
+        switch (aProperty) {
+          case eCSSProperty_user_input:       aValue = mUserInterface->mUserInput;       break;
+          case eCSSProperty_modify_content:   aValue = mUserInterface->mModifyContent;   break;
+          case eCSSProperty_selection_style:  aValue = mUserInterface->mSelectionStyle;  break;
+          case eCSSProperty_auto_select:      aValue = mUserInterface->mAutoSelect;      break;
+          case eCSSProperty_key_equivalent:
+            if (nsnull != mUserInterface->mKeyEquivalent) {
+              aValue = mUserInterface->mKeyEquivalent->mValue;
+            }
             break;
+          case eCSSProperty_auto_tab:         aValue = mUserInterface->mAutoTab;         break;
+          case eCSSProperty_resizer:          aValue = mUserInterface->mResizer;         break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -2784,7 +2953,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
           case eCSSProperty_stress:             aValue = mAural->mStress;           break;
           case eCSSProperty_voice_family:       aValue = mAural->mVoiceFamily;      break;
           case eCSSProperty_volume:             aValue = mAural->mVolume;           break;
-          default: break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
       else {
@@ -3256,6 +3425,18 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
         } while (nsnull != quotes);
       }
       break;
+    case eCSSProperty_key_equivalent:
+      if ((nsnull != mUserInterface) && (nsnull != mUserInterface->mKeyEquivalent)) {
+        nsCSSValueList* keyEquiv = mUserInterface->mKeyEquivalent;
+        do {
+          AppendValueToString(eCSSProperty_key_equivalent, keyEquiv->mValue, aValue);
+          keyEquiv = keyEquiv->mNext;
+          if (nsnull != keyEquiv) {
+            aValue.Append(' ');
+          }
+        } while (nsnull != keyEquiv);
+      }
+      break;
     default:
       AppendValueToString(aProperty, aValue);
       break;
@@ -3374,6 +3555,9 @@ void CSSDeclarationImpl::List(FILE* out, PRInt32 aIndent) const
   }
   if (nsnull != mContent) {
     mContent->List(out);
+  }
+  if (nsnull != mUserInterface) {
+    mUserInterface->List(out);
   }
   if (nsnull != mAural) {
     mAural->List(out);

@@ -78,6 +78,10 @@ struct nsCSSStruct {
 #define NS_CSS_CONTENT_SID  \
 {0x1629ef70, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
+// SID for the nsCSSUserInterface struct {4397c3a0-3efe-11d3-8060-006008159b5a}
+#define NS_CSS_USER_INTERFACE_SID  \
+{0x4397c3a0, 0x3efe, 0x11d3, {0x80, 0x60, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
 // SID for the nsCSSAural struct {166d2bb0-5a3b-11d2-803b-006008159b5a}
 #define NS_CSS_AURAL_SID  \
 {0x166d2bb0, 0x5a3b, 0x11d2, {0x80, 0x3b, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
@@ -204,13 +208,14 @@ struct nsCSSMargin : public nsCSSStruct  {
 
   nsCSSRect*  mMargin;
   nsCSSRect*  mPadding;
-  nsCSSRect*  mBorderWidth; // CHANGED
-  nsCSSRect*  mBorderColor; // CHANGED
-  nsCSSRect*  mBorderStyle; // CHANGED
-  nsCSSValue  mBorderRadius;  // NEW (extension)
-  nsCSSValue  mOutlineWidth; // NEW
-  nsCSSValue  mOutlineColor; // NEW
-  nsCSSValue  mOutlineStyle; // NEW 
+  nsCSSRect*  mBorderWidth;
+  nsCSSRect*  mBorderColor;
+  nsCSSRect*  mBorderStyle;
+  nsCSSValue  mBorderRadius;  // (extension)
+  nsCSSValue  mOutlineWidth;
+  nsCSSValue  mOutlineColor;
+  nsCSSValue  mOutlineStyle;
+  nsCSSValue  mFloatEdge; // NEW
 };
 
 struct nsCSSPosition : public nsCSSStruct  {
@@ -223,12 +228,13 @@ struct nsCSSPosition : public nsCSSStruct  {
 
   nsCSSValue  mPosition;
   nsCSSValue  mWidth;
-  nsCSSValue  mMinWidth; // NEW
-  nsCSSValue  mMaxWidth; // NEW
+  nsCSSValue  mMinWidth;
+  nsCSSValue  mMaxWidth;
   nsCSSValue  mHeight;
-  nsCSSValue  mMinHeight; // NEW
-  nsCSSValue  mMaxHeight; // NEW
-  nsCSSRect*  mOffset;  // NEW
+  nsCSSValue  mMinHeight;
+  nsCSSValue  mMaxHeight;
+  nsCSSValue  mBoxSizing; // NEW
+  nsCSSRect*  mOffset;
   nsCSSValue  mZIndex;
 };
 
@@ -310,7 +316,7 @@ struct nsCSSQuotes {
   nsCSSQuotes*  mNext;
 };
 
-struct nsCSSContent : public nsCSSStruct  { // NEW
+struct nsCSSContent : public nsCSSStruct  {
   nsCSSContent(void);
   nsCSSContent(const nsCSSContent& aCopy);
   virtual ~nsCSSContent(void);
@@ -323,6 +329,23 @@ struct nsCSSContent : public nsCSSStruct  { // NEW
   nsCSSCounterData* mCounterReset;
   nsCSSValue        mMarkerOffset;
   nsCSSQuotes*      mQuotes;
+};
+
+struct nsCSSUserInterface : public nsCSSStruct  { // NEW
+  nsCSSUserInterface(void);
+  nsCSSUserInterface(const nsCSSUserInterface& aCopy);
+  virtual ~nsCSSUserInterface(void);
+
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue      mUserInput;
+  nsCSSValue      mModifyContent;
+  nsCSSValue      mSelectionStyle;
+  nsCSSValue      mAutoSelect;
+  nsCSSValueList* mKeyEquivalent;
+  nsCSSValue      mAutoTab;
+  nsCSSValue      mResizer;
 };
 
 struct nsCSSAural : public nsCSSStruct  { // NEW
