@@ -30,6 +30,7 @@ function DoEnabling()
   // radio buttons
   var radiogroup = document.getElementById("networkProxyType");
 
+  var prefstring;
   switch ( radiogroup.value ) {
     case "0":
       for (i = 0; i < manual.length; i++)
@@ -41,16 +42,22 @@ function DoEnabling()
       for (i = 0; i < auto.length; i++)
         auto[i].setAttribute( "disabled", "true" );
       if (!radiogroup.disabled)
-        for (i = 0; i < manual.length; i++)
-          manual[i].removeAttribute( "disabled" );
+	for (i = 0; i < manual.length; i++) {
+	  prefstring = manual[i].getAttribute( "prefstring" );
+	  if (!parent.hPrefWindow.getPrefIsLocked(prefstring))
+	    manual[i].removeAttribute( "disabled" );
+	}
       break;
     case "2":
     default:
       for (i = 0; i < manual.length; i++)
         manual[i].setAttribute( "disabled", "true" );
       if (!radiogroup.disabled)
-        for (i = 0; i < auto.length; i++)
-          auto[i].removeAttribute( "disabled" );
+        for (i = 0; i < auto.length; i++) {
+	  prefstring = manual[i].getAttribute( "prefstring" );
+	  if (!parent.hPrefWindow.getPrefIsLocked(prefstring))
+            auto[i].removeAttribute( "disabled" );
+	}
       break;
   }
 }
