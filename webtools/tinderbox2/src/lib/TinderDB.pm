@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.9 $ 
-# $Date: 2002/05/02 23:53:24 $ 
+# $Revision: 1.10 $ 
+# $Date: 2002/05/03 04:10:29 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -257,6 +257,53 @@ sub construct_event_times_vec {
 } # construct_event_times_vec
 
 
+# Create a list of times, based on when build events occurred, which
+# determine the build table row spacing.  This is traditional
+# Tinderbox1 behavior. All times are stored in time() format.
+
+sub construct_build_event_times_vec {
+  my ($start_time, $end_time, $tree) = @_;
+  my (@out) =();
+  
+  if ($DEBUG) {
+    (TreeData::tree_exists($tree)) ||
+      die("TinderDB::loadtree_db(): ".
+          "Tree: $tree, not defined.");
+  }
+
+  my @out;
+
+  # we need an eval since the builds may not be configured.
+
+  # we do not need to loadtree_db() since if we do not have it already
+  # we would not be configured for it and it would give the empty set
+  # since there is no data anyway.
+
+  eval {
+      local $SIG{'__DIE__'} = sub { };
+
+      use TinderDB::Build;
+      
+      my ($build_obj) = TinderDB::Build->new();
+      
+      @out= $db->event_times_vec($start_time, $end_time, $tree);
+  };
+
+
+  # Round all times to nearest minute, so that we do not get two times
+  # appearing in the time column which display as the same string.
+  # We do however want times which are odd numbers of minutes.
+
+  @out = map { ( $_ - ($_%60) ) } @out;
+  @out = main::uniq(@out);
+
+  # sort numerically descending
+  @out = sort {$b <=> $a} @out ;
+
+  return [@out];
+} # construct_build_event_times_vec
+
+
 # Our functions for database methods just iterate over the available
 # implementations.
 
@@ -446,12 +493,17 @@ sub status_table_body {
   # we have data for.
 
   my ($row_times);
-  if ($UNIFORM_ROW_SPACING) {
+  if ($ROW_SPACING_DISIPLINE == 'uniform') {
       $row_times = construct_uniform_times_vec($start_time, $end_time, 
                                                $TABLE_SPACING,);
-  } else {
+  } elsif ($ROW_SPACING_DISIPLINE == 'event_driven') {
       $row_times = construct_event_times_vec($start_time, $end_time, 
                                              $tree);
+  } elsif ($ROW_SPACING_DISIPLINE == 'build_event_driven') {
+      $row_times =  construct_build_event_times_vec($start_time, $end_time, 
+                                                    $tree);
+  } else {
+      die("unknown row spacing disipline: $ROW_SPACING_DISIPLINE\n");
   }
 
   # We must call html_start before we call html_row.  
