@@ -168,10 +168,17 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
       }
       break;
     case eXULPopupType_context:
+#ifdef	XP_MAC
+      // XXX: Handle Mac (currently checks if CTRL key is down)
+	PRBool	ctrlKey = PR_FALSE;
+	uiEvent->GetCtrlKey(&ctrlKey);
+	if (ctrlKey == PR_TRUE)
+#else
       // Check for right mouse button down
       uiEvent->GetButton(&button);
-      // XXX: Handle Mac 
-      if (button == 3) {
+      if (button == 3)
+#endif
+      {
         // Time to launch a context menu.
         LaunchPopup(aMouseEvent);
       }
