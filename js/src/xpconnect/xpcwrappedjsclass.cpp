@@ -67,8 +67,8 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
 nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
                                          nsIInterfaceInfo* aInfo)
     : mXPCContext(xpcc),
-      mIID(aIID),
       mInfo(aInfo),
+      mIID(aIID),
       mDescriptors(NULL)
 {
     NS_ADDREF(mInfo);

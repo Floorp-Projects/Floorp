@@ -192,11 +192,11 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
                                      nsXPCWrappedNativeClass* aClass,
                                      nsXPCWrappedNative* root)
     : mObj(aObj),
-      mClass(aClass),
       mJSObj(NULL),
+      mClass(aClass),
+      mDynamicScriptable(NULL),
       mRoot(root ? root : this),
-      mNext(NULL),
-      mDynamicScriptable(NULL)
+      mNext(NULL)
 
 {
     NS_PRECONDITION(mObj, "bad object to wrap");
