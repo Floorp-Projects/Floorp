@@ -22,6 +22,7 @@ DEFINES=-D_IMPL_NS_APPSHELL -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
 CPPSRCS=                                \
+ nsXULCommand.cpp                  \
  nsAppShellService.cpp                  \
  nsWebShellWindow.cpp                   \
  nsAppShellFactory.cpp                  \
@@ -29,6 +30,7 @@ CPPSRCS=                                \
  $(NULL)
 
 CPP_OBJS=                               \
+ .\$(OBJDIR)\nsXULCommand.obj      \
  .\$(OBJDIR)\nsAppShellService.obj      \
  .\$(OBJDIR)\nsWebShellWindow.obj       \
  .\$(OBJDIR)\nsAppShellFactory.obj      \

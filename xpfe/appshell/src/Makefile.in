@@ -28,6 +28,7 @@ LIBRARY_NAME = nsappshell
 MODULE=raptor
 
 CPPSRCS= \
+	nsXULCommand.cpp	\
 	nsAppShellService.cpp	\
 	nsWebShellWindow.cpp	\
 	nsAppShellFactory.cpp	\
