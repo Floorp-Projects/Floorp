@@ -27,8 +27,9 @@
 #define TOKEN_DELIMITERS "\t\r\n "
 
 // nsISupports methods
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsTXTToHTMLConv,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsTXTToHTMLConv,
                               nsIStreamConverter,
+                              nsITXTToHTMLConv,
                               nsIStreamObserver,
                               nsIStreamListener);
 
@@ -55,7 +56,13 @@ nsTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
 // nsIStreamObserver methods
 NS_IMETHODIMP
 nsTXTToHTMLConv::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
-    mBuffer = "<html>\n";
+    mBuffer = "<html>\n<head><title>";
+    mBuffer.Append(mPageTitle);
+    mBuffer.AppendWithConversion("</title></head>\n<body>\n");
+    if (mPreFormatHTML) {     // Use <pre> tags
+      mBuffer.AppendWithConversion("<pre>\n");
+    }
+
     return mListener->OnStartRequest(aChannel, aContext);
 }
 NS_IMETHODIMP
@@ -68,7 +75,10 @@ nsTXTToHTMLConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
         if (back == -1) back = mBuffer.Length();
         (void)CatHTML(0, mBuffer.Length());
     }
-    mBuffer += "\n</html>";    
+    if (mPreFormatHTML) {
+      mBuffer.AppendWithConversion("</pre>\n");
+    }
+    mBuffer += "\n</body></html>";    
     
     nsCOMPtr<nsIInputStream> inputData;
     nsCOMPtr<nsISupports>    inputDataSup;
@@ -83,6 +93,19 @@ nsTXTToHTMLConv::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
     if (NS_FAILED(rv)) return rv;
 
     return mListener->OnStopRequest(aChannel, aContext, aStatus, aMsg);
+}
+
+// nsITXTToHTMLConv methods
+NS_IMETHODIMP
+nsTXTToHTMLConv::SetTitle(const PRUnichar *aTitle) {
+  mPageTitle.Assign(aTitle);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTXTToHTMLConv::PreFormatHTML(PRBool value) {
+  mPreFormatHTML = value;
+  return NS_OK;
 }
 
 // nsIStreamListener method
@@ -156,6 +179,7 @@ nsTXTToHTMLConv::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
 nsTXTToHTMLConv::nsTXTToHTMLConv() {
     NS_INIT_REFCNT();
     mToken = nsnull;
+    mPreFormatHTML = PR_FALSE;
 }
 
 PRBool CleanupTokens(void *aElement, void *aData) {
