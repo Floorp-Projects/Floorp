@@ -283,6 +283,35 @@ nsNativeCharsetConverter::LazyInit()
     NS_ASSERTION(gUnicodeToNative != INVALID_ICONV_T, "no ucs-2 to native converter");
 #endif
 
+    /*
+     * On Solaris 8 (and newer?), the iconv modules converting to UCS-2
+     * prepend a byte order mark unicode character (BOM, u+FEFF) during
+     * the first use of the iconv converter.
+     *
+     * This dummy conversion gets rid of the BOMs and fixes bugid 153562.
+     */
+    char dummy_input[1] = { ' ' };
+    char dummy_output[4];
+
+    if (gNativeToUnicode != INVALID_ICONV_T) {
+	const char *input = dummy_input;
+	size_t input_left = sizeof(dummy_input);
+	char *output = dummy_output;
+	size_t output_left = sizeof(dummy_output);
+
+	xp_iconv(gNativeToUnicode, &input, &input_left, &output, &output_left);
+    }
+#if defined(ENABLE_UTF8_FALLBACK_SUPPORT)
+    if (gUTF8ToUnicode != INVALID_ICONV_T) {
+	const char *input = dummy_input;
+	size_t input_left = sizeof(dummy_input);
+	char *output = dummy_output;
+	size_t output_left = sizeof(dummy_output);
+
+	xp_iconv(gUTF8ToUnicode, &input, &input_left, &output, &output_left);
+    }
+#endif
+
     gInitialized = PR_TRUE;
 }
 
