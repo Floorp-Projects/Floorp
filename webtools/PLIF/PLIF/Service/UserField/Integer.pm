@@ -40,5 +40,5 @@ sub type {
 sub validate {
     my $self = shift;
     my($data) = @_;
-    return ((not defined($data)) or ($data =~ m/^\d+$/o));
+    return ((not defined($data)) or ($data =~ m/^-?\d+$/o));
 }
