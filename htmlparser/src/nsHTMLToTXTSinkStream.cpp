@@ -685,7 +685,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode){
   else if (type == eHTMLTag_br)
   {
     nsString temp("\n");
-    Write(text);
+    Write(temp);
     mColPos++;
   }
   else if (type == eHTMLTag_newline)
