@@ -123,6 +123,7 @@
 #include "nsIDOMWindowCollection.h"
 #include "nsISelection.h"
 #include "nsITooltipListener.h"
+#include "nsISimpleEnumerator.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

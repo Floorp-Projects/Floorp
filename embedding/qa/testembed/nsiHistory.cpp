@@ -92,7 +92,7 @@ void CNsIHistory::OnInterfacesNsishistory()
 
    PRInt32 numEntries = 5;
    PRInt32 theIndex;
-   PRInt32 theMaxLength = 100;
+   PRInt32 theMaxLength = 1;
 
    CString shString;
 
@@ -138,6 +138,12 @@ void CNsIHistory::OnInterfacesNsishistory()
 		QAOutput("We have the History Entry object!", 1);	
 
 			    // getEntryAtIndex() tests
+		if (theMaxLength < numEntries)
+		{
+			QAOutput("Setting number of entries to maximum length!", 1);
+			numEntries = theMaxLength;
+		}
+
 		for (theIndex = 0; theIndex < numEntries; theIndex++)
 		{ 
 			FormatAndPrintOutput("the index = ", theIndex, 2); 
