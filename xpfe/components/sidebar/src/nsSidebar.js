@@ -332,10 +332,14 @@ nsSidebar.prototype.flags = nsIClassInfo.DOM_OBJECT;
 nsSidebar.prototype.classDescription = "Sidebar";
 
 // method of nsIClassInfo
-nsSidebar.prototype.getInterfaces = function(c) {c.value = 0; return null;}
+nsSidebar.prototype.getInterfaces = function(count) {
+    var interfaceList = [nsISidebar, nsIClassInfo];
+    count.value = interfaceList.length;
+    return interfaceList;
+}
 
 // method of nsIClassInfo
-nsSidebar.prototype.getHelperForLanguage = function() {return null;}
+nsSidebar.prototype.getHelperForLanguage = function(count) {return null;}
 
 nsSidebar.prototype.QueryInterface =
 function (iid) {
