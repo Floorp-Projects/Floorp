@@ -488,7 +488,7 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp)
 extern void
 jsj_ExitJava(JSJavaThreadState *jsj_env)
 {
-    JSIsCallingApplet = JS_FALSE;
+    jsj_JSIsCallingApplet = JS_FALSE;
     if (jsj_env) {
         JS_ASSERT(jsj_env->recursion_depth > 0);
         if (--jsj_env->recursion_depth == 0)

@@ -1804,7 +1804,7 @@ jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
         return JS_FALSE;
 
     if (jaApplet && (*jEnv)->IsInstanceOf(jEnv, java_obj, jaApplet)) {
-        JSIsCallingApplet = JS_TRUE;
+        jsj_JSIsCallingApplet = JS_TRUE;
     }
 
     /* Try to find an instance method with the given name first */
