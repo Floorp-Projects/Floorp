@@ -43,11 +43,6 @@
 #include "nsIPluginTagInfo2.h"
 #include "nsIJVMPluginTagInfo.h"
 
-// Commonly used interface IDs.
-
-static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
-static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
-
 extern nsIPluginManager* thePluginManager;
 extern nsIPluginManager2* thePluginManager2;
 
@@ -180,14 +175,16 @@ void MRJContext::processAppletTag()
 	} attributes = { 0, NULL, NULL }, parameters = { 0, NULL, NULL };
 
 	MRJPageAttributes pageAttributes = { 0, NULL, NULL, false };
+	nsPluginTagType pluginTagType = nsPluginTagType_Embed;
 
 	// obtain the applet's attributes & parameters.
 	nsIPluginTagInfo* tagInfo = NULL;
-	if (mPeer->QueryInterface(kIPluginTagInfoIID, &tagInfo) == NS_OK) {
+	if (mPeer->QueryInterface(nsIPluginTagInfo::GetIID(), &tagInfo) == NS_OK) {
 		tagInfo->GetAttributes(attributes.fCount, attributes.fNames, attributes.fValues);
 		nsIPluginTagInfo2* tagInfo2 = NULL;
-		if (tagInfo->QueryInterface(kIPluginTagInfo2IID, &tagInfo2) == NS_OK) {
+		if (tagInfo->QueryInterface(nsIPluginTagInfo2::GetIID(), &tagInfo2) == NS_OK) {
 			tagInfo2->GetParameters(parameters.fCount, parameters.fNames, parameters.fValues);
+			tagInfo2->GetTagType(&pluginTagType);
 
 			// get the URL of the HTML document	containing the applet.
 			const char* documentBase = NULL;
@@ -239,11 +236,19 @@ void MRJContext::processAppletTag()
 		const char* name = attributes.fNames[i];
 		const char* value = attributes.fValues[i];
 		if (name != NULL && value != NULL) {
+			// if running as an EMBED tag plugin, there may be some attribute
+			// rewriting going on. Sun's Java plugin uses attributes with the
+			// "java_" prefix.
+			if (pluginTagType == nsPluginTagType_Embed) {
+				static const char kJavaPluginAttributePrefix[] = "java_";
+				if (strncmp(name, kJavaPluginAttributePrefix, sizeof(kJavaPluginAttributePrefix) - 1) == 0)
+					name += (sizeof(kJavaPluginAttributePrefix) - 1);
+			}
 			if (strcasecmp(name, "CODEBASE") == 0) {
 				if (pageAttributes.codeBase == NULL)
 					pageAttributes.codeBase = value;
 			} else
-			if (strcasecmp(name, "CODE") == 0 || strcasecmp(name, "java_CODE") == 0) {
+			if (strcasecmp(name, "CODE") == 0) {
 				status = ::JMNewTextRef(mSessionRef, &info.fAppletCode, kTextEncodingMacRoman, value, strlen(value));
 			} else
 			if (strcasecmp(name, "CLASSID") == 0) {
