@@ -142,7 +142,7 @@
     BookmarksService::GetTitleAndHrefForBrowserView([[mBrowserWindowController getBrowserWrapper] getBrowserView],
                                                     title, href);
 
-    mCachedHref = [NSString stringWithCharacters: href.get() length: nsCRT::strlen(href.get())];
+    mCachedHref = [NSString stringWithCharacters: href.get() length: href.Length()];
     [mCachedHref retain];
   }
   else {
@@ -151,7 +151,7 @@
   }
   
   NSTextField* textField = [mBrowserWindowController getAddBookmarkTitle];
-  [textField setStringValue: [NSString stringWithCharacters: title.get() length: nsCRT::strlen(title.get())]];
+  [textField setStringValue: [NSString stringWithCharacters: title.get() length: title.Length()]];
 
   [mBrowserWindowController cacheBookmarkDS: self];
 
@@ -341,8 +341,7 @@
     nsAutoString href;
     content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, href);
     if (!href.IsEmpty()) {
-      nsCAutoString cstr; cstr.AssignWithConversion(href);
-      NSString* url = [NSString stringWithCString: cstr.get()];
+      NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
       [[[mBrowserWindowController getBrowserWrapper] getBrowserView] loadURI:[NSURL URLWithString: url] flags:			NSLoadFlagsNone];
       // Focus and activate our content area.
       [[[mBrowserWindowController getBrowserWrapper] getBrowserView] setActive: YES];
@@ -350,9 +349,17 @@
   }
 }
 
+
+//
+// outlineView:shouldEditTableColumn:item: (delegate method)
+//
+// Called by the outliner to determine whether or not we should allow the 
+// user to edit this item. For now, Cocoa doesn't correctly handle editing
+// of attributed strings with icons, so we can't turn this on. :(
+//
 - (BOOL)outlineView:(NSOutlineView *)outlineView shouldEditTableColumn:(NSTableColumn *)tableColumn item:(id)item
 {
-    return NO;
+	return NO;
 }
 
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item
@@ -416,11 +423,10 @@
         nsIContent* content = [item contentNode];
         nsAutoString nameAttr;
         content->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, nameAttr);
-        nsCAutoString cStr; cStr.AssignWithConversion(nameAttr);
         
         //Set cell's textual contents
         [cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length])
-                                 withString:[NSString stringWithCString: cStr.get()]];
+                                 withString:[NSString stringWithCharacters: nameAttr.get() length: nameAttr.Length()]];
         
         //Create an attributed string to hold the empty attachment, then release the components.
         attachmentAttrString = [[NSMutableAttributedString attributedStringWithAttachment:textAttachment] retain];
@@ -459,6 +465,36 @@
 
 - (void)outlineView:(NSOutlineView *)outlineView setObjectValue:(id)object forTableColumn:(NSTableColumn *)tableColumn byItem:(id)item
 {
+#if NOT_USED
+  // ignore all this. It doesn't work, but i'm leaving it here just in case we ever try to turn 
+  // this code back on. We have to remove the attributes from the string in order to correctly
+  // set it in the DOM.
+  
+  NSString *columnName = [tableColumn identifier];
+  if ( [columnName isEqualTo:@"name"] ) {
+    // remove the attributes
+    int strLen = [object length];
+    NSMutableAttributedString *cellValue = [[NSMutableAttributedString alloc] initWithAttributedString:object];
+    [cellValue removeAttribute:NSBaselineOffsetAttributeName range:NSMakeRange(0,1)];
+    [cellValue removeAttribute:NSAttachmentAttributeName range:NSMakeRange(0,strLen)];
+
+    // extract the unicode
+    strLen = [cellValue length];
+    PRUnichar* buffer = new PRUnichar[strLen + 1];
+    buffer[strLen] = '\0';
+    if ( !buffer )
+      return;
+    [cellValue getCharacters: buffer];
+    nsAutoString nameAttr;
+    nameAttr.Adopt(buffer);
+    
+    // stash it into the dom.
+    nsIContent* content = [item contentNode];
+    content->SetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, nameAttr, PR_TRUE);
+    
+    [cellValue release];
+  }
+#endif
 }
 
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren
@@ -514,7 +550,7 @@
 {
   NSMutableArray* contentIds = [NSMutableArray array];
   
-  for (int i = 0; i < [items count]; ++i) {
+  for (unsigned int i = 0; i < [items count]; ++i) {
     nsCOMPtr<nsIContent> content = [[items objectAtIndex:i] contentNode];
     PRUint32 contentId;
     content->GetContentID(&contentId);
@@ -526,6 +562,7 @@
 
   return YES;
 }
+
 
 @end
 
@@ -1042,8 +1079,7 @@ BookmarksService::AddMenuBookmark(NSMenu* aMenu, nsIContent* aParent, nsIContent
 {
   nsAutoString name;
   aChild->GetAttr(kNameSpaceID_None, gNameAtom, name);
-  nsCAutoString nameCStr; nameCStr.AssignWithConversion(name);
-  NSString* title = [NSString stringWithCString: nameCStr.get()];
+  NSString* title = [NSString stringWithCharacters: name.get() length: name.Length()];
 
   // Create a menu or menu item for the child.
   NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle: title action: NULL keyEquivalent: @""] autorelease];
@@ -1102,11 +1138,10 @@ BookmarksService::OpenMenuBookmark(BrowserWindowController* aController, id aMen
   // Get the href attribute.  This is the URL we want to load.
   nsAutoString href;
   content->GetAttr(kNameSpaceID_None, gHrefAtom, href);
-  nsCAutoString cref; cref.AssignWithConversion(href);
-  if (cref.IsEmpty())
+  if (href.IsEmpty())
     return;
 
-  NSString* url = [NSString stringWithCString: cref.get()];
+  NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
 
   // Now load the URL in the window.
   [aController loadURL:[NSURL URLWithString: url]];
@@ -1304,8 +1339,7 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
       nsAutoString href;
       elt->GetAttribute(NS_LITERAL_STRING("href"), href);
       if (!href.IsEmpty()) {
-        nsCAutoString cref; cref.AssignWithConversion(href);
-        NSString* url = [NSString stringWithCString: cref.get()];
+        NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
         NSTabViewItem* tabViewItem = nil;
         if (currentIndex >= total) {
           // We need to make a new tab.
@@ -1366,7 +1400,7 @@ BookmarksService::DragBookmark(nsIDOMElement* aElement, NSView* aView, NSEvent* 
   
   nsAutoString nameStr;
   aElement->GetAttribute(NS_LITERAL_STRING("name"), nameStr);
-  title = [NSString stringWithCharacters: nameStr.get() length: nsCRT::strlen(nameStr.get())];
+  title = [NSString stringWithCharacters: nameStr.get() length: nameStr.Length()];
   
   [aView dragImage: [MainController createImageForDragging: CreateIconForBookmark(aElement) title:title]
                     at:NSMakePoint(0,0) offset:NSMakeSize(0,0)
@@ -1395,7 +1429,7 @@ BookmarksService::CompleteBookmarkDrag(NSPasteboard* aPasteboard, nsIDOMElement*
   contentIds = [aPasteboard propertyListForType: @"MozBookmarkType"];
   if (contentIds) {
     // drag type is chimera bookmarks
-    for (int i = 0; i < [contentIds count]; ++i) {
+    for (unsigned int i = 0; i < [contentIds count]; ++i) {
       BookmarkItem* item = [gDictionary objectForKey: [contentIds objectAtIndex:i]];
       nsCOMPtr<nsIDOMElement> bookmarkElt = do_QueryInterface([item contentNode]);
       MoveBookmarkToFolder(bookmarkElt, aFolderElt, beforeElt);
