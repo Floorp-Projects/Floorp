@@ -287,6 +287,10 @@ NS_IMETHODIMP FileImpl::Seek(PRSeekWhence whence, PRInt32 offset)
        return NS_FILE_RESULT(PR_BAD_DESCRIPTOR_ERROR);
     mFailed = PR_FALSE; // reset on a seek.
     mEOF = PR_FALSE; // reset on a seek.
+    
+    // To avoid corruption, we flush during a seek. see bug number 18949
+    Flush();
+
     PRInt32 position = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
     PRInt32 available = PR_Available(mFileDesc);
     PRInt32 fileSize = position + available;
