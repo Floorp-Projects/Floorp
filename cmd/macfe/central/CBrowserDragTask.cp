@@ -46,17 +46,13 @@ CBrowserDragTask::~CBrowserDragTask()
 //
 // AddFlavorBookmark
 //
-// This flavor is currently used by the Proxy Icon and the Personal Toolbar
-// to shuttle around url/title information. The data format is plain text in
-// the form of URL<cr>Title.
+// This flavor is currently used to shuttle around url/title information, and is
+// used by external applications (like DragThing) to get info about bookmarks/etc.
+// The data format is plain text in the form of URL<cr>Title.
 //
 // This flavor may or may not contain data. The proxy icon, for example, would want to 
 // include the data so that if it is dropped in the NavCenter, the NC could 
 // determine if the drop was allowable based on the URL.
-//
-// NOTE: THIS FLAVOR WILL NOT BE USED BY THE PERSONAL TOOLBAR IN THE FUTURE
-// AND WILL ONLY BE USED BY THE PROXY ICON. AS A RESULT, IT WILL BE MOVED
-// INTO CProxyDragTask.
 //
 void
 CBrowserDragTask::AddFlavorBookmark(ItemReference inItemRef, const char* inData)
@@ -67,7 +63,7 @@ CBrowserDragTask::AddFlavorBookmark(ItemReference inItemRef, const char* inData)
 									emBookmarkDrag,
 									inData,			
 									inData ? strlen(inData) + 1 : 0,
-									flavorSenderTranslated | flavorSenderOnly);
+									flavorSenderTranslated );
 	ThrowIfOSErr_(theErr);
 }							
 
