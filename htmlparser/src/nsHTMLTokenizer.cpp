@@ -576,16 +576,20 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
       //and a textkey of "/". We should destroy it, and tell the 
       //start token it was empty.
       if(NS_SUCCEEDED(result)) {
+        PRBool isUsableAttr=PR_TRUE;
         const nsAReadableString& key=theToken->GetKey();
         const nsAReadableString& text=theToken->GetValue();
-        if((mDoXMLEmptyTags) && (kForwardSlash==key.CharAt(0)) && (0==text.Length())){
-          //tada! our special case! Treat it like an empty start tag...
+         // support XML like syntax to fix bugs like 44186
+        if((kForwardSlash==key.CharAt(0)) && (0==text.Length())){
           aToken->SetEmpty(PR_TRUE);
-          IF_FREE(theToken);
+          isUsableAttr=!mDoXMLEmptyTags; 
         }
-        else {
+        if(isUsableAttr) {
           theAttrCount++;
           AddToken((CToken*&)theToken,result,&mTokenDeque,theAllocator);
+        }
+        else {
+          IF_FREE(theToken);
         }
       }
       else { //if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
@@ -677,6 +681,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         }//if
       }
       
+      CStartToken* theStartToken=NS_STATIC_CAST(CStartToken*,aToken);
       if(theTagHasAttributes) {
         if (eViewSource==mParserCommand) {
           // Since we conserve whitespace in view-source mode,
@@ -684,7 +689,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           // and let the first attribute grab it.
           aScanner.SetPosition(start, PR_FALSE, PR_TRUE);
         }
-        result=ConsumeAttributes(aChar,(CStartToken*)aToken,aScanner);
+        result=ConsumeAttributes(aChar,theStartToken,aScanner);
       }
 
       /*  Now that that's over with, we have one more problem to solve.
@@ -700,7 +705,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         }
           
         if(mRecordTrailingContent) 
-          RecordTrailingContent((CStartToken*)aToken,aScanner,origin);
+          RecordTrailingContent(theStartToken,aScanner,origin);
         
         //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         if(gHTMLElements[theTag].CanContainType(kCDATA)) {
@@ -709,12 +714,22 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           endText.Assign(endTagName);
           endText.InsertWithConversion("</",0,2);
 
-          CToken* textToken=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
-          result=((CTextToken*)textToken)->ConsumeUntil(0,PRBool(theTag!=eHTMLTag_script),aScanner,endText,mParseMode,aFlushTokens);  //tell new token to finish consuming text...    
-
-          CToken* endToken=theAllocator->CreateTokenOfType(eToken_end,theTag,endTagName);
-          AddToken(textToken,result,&mTokenDeque,theAllocator);
-          AddToken(endToken,result,&mTokenDeque,theAllocator);
+          CToken*     text=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
+          CTextToken* textToken=NS_STATIC_CAST(CTextToken*,text);
+          result=textToken->ConsumeUntil(0,theTag!=eHTMLTag_script,aScanner,endText,mParseMode,aFlushTokens);  //tell new token to finish consuming text...    
+          
+          // Fix bug 44186
+          // Support XML like syntax, i.e., <script src="external.js"/> == <script src="external.js"></script>
+          // Note: if aFlushTokens is TRUE then we have seen an </script>
+          if(!theStartToken->IsEmpty() || aFlushTokens) {
+            theStartToken->SetEmpty(PR_FALSE); // Setting this would make cases like <script/>d.w("text");</script> work.
+            CToken* endToken=theAllocator->CreateTokenOfType(eToken_end,theTag,endTagName);
+            AddToken(text,result,&mTokenDeque,theAllocator);
+            AddToken(endToken,result,&mTokenDeque,theAllocator);
+          }
+          else {
+            IF_FREE(text);
+          }
         }
       }
  

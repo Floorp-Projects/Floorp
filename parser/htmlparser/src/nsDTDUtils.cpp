@@ -371,7 +371,7 @@ nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
 
   MOZ_COUNT_CTOR(nsDTDContext);
   mResidualStyleCount=0;
-  mContextTopIndex=0;
+  mContextTopIndex=-1;
   mTableStates=0;
   mCounters=0;
   mTokenAllocator=0;

@@ -147,7 +147,7 @@ CNavDTD::CNavDTD() : nsIDTD(),
   mHasOpenBody=PR_FALSE;
   mHasOpenHead=0;
   mHasOpenForm=PR_FALSE;
-  mHasOpenMap=PR_FALSE;
+  mOpenMapCount=0;
   mHasOpenNoXXX=0;
   mFormContext=0;
   mMapContext=0;
@@ -802,8 +802,13 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     
     if(theToken){
       //Before dealing with the token normally, we need to deal with skip targets
-      if((!execSkipContent) && (theType!=eToken_end) &&
-         (eHTMLTag_unknown==mSkipTarget) && (gHTMLElements[theTag].mSkipTarget)){ //create a new target
+     CStartToken* theStartToken=NS_STATIC_CAST(CStartToken*,aToken);
+     if((!execSkipContent)                  && 
+        (theType!=eToken_end)               &&
+        (eHTMLTag_unknown==mSkipTarget)     && 
+        (gHTMLElements[theTag].mSkipTarget) && 
+        (!theStartToken->IsEmpty())) { // added empty token check for bug 44186
+        //create a new target
         mSkipTarget=gHTMLElements[theTag].mSkipTarget;
         mSkippedContent.Push(theToken);
       }
@@ -1611,12 +1616,12 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_area:
-          if(!mHasOpenMap) isTokenHandled=PR_TRUE;
+          if(!mOpenMapCount) isTokenHandled=PR_TRUE;
 
           STOP_TIMER();
           MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleStartToken(), this=%p\n", this));
           
-          if (mHasOpenMap && mSink) {
+          if (mOpenMapCount>0 && mSink) {
             result=mSink->AddLeaf(*theNode);
             isTokenHandled=PR_TRUE;
           }
@@ -2756,7 +2761,7 @@ PRBool CNavDTD::HasOpenContainer(eHTMLTags aContainer) const {
     case eHTMLTag_form:
       result=mHasOpenForm; break;
     case eHTMLTag_map: 
-      result=mHasOpenMap; break; 
+      result=mOpenMapCount>0; break; 
     default:
       result=mBodyContext->HasOpenContainer(aContainer);
       break;
@@ -3162,8 +3167,6 @@ nsresult CNavDTD::CloseForm(const nsIParserNode *aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::OpenMap(const nsIParserNode *aNode){
-  if(mHasOpenMap)
-    CloseMap(aNode);
 
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenMap(), this=%p\n", this));
@@ -3175,7 +3178,7 @@ nsresult CNavDTD::OpenMap(const nsIParserNode *aNode){
 
   if(NS_OK==result) {
     mBodyContext->Push(aNode);
-    mHasOpenMap=PR_TRUE;
+    mOpenMapCount++;
   }
   return result;
 }
@@ -3191,8 +3194,8 @@ nsresult CNavDTD::OpenMap(const nsIParserNode *aNode){
 nsresult CNavDTD::CloseMap(const nsIParserNode *aNode){
 //  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult result=NS_OK;
-  if(mHasOpenMap) {
-    mHasOpenMap=PR_FALSE;
+  if(mOpenMapCount) {
+    mOpenMapCount--;
 
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseMap(), this=%p\n", this));
