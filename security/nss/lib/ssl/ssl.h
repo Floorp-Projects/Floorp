@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.4 2001/01/05 23:53:38 nelsonb%netscape.com Exp $
+ * $Id: ssl.h,v 1.5 2001/01/06 20:56:40 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -114,9 +114,11 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 #define SSL_ENABLE_TLS		       13 /* enable TLS (off by default) */
 #define SSL_ROLLBACK_DETECTION         14 /* for compatibility, default: on */
 
+#ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRBool on);
 SSL_IMPORT SECStatus SSL_EnableDefault(int option, PRBool on);
+#endif
 
 /* New function names */
 SSL_IMPORT SECStatus SSL_OptionSet(PRFileDesc *fd, PRInt32 option, PRBool on);
@@ -132,9 +134,11 @@ SSL_IMPORT SECStatus SSL_CertDBHandleSet(PRFileDesc *fd, CERTCertDBHandle *dbHan
 ** EnableCipher records user preferences.
 ** SetPolicy sets the policy according to the policy module.
 */
+#ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_EnableCipher(long which, PRBool enabled);
 SSL_IMPORT SECStatus SSL_SetPolicy(long which, int policy);
+#endif
 
 /* New function names */
 SSL_IMPORT SECStatus SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 cipher, PRBool enabled);
@@ -319,29 +323,15 @@ SSL_IMPORT int SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
 */
 SSL_IMPORT int SSL_ReHandshake(PRFileDesc *fd, PRBool flushCache);
 
-/*
+#ifdef SSL_DEPRECATED_FUNCTION 
+/* deprecated!
 ** For the server, request a new handshake.  For the client, begin a new
 ** handshake.  Flushes SSL3 session cache entry first, ensuring that a 
 ** full handshake will be done.  
 ** This call is equivalent to SSL_ReHandshake(fd, PR_TRUE)
 */
 SSL_IMPORT int SSL_RedoHandshake(PRFileDesc *fd);
-
-/*
-** Return 1 if the socket is direct, 0 if not, -1 on error
-*/
-SSL_IMPORT int SSL_CheckDirectSock(PRFileDesc *s);
-
-/*
-** A cousin to SSL_Bind, this takes an extra arg: dsthost, so we can
-** set up sockd connection. This should be used with socks enabled.
-*/
-SSL_IMPORT int SSL_BindForSockd(PRFileDesc *s, PRNetAddr *sa, long dsthost);
-
-/*
-** Configure ssl for using socks.
-*/
-SSL_IMPORT SECStatus SSL_ConfigSockd(PRFileDesc *fd, PRUint32 host, PRUint16 port);
+#endif
 
 /*
  * Allow the application to pass a URL or hostname into the SSL library
@@ -374,12 +364,6 @@ SSL_IMPORT void SSL_ClearSessionCache(void);
 ** You only have to do this if you're tunneling through a proxy.
 */
 SSL_IMPORT int SSL_SetSockPeerID(PRFileDesc *fd, char *peerID);
-
-/*
-** Read the socks config file.  You must do this before doing anything with
-** socks.
-*/
-SSL_IMPORT int SSL_ReadSocksConfFile(PRFileDesc *fp);
 
 /*
 ** Reveal the security information for the peer. 
