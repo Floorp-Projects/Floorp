@@ -164,7 +164,7 @@ pref("nglayout.widget.gfxscrollbars", true);
 pref("nglayout.view.useViewManager2", true);
 
 // css2 hover pref
-pref("nglayout.events.showHierarchicalHover", true);
+pref("nglayout.events.showHierarchicalHover", false);
 
 // Smart Browsing prefs
 pref("browser.related.enabled", true);
