@@ -3014,6 +3014,22 @@ void nsWindow::StoreProperty(char *property, unsigned char *data)
 }
 
 // These are all of our drag and drop operations
+
+void
+nsWindow::InitDragEvent (nsMouseEvent &aEvent)
+{
+  // set everything to zero
+  memset(&aEvent, 0, sizeof(nsMouseEvent));
+  // set the keyboard modifiers
+  gint x, y;
+  GdkModifierType state = (GdkModifierType)0;
+  gdk_window_get_pointer(NULL, &x, &y, &state);
+  aEvent.isShift = (state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+  aEvent.isControl = (state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+  aEvent.isAlt = (state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+  aEvent.isMeta = PR_FALSE; // GTK+ doesn't support the meta key
+}
+
 /* static */
 gint
 nsWindow::DragMotionSignal (GtkWidget *      aWidget,
@@ -3090,6 +3106,8 @@ gint nsWindow::OnDragMotionSignal      (GtkWidget *      aWidget,
   dragSessionGTK->TargetStartDragMotion();
 
   nsMouseEvent event;
+
+  InitDragEvent(event);
 
   event.message = NS_DRAGDROP_OVER;
   event.eventStructType = NS_DRAGDROP_EVENT;
@@ -3224,6 +3242,8 @@ nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
 
   nsMouseEvent event;
 
+  InitDragEvent(event);
+
   event.message = NS_DRAGDROP_OVER;
   event.eventStructType = NS_DRAGDROP_EVENT;
   event.widget = innerMostWidget;
@@ -3231,6 +3251,8 @@ nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
   event.point.y = rety;
 
   innerMostWidget->DispatchMouseEvent(event);
+
+  InitDragEvent(event);
 
   event.message = NS_DRAGDROP_DROP;
   event.eventStructType = NS_DRAGDROP_EVENT;
