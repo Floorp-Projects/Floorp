@@ -33,6 +33,7 @@ CPPSRCS= \
 	nsAppCoresNameSet.cpp       \
 	nsToolbarCore.cpp       \
 	nsBrowserAppCore.cpp       \
+	nsThrobberGlue.cpp       \
 	nsMailCoreFactory.cpp       \
 	nsToolbarCoreFactory.cpp       \
 	nsBrowserAppCoreFactory.cpp       \
