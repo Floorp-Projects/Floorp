@@ -1650,17 +1650,17 @@ retry:
                     ADD_TO_TOKENBUF(c);
                 }
                 if (contentIndex < 0) {
-                    tp->t_atom2 = NULL;
+                    atom = js_AtomizeString(cx, cx->runtime->emptyString, 0);
                 } else {
                     atom = js_AtomizeChars(cx,
                                            &TOKENBUF_CHAR(contentIndex),
                                            TOKENBUF_LENGTH() - contentIndex,
                                            0);
-                    if (!atom)
-                        goto error;
-                    tp->t_atom2 = atom;
                     TRIM_TOKENBUF(targetLength);
                 }
+                if (!atom)
+                    goto error;
+                tp->t_atom2 = atom;
                 tt = TOK_XMLPI;
 
         finish_xml_markup:
