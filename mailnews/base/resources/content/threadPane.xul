@@ -75,7 +75,7 @@ Rights Reserved.
     <treerow>
 		<treecell onclick="return top.ChangeThreadView();" class='threadColumnHeader' id="ThreadColumnHeader"/> 
 		<treecell value="&subjectColumn.label;" onclick="return top.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');"/>
-		<treecell onclick="return top.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');">&senderColumn.label;</treecell>
+		<treecell onclick="return top.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');" value="&senderColumn.label;"/>
 		<treecell class="readColumnHeader"/> 
 		<treecell value="&dateColumn.label;" onclick="return top.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');"/>
 		<treecell value="&priorityColumn.label;" onclick="return top.SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority');"/>
