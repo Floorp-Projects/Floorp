@@ -633,3 +633,17 @@ XfeEventGetModifiers(XEvent * event)
 	return 0;
 }
 /*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Test whether a widget is a private component of an XfeManager parent */
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ Boolean
+XfeIsPrivateComponent(Widget w)
+{
+	return (XfeIsManager(_XfeParent(w)) && 
+			_XfeManagerPrivateComponent(w));
+}
+/*----------------------------------------------------------------------*/
+

@@ -417,6 +417,14 @@ extern Modifiers
 XfeEventGetModifiers			(XEvent *			event);
 /*----------------------------------------------------------------------*/
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Test whether a widget is a private component of an XfeManager parent */
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern Boolean		XfeIsPrivateComponent	(Widget	w);
+/*----------------------------------------------------------------------*/
+
 #ifdef __cplusplus								/* end C++				*/
 }
 #endif
