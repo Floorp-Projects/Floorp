@@ -633,8 +633,6 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParse
       mHasOpenBody=PR_FALSE;
       mLineNumber=1;
       result = mSink->WillBuildModel();
-      //CStartToken theToken(eHTMLTag_body);  //open the body container...
-      //result=HandleStartToken(&theToken);
     }
   }
   return result;
@@ -649,25 +647,24 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParse
 nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink,nsIParser* aParser){
   nsresult result= NS_OK;
 
-/*  if((kNoError==anErrorCode) && (!mHasOpenBody)) {
+  if((kNoError==anErrorCode) && (!mHasOpenBody)) {
     CStartToken theToken(eHTMLTag_body);  //open the body container...
     result=HandleStartToken(&theToken);
   }
-*/
 
   if(aParser){
     mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
 
-    if((kNoError==anErrorCode) && (mBodyContext->mElements.mCount>0)) {
-      result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
-    }
+    if(aNotifySink && mSink){
+      if((kNoError==anErrorCode) && (mBodyContext->mElements.mCount>0)) {
+        result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
+      }
 
-    if((aNotifySink) && (mSink)) {
       result = mSink->DidBuildModel(1);
-    }
 
-    if(mDTDDebug) {
-      mDTDDebug->DumpVectorRecord();
+      if(mDTDDebug) {
+        mDTDDebug->DumpVectorRecord();
+      }
     }
   }
   return result;
