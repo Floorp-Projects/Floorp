@@ -90,18 +90,14 @@ nsChromeProtocolHandler::MakeAbsolute(const char* aSpec,
                                       nsIURI* aBaseURI,
                                       char* *result)
 {
-    nsresult rv;
+    // XXX optimize this to not needlessly construct the URL
 
+    nsresult rv;
     nsIURI* url;
-    if (aBaseURI)
-        rv = aBaseURI->Clone(&url);
-    else
-        rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull, nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&url);
+    rv = NewURI(aSpec, aBaseURI, &url);
     if (NS_FAILED(rv)) return rv;
 
-    rv = url->SetSpec((char*)aSpec);
-
-    url->GetSpec(result);
+    rv = url->GetSpec(result);
     NS_RELEASE(url);
     return rv;
 }
