@@ -2575,18 +2575,6 @@ PRInt16   thickness;
         curIndex++;
         aRenderingContext.FillPolygon(polypath,curIndex);
 
-        // anti-alias this
-        //r = NS_GET_R(sideColor);
-        //g = NS_GET_G(sideColor);
-        //b = NS_GET_B(sideColor);
-
-        //r += (255-r)>>1;
-        //g += (255-g)>>1;
-        //b += (255-b)>>1;
-        
-        //sideColor = NS_RGB(r,g,b);
-
-        //aRenderingContext.SetColor(sideColor);
        break;
       case NS_STYLE_BORDER_STYLE_DOUBLE:
         polypath[0].x = aPoints[0].x;
@@ -2736,6 +2724,7 @@ PRInt16   adjust=0;
 void 
 RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius[4],PRInt16 aNumTwipPerPix)
 {
+PRBool  doRound;
 nscoord x,y,width,height;
 int     i;
 
@@ -2758,13 +2747,25 @@ int     i;
   }
 
 
-  // are we drawing a circle
-  if( (aHeight==aWidth) && (mRoundness[0]>=(aWidth>>1)) ) {
-    mDoRound = PR_TRUE;
-    mRoundness[0] = aWidth>>1;
-  } else {
-    mDoRound = PR_FALSE;
+  // if we are drawing a circle
+  mDoRound = PR_FALSE;
+  if(aHeight==aWidth){
+    for(i=0;i<4;i++){
+      if(mRoundness[i]<(aWidth>>1)){
+        doRound = PR_FALSE;
+        break;
+      }
+    }
+
+    if(doRound){
+      mDoRound = PR_TRUE;
+      for(i=0;i<4;i++){
+        mRoundness[i] = aWidth>>1;
+      }
+    }
   }
+
+
 
   // important coordinates that the path hits
   mLeft = x;
