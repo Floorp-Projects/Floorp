@@ -72,8 +72,19 @@ function InitEditCard()
 	// get specific prefs that editCard will need
 	if ( prefs )
 	{
-		editCard.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.lastnamefirst");
-		editCard.generateDisplayName = prefs.GetBoolPref("mail.addr_book.displayName.autoGeneration");
+		try {
+			editCard.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.lastnamefirst");
+		}
+		catch (ex) {
+			dump("failed to get the mail.addr_book.lastnamefirst pref\n");
+		}
+
+		try {
+			editCard.generateDisplayName = prefs.GetBoolPref("mail.addr_book.displayName.autoGeneration");
+		}
+		catch (ex) {
+			dump("failed to get the mail.addr_book.displayName.autoGeneration pref\n");
+		}
 	}
 }
 
