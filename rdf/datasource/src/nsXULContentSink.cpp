@@ -1025,11 +1025,14 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
         v = aNode.GetValueAt(i);
         nsRDFParserUtils::StripAndConvert(v);
 
-#define USE_TAG_NAMESPACE_AS_DEFAULT_NAMESPACE
+//#define USE_TAG_NAMESPACE_AS_DEFAULT_NAMESPACE
 #ifdef  USE_TAG_NAMESPACE_AS_DEFAULT_NAMESPACE
         // XXX This is a hack that I'm not sure is legal: as a last
         // ditch effort, we treat attributes with an unknown (or no)
         // namespace as being in the same namespace as the tag itself.
+
+        // XXX Note, for this to really work right, you need to make
+        // sure to do this in GetXULIDAttribute(), too...
         if ((nameSpaceID == kNameSpaceID_Unknown) ||
             (nameSpaceID == kNameSpaceID_None)) {
             nsAutoString tag = aNode.GetText();
