@@ -33,6 +33,7 @@
 urpStub::urpStub(urpManager* man, urpConnection* conn) {
   manager = man;
   connection = conn;
+_mOwningThread = PR_CurrentThread();
 }
 
 
@@ -43,6 +44,10 @@ printf("destructor of urpStub\n");
 }
 
 void urpStub::Dispatch(bcICall *call) {
+if (_mOwningThread == PR_CurrentThread())
+printf("RavnYYYYYYYYY\n");
+else
+printf("NEEEEE RAAAAVVVNNNYYY\n");
     
   printf("this is method Dispatch of urpStub\n");
   bcIID iid; bcOID oid; bcMID mid;
@@ -67,20 +72,35 @@ void urpStub::Dispatch(bcICall *call) {
   PRMonitor* mon = PR_NewMonitor();
   PR_EnterMonitor(mon);
 printf("ThreadID is written %d %p %p %p %p\n",paramCount, call, mon, manager, this);
-  nsresult rv = manager->SetCall(call, mon);
+  bcTID tid = manager->GetThread();
+  nsresult rv = manager->SetCall(call, mon, tid);
   if(NS_FAILED(rv)) {
      printf("Error of SetCall in method Dispatch\n");
      exit(-1);
   }
   manager->SendUrpRequest(oid, iid, mid, interfaceInfo, call, paramCount,
 		 info, connection);
-  if(NS_FAILED(PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT))) {
+  forReply* fR = (forReply*)PR_Malloc(sizeof(forReply));
+  while(1) {
+    fR->request = 0;
+    if(NS_FAILED(PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT))) {
 	printf("Can't wait on cond var\n");
 	exit(-1);
+    }
+    rv = manager->RemoveCall(fR, tid);
+    if(fR->request) 
+       manager->ReadLongRequest(fR->header, fR->mess, fR->iid,
+				fR->oid, fR->tid, fR->methodId, connection);
+    else
+       break;
   }
-  rv = manager->RemoveCall();
+  manager->ReadReply(fR->mess, fR->header, call, paramCount,
+			info, interfaceInfo, mid, connection);
+  NS_RELEASE(interfaceInfo);
   PR_ExitMonitor(mon);
   PR_DestroyMonitor(mon);
+  delete fR->mess;
+  PR_Free(fR);
 }
 
 

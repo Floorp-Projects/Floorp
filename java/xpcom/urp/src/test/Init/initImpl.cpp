@@ -27,8 +27,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIComponentManager.h"
-#include "urpITest.h"
-#include "urpTestImpl.h"
+#include "bcIJavaSample.h"
 
 static char * className = "initImpl";
 
@@ -38,11 +37,11 @@ initImpl::initImpl() {
   NS_INIT_REFCNT();
   printf("Constructor of initImpl\n");
   nsresult rv;
-  urpITest * serverComponent;
-  urpITest* anComp;
-  rv = nsComponentManager::CreateInstance("urpTest",
+  bcIJavaSample * serverComponent;
+//  urpITest* anComp;
+  rv = nsComponentManager::CreateInstance("bcJavaSample",
                                         nsnull,
-                                        NS_GET_IID(urpITest),
+                                        NS_GET_IID(bcIJavaSample),
                                         (void**)&serverComponent);
   if (NS_FAILED(rv)) {
         printf("Create instance failed in initImpl!!!");
@@ -59,23 +58,27 @@ initImpl::initImpl() {
   }
 */
   int l = 2000;
-  serverComponent->Test1(&l);
+  serverComponent->Test1(100);
   printf("in initImpl after Test1 %d\n",l);
 /*
   anComp->Test1(&l);
   printf("in initImpl after Test1 %d\n",l);
 */
     /*******************************************/
+/*
     PRInt32 l2 = 2000;
     l = 1999;
     serverComponent->Test2(l,&l2);
     printf("--urpTestImpl after Test2 l2=%d\n",l2);
-
+*/
     /*******************************************/
+/*
     const char * s1 = "s1";
     char * s2 = "s2";
-    serverComponent->Test3(s1,&s2);
-    printf("--urpTestImpl after Test3 s2=%s\n",s2);
+*/
+    int intArray[] = {1,2,3};
+    serverComponent->Test3(3, intArray);
+//    printf("--urpTestImpl after Test3 s2=%s\n",s2);
     /*******************************************/
 
     char ** valueArray = (char **)malloc(sizeof(char*)*4);
@@ -84,9 +87,28 @@ initImpl::initImpl() {
     valueArray[2] = "a";
     valueArray[3] = "b";
 
-    serverComponent->Test4(4,(const char **)valueArray);
-    /*******************************************/
+    char *** valueArray2 = &valueArray;
+    serverComponent->Test4(4,valueArray2);
+    for (int i = 0; i < 4; i++) {
+            char *str = (*valueArray2)[i];
+            printf("--[c++] valueArray2[%d]=%s\n",i,(str == NULL) ? "null" : str);
+        }
+    {
 
+        nsIComponentManager* cm;
+        nsresult rv = NS_GetGlobalComponentManager(&cm);
+        printf("--[c++] bcJavaSample before test->Test5(cm)\n");
+        serverComponent->Test5(cm);
+
+        nsIEnumerator *enumerator;
+        rv = cm->EnumerateCLSIDs(&enumerator);
+        if (NS_FAILED(rv)) {
+            printf("--[c++] can get enumerator\n");
+        }
+        printf("--[c++] bcJavaSample after test->Test5(cm)\n");
+    }
+    /*******************************************/
+/*
     char ***valueArray2 = &valueArray;
 
     printf("call object\n");
@@ -104,10 +126,6 @@ initImpl::initImpl() {
     for (unsigned int i = 0; i < 4; i++) {
         printf("valueArray[%d]=%s\n",i,(*valueArray2)[i]);
     }
-
-    urpITest *object = new urpTestImpl();
-    object->AddRef();
-    serverComponent->Test6(object);
     {
         urpITest *p1;
         serverComponent->Test7(&p1);
@@ -128,7 +146,8 @@ initImpl::initImpl() {
 
 
     }
-    delete serverComponent;
+*/
+//    delete serverComponent;
 }
 
 initImpl::~initImpl() {

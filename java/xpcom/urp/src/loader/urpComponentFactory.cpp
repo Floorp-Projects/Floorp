@@ -28,15 +28,16 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(urpComponentFactory, nsIFactory)
 //static nsISupports* compM = nsnull;
 //nsCOMPtr<nsIComponentManager> compM = nsnull;
 
-urpComponentFactory::urpComponentFactory(const char *_location, const nsCID &aCID, nsIComponentManager* m) {
+urpComponentFactory::urpComponentFactory(const char *_location, const nsCID &aCID, nsISupports* m) {
     NS_INIT_ISUPPORTS();
     location = nsCRT::strdup(_location);
     aClass = aCID;
-    compM = m;
+    compM = (nsIComponentManager*)m;
 }
 
 urpComponentFactory::~urpComponentFactory() {
     printf("destructor or urpComponentFactory\n");
+    NS_RELEASE(compM);
     nsCRT::free((char*)location);
 }
 

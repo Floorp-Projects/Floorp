@@ -69,12 +69,18 @@ urpMarshalToolkit::WriteElement(bcIUnMarshaler *um, nsXPTParamInfo * param, uint
 			PRUint16 methodIndex, const nsXPTMethodInfo *info,
 			bcIAllocator * allocator) {
 	void* data = allocator->Alloc(sizeof(void*));
+	nsID *id;
+	char* help;
    	nsresult r = NS_OK;
 	switch(type) {
                 case nsXPTType::T_IID    :
-		  data = (char*)new nsIID();
-		  um->ReadSimple(data,XPTType2bcXPType(type));
-		  message->WriteString((char*)data, strlen((char*)data));
+		  id = new nsID();
+		  um->ReadSimple(id,XPTType2bcXPType(type));
+		  help = ((nsID)(*id)).ToString();
+		  printf("nsIID %s\n", help);
+		  message->WriteString(help, strlen(help));
+		  delete id;
+		  PR_Free(help);
                   break;
                 case nsXPTType::T_I8  :
 		  um->ReadSimple(data,XPTType2bcXPType(type));
@@ -256,12 +262,16 @@ urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
 			urpConnection* conn) {
 	void* data = allocator->Alloc(sizeof(void*));
 	nsresult r = NS_OK;
+	char* str;
+	nsID id;
 	switch(type) {
                 case nsXPTType::T_IID    :
 		{
-		  int& size = 0;
-		  data = message->ReadString(size);
-		  m->WriteSimple(data, XPTType2bcXPType(type));
+		  int size;
+		  str = message->ReadString(size);
+		  id.Parse((char*)str);
+		  m->WriteSimple((char*)&id, XPTType2bcXPType(type));
+		  PR_Free(str);
                   break;
 		}
                 case nsXPTType::T_I8  :
@@ -307,9 +317,13 @@ urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
                 case nsXPTType::T_CHAR_STR  :
                 case nsXPTType::T_WCHAR_STR :
 		{
-                  int& size = 0;
+                  int size;
+/*
                   *(char**)data = message->ReadString(size);
 		  data = *(char **)data;
+*/
+		  str = message->ReadString(size);
+		  data = str;
                   size_t length = 0;
                   if (type == nsXPTType::T_WCHAR_STR) {
                     length = nsCRT::strlen((const PRUnichar*)data);
@@ -323,6 +337,7 @@ urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
                     length+=1;
                   }
                   m->WriteString(data,length);
+		  PR_Free(str);
                   break;
 		}
 		case nsXPTType::T_INTERFACE :
@@ -541,7 +556,7 @@ urpMarshalToolkit::ReadType(urpPacket* message) {
 
 	short cache_index = message->ReadShort();
 	
-	int& size = 0;
+	int size;
 	nsIID iid;
 	char* name = message->ReadString(size);
 	iid.Parse(name);
@@ -570,7 +585,7 @@ urpMarshalToolkit::WriteOid(bcOID oid, urpPacket* message) {
 
 bcOID
 urpMarshalToolkit::ReadOid(urpPacket* message) {
-	int& size = 0;
+	int size;
 	bcOID result;
 
 	char* str = message->ReadString(size);
@@ -605,7 +620,7 @@ urpMarshalToolkit::WriteThreadID(bcTID tid, urpPacket* message) {
 
 bcTID
 urpMarshalToolkit::ReadThreadID(urpPacket* message) {
-	int& size = 0;
+	int size = 0;
 	bcTID result;
 	char* array = message->ReadOctetStream(size);
 	short cache_index = message->ReadShort();

@@ -27,6 +27,15 @@
 #define INTERFACE 22
 #define INTERFACE_STRING "com.sun.star.uno.XInterface"
 
+typedef struct {
+    urpPacket* mess;
+    char header;
+    bcIID iid;
+    bcOID oid;
+    bcTID tid;
+    bcMID methodId;
+    int request;
+} forReply;
 
 class urpManager {
 
@@ -42,22 +51,23 @@ public:
                           PRUint32 paramCount, const nsXPTMethodInfo* info,
 			  urpConnection* conn);
 	nsresult ReadMessage(urpConnection* conn, PRBool ic);
-	nsresult SetCall(bcICall* call, PRMonitor *m);
-	nsresult RemoveCall();
-private:
-	nsHashtable* monitTable;
-	bcIORB *broker;
-/* for ReadReply */
-	nsIInterfaceInfo *interfaceInfo;
-    void TransformMethodIDAndIID();
-    nsresult ReadReply(urpPacket* message, char header,
+	nsresult SetCall(bcICall* call, PRMonitor *m, bcTID tid);
+	nsresult RemoveCall(forReply* fR, bcTID tid);
+	nsresult ReadReply(urpPacket* message, char header,
                         bcICall* call, PRUint32 paramCount, 
 			const nsXPTMethodInfo *info, 
 			nsIInterfaceInfo *interfaceInfo, 
 			PRUint16 methodIndex, urpConnection* conn);
-    nsresult ReadLongRequest(char header, urpPacket* message,
+	nsresult ReadLongRequest(char header, urpPacket* message,
 				bcIID iid, bcOID oid, bcTID tid,
 				PRUint16 methodId, urpConnection* conn);
+	bcTID GetThread();
+private:
+	nsHashtable* monitTable;
+	bcIORB *broker;
+	nsHashtable* threadTable;
+/* for ReadReply */
+    void TransformMethodIDAndIID();
     nsresult ReadShortRequest(char header, urpPacket* message);
     nsresult SendReply(bcTID tid, bcICall* call, PRUint32 paramCount,
                    const nsXPTMethodInfo* info,

@@ -36,6 +36,7 @@ class urpStub : public bcIStub {
  private:
     urpManager* manager;
     urpConnection* connection;
+void* _mOwningThread;
 };
 
 #endif

@@ -17,7 +17,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Sergey Lunegov <lvv@sparc.spb.su>
+ * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
 /*
@@ -59,12 +59,12 @@ const char xpcomKeyName[] = "software/mozilla/XPCOM/components";
 
 NS_IMPL_THREADSAFE_ISUPPORTS(urpComponentLoader,NS_GET_IID(nsIComponentLoader));
 
-nsCOMPtr<nsIComponentManager> compM = nsnull;
+//nsCOMPtr<nsIComponentManager> compM = nsnull;
 static bcIORB* orb = nsnull;
 static urpTransport* transport;
 static urpManager* man;
 static bcIStub* stub;
-static nsISupports* proxy;
+static nsISupports* proxy = nsnull;
 
 urpComponentLoader::urpComponentLoader() 
     : mCompMgr(NULL),
@@ -86,9 +86,9 @@ urpComponentLoader::urpComponentLoader()
     }
     _orb->GetORB(&orb);
 //    bcOID oid;
-    bcOID oid = -860880895;
+    bcOID oid = 1601175553;
     transport = new urpConnector();
-    PRStatus status = transport->Open("socket,host=localhost,port=20009");
+    PRStatus status = transport->Open("socket,host=indra,port=20009");
     if(status != PR_SUCCESS) {
         printf("Error during opening connection\n");
         exit(-1);
@@ -98,15 +98,15 @@ urpComponentLoader::urpComponentLoader()
     stub = new urpStub(man, conn);
 //    oid = orb->RegisterStub(stub);
     orb->RegisterStubWithOID(stub, &oid);
-    xpcomStubsAndProxies->GetProxy(oid, NS_GET_IID(nsIComponentManager), orb, &proxy);
-    compM = (nsIComponentManager*)proxy;
+    xpcomStubsAndProxies->GetProxy(oid, NS_GET_IID(nsIComponentManager), orb, (nsISupports**)&proxy);
+//    compM = (nsIComponentManager*)proxy;
 }
 
 urpComponentLoader::~urpComponentLoader() { //nb
     delete stub;
     delete man;
     delete transport;
-    NS_RELEASE(proxy);
+//    NS_RELEASE(proxy);
     printf("--urpComponentLoader::~urpComponentLoader \n");
 }
 
@@ -124,7 +124,7 @@ NS_IMETHODIMP urpComponentLoader::GetFactory(const nsIID & aCID, const char *aLo
     fprintf(stderr, "--urpComponentLoader::GetFactory(%s,%s,%s)\n", cidString, aLocation, aType);
     delete [] cidString;
 #endif
-    nsIFactory *f = new urpComponentFactory(aLocation, aCID, compM);
+    nsIFactory *f = new urpComponentFactory(aLocation, aCID, proxy);
     NS_ADDREF(f);
     *_retval = f;
     return NS_OK;
@@ -470,7 +470,8 @@ UnregisterRemoteLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     // only unregister if we're the current JS component loader
     if (!strcmp(urpLoader, URP_COMPONENTLOADER_ContractID)) {
         return catman->DeleteCategoryEntry("component-loader",
-					   urpComponentTypeName, PR_TRUE,getter_Copies(urpLoader));
+					   urpComponentTypeName, PR_TRUE,
+					   getter_Copies(urpLoader));
     }
     return NS_OK;
 }

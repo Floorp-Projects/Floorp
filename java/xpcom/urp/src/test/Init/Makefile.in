@@ -42,8 +42,10 @@ CPPSRCS  =   \
 	 initImplFactory.cpp \
 	 $(NULL)
 
+EXTRA_DSO_LDOPTS += \
+	../urpTestImpl.o
 
-LIBS            = -L./ -L$(DIST)/bin/components/ $(XPCOM_LIBS) $(NSPR_LIBS) $(EXTRA_DSO_LIBS) 
+LIBS            = -L./ -L$(DIST)/bin/components/ $(XPCOM_LIBS) $(NSPR_LIBS) $(EXTRA_DSO_LIBS)
 
 
 include $(topsrcdir)/config/rules.mk

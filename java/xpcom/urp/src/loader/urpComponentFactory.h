@@ -28,12 +28,12 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFACTORY
     urpComponentFactory(const char *location, const nsCID &aCID,
-			nsIComponentManager* m);
+			nsISupports* m);
     virtual ~urpComponentFactory();
 private:
     char *location;
     nsCID aClass;    
-    nsCOMPtr<nsIComponentManager> compM;
+    nsIComponentManager* compM;
 };
 
 #endif
