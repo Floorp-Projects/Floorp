@@ -1,0 +1,66 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?>
+<?xml-stylesheet href="dialog.css" type="text/css"?>
+<?xml-stylesheet href="pref.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY  title.label "Composer">
+<!ENTITY  compheader "Composer">
+<!ENTITY  authorName "Author Name">
+<!ENTITY  AutoSaveCheck.label "Automatically save page every">
+<!ENTITY  minText "minutes">
+<!ENTITY  exterLegand.label "External Editors">
+<!ENTITY  htmlSource "Html Source">
+<!ENTITY  chooseButton.label "Choose...">
+<!ENTITY  fontSizeHeader "Font Size Mode">
+<!ENTITY  img "Images">
+<!ENTITY  relSizeRadio.label "Show relative size as points based on your Navigator font sizes">
+<!ENTITY  relfontRadio.label "Show relative HTML font scale: -2, -1, 0, +1, +2, +3, +4">
+<!ENTITY  relScaleRadio.label "Show relative HTML scale and absolute &quot;point-size&quot; attributes">
+
+]> 
+
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="return StartUp('Composer');"  title="&title.label;">
+
+<html:script language="JavaScript" src="PrefsWindow.js">
+</html:script>
+
+
+
+
+<html:DIV ID="top">
+		<html:SPAN ID="lefttext">&compheader;</html:SPAN>
+</html:DIV>
+
+<form>
+<html:table> 
+      <html:tr><html:td>&authorName;<html:input name="author" type="text" id="pref:string:editor.author" /></html:td></html:tr>           
+			<html:tr><html:td><html:label><html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save_delay" />&AutoSaveCheck.label;</html:label></html:td>
+			<html:td><html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />&minText;</html:td></html:tr>			
+</html:table>
+</form>
+&exterLegand.label;	
+<form>	
+<html:table>		
+      <html:tr><html:td>&htmlSource;</html:td></html:tr>
+			<html:tr><html:td><html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_directory" /></html:td>
+			<html:td><html:input name="" type="button" value="&chooseButton.label;" /></html:td></html:tr>
+			
+			<html:tr><html:td>&img;</html:td></html:tr>
+			<html:tr><html:td><html:input name="chooseButton.label" type="text" id="pref:string:editor.image_editor" /></html:td>
+			<html:td><html:input name="chooseButton.label" type="button" value="choose..." /></html:td></html:tr>
+</html:table>
+</form>
+<form>
+&fontSizeHeader;
+<html:table>
+      		
+			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:0:int:fontsize_mode" val="checked" />&relSizeRadio.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:1:int:fontsize_mode" />&relfontRadio.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:2:int:fontsize_mode" />&relScaleRadio.label;</html:label></html:td></html:tr>
+</html:table>
+</form>
+</window>
