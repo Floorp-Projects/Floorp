@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="EditorDialog.css" type="text/css"?>
-<!DOCTYPE dialog>
+<!DOCTYPE window SYSTEM "targetdlog.dtd">
 <window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40">
 
-  <table xmlns="http://www.w3.org/TR/REC-html40" cellspacing=20>
+  <table xmlns="http://www.w3.org/TR/REC-html40" cellspacing="20">
     <tr>
       <td>
-        <xul:label>Target Name:</xul:label>
+        <p>Target Name:</p>
         <p/>
         <input type="text" size="40" length="40" maxlength="40" />
         <select size="1" name="targets.previous">

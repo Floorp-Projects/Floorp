@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="EditorDialog.css" type="text/css"?>
-<!DOCTYPE dialog>
+<!DOCTYPE window SYSTEM "tablecelldlog.dtd">
 <window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40">
 
   <table xmlns="http://www.w3.org/TR/REC-html40">
     <tr>
-      <td width=500>
+      <td width="500">
         <fieldset><legend> Selection </legend>
           <select size="1" name="tablecell.selection">
             <optgroup label="selection">
@@ -16,16 +16,18 @@
               <option label="Mixed" value="Mixed">Mixed (?)</option>
             </optgroup>
           </select>
-          <input type="button" class=genericbutton value=" Previous " />
-          <input type="button" class=genericbutton value=" Next " />
+          <input type="button" class="genericbutton" value=" Previous " />
+          <input type="button" class="genericbutton" value=" Next " />
         </fieldset>
 
         <fieldset><legend> Cell Size </legend>
           <table>
             <tr>
               <td>
-                <xul:checkbox value="Width:" />
-                <xul:label>Width:</xul:label>
+                <p>
+                  <xul:checkbox value="Width:" />
+                  Width:
+                </p>
               </td>
               <td>
                 <input type="text" size="4" length="4" maxlength="4" name="cell.width" />
@@ -38,18 +40,22 @@
               </td>
               <td width="20px"/>
               <td>
-                <xul:label>Spans:</xul:label>
+                <p>Spans:</p>
               </td>
               <td>
-                <input type="text" size="4" length="4" maxlength="4" name="table.spannumrows" />
-                <xul:label>rows</xul:label>
+                <p>
+                  <input type="text" size="4" length="4" maxlength="4" name="table.spannumrows" />
+                  rows
+                </p>
               </td>
             </tr>
 
             <tr>
               <td>
-                <xul:checkbox value="Height:" />
-                <xul:label>Height:</xul:label>
+                <p>
+                  <xul:checkbox value="Height:" />
+                  Height:
+                </p>
               </td>
               <td>
                 <input type="text" size="4" length="4" maxlength="4" name="cell.height" />
@@ -63,22 +69,24 @@
               <td width="20px"/>
               <td/>
               <td>
-                <input type="text" size="4" length="4" maxlength="4" name="table.spannumcols" />
-                <xul:label>columns</xul:label>
+                <p>
+                  <input type="text" size="4" length="4" maxlength="4" name="table.spannumcols" />
+                  columns
+                </p>
               </td>
             </tr>
           </table>
         </fieldset>
 
-        <table cellspacing=0 cellpadding=0 width="100%">
+        <table cellspacing="0" cellpadding="0" width="100%">
           <tr>
-            <td width="60%" valign=top>
+            <td width="60%" valign="top">
 
               <fieldset><legend> Content Alignment </legend>
-                <table cellspacing=0 cellpadding=2>
+                <table cellspacing="0" cellpadding="2">
                   <tr>
-                    <td valign=middle align=right>
-                      <xul:label>Horizontal</xul:label>
+                    <td valign="middle" align="right">
+                      <p>Horizontal</p>
                     </td>
                     <td>
                       <select size="1" name="cell.horizontalalignment">
@@ -92,8 +100,8 @@
                   </tr>
 
                   <tr>
-                    <td valign=middle align=right>
-                      <xul:label>Vertical</xul:label>
+                    <td valign="middle" align="right">
+                      <p>Vertical</p>
                     </td>
                     <td>
                       <select size="1" name="cell.verticalalignment">
@@ -111,7 +119,7 @@
 
             </td>
 
-            <td width="40%" align=right>
+            <td width="40%" align="right">
               <table>
                 <tr>
                   <td>
@@ -119,13 +127,17 @@
                       <table>
                         <tr>
                           <td>
-                            <xul:checkbox value="Header" />
-                            <xul:label> Header </xul:label>
+                            <p>
+                              <xul:checkbox value="Header" />
+                              Header
+                            </p>
                           </td>
-                          <td width=20 />
+                          <td width="20" />
                           <td>
-                            <xul:checkbox value="Nonbreaking" />
-                            <xul:label> Nonbreaking </xul:label>
+                            <p>
+                              <xul:checkbox value="Nonbreaking" />
+                              Nonbreaking
+                            </p>
                           </td>
                         </tr>
                       </table>
@@ -134,9 +146,9 @@
                 </tr>
 
                 <tr>
-                  <td align=right>
+                  <td align="right">
                     <p/>
-                    <input type="button" class=genericbutton value=" Extra HTML... " disabled />
+                    <input type="button" class="genericbutton" value=" Extra HTML... " disabled />
                   </td>
                 </tr>
               </table>
@@ -146,21 +158,23 @@
         </table>
 
         <fieldset><legend> Cell Background </legend>
-          <table cellspacing=0 cellpadding=2 width="100%">
+          <table cellspacing="0" cellpadding="2" width="100%">
             <tr>
-              <td valign=middle>
-                <xul:checkbox value="Color:" />
-                <xul:label>Color:</xul:label>
+              <td valign="middle">
+                <p>
+                  <xul:checkbox value="Color:" />
+                  Color:
+                </p>
               </td>
-              <td valign=middle>
-                <xul:label>[Color Picker Here]</xul:label>
+              <td valign="middle">
+                <p>[Color Picker Here]</p>
               </td>
             </tr>
 
-            <tr valign=middle>
+            <tr valign="middle">
               <td>
                 <xul:checkbox value="Image:" />
-                <xul:label>Image:</xul:label>
+                <p>Image:</p>
               </td>
               <td>
                 <input type="file" value=" Choose Image... " size="50" length="50" maxlength="255" name="table.imageurl" />
@@ -169,9 +183,11 @@
 
             <tr>
               <td/>
-              <td valign=middle>
-                <xul:checkbox value="Leave image at the original location" />
-                <xul:label>Leave image at the original location</xul:label>
+              <td valign="middle">
+                <p>
+                  <xul:checkbox value="Leave image at the original location" />
+                  Leave image at the original location
+                </p>
               </td>
             </tr>
           </table>
