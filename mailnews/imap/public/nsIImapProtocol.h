@@ -54,6 +54,13 @@ public:
 	/////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD LoadUrl(nsIURL * aUrl, nsISupports * aConsumer) = 0;
 
+	/////////////////////////////////////////////////////////////////////////
+	// Right now, initialize requires the event queue of the UI thread, 
+	// or more importantly the event queue of the consumer of the imap
+	// protocol data.
+	/////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD Initialize(PLEventQueue * aSinkEventQueue) = 0;
+
     NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue) = 0;
 };
 
