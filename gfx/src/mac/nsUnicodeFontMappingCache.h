@@ -66,7 +66,7 @@ private:
 	inline static PR_CALLBACK PLHashNumber HashKey(const void *aKey)
 	{
     nsString* key = (nsString*)aKey;
-		return nsCRT::HashCode(key->GetUnicode(), key->Length());
+		return nsCRT::HashCode(key->GetUnicode());
 	};
 	inline static PR_CALLBACK PRIntn		CompareKeys(const void *v1, const void *v2)
 	{

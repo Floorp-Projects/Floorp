@@ -781,9 +781,9 @@ PRUint32
 nsStr::HashCode(const nsStr& aDest)
 {
 	if (aDest.mCharSize == eTwoByte)
-    return nsCRT::HashCode(aDest.mUStr, aDest.mLength);
+    return nsCRT::HashCode(aDest.mUStr);
   else 
-    return nsCRT::HashCode(aDest.mStr, aDest.mLength);
+    return nsCRT::HashCode(aDest.mStr);
 }
 
 #ifdef NS_STR_STATS

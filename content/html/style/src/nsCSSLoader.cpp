@@ -84,7 +84,7 @@ public:
     char* urlStr;
     mURL->GetSpec(&urlStr);
     if (urlStr) {
-      mHashValue = nsCRT::HashCode(urlStr, nsCRT::strlen(urlStr));
+      mHashValue = nsCRT::HashCode(urlStr);
       nsCRT::free(urlStr);
     }
   }

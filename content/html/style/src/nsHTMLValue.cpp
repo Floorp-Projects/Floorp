@@ -178,7 +178,7 @@ PRUint32 nsHTMLValue::HashValue(void) const
   return PRUint32(mUnit) ^ 
          ((((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) && 
            (nsnull != mValue.mString)) ? 
-          nsCRT::HashCode(mValue.mString, nsCRT::strlen(mValue.mString)) : 
+          nsCRT::HashCode(mValue.mString) : 
           mValue.mInt);
 }
 

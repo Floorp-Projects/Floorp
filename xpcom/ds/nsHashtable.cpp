@@ -238,7 +238,16 @@ nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
   }
 }
 
+#ifdef HASHMETER
+PRIntn DontEnum(PLHashEntry *he, PRIntn i, void *arg) {
+    return HT_ENUMERATE_STOP;
+}
+#endif
+
 nsHashtable::~nsHashtable() {
+#ifdef HASHMETER
+  PL_HashTableDump(&mHashtable, DontEnum, stdout);
+#endif
   MOZ_COUNT_DTOR(nsHashtable);
   PL_HashTableFinalize(&mHashtable);
   if (mLock) PR_DestroyLock(mLock);
@@ -386,8 +395,8 @@ nsCStringKey::nsCStringKey(const char* str, PRInt32 strLen, Ownership own)
     : mStr((char*)str), mStrLen(strLen), mOwnership(own)
 {
     NS_ASSERTION(mStr, "null string key");
-    if (mStrLen == -1)
-        mStrLen = nsCRT::strlen(str);
+//    if (mStrLen == -1)
+//        mStrLen = nsCRT::strlen(str);
 #ifdef DEBUG
     mKeyType = CStringKey;
 #endif
@@ -404,7 +413,7 @@ nsCStringKey::~nsCStringKey(void)
 PRUint32
 nsCStringKey::HashCode(void) const
 {
-    return nsCRT::HashCode(mStr, mStrLen);
+    return nsCRT::HashCode(mStr, (PRUint32*)&mStrLen);
 }
 
 PRBool
@@ -412,6 +421,8 @@ nsCStringKey::Equals(const nsHashKey* aKey) const
 {
     NS_ASSERTION(aKey->GetKeyType() == CStringKey, "mismatched key types");
     nsCStringKey* other = (nsCStringKey*)aKey;
+    NS_ASSERTION(mStrLen != -1, "never called HashCode");
+    NS_ASSERTION(other->mStrLen != -1, "never called HashCode");
     if (mStrLen != other->mStrLen)
         return PR_FALSE;
     return nsCRT::memcmp(mStr, other->mStr, mStrLen * sizeof(char)) == 0;
@@ -453,8 +464,8 @@ nsStringKey::nsStringKey(const PRUnichar* str, PRInt32 strLen, Ownership own)
     : mStr((PRUnichar*)str), mStrLen(strLen), mOwnership(own)
 {
     NS_ASSERTION(mStr, "null string key");
-    if (mStrLen == -1)
-        mStrLen = nsCRT::strlen(str);
+//    if (mStrLen == -1)
+//        mStrLen = nsCRT::strlen(str);
 #ifdef DEBUG
     mKeyType = StringKey;
 #endif
@@ -471,7 +482,7 @@ nsStringKey::~nsStringKey(void)
 PRUint32
 nsStringKey::HashCode(void) const
 {
-    return nsCRT::HashCode(mStr, mStrLen);
+    return nsCRT::HashCode(mStr, (PRUint32*)&mStrLen);
 }
 
 PRBool
@@ -479,6 +490,8 @@ nsStringKey::Equals(const nsHashKey* aKey) const
 {
     NS_ASSERTION(aKey->GetKeyType() == StringKey, "mismatched key types");
     nsStringKey* other = (nsStringKey*)aKey;
+    NS_ASSERTION(mStrLen != -1, "never called HashCode");
+    NS_ASSERTION(other->mStrLen != -1, "never called HashCode");
     if (mStrLen != other->mStrLen)
         return PR_FALSE;
     return nsCRT::memcmp(mStr, other->mStr, mStrLen * sizeof(PRUnichar)) == 0;

@@ -502,100 +502,47 @@ PRUnichar* nsCRT::strndup(const PRUnichar* str, PRUint32 len)
   return rslt;
 }
 
-#if 0
-PRUint32 nsCRT::HashValue(const char* us)
+PRUint32 nsCRT::HashCode(const char* str, PRUint32* resultingStrLen)
 {
-  PRUint32 rv = 0;
-  if(us) {
+  PRUint32 hc = 0, len = 0;
+  if (str) {
     char ch;
-    while ((ch = *us++) != 0) {
-      // FYI: rv = rv*37 + ch
-      rv = ((rv << 5) + (rv << 2) + rv) + ch;
+    while ((ch = *str++) != 0) {
+      // FYI: hc = hc*37 + ch
+      hc = ((hc << 5) + (hc << 2) + hc) + ch;
+      len++;
     }
   }
-  return rv;
+  if (resultingStrLen)
+    *resultingStrLen = len;
+  return hc;
 }
 
-PRUint32 nsCRT::HashValue(const char* us, PRUint32* uslenp)
+PRUint32 nsCRT::HashCode(const PRUnichar* str, PRUint32* resultingStrLen)
 {
-  PRUint32 rv = 0;
-  PRUint32 len = 0;
-  char ch;
-  while ((ch = *us++) != 0) {
-    // FYI: rv = rv*37 + ch
-    rv = ((rv << 5) + (rv << 2) + rv) + ch;
-    len++;
-  }
-  *uslenp = len;
-  return rv;
-}
-
-PRUint32 nsCRT::HashValue(const PRUnichar* us)
-{
-  PRUint32 rv = 0;
-  if(us) {
+  PRUint32 hc = 0, len = 0;
+  if (str) {
     PRUnichar ch;
-    while ((ch = *us++) != 0) {
-      // FYI: rv = rv*37 + ch
-      rv = ((rv << 5) + (rv << 2) + rv) + ch;
+    while ((ch = *str++) != 0) {
+      // FYI: hc = hc*37 + ch
+      hc = ((hc << 5) + (hc << 2) + hc) + ch;
+      len++;
     }
   }
-  return rv;
+  if (resultingStrLen)
+    *resultingStrLen = len;
+  return hc;
 }
 
-PRUint32 nsCRT::HashValue(const PRUnichar* us, PRUint32* uslenp)
+PRUint32 nsCRT::BufferHashCode(const char* buf, PRUint32 len)
 {
-  PRUint32 rv = 0;
-  PRUint32 len = 0;
-  PRUnichar ch;
-  while ((ch = *us++) != 0) {
-    // FYI: rv = rv*37 + ch
-    rv = ((rv << 5) + (rv << 2) + rv) + ch;
-    len++;
+  PRUint32 hc = 0;
+  for (PRUint32 i = 0; i < len; i++) {
+    char ch = *buf++;
+    // FYI: hc = hc*37 + ch
+    hc = ((hc << 5) + (hc << 2) + hc) + ch;
   }
-  *uslenp = len;
-  return rv;
-}
-#endif
-
-PRUint32
-nsCRT::HashCode(const char* c, PRUint32 n)
-{
-  PRUint32 h = 0;
-  NS_ASSERTION(n >= 0, "bad string length");
-    
-  // Same hashing technique as for java.lang.String.hashCode()
-  if (n < 16) {
-    // A short key; Use a dense sampling to compute the hash code
-    for(; n; c++, n--)
-      h = (h >> 28) ^ (h << 4) ^ *c;
-  }
-  else {
-    // A long key; Use a sparse sampling to compute the hash code
-    for(PRUint32 m = n >> 3; n >= m; c += m, n -= m)
-      h = (h >> 28) ^ (h << 4) ^ *c;
-  }
-  return h; 
-}
-
-PRUint32
-nsCRT::HashCode(const PRUnichar* c, PRUint32 n)
-{
-  PRUint32 h = 0;
-  NS_ASSERTION(n >= 0, "bad string length");
-    
-  // Same hashing technique as for java.lang.String.hashCode()
-  if (n < 16) {
-    // A short key; Use a dense sampling to compute the hash code
-    for(; n; c++, n--)
-      h = (h >> 28) ^ (h << 4) ^ *c;
-  }
-  else {
-    // A long key; Use a sparse sampling to compute the hash code
-    for(PRUint32 m = n >> 3; n >= m; c += m, n -= m)
-      h = (h >> 28) ^ (h << 4) ^ *c;
-  }
-  return h; 
+  return hc;
 }
 
 PRInt32 nsCRT::atoi( const PRUnichar *string )

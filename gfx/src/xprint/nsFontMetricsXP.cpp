@@ -1216,7 +1216,7 @@ HashKey(const void* aString)
 {
   const nsString* key = (const nsString*) aString;
   return (PLHashNumber)
-    nsCRT::HashCode(key->GetUnicode(), key->Length());
+    nsCRT::HashCode(key->GetUnicode());
 }
 
 static PRIntn

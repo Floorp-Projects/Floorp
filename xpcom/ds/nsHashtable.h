@@ -75,8 +75,8 @@ typedef PRBool (*PR_CALLBACK nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, 
 class NS_COM nsHashtable {
 protected:
   // members  
-  PLHashTable           mHashtable;
   PRLock*               mLock;
+  PLHashTable           mHashtable;
 
 public:
   nsHashtable(PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE);

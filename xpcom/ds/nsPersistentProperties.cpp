@@ -36,7 +36,7 @@
 static PLHashNumber
 HashKey(const PRUnichar *aString)
 {
-  return (PLHashNumber) nsCRT::HashCode(aString, nsCRT::strlen(aString));
+  return (PLHashNumber) nsCRT::HashCode(aString);
 }
 
 static PRIntn
@@ -224,8 +224,8 @@ nsPersistentProperties::SetStringProperty(const nsString& aKey, nsString& aNewVa
   }
 
   const PRUnichar *key = aKey.GetUnicode();  // returns internal pointer (not a copy)
-  PRUint32 len = nsCRT::strlen(key);
-  PRUint32 hashValue = nsCRT::HashCode(key, len);
+  PRUint32 len;
+  PRUint32 hashValue = nsCRT::HashCode(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
   PLHashEntry *he = *hep;
   if (he) {
@@ -271,8 +271,8 @@ nsPersistentProperties::GetStringProperty(const nsString& aKey, nsString& aValue
     return NS_ERROR_FAILURE;
   }
 
-  PRUint32 len = nsCRT::strlen(key);
-  PRUint32 hashValue = nsCRT::HashCode(key, len);
+  PRUint32 len;
+  PRUint32 hashValue = nsCRT::HashCode(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
   PLHashEntry *he = *hep;
   if (he) {
