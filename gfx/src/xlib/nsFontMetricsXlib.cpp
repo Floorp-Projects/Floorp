@@ -997,7 +997,7 @@ nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
   rv = gPref->GetCharPref(
 #ifdef USE_XPRINT
                           nsFontMetricsXlib::mPrinterMode?
-                          "printer.font.xprint.rejectfontpattern":
+                          "print.xprint.font.rejectfontpattern":
 #endif /* USE_XPRINT */
                           "font.x11.rejectfontpattern",
                           getter_Copies(fbpattern));
@@ -1022,7 +1022,7 @@ nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
   rv = gPref->GetCharPref(
 #ifdef USE_XPRINT
                           nsFontMetricsXlib::mPrinterMode?
-                          "printer.font.xprint.acceptfontpattern":
+                          "print.xprint.font.acceptfontpattern":
 #endif /* USE_XPRINT */
                           "font.x11.acceptfontpattern",
                           getter_Copies(fbpattern));

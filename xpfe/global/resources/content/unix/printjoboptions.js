@@ -43,6 +43,7 @@ var gPrintSettings = null;
 var gStringBundle  = null;
 var gPrintSettingsInterface  = Components.interfaces.nsIPrintSettings;
 var gPaperArray;
+var gPrefs;
 
 var default_command    = "lpr";
 var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
@@ -117,27 +118,38 @@ listElement.prototype =
           for (var i=0;i<aDataObject.length;i++)  {
             var paperObj = aDataObject[i];
             var itemNode = document.createElement("menuitem");
+            var label;
             try {
-              var label = gStringBundle.GetStringFromName(paperObj.name)
-              itemNode.setAttribute("label", label);
-              itemNode.setAttribute("value", i);
-              popupNode.appendChild(itemNode);
-            } catch (e) {}
+              label = gStringBundle.GetStringFromName(paperObj.name)
+            } 
+            catch (e) {
+              /* No name in string bundle ? Then build one manually (this
+               * usually happens when gPaperArray was build by createPaperArrayFromPrinterFeatures() ...) */              
+              if (paperObj.inches) {
+                label = paperObj.name + " (" + paperObj.width + "x" + paperObj.height + " in.)";
+              }  
+              else {
+                label = paperObj.name + " (" + paperObj.width + "x" + paperObj.height + " mm)";
+              }
+            }
+            itemNode.setAttribute("label", label);
+            itemNode.setAttribute("value", i);
+            popupNode.appendChild(itemNode);            
           }
           this.listElement.appendChild(popupNode); 
         } 
   };
 
 //---------------------------------------------------
-function createPaperArray()
+function createPaperArrayFromDefaults()
 {
-  var paperNames   = ["letterSize", "legalSize", "exectiveSize", "a4Size", "a3Size"];
+  var paperNames   = ["letterSize", "legalSize", "exectiveSize", "a5Size", "a4Size", "a3Size", "a2Size", "a1Size", "a0Size"];
   //var paperNames   = ["&letterRadio.label;", "&legalRadio.label;", "&exectiveRadio.label;", "&a4Radio.label;", "&a3Radio.label;"];
-  var paperWidths  = [8.5, 8.5, 7.25, 210.0, 287.0];
-  var paperHeights = [11.0, 14.0, 10.5, 297.0, 420.0];
-  var paperInches  = [true, true, true, false, false];
+  var paperWidths  = [ 8.5,  8.5,  7.25, 148.0, 210.0, 287.0, 420.0, 594.0,  841.0];
+  var paperHeights = [11.0, 14.0, 10.50, 210.0, 297.0, 420.0, 594.0, 841.0, 1189.0];
+  var paperInches  = [true, true, true,  false, false, false, false, false, false];
   // this is deprecated
-  var paperEnums  = [0, 1, 2, 3, 4];
+  var paperEnums  = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
   gPaperArray = new Array();
 
@@ -148,7 +160,78 @@ function createPaperArray()
     obj.height = paperHeights[i];
     obj.inches = paperInches[i];
     obj.paperSize = paperEnums[i]; // deprecated
+    
+    /* Calculate the width/height in millimeters */
+    if (paperInches[i]) {
+      obj.width_mm  = paperWidths[i]  * 25.4;
+      obj.height_mm = paperHeights[i] * 25.4; 
+    }
+    else {
+      obj.width_mm  = paperWidths[i];
+      obj.height_mm = paperHeights[i];        
+    }
     gPaperArray[i] = obj;
+  }
+}
+
+//---------------------------------------------------
+function createPaperArrayFromPrinterFeatures()
+{
+  var printername = gPrintSettings.printerName;
+  if (doDebug) {
+    dump("createPaperArrayFromPrinterFeatures for " + printername + ".\n");
+  }
+
+  gPaperArray = new Array();
+  
+  var numPapers = gPrefs.getIntPref("print.tmp.printerfeatures." + printername + ".paper.count");
+  
+  if (doDebug) {
+    dump("processing " + numPapers + " entries...\n");
+  }    
+
+  for (var i=0;i<numPapers;i++) {
+    var obj    = new Object();
+    obj.name      = gPrefs.getCharPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".name");
+    obj.width_mm  = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".width_mm");
+    obj.height_mm = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".height_mm");
+    obj.inches    = gPrefs.getBoolPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".is_inch");
+    obj.paperSize = 666; // deprecated
+    
+    /* Calculate the width/height in paper's native units (either inches or millimeters) */
+    if (obj.inches) {
+      obj.width  = obj.width_mm  / 25.4;
+      obj.height = obj.height_mm / 25.4; 
+    }
+    else {
+      obj.width  = obj.width_mm;
+      obj.height = obj.height_mm;
+    }
+
+    gPaperArray[i] = obj;
+
+    if (doDebug) {
+      dump("paper index=" + i + ", name=" + obj.name + ", width=" + obj.width + ", height=" + obj.height + ".\n");
+    }
+  }  
+}
+
+//---------------------------------------------------
+function createPaperArray()
+{
+  var use_paper_array_from_printerfeatures = false;
+
+  try {
+    use_paper_array_from_printerfeatures = gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".has_special_printerfeatures");
+  }
+  catch (e) {
+  }
+  
+  if (use_paper_array_from_printerfeatures) {
+    createPaperArrayFromPrinterFeatures();    
+  }
+  else {
+    createPaperArrayFromDefaults();
   }
 }
 
@@ -172,12 +255,16 @@ function createPaperSizeList(selectedInx)
 //---------------------------------------------------
 function loadDialog()
 {
-  var print_paper_type    = 0;
-  var print_paper_unit    = 0;
-  var print_paper_width   = 0.0;
-  var print_paper_height  = 0.0;
-  var print_color         = true;
-  var print_command       = default_command;
+  var print_paper_type       = 0;
+  var print_paper_unit       = 0;
+  var print_paper_width      = 0.0;
+  var print_paper_height     = 0.0;
+  var print_paper_width_mm   = 0.0;
+  var print_paper_height_mm  = 0.0;  
+  var print_color            = true;
+  var print_command          = default_command;
+
+  gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
   if (gPrintSettings) {
     print_paper_type   = gPrintSettings.paperSizeType;
@@ -186,6 +273,18 @@ function loadDialog()
     print_paper_height = gPrintSettings.paperHeight;
     print_color     = gPrintSettings.printInColor;
     print_command   = gPrintSettings.printCommand;
+    
+    if (print_paper_unit == gPrintSettingsInterface.kPaperSizeInches) {
+      print_paper_width_mm  = gPrintSettings.paperWidth  * 25.4;
+      print_paper_height_mm = gPrintSettings.paperHeight * 25.4;
+    }
+    else if (print_paper_unit == gPrintSettingsInterface.kPaperSizeMillimeters) {
+      print_paper_width_mm  = gPrintSettings.paperWidth;
+      print_paper_height_mm = gPrintSettings.paperHeight;
+    }
+    else {
+      dump("Unknown value in gPrintSettings.paperSizeUnit");
+    }
   }
 
   if (doDebug) {
@@ -200,12 +299,21 @@ function loadDialog()
   createPaperArray();
 
   var selectedInx = 0;
-  for (var i=0;i<gPaperArray.length;i++) {
-    if (print_paper_width == gPaperArray[i].width && print_paper_height == gPaperArray[i].height) {
+  var tolerance = 10.0; // 4 is usually enougth except for large papers like DIN-A3
+  for (var i=0;i<gPaperArray.length;i++) { 
+    // Weak match. Allow errors up to +/- 5mm due rounding errors
+    if ((Math.abs(print_paper_width_mm  - gPaperArray[i].width_mm)  <= tolerance) && 
+        (Math.abs(print_paper_height_mm - gPaperArray[i].height_mm) <= tolerance)) {
       selectedInx = i;
       break;
     }
   }
+  
+  if (doDebug) {
+    if (i == gPaperArray.length)
+      dump("loadDialog: No paper found.\n");
+  }
+
   createPaperSizeList(selectedInx);
 
   if (print_command == "") {
@@ -221,12 +329,10 @@ function loadDialog()
   dialog.cmdInput.value = print_command;
 
   try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    dialog.topInput.value    = pref.getIntPref("print.print_edge_top") / 100.0;
-    dialog.bottomInput.value = pref.getIntPref("print.print_edge_left") / 100.0;
-    dialog.leftInput.value   = pref.getIntPref("print.print_edge_right") / 100.0;
-    dialog.rightInput.value  = pref.getIntPref("print.print_edge_bottom") / 100.0;
+    dialog.topInput.value    = gPrefs.getIntPref("print.print_edge_top") / 100.0;
+    dialog.bottomInput.value = gPrefs.getIntPref("print.print_edge_left") / 100.0;
+    dialog.leftInput.value   = gPrefs.getIntPref("print.print_edge_right") / 100.0;
+    dialog.rightInput.value  = gPrefs.getIntPref("print.print_edge_bottom") / 100.0;
   } catch (e) {
     dialog.topInput.value    = "0.04";
     dialog.bottomInput.value = "0.04";
@@ -291,19 +397,17 @@ function onAccept()
 
     // 
     try {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
       var i = dialog.topInput.value * 100;
-      pref.setIntPref("print.print_edge_top", i);
+      gPrefs.setIntPref("print.print_edge_top", i);
 
       i = dialog.bottomInput.value * 100;
-      pref.setIntPref("print.print_edge_left", i);
+      gPrefs.setIntPref("print.print_edge_left", i);
 
       i = dialog.leftInput.value * 100;
-      pref.setIntPref("print.print_edge_right", i);
+      gPrefs.setIntPref("print.print_edge_right", i);
 
       i = dialog.rightInput.value * 100;
-      pref.setIntPref("print.print_edge_bottom", i);
+      gPrefs.setIntPref("print.print_edge_bottom", i);
     } catch (e) {
     }
 
@@ -329,6 +433,6 @@ function onAccept()
     dump("*** FATAL ERROR: printService missing\n");
   }
 
-
   return true;
 }
+

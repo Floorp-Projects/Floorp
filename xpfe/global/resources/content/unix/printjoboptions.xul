@@ -51,14 +51,14 @@ Contributor(s):
         <hbox align="center" pack="end">
           <label id="paperLabel" value="&paperInput.label;"/>
         </hbox>
-        <menulist id="paperList" flex ="1">
+        <menulist id="paperList" flex="1">
           <menupopup/>
         </menulist>
       </row>
 
       <row>
         <label id="cmdLabel" value="&cmdInput.label;"/>
-        <textbox id="cmdInput" flex ="1"/>
+        <textbox id="cmdInput" flex="1"/>
       </row>
 
       <row>

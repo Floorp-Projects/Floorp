@@ -91,6 +91,7 @@ public:
   NS_IMETHOD GetLandscape (PRBool &aLandscape);
   NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
   NS_IMETHOD GetPrintMethod(PrintMethod &aMethod);
+  static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
   NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
   virtual ~nsDeviceContextSpecXlib();
   
@@ -120,10 +121,6 @@ public:
   nsPrinterEnumeratorXlib();
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTERENUMERATOR
-
-protected:
 };
-
-
 
 #endif /* !nsDeviceContextSpecXlib_h___ */

@@ -140,7 +140,8 @@ nsDrawingSurfaceXlibImpl::Init(XlibRgbHandle *aXlibRgbHandle,
                             mWidth, 
                             mHeight, 
                             mDepth);
-  return NS_OK;
+
+  return (mDrawable!=None)?(NS_OK):(NS_ERROR_FAILURE);
 }
 
 void 
@@ -204,6 +205,11 @@ nsDrawingSurfaceXlibImpl::Lock(PRInt32 aX, PRInt32 aY,
                      mLockWidth, mLockHeight,
                      0xFFFFFFFF,
                      ZPixmap);
+
+  if (!mImage) {
+    mLocked = PR_FALSE;
+    return NS_ERROR_FAILURE;
+  }
   
   *aBits = mImage->data;
   

@@ -255,19 +255,15 @@ const char *paper_size_to_paper_name(float width_in_inch, float height_in_inch)
 #define MATCH_PAGE(width, height, paper_width, paper_height) \
           (MORE_OR_LESS_EQUAL((width),  (paper_width),  0.4f) && \
            MORE_OR_LESS_EQUAL((height), (paper_height), 0.4f))
+  int i;
+  
+  for( i = 0 ; postscript_module_paper_sizes[i].name != nsnull ; i++ )
+  {
+    const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
 
-  // 210mm X 297mm == 8.27in X 11.69in  
-  if (MATCH_PAGE(width_in_inch, height_in_inch, 8.27f, 11.69f))
-    return "A4";
-  // 297mm X 420mm == 11.69in X 16.53in  
-  if (MATCH_PAGE(width_in_inch, height_in_inch, 11.69f, 16.53f))
-    return "A3";  
-  if (MATCH_PAGE(width_in_inch, height_in_inch, 8.5f, 11.0f))
-    return "Letter";
-  if (MATCH_PAGE(width_in_inch, height_in_inch, 8.5f, 14.0f))
-    return "Legal"; 
-  if (MATCH_PAGE(width_in_inch, height_in_inch, 7.5f, 10.0f))
-    return "Executive";
+    if (MATCH_PAGE(width_in_inch, height_in_inch, curr->width, curr->height))
+      return curr->name;
+  }      
 #undef MATCH_PAGE
 #undef MORE_OR_LESS_EQUAL
 
@@ -2799,8 +2795,8 @@ typedef struct _unixPrinterFallbacks_t {
 } unixPrinterFallbacks_t;
 
 static const unixPrinterFallbacks_t unixPrinterFallbacks[] = {
-  {"print.psnativefont.ja", "Ryumin-Light-EUC-H"},
-  {"print.psnativecode.ja", "euc-jp"},
+  {"print.postscript.nativefont.ja", "Ryumin-Light-EUC-H"},
+  {"print.postscript.nativecode.ja", "euc-jp"},
   {nsnull, nsnull}
 };
 
@@ -2831,9 +2827,9 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 
   nsAutoString lang; lang.AssignWithConversion(aName);
 
-  if (strstr(aName, "print.psnativefont.")) {
+  if (strstr(aName, "print.postscript.nativefont.")) {
     lang.Cut(0, 19);
-  } else if (strstr(aName, "print.psunicodefont.")) {
+  } else if (strstr(aName, "print.postscript.unicodefont.")) {
     lang.Cut(0, 20);
   }
   nsStringKey key(lang);
@@ -2856,11 +2852,11 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
   //
   // Try to get the info from the user's prefs file
   //
-  nsCAutoString namepsnativefont("print.psnativefont.");
+  nsCAutoString namepsnativefont("print.postscript.nativefont.");
   namepsnativefont.AppendWithConversion(lang);
   gPrefs->CopyCharPref(namepsnativefont.get(), getter_Copies(psnativefont));
 
-  nsCAutoString namepsnativecode("print.psnativecode.");
+  nsCAutoString namepsnativecode("print.postscript.nativecode.");
   namepsnativecode.AppendWithConversion(lang);
   gPrefs->CopyCharPref(namepsnativecode.get(), getter_Copies(psnativecode));
   if (((psnativefont)&&(*psnativefont)) && ((psnativecode)&&(*psnativecode))) {
@@ -2893,7 +2889,7 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
     psnativefont.Adopt(0);
     psnativecode.Adopt(0);
   } else {
-    nsCAutoString namepsfontorder("print.psfontorder.");
+    nsCAutoString namepsfontorder("print.postscript.fontorder.");
     namepsfontorder.AppendWithConversion(lang);
     if (use_prefsfile) {
       gPrefs->GetIntPref(namepsfontorder.get(), &psfontorder);
@@ -2908,7 +2904,7 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
   }
 
   /* check UCS fonts */
-  nsCAutoString namepsunicodefont("print.psunicodefont.");
+  nsCAutoString namepsunicodefont("print.postscript.unicodefont.");
   namepsunicodefont.AppendWithConversion(lang);
   if (use_prefsfile) {
     gPrefs->CopyCharPref(namepsunicodefont.get(), getter_Copies(psunicodefont));
@@ -2987,9 +2983,9 @@ nsPostScriptObj::initlanggroup()
 {
 
   /* check langgroup of preference */
-  gPrefs->EnumerateChildren("print.psnativefont.",
+  gPrefs->EnumerateChildren("print.postscript.nativefont.",
 	    PrefEnumCallback, (void *) this);
 
-  gPrefs->EnumerateChildren("print.psunicodefont.",
+  gPrefs->EnumerateChildren("print.postscript.unicodefont.",
 	    PrefEnumCallback, (void *) this);
 }

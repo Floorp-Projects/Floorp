@@ -325,30 +325,37 @@ pref("font.min-size.fixed.zh-TW", 10);
 //     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
 
 /* reject font if accept pattern does not match it... */
-//pref("printer.font.xprint.acceptfontpattern", ".*");
+//pref("print.xprint.font.acceptfontpattern", ".*");
 /* reject font if reject pattern matches it... */
-//pref("printer.font.xprint.rejectfontpattern", 
+//pref("print.xprint.font.rejectfontpattern", 
 //     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
 
-// ps font
-// this list is used by the postscript font
-// to enumerate the list of langGroups
-// there should be a call to get the
-// langGroups; see bug 75054
-pref("print.psnativefont.ar", "");
-pref("print.psnativefont.el", "");
-pref("print.psnativefont.he", "");
-pref("print.psnativefont.ja", "");
-pref("print.psnativefont.ko", "");
-pref("print.psnativefont.th", "");
-pref("print.psnativefont.tr", "");
-pref("print.psnativefont.x-baltic", "");
-pref("print.psnativefont.x-central-euro", "");
-pref("print.psnativefont.x-cyrillic", "");
-pref("print.psnativefont.x-unicode", "");
-pref("print.psnativefont.x-user-def", "");
-pref("print.psnativefont.x-western", "");
-pref("print.psnativefont.zh-CN", "");
-pref("print.psnativefont.zh-TW", "");
+/* PostScript print module prefs */
+pref("print.postscript.paper_size",    "letter");
+pref("print.postscript.orientation",   "portrait");
+pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
+''
+/* PostScript print module font config
+ * this list is used by the postscript font
+ * to enumerate the list of langGroups
+ * there should be a call to get the
+ * langGroups; see bug 75054
+ */
+pref("print.postscript.nativefont.ar",             "");
+pref("print.postscript.nativefont.el",             "");
+pref("print.postscript.nativefont.he",             "");
+pref("print.postscript.nativefont.ja",             "");
+pref("print.postscript.nativefont.ko",             "");
+pref("print.postscript.nativefont.th",             "");
+pref("print.postscript.nativefont.tr",             "");
+pref("print.postscript.nativefont.x-baltic",       "");
+pref("print.postscript.nativefont.x-central-euro", "");
+pref("print.postscript.nativefont.x-cyrillic",     "");
+pref("print.postscript.nativefont.x-unicode",      "");
+pref("print.postscript.nativefont.x-user-def",     "");
+pref("print.postscript.nativefont.x-western",      "");
+pref("print.postscript.nativefont.zh-CN",          "");
+pref("print.postscript.nativefont.zh-TW",          "");
 
 pref("mail.signature_date", 0);
+// EOF.
