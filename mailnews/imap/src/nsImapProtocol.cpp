@@ -6614,6 +6614,25 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
     flagString.SetCharAt(')',flagString.Length() - 1);
   
     Store(messageIdsString, flagString.get(), idsAreUids);
+
+    // looks like we're going to have to turn off any potential labels on these msgs.
+    if (addFlags && (userFlags & kImapMsgSupportUserFlag) && (flags & kImapMsgLabelFlags))
+    {
+      flagString = "-Flags (";
+      PRUint32 labelValue = (flags & kImapMsgLabelFlags) >> 9;
+      for (PRUint32 i = 1; i <= 5; i++)
+      {
+         if (labelValue != i)
+         {
+            flagString.Append("$Label");
+            flagString.AppendInt(i);
+            flagString.Append(" ");
+         }
+       }
+      flagString.SetCharAt(')',flagString.Length() - 1);
+  
+      Store(messageIdsString, flagString.get(), idsAreUids);
+    }
   }
 }
 
