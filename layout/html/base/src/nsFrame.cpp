@@ -684,17 +684,17 @@ nsFrame::SetClipRect(nsIRenderingContext& aRenderingContext)
     top += display->mClip.top;
   }
   if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
-    right += display->mClip.right;
+    right -= display->mClip.right;
   }
   if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
-    bottom += display->mClip.bottom;
+    bottom -= display->mClip.bottom;
   }
   if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
     left += display->mClip.left;
   }
 
   // Set updated clip-rect into the rendering context
-  nsRect clipRect(top, left, right - left, bottom - top);
+  nsRect clipRect(left, top, right - left, bottom - top);
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
 }
 
@@ -735,8 +735,8 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
     PRBool        isSelected;
     GetFrameState(&frameState);
     isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
-    PRInt32 selectionStartOffset = 0;//frame coordinates
-    PRInt32 selectionEndOffset = 0;//frame coordinates
+//    PRInt32 selectionStartOffset = 0;//frame coordinates
+//    PRInt32 selectionEndOffset = 0;//frame coordinates
 
     if (!displaySelection || !isSelected)
       return NS_OK;
@@ -749,8 +749,7 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
     PRInt32 offset;
     PRInt32 offsetEnd;
     if (NS_SUCCEEDED(result) && newContent){
-      PRInt32 index = 0;
-      nsresult result = newContent->IndexOf(mContent, offset);
+      result = newContent->IndexOf(mContent, offset);
       if (NS_FAILED(result)) 
       {
         return result;
@@ -891,7 +890,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
   if (NS_SUCCEEDED(rv) && shell) {
     nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
     PRInt32 startPos = 0;
-    PRUint32 contentOffset = 0;
+//    PRUint32 contentOffset = 0;
     PRInt32 contentOffsetEnd = 0;
     nsCOMPtr<nsIContent> newContent;
     if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x, getter_AddRefs(newContent), 
@@ -984,8 +983,7 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
   result = mContent->GetParent(*aNewContent);
 
   if (*aNewContent){
-    PRInt32 index = 0;
-    nsresult result = (*aNewContent)->IndexOf(mContent, aContentOffset);
+    result = (*aNewContent)->IndexOf(mContent, aContentOffset);
     if (NS_FAILED(result)) 
     {
       return result;
@@ -1588,9 +1586,11 @@ nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   if (eSpreadDown == aSpread){
     nsIFrame* kid;
     nsresult rv = FirstChild(nsnull, &kid);
-    while (nsnull != kid) {
-      kid->SetSelected(nsnull,aSelected,aSpread);
-      kid->GetNextSibling(&kid);
+    if (NS_SUCCEEDED(rv)) {
+      while (nsnull != kid) {
+        kid->SetSelected(nsnull,aSelected,aSpread);
+        kid->GetNextSibling(&kid);
+      }
     }
   }
   nsFrameState  frameState;
