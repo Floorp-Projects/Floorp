@@ -132,14 +132,14 @@ static nsModuleComponentInfo components[] =
     nsUnicodeToJISx0201RegSelf, nsUnicodeToJISx0201UnRegSelf
   },
   { 
-    ENCODER_NAME_BASE "jis_x0208-1983" , NS_UNICODETOJISX0208_CID, 
-    NS_UNICODEENCODER_PROGID_BASE "jis_x0208-1983",
+    ENCODER_NAME_BASE "jis_0208-1983" , NS_UNICODETOJISX0208_CID, 
+    NS_UNICODEENCODER_PROGID_BASE "jis_0208-1983",
     nsUnicodeToJISx0208Constructor, 
     nsUnicodeToJISx0208RegSelf, nsUnicodeToJISx0208UnRegSelf
   },
   { 
-    ENCODER_NAME_BASE "jis_x0212-1990" , NS_UNICODETOJISX0212_CID, 
-    NS_UNICODEENCODER_PROGID_BASE "jis_x0212-1990",
+    ENCODER_NAME_BASE "jis_0212-1990" , NS_UNICODETOJISX0212_CID, 
+    NS_UNICODEENCODER_PROGID_BASE "jis_0212-1990",
     nsUnicodeToJISx0212Constructor, 
     nsUnicodeToJISx0212RegSelf, nsUnicodeToJISx0212UnRegSelf
   }
