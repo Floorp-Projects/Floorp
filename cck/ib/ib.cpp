@@ -436,6 +436,130 @@ int ModifyDTD(CString xpifile, CString entity, CString newvalue)
 	return TRUE;
 }
 
+void ModifyEntity1(char *buffer, CString entity, CString newvalue)
+{
+	CString buf(buffer);
+	entity = entity + "\"";
+
+	int i = buf.Find(entity);
+	if (i == -1) return;
+
+	i = buf.ReverseFind('"');
+	if (i == -1) return;
+	
+	CString tempbuf = buf;
+	tempbuf.Left(i);
+	int j = tempbuf.ReverseFind('"');
+	if (j == -1) return;
+	
+	buf.Delete(j, i-j);
+	buf.Insert(j, newvalue);
+
+	strcpy(buffer, (char *)(LPCTSTR) buf);
+}
+
+int ModifyJS1(CString xpifile, CString entity, CString newvalue)
+{
+	CString newfile = xpifile + ".new";
+	int rv = TRUE;
+	char *fgetsrv;
+
+	// Read in all.js file and make substitutions
+	FILE *srcf = fopen(xpifile, "r");
+	FILE *dstf = fopen(newfile, "w");
+	if (!srcf)
+		rv = FALSE;
+	else
+	{
+		int done = FALSE;
+		while (!done)
+		{
+			fgetsrv = fgets(buffer, sizeof(buffer), srcf);
+			done = feof(srcf);
+			if (!done)
+			{
+				if (!fgetsrv || ferror(srcf))
+				{
+					rv = FALSE;
+					break;
+				}
+				ModifyEntity1(buffer, entity, newvalue);
+				fputs(buffer, dstf);
+			}
+		}
+
+		fclose(srcf);
+		fclose(dstf);
+	}
+
+	remove(xpifile);
+	rename(newfile, xpifile);
+
+	return TRUE;
+}
+
+void ModifyEntity2(char *buffer, CString entity, CString newvalue)
+{
+	CString buf(buffer);
+	newvalue = "              " + newvalue;
+
+	int i = buf.Find(entity);
+	if (i == -1) return;
+
+	i = buf.ReverseFind(')');
+	if (i == -1) return;
+	
+	CString tempbuf = buf;
+	tempbuf.Left(i);
+	int j = tempbuf.ReverseFind(',');
+	if (j == -1) return;
+	
+	buf.Delete(j+1, i-j-1);
+	buf.Insert(j+1, newvalue);
+
+	strcpy(buffer, (char *)(LPCTSTR) buf);
+}
+
+int ModifyJS2(CString xpifile, CString entity, CString newvalue)
+{
+	CString newfile = xpifile + ".new";
+	int rv = TRUE;
+	char *fgetsrv;
+
+	// Read in all.js file and make substitutions
+	FILE *srcf = fopen(xpifile, "r");
+	FILE *dstf = fopen(newfile, "w");
+	if (!srcf)
+		rv = FALSE;
+	else
+	{
+		int done = FALSE;
+		while (!done)
+		{
+			fgetsrv = fgets(buffer, sizeof(buffer), srcf);
+			done = feof(srcf);
+			if (!done)
+			{
+				if (!fgetsrv || ferror(srcf))
+				{
+					rv = FALSE;
+					break;
+				}
+				ModifyEntity2(buffer, entity, newvalue);
+				fputs(buffer, dstf);
+			}
+		}
+
+		fclose(srcf);
+		fclose(dstf);
+	}
+
+	remove(xpifile);
+	rename(newfile, xpifile);
+
+	return TRUE;
+}
+
 int interpret(char *cmd)
 {
 	char *cmdname = strtok(cmd, "(");
@@ -568,6 +692,8 @@ int interpret(char *cmd)
 
 	else if ((strcmp(cmdname, "modifyDTD") == 0) ||
 			(strcmp(cmdname, "modifyJS") == 0) ||
+			(strcmp(cmdname, "modifyJS1") == 0) ||
+			(strcmp(cmdname, "modifyJS2") == 0) ||
 			(strcmp(cmdname, "modifyProperties") == 0))
 	{
 		char *xpiname	= strtok(NULL, ",)");
@@ -599,6 +725,10 @@ int interpret(char *cmd)
 			ModifyJS(xpifile,entity,newvalue);
 		else if (strcmp(cmdname, "modifyProperties") == 0)
 			ModifyProperties(xpifile,entity,newvalue);
+		else if (strcmp(cmdname, "modifyJS1") == 0)
+			ModifyJS1(xpifile,entity,newvalue);
+		else if (strcmp(cmdname, "modifyJS2") == 0)
+			ModifyJS2(xpifile,entity,newvalue);
 		else
 		{
 			// If the browser window's title bar text field is empty, 
@@ -1140,6 +1270,21 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CString setnewsRDF = tempPath +"\\newsaccount.rdf";
 	SetGlobal("NewsRDF",setnewsRDF);
 	CreateNewsMenu();
+
+	// Determine which proxy configuration is chosen
+	CString proxyConfigoption = GetGlobal("radioGroup2");
+	if (proxyConfigoption == "3")
+		SetGlobal("ProxyConfig","2");
+	else if (proxyConfigoption == "2")
+		SetGlobal("ProxyConfig","1");
+	else
+		SetGlobal("ProxyConfig","0");
+	// Determine which SOCKS version is chosen
+	CString socksVer = GetGlobal("socksv");
+	if (socksVer == "SOCKS v4")
+		SetGlobal("SocksVersion","4");
+	else
+		SetGlobal("SocksVersion","5");
 
 	if (cdDir.Compare("1") ==0)
 	{
