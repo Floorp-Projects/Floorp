@@ -81,7 +81,7 @@ $inRedirIniURL            = $inXpiURL                    if !defined($inRedirIni
 
 if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 {
-  print " os2/makeall.pl\n";
+  print " windows/makeall.pl\n";
   print "   topobjdir  : $topobjdir\n";
   print "   topsrcdir  : $topsrcdir\n";
   print "   inStagePath: $inStagePath\n";
@@ -135,7 +135,7 @@ $gDirDistInstall      = "$inDistPath/install";
 
 if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 {
-  print " back in os2/makeall.pl\n";
+  print " back in windows/makeall.pl\n";
   print "   inStagePath: $inStagePath\n";
   print "   inDistPath : $inDistPath\n";
 }
