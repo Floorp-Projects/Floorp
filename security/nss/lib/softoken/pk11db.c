@@ -273,7 +273,10 @@ secmod_getSecmodName(char *param, char **appName, char **filename,PRBool *rw)
    if (pk11_argHasFlag("flags","readOnly",save_params) ||
 	pk11_argHasFlag("flags","noModDB",save_params)) *rw = PR_FALSE;
 
-   if (!secmodName || *secmodName == '\0') secmodName = PORT_Strdup(SECMOD_DB);
+   if (!secmodName || *secmodName == '\0') {
+	if (secmodName) PORT_Free(secmodName);
+	secmodName = PORT_Strdup(SECMOD_DB);
+   }
    *filename = secmodName;
 
    lconfigdir = pk11_EvaluateConfigDir(configdir, appName);
