@@ -346,104 +346,6 @@ nsHTMLToTXTSinkStream::EndContext(PRInt32 aPosition)
   return NS_OK;
 }
 
-void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
-{  
-    if (mBufferSize < aNewSize)
-  {
-    nsAllocator::Free(mBuffer);
-    mBufferSize = 2*aNewSize+1; // make the twice as large
-    mBuffer = NS_STATIC_CAST(char*, nsAllocator::Alloc(mBufferSize));
-    if(mBuffer){
-      mBuffer[0] = 0;
-      mBufferLength = 0;
-    }
-  }
-}
-
-
-
-void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
-{
-  if (mUnicodeEncoder == nsnull)
-  {
-    NS_WARNING("The unicode encoder needs to be initialized");
-    EnsureBufferSize(aSrc.Length()+1);
-    aSrc.ToCString ( mBuffer, aSrc.Length()+1 );
-    return;
-  }
-
-#define CH_NBSP 160
-
-  PRInt32       length = aSrc.Length();
-  nsresult      result;
-
-  if (mUnicodeEncoder != nsnull && length > 0)
-  {
-    EnsureBufferSize(length);
-    mBufferLength = mBufferSize;
-    
-    mUnicodeEncoder->Reset();
-    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, mBuffer, &mBufferLength);
-    mBuffer[mBufferLength] = 0;
-    PRInt32 temp = mBufferLength;
-    if (NS_SUCCEEDED(result))
-      result = mUnicodeEncoder->Finish(mBuffer,&temp);
-
-
-    for (PRInt32 i = 0; i < mBufferLength; i++)
-    {
-      if (mBuffer[i] == char(CH_NBSP))
-        mBuffer[i] = ' ';
-    }
-  }
-  
-}
-
-
-
-/**
- *  Write places the contents of aString into either the output stream
- *  or the output string.
- *  When going to the stream, all data is run through the encoder
- *  
- *  @updated gpk02/03/99
- *  @param   
- *  @return  
- */
-void nsHTMLToTXTSinkStream::Write(const nsString& aString)
-{
-  // If a encoder is being used then convert first convert the input string
-  if (mUnicodeEncoder != nsnull)
-  {
-    EncodeToBuffer(aString);
-    if (mStream != nsnull)
-    {
-      nsOutputStream out(mStream);
-      out.write(mBuffer,mBufferLength);
-    }
-    if (mString != nsnull)
-    {
-      mString->Append(mBuffer);
-    }
-  }
-  else
-  {
-    if (mStream != nsnull)
-    {
-      nsOutputStream out(mStream);
-      const PRUnichar* unicode = aString.GetUnicode();
-      PRUint32   length = aString.Length();
-      out.write(unicode,length);
-    }
-    else
-    {
-      mString->Append(aString);
-    }
-  }
-}
-
-
-
 /**
  *  This gets called by the parser when you want to add
  *  a PI node to the current container in the content
@@ -521,6 +423,10 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   if (type == eHTMLTag_body)
   {
     mDoOutput = PR_TRUE;
+
+    // Would be cool to figure out here whether we have a
+    // preformatted style attribute.  It's hard, though.
+
     return NS_OK;
   }
   if (!mDoOutput)
@@ -654,14 +560,20 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
 
   if (type == eHTMLTag_text)
   {
+#if 0
+    // This is too generous about putting spaces around text nodes
+    // even when there's no indication for a space.
     if (mColPos > mIndent)
     {
       nsAutoString temp(" ");
       Write(temp);
       mColPos++;
     }
+#endif
 
-    if (mFlags & nsIDocumentEncoder::OutputFormatted)
+    if ((mFlags & nsIDocumentEncoder::OutputFormatted
+         || mFlags & nsIDocumentEncoder::OutputWrap)
+        && mWrapColumn > 0)
       WriteWrapped(text);
     else
     {
@@ -687,14 +599,16 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
     Write(temp);
     mColPos = 0;
   }
-  // The only time we want to pass along whitespace from the original
-  // html source is if we're prettyprinting and we're inside a <pre>.
+  // The only times we want to pass along whitespace from the original
+  // html source are if we're forced into preformatted mode via flags,
+  // or if we're prettyprinting and we're inside a <pre>.
   // Otherwise, either we're collapsing to minimal text, or we're
   // prettyprinting to mimic the html format, and in neither case
   // does the formatting of the html source help us.
-  else if ((mFlags & nsIDocumentEncoder::OutputFormatted)
-           && (mTagStackIndex > 0)
-           && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre))
+  else if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
+           ((mFlags & nsIDocumentEncoder::OutputFormatted)
+            && (mTagStackIndex > 0)
+            && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)))
   {
     if (type == eHTMLTag_whitespace)
     {
@@ -713,16 +627,131 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   return NS_OK;
 }
 
+void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
+{  
+    if (mBufferSize < aNewSize)
+  {
+    nsAllocator::Free(mBuffer);
+    mBufferSize = 2*aNewSize+1; // make the twice as large
+    mBuffer = NS_STATIC_CAST(char*, nsAllocator::Alloc(mBufferSize));
+    if(mBuffer){
+      mBuffer[0] = 0;
+      mBufferLength = 0;
+    }
+  }
+}
+
+
+
+void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
+{
+  if (mUnicodeEncoder == nsnull)
+  {
+    NS_WARNING("The unicode encoder needs to be initialized");
+    EnsureBufferSize(aSrc.Length()+1);
+    aSrc.ToCString ( mBuffer, aSrc.Length()+1 );
+    return;
+  }
+
+#define CH_NBSP 160
+
+  PRInt32       length = aSrc.Length();
+  nsresult      result;
+
+  if (mUnicodeEncoder != nsnull && length > 0)
+  {
+    EnsureBufferSize(length);
+    mBufferLength = mBufferSize;
+    
+    mUnicodeEncoder->Reset();
+    result = mUnicodeEncoder->Convert(aSrc.GetUnicode(), &length, mBuffer, &mBufferLength);
+    mBuffer[mBufferLength] = 0;
+    PRInt32 temp = mBufferLength;
+    if (NS_SUCCEEDED(result))
+      result = mUnicodeEncoder->Finish(mBuffer,&temp);
+
+
+    for (PRInt32 i = 0; i < mBufferLength; i++)
+    {
+      if (mBuffer[i] == char(CH_NBSP))
+        mBuffer[i] = ' ';
+    }
+  }
+  
+}
+
+
+
+/**
+ *  Write places the contents of aString into either the output stream
+ *  or the output string.
+ *  When going to the stream, all data is run through the encoder
+ *  
+ *  @updated gpk02/03/99
+ *  @param   
+ *  @return  
+ */
+void nsHTMLToTXTSinkStream::Write(const nsString& aString)
+{
+  // If a encoder is being used then convert first convert the input string
+  if (mUnicodeEncoder != nsnull)
+  {
+    EncodeToBuffer(aString);
+    if (mStream != nsnull)
+    {
+      nsOutputStream out(mStream);
+      out.write(mBuffer,mBufferLength);
+    }
+    if (mString != nsnull)
+    {
+      mString->Append(mBuffer);
+    }
+  }
+  else
+  {
+    if (mStream != nsnull)
+    {
+      nsOutputStream out(mStream);
+      const PRUnichar* unicode = aString.GetUnicode();
+      PRUint32   length = aString.Length();
+      out.write(unicode,length);
+    }
+    else
+    {
+      mString->Append(aString);
+    }
+  }
+}
+
+#ifdef DEBUG_akkana_not
+#define DEBUG_wrapping 1
+#endif
+
 //
 // Write a string, wrapping appropriately to mWrapColumn.
 //
 void
 nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
 {
+#ifdef DEBUG_wrapping
+  char* foo = aString.ToNewCString();
+  printf("WriteWrapped(%s): wrap col = %d\n", foo, mWrapColumn);
+  nsAllocator::Free(foo);
+#endif
+
+  PRInt32 bol = 0;
   int totLen = aString.Length();
-  int charsLeft = totLen;
-  while (charsLeft > 0)     // Loop over lines
+  while (bol < totLen)     // Loop over lines
   {
+#ifdef DEBUG_wrapping
+    nsString remaining;
+    aString.Right(remaining, totLen - bol);
+    foo = remaining.ToNewCString();
+    printf("Next line: bol = %d, totLen = %d, string = '%s'\n",
+           bol, totLen, foo);
+    nsAllocator::Free(foo);
+#endif
+
     // Indent at the beginning of the line, if necessary
     if (mColPos == 0 && mIndent > 0)
     {
@@ -736,22 +765,44 @@ nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
       nsAllocator::Free(spaces);
     }
 
-    // Write whatever chunk of the string we can fit:
-    int bol = totLen - charsLeft;
+    // See if there's a newline in the string:
+    PRInt32 newline = aString.FindCharInSet("\n\r", bol);
+
+    // Set eol to the end of the string or the first newline,
+    // whichever comes first:
     int eol = bol + mWrapColumn - mColPos;
+
     if (eol > totLen)
       eol = totLen;
+    else if (newline > 0 && eol > newline)
+      eol = newline;
+    // else we have to wrap
     else
     {
-      // We need to wrap, so search backward to find last IsSpace char:
+      // search backward to find last IsSpace char:
       int lastSpace = eol;
       while (lastSpace > bol && !nsString::IsSpace(aString[lastSpace]))
-        --lastSpace;
-      if (lastSpace == bol)
       {
+#ifdef DEBUG_wrapping
+        aString.Right(remaining, totLen - bol);
+        foo = remaining.ToNewCString();
+        printf("Searching backward: bol = %d, string = '%s'\n", bol, foo);
+        nsAllocator::Free(foo);
+#endif
+        --lastSpace;
+      }
+      if (lastSpace > bol)
+      {
+        // We found a space, so set eol to just before that
+        eol = lastSpace - 1;
+      }
+      else
+      {
+#ifdef NOTSURE
         // If we reached the bol, it might just be because we were close
         // to the end already and should have wrapped last time.
         // In that case, write a linebreak and come around again.
+        // I don't remember what this comment means, so skip it for now.
         if (mColPos > mIndent)
         {
           nsAutoString linebreak(NS_LINEBREAK);
@@ -759,33 +810,49 @@ nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
           mColPos = 0;
           continue;
         }
+#endif /* CONFUSED */
+
         // Else apparently we really can't break this line at whitespace --
-        // so scan forward to the next space (if any) and dump a long line:
-        while (eol > totLen && !nsString::IsSpace(aString[lastSpace]))
-          ++eol;
-      }
-      else if (lastSpace > bol && lastSpace < eol)
-        eol = lastSpace+1;
-#ifdef DEBUG_akkana
-      else
-        printf("Wrapping: bol = %d, eol = %d, lastSpace = %d, totLen = %d\n",
-               bol, eol, lastSpace, totLen);
+        // so scan forward to the next space or newline, and dump a long line.
+        lastSpace = eol;
+        while (eol < totLen && !nsString::IsSpace(aString[eol])
+               && (newline < 0 || eol < newline))
+        {
+#ifdef DEBUG_wrapping
+          nsString linestr;
+          aString.Mid(linestr, bol, lastSpace - bol);
+          foo = linestr.ToNewCString();
+          printf("Searching foreward: '%c' is not a space\n  line = '%s'\n",
+                 (char)aString[lastSpace], foo);
+          nsAllocator::Free(foo);
 #endif
+          ++eol;
+        }
+      }
     }
+    // At this point, bol and eol should represent the line
+    // we really want to dump; lastSpace isn't necessarily set.
 
     nsAutoString lineStr;
-    aString.Mid(lineStr, bol, eol-bol);
+    aString.Mid(lineStr, bol, eol-bol+1);
 
-    if (eol != totLen)      // we're wrapping
+    if (eol == newline)
+      mColPos = 0;
+    else if (eol != totLen)      // we're wrapping
     {
       lineStr.Append(NS_LINEBREAK);
       mColPos = 0;
+      // If we broke at a space, skip that space:
+      // (but not necessarily any spaces that might follow it,
+      // see bug 12984)
+      if (eol < totLen && nsString::IsSpace(aString[eol+1]))
+        ++eol;
     }
-    else
+    else                        // Not wrapping and not writing a newline
       mColPos += lineStr.Length();
     Write(lineStr);
-    charsLeft = totLen - eol;
-  }
+    bol = eol+1;
+  } // Continue looping over the string
 }
 
 /**
