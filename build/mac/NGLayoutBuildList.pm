@@ -519,6 +519,24 @@ sub InstallSkinFiles($)
 }
 
 #//--------------------------------------------------------------------------------------------------
+#// Select a default skin
+#//--------------------------------------------------------------------------------------------------
+
+sub SetDefaultSkin($)
+{
+    my($skin) = @_;
+
+    _assertRightDirectory();
+
+    my($dist_dir) = _getDistDirectory();
+    my($chrome_subdir) = $dist_dir."Chrome";
+    
+    open(CHROMEFILE, ">>${chrome_subdir}:installed-chrome.txt") || die "Failed to open installed_chrome.txt\n";
+    print(CHROMEFILE "skin,install,select,$skin\n");
+    close(CHROMEFILE);
+}
+
+#//--------------------------------------------------------------------------------------------------
 #// Recurse into the provider directories
 #//--------------------------------------------------------------------------------------------------
 
@@ -687,6 +705,7 @@ sub MakeResourceAliases()
     # default folder
     my($defaults_dir) = "$dist_dir" . "Defaults:";
     mkdir($defaults_dir, 0);
+
     my($default_wallet_dir) = "$defaults_dir"."wallet:";
     mkdir($default_wallet_dir, 0);
 
@@ -1107,11 +1126,12 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:intl:strres:tests:MANIFEST",            "$resource_dir");
 
     # Install skin files
-    InstallSkinFiles("modern"); # fix me
+   	InstallSkinFiles("classic"); # fix me
     InstallSkinFiles("blue"); # fix me
-    if ($main::INCLUDE_CLASSIC_SKIN) {
-    		InstallSkinFiles("classic"); # fix me
-    }
+    InstallSkinFiles("modern"); # fix me
+
+    # Set the default skin to be classic
+    SetDefaultSkin("classic/1.0"); 
 
     # install locale provider
     InstallProviderFiles("locales", "en-DE");
