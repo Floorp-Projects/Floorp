@@ -924,6 +924,14 @@ mail/config/Makefile
 xpfe/components/build2/Makefile
 "
 
+MAKEFILES_standalone_composer="
+composer/Makefile
+composer/app/Makefile
+composer/app/profile/Makefile
+composer/base/Makefile
+xpfe/components/build2/Makefile
+"
+
 MAKEFILES_sql="
 extensions/sql/Makefile
 extensions/sql/base/Makefile
@@ -1400,6 +1408,10 @@ fi
 
 if test -n "$MOZ_THUNDERBIRD"; then
     add_makefiles "$MAKEFILES_thunderbird"
+fi
+
+if test -n "$MOZ_STANDALONE_COMPOSER"; then
+    add_makefiles "$MAKEFILES_standalone_composer"
 fi
 
 if test -n "$MOZ_IPCD"; then

@@ -88,7 +88,11 @@ DIRS		+= xremote
 endif
 
 ifndef MOZ_THUNDERBIRD
+ifndef MOZ_STANDALONE_COMPOSER
 DIRS		+= build
+else
+DIRS		+= build2
+endif
 else
 DIRS	        += build2
 endif

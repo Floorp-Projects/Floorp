@@ -313,6 +313,10 @@ ifdef MOZ_THUNDERBIRD
 tier_99_dirs	+= mail
 endif
 
+ifdef MOZ_STANDALONE_COMPOSER
+tier_99_dirs	+= composer
+endif
+
 ifdef MOZ_XUL_APP
 else
 ifneq (,$(MOZ_XPFE_COMPONENTS)$(MOZ_XUL))
