@@ -148,7 +148,7 @@ LIBS            += \
 		$(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)embedstring_s.$(LIB_SUFFIX) \
 		$(NULL)
 else
 LIBS		+= $(XPCOM_LIBS)
