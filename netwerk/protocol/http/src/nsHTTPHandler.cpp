@@ -202,6 +202,7 @@ nsHTTPHandler::GetTransport(const char* i_Host,
                             PRUint32& i_Port, 
                             nsIChannel** o_pTrans)
 {
+#if 0
     // Check in the table...
     nsSocketKey key(i_Host, i_Port);
     nsIChannel* trans = (nsIChannel*) m_pTransportTable->Get(&key);
@@ -210,9 +211,11 @@ nsHTTPHandler::GetTransport(const char* i_Host,
         *o_pTrans = trans;
         return NS_OK;
     }
+#endif /* 0 */
 
     // Create a new one...
     nsresult rv;
+    nsIChannel* trans;
 
     NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -220,10 +223,12 @@ nsHTTPHandler::GetTransport(const char* i_Host,
     rv = sts->CreateTransport(i_Host, i_Port, &trans);
     if (NS_FAILED(rv)) return rv;
 
+#if 0
     // Put it in the table...
     void* oldValue = m_pTransportTable->Put(&key, trans);
     NS_ASSERTION(oldValue == nsnull, "Race condition in transport table!");
     NS_ADDREF(trans);
+#endif /* 0 */
 
     *o_pTrans = trans;
 
@@ -235,11 +240,14 @@ nsHTTPHandler::ReleaseTransport(const char* i_Host,
                                 PRUint32& i_Port, 
                                 nsIChannel* i_pTrans)
 {
+#if 0
     nsSocketKey key(i_Host, i_Port);
     nsIChannel* value = (nsIChannel*) m_pTransportTable->Remove(&key);
     if (value == nsnull)
         return NS_ERROR_FAILURE;
     NS_ASSERTION(i_pTrans == value, "m_pTransportTable is out of sync");
+#endif /* 0 */
+
     return NS_OK;
 }
 
