@@ -35,8 +35,7 @@
 #include "nsString.h"
 #include "nsIParser.h"
 #include "nsHTMLEntities.h"
-#include "fe_proto.h"   // for LINEBREAK.  XXX fe_proto.h MUST DIE!
-
+#include "nsCRT.h"
 
 #include "nsIUnicodeEncoder.h"
 #include "nsICharsetAlias.h"
@@ -882,7 +881,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   
   if (mColPos != 0 && BreakBeforeOpen(tag))
   {
-    Write(LINEBREAK);
+    Write(NS_LINEBREAK);
     mColPos = 0;
   }
 
@@ -900,7 +899,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   if (tag == eHTMLTag_style)
   {
     Write(">");
-    Write(LINEBREAK);
+    Write(NS_LINEBREAK);
     const   nsString& data = aNode.GetSkippedContent();
     PRInt32 size = data.Length();
     char*   buffer = new char[size+1];
@@ -919,7 +918,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   if (BreakAfterOpen(tag))
   {
-    Write(LINEBREAK);
+    Write(NS_LINEBREAK);
     mColPos = 0;
   }
 
@@ -957,7 +956,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   {
     if (mColPos != 0)
     {
-      Write(LINEBREAK);
+      Write(NS_LINEBREAK);
       mColPos = 0;
     }
     AddIndent();
@@ -975,7 +974,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   
   if (BreakAfterClose(tag))
   {
-    Write(LINEBREAK);
+    Write(NS_LINEBREAK);
     mColPos = 0;
   }
   mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
@@ -1081,7 +1080,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
             first.Truncate(indx);
   
             Write(first);
-            Write(LINEBREAK);
+            Write(NS_LINEBREAK);
             mColPos = 0;
   
             // cut the string from the beginning to the index
@@ -1217,9 +1216,9 @@ nsHTMLContentSinkStream::WillBuildModel(void){
   mTabLevel=-1;
   if(mDoHeader) {
     Write(gHeaderComment);
-    Write(LINEBREAK);
+    Write(NS_LINEBREAK);
     Write(gDocTypeHeader);
-    Write(LINEBREAK);
+    Write(NS_LINEBREAK);
    }
   return NS_OK;
 }
