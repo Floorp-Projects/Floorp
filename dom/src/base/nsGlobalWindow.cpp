@@ -98,6 +98,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShell.h"
 #include "nsIComputedDOMStyle.h"
+#include "nsIEntropyCollector.h"
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
 
@@ -108,6 +109,9 @@
 #include "nsIBindingManager.h"
 #include "nsIXBLService.h"
 
+
+nsIEntropyCollector* gEntropyCollector = nsnull;
+PRInt32              gRefCnt           = 0;
 
 // CIDs
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -138,6 +142,13 @@ GlobalWindowImpl::GlobalWindowImpl() :
   mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
+  if (gRefCnt++ == 0) {
+    nsCOMPtr<nsIEntropyCollector> enCol(do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID));
+    if (enCol) {
+      gEntropyCollector = enCol;
+      NS_ADDREF(gEntropyCollector);
+    }
+  }
 }
 
 GlobalWindowImpl::~GlobalWindowImpl()
@@ -163,6 +174,9 @@ void GlobalWindowImpl::CleanUp()
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mFrames);
   mOpener = nsnull;             // Forces Release
+  if (--gRefCnt == 0) {
+    NS_IF_RELEASE(gEntropyCollector);
+  }
 }
 
 //*****************************************************************************
@@ -472,6 +486,24 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
      without this addref. */
   nsCOMPtr<nsIChromeEventHandler> kungFuDeathGrip1(mChromeEventHandler);
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(mContext);
+
+  /* If this is a mouse event, use the struct to provide entropy for 
+   * the system.
+   */
+  if (gEntropyCollector && !mChromeEventHandler &&
+      (NS_EVENT_FLAG_BUBBLE != aFlags) && 
+      (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)) {
+    //Since the high bits seem to be zero's most of the time, 
+    //let's only take the lowest half of the point structure.
+    PRInt16 myCoord[4];
+
+    myCoord[0] = aEvent->point.x;
+    myCoord[1] = aEvent->point.y;
+    myCoord[2] = aEvent->refPoint.x;
+    myCoord[3] = aEvent->refPoint.y;
+    gEntropyCollector->RandomUpdate((void*)myCoord, sizeof(myCoord));
+    gEntropyCollector->RandomUpdate((void*)&aEvent->time, sizeof(PRUint32));
+  }
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
     if (!aDOMEvent) {
