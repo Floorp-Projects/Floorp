@@ -26,7 +26,7 @@
 #
 
 use Cwd;
-use MozillaBuildCore;
+use Moz::BuildCore;
 
 #-----------------------------------------------
 # hashes to hold build options
