@@ -68,13 +68,6 @@
           <menulist id="widthPixelOrPercentMenulist"><menupopup/></menulist>
             <!-- child elements are appended by JS -->
         </row>
-        <row valign="middle" text-align="right" autostretch="never">
-          <text class="label align-right" value="&heightEditField.label;"
-              tooltip="aTooltip" tooltiptext="&heightEditField.tooltip;" />
-          <textfield class="narrow" id="heightInput" onkeyup="forceInteger(this.id)" />
-          <menulist id="heightPixelOrPercentMenulist"><menupopup/></menulist>
-            <!-- child elements are appended by JS -->
-        </row>
       </rows>
     </grid>
     <spring class="spacer"/>

@@ -74,11 +74,6 @@
             <columns><column/><column/><column/></columns>
             <rows>
               <row valign="middle">
-                <text class="label" value="&tableHeight.label;"/>
-                <textfield class="narrow" id="TableHeightInput" onkeyup="forceInteger(this.id);"/>
-                <menulist id="TableHeightUnits"/>
-              </row>
-              <row valign="middle">
                 <text class="label" value="&tableWidth.label;"/>
                 <textfield class="narrow" id="TableWidthInput" onkeyup="forceInteger(this.id);"/>
                 <menulist id="TableWidthUnits"/>
