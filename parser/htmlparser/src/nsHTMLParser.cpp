@@ -164,7 +164,7 @@ nsresult nsHTMLParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr=0;
     return NS_NOINTERFACE;
   }
-  ((nsISupports*) *aInstancePtr)->AddRef();
+  NS_ADDREF_THIS();
   return NS_OK;                                                        
 }
 
@@ -296,8 +296,7 @@ nsIDTD* NewDTD(eParseMode aMode) {
     default:
       break;
   }
-  if (aDTD)
-     aDTD->AddRef();
+  NS_IF_ADDREF(aDTD);
   return aDTD;
 }
 

@@ -676,6 +676,6 @@ nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aHandler) const
 nsIContentDelegate*
 nsGenericDOMDataNode::GetDelegate(nsIPresContext* aCX)
 {
-  gContentDelegate->AddRef();
+  NS_ADDREF(gContentDelegate);
   return gContentDelegate;
 }

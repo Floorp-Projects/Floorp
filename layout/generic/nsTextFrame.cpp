@@ -924,13 +924,6 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   PRUnichar buf[500];
   PRUnichar* text = PrepareUnicodeText(displaySelection ? ip : nsnull,
                                        buf, 500, textLength);
-  // ?? DEBUG
-  nsString str(text);
-  PRInt32 inx = str.Find("bold");
-  if (inx > -1) {
-    int x = 0;
-  }
-
   if (0 != textLength) {
     if (!displaySelection) {
       // When there is no selection showing, use the fastest and

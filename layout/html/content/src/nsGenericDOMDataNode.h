@@ -531,43 +531,43 @@ struct nsGenericDOMDataNode {
     nsIHTMLContent* tmp = _this;                            \
     nsISupports* tmp2 = tmp;                                \
     *_iptr = (void*) tmp2;                                  \
-    AddRef();                                               \
+    NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
   if (_id.Equals(kIDOMNodeIID)) {                           \
     nsIDOMNode* tmp = _this;                                \
     *_iptr = (void*) tmp;                                   \
-    AddRef();                                               \
+    NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
   if (_id.Equals(kIDOMDataIID)) {                           \
     nsIDOMData* tmp = _this;                                \
     *_iptr = (void*) tmp;                                   \
-    AddRef();                                               \
+    NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
   if (_id.Equals(kIDOMEventReceiverIID)) {                  \
     nsIDOMEventReceiver* tmp = _this;                       \
     *_iptr = (void*) tmp;                                   \
-    AddRef();                                               \
+    NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
   if (_id.Equals(kIScriptObjectOwnerIID)) {                 \
     nsIScriptObjectOwner* tmp = _this;                      \
     *_iptr = (void*) tmp;                                   \
-    AddRef();                                               \
+    NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
   if (_id.Equals(kIContentIID)) {                           \
     nsIContent* tmp = _this;                                \
     *_iptr = (void*) tmp;                                   \
-    AddRef();                                               \
+    NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
   if (_id.Equals(kIHTMLContentIID)) {                       \
     nsIHTMLContent* tmp = _this;                            \
     *_iptr = (void*) tmp;                                   \
-    AddRef();                                               \
+    NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }
 

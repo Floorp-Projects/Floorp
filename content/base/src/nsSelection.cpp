@@ -35,8 +35,9 @@ nsresult nsSelection::QueryInterface(const nsIID& aIID,
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISelectionIID)) {
-    *aInstancePtrResult = (void*) ((nsISelection*)this);
-    AddRef();
+    nsISelection* tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return !NS_OK;

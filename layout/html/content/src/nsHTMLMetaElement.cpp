@@ -111,7 +111,7 @@ nsHTMLMetaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLMetaElementIID)) {
     nsIDOMHTMLMetaElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

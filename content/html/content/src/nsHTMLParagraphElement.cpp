@@ -38,7 +38,7 @@ class nsHTMLParagraphElement : public nsIDOMHTMLParagraphElement,
                                public nsIHTMLContent
 {
 public:
-  nsHTMLParagraphElement(nsIAtom* aTag);
+  nsHTMLParagraphElement();
   ~nsHTMLParagraphElement();
 
   // nsISupports
@@ -71,6 +71,8 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
+
+  friend nsresult NS_NewHTMLParagraphElement(nsIHTMLContent**, nsIAtom*);
 };
 
 nsresult
@@ -80,17 +82,18 @@ NS_NewHTMLParagraphElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIHTMLContent* it = new nsHTMLParagraphElement(aTag);
+  nsHTMLParagraphElement* it;
+  NS_NEWXPCOM(it, nsHTMLParagraphElement);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  it->mInner.Init(it, aTag);
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-nsHTMLParagraphElement::nsHTMLParagraphElement(nsIAtom* aTag)
+nsHTMLParagraphElement::nsHTMLParagraphElement()
 {
   NS_INIT_REFCNT();
-  mInner.Init(this, aTag);
 }
 
 nsHTMLParagraphElement::~nsHTMLParagraphElement()
@@ -117,10 +120,12 @@ nsHTMLParagraphElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsresult
 nsHTMLParagraphElement::CloneNode(nsIDOMNode** aReturn)
 {
-  nsHTMLParagraphElement* it = new nsHTMLParagraphElement(mInner.mTag);
+  nsHTMLParagraphElement* it;
+  NS_NEWXPCOM(it, nsHTMLParagraphElement);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  it->mInner.Init(it, mInner.mTag);
   mInner.CopyInnerTo(this, &it->mInner);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }

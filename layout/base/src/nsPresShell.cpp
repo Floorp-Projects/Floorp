@@ -285,44 +285,35 @@ PresShell::PresShell()
 {
 }
 
-nsrefcnt
-PresShell::AddRef(void)
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt
-PresShell::Release(void)
-{
-  NS_PRECONDITION(0 != mRefCnt, "bad refcnt");
-  if (--mRefCnt == 0) {
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
-}
+NS_IMPL_ADDREF(PresShell)
+NS_IMPL_RELEASE(PresShell)
 
 nsresult
 PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   if (aIID.Equals(kIPresShellIID)) {
-    *aInstancePtr = (void*) ((nsIPresShell*) this);
-    AddRef();
+    nsIPresShell* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDocumentObserverIID)) {
-    *aInstancePtr = (void*) ((nsIDocumentObserver*) this);
-    AddRef();
+    nsIDocumentObserver* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIViewObserverIID)) {
-    *aInstancePtr = (void*) ((nsIViewObserver*) this);
-    AddRef();
+    nsIViewObserver* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*) ((nsIPresShell*)this));
-    AddRef();
+    nsIPresShell* tmp = this;
+    nsISupports* tmp2 = tmp;
+    *aInstancePtr = (void*) tmp2;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

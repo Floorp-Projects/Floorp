@@ -211,39 +211,47 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kIDocumentIID)) {
-    *aInstancePtr = (void*)(nsIDocument*)this;
-    AddRef();
+    nsIDocument* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMDocumentIID)) {
-    *aInstancePtr = (void*)(nsIDOMDocument*)this;
-    AddRef();
+    nsIDOMDocument* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
-    AddRef();
+    nsIScriptObjectOwner* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIJSScriptObjectIID)) {
-    *aInstancePtr = (void*)(nsIJSScriptObject*)this;
-    AddRef();
+    nsIJSScriptObject* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMEventCapturerIID)) {
-    *aInstancePtr = (void*)(nsIDOMEventCapturer*)this;
-    AddRef();
+    nsIDOMEventCapturer* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMEventReceiverIID)) {
-    *aInstancePtr = (void*)(nsIDOMEventReceiver*)this;
-    AddRef();
+    nsIDOMEventReceiver* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDocument*)this;
-    AddRef();
+    nsIDocument* tmp = this;
+    nsISupports* tmp2 = tmp;
+    *aInstancePtr = (void*) tmp2;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -592,7 +600,7 @@ nsresult nsDocument::ResetScriptObject()
 NS_IMETHODIMP
 nsDocument::GetMasterDoc(nsIDOMDocument **aDocument)
 {
-  AddRef();
+  NS_ADDREF_THIS();
   *aDocument = (nsIDOMDocument*)this;
   return NS_OK;
 }
