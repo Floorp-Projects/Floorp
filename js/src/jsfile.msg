@@ -43,6 +43,11 @@ MSG_DEF(JSFILEMSG_CLOSE_FAILED,                                   20, 1, JSEXN_N
 MSG_DEF(JSFILEMSG_PCLOSE_FAILED,                                  21, 1, JSEXN_NONE, "pclose on file {0} failed")
 MSG_DEF(JSFILEMSG_REMOVE_FAILED,                                  22, 1, JSEXN_NONE, "remove on file {0} failed")
 MSG_DEF(JSFILEMSG_CANNOT_ACCESS_FILE_STATUS,                      23, 1, JSEXN_NONE, "Cannot access file status for {0}")
+MSG_DEF(JSFILEMSG_RENAME_FAILED,                                  24, 2, JSEXN_NONE, "Cannot rename {0} to {1}")
+MSG_DEF(JSFILEMSG_WRITE_FAILED,                                   25, 1, JSEXN_NONE, "Write failed on file {0}")
+MSG_DEF(JSFILEMSG_READ_FAILED,                                    26, 1, JSEXN_NONE, "Read failed on file {0}")
+MSG_DEF(JSFILEMSG_SKIP_FAILED,                                    27, 1, JSEXN_NONE, "Skip failed on file {0}")
+
 
 
 
