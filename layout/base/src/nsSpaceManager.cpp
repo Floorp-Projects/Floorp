@@ -852,9 +852,8 @@ PRBool nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
       if (nsnull != band) {
         // If we found a rect occupied by aFrame in this band or the previous band
         // then try to join the two bands
-        if (prevFoundMatchingRect || (foundMatchingRect && (nsnull != prevBand))) {
+        if ((nsnull != prevBand) && (foundMatchingRect || prevFoundMatchingRect)) {
           // Try and join this band with the previous band
-          NS_ASSERTION(nsnull != prevBand, "no previous band");
           JoinBands(band, prevBand);
         }
       }
