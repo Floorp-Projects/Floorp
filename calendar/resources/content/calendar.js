@@ -1043,16 +1043,12 @@ function publishEntireCalendar()
 
    var remotePath = node.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
    
-   if( remotePath != "" )
+   if( remotePath != "" && remotePath != null )
    {
       var publishObject = new Object( );
       publishObject.username = node.getAttribute( "http://home.netscape.com/NC-rdf#username" );
       
-      //get the url and the filename from the remotePath
-      var arrayOfPath = remotePath.split( "/" );
-      publishObject.filename = arrayOfPath.pop();
-      
-      publishObject.url = remotePath.substr( 0, ( remotePath.length - publishObject.filename.length) );
+      publishObject.remotePath = remotePath;
       
       publishObject.password = node.getAttribute( "http://home.netscape.com/NC-rdf#password" );
       args.publishObject = publishObject;
@@ -1073,13 +1069,15 @@ function publishEntireCalendarDialogResponse( CalendarPublishObject )
    
    node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarPublishObject.password);
    
-   node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", CalendarPublishObject.url+CalendarPublishObject.remotePath );
+   node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", CalendarPublishObject.remotePath );
    
    node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", "false");
 
    gCalendarWindow.calendarManager.rdf.flush();
       
    gCalendarWindow.calendarManager.publishCalendar( );
+
+   return( false );
 }
 
 function publishCalendarData()
@@ -1095,7 +1093,7 @@ function publishCalendarDataDialogResponse( CalendarPublishObject )
 {
    var calendarString = eventArrayToICalString( gCalendarWindow.EventSelection.selectedEvents );
    
-   calendarPublish(calendarString, CalendarPublishObject.url, CalendarPublishObject.remotePath, CalendarPublishObject.username, CalendarPublishObject.password, "text/calendar");
+   calendarPublish(calendarString, CalendarPublishObject.remotePath, CalendarPublishObject.username, CalendarPublishObject.password, "text/calendar");
 }
 
 /*

@@ -105,7 +105,15 @@
                         <textbox flex="1" id="server-name-textbox"/>
                     </row>
                     
-                    <!-- Location -->    
+                    <!-- File Picker Button -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end"/>
+                        <hbox flex="1"> 
+                           <description flex="1">&calendar.local.calendar.dialog.help.label;</description>
+                        </hbox>
+                    </row>
+						  
+						  <!-- Location -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <description>&calendar.server.dialog.location.label;</description>
@@ -116,13 +124,46 @@
                         </hbox>
                     </row>
                     
-                    <!-- File Picker Button -->    
+                    <!-- Explain the following form elements -->
+						  <row align="center">
+                        <hbox class="field-label-box-class" pack="end"/>
+                        <hbox flex="1"> 
+                           <description flex="1">The following fields are optional, and are used for publishing the calendar to a remote location.</description>
+                        </hbox>
+                    </row>
+						  
+						  <!-- Remote File Location -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <description>&calendar.server.dialog.location.label;</description>
+                        </hbox>
+                        <textbox id="server-remotepath-textbox" flex="1" /> 
+                           
+                    </row>
+						  
+						  <!-- Username -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <description>&calendar.server.dialog.username.label;</description>
+                        </hbox>
+                        <textbox flex="1" id="server-username-textbox"/>
+                    </row>
+                    
+                    <!-- Password -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <description>&calendar.server.dialog.password.label;</description>
+                        </hbox>
+                        <textbox flex="1" id="server-password-textbox"/>
+                    </row>
+						  
+						  <!-- Publish Automatically -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end"/>
-                        <hbox style="max-width: 400px;"> 
-                           
-                           <description flex="1">&calendar.local.calendar.dialog.help.label;</description>
-                        </hbox>
+                        <hbox>
+									<checkbox id="server-publish-checkbox"/>
+									<description flex="1">&calendar.server.dialog.publish.label;</description>
+								</hbox>
                     </row>
                   </rows>
                </grid> 

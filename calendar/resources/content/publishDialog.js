@@ -99,21 +99,19 @@ function loadCalendarPublishDialog()
    
    if( args.publishObject )
    {
-      document.getElementById( "publish-url-textbox" ).value = args.publishObject.url;
-      document.getElementById( "publish-remotefilename-textbox" ).value = args.publishObject.filename;
+      document.getElementById( "publish-remotePath-textbox" ).value = args.publishObject.remotePath;
       document.getElementById( "publish-username-textbox" ).value = args.publishObject.username;
       document.getElementById( "publish-password-textbox" ).value = args.publishObject.password;
    }
    else
    {
       //get default values from the prefs
-      document.getElementById( "publish-url-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.path", "" );
-      document.getElementById( "publish-remotefilename-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.filename", "" );
+      document.getElementById( "publish-remotePath-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.path", "" );
       document.getElementById( "publish-username-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.username", "" );
       document.getElementById( "publish-password-textbox" ).value = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "publish.password", "" );
    }
-      
-   var firstFocus = document.getElementById( "publish-url-textbox" );
+   document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "label", "Publish" );   
+   var firstFocus = document.getElementById( "publish-remotePath-textbox" );
    firstFocus.focus();
 }
 
@@ -127,16 +125,21 @@ function onOKCommand()
 {
    var CalendarPublishObject = new Object();
 
-   CalendarPublishObject.url = document.getElementById( "publish-url-textbox" ).value;
-   CalendarPublishObject.remotePath = document.getElementById( "publish-remotefilename-textbox" ).value;
+   CalendarPublishObject.remotePath = document.getElementById( "publish-remotePath-textbox" ).value;
    CalendarPublishObject.username = document.getElementById( "publish-username-textbox" ).value;
    CalendarPublishObject.password = document.getElementById( "publish-password-textbox" ).value;
 
+   document.getElementById( "publish-progressmeter" ).setAttribute( "mode", "undetermined" );
    // call caller's on OK function
    gOnOkFunction( CalendarPublishObject );
-      
-   // tell standard dialog stuff to close the dialog
-   return true;
+   document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "label", "Close" );   
+   document.getElementById( "calendar-publishwindow" ).getButton( "accept" ).setAttribute( "oncommand", "closeDialog()" );   
+   document.getElementById( "publish-progressmeter" ).setAttribute( "mode", "determined" );
+   return( false );
 }
 
+function closeDialog( )
+{
+   self.close( );
+}
 

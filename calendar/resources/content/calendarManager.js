@@ -167,6 +167,8 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
    ThisCalendarObject.path = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#path" );
    ThisCalendarObject.active = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#active" );
    ThisCalendarObject.remote = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remote" );
+   ThisCalendarObject.username = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#username" );
+   ThisCalendarObject.password = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#password" );
    ThisCalendarObject.remotePath = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" );
    ThisCalendarObject.publishAutomatically = SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" );
    
@@ -175,7 +177,7 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
 
    var thisManager = this;
 
-   var callback = function( ThisCalendarObject ) { thisManager.editServerDialogResponse( ThisCalendarObject ) };
+   var callback = function( ThisCalendarObject ) { thisManager.editLocalCalendarDialogResponse( ThisCalendarObject ) };
 
    args.onOk =  callback;
    args.CalendarObject = ThisCalendarObject;
@@ -265,8 +267,6 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
 
    var node = this.rootContainer.addNode(name);
    node.setAttribute("http://home.netscape.com/NC-rdf#active", "true");
-   node.setAttribute("http://home.netscape.com/NC-rdf#username", CalendarObject.username);
-   node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarObject.password);
    node.setAttribute("http://home.netscape.com/NC-rdf#serverNumber", this.rootContainer.getSubNodes().length);
    node.setAttribute("http://home.netscape.com/NC-rdf#name", CalendarObject.name);
    
@@ -281,7 +281,7 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
       CalendarObject.path = profileFile.path;
    }
    
-   node.setAttribute("http://home.netscape.com/NC-rdf#path", CalendarObject.remotePath)
+   node.setAttribute("http://home.netscape.com/NC-rdf#path", CalendarObject.path);
    
    if( CalendarObject.remotePath.indexOf( "http://" ) != -1 ||
        CalendarObject.remotePath.indexOf( "https://" ) != -1 ||
@@ -292,9 +292,11 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
       profileFile.append("RemoteCalendar"+this.rootContainer.getSubNodes().length+".ics");
 
       node.setAttribute("http://home.netscape.com/NC-rdf#remote", "true");
+      
       node.setAttribute("http://home.netscape.com/NC-rdf#remotePath", CalendarObject.remotePath);
-      node.setAttribute("http://home.netscape.com/NC-rdf#path", profileFile.path);
       node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
+      node.setAttribute("http://home.netscape.com/NC-rdf#username", CalendarObject.username);
+      node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarObject.password);
       this.retrieveAndSaveRemoteCalendar( node );
       
       dump( "Remote Calendar Number "+this.rootContainer.getSubNodes().length+" Added" );
@@ -310,6 +312,24 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
 }
 
 
+/*
+** Called when OK is clicked in the new server dialog.
+*/
+calendarManager.prototype.editLocalCalendarDialogResponse = function calMan_editServerDialogResponse( CalendarObject )
+{
+   var name = CalendarObject.Id;
+   
+   //get the node
+   var node = this.rdf.getNode( name );
+   
+   node.setAttribute("http://home.netscape.com/NC-rdf#username", CalendarObject.username);
+   node.setAttribute("http://home.netscape.com/NC-rdf#password", CalendarObject.password);
+   node.setAttribute( "http://home.netscape.com/NC-rdf#name", CalendarObject.name );
+   node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", CalendarObject.remotePath );
+   node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
+
+   this.rdf.flush();
+}
 /*
 ** Called when OK is clicked in the new server dialog.
 */
@@ -390,7 +410,6 @@ calendarManager.prototype.publishCalendar = function calMan_publishCalendar( Sel
    
    calendarUploadFile(SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#path" ), 
                       SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ), 
-                      "", 
                       SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#login" ), 
                       SelectedCalendar.getAttribute( "http://home.netscape.com/NC-rdf#password" ), 
                       "text/calendar");

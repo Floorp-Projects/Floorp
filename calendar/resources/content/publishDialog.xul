@@ -84,29 +84,16 @@
                 
                 <rows>
             
-                    <!-- URL -->    
+                    <!-- Remote Path -->    
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <description>&calendar.publish.url.label;</description>
                         </hbox>
-                        <textbox flex="1" id="publish-url-textbox"/>
+                        <textbox flex="1" id="publish-remotePath-textbox"/>
                     </row>
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end"/>
-                        <description>Something like http://www.myserver.com/webdav/</description>
-                    </row>
-                    
-                    <!-- File Name -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <description>&calendar.publish.remotefilename.label;</description>
-                        </hbox>
-                        <textbox flex="1" id="publish-remotefilename-textbox"/>
-                    </row>
-                  
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end"/>
-                        <description>The filename to save to on the remote server.</description>
+                        <description>Something like http://www.myserver.com/webdav/test.ics</description>
                     </row>
                     
                     <!-- Username -->    
@@ -133,7 +120,8 @@
                         <description>(Optional) The password to upload to this server.</description>
                     </row>
                   </rows>
-               </grid> 
+               </grid>
+					<progressmeter id="publish-progressmeter" mode="determined" value="0"/> 
    </vbox> <!-- dialog-box -->
 
 </dialog>

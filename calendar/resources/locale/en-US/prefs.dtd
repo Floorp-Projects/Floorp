@@ -95,7 +95,6 @@
 <!ENTITY pref.reloadonlaunch       "Reload Remote Calendars On Startup">
 
 <!ENTITY pref.publish.caption        "Publishing Settings">
-<!ENTITY pref.publish.path.label     "Path To Server">
-<!ENTITY pref.publish.filename.label "Remote File Name">
+<!ENTITY pref.publish.path.label     "Default Remote Filename">
 <!ENTITY pref.publish.username.label "Username">
 <!ENTITY pref.publish.password.label "Password">

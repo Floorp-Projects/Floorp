@@ -68,11 +68,11 @@ function GetIOService()
  * contentType is always text/calendar
  */
  
-function calendarPublish(aDataString, newLocation, fileName, login, password, contentType)
+function calendarPublish(aDataString, newLocation, login, password, contentType)
 {
   try
   {
-    var protocolChannel = get_destination_channel(newLocation, fileName, login, password);
+    var protocolChannel = get_destination_channel(newLocation, login, password);
     if (!protocolChannel)
     {
       dump("failed to get a destination channel\n");
@@ -87,11 +87,11 @@ function calendarPublish(aDataString, newLocation, fileName, login, password, co
   }
 }
 
-function calendarUploadFile(aSourceFilename, newLocation, fileName, login, password, contentType)
+function calendarUploadFile(aSourceFilename, newLocation, login, password, contentType)
 {
    try
    {
-      var protocolChannel = get_destination_channel(newLocation, fileName, login, password);
+      var protocolChannel = get_destination_channel(newLocation, login, password);
     
       if (!protocolChannel)
       {
@@ -101,7 +101,8 @@ function calendarUploadFile(aSourceFilename, newLocation, fileName, login, passw
 
        output_file_to_channel(protocolChannel, aSourceFilename, contentType);
        protocolChannel.asyncOpen(gPublishingListener, protocolChannel);
-       dump("done\n");
+       
+       return( true );
    }
    catch (e)
    {
@@ -136,7 +137,7 @@ function output_file_to_channel( aChannel, aFilePath, contentType )
 
 
 // this function takes a login and password and adds them to the destination url
-function get_destination_channel(destinationDirectoryLocation, fileName, login, password)
+function get_destination_channel(destinationDirectoryLocation, login, password)
 {
     var ioService = GetIOService();
     if (!ioService)
@@ -145,7 +146,7 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
     }
 
     // create a channel for the destination location
-    var fullurl = destinationDirectoryLocation + fileName;
+    var fullurl = destinationDirectoryLocation;
     destChannel = create_channel_from_url(ioService, fullurl, login, password);
     if (!destChannel)
     {
@@ -214,7 +215,7 @@ function create_channel_from_url(ioService, aURL, aLogin, aPassword)
 }
 
 /*
-function PublishCopyFile(srcDirectoryLocation, destinationDirectoryLocation, fileName, aLogin, aPassword)
+function PublishCopyFile(srcDirectoryLocation, destinationDirectoryLocation, aLogin, aPassword)
 {
   // append '/' if it's not there; inputs should be directories so should end in '/'
   if ( srcDirectoryLocation.charAt(srcDirectoryLocation.length-1) != '/' )
@@ -230,7 +231,7 @@ function PublishCopyFile(srcDirectoryLocation, destinationDirectoryLocation, fil
       return;
 
     // create a channel for the source location
-    srcChannel = create_channel_from_url(ioService, srcDirectoryLocation + fileName, null, null);
+    srcChannel = create_channel_from_url(ioService, srcDirectoryLocation, null, null);
     if (!srcChannel)
     {
       dump("can't create src channel\n");
@@ -238,7 +239,7 @@ function PublishCopyFile(srcDirectoryLocation, destinationDirectoryLocation, fil
     }
 
     // create a channel for the destination location
-    var ftpChannel = get_destination_channel(destinationDirectoryLocation, fileName, aLogin, aPassword);
+    var ftpChannel = get_destination_channel(destinationDirectoryLocation, aLogin, aPassword);
     if (!ftpChannel)
     {
       dump("failed to get ftp channel\n");
