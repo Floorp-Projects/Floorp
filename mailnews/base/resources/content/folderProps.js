@@ -4,15 +4,17 @@ var preselectedFolderURI = null;
 // services used
 var RDF;
 
+// corresponds to MSG_FOLDER_FLAG_OFFLINE
+const FOLDER_FLAG_OFFLINE = 0x8000000
 
 function folderPropsOKButtonCallback()
 {
   if (gMsgFolder)
   {
     if (document.getElementById("selectForDownload").checked)	
-      gMsgFolder.setFlag(0x8000000);
+      gMsgFolder.setFlag(FOLDER_FLAG_OFFLINE);
     else
-      gMsgFolder.clearFlag(0x8000000);
+      gMsgFolder.clearFlag(FOLDER_FLAG_OFFLINE);
 
     // set charset attributes
     var folderCharsetList = document.getElementById("folderCharsetList");
@@ -71,7 +73,7 @@ function folderPropsOnLoad()
     dump("no gMsgFolder preselectfolder uri = "+preselectedFolderURI+'\n');
 
   if (gMsgFolder) {
-    if (gMsgFolder.flags & 0x8000000) {
+    if (gMsgFolder.flags & FOLDER_FLAG_OFFLINE) {
   	  document.getElementById("selectForDownload").checked = true;
     }
 
