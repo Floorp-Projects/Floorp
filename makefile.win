@@ -64,7 +64,6 @@ DIRS = \
   lib\libpwcac			\
   network			\
 !endif
-  profile			\
 !endif
 !if defined(LAYOUT_DIRS)
 # the following are associated with the layout engine
@@ -73,6 +72,7 @@ DIRS = \
 !if defined(NECKO)
   netwerk			\
 !endif
+  profile			\
   htmlparser			\
   widget			\
   dom				\
