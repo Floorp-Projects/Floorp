@@ -26,6 +26,7 @@
  *
  * Contributor(s):
  *   Chak Nanga <chak@netscape.com> 
+ *   Rod Spears <rods@netscape.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
@@ -59,10 +60,7 @@
 #include "BrowserImpl.h"
 #include "BrowserFrm.h"
 #include "Dialogs.h"
-
-// Print Includes
-#include "PrintProgressDialog.h"
-#include "PrintSetupDialog.h"
+#include "CPageSetupPropSheet.h"
 
 // Mozilla Includes
 #include "nsIWidget.h"
@@ -123,6 +121,7 @@ BEGIN_MESSAGE_MAP(CBrowserView, CWnd)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdatePaste)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
+	ON_UPDATE_COMMAND_UI(ID_FILE_PRINTSETUP, OnUpdatePrintSetup)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -140,8 +139,6 @@ CBrowserView::CBrowserView()
 	mbDocumentLoading = PR_FALSE;
 
     m_pFindDlg = NULL;
-    m_pPrintProgressDlg = NULL;
-
     m_bUrlBarClipOp = FALSE;
     m_bCurrentlyPrinting = FALSE;
 
@@ -980,21 +977,12 @@ void CBrowserView::OnFilePrint()
         return;
       }
     }
-
-    m_PrintSettings->SetShowPrintProgress(PR_FALSE);
-    CPrintProgressDialog  dlg(mWebBrowser, m_PrintSettings);
-
-	  nsCOMPtr<nsIURI> currentURI;
-	  nsresult rv = mWebNav->GetCurrentURI(getter_AddRefs(currentURI));
-    if(NS_SUCCEEDED(rv) || currentURI) 
+    nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+	  if(print)
     {
-	    nsCAutoString path;
-	    currentURI->GetPath(path);
-      dlg.SetURI(path.get());
+      print->Print(m_PrintSettings, nsnull);
     }
-    m_bCurrentlyPrinting = TRUE;
-    dlg.DoModal();
-    m_bCurrentlyPrinting = FALSE;
+
   }
 }
 
@@ -1037,24 +1025,6 @@ void CBrowserView::OnFilePrintPreview()
   }
 }
 
-static float GetFloatFromStr(const char* aStr, float aMaxVal = 1.0)
-{
-  float val;
-  sscanf(aStr, "%f", &val);
-  if (val <= aMaxVal) {
-    return val;
-  } else {
-    return 0.5;
-  }
-}
-
-static PRUnichar* GetUnicodeFromCString(const CString& aStr)
-{
-  nsString str;
-  str.AssignWithConversion(LPCSTR(aStr));
-  return ToNewUnicode(str);
-}
-
 void CBrowserView::OnFilePrintSetup()
 {
   nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
@@ -1066,50 +1036,14 @@ void CBrowserView::OnFilePrintSetup()
         return;
       }
     }
-    CPrintSetupDialog  dlg(m_PrintSettings);
-    if (dlg.DoModal() == IDOK && m_PrintSettings != NULL) {
-      m_PrintSettings->SetMarginTop(GetFloatFromStr(dlg.m_TopMargin));
-      m_PrintSettings->SetMarginLeft(GetFloatFromStr(dlg.m_LeftMargin));
-      m_PrintSettings->SetMarginRight(GetFloatFromStr(dlg.m_RightMargin));
-      m_PrintSettings->SetMarginBottom(GetFloatFromStr(dlg.m_BottomMargin));
+    CPageSetupPropSheet propSheet(_T("Page Setup"), this);
 
-      m_PrintSettings->SetScaling(double(dlg.m_Scaling) / 100.0);
-      m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGColors);
-      m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGImages);
+    propSheet.SetPrintSettingsValues(m_PrintSettings);
 
-      short  type;
-      double width;
-      double height;
-      dlg.GetPaperSizeInfo(type, width, height);
-      m_PrintSettings->SetPaperSizeType(type);
-      m_PrintSettings->SetPaperWidth(width);
-      m_PrintSettings->SetPaperHeight(height);
-
-      PRUnichar* uStr;
-      uStr = GetUnicodeFromCString(dlg.m_HeaderLeft);
-      m_PrintSettings->SetHeaderStrLeft(uStr);
-      if (uStr != nsnull) nsMemory::Free(uStr);
-
-      uStr = GetUnicodeFromCString(dlg.m_HeaderMiddle);
-      m_PrintSettings->SetHeaderStrCenter(uStr);
-      if (uStr != nsnull) nsMemory::Free(uStr);
-
-      uStr = GetUnicodeFromCString(dlg.m_HeaderRight);
-      m_PrintSettings->SetHeaderStrRight(uStr);
-      if (uStr != nsnull) nsMemory::Free(uStr);
-
-      uStr = GetUnicodeFromCString(dlg.m_FooterLeft);
-      m_PrintSettings->SetFooterStrLeft(uStr);
-      if (uStr != nsnull) nsMemory::Free(uStr);
-
-      uStr = GetUnicodeFromCString(dlg.m_FooterMiddle);
-      m_PrintSettings->SetFooterStrCenter(uStr);
-      if (uStr != nsnull) nsMemory::Free(uStr);
-
-      uStr = GetUnicodeFromCString(dlg.m_FooterRight);
-      m_PrintSettings->SetFooterStrRight(uStr);
-      if (uStr != nsnull) nsMemory::Free(uStr);
-
+    int status = propSheet.DoModal();
+    if (status == IDOK) 
+    {
+      propSheet.GetPrintSettingsValues(m_PrintSettings);
     }
   }
 }
@@ -1118,6 +1052,12 @@ void CBrowserView::OnFilePrintSetup()
 void CBrowserView::OnUpdateFilePrint(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(!m_bCurrentlyPrinting);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void CBrowserView::OnUpdatePrintSetup(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(!m_bCurrentlyPrinting && !m_InPrintPreview);
 }
 
 

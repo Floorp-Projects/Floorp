@@ -62,6 +62,10 @@ REQUIRES = \
 	$(NULL)
 
 CPPSRCS		= \
+		CCustomPromptDialog.cpp     \
+		CMarginHeaderFooter.cpp     \
+		CFormatOptionTab.cpp     \
+		CPageSetupPropSheet.cpp     \
 		MfcEmbed.cpp     \
 		BrowserFrm.cpp   \
 		EditorFrm.cpp 	\
@@ -75,9 +79,7 @@ CPPSRCS		= \
 		ProfilesDlg.cpp \
 		winEmbedFileLocProvider.cpp \
 		MostRecentUrls.cpp \
-		PrintProgressDialog.cpp       \
 		Preferences.cpp \
-		PrintSetupDialog.cpp       \
 		StdAfx.cpp       \
 		$(NULL)
 

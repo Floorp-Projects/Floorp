@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by MfcEmbed.rc
+// Used by mfcembed.rc
 //
 #define IDD_ABOUTBOX                    100
 #define ID_TOOLBAR_UPDATE               101
@@ -18,7 +18,6 @@
 #define IDD_PROFILE_NEW                 138
 #define IDD_PROFILE_RENAME              139
 #define IDD_FINDDLG                     140
-#define IDD_PRINT_PROGRESS_DIALOG       141
 #define IDD_PREFS_START_PAGE            142
 #define IDR_SECURITY_LOCK               143
 #define IDR_SECURITY_UNLOCK             144
@@ -32,6 +31,9 @@
 #define IDS_VIEW_FRAME_SOURCE           153
 #define IDS_OPEN_FRAME_IN_NEW_WINDOW    154
 #define IDR_CTXMENU_EDITOR              155
+#define IDD_HEADERFOOTER_TAB            156
+#define IDD_FORMAT_OPTIONS_TAB          157
+#define IDD_CUSTOM_PROMPT_DIALOG        159
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
@@ -74,13 +76,23 @@
 #define IDC_HDR_RIGHT_TXT               1041
 #define IDC_WRAP_AROUND                 1042
 #define IDC_FTR_LEFT_TXT                1042
+#define IDC_TAB1                        1042
+#define IDC_PRINTSETUP_TAB_CTRL         1042
 #define IDC_SEARCH_BACKWARDS            1043
 #define IDC_FTR_MID_TXT                 1043
 #define IDC_FTR_RIGHT_TXT               1044
-#define IDC_FIND_EDIT                   1152
-#define IDC_RADIO_BLANK_PAGE            1153
-#define IDC_RADIO_HOME_PAGE             1154
-#define IDC_EDIT_HOMEPAGE               1155
+#define IDC_FTR_LEFT_CMBX               1045
+#define IDC_FTR_CENTER_CMBX             1047
+#define IDC_FTR_RIGHT_CMBX              1048
+#define IDC_HDR_LEFT_CMBX               1049
+#define IDC_HDR_CENTER_CMBX             1050
+#define IDC_HDR_RIGHT_CMBX              1051
+#define IDC_FIND_EDIT                   1052
+#define IDC_RADIO_BLANK_PAGE            1053
+#define IDC_RADIO_HOME_PAGE             1054
+#define IDC_EDIT_HOMEPAGE               1055
+#define IDC_PRT_PORTRAIT_RD             1056
+#define IDC_PRT_LANDSCAPE_RD            1057
 #define ID_NAV_BACK                     32773
 #define ID_NAV_FORWARD                  32774
 #define ID_NAV_HOME                     32775
@@ -126,9 +138,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        156
+#define _APS_NEXT_RESOURCE_VALUE        160
 #define _APS_NEXT_COMMAND_VALUE         32813
-#define _APS_NEXT_CONTROL_VALUE         1042
+#define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: Mozilla-sample-code 1.0
  *
@@ -24,73 +25,67 @@
  * DEALINGS IN THE SOFTWARE.
  *
  * Contributor(s):
+ *   Rod Spears <rods@netscape.com>
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined(AFX_PRINTPROGRESSDIALOG_H__1BAF9B13_1875_11D5_9773_000064657374__INCLUDED_)
-#define AFX_PRINTPROGRESSDIALOG_H__1BAF9B13_1875_11D5_9773_000064657374__INCLUDED_
+#if !defined(AFX_CPAGESETUPPROPSHEET_H__E8A6D703_7EAD_4729_8FBA_9E0515AB9822__INCLUDED_)
+#define AFX_CPAGESETUPPROPSHEET_H__E8A6D703_7EAD_4729_8FBA_9E0515AB9822__INCLUDED_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
-// PrintProgressDialog.h : header file
+// CPageSetupPropSheet.h : header file
 //
-
-#include "nsIWebProgressListener.h"
-class nsIWebBrowser;
+#include "CFormatOptionTab.h"
+#include "CMarginHeaderFooter.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CPrintProgressDialog dialog
+// CPageSetupPropSheet
 
-class CPrintProgressDialog : public CDialog
+class CPageSetupPropSheet : public CPropertySheet
 {
+	DECLARE_DYNAMIC(CPageSetupPropSheet)
+
 // Construction
 public:
-	CPrintProgressDialog(nsIWebBrowser* aWebBrowser, 
-                       nsIPrintSettings* aPrintSettings,
-                       CWnd* pParent = NULL);
-	virtual ~CPrintProgressDialog();
-  virtual int DoModal( );
+	CPageSetupPropSheet(UINT nIDCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
+	CPageSetupPropSheet(LPCTSTR pszCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
 
-  // Helper
-  void SetURI(const char* aTitle);
+  void SetPrintSettingsValues(nsIPrintSettings* aPrintSettings);
+  void GetPrintSettingsValues(nsIPrintSettings* aPrintSettings);
 
-  NS_IMETHOD OnStartPrinting(void);
-  NS_IMETHOD OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnEndPrinting(PRUint32 aStatus);
+protected:
+	void AddControlPages(void);
 
-// Dialog Data
-	//{{AFX_DATA(CPrintProgressDialog)
-	enum { IDD = IDD_PRINT_PROGRESS_DIALOG };
-		// NOTE: the ClassWizard will add data members here
-	//}}AFX_DATA
+// Attributes
+public:
+	CFormatOptionTab     m_FormatOptionTab;
+	CMarginHeaderFooter  m_MarginHeaderFooterTab;
 
+// Operations
+public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CPrintProgressDialog)
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	//{{AFX_VIRTUAL(CPageSetupPropSheet)
 	//}}AFX_VIRTUAL
 
 // Implementation
-protected:
-	CProgressCtrl              m_wndProgress;
-  CString                    m_URL;
-  nsIWebBrowser*             m_WebBrowser;
-  nsCOMPtr<nsIWebProgressListener> m_PrintListener;
-  nsIPrintSettings*          m_PrintSettings;
-  BOOL                       m_InModalMode;
+public:
+	virtual ~CPageSetupPropSheet();
 
 	// Generated message map functions
-	//{{AFX_MSG(CPrintProgressDialog)
-	virtual BOOL OnInitDialog();
-	virtual void OnCancel();
+protected:
+	//{{AFX_MSG(CPageSetupPropSheet)
+		// NOTE - the ClassWizard will add and remove member functions here.
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 
+/////////////////////////////////////////////////////////////////////////////
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_PRINTPROGRESSDIALOG_H__1BAF9B13_1875_11D5_9773_000064657374__INCLUDED_)
+#endif // !defined(AFX_CPAGESETUPPROPSHEET_H__E8A6D703_7EAD_4729_8FBA_9E0515AB9822__INCLUDED_)
