@@ -351,7 +351,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
       // first one and make that work. The folder is specified as a URI, like
       // the following:
       //
-      //                  mailbox://rhp@netscape.com/Sent
+      //		  mailbox://nobody@Local Mail/Sent
       //                  imap://rhp@nsmail-2/Drafts
       //                  newsgroup://news.mozilla.org/netscape.test
       //
