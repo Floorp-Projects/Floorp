@@ -46,6 +46,7 @@ LIBS = \
 	-lpwcac \
 	-lnetcache \
 	-lnetwork \
+	$(DIST)/bin/components/libraptorhtml.so \
 	-lpref \
 	-lsecfree \
 	-lraptorgfx \
