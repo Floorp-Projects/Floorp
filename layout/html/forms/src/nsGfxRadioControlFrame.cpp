@@ -156,15 +156,19 @@ NS_IMETHODIMP nsGfxRadioControlFrame::GetProperty(nsIAtom* aName, nsString& aVal
 
 //--------------------------------------------------------------
 PRBool
-nsGfxRadioControlFrame::GetChecked(PRBool aGetInitialValue) 
+nsGfxRadioControlFrame::GetChecked() 
 {
   PRBool checked = PR_FALSE;
-  if (PR_TRUE == aGetInitialValue) {
-    GetDefaultCheckState(&checked);
-  }
-  else {
-    GetCurrentCheckState(&checked);
-  }
+  GetDefaultCheckState(&checked);
+  return(checked);
+}
+
+//--------------------------------------------------------------
+PRBool
+nsGfxRadioControlFrame::GetDefaultChecked() 
+{
+  PRBool checked = PR_FALSE;
+  GetCurrentCheckState(&checked);
   return(checked);
 }
 
@@ -350,10 +354,16 @@ nsGfxRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState*
     InitializeControl(aPresContext);
     mDidInit = PR_TRUE;
   }
+
+  mIsRestored = PR_TRUE;
   nsAutoString string;
   aState->GetStateProperty("checked", string);
   PRBool state = (string == NS_STRING_TRUE) ? PR_TRUE : PR_FALSE;
-  SetRadioState(aPresContext, state);
+
+  SetRadioState(aPresContext, state); // sets mChecked
+  mRestoredChecked = mChecked;
+
+
   return NS_OK;
 }
 
