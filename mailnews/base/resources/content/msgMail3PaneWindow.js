@@ -141,9 +141,27 @@ var folderListener = {
 		}
         } else if (event.GetUnicode() == "DeleteOrMoveMsgCompleted") {
 			HandleDeleteOrMoveMsgCompleted(folder);
-		}     
+        }     
+          else if (event.GetUnicode() == "DeleteOrMoveMsgFailed") {
+                        HandleDeleteOrMoveMsgFailed(folder);
+        }
+
     }
 }
+
+function HandleDeleteOrMoveMsgFailed(folder)
+{
+
+        if(IsCurrentLoadedFolder(folder))
+        {
+                if(gNextMessageAfterDelete)
+                {
+                        gNextMessageAfterDelete = null;
+		}
+        }
+
+}
+
 
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
