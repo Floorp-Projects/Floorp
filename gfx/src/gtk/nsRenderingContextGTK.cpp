@@ -485,6 +485,10 @@ void nsRenderingContextGTK::UpdateGC()
   GdkGCValues values;
   GdkGCValuesMask valuesMask;
 
+  if (mGC)
+    gdk_gc_unref(mGC);
+
+
   memset(&values, 0, sizeof(GdkGCValues));
 
   values.font = mCurrentFont;
