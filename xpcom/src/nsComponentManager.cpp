@@ -33,6 +33,10 @@
 #include <Processes.h>
 #include <TextUtils.h>
 #include "primpl.h"     // XXX for PR_PATH_SEPARATOR 
+#elif defined(XP_UNIX)
+#ifndef PR_PATH_SEPARATOR
+#define PR_PATH_SEPARATOR       ':'     // nspr doesn't like sun386i?
+#endif
 #else
 #include "private/primpl.h"     // XXX for PR_PATH_SEPARATOR 
 #endif
