@@ -129,6 +129,8 @@ nsresult nsMsgIdentity::GetSmtpName(const char ** aSmtpName)
 		else							// if we don't have a smtp name use the pop name...
 			return GetPopName(aSmtpName); 
 	}
+
+	return NS_OK;
 }
 
 nsresult nsMsgIdentity::GetOrganization(const char ** aOrganization)
