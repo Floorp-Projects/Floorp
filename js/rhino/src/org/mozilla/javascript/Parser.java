@@ -52,9 +52,7 @@ import java.io.IOException;
 
 class Parser {
 
-    public Parser(IRFactory nf) {
-        this.nf = nf;
-    }
+    public Parser() { }
 
     public void setLanguageVersion(int languageVersion) {
         this.languageVersion = languageVersion;
@@ -89,15 +87,17 @@ class Parser {
      * Build a parse tree from the given TokenStream.
      *
      * @param ts the TokenStream to parse
+     * @param nf the node factory to use to build parse nodes
      *
      * @return an Object representing the parsed
      * program.  If the parse fails, null will be returned.  (The
      * parse failure will result in a call to the current Context's
      * ErrorReporter.)
      */
-    public ScriptOrFnNode parse(TokenStream ts)
+    public ScriptOrFnNode parse(TokenStream ts, IRFactory nf)
         throws IOException
     {
+        this.nf = nf;
         currentScriptOrFn = nf.createScript();
 
         this.ok = true;

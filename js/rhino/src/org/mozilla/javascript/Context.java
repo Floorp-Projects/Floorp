@@ -839,9 +839,9 @@ public class Context {
         boolean errorseen = false;
         Interpreter compiler = new Interpreter();
         IRFactory irf = compiler.createIRFactory(this, ts);
-        Parser p = createParser(irf);
+        Parser p = createParser();
         try {
-            p.parse(ts);
+            p.parse(ts, irf);
         } catch (IOException ioe) {
             errorseen = true;
         } catch (EvaluatorException ee) {
@@ -1872,6 +1872,9 @@ public class Context {
         // One of sourceReader or sourceString has to be null
         if (!(sourceReader == null ^ sourceString == null)) Context.codeBug();
 
+        errorCount = 0;
+        Interpreter compiler = createCompiler();
+
         if (securityController != null) {
             securityDomain = securityController.
                                  getDynamicSecurityDomain(securityDomain);
@@ -1887,13 +1890,11 @@ public class Context {
         }
         TokenStream ts = new TokenStream(sourceReader, sourceString,
                                          scope, sourceName, lineno);
-
-        Interpreter compiler = createCompiler();
+        Parser p = createParser();
 
         errorCount = 0;
         IRFactory irf = compiler.createIRFactory(this, ts);
-        Parser p = createParser(irf);
-        ScriptOrFnNode tree = p.parse(ts);
+        ScriptOrFnNode tree = p.parse(ts, irf);
         if (tree == null)
             return null;
 
@@ -1933,8 +1934,8 @@ public class Context {
         return result;
     }
 
-    private Parser createParser(IRFactory irf) {
-        Parser parser = new Parser(irf);
+    private Parser createParser() {
+        Parser parser = new Parser();
         parser.setLanguageVersion(getLanguageVersion());
         parser.setAllowMemberExprAsFunctionName(
             hasFeature(Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME));
