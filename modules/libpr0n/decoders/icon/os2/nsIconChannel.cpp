@@ -379,7 +379,7 @@ void ConvertMaskBitMap(PBYTE aBitMaskBuffer, PBITMAPINFO2 pBitMapInfo, nsCString
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
   nsXPIDLCString contentType;
-  nsCAutoStrint filePath;
+  nsCAutoString filePath;
   nsCOMPtr<nsIFile> localFile; // file we want an icon for
   PRUint32 desiredImageSize;
   nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, contentType, filePath);
