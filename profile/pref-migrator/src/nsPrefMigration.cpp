@@ -2056,7 +2056,7 @@ nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathN
 	if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStringBundle> bundle;
-    rv = bundleService->CreateBundle(MIGRATION_PROPERTIES_URL, nsnull, getter_AddRefs(bundle));
+    rv = bundleService->CreateBundle(MIGRATION_PROPERTIES_URL, getter_AddRefs(bundle));
 	if (NS_FAILED(rv)) return rv;
 
 	nsXPIDLString localizedDirName;
