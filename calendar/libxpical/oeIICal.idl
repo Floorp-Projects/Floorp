@@ -132,7 +132,7 @@ interface oeIICal : nsISupports
 	nsISimpleEnumerator getEventsForDay(in PRTime date, out nsISimpleEnumerator datelist );
 	nsISimpleEnumerator getEventsForRange(in PRTime begindate, in PRTime enddate, out nsISimpleEnumerator datelist );
 	nsISimpleEnumerator getNextNEvents(in PRTime begindate, in long count, out nsISimpleEnumerator datelist );
-
+	nsISimpleEnumerator getFirstEventsForRange(in PRTime begindate, in PRTime enddate );
 };
 
 

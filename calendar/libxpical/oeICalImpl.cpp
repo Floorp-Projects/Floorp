@@ -1227,7 +1227,6 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
         return NS_ERROR_OUT_OF_MEMORY;
 
     EventList *tmplistptr = &m_eventlist;
-    int i=0;
     while( tmplistptr ) {
         if( tmplistptr->event ) {
             oeIICalEvent* tmpevent = tmplistptr->event;
@@ -1241,11 +1240,39 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
             }
         }
         tmplistptr = tmplistptr->next;
-        i++;
     }
 
     eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
     dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **eventlist ) {
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalImpl::GetEventsInRange()\n" );
+#endif
+    
+    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
+    
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    EventList *tmplistptr = &m_eventlist;
+    while( tmplistptr ) {
+        if( tmplistptr->event ) {
+            oeIICalEvent* tmpevent = tmplistptr->event;
+            PRBool isvalid;
+            PRTime checkdateloop = checkdateinms;
+            tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
+            if( isvalid && LL_CMP( checkdateloop, <, checkenddateinms ) ) {
+                eventEnum->AddEvent( tmpevent );
+            }
+        }
+        tmplistptr = tmplistptr->next;
+    }
+
+    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
     return NS_OK;
 }
 
