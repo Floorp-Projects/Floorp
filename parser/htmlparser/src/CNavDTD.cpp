@@ -1693,9 +1693,12 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
             CTagList* theParents=gHTMLElements[aChild].GetSpecialParents();
             if(theParents) {
                 PRInt32 theParentIndex=theParents->GetTopmostIndexOf(mBodyContext->mTags);
-                result=PRBool(kNotFound==theParentIndex);
+                return PRBool(kNotFound==theParentIndex);
               // result=!theParents->Contains(aParent); THE OLD WAY
             }
+          }
+          if(!gHTMLElements[aParent].CanContain(aChild)){
+            return PR_TRUE;
           }
           break;
       } //switch
