@@ -11,7 +11,7 @@
 #
 # The Initial Developer of this code under the NPL is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
 
@@ -22,8 +22,25 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+EXPORT_RESOURCE_SKIN = \
+    $(srcdir)/EditorDialog.css \
+    $(srcdir)/EdImageMap.css \
+		$(NULL)
+
+EXPORT_RESOURCE_IMAGES = \
+		$(srcdir)/images/checker.gif \
+		$(srcdir)/images/circletool.gif \
+		$(srcdir)/images/contrast.gif \
+		$(srcdir)/images/pointertool.gif \
+		$(srcdir)/images/polygontool.gif \
+		$(srcdir)/images/rectangletool.gif \
+		$(srcdir)/images/zoomin.gif \
+		$(srcdir)/images/zoomout.gif \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 install:: 
-	$(INSTALL) $(srcdir)/EditorDialog.css $(DIST)/bin/chrome/editor/skin/default
+	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/skin/default
+	$(INSTALL) $(EXPORT_RESOURCE_IMAGES) $(DIST)/bin/chrome/editor/skin/default/images
 
