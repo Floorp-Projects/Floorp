@@ -1433,7 +1433,7 @@ HRESULT LaunchApps()
       lstrcpy(szArchive, sgProduct.szAlternateArchiveSearchPath);
       AppendBackSlash(szArchive, sizeof(szArchive));
       lstrcat(szArchive, siCObject->szArchiveName);
-      if(!FileExists(szArchive))
+      if((*sgProduct.szAlternateArchiveSearchPath == '\0') || !FileExists(szArchive))
       {
         lstrcpy(szArchive, szSetupDir);
         AppendBackSlash(szArchive, sizeof(szArchive));
@@ -5272,7 +5272,7 @@ HRESULT DecryptString(LPSTR szOutputStr, LPSTR szInputStr)
       lstrcat(szOutuptStrTemp, szBuf);
       lstrcat(szOutuptStrTemp, szAppend);
 
-      if(FileExists(szOutuptStrTemp))
+      if((*sgProduct.szAlternateArchiveSearchPath != '\0') && FileExists(szOutuptStrTemp))
       {
         lstrcpy(szVariable, sgProduct.szAlternateArchiveSearchPath);
       }
