@@ -1644,7 +1644,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
         if (NS_FAILED(rv)) {
     // The channel doesn't want to do our bidding, lets cache it to disk ourselves
     rv = SetupPluginCacheFile(channel);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "No Cache Aval.  Some plugins wont work.");
+    if (NS_FAILED(rv))
+      NS_WARNING("No Cache Aval.  Some plugins wont work OR we don't have a URL");
     }
 
   char* aContentType = nsnull;
@@ -2076,17 +2077,6 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   rv = mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
 
   mStartBinding = PR_TRUE;
-
-  if(rv == NS_OK)
-  {
-    mPStreamListener->GetStreamType(&mStreamType);
-    // check to see if we need to cache the file as well
-    if ((mStreamType == nsPluginStreamType_AsFile) || 
-        (mStreamType == nsPluginStreamType_AsFileOnly))
-    // wtf does this do?!  
-    rv = SetUpCache(aURL);
-  }
-
   return rv;
 }
 

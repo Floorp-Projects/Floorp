@@ -108,12 +108,64 @@ static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr)
 {
   NS_INIT_REFCNT();
+  gServiceMgr = serviceMgr;
+  fLibrary = nsnull;
 
+#if defined(XP_WIN)
+  // On Windows (and Mac) we need to keep a direct reference to the fCallbacks and NOT
+  // just copy the struct. See Bugzilla 85334
+ 
+  NP_GETENTRYPOINTS pfnGetEntryPoints =
+    (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
+  
+  if (!pfnGetEntryPoints)
+  {
+    NS_ASSERTION(pfnGetEntryPoints, "failed to get entry points");
+    return;
+  }
+
+  memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
+  
+  fCallbacks.size = sizeof(fCallbacks);
+  
+  nsresult result = pfnGetEntryPoints(&fCallbacks);
+  NS_ASSERTION( NS_OK == result,"Failed to get callbacks");
+  
+  NS_ASSERTION(HIBYTE(fCallbacks.version) >= NP_VERSION_MAJOR,
+    "callback version is less than NP version");
+
+  fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
+#elif defined(XP_MAC)
+  // get the main entry point
+#if TARGET_CARBON
+  NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
+#else
+  NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "mainRD");
+#endif
+
+  if(pfnMain == NULL)
+  {
+    NS_ASSERTION(pfnMain, "failed to get entry points");
+    return;
+  }
+
+  // call into the entry point
+  NPError error;
+  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
+                                                       &(ns4xPlugin::CALLBACKS), 
+                                                       &fCallbacks, 
+                                                       &fShutdownEntry), aLibrary);
+
+  if(error != NPERR_NO_ERROR 	|| ((fCallbacks.version >> 8) < NP_VERSION_MAJOR))
+  {
+    return;
+  }
+#else // for everyone else
   memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
   fShutdownEntry = aShutdown;
+#endif
 
   fLibrary = aLibrary;
-  gServiceMgr = serviceMgr;
 }
 
 
@@ -253,8 +305,9 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
     memcpy((void*) &(plptr->fCallbacks), (void*)&callbacks, sizeof(callbacks));
 #endif
 
-#ifdef XP_PC
-	// XXX this only applies on Windows
+#if defined(XP_PC) && !defined(XP_WIN)
+    // XXX this probably should be factored out and
+    //      just use trailing XP_WIN.
     NP_GETENTRYPOINTS pfnGetEntryPoints =
         (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
 
@@ -269,17 +322,20 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
     if (pfnGetEntryPoints(&callbacks) != NS_OK)
         return NS_ERROR_FAILURE; // XXX
 
-#ifdef XP_PC // XXX This is really XP, but we need to figure out how to do HIBYTE()
     if (HIBYTE(callbacks.version) < NP_VERSION_MAJOR)
         return NS_ERROR_FAILURE;
-#endif
 
     NP_PLUGINSHUTDOWN pfnShutdown =
         (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
 
-	// create the new plugin handler
+    // create the new plugin handler
     *aResult = new ns4xPlugin(&callbacks, aLibrary, pfnShutdown, aServiceMgr);
-
+#elif defined(XP_WIN)
+    // Note: on Windows, we must use the fCallback because plugins may change
+    // the function table. The Shockwave installer makes changes in the table while running
+    *aResult = new ns4xPlugin(nsnull, aLibrary, nsnull, aServiceMgr);
+#endif
+#ifdef XP_PC
     if (*aResult == NULL)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -312,25 +368,10 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 #endif
 
 #if defined(XP_MAC)
-#if TARGET_CARBON
-	// get the main entry point
-	NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
-#else
-	// get the mainRD entry point
-	NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "mainRD");
-#endif
-	if(pfnMain == NULL)
-		return NS_ERROR_FAILURE;
-		
-	NPP_ShutdownUPP pfnShutdown;
-	NPPluginFuncs callbacks;
-    memset((void*) &callbacks, 0, sizeof(callbacks));
-    callbacks.size = sizeof(callbacks);	
+  nsPluginsDir pluginsDir(PLUGINS_DIR_LOCATION_MAC_SYSTEM_PLUGINS_FOLDER);
+  if(!pluginsDir.Valid())
+    return NS_ERROR_FAILURE;
 
-	nsPluginsDir pluginsDir(PLUGINS_DIR_LOCATION_MAC_SYSTEM_PLUGINS_FOLDER);
-	if(!pluginsDir.Valid())
-		return NS_ERROR_FAILURE;
-		
 	short appRefNum = ::CurResFile();
 	short pluginRefNum;
 	Boolean found = false;
@@ -374,28 +415,14 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
     } 
    
 
-	// call into the entry point
-	NPError error;
-  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
-                                                       &(ns4xPlugin::CALLBACKS), 
-                                                       &callbacks, 
-                                                       &pfnShutdown), fLibrary);
-  if(error != NPERR_NO_ERROR)
-		return NS_ERROR_FAILURE;
+  ns4xPlugin* plugin = new ns4xPlugin(nsnull, aLibrary, nsnull, aServiceMgr);
+  if(plugin == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-	::UseResFile(appRefNum);
+  ::UseResFile(appRefNum);
 
-	if ((callbacks.version >> 8) < NP_VERSION_MAJOR)
-		return NS_ERROR_FAILURE;
-	
-	// create the new plugin handler
-	ns4xPlugin* plugin = new ns4xPlugin(&callbacks, aLibrary, (NP_PLUGINSHUTDOWN)pfnShutdown, aServiceMgr);
+  plugin->SetPluginRefNum(pluginRefNum);
 
-	if(plugin == NULL)
-    	return NS_ERROR_OUT_OF_MEMORY;
-
-	plugin->SetPluginRefNum(pluginRefNum);
-	
     *aResult = plugin;
       
     NS_ADDREF(*aResult);
