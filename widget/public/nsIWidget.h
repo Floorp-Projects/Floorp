@@ -299,10 +299,10 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Show(PRBool aState) = 0;
 
     /**
-     * Make the window modal 
+     * Make the window modal
      *
      */
-    NS_IMETHOD SetModal(void) = 0;
+    NS_IMETHOD SetModal(PRBool aModal) = 0;
 
     /**
      * Returns whether the window is visible
@@ -706,6 +706,20 @@ class nsIWidget : public nsISupports {
 	 *
 	 */
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent) = 0;
+
+  /**
+   *   Determine whether a given event should be processed assuming we are
+   * the currently active modal window.
+   *   Note that the exact semantics of this method are platform-dependent.
+   * The Macintosh, for instance, cares deeply that this method do exactly
+   * as advertised. Gtk, for instance, handles modality in a completely
+   * different fashion and does little if anything with this method.
+   * @param aRealEvent event is real or a null placeholder (Macintosh)
+   * @param aEvent void pointer to native event structure
+   * @param aForWindow return value. PR_TRUE iff event should be processed.
+   */
+  NS_IMETHOD ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow) = 0;
+
 };
 
 #endif // nsIWidget_h__
