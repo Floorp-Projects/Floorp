@@ -92,6 +92,7 @@ bin\components\layout_base.xpt
 bin\components\layout_xul.xpt
 bin\components\locale.xpt
 bin\components\lwbrk.dll
+bin\components\mork.dll
 bin\components\mozbrwsr.dll
 bin\components\mozbrwsr.xpt
 bin\components\mozcomps.xpt
@@ -237,7 +238,6 @@ bin\components\emitter.dll
 bin\components\mailnewspublic.xpt
 bin\components\mime.dll
 bin\components\mime.xpt
-bin\components\mork.dll
 bin\components\msgbase.dll
 bin\components\msgbase.xpt
 bin\components\msgcompo.dll

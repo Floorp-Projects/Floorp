@@ -84,6 +84,7 @@ bin/components/libgfx_gtk.so
 bin/components/libgfxps.so
 bin/components/libjsurl.so
 bin/components/liblwbrk.so
+bin/components/libmork.so
 bin/components/libmozbrwsr.so
 bin/components/libmozfind.so
 bin/components/libmozucth.so
@@ -240,7 +241,6 @@ bin/components/liblocalmail.so
 bin/components/libmailnews.so
 bin/components/libmime.so
 bin/components/libmimeemitter.so
-bin/components/libmork.so
 bin/components/libmsgcompose.so
 bin/components/libmsgdb.so
 bin/components/libmsgimap.so
