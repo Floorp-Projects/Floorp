@@ -22,7 +22,6 @@
 #include "EditTxn.h"
 #include "nsIEditor.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
 #include "nsCOMPtr.h"
 
 #define CREATE_ELEMENT_TXN_IID \
@@ -89,7 +88,7 @@ protected:
   PRUint32 mOffsetInParent;
 
   /** the new node to insert */
-  nsCOMPtr<nsIDOMElement> mNewNode;  
+  nsCOMPtr<nsIDOMNode> mNewNode;  
 
   /** the node we will insert mNewNode before.  We compute this ourselves. */
   nsCOMPtr<nsIDOMNode> mRefNode;
