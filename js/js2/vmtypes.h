@@ -129,8 +129,8 @@ namespace VM {
         }                
         
         ICodeOp getBranchOp() \
-        { return ((opcode >= COMPARE_LT) && (opcode <= COMPARE_GT)) ? \
-              (ICodeOp)(BRANCH_LT + (opcode - COMPARE_LT)) : NOP;  }
+        { return ((opcode >= COMPARE_EQ) && (opcode <= COMPARE_NE)) ? \
+              (ICodeOp)(BRANCH_EQ + (opcode - COMPARE_EQ)) : NOP;  }
         
         ICodeOp op() { return opcode; }
         

@@ -51,6 +51,7 @@ static void initConsole(StringPtr consoleName,
     argc = 1;
     argv = mac_argv;
 }
+
 #endif
 
 namespace JavaScript {
@@ -287,43 +288,41 @@ namespace JavaScript {
             uint32 pos = 0;
             ICodeGenerator icg;
             
-            // var i,j; i = j + 2;
+            // var i,j;
             // i is bound to var #0, j to var #1
-            
+            Register r_i = icg.allocateVariable(world.identifiers[widenCString("i")]);
+            Register r_j = icg.allocateVariable(world.identifiers[widenCString("j")]);
+
+            //  i = j + 2;
             icg.beginStatement(pos);
-            Register r1 = icg.loadVariable(1);
-            Register r2 = icg.loadImmediate(2.0);
-            icg.saveVariable(0, icg.op(ADD, r1, r2));
+            Register r1 = icg.loadImmediate(2.0);
+            icg.move(r_i, icg.op(ADD, r_i, r_j));
             
             // j = a.b
             icg.beginStatement(pos);
-            Register r4 = icg.loadName(world.identifiers[widenCString("a")]);
-            Register r5 = icg.getProperty(r4, world.identifiers[widenCString("b")]);
-            icg.saveVariable(1, r5);
+            r1 = icg.loadName(world.identifiers[widenCString("a")]);
+            r1 = icg.getProperty(r1, world.identifiers[widenCString("b")]);
+            icg.move(r_j, r1);
     
             // while (i) i = i + j;
             icg.beginWhileStatement(pos);
-            r1 = icg.loadVariable(0);
-            icg.endWhileExpression(r1);        
-            icg.saveVariable(0, icg.op(ADD, icg.loadVariable(0), icg.loadVariable(1)));
+            icg.endWhileExpression(r_i);        
+            icg.move(r_i, icg.op(ADD, r_i, r_j));
             icg.endWhileStatement();
 
             // if (i) if (j) i = 3; else j = 4;
-            r1 = icg.loadVariable(0);   
-            icg.beginIfStatement(pos, r1);
-            r2 = icg.loadVariable(1);
-            icg.beginIfStatement(pos, r2);
-            icg.saveVariable(0, icg.loadImmediate(3));
+            icg.beginIfStatement(pos, r_i);
+            icg.beginIfStatement(pos, r_j);
+            icg.move(r_i, icg.loadImmediate(3));
             icg.beginElseStatement(true);
-            icg.saveVariable(1, icg.loadImmediate(4));
+            icg.move(r_j, icg.loadImmediate(4));
             icg.endIfStatement();
             icg.beginElseStatement(false);
             icg.endIfStatement();
             
 
             // switch (i) { case 3: case 4: j = 4; break; case 5: j = 5; break; default : j = 6; }
-            r1 = icg.loadVariable(0);   
-            icg.beginSwitchStatement(pos, r1);
+            icg.beginSwitchStatement(pos, r_i);
                 // case 3, note empty case statement (?necessary???)
             icg.endCaseCondition(icg.loadImmediate(3));
             icg.beginCaseStatement();
@@ -332,30 +331,29 @@ namespace JavaScript {
             icg.endCaseCondition(icg.loadImmediate(4));
             icg.beginCaseStatement();
             icg.beginStatement(pos);
-            icg.saveVariable(1, icg.loadImmediate(4));
+            icg.move(r_j, icg.loadImmediate(4));
             icg.breakStatement();
             icg.endCaseStatement();
                 // case 5
             icg.endCaseCondition(icg.loadImmediate(5));
             icg.beginCaseStatement();
             icg.beginStatement(pos);
-            icg.saveVariable(1, icg.loadImmediate(5));
+            icg.move(r_j, icg.loadImmediate(5));
             icg.breakStatement();
             icg.endCaseStatement();
                 // default
             icg.beginDefaultStatement();
             icg.beginStatement(pos);
-            icg.saveVariable(1, icg.loadImmediate(6));
+            icg.move(r_j, icg.loadImmediate(6));
             icg.endDefaultStatement();
             icg.endSwitchStatement();
             
-                // for ( ; i; i + 1 ) j = 99;
+                // for ( ; i; i = i + 1 ) j = 99;
             icg.beginForStatement(pos);
-            r1 = icg.loadVariable(0);
-            icg.forCondition(r1);
-            icg.saveVariable(0, icg.op(ADD, icg.loadVariable(0), icg.loadImmediate(1)));
+            icg.forCondition(r_i);
+            icg.move(r_i, icg.op(ADD, r_i, icg.loadImmediate(1)));
             icg.forIncrement();
-            icg.saveVariable(0, icg.loadImmediate(99));
+            icg.move(r_j, icg.loadImmediate(99));
             icg.endForStatement();
             
             ICodeModule *icm = icg.complete();
@@ -374,11 +372,12 @@ namespace JavaScript {
             ICodeGenerator fun;
                 // function sum(n) { if (n > 1) return 1 + sum(n - 1); else return 1; }
                 // n is bound to var #0.
+            Register r_n = fun.allocateVariable(world.identifiers[widenCString("n")]);
             fun.beginStatement(position);
-            Register r1 = fun.op(COMPARE_GT, fun.loadVariable(0), fun.loadImmediate(1.0));
+            Register r1 = fun.op(COMPARE_GT, r_n, fun.loadImmediate(1.0));
             fun.beginIfStatement(position, r1);
             fun.beginStatement(position);
-            r1 = fun.op(SUBTRACT, fun.loadVariable(0), fun.loadImmediate(1.0));
+            r1 = fun.op(SUBTRACT, r_n, fun.loadImmediate(1.0));
             RegisterList args(1);
             args[0] = r1;
             r1 = fun.call(fun.loadName(sum), args);
@@ -419,11 +418,12 @@ namespace JavaScript {
             ICodeGenerator icg;
             
                 // fact(n) {
-                // n is bound to var #0.
                 // var result = 1;
-                // result is bound to var #1.
+            Register r_n = icg.allocateVariable(world.identifiers[widenCString("n")]);
+            Register r_result = icg.allocateVariable(world.identifiers[widenCString("result")]);
+
             icg.beginStatement(position);
-            icg.saveVariable(1, icg.loadImmediate(1.0));
+            icg.move(r_result, icg.loadImmediate(1.0));
             
                 // while (n > 1) {
                 //   result = result * n;
@@ -431,24 +431,20 @@ namespace JavaScript {
                 // }
             {
                 icg.beginWhileStatement(position);
-                Register r0 = icg.loadVariable(0);
                 Register r1 = icg.loadImmediate(1.0);
-                Register r2 = icg.op(COMPARE_GT, r0, r1);
+                Register r2 = icg.op(COMPARE_GT, r_n, r1);
                 icg.endWhileExpression(r2);
-                r0 = icg.loadVariable(0);
-                r1 = icg.loadVariable(1);
-                r2 = icg.op(MULTIPLY, r1, r0);
-                icg.saveVariable(1, r2);
+                r2 = icg.op(MULTIPLY, r_result, r_n);
+                icg.move(r_result, r2);
                 icg.beginStatement(position);
-                r0 = icg.loadVariable(0);
                 r1 = icg.loadImmediate(1.0); 
-                r2 = icg.op(SUBTRACT, r0, r1);
-                icg.saveVariable(0, r2);
+                r2 = icg.op(SUBTRACT, r_n, r1);
+                icg.move(r_n, r2);
                 icg.endWhileStatement();
             }
             
                 // return result;
-            icg.returnStatement(icg.loadVariable(1));
+            icg.returnStatement(r_result);
             ICodeModule *icm = icg.complete();
             stdOut << icg;
             

@@ -193,7 +193,7 @@ namespace JSTypes {
               mLocals(iCode->itsMaxVariable + 1)
         {
             // copy caller's parameter list in to locals.
-            JSValues::iterator dest = mLocals.begin();
+            JSValues::iterator dest = mRegisters.begin();
             const JSValues& params = caller->mRegisters;
             for (RegisterList::const_iterator src = list.begin(), 
                      end = list.end(); src != end; ++src, ++dest) {
@@ -225,9 +225,8 @@ namespace JSTypes {
     // a stack of JSFrames.
     typedef std::stack<JSFrame*, std::vector<JSFrame*, gc_allocator<JSFrame*> > > JSFrameStack;
         
-} /* namespace JSTypes */
-    
-} /* namespace JavaScript */
+} /* namespace JSTypes */    
+}; /* namespace JavaScript */
 
 
 #endif /* jstypes_h */
