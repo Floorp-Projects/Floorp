@@ -214,7 +214,7 @@ void CMozillaBrowser::ShowContextMenu(PRUint32 aContextFlags)
         {
             dwID = ctxMenu1DSelect;
         }
-        else if (aContextFlags & nsIContextMenuListener::CONTEXT_DEFAULT)
+        else
         {
             dwID = ctxMenuDefault;
         }
@@ -244,7 +244,7 @@ void CMozillaBrowser::ShowContextMenu(PRUint32 aContextFlags)
     {
         pszMenuResource = MAKEINTRESOURCE(IDR_POPUP_TEXT);
     }
-    else if (aContextFlags & nsIContextMenuListener::CONTEXT_DEFAULT)
+    else
     {
         pszMenuResource = MAKEINTRESOURCE(IDR_POPUP_DOCUMENT);
     }
@@ -916,7 +916,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 
     // Configure what the web browser can and cannot do
     nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
-    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
+    // webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
     // webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_CONTAINS_CHROME, PR_TRUE);
 
     // Create the webbrowser window

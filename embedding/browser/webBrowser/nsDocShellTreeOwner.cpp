@@ -665,7 +665,7 @@ nsresult nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
 nsresult nsDocShellTreeOwner::MouseDown(nsIDOMEvent* aMouseEvent)
 {
     // Don't bother going any further if no one is interested in context menu events
-    nsCOMPtr<nsIContextMenuListener> menuListener(do_QueryInterface(mTreeOwner));
+    nsCOMPtr<nsIContextMenuListener> menuListener(do_QueryInterface(mWebBrowserChrome));
     if (!menuListener)
     {
         return NS_OK;
@@ -700,6 +700,7 @@ nsresult nsDocShellTreeOwner::MouseDown(nsIDOMEvent* aMouseEvent)
         return NS_ERROR_NULL_POINTER;
     }
 
+    nsCOMPtr<nsIDOMNode> targetDOMnode;
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(targetNode);
     if (!node)
     {
@@ -712,11 +713,10 @@ nsresult nsDocShellTreeOwner::MouseDown(nsIDOMEvent* aMouseEvent)
     PRUint32 flags = nsIContextMenuListener::CONTEXT_NONE;
     nsCOMPtr<nsIDOMHTMLElement> element;
     do {
-        PRUint16 type;
-        node->GetNodeType(&type);
+        //PRUint16 type;
+        //node->GetNodeType(&type);
 
         // XXX test for selected text
-
         element = do_QueryInterface(node);
         if (element)
         {
@@ -724,20 +724,34 @@ nsresult nsDocShellTreeOwner::MouseDown(nsIDOMEvent* aMouseEvent)
             element->GetTagName(tag);
 
             // Test what kind of element we're dealing with here
-            if (tag.EqualsWithConversion("input", PR_TRUE))
+            if (tag.EqualsWithConversion("img", PR_TRUE))
+            {
+                flags |= nsIContextMenuListener::CONTEXT_IMAGE;
+                targetDOMnode = node;
+                // if we see an image, keep searching for a possible anchor
+            }
+            else if (tag.EqualsWithConversion("input", PR_TRUE))
             {
                 // INPUT element - button, combo, checkbox, text etc.
                 flags |= nsIContextMenuListener::CONTEXT_INPUT;
+                targetDOMnode = node;
+                break; // exit do-while
             }
-            else if (tag.EqualsWithConversion("img", PR_TRUE))
+            else if (tag.EqualsWithConversion("textarea", PR_TRUE))
             {
-                // IMG element
-                flags |= nsIContextMenuListener::CONTEXT_IMAGE;
+                // text area
+                flags |= nsIContextMenuListener::CONTEXT_TEXT;
+                targetDOMnode = node;
+                break; // exit do-while
             }
-            else
+            else if (tag.EqualsWithConversion("html", PR_TRUE))
             {
-                // Something else
-                flags |= nsIContextMenuListener::CONTEXT_OTHER;
+                // only care about this if no other context was found.
+                if (!flags) {
+                    flags |= nsIContextMenuListener::CONTEXT_DOCUMENT;
+                    targetDOMnode = node;
+                }
+                break; // exit do-while
             }
 
             // Test if the element has an associated link
@@ -751,25 +765,21 @@ nsresult nsDocShellTreeOwner::MouseDown(nsIDOMEvent* aMouseEvent)
                 if (hrefNode)
                 {
                     flags |= nsIContextMenuListener::CONTEXT_LINK;
-                    break;
+                    if (!targetDOMnode)
+                        targetDOMnode = node;
+                    break; // exit do-while
                 }
             }
         }
+
+        // walk-up-the-tree
         nsCOMPtr<nsIDOMNode> parentNode;
         node->GetParentNode(getter_AddRefs(parentNode));
-
-        // Test if we're at the top of the document
-        if (!parentNode)
-        {
-            node = nsnull;
-            flags |= nsIContextMenuListener::CONTEXT_DOCUMENT;
-            break;
-        }
         node = parentNode;
     } while (node);
 
     // Tell the listener all about the event
-    menuListener->OnShowContextMenu(flags, aMouseEvent, node);
+    menuListener->OnShowContextMenu(flags, aMouseEvent, targetDOMnode);
 
     return NS_OK;
 }
