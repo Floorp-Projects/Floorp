@@ -89,8 +89,17 @@
 #include "nsIDeviceContext.h"
 
 // XXX greasy constants
+#ifdef THROBBING_N
 #define THROBBER_WIDTH 32
 #define THROBBER_HEIGHT 32
+#define THROBBER_AT "resource:/res/throbber/anims%02d.gif"
+#define THROB_NUM 14
+#else
+#define THROBBER_WIDTH 42
+#define THROBBER_HEIGHT 42
+#define THROBBER_AT "resource:/res/throbber/LargeAnimation%02d.gif"
+#define THROB_NUM 38
+#endif
 #define BUTTON_WIDTH 90
 #define BUTTON_HEIGHT THROBBER_HEIGHT
 
@@ -1163,7 +1172,8 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   if (NS_OK != rv) {
     return rv;
   }
-  mThrobber->Init(mWindow, r);
+  nsString throbberURL(THROBBER_AT);
+  mThrobber->Init(mWindow, r, throbberURL, THROB_NUM);
   mThrobber->Show();
 
   return NS_OK;
