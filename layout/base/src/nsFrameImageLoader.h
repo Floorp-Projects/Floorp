@@ -57,6 +57,7 @@ public:
                   const nscolor* aBackgroundColor,
                   const nsSize* aDesiredSize,
                   nsIFrame* aTargetFrame,
+                  nsImageAnimation aAnimationMode,
                   nsIFrameImageLoaderCB aCallBack,
                   void* aClosure);
 
@@ -111,8 +112,8 @@ protected:
 
   nsSize mImageSize;
 
-  PRUint32 mImageLoadStatus;
-  nsImageError mImageLoadError;
+  PRUint32          mImageLoadStatus;
+  nsImageError      mImageLoadError;
 
   PRInt32 mNotifyLockCount;
 

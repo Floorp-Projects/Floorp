@@ -93,7 +93,8 @@ nsPresContext::nsPresContext()
   mCompatibilityMode = eCompatibility_Standard;
   mCompatibilityLocked = PR_FALSE;
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
-
+  mImageAnimationMode = eImageAnimation_Normal;
+  
   mLookAndFeel = nsnull;
   mShell = nsnull;
 
@@ -403,10 +404,7 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
 NS_IMETHODIMP
 nsPresContext::GetWidgetRenderingMode(nsWidgetRendering* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
   *aResult = mWidgetRenderingMode;
   return NS_OK;
 }
@@ -416,6 +414,22 @@ NS_IMETHODIMP
 nsPresContext::SetWidgetRenderingMode(nsWidgetRendering aMode)
 {
   mWidgetRenderingMode = aMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetImageAnimationMode(nsImageAnimation* aModeResult)
+{
+  NS_ENSURE_ARG_POINTER(aModeResult);
+  *aModeResult = mImageAnimationMode;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsPresContext::SetImageAnimationMode(nsImageAnimation aMode)
+{
+  mImageAnimationMode = aMode;
   return NS_OK;
 }
 
@@ -862,7 +876,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   }
 
   // Allow for a null target frame argument (for precached images)
-  if (nsnull != aTargetFrame) {
+  if (aTargetFrame) {
     // Mark frame as having loaded an image
     nsFrameState state;
     aTargetFrame->GetFrameState(&state);
@@ -920,7 +934,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   }
 
   rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aDesiredSize,
-                    aTargetFrame, aCallBack, aClosure);
+                    aTargetFrame, mImageAnimationMode, aCallBack, aClosure);
   if (NS_OK != rv) {
     mImageLoaders.RemoveElement(loader);
     loader->StopImageLoad();

@@ -123,6 +123,12 @@ public:
   NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode) = 0;
 
   /**
+   * Access the image animation mode for this context
+   */
+  NS_IMETHOD GetImageAnimationMode(nsImageAnimation* aModeResult) = 0;
+  NS_IMETHOD SetImageAnimationMode(nsImageAnimation aMode) = 0;
+
+  /**
    * Get look and feel object
    */
   NS_IMETHOD GetLookAndFeel(nsILookAndFeel** aLookAndFeel) = 0;

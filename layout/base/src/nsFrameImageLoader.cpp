@@ -122,6 +122,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
                          const nscolor* aBackgroundColor,
                          const nsSize* aDesiredSize,
                          nsIFrame* aTargetFrame,
+                         nsImageAnimation aAnimationMode,
                          nsIFrameImageLoaderCB aCallBack,
                          void* aClosure)
 {
@@ -133,7 +134,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
   if (nsnull != mPresContext) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
-
+  
   mPresContext = aPresContext;
   NS_IF_ADDREF(aPresContext);
   mURL = aURL;
