@@ -42,15 +42,15 @@
 
 #include "prtypes.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIModelElementPrivate.h"
 
-class nsIDOMNode;
 class nsIDOMElement;
 class nsIXFormsModelElement;
 class nsIURI;
 class nsString;
-class nsXFormsMDGSet;
 class nsIMutableArray;
 
 #define NS_NAMESPACE_XFORMS              "http://www.w3.org/2002/xforms"
@@ -209,7 +209,7 @@ public:
                         PRUint16                 aResultType,
                         nsIModelElementPrivate **aModel,
                         nsIDOMXPathResult      **aResult,
-                        nsIMutableArray         *aDeps = nsnull);
+                        nsCOMArray<nsIDOMNode>  *aDeps = nsnull);
 
   /**
    * Given a bind element |aBindElement|, find the model and the context node
@@ -228,13 +228,13 @@ public:
    * namespace resolver, and result type.
    */
   static NS_HIDDEN_(already_AddRefed<nsIDOMXPathResult>)
-    EvaluateXPath(const nsAString &aExpression,
-                  nsIDOMNode      *aContextNode,
-                  nsIDOMNode      *aResolverNode,
-                  PRUint16         aResultType,
-                  PRInt32          aContextPosition = 1,
-                  PRInt32          aContextSize = 1,
-                  nsXFormsMDGSet  *aSet = nsnull);
+    EvaluateXPath(const nsAString        &aExpression,
+                  nsIDOMNode             *aContextNode,
+                  nsIDOMNode             *aResolverNode,
+                  PRUint16                aResultType,
+                  PRInt32                 aContextPosition = 1,
+                  PRInt32                 aContextSize = 1,
+                  nsCOMArray<nsIDOMNode> *aSet = nsnull);
 
   /**
    * Given a node in the instance data, get its string value according
@@ -329,6 +329,11 @@ public:
    * Tries to focus a form control and returns true if succeeds.
    */
   static NS_HIDDEN_(PRBool) FocusControl(nsIDOMElement *aElement);
+
+  /**
+   * Sorts the array and removes duplicate entries
+   */
+  static NS_HIDDEN_(void) MakeUniqueAndSort(nsCOMArray<nsIDOMNode> *aArray);
 
   /**
    * Returns the <xf:instance> for a given instance data node.

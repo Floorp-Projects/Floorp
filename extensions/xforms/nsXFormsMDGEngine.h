@@ -42,13 +42,13 @@
 
 #include "nscore.h"
 #include "nsClassHashtable.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 
 #include "nsIDOMNode.h"
 
 #include "nsXFormsTypes.h"
-#include "nsXFormsMDGSet.h"
 #include "nsXFormsNodeState.h"
 #include "nsIModelElementPrivate.h"
 
@@ -177,10 +177,9 @@ protected:
   nsIModelElementPrivate *mModel;
   
   /**
-   * Set of nodes that are marked as changed, and should be included in
-   * recalculation
+   * Nodes that are marked as changed, and should be included in recalculation
    */
-  nsXFormsMDGSet mMarkedNodes;
+  nsCOMArray<nsIDOMNode> mMarkedNodes;
   
   /** Number of nodes in the graph */
   PRInt32 mNodesInGraph;
@@ -289,11 +288,11 @@ protected:
    * @param aNode            The context node
    * @param aSet             Set of the nodes influenced by operation
    */
-  nsresult ComputeMIPWithInheritance(eFlag_t          aStateFlag,
-                                     eFlag_t          aDispatchFlag,
-                                     eFlag_t          aInheritanceFlag,
-                                     nsXFormsMDGNode *aNode,
-                                     nsXFormsMDGSet  *aSet);
+  nsresult ComputeMIPWithInheritance(eFlag_t                 aStateFlag,
+                                     eFlag_t                 aDispatchFlag,
+                                     eFlag_t                 aInheritanceFlag,
+                                     nsXFormsMDGNode        *aNode,
+                                     nsCOMArray<nsIDOMNode> *aSet);
 
   /**
    * Attaches inheritance to all children of a given node
@@ -303,10 +302,10 @@ protected:
    * @param aState           The state of the flag
    * @param aStateFlag       The flag
    */
-  nsresult AttachInheritance(nsXFormsMDGSet *aSet,
-                             nsIDOMNode     *aSrc,
-                             PRBool          aState,
-                             eFlag_t         aStateFlag);
+  nsresult AttachInheritance(nsCOMArray<nsIDOMNode> *aSet,
+                             nsIDOMNode             *aSrc,
+                             PRBool                 aState,
+                             eFlag_t                aStateFlag);
 
   /**
    * Invalidate the information, ie. mark all nodes as dirty.
@@ -356,13 +355,13 @@ public:
    * @param aContextPos      The context positions of aExpression
    * @param aContextSize     The context size for aExpression
    */
-  nsresult AddMIP(ModelItemPropName      aType,
-                  nsIDOMXPathExpression *aExpression,
-                  nsXFormsMDGSet        *aDependencies,
-                  PRBool                 aDynFunc,
-                  nsIDOMNode            *aContextNode,
-                  PRInt32                aContextPos,
-                  PRInt32                aContextSize);
+  nsresult AddMIP(ModelItemPropName       aType,
+                  nsIDOMXPathExpression  *aExpression,
+                  nsCOMArray<nsIDOMNode> *aDependencies,
+                  PRBool                  aDynFunc,
+                  nsIDOMNode             *aContextNode,
+                  PRInt32                 aContextPos,
+                  PRInt32                 aContextSize);
 
   /**
    * Recalculate the MDG.
@@ -371,7 +370,7 @@ public:
    *
    * @note aChangedNodes are unique and sorted in pointer-order, ascending.
    */
-  nsresult Recalculate(nsXFormsMDGSet *aChangedNodes);
+  nsresult Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes);
 
   /**
    * Rebuilds the MDG.

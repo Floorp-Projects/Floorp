@@ -39,11 +39,11 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsXFormsXPathNode.h"
 #include "nsIDOMXPathExpression.h"
 #include "nsIXFormsXPathEvaluator.h"
 #include "nsIDOMXPathNSResolver.h"
-#include "nsXFormsMDGSet.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -60,7 +60,7 @@ private:
   nsCOMPtr<nsIXFormsXPathEvaluator>  mEvaluator;
   nsCOMPtr<nsIDOMNode>            mResolver;
 
-  nsXFormsMDGSet                 *mCurSet;
+  nsCOMArray<nsIDOMNode>         *mCurSet;
   nsCOMPtr<nsIDOMXPathExpression> mCurExpression;
   const nsAString                *mCurExprString;
 
@@ -77,5 +77,5 @@ public:
                    const nsXFormsXPathNode *aNode,
                    nsIDOMXPathExpression   *aExpression,
                    const nsAString         *aExprString,
-                   nsXFormsMDGSet          *aSet);
+                   nsCOMArray<nsIDOMNode>  *aSet);
 };

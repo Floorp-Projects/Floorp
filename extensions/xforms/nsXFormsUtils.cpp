@@ -66,7 +66,6 @@
 #include "nsXFormsXPathAnalyzer.h"
 #include "nsXFormsXPathParser.h"
 #include "nsXFormsXPathNode.h"
-#include "nsXFormsMDGSet.h"
 #include "nsIDOMXPathExpression.h"
 #include "nsArray.h"
 
@@ -338,13 +337,13 @@ nsXFormsUtils::GetModel(nsIDOMElement  *aElement,
 }
 
 /* static */ already_AddRefed<nsIDOMXPathResult>
-nsXFormsUtils::EvaluateXPath(const nsAString &aExpression,
-                             nsIDOMNode      *aContextNode,
-                             nsIDOMNode      *aResolverNode,
-                             PRUint16         aResultType,
-                             PRInt32          aContextPosition,
-                             PRInt32          aContextSize,
-                             nsXFormsMDGSet  *aSet)
+nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
+                             nsIDOMNode             *aContextNode,
+                             nsIDOMNode             *aResolverNode,
+                             PRUint16                aResultType,
+                             PRInt32                 aContextPosition,
+                             PRInt32                 aContextSize,
+                             nsCOMArray<nsIDOMNode> *aSet)
 {
   nsCOMPtr<nsIDOMDocument> doc;
   aContextNode->GetOwnerDocument(getter_AddRefs(doc));
@@ -435,7 +434,7 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
                                    PRUint16                 aResultType,
                                    nsIModelElementPrivate **aModel,
                                    nsIDOMXPathResult      **aResult,
-                                   nsIMutableArray         *aDeps)
+                                   nsCOMArray<nsIDOMNode>  *aDeps)
 {
   if (!aElement || !aModel || !aResult) {
     return NS_OK;
@@ -507,20 +506,13 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
   }
 
   // Evaluate |expr|
-  nsXFormsMDGSet set;
   nsCOMPtr<nsIDOMXPathResult> res = EvaluateXPath(expr,
                                                   contextNode,
                                                   aElement,
                                                   aResultType,
                                                   contextSize,
                                                   contextPosition,
-                                                  aDeps ? &set : nsnull);
-
-  if (res && aDeps) {
-    for (PRInt32 i = 0; i < set.Count(); ++i) {
-      aDeps->AppendElement(set.GetNode(i), PR_FALSE);
-    }
-  }
+                                                  aDeps);
 
   res.swap(*aResult); // exchanges ref
 
@@ -959,6 +951,30 @@ nsXFormsUtils::FocusControl(nsIDOMElement *aElement)
   if (element && NS_SUCCEEDED(element->Focus()))
     ret = PR_TRUE;
   return ret;
+}
+
+int
+sortFunc(nsIDOMNode *aNode1, nsIDOMNode *aNode2, void *aArg) 
+{
+  return (void*) aNode1 < (void*) aNode2;
+}
+
+/* static */ void
+nsXFormsUtils::MakeUniqueAndSort(nsCOMArray<nsIDOMNode> *aArray)
+{
+  if (!aArray)
+    return;
+
+  aArray->Sort(sortFunc, nsnull);  
+
+  PRInt32 pos = 0;
+  while (pos + 1 < aArray->Count()) {
+    if (aArray->ObjectAt(pos) == aArray->ObjectAt(pos + 1)) {
+      aArray->RemoveObjectAt(pos + 1);
+    } else {
+      ++pos;
+    }
+  }
 }
 
 /* static */ nsresult

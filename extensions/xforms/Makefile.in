@@ -105,7 +105,6 @@ CPPSRCS		= \
 		nsXFormsAtoms.cpp \
 		nsXFormsModule.cpp \
 		nsXFormsMDGEngine.cpp \
-		nsXFormsMDGSet.cpp \
 		nsXFormsXPathAnalyzer.cpp \
 		nsXFormsXPathNode.cpp \
 		nsXFormsXPathParser.cpp \

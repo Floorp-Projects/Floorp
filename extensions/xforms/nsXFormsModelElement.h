@@ -149,7 +149,7 @@ private:
    * List of changed nodes, ie. nodes that have not been informed about
    * changes yet
    */
-  nsXFormsMDGSet    mChangedNodes;
+  nsCOMArray<nsIDOMNode>    mChangedNodes;
 
   /* Controls that need to a Refresh() */
   nsVoidArray       mControlsNeedingRefresh;

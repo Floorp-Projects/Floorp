@@ -39,7 +39,6 @@
 #ifndef nsXFormsControlStub_h_
 #define nsXFormsControlStub_h_
 
-#include "nsArray.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -86,7 +85,7 @@ public:
 
   // nsIXFormsControl
   NS_IMETHOD GetBoundNode(nsIDOMNode **aBoundNode);
-  NS_IMETHOD GetDependencies(nsIArray **aDependencies);
+  NS_IMETHOD GetDependencies(nsCOMArray<nsIDOMNode> **aDependencies);
   NS_IMETHOD GetElement(nsIDOMElement **aElement);
   NS_IMETHOD ResetBoundNode();
   NS_IMETHOD Bind();
@@ -126,7 +125,7 @@ protected:
   nsCOMPtr<nsIDOMNode>             mBoundNode;
 
   /** Array of nsIDOMNodes that the control depends on. */
-  nsCOMPtr<nsIMutableArray>        mDependencies;
+  nsCOMArray<nsIDOMNode>           mDependencies;
 
   /** The model for the control */
   nsCOMPtr<nsIModelElementPrivate> mModel;

@@ -573,12 +573,9 @@ nsXFormsModelElement::Revalidate()
     control->GetBoundNode(getter_AddRefs(boundNode));
 
     // Get dependencies
-    nsCOMPtr<nsIArray> deps;
-    control->GetDependencies(getter_AddRefs(deps));    
-    PRUint32 depCount = 0;
-    if (deps) {
-      deps->GetLength(&depCount);
-    }
+    nsCOMArray<nsIDOMNode> *deps = nsnull;
+    control->GetDependencies(&deps);    
+    PRUint32 depCount = deps ? deps->Count() : 0;
 
 #ifdef DEBUG_MODEL
     nsCOMPtr<nsIDOMElement> controlElement;
@@ -604,7 +601,7 @@ nsXFormsModelElement::Revalidate()
     PRBool refresh = PR_FALSE;
 
     for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
-      curChanged = mChangedNodes.GetNode(j);
+      curChanged = mChangedNodes[j];
 
       if (curChanged == boundNode) {
         refresh = PR_TRUE;
@@ -617,7 +614,7 @@ nsXFormsModelElement::Revalidate()
       }
 
       while (depPos < depCount && (void*) curChanged > (void*) curDep) {
-        curDep = do_QueryElementAt(deps, depPos);
+        curDep = deps->ObjectAt(depPos);
         ++depPos;
       }
 
@@ -1196,7 +1193,7 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
   
 
   // Iterate over resultset
-  nsXFormsMDGSet set;
+  nsCOMArray<nsIDOMNode> deps;
   nsCOMPtr<nsIDOMNode> node;
   PRUint32 snapItem;
   for (snapItem = 0; snapItem < snapLen; ++snapItem) {
@@ -1265,14 +1262,14 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
 
         // Get node dependencies
         nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(propStrings[j]));
-        set.Clear();
-        rv = analyzer.Analyze(node, xNode, expr, &propStrings[j], &set);
+        deps.Clear();
+        rv = analyzer.Analyze(node, xNode, expr, &propStrings[j], &deps);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // Insert into MDG
         rv = mMDG.AddMIP((ModelItemPropName) j,
                          expr,
-                         &set,
+                         &deps,
                          parser.UsesDynamicFunc(),
                          node,
                          snapItem + 1,

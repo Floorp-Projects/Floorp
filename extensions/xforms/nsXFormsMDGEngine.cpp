@@ -46,6 +46,7 @@
 #include "nsIDOMXPathResult.h"
 #include "nsDeque.h"
 #include "nsIModelElementPrivate.h"
+#include "nsXFormsUtils.h"
 
 #ifdef DEBUG
 //#  define DEBUG_XF_MDG
@@ -149,13 +150,13 @@ nsXFormsMDGEngine::Init(nsIModelElementPrivate *aModel)
 }
 
 nsresult
-nsXFormsMDGEngine::AddMIP(ModelItemPropName      aType,
-                          nsIDOMXPathExpression *aExpression,
-                          nsXFormsMDGSet        *aDependencies,
-                          PRBool                 aDynFunc,
-                          nsIDOMNode            *aContextNode,
-                          PRInt32                aContextPos,
-                          PRInt32                aContextSize)
+nsXFormsMDGEngine::AddMIP(ModelItemPropName       aType,
+                          nsIDOMXPathExpression  *aExpression,
+                          nsCOMArray<nsIDOMNode> *aDependencies,
+                          PRBool                  aDynFunc,
+                          nsIDOMNode             *aContextNode,
+                          PRInt32                 aContextPos,
+                          PRInt32                 aContextSize)
 {
   NS_ENSURE_ARG(aContextNode);
   
@@ -193,7 +194,7 @@ nsXFormsMDGEngine::AddMIP(ModelItemPropName      aType,
     nsCOMPtr<nsIDOMNode> dep_domnode;
     nsXFormsMDGNode* dep_gnode;
     for (PRInt32 i = 0; i < aDependencies->Count(); ++i) {
-      dep_domnode = aDependencies->GetNode(i);
+      dep_domnode = aDependencies->ObjectAt(i);
       if (!dep_domnode) {
         return NS_ERROR_NULL_POINTER;
       }
@@ -241,9 +242,7 @@ nsXFormsMDGEngine::MarkNodeAsChanged(nsIDOMNode* aContextNode)
     NS_ENSURE_TRUE(mGraph.AppendElement(n), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  NS_ENSURE_TRUE(mMarkedNodes.AddNode(aContextNode), NS_ERROR_FAILURE);
-
-  return NS_OK;
+  return mMarkedNodes.AppendObject(aContextNode);
 }
 
 #ifdef DEBUG_beaufour
@@ -292,7 +291,7 @@ nsXFormsMDGEngine::PrintDot(const char* aFile)
 #endif
 
 nsresult
-nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
+nsXFormsMDGEngine::Recalculate(nsCOMArray<nsIDOMNode> *aChangedNodes)
 {
   NS_ENSURE_ARG(aChangedNodes);
 
@@ -301,7 +300,7 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
          aChangedNodes->Count());
 #endif
 
-  NS_ENSURE_TRUE(aChangedNodes->AddSet(mMarkedNodes), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(aChangedNodes->AppendObjects(mMarkedNodes), NS_ERROR_OUT_OF_MEMORY);
 
   mMarkedNodes.Clear();
   
@@ -372,7 +371,7 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
                                   PR_FALSE,
                                   PR_TRUE);
         if (NS_SUCCEEDED(rv)) {
-          NS_ENSURE_TRUE(aChangedNodes->AddNode(g->mContextNode),
+          NS_ENSURE_TRUE(aChangedNodes->AppendObject(g->mContextNode),
                          NS_ERROR_FAILURE);
         }
       }
@@ -393,7 +392,7 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
       if (ns->IsConstraint() != constraint) {
         ns->Set(eFlag_CONSTRAINT, constraint);
         ns->Set(eFlag_DISPATCH_VALID_CHANGED, PR_TRUE);
-        NS_ENSURE_TRUE(aChangedNodes->AddNode(g->mContextNode),
+        NS_ENSURE_TRUE(aChangedNodes->AppendObject(g->mContextNode),
                        NS_ERROR_FAILURE);
       }
 
@@ -431,7 +430,7 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
         NS_ENSURE_SUCCESS(rv, rv);
       
         if (didChange) {
-          NS_ENSURE_TRUE(aChangedNodes->AddNode(g->mContextNode),
+          NS_ENSURE_TRUE(aChangedNodes->AppendObject(g->mContextNode),
                          NS_ERROR_FAILURE);
         }
       }
@@ -456,7 +455,7 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
 
     g->MarkClean();
   }
-  aChangedNodes->MakeUnique();
+  nsXFormsUtils::MakeUniqueAndSort(aChangedNodes);
   
 #ifdef DEBUG_XF_MDG
   printf("\taChangedNodes: %d\n", aChangedNodes->Count());
@@ -950,11 +949,11 @@ nsXFormsMDGEngine::ComputeMIP(eFlag_t          aStateFlag,
 }
 
 nsresult
-nsXFormsMDGEngine::ComputeMIPWithInheritance(eFlag_t          aStateFlag,
-                                             eFlag_t          aDispatchFlag,
-                                             eFlag_t          aInheritanceFlag,
-                                             nsXFormsMDGNode *aNode,
-                                             nsXFormsMDGSet  *aSet)
+nsXFormsMDGEngine::ComputeMIPWithInheritance(eFlag_t                aStateFlag,
+                                             eFlag_t                aDispatchFlag,
+                                             eFlag_t                aInheritanceFlag,
+                                             nsXFormsMDGNode        *aNode,
+                                             nsCOMArray<nsIDOMNode> *aSet)
 {
   nsresult rv;
   PRBool didChange;
@@ -967,7 +966,7 @@ nsXFormsMDGEngine::ComputeMIPWithInheritance(eFlag_t          aStateFlag,
     if (   !(aStateFlag == eFlag_READONLY && ns->Test(aInheritanceFlag))
         ||  (aStateFlag == eFlag_RELEVANT && ns->Test(aInheritanceFlag)) )
     {
-      NS_ENSURE_TRUE(aSet->AddNode(aNode->mContextNode),
+      NS_ENSURE_TRUE(aSet->AppendObject(aNode->mContextNode),
                      NS_ERROR_FAILURE);
       rv = AttachInheritance(aSet,
                              aNode->mContextNode,
@@ -980,10 +979,10 @@ nsXFormsMDGEngine::ComputeMIPWithInheritance(eFlag_t          aStateFlag,
 }
 
 nsresult
-nsXFormsMDGEngine::AttachInheritance(nsXFormsMDGSet *aSet,
-                                     nsIDOMNode     *aSrc,
-                                     PRBool          aState,
-                                     eFlag_t         aStateFlag)
+nsXFormsMDGEngine::AttachInheritance(nsCOMArray<nsIDOMNode> *aSet,
+                                     nsIDOMNode             *aSrc,
+                                     PRBool                  aState,
+                                     eFlag_t                 aStateFlag)
 {
   NS_ENSURE_ARG(aSrc);
   
@@ -1043,7 +1042,7 @@ nsXFormsMDGEngine::AttachInheritance(nsXFormsMDGSet *aSet,
     if (updateNode) {
       rv = AttachInheritance(aSet, node, aState, aStateFlag);
       NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(aSet->AddNode(node), NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(aSet->AppendObject(node), NS_ERROR_FAILURE);
       updateNode = PR_FALSE;
     }
   }

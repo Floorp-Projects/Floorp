@@ -39,6 +39,7 @@
 
 #include "nsXFormsXPathAnalyzer.h"
 #include "nsIDOMXPathResult.h"
+#include "nsXFormsUtils.h"
 
 #ifdef DEBUG
 //#define DEBUG_XF_ANALYZER
@@ -65,7 +66,7 @@ nsXFormsXPathAnalyzer::Analyze(nsIDOMNode              *aContextNode,
                                const nsXFormsXPathNode *aNode,
                                nsIDOMXPathExpression   *aExpression,
                                const nsAString         *aExprString,
-                               nsXFormsMDGSet          *aSet)
+                               nsCOMArray<nsIDOMNode>  *aSet)
 {
   NS_ENSURE_ARG(aContextNode);
   NS_ENSURE_ARG(aNode);
@@ -90,7 +91,7 @@ nsXFormsXPathAnalyzer::Analyze(nsIDOMNode              *aContextNode,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Besides making the set a set, it also makes it sorted.
-  aSet->MakeUnique();
+  nsXFormsUtils::MakeUniqueAndSort(aSet);
 
   return NS_OK;
 }
@@ -196,7 +197,7 @@ nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
 #ifdef DEBUG_XF_ANALYZER
         printf("collecting '%s'\n", NS_ConvertUCS2toUTF8(xp).get());
 #endif
-        mCurSet->AddNode(node);
+        mCurSet->AppendObject(node);
       }
       rv = AnalyzeRecursively(node, aNode->mChild, aIndent + 1);
     }

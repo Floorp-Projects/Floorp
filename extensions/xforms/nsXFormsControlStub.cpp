@@ -92,9 +92,10 @@ nsXFormsControlStub::GetBoundNode(nsIDOMNode **aBoundNode)
 }
 
 NS_IMETHODIMP
-nsXFormsControlStub::GetDependencies(nsIArray **aDependencies)
+nsXFormsControlStub::GetDependencies(nsCOMArray<nsIDOMNode> **aDependencies)
 {
-  NS_IF_ADDREF(*aDependencies = mDependencies);
+  if (aDependencies)
+    *aDependencies = &mDependencies;
   return NS_OK;  
 }
 
@@ -153,15 +154,9 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
                                         nsIDOMXPathResult      **aResult,
                                         nsIModelElementPrivate **aModel)
 {
-  nsresult rv;
+  mDependencies.Clear();
 
-  if (!mDependencies) {  
-    rv = NS_NewArray(getter_AddRefs(mDependencies));
-  } else {
-    rv = mDependencies->Clear();
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  nsresult rv;
   rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
                                           kElementFlags,
                                           aBindingAttr,
@@ -169,7 +164,7 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
                                           aResultType,
                                           getter_AddRefs(mModel),
                                           aResult,
-                                          mDependencies);
+                                          &mDependencies);
 
   if (mModel) {
     mModel->AddFormControl(this);
