@@ -381,6 +381,7 @@ nsMsgAccountManager::GetAllServers(nsISupportsArray **_retval)
   // convert hash table->nsISupportsArray of servers
   m_accounts->Enumerate(addServerToArray, (void *)servers);
   
+  *_retval = servers;
   return rv;
 }
 
