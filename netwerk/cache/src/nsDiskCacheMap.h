@@ -64,19 +64,20 @@ public:
     ~nsDiskCacheMap();
     
     PRUint32& DataSize() { return mHeader.mDataSize; }
-
     PRUint32& EntryCount() { return mHeader.mEntryCount; }
 
     nsDiskCacheRecord* GetRecord(PRUint32 hashNumber);
-    void DeleteRecord(PRUint32 hashNumber);
-    
-    nsresult Read(nsIInputStream* input);
-    nsresult Write(nsIOutputStream* output);
+    void DeleteRecord(nsDiskCacheRecord* record);
     
     enum {
         kRecordsPerBucket = 256,
         kBucketsPerTable = (1 << 5)                 // must be a power of 2!
     };
+    
+    nsDiskCacheRecord* GetBucket(PRUint32 index) { return mBuckets[index].mRecords; }
+    
+    nsresult Read(nsIInputStream* input);
+    nsresult Write(nsIOutputStream* output);
     
 private:
     struct nsDiskCacheBucket {

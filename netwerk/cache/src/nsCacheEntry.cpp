@@ -116,6 +116,18 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
 
 
 nsresult
+nsCacheEntry::VisitMetaDataElements( nsICacheMetaDataVisitor * visitor)
+{
+    NS_ENSURE_ARG_POINTER(visitor);
+
+    if (mMetaData)
+        mMetaData->VisitElements(visitor);
+
+    return NS_OK;
+}
+
+
+nsresult
 nsCacheEntry::FlattenMetaData(char ** data, PRUint32 * size)
 {
     NS_ENSURE_ARG_POINTER(size);
@@ -535,7 +547,6 @@ nsCacheEntryHashTable::MoveEntry(PLDHashTable * /* table */,
                                  const PLDHashEntryHdr *from,
                                  PLDHashEntryHdr       *to)
 {
-    to->keyHash = from->keyHash;
     ((nsCacheEntryHashTableEntry *)to)->cacheEntry =
         ((nsCacheEntryHashTableEntry *)from)->cacheEntry;
 }
@@ -545,7 +556,6 @@ void PR_CALLBACK
 nsCacheEntryHashTable::ClearEntry(PLDHashTable * /* table */,
                                   PLDHashEntryHdr * hashEntry)
 {
-    ((nsCacheEntryHashTableEntry *)hashEntry)->keyHash    = 0;
     ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = 0;
 }
 

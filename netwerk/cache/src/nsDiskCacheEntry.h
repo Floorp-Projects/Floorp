@@ -62,11 +62,6 @@ public:
     {
         return mTransports[mode - 1];
     }
-    
-    nsCOMPtr<nsITransport>& getMetaTransport(nsCacheAccessMode mode)
-    {
-        return mMetaTransports[mode - 1];
-    }
 #endif
     
     nsCacheEntry* getCacheEntry()
@@ -89,12 +84,16 @@ public:
         return mHashNumber;
     }
     
+    nsrefcnt getRefCount()
+    {
+        return mRefCnt;
+    }
+    
     static PLDHashNumber Hash(const char* key);
     
 private:
 #ifdef MOZ_NEW_CACHE_REUSE_TRANSPORTS
     nsCOMPtr<nsITransport>  mTransports[3];
-    nsCOMPtr<nsITransport>  mMetaTransports[3];
 #endif
     nsCacheEntry*           mCacheEntry;
     PRUint32                mGeneration;

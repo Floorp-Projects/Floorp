@@ -141,7 +141,9 @@ private:
                                                          PLDHashEntryHdr * hdr,
                                                          PRUint32          number,
                                                          void *            arg);
-
+#if defined(PR_LOGGING)
+    void LogCacheStatistics();
+#endif
     /**
      *  Data Members
      */
@@ -165,6 +167,7 @@ private:
     PRCList                 mDoomedEntries;
 
     // stats
+    
     PRUint32                mTotalEntries;
     PRUint32                mCacheHits;
     PRUint32                mCacheMisses;

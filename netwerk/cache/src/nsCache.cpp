@@ -26,32 +26,20 @@
 #include "nsCache.h"
 #include "nsReadableUtils.h"
 
+
 /**
  * Cache Service Utility Functions
  */
 
-#if 0
-// time conversion utils from nsCachedNetData.cpp
-// Convert PRTime to unix-style time_t, i.e. seconds since the epoch
-PRUint32
-ConvertPRTimeToSeconds(PRTime time64)
-{
-    double fpTime;
-    LL_L2D(fpTime, time64);
-    return (PRUint32)(fpTime * 1e-6 + 0.5);
-}
+#if defined(PR_LOGGING)
+PRLogModuleInfo * gCacheLog = nsnull;
 
-
-// Convert unix-style time_t, i.e. seconds since the epoch, to PRTime
-PRTime
-ConvertSecondsToPRTime(PRUint32 seconds)
+void
+CacheLogInit()
 {
-    PRInt64 t64;
-    LL_I2L(t64, seconds);
-    PRInt64 mil;
-    LL_I2L(mil, 1000000);
-    LL_MUL(t64, t64, mil);
-    return t64;
+    if (gCacheLog) return;
+    gCacheLog = PR_NewLogModule("cache");
+    NS_ASSERTION(gCacheLog, "\n### failed to allocate cache log.\n");
 }
 #endif
 

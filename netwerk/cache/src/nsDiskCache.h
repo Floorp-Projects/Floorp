@@ -48,7 +48,7 @@ public:
     {
     }
     
-    PRUint32   HashNumber()
+    PRUint32   HashNumber() const
     {
         return mHashNumber;
     }
@@ -58,7 +58,7 @@ public:
         mHashNumber = hashNumber;
     }
 
-    PRUint32   EvictionRank()
+    PRUint32   EvictionRank() const
     {
         return mEvictionRank;
     }
@@ -68,7 +68,7 @@ public:
         mEvictionRank = rank;
     }
 
-    PRUint32   LocationSelector()
+    PRUint32   LocationSelector() const
     {
         return (PRUint32)(mLocation & eLocationSelectorMask) >> 22;
     }
@@ -79,7 +79,7 @@ public:
         mLocation |= (selector & eLocationSelectorMask) << 22;
     }
 
-    PRUint32   BlockCount()
+    PRUint32   BlockCount() const
     {
         return (PRUint32)((mLocation & eExtraBlocksMask) >> 20) + 1;
     }
@@ -92,7 +92,7 @@ public:
         mLocation |= (count & eExtraBlocksMask) << 20;
     }
 
-    PRUint32   BlockNumber()
+    PRUint32   BlockNumber() const
     {
         return (mLocation & eBlockNumberMask);
     }
@@ -103,7 +103,7 @@ public:
         mLocation |= blockNumber & eBlockNumberMask;
     }
 
-    PRUint16   FileGeneration()
+    PRUint16   FileGeneration() const
     {
         return (mLocation & eFileGenerationMask);
     }

@@ -23,6 +23,7 @@
 
 #include "nsCacheMetaData.h"
 #include "nsString.h"
+#include "nsICacheEntryDescriptor.h"
 
 
 /*
@@ -167,7 +168,7 @@ nsCacheMetaData::FlattenMetaData(char ** data, PRUint32 * size)
         *data = new char[*size];
         if (*data == nsnull) return NS_ERROR_OUT_OF_MEMORY;
         char* state = *data;
-        PL_DHashTableEnumerate(&table, AccumulateElements, &state);
+        PL_DHashTableEnumerate(&table, AccumulateElement, &state);
     }
 
     return NS_OK;
@@ -193,6 +194,15 @@ nsCacheMetaData::UnflattenMetaData(char * data, PRUint32 size)
     }
     return rv;
 }
+
+
+nsresult
+nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor * visitor)
+{
+    (void) PL_DHashTableEnumerate(&table, VisitElement, visitor);
+    return NS_OK;
+}
+
 
 /*
  *  hash table operation callback functions
@@ -231,7 +241,6 @@ nsCacheMetaData::MoveEntry(PLDHashTable * /* table */,
 				    const PLDHashEntryHdr *from,
 				    PLDHashEntryHdr       *to)
 {
-    to->keyHash = from->keyHash;
     ((nsCacheMetaDataHashTableEntry *)to)->key =
         ((nsCacheMetaDataHashTableEntry *)from)->key;
     ((nsCacheMetaDataHashTableEntry *)to)->value =
@@ -243,7 +252,6 @@ void PR_CALLBACK
 nsCacheMetaData::ClearEntry(PLDHashTable * /* table */,
                             PLDHashEntryHdr * hashEntry)
 {
-    ((nsCacheMetaDataHashTableEntry *)hashEntry)->keyHash  = 0;
     ((nsCacheMetaDataHashTableEntry *)hashEntry)->key      = 0;
     ((nsCacheMetaDataHashTableEntry *)hashEntry)->value    = 0;
 }
@@ -252,7 +260,7 @@ nsCacheMetaData::ClearEntry(PLDHashTable * /* table */,
 void PR_CALLBACK
 nsCacheMetaData::Finalize(PLDHashTable * table)
 {
-    (void) PL_DHashTableEnumerate(table, FreeElements, nsnull);   
+    (void) PL_DHashTableEnumerate(table, FreeElement, nsnull);   
 }
 
 
@@ -272,7 +280,7 @@ nsCacheMetaData::CalculateSize(PLDHashTable *table,
 }
 
 PLDHashOperator PR_CALLBACK
-nsCacheMetaData::AccumulateElements(PLDHashTable *table,
+nsCacheMetaData::AccumulateElement(PLDHashTable *table,
                                  PLDHashEntryHdr *hdr,
                                  PRUint32 number,
                                  void *arg)
@@ -289,7 +297,7 @@ nsCacheMetaData::AccumulateElements(PLDHashTable *table,
 }
 
 PLDHashOperator PR_CALLBACK
-nsCacheMetaData::FreeElements(PLDHashTable *table,
+nsCacheMetaData::FreeElement(PLDHashTable *table,
                               PLDHashEntryHdr *hdr,
                               PRUint32 number,
                               void *arg)
@@ -298,4 +306,22 @@ nsCacheMetaData::FreeElements(PLDHashTable *table,
     delete entry->key;
     delete entry->value;
     return PL_DHASH_NEXT;
+}
+
+
+PLDHashOperator PR_CALLBACK
+nsCacheMetaData::VisitElement(PLDHashTable *table,
+                              PLDHashEntryHdr *hdr,
+                              PRUint32 number,
+                              void *arg)
+{
+    nsCacheMetaDataHashTableEntry *entry   = (nsCacheMetaDataHashTableEntry *)hdr;
+    nsICacheMetaDataVisitor       *visitor = (nsICacheMetaDataVisitor *)arg;
+    const char * key   = entry->key   ? entry->key->get()   : nsnull;
+    const char * value = entry->value ? entry->value->get() : nsnull;
+    
+    PRBool keepGoing;
+    nsresult rv = visitor->VisitMetaDataElement(key, value, &keepGoing);
+
+    return NS_SUCCEEDED(rv) && keepGoing ? PL_DHASH_NEXT : PL_DHASH_STOP;
 }
