@@ -117,7 +117,7 @@ nsDOMEvent::operator new(size_t aSize)
   }
   
   if (result) {
-    nsCRT::zero(result, aSize);
+    memset(result, 0, aSize);
   }
 
   return result;

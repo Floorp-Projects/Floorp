@@ -398,7 +398,7 @@ static PRBool FillFontInfoFromCMAP(FMFont aFont, PRUint32 *aFontInfo, FourCharCo
 static PRUint16* InitGlobalCCMap()
 {
   PRUint32 info[2048];
-  nsCRT::zero(info, sizeof(info));
+  memset(info, 0, sizeof(info));
 
 #ifdef TRACK_INIT_PERFORMANCE
   AbsoluteTime startTime;

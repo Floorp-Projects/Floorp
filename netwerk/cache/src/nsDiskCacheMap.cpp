@@ -173,8 +173,8 @@ nsDiskCacheMap::Open(nsILocalFile *  cacheDirectory)
             mHeader.mEvictionRank[i] = 0;
         }
 
-        nsCRT::zero(mHeader.reserved, nsDiskCacheHeader::kReservedBytes);
-        nsCRT::zero(mBuckets, sizeof(nsDiskCacheBucket) * kBucketsPerTable);
+        memset(mHeader.reserved, 0, nsDiskCacheHeader::kReservedBytes);
+        memset(mBuckets, 0, sizeof(nsDiskCacheBucket) * kBucketsPerTable);
         
     } else if (mapSize == kCacheMapSize) {
         // read it in
