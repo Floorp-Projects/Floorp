@@ -79,33 +79,6 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::ContentChanged(nsIPresContext* aPresContext,
-                                   nsIContent*     aChild,
-                                   nsISupports*    aSubContent)
-{
-  NS_ASSERTION(mContent == aChild, "bad content-changed target");
-
-  // Forward the notification to the out of flow frame
-  if (nsnull != mOutOfFlowFrame) {
-    return mOutOfFlowFrame->ContentChanged(aPresContext, aChild, aSubContent);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPlaceholderFrame::AttributeChanged(nsIPresContext* aPresContext,
-                                     nsIContent* aChild,
-                                     nsIAtom* aAttribute,
-                                     PRInt32 aHint)
-{
-  // Forward the notification to the out of flow frame
-  if (nsnull != mOutOfFlowFrame) {
-    return mOutOfFlowFrame->AttributeChanged(aPresContext, aChild, aAttribute, aHint);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPlaceholderFrame::GetFrameType(nsIAtom** aType) const
 {
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
