@@ -51,4 +51,4 @@ REQUIRES = dbm seccmd
 
 PROGRAM = sdrtest
 
-USE_STATIC_LIBS = 1
+#USE_STATIC_LIBS = 1
