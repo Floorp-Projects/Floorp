@@ -96,6 +96,7 @@ function filepickerLoad() {
   // start out with a filename sort
   handleColumnClick("FilenameColumn");
 
+  document.documentElement.setAttribute("ondialogcancel", "onCancel");
   try {
     var buttonLabel = getOKAction();
     okButton.setAttribute("label", buttonLabel);
@@ -412,11 +413,11 @@ function getOKAction(file) {
   var buttonLabel;
 
   if (file && file.isDirectory() && filePickerMode != nsIFilePicker.modeGetFolder) {
-    doSetOKCancel(openOnOK, onCancel);
+    document.documentElement.setAttribute("ondialogaccept", "openOnOK");
     buttonLabel = gFilePickerBundle.getString("openButtonLabel");
   }
   else {
-    doSetOKCancel(selectOnOK, onCancel);
+    document.documentElement.setAttribute("ondialogaccept", "selectOnOK");
     switch(filePickerMode) {
     case nsIFilePicker.modeGetFolder:
       buttonLabel = gFilePickerBundle.getString("selectFolderButtonLabel");
