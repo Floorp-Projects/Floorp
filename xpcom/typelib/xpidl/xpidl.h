@@ -157,7 +157,7 @@ xpidl_write_comment(TreeState *state, int indent);
 /*
  * Functions for parsing and printing UUIDs.
  */
-#include "xpt_struct.h"
+#include <xpt_struct.h>
 
 /*
  * How large should the buffer supplied to xpidl_sprint_IID be?
