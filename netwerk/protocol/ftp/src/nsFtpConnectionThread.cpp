@@ -469,21 +469,26 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
     }
 
     char* buffer = (char*)nsMemory::Alloc(aCount + 1);
+    if (!buffer)
+        return NS_ERROR_OUT_OF_MEMORY;
     nsresult rv = aInStream->Read(buffer, aCount, &aCount);
     if (NS_FAILED(rv)) 
     {
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) nsFtpState - error reading %x\n", this, rv));
+        nsMemory::Free(buffer);
         return NS_ERROR_FAILURE;
     }
     buffer[aCount] = '\0';
-        
+    
+    nsXPIDLCString data;
+    data.Adopt(buffer);
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) reading %d bytes: \"%s\"", this, aCount, buffer));
 
     // Sometimes we can get two responses in the same packet, eg from LIST.
     // So we need to parse the response line by line
     nsCString lines(mControlReadCarryOverBuf);
-    lines.Append(buffer, aCount);
+    lines.Append(data, aCount);
     // Clear the carryover buf - if we still don't have a line, then it will
     // be reappended below
     mControlReadCarryOverBuf.Truncate();
