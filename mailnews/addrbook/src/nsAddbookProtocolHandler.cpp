@@ -128,11 +128,12 @@ nsAddbookProtocolHandler::GenerateXMLOutputChannel( nsString &aOutput,
   nsresult                  rv = NS_OK;
   nsIChannel                *channel;
   nsCOMPtr<nsIInputStream>  inStr;
+  NS_ConvertUCS2toUTF8 utf8String(aOutput.get());
 
-  rv = NS_NewStringInputStream(getter_AddRefs(inStr), aOutput);
+  rv = NS_NewCStringInputStream(getter_AddRefs(inStr), utf8String);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = NS_NewInputStreamChannel(&channel, aURI, inStr, "text/xml", aOutput.Length());
+  rv = NS_NewInputStreamChannel(&channel, aURI, inStr, "text/xml", utf8String.Length());
   NS_ENSURE_SUCCESS(rv, rv);
   
   *_retval = channel;
