@@ -40,13 +40,21 @@ enum
 	menu_File,
 	menu_Edit,
 	menu_Sample,
-	menu_Last = menu_Sample,
+	menu_Debug,
+	menu_Tools,
+	menu_Last = menu_Tools,
 
 	submenu_Print = 16,
 
 	cmd_Sample0			= 1000,
 	cmd_PrintOneColumn	= 2000,
-	cmd_Find			= 3000
+	cmd_Find			= 3000,
+	
+	cmd_DebugMode		= 4000,
+	cmd_DebugRobot,
+	cmd_JSConsole,
+	cmd_EditorMode,
+	cmd_Top100
 };
 
 
@@ -221,6 +229,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_Clear:		/*n.a.*/						break;
 				case cmd_SelectAll:	xpID = VIEWER_EDIT_SELECTALL;	break;
 				case cmd_Find:		xpID = VIEWER_EDIT_FINDINPAGE;	break;
+				case cmd_Preferences:	xpID = VIEWER_PREFS;		break;
 			}
 			break;
 
@@ -228,6 +237,23 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 			xpID = VIEWER_DEMO0 + menuItem - cmd_Sample0;
 			break;
 
+		case menu_Debug:
+			switch (menuItem)
+			{
+				case cmd_DebugMode:		xpID = VIEWER_VISUAL_DEBUGGING;	break;
+				case cmd_DebugRobot:	xpID = VIEWER_DEBUGROBOT;		break;
+			}
+			break;
+			
+		case menu_Tools:
+			switch (menuItem)
+			{
+				case cmd_JSConsole:		xpID = JS_CONSOLE;				break;
+				case cmd_EditorMode:	xpID = EDITOR_MODE;				break;
+				case cmd_Top100:		xpID = VIEWER_TOP100;			break;
+			}
+			break;
+			
 		case submenu_Print:
 			xpID = VIEWER_ONE_COLUMN + menuItem - cmd_PrintOneColumn;
 			break;
