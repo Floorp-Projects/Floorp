@@ -774,11 +774,13 @@ nsXBLContentSink::ConstructProperty(const PRUnichar **aAtts)
     }
   }
 
-  // All of our pointers are now filled in. Construct our property with all of
-  // these parameters.
-  mProperty = new nsXBLProtoImplProperty(name, onget, onset, readonly);
-  if (mProperty) {
-    AddMember(mProperty);
+  if (name) {
+    // All of our pointers are now filled in. Construct our property with all of
+    // these parameters.
+    mProperty = new nsXBLProtoImplProperty(name, onget, onset, readonly);
+    if (mProperty) {
+      AddMember(mProperty);
+    }
   }
 }
 
