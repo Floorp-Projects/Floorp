@@ -32,3 +32,6 @@ ecma_3/Date/15.9.5.7.js
 js1_4/Eval/eval-001.js
 js1_4/Eval/eval-002.js
 js1_4/Eval/eval-003.js
+#Rhino doesn't implement the toSource() method
+js1_5\Regress\regress-44009.js
+
