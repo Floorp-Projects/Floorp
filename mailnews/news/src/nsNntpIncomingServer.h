@@ -36,6 +36,8 @@
 #include "nsEnumeratorUtils.h" 
 #include "nsIMsgWindow.h"
 #include "nsISubscribableServer.h"
+#include "nsMsgLineBuffer.h"
+#include "nsVoidArray.h"
 
 class nsINntpUrl;
 class nsIMsgMailNewsUrl;
@@ -44,7 +46,8 @@ class nsIMsgMailNewsUrl;
 class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer,
 			     public nsIUrlListener,
-			     public nsISubscribableServer
+			     public nsISubscribableServer,
+				 public nsMsgLineBuffer
 							 
 {
 public:
@@ -60,14 +63,21 @@ public:
     NS_IMETHOD CloseCachedConnections();
 	NS_IMETHOD PerformBiff();
     NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
+
+	// for nsMsgLineBuffer
+	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
+
 protected:
-  nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,
+	nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,
                                              nsIMsgWindow *window);
     PRBool ConnectionTimeOut(nsINNTPProtocol* aNntpConnection);
     nsCOMPtr<nsISupportsArray> m_connectionCache;
 	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
+	nsByteArray		mHostInfoInputStream;	
 
 private:
+	nsCStringArray mGroupsOnServer;
+	PRBool   mHasSeenBeginGroups;
 	nsresult WriteHostInfoFile();
 	nsresult LoadHostInfoFile();
 	nsresult PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsgWindow);
@@ -77,6 +87,7 @@ private:
 	PRBool mHostInfoLoaded;
 	PRBool mHostInfoHasChanged;
 	nsCOMPtr <nsISubscribableServer> mInner;
+	nsCOMPtr <nsIFileSpec> mHostInfoFile;
 };
 
 #endif

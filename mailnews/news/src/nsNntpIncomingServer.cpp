@@ -40,6 +40,7 @@
 
 #define NEW_NEWS_DIR_NAME        "News"
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
+#define HOSTINFO_FILE_NAME		 "hostinfo.dat"
 
 // this platform specific junk is so the newsrc filenames we create 
 // will resemble the migrated newsrc filenames.
@@ -50,6 +51,11 @@
 #define NEWSRC_FILE_PREFIX ""
 #define NEWSRC_FILE_SUFFIX ".rc"
 #endif /* XP_UNIX || XP_BEOS */
+
+// ###tw  This really ought to be the most
+// efficient file reading size for the current
+// operating system.
+#define HOSTINFO_FILE_BUFFER_SIZE 1024
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);                            
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
@@ -67,7 +73,7 @@ NS_INTERFACE_MAP_BEGIN(nsNntpIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsISubscribableServer)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
-nsNntpIncomingServer::nsNntpIncomingServer()
+nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
 {    
   NS_INIT_REFCNT();
 
@@ -675,11 +681,63 @@ nsNntpIncomingServer::WriteHostInfoFile()
 nsresult
 nsNntpIncomingServer::LoadHostInfoFile()
 {
+	nsresult rv;
+	
+	rv = GetLocalPath(getter_AddRefs(mHostInfoFile));
+	if (NS_FAILED(rv)) return rv;
+	if (!mHostInfoFile) return NS_ERROR_FAILURE;
+
+	rv = mHostInfoFile->AppendRelativeUnixPath(HOSTINFO_FILE_NAME);
+	if (NS_FAILED(rv)) return rv;
+
+	PRBool exists;
+	rv = mHostInfoFile->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+
+	// it is ok if the hostinfo.dat file does not exist.
+	if (!exists) return NS_OK;
+
+	nsInputFileStream hostinfoStream(mHostInfoFile); 
+
+    PRInt32 numread = 0;
+
+    if (NS_FAILED(mHostInfoInputStream.GrowBuffer(HOSTINFO_FILE_BUFFER_SIZE))) {
+    	return NS_ERROR_FAILURE;
+    }
+	
+	mHasSeenBeginGroups = PR_FALSE;
+
+    while (1) {
+    	numread = hostinfoStream.read(mHostInfoInputStream.GetBuffer(), HOSTINFO_FILE_BUFFER_SIZE);
+        if (numread == 0) {
+      		break;
+    	}
+    	else {
+      		rv = BufferInput(mHostInfoInputStream.GetBuffer(), numread);
+      		if (NS_FAILED(rv)) {
+        		break;
+      		}
+    	}
+  	}
+
+  	hostinfoStream.close();
 #ifdef DEBUG_sspitzer
 	printf("LoadHostInfoFile()\n");
 #endif
   	mHostInfoLoaded = PR_TRUE;
 	return NS_OK;
+}
+
+PRBool
+addGroup(nsCString &aElement, void *aData)
+{
+	nsresult rv;
+	nsNntpIncomingServer *server;
+	server = (nsNntpIncomingServer *)aData;
+	
+	rv = server->AddNewsgroupToSubscribeDS((const char *)aElement);
+	NS_ASSERTION(NS_SUCCEEDED(rv),"AddNewsgroupToSubscribeDS failed");
+	return PR_TRUE;
 }
 
 nsresult
@@ -689,14 +747,8 @@ nsNntpIncomingServer::PopulateSubscribeDatasourceFromHostInfo(nsIMsgWindow *aMsg
 #ifdef DEBUG_sspitzer
 	printf("PopulateSubscribeDatasourceFromHostInfo()\n");
 #endif
-	rv = AddNewsgroupToSubscribeDS("a.b.d");
-	if (NS_FAILED(rv)) return rv;
-	rv = AddNewsgroupToSubscribeDS("a.b.e");
-	if (NS_FAILED(rv)) return rv;
-	rv = AddNewsgroupToSubscribeDS("a.b.f");
-	if (NS_FAILED(rv)) return rv;
-	rv = AddNewsgroupToSubscribeDS("a.c");
-	if (NS_FAILED(rv)) return rv;
+
+	mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)addGroup, (void *)this);
 
 	rv = StopPopulatingSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
@@ -716,15 +768,11 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
   if (NS_FAILED(rv)) return rv;
   if (!nntpService) return NS_ERROR_FAILURE; 
 
-#ifdef DEBUG_sspitzer_
   if (!mHostInfoLoaded) {
 	// will set mHostInfoLoaded, if we were able to load the hostinfo.dat file
 	rv = LoadHostInfoFile();	
   	if (NS_FAILED(rv)) return rv;
   }
-#else
-  mHostInfoLoaded = PR_FALSE;
-#endif
 
   if (mHostInfoLoaded) {
 	rv = PopulateSubscribeDatasourceFromHostInfo(aMsgWindow);
@@ -904,4 +952,34 @@ nsNntpIncomingServer::Unsubscribe(const char *aName)
     rv = SetNewsrcHasChanged(PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
 	return NS_OK;
+}
+
+PRInt32
+nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
+{
+	NS_ASSERTION(line, "line is null");
+	if (!line) return 0;
+
+	line[line_size] = 0;
+#ifdef DEBUG_sspitzer_
+	printf("%s",line);
+#endif
+
+	if (mHasSeenBeginGroups) {
+		char *commaPos = PL_strchr(line,',');
+		if (commaPos) *commaPos = 0;
+#ifdef DEBUG_sspitzer
+		printf("%s\n",line);
+#endif
+		nsCString str(line);
+		mGroupsOnServer.AppendCString(str);
+	}
+	else {
+		if (nsCRT::strncmp(line,"begingroups", 11) == 0) {
+			mGroupsOnServer.Clear();
+			mHasSeenBeginGroups = PR_TRUE;
+		}
+	}
+
+	return 0;
 }
