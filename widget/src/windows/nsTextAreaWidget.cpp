@@ -22,7 +22,7 @@
 #include "nsString.h"
 #include <windows.h>
 
-NS_IMPL_ADDREF(nsTextAreaWidget)
+/*NS_IMPL_ADDREF(nsTextAreaWidget)
 //NS_IMPL_RELEASE(nsTextAreaWidget)
 nsrefcnt nsTextAreaWidget::Release(void)                         
 {             
@@ -32,18 +32,10 @@ nsrefcnt nsTextAreaWidget::Release(void)
     return 0;                                          
   }                                                    
   return mRefCnt;                                      
-}
+}*/
 
-
-//-------------------------------------------------------------------------
-void nsTextAreaWidget::SetUpForPaint(HDC aHDC) 
-{
-  NS_INIT_REFCNT();
-  ::SetBkColor (aHDC, NSRGB_2_COLOREF(mBackground));
-  ::SetTextColor(aHDC, NSRGB_2_COLOREF(mForeground));
-  //::SetBkMode (aHDC, TRANSPARENT); // don't do this
-}
-
+NS_IMPL_ADDREF(nsTextAreaWidget)
+NS_IMPL_RELEASE(nsTextAreaWidget)
 
 //-------------------------------------------------------------------------
 //
@@ -52,6 +44,7 @@ void nsTextAreaWidget::SetUpForPaint(HDC aHDC)
 //-------------------------------------------------------------------------
 nsTextAreaWidget::nsTextAreaWidget()
 {
+  NS_INIT_REFCNT();
   nsTextHelper::mBackground = NS_RGB(124, 124, 124);
 }
 
@@ -64,6 +57,13 @@ nsTextAreaWidget::~nsTextAreaWidget()
 {
 }
 
+//-------------------------------------------------------------------------
+void nsTextAreaWidget::SetUpForPaint(HDC aHDC) 
+{
+  ::SetBkColor (aHDC, NSRGB_2_COLOREF(mBackground));
+  ::SetTextColor(aHDC, NSRGB_2_COLOREF(mForeground));
+  //::SetBkMode (aHDC, TRANSPARENT); // don't do this
+}
 
 //-------------------------------------------------------------------------
 //
