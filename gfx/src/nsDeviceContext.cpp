@@ -20,9 +20,16 @@
 #include "nsIFontCache.h"
 #include "nsIView.h"
 #include "nsGfxCIID.h"
+#include "nsImageNet.h"
+#include "nsImageRequest.h"
+#include "nsIImageGroup.h"
+#include "il_util.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+NS_IMPL_QUERY_INTERFACE(DeviceContextImpl, kDeviceContextIID)
+NS_IMPL_ADDREF(DeviceContextImpl)
+NS_IMPL_RELEASE(DeviceContextImpl)
 
 DeviceContextImpl :: DeviceContextImpl()
 {
@@ -33,6 +40,11 @@ DeviceContextImpl :: DeviceContextImpl()
   mGammaValue = 1.0f;
   mGammaTable = new PRUint8[256];
   mZoom = 1.0f;
+  mWidget = nsnull;
+  mIconImageGroup = nsnull;
+  for (PRInt32 i = 0; i < NS_NUMBER_OF_ICONS; i++) {
+    mIcons[i] = nsnull;
+  }
 }
 
 DeviceContextImpl :: ~DeviceContextImpl()
@@ -44,11 +56,13 @@ DeviceContextImpl :: ~DeviceContextImpl()
     delete mGammaTable;
     mGammaTable = nsnull;
   }
-}
 
-NS_IMPL_QUERY_INTERFACE(DeviceContextImpl, kDeviceContextIID)
-NS_IMPL_ADDREF(DeviceContextImpl)
-NS_IMPL_RELEASE(DeviceContextImpl)
+  IL_DestroyGroupContext(mIconImageGroup);
+
+  for (PRInt32 i = 0; i < NS_NUMBER_OF_ICONS; i++) {
+    NS_IF_RELEASE(mIcons[i]);
+  }
+}
 
 nsresult DeviceContextImpl :: Init(nsNativeWidget aWidget)
 {
@@ -201,5 +215,113 @@ void DeviceContextImpl :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, f
 nsNativeWidget DeviceContextImpl :: GetNativeWidget(void)
 {
   return mWidget;
+}
+
+nsresult DeviceContextImpl::CreateImageGroupContext(nsIRenderingContext& aContext)
+{
+  ilIImageRenderer* renderer;
+  nsresult          result;
+   
+  // Create an image renderer
+  result = NS_NewImageRenderer(&renderer);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  // Create an image group context. The image renderer code expects the
+  // display_context to be a pointer to a nsIRenderingContext
+  mIconImageGroup = IL_NewGroupContext((void*)(nsIRenderingContext*)&aContext,
+                                       renderer);
+  if (nsnull == mIconImageGroup) {
+    NS_RELEASE(renderer);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Initialize the image group context.
+  // XXX Hard coded tp 24-bits.
+  IL_RGBBits     colorRGBBits;
+  IL_ColorSpace* colorSpace;
+
+  colorRGBBits.red_shift = 16;  
+  colorRGBBits.red_bits = 8;
+  colorRGBBits.green_shift = 8;
+  colorRGBBits.green_bits = 8; 
+  colorRGBBits.blue_shift = 0; 
+  colorRGBBits.blue_bits = 8;  
+  colorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
+  if (nsnull == colorSpace) {
+    NS_RELEASE(renderer);
+    IL_DestroyGroupContext(mIconImageGroup);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // This is all synchronous, so don't waste time with progressive display
+  IL_DisplayData displayData;
+  displayData.dither_mode = IL_Auto;
+  displayData.color_space = colorSpace;
+  displayData.progressive_display = PR_FALSE;
+  IL_SetDisplayMode(mIconImageGroup, IL_COLOR_SPACE | IL_DITHER_MODE, &displayData);
+  IL_ReleaseColorSpace(colorSpace);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP DeviceContextImpl::LoadIconImage(nsIRenderingContext& aContext,
+                                               PRInt32              aId,
+                                               nsIImage*&           aImage)
+{
+  nsresult  result;
+
+  // Initialize out parameter
+  aImage = nsnull;
+
+  // Make sure the icon number is valid
+  if ((aId < 0) || (aId >= NS_NUMBER_OF_ICONS)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  // See if the icon is already loaded
+  if (nsnull != mIcons[aId]) {
+    aImage = mIcons[aId]->GetImage();
+    return NS_OK;
+  }
+
+  // Make sure we have an image group context
+  if (nsnull == mIconImageGroup) {
+    result = CreateImageGroupContext(aContext);
+    if (NS_FAILED(result)) {
+      return result;
+    }
+  }
+
+  // Build the URL string
+  char  url[128];
+  sprintf(url, "resource://res/gfx/icon_%d.gif", aId);
+
+  // Use a sync net context
+  ilINetContext* netContext;
+  result = NS_NewImageNetContextSync(&netContext);
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  // Create an image request object which will do the actual load
+  ImageRequestImpl* imageReq = new ImageRequestImpl();
+  if (nsnull == imageReq) {
+    result = NS_ERROR_OUT_OF_MEMORY;
+
+  } else {
+    // Load the image
+    result = imageReq->Init(mIconImageGroup, url, nsnull, nsnull, 0, 0,
+                            nsImageLoadFlags_kHighPriority, netContext);
+    aImage = imageReq->GetImage();
+
+    // Keep the image request object around and avoid reloading the image
+    NS_ADDREF(imageReq);
+    mIcons[aId] = imageReq;
+  }
+  
+  netContext->Release();
+  return result;
 }
 

@@ -28,3 +28,6 @@ extern "C" NS_GFX_(nsresult) NS_NewImageURL(ilIURL **aInstancePtrResult,  const 
 extern "C" NS_GFX_(nsresult) NS_NewImageRenderer(ilIImageRenderer  **aInstancePtrResult);
 
 extern "C" NS_GFX_(nsresult) NS_NewImageSystemServices(ilISystemServices **aInstancePtrResult);
+
+// Internal net context used for synchronously loading icons
+nsresult  NS_NewImageNetContextSync(ilINetContext** aInstancePtrResult);

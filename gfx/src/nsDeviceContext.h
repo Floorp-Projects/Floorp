@@ -20,6 +20,8 @@
 #define nsDeviceContext_h___
 
 #include "nsIDeviceContext.h"
+#include "libimg.h"
+class nsIImageRequest;
 
 class DeviceContextImpl : public nsIDeviceContext
 {
@@ -57,11 +59,16 @@ public:
 
   virtual nsNativeWidget GetNativeWidget(void);
 
+  NS_IMETHOD LoadIconImage(nsIRenderingContext& aContext,
+                           PRInt32              aId,
+                           nsIImage*&           aImage);
+
 protected:
   virtual ~DeviceContextImpl();
 
   nsresult CreateFontCache();
   void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
+  nsresult CreateImageGroupContext(nsIRenderingContext& aContext);
 
   float             mTwipsToPixels;
   float             mPixelsToTwips;
@@ -72,6 +79,8 @@ protected:
   float             mGammaValue;
   PRUint8           *mGammaTable;
   nsNativeWidget    mWidget;
+  IL_GroupContext*  mIconImageGroup;
+  nsIImageRequest*  mIcons[NS_NUMBER_OF_ICONS];
 };
 
 #endif /* nsDeviceContext_h___ */

@@ -210,11 +210,15 @@ ImageGroupImpl::GetImage(const char* aUrl,
   
   ImageRequestImpl *image_req = new ImageRequestImpl();
   if (image_req != nsnull) {
-    if (image_req->Init(mGroupContext, aUrl, aObserver, aBackgroundColor,
-                        aWidth, aHeight, aFlags) == NS_OK) {
+    ilINetContext* net_cx;
+
+    // Create an async net context, and ask the image request object
+    // to get the image
+    if (NS_SUCCEEDED(NS_NewImageNetContext(&net_cx)) &&
+        NS_SUCCEEDED(image_req->Init(mGroupContext, aUrl, aObserver, aBackgroundColor,
+                                     aWidth, aHeight, aFlags, net_cx))) {
       NS_ADDREF(image_req);
-    }
-    else {
+    } else {
       delete image_req;
       image_req = nsnull;
     }
