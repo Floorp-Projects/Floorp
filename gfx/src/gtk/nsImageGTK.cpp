@@ -35,6 +35,7 @@
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 #define NS_SET_BIT(rowptr, x) (rowptr[(x)>>3] |= (1<<(7-(x)&0x7)))
+#define NS_CLEAR_BIT(rowptr, x) (rowptr[(x)>>3] &= ~(1<<(7-(x)&0x7)))
 
 // Defining this will trace the allocation of images.  This includes
 // ctor, dtor and update.
@@ -344,6 +345,7 @@ void nsImageGTK::UpdateCachedImage()
             NS_SET_BIT(mask,x);
             break;
           case 0:
+            NS_CLEAR_BIT(mask,x);
             if (mAlphaDepth != 8)
               mAlphaDepth=1;
             break;
