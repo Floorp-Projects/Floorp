@@ -516,6 +516,8 @@ pk11_HandleTrustObject(PK11SlotInfo *slot, CERTCertificate *cert, CERTCertTrust 
 
   /* There's certainly a lot more logic that can go here.. */
 
+  PORT_FreeArena(arena, PR_FALSE);
+
   return PR_TRUE;
 }
 
