@@ -2800,7 +2800,6 @@ nsBrowserStatusHandler.prototype =
     this.statusMeter     = document.getElementById("statusbar-icon");
     this.stopCommand     = document.getElementById("Browser:Stop");
     this.statusTextField = document.getElementById("statusbar-display");
-    this.isImage         = document.getElementById("isImage");
     this.securityButton  = document.getElementById("security-button");
 
     // Initialize the security button's state and tooltip text
@@ -2816,7 +2815,6 @@ nsBrowserStatusHandler.prototype =
     this.statusMeter     = null;
     this.stopCommand     = null;
     this.statusTextField = null;
-    this.isImage         = null;
     this.securityButton  = null;
     this.userTyped       = null;
   },
@@ -2895,7 +2893,6 @@ nsBrowserStatusHandler.prototype =
   {  
     const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
     const nsIChannel = Components.interfaces.nsIChannel;
-    var ctype;
     if (aStateFlags & nsIWebProgressListener.STATE_START) {
         // This (thanks to the filter) is a network start or the first
         // stray request (the first request outside of the document load),
@@ -2964,16 +2961,6 @@ nsBrowserStatusHandler.prototype =
           }
           this.status = "";
           this.setDefaultStatus(msg);
-          if (channel) {
-            try {
-              ctype = channel.contentType;
-              if (this.mimeTypeIsTextBased(ctype))
-                this.isImage.removeAttribute('disabled');
-              else
-                this.isImage.setAttribute('disabled', 'true');
-            }
-            catch (e) {}
-          }
         }
 
         // Turn the progress meter and throbber off.
@@ -2983,8 +2970,6 @@ nsBrowserStatusHandler.prototype =
         if (this.throbberElement)
           this.throbberElement.removeAttribute("busy");
 
-        // XXX: These need to be based on window activity...
-        // XXXjag: <command id="cmd_stop"/> ?
         this.stopCommand.setAttribute("disabled", "true");
     }
   },
@@ -3000,12 +2985,6 @@ nsBrowserStatusHandler.prototype =
       if (location == "about:blank")
         location = "";
     }
-
-    // Disable menu entries for images, enable otherwise
-    if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
-      this.isImage.removeAttribute('disabled');
-    else
-      this.isImage.setAttribute('disabled', 'true');
 
     // We should probably not do this if the value has changed since the user
     // searched
