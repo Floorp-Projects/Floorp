@@ -30,6 +30,7 @@ MODULE = xpcom_threads
 EXPORTS =                      \
         nsAutoLock.h           \
         plevent.h              \
+        nsProcess.h              \
         $(NULL)			
 
 NO_XPT_GEN=1
@@ -41,6 +42,7 @@ XPIDLSRCS =                        \
         .\nsIThread.idl            \
         .\nsIThreadPool.idl        \
         .\nsIRunnable.idl          \
+        .\nsIProcess.idl           \
         $(NULL)
 
 ################################################################################
@@ -63,6 +65,7 @@ CPP_OBJS =                                  \
         .\$(OBJDIR)\nsEventQueue.obj        \
         .\$(OBJDIR)\nsEventQueueService.obj \
         .\$(OBJDIR)\nsThread.obj            \
+        .\$(OBJDIR)\nsProcessCommon.obj     \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
