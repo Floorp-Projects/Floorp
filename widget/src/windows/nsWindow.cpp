@@ -1706,6 +1706,7 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
+//XXX Scroll is obsolete and should go away soon
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   RECT  trect;
@@ -1721,6 +1722,32 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   ::ScrollWindowEx(mWnd, aDx, aDy, (nsnull != aClipRect) ? &trect : NULL, NULL,
                    NULL, NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
   ::UpdateWindow(mWnd);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
+{
+    // Scroll the entire contents of the window + change the offset of any child windows
+  ::ScrollWindowEx(mWnd, aDx, aDy, NULL, NULL, NULL, 
+     NULL, SW_INVALIDATE | SW_SCROLLCHILDREN);
+  ::UpdateWindow(mWnd); // Force synchronous generation of NS_PAINT
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy)
+{
+  RECT  trect;
+
+  trect.left = aRect.x;
+  trect.top = aRect.y;
+  trect.right = aRect.XMost();
+  trect.bottom = aRect.YMost();
+
+    // Scroll the bits in the window defined by trect. 
+    // Child windows are not scrolled.
+  ::ScrollWindowEx(mWnd, aDx, aDy, &trect, NULL, NULL, 
+    NULL, SW_INVALIDATE);
+  ::UpdateWindow(mWnd); // Force synchronous generation of NS_PAINT
   return NS_OK;
 }
 

@@ -125,7 +125,10 @@ public:
     virtual void*           GetNativeData(PRUint32 aDataType);
     virtual void            FreeNativeData(void * data, PRUint32 aDataType);//~~~
     NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
+     //XXX-Scroll is obsolete it is going away soon
     NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+    NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
+    NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
     NS_IMETHOD              SetTitle(const nsString& aTitle); 
     NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar); 
     NS_IMETHOD              ShowMenuBar(PRBool aShow);

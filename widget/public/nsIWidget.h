@@ -555,7 +555,8 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap) = 0;
 
     /**
-     * Scroll this widget.
+     * XXX (This is obsolete and will be removed soon, Use ScrollWidgets instead)
+     * Scroll this widget. 
      *
      * @param aDx amount to scroll along the x-axis
      * @param aDy amount to scroll along the y-axis.
@@ -566,11 +567,24 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) = 0;
 
     /**
-     * Scroll an area of this widget.
+     * Scroll the contents of the widget. 
+     * All child widgets are also scrolled by offsetting their coordinates.
+     * A NS_PAINT message is synchronously dispatched for the newly exposed rectangle.
      *
-     * @param aRect source rectangle to scroll in the widget
-     * @param aDx x offset from the source
-     * @param aDy y offset from the source
+     * @param aDx amount to scroll along the x-axis in pixels
+     * @param aDy amount to scroll along the y-axis in pixels
+     *
+     */
+
+    NS_IMETHOD ScrollWidgets(PRInt32 aDx, PRInt32 aDy) = 0;
+
+    /**
+     * Scroll an area of this widget. Child widgets are not scrolled.
+     * A NS_PAINT message is synchronously dispatched for the newly exposed rectangle.
+     *
+     * @param aRect source rectangle to scroll in the widget in pixels
+     * @param aDx x offset from the source in pixels
+     * @param aDy y offset from the source in pixels
      *
      */
 
