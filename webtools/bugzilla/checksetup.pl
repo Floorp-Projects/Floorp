@@ -1672,6 +1672,7 @@ $table{bugs_activity} =
     removed tinytext,
 
     index (bug_id),
+    index (who),
     index (bug_when),
     index (fieldid)';
 
@@ -1690,6 +1691,7 @@ $table{attachments} =
     isprivate tinyint not null default 0,
 
     index(bug_id),
+    index(submitter_id),
     index(creation_ts)';
 
 # September 2002 myk@mozilla.org: Tables to support status flags,
@@ -4730,6 +4732,16 @@ if ($emptygroupid) {
 if (($fielddef = GetFieldDef("bugs", "delta_ts")) &&
     $fielddef->[1] =~ /^timestamp/) {
     ChangeFieldType ('bugs', 'delta_ts', 'DATETIME NOT NULL');
+}
+
+# 2005-02-12 bugreport@peshkin.net, bug 281787
+if (!defined GetIndexDef('attachments','submitter_id')) {
+    print "Adding index for submitter_id column in attachments table...\n";
+    $dbh->do('ALTER TABLE attachments ADD INDEX (submitter_id)');
+}
+if (!defined GetIndexDef('bugs_activity','who')) {
+    print "Adding index for who column in bugs_activity table...\n";
+    $dbh->do('ALTER TABLE bugs_activity ADD INDEX (who)');
 }
 
 #
