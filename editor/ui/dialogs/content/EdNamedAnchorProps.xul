@@ -45,11 +45,10 @@
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="dialogKeys"/>
-  <popupset id="aTooltipSet" />
 
   <label control="nameInput" value="&anchorNameEditField.label;"/>
   <textbox class="MinWidth20em" id="nameInput" oninput="ChangeName()" 
-             tooltip="aTooltip" tooltiptext="&nameInput.tooltip;"/>
+             tooltiptext="&nameInput.tooltip;"/>
   <spacer class="spacer"/>
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>

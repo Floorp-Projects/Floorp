@@ -43,7 +43,6 @@
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="dialogKeys"/>
-  <popupset id="aTooltipSet" />
   
   <label value ="&conflictWarning.label;"/>
   <spacer class="bigspacer"/>

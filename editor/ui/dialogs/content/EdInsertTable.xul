@@ -47,7 +47,6 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
-  <popupset id="aTooltipSet" />
   <groupbox><caption label="&size.label;"/>
     <grid>
       <columns>
@@ -79,7 +78,7 @@
   <spacer class="spacer"/>
   <hbox align="center">
     <label class="align-right" value="&borderEditField.label;"
-        tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;" />
+        tooltiptext="&borderEditField.tooltip;" />
     <textbox class="narrow" id="borderInput" oninput="forceInteger(this.id)" />
     <label value="&pixels.label;"/>  
   </hbox>
