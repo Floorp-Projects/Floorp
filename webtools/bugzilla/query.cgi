@@ -264,6 +264,7 @@ if (defined $::COOKIE{"Bugzilla_login"}) {
 }
 print "<a href=changepassword.cgi>Change your password.</a><br>\n";
 print "<a href=\"enter_bug.cgi\">Create a new bug.</a><br>\n";
+print "<a href=\"enter_bug.cgi\">Bug reports</a><br>\n";
 
 
 

@@ -9,8 +9,7 @@ query the CVS tree.  For example,
 
 will tell you what has been changed in the last week.
 
-
-
+10/17/98 modified README installation instructions slightly. 
 
 10/7/98 Added a new table called "products".  Right now, this is used
 only to have a description for each product, and that description is

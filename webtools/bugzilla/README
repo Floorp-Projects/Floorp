@@ -53,17 +53,20 @@ You have a freedom of choice here - Apache, Netscape or any other
 server on UNIX would do. The only thing - to make configuration easier
 you'd better run HTTP daemon on the same machine that you run MySQL
 server on. Make sure that you can access 'bugs' database with user
-id you're running the daemon with.
+id you're running the daemon with. 
+
+globals.pl:     $::db = Mysql->Connect("localhost", "bugs", "nobody", "")
+
+In globals.pl, the database connect call uses a mysql account
+name "bugs" (third argument to Mysql->Connect) to access the 
+bugs database. You may have to hack the code to use "nobody" 
+or whatever your HTTP server is running as.
 
 
 2. TWEAKING THE TOOLS
 
-   Now you should have all necessary tools to be able to run Bugzilla
-and see why the wouldn't work for you right now. 
-
-   First of all you have to change "#!/usr/bonsaitools" to wherever
-you've installed your binaries in all executable scripts in Bugzilla
-directories.
+  All scripts look in /usr/bonsaitools/bin for perl. Make 
+the appropriate links or modify the paths in each script.
 
    Make sure the directory containing the binaries is writable by the 
 web server.  Bugzilla keeps some temporary files here.
