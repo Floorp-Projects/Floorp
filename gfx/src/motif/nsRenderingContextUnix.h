@@ -30,7 +30,6 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsIFontCache.h"
 #include "nsImageUnix.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
@@ -150,7 +149,6 @@ protected:
   nsDrawingSurfaceUnix   *mFrontBuffer;
   nsIDeviceContext       *mContext;
   nsIFontMetrics         *mFontMetrics;
-  nsIFontCache           *mFontCache;
   Region                 mRegion;
   Font                   mCurrFontHandle;
   XChar2b*               mDrawStringBuf;

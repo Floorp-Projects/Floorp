@@ -24,6 +24,7 @@
 
 class nsIImageRequest;
 class nsHashtable;
+class nsFontCache;
 
 class DeviceContextImpl : public nsIDeviceContext
 {
@@ -45,9 +46,6 @@ public:
 
   NS_IMETHOD  GetAppUnitsToDevUnits(float &aAppUnits) const;
   NS_IMETHOD  GetDevUnitsToAppUnits(float &aDevUnits) const;
-
-  NS_IMETHOD  GetFontCache(nsIFontCache *&aCache);
-  NS_IMETHOD  FlushFontCache();
 
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
 
@@ -89,7 +87,7 @@ protected:
   float             mPixelsToTwips;
   float             mAppUnitsToDevUnits;
   float             mDevUnitsToAppUnits;
-  nsIFontCache      *mFontCache;
+  nsFontCache       *mFontCache;
   float             mZoom;
   float             mGammaValue;
   PRUint8           *mGammaTable;

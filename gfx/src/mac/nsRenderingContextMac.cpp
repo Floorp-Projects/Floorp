@@ -95,7 +95,6 @@ nsRenderingContextMac :: nsRenderingContextMac()
 {
   NS_INIT_REFCNT();
 
-  mFontCache = nsnull ;
   mFontMetrics = nsnull ;
   mContext = nsnull ;
   mRenderingSurface = nsnull ;        
@@ -145,7 +144,6 @@ nsRenderingContextMac :: ~nsRenderingContextMac()
   	}
 
   NS_IF_RELEASE(mFontMetrics);
-  NS_IF_RELEASE(mFontCache);
   NS_IF_RELEASE(mContext);
 
 }
@@ -205,7 +203,6 @@ nsresult nsRenderingContextMac :: CommonInit()
 	((nsDeviceContextMac *)mContext)->SetDrawingSurface(mRenderingSurface);
   //((nsDeviceContextMac *)mContext)->InstallColormap();
 
-  mContext->GetFontCache(mFontCache);
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
@@ -518,8 +515,8 @@ nscolor nsRenderingContextMac :: GetColor() const
 void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 {
 	NS_IF_RELEASE(mFontMetrics);
-	if (mFontCache)
-		mFontCache->GetMetricsFor(aFont, mFontMetrics);
+	if (mContext)
+		mContext->GetMetricsFor(aFont, mFontMetrics);
 
 	if (mFontMetrics)
 		nsFontMetricsMac::SetFont(aFont, mContext);

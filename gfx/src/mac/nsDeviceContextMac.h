@@ -21,7 +21,6 @@
 
 #include "nsDeviceContext.h"
 #include "nsUnitConversion.h"
-#include "nsIFontCache.h"
 #include "nsIWidget.h"
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
@@ -51,9 +50,7 @@ public:
 
 protected:
   virtual ~nsDeviceContextMac();
-  nsresult CreateFontCache();
 
-  nsIFontCache      		*mFontCache;
   nsDrawingSurface 			mSurface ;
   PRUint32 							mDepth;
 

@@ -18,8 +18,8 @@ nsIImageGroup.h
 nsIImageRequest.h
 nsIImageObserver.h
 nsIDeviceContext.h
-nsIFontCache.h
 nsIImage.h
 nsIBlender.h
 nsGfxCIID.h
 nsIRegion.h
+nsDeviceContext.h

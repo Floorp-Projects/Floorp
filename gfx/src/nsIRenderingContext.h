@@ -29,7 +29,6 @@ class nsIFontMetrics;
 class nsIImage;
 class nsTransform2D;
 class nsString;
-class nsIFontCache;
 class nsIDeviceContext;
 class nsIRegion;
 

@@ -17,7 +17,6 @@
  */
 
 #include "nsDeviceContext.h"
-#include "nsIFontCache.h"
 #include "nsFont.h"
 #include "nsIView.h"
 #include "nsGfxCIID.h"
@@ -25,6 +24,26 @@
 #include "nsImageRequest.h"
 #include "nsIImageGroup.h"
 #include "il_util.h"
+#include "nsVoidArray.h"
+#include "nsIFontMetrics.h"
+
+class nsFontCache
+{
+public:
+  nsFontCache();
+  ~nsFontCache();
+
+  nsresult Init(nsIDeviceContext* aContext);
+  nsresult GetDeviceContext(nsIDeviceContext *&aContext) const;
+  nsresult GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMetrics);
+  nsresult Flush();
+
+protected:
+  nsVoidArray       mFontMetrics;
+  nsIDeviceContext  *mContext;      //we do not addref this since
+                                    //ownership is implied. MMP.
+};
+
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
@@ -59,7 +78,11 @@ static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
 
 DeviceContextImpl :: ~DeviceContextImpl()
 {
-  NS_IF_RELEASE(mFontCache);
+  if (nsnull != mFontCache)
+  {
+    delete mFontCache;
+    mFontCache = nsnull;
+  }
 
   if (nsnull != mGammaTable)
   {
@@ -165,33 +188,11 @@ NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aCo
   return (aContext->Init(this, aWin));
 }
 
-NS_IMETHODIMP DeviceContextImpl::GetFontCache(nsIFontCache*& aCache)
-{
-  nsresult  rv;
-
-  if (nsnull == mFontCache) {
-    rv = CreateFontCache();
-    if (NS_FAILED(rv)) {
-      aCache = nsnull;
-      return rv;
-    }
-  }
-  NS_ADDREF(mFontCache);
-  aCache = mFontCache;
-  return NS_OK;
-}
-
-NS_IMETHODIMP DeviceContextImpl::FlushFontCache()
-{
-  NS_IF_RELEASE(mFontCache);
-  return NS_OK;
-}
-
 nsresult DeviceContextImpl::CreateFontCache()
 {
-  nsresult rv = NS_NewFontCache(&mFontCache);
-  if (NS_OK != rv) {
-    return rv;
+  mFontCache = new nsFontCache();
+  if (nsnull == mFontCache) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   mFontCache->Init(this);
   return NS_OK;
@@ -570,3 +571,91 @@ NS_IMETHODIMP DeviceContextImpl::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
   return NS_OK;
 }
 
+/////////////////////////////////////////////////////////////
+
+nsFontCache :: nsFontCache()
+{
+  mContext = nsnull;
+}
+
+nsFontCache :: ~nsFontCache()
+{
+  Flush();
+}
+
+nsresult nsFontCache :: Init(nsIDeviceContext* aContext)
+{
+  NS_PRECONDITION(nsnull != aContext, "null ptr");
+  // Note: we don't hold a reference to the device context, because it
+  // holds a reference to us and we don't want circular references
+  mContext = aContext;
+  return NS_OK;
+}
+
+nsresult nsFontCache :: GetDeviceContext(nsIDeviceContext *&aContext) const
+{
+  NS_IF_ADDREF(mContext);
+  aContext = mContext;
+  return NS_OK;
+}
+
+nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMetrics)
+{
+  // First check our cache
+  PRInt32 n = mFontMetrics.Count();
+
+  for (PRInt32 cnt = 0; cnt < n; cnt++)
+  {
+    aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
+
+    const nsFont* font;
+    aMetrics->GetFont(font);
+    if (aFont.Equals(*font))
+    {
+      NS_ADDREF(aMetrics);
+      return NS_OK;
+    }
+  }
+
+  // It's not in the cache. Get font metrics and then cache them.
+
+  static NS_DEFINE_IID(kFontMetricsCID, NS_FONT_METRICS_CID);
+  static NS_DEFINE_IID(kFontMetricsIID, NS_IFONT_METRICS_IID);
+
+  nsIFontMetrics* fm;
+  nsresult        rv = nsRepository::CreateInstance(kFontMetricsCID, nsnull,
+                                                    kFontMetricsIID, (void **)&fm);
+  if (NS_OK != rv) {
+    aMetrics = nsnull;
+    return rv;
+  }
+
+  rv = fm->Init(aFont, mContext);
+
+  if (NS_OK != rv) {
+    aMetrics = nsnull;
+    return rv;
+  }
+
+  mFontMetrics.AppendElement(fm);
+
+  NS_ADDREF(fm);
+  aMetrics = fm;
+  return NS_OK;
+}
+
+nsresult nsFontCache :: Flush()
+{
+  PRInt32 i, n = mFontMetrics.Count();
+
+  for (i = 0; i < n; i++)
+  {
+    nsIFontMetrics* fm = (nsIFontMetrics*) mFontMetrics.ElementAt(i);
+    fm->Destroy();
+    NS_RELEASE(fm);
+  }
+
+  mFontMetrics.Clear();
+
+  return NS_OK;
+}

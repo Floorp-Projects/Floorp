@@ -264,7 +264,6 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mMainDC = NULL;
   mDCOwner = nsnull;
   mFontMetrics = nsnull;
-  mFontCache = nsnull;
   mOrigSolidBrush = NULL;
   mBlackBrush = NULL;
   mOrigFont = NULL;
@@ -296,7 +295,6 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
 {
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mFontMetrics);
-  NS_IF_RELEASE(mFontCache);
 
   //destroy the initial GraphicsState
 
@@ -483,7 +481,6 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mContext->GetAppUnitsToDevUnits(app2dev);
 	mTMatrix->AddScale(app2dev, app2dev);
   mContext->GetDevUnitsToAppUnits(mP2T);
-  mContext->GetFontCache(mFontCache);
 
 #ifdef NS_DEBUG
   mInitialized = PR_TRUE;
@@ -773,7 +770,7 @@ nscolor nsRenderingContextWin :: GetColor() const
 void nsRenderingContextWin :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
-  mFontCache->GetMetricsFor(aFont, mFontMetrics);
+  mContext->GetMetricsFor(aFont, mFontMetrics);
 }
 
 const nsFont& nsRenderingContextWin :: GetFont()

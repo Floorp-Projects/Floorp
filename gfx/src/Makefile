@@ -36,13 +36,13 @@ LCFLAGS=-D_IMPL_NS_GFX
 CPPSRCS=nsColor.cpp nsColorNames.cpp nsColorNamesRGB.cpp nsFont.cpp \
     nsImageGroup.cpp nsImageManager.cpp nsImageNetContextAsync.cpp \
     nsImageRenderer.cpp nsImageRequest.cpp nsImageSystemServices.cpp \
-    nsImageURL.cpp nsRect.cpp nsTransform2D.cpp nsFontCache.cpp \
+    nsImageURL.cpp nsRect.cpp nsTransform2D.cpp \
 	nsDeviceContext.cpp nsImageNetContextSync.cpp
 
 EXPORTS=nsColor.h nsColorNames.h nsCoord.h nsFont.h nsRect.h nsPoint.h \
     nsSize.h nsMargin.h nsTransform2D.h nsIRenderingContext.h \
     nsIFontMetrics.h nsIImageManager.h nsIImageGroup.h nsIImageRequest.h \
-    nsIImageObserver.h nsDeviceContext.h nsIDeviceContext.h nsIFontCache.h nsIImage.h nsIBlender.h \
-    nsGfxCIID.h nsIRegion.h
+    nsIImageObserver.h nsIDeviceContext.h nsIImage.h nsIBlender.h \
+    nsGfxCIID.h nsIRegion.h nsDeviceContext.h
 
 include $(DEPTH)/config/rules.mk

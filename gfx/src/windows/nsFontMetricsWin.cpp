@@ -39,7 +39,7 @@ nsFontMetricsWin :: ~nsFontMetricsWin()
     mFontHandle = NULL;
   }
 
-  NS_IF_RELEASE(mDeviceContext);
+  mDeviceContext = nsnull;
 }
 
 #ifdef LEAK_DEBUG
@@ -91,8 +91,8 @@ NS_IMETHODIMP
 nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
 {
   mFont = new nsFont(aFont);
+  //don't addref this to avoid circular refs
   mDeviceContext = aContext;
-  NS_ADDREF(aContext);
   RealizeFont();
   return NS_OK;
 }
@@ -100,7 +100,7 @@ nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
 NS_IMETHODIMP
 nsFontMetricsWin :: Destroy()
 {
-  NS_IF_RELEASE(mDeviceContext);
+  mDeviceContext = nsnull;
   return NS_OK;
 }
 

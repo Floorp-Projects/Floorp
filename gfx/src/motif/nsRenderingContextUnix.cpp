@@ -78,7 +78,6 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
 {
   NS_INIT_REFCNT();
 
-  mFontCache = nsnull ;
   mFontMetrics = nsnull ;
   mContext = nsnull ;
   mFrontBuffer = nsnull ;
@@ -133,7 +132,6 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
 
 
   NS_IF_RELEASE(mFontMetrics);
-  NS_IF_RELEASE(mFontCache);
   NS_IF_RELEASE(mContext);
 
   if (nsnull != mDrawStringBuf) {
@@ -204,7 +202,6 @@ nsresult nsRenderingContextUnix :: CommonInit()
   ((nsDeviceContextUnix *)mContext)->SetDrawingSurface(mRenderingSurface);
   ((nsDeviceContextUnix *)mContext)->InstallColormap();
 
-  mContext->GetFontCache(mFontCache);
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
@@ -552,7 +549,7 @@ nscolor nsRenderingContextUnix :: GetColor() const
 void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
-  mFontCache->GetMetricsFor(aFont, mFontMetrics);
+  mContext->GetMetricsFor(aFont, mFontMetrics);
 
   if (mFontMetrics)
   {  
