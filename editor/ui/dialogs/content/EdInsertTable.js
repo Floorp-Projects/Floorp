@@ -39,7 +39,6 @@ function Startup()
 
   doSetOKCancel(onOK, null);
 
-  dump(tagName+" = InsertTable tagName\n");
   tableElement = editorShell.CreateElementWithDefaults(tagName);
   if(!tableElement)
   {
@@ -94,14 +93,16 @@ function InitDialog()
 function ValidateData()
 {
   rows = ValidateNumberString(dialog.rowsInput.value, 1, maxRows);
-  if (rows == "") {
+  if (rows == "")
+  {
     // Set focus to the offending control
     dialog.rowsInput.focus();
     return false;
   }
 
   columns = ValidateNumberString(dialog.columnsInput.value, 1, maxColumns);
-  if (columns == "") {
+  if (columns == "")
+  {
     // Set focus to the offending control
     dialog.columnsInput.focus();
     return false;
@@ -109,7 +110,8 @@ function ValidateData()
 
   // Set attributes: NOTE: These may be empty strings
   borderText = TrimString(dialog.borderInput.value);
-  if (borderText) {
+  if (borderText) 
+  {
     // Set the other attributes on the table
     if (ValidateNumberString(borderText, 0, maxPixels))
       globalElement.setAttribute("border", borderText);
@@ -118,16 +120,17 @@ function ValidateData()
   var maxLimit;
   var isPercent = (dialog.widthPixelOrPercentMenulist.selectedIndex == 1);
   widthText = TrimString(dialog.widthInput.value);
-  if (widthText.length > 0) {
-    if (isPercent) {
+  if (widthText.length > 0)
+  {
+    if (isPercent)
       maxLimit = 100;
-    } else {
+    else
       // Upper limit when using pixels
       maxLimit = maxPixels;
-    }
 
-    widthText = ValidateNumberString(dialog.widthInput.value, 1, maxLimit);
-    if (widthText.length == 0) return false;
+    widthText = ValidateNumberString(widthText, 1, maxLimit);
+    if (widthText.length == 0)
+      return false;
 
     if (isPercent)
       widthText += "%";
@@ -135,17 +138,18 @@ function ValidateData()
   }
 
   isPercent = (dialog.heightPixelOrPercentMenulist.selectedIndex == 1);
-  heightText = TrimString(dialog.widthInput.value);
-  if (heightText.length > 0) {
-    if (isPercent) {
+  heightText = TrimString(dialog.heightInput.value);
+  if (heightText.length > 0)
+  {
+    if (isPercent)
       maxLimit = 100;
-    } else {
+    else
       // Upper limit when using pixels
       maxLimit = maxPixels;
-    }
 
-    heightText = ValidateNumberString(dialog.heightInput.value, 1, maxLimit);
-    if (heightText.length == 0) return false;
+    heightText = ValidateNumberString(heightText, 1, maxLimit);
+    if (heightText.length == 0)
+      return false;
 
     if (isPercent)
       heightText += "%";
@@ -168,7 +172,7 @@ function onOK()
       tableElement.appendChild(tableBody);
 
       // Create necessary rows and cells for the table
-      dump("Rows = "+rows+"  Columns = "+columns+"\n");
+      //dump("Rows = "+rows+"  Columns = "+columns+"\n");
       for (var i = 0; i < rows; i++)
       {
         var newRow = editorShell.CreateElementWithDefaults("tr");
