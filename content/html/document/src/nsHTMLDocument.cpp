@@ -1347,18 +1347,12 @@ NS_IMETHODIMP
 nsHTMLDocument::GetCookie(nsString& aCookie)
 {
 #ifndef NECKO
-  nsINetService *service;
-  nsresult res = nsServiceManager::GetService(kNetServiceCID,
-                                              kINetServiceIID,
-                                              (nsISupports **)&service);
-  if ((NS_OK == res) && (nsnull != service) && (nsnull != mDocumentURL)) {
-
-    res = service->GetCookieString(mDocumentURL, aCookie);
-
-    NS_RELEASE(service);
+  nsresult result = NS_OK;
+  NS_WITH_SERVICE(nsINetService, service, kNetServiceCID, &result);
+  if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
+    result = service->GetCookieString(mDocumentURL, aCookie);
   }
-
-  return res;
+  return result;
 #else
   // XXX NECKO we need to use the cookie module for this info instead of 
   // XXX the IOService
@@ -1370,18 +1364,12 @@ NS_IMETHODIMP
 nsHTMLDocument::SetCookie(const nsString& aCookie)
 {
 #ifndef NECKO
-  nsINetService *service;
-  nsresult res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
-  if ((NS_OK == res) && (nsnull != service) && (nsnull != mDocumentURL)) {
-
-    res = service->SetCookieString(mDocumentURL, aCookie);
-
-    NS_RELEASE(service);
+  nsresult result = NS_OK;
+  NS_WITH_SERVICE(nsINetService, service, kNetServiceCID, &result);
+  if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
+    result = service->SetCookieString(mDocumentURL, aCookie);
   }
-
-  return res;
+  return result;
 #else
   // XXX NECKO we need to use the cookie module for this info instead of 
   // XXX the IOService
