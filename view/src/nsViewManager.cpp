@@ -449,7 +449,10 @@ NS_IMETHODIMP nsViewManager :: Composite()
 {
   // Walk the view hierarchy and for each view that has a non-empty
   // dirty region invalidate its associated widget
-  UpdateDirtyViews(mRootView);
+  if (nsnull != mRootView)
+  {
+    UpdateDirtyViews(mRootView);
+  }
   return NS_OK;
 }
 
