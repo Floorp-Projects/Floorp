@@ -53,6 +53,10 @@ function EditorFillContextMenu(event, contextMenuNode)
       HideDisabledItem(children.item(i));
   }
 
+  // The 'Save image (imagename)' menuitem:
+  var isImage = (objectName == "img");
+  ShowMenuItem("menu_saveImage_cm", isImage);
+
   // Remove separators if all items in immediate group above are hidden
   // A bit complicated to account if multiple groups are completely hidden!
   var haveUndo =
@@ -70,18 +74,13 @@ function EditorFillContextMenu(event, contextMenuNode)
     IsMenuItemShowing("createLink_cm") ||
     IsMenuItemShowing("removeLinksMenuitem_cm");
 
-  var haveProps =
+  var havePropsOrImage =
     IsMenuItemShowing("objectProperties_cm") ||
     IsMenuItemShowing("menu_saveImage_cm")
 
   ShowMenuItem("undoredo-separator", haveUndo && haveEdit);
 
   ShowMenuItem("edit-separator", haveEdit || haveUndo);
-
-
-  //The following is for the 'save image (imagename)' contextmenuitem
-  var isImage = (objectName=="img");
-  ShowMenuItem("menu_saveImage_cm", isImage);
 
   if (isImage)   //we have an image
   {
@@ -102,10 +101,11 @@ function EditorFillContextMenu(event, contextMenuNode)
   // following separator are ALWAYS enabled,
   // so there will always be 1 separator here
 
-//dump("haveStyle = "+haveStyle+", "+haveProps+", inCell"+inCell+"\n");
-  ShowMenuItem("styles-separator", haveStyle && (haveProps || inCell));
+  var showStyleSep = haveStyle && (havePropsOrImage || inCell);
+  ShowMenuItem("styles-separator", showStyleSep);
 
-  ShowMenuItem("property-separator", (haveProps && inCell) || !haveStyle);
+  var showPropSep = (havePropsOrImage && inCell) || !haveStyle;
+  ShowMenuItem("property-separator", showPropSep);
 
   // Remove table submenus if not in table
   ShowMenuItem("tableInsertMenu_cm",  inCell);
@@ -132,7 +132,6 @@ function HideDisabledItem( item )
   if (!item) return false;
 
   var enabled = (item.getAttribute('disabled') !="true");
-//dump("HideDisabledItem: "+item.getAttribute("id")+", enabled="+enabled+"\n");
   item.setAttribute("collapsed", enabled ? "" : "true");
   item.setAttribute('contexthidden', enabled ? "" : "true");
   return enabled;
