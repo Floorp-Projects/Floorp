@@ -48,7 +48,7 @@ NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
 NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
 #endif
@@ -66,7 +66,7 @@ char* localeCategoryList[LOCALE_CATEGORY_LISTLEN] =
                 "NSILOCALE_MESSAGES"
 };
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 
 //
 // of systems w/o LC_MESSAGE, we grab LC_CTYPE for the value of LC_MESSAGE
@@ -109,7 +109,7 @@ nsLocaleFactory::nsLocaleFactory(void)
 									kIWin32LocaleIID,
 									(void**)&fWin32LocaleInterface);
 	NS_ASSERTION(fWin32LocaleInterface!=NULL,"nsLocaleFactory: factory_create_interface failed.\n");
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
   fPosixLocaleInterface = nsnull;
   result = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID,
                                               NULL,
@@ -138,7 +138,7 @@ nsLocaleFactory::~nsLocaleFactory(void)
 	if (fWin32LocaleInterface)
 		fWin32LocaleInterface->Release();
 #endif
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
   if (fPosixLocaleInterface)
     fPosixLocaleInterface->Release();
 #endif
@@ -254,7 +254,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 	delete systemLocaleName;
 	return result;
 	
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
  
   char* lc_all = setlocale(LC_ALL,"");
   char* lc_temp;
@@ -393,7 +393,7 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 	delete applicationLocaleName;
 	return result;
 
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 
   result = GetSystemLocale(&fApplicationLocale);
   *applicationLocale = fApplicationLocale;

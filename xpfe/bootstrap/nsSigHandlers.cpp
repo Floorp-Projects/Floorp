@@ -31,7 +31,13 @@
 #include "prthread.h"
 #include "plstr.h"
 
+#ifdef XP_BEOS
+#include <string.h>
+extern "C" const char * strsignal(int);
+#else
 extern "C" char * strsignal(int);
+#endif
+
 static char _progname[1024] = "huh?";
 
 #ifdef DEBUG_ramiro
@@ -116,6 +122,4 @@ void InstallUnixSignalHandlers(const char *ProgramName)
   signal(SIGILL, ah_crap_handler);
   signal(SIGABRT, ah_crap_handler);
 #endif // CRAWL_STACK_ON_SIGSEGV
-
 }
-
