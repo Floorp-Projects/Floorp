@@ -26,12 +26,13 @@
 #include "nsIEventSinkGetter.h"
 #include "nsIProgressEventSink.h"
 #include "nsIStreamListener.h"
+#include "nsIChannel.h"
+#include "nsIOutputStream.h"
+#include "nsIFileSpec.h"
 
 #include "nsCOMPtr.h"
 
 class nsIDOMWindow;
-class nsIChannel;
-class nsIFileSpec;
 
 // Implementation of the stream transfer operation interface.
 //
