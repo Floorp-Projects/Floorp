@@ -109,10 +109,6 @@
 
 <!ENTITY addSignatureCmd.label ".Add Signature File">
 
-<!--LOCALIZATION NOTE attachVCard.label Don't translate the term 'vCard' -->
-<!ENTITY attachVCard.label "Attach Personal Card (vCard)">
-<!ENTITY attachVCard.accesskey "v">
-
 <!ENTITY quoteCmd.label "Quote Message">
 <!ENTITY quoteCmd.accesskey "Q">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
