@@ -80,6 +80,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIStyledContent.h"
 #include "nsIStyleContext.h"
+#include "nsIMutableStyleContext.h"
 #include "nsIFocusableContent.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
@@ -361,8 +362,8 @@ public:
     // need to be mapped into style contexts (e.g., width in treecols).
     NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
     NS_IMETHOD GetStrength(PRInt32& aStrength) const;
-    NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
-    NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+    NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+    NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
     
     // nsIJSScriptObject
     virtual PRBool AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
@@ -3650,13 +3651,13 @@ RDFElementImpl::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-RDFElementImpl::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+RDFElementImpl::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-RDFElementImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+RDFElementImpl::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (mTag == kTreeColAtom) {
     // Should only get called if we had a width attribute set. Retrieve it.
