@@ -25,7 +25,7 @@
 //
 //-------------------------------------------------------------------------
 
-void nsAppShell::Create()
+void nsAppShell::Create(int* argc, char ** argv)
 {
 }
 
@@ -99,4 +99,16 @@ nsresult nsAppShell::QueryObject(const nsIID& aIID, void** aInstancePtr)
     }
 
     return result;
+}
+//-------------------------------------------------------------------------
+//
+// GetNativeData
+//
+//-------------------------------------------------------------------------
+void* nsAppShell::GetNativeData(PRUint32 aDataType)
+{
+  if (aDataType == NS_NATIVE_SHELL) {
+    return NULL;
+  }
+  return nsnull;
 }
