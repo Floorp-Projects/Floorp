@@ -31,7 +31,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:31:42 $ $Name:  $';
+$cvs_id = '@(#) $RCSfile: ckapi.perl,v $ $Revision: 1.3 $ $Date: 2000/09/11 22:37:01 $ $Name:  $';
 
 $copyright = '/* THIS IS A GENERATED FILE */
 /* 
@@ -70,7 +70,10 @@ $copyright = '/* THIS IS A GENERATED FILE */
 
 $count = -1;
 $i = 0;
-while(<>) {
+
+open(INPUT, "<$ARGV[0]") || die "Can't open $ARGV[0]: $!";
+
+while(<INPUT>) {
   s/^((?:[^"#]+|"[^"]*")*)(\s*#.*$)/$1/;
   next if (/^\s*$/);
 
@@ -96,6 +99,8 @@ while(<>) {
     }
   }
 }
+
+close INPUT;
 
 # dodump();
 doprint();
