@@ -30,6 +30,8 @@ CPPSRCS =				\
 	nsHTMLTitle.cpp			\
 	nsObjectContent.cpp		\
 	nsHTMLLayer.cpp			\
+	nsHTMLGenericContent.cpp	\
+	nsHTMLHR.cpp			\
 	$(NULL)
 
 MODULE = raptor
