@@ -15,10 +15,15 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+ 
 #include <iostream.h>
 #include <stdlib.h>
+#define NS_IMPL_IDS
 #include "nsISupports.h"
 #include "nsRepository.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsUCvLatinCID.h"
 #include "nsCollationCID.h"
 #include "nsICollation.h"
 #include "nsDateTimeFormatCID.h"
@@ -26,10 +31,16 @@
 
 #ifdef XP_MAC
 #define LOCALE_DLL_NAME "NSLOCALE_DLL"
+#define UCONV_DLL       "UCONV_DLL"
+#define UCVLATIN_DLL    "UCVLATIN_DLL"
 #elif defined(XP_PC)
 #define LOCALE_DLL_NAME "NSLOCALE.DLL"
+#define UCONV_DLL       "uconv.dll"
+#define UCVLATIN_DLL    "ucvlatin.dll"
 #else
 #define LOCALE_DLL_NAME "libnslocale.so"
+#define UCONV_DLL       "libuconv.so"
+#define UCVLATIN_DLL    "libucvlatin.so"
 #endif
 
 
@@ -570,27 +581,20 @@ static void TestDateTimeFormat(nsILocale *locale)
 int main(int argc, char** argv) {
   nsresult res; 
    
-  res = nsRepository::RegisterFactory(kCollationFactoryCID,
-                                 LOCALE_DLL_NAME,
-                                 PR_FALSE,
-                                 PR_FALSE);
-  if(NS_FAILED(res)) {
-    cout << "RegisterFactory failed\n";
-  }
-  res = nsRepository::RegisterFactory(kCollationCID,
-                                 LOCALE_DLL_NAME,
-                                 PR_FALSE,
-                                 PR_FALSE);
-  if(NS_FAILED(res)) {
-    cout << "RegisterFactory failed\n";
-  }
-  res = nsRepository::RegisterFactory(kDateTimeFormatCID,
-                                 LOCALE_DLL_NAME,
-                                 PR_FALSE,
-                                 PR_FALSE);
-  if(NS_FAILED(res)) {
-    cout << "RegisterFactory failed\n";
-  }
+  res = nsRepository::RegisterFactory(kCollationFactoryCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+
+  res = nsRepository::RegisterFactory(kCollationCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+
+  res = nsRepository::RegisterFactory(kDateTimeFormatCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+
+  res = nsRepository::RegisterFactory(kCharsetConverterManagerCID, UCONV_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+
+  res = nsRepository::RegisterFactory(kLatin1ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
 
   // --------------------------------------------
   nsILocale *locale = NULL;
