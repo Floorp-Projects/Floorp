@@ -509,16 +509,6 @@ nsAppShellService::Shutdown(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsAppShellService::PushThreadEventQueue() {
-  return mAppShell->PushThreadEventQueue();
-}
-
-NS_IMETHODIMP
-nsAppShellService::PopThreadEventQueue() {
-  return mAppShell->PopThreadEventQueue();
-}
-
 /*
  * Create a new top level window and display the given URL within it...
  */
@@ -714,16 +704,19 @@ nsAppShellService::RunModalDialog(
 {
   nsresult          rv;
   nsIWebShellWindow *theWindow;
-  PRBool            pushedQueue;
+  nsIEventQueue     *pushedQueue;
 
-  pushedQueue = PR_FALSE;
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  pushedQueue = NULL;
   if (aWindow && *aWindow) {
-    theWindow = *aWindow; // and rv is already some success indication
+    theWindow = *aWindow;
     NS_ADDREF(theWindow);
     rv = NS_OK;
   } else {
-    pushedQueue = PR_TRUE;
-    PushThreadEventQueue();
+    eventQService->PushThreadEventQueue(&pushedQueue);
     rv = CreateTopLevelWindow(aParent, aUrl, PR_TRUE, PR_TRUE, aChromeMask,
             aCallbacks, aInitialWidth, aInitialHeight, &theWindow);
   }
@@ -751,7 +744,7 @@ nsAppShellService::RunModalDialog(
   }
 
   if (pushedQueue)
-    PopThreadEventQueue();
+    eventQService->PopThreadEventQueue(pushedQueue);
 
   return rv;
 }
