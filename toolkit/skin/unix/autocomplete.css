@@ -113,10 +113,10 @@ textbox {
   padding-left: 8px;
 }
 
-.autocomplete-treebody:-moz-tree-row(menuactive) {
-  background-color: Highlight;
+treechildren.autocomplete-treebody:-moz-tree-row(selected) {
+ background-color: Highlight;
 }
 
-.autocomplete-treebody:-moz-tree-cell-text(menuactive)  {
+treechildren.autocomplete-treebody:-moz-tree-cell-text(selected) {
   color: HighlightText !important;
 }

@@ -402,13 +402,15 @@ nsAutoCompleteController::GetRowProperties(PRInt32 index, nsISupportsArray *prop
   PRInt32 currentIndex;
   mSelection->GetCurrentIndex(&currentIndex);
   
+  /*
   if (index == currentIndex) {
     nsCOMPtr<nsIAtomService> atomSvc = do_GetService("@mozilla.org/atom-service;1");
     nsCOMPtr<nsIAtom> atom;
     atomSvc->GetAtom(NS_LITERAL_STRING("menuactive").get(), getter_AddRefs(atom));
     properties->AppendElement(atom);
   }
-  
+  */
+
   return NS_OK;
 }
 

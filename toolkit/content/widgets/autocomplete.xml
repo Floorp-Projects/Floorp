@@ -382,6 +382,7 @@
 
   <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
     <resources>
+      <stylesheet src="chrome://global/skin/tree.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
@@ -417,7 +418,7 @@
       <property name="selectedIndex"
                 onget="return this.tree.currentIndex;">
         <setter><![CDATA[
-          this.tree.currentIndex = val;
+          this.tree.treeBoxObject.selection.select(val);
           if (this.tree.treeBoxObject.height > 0)
             this.tree.treeBoxObject.ensureRowIsVisible(val < 0 ? 0 : val);
           return val;
@@ -643,9 +644,9 @@
       <handler event="mousemove"><![CDATA[
         if (new Date() - this.mLastMoveTime > 30) {
          var rc = this.getHoverCell(event);
-         if (rc && rc.row != this.parentNode.currentIndex) 
-            this.parentNode.currentIndex = rc.row;
-          this.mLastMoveTime = new Date();
+         if (rc && rc.row != this.parentNode.currentIndex)
+            this.parentNode.treeBoxObject.selection.select(rc.row);
+         this.mLastMoveTime = new Date();
         }
       ]]></handler>
     </handlers>
