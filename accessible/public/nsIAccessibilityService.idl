@@ -44,7 +44,7 @@ interface nsIDocument;
 interface nsIFrame;
 interface nsObjectFrame;
 
-[scriptable, uuid(68D9720A-0984-42b6-A3F5-8237ED925727)]
+[scriptable, uuid(a5f0a449-41a5-4040-bb67-56e2eafcffd7)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -60,6 +60,7 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLCheckboxAccessibleXBL(in nsIDOMNode aNode);
   nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
+  nsIAccessible createHTMLGenericAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLGroupboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLHRAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);

@@ -4387,7 +4387,7 @@ nsEventStateManager::FlushPendingEvents(nsPresContext* aPresContext)
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
                                              nsIContent **aEndContent,
                                              nsIFrame **aStartFrame,
@@ -4431,7 +4431,8 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
       nsIContent *childContent = nsnull;
 
       startContent = do_QueryInterface(startNode);
-      if (startContent->IsContentOfType(nsIContent::eELEMENT)) {
+      if (*aStartOffset > 0 && 
+          startContent->IsContentOfType(nsIContent::eELEMENT)) {
         childContent = startContent->GetChildAt(*aStartOffset);
         if (childContent)
           startContent = childContent;
@@ -4441,9 +4442,11 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
       if (endContent->IsContentOfType(nsIContent::eELEMENT)) {
         PRInt32 endOffset = 0;
         domRange->GetEndOffset(&endOffset);
-        childContent = endContent->GetChildAt(endOffset);
-        if (childContent)
-          endContent = childContent;
+        if (endOffset > 0) {
+          childContent = endContent->GetChildAt(endOffset);
+          if (childContent)
+            endContent = childContent;
+        }
       }
     }
   }
@@ -4737,12 +4740,6 @@ nsEventStateManager::MoveCaretToFocus()
     GetDocSelectionLocation(getter_AddRefs(selectionContent),
                             getter_AddRefs(endSelectionContent),
                             &selectionFrame, &selectionOffset);
-    while (selectionContent) {
-      nsIContent* parentContent = selectionContent->GetParent();
-      if (mCurrentFocus == selectionContent && parentContent)
-        return NS_OK; // selection is already within focus node that isn't the root content
-      selectionContent = parentContent; // Keep checking up chain of parents, focus may be in a link above us
-    }
 
     nsIPresShell *shell = mPresContext->GetPresShell();
     if (shell) {

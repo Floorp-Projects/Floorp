@@ -49,6 +49,7 @@
 #include "nsReflowPath.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsCRT.h"
 #include "nsGUIEvent.h"
@@ -4554,6 +4555,27 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex)
         tabIndex = 0;
       }
       isFocusable = mContent->IsFocusable(&tabIndex);
+      if (!isFocusable && GetType() == nsLayoutAtoms::scrollFrame &&
+          mContent->IsContentOfType(nsIContent::eHTML) &&
+          !mContent->IsNativeAnonymous() && mContent->GetParent() &&
+          !mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex)) {
+        // Elements with scrollable view always focusable & tabbable
+        // Otherwise you couldn't scroll them with keyboard, which is
+        // an accessibility issue (e.g. Section 508 rules)
+        nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(this);
+        if (scrollFrame) {
+          nsIScrollableFrame::ScrollbarStyles styles =
+            scrollFrame->GetScrollbarStyles();
+          if (styles.mVertical == NS_STYLE_OVERFLOW_SCROLL ||
+              styles.mVertical == NS_STYLE_OVERFLOW_AUTO ||
+              styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL ||
+              styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO) {
+            // Scroll bars will be used for overflow
+            isFocusable = PR_TRUE;
+            tabIndex = 0;
+          }
+        }
+      }
     }
   }
 

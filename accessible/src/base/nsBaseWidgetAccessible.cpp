@@ -338,7 +338,7 @@ NS_IMETHODIMP nsGenericAccessible::GetRole(PRUint32 *aRole)
 {
   // XXX todo: use DHTML role attribs to fill in accessible role
 
-  *aRole = ROLE_NOTHING;
+  *aRole = ROLE_PANE;
 
   return NS_OK;
 }

@@ -53,9 +53,9 @@ class nsIWidget;
  * Event listener manager interface.
  */
 #define NS_IEVENTSTATEMANAGER_IID \
-{ /* 80a98c80-2036-11d2-bd89-00805f8ae3f4 */ \
-0x80a98c80, 0x2036, 0x11d2, \
-{0xbd, 0x89, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
+{ /* 08bd45d8-db4a-4e06-918c-cebffb002fef */ \
+0x08bd45d8, 0xdb4a, 0x4e06, \
+{ 0x91, 0x8c, 0xce, 0xbf, 0xfb, 0x0, 0x2f, 0xef} };
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
 
@@ -123,9 +123,6 @@ public:
 
   // Method for moving the focus forward/back.
   NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
-
-  // Return the location of the caret
-  NS_IMETHOD  GetDocSelectionLocation(nsIContent **startContent, nsIContent **endContent, nsIFrame **startFrame, PRUint32 *startOffset) = 0;
 };
 
 #define NS_EVENT_STATE_UNSPECIFIED  0x0000
