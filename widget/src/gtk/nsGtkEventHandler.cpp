@@ -267,6 +267,9 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     anEvent.point.x = 0;
     anEvent.point.y = 0;
   }
+  if (anEvent.isShift || anEvent.isControl || anEvent.isAlt)
+    printf("contol/special key");
+  printf("%d\n",anEvent.charCode);
 }
 
 
@@ -656,6 +659,7 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 {
   nsKeyEvent kevent;
   nsWindow* win = (nsWindow*)p;
+  int isModifier;
 
   // Don't pass shift, control and alt as key press events
   if (event->keyval == GDK_Shift_L
@@ -671,14 +675,18 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   // First, dispatch the Key event as a virtual key down event
   //
   InitKeyEvent(event, p, kevent, NS_KEY_DOWN);
-   win->OnKey(kevent);
+  win->OnKey(kevent);
  
 
 
   //
   // Second, dispatch the Key event as a key press event w/ a Unicode
-  //  character code
-  if (event->length) {
+  //  character code.  Note we have to check for modifier keys, since
+  // gtk returns a character value for them
+  //
+  isModifier = event->state &(GDK_SHIFT_MASK|GDK_CONTROL_MASK|GDK_MOD1_MASK);
+  if (isModifier) printf("isModifier\n");
+  if (event->length && !isModifier) {
      InitKeyPressEvent(event,p,kevent);
      win->OnKey(kevent);
    }
