@@ -397,7 +397,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
-	  printf("Mouse down\n");
     BeginTrackingDragGesture ( aEvent, aTargetFrame );
     mLClickCount = ((nsMouseEvent*)aEvent)->clickCount;
     SetClickCount(aPresContext, (nsMouseEvent*)aEvent, aStatus);
@@ -565,7 +564,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         commandDispatcher->SetActive(PR_TRUE);
         commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
       }  
-      mCurrentFocus = nsnull;  
     }
     break;
     
@@ -666,7 +664,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         commandDispatcher->SetActive(PR_FALSE);
         commandDispatcher->SetSuppressFocus(PR_FALSE);
       }
-      mCurrentFocus = nsnull;
     } 
     
     break;
@@ -2153,7 +2150,11 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 
   if ((aState & NS_EVENT_STATE_FOCUS)) {
     if (aContent == mCurrentFocus) {
-      //printf("NOOOOOOOOO!\n");
+      // gLastFocusedDocument appears to always be correct, that is why
+      // I'm not setting it here. This is to catch an edge case.
+      NS_IF_RELEASE(gLastFocusedContent);
+      gLastFocusedContent = mCurrentFocus;
+      NS_IF_ADDREF(gLastFocusedContent);
     } else {
       SendFocusBlur(mPresContext, aContent);
 
