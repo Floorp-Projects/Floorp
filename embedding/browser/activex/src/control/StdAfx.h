@@ -167,6 +167,7 @@ typedef long int32;
 #include "IEHtmlDocument.h"
 #include "CPMozillaControl.h"
 #include "MozillaBrowser.h"
+#include "WindowCreator.h"
 #include "WebBrowserContainer.h"
 #include "DropTarget.h"
 #include "guids.h"

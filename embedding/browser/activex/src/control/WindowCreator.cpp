@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,61 +36,66 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef WEBBROWSERCONTAINER_H
-#define WEBBROWSERCONTAINER_H
 
-#include "nsIContextMenuListener.h"
-#include "nsITooltipListener.h"
-#include "nsICommandHandler.h"
-#include "nsIEmbeddingSiteWindow.h"
-#include "nsIURIContentListener.h"
-#include "nsIWebBrowserChromeFocus.h"
-#include "nsWeakReference.h"
+#include "stdafx.h"
 
-// This is the class that handles the XPCOM side of things, callback
-// interfaces into the web shell and so forth.
+#include "WindowCreator.h"
 
-class CWebBrowserContainer :
-        public nsIEmbeddingSiteWindow,
-        public nsIWebBrowserChrome,
-        public nsIWebProgressListener,
-        public nsIRequestObserver,
-        public nsIURIContentListener,
-        public nsIInterfaceRequestor,
-        public nsIContextMenuListener,
-        public nsICommandHandler,
-        public nsIWebBrowserChromeFocus,
-        public nsSupportsWeakReference
+NS_IMPL_ISUPPORTS1(CWindowCreator, nsIWindowCreator)
+
+CWindowCreator::CWindowCreator(void)
 {
-public:
-    CWebBrowserContainer(CMozillaBrowser *pOwner);
+    NS_INIT_REFCNT();
+}
 
-    friend CMozillaBrowser;
-    friend CWindowCreator;
+CWindowCreator::~CWindowCreator()
+{
+}
 
-protected:
-    virtual ~CWebBrowserContainer();
+NS_IMETHODIMP
+CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent, PRUint32 aChromeFlags, nsIWebBrowserChrome **_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+    *_retval = nsnull;
 
-// Protected members
-protected:
-    CMozillaBrowser *m_pOwner;
-    nsString m_sTitle;
-    nsIURI *m_pCurrentURI;
-    CDWebBrowserEvents1 *m_pEvents1;
-    CDWebBrowserEvents2 *m_pEvents2;
+    // NOTE:
+    //
+    // The nsIWindowCreator::CreateChromeWindow is REQUIRED to handle a nsnull
+    // parent window but this implementation must have one in order to fire
+    // events to the ActiveX container. Therefore we treat a nsnull aParent
+    // as an error and return.
 
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIEMBEDDINGSITEWINDOW
-    NS_DECL_NSIWEBBROWSERCHROME
-    NS_DECL_NSIURICONTENTLISTENER
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSIWEBPROGRESSLISTENER
-    NS_DECL_NSICONTEXTMENULISTENER
-    NS_DECL_NSIWEBBROWSERCHROMEFOCUS
-    NS_DECL_NSICOMMANDHANDLER
-};
+    if (aParent == nsnull)
+    {
+        return NS_ERROR_FAILURE;
+    }
 
-#endif
+    CWebBrowserContainer *pContainer = NS_STATIC_CAST(CWebBrowserContainer *, aParent);
+    
+    CComQIPtr<IDispatch> dispNew;
+    VARIANT_BOOL bCancel = VARIANT_FALSE;
+
+    // Test if the event sink can give us a new window to navigate into
+    if (pContainer->m_pEvents2)
+    {
+        pContainer->m_pEvents2->Fire_NewWindow2(&dispNew, &bCancel);
+        if ((bCancel == VARIANT_FALSE) && dispNew)
+        {
+            CComQIPtr<IMozControlBridge> cpBridge = dispNew;
+            if (cpBridge)
+            {
+                nsIWebBrowser *browser = nsnull;
+                cpBridge->GetWebBrowser((void **) &browser);
+                if (browser)
+                {
+                    nsresult rv = browser->GetContainerWindow(_retval);
+                    NS_RELEASE(browser);
+                    return rv;
+                }
+            }
+        }
+    }
+
+    return NS_ERROR_FAILURE;
+}
 

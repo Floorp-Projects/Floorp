@@ -158,7 +158,15 @@ SOURCE=.\StdAfx.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\TextProviderService.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\WebBrowserContainer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\WindowCreator.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -254,7 +262,15 @@ SOURCE=.\StdAfx.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\TextProviderService.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\WebBrowserContainer.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\WindowCreator.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

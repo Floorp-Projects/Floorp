@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,61 +36,23 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef WEBBROWSERCONTAINER_H
-#define WEBBROWSERCONTAINER_H
 
-#include "nsIContextMenuListener.h"
-#include "nsITooltipListener.h"
-#include "nsICommandHandler.h"
-#include "nsIEmbeddingSiteWindow.h"
-#include "nsIURIContentListener.h"
-#include "nsIWebBrowserChromeFocus.h"
-#include "nsWeakReference.h"
+#ifndef WINDOWCREATOR_H
+#define WINDOWCREATOR_H
 
-// This is the class that handles the XPCOM side of things, callback
-// interfaces into the web shell and so forth.
+#include "nsIWindowCreator.h"
+#include "nsIWebBrowserChrome.h"
 
-class CWebBrowserContainer :
-        public nsIEmbeddingSiteWindow,
-        public nsIWebBrowserChrome,
-        public nsIWebProgressListener,
-        public nsIRequestObserver,
-        public nsIURIContentListener,
-        public nsIInterfaceRequestor,
-        public nsIContextMenuListener,
-        public nsICommandHandler,
-        public nsIWebBrowserChromeFocus,
-        public nsSupportsWeakReference
+class CWindowCreator : public nsIWindowCreator
 {
 public:
-    CWebBrowserContainer(CMozillaBrowser *pOwner);
-
-    friend CMozillaBrowser;
-    friend CWindowCreator;
-
+    CWindowCreator();
 protected:
-    virtual ~CWebBrowserContainer();
-
-// Protected members
-protected:
-    CMozillaBrowser *m_pOwner;
-    nsString m_sTitle;
-    nsIURI *m_pCurrentURI;
-    CDWebBrowserEvents1 *m_pEvents1;
-    CDWebBrowserEvents2 *m_pEvents2;
+    virtual ~CWindowCreator();
 
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIEMBEDDINGSITEWINDOW
-    NS_DECL_NSIWEBBROWSERCHROME
-    NS_DECL_NSIURICONTENTLISTENER
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSIWEBPROGRESSLISTENER
-    NS_DECL_NSICONTEXTMENULISTENER
-    NS_DECL_NSIWEBBROWSERCHROMEFOCUS
-    NS_DECL_NSICOMMANDHANDLER
+    NS_DECL_NSIWINDOWCREATOR
 };
 
 #endif
-

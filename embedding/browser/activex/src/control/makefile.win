@@ -81,6 +81,7 @@ OBJS =                                 \
     .\$(OBJDIR)\DropTarget.obj         \
     .\$(OBJDIR)\PropertyDlg.obj        \
     .\$(OBJDIR)\PromptService.obj      \
+    .\$(OBJDIR)\WindowCreator.obj      \
     .\$(OBJDIR)\guids.obj              \
     $(NULL)
 
