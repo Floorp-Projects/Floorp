@@ -46,14 +46,10 @@
 #include "nsIAddrBookSession.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-
-
 
 nsAbRDFResource::nsAbRDFResource(void)
 {
-        NS_INIT_ISUPPORTS();
+  NS_INIT_ISUPPORTS();
 	mDatabase = nsnull;
 }
 
@@ -101,7 +97,7 @@ nsresult nsAbRDFResource::GetAbDatabase()
 		nsFileSpec* dbPath = nsnull;
 
 		nsCOMPtr<nsIAddrBookSession> abSession = 
-		         do_GetService(kAddrBookSessionCID, &rv); 
+		         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
@@ -112,7 +108,7 @@ nsresult nsAbRDFResource::GetAbDatabase()
 		(*dbPath) += file;
 
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-		         do_GetService(kAddressBookDBCID, &rv);
+		         do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);

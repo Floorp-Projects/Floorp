@@ -103,7 +103,6 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec* mailDirectory);
 extern void SavePopData(char *data, nsIFileSpec* maildirectory);

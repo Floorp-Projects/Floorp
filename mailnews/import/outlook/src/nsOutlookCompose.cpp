@@ -53,9 +53,7 @@
 
 static NS_DEFINE_CID( kMsgSendCID, NS_MSGSEND_CID);
 static NS_DEFINE_CID( kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
-static NS_DEFINE_CID( kMsgMailSessionCID,	NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID( kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID( kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID( kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
@@ -201,7 +199,7 @@ nsOutlookCompose::~nsOutlookCompose()
         NS_ASSERTION(NS_SUCCEEDED(rv),"failed to clear values");
 		if (NS_FAILED(rv)) return;
 
-		NS_WITH_PROXIED_SERVICE(nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, NS_UI_THREAD_EVENTQ, &rv);
+		NS_WITH_PROXIED_SERVICE(nsIMsgAccountManager, accMgr, NS_MSGACCOUNTMANAGER_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv);
         NS_ASSERTION(NS_SUCCEEDED(rv) && accMgr,"failed to get account manager");
 		if (NS_FAILED(rv) || !accMgr) return;
 
@@ -219,7 +217,7 @@ nsresult nsOutlookCompose::CreateIdentity( void)
 		return( NS_OK);
 
 	nsresult	rv;
-    NS_WITH_PROXIED_SERVICE(nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, NS_UI_THREAD_EVENTQ, &rv);
+    NS_WITH_PROXIED_SERVICE(nsIMsgAccountManager, accMgr, NS_MSGACCOUNTMANAGER_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv);
     if (NS_FAILED(rv)) return( rv);
 	rv = accMgr->CreateIdentity( &m_pIdentity);
 	nsString	name;

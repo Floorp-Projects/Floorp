@@ -61,7 +61,6 @@
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsMsgMailNewsUrl::nsMsgMailNewsUrl()
@@ -236,7 +235,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetMsgWindow(nsIMsgWindow **aMsgWindow)
 	if (!m_msgWindow)
 	{
 //		nsCOMPtr<nsIMsgMailSession> mailSession = 
-//		         do_GetService(kMsgMailSessionCID, &rv); 
+//		         do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
 
 //		if(NS_SUCCEEDED(rv))
 //		mailSession->GetTemporaryMsgStatusFeedback(getter_AddRefs(m_statusFeedback));

@@ -57,7 +57,6 @@
 #include "nsIMsgLocalMailFolder.h"
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsPop3IncomingServer,
@@ -142,7 +141,7 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
   }
 
   //Biff just needs to give status in one of the windows. so do it in topmost window.
-  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(kCMsgMailSessionCID, &rv);
+  nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIMsgWindow> msgWindow;

@@ -100,7 +100,6 @@ static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
-static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -1034,7 +1033,7 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
          {
            nsCOMPtr<nsIUrlListener> urlListener;
            nsCOMPtr<nsIMsgAccountManager> accountManager = 
-                    do_GetService(kMsgAccountManagerCID, &rv);
+                    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
            if (NS_FAILED(rv)) return rv;
            nsCOMPtr<nsIEventQueueService> pEventQService = 
                     do_GetService(kEventQueueServiceCID, &rv);

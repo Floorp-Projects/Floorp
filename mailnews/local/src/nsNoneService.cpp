@@ -58,7 +58,6 @@
 #define PREF_MAIL_ROOT_NONE "mail.root.none"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsNoneService::nsNoneService()
 {

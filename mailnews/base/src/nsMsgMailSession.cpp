@@ -65,11 +65,8 @@ NS_INTERFACE_MAP_BEGIN(nsMsgMailSession)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgMailSession)
 NS_INTERFACE_MAP_END_THREADSAFE
   
-static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-
 nsMsgMailSession::nsMsgMailSession()
 {
-
 	NS_INIT_ISUPPORTS();
 }
 
@@ -468,7 +465,7 @@ NS_IMETHODIMP nsMsgMailSession::RemoveMsgWindow(nsIMsgWindow *msgWindow)
     {
         nsresult rv;
         nsCOMPtr<nsIMsgAccountManager> accountManager = 
-                 do_GetService(kMsgAccountManagerCID, &rv);
+                 do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
         accountManager->CleanupOnExit();
     }

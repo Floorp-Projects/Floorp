@@ -50,7 +50,6 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,		NS_RDFINMEMORYDATASOURCE_CID); 
-static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 
@@ -146,7 +145,7 @@ nsresult nsMsgNotificationManager::Init()
 		return rv;
 
 	nsCOMPtr<nsIMsgMailSession> mailSession = 
-	         do_GetService(kMsgMailSessionCID, &rv); 
+	         do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		rv = mailSession->AddFolderListener(this, nsIFolderListener::propertyChanged | nsIFolderListener::propertyFlagChanged);
 

@@ -41,7 +41,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsIPref.h"
 
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsMsgCompPrefs::nsMsgCompPrefs()

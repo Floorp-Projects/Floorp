@@ -66,7 +66,6 @@
 #include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static PRTime gtimeOfLastPurgeCheck;    //variable to know when to check for purge_threshhold
 
 
@@ -373,7 +372,7 @@ nsresult nsMsgDBFolder::GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, ns
 	NS_ASSERTION(NS_SUCCEEDED(fileSpec->Exists(&exists)) && exists, "whoops, file doesn't exist, mac will break");
 #endif
 	nsCOMPtr<nsIMsgAccountManager> accountMgr = 
-	         do_GetService(kMsgAccountManagerCID, &result); 
+	         do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &result); 
 	if(NS_SUCCEEDED(result))
 	{
 		result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));

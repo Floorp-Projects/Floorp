@@ -73,7 +73,6 @@
 #define PREF_MAIL_ROOT_MOVEMAIL "mail.root.movemail"
 
 static NS_DEFINE_CID(kPrefCID,           NS_PREF_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsMovemailService::nsMovemailService()
 {

@@ -54,11 +54,10 @@
 #include "nsMsgNewsCID.h"
 #include "nsINntpService.h"
 #include "nsXPIDLString.h"
+
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
-static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsMsgOfflineManager,
@@ -216,7 +215,7 @@ nsresult nsMsgOfflineManager::SendUnsentMessages()
 	nsCOMPtr<nsIMsgSendLater> pMsgSendLater = do_CreateInstance(kMsgSendLaterCID, &rv); 
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
-           do_GetService(kCMsgAccountManagerCID, &rv);
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   // now we have to iterate over the identities, finding the *unique* unsent messages folder
   // for each one, determine if they have unsent messages, and if so, add them to the list
@@ -303,7 +302,7 @@ nsresult nsMsgOfflineManager::DownloadOfflineNewsgroups()
 {
 	nsresult rv;
   ShowStatus("downloadingNewsgroups");
-  nsCOMPtr<nsINntpService> nntpService(do_GetService(kNntpServiceCID, &rv));
+  nsCOMPtr<nsINntpService> nntpService(do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && nntpService)
     rv = nntpService->DownloadNewsgroupsForOffline(m_window, this);
 

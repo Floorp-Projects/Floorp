@@ -110,9 +110,7 @@
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
 // for these two interfaces 
 //
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
-static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -255,7 +253,7 @@ NS_IMETHODIMP nsMsgComposeAndSend::GetDefaultPrompt(nsIPrompt ** aPrompt)
   
   /* If we cannot find a prompter, try the mail3Pane window */
   nsCOMPtr<nsIMsgWindow> msgWindow;
-  nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(kMsgMailSessionCID));
+  nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(NS_MSGMAILSESSION_CONTRACTID));
   if (mailSession)
   {
   mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
@@ -270,7 +268,7 @@ nsresult nsMsgComposeAndSend::GetNotificationCallbacks(nsIInterfaceRequestor** a
 {
 // TODO: stop using mail3pane window!
   nsCOMPtr<nsIMsgWindow> msgWindow;
-  nsCOMPtr<nsIMsgMailSession> mailSession(do_GetService(kMsgMailSessionCID));
+  nsCOMPtr<nsIMsgMailSession> mailSession(do_GetService(NS_MSGMAILSESSION_CONTRACTID));
   mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
   if (msgWindow) {
     nsCOMPtr<nsIDocShell> docShell;
@@ -3336,7 +3334,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
   nsCOMPtr<nsIPrompt> promptObject;
   GetDefaultPrompt(getter_AddRefs(promptObject));
 
-  nsCOMPtr<nsINntpService> nntpService(do_GetService(kNntpServiceCID, &rv));
+  nsCOMPtr<nsINntpService> nntpService(do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv));
 
   if (NS_SUCCEEDED(rv) && nntpService) 
   {
@@ -3358,7 +3356,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
   mComposeBundle->GetStringByID(NS_MSG_POSTING_MESSAGE, getter_Copies(msg));
   SetStatusMessage( msg );
 
-  nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(kMsgMailSessionCID, &rv);
+  nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   if (!mailSession) return NS_ERROR_FAILURE;

@@ -83,7 +83,6 @@
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kMsgFolderListenerManagerCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
@@ -2325,7 +2324,7 @@ nsMsgFolder::NotifyPropertyChanged(nsIAtom *property,
     //Notify listeners who listen to every folder
     nsresult rv;
     nsCOMPtr<nsIFolderListener> folderListenerManager =
-             do_GetService(kMsgFolderListenerManagerCID, &rv);
+             do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       folderListenerManager->OnItemPropertyChanged(supports, property, oldValue, newValue);
 
@@ -2355,7 +2354,7 @@ nsMsgFolder::NotifyUnicharPropertyChanged(nsIAtom *property,
 
   // Notify listeners who listen to every folder
   nsCOMPtr<nsIFolderListener> folderListenerManager =
-           do_GetService(kMsgFolderListenerManagerCID, &rv);
+           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     rv = folderListenerManager->OnItemUnicharPropertyChanged(supports,
                                                    property,
@@ -2384,7 +2383,7 @@ nsresult nsMsgFolder::NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldVal
     //Notify listeners who listen to every folder
     nsresult rv;
     nsCOMPtr<nsIFolderListener> folderListenerManager =
-             do_GetService(kMsgFolderListenerManagerCID, &rv);
+             do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       folderListenerManager->OnItemIntPropertyChanged(supports, property, oldValue, newValue);
 
@@ -2412,7 +2411,7 @@ nsMsgFolder::NotifyBoolPropertyChanged(nsIAtom* property,
     //Notify listeners who listen to every folder
     nsresult rv;
     nsCOMPtr<nsIFolderListener> folderListenerManager =
-             do_GetService(kMsgFolderListenerManagerCID, &rv);
+             do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       folderListenerManager->OnItemBoolPropertyChanged(supports, property, oldValue, newValue);
 
@@ -2437,7 +2436,7 @@ nsMsgFolder::NotifyPropertyFlagChanged(nsISupports *item, nsIAtom *property,
   //Notify listeners who listen to every folder
   nsresult rv;
   nsCOMPtr<nsIFolderListener> folderListenerManager =
-           do_GetService(kMsgFolderListenerManagerCID, &rv);
+           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     folderListenerManager->OnItemPropertyFlagChanged(item, property, oldValue, newValue);
 
@@ -2462,7 +2461,7 @@ nsresult nsMsgFolder::NotifyItemAdded(nsISupports *parentItem, nsISupports *item
   //Notify listeners who listen to every folder
   nsresult rv;
   nsCOMPtr<nsIFolderListener> folderListenerManager =
-           do_GetService(kMsgFolderListenerManagerCID, &rv);
+           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     folderListenerManager->OnItemAdded(parentItem, item, viewString);
 
@@ -2483,7 +2482,7 @@ nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *parentItem, nsISupports *it
   //Notify listeners who listen to every folder
   nsresult rv;
   nsCOMPtr<nsIFolderListener> folderListenerManager =
-           do_GetService(kMsgFolderListenerManagerCID, &rv);
+           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     folderListenerManager->OnItemRemoved(parentItem, item, viewString);
 
@@ -2504,7 +2503,7 @@ nsresult nsMsgFolder::NotifyFolderEvent(nsIAtom* aEvent)
   //Notify listeners who listen to every folder
   nsresult rv;
   nsCOMPtr<nsIFolderListener> folderListenerManager =
-           do_GetService(kMsgFolderListenerManagerCID, &rv);
+           do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     folderListenerManager->OnItemEvent(this, aEvent);
 

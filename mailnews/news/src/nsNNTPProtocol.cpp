@@ -174,8 +174,6 @@ protected:
 };
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
-static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
@@ -4285,7 +4283,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
       
       // get the current identity from the news session....
       nsCOMPtr<nsIMsgAccountManager> accountManager = 
-               do_GetService(kCMsgAccountManagerCID, &rv);
+               do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv) && accountManager) {
           nsCOMPtr<nsISupportsArray> identities;
           rv = accountManager->GetAllIdentities(getter_AddRefs(identities));

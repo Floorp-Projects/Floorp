@@ -63,7 +63,6 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 
 nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
@@ -279,7 +278,7 @@ nsresult nsMsgFolderDataSource::Init()
     return rv;
 
   nsCOMPtr<nsIMsgMailSession> mailSession = 
-    do_GetService(kMsgMailSessionCID, &rv); 
+    do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
 
   if(NS_SUCCEEDED(rv))
     mailSession->AddFolderListener(this, 
@@ -299,7 +298,7 @@ void nsMsgFolderDataSource::Cleanup()
   if (!m_shuttingDown)
   {
     nsCOMPtr<nsIMsgMailSession> mailSession =
-      do_GetService(kMsgMailSessionCID, &rv);
+      do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
     
     if(NS_SUCCEEDED(rv))
       mailSession->RemoveFolderListener(this);

@@ -50,7 +50,6 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIFileStream.h"
 #include "nsIMsgCopyService.h"
-static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 NS_IMPL_ISUPPORTS2(nsImapOfflineSync, nsIUrlListener, nsIMsgCopyServiceListener)
@@ -948,7 +947,7 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
     // Update the INBOX first so the updates on the remaining
     // folders pickup the results of any filter moves.
     nsCOMPtr<nsIMsgAccountManager> accountManager = 
-             do_GetService(kMsgAccountManagerCID, &rv);
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsISupportsArray> servers;
   

@@ -42,7 +42,6 @@
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kSmtpServiceCID,		NS_SMTPSERVICE_CID); 
-static NS_DEFINE_CID(kMsgAccountMgrCID, NS_MSGACCOUNTMANAGER_CID);
 
 static const char *	kWhitespace = "\b\t\r\n ";
 
@@ -549,7 +548,7 @@ PRBool nsEudoraWin32::ImportSettings( nsIFileSpec *pIniFile, nsIMsgAccount **loc
 	nsresult	rv;
 
 	nsCOMPtr<nsIMsgAccountManager> accMgr = 
-	         do_GetService(kMsgAccountMgrCID, &rv);
+	         do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
 		IMPORT_LOG0( "*** Failed to create a account manager!\n");
 		return( PR_FALSE);

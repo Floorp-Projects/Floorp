@@ -65,7 +65,6 @@ static NS_DEFINE_CID(kIStreamConverterServiceCID,
                      NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 
 nsMailboxService::nsMailboxService()

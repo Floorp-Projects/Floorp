@@ -97,7 +97,6 @@
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
-static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
 static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -527,7 +526,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
 {
   nsresult rv;
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
-           do_GetService(kMsgAccountManagerCID, &rv);
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // create the server
@@ -669,7 +668,7 @@ nsMessengerMigrator::UpgradePrefs()
 #endif 
 
     nsCOMPtr<nsIMsgAccountManager> accountManager = 
-             do_GetService(kMsgAccountManagerCID, &rv);
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // create a dummy identity, for migration only
@@ -1150,7 +1149,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
 {
   nsresult rv;
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
-           do_GetService(kMsgAccountManagerCID, &rv);
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // create the server
@@ -1274,7 +1273,7 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   nsCOMPtr<nsIMsgIncomingServer> server;
   
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
-           do_GetService(kMsgAccountManagerCID, &rv);
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // get the pop username
@@ -1383,7 +1382,7 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
 {
   nsresult rv;
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
-           do_GetService(kMsgAccountManagerCID, &rv);
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIMsgIncomingServer> server;
@@ -1647,7 +1646,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   nsresult rv;  
 
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
-           do_GetService(kMsgAccountManagerCID, &rv);
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   if (!hostAndPort) return NS_ERROR_NULL_POINTER;
@@ -2303,7 +2302,7 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 {  
 	nsresult rv;
     nsCOMPtr<nsIMsgAccountManager> accountManager = 
-             do_GetService(kMsgAccountManagerCID, &rv);
+             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
 	nsFileSpec thisNewsHostsDir = newsHostsDir;

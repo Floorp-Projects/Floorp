@@ -67,8 +67,6 @@
 #include "nsIWindowWatcher.h"
 
 static NS_DEFINE_CID(kCAbSyncPostEngineCID, NS_ABSYNC_POST_ENGINE_CID); 
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -731,7 +729,7 @@ nsAbSync::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
 	nsFileSpec* dbPath = nsnull;
 
 	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(kAddrBookSessionCID, &rv); 
+	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
 	if(NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
 	
@@ -743,7 +741,7 @@ nsAbSync::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
       (*dbPath) += aAbName;
 
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory = 
-		         do_GetService(kAddressBookDBCID, &rv);
+		         do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);

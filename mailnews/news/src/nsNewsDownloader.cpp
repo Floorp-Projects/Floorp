@@ -51,10 +51,8 @@
 #include "nsIMsgAccountManager.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIRequestObserver.h"
+
 // This file contains the news article download state machine.
-
-static NS_DEFINE_CID(kNntpServiceCID,	NS_NNTPSERVICE_CID);
-
 
 // if pIds is not null, download the articles whose id's are passed in. Otherwise,
 // which articles to download is determined by nsNewsDownloader object,
@@ -348,7 +346,6 @@ DownloadMatchingNewsArticlesToNewsDB::~DownloadMatchingNewsArticlesToNewsDB()
 {
 }
 
-static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 NS_IMPL_ISUPPORTS1(nsMsgDownloadAllNewsgroups, nsIUrlListener)

@@ -68,10 +68,8 @@
 
 #include "ImportDebug.h"
 
-static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_STRING_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
@@ -778,7 +776,7 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 	// Note to Candice: This should return an nsIFileSpec, not a nsFileSpec
 	nsFileSpec *					dbPath = nsnull;
 
-	NS_WITH_PROXIED_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, NS_UI_THREAD_EVENTQ, &rv); 
+	NS_WITH_PROXIED_SERVICE(nsIAddrBookSession, abSession, NS_ADDRBOOKSESSION_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv); 
 	
 	if (NS_SUCCEEDED(rv))
 		abSession->GetUserProfileDirectory(&dbPath);
@@ -790,7 +788,7 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		
 		IMPORT_LOG0( "Getting the address database factory\n");
 
-		NS_WITH_PROXIED_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, NS_UI_THREAD_EVENTQ, &rv);
+		NS_WITH_PROXIED_SERVICE(nsIAddrDatabase, addrDBFactory, NS_ADDRDATABASE_CONTRACTID, NS_UI_THREAD_EVENTQ, &rv);
 		if (NS_SUCCEEDED(rv) && addrDBFactory) {
 			
 			IMPORT_LOG0( "Opening the new address book\n");
