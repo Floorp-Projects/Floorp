@@ -429,7 +429,8 @@ orkinCell::SetColumn(nsIMdbEnv* mev, mdb_column inColumn)
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    morkCellObject* cellObj;
+    cellObj = (morkCellObject*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -478,7 +479,8 @@ orkinCell::GetCellInfo(  // all cell metainfo except actual content
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    morkCellObject* cellObj;
+    cellObj = (morkCellObject*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -593,7 +595,8 @@ orkinCell::GetAnyChild( // access table of specific attribute
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    morkCellObject* cellObj;
+    cellObj = (morkCellObject*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -620,7 +623,8 @@ orkinCell::SetChildRow( // access table of specific attribute
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    morkCellObject* cellObj;
+    cellObj = (morkCellObject*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -640,7 +644,8 @@ orkinCell::GetChildRow( // access row of specific attribute
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    morkCellObject* cellObj;
+    cellObj = (morkCellObject*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -663,7 +668,8 @@ orkinCell::SetChildTable( // access table of specific attribute
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    morkCellObject* cellObj;
+    cellObj = (morkCellObject*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -683,7 +689,8 @@ orkinCell::GetChildTable( // access table of specific attribute
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    morkCellObject* cellObj;
+    cellObj = (morkCellObject*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }

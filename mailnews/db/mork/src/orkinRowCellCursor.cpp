@@ -361,7 +361,7 @@ orkinRowCellCursor::SetRow(nsIMdbEnv* mev, nsIMdbRow* ioRow)
   if ( ev )
   {
     morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
-    morkRow* row = 0;
+    row = 0;
     orkinRow* orow = (orkinRow*) ioRow;
     if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
     {
@@ -464,7 +464,8 @@ orkinRowCellCursor::SeekCell( // same as SetRow() followed by MakeCell()
     this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    morkRowCellCursor* cursor;
+    cursor = (morkRowCellCursor*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -493,7 +494,8 @@ orkinRowCellCursor::NextCell( // get next cell in the row
     this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    morkRowCellCursor* cursor;
+    cursor = (morkRowCellCursor*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -524,7 +526,8 @@ orkinRowCellCursor::PickNextCell( // get next cell in row within filter set
     this->CanUseRowCellCursor(mev, /*mut*/ morkBool_kFalse, &outErr, &row);
   if ( ev )
   {
-    morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
+    morkRowCellCursor* cursor;
+    cursor = (morkRowCellCursor*) mHandle_Object;
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }

@@ -128,7 +128,8 @@ NS_IMETHODIMP nsMsgHdr::SetMessageKey(nsMsgKey value)
 
 NS_IMETHODIMP nsMsgHdr::GetFlags(PRUint32 *result)
 {
-	nsresult res = GetUInt32Column(m_mdb->m_flagsColumnToken, &m_flags);
+	nsresult res;
+    res = GetUInt32Column(m_mdb->m_flagsColumnToken, &m_flags);
     *result = m_flags;
     return NS_OK;
 }
@@ -440,7 +441,8 @@ NS_IMETHODIMP nsMsgHdr::SetPriority(const char *priority)
 
 	// NS_MsgGetPriorityFromString will return normal in case of error,
 	// so we can ignore return value.
-	nsresult res = NS_MsgGetPriorityFromString(priority, &priorityVal);
+	nsresult res;
+    res = NS_MsgGetPriorityFromString(priority, &priorityVal);
 	return SetPriority(priorityVal);
 }
 

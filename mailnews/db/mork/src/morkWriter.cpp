@@ -783,11 +783,11 @@ morkWriter::WriteAllStoreTables(morkEnv* ev)
             morkTableMapIter* ti = &mWriter_RowSpaceTablesIter;
             ti->InitTableMapIter(ev, &space->mRowSpace_Tables);
 
-            mork_tid* key = 0; // ignore keys in table map
+            mork_tid* key2 = 0; // ignore keys in table map
             morkTable* table = 0; // old key row in the map
               
-            for ( c = ti->FirstTable(ev, key, &table); c && ev->Good();
-                  c = ti->NextTable(ev, key, &table) )
+            for ( c = ti->FirstTable(ev, key2, &table); c && ev->Good();
+                  c = ti->NextTable(ev, key2, &table) )
             {
               if ( table && table->IsTable() )
               {
@@ -1494,7 +1494,8 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
       mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowDepth);
     
     ioRow->SetRowClean();
-    mork_rid rid = roid->mOid_Id;
+    mork_rid rid;
+    rid = roid->mOid_Id;
     *p++ = '[';
     if ( roid->mOid_Scope == mWriter_TableRowScope )
       ridSize = ev->TokenAsHex(p, roid->mOid_Id);

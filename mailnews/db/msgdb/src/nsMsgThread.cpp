@@ -171,7 +171,7 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, PRBool threadInThread)
 }
 
 
-NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 index, nsIMsgDBHdr **result)
+NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 {
 	nsresult ret = NS_OK;
 
@@ -206,11 +206,11 @@ NS_IMETHODIMP nsMsgThread::GetChild(nsMsgKey msgKey, nsIMsgDBHdr **result)
 }
 
 
-NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **result)
+NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 {
 	nsresult ret = NS_OK;
 	nsIMdbRow* resultRow;
-	mdb_pos pos = index - 1;
+	mdb_pos pos = aIndex - 1;
 
 	if (!result)
 		return NS_ERROR_NULL_POINTER;
@@ -218,7 +218,7 @@ NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **result)
 	*result = nsnull;
 	// mork doesn't seem to handle this correctly, so deal with going off
 	// the end here.
-	if (index > m_numChildren)
+	if (aIndex > m_numChildren)
 		return NS_OK;
 
 	nsIMdbTableRowCursor *rowCursor;
@@ -242,7 +242,7 @@ NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **result)
 }
 
 
-NS_IMETHODIMP nsMsgThread::RemoveChildAt(PRInt32 index)
+NS_IMETHODIMP nsMsgThread::RemoveChildAt(PRInt32 aIndex)
 {
 	nsresult ret = NS_OK;
 
@@ -336,7 +336,7 @@ NS_IMPL_ISUPPORTS(nsMsgThreadEnumerator, nsIEnumerator::GetIID())
 
 NS_IMETHODIMP nsMsgThreadEnumerator::First(void)
 {
-	nsresult rv = 0;
+	//nsresult rv = NS_OK;
 
 	if (!mThread)
 		return NS_ERROR_NULL_POINTER;
