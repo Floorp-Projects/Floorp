@@ -132,17 +132,21 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam,
   pShellInstance->mArgv = __argv;
 
   pShellInstance->Init();
-	pApplicationShell->Init();
+	result = pApplicationShell->Init();
 
-  // Now, let actually start dispatching events.
-  nsIAppShell * app_shell = nsnull;
-
-  result = pApplicationShell->QueryInterface(kIAppShellIID,(void**)&app_shell);
-
-  if (result == NS_OK)
+  if (NS_OK == result)
   {
-	result = app_shell->Run();
-    NS_RELEASE(app_shell);
+
+    // Now, let actually start dispatching events.
+    nsIAppShell * app_shell = nsnull;
+
+    result = pApplicationShell->QueryInterface(kIAppShellIID,(void**)&app_shell);
+
+    if (result == NS_OK)
+  	  result = app_shell->Run();
+
+    NS_IF_RELEASE(app_shell);
+
   }
 
   // We're done, clean up
