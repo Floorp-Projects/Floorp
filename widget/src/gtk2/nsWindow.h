@@ -21,6 +21,9 @@
 
 #include <nsBaseWidget.h>
 
+#include "mozcontainer.h"
+#include "mozdrawingarea.h"
+
 class nsWindow : public nsBaseWidget {
  public:
   nsWindow();
@@ -113,4 +116,23 @@ class nsWindow : public nsBaseWidget {
 				      void   *aEvent,
 				      PRBool *aForWindow);
   NS_IMETHOD         GetAttention();
+
+ private:
+
+  nsresult CommonCreate(nsIWidget        *aParent,
+		        nsNativeWidget    aNativeParent,
+		        const nsRect     &aRect,
+		        EVENT_CALLBACK    aHandleEventFunction,
+		        nsIDeviceContext *aContext,
+		        nsIAppShell      *aAppShell,
+		        nsIToolkit       *aToolkit,
+		        nsWidgetInitData *aInitData);
+
+  GtkWidget          *mShell;
+  MozContainer       *mContainer;
+  MozDrawingarea     *mDrawingarea;
+
+  PRPackedBool        mIsTopLevel;
+
+  nsCOMPtr<nsIWidget> mParent;
 };
