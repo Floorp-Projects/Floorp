@@ -49,7 +49,7 @@ to leaves form stack traces that call malloc, calloc, realloc, and free,
 can by built in-process by building with --enable-trace-malloc and running
 with --trace-malloc <i>filename</i>.&nbsp; As malloc, free, etc. are called,
 log events identifying the function call and its callsite are emitted to
-    <i>filename</i>. (more <a href="TraceMalloc">below</a>).<br>
+    <i>filename</i>. (more <a href="#TraceMalloc">below</a>).<br>
   </li>
   
   <li> <b>Leaky</b> - This tool also dumps out stack traces (in a slightly
@@ -911,7 +911,7 @@ and a binary log of events and callsite relations will be written to <i>filename
 machinery keeps track of all live allocations, and builds its tree of callsites
 to keep book on stack backtraces.<br>
                                         <br>
-Tools such as bloatblame (xpcom/base/bloatblame.c) can be used to process
+Tools such as bloatblame (tools/trace-malloc/bloatblame.c) can be used to process
                                         <i>filename</i>.&nbsp; Try running
 with the unified output format option, -u.&nbsp; The output is a large HTML
 file that hyperlinks ancestor and descendent libraries, classes, and functions
