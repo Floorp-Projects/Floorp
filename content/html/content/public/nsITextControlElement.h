@@ -66,6 +66,11 @@ public:
    * the control is not there or goes away.
    */
   NS_IMETHOD SetValueInternal(nsAReadableString& str) = 0;
+
+  /**
+   * Tell the control that value has been deliberately changed (or not).
+   */
+  NS_IMETHOD SetValueChanged(PRBool changed) = 0;
 };
 
 #endif // nsITextControlElement_h___
