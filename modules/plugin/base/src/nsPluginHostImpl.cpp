@@ -1484,7 +1484,10 @@ nsPluginStreamInfo::SetLocalCachedFile(const char* path)
 void
 nsPluginStreamInfo::GetLocalCachedFile(char** path)
 { 
-  *path = PL_strdup(mFilePath);
+  if (mFilePath)
+    *path = PL_strdup(mFilePath);
+  else
+    *path = nsnull;
 }
 
 
@@ -1634,7 +1637,7 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
   if(mURL != nsnull) (void)mURL->GetSpec(&urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginStreamListenerPeer::dtor url=%s, POST_file=%s\n", urlSpec, mLocalFile));
+        ("nsPluginStreamListenerPeer::dtor this=%p, url=%s, POST_file=%s\n",this, urlSpec, mLocalFile));
 
   PR_LogFlush();
   if (urlSpec) nsCRT::free(urlSpec);
@@ -1880,6 +1883,21 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
+  
+  // deal with 404 (Not Found) HTTP response,
+  // just return, this causes the request to be ignored.
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel, &rv));
+
+  if (NS_SUCCEEDED(rv)) {
+    PRUint32 responseCode = 0;
+    rv = httpChannel->GetResponseStatus(&responseCode);
+    if (NS_FAILED(rv) || responseCode > 206) { // not normal
+      // NPP_Notyfy() will be called from OnStopRequest
+      // in ns4xPluginStreamListener::CleanUpStream
+      // return error will cancel this request
+      return NS_ERROR_FAILURE;
+    }
+  }
 
   nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel, &rv);
   if (cacheChannel)
@@ -1907,8 +1925,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   if(aURL != nsnull) (void)aURL->GetSpec(&urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NOISY,
-  ("nsPluginStreamListenerPeer::OnStartRequest request=%p mime=%s, url=%s\n",
-  request, aContentType, urlSpec));
+  ("nsPluginStreamListenerPeer::OnStartRequest this=%p request=%p mime=%s, url=%s\n",
+  this, request, aContentType, urlSpec));
 
   PR_LogFlush();
   if (urlSpec) nsCRT::free(urlSpec);
@@ -2065,8 +2083,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   aURL->GetSpec(&urlString);
   mPluginStreamInfo->SetURL(urlString);
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
-  ("nsPluginStreamListenerPeer::OnDataAvailable request=%p, offset=%d, length=%d, url=%s\n",
-  request, sourceOffset, aLength, urlString));
+  ("nsPluginStreamListenerPeer::OnDataAvailable this=%p request=%p, offset=%d, length=%d, url=%s\n",
+  this, request, sourceOffset, aLength, urlString));
   nsCRT::free(urlString);
 
   // if the plugin has requested an AsFileOnly stream, then don't 
@@ -2152,7 +2170,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
 
   // doing multiple requests, the main url load (the cacheable entry) could come
   // out of order.  Here we will check to see if the request is main url load.
-  
+
   if (cacheChannel) {
     rv = cacheChannel->GetCacheFile(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv)) {
@@ -2162,8 +2180,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   }
 
   PLUGIN_LOG(PLUGIN_LOG_NOISY,
-  ("nsPluginStreamListenerPeer::OnStopAvailable request=%p, cachefile=%s\n",
-  request, pathAndFilename.get()));
+  ("nsPluginStreamListenerPeer::OnStopRequest this=%p aStatus=%d request=%p, cachefile=%s\n",
+  this, aStatus, request, pathAndFilename.get()));
 
   // If we are writting the stream to disk ourselves, lets close it
   nsCOMPtr<nsIOutputStream> outStream;
@@ -2209,18 +2227,19 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   if (!pathAndFilename)
     mPluginStreamInfo->GetLocalCachedFile(getter_Copies(pathAndFilename));
 
-  if (!pathAndFilename || 0 == *pathAndFilename) {
+  if (!pathAndFilename) {
     // see if it is a file channel.
     nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
-    if (fileChannel)
+    if (fileChannel) {
       fileChannel->GetFile(getter_AddRefs(localFile));
-    if (localFile)
+      if (localFile) {
         localFile->GetPath(getter_Copies(pathAndFilename));
-
-    mPluginStreamInfo->SetLocalCachedFile(pathAndFilename);
+        mPluginStreamInfo->SetLocalCachedFile(pathAndFilename);
+      }
+    }
   }
 
-  if (pathAndFilename)
+  if (pathAndFilename && *pathAndFilename)
     OnFileAvailable(pathAndFilename);
   
   nsCOMPtr<nsIURI> aURL;
@@ -2246,7 +2265,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   if (aContentType)
     mPluginStreamInfo->SetContentType(aContentType);
 
-  if (mStartBinding)
+  // on error status cleanup the stream
+  if (mStartBinding || NS_FAILED(aStatus))
   {
     // On start binding has been called
     mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
