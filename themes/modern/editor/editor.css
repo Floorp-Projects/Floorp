@@ -47,3 +47,8 @@
 #content-source, #doctype-text {
   font-family   : -moz-fixed;
 }
+
+/********* image pre-cacheing ********/
+#resource_bundle_editor{
+   -moz-binding            : url('chrome://editor/skin/resources.xml#resource_bundle_editor') 
+}

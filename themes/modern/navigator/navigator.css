@@ -27,6 +27,12 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: image precacheing ::::: */
+
+#resource_bundle_navigator {
+  -moz-binding            : url('chrome://navigator/skin/resources.xml#resource_bundle_navigator')      
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 .menubutton-dual {

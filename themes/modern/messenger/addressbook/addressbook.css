@@ -35,6 +35,12 @@
   background-image: url("chrome://messenger/skin/addressbook/icons/mast-ab.gif");
 }
 
+/* :::::  addressbook image precaching ::::: */
+
+#resource_bundle_addressbook {
+   -moz-binding: url('chrome://messenger/skin/addressbook/resources.xml#resource_bundle_addressbook');
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 #button-newcard {

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<bindings id="NavigatorResourcesBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          
+         
+ <binding id="resource_bundle_navigator" extends="" >
+   <resources>
+     <image src="chrome://navigator/skin/back-hover.gif"/>
+     <image src="chrome://navigator/skin/btn1/back-hov.gif"/>
+     <image src="chrome://navigator/skin/btn1/back-act.gif"/>
+     <image src="chrome://navigator/skin/btn1/forward-hov.gif"/>
+     <image src="chrome://navigator/skin/btn1/forward-act.gif"/>
+     <image src="chrome://navigator/skin/btn1/reload-hov.gif"/>
+     <image src="chrome://navigator/skin/btn1/reload-act.gif"/>
+     <image src="chrome://navigator/skin/btn1/stop-hov.gif"/>
+     <image src="chrome://navigator/skin/btn1/stop-act.gif"/>
+     <image src="chrome://communicator/skin/btn1/print-hov.gif"/>
+     <image src="chrome://communicator/skin/btn1/print-act.gif"/>
+   </resources>	
+  </binding>
+          
+</bindings>  
