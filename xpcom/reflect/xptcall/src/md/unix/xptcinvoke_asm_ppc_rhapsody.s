@@ -24,7 +24,7 @@
 
 # 
 # ** Assumed vtable layout (obtained by disassembling with gdb):
-# ** 4 bytes per vtable entry, skip 0th entry, so the mapping
+# ** 4 bytes per vtable entry, skip 0th and 1st entries, so the mapping
 # ** from index to entry is (4 * index) + 8.
 #
 
@@ -42,12 +42,15 @@ __XPTC_InvokeByIndex:
 #
 # save off the incoming values in the callers parameter area
 #		
-	stw	r3,24(r1)
-	stw	r4,28(r1)
-	stw	r5,32(r1)
-	stw	r6,36(r1)
+	stw	r3,24(r1)               ; that
+	stw	r4,28(r1)               ; methodIndex
+	stw	r5,32(r1)               ; paramCount
+	stw	r6,36(r1)               ; params
 	stw	r0,8(r1)
-	stwu	r1,-144(r1)              ; keep 16-byte aligned
+	stwu	r1,-144(r1)             ; 24 for linkage area, 
+                                        ; 8*13 for fprData area,
+                                        ; 8 for saved registers,
+                                        ; 8 to keep stack 16-byte aligned
 
 # set up for and call 'invoke_count_words' to get new stack size
 #	
@@ -57,31 +60,26 @@ __XPTC_InvokeByIndex:
 	stwu	r1,-24(r1)	
 	bl	_invoke_count_words
 	lwz	r1,0(r1)
-#	nop
 
 # prepare args for 'invoke_copy_to_stack' call
 #		
-	lwz	r4,176(r1)
-	lwz	r5,180(r1)
-	mr	r6,r1
-	slwi	r3,r3,2
-	addi	r3,r3,28
-	mr	r31,r1
-	sub	r1,r1,r3
-	clrrwi r1,r1,4                  ; keep 16-byte aligned
-	lwz	r3,0(r31)
-	stw	r3,0(r1)
-	addi	r3,r1,28
+	lwz	r4,176(r1)              ; paramCount
+	lwz	r5,180(r1)              ; params
+	mr	r6,r1                   ; fprData
+	slwi	r3,r3,2                 ; number of stack bytes required
+	addi	r3,r3,28                ; linkage area
+	mr	r31,r1                  ; save original stack top
+	sub	r1,r1,r3                ; bump the stack
+	clrrwi	r1,r1,4                 ; keep the stack 16-byte aligned
+	addi	r3,r31,144              ; act like real alloca, so 0(sp) always
+	stw	r3,0(r1)                ;  points back to previous stack frame
+	addi	r3,r1,28                ; parameter pointer excludes linkage area size + 'this'
 	
 # create "temporary" stack frame for _invoke_copy_to_stack to operate in.
 	stwu	r1,-40(r1)
-
 	bl	_invoke_copy_to_stack
-#	nop
-	
 # remove temporary stack frame.
 	lwz	r1,0(r1)
-
 
 	lfd	f1,0(r31)				
 	lfd	f2,8(r31)				
@@ -97,13 +95,12 @@ __XPTC_InvokeByIndex:
 	lfd	f12,88(r31)				
 	lfd	f13,96(r31)				
 	
-	lwz	r3,168(r31)
-	lwz	r4,0(r3)
-	lwz	r5,172(r31)
-	slwi	r5,r5,2		; entry_offset = (index * 4) + 4
-	addi	r5,r5,4
-	add	r12,r5,r4
-	lwz	r12,4(r12)
+	lwz	r3,168(r31)             ; that
+	lwz	r4,0(r3)                ; get vTable from 'that'
+	lwz	r5,172(r31)             ; methodIndex
+	slwi	r5,r5,2                 ; methodIndex * 4
+	addi	r5,r5,8                 ; (methodIndex * 4) + 8
+	lwzx	r12,r5,r4               ; get function pointer
 
 	lwz	r4,28(r1)
 	lwz	r5,32(r1)
@@ -113,9 +110,6 @@ __XPTC_InvokeByIndex:
 	lwz	r9,48(r1)
 	lwz	r10,52(r1)
 	
-#	bl	.__ptr_glue
-#	nop
-
 	mtlr	r12
 	blrl
 	
