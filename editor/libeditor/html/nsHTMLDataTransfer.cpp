@@ -319,7 +319,6 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
                                             &rangeStartHint, &rangeEndHint);
   NS_ENSURE_SUCCESS(res, res);
 
-
   // make a list of what nodes in docFrag we need to move
   nsCOMPtr<nsISupportsArray> nodeList;
   res = CreateListOfNodesToPaste(fragmentAsNode, address_of(nodeList), rangeStartHint, rangeEndHint);
@@ -1107,7 +1106,7 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
   nsCOMPtr<nsIDOMDocument> domdoc;
   rv = GetDocument(getter_AddRefs(domdoc));
   if (NS_FAILED(rv)) return rv;
-	
+  
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
   if (doc)
   {
@@ -1721,8 +1720,6 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
   res = aNSRange->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
   NS_ENSURE_SUCCESS(res, res);
   *outFragNode = do_QueryInterface(docfrag);
-  res = StripFormattingNodes(*outFragNode);
-  NS_ENSURE_SUCCESS(res, res);
   
   if (contextfrag)
   {
