@@ -52,7 +52,7 @@ LCFLAGS =                               \
 WIN_LIBS=                               \
  comctl32.lib                           \
  comdlg32.lib                           \
- imm32.lib								\
+# imm32.lib								\
  Uuid.lib								\
  ole32.lib								\
  shell32.lib
