@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -74,6 +74,15 @@ FT_BEGIN_HEADER
   /****                                                                 ****/
   /*************************************************************************/
   /*************************************************************************/
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* CMap support                                                          */
+  /*                                                                       */
+  /*   Define this if you want generic cmap support.                       */
+  /*                                                                       */
+#define FT_CONFIG_OPTION_USE_CMAPS
 
 
   /*************************************************************************/
@@ -234,7 +243,6 @@ FT_BEGIN_HEADER
 #undef FT_EXPORT
 #undef FT_EXPORT_DEF
 
-
   /*************************************************************************/
   /*                                                                       */
   /* Debug level                                                           */
@@ -270,22 +278,12 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Computation Algorithms                                                */
-  /*                                                                       */
-  /*   Used for debugging, this configuration macro should disappear       */
-  /*   soon.                                                               */
-  /*                                                                       */
-#undef FT_CONFIG_OPTION_OLD_CALCS
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* The size in bytes of the render pool used by the scan-line converter  */
   /* to do all of its work.                                                */
   /*                                                                       */
   /* This must be greater than 4kByte.                                     */
   /*                                                                       */
-#define FT_RENDER_POOL_SIZE  32768L
+#define FT_RENDER_POOL_SIZE  16384L
 
 
   /*************************************************************************/
@@ -296,19 +294,6 @@ FT_BEGIN_HEADER
   /*   FreeType library object.  16 is the default.                        */
   /*                                                                       */
 #define FT_MAX_MODULES  16
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* FT_MAX_EXTENSIONS                                                     */
-  /*                                                                       */
-  /*   The maximum number of extensions that can be registered in a single */
-  /*   font driver.  8 is the default.                                     */
-  /*                                                                       */
-  /*   If you don't know what this means, you certainly do not need to     */
-  /*   change this value.                                                  */
-  /*                                                                       */
-#define FT_MAX_EXTENSIONS  8
 
 
   /*************************************************************************/
@@ -356,6 +341,21 @@ FT_BEGIN_HEADER
   /* `freetype/ftnames.h'.                                                 */
   /*                                                                       */
 #define TT_CONFIG_OPTION_SFNT_NAMES
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* TrueType CMap support                                                 */
+  /*                                                                       */
+  /*   Here you can fine-tune which TrueType CMap table format shall be    */
+  /*   supported.                                                          */
+#define TT_CONFIG_CMAP_FORMAT_0
+#define TT_CONFIG_CMAP_FORMAT_2
+#define TT_CONFIG_CMAP_FORMAT_4
+#define TT_CONFIG_CMAP_FORMAT_6
+#define TT_CONFIG_CMAP_FORMAT_8
+#define TT_CONFIG_CMAP_FORMAT_10
+#define TT_CONFIG_CMAP_FORMAT_12
 
 
   /*************************************************************************/

@@ -118,7 +118,7 @@ FT_BEGIN_HEADER
 
   FT_EXPORT( void )
   ftc_family_table_free( FTC_FamilyTable  table,
-                         FT_UInt          index );
+                         FT_UInt          idx );
 
 
   /*************************************************************************/

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Build macros of the FreeType 2 library.                              */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -105,6 +105,20 @@
   /*                                                                       */
 #ifndef FT_CONFIG_CONFIG_H
 #define FT_CONFIG_CONFIG_H  <freetype/config/ftconfig.h>
+#endif
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* @macro:                                                               */
+  /*    FT_CONFIG_STANDARD_LIBRARY_H                                       */
+  /*                                                                       */
+  /* @description:                                                         */
+  /*    A macro used in #include statements to name the file containing    */
+  /*    FreeType 2 configuration data.                                     */
+  /*                                                                       */
+#ifndef FT_CONFIG_STANDARD_LIBRARY_H
+#define FT_CONFIG_STANDARD_LIBRARY_H  <freetype/config/ftstdlib.h>
 #endif
 
 
@@ -474,6 +488,7 @@
 
 #define FT_TRIGONOMETRY_H          <freetype/fttrigon.h>
 #define FT_SYNTHESIS_H             <freetype/ftsynth.h>
+#define FT_ERROR_DEFINITIONS_H     <freetype/fterrdef.h>
 
 #define FT_CACHE_MANAGER_H         <freetype/cache/ftcmanag.h>
 

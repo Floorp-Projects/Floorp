@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType type definitions and interface (specification    */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -45,7 +45,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TTC_Header                                                         */
+  /*    TTC_HeaderRec                                                      */
   /*                                                                       */
   /* <Description>                                                         */
   /*    TrueType collection header.  This table contains the offsets of    */
@@ -63,20 +63,20 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    offsets :: The offsets of the font headers, one per face.          */
   /*                                                                       */
-  typedef struct  TTC_Header_
+  typedef struct  TTC_HeaderRec_
   {
     FT_ULong   tag;
     FT_Fixed   version;
     FT_Long    count;
     FT_ULong*  offsets;
 
-  } TTC_Header;
+  } TTC_HeaderRec;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    SFNT_Header                                                        */
+  /*    SFNT_HeaderRec                                                     */
   /*                                                                       */
   /* <Description>                                                         */
   /*    SFNT file format header.                                           */
@@ -86,13 +86,13 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    num_tables     :: The number of tables in file.                    */
   /*                                                                       */
-  /*    search_range   :: Must be 16*(max power of 2 <= num_tables).       */
+  /*    search_range   :: Must be `16 * (max power of 2 <= num_tables)'.   */
   /*                                                                       */
-  /*    entry_selector :: Must be log2 of search_range/16.                 */
+  /*    entry_selector :: Must be log2 of `search_range / 16'.             */
   /*                                                                       */
-  /*    range_shift    :: Must be num_tables*16 - search_range.            */
+  /*    range_shift    :: Must be `num_tables * 16 - search_range'.        */
   /*                                                                       */
-  typedef struct  SFNT_Header_
+  typedef struct  SFNT_HeaderRec_
   {
     FT_ULong   format_tag;
     FT_UShort  num_tables;
@@ -100,13 +100,13 @@ FT_BEGIN_HEADER
     FT_UShort  entry_selector;
     FT_UShort  range_shift;
 
-  } SFNT_Header;
+  } SFNT_HeaderRec, *SFNT_Header;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_TableDir                                                        */
+  /*    TT_TableDirRec                                                     */
   /*                                                                       */
   /* <Description>                                                         */
   /*    This structure models a TrueType table directory.  It is used to   */
@@ -126,7 +126,7 @@ FT_BEGIN_HEADER
   /* <Note>                                                                */
   /*    This structure is only used during font opening.                   */
   /*                                                                       */
-  typedef struct  TT_TableDir_
+  typedef struct  TT_TableDirRec_
   {
     FT_Fixed   version;        /* should be 0x10000 */
     FT_UShort  numTables;      /* number of tables  */
@@ -135,13 +135,13 @@ FT_BEGIN_HEADER
     FT_UShort  entrySelector;  /* for a dichotomy search in the   */
     FT_UShort  rangeShift;     /* directory.  We ignore them.     */
 
-  } TT_TableDir;
+  } TT_TableDirRec;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_Table                                                           */
+  /*    TT_TableRec                                                        */
   /*                                                                       */
   /* <Description>                                                         */
   /*    This structure describes a given table of a TrueType font.         */
@@ -156,20 +156,20 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    Length   :: The table length (in bytes).                           */
   /*                                                                       */
-  typedef struct  TT_Table_
+  typedef struct  TT_TableRec_
   {
     FT_ULong  Tag;        /*        table type */
     FT_ULong  CheckSum;   /*    table checksum */
     FT_ULong  Offset;     /* table file offset */
     FT_ULong  Length;     /*      table length */
 
-  } TT_Table;
+  } TT_TableRec, *TT_Table;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_CMapDir                                                         */
+  /*    TT_CMapDirRec                                                      */
   /*                                                                       */
   /* <Description>                                                         */
   /*    This structure describes the directory of the `cmap' table,        */
@@ -183,18 +183,18 @@ FT_BEGIN_HEADER
   /* <Note>                                                                */
   /*    This structure is only used during font loading.                   */
   /*                                                                       */
-  typedef struct  TT_CMapDir_
+  typedef struct  TT_CMapDirRec_
   {
     FT_UShort  tableVersionNumber;
     FT_UShort  numCMaps;
 
-  } TT_CMapDir;
+  } TT_CMapDirRec, *TT_CMapDir;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_CMapDirEntry                                                    */
+  /*    TT_CMapDirEntryRec                                                 */
   /*                                                                       */
   /* <Description>                                                         */
   /*    This structure describes a charmap in a TrueType font.             */
@@ -212,19 +212,19 @@ FT_BEGIN_HEADER
   /* <Note>                                                                */
   /*    This structure is only used during font loading.                   */
   /*                                                                       */
-  typedef struct  TT_CMapDirEntry_
+  typedef struct  TT_CMapDirEntryRec_
   {
     FT_UShort  platformID;
     FT_UShort  platformEncodingID;
     FT_Long    offset;
 
-  } TT_CMapDirEntry;
+  } TT_CMapDirEntryRec, *TT_CMapDirEntry;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_LongMetrics                                                     */
+  /*    TT_LongMetricsRec                                                  */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure modeling the long metrics of the `hmtx' and `vmtx'     */
@@ -235,17 +235,18 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    bearing :: The left-side or top-side bearing for the glyph.        */
   /*                                                                       */
-  typedef struct  TT_LongMetrics_
+  typedef struct  TT_LongMetricsRec_
   {
     FT_UShort  advance;
     FT_Short   bearing;
 
-  } TT_LongMetrics;
+  } TT_LongMetricsRec, *TT_LongMetrics;
 
 
   /*************************************************************************/
   /*                                                                       */
-  /* <Type> TT_ShortMetrics                                                */
+  /* <Type>                                                                */
+  /*    TT_ShortMetrics                                                    */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A simple type to model the short metrics of the `hmtx' and `vmtx'  */
@@ -257,7 +258,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_NameRec                                                         */
+  /*    TT_NameEntryRec                                                    */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure modeling TrueType name records.  Name records are used */
@@ -281,7 +282,7 @@ FT_BEGIN_HEADER
   /*    string       :: A pointer to the string's bytes.  Note that these  */
   /*                    are usually UTF-16 encoded characters.             */
   /*                                                                       */
-  typedef struct  TT_NameRec_
+  typedef struct  TT_NameEntryRec_
   {
     FT_UShort  platformID;
     FT_UShort  encodingID;
@@ -295,13 +296,13 @@ FT_BEGIN_HEADER
 
     FT_Byte*   string;
 
-  } TT_NameRec;
+  } TT_NameEntryRec, *TT_NameEntry;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_NameTable                                                       */
+  /*    TT_NameTableRec                                                    */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure modeling the TrueType name table.                      */
@@ -318,15 +319,15 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    storage        :: The names storage area.                          */
   /*                                                                       */
-  typedef struct  TT_NameTable_
+  typedef struct  TT_NameTableRec_
   {
-    FT_UShort    format;
-    FT_UShort    numNameRecords;
-    FT_UShort    storageOffset;
-    TT_NameRec*  names;
-    FT_Byte*     storage;
+    FT_UShort         format;
+    FT_UShort         numNameRecords;
+    FT_UShort         storageOffset;
+    TT_NameEntryRec*  names;
+    FT_Byte*          storage;
 
-  } TT_NameTable;
+  } TT_NameTableRec, *TT_NameTable;
 
 
   /*************************************************************************/
@@ -345,7 +346,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_GaspRange                                                       */
+  /*    TT_GaspRangeRec                                                    */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A tiny structure used to model a gasp range according to the       */
@@ -357,12 +358,12 @@ FT_BEGIN_HEADER
   /*    gaspFlag :: A flag describing the grid-fitting and anti-aliasing   */
   /*                modes to be used.                                      */
   /*                                                                       */
-  typedef struct  TT_GaspRange_
+  typedef struct  TT_GaspRangeRec_
   {
     FT_UShort  maxPPEM;
     FT_UShort  gaspFlag;
 
-  } TT_GaspRange;
+  } TT_GaspRangeRec, *TT_GaspRange;
 
 
 #define TT_GASP_GRIDFIT  0x01
@@ -372,7 +373,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_Gasp                                                            */
+  /*    TT_GaspRec                                                         */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure modeling the TrueType `gasp' table used to specify     */
@@ -387,17 +388,17 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  TT_Gasp_
   {
-    FT_UShort      version;
-    FT_UShort      numRanges;
-    TT_GaspRange*  gaspRanges;
+    FT_UShort     version;
+    FT_UShort     numRanges;
+    TT_GaspRange  gaspRanges;
 
-  } TT_Gasp;
+  } TT_GaspRec;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_HdmxRec                                                         */
+  /*    TT_HdmxEntryRec                                                    */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A small structure used to model the pre-computed widths of a given */
@@ -410,19 +411,19 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    widths    :: An array of widths.  Note: These are 8-bit bytes.     */
   /*                                                                       */
-  typedef struct  TT_HdmxRec_
+  typedef struct  TT_HdmxEntryRec_
   {
     FT_Byte   ppem;
     FT_Byte   max_width;
     FT_Byte*  widths;
 
-  } TT_HdmxRec;
+  } TT_HdmxEntryRec, *TT_HdmxEntry;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_Hdmx                                                            */
+  /*    TT_HdmxRec                                                         */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used to model the `hdmx' table, which contains         */
@@ -435,19 +436,19 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    records     :: An array of hdmx records.                           */
   /*                                                                       */
-  typedef struct  TT_Hdmx_
+  typedef struct  TT_HdmxRec_
   {
-    FT_UShort    version;
-    FT_Short     num_records;
-    TT_HdmxRec*  records;
+    FT_UShort     version;
+    FT_Short      num_records;
+    TT_HdmxEntry  records;
 
-  } TT_Hdmx;
+  } TT_HdmxRec, *TT_Hdmx;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_Kern_0_Pair                                                     */
+  /*    TT_Kern0_PairRec                                                   */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used to model a kerning pair for the kerning table     */
@@ -462,13 +463,13 @@ FT_BEGIN_HEADER
   /*    value :: The kerning distance.  A positive value spaces the        */
   /*             glyphs, a negative one makes them closer.                 */
   /*                                                                       */
-  typedef struct  TT_Kern_0_Pair_
+  typedef struct  TT_Kern0_PairRec_
   {
     FT_UShort  left;   /* index of left  glyph in pair */
     FT_UShort  right;  /* index of right glyph in pair */
     FT_FWord   value;  /* kerning value                */
 
-  } TT_Kern_0_Pair;
+  } TT_Kern0_PairRec, *TT_Kern0_Pair;
 
 
   /*************************************************************************/
@@ -487,7 +488,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_SBit_Metrics                                                    */
+  /*    TT_SBit_MetricsRec                                                 */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used to hold the big metrics of a given glyph bitmap   */
@@ -511,7 +512,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    vertAdvance  :: The vertical advance.                              */
   /*                                                                       */
-  typedef struct  TT_SBit_Metrics_
+  typedef struct  TT_SBit_MetricsRec_
   {
     FT_Byte  height;
     FT_Byte  width;
@@ -524,13 +525,13 @@ FT_BEGIN_HEADER
     FT_Char  vertBearingY;
     FT_Byte  vertAdvance;
 
-  } TT_SBit_Metrics;
+  } TT_SBit_MetricsRec, *TT_SBit_Metrics;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_SBit_Small_Metrics                                              */
+  /*    TT_SBit_SmallMetricsRec                                            */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used to hold the small metrics of a given glyph bitmap */
@@ -557,13 +558,13 @@ FT_BEGIN_HEADER
     FT_Char  bearingY;
     FT_Byte  advance;
 
-  } TT_SBit_Small_Metrics;
+  } TT_SBit_SmallMetricsRec, *TT_SBit_SmallMetrics;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_SBit_Line_Metrics                                               */
+  /*    TT_SBit_LineMetricsRec                                             */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used to describe the text line metrics of a given      */
@@ -611,7 +612,7 @@ FT_BEGIN_HEADER
   /*    pads                    :: Unused (to make the size of the record  */
   /*                               a multiple of 32 bits.                  */
   /*                                                                       */
-  typedef struct  TT_SBit_Line_Metrics_
+  typedef struct  TT_SBit_LineMetricsRec_
   {
     FT_Char  ascender;
     FT_Char  descender;
@@ -625,13 +626,13 @@ FT_BEGIN_HEADER
     FT_Char  min_after_BL;
     FT_Char  pads[2];
 
-  } TT_SBit_Line_Metrics;
+  } TT_SBit_LineMetricsRec, *TT_SBit_LineMetrics;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_SBit_Range                                                      */
+  /*    TT_SBit_RangeRec                                                   */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A TrueType/OpenType subIndexTable as defined in the `EBLC'         */
@@ -665,31 +666,31 @@ FT_BEGIN_HEADER
   /*    table_offset  :: The offset of the index table in the `EBLC'       */
   /*                     table.  Only used during strike loading.          */
   /*                                                                       */
-  typedef struct  TT_SBit_Range
+  typedef struct  TT_SBit_RangeRec
   {
-    FT_UShort        first_glyph;
-    FT_UShort        last_glyph;
+    FT_UShort           first_glyph;
+    FT_UShort           last_glyph;
 
-    FT_UShort        index_format;
-    FT_UShort        image_format;
-    FT_ULong         image_offset;
+    FT_UShort           index_format;
+    FT_UShort           image_format;
+    FT_ULong            image_offset;
 
-    FT_ULong         image_size;
-    TT_SBit_Metrics  metrics;
-    FT_ULong         num_glyphs;
+    FT_ULong            image_size;
+    TT_SBit_MetricsRec  metrics;
+    FT_ULong            num_glyphs;
 
-    FT_ULong*        glyph_offsets;
-    FT_UShort*       glyph_codes;
+    FT_ULong*           glyph_offsets;
+    FT_UShort*          glyph_codes;
 
-    FT_ULong         table_offset;
+    FT_ULong            table_offset;
 
-  } TT_SBit_Range;
+  } TT_SBit_RangeRec, *TT_SBit_Range;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_SBit_Strike                                                     */
+  /*    TT_SBit_StrikeRec                                                  */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used describe a given bitmap strike in the `EBLC'      */
@@ -729,33 +730,33 @@ FT_BEGIN_HEADER
   /*                         http://fonts.apple.com/                       */
   /*                                TTRefMan/RM06/Chap6bloc.html           */
   /*                                                                       */
-  typedef struct  TT_SBit_Strike_
+  typedef struct  TT_SBit_StrikeRec_
   {
-    FT_Int                num_ranges;
-    TT_SBit_Range*        sbit_ranges;
-    FT_ULong              ranges_offset;
+    FT_Int                  num_ranges;
+    TT_SBit_Range           sbit_ranges;
+    FT_ULong                ranges_offset;
 
-    FT_ULong              color_ref;
+    FT_ULong                color_ref;
 
-    TT_SBit_Line_Metrics  hori;
-    TT_SBit_Line_Metrics  vert;
+    TT_SBit_LineMetricsRec  hori;
+    TT_SBit_LineMetricsRec  vert;
 
-    FT_UShort             start_glyph;
-    FT_UShort             end_glyph;
+    FT_UShort               start_glyph;
+    FT_UShort               end_glyph;
 
-    FT_Byte               x_ppem;
-    FT_Byte               y_ppem;
+    FT_Byte                 x_ppem;
+    FT_Byte                 y_ppem;
 
-    FT_Byte               bit_depth;
-    FT_Char               flags;
+    FT_Byte                 bit_depth;
+    FT_Char                 flags;
 
-  } TT_SBit_Strike;
+  } TT_SBit_StrikeRec, *TT_SBit_Strike;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_SBit_Component                                                  */
+  /*    TT_SBit_ComponentRec                                               */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A simple structure to describe a compound sbit element.            */
@@ -767,19 +768,19 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    y_offset   :: The element's top bearing.                           */
   /*                                                                       */
-  typedef struct  TT_SBit_Component_
+  typedef struct  TT_SBit_ComponentRec_
   {
     FT_UShort  glyph_code;
     FT_Char    x_offset;
     FT_Char    y_offset;
 
-  } TT_SBit_Component;
+  } TT_SBit_ComponentRec, *TT_SBit_Component;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_SBit_Scale                                                      */
+  /*    TT_SBit_ScaleRec                                                   */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used describe a given bitmap scaling table, as defined */
@@ -798,18 +799,18 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    y_ppem_substitute :: Substitution y_ppem value.                    */
   /*                                                                       */
-  typedef struct  TT_SBit_Scale_
+  typedef struct  TT_SBit_ScaleRec_
   {
-    TT_SBit_Line_Metrics  hori;
-    TT_SBit_Line_Metrics  vert;
+    TT_SBit_LineMetricsRec  hori;
+    TT_SBit_LineMetricsRec  vert;
 
-    FT_Byte               x_ppem;
-    FT_Byte               y_ppem;
+    FT_Byte                 x_ppem;
+    FT_Byte                 y_ppem;
 
-    FT_Byte               x_ppem_substitute;
-    FT_Byte               y_ppem_substitute;
+    FT_Byte                 x_ppem_substitute;
+    FT_Byte                 y_ppem_substitute;
 
-  } TT_SBit_Scale;
+  } TT_SBit_ScaleRec, *TT_SBit_Scale;
 
 
   /*************************************************************************/
@@ -828,7 +829,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_Post_20                                                         */
+  /*    TT_Post_20Rec                                                      */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Postscript names sub-table, format 2.0.  Stores the PS name of     */
@@ -843,20 +844,20 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    glyph_names   :: The PS names not in Mac Encoding.                 */
   /*                                                                       */
-  typedef struct  TT_Post_20_
+  typedef struct  TT_Post_20Rec_
   {
     FT_UShort   num_glyphs;
     FT_UShort   num_names;
     FT_UShort*  glyph_indices;
     FT_Char**   glyph_names;
 
-  } TT_Post_20;
+  } TT_Post_20Rec, *TT_Post_20;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_Post_25                                                         */
+  /*    TT_Post_25Rec                                                      */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Postscript names sub-table, format 2.5.  Stores the PS name of     */
@@ -873,13 +874,13 @@ FT_BEGIN_HEADER
     FT_UShort  num_glyphs;
     FT_Char*   offsets;
 
-  } TT_Post_25;
+  } TT_Post_25Rec, *TT_Post_25;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_Post_Names                                                      */
+  /*    TT_Post_NamesRec                                                   */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Postscript names table, either format 2.0 or 2.5.                  */
@@ -891,18 +892,18 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    format_25 :: The sub-table used for format 2.5.                    */
   /*                                                                       */
-  typedef struct  TT_Post_Names_
+  typedef struct  TT_Post_NamesRec_
   {
-    FT_Bool       loaded;
+    FT_Bool  loaded;
 
     union
     {
-      TT_Post_20  format_20;
-      TT_Post_25  format_25;
+      TT_Post_20Rec  format_20;
+      TT_Post_25Rec  format_25;
 
     } names;
 
-  } TT_Post_Names;
+  } TT_Post_NamesRec, *TT_Post_Names;
 
 
   /*************************************************************************/
@@ -926,34 +927,32 @@ FT_BEGIN_HEADER
 
     FT_Byte*  glyphIdArray;
 
-  } TT_CMap0;
+  } TT_CMap0Rec, *TT_CMap0;
 
 
   /* format 2 */
 
-  typedef struct  TT_CMap2SubHeader_
+  typedef struct  TT_CMap2SubHeaderRec_
   {
     FT_UShort  firstCode;      /* first valid low byte         */
     FT_UShort  entryCount;     /* number of valid low bytes    */
     FT_Short   idDelta;        /* delta value to glyphIndex    */
     FT_UShort  idRangeOffset;  /* offset from here to 1st code */
 
-  } TT_CMap2SubHeader;
+  } TT_CMap2SubHeaderRec, *TT_CMap2SubHeader;
 
 
-  typedef struct  TT_CMap2_
+  typedef struct  TT_CMap2Rec_
   {
     FT_ULong            language;     /* for Mac fonts (originally ushort) */
 
-    FT_UShort*          subHeaderKeys;
-    /* high byte mapping table            */
-    /* value = subHeader index * 8        */
-
-    TT_CMap2SubHeader*  subHeaders;
+    FT_UShort*          subHeaderKeys;  /* high byte mapping table     */
+                                        /* value = subHeader index * 8 */
+    TT_CMap2SubHeader   subHeaders;
     FT_UShort*          glyphIdArray;
     FT_UShort           numGlyphId;   /* control value */
 
-  } TT_CMap2;
+  } TT_CMap2Rec, *TT_CMap2;
 
 
   /* format 4 */
@@ -965,25 +964,25 @@ FT_BEGIN_HEADER
     FT_Short   idDelta;
     FT_UShort  idRangeOffset;
 
-  } TT_CMap4Segment;
+  } TT_CMap4SegmentRec, *TT_CMap4Segment;
 
 
-  typedef struct  TT_CMap4_
+  typedef struct  TT_CMap4Rec_
   {
-    FT_ULong          language;       /* for Mac fonts (originally ushort) */
+    FT_ULong         language;       /* for Mac fonts (originally ushort) */
 
-    FT_UShort         segCountX2;     /* number of segments * 2            */
-    FT_UShort         searchRange;    /* these parameters can be used      */
-    FT_UShort         entrySelector;  /* for a binary search               */
-    FT_UShort         rangeShift;
+    FT_UShort        segCountX2;     /* number of segments * 2            */
+    FT_UShort        searchRange;    /* these parameters can be used      */
+    FT_UShort        entrySelector;  /* for a binary search               */
+    FT_UShort        rangeShift;
 
-    TT_CMap4Segment*  segments;
-    FT_UShort*        glyphIdArray;
-    FT_UShort         numGlyphId;    /* control value */
+    TT_CMap4Segment  segments;
+    FT_UShort*       glyphIdArray;
+    FT_UShort        numGlyphId;     /* control value */
 
-    TT_CMap4Segment*  last_segment;  /* last used segment; this is a small  */
+    TT_CMap4Segment  last_segment;   /* last used segment; this is a small  */
                                      /* cache to potentially increase speed */
-  } TT_CMap4;
+  } TT_CMap4Rec, *TT_CMap4;
 
 
   /* format 6 */
@@ -997,18 +996,18 @@ FT_BEGIN_HEADER
 
     FT_UShort*  glyphIdArray;
 
-  } TT_CMap6;
+  } TT_CMap6Rec, *TT_CMap6;
 
 
   /* auxiliary table for format 8 and 12 */
 
-  typedef struct  TT_CMapGroup_
+  typedef struct  TT_CMapGroupRec_
   {
     FT_ULong  startCharCode;
     FT_ULong  endCharCode;
     FT_ULong  startGlyphID;
 
-  } TT_CMapGroup;
+  } TT_CMapGroupRec, *TT_CMapGroup;
 
 
   /* FreeType handles format 8 and 12 identically.  It is not necessary to
@@ -1016,21 +1015,21 @@ FT_BEGIN_HEADER
      for input character codes -- converting Unicode surrogates to 32bit
      character codes must be done by the application.                      */
 
-  typedef struct  TT_CMap8_12_
+  typedef struct  TT_CMap8_12Rec_
   {
-    FT_ULong       language;        /* for Mac fonts */
+    FT_ULong      language;        /* for Mac fonts */
 
-    FT_ULong       nGroups;
-    TT_CMapGroup*  groups;
+    FT_ULong      nGroups;
+    TT_CMapGroup  groups;
 
-    TT_CMapGroup*  last_group;      /* last used group; this is a small    */
-                                    /* cache to potentially increase speed */
-  } TT_CMap8_12;
+    TT_CMapGroup  last_group;      /* last used group; this is a small    */
+                                   /* cache to potentially increase speed */
+  } TT_CMap8_12Rec, *TT_CMap8_12;
 
 
   /* format 10 */
 
-  typedef struct  TT_CMap10_
+  typedef struct  TT_CMap10Rec_
   {
     FT_ULong    language;           /* for Mac fonts */
 
@@ -1039,23 +1038,23 @@ FT_BEGIN_HEADER
 
     FT_UShort*  glyphs;
 
-  } TT_CMap10;
+  } TT_CMap10Rec, *TT_CMap10;
 
 
-  typedef struct TT_CMapTable_  TT_CMapTable;
+  typedef struct TT_CMapTableRec_*  TT_CMapTable;
 
 
   typedef FT_UInt
-  (*TT_CharMap_Func)( TT_CMapTable*  charmap,
-                      FT_ULong       char_code );
+  (*TT_CharMap_Func)( TT_CMapTable  charmap,
+                      FT_ULong      char_code );
 
   typedef FT_ULong
-  (*TT_CharNext_Func)( TT_CMapTable* charmap,
+  (*TT_CharNext_Func)( TT_CMapTable  charmap,
                        FT_ULong      char_code );
 
 
   /* charmap table */
-  struct  TT_CMapTable_
+  typedef struct  TT_CMapTableRec_
   {
     FT_UShort  platformID;
     FT_UShort  platformEncodingID;
@@ -1067,17 +1066,18 @@ FT_BEGIN_HEADER
 
     union
     {
-      TT_CMap0     cmap0;
-      TT_CMap2     cmap2;
-      TT_CMap4     cmap4;
-      TT_CMap6     cmap6;
-      TT_CMap8_12  cmap8_12;
-      TT_CMap10    cmap10;
+      TT_CMap0Rec     cmap0;
+      TT_CMap2Rec     cmap2;
+      TT_CMap4Rec     cmap4;
+      TT_CMap6Rec     cmap6;
+      TT_CMap8_12Rec  cmap8_12;
+      TT_CMap10Rec    cmap10;
     } c;
 
-    TT_CharMap_Func  get_index;
-    TT_CharNext_Func get_next_char;
-  };
+    TT_CharMap_Func   get_index;
+    TT_CharNext_Func  get_next_char;
+    
+  } TT_CMapTableRec;
 
 
   /*************************************************************************/
@@ -1095,8 +1095,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  TT_CharMapRec_
   {
-    FT_CharMapRec  root;
-    TT_CMapTable   cmap;
+    FT_CharMapRec    root;
+    TT_CMapTableRec  cmap;
 
   } TT_CharMapRec;
 
@@ -1120,7 +1120,7 @@ FT_BEGIN_HEADER
   /* following formats: TTF, OpenType-TT, and OpenType-CFF.                */
   /*                                                                       */
   /* Note, however, that the classes TT_Size, TT_GlyphSlot, and TT_CharMap */
-  /* are not shared between font drivers, and are thus defined normally in */
+  /* are not shared between font drivers, and are thus defined in          */
   /* `ttobjs.h'.                                                           */
   /*                                                                       */
   /*************************************************************************/
@@ -1159,13 +1159,13 @@ FT_BEGIN_HEADER
   (*TT_Interpreter)( void*  exec_context );
 
   /* forward declaration */
-  typedef struct TT_Loader_  TT_Loader;
+  typedef struct TT_LoaderRec_*  TT_Loader;
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
-  /*    TT_Goto_Table_Func                                                 */
+  /*    TT_Loader_GotoTableFunc                                            */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Seeks a stream to the start of a given TrueType table.             */
@@ -1188,16 +1188,16 @@ FT_BEGIN_HEADER
   /*    The stream cursor must be at the font file's origin.               */
   /*                                                                       */
   typedef FT_Error
-  (*TT_Goto_Table_Func)( TT_Face    face,
-                         FT_ULong   tag,
-                         FT_Stream  stream,
-                         FT_ULong*  length );
+  (*TT_Loader_GotoTableFunc)( TT_Face    face,
+                              FT_ULong   tag,
+                              FT_Stream  stream,
+                              FT_ULong*  length );
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
-  /*    TT_Access_Glyph_Frame_Func                                         */
+  /*    TT_Loader_StartGlyphFunc                                           */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Seeks a stream to the start of a given glyph element, and opens a  */
@@ -1217,22 +1217,22 @@ FT_BEGIN_HEADER
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    This function is normally equivalent to FILE_Seek(offset)          */
-  /*    followed by ACCESS_Frame(byte_count) with the loader's stream, but */
-  /*    alternative formats (e.g. compressed ones) might use something     */
+  /*    This function is normally equivalent to FT_STREAM_SEEK(offset)     */
+  /*    followed by FT_FRAME_ENTER(byte_count) with the loader's stream,   */
+  /*    but alternative formats (e.g. compressed ones) might use something */
   /*    different.                                                         */
   /*                                                                       */
   typedef FT_Error
-  (*TT_Access_Glyph_Frame_Func)( TT_Loader*  loader,
-                                 FT_UInt     glyph_index,
-                                 FT_ULong    offset,
-                                 FT_UInt     byte_count );
+  (*TT_Loader_StartGlyphFunc)( TT_Loader  loader,
+                               FT_UInt    glyph_index,
+                               FT_ULong   offset,
+                               FT_UInt    byte_count );
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
-  /*    TT_Load_Glyph_Element_Func                                         */
+  /*    TT_Loader_ReadGlyphFunc                                            */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Reads one glyph element (its header, a simple glyph, or a          */
@@ -1245,13 +1245,13 @@ FT_BEGIN_HEADER
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   typedef FT_Error
-  (*TT_Load_Glyph_Element_Func)( TT_Loader*  loader );
+  (*TT_Loader_ReadGlyphFunc)( TT_Loader  loader );
 
 
   /*************************************************************************/
   /*                                                                       */
   /* <FuncType>                                                            */
-  /*    TT_Forget_Glyph_Frame_Func                                         */
+  /*    TT_Loader_EndGlyphFunc                                             */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Closes the current loader stream frame for the glyph.              */
@@ -1260,8 +1260,7 @@ FT_BEGIN_HEADER
   /*    loader :: The current TrueType glyph loader object.                */
   /*                                                                       */
   typedef void
-  (*TT_Forget_Glyph_Frame_Func)( TT_Loader*  loader );
-
+  (*TT_Loader_EndGlyphFunc)( TT_Loader  loader );
 
 
   /*************************************************************************/
@@ -1334,6 +1333,12 @@ FT_BEGIN_HEADER
   /*                            not loaded by the driver on face opening.  */
   /*                            See the `ttpost' module for more details.  */
   /*                                                                       */
+  /*    cmap_table           :: Address of the face's `cmap' SFNT table    */
+  /*                            in memory (it's an extracted frame).       */
+  /*                                                                       */
+  /*    cmap_size            :: The size in bytes of the `cmap_table'      */
+  /*                            described above.                           */
+  /*                                                                       */
   /*    num_charmaps         :: The number of character mappings in the    */
   /*                            font.                                      */
   /*                                                                       */
@@ -1350,15 +1355,23 @@ FT_BEGIN_HEADER
   /*                            can be different for strange formats (e.g. */
   /*                            Type 42).                                  */
   /*                                                                       */
-  /*    access_glyph_frame   :: XXX                                        */
+  /*    access_glyph_frame   :: A function used to access the frame of a   */
+  /*                            given glyph within the face's font file.   */
   /*                                                                       */
-  /*    read_glyph_header    :: XXX                                        */
+  /*    forget_glyph_frame   :: A function used to forget the frame of a   */
+  /*                            given glyph when all data has been loaded. */
   /*                                                                       */
-  /*    read_simple_glyph    :: XXX                                        */
+  /*    read_glyph_header    :: A function used to read a glyph header.    */
+  /*                            It must be called between an `access' and  */
+  /*                            `forget'.                                  */
   /*                                                                       */
-  /*    read_composite_glyph :: XXX                                        */
+  /*    read_simple_glyph    :: A function used to read a simple glyph.    */
+  /*                            It must be called after the header was     */
+  /*                            read, and before the `forget'.             */
   /*                                                                       */
-  /*    forget_glyph_frame   :: XXX                                        */
+  /*    read_composite_glyph :: A function used to read a composite glyph. */
+  /*                            It must be called after the header was     */
+  /*                            read, and before the `forget'.             */
   /*                                                                       */
   /*    sfnt                 :: A pointer to the SFNT `driver' interface.  */
   /*                                                                       */
@@ -1373,7 +1386,7 @@ FT_BEGIN_HEADER
   /*                            table (`gasp').  This table is optional in */
   /*                            TrueType/OpenType fonts.                   */
   /*                                                                       */
-  /*    pclt                 :: XXX                                        */
+  /*    pclt                 :: The `pclt' SFNT table.                     */
   /*                                                                       */
   /*    num_sbit_strikes     :: The number of sbit strikes, i.e., bitmap   */
   /*                            sizes, embedded in this font.              */
@@ -1430,65 +1443,71 @@ FT_BEGIN_HEADER
   /*    num_kern_pairs       :: The number of kerning pairs present in the */
   /*                            font file.  The engine only loads the      */
   /*                            first horizontal format 0 kern table it    */
-  /*                            finds in the font file.  You should use    */
-  /*                            the `ttxkern' structures if you want to    */
-  /*                            access other kerning tables.  Ignored      */
-  /*                            for Type 2 fonts.                          */
+  /*                            finds in the font file.  Ignored for       */
+  /*                            Type 2 fonts.                              */
   /*                                                                       */
   /*    kern_table_index     :: The index of the kerning table in the font */
-  /*                            kerning directory.  Only used by the       */
-  /*                            ttxkern extension to avoid data            */
-  /*                            duplication.  Ignored for Type 2 fonts.    */
+  /*                            kerning directory.  Ignored for Type 2     */
+  /*                            fonts.                                     */
   /*                                                                       */
   /*    interpreter          :: A pointer to the TrueType bytecode         */
   /*                            interpreters field is also used to hook    */
   /*                            the debugger in `ttdebug'.                 */
   /*                                                                       */
-  /*    extra                :: XXX                                        */
+  /*    extra                :: Reserved for third-party font drivers.     */
   /*                                                                       */
   typedef struct  TT_FaceRec_
   {
-    FT_FaceRec         root;
+    FT_FaceRec            root;
 
-    TTC_Header         ttc_header;
+    TTC_HeaderRec         ttc_header;
 
-    FT_ULong           format_tag;
-    FT_UShort          num_tables;
-    TT_Table*          dir_tables;
+    FT_ULong              format_tag;
+    FT_UShort             num_tables;
+    TT_Table              dir_tables;
 
-    TT_Header          header;       /* TrueType header table          */
-    TT_HoriHeader      horizontal;   /* TrueType horizontal header     */
+    TT_Header             header;       /* TrueType header table          */
+    TT_HoriHeader         horizontal;   /* TrueType horizontal header     */
 
-    TT_MaxProfile      max_profile;
-    FT_ULong           max_components;
+    TT_MaxProfile         max_profile;
+    FT_ULong              max_components;
 
-    FT_Bool            vertical_info;
-    TT_VertHeader      vertical;     /* TT Vertical header, if present */
+    FT_Bool               vertical_info;
+    TT_VertHeader         vertical;     /* TT Vertical header, if present */
 
-    FT_UShort          num_names;    /* number of name records  */
-    TT_NameTable       name_table;   /* name table              */
+    FT_UShort             num_names;    /* number of name records  */
+    TT_NameTableRec       name_table;   /* name table              */
 
-    TT_OS2             os2;          /* TrueType OS/2 table            */
-    TT_Postscript      postscript;   /* TrueType Postscript table      */
+    TT_OS2                os2;          /* TrueType OS/2 table            */
+    TT_Postscript         postscript;   /* TrueType Postscript table      */
 
-    FT_Int             num_charmaps;
-    TT_CharMap         charmaps;     /* array of TT_CharMapRec */
+#ifdef FT_CONFIG_OPTION_USE_CMAPS
 
-    TT_Goto_Table_Func          goto_table;
+    FT_Byte*              cmap_table;   /* extracted 'cmap' table */
+    FT_ULong              cmap_size;
 
-    TT_Access_Glyph_Frame_Func  access_glyph_frame;
-    TT_Load_Glyph_Element_Func  read_glyph_header;
-    TT_Load_Glyph_Element_Func  read_simple_glyph;
-    TT_Load_Glyph_Element_Func  read_composite_glyph;
-    TT_Forget_Glyph_Frame_Func  forget_glyph_frame;
+#else /* !FT_CONFIG_OPTION_USE_CMAPS */
+
+    FT_Int                num_charmaps;
+    TT_CharMap            charmaps;     /* array of TT_CharMapRec */
+
+#endif /* !FT_CONFIG_OPTION_USE_CMAPS */
+
+    TT_Loader_GotoTableFunc   goto_table;
+
+    TT_Loader_StartGlyphFunc  access_glyph_frame;
+    TT_Loader_EndGlyphFunc    forget_glyph_frame;
+    TT_Loader_ReadGlyphFunc   read_glyph_header;
+    TT_Loader_ReadGlyphFunc   read_simple_glyph;
+    TT_Loader_ReadGlyphFunc   read_composite_glyph;
 
     /* a typeless pointer to the SFNT_Interface table used to load     */
     /* the basic TrueType tables in the face object                    */
-    void*              sfnt;
+    void*                 sfnt;
 
     /* a typeless pointer to the PSNames_Interface table used to       */
     /* handle glyph names <-> unicode & Mac values                     */
-    void*              psnames;
+    void*                 psnames;
 
     /***********************************************************************/
     /*                                                                     */
@@ -1497,23 +1516,23 @@ FT_BEGIN_HEADER
     /***********************************************************************/
 
     /* horizontal device metrics */
-    TT_Hdmx            hdmx;
+    TT_HdmxRec            hdmx;
 
     /* grid-fitting and scaling table */
-    TT_Gasp            gasp;                 /* the `gasp' table */
+    TT_GaspRec            gasp;                 /* the `gasp' table */
 
     /* PCL 5 table */
-    TT_PCLT            pclt;
+    TT_PCLT               pclt;
 
     /* embedded bitmaps support */
-    FT_Int             num_sbit_strikes;
-    TT_SBit_Strike*    sbit_strikes;
+    FT_Int                num_sbit_strikes;
+    TT_SBit_Strike        sbit_strikes;
 
-    FT_Int             num_sbit_scales;
-    TT_SBit_Scale*     sbit_scales;
+    FT_Int                num_sbit_scales;
+    TT_SBit_Scale         sbit_scales;
 
     /* postscript names table */
-    TT_Post_Names      postscript_names;
+    TT_Post_NamesRec      postscript_names;
 
 
     /***********************************************************************/
@@ -1523,29 +1542,29 @@ FT_BEGIN_HEADER
     /***********************************************************************/
 
     /* the glyph locations */
-    FT_UShort          num_locations;
-    FT_Long*           glyph_locations;
+    FT_UShort             num_locations;
+    FT_Long*              glyph_locations;
 
     /* the font program, if any */
-    FT_ULong           font_program_size;
-    FT_Byte*           font_program;
+    FT_ULong              font_program_size;
+    FT_Byte*              font_program;
 
     /* the cvt program, if any */
-    FT_ULong           cvt_program_size;
-    FT_Byte*           cvt_program;
+    FT_ULong              cvt_program_size;
+    FT_Byte*              cvt_program;
 
     /* the original, unscaled, control value table */
-    FT_ULong           cvt_size;
-    FT_Short*          cvt;
+    FT_ULong              cvt_size;
+    FT_Short*             cvt;
 
     /* the format 0 kerning table, if any */
-    FT_Int             num_kern_pairs;
-    FT_Int             kern_table_index;
-    TT_Kern_0_Pair*    kern_pairs;
+    FT_Int                num_kern_pairs;
+    FT_Int                kern_table_index;
+    TT_Kern0_Pair         kern_pairs;
 
     /* A pointer to the bytecode interpreter to use.  This is also */
     /* used to hook the debugger for the `ttdebug' utility.        */
-    TT_Interpreter     interpreter;
+    TT_Interpreter        interpreter;
 
 
     /***********************************************************************/
@@ -1555,7 +1574,7 @@ FT_BEGIN_HEADER
     /*                                                                     */
     /***********************************************************************/
 
-    FT_Generic      extra;
+    FT_Generic            extra;
 
   } TT_FaceRec;
 
@@ -1563,7 +1582,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /*  <Struct>                                                             */
-  /*     TT_GlyphZone                                                      */
+  /*     TT_GlyphZoneRec                                                   */
   /*                                                                       */
   /*  <Description>                                                        */
   /*     A glyph zone is used to load, scale and hint glyph outline        */
@@ -1589,7 +1608,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*     contours     :: The contours end points.                          */
   /*                                                                       */
-  typedef struct  TT_GlyphZone_
+  typedef struct  TT_GlyphZoneRec_
   {
     FT_Memory   memory;
     FT_UShort   max_points;
@@ -1603,19 +1622,19 @@ FT_BEGIN_HEADER
     FT_Byte*    tags;       /* current touch flags         */
     FT_UShort*  contours;   /* contour end points          */
 
-  } TT_GlyphZone;
+  } TT_GlyphZoneRec, *TT_GlyphZone;
 
 
   /* handle to execution context */
   typedef struct TT_ExecContextRec_*  TT_ExecContext;
 
   /* glyph loader structure */
-  struct  TT_Loader_
+  typedef struct  TT_LoaderRec_
   {
     FT_Face          face;
     FT_Size          size;
     FT_GlyphSlot     glyph;
-    FT_GlyphLoader*  gloader;
+    FT_GlyphLoader   gloader;
 
     FT_ULong         load_flags;
     FT_UInt          glyph_index;
@@ -1636,8 +1655,8 @@ FT_BEGIN_HEADER
     FT_ULong         glyf_offset;
 
     /* the zone where we load our glyphs */
-    TT_GlyphZone     base;
-    TT_GlyphZone     zone;
+    TT_GlyphZoneRec  base;
+    TT_GlyphZoneRec  zone;
 
     TT_ExecContext   exec;
     FT_Byte*         instructions;
@@ -1645,7 +1664,8 @@ FT_BEGIN_HEADER
 
     /* for possible extensibility in other formats */
     void*            other;
-  };
+    
+  } TT_LoaderRec;
 
 
 FT_END_HEADER

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    ANSI-specific configuration file (specification only).               */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,7 +41,7 @@
 
 #include <ft2build.h>
 #include FT_CONFIG_OPTIONS_H
-
+#include FT_CONFIG_STANDARD_LIBRARY_H
 
 FT_BEGIN_HEADER
 
@@ -58,24 +58,21 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
 
-  /* We use <limits.h> values to know the sizes of the types.  */
-#include <limits.h>
-
   /* The number of bytes in an `int' type.  */
-#if   UINT_MAX == 0xFFFFFFFFUL
+#if   FT_UINT_MAX == 0xFFFFFFFFUL
 #define FT_SIZEOF_INT  4
-#elif UINT_MAX == 0xFFFFU
+#elif FT_UINT_MAX == 0xFFFFU
 #define FT_SIZEOF_INT  2
-#elif UINT_MAX > 0xFFFFFFFFU && UINT_MAX == 0xFFFFFFFFFFFFFFFFU
+#elif FT_UINT_MAX > 0xFFFFFFFFU && FT_UINT_MAX == 0xFFFFFFFFFFFFFFFFU
 #define FT_SIZEOF_INT  8
 #else
 #error "Unsupported number of bytes in `int' type!"
 #endif
 
   /* The number of bytes in a `long' type.  */
-#if   ULONG_MAX == 0xFFFFFFFFUL
+#if   FT_ULONG_MAX == 0xFFFFFFFFUL
 #define FT_SIZEOF_LONG  4
-#elif ULONG_MAX > 0xFFFFFFFFU && ULONG_MAX == 0xFFFFFFFFFFFFFFFFU
+#elif FT_ULONG_MAX > 0xFFFFFFFFU && FT_ULONG_MAX == 0xFFFFFFFFFFFFFFFFU
 #define FT_SIZEOF_LONG  8
 #else
 #error "Unsupported number of bytes in `long' type!"
@@ -86,8 +83,8 @@ FT_BEGIN_HEADER
 #define FT_ALIGNMENT  8
 
 
-  /* UNUSED is a macro used to indicate that a given parameter is not used */
-  /* -- this is only used to get rid of unpleasant compiler warnings       */
+  /* FT_UNUSED is a macro used to indicate that a given parameter is not  */
+  /* used -- this is only used to get rid of unpleasant compiler warnings */
 #ifndef FT_UNUSED
 #define FT_UNUSED( arg )  ( (arg) = (arg) )
 #endif
@@ -130,16 +127,15 @@ FT_BEGIN_HEADER
   /* now, lookup for an integer type that is at least 32 bits */
 #if FT_SIZEOF_INT >= 4
 
-  typedef int           FT_Fast;
-  typedef unsigned int  FT_UFast;
+  typedef int            FT_Fast;
+  typedef unsigned int   FT_UFast;
 
 #elif FT_SIZEOF_LONG >= 4
 
-  typedef long          FT_Fast;
-  typedef unsigned long FT_UFast;
+  typedef long           FT_Fast;
+  typedef unsigned long  FT_UFast;
 
 #endif
-
 
 
   /* determine whether we have a 64-bit int type for platforms without */
@@ -150,7 +146,7 @@ FT_BEGIN_HEADER
 #define FT_LONG64
 #define FT_INT64  long
 
-#elif defined( _MSC_VER )      /* Visual C++ (and Intel C++) */
+#elif defined( _MSC_VER ) && _MSC_VER >= 900  /* Visual C++ (and Intel C++) */
 
   /* this compiler provides the __int64 type */
 #define FT_LONG64
@@ -180,7 +176,7 @@ FT_BEGIN_HEADER
 #define FT_LONG64
 #define FT_INT64  long long int
 
-#endif /* !FT_LONG64 */
+#endif /* FT_SIZEOF_LONG == 8 */
 
 
   /*************************************************************************/
@@ -205,17 +201,17 @@ FT_BEGIN_HEADER
 
 #ifdef FT_MAKE_OPTION_SINGLE_OBJECT
 
-#define FT_LOCAL      static
-#define FT_LOCAL_DEF  static
+#define FT_LOCAL( x )      static  x
+#define FT_LOCAL_DEF( x )  static  x
 
 #else
 
 #ifdef __cplusplus
-#define FT_LOCAL      extern "C"
-#define FT_LOCAL_DEF  extern "C"
+#define FT_LOCAL( x )      extern "C"  x
+#define FT_LOCAL_DEF( x )  extern "C"  x
 #else
-#define FT_LOCAL      extern
-#define FT_LOCAL_DEF  extern
+#define FT_LOCAL( x )      extern  x
+#define FT_LOCAL_DEF( x )  x
 #endif
 
 #endif /* FT_MAKE_OPTION_SINGLE_OBJECT */
@@ -300,9 +296,9 @@ FT_BEGIN_HEADER
   /*                                                                 */
 #ifndef FT_CALLBACK_DEF
 #ifdef __cplusplus
-#define FT_CALLBACK_DEF( x )  extern "C" x
+#define FT_CALLBACK_DEF( x )  extern "C"  x
 #else
-#define FT_CALLBACK_DEF( x )  static x
+#define FT_CALLBACK_DEF( x )  static  x
 #endif
 #endif /* FT_CALLBACK_DEF */
 

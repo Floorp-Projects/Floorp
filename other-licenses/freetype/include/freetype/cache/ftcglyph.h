@@ -24,14 +24,6 @@
   /*            For example, see `ftcimage.h' and `ftcimage.c' which       */
   /*            implement a FT_Glyph cache based on this code.             */
   /*                                                                       */
-  /*  NOTE: For now, each glyph set is implemented as a static hash table. */
-  /*        It would be interesting to experiment with dynamic hashes to   */
-  /*        see whether this improves performance or not (I don't know why */
-  /*        but something tells me it won't).                              */
-  /*                                                                       */
-  /*        In all cases, this change should not affect any derived glyph  */
-  /*        cache class.                                                   */
-  /*                                                                       */
   /*************************************************************************/
 
 

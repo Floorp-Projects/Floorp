@@ -5,7 +5,7 @@
 /*    Basic OpenType/CFF type definitions and interface (specification     */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -31,7 +31,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    CFF_Index                                                          */
+  /*    CFF_IndexRec                                                       */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure used to model a CFF Index table.                       */
@@ -50,7 +50,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    bytes       :: If the index is loaded in memory, its bytes.        */
   /*                                                                       */
-  typedef struct  CFF_Index_
+  typedef struct  CFF_IndexRec_
   {
     FT_Stream  stream;
     FT_UInt    count;
@@ -60,10 +60,10 @@ FT_BEGIN_HEADER
     FT_ULong*  offsets;
     FT_Byte*   bytes;
 
-  } CFF_Index;
+  } CFF_IndexRec, *CFF_Index;
 
 
-  typedef struct  CFF_Encoding_
+  typedef struct  CFF_EncodingRec_
   {
     FT_UInt     format;
     FT_ULong    offset;
@@ -71,10 +71,10 @@ FT_BEGIN_HEADER
     FT_UShort*  sids;
     FT_UShort*  codes;
 
-  } CFF_Encoding;
+  } CFF_EncodingRec, *CFF_Encoding;
 
 
-  typedef struct  CFF_Charset_
+  typedef struct  CFF_CharsetRec_
   {
 
     FT_UInt     format;
@@ -82,10 +82,10 @@ FT_BEGIN_HEADER
 
     FT_UShort*  sids;
 
-  } CFF_Charset;
+  } CFF_CharsetRec, *CFF_Charset;
 
 
-  typedef struct  CFF_Font_Dict_
+  typedef struct  CFF_FontRecDictRec_
   {
     FT_UInt    version;
     FT_UInt    notice;
@@ -129,10 +129,10 @@ FT_BEGIN_HEADER
     FT_ULong   cid_fd_select_offset;
     FT_UInt    cid_font_name;
 
-  } CFF_Font_Dict;
+  } CFF_FontRecDictRec, *CFF_FontRecDict;
 
 
-  typedef struct  CFF_Private_
+  typedef struct  CFF_PrivateRec_
   {
     FT_Byte   num_blue_values;
     FT_Byte   num_other_blues;
@@ -164,10 +164,10 @@ FT_BEGIN_HEADER
     FT_Pos    default_width;
     FT_Pos    nominal_width;
 
-  } CFF_Private;
+  } CFF_PrivateRec, *CFF_Private;
 
 
-  typedef struct  CFF_FD_Select_
+  typedef struct  CFF_FDSelectRec_
   {
     FT_Byte   format;
     FT_UInt   range_count;
@@ -181,67 +181,67 @@ FT_BEGIN_HEADER
     FT_UInt   cache_count;
     FT_Byte   cache_fd;
 
-  } CFF_FD_Select;
+  } CFF_FDSelectRec, *CFF_FDSelect;
 
 
-  /* A SubFont packs a font dict and a private dict together. They are */
-  /* needed to support CID-keyed CFF fonts.                            */
-  typedef struct  CFF_SubFont_
+  /* A SubFont packs a font dict and a private dict together.  They are */
+  /* needed to support CID-keyed CFF fonts.                             */
+  typedef struct  CFF_SubFontRec_
   {
-    CFF_Font_Dict  font_dict;
-    CFF_Private    private_dict;
+    CFF_FontRecDictRec  font_dict;
+    CFF_PrivateRec      private_dict;
 
-    CFF_Index      local_subrs_index;
-    FT_UInt        num_local_subrs;
-    FT_Byte**      local_subrs;
+    CFF_IndexRec        local_subrs_index;
+    FT_UInt             num_local_subrs;
+    FT_Byte**           local_subrs;
 
-  } CFF_SubFont;
+  } CFF_SubFontRec, *CFF_SubFont;
 
 
   /* maximum number of sub-fonts in a CID-keyed file */
 #define CFF_MAX_CID_FONTS  16
 
 
-  typedef struct  CFF_Font_
+  typedef struct  CFF_FontRec_
   {
-    FT_Stream      stream;
-    FT_Memory      memory;
-    FT_UInt        num_faces;
-    FT_UInt        num_glyphs;
+    FT_Stream        stream;
+    FT_Memory        memory;
+    FT_UInt          num_faces;
+    FT_UInt          num_glyphs;
 
-    FT_Byte        version_major;
-    FT_Byte        version_minor;
-    FT_Byte        header_size;
-    FT_Byte        absolute_offsize;
+    FT_Byte          version_major;
+    FT_Byte          version_minor;
+    FT_Byte          header_size;
+    FT_Byte          absolute_offsize;
 
 
-    CFF_Index      name_index;
-    CFF_Index      top_dict_index;
-    CFF_Index      string_index;
-    CFF_Index      global_subrs_index;
+    CFF_IndexRec     name_index;
+    CFF_IndexRec     top_dict_index;
+    CFF_IndexRec     string_index;
+    CFF_IndexRec     global_subrs_index;
 
-    CFF_Encoding   encoding;
-    CFF_Charset    charset;
+    CFF_EncodingRec  encoding;
+    CFF_CharsetRec   charset;
 
-    CFF_Index      charstrings_index;
-    CFF_Index      font_dict_index;
-    CFF_Index      private_index;
-    CFF_Index      local_subrs_index;
+    CFF_IndexRec     charstrings_index;
+    CFF_IndexRec     font_dict_index;
+    CFF_IndexRec     private_index;
+    CFF_IndexRec     local_subrs_index;
 
-    FT_String*     font_name;
-    FT_UInt        num_global_subrs;
-    FT_Byte**      global_subrs;
+    FT_String*       font_name;
+    FT_UInt          num_global_subrs;
+    FT_Byte**        global_subrs;
 
-    CFF_SubFont    top_font;
-    FT_UInt        num_subfonts;
-    CFF_SubFont*   subfonts[CFF_MAX_CID_FONTS];
+    CFF_SubFontRec   top_font;
+    FT_UInt          num_subfonts;
+    CFF_SubFont      subfonts[CFF_MAX_CID_FONTS];
 
-    CFF_FD_Select  fd_select;
+    CFF_FDSelectRec  fd_select;
 
     /* interface to PostScript hinter */
-    void*          pshinter;
+    void*            pshinter;
 
-  } CFF_Font;
+  } CFF_FontRec, *CFF_Font;
 
 
 FT_END_HEADER
