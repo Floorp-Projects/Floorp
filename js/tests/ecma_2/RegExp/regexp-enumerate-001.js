@@ -13,8 +13,13 @@
     objects, since the inherited properties of most core JavaScript
     objects are not enumerated.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+    Author:             christine@netscape.com, pschwartau@netscape.com
+    Date:               12 November 1997
+    Modified:           14 July 2002
+    Reason:             See http://bugzilla.mozilla.org/show_bug.cgi?id=155291
+                        ECMA-262 Ed.3  Sections 15.10.7.1 through 15.10.7.5
+                        RegExp properties should be DontEnum
+*
 */
 //    onerror = err;
 
@@ -50,7 +55,7 @@
     testcases[testcases.length] = new TestCase( SECTION,
         "r = new RegExp(); e = new Array(); "+
         "for ( p in r ) { e[e.length] = { property:p, value:r[p] }; e.length",
-        5,
+        0,
         e.length );
 
     test();
