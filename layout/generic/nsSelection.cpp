@@ -2620,7 +2620,22 @@ nsSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt
 
 
   *aReturnDetails = nsnull;
+
+  // if any of the additional selections are set, always do a slow check. The
+  // issue is that the NS_FRAME_SELECTED_CONTENT bit is set when any of the
+  // selections are used, and the 'non-slow' code assumes that this means that
+  // there exists something selected for all selection types.
   PRInt8 j;
+  for (j = (PRInt8) 1; j < (PRInt8)nsISelectionController::NUM_SELECTIONTYPES; j++){
+    if (mDomSelections[j]){
+      PRBool iscollapsed;
+      mDomSelections[j]->GetIsCollapsed(&iscollapsed);
+      if (!iscollapsed){
+        aSlowCheck = PR_TRUE;
+      }
+    }
+  }
+
   for (j = (PRInt8) 0; j < (PRInt8)nsISelectionController::NUM_SELECTIONTYPES; j++){
     if (mDomSelections[j])
      mDomSelections[j]->LookUpSelection(aContent, aContentOffset, aContentLength, aReturnDetails, (SelectionType)(1<<j), aSlowCheck);
