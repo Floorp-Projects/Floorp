@@ -15,9 +15,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+function debug(str)
+{
+  dump( str );
+}
 function LoadDetectorsMenu()
   {
-    dump("run LoadDetectorsMenu()\n");
+    debug("run LoadDetectorsMenu()\n");
     var Registry = Components.classes['component://netscape/registry-viewer'].createInstance();
     Registry = Registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
 
@@ -32,20 +36,28 @@ function LoadDetectorsMenu()
   }
 function SelectDetectors( event )
   {
-   dump ( event.target );
+   uri =  event.target.getAttribute("id");
+   debug(uri + "\n");
    pref = Components.classes['component://netscape/preferences'];
+   prefvalue = uri.substring(
+                     'urn:mozilla-registry:key:/software/netscape/intl/charsetdetector/'.length
+                     ,uri.length);
+   if("off" == prefvalue) { // "off" is special value to turn off the detectors
+      prefvalue = "";
+   }
+   debug(prefvalue + "\n");
 
    // if all else fails, use trusty "about:blank" as the start page
    if (pref) {
-        dump("get pref\n");
+        debug("get pref\n");
         pref = pref.getService();
         pref = pref.QueryInterface(Components.interfaces.nsIPref);
    }
 
 
    if (pref) {
-       dump("get pref 2\n");
-       pref.SetCharPref("intl.charset.detector", "japsm");
+       debug("get pref 2\n");
+       pref.SetCharPref("intl.charset.detector", prefvalue);
    }
   }
 
