@@ -147,7 +147,7 @@ nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
       mAccessKeyInfo->mAccesskeyIndex = -1;
       mAccessKeyInfo->mAccesskeyIndex = mTitle.Find(accesskey, PR_TRUE);
 	  if (mAccessKeyInfo->mAccesskeyIndex == -1) {
-		  nsString tmpstring; tmpstring.AssignWithConversion("(");
+		  nsAutoString tmpstring; tmpstring.AssignWithConversion("(");
 		  accesskey.ToUpperCase();
 		  tmpstring += accesskey;
 		  tmpstring.AppendWithConversion(")");
@@ -443,7 +443,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
                return;
 		   
 		   // insert what character we can in.
-           nsString title = mTitle;
+           nsAutoString title = mTitle;
            title.Truncate(i);
 		   mCroppedTitle = title + mCroppedTitle;
        } 
@@ -468,7 +468,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
            if (i == 0) 
                break;
         
-           nsString copy;
+           nsAutoString copy;
            mTitle.Right(copy, length-i-1);
            mCroppedTitle = mCroppedTitle + copy;
        } 
@@ -476,7 +476,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
 
        case CropCenter:
 
-       nsString elipsisLeft; elipsisLeft.AssignWithConversion(ELIPSIS);
+       nsAutoString elipsisLeft; elipsisLeft.AssignWithConversion(ELIPSIS);
 
        if (aWidth <= elipsisWidth) 
          elipsisLeft.SetLength(0);
@@ -513,7 +513,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
            }
 
 
-           nsString copy;
+           nsAutoString copy;
 
            if (i2 > i)
               mTitle.Mid(copy, i,i2-i);
