@@ -133,7 +133,7 @@ nsHTTPChunkConv::OnDataAvailable (
         mChunkBufferPos = sprintf (mChunkBuffer, "%x%c%c", streamLen, '\r', '\n');
 
         rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], streamLen, &rl);
-        if (NS_FAILED (rv))
+        if (NS_FAILED (rv) || rl != streamLen)
             return rv;
 
         mChunkBufferPos += streamLen;
@@ -168,7 +168,7 @@ nsHTTPChunkConv::OnDataAvailable (
     {
         // DO_UNCHUNKING
 
-        while (streamLen > 0 || mState == CHUNK_STATE_FINAL)
+        while (mState != CHUNK_STATE_DONE)
         {
             switch (mState)
             {
@@ -209,14 +209,16 @@ nsHTTPChunkConv::OnDataAvailable (
 
                             if (NS_FAILED (rv))
                                 return rv;
+
+                            mState = CHUNK_STATE_INIT;
                         }
                         else
                         {
                             if (mChunkContext)
                                 mChunkContext -> SetEOF (PR_TRUE);
+                            
+                            mState = CHUNK_STATE_DONE;
                         }
-
-                        mState = CHUNK_STATE_INIT;
                     
                         if (mChunkBuffer != NULL)
                         {
@@ -229,6 +231,9 @@ nsHTTPChunkConv::OnDataAvailable (
 
                 case CHUNK_STATE_CR:
                 case CHUNK_STATE_CR_FINAL:
+
+                    if (!streamLen)
+                        return NS_OK;
 
                     rv = iStr -> Read (&c, 1, &rl);
                     if (NS_FAILED (rv))
@@ -246,6 +251,9 @@ nsHTTPChunkConv::OnDataAvailable (
                     
                     if (c != '\n')
                     {
+                        if (!streamLen)
+                            return NS_OK;
+
                         rv = iStr -> Read (&c, 1, &rl);
                         if (NS_FAILED (rv))
                             return rv;
@@ -275,6 +283,9 @@ nsHTTPChunkConv::OnDataAvailable (
                 
                     if (mLenBufCnt >= sizeof (mLenBuf) - 1)
                         return NS_ERROR_FAILURE;
+
+                    if (!streamLen)
+                        return NS_OK;
 
                     rv = iStr -> Read (&c, 1, &rl);
                     if (NS_FAILED (rv))
@@ -307,6 +318,9 @@ nsHTTPChunkConv::OnDataAvailable (
                     if (mChunkBufferLength - mChunkBufferPos <= streamLen)
                     {
                         // entire chunk
+                        if (!streamLen)
+                            return NS_OK;
+
                         rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], mChunkBufferLength - mChunkBufferPos, &rl);
                         if (NS_FAILED (rv))
                             return rv;
@@ -318,7 +332,10 @@ nsHTTPChunkConv::OnDataAvailable (
                     }
                     else
                     {
-                        rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], streamLen, &rl);                     
+                        if (!streamLen)
+                            return NS_OK;
+
+                        rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], streamLen, &rl);
                         if (NS_FAILED (rv))
                             return rv;
 
@@ -338,6 +355,9 @@ nsHTTPChunkConv::OnDataAvailable (
 
                 case CHUNK_STATE_TRAILER_HEADER:
                     
+                    if (!streamLen)
+                        return NS_OK;
+
                     rv = iStr -> Read (&c, 1, &rl);
                     if (NS_FAILED (rv))
                         return rv;
@@ -354,6 +374,9 @@ nsHTTPChunkConv::OnDataAvailable (
                     break;
                 
                 case CHUNK_STATE_TRAILER_VALUE:
+
+                    if (!streamLen)
+                        return NS_OK;
 
                     rv = iStr -> Read (&c, 1, &rl);
                     if (NS_FAILED (rv))
