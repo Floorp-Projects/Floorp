@@ -2851,25 +2851,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenBody()\n"));
   MOZ_TIMER_STOP(mWatch);
 
-  // Check to see if InitialReflow() has been called on any of our
-  // presShells. If so, the InitialReflow() call inside StartLayout()
-  // will be supressed, so we can't rely on it to construct the body
-  // frame for us, so we'll have to manually call NotifyInsert() or
-  // NotifyAppend() to make sure a body frame gets constructed. (Bug 153815)
-
-  PRBool didInitialReflow = PR_FALSE;
-
-  PRUint32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell *shell = mDocument->GetShellAt(i);
-
-    shell->GetDidInitialReflow(&didInitialReflow);
-    if (didInitialReflow) {
-      break;
-    }
-  }
-
-  if (didInitialReflow && mCurrentContext->mStackPos > 1) {
+  if (mCurrentContext->mStackPos > 1) {
     PRInt32 parentIndex    = mCurrentContext->mStackPos - 2;
     nsIHTMLContent *parent = mCurrentContext->mStack[parentIndex].mContent;
     PRInt32 numFlushed     = mCurrentContext->mStack[parentIndex].mNumFlushed;
@@ -2883,10 +2865,6 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     if (insertionPoint != -1) {
       NotifyInsert(parent, mBody, insertionPoint - 1);
     } else {
-      // XXX: Would it be better to use |parent->ChildCount() - 1| so
-      // that we don't cause notifications for the <head> element and
-      // it's children?
-
       NotifyAppend(parent, numFlushed);
     }
   }
