@@ -143,11 +143,11 @@
   -moz-image-region: rect(34px 49px 67px 0);
 }
 
-#printButton[buttonover="true"] {
+#printButton:hover {
   -moz-image-region: rect(34px 99px 67px 50px);
 }
 
-#printButton[buttondown="true"] {
+#printButton:hover:active {
   -moz-image-region: rect(34px 149px 67px 100px);
 }
 

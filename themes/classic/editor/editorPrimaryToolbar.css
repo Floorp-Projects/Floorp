@@ -129,11 +129,11 @@
   -moz-image-region: rect(160px 16px 176px 0);
 }
 
-#printButton[buttonover="true"] {
+#printButton:hover {
   -moz-image-region: rect(160px 32px 176px 16px);
 }
 
-#printButton[buttondown="true"] {
+#printButton:hover:active {
   -moz-image-region: rect(160px 48px 176px 32px);
 }
 
@@ -305,11 +305,11 @@
   -moz-image-region: rect(256px 16px 272px 0);
 }
 
-#formButton[buttonover="true"] {
+#formButton:hover {
   -moz-image-region: rect(256px 32px 272px 16px);
 }
 
-#formButton[buttondown="true"] {
+#formButton:hover:active {
   -moz-image-region: rect(256px 48px 272px 32px);
 }
 
