@@ -56,12 +56,12 @@
 <!ENTITY pref.defaultemail.label "メールアドレス(デフォルト):">
 <!ENTITY pref.defaulttext.label "アラームメッセージ(デフォルト):">
 <!ENTITY pref.missedalarms    "失敗したアラームを表示する" >
-<!ENTITY pref.defalarm4events.label "Default alarm setting for events:">
-<!ENTITY pref.defalarm4todos.label "Default alarm setting for tasks:">
-<!ENTITY pref.alarm.on "On">
-<!ENTITY pref.alarm.off "Off">
-<!ENTITY pref.defalarmlen4events.label "Default time an alarm goes off before an event:">
-<!ENTITY pref.defalarmlen4todos.label "Default time an alarm goes off before a task:">
+<!ENTITY pref.defalarm4events.label "イベントのアラーム設定(デフォルト):">
+<!ENTITY pref.defalarm4todos.label "タスクのアラーム設定(デフォルト):">
+<!ENTITY pref.alarm.on "有効">
+<!ENTITY pref.alarm.off "無効">
+<!ENTITY pref.defalarmlen4events.label "イベント前通知時間(デフォルト):">
+<!ENTITY pref.defalarmlen4todos.label "タスク前通知時間(デフォルト):">
 
 <!ENTITY pref.dateformat.label      "日付形式:" >
 <!ENTITY pref.dateformat.long       "ロング形式" >

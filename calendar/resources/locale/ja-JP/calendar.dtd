@@ -86,8 +86,8 @@
 <!ENTITY newevent.server.label       "カレンダーファイル" >
 <!ENTITY newevent.invite.label       "訪問" >
 <!ENTITY newevent.email.label        "次のメールアドレスに通知する" >
-<!ENTITY newevent.beforealarm.label  "前にイベントを開始する" >
-<!ENTITY newevent.beforealarmends.label  "before the event ends" >
+<!ENTITY newevent.beforealarm.label  "イベント開始前" >
+<!ENTITY newevent.beforealarmends.label  "イベント終了前" >
 <!ENTITY newevent.repeat.label       "次の周期で繰り返す" >
 <!ENTITY newevent.until.label        "次の期日まで繰り返す" >
 <!ENTITY newevent.forever.label      "永久に繰り返す" >
@@ -113,13 +113,13 @@
 <!ENTITY newevent.status.inprogress.label  "進行中" >
 <!ENTITY newevent.status.completed.label   "完了" >
 <!ENTITY newevent.status.cancelled.label   "キャンセル" >
-<!ENTITY newevent.status.tentative.label   "未確認" >
+!ENTITY newevent.status.tentative.label   "未確認" >
 <!ENTITY newevent.status.confirmed.label   "確認済み" >
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "その月の x 番目の日に">
 <!ENTITY newevent.advanced.repeat.dayofweek.label "その月の第 4 火曜日">
 <!ENTITY newevent.advanced.repeat.lastdayofweek.label "その月の先の火曜日">
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " (その月の)">
 
 <!ENTITY newevent.advanced.repeat.onthe.label "に ">
 <!ENTITY newevent.advanced.repeat.last.label "先の ">
@@ -142,15 +142,15 @@
 <!ENTITY newtodo.priority.label "優先度">
 <!ENTITY newtodo.percentcomplete.label "&#37; 完了">
 <!ENTITY newtodo.categories.label "カテゴリ">
-<!ENTITY newtodo.starttime.warning "開始日付が期日後になっています。">
+<!ENTITY newtodo.starttime.warning "開始日付が期日後です。">
 <!ENTITY newtodo.cancelled.label "キャンセル">
 <!ENTITY newtodo.status.label "ステータス">
-<!ENTITY newtodo.beforealarm.label  "before the task starts" >
-<!ENTITY newtodo.beforealarmends.label  "before the task is due" >
-<!ENTITY newtodo.newtodo.tab.label "Task" >
-<!ENTITY newtodo.status.longlabel "Task Status">
-<!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
-<!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
+<!ENTITY newtodo.beforealarm.label  "タスク開始前" >
+<!ENTITY newtodo.beforealarmends.label  "タスク期限前" >
+<!ENTITY newtodo.newtodo.tab.label "タスク" >
+<!ENTITY newtodo.status.longlabel "タスクステータス">
+<!ENTITY newtodo.duetime.warning    "開始時間が予定時間後です。">
+<!ENTITY newtodo.duedate.warning    "開始日付が期日後です。">
 
 <!ENTITY calendar.confirm.deleteevent "このタイトルのイベントを削除しますか: " >        
 <!ENTITY calendar.confirm.deleteuntitledevent "タイトルなしのイベントを削除しますか?" >
