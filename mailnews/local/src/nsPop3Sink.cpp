@@ -292,7 +292,7 @@ nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState)
         printf("Excuse me, Sir. I have no idea.\n");
         break;
     case 1:
-        printf("You have got mail!\n");
+        printf("Ya'll got mail!\n");
         break;
     case 2:
         printf("You have no mail.\n");
