@@ -78,7 +78,7 @@ interface calICalendar : nsISupports
    * XXX what do we guarantee about item ordering, especially w.r.t.
    * which items are returned when aCount != 0
    */
-  void getItems( in nsID aItemType, in unsigned long aItemFilter, 
+  void getItems( in nsIIDRef aItemType, in unsigned long aItemFilter, 
                  in unsigned long aCount, in calIDateTime aRangeStart,
                  in calIDateTime aRangeEnd, 
 		 in calIOperationListener aListener );
@@ -118,8 +118,8 @@ interface calIOperationListener : nsISupports
   /**
    * for getItem and getItems
    */
-  void onGetComplete(in nsresult aStatus, in nsID aItemType, 
-		     in nISupports aDetail, in PRUint32 aCount, 
+  void onGetComplete(in nsresult aStatus, in nsIIDRef aItemType, 
+		     in nsISupports aDetail, in PRUint32 aCount, 
 		     [array, size_is(aCount), iid_is(aItemType)] 
 		     in nsQIResult aItems ); 
 };
