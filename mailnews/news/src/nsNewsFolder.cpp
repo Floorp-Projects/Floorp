@@ -391,7 +391,10 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
   }
 #endif
  
-	mSubFolders->AppendElement(folder);
+	//convert to an nsISupports before appending
+	nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(folder));
+	if(folderSupports)
+		mSubFolders->AppendElement(folderSupports);
 	*child = folder;
 	NS_ADDREF(*child);
 
