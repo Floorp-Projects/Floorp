@@ -5329,7 +5329,7 @@ NS_IMETHODIMP nsNNTPProtocol::CloseConnection()
 
   if (m_nntpServer) {
     m_nntpServer->RemoveConnection(this);
-  m_nntpServer = nsnull;
+    m_nntpServer = nsnull;
   }
   m_newsFolder = nsnull;
   
@@ -5419,8 +5419,14 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
 nsresult nsNNTPProtocol::CloseSocket()
 {
   PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) ClosingSocket()",this));
+  
+  if (m_nntpServer) {
+    m_nntpServer->RemoveConnection(this);
+    m_nntpServer = nsnull;
+  }
+  
   CleanupAfterRunningUrl(); // is this needed?
-	return nsMsgProtocol::CloseSocket();
+  return nsMsgProtocol::CloseSocket();
 }
 
 void nsNNTPProtocol::SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax)
