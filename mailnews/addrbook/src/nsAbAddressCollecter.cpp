@@ -246,7 +246,14 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 		         do_GetService(kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
+                {
 			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
+                        if (!NS_SUCCEEDED(rv))
+                        {
+                          // blow away corrupt db's
+                          dbPath->Delete(PR_FALSE);
+                        }
+                }
 		delete dbPath;
 	}
 	nsCOMPtr<nsIRDFService> rdfService(do_GetService(kRDFServiceCID, &rv));
