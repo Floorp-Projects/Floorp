@@ -114,7 +114,7 @@ Rights Reserved.
       <menuitem label="&SendMailTo.label;"
                 accesskey="&SendMailTo.accesskey;"
                 oncommand="SendMailToNode(document.popupNode)"/>
-      <menuitem value="&CopyEmailAddress.label;"
+      <menuitem label="&CopyEmailAddress.label;"
                 accesskey="&CopyEmailAddress.accesskey;"
                 oncommand="CopyEmailAddress(document.popupNode)"/>  
   </popup>
