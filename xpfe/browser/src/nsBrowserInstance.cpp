@@ -773,8 +773,8 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
         case 2: {
           nsCOMPtr<nsIBrowserHistory> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
           if (history) {
-            nsXPIDLCString curl;
-            rv = history->GetLastPageVisited(getter_Copies(curl));
+            nsCAutoString curl;
+            rv = history->GetLastPageVisited(curl);
             if (NS_SUCCEEDED(rv)) {
               *aDefaultArgs = UTF8ToNewUnicode(curl);
               if (*aDefaultArgs) return NS_OK;
