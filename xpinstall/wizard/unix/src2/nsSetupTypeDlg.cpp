@@ -90,7 +90,7 @@ void
 nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
-    if (aData != gCtx->sdlg) return;
+    if (aData && aData != gCtx->sdlg) return;
     if (gCtx->bMoving)
     {
         gCtx->bMoving = FALSE;
@@ -116,15 +116,35 @@ nsSetupTypeDlg::Next(GtkWidget *aWidget, gpointer aData)
             return;
     }
 
-    // hide this notebook page
-    gCtx->sdlg->Hide();
+    if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
+    {
+        // hide this notebook page
+        gCtx->sdlg->Hide();
+    }
 
     // show the last dlg
     if (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1))
+    {
         gCtx->cdlg->Show();
+    }
     else
-        gCtx->idlg->Show();
-    gCtx->bMoving = TRUE;
+    {
+        if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+        {
+            gCtx->idlg->Show();
+        }
+        if (gCtx->opt->mMode != nsXIOptions::MODE_DEFAULT)
+        {
+            gCtx->idlg->Next((GtkWidget *)NULL, (gpointer) gCtx->idlg);
+        }
+    }
+
+    // When Next() is not invoked from a signal handler, the caller passes
+    // aData as NULL so we know not to do the bMoving hack. 
+    if (aData)
+    {
+        gCtx->bMoving = TRUE;
+    }
 }
 
 int
@@ -689,7 +709,6 @@ nsSetupTypeDlg::RadBtnToggled(GtkWidget *aWidget, gpointer aData)
 int
 nsSetupTypeDlg::VerifyDestination()
 {
-    int err = E_NO_DEST;
     int stat_err = 0;
     struct stat stbuf; 
     GtkWidget *yesButton, *noButton, *label;
@@ -701,6 +720,10 @@ nsSetupTypeDlg::VerifyDestination()
     {
       if (access(gCtx->opt->mDestination, R_OK | W_OK | X_OK ) != 0)
       {
+        if (gCtx->opt->mMode != nsXIOptions::MODE_DEFAULT) {
+          ErrorHandler(E_NO_PERMS);
+          return E_NO_PERMS;
+        }
         sprintf(message, gCtx->Res("NO_PERMS"), gCtx->opt->mDestination);
 
         noPermsDlg = gtk_dialog_new();
@@ -736,6 +759,11 @@ nsSetupTypeDlg::VerifyDestination()
       }
     }
 
+    if (gCtx->opt->mMode != nsXIOptions::MODE_DEFAULT)
+    {
+      CreateDestYes((GtkWidget *)NULL, (gpointer) gCtx->sdlg);
+      return E_NO_DEST;
+    }
     // destination doesn't exist so ask user if we should create it
     sprintf(message, gCtx->Res("DOESNT_EXIST"), gCtx->opt->mDestination);
 
@@ -763,7 +791,7 @@ nsSetupTypeDlg::VerifyDestination()
     
     gtk_widget_show_all(sCreateDestDlg);
 
-    return err;
+    return E_NO_DEST;
 }
 
 void
@@ -791,7 +819,6 @@ nsSetupTypeDlg::CreateDestYes(GtkWidget *aWidget, gpointer aData)
     path[pathLen] = '/';  // for uniform handling
 
     struct stat buf;
-    mode_t oldPerms = umask(022);
 
     for (int i = 1; !err && i <= pathLen; i++) 
     {
@@ -800,30 +827,26 @@ nsSetupTypeDlg::CreateDestYes(GtkWidget *aWidget, gpointer aData)
             path[i] = '\0';
             if (stat(path, &buf) != 0) 
             {
-                err = mkdir(path, (0777 & ~oldPerms));
+                err = mkdir(path, 0755);
             }
             path[i] = '/';
         }
     }
 
-    umask(oldPerms); // restore original umask
-
-    gtk_widget_destroy(sCreateDestDlg);
+    if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
+    {
+        gtk_widget_destroy(sCreateDestDlg);
+    }
 
     if (err != 0)
     {
         ErrorHandler(E_MKDIR_FAIL);
-        return;
     }
-
-    // hide this notebook page
-    gCtx->sdlg->Hide();
-
-    // show the final dlg
-    if (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1))
-        gCtx->cdlg->Show();
     else
-        gCtx->idlg->Show();
+    {
+        // try to move forward to installer dialog again
+        nsSetupTypeDlg::Next((GtkWidget *)NULL, NULL);
+    }
 }
 
 void
@@ -862,6 +885,12 @@ nsSetupTypeDlg::DeleteOldInst()
       // check if old installation exists
       if (0 == stat(path, &dummy))
       {
+          if (gCtx->opt->mMode != nsXIOptions::MODE_DEFAULT)
+          {
+              DeleteInstDelete((GtkWidget *)NULL, (gpointer) gCtx->sdlg);
+              return OK;
+          }
+
           // throw up delete dialog 
           sDelInstDlg = gtk_dialog_new();
           gtk_window_set_modal(GTK_WINDOW(sDelInstDlg), TRUE);
@@ -933,20 +962,20 @@ nsSetupTypeDlg::DeleteInstDelete(GtkWidget *aWidget, gpointer aData)
     }
     wait(NULL);
 
-    // hide this notebook page
-    gCtx->sdlg->Hide();
+    if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
+    {
+       gtk_widget_destroy(sDelInstDlg);
+    }
 
-    // disconnect this dlg's nav btn signal handlers
-    gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
-    gtk_signal_disconnect(GTK_OBJECT(sBrowseBtn), sBrowseBtnID);
+    // We just deleted the directory, so the parent exists
+    // and we have appropriate perms.
+    mkdir(gCtx->opt->mDestination, 0755);
 
-    // show the final dlg
-    if (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1))
-        gCtx->cdlg->Show();
-    else
-        gCtx->idlg->Show();
-
-    gtk_widget_destroy(sDelInstDlg);
+    if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
+    {
+        // Try to move forward to installer dialog again.
+        nsSetupTypeDlg::Next((GtkWidget *)NULL, NULL);
+    }
 }
 
 void         
@@ -1038,39 +1067,42 @@ nsSetupTypeDlg::VerifyDiskSpace(void)
 
     if (dsReqd > dsAvail)
     {
-        // throw up not enough ds dlg
-        sprintf(dsAvailStr, gCtx->Res("DS_AVAIL"), dsAvail);
-        sprintf(dsReqdStr, gCtx->Res("DS_REQD"), dsReqd);
-        sprintf(message, "%s\n%s\n\n%s", dsAvailStr, dsReqdStr, 
-                gCtx->Res("NO_DISK_SPACE"));
-
-        noDSDlg = gtk_dialog_new();
-        gtk_window_set_modal(GTK_WINDOW(noDSDlg), TRUE);
-        label = gtk_label_new(message);
-        okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
-        packer = gtk_packer_new(); 
-
-        if (noDSDlg && label && okButton && packer)
+        if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
         {
-            gtk_window_set_title(GTK_WINDOW(noDSDlg), gCtx->opt->mTitle);
-            gtk_window_set_position(GTK_WINDOW(noDSDlg), 
-                                    GTK_WIN_POS_CENTER);
-            gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
-            gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
-            gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
-                                    GTK_ANCHOR_CENTER, GTK_FILL_X);
-            gtk_box_pack_start(GTK_BOX(
-                GTK_DIALOG(noDSDlg)->action_area), okButton,
-                FALSE, FALSE, 10);
-            gtk_signal_connect(GTK_OBJECT(okButton), "clicked", 
-                GTK_SIGNAL_FUNC(NoDiskSpaceOK), noDSDlg);
-            gtk_box_pack_start(GTK_BOX(
-                GTK_DIALOG(noDSDlg)->vbox), packer, FALSE, FALSE, 10);
+            // throw up not enough ds dlg
+            sprintf(dsAvailStr, gCtx->Res("DS_AVAIL"), dsAvail);
+            sprintf(dsReqdStr, gCtx->Res("DS_REQD"), dsReqd);
+            sprintf(message, "%s\n%s\n\n%s", dsAvailStr, dsReqdStr, 
+                    gCtx->Res("NO_DISK_SPACE"));
 
-            GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
-            gtk_widget_grab_default(okButton);
+            noDSDlg = gtk_dialog_new();
+            gtk_window_set_modal(GTK_WINDOW(noDSDlg), TRUE);
+            label = gtk_label_new(message);
+            okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
+            packer = gtk_packer_new(); 
 
-            gtk_widget_show_all(noDSDlg);
+            if (noDSDlg && label && okButton && packer)
+            {
+                gtk_window_set_title(GTK_WINDOW(noDSDlg), gCtx->opt->mTitle);
+                gtk_window_set_position(GTK_WINDOW(noDSDlg), 
+                        GTK_WIN_POS_CENTER);
+                gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+                gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
+                gtk_packer_add_defaults(GTK_PACKER(packer), label,
+                        GTK_SIDE_BOTTOM, GTK_ANCHOR_CENTER, GTK_FILL_X);
+                gtk_box_pack_start(GTK_BOX(
+                            GTK_DIALOG(noDSDlg)->action_area), okButton,
+                        FALSE, FALSE, 10);
+                gtk_signal_connect(GTK_OBJECT(okButton), "clicked", 
+                        GTK_SIGNAL_FUNC(NoDiskSpaceOK), noDSDlg);
+                gtk_box_pack_start(GTK_BOX(
+                            GTK_DIALOG(noDSDlg)->vbox), packer, FALSE, FALSE, 10);
+
+                GTK_WIDGET_SET_FLAGS(okButton, GTK_CAN_DEFAULT);
+                gtk_widget_grab_default(okButton);
+
+                gtk_widget_show_all(noDSDlg);
+            }
         }
 
         err = E_NO_DISK_SPACE;

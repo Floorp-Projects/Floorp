@@ -229,10 +229,8 @@ nsXInstaller::RunWizard(int argc, char **argv)
     }
     else
     {
-        // show install dlg
-        if (gCtx->opt->mMode == nsXIOptions::MODE_AUTO)
-            gCtx->idlg->Show();
-        gCtx->idlg->Next((GtkWidget *)NULL, (gpointer) gCtx->idlg);
+        // jump to the SetupType dialog to check destination directory
+        gCtx->sdlg->Next((GtkWidget *)NULL, (gpointer) gCtx->sdlg);
     }
 
     return OK;
@@ -442,6 +440,8 @@ ErrorHandler(int aErr, const char* aErrMsg)
     if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT || !gCtx->window)
     {
         fprintf (stderr, "%s\n", msg);
+        if (IsErrFatal(aErr))
+            exit(aErr);
         return aErr;
     }
     sErrDlg = gtk_dialog_new();
