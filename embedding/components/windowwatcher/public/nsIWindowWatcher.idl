@@ -136,6 +136,16 @@ interface nsIWindowWatcher : nsISupports {
   */
   nsIWebBrowserChrome getChromeForWindow(in nsIDOMWindow aWindow);
 
+  /**
+      Retrieve an existing window (or frame).
+      @param aTargetName the window name
+      @param aCurrentWindow a starting point in the window hierarchy to
+                            begin the search.  If null, each toplevel window
+                            will be searched.
+  */
+  nsIDOMWindow getWindowByName(in wstring aTargetName,
+                               in nsIDOMWindow aCurrentWindow);
+
   /** The Watcher serves as a global storage facility for the current active
       (frontmost non-floating-palette-type) window, storing and returning
       it on demand. Users must keep this attribute current, including after

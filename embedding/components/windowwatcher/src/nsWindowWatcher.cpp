@@ -960,6 +960,50 @@ nsWindowWatcher::GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWindowWatcher::GetWindowByName(const PRUnichar *aTargetName, 
+                                 nsIDOMWindow *aCurrentWindow,
+                                 nsIDOMWindow **aResult)
+{
+  if (!aResult) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  *aResult = nsnull;
+
+  nsCOMPtr<nsIWebNavigation> webNav;
+  nsCOMPtr<nsIDocShellTreeItem> treeItem;
+
+  // First, check if the TargetName exists in the aCurrentWindow hierarchy
+  webNav = do_GetInterface(aCurrentWindow);
+  if (webNav) {
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem;
+
+    docShellTreeItem = do_QueryInterface(webNav);
+    if (docShellTreeItem) {
+      docShellTreeItem->FindItemWithName(aTargetName, nsnull,
+                                         getter_AddRefs(treeItem));
+    }
+  }
+
+  // Next, see if the TargetName exists in any window hierarchy
+  if (!treeItem) {
+    FindItemWithName(aTargetName, getter_AddRefs(treeItem));
+  }
+
+  if (treeItem) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+
+    domWindow = do_GetInterface(treeItem);
+    if (domWindow) {
+      *aResult = domWindow;
+      NS_ADDREF(*aResult);
+    }
+  }
+
+  return NS_OK;
+}
+
 PRBool
 nsWindowWatcher::AddEnumerator(nsWatcherWindowEnumerator* inEnumerator)
 {
