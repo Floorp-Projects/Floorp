@@ -36,7 +36,7 @@
 
 #include "nsXPIDLString.h"
 
-class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl
+class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl, public nsIMsgI18NUrl
 {
 public:
 
@@ -55,6 +55,7 @@ public:
 
   // nsIMsgMessageUrl
   NS_DECL_NSIMSGMESSAGEURL
+  NS_DECL_NSIMSGI18NURL
 
 	// nsImapUrl
 	nsImapUrl();
@@ -120,6 +121,8 @@ protected:
 	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
   PRBool                m_addDummyEnvelope;
   PRBool                m_canonicalLineEnding; // CRLF
+  
+  nsCString mURI; // the RDF URI associated with this url.
 };
 
 #endif /* nsImapUrl_h___ */

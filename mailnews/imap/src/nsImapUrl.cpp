@@ -43,6 +43,13 @@
 #include "nsAutoLock.h"
 #include "nsIMAPNamespace.h"
 
+// rdf stuff is needed to get the charset from the imap folder associated with the url.
+#include "nsIRDFService.h"
+#include "rdf.h"
+#include "nsIMsgFolder.h"
+#include "nsIMessage.h"
+
+
 static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCImapHostSessionListCID, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -101,6 +108,7 @@ NS_IMPL_RELEASE_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
 NS_INTERFACE_MAP_BEGIN(nsImapUrl)
    NS_INTERFACE_MAP_ENTRY(nsIImapUrl)
    NS_INTERFACE_MAP_ENTRY(nsIMsgMessageUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgI18NUrl)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -207,8 +215,8 @@ NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExten
 
 NS_IMETHODIMP nsImapUrl::SetImapExtensionSink(nsIImapExtensionSink  * aImapExtensionSink)
 {
-    // ** jt - not ref counted; talk to me before you change the code
-    m_imapExtensionSink = aImapExtensionSink;
+  // ** jt - not ref counted; talk to me before you change the code
+  m_imapExtensionSink = aImapExtensionSink;
 
 	return NS_OK;
 }
@@ -228,9 +236,8 @@ NS_IMETHODIMP nsImapUrl::GetImapMiscellaneousSink(nsIImapMiscellaneousSink **
 NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
                                               aImapMiscellaneousSink)
 {
-    // ** jt - not ref counted; talk to me before you change the code
-    m_imapMiscellaneousSink = aImapMiscellaneousSink;
-
+  // ** jt - not ref counted; talk to me before you change the code
+  m_imapMiscellaneousSink = aImapMiscellaneousSink;
 	return NS_OK;
 }
 
@@ -1010,12 +1017,19 @@ NS_IMETHODIMP nsImapUrl::GetAllowContentChange(PRBool *result)
 	return NS_OK;
 }
 
-NS_IMETHODIMP
-nsImapUrl::GetURI(char** aURI)
+NS_IMETHODIMP nsImapUrl::SetUri(const char * aURI)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
-  if (aURI)
-  {
+  mURI= aURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
+{
+  nsresult rv = NS_OK;
+  if (!mURI.IsEmpty())
+    *aURI = mURI.ToNewCString();
+  else
+	{
     *aURI = nsnull;
     PRUint32 key = m_listOfMessageIds ? atoi(m_listOfMessageIds) : 0;
 		nsXPIDLCString theFile;
@@ -1029,15 +1043,13 @@ nsImapUrl::GetURI(char** aURI)
     fullFolderPath += '/';
     fullFolderPath.Append(theFile);
 
-	PR_FREEIF(hostName);
-	char * baseMessageURI;
-	nsCreateImapBaseMessageURI(fullFolderPath, &baseMessageURI);
-	nsCAutoString uriStr;
-	rv = nsBuildImapMessageURI(baseMessageURI, key, uriStr);
-	nsCRT::free(baseMessageURI);
-	*aURI = uriStr.ToNewCString();
-	return rv;
-
+    PR_FREEIF(hostName);
+    char * baseMessageURI;
+    nsCreateImapBaseMessageURI(fullFolderPath, &baseMessageURI);
+    nsCAutoString uriStr;
+    rv = nsBuildImapMessageURI(baseMessageURI, key, uriStr);
+    nsCRT::free(baseMessageURI);
+    *aURI = uriStr.ToNewCString();
   }
   
   return rv;
@@ -1236,5 +1248,32 @@ void nsImapUrl::ParseListOfMessageIds()
     m_listOfMessageIds = nsCRT::strdup(m_listOfMessageIds);
 		m_mimePartSelectorDetected = PL_strstr(m_listOfMessageIds, "&part=") != 0;
 	}
+}
+
+// nsIMsgI18NUrl support
+
+NS_IMETHODIMP nsImapUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
+{
+  // if we have a RDF URI, then try to get the folder for that URI and then ask the folder
+  // for it's charset....
+
+  nsXPIDLCString uri;
+  GetUri(getter_Copies(uri));
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_PROGID "/rdf-service"); 
+  nsCOMPtr<nsIRDFResource> resource;
+  rdfService->GetResource(uri, getter_AddRefs(resource));
+
+  NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMessage> msg (do_QueryInterface(resource));
+  NS_ENSURE_TRUE(msg, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMsgFolder> folder;
+  msg->GetMsgFolder(getter_AddRefs(folder));
+  NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
+  nsXPIDLString charset; 
+  folder->GetCharset(getter_Copies(charset));
+  *aCharacterSet = nsCRT::strdup(charset);
+
+  return NS_OK;
 }
 

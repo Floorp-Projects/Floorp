@@ -69,11 +69,12 @@ protected:
     PRUnichar GetHierarchyDelimiter(nsIMsgFolder* aMsgFolder);
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,
                            char **folderName);
-	nsresult CreateStartOfImapUrl(nsIImapUrl  **imapUrl,
+	  nsresult CreateStartOfImapUrl(const char * aImapURI /* a RDF URI for the current message / folder, can be null */,
+                                  nsIImapUrl  **imapUrl,
                                   nsIMsgFolder* aImapFolder,
                                   nsIUrlListener * aUrlListener,
                                   nsCString & urlSpec,
-								  PRUnichar &hierarchyDelimiter);
+								                  PRUnichar &hierarchyDelimiter);
     nsresult GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue, 
                                          nsIImapUrl* aImapUrl,
                                          nsISupports* aConsumer,
