@@ -26,6 +26,9 @@ class nsWindow : public nsWidget
  public:
   nsWindow();
   ~nsWindow();
+  NS_IMETHOD Invalidate(PRBool aIsSynchronous);
+  NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+  NS_IMETHOD Update();
 protected:
   void CreateNative(Window aParent, nsRect aRect);
   void DestroyNative(void);

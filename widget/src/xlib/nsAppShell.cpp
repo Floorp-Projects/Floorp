@@ -322,11 +322,12 @@ nsAppShell::DispatchEvent(XEvent *event)
   case Expose:
     HandleExposeEvent(event, widget);
     break;
-#if 0
   case ConfigureNotify:
+    // we need to make sure that this is the LAST of the
+    // config events.
+    while (XCheckWindowEvent(gDisplay, event->xany.window, StructureNotifyMask, event) == True);
     HandleConfigureNotifyEvent(event, widget);
     break;
-#endif
   case ButtonPress:
   case ButtonRelease:
     HandleButtonEvent(event, widget);

@@ -102,6 +102,60 @@ nsWindow::CreateNative(Window aParent, nsRect aRect)
   AddWindowCallback(mBaseWindow, this);
 }
 
+NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
+{
+  printf("nsWindow::Invalidate(sync)\n");
+  nsPaintEvent pevent;
+  pevent.message = NS_PAINT;
+  pevent.widget = this;
+  pevent.eventStructType = NS_PAINT_EVENT;
+  pevent.rect = new nsRect (mBounds.x, mBounds.y,
+                            mBounds.height, mBounds.width);
+  // XXX fix this
+  pevent.time = 0;
+  AddRef();
+  OnPaint(pevent);
+  Release();
+  delete pevent.rect;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
+{
+  printf("nsWindow::Invalidate(rect, sync)\n");
+  nsPaintEvent pevent;
+  pevent.message = NS_PAINT;
+  pevent.widget = this;
+  pevent.eventStructType = NS_PAINT_EVENT;
+  pevent.rect = new nsRect(aRect);
+  // XXX fix this
+  pevent.time = 0;
+  AddRef();
+  OnPaint(pevent);
+  Release();
+  // XXX will this leak?
+  //delete pevent.rect;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::Update()
+{
+  printf("nsWindow::Update()\n");
+  nsPaintEvent pevent;
+  pevent.message = NS_PAINT;
+  pevent.widget = this;
+  pevent.eventStructType = NS_PAINT_EVENT;
+  pevent.rect = new nsRect (mBounds.x, mBounds.y,
+                            mBounds.height, mBounds.width);
+  // XXX fix this
+  pevent.time = 0;
+  AddRef();
+  OnPaint(pevent);
+  Release();
+  delete pevent.rect;
+  return NS_OK;
+}
+
 ChildWindow::ChildWindow(): nsWindow()
 {
   name = "nsChildWindow";
