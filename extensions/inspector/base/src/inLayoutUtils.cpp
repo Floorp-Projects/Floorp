@@ -52,17 +52,16 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsIPresContext.h"
-#include "nsIStyleContext.h" 
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
 nsIDOMWindowInternal*
-inLayoutUtils::GetWindowFor(nsIDOMElement* aElement)
+inLayoutUtils::GetWindowFor(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIDOMDocument> doc1;
-  aElement->GetOwnerDocument(getter_AddRefs(doc1));
+  aNode->GetOwnerDocument(getter_AddRefs(doc1));
   return GetWindowFor(doc1);
 }
 

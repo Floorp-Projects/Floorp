@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "inDOMView.h"
+#include "inIDOMUtils.h"
 
 #include "inLayoutUtils.h"
 
@@ -45,12 +46,14 @@
 #include "nsISupportsArray.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMCharacterData.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIBindingManager.h"
 #include "nsIDocument.h"
+#include "nsIServiceManager.h"
 
 ////////////////////////////////////////////////////////////////////////
 // inDOMViewNode
@@ -1256,6 +1259,12 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids, nsISupportsArray* aArray)
   nsCOMPtr<nsIDOMNode> kid;
   PRUint16 nodeType = 0;
   PRBool filtered = PR_FALSE;
+
+  // Try and get DOM Utils in case we don't have one yet.
+  if (mShowWhitespaceNodes && !mDOMUtils) {
+    mDOMUtils = do_CreateInstance("@mozilla.org/inspector/dom-utils;1");
+  }
+
   for (PRUint32 i = 0; i < l; ++i) {
     aKids->Item(i, getter_AddRefs(kid));
     kid->GetNodeType(&nodeType);
@@ -1263,40 +1272,12 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids, nsISupportsArray* aArray)
     if (filtered) {
       if ((nodeType == nsIDOMNode::TEXT_NODE ||
            nodeType == nsIDOMNode::COMMENT_NODE) &&
-          !mShowWhitespaceNodes) {
-        // Check to see if this node contains only whitespace.
-        nsAutoString nodeValue;
-        kid->GetNodeValue(nodeValue);
-
-        nsAString::const_iterator start, end;
-        nodeValue.BeginReading(start);
-        nodeValue.EndReading(end);
-
-        PRUint32 size;
-        PRBool foundNonWhitespace = PR_FALSE;
-        for (; start != end; start.advance(size)) {
-          const PRUnichar *buf = start.get();
-          size = start.size_forward();
-
-          for (PRUint32 j = 0; j < size; ++j, ++buf) {
-            if (!nsCRT::IsAsciiSpace(*buf)) {
-              // Great, we found a non-whitspace char.
-              // Let's mark that, and break out.
-              foundNonWhitespace = PR_TRUE;
-              break;
-            }
-          }
-
-          // Another loop we need to break out of.  That is,
-          // if we've already found what we're looking for.
-          if (foundNonWhitespace) {
-            break;
-          }
-        }
-
-        // Okay, we tried, but it seems everything here is whitespace.
-        // The user doesn't want to see it so suck it up and move on.
-        if (!foundNonWhitespace) {
+          !mShowWhitespaceNodes && mDOMUtils) {
+        nsCOMPtr<nsIDOMCharacterData> data = do_QueryInterface(kid);
+        NS_ASSERTION(data, "Does not implement nsIDOMCharacterData!");
+        PRBool ignore;
+        mDOMUtils->IsIgnorableWhitespace(data, &ignore);
+        if (ignore) {
           continue;
         }
       }
