@@ -935,11 +935,22 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     rv = owner->GetScriptObject(this, (void **)&global);
 
     // init standard classes
-    if (NS_SUCCEEDED(rv) && ::JS_InitStandardClasses(mContext, global)) {
-      ::JS_SetGlobalObject(mContext, global);
-      rv = InitClasses(); // this will complete the global object initialization
+    if (NS_SUCCEEDED(rv)) {
+      extern JSClass WindowClass;
+
+      // Window uses JS_ResolveStandardClass for lazy class initialization.
+      if (JS_GetClass(mContext, global) == &WindowClass) {
+        // No JS_InitStandardClasses, so we must JS_SetGlobalObject explicitly.
+        ::JS_SetGlobalObject(mContext, global);
+      }
+      else {
+        // JS_InitStandardClasses does JS_SetGlobalObject for us, if necessary.
+        if (!::JS_InitStandardClasses(mContext, global))
+          rv = NS_ERROR_FAILURE;
+      }
+      if (NS_SUCCEEDED(rv))
+        rv = InitClasses(); // this will complete global object initialization
     }
-    // XXX there ought to be an else here!
 
     if (NS_SUCCEEDED(rv)) {
       ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
