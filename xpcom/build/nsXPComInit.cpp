@@ -48,6 +48,11 @@
 
 #include "nsThread.h"
 
+#include _NEW_NSIFILE
+#include "nsIFileImpl.h"
+#include "nsIDirEnumeratorImpl.h"
+#endif
+
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
 #endif
@@ -83,6 +88,7 @@ static NS_DEFINE_CID(kSupportsVoidCID, NS_SUPPORTS_VOID_CID);
 // io
 static NS_DEFINE_CID(kFileSpecCID, NS_FILESPEC_CID);
 static NS_DEFINE_CID(kDirectoryIteratorCID, NS_DIRECTORYITERATOR_CID);
+
 // components
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
@@ -440,6 +446,21 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 NS_SUPPORTS_VOID_PROGID,
                                 nsSupportsVoidImplConstructor);
     if (NS_FAILED(rv)) return rv;
+
+#include _NEW_NSIFILE
+    rv = RegisterGenericFactory(compMgr, nsIFileImpl::GetCID(),
+                                NS_FILE_CLASSNAME,
+                                NS_FILE_PROGID,
+                                nsIFileImpl::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, nsIDirEnumeratorImpl::GetCID(),
+                                NS_DIRECTORY_ENUMERATOR_CLASS,
+                                NS_DIRECTORY_ENUMERATOR_PROGID,
+                                nsIDirEnumeratorImpl::Create);
+    if (NS_FAILED(rv)) return rv;
+#endif
+
 
     // Prepopulate registry for performance
     // Ignore return value. It is ok if this fails.
