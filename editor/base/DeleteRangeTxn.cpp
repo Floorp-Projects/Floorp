@@ -348,7 +348,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
       result = temp->GetNextSibling(getter_AddRefs(child));
       if ((NS_SUCCEEDED(result)) && child)
       {
-        if (child==aLastChild)
+        if (child.get()==aLastChild)
         { // aFirstChild and aLastChild have the same parent, and we've reached aLastChild
           needToProcessLastChild = PR_FALSE;
           break;  
@@ -396,7 +396,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
           return NS_ERROR_NULL_POINTER;
       }
     }
-    if (parent==aCommonParent)
+    if (parent.get()==aCommonParent)
       break;
     child = parent;
     nsCOMPtr<nsIDOMNode> temp=parent;
@@ -412,7 +412,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
     result = child->GetParentNode(getter_AddRefs(parent));
     while ((NS_SUCCEEDED(result)) && parent)
     {
-      if (parent==aCommonParent)
+      if (parent.get()==aCommonParent)
         break; // notice that when we go up the aLastChild parent chain, we don't touch aCommonParent
       while ((NS_SUCCEEDED(result)) && child)
       { // this loop starts with the first sibling of an ancestor of aFirstChild

@@ -108,7 +108,7 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
       {
         nsCOMPtr<nsIAtom> txnName;
         otherTxn->GetName(getter_AddRefs(txnName));
-        if (txnName==gInsertTextTxnName)
+        if (txnName.get()==gInsertTextTxnName)
         { // yep, it's one of ours.  By definition, it must contain only
           // a single InsertTextTxn
           nsCOMPtr<EditTxn> childTxn;
