@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.10 $ $Date: 2002/02/13 16:58:05 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.11 $ $Date: 2002/02/15 01:10:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -322,6 +322,32 @@ nssCertificateStore_Remove
 {
     certificate_hash_entry *entry;
     PZ_Lock(store->lock);
+#ifdef NSS_3_4_CODE
+    if (cert->object.refCount > 2) {
+	/* This continues the hack described in CERT_DestroyCertificate.
+	 * Because NSS 3.4 maintains a single, global, crypto context,
+	 * certs must be explicitly removed from it when there are no
+	 * more references to them.  This is done by destroying the cert
+	 * when there are two references left, the one being destroyed,
+	 * and the one here (read: temp db).
+	 * However, there is a race condition with timing the removal
+	 * of the cert from the temp store and deleting the last
+	 * reference.  In CERT_DestroyCertificate, the refCount is checked,
+	 * and if it is two, a call is made here to remove the temp cert.
+	 * But by the time it gets here (and within the safety of the
+	 * store's lock), another thread could have grabbed a reference
+	 * to it.  Removing it now will wreak havoc.
+	 * Therefore, it is necessary to check the refCount again, 
+	 * after obtaining the store's lock, to make sure the cert is
+	 * actually ready to be deleted.  This check is safe, because
+	 * within the store's lock a cert that has only two references
+	 * *must* have one in the store, and the one being deleted.
+	 * See bug 125263.
+	 */
+	PZ_Unlock(store->lock);
+	return;
+    }
+#endif
     entry = (certificate_hash_entry *)
                               nssHash_Lookup(store->issuer_and_serial, cert);
     if (entry && entry->cert == cert) {
