@@ -410,10 +410,18 @@ NS_IMETHODIMP nsContentTreeOwner::SetChromeFlags(PRUint32 aChromeFlags)
 
 NS_IMETHODIMP nsContentTreeOwner::GetChromeFlags(PRUint32* aChromeFlags)
 {
-   NS_ENSURE_ARG_POINTER(aChromeFlags);
+  NS_ENSURE_ARG_POINTER(aChromeFlags);
 
-   *aChromeFlags = mChromeFlags;
-   return NS_OK;
+  // use scrollbar status from the content shell window to update flags
+  PRBool scrollbarVisibility = mXULWindow->GetContentScrollbarVisibility();
+  if (scrollbarVisibility)
+    mChromeFlags |= nsIWebBrowserChrome::CHROME_SCROLLBARS;
+  else
+    mChromeFlags &= ~nsIWebBrowserChrome::CHROME_SCROLLBARS;
+
+  // the rest of mChromeFlags is kept up to date
+  *aChromeFlags = mChromeFlags;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::DestroyBrowserWindow()
@@ -430,7 +438,7 @@ NS_IMETHODIMP nsContentTreeOwner::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 
 NS_IMETHODIMP nsContentTreeOwner::ShowAsModal()
 {
-   return mXULWindow->ShowModal();   
+   return mXULWindow->ShowModal();
 }
 
 NS_IMETHODIMP nsContentTreeOwner::IsWindowModal(PRBool *_retval)
