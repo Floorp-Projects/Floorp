@@ -3,7 +3,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIPref.h"
-#include "nsCCookieManager.h"
+#include "nsNetCID.h"
 #include "nsIPermissionManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIPermission.h"
