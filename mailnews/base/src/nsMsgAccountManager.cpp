@@ -359,6 +359,9 @@ nsMsgAccountManager::CreateIncomingServer(const char* username,
                                           nsIMsgIncomingServer **_retval)
 {
   if (!_retval) return NS_ERROR_NULL_POINTER;
+  // make sure we've loaded existing accounts
+  nsresult rv = LoadAccounts();
+  if (NS_FAILED(rv)) return rv;
   const char *key = getUniqueKey(SERVER_PREFIX, &m_incomingServers);
   return createKeyedServer(key, username, hostname, type, _retval);
 }
