@@ -1620,10 +1620,6 @@ SI_LoadSignonData(PRBool fullLoad) {
   if (!strm.is_open()) {
     return -1;
   }
-  nsInputFileStream strmx(dirSpec + signonFileName);
-  if (!strmx.is_open()) {
-    return -1;
-  }
 
   si_RemoveAllSignonData();
 
@@ -1635,6 +1631,11 @@ SI_LoadSignonData(PRBool fullLoad) {
         return 1;
       }
     }
+  }
+
+  nsInputFileStream strmx(dirSpec + signonFileName);
+  if (fullLoad && !strmx.is_open()) {
+    return -1;
   }
 
   /* read the reject list */
