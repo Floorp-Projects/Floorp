@@ -437,15 +437,15 @@ FactoryData g_FactoryData[] =
   },
   {
     &kUCS2BEToUnicodeCID,
-    nsUCS2BEToUnicode::CreateInstance,
-    //NEW_UTF16BEToUnicode,
+    //nsUCS2BEToUnicode::CreateInstance,
+    NEW_UTF16BEToUnicode,
     "X-ISO-10646-UCS-2-BE",
     "Unicode"
   },
   {
     &kUCS2LEToUnicodeCID,
-    nsUCS2LEToUnicode::CreateInstance,
-    //NEW_UTF16LEToUnicode,
+    //nsUCS2LEToUnicode::CreateInstance,
+    NEW_UTF16LEToUnicode,
     "X-ISO-10646-UCS-2-LE",
     "Unicode"
   },
