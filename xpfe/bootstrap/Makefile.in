@@ -98,6 +98,8 @@ DEFINES += -D_MOZCOMPS_SHARED_LIBRARY -D_BUILD_STATIC_BIN
 endif
 endif
 
+PREF_JS_EXPORTS = $(srcdir)/browser-prefs.js
+
 CPPSRCS		= \
 		nsAppRunner.cpp \
 		nsWindowCreator.cpp \
