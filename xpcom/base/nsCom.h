@@ -28,7 +28,7 @@
  */
 
 #ifdef _IMPL_NS_COM
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #define NS_COM _declspec(dllexport)
 #elif defined(XP_MAC)
 #define NS_COM __declspec(export)
@@ -36,7 +36,7 @@
 #define NS_COM
 #endif /* !XP_PC */
 #else  /* !_IMPL_NS_COM */
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #define NS_COM _declspec(dllimport)
 #else  /* !XP_PC */
 #define NS_COM
@@ -47,7 +47,7 @@
  * DLL Export macro
  */
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
 
 #define NS_EXPORT _declspec(dllexport)
 #define NS_EXPORT_(type) type _declspec(dllexport) __stdcall
