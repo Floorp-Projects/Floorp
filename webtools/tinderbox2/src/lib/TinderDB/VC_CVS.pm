@@ -126,7 +126,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.5 $ )[1];
+$VERSION = ( qw $Revision: 1.6 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -327,11 +327,7 @@ sub apply_db_updates {
               " which is more then a year away from now.\n")
         }
 
-        # At mozilla.org authors are email addresses with the "\@"
-        # replaced by "\%" they have one user with a + in his name
-
-        $author =~ m/([a-zA-Z0-9\.\%\+]+)/;
-        $author = $1;      
+        $author = main::extract_user($author);
       }
       
       $DATABASE{$tree}{$time}{'author'}{$author}{"$repository_dir/$file"}=1;
