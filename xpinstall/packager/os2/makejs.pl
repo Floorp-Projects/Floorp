@@ -74,8 +74,7 @@ $outTempFile      = $inJstFileSplit[0];
 $outTempFile     .= ".template";
 $foundLongFiles   = 0;
 
-print "cp \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\common\\share.t\" $outTempFile\n";
-copy("$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\common\\share.t", "$outTempFile");
+system("cp \"$ENV{MOZ_SRC}\\mozilla\\xpinstall\\packager\\common\\share.t\" $outTempFile\n");
 system("cat $inJstFile >> $outTempFile");
 
 # Open the input .template file

@@ -106,10 +106,10 @@ if(!(-e "$inStagePath\\$inComponentName"))
 
 if($inComponentName =~ /xpcom/i)
 {
-  # copy msvcrt.dll to xpcom dir
+  # copy cpprmi36.dll to xpcom dir
   if(-e "$ENV{VACPP365}\\runtime\\cpprmi36.dll")
   {
-    copy("$ENV{VACPP365}\\runtime\\cpprmi36.dll", "$inStagePath\\$inComponentName\\bin");
+    system("cp $ENV{VACPP365}\\runtime\\cpprmi36.dll $inStagePath\\$inComponentName\\bin");
   }
 }
 
@@ -145,7 +145,7 @@ print "\n Making $inComponentName.xpi...\n";
 
 $saveCwdir = cwd();
 
-copy("$inComponentName.js", "$inStagePath\\$inComponentName\\install.js");
+system("cp $inComponentName.js $inStagePath\\$inComponentName\\install.js");
 
 # DLLRNAME and possibly LXLITE DLLs
 print "Modifying DLLs in $inStagePath/$inComponentName...\n";
