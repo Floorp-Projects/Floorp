@@ -131,7 +131,7 @@ BOOL CInterpret::IterateListBox(char *parms)
 	char indices[MAX_SIZE];
 	int  showflag;
 
-	if (!w || w->type != "ListBox")
+	if (!w || !(w->type == "ListBox" || w->type == "CheckListBox"))
 		return FALSE;
 
 	if (w->control && w->control->m_hWnd)
@@ -497,6 +497,16 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						CString value = replaceVars(p2, NULL);
 						value.TrimRight();
 						theApp.SetGlobal(name, value);
+					}
+				}
+				else if (strcmp(pcmd, "ShowDescription") == 0)
+				{
+					if (curWidget)
+					{
+						int i = ((CCheckListBox*)curWidget->control)->GetCurSel();
+						WIDGET *t = theApp.findWidget((char *)(LPCSTR) curWidget->target);
+						CString msg(i);
+						((CEdit*)t->control)->SetWindowText(msg);
 					}
 				}
 			}

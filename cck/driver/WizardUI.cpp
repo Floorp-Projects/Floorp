@@ -861,7 +861,7 @@ void CWizardUI::CreateControls()
 		}
 		else if (widgetType == "EditBox") {
 			curWidget->control = new CEdit;//Added new style parameter ES_AUTOHSCROLL- to allow *GASP* SCROLLING!!
-			((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
+			if (((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
 													_T("EDIT"), 
 													NULL,
 													WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER |ES_AUTOHSCROLL ,
@@ -869,10 +869,12 @@ void CWizardUI::CreateControls()
 													curWidget->location.y,
 													curWidget->size.width,
 													curWidget->size.height,
-													m_hWnd, 0, 0 );
-			//Set maximum number of characters allowed per line - limit set to 200
-			((CEdit*)curWidget->control)->SetLimitText(int(curWidget->fieldlen.length));
-			((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
+													m_hWnd, 0, 0 ))
+			{
+				//Set maximum number of characters allowed per line - limit set to 200
+				((CEdit*)curWidget->control)->SetLimitText(int(curWidget->fieldlen.length));
+				((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
+			}
 		}
 		else if (widgetType == "Button") {
 			curWidget->control = new CButton;
@@ -988,6 +990,46 @@ void CWizardUI::CreateControls()
 				s = strtok( NULL, "," );
 			}
 		}
+		else if (widgetType == "CheckListBox") 
+		{
+			curWidget->control = new CCheckListBox;
+			((CCheckListBox*)curWidget->control)->Create(
+				LBS_STANDARD | LBS_HASSTRINGS | BS_CHECKBOX |
+				LBS_OWNERDRAWFIXED | WS_HSCROLL | WS_VSCROLL | 
+				WS_TABSTOP, tmpRect, this, ID);
+			((CCheckListBox*)curWidget->control)->ModifyStyleEx(NULL, WS_EX_CLIENTEDGE, 0);
+
+			if (curWidget->action.function == "GenerateFileList" ||
+				curWidget->action.function == "GenerateDirList")
+			{
+				CString ext = theInterpreter->replaceVars(curWidget->action.parameters, NULL);
+				theApp.GenerateList(curWidget->action.function, curWidget, ext);
+			}
+			else
+			{
+				for (int i = 0; i < curWidget->numOfOptions; i++) 
+				{
+					if (curWidget->options.value[i])
+					{
+						((CCheckListBox*)curWidget->control)->AddString(curWidget->options.value[i]);
+					}
+				}
+			}
+		
+			char* selectedItems;
+			selectedItems = (char *) GlobalAlloc(0, 20 * sizeof(char));
+			strcpy(selectedItems, (char *) (LPCTSTR) curWidget->value);
+
+			int i;
+			char *s = strtok(selectedItems, ",");
+			while (s) 
+			{
+				i = ((CCheckListBox*)curWidget->control)->FindString(0, s);
+				if (i != -1)
+					((CCheckListBox*)curWidget->control)->SetCheck(i, 1);
+				s = strtok( NULL, "," );
+			}
+		}
 		else if (widgetType == "ComboBox") {
 			curWidget->control = new CComboBox;
 			((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP, tmpRect, this, ID);
@@ -1063,11 +1105,16 @@ void CWizardUI::DisplayControls()
 void CWizardUI::DestroyCurrentScreenWidgets() 
 {
 	WIDGET* curWidget;
-	for (int i = 0; i < m_pControlCount; i++) {
+	for (int i = 0; i < m_pControlCount; i++) 
+	{
 		curWidget = CurrentNode->pageWidgets[i];
 	
-	if (curWidget->control)
-		BOOL retFalg = curWidget->control->DestroyWindow();
+		if (curWidget->control)
+		{
+			BOOL retFalg = curWidget->control->DestroyWindow();
+			delete curWidget->control;
+			curWidget->control = NULL;
+		}
 	}
 }
 
@@ -1169,6 +1216,23 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 			rv = rv + temp;
 			if ( i+1 < count)
 				rv += ",";
+		}
+	}
+	else if (widgetType == "CheckListBox")
+	{
+		int count = (((CCheckListBox *)curWidget->control))->GetCount();
+			
+		rv = "";
+		CString temp;
+		for (int i=0; i < count; i++)
+		{
+			if (((CCheckListBox *)curWidget->control)->GetCheck(i))
+			{
+				((CCheckListBox *)curWidget->control)->GetText(i, temp);
+				if ( i > 0)
+					rv += ",";
+				rv += temp;
+			}
 		}
 	}
 	else if (widgetType == "ComboBox")

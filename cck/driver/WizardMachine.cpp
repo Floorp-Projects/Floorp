@@ -1501,6 +1501,11 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 	CFileFind fileList;
 	BOOL dirFound = fileList.FindFile(parentDirPath);
 
+	if(curWidget->type == "CheckListBox")
+	{
+		((CCheckListBox*)curWidget->control)->ResetContent();
+	}
+
 	if(curWidget->type == "ListBox")
 	{
 		((CListBox*)curWidget->control)->ResetContent();
@@ -1521,6 +1526,11 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 		    if (!fileList.IsDirectory())  // skip if this is a dir
 		    {
 				CString tmpFile = fileList.GetFileName();
+				if(curWidget->type == "CheckListBox")
+				{
+					((CCheckListBox*)curWidget->control)->AddString(tmpFile);
+				}
+
 				if(curWidget->type == "ListBox")
 				{
 					((CListBox*)curWidget->control)->AddString(tmpFile);
@@ -1539,6 +1549,11 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 		    {
 				CString tmpFile = fileList.GetFileName();
 				if (!(tmpFile == "." || tmpFile == "..")) {
+					if(curWidget->type == "CheckListBox")
+					{
+						((CCheckListBox*)curWidget->control)->AddString(tmpFile);
+					}
+
 					if(curWidget->type == "ListBox")
 					{
 						((CListBox*)curWidget->control)->AddString(tmpFile);
@@ -1556,6 +1571,20 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 
 	fileList.Close();
 
+	if(curWidget->type == "CheckListBox")
+	{
+		if (curWidget->value && curWidget->value != "")
+		{
+			char indices[MAX_SIZE];
+
+			strcpy(indices, curWidget->value); 
+			char *s = strtok(indices, ",");
+			for (; s; s=strtok(NULL, ","))
+				((CCheckListBox*)curWidget->control)->SelectString(0, s);
+		}
+		else
+			((CCheckListBox*)curWidget->control)->SetCurSel(0);
+	}
 	if(curWidget->type == "ListBox")
 	{
 		if (curWidget->value && curWidget->value != "")
