@@ -44,42 +44,41 @@ import java.io.ObjectOutputStream;
 Implementation of resizable array with focus on minimizing memory usage by storing few initial array elements in object fields. Can also be used as a stack.
 */
 
-public class ObjArray implements Serializable {
+public class ObjArray implements Serializable
+{
 
     public ObjArray() { }
 
-    public ObjArray(int capacityHint) {
-        if (capacityHint < 0) throw new IllegalArgumentException();
-        if (capacityHint > FIELDS_STORE_SIZE) {
-            data = new Object[capacityHint - FIELDS_STORE_SIZE];
-        }
+    public final boolean isSealed()
+    {
+        return sealed;
     }
 
-    public final boolean isReadOnly() {
-        return readOnly;
+    public final void seal()
+    {
+        sealed = true;
     }
 
-    public final void setReadOnly() {
-        readOnly = true;
-    }
-
-    public final boolean isEmpty() {
+    public final boolean isEmpty()
+    {
         return size == 0;
     }
 
-    public final int size() {
+    public final int size()
+    {
         return size;
     }
 
-    public final void setSize(int newSize) {
+    public final void setSize(int newSize)
+    {
         if (newSize < 0) throw new IllegalArgumentException();
-        if (readOnly) onReadonlyViolation();
+        if (sealed) throw onSeledMutation();
         int N = size;
         if (newSize < N) {
             for (int i = newSize; i != N; ++i) {
                 setImpl(i, null);
             }
-        }else if (newSize > N) {
+        } else if (newSize > N) {
             if (newSize > FIELDS_STORE_SIZE) {
                 ensureCapacity(newSize);
             }
@@ -87,18 +86,21 @@ public class ObjArray implements Serializable {
         size = newSize;
     }
 
-    public final Object get(int index) {
-        if (!(0 <= index && index < size)) onInvalidIndex(index, size);
+    public final Object get(int index)
+    {
+        if (!(0 <= index && index < size)) throw onInvalidIndex(index, size);
         return getImpl(index);
     }
 
-    public final void set(int index, Object value) {
-        if (!(0 <= index && index < size)) onInvalidIndex(index, size);
-        if (readOnly) onReadonlyViolation();
+    public final void set(int index, Object value)
+    {
+        if (!(0 <= index && index < size)) throw onInvalidIndex(index, size);
+        if (sealed) throw onSeledMutation();
         setImpl(index, value);
     }
 
-    private Object getImpl(int index) {
+    private Object getImpl(int index)
+    {
         switch (index) {
             case 0: return f0;
             case 1: return f1;
@@ -109,7 +111,8 @@ public class ObjArray implements Serializable {
         return data[index - FIELDS_STORE_SIZE];
     }
 
-    private void setImpl(int index, Object value) {
+    private void setImpl(int index, Object value)
+    {
         switch (index) {
             case 0: f0 = value; break;
             case 1: f1 = value; break;
@@ -121,7 +124,8 @@ public class ObjArray implements Serializable {
 
     }
 
-    public int indexOf(Object obj) {
+    public int indexOf(Object obj)
+    {
         int N = size;
         for (int i = 0; i != N; ++i) {
             Object current = getImpl(i);
@@ -132,7 +136,8 @@ public class ObjArray implements Serializable {
         return -1;
     }
 
-    public int lastIndexOf(Object obj) {
+    public int lastIndexOf(Object obj)
+    {
         for (int i = size; i != 0;) {
             --i;
             Object current = getImpl(i);
@@ -143,19 +148,21 @@ public class ObjArray implements Serializable {
         return -1;
     }
 
-    public final Object peek() {
+    public final Object peek()
+    {
         int N = size;
-        if (N == 0) onEmptyStackTopRead();
+        if (N == 0) throw onEmptyStackTopRead();
         return getImpl(N - 1);
     }
 
-    public final Object pop() {
-        if (readOnly) onReadonlyViolation();
+    public final Object pop()
+    {
+        if (sealed) throw onSeledMutation();
         int N = size;
         --N;
         Object top;
         switch (N) {
-            case -1: onEmptyStackTopRead();
+            case -1: throw onEmptyStackTopRead();
             case 0: top = f0; f0 = null; break;
             case 1: top = f1; f1 = null; break;
             case 2: top = f2; f2 = null; break;
@@ -169,13 +176,14 @@ public class ObjArray implements Serializable {
         return top;
     }
 
-    public final void push(Object value) {
-        if (readOnly) onReadonlyViolation();
+    public final void push(Object value)
+    {
         add(value);
     }
 
-    public final void add(Object value) {
-        if (readOnly) onReadonlyViolation();
+    public final void add(Object value)
+    {
+        if (sealed) throw onSeledMutation();
         int N = size;
         if (N >= FIELDS_STORE_SIZE) {
             ensureCapacity(N + 1);
@@ -184,10 +192,11 @@ public class ObjArray implements Serializable {
         setImpl(N, value);
     }
 
-    public final void add(int index, Object value) {
+    public final void add(int index, Object value)
+    {
         int N = size;
-        if (!(0 <= index && index <= N)) onInvalidIndex(index, N + 1);
-        if (readOnly) onReadonlyViolation();
+        if (!(0 <= index && index <= N)) throw onInvalidIndex(index, N + 1);
+        if (sealed) throw onSeledMutation();
         Object tmp;
         switch (index) {
             case 0:
@@ -219,10 +228,11 @@ public class ObjArray implements Serializable {
         size = N + 1;
     }
 
-    public final void remove(int index) {
+    public final void remove(int index)
+    {
         int N = size;
-        if (!(0 <= index && index < N)) onInvalidIndex(index, N);
-        if (readOnly) onReadonlyViolation();
+        if (!(0 <= index && index < N)) throw onInvalidIndex(index, N);
+        if (sealed) throw onSeledMutation();
         --N;
         switch (index) {
             case 0:
@@ -253,8 +263,9 @@ public class ObjArray implements Serializable {
         size = N;
     }
 
-    public final void clear() {
-        if (readOnly) onReadonlyViolation();
+    public final void clear()
+    {
+        if (sealed) throw onSeledMutation();
         int N = size;
         for (int i = 0; i != N; ++i) {
             setImpl(i, null);
@@ -262,17 +273,20 @@ public class ObjArray implements Serializable {
         size = 0;
     }
 
-    public final Object[] toArray() {
+    public final Object[] toArray()
+    {
         Object[] array = new Object[size];
         toArray(array, 0);
         return array;
     }
 
-    public final void toArray(Object[] array) {
+    public final void toArray(Object[] array)
+    {
         toArray(array, 0);
     }
 
-    public final void toArray(Object[] array, int offset) {
+    public final void toArray(Object[] array, int offset)
+    {
         int N = size;
         switch (N) {
             default:
@@ -287,7 +301,8 @@ public class ObjArray implements Serializable {
         }
     }
 
-    private void ensureCapacity(int minimalCapacity) {
+    private void ensureCapacity(int minimalCapacity)
+    {
         int required = minimalCapacity - FIELDS_STORE_SIZE;
         if (required <= 0) throw new IllegalArgumentException();
         if (data == null) {
@@ -317,21 +332,25 @@ public class ObjArray implements Serializable {
         }
     }
 
-    private static void onInvalidIndex(int index, int upperBound) {
+    private static RuntimeException onInvalidIndex(int index, int upperBound)
+    {
         // \u2209 is "NOT ELEMENT OF"
         String msg = index+" \u2209 [0, "+upperBound+')';
         throw new IndexOutOfBoundsException(msg);
     }
 
-    private static void onEmptyStackTopRead() {
+    private static RuntimeException onEmptyStackTopRead()
+    {
         throw new RuntimeException("Empty stack");
     }
 
-    private static void onReadonlyViolation() {
-        throw new RuntimeException("Attempt to modify read only array");
+    private static RuntimeException onSeledMutation()
+    {
+        throw new IllegalStateException("Attempt to modify sealed array");
     }
 
-    private void writeObject(ObjectOutputStream os) throws IOException {
+    private void writeObject(ObjectOutputStream os) throws IOException
+    {
         os.defaultWriteObject();
         int N = size;
         for (int i = 0; i != N; ++i) {
@@ -359,7 +378,7 @@ public class ObjArray implements Serializable {
 // Number of data elements
     private int size;
 
-    private boolean readOnly;
+    private boolean sealed;
 
     private static final int FIELDS_STORE_SIZE = 5;
     private transient Object f0, f1, f2, f3, f4;
