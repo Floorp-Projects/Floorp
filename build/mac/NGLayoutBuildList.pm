@@ -1075,8 +1075,6 @@ sub BuildClientDist()
         _InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",                 "$distdirectory:idl:");
 	# regviewer
          _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",                "$distdirectory:idl:");
-	# console
-         _InstallFromManifest(":mozilla:xpfe:components:console:MANIFEST_IDL",                  "$distdirectory:idl:");
 	# autocomplete
 	_InstallFromManifest(":mozilla:xpfe:components:autocomplete:public:MANIFEST_IDL", "$distdirectory:idl:");
 
@@ -1350,7 +1348,6 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:search:macbuild:SearchIDL.mcp",	"search");
 	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
 	BuildIDLProject(":mozilla:xpfe:components:timebomb:macbuild:timebombIDL.mcp",	"tmbm");
-	BuildIDLProject(":mozilla:xpfe:components:console:macbuild:ConsoleIDL.mcp",	"console");
 	BuildIDLProject(":mozilla:xpfe:components:autocomplete:macbuild:AutoCompleteIDL.mcp",	"autocomplete");
 
 	BuildIDLProject(":mozilla:xpfe:appshell:macbuild:appshellIDL.mcp",				"appshell");
@@ -1778,7 +1775,6 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.shlb", "shistoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:xpfe:components:console:macbuild:Console.mcp", "Console$D.shlb", "Console.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:autocomplete:macbuild:AutoComplete.mcp", "AutoComplete$D.shlb", "AutoComplete.toc", 1, $main::ALIAS_SYM_FILES, 1);		
 
 	# Applications
