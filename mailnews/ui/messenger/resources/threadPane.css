@@ -36,6 +36,10 @@ treecell[selectedcell] {
  background-color: blue; 
 } 
 
+treeitem[Status="new"] {
+	font-weight: bold;
+}
+
 treehead treeitem treecell { 
  font-size: 8pt;
  background-color: #a0a0a0; 

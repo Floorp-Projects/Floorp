@@ -47,6 +47,7 @@ function ComposeMessage(tree, nodeList, msgAppCore, type)
 
 function NewMessage()
 {
+
   dump("\n\nnewMsg from XUL\n\n\n");
   ComposeMessage(null, null, null, 0);
 }
@@ -72,7 +73,7 @@ function ChangeFolder(folderNode)
   var uri = folderNode.getAttribute('id');
   dump(uri);
   var tree = frames[0].frames[1].document.getElementById('threadTree');
-  tree.childNodes[4].setAttribute('id', uri);
+  tree.childNodes[5].setAttribute('id', uri);
 }
 
 function ComposeMessageWithType(type)

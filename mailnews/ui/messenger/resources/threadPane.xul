@@ -13,16 +13,18 @@
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
   <treehead>
     <treeitem>
       <treecell>Subject</treecell>
       <treecell>Sender</treecell>
       <treecell>Date</treecell>
+	  <treecell>Status</treecell>
     </treeitem>
   </treehead>
   
 
-  <treebody id="mailbox://Inbox">
+  <treebody id="mailbox://Inbox" name="threadTreeBody">
     <treeitem  open="true">
     </treeitem>
   </treebody>
