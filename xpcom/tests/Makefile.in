@@ -98,7 +98,6 @@ LIBS		= \
 
 ifndef NECKO
 LIBS += 	\
-	-lgfxps \
 	-lnetlib \
 	-labouturl \
 	-lfileurl \
