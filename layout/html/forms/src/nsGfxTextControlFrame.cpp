@@ -3409,6 +3409,8 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEven
       aEvent->GetShiftKey(&(event.isShift));
       aEvent->GetCtrlKey(&(event.isControl));
       aEvent->GetAltKey(&(event.isAlt));
+      aEvent->GetMetaKey(&(event.isMeta));
+
       PRUint16 clickCount;
       aEvent->GetClickCount(&clickCount);
       event.clickCount = clickCount;
