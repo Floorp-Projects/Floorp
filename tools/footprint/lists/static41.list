@@ -1,6 +1,8 @@
 # List of 41 urls which are static and inside the firewall.
 # Sorted in order from biggest memory user to least memory
 #   user.
+# 1/22/01 - Added 5 international urls, so this now has 46 urls
+#   in the list (even though the name doesn't sound like it).
 http://jrgm.mcom.com/perf/loadtime5/base/www.iplanet.com
 http://jrgm.mcom.com/perf/loadtime5/base/www.voodooextreme.com
 http://jrgm.mcom.com/perf/loadtime5/base/www.cnn.com
@@ -42,3 +44,9 @@ http://jrgm.mcom.com/perf/loadtime5/base/www.google.com
 http://jrgm.mcom.com/perf/loadtime5/base/lxr.mozilla.org
 http://jrgm.mcom.com/perf/loadtime5/base/www.yahoo.com
 http://jrgm.mcom.com/perf/loadtime5/base/vanilla-page
+# International Urls:
+http://jrgm.mcom.com/perf/loadtime5/base/www.jp.aol.com/index.html
+http://jrgm.mcom.com/perf/loadtime5/base/www.zdnet.co.jp_eweek/index.html
+http://jrgm.mcom.com/perf/loadtime5/base/www.ttimes.com.tw/index.html
+http://jrgm.mcom.com/perf/loadtime5/base/www.chinacue.cn.net/index.html
+http://jrgm.mcom.com/perf/loadtime5/base/www.lesechos.fr/index.html
