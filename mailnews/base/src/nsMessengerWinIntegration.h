@@ -83,14 +83,23 @@ private:
   void InitializeBiffStatusIcon(); 
   void FillToolTipInfo();
   nsresult GetStringBundle(nsIStringBundle **aBundle);
-  PRBool mBiffIconVisible;
   nsCOMPtr<nsISupportsArray> mFoldersWithNewMail;  // keep track of all the root folders with pending new mail
 
   nsCOMPtr<nsIAtom> mBiffStateAtom;
 
   PRUint32 mCurrentBiffState;
-  PRBool   mStoreUnreadCounts; // for windows XP, we do a lot of work to store the last unread count for the inbox
+  PRPackedBool   mStoreUnreadCounts; // for windows XP, we do a lot of work to store the last unread count for the inbox
                                // this flag is set to true when we are doing that
+  PRPackedBool mBiffIconVisible;
+  PRPackedBool mBiffIconInitialized;
+  
+  // "might" because we don't know until we check 
+  // what type of server is associated with the default account
+  PRPackedBool    mDefaultAccountMightHaveAnInbox;
+
+  // first time the unread count changes, we need to update registry
+  PRPackedBool mFirstTimeFolderUnreadCountChanged;
+
   nsresult ResetCurrent();
   nsresult RemoveCurrentFromRegistry();
   nsresult UpdateRegistryWithCurrent();
@@ -119,13 +128,6 @@ private:
   PRInt32   mLastUnreadCountWrittenToRegistry;
 
   nsInt64   mIntervalTime;
- 
-  // "might" because we don't know until we check 
-  // what type of server is associated with the default account
-  PRBool    mDefaultAccountMightHaveAnInbox;
-
-  // first time the unread count changes, we need to update registry
-  PRBool mFirstTimeFolderUnreadCountChanged;
 };
 
 #endif // __nsMessengerWinIntegration_h

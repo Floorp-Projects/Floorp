@@ -95,6 +95,7 @@ nsMessengerWinIntegration::nsMessengerWinIntegration()
 
   mBiffStateAtom = getter_AddRefs(NS_NewAtom("BiffState"));
   mBiffIconVisible = PR_FALSE;
+  mBiffIconInitialized = PR_FALSE;
 
   NS_NewISupportsArray(getter_AddRefs(mFoldersWithNewMail));
 }
@@ -187,14 +188,14 @@ void nsMessengerWinIntegration::InitializeBiffStatusIcon()
   mBiffIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( "msgbase.dll" ), MAKEINTRESOURCE(IDI_MAILBIFF) );
 
   mBiffIconData.szTip[0] = 0;
+
+  mBiffIconInitialized = PR_TRUE;
 }
 
 nsresult
 nsMessengerWinIntegration::Init()
 {
   nsresult rv;
-
-  InitializeBiffStatusIcon(); 
 
   // get pref service
   nsCOMPtr<nsIPref> prefService;
@@ -394,6 +395,10 @@ NS_IMETHODIMP
 nsMessengerWinIntegration::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
 {
   nsresult rv = NS_OK;
+
+  if (!mBiffIconInitialized)
+    InitializeBiffStatusIcon(); 
+    
   // if we got new mail show a icon in the system tray
 	if (mBiffStateAtom == property && mFoldersWithNewMail)
 	{
