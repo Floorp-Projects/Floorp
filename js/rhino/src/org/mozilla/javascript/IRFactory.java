@@ -259,6 +259,10 @@ public class IRFactory {
         Node result = new Node(Token.LOOP, lineno);
         result.addChildToBack(bodyTarget);
         result.addChildrenToBack(body);
+        if (loopType == LOOP_WHILE || loopType == LOOP_FOR) {
+            // propagate lineno to condition
+            result.addChildrenToBack(new Node(Token.EMPTY, lineno));
+        }
         result.addChildToBack(condTarget);
         result.addChildToBack(IFEQ);
         result.addChildToBack(breakTarget);
