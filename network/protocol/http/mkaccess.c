@@ -2942,7 +2942,7 @@ NET_SaveCookies(char * filename)
 
 /* This isn't needed any more */
 PUBLIC void
-NET_InitRDFCookieResources (void) {
+NET_InitRDFCookieResources (void)
 {
 }
 
