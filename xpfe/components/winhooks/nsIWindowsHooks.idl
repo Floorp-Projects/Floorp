@@ -91,6 +91,8 @@
  * can be set up using the implementation of the interfaces defined here.
  */
 
+interface nsIDOMWindowInternal;
+
 /* nsIWindowsHooksSettings
  *
  * This interface is used to get/set the user preferences relating to
@@ -116,6 +118,10 @@ interface nsIWindowsHooksSettings : nsISupports {
     attribute boolean isHandlingXML;
     attribute boolean isHandlingXUL;
 
+    // Nag dialog flag.  Set this so that dialog
+    // appears on startup if there is a mismatch
+    // between registry and these settings.
+    attribute boolean showDialog;
 };
 
 /* nsIWindowsHooks
@@ -127,10 +133,23 @@ interface nsIWindowsHooksSettings : nsISupports {
 [scriptable, uuid(19c9fbb0-06a3-11d4-8076-00600811a9c3)]
 interface nsIWindowsHooks : nsISupports {
 
-    // Settings.  Get/set this to query or modify them.  The Windows
+    // settings
+    // --------
+    // Get/set this to query or modify them.  The Windows
     // registry is updated when you set this attribute.
     attribute nsIWindowsHooksSettings settings;
 
+    // checkSettings
+    // -------------
+    // Check that registry matches settings and if not,
+    // prompt user for whether to reset.  This is
+    // controlled by the showDialog setting.  This will
+    // perform the check only the first time the
+    // service is called.
+    //   aParent - parent window for any dialogs that
+    //             will appear
+    void checkSettings( in nsIDOMWindowInternal aParent );
+    
 };
 
 %{C++

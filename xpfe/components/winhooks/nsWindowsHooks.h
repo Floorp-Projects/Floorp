@@ -66,6 +66,15 @@ private:
         PRBool mHandleXML;
         PRBool mHandleXUL;
     };
+    struct {
+        PRBool mShowDialog;
+    };
+    // Special member to handle initialization.
+    PRBool mHaveBeenSet;
+    NS_IMETHOD GetHaveBeenSet( PRBool * );
+    NS_IMETHOD SetHaveBeenSet( PRBool );
+
+    // Give nsWindowsHooks full access.
     friend class nsWindowsHooks;
 }; // nsWindowsHooksSettings
 
