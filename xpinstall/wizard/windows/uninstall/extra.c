@@ -1501,19 +1501,19 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
 
     wsprintf(szVariable, "Software\\Netscape\\Netscape 6\\%s", szBuf);
   }
-  else if(lstrcmpi(szVariable, "WinRegKey Netscape Instant Messenger") == 0)
+  else if(lstrcmpi(szVariable, "WinRegKey Netscape Netbusiness Messenger") == 0)
   {
-    lstrcpy(szVariable, "Software\\Netscape\\Netscape Instant Messenger");
+    lstrcpy(szVariable, "Software\\Netscape\\Netscape Netbusiness Messenger");
   }
-  else if(lstrcmpi(szVariable, "Netscape Instant Messenger CurrentVersion") == 0)
+  else if(lstrcmpi(szVariable, "Netscape Netbusiness Messenger CurrentVersion") == 0)
   {
     /* parse for the current Netscape WinReg key */
-    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape Instant Messenger", "CurrentVersion", szBuf, sizeof(szBuf));
+    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape Netbusiness Messenger", "CurrentVersion", szBuf, sizeof(szBuf));
 
     if(*szBuf == '\0')
       return(FALSE);
 
-    wsprintf(szVariable, "Software\\Netscape\\Netscape Instant Messenger\\%s", szBuf);
+    wsprintf(szVariable, "Software\\Netscape\\Netscape Netbusiness Messenger\\%s", szBuf);
   }
   else if(lstrcmpi(szVariable, "WinRegKey Mozilla Seamonkey") == 0)
   {
