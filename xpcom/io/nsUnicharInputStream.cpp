@@ -49,6 +49,7 @@ public:
 
 StringUnicharInputStream::StringUnicharInputStream(nsString* aString)
 {
+  NS_INIT_REFCNT();
   mString = aString;
   mPos = 0;
   mLen = aString->Length();
