@@ -39,7 +39,7 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 #define UPDATE_QUANTUM  1000 / 40
 
-#define NO_DOUBLE_BUFFER
+//#define NO_DOUBLE_BUFFER
 
 // display list flags
 #define RENDER_VIEW		0x0000
@@ -181,9 +181,13 @@ nsViewManager2::~nsViewManager2()
     delete mDisplayList;
     mDisplayList = nsnull;
   }
+  
+  if (nsnull != mFrontToBackList) {
+    delete mFrontToBackList;
+    mFrontToBackList = nsnull;
+  }
 
-  if (nsnull != mTransRgn)
-  {
+  if (nsnull != mTransRgn) {
     if (nsnull != mTransRects)
       mTransRgn->FreeRects(mTransRects);
 
@@ -611,31 +615,6 @@ void nsViewManager2::Refresh(nsIView *aView, nsIRenderingContext *aContext, cons
   }
 }
 
-//states
-
-typedef enum
-{
-  FRONT_TO_BACK_RENDER =    1,
-  FRONT_TO_BACK_ACCUMULATE,
-  BACK_TO_FRONT_TRANS,
-  BACK_TO_FRONT_OPACITY,
-  FRONT_TO_BACK_CLEANUP,
-  FRONT_TO_BACK_POP_SEARCH,
-  COMPOSITION_DONE
-} nsCompState;
-
-#ifdef XP_MAC
-#include <Events.h>
-static Boolean caps_lock()
-{
-	EventRecord event;
-	::OSEventAvail(0, &event);
-	return ((event.modifiers & alphaLock) != 0);
-}
-#else
-#define caps_lock() (0)
-#endif
-
 void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
 	PRBool isFloatingView = PR_FALSE;
@@ -671,14 +650,18 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 		// draw all views in the display list, from back to front.
 		for (PRInt32 i = mDisplayListCount - 1; i>= 0; --i) {
 			DisplayListElement* element = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(i));
-			if (element->mFlags & PUSH_CLIP) {
-				aRC.PushState();
-				aRC.SetClipRect(element->mClip, nsClipCombine_kIntersect, clipEmpty);
-			} else
-			if (element->mFlags & POP_CLIP) {
-				aRC.PopState(clipEmpty);
-			} else {
+			if (element->mFlags & VIEW_INCLUDED) {
+				// typical case, just rendering a view.
 				RenderView(element->mView, aRC, aRect, element->mClip, aResult);
+			} else {
+				// special case, pushing or popping clipping.
+				if (element->mFlags & PUSH_CLIP) {
+					aRC.PushState();
+					aRC.SetClipRect(element->mClip, nsClipCombine_kIntersect, clipEmpty);
+				} else
+				if (element->mFlags & POP_CLIP) {
+					aRC.PopState(clipEmpty);
+				}
 			}
 		}
 		
@@ -700,6 +683,8 @@ void nsViewManager2::RenderView(nsIView *aView, nsIRenderingContext &aRC, const 
 
 	drect.x -= aGlobalRect.x;
 	drect.y -= aGlobalRect.y;
+
+	// should use blender here if opacity < 1.0
 
 	aView->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, aResult);
 
@@ -1960,7 +1945,7 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 
 		if ((nsViewVisibility_kShow == vis) && (opacity > 0.0f) && overlap)
 		{
-			retval = AddToDisplayList(aIndex, aView, lrect, 0);
+			retval = AddToDisplayList(aIndex, aView, lrect, VIEW_INCLUDED);
 
 			if (retval || !trans && (opacity == 1.0f) && (irect == *aDamageRect))
 				retval = PR_TRUE;
@@ -2003,11 +1988,43 @@ PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect 
 
 nsresult nsViewManager2::PartitionDisplayList()
 {
+#if 0
 	nsVoidArray* frontToBackList = mFrontToBackList;
 	if (frontToBackList == nsnull) {
 		frontToBackList = mFrontToBackList = new nsVoidArray(8);
 		if (frontToBackList == nsnull)
 			return NS_ERROR_OUT_OF_MEMORY;
+	}
+#endif
+	
+	// walk the display list, looking for opaque views, and remove any views that are behind them and totally occluded.
+	PRInt32 count = mDisplayListCount;
+	for (PRInt32 i = 0; i < count; ++i) {
+		DisplayListElement* element = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(i));
+		if (element->mFlags & VIEW_INCLUDED) {
+			nsIView* view = element->mView;
+			PRBool isTransparent;
+			view->HasTransparency(isTransparent);
+			if (!isTransparent) {
+				const nsRect& opaqueRect = element->mClip;
+				nscoord top = opaqueRect.y, left = opaqueRect.x,
+				        bottom = top + opaqueRect.height, right = left + opaqueRect.width;
+				// search for views behind this one, that are completely obscured by it.
+				for (PRInt32 j = i + 1; j < count; ++j) {
+					DisplayListElement* lowerElement = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(j));
+					if (lowerElement->mFlags & VIEW_INCLUDED) {
+						const nsRect& lowerRect = lowerElement->mClip;
+						if (left <= lowerRect.x && top <= lowerRect.y &&
+						    right >= (lowerRect.x + lowerRect.width) &&
+						    bottom >= (lowerRect.y + lowerRect.height))
+						{
+							// remove this element from the display list, by clearing its VIEW_INCLUDED flag.
+							lowerElement->mFlags &= ~VIEW_INCLUDED;
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	return NS_OK;
@@ -2076,21 +2093,22 @@ void nsViewManager2::ShowDisplayList(PRInt32 flatlen)
 
 void nsViewManager2::ComputeViewOffset(nsIView *aView, nsPoint *aOrigin, PRInt32 aFlag)
 {
-	// Mark the view with specified flags.
-	aView->SetCompositorFlags(aFlag);
+	while (aView != nsnull) {
+		// Mark the view with specified flags.
+		aView->SetCompositorFlags(aFlag);
 
-	// compute the view's global position in the view hierarchy.
-	if (aOrigin) {
-		nsRect bounds;
-		aView->GetBounds(bounds);
-		aOrigin->x += bounds.x;
-		aOrigin->y += bounds.y;
+		// compute the view's global position in the view hierarchy.
+		if (aOrigin) {
+			nsRect bounds;
+			aView->GetBounds(bounds);
+			aOrigin->x += bounds.x;
+			aOrigin->y += bounds.y;
+		}
+
+		nsIView *parent;
+		aView->GetParent(parent);
+		aView = parent;
 	}
-
-	nsIView *parent;
-	aView->GetParent(parent);
-	if (parent)
-		ComputeViewOffset(parent, aOrigin, aFlag);
 }
 
 PRBool nsViewManager2::DoesViewHaveNativeWidget(nsIView* aView)
