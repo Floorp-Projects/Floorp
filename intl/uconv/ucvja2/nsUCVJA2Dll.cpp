@@ -21,23 +21,33 @@
 
 #include "pratom.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsIFactory.h"
+#include "nsCOMPtr.h"
 #include "nsICharsetConverterInfo.h"
 #include "nsUCVJA2CID.h"
+#include "nsUCVJA2Dll.h"
 #include "nsEUCJPToUnicode.h"
 #include "nsISO2022JPToUnicode.h"
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
-
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+#include "nsUnicodeToEUCJP.h"
+#include "nsUnicodeToISO2022JP.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeDecodeUtil.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsIUnicodeEncodeHelper.h"
 #include "nsICharsetConverterManager.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
+
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+
+extern "C" PRInt32 g_InstanceCount = 0;
+extern "C" PRInt32 g_LockCount = 0;
 
 extern "C" PRUint16 g_0201Mapping[] = {
 #include "jis0201.ut"
@@ -50,9 +60,6 @@ extern "C" PRUint16 g_0208Mapping[] = {
 extern "C" PRUint16 g_0212Mapping[] = {
 #include "jis0212.ut"
 };
-
-extern "C" PRInt32 g_InstanceCount = 0;
-extern "C" PRInt32 g_LockCount = 0;
 
 typedef nsresult (* fpCreateInstance) (nsISupports **);
 
@@ -75,8 +82,20 @@ FactoryData g_FactoryData[] =
   {
     &kEUCJPToUnicodeCID,
     nsEUCJPToUnicode::CreateInstance,
-    "EUC-JP"
+    "EUC-JP",
     "Unicode"
+  },
+  {
+    &kUnicodeToEUCJPCID,
+    nsUnicodeToEUCJP::CreateInstance,
+    "Unicode",
+    "EUC-JP"
+  },
+  {
+    &kUnicodeToISO2022JPCID,
+    nsUnicodeToISO2022JP::CreateInstance,
+    "Unicode",
+    "ISO-2022-JP"
   }
 };
 
@@ -130,8 +149,6 @@ public:
 
 //----------------------------------------------------------------------
 // Global functions and data [implementation]
-
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 {
@@ -244,28 +261,19 @@ nsresult nsConverterFactory::QueryInterface(REFNSIID aIID,
   }                                                                      
                                                                          
   *aInstancePtr = NULL;                                                  
-                                                                         
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kICharsetConverterInfoIID);                         
-  static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-  if (aIID.Equals(kClassIID)) {                                          
-    *aInstancePtr = (void*) ((nsICharsetConverterInfo*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kIFactoryIID)) {                                          
-    *aInstancePtr = (void*) ((nsIFactory*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
+  if (aIID.Equals(kICharsetConverterInfoIID)) {
+    *aInstancePtr = (void*) ((nsICharsetConverterInfo*)this);
+  } else if (aIID.Equals(kIFactoryIID)) {
+    *aInstancePtr = (void*) ((nsIFactory*)this);
+  } else if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*) ((nsISupports*)(nsIFactory*)this);
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
+  } else {
+    return NS_NOINTERFACE;
+  }
 
-  return NS_NOINTERFACE;                                                 
+  NS_ADDREF_THIS();                                                    
+  return NS_OK;                                                        
 }
 
 //----------------------------------------------------------------------

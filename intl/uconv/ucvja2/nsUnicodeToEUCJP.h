@@ -17,16 +17,41 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#ifndef nsUCVJA2Dll_h___
-#define nsUCVJA2Dll_h___
+#ifndef nsUnicodeToEUCJP_h___
+#define nsUnicodeToEUCJP_h___
 
-#include "prtypes.h"
+#include "nsUCvJa2Support.h"
 
-extern PRInt32 g_InstanceCount;
-extern PRInt32 g_LockCount;
+//----------------------------------------------------------------------
+// Class nsUnicodeToEUCJP [declaration]
 
-extern PRUint16 g_0201Mapping[];
-extern PRUint16 g_0208Mapping[];
-extern PRUint16 g_0212Mapping[];
+/**
+ * A character set converter from Unicode to EUCJP.
+ *
+ * @created         17/Feb/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsUnicodeToEUCJP : public nsTableEncoderSupport
+{
+public:
 
-#endif /* nsUCVJA2Dll_h___ */
+  /**
+   * Class constructor.
+   */
+  nsUnicodeToEUCJP();
+
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
+
+protected:
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsEncoderSupport class [declaration]
+
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+};
+
+#endif /* nsUnicodeToEUCJP_h___ */

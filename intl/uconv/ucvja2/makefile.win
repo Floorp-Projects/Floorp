@@ -27,15 +27,21 @@ DLLNAME = ucvja2
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
-	nsUCVJA2Dll.cpp			\
 	nsEUCJPToUnicode.cpp		\
 	nsISO2022JPToUnicode.cpp	\
+	nsUnicodeToEUCJP.cpp		\
+	nsUnicodeToISO2022JP.cpp	\
+	nsUCvJa2Support.cpp		\
+	nsUCVJA2Dll.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
-	.\$(OBJDIR)\nsUCVJA2Dll.obj 		\
 	.\$(OBJDIR)\nsEUCJPToUnicode.obj	\
 	.\$(OBJDIR)\nsISO2022JPToUnicode.obj	\
+	.\$(OBJDIR)\nsUnicodeToEUCJP.obj	\
+	.\$(OBJDIR)\nsUnicodeToISO2022JP.obj	\
+	.\$(OBJDIR)\nsUCvJa2Support.obj		\
+	.\$(OBJDIR)\nsUCVJA2Dll.obj 		\
 	$(NULL)
 
 CSRCS =					\
