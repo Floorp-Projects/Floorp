@@ -18,6 +18,7 @@
 #include "nsVoidArray.h"
 #include "nsCRT.h"
 #include "nsISizeOfHandler.h"
+#include "nsString.h"
 
 static PRInt32 kGrowArrayBy = 8;
 
@@ -221,6 +222,189 @@ PRBool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
 
   while (running && (0 <= --index)) {
     running = (*aFunc)(mArray[index], aData);
+  }
+  return running;
+}
+
+//----------------------------------------------------------------
+// nsStringArray
+
+nsStringArray::nsStringArray(void)
+  : nsVoidArray()
+{
+}
+
+nsStringArray::~nsStringArray(void)
+{
+  Clear();
+}
+
+nsStringArray& 
+nsStringArray::operator=(const nsStringArray& other)
+{
+  if (nsnull != mArray) {
+    delete mArray;
+  }
+  PRInt32 otherCount = other.mCount;
+  mArraySize = otherCount;
+  mCount = otherCount;
+  if (0 < otherCount) {
+    mArray = new void*[otherCount];
+    while (0 <= --otherCount) {
+      nsString* otherString = (nsString*)(other.mArray[otherCount]);
+      mArray[otherCount] = new nsString(*otherString);
+    }
+  } else {
+    mArray = nsnull;
+  }
+  return *this;
+}
+
+void  
+nsStringArray::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  nsVoidArray::SizeOf(aHandler);
+  PRInt32 index = mCount;
+  while (0 <= --index) {
+    nsString* string = (nsString*)mArray[index];
+    string->SizeOf(aHandler);
+  }
+}
+
+void 
+nsStringArray::StringAt(PRInt32 aIndex, nsString& aString) const
+{
+  nsString* string = (nsString*)nsVoidArray::ElementAt(aIndex);
+  if (nsnull != string) {
+    aString = *string;
+  }
+  else {
+    aString.Truncate();
+  }
+}
+
+nsString*
+nsStringArray::StringAt(PRInt32 aIndex) const
+{
+  return (nsString*)nsVoidArray::ElementAt(aIndex);
+}
+
+PRInt32 
+nsStringArray::IndexOf(const nsString& aPossibleString) const
+{
+  void** ap = mArray;
+  void** end = ap + mCount;
+  while (ap < end) {
+    nsString* string = (nsString*)*ap;
+    if (string->Equals(aPossibleString)) {
+      return ap - mArray;
+    }
+    ap++;
+  }
+  return -1;
+}
+
+PRInt32 
+nsStringArray::IndexOfIgnoreCase(const nsString& aPossibleString) const
+{
+  void** ap = mArray;
+  void** end = ap + mCount;
+  while (ap < end) {
+    nsString* string = (nsString*)*ap;
+    if (string->EqualsIgnoreCase(aPossibleString)) {
+      return ap - mArray;
+    }
+    ap++;
+  }
+  return -1;
+}
+
+PRBool 
+nsStringArray::InsertStringAt(const nsString& aString, PRInt32 aIndex)
+{
+  nsString* string = new nsString(aString);
+  if (nsVoidArray::InsertElementAt(string, aIndex)) {
+    return PR_TRUE;
+  }
+  delete string;
+  return PR_FALSE;
+}
+
+PRBool
+nsStringArray::ReplaceStringAt(const nsString& aString, PRInt32 aIndex)
+{
+  nsString* string = (nsString*)nsVoidArray::ElementAt(aIndex);
+  if (nsnull != string) {
+    *string = aString;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsStringArray::RemoveString(const nsString& aString)
+{
+  PRInt32 index = IndexOf(aString);
+  if (-1 < index) {
+    return RemoveStringAt(index);
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsStringArray::RemoveStringIgnoreCase(const nsString& aString)
+{
+  PRInt32 index = IndexOfIgnoreCase(aString);
+  if (-1 < index) {
+    return RemoveStringAt(index);
+  }
+  return PR_FALSE;
+}
+
+PRBool nsStringArray::RemoveStringAt(PRInt32 aIndex)
+{
+  nsString* string = StringAt(aIndex);
+  if (nsnull != string) {
+    nsVoidArray::RemoveElementAt(aIndex);
+    delete string;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+void 
+nsStringArray::Clear(void)
+{
+  PRInt32 index = mCount;
+  while (0 <= --index) {
+    nsString* string = (nsString*)mArray[index];
+    delete string;
+  }
+  nsVoidArray::Clear();
+}
+
+
+
+PRBool 
+nsStringArray::EnumerateForwards(nsStringArrayEnumFunc aFunc, void* aData)
+{
+  PRInt32 index = -1;
+  PRBool  running = PR_TRUE;
+
+  while (running && (++index < mCount)) {
+    running = (*aFunc)(*((nsString*)mArray[index]), aData);
+  }
+  return running;
+}
+
+PRBool 
+nsStringArray::EnumerateBackwards(nsStringArrayEnumFunc aFunc, void* aData)
+{
+  PRInt32 index = mCount;
+  PRBool  running = PR_TRUE;
+
+  while (running && (0 <= --index)) {
+    running = (*aFunc)(*((nsString*)mArray[index]), aData);
   }
   return running;
 }
