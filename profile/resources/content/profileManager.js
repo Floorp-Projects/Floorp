@@ -22,6 +22,8 @@
  *   Ben Goodger <ben@netscape.com>
  */
 
+var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
+                                                          "nsICommonDialogs");
 var bundle = srGetStrBundle("chrome://communicator/locale/profile/profileManager.properties");
 var profileManagerMode = "selection";
 var set = null;
@@ -50,30 +52,26 @@ function RenameProfile()
   if( renameButton.getAttribute("disabled") == "true" )
     return;
   var profileTree = document.getElementById( "profiles" );
-  if( !profileTree.selectedItems.length ) {
-    alert( bundle.GetStringFromName("noneselectedrename") );
-    return;
-  }
-  else if( profileTree.selectedItems.length != 1 ) {
-    alert( bundle.GetStringFromName("wrongnumberselectedrename") );
-    return;
+  var selected = profileTree.selectedItems[0];
+  if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
+    // migrate if the user wants to
+    var lString = bundle.GetStringFromName("migratebeforerename");
+    lString = lString.replace(/\s*<html:br\/>/g,"\n");
+    var title = bundle.GetStringFromName("migratetitle");
+    if (commonDialogService.Confirm(window, title, lString))
+      profile.migrateProfile( profilename, true );
+    else
+      return false;
   }
   else {
-    var selected = profileTree.selectedItems[0];
-    if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
-      // migrate if the user wants to
-      var lString = bundle.GetStringFromName("migratebeforerename");
-      lString = lString.replace(/\s*<html:br\/>/g,"\n");
-      if( confirm( lString ) ) 
-        profile.migrateProfile( profilename, true );
-      else
-        return false;
-    }
-    else {
-      var oldName = selected.getAttribute("rowName");
-      var newName = prompt( bundle.GetStringFromName("renameprofilepromptA") + oldName + bundle.GetStringFromName("renameprofilepromptB"), oldName );
+    var oldName = selected.getAttribute("rowName");
+    var result = { };
+    var dialogTitle = bundle.GetStringFromName("renameprofiletitle");
+    var msg = bundle.GetStringFromName("renameprofilepromptA") + oldName + bundle.GetStringFromName("renameprofilepromptB");
+    if (commonDialogService.Prompt(window, dialogTitle, msg, oldName, result)) {
+      var newName = result.value;
       dump("*** newName = |" + newName + "|\n");
-      if( newName == "" || !newName )
+      if (!newName)
         return false;
       var invalidChars = ["/", "\\", "*", ":"];
       for( var i = 0; i < invalidChars.length; i++ )
@@ -87,7 +85,7 @@ function RenameProfile()
           return false;
         }
       }
-        
+      
       var migrate = selected.firstChild.firstChild.getAttribute("rowMigrate");
       dump("*** oldName = "+ oldName+ ", newName = "+ newName+ ", migrate = "+ migrate+ "\n");
       try {
@@ -98,7 +96,8 @@ function RenameProfile()
       }
       catch(e) {
         var lString = bundle.GetStringFromName("profileExists");
-        alert( lString );
+        var profileExistsTitle = bundle.GetStringFromName("profileExistsTitle");
+        commonDialogService.Alert(window, profileExistsTitle, lString);
       }
     }
   }
@@ -113,14 +112,6 @@ function ConfirmDelete()
   if( deleteButton.getAttribute("disabled") == "true" )
     return;
   var profileTree = document.getElementById( "profiles" );
-  if( !profileTree.selectedItems.length ) {
-    alert( bundle.GetStringFromName( "noneselecteddelete" ) );
-    return;
-  }
-  else if( profileTree.selectedItems.length != 1 ) {
-    alert( bundle.GetStringFromName("wrongnumberselectedrename") );
-    return;
-  }
 
   var selected = profileTree.selectedItems[0];
   var name = selected.getAttribute("rowName");
@@ -129,7 +120,8 @@ function ConfirmDelete()
       // auto migrate if the user wants to. THIS IS REALLY REALLY DUMB PLEASE FIX THE BACK END.
     var lString = bundle.GetStringFromName("migratebeforedelete");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
-    if( confirm( lString ) ) 
+    var title = bundle.GetStringFromName("deletetitle");
+    if (commonDialogService.Confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
     else
       return false;
@@ -164,7 +156,9 @@ function DeleteProfile( deleteFiles )
 
 function ConfirmMigrateAll()
 {
-  if( confirm( bundle.GetStringFromName("migrateallprofiles") ) )
+  var string = bundle.GetStringFromName("migrateallprofiles");
+  var title = bundle.GetStringFromName("migrateallprofilestitle");
+  if (commonDialogService.Confirm(window, title, string))
     return true;
   else 
     return false;
