@@ -318,7 +318,7 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
     NS_ASSERTION(desc->category == XPCNativeMemberDescriptor::CONSTANT,"bad type");
     if(NS_FAILED(mInfo->GetConstant(desc->index, &constant)))
     {
-        // XX fail silently?
+        // XXX fail silently?
         *vp = JSVAL_NULL;
         return JS_TRUE;
     }
@@ -883,7 +883,6 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
         return JS_TRUE;
     }
     case JSENUMERATE_NEXT:
-    {
         holder = (EnumStateHolder*) JSVAL_TO_PRIVATE(*statep);
         NS_ASSERTION(holder,"bad statep");
 
@@ -893,23 +892,18 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
             if(NS_FAILED(ds->Enumerate(cx, obj, JSENUMERATE_NEXT,
                                 &holder->dstate, idp, wrapper, 
                                 GetArbitraryScriptable(), &retval)) || !retval)
-            {
                 *idp = holder->dstate = JSVAL_NULL;
-            }
         }
-        else
-        {
-            NS_ASSERTION(holder->sstate != JSVAL_NULL,"bad statep");
+    
+        if(holder->dstate == JSVAL_NULL && holder->sstate != JSVAL_NULL)
             StaticEnumerate(wrapper, JSENUMERATE_NEXT, &holder->sstate, idp);
-        }
-        // perhaps we're done?
-        if(holder->dstate == JSVAL_NULL && holder->sstate == JSVAL_NULL)
-        {
-            delete holder;
-            *statep = JSVAL_NULL;
-        }
-        return JS_TRUE;
-    }
+
+        // are we done?
+        if(holder->dstate != JSVAL_NULL || holder->sstate != JSVAL_NULL)
+            return JS_TRUE;
+
+        /* Fall through ... */
+
     case JSENUMERATE_DESTROY:
         if(NULL != (holder = (EnumStateHolder*) JSVAL_TO_PRIVATE(*statep)))
         {
@@ -949,8 +943,8 @@ nsXPCWrappedNativeClass::StaticEnumerate(nsXPCWrappedNative* wrapper,
         int count = GetMemberCount();
 
         if (index < count) {
-            *idp = INT_TO_JSVAL(GetMemberDescriptor(index++)->id);
-            *statep = INT_TO_JSVAL(index < count ? index : 0);
+            *idp = GetMemberDescriptor(index)->id;
+            *statep =  INT_TO_JSVAL(index+1);
             return JS_TRUE;
         }
     }
