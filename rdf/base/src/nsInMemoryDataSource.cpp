@@ -295,7 +295,6 @@ protected:
     PLDHashTable mReverseArcs; 
 
     nsCOMPtr<nsISupportsArray> mObservers;  
-    nsIRDFService              *mRDFService;
     PRUint32                   mNumObservers;
 
     static PLDHashOperator PR_CALLBACK
@@ -871,12 +870,6 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 
     mAllocator.Init("nsInMemoryDataSource", kBucketSizes, kNumBuckets, kInitialSize);
 
-
-    nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      NS_GET_IID(nsIRDFService),
-                                      (nsISupports**) &mRDFService);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-
 #ifdef MOZ_THREADSAFE_RDF
     mLock = nsnull;
 #endif
@@ -925,12 +918,6 @@ InMemoryDataSource::~InMemoryDataSource()
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: InMemoryDataSource\n", gInstanceCount);
 #endif
-
-    if (mRDFService)
-    {
-        nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
-        mRDFService = nsnull;
-    }
 
     // This'll release all of the Assertion objects that are
     // associated with this data source. We only need to do this
