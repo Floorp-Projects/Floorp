@@ -1,0 +1,9 @@
+native nsQIResult(void *);
+native nsID(nsID *);
+
+[
+	uuid(00000000-0000-0000-c000-000000000046)
+]
+interface nsISupports {
+  void QueryInterface(in nsID uuid, out nsQIResult result);
+};
