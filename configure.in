@@ -389,6 +389,26 @@ else
   AC_MSG_RESULT(no)
 fi  
 
+dnl By default, turn rtti and exceptions off on g++/egcs
+dnl ========================================================
+if [ test -n "$GNU_CXX" ]; then
+
+	MOZ_RTTI_FLAGS=-fno-rtti
+
+dnl They changed -f[no-]handle-exceptions to -f[no-]exceptions in g++ 2.8
+    AC_TRY_RUN(
+	#include <stdio.h>
+	int main () 
+    {
+	  #if __GNUC_MINOR__ >= 8
+	  exit(0);
+      #else
+	  exit(1);
+      #endif
+	}
+	, MOZ_EXCEPTIONS_FLAGS=-fno-exceptions, MOZ_EXCEPTIONS_FLAGS=-fno-handle-exceptions, MOZ_EXCEPTIONS_FLAGS=-fno-exceptions)
+fi
+
 dnl Put your C++ language/feature checks below
 dnl Is there a way to make AC_TRY_COMPILE use CXX instead of CC?
 _SAVE_CC=$CC
@@ -585,8 +605,8 @@ dnl fi
 dnl CFLAGS=$_SAVE_CFLAGS
 
 
-# Mozilla specific options
-# ========================================================
+dnl Mozilla specific options
+dnl ========================================================
 dnl The macros used for command line options
 dnl are defined in build/autoconf/altoptions.m4.
 
@@ -658,7 +678,11 @@ if test "$MOZ_TOOLKIT" = "USE_DEFAULT"; then
   fi
 fi
 
-
+dnl ========================================================
+dnl =
+dnl = Compiler Options
+dnl = 
+dnl ========================================================
 MOZ_ARG_HEADER(Compiler Options)
 
 MOZ_ARG_DISABLE_BOOL(asserts,
@@ -687,6 +711,19 @@ MOZ_ARG_DISABLE_BOOL(shared,
 [  --disable-shared        Disable building of internal shared libs],
   NO_SHARED_LIB=1)
 
+dnl C++ rtti (g++/egcs only - for now)
+dnl Should be smarter and check that the compiler does indeed have rtti
+MOZ_ARG_ENABLE_BOOL(cpp-rtti,
+[  --enable-cpp-rtti       Enable C++ RTTI ],
+    [ MOZ_RTTI_FLAGS=-frtti ]
+)
+
+dnl C++ exceptions (g++/egcs only - for now)
+dnl Should be smarter and check that the compiler does indeed have exceptions
+MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
+[  --enable-cpp-exceptions Enable C++ exceptions ],
+    [ MOZ_EXCEPTIONS_FLAGS=-fexceptions ]
+)
 
 MOZ_ARG_HEADER(Profiling and Instrumenting)
 
@@ -808,7 +845,8 @@ AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
 AC_SUBST(MOZ_IDL_TOOL)
 AC_SUBST(COMPILER_DEPEND)
-
+AC_SUBST(MOZ_RTTI_FLAGS)
+AC_SUBST(MOZ_EXCEPTIONS_FLAGS)
 
 dnl Checks for X libraries.
 dnl Ordering is important.
