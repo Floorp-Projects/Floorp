@@ -348,20 +348,20 @@ nsHttpHandler::InitiateTransaction(nsHttpTransaction *trans,
         LOG(("comparing against idle connection [host=%s:%d]\n",
             conn->ConnectionInfo()->Host(), conn->ConnectionInfo()->Port()));
 
-        if (conn->ConnectionInfo()->Equals(ci)) {
-            // found a matching connection; remove from list
+        // we check if the connection can be reused before even checking if it
+        // is a "matching" connection.  this is how we keep the idle connection
+        // list fresh.  we could alternatively use some sort of timer for this.
+        if (!conn->CanReuse()) {
+            LOG(("dropping stale connection: [conn=%x]\n", conn));
             mIdleConnections.RemoveElementAt(i);
-
             i--;
-
-            if (conn->CanReuse()) {
-                LOG(("reusing connection [conn=%x]\n", conn));
-                break;
-            }
-            else {
-                LOG(("dropping stale connection: [conn=%x]\n", conn));
-                NS_RELEASE(conn);
-            }
+            NS_RELEASE(conn);
+        }
+        else if (conn->ConnectionInfo()->Equals(ci)) {
+            LOG(("reusing connection [conn=%x]\n", conn));
+            mIdleConnections.RemoveElementAt(i);
+            i--;
+            break;
         }
         conn = nsnull;
     }
