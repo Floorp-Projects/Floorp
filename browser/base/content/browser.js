@@ -863,7 +863,8 @@ function delayedStartup()
   catch (e) { }
 
   // BiDi UI
-  if (isBidiEnabled()) {
+  gBidiUI = isBidiEnabled();
+  if (gBidiUI) {
     document.getElementById("documentDirection-separator").hidden = false;
     document.getElementById("documentDirection-swap").hidden = false;
     document.getElementById("textfieldDirection-separator").hidden = false;
@@ -3735,10 +3736,9 @@ nsContextMenu.prototype = {
         this.showItem( "context-blockimage", this.onImage);
 
         // BiDi UI
-        var showBIDI = isBidiEnabled();
-        this.showItem( "context-sep-bidi", showBIDI);
-        this.showItem( "context-bidi-text-direction-toggle", this.onTextInput && showBIDI);
-        this.showItem( "context-bidi-page-direction-toggle", !this.onTextInput && showBIDI);
+        this.showItem( "context-sep-bidi", gBidiUI);
+        this.showItem( "context-bidi-text-direction-toggle", this.onTextInput && gBidiUI);
+        this.showItem( "context-bidi-page-direction-toggle", !this.onTextInput && gBidiUI);
 
         if (this.onImage) {
           var blockImage = document.getElementById("context-blockimage");
@@ -5553,31 +5553,6 @@ function getUILink(item)
   return "";
 }
 
-function isBidiEnabled(){
-  var rv = false;
-
-  var systemLocale;
-  try {
-    var localService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                                 .getService(Components.interfaces.nsILocaleService);
-    systemLocale = localService.getSystemLocale().getCategory("NSILOCALE_CTYPE").substr(0,3);
-  } catch (e){}
-
-  rv = ( (systemLocale == "he-") || (systemLocale == "ar-") || (systemLocale == "syr") ||
-         (systemLocale == "fa-") || (systemLocale == "ur-") );
-
-  if (!rv) {
-    // check the overriding pref
-    var mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-    try {
-      rv = mPrefs.getBoolPref("bidi.browser.ui");
-    }
-    catch (e){}
-  }
-
-  return rv;
-}
-
 function GetFrameDocumentsFromWindow(aWindow){
  if (aWindow.getComputedStyle(aWindow.document.body, "").direction == "ltr")
     aWindow.document.dir = "rtl";
@@ -5590,18 +5565,6 @@ function GetFrameDocumentsFromWindow(aWindow){
 
 function SwitchDocumentDirection(){
   GetFrameDocumentsFromWindow(window.content);
-}
-
-function SwitchFocusedTextEntryDirection() {
-  if (isBidiEnabled())
-  {
-    var focusedElement = document.commandDispatcher.focusedElement;
-    if (focusedElement)
-      if (window.getComputedStyle(focusedElement, "").direction == "ltr")
-        focusedElement.style.direction = "rtl";
-      else
-        focusedElement.style.direction = "ltr";
-  }
 }
 
 #ifdef XP_MACOSX

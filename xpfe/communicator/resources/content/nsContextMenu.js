@@ -49,8 +49,6 @@
 |   longer term, this code will be restructured to make it more reusable.      |
 ------------------------------------------------------------------------------*/
 
-var gShowBiDi = false;
-
 function nsContextMenu( xulMenu ) {
     this.target         = null;
     this.menu           = null;

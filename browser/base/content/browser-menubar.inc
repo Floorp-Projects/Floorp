@@ -115,11 +115,12 @@
                 <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="cmd_find"/>
                 <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="cmd_findAgain"/>
                 <menuseparator hidden="true" id="textfieldDirection-separator"/>
-                <menuitem hidden="true" id="textfieldDirection-swap" 
+                <menuitem id="textfieldDirection-swap"
+                          command="cmd_switchTextDirection"
+                          key="key_switchTextDirection"
                           label="&bidiSwitchTextDirectionItem.label;"
-                          key="key_SwitchTextDirection"
                           accesskey="&bidiSwitchTextDirectionItem.accesskey;"
-                          command="cmd_SwitchTextDirection"/>
+                          hidden="true"/>
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
                 <menuseparator/>

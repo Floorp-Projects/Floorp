@@ -63,7 +63,7 @@ typedef short EDirection;
 [ptr] native nsIContentPtr(nsIContent);
 
 
-[scriptable, uuid(06b979ce-1dd2-11b2-b6c7-a8bc47aa06b6)]
+[scriptable, uuid(e456440e-2e2b-4097-b3ec-60dc22b0aa9a)]
 
 interface nsIEditor  : nsISupports
 {
@@ -483,6 +483,13 @@ interface nsIEditor  : nsISupports
    */
   void markNodeDirty(in nsIDOMNode node);
 
+/* ---------- direction controller ---------- */
+
+  /** 
+   * Switches the editor element direction; from "Left-to-Right" to
+   * "Right-to-Left", and vice versa.
+   */
+  void switchTextDirection();
 
 /* ------------ Output methods -------------- */
 

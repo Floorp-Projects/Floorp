@@ -5205,6 +5205,39 @@ nsEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
 {
   return RemoveAttribute(aElement, aAttribute);
 }
+
+NS_IMETHODIMP
+nsEditor::SwitchTextDirection()
+{
+  // Get the current body direction from its frame
+  nsCOMPtr<nsIDOMElement> rootElement;
+  nsresult rv = GetRootElement(getter_AddRefs(rootElement));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(rv))
+    return rv;  
+
+  nsIFrame *frame = nsnull;
+  presShell->GetPrimaryFrameFor(content, &frame);
+  if (NS_FAILED(rv))
+    return rv; 
+
+  // Apply the opposite direction
+  if (frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
+    rv = rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("ltr"));
+  else
+    rv = rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("rtl"));
+
+  return rv;
+}
+
 #if DEBUG_JOE
 void
 nsEditor::DumpNode(nsIDOMNode *aNode, PRInt32 indent)

@@ -42,6 +42,7 @@
  **/
 
 var goPrefWindow = 0;
+var gBidiUI = false;
 
 function getBrowserURL()
 {
@@ -287,7 +288,8 @@ function goUpdateGlobalEditMenuItems()
   goUpdateCommand('cmd_paste');
   goUpdateCommand('cmd_selectAll');
   goUpdateCommand('cmd_delete');
-  // XXX: implement controller for cmd_SwitchTextDirection  document.getElementById('cmd_SwitchTextDirection').setAttribute('disabled', !document.commandDispatcher.focusedElement);
+  if (gBidiUI)
+    goUpdateCommand('cmd_switchTextDirection');
 }
 
 // update menu items that rely on the current selection
@@ -366,4 +368,29 @@ function getShellService()
       .getService(Components.interfaces.nsIShellService);
   } catch (e) {}
   return shell;
+}
+
+function isBidiEnabled() {
+  var rv = false;
+
+  try {
+    var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                  .getService(Components.interfaces.nsILocaleService);
+    var systemLocale = localeService.getSystemLocale().getCategory("NSILOCALE_CTYPE").substr(0,3);
+
+    switch (systemLocale) {
+      case "ar-":
+      case "he-":
+      case "fa-":
+      case "ur-":
+      case "syr":
+        rv = true;
+    }
+  } catch (e) {}
+
+  // check the overriding pref
+  if (!rv)
+    rv = getBoolPref("bidi.browser.ui");
+
+  return rv;
 }
