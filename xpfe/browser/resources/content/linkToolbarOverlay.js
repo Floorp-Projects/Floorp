@@ -21,6 +21,7 @@
  * Contributor(s):
  *      Christopher Hoess <choess@force.stwing.upenn.edu>
  *      Tim Taylor <tim@tool-man.org>
+ *      Henri Sivonen <henris@clinet.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
