@@ -319,7 +319,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
 
   NS_RELEASE(hContent);
   if (ATTR_NOTSET == numRows) {
-    numRows = aDesiredSize.height / aRowHeight;
+    numRows = (aRowHeight > 0) ? (aDesiredSize.height / aRowHeight) : 0;
   }
 
   NS_RELEASE(iContent);
