@@ -98,9 +98,9 @@ nsTemplateMatchRefSet::Finish()
 {
 #ifdef NSTEMPLATEMATCHREFSET_METER
     {
-        PRInt32 entries = mInlineMatches.mCount <= kMaxInlineMatches
-            ? PRInt32(mInlineMatches.mCount)
-            : mTable.entryCount;
+        PRInt32 entries = mStorageElements.mInlineMatches.mCount <= kMaxInlineMatches
+            ? PRInt32(mStorageElements.mInlineMatches.mCount)
+            : mStorageElements.mTable.entryCount;
 
         PRInt32 count = PRInt32(gCountDistribution[entries]);
         gCountDistribution.ReplaceElementAt((void*) ++count, entries);
@@ -109,7 +109,7 @@ nsTemplateMatchRefSet::Finish()
         if (gCount == 0) {
             printf("nsTemplateMatchRefSet distribution\n");
             for (PRInt32 i = gCountDistribution.Count() - 1; i >= 0; --i)
-                printf("%d: %d\n", i, gCountDistribution[i]);
+                printf("%d: %d\n", i, PRInt32(gCountDistribution[i]));
         }
     }
 #endif
