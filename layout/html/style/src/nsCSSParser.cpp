@@ -570,7 +570,7 @@ PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
 }
 
 PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
-{ // media is acse sensative
+{
   PRBool first = PR_TRUE;
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
@@ -580,6 +580,7 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
       PRUnichar symbol = mToken.mSymbol;
       if (';' == symbol) {
         UngetToken();
+        aMedia.ToLowerCase(); // case insensitive from CSS - must be lower cased
         return PR_TRUE;
       } else if (',' != symbol) {
         UngetToken();
