@@ -34,6 +34,7 @@
 #include "nsIServiceManager.h"
 #include "nsIFrameManager.h"
 #include "nsBidiFrames.h"
+#include "nsITextFrame.h"
 #include "nsIUBidiUtils.h"
 
 static const PRUnichar kSpace            = 0x0020;
@@ -214,7 +215,7 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
   PRBool                   isTextFrame;
   nsIFrame*                frame = nsnull;
   nsIFrame*                nextBidi;
-  nsBidiTextFrame*         textFrame;
+  nsITextFrame*            textFrame;
   nsCOMPtr<nsIAtom>        frameType;
   nsCOMPtr<nsIContent>     content;
   nsCOMPtr<nsITextContent> textContent;
@@ -291,17 +292,25 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
                                       &nextBidi, frameIndex) ) {
             break;
           }
-          frame->QueryInterface(NS_GET_IID(nsBidiTextFrame), (void**) &textFrame);
+          frame->QueryInterface(NS_GET_IID(nsITextFrame), (void**) &textFrame);
           if (textFrame) {
             textFrame->SetOffsets(contentOffset, contentOffset + runLength);
+            nsFrameState frameState;
+            frame->GetFrameState(&frameState);
+            frameState |= NS_FRAME_IS_BIDI;
+            frame->SetFrameState(frameState);
           }
           frame = nextBidi;
           contentOffset += runLength;
         } // if (runLength < fragmentLength)
         else {
-          frame->QueryInterface(NS_GET_IID(nsBidiTextFrame), (void**) &textFrame);
+          frame->QueryInterface(NS_GET_IID(nsITextFrame), (void**) &textFrame);
           if (textFrame) {
             textFrame->SetOffsets(contentOffset, contentOffset + fragmentLength);
+            nsFrameState frameState;
+            frame->GetFrameState(&frameState);
+            frameState |= NS_FRAME_IS_BIDI;
+            frame->SetFrameState(frameState);
           }
           frame->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
                                  (void**) &nextBidi);
@@ -550,8 +559,8 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
   PRInt32 i;
 
 #ifdef FIX_FOR_BUG_40882
-  long ch;
-  long charType;
+  PRInt32 ch;
+  PRInt32 charType;
   nscoord width, dWidth, alefWidth = 0, dx = 0;
   PRUnichar buf[2] = {ALEF, 0x0000};
 
@@ -608,7 +617,7 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
 
 #ifdef FIX_FOR_BUG_40882
   if (dx > 0) {
-    long alignRight;
+    PRInt32 alignRight;
     frame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
                            (void**) &alignRight);
     if (0 == (alignRight & 1) ) {
@@ -840,9 +849,9 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
   }
 // ahmed 
       //adjusted for correct numeral shaping  
-  nsBidiOptions mBidioptions;
-  aPresContext->GetBidi(&mBidioptions);
-  switch (GET_BIDI_OPTION_NUMERAL(mBidioptions)) {
+  PRUint32 bidiOptions;
+  aPresContext->GetBidi(&bidiOptions);
+  switch (GET_BIDI_OPTION_NUMERAL(bidiOptions)) {
 
     case IBMBIDI_NUMERAL_HINDI:
       mUnicodeUtils->HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_HINDI);
@@ -870,7 +879,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
       break;
       
     case IBMBIDI_NUMERAL_HINDICONTEXT:
-      if ( ( (GET_BIDI_OPTION_DIRECTION(mBidioptions)==IBMBIDI_TEXTDIRECTION_RTL) && (IS_ARABIC_DIGIT (aText[0])) ) || (eCharType_ArabicNumber == aCharType) )
+      if ( ( (GET_BIDI_OPTION_DIRECTION(bidiOptions)==IBMBIDI_TEXTDIRECTION_RTL) && (IS_ARABIC_DIGIT (aText[0])) ) || (eCharType_ArabicNumber == aCharType) )
         mUnicodeUtils->HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_HINDI);
       else if (eCharType_EuropeanNumber == aCharType)
         mUnicodeUtils->HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_ARABIC);
@@ -886,9 +895,11 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
 
   PRBool doReverse = PR_FALSE;
 
+printf("aCharType is %d\n", aCharType);
   if (aIsBidiSystem) {
     if (CHARTYPE_IS_RTL(aCharType) ^ aIsOddLevel) {
       doReverse = PR_TRUE;
+printf("doReverse set to TRUE\n");
     }
   }
   else if (aIsOddLevel) {
@@ -915,6 +926,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
                                    (PRUint32 *)&newLen);
     } // eCharType_RightToLeftArabic
     else {
+printf("reversing buffer\n");
       rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,
                                      NSBIDI_REMOVE_BIDI_CONTROLS | NSBIDI_DO_MIRRORING,
                                      &newLen);
