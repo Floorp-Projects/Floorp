@@ -140,7 +140,7 @@ nsIOService::ExtractScheme(const char* inURI, PRUint32 *startPos, PRUint32 *endP
     const char* uri = inURI;
 
     // skip leading white space
-    while (nsString::IsSpace(*uri))
+    while (nsCRT::IsAsciiSpace(*uri))
         uri++;
 
     PRUint32 start = uri - inURI;
@@ -166,7 +166,7 @@ nsIOService::ExtractScheme(const char* inURI, PRUint32 *startPos, PRUint32 *endP
             }
             return NS_OK;
         }
-        else if (nsString::IsAlpha(c)) {
+        else if (nsCRT::IsAsciiAlpha(c)) {
             length++;
         }
         else 

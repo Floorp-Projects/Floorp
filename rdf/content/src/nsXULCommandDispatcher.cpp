@@ -479,13 +479,13 @@ nsXULCommandDispatcher::Matches(const nsString& aList, const nsString& aElement)
     // found inside of 'blur'.
     if (indx > 0) {
         PRUnichar ch = aList[indx - 1];
-        if (! nsString::IsSpace(ch) && ch != PRUnichar(','))
+        if (! nsCRT::IsAsciiSpace(ch) && ch != PRUnichar(','))
             return PR_FALSE;
     }
 
     if (indx + aElement.Length() < aList.Length()) {
         PRUnichar ch = aList[indx + aElement.Length()];
-        if (! nsString::IsSpace(ch) && ch != PRUnichar(','))
+        if (! nsCRT::IsAsciiSpace(ch) && ch != PRUnichar(','))
             return PR_FALSE;
     }
 

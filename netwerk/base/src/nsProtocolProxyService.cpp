@@ -159,7 +159,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
     char* np= mFilters; 
     while (*np)
     {
-        while (*np && (*np == ',' || nsString::IsSpace(*np)))
+        while (*np && (*np == ',' || nsCRT::IsAsciiSpace(*np)))
             np++;
 
         char* endproxy = np+1;

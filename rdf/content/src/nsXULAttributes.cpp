@@ -109,12 +109,12 @@ nsClassList::ParseClasses(nsClassList** aList, const nsString& aClassString)
         PRUnichar* end   = start;
 
         while (kNullCh != *start) {
-            while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+            while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
                 start++;
             }
             end = start;
 
-            while ((kNullCh != *end) && (PR_FALSE == nsString::IsSpace(*end))) { // look for space or end
+            while ((kNullCh != *end) && (PR_FALSE == nsCRT::IsAsciiSpace(*end))) { // look for space or end
                 end++;
             }
             *end = kNullCh; // end string here
