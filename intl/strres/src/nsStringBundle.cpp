@@ -221,6 +221,10 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
                                      PRUint32 aLength,
                                      PRUnichar **aResult)
 {
+  NS_ENSURE_ARG_POINTER(aName);
+  NS_ENSURE_ARG_POINTER(aParams);
+  NS_ENSURE_ARG_POINTER(aResult);
+
   nsresult rv;
   rv = LoadProperties();
   if (NS_FAILED(rv)) return rv;
@@ -257,6 +261,9 @@ nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
 NS_IMETHODIMP 
 nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 {
+  NS_ENSURE_ARG_POINTER(aName);
+  NS_ENSURE_ARG_POINTER(aResult);
+
   nsresult rv;
   rv = LoadProperties();
   if (NS_FAILED(rv)) return rv;
