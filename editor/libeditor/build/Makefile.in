@@ -34,9 +34,7 @@ EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsEditorModule
 
-ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS	= gkgfx
-endif
 
 EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS)	 \
