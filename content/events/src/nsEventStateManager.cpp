@@ -4509,7 +4509,17 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
   if (startContent) {
     rv = shell->GetPrimaryFrameFor(startContent, &startFrame);
     if (isCollapsed && NS_SUCCEEDED(rv)) {
-      // First check to see if our caret is at the very end of a node
+      // First check to see if we're in a <label>
+      // We don't want to return the selection in a label, because
+      // we we should be tabbing relative to what the label 
+      // points to (the current focus), not relative to the label itself.
+      nsIContent *parentContent = startContent;
+      while ((parentContent = parentContent->GetParent()) != nsnull) {
+        if (parentContent->Tag() == nsHTMLAtoms::label) {
+          return NS_OK; // Don't return selection location, we're on a label
+        }
+      }
+      // Next check to see if our caret is at the very end of a node
       // If so, the caret is actually sitting in front of the next
       // logical frame's primary node - so for this case we need to
       // change caretContent to that node.
