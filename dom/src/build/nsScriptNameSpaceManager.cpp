@@ -105,7 +105,7 @@ GlobalNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 
     // If we constructed an internal helper, we'll let the helper delete 
     // the nsDOMClassInfoData structure, if not we do it here.
-    if (!ci || e->mGlobalName.mData->mExternalConstructorFptr) {
+    if (!ci || e->mGlobalName.mData->u.mExternalConstructorFptr) {
       delete e->mGlobalName.mData;
     }
 
@@ -623,10 +623,10 @@ nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
   s->mType = nsGlobalNameStruct::eTypeExternalClassInfo;
   s->mData->mName = aName;
   if (aConstructorFptr)
-    s->mData->mExternalConstructorFptr = aConstructorFptr;
+    s->mData->u.mExternalConstructorFptr = aConstructorFptr;
   else
     // null constructor will cause us to use nsDOMGenericSH::doCreate
-    s->mData->mExternalConstructorFptr = nsnull;
+    s->mData->u.mExternalConstructorFptr = nsnull;
   s->mData->mCachedClassInfo = nsnull;
   s->mData->mProtoChainInterface = aProtoChainInterface;
   s->mData->mInterfaces = aInterfaces;
