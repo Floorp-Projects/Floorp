@@ -156,7 +156,7 @@ extern "C" NET_StreamClass * NET_PluginStream(int fmt, void* data_obj, URL_Struc
 extern "C" NET_StreamClass *
 NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 {
-	PRBool can_use;
+	PRBool can_use, error = PR_FALSE;
 	char *mime_type;
 	const char *mime_type_out;
 	NET_StreamClass *new_stream = NULL;
@@ -185,58 +185,71 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 	can_use = register_converter(mime_type, (void *)URL_s);
 	if (can_use == PR_FALSE)
 	{
+		PR_FREEIF(mime_type);
 		return NULL;
 	}
 
-	if (nsComponentManager::ProgIDToCLSID(mime_type, &classID) != NS_OK)
+	do {
+		if (nsComponentManager::ProgIDToCLSID(mime_type, &classID) != NS_OK)
+		{
+			error = PR_TRUE;
+			break;
+		}
+
+		nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kINetPluginInstanceIID, (void **)&plugin_inst);
+
+		if (plugin_inst == NULL)
+		{
+			error = PR_TRUE;
+			break;
+		}
+
+		plugin_inst->GetMIMEOutput(&mime_type_out);
+
+		if (mime_type_out != NULL)
+		{
+			PR_FREEIF(URL_s->content_type);
+			URL_s->content_type = XP_STRDUP(mime_type_out);
+		}
+		next_stream = NET_StreamBuilder(fmt, URL_s, w);
+
+		converter_stream = new nsNetConverterStream();
+		if (converter_stream == NULL)
+		{
+			error = PR_TRUE;
+			break;
+		}
+
+		converter_stream->Initialize((void *)next_stream);
+
+		if (NS_OK != converter_stream->QueryInterface(kINetOStreamIID, (void **)&out_stream))
+		{
+			delete converter_stream;
+			error = PR_TRUE;
+			break;
+		}
+
+		plugin_inst->Initialize(out_stream, URL_s->address);
+
+		if (NS_OK != plugin_inst->QueryInterface(kINetOStreamIID, (void **)&instance_stream))
+		{
+			delete converter_stream;
+			error = PR_TRUE;
+			break;
+		}
+	} while (0);
+
+	if (error)
 	{
 		unregister_converter(mime_type, (void *)URL_s);
-		return NULL;
-	}
-
-	nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kINetPluginInstanceIID, (void **)&plugin_inst);
-
-	if (plugin_inst == NULL)
-	{
-		unregister_converter(mime_type, (void *)URL_s);
-		return NULL;
-	}
-
-	plugin_inst->GetMIMEOutput(&mime_type_out);
-
-	if (mime_type_out != NULL)
-	{
-		PR_FREEIF(URL_s->content_type);
-		URL_s->content_type = XP_STRDUP(mime_type_out);
-	}
-	next_stream = NET_StreamBuilder(fmt, URL_s, w);
-
-	converter_stream = new nsNetConverterStream();
-	if (converter_stream == NULL)
-	{
-		unregister_converter(mime_type, (void *)URL_s);
-		return NULL;
-	}
-
-	converter_stream->Initialize((void *)next_stream);
-
-	if (NS_OK != converter_stream->QueryInterface(kINetOStreamIID, (void **)&out_stream))
-	{
-		unregister_converter(mime_type, (void *)URL_s);
-		return NULL;
-	}
-
-	plugin_inst->Initialize(out_stream, URL_s->address);
-
-	if (NS_OK != plugin_inst->QueryInterface(kINetOStreamIID, (void **)&instance_stream))
-	{
-		unregister_converter(mime_type, (void *)URL_s);
+		PR_FREEIF(mime_type);
 		return NULL;
 	}
 
 	new_stream = NET_NewStream("PluginStream", plugin_stream_write, plugin_stream_complete, plugin_stream_abort, plugin_stream_write_ready, (void *)instance_stream, w);
 
 	unregister_converter(mime_type, (void *)URL_s);
+	PR_FREEIF(mime_type);
 	return new_stream;
 }
 
