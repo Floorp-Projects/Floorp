@@ -461,7 +461,7 @@ nsFontPS::FindFont(PRUnichar aChar, const nsFont& aFont,
 #ifdef MOZ_ENABLE_FREETYPE2
   nsDeviceContextPS* dc = aFontMetrics->GetDeviceContext();
   NS_ENSURE_TRUE(dc, nsnull);
-  if (dc->mTTPEnable) {
+  if (dc->mFTPEnable) {
     fontPS = nsFontPSFreeType::FindFont(aChar, aFont, aFontMetrics);
     if (fontPS)
       return fontPS;
@@ -1606,7 +1606,8 @@ void nsFT2Type8Generator::GeneratePSFont(FILE* aFile)
     return;
  
   int wmode = 0;
-  FT2SubsetToType8(face, mSubset.get(), mSubset.Length(), wmode, aFile);
+  if (mSubset.Length() > 0)
+    FT2SubsetToType8(face, mSubset.get(), mSubset.Length(), wmode, aFile);
 }
 #endif //MOZ_ENABLE_FREETYPE2
 
