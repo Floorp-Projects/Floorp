@@ -86,17 +86,22 @@ endif
 ifdef MOZ_ENABLE_XPRINT
 DIRS        += xprintutil xprint 
 endif
-ifdef MOZ_ENABLE_GTK
-DIRS        += gtk
-endif
-ifdef MOZ_ENABLE_GTK2
-DIRS        += gtk
-endif
-ifdef MOZ_ENABLE_XLIB
-DIRS        += xlib
-endif
-ifdef MOZ_ENABLE_PHOTON
-DIRS        += photon
+
+ifdef MOZ_ENABLE_CAIRO_GFX
+DIRS        += cairo
+else
+ ifdef MOZ_ENABLE_GTK
+ DIRS        += gtk
+ endif
+ ifdef MOZ_ENABLE_GTK2
+ DIRS        += gtk
+ endif
+ ifdef MOZ_ENABLE_XLIB
+ DIRS        += xlib
+ endif
+ ifdef MOZ_ENABLE_PHOTON
+ DIRS        += photon
+ endif
 endif
 
 CPPSRCS = \
