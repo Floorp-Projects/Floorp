@@ -47,6 +47,9 @@ public:
   NS_IMETHOD GetNodeInfo(const nsString& aName, const nsString& aPrefix,
                          const nsString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo);
+  NS_IMETHOD GetNodeInfo(const nsString& aQualifiedName,
+                         const nsString& aNamespaceURI,
+                         nsINodeInfo*& aNodeInfo); 
   NS_IMETHOD GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager);
 
   // nsNodeInfoManager
