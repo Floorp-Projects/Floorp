@@ -524,7 +524,6 @@ sub MakeResourceAliases()
 
 	my($profile_content_chrome_dir) = "$communicator_content_chrome_dir" . "profile";
 	my($profile_locale_chrome_dir) = "$communicator_locale_chrome_dir" . "profile";
-	my($profile_skin_chrome_dir) = "$communicator_skin_chrome_dir" . "profile";
 
 	_InstallResources(":mozilla:profile:resources:content:MANIFEST",					"$profile_content_chrome_dir", 0);
 	_InstallResources(":mozilla:profile:resources:locale:en-US:MANIFEST",				"$profile_locale_chrome_dir", 0);
