@@ -512,9 +512,12 @@ public class NativeGlobal implements IdFunctionMaster {
             // mode.
             int oldOptLevel = cx.getOptimizationLevel();
             cx.setOptimizationLevel(-1);
-            Script script = cx.compileReader(scope, in, sourceName, 1,
-                                             null);
-            cx.setOptimizationLevel(oldOptLevel);
+            Script script;
+            try {
+                script = cx.compileReader(scope, in, sourceName, 1, null);
+            } finally {
+                cx.setOptimizationLevel(oldOptLevel);
+            }
 
             // if the compile fails, an error has been reported by the
             // compiler, but we need to stop execution to avoid
