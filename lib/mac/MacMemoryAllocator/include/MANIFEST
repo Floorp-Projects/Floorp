@@ -4,4 +4,3 @@
 
 # this should go away when NSPR is fixed
 MacMemAllocator.h
-FlushAllocator.h
