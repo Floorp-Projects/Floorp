@@ -5,10 +5,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#ifndef HAVE_SYS_CDEFS_H
-#include "cdefs.h"
-#else
+#ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
+#else
+#include "cdefs.h"
 #endif
 
 #include "prtypes.h"
