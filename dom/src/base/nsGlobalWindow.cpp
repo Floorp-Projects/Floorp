@@ -770,18 +770,20 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
       // If we're not in chrome, or at a chrome boundary, fire the
       // onload event for the frame element.
 
-      nsCOMPtr<nsIPresContext> ctx;
-      mDocShell->GetPresContext(getter_AddRefs(ctx));
-      NS_ENSURE_TRUE(ctx, NS_OK);
-
       nsEventStatus status = nsEventStatus_eIgnore;
       nsEvent event;
 
       event.eventStructType = NS_EVENT;
       event.message = NS_PAGE_LOAD;
 
-      return content->HandleDOMEvent(ctx, &event, nsnull, NS_EVENT_FLAG_INIT,
-                                     &status);
+      // Most of the time we could get a pres context to pass in here,
+      // but not always (i.e. if this window is not shown there won't
+      // be a pres context available). Since we're not firing a GUI
+      // event we don't need a pres context anyway so we just pass
+      // null as the pres context all the time here.
+
+      return content->HandleDOMEvent(nsnull, &event, nsnull,
+                                     NS_EVENT_FLAG_INIT, &status);
     }
   }
 
