@@ -426,10 +426,10 @@ nsHttpTransaction::HandleContentStart()
                 mNoContent = PR_TRUE;
                 LOG(("looks like this response should not contain a body.\n"));
                 break;
+            default:
+                LOG(("waiting for the server to close the connection.\n"));
+                break;
             }
-            if (mNoContent)
-                mContentLength = 0;
-            // otherwise, we'll wait for the server to close the connection.
         }
         else if (mResponseHead->Version() < NS_HTTP_VERSION_1_1 &&
                  !mConnection->IsKeepAlive()) {
@@ -447,6 +447,8 @@ nsHttpTransaction::HandleContentStart()
             //          mResponseHead->SetHeader(nsHttp::Content_Length, nsnull);
 
         }
+        if (mNoContent)
+            mContentLength = 0;
     }
 
     LOG(("nsHttpTransaction [this=%x] sending OnStartRequest\n", this));
