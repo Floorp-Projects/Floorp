@@ -88,7 +88,7 @@ NS_IMETHODIMP_(nsrefcnt) InputStreamShim::Release(void)
     return mRefCnt;                                            
 }
 
-NS_IMPL_QUERY_INTERFACE(InputStreamShim, NS_GET_IID(nsIInputStream))
+NS_IMPL_QUERY_INTERFACE1(InputStreamShim, nsIInputStream)
 
 nsresult InputStreamShim::doReadFromJava()
 {
@@ -223,7 +223,7 @@ InputStreamShim::doRead(void)
                 return NS_ERROR_FAILURE;
             }
             // copy the old buffer into the new buffer
-            nsCRT::memcpy(tBuffer, mBuffer, mBufferLength);
+            memcpy(tBuffer, mBuffer, mBufferLength);
             // delete the old buffer
             delete [] mBuffer;
             // update mBuffer;
@@ -364,13 +364,13 @@ InputStreamShim::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
     if (mAvailableForMozilla) {
         if (aCount <= (mCountFromJava - mCountFromMozilla)) {
             // what she's asking for is less than or equal to what we have
-            nsCRT::memcpy(aBuffer, (mBuffer + mCountFromMozilla), aCount);
+            memcpy(aBuffer, (mBuffer + mCountFromMozilla), aCount);
             mCountFromMozilla += aCount;
             *aNumRead = aCount;
         }
         else {
             // what she's asking for is more than what we have
-            nsCRT::memcpy(aBuffer, (mBuffer + mCountFromMozilla), 
+            memcpy(aBuffer, (mBuffer + mCountFromMozilla), 
                           (mCountFromJava - mCountFromMozilla));
             *aNumRead = (mCountFromJava - mCountFromMozilla);
             

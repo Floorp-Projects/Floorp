@@ -22,6 +22,7 @@
 #include "prlog.h"
 #include "nsIDOMNode.h"
 #include"nsIDOMEvent.h"
+#include"nsIDOMNSEvent.h"
 #include"nsIDOMEventTarget.h"
 #include"javaDOMEventsGlobals.h"
 #include "org_mozilla_dom_events_EventImpl.h"
@@ -239,15 +240,21 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_getType
 JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventBubble
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMEvent* event = (nsIDOMEvent*)
+    nsIDOMEvent* domEvent = (nsIDOMEvent*)
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
-    if (!event) {
+    if (!domEvent) {
         JavaDOMGlobals::ThrowException(env,
             "Event.preventBubble: NULL pointer");
         return;
     }
 
-    nsresult rv = event->PreventBubble();
+    nsCOMPtr<nsIDOMNSEvent> event(do_QueryInterface(domEvent));
+    nsresult rv = NS_ERROR_FAILURE;
+ 
+    if (event) {
+	rv = event->PreventBubble();
+    }
+
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "Event.preventBubble: failed", rv);
@@ -262,15 +269,21 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventBubble
 JNIEXPORT void JNICALL Java_org_mozilla_dom_events_EventImpl_preventCapture
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMEvent* event = (nsIDOMEvent*)
+    nsIDOMEvent* domEvent = (nsIDOMEvent*)
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
-    if (!event) {
+    if (!domEvent) {
         JavaDOMGlobals::ThrowException(env,
             "Event.preventCapture: NULL pointer");
         return;
     }
 
-    nsresult rv = event->PreventCapture();
+    nsCOMPtr<nsIDOMNSEvent> event(do_QueryInterface(domEvent));
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (event) {
+	rv = event->PreventCapture();
+    }
+
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "Event.preventCapture: failed", rv);

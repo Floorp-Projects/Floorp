@@ -67,7 +67,9 @@ wsLoadURLEvent::handleEvent ()
   printf ("+++++++++++++++++++++ Thread Id ---- %p\n\n", threadId);
 
   if (mWebNavigation && mURL) {
-      nsresult rv = mWebNavigation->LoadURI(mURL->get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      nsresult rv = mWebNavigation->LoadURI(mURL->get(), 
+                                            nsIWebNavigation::LOAD_FLAGS_NONE,
+                                            nsnull, nsnull, nsnull);
   }
   return nsnull;
 } // handleEvent()

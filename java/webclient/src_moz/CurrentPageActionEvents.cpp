@@ -42,6 +42,9 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsIURI.h"
+#include "nsIHistoryEntry.h"
+#include "nsString.h"
 
 wsCopySelectionEvent::wsCopySelectionEvent(WebShellInitContext *yourInitContext) :
         nsActionEvent(),
@@ -241,13 +244,16 @@ wsGetURLEvent::handleEvent ()
 	if (NS_FAILED(rv)) {
             return result;
         }
+
+    nsCString urlSpecString;
 	
-	rv = URI->GetSpec(&currentURL);
+	rv = URI->GetSpec(urlSpecString);
 	if (NS_FAILED(rv)) {
-            return result;
-        }
-        
-        result = (void *) currentURL;
+        return result;
+    }
+    currentURL = (char *) urlSpecString.GetBufferHandle();
+    
+    result = (void *) currentURL;
     }
     return result;
 } // handleEvent()

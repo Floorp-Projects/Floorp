@@ -27,6 +27,7 @@
 #include "PromptActionEvents.h"
 
 #include "ns_util.h"
+#include "nsReadableUtils.h"
 #include "nsString2.h" // for nsAutoString
 
 wsPromptUsernameAndPasswordEvent::wsPromptUsernameAndPasswordEvent(WebShellInitContext *yourInitContext,
@@ -83,7 +84,7 @@ void *wsPromptUsernameAndPasswordEvent::handleEvent()
     if (user) {
         userJchar = ::util_GetStringChars(env, user);
         autoUser = (PRUnichar *) userJchar;
-        *mOutUser = autoUser.ToNewUnicode();
+        *mOutUser = ToNewUnicode(autoUser);
         ::util_ReleaseStringChars(env, user, userJchar);
     }
     
@@ -93,7 +94,7 @@ void *wsPromptUsernameAndPasswordEvent::handleEvent()
     if (password) {
         passwordJchar = ::util_GetStringChars(env, password);
         autoPassword = (PRUnichar *) passwordJchar;
-        *mOutPwd = autoPassword.ToNewUnicode();
+        *mOutPwd = ToNewUnicode(autoPassword);
         ::util_ReleaseStringChars(env, password, passwordJchar);
     }
     
@@ -177,7 +178,7 @@ void *wsPromptUniversalDialogEvent::handleEvent()
                                                          &(mInitContext->shareContext));
         edit1Jchar = ::util_GetStringChars(env, edit1);
         autoEdit1 = (PRUnichar *) edit1Jchar;
-        *mFieldOne = autoEdit1.ToNewUnicode();
+        *mFieldOne = ToNewUnicode(autoEdit1);
         ::util_ReleaseStringChars(env, edit1, edit1Jchar);
     }
     
@@ -189,7 +190,7 @@ void *wsPromptUniversalDialogEvent::handleEvent()
                                                          &(mInitContext->shareContext));
         edit2Jchar = ::util_GetStringChars(env, edit2);
         autoEdit2 = (PRUnichar *) edit2Jchar;
-        *mFieldTwo = autoEdit2.ToNewUnicode();
+        *mFieldTwo = ToNewUnicode(autoEdit2);
         ::util_ReleaseStringChars(env, edit2, edit2Jchar);
     }
 

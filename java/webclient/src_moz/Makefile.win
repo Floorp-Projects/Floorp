@@ -20,14 +20,38 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
-
-MAKE_OBJ_TYPE	= DLL
-
-MODULE=webclient 
 
 DIRS=win32
 
+MODULE=webclient 
+REQUIRES	= xpcom \
+		  layout \
+		  shistory \
+		  appcomps \
+		  appshell \
+		  pref \
+		  locale \
+		  intl \
+		  rdf \
+		  bookmarks \
+		  content \
+		  editor \
+		  string \
+		  embed_base \
+		  webBrowser_core \
+		  webshell \
+		  windowwatcher \
+		  profile \
+		  necko \
+		  docshell \
+		  dom \
+		  widget \
+		  uriloader \
+		  webbrowserpersist \
+		  gfx \
+		  $(NULL)
+LIBRARY_NAME=webclient
+MODULE_NAME=nsWebClient
 
 OBJS =                              \
     .\$(OBJDIR)\ns_util.obj  \
@@ -57,26 +81,12 @@ OBJS =                              \
     .\$(OBJDIR)\PreferencesImpl.obj  \
     .\$(OBJDIR)\PreferencesActionEvents.obj  \
     .\$(OBJDIR)\ISupportsPeer.obj  \
-    .\win32\$(OBJDIR)\Win32BrowserControlCanvas.obj  \
+    .\win32\$(OBJDIR)\Win32BrowserControlCanvas.obj \
     $(NULL)
 
-
-LCFLAGS = \
-	-DDEBUG_RAPTOR_CANVAS \
+SUB_LIBRARIES=                       \
+        $(DIST)\lib\wc_win32.lib \
         $(NULL)
-
-!ifdef BAL_INTERFACE
-LCFLAGS = \
-	$(LCFLAGS) \
-	-DBAL_INTERFACE \
-	$(NULL)
-
-DLLNAME = webclient_bal
-!else
-DLLNAME = webclient
-!endif
-
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS = \
 	$(DIST)\lib\baseembed_s.lib \
@@ -97,7 +107,6 @@ WIN_LIBS=                       \
     version.lib                 \
     $(NULL)
 
-
 !ifdef BAL_INTERFACE
 LLIBS = $(LLIBS) \
 	$(DIST)\lib\wc_share_bal.lib \
@@ -108,7 +117,6 @@ LLIBS = $(LLIBS) \
 	$(NULL)
 !endif
 
-include <$(DEPTH)\config\rules.mak>
 
 !ifdef BAL_INTERFACE
 INCS = \
@@ -129,13 +137,25 @@ INCS = \
 	$(INCS) \
 	$(NULL)
 
-!CMDSWITCHES -S
+LCFLAGS = \
+	-DDEBUG_RAPTOR_CANVAS \
+        $(NULL)
+
+!ifdef BAL_INTERFACE
+LCFLAGS = \
+	$(LCFLAGS) \
+	-DBAL_INTERFACE \
+	$(NULL)
+!endif
+
+include <$(DEPTH)\config\rules.mak>
+#!CMDSWITCHES -S
 
 # generate the jni header
 
 buildRunems:
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
 	copy $(DIST)\bin\windbgdlg.exe $(JDKHOME)\bin
 !ifdef BAL_INTERFACE
 !else
@@ -153,9 +173,12 @@ clobber_all:: clobber
 
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\bin\$(DLL).dll
 !ifdef PACKAGE_BUILD
 	rm -f runem_win_commercial.bat
 !else
 	rm -f runem.bat
 !endif
+
+edburns:
+	echo $(DLL) $(MAKE_OBJ_TYPE) $(LIBRARY_NAME) $(EXPORT_LIBRARY)

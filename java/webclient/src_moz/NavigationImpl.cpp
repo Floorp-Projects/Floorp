@@ -205,8 +205,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     if (postHeadersChars && postDataChars) {
         headersAndData = new char[postHeadersLength + postDataLength + 1];
         if (headersAndData) {
-            nsCRT::memcpy(headersAndData, postHeadersChars, postHeadersLength);
-            nsCRT::memcpy((headersAndData + postHeadersLength),
+            memcpy(headersAndData, postHeadersChars, postHeadersLength);
+            memcpy((headersAndData + postHeadersLength),
                           postDataChars, postDataLength);
             headersAndData[postHeadersLength + postDataLength] = '\0';
             // free the existing postHeadersChars and postDataChars

@@ -21,34 +21,35 @@
 
 DEPTH=..\..\..\..
 MODULE=wc_win32
-include <$(DEPTH)/config/config.mak>
-
-OBJS =                              \
-    .\$(OBJDIR)\Win32BrowserControlCanvas.obj  \
-    $(NULL)
-
-LCFLAGS = \
-	-DDEBUG_RAPTOR_CANVAS \
-        $(NULL)
+REQUIRES	= xpcom \
+		  layout \
+		  appcomps \
+		  string \
+		  embed_base \
+		  webBrowser_core \
+		  webshell \
+		  windowwatcher \
+		  profile \
+		  necko \
+		  docshell \
+		  dom \
+		  widget \
+		  uriloader \
+		  shistory \
+		  webbrowserpersist \
+		  content \
+		  gfx \
+		  $(NULL)
 
 !ifdef BAL_INTERFACE
-LCFLAGS = \
-	$(LCFLAGS) \
-	-DBAL_INTERFACE \
-	$(NULL)
-
 LIBRARY_NAME = wc_win32_bal
 !else
 LIBRARY_NAME = wc_win32
 !endif
 
-LLIBS = \
-	$(NULL)  
-
-WIN_LIBS = \
-  version.lib
-
-include <$(DEPTH)\config\rules.mak>
+CPP_OBJS =                              \
+    .\$(OBJDIR)\Win32BrowserControlCanvas.obj  \
+    $(NULL)
 
 INCS=-I.. -I..\..\src_share $(INCS)
 
@@ -66,9 +67,35 @@ INCS = \
 	$(NULL)
 !endif
 
+LCFLAGS = \
+	-DDEBUG_RAPTOR_CANVAS \
+        $(NULL)
+
+!ifdef BAL_INTERFACE
+LCFLAGS = \
+	$(LCFLAGS) \
+	-DBAL_INTERFACE \
+	$(NULL)
+!endif
+
+LLIBS = \
+	$(NULL)  
+
+WIN_LIBS = \
+  version.lib
+
+include <$(DEPTH)\config\rules.mak>
+
 !CMDSWITCHES -S
+
+export:: libs
+
+libs:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+         
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 
 clobber_all:: clobber
 
-edburns:
-	@echo $(INCS)

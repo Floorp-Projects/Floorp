@@ -29,6 +29,8 @@
 
 #include "NativeEventThreadActionEvents.h"
 
+#include "nsIInterfaceRequestorUtils.h"
+
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
@@ -118,21 +120,20 @@ wsRealizeBrowserEvent::handleEvent ()
     
     // set the docloaderobserver PENDING(edburns): how to we make our
     // presence as a nsIWebProgressListener know?n
-    
+
+	printf("Creation Done.....\n");
+    // Get the WebNavigation Object from the DocShell
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mInitContext->docShell));
+    mInitContext->webNavigation = webNav;
+
     if (nsnull == gHistory) {
-        rv = gComponentManager->CreateInstance(kSHistoryCID, nsnull, 
-                                               kISHistoryIID, 
-                                               (void**)&gHistory);
+        rv = webNav->GetSessionHistory((nsISHistory **)&gHistory);
         if (NS_FAILED(rv)) {
             mInitContext->initFailCode = kHistoryWebShellError;
             return (void *) rv;
         }
     }
     
-	printf("Creation Done.....\n");
-    // Get the WebNavigation Object from the DocShell
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mInitContext->docShell));
-    mInitContext->webNavigation = webNav;
     
     // Set the History
     //    mInitContext->webNavigation->SetSessionHistory(gHistory);

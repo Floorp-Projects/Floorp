@@ -61,7 +61,7 @@ void prefEnumerator(const char *name, void *closure)
     nsAutoString prefValueAuto;
     const PRInt32 bufLen = 20;
     char buf[bufLen];
-    nsCRT::memset(buf, 0, bufLen);
+    memset(buf, 0, bufLen);
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
 
     if (nsnull == props || !prefs) {

@@ -33,6 +33,9 @@
 
 #include "HistoryActionEvents.h"
 #include "ns_util.h"
+#include "nsIHistoryEntry.h"
+#include "nsIURI.h"
+#include "nsString.h"
 
 /*
  * wsCanBackEvent
@@ -254,7 +257,7 @@ wsGetURLForIndexEvent::handleEvent ()
         nsresult rv;
         nsISHistory* sHistory;
         rv = mInitContext->webNavigation->GetSessionHistory(&sHistory);
-        char *indexURL = nsnull;
+        const char *indexURL = nsnull;
         
         nsIHistoryEntry * Entry;
         rv = sHistory->GetEntryAtIndex(mHistoryIndex, PR_FALSE, &Entry);
@@ -268,12 +271,15 @@ wsGetURLForIndexEvent::handleEvent ()
         if (NS_FAILED(rv)) {
             return result;
         }
-        
-        rv = URI->GetSpec(&indexURL);
+
+        nsCString urlSpecString;
+
+        rv = URI->GetSpec(urlSpecString);
         if (NS_FAILED(rv)) {
             return result;
         }	
         
+        indexURL = urlSpecString.get();
         result = (void *) indexURL;
     }
     return result;

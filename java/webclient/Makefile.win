@@ -35,8 +35,7 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 DEPTH = ..\..
 
-DIRS  = import \
-	classes_spec \
+DIRS  = classes_spec \
 	src_share \
 	$(NULL)
 

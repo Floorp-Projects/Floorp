@@ -52,7 +52,6 @@
 #include "nsCOMPtr.h" // to get nsIBaseWindow from webshell
 //nsIDocShell is included in ns_util.h
 #include "nsIEventQueueService.h" // for PLEventQueue
-#include "nsRepository.h"
 #include "nsIServiceManager.h" // for do_GetService
 #include "nsISHistory.h" // for sHistory
 #include "nsIThread.h" // for PRThread
@@ -413,8 +412,6 @@ int processEventLoop(WebShellInitContext * initContext)
             }
         }
     }
-    // Do idle stuff
-    ::NS_DoIdleEmbeddingStuff();
 #endif
     ::PR_Sleep(PR_INTERVAL_NO_WAIT);
     
@@ -495,9 +492,6 @@ void DoMozInitialization(WebShellInitContext * initContext)
             // If this fails, it just goes to stdout/stderr
         }
         
-        gComponentManager->RegisterComponentLib(kSHistoryCID, nsnull, 
-                                                nsnull, APPSHELL_DLL, 
-                                                PR_FALSE, PR_FALSE);
         // handle the profile manager nonsense
         nsCOMPtr<nsICmdLineService> cmdLine =do_GetService(kCmdLineServiceCID);
         nsCOMPtr<nsIProfile> profile = do_GetService(NS_PROFILE_CONTRACTID);

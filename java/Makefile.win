@@ -50,7 +50,6 @@ DIRS =	external \
 DIRS = 	external \
 	util \
 	dom \
-	xpcom \
 	webclient \
 	build
 !else

@@ -30,6 +30,7 @@
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIRequest.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
@@ -271,8 +272,8 @@ NS_IMETHODIMP CBrowserContainer::ConfirmEx(const PRUnichar *dialogTitle,
     // This array contains the button strings that are dynamically
     // allocated and need to be freed.
     const PRUnichar *buttonStringsToFree[maxButtons];
-    nsCRT::memset(buttonStringsToFree, nsnull, 
-                  maxButtons * sizeof(PRUnichar *));
+    memset(buttonStringsToFree, nsnull, 
+           maxButtons * sizeof(PRUnichar *));
     
 
     PRInt32 numberButtons = 0;
@@ -315,7 +316,7 @@ NS_IMETHODIMP CBrowserContainer::ConfirmEx(const PRUnichar *dialogTitle,
             // localization bundle.  In this case, we must copy the
             // string and free it.
             tempStr = buttonTextStr.get();
-            strings[buttonOffset + i].uniStr = tempStr.ToNewUnicode();
+            strings[buttonOffset + i].uniStr = ToNewUnicode(tempStr);
             buttonStringsToFree[i] = strings[buttonOffset + i].uniStr;
         }
         else {
@@ -901,25 +902,19 @@ NS_IMETHODIMP CBrowserContainer::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP CBrowserContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **_retval)
+NS_IMETHODIMP CBrowserContainer::DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-NS_IMETHODIMP CBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *_retval)
+NS_IMETHODIMP CBrowserContainer::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-NS_IMETHODIMP CBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP CBrowserContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
+NS_IMETHODIMP CBrowserContainer::CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1008,16 +1003,19 @@ CBrowserContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
 	return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserContainer::GetNewWindow(PRInt32 aChromeFlags, 
-   nsIDocShellTreeItem** aDocShellTreeItem)
-{
-
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIBaseWindow
+
+NS_IMETHODIMP CBrowserContainer::GetEnabled(PRBool *aEnabled)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP CBrowserContainer::SetEnabled(PRBool aEnabled)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP 
 CBrowserContainer::InitWindow(nativeWindow parentNativeWindow, nsIWidget * parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
@@ -1146,15 +1144,6 @@ CBrowserContainer::SetFocus(void)
 
 
 NS_IMETHODIMP 
-CBrowserContainer::FocusAvailable(nsIBaseWindow *aCurrentFocus, 
-                                  PRBool aForward, 
-                                  PRBool *aTookFocus)
-{
-	return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP 
 CBrowserContainer::GetTitle(PRUnichar * *aTitle)
 {
 	return NS_ERROR_FAILURE;
@@ -1216,14 +1205,6 @@ CBrowserContainer::GetChromeFlags(PRUint32 *aChromeFlags)
 
 NS_IMETHODIMP
 CBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-CBrowserContainer::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX, 
-                                       PRInt32 aY, PRInt32 aCX, PRInt32 aCY, 
-nsIWebBrowser **aWebBrowser)
 {
     return NS_ERROR_FAILURE;
 }
@@ -1728,8 +1709,9 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
         nodeName = nodeInfo;
         
         if (prLogModuleInfo) {
-            nsAutoCString nodeInfoCStr(nodeName);
-            PR_LOG(prLogModuleInfo, 4, ("%s", (const char *)nodeInfoCStr));
+            char * nodeInfoCStr = ToNewCString(nodeName);
+            PR_LOG(prLogModuleInfo, 4, ("%s", nodeInfoCStr));
+            nsMemory::Free(nodeInfoCStr);
         }
         
         rv = currentNode->GetNodeValue(nodeInfo);
@@ -1741,8 +1723,9 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
         nodeValue = nodeInfo;
         
         if (prLogModuleInfo) {
-            nsAutoCString nodeInfoCStr(nodeValue);
+            char * nodeInfoCStr = ToNewCString(nodeName);
             PR_LOG(prLogModuleInfo, 4, ("%s", (const char *)nodeInfoCStr));
+            nsMemory::Free(nodeInfoCStr);
         }
         
         jNodeName = ::util_NewString(env, nodeName.get(), 
@@ -1791,9 +1774,10 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
             nodeName = nodeInfo;
 
             if (prLogModuleInfo) {
-                nsAutoCString nodeInfoCStr(nodeName);
+                char * nodeInfoCStr = ToNewCString(nodeName);
                 PR_LOG(prLogModuleInfo, 4, 
                        ("attribute[%d], %s", i, (const char *)nodeInfoCStr));
+                nsMemory::Free(nodeInfoCStr);
             }
             
             rv = currentNode->GetNodeValue(nodeInfo);
@@ -1805,9 +1789,10 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
             nodeValue = nodeInfo;
             
             if (prLogModuleInfo) {
-                nsAutoCString nodeInfoCStr(nodeValue);
+                char * nodeInfoCStr = ToNewCString(nodeName);
                 PR_LOG(prLogModuleInfo, 4, 
                        ("attribute[%d] %s", i,(const char *)nodeInfoCStr));
+                nsMemory::Free(nodeInfoCStr);
             }
             jNodeName = ::util_NewString(env, nodeName.get(), 
                                          nodeName.Length());

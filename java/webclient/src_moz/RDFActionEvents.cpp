@@ -46,6 +46,7 @@
 
 #include "wsRDFObserver.h"
 #include "nsString.h" // for nsCAutoString
+#include "nsReadableUtils.h" 
 
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
@@ -111,7 +112,7 @@ wsNewRDFNodeEvent::handleEvent ()
     JNIEnv *env = (JNIEnv*) JNU_GetEnv(gVm, JNI_VERSION);
     
     // PENDING(edburns): does this leak? 
-    PRUnichar *uriUni = uri.ToNewUnicode();
+    PRUnichar *uriUni = ToNewUnicode(uri);
     
     rv = gRDF->GetUnicodeResource(uriUni, getter_AddRefs(newNode));
     nsCRT::free(uriUni);

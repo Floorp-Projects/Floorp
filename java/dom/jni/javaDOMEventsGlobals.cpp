@@ -220,7 +220,7 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
         return NULL;
     }
 
-    char* buffer = eventType.ToNewUTF8String();
+    char* buffer = (char *) eventType.GetBufferHandle();
 
     if (isEventOfType(mouseEventTypes, buffer) == JNI_TRUE) {
       clazz = mouseEventClass;

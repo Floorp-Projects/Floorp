@@ -299,12 +299,16 @@ NS_IMETHODIMP nsJavaDOMImpl::OnProgressChange(nsIWebProgress *aWebProgress,
 
     JNIEnv* env = NULL;
     if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
-    
+
+    nsCString urlSpecString;
     char* urlSpec = (char*) "";
     nsIURI* url = nsnull;
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
-	url->GetSpec(&urlSpec);
+    if (channel && NS_SUCCEEDED(channel->GetURI(&url)) &&
+	NS_SUCCEEDED(url->GetSpec(urlSpecString))) {
+	urlSpec = (char *) urlSpecString.GetBufferHandle();
+    }
+    
     jstring jURL = env->NewStringUTF(urlSpec);
     if (!jURL) return NS_ERROR_FAILURE;
     // PENDING(edburns): this leaks.
@@ -336,10 +340,13 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusChange(nsIWebProgress *aWebProgress,
     if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
     
     char* urlSpec = (char*) "";
+    nsCString urlSpecString;
     nsIURI* url = nsnull; 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
-	url->GetSpec(&urlSpec);
+    if (channel && NS_SUCCEEDED(channel->GetURI(&url)) &&
+	NS_SUCCEEDED(url->GetSpec(urlSpecString))) {
+	urlSpec = (char *) urlSpecString.GetBufferHandle();
+    }
     jstring jURL = env->NewStringUTF(urlSpec);
     if (!jURL) return NS_ERROR_FAILURE;
     // PENDING(edburns): this leaks
@@ -402,10 +409,14 @@ NS_IMETHODIMP nsJavaDOMImpl::doEndDocumentLoad(nsIWebProgress *aWebProgress,
   if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
   
   char* urlSpec = (char*) "";
+  nsCString urlSpecString;
   nsIURI* url = nsnull;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
-    url->GetSpec(&urlSpec);
+  if (channel && NS_SUCCEEDED(channel->GetURI(&url)) &&
+      NS_SUCCEEDED(url->GetSpec(urlSpecString))) {
+      urlSpec = (char *) urlSpecString.GetBufferHandle();
+  }
+
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
   
@@ -432,10 +443,14 @@ NS_IMETHODIMP nsJavaDOMImpl::doStartURLLoad(nsIWebProgress *aWebProgress,
   if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
 
   char* urlSpec = (char*) "";
+  nsCString urlSpecString;
   nsIURI* url = nsnull;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
-    url->GetSpec(&urlSpec);
+  if (channel && NS_SUCCEEDED(channel->GetURI(&url)) &&
+      NS_SUCCEEDED(url->GetSpec(urlSpecString))) {
+      urlSpec = (char *) urlSpecString.GetBufferHandle();
+  }
+  
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
@@ -470,11 +485,15 @@ NS_IMETHODIMP nsJavaDOMImpl::doEndURLLoad(nsIWebProgress *aWebProgress,
   JNIEnv* env = NULL;
   if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
 
+    nsCString urlSpecString;
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
-    url->GetSpec(&urlSpec);
+  if (channel && NS_SUCCEEDED(channel->GetURI(&url)) &&
+      NS_SUCCEEDED(url->GetSpec(urlSpecString))) {
+      urlSpec = (char *) urlSpecString.GetBufferHandle();
+  }
+  
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 

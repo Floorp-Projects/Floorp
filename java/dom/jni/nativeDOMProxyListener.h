@@ -1,8 +1,8 @@
 #ifndef __JAVA_DOM_NATIVE_PROXY_LISTENER__
 #define __JAVA_DOM_NATIVE_PROXY_LISTENER__
 
-#include"nsIDOMEventListener.h"
-#include"jni.h"
+#include "nsIDOMEventListener.h"
+#include "jni.h"
 
 class NativeDOMProxyListener: public nsIDOMEventListener{
 
