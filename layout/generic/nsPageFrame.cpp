@@ -31,6 +31,27 @@
 #include "nsLayoutAtoms.h"
 #include "nsIStyleSet.h"
 #include "nsIPresShell.h"
+#include "nsIDeviceContext.h"
+
+// for page number localization formatting
+#include "nsTextFormatter.h"
+
+// DateTime Includes
+#include "nsDateTimeFormatCID.h"
+#include "nsIDateTimeFormat.h"
+#include "nsIServiceManager.h"
+#include "nsILocale.h"
+#include "nsLocaleCID.h"
+#include "nsILocaleService.h"
+
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
+
+// Temporary
+#include "nsIFontMetrics.h"
+
+// tstaic data members
+PRUnichar * nsPageFrame::mPageNumFormat = nsnull;
 
 nsresult
 NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -47,8 +68,20 @@ NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsPageFrame::nsPageFrame()
+nsPageFrame::nsPageFrame() :
+  mHeadFootFont(nsnull)
 {
+}
+
+nsPageFrame::~nsPageFrame()
+{
+  if (mHeadFootFont) 
+    delete mHeadFootFont;
+
+  if (mPageNumFormat) {
+    nsMemory::Free(mPageNumFormat);
+    mPageNumFormat = nsnull;
+  }
 }
 
 NS_METHOD nsPageFrame::Reflow(nsIPresContext*          aPresContext,
@@ -173,3 +206,253 @@ nsPageFrame::IsPercentageBase(PRBool& aBase) const
   aBase = PR_TRUE;
   return NS_OK;
 }
+
+//------------------------------------------------------------------------------
+nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext, 
+                                  const nsRect&        aRect, 
+                                  PRInt32              aJust,
+                                  const nsString&      aStr)
+{
+  PRInt32 width;
+  aRenderingContext.GetWidth(aStr, width);
+
+  nscoord x = aRect.x;
+  switch (aJust) {
+    case NS_PRINT_JUSTIFY_LEFT:
+      // do nothing, already set
+      break;
+
+    case NS_PRINT_JUSTIFY_CENTER:
+      x += (aRect.width - width) / 2;
+      break;
+
+    case NS_PRINT_JUSTIFY_RIGHT:
+      x += aRect.width - width;
+      break;
+  } // switch
+
+  return x;
+}
+
+//------------------------------------------------------------------------------
+// Draw a Header or footer text lrft,right or center justified
+// @parm aRenderingContext - rendering content ot draw into
+// @parm aHeaderFooter - indicates whether it is a header or footer
+// @parm aJust - indicates the justification of the text
+// @parm aStr - The string to be drawn
+// @parm aRect - the rect of the page
+// @parm aHeight - the height of the text
+// @parm aUseHalfThePage - indicates whether the text should limited to  the width
+//                         of the entire page or just half the page
+void
+nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+                              nsIFrame *           aFrame,
+                              nsHeaderFooterEnum   aHeaderFooter,
+                              PRInt32              aJust,
+                              const nsString&      aStr,
+                              const nsRect&        aRect,
+                              nscoord              aHeight,
+                              PRBool               aUseHalfThePage)
+{
+  // first make sure we have a vaild string and that the height of the
+  // text will fit in the margin
+  if (aStr.Length() > 0 && 
+      ((aHeaderFooter == eHeader && aHeight < mMargin.top) ||
+       (aHeaderFooter == eFooter && aHeight < mMargin.bottom))) {
+    // measure the width of the text
+    nsString str = aStr;
+    PRInt32 width;
+    aRenderingContext.GetWidth(str, width);
+    PRBool addEllipse = PR_FALSE;
+    nscoord halfWidth = aRect.width;
+    if (aUseHalfThePage) {
+      halfWidth /= 2;
+    }
+    // trim the text and add the elipses if it won't fit
+    while (width >= halfWidth && str.Length() > 1) {
+      str.SetLength(str.Length()-1);
+      aRenderingContext.GetWidth(str, width);
+      addEllipse = PR_TRUE;
+    }
+    if (addEllipse && str.Length() > 3) {
+      str.SetLength(str.Length()-3);
+      str.AppendWithConversion("...");
+      aRenderingContext.GetWidth(str, width);
+    }
+
+    // cacl the x and y positions of the text
+    nsRect rect(aRect);
+    nscoord x = GetXPosition(aRenderingContext, rect, aJust, str);
+    nscoord y;
+    if (aHeaderFooter == eHeader) {
+      nscoord offset = ((mMargin.top - aHeight) / 2);
+      y = rect.y - offset - aHeight;
+      rect.Inflate(0, offset + aHeight);
+    } else {
+      nscoord offset = ((mMargin.bottom - aHeight) / 2);
+      y = rect.y + rect.height + offset;
+      rect.height += offset + aHeight;
+    }
+
+    // set up new clip and draw the text
+    PRBool clipEmpty;
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
+    aRenderingContext.DrawString(str, x, y);
+    aRenderingContext.PopState(clipEmpty);
+  }
+}
+
+//------------------------------------------------------------------------------
+NS_IMETHODIMP
+nsPageFrame::Paint(nsIPresContext*      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer)
+{
+  nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+    // get the current margin
+    mPrintOptions->GetMargin(mMargin);
+
+    nsRect  rect(0,0,mRect.width, mRect.height);
+
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+    // XXX Paint a one-pixel border around the page so it's easy to see where
+    // each page begins and ends when we're
+    float   p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
+    rect.Deflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
+    aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+    //aRenderingContext.DrawRect(rect);
+    rect.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
+    printf("SPSF::PaintChild -> Painting Frame %p Page No: %d\n", this, mPageNum);
+#endif
+    // use the whole page
+    rect.width  += mMargin.left + mMargin.right;
+    rect.x      -= mMargin.left;
+
+    aRenderingContext.SetFont(*mHeadFootFont);
+    aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+    // Get the FontMetrics to determine width.height of strings
+    nsCOMPtr<nsIDeviceContext> deviceContext;
+    aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
+    NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
+    nsCOMPtr<nsIFontMetrics> fontMet;
+    deviceContext->GetMetricsFor(*mHeadFootFont, *getter_AddRefs(fontMet));
+    nscoord visibleHeight = 0;
+    if (fontMet) {
+      fontMet->GetHeight(visibleHeight);
+    }
+
+    // get the print options bits so we can figure out all the 
+    // the extra pieces of text that need to be drawn
+    PRInt32 printOptBits;
+    mPrintOptions->GetPrintOptionsBits(&printOptBits);
+
+    // print page numbers
+    if (printOptBits & NS_PRINT_OPTIONS_PRINT_PAGE_NUMS && mPageNumFormat != nsnull) {
+      PRInt32 justify = NS_PRINT_JUSTIFY_LEFT;
+      mPrintOptions->GetPageNumJust(&justify);
+
+      PRUnichar *  valStr;
+      // print page number totals "x of x"
+      if (printOptBits & NS_PRINT_OPTIONS_PRINT_PAGE_TOTAL) {
+        valStr = nsTextFormatter::smprintf(mPageNumFormat, mPageNum, mTotNumPages);
+      } else {
+        valStr = nsTextFormatter::smprintf(mPageNumFormat, mPageNum);
+      }
+      nsAutoString pageNoStr(valStr);
+      nsMemory::Free(valStr);
+      DrawHeaderFooter(aRenderingContext, this, eFooter, justify, pageNoStr, rect, visibleHeight);
+    }
+
+    // print localized date
+    if (printOptBits & NS_PRINT_OPTIONS_PRINT_DATE_PRINTED) {
+      // Get Locale for Formating DateTime
+      nsCOMPtr<nsILocale> locale; 
+      NS_WITH_SERVICE(nsILocaleService, localeSvc, kLocaleServiceCID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+
+        rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
+        if (NS_SUCCEEDED(rv) && locale) {
+          nsCOMPtr<nsIDateTimeFormat> dateTime;
+          rv = nsComponentManager::CreateInstance(kDateTimeFormatCID,
+                                                 NULL,
+                                                 NS_GET_IID(nsIDateTimeFormat),
+                                                 (void**) getter_AddRefs(dateTime));
+       
+          if (NS_SUCCEEDED(rv)) {
+            nsAutoString dateString;
+            time_t ltime;
+            time( &ltime );
+            rv = dateTime->FormatTMTime(locale, kDateFormatShort, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
+            if (NS_SUCCEEDED(rv)) {
+              DrawHeaderFooter(aRenderingContext, this, eFooter, NS_PRINT_JUSTIFY_RIGHT, dateString, rect, visibleHeight);
+            }
+          }
+        }
+      }
+    }
+
+
+    PRBool usingHalfThePage = (printOptBits & NS_PRINT_OPTIONS_PRINT_DOC_TITLE) && (printOptBits & NS_PRINT_OPTIONS_PRINT_DOC_LOCATION);
+        
+    // print document title
+    PRUnichar * title;
+    mPrintOptions->GetTitle(&title); // creates memory
+    if (title != nsnull && (printOptBits & NS_PRINT_OPTIONS_PRINT_DOC_TITLE)) {
+      DrawHeaderFooter(aRenderingContext, this, eHeader, NS_PRINT_JUSTIFY_LEFT, nsAutoString(title), rect, visibleHeight, usingHalfThePage);
+      nsMemory::Free(title);
+    }
+
+    // print document URL
+    PRUnichar * url;
+    mPrintOptions->GetURL(&url);
+    if (title != url && (printOptBits & NS_PRINT_OPTIONS_PRINT_DOC_LOCATION)) {
+      DrawHeaderFooter(aRenderingContext, this, eHeader, NS_PRINT_JUSTIFY_RIGHT, nsAutoString(url), rect, visibleHeight, usingHalfThePage);
+      nsMemory::Free(url);
+    }
+
+  }
+
+  return rv;
+}
+
+//------------------------------------------------------------------------------
+void
+nsPageFrame::SetPrintOptions(nsIPrintOptions * aPrintOptions) 
+{ 
+  NS_ASSERTION(aPrintOptions != nsnull, "Print Options can not be null!");
+
+  mPrintOptions = aPrintOptions;
+  // create a default font
+  mHeadFootFont = new nsFont("serif", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
+                             NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(10));
+  // now get the default font form the print options
+  mPrintOptions->GetDefaultFont(*mHeadFootFont);
+}
+
+//------------------------------------------------------------------------------
+void
+nsPageFrame::SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages) 
+{ 
+  mPageNum     = aPageNumber; 
+  mTotNumPages = aTotalPages; 
+}
+
+
+//------------------------------------------------------------------------------
+void
+nsPageFrame::SetPageNumberFormat(PRUnichar * aFormatStr)
+{ 
+  NS_ASSERTION(aFormatStr != nsnull, "Format string cannot be null!");
+
+  if (mPageNumFormat != nsnull) {
+    nsMemory::Free(mPageNumFormat);
+  }
+  mPageNumFormat = aFormatStr;
+}
+

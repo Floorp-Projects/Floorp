@@ -287,9 +287,55 @@ nsListControlFrame::Destroy(nsIPresContext *aPresContext)
   return nsScrollFrame::Destroy(aPresContext);
 }
 
-//---------------------------------------------------------
-//NS_IMPL_ADDREF(nsListControlFrame)
-//NS_IMPL_RELEASE(nsListControlFrame)
+NS_IMETHODIMP
+nsListControlFrame::Paint(nsIPresContext* aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect,
+                          nsFramePaintLayer aWhichLayer)
+{
+  nsIStyleContext* sc = mStyleContext;
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)sc->GetStyleData(eStyleStruct_Display);
+  if (!disp->IsVisible()) {
+    return PR_FALSE;
+  }
+
+  // Start by assuming we are visible and need to be painted
+  PRBool isVisible = PR_TRUE;
+
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+  if (isPaginated) {
+    PRBool isRendingSelection;;
+    aPresContext->IsRenderingOnlySelection(&isRendingSelection);
+    if (isRendingSelection) {
+      // Check the quick way first
+      PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+      // if we aren't selected in the mState we could be a container
+      // so check to see if we are in the selection range
+      if (!isSelected) {
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext->GetShell(getter_AddRefs(shell));
+        nsCOMPtr<nsISelectionController> selcon;
+        selcon = do_QueryInterface(shell);
+        if (selcon) {
+          nsCOMPtr<nsISelection> selection;
+          selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+          nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+          selection->ContainsNode(node, PR_TRUE, &isVisible);
+        } else {
+          isVisible = PR_FALSE;
+        }
+      }
+    }
+  } 
+
+  if (isVisible) {
+    return nsScrollFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  }
+
+  return NS_OK;
+
+}
 
 //---------------------------------------------------------
 // Frames are not refcounted, no need to AddRef

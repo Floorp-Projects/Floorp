@@ -40,6 +40,12 @@ nsLeafFrame::Paint(nsIPresContext* aPresContext,
                    nsFramePaintLayer aWhichLayer)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    PRBool isVisible;
+    if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && 
+                     !isVisible) {// just checks selection painting
+      return NS_OK;               // not visibility
+    }
+
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
     if (disp->IsVisibleOrCollapsed()) {

@@ -24,6 +24,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsIPrintOptions.h"
+#include "nsGfxCIID.h"
 
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
@@ -36,6 +38,7 @@
 
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 //#include "prmem.h"
 //#include "plstr.h"
@@ -124,16 +127,30 @@ NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
  */
 NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 {
+  nsresult  rv = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+
+  // if there is a current selection then enable the "Selection" radio button
+  if (NS_SUCCEEDED(rv) && printService) {
+    PRBool isOn;
+    printService->GetPrintOptions(NS_PRINT_OPTIONS_ENABLE_SELECTION_RADIO, &isOn);
+    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && pPrefs) {
+      (void) pPrefs->SetBoolPref("print.selection_radio_enabled", isOn);
+    }
+  }
+
   char *path;
 
   PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE;
-  PRBool tofile = PR_FALSE;
+  PRBool tofile = PR_FALSE, allpagesRange = PR_TRUE, pageRange = PR_FALSE, selectionRange = PR_FALSE;
   PRInt32 paper_size = NS_LETTER_SIZE;
-  int ileft = 500, iright = 0, itop = 500, ibottom = 0; 
+  PRInt32 fromPage = 1, toPage = 1;
+  int ileft = 500, iright = 500, itop = 500, ibottom = 500; 
   char *command;
   char *printfile = nsnull;
 
-  nsresult rv = NS_OK;
+  rv = NS_OK;
   nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
 
   rv = nsComponentManager::CreateInstance(kDialogParamBlockCID,
@@ -179,14 +196,58 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
                 (void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
                 (void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
                 (void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
-                (void) pPrefs->GetIntPref("print.print_margin_top", &itop);
-                (void) pPrefs->GetIntPref("print.print_margin_left", &ileft);
-                (void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom);
-                (void) pPrefs->GetIntPref("print.print_margin_right", &iright);
+
+                // the _js extention means these were set via script with the xp
+                // dialog as integers, int * 1000, meaning a 0.5 inches is 500
+                // the "real" values are set into the prefs as strings
+                // the PrintOption object will save out these values as twips
+                // in the prefs with these names without the _js extention
+                (void) pPrefs->GetIntPref("print.print_margin_top_js", &itop);
+                (void) pPrefs->GetIntPref("print.print_margin_left_js", &ileft);
+                (void) pPrefs->GetIntPref("print.print_margin_bottom_js", &ibottom);
+                (void) pPrefs->GetIntPref("print.print_margin_right_js", &iright);
+
                 (void) pPrefs->CopyCharPref("print.print_file", (char **) &printfile);
                 (void) pPrefs->GetBoolPref("print.print_tofile", &tofile);
+
+                (void) pPrefs->GetBoolPref("print.print_allpagesrange", &allpagesRange);
+                (void) pPrefs->GetBoolPref("print.print_pagerange", &pageRange);
+                (void) pPrefs->GetBoolPref("print.print_selectionrange", &selectionRange);
+                (void) pPrefs->GetIntPref("print.print_frompage", &fromPage);
+                (void) pPrefs->GetIntPref("print.print_topage", &toPage);
                 sprintf( mPrData.command, command );
                 sprintf( mPrData.path, printfile );
+
+                // fill the print options with the info from the dialog
+                if(printService) {
+                  // convert the script values to twips
+                  nsMargin margin;
+                  margin.SizeTo(NS_INCHES_TO_TWIPS(float(ileft)/1000.0), 
+                                NS_INCHES_TO_TWIPS(float(itop)/1000.0),
+                                NS_INCHES_TO_TWIPS(float(iright)/1000.0),
+                                NS_INCHES_TO_TWIPS(float(ibottom)/1000.0));
+                  printService->SetMargins(margin.top, margin.left, margin.right, margin.bottom);
+#ifdef DEBUG_rods
+                printf("margins:       %d,%d,%d,%d\n", itop, ileft, ibottom, iright);
+                printf("margins:       %d,%d,%d,%d (twips)\n", margin.top, margin.left,  margin.bottom,  margin.right);
+                printf("allpagesRange  %d\n", allpagesRange);
+                printf("pageRange      %d\n", pageRange);
+                printf("selectionRange %d\n", selectionRange);
+                printf("fromPage       %d\n", fromPage);
+                printf("toPage         %d\n", toPage);
+#endif
+                  if (selectionRange) {
+                    printService->SetPrintRange(ePrintRange_Selection);
+
+                  } else if (pageRange) {
+                    printService->SetPrintRange(ePrintRange_SpecifiedPageRange);
+                    printService->SetPageRange(fromPage, toPage);
+
+                  } else { // (allpagesRange)
+                    printService->SetPrintRange(ePrintRange_AllPages);
+                  }
+                }  
+
               } else {
 #ifndef VMS
                 sprintf( mPrData.command, "lpr" );

@@ -2308,6 +2308,58 @@ nsFrame::ParentDisablesSelection() const
   return PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsFrame::IsVisibleForPainting(nsIPresContext *     aPresContext, 
+                              nsIRenderingContext& aRenderingContext,
+                              PRBool               aCheckVis,
+                              PRBool*              aIsVisible)
+{
+  // first check to see if we are visible
+  if (aCheckVis) {
+    nsIStyleContext* sc = mStyleContext;
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)sc->GetStyleData(eStyleStruct_Display);
+    if (!disp->IsVisible()) {
+      *aIsVisible = PR_FALSE;
+      return NS_OK;
+    }
+  }
+
+  // Start by assuming we are visible and need to be painted
+  PRBool isVisible = PR_TRUE;
+
+  // start by checking to see if we are paginated which probably means
+  // we are in print preview or printing
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+  if (isPaginated) {
+    // now see if we are rendering selection only
+    PRBool isRendingSelection;
+    aPresContext->IsRenderingOnlySelection(&isRendingSelection);
+    if (isRendingSelection) {
+      // Check the quick way first (typically only leaf nodes)
+      PRBool isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+      // if we aren't selected in the mState,
+      // we could be a container so check to see if we are in the selection range
+      // this is a expensive
+      if (!isSelected) {
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext->GetShell(getter_AddRefs(shell));
+        nsCOMPtr<nsISelectionController> selcon(do_QueryInterface(shell));
+        if (selcon) {
+          nsCOMPtr<nsISelection> selection;
+          selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+          nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+          selection->ContainsNode(node, PR_TRUE, &isVisible);
+        } else {
+          isVisible = PR_FALSE;
+        }
+      }
+    }
+  } 
+
+  *aIsVisible = isVisible;
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP

@@ -104,6 +104,19 @@ nsLegendFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 
+NS_IMETHODIMP
+nsLegendFrame::Paint(nsIPresContext* aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     const nsRect& aDirtyRect,
+                     nsFramePaintLayer aWhichLayer)
+{
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
+  return nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+}
+
 PRInt32 nsLegendFrame::GetAlign()
 {
   PRInt32 intValue = NS_STYLE_TEXT_ALIGN_LEFT;

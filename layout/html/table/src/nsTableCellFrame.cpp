@@ -247,6 +247,10 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
                                   const nsRect& aDirtyRect,
                                   nsFramePaintLayer aWhichLayer)
 {
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 

@@ -475,17 +475,18 @@ nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString) 
 {
+  const char * propname = nsFormControlHelper::GetHTMLPropertiesFileName();
   nsresult rv = NS_OK;
   PRInt32 type;
   GetType(&type);
   if (IsReset(type)) {
-    rv = nsFormControlHelper::GetLocalizedString("Reset", aString);
+    rv = nsFormControlHelper::GetLocalizedString(propname, "Reset", aString);
   } 
   else if (IsSubmit(type)) {
-    rv = nsFormControlHelper::GetLocalizedString("Submit", aString);
+    rv = nsFormControlHelper::GetLocalizedString(propname, "Submit", aString);
   } 
   else if (IsBrowse(type)) {
-    rv = nsFormControlHelper::GetLocalizedString("Browse", aString);
+    rv = nsFormControlHelper::GetLocalizedString(propname, "Browse", aString);
   }
   else {
     aString.AssignWithConversion("  ");

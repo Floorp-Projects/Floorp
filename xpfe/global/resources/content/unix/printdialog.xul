@@ -88,21 +88,35 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
         </radiogroup>
       </row>
       <row>
+        <text class="label" value="&printrangeGroup.label;" flex ="1"/>
+        <radiogroup id="printrangeGroup" orient="vertical">
+          <radio group = "printrangeGroup" id = "allpagesRadio" value = "&allpagesRadio.label;" onclick = "doPrintRange(!document.getElementById('rangeRadio').checked);"/>
+          <box orient="horizontal" autostretch="never">
+            <radio group = "printrangeGroup" id = "rangeRadio" value = "&rangeRadio.label;" onclick = "doPrintRange(!this.checked);"/>
+            <text class = "label" id = "frompageLabel" for = "frompageInput" value = "&frompageInput.label;" />
+            <textfield id = "frompageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
+            <text class = "label" id = "topageLabel" for = "topageInput" value = "&topageInput.label;" />
+            <textfield id = "topageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
+          </box>
+          <radio group = "printrangeGroup" id = "selectionRadio" value = "&selectionRadio.label;" onclick = "doPrintRange(!document.getElementById('rangeRadio').checked);"/>
+        </radiogroup>
+      </row>
+      <row>
         <text class="label" value="&marginInput.label;" flex ="1"/>
-	<box orient="horizontal">
-	  <box orient="horizontal">
+	      <box orient="horizontal">
+	        <box orient="horizontal" autostretch="never">
             <text class = "label" id = "topLabel" for = "topInput" value = "&topInput.label;" />
             <textfield id = "topInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
-          <box orient="horizontal">
+          <box orient="horizontal" autostretch="never">
             <text class = "label" id = "bottomLabel" for = "bottomInput" value = "&bottomInput.label;" />
             <textfield id = "bottomInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
-          <box orient="horizontal">
+          <box orient="horizontal" autostretch="never">
             <text class = "label" id = "leftLabel" for = "leftInput" value = "&leftInput.label;" />
             <textfield id = "leftInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
-          <box orient="horizontal">
+          <box orient="horizontal" autostretch="never">
             <text class = "label" id = "rightLabel" for = "rightInput" value = "&rightInput.label;" />
             <textfield id = "rightInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>

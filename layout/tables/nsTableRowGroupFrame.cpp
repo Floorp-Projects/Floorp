@@ -205,6 +205,10 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
                                       const nsRect&        aDirtyRect,
                                       nsFramePaintLayer    aWhichLayer)
 {
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
   nsresult rv;
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     nsCompatibility mode;

@@ -357,6 +357,12 @@ public:
   NS_IMETHOD GetLanguageSpecificTransformType(
               nsLanguageSpecificTransformType* aType) = 0;
 
+  /**
+   * Render only Selection
+   */
+  NS_IMETHOD SetIsRenderingOnlySelection(PRBool aResult) = 0;
+  NS_IMETHOD IsRenderingOnlySelection(PRBool* aResult) = 0;
+
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType) = 0;
 #endif

@@ -1092,6 +1092,19 @@ public:
                                            nsIFrame** aProviderFrame, 
                                            nsContextProviderRelationship& aRelationship) = 0;
 
+  /**
+   * Determines whether a frame is visible for painting
+   * this takes into acount whether it is painting selection for printin
+   * @param aPresContext PresContext
+   * @param aRenderingContext PresContext
+   * @param aCheckVis indicates whether it should check for CSS visibility, 
+   *                  PR_FALSE skips the check, PR_TRUE does the check
+   * @param aIsVisible return value
+   */
+  NS_IMETHOD IsVisibleForPainting(nsIPresContext *     aPresContext, 
+                                  nsIRenderingContext& aRenderingContext,
+                                  PRBool               aCheckVis,
+                                  PRBool*              aIsVisible) = 0;
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

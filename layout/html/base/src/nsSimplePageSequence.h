@@ -22,8 +22,9 @@
 #ifndef nsSimplePageSequence_h___
 #define nsSimplePageSequence_h___
 
-#include "nsHTMLContainerFrame.h"
 #include "nsIPageSequenceFrame.h"
+#include "nsContainerFrame.h"
+#include "nsIPrintOptions.h"
 
 // Simple page sequence frame class. Used when we're in paginated mode
 class nsSimplePageSequenceFrame : public nsContainerFrame,
@@ -40,16 +41,12 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  // nsIFrame
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer);
-
   // nsIPageSequenceFrame
   NS_IMETHOD  Print(nsIPresContext*         aPresContext,
-                    const nsPrintOptions&   aPrintOptions,
+                    nsIPrintOptions*        aPrintOptions,
                     nsIPrintStatusCallback* aStatusCallback);
+  NS_IMETHOD SetOffsets(nscoord aStartOffset, nscoord aEndOffset);
+  NS_IMETHOD SetPageNo(PRInt32 aPageNo) { return NS_OK;}
 
 #ifdef DEBUG
   // Debugging
@@ -58,11 +55,7 @@ public:
 
 protected:
   nsSimplePageSequenceFrame();
-  virtual void PaintChild(nsIPresContext*      aPresContext,
-                          nsIRenderingContext& aRenderingContext,
-                          const nsRect&        aDirtyRect,
-                          nsIFrame*            aFrame,
-                          nsFramePaintLayer    aWhichLayer);
+  virtual ~nsSimplePageSequenceFrame();
 
   nsresult IncrementalReflow(nsIPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
@@ -73,9 +66,14 @@ protected:
   nsresult CreateContinuingPageFrame(nsIPresContext* aPresContext,
                                      nsIFrame*       aPageFrame,
                                      nsIFrame**      aContinuingFrame);
-  
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
+
+  nscoord  mStartOffset;
+  nscoord  mEndOffset;
+
+  nsMargin mMargin;
+  PRBool   mIsPrintingSelection;
 };
 
 #endif /* nsSimplePageSequence_h___ */

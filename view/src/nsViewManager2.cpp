@@ -2368,51 +2368,46 @@ NS_IMETHODIMP nsViewManager2::GetRootScrollableView(nsIScrollableView **aScrolla
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager2::Display(nsIView* aView)
+NS_IMETHODIMP nsViewManager2::Display(nsIView* aView, nscoord aX, nscoord aY)
 {
-	nsIRenderingContext *localcx = nsnull;
-	nsRect              trect;
+  nsIRenderingContext *localcx = nsnull;
+  nsRect              trect;
 
-	if (PR_FALSE == mRefreshEnabled)
-		return NS_OK;
+  if (PR_FALSE == mRefreshEnabled)
+    return NS_OK;
 
-	NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+  NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
 
-	mPainting = PR_TRUE;
+  mPainting = PR_TRUE;
 
-	mContext->CreateRenderingContext(localcx);
+  mContext->CreateRenderingContext(localcx);
 
-	//couldn't get rendering context. this is ok if at startup
-	if (nsnull == localcx)
-		{
-			mPainting = PR_FALSE;
-			return NS_ERROR_FAILURE;
-		}
+  //couldn't get rendering context. this is ok if at startup
+  if (nsnull == localcx)
+    {
+      mPainting = PR_FALSE;
+      return NS_ERROR_FAILURE;
+    }
 
-	aView->GetBounds(trect);
-	nscoord x = trect.x, y = trect.y;
+  aView->GetBounds(trect);
+  nscoord x = trect.x, y = trect.y;
 
-	// XXX Temporarily reset the position to (0, 0), that way when we paint
-	// we won't end up translating incorrectly
-	aView->SetPosition(0, 0);
+  localcx->Translate(aX, aY);
 
-	PRBool  result;
+  PRBool  result;
 
-	trect.x = trect.y = 0;
-	localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
+  trect.x = trect.y = 0;
+  localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 
-	// Paint the view. The clipping rect was set above set don't clip again.
-	//aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
+  // Paint the view. The clipping rect was set above set don't clip again.
+  //aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
   RenderViews(aView,*localcx,trect,result);
 
-	// XXX Reset the view's origin
-	aView->SetPosition(x, y);
+  NS_RELEASE(localcx);
 
-	NS_RELEASE(localcx);
+  mPainting = PR_FALSE;
 
-	mPainting = PR_FALSE;
-
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager2::AddCompositeListener(nsICompositeListener* aListener)

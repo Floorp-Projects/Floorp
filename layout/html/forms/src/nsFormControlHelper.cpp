@@ -872,12 +872,10 @@ nsFormControlHelper::GetInputElementValue(nsIContent* aContent, nsString* aText,
 }
 
 //----------------------------------------------------------------------------------
-#define form_properties "chrome://communicator/locale/layout/HtmlForm.properties"
-
 // Return localised string for resource string (e.g. "Submit" -> "Submit Query")
 // This code is derived from nsBookmarksService::Init() and cookie_Localize()
 nsresult
-nsFormControlHelper::GetLocalizedString(char* aKey, nsString& oVal)
+nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const char* aKey, nsString& oVal)
 {
   nsresult rv;
   nsCOMPtr<nsIStringBundle> bundle;
@@ -887,7 +885,7 @@ nsFormControlHelper::GetLocalizedString(char* aKey, nsString& oVal)
   NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && pNetService) {
     nsCOMPtr<nsIURI> uri;
-    rv = pNetService->NewURI(form_properties, nsnull, getter_AddRefs(uri));
+    rv = pNetService->NewURI(aPropFileName, nsnull, getter_AddRefs(uri));
     if (NS_SUCCEEDED(rv) && uri) {
 
       // Create bundle

@@ -6245,6 +6245,19 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
   }
 #endif  
 
+  // Check to see if we are an absolutely positioned block (div)
+  // then then check to see if we need to paint.
+  const nsStylePosition* postionStyle = (const nsStylePosition*)
+                                        mStyleContext->GetStyleData(eStyleStruct_Position);
+  if (NS_STYLE_POSITION_RELATIVE == postionStyle->mPosition ||
+      NS_STYLE_POSITION_ABSOLUTE == postionStyle->mPosition ||
+      NS_STYLE_POSITION_FIXED    == postionStyle->mPosition) {
+    PRBool isVisible;
+    if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
+      return NS_OK;
+    }
+  }
+
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
 

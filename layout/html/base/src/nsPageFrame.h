@@ -22,17 +22,25 @@
 #ifndef nsPageFrame_h___
 #define nsPageFrame_h___
 
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
+#include "nsIPrintOptions.h"
 
 // Page frame class used by the simple page sequence frame
 class nsPageFrame : public nsContainerFrame {
 public:
   friend nsresult NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
+  // nsIFrame
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
+
+  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect&        aDirtyRect,
+                    nsFramePaintLayer    aWhichLayer);
+
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 
   /**
@@ -47,8 +55,51 @@ public:
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
 #endif
 
+  //////////////////
+  // For Printing
+  //////////////////
+
+  // Set the print options object into the page for printing
+  virtual void  SetPrintOptions(nsIPrintOptions * aPrintOptions);
+
+  // Tell the page which page number it is out of how many
+  virtual void  SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages);
+
+  // This is class is now responsible for freeing the memory
+  static void SetPageNumberFormat(PRUnichar * aFormatStr);
+
 protected:
   nsPageFrame();
+  virtual ~nsPageFrame();
+
+  typedef enum {
+    eHeader,
+    eFooter
+  } nsHeaderFooterEnum;
+
+  nscoord GetXPosition(nsIRenderingContext& aRenderingContext, 
+                       const nsRect&        aRect, 
+                       PRInt32              aJust,
+                       const nsString&      aStr);
+
+  void DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+                        nsIFrame *           aFrame,
+                        nsHeaderFooterEnum   aHeaderFooter,
+                        PRInt32              aJust,
+                        const nsString&      sStr,
+                        const nsRect&        aRect,
+                        nscoord              aHeight,
+                        PRBool               aUseHalfThePage = PR_TRUE);
+
+
+  nsCOMPtr<nsIPrintOptions> mPrintOptions;
+  PRInt32     mPageNum;
+  PRInt32     mTotNumPages;
+  nsMargin    mMargin;
+  nsFont *    mHeadFootFont;
+
+  static PRUnichar * mPageNumFormat;
+
 };
 
 #endif /* nsPageFrame_h___ */

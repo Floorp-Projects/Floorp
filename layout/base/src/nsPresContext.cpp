@@ -123,6 +123,7 @@ nsPresContext::nsPresContext()
   mDefaultBackgroundImageOffsetX = mDefaultBackgroundImageOffsetY = 0;
   mDefaultDirection = NS_STYLE_DIRECTION_LTR;
   mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
+  mIsRenderingOnlySelection = PR_FALSE;
 }
 
 nsPresContext::~nsPresContext()
@@ -1309,6 +1310,15 @@ nsPresContext::GetLanguageSpecificTransformType(
 {
   NS_ENSURE_ARG_POINTER(aType);
   *aType = mLanguageSpecificTransformType;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::IsRenderingOnlySelection(PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mIsRenderingOnlySelection;
 
   return NS_OK;
 }

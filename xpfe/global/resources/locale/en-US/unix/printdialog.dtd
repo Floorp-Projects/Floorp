@@ -28,6 +28,13 @@
 <!ENTITY exectiveRadio.label "Executive (7 1/2 x 10 in.)">
 <!ENTITY a4Radio.label "A4 (210 x 297 mm)">
 
+<!ENTITY printrangeGroup.label "Print Range:">
+<!ENTITY allpagesRadio.label "All Pages">
+<!ENTITY rangeRadio.label  "Pages">
+<!ENTITY frompageInput.label  "from">
+<!ENTITY topageInput.label  "to">
+<!ENTITY selectionRadio.label "Selection">
+
 <!ENTITY marginInput.label "Margins(inches):">
 <!ENTITY topInput.label "Top:">
 <!ENTITY bottomInput.label "Bottom:">

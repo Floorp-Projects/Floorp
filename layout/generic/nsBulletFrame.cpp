@@ -107,6 +107,7 @@ nsBulletFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#include "nsIDOMNode.h"
 NS_IMETHODIMP
 nsBulletFrame::Paint(nsIPresContext*      aCX,
                      nsIRenderingContext& aRenderingContext,
@@ -117,10 +118,8 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
     return NS_OK;
   }
 
-  const nsStyleDisplay* disp =
-    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-
-  if (disp->IsVisible()) {
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aCX, aRenderingContext, PR_TRUE, &isVisible)) && isVisible) {
     const nsStyleList* myList =
       (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
     PRUint8 listStyleType = myList->mListStyleType;

@@ -314,11 +314,10 @@ nsGfxRadioControlFrame::Paint(nsIPresContext* aPresContext,
                            const nsRect& aDirtyRect,
                            nsFramePaintLayer aWhichLayer)
 {
- 	const nsStyleDisplay* disp = (const nsStyleDisplay*)
-	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (!disp->IsVisible())
-		return NS_OK;
-
+  PRBool isVisible;
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
+    return NS_OK;
+  }
      // Paint the background
   nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
