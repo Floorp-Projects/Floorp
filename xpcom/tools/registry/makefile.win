@@ -37,6 +37,8 @@ LLIBS = \
 !endif
         $(NULL)
 
+PDBFILE=regExport
+
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
@@ -55,7 +57,7 @@ clobber::
         $(INCS)
         $(LLIBS)
         $(OS_LIBS)
-        -Fd$(PBDFILE)
+        -Fd$(PDBFILE)
         -Fe.\$(OBJDIR)\
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).cpp
