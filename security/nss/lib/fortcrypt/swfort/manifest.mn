@@ -39,10 +39,9 @@ LIBRARY_NAME	= swfci
 CSRCS		= swfalg.c  \
 		  swfparse.c \
 		  swflib.c   \
+		  nslib.c    \
 		  swfutl.c   \
 		  $(NULL)
-
-BUILT_CSRCS = $(OBJDIR)/nslib.c 
 
 DIRS = pkcs11
 
