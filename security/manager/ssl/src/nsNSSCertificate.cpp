@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.26 2001/05/19 01:20:17 ddrinan%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.27 2001/05/22 21:19:29 ddrinan%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -2355,7 +2355,7 @@ done:
     PR_FREEIF(tmp);
     return(nickname);
 }
-static SECStatus
+static SECStatus PR_CALLBACK
 collect_certs(void *arg, SECItem **certs, int numcerts)
 {
     CERTDERCerts *collectArgs;
@@ -2704,9 +2704,10 @@ PRInt32 nsOCSPResponder::CompareEntries(nsIOCSPResponder *a, nsIOCSPResponder *b
   }
 }
 
-static SECStatus GetOCSPResponders (CERTCertificate *aCert,
-                          SECItem         *aDBKey,
-                          void            *aArg)
+static SECStatus PR_CALLBACK 
+GetOCSPResponders (CERTCertificate *aCert,
+                   SECItem         *aDBKey,
+                   void            *aArg)
 {
   nsISupportsArray *array = NS_STATIC_CAST(nsISupportsArray*, aArg);
   PRUnichar* nn = nsnull;

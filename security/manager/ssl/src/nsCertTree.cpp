@@ -247,7 +247,7 @@ nsCertOutliner::GetCertAtIndex(PRInt32 index)
 // Load all of the certificates in the DB for this type.  Sort them
 // by token, organization, then common name.
 NS_IMETHODIMP 
-nsCertOutliner::LoadCerts(const PRUint32 aType)
+nsCertOutliner::LoadCerts(PRUint32 aType)
 {
   nsresult rv;
   PRBool rowsChanged = PR_FALSE;
@@ -308,7 +308,7 @@ nsCertOutliner::LoadCerts(const PRUint32 aType)
 
 /* nsIX509Cert getCert(in unsigned long index); */
 NS_IMETHODIMP
-nsCertOutliner::GetCert(const PRUint32 aIndex, nsIX509Cert **_cert)
+nsCertOutliner::GetCert(PRUint32 aIndex, nsIX509Cert **_cert)
 {
   NS_ENSURE_ARG(_cert);
   *_cert = GetCertAtIndex(aIndex);
