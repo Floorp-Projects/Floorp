@@ -144,6 +144,7 @@ class QuotingOutputStreamListener : public nsIStreamListener
 public:
     QuotingOutputStreamListener(const PRUnichar *originalMsgURI,
                                 PRBool quoteHeaders,
+                                PRBool headersOnly,
                                 nsIMsgIdentity *identity);
     virtual ~QuotingOutputStreamListener(void);
 
@@ -161,6 +162,7 @@ private:
     nsString       				    mCitePrefix;
     nsString       				    mSignature;
     PRBool						        mQuoteHeaders;
+    PRBool						        mHeadersOnly;
     nsCOMPtr<nsIMimeHeaders>	mHeaders;
     nsCOMPtr<nsIMsgIdentity>  mIdentity;
     nsString                  mCiteReference;
