@@ -73,7 +73,7 @@
     var newvalue = value.toString();
     var keyboardShortcut = getAccKeyboardShortcut();
 
-    var expectedName          = "menubar";
+    var expectedName          = "Application";
     var expectedRole          = "2";
     var expectedState         = "0";
     var expectedValue         = "NS_ERROR_NOT_IMPLEMENTED";
