@@ -373,6 +373,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   }
   [parentFolder insertChild:aBookmark atIndex:index isMove:NO];  
   [self selectItem:aBookmark expandingContainers:YES scrollIntoView:YES byExtendingSelection:NO];
+  [aBookmark release];
 }
 
 -(void)addItem:(id)aSender isFolder:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
