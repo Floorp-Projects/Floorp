@@ -315,10 +315,19 @@ print "\n" unless $silent;
 
 if ($^O =~ /MSWin32/i) {
     if ($^V lt pack('U*',5,8,0)) {
+        # If something older than 5.8 is detected, then point to the oi
+        # repository using ppm version 2 commands (which is the default
+        # for Perl 5.6)
+
         print "The required ActivePerl modules are available at OpenInteract's ppm repository.\n";
         print "You can add the repository with the following command:\n";
-        print "    ppm rep add oi http://openinteract.sourceforge.net/ppmpackages/\n\n";
+        print "    ppm set rep oi http://openinteract.sourceforge.net/ppmpackages/\n";
+        print "You can then save the changes by typing:\n";
+        print "    ppm set save\n\n";
     } else {
+        # For Perl 5.8 or higher, point the user to a 5.8 repository,
+        # using ppm version 3 commands (which is the default for Perl 5.8)
+
         print "Most ActivePerl modules are available at Apache's ppm repository.\n";
         print "A list of mirrors is available at\n";
         print "    http://www.apache.org/dyn/closer.cgi/perl/win32-bin/ppms/\n";
