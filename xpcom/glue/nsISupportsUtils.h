@@ -60,8 +60,14 @@ struct JSContext;
  * To maintain binary compatibility of nsISupports with nsIUnknown, we are
  * doing this ifdeffing.
  */
+#if 0
+// Disable this until mailnews and other code that has specific implementations
+// of Release is fixed.
 #if defined(XP_PC) && PR_BYTES_PER_LONG == 4
 typedef unsigned long nsrefcnt;
+#else
+typedef PRUint32 nsrefcnt;
+#endif
 #else
 typedef PRUint32 nsrefcnt;
 #endif
