@@ -95,9 +95,9 @@ LIBS += \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	-lxp \
 	-lxpcom \
+	$(NETLIB_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
-	$(NETLIB_LIBS) \
 	$(NULL)
 
 
