@@ -32,6 +32,7 @@ CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsAboutProtocolHandler.obj \
 	.\$(OBJDIR)\nsAboutProtocolModule.obj  \
 	.\$(OBJDIR)\nsAboutBlank.obj           \
+	.\$(OBJDIR)\nsAboutBloat.obj           \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	

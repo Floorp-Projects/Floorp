@@ -22,10 +22,12 @@
 #include "nsIServiceManager.h"
 #include "nsAboutProtocolHandler.h"
 #include "nsAboutBlank.h"
+#include "nsAboutBloat.h"
 #include "nscore.h"
 
 static NS_DEFINE_CID(kAboutProtocolHandlerCID,  NS_ABOUTPROTOCOLHANDLER_CID);
 static NS_DEFINE_CID(kAboutBlankModuleCID,      NS_ABOUT_BLANK_MODULE_CID);
+static NS_DEFINE_CID(kAboutBloatModuleCID,      NS_ABOUT_BLOAT_MODULE_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,6 +49,7 @@ protected:
     PRBool mInitialized;
     nsCOMPtr<nsIGenericFactory> mAboutProtocolFactory;
     nsCOMPtr<nsIGenericFactory> mAboutBlankFactory;
+    nsCOMPtr<nsIGenericFactory> mAboutBloatFactory;
 };
 
 static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
@@ -82,6 +85,7 @@ nsAboutProtocolModule::Shutdown()
     // Release the factory objects
     mAboutProtocolFactory = nsnull;
     mAboutBlankFactory = nsnull;
+    mAboutBloatFactory = nsnull;
 }
 
 // Create a factory object for creating instances of aClass.
@@ -125,6 +129,13 @@ nsAboutProtocolModule::GetClassObject(nsIComponentManager *aCompMgr,
         }
         fact = mAboutBlankFactory;
     }
+    else if (aClass.Equals(kAboutBloatModuleCID)) {
+        if (!mAboutBloatFactory) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mAboutBloatFactory),
+                                      nsAboutBloat::Create);
+        }
+        fact = mAboutBloatFactory;
+    }
     else {
         rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 #ifdef DEBUG
@@ -155,6 +166,8 @@ static Components gComponents[] = {
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "about", },
     { "about:blank", &kAboutBlankModuleCID,
       NS_ABOUT_MODULE_PROGID_PREFIX "blank", },
+    { "about:bloat", &kAboutBloatModuleCID,
+      NS_ABOUT_MODULE_PROGID_PREFIX "bloat", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
