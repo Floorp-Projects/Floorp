@@ -496,17 +496,30 @@ nsHTMLInputElement::SetAutocomplete(const nsString& aAutocomplete)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
+  nsString value("0");
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
-      if (nsnull != formControlFrame) {
-      nsString value("0");
+  if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
+    if (nsnull != formControlFrame) {
       formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
-      if (value == "1")
-        *aValue = PR_TRUE;
-      else
-        *aValue = PR_FALSE;
     }
   }
+  else {
+    // Retrieve the presentation state instead.
+    nsCOMPtr<nsIPresState> presState;
+    nsGenericHTMLElement::GetPrimaryPresState(this, nsIStatefulFrame::eCheckboxType, getter_AddRefs(presState));
+
+    // Obtain the value property from the presentation state.
+    if (presState) {
+      nsAutoString value;
+      presState->GetStateProperty("checked", value);
+    }
+  }
+  
+  if (value == "1")
+    *aValue = PR_TRUE;
+  else
+    *aValue = PR_FALSE;
+
   return NS_OK;      
 }
 
@@ -526,6 +539,21 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
     }
     NS_IF_RELEASE(presContext);
   }
+  else {
+    // Retrieve the presentation state instead.
+    nsCOMPtr<nsIPresState> presState;
+    nsGenericHTMLElement::GetPrimaryPresState(this, nsIStatefulFrame::eCheckboxType, getter_AddRefs(presState));
+
+    // Obtain the value property from the presentation state.
+    if (presState) {
+      nsAutoString value;
+      if (PR_TRUE == aValue)
+        value = "1";
+      else value = "0";
+      presState->SetStateProperty("checked", value);
+    }
+  }
+
   return NS_OK;     
 }
 
