@@ -43,6 +43,8 @@ nsresult InsertTextTxn::ClassInit()
 InsertTextTxn::InsertTextTxn()
   : EditTxn()
 {
+  SetTransactionDescriptionID( kTransactionID );
+  /* log description initialized in parent constructor */
 }
 
 InsertTextTxn::~InsertTextTxn()
@@ -153,23 +155,29 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
         { // yep, it's one of ours.  By definition, it must contain only
           // another aggregate with a single child,
           // or a single InsertTextTxn
-          nsCOMPtr<EditTxn> childTxn;
-          otherTxn->GetTxnAt(0, getter_AddRefs(childTxn));
+          EditTxn * childTxn;
+          otherTxn->GetTxnAt(0, (&childTxn));
           if (childTxn)
           {
-            nsCOMPtr<InsertTextTxn> otherInsertTxn;
-            otherInsertTxn = do_QueryInterface(childTxn);
-            if (otherInsertTxn)
+            InsertTextTxn * otherInsertTxn = nsnull;
+            result = childTxn->QueryInterface(InsertTextTxn::GetCID(), (void**)&otherInsertTxn);
+            if (NS_SUCCEEDED(result))
             {
-              if (PR_TRUE==IsSequentialInsert(otherInsertTxn))
+              if (otherInsertTxn)
               {
-                nsAutoString otherData;
-                otherInsertTxn->GetData(otherData);
-                mStringToInsert += otherData;
-                *aDidMerge = PR_TRUE;
-                if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
-              }
+                if (PR_TRUE==IsSequentialInsert(otherInsertTxn))
+	              {
+	                nsAutoString otherData;
+	                otherInsertTxn->GetData(otherData);
+	                mStringToInsert += otherData;
+	                *aDidMerge = PR_TRUE;
+	                if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
+	              }
+	              NS_RELEASE(otherInsertTxn);
+	            }
             }
+            
+            NS_RELEASE(childTxn);
           }
         }
         NS_RELEASE(otherTxn);

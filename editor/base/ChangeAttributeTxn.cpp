@@ -23,6 +23,8 @@
 ChangeAttributeTxn::ChangeAttributeTxn()
   : EditTxn()
 {
+  SetTransactionDescriptionID( kTransactionID );
+  /* log description initialized in parent constructor */
 }
 
 ChangeAttributeTxn::~ChangeAttributeTxn()

@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -69,6 +69,8 @@ public:
 
   NS_IMETHOD GetRedoString(nsString *aString);
 
+  enum { kTransactionID = 11240 };
+
 protected:
 
   nsIEditor*  mEditor;									// the editor that created this transaction
@@ -112,6 +114,8 @@ public:
   NS_IMETHOD GetUndoString(nsString *aString);
 
   NS_IMETHOD GetRedoString(nsString *aString);
+
+  enum { kTransactionID = 11250 };
 
 protected:
 

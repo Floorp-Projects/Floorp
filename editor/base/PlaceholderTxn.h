@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -52,6 +52,8 @@ public:
   NS_IMETHOD SetAbsorb(PRBool aAbsorb);
 
   friend class TransactionFactory;
+
+  enum { kTransactionID = 11260 };
 
 protected:
 

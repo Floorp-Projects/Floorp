@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -70,6 +70,8 @@ public:
 
   /** must be called before any IMECommitTxn is instantiated */
   static nsresult ClassInit();
+
+  enum { kTransactionID = 11230 };
 
 protected:
 

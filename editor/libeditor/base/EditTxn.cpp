@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -29,6 +29,7 @@ NS_IMPL_RELEASE(EditTxn)
 
 // note that aEditor is not refcounted
 EditTxn::EditTxn()
+  : mTransactionID(-1)
 {
   NS_INIT_REFCNT();
 }
@@ -83,6 +84,32 @@ NS_IMETHODIMP EditTxn::GetRedoString(nsString *aString)
   return NS_OK;
 }
 
+NS_IMETHODIMP EditTxn::GetLogDescription(PRUnichar * *aString)
+{
+  if (nsnull!=aString)
+    *aString = mLogDescription.ToNewUnicode();
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditTxn::SetLogDescription(const PRUnichar *aString)
+{
+  mLogDescription = (PRUnichar *)aString;
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditTxn::GetTransactionDescriptionID(int *aID)
+{
+  if (nsnull!=aID)
+    *aID = mTransactionID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditTxn::SetTransactionDescriptionID(int aID)
+{
+  mTransactionID = aID;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 EditTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -90,7 +117,9 @@ EditTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
+    nsITransaction *tmp = this;
+    nsISupports *tmp2 = tmp;
+    *aInstancePtr = (void*)(nsISupports*)tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -99,6 +128,12 @@ EditTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(nsITransactionDescription::GetIID())) {
+    *aInstancePtr = (void*)(nsITransactionDescription*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  
   *aInstancePtr = 0;
   return NS_NOINTERFACE;
 }
