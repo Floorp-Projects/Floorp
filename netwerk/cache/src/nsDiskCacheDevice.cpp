@@ -284,8 +284,9 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
 nsresult
 nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
-    PRInt64 delta = LL_INIT(deltaSize < 0 ? -1 : 0, deltaSize);
-    LL_ADD(mTotalCachedDataSize, mTotalCachedDataSize, delta);
+    PRInt64 deltaSize64;
+    LL_I2L(deltaSize64, deltaSize);
+    LL_ADD(mTotalCachedDataSize, mTotalCachedDataSize, deltaSize64);
     return NS_OK;
 }
 
