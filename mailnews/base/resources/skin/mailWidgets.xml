@@ -1,24 +1,25 @@
 <?xml version="1.0"?>
 
-<bindings id="mailWidgetsBindings"
-   xmlns="http://www.mozilla.org/xbl"
-   xmlns:html="http://www.w3.org/TR/REC-html40"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<bindings   id="mailBindings"
+            xmlns="http://www.mozilla.org/xbl"
+            xmlns:html="http://www.w3.org/TR/REC-html40"
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding id="searchattribute" >
+  <binding id="searchattribute" extends="xul:menulist">
     <content>
-      <xul:box>
-        <xul:text style="border: 1px solid blue" value="searchattr!"/>
-        <xul:image inherits="src"/>
-        <xul:text style="border: 1px solid blue" value="searchattr2!"/>
-      </xul:box>
+      <xul:menupopup>
+        <xul:menuitem value="contains"/>
+        <xul:menuitem value="doesn't contain"/>
+      </xul:menupopup>
     </content>
-  </binding>
 
-  <binding id="searchoperator" extends="xul:box">
-    <content>
-      <xul:text value="operator!"/>
-    </content>
+    <interface>
+      <!-- scope ID - retrieve the table -->
+      <property readonly="true" name="validityManager">
+        <![CDATA[
+           Components.classes['mozilla.mail.search.validityManager.1'].getService(Components.interfaces.nsIMsgSearchValidityManager);
+        ]]>
+      </property>
+    </interface>
   </binding>
-
 </bindings>
