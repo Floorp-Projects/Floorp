@@ -645,8 +645,6 @@ JS_NewRuntime(uint32 maxbytes)
     JS_END_MACRO;
 #endif /* DEBUG */
 
-    if (!js_InitScriptGlobals())
-        return NULL;
     if (!js_InitStringGlobals())
         return NULL;
     rt = (JSRuntime *) malloc(sizeof(JSRuntime));
@@ -744,7 +742,6 @@ JS_ShutDown(void)
 {
     JS_ArenaShutDown();
     js_FinishDtoa();
-    js_FreeScriptGlobals();
     js_FreeStringGlobals();
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
