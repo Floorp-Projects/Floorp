@@ -471,7 +471,8 @@ XFE_RDFTreeView::notify(HT_Resource n, HT_Event whatHappened)
   D(debugEvent(n, whatHappened,"RTV"););
   switch (whatHappened) {
   case HT_EVENT_NODE_ADDED:
-    add_row(n);
+      updateRoot();
+      //    add_row(n);
     break;
   case HT_EVENT_NODE_DELETED_NODATA:
     {
@@ -646,8 +647,7 @@ XFE_RDFTreeView::add_row(int row)
 }
 
 void
-XFE_RDFTreeView::add_row
-(HT_Resource node)
+XFE_RDFTreeView::add_row(HT_Resource node)
 {
   //HT_Resource node = GetNthItem (_ht_view, row);
     int row = HT_GetNodeIndex(_ht_view, node);
@@ -749,6 +749,7 @@ XFE_RDFTreeView::add_row
 				break;
             }
             /*D(fprintf(stderr,"Node data (%d, %d) = '%s'\n",row,ii,buffer););*/
+            // ii is getting set to 1 here !!!!!!
             XmLGridSetStringsPos(_tree, 
                                  XmCONTENT, row,
                                  XmCONTENT, ii, 

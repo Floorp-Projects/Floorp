@@ -483,7 +483,7 @@ BASIC_LIBS	+= \
 
 ifdef MOZ_SMARTUPDATE
 BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a \
- 		   $(DIST)/lib/libprgrss.a \
+		   $(DIST)/lib/libprgrss.a \
 		   $(NULL)
 endif
 
@@ -1157,7 +1157,7 @@ e_kit_resources.h: e_kit.ad
 		s/ /\\/g;s/\(.*\)/ "\1"/;s/^ *"\\"$$//' >> $@
 	@echo ';' >> $@
 
-$(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
+$(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resources resources-translations versionn.h strs make-resources $(LOCALE_MAP)
 	@./make-resources $@ Netscape Netscape versionn.h strs resources $(MOZ_USER_DIR) "" export $(LOCALES)
 
 #######################################################################
