@@ -260,9 +260,13 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                        areaSpec, desiredSize, minSize, widthExplicit, heightExplicit, ignore);
   }
 
+  // CalculateSize makes calls in the nsFormControlHelper that figures
+  // out the entire size of the control when in NavQuirks mode. For the
+  // textarea, this means the scrollbar sizes hav already been added to
+  // its overall size and do not need to be added here.
   float   p2t;
   aPresContext->GetPixelsToTwips(&p2t);
-  if (NS_FORM_TEXTAREA == type) {
+  if (NS_FORM_TEXTAREA == type && mode == eCompatibility_Standard) {
     nscoord scrollbarWidth  = 0;
     nscoord scrollbarHeight = 0;
     float   scale;
@@ -339,26 +343,6 @@ nsTextControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
   mSuggestedHeight = aHeight;
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextControlFrame::GetWrapProperty(nsString &aOutValue)
-{
-  aOutValue = "";
-  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
-  nsIHTMLContent* content = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) 
-  {
-    nsHTMLValue value;
-    result = content->GetHTMLAttribute(nsHTMLAtoms::wrap, value);
-    if (eHTMLUnit_String == value.GetUnit()) 
-    { 
-      value.GetStringValue(aOutValue);
-    }
-    NS_RELEASE(content);
-  }
-  return result;
 }
 
 //----------------------------------------------------------------------

@@ -55,11 +55,6 @@ public:
   NS_IMETHOD GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRInt32& aCursor);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
-  /** returns the value of the "wrap" property in aOutValue
-    * returns NS_CONTENT_ATTR_NOT_THERE if the property does not exist for this
-    */
-  NS_IMETHOD GetWrapProperty(nsString &aOutValue);
-  
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(StateType* aStateType);
   NS_IMETHOD SaveState(nsISupports** aState);
