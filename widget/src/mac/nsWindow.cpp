@@ -1203,24 +1203,26 @@ static long long microseconds()
 OSStatus
 nsWindow :: PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
 {
-  nsWindow* self = NS_REINTERPRET_CAST(nsWindow*, refCon);
-  Rect dirtyRect = *inDirtyRect;
+  if (message == kQDRegionToRectsMsgParse) {
+    nsWindow* self = NS_REINTERPRET_CAST(nsWindow*, refCon);
+    Rect dirtyRect = *inDirtyRect;
   
-	nsCOMPtr<nsIRenderingContext> renderingContext ( dont_AddRef(self->GetRenderingContext()) );
-	if (renderingContext)
-	{
-  	nsRect bounds = self->mBounds;
-  	self->LocalToWindowCoordinate(bounds);
-  	
-		// determine the rect to draw
-		::OffsetRect(&dirtyRect, -bounds.x, -bounds.y);
-		nsRect rect ( dirtyRect.left, dirtyRect.top, dirtyRect.right - dirtyRect.left,
-		                dirtyRect.bottom - dirtyRect.top );
+  	nsCOMPtr<nsIRenderingContext> renderingContext ( dont_AddRef(self->GetRenderingContext()) );
+  	if (renderingContext)
+  	{
+    	nsRect bounds = self->mBounds;
+    	self->LocalToWindowCoordinate(bounds);
+    	
+  		// determine the rect to draw
+  		::OffsetRect(&dirtyRect, -bounds.x, -bounds.y);
+  		nsRect rect ( dirtyRect.left, dirtyRect.top, dirtyRect.right - dirtyRect.left,
+  		                dirtyRect.bottom - dirtyRect.top );
 
-		// update the widget
-		self->UpdateWidget(rect, renderingContext);
+  		// update the widget
+  		self->UpdateWidget(rect, renderingContext);
+    }
   }
-
+  
   return noErr;
   
 } // PaintUpdateRectProc
@@ -1235,11 +1237,13 @@ nsWindow :: PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDi
 OSStatus
 nsWindow :: AddRectToArrayProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *inArray)
 {
-  NS_ASSERTION ( inArray, "You better pass an array!" );
-  TRectArray* rectArray = NS_REINTERPRET_CAST(TRectArray*, inArray);
+  if (message == kQDRegionToRectsMsgParse) {
+    NS_ASSERTION ( inArray, "You better pass an array!" );
+    TRectArray* rectArray = NS_REINTERPRET_CAST(TRectArray*, inArray);
   
-  rectArray->mRectList[rectArray->Count()] = *inDirtyRect;
-  ++rectArray->mNumRects;
+    rectArray->mRectList[rectArray->Count()] = *inDirtyRect;
+    ++rectArray->mNumRects;
+  }
   
   return noErr;
 }
@@ -1253,10 +1257,12 @@ nsWindow :: AddRectToArrayProc (UInt16 message, RgnHandle rgn, const Rect *inDir
 // the number of rects.
 //
 OSStatus
-nsWindow :: CountUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
+nsWindow :: CountRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
 {
-  NS_ASSERTION ( refCon, "You better pass a counter!" );
-  (*NS_REINTERPRET_CAST(long*, refCon))++;                  // increment
+  if (message == kQDRegionToRectsMsgParse) {
+    NS_ASSERTION ( refCon, "You better pass a counter!" );
+    (*NS_REINTERPRET_CAST(long*, refCon))++;                  // increment
+  }
   return noErr;
 }
 
@@ -1426,12 +1432,12 @@ else
       // we're above a certain threshold, just bail and do bounding box
       if ( rectWrapper.Count() < kRectsBeforeBoundingBox ) {
         for ( int i = 0; i < rectWrapper.Count(); ++i )
-          PaintUpdateRectProc ( &rectList[i], this );
+          PaintUpdateRectProc (kQDRegionToRectsMsgParse, updateRgn, &rectList[i], this );
       }
       else {
         Rect boundingBox;
         ::GetRegionBounds(updateRgn, &boundingBox);
-        PaintUpdateRectProc ( &boundingBox, this );
+        PaintUpdateRectProc ( kQDRegionToRectsMsgParse, updateRgn, &boundingBox, this );
       }
     }
     else {
