@@ -439,7 +439,7 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
              printf(" after we receive enough data.\n");
           }
 #endif
-          PRInt32 bestIdx;
+          PRInt32 bestIdx = -1;
           PRInt32 eucCnt=0;
           float bestScore = 0.0f;
           for(j = 0; j < mItems; j++) {
@@ -462,12 +462,15 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
                 } // if(( 0 == eucCnt++) || (bestScore > score )) 
             } // if(nsnull != ...)
          } // for
+         if (bestIdx >= 0)
+         {
 #ifdef DETECTOR_DEBUG
-         printf("Based on the statistic, we decide it is %s",
-          mVerifier[mItemIdx[bestIdx]]->charset);
+           printf("Based on the statistic, we decide it is %s",
+            mVerifier[mItemIdx[bestIdx]]->charset);
 #endif
-         Report( mVerifier[mItemIdx[bestIdx]]->charset);
-         mDone = PR_TRUE;
+           Report( mVerifier[mItemIdx[bestIdx]]->charset);
+           mDone = PR_TRUE;
+         }
        } // if (eucNum == nonUCS2Num)
      } // if(mRunSampler)
 }
