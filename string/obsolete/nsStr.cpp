@@ -565,8 +565,13 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnor
  *  @param   aCount tell us how many iterations to perform from offset; -1 means use full length.
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsStr::RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-  return gRFindChars[aDest.mCharSize](aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
+PRInt32 nsStr::RFindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 bytes");
+  return ::RFindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
+}
+PRInt32 nsStr::RFindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 bytes");
+  return ::RFindChar2(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
 
 
@@ -599,6 +604,44 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
   return kNotFound;
 }
 
+// from the start of the old nsStr::StrCompare - now used as helper
+// routines for nsStr::Compare1to1 and so forth
+static inline PRInt32
+GetCompareCount(const PRInt32 aDestLength, const PRInt32 aSourceLength,
+                PRInt32 aCount)
+{
+  PRInt32 minlen=(aSourceLength<aDestLength) ? aSourceLength : aDestLength;
+
+  if(0==minlen) {
+    if ((aDestLength == 0) && (aSourceLength == 0))
+      return 0;
+    if (aDestLength == 0)
+      return -1;
+    return 1;
+  }
+
+  PRInt32 theCount = (aCount<0) ? minlen: MinInt(aCount,minlen);
+    
+  return theCount;
+}
+
+static inline PRInt32
+TranslateCompareResult(const PRInt32 aDestLength, const PRInt32& aSourceLength, PRInt32 result, PRInt32 aCount)
+{
+
+  if (0==result && -1==aCount) {
+    //Since the caller didn't give us a length to test, and minlen characters matched,
+    //we have to assume that the longer string is greater.
+      
+    if (aDestLength != aSourceLength) {
+      //we think they match, but we've only compared minlen characters. 
+      //if the string lengths are different, then they don't really match.
+      result = (aDestLength<aSourceLength) ? -1 : 1;
+    }
+  }
+  
+  return result;
+}
 /**
  * Compare source and dest strings, up to an (optional max) number of chars
  * @param   aDest is the first str to compare
@@ -607,39 +650,59 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
  * @param   aIgnorecase tells us whether to search with case sensitivity
  * @return  aDest<aSource=-1;aDest==aSource==0;aDest>aSource=1
  */
-PRInt32 nsStr::StrCompare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
-  PRInt32 result=0;
-
-  if(aCount) {
-    PRInt32 minlen=(aSource.mLength<aDest.mLength) ? aSource.mLength : aDest.mLength;
-
-    if(0==minlen) {
-      if ((aDest.mLength == 0) && (aSource.mLength == 0))
-        return 0;
-      if (aDest.mLength == 0)
-        return -1;
-      return 1;
-    }
-
-    PRInt32 theCount = (aCount<0) ? minlen: MinInt(aCount,minlen);
-    result=(*gCompare[aDest.mCharSize][aSource.mCharSize])(aDest.mStr,aSource.mStr,theCount,aIgnoreCase);
-
-    if (0==result) {
-      if(-1==aCount) {
-
-          //Since the caller didn't give us a length to test, and minlen characters matched,
-          //we have to assume that the longer string is greater.
-
-        if (aDest.mLength != aSource.mLength) {
-          //we think they match, but we've only compared minlen characters. 
-          //if the string lengths are different, then they don't really match.
-          result = (aDest.mLength<aSource.mLength) ? -1 : 1;
-        }
-      } //if
-    }
-
+PRInt32 nsStr::StrCompare1To1(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aSource.mCharSize == eOneByte, "Must be 1 byte");
+  if (aCount) {
+    PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
+    PRInt32 result = Compare1To1(aDest.mStr, aSource.mStr, theCount, aIgnoreCase);
+    result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
+    return result;
   }
-  return result;
+  
+  return 0;
+}
+
+PRInt32 nsStr::StrCompare1To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
+  
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aSource.mCharSize == eTwoByte, "Must be 2 byte");
+  if (aCount) {
+    PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
+    PRInt32 result = Compare1To2(aDest.mStr, aSource.mStr, theCount, aIgnoreCase);
+    result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
+    return result;
+  }
+  
+  return 0;
+}
+
+PRInt32 nsStr::StrCompare2To1(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aSource.mCharSize == eOneByte, "Must be 1 byte");
+  
+  if (aCount) {
+    PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
+    PRInt32 result = Compare2To1(aDest.mStr, aSource.mStr, theCount, aIgnoreCase);
+    result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
+    return result;
+  }
+  
+  return 0;
+}
+
+PRInt32 nsStr::StrCompare2To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aSource.mCharSize == eTwoByte, "Must be 2 byte");
+  
+  if (aCount) {
+    PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
+    PRInt32 result = Compare2To2(aDest.mStr, aSource.mStr, theCount, aIgnoreCase);
+    result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
+    return result;
+  }
+  
+  return 0;
 }
 
 /**
@@ -849,14 +912,6 @@ nsStr_Hash(const void* key)
 {
   nsStr* str = (nsStr*)key;
   return nsStr::HashCode(*str);
-}
-
-PR_EXTERN(PRIntn)
-nsStr_Compare(const void *v1, const void *v2)
-{
-  nsStr* str1 = (nsStr*)v1;
-  nsStr* str2 = (nsStr*)v2;
-  return nsStr::StrCompare(*str1, *str2, -1, PR_FALSE) == 0;
 }
 
 nsStringInfo*

@@ -706,7 +706,6 @@ inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
 
 typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount);
 FindChars gFindChars[]={&FindChar1,&FindChar2};
-FindChars gRFindChars[]={&RFindChar1,&RFindChar2};
 
 //----------------------------------------------------------------------------------------
 //

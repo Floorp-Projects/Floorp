@@ -1053,7 +1053,7 @@ PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
 PRInt32 nsCString::RFindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::RFindChar(*this,aChar,aIgnoreCase,anOffset,aCount);
+  PRInt32 result=nsStr::RFindChar1(*this,aChar,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
@@ -1137,7 +1137,7 @@ PRInt32 nsCString::CompareWithConversion(const PRUnichar* aString,PRBool aIgnore
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aString);
     temp.mUStr=(PRUnichar*)aString;
-    return nsStr::StrCompare(*this,temp,aCount,aIgnoreCase);
+    return nsStr::StrCompare1To2(*this,temp,aCount,aIgnoreCase);
   }
   return 0;
 }
@@ -1158,7 +1158,7 @@ PRInt32 nsCString::CompareWithConversion(const char *aCString,PRBool aIgnoreCase
     nsStr::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aCString);
     temp.mStr=(char*)aCString;
-    return nsStr::StrCompare(*this,temp,aCount,aIgnoreCase);
+    return nsStr::StrCompare1To1(*this,temp,aCount,aIgnoreCase);
   }
   return 0;
 }
