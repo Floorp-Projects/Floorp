@@ -143,7 +143,7 @@ void nsCellMap::GrowToCol(PRInt32 aColCount)
 void nsCellMap::SetCellAt(CellData *aCell, int aRowIndex, int aColIndex)
 {
   NS_PRECONDITION(nsnull!=aCell, "bad aCell");
-  PRInt32 newRows = (aRowIndex+1)-mRowCount;    // add 1 to the "index" to get a "count"
+  PRInt32 newRows = (aRowIndex+1)-mTotalRowCount;    // add 1 to the "index" to get a "count"
   if (0<newRows)
   {
     for ( ; newRows>0; newRows--)
