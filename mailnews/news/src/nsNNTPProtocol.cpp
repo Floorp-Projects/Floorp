@@ -2546,7 +2546,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 {
 	char *line;
 	PRUint32 status = 0;
-	char outputBuffer[OUTPUT_BUFFER_SIZE];
+	char *outputBuffer;
 	
 	PRBool pauseForMoreData = PR_FALSE;
 
@@ -2602,36 +2602,15 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		if (m_tempArticleStream)
 			m_tempArticleStream->Close();
 
-		// now mark the message as read
-        MarkCurrentMsgRead();
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	}
 	else
 	{
 		if (line[0] == '.')
-			PL_strcpy (outputBuffer, line + 1);
+			outputBuffer = line + 1;
 		else
-			PL_strcpy (outputBuffer, line);
+			outputBuffer = line;
 
-		/* When we're sending this line to a converter (ie,
-		   it's a message/rfc822) use the local line termination
-		   convention, not CRLF.  This makes text articles get
-		   saved with the local line terminators.  Since SMTP
-		   and NNTP mandate the use of CRLF, it is expected that
-		   the local system will convert that to the local line
-		   terminator as it is read.
-		 */
-        // ** jt - in the case of save message to the stationary file if the
-        // message is to be uploaded to the imap server we need to end the
-        // line with canonical line endings, i.e., CRLF
-        nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningURL);
-        PRBool canonicalLineEnding = PR_FALSE;
-        if (msgurl)
-            msgurl->GetCanonicalLineEnding(&canonicalLineEnding);
-        if (canonicalLineEnding)
-            PL_strcat(outputBuffer, CRLF);
-        else
-            PL_strcat (outputBuffer, MSG_LINEBREAK);
 		/* Don't send content-type to mime parser if we're doing a cancel
 		  because it confuses mime parser into not parsing.
 		  */
@@ -2647,6 +2626,27 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 			{
 				PRUint32 count = 0;
 				m_tempArticleStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+
+				/* When we're sending this line to a converter (ie,
+				   it's a message/rfc822) use the local line termination
+				   convention, not CRLF.  This makes text articles get
+				   saved with the local line terminators.  Since SMTP
+				   and NNTP mandate the use of CRLF, it is expected that
+				   the local system will convert that to the local line
+				   terminator as it is read.
+				 */
+				// ** jt - in the case of save message to the stationary file if the
+				// message is to be uploaded to the imap server we need to end the
+				// line with canonical line endings, i.e., CRLF
+				nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningURL);
+				PRBool canonicalLineEnding = PR_FALSE;
+				if (msgurl)
+					msgurl->GetCanonicalLineEnding(&canonicalLineEnding);
+
+				if (canonicalLineEnding)
+					m_tempArticleStream->Write(CRLF, PL_strlen(CRLF), &count);
+				else
+					m_tempArticleStream->Write(MSG_LINEBREAK, PL_strlen(MSG_LINEBREAK), &count);
 			}
 		}
 	}
