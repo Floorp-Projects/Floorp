@@ -113,7 +113,6 @@ protected:
     nsresult SendStart(nsIChannel *aChannel);
     nsresult SendStop();
     nsresult SendData(char *aBuffer, PRUint32 aLen);
-    nsresult BuildURI(nsIChannel *aChannel, nsIURI **_retval);
     nsresult ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                           PRUint32 &aLen, PRBool *_retval);
     PRInt8 PushOverLine(char *&aPtr, PRUint32 &aLen);

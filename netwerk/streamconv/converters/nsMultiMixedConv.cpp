@@ -313,24 +313,6 @@ nsMultiMixedConv::Init() {
 }
 
 nsresult
-nsMultiMixedConv::BuildURI(nsIChannel *aChannel, nsIURI **_retval) {
-    nsresult rv;
-    nsXPIDLCString uriSpec;
-    nsCOMPtr<nsIURI> rootURI;
-    rv = aChannel->GetURI(getter_AddRefs(rootURI));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = rootURI->GetSpec(getter_Copies(uriSpec));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCAutoString dummyURIStr(uriSpec);
-//    dummyURIStr.Append("##");
-//    dummyURIStr.AppendInt(mPartCount, 10 /* radix */);
-
-    return mIOService->NewURI(dummyURIStr.GetBuffer(), nsnull, _retval);
-}
-
-nsresult
 nsMultiMixedConv::BufferData(char *aData, PRUint32 aLen) {
     NS_ASSERTION(!mBuffer, "trying to over-write buffer");
 
@@ -352,8 +334,6 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     nsCOMPtr<nsIURI> partURI;
     rv = aChannel->GetURI(getter_AddRefs (partURI));
     if (NS_FAILED(rv)) return rv;
-//    rv = BuildURI(aChannel, getter_AddRefs(partURI));
-//    if (NS_FAILED(rv)) return rv;
 
     if (mContentType.IsEmpty())
         mContentType = UNKNOWN_CONTENT_TYPE;
