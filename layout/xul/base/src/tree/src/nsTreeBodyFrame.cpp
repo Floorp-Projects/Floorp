@@ -453,7 +453,6 @@ nsTreeBodyFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
     if (!rows.IsEmpty()) {
       PRInt32 err;
       desiredRows = rows.ToInteger(&err);
-      mHasFixedRowCount = PR_TRUE;
       mPageCount = desiredRows;
     }
     else {
