@@ -233,7 +233,7 @@ nsInputStreamChannel::GetContentLength(PRInt32 *aContentLength)
 NS_IMETHODIMP
 nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
-    *aLoadGroup = mLoadGroup;
+    *aLoadGroup = mLoadGroup.get();
     NS_IF_ADDREF(*aLoadGroup);
     return NS_OK;
 }
@@ -241,7 +241,7 @@ nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsInputStreamChannel::GetOwner(nsISupports * *aOwner)
 {
-    *aOwner = mOwner;
+    *aOwner = mOwner.get();
     NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
