@@ -218,7 +218,7 @@ public:
   NS_IMETHOD  Scrolled(nsIView *aView);
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
-  NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent);
+  NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD  VerifyTree() const;
   NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
@@ -353,7 +353,7 @@ protected:
    * some custom behavior that requires changing how the outer "frame"
    * XML container is dumped.
    */
-  virtual void DumpBaseRegressionData(FILE* out, PRInt32 aIndent);
+  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
 
   nsresult MakeFrameName(const char* aKind, nsString& aResult) const;
 
@@ -373,13 +373,6 @@ protected:
   nsIFrame*        mNextSibling;  // singly linked list of frames
   nsFrameState     mState;
 
-
-  // Selection data is valid only from the Mouse Press to the Mouse Release
-  ///////////////////////////////////
-
-
-private:
-  nsIView*         mView;  // must use accessor member functions
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);

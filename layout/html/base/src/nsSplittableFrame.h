@@ -62,7 +62,7 @@ public:
   nsIFrame*   GetNextInFlow();
 
 protected:
-  virtual void DumpBaseRegressionData(FILE* out, PRInt32 aIndent);
+  virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
 
   nsIFrame*   mPrevInFlow;
   nsIFrame*   mNextInFlow;

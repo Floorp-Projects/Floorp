@@ -103,6 +103,7 @@ LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 LAYOUT_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")
 LAYOUT_ATOM(maxElementSizeProperty, "MaxElementSizeProperty")
 LAYOUT_ATOM(overflowProperty, "OverflowProperty")
+LAYOUT_ATOM(viewProperty, "ViewProperty")
 
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code

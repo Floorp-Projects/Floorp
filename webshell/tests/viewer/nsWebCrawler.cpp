@@ -243,12 +243,15 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
       nsIFrame* root;
       shell->GetRootFrame(&root);
       if (nsnull != root) {
+        nsCOMPtr<nsIPresContext> presContext;
+        shell->GetPresContext(getter_AddRefs(presContext));
+        
         if (mOutputDir.Length() > 0)
         {
           nsAutoString regressionFileName;
           FILE *fp = GetOutputFile(aURL, regressionFileName);
           if (fp) {
-            root->DumpRegressionData(fp, 0);
+            root->DumpRegressionData(presContext, fp, 0);
             fclose(fp);
             if (mRegressing) {
               PerformRegressionTest(regressionFileName);
@@ -266,7 +269,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
           }
         }
         else
-          root->DumpRegressionData(stdout, 0);
+          root->DumpRegressionData(presContext, stdout, 0);
       }
     }
 

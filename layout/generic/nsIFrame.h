@@ -631,7 +631,7 @@ public:
    * the caveat that some base types are defined.
    * For more information, see XXX.
    */
-  NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent) = 0;
+  NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) = 0;
 
   /**
    * Get the size of the frame object. The size value should include

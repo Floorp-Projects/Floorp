@@ -36,6 +36,7 @@
 #include <stdarg.h>
 #include "nsIPtr.h"
 #include "nsISizeOfHandler.h"
+#include "nsIFrameManager.h"
 
 #include "nsIDOMText.h"
 #include "nsDocument.h"
@@ -207,11 +208,6 @@ nsFrame::~nsFrame()
 
   NS_IF_RELEASE(mContent);
   NS_IF_RELEASE(mStyleContext);
-  if (nsnull != mView) {
-    // Break association between view and frame
-    mView->Destroy();
-    mView = nsnull;
-  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -340,6 +336,11 @@ nsFrame::Destroy(nsIPresContext& aPresContext)
 {
   nsCOMPtr<nsIPresShell> shell;
   aPresContext.GetShell(getter_AddRefs(shell));
+
+  // Get the view pointer now before the frame properties disappear
+  // when we call NotifyDestroyingFrame()
+  nsIView*  view;
+  GetView(&aPresContext, &view);
   
   // XXX Rather than always doing this it would be better if it was part of
   // a frame observer mechanism and the pres shell could register as an
@@ -359,9 +360,12 @@ nsFrame::Destroy(nsIPresContext& aPresContext)
   // that actually loads images?
   aPresContext.StopAllLoadImagesFor(this);
 
-  //Set to prevent event dispatch during destruct
-  if (nsnull != mView) {
-    mView->SetClientData(nsnull);
+  if (view) {
+    // Break association between view and frame
+    view->SetClientData(nsnull);
+    
+    // Destroy the view
+    view->Destroy();
   }
 
   delete this;
@@ -500,7 +504,9 @@ NS_IMETHODIMP nsFrame::MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord 
   mRect.x = aX;
   mRect.y = aY;
 
-  if (nsnull != mView) {
+  nsIView*  view;
+  GetView(aPresContext, &view);
+  if (view) {
     // If we should keep the view position and size in sync with the frame
     // then position the view. Don't do this if we're in the middle of reflow.
     // Instead wait until the DidReflow() notification
@@ -512,8 +518,8 @@ NS_IMETHODIMP nsFrame::MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord 
       nsPoint origin;
       GetOffsetFromView(aPresContext, origin, &parentWithView);
       nsIViewManager  *vm;
-      mView->GetViewManager(vm);
-      vm->MoveViewTo(mView, origin.x, origin.y);
+      view->GetViewManager(vm);
+      vm->MoveViewTo(view, origin.x, origin.y);
       NS_RELEASE(vm);
     }
   }
@@ -527,7 +533,9 @@ NS_IMETHODIMP nsFrame::SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nsco
   mRect.height = aHeight;
 
   // Let the view know
-  if (nsnull != mView) {
+  nsIView*  view;
+  GetView(aPresContext, &view);
+  if (view) {
     // If we should keep the view position and size in sync with the frame
     // then resize the view. Don't do this if we're in the middle of reflow.
     // Instead wait until the DidReflow() notification
@@ -535,8 +543,8 @@ NS_IMETHODIMP nsFrame::SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nsco
                                                    NS_FRAME_SYNC_FRAME_AND_VIEW))) {
       // Resize the view to be the same size as the frame
       nsIViewManager  *vm;
-      mView->GetViewManager(vm);
-      vm->ResizeView(mView, aWidth, aHeight);
+      view->GetViewManager(vm);
+      vm->ResizeView(view, aWidth, aHeight);
       NS_RELEASE(vm);
     }
   }
@@ -1187,9 +1195,11 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
 
     // Make sure the view is sized and positioned correctly and it's
     // visibility, opacity, content transparency, and clip are correct
-    if (mView) {
+    nsIView*  view;
+    GetView(&aPresContext, &view);
+    if (view) {
       nsIViewManager  *vm;
-      mView->GetViewManager(vm);
+      view->GetViewManager(vm);
       
       if (NS_FRAME_SYNC_FRAME_AND_VIEW & mState) {
         // Position and size view relative to its parent, not relative to our
@@ -1197,8 +1207,8 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
         nsIView* parentWithView;
         nsPoint origin;
         GetOffsetFromView(&aPresContext, origin, &parentWithView);
-        vm->ResizeView(mView, mRect.width, mRect.height);
-        vm->MoveViewTo(mView, origin.x, origin.y);
+        vm->ResizeView(view, mRect.width, mRect.height);
+        vm->MoveViewTo(view, origin.x, origin.y);
       }
 
       const nsStyleColor* color =
@@ -1207,7 +1217,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
         (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
       // Set the view's opacity
-      vm->SetViewOpacity(mView, color->mOpacity);
+      vm->SetViewOpacity(view, color->mOpacity);
       
       // See if the view should be hidden or visible
       PRBool  viewIsVisible = PR_TRUE;
@@ -1220,7 +1230,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
       else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
         // If it has a widget, hide the view because the widget can't deal with it
         nsIWidget* widget = nsnull;
-        mView->GetWidget(widget);
+        view->GetWidget(widget);
         if (widget) {
           viewIsVisible = PR_FALSE;
           NS_RELEASE(widget);
@@ -1266,12 +1276,12 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
       }
 
       // Make sure visibility is correct
-      vm->SetViewVisibility(mView, viewIsVisible ? nsViewVisibility_kShow :
+      vm->SetViewVisibility(view, viewIsVisible ? nsViewVisibility_kShow :
                             nsViewVisibility_kHide);
       
       // Make sure content transparency is correct
       if (viewIsVisible) {
-        vm->SetViewContentTransparency(mView, viewHasTransparentContent);
+        vm->SetViewContentTransparency(view, viewHasTransparentContent);
       }
       
       // Clip applies to block-level and replaced elements with overflow
@@ -1298,11 +1308,11 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
           if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
             left += display->mClip.left;
           }
-          mView->SetClip(left, top, right, bottom);
+          view->SetClip(left, top, right, bottom);
 
         } else {
           // Make sure no clip is set
-          mView->SetClip(0, 0, 0, 0);
+          view->SetClip(0, 0, 0, 0);
         }
       }
       NS_RELEASE(vm);
@@ -1429,24 +1439,50 @@ NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
 // Associated view object
 NS_IMETHODIMP nsFrame::GetView(nsIPresContext* aPresContext, nsIView** aView) const
 {
-  NS_PRECONDITION(nsnull != aView, "null OUT parameter pointer");
-  *aView = mView;
+  NS_ENSURE_ARG_POINTER(aView);
+
+  // Initialize OUT parameter
+  *aView = nsnull;
+
+  // Check for a property on the frame
+  nsCOMPtr<nsIPresShell>     presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager>  frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      void* value;
+      frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::viewProperty, 0, &value);
+      *aView = (nsIView*)value;
+    }
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
 {
-  nsresult  rv;
-
-  if (nsnull != aView) {
-    mView = aView;
+  if (aView) {
     aView->SetClientData(this);
-    rv = NS_OK;
-  }
-  else
-    rv = NS_OK;
 
-  return rv;
+    // Set a property on the frame
+    nsCOMPtr<nsIPresShell>  presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    
+    if (presShell) {
+      nsCOMPtr<nsIFrameManager>  frameManager;
+      presShell->GetFrameManager(getter_AddRefs(frameManager));
+    
+      if (frameManager) {
+        frameManager->SetFrameProperty(this, nsLayoutAtoms::viewProperty,
+                                       aView, nsnull);
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 // Find the first geometric parent that has a view
@@ -1543,14 +1579,16 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
   }
 
   PRUint32 flags = aImmediate ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
-  if (nsnull != mView) {
-    mView->GetViewManager(viewManager);
-    viewManager->UpdateView(mView, damageRect, flags);
+  nsIView* view;
+
+  GetView(aPresContext, &view);
+  if (view) {
+    view->GetViewManager(viewManager);
+    viewManager->UpdateView(view, damageRect, flags);
     
   } else {
     nsRect    rect(damageRect);
     nsPoint   offset;
-    nsIView*  view;
   
     GetOffsetFromView(aPresContext, offset, &view);
     NS_ASSERTION(nsnull != view, "no view");
@@ -1660,8 +1698,11 @@ nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
-  if (nsnull != mView) {
-    fprintf(out, " [view=%p]", mView);
+
+  nsIView*  view;
+  GetView(aPresContext, &view);
+  if (view) {
+    fprintf(out, " [view=%p]", view);
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
@@ -1749,7 +1790,7 @@ nsFrame::ParentDisablesSelection() const
 }
 
 NS_IMETHODIMP
-nsFrame::DumpRegressionData(FILE* out, PRInt32 aIndent)
+nsFrame::DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
   IndentBy(out, aIndent);
   fprintf(out, "<frame va=\"%ld\" type=\"", PRUptrdiff(this));
@@ -1761,7 +1802,7 @@ nsFrame::DumpRegressionData(FILE* out, PRInt32 aIndent)
           mState, PRUptrdiff(mParent));
 
   aIndent++;
-  DumpBaseRegressionData(out, aIndent);
+  DumpBaseRegressionData(aPresContext, out, aIndent);
   aIndent--;
 
   IndentBy(out, aIndent);
@@ -1771,16 +1812,18 @@ nsFrame::DumpRegressionData(FILE* out, PRInt32 aIndent)
 }
 
 void
-nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
+nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
   if (nsnull != mNextSibling) {
     IndentBy(out, aIndent);
     fprintf(out, "<next-sibling va=\"%ld\"/>\n", PRUptrdiff(mNextSibling));
   }
 
-  if (nsnull != mView) {
+  nsIView*  view;
+  GetView(aPresContext, &view);
+  if (view) {
     IndentBy(out, aIndent);
-    fprintf(out, "<view va=\"%ld\">\n", PRUptrdiff(mView));
+    fprintf(out, "<view va=\"%ld\">\n", PRUptrdiff(view));
     aIndent++;
     // XXX add in code to dump out view state too...
     aIndent--;
@@ -1813,7 +1856,7 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
       }
       aIndent++;
       while (nsnull != kid) {
-        kid->DumpRegressionData(out, aIndent);
+        kid->DumpRegressionData(aPresContext, out, aIndent);
         kid->GetNextSibling(&kid);
       }
       aIndent--;
