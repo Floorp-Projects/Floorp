@@ -76,27 +76,39 @@ nsContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsContainerFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  // Prevent event dispatch during destruct
+  // Prevent event dispatch during destruction
   nsIView*  view;
   GetView(view);
   if (nsnull != view) {
     view->SetClientData(nsnull);
   }
 
-  // Delete our child frames
-  while (nsnull != mFirstChild) {
-    nsIFrame* nextChild;
-
-    mFirstChild->GetNextSibling(nextChild);
-    mFirstChild->DeleteFrame(aPresContext);
-
-    // Once we've deleted the child frame make sure it's no longer in
-    // our child list
-    mFirstChild = nextChild;
-  }
+  // Delete the primary child list
+  DeleteFrameList(aPresContext, &mFirstChild);
 
   // Base class will delete the frame
   return nsFrame::DeleteFrame(aPresContext);
+}
+
+/**
+ * Helper method to delete a frame list and keep the list sane during
+ * the deletion.
+ */
+void
+nsContainerFrame::DeleteFrameList(nsIPresContext& aPresContext,
+                                  nsIFrame** aListP)
+{
+  nsIFrame* first;
+  while (nsnull != (first = *aListP)) {
+    nsIFrame* nextChild;
+
+    first->GetNextSibling(nextChild);
+    first->DeleteFrame(aPresContext);
+
+    // Once we've deleted the child frame make sure it's no longer in
+    // the child list
+    *aListP = nextChild;
+  }
 }
 
 void
@@ -120,7 +132,7 @@ nsContainerFrame::PrepareContinuingFrame(nsIPresContext&   aPresContext,
   aContFrame->SetStyleContext(&aPresContext, aStyleContext);
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus)
 {
@@ -128,15 +140,24 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
                      ("enter nsContainerFrame::DidReflow: status=%d",
                       aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsIFrame* kid;
-    FirstChild(nsnull, kid);
-    while (nsnull != kid) {
-      nsIHTMLReflow*  htmlReflow;
-      if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-        htmlReflow->DidReflow(aPresContext, aStatus);
+    // Apply DidReflow to each and every list that this frame implements
+    nsIAtom* listName = nsnull;
+    PRInt32 listIndex = 0;
+    do {
+      nsIFrame* kid;
+      FirstChild(listName, kid);
+      while (nsnull != kid) {
+        nsIHTMLReflow* htmlReflow;
+        nsresult rv;
+        rv = kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+        if (NS_SUCCEEDED(rv)) {
+          htmlReflow->DidReflow(aPresContext, aStatus);
+        }
+        kid->GetNextSibling(kid);
       }
-      kid->GetNextSibling(kid);
-    }
+      NS_IF_RELEASE(listName);
+      GetAdditionalChildListName(listIndex++, listName);
+    } while(nsnull != listName);
   }
 
   NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
@@ -146,51 +167,11 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
   return nsFrame::DidReflow(aPresContext, aStatus);
 }
 
-#if XXX
-    // Now that we are doing be reflowed, clear out the
-    // child-is-outside flag in our state word. Below, as we pass
-    // through the did-reflow to our children we will discover if we
-    // still need the bit set.
-    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-
-      if (0 == (NS_FRAME_OUTSIDE_CHILDREN & mState)) {
-        nsFrameState state;
-        nsRect r;
-        kid->GetRect(r);
-        kid->GetFrameState(state);
-        if (NS_FRAME_CHILD_IS_OUTSIDE & state) {
-          kid->GetCombinedRect(r);
-        }
-        if ((r.x < 0) || (r.y < 0) ||
-            (r.XMost() > mRect.width) || (r.YMost() > mRect.height)) {
-          // We have a child that sticks outside of us
-          mState |= NS_FRAME_OUTSIDE_CHILDREN;
-        }
-      }
-
-NS_IMETHODIMP
-nsContainerFrame::GetCombinedRect(nsRect& aRect)
-{
-  if (NS_FRAME_CHILD_IS_OUTSIDE) {
-    nsIFrame* kid;
-    FirstChild(kid);
-    while (nsnull != kid) {
-      nsRect r;
-      kid->GetCombinedRect(r);
-      kid->GetNextSibling(kid);
-    }
-  }
-  else {
-    aRect = mRect;
-  }
-  return NS_OK;
-}
-#endif
-
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-NS_METHOD nsContainerFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
+NS_IMETHODIMP
+nsContainerFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 {
   // We only know about the unnamed principal child list
   if (nsnull == aListName) {
