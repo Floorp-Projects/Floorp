@@ -616,7 +616,8 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
     } else {
 #endif
 	/* List certs on a non-internal slot. */
-	if ( !PK11_IsFriendly(slot) && PK11_NeedLogin(slot))
+	if ( PK11_IsFIPS() || 
+	     (!PK11_IsFriendly(slot) && PK11_NeedLogin(slot)) )
 	    PK11_Authenticate(slot, PR_TRUE, pwarg);
 	if (name) {
 	    CERTCertificate *the_cert;
