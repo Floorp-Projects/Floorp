@@ -34,7 +34,7 @@
 /*
  * Support routines for SECItem data structure.
  *
- * $Id: secitem.c,v 1.7 2002/06/24 21:57:27 relyea%netscape.com Exp $
+ * $Id: secitem.c,v 1.8 2003/06/06 04:51:26 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -161,10 +161,15 @@ SECITEM_CompareItem(const SECItem *a, const SECItem *b)
 PRBool
 SECITEM_ItemsAreEqual(const SECItem *a, const SECItem *b)
 {
-    if (SECITEM_CompareItem(a, b) == SECEqual)
-	return PR_TRUE;
-
-    return PR_FALSE;
+    if (a->len != b->len)
+        return PR_FALSE;
+    if (!a->len)
+    	return PR_TRUE;
+    if (!a->data || !b->data) {
+        /* avoid null pointer crash. */
+	return (PRBool)(a->data == b->data);
+    }
+    return (PRBool)!PORT_Memcmp(a->data, b->data, a->len);
 }
 
 SECItem *
