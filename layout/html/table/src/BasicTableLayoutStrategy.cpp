@@ -721,7 +721,8 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
   PRInt32 colX, rowX; 
   nscoord basis = aBasisIn;
   // For an auto table, determine the potentially new percent adjusted width based 
-  // on percent cells/cols. 
+  // on percent cells/cols. This probably should only be a NavQuirks thing, since
+  // a percentage based cell or column on an auto table should force the column to auto
   if (aTableIsAutoWidth) {
     nscoord fixWidthTotal = 0;
     basis = 0;
@@ -744,14 +745,42 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
           float percent = cellPosition->mWidth.GetPercentValue();
           colBasis = 0;
           if (percent > 0.0f) {
-            nscoord desWidth = colFrame->GetDesWidth();
-            if (colSpan > 1) { // sum up the DES_ADJ widths of the spanned cols
-              for (PRInt32 spanX = 1; spanX < colSpan; spanX++) {
-                nsTableColFrame* spanFrame = mTableFrame->GetColFrame(colX + spanX);
-                desWidth += spanFrame->GetWidth(DES_ADJ);
-              }
+            // calculate the preferred width of the cell based on fixWidth and desWidth
+            nscoord cellDesWidth  = 0;
+            for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
+              nsTableColFrame* spanFrame = mTableFrame->GetColFrame(colX + spanX);
+              cellDesWidth += spanFrame->GetDesWidth();
             }
-            colBasis = NSToCoordRound((float)desWidth / percent);
+            // calculate the preferred width of everything besides the cell
+            // XXX there needs to be a method on nsTableColFrame to get the 
+            // preferred width, figuring it based on whether or not fixed is set
+            nscoord otherDesWidth = 0;
+            PRInt32 colX2;
+            for (colX2 = 0; colX2 < colX; colX2++) {
+              nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX2);
+              nscoord prefWidth = colFrame->GetFixWidth();
+              if (prefWidth <= 0) {
+                prefWidth = colFrame->GetDesWidth();
+              }
+              otherDesWidth += prefWidth;
+            }
+            for (colX2 = colX + colSpan; colX2 < mNumCols; colX2++) {
+              nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX2);
+              nscoord prefWidth = colFrame->GetFixWidth();
+              if (prefWidth <= 0) {
+                prefWidth = colFrame->GetDesWidth();
+              }
+              otherDesWidth += prefWidth;
+            }
+
+            // figure the basis using the cell's desired width and percent
+            nscoord cellBasis = NSToCoordRound((float)cellDesWidth / percent);
+
+            // figure the basis using the rest of the table and the cell's percent
+            nscoord otherBasis = NSToCoordRound((float)otherDesWidth / (1.0f - percent));
+
+            // use the largest basis
+            colBasis = PR_MAX(cellBasis, otherBasis);
           }
         }
       }
