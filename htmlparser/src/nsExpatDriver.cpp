@@ -180,36 +180,11 @@ Driver_HandleExternalEntityRef(XML_Parser parser,
   nsCOMPtr<nsIInputStream> in;
   nsAutoString absURL;
 
-#ifdef MOZ_SVG
-  // yuck. I don't know of any other way to do this, though, since we don't
-  // read external dtd's, and we need the #FIXED xmlns attribute, so we
-  // can't do this later based on what namespace we're in - bbaetz
+  nsresult rv = nsExpatDriver::OpenInputStream(systemId, base, getter_AddRefs(in), absURL);
 
-  // The alternative is remapping the systemId, and installing an svg.dtd file
-  // in the dtd directory. This is simpler, for now.
-  
-  // XXX - need to do this for the other #FIXED attribuues as well
-  NS_NAMED_LITERAL_STRING(svgDtd,
-                          "<!ATTLIST svg xmlns CDATA #FIXED \"http://www.w3.org/2000/svg\" >");
-  
-#define svgPublicIdPrefix "-//W3C//DTD SVG "
-  
-  if (publicId && !nsCRT::strncmp((const PRUnichar*)publicId,
-                                  NS_LITERAL_STRING(svgPublicIdPrefix).get(),
-                                  sizeof(svgPublicIdPrefix)-1)) {
-    uniBuf = ToNewUnicode(svgDtd);
-    retLen = svgDtd.Length();
-  } 
-  else {
-#endif
-    nsresult rv = nsExpatDriver::OpenInputStream(systemId, base, getter_AddRefs(in), absURL);
-
-    if (NS_FAILED(rv)) {
-      return result;
-    }
-#ifdef MOZ_SVG
+  if (NS_FAILED(rv)) {
+    return result;
   }
-#endif
 
   nsCOMPtr<nsIUnicharInputStream> uniIn;
 
