@@ -390,22 +390,24 @@ const int kReuseWindowOnAE = 2;
       behindWindow = [browserWindowController window];
       break;
   }
-  
+
+  // we allow popups for the load that fires off a bookmark. Subsequent page loads, however, will
+  // not allow popups (if blocked).
   if ([item isKindOfClass:[Bookmark class]]) {
     if (openInNewWindow)
-      [self openBrowserWindowWithURL:[(Bookmark *)item url] andReferrer:nil behind:behindWindow];
+      [self openBrowserWindowWithURL:[(Bookmark *)item url] andReferrer:nil behind:behindWindow allowPopups:YES];
     else if (openInNewTab)
-      [browserWindowController openNewTabWithURL:[(Bookmark *)item url] referrer:nil loadInBackground:newTabInBackground];
+      [browserWindowController openNewTabWithURL:[(Bookmark *)item url] referrer:nil loadInBackground:newTabInBackground allowPopups:YES];
     else
-      [browserWindowController loadURL:[(Bookmark *)item url] referrer:nil activate:YES];
+      [browserWindowController loadURL:[(Bookmark *)item url] referrer:nil activate:YES allowPopups:YES];
   }
   else if ([item isKindOfClass:[BookmarkFolder class]]) {
     if (openInNewWindow)
-      [self openBrowserWindowWithURLs:[(BookmarkFolder *)item childURLs] behind:behindWindow];
+      [self openBrowserWindowWithURLs:[(BookmarkFolder *)item childURLs] behind:behindWindow allowPopups:YES];
     else if (openInNewTab)
-      [browserWindowController openURLArray:[(BookmarkFolder *)item childURLs] replaceExistingTabs:NO];
+      [browserWindowController openURLArray:[(BookmarkFolder *)item childURLs] replaceExistingTabs:NO allowPopups:YES];
     else
-      [browserWindowController openURLArrayReplacingTabs:[(BookmarkFolder *)item childURLs] closeExtraTabs:[item isGroup]];
+      [browserWindowController openURLArrayReplacingTabs:[(BookmarkFolder *)item childURLs] closeExtraTabs:[item isGroup] allowPopups:YES];
   }
 }
 
@@ -428,7 +430,7 @@ const int kReuseWindowOnAE = 2;
 
   // Now open the new window.
   NSString* homePage = mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePage:YES];
-  BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage andReferrer:nil behind:nil];
+  BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage andReferrer:nil behind:nil allowPopups:NO];
 
   if ([MainController isBlankURL:homePage])
     [controller focusURLBar];
@@ -489,9 +491,9 @@ const int kReuseWindowOnAE = 2;
         [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
         BrowserWindowController* browserController = [self getMainWindowBrowserController];
         if (browserController)
-          [browserController loadURL:[url absoluteString] referrer:nil activate:YES];
+          [browserController loadURL:[url absoluteString] referrer:nil activate:YES allowPopups:NO];
         else
-          [self openBrowserWindowWithURL:[url absoluteString] andReferrer:nil behind:nil];
+          [self openBrowserWindowWithURL:[url absoluteString] andReferrer:nil behind:nil allowPopups:NO];
     }
 }
 
@@ -499,7 +501,7 @@ const int kReuseWindowOnAE = 2;
 {
     NSWindow* browserWindow = [self getFrontmostBrowserWindow];
     if (!browserWindow) {
-      [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil behind:nil];
+      [self openBrowserWindowWithURL: @"about:blank" andReferrer:nil behind:nil allowPopups:NO];
       browserWindow = [mApplication mainWindow];
     }
     else if (![browserWindow isMainWindow] || ![browserWindow isKeyWindow]) {
@@ -755,7 +757,7 @@ const int kReuseWindowOnAE = 2;
   return foundWindow;
 }
 
-- (BrowserWindowController*)openBrowserWindowWithURL:(NSString*)aURL andReferrer:(NSString*)aReferrer behind:(NSWindow*)window
+- (BrowserWindowController*)openBrowserWindowWithURL:(NSString*)aURL andReferrer:(NSString*)aReferrer behind:(NSWindow*)window allowPopups:(BOOL)inAllowPopups
 {
   BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
 
@@ -776,12 +778,12 @@ const int kReuseWindowOnAE = 2;
   if ([MainController isBlankURL:aURL])
     [browser disableLoadPage];
   else
-    [browser loadURL: aURL referrer:aReferrer activate:YES];
+    [browser loadURL: aURL referrer:aReferrer activate:YES allowPopups:inAllowPopups];
 
   return browser;
 }
 
-- (BrowserWindowController*)openBrowserWindowWithURLs:(NSArray*)urlArray behind:(NSWindow*)window
+- (BrowserWindowController*)openBrowserWindowWithURLs:(NSArray*)urlArray behind:(NSWindow*)window allowPopups:(BOOL)inAllowPopups
 {
   BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
 
@@ -797,7 +799,7 @@ const int kReuseWindowOnAE = 2;
     [browser showWindow: self];
   }
 
-  [browser openURLArray:urlArray replaceExistingTabs:YES];
+  [browser openURLArray:urlArray replaceExistingTabs:YES allowPopups:inAllowPopups];
   return browser;
 }
 
@@ -827,17 +829,17 @@ const int kReuseWindowOnAE = 2;
       // we don't do this, and just reuse the current tab, people will lose the urls
       // as they get replaced in the current tab.
       if ([controller newTabsAllowed])
-        [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground];
+        [controller openNewTabWithURL:inURLString referrer:aReferrer loadInBackground:loadInBackground allowPopups:NO];
       else
-        controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer behind:nil];
+        controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer behind:nil allowPopups:NO];
     }
     else
-      [controller loadURL: inURLString referrer:nil activate:YES];
+      [controller loadURL: inURLString referrer:nil activate:YES allowPopups:NO];
   }
   else {
     // should use BrowserWindowController openNewWindowWithURL, but that method
     // really needs to be on the MainController
-    controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer behind:nil];
+    controller = [self openBrowserWindowWithURL: inURLString andReferrer:aReferrer behind:nil allowPopups:NO];
   }
   
   [[[controller getBrowserWrapper] getBrowserView] setActive: YES];

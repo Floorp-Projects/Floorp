@@ -109,9 +109,9 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
     if (shiftKey)
       loadInBackground = !loadInBackground;
     if (useTab && [mBrowserController newTabsAllowed])
-      [mBrowserController openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];
+      [mBrowserController openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];
     else
-      [mBrowserController openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];
+      [mBrowserController openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];
   }
   else if (altKey) {
     // The user wants to save this link.

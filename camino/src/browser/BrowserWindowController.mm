@@ -692,7 +692,7 @@ enum BWCOpenDest {
     // with it now that everything is loaded.
     if (mPendingURL) {
       if (mShouldLoadHomePage)
-        [self loadURL: mPendingURL referrer:mPendingReferrer activate:mPendingActivate];
+        [self loadURL:mPendingURL referrer:mPendingReferrer activate:mPendingActivate allowPopups:mPendingAllowPopups];
       [mPendingURL release];
       [mPendingReferrer release];
       mPendingURL = mPendingReferrer = nil;
@@ -1260,7 +1260,7 @@ enum BWCOpenDest {
 {
   [mLocationSheetWindow orderOut:self];
   [NSApp endSheet:mLocationSheetWindow returnCode:1];
-  [self loadURL:[mLocationSheetURLField stringValue] referrer:nil activate:YES];
+  [self loadURL:[mLocationSheetURLField stringValue] referrer:nil activate:YES allowPopups:NO];
 }
 
 - (IBAction)cancelLocationSheet:(id)sender
@@ -1397,16 +1397,16 @@ enum BWCOpenDest {
   if ([resolvedURLs count] == 1) {
     resolvedURL = [resolvedURLs lastObject];
     if (inDest == kDestinationNewTab)
-      [self openNewTabWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG];
+      [self openNewTabWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
     else if (inDest == kDestinationNewWindow)
-      [self openNewWindowWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG];
+      [self openNewWindowWithURL:resolvedURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
     else // if it's not a new window or a new tab, load into the current view
-      [self loadURL:resolvedURL referrer:nil activate:YES];
+      [self loadURL:resolvedURL referrer:nil activate:YES allowPopups:NO];
   } else {
     if (inDest == kDestinationNewTab || inDest == kDestinationNewWindow)
-      [self openURLArray:resolvedURLs replaceExistingTabs:NO];
+      [self openURLArray:resolvedURLs replaceExistingTabs:NO allowPopups:NO];
     else
-      [self openURLArray:resolvedURLs replaceExistingTabs:YES];
+      [self openURLArray:resolvedURLs replaceExistingTabs:YES allowPopups:NO];
   }
   
   // global history needs to know the user typed this url so it can present it
@@ -1463,9 +1463,9 @@ enum BWCOpenDest {
   //otherwise reload it from the server
   NSString* viewSource = [@"view-source:" stringByAppendingString: urlStr];
   if ([self newTabsAllowed])
-    [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
+    [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground allowPopups:NO];
   else
-    [self openNewWindowWithURL: viewSource referrer:nil loadInBackground: loadInBackground];
+    [self openNewWindowWithURL: viewSource referrer:nil loadInBackground: loadInBackground allowPopups:NO];
 }
 
 - (IBAction)viewSource:(id)aSender
@@ -1542,11 +1542,11 @@ enum BWCOpenDest {
       aDomain = [NSString stringWithUTF8String:spec.get()];
       
       if (inDest == kDestinationNewTab)
-        [self openNewTabWithURL:aDomain referrer:nil loadInBackground:inLoadInBG];
+        [self openNewTabWithURL:aDomain referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
       else if (inDest == kDestinationNewWindow)
-        [self openNewWindowWithURL:aDomain referrer:nil loadInBackground:inLoadInBG];
+        [self openNewWindowWithURL:aDomain referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
       else // if it's not a new window or a new tab, load into the current view
-        [self loadURL:aDomain referrer:nil activate:NO];
+        [self loadURL:aDomain referrer:nil activate:NO allowPopups:NO];
 
     } 
   } else {
@@ -1569,11 +1569,11 @@ enum BWCOpenDest {
     [escapedSearchString release];
     
     if (inDest == kDestinationNewTab)
-      [self openNewTabWithURL:searchURL referrer:nil loadInBackground:inLoadInBG];
+      [self openNewTabWithURL:searchURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
     else if (inDest == kDestinationNewWindow)
-      [self openNewWindowWithURL:searchURL referrer:nil loadInBackground:inLoadInBG];
+      [self openNewWindowWithURL:searchURL referrer:nil loadInBackground:inLoadInBG allowPopups:NO];
     else // if it's not a new window or a new tab, load into the current view
-      [self loadURL:searchURL referrer:nil activate:NO];
+      [self loadURL:searchURL referrer:nil activate:NO allowPopups:NO];
   }
 }
 
@@ -1660,7 +1660,7 @@ enum BWCOpenDest {
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"ThrobberPageDefault"])
-    [self loadURL:pageToLoad referrer:nil activate:YES];
+    [self loadURL:pageToLoad referrer:nil activate:YES allowPopups:NO];
 }
 
 - (void)startThrobber
@@ -1905,7 +1905,7 @@ enum BWCOpenDest {
 
 - (IBAction)home:(id)aSender
 {
-  [mBrowserView loadURI:[[PreferenceManager sharedInstance] homePage:NO] referrer: nil flags:NSLoadFlagsNone activate:NO];
+  [mBrowserView loadURI:[[PreferenceManager sharedInstance] homePage:NO] referrer: nil flags:NSLoadFlagsNone activate:NO allowPopups:NO];
 }
 
 - (NSString*)getContextMenuNodeDocumentURL
@@ -1932,7 +1932,7 @@ enum BWCOpenDest {
   // assumes mContextMenuNode has been set
   NSString* frameURL = [self getContextMenuNodeDocumentURL];
   if ([frameURL length] > 0)
-    [self openNewWindowWithURL:frameURL referrer:nil loadInBackground:NO];		// follow the pref?
+    [self openNewWindowWithURL:frameURL referrer:nil loadInBackground:NO allowPopups:NO];     // follow the pref?
 }
 
 - (IBAction)frameToNewTab:(id)sender
@@ -1940,7 +1940,7 @@ enum BWCOpenDest {
   // assumes mContextMenuNode has been set
   NSString* frameURL = [self getContextMenuNodeDocumentURL];
   if ([frameURL length] > 0)
-    [self openNewTabWithURL:frameURL referrer:nil loadInBackground:NO];		// follow the pref?
+    [self openNewTabWithURL:frameURL referrer:nil loadInBackground:NO allowPopups:NO];        // follow the pref?
 }
 
 - (IBAction)frameToThisWindow:(id)sender
@@ -1948,7 +1948,7 @@ enum BWCOpenDest {
   // assumes mContextMenuNode has been set
   NSString* frameURL = [self getContextMenuNodeDocumentURL];
   if ([frameURL length] > 0)
-    [self loadURL:frameURL referrer:nil activate:YES];
+    [self loadURL:frameURL referrer:nil activate:YES allowPopups:NO];
 }
 
 
@@ -2021,10 +2021,10 @@ enum BWCOpenDest {
     [self back:sender];
 }
 
--(void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate
+-(void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups
 {
     if (mInitialized) {
-      [mBrowserView loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:activate];
+      [mBrowserView loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:activate allowPopups:inAllowPopups];
     }
     else {
         // we haven't yet initialized all the browser machinery, stash the url and referrer
@@ -2034,6 +2034,7 @@ enum BWCOpenDest {
         mPendingReferrer = aReferrer;
         [mPendingReferrer retain];
         mPendingActivate = activate;
+        mPendingAllowPopups = inAllowPopups;
     }
 }
 
@@ -2119,7 +2120,7 @@ enum BWCOpenDest {
 
       focusURLBar = locationBarVisible && [MainController isBlankURL:urlToLoad];      
 
-      [newView loadURI:urlToLoad referrer:nil flags:NSLoadFlagsNone activate:!focusURLBar];
+      [newView loadURI:urlToLoad referrer:nil flags:NSLoadFlagsNone activate:!focusURLBar allowPopups:NO];
     }
     
     [mTabBrowser selectLastTabViewItem: self];
@@ -2218,7 +2219,7 @@ enum BWCOpenDest {
       if (pref)
         pref->GetBoolPref("browser.tabs.loadInBackground", &backgroundLoad);
 
-      [self openNewWindowWithURL:url referrer:nil loadInBackground:backgroundLoad];
+      [self openNewWindowWithURL:url referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
 
       [[tabViewItem view] windowClosed];
       [mTabBrowser removeTabViewItem:tabViewItem];
@@ -2279,10 +2280,10 @@ enum BWCOpenDest {
   return mBrowserView;
 }
 
--(void)openNewWindowWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
+-(void)openNewWindowWithURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground:(BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups
 {
   BrowserWindowController* browser = [self openNewWindow:aLoadInBG];
-  [browser loadURL: aURLSpec referrer:aReferrer activate:!aLoadInBG];
+  [browser loadURL: aURLSpec referrer:aReferrer activate:!aLoadInBG allowPopups:inAllowPopups];
 }
 
 //
@@ -2310,10 +2311,10 @@ enum BWCOpenDest {
   return browser;
 }
 
--(void)openNewTabWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG
+-(void)openNewTabWithURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground:(BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups
 {
   BrowserTabViewItem* newTab = [self openNewTab:aLoadInBG];
-  [[newTab view] loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG];
+  [[newTab view] loadURI:aURLSpec referrer:aReferrer flags:NSLoadFlagsNone activate:!aLoadInBG allowPopups:inAllowPopups];
 }
 
 //
@@ -2366,7 +2367,7 @@ enum BWCOpenDest {
   [[[newTab view] getBrowserView] setPageDescriptor:aDesc displayType:aDisplayType];
 }
 
-- (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting
+- (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting allowPopups:(BOOL)inAllowPopups
 {
   // ensure the content area is visible. We can't rely on normal url loading
   // to do this because for the new tabs we create below, they won't be connected
@@ -2393,7 +2394,7 @@ enum BWCOpenDest {
     }
 
     [[tabViewItem view] loadURI: thisURL referrer:nil
-                        flags: NSLoadFlagsNone activate:(i == 0)];
+                        flags: NSLoadFlagsNone activate:(i == 0) allowPopups:inAllowPopups];
                         
     if (![mTabBrowser canMakeNewTabs])
       break;		// we'll throw away the rest of the items. Too bad.
@@ -2403,9 +2404,9 @@ enum BWCOpenDest {
   [mTabBrowser selectTabViewItemAtIndex:replaceExisting ? 0 : curNumTabs];
 }
 
--(void) openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra
+-(void) openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra allowPopups:(BOOL)inAllowPopups
 {
-  [self openURLArray:urlArray replaceExistingTabs:YES];
+  [self openURLArray:urlArray replaceExistingTabs:YES allowPopups:inAllowPopups];
   if (closeExtra) {
     int closeIndex = [urlArray count];
     int closeCount = [mTabBrowser numberOfTabViewItems] - closeIndex;
@@ -2595,9 +2596,9 @@ enum BWCOpenDest {
   NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
 
   if (aUseWindow || ![self newTabsAllowed])
-    [self openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];
+    [self openNewWindowWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];
   else
-    [self openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground];
+    [self openNewTabWithURL: hrefStr referrer:referrer loadInBackground: loadInBackground allowPopups:NO];
 }
 
 - (IBAction)savePageAs:(id)aSender
@@ -2681,7 +2682,7 @@ enum BWCOpenDest {
     NSString* urlStr = [NSString stringWith_nsAString: url];
     NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
 
-    [self loadURL: urlStr referrer:referrer activate:YES];
+    [self loadURL: urlStr referrer:referrer activate:YES allowPopups:NO];
   }  
 }
 

@@ -143,6 +143,7 @@ typedef enum
   NSString* mPendingURL;
   NSString* mPendingReferrer;
   BOOL mPendingActivate;
+  BOOL mPendingAllowPopups;
   
   BrowserWrapper* mBrowserView;
 
@@ -189,7 +190,7 @@ typedef enum
 - (BOOL)newTabsAllowed;
 - (BrowserWrapper*)getBrowserWrapper;
 
-- (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate;
+- (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
 - (void)updateLocationFields:(NSString *)locationString;
 - (void)updateSiteIcons:(NSImage *)siteIconImage;
 - (void)loadingStarted;
@@ -282,11 +283,11 @@ typedef enum
 - (IBAction)frameToNewTab:(id)sender;
 - (IBAction)frameToThisWindow:(id)sender;
 
-- (void)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
-- (void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
+- (void)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups;
+- (void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG allowPopups:(BOOL)inAllowPopups;
 
-- (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting;
-- (void)openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra;
+- (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting allowPopups:(BOOL)inAllowPopups;
+- (void)openURLArrayReplacingTabs:(NSArray*)urlArray closeExtraTabs:(BOOL)closeExtra allowPopups:(BOOL)inAllowPopups;
 
 -(BrowserTabViewItem*)createNewTabItem;
 

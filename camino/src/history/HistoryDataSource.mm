@@ -288,7 +288,7 @@ HistoryRDFObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
   NSString *url = [aSender representedObject];
   if ([url isKindOfClass:[NSString class]]) {
     BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-    [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground: loadInBackground];
+    [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground: loadInBackground allowPopups:NO];
   }
 }
 
@@ -299,7 +299,7 @@ HistoryRDFObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
   NSString *url = [aSender representedObject];
   if ([url isKindOfClass:[NSString class]]) {
     BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-    [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground: loadInBackground];  
+    [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground: loadInBackground allowPopups:NO];  
   }
 }
 
@@ -325,12 +325,12 @@ HistoryRDFObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
     BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
     if (GetCurrentKeyModifiers() & cmdKey) {
       if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
-        [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground:loadInBackground];
+        [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground:loadInBackground allowPopups:NO];
       else
-        [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground:loadInBackground];  
+        [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground:loadInBackground allowPopups:NO];  
     }
     else
-      [[mBrowserWindowController getBrowserWrapper] loadURI:url referrer:nil flags:NSLoadFlagsNone activate:YES];
+      [[mBrowserWindowController getBrowserWrapper] loadURI:url referrer:nil flags:NSLoadFlagsNone activate:YES allowPopups:NO];
   }
 }
 

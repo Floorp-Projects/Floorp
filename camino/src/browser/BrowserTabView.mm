@@ -290,12 +290,12 @@
 {
   if (overTabViewItem) 
   {
-    [[overTabViewItem view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO];
+    [[overTabViewItem view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO allowPopups:NO];
     return YES;
   }
   else if (overContentArea)
   {
-    [[[self selectedTabViewItem] view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO];
+    [[[self selectedTabViewItem] view] loadURI: url referrer:nil flags: NSLoadFlagsNone activate:NO allowPopups:NO];
     return YES;
   }
   else if ([self canMakeNewTabs])
@@ -407,7 +407,7 @@
         if ([aBookmark isKindOfClass:[Bookmark class]])
           return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[aBookmark url]];
         else if ([aBookmark isKindOfClass:[BookmarkFolder class]]) {
-          [[[self window] windowController] openURLArray:[aBookmark childURLs] replaceExistingTabs:YES];
+          [[[self window] windowController] openURLArray:[aBookmark childURLs] replaceExistingTabs:YES allowPopups:NO];
           return YES;
         }
       } else if ([draggedItems count] > 1) {
@@ -419,7 +419,7 @@
           else if ([aBookmark isKindOfClass:[BookmarkFolder class]])
             [urlArray addObjectsFromArray:[aBookmark childURLs]];
         }
-        [[[self window] windowController] openURLArray:urlArray replaceExistingTabs:YES];
+        [[[self window] windowController] openURLArray:urlArray replaceExistingTabs:YES allowPopups:NO];
         return YES;
       }
     }
@@ -480,7 +480,7 @@
 
 -(void)addTabForURL:(NSString*)aURL referrer:(NSString*)aReferrer
 {
-  [[[self window] windowController] openNewTabWithURL:aURL referrer:aReferrer loadInBackground:YES];
+  [[[self window] windowController] openNewTabWithURL:aURL referrer:aReferrer loadInBackground:YES allowPopups:NO];
 }
 
 #pragma mark -

@@ -97,7 +97,7 @@ class nsISupportsArray;
 
 - (void)getBlockedSites:(nsISupportsArray**)outSites;
 
-- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate;
+- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
 - (void)makePrimaryBrowserView: (id)aUrlbar status: (id)aStatus
           windowController: (BrowserWindowController*)aWindowController;
 - (void)disconnectView;

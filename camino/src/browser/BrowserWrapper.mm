@@ -175,7 +175,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
 
 - (IBAction)load:(id)sender
 {
-  [mBrowserView loadURI:[mUrlbar stringValue] referrer:nil flags:NSLoadFlagsNone];
+  [mBrowserView loadURI:[mUrlbar stringValue] referrer:nil flags:NSLoadFlagsNone allowPopups:NO];
 }
 
 -(void)disconnectView
@@ -314,7 +314,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   return mIsBusy;
 }
 
-- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate
+- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups
 {
   // blast it into the urlbar immediately so that we know what we're 
   // trying to load, even if it doesn't work
@@ -322,7 +322,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     [mWindowController updateLocationFields:urlSpec];
 
   mActivateOnLoad = activate;
-  [mBrowserView loadURI:urlSpec referrer:referrer flags:flags];
+  [mBrowserView loadURI:urlSpec referrer:referrer flags:flags allowPopups:inAllowPopups];
 }
 
 - (void)onLoadingStarted 

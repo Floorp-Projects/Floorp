@@ -263,7 +263,7 @@
   
   if (success) {  //show them the imported bookmarks if import succeeded
     [[self window] orderOut:self];
-    BrowserWindowController *windowController = [(MainController *)[NSApp delegate] openBrowserWindowWithURL:@"" andReferrer:nil behind:nil];
+    BrowserWindowController *windowController = [(MainController *)[NSApp delegate] openBrowserWindowWithURL:@"" andReferrer:nil behind:nil allowPopups:NO];
     [windowController manageBookmarks:self];
     BookmarkViewController *bmController = [windowController bookmarkViewController];
     [bmController selectContainer:[bmController containerCount]-1];

@@ -1196,7 +1196,7 @@
 		3003B8AC044514E300B85BF3 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			name = English;
 			path = resources/localized/English.lproj/SearchURLList.plist;
 			refType = 4;
@@ -1234,7 +1234,7 @@
 		};
 		3F22CC1303DF42A200026DCE = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			name = Charset.dict;
 			path = resources/application/Charset.dict;
 			refType = 4;
@@ -4607,7 +4607,7 @@
 		};
 		3F44AD8705BDFB9F00CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-Camino__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -4786,7 +4786,7 @@
 		};
 		3F44AD9E05BDFB9F00CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-AppearancePrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -4957,7 +4957,7 @@
 		};
 		3F44ADB205BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-NavigationPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -4972,7 +4972,7 @@
 		};
 		3F44ADC105BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-PersonalPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -5158,7 +5158,7 @@
 		};
 		3F44ADD905BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-PrivacyPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -5346,7 +5346,7 @@
 		};
 		3F44ADF005BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-SecurityPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -5534,7 +5534,7 @@
 		};
 		3F44AE0705BDFBA000CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-WebFeaturesPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -8625,7 +8625,7 @@
 		};
 		3F44AFC505BDFBA100CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-CaminoStatic__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -8732,7 +8732,7 @@
 		};
 		3F44AFD305BDFBA100CB4B08 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = "Info-AddressBookManager__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
@@ -9101,7 +9101,7 @@
 		3FAA54C70587778700BBF630 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			name = bookmarks.plist;
 			path = resources/application/bookmarks.plist;
 			refType = 2;
@@ -12018,7 +12018,7 @@
 		};
 		F51B70B4026EC8A601A80166 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			name = Camino.scriptSuite;
 			path = resources/application/Camino.scriptSuite;
 			refType = 2;
@@ -13684,7 +13684,7 @@
 		F5949A47030D58A1014E8430 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			path = xhtml11.dtd;
 			refType = 4;
 			sourceTree = "<group>";
@@ -14160,7 +14160,7 @@
 		};
 		F5CA1A1A02D3956F01F34900 = {
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			name = English;
 			path = resources/localized/English.lproj/Camino.scriptTerminology;
 			refType = 2;
@@ -15290,7 +15290,7 @@
 		F6BD64D501B3172601A962F7 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = text.xml;
+			lastKnownFileType = text.plist.xml;
 			name = platformHTMLBindings.xml;
 			path = ../dist/Embed/res/builtin/platformHTMLBindings.xml;
 			refType = 2;

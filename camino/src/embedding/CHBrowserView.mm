@@ -260,9 +260,17 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   return window;
 }
 
-- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags
+- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags allowPopups:(BOOL)inAllowPopups
 {
   nsCOMPtr<nsIWebNavigation> nav = do_QueryInterface(_webBrowser);
+
+  // if |inAllowPopups|, temporarily allow popups for the load. We allow them for trusted things like
+  // bookmarks.
+  nsCOMPtr<nsIDOMWindow> contentWindow = getter_AddRefs([self getContentWindow]);
+  nsCOMPtr<nsPIDOMWindow> piWindow;
+  if (inAllowPopups)
+    piWindow = do_QueryInterface(contentWindow);
+  nsAutoPopupStatePusher popupStatePusher(piWindow, openAllowed);
   
   nsAutoString specStr;
   [urlSpec assignTo_nsAString:specStr];

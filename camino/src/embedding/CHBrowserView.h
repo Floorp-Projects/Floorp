@@ -156,7 +156,7 @@ enum {
 - (nsIDOMWindow*)getContentWindow;	// addrefs
 
 // nsIWebNavigation methods
-- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags;
+- (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags allowPopups:(BOOL)inAllowPopups;
 - (void)reload:(unsigned int)flags;
 - (BOOL)canGoBack;
 - (BOOL)canGoForward;
