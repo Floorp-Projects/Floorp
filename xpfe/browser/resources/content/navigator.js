@@ -2154,6 +2154,21 @@ function onPopupBlocked(aEvent) {
         browser.popupUrls = [];
         browser.popupFeatures = [];
       }
+      // Check for duplicates, remove the old occurence of this url,
+      // to update the features, and put it at the end of the list.
+      for (var i = 0; i < browser.popupUrls.length; ++i) {
+        if (browser.popupUrls[i].equals(aEvent.popupWindowURI)) {
+          browser.popupUrls.splice(i, 1);
+          browser.popupFeatures.splice(i, 1);
+          break;
+        }
+      }
+      // Limit the length of the menu to some reasonable size.
+      // We only add one item every time, so no need for more complex stuff.
+      if (browser.popupUrls.length >= 100) {
+        browser.popupUrls.shift();
+        browser.popupFeatures.shift();
+      }
       browser.popupUrls.push(aEvent.popupWindowURI);
       browser.popupFeatures.push(aEvent.popupWindowFeatures);
     }
