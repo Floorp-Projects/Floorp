@@ -89,6 +89,7 @@ CPPSRCS         = nsAppShell.cpp \
 
 XPIDLSRCS	+= \
 		nsIChangeManager.idl \
+		nsIMenuCommandDispatcher.idl \
 		$(NULL)
 
 GARBAGE		+= $(GFX_LCPPSRCS)

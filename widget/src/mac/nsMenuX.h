@@ -143,9 +143,7 @@ protected:
     nsSupportsArray             mMenuItemsArray;        // array holds refs
 
     nsISupports*                mParent;                // weak, my parent owns me
-    // nsIMenu*                    mMenuParent;            
-    // nsIMenuBar*                 mMenuBarParent;
-    nsIChangeManager*           mManager;               // weak ref, it will outlive us
+    nsIChangeManager*           mManager;               // weak ref, it will outlive us [menubar]
     nsWeakPtr                   mWebShellWeakRef;       // weak ref to webshell
     nsCOMPtr<nsIContent>        mMenuContent;           // the |menu| tag, strong ref
     nsCOMPtr<nsIMenuListener>   mListener;              // strong ref

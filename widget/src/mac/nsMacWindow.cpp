@@ -1322,6 +1322,8 @@ PRBool nsMacWindow::HandleOSEvent ( EventRecord& aOSEvent )
 }
 
 
+#if USE_MENUSELECT
+
 //-------------------------------------------------------------------------
 //
 // Handle Menu commands
@@ -1336,6 +1338,8 @@ PRBool nsMacWindow::HandleMenuCommand ( EventRecord& aOSEvent, long aMenuResult 
 		retVal = PR_FALSE;
 	return retVal;
 }
+
+#endif
 
 //-------------------------------------------------------------------------
 // Pass notification of some drag event to Gecko

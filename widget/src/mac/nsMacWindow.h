@@ -110,9 +110,11 @@ public:
 		virtual PRBool					HandleOSEvent(
 																		EventRecord&		aOSEvent);
 
+#if USE_MENUSELECT
 		virtual PRBool					HandleMenuCommand(
 																		EventRecord&		aOSEvent,
 																		long						aMenuResult);
+#endif
 
 		// be notified that a some form of drag event needs to go into Gecko
 	virtual PRBool 			DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;

@@ -138,7 +138,9 @@ public:
 		virtual ~nsMacEventHandler();
 
 		virtual PRBool	HandleOSEvent(EventRecord& aOSEvent);
+#if USE_MENUSELECT
 		virtual PRBool	HandleMenuCommand(EventRecord& aOSEvent, long aMenuResult);
+#endif
 		
 		// Tell Gecko that a drag event has occurred and should go into Gecko
 		virtual PRBool	DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;

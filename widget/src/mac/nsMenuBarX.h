@@ -42,6 +42,7 @@
 #include "nsIMenuListener.h"
 #include "nsIDocumentObserver.h"
 #include "nsIChangeManager.h"
+#include "nsIMenuCommandDispatcher.h"
 #include "nsIPresContext.h"
 #include "nsSupportsArray.h"
 #include "nsVoidArray.h"
@@ -76,6 +77,7 @@ class nsMenuBarX :  public nsIMenuBar,
                     public nsIMenuListener,
                     public nsIDocumentObserver,
                     public nsIChangeManager,
+                    public nsIMenuCommandDispatcher,
                     public nsSupportsWeakReference
 {
 public:
@@ -86,6 +88,7 @@ public:
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSICHANGEMANAGER
+    NS_DECL_NSIMENUCOMMANDDISPATCHER
 
     // nsIMenuListener interface
     nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
@@ -171,30 +174,29 @@ protected:
     void GetDocument ( nsIWebShell* inWebShell, nsIDocument** outDocument ) ;
     void RegisterAsDocumentObserver ( nsIWebShell* inWebShell ) ;
     
-#if TARGET_CARBON
       // Make our menubar conform to Aqua UI guidelines
     void AquifyMenuBar ( ) ;
     void HideItem ( nsIDOMDocument* inDoc, nsAReadableString & inID, nsIContent** outHiddenNode ) ;
+    OSStatus InstallCommandEventHandler ( ) ;
 
       // command handler for some special menu items (prefs/quit/etc)
     pascal static OSStatus CommandEventHandler ( EventHandlerCallRef inHandlerChain, 
                                                   EventRef inEvent, void* userData ) ;
     nsEventStatus ExecuteCommand ( nsIContent* inDispatchTo ) ;
-#endif
     
       // build the Apple menu shared by all menu bars.
     nsresult CreateAppleMenu ( nsIMenu* inMenu ) ;
 
     nsHashtable             mObserverTable;     // stores observers for content change notification
+    nsHashtable             mCommandMapTable;   // maps CommandIDs to content nodes for CarbonEvent item selection
+    PRUint32                mCurrentCommandID;  // unique command id (per menu-bar) to give to next item that asks
 
     PRUint32                mNumMenus;
     nsSupportsArray         mMenusArray;        // holds refs
     nsCOMPtr<nsIContent>    mMenuBarContent;    // menubar content node, strong ref
- #if TARGET_CARBON
     nsCOMPtr<nsIContent>    mPrefItemContent;   // on X, holds the content node for the prefs item that has
                                                 // been removed from the menubar
     nsCOMPtr<nsIContent>    mQuitItemContent;   // as above, but for quit
- #endif
     nsIWidget*              mParent;            // weak ref
 
     PRBool                  mIsMenuBarAdded;
@@ -206,9 +208,7 @@ protected:
     
     static MenuRef          sAppleMenu;         // AppleMenu shared by all menubars
  
-#if TARGET_CARBON
     static EventHandlerUPP  sCommandEventHandler;   // carbon event handler for commands, shared
-#endif
 };
 
 #endif // nsMenuBarX_h__
