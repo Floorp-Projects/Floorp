@@ -235,35 +235,35 @@ pref("capability.policy.default.DOMException.code", "allAccess");
 pref("capability.policy.default.DOMException.message", "allAccess");
 pref("capability.policy.default.DOMException.name", "allAccess");
 pref("capability.policy.default.DOMException.result", "allAccess");
-pref("capability.policy.default.DOMException.toString", "allAccess");
+pref("capability.policy.default.DOMException.toString.get", "allAccess");
 
-pref("capability.policy.default.History.back", "allAccess");
+pref("capability.policy.default.History.back.get", "allAccess");
 pref("capability.policy.default.History.current", "UniversalBrowserRead");
-pref("capability.policy.default.History.forward", "allAccess");
-pref("capability.policy.default.History.go", "allAccess");
+pref("capability.policy.default.History.forward.get", "allAccess");
+pref("capability.policy.default.History.go.get", "allAccess");
 pref("capability.policy.default.History.item", "UniversalBrowserRead");
 pref("capability.policy.default.History.next", "UniversalBrowserRead");
 pref("capability.policy.default.History.previous", "UniversalBrowserRead");
 pref("capability.policy.default.History.toString", "UniversalBrowserRead");
 
-pref("capability.policy.default.HTMLDocument.close", "allAccess");
-pref("capability.policy.default.HTMLDocument.open", "allAccess");
+pref("capability.policy.default.HTMLDocument.close.get", "allAccess");
+pref("capability.policy.default.HTMLDocument.open.get", "allAccess");
 
 pref("capability.policy.default.Location.hash.set", "allAccess");
 pref("capability.policy.default.Location.href.set", "allAccess");
-pref("capability.policy.default.Location.reload", "allAccess");
-pref("capability.policy.default.Location.replace", "allAccess");
+pref("capability.policy.default.Location.reload.get", "allAccess");
+pref("capability.policy.default.Location.replace.get", "allAccess");
 
 pref("capability.policy.default.Navigator.preference", "allAccess");
 pref("capability.policy.default.Navigator.preferenceinternal.get", "UniversalPreferencesRead");
 pref("capability.policy.default.Navigator.preferenceinternal.set", "UniversalPreferencesWrite");
 
-pref("capability.policy.default.Window.blur", "allAccess");
-pref("capability.policy.default.Window.close", "allAccess");
+pref("capability.policy.default.Window.blur.get", "allAccess");
+pref("capability.policy.default.Window.close.get", "allAccess");
 pref("capability.policy.default.Window.closed", "allAccess");
 pref("capability.policy.default.Window.Components", "allAccess");
 pref("capability.policy.default.Window.document", "allAccess");
-pref("capability.policy.default.Window.focus", "allAccess");
+pref("capability.policy.default.Window.focus.get", "allAccess");
 pref("capability.policy.default.Window.frames", "allAccess");
 pref("capability.policy.default.Window.history", "allAccess");
 pref("capability.policy.default.Window.length", "allAccess");
