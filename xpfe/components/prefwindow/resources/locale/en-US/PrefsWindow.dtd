@@ -1,5 +1,5 @@
 <!-- extracted from content/PrefsWindow.xul -->
 
-<!-- LOCALIZATION NOTE PrefsWindow.dtd: UI for the outer parts of the Prefs dialog -->
+<!-- LOCALIZATION NOTE : FILE UI for the outer parts of the Prefs dialog -->
 <!ENTITY categoryHeader "Category">
 <!ENTITY window.title "Preferences">

@@ -1,23 +1,23 @@
 <!-- extracted from content/pref-fonts.xul -->
 
-<!--LOCALIZATION NOTE pref-fonts.dtd: 'Fonts' prefs dialog -->
+<!--LOCALIZATION NOTE : FILE 'Fonts' prefs dialog -->
 <!ENTITY  window.title "Fonts">
 <!ENTITY  lHeader "Fonts">
 <!ENTITY  rHeader "Change the fonts in your display">
 <!ENTITY  encod.select "For the Encoding:">
 <!ENTITY  encod1.option "Western">
 <!ENTITY  size.select "Size">
-<!--LOCALIZATION NOTE size1.option: DONT_TRANSLATE -->
+<!--LOCALIZATION NOTE (size1.option): DONT_TRANSLATE -->
 <!ENTITY  size1.option "10">
 <!ENTITY  varFont.select "Variable Width Font:">
-<!--LOCALIZATION NOTE varFont.option: DONT_TRANSLATE -->
+<!--LOCALIZATION NOTE (varFont.option): DONT_TRANSLATE -->
 <!ENTITY  varFont.option "10">
 <!ENTITY  fixedFont.Select "Fixed Width Font">
-<!--LOCALIZATION NOTE fixedFont.option Don't translate this term. -->
+<!--LOCALIZATION NOTE (fixedFont.option): DONT_TRANSLATE -->
 <!ENTITY  fixedFont.option "Filler">
 <!ENTITY  header2 "Sometimes a document will provide its own fonts.">
 <!ENTITY  useDefaultFont "Use my default fonts, overriding document-specified fonts">
-<!--LOCALIZATION NOTE useDocFontNonDynamic Translate 'Dynamic Fonts' according to Netscape Glossary -->
+<!--LOCALIZATION NOTE (useDocFontNonDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
 <!ENTITY  useDocFontNonDynamic "Use document-specified fonts, but disable Dynamic Fonts">
-<!--LOCALIZATION NOTE useDocFontDynamic Translate 'Dynamic Fonts' according to Netscape Glossary -->
+<!--LOCALIZATION NOTE (useDocFontDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
 <!ENTITY  useDocFontDynamic "Use document-specified fonts, including Dynamic Fonts">
