@@ -64,7 +64,7 @@
       <menuitem id="miOpenInNewWindow" label="&openLinkCmd.label;" accesskey="&openLinkCmd.accesskey;"
                 oncommand="OpenURL(true);"/>
       <menuseparator id="pre-bookmarks-separator"/>
-      <menuitem id="miAddBookmark" label="&bookmarkLinkCmd.label;" accesskey="&bookmarkLinkCmd.accesskey;" oncommand="historyAddBookmarks();"/>
+      <menuitem id="miAddBookmark" label="&bookmarkLinkCmd.label;" oncommand="historyAddBookmarks();"/>
       <menuitem id="miCopyLinkLocation" label="&copyLinkCmd.label;" accesskey="&copyLinkCmd.accesskey;"
                 command="cmd_copy"/>
       <menuseparator id="post-bookmarks-separator"/>
