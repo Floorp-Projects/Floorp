@@ -2209,12 +2209,15 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(PRUint32 *result)
         }
 
         // now make it nicely fit counting margins
-        nsIFrame *parent;
-        mOwner->GetParent(&parent);
-        parent->GetRect(rect);
-
-        w -= 2*rect.x;
-
+        nsIFrame *containingBlock=nsnull;
+        rv = GetContainingBlock(mOwner, &containingBlock);
+        if (NS_SUCCEEDED(rv) && containingBlock)
+        {
+          containingBlock->GetRect(rect);
+          w -= 2*rect.x;
+          // XXX: this math seems suspect to me.  Is the parent's margin really twice the x-offset?
+          //      in CSS, a frame can have independent left and right margins
+        }
         *result = NSTwipsToIntPixels(attr*w/100, t2p);
       }
     }
@@ -2274,6 +2277,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
         {
           containingBlock->GetRect(rect);
           h -= 2*rect.y;
+          // XXX: this math seems suspect to me.  Is the parent's margin really twice the x-offset?
+          //      in CSS, a frame can have independent top and bottom margins
         }
         *result = NSTwipsToIntPixels(attr*h/100, t2p);
       }
@@ -2287,6 +2292,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
   return rv;
 }
 
+// it would indicate a serious error in the frame model if aContainingBlock were null when 
+// GetContainingBlock returns
 nsresult
 nsPluginInstanceOwner::GetContainingBlock(nsIFrame *aFrame, 
                                           nsIFrame **aContainingBlock)
@@ -2307,6 +2314,7 @@ nsPluginInstanceOwner::GetContainingBlock(nsIFrame *aFrame,
     }
     containingBlock->GetParent(&containingBlock);
   }
+  NS_POSTCONDITION(*aContainingBlock, "bad frame model, this object frame has no containing block");
   return NS_OK;
 }
 
