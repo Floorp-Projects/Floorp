@@ -92,7 +92,6 @@ Rights Reserved.
       <hbox id="normalview">
         <tree id="subscribeTree"
               flex="1"
-              seltype="multiple"
               datasources="rdf:null"
               flags="dont-build-content"
               disableKeyNavigation="true"

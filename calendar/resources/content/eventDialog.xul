@@ -415,7 +415,7 @@
                   <!-- Existing addresses -->                
                   <vbox id="resultsBox" flex="4">
                      <label value=" " />
-                     <tree id="abResultsTree" flex="1" persist="height" hidecolumnpicker="true" seltype="multiple" onclick="this.contactsTree.onClick( event );" ondblclick="this.contactsTree.onDblClick( event );">
+                     <tree id="abResultsTree" flex="1" persist="height" hidecolumnpicker="true" onclick="this.contactsTree.onClick( event );" ondblclick="this.contactsTree.onDblClick( event );">
                       
                         <treecols id="recipientTreeCols">
                            <treecol id="GeneratedName" sort-field="GeneratedName" class="sortDirectionIndicator"   list-view-sort-field="true" 
@@ -445,7 +445,7 @@
                   <vbox id="bucketBox" flex="1">
                       <label value="&ab-selectAddressesDialogInviteList.label;"/>
                       
-                      <tree id="addressBucket" flex="1" seltype="multiple" hidecolumnpicker="true" onclick="selectEventRecipient( this );">
+                      <tree id="addressBucket" flex="1" hidecolumnpicker="true" onclick="selectEventRecipient( this );">
                           <treecols>
                               <treecol id="addressCol" flex="1" hideheader="true"/>
                           </treecols>

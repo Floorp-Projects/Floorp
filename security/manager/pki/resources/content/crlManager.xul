@@ -48,7 +48,7 @@
   <description value="&validation.crlmanager.label;"/>
   <separator class="thin"/>
   <tree id="crltree" style="height: 10em;"
-   seltype="multiple" onselect="EnableCrlActions()" flex="1">
+   onselect="EnableCrlActions()" flex="1">
     <treecols>
       <treecol id="Col1" flex="3" label="&certmgr.certdetail.o;"/>
       <splitter class="tree-splitter"/>

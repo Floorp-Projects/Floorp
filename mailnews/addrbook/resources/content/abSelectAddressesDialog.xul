@@ -107,7 +107,7 @@ Contributor(s):
         
       <vbox id="bucketBox" flex="1">
         <label value="&addressMessageTo.label;"/>
-        <tree id="addressBucket" flex="1" seltype="multiple" hidecolumnpicker="true"
+        <tree id="addressBucket" flex="1" hidecolumnpicker="true"
             ondragover="DragOverBucketPane(event);"
             ondragdrop="DropOnBucketPane(event);"
             onselect="DialogBucketPaneSelectionChanged();">

@@ -52,7 +52,7 @@
  
           <tree id="user-list" container="true" datasources="rdf:null" flex="1"
             containment="http://home.netscape.com/NC-irc#chanuser"
-            seltype="multiple" context="userlistPopup">
+            context="userlistPopup">
 
             <template>
               <rule>

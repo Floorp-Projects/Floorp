@@ -106,7 +106,7 @@
           <description>&spiel.nopreview.label;</description>
           <separator class="thin"/>
           <tree id="nopreviewsTree" flex="1" style="height: 10em;"
-                seltype="multiple" hidecolumnpicker="true"
+                hidecolumnpicker="true"
                 onkeypress="HandleNopreviewKeyPress(event)"
                 onselect="NopreviewSelected();">
             <treecols>
@@ -129,7 +129,7 @@
           <description>&spiel.nocapture.label;</description>
           <separator class="thin"/>
           <tree id="nocapturesTree" flex="1" style="height: 10em;"
-                seltype="multiple" hidecolumnpicker="true"
+                hidecolumnpicker="true"
                 onkeypress="HandleNocaptureKeyPress(event)"
                 onselect="NocaptureSelected();">
             <treecols>
