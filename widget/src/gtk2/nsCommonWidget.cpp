@@ -67,11 +67,10 @@ nsCommonWidget::GetParent(void)
 }
 
 void
-nsCommonWidget::CommonCreate(nsIWidget *aParent, nsNativeWidget aNativeParent)
+nsCommonWidget::CommonCreate(nsIWidget *aParent, PRBool aListenForResizes)
 {
     mParent = aParent;
-    if (aNativeParent)
-        mListenForResizes = PR_TRUE;
+    mListenForResizes = aListenForResizes;
 }
 
 void
@@ -387,13 +386,15 @@ nsCommonWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     // If the widget hasn't been shown, mark the widget as needing to be
     // resized before it is shown.
     else {
-        // For widgets that we listen for resizes for (widgets created
-        // with native parents) we apparently _always_ have to resize.  I
-        // dunno why, but apparently we're lame like that.
-        if (mListenForResizes)
+        if (AreBoundsSane() && mListenForResizes) {
+            // For widgets that we listen for resizes for (widgets created
+            // with native parents) we apparently _always_ have to resize.  I
+            // dunno why, but apparently we're lame like that.
             NativeResize(aWidth, aHeight, aRepaint);
-        else
+        }
+        else {
             mNeedsResize = PR_TRUE;
+        }
     }
 
     // synthesize a resize event if this isn't a toplevel
@@ -445,13 +446,15 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     // If the widget hasn't been shown, mark the widget as needing to be
     // resized before it is shown
     else {
-        // For widgets that we listen for resizes for (widgets created
-        // with native parents) we apparently _always_ have to resize.  I
-        // dunno why, but apparently we're lame like that.
-        if (mListenForResizes)
+        if (AreBoundsSane() && mListenForResizes){
+            // For widgets that we listen for resizes for (widgets created
+            // with native parents) we apparently _always_ have to resize.  I
+            // dunno why, but apparently we're lame like that.
             NativeResize(aX, aY, aWidth, aHeight, aRepaint);
-        else
+        }
+        else {
             mNeedsResize = PR_TRUE;
+        }
     }
 
     if (mIsTopLevel || mListenForResizes) {
@@ -525,7 +528,7 @@ nsCommonWidget::OnDestroy(void)
 PRBool
 nsCommonWidget::AreBoundsSane(void)
 {
-    if (mBounds.width > 1 && mBounds.height > 1)
+    if (mBounds.width > 0 && mBounds.height > 0)
         return PR_TRUE;
 
     return PR_FALSE;

@@ -69,7 +69,7 @@ public:
 
     virtual nsIWidget *GetParent(void);
 
-    void CommonCreate(nsIWidget *aParent, nsNativeWidget aNativeParent);
+    void CommonCreate(nsIWidget *aParent, PRBool aListenForResizes);
 
     // event handling code
     void InitPaintEvent(nsPaintEvent &aEvent);

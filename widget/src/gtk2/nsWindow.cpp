@@ -494,11 +494,15 @@ nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 NS_IMETHODIMP
 nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-    if (aX == mBounds.x && aY == mBounds.y)
-        return NS_OK;
-
     LOG(("nsWindow::Move [%p] %d %d\n", (void *)this,
          aX, aY));
+
+    // Since a popup window's x/y coordinates are in relation to to
+    // the parent, the parent might have moved so we always move a
+    // popup window.
+    if (aX == mBounds.x && aY == mBounds.y &&
+        mWindowType != eWindowType_popup)
+        return NS_OK;
 
     mBounds.x = aX;
     mBounds.y = aY;
@@ -1964,8 +1968,13 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
                aAppShell, aToolkit, aInitData);
 
+    // Do we need to listen for resizes?
+    PRBool listenForResizes;
+    if (aNativeParent || aInitData->mListenForResizes)
+        listenForResizes = PR_TRUE;
+
     // and do our common creation
-    CommonCreate(aParent, aNativeParent);
+    CommonCreate(aParent, listenForResizes);
 
     // save our bounds
     mBounds = aRect;
