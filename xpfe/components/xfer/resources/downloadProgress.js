@@ -336,8 +336,7 @@ function onStatus( status ) {
 }
 
 function onError( errorCode ) {
-    // XXX - l10n
-    var msg = "Unknown error";
+    var msg = bundle.GetStringFromName("unknown");
     switch ( errorCode ) {
         default:
             break;
@@ -350,4 +349,4 @@ function onError( errorCode ) {
     dump( "Error closing dialog\n" );  
     onStatus( bundle.GetStringFromName("error"));
     dialog.cancel.childNodes[0].nodeValue = bundle.GetStringFromName("close");
-}
+
