@@ -37,7 +37,7 @@
 
 #include "ApplIDs.h"
 
-static const nsACString &GetResCString(PRInt32 stringIndex, Str255& buf);
+static nsACString& GetResCString(PRInt32 stringIndex, nsACString& outStr);
   
 
 //*****************************************************************************
@@ -71,7 +71,7 @@ CAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile 
 {    
 	nsCOMPtr<nsILocalFile>  localFile;
 	nsresult rv = NS_ERROR_FAILURE;
-	Str255 strBuf;
+	nsCAutoString strBuf;
 
 	*_retval = nsnull;
 	*persistant = PR_TRUE;
@@ -237,7 +237,7 @@ NS_METHOD CAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLo
     nsresult rv;
     PRBool exists;
     nsCOMPtr<nsILocalFile> localDir;
-    Str255 strBuf;
+    nsCAutoString strBuf;
    
     rv = GetProductDirectory(getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
@@ -259,19 +259,13 @@ NS_METHOD CAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLo
 // Static Routines
 //****************************************************************************************
 
-static const nsACString &GetResCString(PRInt32 stringIndex, Str255& buf)
+static nsACString& GetResCString(PRInt32 stringIndex, nsACString& outStr)
 {
-    GetIndString(buf, STRx_FileLocProviderStrings, stringIndex);
-    if (!buf[0]) {
+    Str255 pString;
+    GetIndString(pString, STRx_FileLocProviderStrings, stringIndex);
+    if (!pString[0])
         NS_ASSERTION(PR_FALSE, "Directory name resource is missing.");
-        return nsCString();
-    }
-    
-    // Because of different availability of Pascal to C conversion routines
-    // in Carbon and not, just do it by hand.
-    PRInt32 len = buf[0];
-    memmove(buf, buf + 1, len);
-    buf[len] = '\0';
-    
-    return nsDependentCString((char *)buf);
+
+    outStr.Assign((char*)&pString[1], pString[0]);
+    return outStr;   
 }
