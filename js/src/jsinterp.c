@@ -1257,7 +1257,8 @@ js_Interpret(JSContext *cx, jsval *result)
 	    if (!ok)
 		goto out;
 	    PUSH_OPND(BOOLEAN_TO_JSVAL(prop != NULL));
-            OBJ_DROP_PROPERTY(cx, obj, prop);
+            if (prop)
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
 	    break;
 #endif /* JS_HAS_IN_OPERATOR */
 
