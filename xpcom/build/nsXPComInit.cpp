@@ -83,7 +83,9 @@
 
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
+#ifdef XP_UNIX
 #include "nsNativeCharsetUtils.h"
+#endif
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"

@@ -744,6 +744,7 @@ NS_ShutdownNativeCharsetUtils()
 #else // non XP_UNIX implementations go here...
 
 #include "nsDebug.h"
+#include "nsAString.h"
 
 NS_COM nsresult
 NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
