@@ -398,9 +398,17 @@
  * netwerk/dns/ classes
  */
 
+#define NS_IDNSERVICE_CLASSNAME \
+    "nsIDNService"
 /* ContractID of the XPCOM package that implements nsIIDNService */
 #define NS_IDNSERVICE_CONTRACTID \
-    "@i-dns.net/IDNService;1"
-
+    "@mozilla.org/network/idn-service;1"
+#define NS_IDNSERVICE_CID \
+{ /* 62b778a6-bce3-456b-8c31-2865fbb68c91 */         \
+    0x62b778a6,                                      \
+    0xbce3,                                          \
+    0x456b,                                          \
+    {0x8c, 0x31, 0x28, 0x65, 0xfb, 0xb6, 0x8c, 0x91} \
+}
 
 #endif // nsNetCID_h__
