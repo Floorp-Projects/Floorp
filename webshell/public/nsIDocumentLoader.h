@@ -65,14 +65,21 @@ public:
 class nsIDocumentLoader : public nsISupports 
 {
 public:
-    NS_IMETHOD SetDocumentFactory(nsIDocumentLoaderFactory* aFactory) = 0;
-
     NS_IMETHOD LoadURL(const nsString& aURLSpec, 
                        const char* aCommand,
                        nsIContentViewerContainer* aContainer,
                        nsIPostData* aPostData = nsnull,
                        nsISupports* aExtraInfo = nsnull,
                        nsIStreamObserver* anObserver = nsnull) = 0;
+
+    NS_IMETHOD LoadURL(const nsString& aURLSpec,
+                       nsIStreamListener* aListener) = 0;
+
+    NS_IMETHOD Stop(void) = 0;
+
+    NS_IMETHOD CreateDocumentLoader(nsIDocumentLoader** anInstance) = 0;
+
+    NS_IMETHOD SetDocumentFactory(nsIDocumentLoaderFactory* aFactory) = 0;
 };
 
 /* 057b04d0-0ccf-11d2-beba-00805f8a66dc */
