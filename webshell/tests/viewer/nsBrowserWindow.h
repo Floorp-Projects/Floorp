@@ -40,14 +40,12 @@
 
 #include "nsIXPBaseWindow.h"
 #include "nsPrintSetupDialog.h"
-#include "nsFindDialog.h"
 #include "nsTableInspectorDialog.h"
 #include "nsImageInspectorDialog.h"
 #include "nsIPrompt.h"
 
 class nsILabel;
 class nsICheckButton;
-class nsIRadioButton;
 class nsITextWidget;
 class nsIButton;
 class nsThrobber;
@@ -259,16 +257,6 @@ public:
   
   // "Status bar"
   nsITextWidget* mStatus;
-
-  // Find Dialog
-  nsIBrowserWindow * mDialog;
-  nsIButton      * mCancelBtn;
-  nsIButton      * mFindBtn;
-  nsITextWidget  * mTextField;
-  nsICheckButton * mMatchCheckBtn;
-  nsIRadioButton * mUpRadioBtn;
-  nsIRadioButton * mDwnRadioBtn;
-  nsILabel       * mLabel;
 
   nsIXPBaseWindow * mXPDialog;
   nsIXPBaseWindow * mTableInspectorDialog;

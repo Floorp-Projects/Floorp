@@ -41,7 +41,6 @@ LCFLAGS = $(LCFLAGS) -DUSE_LOCAL_WIDGETS
 
 OBJS =                                      \
 	.\$(OBJDIR)\nsBaseDialog.obj     \
-	.\$(OBJDIR)\nsFindDialog.obj     \
 	.\$(OBJDIR)\nsImageInspectorDialog.obj     \
 	.\$(OBJDIR)\nsTableInspectorDialog.obj     \
 	.\$(OBJDIR)\nsPrintSetupDialog.obj     \
@@ -55,6 +54,7 @@ OBJS =                                      \
 	.\$(OBJDIR)\nsWebBrowserChrome.obj        \
 	.\$(OBJDIR)\nsWinMain.obj           \
 	.\$(OBJDIR)\JSConsole.obj           \
+	.\$(OBJDIR)\nsWidgetSupport.obj           \
 	$(NULL)
 
 LINCS=  \
@@ -96,7 +96,7 @@ LLIBS=                         \
  $(DIST)\lib\raptornativewidgets_s.lib     \
  $(DIST)\lib\raptorbasewidget_s.lib     \
  $(DIST)\lib\raptorwidget_s.lib     \
- $(DIST)\lib\widgetsupport_s.lib \
+# $(DIST)\lib\widgetsupport_s.lib \
  $(DIST)\lib\DebugRobot.lib     \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib \
