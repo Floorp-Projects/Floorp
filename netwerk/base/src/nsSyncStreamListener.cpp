@@ -144,7 +144,7 @@ nsSyncStreamListener::OnDataAvailable(nsISupports* context,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
+NS_NET nsresult
 NS_NewSyncStreamListener(nsIStreamListener* *listener,
                          nsIBufferInputStream* *inStream)
 {

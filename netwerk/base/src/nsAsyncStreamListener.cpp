@@ -507,7 +507,7 @@ nsAsyncStreamListener::OnDataAvailable(nsISupports* context,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
+NS_NET nsresult
 NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
                           nsIEventQueue* eventQueue,
                           nsIStreamObserver* receiver)
@@ -522,7 +522,7 @@ NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
     return NS_OK;
 }
 
-nsresult
+NS_NET nsresult
 NS_NewAsyncStreamListener(nsIStreamListener* *result,
                           nsIEventQueue* eventQueue,
                           nsIStreamListener* receiver)

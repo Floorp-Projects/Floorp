@@ -46,4 +46,19 @@
 #define NS_ERROR_IN_PROGRESS \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 6)
 
+#undef NS_NET
+#ifdef _IMPL_NS_NET
+#ifdef XP_PC
+#define NS_NET _declspec(dllexport)
+#else  /* !XP_PC */
+#define NS_NET
+#endif /* !XP_PC */
+#else  /* !_IMPL_NS_NET */
+#ifdef XP_PC
+#define NS_NET _declspec(dllimport)
+#else  /* !XP_PC */
+#define NS_NET
+#endif /* !XP_PC */
+#endif /* !_IMPL_NS_NET */
+
 #endif // __netCore_h__
