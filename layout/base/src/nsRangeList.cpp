@@ -216,7 +216,7 @@ public:
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGUIEvent);
   NS_IMETHOD HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent);
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
-                       PRBool aContinueSelection, PRBool aMultipleSelection,PRBool aHint);
+                       PRBool aContinueSelection, PRBool aMultipleSelection,PRBool aHint, PRBool aIsCell);
   NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
   NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
   NS_IMETHOD StopAutoScrollTimer();
@@ -274,6 +274,8 @@ private:
   void         SetDirty(PRBool aDirty=PR_TRUE){if (mBatching) mChangesDuringBatching = aDirty;}
 
   nsresult     NotifySelectionListeners();			// add parameters to say collapsed etc?
+  nsresult     NotifySelectionListeners(nsIDOMNode *aNode, PRUint32 aCellOffset);
+
 
   nsDOMSelection *mDomSelections[NUM_SELECTIONTYPES];
 
@@ -1348,10 +1350,15 @@ nsDOMSelection::ToString(nsString& aReturn)
 NS_IMETHODIMP
 nsRangeList::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, 
                        PRUint32 aContentEndOffset, PRBool aContinueSelection, 
-                       PRBool aMultipleSelection, PRBool aHint)
+                       PRBool aMultipleSelection, PRBool aHint, PRBool aIsCell)
 {
   InvalidateDesiredX();
   mHint = HINT(aHint);
+  if (aIsCell)
+  {
+    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNewFocus);
+    return NotifySelectionListeners(domNode, aContentOffset);
+  }
   return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
 }
 
@@ -1390,7 +1397,7 @@ nsRangeList::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
                                                    startPos, contentOffsetEnd,beginOfContent);
 
   if (NS_SUCCEEDED(result))
-    result = HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE,beginOfContent);
+    result = HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE,beginOfContent, PR_FALSE);
 
   return result;
 }
@@ -1789,6 +1796,26 @@ nsRangeList::NotifySelectionListeners()
     nsCOMPtr<nsIDOMSelectionListener> thisListener = do_QueryInterface(isupports);
     if (thisListener)
     	thisListener->NotifySelectionChanged();
+  }
+	return NS_OK;
+}
+
+
+nsresult
+nsRangeList::NotifySelectionListeners(nsIDOMNode *aNode, PRUint32 aCellOffset)
+{
+  if (!mSelectionListeners)
+    return NS_ERROR_FAILURE;
+ 
+  PRUint32 cnt;
+  nsresult rv = mSelectionListeners->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  for (PRUint32 i = 0; i < cnt;i++)
+  {
+    nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
+    nsCOMPtr<nsIDOMSelectionListener> thisListener = do_QueryInterface(isupports);
+    if (thisListener)
+    	thisListener->TableCellNotification(aNode,aCellOffset);
   }
 	return NS_OK;
 }

@@ -58,6 +58,7 @@
 #include "nsCOMPtr.h"
 #include "nsStyleChangeList.h"
 #include "nsIDOMRange.h"
+#include "nsITableCellLayout.h"//selection neccesity
 
 
 #define NORMAL_DRAG_HANDLING 1  // remove this to simulate a start-drag event.
@@ -865,13 +866,40 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
       nsCOMPtr<nsIFrameSelection> frameselection;
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
         frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
-        PRBool doMultipleSelection;
+        PRBool doCellSelection;
 #ifdef XP_MAC
-        doMultipleSelection = me->isMeta;
+        doCellSelection = me->isMeta;
 #else
-        doMultipleSelection = me->isControl;
+        doCellSelection = me->isControl;
 #endif
-        frameselection->HandleClick(newContent, startPos , contentOffsetEnd , me->isShift, doMultipleSelection, beginContent);
+        nsIFrame *cellFrame;
+
+        if (doCellSelection)
+        {
+          nsresult result = GrabContainingCell(&cellFrame);
+          if (NS_SUCCEEDED(result) && cellFrame)
+          {
+            nsIContent* cellContent;
+            result = cellFrame->GetContent(&cellContent);
+            if (NS_SUCCEEDED(result) && cellContent)
+            {
+              nsIContent* parentContent;
+              result = cellContent->GetParent(parentContent);
+              if (parentContent){
+                PRInt32 newIndex;
+                result = parentContent->IndexOf(cellContent, newIndex);
+                if (NS_SUCCEEDED(result) && newIndex >= 0) 
+                {
+                  frameselection->HandleClick(parentContent,newIndex, newIndex+1,me->isShift,PR_FALSE, beginContent, PR_TRUE);
+                }
+                NS_IF_RELEASE(parentContent);
+              }
+              NS_IF_RELEASE(cellContent);
+            }
+          }
+        }
+        else
+          frameselection->HandleClick(newContent, startPos , contentOffsetEnd , me->isShift, PR_FALSE, beginContent, PR_FALSE);
       }
       //no release 
     }
@@ -2708,6 +2736,24 @@ nsFrame::GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
     child = lookahead;
     *aFrame = child;
   }
+}
+
+NS_IMETHODIMP
+nsFrame::GrabContainingCell(nsIFrame **aCellFrame)
+{
+  *aCellFrame = this;
+  nsresult result = NS_OK;
+  while (*aCellFrame && NS_SUCCEEDED(result))
+  {
+    nsITableCellLayout *cellelement;
+
+    result = (*aCellFrame)->QueryInterface(nsITableCellLayout::GetIID(), (void **)&cellelement);
+    if (NS_SUCCEEDED(result) && cellelement)
+      return NS_OK;
+    else
+      result = (*aCellFrame)->GetParent(aCellFrame);
+  }
+  return result?result:NS_ERROR_FAILURE;
 }
 
 nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                aPresShell,

@@ -38,6 +38,7 @@ public:
   virtual ~TypeInState();
 
   NS_IMETHOD NotifySelectionChanged();
+  NS_IMETHOD TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset);
 
   void GetEnumForName(nsIAtom *aPropName, PRUint32 &aEnum);
   void GetPropertyIsString(PRUint32 aProp, PRUint32 &aIsString);

@@ -25,12 +25,19 @@
 
 #include "nsISupports.h"
 
+
+class nsIFocusTracker;
 class nsIContent;
 class nsIDOMRange;
 
 #define NS_ICONTENTITERTOR_IID \
 {0xa6cf90e4, 0x15b3, 0x11d2,   \
 {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+
+// {B4BC9F63-D9BA-11d3-9938-00108301233C}
+#define NS_IGENERATEDCONTENTITERTOR_IID \
+{ 0xb4bc9f63, 0xd9ba, 0x11d3,  \
+{ 0x99, 0x38, 0x0, 0x10, 0x83, 0x1, 0x23, 0x3c } }
 
 class nsIContentIterator : public nsISupports {
 public:
@@ -84,6 +91,16 @@ public:
    */
   NS_IMETHOD MakePost()=0;
 
+};
+
+class nsIGeneratedContentIterator : public nsISupports {
+public:
+
+  static const nsIID& GetIID() { static nsIID iid = NS_IGENERATEDCONTENTITERTOR_IID; return iid; }
+
+  /* Initializes an iterator for the subtree rooted by the node aRoot
+   */
+  NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIDOMRange* aRange, PRBool aSelectBefore, PRBool aSelectAfter)=0;
 };
 
 
