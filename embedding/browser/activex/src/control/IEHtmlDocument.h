@@ -46,9 +46,10 @@
 
 class CMozillaBrowser;
 
-class CIEHtmlDocument :    public CIEHtmlNode,
-                        public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML, 4, 0>,
-                        public IOleCommandTarget
+class CIEHtmlDocument :
+    public CIEHtmlNode,
+    public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML, 4, 0>,
+    public IOleCommandTarget
 {
 public:
     CIEHtmlDocument();
@@ -56,8 +57,8 @@ protected:
     virtual ~CIEHtmlDocument();
 
     // Pointer to browser that owns the document
-    CMozillaBrowser *m_pParent;
-    nsIDOMHTMLDocument *m_pNative;
+    CMozillaBrowser *mControl;
+    nsCOMPtr<nsIDOMHTMLDocument> mDOMDocument;
 
     HRESULT WriteCommon(SAFEARRAY __RPC_FAR * psarray, int bLn);
 
@@ -71,8 +72,6 @@ BEGIN_COM_MAP(CIEHtmlDocument)
     COM_INTERFACE_ENTRY_IID(IID_IHTMLDocument2, IHTMLDocument2)
     COM_INTERFACE_ENTRY(IOleCommandTarget)
 END_COM_MAP()
-
-    virtual HRESULT GetIDispatch(IDispatch **pDispatch);
 
     // IOleCommandTarget methods
     virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID __RPC_FAR *pguidCmdGroup, ULONG cCmds, OLECMD __RPC_FAR prgCmds[], OLECMDTEXT __RPC_FAR *pCmdText);

@@ -45,10 +45,9 @@
 
 #include <stack>
 
-CIEHtmlDocument::CIEHtmlDocument()
+CIEHtmlDocument::CIEHtmlDocument() :
+    mControl(NULL)
 {
-    m_pParent = NULL;
-    m_pNative = nsnull;
 }
 
 
@@ -59,29 +58,13 @@ CIEHtmlDocument::~CIEHtmlDocument()
 
 void CIEHtmlDocument::SetParent(CMozillaBrowser *parent)
 {
-    m_pParent = parent;
+    mControl = parent;
 }
 
 
 void CIEHtmlDocument::SetNative(nsIDOMHTMLDocument *native)
 {
-    m_pNative = native;
-}
-
-
-HRESULT CIEHtmlDocument::GetIDispatch(IDispatch **pDispatch)
-{
-    if (pDispatch == NULL)
-    {
-        return E_INVALIDARG;
-    }
-
-    IDispatch *pDisp = (IDispatch *) this;
-    NG_ASSERT(pDisp);
-    pDisp->AddRef();
-    *pDispatch = pDisp;
-
-    return S_OK;
+    mDOMDocument = native;
 }
 
 
@@ -142,7 +125,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_body(IHTMLElement __RPC_FAR *__RP
 
     nsCOMPtr<nsIDOMHTMLElement> bodyElement;
 
-    m_pNative->GetBody(getter_AddRefs(bodyElement));
+    mDOMDocument->GetBody(getter_AddRefs(bodyElement));
     if (bodyElement)
     {
         nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
@@ -152,7 +135,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_body(IHTMLElement __RPC_FAR *__RP
         if (pElement)
         {
             pElement->SetDOMNode(bodyNode);
-            pElement->SetParentNode(this);
+            pElement->SetParent(this);
             pElement->QueryInterface(IID_IHTMLElement, (void **) p);
         }
     }
@@ -179,7 +162,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_images(IHTMLElementCollection __R
     *p = NULL;
 
     nsCOMPtr<nsIDOMHTMLCollection> nodeList;
-    m_pNative->GetImages(getter_AddRefs(nodeList));
+    mDOMDocument->GetImages(getter_AddRefs(nodeList));
 
     // Get all elements
     CIEHtmlElementCollectionInstance *pCollection = NULL;
@@ -204,7 +187,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_applets(IHTMLElementCollection __
     *p = NULL;
 
     nsCOMPtr<nsIDOMHTMLCollection> nodeList;
-    m_pNative->GetApplets(getter_AddRefs(nodeList));
+    mDOMDocument->GetApplets(getter_AddRefs(nodeList));
 
     // Get all elements
     CIEHtmlElementCollectionInstance *pCollection = NULL;
@@ -229,7 +212,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_links(IHTMLElementCollection __RP
     *p = NULL;
 
     nsCOMPtr<nsIDOMHTMLCollection> nodeList;
-    m_pNative->GetLinks(getter_AddRefs(nodeList));
+    mDOMDocument->GetLinks(getter_AddRefs(nodeList));
 
     // Get all elements
     CIEHtmlElementCollectionInstance *pCollection = NULL;
@@ -254,7 +237,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_forms(IHTMLElementCollection __RP
     *p = NULL;
 
     nsCOMPtr<nsIDOMHTMLCollection> nodeList;
-    m_pNative->GetForms(getter_AddRefs(nodeList));
+    mDOMDocument->GetForms(getter_AddRefs(nodeList));
 
     // Get all elements
     CIEHtmlElementCollectionInstance *pCollection = NULL;
@@ -279,7 +262,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_anchors(IHTMLElementCollection __
     *p = NULL;
 
     nsCOMPtr<nsIDOMHTMLCollection> nodeList;
-    m_pNative->GetAnchors(getter_AddRefs(nodeList));
+    mDOMDocument->GetAnchors(getter_AddRefs(nodeList));
 
     // Get all elements
     CIEHtmlElementCollectionInstance *pCollection = NULL;
@@ -295,10 +278,10 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_anchors(IHTMLElementCollection __
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_title(BSTR v)
 {
-    if (m_pNative)
+    if (mDOMDocument)
     {
         nsAutoString newTitle((PRUnichar *) v);
-        m_pNative->SetTitle(newTitle);
+        mDOMDocument->SetTitle(newTitle);
     }
     return S_OK;
 }
@@ -307,7 +290,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_title(BSTR v)
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_title(BSTR __RPC_FAR *p)
 {
     nsAutoString value;
-    if (m_pNative == NULL || m_pNative->GetTitle(value))
+    if (mDOMDocument == NULL || mDOMDocument->GetTitle(value))
     {
         return E_FAIL;
     }
@@ -607,14 +590,16 @@ HRESULT CIEHtmlDocument::WriteCommon(SAFEARRAY __RPC_FAR * psarray, int bLn)
 
     for (DWORD i = 0; i < psarray->rgsabound[0].cElements; i++)
     {
-        nsString str;
+        nsAutoString str;
         if (psarray->fFeatures & FADF_BSTR)
         {
+            USES_CONVERSION;
             BSTR *bstrArray = (BSTR *) psarray->pvData;
-            str = nsString(bstrArray[i], SysStringLen(bstrArray[i]));
+            str = OLE2W(bstrArray[i]);
         }
         else if (psarray->fFeatures & FADF_VARIANT)
         {
+            USES_CONVERSION;
             VARIANT *vArray = (VARIANT *) psarray->pvData;
             VARIANT vStr;
             VariantInit(&vStr);
@@ -624,13 +609,13 @@ HRESULT CIEHtmlDocument::WriteCommon(SAFEARRAY __RPC_FAR * psarray, int bLn)
                 SafeArrayUnlock(psarray);
                 return hr;
             }
-            str = nsString(vStr.bstrVal, SysStringLen(vStr.bstrVal));
+            str = OLE2W(vStr.bstrVal);
             VariantClear(&vStr);
         }
 
         if (bLn && !i)
         {
-            if (m_pNative->Writeln(str))
+            if (mDOMDocument->Writeln(str))
             {
                 SafeArrayUnlock(psarray);
                 return E_FAIL;
@@ -638,7 +623,7 @@ HRESULT CIEHtmlDocument::WriteCommon(SAFEARRAY __RPC_FAR * psarray, int bLn)
         }
         else
         {
-            if (m_pNative->Write(str))
+            if (mDOMDocument->Write(str))
             {
                 SafeArrayUnlock(psarray);
                 return E_FAIL;
@@ -670,7 +655,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::writeln(SAFEARRAY __RPC_FAR * psarray
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::open(BSTR url, VARIANT name, VARIANT features, VARIANT replace, IDispatch __RPC_FAR *__RPC_FAR *pomWindowResult)
 {
-    if (m_pNative == NULL || m_pNative->Open())
+    if (mDOMDocument == NULL || mDOMDocument->Open())
     {
         return E_FAIL;
     }
@@ -680,7 +665,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::open(BSTR url, VARIANT name, VARIANT 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::close(void)
 {
-    if (m_pNative == NULL || m_pNative->Close())
+    if (mDOMDocument == NULL || mDOMDocument->Close())
     {
         return E_FAIL;
     }
@@ -1013,9 +998,9 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::createStyleSheet(BSTR bstrHref, long 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::QueryStatus(const GUID __RPC_FAR *pguidCmdGroup, ULONG cCmds, OLECMD __RPC_FAR prgCmds[], OLECMDTEXT __RPC_FAR *pCmdText)
 {
     HRESULT hr = E_NOTIMPL;
-    if(m_pParent)
+    if(mControl)
     {
-        hr = m_pParent->QueryStatus(pguidCmdGroup,cCmds,prgCmds,pCmdText);
+        hr = mControl->QueryStatus(pguidCmdGroup,cCmds,prgCmds,pCmdText);
     }
     return hr;
 }
@@ -1024,9 +1009,9 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::QueryStatus(const GUID __RPC_FAR *pgu
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::Exec(const GUID __RPC_FAR *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut)
 {
     HRESULT hr = E_NOTIMPL;
-    if(m_pParent)
+    if(mControl)
     {
-        hr = m_pParent->Exec(pguidCmdGroup,nCmdID,nCmdexecopt,pvaIn,pvaOut);
+        hr = mControl->Exec(pguidCmdGroup,nCmdID,nCmdexecopt,pvaIn,pvaOut);
     }
     return hr;
 }
