@@ -206,7 +206,7 @@
 	</menu>   
       <menuseparator />
 
-      <menu id="menu_TextZoom" accesskey="&textZoomMenu.accesskey;">
+      <menu id="menu_TextZoom" accesskey="&textZoomMenu.accesskey;" hidden="true">
         <menupopup id="textZoomPopup" oncreate="initTextZoomMenu()">
           <menuitem key="key_textZoomReduce" accesskey="&textZoomReduceCmd.accesskey;" observes="cmd_viewTextZoomReduce"/>
           <menuitem key="key_textZoomEnlarge" accesskey="&textZoomEnlargeCmd.accesskey;" observes="cmd_viewTextZoomEnlarge"/>
