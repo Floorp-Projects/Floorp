@@ -1134,39 +1134,39 @@ public class Codegen extends Interpreter {
         }
 
         /*
-         * Generate code to initialize names field with a
-         * string array that is the names of the function,
-         * the parameters and the vars. Initialize argCount
+         * Generate code to initialize functionName field with the name 
+         * of the function and argNames string array with the names 
+         * of the parameters and the vars. Initialize argCount
          * to the number of formal parameters.
          */
         
-        if (name.length() != 0 || (vars != null && vars.size() > 0)) {
+        if (name.length() != 0) {
             setNonTrivialInit(methodName);
-            if (vars == null)
-                vars = new OptVariableTable();
-            push(vars.size() + 1);
-            addByteCode(ByteCode.ANEWARRAY, "java/lang/String");
-            addByteCode(ByteCode.DUP);
-            short x = getNewWordLocal();
-            astore(x);
-            addByteCode(ByteCode.DUP);
-            push(0);
+               addByteCode(ByteCode.ALOAD_0);
             classFile.addLoadConstant(name);
-            addByteCode(ByteCode.AASTORE);
-            if (vars != null) {
-                for (int i = 0; i < vars.size(); i++) {
-                    aload(x);
-                    push(i + 1);
+            classFile.add(ByteCode.PUTFIELD,
+                          "org/mozilla/javascript/NativeFunction",
+                          "functionName", "Ljava/lang/String;");
+        }
+
+        if (vars != null) {
+            int N = vars.size();
+            if (N != 0) {
+                setNonTrivialInit(methodName);
+                push(N);
+                addByteCode(ByteCode.ANEWARRAY, "java/lang/String");
+                for (int i = 0; i != N; i++) {
+                    addByteCode(ByteCode.DUP);
+                    push(i);
                     push(vars.getName(i));
                     addByteCode(ByteCode.AASTORE);
                 }
+                addByteCode(ByteCode.ALOAD_0);
+                addByteCode(ByteCode.SWAP);
+                classFile.add(ByteCode.PUTFIELD,
+                              "org/mozilla/javascript/NativeFunction",
+                              "argNames", "[Ljava/lang/String;");
             }
-            releaseWordLocal(x);
-            addByteCode(ByteCode.ALOAD_0);
-            addByteCode(ByteCode.SWAP);
-            classFile.add(ByteCode.PUTFIELD,
-                    "org/mozilla/javascript/NativeFunction",
-                    "names", "[Ljava/lang/String;");
         }
 
         int parmCount = vars == null ? 0 : vars.getParameterCount();
@@ -1238,7 +1238,7 @@ public class Codegen extends Interpreter {
                 String className
                      = classFile.fullyQualifiedForm(fnNode.getClassName());
                 String fieldName = className.replace('/', '_');
-            	classFile.addField(fieldName,
+                classFile.addField(fieldName,
                                        "L" + className + ";",
                    (short)(ClassFileWriter.ACC_PUBLIC
                             + ClassFileWriter.ACC_STATIC));
@@ -1255,7 +1255,7 @@ public class Codegen extends Interpreter {
             finishMethod(cx, null);
         }
     }
-
+	
     private void generateRegExpLiterals(Vector regexps, boolean inCtor) {
         for (int i=0; i < regexps.size(); i++) {
             Node regexp = (Node) regexps.elementAt(i);

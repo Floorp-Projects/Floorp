@@ -57,8 +57,7 @@ public class NativeJavaConstructor extends NativeFunction implements Function {
 
     public NativeJavaConstructor(Constructor ctor) {
         this.constructor = ctor;
-        names = new String[1];
-        names[0] = "<init>" + NativeJavaMethod.signature(ctor);
+        this.functionName = "<init>" + NativeJavaMethod.signature(ctor);
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,

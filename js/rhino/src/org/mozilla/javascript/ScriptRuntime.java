@@ -1838,8 +1838,8 @@ public class ScriptRuntime {
                                         Scriptable thisObj,
                                         boolean fromEvalCode)
     {
-        String[] names = funObj.names;
-        if (names != null) {
+        String[] argNames = funObj.argNames;
+        if (argNames != null) {
             ScriptableObject so;
             try {
                 /* Global var definitions are supposed to be DONTDELETE
@@ -1862,8 +1862,8 @@ public class ScriptRuntime {
                 while (varScope instanceof NativeWith)
                     varScope = varScope.getParentScope();
             }
-            for (int i=funObj.names.length-1; i > 0; i--) {
-                String name = funObj.names[i];
+            for (int i = argNames.length; i-- != 0;) {
+                String name = argNames[i];
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
                 if (!hasProp(scope, name)) {
@@ -1896,10 +1896,10 @@ public class ScriptRuntime {
                                         Scriptable thisObj, Object[] args)
     {
         NativeCall result = new NativeCall(cx, scope, funObj, thisObj, args);
-        String[] names = funObj.names;
-        if (names != null) {
-            for (int i=funObj.argCount+1; i < funObj.names.length; i++) {
-                String name = funObj.names[i];
+        String[] argNames = funObj.argNames;
+        if (argNames != null) {
+            for (int i = funObj.argCount; i != argNames.length; i++) {
+                String name = argNames[i];
                 result.put(name, result, Undefined.instance);
             }
         }
@@ -2082,7 +2082,7 @@ public class ScriptRuntime {
         return Context.reportRuntimeError1(msg, val.getClass().getName());
     }
 
-    static public Object[] emptyArgs = new Object[0];
+    public static final Object[] emptyArgs = new Object[0];
 
 }
 

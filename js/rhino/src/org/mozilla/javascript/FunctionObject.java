@@ -126,8 +126,7 @@ public class FunctionObject extends NativeFunction {
             types = method.getParameterTypes();
             methodName = method.getName();
         }
-        String myNames[] = { name };
-        super.names = myNames;
+        this.functionName = name;
         int length;
         if (types.length == 4 && (types[1].isArray() || types[2].isArray())) {
             // Either variable args or an error.
@@ -458,7 +457,7 @@ public class FunctionObject extends NativeFunction {
                 if (thisObj == null || !useDynamicScope) {
                     // Couldn't find an object to call this on.
                     throw NativeGlobal.typeError1
-                        ("msg.incompat.call", names[0], scope);
+                        ("msg.incompat.call", functionName, scope);
                 }
             }
         }

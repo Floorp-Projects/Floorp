@@ -91,7 +91,7 @@ class Arguments extends ScriptableObject {
         if (0 <= index && index < args.length) {
             NativeFunction f = activation.funObj;
             if (index < f.argCount)
-                return activation.get(f.names[index+1], activation);
+                return activation.get(f.argNames[index], activation);
             return args[index];
         }
         return super.get(index, start);
@@ -110,7 +110,7 @@ class Arguments extends ScriptableObject {
         if (0 <= index && index < args.length) {
             NativeFunction f = activation.funObj;
             if (index < f.argCount)
-                activation.put(f.names[index+1], activation, value);
+                activation.put(f.argNames[index], activation, value);
             else
                 args[index] = value;
             return;

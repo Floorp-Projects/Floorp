@@ -55,26 +55,24 @@ import java.lang.reflect.*;
 public class NativeJavaMethod extends NativeFunction implements Function {
 
     public NativeJavaMethod() {
-        names = new String[1];
+        this.functionName = null;
     }
 
     public NativeJavaMethod(Method[] methods) {
         this.methods = methods;
-        names = new String[1];
-        names[0] = methods[0].getName();
+        this.functionName = methods[0].getName();
     }
 
     public NativeJavaMethod(Method method, String name) {
         this.methods = new Method[1];
         this.methods[0] = method;
-        names = new String[1];
-        names[0] = name;
+        this.functionName = name;
     }
 
     public void add(Method method) {
-        if (names[0] == null) {
-            names[0] = method.getName();
-        } else if (!names[0].equals(method.getName())) {
+        if (functionName == null) {
+            functionName = method.getName();
+        } else if (!functionName.equals(method.getName())) {
             throw new RuntimeException("internal method name mismatch");
         }                
         // XXX a more intelligent growth algorithm would be nice
@@ -178,7 +176,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         Method meth = (Method) findFunction(methods, args);
         if (meth == null) {
             Class c = methods[0].getDeclaringClass();
-            String sig = c.getName() + "." + names[0] + "(" +
+            String sig = c.getName() + "." + functionName + "(" +
                          scriptSignature(args) + ")";
             throw Context.reportRuntimeError1("msg.java.no_such_method", sig);
         }
@@ -200,7 +198,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 o = o.getPrototype();
                 if (o == null) {
                     throw Context.reportRuntimeError1(
-                        "msg.nonjava.method", names[0]);
+                        "msg.nonjava.method", functionName);
                 }
             }
             javaObject = ((Wrapper) o).unwrap();        

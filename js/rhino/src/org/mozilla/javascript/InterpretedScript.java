@@ -44,10 +44,14 @@ public class InterpretedScript extends NativeScript implements DebuggableScript 
     InterpretedScript(InterpreterData theData, Context cx)
     {
         itsData = theData;
-        names = new String[itsData.itsVariableTable.size() + 1];
-        names[0] = "";
-        for (int i = 0; i < itsData.itsVariableTable.size(); i++)
-            names[i + 1] = itsData.itsVariableTable.getName(i);
+        functionName = "";
+        int N = itsData.itsVariableTable.size();
+        if (N != 0) {
+            argNames = new String[N];
+            for (int i = 0; i != N; i++) {
+                argNames[i] = itsData.itsVariableTable.getName(i);
+            }
+        }
         nestedFunctions = itsData.itsNestedFunctions;
         version = (short)cx.getLanguageVersion();   
     }

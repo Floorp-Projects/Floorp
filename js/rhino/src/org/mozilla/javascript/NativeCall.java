@@ -52,12 +52,12 @@ public final class NativeCall extends ScriptableObject {
         this.originalArgs = (args == null) ? ScriptRuntime.emptyArgs : args;
         
         // initialize values of arguments
-        String[] names = funObj.names;
-        if (names != null) {
+        String[] argNames = funObj.argNames;
+        if (argNames != null) {
             for (int i=0; i < funObj.argCount; i++) {
                 Object val = i < args.length ? args[i] 
                                              : Undefined.instance;
-                super.put(names[i+1], this, val);
+                super.put(argNames[i], this, val);
             }
         }
         

@@ -57,8 +57,7 @@ public class NativeRegExpCtor extends NativeFunction {
     {
         NativeRegExpCtor ctor = new NativeRegExpCtor();
 
-        String[] names = { "RegExp" };
-        ctor.names = names;
+        ctor.functionName = "RegExp";
 
         ctor.setPrototype(getClassPrototype(scope, "Function"));
         ctor.setParentScope(scope);

@@ -50,10 +50,14 @@ class InterpretedFunction extends NativeFunction implements DebuggableScript {
 // probably too much copying going on from theData to the InterpretedFunction object
 // should pass them as parameters - unless we need them in the data block anyway?
 
-        names = new String[itsData.itsVariableTable.size() + 1];
-        names[0] = itsData.itsName;
-        for (int i = 0; i < itsData.itsVariableTable.size(); i++)
-            names[i + 1] = itsData.itsVariableTable.getName(i);
+        functionName = itsData.itsName;
+        int N = itsData.itsVariableTable.size();
+        if (N != 0) {
+            argNames = new String[N];
+            for (int i = 0; i != N; i++) {
+                argNames[i] = itsData.itsVariableTable.getName(i);
+            }
+        }
         argCount = (short)itsData.itsVariableTable.getParameterCount();
         source = itsData.itsSource;
         nestedFunctions = itsData.itsNestedFunctions;

@@ -54,8 +54,7 @@ public class NativeFunction extends ScriptableObject implements Function {
         // was not yet defined.
         ctor.setPrototype(proto);
 
-        String[] noName = { "" };
-        ((NativeFunction) proto).names = noName;
+        ((NativeFunction) proto).functionName = "";
     }
 
     public String getClassName() {
@@ -118,7 +117,7 @@ public class NativeFunction extends ScriptableObject implements Function {
             return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
         }
         throw NativeGlobal.typeError1
-            ("msg.instanceof.bad.prototype", names[0], instance);
+            ("msg.instanceof.bad.prototype", functionName, instance);
     }
 
     /**
@@ -270,8 +269,8 @@ public class NativeFunction extends ScriptableObject implements Function {
                      */
                     if (nextIs(i, TokenStream.LP)
                         && this.version != Context.VERSION_1_2
-                        && this.names != null 
-                        && this.names[0].equals("anonymous"))
+                        && this.functionName != null 
+                        && this.functionName.equals("anonymous"))
                         result.append("anonymous");
                     i++;
                 } else {
@@ -398,12 +397,10 @@ public class NativeFunction extends ScriptableObject implements Function {
                     || functionNumber > nestedFunctions.length)
                 {
                     String message;
-                    if (names != null && names.length > 0
-                        && names[0].length() > 0)
-                    {
+                    if (functionName != null && functionName.length() > 0) {
                         message = Context.getMessage2
                             ("msg.no.function.ref.found.in", 
-                             new Integer((int)source.charAt(i)), names[0]);
+                             new Integer((int)source.charAt(i)), functionName);
                     } else {
                         message = Context.getMessage1
                             ("msg.no.function.ref.found", 
@@ -898,9 +895,7 @@ public class NativeFunction extends ScriptableObject implements Function {
                                                 securityDomain);
         cx.setOptimizationLevel(oldOptLevel);
 
-        if (fn.names == null)
-            fn.names = new String[1];
-        fn.names[0] = "anonymous";
+        fn.functionName = "anonymous";
         fn.setPrototype(getFunctionPrototype(global));
         fn.setParentScope(global);
 
@@ -976,14 +971,14 @@ public class NativeFunction extends ScriptableObject implements Function {
     }
 
     public String jsGet_name() {
-        if (names == null)
+        if (functionName == null)
             return "";
-        if (names[0].equals("anonymous")) {
+        if (functionName.equals("anonymous")) {
             Context cx = Context.getCurrentContext();
             if (cx != null && cx.getLanguageVersion() == Context.VERSION_1_2)
                 return "";
         }
-        return names[0];
+        return functionName;
     }
 
     private NativeCall getActivation(Context cx) {
@@ -996,15 +991,14 @@ public class NativeFunction extends ScriptableObject implements Function {
         return null;
     }
         
+    protected String functionName;
     /**
-     * The "names" array has the following information:
-     * names[0]: The name of the function
-     * names[1] through names[argCount]: the names of the parameters
-     * names[argCount+1] through names[names.length-1]: the names of the
-     *                                                  variables declared
-     *                                                  in var statements
+     * The "argsNames" array has the following information:
+     * argNames[0] through argNames[argCount - 1]: the names of the parameters
+     * argNames[argCount] through argNames[args.length-1]: the names of the
+     * variables declared in var statements
      */
-    protected String[] names;
+    protected String[] argNames;
     protected short argCount;
     protected short version;
 
