@@ -36,6 +36,7 @@ function onLoad()
   gUPMsg = document.getElementById("unblockedPopupMsg");
 
   buildSiteBox();
+  gSiteBox.selectedIndex = 0;
 }
 
 function buildSiteBox()
@@ -43,7 +44,7 @@ function buildSiteBox()
   for (var i = 0; i < gPageReport.length; i++) {
     var found = false;
     for (var j = 0; j < gSiteBox.childNodes.length; j++) {
-      if (gSiteBox.childNodes[i].label == gPageReport[i]) {
+      if (gSiteBox.childNodes[j].label == gPageReport[i]) {
         found = true;
         break;
       }
@@ -76,6 +77,8 @@ function whitelistSite()
   popupmanager.add(uri, true);
   gSiteBox.removeChild(selectedItem);
 
+  // XXXlocalize
   alert(uri.host + gUPMsg.value);
+  document.documentElement.getButton("accept").focus();
 }
 
