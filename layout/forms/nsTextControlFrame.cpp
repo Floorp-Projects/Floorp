@@ -329,7 +329,7 @@ nsTextControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::GetText(nsString* aText)
+nsTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
 {
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
   PRInt32 type;
@@ -338,14 +338,25 @@ nsTextControlFrame::GetText(nsString* aText)
     nsIDOMHTMLInputElement* textElem = nsnull;
     result = mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem);
     if ((NS_OK == result) && textElem) {
-      result = textElem->GetDefaultValue(*aText);
+      if (PR_TRUE == aInitialValue) {
+        result = textElem->GetDefaultValue(*aText);
+      }
+      else {
+        result = textElem->GetValue(*aText);
+      }
+
       NS_RELEASE(textElem);
     }
   } else {
     nsIDOMHTMLTextAreaElement* textArea = nsnull;
     result = mContent->QueryInterface(kIDOMHTMLTextAreaElementIID, (void**)&textArea);
     if ((NS_OK == result) && textArea) {
-      result = textArea->GetDefaultValue(*aText);
+      if (PR_TRUE == aInitialValue) {
+        result = textArea->GetDefaultValue(*aText);
+      }
+      else {
+        result = textArea->GetValue(*aText);
+      }
       NS_RELEASE(textArea);
     }
   }
@@ -364,7 +375,7 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     result = mWidget->QueryInterface(kITextWidgetIID, (void**)&text);
     if ((nsHTMLAtoms::value == aAttribute) && (nsnull != text)) {
         nsString value;
-        nsresult rv = GetText(&value);
+        nsresult rv = GetText(&value, PR_TRUE);
         PRUint32 ignore;
         text->SetText(value, ignore);
         nsFormFrame::StyleChangeReflow(aPresContext, this);
@@ -444,12 +455,12 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
       if (valueString && *valueString) {
         value = nsAutoString(valueString);
       } else {
-        GetText(&value);
+        GetText(&value, PR_TRUE);
       }
     }
 
 #else
-  GetText(&value);
+  GetText(&value, PR_TRUE);
 #endif
 
     text->SetText(value, ignore);
@@ -519,7 +530,7 @@ nsTextControlFrame::Reset()
   nsITextAreaWidget* textArea = nsnull;
 
   nsAutoString value;
-  nsresult valStatus = GetText(&value);
+  nsresult valStatus = GetText(&value, PR_TRUE);
 
   PRUint32 size;
   if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
@@ -614,7 +625,7 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
     nscoord textHeight;
     nsString text;
 
-    GetText(&text);
+    GetText(&text, PR_FALSE);
     aRenderingContext.GetWidth(text, textWidth);
 
     nsIFontMetrics* metrics;
