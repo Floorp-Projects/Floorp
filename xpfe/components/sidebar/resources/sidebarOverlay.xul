@@ -165,13 +165,15 @@
           <description>&sidebar.no-panels.hide;</description>
         </vbox>
       </vbox>
+      <vbox flex="0">
+        <hbox id="nav-buttons-box" hidden="true">
+          <toolbarbutton flex="1" pack="center" 
+            class="sidebar-nav-button tab-fwd" onclick="SidebarNavigate(-1);"/>
+          <toolbarbutton flex="1" pack="center" 
+            class="sidebar-nav-button tab-back" onclick="SidebarNavigate(1);"/>
+        </hbox>
+      </vbox>
     </vbox>
-    <hbox id="nav-buttons-box" hidden="true">
-      <toolbarbutton flex="1" pack="center" class="sidebar-nav-button tab-fwd"
-        onclick="SidebarNavigate(-1);"/>
-      <toolbarbutton flex="1" pack="center" class="sidebar-nav-button tab-back"
-        onclick="SidebarNavigate(1);"/>
-    </hbox>
     <popupset id="contentAreaContextSet"/>
   </vbox>
 
