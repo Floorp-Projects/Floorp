@@ -122,7 +122,7 @@ interface nsIMsgFolder : nsIFolder {
 	void recursiveDelete(in boolean deleteStorage);
 
 	void createSubfolder(in string folderName);
-  nsIMsgFolder addSubfolder(in nsAutoString folderName);
+  [noscript] nsIMsgFolder addSubfolder(in nsAutoString folderName);
   
   void compact();
   void emptyTrash();
