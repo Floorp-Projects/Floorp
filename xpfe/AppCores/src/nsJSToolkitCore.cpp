@@ -221,6 +221,54 @@ ToolkitCoreShowWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 
 //
+// Native method ShowWindowWithArgs
+//
+PR_STATIC_CALLBACK(JSBool)
+ToolkitCoreShowWindowWithArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMToolkitCore *nativeThis = (nsIDOMToolkitCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsIDOMWindowPtr b1;
+  nsAutoString b2;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 3) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[1])) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
+
+    if (NS_OK != nativeThis->ShowWindowWithArgs(b0, b1, b2)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function ShowWindowWithArgs requires 3 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method ShowModalDialog
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -341,6 +389,7 @@ static JSFunctionSpec ToolkitCoreMethods[] =
 {
   {"ShowDialog",          ToolkitCoreShowDialog,     2},
   {"ShowWindow",          ToolkitCoreShowWindow,     2},
+  {"ShowWindowWithArgs",          ToolkitCoreShowWindowWithArgs,     3},
   {"ShowModalDialog",          ToolkitCoreShowModalDialog,     2},
   {"CloseWindow",          ToolkitCoreCloseWindow,     1},
   {0}
