@@ -24,6 +24,8 @@
 #define nsUnicodeRenderingToolkit_h__
 #include "nsATSUIUtils.h"
 #include <UnicodeConverter.h>
+#include "nsCOMPtr.h"
+#include "nsISaveAsCharset.h"
 class nsUnicodeFallbackCache;
 class nsIDeviceContext;
 class nsGraphicState;
@@ -56,6 +58,10 @@ private:
 
 	PRBool 				QuestionMarkFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
 	PRBool 				QuestionMarkFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
+
+	PRBool 				TransliterateFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
+	PRBool 				TransliterateFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
+	PRBool 				LoadTransliterator();
 	
 	void 				GetScriptTextWidth(const char* aText, ByteCount aLen, short& aWidth);
 	void 				DrawScriptText(const char* aText, ByteCount aLen, PRInt32 x, PRInt32 y, short& aWidth);
@@ -73,6 +79,7 @@ private:
 
 	GrafPtr					mPort;			// current grafPort - shortcut for mCurrentSurface->GetPort()
 	nsATSUIToolkit			mATSUIToolkit;
+	nsCOMPtr<nsISaveAsCharset> mTrans;
 
 };
 #endif /* nsUnicodeRenderingToolkit_h__ */

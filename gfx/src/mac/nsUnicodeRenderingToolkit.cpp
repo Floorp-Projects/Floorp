@@ -28,13 +28,17 @@
 #include "nsGraphicState.h"
 #include "prprf.h"
 #include "nsCarbonHelpers.h"
+#include "nsISaveAsCharset.h"
+#include "nsIComponentManager.h"
 
 #define BAD_FONT_NUM -1
 #define BAD_SCRIPT 0x7F
 #define STACK_TREASHOLD 1000
+static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 //#define DISABLE_TEC_FALLBACK
 //#define DISABLE_ATSUI_FALLBACK
+//#define DISABLE_TRANSLITERATE_FALLBACK
 //#define DISABLE_UPLUS_FALLBACK
 
 #define QUESTION_FALLBACKSIZE 9
@@ -307,6 +311,65 @@ PRBool nsUnicodeRenderingToolkit :: QuestionMarkFallbackDrawChar(
   return PR_TRUE;
 }
 //------------------------------------------------------------------------
+PRBool nsUnicodeRenderingToolkit :: LoadTransliterator()
+{
+	if(mTrans) 
+		return PR_TRUE;
+		
+	nsresult res;
+    if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(
+    	kSaveAsCharsetCID, 0, NS_GET_IID(nsISaveAsCharset), 
+        getter_AddRefs(mTrans) ) ) )
+    {
+       res = mTrans->Init("x-mac-roman",
+               nsISaveAsCharset::attr_FallbackQuestionMark +
+               nsISaveAsCharset::attr_EntityBeforeCharsetConv,
+               nsIEntityConverter::transliterate);
+      NS_ASSERTION(NS_SUCCEEDED(res), "cannot init the converter");
+      if (NS_FAILED(res)) 
+      {
+        mTrans = nsnull;
+        return PR_FALSE;
+      }
+    }
+    return PR_TRUE;
+}
+//------------------------------------------------------------------------
+PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackGetWidth(
+	const PRUnichar *aCharPt, 
+	short& oWidth)
+{
+  if(LoadTransliterator()) {
+    nsAutoString tmp(aCharPt, 1);
+    char* conv = nsnull;
+    if(NS_SUCCEEDED(mTrans->Convert(tmp.GetUnicode(), &conv)) && conv) {
+  		GetScriptTextWidth(conv, nsCRT::strlen(conv),oWidth);    
+    	nsAllocator::Free(conv);
+    	return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+//------------------------------------------------------------------------
+
+PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackDrawChar(
+	const PRUnichar *aCharPt, 
+	PRInt32 x, 
+	PRInt32 y, 
+	short& oWidth)
+{
+  if(LoadTransliterator()) {
+    nsAutoString tmp(aCharPt, 1);
+    char* conv = nsnull;
+    if(NS_SUCCEEDED(mTrans->Convert(tmp.GetUnicode(), &conv)) && conv) {
+  		DrawScriptText(conv, nsCRT::strlen(conv), x, y, oWidth);
+    	nsAllocator::Free(conv);
+    	return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+//------------------------------------------------------------------------
 
 PRBool nsUnicodeRenderingToolkit :: UPlusFallbackGetWidth(
 	const PRUnichar *aCharPt, 
@@ -458,6 +521,11 @@ nsresult nsUnicodeRenderingToolkit :: GetTextSegmentWidth(
 									  		mGS->mColor );
 		  }
 #endif
+#ifndef DISABLE_TRANSLITERATE_FALLBACK  
+		  // Fallback to Transliteration
+		  if(! fallbackDone)
+		  	fallbackDone = TransliterateFallbackGetWidth(aString, thisWidth);
+#endif
 #ifndef DISABLE_UPLUS_FALLBACK  
 		  // Fallback to UPlus
 		  if(! fallbackDone)
@@ -579,6 +647,11 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 									  		((NS_FONT_STYLE_ITALIC ==  font->style) || (NS_FONT_STYLE_OBLIQUE ==  font->style)),
 									  		mGS->mColor );
 		  }
+#endif
+#ifndef DISABLE_TRANSLITERATE_FALLBACK  
+		  // Fallback to Transliteration
+		  if(! fallbackDone)
+		  	fallbackDone = TransliterateFallbackDrawChar(aString, x, y, thisWidth);
 #endif
 #ifndef DISABLE_UPLUS_FALLBACK  
 		  // Fallback to U+xxxx
