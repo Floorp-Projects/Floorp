@@ -317,6 +317,8 @@ nsButtonFrameRenderer::PaintButton     (nsIPresContext& aPresContext,
 										nsFramePaintLayer aWhichLayer,
 										const nsRect& aRect)
 {
+  printf("painted width='%d' height='%d'\n",aRect.width, aRect.height);
+
 	// draw the border and background inside the focus and outline borders
 	PaintBorderAndBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aRect);
 
@@ -565,26 +567,25 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
 
 
 void
-nsButtonFrameRenderer::AddBordersAndPadding(nsIPresContext* aPresContext,
+nsButtonFrameRenderer::AddFocusBordersAndPadding(nsIPresContext& aPresContext,
                                   const nsHTMLReflowState& aReflowState,
                                   nsHTMLReflowMetrics& aMetrics,
                                   nsMargin& aBorderPadding)
 {
-	/*
-  nsHTMLReflowState::ComputeBorderPaddingFor(aFrame,
+
+  nsHTMLReflowState::ComputeBorderPaddingFor(mFrame,
                                              aReflowState.parentReflowState,
                                              aBorderPadding);
-  */
+  
 
-  aBorderPadding.left = aBorderPadding.right = aBorderPadding.top = aBorderPadding.bottom = 0;
- 
   aBorderPadding += GetButtonOuterFocusBorderAndPadding();
-  aBorderPadding += GetButtonBorderAndPadding();
   aBorderPadding += GetButtonInnerFocusMargin();
   aBorderPadding += GetButtonInnerFocusBorderAndPadding();
  
   aMetrics.width += aBorderPadding.left + aBorderPadding.right;
   aMetrics.height += aBorderPadding.top + aBorderPadding.bottom;
+
+  printf("requested width='%d' height='%d'\n",aMetrics.width, aMetrics.height);
 }
 
 

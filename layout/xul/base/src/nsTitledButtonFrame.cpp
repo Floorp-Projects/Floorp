@@ -69,6 +69,7 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
+#include "nsIPopUpMenu.h"
 
 #ifndef _WIN32
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
@@ -179,7 +180,6 @@ nsTitledButtonFrame::nsTitledButtonFrame()
 	mAlign = NS_SIDE_BOTTOM;
 	mTruncationType = Right;
 	mNeedsLayout = PR_TRUE;
-	mUpdateHappendedInInit = PR_FALSE;
 	mHasImage = PR_FALSE;
 }
 
@@ -211,12 +211,26 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
 	 mSpacing = NSIntPixelsToTwips(4, p2t);
 
   // Set the image loader's source URL and base URL
-  
+
+  // get src
+  mHasImage = PR_FALSE;
   nsAutoString src;
   if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::src, src)) &&
-      (src.Length() > 0)) {
-	mHasImage = PR_TRUE;
-    mImageLoader.SetURLSpec(src);
+    (src.Length() > 0)) {
+     mHasImage = PR_TRUE;
+  } else {
+    // if no src then get the list style image
+      const nsStyleList* myList =
+    (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  
+    if (myList->mListStyleImage.Length() > 0) {
+      src = myList->mListStyleImage;
+      mHasImage = PR_TRUE;
+    }
+  }
+
+  if (mHasImage == PR_TRUE) {
+	  mImageLoader.SetURLSpec(src);
     nsIURL* baseURL = nsnull;
     nsIHTMLContent* htmlContent;
     if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
@@ -245,17 +259,6 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   nsAutoString align;
   mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::align, align);
   setAlignment(align); 
-
-/*
-  // get the alignment
-  nsAutoString disabled;
-  mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::disabled, disabled);
-  SetDisabled(disabled);
-
-  // defer the update
-  if (mRenderer.isDisabled())
-	 mUpdateHappendedInInit = PR_TRUE;
-*/
 
   return rv;
 }
@@ -307,6 +310,15 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
 
     aChild->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::src, newSRC);
 
+    if (newSRC.Equals("")) {
+         // if no src then get the list style image
+        const nsStyleList* myList =
+      (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  
+      if (myList->mListStyleImage.Length() > 0) {
+        newSRC = myList->mListStyleImage;
+      }
+    }
 
 	if (!oldSRC.Equals(newSRC)) {
 		if (newSRC.Length() == 0)
@@ -367,17 +379,10 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
 	  aChild->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::value, align);
 	  setAlignment(align); 
   } 
-  /*
-  else if (nsHTMLAtoms::disabled == aAttribute) {
-	  nsAutoString disabled;
-	  aChild->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::value, disabled);
-	  SetDisabled(disabled);
-  }
-  */
-
 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsTitledButtonFrame::Paint(nsIPresContext& aPresContext,
@@ -385,28 +390,21 @@ nsTitledButtonFrame::Paint(nsIPresContext& aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {	
+	
 	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
 	if (!disp->mVisible)
 		return NS_OK;
 
-    // if we changed an attribute in our Init method then we need to update the
-	// styles now.
-	/*
-	if (PR_TRUE == mUpdateHappendedInInit)
-    {
-		mUpdateHappendedInInit = PR_FALSE;
-
-	}
-	*/
 
 	nsRect rect (0,0, mRect.width, mRect.height);
 	mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
 	
-
-   LayoutTitleAndImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);   
+   LayoutTitleAndImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);  
+   
    PaintTitle(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);   
    PaintImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
 
    /*
    aRenderingContext.SetColor(NS_RGB(0,128,0));
@@ -649,6 +647,17 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
 {
    if (eFramePaintLayer_Content == aWhichLayer) {
  
+   	 // place 4 pixels of spacing
+		 float p2t;
+		 aPresContext.GetScaledPixelsToTwips(&p2t);
+		 nscoord pixel = NSIntPixelsToTwips(1, p2t);
+
+     nsRect disabledRect(mTitleRect.x+pixel, mTitleRect.y+pixel, mTitleRect.width, mTitleRect.height);
+
+     // don't draw if the title is not dirty
+     if (PR_FALSE == aDirtyRect.Intersects(mTitleRect) && PR_FALSE == aDirtyRect.Intersects(disabledRect))
+           return NS_OK;
+
 	   // paint the title 
 	   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 	   const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
@@ -658,13 +667,8 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
 	   // if disabled paint 
 	   if (PR_TRUE == mRenderer.isDisabled())
 	   {
-		    	 // place 4 pixels of spacing
-		   float p2t;
-		   aPresContext.GetScaledPixelsToTwips(&p2t);
-		   nscoord pixel = NSIntPixelsToTwips(1, p2t);
-
 		   aRenderingContext.SetColor(NS_RGB(255,255,255));
-		   aRenderingContext.DrawString(mTruncatedTitle, mTitleRect.x+pixel, mTitleRect.y+pixel);
+		   aRenderingContext.DrawString(mTruncatedTitle, disabledRect.x, disabledRect.y);
 	   }
 
 	   aRenderingContext.SetColor(colorStyle->mColor);
@@ -688,6 +692,11 @@ nsTitledButtonFrame::PaintImage(nsIPresContext& aPresContext,
     // asynchronously.
     return NS_OK;
   }
+
+  // don't draw if the image is not dirty
+  if (PR_FALSE == aDirtyRect.Intersects(mImageRect))
+      return NS_OK;
+
 
     nsIImage* image = mImageLoader.GetImage();
     if (nsnull == image) {
@@ -719,57 +728,9 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
                      nsReflowStatus&          aStatus)
 {
   mNeedsLayout = PR_TRUE;
-
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("enter nsTitledButtonFrame::Reflow: aMaxSize=%d,%d",
-                  aReflowState.availableWidth, aReflowState.availableHeight));
-
-  NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
-
-  // figure out our size
-  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
-
-  mRenderer.AddBordersAndPadding(&aPresContext, aReflowState, aMetrics, mBorderPadding);
-
-  if (nsnull != aMetrics.maxElementSize) {
-    aMetrics.maxElementSize->width = aMetrics.width;
-    aMetrics.maxElementSize->height = aMetrics.height;
-  }
-
-  PRBool fixedWidthContent = aReflowState.HaveFixedContentWidth();
-  if (NS_INTRINSICSIZE == aReflowState.computedWidth) {
-		fixedWidthContent = PR_FALSE;
-  }
-
-  PRBool fixedHeightContent = aReflowState.HaveFixedContentHeight();
-  if (NS_INTRINSICSIZE == aReflowState.computedHeight) {
-		fixedHeightContent = PR_FALSE;
-  }
-
-  nsRect minSize(0,0,mMinSize.width, mMinSize.height);
-  minSize.Inflate(mBorderPadding);
- 
-  // if the width is set
-  if (fixedWidthContent)
-	  if (aReflowState.computedWidth >= minSize.width)
-	      aMetrics.width = aReflowState.computedWidth;
-	  else
-          aMetrics.width = minSize.width;
-  
-
-  // if the height is set
-  if (fixedHeightContent) 
-	  if (aReflowState.computedWidth >= minSize.height)
-	      aMetrics.height = aReflowState.computedHeight;
-	  else
-          aMetrics.height = minSize.height;
-
-  aStatus = NS_FRAME_COMPLETE;
-
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("exit nsTitledButtonFrame::Reflow: size=%d,%d",
-                  aMetrics.width, aMetrics.height));
-  return NS_OK;
+  nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+  mRenderer.AddFocusBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
+  return result;
 }
 
 void
@@ -847,6 +808,34 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
          break;
   
    }
+
+  PRBool fixedWidthContent = aReflowState.HaveFixedContentWidth();
+  if (NS_INTRINSICSIZE == aReflowState.computedWidth) {
+		fixedWidthContent = PR_FALSE;
+  }
+
+  PRBool fixedHeightContent = aReflowState.HaveFixedContentHeight();
+  if (NS_INTRINSICSIZE == aReflowState.computedHeight) {
+		fixedHeightContent = PR_FALSE;
+  }
+
+ 
+  nsRect minSize(0,0,mMinSize.width, mMinSize.height);
+ 
+  // if the width is set
+  if (fixedWidthContent)
+	  if (aReflowState.computedWidth >= minSize.width)
+	      aDesiredSize.width = aReflowState.computedWidth;
+	  else
+          aDesiredSize.width = minSize.width;
+  
+
+  // if the height is set
+  if (fixedHeightContent) 
+	  if (aReflowState.computedWidth >= minSize.height)
+	      aDesiredSize.height = aReflowState.computedHeight;
+	  else
+        aDesiredSize.height = minSize.height;
 }
 
 
@@ -1111,4 +1100,232 @@ nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsI
 } // ReResolveStyleContext
 
 
+/*
+//----------------------------------------
+NS_IMETHODIMP nsTitledButtonFrame::CreateMenu(nsIPopUpMenu * aPopUpMenu, 
+                                            nsIDOMNode * aMenuNode, 
+                                           nsString   & aMenuName) 
+{
+  // Create and place back button
+  nsresult rv = nsRepository::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
+                                             (void**)&mPopUpMenu);
+  if (NS_OK != rv) 
+    return rv;
+  
+  nsIWidget * menuParentWidget;
+  if (NS_OK != this->QueryInterface(kIWidgetIID,(void**)&menuParentWidget)) {
+    return;
+  }
 
+  nsIWidget * popupWidget;
+  nsRect rect;
+  if (NS_OK == mPopUpMenu->QueryInterface(kIWidgetIID,(void**)&popupWidget)) {
+	  popupWidget->Create(menuParentWidget, rect, nsnull, nsnull);
+	  NS_RELEASE(popupWidget);
+  }
+  NS_RELEASE(menuParentWidget);
+  
+    // Begin menuitem inner loop
+    nsCOMPtr<nsIDOMNode> menuitemNode;
+    aMenuNode->GetFirstChild(getter_AddRefs(menuitemNode));
+    while (menuitemNode) {
+      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+      if (menuitemElement) {
+        nsString menuitemNodeType;
+        nsString menuitemName;
+        menuitemElement->GetNodeName(menuitemNodeType);
+        if (menuitemNodeType.Equals("menuitem")) {
+          // LoadMenuItem
+          LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
+        } else if (menuitemNodeType.Equals("separator")) {
+          pnsMenu->AddSeparator();
+        } else if (menuitemNodeType.Equals("menu")) {
+          // Load a submenu
+          LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
+        }
+      }
+      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
+      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+    } // end menu item innner loop
+  }
+
+  return NS_OK;
+}
+
+//----------------------------------------
+NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
+  nsIMenu *    pParentMenu,
+  nsIDOMElement * menuitemElement,
+  nsIDOMNode *    menuitemNode)
+{
+  nsString menuitemName;
+  nsString menuitemCmd;
+
+  menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
+  menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
+  // Create nsMenuItem
+  nsIMenuItem * pnsMenuItem = nsnull;
+  nsresult rv = nsRepository::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
+  if (NS_OK == rv) {
+    pnsMenuItem->Create(pParentMenu); //, menuitemName, 0);                 
+    // Set nsMenuItem Name
+    pnsMenuItem->SetLabel(menuitemName);
+    // Make nsMenuItem a child of nsMenu
+    pParentMenu->AddMenuItem(pnsMenuItem);
+          
+    // Create MenuDelegate - this is the intermediator inbetween 
+    // the DOM node and the nsIMenuItem
+    // The nsWebShellWindow wacthes for Document changes and then notifies the 
+    // the appropriate nsMenuDelegate object
+    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(menuitemNode));
+    if (!domElement) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsAutoString cmdAtom("onClick");
+    nsString cmdName;
+
+    domElement->GetAttribute(cmdAtom, cmdName);
+
+    nsXULCommand * menuDelegate = new nsXULCommand();
+    menuDelegate->SetCommand(cmdName);
+    menuDelegate->SetWebShell(mWebShell);
+    menuDelegate->SetDOMElement(domElement);
+    menuDelegate->SetMenuItem(pnsMenuItem);
+    nsIXULCommand * icmd;
+    if (NS_OK == menuDelegate->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
+      mMenuDelegates.AppendElement(icmd);
+      nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menuDelegate));
+      if (listener) {
+        pnsMenuItem->AddMenuListener(listener);
+        if (DEBUG_MENUSDEL) printf("Adding menu listener to [%s]\n", menuitemName.ToNewCString());
+      } else {
+        if (DEBUG_MENUSDEL) printf("*** NOT Adding menu listener to [%s]\n", menuitemName.ToNewCString());
+      }
+    }
+  } 
+  return NS_OK;
+}
+
+//----------------------------------------
+void nsWebShellWindow::LoadSubMenu(
+  nsIMenu *       pParentMenu,
+  nsIDOMElement * menuElement,
+  nsIDOMNode *    menuNode)
+{
+  nsString menuName;
+  menuElement->GetAttribute(nsAutoString("name"), menuName);
+  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+
+  // Create nsMenu
+  nsIMenu * pnsMenu = nsnull;
+  nsresult rv = nsRepository::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+  if (NS_OK == rv) {
+    // Call Create
+    pnsMenu->Create(pParentMenu, menuName);
+
+    // Set nsMenu Name
+    pnsMenu->SetLabel(menuName); 
+    // Make nsMenu a child of parent nsMenu
+    pParentMenu->AddMenu(pnsMenu);
+
+    // Begin menuitem inner loop
+    nsCOMPtr<nsIDOMNode> menuitemNode;
+    menuNode->GetFirstChild(getter_AddRefs(menuitemNode));
+    while (menuitemNode) {
+      nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
+      if (menuitemElement) {
+        nsString menuitemNodeType;
+        menuitemElement->GetNodeName(menuitemNodeType);
+        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("separator"));
+        if (menuitemNodeType.Equals("menuitem")) {
+          // Load a menuitem
+          LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
+        } else if (menuitemNodeType.Equals("separator")) {
+          pnsMenu->AddSeparator();
+        } else if (menuitemNodeType.Equals("menu")) {
+          // Add a submenu
+          LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
+        }
+      }
+      nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
+      oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
+    } // end menu item innner loop
+  }     
+}
+
+
+
+//------------------------------------------------------------
+void nsTitledButtonFrame::CreatePopUpMenu()
+{
+  if (nsnull != mPopUpMenu) {
+    return;
+  }
+
+  // Create and place back button
+  nsresult rv = nsRepository::CreateInstance(kPopUpMenuCID, nsnull, kIPopUpMenuIID,
+                                             (void**)&mPopUpMenu);
+  if (NS_OK == rv) {
+    nsIWidget * menuParentWidget;
+	  if (NS_OK != this->QueryInterface(kIWidgetIID,(void**)&menuParentWidget)) {
+      return;
+	  }
+
+    nsIWidget * popupWidget;
+    nsRect rect;
+	  if (NS_OK == mPopUpMenu->QueryInterface(kIWidgetIID,(void**)&popupWidget)) {
+	    popupWidget->Create(menuParentWidget, rect, nsnull, nsnull);
+		  NS_RELEASE(popupWidget);
+	  }
+    NS_RELEASE(menuParentWidget);
+  }
+
+
+  return;
+}
+
+//------------------------------------------------------------
+NS_METHOD nsTitledButtonFrame::GetPopUpMenu(nsIPopUpMenu *& aPopUpMenu)
+{
+  CreatePopUpMenu();
+
+  NS_ADDREF(mPopUpMenu);
+  aPopUpMenu = mPopUpMenu;
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+NS_METHOD nsTitledButtonFrame::AddMenuItem(const nsString& aMenuLabel, PRInt32 aCommand)
+{
+  CreatePopUpMenu();
+
+  nsIMenuItem * menuItem = nsnull;
+  nsresult rv = nsRepository::CreateInstance(kMenuItemCID, nsnull,  kIMenuItemIID,  (void**)&menuItem);
+  menuItem->Create(mPopUpMenu, aMenuLabel, aCommand);
+  if (NS_OK == rv) {
+    mPopUpMenu->AddItem(menuItem);
+    NS_RELEASE(menuItem);
+  }
+  return NS_OK;
+}
+
+
+//-----------------------------------------------------------------------------
+nsEventStatus nsTitledButtonFrame::OnLeftButtonDown()
+{
+  mState |= eButtonState_pressed;
+  Invalidate(PR_TRUE);
+
+  nsRect rect;
+  GetBounds(rect);
+
+  if (mPopUpMenu) {
+    mMenuIsPoppedUp = PR_TRUE;
+    mPopUpMenu->ShowMenu(0, rect.height);
+    mMenuIsPoppedUp = PR_FALSE;
+  }
+  return nsEventStatus_eIgnore;
+}
+
+*/

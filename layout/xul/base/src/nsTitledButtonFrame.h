@@ -26,6 +26,8 @@
 #include "nsLeafFrame.h"
 #include "nsButtonFrameRenderer.h"
 
+class nsIPopUpMenu;
+
 class nsTitledButtonImageLoader : public nsHTMLImageLoader {
 public:
 
@@ -98,6 +100,7 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
+
  void DisplayAltFeedback(nsIPresContext&      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRInt32              aIconId);
@@ -137,7 +140,9 @@ private:
   nsButtonFrameRenderer mRenderer;
   PRBool mHasImage;
 
-  PRBool mUpdateHappendedInInit;
+  nsIPopUpMenu * mPopUpMenu;
+  PRBool         mMenuIsPoppedUp;
+
  
  
 }; // class nsTitledButtonFrame
