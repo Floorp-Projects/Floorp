@@ -1,0 +1,10 @@
+classic.jar:
++   skin/classic/messenger/addressbook/addressbook.css          (addressbook.css)
++   skin/classic/messenger/addressbook/abContactsPanel.css      (abContactsPanel.css)
++   skin/classic/messenger/addressbook/cardDialog.css           (cardDialog.css)
++   skin/classic/messenger/addressbook/abResultsPane.css        (abResultsPane.css)
+    skin/classic/messenger/addressbook/icons/abcard.png         (icons/abcard.png)
+    skin/classic/messenger/addressbook/icons/addrbook.png       (icons/addrbook.png) 
+    skin/classic/messenger/addressbook/icons/ablist.png         (icons/ablist.png) 
+    skin/classic/messenger/addressbook/icons/addressbook-toolbar.png         (icons/addressbook-toolbar.png)
+    skin/classic/messenger/addressbook/icons/addressbook-toolbar-small.png   (icons/addressbook-toolbar-small.png)
