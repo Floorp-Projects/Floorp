@@ -48,9 +48,11 @@ nsQScrollBar::nsQScrollBar(nsWidget * widget,
 {
 #if 1
     connect((QScrollBar *)this,
-            SIGNAL(sliderMoved(int)),
+            //SIGNAL(sliderMoved(int)),
+            SIGNAL(valueChanged(int)),
             SLOT(SetValue(int)));
 #endif
+#if 0
     connect((QScrollBar *) this,
             SIGNAL(nextLine()),
             SLOT(NextLine()));
@@ -63,6 +65,7 @@ nsQScrollBar::nsQScrollBar(nsWidget * widget,
     connect((QScrollBar *) this,
             SIGNAL(prevPage()),
             SLOT(PreviousPage()));
+#endif
 }
 
 nsQScrollBar::~nsQScrollBar()
@@ -155,9 +158,9 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget (), nsIScrollbar ()
            PR_LOG_DEBUG, 
            ("nsQScrollBar::nsScrollbar()\n"));
     mOrientation = aIsVertical ? QScrollBar::Vertical : QScrollBar::Horizontal;
-    mMaxValue = 100;
     mLineStep = 1;
     mPageStep = 10;
+    mMaxValue = 100;
     mValue    = 0;
 }
 
@@ -240,7 +243,7 @@ NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
            ("nsQScrollBar::SetMaxRange()\n"));
     mMaxValue = aEndRange;
 
-    ((QScrollBar *)mWidget)->setRange(0, mMaxValue);
+    ((QScrollBar *)mWidget)->setRange(0, mMaxValue - mPageStep);
 
     return NS_OK;
 }
@@ -391,35 +394,16 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange,
             aThumbSize, 
             aPosition, 
             aLineIncrement));
-    mMaxValue = (int) ((aMaxRange > 0) ? aMaxRange : 10);
     mPageStep = (int) ((aThumbSize > 0) ? aThumbSize : 1);
     mValue    = (int) ((aPosition > 0) ? aPosition : 0);
     mLineStep = (int) ((aLineIncrement > 0) ? aLineIncrement : 1);
+    mMaxValue = (int) ((aMaxRange > 0) ? aMaxRange : 10);
     
     ((QScrollBar *)mWidget)->setValue(mValue);
     ((QScrollBar *)mWidget)->setSteps(mLineStep, mPageStep);
-    ((QScrollBar *)mWidget)->setRange(0, mMaxValue);
+    ((QScrollBar *)mWidget)->setRange(0, mMaxValue - mPageStep);
 
     return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-int nsScrollbar::AdjustScrollBarPosition(int aPosition)
-{
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsScrollBar::AdjustScrollBarPosition()\n"));
-#if 0
-    int maxRange;
-    int sliderSize;
-    XtVaGetValues (mWidget, XmNmaximum, &maxRange,
-                   XmNsliderSize, &sliderSize,
-                   nsnull);
-    int cap = maxRange - sliderSize;
-    return aPosition > cap ? cap : aPosition;
-#endif
-    return 0;			/* XXX */
 }
 
 //-------------------------------------------------------------------------
@@ -441,7 +425,7 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
     case NS_SCROLLBAR_LINE_NEXT:
     {
         ((QScrollBar *)mWidget)->addLine();
-
+        
         mValue = ((QScrollBar *)mWidget)->value();
 
         // if an event callback is registered, give it the chance
@@ -515,7 +499,6 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
     case NS_SCROLLBAR_POS:
     {
         mValue = cPos;
-        ((QScrollBar *)mWidget)->setValue(mValue);
 
         // if an event callback is registered, give it the chance
         // to change the increment
@@ -528,17 +511,9 @@ PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
         break;
     }
     }
-    /*
-      GTK_ADJUSTMENT(mAdjustment)->value = newPosition;
-      gtk_signal_emit_by_name(GTK_OBJECT(mAdjustment), "value_changed");
-    */
-    /*
-      if (mEventCallback) {
-      aEvent.position = cPos;
-      result = ConvertStatus((*mEventCallback)(&aEvent));
-      newPosition = aEvent.position;
-      }
-    */
+
+    ((QScrollBar *)mWidget)->setValue(mValue);
+
     return result;
 }
 
