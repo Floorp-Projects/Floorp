@@ -225,6 +225,8 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
     mTransactionDone = PR_TRUE;
     mStatus = status;
 
+    NS_IF_RELEASE(mConnection);
+
 	if (mListener) {
 		if (!mFiredOnStart) {
 			mFiredOnStart = PR_TRUE;
@@ -353,6 +355,96 @@ nsHttpTransaction::ParseHead(char *buf,
 }
 
 nsresult
+nsHttpTransaction::HandleContentStart()
+{
+    nsresult rv;
+
+    LOG(("nsHttpTransaction::HandleContentStart [this=%x response-head=%x]\n",
+        this, mResponseHead));
+
+    if (mResponseHead) {
+#if defined(PR_LOGGING)
+        nsCAutoString headers;
+        mResponseHead->Flatten(headers, PR_FALSE);
+        LOG2(("http response [\n%s]\n", headers.get()));                        
+#endif
+        PRBool reset = PR_FALSE;
+
+        // we ignore a 100 response, which means that we must reset
+        // our state so that we'll parse from the beginning again.
+        if (mResponseHead->Status() == 100) {
+            LOG(("ignoring 100 response\n"));
+            reset = PR_TRUE;
+        }
+        // notify the connection, give it a chance to cause a reset.
+        else
+            mConnection->OnHeadersAvailable(this, &reset);
+
+        // looks like we should ignore this response, resetting...
+        if (reset) {
+            LOG(("resetting transaction's response head\n"));
+            mHaveAllHeaders = PR_FALSE;
+            mHaveStatusLine = PR_FALSE;
+            mResponseHead->Reset();
+            // wait to be called again...
+            return NS_BASE_STREAM_WOULD_BLOCK;
+        }
+
+        // grab the content-length from the response headers
+        mContentLength = mResponseHead->ContentLength();
+
+        // handle chunked encoding here, so we'll know immediately when
+        // we're done with the socket.  please note that _all_ other
+        // decoding is done when the channel receives the content data
+        // so as not to block the socket transport thread too much.
+        const char *val = mResponseHead->PeekHeader(nsHttp::Transfer_Encoding);
+        if (PL_strcasestr(val, "chunked")) {
+            // we only support the "chunked" transfer encoding right now.
+            mChunkedDecoder = new nsHttpChunkedDecoder();
+            if (!mChunkedDecoder)
+                return NS_ERROR_OUT_OF_MEMORY;
+            LOG(("chunked decoder created\n"));
+
+            val = mResponseHead->PeekHeader(nsHttp::Trailer);
+            NS_ASSERTION(!val, "FIXME: unhandled trailer header present!");
+        }
+        else if (mContentLength == -1) {
+            // check if this is a no-content response
+            switch (mResponseHead->Status()) {
+            case 204:
+            case 205:
+            case 304:
+                mNoContent = PR_TRUE;
+                LOG(("looks like this response should not contain a body.\n"));
+                break;
+            }
+            if (mNoContent)
+                mContentLength = 0;
+            // otherwise, we'll wait for the server to close the connection.
+        }
+        else if (mResponseHead->Version() < NS_HTTP_VERSION_1_1 &&
+                 !mConnection->IsKeepAlive()) {
+            // HTTP/1.0 servers have been known to send erroneous Content-Length
+            // headers.  So, unless the connection is keep-alive, we'll ignore
+            // the Content-Length header altogether.
+            LOG(("ignoring possibly erroneous content-length header\n"));
+            // eliminate any references to this content length value, so our
+            // consumers don't get confused.
+            mContentLength = -1;
+            mResponseHead->SetHeader(nsHttp::Content_Length, nsnull);
+            mResponseHead->SetContentLength(-1);
+        }
+    }
+
+    LOG(("nsHttpTransaction [this=%x] sending OnStartRequest\n", this));
+    mFiredOnStart = PR_TRUE;
+
+    rv = mListener->OnStartRequest(this, nsnull);
+    LOG(("OnStartRequest returned rv=%x\n", rv));
+    return rv;
+}
+
+nsresult
 nsHttpTransaction::HandleContent(char *buf,
                                  PRUint32 count,
                                  PRUint32 *countRead)
@@ -370,77 +462,8 @@ nsHttpTransaction::HandleContent(char *buf,
     NS_PRECONDITION(mConnection, "no connection");
 
     if (!mFiredOnStart) {
-        if (mResponseHead) {
-#if defined(PR_LOGGING)
-            nsCAutoString headers;
-            mResponseHead->Flatten(headers, PR_FALSE);
-            LOG2(("http response [\n%s]\n", headers.get()));                        
-#endif
-            PRBool reset = PR_FALSE;
-
-            // we ignore a 100 response, which means that we must reset
-            // our state so that we'll parse from the beginning again.
-            if (mResponseHead->Status() == 100) {
-                LOG(("ignoring 100 response\n"));
-                reset = PR_TRUE;
-            }
-            // notify the connection, give it a chance to cause a reset.
-            else if (mConnection)
-                mConnection->OnHeadersAvailable(this, &reset);
-
-            // looks like we should ignore this response, resetting...
-            if (reset) {
-                LOG(("resetting transaction's response head\n"));
-                mHaveAllHeaders = PR_FALSE;
-                mHaveStatusLine = PR_FALSE;
-                mResponseHead->Reset();
-                // wait to be called again...
-                return NS_BASE_STREAM_WOULD_BLOCK;
-            }
-
-            // grab the content-length from the response headers
-            mContentLength = mResponseHead->ContentLength();
-
-            // handle chunked encoding here, so we'll know immediately when
-            // we're done with the socket.  please note that _all_ other
-            // decoding is done when the channel receives the content data
-            // so as not to block the socket transport thread too much.
-            const char *val =
-                    mResponseHead->PeekHeader(nsHttp::Transfer_Encoding);
-            if (PL_strcasestr(val, "chunked")) {
-                // we only support the "chunked" transfer encoding right now.
-                mChunkedDecoder = new nsHttpChunkedDecoder();
-                if (!mChunkedDecoder)
-                    return NS_ERROR_OUT_OF_MEMORY;
-                LOG(("chunked decoder created\n"));
-
-                val = mResponseHead->PeekHeader(nsHttp::Trailer);
-                NS_ASSERTION(!val, "FIXME: unhandled trailer header present!");
-            }
-            else if (mContentLength == -1) {
-                // check if this is a no-content response
-                switch (mResponseHead->Status()) {
-                case 204:
-                case 205:
-                case 304:
-                    mNoContent = PR_TRUE;
-                    LOG(("looks like this response should not contain a body.\n"));
-                    break;
-                }
-                if (mNoContent)
-                    mContentLength = 0;
-                // otherwise, we'll wait for the server to close the connection.
-            }
-        }
-
-        LOG(("nsHttpTransaction [this=%x] sending OnStartRequest\n", this));
-        mFiredOnStart = PR_TRUE;
-
-        rv = mListener->OnStartRequest(this, nsnull);
-        if (NS_FAILED(rv)) {
-            LOG(("OnStartRequest failed with [rv=%x]\n", rv));
-            return rv;
-        }
+        rv = HandleContentStart();
+        if (NS_FAILED(rv)) return rv;
     }
 
     if (mChunkedDecoder) {
@@ -478,7 +501,6 @@ nsHttpTransaction::HandleContent(char *buf,
             rv = mConnection->OnTransactionComplete(NS_OK);
             
             // at this point, we no longer need the connection
-            //nsHttpHandler::get()->ReclaimConnection(mConnection);
             NS_RELEASE(mConnection);
 
             return rv;

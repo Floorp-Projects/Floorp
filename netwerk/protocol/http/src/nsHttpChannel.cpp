@@ -1769,7 +1769,8 @@ nsHttpChannel::SetContentType(const char *value)
     if (!mResponseHead)
         return NS_ERROR_NOT_AVAILABLE;
 
-    return mResponseHead->SetContentType(value);
+    mResponseHead->SetContentType(value);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -54,7 +54,8 @@ public:
     nsresult GetHeader(nsHttpAtom h, char **v)      { return mHeaders.GetHeader(h, v); }
     void     ClearHeaders()                         { mHeaders.Clear(); }
 
-    nsresult SetContentType(const char *s) { mContentType = s; return NS_OK; }
+    void     SetContentType(const char *s) { mContentType = s; }
+    void     SetContentLength(PRInt32 len) { mContentLength = len; }
 
     // write out the response status line and headers as a single text block,
     // optionally pruning out transient headers (ie. headers that only make

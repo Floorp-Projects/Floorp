@@ -85,6 +85,7 @@ public:
 
     PRBool   CanReuse(); // can this connection be reused?
     PRBool   IsAlive();
+    PRBool   IsKeepAlive()   { return mKeepAlive; }
     PRUint32 ReuseCount()    { return mReuseCount; }
     PRUint32 MaxReuseCount() { return mMaxReuseCount; }
     PRUint32 IdleTimeout()   { return mIdleTimeout; }
