@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.3 1998/11/11 17:33:24 leaf%mozilla.org Exp $
+# $Id: Local.pm,v 1.4 1999/04/26 19:52:55 endico%mozilla.org Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <dawn@cannibal.mi.org>
@@ -71,6 +71,7 @@ sub fdescexpand {
 	    ($filename =~ /\.cc$/) |
 	    ($filename =~ /\.cp$/) | 
 	    ($filename =~ /\.cpp$/) | 
+	    ($filename =~ /\.idl$/) | 
 	    ($filename =~ /\.java$/)
 	    )){
 	return("\&nbsp\;");
