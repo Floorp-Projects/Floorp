@@ -34,7 +34,7 @@ interface nsIDataType : nsISupports
 {
     // These MUST match the declarations in xpt_struct.h. 
     // Otherwise the world is likely to explode.   
-                                                  // From xpt_struct.h ...
+                                                   // From xpt_struct.h ...
     const PRUint16 VTYPE_INT8                =  0; // TD_INT8              = 0,
     const PRUint16 VTYPE_INT16               =  1; // TD_INT16             = 1,
     const PRUint16 VTYPE_INT32               =  2; // TD_INT32             = 2,
@@ -50,15 +50,17 @@ interface nsIDataType : nsISupports
     const PRUint16 VTYPE_WCHAR               = 12; // TD_WCHAR             = 12,
     const PRUint16 VTYPE_VOID                = 13; // TD_VOID              = 13,
     const PRUint16 VTYPE_ID                  = 14; // TD_PNSIID            = 14,
-    const PRUint16 VTYPE_ASTRING             = 15; // TD_DOMSTRING         = 15,
+    const PRUint16 VTYPE_DOMSTRING           = 15; // TD_DOMSTRING         = 15,
     const PRUint16 VTYPE_CHAR_STR            = 16; // TD_PSTRING           = 16,
     const PRUint16 VTYPE_WCHAR_STR           = 17; // TD_PWSTRING          = 17,
     const PRUint16 VTYPE_INTERFACE           = 18; // TD_INTERFACE_TYPE    = 18,
     const PRUint16 VTYPE_INTERFACE_IS        = 19; // TD_INTERFACE_IS_TYPE = 19,
     const PRUint16 VTYPE_ARRAY               = 20; // TD_ARRAY             = 20,
     const PRUint16 VTYPE_STRING_SIZE_IS      = 21; // TD_PSTRING_SIZE_IS   = 21,
-    const PRUint16 VTYPE_WSTRING_SIZE_IS     = 22; // TD_PWSTRING_SIZE_IS  = 22
-    
+    const PRUint16 VTYPE_WSTRING_SIZE_IS     = 22; // TD_PWSTRING_SIZE_IS  = 22,
+    const PRUint16 VTYPE_UTF8STRING          = 23; // TD_UTF8STRING        = 23,
+    const PRUint16 VTYPE_CSTRING             = 24; // TD_CSTRING           = 24,
+    const PRUint16 VTYPE_ASTRING             = 25; // TD_ASTRING           = 25,
     const PRUint16 VTYPE_EMPTY               = 255;
 };
 
@@ -91,6 +93,9 @@ interface nsIVariant : nsISupports
     [noscript] wchar        getAsWChar();
     [notxpcom] nsresult     getAsID(out nsID retval);
     [noscript] AString      getAsAString();
+    [noscript] DOMString    getAsDOMString();
+    [noscript] ACString     getAsACString();
+    [noscript] AUTF8String  getAsAUTF8String();
     [noscript] string       getAsString();
     [noscript] wstring      getAsWString();
     [noscript] nsISupports  getAsISupports();
@@ -138,6 +143,9 @@ interface nsIWritableVariant : nsIVariant
     void setAsWChar(in wchar aValue);
     void setAsID(in nsIDRef aValue);
     void setAsAString(in AString aValue);
+    void setAsDOMString(in DOMString aValue);
+    void setAsACString(in ACString aValue);
+    void setAsAUTF8String(in AUTF8String aValue);
     void setAsString(in string aValue);
     void setAsWString(in wstring aValue);
     void setAsISupports(in nsISupports aValue);

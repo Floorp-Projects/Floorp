@@ -103,10 +103,10 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
 
     switch(type)
     {
-    case nsIDataType::VTYPE_INT8:        
+    case nsIDataType::VTYPE_INT8:
         MEMBER_COPY_CAST(Int8, PRUint8)
         break;
-    case nsIDataType::VTYPE_INT16:        
+    case nsIDataType::VTYPE_INT16:
         MEMBER_COPY(Int16)
         break;
     case nsIDataType::VTYPE_INT32:        
@@ -152,6 +152,7 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         MEMBER_COPY(ID)
         break;
     case nsIDataType::VTYPE_ASTRING:        
+    case nsIDataType::VTYPE_DOMSTRING:
     {
         nsAutoString str;
         rv = inVar->GetAsAString(str);
@@ -160,6 +161,24 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         NS_ENSURE_SUCCESS(rv,rv);
         break;
     }
+    case nsIDataType::VTYPE_UTF8STRING:
+    {
+        nsUTF8String str;
+        rv = inVar->GetAsAUTF8String(str);
+        if(NS_FAILED(rv)) return rv;
+        rv = outVar->SetAsAUTF8String(str);
+        NS_ENSURE_SUCCESS(rv,rv);
+        break;
+    }
+    case nsIDataType::VTYPE_CSTRING:
+    {
+        nsCAutoString str;
+        rv = inVar->GetAsACString(str);
+        if(NS_FAILED(rv)) return rv;
+        rv = outVar->SetAsACString(str);
+        NS_ENSURE_SUCCESS(rv,rv);
+        break;
+    }    
     case nsIDataType::VTYPE_CHAR_STR:        
     {
         char* str;

@@ -26,6 +26,15 @@
 #include "nsIVariant.h"
 #include "xpt_struct.h"
 
+/** 
+ * Map the nsAUTF8String, nsUTF8String classes to the nsACString and
+ * nsCString classes respectively for now.  These defines need to be removed
+ * once Jag lands his nsUTF8String implementation.
+ */
+#define nsAUTF8String nsACString
+#define nsUTF8String nsCString
+#define PromiseFlatUTF8String PromiseFlatCString
+
 /**
  * nsDiscriminatedUnion is a type that nsIVariant implementors *may* use 
  * to hold underlying data. It has no methods. So, its use requires no linkage
@@ -35,21 +44,23 @@
 struct NS_COM nsDiscriminatedUnion
 {
     union {
-        PRInt8      mInt8Value;
-        PRInt16     mInt16Value;
-        PRInt32     mInt32Value;
-        PRInt64     mInt64Value;
-        PRUint8     mUint8Value;
-        PRUint16    mUint16Value;
-        PRUint32    mUint32Value;
-        PRUint64    mUint64Value;
-        float       mFloatValue;
-        double      mDoubleValue;
-        PRBool      mBoolValue;
-        char        mCharValue;
-        PRUnichar   mWCharValue;
-        nsIID       mIDValue;
-        nsAString*  mAStringValue;
+        PRInt8         mInt8Value;
+        PRInt16        mInt16Value;
+        PRInt32        mInt32Value;
+        PRInt64        mInt64Value;
+        PRUint8        mUint8Value;
+        PRUint16       mUint16Value;
+        PRUint32       mUint32Value;
+        PRUint64       mUint64Value;
+        float          mFloatValue;
+        double         mDoubleValue;
+        PRBool         mBoolValue;
+        char           mCharValue;
+        PRUnichar      mWCharValue;
+        nsIID          mIDValue;
+        nsAString*     mAStringValue;
+        nsAUTF8String* mUTF8StringValue;
+        nsACString*    mCStringValue;
         struct {
             nsISupports* mInterfaceValue;
             nsIID        mInterfaceID;
@@ -111,6 +122,8 @@ public:
     static nsresult ConvertToWChar(const nsDiscriminatedUnion& data, PRUnichar *_retval);
     static nsresult ConvertToID(const nsDiscriminatedUnion& data, nsID * _retval);
     static nsresult ConvertToAString(const nsDiscriminatedUnion& data, nsAWritableString & _retval);
+    static nsresult ConvertToAUTF8String(const nsDiscriminatedUnion& data, nsAUTF8String & _retval);
+    static nsresult ConvertToACString(const nsDiscriminatedUnion& data, nsACString & _retval);
     static nsresult ConvertToString(const nsDiscriminatedUnion& data, char **_retval);
     static nsresult ConvertToWString(const nsDiscriminatedUnion& data, PRUnichar **_retval);
     static nsresult ConvertToISupports(const nsDiscriminatedUnion& data, nsISupports **_retval);
@@ -136,6 +149,8 @@ public:
     static nsresult SetFromWChar(nsDiscriminatedUnion* data, PRUnichar aValue);
     static nsresult SetFromID(nsDiscriminatedUnion* data, const nsID & aValue);
     static nsresult SetFromAString(nsDiscriminatedUnion* data, const nsAReadableString & aValue);
+    static nsresult SetFromAUTF8String(nsDiscriminatedUnion* data, const nsAUTF8String & aValue);
+    static nsresult SetFromACString(nsDiscriminatedUnion* data, const nsACString & aValue);
     static nsresult SetFromString(nsDiscriminatedUnion* data, const char *aValue);
     static nsresult SetFromWString(nsDiscriminatedUnion* data, const PRUnichar *aValue);
     static nsresult SetFromISupports(nsDiscriminatedUnion* data, nsISupports *aValue);
