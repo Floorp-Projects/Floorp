@@ -288,6 +288,11 @@ nsWindowEnumerator::nsWindowEnumerator ( const PRUnichar* inTypeString,
   NS_INIT_REFCNT();
   mWindowMediator->AddEnumerator( this );
   mWindowMediator->AddRef();
+
+  // If creating an enumerator for specific type, 
+  //  initialize with a window of that type
+  if (!mType.IsEmpty() && mCurrentPosition && mCurrentPosition->GetType() != mType)
+    mCurrentPosition = FindNext();
 }
 
 nsWindowEnumerator::~nsWindowEnumerator()
