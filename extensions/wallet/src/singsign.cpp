@@ -1196,16 +1196,20 @@ SI_RemoveAllSignonData() {
   }
   si_PartiallyLoaded = PR_FALSE;
 
-  si_Reject * reject;
-  while (LIST_COUNT(si_reject_list)>0) {
-    reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(0));
-    if (reject) {
-      si_FreeReject(reject);
-      si_signon_list_changed = PR_TRUE;
+  if (si_reject_list) {
+    si_Reject * reject;
+    while (LIST_COUNT(si_reject_list)>0) {
+      reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(0));
+      if (reject) {
+        si_FreeReject(reject);
+        si_signon_list_changed = PR_TRUE;
+      }
     }
+    delete si_reject_list;
+    si_reject_list = nsnull;
   }
-  delete si_reject_list;
   delete si_signon_list;
+  si_signon_list = nsnull;
 }
 
 PUBLIC void
