@@ -36,12 +36,15 @@ class nsSimpleNotifier : public nsIXPINotifier
         nsSimpleNotifier();
         virtual ~nsSimpleNotifier();
        
-        NS_IMETHOD BeforeJavascriptEvaluation();
-        NS_IMETHOD AfterJavascriptEvaluation();
-        NS_IMETHOD InstallStarted(const char *UIPackageName);
-        NS_IMETHOD ItemScheduled(const char *message);
-        NS_IMETHOD InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum);
-        NS_IMETHOD InstallAborted();
+        NS_IMETHOD            BeforeJavascriptEvaluation();
+        NS_IMETHOD            AfterJavascriptEvaluation();
+        NS_IMETHOD            InstallStarted(const char *UIPackageName);
+        NS_IMETHOD            ItemScheduled(const char *message);
+        NS_IMETHOD            InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum);
+        NS_IMETHOD            InstallAborted();
+        NS_IMETHOD            QueryInterface(REFNSIID aIID, void** aInstancePtr);
+        NS_IMETHOD_(nsrefcnt) AddRef(void);
+        NS_IMETHOD_(nsrefcnt) Release(void);
 };
 
 #endif

@@ -72,4 +72,20 @@ nsSimpleNotifier::InstallAborted(void)
     printf("Installation aborted.\n");
 }
 
+NS_IMETHOD
+nsSimpleNotifier::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    printf("Query Interface.\n");
+}
 
+NS_IMETHOD_(nsrefcnt)
+nsSimpleNotifier::AddRef(void)
+{
+    printf("Add Reference.\n");
+}
+
+NS_IMETHOD_(nsrefcnt)
+nsSimpleNotifier::Release(void)
+{
+    printf("Release.\n");
+}
