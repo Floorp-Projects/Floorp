@@ -10886,7 +10886,7 @@ then
   LDFLAGS="$LDFLAGS $MOZ_OPTIMIZE_LDFLAGS"
 fi
 
-MOZ_REORDER=0
+MOZ_REORDER=
 # Check whether --enable-reorder or --disable-reorder was given.
 if test "${enable_reorder+set}" = set; then
   enableval="$enable_reorder"
@@ -10896,7 +10896,7 @@ if test "${enable_reorder+set}" = set; then
 fi
 
 
-MOZ_TIMELINE=0
+MOZ_TIMELINE=
 # Check whether --enable-timeline or --disable-timeline was given.
 if test "${enable_timeline+set}" = set; then
   enableval="$enable_timeline"
