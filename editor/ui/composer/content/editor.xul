@@ -269,9 +269,8 @@
     <!-- Some of this is from globarOverlay.xul -->
     <statusbar class="chromeclass-status" id="status-bar">
       <statusbarpanel id="component-bar"/>
-      <statusbarpanel id="statusText" flex="1" align="left" style="min-height: 20px"
-                      observes="cmd_structToolBar">
-	    <label value=""/>
+      <statusbarpanel id="structToolbar" flex="1" pack="end">
+	    <label id="structSpacer" value="" flex="1"/>
       </statusbarpanel>
       <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
     </statusbar>
