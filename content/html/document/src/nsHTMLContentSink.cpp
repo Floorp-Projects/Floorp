@@ -428,6 +428,12 @@ public:
   void ScrollToRef(PRBool aReallyScroll);
   void TryToScrollToRef();
 
+  /**
+   * AddBaseTagInfo adds the "current" base URI and target to the content node
+   * in the form of bogo-attributes.  This MUST be called before attributes are
+   * added to the content node, since the way URI attributes are treated may
+   * depend on the value of the base URI
+   */
   void AddBaseTagInfo(nsIHTMLContent* aContent);
 
   nsresult ProcessLinkHeader(nsIHTMLContent* aElement,
@@ -448,7 +454,6 @@ public:
   nsresult RefreshIfEnabled(nsIViewManager* vm);
 
   // Routines for tags that require special handling
-  nsresult ProcessATag(const nsIParserNode& aNode, nsIHTMLContent* aContent);
   nsresult ProcessAREATag(const nsIParserNode& aNode);
   nsresult ProcessBASETag(const nsIParserNode& aNode);
   nsresult ProcessLINKTag(const nsIParserNode& aNode);
@@ -1576,6 +1581,36 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mInsertionPoint = -1;
   content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
+  // Make sure to add base tag info, if needed, before setting any other
+  // attributes -- what URI attrs do will depend on the base URI.  Only do this
+  // for elements that have useful URI attributes.
+  // See bug 18478 and bug 30617 for why we need to do this.
+  switch (nodeType) {
+    // Containers with "href="
+    case eHTMLTag_a:
+    case eHTMLTag_map:
+    
+    // Containers with "action="
+    case eHTMLTag_form:
+
+    // Containers with "data="
+    case eHTMLTag_object:
+
+    // Containers with "background="
+    case eHTMLTag_table:
+    case eHTMLTag_thead:
+    case eHTMLTag_tbody:
+    case eHTMLTag_tfoot:
+    case eHTMLTag_tr:
+    case eHTMLTag_td:
+    case eHTMLTag_th:
+      mSink->AddBaseTagInfo(content);
+
+      break;
+    default:
+      break;    
+  }
+  
   rv = mSink->AddAttributes(aNode, content);
 
   if (mPreAppend) {
@@ -1613,22 +1648,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       mSink->mInsideNoXXXTag++;
 
       break;
-    case eHTMLTag_a:
-      mSink->ProcessATag(aNode, content);
 
-      break;
-    case eHTMLTag_form:
-    case eHTMLTag_table:
-    case eHTMLTag_thead:
-    case eHTMLTag_tbody:
-    case eHTMLTag_tfoot:
-    case eHTMLTag_tr:
-    case eHTMLTag_td:
-    case eHTMLTag_th:
-      // XXX if navigator_quirks_mode (only body in html supports background)
-      mSink->AddBaseTagInfo(content);
-
-      break;
     case eHTMLTag_map:
       mSink->ProcessMAPTag(aNode, content);
 
@@ -1809,20 +1829,26 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       // Set the content's document
       content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
-      rv = mSink->AddAttributes(aNode, content);
-
-      NS_ENSURE_SUCCESS(rv, rv);
-
+      // Make sure to add base tag info, if needed, before setting any other
+      // attributes -- what URI attrs do will depend on the base URI.  Only do
+      // this for elements that have useful URI attributes.
+      // See bug 18478 and bug 30617 for why we need to do this.
       switch (nodeType) {
-      case eHTMLTag_img:    // elements with 'SRC='
+      // leaves with 'SRC='
+      case eHTMLTag_img:
       case eHTMLTag_frame:
       case eHTMLTag_input:
+      case eHTMLTag_embed:
         mSink->AddBaseTagInfo(content);
 
         break;
       default:
         break;
       }
+
+      rv = mSink->AddAttributes(aNode, content);
+
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // Add new leaf to its parent
       AddLeaf(content);
@@ -4381,15 +4407,6 @@ HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
 }
 
 nsresult
-HTMLContentSink::ProcessATag(const nsIParserNode& aNode,
-                             nsIHTMLContent* aContent)
-{
-  AddBaseTagInfo(aContent);
-
-  return NS_OK;
-}
-
-nsresult
 HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 {
   if (!mCurrentMap) {
@@ -4405,12 +4422,18 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
     return rv;
   }
 
-  // Set the content's document and attributes
+  // Set the content's document
   area->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+
+  // Make sure to add base tag info, if needed, before setting any other
+  // attributes -- what URI attrs do will depend on the base URI.  Only do this
+  // for elements that have useful URI attributes.
+  // See bug 18478 and bug 30617 for why we need to do this.
+  AddBaseTagInfo(area);
+
+  // Set the content's attributes
   rv = AddAttributes(aNode, area);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  AddBaseTagInfo(area); // basehref or basetarget. Fix. Bug: 30617
 
   // Add AREA object to the current map
   mCurrentMap->AppendChildTo(area, PR_FALSE, PR_FALSE);
@@ -5024,11 +5047,6 @@ HTMLContentSink::ProcessMAPTag(const nsIParserNode& aNode,
   // We used to strip whitespace from the NAME attribute here, to
   // match a 4.x quirk, but it proved too quirky for us, and IE never
   // did that.  See bug 79738 for details.
-
-  // This is for nav4 compatibility. (Bug 18478) The base tag should
-  // only appear in the head, but nav4 allows the base tag in the body
-  // as well.
-  AddBaseTagInfo(aContent);
 
   // Don't need to add the map to the document here anymore.
   // The map adds itself
