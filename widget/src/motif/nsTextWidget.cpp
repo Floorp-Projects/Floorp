@@ -34,7 +34,7 @@ extern int mIsPasswordCallBacksInstalled;
 // nsTextWidget constructor
 //
 //-------------------------------------------------------------------------
-nsTextWidget::nsTextWidget(nsISupports *aOuter) : nsTextHelper(aOuter),
+nsTextWidget::nsTextWidget(nsISupports *aOuter) : nsWindow(aOuter),
   mIsPasswordCallBacksInstalled(PR_FALSE),
   mMakeReadOnly(PR_FALSE),
   mMakePassword(PR_FALSE)
@@ -78,10 +78,10 @@ void nsTextWidget::Create(nsIWidget *aParent,
                                     XmNheight, aRect.height,
                                     XmNrecomputeSize, False,
                                     XmNhighlightOnEnter, False,
-		                                XmNx, aRect.x,
-		                                XmNy, aRect.y, 
+		                    XmNx, aRect.x,
+		                    XmNy, aRect.y, 
                                     nsnull);
-
+  mHelper = new nsTextHelper(mWidget);
   if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
@@ -114,7 +114,7 @@ void nsTextWidget::Create(nsNativeWindow aParent,
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsTextWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult nsTextWidget::QueryObject(REFNSIID aIID, void** aInstancePtr)
 {
   static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 
@@ -123,7 +123,7 @@ nsresult nsTextWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void**) &mAggWidget;
     return NS_OK;
   }
-  return nsWindow::QueryInterface(aIID, aInstancePtr);
+  return nsWindow::QueryObject(aIID, aInstancePtr);
 }
 
 
@@ -174,74 +174,74 @@ PRBool  nsTextWidget::SetReadOnly(PRBool aReadOnlyFlag)
     mMakeReadOnly = PR_TRUE;
     return PR_TRUE;
   }
-  return nsTextHelper::SetReadOnly(aReadOnlyFlag);
+  return mHelper->SetReadOnly(aReadOnlyFlag);
 }
 
 //--------------------------------------------------------------
 void nsTextWidget::SetMaxTextLength(PRUint32 aChars)
 {
-  nsTextHelper::SetMaxTextLength(aChars);
+  mHelper->SetMaxTextLength(aChars);
 }
 
 //--------------------------------------------------------------
 PRUint32  nsTextWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
-  return nsTextHelper::GetText(aTextBuffer, aBufferSize);
+  return mHelper->GetText(aTextBuffer, aBufferSize);
 }
 
 //--------------------------------------------------------------
 PRUint32  nsTextWidget::SetText(const nsString& aText)
 { 
-  return nsTextHelper::SetText(aText);
+  return mHelper->SetText(aText);
 }
 
 //--------------------------------------------------------------
 PRUint32  nsTextWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
 { 
-  return nsTextHelper::InsertText(aText, aStartPos, aEndPos);
+  return mHelper->InsertText(aText, aStartPos, aEndPos);
 }
 
 //--------------------------------------------------------------
 void  nsTextWidget::RemoveText()
 {
-  nsTextHelper::RemoveText();
+  mHelper->RemoveText();
 }
 
 //--------------------------------------------------------------
 void nsTextWidget::SelectAll()
 {
-  nsTextHelper::SelectAll();
+  mHelper->SelectAll();
 }
 
 
 //--------------------------------------------------------------
 void  nsTextWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
-  nsTextHelper::SetSelection(aStartSel, aEndSel);
+  mHelper->SetSelection(aStartSel, aEndSel);
 }
 
 
 //--------------------------------------------------------------
 void  nsTextWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 {
-  nsTextHelper::GetSelection(aStartSel, aEndSel);
+  mHelper->GetSelection(aStartSel, aEndSel);
 }
 
 //--------------------------------------------------------------
 void  nsTextWidget::SetCaretPosition(PRUint32 aPosition)
 {
-  nsTextHelper::SetCaretPosition(aPosition);
+  mHelper->SetCaretPosition(aPosition);
 }
 
 //--------------------------------------------------------------
 PRUint32  nsTextWidget::GetCaretPosition()
 {
-  return nsTextHelper::GetCaretPosition();
+  return mHelper->GetCaretPosition();
 }
 
 //--------------------------------------------------------------
 PRBool nsTextWidget::AutoErase()
 {
-  return nsTextHelper::AutoErase();
+  return mHelper->AutoErase();
 }
 
 
