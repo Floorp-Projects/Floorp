@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/perl
 
 require 5.000;
 
@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.18 $';
+$Version = '$Revision: 1.19 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -37,6 +37,11 @@ sub InitVars {
     # Set these proper values for your tinderbox server
     $Tinderbox_server = 'tinderbox-daemon\@cvs-mirror.mozilla.org';
 
+    # You'll need to change these to suit your machine's needs
+    $BaseDir = '/builds/tinderbox/SeaMonkey';
+    $NSPRDir = '/builds/tinderbox/SeaMonkey/nspr';
+    $DisplayServer = 'crucible.mcom.com:0.0';
+
     # These shouldn't really need to be changed
     $BuildSleep = 10; # Minimum wait period from start of build to start
                       # of next build in minutes
@@ -52,10 +57,10 @@ sub InitVars {
     $Topsrcdir = 'mozilla';
     $ClobberStr = 'realclean';
     $ConfigureEnvArgs = '';
-    $ConfigureArgs = '--with-nspr=/builds/tinderbox/SeaMonkey/nspr --cache-file=/dev/null ';
+    $ConfigureArgs = '--with-nspr=' . $NSPRDir . ' --cache-file=/dev/null ';
     $ConfigGuess = './build/autoconf/config.guess';
     $Logfile = '${BuildDir}.log';
-    $NSPRArgs = 'DIST=/builds/tinderbox/SeaMonkey/nspr MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1 ';
+    $NSPRArgs = 'DIST=' . $NSPRDir . ' MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1 ';
     $Compiler = 'gcc';
     $ShellOverride = ''; # Only used if the default shell is too stupid
 }
@@ -78,8 +83,8 @@ sub ConditionalArgs {
 sub SetupEnv {
     umask(0);
     $ENV{"CVSROOT"} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-    $ENV{"LD_LIBRARY_PATH"} = '/builds/tinderbox/SeaMonkey/nspr/lib:/builds/tinderbox/SeaMonkey/' . $DirName . '/mozilla/' . $ObjDir . '/dist/bin:/usr/lib/png:/usr/local/lib';
-    $ENV{"DISPLAY"} = 'crucible.mcom.com:0.0';
+    $ENV{"LD_LIBRARY_PATH"} = $NSPRDir . '/lib:' . $BaseDir . '/' . $DirName . '/mozilla/' . $ObjDir . '/dist/bin:/usr/lib/png:/usr/local/lib';
+    $ENV{"DISPLAY"} = $DisplayServer;
 }
 
 sub SetupPath {
@@ -146,7 +151,6 @@ sub SetupPath {
     if ( $OS eq 'OSF1' ) {
 	$ENV{'PATH'} = '/usr/gnu/bin:' . $ENV{'PATH'};
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/gnu/lib';
-	$ConfigureArgs .= '--with-pthreads';
 	$ConfigureEnvArgs = 'CC="cc -readonly_strings" CXX="cxx"';
 	$Compiler = 'cc/cxx';
 	$MakeOverrides = 'SHELL=/usr/bin/ksh';
@@ -172,7 +176,6 @@ sub SetupPath {
 	    $Compiler = 'egcc';
 	} else {
 	    $ENV{'PATH'} = '/usr/ccs/bin:' . $ENV{'PATH'};
-	    $ConfigureArgs .= '--with-pthreads';
 	}
 	if ( $CPU eq 'i86pc' ) {
 	    $ENV{'PATH'} = '/opt/gnu/bin:' . $ENV{'PATH'};
@@ -585,7 +588,6 @@ sub BuildIt {
 
 	while (<LOG>) {
 	    $q = 0;
-
 	    for (;;) {
 		$val = $q * 1000;
 		$Output = substr($_, $val, 1000);
@@ -597,8 +599,7 @@ sub BuildIt {
 		print OUTLOG "$Output\n";
 		$q++;
 	    }
-
-	} #EndWhile
+	}
 
 	close(LOG);
 	close(OUTLOG);
@@ -706,7 +707,7 @@ sub ParseArgs {
  	    $manArg++;
 	}
 	elsif ( $ARGV[$i] eq '--help' || $ARGV[$i] eq '-h' ) {
-	    $PrintUsage;
+	    &PrintUsage;
 	}
 	elsif ( $ARGV[$i] eq '--nodeps' ) {
 	    $ConfigureArgs .= '--enable-md=no ';
