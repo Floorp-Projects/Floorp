@@ -128,7 +128,6 @@ private:
     PRUint32 mLastGroupDate;
     PRTime mFirstNewDate;
     PRInt32 mUniqueId;    
-    PRBool mPushAuth;
     PRUint32 mLastUpdatedTime;
     PRInt32 mVersion;
     PRBool mPostingAllowed;

@@ -108,12 +108,12 @@
 #define RATE_STR_BUF_LEN 32
 #define UPDATE_THRESHHOLD 25600 /* only update every 25 KB */
 
-// neither push auth nor extensions are supported yet
-// since there is a lot of work to do on the news code
-// for example, nsNNTPHost and nsNNTPNewgroup are
-// going away.  until then, after doing "mode reader"
-// skip to the first nntp command.
-//#define HAVE_PUSH_AUTH_AND_EXTENSIONS
+// NNTP extensions are supported yet
+// until the extension code is ported, 
+// we'll skip right to the first nntp command 
+// after doing "mode reader"
+// and "pushed" authentication (if necessary),
+//#define HAVE_NNTP_EXTENSIONS
 
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
 // which is not currently in the build system
@@ -1564,7 +1564,6 @@ PRInt32 nsNNTPProtocol::SendModeReaderResponse()
 {
 	SetFlag(NNTP_READER_PERFORMED);
 
-#ifdef HAVE_PUSH_AUTH_AND_EXTENSIONS
 	/* ignore the response code and continue
 	 */
     PRBool pushAuth;
@@ -1575,10 +1574,11 @@ PRInt32 nsNNTPProtocol::SendModeReaderResponse()
 		 */
 		m_nextState = NNTP_BEGIN_AUTHORIZE;
 	else
+#ifdef HAVE_NNTP_EXTENSIONS
 		m_nextState = SEND_LIST_EXTENSIONS;
 #else
-	 m_nextState = SEND_FIRST_NNTP_COMMAND;
-#endif  /* HAVE_PUSH_AUTH_AND_EXTENSIONS */
+		m_nextState = SEND_FIRST_NNTP_COMMAND;
+#endif  /* HAVE_NNTP_EXTENSIONS */
 
 	return(0);
 }
@@ -2790,7 +2790,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == m_responseCode) 
 	  {
 		/* successful login */
-#ifdef HAVE_PUSH_AUTH_AND_EXTENSIONS
+#ifdef HAVE_NNTP_EXTENSIONS
         PRBool pushAuth;
 		/* If we're here because the host demanded authentication before we
 		 * even sent a single command, then jump back to the beginning of everything
@@ -2812,7 +2812,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 			m_nextState = NNTP_SEND_MODE_READER;
         else
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
-#endif /* HAVE_PUSH_AUTH_AND_EXTENSIONS */
+#endif /* HAVE_NNTP_EXTENSIONS */
 
 		return(0); 
 	  }
@@ -2914,7 +2914,7 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == m_responseCode) 
 	  {
         /* successful login */
-#ifdef HAVE_PUSH_AUTH_AND_EXTENSIONS
+#ifdef HAVE_NNTP_EXTENSIONS
         PRBool pushAuth;
 		/* If we're here because the host demanded authentication before we
 		 * even sent a single command, then jump back to the beginning of everything
@@ -2936,7 +2936,7 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 			m_nextState = NNTP_SEND_MODE_READER;
         else
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
-#endif /* HAVE_PUSH_AUTH_AND_EXTENSIONS */
+#endif /* HAVE_NNTP_EXTENSIONS */
 
         return(0);
 	  }

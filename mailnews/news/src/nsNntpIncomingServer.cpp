@@ -92,7 +92,6 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
 
   mLastGroupDate = 0;
   mUniqueId = 0;
-  mPushAuth = PR_FALSE;
   mHasSeenBeginGroups = PR_FALSE;
   mPostingAllowed = PR_FALSE;
   mLastUpdatedTime = 0;
@@ -134,6 +133,7 @@ nsNntpIncomingServer::~nsNntpIncomingServer()
 NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, NotifyOn, "notify.on");
 NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, MarkOldRead, "mark_old_read");
 NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, Abbreviate, "abbreviate");
+NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, PushAuth, "always_authenticate");
 NS_IMPL_SERVERPREF_INT(nsNntpIncomingServer, MaxArticles, "max_articles");
 
 NS_IMETHODIMP
@@ -825,7 +825,6 @@ nsNntpIncomingServer::WriteHostInfoFile()
 	*mHostInfoStream << "lastgroupdate=" << mLastGroupDate << MSG_LINEBREAK;
 	*mHostInfoStream << "firstnewdate=" << firstnewdate << MSG_LINEBREAK;
 	*mHostInfoStream << "uniqueid=" << mUniqueId << MSG_LINEBREAK;
-	*mHostInfoStream << "pushauth=" << mPushAuth << MSG_LINEBREAK;
 	*mHostInfoStream << "" << MSG_LINEBREAK;
 	*mHostInfoStream << "begingroups" << MSG_LINEBREAK;
 
@@ -1232,8 +1231,6 @@ nsNntpIncomingServer::HandleLine(char* line, PRUint32 line_size)
 				LL_I2L(mFirstNewDate, firstnewdate);
 			} else if (PL_strcmp(line, "uniqueid") == 0) {
 				mUniqueId = strtol(equalPos, nsnull, 16);
-			} else if (PL_strcmp(line, "pushauth") == 0) {
-				mPushAuth = strtol(equalPos, nsnull, 16);
 			} else if (PL_strcmp(line, "version") == 0) {
 				mVersion = strtol(equalPos, nsnull, 16);
 			}
@@ -1431,20 +1428,6 @@ nsNntpIncomingServer::SetPostingAllowed(PRBool aPostingAllowed)
 {
   mPostingAllowed = aPostingAllowed;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNntpIncomingServer::GetPushAuth(PRBool *aPushAuth)
-{
-  NS_ASSERTION(0,"not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsNntpIncomingServer::SetPushAuth(PRBool aPushAuth)
-{
-  NS_ASSERTION(0,"not implemented");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
