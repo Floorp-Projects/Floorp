@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either ex7press or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -21,6 +21,7 @@
  */
 
 #include "nsFileWidget.h"
+#include "nsIToolkit.h"
 
 #include <Pt.h>
 #include "nsPhWidgetLog.h"
@@ -35,8 +36,11 @@ NS_IMPL_ISUPPORTS(nsFileWidget, kIFileWidgetIID);
 //-------------------------------------------------------------------------
 nsFileWidget::nsFileWidget() : nsIFileWidget()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::nsFileWidget - Constructor Called this=<%p>\n", this));
+
   NS_INIT_REFCNT();
   mWidget = nsnull;
+  mParent = nsnull;
   mNumberOfFilters = 0;
 }
 
@@ -47,7 +51,7 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
 //-------------------------------------------------------------------------
 nsFileWidget::~nsFileWidget()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::~nsFileWidget - Destructor Called\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::~nsFileWidget - Destructor Called this=<%p>\n", this));
 
   if (mWidget)
   	PtDestroyWidget(mWidget);
@@ -60,14 +64,19 @@ nsFileWidget::~nsFileWidget()
 //-------------------------------------------------------------------------
 PRBool nsFileWidget::Show()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Show this=<%p> mMode=<%d>\n", this, mMode));
+
   int         err;
   PRBool      res = PR_FALSE;
   char       *title = mTitle.ToNewCString();
+  PtWidget_t *myParent = nsnull;
 
-  PtWidget_t *myParent = (PtWidget_t *) mParent->GetNativeData(NS_NATIVE_WIDGET);
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Show myParent=<%p> - Not Implemented\n", myParent));
-  
+  if (mParent)
+  {
+    myParent = (PtWidget_t *) mParent->GetNativeData(NS_NATIVE_WIDGET);
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Show myParent=<%p>\n", myParent));
+  }
+    
   PhPoint_t thePos= {100,100};
   char      *root_dir = mDisplayDirectory.ToNewCString();
   char      *file_spec = nsnull;
@@ -86,7 +95,7 @@ PRBool nsFileWidget::Show()
    /* Save a File or directory */  
     flags = flags | Pt_FSDIALOG_NO_FCHECK;
   }
-  
+
   int i;
   nsString mFilterList;
   for(i=0; i<(mNumberOfFilters-1); i++)
@@ -99,9 +108,12 @@ PRBool nsFileWidget::Show()
 
   file_spec = mFilterList.ToNewCString();  /* convert it into a string */
   
-  myParent = nsnull; /* HACK! */
-  
+  if (myParent == nsnull)
+    PtSetParentWidget( NULL );
+	  
   err = PtFileSelection(myParent, &thePos, title, root_dir, file_spec, btn1, btn2, format, &info, flags);
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Show 2 err=<%d>\n", err));  
+
   if (err == 0)
   {
 	/* Successfully selected a file or directory */
@@ -129,6 +141,21 @@ PRBool nsFileWidget::Show()
   return res;
 }
 
+
+//-------------------------------------------------------------------------
+//
+// Show - Display the replace dialog
+//
+//-------------------------------------------------------------------------
+PRBool nsFileWidget::AskReplace()
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::AskReplace this=<%p> - Not Implemented\n", this));
+  PRBool      res = PR_FALSE;
+
+  /* Almost the same as ::Show Just different button labels */
+  
+  return res;
+}
 //-------------------------------------------------------------------------
 //
 // Set the list of filters
@@ -140,7 +167,8 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
 				      const nsString aFilters[])
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::SetFilterList numFilters=<%d>\n", aNumberOfFilters));
-#if 1
+
+#if defined(DEBUG)
 {
   int i;
   for(i=0; i<aNumberOfFilters; i++)
@@ -217,6 +245,8 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
                                nsIToolkit *aToolkit,
                                void *aInitData)
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Create  aParent=<%p>\n", aParent));
+
   mMode = aMode;
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
@@ -229,10 +259,14 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
 
 NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFile with nsFileSpec - Not Implemented\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFile with nsFileSpec this=<%p>\n", this));
   
-  nsresult res = NS_ERROR_FAILURE;
-  return res;
+    char *str = mSelectedFile.ToNewCString();
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFile with nsFileSpec filename=<%s>\n", str));
+    aFile = strdup(str);
+    delete [] str;
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -251,8 +285,16 @@ nsFileDlgResults nsFileWidget::GetFile(
       const nsString   & promptString,    // Window title for the dialog
       nsFileSpec       & theFileSpec)     // Populate with initial path for file dialog
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFile with nsIWidget - Not Implemented\n"));
-  return nsFileDlgResults_OK;
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFile with nsIWidget this=<%p> aParent=<%p>\n", this, aParent));
+  
+	Create(aParent, promptString, eMode_load, nsnull, nsnull);
+	if (Show() == PR_TRUE)
+	{
+		GetFile(theFileSpec);
+		return nsFileDlgResults_OK;
+	}
+
+  return nsFileDlgResults_Cancel;
 }
     
 nsFileDlgResults nsFileWidget::GetFolder(
@@ -260,14 +302,41 @@ nsFileDlgResults nsFileWidget::GetFolder(
       const nsString   & promptString,    // Window title for the dialog
       nsFileSpec       & theFileSpec)     // Populate with initial path for file dialog 
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFolder with nsIWidget - Not Implemented\n"));
-  return nsFileDlgResults_OK;
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFolder with nsIWidget\n"));
+
+	Create(aParent, promptString, eMode_getfolder, nsnull, nsnull);
+	if (Show() == PR_TRUE)
+	{
+		GetFile(theFileSpec);
+		return nsFileDlgResults_OK;
+	}
+
+  return nsFileDlgResults_Cancel;
 }
+
 nsFileDlgResults nsFileWidget::PutFile(
       nsIWidget        * aParent,
       const nsString   & promptString,    // Window title for the dialog
       nsFileSpec       & theFileSpec)     // Populate with initial path for file dialog 
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::PutFile with nsIWidget - Not Implemented\n"));
-  return nsFileDlgResults_OK;
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::PutFile with nsIWidget\n"));
+
+  nsFileDlgResults theResult = nsFileDlgResults_Cancel;
+  
+  Create(aParent, promptString, eMode_save, nsnull, nsnull);
+  if (Show() == PR_TRUE)
+  {
+    GetFile(theFileSpec);
+    if( theFileSpec.Exists() )
+    {
+      PRBool result = AskReplace();
+      theResult = result ? nsFileDlgResults_Replace : nsFileDlgResults_Cancel;
+      // Ask for replace dialog
+    }
+    else
+    {
+      theResult = nsFileDlgResults_OK;
+    }
+  }
+  return theResult; 
 }
