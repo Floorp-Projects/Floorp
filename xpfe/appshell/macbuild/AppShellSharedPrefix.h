@@ -19,4 +19,4 @@
 /* Defining the following causes NS_APPSHELL to be defined as NS_EXPORT. */
 #define _IMPL_NS_APPSHELL
 
-#include "MacSharedPrefix_debug.h"
+#include "MacSharedPrefix.h"
