@@ -1,7 +1,20 @@
 <!-- LOCALIZATION NOTE (smtpServer.label): do not translate "SMTP" in below line -->
 <!ENTITY smtpServer.label "Outgoing Server (SMTP) Settings">
 <!-- LOCALIZATION NOTE (smtpDesc.label): do not translate "SMTP" in below line -->
-<!ENTITY smtpDesc.label "Only one outgoing server (SMTP) needs to be specified, even if you have several mail accounts. Enter the name of the server for outgoing messages.">
-<!ENTITY advanced.label "Advanced...">
-<!ENTITY advanced.accesskey "v">
+<!ENTITY smtpDesc.label "Although you can specify more than one outgoing server (SMTP), this is only recommended for advanced users. Setting up multiple SMTP servers can cause errors when sending messages.">
+
+<!ENTITY smtpListAdd.label  "Add...">
+<!ENTITY smtpListAdd.accesskey  "d">
+<!ENTITY smtpListEdit.label "Edit...">
+<!ENTITY smtpListEdit.accesskey "E">
+<!ENTITY smtpListDelete.label "Remove">
+<!ENTITY smtpListDelete.accesskey "m">
+<!ENTITY smtpListSetDefault.label "Set Default">
+<!ENTITY smtpListSetDefault.accesskey "t">
+
+<!ENTITY serverDescription.label "Description: ">
+<!ENTITY serverName.label "Server Name: ">
+<!ENTITY serverPort.label "Port: ">
+<!ENTITY userName.label   "User Name: ">
+<!ENTITY useSecureConnection.label   "Secure Connection: ">
 

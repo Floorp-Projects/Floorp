@@ -40,7 +40,6 @@
   locale/@AB_CD@/messenger/am-identity-edit.dtd                         (@AB_CD@/chrome/messenger/am-identity-edit.dtd)
   locale/@AB_CD@/messenger/prefs.properties                             (@AB_CD@/chrome/messenger/prefs.properties)
   locale/@AB_CD@/messenger/am-serverwithnoidentities.dtd                (@AB_CD@/chrome/messenger/am-serverwithnoidentities.dtd)
-  locale/@AB_CD@/messenger/SmtpServerList.dtd                           (@AB_CD@/chrome/messenger/SmtpServerList.dtd)
   locale/@AB_CD@/messenger/smtpEditOverlay.dtd                          (@AB_CD@/chrome/messenger/smtpEditOverlay.dtd)
   locale/@AB_CD@/messenger/pref-advanced.dtd                            (@AB_CD@/chrome/messenger/pref-advanced.dtd)
   locale/@AB_CD@/messenger/pref-masterpass.dtd                          (@AB_CD@/chrome/messenger/pref-masterpass.dtd)

@@ -1,7 +1,6 @@
 <!-- extracted from am-main.xul -->
 
 <!ENTITY accountTitle.label "Account Settings">
-<!ENTITY accountSettingsDesc.label "The following information is needed before you can send messages. If you do not know the information requested, please contact your system administrator or Internet Service Provider.">
 <!ENTITY accountName.label "Account Name:">
 <!ENTITY accountName.accesskey "N">
 <!ENTITY accountNameDesc.label "The account name is used to identify each account">
@@ -28,3 +27,9 @@
 
 <!ENTITY manageIdentities.label "Manage Identities...">
 <!ENTITY manageIdentities.accesskey "M">
+
+<!-- LOCALIZATION NOTE (smtpName.label) : do not translate "SMTP" in below line -->
+<!ENTITY smtpName.label "Outgoing Server (SMTP):">
+<!ENTITY smtpName.accesskey "u">
+<!ENTITY smtpDefaultServer.label "Use Default Server">
+

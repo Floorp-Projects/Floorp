@@ -1,9 +1,4 @@
 <!ENTITY serverAdvanced.label "Advanced Account Settings">
-<!-- LOCALIZATION NOTE (smtpDesc.label): DONT_TRANSLATE "SMTP" -->
-<!ENTITY smtpDesc.label "When sending messages from this identity, always use the following outgoing server (SMTP):">
-<!ENTITY smtpName.label "Server:">
-<!ENTITY smtpName.accesskey "S">
-<!ENTITY smtpDefaultServer.label "Always use default server">
 <!-- LOCALIZATION NOTE (serverDirectory.label): DONT_TRANSLATE "IMAP" -->
 <!ENTITY imapAdvanced.label "Advanced IMAP Server Settings">
 <!ENTITY serverDirectory.label "IMAP server directory:">

@@ -53,45 +53,8 @@
   <script type="application/x-javascript" src="am-server-advanced.js"/>
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
 
-  <tabbox id="tabbox" flex="1">
-    <tabs id="tabs">
-      <tab id="smtpTab" label="SMTP"/>
-      <tab id="imapTab" label="IMAP"/>
-      <tab id="pop3Tab" label="POP"/>
-    </tabs>
-    <tabpanels id="tabpanels" flex="1">
-
-    <!-- SMTP Tab -->
-    <vbox>    
-      <description style="width: 20em; ">&smtpDesc.label;</description>
-      <separator class="thin"/>
-      <hbox align="center">
-        <label value="&smtpName.label;" control="smtpServerList"
-               accesskey="&smtpName.accesskey;"/>
-        <menulist datasources="rdf:smtp"
-                  containment="http://home.netscape.com/NC-rdf#child"
-                  ref="NC:smtpservers" amsa_persist="true"
-                  id="smtpServerList">
-          <template>
-            <rule>
-              <menupopup>
-                <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Key"
-                          label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              </menupopup>
-            </rule>
-            <menupopup/>
-          </template>
-          <menupopup id="smtpPopup">
-            <menuitem value="" label="&smtpDefaultServer.label;" id="useDefaultItem"/>
-            <menuseparator/>
-            <!-- template will be inserted here -->
-          </menupopup>
-        </menulist>
-      </hbox>
-    </vbox>
-
-    <!-- IMAP Tab -->
-    <vbox id="imapTabPanel">
+    <!-- IMAP Panel -->
+    <vbox id="imapPanel">
       <hbox>
         <label value="&serverDirectory.label;"
                accesskey="&serverDirectory.accesskey;"
@@ -165,9 +128,11 @@
         </rows>
       </grid>
     </vbox>
-    <!-- POP3 Tab -->
-    <vbox id="pop3TabPanel">
-      <description style="width: 20em; ">&pop3Desc.label;</description>
+
+
+    <!-- POP3 Panel -->
+    <vbox id="pop3Panel">
+      <description style="width: 20em;">&pop3Desc.label;</description>
       <separator class="thin"/>
       <hbox align="center">
       <radiogroup id="folderStorage"
@@ -197,6 +162,4 @@
               label="&deferGetNewMail.label;"
               accesskey="&deferGetNewMail.accesskey;"/>
     </vbox>
-    </tabpanels>
-  </tabbox>
 </dialog>

@@ -56,35 +56,35 @@ function onInit()
 
 function onPreInit(account, accountValues)
 {
-    // Bug 134238
-    // Make sure server.isSecure will be saved before server.port preference
-    parent.getAccountValue(account, accountValues, "server", "isSecure", null, false);
+  // Bug 134238
+  // Make sure server.isSecure will be saved before server.port preference
+  parent.getAccountValue(account, accountValues, "server", "isSecure", null, false);
 
-    var type = parent.getAccountValue(account, accountValues, "server", "type", null, false);
-    gRedirectorType = parent.getAccountValue(account, accountValues, "server", "redirectorType", null, false);
-    hideShowControls(type);
+  var type = parent.getAccountValue(account, accountValues, "server", "type", null, false);
+  gRedirectorType = parent.getAccountValue(account, accountValues, "server", "redirectorType", null, false);
+  hideShowControls(type);
 
-    gServer = account.incomingServer;
-    
-    if(!account.incomingServer.canEmptyTrashOnExit)
-    {
-      document.getElementById("server.emptyTrashOnExit").setAttribute("hidden", "true");
-      document.getElementById("imap.deleteModel.box").setAttribute("hidden", "true");
+  gServer = account.incomingServer;
+  
+  if(!account.incomingServer.canEmptyTrashOnExit)
+  {
+    document.getElementById("server.emptyTrashOnExit").setAttribute("hidden", "true");
+    document.getElementById("imap.deleteModel.box").setAttribute("hidden", "true");
+  }
+  var hideButton = false;
+
+  try {
+    if (gRedirectorType) {
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+      var prefString = "mail.accountmanager." + gRedirectorType + ".hide_advanced_button";
+      hideButton = prefs.getBoolPref(prefString);
     }
-    var hideButton = false;
-
-    try {
-      if (gRedirectorType) {
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-        var prefString = "mail.accountmanager." + gRedirectorType + ".hide_advanced_button";
-        hideButton = prefs.getBoolPref(prefString);
-      }
-    }
-    catch (ex) { }
-    if (hideButton)
-      document.getElementById("server.advancedbutton").setAttribute("hidden", "true");  
-    else 
-      document.getElementById("server.advancedbutton").removeAttribute("hidden");  
+  }
+  catch (ex) { }
+  if (hideButton)
+    document.getElementById("server.advancedbutton").setAttribute("hidden", "true");  
+  else 
+    document.getElementById("server.advancedbutton").removeAttribute("hidden");  
 }
 
 function initServerType()
@@ -107,27 +107,23 @@ function initServerType()
   document.getElementById("defaultPort").value = protocolInfo.getDefaultServerPort(isSecureSelected);
 }
 
-function setDivText(divname, value) {
-    var div = document.getElementById(divname);
-    if (!div) return;
-    div.setAttribute("value", value);
+function setDivText(divname, value) 
+{
+  var div = document.getElementById(divname);
+  if (!div) 
+    return;
+  div.setAttribute("value", value);
 }
 
 
 function onAdvanced()
 {
-  dump("onAdvanced..\n");
-  var serverKeyElement = document.getElementById("identity.smtpServerKey");
-  var oldSmtpServerKey = serverKeyElement.getAttribute("value");
-  dump("selected key = " + oldSmtpServerKey + "\n");
-
-  var serverSettings = {};
-  serverSettings.smtpServerList = oldSmtpServerKey;
-
   // Store the server type and, if an IMAP or POP3 server,
   // the settings needed for the IMAP/POP3 tab into the array
+  var serverSettings = {};
   var serverType = document.getElementById("server.type").getAttribute("value");
   serverSettings.serverType = serverType;
+
 
   if (serverType == "imap")
   {
@@ -151,15 +147,6 @@ function onAdvanced()
   window.openDialog("chrome://messenger/content/am-server-advanced.xul",
                     "_blank", "chrome,modal,titlebar", serverSettings);
 
-  if (serverSettings.smtpServerList != oldSmtpServerKey)
-  {
-    // save the identity back to the page as a key
-    dump("Setting the smtp server to " + serverSettings.smtpServerList + "\n");
-    if (serverSettings.smtpServerList)
-      serverKeyElement.setAttribute("value", serverSettings.smtpServerList);
-    else
-      serverKeyElement.removeAttribute("value");
-  }
   if (serverType == "imap")
   {
     document.getElementById("imap.dualUseFolders").checked = serverSettings.dualUseFolders;
@@ -178,29 +165,8 @@ function onAdvanced()
     document.getElementById("pop3.deferGetNewMail").checked = serverSettings.deferGetNewMail;
     document.getElementById("pop3.deferredToAccount").setAttribute("value", serverSettings.deferredToAccount);
     var pop3Server = gServer.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
-    // if we were using default special folders for this server, and we're deferring it,
-    // switch the special folders to the deferred to account.
-    if (serverSettings.deferredToAccount.length > 0)
-    {
-      var account = parent.getAccountFromServerId(gServer.serverURI);
-      var identity = account.defaultIdentity;
-      var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
-      account = accountManager.getAccount(serverSettings.deferredToAccount);
-      if (!account)
-      {
-        throw "UNEXPECTED: deferredToAccount '" + 
-            serverSettings.deferredToAccount + "' not found!";
-      }
-              
-      if (identity.fccFolder == (pop3Server.serverURI + "/Sent"))
-        identity.fccFolder = account.incomingServer.serverURI + "/Sent";
-
-      if (identity.draftFolder == (pop3Server.serverURI + "/Drafts"))
-        identity.draftFolder = account.incomingServer.serverURI + "/Drafts";
-
-      if (identity.stationeryFolder == (pop3Server.serverURI + "/Templates"))
-        identity.stationeryFolder = account.incomingServer.serverURI + "/Templates";
-    }
+    // we're explicitly setting this so we'll go through the SetDeferredToAccount method
+    pop3Server.deferredToAccount = serverSettings.deferredToAccount;
   }
 }
 
@@ -304,16 +270,16 @@ function setupFixedUI()
 
 function setupNotifyUI()
 { 
-    var broadcaster = document.getElementById("broadcaster_notify");
+  var broadcaster = document.getElementById("broadcaster_notify");
 
-    var notify = document.getElementById("nntp.notifyOn");
-    var checked = notify.checked;
-    var locked = getAccountValueIsLocked(notify);
+  var notify = document.getElementById("nntp.notifyOn");
+  var checked = notify.checked;
+  var locked = getAccountValueIsLocked(notify);
 
-    if (checked && !locked)
-      broadcaster.removeAttribute("disabled");
-    else
-      broadcaster.setAttribute("disabled", "true");
+  if (checked && !locked)
+    broadcaster.removeAttribute("disabled");
+  else
+    broadcaster.setAttribute("disabled", "true");
 }
 
 function BrowseForNewsrc()

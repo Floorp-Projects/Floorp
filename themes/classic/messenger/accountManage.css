@@ -61,3 +61,17 @@
 treechildren::-moz-tree-cell-text(isDefaultServer-true) {
   font-weight: bold;
 }
+
+/* ::::: SMTP Server Panel :::::: */
+
+.smtpServerListItem {
+  padding-left: 3px;
+}
+
+#backgroundBox {
+  background-color: ThreeDLightShadow;
+}
+
+#smtpServerInfoBox textbox {
+  background-color: transparent;
+}

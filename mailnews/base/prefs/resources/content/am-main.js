@@ -50,7 +50,12 @@ function onInit()
 
   title.setAttribute("title",titleValue);
     
-  setupSignatureItems();
+  setupSignatureItems(); 
+}
+
+function onPreInit(account, accountValues)
+{
+  loadSMTPServerList();
 }
 
 function manageIdentities()

@@ -302,8 +302,8 @@
             accesskey="&advancedButton.accesskey;"
             oncommand="onAdvanced();"
             wsm_persist="true" id="server.advancedbutton" 
-            prefstring="mail.server.%serverkey%.advanced.disable"/>
-    <label hidden="true" wsm_persist="true" id="identity.smtpServerKey"/>
+            prefstring="mail.server.%serverkey%.advanced.disable"
+            hidefor="nntp,movemail"/>
   </hbox>
 
   <vbox hidefor="imap,pop3,movemail">

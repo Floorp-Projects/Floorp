@@ -184,9 +184,7 @@ function disableEditableFields()
   gMsgCompose.editor.flags |= nsIPlaintextEditorMail.eEditorReadonlyMask;
   var disableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<disableElements.length;i++)
-  {
     disableElements[i].setAttribute('disabled', 'true');
-  }
 }
 
 function enableEditableFields()

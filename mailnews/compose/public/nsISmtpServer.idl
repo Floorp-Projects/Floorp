@@ -40,11 +40,12 @@
 
 interface nsIAuthPrompt;
 
-[scriptable, uuid(c165b634-1dd1-11b2-a849-82dd67b7519e)]
+[scriptable, uuid(556ee1e9-8221-4c00-a502-8ce44f029b47)]
 interface nsISmtpServer : nsISupports {
     
     attribute string key;       // unique identifier
     
+    attribute AUTF8String description; // user provided description for the server
     attribute string hostname;
     attribute PRInt32 port;
     attribute string username;

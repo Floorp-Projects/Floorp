@@ -64,16 +64,12 @@ function onLoad()
 {
   if (gServerSettings.serverType == "imap")
   {
-    document.getElementById("tabbox").selectedTab = document.getElementById("imapTab");
-    document.getElementById("pop3Tab").hidden = true;
-    // don't hide panel - it hides all subsequent panels
+    document.getElementById("pop3Panel").hidden = true;
   }
   else if (gServerSettings.serverType == "pop3")
   {
     var radioGroup = document.getElementById("folderStorage");
-    document.getElementById("tabbox").selectedTab = document.getElementById("pop3Tab");
-    document.getElementById("imapTab").hidden = true;
-    // just hide the tab, don't hide panel - it hides all subsequent panels
+    document.getElementById("imapPanel").hidden = true;
     gAccountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
     gFirstDeferredAccount = gServerSettings.deferredToAccount;
     var localFoldersAccount = getLocalFoldersAccount();
@@ -111,11 +107,7 @@ function onLoad()
 
     }
   }
-  else
-  {
-    document.getElementById("imapTab").hidden = true;
-    document.getElementById("pop3Tab").hidden = true;
-  }
+
   var controls = getControls();
 
   for (var i = 0; i < controls.length; i++)

@@ -50,6 +50,11 @@ function onLoadIdentityProperties()
   initIdentityValues(gIdentity);
   initCopiesAndFolder(gIdentity);
   initCompositionAndAddressing(gIdentity);
+  loadSMTPServerList();
+
+  // the multiple identities editor isn't an account wizard panel so we have to do this ourselves:
+  document.getElementById('identity.smtpServerKey').value = gIdentity ? gIdentity.smtpServerKey 
+                                                            : gAccount.defaultIdentity.smtpServerKey;
 }
 
 // based on the values of gIdentity, initialize the identity fields we expose to the user
@@ -182,6 +187,7 @@ function saveIdentitySettings(identity)
 
     identity.attachVCard = document.getElementById('identity.attachVCard').checked;
     identity.escapedVCard = document.getElementById('identity.escapedVCard').value;
+    identity.smtpServerKey = document.getElementById('identity.smtpServerKey').value;
     
     var attachSignaturePath = document.getElementById('identity.signature').value;
     if (attachSignaturePath)
@@ -317,4 +323,39 @@ function editVCard()
 function getAccountForFolderPickerState()
 { 
   return gAccount;
+}
+
+// when the identity panel is loaded, the smpt-list is created
+// and the in prefs.js configured smtp is activated
+function loadSMTPServerList()
+{
+  var smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
+  fillSmtpServers(document.getElementById('identity.smtpServerKey'), smtpService.smtpServers, smtpService.defaultServer);
+}
+
+function fillSmtpServers(smtpServerList, servers, defaultServer)
+{
+  if (!smtpServerList || !servers) 
+    return;
+
+  var serverCount = servers.Count();
+  for (var i = 0; i < serverCount; i++) 
+  {
+    var server = servers.QueryElementAt(i, Components.interfaces.nsISmtpServer);
+    //ToDoList: add code that allows for the redirector type to specify whether to show values or not
+    if (!server.redirectorType)
+    {
+      var serverName = "";
+      if (server.description)
+        serverName = server.description + ' - ';
+      else if (server.username)
+        serverName = server.username + ' - ';    
+      serverName += server.hostname;
+
+      if (defaultServer.key == server.key)
+        serverName += " " + document.getElementById("bundle_messenger").getString("defaultServerTag");
+
+      smtpServerList.appendItem(serverName, server.key);
+    }
+  }
 }

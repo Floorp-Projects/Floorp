@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
+ *   Scott MacGregor <mscott@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,85 +37,196 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const nsIPromptService = Components.interfaces.nsIPromptService;
 var smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
-var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
-function onLoad()
+var gSmtpServerListWindow = 
 {
+  mBundle: null,
+  mServerList: null,
+  mAddButton: null,
+  mEditButton: null,
+  mDeleteButton: null,
+  mSetDefaultServerButton: null,
+
+  onLoad: function()
+  {
     parent.onPanelLoaded('am-smtp.xul');
 
-    var defaultSmtpServer = smtpService.defaultServer;
+    this.mBundle = document.getElementById("bundle_messenger");
+    this.mServerList = document.getElementById("smtpList");
+    this.mAddButton = document.getElementById("addButton");
+    this.mEditButton = document.getElementById("editButton");
+    this.mDeleteButton = document.getElementById("deleteButton");
+    this.mSetDefaultServerButton = document.getElementById("setDefaultButton");
 
-    initSmtpSettings(defaultSmtpServer);
+    this.refreshServerList();
+  },
 
-    // Get the default smtp server preference to check if we need to lock the
-    // advance button on the panel. 
-    if (defaultSmtpServer) {
-      var defaultSmtpServerKey = gPrefBranch.getCharPref("mail.smtp.defaultserver");
-      var prefString = "mail.smtpserver."+ defaultSmtpServerKey + ".advanced.disable"; 
-
-      var advButton = document.getElementById("smtp.advancedbutton");
-      if (gPrefBranch.prefIsLocked(prefString)) {
-        advButton.setAttribute("disabled", "true");
-      }
-    }
-}
-
-function onSave()
-{
-    var defaultSmtpServer = smtpService.defaultServer;
-
-    //if we have a null defaultSmtpServer and if the hostname field has valid 
-    //values then we create a server and make it as the default.
-    if ((defaultSmtpServer == null) && (!hostnameIsIllegal(gSmtpHostname.value))) {
-      defaultSmtpServer = smtpService.createSmtpServer();
-    }
-   
-    saveSmtpSettings(defaultSmtpServer);
-}
-
-function onExitAdvancedDialog(deleteSmtpServers,replaceWithDefault)
-{
-  for (var index in deleteSmtpServers) {
-    var server = smtpService.getServerByKey(deleteSmtpServers[index]);
-    smtpService.deleteSmtpServer(server);
-    if (replaceWithDefault)
-      window.parent.replaceWithDefaultSmtpServer(deleteSmtpServers[index]);
-  }
-}
-
-function onAdvanced(event)
-{
-    if (smtpService.defaultServer && hostnameIsIllegal(gSmtpHostname.value)) {
-      var alertTitle = window.parent.gBrandBundle.getString("brandShortName");
-      var alertMsg = window.parent.gPrefsBundle.getString("enterValidHostname");
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-      if (promptService)
-        promptService.alert(window, alertTitle, alertMsg);
-      else
-        window.alert(alertMsg);
-
+  onSelectionChanged: function(aEvent)
+  {
+    if (this.mServerList.selectedItems.length <= 0) 
       return;
+
+    var server = this.getSelectedServer();
+    this.updateButtons(server);
+    this.updateServerInfoBox(server);    
+  },
+
+  onDeleteServer: function (aEvent)
+  {
+    var server = this.getSelectedServer();
+    if (server)
+    {
+      // confirm deletion
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(nsIPromptService);
+      var cancel = promptService.confirmEx(window, this.mBundle.getString('smtpServers-confirmServerDeletionTitle'), 
+                                           this.mBundle.getFormattedString('smtpServers-confirmServerDeletion', [server.hostname], 1),
+                                           (nsIPromptService.BUTTON_TITLE_YES * nsIPromptService.BUTTON_POS_0) + 
+                                           (nsIPromptService.BUTTON_TITLE_NO * nsIPromptService.BUTTON_POS_1),
+                                           null, null, null, null, { });
+
+      if (!cancel)
+      {
+        smtpService.deleteSmtpServer(server);
+        parent.replaceWithDefaultSmtpServer(server.key);
+        this.refreshServerList();
+      }
+    } 
+  },
+
+  onAddServer: function (aEvent)
+  {
+    this.openServerEditor(null);
+  },
+
+  onEditServer: function (aEvent)
+  {
+    if (this.mServerList.selectedItems.length <= 0) 
+      return;
+    this.openServerEditor(this.getSelectedServer());
+  },
+
+  onSetDefaultServer: function(aEvent)
+  {
+    if (this.mServerList.selectedItems.length <= 0) 
+      return;
+
+    smtpService.defaultServer = this.getSelectedServer();
+    this.refreshServerList();
+  },
+
+  updateButtons: function(aServer)
+  {
+    // can't delete default server
+    if (smtpService.defaultServer == aServer) 
+    {
+      this.mSetDefaultServerButton.setAttribute("disabled", "true");
+      this.mDeleteButton.setAttribute("disabled", "true");
+    }
+    else 
+    {
+      this.mSetDefaultServerButton.removeAttribute("disabled");
+      this.mDeleteButton.removeAttribute("disabled");
+    }
+  },
+
+  updateServerInfoBox: function(aServer)
+  {
+    var noneSelected = this.mBundle.getString("smtpServerList-NotSpecified");
+
+    document.getElementById('nameValue').value = aServer.hostname;
+    document.getElementById('descriptionValue').value = aServer.description || noneSelected;
+    document.getElementById('portValue').value = aServer.port;
+    document.getElementById('userNameValue').value = aServer.username || noneSelected;
+    document.getElementById('useSecureConnectionValue').value = this.mBundle.getString("smtpServer-SecureConnection-Type-" + 
+                                                                aServer.trySSL);
+  },
+
+  refreshServerList: function(aServerKeyToSelect)
+  {
+    // remove all children
+    while (this.mServerList.hasChildNodes())
+      this.mServerList.removeChild(this.mServerList.lastChild);
+
+    var defaultServer = smtpService.defaultServer;
+    this.fillSmtpServers(this.mServerList, smtpService.smtpServers, defaultServer);
+
+    if (aServerKeyToSelect)
+      this.mServerList.selectItem(this.mServerList.getElementsByAttribute("key", aServerKeyToSelect)[0]);
+    else // select the default server
+      this.mServerList.selectItem(this.mServerList.getElementsByAttribute("default", "true")[0]);
+
+    this.mServerList.focus();
+  },
+
+  fillSmtpServers: function(aListBox, aServers, aDefaultServer)
+  {
+    if (!aListBox || !aServers) 
+      return;
+
+    var serverCount = aServers.Count();
+    for (var i=0; i < serverCount; i++) 
+    {
+      var server = aServers.QueryElementAt(i, Components.interfaces.nsISmtpServer);
+      var isDefault = (aDefaultServer.key == server.key);
+      //ToDoList: add code that allows for the redirector type to specify whether to show values or not
+      if (!server.redirectorType) 
+      {
+        var listitem = this.createSmtpListItem(server, isDefault);
+        aListBox.appendChild(listitem);
+      }
+    }    
+  },
+
+  createSmtpListItem: function(aServer, aIsDefault)
+  {
+    var listitem = document.createElement("listitem");
+    var serverName = "";
+
+    if (aServer.description)
+      serverName = aServer.description + ' - ';
+    else if (aServer.username)
+      serverName = aServer.username + ' - ';
+    
+    serverName += aServer.hostname;
+      
+    if (aIsDefault)
+    {
+      serverName += " " + this.mBundle.getString("defaultServerTag");
+      listitem.setAttribute("default", "true");
     }
 
-    // fix for bug #60647
-    // when the user presses "Advanced..." we save any changes
-    // they made so that the changes will show up in the advanced dialog
-    // and when they return from the advanced dialog, the changes they
-    // made won't be blown away.
-    //
-    // the only remaing problem is if the user "cancels" out of the
-    // account manager dialog, those changes will get saved.  
-    // that is covered in bug #63825
-    onSave();
+    listitem.setAttribute("label", serverName);
+    listitem.setAttribute("key", aServer.key);
+    listitem.setAttribute("class", "smtpServerListItem");
+    
+    // give it some unique id
+    listitem.id = "smtpServer." + aServer.key;
+    return listitem;
+  },
 
-    var args = {result: false};
-    window.openDialog('chrome://messenger/content/SmtpServerList.xul', 'smtp', 'modal,titlebar,chrome', args);
+  openServerEditor: function(aServer)
+  {
+    var args = {server: aServer,
+                result: false,
+                addSmtpServer: ""};
 
-    if (args.result) {
-        // this is the wrong way to do this.
-        dump("reloading panel...\n");
-        onLoad();
-    }
-}
+    window.openDialog("chrome://messenger/content/SmtpServerEdit.xul",
+                      "smtpEdit", "chrome,titlebar,modal,centerscreen", args);
+    
+    // now re-select the server which was just added
+    if (args.result)          
+      this.refreshServerList(aServer ? aServer.key : args.addSmtpServer);
+  
+    return args.result;
+  },
+
+  getSelectedServer: function()
+  {
+    var serverKey = this.mServerList.selectedItems[0].getAttribute("key");
+    return smtpService.getServerByKey(serverKey); 
+  }
+};
+
 

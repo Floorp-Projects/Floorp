@@ -1,5 +1,9 @@
+<!ENTITY settings.caption "Settings">
+<!ENTITY security.caption "Security and Authentication">
 <!ENTITY serverName.label "Server Name:">
 <!ENTITY serverName.accesskey "S">
+<!ENTITY serverDescription.label "Description:">
+<!ENTITY serverDescription.accesskey "D">
 <!ENTITY serverPort.label "Port:">
 <!ENTITY serverPort.accesskey "P">
 <!ENTITY alwaysUseUsername.label "Use name and password">

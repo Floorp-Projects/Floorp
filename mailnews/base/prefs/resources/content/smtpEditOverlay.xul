@@ -46,60 +46,86 @@
   <script src="smtpEditOverlay.js"/>
 
   <vbox id="smtpServerEditor">
-    <hbox align = "center">
-          <label value="&serverName.label;" accesskey="&serverName.accesskey;" control="smtp.hostname"/>
-          <textbox id="smtp.hostname" flex="1"
-                   preftype="string"
-                   class="uri-element"
-                   prefstring="mail.smtpserver.%serverkey%.hostname"/>
-            <label value="&serverPort.label;" accesskey="&serverPort.accesskey;"
-                   control="smtp.port"/>
-            <textbox id="smtp.port" size="5"
-                     preftype="int"
-                     prefstring="mail.smtpserver.%serverkey%.port"/>
-            <label value="&serverPortDefault.label;"/>
-            <label id="smtp.defaultPort"/>
-          </hbox>
-    <vbox>
-      <!-- This hidden one will hold the integer version
-           of smtp.useUsername -->
-      <label hidden="true" id="smtp.authMethod"/>
-      <hbox align="center">
-      <checkbox id="smtp.useUsername" label="&alwaysUseUsername.label;"
-                accesskey="&alwaysUseUsername.accesskey;"
-                oncommand="onUseUsername(event.target,true);"
-                prefattribute="value"
-                prefstring="mail.smtpserver.%serverkey%.use_username"/>
-      </hbox>                
-      <vbox class="indent">
+      <groupbox>
+          <caption label="&settings.caption;"/>
+          <grid flex="1">
+              <columns>
+                  <column/>
+                  <column flex="1"/>
+              </columns>
+              <rows>
+                  <row align="center">
+                      <hbox pack="end"><label value="&serverDescription.label;" accesskey="&serverDescription.accesskey;"
+                                              control="smtp.description"/></hbox>
+                       <textbox id="smtp.description" flex="1" preftype="string" prefstring="mail.smtpserver.%serverkey%.description"/>
+                  </row>
+          
+                  <row align="center">
+                      <hbox pack="end"><label value="&serverName.label;" accesskey="&serverName.accesskey;" control="smtp.hostname"/></hbox>
+                      <textbox id="smtp.hostname" flex="1" preftype="string" class="uri-element" prefstring="mail.smtpserver.%serverkey%.hostname"/>
+                  </row>
+                  <row align="center">
+                      <hbox pack="end"><label value="&serverPort.label;" accesskey="&serverPort.accesskey;" control="smtp.port"/>
+                      </hbox>
+
+                      <hbox>
+                          <textbox id="smtp.port" size="4"
+                                   preftype="int"
+                                   prefstring="mail.smtpserver.%serverkey%.port"/>
+                          <label value="&serverPortDefault.label;"/>
+                          <label id="smtp.defaultPort"/>
+                      </hbox>
+                  </row>
+              </rows>
+          </grid> 
+      </groupbox>
+
+      <separator class="thin"/>
+
+      <groupbox>
+        <caption label="&security.caption;"/>
+        <vbox>
+            <!-- This hidden one will hold the integer version
+                 of smtp.useUsername -->
+            <label hidden="true" id="smtp.authMethod"/>
+            <hbox align="center">
+            <checkbox id="smtp.useUsername" label="&alwaysUseUsername.label;"
+                      accesskey="&alwaysUseUsername.accesskey;"
+                      oncommand="onUseUsername(event.target,true);"
+                      prefattribute="value"
+                      prefstring="mail.smtpserver.%serverkey%.use_username"/>
+            </hbox>                
+            <vbox class="indent">
+              <hbox align="center">
+                <label id="smtpusernamelabel" value="&userName.label;"
+                       accesskey="&userName.accesskey;" control="smtp.username"/>
+                <textbox id="smtp.username" flex="1"
+                         preftype="string"
+                         prefstring="mail.smtpserver.%serverkey%.username"/>
+              </hbox>
+            </vbox>
+        </vbox>
+
+        <separator class="thin"/>
+
         <hbox align="center">
-          <label id="smtpusernamelabel" value="&userName.label;"
-                 accesskey="&userName.accesskey;" control="smtp.username"/>
-          <textbox id="smtp.username" flex="1"
-                   preftype="string"
-                   prefstring="mail.smtpserver.%serverkey%.username"/>
+           <label value="&isSecure.label;"/>
         </hbox>
-      </vbox>
-     </vbox>
 
-    <separator class="thin"/>
-
-     <hbox align="center">
-       <label value="&isSecure.label;"/>
-     </hbox>
-     <radiogroup id="smtp.trySSL"
-                 prefstring="mail.smtpserver.%serverkey%.try_ssl"
-                 oncommand="selectProtocol(0);">
-       <hbox class="indent">
-         <radio value="0" id="smtp.neverSecure"
-                label="&neverSecure.label;" accesskey="&neverSecure.accesskey;"/>
-         <radio value="1" id="smtp.sometimesSecure"
-                label="&sometimesSecure.label;" accesskey="&sometimesSecure.accesskey;"/>
-         <radio value="2" id="smtp.alwaysSecure"
-                label="&alwaysSecure.label;" accesskey="&alwaysSecure.accesskey;"/>
-         <radio value="3" id="smtp.alwaysSmtpS"
-                label="&alwaysSmtpS.label;" accesskey="&alwaysSmtpS.accesskey;"/>
-       </hbox>
-     </radiogroup>
+        <radiogroup id="smtp.trySSL"
+                    prefstring="mail.smtpserver.%serverkey%.try_ssl"
+                    oncommand="selectProtocol(0);">
+            <hbox class="indent">
+                <radio value="0" id="smtp.neverSecure"
+                       label="&neverSecure.label;" accesskey="&neverSecure.accesskey;"/>
+                <radio value="1" id="smtp.sometimesSecure"
+                       label="&sometimesSecure.label;" accesskey="&sometimesSecure.accesskey;"/>
+                <radio value="2" id="smtp.alwaysSecure"
+                       label="&alwaysSecure.label;" accesskey="&alwaysSecure.accesskey;"/>
+                <radio value="3" id="smtp.alwaysSmtpS"
+                       label="&alwaysSmtpS.label;" accesskey="&alwaysSmtpS.accesskey;"/>
+            </hbox>
+        </radiogroup>
+    </groupbox>
   </vbox>
 </overlay>

@@ -58,6 +58,8 @@
 
   <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+
   <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
   <script type="application/x-javascript" src="am-identity-edit.js"/>
   <script type="application/x-javascript">
@@ -85,56 +87,69 @@
       <!-- Identity Settings Tab --> 
       <vbox flex="1" name="settings">
         <grid>
-      <columns>
-        <column/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row align="center">
-          <label value="&name.label;" control="identity.fullName" accesskey="&name.accesskey;"/>
-          <textbox id="identity.fullName" size="30"/>
-        </row>
-        <row align="center">
-          <label value="&email.label;" control="identity.email" accesskey="&email.accesskey;"/>
-          <textbox id="identity.email" class="uri-element"/>
-        </row>
-        <row align="center">
-          <label value="&replyTo.label;" control="identity.replyTo" accesskey="&replyTo.accesskey;"/>
-          <textbox id="identity.replyTo" class="uri-element"/>
-        </row>
-        <row align="center">
-          <label value="&organization.label;" control="identity.organization" accesskey="&organization.accesskey;"/>
-          <textbox id="identity.organization"/>
-        </row>
-      </rows>
-    </grid>
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row align="center">
+              <label value="&name.label;" control="identity.fullName" accesskey="&name.accesskey;"/>
+              <textbox id="identity.fullName" size="30"/>
+            </row>
+            <row align="center">
+              <label value="&email.label;" control="identity.email" accesskey="&email.accesskey;"/>
+              <textbox id="identity.email" class="uri-element"/>
+            </row>
+            <row align="center">
+              <label value="&replyTo.label;" control="identity.replyTo" accesskey="&replyTo.accesskey;"/>
+              <textbox id="identity.replyTo" class="uri-element"/>
+            </row>
+            <row align="center">
+              <label value="&organization.label;" control="identity.organization" accesskey="&organization.accesskey;"/>
+              <textbox id="identity.organization"/>
+            </row>
+          </rows>
+        </grid>
     
-    <separator class="thin"/>
+        <separator class="thin"/>
 
-    <hbox align="center">
-      <checkbox id="identity.attachSignature" label="&signature.label;" flex="1"
-                accesskey="&signature.accesskey;"
-                oncommand="setupSignatureItems();"/>
-    </hbox>
+        <hbox align="center">
+          <checkbox id="identity.attachSignature" label="&signature.label;" flex="1"
+                    accesskey="&signature.accesskey;"
+                    oncommand="setupSignatureItems();"/>
+        </hbox>
 
-    <hbox align="center" class="indent">
-      <textbox id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"
-               observes="broadcaster_attachSignature" class="uri-element"/>
-      <button class="push" name="browse" label="&choose.label;"
-              accesskey="&choose.accesskey;" 
-              oncommand="selectFile()"
-              observes="broadcaster_attachSignature"
-              id="identity.sigbrowsebutton"/>
-    </hbox>
+        <hbox align="center" class="indent">
+          <textbox id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"
+                   observes="broadcaster_attachSignature" class="uri-element"/>
+          <button class="push" name="browse" label="&choose.label;"
+                  accesskey="&choose.accesskey;" 
+                  oncommand="selectFile()"
+                  observes="broadcaster_attachSignature"
+                  id="identity.sigbrowsebutton"/>
+        </hbox>
 
-    <hbox align="center">
-      <checkbox id="identity.attachVCard" label="&attachVCard.label;" flex="1"
-                accesskey="&attachVCard.accesskey;"/>
-      <button class="push" name="editVCard" label="&editVCard.label;"  
-              accesskey="&editVCard.accesskey;"
-              oncommand="editVCard()"/>
-      <label hidden="true" id="identity.escapedVCard"/>
-    </hbox>
+        <hbox align="center">
+          <checkbox id="identity.attachVCard" label="&attachVCard.label;" flex="1"
+                    accesskey="&attachVCard.accesskey;"/>
+          <button class="push" name="editVCard" label="&editVCard.label;"  
+                  accesskey="&editVCard.accesskey;"
+                  oncommand="editVCard()"/>
+          <label hidden="true" id="identity.escapedVCard"/>
+        </hbox>
+
+        <separator class="thin"/>
+        <hbox align="center">
+          <label value="&smtpName.label;" control="identity.smtpServerKey"
+                 accesskey="&smtpName.accesskey;"/>
+          <menulist id="identity.smtpServerKey" flex="1">
+            <menupopup id="smtpPopup">
+              <menuitem value="" label="&smtpDefaultServer.label;" id="useDefaultItem"/>
+              <menuseparator/>
+              <!-- list will be inserted here -->
+            </menupopup>
+          </menulist>
+        </hbox>
       </vbox>
       
       <!-- Copies & Folders Tab --> 

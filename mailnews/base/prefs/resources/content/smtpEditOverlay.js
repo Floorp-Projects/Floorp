@@ -41,6 +41,7 @@
 // with the new XUL widgets
 
 var gSmtpUsername;
+var gSmtpDescription;
 var gSmtpUsernameLabel;
 var gSmtpHostname;
 var gSmtpPort;
@@ -57,6 +58,7 @@ var gDefaultPort;
 function initSmtpSettings(server) {
 
     gSmtpUsername = document.getElementById("smtp.username");
+    gSmtpDescription = document.getElementById("smtp.description");
     gSmtpUsernameLabel = document.getElementById("smtpusernamelabel");
     gSmtpHostname = document.getElementById("smtp.hostname");
     gSmtpPort = document.getElementById("smtp.port");
@@ -68,6 +70,7 @@ function initSmtpSettings(server) {
 
     if (server) {
         gSmtpHostname.value = server.hostname;
+        gSmtpDescription.value = server.description;
         gSmtpPort.value = server.port ? server.port : "";
         gSmtpUsername.value = server.username;
         gSmtpAuthMethod.setAttribute("value", server.authMethod);
@@ -99,6 +102,7 @@ function onLockPreference()
 
     var allPrefElements = [
       { prefstring:"hostname", id:"smtp.hostname"},
+      { prefstring:"description", id:"smtp.description"},
       { prefstring:"port", id:"smtp.port"},
       { prefstring:"use_username", id:"smtp.useUsername"},
       { prefstring:"try_ssl", id:"smtp.trySSL"}
@@ -140,6 +144,7 @@ function saveSmtpSettings(server)
     //dump("Saving to " + server + "\n");
     if (server) {
         server.hostname = gSmtpHostname.value;
+        server.description = gSmtpDescription.value;
         server.port = gSmtpPort.value;
         server.authMethod = (gSmtpUseUsername.checked ? 1 : 0);
         //dump("Saved authmethod = " + server.authMethod +

@@ -136,6 +136,24 @@ nsSmtpServer::SetHostname(const char * aHostname)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSmtpServer::GetDescription(nsACString &aDescription)
+{
+    nsXPIDLCString temp;
+    mPrefBranch->GetCharPref("description", getter_Copies(temp));
+    aDescription.Assign(temp);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpServer::SetDescription(const nsACString &aDescription)
+{
+    if (!aDescription.IsEmpty())
+        return mPrefBranch->SetCharPref("description", PromiseFlatCString(aDescription).get());
+    else
+        return mPrefBranch->ClearUserPref("description");
+}
+
 // if GetPort returns 0, it means default port
 NS_IMETHODIMP
 nsSmtpServer::GetPort(PRInt32 *aPort)

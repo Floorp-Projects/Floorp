@@ -95,7 +95,7 @@ function openIdentityEditor(identity)
   var result = false; 
   var args = { identity: identity, account: gAccount, result: result };
 
-  window.openDialog('am-identity-edit.xul', 'identity-edit', 'modal,titlebar,chrome', args);
+  window.openDialog('am-identity-edit.xul', '', 'modal,titlebar,chrome', args);
 
   var selectedItemIndex = gIdentityListBox.selectedIndex;
 

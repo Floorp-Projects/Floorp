@@ -8,6 +8,8 @@
       onload="parent.onPanelLoaded('am-main.xul');">
 
     <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+
     <script type="application/x-javascript" src="chrome://messenger/content/am-identity-edit.js"/>
     <script type="application/x-javascript" src="chrome://messenger/content/am-main.js"/>
     <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
@@ -15,8 +17,7 @@
     <broadcaster id="broadcaster_attachSignature"/>
 
     <dialogheader id="am-main-title" defaultTitle="&accountTitle.label;"/>
-    
-    <description>&accountSettingsDesc.label;</description>
+
     <hbox align="center">
       <label value="&accountName.label;" control="server.prettyName"
              accesskey="&accountName.accesskey;"/>
@@ -96,6 +97,21 @@
         <label hidden="true" wsm_persist="true" id="identity.escapedVCard"
                   pref="true" preftype="string" prefattribute="value"
                   prefstring="mail.identity.%identitykey%.escapedVCard"/>
+      </hbox>
+
+      <separator class="thin"/>
+      <hbox align="center">
+        <label value="&smtpName.label;" control="identity.smtpServerKey"
+               accesskey="&smtpName.accesskey;"/>
+        <menulist wsm_persist="true" id="identity.smtpServerKey" flex="1"
+                  pref="true" preftype="string" prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.smtpServer">
+          <menupopup id="smtpPopup">
+            <menuitem value="" label="&smtpDefaultServer.label;" id="useDefaultItem"/>
+            <menuseparator/>
+            <!-- list will be inserted here -->
+          </menupopup>
+        </menulist>
       </hbox>
     </groupbox>
 
