@@ -2698,12 +2698,12 @@ nsWebShell::ReloadDocument(const char* aCharset,
   s = (nsString*) mHistory.ElementAt(mHistoryIndex);
 #else
   if (mSHist) {
-     PRInt32  index = 0;
+     PRInt32  indix = 0;
      nsresult rv;
-     rv = mSHist->getCurrentIndex(index);
+     rv = mSHist->getCurrentIndex(indix);
      if (NS_SUCCEEDED(rv)) {
-        PRUnichar * url=nsnull;
-        rv = mSHist->GetURLForIndex(index, &url);
+        const PRUnichar * url=nsnull;
+        rv = mSHist->GetURLForIndex(indix, &url);
         if (NS_SUCCEEDED(rv))
           s = new nsString(url);       
      }
