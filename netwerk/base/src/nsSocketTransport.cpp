@@ -535,9 +535,10 @@ nsresult nsSocketTransport::doResolveHost(void)
       PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
       status = PR_StringToNetAddr(mHostName, netAddr);
       if (PR_SUCCESS != status) {
-          ;
+          rv = NS_ERROR_UNKNOWN_HOST; // check this!
       }
       status = PR_GetHostByAddr(netAddr, dbbuf, sizeof(dbbuf), &hostEnt);
+	  nsAllocator::Free(netAddr);
   } else {
       status = PR_GetHostByName(mHostName, dbbuf, sizeof(dbbuf), &hostEnt);
   }
