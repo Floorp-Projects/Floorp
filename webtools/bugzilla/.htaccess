@@ -1,7 +1,0 @@
-<Files globals.pl>
-deny from all
-</Files>
-<Files localconfig>
-deny from all
-</Files>
-allow from all
