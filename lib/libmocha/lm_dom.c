@@ -277,11 +277,14 @@ lm_CDataOp(JSContext *cx, DOM_CharacterData *cdata, DOM_CDataOperationCode op)
 }
 
 static DOM_Node *
-lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
+lm_NodeForTag(JSContext *cx, PA_Tag *tag, DOM_Node *current,
+              MWContext *context, int16 csid)
 {
     DOM_Node *node;
     DOM_Element *element;
     DOM_HTMLElementPrivate *elepriv;
+    char **names, **values;
+    uintN nattrs;
 
     if (current->type == NODE_TYPE_TEXT)
         /*
@@ -312,9 +315,19 @@ lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
         node = (DOM_Node *)
             DOM_NewElement(PA_TagString(tag->type), &lm_ElementOps,
                            (char *)PA_FetchParamValue(tag, "name", csid),
-                           &lm_NodeOps, 0);
+                           (char *)PA_FetchParamValue(tag, "class", csid),
+                           (char *)PA_FetchParamValue(tag, "id", csid),
+                           &lm_NodeOps);
         if (!node)
             return NULL;
+        nattrs = PA_FetchAllNameValues(tag, &names, &values, csid);
+        if (!DOM_SetElementAttributes(cx, (DOM_Element *)node,
+                                      (const char**)names,
+                                      (const char **)values, nattrs)) {
+            /* XXX free data */
+            return NULL;
+        }
+        break;
     }
 
     elepriv = XP_NEW_ZAP(DOM_HTMLElementPrivate);
@@ -335,41 +348,96 @@ static int LM_Node_indent;
 JSBool
 DOM_HTMLPushNode(DOM_Node *node, DOM_Node *parent)
 {
-    DOM_Element *element = (DOM_Element *)node;
-    DOM_Element *parent_el = (DOM_Element *)parent;
+    /*
+     * DOM_PushNode would do this for us, but we do it here so that
+     * we can use the enclosing element for implicit pop checks and other
+     * such fun.
+     */
+
+    if (parent->type == NODE_TYPE_TEXT)
+        parent = parent->parent;
 
     /* XXX factor this information out, and share with parser */
     if (parent->type == NODE_TYPE_ELEMENT) {
-        if ( parent_el->ops == &lm_ElementOps &&
-             lo_IsEmptyTag(ELEMENT_PRIV(parent_el)->tagtype)) {
+        TagType parentType = ELEMENT_PRIV(parent)->tagtype;
+        if (((DOM_Element *)parent)->ops == &lm_ElementOps &&
+            lo_IsEmptyTag(parentType)) {
             /* these don't have contents */
             parent = parent->parent;
 #ifdef DEBUG_shaver
             LM_Node_indent -= 2;
 #endif
-        } else {                /* not an empty tag */
-            switch(ELEMENT_PRIV(parent_el)->tagtype) {
-            case P_PARAGRAPH:
-            case P_LIST_ITEM:
-            case P_HEADER_1:
-            case P_HEADER_2:
-            case P_HEADER_3:
-            case P_HEADER_4:
-            case P_HEADER_5:
-            case P_HEADER_6:
-            case P_ANCHOR:
-            case P_OPTION:
+        } else if (node->type == NODE_TYPE_ELEMENT) { /* non-empty element */
+            /*
+             * Because HTML is such a cool markup language, we have to
+             * worry about tags that are implicitly closed by new tags.
+             * There are a couple of cases:
+             *
+             * <P> et alii: they close the ``enclosing'' one of the same type,
+             * so that you get:
+             * <SOME>
+             *   <P>
+             *   <P>
+             * and not
+             * <SOME>
+             *   <P>
+             *     <P>
+             *
+             * <DL>/<DT>/<DD>: these close up to an enclosing DL element, so
+             * that you get:
+             * <DL>
+             *   <DT>
+             *   <DD>
+             * and not
+             * <DL>
+             *   <DT>
+             *     <DD>
+             * We could enforce further stricture here, I guess, by only
+             * allowing <DT> and <DD> elements as children of <DL>, etc.
+             * Maybe later.
+             */
+            TagType type = ELEMENT_PRIV(node)->tagtype;
+            DOM_Node *iter;
+            TagType breakType = P_UNKNOWN;
+            JSBool breakIsNewParent = JS_FALSE;
+
+            switch(type) {
+              case P_DESC_TITLE:
+              case P_DESC_TEXT:
+                breakType = P_DESC_LIST;
+                breakIsNewParent = JS_TRUE;
+                /* fallthrough */
+              case P_PARAGRAPH:
+              case P_LIST_ITEM:
+              case P_HEADER_1:
+              case P_HEADER_2:
+              case P_HEADER_3:
+              case P_HEADER_4:
+              case P_HEADER_5:
+              case P_HEADER_6:
+              case P_ANCHOR:
+              case P_OPTION:
                 /* these don't nest with themselves */
-                if (node->type == NODE_TYPE_ELEMENT &&
-                    ELEMENT_PRIV(parent_el)->tagtype == 
-                    ELEMENT_PRIV(element)->tagtype) {
-                    parent = parent->parent;
-#ifdef DEBUG_shaver
-                    LM_Node_indent -= 2;
-#endif
+                iter = parent;
+                if (breakType == P_UNKNOWN)
+                    breakType = type;
+                while (iter &&
+                       iter->parent->type == NODE_TYPE_ELEMENT) {
+                    /* find the enclosing tag for this type */
+                    if (ELEMENT_PRIV(iter)->tagtype == breakType) {
+                        if (breakIsNewParent)
+                            parent = iter;
+                        else
+                            parent = iter->parent;
+                        break;
+                    }
+                    iter = iter->parent;
                 }
+#ifdef DEBUG_shaver
+                LM_Node_indent -= 2;
+#endif
                 break;
-            default:;
+              default:;
             }
         }
     } else if (parent->type != NODE_TYPE_DOCUMENT) {
@@ -413,6 +481,9 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
     int16 csid = INTL_GetCSIWinCSID(c);
     lo_DocState *doc = (lo_DocState *)doc_state;
     DOM_Node *node;
+    JSContext *cx;
+    
+    cx = context->mocha_context;
 
     if (!TOP_NODE(doc)) {
 #if 0
@@ -424,14 +495,19 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
             return NULL;
         node->type = NODE_TYPE_DOCUMENT;
         node->name = XP_STRDUP("#document");
-        CURRENT_NODE(doc) = TOP_NODE(doc) = node;
+        TOP_NODE(doc) = node;
+
+        /* now put a single <HTML> element as child */
+        node = (DOM_Node *)DOM_NewElement ("HTML", &lm_ElementOps,
+                                           NULL, NULL, NULL, &lm_NodeOps);
+        if (!node)
+            return NULL;
+        TOP_NODE(doc)->child = node;
+        node->parent = TOP_NODE(doc);
+        CURRENT_NODE(doc) = node;
     }
 
     if (!tag) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "finished reflecting document\n");
-        LM_Node_indent = 0;
-#endif
         CURRENT_NODE(doc) = TOP_NODE(doc);
         return CURRENT_NODE(doc);
     }
@@ -441,12 +517,11 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
 
     if (tag->is_end) {
         DOM_Node *last_node;
-        if (CURRENT_NODE(doc) == TOP_NODE(doc)) {
-            XP_ASSERT(CURRENT_NODE(doc)->type == NODE_TYPE_DOCUMENT);
-#ifdef DEBUG_shaver_verbose
-            fprintf(stderr, "not popping tag </%s> from doc-only stack\n",
-                    PA_TagString(tag->type));
-#endif
+        if (CURRENT_NODE(doc)->parent == TOP_NODE(doc)) {
+            /* don't remove the top-most <HTML> child */
+            XP_ASSERT(CURRENT_NODE(doc)->type == NODE_TYPE_ELEMENT &&
+                      !XP_STRCMP(((DOM_Element *)CURRENT_NODE(doc))->tagName,
+                                 "HTML"));
             return CURRENT_NODE(doc);
         }
         last_node = (DOM_Node *)DOM_HTMLPopElementByType(tag->type,
@@ -457,7 +532,7 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
         return last_node;
     }
 
-    node = lm_NodeForTag(tag, CURRENT_NODE(doc), context, csid);
+    node = lm_NodeForTag(cx, tag, CURRENT_NODE(doc), context, csid);
     if (node) {
         if (!DOM_HTMLPushNode(node, CURRENT_NODE(doc))) {
 #ifdef DEBUG_shaver
@@ -469,21 +544,17 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
                                        node);
             return NULL;
         }
-        /* 
+        /*
          * we always have to have CURRENT_NODE(doc) pointing at the
          * node for which we are parsing a tag.  Even in the case of
          * Text and other child-less nodes (Comments?), we need layout
          * to be able to find the node for which it's generating
-         * LO_Elements.  This means that the `Text has no children' logic
-         * has to be in the DOM_HTMLPushNode code, and has to be driven
-         * by pre-check of parent.  Sorry.
+         * LO_Elements.  This means that the `Text has no children'
+         * logic has to be in the DOM_HTMLPushNode or DOM_PushNode
+         * code, and has to be driven by pre-check of parent.  Sorry.
          */
         CURRENT_NODE(doc) = node;
     } else {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "lm_NodeForTag returned NULL for tag %d\n",
-                tag->type);
-#endif
     }
     XP_ASSERT(!CURRENT_NODE(doc)->parent || 
               CURRENT_NODE(doc)->parent->type != NODE_TYPE_TEXT);
@@ -550,8 +621,12 @@ DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
         element = (DOM_Element *)element->node.parent;
 
     XP_ASSERT(element->node.type == NODE_TYPE_ELEMENT);
-    if (element->node.type != NODE_TYPE_ELEMENT)
+    if (element->node.type != NODE_TYPE_ELEMENT) {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "node has type %d\n", element->node.type);
+#endif
         return NULL;
+    }
 
     closing = element;
     while (closing && 

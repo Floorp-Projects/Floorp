@@ -44,6 +44,9 @@
 #include "jsjava.h"
 #include "np2.h"
 #endif
+#ifdef DOM
+#include "domstyle.h"
+#endif
 
 #ifndef DOM
 enum doc_slot {
@@ -799,8 +802,13 @@ doc_resolve_name(JSContext *cx, JSObject *obj, jsval id)
                                  NULL, NULL,
                                  JSPROP_ENUMERATE | JSPROP_READONLY);
 
+#ifdef DOM
+    if (!DOM_DocObjectResolveStyleProps(cx, obj, id))
+      return JS_FALSE;
+#else
     if (!JSS_ResolveDocName(cx, doc->decoder->window_context, obj, id))
-        return JS_FALSE;
+      return JS_FALSE;
+#endif
 
     return doc_list_properties(cx, obj);
 }

@@ -3361,6 +3361,10 @@ lm_InitWindowContent(MochaDecoder *decoder)
             return JS_FALSE;
         }
     }
+#ifdef DOM
+    if (!dom_StyleSelectorInit(cx, obj))
+        return JS_FALSE;
+#endif
 
     return (JSBool)(lm_DefineWindowProps(cx, decoder) &&
            JS_SetPrototype(cx, obj, decoder->event_capturer_prototype));
