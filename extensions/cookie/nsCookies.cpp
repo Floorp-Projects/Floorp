@@ -562,6 +562,20 @@ PRBool
 cookie_IsInDomain(char* domain, char* host, int hostLength) {
   int domainLength = PL_strlen(domain);
 
+  /* special case for domainName being identical to hostName
+   *   This probably buys some efficiency.
+   *   But, more important, it allows a site that has an IP address to set a domain
+   *      cookie for that same domain.  This should be illegal (domain cookies for
+   *      IP addresses make no sense) and will be trapped by the very next test.  However
+   *      that test was actually preventing hotmail attachments from working.  See bug
+   *      105917 for details.  So we will allow IP-address sites to set domain cookies in
+   *      this one special case -- where the domain name is identically equal to the host
+   *      name.
+   */
+  if (!PL_strcmp(domain, host)) {
+    return PR_TRUE;
+  }
+
   /*
    * test for domain name being an IP address (e.g., 105.217) and reject if so
    */
