@@ -62,6 +62,10 @@ viewer:Essential Files:libutil.shlb
 viewer:Essential Files:RaptorShell.shlb 
 viewer:Essential Files:widget.shlb 
 
+viewer:Essential Files:PSM.shlb
+viewer:Essential Files:NSSckbi.shlb
+viewer:psmdata:*
+
 viewer:Components:docshell.shlb 
 viewer:Components:AppShell.shlb 
 viewer:Components:appshell.xpt 
