@@ -250,6 +250,6 @@ nsXPCArbitraryScriptable::Finalize(JSContext *cx, JSObject *obj,
     NS_PRECONDITION(cx, "bad param");
     NS_PRECONDITION(obj, "bad param");
     NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
-    JS_FinalizeStub(cx, obj);
+    /* XPConnect does the finalization on the wrapper itself anyway */
     return NS_OK;
 }

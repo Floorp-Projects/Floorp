@@ -531,7 +531,7 @@ public:
     nsIXPCScriptable* GetArbitraryScriptable() const
         {return GetClass()->GetArbitraryScriptable();}
 
-    void JSObjectFinalized();
+    void JSObjectFinalized(JSContext *cx, JSObject *obj);
 
     virtual ~nsXPCWrappedNative();
 private:

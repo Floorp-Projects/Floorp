@@ -1133,7 +1133,7 @@ WrappedNative_Finalize(JSContext *cx, JSObject *obj)
         return;
     NS_ASSERTION(obj == wrapper->GetJSObject(),"bad obj");
     // wrapper is responsible for calling DynamicScriptable->Finalize
-    wrapper->JSObjectFinalized();
+    wrapper->JSObjectFinalized(cx, obj);
 }
 
 static JSObjectOps WrappedNative_ops = {
