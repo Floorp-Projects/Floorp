@@ -61,9 +61,11 @@ my $component_id;
 
 # Determine whether to use the action specified by the user or the default.
 my $action = $::FORM{'action'} || 'list';
+my @categoryActions;
 
-if ($::FORM{'categoryAction'}) {
-    processCategoryChange();
+if (@categoryActions = grep(/^categoryAction-.+/, keys(%::FORM))) {
+    $categoryActions[0] =~ s/^categoryAction-//;
+    processCategoryChange($categoryActions[0]);
     exit;
 }
 
@@ -145,6 +147,7 @@ sub edit {
 }
 
 sub processCategoryChange {
+    my $categoryAction = shift;
     validateIsActive();
     validateIsRequestable();
     validateIsRequesteeble();
@@ -152,22 +155,22 @@ sub processCategoryChange {
     
     my @inclusions = $::MFORM{'inclusions'} ? @{$::MFORM{'inclusions'}} : ();
     my @exclusions = $::MFORM{'exclusions'} ? @{$::MFORM{'exclusions'}} : ();
-    if ($::FORM{'categoryAction'} eq "Include") {
+    if ($categoryAction eq 'include') {
         validateProduct();
         validateComponent();
         my $category = ($::FORM{'product'} || "__Any__") . ":" . ($::FORM{'component'} || "__Any__");
         push(@inclusions, $category) unless grep($_ eq $category, @inclusions);
     }
-    elsif ($::FORM{'categoryAction'} eq "Exclude") {
+    elsif ($categoryAction eq 'exclude') {
         validateProduct();
         validateComponent();
         my $category = ($::FORM{'product'} || "__Any__") . ":" . ($::FORM{'component'} || "__Any__");
         push(@exclusions, $category) unless grep($_ eq $category, @exclusions);
     }
-    elsif ($::FORM{'categoryAction'} eq "Remove Inclusion") {
+    elsif ($categoryAction eq 'removeInclusion') {
         @inclusions = map(($_ eq $::FORM{'inclusion_to_remove'} ? () : $_), @inclusions);
     }
-    elsif ($::FORM{'categoryAction'} eq "Remove Exclusion") {
+    elsif ($categoryAction eq 'removeExclusion') {
         @exclusions = map(($_ eq $::FORM{'exclusion_to_remove'} ? () : $_), @exclusions);
     }
     
