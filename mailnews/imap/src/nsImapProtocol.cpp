@@ -650,7 +650,7 @@ NS_IMETHODIMP nsImapProtocol::Run()
 
   NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result); 
 
-    result = pEventQService->CreateThreadEventQueue();
+    result = pEventQService->CreateMonitoredThreadEventQueue();
 	
 	pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,getter_AddRefs(me->m_eventQueue));
 
