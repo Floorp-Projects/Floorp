@@ -68,9 +68,11 @@ public:
   void Armed();
   void DisArmed();
 
-private:
+protected:
   GtkWidget *mWidget;
   GtkWidget *mLabel;
+  
+private:
   PRBool mInitialState;
   PRBool mNewValue;
   PRBool mValueWasSet;

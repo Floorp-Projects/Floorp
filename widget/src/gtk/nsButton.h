@@ -60,7 +60,7 @@ public:
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint(nsPaintEvent &aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
-private:
+protected:
   GtkWidget *mWidget;
 };
 
