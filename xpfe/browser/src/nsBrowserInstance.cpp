@@ -1620,6 +1620,7 @@ nsBrowserInstance::IsPreferred(const char * aContentType,
        || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
        || nsCRT::strcasecmp(aContentType, "image/png") == 0
        || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
+       || nsCRT::strcasecmp(aContentType, "text/plain") == 0
        || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
        *aCanHandleContent = PR_TRUE;
   }
@@ -2267,6 +2268,11 @@ static nsModuleComponentInfo components[] = {
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
     NS_CONTENT_HANDLER_PROGID_PREFIX"text/css", 
+    nsBrowserContentHandlerConstructor 
+  },
+  { "Browser Content Handler",
+    NS_BROWSERCONTENTHANDLER_CID,
+    NS_CONTENT_HANDLER_PROGID_PREFIX"text/plain", 
     nsBrowserContentHandlerConstructor 
   },
   { "Browser Content Handler",
