@@ -38,20 +38,20 @@ class nsIDOMHTMLQuoteElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLQUOTEELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetCite(nsString& aCite)=0;
-  NS_IMETHOD    SetCite(const nsString& aCite)=0;
+  NS_IMETHOD    GetCite(nsAWritableString& aCite)=0;
+  NS_IMETHOD    SetCite(const nsAReadableString& aCite)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLQUOTEELEMENT   \
-  NS_IMETHOD    GetCite(nsString& aCite);  \
-  NS_IMETHOD    SetCite(const nsString& aCite);  \
+  NS_IMETHOD    GetCite(nsAWritableString& aCite);  \
+  NS_IMETHOD    SetCite(const nsAReadableString& aCite);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLQUOTEELEMENT(_to)  \
-  NS_IMETHOD    GetCite(nsString& aCite) { return _to GetCite(aCite); } \
-  NS_IMETHOD    SetCite(const nsString& aCite) { return _to SetCite(aCite); } \
+  NS_IMETHOD    GetCite(nsAWritableString& aCite) { return _to GetCite(aCite); } \
+  NS_IMETHOD    SetCite(const nsAReadableString& aCite) { return _to SetCite(aCite); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLQuoteElementClass(nsIScriptContext *aContext, void **aPrototype);

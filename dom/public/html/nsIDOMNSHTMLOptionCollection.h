@@ -47,7 +47,7 @@ public:
 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
 
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)=0;
 };
 
 
@@ -57,7 +57,7 @@ public:
   NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex);  \
   NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex);  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);  \
 
 
 
@@ -67,7 +67,7 @@ public:
   NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex) { return _to GetSelectedIndex(aSelectedIndex); } \
   NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex) { return _to SetSelectedIndex(aSelectedIndex); } \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return _to Item(aIndex, aReturn); }  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn) { return _to NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn) { return _to NamedItem(aName, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNSHTMLOptionCollectionClass(nsIScriptContext *aContext, void **aPrototype);

@@ -38,55 +38,55 @@ class nsIDOMHTMLTableColElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLTABLECOLELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetAlign(nsString& aAlign)=0;
-  NS_IMETHOD    SetAlign(const nsString& aAlign)=0;
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign)=0;
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign)=0;
 
-  NS_IMETHOD    GetCh(nsString& aCh)=0;
-  NS_IMETHOD    SetCh(const nsString& aCh)=0;
+  NS_IMETHOD    GetCh(nsAWritableString& aCh)=0;
+  NS_IMETHOD    SetCh(const nsAReadableString& aCh)=0;
 
-  NS_IMETHOD    GetChOff(nsString& aChOff)=0;
-  NS_IMETHOD    SetChOff(const nsString& aChOff)=0;
+  NS_IMETHOD    GetChOff(nsAWritableString& aChOff)=0;
+  NS_IMETHOD    SetChOff(const nsAReadableString& aChOff)=0;
 
   NS_IMETHOD    GetSpan(PRInt32* aSpan)=0;
   NS_IMETHOD    SetSpan(PRInt32 aSpan)=0;
 
-  NS_IMETHOD    GetVAlign(nsString& aVAlign)=0;
-  NS_IMETHOD    SetVAlign(const nsString& aVAlign)=0;
+  NS_IMETHOD    GetVAlign(nsAWritableString& aVAlign)=0;
+  NS_IMETHOD    SetVAlign(const nsAReadableString& aVAlign)=0;
 
-  NS_IMETHOD    GetWidth(nsString& aWidth)=0;
-  NS_IMETHOD    SetWidth(const nsString& aWidth)=0;
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth)=0;
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLTABLECOLELEMENT   \
-  NS_IMETHOD    GetAlign(nsString& aAlign);  \
-  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
-  NS_IMETHOD    GetCh(nsString& aCh);  \
-  NS_IMETHOD    SetCh(const nsString& aCh);  \
-  NS_IMETHOD    GetChOff(nsString& aChOff);  \
-  NS_IMETHOD    SetChOff(const nsString& aChOff);  \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign);  \
+  NS_IMETHOD    GetCh(nsAWritableString& aCh);  \
+  NS_IMETHOD    SetCh(const nsAReadableString& aCh);  \
+  NS_IMETHOD    GetChOff(nsAWritableString& aChOff);  \
+  NS_IMETHOD    SetChOff(const nsAReadableString& aChOff);  \
   NS_IMETHOD    GetSpan(PRInt32* aSpan);  \
   NS_IMETHOD    SetSpan(PRInt32 aSpan);  \
-  NS_IMETHOD    GetVAlign(nsString& aVAlign);  \
-  NS_IMETHOD    SetVAlign(const nsString& aVAlign);  \
-  NS_IMETHOD    GetWidth(nsString& aWidth);  \
-  NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+  NS_IMETHOD    GetVAlign(nsAWritableString& aVAlign);  \
+  NS_IMETHOD    SetVAlign(const nsAReadableString& aVAlign);  \
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth);  \
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLTABLECOLELEMENT(_to)  \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD    GetCh(nsString& aCh) { return _to GetCh(aCh); } \
-  NS_IMETHOD    SetCh(const nsString& aCh) { return _to SetCh(aCh); } \
-  NS_IMETHOD    GetChOff(nsString& aChOff) { return _to GetChOff(aChOff); } \
-  NS_IMETHOD    SetChOff(const nsString& aChOff) { return _to SetChOff(aChOff); } \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetCh(nsAWritableString& aCh) { return _to GetCh(aCh); } \
+  NS_IMETHOD    SetCh(const nsAReadableString& aCh) { return _to SetCh(aCh); } \
+  NS_IMETHOD    GetChOff(nsAWritableString& aChOff) { return _to GetChOff(aChOff); } \
+  NS_IMETHOD    SetChOff(const nsAReadableString& aChOff) { return _to SetChOff(aChOff); } \
   NS_IMETHOD    GetSpan(PRInt32* aSpan) { return _to GetSpan(aSpan); } \
   NS_IMETHOD    SetSpan(PRInt32 aSpan) { return _to SetSpan(aSpan); } \
-  NS_IMETHOD    GetVAlign(nsString& aVAlign) { return _to GetVAlign(aVAlign); } \
-  NS_IMETHOD    SetVAlign(const nsString& aVAlign) { return _to SetVAlign(aVAlign); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
+  NS_IMETHOD    GetVAlign(nsAWritableString& aVAlign) { return _to GetVAlign(aVAlign); } \
+  NS_IMETHOD    SetVAlign(const nsAReadableString& aVAlign) { return _to SetVAlign(aVAlign); } \
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth) { return _to SetWidth(aWidth); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLTableColElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -40,7 +40,7 @@ class nsIDOMCSSImportRule : public nsIDOMCSSRule {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSIMPORTRULE_IID; return iid; }
 
-  NS_IMETHOD    GetHref(nsString& aHref)=0;
+  NS_IMETHOD    GetHref(nsAWritableString& aHref)=0;
 
   NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia)=0;
 
@@ -49,14 +49,14 @@ public:
 
 
 #define NS_DECL_IDOMCSSIMPORTRULE   \
-  NS_IMETHOD    GetHref(nsString& aHref);  \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref);  \
   NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia);  \
   NS_IMETHOD    GetStyleSheet(nsIDOMCSSStyleSheet** aStyleSheet);  \
 
 
 
 #define NS_FORWARD_IDOMCSSIMPORTRULE(_to)  \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref) { return _to GetHref(aHref); } \
   NS_IMETHOD    GetMedia(nsIDOMMediaList** aMedia) { return _to GetMedia(aMedia); } \
   NS_IMETHOD    GetStyleSheet(nsIDOMCSSStyleSheet** aStyleSheet) { return _to GetStyleSheet(aStyleSheet); } \
 

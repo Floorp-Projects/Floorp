@@ -41,23 +41,23 @@ public:
 
   NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn)=0;
 
-  NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsString& aBindingURL)=0;
+  NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL)=0;
 
-  NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsString& aBindingURL)=0;
+  NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL)=0;
 };
 
 
 #define NS_DECL_IDOMDOCUMENTXBL   \
   NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn);  \
-  NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsString& aBindingURL);  \
-  NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsString& aBindingURL);  \
+  NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL);  \
+  NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL);  \
 
 
 
 #define NS_FORWARD_IDOMDOCUMENTXBL(_to)  \
   NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn) { return _to GetAnonymousNodes(aElt, aReturn); }  \
-  NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsString& aBindingURL) { return _to AddBinding(aElt, aBindingURL); }  \
-  NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsString& aBindingURL) { return _to RemoveBinding(aElt, aBindingURL); }  \
+  NS_IMETHOD    AddBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL) { return _to AddBinding(aElt, aBindingURL); }  \
+  NS_IMETHOD    RemoveBinding(nsIDOMElement* aElt, const nsAReadableString& aBindingURL) { return _to RemoveBinding(aElt, aBindingURL); }  \
 
 
 #endif // nsIDOMDocumentXBL_h__

@@ -39,24 +39,24 @@ class nsIDOMEventTarget : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENTTARGET_IID; return iid; }
 
-  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)=0;
+  NS_IMETHOD    AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)=0;
 
-  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)=0;
+  NS_IMETHOD    RemoveEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)=0;
 
   NS_IMETHOD    DispatchEvent(nsIDOMEvent* aEvt)=0;
 };
 
 
 #define NS_DECL_IDOMEVENTTARGET   \
-  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture);  \
-  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture);  \
+  NS_IMETHOD    AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture);  \
+  NS_IMETHOD    RemoveEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture);  \
   NS_IMETHOD    DispatchEvent(nsIDOMEvent* aEvt);  \
 
 
 
 #define NS_FORWARD_IDOMEVENTTARGET(_to)  \
-  NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture) { return _to AddEventListener(aType, aListener, aUseCapture); }  \
-  NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture) { return _to RemoveEventListener(aType, aListener, aUseCapture); }  \
+  NS_IMETHOD    AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture) { return _to AddEventListener(aType, aListener, aUseCapture); }  \
+  NS_IMETHOD    RemoveEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture) { return _to RemoveEventListener(aType, aListener, aUseCapture); }  \
   NS_IMETHOD    DispatchEvent(nsIDOMEvent* aEvt) { return _to DispatchEvent(aEvt); }  \
 
 

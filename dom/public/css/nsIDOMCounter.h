@@ -37,25 +37,25 @@ class nsIDOMCounter : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCOUNTER_IID; return iid; }
 
-  NS_IMETHOD    GetIdentifier(nsString& aIdentifier)=0;
+  NS_IMETHOD    GetIdentifier(nsAWritableString& aIdentifier)=0;
 
-  NS_IMETHOD    GetListStyle(nsString& aListStyle)=0;
+  NS_IMETHOD    GetListStyle(nsAWritableString& aListStyle)=0;
 
-  NS_IMETHOD    GetSeparator(nsString& aSeparator)=0;
+  NS_IMETHOD    GetSeparator(nsAWritableString& aSeparator)=0;
 };
 
 
 #define NS_DECL_IDOMCOUNTER   \
-  NS_IMETHOD    GetIdentifier(nsString& aIdentifier);  \
-  NS_IMETHOD    GetListStyle(nsString& aListStyle);  \
-  NS_IMETHOD    GetSeparator(nsString& aSeparator);  \
+  NS_IMETHOD    GetIdentifier(nsAWritableString& aIdentifier);  \
+  NS_IMETHOD    GetListStyle(nsAWritableString& aListStyle);  \
+  NS_IMETHOD    GetSeparator(nsAWritableString& aSeparator);  \
 
 
 
 #define NS_FORWARD_IDOMCOUNTER(_to)  \
-  NS_IMETHOD    GetIdentifier(nsString& aIdentifier) { return _to GetIdentifier(aIdentifier); } \
-  NS_IMETHOD    GetListStyle(nsString& aListStyle) { return _to GetListStyle(aListStyle); } \
-  NS_IMETHOD    GetSeparator(nsString& aSeparator) { return _to GetSeparator(aSeparator); } \
+  NS_IMETHOD    GetIdentifier(nsAWritableString& aIdentifier) { return _to GetIdentifier(aIdentifier); } \
+  NS_IMETHOD    GetListStyle(nsAWritableString& aListStyle) { return _to GetListStyle(aListStyle); } \
+  NS_IMETHOD    GetSeparator(nsAWritableString& aSeparator) { return _to GetSeparator(aSeparator); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCounterClass(nsIScriptContext *aContext, void **aPrototype);

@@ -41,24 +41,24 @@ public:
   NS_IMETHOD    GetCompact(PRBool* aCompact)=0;
   NS_IMETHOD    SetCompact(PRBool aCompact)=0;
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
+  NS_IMETHOD    SetType(const nsAReadableString& aType)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLULISTELEMENT   \
   NS_IMETHOD    GetCompact(PRBool* aCompact);  \
   NS_IMETHOD    SetCompact(PRBool aCompact);  \
-  NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
+  NS_IMETHOD    SetType(const nsAReadableString& aType);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLULISTELEMENT(_to)  \
   NS_IMETHOD    GetCompact(PRBool* aCompact) { return _to GetCompact(aCompact); } \
   NS_IMETHOD    SetCompact(PRBool aCompact) { return _to SetCompact(aCompact); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsAReadableString& aType) { return _to SetType(aType); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLUListElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -41,7 +41,7 @@ public:
 
 	NS_IMETHOD GetLength(PRUint32* aLength);
 	NS_IMETHOD Item(PRUint32 aIndex, nsIDOMMimeType** aReturn);
-	NS_IMETHOD NamedItem(const nsString& aName, nsIDOMMimeType** aReturn);
+	NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn);
 
 private:
 	nsresult GetMimeTypes();
@@ -63,10 +63,10 @@ public:
 	NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 	NS_IMETHOD SetScriptObject(void* aScriptObject);
 
-	NS_IMETHOD GetDescription(nsString& aDescription);
+	NS_IMETHOD GetDescription(nsAWritableString& aDescription);
 	NS_IMETHOD GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin);
-	NS_IMETHOD GetSuffixes(nsString& aSuffixes);
-	NS_IMETHOD GetType(nsString& aType);
+	NS_IMETHOD GetSuffixes(nsAWritableString& aSuffixes);
+	NS_IMETHOD GetType(nsAWritableString& aType);
 
 protected:
 	void *mScriptObject;

@@ -38,17 +38,17 @@ class nsIDOMDocumentEvent : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTEVENT_IID; return iid; }
 
-  NS_IMETHOD    CreateEvent(const nsString& aEventType, nsIDOMEvent** aReturn)=0;
+  NS_IMETHOD    CreateEvent(const nsAReadableString& aEventType, nsIDOMEvent** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMDOCUMENTEVENT   \
-  NS_IMETHOD    CreateEvent(const nsString& aEventType, nsIDOMEvent** aReturn);  \
+  NS_IMETHOD    CreateEvent(const nsAReadableString& aEventType, nsIDOMEvent** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMDOCUMENTEVENT(_to)  \
-  NS_IMETHOD    CreateEvent(const nsString& aEventType, nsIDOMEvent** aReturn) { return _to CreateEvent(aEventType, aReturn); }  \
+  NS_IMETHOD    CreateEvent(const nsAReadableString& aEventType, nsIDOMEvent** aReturn) { return _to CreateEvent(aEventType, aReturn); }  \
 
 
 #endif // nsIDOMDocumentEvent_h__

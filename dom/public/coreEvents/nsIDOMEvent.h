@@ -78,7 +78,7 @@ public:
     META_MASK = 8
   };
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
 
   NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget)=0;
 
@@ -100,12 +100,12 @@ public:
 
   NS_IMETHOD    PreventDefault()=0;
 
-  NS_IMETHOD    InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg)=0;
+  NS_IMETHOD    InitEvent(const nsAReadableString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg)=0;
 };
 
 
 #define NS_DECL_IDOMEVENT   \
-  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
   NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget);  \
   NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget);  \
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase);  \
@@ -116,12 +116,12 @@ public:
   NS_IMETHOD    PreventBubble();  \
   NS_IMETHOD    PreventCapture();  \
   NS_IMETHOD    PreventDefault();  \
-  NS_IMETHOD    InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg);  \
+  NS_IMETHOD    InitEvent(const nsAReadableString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg);  \
 
 
 
 #define NS_FORWARD_IDOMEVENT(_to)  \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
   NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget) { return _to GetTarget(aTarget); } \
   NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget) { return _to GetCurrentTarget(aCurrentTarget); } \
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase) { return _to GetEventPhase(aEventPhase); } \
@@ -132,7 +132,7 @@ public:
   NS_IMETHOD    PreventBubble() { return _to PreventBubble(); }  \
   NS_IMETHOD    PreventCapture() { return _to PreventCapture(); }  \
   NS_IMETHOD    PreventDefault() { return _to PreventDefault(); }  \
-  NS_IMETHOD    InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg) { return _to InitEvent(aEventTypeArg, aCanBubbleArg, aCancelableArg); }  \
+  NS_IMETHOD    InitEvent(const nsAReadableString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg) { return _to InitEvent(aEventTypeArg, aCanBubbleArg, aCancelableArg); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype);

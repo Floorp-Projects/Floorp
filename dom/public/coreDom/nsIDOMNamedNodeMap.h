@@ -40,43 +40,43 @@ public:
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 
-  NS_IMETHOD    GetNamedItem(const nsString& aName, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)=0;
 
   NS_IMETHOD    SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)=0;
 
-  NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)=0;
 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
 
-  NS_IMETHOD    GetNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetNamedItemNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aLocalName, nsIDOMNode** aReturn)=0;
 
   NS_IMETHOD    SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)=0;
 
-  NS_IMETHOD    RemoveNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    RemoveNamedItemNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aLocalName, nsIDOMNode** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMNAMEDNODEMAP   \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
-  NS_IMETHOD    GetNamedItem(const nsString& aName, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    GetNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);  \
   NS_IMETHOD    SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn);  \
-  NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);  \
-  NS_IMETHOD    GetNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    GetNamedItemNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aLocalName, nsIDOMNode** aReturn);  \
   NS_IMETHOD    SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn);  \
-  NS_IMETHOD    RemoveNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    RemoveNamedItemNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aLocalName, nsIDOMNode** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMNAMEDNODEMAP(_to)  \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD    GetNamedItem(const nsString& aName, nsIDOMNode** aReturn) { return _to GetNamedItem(aName, aReturn); }  \
+  NS_IMETHOD    GetNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn) { return _to GetNamedItem(aName, aReturn); }  \
   NS_IMETHOD    SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn) { return _to SetNamedItem(aArg, aReturn); }  \
-  NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn) { return _to RemoveNamedItem(aName, aReturn); }  \
+  NS_IMETHOD    RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn) { return _to RemoveNamedItem(aName, aReturn); }  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return _to Item(aIndex, aReturn); }  \
-  NS_IMETHOD    GetNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn) { return _to GetNamedItemNS(aNamespaceURI, aLocalName, aReturn); }  \
+  NS_IMETHOD    GetNamedItemNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aLocalName, nsIDOMNode** aReturn) { return _to GetNamedItemNS(aNamespaceURI, aLocalName, aReturn); }  \
   NS_IMETHOD    SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn) { return _to SetNamedItemNS(aArg, aReturn); }  \
-  NS_IMETHOD    RemoveNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn) { return _to RemoveNamedItemNS(aNamespaceURI, aLocalName, aReturn); }  \
+  NS_IMETHOD    RemoveNamedItemNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aLocalName, nsIDOMNode** aReturn) { return _to RemoveNamedItemNS(aNamespaceURI, aLocalName, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNamedNodeMapClass(nsIScriptContext *aContext, void **aPrototype);

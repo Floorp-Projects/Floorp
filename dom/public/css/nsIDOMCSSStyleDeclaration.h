@@ -39,52 +39,52 @@ class nsIDOMCSSStyleDeclaration : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSSTYLEDECLARATION_IID; return iid; }
 
-  NS_IMETHOD    GetCssText(nsString& aCssText)=0;
-  NS_IMETHOD    SetCssText(const nsString& aCssText)=0;
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText)=0;
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText)=0;
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 
   NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule)=0;
 
-  NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn)=0;
+  NS_IMETHOD    GetPropertyValue(const nsAReadableString& aPropertyName, nsAWritableString& aReturn)=0;
 
-  NS_IMETHOD    GetPropertyCSSValue(const nsString& aPropertyName, nsIDOMCSSValue** aReturn)=0;
+  NS_IMETHOD    GetPropertyCSSValue(const nsAReadableString& aPropertyName, nsIDOMCSSValue** aReturn)=0;
 
-  NS_IMETHOD    RemoveProperty(const nsString& aPropertyName, nsString& aReturn)=0;
+  NS_IMETHOD    RemoveProperty(const nsAReadableString& aPropertyName, nsAWritableString& aReturn)=0;
 
-  NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn)=0;
+  NS_IMETHOD    GetPropertyPriority(const nsAReadableString& aPropertyName, nsAWritableString& aReturn)=0;
 
-  NS_IMETHOD    SetProperty(const nsString& aPropertyName, const nsString& aValue, const nsString& aPriority)=0;
+  NS_IMETHOD    SetProperty(const nsAReadableString& aPropertyName, const nsAReadableString& aValue, const nsAReadableString& aPriority)=0;
 
-  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn)=0;
+  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMCSSSTYLEDECLARATION   \
-  NS_IMETHOD    GetCssText(nsString& aCssText);  \
-  NS_IMETHOD    SetCssText(const nsString& aCssText);  \
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText);  \
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText);  \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
   NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule);  \
-  NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn);  \
-  NS_IMETHOD    GetPropertyCSSValue(const nsString& aPropertyName, nsIDOMCSSValue** aReturn);  \
-  NS_IMETHOD    RemoveProperty(const nsString& aPropertyName, nsString& aReturn);  \
-  NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn);  \
-  NS_IMETHOD    SetProperty(const nsString& aPropertyName, const nsString& aValue, const nsString& aPriority);  \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn);  \
+  NS_IMETHOD    GetPropertyValue(const nsAReadableString& aPropertyName, nsAWritableString& aReturn);  \
+  NS_IMETHOD    GetPropertyCSSValue(const nsAReadableString& aPropertyName, nsIDOMCSSValue** aReturn);  \
+  NS_IMETHOD    RemoveProperty(const nsAReadableString& aPropertyName, nsAWritableString& aReturn);  \
+  NS_IMETHOD    GetPropertyPriority(const nsAReadableString& aPropertyName, nsAWritableString& aReturn);  \
+  NS_IMETHOD    SetProperty(const nsAReadableString& aPropertyName, const nsAReadableString& aValue, const nsAReadableString& aPriority);  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMCSSSTYLEDECLARATION(_to)  \
-  NS_IMETHOD    GetCssText(nsString& aCssText) { return _to GetCssText(aCssText); } \
-  NS_IMETHOD    SetCssText(const nsString& aCssText) { return _to SetCssText(aCssText); } \
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText) { return _to GetCssText(aCssText); } \
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText) { return _to SetCssText(aCssText); } \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
   NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule) { return _to GetParentRule(aParentRule); } \
-  NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn) { return _to GetPropertyValue(aPropertyName, aReturn); }  \
-  NS_IMETHOD    GetPropertyCSSValue(const nsString& aPropertyName, nsIDOMCSSValue** aReturn) { return _to GetPropertyCSSValue(aPropertyName, aReturn); }  \
-  NS_IMETHOD    RemoveProperty(const nsString& aPropertyName, nsString& aReturn) { return _to RemoveProperty(aPropertyName, aReturn); }  \
-  NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn) { return _to GetPropertyPriority(aPropertyName, aReturn); }  \
-  NS_IMETHOD    SetProperty(const nsString& aPropertyName, const nsString& aValue, const nsString& aPriority) { return _to SetProperty(aPropertyName, aValue, aPriority); }  \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn) { return _to Item(aIndex, aReturn); }  \
+  NS_IMETHOD    GetPropertyValue(const nsAReadableString& aPropertyName, nsAWritableString& aReturn) { return _to GetPropertyValue(aPropertyName, aReturn); }  \
+  NS_IMETHOD    GetPropertyCSSValue(const nsAReadableString& aPropertyName, nsIDOMCSSValue** aReturn) { return _to GetPropertyCSSValue(aPropertyName, aReturn); }  \
+  NS_IMETHOD    RemoveProperty(const nsAReadableString& aPropertyName, nsAWritableString& aReturn) { return _to RemoveProperty(aPropertyName, aReturn); }  \
+  NS_IMETHOD    GetPropertyPriority(const nsAReadableString& aPropertyName, nsAWritableString& aReturn) { return _to GetPropertyPriority(aPropertyName, aReturn); }  \
+  NS_IMETHOD    SetProperty(const nsAReadableString& aPropertyName, const nsAReadableString& aValue, const nsAReadableString& aPriority) { return _to SetProperty(aPropertyName, aValue, aPriority); }  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn) { return _to Item(aIndex, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSStyleDeclarationClass(nsIScriptContext *aContext, void **aPrototype);

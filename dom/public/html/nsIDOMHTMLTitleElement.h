@@ -38,20 +38,20 @@ class nsIDOMHTMLTitleElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLTITLEELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetText(nsString& aText)=0;
-  NS_IMETHOD    SetText(const nsString& aText)=0;
+  NS_IMETHOD    GetText(nsAWritableString& aText)=0;
+  NS_IMETHOD    SetText(const nsAReadableString& aText)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLTITLEELEMENT   \
-  NS_IMETHOD    GetText(nsString& aText);  \
-  NS_IMETHOD    SetText(const nsString& aText);  \
+  NS_IMETHOD    GetText(nsAWritableString& aText);  \
+  NS_IMETHOD    SetText(const nsAReadableString& aText);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLTITLEELEMENT(_to)  \
-  NS_IMETHOD    GetText(nsString& aText) { return _to GetText(aText); } \
-  NS_IMETHOD    SetText(const nsString& aText) { return _to SetText(aText); } \
+  NS_IMETHOD    GetText(nsAWritableString& aText) { return _to GetText(aText); } \
+  NS_IMETHOD    SetText(const nsAReadableString& aText) { return _to SetText(aText); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLTitleElementClass(nsIScriptContext *aContext, void **aPrototype);

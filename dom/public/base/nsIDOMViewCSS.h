@@ -40,17 +40,17 @@ class nsIDOMViewCSS : public nsIDOMAbstractView {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMVIEWCSS_IID; return iid; }
 
-  NS_IMETHOD    GetComputedStyle(nsIDOMElement* aElt, const nsString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn)=0;
+  NS_IMETHOD    GetComputedStyle(nsIDOMElement* aElt, const nsAReadableString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMVIEWCSS   \
-  NS_IMETHOD    GetComputedStyle(nsIDOMElement* aElt, const nsString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn);  \
+  NS_IMETHOD    GetComputedStyle(nsIDOMElement* aElt, const nsAReadableString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMVIEWCSS(_to)  \
-  NS_IMETHOD    GetComputedStyle(nsIDOMElement* aElt, const nsString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn) { return _to GetComputedStyle(aElt, aPseudoElt, aReturn); }  \
+  NS_IMETHOD    GetComputedStyle(nsIDOMElement* aElt, const nsAReadableString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn) { return _to GetComputedStyle(aElt, aPseudoElt, aReturn); }  \
 
 
 #endif // nsIDOMViewCSS_h__

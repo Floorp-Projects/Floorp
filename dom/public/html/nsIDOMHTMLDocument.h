@@ -41,15 +41,15 @@ class nsIDOMHTMLDocument : public nsIDOMDocument {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLDOCUMENT_IID; return iid; }
 
-  NS_IMETHOD    GetTitle(nsString& aTitle)=0;
-  NS_IMETHOD    SetTitle(const nsString& aTitle)=0;
+  NS_IMETHOD    GetTitle(nsAWritableString& aTitle)=0;
+  NS_IMETHOD    SetTitle(const nsAReadableString& aTitle)=0;
 
-  NS_IMETHOD    GetReferrer(nsString& aReferrer)=0;
+  NS_IMETHOD    GetReferrer(nsAWritableString& aReferrer)=0;
 
-  NS_IMETHOD    GetDomain(nsString& aDomain)=0;
-  NS_IMETHOD    SetDomain(const nsString& aDomain)=0;
+  NS_IMETHOD    GetDomain(nsAWritableString& aDomain)=0;
+  NS_IMETHOD    SetDomain(const nsAReadableString& aDomain)=0;
 
-  NS_IMETHOD    GetURL(nsString& aURL)=0;
+  NS_IMETHOD    GetURL(nsAWritableString& aURL)=0;
 
   NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody)=0;
   NS_IMETHOD    SetBody(nsIDOMHTMLElement* aBody)=0;
@@ -64,28 +64,28 @@ public:
 
   NS_IMETHOD    GetAnchors(nsIDOMHTMLCollection** aAnchors)=0;
 
-  NS_IMETHOD    GetCookie(nsString& aCookie)=0;
-  NS_IMETHOD    SetCookie(const nsString& aCookie)=0;
+  NS_IMETHOD    GetCookie(nsAWritableString& aCookie)=0;
+  NS_IMETHOD    SetCookie(const nsAReadableString& aCookie)=0;
 
   NS_IMETHOD    Open()=0;
 
   NS_IMETHOD    Close()=0;
 
-  NS_IMETHOD    Write(const nsString& aText)=0;
+  NS_IMETHOD    Write(const nsAReadableString& aText)=0;
 
-  NS_IMETHOD    Writeln(const nsString& aText)=0;
+  NS_IMETHOD    Writeln(const nsAReadableString& aText)=0;
 
-  NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn)=0;
+  NS_IMETHOD    GetElementsByName(const nsAReadableString& aElementName, nsIDOMNodeList** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLDOCUMENT   \
-  NS_IMETHOD    GetTitle(nsString& aTitle);  \
-  NS_IMETHOD    SetTitle(const nsString& aTitle);  \
-  NS_IMETHOD    GetReferrer(nsString& aReferrer);  \
-  NS_IMETHOD    GetDomain(nsString& aDomain);  \
-  NS_IMETHOD    SetDomain(const nsString& aDomain);  \
-  NS_IMETHOD    GetURL(nsString& aURL);  \
+  NS_IMETHOD    GetTitle(nsAWritableString& aTitle);  \
+  NS_IMETHOD    SetTitle(const nsAReadableString& aTitle);  \
+  NS_IMETHOD    GetReferrer(nsAWritableString& aReferrer);  \
+  NS_IMETHOD    GetDomain(nsAWritableString& aDomain);  \
+  NS_IMETHOD    SetDomain(const nsAReadableString& aDomain);  \
+  NS_IMETHOD    GetURL(nsAWritableString& aURL);  \
   NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody);  \
   NS_IMETHOD    SetBody(nsIDOMHTMLElement* aBody);  \
   NS_IMETHOD    GetImages(nsIDOMHTMLCollection** aImages);  \
@@ -93,23 +93,23 @@ public:
   NS_IMETHOD    GetLinks(nsIDOMHTMLCollection** aLinks);  \
   NS_IMETHOD    GetForms(nsIDOMHTMLCollection** aForms);  \
   NS_IMETHOD    GetAnchors(nsIDOMHTMLCollection** aAnchors);  \
-  NS_IMETHOD    GetCookie(nsString& aCookie);  \
-  NS_IMETHOD    SetCookie(const nsString& aCookie);  \
+  NS_IMETHOD    GetCookie(nsAWritableString& aCookie);  \
+  NS_IMETHOD    SetCookie(const nsAReadableString& aCookie);  \
   NS_IMETHOD    Open();  \
   NS_IMETHOD    Close();  \
-  NS_IMETHOD    Write(const nsString& aText);  \
-  NS_IMETHOD    Writeln(const nsString& aText);  \
-  NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn);  \
+  NS_IMETHOD    Write(const nsAReadableString& aText);  \
+  NS_IMETHOD    Writeln(const nsAReadableString& aText);  \
+  NS_IMETHOD    GetElementsByName(const nsAReadableString& aElementName, nsIDOMNodeList** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLDOCUMENT(_to)  \
-  NS_IMETHOD    GetTitle(nsString& aTitle) { return _to GetTitle(aTitle); } \
-  NS_IMETHOD    SetTitle(const nsString& aTitle) { return _to SetTitle(aTitle); } \
-  NS_IMETHOD    GetReferrer(nsString& aReferrer) { return _to GetReferrer(aReferrer); } \
-  NS_IMETHOD    GetDomain(nsString& aDomain) { return _to GetDomain(aDomain); } \
-  NS_IMETHOD    SetDomain(const nsString& aDomain) { return _to SetDomain(aDomain); } \
-  NS_IMETHOD    GetURL(nsString& aURL) { return _to GetURL(aURL); } \
+  NS_IMETHOD    GetTitle(nsAWritableString& aTitle) { return _to GetTitle(aTitle); } \
+  NS_IMETHOD    SetTitle(const nsAReadableString& aTitle) { return _to SetTitle(aTitle); } \
+  NS_IMETHOD    GetReferrer(nsAWritableString& aReferrer) { return _to GetReferrer(aReferrer); } \
+  NS_IMETHOD    GetDomain(nsAWritableString& aDomain) { return _to GetDomain(aDomain); } \
+  NS_IMETHOD    SetDomain(const nsAReadableString& aDomain) { return _to SetDomain(aDomain); } \
+  NS_IMETHOD    GetURL(nsAWritableString& aURL) { return _to GetURL(aURL); } \
   NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody) { return _to GetBody(aBody); } \
   NS_IMETHOD    SetBody(nsIDOMHTMLElement* aBody) { return _to SetBody(aBody); } \
   NS_IMETHOD    GetImages(nsIDOMHTMLCollection** aImages) { return _to GetImages(aImages); } \
@@ -117,13 +117,13 @@ public:
   NS_IMETHOD    GetLinks(nsIDOMHTMLCollection** aLinks) { return _to GetLinks(aLinks); } \
   NS_IMETHOD    GetForms(nsIDOMHTMLCollection** aForms) { return _to GetForms(aForms); } \
   NS_IMETHOD    GetAnchors(nsIDOMHTMLCollection** aAnchors) { return _to GetAnchors(aAnchors); } \
-  NS_IMETHOD    GetCookie(nsString& aCookie) { return _to GetCookie(aCookie); } \
-  NS_IMETHOD    SetCookie(const nsString& aCookie) { return _to SetCookie(aCookie); } \
+  NS_IMETHOD    GetCookie(nsAWritableString& aCookie) { return _to GetCookie(aCookie); } \
+  NS_IMETHOD    SetCookie(const nsAReadableString& aCookie) { return _to SetCookie(aCookie); } \
   NS_IMETHOD    Open() { return _to Open(); }  \
   NS_IMETHOD    Close() { return _to Close(); }  \
-  NS_IMETHOD    Write(const nsString& aText) { return _to Write(aText); }  \
-  NS_IMETHOD    Writeln(const nsString& aText) { return _to Writeln(aText); }  \
-  NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn) { return _to GetElementsByName(aElementName, aReturn); }  \
+  NS_IMETHOD    Write(const nsAReadableString& aText) { return _to Write(aText); }  \
+  NS_IMETHOD    Writeln(const nsAReadableString& aText) { return _to Writeln(aText); }  \
+  NS_IMETHOD    GetElementsByName(const nsAReadableString& aElementName, nsIDOMNodeList** aReturn) { return _to GetElementsByName(aElementName, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLDocumentClass(nsIScriptContext *aContext, void **aPrototype);

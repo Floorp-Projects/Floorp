@@ -120,7 +120,7 @@ NS_IMETHODIMP MimeTypeArrayImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 	return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP MimeTypeArrayImpl::NamedItem(const nsString& aName,
+NS_IMETHODIMP MimeTypeArrayImpl::NamedItem(const nsAReadableString& aName,
                                            nsIDOMMimeType** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -257,7 +257,7 @@ NS_IMETHODIMP MimeTypeElementImpl::GetScriptObject(nsIScriptContext *aContext, v
 	return res;
 }
 
-NS_IMETHODIMP MimeTypeElementImpl::GetDescription(nsString& aDescription)
+NS_IMETHODIMP MimeTypeElementImpl::GetDescription(nsAWritableString& aDescription)
 {
 	return mMimeType->GetDescription(aDescription);
 }
@@ -269,12 +269,12 @@ NS_IMETHODIMP MimeTypeElementImpl::GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugi
 	return NS_OK;
 }
 
-NS_IMETHODIMP MimeTypeElementImpl::GetSuffixes(nsString& aSuffixes)
+NS_IMETHODIMP MimeTypeElementImpl::GetSuffixes(nsAWritableString& aSuffixes)
 {
 	return mMimeType->GetSuffixes(aSuffixes);
 }
 
-NS_IMETHODIMP MimeTypeElementImpl::GetType(nsString& aType)
+NS_IMETHODIMP MimeTypeElementImpl::GetType(nsAWritableString& aType)
 {
 	return mMimeType->GetType(aType);
 }

@@ -37,81 +37,81 @@ class nsIDOMLocation : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMLOCATION_IID; return iid; }
 
-  NS_IMETHOD    GetHash(nsString& aHash)=0;
-  NS_IMETHOD    SetHash(const nsString& aHash)=0;
+  NS_IMETHOD    GetHash(nsAWritableString& aHash)=0;
+  NS_IMETHOD    SetHash(const nsAReadableString& aHash)=0;
 
-  NS_IMETHOD    GetHost(nsString& aHost)=0;
-  NS_IMETHOD    SetHost(const nsString& aHost)=0;
+  NS_IMETHOD    GetHost(nsAWritableString& aHost)=0;
+  NS_IMETHOD    SetHost(const nsAReadableString& aHost)=0;
 
-  NS_IMETHOD    GetHostname(nsString& aHostname)=0;
-  NS_IMETHOD    SetHostname(const nsString& aHostname)=0;
+  NS_IMETHOD    GetHostname(nsAWritableString& aHostname)=0;
+  NS_IMETHOD    SetHostname(const nsAReadableString& aHostname)=0;
 
-  NS_IMETHOD    GetHref(nsString& aHref)=0;
-  NS_IMETHOD    SetHref(const nsString& aHref)=0;
+  NS_IMETHOD    GetHref(nsAWritableString& aHref)=0;
+  NS_IMETHOD    SetHref(const nsAReadableString& aHref)=0;
 
-  NS_IMETHOD    GetPathname(nsString& aPathname)=0;
-  NS_IMETHOD    SetPathname(const nsString& aPathname)=0;
+  NS_IMETHOD    GetPathname(nsAWritableString& aPathname)=0;
+  NS_IMETHOD    SetPathname(const nsAReadableString& aPathname)=0;
 
-  NS_IMETHOD    GetPort(nsString& aPort)=0;
-  NS_IMETHOD    SetPort(const nsString& aPort)=0;
+  NS_IMETHOD    GetPort(nsAWritableString& aPort)=0;
+  NS_IMETHOD    SetPort(const nsAReadableString& aPort)=0;
 
-  NS_IMETHOD    GetProtocol(nsString& aProtocol)=0;
-  NS_IMETHOD    SetProtocol(const nsString& aProtocol)=0;
+  NS_IMETHOD    GetProtocol(nsAWritableString& aProtocol)=0;
+  NS_IMETHOD    SetProtocol(const nsAReadableString& aProtocol)=0;
 
-  NS_IMETHOD    GetSearch(nsString& aSearch)=0;
-  NS_IMETHOD    SetSearch(const nsString& aSearch)=0;
+  NS_IMETHOD    GetSearch(nsAWritableString& aSearch)=0;
+  NS_IMETHOD    SetSearch(const nsAReadableString& aSearch)=0;
 
   NS_IMETHOD    Reload(PRBool aForceget)=0;
 
-  NS_IMETHOD    Replace(const nsString& aUrl)=0;
+  NS_IMETHOD    Replace(const nsAReadableString& aUrl)=0;
 
-  NS_IMETHOD    ToString(nsString& aReturn)=0;
+  NS_IMETHOD    ToString(nsAWritableString& aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMLOCATION   \
-  NS_IMETHOD    GetHash(nsString& aHash);  \
-  NS_IMETHOD    SetHash(const nsString& aHash);  \
-  NS_IMETHOD    GetHost(nsString& aHost);  \
-  NS_IMETHOD    SetHost(const nsString& aHost);  \
-  NS_IMETHOD    GetHostname(nsString& aHostname);  \
-  NS_IMETHOD    SetHostname(const nsString& aHostname);  \
-  NS_IMETHOD    GetHref(nsString& aHref);  \
-  NS_IMETHOD    SetHref(const nsString& aHref);  \
-  NS_IMETHOD    GetPathname(nsString& aPathname);  \
-  NS_IMETHOD    SetPathname(const nsString& aPathname);  \
-  NS_IMETHOD    GetPort(nsString& aPort);  \
-  NS_IMETHOD    SetPort(const nsString& aPort);  \
-  NS_IMETHOD    GetProtocol(nsString& aProtocol);  \
-  NS_IMETHOD    SetProtocol(const nsString& aProtocol);  \
-  NS_IMETHOD    GetSearch(nsString& aSearch);  \
-  NS_IMETHOD    SetSearch(const nsString& aSearch);  \
+  NS_IMETHOD    GetHash(nsAWritableString& aHash);  \
+  NS_IMETHOD    SetHash(const nsAReadableString& aHash);  \
+  NS_IMETHOD    GetHost(nsAWritableString& aHost);  \
+  NS_IMETHOD    SetHost(const nsAReadableString& aHost);  \
+  NS_IMETHOD    GetHostname(nsAWritableString& aHostname);  \
+  NS_IMETHOD    SetHostname(const nsAReadableString& aHostname);  \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref);  \
+  NS_IMETHOD    SetHref(const nsAReadableString& aHref);  \
+  NS_IMETHOD    GetPathname(nsAWritableString& aPathname);  \
+  NS_IMETHOD    SetPathname(const nsAReadableString& aPathname);  \
+  NS_IMETHOD    GetPort(nsAWritableString& aPort);  \
+  NS_IMETHOD    SetPort(const nsAReadableString& aPort);  \
+  NS_IMETHOD    GetProtocol(nsAWritableString& aProtocol);  \
+  NS_IMETHOD    SetProtocol(const nsAReadableString& aProtocol);  \
+  NS_IMETHOD    GetSearch(nsAWritableString& aSearch);  \
+  NS_IMETHOD    SetSearch(const nsAReadableString& aSearch);  \
   NS_IMETHOD    Reload(PRBool aForceget);  \
-  NS_IMETHOD    Replace(const nsString& aUrl);  \
-  NS_IMETHOD    ToString(nsString& aReturn);  \
+  NS_IMETHOD    Replace(const nsAReadableString& aUrl);  \
+  NS_IMETHOD    ToString(nsAWritableString& aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMLOCATION(_to)  \
-  NS_IMETHOD    GetHash(nsString& aHash) { return _to GetHash(aHash); } \
-  NS_IMETHOD    SetHash(const nsString& aHash) { return _to SetHash(aHash); } \
-  NS_IMETHOD    GetHost(nsString& aHost) { return _to GetHost(aHost); } \
-  NS_IMETHOD    SetHost(const nsString& aHost) { return _to SetHost(aHost); } \
-  NS_IMETHOD    GetHostname(nsString& aHostname) { return _to GetHostname(aHostname); } \
-  NS_IMETHOD    SetHostname(const nsString& aHostname) { return _to SetHostname(aHostname); } \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
-  NS_IMETHOD    SetHref(const nsString& aHref) { return _to SetHref(aHref); } \
-  NS_IMETHOD    GetPathname(nsString& aPathname) { return _to GetPathname(aPathname); } \
-  NS_IMETHOD    SetPathname(const nsString& aPathname) { return _to SetPathname(aPathname); } \
-  NS_IMETHOD    GetPort(nsString& aPort) { return _to GetPort(aPort); } \
-  NS_IMETHOD    SetPort(const nsString& aPort) { return _to SetPort(aPort); } \
-  NS_IMETHOD    GetProtocol(nsString& aProtocol) { return _to GetProtocol(aProtocol); } \
-  NS_IMETHOD    SetProtocol(const nsString& aProtocol) { return _to SetProtocol(aProtocol); } \
-  NS_IMETHOD    GetSearch(nsString& aSearch) { return _to GetSearch(aSearch); } \
-  NS_IMETHOD    SetSearch(const nsString& aSearch) { return _to SetSearch(aSearch); } \
+  NS_IMETHOD    GetHash(nsAWritableString& aHash) { return _to GetHash(aHash); } \
+  NS_IMETHOD    SetHash(const nsAReadableString& aHash) { return _to SetHash(aHash); } \
+  NS_IMETHOD    GetHost(nsAWritableString& aHost) { return _to GetHost(aHost); } \
+  NS_IMETHOD    SetHost(const nsAReadableString& aHost) { return _to SetHost(aHost); } \
+  NS_IMETHOD    GetHostname(nsAWritableString& aHostname) { return _to GetHostname(aHostname); } \
+  NS_IMETHOD    SetHostname(const nsAReadableString& aHostname) { return _to SetHostname(aHostname); } \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    SetHref(const nsAReadableString& aHref) { return _to SetHref(aHref); } \
+  NS_IMETHOD    GetPathname(nsAWritableString& aPathname) { return _to GetPathname(aPathname); } \
+  NS_IMETHOD    SetPathname(const nsAReadableString& aPathname) { return _to SetPathname(aPathname); } \
+  NS_IMETHOD    GetPort(nsAWritableString& aPort) { return _to GetPort(aPort); } \
+  NS_IMETHOD    SetPort(const nsAReadableString& aPort) { return _to SetPort(aPort); } \
+  NS_IMETHOD    GetProtocol(nsAWritableString& aProtocol) { return _to GetProtocol(aProtocol); } \
+  NS_IMETHOD    SetProtocol(const nsAReadableString& aProtocol) { return _to SetProtocol(aProtocol); } \
+  NS_IMETHOD    GetSearch(nsAWritableString& aSearch) { return _to GetSearch(aSearch); } \
+  NS_IMETHOD    SetSearch(const nsAReadableString& aSearch) { return _to SetSearch(aSearch); } \
   NS_IMETHOD    Reload(PRBool aForceget) { return _to Reload(aForceget); }  \
-  NS_IMETHOD    Replace(const nsString& aUrl) { return _to Replace(aUrl); }  \
-  NS_IMETHOD    ToString(nsString& aReturn) { return _to ToString(aReturn); }  \
+  NS_IMETHOD    Replace(const nsAReadableString& aUrl) { return _to Replace(aUrl); }  \
+  NS_IMETHOD    ToString(nsAWritableString& aReturn) { return _to ToString(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitLocationClass(nsIScriptContext *aContext, void **aPrototype);

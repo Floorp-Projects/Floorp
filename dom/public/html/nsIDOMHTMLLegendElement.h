@@ -41,29 +41,29 @@ public:
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
 
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey)=0;
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey)=0;
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey)=0;
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey)=0;
 
-  NS_IMETHOD    GetAlign(nsString& aAlign)=0;
-  NS_IMETHOD    SetAlign(const nsString& aAlign)=0;
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign)=0;
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLLEGENDELEMENT   \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey);  \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey);  \
-  NS_IMETHOD    GetAlign(nsString& aAlign);  \
-  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey);  \
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey);  \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLLEGENDELEMENT(_to)  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign) { return _to SetAlign(aAlign); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLLegendElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -38,20 +38,20 @@ class nsIDOMHTMLHtmlElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLHTMLELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetVersion(nsString& aVersion)=0;
-  NS_IMETHOD    SetVersion(const nsString& aVersion)=0;
+  NS_IMETHOD    GetVersion(nsAWritableString& aVersion)=0;
+  NS_IMETHOD    SetVersion(const nsAReadableString& aVersion)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLHTMLELEMENT   \
-  NS_IMETHOD    GetVersion(nsString& aVersion);  \
-  NS_IMETHOD    SetVersion(const nsString& aVersion);  \
+  NS_IMETHOD    GetVersion(nsAWritableString& aVersion);  \
+  NS_IMETHOD    SetVersion(const nsAReadableString& aVersion);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLHTMLELEMENT(_to)  \
-  NS_IMETHOD    GetVersion(nsString& aVersion) { return _to GetVersion(aVersion); } \
-  NS_IMETHOD    SetVersion(const nsString& aVersion) { return _to SetVersion(aVersion); } \
+  NS_IMETHOD    GetVersion(nsAWritableString& aVersion) { return _to GetVersion(aVersion); } \
+  NS_IMETHOD    SetVersion(const nsAReadableString& aVersion) { return _to SetVersion(aVersion); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLHtmlElementClass(nsIScriptContext *aContext, void **aPrototype);

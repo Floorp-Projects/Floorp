@@ -37,17 +37,17 @@ class nsIDOMCRMFObject : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCRMFOBJECT_IID; return iid; }
 
-  NS_IMETHOD    GetRequest(nsString& aRequest)=0;
+  NS_IMETHOD    GetRequest(nsAWritableString& aRequest)=0;
 };
 
 
 #define NS_DECL_IDOMCRMFOBJECT   \
-  NS_IMETHOD    GetRequest(nsString& aRequest);  \
+  NS_IMETHOD    GetRequest(nsAWritableString& aRequest);  \
 
 
 
 #define NS_FORWARD_IDOMCRMFOBJECT(_to)  \
-  NS_IMETHOD    GetRequest(nsString& aRequest) { return _to GetRequest(aRequest); } \
+  NS_IMETHOD    GetRequest(nsAWritableString& aRequest) { return _to GetRequest(aRequest); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCRMFObjectClass(nsIScriptContext *aContext, void **aPrototype);
