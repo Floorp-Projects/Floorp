@@ -73,15 +73,17 @@ public:
     NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
     NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-protected:
-    NS_IMETHOD GetParentWindowFromElement(nsIDOMElement* aElement, nsPIDOMWindow** aPWindow);
+public:
+    static nsresult GetParentWindowFromDocument(nsIDOMDocument* aElement, nsIDOMWindow** aWindow);
 
+protected:
     void* mScriptObject;       // ????
 
     // XXX THis was supposed to be WEAK, but c'mon, that's an accident
     // waiting to happen! If somebody deletes the node, then asks us
     // for the focus, we'll get killed!
-    nsCOMPtr<nsIDOMNode> mCurrentNode; // [OWNER]
+    nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
+    nsCOMPtr<nsIDOMWindow> mCurrentWindow; // [OWNER]
 
     class Updater {
     public:

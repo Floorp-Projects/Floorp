@@ -1,19 +1,23 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -26,7 +30,7 @@
 
 class nsIController;
 class nsIDOMElement;
-class nsIDOMNode;
+class nsIDOMWindow;
 class nsIControllers;
 
 #define NS_IDOMXULCOMMANDDISPATCHER_IID \
@@ -37,8 +41,11 @@ class nsIDOMXULCommandDispatcher : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULCOMMANDDISPATCHER_IID; return iid; }
 
-  NS_IMETHOD    GetFocusedNode(nsIDOMNode** aFocusedNode)=0;
-  NS_IMETHOD    SetFocusedNode(nsIDOMNode* aFocusedNode)=0;
+  NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement)=0;
+  NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement)=0;
+
+  NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow)=0;
+  NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow)=0;
 
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets)=0;
 
@@ -53,8 +60,10 @@ public:
 
 
 #define NS_DECL_IDOMXULCOMMANDDISPATCHER   \
-  NS_IMETHOD    GetFocusedNode(nsIDOMNode** aFocusedNode);  \
-  NS_IMETHOD    SetFocusedNode(nsIDOMNode* aFocusedNode);  \
+  NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement);  \
+  NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement);  \
+  NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow);  \
+  NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow);  \
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets);  \
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater);  \
   NS_IMETHOD    UpdateCommands(const nsString& aEventName);  \
@@ -64,8 +73,10 @@ public:
 
 
 #define NS_FORWARD_IDOMXULCOMMANDDISPATCHER(_to)  \
-  NS_IMETHOD    GetFocusedNode(nsIDOMNode** aFocusedNode) { return _to GetFocusedNode(aFocusedNode); } \
-  NS_IMETHOD    SetFocusedNode(nsIDOMNode* aFocusedNode) { return _to SetFocusedNode(aFocusedNode); } \
+  NS_IMETHOD    GetFocusedElement(nsIDOMElement** aFocusedElement) { return _to GetFocusedElement(aFocusedElement); } \
+  NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement) { return _to SetFocusedElement(aFocusedElement); } \
+  NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow) { return _to GetFocusedWindow(aFocusedWindow); } \
+  NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow) { return _to SetFocusedWindow(aFocusedWindow); } \
   NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets) { return _to AddCommandUpdater(aUpdater, aEvents, aTargets); }  \
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater) { return _to RemoveCommandUpdater(aUpdater); }  \
   NS_IMETHOD    UpdateCommands(const nsString& aEventName) { return _to UpdateCommands(aEventName); }  \

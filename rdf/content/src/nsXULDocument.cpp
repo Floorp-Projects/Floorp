@@ -601,11 +601,11 @@ nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
     return NS_OK;
 }
 
-void
-nsXULDocument::SetDocumentURLAndGroup(nsIURI* anURL)
+NS_IMETHODIMP
+nsXULDocument::SetDocumentURL(nsIURI* anURL)
 {
     mDocumentURL = dont_QueryInterface(anURL);
-    // XXX help
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2021,6 +2021,19 @@ nsXULDocument::ResolveForwardReferences()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::SetMasterPrototype(nsIXULPrototypeDocument* aDocument)
+{
+  mMasterPrototype = aDocument;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::SetCurrentPrototype(nsIXULPrototypeDocument* aDocument)
+{
+  mCurrentPrototype = aDocument;
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 //
@@ -4360,8 +4373,7 @@ nsXULDocument::PrepareToWalk()
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-        NS_ASSERTION(group != nsnull, "no load group");
-
+        
         if (group) {
             rv = mPlaceholderChannel->SetLoadGroup(group);
             if (NS_FAILED(rv)) return rv;

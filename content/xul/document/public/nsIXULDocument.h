@@ -46,6 +46,7 @@ class nsIRDFContentModelBuilder;
 class nsIRDFResource;
 class nsISupportsArray;
 class nsIXULPrototypeDocument;
+class nsIURI;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IRDFDOCUMENT_IID \
@@ -56,6 +57,7 @@ class nsIXULPrototypeDocument;
  */
 
 class nsIRDFDataSource;
+class nsIXULPrototypeDocument;
 
 class nsIXULDocument : public nsIXMLDocument
 {
@@ -105,6 +107,26 @@ public:
    * Resolve the all of the document's forward references.
    */
   NS_IMETHOD ResolveForwardReferences() = 0;
+
+  /**
+   * Set the master prototype.
+   */
+  NS_IMETHOD SetMasterPrototype(nsIXULPrototypeDocument* aDocument) = 0;
+
+  /**
+   * Set the current prototype
+   */
+  NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument) = 0;
+
+  /**
+   * Set the doc's URL
+   */
+  NS_IMETHOD SetDocumentURL(nsIURI* aURI) = 0;
+
+  /**
+   * Load inline and attribute style sheets
+   */
+  NS_IMETHOD PrepareStyleSheets(nsIURI* aURI) = 0;
 };
 
 // factory functions
