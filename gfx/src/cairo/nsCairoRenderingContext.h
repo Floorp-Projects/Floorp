@@ -199,6 +199,8 @@ public:
 
     NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) { return NS_OK; }
 
+    cairo_t *GetCairo() { return mCairo; }
+
 protected:
     PRBool DoCairoDrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
     void DoCairoDrawEllipse (double aX, double aY, double aWidth, double aHeight);

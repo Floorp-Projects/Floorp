@@ -90,6 +90,7 @@ protected:
 
     cairo_surface_t *mImageSurface;
     char *mImageSurfaceData;
+    char *mImageSurfaceAlpha;
 };
 
 #endif // NSCAIROIMAGE__H__

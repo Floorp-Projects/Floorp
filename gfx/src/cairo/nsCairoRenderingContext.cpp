@@ -738,8 +738,8 @@ nsCairoRenderingContext::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 NS_IMETHODIMP
 nsCairoRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
 {
-//    *aUseBackbuffer = PR_FALSE;
-    *aUseBackbuffer = PR_TRUE;
+    *aUseBackbuffer = PR_FALSE;
+//    *aUseBackbuffer = PR_TRUE;
     return NS_OK;
 }
 
@@ -834,11 +834,10 @@ nsCairoRenderingContext::DrawImage(imgIContainer *aImage,
 
     img->LockImagePixels(PR_FALSE);
 
-    /* XXX
-    img->Draw(*this, mCairo,
+    img->Draw(*this, mDrawingSurface,
               sr.x, sr.y, sr.width, sr.height,
               dr.x, dr.y, dr.width, dr.height);
-    */
+
     img->UnlockImagePixels(PR_FALSE);
  
     return NS_OK;
@@ -857,11 +856,11 @@ nsCairoRenderingContext::DrawTile(imgIContainer *aImage,
     if (!img) return NS_ERROR_FAILURE;
 
     img->LockImagePixels(PR_FALSE);
-    /* XXX
-    img->Draw(*this, mCairo,
+
+    img->Draw(*this, mDrawingSurface,
               aXOffset, aYOffset, aTargetRect->width, aTargetRect->height,
               aTargetRect->x, aTargetRect->y, aTargetRect->width, aTargetRect->height);
-    */
+
     img->UnlockImagePixels(PR_FALSE);
 
     return NS_OK;
