@@ -49,11 +49,11 @@ function calMemoryCalendar() {
 function makeOccurrence(item, start, end)
 {
     var occ = Components.classes["@mozilla.org/calendar/item-occurrence;1"].
-        createInstance(calIItemOccurrence);
+        createInstance(Components.interfaces.calIItemOccurrence);
     // XXX poor form
     occ.wrappedJSObject.item = item;
-    occ.wrappedJSObject.occurrenceStartDate = item.start;
-    occ.wrappedJSObject.occurrenceEndDate = item.end;
+    occ.wrappedJSObject.occurrenceStartDate = start;
+    occ.wrappedJSObject.occurrenceEndDate = end;
     return occ;
 }
 
