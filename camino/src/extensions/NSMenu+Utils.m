@@ -35,8 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "NSMenu+Utils.h"
+#import "NSResponder+Utils.h"
 
+#import "NSMenu+Utils.h"
 
 @implementation NSMenu(ChimeraMenuUtils)
 
@@ -71,7 +72,7 @@
 {
   NSArray* menuItems = [self itemArray];
 
-  int i;
+  unsigned int i;
   for (i = inFirstItem; i < [menuItems count]; i ++)
   {
     id<NSMenuItem> curItem = [self itemAtIndex:i];
@@ -83,6 +84,12 @@
   }
 }
 
+- (id<NSMenuItem>)itemWithTarget:(id)anObject andAction:(SEL)actionSelector
+{
+  int itemIndex = [self indexOfItemWithTarget:anObject andAction:actionSelector];
+  return [self itemAtIndex:itemIndex];
+}
+
 @end
 
 
@@ -91,6 +98,12 @@
 - (int)tagRemovingMask:(int)tagMask
 {
   return ([self tag] & ~tagMask);
+}
+
+- (void)takeStateFromItem:(id<NSMenuItem>)inItem
+{
+  [self setTitle:[inItem title]];
+  [self setEnabled:[inItem isEnabled]];
 }
 
 @end

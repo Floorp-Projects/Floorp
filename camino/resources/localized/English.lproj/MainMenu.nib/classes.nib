@@ -66,6 +66,7 @@
             OUTLETS = {
                 mAddBookmarkMenuItem = NSMenuItem; 
                 mApplication = NSApplication; 
+                mBookmarksHelperMenu = NSMenu; 
                 mBookmarksMenu = NSMenu; 
                 mBookmarksToolbarMenuItem = NSMenuItem; 
                 mCloseTabMenuItem = NSMenuItem; 

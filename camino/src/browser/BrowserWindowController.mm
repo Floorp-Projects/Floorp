@@ -2265,7 +2265,7 @@ enum BWCOpenDest {
   }
 }
 
-- (void)createNewTab:(ENewTabContents)contents;
+- (void)createNewTab:(ENewTabContents)contents
 {
     BrowserTabViewItem* newTab  = [self createNewTabItem];
     BrowserWrapper*     newView = [newTab view];
@@ -2317,8 +2317,6 @@ enum BWCOpenDest {
   {
     [[[mTabBrowser selectedTabViewItem] view] windowClosed];
     [mTabBrowser removeTabViewItem:[mTabBrowser selectedTabViewItem]];
-
-    [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
   }
 }
 
@@ -2336,6 +2334,8 @@ enum BWCOpenDest {
     [mTabBrowser selectFirstTabViewItem:sender];
   else
     [mTabBrowser selectNextTabViewItem:sender];
+
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
 }
 
 - (IBAction)closeSendersTab:(id)sender
@@ -2433,6 +2433,8 @@ enum BWCOpenDest {
 
   if (![self userChangedLocationField] && [[self window] isKeyWindow])
     [mBrowserView setBrowserActive:YES];
+
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
 }
 
 - (void)tabView:(NSTabView *)aTabView willSelectTabViewItem:(NSTabViewItem *)aTabViewItem
@@ -2506,7 +2508,7 @@ enum BWCOpenDest {
 // open a new tab, but doesn't load anything into it. Must be matched
 // with a call to do that.
 //
-- (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG;
+- (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG
 {
   BrowserTabViewItem* newTab  = [self createNewTabItem];
 
@@ -2534,13 +2536,13 @@ enum BWCOpenDest {
   return newTab;
 }
 
--(void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
+-(void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG
 {
   BrowserWindowController* browser = [self openNewWindow:aLoadInBG];
   [[[browser getBrowserWrapper] getBrowserView] setPageDescriptor:aDesc displayType:aDisplayType];
 }
 
--(void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
+-(void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG
 {
   BrowserTabViewItem* newTab = [self openNewTab:aLoadInBG];
   [[[newTab view] getBrowserView] setPageDescriptor:aDesc displayType:aDisplayType];
@@ -3107,7 +3109,7 @@ enum BWCOpenDest {
   return sInsecureIcon;
 }
 
-+ (NSImage*) secureIcon;
++ (NSImage*) secureIcon
 {
   static NSImage* sSecureIcon = nil;
   if (!sSecureIcon)
@@ -3115,7 +3117,7 @@ enum BWCOpenDest {
   return sSecureIcon;
 }
 
-+ (NSImage*) brokenIcon;
++ (NSImage*) brokenIcon
 {
   static NSImage* sBrokenIcon = nil;
   if (!sBrokenIcon)
@@ -3281,7 +3283,6 @@ enum BWCOpenDest {
   }
   return handled;
 }
-
 
 @end
 

@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
+ *   Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,11 +50,17 @@
 // optionally recursing into submenus.
 - (void)setAllItemsEnabled:(BOOL)inEnable startingWithItemAtIndex:(int)inFirstItem includingSubmenus:(BOOL)includeSubmenus;
 
+// return the first item (if any) with the given target and action.
+- (id<NSMenuItem>)itemWithTarget:(id)anObject andAction:(SEL)actionSelector;
+
 @end
 
 
 @interface NSMenuItem(ChimeraMenuItemUtils)
 
 - (int)tagRemovingMask:(int)tagMask;
+
+// copy the title and enabled state from the given item
+- (void)takeStateFromItem:(id<NSMenuItem>)inItem;
 
 @end

@@ -111,6 +111,7 @@ const int kReuseWindowOnAE = 2;
 - (NSMenu*)bookmarksMenu;
 - (BOOL)bookmarksItemsEnabled;
 - (void)adjustBookmarkMenuItems;
+- (void)doBookmarksMenuEnabling;
 - (void)windowLayeringDidChange:(NSNotification*)inNotifiction;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
 
@@ -182,10 +183,17 @@ const int kReuseWindowOnAE = 2;
 
   [mFindDialog release];
   [mKeychainService release];
+  
   [super dealloc];
 #if DEBUG
   NSLog(@"Main controller died");
 #endif
+}
+
+- (void)awakeFromNib
+{
+  // Be aware that we load a secondary nib for the accessory views, so this
+  // will get called more than once.
 }
 
 -(void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -298,9 +306,7 @@ const int kReuseWindowOnAE = 2;
 
 - (void)windowLayeringDidChange:(NSNotification*)inNotifiction
 {
-  // The key window isn't set until after this notification is processed, so we have to delay the actual
-  // menu update.
-  [self performSelectorOnMainThread:@selector(adjustBookmarksMenuItemsEnabling) withObject:nil waitUntilDone:NO];
+  [self adjustBookmarksMenuItemsEnabling];
 }
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
@@ -810,6 +816,14 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
                                  menuEventList, (void*)self, NULL);
 }
 
+
+- (void)adjustBookmarksMenuItemsEnabling
+{
+  // we do this after a delay to ensure that window layer state has been set by the time
+  // we do the enabling.
+  [self performSelectorOnMainThread:@selector(doBookmarksMenuEnabling) withObject:nil waitUntilDone:NO];
+}
+
 //
 // -adjustBookmarksMenuItemsEnabling
 //
@@ -817,35 +831,21 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
 // number of bookmarks in the list so we have to manage it manually. This routine
 // should be called whenever a window goes away, becomes main, or is no longer main.
 //
-- (void)adjustBookmarksMenuItemsEnabling
+- (void)doBookmarksMenuEnabling
 {
-  NSResponder* firstResponder = [[NSApp keyWindow] firstResponder];
-  [mAddBookmarkMenuItem               setEnabled:([firstResponder responderForAction:[mAddBookmarkMenuItem action]] != nil)];
-  [mCreateBookmarksFolderMenuItem     setEnabled:([firstResponder responderForAction:[mCreateBookmarksFolderMenuItem action]] != nil)];
-  [mCreateBookmarksSeparatorMenuItem  setEnabled:([firstResponder responderForAction:[mCreateBookmarksSeparatorMenuItem action]] != nil)];
+  // update our stand-in menu by hand (because it doesn't get autoupdated)
+  [mBookmarksHelperMenu update];
 
-  BOOL browserWindowIsMain  = [[[NSApp mainWindow] delegate] isMemberOfClass:[BrowserWindowController class]];
-  BOOL showBookmarksEnabled = [self bookmarksItemsEnabled];
-  BOOL useShowLabel = YES;
-  if (browserWindowIsMain)
-  {
-    BrowserWindowController* browserController = (BrowserWindowController*)[[NSApp mainWindow] delegate];
-    if ([browserController bookmarkManagerIsVisible])
-    {
-      useShowLabel = NO;
-      showBookmarksEnabled = [browserController canHideBookmarks];
-    }    
-    else
-    {
-      useShowLabel = YES;
-    }
-  }
+  [mAddBookmarkMenuItem               takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mAddBookmarkMenuItem target]
+                                                                                   andAction:[mAddBookmarkMenuItem action]]];
+  [mCreateBookmarksFolderMenuItem     takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mCreateBookmarksFolderMenuItem target]
+                                                                                   andAction:[mCreateBookmarksFolderMenuItem action]]];
+  [mCreateBookmarksSeparatorMenuItem  takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mCreateBookmarksSeparatorMenuItem target]
+                                                                                   andAction:[mCreateBookmarksSeparatorMenuItem action]]];
+  [mShowAllBookmarksMenuItem          takeStateFromItem:[mBookmarksHelperMenu itemWithTarget:[mShowAllBookmarksMenuItem target]
+                                                                                   andAction:[mShowAllBookmarksMenuItem action]]];
 
-  NSString* showBMLabel = useShowLabel ? NSLocalizedString(@"Show All Bookmarks", @"")
-                                       : NSLocalizedString(@"Hide All Bookmarks", @"");
-                                       
-  [mShowAllBookmarksMenuItem setTitle:showBMLabel];
-  [mShowAllBookmarksMenuItem setEnabled:showBookmarksEnabled];
+  // We enable bookmark items themselves from the carbon event handler that fires before the menu is shown.
 }
 
 - (NSMenu*)bookmarksMenu
@@ -855,34 +855,9 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
 
 - (BOOL)bookmarksItemsEnabled
 {
-  BOOL enableItems = YES;
-  
-  // NSLog(@"Main window %@, key window %@", [NSApp mainWindow], [NSApp keyWindow]);
-  
-  // I can't help thinking that there's an easier way, via NSResponder-type logic
-  // XXX this isn't quite right yet. It disables stuff when the toolbar customization
-  // sheet is up, which is unnecessary.
-  NSEnumerator* windowEnum = [[NSApp windows] objectEnumerator];
-  NSWindow* curWindow;
-  while ((curWindow = [windowEnum nextObject]))
-  {
-    if (![curWindow isVisible])
-      continue;
-
-    if ([curWindow level] == NSModalPanelWindowLevel)
-    {
-      enableItems = NO;
-      break;
-    }
-    
-    if ([curWindow isSheet])
-    {
-      enableItems = NO;
-      break;
-    }
-  }
-    
-  return enableItems;
+  // since this menu is not in the menu bar, we have to update it by hand
+  [mBookmarksHelperMenu update];
+  return [[mBookmarksHelperMenu itemWithTarget:self andAction:@selector(openMenuBookmark:)] isEnabled];
 }
 
 - (void)adjustBookmarkMenuItems
@@ -1079,7 +1054,7 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
 //
 // toggle the bookmark manager (creating a new window if needed)
 //
--(IBAction)manageBookmarks: (id)aSender
+-(IBAction)manageBookmarks:(id)aSender
 {
   NSWindow* browserWindow = [self getFrontmostBrowserWindow];
   if (!browserWindow) {
@@ -1090,7 +1065,7 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   [[browserWindow windowController] manageBookmarks: aSender];
 }
 
-- (void)displayPreferencesWindow:sender
+- (void)displayPreferencesWindow:(id)sender
 {
   [[MVPreferencesController sharedInstance] showPreferences:nil];
 }
@@ -1171,7 +1146,7 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   }
 }
 
--(BOOL)validateMenuItem: (NSMenuItem*)aMenuItem
+-(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
 
@@ -1258,9 +1233,11 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
   {
     return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
   }
-
+  
+#if 0
   if (action == @selector(addBookmark:))
     return (browserController && ![[browserController getBrowserWrapper] isEmpty]);
+#endif
   
   if (action == @selector(biggerTextSize:))
     return (browserController &&
@@ -1291,7 +1268,17 @@ static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef 
       return NO;
   }
   
-  if (action == @selector(sendURL:)) {
+  if (action == @selector(manageBookmarks:))
+  {
+    BOOL showingBookmarks = (browserController && [browserController bookmarkManagerIsVisible]);
+    NSString* showBMLabel = showingBookmarks ? NSLocalizedString(@"Hide All Bookmarks", @"")
+                                             : NSLocalizedString(@"Show All Bookmarks", @"");
+    [aMenuItem setTitle:showBMLabel];
+    return showingBookmarks ? [browserController canHideBookmarks] : YES;
+  }
+  
+  if (action == @selector(sendURL:))
+  {
     NSString* titleString = nil;
     NSString* urlString = nil;
     [[[self getMainWindowBrowserController] getBrowserWrapper] getTitle:&titleString andHref:&urlString];

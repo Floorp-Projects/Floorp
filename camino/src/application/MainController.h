@@ -77,6 +77,8 @@ typedef enum EBookmarkOpenBehavior
     IBOutlet NSMenu*        mBookmarksMenu;
     IBOutlet NSMenu*        mDockMenu;
     IBOutlet NSMenu*        mServersSubmenu;
+
+    IBOutlet NSMenu*        mBookmarksHelperMenu; // not shown, used to get enable state
 	
     IBOutlet NSMenuItem*    mBookmarksToolbarMenuItem;
     IBOutlet NSMenuItem*    mAddBookmarkMenuItem;
@@ -177,7 +179,7 @@ typedef enum EBookmarkOpenBehavior
 - (void)setupBookmarkMenus:(BookmarkManager *)BookmarkManager;
 - (void)loadBookmark:(BookmarkItem*)item withWindowController:(BrowserWindowController*)browserWindowController openBehavior:(EBookmarkOpenBehavior)behavior;
 
-- (void)displayPreferencesWindow:sender;
+- (void)displayPreferencesWindow:(id)sender;
 - (BOOL)isMainWindowABrowserWindow;
 
 // if the main window is a browser window, return its controller, otherwise nil

@@ -3,13 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>IBDocumentLocation</key>
-	<string>100 49 608 498 0 0 1600 1002 </string>
+	<string>53 17 409 367 0 0 1600 1002 </string>
 	<key>IBEditorPositions</key>
 	<dict>
 		<key>29</key>
-		<string>471 684 433 44 0 0 1600 1002 </string>
+		<string>274 731 433 44 0 0 1600 1002 </string>
 		<key>494</key>
-		<string>507 508 116 61 0 0 1152 848 </string>
+		<string>726 607 116 61 0 0 1600 1002 </string>
+		<key>670</key>
+		<string>398 459 199 118 0 0 1600 1002 </string>
 	</dict>
 	<key>IBFramework Version</key>
 	<string>364.0</string>
