@@ -1481,8 +1481,6 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
 
   // extract cookie <NAME> & <VALUE> (first attribute), and copy the strings.
   // if we find multiple cookies, return for processing
-  // note: if there's no '=', we assume token is NAME, not VALUE.
-  //       the old code assumed VALUE instead.
   // note: if there's no '=', we assume token is <VALUE>. this is required by
   //       some sites (see bug 169091).
   // XXX fix the parser to parse according to <VALUE> grammar for this case
