@@ -84,9 +84,11 @@ nsNativeButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoo
 {
  	nsIButton* button = nsnull;
   if (mWidget && (NS_OK == mWidget->QueryInterface(kIButtonIID,(void**)&button))) {
-    nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
-    GetFont(aPresContext, font);
-    mWidget->SetFont(font);
+    const nsFont * font = nsnull;
+    nsresult res = GetFont(aPresContext, font);
+    if (NS_SUCCEEDED(res) && font != nsnull) {
+      mWidget->SetFont(*font);
+    }
     SetColors(aPresContext);
 
     nsAutoString value;

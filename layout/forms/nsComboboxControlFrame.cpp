@@ -277,8 +277,8 @@ nsComboboxControlFrame::GetFormContent(nsIContent*& aContent) const
 
 //--------------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::GetFont(nsIPresContext*        aPresContext, 
-                             nsFont&                aFont)
+nsComboboxControlFrame::GetFont(nsIPresContext* aPresContext, 
+                                const nsFont*&  aFont)
 {
   nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
   return NS_OK;

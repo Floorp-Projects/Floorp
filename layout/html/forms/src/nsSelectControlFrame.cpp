@@ -553,9 +553,11 @@ nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   }
 
   mWidget->Enable(!nsFormFrame::GetDisabled(this));
-  nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
-  GetFont(aPresContext, font);
-  mWidget->SetFont(font);
+  const nsFont * font = nsnull;
+  nsresult res = GetFont(aPresContext, font);
+  if (NS_SUCCEEDED(res) && font != nsnull) {
+    mWidget->SetFont(font);
+  }
   SetColors(aPresContext);
 
   // add the options 
@@ -874,10 +876,12 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext* aPresContext,
 
   aRenderingContext.SetColor(NS_RGB(0,0,0));
 
-  nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
-  GetFont(aPresContext, font);
+  const nsFont * font = nsnull;
+  nsresult res = GetFont(aPresContext, font);
+  if (NS_SUCCEEDED(res) && font != nsnull) {
+    aRenderingContext.SetFont(font);
+  }
 
-  aRenderingContext.SetFont(font);
 
   //nscoord textWidth;
   nscoord textHeight;

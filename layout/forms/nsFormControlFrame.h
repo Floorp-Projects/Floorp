@@ -192,7 +192,7 @@ public:
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                    nsFont&         aFont);
+                     const nsFont*&  aFont);
 
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
 

@@ -119,7 +119,7 @@ public:
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                    nsFont&         aFont);
+                     const nsFont*&  aFont);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;

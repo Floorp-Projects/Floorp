@@ -610,9 +610,11 @@ nsNativeSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   }
   
   mWidget->Enable(!nsFormFrame::GetDisabled(this));
-  nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
-  GetFont(aPresContext, font);
-  mWidget->SetFont(font);
+  const nsFont * font;
+  nsresult res = GetFont(aPresContext, font);
+  if (NS_SUCCEEDED(res) && font != nsnull) {
+    mWidget->SetFont(*font);
+  }
   SetColors(aPresContext);
 
   // add the options 
@@ -932,10 +934,12 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext* aPresContext,
 
   aRenderingContext.SetColor(NS_RGB(0,0,0));
 
-  nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
-  GetFont(aPresContext, font);
-
-  aRenderingContext.SetFont(font);
+  const nsFont * font = nsnull;
+  nsresult res = GetFont(aPresContext, font);
+  if (NS_SUCCEEDED(res) && font != nsnull) {
+    mWidget->SetFont(*font);
+    aRenderingContext.SetFont(*font);
+  }
 
   //nscoord textWidth;
   nscoord textHeight;
@@ -943,7 +947,9 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext* aPresContext,
 
   // Calculate the height of the text
   nsIFontMetrics* metrics;
-  context->GetMetricsFor(font, metrics);
+  if (font != nsnull) {
+    context->GetMetricsFor(*font, metrics);
+  }
   metrics->GetHeight(textHeight);
 
   // Calculate the width of the scrollbar

@@ -100,7 +100,7 @@ public:
   void           ScrollIntoView(nsIPresContext* aPresContext);
 
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                    nsFont&         aFont);
+                     const nsFont*&  aFont);
 
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
   virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
