@@ -40,7 +40,7 @@
 
 #include "nsIPluginInstancePeer2.h"
 #include "nsIWindowlessPlugInstPeer.h"
-#include "nsIPluginTagInfo.h"
+#include "nsIPluginTagInfo2.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIJVMPluginTagInfo.h"
 #include "nsPIPluginInstancePeer.h"

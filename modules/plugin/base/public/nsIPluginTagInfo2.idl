@@ -35,25 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsIPluginTagInfo.idl"
-
-interface nsIDOMElement;
-
 /**
  * nsIPluginTagInfo2
  *
@@ -64,27 +45,32 @@ interface nsIDOMElement;
  * http://mozilla.org/projects/plugins/
  */
 
-[scriptable, uuid(e4003382-2dfd-11d4-8cf4-0060b0fc14a3)]
+#include "nsIPluginTagInfo.idl"
+
+%{C++
+enum nsPluginTagType {
+  nsPluginTagType_Unknown,
+  nsPluginTagType_Embed,
+  nsPluginTagType_Object,
+  nsPluginTagType_Applet
+};
+%}
+
+native nsPluginTagType(nsPluginTagType);
+
+[uuid(6a49c9a0-019b-11d2-815b-006008119d7a)]
 interface nsIPluginTagInfo2 : nsIPluginTagInfo
 {
-    // QueryInterface on nsIPluginInstancePeer to get this.
-
-    const unsigned long TAGTYPE_UNKNOWN = 0;
-    const unsigned long TAGTYPE_EMBED   = 1;
-    const unsigned long TAGTYPE_OBJECT  = 2;
-    const unsigned long TAGTYPE_APPLET  = 3;
-
     /**
      * Get the type of the HTML tag that was used ot instantiate this
      * plugin.  Currently supported tags are EMBED, OBJECT and APPLET.
      */
-    readonly attribute unsigned long tagType;
+  readonly attribute nsPluginTagType tagType;
 
     /**
-     * Get the complete text of the HTML tag that was
-     * used to instantiate this plugin.
+   * Get the complete text of the HTML tag that was used to instantiate this plugin.
      */
-    readonly attribute wstring tagText;
+  void getTagText(out constCharPtr aTagText);
 
     /**
      * Get a ptr to the paired list of parameter names and values,
@@ -92,40 +78,58 @@ interface nsIPluginTagInfo2 : nsIPluginTagInfo
      *
      * Each name or value is a null-terminated string.
      */
-    void getParameters(out unsigned long count,
-                       [array, size_is(count)] out wstring names,
-                       [array, size_is(count)] out wstring values);
+  void getParameters(in PRUint16Ref aCount,
+                     in constCharStarConstStar aNames,
+                     in constCharStarConstStar aValues);
 
     /**
      * Get the value for the named parameter.  Returns null
      * if the parameter was not set.
-     * @result - NS_OK if this operation was successful, NS_ERROR_FAILURE if
-     * this operation failed. result is set to NULL if the attribute is not found
-     * else to the found value.
+   *
+   * @param aName   - name of the parameter
+   * @param aResult - parameter value
+   * @result        - NS_OK if this operation was successful
      */
-    wstring getParameter(in wstring name);
+  void getParameter(in string aName, out constCharPtr aResult);
 
-    readonly attribute wstring documentBase;
+  /**
+   * Get the document base
+   */
+  void getDocumentBase(out constCharPtr aDocumentBase);
     
     /**
      * Return an encoding whose name is specified in:
      * http://java.sun.com/products/jdk/1.1/docs/guide/intl/intl.doc.html#25303
      */
-    readonly attribute string documentEncoding;
+  void getDocumentEncoding(out constCharPtr aDocumentEncoding);
 
-    readonly attribute string alignment;
+  /**
+   * Get object alignment
+   */
+  void getAlignment(out constCharPtr aElignment);
 
+  /**
+   * Get object width
+   */
     readonly attribute unsigned long width;
 
+  /**
+   * Get object height
+   */
     readonly attribute unsigned long height;
 
+  /**
+   * Get border vertical space
+   */
     readonly attribute unsigned long borderVertSpace;
 
+  /**
+   * Get border horizontal space
+   */
     readonly attribute unsigned long borderHorizSpace;
 
     /**
-     * Returns a unique id for the current document on which the
-     * plugin is displayed.
+   * Returns a unique id for the current document containing plugin
      */
     readonly attribute unsigned long uniqueID;
 
@@ -133,7 +137,7 @@ interface nsIPluginTagInfo2 : nsIPluginTagInfo
      * Returns the DOM element corresponding to the tag which references
      * this plugin in the document.
      *
-     * @param result - resulting DOM element
+   * @param aDOMElement - resulting DOM element
      * @result - NS_OK if this operation was successful
      */
     readonly attribute nsIDOMElement DOMElement;

@@ -35,26 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsISupports.idl"
-%{C++
-#include "nsplugindefs.h"
-%}
-
 /**
  * nsIPluginManager
  *
@@ -64,6 +44,13 @@
  * Developers are welcome to use NPAPI, please refer to:
  * http://mozilla.org/projects/plugins/
  */
+
+#include "nsISupports.idl"
+#include "nspluginroot.idl"
+
+%{C++
+#include "nsplugindefs.h"
+%}
 
 // CLSID for the browser's global plugin manager object.
 %{C++
@@ -77,10 +64,6 @@
 %}
 
 interface nsIPluginStreamListener;
-native nsPluginManagerVariable(nsPluginManagerVariable);
-native REFNSIID(REFNSIID);
-native nativeVoid(void *);
-native nativeChar(const char * *);
 
 [scriptable, uuid(da58ad80-4eb6-11d2-8164-006008119d7a)]
 
@@ -93,7 +76,6 @@ native nativeChar(const char * *);
 
 interface nsIPluginManager : nsISupports
 {
-
     /**
      * Returns the value of a variable associated with the plugin manager.
      *
@@ -103,8 +85,7 @@ interface nsIPluginManager : nsISupports
      * @param value - the address of where to store the resulting value
      * @result - NS_OK if this operation was successful
      */
-     [noscript] void GetValue(in nsPluginManagerVariable variable, 
-			         in nativeVoid value);
+   [noscript] void GetValue(in nsPluginManagerVariable variable, in nativeVoid value);
 
     /**
      * Causes the plugins directory to be searched again for new plugin 
@@ -240,23 +221,18 @@ interface nsIPluginManager : nsISupports
      */
      [noscript] void UnregisterPlugin(in REFNSIID aCID);
 
+%{C++
     /**
      * Fetches a URL, with Headers
-
      * @see GetURL.  Identical except for additional params headers and
      * headersLen
-
      * @param getHeadersLength - the length of getHeaders (if non-NULL)
-
      * @param getHeaders - the headers to GET. Must be in the form of
      * "HeaderName: HeaderValue\r\n".  Each header, including the last,
      * must be followed by "\r\n".  NULL specifies that there are no
      * get headers
-
      * @result - NS_OK if this operation was successful
-
      */
-%{C++
     NS_IMETHOD
     GetURLWithHeaders(nsISupports* pluginInst,
                       const char* url,
@@ -268,6 +244,4 @@ interface nsIPluginManager : nsISupports
                       PRUint32 getHeadersLength = 0,
                       const char* getHeaders = NULL) = 0;
 %}
-
 };
-

@@ -35,23 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsPluginDefs.idl"
-
 /**
  * nsIJRILiveConnectPlugin
  *
@@ -61,6 +44,13 @@
  * Developers are welcome to use NPAPI, please refer to:
  * http://mozilla.org/projects/plugins/
  */
+
+#include "nsISupports.idl"
+#include "nspluginroot.idl"
+
+%{C++
+#include "jri.h"
+%}
 
 /** 
  * The nsIJRILiveConnectPlugin interface defines additional entry points that a
@@ -78,10 +68,11 @@ interface nsIJRILiveConnectPlugin : nsISupports
      * Returns the class of the Java instance to be associated with the
      * plugin.
      *
-     * (Corresponds to NPP_GetJavaClass.)
+   * (New JNI-based entry point, roughly corresponds to NPP_GetJavaClass.)
      *
-     * @result - a resulting reference to the Java class
+   * @param aJavaClass - a resulting reference to the Java class
+   * @result           - NS_OK if this operation was successful
      */
-    jref getJavaClass(in JRIEnvStar env);
+  void getJavaClass(in JRIEnvPtr aEnv, out jref aJavaClass);
 };
 

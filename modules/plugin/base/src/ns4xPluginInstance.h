@@ -48,11 +48,16 @@
 #define _INT32
 #endif /* HPUX11 */
 
-#include "nsplugin.h"
+#include "nsCOMPtr.h"
+#include "nsIPlugin.h"
+#include "nsIPluginInstance.h"
+#include "nsIPluginInstancePeer.h"
+#include "nsIPluginTagInfo2.h"
+#include "nsIScriptablePlugin.h"
+
 #include "npupp.h"
 #include "jri.h"
 #include "prlink.h"  // for PRLibrary
-#include "nsIScriptablePlugin.h"
 
 #if defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>

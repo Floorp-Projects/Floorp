@@ -35,23 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsIPluginInstancePeer.idl"
-
 /**
  * nsIPluginInstancePeer2
  *
@@ -62,33 +45,46 @@
  * http://mozilla.org/projects/plugins/
  */
 
+#include "nsIPluginInstancePeer.idl"
+
+%{C++
+struct JSObject;
+struct JSContext;
+%}
+
+[ptr] native JSObjectPtr(JSObject);
+[ptr] native JSContextPtr(JSContext);
+
 /**
  * The nsIPluginInstancePeer2 interface extends the nsIPluginInstancePeer
  * interface, providing access to functionality provided by newer browsers.
  * All functionality in nsIPluginInstancePeer can be mapped to the 4.X
  * plugin API.
  */
-[scriptable, uuid(e7d48c00-e1f1-11d2-8360-fbc8abc4ae7c)]
+[uuid(e7d48c00-e1f1-11d2-8360-fbc8abc4ae7c)]
 interface nsIPluginInstancePeer2 : nsIPluginInstancePeer
 {
     /**
      * Get the JavaScript window object corresponding to this plugin instance.
      *
-     * @result - the resulting JavaScript window object
+   * @param aJSWindow - the resulting JavaScript window object
+   * @result          - NS_OK if this operation was successful
      */
-    [noscript] readonly attribute JSObjectPtr JSWindow;
+  readonly attribute JSObjectPtr JSWindow;
 	
 	/**
 	 * Get the JavaScript execution thread corresponding to this plugin instance.
 	 *
-	 * @result - the resulting JavaScript thread
+   * @param aJSThread - the resulting JavaScript thread id
+   * @result            - NS_OK if this operation was successful
 	 */
     readonly attribute unsigned long JSThread;
 
 	/**
 	 * Get the JavaScript context to this plugin instance.
 	 *
-	 * @result - the resulting JavaScript context
+   * @param aJSContext - the resulting JavaScript context
+   * @result           - NS_OK if this operation was successful
 	 */
-    [noscript] readonly attribute JSContextPtr JSContext;
+  readonly attribute JSContextPtr JSContext;
 };

@@ -35,23 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsPluginDefs.idl"
-
 /**
  * nsIPluginInstance
  *
@@ -62,8 +45,14 @@
  * http://mozilla.org/projects/plugins/
  */
 
-////////////////////////////////////////////////////////////////////////////////
-// Plugin Instance Interface
+#include "nsISupports.idl"
+#include "nsIPluginStreamListener.idl"
+
+%{C++
+#include "nsplugindefs.h"
+%}
+
+interface nsIPluginInstancePeer;
 
 /**
  * The nsIPluginInstance interface is the minimum interface plugin developers
@@ -82,16 +71,17 @@
  * Destroy -- called once, before the plugin instance peer is to be 
  * destroyed. This method is used to destroy the plugin instance.
  */
-[scriptable, uuid(f69b5c56-2de9-11d4-8cf4-0060b0fc14a3)]
+[uuid(ebe00f40-0199-11d2-815b-006008119d7a)]
 interface nsIPluginInstance : nsISupports
 {
     /**
      * Initializes a newly created plugin instance, passing to it the plugin
      * instance peer which it should use for all communication back to the browser.
      * 
-     * @param peer - the corresponding plugin instance peer
+   * @param aPeer - the corresponding plugin instance peer
+   * @result      - NS_OK if this operation was successful
      */
-    void initialize(in nsIPluginInstancePeer peer);
+  void initialize(in nsIPluginInstancePeer aPeer);
 
     /**
      * Returns a reference back to the plugin instance peer. This method is
@@ -99,7 +89,8 @@ interface nsIPluginInstance : nsISupports
      * instance. The implementation of this method should be sure to increment
      * the reference count on the peer by calling AddRef.
      *
-     * @result - the resulting plugin instance peer
+   * @param aPeer - the resulting plugin instance peer
+   * @result      - NS_OK if this operation was successful
      */
     readonly attribute nsIPluginInstancePeer peer;
 
@@ -108,6 +99,8 @@ interface nsIPluginInstance : nsISupports
      * the plugin is first created and initialized, and may be called after the
      * plugin is stopped (via the Stop method) if the plugin instance is returned
      * to in the browser window's history.
+   *
+   * @result - NS_OK if this operation was successful
      */
     void start();
 
@@ -116,6 +109,8 @@ interface nsIPluginInstance : nsISupports
      * This method will be called whenever the browser window goes on to display
      * another page and the page containing the plugin goes into the window's history
      * list.
+   *
+   * @result - NS_OK if this operation was successful
      */
     void stop();
 
@@ -124,6 +119,8 @@ interface nsIPluginInstance : nsISupports
      * it become no longer possible to return to the plugin instance, either because 
      * the browser window's history list of pages is being trimmed, or because the
      * window containing this page in the history is being closed.
+   *
+   * @result - NS_OK if this operation was successful
      */
     void destroy();
 
@@ -132,9 +129,10 @@ interface nsIPluginInstance : nsISupports
      *
      * (Corresponds to NPP_SetWindow.)
      *
-     * @param window - the plugin window structure
+   * @param aWindow - the plugin window structure
+   * @result        - NS_OK if this operation was successful
      */
-    [noscript] void setWindow(in nsPluginWindowPtr window);
+   void setWindow(in nsPluginWindowPtr aWindow);
 
     /**
      * Called to tell the plugin that the initial src/data stream is
@@ -142,17 +140,46 @@ interface nsIPluginInstance : nsISupports
      *
      * (Corresponds to NPP_NewStream.)
      *
-     * @result - listener the browser will use to give the plugin the data
+   * @param aListener - listener the browser will use to give the plugin the data
+   * @result          - NS_OK if this operation was successful
      */
-    nsIPluginStreamListener newStream();
+  void newStream(out nsIPluginStreamListener aListener);
 
     /**
      * Called to instruct the plugin instance to print itself to a printer.
      *
      * (Corresponds to NPP_Print.)
      *
-     * @param platformPrint - platform-specific printing information
+   * @param aPlatformPrint - platform-specific printing information
+   * @result               - NS_OK if this operation was successful
+   */
+  void print(in nsPluginPrintPtr aPlatformPrint);
+
+  /**
+   * Returns the value of a variable associated with the plugin instance.
+   *
+   * @param aVariable - the plugin instance variable to get
+   * @param aValue    - the address of where to store the resulting value
+   * @result          - NS_OK if this operation was successful
+   */
+  void getValue(in nsPluginInstanceVariable aVariable, in voidPtr aValue);
+
+  /**
+   * Handles an event. An nsIEventHandler can also get registered with with
+   * nsIPluginManager2::RegisterWindow and will be called whenever an event
+   * comes in for that window.
+   *
+   * Note that for Unix and Mac the nsPluginEvent structure is different
+   * from the old NPEvent structure -- it's no longer the native event
+   * record, but is instead a struct. This was done for future extensibility,
+   * and so that the Mac could receive the window argument too. For Windows
+   * and OS2, it's always been a struct, so there's no change for them.
+   *
+   * (Corresponds to NPP_HandleEvent.)
+   *
+   * @param aEvent   - the event to be handled
+   * @param aHandled - set to PR_TRUE if event was handled
      * @result - NS_OK if this operation was successful
      */
-    [noscript] void print(in nsPluginPrintPtr platformPrint);
+  void handleEvent(in nsPluginEventPtr aEvent, out boolean aHandled);
 };

@@ -38,7 +38,6 @@
 // TODO: Implement Java callbacks
 
 #include "prtypes.h"
-#include "nsplugin.h"
 #include "ns4xPlugin.h"
 #include "ns4xPluginInstance.h"
 #include "ns4xPluginStreamListener.h"

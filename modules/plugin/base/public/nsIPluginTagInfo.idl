@@ -35,23 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsPluginDefs.idl"
-
 /**
  * nsIPluginTagInfo
  *
@@ -62,33 +45,45 @@
  * http://mozilla.org/projects/plugins/
  */
 
+#include "nsISupports.idl"
+#include "nspluginroot.idl"
+
+%{C++
+#include "nsplugindefs.h"
+%}
+
+interface nsIDOMElement;
+
 /**
  * Plugin Tag Info Interface
  * This interface provides information about the HTML tag on the page.
  * Some day this might get superseded by a DOM API.
  */
-[scriptable, uuid(6aa8a500-2dfd-11d4-8cf4-0060b0fc14a3)]
+
+[uuid(5f1ec1d0-019b-11d2-815b-006008119d7a)]
 interface nsIPluginTagInfo : nsISupports
 {
-    // QueryInterface on nsIPluginInstancePeer to get this.
-
-    // (Corresponds to NPP_New's argc, argn, and argv arguments.)
-    // Get a ptr to the paired list of attribute names and values,
-    // returns the length of the array.
-    //
-    // Each name or value is a null-terminated string.
-    void getAttributes(out unsigned long count,
-                       [array, size_is(count)] out wstring names,
-                       [array, size_is(count)] out wstring values);
+  /**
+   * QueryInterface on nsIPluginInstancePeer to get this.
+   *
+   * (Corresponds to NPP_New's argc, argn, and argv arguments.)
+   * Get a ptr to the paired list of attribute names and values,
+   * returns the length of the array.
+   *
+   * Each name or value is a null-terminated string.
+   */
+  void getAttributes(in PRUint16Ref aCount,
+                     in constCharStarConstStar aNames,
+                     in constCharStarConstStar aValues);
 
     /**
      * Gets the value for the named attribute.
      *
-     * @param name - the name of the attribute to find
-     * @param result - the resulting attribute
+   * @param aName   - the name of the attribute to find
+   * @param aResult - the resulting attribute
      * @result - NS_OK if this operation was successful, NS_ERROR_FAILURE if
      * this operation failed. result is set to NULL if the attribute is not found
      * else to the found value.
      */
-    wstring getAttribute(in wstring name);
+  void getAttribute(in string aName, out constCharPtr aResult);
 };

@@ -35,23 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsPluginDefs.idl"
-
 /**
  * nsIPluginStreamListener
  *
@@ -62,59 +45,75 @@
  * http://mozilla.org/projects/plugins/
  */
 
+#include "nsISupports.idl"
+#include "nspluginroot.idl"
+#include "nsIPluginStreamInfo.idl"
+#include "nsIInputStream.idl"
+
+%{C++
+#include "nsplugindefs.h"
+%}
+
 /**
  * The nsIPluginStreamListener interface defines the minimum set of functionality that
  * the browser will support if it allows plugins. Plugins can call QueryInterface
  * to determine if a plugin manager implements more specific APIs or other 
  * browser interfaces for the plugin to use (e.g. nsINetworkManager).
  */
-[scriptable, uuid(faa328a8-2dfb-11d4-8cf4-0060b0fc14a3)]
+[uuid(df055770-5448-11d2-8164-006008119d7a)]
 interface nsIPluginStreamListener : nsISupports
 {
     /**
      * Notify the observer that the URL has started to load.  This method is
      * called only once, at the beginning of a URL load.<BR><BR>
+   *
+   * @param aPluginInfo  - plugin stream info
+   * @return             - the return value is currently ignored, in the future
+   * it may be used to cancel the URL load..
      */
-    void onStartBinding(in nsIPluginStreamInfo pluginInfo);
+  void onStartBinding(in nsIPluginStreamInfo aPluginInfo);
 
     /**
      * Notify the client that data is available in the input stream.  This
      * method is called whenver data is written into the input stream by the
      * networking library...<BR><BR>
      * 
-     * @param aIStream  The input stream containing the data.  This stream can
+   * @param aPluginInfo  - plugin stream info
+   * @param aInputStream - the input stream containing the data. This stream can
      * be either a blocking or non-blocking stream.
-     * @param length    The amount of data that was just pushed into the stream.
+   * @param aLength      - the amount of data that was just pushed into the stream.
+   * @return             - the return value is currently ignored.
      */
-    void onDataAvailable(in nsIPluginStreamInfo pluginInfo,
-                         in nsIInputStream input,
-                         in unsigned long sourceOffset,
-                         in unsigned long length);
+  void onDataAvailable(in nsIPluginStreamInfo aPluginInfo,
+                       in nsIInputStream aInputStream,
+                       in unsigned long aLength);
 
-    void onFileAvailable(in nsIPluginStreamInfo pluginInfo,
-                         in nsIFile fileName);
+  /**
+   * Notify the client that data is available in the file.
+   * 
+   * @param aPluginInfo - plugin stream info
+   * @param aFileName   - the name of the file containing the data
+   * @return            - the return value is currently ignored.
+   */
+  void onFileAvailable(in nsIPluginStreamInfo aPluginInfo, in string aFileName);
  
 	/**
      * Notify the observer that the URL has finished loading.  This method is 
      * called once when the networking library has finished processing the 
-     * URL transaction.<BR><BR>
+   * URL transaction initiatied via the nsINetService::Open(...) call.<BR><BR>
      * 
      * This method is called regardless of whether the URL loaded successfully.<BR><BR>
      * 
-     * @param status    Status code for the URL load.
-     * @param msg   A text string describing the error.
+   * @param aPluginInfo - plugin stream info
+   * @param aStatus     - reason why the stream has been terminated
+   * @return            - the return value is currently ignored.
      */
-    void onStopBinding(in nsIPluginStreamInfo pluginInfo,
-                       in nsresult status);
+  void onStopBinding(in nsIPluginStreamInfo aPluginInfo, in nsresult aStatus);
 
-    const unsigned long STREAMTYPE_NORMAL       = 1;
-    const unsigned long STREAMTYPE_SEEK         = 2;
-    const unsigned long STREAMTYPE_ASFILE       = 3;
-    const unsigned long STREAMTYPE_ASFILEONLY   = 4;
-    
-    readonly attribute unsigned long streamType;
+  /**
+   * Gets the type of the stream
+   *
+   * @param aStreamType - the type of the stream
+   */
+  readonly attribute nsPluginStreamType streamType;
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-#endif /* nsIPluginStreamListener_h___ */
