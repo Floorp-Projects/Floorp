@@ -117,7 +117,7 @@ SHAREDCMMSRCS += nsNativeAppSupportForCocoa.mm
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
-SHAREDSRCS += nsNativeAppSupportPh.cpp
+SHAREDCPPSRCS += nsNativeAppSupportPh.cpp
 endif
 
 CPPSRCS = \
