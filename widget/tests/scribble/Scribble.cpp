@@ -38,6 +38,7 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
+#include <quickdraw.h>
 
 ScribbleApp scribbleData;
 
@@ -217,6 +218,7 @@ nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
         case NS_MOUSE_MOVE:
         {
             if (scribbleData.isDrawing) {
+            
                 nsIRenderingContext *drawCtx = aEvent->widget->GetRenderingContext();
                 //drawCtx->SetColor(aEvent->widget->GetForegroundColor());
                 drawCtx->SetColor(NS_RGB(255, 0, 0));
@@ -225,8 +227,8 @@ nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
                                   ((nsGUIEvent*)aEvent)->point.x,
                                   ((nsGUIEvent*)aEvent)->point.y);
 
-                //if (scribbleData.scribble->GetState())
-                   //scribbleData.mousePos = ((nsGUIEvent*)aEvent)->point;
+                if (scribbleData.scribble->GetState())
+                   scribbleData.mousePos = ((nsGUIEvent*)aEvent)->point;
   
 
                 NS_RELEASE(drawCtx);
@@ -446,8 +448,8 @@ nsresult CreateApplication(int * argc, char ** argv)
     nsRepository::RegisterFactory(kCVertScrollbarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE)
-;
+    nsRepository::RegisterFactory(kCLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+
     //NS_InitToolkit(PR_GetCurrentThread());
 
     nsresult  res;
@@ -468,8 +470,10 @@ nsresult CreateApplication(int * argc, char ** argv)
     appShell->Create(argc, argv);
    
 
+
     //nsILookAndFeel *laf;
     //nsRepository::CreateInstance(kCLookAndFeelCID, nsnull, kILookAndFeelIID,(void**)&laf);
+
     
     //
     // create the main window
@@ -494,10 +498,10 @@ nsresult CreateApplication(int * argc, char ** argv)
     nsRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void **)&controlPane);
     controlPane->Create(scribbleData.mainWindow, rect, HandleEventControlPane, NULL);
     //controlPane->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
-    controlPane->SetBackgroundColor(NS_RGB(0,0,255));
+    controlPane->SetBackgroundColor(NS_RGB(100,128,128));
     controlPane->Show(PR_TRUE);
 
-#ifdef NOTNOW
+
     //
     // Add the scribble/lines section
     //
@@ -510,7 +514,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     nsString cbLabel("Scribble");
     scribbleData.scribble->SetLabel(cbLabel);
     scribbleData.scribble->SetState(PR_FALSE);
-    scribbleData.scribble->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    //scribbleData.scribble->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     scribbleData.scribble->Show(PR_TRUE);
 
     // create the "Lines" check button
@@ -521,8 +525,12 @@ nsresult CreateApplication(int * argc, char ** argv)
     nsString cbLabel1("Lines");
     scribbleData.lines->SetLabel(cbLabel1);
     scribbleData.lines->SetState(PR_TRUE);
-    scribbleData.lines->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    //scribbleData.lines->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     scribbleData.lines->Show(PR_TRUE);
+
+
+#ifdef NOTNOW
+
     //
     // Add the circle/rectangle section
     //
@@ -611,9 +619,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     scribbleData.drawPane->SetBackgroundColor(NS_RGB(255,250,250));
     scribbleData.drawPane->Show(PR_TRUE);
 
-    //
     // show. We are in business...
-    //
     scribbleData.mainWindow->Show(PR_TRUE);
 
     //laf->Release();
