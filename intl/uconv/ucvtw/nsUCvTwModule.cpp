@@ -73,14 +73,14 @@ static FactoryData g_FactoryData[] =
   {
     &kBIG5ToUnicodeCID,
     nsBIG5ToUnicode::CreateInstance,
-    "BIG5",
+    "Big5",
     "Unicode"
   },
   {
     &kUnicodeToBIG5CID,
     nsUnicodeToBIG5::CreateInstance,
     "Unicode",
-    "BIG5"
+    "Big5"
   },
   {
     &kUnicodeToBIG5NoAsciiCID,
