@@ -327,14 +327,100 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   //XXX: TODO Implement focus for combobox. 
 }
 
+/////////////////////////////////////////////////////////////////////
+// I hate that this duplicates a lot of code from the PresShell
+// But here we check to see if we need to be scrolled into view
+// the PresShell call ScrollFrameIntoView needs an extra parameter
+// that is a suggestion as to whether it should scroll it into view 
+// if it is (or part of it is already) in view.
+PRBool nsComboboxControlFrame::ShouldScrollFrameIntoView(nsIPresShell * aShell, nsIPresContext * aPresContext, nsIFrame *aFrame)
+{
+  nsresult rv = NS_OK;
+  if (!aFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsIViewManager * vm;
+  aShell->GetViewManager(&vm);
+  if (vm) {
+    // Get the viewport scroller
+    nsIScrollableView* scrollingView;
+    vm->GetRootScrollableView(&scrollingView);
+
+    if (scrollingView) {
+      nsIView*  scrolledView;
+      nsPoint   offset;
+      nsIView*  closestView;
+          
+      // Determine the offset from aFrame to the scrolled view. We do that by
+      // getting the offset from its closest view and then walking up
+      scrollingView->GetScrolledView(scrolledView);
+      aFrame->GetOffsetFromView(aPresContext, offset, &closestView);
+
+      // XXX Deal with the case where there is a scrolled element, e.g., a
+      // DIV in the middle...
+      while ((closestView != nsnull) && (closestView != scrolledView)) {
+        nscoord x, y;
+
+        // Update the offset
+        closestView->GetPosition(&x, &y);
+        offset.MoveBy(x, y);
+
+        // Get its parent view
+        closestView->GetParent(closestView);
+      }
+
+      // Determine the visible rect in the scrolled view's coordinate space.
+      // The size of the visible area is the clip view size
+      const nsIView*  clipView;
+      nsRect          visibleRect;
+
+      scrollingView->GetScrollPosition(visibleRect.x, visibleRect.y);
+      scrollingView->GetClipView(&clipView);
+      clipView->GetDimensions(&visibleRect.width, &visibleRect.height);
+
+      // The actual scroll offsets
+      nscoord scrollOffsetX = visibleRect.x;
+      nscoord scrollOffsetY = visibleRect.y;
+
+      // The frame's bounds in the coordinate space of the scrolled frame
+      nsRect  frameBounds;
+      aFrame->GetRect(frameBounds);
+      frameBounds.x = offset.x;
+      frameBounds.y = offset.y;
+
+      // The caller doesn't care where the frame is positioned vertically,
+      // so long as it's fully visible
+      if (frameBounds.y < visibleRect.y) {
+        return PR_TRUE;
+      } else if (frameBounds.y > visibleRect.YMost()) {
+        return PR_TRUE;
+      }
+
+      // The caller doesn't care where the frame is positioned horizontally,
+      // so long as it's fully visible
+      if (frameBounds.x < visibleRect.x) {
+        // Scroll left so the frame's left edge is visible
+        return PR_TRUE;
+      } else if (frameBounds.x > visibleRect.XMost()) {
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 void
 nsComboboxControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 {
   if (aPresContext) {
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
-    presShell->ScrollFrameIntoView(this,
-                   NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+
+    if (ShouldScrollFrameIntoView(presShell, mPresContext, this)) {
+      presShell->ScrollFrameIntoView(this,
+                     NS_PRESSHELL_SCROLL_ANYWHERE,NS_PRESSHELL_SCROLL_ANYWHERE);
+    }
 
   }
 }
