@@ -2217,6 +2217,23 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
           PRInt32 swap  = sdptr->mStart;
           sdptr->mStart = textLength - sdptr->mEnd;
           sdptr->mEnd   = textLength - swap;
+ 
+          // temp fix for 75026 crasher untill we fix the bidi code
+          // the above bidi code cause mStart < 0 in some case
+          // the problem is we have whitespace compression code in 
+          // nsTextTransformer which cause mEnd > textLength
+          NS_ASSERTION((sdptr->mStart >= 0) , "mStart >= 0");
+          if(sdptr->mStart < 0 )
+            sdptr->mStart = 0;
+
+          NS_ASSERTION((sdptr->mEnd >= 0) , "mEnd >= 0");
+          if(sdptr->mEnd < 0 )
+            sdptr->mEnd = 0;
+
+          NS_ASSERTION((sdptr->mStart <= sdptr->mEnd), "mStart <= mEnd");
+          if(sdptr->mStart > sdptr->mEnd)
+            sdptr->mEnd = sdptr->mStart;
+           
         }
 #endif
         sdptr = sdptr->mNext;
