@@ -35,6 +35,7 @@ EXPORTS = \
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libmailnewsbase_s.a	\
+		$(DIST)/lib/libnntp_s.a	\
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
