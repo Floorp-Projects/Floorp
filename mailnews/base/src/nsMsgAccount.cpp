@@ -86,20 +86,19 @@ nsMsgAccount::getPrefService() {
 NS_IMETHODIMP
 nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
 {
-  if (!aIncomingServer) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aIncomingServer);
 
   nsresult rv = NS_OK;
   // create the incoming server lazily
   if (!m_incomingServer) {
+    // ignore the error (and return null), but it's still bad so assert
     rv = createIncomingServer();
-    if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't lazily create the server\n");
   }
   
-  if (NS_FAILED(rv)) return rv;
-  if (!m_incomingServer) return NS_ERROR_UNEXPECTED;
   
   *aIncomingServer = m_incomingServer;
-  NS_ADDREF(*aIncomingServer);
+  NS_IF_ADDREF(*aIncomingServer);
 
   return NS_OK;
 }
@@ -117,10 +116,11 @@ nsMsgAccount::createIncomingServer()
   if (NS_FAILED(rv)) return rv;
 
   // get the "server" pref
-  char *serverKeyPref = PR_smprintf("mail.account.%s.server", m_accountKey);
+  nsCAutoString serverKeyPref("mail.account.");
+  serverKeyPref += m_accountKey;
+  serverKeyPref += ".server";
   nsXPIDLCString serverKey;
   rv = m_prefs->CopyCharPref(serverKeyPref, getter_Copies(serverKey));
-  PR_FREEIF(serverKeyPref);
   if (NS_FAILED(rv)) return rv;
     
 #ifdef DEBUG_alecf
@@ -129,11 +129,12 @@ nsMsgAccount::createIncomingServer()
 
   // get the servertype
   // ex) mail.server.myserver.type = imap
-  char *serverTypePref = PR_smprintf("mail.server.%s.type",
-                                     (const char*)serverKey);
+  nsCAutoString serverTypePref("mail.server.");
+  serverTypePref += serverKey;
+  serverTypePref += ".type";
+  
   nsXPIDLCString serverType;
   rv = m_prefs->CopyCharPref(serverTypePref, getter_Copies(serverType));
-  PR_FREEIF(serverTypePref);
 
   // the server type doesn't exist, use "generic"
   if (NS_FAILED(rv)) {
@@ -143,7 +144,7 @@ nsMsgAccount::createIncomingServer()
     
 #ifdef DEBUG_alecf
   if (NS_FAILED(rv)) {
-    printf("\tCould not read pref %s\n", serverTypePref);
+    printf("\tCould not read pref %s\n", (const char*)serverTypePref);
   } else {
     printf("\t%s's   type: %s\n", m_accountKey, (const char*)serverType);
   }
@@ -184,6 +185,12 @@ nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
   }
 
   m_incomingServer = dont_QueryInterface(aIncomingServer);
+
+  nsCOMPtr<nsIMsgAccountManager> accountManager =
+    do_GetService(NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    accountManager->NotifyServerLoaded(aIncomingServer);
+  }
   return NS_OK;
 }
 

@@ -436,8 +436,6 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   NS_ADDREF(serversupports);
   m_incomingServers.Put(&hashKey, serversupports);
 
-  NotifyServerLoaded(server);
-
   *aServer = server;
   NS_ADDREF(*aServer);
   
@@ -1122,7 +1120,7 @@ nsMsgAccountManager::findServerIndexByServer(nsISupports *element, void *aData)
   
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = account->GetIncomingServer(getter_AddRefs(server));
-  if (NS_FAILED(rv)) return PR_TRUE;
+  if (!server || NS_FAILED(rv)) return PR_TRUE;
   
   nsXPIDLCString key;
   rv = server->GetKey(getter_Copies(key));
@@ -1255,7 +1253,7 @@ nsMsgAccountManager::findAccountByServerKey(nsISupports *element,
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = account->GetIncomingServer(getter_AddRefs(server));
-  if (NS_FAILED(rv)) return PR_TRUE;
+  if (!server || NS_FAILED(rv)) return PR_TRUE;
 
   nsXPIDLCString key;
   rv = server->GetKey(getter_Copies(key));
@@ -1466,7 +1464,7 @@ nsMsgAccountManager::findServersForIdentity(nsISupports *element, void *aData)
         nsCOMPtr<nsIMsgIncomingServer> thisServer;
         rv = account->GetIncomingServer(getter_AddRefs(thisServer));
         
-        if (NS_SUCCEEDED(rv)) {
+        if (thisServer && NS_SUCCEEDED(rv)) {
           entry->servers->AppendElement(thisServer);
           break;
         }
