@@ -32,6 +32,7 @@
 #include "msgCore.h"
 #include "nsMsgAppleDouble.h"
 #include "nsMsgAppleCodes.h"
+#include "nsFileSpec.h"
 
 #ifdef XP_MAC
 
@@ -59,7 +60,8 @@ char* my_PathnameFromFSSpec(FSSpec* fspec)
 }
 
 /* returns true if the resource fork should be sent */
-PRBool	isMacFile(char* filename)
+PRBool	
+nsMsgIsMacFile(char* filename)
 {
 	Boolean returnValue = FALSE;
 	
@@ -103,6 +105,74 @@ PRBool	isMacFile(char* filename)
 
 	return (PRBool) returnValue;
 }
+
+/* Netlib utility routine, should be ripped out */
+void	MacGetFileType(nsFileSpec   *path, 
+                     PRBool       *useDefault, 
+                     char         **fileType, 
+                     char         **encoding)
+{
+	if ((path == NULL) || (fileType == NULL) || (encoding == NULL))
+		return;
+
+	*useDefault = TRUE;
+	*fileType = NULL;
+	*encoding = NULL;
+
+	char *pathPart = NET_ParseURL( path, GET_PATH_PART);
+	if (pathPart == NULL)
+		return;
+
+	nsFilePath thePath(pathPart);
+	nsNativeFileSpec spec(thePath);
+	XP_FREE(pathPart);
+
+	CMimeMapper * mapper = CPrefs::sMimeTypes.FindMimeType(spec);
+	if (mapper != NULL)
+	{
+		*useDefault = FALSE;
+		*fileType = XP_STRDUP(mapper->GetMimeName());
+	}
+	else
+	{
+		FInfo		fndrInfo;
+		OSErr err = FSpGetFInfo( &spec, &fndrInfo );
+		if ( (err != noErr) || (fndrInfo.fdType == 'TEXT') )
+			*fileType = XP_STRDUP(APPLICATION_OCTET_STREAM);
+		else
+		{
+			// Time to call IC to see if it knows anything
+			ICMapEntry ICMapper;
+			
+			ICError  error = 0;
+			CStr255 fileName( spec.name );
+			error = CInternetConfigInterface::GetInternetConfigFileMapping(
+					fndrInfo.fdType, fndrInfo.fdCreator,  fileName ,  &ICMapper );	
+			if( error != icPrefNotFoundErr && StrLength(ICMapper.MIME_type) )
+			{
+				*useDefault = FALSE;
+				CStr255 mimeName( ICMapper.MIME_type );
+				*fileType = XP_STRDUP( mimeName );
+			}
+			else
+			{
+				// That failed try using the creator type		
+				mapper = CPrefs::sMimeTypes.FindCreator(fndrInfo.fdCreator);
+				if( mapper)
+				{
+					*useDefault = FALSE;
+					*fileType = XP_STRDUP(mapper->GetMimeName());
+				}
+				else
+				{
+					// don't have a mime mapper
+					*fileType = XP_STRDUP(APPLICATION_OCTET_STREAM);
+				}
+			}
+		}
+	}
+}
+
 
 void DecodingDone( appledouble_decode_object* p_ap_decode_obj )
 {

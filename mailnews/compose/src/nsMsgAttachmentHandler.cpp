@@ -564,8 +564,33 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       // To make this really work, we need something that will do the job of
       // the old fe_MakeAppleDoubleEncodeStream() stream in 4.x
       // 
+/*********************
+		  ad_encode_stream = (NET_StreamClass *) fe_MakeAppleDoubleEncodeStream (FO_CACHE_AND_MAIL_TO,
+											NULL,
+											m_url,
+											m_mime_delivery_state->GetContext(),
+											src_filename,
+											m_ap_filename,
+											separator);
 
-      printf("...and then magic happens...which converts %s to appledouble encoding\n", (const char*)url_string);
+		  if (ad_encode_stream == NULL)
+			{
+			  FREEIF(separator);
+			  return MK_OUT_OF_MEMORY;
+			}
+
+		  do 
+      {
+  			status = (*ad_encode_stream->put_block)((NET_StreamClass *)ad_encode_stream->data_object, NULL, 1024);
+		  } while (status == noErr);
+
+		  if (status >= 0)
+			  ad_encode_stream->complete ((NET_StreamClass *)ad_encode_stream->data_object);
+		  else
+			  ad_encode_stream->abort ((NET_StreamClass *)ad_encode_stream->data_object, status);
+
+		  XP_FREE(ad_encode_stream);
+*****************************/
 
       //
       // Now that we have morphed this file, we need to change where mURL is pointing.
