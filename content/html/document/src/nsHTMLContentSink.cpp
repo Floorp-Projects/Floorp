@@ -1709,8 +1709,6 @@ SetDocumentInChildrenOf(nsIContent* aContent,
 nsresult
 SinkContext::DemoteContainer(const nsIParserNode& aNode)
 {
-  mSink->mIsDemotingContainer = PR_TRUE;
-
   nsresult result = NS_OK;
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   
@@ -1748,7 +1746,11 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
         parent->AppendChildTo(container, PR_FALSE, PR_FALSE);
         mSink->mInNotification--;
       }
-      
+
+      // Set mIsDemotingContainer here so that the above FlushTags()
+      // calls really flushes the tags.
+      mSink->mIsDemotingContainer = PR_TRUE;
+
       // Create a temp layoutHistoryState to store the childrens' state
       nsCOMPtr<nsIPresShell> presShell;
       nsCOMPtr<nsIPresContext> presContext;
@@ -2132,6 +2134,11 @@ SinkContext::AddText(const nsAReadableString& aText)
 nsresult
 SinkContext::FlushTags(PRBool aNotify)
 {
+  // If we're demoting containers right now, don't flush.
+  if (mSink->mIsDemotingContainer) {
+    return NS_OK;
+  }
+
   nsresult result = NS_OK;
 
   // Don't release last text node in case we need to add to it again
