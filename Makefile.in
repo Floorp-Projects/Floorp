@@ -41,12 +41,9 @@ else
 # Tiers must be defined on module boundaries 
 #
 default: $(SUBMAKEFILES)
-	$(MAKE) nspr
 	$(MAKE) tier_0
-ifdef MOZ_LDAP_XPCOM
-	$(MAKE) -C directory/c-sdk/ldap export
-	$(MAKE) -C directory/c-sdk/ldap install
-endif
+	$(MAKE) nspr
+	$(MAKE) ldap
 	$(MAKE) tier_1
 	$(MAKE) tier_9
 ifdef MOZ_PSM
@@ -61,14 +58,14 @@ endif
 	$(MAKE) tier_99
 
 # Make sure that the existing rulesets work
-DIRS = $(NSPRPUB_DIR) \
+DIRS = \
 	$(tier_0_dirs) \
 	$(tier_1_dirs) \
 	$(tier_9_dirs) \
 	$(NULL)
 
-ifdef MOZ_LDAP_XPCOM
-DIRS += directory/c-sdk/ldap
+ifdef GC_LEAK_DETECTOR
+DIRS += gc/boehm
 endif
 
 ifdef MOZ_PSM
@@ -257,7 +254,7 @@ endif
 
 endif # BUILD_MODULES == all
 
-STATIC_MAKEFILES := $(NSPRPUB_DIR) directory/c-sdk/ldap
+STATIC_MAKEFILES := nsprpub directory/c-sdk/ldap
 
 ifdef MOZ_PSM
 STATIC_MAKEFILES += security/nss 
@@ -269,7 +266,22 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    unallmakefiles \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out 
 
+# Build psuedo-external modules first when export is explicitly called
+export::
+	$(MAKE) -C config export
+	$(MAKE) nspr
+	$(MAKE) ldap
+
 include $(topsrcdir)/config/rules.mk
+
+# Clean up after psuedo-external modules
+clean clobber realclean clobber_all distclean::
+ifndef MOZ_NATIVE_NSPR
+	$(MAKE) -C nsprpub $@
+endif
+ifdef MOZ_LDAP_XPCOM
+	$(MAKE) -C directory/c-sdk/ldap $@
+endif
 
 tier_%: 
 	@echo "$@: $($@_dirs)"
@@ -290,8 +302,13 @@ ifdef GC_LEAK_DETECTOR
 endif
 
 nspr: boehm
-ifdef NSPRPUB_DIR
-	$(MAKE) -C $(NSPRPUB_DIR)
+ifndef MOZ_NATIVE_NSPR
+	$(MAKE) -C nsprpub
+endif
+
+ldap:
+ifdef MOZ_LDAP_XPCOM
+	$(MAKE) -C directory/c-sdk/ldap
 endif
 
 # For modules.mk standalone build
