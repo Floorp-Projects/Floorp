@@ -1931,13 +1931,12 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
 
 #ifdef	XP_MAC
 	// rjc - on Mac, check the file's type code (skip checking the creator code)
-	const nsFileSpec	*fs = nsnull;
-	if (NS_FAILED(rv = component->GetFileSpec(fs)))
+	const nsFileSpec	fs;
+	if (NS_FAILED(rv = component->GetFileSpec(&fs)))
 			return(rv);
-	if (!fs)	return(NS_ERROR_NULL_POINTER);
 
 	CInfoPBRec	catInfo;
-	OSErr 		err = fs->GetCatInfo(catInfo);
+	OSErr 		err = fs.GetCatInfo(catInfo);
 	if (!err)
 	{
 		// on Mac, Mozilla shared libraries are of type 'shlb'
