@@ -691,6 +691,7 @@ ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aL
   mTransparent = PR_FALSE;
   mStarted = PR_FALSE;
   mStreams = nsnull;
+  mCached = PR_FALSE;
 
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("ns4xPluginInstance ctor: this=%p\n",this));
 }
@@ -1226,8 +1227,7 @@ NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
 
   nsresult  res = NS_OK;
 
-  switch (variable)
-  {
+  switch (variable) {
     case nsPluginInstanceVariable_WindowlessBool:
       *(PRBool *)value = mWindowless;
       break;
@@ -1236,21 +1236,27 @@ NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
       *(PRBool *)value = mTransparent;
       break;
 
+    case nsPluginInstanceVariable_DoCacheBool:
+      *(PRBool *)value = mCached;
+      break;
+
+    case nsPluginInstanceVariable_CallSetWindowAfterDestroyBool:
+      *(PRBool *)value = 0;  // not supported for 4.x plugins
+      break;
+
     default:
-      if(fCallbacks->getvalue)
-      {
+      if(fCallbacks->getvalue) {
         NS_TRY_SAFE_CALL_RETURN(res, 
                                 CallNPP_GetValueProc(fCallbacks->getvalue, 
                                                      &fNPP, 
                                                      (NPPVariable)variable, 
                                                      value), 
-                                fLibrary);
+                                                     fLibrary);
+        NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
+        ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
+        this, &fNPP, variable, value, res));
       }
   }
-
-  NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
-  this, &fNPP, variable, value, res));
 
   return res;
 }

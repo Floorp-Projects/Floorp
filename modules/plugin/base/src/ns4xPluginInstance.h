@@ -146,6 +146,9 @@ public:
 
     // returns the state of mStarted
     PRBool IsStarted(void);
+
+    // cache this 4.x plugin like an XPCOM plugin
+    nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; };
     
 protected:
 
@@ -182,9 +185,10 @@ protected:
     //these are used to store the windowless properties
     //which the browser will later query
 
-    PRBool  mWindowless;
-    PRBool  mTransparent;
-    PRBool  mStarted;
+    PRPackedBool  mWindowless;
+    PRPackedBool  mTransparent;
+    PRPackedBool  mStarted;
+    PRPackedBool  mCached;
 
 public:
     PRLibrary* fLibrary;
