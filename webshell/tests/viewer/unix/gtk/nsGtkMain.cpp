@@ -32,6 +32,10 @@
 #include "prinit.h"
 #include "prlog.h"
 
+#ifdef NS_TRACE_MALLOC
+#include "nsTraceMalloc.h"
+#endif
+
 static nsNativeViewerApp* gTheApp;
 
 nsNativeViewerApp::nsNativeViewerApp()
@@ -151,6 +155,10 @@ ah_crap_handler(int signum)
 
 int main(int argc, char **argv)
 {
+#ifdef NS_TRACE_MALLOC
+  argc = NS_TraceMallocStartupArgs(argc, argv);
+#endif
+
 #ifdef CRAWL_STACK_ON_SIGSEGV
   strcpy(_progname,argv[0]);
   signal(SIGSEGV, ah_crap_handler);
