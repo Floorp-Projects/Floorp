@@ -198,12 +198,8 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* aContaining
   if (isAutoLeftMargin) {
     if (isAutoRightMargin) {
       // Both margins are 'auto' so their computed values are equal
-      if (availMarginSpace <= 0) {
-        aComputedLeftMargin = aComputedRightMargin = 0;
-      } else {
-        aComputedLeftMargin = availMarginSpace / 2;
-        aComputedRightMargin = availMarginSpace - aComputedLeftMargin;
-      }
+      aComputedLeftMargin = availMarginSpace / 2;
+      aComputedRightMargin = availMarginSpace - aComputedLeftMargin;
     } else {
       aComputedLeftMargin = availMarginSpace - aComputedRightMargin;
     }
@@ -491,19 +487,17 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
           borderPadding.left - computedWidth - borderPadding.right -
           computedOffsets.right;
 
-        if (availMarginSpace > 0) {
-          if (eStyleUnit_Auto == spacing->mMargin.GetLeftUnit()) {
-            if (eStyleUnit_Auto == spacing->mMargin.GetRightUnit()) {
-              // Both 'margin-left' and 'margin-right' are 'auto', so they get
-              // equal values
-              computedMargin.left = availMarginSpace / 2;
-              computedMargin.right = availMarginSpace - computedMargin.left;
-            } else {
-              computedMargin.left = availMarginSpace;
-            }
+        if (eStyleUnit_Auto == spacing->mMargin.GetLeftUnit()) {
+          if (eStyleUnit_Auto == spacing->mMargin.GetRightUnit()) {
+            // Both 'margin-left' and 'margin-right' are 'auto', so they get
+            // equal values
+            computedMargin.left = availMarginSpace / 2;
+            computedMargin.right = availMarginSpace - computedMargin.left;
           } else {
-            computedMargin.right = availMarginSpace;
+            computedMargin.left = availMarginSpace;
           }
+        } else {
+          computedMargin.right = availMarginSpace;
         }
       }
     }
@@ -588,19 +582,17 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
             borderPadding.top - computedHeight - borderPadding.bottom -
             computedOffsets.bottom;
   
-          if (availMarginSpace > 0) {
-            if (eStyleUnit_Auto == spacing->mMargin.GetTopUnit()) {
-              if (eStyleUnit_Auto == spacing->mMargin.GetBottomUnit()) {
-                // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
-                // equal values
-                computedMargin.top = availMarginSpace / 2;
-                computedMargin.bottom = availMarginSpace - computedMargin.top;
-              } else {
-                computedMargin.top = availMarginSpace;
-              }
+          if (eStyleUnit_Auto == spacing->mMargin.GetTopUnit()) {
+            if (eStyleUnit_Auto == spacing->mMargin.GetBottomUnit()) {
+              // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
+              // equal values
+              computedMargin.top = availMarginSpace / 2;
+              computedMargin.bottom = availMarginSpace - computedMargin.top;
             } else {
-              computedMargin.bottom = availMarginSpace;
+              computedMargin.top = availMarginSpace;
             }
+          } else {
+            computedMargin.bottom = availMarginSpace;
           }
         }
       }
