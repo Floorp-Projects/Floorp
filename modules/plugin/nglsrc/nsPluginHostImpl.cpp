@@ -3335,6 +3335,17 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
 
     if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i],"application/x-director"))
       return PR_FALSE;
+
+    // these are Quicktime-only types so that wav and midi will register indirectly
+    if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i],"image/x-quicktime"))
+      return PR_FALSE;
+
+    if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i],"image/x-macpaint"))
+      return PR_FALSE;
+
+    if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i],"video/quicktime"))
+      return PR_FALSE;
+
   }
 
   return PR_TRUE;
