@@ -1523,11 +1523,12 @@ Wallet_KeyResetTime() {
   }
 }
 
-PRIVATE void
-wallet_KeyTimeoutImmediately() {
+PUBLIC void
+WLLT_ExpirePassword() {
   if (Wallet_IsKeySet()) {
     keyExpiresTime = time(NULL);
   }
+  SI_RemoveAllSignonData();
 }
 
 PUBLIC PRBool
@@ -2927,8 +2928,7 @@ void WLLT_ChangePassword() {
   }
 
   /* force the user to supply old database key, for security */
-  wallet_KeyTimeoutImmediately();
-  SI_RemoveAllSignonData();
+  WLLT_ExpirePassword();
 
   /* read in user data using old key */
   wallet_Initialize(PR_FALSE);

@@ -104,6 +104,11 @@ NS_IMETHODIMP nsWalletlibService::WALLET_FetchFromNetCenter(){
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWalletlibService::WALLET_ExpirePassword(){
+  ::WLLT_ExpirePassword();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWalletlibService::PromptUsernameAndPasswordURL
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
      const char *urlname, PRBool stripUrl, nsIPrompt* dialog, PRBool *returnValue) {

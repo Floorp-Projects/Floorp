@@ -70,6 +70,9 @@ WLLT_OnSubmit (nsIContent* formNode);
 extern void
 WLLT_FetchFromNetCenter();
 
+extern void
+WLLT_ExpirePassword();
+
 extern NS_METHOD
 Wallet_GetMasterPassword(PRUnichar **password);
 

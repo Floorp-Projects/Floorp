@@ -54,6 +54,7 @@ interface nsIWalletService : nsISupports {
   void WALLET_Prefill(in nsIPresShell shell, in boolean quick);
   [noscript]void WALLET_PrefillReturn(in nsAutoString results);
   void WALLET_FetchFromNetCenter();
+  void WALLET_ExpirePassword();
 
   boolean PromptUsernameAndPasswordURL(in wstring text, out wstring user, out wstring pwd, in string urlname, in boolean stripUrl, in nsIPrompt dialog);
   boolean PromptPasswordURL(in wstring text, out wstring pwd, in string urlname, in boolean stripUrl, in nsIPrompt dialog);

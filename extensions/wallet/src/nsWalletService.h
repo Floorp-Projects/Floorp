@@ -50,6 +50,7 @@ public:
   NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, PRBool quick);
   NS_IMETHOD WALLET_PrefillReturn(nsAutoString results);
   NS_IMETHOD WALLET_FetchFromNetCenter();
+  NS_IMETHOD WALLET_ExpirePassword();
 
   NS_IMETHOD PromptUsernameAndPasswordURL
     (const PRUnichar *text, PRUnichar **user, PRUnichar **pwd,
