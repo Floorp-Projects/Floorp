@@ -420,13 +420,14 @@ sub who_menu {
     local( $td, $mindate, $maxdate, $who ) = @_;
     my $treeflag;
     #$qr="../bonsai/cvsquery.cgi?module=$td->{cvs_module}&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}&date=explicit&mindate=$mindate&maxdate=$maxdate&who=$who";
-    $qr = "../registry/who.cgi?email=$who"
+    my $e = url_encode($who);
+    $qr = "../registry/who.cgi?email=$e"
         . "&t0=" . &url_encode("What did $who check into the source tree" )
         . "&u0=" . &url_encode( &query_ref2($td,$mindate,$maxdate,$who) )
         . "&t1=" . &url_encode("What has $who been checking in in the last day" )
         . "&u1=" . &url_encode( &query_ref2($td,$mindate,$maxdate,$who) );
 
-    return "<a href='$qr' onClick=\"return js_who_menu($td->{num},'$who',event,$mindate,$maxdate);\" >";
+    return "<a href='$qr' onClick=\"return js_who_menu($td->{num},'$e',event,$mindate,$maxdate);\" >";
 }
 
 
