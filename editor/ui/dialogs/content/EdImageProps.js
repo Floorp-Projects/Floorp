@@ -582,7 +582,7 @@ function ValidateData()
       return false;
 
     height = ValidateNumber(dialog.heightInput, dialog.heightUnitsMenulist, 1, maxPixels, 
-                            globalElement, "height", false, ture);
+                            globalElement, "height", false, true);
     if (gValidationError)
       return false;
   }
