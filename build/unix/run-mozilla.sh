@@ -72,37 +72,34 @@ exitcode=0
 ##########################################################################
 moz_usage()
 {
-    cat << EOF
-
-Usage:  ${cmdname} [options] [program]
-
-  options:
-
-    -g                   Run in debugger.
-    --debug
-
-    -d debugger          Debugger to use.
-    --debugger debugger
-
-  Examples:
-
-  Run the viewer
-
-    ${cmdname} viewer
-
-  Run the mozilla-bin binary
-
-    ${cmdname} mozilla-bin
-
-  Debug the viewer in a debugger
-
-    ${cmdname} -g viewer
-
-  Debug the mozilla-bin binary in gdb
-
-    ${cmdname} -g mozilla-bin -d gdb
-
-EOF
+echo "Usage:  ${cmdname} [options] [program]"
+echo ""
+echo "  options:"
+echo ""
+echo "    -g                   Run in debugger."
+echo "    --debug"
+echo ""
+echo "    -d debugger          Debugger to use."
+echo "    --debugger debugger"
+echo ""
+echo "  Examples:"
+echo ""
+echo "  Run the viewer"
+echo ""
+echo "    ${cmdname} viewer"
+echo ""
+echo "  Run the mozilla-bin binary"
+echo ""
+echo "    ${cmdname} mozilla-bin"
+echo ""
+echo "  Debug the viewer in a debugger"
+echo ""
+echo "    ${cmdname} -g viewer"
+echo ""
+echo "  Debug the mozilla-bin binary in gdb"
+echo ""
+echo "    ${cmdname} -g mozilla-bin -d gdb"
+echo ""
 	return 0
 }
 ##########################################################################
