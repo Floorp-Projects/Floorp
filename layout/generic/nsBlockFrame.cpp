@@ -5216,6 +5216,65 @@ nsBlockFrame::PaintChildren(nsIPresContext* aPresContext,
 #endif
 }
 
+#define MAGIC_LINENUM 20
+
+nsresult
+nsBlockFrame::GetClosestLine(nsILineIterator *aLI, 
+                             const nsPoint &aOrigin, 
+                             const nsPoint &aPoint, 
+                             PRInt32 &aClosestLine)
+{
+  if (!aLI)
+    return NS_ERROR_NULL_POINTER;
+  nsRect rect;
+  PRInt32 countLines;
+  PRInt32 lineFrameCount;
+  nsIFrame *firstFrame;
+  PRUint32 flags;
+
+  nsresult result = aLI->GetNumLines(&countLines);
+
+  if (NS_FAILED(result) || countLines<0)
+    return NS_OK;//do not handle
+
+  //how many divisions
+  PRInt16 divisions = 0;
+  PRUint32 shifted = (PRUint32)countLines;
+  PRInt32 start = 0;
+  PRInt32 y = 0;
+
+  while( shifted > 1 )
+  {
+    shifted >>= 1; //divide by 2
+    result = aLI->GetLine(start + shifted, &firstFrame, &lineFrameCount,rect,&flags);
+    if (NS_FAILED(result))
+      break;//do not handle
+
+    rect+=aOrigin; //offset origin to get comparative coordinates
+
+    y = aPoint.y - rect.y;
+    if (y >=0 && (aPoint.y < (rect.y+rect.height)))
+    {
+      aClosestLine = start + shifted; //spot on!
+      return NS_OK;
+    }
+    
+    if (y > 0) //advance start shifted amount
+      start+=shifted;
+  }
+
+  //special case for missed line.
+  if ( y > 0 )
+    ++start; //set the start to the next line before leaving loop
+  else 
+    --start; //set the start to the previous line
+
+  if (start == countLines)//dont let it slip off the edge
+    --start; 
+
+  aClosestLine = start; //close as we could come
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsBlockFrame::HandleEvent(nsIPresContext* aPresContext, 
@@ -5272,42 +5331,12 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
 
       if (NS_FAILED(result))
         return NS_OK;//do not handle
-      PRInt32 countLines;
-      result = it->GetNumLines(&countLines);
-      if (NS_FAILED(result))
-        return NS_OK;//do not handle
-      PRInt32 i;
-      PRInt32 lineFrameCount;
-      nsIFrame *firstFrame;
-      nsRect  rect;
-      PRInt32 closestLine = 0;
-      PRInt32 closestDistance = 999999; //some HUGE number that will always fail first comparison
-      //incase we hit another block frame.
-      for (i = 0; i< countLines;i++)
-      {
-        PRUint32 flags;
-        result = it->GetLine(i, &firstFrame, &lineFrameCount,rect,&flags);
-        if (NS_FAILED(result))
-          continue;//do not handle
-        rect+=origin;
-        rect.width = aEvent->point.x - rect.x+1;//EXTEND RECT TO REACH POINT
-        if (rect.Contains(aEvent->point.x, aEvent->point.y))
-        {
-          closestLine = i;
-          break;
-        }
-        else
-        {
-          PRInt32 distance = PR_MIN(abs(rect.y - aEvent->point.y),abs((rect.y + rect.height) - aEvent->point.y));
-          if (distance < closestDistance)
-          {
-            closestDistance = distance;
-            closestLine = i;
-          }
-          else if (distance > closestDistance)
-            break;//done
-        }
-      }
+      PRInt32 closestLine;
+
+      if (NS_FAILED(result = GetClosestLine(it,origin,aEvent->point,closestLine)))
+        return result;
+      
+      
       //we will now ask where to go. if we cant find what we want"aka another block frame" 
       //we drill down again
       pos.mTracker = tracker;

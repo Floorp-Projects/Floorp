@@ -3824,6 +3824,8 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
           return aPos->mResultFrame->PeekOffset(aPresContext, aPos);
+        else if (NS_FAILED(result))
+          return result;
       }
     }
     break;
@@ -3898,7 +3900,11 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       {
         result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
+        {
           result = aPos->mResultFrame->PeekOffset(aPresContext, aPos);
+          if (NS_FAILED(result))
+            return result;
+        }
       }
       else 
         aPos->mResultContent = mContent;

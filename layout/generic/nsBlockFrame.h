@@ -30,7 +30,7 @@ class nsBlockReflowState;
 class nsBulletFrame;
 class nsLineBox;
 class nsFirstLineFrame;
-
+class nsILineIterator;
 /**
  * Child list name indices
  * @see #GetAdditionalChildListName()
@@ -172,6 +172,17 @@ protected:
   virtual ~nsBlockFrame();
 
   nsIStyleContext* GetFirstLetterStyle(nsIPresContext* aPresContext);
+
+  /**
+   * GetClosestLine will return the line that VERTICALLY owns the point closest to aPoint.y
+   * aOrigin is the offset for this block frame to its frame.
+   * aPoint is the point to search for.
+   * aClosestLine is the result.
+   */
+  nsresult GetClosestLine(nsILineIterator *aLI, 
+                             const nsPoint &aOrigin, 
+                             const nsPoint &aPoint, 
+                             PRInt32 &aClosestLine);
 
   void SetFlags(PRUint32 aFlags) {
     mState &= ~NS_BLOCK_FLAGS_MASK;
