@@ -80,7 +80,7 @@ protected:
     // This is as deep as a tree can ever grow, mostly because we use an
     // automatic variable to keep track of the path we take through the
     // tree while inserting and removing stuff.
-    enum { kMaxDepth = 7 };
+    enum { kMaxDepth = 8 };
 
     //----------------------------------------
 
@@ -92,22 +92,21 @@ protected:
         enum Type { eType_Data = 0, eType_Index = 1 };
 
         enum {
-            kTypeBit = 1 << 31,
-            kCountMask = ~kTypeBit,
-            kMaxCapacity = kCountMask
+            kTypeBit = 0x80000000,
+            kCountShift = 24,
+            kCountMask = 0x7f000000,
+            kMaxCapacity = kCountMask,
+            kSubTreeSizeMask = 0x00ffffff,
+            kMaxSubTreeSize = kSubTreeSizeMask
         };
 
     protected:
         /**
-         * High bit is the type (data or index), low bit is the
-         * number of elements in the node
+         * High bit is the type (data or index), next 7 bits are the
+         * number of elements in the node, low 24 bits is the subtree
+         * size.
          */
-        PRInt32 mBits;
-
-        /**
-         * Cached size of this node's subtree
-         */
-        PRInt32 mSubTreeSize;
+        PRUint32 mBits;
 
         /**
          * This node's data; when a Node allocated, this is actually
@@ -119,7 +118,7 @@ protected:
         static nsresult Create(Type aType, PRInt32 aCapacity, Node** aResult);
         static nsresult Destroy(Node* aNode);
 
-        Type GetType() {
+        Type GetType() const {
             return (mBits & kTypeBit) ? eType_Index : eType_Data; }
 
         void SetType(Type aType) {
@@ -129,24 +128,31 @@ protected:
                 mBits |= kTypeBit;
         }
 
-        PRInt32 GetSubTreeSize() { return mSubTreeSize; }
-        void SetSubTreeSize(PRInt32 aSubTreeSize) { mSubTreeSize = aSubTreeSize; }
+        PRInt32 GetSubTreeSize() const {
+            return PRInt32(mBits & kSubTreeSizeMask); }
 
-        PRInt32 GetCount() { return PRInt32(mBits & kCountMask); }
+        void SetSubTreeSize(PRInt32 aSubTreeSize) {
+            mBits &= ~kSubTreeSizeMask;
+            mBits |= PRUint32(aSubTreeSize) & kSubTreeSizeMask; }
+
+        PRInt32 GetCount() const { return PRInt32((mBits & kCountMask) >> kCountShift); }
+
         void SetCount(PRInt32 aCount) {
-            NS_PRECONDITION(aCount < kMaxCapacity, "overflow");
+            NS_PRECONDITION(aCount < PRInt32(kMaxCapacity), "overflow");
             mBits &= ~kCountMask;
-            mBits |= aCount & kCountMask; }
+            mBits |= (PRUint32(aCount) << kCountShift) & kCountMask; }
 
-        void* GetElementAt(PRInt32 aIndex) {
+        void* GetElementAt(PRInt32 aIndex) const {
             NS_PRECONDITION(aIndex >= 0 && aIndex < GetCount(), "bad index");
-            return mData[aIndex];
-        }
+            return mData[aIndex]; }
+
+        void*& GetElementAt(PRInt32 aIndex) {
+            NS_PRECONDITION(aIndex >= 0 && aIndex < GetCount(), "bad index");
+            return mData[aIndex]; }
 
         void SetElementAt(void* aElement, PRInt32 aIndex) {
             NS_PRECONDITION(aIndex >= 0 && aIndex < GetCount(), "bad index");
-            mData[aIndex] = aElement;
-        }
+            mData[aIndex] = aElement; }
 
         void InsertElementAt(void* aElement, PRInt32 aIndex);
         void RemoveElementAt(PRInt32 aIndex);
@@ -240,10 +246,16 @@ protected:
         mRoot = PRWord(aNode) | kRoot_Node; }
 
     enum {
-        // XXX Tune? If changed, update kMaxDepth appropriately so
-        // that we can fit 2^31 elements in here.
-        kDataCapacity = 16,
-        kIndexCapacity = 16
+        // This is tuned based on distribution data from nsVoidArray
+        // that indicated that, during a "normal run" of mozilla, we'd
+        // be able to fit about 90% of the nsVoidArray's contents into
+        // an eight element array.
+        //
+        // If you decide to change these values, update kMaxDepth
+        // appropriately so that we can fit kMaxSubTreeSize elements
+        // in here.
+        kDataCapacity = 8,
+        kIndexCapacity = 8
     };
 
     nsresult Split(Path& path, Node* aOldNode, void* aElementToInsert, PRInt32 aSplitIndex);
@@ -259,13 +271,19 @@ public:
     class ConstIterator;
     friend class ConstIterator;
 
+    class Iterator;
+    friend class Iterator;
+
     /**
      * A "const" bidirectional iterator over the nsVoidBTree. Supports
      * the usual iteration interface.
      */
     class NS_COM ConstIterator {
     protected:
-        PRBool mIsSingleton;
+        friend class Iterator; // XXXwaterson broken
+
+        PRPackedBool mIsSingleton;
+        PRPackedBool mIsExhausted;
         PRWord mElement;
         Path   mPath;
 
@@ -276,23 +294,28 @@ public:
         ConstIterator() : mIsSingleton(PR_TRUE), mElement(nsnull) {}
 
         ConstIterator(const ConstIterator& aOther) : mIsSingleton(aOther.mIsSingleton) {
-            if (mIsSingleton)
+            if (mIsSingleton) {
                 mElement = aOther.mElement;
-            else
-                mPath = aOther.mPath; }
+                mIsExhausted = aOther.mIsExhausted;
+            }
+            else {
+                mPath = aOther.mPath; } }
 
         ConstIterator&
         operator=(const ConstIterator& aOther) {
             mIsSingleton = aOther.mIsSingleton;
-            if (mIsSingleton)
+            if (mIsSingleton) {
                 mElement = aOther.mElement;
-            else
-                mPath = aOther.mPath;
+                mIsExhausted = aOther.mIsExhausted;
+            }
+            else {
+                mPath = aOther.mPath; 
+            }
             return *this; }
 
         void* operator*() const {
             return mIsSingleton
-                ? NS_REINTERPRET_CAST(void*, mElement)
+                ? NS_REINTERPRET_CAST(void*, !mIsExhausted ? mElement : 0)
                 : mPath.TopNode()->GetElementAt(mPath.TopIndex()); }
 
         ConstIterator& operator++() {
@@ -314,7 +337,8 @@ public:
             return temp; }
 
         PRBool operator==(const ConstIterator& aOther) const {
-            return mIsSingleton ? mElement == aOther.mElement
+            return mIsSingleton
+                ? (mElement == aOther.mElement && mIsExhausted == aOther.mIsExhausted)
                 : mPath == aOther.mPath; }
 
         PRBool operator!=(const ConstIterator& aOther) const {
@@ -322,19 +346,83 @@ public:
 
     protected:
         friend class nsVoidBTree;
-        ConstIterator(PRWord aElement) : mIsSingleton(PR_TRUE), mElement(aElement) {}
-        ConstIterator(const Path& aPath) : mIsSingleton(PR_FALSE), mPath(aPath) {}
+        ConstIterator(PRWord aElement, PRBool aIsExhausted)
+            : mIsSingleton(PR_TRUE), mIsExhausted(aElement ? aIsExhausted : PR_TRUE), mElement(aElement) {}
+
+        ConstIterator(const Path& aPath)
+            : mIsSingleton(PR_FALSE), mPath(aPath) {}
     };
 
     /**
      * The first element in the nsVoidBTree
      */
-    ConstIterator First() const;
+    ConstIterator First() const {
+        return IsSingleElement() ? ConstIterator(mRoot, PR_FALSE) : ConstIterator(LeftMostPath()); }
 
     /**
      * "One past" the last element in the nsVoidBTree
      */
-    ConstIterator Last() const;
+    ConstIterator Last() const {
+        return IsSingleElement() ? ConstIterator(mRoot, PR_TRUE) : ConstIterator(RightMostPath()); }
+
+    class Iterator : public ConstIterator {
+    protected:
+        PRWord* mElementRef;
+
+    public:
+        Iterator& operator++() {
+            Next();
+            return *this; }
+
+        Iterator operator++(int) {
+            Iterator temp(*this);
+            Next();
+            return temp; }
+
+        Iterator& operator--() {
+            Prev();
+            return *this; }
+
+        Iterator operator--(int) {
+            Iterator temp(*this);
+            Prev();
+            return temp; }
+
+        void*& operator*() const {
+            return mIsSingleton
+                ? NS_REINTERPRET_CAST(void*&, !mIsExhausted ? *mElementRef : kDummyLast)
+                : mPath.TopNode()->GetElementAt(mPath.TopIndex()); }
+
+        PRBool operator==(const Iterator& aOther) const {
+            return mIsSingleton
+                ? (mElement == aOther.mElement && mIsExhausted == aOther.mIsExhausted)
+                : mPath == aOther.mPath; }
+
+        PRBool operator!=(const Iterator& aOther) const {
+            return !aOther.operator==(*this); }
+
+    protected:
+        Iterator(const Path& aPath)
+            : ConstIterator(aPath) {}
+
+        Iterator(PRWord* aElementRef, PRBool aIsExhausted)
+            : ConstIterator(*aElementRef, aIsExhausted),
+              mElementRef(aElementRef) {}
+
+        friend class nsVoidBTree;
+    };
+
+    Iterator First() {
+        return IsSingleElement() ? Iterator(&mRoot, PR_FALSE) : Iterator(LeftMostPath()); }
+
+    Iterator Last() {
+        return IsSingleElement() ? Iterator(&mRoot, PR_TRUE) : Iterator(RightMostPath()); }
+
+protected:
+    const Path LeftMostPath() const;
+    const Path RightMostPath() const;
+
+    static PRWord kDummyLast;
 };
 
 

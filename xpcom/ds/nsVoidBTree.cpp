@@ -47,7 +47,7 @@ nsVoidBTree::Node::Create(Type aType, PRInt32 aCapacity, Node** aResult)
         return NS_ERROR_OUT_OF_MEMORY;
 
     Node* result = NS_REINTERPRET_CAST(Node*, bytes);
-    result->mBits = result->mSubTreeSize = 0;
+    result->mBits = 0;
     result->SetType(aType);
 
     *aResult = result;
@@ -746,14 +746,16 @@ nsVoidBTree::Dump(Node* aNode, PRInt32 aIndent)
 
 //----------------------------------------------------------------------
 //
-// nsVoidBTree::ConstIterator methods
+// nsVoidBTree::ConstIterator and Iterator methods
 //
+
+PRWord nsVoidBTree::kDummyLast;
 
 void
 nsVoidBTree::ConstIterator::Next()
 {
     if (mIsSingleton) {
-        ++mElement;
+        mIsExhausted = PR_TRUE;
         return;
     }
 
@@ -821,7 +823,7 @@ void
 nsVoidBTree::ConstIterator::Prev()
 {
     if (mIsSingleton) {
-        --mElement;
+        mIsExhausted = PR_FALSE;
         return;
     }
 
@@ -849,18 +851,9 @@ nsVoidBTree::ConstIterator::Prev()
     }
 }
 
-nsVoidBTree::ConstIterator
-nsVoidBTree::First() const
+const nsVoidBTree::Path
+nsVoidBTree::LeftMostPath() const
 {
-    // A singleton nsVoidBTree::ConstIterator is special-cased, and
-    // will just to integer arithmetic to the word value that's the
-    // pointer.
-    if (IsSingleElement()) {
-        return ConstIterator(mRoot & kRoot_PointerMask);
-    }
-
-    // Othewise, we'll need to build a path along the left-hand side
-    // of the b-tree.
     Path path;
     Node* current = NS_REINTERPRET_CAST(Node*, mRoot & kRoot_PointerMask);
 
@@ -873,23 +866,13 @@ nsVoidBTree::First() const
         current = NS_STATIC_CAST(Node*, current->GetElementAt(0));
     }
 
-    return ConstIterator(path);
+    return path;
 }
 
 
-nsVoidBTree::ConstIterator
-nsVoidBTree::Last() const
+const nsVoidBTree::Path
+nsVoidBTree::RightMostPath() const
 {
-    // A singleton nsVoidBTree::ConstIterator is special-cased, and
-    // will just to integer arithmetic to the word value that's the
-    // pointer. So we'll take the root (if we have one) and add one to
-    // it.
-    if (IsSingleElement()) {
-        return ConstIterator(mRoot ? (mRoot & kRoot_PointerMask) + 1 : 0);
-    }
-
-    // Otherwise, we'll need to build a path along the right-hand side
-    // of the b-tree.
     Path path;
     Node* current = NS_REINTERPRET_CAST(Node*, mRoot & kRoot_PointerMask);
 
@@ -906,5 +889,5 @@ nsVoidBTree::Last() const
         }
     }
 
-    return ConstIterator(path);
+    return path;
 }
