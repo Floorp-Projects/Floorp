@@ -52,6 +52,7 @@
         void  resizeTo(in long width, in long height);
         void  resizeBy(in long widthDif, in long heightDif);
         void  sizeToContent();
+	void  scroll(in long xScroll, in long yScroll);
         void  scrollTo(in long xScroll, in long yScroll);
         void  scrollBy(in long xScrollDif, in long yScrollDif);
 
