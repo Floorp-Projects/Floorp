@@ -31,6 +31,9 @@
 #include "nsStyleStruct.h"
 #include "nsStyleCoord.h"
 #include "nsHTMLReflowState.h"
+#ifdef MOZ_MATHML
+#include "nsIRenderingContext.h" //to get struct nsBoundingMetrics
+#endif
 
 /**
  * New rules of reflow:
@@ -201,7 +204,10 @@ enum nsSpread {
 //----------------------------------------------------------------------
 
 // Option flags
-#define NS_REFLOW_CALC_MAX_WIDTH  0x0001
+#define NS_REFLOW_CALC_MAX_WIDTH         0x0001
+#ifdef MOZ_MATHML
+#define NS_REFLOW_CALC_BOUNDING_METRICS  0x0002
+#endif
 
 /**
  * Reflow metrics used to return the frame's desired size and alignment
@@ -220,6 +226,16 @@ struct nsHTMLReflowMetrics {
   // then the caller is requesting that you update and return your maximum width
   nscoord mMaximumWidth;        // [OUT]
 
+#ifdef MOZ_MATHML
+  // Metrics that _exactly_ enclose the text to allow precise MathML placements.
+  // If the NS_REFLOW_CALC_BOUNDING_METRICS flag is set, then the caller is 
+  // requesting that you also compute additional details about your inner
+  // bounding box and italic correction. For example, the bounding box of
+  // msup is the smallest rectangle that _exactly_ encloses both the text
+  // of the base and the text of the superscript.
+  nsBoundingMetrics mBoundingMetrics;  // [OUT]
+#endif
+
   // Carried out bottom margin values. This is the collapsed
   // (generational) bottom margin value.
   nscoord mCarriedOutBottomMargin;
@@ -236,6 +252,7 @@ struct nsHTMLReflowMetrics {
 
   PRUint32 mFlags;
   
+
   nsHTMLReflowMetrics(nsSize* aMaxElementSize, PRUint32 aFlags = 0) {
     maxElementSize = aMaxElementSize;
     mMaximumWidth = 0;
@@ -245,6 +262,9 @@ struct nsHTMLReflowMetrics {
     mOverflowArea.y = 0;
     mOverflowArea.width = 0;
     mOverflowArea.height = 0;
+#ifdef MOZ_MATHML
+    mBoundingMetrics.Clear();
+#endif
 
     // XXX These are OUT parameters and so they shouldn't have to be
     // initialized, but there are some bad frame classes that aren't
@@ -676,7 +696,7 @@ public:
    * the correct horizontal offset
    */
   NS_IMETHOD  GetPointFromOffset(nsIPresContext*          inPresContext,
-															   nsIRenderingContext*     inRendContext,
+                                 nsIRenderingContext*     inRendContext,
                                  PRInt32                  inOffset,
                                  nsPoint*                 outPoint) = 0;
   
