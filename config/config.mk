@@ -361,33 +361,6 @@ NOMD_CXXFLAGS	= $(XP_DEFINE) $(OPTIMIZER) $(OS_CXXFLAGS) $(DEFINES) $(INCLUDES) 
 LDFLAGS		= $(OS_LDFLAGS)
 
 #
-# The following platforms support detection of paths and libraries.
-#
-# Need to define these before include the $ARCH.mk makefile
-#
-ifndef USE_AUTOCONF
-ifneq (,$(filter Linux,$(OS_ARCH)))
-MOZILLA_DETECT		= 1
-MOZILLA_DETECT_DIR	= $(DEPTH)/config/mkdetect
-
-# A uniq identifier that describes this host
-ifdef MOZILLA_CONFIG_HOST_IDENT
-MOZILLA_DETECT_UNIQ_IDENT	= $(MOZILLA_CONFIG_HOST_IDENT)
-else
-MOZILLA_DETECT_UNIQ_IDENT	= $(shell $(topsrcdir)/config/mkdetect/detect_hostident.sh)
-endif
-
-MOZILLA_DETECT_NAME	= detect_$(MOZILLA_DETECT_UNIQ_IDENT)_gen.mk
-
-MOZILLA_DETECT_GEN	= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
-endif
-
-#
-# Now include the platform-specific stuff.
-#
-include $(topsrcdir)/config/$(OS_ARCH).mk
-endif # !USE_AUTOCONF
-#
 # Some platforms (Solaris) might require builds using either
 # (or both) compiler(s).
 #
