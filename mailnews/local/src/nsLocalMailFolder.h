@@ -231,6 +231,7 @@ protected:
   nsCOMPtr<nsIMsgStringService> mMsgStringService;
   PRInt32 mNumFilterClassifyRequests;
   nsMsgKeyArray mSpamKeysToMove;
+  nsCString mSpamFolderURI;
   nsresult setSubfolderFlag(const char *aFolderName, PRUint32 flags);
 };
 

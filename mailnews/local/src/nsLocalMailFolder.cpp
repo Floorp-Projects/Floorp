@@ -101,7 +101,6 @@
 
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec* mailDirectory);
 extern void SavePopData(char *data, nsIFileSpec* maildirectory);
@@ -3048,15 +3047,10 @@ nsMsgLocalMailFolder::GetIncomingServerType()
 
   if (mType) return mType;
 
-  nsCOMPtr<nsIURL> url;
-  
   // this is totally hacky - we have to re-parse the URI, then
   // guess at "none" or "pop3"
   // if anyone has any better ideas mail me! -alecf@netscape.com
-  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
-                                          NS_GET_IID(nsIURL),
-                                          (void **)getter_AddRefs(url));
-
+  nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return "";
 
   rv = url->SetSpec(nsDependentCString(mURI));
@@ -3406,7 +3400,6 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
   mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin");
 
   nsCOMPtr<nsISpamSettings> spamSettings;
-  nsXPIDLCString spamFolderURI;
   PRBool moveOnSpam = PR_FALSE;
   
   rv = GetServer(getter_AddRefs(server));
@@ -3428,11 +3421,13 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
       NS_ENSURE_SUCCESS(rv,rv);
       if (moveOnSpam)
       {
-        rv = spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));
+        nsXPIDLCString uriStr;
+        rv = spamSettings->GetSpamFolderURI(getter_Copies(uriStr));
         NS_ENSURE_SUCCESS(rv,rv);
+        mSpamFolderURI = uriStr;
 
         nsCOMPtr<nsIMsgFolder> folder;
-        rv = GetExistingFolder(spamFolderURI, getter_AddRefs(folder));
+        rv = GetExistingFolder(mSpamFolderURI.get(), getter_AddRefs(folder));
         if (NS_SUCCEEDED(rv) && folder) {
           rv = folder->SetFlag(MSG_FOLDER_FLAG_JUNK);
           NS_ENSURE_SUCCESS(rv,rv);
@@ -3447,7 +3442,7 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
           // NS_ENSURE_SUCCESS(rv,rv);
           // mSpamKeysToMove.Add(msgKey);
           // willMoveMessage = PR_TRUE;
-          rv = GetOrCreateFolder(spamFolderURI, nsnull /* aListener */);
+          rv = GetOrCreateFolder(mSpamFolderURI, nsnull /* aListener */);
           NS_ASSERTION(NS_SUCCEEDED(rv), "GetOrCreateFolder failed");
         }
       }
@@ -3458,10 +3453,10 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus a
 
   if (--mNumFilterClassifyRequests == 0 && mSpamKeysToMove.GetSize() > 0)
   {
-    if (!spamFolderURI.IsEmpty())
+    if (!mSpamFolderURI.IsEmpty())
     {
         nsCOMPtr<nsIMsgFolder> folder;
-        rv = GetExistingFolder(spamFolderURI, getter_AddRefs(folder));
+        rv = GetExistingFolder(mSpamFolderURI.get(), getter_AddRefs(folder));
         if (NS_SUCCEEDED(rv) && folder) {      
           nsCOMPtr<nsISupportsArray> messages;
           NS_NewISupportsArray(getter_AddRefs(messages));
