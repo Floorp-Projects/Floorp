@@ -34,8 +34,7 @@
 #include "prmem.h"
 #include "prlog.h"
 
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
+#include "nsIObserverService.h"
 
 #include "nsIPref.h"
 #include "mcom_db.h"
@@ -126,11 +125,8 @@ nsNetDiskCache::nsNetDiskCache() :
 
 nsNetDiskCache::~nsNetDiskCache()
 {
-  if ( mDB )
-  	SetSizeEntry();
+  ShutdownDB();
 
-  NS_IF_RELEASE(mDB) ;
-  
   nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
 	if ( NS_SUCCEEDED (rv ) )
@@ -180,6 +176,28 @@ nsNetDiskCache::~nsNetDiskCache()
     }
   }
 }
+
+NS_IMETHODIMP
+nsNetDiskCache::ShutdownDB()
+{
+  if (mDB)
+  {
+    SetSizeEntry();
+    NS_RELEASE(mDB);
+    mDB = nsnull;
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNetDiskCache::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
+                        const PRUnichar *someData)
+{
+  return ShutdownDB();
+}
+
 
 NS_IMETHODIMP nsNetDiskCache::InitCacheFolder()
 {
@@ -262,35 +280,72 @@ nsNetDiskCache::InitDB(void)
     return rv ;
 
   mDBFile->Append("cache.db") ;
-	#ifdef XP_MAC
-		PRBool exists;
-		if ( NS_SUCCEEDED( mDBFile->Exists(&exists ) ) && !exists)
-		{
-			mDBFile->Create( nsIFile::NORMAL_FILE_TYPE, PR_IRUSR | PR_IWUSR );
-		}
-	#endif
+  PRBool exists = PR_FALSE;
+  rv = mDBFile->Exists(&exists);
+#ifdef XP_MAC
+  if (NS_SUCCEEDED(rv) && !exists)
+    {
+      mDBFile->Create( nsIFile::NORMAL_FILE_TYPE, PR_IRUSR | PR_IWUSR );
+              }
+#endif
   rv = mDB->Init(mDBFile) ;
-  if ( NS_SUCCEEDED( rv ) ) {
-	  rv = GetSizeEntry();
-      if ( NS_SUCCEEDED( rv ) ) {
-          if (mNumEntries > mMaxEntries)
-              rv = NS_ERROR_FAILURE;
-      }
-
+  if (NS_FAILED(rv)) return rv;
+  rv = GetSizeEntry();
+  if (NS_FAILED(rv)) return rv;
+  
+  // Detect cache corruption conditions
+  // ----------------------------------------------------------------------
+ 
+  if (exists && mNumEntries == 0)
+  {
+    // Cache db didn't shutdown properly. We should reinitialize.
+    // NOTE: This wont cause an infinite loop as after this, the db
+    // file wont exist and the (exists) condition will prevent this when
+    // InitDB() again happens on DBRecovery()
+    return NS_ERROR_FAILURE;
   }
-  return rv ;
-}
 
+  // Corruption. We cannot have a cache that has more entries than the max.
+  if (mNumEntries > mMaxEntries)
+    return NS_ERROR_FAILURE;
+
+
+  // Normal startup
+  // ----------------------------------------------------------------------
+  //
+  // Become an xpcom shutdown observer so we can flush data to disk not only on destructor
+  // but also on the shutdown to protect against leaks. Here is a list of all failsafes for
+  // flushing cache counts.
+  // 1. This observer of xpcom shutdown
+  // 2. Destructor of nsNetDiskCache
+  // 3. On startup, if (1) or (2) didn't happen, we clear the cache
+  //
+  nsresult rvLocal = NS_OK;
+  nsCOMPtr<nsIObserverService> observerService =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rvLocal);
+  if (NS_SUCCEEDED(rvLocal))
+  {
+    nsAutoString topic;
+    topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    (void) observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, this),
+                                        topic.GetUnicode());
+  }
+
+  // Set size to 0 to detect if we didnt shutdown properly.
+  // This will be reset to the right value by the shutdown observer.
+  rv = SetSizeEntryExplicit(0, 0);
+  return rv;
+}
+  
 //////////////////////////////////////////////////////////////////////////
 // nsISupports methods
-
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsNetDiskCache,
-                   nsINetDataDiskCache,
-                   nsINetDataCache,
-                   nsISupports) 
-
+  
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsNetDiskCache, nsINetDataDiskCache,
+  nsINetDataCache, nsIObserver, nsISupportsWeakReference)
+  
 ///////////////////////////////////////////////////////////////////////////
 // nsINetDataCache Method 
+
 
 NS_IMETHODIMP
 nsNetDiskCache::GetDescription(PRUnichar* *aDescription) 
@@ -563,6 +618,7 @@ nsNetDiskCache::RemoveAll(void)
 #endif /* DEBUG_dp */
   NS_ASSERTION(mDB, "no db.") ;
   NS_ASSERTION(mDiskCacheFolder, "no cache folder.") ;
+  nsresult rv;
 
 
 
@@ -581,7 +637,7 @@ nsNetDiskCache::RemoveAll(void)
   PRBool hasMore;
   while( NS_SUCCEEDED(directoryEnumerator->HasMoreElements( &hasMore ) ) && hasMore)
   {
-  	nsresult rv = directoryEnumerator->GetNext( getter_AddRefs(file) );
+  	rv = directoryEnumerator->GetNext( getter_AddRefs(file) );
   	if ( NS_FAILED( rv ) )
   		return rv ;
   	PRBool isDirectory;		
@@ -590,7 +646,16 @@ nsNetDiskCache::RemoveAll(void)
      
   }
   if ( mDBFile )
+  {
  	 mDBFile->Delete(PR_FALSE) ;
+	 if (mDBFile)
+	 {
+		PRBool exists = PR_FALSE;
+		rv = mDBFile->Exists(&exists);
+		if (exists)
+			return NS_ERROR_FAILURE;
+	 }
+  }
   // reinitilize
   return InitCacheFolder() ;
 }
@@ -702,12 +767,13 @@ nsNetDiskCache::GetSizeEntry(void)
 }
 
 NS_IMETHODIMP
-nsNetDiskCache::SetSizeEntry(void)
+nsNetDiskCache::SetSizeEntryExplicit(PRUint32 numEntries, PRUint32 storageInUse)
 {
+
   PRUint32 InfoSize ;
   
-  InfoSize = sizeof mNumEntries ;
-  InfoSize += sizeof mStorageInUse ;
+  InfoSize = sizeof numEntries ;
+  InfoSize += sizeof storageInUse ;
   
   void* pInfo = nsMemory::Alloc(InfoSize*sizeof(char)) ;
   if(!pInfo) 
@@ -715,15 +781,21 @@ nsNetDiskCache::SetSizeEntry(void)
   
   char* cur_ptr = NS_STATIC_CAST(char*, pInfo) ;
 
-  COPY_INT32(cur_ptr, &mNumEntries) ;
+  COPY_INT32(cur_ptr, &numEntries) ;
   cur_ptr += sizeof(PRUint32) ;
 
-  COPY_INT32(cur_ptr, &mStorageInUse) ;
+  COPY_INT32(cur_ptr, &storageInUse) ;
   cur_ptr += sizeof(PRUint32) ;
   
   PR_ASSERT(cur_ptr == NS_STATIC_CAST(char*, pInfo) + InfoSize);
   
   return mDB->SetSizeEntry(pInfo, InfoSize) ;
+}
+
+NS_IMETHODIMP
+nsNetDiskCache::SetSizeEntry(void)
+{
+  return SetSizeEntryExplicit(mNumEntries, mStorageInUse);
 }
 
 // this routine will be called everytime we have a db corruption. 

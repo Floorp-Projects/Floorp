@@ -50,7 +50,7 @@ public:
 
 private:
     nsCOMPtr<nsIDBAccessor>                m_DB ;
-    nsCOMPtr<nsNetDiskCache>               m_DiskCache ;
+    nsNetDiskCache*                        m_DiskCache ;
     void *                                 m_tempEntry ;
     PRUint32                               m_tempEntry_length ;
     nsDiskCacheRecord*                     m_CacheEntry ;

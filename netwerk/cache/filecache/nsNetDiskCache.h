@@ -35,6 +35,8 @@
 #include "nsNetDiskCacheCID.h"
 #include "nsCOMPtr.h"
 #include "nsDBAccessor.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 class nsIURI; /* forward decl */
 class nsICachedNetData; /* forward decl */
@@ -43,16 +45,18 @@ class nsIFile; /* forward decl */
 
 // 2 : cache that never deleted entires
 // 3 : Evict works. Number of records and entries matched up and limited.
-#define CURRENT_CACHE_VERSION   3
+// 4 : Detection of corrupt cache works
+#define CURRENT_CACHE_VERSION   4
 
 /* starting interface:    nsNetDiskCache */
 
-class nsNetDiskCache : public nsINetDataDiskCache {
+class nsNetDiskCache : public nsINetDataDiskCache, public nsIObserver, public nsSupportsWeakReference {
   public: 
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSINETDATACACHE
   NS_DECL_NSINETDATADISKCACHE
+  NS_DECL_NSIOBSERVER
 
   NS_IMETHOD Init(void) ;
 
@@ -60,11 +64,12 @@ class nsNetDiskCache : public nsINetDataDiskCache {
   virtual ~nsNetDiskCache() ;
 
   protected:
-
+  NS_IMETHOD ShutdownDB();
   NS_IMETHOD InitDB(void) ;
   NS_IMETHOD CreateDir(nsIFile* dir_spec) ;
   NS_IMETHOD GetSizeEntry(void) ;
   NS_IMETHOD SetSizeEntry(void) ;
+  NS_IMETHOD SetSizeEntryExplicit(PRUint32 numEntries, PRUint32 storageInUse) ;
 
   NS_IMETHOD RenameCacheSubDirs(void) ;
   NS_IMETHOD DBRecovery(void) ;
