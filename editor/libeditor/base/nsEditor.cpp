@@ -2335,6 +2335,15 @@ nsEditor::ForceCompositionEnd()
   
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsEditor::Composing(PRBool *aInIMEMode)
+{
+  if (!aInIMEMode) return NS_ERROR_NULL_POINTER;
+  *aInIMEMode = mInIMEMode;
+  return NS_OK;
+}
+
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark  public nsEditor methods 
@@ -2636,7 +2645,7 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsString& aStringToInse
   {
     result = CreateTxnForInsertText(aStringToInsert, aTextNode, aOffset, (InsertTextTxn**)&txn);
   }
-  if (NS_FAILED(result)) return result;
+  if (NS_FAILED(result)) return result;  // we potentially leak txn here?
 
   // let listeners know whats up
   PRInt32 i;
@@ -2653,9 +2662,6 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsString& aStringToInse
     
   BeginUpdateViewBatch();
   result = Do(txn);
-  // The transaction system (if any) has taken ownwership of txns.
-  // aggTxn released at end of routine.
-  NS_IF_RELEASE(txn);
   EndUpdateViewBatch();
 
   // let listeners know what happened
@@ -2669,6 +2675,31 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsString& aStringToInse
     }
   }
 
+  // Added some cruft here for bug 43366.  Layout was crashing because we left an 
+  // empty text node lying around in the document.  So I delete empty text nodes
+  // caused by IME.  I have to mark the IME transaction as "fixed", which means
+  // that furure ime txns won't merge with it.  This is because we don't want
+  // future ime txns trying to put their text into a node that is no longer in
+  // the document.  This does not break undo/redo, because all these txns are 
+  // wrapped in a parent PlaceHolder txn, and placeholder txns are already 
+  // savvy to having multiple ime txns inside them.
+  
+  // delete empty ime text node if there is one
+  if (mInIMEMode && mIMETextNode)
+  {
+    PRUint32 len;
+    mIMETextNode->GetLength(&len);
+    if (!len)
+    {
+      DeleteNode(mIMETextNode);
+      mIMETextNode = nsnull;
+      ((IMETextTxn*)txn)->MarkFixed();  // mark the ime txn "fixed"
+    }
+  }
+  
+  // The transaction system (if any) has taken ownwership of txns.
+  // aggTxn released at end of routine.
+  NS_IF_RELEASE(txn);
   return result;
 }
 

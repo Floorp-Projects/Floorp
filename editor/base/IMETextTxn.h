@@ -86,6 +86,8 @@ public:
 
   NS_IMETHOD GetRedoString(nsString *aString);
 
+  NS_IMETHOD MarkFixed(void);
+
 // nsISupports declarations
 
   // override QueryInterface to handle IMETextTxn request
