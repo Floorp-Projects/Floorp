@@ -161,7 +161,7 @@ public:
   virtual PRInt32 GetColumnWidth(PRInt32 aColIndex);
 
   /** set the width of the column at aColIndex to aWidth    */
-  virtual void SetColumnWidth(PRInt32 aColIndex, PRInt32 aWidth);
+  virtual void SetColumnWidth(PRInt32 aColIndex, nscoord aWidth);
           
   /**
     * Calculate Layout Information

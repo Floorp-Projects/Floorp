@@ -2357,7 +2357,7 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
   return result;
 }
 
-void  nsTableFrame::SetColumnWidth(PRInt32 aColIndex, PRInt32 aWidth)
+void  nsTableFrame::SetColumnWidth(PRInt32 aColIndex, nscoord aWidth)
 {
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
