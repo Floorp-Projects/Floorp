@@ -79,8 +79,9 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
   MOZ_COUNT_DTOR(BasicTableLayoutStrategy);
 }
 
-PRBool BasicTableLayoutStrategy::Initialize(nsSize*       aMaxElementSize,
-                                            nscoord       aMaxWidth)
+PRBool BasicTableLayoutStrategy::Initialize(nsIPresContext* aPresContext,
+                                            nsSize*         aMaxElementSize,
+                                            nscoord         aMaxWidth)
 {
   ContinuingFrameCheck();
 
@@ -92,7 +93,7 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize*       aMaxElementSize,
   mCellSpacingTotal     = 0;
   mCols                 = mTableFrame->GetEffectiveCOLSAttribute();
   // assign the width of all fixed-width columns
-  AssignPreliminaryColumnWidths(aMaxWidth);
+  AssignPreliminaryColumnWidths(aPresContext, aMaxWidth);
 
   // set aMaxElementSize here because we compute mMinTableWidth in AssignPreliminaryColumnWidths
   if (nsnull != aMaxElementSize) {
@@ -137,13 +138,14 @@ void BasicTableLayoutStrategy::ContinuingFrameCheck()
 #endif
 }
 
-PRBool BCW_Wrapup(BasicTableLayoutStrategy* aStrategy, 
+PRBool BCW_Wrapup(nsIPresContext*           aPresContext,
+                  BasicTableLayoutStrategy* aStrategy, 
                   nsTableFrame*             aTableFrame, 
                   PRInt32*                  aAllocTypes)
 {
   if (aAllocTypes)
     delete [] aAllocTypes;
-  if (gsDebugBalance) {printf("BalanceColumnWidths ex \n"); aTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugBalance) {printf("BalanceColumnWidths ex \n"); aTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   return PR_TRUE;
 }
 
@@ -158,11 +160,12 @@ PRBool BCW_Wrapup(BasicTableLayoutStrategy* aStrategy,
 //      space if the sum of the col allocations is insufficient 
 
 PRBool 
-BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableStyle,
+BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresContext,
+                                              nsIStyleContext*         aTableStyle,
                                               const nsHTMLReflowState& aReflowState,
                                               nscoord                  aMaxWidthIn)
 {
-  if (gsDebugBalance) {printf("BalanceColumnWidths en max=%d\n", aMaxWidthIn); mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugBalance) {printf("BalanceColumnWidths en max=%d\n", aMaxWidthIn); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
 
   ContinuingFrameCheck();
   if (!aTableStyle) {
@@ -219,13 +222,13 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
 
   // if the max width available is less than the min content width for fixed table, we're done
   if (!tableIsAutoWidth && (maxWidth < mMinTableContentWidth)) {
-    return BCW_Wrapup(this, mTableFrame, nsnull);
+    return BCW_Wrapup(aPresContext, this, mTableFrame, nsnull);
   }
 
   // if the max width available is less than the min content width for auto table
   // that had no % cells/cols, we're done
   if (tableIsAutoWidth && (maxWidth < mMinTableContentWidth) && (0 == perAdjTableWidth)) {
-    return BCW_Wrapup(this, mTableFrame, nsnull);
+    return BCW_Wrapup(aPresContext, this, mTableFrame, nsnull);
   }
 
   PRInt32 cellSpacingTotal;
@@ -260,7 +263,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, PCT, PR_FALSE, allocTypes);
-      return BCW_Wrapup(this, mTableFrame, allocTypes);
+      return BCW_Wrapup(aPresContext, this, mTableFrame, allocTypes);
     }
   }
   // allocate fixed cols
@@ -271,7 +274,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, FIX, PR_TRUE, allocTypes);
-      return BCW_Wrapup(this, mTableFrame, allocTypes);
+      return BCW_Wrapup(aPresContext, this, mTableFrame, allocTypes);
     }
   }
   // allocate fixed adjusted cols
@@ -282,7 +285,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, FIX_ADJ, PR_TRUE, allocTypes);
-      return BCW_Wrapup(this, mTableFrame, allocTypes);
+      return BCW_Wrapup(aPresContext, this, mTableFrame, allocTypes);
     }
   }
   // allocate proportional cols up to their min proportional value
@@ -293,7 +296,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, MIN_PRO, PR_FALSE, allocTypes);
-      return BCW_Wrapup(this, mTableFrame, allocTypes);
+      return BCW_Wrapup(aPresContext, this, mTableFrame, allocTypes);
     }
   }
 
@@ -305,13 +308,13 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, DES_CON, PR_FALSE, allocTypes);
-      return BCW_Wrapup(this, mTableFrame, allocTypes);
+      return BCW_Wrapup(aPresContext, this, mTableFrame, allocTypes);
     }
   }
 
   // if this is a nested non auto table and pass1 reflow, we are done
   if ((maxWidth == NS_UNCONSTRAINEDSIZE) && (!tableIsAutoWidth))  {
-    return BCW_Wrapup(this, mTableFrame, allocTypes);
+    return BCW_Wrapup(aPresContext, this, mTableFrame, allocTypes);
   }
 
   // allocate the rest unconstrained
@@ -347,7 +350,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
   }
 
 
-  return BCW_Wrapup(this, mTableFrame, allocTypes);
+  return BCW_Wrapup(aPresContext, this, mTableFrame, allocTypes);
 }
 
 
@@ -691,9 +694,10 @@ BasicTableLayoutStrategy::ComputeColspanWidths(PRInt32           aWidthIndex,
 
 // Determine min, desired, fixed, and proportional sizes for the cols and 
 // and calculate min/max table width
-PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth)
+PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,
+                                                               nscoord         aMaxWidth)
 {
-  if (gsDebugAssign) {printf("AssignPrelimColWidths en max=%d\n", aMaxWidth); mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugAssign) {printf("AssignPrelimColWidths en max=%d\n", aMaxWidth); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   PRBool rv = PR_FALSE;
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 numCols = mTableFrame->GetColCount();
@@ -912,7 +916,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
   }
   SetMinAndMaxTableContentWidths();
 
-  if (gsDebugAssign) {printf("AssignPrelimColWidths ex\n"); mTableFrame->Dump(PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugAssign) {printf("AssignPrelimColWidths ex\n"); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   return rv;
 }
 

@@ -259,7 +259,7 @@ static nsIScrollableView * GetScrollableView(nsIPresContext * aPresContext, nsIF
   }
 
   nsIFrame * childFrame = nsnull;
-  aFrame->FirstChild(nsnull, &childFrame);
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
   while (nsnull != childFrame) {
     scrollableView = GetScrollableView(aPresContext, childFrame);
     if (nsnull != scrollableView) {
@@ -355,7 +355,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
 
   nsIFrame * firstChildFrame = nsnull;
-  FirstChild(nsnull, &firstChildFrame);
+  FirstChild(aPresContext, nsnull, &firstChildFrame);
 
    // Strategy: Let the inherited reflow happen as though the width and height of the
    // ScrollFrame are big enough to allow the listbox to

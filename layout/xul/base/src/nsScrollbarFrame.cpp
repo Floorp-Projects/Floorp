@@ -272,7 +272,8 @@ NS_NewScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
  * Anonymous interface
  */
 NS_IMETHODIMP
-nsScrollbarFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+nsScrollbarFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+                                         nsISupportsArray& aAnonymousChildren)
 {
   // if not content the create some anonymous content
   PRInt32 count = 0;
@@ -357,7 +358,7 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
      // tell the slider its attribute changed so it can 
      // update itself
      nsIFrame* slider;
-     nsScrollbarButtonFrame::GetChildWithTag(nsXULAtoms::slider, this, slider);
+     nsScrollbarButtonFrame::GetChildWithTag(aPresContext, nsXULAtoms::slider, this, slider);
      if (slider)
         slider->AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
   }

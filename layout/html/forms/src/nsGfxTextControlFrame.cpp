@@ -2862,14 +2862,16 @@ nsGfxTextControlFrame::GetAdditionalChildListName(PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+nsGfxTextControlFrame::FirstChild(nsIPresContext* aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame**      aFirstChild) const
 {
   if (nsLayoutAtoms::editorDisplayList) {
     *aFirstChild = mDisplayFrame;
     return NS_OK;
   }
   
-  return nsTextControlFrame::FirstChild(aListName, aFirstChild);
+  return nsTextControlFrame::FirstChild(aPresContext, aListName, aFirstChild);
 }
 
 NS_IMETHODIMP

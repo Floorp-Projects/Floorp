@@ -67,7 +67,8 @@ public:
 
 
   // nsIAnonymousContentCreator
-  NS_IMETHOD  CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
+  NS_IMETHOD  CreateAnonymousContent(nsIPresContext* aPresContext,
+                                     nsISupportsArray& aAnonymousItems);
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }

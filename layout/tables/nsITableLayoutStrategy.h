@@ -26,6 +26,7 @@
 #include "nscore.h"
 #include "nsSize.h"
 
+class nsIPresContext;
 class nsIStyleContext;
 struct nsHTMLReflowState;
 class nsTableCellFrame;
@@ -40,8 +41,9 @@ public:
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
     * @param aComputedWidth   the computed size of the table
     */
-  virtual PRBool Initialize(nsSize*       aMaxElementSize, 
-                            nscoord       aComputedWidth)=0;
+  virtual PRBool Initialize(nsIPresContext* aPresContext,
+                            nsSize*         aMaxElementSize, 
+                            nscoord         aComputedWidth)=0;
 
   /** compute the max-element-size for the table
     * @param aMaxElementSize  [OUT] width field set to the min legal width of the table
@@ -55,7 +57,8 @@ public:
     * @param aMaxWidth        the width constraint
 
     */
-  virtual PRBool BalanceColumnWidths(nsIStyleContext*         aTableStyle,
+  virtual PRBool BalanceColumnWidths(nsIPresContext*          aPresContext,
+                                     nsIStyleContext*         aTableStyle,
                                      const nsHTMLReflowState& aReflowState,
                                      nscoord                  aMaxWidth)=0;
 

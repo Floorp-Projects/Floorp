@@ -96,7 +96,8 @@ nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNam
  * Anonymous interface
  */
 NS_IMETHODIMP
-nsSliderFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+nsSliderFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+                                      nsISupportsArray& aAnonymousChildren)
 {
   // supply anonymous content if there is no content
   PRInt32 count = 0;

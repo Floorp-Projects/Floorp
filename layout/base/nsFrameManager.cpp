@@ -247,7 +247,7 @@ public:
                                  nsIAtom*  aPropertyName);
 
 #ifdef NS_DEBUG
-  NS_IMETHOD DebugVerifyStyleTree(nsIFrame* aFrame);
+  NS_IMETHOD DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame);
 #endif
 
 private:
@@ -906,7 +906,7 @@ VerifyContextParent(nsIFrame* aFrame, nsIStyleContext* aParentContext)
 }
 
 static void
-VerifyStyleTree(nsIFrame* aFrame, nsIStyleContext* aParentContext)
+VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIStyleContext* aParentContext)
 {
   nsIStyleContext*  context;
   aFrame->GetStyleContext(&context);
@@ -920,7 +920,7 @@ VerifyStyleTree(nsIFrame* aFrame, nsIStyleContext* aParentContext)
 
   do {
     child = nsnull;
-    nsresult result = aFrame->FirstChild(childList, &child);
+    nsresult result = aFrame->FirstChild(aPresContext, childList, &child);
     while ((NS_SUCCEEDED(result)) && child) {
       nsFrameState  state;
       child->GetFrameState(&state);
@@ -937,10 +937,10 @@ VerifyStyleTree(nsIFrame* aFrame, nsIStyleContext* aParentContext)
           VerifyContextParent(child, outOfFlowContext);
           NS_RELEASE(outOfFlowContext);
 
-          VerifyStyleTree(outOfFlowFrame, context);
+          VerifyStyleTree(aPresContext, outOfFlowFrame, context);
         }
         else { // regular frame
-          VerifyStyleTree(child, context);
+          VerifyStyleTree(aPresContext, child, context);
         }
         NS_IF_RELEASE(frameType);
       }
@@ -969,13 +969,13 @@ VerifyStyleTree(nsIFrame* aFrame, nsIStyleContext* aParentContext)
 }
 
 NS_IMETHODIMP
-FrameManager::DebugVerifyStyleTree(nsIFrame* aFrame)
+FrameManager::DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
   if (aFrame) {
     nsIStyleContext* context;
     aFrame->GetStyleContext(&context);
     nsIStyleContext* parentContext = context->GetParent();
-    VerifyStyleTree(aFrame, parentContext);
+    VerifyStyleTree(aPresContext, aFrame, parentContext);
     NS_IF_RELEASE(parentContext);
     NS_RELEASE(context);
   }
@@ -991,7 +991,7 @@ FrameManager::ReParentStyleContext(nsIPresContext* aPresContext,
   nsresult result = NS_ERROR_NULL_POINTER;
   if (aFrame) {
 #ifdef NS_DEBUG
-    DebugVerifyStyleTree(aFrame);
+    DebugVerifyStyleTree(aPresContext, aFrame);
 #endif
 
     nsIStyleContext* oldContext = nsnull;
@@ -1011,7 +1011,7 @@ FrameManager::ReParentStyleContext(nsIPresContext* aPresContext,
 
           do {
             child = nsnull;
-            result = aFrame->FirstChild(childList, &child);
+            result = aFrame->FirstChild(aPresContext, childList, &child);
             while ((NS_SUCCEEDED(result)) && child) {
               nsFrameState  state;
               child->GetFrameState(&state);
@@ -1070,7 +1070,7 @@ FrameManager::ReParentStyleContext(nsIPresContext* aPresContext,
             }
           }
 #ifdef NS_DEBUG
-          VerifyStyleTree(aFrame, aNewParentContext);
+          VerifyStyleTree(aPresContext, aFrame, aNewParentContext);
 #endif
         }
         NS_RELEASE(newContext);
@@ -1285,7 +1285,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
     do {
       child = nsnull;
-      result = aFrame->FirstChild(childList, &child);
+      result = aFrame->FirstChild(aPresContext, childList, &child);
       while ((NS_SUCCEEDED(result)) && (child)) {
         nsFrameState  state;
         child->GetFrameState(&state);
@@ -1349,7 +1349,7 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
                           aAttrNameSpaceID, aAttribute,
                           aChangeList, aMinChange, frameChange);
 #ifdef NS_DEBUG
-    VerifyStyleTree(frame, parentContext);
+    VerifyStyleTree(aPresContext, frame, parentContext);
 #endif
     NS_IF_RELEASE(parentContext);
     NS_RELEASE(styleContext);
@@ -1412,7 +1412,7 @@ FrameManager::CaptureFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, 
   PRInt32   childListIndex = 0;
   do {    
     nsIFrame* childFrame;
-    aFrame->FirstChild(childListName, &childFrame);
+    aFrame->FirstChild(aPresContext, childListName, &childFrame);
     while (childFrame) {             
       rv = CaptureFrameState(aPresContext, childFrame, aState);
       // Get the next sibling child frame
@@ -1477,7 +1477,7 @@ FrameManager::RestoreFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, 
   PRInt32   childListIndex = 0;
   do {    
     nsIFrame* childFrame;
-    aFrame->FirstChild(childListName, &childFrame);
+    aFrame->FirstChild(aPresContext, childListName, &childFrame);
     while (childFrame) {             
       rv = RestoreFrameState(aPresContext, childFrame, aState);
       // Get the next sibling child frame

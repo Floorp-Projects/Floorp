@@ -26,7 +26,10 @@
 #include "nsIFrame.h"
 
 enum nsTraversalType{LEAF, EXTENSIVE, FASTEST}; 
-nsresult NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator, nsTraversalType aType, nsIFrame *aStart);
+nsresult NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
+                              nsTraversalType aType,
+                              nsIPresContext* aPresContext,
+                              nsIFrame *aStart);
 
 
 #endif //NSFRAMETRAVERSAL_H

@@ -28,6 +28,7 @@
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 
+class nsIPresContext;
 class nsISupportsArray;
 class nsIAtom;
 
@@ -44,7 +45,8 @@ class nsIAtom;
 class nsIAnonymousContentCreator : public nsISupports {
 public:
      static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUS_CONTENT_CREATOR_IID; return iid; }
-     NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aAnonymousItems)=0;
+     NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+                                       nsISupportsArray& aAnonymousItems)=0;
 };
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);

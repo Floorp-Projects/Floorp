@@ -134,7 +134,7 @@ nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord
   // where we need to start computing things from.
   nsRect rowRect;
   nsIFrame* rowFrame;
-  mTreeItem->FirstChild(nsnull, &rowFrame);
+  mTreeItem->FirstChild(mPresContext, nsnull, &rowFrame);
   NS_ASSERTION ( rowFrame, "couldn't get rowGroup's row frame" );
   rowFrame->GetRect(rowRect);
    

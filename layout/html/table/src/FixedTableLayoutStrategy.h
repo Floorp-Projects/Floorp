@@ -58,7 +58,8 @@ public:
 	  * @param aReflowState - the reflow state for mTableFrame
 	  * @param aMaxWidth - the computed max width for columns to fit into
 	  */
-  virtual PRBool  BalanceColumnWidths(nsIStyleContext*         aTableStyle,
+  virtual PRBool  BalanceColumnWidths(nsIPresContext*          aPresContext,
+                                      nsIStyleContext*         aTableStyle,
                                       const nsHTMLReflowState& aReflowState,
                                       nscoord                  aMaxWidth);
 
@@ -95,7 +96,8 @@ protected:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool AssignPreliminaryColumnWidths(nscoord aComputedWidth);
+  virtual PRBool AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,
+                                               nscoord         aComputedWidth);
 
 
 };

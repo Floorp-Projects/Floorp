@@ -101,12 +101,18 @@ nsContainerFrame::Destroy(nsIPresContext* aPresContext)
 // Child frame enumeration
 
 NS_IMETHODIMP
-nsContainerFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+nsContainerFrame::FirstChild(nsIPresContext* aPresContext,
+                             nsIAtom*        aListName,
+                             nsIFrame**      aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
-  // We only know about the unnamed principal child list
+  // We only know about the unnamed principal child list and the overflow
+  // list
   if (nsnull == aListName) {
     *aFirstChild = mFrames.FirstChild();
+    return NS_OK;
+  } else if (nsLayoutAtoms::overflowList == aListName) {
+    *aFirstChild = GetOverflowFrames(aPresContext, PR_FALSE);
     return NS_OK;
   } else {
     *aFirstChild = nsnull;
@@ -255,7 +261,7 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
   // point. We try to use a quick check on the child frames bbox to
   // avoid a potentially expensive recursion into the child frames
   // GetFrameForPoint method.
-  FirstChild(aList, &kid);
+  FirstChild(aPresContext, aList, &kid);
   while (nsnull != kid) {
     kid->GetRect(kidRect);
     // Do a quick check and see if the child frame contains the point
@@ -282,7 +288,7 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
 
   // Try again, this time looking only inside child frames that have
   // outside children.
-  FirstChild(aList, &kid);
+  FirstChild(aPresContext, aList, &kid);
   while (nsnull != kid) {
     nsFrameState state;
     kid->GetFrameState(&state);
@@ -321,7 +327,7 @@ nsContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
   nsresult  rv;
 
   // Get the old frame's previous sibling frame
-  FirstChild(aListName, &firstChild);
+  FirstChild(aPresContext, aListName, &firstChild);
   nsFrameList frames(firstChild);
   NS_ASSERTION(frames.ContainsFrame(aOldFrame), "frame is not a valid child frame");
   prevFrame = frames.GetPrevSiblingFor(aOldFrame);
@@ -498,7 +504,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
           // hidden visibility and be visible anyway
           nsIFrame* firstChild;
 
-          aFrame->FirstChild(nsnull, &firstChild);
+          aFrame->FirstChild(aPresContext, nsnull, &firstChild);
           if (firstChild) {
             // Not a left frame, so the view needs to be visible, but marked
             // as having transparent content
@@ -677,7 +683,7 @@ nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
   do {
     // Recursively walk aFrame's child frames
     nsIFrame* childFrame;
-    aFrame->FirstChild(childListName, &childFrame);
+    aFrame->FirstChild(aPresContext, childListName, &childFrame);
     while (childFrame) {
       nsIView*  view;
 
@@ -805,7 +811,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
 
 nsIFrame*
 nsContainerFrame::GetOverflowFrames(nsIPresContext* aPresContext,
-                                    PRBool          aRemoveProperty)
+                                    PRBool          aRemoveProperty) const
 {
   nsCOMPtr<nsIPresShell>     presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
@@ -821,7 +827,7 @@ nsContainerFrame::GetOverflowFrames(nsIPresContext* aPresContext,
       if (aRemoveProperty) {
         options |= NS_IFRAME_MGR_REMOVE_PROP;
       }
-      frameManager->GetFrameProperty(this, nsLayoutAtoms::overflowProperty,
+      frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowProperty,
                                      options, &value);
       return (nsIFrame*)value;
     }
@@ -992,7 +998,7 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
   PRBool outputOneList = PR_FALSE;
   do {
     nsIFrame* kid;
-    FirstChild(listName, &kid);
+    FirstChild(aPresContext, listName, &kid);
     if (nsnull != kid) {
       if (outputOneList) {
         IndentBy(out, aIndent);
@@ -1005,8 +1011,13 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
       }
       fputs("<\n", out);
       while (nsnull != kid) {
-        nsIFrameDebug*  frameDebug;
+        // Verify the child frame's parent frame pointer is correct
+        nsIFrame* parentFrame;
+        kid->GetParent(&parentFrame);
+        NS_ASSERTION(parentFrame == (nsIFrame*)this, "bad parent frame pointer");
 
+        // Have the child frame list
+        nsIFrameDebug*  frameDebug;
         if (NS_SUCCEEDED(kid->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
           frameDebug->List(aPresContext, out, aIndent + 1);
         }

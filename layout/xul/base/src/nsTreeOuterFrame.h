@@ -61,7 +61,7 @@ protected:
   nsTreeOuterFrame();
   virtual ~nsTreeOuterFrame();
 
-  nsITreeFrame* FindTreeFrame();
+  nsITreeFrame* FindTreeFrame(nsIPresContext* aPresContext);
 
 protected: // Data Members
   

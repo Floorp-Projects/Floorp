@@ -59,7 +59,7 @@ public:
   NS_DECL_ISUPPORTS
   
   // The nsIAnonymousContentCreator interface
-  NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
+  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext, nsISupportsArray& aAnonymousItems);
   
   // The nsITimerCallback interface
   NS_IMETHOD_(void) Notify(nsITimer *timer);
@@ -75,8 +75,9 @@ public:
   // The following four methods are all overridden so that the menu children
   // can be stored in a separate list (so that they don't impact reflow of the
   // actual menu item at all).
-  NS_IMETHOD FirstChild(nsIAtom*   aListName,
-                        nsIFrame** aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const;
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
@@ -154,8 +155,8 @@ public:
 
 protected:
   static void UpdateDismissalListener(nsIMenuParent* aMenuParent);
-  void UpdateMenuType();
-  void UpdateMenuSpecialState();
+  void UpdateMenuType(nsIPresContext* aPresContext);
+  void UpdateMenuSpecialState(nsIPresContext* aPresContext);
 
   void OpenMenuInternal(PRBool aActivateFlag);
   void GetMenuChildrenElement(nsIContent** aResult);

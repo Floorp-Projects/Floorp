@@ -79,26 +79,30 @@ private :
 class nsLeafIterator: public nsFrameIterator
 {
 public:
-  nsLeafIterator(nsIFrame *start);
+  nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *start);
 private :
   
   NS_IMETHOD Next();
 
   NS_IMETHOD Prev();
 
+  nsIPresContext* mPresContext;
 };
 
 /************IMPLEMENTATIONS**************/
 
 nsresult
-NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator, nsTraversalType aType, nsIFrame *aStart)
+NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
+                     nsTraversalType aType,
+                     nsIPresContext* aPresContext,
+                     nsIFrame *aStart)
 {
   if (!aEnumerator || !aStart)
     return NS_ERROR_NULL_POINTER;
   switch(aType)
   {
   case LEAF: {
-    nsLeafIterator *trav = new nsLeafIterator(aStart);
+    nsLeafIterator *trav = new nsLeafIterator(aPresContext, aStart);
     if (!trav)
       return NS_ERROR_OUT_OF_MEMORY;
     *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
@@ -210,7 +214,8 @@ nsFrameIterator::Last()
 /*********LEAFITERATOR**********/
 
 
-nsLeafIterator::nsLeafIterator(nsIFrame *aStart)
+nsLeafIterator::nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *aStart)
+  : mPresContext(aPresContext)
 {
   setStart(aStart);
   setCurrent(aStart);
@@ -227,7 +232,7 @@ nsLeafIterator::Next()
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
-  while(NS_SUCCEEDED(parent->FirstChild(nsnull,&result)) && result)
+  while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
   {
     parent = result;
   }
@@ -239,7 +244,7 @@ nsLeafIterator::Next()
     while(parent){
       if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
         parent = result;
-        while(NS_SUCCEEDED(parent->FirstChild(nsnull,&result)) && result)
+        while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
         {
           parent = result;
         }
@@ -275,12 +280,12 @@ nsLeafIterator::Prev()
   while(parent){
     nsIFrame *grandParent;
     if (NS_SUCCEEDED(parent->GetParent(&grandParent)) && grandParent &&
-      NS_SUCCEEDED(grandParent->FirstChild(nsnull,&result))){
+      NS_SUCCEEDED(grandParent->FirstChild(mPresContext, nsnull,&result))){
       nsFrameList list(result);
       result = list.GetPrevSiblingFor(parent);
       if (result){
         parent = result;
-        while(NS_SUCCEEDED(parent->FirstChild(nsnull,&result)) && result){
+        while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result){
           parent = result;
           while(NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
             parent = result;

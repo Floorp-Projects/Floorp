@@ -510,10 +510,12 @@ nsXULTreeElement::EnsureElementIsVisible(nsIDOMXULElement *aElement)
     shell->GetPrimaryFrameFor(content, &outerFrame);
 
     if (outerFrame) {
+      nsCOMPtr<nsIPresContext> presContext;
+      shell->GetPresContext(getter_AddRefs(presContext));
 
       // need to look at the outer frame's children to find the nsTreeFrame
       nsIFrame *childFrame=nsnull;
-      outerFrame->FirstChild(nsnull, &childFrame);
+      outerFrame->FirstChild(presContext, nsnull, &childFrame);
 
       // now iterate through the children
       while (childFrame) {

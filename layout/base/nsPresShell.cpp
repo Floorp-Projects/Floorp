@@ -503,16 +503,16 @@ private:
 
 #ifdef NS_DEBUG
 static void
-VerifyStyleTree(nsIFrameManager* aFrameManager)
+VerifyStyleTree(nsIPresContext* aPresContext, nsIFrameManager* aFrameManager)
 {
   if (aFrameManager && nsIFrameDebug::GetVerifyStyleTreeEnable()) {
     nsIFrame* rootFrame;
 
     aFrameManager->GetRootFrame(&rootFrame);
-    aFrameManager->DebugVerifyStyleTree(rootFrame);
+    aFrameManager->DebugVerifyStyleTree(aPresContext, rootFrame);
   }
 }
-#define VERIFY_STYLE_TREE VerifyStyleTree(mFrameManager)
+#define VERIFY_STYLE_TREE VerifyStyleTree(mPresContext, mFrameManager)
 #else
 #define VERIFY_STYLE_TREE
 #endif
@@ -1566,7 +1566,7 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 
   // The page sequence frame is the child of the rootFrame
   mFrameManager->GetRootFrame(&rootFrame);
-  rootFrame->FirstChild(nsnull, &child);
+  rootFrame->FirstChild(mPresContext, nsnull, &child);
 
   if (nsnull != child) {
 
@@ -2885,8 +2885,8 @@ CompareTrees(nsIPresContext* aPresContext, nsIFrame* aA, nsIFrame* aB)
   PRInt32 listIndex = 0;
   do {
     nsIFrame* k1, *k2;
-    aA->FirstChild(listName, &k1);
-    aB->FirstChild(listName, &k2);
+    aA->FirstChild(aPresContext, listName, &k1);
+    aB->FirstChild(aPresContext, listName, &k2);
     PRInt32 l1 = nsContainerFrame::LengthOf(k1);
     PRInt32 l2 = nsContainerFrame::LengthOf(k2);
     if (l1 != l2) {

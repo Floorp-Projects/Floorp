@@ -156,13 +156,14 @@ nsMenuFrame::Init(nsIPresContext*  aPresContext,
 // The following methods are all overridden to ensure that the menupopup frame
 // is placed in the appropriate list.
 NS_IMETHODIMP
-nsMenuFrame::FirstChild(nsIAtom*   aListName,
-                        nsIFrame** aFirstChild) const
+nsMenuFrame::FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const
 {
   if (nsLayoutAtoms::popupList == aListName) {
     *aFirstChild = mPopupFrames.FirstChild();
   } else {
-    nsBoxFrame::FirstChild(aListName, aFirstChild);
+    nsBoxFrame::FirstChild(aPresContext, aListName, aFirstChild);
   }
   return NS_OK;
 }
@@ -451,9 +452,9 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
       OpenMenuInternal(PR_FALSE);
   } else if (aAttribute == nsHTMLAtoms::checked) {
     if (mType != eMenuType_Normal)
-        UpdateMenuSpecialState();
+        UpdateMenuSpecialState(aPresContext);
   } else if (aAttribute == nsHTMLAtoms::type) {
-    UpdateMenuType();
+    UpdateMenuType(aPresContext);
   }
 
   if (mHasAnonymousContent) {
@@ -872,7 +873,7 @@ nsMenuFrame::IsDisabled()
 }
 
 void
-nsMenuFrame::UpdateMenuType()
+nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
 {
   nsAutoString value;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value);
@@ -886,12 +887,12 @@ nsMenuFrame::UpdateMenuType()
                                PR_TRUE);
     mType = eMenuType_Normal;
   }
-  UpdateMenuSpecialState();
+  UpdateMenuSpecialState(aPresContext);
 }
 
 /* update checked-ness for type="checkbox" and type="radio" */
 void
-nsMenuFrame::UpdateMenuSpecialState() {
+nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
   nsAutoString value;
   PRBool newChecked;
 
@@ -955,7 +956,7 @@ nsMenuFrame::UpdateMenuSpecialState() {
   NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't get parent of radio menu frame\n");
   if (NS_FAILED(rv)) return;
   
-  rv = parent->FirstChild(NULL, &sib);
+  rv = parent->FirstChild(aPresContext, NULL, &sib);
   NS_ASSERTION((NS_SUCCEEDED(rv) && sib), 
                "couldn't get first sib of radio menu frame\n");
   if (NS_FAILED(rv) || !sib) return;
@@ -987,7 +988,7 @@ nsMenuFrame::UpdateMenuSpecialState() {
 }
 
 NS_IMETHODIMP
-nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+nsMenuFrame::CreateAnonymousContent(nsIPresContext* aPresContext, nsISupportsArray& aAnonymousChildren)
 {
   // Create anonymous children only if the menu has no children or
   // only has a menuchildren as its child.
@@ -1068,7 +1069,7 @@ nsMenuFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
   aAnonymousChildren.AppendElement(content);
 
   // Do the type="checkbox" magic
-  UpdateMenuType();
+  UpdateMenuType(aPresContext);
 
   // Create a spring that serves as padding between the text and the
   // accelerator.

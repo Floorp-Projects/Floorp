@@ -57,7 +57,11 @@ public:
 
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
 //override of nsFrame method
-  NS_IMETHOD GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, PRInt32* outFrameContentOffset, nsIFrame **outChildFrame);
+  NS_IMETHOD GetChildFrameContainingOffset(nsIPresContext* aPresContext,
+                                           PRInt32 inContentOffset,
+                                           PRBool inHint,
+                                           PRInt32* outFrameContentOffset,
+                                           nsIFrame **outChildFrame);
 protected:
   virtual PRIntn GetSkipSides() const;
 
@@ -165,7 +169,7 @@ nsFirstLetterFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRang
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
   nsIFrame *child;
-  nsresult result = FirstChild(nsnull, &child);
+  nsresult result = FirstChild(aPresContext, nsnull, &child);
   while (NS_SUCCEEDED(result) && child)
   {
     child->SetSelected(aPresContext,aRange, aSelected,aSpread);//dont worry about result. there are more frames to come
@@ -186,10 +190,14 @@ nsFirstLetterFrame::FindTextRuns(nsLineLayout& aLineLayout)
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, PRInt32* outFrameContentOffset, nsIFrame **outChildFrame)
+nsFirstLetterFrame::GetChildFrameContainingOffset(nsIPresContext* aPresContext,
+                                                  PRInt32 inContentOffset,
+                                                  PRBool inHint,
+                                                  PRInt32* outFrameContentOffset,
+                                                  nsIFrame **outChildFrame)
 {
   nsIFrame *kid;
-  nsresult result = FirstChild(nsnull, &kid);
+  nsresult result = FirstChild(aPresContext, nsnull, &kid);
   if (NS_SUCCEEDED(result) && kid)
   {
     return kid->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);

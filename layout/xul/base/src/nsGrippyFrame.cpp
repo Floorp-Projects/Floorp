@@ -152,12 +152,12 @@ nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext)
 
 
 nsIFrame*
-nsGrippyFrame::GetChildBeforeAfter(nsIFrame* start, PRBool before)
+nsGrippyFrame::GetChildBeforeAfter(nsIPresContext* aPresContext, nsIFrame* start, PRBool before)
 {
    nsIFrame* parent = nsnull;
    start->GetParent(&parent);
-   PRInt32 index = IndexOf(parent,start);
-   PRInt32 count = CountFrames(parent);
+   PRInt32 index = IndexOf(aPresContext, parent,start);
+   PRInt32 count = CountFrames(aPresContext, parent);
 
    if (index == -1) 
      return nsnull;
@@ -167,24 +167,24 @@ nsGrippyFrame::GetChildBeforeAfter(nsIFrame* start, PRBool before)
          return nsnull;
      }
 
-     return GetChildAt(parent, index-1);
+     return GetChildAt(aPresContext, parent, index-1);
    }
 
 
    if (index == count-1)
        return nsnull;
 
-   return GetChildAt(parent, index+1);
+   return GetChildAt(aPresContext, parent, index+1);
 
 }
 
 PRInt32
-nsGrippyFrame::IndexOf(nsIFrame* parent, nsIFrame* child)
+nsGrippyFrame::IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFrame* child)
 {
   PRInt32 count = 0;
 
   nsIFrame* childFrame;
-  parent->FirstChild(nsnull, &childFrame); 
+  parent->FirstChild(aPresContext, nsnull, &childFrame); 
   while (nsnull != childFrame) 
   {    
     if (childFrame == child)
@@ -199,12 +199,12 @@ nsGrippyFrame::IndexOf(nsIFrame* parent, nsIFrame* child)
 }
 
 PRInt32
-nsGrippyFrame::CountFrames(nsIFrame* aFrame)
+nsGrippyFrame::CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
   PRInt32 count = 0;
 
   nsIFrame* childFrame;
-  aFrame->FirstChild(nsnull, &childFrame); 
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame); 
   while (nsnull != childFrame) 
   {    
     nsresult rv = childFrame->GetNextSibling(&childFrame);
@@ -216,12 +216,12 @@ nsGrippyFrame::CountFrames(nsIFrame* aFrame)
 }
 
 nsIFrame*
-nsGrippyFrame::GetChildAt(nsIFrame* parent, PRInt32 index)
+nsGrippyFrame::GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt32 index)
 {
   PRInt32 count = 0;
 
   nsIFrame* childFrame;
-  parent->FirstChild(nsnull, &childFrame); 
+  parent->FirstChild(aPresContext, nsnull, &childFrame); 
   while (nsnull != childFrame) 
   {    
     if (count == index)

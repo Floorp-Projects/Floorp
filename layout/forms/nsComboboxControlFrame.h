@@ -67,7 +67,8 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
    // nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aChildList);
+  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+                                    nsISupportsArray& aChildList);
 
    // nsIFrame
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
@@ -89,7 +90,9 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const;
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                nsIAtom*        aListName,
                                nsIFrame*       aChildList);

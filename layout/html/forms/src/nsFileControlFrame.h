@@ -115,7 +115,8 @@ public:
 
 
   // from nsIAnonymousContentCreator
-  NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aChildList);
+  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+                                    nsISupportsArray& aChildList);
 
 
   // mouse events when out browse button is pressed
@@ -183,7 +184,8 @@ protected:
   nsIPresContext*     mPresContext;  // weak reference
 
 private:
-  nsTextControlFrame* GetTextControlFrame(nsIFrame* aStart);
+  nsTextControlFrame* GetTextControlFrame(nsIPresContext* aPresContext,
+                                          nsIFrame* aStart);
 
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }

@@ -162,7 +162,7 @@ nsTableRowFrame::InsertFrames(nsIPresContext* aPresContext,
   nsTableFrame::GetTableFrame(this, tableFrame);
   
   // gather the new frames (only those which are cells) into an array
-  nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsLayoutAtoms::tableCellFrame);
+  nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(aPresContext, this, aPrevFrame, nsLayoutAtoms::tableCellFrame);
   nsVoidArray cellChildren;
   for (nsIFrame* childFrame = aFrameList; childFrame; childFrame->GetNextSibling(&childFrame)) {
     nsIAtom* frameType;
@@ -245,7 +245,7 @@ nsTableRowFrame::DidResize(nsIPresContext* aPresContext,
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
 
-  nsTableIterator iter(*this, eTableDIR);
+  nsTableIterator iter(aPresContext, *this, eTableDIR);
   nsIFrame* cellFrame = iter.First();
 
   while (nsnull != cellFrame) {
@@ -320,16 +320,17 @@ void nsTableRowFrame::SetMaxChildHeight(nscoord aChildHeight)
 }
 
 static
-PRBool IsFirstRow(nsTableFrame&    aTable,
+PRBool IsFirstRow(nsIPresContext*  aPresContext,
+                  nsTableFrame&    aTable,
                   nsTableRowFrame& aRow)
 {
   nsIFrame* firstRowGroup = nsnull;
-  aTable.FirstChild(nsnull, &firstRowGroup);
+  aTable.FirstChild(aPresContext, nsnull, &firstRowGroup);
   nsIFrame* rowGroupFrame = nsnull;
   nsresult rv = aRow.GetParent(&rowGroupFrame);
   if (NS_SUCCEEDED(rv) && (rowGroupFrame == firstRowGroup)) {
     nsIFrame* firstRow;
-    rowGroupFrame->FirstChild(nsnull, &firstRow);
+    rowGroupFrame->FirstChild(aPresContext, nsnull, &firstRow);
     return (&aRow == firstRow);
   }
   return PR_FALSE;
@@ -365,7 +366,7 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext* aPresContext,
         nsRect rect(0, 0, mRect.width + cellSpacingX, mRect.height);
         // first row may have gotten too much cell spacing Y
         if (tableFrame->GetRowCount() != 1) {
-          if (IsFirstRow(*tableFrame, *this)) { 
+          if (IsFirstRow(aPresContext, *tableFrame, *this)) { 
             rect.height -= halfCellSpacingY;
           }
           else {
@@ -696,7 +697,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
 
   nsTableIteration dir = (aReflowState.reflowState.availableWidth == NS_UNCONSTRAINEDSIZE)
                          ? eTableLTR : eTableDIR;
-  nsTableIterator iter(*this, dir);
+  nsTableIterator iter(aPresContext, *this, dir);
   if (iter.IsLeftToRight()) {
     prevColIndex = -1;
   }
@@ -1409,7 +1410,7 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
  * so the default "get the child rect, see if it contains the event point" action isn't
  * sufficient.  We have to ask the row if it has a child that contains the point.
  */
-PRBool nsTableRowFrame::Contains(const nsPoint& aPoint)
+PRBool nsTableRowFrame::Contains(nsIPresContext* aPresContext, const nsPoint& aPoint)
 {
   PRBool result = PR_FALSE;
   // first, check the row rect and see if the point is in their
@@ -1419,7 +1420,7 @@ PRBool nsTableRowFrame::Contains(const nsPoint& aPoint)
   // if that fails, check the cells, they might span outside the row rect
   else {
     nsIFrame* kid;
-    FirstChild(nsnull, &kid);
+    FirstChild(aPresContext, nsnull, &kid);
     while (nsnull != kid) {
       nsRect kidRect;
       kid->GetRect(kidRect);

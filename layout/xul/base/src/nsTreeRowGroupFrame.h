@@ -44,9 +44,11 @@ public:
 
   NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
                                          nsIAtom** aListName) const;
-  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const;
 
-  void SetScrollbarFrame(nsIFrame* aFrame);
+  void SetScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
   void SetFrameConstructor(nsCSSFrameConstructor* aFrameConstructor) { mFrameConstructor = aFrameConstructor; };
   
   void CreateScrollbar(nsIPresContext* aPresContext);
@@ -148,7 +150,7 @@ protected:
 
   void ComputeTotalRowCount(PRInt32& rowCount, nsIContent* aParent);
 
-  static void ClearFrameRefs(nsIPresShell* aPresShell, nsIFrame *aParent);
+  static void ClearFrameRefs(nsIPresContext* aPresContext, nsIPresShell* aPresShell, nsIFrame *aParent);
   
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this

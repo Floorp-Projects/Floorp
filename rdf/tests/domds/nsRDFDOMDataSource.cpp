@@ -562,9 +562,10 @@ nsRDFDOMDataSource::createFrameArcs(nsIFrame* frame,
   nsresult rv;
   nsIFrame *child;
   nsCOMPtr<nsIRDFResource> resource;
+  nsCOMPtr<nsIPresContext> presContext;
 
   // primary child list
-  frame->FirstChild(nsnull, &child);
+  frame->FirstChild(nsnull, nsnull, &child);
   while (child) {
     rv = getResourceForObject(child, getter_AddRefs(resource));
     arcs->AppendElement(resource);
@@ -577,7 +578,7 @@ nsRDFDOMDataSource::createFrameArcs(nsIFrame* frame,
   nsCOMPtr<nsIAtom> childList;
   frame->GetAdditionalChildListName(listIndex++, getter_AddRefs(childList));
   while (childList) {
-    rv = frame->FirstChild(childList, &child);
+    rv = frame->FirstChild(nsnull, childList, &child);
     while (NS_SUCCEEDED(rv) && (child)) {
       rv = getResourceForObject(child, getter_AddRefs(resource));
       arcs->AppendElement(resource);

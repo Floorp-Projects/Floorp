@@ -808,7 +808,7 @@ nsTreeRowGroupFrame::PagedUpDown()
 }
 
 void
-nsTreeRowGroupFrame::SetScrollbarFrame(nsIFrame* aFrame)
+nsTreeRowGroupFrame::SetScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
   mScrollbar = aFrame;
   nsFrameList frameList(mScrollbar);
@@ -825,7 +825,7 @@ nsTreeRowGroupFrame::SetScrollbarFrame(nsIFrame* aFrame)
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, "5000", PR_FALSE);
 
   nsIFrame* result;
-  nsScrollbarButtonFrame::GetChildWithTag(nsXULAtoms::slider, aFrame, result);
+  nsScrollbarButtonFrame::GetChildWithTag(aPresContext, nsXULAtoms::slider, aFrame, result);
   ((nsSliderFrame*)result)->SetScrollbarListener(this);
 }
 
@@ -864,15 +864,16 @@ nsTreeRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeRowGroupFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+nsTreeRowGroupFrame::FirstChild(nsIPresContext* aPresContext,
+                                nsIAtom*        aListName,
+                                nsIFrame**      aFirstChild) const
 {
   if (nsXULAtoms::scrollbarlist == aListName) {
     *aFirstChild = mScrollbarList.FirstChild();
     return NS_OK;
   }
   
-  nsTableRowGroupFrame::FirstChild(aListName, aFirstChild);
-  return NS_OK;
+  return nsTableRowGroupFrame::FirstChild(aPresContext, aListName, aFirstChild);
 }
 
 NS_IMETHODIMP
@@ -1059,7 +1060,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
       // event manager doesn't send events to the destroyed scrollbar frames
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
-      ClearFrameRefs(shell, mScrollbar);
+      ClearFrameRefs(aPresContext, shell, mScrollbar);
       
       // Nuke the scrollbar.
       mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar, nsnull);
@@ -1701,7 +1702,7 @@ nsTreeRowGroupFrame::CollapseScrollbar(PRBool hide, nsIPresContext* aPresContext
 
   // collapse the child
   nsIFrame* child = nsnull;
-  frame->FirstChild(nsnull, &child);
+  frame->FirstChild(aPresContext, nsnull, &child);
 
   while (nsnull != child) 
   {
@@ -2098,10 +2099,12 @@ nsTreeRowGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIConte
 
 
 void
-nsTreeRowGroupFrame::ClearFrameRefs(nsIPresShell *aShell, nsIFrame *aParent)
+nsTreeRowGroupFrame::ClearFrameRefs(nsIPresContext* aPresContext,
+                                    nsIPresShell *aShell,
+                                    nsIFrame *aParent)
 {
   nsIFrame* child;
-  aParent->FirstChild(nsnull,&child);
+  aParent->FirstChild(aPresContext, nsnull,&child);
 
   while (child) {
 
@@ -2114,7 +2117,7 @@ nsTreeRowGroupFrame::ClearFrameRefs(nsIPresShell *aShell, nsIFrame *aParent)
     child->GetContent(getter_AddRefs(content));
     content->SetParent(nsnull);
     
-    ClearFrameRefs(aShell, child);
+    ClearFrameRefs(aPresContext, aShell, child);
     child->GetNextSibling(&child);
   }
   aShell->ClearFrameRefs(aParent);

@@ -85,7 +85,9 @@ public:
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const;
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const;
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
@@ -326,14 +328,17 @@ protected:
   //----------------------------------------
   // List handling kludge
 
-  void RenumberLists();
+  void RenumberLists(nsIPresContext* aPresContext);
 
-  PRBool RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal);
+  PRBool RenumberListsIn(nsIPresContext* aPresContext,
+                         nsIFrame* aContainerFrame,
+                         PRInt32* aOrdinal);
 
-  PRBool RenumberListsInBlock(nsBlockFrame* aContainerFrame,
+  PRBool RenumberListsInBlock(nsIPresContext* aPresContext,
+                              nsBlockFrame* aContainerFrame,
                               PRInt32* aOrdinal);
 
-  PRBool RenumberListsFor(nsIFrame* aKid, PRInt32* aOrdinal);
+  PRBool RenumberListsFor(nsIPresContext* aPresContext, nsIFrame* aKid, PRInt32* aOrdinal);
 
   PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 
@@ -345,7 +350,7 @@ protected:
   //----------------------------------------
 
   nsLineBox* GetOverflowLines(nsIPresContext* aPresContext,
-                              PRBool          aRemoveProperty);
+                              PRBool          aRemoveProperty) const;
 
   nsresult SetOverflowLines(nsIPresContext* aPresContext,
                             nsLineBox*      aOverflowFrames);

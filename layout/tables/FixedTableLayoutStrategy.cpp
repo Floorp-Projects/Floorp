@@ -40,7 +40,8 @@ FixedTableLayoutStrategy::~FixedTableLayoutStrategy()
 {
 }
 
-PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableStyle,
+PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresContext,
+                                                     nsIStyleContext*         aTableStyle,
                                                      const nsHTMLReflowState& aReflowState,
                                                      nscoord                  aMaxWidth)
 {
@@ -55,7 +56,8 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aT
  * otherwise the cell get a proportion of the remaining space 
  *  as determined by the table width attribute.  If no table width attribute, it gets 0 width
  */
-PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputedWidth)
+PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,
+                                                               nscoord         aComputedWidth)
 {
   // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
   const nsStylePosition* tablePosition;

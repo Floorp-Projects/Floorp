@@ -579,9 +579,10 @@ protected:
                                        nsIStyleContext*         aStyleContext,
                                        nsFrameItems&            aFrameItems);
 
-  nsresult GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame, 
-                                  PRUint8    aChildDisplayType,
-                                  nsIFrame*& aNewParentFrame);
+  nsresult GetAdjustedParentFrame(nsIPresContext* aPresContext,
+                                  nsIFrame*       aCurrentParentFrame, 
+                                  PRUint8         aChildDisplayType,
+                                  nsIFrame*&      aNewParentFrame);
 
 
   nsresult ProcessChildren(nsIPresShell* aPresShell, 

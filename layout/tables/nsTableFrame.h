@@ -150,9 +150,10 @@ public:
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
-  static nsIFrame* GetFrameAtOrBefore(nsIFrame* aParentFrame,
-                                      nsIFrame* aPriorChildFrame,
-                                      nsIAtom*  aChildType);
+  static nsIFrame* GetFrameAtOrBefore(nsIPresContext* aPresContext,
+                                      nsIFrame*       aParentFrame,
+                                      nsIFrame*       aPriorChildFrame,
+                                      nsIAtom*        aChildType);
   PRBool IsAutoWidth();
   
   /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
@@ -170,7 +171,9 @@ public:
   /** return the first child belonging to the list aListName. 
     * @see nsIFrame::FirstChild
     */
-  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const;
 
   /** @see nsIFrame::GetAdditionalChildListName */
   NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
@@ -702,12 +705,14 @@ public:
     */
   virtual nsTableCellMap* GetCellMap() const;
     
-  void AdjustRowIndices(PRInt32 aRowIndex,
-                        PRInt32 aAdjustment);
+  void AdjustRowIndices(nsIPresContext* aPresContext,
+                        PRInt32         aRowIndex,
+                        PRInt32         aAdjustment);
 
-  NS_IMETHOD AdjustRowIndices(nsIFrame* aRowGroup, 
-                              PRInt32   aRowIndex,
-                              PRInt32   anAdjustment);
+  NS_IMETHOD AdjustRowIndices(nsIPresContext* aPresContext,
+                              nsIFrame*       aRowGroup, 
+                              PRInt32         aRowIndex,
+                              PRInt32         anAdjustment);
 
   // Return PR_TRUE if rules=groups is set for the table content 
   PRBool HasGroupRules() const;
@@ -744,8 +749,9 @@ protected:
     */
   virtual PRInt32 GetSpecifiedColumnCount ();
 
-  PRInt32 CollectRows(nsIFrame*    aFrame,
-                      nsVoidArray& aCollection);
+  PRInt32 CollectRows(nsIPresContext* aPresContext,
+                      nsIFrame*       aFrame,
+                      nsVoidArray&    aCollection);
 
 public: /* ----- Cell Map public methods ----- */
 
@@ -817,14 +823,15 @@ public: /* ----- Cell Map public methods ----- */
 
 public:
   static nsIAtom* gColGroupAtom;
-  void Dump(PRBool aDumpRows,
-            PRBool aDumpCols, 
-            PRBool aDumpCellMap);
+  void Dump(nsIPresContext* aPresContext,
+            PRBool          aDumpRows,
+            PRBool          aDumpCols, 
+            PRBool          aDumpCellMap);
 
   nsVoidArray mColFrames; // XXX temporarily public 
 
 protected:
-  void DumpRowGroup(nsIFrame* aChildFrame);
+  void DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aChildFrame);
   void DebugPrintCount() const; // Debugging routine
 
 // data members
@@ -892,7 +899,8 @@ enum nsTableIteration {
 class nsTableIterator
 {
 public:
-  nsTableIterator(nsIFrame&        aSource, 
+  nsTableIterator(nsIPresContext*  aPresContext,
+                  nsIFrame&        aSource, 
                   nsTableIteration aType);
   nsTableIterator(nsFrameList&     aSource, 
                   nsTableIteration aType);
