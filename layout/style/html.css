@@ -492,12 +492,12 @@ input[type=file][disabled] input[type="button"] {
   border: 1px solid;
 } 
 
-input[type=file] input[type="button"]:-moz-buttonlabel {
+input[type=file] input[type="button"] {
   font-family: sans-serif;
 }
 
 /* Show browse button disabled */
-input[type="file"][disabled] input[type="button"]:-moz-buttonlabel  {
+input[type="file"][disabled] input[type="button"] {
   color: gray;
 }
 
@@ -661,12 +661,12 @@ input[type="submit"]:focus:-moz-focus-inner {
    border : 1px dotted black;
 }
 
-input[type=submit]:-moz-buttonlabel {
+input[type=submit] {
   font-family: sans-serif;
   font-size: small;
 }
 
-input[type="submit"][disabled]:-moz-buttonlabel  {
+input[type="submit"][disabled] {
   color: gray;
 }
 
@@ -734,12 +734,12 @@ input[type="reset"]:focus:-moz-focus-inner {
    margin: 0px;
    border : 1px dotted black;
 }
-input[type=reset]:-moz-buttonlabel {
+input[type=reset] {
   font-family: sans-serif;
   font-size: small;
 }
 
-input[type="reset"][disabled]:-moz-buttonlabel  {
+input[type="reset"][disabled] {
   color: gray;
 }
 
@@ -787,14 +787,7 @@ input[type="button"][disabled]:active {
   padding: 1px;
 }
 
-input[type="button"]:-moz-buttonlabel {
-  box-sizing: border-box;
-  font-family: inherit;
-  font-size: inherit;
-  background-color:inherit;
-}
-
-input[type="button"][disabled]:-moz-buttonlabel {
+input[type="button"][disabled] {
   color: gray;
 }
 
