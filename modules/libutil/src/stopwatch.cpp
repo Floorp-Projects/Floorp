@@ -7,13 +7,23 @@ Stopwatch::Stopwatch() {
 #ifdef R__UNIX
    if (!gTicks) gTicks = (clock_t)sysconf(_SC_CLK_TCK);
 #endif
-   fState         = kUndefined;
-   fSavedState    = kUndefined;
+   fState         = kUndefined;   
    fTotalCpuTime  = 0;
-   fTotalRealTime = 0;
+   fTotalRealTime = 0;   
+   mCreatedStack = PR_FALSE;
+   mSavedStates = nsnull;
    Start();
 }
 
+Stopwatch::~Stopwatch() {
+  EState* state = 0;
+  if (mSavedStates) {
+    while (state = (EState*) mSavedStates->Pop()) {
+      delete state;
+    } 
+    delete mSavedStates;
+  }
+}
 
 void Stopwatch::Start(PRBool reset) {
    if (reset) {
@@ -52,14 +62,28 @@ void Stopwatch::Stop() {
 
 
 void Stopwatch::SaveState() {
-  fSavedState = fState;
+  if (!mCreatedStack) {
+    mSavedStates = new nsDeque(nsnull);
+    mCreatedStack = PR_TRUE;
+  }
+  EState* state = new EState();
+  *state = fState;
+  mSavedStates->PushFront((void*) state);
 }
 
 void Stopwatch::RestoreState() {
-  if (fSavedState == kRunning && fState == kStopped)
-    Start(FALSE);
-  else if (fSavedState == kStopped && fState == kRunning)
-    Stop();
+  EState* state = nsnull;
+  state = (EState*) mSavedStates->Pop();
+  if (state) {
+    if (*state == kRunning && fState == kStopped)
+      Start(FALSE);
+    else if (*state == kStopped && fState == kRunning)
+      Stop();
+    delete state;
+  }
+  else {
+    PR_ASSERT("Stopwatch::RestoreState(): The saved state stack is empty.\n");
+  }
 }
 
 void Stopwatch::Continue() {
