@@ -33,6 +33,7 @@
 #define NO_SIGNALS				// signals aren't real on the Macintosh.
 #define USE_TEMPORARY_MEMORY	// use Macintosh temporary memory.
 #define FIND_LEAK				// use as a leak detector.
+#define LARGE_CONFIG			// try a big heap, for fun.
 
 // CFLAGS= -O -DNO_SIGNALS -DSILENT -DALL_INTERIOR_POINTERS
 //
