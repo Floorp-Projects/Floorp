@@ -378,8 +378,9 @@ final class IRFactory
                 // function's name to the function value.
                 fnNode.addVar(name);
                 Node setFn = new Node(Token.EXPR_VOID,
-                                new Node(Token.SETVAR, Node.newString(name),
-                                         new Node(Token.THISFN)));
+                                 new Node(Token.SETNAME,
+                                     Node.newString(Token.BINDNAME, name),
+                                     new Node(Token.THISFN)));
                 statements.addChildrenToFront(setFn);
             }
         }

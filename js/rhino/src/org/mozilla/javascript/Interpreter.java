@@ -78,90 +78,87 @@ public class Interpreter
         Icode_ELEM_INC_DEC              = -10,
         Icode_REF_INC_DEC               = -11,
 
-    // helper codes to deal with activation
-        Icode_SCOPE                     = -12,
-
     // load/save scope from/to local
-        Icode_SCOPE_LOAD                = -13,
-        Icode_SCOPE_SAVE                = -14,
+        Icode_SCOPE_LOAD                = -12,
+        Icode_SCOPE_SAVE                = -13,
 
-        Icode_TYPEOFNAME                = -15,
+        Icode_TYPEOFNAME                = -14,
 
     // helper for function calls
-        Icode_NAME_AND_THIS             = -16,
-        Icode_PROP_AND_THIS             = -17,
-        Icode_ELEM_AND_THIS             = -18,
-        Icode_VALUE_AND_THIS            = -19,
+        Icode_NAME_AND_THIS             = -15,
+        Icode_PROP_AND_THIS             = -16,
+        Icode_ELEM_AND_THIS             = -17,
+        Icode_VALUE_AND_THIS            = -18,
 
     // Create closure object for nested functions
-        Icode_CLOSURE_EXPR              = -20,
-        Icode_CLOSURE_STMT              = -21,
+        Icode_CLOSURE_EXPR              = -19,
+        Icode_CLOSURE_STMT              = -20,
 
     // Special calls
-        Icode_CALLSPECIAL               = -22,
+        Icode_CALLSPECIAL               = -21,
 
     // To return undefined value
-        Icode_RETUNDEF                  = -23,
+        Icode_RETUNDEF                  = -22,
 
     // Exception handling implementation
-        Icode_GOSUB                     = -24,
-        Icode_STARTSUB                  = -25,
-        Icode_RETSUB                    = -26,
+        Icode_GOSUB                     = -23,
+        Icode_STARTSUB                  = -24,
+        Icode_RETSUB                    = -25,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -27,
+        Icode_LINE                      = -26,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -28,
-        Icode_INTNUMBER                 = -29,
+        Icode_SHORTNUMBER               = -27,
+        Icode_INTNUMBER                 = -28,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -30,
-        Icode_LITERAL_SET               = -31,
+        Icode_LITERAL_NEW               = -29,
+        Icode_LITERAL_SET               = -30,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -32,
+        Icode_SPARE_ARRAYLIT            = -31,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -33,
-        Icode_REG_IND_C1                = -34,
-        Icode_REG_IND_C2                = -35,
-        Icode_REG_IND_C3                = -36,
-        Icode_REG_IND_C4                = -37,
-        Icode_REG_IND_C5                = -38,
-        Icode_REG_IND1                  = -39,
-        Icode_REG_IND2                  = -40,
-        Icode_REG_IND4                  = -41,
+        Icode_REG_IND_C0                = -32,
+        Icode_REG_IND_C1                = -33,
+        Icode_REG_IND_C2                = -34,
+        Icode_REG_IND_C3                = -35,
+        Icode_REG_IND_C4                = -36,
+        Icode_REG_IND_C5                = -37,
+        Icode_REG_IND1                  = -38,
+        Icode_REG_IND2                  = -39,
+        Icode_REG_IND4                  = -40,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -42,
-        Icode_REG_STR_C1                = -43,
-        Icode_REG_STR_C2                = -44,
-        Icode_REG_STR_C3                = -45,
-        Icode_REG_STR1                  = -46,
-        Icode_REG_STR2                  = -47,
-        Icode_REG_STR4                  = -48,
+        Icode_REG_STR_C0                = -41,
+        Icode_REG_STR_C1                = -42,
+        Icode_REG_STR_C2                = -43,
+        Icode_REG_STR_C3                = -44,
+        Icode_REG_STR1                  = -45,
+        Icode_REG_STR2                  = -46,
+        Icode_REG_STR4                  = -47,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -49,
-        Icode_SETVAR1                   = -50,
+        Icode_GETVAR1                   = -48,
+        Icode_SETVAR1                   = -49,
 
     // Load unefined
-        Icode_UNDEF                     = -51,
-        Icode_ZERO                      = -52,
-        Icode_ONE                       = -53,
+        Icode_UNDEF                     = -50,
+        Icode_ZERO                      = -51,
+        Icode_ONE                       = -52,
 
     // entrance and exit from .()
-       Icode_ENTERDQ                    = -54,
-       Icode_LEAVEDQ                    = -55,
+       Icode_ENTERDQ                    = -53,
+       Icode_LEAVEDQ                    = -54,
 
-       Icode_TAIL_CALL                  = -56,
+       Icode_TAIL_CALL                  = -55,
 
        // Clear local to allow GC its context
-       Icode_LOCAL_CLEAR                = -57,
+       Icode_LOCAL_CLEAR                = -56,
 
     // Last icode
-        MIN_ICODE                       = -57;
+        MIN_ICODE                       = -56;
 
     // data for parsing
 
@@ -361,7 +358,6 @@ public class Interpreter
           case Icode_PROP_INC_DEC:     return "PROP_INC_DEC";
           case Icode_ELEM_INC_DEC:     return "ELEM_INC_DEC";
           case Icode_REF_INC_DEC:      return "REF_INC_DEC";
-          case Icode_SCOPE:            return "SCOPE";
           case Icode_SCOPE_LOAD:       return "SCOPE_LOAD";
           case Icode_SCOPE_SAVE:       return "SCOPE_SAVE";
           case Icode_TYPEOFNAME:       return "TYPEOFNAME";
@@ -1179,36 +1175,22 @@ public class Interpreter
 
           case Token.GETVAR:
             {
+                if (itsData.itsNeedsActivation) Kit.codeBug();
                 String name = node.getString();
-                if (itsData.itsNeedsActivation) {
-                    // SETVAR handled this by turning into a SETPROP, but
-                    // we can't do that to a GETVAR without manufacturing
-                    // bogus children. Instead we use a special op to
-                    // push the current scope.
-                    addIcode(Icode_SCOPE);
-                    stackChange(1);
-                    addStringOp(Token.GETPROP, name);
-                } else {
-                    int index = scriptOrFn.getParamOrVarIndex(name);
-                    addVarOp(Token.GETVAR, index);
-                    stackChange(1);
-                }
+                int index = scriptOrFn.getParamOrVarIndex(name);
+                addVarOp(Token.GETVAR, index);
+                stackChange(1);
             }
             break;
 
           case Token.SETVAR:
             {
-                if (itsData.itsNeedsActivation) {
-                    child.setType(Token.BINDNAME);
-                    node.setType(Token.SETNAME);
-                    visitExpression(node, 0);
-                } else {
-                    String name = child.getString();
-                    child = child.getNext();
-                    visitExpression(child, 0);
-                    int index = scriptOrFn.getParamOrVarIndex(name);
-                    addVarOp(Token.SETVAR, index);
-                }
+                if (itsData.itsNeedsActivation) Kit.codeBug();
+                String name = child.getString();
+                child = child.getNext();
+                visitExpression(child, 0);
+                int index = scriptOrFn.getParamOrVarIndex(name);
+                addVarOp(Token.SETVAR, index);
             }
             break;
 
@@ -1339,18 +1321,12 @@ public class Interpreter
         int childType = child.getType();
         switch (childType) {
           case Token.GETVAR : {
+            if (itsData.itsNeedsActivation) Kit.codeBug();
             String name = child.getString();
-            if (itsData.itsNeedsActivation) {
-                addIcode(Icode_SCOPE);
-                stackChange(1);
-                addStringOp(Icode_PROP_INC_DEC, name);
-                addUint8(incrDecrMask);
-            } else {
-                int i = scriptOrFn.getParamOrVarIndex(name);
-                addVarOp(Icode_VAR_INC_DEC, i);
-                addUint8(incrDecrMask);
-                stackChange(1);
-            }
+            int i = scriptOrFn.getParamOrVarIndex(name);
+            addVarOp(Icode_VAR_INC_DEC, i);
+            addUint8(incrDecrMask);
+            stackChange(1);
             break;
           }
           case Token.NAME : {
@@ -3273,9 +3249,6 @@ switch (op) {
         stack[stackTop] = Ref.popTarget(cx);
         continue Loop;
     }
-    case Icode_SCOPE :
-        stack[++stackTop] = frame.scope;
-        continue Loop;
     case Icode_SCOPE_LOAD :
         indexReg += frame.localShift;
         frame.scope = (Scriptable)stack[indexReg];

@@ -3172,6 +3172,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         Node child = node.getFirstChild();
         switch (child.getType()) {
           case Token.GETVAR:
+            if (!hasVarsInRegs) Kit.codeBug();
             if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                 boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
                 int varIndex = fnCurrent.getVarIndex(child);
@@ -3190,8 +3191,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                     cfw.add(ByteCode.DUP2);
                 }
                 cfw.addDStore(reg);
-                break;
-            } else if (hasVarsInRegs) {
+            } else {
                 boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
                 int varIndex = fnCurrent.getVarIndex(child);
                 short reg = varRegisters[varIndex];
@@ -3213,7 +3213,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 cfw.addAStore(reg);
                 break;
             }
-            // fallthrough
+            break;
           case Token.NAME:
             cfw.addALoad(variableObjectLocal);
             cfw.addPush(child.getString());          // push name
@@ -3631,86 +3631,66 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
 
     private void visitGetVar(Node node)
     {
-        if (hasVarsInRegs) {
-            int varIndex = fnCurrent.getVarIndex(node);
-            short reg = varRegisters[varIndex];
-            if (varIsDirectCallParameter(varIndex)) {
-                // Remember that here the isNumber flag means that we
-                // want to use the incoming parameter in a Number
-                // context, so test the object type and convert the
-                //  value as necessary.
-                if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-                    dcpLoadAsNumber(reg);
-                } else {
-                    dcpLoadAsObject(reg);
-                }
-            } else if (fnCurrent.isNumberVar(varIndex)) {
-                cfw.addDLoad(reg);
+        if (!hasVarsInRegs) Kit.codeBug();
+        int varIndex = fnCurrent.getVarIndex(node);
+        short reg = varRegisters[varIndex];
+        if (varIsDirectCallParameter(varIndex)) {
+            // Remember that here the isNumber flag means that we
+            // want to use the incoming parameter in a Number
+            // context, so test the object type and convert the
+            //  value as necessary.
+            if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
+                dcpLoadAsNumber(reg);
             } else {
-                cfw.addALoad(reg);
+                dcpLoadAsObject(reg);
             }
+        } else if (fnCurrent.isNumberVar(varIndex)) {
+            cfw.addDLoad(reg);
         } else {
-            cfw.addALoad(variableObjectLocal);
-            cfw.addPush(node.getString());
-            cfw.addALoad(contextLocal);
-            addScriptRuntimeInvoke(
-                "getObjectProp",
-                "(Lorg/mozilla/javascript/Scriptable;"
-                +"Ljava/lang/String;"
-                +"Lorg/mozilla/javascript/Context;"
-                +")Ljava/lang/Object;");
+            cfw.addALoad(reg);
         }
     }
 
     private void visitSetVar(Node node, Node child, boolean needValue)
     {
-        if (hasVarsInRegs) {
-            int varIndex = fnCurrent.getVarIndex(node);
-            generateExpression(child.getNext(), node);
-            boolean isNumber = (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
-            short reg = varRegisters[varIndex];
-            if (varIsDirectCallParameter(varIndex)) {
-                if (isNumber) {
-                    if (needValue) cfw.add(ByteCode.DUP2);
-                    cfw.addALoad(reg);
-                    cfw.add(ByteCode.GETSTATIC,
-                            "java/lang/Void",
-                            "TYPE",
-                            "Ljava/lang/Class;");
-                    int isNumberLabel = cfw.acquireLabel();
-                    int beyond = cfw.acquireLabel();
-                    cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
-                    short stack = cfw.getStackTop();
-                    addDoubleWrap();
-                    cfw.addAStore(reg);
-                    cfw.add(ByteCode.GOTO, beyond);
-                    cfw.markLabel(isNumberLabel, stack);
-                    cfw.addDStore(reg + 1);
-                    cfw.markLabel(beyond);
-                }
-                else {
-                    if (needValue) cfw.add(ByteCode.DUP);
-                    cfw.addAStore(reg);
-                }
-            } else {
-                if (isNumber) {
-                      cfw.addDStore(reg);
-                      if (needValue) cfw.addDLoad(reg);
-                }
-                else {
-                    cfw.addAStore(reg);
-                    if (needValue) cfw.addALoad(reg);
-                }
+        if (!hasVarsInRegs) Kit.codeBug();
+        int varIndex = fnCurrent.getVarIndex(node);
+        generateExpression(child.getNext(), node);
+        boolean isNumber = (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
+        short reg = varRegisters[varIndex];
+        if (varIsDirectCallParameter(varIndex)) {
+            if (isNumber) {
+                if (needValue) cfw.add(ByteCode.DUP2);
+                cfw.addALoad(reg);
+                cfw.add(ByteCode.GETSTATIC,
+                        "java/lang/Void",
+                        "TYPE",
+                        "Ljava/lang/Class;");
+                int isNumberLabel = cfw.acquireLabel();
+                int beyond = cfw.acquireLabel();
+                cfw.add(ByteCode.IF_ACMPEQ, isNumberLabel);
+                short stack = cfw.getStackTop();
+                addDoubleWrap();
+                cfw.addAStore(reg);
+                cfw.add(ByteCode.GOTO, beyond);
+                cfw.markLabel(isNumberLabel, stack);
+                cfw.addDStore(reg + 1);
+                cfw.markLabel(beyond);
             }
-            return;
+            else {
+                if (needValue) cfw.add(ByteCode.DUP);
+                cfw.addAStore(reg);
+            }
+        } else {
+            if (isNumber) {
+                  cfw.addDStore(reg);
+                  if (needValue) cfw.addDLoad(reg);
+            }
+            else {
+                cfw.addAStore(reg);
+                if (needValue) cfw.addALoad(reg);
+            }
         }
-
-        // default: just treat like any other name lookup
-        child.setType(Token.BINDNAME);
-        node.setType(Token.SETNAME);
-        visitSetName(node, child);
-        if (!needValue)
-            cfw.add(ByteCode.POP);
     }
 
     private void visitGetProp(Node node, Node child)
