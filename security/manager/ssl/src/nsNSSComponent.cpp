@@ -903,7 +903,7 @@ nsNSSComponent::InitializeNSS()
     ConfigureInternalPKCS11Token();
 
     if (::NSS_InitReadWrite(profileStr) != SECSuccess) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init NSS r/w in %s\n", profileStr));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init NSS r/w in %s\n", profileStr.get()));
 
       if (supress_warning_preference) {
         which_nss_problem = problem_none;
