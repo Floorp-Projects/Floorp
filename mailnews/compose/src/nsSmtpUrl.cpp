@@ -514,3 +514,39 @@ nsSmtpUrl::SetSenderIdentity(nsIMsgIdentity * aSenderIdentity)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSmtpUrl::SetNetPrompt(nsINetPrompt *aNetPrompt)
+{
+    NS_ENSURE_ARG_POINTER(aNetPrompt);
+    m_netPrompt = aNetPrompt;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpUrl::GetNetPrompt(nsINetPrompt **aNetPrompt)
+{
+    NS_ENSURE_ARG_POINTER(aNetPrompt);
+    if (!m_netPrompt) return NS_ERROR_NULL_POINTER;
+    *aNetPrompt = m_netPrompt;
+    NS_ADDREF(*aNetPrompt);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpUrl::SetSmtpServer(nsISmtpServer * aSmtpServer)
+{
+    NS_ENSURE_ARG_POINTER(aSmtpServer);
+    m_smtpServer = aSmtpServer;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpUrl::GetSmtpServer(nsISmtpServer ** aSmtpServer)
+{
+    NS_ENSURE_ARG_POINTER(aSmtpServer);
+    if (!m_smtpServer) return NS_ERROR_NULL_POINTER;
+    *aSmtpServer = m_smtpServer;
+    NS_ADDREF(*aSmtpServer);
+    return NS_OK;
+}
+

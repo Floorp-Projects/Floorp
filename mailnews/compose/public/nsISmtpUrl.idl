@@ -29,6 +29,8 @@
 %}
 
 interface nsIMsgIdentity;
+interface nsINetPrompt;
+interface nsISmtpServer;
 
 [scriptable, uuid(16ADF2F1-BBAD-11d2-804E-006008128C4E)]
 interface nsISmtpUrl : nsISupports {
@@ -62,6 +64,8 @@ interface nsISmtpUrl : nsISupports {
 	// NOTE:  the SMTP username and SMTP server are in the mailto url
 	// mailto://sspitzer@tintin/...
 	attribute nsIMsgIdentity senderIdentity;
+    attribute nsINetPrompt netPrompt;
+    attribute nsISmtpServer smtpServer;
 };
 
 [scriptable, uuid(5EE2AFF7-9C6F-11d3-98A3-001083010E9B)]

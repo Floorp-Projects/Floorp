@@ -33,26 +33,27 @@
  /* states of the machine
  */
 typedef enum _SmtpState {
-SMTP_RESPONSE = 0, 
-SMTP_START_CONNECT,
-SMTP_FINISH_CONNECT,
-SMTP_LOGIN_RESPONSE,
-SMTP_SEND_HELO_RESPONSE,
-SMTP_SEND_VRFY_RESPONSE,
-SMTP_SEND_MAIL_RESPONSE,
-SMTP_SEND_RCPT_RESPONSE,
-SMTP_SEND_DATA_RESPONSE,
-SMTP_SEND_POST_DATA, 
-SMTP_SEND_MESSAGE_RESPONSE,
-SMTP_DONE,
-SMTP_ERROR_DONE,
-SMTP_FREE,
-SMTP_EXTN_LOGIN_RESPONSE,
-SMTP_SEND_EHLO_RESPONSE,
-SMTP_SEND_AUTH_LOGIN_USERNAME,
-SMTP_SEND_AUTH_LOGIN_PASSWORD,
-SMTP_AUTH_LOGIN_RESPONSE,
-SMTP_AUTH_RESPONSE
+SMTP_RESPONSE = 0,                                  // 0
+SMTP_START_CONNECT,                                 // 1
+SMTP_FINISH_CONNECT,                                // 2
+SMTP_LOGIN_RESPONSE,                                // 3
+SMTP_SEND_HELO_RESPONSE,                            // 4
+SMTP_SEND_VRFY_RESPONSE,                            // 5
+SMTP_SEND_MAIL_RESPONSE,                            // 6
+SMTP_SEND_RCPT_RESPONSE,                            // 7
+SMTP_SEND_DATA_RESPONSE,                            // 8
+SMTP_SEND_POST_DATA,                                // 9
+SMTP_SEND_MESSAGE_RESPONSE,                         // 10
+SMTP_DONE,                                          // 11
+SMTP_ERROR_DONE,                                    // 12
+SMTP_FREE,                                          // 13
+SMTP_EXTN_LOGIN_RESPONSE,                           // 14
+SMTP_SEND_EHLO_RESPONSE,                            // 15
+SMTP_SEND_AUTH_LOGIN_USERNAME,                      // 16
+SMTP_SEND_AUTH_LOGIN_PASSWORD,                      // 17
+SMTP_AUTH_LOGIN_RESPONSE,                           // 18
+SMTP_TLS_RESPONSE,                                  // 19
+SMTP_AUTH_EXTERNAL_RESPONSE                         // 20
 } SmtpState;
 
 // State Flags (Note, I use the word state in terms of storing 
@@ -61,12 +62,17 @@ SMTP_AUTH_RESPONSE
 #define SMTP_PAUSE_FOR_READ			0x00000001  /* should we pause for the next read */
 #define SMTP_EHLO_DSN_ENABLED		0x00000002
 #define SMTP_AUTH_LOGIN_ENABLED		0x00000004
+#define SMTP_AUTH_PLAIN_ENABLED     0x00000008
+#define SMTP_AUTH_EXTERNAL_ENABLED  0x00000010
+#define SMTP_EHLO_STARTTLS_ENABLED  0x00000020
 
-typedef enum _SmtpAuthMethod {
-	SMTP_AUTH_NONE = 0,
-	SMTP_AUTH_LOGIN = 1,
-	SMTP_AUTH_PLAIN = 2
- } SmtpAuthMethod;
+typedef enum _PrefAuthMethod {
+    PREF_AUTH_NONE = 0,
+    PREF_AUTH_ANY = 1,
+    PREF_AUTH_LOGIN = 2,
+    PREF_AUTH_TLS_TRY = 3,
+    PREF_AUTH_TLS_ONLY = 4
+} PrefAuthMethod;
 
 class nsSmtpProtocol : public nsMsgProtocol
 {
@@ -76,6 +82,7 @@ public:
 	virtual ~nsSmtpProtocol();
 
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
+    virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
@@ -108,7 +115,10 @@ private:
 	char	   *m_verifyAddress;
 	nsXPIDLCString m_mailAddr;
 	
-	SmtpAuthMethod m_authMethod;
+    // *** the following should move to the smtp server when we support
+    // multiple smtp servers
+    PRInt32 m_prefAuthMethod;
+    PRBool m_tlsEnabled;
 
 	// message specific information
 	PRInt32		m_totalAmountWritten;
@@ -167,6 +177,7 @@ private:
 
 	// extract domain name from userName field in the url...
 	const char * GetUserDomainName();
+    nsresult GetPassword(char **aPassword);
 };
 
 #endif  // nsSmtpProtocol_h___

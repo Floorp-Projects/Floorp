@@ -36,6 +36,7 @@
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgIdentity.h"
+#include "nsINetPrompt.h"
 #include "nsMsgComposeStringBundle.h"
 
 typedef struct _findServerByKeyEntry {
@@ -57,10 +58,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 nsresult
 NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                    const char* aSmtpHostName, 
-		               const char* aSmtpUserName, 
+                   const char* aSmtpUserName, 
                    const char* aRecipients, 
-		               nsIMsgIdentity * aSenderIdentity,
-		               nsIUrlListener * aUrlListener,
+                   nsIMsgIdentity * aSenderIdentity,
+                   nsIUrlListener * aUrlListener,
+                   nsINetPrompt * aNetPrompt,
                    nsIURI ** aUrl);
 
 nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer);
@@ -83,9 +85,10 @@ NS_IMPL_ISUPPORTS2(nsSmtpService, nsISmtpService, nsIProtocolHandler);
 
 nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         const char * aRecipients, 
-					                              nsIMsgIdentity * aSenderIdentity,
-					                              nsIUrlListener * aUrlListener, 
-					                              nsISmtpServer * aServer,
+                                        nsIMsgIdentity * aSenderIdentity,
+                                        nsIUrlListener * aUrlListener, 
+                                        nsISmtpServer * aServer,
+                                        nsINetPrompt * aNetPrompt,
                                         nsIURI ** aURL)
 {
 	nsIURI * urlToRun = nsnull;
@@ -107,9 +110,16 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 
       if ((const char*)smtpHostName) 
 			{
-        rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,  aRecipients, aSenderIdentity, aUrlListener, &urlToRun); // this ref counts urlToRun
+        rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,
+                                aRecipients, aSenderIdentity, aUrlListener,
+                                aNetPrompt, &urlToRun); // this ref counts urlToRun
         if (NS_SUCCEEDED(rv) && urlToRun)	
-				rv = NS_MsgLoadSmtpUrl(urlToRun, nsnull);
+        {
+            nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(urlToRun, &rv);
+            if (NS_SUCCEEDED(rv))
+                smtpUrl->SetSmtpServer(smtpServer);
+            rv = NS_MsgLoadSmtpUrl(urlToRun, nsnull);
+        }
 
         if (aURL) // does the caller want a handle on the url?
           *aURL = urlToRun; // transfer our ref count to the caller....
@@ -129,12 +139,13 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 
 // short cut function for creating a mailto url...
 nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
-				const char* aSmtpHostName, 
-				const char* aSmtpUserName, 
-				const char * aRecipients, 
-				nsIMsgIdentity * aSenderIdentity,
-				nsIUrlListener * aUrlListener, 
-				nsIURI ** aUrl)
+                            const char* aSmtpHostName, 
+                            const char* aSmtpUserName, 
+                            const char * aRecipients, 
+                            nsIMsgIdentity * aSenderIdentity,
+                            nsIUrlListener * aUrlListener, 
+                            nsINetPrompt * aNetPrompt,
+                            nsIURI ** aUrl)
 {
 	// mscott: this function is a convience hack until netlib actually dispatches smtp urls.
 	// in addition until we have a session to get a password, host and other stuff from, we need to use default values....
@@ -159,7 +170,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 			url->SetSpec(urlSpec);
 			smtpUrl->SetPostMessageFile(aFilePath);
 			smtpUrl->SetSenderIdentity(aSenderIdentity);
-
+            smtpUrl->SetNetPrompt(aNetPrompt);
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}

@@ -328,11 +328,14 @@ public:
                           nsMsgDeliverMode                  mode,
                           nsIMsgSendListener                **aListenerArray);
 
+  NS_IMETHOD SetWebShell (nsIWebShell *aWebShell);
+
   nsresult    SetStatusMessage(PRUnichar *aMsgString);     // Status message method
 
   //
   // All vars necessary for this implementation
   //
+  nsIWebShell *mWebShell;
   nsMsgKey                  m_messageKey;        // jt -- Draft/Template support; newly created key
   nsCOMPtr<nsIMsgIdentity>  mUserIdentity;
   nsCOMPtr<nsMsgCompFields> mCompFields;         // All needed composition fields (header, etc...)

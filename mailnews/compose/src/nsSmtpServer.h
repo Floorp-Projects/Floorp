@@ -41,7 +41,7 @@ private:
     nsCString mKey;
 
     nsresult getPrefString(const char *pref, nsCAutoString& result);
-    
+    nsCString m_password;
 };
 
 

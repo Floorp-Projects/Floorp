@@ -28,6 +28,7 @@ interface nsIURI;
 interface nsIUrlListener;
 interface nsISupportsArray;
 interface nsIMsgIdentity;
+interface nsINetPrompt;
 
 [scriptable, uuid(FBAF0F10-CA9B-11d2-8063-006008128C4E)]
 interface nsISmtpService : nsISupports {
@@ -50,8 +51,11 @@ interface nsISmtpService : nsISupports {
   // default server
   //////////////////////////////////////////////////////////////////////////
 
-  void SendMailMessage(in nsIFileSpec aFilePath, in string aRecipients, in nsIMsgIdentity aSenderIdentity,
-					   in nsIUrlListener aUrlListener, in nsISmtpServer aServer,
+  void SendMailMessage(in nsIFileSpec aFilePath, in string aRecipients, 
+                       in nsIMsgIdentity aSenderIdentity,
+					   in nsIUrlListener aUrlListener, 
+                       in nsISmtpServer aServer,
+                       in nsINetPrompt aNetPrompt,
                        out nsIURI aURL);
 
   /**

@@ -64,6 +64,8 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgMailSession.h"
 #include "nsTextFormatter.h"
+#include "nsIWebShell.h"
+#include "nsINetPrompt.h"
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
@@ -193,6 +195,7 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mCompFieldLocalAttachments = 0;
   mCompFieldRemoteAttachments = 0;
   mMessageWarningSize = 0;
+  mWebShell = nsnull;
 
   // note: it is okay to return a null status feedback and not return an error
   // it's possible the url really doesn't have status feedback
@@ -2755,7 +2758,13 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   	NS_ADDREF_THIS(); // why are we forcing an addref on ourselves? this doesn't look right to me
 	  nsCOMPtr<nsIFileSpec> aFileSpec;
 	  NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
-    rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity, mMailSendListener, nsnull, nsnull);
+      nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+      rv = mWebShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+      nsCOMPtr<nsINetPrompt> netPrompt = 
+          do_QueryInterface(topLevelWindow, &rv);
+    rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity,
+                                      mMailSendListener, nsnull, 
+                                      netPrompt, nsnull);
   }
   
   PR_FREEIF(buf); // free the buf because we are done with it....
@@ -4007,3 +4016,16 @@ nsMsgComposeAndSend::SetGUINotificationState(PRBool aEnableFlag)
   mGUINotificationEnabled = aEnableFlag;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgComposeAndSend::SetWebShell(nsIWebShell *aWebShell)
+{
+    // Yes we are not doing AddRef() here!!!!
+    // Why? I am just doing what nsMsgCompose was doing. There seems have a
+    // reason not using nsCOMPtr and not ref counting it. This is bad, bad,
+    // bad. We need to come back to solve this very soon.
+    if (!aWebShell) return NS_ERROR_NULL_POINTER;
+    mWebShell = aWebShell;
+    return NS_OK;
+}
+

@@ -22,7 +22,13 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
+#include "nsEscape.h"
 #include "nsSmtpServer.h"
+#include "nsINetPrompt.h"
+#include "nsIWalletService.h"
+#include "nsXPIDLString.h"
+
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 NS_IMPL_ISUPPORTS1(nsSmtpServer, nsISmtpServer)
 
@@ -82,6 +88,29 @@ nsSmtpServer::SetHostname(const char * aHostname)
 }
 
 NS_IMETHODIMP
+nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
+{
+    nsresult rv;
+    nsCAutoString pref;
+    NS_ENSURE_ARG_POINTER(authMethod);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    *authMethod = 0;
+    getPrefString("auth_method", pref);
+    return prefs->GetIntPref(pref, authMethod);
+}
+
+NS_IMETHODIMP
+nsSmtpServer::SetAuthMethod(PRInt32 authMethod)
+{
+    nsresult rv;
+    nsCAutoString pref;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    return prefs->SetIntPref(pref, authMethod);
+}
+
+NS_IMETHODIMP
 nsSmtpServer::GetUsername(char * *aUsername)
 {
     nsresult rv;
@@ -120,23 +149,116 @@ nsSmtpServer::SetUsername(const char * aUsername)
 NS_IMETHODIMP
 nsSmtpServer::GetPassword(char * *aPassword)
 {
-    nsresult rv;
-    nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-    getPrefString("password", pref);
-    rv = prefs->CopyCharPref(pref, aPassword);
-    if (NS_FAILED(rv)) *aPassword = nsnull;
+    NS_ENSURE_ARG_POINTER(aPassword);
+	*aPassword = m_password.ToNewCString();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSmtpServer::SetPassword(const char * aPassword)
 {
+	m_password = aPassword;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
+                                PRUnichar *aPromptTitle, 
+                                nsINetPrompt* aDialog,
+                                char **aPassword) 
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(aPassword);
+
+    if (m_password.IsEmpty()) {
+        NS_ENSURE_ARG_POINTER(aDialog);
+        
+		// prompt the user for the password
+		if (NS_SUCCEEDED(rv))
+		{
+            nsXPIDLString uniPassword;
+			PRBool okayValue = PR_TRUE;
+			nsXPIDLCString serverUri;
+			rv = GetServerURI(getter_Copies(serverUri));
+			if (NS_FAILED(rv)) return rv;
+			rv = aDialog->PromptPassword(serverUri, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), &okayValue);
+            		if (NS_FAILED(rv)) return rv;
+				
+			if (!okayValue) // if the user pressed cancel, just return NULL;
+			{
+				*aPassword = nsnull;
+				return rv;
+			}
+
+			// we got a password back...so remember it
+			nsCString aCStr(uniPassword); 
+
+			rv = SetPassword((const char *) aCStr);
+            if (NS_FAILED(rv)) return rv;
+		} // if we got a prompt dialog
+	} // if the password is empty
+
+    rv = GetPassword(aPassword);
+	return rv;
+}
+
+NS_IMETHODIMP
+nsSmtpServer::ForgetPassword()
+{
     nsresult rv;
-    nsCAutoString pref;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
-    getPrefString("password", pref);
-    return prefs->SetCharPref(pref, aPassword);
+    NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    
+    nsXPIDLCString serverUri;
+    rv = GetServerURI(getter_Copies(serverUri));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetPassword("");
+    if (NS_FAILED(rv)) return rv;
+    
+    
+    rv = walletservice->SI_RemoveUser((const char *)serverUri, PR_FALSE, nsnull);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsSmtpServer::GetServerURI(char **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    nsresult rv;
+    nsCAutoString uri;
+
+    uri += "smtp";
+    uri += "://";
+
+    nsXPIDLCString username;
+    rv = GetUsername(getter_Copies(username));
+
+    if (NS_SUCCEEDED(rv) && ((const char*)username) && username[0]) {
+        nsXPIDLCString escapedUsername;
+        *((char **)getter_Copies(escapedUsername)) =
+            nsEscape(username, url_XAlphas);
+//            nsEscape(username, url_Path);
+        // not all servers have a username 
+        uri += escapedUsername;
+        uri += '@';
+    }
+
+    nsXPIDLCString hostname;
+    rv = GetHostname(getter_Copies(hostname));
+
+    if (NS_SUCCEEDED(rv) && ((const char*)hostname) && hostname[0]) {
+        nsXPIDLCString escapedHostname;
+        *((char **)getter_Copies(escapedHostname)) =
+            nsEscape(hostname, url_Path);
+        // not all servers have a hostname
+        uri += escapedHostname;
+    }
+
+    *aResult = uri.ToNewCString();
+    return NS_OK;
 }
                           
 nsresult
