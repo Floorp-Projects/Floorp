@@ -44,32 +44,51 @@
 %}
 
 /**
- * This interface is unicode encoder using from script
+ * This interface is a unicode encoder for use by scripts
  *
  * @created         8/Jun/2000
  * @author          Makoto Kato [m_kato@ga2.so-net.ne.jp]
  */
-[scriptable, uuid(d395ef67-a613-47b9-b5e3-dc7ce1bdb71a)]
+[scriptable, uuid(6a4bd9ef-abbc-47bb-a634-8c944205515a)]
 interface nsIScriptableUnicodeConverter : nsISupports
 {
   /**
    * Converts the data from Unicode to one Charset.
+   * Returns the converted string. After converting, Finish should be called
+   * and its return value appended to this return value.
    */
   string ConvertFromUnicode(in wstring aSrc);
 
   /**
    * Returns the terminator string.
-   * Should be called after ConvertFromUnicode().
+   * Should be called after ConvertFromUnicode() and appended to that
+   * function's return value.
    */
   string Finish();
 
   /**
    * Converts the data from one Charset to Unicode.
    */
-  wstring ConvertToUnicode([const] in string aSrc);
+  wstring ConvertToUnicode(in string aSrc);
 
   /**
-   * Current charactor set
+   * Converts an array of bytes to a unicode string.
+   */
+  wstring convertFromByteArray([const,array,size_is(aCount)] in octet aData,
+                               in unsigned long aCount);
+
+  /**
+   * Convert a unicode string to an array of bytes. Finish does not need to be
+   * called.
+   */
+  void convertToByteArray(in wstring aString,
+                          out unsigned long aLen,
+                          [array, size_is(aLen),retval] out octet aData);
+
+  /**
+   * Current character set.
+   *
+   * @throw NS_ERROR_UCONV_NOCONV The requested charset is not supported.
    */
   attribute string charset;
 };
