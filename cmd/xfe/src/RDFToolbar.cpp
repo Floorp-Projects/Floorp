@@ -514,12 +514,12 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
 
     XtAddCallback(cascade,
                   XmNenterCallback,
-                  &XFE_RDFMenuToolbarBase::item_cascading_cb,
+                  &XFE_RDFMenuToolbarBase::item_enter_cb,
                   (XtPointer) data);
 
     XtAddCallback(cascade,
                   XmNleaveCallback,
-                  &XFE_RDFMenuToolbarBase::item_cascading_cb,
+                  &XFE_RDFMenuToolbarBase::item_leave_cb,
                   (XtPointer) data);
 
     XtAddCallback(cascade,
