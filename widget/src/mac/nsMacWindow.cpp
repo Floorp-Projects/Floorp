@@ -259,7 +259,6 @@ nsMacWindow::~nsMacWindow()
   }
 }
 
-
 //-------------------------------------------------------------------------
 //
 // Utility method for implementing both Create(nsIWidget ...) and
@@ -277,27 +276,35 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 {
   short bottomPinDelta = 0;     // # of pixels to subtract to pin window bottom
   nsCOMPtr<nsIToolkit> theToolkit = aToolkit;
-  Boolean resizable = false;
-  
+
   // build the main native window
   if (aNativeParent == nsnull)
   {
+    PRBool allOrDefault;
+
     if (aInitData) {
+      allOrDefault = aInitData->mBorderStyle == eBorderStyle_all ||
+                     aInitData->mBorderStyle == eBorderStyle_default;
       mWindowType = aInitData->mWindowType;
       // if a toplevel window was requested without a titlebar, use a dialog windowproc
       if (aInitData->mWindowType == eWindowType_toplevel &&
           (aInitData->mBorderStyle == eBorderStyle_none ||
-           aInitData->mBorderStyle != eBorderStyle_all &&
-           aInitData->mBorderStyle != eBorderStyle_default &&
+           !allOrDefault &&
            !(aInitData->mBorderStyle & eBorderStyle_title)))
         mWindowType = eWindowType_dialog;
-    } 
+    }
     else
+    {
+      allOrDefault = PR_TRUE;
       mWindowType = eWindowType_toplevel;
+    }
 
-    short     wDefProcID = kWindowDocumentProc;
-    Boolean   goAwayFlag = false;
-    short     hOffset = 0, vOffset = 0;
+    static const WindowAttributes kWindowResizableAttributes =
+      kWindowResizableAttribute | kWindowLiveResizeAttribute;
+
+    WindowClass windowClass;
+    WindowAttributes attributes = kWindowNoAttributes;
+    short hOffset = 0, vOffset = 0;
 
     switch (mWindowType)
     {
@@ -310,54 +317,41 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
           theToolkit = getter_AddRefs(aParent->GetToolkit());
 
         mAcceptsActivation = PR_FALSE;
-#if TARGET_CARBON
-        wDefProcID = kWindowSimpleProc;
-#else
-        wDefProcID = plainDBox;
-#endif
+
+        // XXX kSimpleWindowClass is only defined in the 10.3 (or
+        //     higher) SDK but MacWindows.h claims it should work on 10.1
+        //     and higher.
+        windowClass = 18; // kSimpleWindowClass
         break;
 
       case eWindowType_child:
-        wDefProcID = plainDBox;
+        windowClass = kPlainWindowClass;
         break;
 
       case eWindowType_dialog:
         mIsTopWidgetWindow = PR_TRUE;
         if (aInitData)
         {
-          // Prior to Carbon, defProcs were solely about appearance. If told to create a dialog,
-          // we could use, for example, |kWindowMovableModalDialogProc| even if the dialog wasn't
-          // supposed to be modal. Carbon breaks this assumption, enforcing modality when using these
-          // particular proc ids. As a result, when compiling under Carbon we have to use the
-          // standard window proc id's and below, after we have a windowPtr, we'll hide the closebox
-          // that comes with the standard window proc.
-          //
           // I'm making the assumption here that any dialog created w/out a titlebar is modal and am
-          // therefore keeping the old modal dialog proc. I'm only special-casing dialogs with a 
+          // therefore keeping the old modal dialog proc. I'm only special-casing dialogs with a
           // titlebar since those are the only ones that might end up not being modal.
-          
+          // We never give dialog boxes a close box.
+
           switch (aInitData->mBorderStyle)
           {
             case eBorderStyle_none:
-              wDefProcID = kWindowModalDialogProc;
-              break;
-              
-            case eBorderStyle_all:
-              #if TARGET_CARBON
-                wDefProcID = kWindowGrowDocumentProc;
-              #else
-                wDefProcID = kWindowMovableModalGrowProc;   // should we add a close box (kWindowGrowDocumentProc) ?
-              #endif
-              resizable = true;
-              break;
-              
             case eBorderStyle_default:
-              wDefProcID = kWindowModalDialogProc;
+              windowClass = kModalWindowClass;
               break;
-            
+
+            case eBorderStyle_all:
+              windowClass = kDocumentWindowClass;
+              attributes = kWindowCollapseBoxAttribute |
+                           kWindowResizableAttributes;
+              break;
+
             default:
-#if TARGET_CARBON
-              if (nsToolkit::OnMacOSX() && aParent && (aInitData->mBorderStyle & eBorderStyle_sheet))
+              if (aParent && (aInitData->mBorderStyle & eBorderStyle_sheet))
               {
                 nsWindowType parentType;
                 aParent->GetWindowType(parentType);
@@ -365,83 +359,88 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
                 {
                   // Mac OS X sheet support
                   mIsSheet = PR_TRUE;
-                  wDefProcID = kWindowSheetProc;
+                  windowClass = kSheetWindowClass;
                   if (aInitData->mBorderStyle & eBorderStyle_resizeh)
                   {
-                    resizable = true;
+                    attributes = kWindowResizableAttributes;
                   }
+                }
+                else
+                {
+                  windowClass = kDocumentWindowClass;
+                  attributes = kWindowCollapseBoxAttribute;
                 }
               }
               else
-#endif
-              // we ignore the close flag here, since mac dialogs should never have a close box.
-              switch(aInitData->mBorderStyle & (eBorderStyle_resizeh | eBorderStyle_title))
               {
-                // combinations of individual options.
-                case eBorderStyle_title:
-                  #if TARGET_CARBON
-                    wDefProcID = kWindowDocumentProc;
-                  #else
-                    wDefProcID = kWindowMovableModalDialogProc;
-                  #endif
-                  break;
-                                    
-                case eBorderStyle_resizeh:
-                case (eBorderStyle_title | eBorderStyle_resizeh):
-                  #if TARGET_CARBON
-                    wDefProcID = kWindowGrowDocumentProc;
-                  #else
-                    wDefProcID = kWindowMovableModalGrowProc;   // this is the only kind of resizable dialog.
-                  #endif
-                  resizable = true;
-                  break;
-                                  
-                default:
-                  NS_WARNING("Unhandled combination of window flags");
-                  break;
+                windowClass = kDocumentWindowClass;
+
+                // we ignore the close flag here, since mac dialogs should never have a close box.
+                switch(aInitData->mBorderStyle & (eBorderStyle_resizeh | eBorderStyle_title))
+                {
+                  // combinations of individual options.
+                  case eBorderStyle_title:
+                    attributes = kWindowCollapseBoxAttribute;
+                    break;
+
+                  case eBorderStyle_resizeh:
+                  case (eBorderStyle_title | eBorderStyle_resizeh):
+                    attributes =
+                      kWindowCollapseBoxAttribute | kWindowResizableAttributes;
+                    break;
+
+                  default:
+                    NS_WARNING("Unhandled combination of window flags");
+                    break;
+                }
               }
           }
         }
         else
         {
-          wDefProcID = kWindowModalDialogProc;
-          goAwayFlag = true; // revisit this below
+          windowClass = kMovableModalWindowClass;
+          attributes = kWindowCollapseBoxAttribute;
         }
-                
+
         hOffset = kDialogMarginWidth;
         vOffset = kDialogTitleBarHeight;
         break;
 
       case eWindowType_toplevel:
         mIsTopWidgetWindow = PR_TRUE;
-        if (aInitData &&
-          aInitData->mBorderStyle != eBorderStyle_all &&
-          aInitData->mBorderStyle != eBorderStyle_default &&
-          (aInitData->mBorderStyle == eBorderStyle_none ||
-           !(aInitData->mBorderStyle & eBorderStyle_resizeh)))
-          wDefProcID = kWindowDocumentProc;
-        else {
-          wDefProcID = kWindowFullZoomGrowDocumentProc;
-          resizable = true;
-        }
-        goAwayFlag = true;
+        windowClass = kDocumentWindowClass;
+        attributes =
+          kWindowCollapseBoxAttribute | kWindowToolbarButtonAttribute;
+
+        if (allOrDefault || aInitData->mBorderStyle & eBorderStyle_close)
+          attributes |= kWindowCloseBoxAttribute;
+
+        if (allOrDefault || aInitData->mBorderStyle & eBorderStyle_resizeh)
+          attributes |= kWindowFullZoomAttribute | kWindowResizableAttributes;
+
         hOffset = kWindowMarginWidth;
         vOffset = kWindowTitleBarHeight;
         break;
 
       case eWindowType_invisible:
-        // don't do anything
-        break;
-    }
+        // XXX Hack to make the hidden window not show up as a normal window in
+        //     OS X (hide it from Expose, don't expose it through
+        //     option-minimize, ...).
+        windowClass = kPlainWindowClass;
 
-    // now turn off some default features if requested by aInitData
-    if (aInitData && aInitData->mBorderStyle != eBorderStyle_all)
-    {
-      if (aInitData->mBorderStyle == eBorderStyle_none ||
-          aInitData->mBorderStyle == eBorderStyle_default &&
-          mWindowType == eWindowType_dialog ||
-          !(aInitData->mBorderStyle & eBorderStyle_close))
-        goAwayFlag = false;
+        // XXX kWindowDoesNotCycleAttribute is only defined in the 10.3 (or
+        //     higher) SDK but MacWindows.h claims it should work on 10.2
+        //     and higher.
+        if (nsToolkit::OSXVersion() > MAC_OS_X_VERSION_10_2)
+        {
+          attributes = (1L << 15); // kWindowDoesNotCycleAttribute
+        }
+        break;
+
+      default:
+        NS_ERROR("Unhandled window type!");
+
+        return NS_ERROR_FAILURE;
     }
 
     Rect wRect;
@@ -468,7 +467,20 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         }
       }
     }
-    mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (WindowRef)-1, goAwayFlag, (long)nsnull);
+
+    // XXX Need to special-case for OS X versions below 10.1, because
+    //     kSimpleWindowClass doesn't exist.
+    if (mWindowType == eWindowType_popup &&
+        nsToolkit::OSXVersion() < MAC_OS_X_VERSION_10_1)
+    {
+      mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, kWindowSimpleProc,
+                                (WindowRef)-1, false, (long)nsnull);
+    }
+    else
+    {
+      ::CreateNewWindow(windowClass, attributes, &wRect, &mWindowPtr);
+    }
+
     mWindowMadeHere = PR_TRUE;
 
     Rect content, structure;
@@ -492,89 +504,58 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   // event handlers to get our widget or event sink when all they have
   // is a native WindowPtr.
   nsIWidget* temp = NS_STATIC_CAST(nsIWidget*, this);
-  OSStatus swpStatus = ::SetWindowProperty ( mWindowPtr,
+  OSStatus err = ::SetWindowProperty ( mWindowPtr,
                           kTopLevelWidgetPropertyCreator, kTopLevelWidgetRefPropertyTag,
                           sizeof(nsIWidget*), &temp );
-  NS_ASSERTION ( swpStatus == noErr, "couldn't set a property on the window, event handling will fail" );
-  if ( swpStatus != noErr )
+  NS_ASSERTION ( err == noErr, "couldn't set a property on the window, event handling will fail" );
+  if ( err != noErr )
     return NS_ERROR_FAILURE;
-  
+
   // reset the coordinates to (0,0) because it's the top level widget
   // and adjust for any adjustment required to requested window bottom
   nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
 
-  // this code used to pass in null for aParent when init'ing the base class
-  // (Mac OS 9.x and earlier has no use for aParent regarding window modality)
-  // but for Mac OS X, we need a valid aParent IFF we have a sheet
-#if TARGET_CARBON
-    if ((!aInitData) || (aInitData->mBorderStyle == eBorderStyle_default) ||
+  // We only need a valid aParent if we have a sheet
+  if (!aInitData || (aInitData->mBorderStyle == eBorderStyle_default) ||
       !(aInitData->mBorderStyle & eBorderStyle_sheet))
-#endif
-      aParent = nil;
+    aParent = nil;
 
   // init base class
   // (note: aParent is ignored. Mac (real) windows don't want parents)
   Inherited::StandardCreate(aParent, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
 
-  // there is a lot of work that we only want to do if we actually created 
+  // there is a lot of work that we only want to do if we actually created
   // the window. Embedding apps would be really torqed off if we mucked around
   // with the window they gave us. Do things like tweak chrome, register
   // event handlers, and install root controls and hacked scrollbars.
   if ( mWindowMadeHere ) {
-#if TARGET_CARBON
     if ( mWindowType == eWindowType_popup ) {
       // Here, we put popups in the same layer as native tooltips so that they float above every
       // type of window including modal dialogs. We also ensure that popups do not receive activate
-      // events and do not steal focus from other windows. Note that SetWindowGroup()
-      // does not exist on OS9 (even in CarbonLib) so we must check for it. It's ok not to
-      // do this on OS9 since it doesn't enforce the window layering that OSX does.
-      if ( (UInt32)SetWindowGroup != (UInt32)kUnresolvedCFragSymbolAddress ) { 
-        ::SetWindowGroup(mWindowPtr, ::GetWindowGroupOfClass(kHelpWindowClass));
-        ::SetWindowActivationScope(mWindowPtr, kWindowActivationScopeNone);
-      }
-    }
-    else if ( mWindowType == eWindowType_dialog ) {
-      // Dialogs on mac don't have a close box, but we probably used a defproc above that
-      // contains one. Thankfully, carbon lets us turn it off after the window has been 
-      // created. Do so. We currently leave the collapse widget for all dialogs.
-      ::ChangeWindowAttributes(mWindowPtr, 0L, kWindowCloseBoxAttribute );
+      // events and do not steal focus from other windows.
+      ::SetWindowGroup(mWindowPtr, ::GetWindowGroupOfClass(kHelpWindowClass));
+      ::SetWindowActivationScope(mWindowPtr, kWindowActivationScopeNone);
     }
     else if ( mWindowType == eWindowType_toplevel ) {
-      // enable toolbar collapse/expand box 
-      ::ChangeWindowAttributes(mWindowPtr, kWindowToolbarButtonAttribute, kWindowNoAttributes );
-      
       EventTypeSpec scrollEventList[] = { {kEventClassMouse, kEventMouseWheelMoved} };
-      OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(ScrollEventHandler), 1, scrollEventList, this, NULL );
+      err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(ScrollEventHandler), 1, scrollEventList, this, NULL );
         // note, passing NULL as the final param to IWEH() causes the UPP to be disposed automatically
         // when the event target (the window) goes away. See CarbonEvents.h for info.
-      
+
       NS_ASSERTION(err == noErr, "Couldn't install Carbon Scroll Event handlers");
-    }
-    else if ( mWindowType == eWindowType_invisible ) {
-      // for an invisible window (like the hidden window), remove it from the
-      // window menu and make sure the position-constrain handler is in place so
-      // the window server doesn't try to move it back on screen.
-      ::ChangeWindowAttributes(mWindowPtr, kWindowNoAttributes, kWindowInWindowMenuAttribute );      
     }
 
     if (mIsSheet)
     {
       // Mac OS X sheet support
-      if ( resizable )
-      {
-        ::ChangeWindowAttributes ( mWindowPtr, kWindowResizableAttribute, kWindowNoAttributes );
-      }
-      ::SetWindowClass(mWindowPtr, kSheetWindowClass);
       EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowUpdate},
                                         {kEventClassWindow, kEventWindowDrawContent} };
-      OSStatus err1 = ::InstallWindowEventHandler ( mWindowPtr,
+      err = ::InstallWindowEventHandler ( mWindowPtr,
           NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
+
+      NS_ASSERTION(err == noErr, "Couldn't install sheet Event handlers");
     }
-    
-    // Setup the live window resizing if appropriate
-    if ( resizable ) 
-      ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
-      
+
     // Since we can only call IWEH() once for each event class such as kEventClassWindow, we register all the event types that
     // we are going to handle here
     const EventTypeSpec windEventList[] = {
@@ -582,69 +563,29 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
                                             {kEventClassWindow, kEventWindowCollapse},      // to roll up popups when we're minimized
                                             {kEventClassWindow, kEventWindowConstrain}      // to keep invisible windows off the screen
                                           };
-    OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler),
-                                                 GetEventTypeCount(windEventList), windEventList, this, NULL );
+    err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler),
+                                        GetEventTypeCount(windEventList), windEventList, this, NULL );
     NS_ASSERTION(err == noErr, "Couldn't install Carbon window event handler");
-    
 
-#endif
-  
-#if !TARGET_CARBON
-    // create a phantom scrollbar to catch the attention of mousewheel 
-    // drivers. We'll catch events sent to this scrollbar in the eventhandler
-    // and dispatch them into gecko as NS_SCROLL_EVENTs at that point. We need
-    // to hang a struct off the refCon in order to provide some data
-    // to the action proc.
-    //
-    // For Logitech, the scrollbar has to be in the content area but can have
-    // zero width. For USBOverdrive (used also by MSFT), the scrollbar can be
-    // anywhere, but must have a valid width (one pixel wide works). The
-    // current location (one pixel wide, and flush along the left side of the
-    // window) is a reasonable comprimise in the short term. It is not intended
-    // to fix all cases.
-    //
-    // Even after all this, we still have to make one more tweak for Kensington
-    // mice. With their new driver, the scrollbar has to be two pixels wide due
-    // to a bug in the appearance manager that doesn't put the correct widgetry
-    // on 1px wide scrollbars in every case. Rather than have it sticking out 2px
-    // into the window, we straddle the window border so only 1px is actually
-    // in the content area. Luckily, this is good enough for Logitech ;)
-    //
-    // NONE of this is required on OSX, which uses CarbonEvents ;)
-    
-    // Create the root control. 
-    ControlHandle rootControl = nsnull;
-    if ( GetRootControl(mWindowPtr, &rootControl) != noErr ) {
-      OSErr err = CreateRootControl(mWindowPtr, &rootControl);
-      NS_ASSERTION(err == noErr, "Error creating window root control");
-    }
-
-    Rect sbRect = { 100, -1, 150, 1 };
-    mPhantomScrollbarData = new PhantomScrollbarData;
-    mPhantomScrollbar = ::NewControl ( mWindowPtr, &sbRect, nil, true, 50, 0, 100, 
-                                              kControlScrollBarLiveProc, (long)mPhantomScrollbarData );
-    ::EmbedControl ( rootControl, mPhantomScrollbar );
-#endif
-    
     // register tracking and receive handlers with the native Drag Manager
     if ( mDragTrackingHandlerUPP ) {
-      OSErr result = ::InstallTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr, nsnull );
-      NS_ASSERTION ( result == noErr, "can't install drag tracking handler");
+      err = ::InstallTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr, nsnull );
+      NS_ASSERTION ( err == noErr, "can't install drag tracking handler");
     }
     if ( mDragReceiveHandlerUPP ) {
-      OSErr result = ::InstallReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr, nsnull );
-      NS_ASSERTION ( result == noErr, "can't install drag receive handler");
+      err = ::InstallReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr, nsnull );
+      NS_ASSERTION ( err == noErr, "can't install drag receive handler");
     }
-  
+
     // If we're a popup, we don't want a border (we want CSS to draw it for us). So
     // install our own window defProc.
     if ( mWindowType == eWindowType_popup )
       InstallBorderlessDefProc(mWindowPtr);
 
   } // if we created windowPtr
-  
+
   nsGraphicsUtils::SafeSetPortWindowPort(mWindowPtr);
-  
+
   return NS_OK;
 }
 
@@ -1362,12 +1303,7 @@ nsMacWindow::CalculateAndSetZoomedSize()
       nsCOMPtr<nsIScreen> primaryScreen;
       screenMgr->GetPrimaryScreen ( getter_AddRefs(primaryScreen) );
       if (screen == primaryScreen) {
-        int iconSpace = 96;
-#if TARGET_CARBON
-        if(nsToolkit::OnMacOSX()) {
-          iconSpace = 128;  //icons/grid is wider on Mac OS X
-        }
-#endif
+        int iconSpace = 128;
         newWindowRect.width -= iconSpace;
       }
 
@@ -1579,17 +1515,14 @@ NS_IMETHODIMP nsMacWindow::SetTitle(const nsAString& aTitle)
 {
   nsAString::const_iterator begin;
   const PRUnichar *strTitle = aTitle.BeginReading(begin).get();
-#if TARGET_CARBON
-  if(nsToolkit::OnMacOSX()) {
-    // On MacOS X try to use the unicode friendly CFString version first
-    CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)strTitle, aTitle.Length());
-    if(labelRef) {
-      ::SetWindowTitleWithCFString(mWindowPtr, labelRef);
-      ::CFRelease(labelRef);
-      return NS_OK;
-    }
+  // Try to use the unicode friendly CFString version first
+  CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)strTitle, aTitle.Length());
+  if(labelRef) {
+    ::SetWindowTitleWithCFString(mWindowPtr, labelRef);
+    ::CFRelease(labelRef);
+    return NS_OK;
   }
-#endif
+
   Str255 title;
   // unicode to file system charset
   nsMacControl::StringToStr255(aTitle, title);
