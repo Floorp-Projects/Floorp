@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.10 $ 
-# $Date: 2001/12/20 17:19:03 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/02/25 19:34:41 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -771,7 +771,7 @@ sub highlight_errors {
         );
     }
     
-    my $color = $Error_Parser::LINE_TYPE2COLOR{$line_type};
+    my $color = $Error_Parse::LINE_TYPE2COLOR{$line_type};
     ($color) &&
       ($color = "color=$color");
 
@@ -856,6 +856,7 @@ sub parse_mail_body {
 
   my ($next_err) = 1;
   my ($lines_since_error) = 0;
+  my ($error_lines) = 0;
   my (@lastlines) = ();
 
   while (defined($line = <>)) {
@@ -919,6 +920,7 @@ sub parse_mail_body {
       $print_to_brief = 1 + $Error_Parse::LINES_AFTER_ERROR;
 
       $lines_since_error = 0;
+      $error_lines++;
     } 
 
     if ($print_to_brief) {
@@ -992,6 +994,10 @@ sub parse_mail_body {
     die("Could not close file: '$TMP_FILE{'brief-log'}'. $!\n");
   close(ERROR_PICK) ||           
     die("Could not close file: '$TMP_FILE{'errorpick'}'. $!\n");
+
+  # store the count of errors
+  $TINDERBOX{'errors'} = $error_lines;
+
 
   return ;  
 }
