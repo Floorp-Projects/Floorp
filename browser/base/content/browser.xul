@@ -249,8 +249,12 @@
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
     <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
+#ifdef XP_MACOSX
+    <key id="key_gotoHistory"  key="&history.commandKey;"  command="viewHistorySidebar" modifiers="accel,shift"/>
+#else
     <key id="key_gotoHistory"  key="&history.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
-        
+#endif
+
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
