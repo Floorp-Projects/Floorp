@@ -33,45 +33,6 @@
 #include "plevent.h"
 
 //-----------------------------------------------------------------------------
-// helpers...
-//-----------------------------------------------------------------------------
-
-static void *PR_CALLBACK
-TransactionRestartEventHandler(PLEvent *ev)
-{
-    nsHttpTransaction *trans =
-            NS_STATIC_CAST(nsHttpTransaction *, PL_GetEventOwner(ev));
-
-    LOG(("TransactionRestartEventHandler [trans=%x]\n", trans));
-
-    NS_PRECONDITION(trans->Connection() &&
-                    trans->Connection()->ConnectionInfo(), "oops");
-
-    if (trans->Connection()) {
-        nsHttpConnectionInfo *ci = trans->Connection()->ConnectionInfo();
-        if (ci) {
-            NS_ADDREF(ci);
-
-            // clean up the old connection
-            nsHttpHandler::get()->ReclaimConnection(trans->Connection());
-            trans->SetConnection(nsnull);
-
-            // initiate the transaction again
-            nsHttpHandler::get()->InitiateTransaction(trans, ci);
-            NS_RELEASE(ci);
-        }
-    }
-    NS_RELEASE(trans);
-    return 0;
-}
-
-static void PR_CALLBACK
-TransactionRestartDestroyHandler(PLEvent *ev)
-{
-    delete ev;
-}
-
-//-----------------------------------------------------------------------------
 // nsHttpTransaction
 //-----------------------------------------------------------------------------
 
@@ -103,10 +64,7 @@ nsHttpTransaction::~nsHttpTransaction()
 {
     LOG(("Destroying nsHttpTransaction @%x\n", this));
 
-    if (mConnection) {
-        nsHttpHandler::get()->ReclaimConnection(mConnection);
-        NS_RELEASE(mConnection);
-    }
+    NS_IF_RELEASE(mConnection);
 
     if (mChunkedDecoder)
         delete mChunkedDecoder;
@@ -121,6 +79,12 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
     LOG(("nsHttpTransaction::SetupRequest [this=%x]\n", this));
 
     NS_ENSURE_ARG_POINTER(requestHead);
+
+    // grab a reference to the calling thread's event queue.
+    nsCOMPtr<nsIEventQueueService> eqs;
+    nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
+    if (eqs)
+        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mConsumerEventQ));
 
     if (requestHead->Method() == nsHttp::Head)
         mNoContent = PR_TRUE;
@@ -150,6 +114,9 @@ nsHttpTransaction::SetupRequest(nsHttpRequestHead *requestHead,
 nsresult
 nsHttpTransaction::SetConnection(nsHttpConnection *conn)
 {
+    LOG(("nsHttpTransaction::SetConnection [this=%x mConnection=%x conn=%x]\n",
+        this, mConnection, conn));
+
     mConnection = conn;
     NS_IF_ADDREF(mConnection);
     return NS_OK;
@@ -229,11 +196,17 @@ nsHttpTransaction::OnDataReadable(nsIInputStream *is)
         // we don't want the connection to send anymore notifications to us.
         mConnection->DropTransaction();
 
-        // the transaction needs to be restarted from the thread on which
-        // it was created.
-        rv = ProxyRestartTransaction(mConnection->ConsumerEventQ());
-        NS_ASSERTION(NS_SUCCEEDED(rv), "ProxyRestartTransaction failed");
+        nsHttpConnectionInfo *ci = mConnection->ConnectionInfo();
+        NS_ADDREF(ci);
 
+        // we must release the connection before calling initiate transaction
+        // since we will be getting a new connection.
+        NS_RELEASE(mConnection);
+
+        rv = nsHttpHandler::get()->InitiateTransaction(this, ci);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "InitiateTransaction failed");
+
+        NS_RELEASE(ci);
         NS_RELEASE_THIS();
         return NS_BINDING_ABORTED;
     }
@@ -502,7 +475,13 @@ nsHttpTransaction::HandleContent(char *buf,
         if (priorVal == 0 && mConnection) {
             // let the connection know that we are done with it; this should
             // result in OnStopTransaction being fired.
-            return mConnection->OnTransactionComplete(NS_OK);
+            rv = mConnection->OnTransactionComplete(NS_OK);
+            
+            // at this point, we no longer need the connection
+            //nsHttpHandler::get()->ReclaimConnection(mConnection);
+            NS_RELEASE(mConnection);
+
+            return rv;
         }
         return NS_OK;
     }
@@ -512,34 +491,83 @@ nsHttpTransaction::HandleContent(char *buf,
     return (!mNoContent && !*countRead) ? NS_BASE_STREAM_WOULD_BLOCK : NS_OK;
 }
 
-nsresult
-nsHttpTransaction::ProxyRestartTransaction(nsIEventQueue *eventQ)
+void
+nsHttpTransaction::DeleteSelfOnConsumerThread()
 {
-    LOG(("nsHttpTransaction::ProxyRestartTransaction [this=%x]\n", this));
+    nsCOMPtr<nsIEventQueueService> eqs;
+    nsCOMPtr<nsIEventQueue> currentEventQ;
 
-    NS_ENSURE_ARG_POINTER(eventQ);
-    NS_PRECONDITION(!mResponseHead, "already received a (partial) response!");
+    LOG(("nsHttpTransaction::DeleteSelfOnConsumerThread [this=%x]\n", this));
 
-    PLEvent *event = new PLEvent;
-    if (!event)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
+    if (eqs)
+        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(currentEventQ));
 
-    NS_ADDREF_THIS();
+    if (currentEventQ == mConsumerEventQ)
+        delete this;
+    else {
+        LOG(("proxying delete to consumer thread...\n"));
 
-    PL_InitEvent(event, this,
-                 TransactionRestartEventHandler,
-                 TransactionRestartDestroyHandler);
+        PLEvent *event = new PLEvent;
+        if (!event) {
+            NS_WARNING("out of memory");
+            // probably better to leak |this| than to delete it on this thread.
+            return;
+        }
 
-    return eventQ->PostEvent(event);
+        PL_InitEvent(event, this,
+                nsHttpTransaction::DeleteThis_EventHandlerFunc,
+                nsHttpTransaction::DeleteThis_EventCleanupFunc);
+
+        PRStatus status = mConsumerEventQ->PostEvent(event);
+        NS_ASSERTION(status == PR_SUCCESS, "PostEvent failed");
+    }
+}
+
+void *PR_CALLBACK
+nsHttpTransaction::DeleteThis_EventHandlerFunc(PLEvent *ev)
+{
+    nsHttpTransaction *trans =
+            NS_STATIC_CAST(nsHttpTransaction *, PL_GetEventOwner(ev));
+
+    LOG(("nsHttpTransaction::DeleteThis_EventHandlerFunc [trans=%x]\n", trans));
+
+    delete trans;
+    return nsnull;
+}
+
+void PR_CALLBACK
+nsHttpTransaction::DeleteThis_EventCleanupFunc(PLEvent *ev)
+{
+    delete ev;
 }
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsHttpTransaction,
-                              nsIRequest,
-                              nsIInputStream)
+NS_IMPL_THREADSAFE_ADDREF(nsHttpTransaction)
+
+NS_IMETHODIMP_(nsrefcnt)
+nsHttpTransaction::Release()
+{
+    nsrefcnt count;
+    NS_PRECONDITION(0 != mRefCnt, "dup release");
+    count = PR_AtomicDecrement((PRInt32 *) &mRefCnt);
+    NS_LOG_RELEASE(this, count, "nsHttpTransaction");
+    if (0 == count) {
+        mRefCnt = 1; /* stablize */
+        // it is essential that the transaction be destroyed on the consumer 
+        // thread (we could be holding the last reference to our consumer).
+        DeleteSelfOnConsumerThread();
+        return 0;
+    }
+    return count;
+}
+
+NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsHttpTransaction,
+                                    nsIRequest,
+                                    nsIInputStream)
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction::nsIRequest
@@ -592,8 +620,10 @@ nsHttpTransaction::Cancel(nsresult status)
     // completion, in which case we should ignore this cancelation request.
 
     PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
-    if (priorVal == 0)
+    if (priorVal == 0) {
         mConnection->OnTransactionComplete(status);
+        NS_RELEASE(mConnection);
+    }
 
     return NS_OK;
 }
