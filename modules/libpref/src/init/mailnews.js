@@ -427,4 +427,6 @@ pref("mailnews.customHeaders", "");
 pref("mailnews.fakeaccount.show", false);
 pref("mailnews.fakeaccount.server", "");
 
-
+// message display properties
+pref("mailnews.message_display.disable_remote_image", false);
+pref("mailnews.message_display.allow.plugins", true);
