@@ -2758,6 +2758,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				mIMECompClauseStringLength = 0;
 			}
 
+			if (lParam & GCS_CURSORPOS) {
+				mIMECursorPosition = ::ImmGetCompositionString(hIMEContext,GCS_CURSORPOS,NULL,0);
+			}
 			//
 			// This provides us with a composition string
 			//
@@ -3527,17 +3530,24 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 	// figure out the ranges from the compclause string
 	//
 	if (mIMECompClauseStringLength==0) {
-		*textRangeListLengthResult = 1;
-		*textRangeListResult = new nsTextRange[1];
+		*textRangeListLengthResult = 2;
+		*textRangeListResult = new nsTextRange[2];
 		(*textRangeListResult)[0].mStartOffset=0;
 		substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,
 								mIMECompositionStringLength,NULL,0);
-		(*textRangeListResult)[0].mEndOffset = substringLength-1;
+		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = mIMEAttributeString[0];
+		substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,
+								mIMECursorPosition,NULL,0);
+		(*textRangeListResult)[0].mStartOffset=substringLength;
+		(*textRangeListResult)[0].mEndOffset = substringLength;
+		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_CARETPOSITION;
+
+		
 	} else {
 		
-		*textRangeListLengthResult = 0;
-		for(i=0;i<(PRUint32)mIMECompClauseStringLength;i++) {
+		*textRangeListLengthResult = 1;
+		for(i=0;i<mIMECompClauseStringLength;i++) {
 			if (mIMECompClauseString[i]!=0x00) 
 				(*textRangeListLengthResult)++;
 		}
@@ -3548,16 +3558,27 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		*textRangeListResult = new nsTextRange[*textRangeListLengthResult];
 
 		//
+		// figure out the cursor position
+		//
+		
+		substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,mIMECursorPosition,NULL,0);
+		(*textRangeListResult)[0].mStartOffset=substringLength;
+		(*textRangeListResult)[0].mEndOffset = substringLength;
+		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_CARETPOSITION;
+
+
+	
+		//
 		// iterate over the attributes and convert them into unicode 
 		lastUnicodeOffset = 0;
 		lastMBCSOffset = 0;
-		rangePointer = 0;
-		for(i=0;i<(PRUint32)mIMECompClauseStringLength;i++) {
+		rangePointer = 1;
+		for(i=0;i<mIMECompClauseStringLength;i++) {
 			if (mIMECompClauseString[i]!=0) {
 				(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
 				substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString+lastMBCSOffset,
 										mIMECompClauseString[i]-lastMBCSOffset,NULL,0);
-				(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset + substringLength -1;
+				(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset + substringLength;
 				(*textRangeListResult)[rangePointer].mRangeType = mIMEAttributeString[mIMECompClauseString[i]-1];
 				lastUnicodeOffset+= substringLength;
 				lastMBCSOffset = mIMECompClauseString[i];

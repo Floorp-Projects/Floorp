@@ -249,6 +249,7 @@ protected:
 	char*		mIMECompClauseString;
 	PRInt32		mIMECompClauseStringLength;
 	PRInt32		mIMECompClauseStringSize;
+	long		mIMECursorPosition;
 
 #if 1
 	BOOL		mHaveDBCSLeadByte;
