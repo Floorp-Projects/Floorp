@@ -19,6 +19,7 @@
 #define nsAbsoluteFrame_h___
 
 #include "nsFrame.h"
+struct nsStylePosition;
 
 // Implementation of a frame that's used as a placeholder for an absolutely
 // positioned frame
