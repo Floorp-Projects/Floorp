@@ -59,22 +59,22 @@ public:
 	// End of delegated functions
 
 	virtual void GetItemStyle(nsIDeviceContext* dc, 
-							  nsTreeItemStyleInfo& styleInfo) const;
+							  nsTreeItemStyleInfo& styleInfo);
 
 	virtual void GetTextForColumn(nsTreeColumn* pColumn, nsString& nodeText) const;
 
 protected:
 	nsIImageRequest* RequestImage(nsString& reqUrl) const; // Helper to kick off the image load.
-	nsIImage* GetTriggerImage() const;
-	nsIImage* GetIconImage() const;
-	nsIImage* GetBackgroundImage() const;
+	nsIImage* GetTriggerImage();
+	nsIImage* GetIconImage();
+	nsIImage* GetBackgroundImage();
 	
 protected:
-	mutable nsIImageRequest* mClosedIconRequest;	// Closed image
-	mutable nsIImageRequest* mOpenIconRequest;		// Open image
-	mutable nsIImageRequest* mClosedTriggerRequest;	// Closed trigger image
-	mutable nsIImageRequest* mOpenTriggerRequest;	// Open trigger image
-	mutable nsIImageRequest* mBackgroundRequest;	// The background image
+	 nsIImageRequest* mClosedIconRequest;	// Closed image
+	 nsIImageRequest* mOpenIconRequest;		// Open image
+	 nsIImageRequest* mClosedTriggerRequest;	// Closed trigger image
+	 nsIImageRequest* mOpenTriggerRequest;	// Open trigger image
+	 nsIImageRequest* mBackgroundRequest;	// The background image
 };
 
 #endif /* nsHTTreeItem_h___ */
