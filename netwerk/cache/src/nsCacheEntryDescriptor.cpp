@@ -64,7 +64,14 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
 
 nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
 {
-    Close();
+    // No need to close if the cache entry has already been severed.  This
+    // helps avoid a shutdown assertion (bug 285519) that is caused when
+    // consumers end up holding onto these objects past xpcom-shutdown.  It's
+    // okay for them to do that because the cache service calls our Close
+    // method during xpcom-shutdown, so we don't need to complain about it.
+    if (mCacheEntry)
+        Close();
+
     nsCacheService * service = nsCacheService::GlobalInstance();
     NS_RELEASE(service);
 }
@@ -407,7 +414,7 @@ nsCacheEntryDescriptor::Close()
     nsAutoLock  lock(nsCacheService::ServiceLock());
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-// XXX perhaps closing descriptors should clear/sever transports
+    // XXX perhaps closing descriptors should clear/sever transports
 
     // tell nsCacheService we're going away
     nsCacheService::CloseDescriptor(this);
