@@ -25,7 +25,7 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 
-#include "nsDrawingSurfaceGTK.h"
+#include "nsOldDrawingSurfaceGTK.h"
 #include "nsRenderingContextGTK.h"
 
 class nsDeviceContextGTK : public DeviceContextImpl
@@ -69,7 +69,6 @@ private:
   PRUint32      mDepth;
   PRBool        mWriteable;
   nsPaletteInfo mPaletteInfo;
-  GdkColormap *mColormap;
   PRUint32 mNumCells;
 };
 
