@@ -40,7 +40,7 @@
 #include "jsapi.h"
 
 #ifdef _WIN32
-	#include "windows.h"
+    #include "windows.h"
 #endif /* _WIN32 */
 
 
@@ -75,16 +75,16 @@ public:
     NS_IMETHOD ReadUserJSFile(const char *filename); // deprecated
     NS_IMETHOD ReadLIJSFile(const char *filename); // deprecated
     NS_IMETHOD EvaluateConfigScript(const char * js_buffer, size_t length,
-				    const char* filename, 
-				    PRBool bGlobalContext, 
-				    PRBool bCallbacks); // deprecated
+                    const char* filename, 
+                    PRBool bGlobalContext, 
+                    PRBool bCallbacks); // deprecated
     NS_IMETHOD SavePrefFileAs(const char *filename);
     NS_IMETHOD SaveLIPrefFile(const char *filename);
 
     // Path prefs
     NS_IMETHOD CopyPathPref(const char *pref, char ** return_buf);
     NS_IMETHOD SetPathPref(const char *pref, 
-			 const char *path, PRBool set_default);
+             const char *path, PRBool set_default);
 #endif
     // Initialize/shutdown
     NS_IMETHOD StartUp();
@@ -96,12 +96,12 @@ public:
     NS_IMETHOD ReadLIJSFile(const nsFileSpec& inSpec);
 
     NS_IMETHOD EvaluateConfigScript(const char * js_buffer, size_t length,
-				    PRBool bGlobalContext, 
-				    PRBool bCallbacks);
+                    PRBool bGlobalContext, 
+                    PRBool bCallbacks);
     NS_IMETHOD EvaluateConfigScriptFile(const char * js_buffer, size_t length,
-				    const nsFileSpec& inSpec, 
-				    PRBool bGlobalContext, 
-				    PRBool bCallbacks);
+                    const nsFileSpec& inSpec, 
+                    PRBool bGlobalContext, 
+                    PRBool bCallbacks);
 
     NS_IMETHOD SavePrefFileAs(const nsFileSpec& inSpec);
     NS_IMETHOD SaveLIPrefFile(const nsFileSpec& inSpec);
@@ -113,17 +113,17 @@ public:
 
     // Getters
     NS_IMETHOD GetCharPref(const char *pref, 
-			 char * return_buf, int * buf_length);
-    NS_IMETHOD GetIntPref(const char *pref, PRInt32 * return_int);	
-    NS_IMETHOD GetBoolPref(const char *pref, PRBool * return_val);	
+             char * return_buf, int * buf_length);
+    NS_IMETHOD GetIntPref(const char *pref, PRInt32 * return_int);    
+    NS_IMETHOD GetBoolPref(const char *pref, PRBool * return_val);    
     NS_IMETHOD GetBinaryPref(const char *pref, 
-			     void * return_val, int * buf_length);	
+                 void * return_val, int * buf_length);    
     NS_IMETHOD GetColorPref(const char *pref,
-			    uint8 *red, uint8 *green, uint8 *blue);
+                uint8 *red, uint8 *green, uint8 *blue);
     NS_IMETHOD GetColorPrefDWord(const char *pref, PRUint32 *colorref);
     NS_IMETHOD GetRectPref(const char *pref, 
-			 PRInt16 *left, PRInt16 *top, 
-			 PRInt16 *right, PRInt16 *bottom);
+             PRInt16 *left, PRInt16 *top, 
+             PRInt16 *right, PRInt16 *bottom);
 
     // Setters
     NS_IMETHOD SetCharPref(const char *pref,const char* value);
@@ -131,53 +131,53 @@ public:
     NS_IMETHOD SetBoolPref(const char *pref,PRBool value);
     NS_IMETHOD SetBinaryPref(const char *pref,void * value, long size);
     NS_IMETHOD SetColorPref(const char *pref, 
-			    uint8 red, uint8 green, uint8 blue);
+                uint8 red, uint8 green, uint8 blue);
     NS_IMETHOD SetColorPrefDWord(const char *pref, PRUint32 colorref);
     NS_IMETHOD SetRectPref(const char *pref, 
-			 PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom);
+             PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom);
     
     NS_IMETHOD ClearUserPref(const char *pref);
 
     // Get Defaults
     NS_IMETHOD GetDefaultCharPref(const char *pref, 
-				char * return_buf, int * buf_length);
+                char * return_buf, int * buf_length);
     NS_IMETHOD GetDefaultIntPref(const char *pref, PRInt32 * return_int);
     NS_IMETHOD GetDefaultBoolPref(const char *pref, PRBool * return_val);
     NS_IMETHOD GetDefaultBinaryPref(const char *pref, 
-				    void * return_val, int * buf_length);
+                    void * return_val, int * buf_length);
     NS_IMETHOD GetDefaultColorPref(const char *pref, 
-				 uint8 *red, uint8 *green, uint8 *blue);
+                 uint8 *red, uint8 *green, uint8 *blue);
     NS_IMETHOD GetDefaultColorPrefDWord(const char *pref, 
-				            PRUint32 *colorref);
+                            PRUint32 *colorref);
     NS_IMETHOD GetDefaultRectPref(const char *pref, 
-				PRInt16 *left, PRInt16 *top, 
-				PRInt16 *right, PRInt16 *bottom);
+                PRInt16 *left, PRInt16 *top, 
+                PRInt16 *right, PRInt16 *bottom);
 
     // Set defaults
     NS_IMETHOD SetDefaultCharPref(const char *pref,const char* value);
     NS_IMETHOD SetDefaultIntPref(const char *pref,PRInt32 value);
     NS_IMETHOD SetDefaultBoolPref(const char *pref,PRBool value);
     NS_IMETHOD SetDefaultBinaryPref(const char *pref,
-				    void * value, long size);
+                    void * value, long size);
     NS_IMETHOD SetDefaultColorPref(const char *pref, 
-				 uint8 red, uint8 green, uint8 blue);
+                 uint8 red, uint8 green, uint8 blue);
     NS_IMETHOD SetDefaultRectPref(const char *pref, 
-				PRInt16 left, PRInt16 top, 
-				PRInt16 right, PRInt16 bottom);
+                PRInt16 left, PRInt16 top, 
+                PRInt16 right, PRInt16 bottom);
     
     // Copy prefs
     NS_IMETHOD CopyCharPref(const char *pref, char ** return_buf);
     NS_IMETHOD CopyBinaryPref(const char *pref,
-			        void ** return_value, int *size);
+                    void ** return_value, int *size);
 
     NS_IMETHOD CopyDefaultCharPref( const char 
-				    *pref,    char ** return_buffer );
+                    *pref,    char ** return_buffer );
     NS_IMETHOD CopyDefaultBinaryPref(const char *pref, 
-				     void ** return_val, int * size);	
+                     void ** return_val, int * size);    
 
-	NS_IMETHOD GetFilePref(const char* pref, nsFileSpec* value);
-	NS_IMETHOD SetFilePref(const char* pref, const nsFileSpec* value, PRBool setDefault);
-	 
+    NS_IMETHOD GetFilePref(const char* pref, nsFileSpec* value);
+    NS_IMETHOD SetFilePref(const char* pref, const nsFileSpec* value, PRBool setDefault);
+     
     // Pref info
     NS_IMETHOD PrefIsLocked(const char *pref, PRBool *res);
 
@@ -186,11 +186,11 @@ public:
 
     // Callbacks
     NS_IMETHOD RegisterCallback( const char* domain,
-			             PrefChangedFunc callback, 
-			             void* instance_data );
+                         PrefChangedFunc callback, 
+                         void* instance_data );
     NS_IMETHOD UnregisterCallback( const char* domain,
-				 PrefChangedFunc callback, 
-				 void* instance_data );
+                 PrefChangedFunc callback, 
+                 void* instance_data );
     NS_IMETHOD CopyPrefsTree(const char *srcRoot, const char *destRoot);
     NS_IMETHOD DeleteBranch(const char *branchName);
 
@@ -202,8 +202,8 @@ protected:
     void useDefaultPrefFile();
     static nsPref *gInstance;
     
-    nsFileSpec					mFileSpec;
-    nsFileSpec					mLIFileSpec;
+    nsFileSpec                    mFileSpec;
+    nsFileSpec                    mLIFileSpec;
 }; // class nsPref
 
 nsPref* nsPref::gInstance = NULL;
@@ -224,16 +224,16 @@ static nsresult _convertRes(int res)
 {
     switch (res)
     {
-	    case PREF_OUT_OF_MEMORY:
-	        return NS_ERROR_OUT_OF_MEMORY;
-	    case PREF_NOT_INITIALIZED:
-	        return NS_ERROR_NOT_INITIALIZED;
-	    case PREF_TYPE_CHANGE_ERR:
-	    case PREF_ERROR:
-	    case PREF_BAD_LOCKFILE:
-	        return NS_ERROR_UNEXPECTED;
-	    case PREF_VALUECHANGED:
-	        return NS_PREF_VALUE_CHANGED;
+        case PREF_OUT_OF_MEMORY:
+            return NS_ERROR_OUT_OF_MEMORY;
+        case PREF_NOT_INITIALIZED:
+            return NS_ERROR_NOT_INITIALIZED;
+        case PREF_TYPE_CHANGE_ERR:
+        case PREF_ERROR:
+        case PREF_BAD_LOCKFILE:
+            return NS_ERROR_UNEXPECTED;
+        case PREF_VALUECHANGED:
+            return NS_PREF_VALUE_CHANGED;
     };
     return NS_OK;
 }
@@ -322,86 +322,86 @@ NS_IMETHODIMP nsPref::StartUpWith(const nsFileSpec& inFile)
 
     PRBool ok = PR_TRUE;
 
-	/* --ML hash test */
-	if (!gHashTable)
-	gHashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
-		PR_CompareValues, &pref_HashAllocOps, NULL);
-	if (!gHashTable)
-		return PR_FALSE;
+    /* --ML hash test */
+    if (!gHashTable)
+    gHashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
+        PR_CompareValues, &pref_HashAllocOps, NULL);
+    if (!gHashTable)
+        return PR_FALSE;
 
     mFileSpec = inFile;
 
     if (!gMochaTaskState)
-		gMochaTaskState = JS_Init((PRUint32) 0xffffffffL);
+        gMochaTaskState = JS_Init((PRUint32) 0xffffffffL);
 
     if (!gMochaContext)
     {
-		gMochaContext = JS_NewContext(gMochaTaskState, 8192);  /* ???? What size? */
-		if (!gMochaContext)
-			return PR_FALSE;
+        gMochaContext = JS_NewContext(gMochaTaskState, 8192);  /* ???? What size? */
+        if (!gMochaContext)
+            return PR_FALSE;
 
-		JS_BeginRequest(gMochaContext);
+        JS_BeginRequest(gMochaContext);
 
-		gGlobalConfigObject = JS_NewObject(gMochaContext, &global_class, NULL, NULL);
-		if (!gGlobalConfigObject)
-		{
-		    JS_EndRequest(gMochaContext);
-		    return PR_FALSE;
+        gGlobalConfigObject = JS_NewObject(gMochaContext, &global_class, NULL, NULL);
+        if (!gGlobalConfigObject)
+        {
+            JS_EndRequest(gMochaContext);
+            return PR_FALSE;
         }
 
         /* MLM - need a global object for set version call now. */
         JS_SetGlobalObject(gMochaContext, gGlobalConfigObject);
 
-		JS_SetVersion(gMochaContext, JSVERSION_1_2);
+        JS_SetVersion(gMochaContext, JSVERSION_1_2);
 
-		if (!JS_InitStandardClasses(gMochaContext, 
-					    gGlobalConfigObject))
-	   {
-		    JS_EndRequest(gMochaContext);
-		    return PR_FALSE;
-	 	}
+        if (!JS_InitStandardClasses(gMochaContext, 
+                        gGlobalConfigObject))
+        {
+            JS_EndRequest(gMochaContext);
+            return PR_FALSE;
+        }
 
-		JS_SetBranchCallback(gMochaContext, pref_BranchCallback);
-		JS_SetErrorReporter(gMochaContext, NULL);
+        JS_SetBranchCallback(gMochaContext, pref_BranchCallback);
+        JS_SetErrorReporter(gMochaContext, NULL);
 
-		gMochaPrefObject = JS_DefineObject(gMochaContext, 
-						    gGlobalConfigObject, 
-						    "PrefConfig",
-						    &autoconf_class, 
-						    NULL, 
-						    JSPROP_ENUMERATE|JSPROP_READONLY);
-		
-		if (gMochaPrefObject)
-		{
-		    if (!JS_DefineProperties(gMochaContext,
-					     gMochaPrefObject,
-					     autoconf_props))
-		    {
-		        JS_EndRequest(gMochaContext);
-			    return PR_FALSE;
-		    }
-		    if (!JS_DefineFunctions(gMochaContext,
-					    gMochaPrefObject,
-					    autoconf_methods))
-		    {
-		        JS_EndRequest(gMochaContext);
-			    return PR_FALSE;
-		    }
-		}
+        gMochaPrefObject = JS_DefineObject(gMochaContext, 
+                            gGlobalConfigObject, 
+                            "PrefConfig",
+                            &autoconf_class, 
+                            NULL, 
+                            JSPROP_ENUMERATE|JSPROP_READONLY);
+        
+        if (gMochaPrefObject)
+        {
+            if (!JS_DefineProperties(gMochaContext,
+                         gMochaPrefObject,
+                         autoconf_props))
+            {
+                JS_EndRequest(gMochaContext);
+                return PR_FALSE;
+            }
+            if (!JS_DefineFunctions(gMochaContext,
+                        gMochaPrefObject,
+                        autoconf_methods))
+            {
+                JS_EndRequest(gMochaContext);
+                return PR_FALSE;
+            }
+        }
 
 #if !defined(XP_PC) && !defined(XP_OS2) && !defined(XP_MAC)
-		ok = pref_InitInitialObjects();
+        ok = pref_InitInitialObjects();
 #endif
-	}
-	else 
-	    JS_BeginRequest(gMochaContext);
+    }
+    else 
+        JS_BeginRequest(gMochaContext);
 
-	if (ok && mFileSpec.Exists())
-	    ok = (JSBool) (pref_OpenFileSpec(mFileSpec, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE) == PREF_NOERROR);
-	else if (!ok)
-		gErrorOpeningUserPrefs = PR_TRUE;
-	JS_EndRequest(gMochaContext);
-	return ok;
+    if (ok && mFileSpec.Exists())
+        ok = (JSBool) (pref_OpenFileSpec(mFileSpec, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE) == PREF_NOERROR);
+    else if (!ok)
+        gErrorOpeningUserPrefs = PR_TRUE;
+    JS_EndRequest(gMochaContext);
+    return ok;
 } // nsPref::StartUpWith
 
 //----------------------------------------------------------------------------------------
@@ -433,18 +433,18 @@ NS_IMETHODIMP nsPref::ReadLIJSFile(const char *filename)
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::EvaluateConfigScript(const char * js_buffer,
-					     size_t length,
-					     const char* filename, 
-					     PRBool bGlobalContext, 
-					     PRBool bCallbacks)
+                         size_t length,
+                         const char* filename, 
+                         PRBool bGlobalContext, 
+                         PRBool bCallbacks)
 //----------------------------------------------------------------------------------------
 {
     return _convertRes(PREF_EvaluateConfigScript(js_buffer,
-					             length,
-					             filename,
-					             bGlobalContext,
-					             bCallbacks,
-					             PR_TRUE));
+                                 length,
+                                 filename,
+                                 bGlobalContext,
+                                 bCallbacks,
+                                 PR_TRUE));
 }
 
 //----------------------------------------------------------------------------------------
@@ -465,14 +465,14 @@ NS_IMETHODIMP nsPref::SaveLIPrefFile(const char *filename)
 NS_IMETHODIMP nsPref::CopyPathPref(const char *pref_name, char ** return_buffer)
 //----------------------------------------------------------------------------------------
 {
-	return _convertRes(PREF_CopyPathPref(pref_name, return_buffer));
+    return _convertRes(PREF_CopyPathPref(pref_name, return_buffer));
 }
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 //----------------------------------------------------------------------------------------
 {
-	return _convertRes(PREF_SetPathPref(pref_name, path, set_default));
+    return _convertRes(PREF_SetPathPref(pref_name, path, set_default));
 }
 
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
@@ -481,7 +481,7 @@ NS_IMETHODIMP nsPref::SetPathPref(const char *pref_name, const char *path, PRBoo
 NS_IMETHODIMP nsPref::ReadUserJSFile(const nsFileSpec& fileSpec)
 //----------------------------------------------------------------------------------------
 {
-	return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
+    return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
 }
 
 //----------------------------------------------------------------------------------------
@@ -489,38 +489,38 @@ NS_IMETHODIMP nsPref::ReadLIJSFile(const nsFileSpec& fileSpec)
 //----------------------------------------------------------------------------------------
 {
     mLIFileSpec = fileSpec;
-	return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+    return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::EvaluateConfigScript(const char * js_buffer,
-					     size_t length,
-					     PRBool bGlobalContext, 
-					     PRBool bCallbacks)
+                         size_t length,
+                         PRBool bGlobalContext, 
+                         PRBool bCallbacks)
 //----------------------------------------------------------------------------------------
 {
     return _convertRes(PREF_EvaluateConfigScript(js_buffer,
-					             length,
-					             nsnull, // bad, but not used for parsing.
-					             bGlobalContext,
-					             bCallbacks,
-					             PR_TRUE));
+                                 length,
+                                 nsnull, // bad, but not used for parsing.
+                                 bGlobalContext,
+                                 bCallbacks,
+                                 PR_TRUE));
 }
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::EvaluateConfigScriptFile(const char * js_buffer,
-					     size_t length,
-					     const nsFileSpec& fileSpec, 
-					     PRBool bGlobalContext, 
-					     PRBool bCallbacks)
+                         size_t length,
+                         const nsFileSpec& fileSpec, 
+                         PRBool bGlobalContext, 
+                         PRBool bCallbacks)
 //----------------------------------------------------------------------------------------
 {
     return _convertRes(PREF_EvaluateConfigScript(js_buffer,
-					             length,
-					             fileSpec.GetCString(), // bad, but not used for parsing.
-					             bGlobalContext,
-					             bCallbacks,
-					             PR_TRUE));
+                                 length,
+                                 fileSpec.GetCString(), // bad, but not used for parsing.
+                                 bGlobalContext,
+                                 bCallbacks,
+                                 PR_TRUE));
 }
 
 //----------------------------------------------------------------------------------------
@@ -534,10 +534,10 @@ NS_IMETHODIMP nsPref::SavePrefFileAs(const nsFileSpec& fileSpec)
 NS_IMETHODIMP nsPref::SaveLIPrefFile(const nsFileSpec& fileSpec)
 //----------------------------------------------------------------------------------------
 {
-	if (!gHashTable)
-		return PREF_NOT_INITIALIZED;
-	PREF_SetSpecialPrefsLocal();
-	return _convertRes(PREF_SavePrefFileSpecWith(fileSpec, (PLHashEnumerator)pref_saveLIPref));
+    if (!gHashTable)
+        return PREF_NOT_INITIALIZED;
+    PREF_SetSpecialPrefsLocal();
+    return _convertRes(PREF_SavePrefFileSpecWith(fileSpec, (PLHashEnumerator)pref_saveLIPref));
 }
 
 //----------------------------------------------------------------------------------------
@@ -545,10 +545,10 @@ NS_IMETHODIMP nsPref::SavePrefFile()
 //----------------------------------------------------------------------------------------
 {
     if (!gHashTable)
-		return PREF_NOT_INITIALIZED;
+        return PREF_NOT_INITIALIZED;
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-	if (gFileName)
-	    return _convertRes(PREF_SavePrefFile());
+    if (gFileName)
+        return _convertRes(PREF_SavePrefFile());
 #endif
     return _convertRes(PREF_SavePrefFileSpecWith(mFileSpec, (PLHashEnumerator)pref_savePref));
 }
@@ -577,7 +577,7 @@ NS_IMETHODIMP nsPref::GetPrefConfigObject(JSObject **js_object)
  */
 
 NS_IMETHODIMP nsPref::GetCharPref(const char *pref, 
-				    char * return_buf, int * buf_length)
+                    char * return_buf, int * buf_length)
 {
     return _convertRes(PREF_GetCharPref(pref, return_buf, buf_length));
 }
@@ -593,26 +593,26 @@ NS_IMETHODIMP nsPref::GetBoolPref(const char *pref, PRBool * return_val)
 }
 
 NS_IMETHODIMP nsPref::GetBinaryPref(const char *pref, 
-				        void * return_val, int * buf_length)
+                        void * return_val, int * buf_length)
 {
     return _convertRes(PREF_GetBinaryPref(pref, return_val, buf_length));
 }
 
 NS_IMETHODIMP nsPref::GetColorPref(const char *pref,
-				     uint8 *red, uint8 *green, uint8 *blue)
+                     uint8 *red, uint8 *green, uint8 *blue)
 {
     return _convertRes(PREF_GetColorPref(pref, red, green, blue));
 }
 
 NS_IMETHODIMP nsPref::GetColorPrefDWord(const char *pref, 
-					PRUint32 *colorref)
+                    PRUint32 *colorref)
 {
     return _convertRes(PREF_GetColorPrefDWord(pref, colorref));
 }
 
 NS_IMETHODIMP nsPref::GetRectPref(const char *pref, 
-				    PRInt16 *left, PRInt16 *top, 
-				    PRInt16 *right, PRInt16 *bottom)
+                    PRInt16 *left, PRInt16 *top, 
+                    PRInt16 *right, PRInt16 *bottom)
 {
     return _convertRes(PREF_GetRectPref(pref, left, top, right, bottom));
 }
@@ -642,20 +642,20 @@ NS_IMETHODIMP nsPref::SetBinaryPref(const char *pref,void * value, long size)
 }
 
 NS_IMETHODIMP nsPref::SetColorPref(const char *pref, 
-				     uint8 red, uint8 green, uint8 blue)
+                     uint8 red, uint8 green, uint8 blue)
 {
     return _convertRes(PREF_SetColorPref(pref, red, green, blue));
 }
 
 NS_IMETHODIMP nsPref::SetColorPrefDWord(const char *pref, 
-					PRUint32 value)
+                    PRUint32 value)
 {
     return _convertRes(PREF_SetColorPrefDWord(pref, value));
 }
 
 NS_IMETHODIMP nsPref::SetRectPref(const char *pref, 
-				    PRInt16 left, PRInt16 top, 
-				    PRInt16 right, PRInt16 bottom)
+                    PRInt16 left, PRInt16 top, 
+                    PRInt16 right, PRInt16 bottom)
 {
     return _convertRes(PREF_SetRectPref(pref, left, top, right, bottom));
 }
@@ -665,50 +665,50 @@ NS_IMETHODIMP nsPref::SetRectPref(const char *pref,
  */
 
 NS_IMETHODIMP nsPref::GetDefaultCharPref(const char *pref, 
-					 char * return_buf,
-					 int * buf_length)
+                     char * return_buf,
+                     int * buf_length)
 {
     return _convertRes(PREF_GetDefaultCharPref(pref, return_buf, buf_length));
 }
 
 NS_IMETHODIMP nsPref::GetDefaultIntPref(const char *pref,
-					PRInt32 * return_int)
+                    PRInt32 * return_int)
 {
     return _convertRes(PREF_GetDefaultIntPref(pref, return_int));
 }
 
 NS_IMETHODIMP nsPref::GetDefaultBoolPref(const char *pref,
-					 PRBool * return_val)
+                     PRBool * return_val)
 {
     return _convertRes(PREF_GetDefaultBoolPref(pref, return_val));
 }
 
 NS_IMETHODIMP nsPref::GetDefaultBinaryPref(const char *pref, 
-					     void * return_val,
-					     int * buf_length)
+                         void * return_val,
+                         int * buf_length)
 {
     return _convertRes(PREF_GetDefaultBinaryPref(pref, return_val, buf_length));
 }
 
 NS_IMETHODIMP nsPref::GetDefaultColorPref(const char *pref, 
-					    uint8 *red, uint8 *green, 
-					    uint8 *blue)
+                        uint8 *red, uint8 *green, 
+                        uint8 *blue)
 {
     return _convertRes(PREF_GetDefaultColorPref(pref, red, green, blue));
 }
 
 NS_IMETHODIMP nsPref::GetDefaultColorPrefDWord(const char *pref, 
-					             PRUint32 *colorref)
+                                 PRUint32 *colorref)
 {
     return _convertRes(PREF_GetDefaultColorPrefDWord(pref, colorref));
 }
 
 NS_IMETHODIMP nsPref::GetDefaultRectPref(const char *pref, 
-					 PRInt16 *left, PRInt16 *top, 
-					 PRInt16 *right, PRInt16 *bottom)
+                     PRInt16 *left, PRInt16 *top, 
+                     PRInt16 *right, PRInt16 *bottom)
 {
     return _convertRes(PREF_GetDefaultRectPref(pref, 
-					         left, top, right, bottom));
+                             left, top, right, bottom));
 }
 
 /*
@@ -731,20 +731,20 @@ NS_IMETHODIMP nsPref::SetDefaultBoolPref(const char *pref, PRBool value)
 }
 
 NS_IMETHODIMP nsPref::SetDefaultBinaryPref(const char *pref,
-					     void * value, long size)
+                         void * value, long size)
 {
     return _convertRes(PREF_SetDefaultBinaryPref(pref, value, size));
 }
 
 NS_IMETHODIMP nsPref::SetDefaultColorPref(const char *pref, 
-					    uint8 red, uint8 green, uint8 blue)
+                        uint8 red, uint8 green, uint8 blue)
 {
     return _convertRes(PREF_SetDefaultColorPref(pref, red, green, blue));
 }
 
 NS_IMETHODIMP nsPref::SetDefaultRectPref(const char *pref, 
-					 PRInt16 left, PRInt16 top,
-					 PRInt16 right, PRInt16 bottom)
+                     PRInt16 left, PRInt16 top,
+                     PRInt16 right, PRInt16 bottom)
 {
     return _convertRes(PREF_SetDefaultRectPref(pref, left, top, right, bottom));
 }
@@ -764,19 +764,19 @@ NS_IMETHODIMP nsPref::CopyCharPref(const char *pref, char ** return_buf)
 }
 
 NS_IMETHODIMP nsPref::CopyBinaryPref(const char *pref,
-				         void ** return_value, int *size)
+                         void ** return_value, int *size)
 {
     return _convertRes(PREF_CopyBinaryPref(pref, return_value, size));
 }
 
 NS_IMETHODIMP nsPref::CopyDefaultCharPref( const char *pref,
-					     char ** return_buffer )
+                         char ** return_buffer )
 {
     return _convertRes(PREF_CopyDefaultCharPref(pref, return_buffer));
 }
 
 NS_IMETHODIMP nsPref::CopyDefaultBinaryPref(const char *pref, 
-					        void ** return_val, int * size)
+                            void ** return_val, int * size)
 {
     return _convertRes(PREF_CopyDefaultBinaryPref(pref, return_val, size));
 }
@@ -795,7 +795,7 @@ NS_IMETHODIMP nsPref::CopyPathPref(const char *pref, char ** return_buf)
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::SetPathPref(const char *pref, 
-				    const char *path, PRBool set_default)
+                    const char *path, PRBool set_default)
 //----------------------------------------------------------------------------------------
 {
     return _convertRes(PREF_SetPathPref(pref, path, set_default));
@@ -808,10 +808,10 @@ NS_IMETHODIMP nsPref::GetFilePref(const char *pref_name, nsFileSpec* value)
 {
     if (!value)
         return NS_ERROR_NULL_POINTER;        
-	char *encodedString = nsnull;
-	PrefResult result = PREF_CopyCharPref(pref_name, &encodedString);
-	if (result != PREF_NOERROR)
-		return _convertRes(result);
+    char *encodedString = nsnull;
+    PrefResult result = PREF_CopyCharPref(pref_name, &encodedString);
+    if (result != PREF_NOERROR)
+        return _convertRes(result);
 
     nsInputStringStream stream(encodedString);
     nsPersistentFileDescriptor descriptor;
@@ -823,7 +823,7 @@ NS_IMETHODIMP nsPref::GetFilePref(const char *pref_name, nsFileSpec* value)
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name, 
-				    const nsFileSpec* value, PRBool set_default)
+                    const nsFileSpec* value, PRBool set_default)
 //----------------------------------------------------------------------------------------
 {
     if (!value)
@@ -842,13 +842,13 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
     stream << descriptor;
     if (encodedString && *encodedString)
     {
-		if (set_default)
-			rv = PREF_SetDefaultCharPref(pref_name, encodedString);
-		else
-			rv = PREF_SetCharPref(pref_name, encodedString);
+        if (set_default)
+            rv = PREF_SetDefaultCharPref(pref_name, encodedString);
+        else
+            rv = PREF_SetCharPref(pref_name, encodedString);
     }
     delete [] encodedString; // Allocated by nsOutputStringStream
-    return rv;
+    return _convertRes(rv);
 }
 
 /*
@@ -872,8 +872,8 @@ NS_IMETHODIMP nsPref::PrefIsLocked(const char *pref, PRBool *res)
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::RegisterCallback( const char* domain,
-					PrefChangedFunc callback, 
-					void* instance_data )
+                    PrefChangedFunc callback, 
+                    void* instance_data )
 //----------------------------------------------------------------------------------------
 {
     PREF_RegisterCallback(domain, callback, instance_data);
@@ -882,8 +882,8 @@ NS_IMETHODIMP nsPref::RegisterCallback( const char* domain,
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::UnregisterCallback( const char* domain,
-					    PrefChangedFunc callback, 
-					    void* instance_data )
+                        PrefChangedFunc callback, 
+                        void* instance_data )
 //----------------------------------------------------------------------------------------
 {
     return _convertRes(PREF_UnregisterCallback(domain, callback, instance_data));
@@ -944,7 +944,7 @@ NS_IMPL_ISUPPORTS(nsPrefFactory, kFactoryIID);
 
 //----------------------------------------------------------------------------------------
 nsresult nsPrefFactory::CreateInstance(
-	nsISupports *aDelegate,
+    nsISupports *aDelegate,
     const nsIID &aIID,
     void **aResult)
 //----------------------------------------------------------------------------------------
@@ -967,11 +967,11 @@ nsresult nsPrefFactory::CreateInstance(
 
 //----------------------------------------------------------------------------------------
 extern "C" NS_EXPORT nsresult NSGetFactory(
-	nsISupports* serviceMgr,
-	const nsCID &aClass,
-	const char *aClassName,
-	const char *aProgID,
-	nsIFactory **aFactory)
+    nsISupports* serviceMgr,
+    const nsCID &aClass,
+    const char *aClassName,
+    const char *aProgID,
+    nsIFactory **aFactory)
 //----------------------------------------------------------------------------------------
 {
     if (aFactory == NULL)
@@ -1031,11 +1031,11 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 
     nsIComponentManager* compMgr;
     rv = servMgr->GetService(
-    	kComponentManagerCID, 
-		nsIComponentManager::GetIID(), 
-		(nsISupports**)&compMgr);
+        kComponentManagerCID, 
+        nsIComponentManager::GetIID(), 
+        (nsISupports**)&compMgr);
     if (NS_FAILED(rv))
-    	return rv;
+        return rv;
 
     rv = compMgr->UnregisterFactory(kPrefCID, path);
 
@@ -1056,91 +1056,91 @@ PrefResult pref_OpenFileSpec(
     PRBool skipFirstLine)
 //----------------------------------------------------------------------------------------
 {
-	PrefResult result = PREF_NOERROR;
+    PrefResult result = PREF_NOERROR;
 
-	if (!fileSpec.Exists())
-		return PREF_ERROR;
+    if (!fileSpec.Exists())
+        return PREF_ERROR;
 
-	PRUint32 fileLength = fileSpec.GetFileSize();
-	if (fileLength == 0)
-		return PREF_ERROR;
-		
-	nsInputFileStream stream(fileSpec);
-	if (!stream.is_open())
-		result =  PREF_ERROR;
-	
-	char* readBuf = nsnull;
-	if (result == PREF_NOERROR)
-	{
-		readBuf = (char*)PR_MALLOC(fileLength * sizeof(char));
-		if (!readBuf)
-			result = PREF_OUT_OF_MEMORY;
-	}
-	
-	if (result == PREF_NOERROR)
-	{
-		PRUint32 bytesRead = stream.read(readBuf, fileLength);
-		if (bytesRead < fileLength)
-			result = PREF_ERROR;
-		else if (verifyHash && !pref_VerifyLockFile(readBuf, fileLength))
-			result = PREF_BAD_LOCKFILE;
-		else if (PREF_EvaluateConfigScript(readBuf, fileLength,
-				fileSpec.GetCString(), bGlobalContext, PR_FALSE, skipFirstLine))
-			result = PREF_NOERROR;
-		PR_Free(readBuf);
-	}
+    PRUint32 fileLength = fileSpec.GetFileSize();
+    if (fileLength == 0)
+        return PREF_ERROR;
+        
+    nsInputFileStream stream(fileSpec);
+    if (!stream.is_open())
+        result =  PREF_ERROR;
+    
+    char* readBuf = nsnull;
+    if (result == PREF_NOERROR)
+    {
+        readBuf = (char*)PR_MALLOC(fileLength * sizeof(char));
+        if (!readBuf)
+            result = PREF_OUT_OF_MEMORY;
+    }
+    
+    if (result == PREF_NOERROR)
+    {
+        PRUint32 bytesRead = stream.read(readBuf, fileLength);
+        if (bytesRead < fileLength)
+            result = PREF_ERROR;
+        else if (verifyHash && !pref_VerifyLockFile(readBuf, fileLength))
+            result = PREF_BAD_LOCKFILE;
+        else if (PREF_EvaluateConfigScript(readBuf, fileLength,
+                fileSpec.GetCString(), bGlobalContext, PR_FALSE, skipFirstLine))
+            result = PREF_NOERROR;
+        PR_Free(readBuf);
+    }
 
-	// If the user prefs file exists but generates an error,
-	//   don't clobber the file when we try to save it
-	if ((!readBuf || result != PREF_NOERROR) && is_error_fatal)
-		gErrorOpeningUserPrefs = PR_TRUE;
+    // If the user prefs file exists but generates an error,
+    //   don't clobber the file when we try to save it
+    if ((!readBuf || result != PREF_NOERROR) && is_error_fatal)
+        gErrorOpeningUserPrefs = PR_TRUE;
 #ifdef XP_PC
-	if (gErrorOpeningUserPrefs && is_error_fatal)
-		MessageBox(nsnull,"Error in preference file (prefs.js).  Default preferences will be used.","Netscape - Warning", MB_OK);
+    if (gErrorOpeningUserPrefs && is_error_fatal)
+        MessageBox(nsnull,"Error in preference file (prefs.js).  Default preferences will be used.","Netscape - Warning", MB_OK);
 #endif
 
-	JS_GC(gMochaContext);
-	return result;
+    JS_GC(gMochaContext);
+    return result;
 } // pref_OpenFile
 
 //----------------------------------------------------------------------------------------
 PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
-	const nsFileSpec& fileSpec,
-	PLHashEnumerator heSaveProc)
+    const nsFileSpec& fileSpec,
+    PLHashEnumerator heSaveProc)
 //----------------------------------------------------------------------------------------
 {
-	if (!gHashTable)
-		return PREF_NOT_INITIALIZED;
+    if (!gHashTable)
+        return PREF_NOT_INITIALIZED;
 
-	/* ?! Don't save (blank) user prefs if there was an error reading them */
-	if (gErrorOpeningUserPrefs)
-		return PREF_NOERROR;
+    /* ?! Don't save (blank) user prefs if there was an error reading them */
+    if (gErrorOpeningUserPrefs)
+        return PREF_NOERROR;
 
-	char** valueArray = (char**) PR_Calloc(sizeof(char*), gHashTable->nentries);
-	if (!valueArray)
-		return PREF_OUT_OF_MEMORY;
+    char** valueArray = (char**) PR_Calloc(sizeof(char*), gHashTable->nentries);
+    if (!valueArray)
+        return PREF_OUT_OF_MEMORY;
 
-	nsOutputFileStream stream(fileSpec);
-	if (!stream.is_open())
-		return PREF_ERROR;
+    nsOutputFileStream stream(fileSpec);
+    if (!stream.is_open())
+        return PREF_ERROR;
 
-	stream << "// Mozilla User Preferences" << LINEBREAK
-		<< "// This is a generated file!  Do not edit."
-		<< LINEBREAK << LINEBREAK;
-	
-	/* LI_STUFF here we pass in the heSaveProc proc used so that li can do its own thing */
-	PR_HashTableEnumerateEntries(gHashTable, heSaveProc, valueArray);
-	
-	/* Sort the preferences to make a readable file on disk */
-	XP_QSORT(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings);
-	for (PRUint32 valueIdx = 0; valueIdx < gHashTable->nentries; valueIdx++)
-	{
-		if (valueArray[valueIdx])
-		{
-			stream << valueArray[valueIdx];
-			PR_Free(valueArray[valueIdx]);
-		}
-	}
-	PR_Free(valueArray);
-	return PREF_NOERROR;
+    stream << "// Mozilla User Preferences" << LINEBREAK
+        << "// This is a generated file!  Do not edit."
+        << LINEBREAK << LINEBREAK;
+    
+    /* LI_STUFF here we pass in the heSaveProc proc used so that li can do its own thing */
+    PR_HashTableEnumerateEntries(gHashTable, heSaveProc, valueArray);
+    
+    /* Sort the preferences to make a readable file on disk */
+    XP_QSORT(valueArray, gHashTable->nentries, sizeof(char*), pref_CompareStrings);
+    for (PRUint32 valueIdx = 0; valueIdx < gHashTable->nentries; valueIdx++)
+    {
+        if (valueArray[valueIdx])
+        {
+            stream << valueArray[valueIdx];
+            PR_Free(valueArray[valueIdx]);
+        }
+    }
+    PR_Free(valueArray);
+    return PREF_NOERROR;
 }
