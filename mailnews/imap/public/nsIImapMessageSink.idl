@@ -1,0 +1,66 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "MailNewsTypes2.idl"
+
+
+typedef long ImapOnlineCopyState;
+
+[scriptable, uuid(5f7484b0-68b4-11d3-a53e-0060b0fc04b7)]
+
+interface ImapOnlineCopyStateType 
+{
+  const long kInProgress = 0;
+  const long kSuccessfulCopy = 1;
+  const long kFailedCopy = 2;
+  const long kSuccessfulDelete = 3;
+  const long kFailedDelete = 4;
+  const long kReadyForAppendData = 5;
+  const long kFailedAppend = 6;
+  const long kInterruptedState = 7;
+};
+
+
+
+
+[scriptable, uuid(5a53b814-68b1-11d3-a53e-0060b0fc04b7)]
+
+interface nsIImapMessageSink : nsISupports {
+    // set up messge download output stream
+    void SetupMsgWriteStream();
+
+    void ParseAdoptedMsgLine(in string adoptedMsgLine, in nsMsgKey uidOfMsg);
+    
+    void NormalEndMsgWriteStream();
+    
+    void AbortMsgWriteStream();
+    
+    // message move/copy related methods
+    void OnlineCopyReport(in ImapOnlineCopyState aCopyState);
+    void BeginMessageUpload();
+//    void UploadMessageFile(UploadMessageInfo* aMsgInfo);
+
+    // message flags operation
+    void NotifyMessageFlags(in unsigned long flags, in nsMsgKey messageKey);
+
+    void NotifyMessageDeleted(in string onlineFolderName,in boolean deleteAllMsgs,in string msgIdString);
+
+    void GetMessageSizeFromDB(in string id, in string folderName, in boolean idIsUid, out unsigned long size);
+
+};
