@@ -1,97 +1,71 @@
 <?xml version="1.0"?> 
-<!-- OS/2 version of platformEditorBindings.xul -->
+<!-- os2 version of platformEditorBindings.xul -->
 
 <keybinding id="platformEditorBindings"
 	 xmlns:html="http://www.w3.org/1999/xhtml"
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- change the xul key for Unix -->
-<keyset id="editorKeySet" xulkey="alt">
+<!-- xul key for OS/2 -->
+<keyset id="editorKeySet" xulkey="ctrl">
 
-<!-- emacs delete keys -->
-<key id="emDelCharBWkb" key="h" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteCharBackward');
-    controller.doCommand('cmd_deleteCharBackward');"/>
-<key id="emDelCharFWkb" key="d" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteCharForward');
-    controller.doCommand('cmd_deleteCharForward');"/>
-<key id="emDelWordBWkb" key="w" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteWordBackward');
-    controller.doCommand('cmd_deleteWordBackward');"/>
-<key id="emKillToEndkb" key="k" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteToEndOfLine');
-    controller.doCommand('cmd_deleteToEndOfLine');"/>
-<key id="emKillToBegkb" key="u" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_deleteToBeginningOfLine');
-    controller.doCommand('cmd_deleteToBeginningOfLine');"/>
-
-<!-- emacs motion keys: these use the selection controller API -->
-<key id="emBeginLinekb" key="a" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_beginLine');
-    controller.doCommand('cmd_beginLine');"/>
-<key id="emEndLinekb" key="e" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_endLine');
-    controller.doCommand('cmd_endLine');"/>
-<key id="emCharPrevkb" key="b" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_charPrevious');
-    controller.doCommand('cmd_charPrevious');"/>
-<key id="emCharNextkb" key="f" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_charNext');
-    controller.doCommand('cmd_charNext');"/>
-<key id="emPrevLinekb" key="p" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_linePrevious');
-    controller.doCommand('cmd_linePrevious');"/>
-<key id="emNextLinekb" key="n" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_lineNext');
-    controller.doCommand('cmd_lineNext');"/>
-
-<!-- Add the Windows/Mac cut, copy, paste, undo and redo keys -->
-<key id="emCutKey" key="x" control="true" shift="false"
+ 
+<!-- alternate cut/copy/paste keys for OS/2 -->
+<key id="os2AlternateCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
     controller.doCommand('cmd_cut');"/>
-<key id="emCopyKey" key="c" control="true" shift="false"
+<key id="os2AlternateCopy2Key" keycode="VK_DELETE" shift="false" control="true" alt="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
     controller.doCommand('cmd_copy');"/>
-<key id="emPasteKey" key="v" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-    controller.doCommand('cmd_paste');"/>
-<key id="emUndoKey" key="z" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');
-    controller.doCommand('cmd_undo');"/>
-<key id="emRedoKey" key="r" control="true" shift="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
-    controller.doCommand('cmd_redo');"/>
-
-<key id="winAlternateCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false"
-  onkeypress="
-    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');"/>
-<key id="winAlternateCopyKey" keycode="VK_INSERT" control="true" shift="false" alt="false"
+<key id="os2AlternateCopyKey" keycode="VK_INSERT" control="true" shift="false" alt="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
     controller.doCommand('cmd_copy');"/>
-<key id="winAlternatePasteKey" keycode="VK_INSERT" shift="true" control="false" alt="false"
+<key id="os2AlternatePasteKey" keycode="VK_INSERT" shift="true" control="false" alt="false"
   onkeypress="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
     controller.doCommand('cmd_paste');"/>
 
+<key id="key_leftcontrol" keycode="VK_LEFT" shift="false" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_wordPrevious');
+    controller.doCommand('cmd_wordPrevious');"/>
+<key id="key_rightcontrol" keycode="VK_RIGHT" shift="false" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_wordNext');
+    controller.doCommand('cmd_wordNext');"/>
+<key id="key_leftshiftcontrol" keycode="VK_LEFT" shift="true" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordPrevious');
+    controller.doCommand('cmd_selectWordPrevious');"/>
+<key id="key_rightshiftcontrol" keycode="VK_RIGHT" shift="true" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
+    controller.doCommand('cmd_selectWordNext');"/>
+
+<key id="key_homectrlshift" keycode="VK_HOME" shift="true" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_selectTop');
+        controller.doCommand('cmd_selectTop');"/>
+<key id="key_endctrlshift" keycode="VK_END" shift="true" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
+        controller.doCommand('cmd_selectBottom');"/>
+<key id="key_homectrl" keycode="VK_HOME" shift="false" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_moveTop');
+        controller.doCommand('cmd_moveTop');"/>
+<key id="key_endctrl" keycode="VK_END" shift="false" control="true" alt="false"
+    onkeypress="
+        var controller =
+        document.commandDispatcher.getControllerForCommand('cmd_moveBottom');
+        controller.doCommand('cmd_moveBottom');"/>
 </keyset>
+
 <!-- End OS/2-specific keybindings -->
 
 </keybinding>

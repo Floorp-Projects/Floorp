@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<!-- OS/2 version of platformDialogOverlay.xul -->
+<!-- os2 version of platformDialogOverlay.xul -->
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/platformDialogOverlay.dtd">
 
@@ -9,24 +9,22 @@
 		 xmlns:html="http://www.w3.org/1999/xhtml"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <box id="okCancelButtons" align="horizontal">
+  <box id="okCancelButtons">
     <spring flex="1"/>
-    <button class="right dialog" id="ok" value="&okButton.label;" default="true" onclick="doOKButton()"/>	
-    <button class="dialog" id="Button2" value="&cancelButton.label;" collapsed="true" onclick="doButton2()"/>	
-    <button class="dialog" id="Button3" value="&cancelButton.label;" collapsed="true" onclick="doButton3()"/>	
-    <button class="dialog" id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>
-    <spring flex="1"/>
-  </box>
-
-  <box id="okCancelButtonsRight" align="horizontal">
-    <spring flex="1"/>
-    <button class="right dialog" id="ok" value="&okButton.label;" default="true" onclick="doOKButton()"/>	
-    <button class="dialog" id="Button2" value="&cancelButton.label;" collapsed="true" onclick="doButton2()"/>	
-    <button class="dialog" id="Button3" value="&cancelButton.label;" collapsed="true" onclick="doButton3()"/>	
-    <button class="dialog" id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>
+    <button class="right exit-dialog" id="ok" value="&okButton.label;" default="true" onclick="doOKButton()"/>	
+    <button class="exit-dialog" id="Button2" value="&cancelButton.label;" collapsed="true" onclick="doButton2()"/>	
+    <button class="exit-dialog" id="Button3" value="&cancelButton.label;" collapsed="true" onclick="doButton3()"/>	
+    <button class="exit-dialog" id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>
     <spring flex="1"/>
   </box>
 
+  <box id="okCancelButtonsRight" halign="right">
+    <spring flex="1"/>
+    <button class="right exit-dialog" id="ok" value="&okButton.label;" default="true" onclick="doOKButton()"/>	
+    <button class="exit-dialog" id="Button2" value="&cancelButton.label;" collapsed="true" onclick="doButton2()"/>	
+    <button class="exit-dialog" id="Button3" value="&cancelButton.label;" collapsed="true" onclick="doButton3()"/>	
+    <button class="exit-dialog" id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>
+  </box>
 	
 	<keyset id="keyset">
 		<key keycode="VK_ENTER" oncommand="doOKButton()"/>
