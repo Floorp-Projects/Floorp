@@ -95,7 +95,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIXMLContent.h"
 #include "nsIXMLElementFactory.h"
-#include "nsIXULCommandDispatcher.h"
 #include "nsIXULContent.h"
 #include "nsIXULContentSink.h"
 #include "nsIXULContentUtils.h"
@@ -108,6 +107,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsXPIDLString.h"
+#include "nsXULCommandDispatcher.h"
 #include "nsXULDocument.h"
 #include "nsXULElement.h"
 #include "plstr.h"
@@ -143,7 +143,6 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,          NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
-static NS_DEFINE_CID(kXULCommandDispatcherCID,   NS_XULCOMMANDDISPATCHER_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULKeyListenerCID,         NS_XULKEYLISTENER_CID);
@@ -3162,15 +3161,9 @@ nsXULDocument::Init()
     if (NS_FAILED(rv)) return rv;
 
     // Create our focus tracker and hook it up.
-    nsCOMPtr<nsIXULCommandDispatcher> commandDis;
-    rv = nsComponentManager::CreateInstance(kXULCommandDispatcherCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIXULCommandDispatcher),
-                                            getter_AddRefs(commandDis));
+    rv = nsXULCommandDispatcher::Create(getter_AddRefs(mCommandDispatcher));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a focus tracker");
     if (NS_FAILED(rv)) return rv;
-
-    mCommandDispatcher = do_QueryInterface(commandDis);
 
     nsCOMPtr<nsIDOMEventListener> CommandDispatcher =
         do_QueryInterface(mCommandDispatcher);

@@ -20,22 +20,40 @@
  * Contributor(s): 
  */
 
-#include "nsISupports.idl"
-#include "nsIController.idl"
-interface nsIDOMXULCommandDispatcher;
+/*
 
-[scriptable, uuid(A5ED3A01-7CC7-11d3-BF87-00105A1B0627)]
-interface nsIControllers : nsISupports {
-	attribute nsIDOMXULCommandDispatcher commandDispatcher;
+  The XUL "controllers" object.
 
-	nsIController getControllerForCommand(in wstring command);
+*/
 
-	void insertControllerAt(in unsigned long index, in nsIController controller);
-	nsIController removeControllerAt(in unsigned long index);
-	nsIController getControllerAt(in unsigned long index);
+#ifndef nsXULControllers_h__
+#define nsXULControllers_h__
 
-    void appendController(in nsIController controller);
-	void removeController(in nsIController controller);
+#include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
+#include "nsIControllers.h"
+#include "nsISupportsArray.h"
 
-	unsigned long getControllerCount();
+class nsIDOMXULCommandDispatcher;
+
+class nsXULControllers : public nsIControllers
+{
+public:
+    friend NS_IMETHODIMP
+    NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICONTROLLERS
+  
+protected:
+    nsXULControllers();
+    virtual ~nsXULControllers(void);
+
+    nsCOMPtr<nsISupportsArray> mControllers;
+    nsWeakPtr mCommandDispatcher;
 };
+
+
+
+
+#endif // nsXULControllers_h__

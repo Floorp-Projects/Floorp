@@ -35,7 +35,6 @@ EXPORTS		= \
 		nsIDOMXULElement.h \
 		nsIDOMXULTreeElement.h \
 		nsIStreamLoadableDocument.h \
-		nsIXULCommandDispatcher.h \
 		nsIXULContentSink.h \
 		nsIXULContentUtils.h \
 		nsIXULDocument.h \
