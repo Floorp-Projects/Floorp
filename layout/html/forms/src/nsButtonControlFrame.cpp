@@ -69,7 +69,9 @@ nsButtonControlFrame::GetDefaultLabel(nsString& aString)
 PRBool
 nsButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
-  if (this == (aSubmitter)) {
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_HIDDEN == type) || (this == aSubmitter)) {
     return nsFormControlFrame::IsSuccessful(aSubmitter);
   } else {
     return PR_FALSE;
