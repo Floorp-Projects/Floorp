@@ -620,6 +620,7 @@ xpfe/browser/resources/locale/en-US/Makefile
 xpfe/global/Makefile
 xpfe/global/resources/Makefile
 xpfe/global/resources/skin/Makefile
+xpfe/global/resources/skin/unix/Makefile
 xpfe/global/resources/content/Makefile
 xpfe/global/resources/content/unix/Makefile
 xpfe/global/resources/locale/Makefile
