@@ -128,10 +128,12 @@ public:
    * @param aTag      The type of object to create
    * @param aParent   The node to insert the new object into
    * @param aPosition The place in aParent to insert the new node
+   * @param aNewNode  [OUT] The node created.  Caller must release aNewNode.
    */
   virtual nsresult CreateNode(const nsString& aTag,
                               nsIDOMNode *    aParent,
-                              PRInt32         aPosition)=0;
+                              PRInt32         aPosition,
+                              nsIDOMNode **   aNewNode)=0;
 
   /** 
    * InsertNode inserts aNode into aParent at aPosition.
@@ -178,7 +180,8 @@ public:
    * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
    */
   virtual nsresult SplitNode(nsIDOMNode * aExistingRightNode,
-                             PRInt32      aOffset)=0;
+                             PRInt32      aOffset,
+                             nsIDOMNode ** aNewLeftNode)=0;
 
   /** 
    * JoinNodes() takes 2 nodes and merge their content|children.
