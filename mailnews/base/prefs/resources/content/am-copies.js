@@ -64,30 +64,6 @@ function onInit() {
     setupFccItems();
     setupBCCTextbox();
     SetSpecialFolderNamesWithDelims();
-    SetupStoreReadMail();
-}
-
-function SetupStoreReadMail()
-{
-  var groupbox = document.getElementById("store_read_mail_in_pfc");
-
-  var serverId = GetCurrentServerId();
-  var account = parent.getAccountFromServerId(serverId);
-  if (!account) 
-    return;
-
-  var server = account.incomingServer;
-  var prefString = server.type + "." + server.redirectorType + ".showStoreReadMailInPFC";
-
-  try {
-    if (gPrefBranch.getBoolPref(prefString))
-      groupbox.removeAttribute("hidden");
-    else
-      groupbox.setAttribute("hidden","true");
-  }
-  catch (ex) {
-    groupbox.setAttribute("hidden","true");
-  }
 }
 
 // Initialize the picker mode choices (account/folder picker) into global vars
