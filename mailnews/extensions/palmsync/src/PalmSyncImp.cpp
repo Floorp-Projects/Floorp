@@ -137,11 +137,11 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
                 (server->dirType == PABDirectory))
             continue;
 
+        // server->description is represented in UTF8, we need to do some conversion...
         if(aIsUnicode) {
-            // convert to unicode
+            // convert to Unicode
             nsAutoString abName;
-            nsCAutoString platformCharSet(nsMsgI18NFileSystemCharset());
-            rv = ConvertToUnicode(platformCharSet.get(), server->description, abName);
+            rv = ConvertToUnicode("UTF-8", server->description, abName);
             if (NS_FAILED(rv))
                 break;
             // add to the list
@@ -149,9 +149,15 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
             wcscpy(m_ServerDescList->lpszABDesc, abName.get());
         }
         else {
-            // we are just typecasting ascii to unichar and back for the ascii description
-            m_ServerDescList->lpszABDesc = (LPTSTR) CoTaskMemAlloc(sizeof(char) * (strlen(server->description)+1));
-            strcpy((char*)m_ServerDescList->lpszABDesc, server->description);
+            // we need to convert the description from UTF-8 to Unicode and then to ASCII
+            nsAutoString abUName;
+            rv = ConvertToUnicode("UTF-8", server->description, abUName);
+            if (NS_FAILED(rv))
+                break;
+            nsCAutoString abName = NS_LossyConvertUCS2toASCII(abUName);
+
+            m_ServerDescList->lpszABDesc = (LPTSTR) CoTaskMemAlloc(sizeof(char) * (abName.Length()+1));
+            strcpy((char*)m_ServerDescList->lpszABDesc, abName.get());
         }
         m_ServerDescList++;
 

@@ -127,8 +127,7 @@ nsAbPalmHotSync::nsAbPalmHotSync(PRBool aIsUnicode, PRUnichar * aAbDescUnicode, 
     if(aIsUnicode)
         mAbName.Assign(aAbDescUnicode);
     else
-        // mAbName.AssignWithConversion(aAbDesc);
-        mAbName = NS_ConvertUTF8toUCS2(aAbDesc);
+        mAbName = NS_ConvertASCIItoUCS2(aAbDesc);
     mAbName.Trim(" ");
 
     mPalmCategoryId = aPalmCatID;
@@ -190,10 +189,9 @@ nsresult nsAbPalmHotSync::Initialize()
         if((server->PalmCategoryId > -1) && (mPalmCategoryId == server->PalmCategoryId))
             break;
 
-        // convert to unicode
+        // convert from UTF-8 to unicode
         nsAutoString abName;
-        nsCAutoString platformCharSet(nsMsgI18NFileSystemCharset());
-        rv = ConvertToUnicode(platformCharSet.get(), server->description, abName);
+        rv = ConvertToUnicode("UTF-8", server->description, abName);
         if(NS_FAILED(rv)) return rv ;
 
         // if Palm category is not already assigned check the AB name

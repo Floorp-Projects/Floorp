@@ -159,7 +159,7 @@ nsresult nsAbIPCCard::Copy(nsABCOMCardStruct * srcCard)
     return NS_OK;
 }
 
-#define CONVERT_ASSIGNTO_UNICODE(d, s)   d.SetLength(0); if((char*) s) d=NS_ConvertUTF8toUCS2((char*)s);
+#define CONVERT_ASSIGNTO_UNICODE(d, s)   d.SetLength(0); if((char*) s) d=NS_ConvertASCIItoUCS2((char*)s);
 
 nsresult nsAbIPCCard::ConvertToUnicodeAndCopy(nsABCOMCardStruct * srcCard)
 {
@@ -684,7 +684,7 @@ void nsAbIPCCard::CopyValue(PRBool isUnicode, nsString & attribValue, LPTSTR * r
         } 
         else { 
             nsCAutoString cStr; 
-            cStr = NS_ConvertUCS2toUTF8(attribValue);
+            cStr = NS_LossyConvertUCS2toASCII(attribValue);
             char * str = (char *) CoTaskMemAlloc(cStr.Length()+1);
             strcpy(str, cStr.get()); 
             *result = (LPTSTR) str;
