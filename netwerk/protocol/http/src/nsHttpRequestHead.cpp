@@ -28,7 +28,7 @@
 //-----------------------------------------------------------------------------
 
 void
-nsHttpRequestHead::Flatten(nsACString &buf)
+nsHttpRequestHead::Flatten(nsACString &buf, PRBool pruneProxyHeaders)
 {
     // note: the first append is intentional.
  
@@ -50,5 +50,5 @@ nsHttpRequestHead::Flatten(nsACString &buf)
 
     buf.Append("\r\n");
 
-    mHeaders.Flatten(buf);
+    mHeaders.Flatten(buf, pruneProxyHeaders);
 }

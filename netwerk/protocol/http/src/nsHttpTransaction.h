@@ -62,7 +62,8 @@ public:
     // Called to initialize the transaction
     nsresult SetupRequest(nsHttpRequestHead *requestHeaders,
                           nsIInputStream    *requestBody,
-                          PRBool             requestBodyIncludesHeaders);
+                          PRBool             requestBodyIncludesHeaders,
+                          PRBool             pruneProxyHeaders);
 
     nsIStreamListener     *Listener()       { return mListener; }
     nsAHttpConnection     *Connection()     { return mConnection; }

@@ -80,7 +80,7 @@ nsHttpResponseHead::Flatten(nsACString &buf, PRBool pruneTransients)
     buf.Append("\r\n");
 
     if (!pruneTransients) {
-        mHeaders.Flatten(buf);
+        mHeaders.Flatten(buf, PR_FALSE);
         return;
     }
 
