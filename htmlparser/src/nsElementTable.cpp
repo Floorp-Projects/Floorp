@@ -422,7 +422,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
       /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-      /*parent,incl,exclgroups*/          kDLChild, kFlowEntity-kHeading, kNone,	
+      /*parent,incl,exclgroups*/          kDLChild, kFlowEntity, kNone,	
       /*special props, prop-range*/       kNoPropagate|kMustCloseSelf,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
 
@@ -819,7 +819,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kExtensions, (kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kInlineEntity, (kFlowEntity), kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -1388,7 +1388,7 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
     if(!result) {
 
       static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,eHTMLTag_dd,eHTMLTag_dt,
-                                    eHTMLTag_td,eHTMLTag_tfoot,eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr,
+                                    /* eHTMLTag_td,eHTMLTag_tfoot,eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr, */
                                     eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul};
       result=FindTagInSet(aTag,gClosers,sizeof(gClosers)/sizeof(eHTMLTag_body));
     }
@@ -1859,20 +1859,11 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
     }
 
 
-#if 0
-      //the older version; replaced in december by rickg
-    if(gHTMLElements[aChild].IsBlockEntity()){
-      if(nsHTMLElement::IsBlockParent(mTagID)){
-        return PR_TRUE;
-      }
-    }
-#else
     if(gHTMLElements[aChild].IsBlockCloser(aChild)){
       if(nsHTMLElement::IsBlockParent(mTagID)){
         return PR_TRUE;
       }
     }
-#endif
 
     if(nsHTMLElement::IsInlineEntity(aChild)){
       if(nsHTMLElement::IsInlineParent(mTagID)){
