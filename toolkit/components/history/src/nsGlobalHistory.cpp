@@ -2358,7 +2358,6 @@ nsGlobalHistory::Init()
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     observerService->AddObserver(this, "profile-do-change", PR_TRUE);
-    observerService->AddObserver(this, "quit-application", PR_TRUE);
   }
   
   return NS_OK;
@@ -3465,8 +3464,6 @@ nsGlobalHistory::Observe(nsISupports *aSubject,
   }
   else if (!nsCRT::strcmp(aTopic, "profile-do-change"))
     rv = OpenDB();
-  else if (!nsCRT::strcmp(aTopic, "quit-application"))
-    rv = Flush();
 
   return NS_OK;
 }
