@@ -270,27 +270,8 @@ public class SSLSocket extends java.net.Socket {
      * @return The local IP address.
      */
     public InetAddress getLocalAddress() {
-        try {
-            int intAddr = getLocalAddressNative();
-            InetAddress in;
-            int[] addr = new int[4];
-            addr[0] = ((intAddr >>> 24) & 0xff);
-            addr[1] = ((intAddr >>> 16) & 0xff);
-            addr[2] = ((intAddr >>>  8) & 0xff);
-            addr[3] = ((intAddr       ) & 0xff);
-            try {
-            in = InetAddress.getByName(
-                addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
-            } catch (java.net.UnknownHostException e) {
-                in = null;
-            }
-            return in;
-        } catch(SocketException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return base.getLocalAddress();
     }
-    private native int getLocalAddressNative() throws SocketException;
 
     /**
      * @return The local port.
@@ -696,6 +677,22 @@ public class SSLSocket extends java.net.Socket {
 
     private static native void setCipherPolicyNative(int policyEnum)
         throws SocketException;
+
+    /**
+     * Returns the addresses and ports of this socket.
+     */
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+        buf.append("SSLSocket[addr=");
+        buf.append(getInetAddress());
+        buf.append(getLocalAddress());
+        buf.append(",port=");
+        buf.append(getPort());
+        buf.append(",localport=");
+        buf.append(getLocalPort());
+        buf.append("]");
+        return buf.toString();
+    }
 
     public final static int SSL2_RC4_128_WITH_MD5                  = 0xFF01;
     public final static int SSL2_RC4_128_EXPORT40_WITH_MD5         = 0xFF02;

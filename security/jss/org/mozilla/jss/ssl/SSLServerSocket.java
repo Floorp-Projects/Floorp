@@ -292,10 +292,10 @@ public class SSLServerSocket extends java.net.ServerSocket {
     }
 
     /**
-     * @return The remote peer's IP address.
+     * @Return the local address of this server socket.
      */
     public InetAddress getInetAddress() {
-        return base.getInetAddress();
+        return base.getLocalAddress();
     }
 
     /**
@@ -333,5 +333,18 @@ public class SSLServerSocket extends java.net.ServerSocket {
      */
     public void useCache(boolean b) throws SocketException {
         base.useCache(b);
+    }
+
+    /**
+     * Returns the addresses and ports of this socket.
+     */
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+        buf.append("SSLServerSocket[addr=");
+        buf.append(getInetAddress());
+        buf.append(",port=0,localport=");
+        buf.append(getLocalPort());
+        buf.append("]");
+        return buf.toString();
     }
 }

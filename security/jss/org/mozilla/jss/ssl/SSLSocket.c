@@ -363,6 +363,10 @@ finish:
     return retval;
 }
 
+/*
+ * This function is only here for binary compatibility. See
+ * http://bugzilla.mozilla.org/show_bug.cgi?id=143254
+ */
 JNIEXPORT jint JNICALL
 Java_org_mozilla_jss_ssl_SSLSocket_getLocalAddressNative(JNIEnv *env,
     jobject self)

@@ -427,6 +427,19 @@ Java_org_mozilla_jss_ssl_SocketBase_getPeerAddressNative
 }
 
 JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_getLocalAddressNative(JNIEnv *env,
+    jobject self)
+{
+    PRNetAddr addr;
+
+    if( JSSL_getSockAddr(env, self, &addr, LOCAL_SOCK) == PR_SUCCESS ) {
+        return ntohl(addr.inet.ip);
+    } else {
+        return 0;
+    }
+}
+
+JNIEXPORT jint JNICALL
 Java_org_mozilla_jss_ssl_SocketBase_getLocalPortNative(JNIEnv *env,
     jobject self)
 {

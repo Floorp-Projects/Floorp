@@ -138,32 +138,57 @@ class SocketBase {
     native void setSSLOption(int option, int on)
         throws SocketException;
 
+    /**
+     * Converts a host-ordered 4-byte internet address into an InetAddress.
+     * Unfortunately InetAddress provides no more efficient means
+     * of construction than getByName(), and it is final.
+     *
+     * @return The InetAddress corresponding to the given integer,
+     *      or <tt>null</tt> if the InetAddress could not be constructed.
+     */
+    private static InetAddress
+    convertIntToInetAddress(int intAddr) {
+        InetAddress in;
+        int[] addr = new int[4];
+        addr[0] = ((intAddr >>> 24) & 0xff);
+        addr[1] = ((intAddr >>> 16) & 0xff);
+        addr[2] = ((intAddr >>>  8) & 0xff);
+        addr[3] = ((intAddr       ) & 0xff);
+        try {
+            in = InetAddress.getByName(
+                addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
+        } catch (java.net.UnknownHostException e) {
+            in = null;
+        }
+        return in;
+    }
+
+    /**
+     * @Return the InetAddress of the peer end of the socket.
+     */
     InetAddress getInetAddress()
     {
         try {
-            int intAddr = getPeerAddressNative();
-            int[] addr = new int[4];
-            InetAddress in = null;
-            addr[0] = ((intAddr >>> 24) & 0xff);
-            addr[1] = ((intAddr >>> 16) & 0xff);
-            addr[2] = ((intAddr >>>  8) & 0xff);
-            addr[3] = ((intAddr       ) & 0xff);
-            try {
-                in = InetAddress.getByName(
-                  addr[0] + "." + addr[1] + "." + addr[2] + "." + addr[3] );
-            } catch (java.net.UnknownHostException e) {
-                e.printStackTrace();
-                in = null;
-            }
-            
-            return in;
+            return convertIntToInetAddress( getPeerAddressNative() );
         } catch(SocketException e) {
             e.printStackTrace();
             return null;
         }
     }
-
     private native int getPeerAddressNative() throws SocketException;
+
+    /**
+     * @return The local IP address.
+     */
+    InetAddress getLocalAddress() {
+        try {
+            return convertIntToInetAddress( getLocalAddressNative() );
+        } catch(SocketException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    private native int getLocalAddressNative() throws SocketException;
 
     public int getLocalPort() {
         try {
