@@ -147,7 +147,6 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDocumentObserver
-  NS_IMETHOD SetTitle(const nsString& aTitle);
   NS_IMETHOD BeginUpdate();
   NS_IMETHOD EndUpdate();
   NS_IMETHOD BeginLoad();
@@ -485,26 +484,6 @@ nsIFrame*
 PresShell::GetRootFrame()
 {
   return mRootFrame;
-}
-
-NS_METHOD
-PresShell::SetTitle(const nsString& aTitle)
-{
-  if (nsnull != mPresContext) {
-    nsISupports* container;
-    if (NS_OK == mPresContext->GetContainer(&container)) {
-      if (nsnull != container) {
-        nsIDocumentObserver* docob;
-        if (NS_OK == container->QueryInterface(kIDocumentObserverIID,
-                                               (void**) &docob)) {
-          docob->SetTitle(aTitle);
-          NS_RELEASE(docob);
-        }
-        NS_RELEASE(container);
-      }
-    }
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
