@@ -64,8 +64,21 @@ nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
 NS_IMETHODIMP
 nsJARInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
 {
-    NS_NOTREACHED("ReadSegments");
-    return NS_ERROR_NOT_IMPLEMENTED;
+   char *readBuf = (char *)nsMemory::Alloc(count);
+   PRUint32 nBytes;
+   if (!readBuf)
+     return NS_ERROR_OUT_OF_MEMORY;
+   
+   nsresult rv = Read(readBuf, count, &nBytes);
+ 
+   *_retval = 0;
+   if (NS_SUCCEEDED(rv)) {
+     rv = writer(this, closure, readBuf, 0, nBytes, _retval);
+     NS_ASSERTION(nBytes == *_retval, "Didn't write all Data.");
+   }
+ 
+   nsMemory::Free(readBuf);
+   return rv;
 }
 
 NS_IMETHODIMP
