@@ -3034,7 +3034,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
           // absolutely positioned.
           nsIFrame* newFrame = nsnull;
           nsIFrame* scrolledFrame = nsnull;
-          NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+          NS_NewSelectsAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
 
           InitializeScrollFrame(aPresContext, aState, listFrame, scrolledFrame, aContent, comboboxFrame,
                                listStyle, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE);
@@ -3047,7 +3047,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
           nsIView *listView; 
           listFrame->GetView(&listView);
           NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
-          listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
+          //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
           nsIFrame* frame = nsnull;
           if (NS_SUCCEEDED(comboboxFrame->QueryInterface(kIFrameIID, (void**)&frame))) {
@@ -3078,7 +3078,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
         rv = NS_NewListControlFrame(&listFrame);
         aNewFrame = listFrame;
         nsIFrame* scrolledFrame = nsnull;
-        NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+        NS_NewSelectsAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
 
         InitializeScrollFrame(aPresContext, aState, listFrame, scrolledFrame, aContent, aParentFrame,
                               aStyleContext, PR_TRUE, aIsAbsolutelyPositioned, aIsFixedPositioned, PR_FALSE);
@@ -3092,7 +3092,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
         nsIView *listView; 
         listFrame->GetView(&listView);
         NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
-        listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
+        //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
         aFrameHasBeenInitialized = PR_TRUE;
       }
     } else {
