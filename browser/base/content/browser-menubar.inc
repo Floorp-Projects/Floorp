@@ -325,6 +325,27 @@
         
           <menu label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
             <menupopup id="menu_ToolsPopup">
+            #ifdef XP_WIN
+              <menu label="&mailMenu.label;"
+                           accesskey="&mailMenu.accesskey;">
+                <menupopup id="viewMailMenu">
+                  <menuitem label="&mailButton.readMail.label;" 
+                                   id="readMailItem"
+                                   accesskey="&mailButton.readMail.accesskey;"
+                                   command="Browser:ReadMail"/>
+                  <menuitem label="&mailButton.newMessage.label;" 
+                                   accesskey="&mailButton.newMessage.accesskey;"
+                                   command="Browser:NewMessage"/>
+                  <menuitem label="&mailButton.sendLink.label;" 
+                                   accesskey="&mailButton.sendLink.accesskey;"
+                                   command="Browser:SendLink"/>
+                  <menuseparator/>
+                  <menuitem label="&mailButton.readNews.label;" 
+                                   accesskey="&mailButton.readNews.accesskey;"
+                                   command="Browser:ReadNews"/>
+                </menupopup>
+              </menu>
+            #endif
               <menuitem label="&search.label;" accesskey="&search.accesskey;" 
                         key="key_search" command="Tools:Search"/>
               <menuseparator/>
