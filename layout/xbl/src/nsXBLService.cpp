@@ -270,6 +270,13 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
     return rv;
   }
 
+  if (!binding) {
+    nsCAutoString str = "Failed to locate XBL binding.  The invalid binding name is: ";
+    str += aURL;
+    NS_ERROR(str);
+    return NS_ERROR_FAILURE;
+  }
+
   // Install the binding on the content node.
   bindableContent->SetBinding(binding);
 
