@@ -3311,7 +3311,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   nsIFrame * newFrame;
   PRUint32 flags = aIsAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0;
   nsresult rv = NS_NewFieldSetFrame(aPresShell, &newFrame, flags);
-  if (!NS_SUCCEEDED(rv) {
+  if (!NS_SUCCEEDED(rv)) {
     return rv;
   }
 
