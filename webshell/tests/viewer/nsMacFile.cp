@@ -211,3 +211,113 @@ int XP_Stat( const char* name, XP_StatStruct * outStat,  XP_FileType type )
 	}	
 	else return -1;
 }
+
+/* Needs to deal with both CR, CRLF, and LF end-of-line */
+extern char * XP_FileReadLine(char * dest, int32 bufferSize, XP_File file)
+{
+	char * retBuf = fgets(dest, bufferSize, file);
+	if (retBuf == NULL)	/* EOF */
+		return NULL;
+	char * LFoccurence = (char *)strchr(retBuf, LF);
+	if (LFoccurence != NULL)	/* We have hit LF before CR,  */
+	{
+		fseek(file, -(strlen(retBuf) - (LFoccurence  - retBuf))+1, SEEK_CUR);
+		LFoccurence[1] = 0;
+	}
+	else	/* We have CR, check if the next character is LF */
+	{
+		int c;
+
+		c = fgetc(file);
+
+		if (c == EOF)
+			;	/* Do nothing, end of file */
+		else if (c == LF)	/* Swallow CR/LF */
+		{
+			int len = strlen(retBuf);
+			if (len < bufferSize)	/* Append LF to our buffer if we can */
+			{
+				retBuf[len++] = LF;
+				retBuf[len] = 0;
+			}
+		}
+		else	/* No LF, just clean up the seek */
+		{
+			fseek(file, -1, SEEK_CUR);
+		}
+	}
+	return retBuf;
+}
+
+#include "ufilemgr.h"
+/* Netlib utility routine, should be ripped out */
+void	FE_FileType(char * path, 
+					Bool * useDefault, 
+					char ** fileType, 
+					char ** encoding)
+{
+	if ((path == NULL) || (fileType == NULL) || (encoding == NULL))
+		return;
+
+	*useDefault = TRUE;
+	*fileType = NULL;
+	*encoding = NULL;
+
+	char *pathPart = NET_ParseURL( path, GET_PATH_PART);
+	if (pathPart == NULL)
+		return;
+
+	FSSpec spec;
+	OSErr err = CFileMgr::FSSpecFromLocalUnixPath(pathPart, &spec);	// Skip file://
+	XP_FREE(pathPart);
+
+#if 0
+#include "umimemap.h"
+#include "uprefd.h"
+#include "InternetConfig.h"
+	CMimeMapper * mapper = CPrefs::sMimeTypes.FindMimeType(spec);
+	if (mapper != NULL)
+	{
+		*useDefault = FALSE;
+		*fileType = XP_STRDUP(mapper->GetMimeName());
+	}
+	else
+	{
+		FInfo		fndrInfo;
+		OSErr err = FSpGetFInfo( &spec, &fndrInfo );
+		if ( (err != noErr) || (fndrInfo.fdType == 'TEXT') )
+			*fileType = XP_STRDUP(APPLICATION_OCTET_STREAM);
+		else
+		{
+			// Time to call IC to see if it knows anything
+			ICMapEntry ICMapper;
+			
+			ICError  error = 0;
+			CStr255 fileName( spec.name );
+			error = CInternetConfigInterface::GetInternetConfigFileMapping(
+					fndrInfo.fdType, fndrInfo.fdCreator,  fileName ,  &ICMapper );	
+			if( error != icPrefNotFoundErr && StrLength(ICMapper.MIME_type) )
+			{
+				*useDefault = FALSE;
+				CStr255 mimeName( ICMapper.MIME_type );
+				*fileType = XP_STRDUP( mimeName );
+			}
+			else
+			{
+				// That failed try using the creator type		
+				mapper = CPrefs::sMimeTypes.FindCreator(fndrInfo.fdCreator);
+				if( mapper)
+				{
+					*useDefault = FALSE;
+					*fileType = XP_STRDUP(mapper->GetMimeName());
+				}
+				else
+				{
+					// don't have a mime mapper
+					*fileType = XP_STRDUP(APPLICATION_OCTET_STREAM);
+				}
+			}
+		}
+	}
+#endif
+}
