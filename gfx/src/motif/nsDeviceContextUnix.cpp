@@ -512,9 +512,7 @@ nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface()
 }
 
 
-NS_IMETHODIMP nsDeviceContextUnix :: LoadIconImage(nsIRenderingContext& aContext,
-                                                   PRInt32              aId,
-                                                   nsIImage*&           aImage)
+NS_IMETHODIMP nsDeviceContextUnix :: LoadIconImage(PRInt32 aId, nsIImage*& aImage)
 {
   // XXX Unix should be using DeviceContextImpl...
   aImage = nsnull;
@@ -556,6 +554,27 @@ NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const char * aFontName)
 
   return rv;
 }
+
+NS_IMETHODIMP nsDeviceContextUnix::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
+{
+  IL_RGBBits colorRGBBits;
+
+  // Default is to create a 24-bit color space
+  colorRGBBits.red_shift = 16;  
+  colorRGBBits.red_bits = 8;
+  colorRGBBits.green_shift = 8;
+  colorRGBBits.green_bits = 8; 
+  colorRGBBits.blue_shift = 0; 
+  colorRGBBits.blue_bits = 8;  
+
+  aColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
+  if (nsnull == aColorSpace) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
 
 
 

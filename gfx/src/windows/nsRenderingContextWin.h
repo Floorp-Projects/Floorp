@@ -154,6 +154,7 @@ protected:
   HFONT             mDefFont;
   HPEN              mOrigSolidPen;
   HPEN              mBlackPen;
+  HPALETTE          mOrigPalette;
   //state management
   GraphicsState     *mStates;
   nsVoidArray       *mStateCache;
@@ -166,6 +167,8 @@ protected:
   HPEN              mNullPen;
   PRUint8           *mGammaTable;
   COLORREF          mCurrTextColor;
+
+  static HPALETTE   gPalette;
 
 #ifdef NS_DEBUG
   PRBool          mInitialized;

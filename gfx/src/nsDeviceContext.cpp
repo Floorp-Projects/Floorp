@@ -217,7 +217,7 @@ nsNativeWidget DeviceContextImpl :: GetNativeWidget(void)
   return mWidget;
 }
 
-nsresult DeviceContextImpl::CreateImageGroupContext(nsIRenderingContext& aContext)
+nsresult DeviceContextImpl::CreateIconILGroupContext()
 {
   ilIImageRenderer* renderer;
   nsresult          result;
@@ -229,33 +229,23 @@ nsresult DeviceContextImpl::CreateImageGroupContext(nsIRenderingContext& aContex
   }
 
   // Create an image group context. The image renderer code expects the
-  // display_context to be a pointer to a nsIRenderingContext
-  mIconImageGroup = IL_NewGroupContext((void*)(nsIRenderingContext*)&aContext,
-                                       renderer);
+  // display_context to be a pointer to a device context
+  mIconImageGroup = IL_NewGroupContext((void*)this, renderer);
   if (nsnull == mIconImageGroup) {
     NS_RELEASE(renderer);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Initialize the image group context.
-  // XXX Hard coded tp 24-bits.
-  IL_RGBBits     colorRGBBits;
   IL_ColorSpace* colorSpace;
-
-  colorRGBBits.red_shift = 16;  
-  colorRGBBits.red_bits = 8;
-  colorRGBBits.green_shift = 8;
-  colorRGBBits.green_bits = 8; 
-  colorRGBBits.blue_shift = 0; 
-  colorRGBBits.blue_bits = 8;  
-  colorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-  if (nsnull == colorSpace) {
+  result = CreateILColorSpace(colorSpace);
+  if (NS_FAILED(result)) {
     NS_RELEASE(renderer);
     IL_DestroyGroupContext(mIconImageGroup);
-    return NS_ERROR_OUT_OF_MEMORY;
+    return result;
   }
 
-  // This is all synchronous, so don't waste time with progressive display
+  // Icon loading is synchronous, so don't waste time with progressive display
   IL_DisplayData displayData;
   displayData.dither_mode = IL_Auto;
   displayData.color_space = colorSpace;
@@ -266,9 +256,7 @@ nsresult DeviceContextImpl::CreateImageGroupContext(nsIRenderingContext& aContex
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl::LoadIconImage(nsIRenderingContext& aContext,
-                                               PRInt32              aId,
-                                               nsIImage*&           aImage)
+NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
 {
   nsresult  result;
 
@@ -288,7 +276,7 @@ NS_IMETHODIMP DeviceContextImpl::LoadIconImage(nsIRenderingContext& aContext,
 
   // Make sure we have an image group context
   if (nsnull == mIconImageGroup) {
-    result = CreateImageGroupContext(aContext);
+    result = CreateIconILGroupContext();
     if (NS_FAILED(result)) {
       return result;
     }
@@ -324,4 +312,108 @@ NS_IMETHODIMP DeviceContextImpl::LoadIconImage(nsIRenderingContext& aContext,
   netContext->Release();
   return result;
 }
+
+NS_IMETHODIMP DeviceContextImpl::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
+{
+  IL_RGBBits colorRGBBits;
+
+  // Default is to create a 24-bit color space
+  colorRGBBits.red_shift = 16;  
+  colorRGBBits.red_bits = 8;
+  colorRGBBits.green_shift = 8;
+  colorRGBBits.green_bits = 8; 
+  colorRGBBits.blue_shift = 0; 
+  colorRGBBits.blue_bits = 8;  
+
+  aColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
+  if (nsnull == aColorSpace) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
+}
+
+#if 0
+  nsresult  result = NS_OK;
+  int       bitsPerPixel = ::GetDeviceCaps(mDC, BITSPIXEL);
+  int       rasterCaps = ::GetDeviceCaps(mDC, RASTERCAPS);
+
+  // See if we're dealing with an 8-bit palette device
+  if ((8 == bitsPerPixel) && (rasterCaps & RC_PALETTE)) {
+    // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
+    // than DIB_RGB_COLORS, so make sure the indexes match that of the
+    // GDI physical palette
+    //
+    // Note: the image library doesn't use the reserved colors, so it doesn't
+    // matter what they're set to...
+    IL_RGB  reserved[10];
+    IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
+    if (nsnull == colorMap) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Create a physical palette if we haven't already done so. Each HDC can
+    // share the same physical palette
+    if (nsnull == gPalette) {
+      // Create a logical palette
+      BYTE         tmp[sizeof(LOGPALETTE) + ((COLOR_CUBE_SIZE + 20) * sizeof(PALETTEENTRY))];
+      LPLOGPALETTE logPal = (LPLOGPALETTE)tmp;
+
+      logPal->palVersion = 0x300;
+      logPal->palNumEntries = COLOR_CUBE_SIZE + 20;
+  
+      // Initialize it from the default Windows palette
+      HPALETTE  hDefaultPalette = ::GetStockObject(DEFAULT_PALETTE);
+  
+      // First ten system colors
+      ::GetPaletteEntries(hDefaultPalette, 0, 10, logPal->palPalEntry);
+
+      // Last ten system colors
+      ::GetPaletteEntries(hDefaultPalette, 10, 10, &logPal->palPalEntry[COLOR_CUBE_SIZE + 10]);
+  
+      // Now set the color cube entries
+      PALETTEENTRY* entry = &logPal->palPalEntry[10];
+      NI_RGB*       map = colorMap->map + 10;
+      for (PRInt32 i = 0; i < COLOR_CUBE_SIZE; i++) {
+        entry->peRed = map->red;
+        entry->peGreen = map->green;
+        entry->peBlue = map->blue; 
+        entry->peFlags = 0;
+  
+        entry++;
+        map++;
+      }
+  
+      // Create a GDI palette
+      gPalette = ::CreatePalette(logPal);
+    }
+
+    // Create an IL pseudo color space
+    aColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
+    if (nsnull == aColorSpace) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+  } else {
+    // Create a default color space.
+    // XXX We should also check for 1 16-bit device and create a 555 or 565
+    // color space...
+    IL_RGBBits colorRGBBits;
+  
+    // Default is to create a 24-bit color space
+    colorRGBBits.red_shift = 16;  
+    colorRGBBits.red_bits = 8;
+    colorRGBBits.green_shift = 8;
+    colorRGBBits.green_bits = 8; 
+    colorRGBBits.blue_shift = 0; 
+    colorRGBBits.blue_bits = 8;  
+  
+    aColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
+    if (nsnull == aColorSpace) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return result;
+#endif
 

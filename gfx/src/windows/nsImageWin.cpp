@@ -243,6 +243,31 @@ struct MONOBITMAPINFO {
 // (value of 1) to just use the destination bits
 #define MASKBLT_ROP MAKEROP4((DWORD)0x00AA0029, SRCCOPY)
 
+void nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
+{
+  HDC the_hdc = (HDC)aSurface;
+
+  if ((the_hdc != NULL) && (mSizeImage > 0))
+  {
+    mHBitmap = ::CreateDIBitmap(the_hdc, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead,
+                                DIB_RGB_COLORS);
+
+    if (nsnull != mAlphaBits)
+    {
+      // Create a monochrome bitmap
+      // XXX Handle the case of 8-bit alpha...
+      NS_ASSERTION(1 == mAlphaDepth, "unexpected alpha depth");
+      mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 1, NULL);
+
+      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+      ::SetDIBits(NULL /* ignored */, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
+                  (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+    }
+
+    CleanUp(PR_FALSE);
+  }
+}
+
 // Draw the bitmap, this method has a source and destination coordinates
 PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                           PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
@@ -252,6 +277,11 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
   if (mBHead == nsnull) 
     return PR_FALSE;
+
+  // If the image can be optimized then make sure we've created the DDB
+  if (mIsOptimized && (nsnull == mHBitmap)) {
+    CreateDDB(aSurface);
+  }
 
   if (!IsOptimized())
   {
@@ -319,6 +349,11 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
 
   if (mBHead == nsnull) 
     return PR_FALSE;
+
+  // If the image can be optimized then make sure we've created the DDB
+  if (mIsOptimized && (nsnull == mHBitmap)) {
+    CreateDDB(aSurface);
+  }
 
   if (!IsOptimized())
   {
@@ -925,31 +960,11 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 //------------------------------------------------------------
 
 // creates an optimized bitmap, or HBITMAP
-nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
+nsresult nsImageWin :: Optimize(nsIDeviceContext* aContext)
 {
-  HDC the_hdc = (HDC)aSurface;
-
-  if ((the_hdc != NULL) && !IsOptimized() && (mSizeImage > 0))
-  {
-    mHBitmap = ::CreateDIBitmap(the_hdc, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead,
-                                DIB_RGB_COLORS);
-
-    if (nsnull != mAlphaBits)
-    {
-      // Create a monochrome bitmap
-      // XXX Handle the case of 8-bit alpha...
-      NS_ASSERTION(1 == mAlphaDepth, "unexpected alpha depth");
-      mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 1, NULL);
-
-      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
-      ::SetDIBits(NULL /* ignored */, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
-                  (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
-    }
-
-    mIsOptimized = PR_TRUE;
-    CleanUp(PR_FALSE);
-  }
-
+  // Wait until we're asked to draw, before we create the DDB, because
+  // we don't have an HDC now
+  mIsOptimized = PR_TRUE;
   return NS_OK;
 }
 

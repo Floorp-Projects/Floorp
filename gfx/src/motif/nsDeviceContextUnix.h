@@ -93,11 +93,11 @@ public:
 
   virtual PRUint32 ConvertPixel(nscolor aColor);
 
-  NS_IMETHOD LoadIconImage(nsIRenderingContext& aContext,
-                           PRInt32              aId,
-                           nsIImage*&           aImage);
+  NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage);
 
   NS_IMETHOD CheckFontExistence(const char * aFontName);
+
+  NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
 
 protected:
   ~nsDeviceContextUnix();

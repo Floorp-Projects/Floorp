@@ -44,7 +44,7 @@ public:
   virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized()       { return mIsOptimized; }
-  virtual nsresult    Optimize(nsDrawingSurface aSurface);
+  virtual nsresult    Optimize(nsIDeviceContext* aContext);
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
   virtual PRInt32     GetAlphaWidth()   { return mAlphaWidth;}
   virtual PRInt32     GetAlphaHeight()   {return mAlphaHeight;}
@@ -205,6 +205,8 @@ private:
    * Calculate the amount of memory needed for the initialization of the pixelmap
    */
   void ComputeMetrics();
+
+  void CreateDDB(nsDrawingSurface aSurface);
 
   PRUint8 PaletteMatch(PRUint8 r, PRUint8 g, PRUint8 b);
 

@@ -19,12 +19,22 @@
 #include "nsRenderingContextWin.h"
 #include "nsRegionWin.h"
 #include <math.h>
+#include "libimg.h"
+#include "il_util.h"
 
 #define FLAG_CLIP_VALID       0x0001
 #define FLAG_CLIP_CHANGED     0x0002
 #define FLAG_LOCAL_CLIP_VALID 0x0004
 
 #define FLAGS_ALL             (FLAG_CLIP_VALID | FLAG_CLIP_CHANGED | FLAG_LOCAL_CLIP_VALID)
+
+// Size of the color cube
+#define COLOR_CUBE_SIZE       216
+
+// Macro for creating a palette relative color if you have a COLORREF instead
+// of the reg, green, and blue values. The color is color-matches to the nearest
+// in the current logical palette. This has no effect on a non-palette device
+#define PALETTERGB_COLORREF(c)  (0x02000000 | (c))
 
 class GraphicsState
 {
@@ -105,6 +115,8 @@ GraphicsState :: ~GraphicsState()
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
+HPALETTE  nsRenderingContextWin::gPalette = NULL;
+
 nsRenderingContextWin :: nsRenderingContextWin()
 {
   NS_INIT_REFCNT();
@@ -120,6 +132,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mDefFont = NULL;
   mOrigSolidPen = NULL;
   mBlackPen = NULL;
+  mOrigPalette = NULL;
   mCurrBrushColor = NULL;
   mCurrFontMetrics = nsnull;
   mCurrPenColor = NULL;
@@ -291,11 +304,20 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
 
     if (nsnull != mOrigSolidPen)
       ::SelectObject(aOldDC, mOrigSolidPen);
+
+    if (nsnull != mOrigPalette)
+      ::SelectPalette(aOldDC, mOrigPalette, TRUE);
   }
 
   mOrigSolidBrush = ::SelectObject(aNewDC, mBlackBrush);
   mOrigFont = ::SelectObject(aNewDC, mDefFont);
   mOrigSolidPen = ::SelectObject(aNewDC, mBlackPen);
+
+  if (gPalette) {
+    mOrigPalette = ::SelectPalette(aNewDC, gPalette, FALSE);
+    // XXX Don't do the realization for an off-screen memory DC...
+    ::RealizePalette(aNewDC);
+  }
 
   return NS_OK;
 }
@@ -907,7 +929,8 @@ void nsRenderingContextWin :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, ns
   ex = (PRInt32)(distance * cos(anglerad) + cx);
   ey = (PRInt32)(cy - distance * sin(anglerad));
 
-  // this just makes it consitent, on windows 95 arc will always draw CC, nt this sets direction
+  // this just makes it consistent, on windows 95 arc will always draw CC,
+  // on NT this sets direction
   ::SetArcDirection(mDC, AD_COUNTERCLOCKWISE);
 
   ::Pie(mDC, aX, aY, aX + aWidth, aY + aHeight, sx, sy, ex, ey); 
@@ -1039,7 +1062,9 @@ HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
 {
   if ((mCurrentColor != mCurrBrushColor) || (NULL == mCurrBrush))
   {
-    HBRUSH  tbrush = ::CreateSolidBrush(mColor);
+    // XXX In 16-bit mode we need to use GetNearestColor() to get a solid
+    // color; otherwise, we'll end up with a dithered brush...
+    HBRUSH  tbrush = ::CreateSolidBrush(PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tbrush);
 
@@ -1068,7 +1093,7 @@ void nsRenderingContextWin :: SetupFontAndColor(void)
   }
 
   if (mCurrentColor != mCurrTextColor) {
-    ::SetTextColor(mDC, mColor);
+    ::SetTextColor(mDC, PALETTERGB_COLORREF(mColor));
     mStates->mTextColor = mCurrTextColor = mCurrentColor;
   }
 }
@@ -1077,7 +1102,7 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen))
   {
-    HPEN  tpen = ::CreatePen(PS_SOLID, 0, mColor);
+    HPEN  tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tpen);
 
@@ -1117,3 +1142,4 @@ void nsRenderingContextWin :: PushClipState(void)
     mStates->mFlags |= FLAG_CLIP_CHANGED;
   }
 }
+

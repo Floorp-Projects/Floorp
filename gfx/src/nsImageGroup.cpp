@@ -24,10 +24,10 @@
 #include "ilIImageRenderer.h"
 #include "nsImageNet.h"
 #include "nsVoidArray.h"
-#include "nsIRenderingContext.h"
 #include "nsCRT.h"
 #include "libimg.h"
 #include "il_util.h"
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kIImageGroupIID, NS_IIMAGEGROUP_IID);
 
@@ -42,7 +42,7 @@ public:
   ImageGroupImpl(nsIImageManager *aManager);
   ~ImageGroupImpl();
 
-  nsresult Init(nsIRenderingContext *aRenderingContext);
+  nsresult Init(nsIDeviceContext *aDeviceContext);
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];
@@ -70,7 +70,7 @@ private:
   nsIImageManager *mManager;
   IL_GroupContext *mGroupContext;
   nsVoidArray *mObservers;
-  nsIRenderingContext *mRenderingContext;
+  nsIDeviceContext *mDeviceContext;
   IL_ColorSpace *mColorSpace;
 };
 
@@ -83,9 +83,7 @@ ImageGroupImpl::ImageGroupImpl(nsIImageManager *aManager)
  
 ImageGroupImpl::~ImageGroupImpl()
 {
-  if (mRenderingContext != nsnull) {
-      NS_RELEASE(mRenderingContext);
-  }
+  NS_IF_RELEASE(mDeviceContext);
 
   if (mObservers != nsnull) {
     PRInt32 i, count = mObservers->Count();
@@ -116,7 +114,7 @@ ImageGroupImpl::~ImageGroupImpl()
 NS_IMPL_ISUPPORTS(ImageGroupImpl, kIImageGroupIID)
 
 nsresult 
-ImageGroupImpl::Init(nsIRenderingContext *aRenderingContext)
+ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext)
 {
   ilIImageRenderer *renderer;
   nsresult result;
@@ -125,30 +123,20 @@ ImageGroupImpl::Init(nsIRenderingContext *aRenderingContext)
       return result;
   }
 
-  // XXX Need to create an image renderer
-  mGroupContext = IL_NewGroupContext((void *)aRenderingContext,
+  mGroupContext = IL_NewGroupContext((void *)aDeviceContext,
                                      renderer);
 
   if (mGroupContext == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mRenderingContext = aRenderingContext;
-  NS_ADDREF(mRenderingContext);
+  mDeviceContext = aDeviceContext;
+  NS_ADDREF(mDeviceContext);
 
-  // XXX Hard coded to be 24-bit. We need to get the right information
-  // from the rendering context (or device context).
-  IL_RGBBits colorRGBBits;
+  // Ask the device context to create a color space
+  mDeviceContext->CreateILColorSpace(mColorSpace);
 
-  colorRGBBits.red_shift = 16;  
-  colorRGBBits.red_bits = 8;
-  colorRGBBits.green_shift = 8;
-  colorRGBBits.green_bits = 8; 
-  colorRGBBits.blue_shift = 0; 
-  colorRGBBits.blue_bits = 8;  
-  mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-  IL_AddRefToColorSpace(mColorSpace);
-
+  // Set the image group context display mode
   IL_DisplayData displayData;
 	displayData.dither_mode = IL_Auto;
   displayData.color_space = mColorSpace;

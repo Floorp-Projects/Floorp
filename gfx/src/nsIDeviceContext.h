@@ -20,11 +20,11 @@
 #define nsIDeviceContext_h___
 
 #include "nsISupports.h"
-#include "nsIRenderingContext.h"
 #include "nsCoord.h"
 #include "nsRect.h"
 #include "nsIWidget.h"
 
+class nsIRenderingContext;
 class nsIView;
 class nsIFontCache;
 class nsIFontMetrics;
@@ -45,6 +45,12 @@ typedef void * nsNativeDeviceContext;
 #define NS_ICON_LOADING_IMAGE 0
 #define NS_ICON_BROKEN_IMAGE  1
 #define NS_NUMBER_OF_ICONS    2
+
+// XXX This is gross, but don't include libimg.h, because it includes ni_pixmap.h
+// which includes xp_core.h which includes windows.h
+struct _NI_ColorSpace;
+typedef _NI_ColorSpace NI_ColorSpace;
+typedef NI_ColorSpace IL_ColorSpace;
 
 class nsIDeviceContext : public nsISupports
 {
@@ -104,9 +110,7 @@ public:
   //load the specified icon. this is a blocking call that does not return
   //until the icon is loaded.
   //release the image when you're done
-  NS_IMETHOD LoadIconImage(nsIRenderingContext& aContext,
-                           PRInt32              aId,
-                           nsIImage*&           aImage) = 0;
+  NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage) = 0;
 
   /**
    * Check to see if a particular named font exists.
@@ -114,6 +118,12 @@ public:
    * @return NS_OK if font is available, else font is unavailable
    */
   NS_IMETHOD CheckFontExistence(const char * aFontName) = 0;
+
+  /**
+   * Create an image lib color space that's appropriate for this rendering
+   * context
+   */
+  NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace) = 0;
 };
 
 #endif /* nsIDeviceContext_h___ */
