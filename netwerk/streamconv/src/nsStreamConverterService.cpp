@@ -390,6 +390,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
 
         // reconstruct the CONTRACTID.
         // Get the predecessor.
+        if (!curState->predecessor) break; // no predecessor
         SCTableData *predecessorData = (SCTableData*)lBFSTable.Get(curState->predecessor);
         if (!predecessorData) break; // no predecessor, chain doesn't exist.
 
