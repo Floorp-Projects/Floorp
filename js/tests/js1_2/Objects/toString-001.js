@@ -100,7 +100,7 @@ function test() {
  * resulting string is some permutation of the strings in the array.
  */
 function checkObjectToString(s, a) {
-    var m = /^{(.*)\}$/(s);
+    var m = /^\{(.*)\}$/(s);
     if (!m)
        return false;	// should begin and end with curly brackets
     var a2 = m[1].split(", ");
