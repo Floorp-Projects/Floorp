@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trivial.c,v $ $Revision: 1.1 $ $Date: 2000/05/08 23:19:45 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trivial.c,v $ $Revision: 1.2 $ $Date: 2000/07/20 21:48:26 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -891,6 +891,418 @@ rmain
         }
       } /* session to create, find, and delete a couple session objects */
 
+      /* Might be interesting to do a find here to verify that all session objects are gone. */
+
+      if( tinfo.flags & CKF_WRITE_PROTECTED ) {
+        PR_fprintf(PR_STDOUT, "Token is write protected, skipping token-object tests.\n");
+      } else {
+        CK_SESSION_HANDLE h = (CK_SESSION_HANDLE)0;
+        CK_ATTRIBUTE tobj[7], tsobj[7], stobj[7], delta[1], mask[2];
+        CK_OBJECT_CLASS cko_data = CKO_DATA;
+        CK_BBOOL false = CK_FALSE, true = CK_TRUE;
+        char *key = "TEST PROGRAM";
+        CK_ULONG key_len = strlen(key);
+        CK_OBJECT_HANDLE hTIn = (CK_OBJECT_HANDLE)0, hTSIn = (CK_OBJECT_HANDLE)0, 
+          hSTIn = (CK_OBJECT_HANDLE)0, hDeltaIn = (CK_OBJECT_HANDLE)0;
+        CK_OBJECT_HANDLE found[10];
+        CK_ULONG nFound;
+
+        ck_rv = epv->C_OpenSession(pSlots[i], CKF_SERIAL_SESSION, (CK_VOID_PTR)CK_NULL_PTR, (CK_NOTIFY)CK_NULL_PTR, &h);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_OpenSession(%lu, CKF_SERIAL_SESSION, , ) returned 0x%08x\n", pSlots[i], ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Opened a session: handle = 0x%08x\n", h);
+
+        tobj[0].type = CKA_CLASS;
+        tobj[0].pValue = &cko_data;
+        tobj[0].ulValueLen = sizeof(CK_OBJECT_CLASS);
+        tobj[1].type = CKA_TOKEN;
+        tobj[1].pValue = &true;
+        tobj[1].ulValueLen = sizeof(CK_BBOOL);
+        tobj[2].type = CKA_PRIVATE;
+        tobj[2].pValue = &false;
+        tobj[2].ulValueLen = sizeof(CK_BBOOL);
+        tobj[3].type = CKA_MODIFIABLE;
+        tobj[3].pValue = &true;
+        tobj[3].ulValueLen = sizeof(CK_BBOOL);
+        tobj[4].type = CKA_LABEL;
+        tobj[4].pValue = "Test data object token";
+        tobj[4].ulValueLen = strlen(tobj[4].pValue);
+        tobj[5].type = CKA_APPLICATION;
+        tobj[5].pValue = key;
+        tobj[5].ulValueLen = key_len;
+        tobj[6].type = CKA_VALUE;
+        tobj[6].pValue = "Object token";
+        tobj[6].ulValueLen = strlen(tobj[6].pValue);
+
+        tsobj[0].type = CKA_CLASS;
+        tsobj[0].pValue = &cko_data;
+        tsobj[0].ulValueLen = sizeof(CK_OBJECT_CLASS);
+        tsobj[1].type = CKA_TOKEN;
+        tsobj[1].pValue = &true;
+        tsobj[1].ulValueLen = sizeof(CK_BBOOL);
+        tsobj[2].type = CKA_PRIVATE;
+        tsobj[2].pValue = &false;
+        tsobj[2].ulValueLen = sizeof(CK_BBOOL);
+        tsobj[3].type = CKA_MODIFIABLE;
+        tsobj[3].pValue = &true;
+        tsobj[3].ulValueLen = sizeof(CK_BBOOL);
+        tsobj[4].type = CKA_LABEL;
+        tsobj[4].pValue = "Test data object token->session";
+        tsobj[4].ulValueLen = strlen(tsobj[4].pValue);
+        tsobj[5].type = CKA_APPLICATION;
+        tsobj[5].pValue = key;
+        tsobj[5].ulValueLen = key_len;
+        tsobj[6].type = CKA_VALUE;
+        tsobj[6].pValue = "Object token->session";
+        tsobj[6].ulValueLen = strlen(tsobj[6].pValue);
+
+        stobj[0].type = CKA_CLASS;
+        stobj[0].pValue = &cko_data;
+        stobj[0].ulValueLen = sizeof(CK_OBJECT_CLASS);
+        stobj[1].type = CKA_TOKEN;
+        stobj[1].pValue = &false;
+        stobj[1].ulValueLen = sizeof(CK_BBOOL);
+        stobj[2].type = CKA_PRIVATE;
+        stobj[2].pValue = &false;
+        stobj[2].ulValueLen = sizeof(CK_BBOOL);
+        stobj[3].type = CKA_MODIFIABLE;
+        stobj[3].pValue = &true;
+        stobj[3].ulValueLen = sizeof(CK_BBOOL);
+        stobj[4].type = CKA_LABEL;
+        stobj[4].pValue = "Test data object session->token";
+        stobj[4].ulValueLen = strlen(stobj[4].pValue);
+        stobj[5].type = CKA_APPLICATION;
+        stobj[5].pValue = key;
+        stobj[5].ulValueLen = key_len;
+        stobj[6].type = CKA_VALUE;
+        stobj[6].pValue = "Object session->token";
+        stobj[6].ulValueLen = strlen(stobj[6].pValue);
+
+        ck_rv = epv->C_CreateObject(h, tobj, 7, &hTIn);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_CreateObject(%lu, tobj, 7, ) returned 0x%08x\n", h, ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Created object token: handle = %lu\n", hTIn);
+
+        ck_rv = epv->C_CreateObject(h, tsobj, 7, &hTSIn);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_CreateObject(%lu, tobj, 7, ) returned 0x%08x\n", h, ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Created object token->session: handle = %lu\n", hTSIn);
+        ck_rv = epv->C_CreateObject(h, stobj, 7, &hSTIn);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_CreateObject(%lu, tobj, 7, ) returned 0x%08x\n", h, ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Created object session->token: handle = %lu\n", hSTIn);
+
+        /* I've created two token objects and one session object; find the two */
+
+        mask[0].type = CKA_APPLICATION;
+        mask[0].pValue = key;
+        mask[0].ulValueLen = key_len;
+        mask[1].type = CKA_TOKEN;
+        mask[1].pValue = &true;
+        mask[1].ulValueLen = sizeof(CK_BBOOL);
+
+        ck_rv = epv->C_FindObjectsInit(h, mask, 2);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjectsInit(%lu, mask, 2) returned 0x%08x\n", 
+                     h, ck_rv);
+          return 1;
+        }
+
+        (void)memset(&found, 0, sizeof(found));
+        nFound = 0;
+        ck_rv = epv->C_FindObjects(h, found, 10, &nFound);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjects(%lu,, 10, ) returned 0x%08x\n", 
+                     h, ck_rv);
+          return 1;
+        }
+
+        if( 2 != nFound ) {
+          PR_fprintf(PR_STDERR, "Found %lu objects, not 2.\n", nFound);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Found 2 objects: %lu, %lu\n", 
+                   found[0], found[1]);
+
+        ck_rv = epv->C_FindObjectsFinal(h);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjectsFinal(%lu) returned 0x%08x\n", h, ck_rv);
+          return 1;
+        }
+
+        /* Convert a token to session object */
+
+        delta[0].type = CKA_TOKEN;
+        delta[0].pValue = &false;
+        delta[0].ulValueLen = sizeof(CK_BBOOL);
+
+        ck_rv = epv->C_SetAttributeValue(h, hTSIn, delta, 1);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_SetAttributeValue(%lu, %lu, delta, 1) returned 0x%08x\n", 
+                     h, hTSIn, ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Changed object from token to session (handle = %lu).\n", hTSIn);
+
+        /* Now find again; there should be one */
+
+        mask[0].type = CKA_APPLICATION;
+        mask[0].pValue = key;
+        mask[0].ulValueLen = key_len;
+        mask[1].type = CKA_TOKEN;
+        mask[1].pValue = &true;
+        mask[1].ulValueLen = sizeof(CK_BBOOL);
+
+        ck_rv = epv->C_FindObjectsInit(h, mask, 2);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjectsInit(%lu, mask, 2) returned 0x%08x\n", 
+                     h, ck_rv);
+          return 1;
+        }
+
+        (void)memset(&found, 0, sizeof(found));
+        nFound = 0;
+        ck_rv = epv->C_FindObjects(h, found, 10, &nFound);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjects(%lu,, 10, ) returned 0x%08x\n", 
+                     h, ck_rv);
+          return 1;
+        }
+
+        if( 1 != nFound ) {
+          PR_fprintf(PR_STDERR, "Found %lu objects, not 1.\n", nFound);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Found 1 objects: %lu\n", 
+                   found[0]);
+
+        ck_rv = epv->C_FindObjectsFinal(h);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjectsFinal(%lu) returned 0x%08x\n", h, ck_rv);
+          return 1;
+        }
+
+        /* Convert a session to a token object */
+
+        delta[0].type = CKA_TOKEN;
+        delta[0].pValue = &true;
+        delta[0].ulValueLen = sizeof(CK_BBOOL);
+
+        ck_rv = epv->C_SetAttributeValue(h, hSTIn, delta, 1);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_SetAttributeValue(%lu, %lu, delta, 1) returned 0x%08x\n", 
+                     h, hSTIn, ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Changed object from session to token (handle = %lu).\n", hSTIn);
+
+        /* Now find again; there should be two again */
+
+        mask[0].type = CKA_APPLICATION;
+        mask[0].pValue = key;
+        mask[0].ulValueLen = key_len;
+        mask[1].type = CKA_TOKEN;
+        mask[1].pValue = &true;
+        mask[1].ulValueLen = sizeof(CK_BBOOL);
+
+        ck_rv = epv->C_FindObjectsInit(h, mask, 2);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjectsInit(%lu, mask, 2) returned 0x%08x\n", 
+                     h, ck_rv);
+          return 1;
+        }
+
+        (void)memset(&found, 0, sizeof(found));
+        nFound = 0;
+        ck_rv = epv->C_FindObjects(h, found, 10, &nFound);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjects(%lu,, 10, ) returned 0x%08x\n", 
+                     h, ck_rv);
+          return 1;
+        }
+
+        if( 2 != nFound ) {
+          PR_fprintf(PR_STDERR, "Found %lu objects, not 2.\n", nFound);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Found 2 objects: %lu, %lu\n", 
+                   found[0], found[1]);
+
+        ck_rv = epv->C_FindObjectsFinal(h);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjectsFinal(%lu) returned 0x%08x\n", h, ck_rv);
+          return 1;
+        }
+
+        /* Delete the two (found) token objects to clean up */
+
+        ck_rv = epv->C_DestroyObject(h, found[0]);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_DestroyObject(%lu, %lu) returned 0x%08x\n", h, found[0], ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Destroyed token object (handle = %lu)\n", found[0]);
+
+        ck_rv = epv->C_DestroyObject(h, found[1]);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_DestroyObject(%lu, %lu) returned 0x%08x\n", h, found[1], ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Destroyed token object (handle = %lu)\n", found[1]);
+        
+        /* Close the session and all objects should be gone */
+
+        ck_rv = epv->C_CloseSession(h);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_CloseSession(%lu) returned 0x%08x\n", h, ck_rv);
+          return 1;
+        }
+      } /* if( tinfo.flags & CKF_WRITE_PROTECTED ) */
+
+      if( tinfo.flags & CKF_WRITE_PROTECTED ) {
+        PR_fprintf(PR_STDOUT, "Token is write protected, skipping leaving a record.\n");
+      } else {
+        CK_SESSION_HANDLE h = (CK_SESSION_HANDLE)0;
+        CK_ATTRIBUTE record[7], mask[2];
+        CK_OBJECT_CLASS cko_data = CKO_DATA;
+        CK_BBOOL false = CK_FALSE, true = CK_TRUE;
+        char *key = "TEST RECORD";
+        CK_ULONG key_len = strlen(key);
+        CK_OBJECT_HANDLE hin = (CK_OBJECT_HANDLE)0;
+        char timebuffer[256];
+
+        ck_rv = epv->C_OpenSession(pSlots[i], CKF_SERIAL_SESSION, (CK_VOID_PTR)CK_NULL_PTR, (CK_NOTIFY)CK_NULL_PTR, &h);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_OpenSession(%lu, CKF_SERIAL_SESSION, , ) returned 0x%08x\n", pSlots[i], ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Opened a session: handle = 0x%08x\n", h);
+
+        /* I can't believe how hard NSPR makes this operation */
+        {
+          time_t now = 0;
+          struct tm *tm;
+          time(&now);
+          tm = localtime(&now);
+          strftime(timebuffer, sizeof(timebuffer), "%Y-%m-%d %T %Z", tm);
+        }
+
+        record[0].type = CKA_CLASS;
+        record[0].pValue = &cko_data;
+        record[0].ulValueLen = sizeof(CK_OBJECT_CLASS);
+        record[1].type = CKA_TOKEN;
+        record[1].pValue = &true;
+        record[1].ulValueLen = sizeof(CK_BBOOL);
+        record[2].type = CKA_PRIVATE;
+        record[2].pValue = &false;
+        record[2].ulValueLen = sizeof(CK_BBOOL);
+        record[3].type = CKA_MODIFIABLE;
+        record[3].pValue = &true;
+        record[3].ulValueLen = sizeof(CK_BBOOL);
+        record[4].type = CKA_LABEL;
+        record[4].pValue = "Test record";
+        record[4].ulValueLen = strlen(record[4].pValue);
+        record[5].type = CKA_APPLICATION;
+        record[5].pValue = key;
+        record[5].ulValueLen = key_len;
+        record[6].type = CKA_VALUE;
+        record[6].pValue = timebuffer;
+        record[6].ulValueLen = strlen(timebuffer)+1;
+
+        PR_fprintf(PR_STDOUT, "    Timestamping with \"%s\"\n", timebuffer);
+
+        ck_rv = epv->C_CreateObject(h, record, 7, &hin);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_CreateObject(%lu, tobj, 7, ) returned 0x%08x\n", h, ck_rv);
+          return 1;
+        }
+
+        PR_fprintf(PR_STDOUT, "    Created record object: handle = %lu\n", hin);
+        
+        PR_fprintf(PR_STDOUT, "   == All test timestamps ==\n");
+
+        mask[0].type = CKA_CLASS;
+        mask[0].pValue = &cko_data;
+        mask[0].ulValueLen = sizeof(CK_OBJECT_CLASS);
+        mask[1].type = CKA_APPLICATION;
+        mask[1].pValue = key;
+        mask[1].ulValueLen = key_len;
+
+        ck_rv = epv->C_FindObjectsInit(h, mask, 2);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjectsInit(%lu, mask, 1) returned 0x%08x\n", 
+                     h, ck_rv);
+          return 1;
+        }
+
+        while( 1 ) {
+          CK_OBJECT_HANDLE o = (CK_OBJECT_HANDLE)0;
+          CK_ULONG nObjects = 0;
+          CK_ATTRIBUTE value[1];
+          char buffer[1024];
+
+          ck_rv = epv->C_FindObjects(h, &o, 1, &nObjects);
+          if( CKR_OK != ck_rv ) {
+            PR_fprintf(PR_STDERR, "C_FindObjects(%lu, , 1, ) returned 0x%08x\n", h, ck_rv);
+            return 1;
+          }
+
+          if( 0 == nObjects ) {
+            PR_fprintf(PR_STDOUT, "\n");
+            break;
+          }
+
+          value[0].type = CKA_VALUE;
+          value[0].pValue = buffer;
+          value[0].ulValueLen = sizeof(buffer);
+
+          ck_rv = epv->C_GetAttributeValue(h, o, value, 1);
+          switch( ck_rv ) {
+          case CKR_OK:
+            PR_fprintf(PR_STDOUT, "    %s\n", value[0].pValue);
+            break;
+          case CKR_ATTRIBUTE_SENSITIVE:
+            PR_fprintf(PR_STDOUT, "    [Sensitive???]\n");
+            break;
+          case CKR_ATTRIBUTE_TYPE_INVALID:
+            PR_fprintf(PR_STDOUT, "    [Invalid attribute???]\n");
+            break;
+          case CKR_BUFFER_TOO_SMALL:
+            PR_fprintf(PR_STDOUT, "    (result > 1k (%lu))\n", value[0].ulValueLen);
+            break;
+          default:
+            PR_fprintf(PR_STDERR, "C_GetAtributeValue(%lu, %lu, CKA_VALUE, 1) returned 0x%08x\n",
+                       h, o);
+            return 1;
+          }
+        } /* while */
+
+        ck_rv = epv->C_FindObjectsFinal(h);
+        if( CKR_OK != ck_rv ) {
+          PR_fprintf(PR_STDERR, "C_FindObjectsFinal(%lu) returned 0x%08x\n", h, ck_rv);
+          return 1;
+        }
+      } /* "leaving a record" else clause */
 
     }
 
