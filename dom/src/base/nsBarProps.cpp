@@ -40,6 +40,10 @@
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsBarProps.h"
+#include "nsGlobalWindow.h"
+#include "nsStyleConsts.h"
+#include "nsIDocShell.h"
+#include "nsIScrollable.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsDOMClassInfo.h"
@@ -157,7 +161,7 @@ ToolbarPropImpl::GetVisible(PRBool *aVisible)
 }
 
 NS_IMETHODIMP
-ToolbarPropImpl::SetVisible(PRBool aVisible) 
+ToolbarPropImpl::SetVisible(PRBool aVisible)
 {
   return BarPropImpl::SetVisibleByFlag(aVisible,
                                        nsIWebBrowserChrome::CHROME_TOOLBAR);
@@ -171,18 +175,18 @@ LocationbarPropImpl::LocationbarPropImpl()
 {
 }
 
-LocationbarPropImpl::~LocationbarPropImpl() 
+LocationbarPropImpl::~LocationbarPropImpl()
 {
 }
 
 NS_IMETHODIMP
-LocationbarPropImpl::GetVisible(PRBool *aVisible) 
+LocationbarPropImpl::GetVisible(PRBool *aVisible)
 {
   return BarPropImpl::GetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_LOCATIONBAR);
 }
 
 NS_IMETHODIMP
-LocationbarPropImpl::SetVisible(PRBool aVisible) 
+LocationbarPropImpl::SetVisible(PRBool aVisible)
 {
   return BarPropImpl::SetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_LOCATIONBAR);
 }
@@ -191,22 +195,22 @@ LocationbarPropImpl::SetVisible(PRBool aVisible)
 // PersonalbarProp class implementation
 //
 
-PersonalbarPropImpl::PersonalbarPropImpl() 
+PersonalbarPropImpl::PersonalbarPropImpl()
 {
 }
 
-PersonalbarPropImpl::~PersonalbarPropImpl() 
+PersonalbarPropImpl::~PersonalbarPropImpl()
 {
 }
 
 NS_IMETHODIMP
-PersonalbarPropImpl::GetVisible(PRBool *aVisible) 
+PersonalbarPropImpl::GetVisible(PRBool *aVisible)
 {
   return BarPropImpl::GetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
 }
 
 NS_IMETHODIMP
-PersonalbarPropImpl::SetVisible(PRBool aVisible) 
+PersonalbarPropImpl::SetVisible(PRBool aVisible)
 {
   return BarPropImpl::SetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
 }
@@ -215,23 +219,23 @@ PersonalbarPropImpl::SetVisible(PRBool aVisible)
 // StatusbarProp class implementation
 //
 
-StatusbarPropImpl::StatusbarPropImpl() 
+StatusbarPropImpl::StatusbarPropImpl()
 {
 }
 
-StatusbarPropImpl::~StatusbarPropImpl() 
+StatusbarPropImpl::~StatusbarPropImpl()
 {
 }
 
 NS_IMETHODIMP
-StatusbarPropImpl::GetVisible(PRBool *aVisible) 
+StatusbarPropImpl::GetVisible(PRBool *aVisible)
 {
   return BarPropImpl::GetVisibleByFlag(aVisible,
                                        nsIWebBrowserChrome::CHROME_STATUSBAR);
 }
 
 NS_IMETHODIMP
-StatusbarPropImpl::SetVisible(PRBool aVisible) 
+StatusbarPropImpl::SetVisible(PRBool aVisible)
 {
   return BarPropImpl::SetVisibleByFlag(aVisible,
                                        nsIWebBrowserChrome::CHROME_STATUSBAR);
@@ -241,24 +245,84 @@ StatusbarPropImpl::SetVisible(PRBool aVisible)
 // ScrollbarsProp class implementation
 //
 
-ScrollbarsPropImpl::ScrollbarsPropImpl() 
+ScrollbarsPropImpl::ScrollbarsPropImpl(GlobalWindowImpl *aWindow)
 {
+  mDOMWindow = aWindow;
+  nsISupports *supwin = NS_STATIC_CAST(nsIScriptGlobalObject *, aWindow);
+  mDOMWindowWeakref = getter_AddRefs(NS_GetWeakReference(supwin));
 }
 
-ScrollbarsPropImpl::~ScrollbarsPropImpl() 
+ScrollbarsPropImpl::~ScrollbarsPropImpl()
 {
-}
-
-NS_IMETHODIMP
-ScrollbarsPropImpl::GetVisible(PRBool *aVisible) 
-{
-  return BarPropImpl::GetVisibleByFlag(aVisible,
-                                       nsIWebBrowserChrome::CHROME_SCROLLBARS);
 }
 
 NS_IMETHODIMP
-ScrollbarsPropImpl::SetVisible(PRBool aVisible) 
+ScrollbarsPropImpl::GetVisible(PRBool *aVisible)
 {
-  return BarPropImpl::SetVisibleByFlag(aVisible,
-                                       nsIWebBrowserChrome::CHROME_SCROLLBARS);
+  NS_ENSURE_ARG_POINTER(aVisible);
+  *aVisible = PR_TRUE; // one assumes
+
+  nsCOMPtr<nsIDOMWindow> domwin(do_QueryReferent(mDOMWindowWeakref));
+  if (domwin) { // dom window not deleted
+    nsCOMPtr<nsIDocShell> docshell;
+    mDOMWindow->GetDocShell(getter_AddRefs(docshell));
+    nsCOMPtr<nsIScrollable> scroller(do_QueryInterface(docshell));
+    if (scroller) {
+      PRInt32 prefValue = aVisible ? NS_STYLE_OVERFLOW_AUTO :
+                                     NS_STYLE_OVERFLOW_HIDDEN;
+      scroller->GetDefaultScrollbarPreferences(
+                  nsIScrollable::ScrollOrientation_Y, &prefValue);
+      if (prefValue == NS_STYLE_OVERFLOW_HIDDEN) // try the other way
+        scroller->GetDefaultScrollbarPreferences(
+                    nsIScrollable::ScrollOrientation_X, &prefValue);
+
+      if (prefValue == NS_STYLE_OVERFLOW_HIDDEN)
+        *aVisible = PR_FALSE;
+    }
+  }
+
+  return NS_OK;
 }
+
+NS_IMETHODIMP
+ScrollbarsPropImpl::SetVisible(PRBool aVisible)
+{
+  /* Scrollbars, unlike the other barprops, implement visibility directly
+     rather than handing off to the superclass (and from there to the
+     chrome window) because scrollbar visibility uniquely applies only
+     to the window making the change (arguably. it does now, anyway.)
+     and because embedding apps have no interface for implementing this
+     themselves, and therefore the implementation must be internal. */
+
+  nsCOMPtr<nsIDOMWindow> domwin(do_QueryReferent(mDOMWindowWeakref));
+  if (domwin) { // dom window must still exist. use away.
+    nsCOMPtr<nsIDocShell> docshell;
+    mDOMWindow->GetDocShell(getter_AddRefs(docshell));
+    nsCOMPtr<nsIScrollable> scroller(do_QueryInterface(docshell));
+    if (scroller) {
+      PRInt32 prefValue = aVisible ? NS_STYLE_OVERFLOW_AUTO :
+                                     NS_STYLE_OVERFLOW_HIDDEN;
+      scroller->SetDefaultScrollbarPreferences(
+                  nsIScrollable::ScrollOrientation_Y, prefValue);
+      scroller->SetDefaultScrollbarPreferences(
+                  nsIScrollable::ScrollOrientation_X, prefValue);
+    }
+  }
+
+  /* Notably absent is the part where we notify the chrome window using
+     mBrowserChrome->SetChromeFlags(). Given the possibility of multiple
+     DOM windows (multiple top-level windows, even) within a single
+     chrome window, the historical concept of a single "has scrollbars"
+     flag in the chrome is inapplicable, and we can't tell at this level
+     whether we represent the particular DOM window that makes this decision
+     for the chrome.
+
+     So only this object (and its corresponding DOM window) knows whether
+     scrollbars are visible. The corresponding chrome window will need to
+     ask (one of) its DOM window(s) when it needs to know about scrollbar
+     visibility, rather than caching its own copy of that information.
+  */
+
+  return NS_OK;
+}
+

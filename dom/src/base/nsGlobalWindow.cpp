@@ -969,7 +969,7 @@ GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
       nsCOMPtr<nsIWebBrowserChrome> browserChrome;
       if (mDocShell &&
           NS_SUCCEEDED(GetWebBrowserChrome(getter_AddRefs(browserChrome)))) {
-        mMenubar-> SetWebBrowserChrome(browserChrome);
+        mMenubar->SetWebBrowserChrome(browserChrome);
       }
     }
   }
@@ -1063,7 +1063,7 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetScrollbars(nsIDOMBarProp** aScrollbars)
 {
   if (!mScrollbars) {
-    mScrollbars = new ScrollbarsPropImpl();
+    mScrollbars = new ScrollbarsPropImpl(this);
     if (mScrollbars) {
       NS_ADDREF(mScrollbars);
       nsCOMPtr<nsIWebBrowserChrome> browserChrome;
