@@ -1,2 +1,3 @@
 Makefile
 .deps_S
+nsZipArchive.cpp
