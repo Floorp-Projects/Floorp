@@ -1,0 +1,53 @@
+This is the web-based build configurator.
+
+The idea is to simplify the build steps to...
+        1. cvs co mozilla/client.mk
+        2. cd mozilla
+        3. gmake -f client.mk webconfig
+        4. gmake -f client.mk
+
+Where the 'webconfig' target loads config.cgi in a web browser via
+"netscape -remote". The cgi presents a form of build options. The user
+submits it and gets a shell script, myconfig.sh, as a result. That shell
+script defines all the options that the user selected. The user then
+saves the script as $HOME/.mozmyconfig.sh. client.mk and configure, both
+use that file to configure the build.
+
+While this tool could be adapted to any configure'd project, it is
+currently designed to only handle the mozilla build system.
+
+=======
+ Files
+=======
+
+   ./config.cgi - cgi form for configure options. Produces myconfig.sh.
+   ./webify-configure.m4 - Parses configure.in and prints a list of options.
+
+-------------
+Related files
+-------------
+
+   $HOME/.mozmyconfig.sh - Script that defines build options.
+       Here is a sample script,
+          #! sh
+          mk_add_options MOZ_OBJDIR=@TOPSRCDIR@
+          ac_add_options --enable-debug --with-pthreads --enable-editor
+          ac_add_options --with-nspr=/tools/contrib/nsprpub
+
+   $TOPSRCDIR/myconfig.sh - Alternate location for the script.
+
+   mozilla/client.mk - Read myconfig.sh by converting it to .client-defs.mk
+     (generates mozilla/.client-defs.mk via myconfig2defs.sh)
+   mozilla/configure.in - Uses macros in altoptions.m4 to define options.
+   mozilla/build/autoconf/altoptions.m4 - Set of option macros.
+   mozilla/build/autoconf/load-myconfig.sh - Used by configure to push
+     myconfig.sh options onto the command line.
+   mozilla/build/autoconf/myconfig2defs.sh - Convert myconfig.sh to
+     a makefile format.
+
+
+============
+ Maintainer
+============
+
+The current primary maintainer is Steve Lamm <slamm@netscape.com>.
