@@ -48,7 +48,7 @@
 #endif
 // } %%%%% end platform defs peculiar to Mork %%%%%
 
-#ifdef MORK_WIN 
+#if defined (MORK_WIN) || defined(MORK_UNIX)
 #include "stdio.h" 
 #include "errno.h" 
 #include "string.h" 
