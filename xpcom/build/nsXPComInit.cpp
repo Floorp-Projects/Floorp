@@ -534,14 +534,10 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // Release the global case converter
     NS_IF_RELEASE(gCaseConv);
 
-#if defined(DEBUG_shaver) || defined(DEBUG_dp)
-    /* shaver needs to fix this and turn this on for the world */
-
     // Shutdown xpcom. This will release all loaders and cause others holding
     // a refcount to the component manager to release it.
     rv = (nsComponentManagerImpl::gComponentManager)->Shutdown();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Component Manager shutdown failed.");
-#endif
 
     // Release our own singletons
     // Do this _after_ shutting down the component manager, because the
