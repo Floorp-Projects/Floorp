@@ -462,7 +462,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
       result = ::GetOpenFileName(&ofn);
     }
     else if (mMode == modeSave) {
-      ofn.Flags |= OFN_NOREADONLYRETURN;
+      ofn.Flags |= OFN_NOREADONLYRETURN | OFN_PATHMUSTEXIST;
       result = ::GetSaveFileName(&ofn);
       if (!result) {
         // Error, find out what kind.
