@@ -97,13 +97,13 @@ Go back to the Error Log</a>
 <b><code>$buildname</code></b>
 </td></tr></table>
 
+<form action='addnote.cgi' METHOD='post'>
+
 <INPUT Type='hidden' name='buildname' value='${buildname}'>
 <INPUT Type='hidden' name='buildtime' value='${buildtime}'>
 <INPUT Type='hidden' name='errorparser' value='$errorparser'>
 <INPUT Type='hidden' name='logfile' value='$logfile'>
 <INPUT Type='hidden' name='tree' value='$tree'>
-
-<form action='addnote.cgi' METHOD='post'>
 
 <table border=0 cellpadding=4 cellspacing=1>
 <tr valign=top>
