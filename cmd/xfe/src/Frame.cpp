@@ -3730,6 +3730,12 @@ XFE_Frame::commandToString(CommandType cmd,
 		}
 }
 
+int
+XFE_Frame::getURL(URL_Struct * /* url */)
+{
+	return -1; // Same as HTMLView
+}
+
 void
 XFE_Frame::setCursor(XP_Bool busy)
 {

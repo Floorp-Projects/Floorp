@@ -170,6 +170,8 @@ public:
   virtual Pixel getTopShadowPixel();
   virtual Pixel getBottomShadowPixel();
 
+  virtual int getURL(URL_Struct *url);
+
   void setCursor(XP_Bool busy);
 
   // Invoked just before we destroy the Frame.
