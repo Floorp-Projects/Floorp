@@ -21,14 +21,16 @@
  */
 
 /*
-
    Style rules specific to the Preview dialog.
-
 */
 
 iframe#previewframe {
  min-width: 10px;
  min-height: 10px;
  width: 162px;
- height: 200px;
+ height: 300px;
+ border: none;
+ margin: 0px;
 }
+
+

@@ -23,8 +23,9 @@ function Init()
 {
   var panel_name = window.arguments[0];
   var panel_URL = window.arguments[1];
+
   var panel_title = document.getElementById('paneltitle');
   var preview_frame = document.getElementById('previewframe');
-  panel_title.description = panel_name;  
+  panel_title.setAttribute('value', panel_name);
   preview_frame.setAttribute('src', panel_URL);
 }
