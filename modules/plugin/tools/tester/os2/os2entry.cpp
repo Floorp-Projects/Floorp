@@ -74,7 +74,7 @@ unsigned long _System _DLL_InitTerm(unsigned long hModule, unsigned long ulFlag)
        GetINIFileName(hInst, szFileName, sizeof(szFileName));
        char sz[256];
        XP_GetPrivateProfileString(SECTION_PREFERENCES, KEY_LOADSTATUS_WINDOW, ENTRY_NO, sz, sizeof(sz), szFileName);
-       if (strcmpi(sz, ENTRY_YES) == 0)
+       if (stricmp(sz, ENTRY_YES) == 0)
          hWndLoadStatus = ShowLoadStatus("Tester dll is loaded");
      }
      break;
