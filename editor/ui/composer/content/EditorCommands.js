@@ -87,16 +87,6 @@
     }
   }
 
-  function EditorShowClipboard()
-  {
-    dump("In EditorShowClipboard...\n");
-   
-    if (appCore) {
-      dump("Doing EditorShowClipboard...\n");
-      appCore.showClipboard(); 
-    }
-  }
-
   function SetTextProperty(property, attribute, value)
   {
     if (appCore) {
