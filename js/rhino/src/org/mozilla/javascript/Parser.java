@@ -231,8 +231,7 @@ class Parser {
         FunctionNode fnNode = nf.createFunction(name);
         int functionIndex = currentScriptOrFn.addFunction(fnNode);
 
-        int functionSourceOffset
-            = decompiler.startFunction(name, functionIndex);
+        int functionSourceOffset = decompiler.startFunction(functionIndex);
 
         ScriptOrFnNode savedScriptOrFn = currentScriptOrFn;
         currentScriptOrFn = fnNode;
@@ -240,6 +239,10 @@ class Parser {
         Object body;
         String source;
         try {
+            decompiler.addToken(Token.FUNCTION);
+            if (name.length() != 0) {
+                decompiler.addName(name);
+            }
             decompiler.addToken(Token.LP);
             if (!ts.matchToken(Token.RP)) {
                 boolean first = true;
@@ -1479,7 +1482,7 @@ class Decompiler
         return encoded;
     }
 
-    public int startFunction(String name, int functionIndex)
+    public int startFunction(int functionIndex)
     {
         if (!(0 <= functionIndex))
             throw new IllegalArgumentException();
@@ -1488,15 +1491,7 @@ class Decompiler
         addToken(Token.FUNCTION);
         append((char)functionIndex);
 
-        int savedTop = sourceTop;
-
-        // FUNCTION as the first token in a means it's a function
-        // definition, and not a reference.
-        addToken(Token.FUNCTION);
-        if (name.length() != 0) {
-            addName(name);
-        }
-        return savedTop;
+        return sourceTop;
     }
 
     public String stopFunction(int savedTop)

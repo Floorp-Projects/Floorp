@@ -126,97 +126,53 @@ public class Interpreter
             generateFunctionICode(cx, scope);
             return createFunction(cx, scope, itsData, false);
         } else {
-            generateScriptICode(cx, scope);
+            generateICodeFromTree(cx, scope, scriptOrFn);
             return new InterpretedScript(cx, itsData);
         }
     }
 
-    private void generateScriptICode(Context cx, Scriptable scope)
+    public void notifyDebuggerCompilationDone(Context cx,
+                                              Object scriptOrFunction,
+                                              String debugSource)
     {
-        debugSource = scriptOrFn.getOriginalSource();
-
-        generateNestedFunctions(cx, scope);
-
-        generateRegExpLiterals(cx, scope);
-
-        generateICodeFromTree(scriptOrFn);
-        if (Token.printICode) dumpICode(itsData);
-
-        if (cx.debugger != null) {
-            cx.debugger.handleCompilationDone(cx, itsData, debugSource);
+        InterpreterData idata;
+        if (scriptOrFunction instanceof InterpretedScript) {
+            idata = ((InterpretedScript)scriptOrFunction).itsData;
+        } else {
+            idata = ((InterpretedFunction)scriptOrFunction).itsData;
         }
+        notifyDebugger_r(cx, idata, debugSource);
+    }
+
+    private static void notifyDebugger_r(Context cx, InterpreterData idata,
+                                         String debugSource)
+    {
+        if (idata.itsNestedFunctions != null) {
+            for (int i = 0; i != idata.itsNestedFunctions.length; ++i) {
+                notifyDebugger_r(cx, idata.itsNestedFunctions[i], debugSource);
+            }
+        }
+        cx.debugger.handleCompilationDone(cx, idata, debugSource);
+
     }
 
     private void generateFunctionICode(Context cx, Scriptable scope)
     {
         FunctionNode theFunction = (FunctionNode)scriptOrFn;
+
         itsData.itsFunctionType = theFunction.getFunctionType();
-        // check if function has own source, which is the case
-        // with Function(...)
-        String savedSource = debugSource;
-        debugSource = theFunction.getOriginalSource();
-        if (debugSource == null) {
-            debugSource = savedSource;
-        }
+        itsData.itsNeedsActivation = theFunction.requiresActivation();
+        itsData.itsName = theFunction.getFunctionName();
+
+        generateICodeFromTree(cx, scope, theFunction.getLastChild());
+    }
+
+    private void generateICodeFromTree(Context cx, Scriptable scope, Node tree)
+    {
         generateNestedFunctions(cx, scope);
 
         generateRegExpLiterals(cx, scope);
 
-        itsData.itsNeedsActivation = theFunction.requiresActivation();
-
-        generateICodeFromTree(theFunction.getLastChild());
-
-        itsData.itsName = theFunction.getFunctionName();
-        itsData.itsSource = theFunction.getEncodedSource();
-        if (Token.printICode) dumpICode(itsData);
-
-        if (cx.debugger != null) {
-            cx.debugger.handleCompilationDone(cx, itsData, debugSource);
-        }
-        debugSource = savedSource;
-    }
-
-    private void generateNestedFunctions(Context cx, Scriptable scope)
-    {
-        int functionCount = scriptOrFn.getFunctionCount();
-        if (functionCount == 0) return;
-
-        InterpreterData[] array = new InterpreterData[functionCount];
-        for (int i = 0; i != functionCount; i++) {
-            FunctionNode def = scriptOrFn.getFunctionNode(i);
-            Interpreter jsi = new Interpreter();
-            jsi.scriptOrFn = def;
-            jsi.itsData = new InterpreterData(itsData.securityDomain);
-            jsi.itsData.itsSourceFile = itsData.itsSourceFile;
-            jsi.itsData.itsCheckThis = def.getCheckThis();
-            jsi.itsInFunctionFlag = true;
-            jsi.debugSource = debugSource;
-            jsi.generateFunctionICode(cx, scope);
-            array[i] = jsi.itsData;
-        }
-        itsData.itsNestedFunctions = array;
-    }
-
-    private void generateRegExpLiterals(Context cx, Scriptable scope)
-    {
-        int N = scriptOrFn.getRegexpCount();
-        if (N == 0) return;
-
-        RegExpProxy rep = cx.getRegExpProxy();
-        if (rep == null) {
-            throw cx.reportRuntimeError0("msg.no.regexp");
-        }
-        Object[] array = new Object[N];
-        for (int i = 0; i != N; i++) {
-            String string = scriptOrFn.getRegexpString(i);
-            String flags = scriptOrFn.getRegexpFlags(i);
-            array[i] = rep.newRegExp(cx, scope, string, flags, false);
-        }
-        itsData.itsRegExpLiterals = array;
-    }
-
-    private void generateICodeFromTree(Node tree)
-    {
         int theICodeTop = 0;
         theICodeTop = generateICode(tree, theICodeTop);
         itsLabels.fixLabelGotos(itsData.itsICode);
@@ -275,6 +231,48 @@ public class Interpreter
 
         itsData.argNames = scriptOrFn.getParamAndVarNames();
         itsData.argCount = scriptOrFn.getParamCount();
+
+        itsData.itsSource = scriptOrFn.getEncodedSource();
+
+        if (Token.printICode) dumpICode(itsData);
+    }
+
+    private void generateNestedFunctions(Context cx, Scriptable scope)
+    {
+        int functionCount = scriptOrFn.getFunctionCount();
+        if (functionCount == 0) return;
+
+        InterpreterData[] array = new InterpreterData[functionCount];
+        for (int i = 0; i != functionCount; i++) {
+            FunctionNode def = scriptOrFn.getFunctionNode(i);
+            Interpreter jsi = new Interpreter();
+            jsi.scriptOrFn = def;
+            jsi.itsData = new InterpreterData(itsData.securityDomain);
+            jsi.itsData.itsSourceFile = itsData.itsSourceFile;
+            jsi.itsData.itsCheckThis = def.getCheckThis();
+            jsi.itsInFunctionFlag = true;
+            jsi.generateFunctionICode(cx, scope);
+            array[i] = jsi.itsData;
+        }
+        itsData.itsNestedFunctions = array;
+    }
+
+    private void generateRegExpLiterals(Context cx, Scriptable scope)
+    {
+        int N = scriptOrFn.getRegexpCount();
+        if (N == 0) return;
+
+        RegExpProxy rep = cx.getRegExpProxy();
+        if (rep == null) {
+            throw cx.reportRuntimeError0("msg.no.regexp");
+        }
+        Object[] array = new Object[N];
+        for (int i = 0; i != N; i++) {
+            String string = scriptOrFn.getRegexpString(i);
+            String flags = scriptOrFn.getRegexpFlags(i);
+            array[i] = rep.newRegExp(cx, scope, string, flags, false);
+        }
+        itsData.itsRegExpLiterals = array;
     }
 
     private int updateLineNumber(Node node, int iCodeTop)
@@ -3067,7 +3065,6 @@ public class Interpreter
 
     private int version;
     private boolean inLineStepMode;
-    private String debugSource;
 
     private static final Object DBL_MRK = new Object();
 }

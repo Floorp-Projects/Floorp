@@ -251,6 +251,13 @@ public class Codegen extends Interpreter {
         }
     }
 
+    public void notifyDebuggerCompilationDone(Context cx,
+                                              Object scriptOrFunction,
+                                              String debugSource)
+    {
+        // Not supported
+    }
+
     private String getScriptClassName(String functionName, boolean primary)
     {
         String result = nameHelper.getScriptClassName(functionName, primary);

@@ -53,12 +53,6 @@ public class ScriptOrFnNode extends Node {
         this.encodedSource = encodedSource;
     }
 
-    public final String getOriginalSource() { return originalSource; }
-
-    public final void setOriginalSource(String originalSource) {
-        this.originalSource = originalSource;
-    }
-
     public final int getBaseLineno() { return baseLineno; }
 
     public final void setBaseLineno(int lineno) {
@@ -182,7 +176,6 @@ public class ScriptOrFnNode extends Node {
     protected void finishParsing(IRFactory irFactory) { }
 
     private String encodedSource;
-    private String originalSource;
     private String sourceName;
     private int baseLineno = -1;
     private int endLineno = -1;

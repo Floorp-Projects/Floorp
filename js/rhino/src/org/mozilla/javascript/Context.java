@@ -1941,13 +1941,13 @@ public class Context {
             tree = tree.getFunctionNode(0);
         }
 
-        if (debugger != null) {
-            if (sourceString == null) Context.codeBug();
-            tree.setOriginalSource(sourceString);
-        }
-
         Object result = compiler.compile(this, scope, tree,
                                          securityController, securityDomain);
+
+        if (debugger != null) {
+            if (sourceString == null) Context.codeBug();
+            compiler.notifyDebuggerCompilationDone(this, result, sourceString);
+        }
 
         return errorCount == 0 ? result : null;
     }
