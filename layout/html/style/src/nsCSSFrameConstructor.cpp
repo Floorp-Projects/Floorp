@@ -538,53 +538,6 @@ MarkIBSpecialPrevSibling(nsIPresContext* aPresContext,
                                   nsnull);
 }
 
-/**
- * Moves frames to a new parent, updating the style context and
- * propagating relevant frame state bits. |aNewParentSC| may be null,
- * in which case the child frames' style contexts will remain
- * untouched.
- */
-static void
-MoveChildrenTo(nsIPresContext*  aPresContext,
-               nsIStyleContext* aNewParentSC,
-               nsIFrame*        aNewParent,
-               nsIFrame*        aFrameList)
-{
-  PRBool setHasChildWithView = PR_FALSE;
-
-  while (aFrameList) {
-    if (! setHasChildWithView) {
-      nsFrameState state;
-      aFrameList->GetFrameState(&state);
-      if (state & (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW))
-        setHasChildWithView = PR_TRUE;
-    }
-
-    aFrameList->SetParent(aNewParent);
-
-#if 0
-    // XXX When this is used with {ib} frame hierarchies, it seems
-    // fine to leave the style contexts of the children of the
-    // anonymous block frame parented by the original inline
-    // frame. (In fact, one would expect some inheritance
-    // relationships to be broken if we reparented them to the
-    // anonymous block frame, but oddly they aren't -- need to
-    // investigate that...)
-    if (aNewParentSC)
-      aPresContext->ReParentStyleContext(aFrameList, aNewParentSC);
-#endif
-
-    aFrameList->GetNextSibling(&aFrameList);
-  }
-
-  if (setHasChildWithView) {
-    nsFrameState state;
-    aNewParent->GetFrameState(&state);
-    state |= NS_FRAME_HAS_CHILD_WITH_VIEW;
-    aNewParent->SetFrameState(state);
-  }
-}
-
 // -----------------------------------------------------------
 
 // Structure used when constructing formatting object trees.
@@ -887,6 +840,176 @@ PRBool IsBorderCollapse(nsIFrame* aFrame)
   }
   NS_ASSERTION(PR_FALSE, "program error");
   return PR_FALSE;
+}
+
+// a helper routine that automatically navigates placeholders.
+static nsIFrame*
+GetRealFrame(nsIFrame* aFrame)
+{
+  nsIFrame* result = aFrame;
+
+  // We may be a placeholder.  If we are, go to the real frame.
+  nsCOMPtr<nsIAtom>  frameType;
+  
+  // See if it's a placeholder frame for a floater.
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  PRBool isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType.get());
+  if (isPlaceholder) {
+    // Get the out-of-flow frame that the placeholder points to.
+    // This is the real floater that we should examine.
+    result = NS_STATIC_CAST(nsPlaceholderFrame*,aFrame)->GetOutOfFlowFrame();
+    NS_ASSERTION(result, "No out of flow frame found for placeholder!\n");
+  }
+  
+  return result;
+}
+
+/**
+ * Utility method, called from MoveChildrenTo(), that recursively
+ * descends down the frame hierarchy looking for out-of-flow frames that
+ * need parent pointer adjustments to account for the containment block
+ * changes that could occur as the result of the reparenting done in
+ * MoveChildrenTo().
+ */
+static void
+AdjustOutOfFlowFrameParentPtrs(nsIPresContext*          aPresContext,
+                               nsIFrame*                aFrame,
+                               nsFrameConstructorState* aState)
+{
+  nsIFrame *outOfFlowFrame = GetRealFrame(aFrame);
+
+  if (outOfFlowFrame && outOfFlowFrame != aFrame) {
+
+    // Get the display data for the outOfFlowFrame so we can
+    // figure out if it is a floater or absolutely positioned element.
+
+    const nsStyleDisplay* display = nsnull;
+    outOfFlowFrame->GetStyleData(eStyleStruct_Display,
+                                (const nsStyleStruct*&)display);
+ 
+    if (!display) {
+      NS_WARNING("outOfFlowFrame has no display data!");
+      return;
+    }
+
+    // Update the parent pointer for outOfFlowFrame if it's
+    // containing block has changed as the result of reparenting,
+    //
+    // XXX_kin: I don't think we have to worry about
+    // XXX_kin: NS_STYLE_POSITION_FIXED or NS_STYLE_POSITION_RELATIVE.
+
+    if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition) {
+      // XXX_kin: I think we'll need to add code here to handle the
+      // XXX_kin: reparenting that can happen in ConstructInline()?
+      // XXX_kin:
+      // XXX_kin: The case I'm thinking about here is when the inline being
+      // XXX_kin: constructed has a style="position: relative;" property
+      // XXX_kin: on it, and ConstructInline() moves/reparents all child block
+      // XXX_kin: frames and any inlines (including placeholders) that happen
+      // XXX_kin: to be between these blocks, under the new inline-block it created.
+      // XXX_kin: I think right now this case generates an assertion during
+      // XXX_kin: reflow, and as a result things fail to render since I believe
+      // XXX_kin: the placeholder is parented to the inline-block, and the
+      // XXX_kin: outOfFlowFrame is in the original inline frame's absolute list,
+      // XXX_kin: and is also parented to it.
+    }
+    else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+      outOfFlowFrame->SetParent(aState->mFloatedItems.containingBlock);
+    }
+
+    // XXX_kin: We'll need to remove the return below when we support
+    // XXX_kin: descending into out-of-flow frames. Here are some notes
+    // XXX_kin: from waterson:
+    // XXX_kin:
+    // XXX_kin:     We'd want to continue to descend into placeholders
+    // XXX_kin:     until we found an out-of-flow frame that established
+    // XXX_kin:     a new containing block for absolutely positioned
+    // XXX_kin:     elements. At that point, we could terminate the descent,
+    // XXX_kin:     because any absolutely positioned frames below that frame
+    // XXX_kin:     would be properly parented.
+
+    return;
+  }
+
+  // XXX_kin: Since we're only handling floaters at the moment,
+  // XXX_kin: we don't need to cross block boundaries.
+
+  if (IsBlockFrame(aPresContext, aFrame))
+    return;
+
+  // Dive down into children to see if any of their
+  // placeholders need adjusting.
+
+  nsIFrame *childFrame = nsnull;
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+
+  while (childFrame)
+  {
+    // XXX_kin: Once we add support for adjusting absolutely positioned
+    // XXX_kin: frames, we will be crossing block boundaries, we/ll need
+    // XXX_kin: to update aState's containingBlock info to avoid incorrectly
+    // XXX_kin: reparenting floaters, etc.
+    // XXX_kin:
+    // XXX_kin: Do we need to prevent descent into anonymous content here?
+
+    AdjustOutOfFlowFrameParentPtrs(aPresContext, childFrame, aState);
+    childFrame->GetNextSibling(&childFrame);
+  }
+}
+
+/**
+ * Moves frames to a new parent, updating the style context and
+ * propagating relevant frame state bits. |aNewParentSC| may be null,
+ * in which case the child frames' style contexts will remain
+ * untouched. |aState| may be null, in which case the parent
+ * pointers of out-of-flow frames will remain untouched.
+ */
+static void
+MoveChildrenTo(nsIPresContext*          aPresContext,
+               nsIStyleContext*         aNewParentSC,
+               nsIFrame*                aNewParent,
+               nsIFrame*                aFrameList,
+               nsFrameConstructorState* aState)
+{
+  PRBool setHasChildWithView = PR_FALSE;
+
+  while (aFrameList) {
+    if (! setHasChildWithView) {
+      nsFrameState state;
+      aFrameList->GetFrameState(&state);
+      if (state & (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW))
+        setHasChildWithView = PR_TRUE;
+    }
+
+    aFrameList->SetParent(aNewParent);
+
+    // If aState is not null, the caller expects us to make adjustments
+    // so that placeholder out of flow frames point to the correct parent.
+
+    if (aState)
+      AdjustOutOfFlowFrameParentPtrs(aPresContext, aFrameList, aState);
+
+#if 0
+    // XXX When this is used with {ib} frame hierarchies, it seems
+    // fine to leave the style contexts of the children of the
+    // anonymous block frame parented by the original inline
+    // frame. (In fact, one would expect some inheritance
+    // relationships to be broken if we reparented them to the
+    // anonymous block frame, but oddly they aren't -- need to
+    // investigate that...)
+    if (aNewParentSC)
+      aPresContext->ReParentStyleContext(aFrameList, aNewParentSC);
+#endif
+
+    aFrameList->GetNextSibling(&aFrameList);
+  }
+
+  if (setHasChildWithView) {
+    nsFrameState state;
+    aNewParent->GetFrameState(&state);
+    state |= NS_FRAME_HAS_CHILD_WITH_VIEW;
+    aNewParent->SetFrameState(state);
+  }
 }
 
 // -----------------------------------------------------------
@@ -4908,28 +5031,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
   }
 
   return rv;
-}
-
-// a helper routine that automatically navigates placeholders.
-static nsIFrame*
-GetRealFrame(nsIFrame* aFrame)
-{
-  nsIFrame* result = aFrame;
-
-  // We may be a placeholder.  If we are, go to the real frame.
-  nsCOMPtr<nsIAtom>  frameType;
-  
-  // See if it's a placeholder frame for a floater.
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-  PRBool isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType.get());
-  if (isPlaceholder) {
-    // Get the out-of-flow frame that the placeholder points to.
-    // This is the real floater that we should examine.
-    result = NS_STATIC_CAST(nsPlaceholderFrame*,aFrame)->GetOutOfFlowFrame();
-    NS_ASSERTION(result, "No out of flow frame found for placeholder!\n");
-  }
-  
-  return result;
 }
 
 // after the node has been constructed and initialized create any
@@ -13380,7 +13481,12 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   }
 
   blockFrame->SetInitialChildList(aPresContext, nsnull, list2);
-  MoveChildrenTo(aPresContext, blockSC, blockFrame, list2);
+
+  nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
+                                GetAbsoluteContainingBlock(aPresContext, blockFrame),
+                                GetFloaterContainingBlock(aPresContext, blockFrame));
+
+  MoveChildrenTo(aPresContext, blockSC, blockFrame, list2, &state);
 
   // list3's frames belong to another inline frame
   nsIFrame* inlineFrame = nsnull;
@@ -13410,7 +13516,7 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
     // Reparent (cheaply) the frames in list3 - we don't have to futz
     // with their style context because they already have the right one.
     inlineFrame->SetInitialChildList(aPresContext, nsnull, list3);
-    MoveChildrenTo(aPresContext, nsnull, inlineFrame, list3);
+    MoveChildrenTo(aPresContext, nsnull, inlineFrame, list3, nsnull);
   }
 
   // Mark the 3 frames as special. That way if any of the
@@ -13842,7 +13948,7 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
                       nsnull, blockSC, nsnull, blockFrame);
 
   blockFrame->SetInitialChildList(aPresContext, nsnull, aBlockChildFrame);
-  MoveChildrenTo(aPresContext, blockSC, blockFrame, aBlockChildFrame);
+  MoveChildrenTo(aPresContext, blockSC, blockFrame, aBlockChildFrame, nsnull);
 
   // Create an anonymous inline frame that will parent
   // aRightInlineChildFrame. The new frame won't have a parent yet:
@@ -13857,7 +13963,7 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
                       nsnull, styleContext, nsnull, inlineFrame);
 
   inlineFrame->SetInitialChildList(aPresContext, nsnull, aRightInlineChildFrame);
-  MoveChildrenTo(aPresContext, nsnull, inlineFrame, aRightInlineChildFrame);
+  MoveChildrenTo(aPresContext, nsnull, inlineFrame, aRightInlineChildFrame, nsnull);
 
   // Make the "special" inline-block linkage between aFrame and the
   // newly created anonymous frames. We need to create the linkage
