@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.31 $ 
-# $Date: 2002/05/03 21:28:51 $ 
+# $Revision: 1.32 $ 
+# $Date: 2002/05/03 21:44:25 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.31 $ )[1];
+$VERSION = ( qw $Revision: 1.32 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -397,20 +397,20 @@ sub status_table_row {
                             "bgcolor=$cell_color ");
       my ($lc_time) = localtime($DB_TIMES[$NEXT_DB]);
 
-      push @outrow, ("\t<!-- not_running: VC_Bonsai ".
+      push @outrow, ("\t<!-- empty data: VC_Bonsai ".
                      "tree: $tree, ".
-                     "build: $buildname, ".
                      "Next_End: $lc_time, ".
                      "-->\n".
                      
-                     "\t\t<td rowspan=$rowspan align=center $cell_options>".
+                     "\t\t<td align=center $cell_options>".
                      "$EMPTY_TABLE_CELL</td>\n");
 
-      $NEXT_ROW{$tree} =  $row_index + $rowspan;
+      $NEXT_ROW{$tree} = $row_index + $rowspan;
 
       return @outrow;
   }
 
+  $NEXT_ROW{$tree} = $row_index + 1;
 
   # we assume that tree states only change rarely so there are very
   # few cells which have more then one state associated with them.
@@ -598,11 +598,12 @@ sub status_table_row {
       my ($date_str) = localtime($mindate)."-".localtime($maxdate);
 
       $query_links .= (
-                       "\t\t<!-- VC: ".("Author: $author, ".
-                                        "Bug_Numbers: '@bug_numbers', ".
-                                        "Time: '$date_str', ".
-                                        "Tree: $tree, ".
-                                       "").
+                       "\t\t<!-- VC_Bonsai: ".
+                       ("Author: $author, ".
+                        "Bug_Numbers: '@bug_numbers', ".
+                        "Time: '$date_str', ".
+                        "Tree: $tree, ".
+                        "").
                        "  -->\n".
                        "");
 
