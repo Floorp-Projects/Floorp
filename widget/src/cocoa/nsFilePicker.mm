@@ -40,8 +40,8 @@
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsIURL.h"
-#include "nsVoidArray.h"
 #include "nsIFileURL.h"
+#include "nsArrayEnumerator.h"
 
 #include "nsFilePicker.h"
 
@@ -117,9 +117,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   *retval = returnCancel;
 
   PRInt16 userClicksOK = returnCancel;
-  nsCOMPtr<nsILocalFileMac> theFile(do_CreateInstance("@mozilla.org/file/local;1"));
-  if (!theFile)
-    return NS_ERROR_FAILURE;
 //
 // Random questions from DHH:
 //
@@ -133,19 +130,25 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //  
 //  
 
+  mFiles.Clear();
+  nsCOMPtr<nsILocalFile> theFile;
+
   switch (mMode)
   {
     case modeOpen:
+      userClicksOK = GetLocalFiles(mTitle, PR_FALSE, mFiles);
+      break;
+    
     case modeOpenMultiple:
-      userClicksOK = GetLocalFile(mTitle, theFile);
+      userClicksOK = GetLocalFiles(mTitle, PR_TRUE, mFiles);
       break;
       
     case modeSave:
-      userClicksOK = PutLocalFile(mTitle, mDefault, theFile);
+      userClicksOK = PutLocalFile(mTitle, mDefault, getter_AddRefs(theFile));
       break;
       
     case modeGetFolder:
-      userClicksOK = GetLocalFolder(mTitle, theFile);
+      userClicksOK = GetLocalFolder(mTitle, getter_AddRefs(theFile));
       break;
     
     default:
@@ -153,8 +156,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       break;
   }
 
-  if (userClicksOK == returnOK || userClicksOK == returnReplace)
-    mFile = theFile;
+  if (theFile)
+    mFiles.AppendObject(theFile);
   
   *retval = userClicksOK;
   return NS_OK;
@@ -170,9 +173,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //
 //-------------------------------------------------------------------------
 PRInt16
-nsFilePicker::GetLocalFile(const nsString & inTitle, nsILocalFileMac* ioFile)
+nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
 {
-  NS_ENSURE_ARG(ioFile);
   PRInt16 retVal = (PRInt16)returnCancel;
   NSOpenPanel *thePanel = [NSOpenPanel openPanel];
 
@@ -181,7 +183,7 @@ nsFilePicker::GetLocalFile(const nsString & inTitle, nsILocalFileMac* ioFile)
 
   // Set the options for how the get file dialog will appear
   SetDialogTitle(inTitle, thePanel);
-  [thePanel setAllowsMultipleSelection:NO]; //this is default - probably doesn't need to be set
+  [thePanel setAllowsMultipleSelection:inAllowMultiple];
   [thePanel setCanSelectHiddenExtension:YES];
   [thePanel setCanChooseDirectories:NO];
   [thePanel setCanChooseFiles:YES];
@@ -190,20 +192,30 @@ nsFilePicker::GetLocalFile(const nsString & inTitle, nsILocalFileMac* ioFile)
   if (filters)
     [thePanel setTreatsFilePackagesAsDirectories:NO];       
 
-    // set up default directory
+  // set up default directory
   NSString *theDir = PanelDefaultDirectory();
   int result = [thePanel runModalForDirectory:theDir file:nil types:filters];  
   
   if (result == NSFileHandlingPanelCancelButton)
     return retVal;
-    
-  //get FSRef for file (we allow just 1, so that's all we get)
-  NSURL *theURL = [[thePanel URLs] objectAtIndex:0];
-  FSRef theFSRef;
-  if (::CFURLGetFSRef((CFURLRef)theURL, &theFSRef)) {
-    if (NS_SUCCEEDED(ioFile->InitWithFSRef(&theFSRef))) 
-      retVal = returnOK;
+  
+  // append each chosen file to our list
+  for (unsigned int i = 0; i < [[thePanel URLs] count]; i ++)
+  {
+    NSURL *theURL = [[thePanel URLs] objectAtIndex:i];
+    if (theURL)
+    {
+      nsCOMPtr<nsILocalFile> localFile;
+      NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localFile));
+      nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
+      if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL)))
+        outFiles.AppendObject(localFile);
+    }
   }
+
+  if (outFiles.Count() > 0)
+    retVal = returnOK;
+
   return retVal;
 } // GetFile
 
@@ -219,9 +231,11 @@ nsFilePicker::GetLocalFile(const nsString & inTitle, nsILocalFileMac* ioFile)
 //       Consider yourself warned.
 //-------------------------------------------------------------------------
 PRInt16
-nsFilePicker::GetLocalFolder(const nsString & inTitle, nsILocalFileMac* ioFile)
+nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 {
-  NS_ENSURE_ARG(ioFile);
+  NS_ENSURE_ARG(outFile);
+  *outFile = nsnull;
+  
   PRInt16 retVal = (PRInt16)returnCancel;
   NSOpenPanel *thePanel = [NSOpenPanel openPanel];
 
@@ -241,15 +255,22 @@ nsFilePicker::GetLocalFolder(const nsString & inTitle, nsILocalFileMac* ioFile)
   if (result == NSFileHandlingPanelCancelButton)
     return retVal;
     
-  //get FSRef for folder (we allow just 1, so that's all we get)
+  // get FSRef for folder (we allow just 1, so that's all we get)
   NSURL *theURL = [[thePanel URLs] objectAtIndex:0];
-  FSRef theFSRef;
-  if (::CFURLGetFSRef((CFURLRef)theURL, &theFSRef)) {
-    if (NS_SUCCEEDED(ioFile->InitWithFSRef(&theFSRef))) 
+  if (theURL)
+  {
+    nsCOMPtr<nsILocalFile> localFile;
+    NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localFile));
+    nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
+    if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL)))
+    {
+      *outFile = localFile;
+      NS_ADDREF(*outFile);
       retVal = returnOK;
+    }
   }
-  return retVal;
 
+  return retVal;
 } // GetFolder
 
 //-------------------------------------------------------------------------
@@ -264,9 +285,11 @@ nsFilePicker::GetLocalFolder(const nsString & inTitle, nsILocalFileMac* ioFile)
 //-------------------------------------------------------------------------
 
 PRInt16
-nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultName, nsILocalFileMac* ioFile)
+nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile)
 {
-  NS_ENSURE_ARG(ioFile);
+  NS_ENSURE_ARG(outFile);
+  *outFile = nsnull;
+
   PRInt16 retVal = returnCancel;
   NSSavePanel *thePanel = [NSSavePanel savePanel];
   
@@ -274,32 +297,34 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
   SetDialogTitle(inTitle, thePanel);
   
   // set up default file name
-  CFStringRef defaultFileNameRef = ::CFStringCreateWithCharacters(NULL, 
-                                                                (const UniChar *) inDefaultName.get(), 
-                                                                inDefaultName.Length());
-  if (!defaultFileNameRef) {
-    defaultFileNameRef = CFSTR(""); //empty strings ok - just can't be NULL.
-    CFRetain(defaultFileNameRef);   //fake out so we can release it later without problems.
-  }
+  NSString* defaultFilename = [NSString stringWithCharacters:(const unichar*)inDefaultName.get() length:inDefaultName.Length()];
+
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
   
   // load the panel.
-  int result = [thePanel runModalForDirectory:theDir file:(NSString *)defaultFileNameRef];
-  // clean up name
-  CFRelease (defaultFileNameRef);
-
+  int result = [thePanel runModalForDirectory:theDir file:defaultFilename];
   if (result == NSFileHandlingPanelCancelButton)
     return retVal;
 
-  // Get the FSRef for the directory where the file to be saved
-  NSURL *theURL = [NSURL fileURLWithPath:[thePanel directory]];
-  FSRef theFSRef;
-  if (::CFURLGetFSRef((CFURLRef)theURL, &theFSRef)) { 
-    if (NS_SUCCEEDED(ioFile->InitWithFSRef(&theFSRef))) {
-      if (NS_SUCCEEDED(ioFile->Append(nsDependentString(::CFStringGetCharactersPtr((CFStringRef)[thePanel filename])))));
-        retVal = returnOK;
+  // Get the NSURL for the directory where the file to be saved
+  NSURL *dirURL = [NSURL fileURLWithPath:[thePanel directory]];
+  // append the filename
+  NSURL *fileURL = [[NSURL alloc] initWithString:[thePanel filename] relativeToURL:dirURL];
+  if (fileURL)
+  { 
+    nsCOMPtr<nsILocalFile> localFile;
+    NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localFile));
+    nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
+    if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)fileURL)))
+    {
+      *outFile = localFile;
+      NS_ADDREF(*outFile);
+      // XXX how can we tell if we're replacing? Need to return returnReplace
+      retVal = returnOK;
     }
+
+    [fileURL release];
   }      
   return retVal;    
 }
@@ -362,11 +387,7 @@ nsFilePicker::GenerateFilterList()
 void
 nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel)
 {
-  // XXX why not just make an NString* here?
-  CFStringRef titleRef = CFStringCreateWithCharacters(NULL,(const UniChar *) inTitle.get(), inTitle.Length());
-  if (titleRef) 
-    [aPanel setTitle:(NSString *)titleRef];  
-  CFRelease (titleRef);
+  [aPanel setTitle:[NSString stringWithCharacters:(const unichar*)inTitle.get() length:inTitle.Length()]];
 } 
 
 //-------------------------------------------------------------------------
@@ -394,17 +415,31 @@ nsFilePicker::PanelDefaultDirectory()
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
-  NS_IF_ADDREF(*aFile = mFile);
+  *aFile = nsnull;
+  
+  // just return the first file
+  if (mFiles.Count() > 0)
+  {
+    *aFile = mFiles.ObjectAt(0);
+    NS_IF_ADDREF(*aFile);
+  }
+
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
-  NS_ENSURE_TRUE(mFile, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aFileURL);
+  *aFileURL = nsnull;
+
+  if (mFiles.Count() == 0)
+    return NS_OK;
 
   nsCOMPtr<nsIURI> uri;
-  NS_NewFileURI(getter_AddRefs(uri), mFile);
+  nsresult rv = NS_NewFileURI(getter_AddRefs(uri), mFiles.ObjectAt(0));
+  if (NS_FAILED(rv)) return rv;
+
   nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
   NS_ENSURE_TRUE(fileURL, NS_ERROR_FAILURE);
   
@@ -412,6 +447,11 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
+{
+  return NS_NewArrayEnumerator(aFiles, mFiles);
+}
 
 //-------------------------------------------------------------------------
 //
