@@ -80,7 +80,7 @@ nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
 
     *bytesConsumed = 0;
     
-    char *p = PL_strnchr(buf, '\n', count);
+    char *p = NS_STATIC_CAST(char *, memchr(buf, '\n', count));
     if (p) {
         *p = 0;
         *bytesConsumed = p - buf + 1;
