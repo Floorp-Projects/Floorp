@@ -212,7 +212,8 @@ GdkKeyCodeToDOMKeyCode(int aKeysym)
 PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aEvent)
 {
     // Anything above 0xf000 is considered a non-printable
-    if (aEvent->keyval > 0xf000) {
+    // Exception: directly encoded UCS characters
+    if (aEvent->keyval > 0xf000 && (aEvent->keyval & 0xff000000) != 0x01000000) {
 
         // Keypad keys are an exception: they return a value different
         // from their non-keypad equivalents, but mozilla doesn't distinguish.
