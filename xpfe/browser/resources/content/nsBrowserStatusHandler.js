@@ -109,6 +109,7 @@ nsBrowserStatusHandler.prototype =
     this.stopMenu        = document.getElementById("menuitem-stop");
     this.stopContext     = document.getElementById("context-stop");
     this.statusTextField = document.getElementById("statusbar-display");
+    this.translateMenu   = document.getElementById("menuitem-translate");
 
   },
 
@@ -122,6 +123,7 @@ nsBrowserStatusHandler.prototype =
     this.stopMenu        = null;
     this.stopContext     = null;
     this.statusTextField = null;
+    this.translateMenu   = null;
     this.userTyped       = null;
   },
 
@@ -214,6 +216,7 @@ nsBrowserStatusHandler.prototype =
         this.stopButton.disabled = false;
         this.stopMenu.removeAttribute('disabled');
         this.stopContext.removeAttribute('disabled');
+        this.translateMenu.removeAttribute('disabled');
 
         // Initialize the progress stuff...
         this.useRealProgressFlag = false;
@@ -247,6 +250,9 @@ nsBrowserStatusHandler.prototype =
           }
           this.status = "";
           this.setDefaultStatus(msg);
+          var ctype = aRequest.QueryInterface(nsIChannel).contentType;
+          if (ctype.match(/^image\//))
+            this.translateMenu.setAttribute('disabled', 'true');
         }
 
         // Turn the progress meter and throbber off.
