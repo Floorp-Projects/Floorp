@@ -45,6 +45,9 @@
 #include "nsObserverService.h"
 #include "nsObserverList.h"
 #include "nsHashtable.h"
+#include "nsIWeakReference.h"
+
+#define NS_WEAK_OBSERVERS
 
 static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 
@@ -211,6 +214,17 @@ NS_IMETHODIMP nsObserverService::NotifyObservers( nsISupports *aSubject,
         nsCOMPtr<nsIObserver> observer = do_QueryInterface(observerRef);
         if ( observer ) 
             observer->Observe( aSubject, aTopic, someData );
+#ifdef NS_WEAK_OBSERVERS
+        else
+        {  // check for weak reference.
+             nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(observerRef);     
+             if ( weakRef )                                                              
+                weakRef->QueryReferent(NS_GET_IID(nsIObserver), getter_AddRefs(observer));
+
+             if ( observer ) 
+                observer->Observe( aSubject, aTopic, someData );
+        }
+#endif
     }
     return NS_OK;
 }
