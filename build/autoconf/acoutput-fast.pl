@@ -50,6 +50,15 @@ sub dirname {
   return $dir;
 }
 
+# Create one directory. Assumes it doesn't already exist.
+# Will create parent(s) if needed.
+sub create_directory {
+  my $dir = $_[0];
+  my $parent = dirname($dir);
+  create_directory($parent) if not -d $parent;
+  mkdir "$dir",0777;
+}
+
 # Create all the directories at once.
 #   This can be much faster than calling mkdir() for each one.
 sub create_directories {
@@ -60,7 +69,18 @@ sub create_directories {
     push @dirs, dirname($ac_file);
   }
   # Call mkdir with the directories sorted by subdir count (how many /'s)
-  system "mkdir -p ". join(' ', @dirs) if @dirs;
+  if (@dirs) {
+    my $mkdir_command = "mkdir -p ". join(' ', @dirs);
+    if (system($mkdir_command)  != 0) {
+      print STDERR "Creating dirs all at once failed; trying one at atime\n";
+      foreach $dir (@dirs) {
+        if (not -d $dir) {
+          print STDERR "Creating directory $dir\n";
+          create_directory($dir);
+        }
+      }
+    }
+  }
 }
 
 $ac_given_srcdir = $0;
