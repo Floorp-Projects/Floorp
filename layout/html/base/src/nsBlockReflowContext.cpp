@@ -396,26 +396,28 @@ nsBlockReflowContext::ComputeRelativePosition(nsIFrame* aFrame,
                                               const nsStylePosition* aStylePos,
                                               nscoord& aX, nscoord& aY)
 {
+  nsStyleCoord coord;
+  
   nscoord dx = 0;
-  switch (aStylePos->mLeftOffset.GetUnit()) {
+  switch (aStylePos->mOffset.GetLeftUnit()) {
   case eStyleUnit_Percent:
     printf("XXX: not yet implemented: % relative position\n");
   case eStyleUnit_Auto:
     break;
   case eStyleUnit_Coord:
-    dx = aStylePos->mLeftOffset.GetCoordValue();
+    dx = aStylePos->mOffset.GetLeft(coord).GetCoordValue();
     break;
   }
   aX += dx;
 
   nscoord dy = 0;
-  switch (aStylePos->mTopOffset.GetUnit()) {
+  switch (aStylePos->mOffset.GetTopUnit()) {
   case eStyleUnit_Percent:
     printf("XXX: not yet implemented: % relative position\n");
   case eStyleUnit_Auto:
     break;
   case eStyleUnit_Coord:
-    dy = aStylePos->mTopOffset.GetCoordValue();
+    dy = aStylePos->mOffset.GetTop(coord).GetCoordValue();
     break;
   }
   aY += dy;

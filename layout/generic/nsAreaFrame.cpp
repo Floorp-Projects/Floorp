@@ -530,8 +530,8 @@ nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
 #endif
       // We need to place the frame if the left-offset or the top-offset are
       // auto or a percentage
-      if ((eStyleUnit_Coord != position->mLeftOffset.GetUnit()) ||
-          (eStyleUnit_Coord != position->mTopOffset.GetUnit())) {
+      if ((eStyleUnit_Coord != position->mOffset.GetLeftUnit()) ||
+          (eStyleUnit_Coord != position->mOffset.GetTopUnit())) {
         placeFrame = PR_TRUE;
       }
 
@@ -622,8 +622,8 @@ void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIPresContext&          aPresConte
   // If either the left or top are 'auto' then get the offset of the anchor
   // frame from this frame
   nsPoint offset(0, 0);
-  if ((eStyleUnit_Auto == aPosition->mLeftOffset.GetUnit()) ||
-      (eStyleUnit_Auto == aPosition->mTopOffset.GetUnit())) {
+  if ((eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) ||
+      (eStyleUnit_Auto == aPosition->mOffset.GetTopUnit())) {
     // Get the placeholder frame
     nsIFrame*     placeholderFrame;
     nsIPresShell* presShell = aPresContext.GetShell();
@@ -638,42 +638,46 @@ void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIPresContext&          aPresConte
   }
 
   // left-offset
-  if (eStyleUnit_Auto == aPosition->mLeftOffset.GetUnit()) {
+  if (eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit()) {
     // Use the current x-offset of the anchor frame translated into our
     // coordinate space
     aRect.x = offset.x;
-  } else if (eStyleUnit_Coord == aPosition->mLeftOffset.GetUnit()) {
-    aRect.x = aPosition->mLeftOffset.GetCoordValue();
+  } else if (eStyleUnit_Coord == aPosition->mOffset.GetLeftUnit()) {
+    nsStyleCoord  coord;
+    aRect.x = aPosition->mOffset.GetLeft(coord).GetCoordValue();
   } else {
-    NS_ASSERTION(eStyleUnit_Percent == aPosition->mLeftOffset.GetUnit(),
+    NS_ASSERTION(eStyleUnit_Percent == aPosition->mOffset.GetLeftUnit(),
                  "unexpected offset type");
     // Percentage values refer to the width of the containing block. If the
     // width is unconstrained then just use 0
     if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
       aRect.x = 0;
     } else {
+      nsStyleCoord  coord;
       aRect.x = (nscoord)((float)aReflowState.availableWidth *
-                          aPosition->mLeftOffset.GetPercentValue());
+                          aPosition->mOffset.GetLeft(coord).GetPercentValue());
     }
   }
 
   // top-offset
-  if (eStyleUnit_Auto == aPosition->mTopOffset.GetUnit()) {
+  if (eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) {
     // Use the current y-offset of the anchor frame translated into our
     // coordinate space
     aRect.y = offset.y;
-  } else if (eStyleUnit_Coord == aPosition->mTopOffset.GetUnit()) {
-    aRect.y = aPosition->mTopOffset.GetCoordValue();
+  } else if (eStyleUnit_Coord == aPosition->mOffset.GetTopUnit()) {
+    nsStyleCoord  coord;
+    aRect.y = aPosition->mOffset.GetTop(coord).GetCoordValue();
   } else {
-    NS_ASSERTION(eStyleUnit_Percent == aPosition->mTopOffset.GetUnit(),
+    NS_ASSERTION(eStyleUnit_Percent == aPosition->mOffset.GetTopUnit(),
                  "unexpected offset type");
     // Percentage values refer to the height of the containing block. If the
     // height is unconstrained then interpret it like 'auto'
     if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
       aRect.y = offset.y;
     } else {
+      nsStyleCoord  coord;
       aRect.y = (nscoord)((float)aReflowState.availableHeight *
-                          aPosition->mTopOffset.GetPercentValue());
+                          aPosition->mOffset.GetTop(coord).GetPercentValue());
     }
   }
 

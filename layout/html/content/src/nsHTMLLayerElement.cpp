@@ -216,14 +216,14 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     aAttributes->GetAttribute(nsHTMLAtoms::left, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-      position->mLeftOffset.SetCoordValue(twips);
+      position->mOffset.SetLeft(nsStyleCoord(twips));
     }
 
     // Top
     aAttributes->GetAttribute(nsHTMLAtoms::top, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-      position->mTopOffset.SetCoordValue(twips);
+      position->mOffset.SetTop(nsStyleCoord(twips));
     }
 
     // Width

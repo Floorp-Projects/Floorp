@@ -98,23 +98,23 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
     if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
       kid->GetOrigin(origin);
       nscoord dx = 0;
-      switch (kidPosition->mLeftOffset.GetUnit()) {
+      switch (kidPosition->mOffset.GetLeftUnit()) {
       case eStyleUnit_Percent:
         printf("XXX: not yet implemented: % relative position\n");
       case eStyleUnit_Auto:
         break;
       case eStyleUnit_Coord:
-        dx = kidPosition->mLeftOffset.GetCoordValue();
+        dx = kidPosition->mOffset.GetLeft().GetCoordValue();
         break;
       }
       nscoord dy = 0;
-      switch (kidPosition->mTopOffset.GetUnit()) {
+      switch (kidPosition->mOffset.GetTopUnit()) {
       case eStyleUnit_Percent:
         printf("XXX: not yet implemented: % relative position\n");
       case eStyleUnit_Auto:
         break;
       case eStyleUnit_Coord:
-        dy = kidPosition->mTopOffset.GetCoordValue();
+        dy = kidPosition->mOffset.GetTop().GetCoordValue();
         break;
       }
       kid->MoveTo(origin.x + dx, origin.y + dy);

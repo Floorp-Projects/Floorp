@@ -124,8 +124,7 @@ protected:
 struct nsStylePosition : public nsStyleStruct {
   PRUint8   mPosition;                  // [reset] see nsStyleConsts.h
 
-  nsStyleCoord  mLeftOffset;            // [reset] 
-  nsStyleCoord  mTopOffset;             // [reset] 
+  nsStyleSides  mOffset;                // [reset]
   nsStyleCoord  mWidth;                 // [reset] coord, percent, auto, inherit
   nsStyleCoord  mMinWidth;              // [reset] coord, percent, inherit
   nsStyleCoord  mMaxWidth;              // [reset] coord, percent, null, inherit

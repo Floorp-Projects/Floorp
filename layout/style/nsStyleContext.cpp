@@ -553,8 +553,11 @@ void StylePositionImpl::ResetFrom(const nsStylePosition* aParent, nsIPresContext
 {
   // positioning values not inherited
   mPosition = NS_STYLE_POSITION_NORMAL;
-  mLeftOffset.SetAutoValue();
-  mTopOffset.SetAutoValue();
+  nsStyleCoord  autoCoord(eStyleUnit_Auto);
+  mOffset.SetLeft(autoCoord);
+  mOffset.SetTop(autoCoord);
+  mOffset.SetRight(autoCoord);
+  mOffset.SetBottom(autoCoord);
   mWidth.SetAutoValue();
   mMinWidth.SetCoordValue(0);
   mMaxWidth.Reset();
