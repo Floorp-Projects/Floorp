@@ -146,8 +146,8 @@ function getItemRoots(aItemType)
 {    
   var roots = [];
   if (aItemType == nsIUpdateItem.TYPE_ADDON)
-    roots.join([getItemRoot(nsIUpdateItem.TYPE_EXTENSION), 
-                getItemRoot(nsIUpdateItem.TYPE_THEME)]);
+    roots = roots.concat([getItemRoot(nsIUpdateItem.TYPE_EXTENSION), 
+                          getItemRoot(nsIUpdateItem.TYPE_THEME)]);
   else
     roots.push(getItemRoot(aItemType));
   return roots;
@@ -699,6 +699,10 @@ nsThemeInstaller.prototype = {
       this._writer = new nsInstallLogWriter(this._themeID, aIsProfile);
       this._writer.open();
 
+      // Insert the theme into the theme list. 
+      this._extensionDS.insertForthcomingItem(this._themeID, nsIUpdateItem.TYPE_THEME, 
+                                              aIsProfile);
+
       // Add metadata for the extension to the global extension metadata set
       this._extensionDS.addItemMetadata(this._themeID, nsIUpdateItem.TYPE_THEME,
                                         themeMetadata, aIsProfile);
@@ -862,13 +866,17 @@ nsExtensionManager.prototype = {
           win.close();
         }
         
-        var globalFlags = cmdLineSvc.getCmdLineValue("-install-global-extension");
-        if (globalFlags)
-          this._checkForGlobalInstalls(globalFlags);
+        var globalExtension = cmdLineSvc.getCmdLineValue("-install-global-extension");
+        if (globalExtension)
+          this._checkForGlobalInstalls(globalExtension, nsIUpdateItem.TYPE_EXTENSION);
+          
+        var globalTheme = cmdLineSvc.getCmdLineValue("-install-global-theme");
+        if (globalTheme)
+          this._checkForGlobalInstalls(globalTheme, nsIUpdateItem.TYPE_THEME);
 
         this._finishOperations();
         this._loadDefaults();
-        if (globalFlags) {
+        if (globalExtension || globalTheme) {
           // If we did a global install, shut down the app now. 
           // XXXben - change to nsIAppStartup w/bsmedberg change
           var appStartup = Components.classes['@mozilla.org/appshell/appShellService;1']
@@ -895,7 +903,7 @@ nsExtensionManager.prototype = {
     }
   },
   
-  _checkForGlobalInstalls: function (aPath)
+  _checkForGlobalInstalls: function (aPath, aItemType)
   {
     // First see if the path supplied is a file path
     var file = Components.classes["@mozilla.org/file/local;1"]
@@ -912,10 +920,14 @@ nsExtensionManager.prototype = {
       catch (e) { /* can't handle this */ }
     }
     
-    if (file.exists())
-      this.installExtension(file, nsIExtensionManager.FLAG_INSTALL_GLOBAL);
+    if (file.exists()) {
+      if (aItemType == nsIUpdateItem.TYPE_EXTENSION)
+        this.installExtension(file, nsIExtensionManager.FLAG_INSTALL_GLOBAL);
+      else if (aItemType == nsIUpdateItem.TYPE_THEME)
+        this.installTheme(file, nsIExtensionManager.FLAG_INSTALL_GLOBAL);
+    }
     else
-      dump("Invalid XPI Path: " + aPath + "\n");
+      dump("Invalid XPI/JAR Path: " + aPath + "\n");
   },
   
   _finishOperations: function ()
@@ -1196,6 +1208,16 @@ nsExtensionManager.prototype = {
       // Then we stage the extension's XPI into a temporary directory so we 
       // can extract them after the next restart. 
       this._stageExtensionXPI(zipReader, extensionID, installProfile);
+      
+      // Insert it into the child list NOW rather than later because:
+      // - extensions installed using the command line need to be a member
+      //   of a container during the install phase for the code to be able
+      //   to identify profile vs. global
+      // - extensions installed through the UI should show some kind of
+      //   feedback to indicate their presence is forthcoming (i.e. they
+      //   will be available after a restart).
+      this._ds.insertForthcomingItem(extensionID, nsIUpdateItem.TYPE_EXTENSION, 
+                                     installProfile);
     }
     zipReader.close();
     tempManifest.remove(false);
@@ -1755,9 +1777,9 @@ nsExtensionsDataSource.prototype = {
     return items;
   },
   
-  isProfileItem: function (aExtensionID)
+  isProfileItem: function (aItemID)
   {
-    return this.getItemProperty(aExtensionID, "installLocation") != "global";
+    return this.getItemProperty(aItemID, "installLocation") != "global";
   },
   
   _setProperty: function (aDS, aSource, aProperty, aNewValue)
@@ -1773,10 +1795,15 @@ nsExtensionsDataSource.prototype = {
       aDS.Assert(aSource, aProperty, aNewValue, true);
   },
   
+  // Given a GUID, get the RDF resource representing the item. This
+  // will be of the form urn:mozilla:extension:{GUID} or 
+  // urn:mozilla:theme:{GUID} depending on the item type. 
   _getResourceForItem: function (aItemID)
   {
     var res = null;
     
+    // We can try and infer the resource URI from presence in one of the 
+    // item lists.
     var rdfc = Components.classes["@mozilla.org/rdf/container;1"]
                          .createInstance(Components.interfaces.nsIRDFContainer);
     rdfc.Init(this, this._rdf.GetResource(ROOT_EXTENSION));
@@ -1788,15 +1815,19 @@ nsExtensionsDataSource.prototype = {
     res = this._rdf.GetResource(PREFIX_THEME + aItemID);
     if (rdfc.IndexOf(res) != -1)
       return res;
-      
+
     return null;
   },
   
-  getItemProperty: function (aExtensionID, aProperty)
-  {
-    var extension = this._getResourceForItem(aExtensionID);
+  getItemProperty: function (aItemID, aProperty)
+  { 
+    var item = this._getResourceForItem(aItemID);
+    if (!item) {
+      dump("*** getItemProperty failing for lack of an item. This means _getResourceForItem \
+                failed to locate a resource for aItemID (" + aItemID + ")\n");
+    }
     try {
-      return this.GetTarget(extension, this._emR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+      return this.GetTarget(item, this._emR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     }
     catch (e) {}
     return "";
@@ -1807,13 +1838,12 @@ nsExtensionsDataSource.prototype = {
   {
     var item = this._rdf.GetResource(getItemPrefix(aItemType) + aItemID);
     var ds = aIsProfile ? this._profileExtensions : this._appExtensions;
-    
     this._setProperty(ds, item, aPropertyArc, aPropertyValue);
 
     this._flush(aIsProfile);  
   },
-  
-  addItemMetadata: function (aItemID, aItemType, aSourceDS, aIsProfile)
+
+  insertForthcomingItem: function (aItemID, aItemType, aIsProfile)
   {
     // Get the target container and resource
     var targetDS = aIsProfile ? this._profileExtensions : this._appExtensions;
@@ -1827,12 +1857,24 @@ nsExtensionsDataSource.prototype = {
     var oldIndex = ctr.IndexOf(targetRes);
     if (oldIndex == -1)
       ctr.AppendElement(targetRes);
-    
+
+    this._flush(aIsProfile);
+  }, 
+  
+  addItemMetadata: function (aItemID, aItemType, aSourceDS, aIsProfile)
+  {
+    var targetDS = aIsProfile ? this._profileExtensions : this._appExtensions;
+    var targetRes = this._rdf.GetResource(getItemPrefix(aItemType) + aItemID);
+
     // Copy the assertions over from the source datasource. 
     
     // Assert properties with single values
     var singleProps = ["version", "name", "description", "creator", "homepageURL", 
                        "updateURL", "optionsURL", "aboutURL", "iconURL"];
+
+    // Global extensions and themes can also be locked (can't be removed or disabled).
+    if (!aIsProfile)
+      singleProps = singleProps.concat(["locked"]);
     var sourceRes = this._rdf.GetResource("urn:mozilla:install-manifest");
     for (var i = 0; i < singleProps.length; ++i) {
       var property = this._emR(singleProps[i]);
@@ -1928,7 +1970,7 @@ nsExtensionsDataSource.prototype = {
     // refresh.
     var theme = this._getResourceForItem(aThemeID);
     var iconURLArc = this._emR("iconURL");
-    var iconURL = this.GetTarget(theme, iconURL, true);
+    var iconURL = this.GetTarget(theme, iconURLArc, true);
     for (var i = 0; i < this._observers.length; ++i)
       this._observers.onAssert(this, theme, iconURLArc, iconURL);
   },
