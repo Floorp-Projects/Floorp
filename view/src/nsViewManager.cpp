@@ -1892,11 +1892,15 @@ NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
 {
 	nscoord oldX, oldY;
 	aView->GetPosition(&oldX, &oldY);
-	aView->SetPosition(aX, aY);
 
 	// only do damage control if the view is visible
 
 	if ((aX != oldX) || (aY != oldY)) {
+    // XXXwaterson: there were dire warnings from plitkins about some
+    // rare cases not working when you only move when position has
+    // changed. If they re-occur, move this back outside.
+    aView->SetPosition(aX, aY);
+
 		nsViewVisibility  visibility;
 		aView->GetVisibility(visibility);
 		if (visibility != nsViewVisibility_kHide) {
