@@ -1,0 +1,192 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Brian Ryner <bryner@netscape.com>
+#  Jonathan Wilson <jonwil@tpgi.com.au>
+#  Dan Mosedale <dmose@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+PREF_JS_EXPORTS = \
+    $(srcdir)/profile/all.js \
+    $(NULL)
+
+ifeq ($(USE_SHORT_LIBNAME), 1)
+PROGRAM = MozillaSunbird$(BIN_SUFFIX)
+else
+PROGRAM = MozillaSunbird-bin$(BIN_SUFFIX)
+endif
+
+REQUIRES = \
+	appshell \
+	string \
+	xpcom \
+	xulapp \
+	$(NULL)
+
+CPPSRCS = nsCalendarApp.cpp
+
+ifdef BUILD_STATIC_LIBS
+STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
+endif
+
+LIBS = \
+	$(STATIC_COMPONENTS_LINKER_PATH) \
+	$(EXTRA_DSO_LIBS) \
+	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
+	$(MOZ_JS_LIBS) \
+	$(XPCOM_LIBS) \
+	$(NSPR_LIBS) \
+	$(TK_LIBS) \
+	$(NULL)
+
+ifdef MOZ_JPROF
+LIBS += -ljprof
+endif
+
+ifndef MOZ_WINCONSOLE
+ifdef MOZ_DEBUG
+MOZ_WINCONSOLE = 1
+else
+MOZ_WINCONSOLE = 0
+endif
+endif
+
+include $(topsrcdir)/config/config.mk
+ifndef BUILD_STATIC_LIBS
+
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS += tracemalloc
+endif
+
+else
+include $(topsrcdir)/config/static-config.mk
+
+EXTRA_DEPS	+= \
+	$(STATIC_EXTRA_DEPS) \
+	$(NULL)
+DEFINES		+= $(STATIC_DEFINES)
+CPPSRCS		+= $(STATIC_CPPSRCS)
+EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
+REQUIRES	+= $(STATIC_REQUIRES)
+EXTRA_LIBS	+= $(STATIC_EXTRA_LIBS)
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)
+RCINCLUDE = splash.rc
+ifndef GNU_CC
+RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
+else
+RCFLAGS += -DMOZ_PHOENIX --include-dir $(srcdir)
+endif
+ifdef BUILD_STATIC_LIBS
+RCFLAGS += -DMOZ_STATIC_BUILD
+endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+RESFILE=splashos2.res
+ifdef BUILD_STATIC_LIBS
+EXE_DEF_FILE = browser.def
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OS_LIBS += libuls.lib libconv.lib
+else
+OS_LIBS += -llibuni -luconv
+endif
+endif
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+ifdef BUILD_STATIC_LIBS
+include $(topsrcdir)/config/static-rules.mk
+endif
+
+$(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+
+ifeq ($(OS_ARCH),OS2)
+ifdef BUILD_STATIC_LIBS
+$(EXE_DEF_FILE):
+	rm -f $@
+	@echo NAME mozilla >$(EXE_DEF_FILE)
+	@echo IMPORTS >>$(EXE_DEF_FILE)
+	@echo 	WinQueryProperty		= PMMERGE.5450 >>$(EXE_DEF_FILE)
+	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
+	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
+
+LDFLAGS += /NOE
+endif
+endif
+
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+MozillaSunbird:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
+		-e "s|%MREDIR%|$(mredir)|" \
+		-e "s|mozilla-bin|$(PROGRAM)|g" > $@
+	chmod +x $@
+
+libs:: MozillaSunbird
+	$(INSTALL) $< $(DIST)/bin
+
+install:: MozillaSunbird
+	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
+
+GARBAGE += MozillaSunbird
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js)
+
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+
+APP_NAME = Mozilla\ Sunbird
+
+libs:: $(PROGRAM)
+	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rsync -a $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
+	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
+	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
+	echo -n APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+
+clean clobber::
+	rm -rf $(DIST)/$(APP_NAME).app
+endif

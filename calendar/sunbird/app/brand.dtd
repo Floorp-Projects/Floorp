@@ -1,0 +1,6 @@
+<!ENTITY  lang.version          "1.3a">
+<!ENTITY  brandShortName        "Mozilla Sunbird">
+<!ENTITY  version               "0.1">
+<!ENTITY  vendorShortName       "Mozilla Sunbird">
+
+<!ENTITY  releaseURL            "http://www.mozilla.org/projects/calendar">
