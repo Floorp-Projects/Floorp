@@ -919,6 +919,29 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
   return result;
 }
 
+/**
+ *  This method causes all tokens to be dispatched to the given tag handler.
+ *
+ *  @update  gess 3/25/98
+ *  @param   aHandler -- object to receive subsequent tokens...
+ *  @return	 error code (usually 0)
+ */
+nsresult CViewSourceHTML::CaptureTokenPump(nsITagHandler* aHandler) {
+  nsresult result=NS_OK;
+  return result;
+}
+
+/**
+ *  This method releases the token-pump capture obtained in CaptureTokenPump()
+ *
+ *  @update  gess 3/25/98
+ *  @param   aHandler -- object that received tokens...
+ *  @return	 error code (usually 0)
+ */
+nsresult CViewSourceHTML::ReleaseTokenPump(nsITagHandler* aHandler){
+  nsresult result=NS_OK;
+  return result;
+}
 
 /**
  * 

@@ -43,7 +43,7 @@ class nsIContentSink;
 class nsIDTDDebug;
 class nsIURL;
 class nsString;
-
+class nsITagHandler;
 
 enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 
@@ -144,10 +144,28 @@ class nsIDTD : public nsISupports {
      *  return an error result.
      *
      *  @update  gess 3/25/98
-	 *  @param   aToken -- will contain newly created and consumed token
-	 *  @return	 error code (usually 0)
+  	 *  @param   aToken -- will contain newly created and consumed token
+	   *  @return	 error code (usually 0)
      */
     NS_IMETHOD ConsumeToken(CToken*& aToken)=0;
+
+    /**
+     *  This method causes all tokens to be dispatched to the given tag handler.
+     *
+     *  @update  gess 3/25/98
+  	 *  @param   aHandler -- object to receive subsequent tokens...
+	   *  @return	 error code (usually 0)
+     */
+    NS_IMETHOD CaptureTokenPump(nsITagHandler* aHandler)=0;
+
+    /**
+     *  This method releases the token-pump capture obtained in CaptureTokenPump()
+     *
+     *  @update  gess 3/25/98
+  	 *  @param   aHandler -- object that received tokens...
+	   *  @return	 error code (usually 0)
+     */
+    NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler)=0;
 
     /**
      * If the parse process gets interrupted midway, this method is called by the

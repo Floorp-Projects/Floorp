@@ -418,6 +418,30 @@ nsresult CNavDTD::HandleToken(CToken* aToken){
 }
 
 /**
+ *  This method causes all tokens to be dispatched to the given tag handler.
+ *
+ *  @update  gess 3/25/98
+ *  @param   aHandler -- object to receive subsequent tokens...
+ *  @return	 error code (usually 0)
+ */
+nsresult CNavDTD::CaptureTokenPump(nsITagHandler* aHandler) {
+  nsresult result=NS_OK;
+  return result;
+}
+
+/**
+ *  This method releases the token-pump capture obtained in CaptureTokenPump()
+ *
+ *  @update  gess 3/25/98
+ *  @param   aHandler -- object that received tokens...
+ *  @return	 error code (usually 0)
+ */
+nsresult CNavDTD::ReleaseTokenPump(nsITagHandler* aHandler){
+  nsresult result=NS_OK;
+  return result;
+}
+
+/**
  * This gets called after we've handled a given start tag.
  * It's a generic hook to let us to post processing.
  * @param   aToken contains the tag in question

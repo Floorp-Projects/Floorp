@@ -151,7 +151,7 @@ class nsITagHandler {
 public:
   
   virtual PRBool  HandleToken(CToken* aToken,nsIDTD* aDTD)=0;
-  virtual PRBool  HandleCapturedTokens(CToke* aToken,nsIDTD* aDTD)=0;
+  virtual PRBool  HandleCapturedTokens(CToken* aToken,nsIDTD* aDTD)=0;
 };
 
 
