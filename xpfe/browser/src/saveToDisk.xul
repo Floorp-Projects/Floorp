@@ -1,0 +1,89 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad()">
+
+    <data>
+        <broadcaster id="data.location" type="url" value="url...to be replaced"/>
+        <broadcaster id="data.contentType" type="string" value="content-type...to be replaced"/>
+        <broadcaster id="data.fileName" type="string" value=""/>
+        <broadcaster id="data.execute" command=""/>
+    </data>
+
+    <html:script>
+        var data;
+        var dialog;
+
+        function loadDialog() {
+            dialog.location.setAttribute( "value", data.location.getAttribute( "value" ) );
+            dialog.contentType.setAttribute( "value", data.contentType.getAttribute( "value" ) );
+            dialog.fileName.setAttribute( "value", data.fileName.getAttribute( "value" ) );
+        }
+
+        function onLoad() {
+            // Set global variables.
+            data = new Object;
+            data.location      = document.getElementById("data.location");
+            data.contentType   = document.getElementById("data.contentType");
+            data.fileName      = document.getElementById("data.fileName");
+            data.execute       = document.getElementById("data.execute");
+            dialog = new Object;
+            dialog.location    = document.getElementById("dialog.location");
+            dialog.contentType = document.getElementById("dialog.contentType");
+            dialog.fileName    = document.getElementById("dialog.fileName");
+
+            // Fill dialog.
+            loadDialog();
+        }
+
+        function ok() {
+            data.execute.setAttribute("filename", dialog.fileName.value );
+            data.execute.setAttribute("command","ok");
+        }
+
+        function cancel() {
+            data.execute.setAttribute("command","cancel");
+        }
+    </html:script>
+
+    <html:table style="width:100%;">
+        <html:tr>
+            <html:td align="right">
+                URL:
+            </html:td>
+            <html:td align="left">
+                <html:input id="dialog.location" readonly style="background-color:lightgray;width:300px;"/>
+            </html:td>
+        </html:tr>
+    
+        <html:tr>
+            <html:td align="right" height="40px">
+                content-type:
+            </html:td>
+            <html:td>
+                <html:input id="dialog.contentType" readonly style="background-color:lightgray;width:300px;"/>
+            </html:td>
+        </html:tr>
+    
+        <html:tr>
+            <html:td align="right" height="40px">
+                Enter file name:
+            </html:td>
+            <html:td align="left">
+                <html:input id="dialog.fileName" value="" style="width:300px;"/>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="center" colspan="2">
+                <html:button onclick="ok()">Ok</html:button>
+                <html:button onclick="cancel()">Cancel</html:button>
+            </html:td>
+        </html:tr>
+    </html:table>
+
+</xul:window>

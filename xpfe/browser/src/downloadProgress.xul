@@ -1,0 +1,195 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="downloadProgress.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+  		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad()">
+
+    <data>
+        <broadcaster id="data.location" type="url" value="url"/>
+        <broadcaster id="data.contentType" type="string" value="content-type"/>
+        <broadcaster id="data.fileName" type="string" value=""/>
+        <broadcaster id="data.progress" type="progress" value="0" max="0"/>
+        <broadcaster id="data.status" type="string" value=""/>
+        <broadcaster id="data.execute" command=""/>
+    </data>
+
+    <dialog>
+        <observes element="data.progress" attribute="value" onchange="onProgress()"/>
+    </dialog>
+
+    <html:script>
+        var data;
+        var dialog;
+
+        function loadDialog() {
+            dialog.location.setAttribute( "value", data.location.getAttribute( "value" ) );
+            dialog.fileName.setAttribute( "value", data.fileName.getAttribute( "value" ) );
+        }
+
+        function onLoad() {
+            // Set global variables.
+            data = new Object;
+            data.location      = document.getElementById("data.location");
+            data.contentType   = document.getElementById("data.contentType");
+            data.fileName      = document.getElementById("data.fileName");
+            data.progress      = document.getElementById("data.progress");
+            data.status        = document.getElementById("data.status");
+            data.execute       = document.getElementById("data.execute");
+            dialog = new Object;
+            dialog.location    = document.getElementById("dialog.location");
+            dialog.contentType = document.getElementById("dialog.contentType");
+            dialog.fileName    = document.getElementById("dialog.fileName");
+            dialog.status      = document.getElementById("dialog.status");
+            dialog.progress    = document.getElementById("dialog.progress");
+            dialog.progressPercent = document.getElementById("dialog.progressPercent");
+            dialog.timeLeft    = document.getElementById("dialog.timeLeft");
+
+            // Fill dialog.
+            loadDialog();
+        }
+
+        function cancel() {
+            data.execute.setAttribute("command","cancel");
+        }
+
+        var started = false;
+        var startTime;
+        var interval = 1000; // Update every 1000 milliseconds.
+        var lastUpdate = -interval; // Update initially.
+
+        function onProgress() {
+            // Check for first time.
+            if ( !started ) {
+                // Initialize download start time.
+                started = true;
+                startTime = ( new Date() ).getTime();
+            }
+            // Get stats.
+            var bytes = data.progress.getAttribute("value");
+            var max   = data.progress.getAttribute("max");
+
+            // Get current time.
+            var now = ( new Date() ).getTime();
+            // If interval hasn't elapsed, ignore it.
+            if ( now - lastUpdate < interval && eval(bytes) < eval(max) ) {
+                return;
+            }
+
+            // Update this time.
+            lastUpdate = now;
+
+            // Update download rate.
+            var elapsed = now - startTime;
+            var rate; // bytes/sec
+            if ( elapsed ) {
+                rate = ( bytes * 1000 ) / elapsed;
+            } else {
+                rate = 0;
+            }
+
+            // Calculate percentage.
+            var percent = Math.round( (bytes*100)/max );
+
+            // Advance progress meter.
+            dialog.progress.setAttribute( "value", percent );
+            
+            // Update status (nnn of mmm)
+            var status = "( ";
+            status += Math.round( bytes/1000 );
+            status += "K of ";
+            status += Math.round( max/1000 );
+            status += "K bytes ";
+            if ( rate ) {
+                status += "at ";
+                status += Math.round( (rate*10)/1000 ) / 10;
+                status += "K bytes/sec )";
+            } else {
+                status += ")";
+            }
+            status += 
+            dialog.status.childNodes[0].nodeValue = status;
+
+            // Update percentage label on progress meter.
+            dialog.progressPercent.childNodes[0].nodeValue = percent + "%";
+            
+            // Update time remaining.
+            if ( rate ) {
+                var rem = Math.round( ( max - bytes ) / rate ); // In seconds.
+                status = "";
+                if ( rem >= 3600 ) {
+                    status += Math.round( rem/3600 ) + " hours, ";
+                    rem = rem % 3600;
+                }
+                status += Math.round( rem/60 ) + " minutes and ";
+                rem = rem % 60;
+                status += rem + " seconds";
+                dialog.timeLeft.childNodes[0].nodeValue = status;
+            }
+        }
+    </html:script>
+
+    <html:table style="width:100%;">
+
+        <html:tr>
+            <html:td align="right">
+                Location:
+            </html:td>
+            <html:td align="left">
+                <html:input id="dialog.location" readonly style="background-color:lightgray;width:300px;"/>
+            </html:td>
+        </html:tr>
+    
+        <html:tr>
+            <html:td align="right">
+                Saving:
+            </html:td>
+            <html:td align="left">
+                <html:input id="dialog.fileName" readonly value="" style="background-color:lightgray;width:300px;"/>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="right">
+                Status:
+            </html:td>
+            <html:td align="left">
+                <html:span id="dialog.status">
+                    ( nn.nK of mm.mK bytes )
+                </html:span>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="right">
+                Time Left:
+            </html:td>
+            <html:td align="left">
+                <html:span id="dialog.timeLeft">
+                    ?
+                </html:span>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="center" height="40px" colspan="2">
+                <progressmeter id="dialog.progress" mode="normal" value="0"
+                               style="width:300px;height:16px;"/>
+                <html:span id="dialog.progressPercent" style="border-left:5px solid lightgray;">
+                    0%
+                </html:span>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="center" colspan="2">
+                <html:button onclick="cancel()">Cancel</html:button>
+            </html:td>
+        </html:tr>
+
+    </html:table>
+
+</xul:window>

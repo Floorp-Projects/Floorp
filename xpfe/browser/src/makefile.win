@@ -72,11 +72,14 @@ install:: $(DLL)
 	$(MAKE_INSTALL) xul.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) navigator.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) navigator.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) saveToDisk.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) downloadProgress.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) downloadProgress.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) navigator-mozillazine0.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) navigator-test1.xul $(DIST)\bin\res\samples
-        $(MAKE_INSTALL) navigator-goofy.css $(DIST)\bin\res\samples
-        $(MAKE_INSTALL) navigator-shiny.css $(DIST)\bin\res\samples
-        $(MAKE_INSTALL) raindrops_light.gif $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) navigator-goofy.css $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) navigator-shiny.css $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) raindrops_light.gif $(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
@@ -86,9 +89,14 @@ clobber::
 	rm -f $(DIST)\res\samples\BrowserInitPage.html
 	rm -f $(DIST)\res\samples\sidebar.html
 	rm -f $(DIST)\res\samples\xul.css
-        rm -f $(DIST)\res\samples\navigator.css
-        rm -f $(DIST)\res\samples\navigator-mozillazine0.css
-        rm -f $(DIST)\res\samples\navigator-test1.xul
-        rm -f $(DIST)\res\samples\navigator-goofy.css
-        rm -f $(DIST)\res\samples\navigator-shiny.css
-        rm -f $(DIST)\res\samples\raindrops_light.gif
+	rm -f $(DIST)\res\samples\navigator.xul
+	rm -f $(DIST)\res\samples\saveToDisk.xul
+	rm -f $(DIST)\res\samples\downloadProgress.xul
+	rm -f $(DIST)\res\samples\downloadProgress.css
+	rm -f $(DIST)\res\samples\navigator.css
+	rm -f $(DIST)\res\samples\navigator-mozillazine0.css
+	rm -f $(DIST)\res\samples\navigator-test1.xul
+	rm -f $(DIST)\res\samples\navigator-goofy.css
+	rm -f $(DIST)\res\samples\navigator-shiny.css
+	rm -f $(DIST)\res\samples\raindrops_light.gif
+
