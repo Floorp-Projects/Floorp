@@ -286,7 +286,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
             InsertStyleNode(newTextNode, nsIEditProperty::b, aSelection);
           }
           else {
-            printf("not yet implemented, make unbold in a bold context\n");
+            printf("not yet implemented, make not bold in a bold context\n");
           }
         }
         if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
@@ -296,7 +296,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
           }
           else
           {
-            printf("not yet implemented, make unitalic in a italic context\n");
+            printf("not yet implemented, make not italic in a italic context\n");
           }
         }
         if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
@@ -334,21 +334,20 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
       { // now we've got the body tag.  insert the style tag
         if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
         {
-          if (PR_TRUE==aTypeInState.GetBold())
-          { // make the next char bold
-            nsAutoString tag;
-            nsIEditProperty::b->ToString(tag);
-            nsCOMPtr<nsIDOMNode>newStyleNode;
-            nsCOMPtr<nsIDOMNode>newTextNode;
-            result = mEditor->CreateNode(tag, bodyNode, 0, getter_AddRefs(newStyleNode));
-            if (NS_SUCCEEDED(result)) 
-            {
-              result = mEditor->CreateNode(nsIEditor::GetTextNodeTag(), newStyleNode, 0, getter_AddRefs(newTextNode));
-              if (NS_SUCCEEDED(result)) 
-              {
-                aSelection->Collapse(newTextNode, 0);
-              }
-            }
+          if (PR_TRUE==aTypeInState.GetBold()) { 
+            InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::b, aSelection);
+          }
+        }
+        if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
+        {
+          if (PR_TRUE==aTypeInState.GetItalic()) { 
+            InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::i, aSelection);
+          }
+        }
+        if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
+        {
+          if (PR_TRUE==aTypeInState.GetUnderline()) { 
+            InsertStyleAndNewTextNode(bodyNode, nsIEditProperty::u, aSelection);
           }
         }
       }
@@ -382,6 +381,50 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode *aNode, nsIAtom *aTag, nsIDOMSelecti
         if (aSelection) {
           aSelection->Collapse(aNode, 0);
         }
+      }
+    }
+  }
+  return result;
+}
+
+
+NS_IMETHODIMP
+nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTag, nsIDOMSelection *aSelection)
+{
+  NS_ASSERTION(aParentNode && aTag, "bad args");
+  if (!aParentNode || !aTag) { return NS_ERROR_NULL_POINTER; }
+
+  nsresult result;
+  // if the selection already points to a text node, just call InsertStyleNode()
+  if (aSelection)
+  {
+    nsCOMPtr<nsIDOMNode>anchor;
+    PRInt32 offset;
+    nsresult result = aSelection->GetAnchorNodeAndOffset(getter_AddRefs(anchor), &offset);
+    if ((NS_SUCCEEDED(result)) && anchor)
+    {
+      nsCOMPtr<nsIDOMCharacterData>anchorAsText;
+      anchorAsText = do_QueryInterface(anchor);
+      if (anchorAsText)
+      {
+        result = InsertStyleNode(anchor, aTag, aSelection);
+        return result;
+      }
+    }
+  }
+  // if we get here, there is no selected text node so we create one.
+  nsAutoString tag;
+  aTag->ToString(tag);
+  nsCOMPtr<nsIDOMNode>newStyleNode;
+  nsCOMPtr<nsIDOMNode>newTextNode;
+  result = mEditor->CreateNode(tag, aParentNode, 0, getter_AddRefs(newStyleNode));
+  if (NS_SUCCEEDED(result)) 
+  {
+    result = mEditor->CreateNode(nsIEditor::GetTextNodeTag(), newStyleNode, 0, getter_AddRefs(newTextNode));
+    if (NS_SUCCEEDED(result)) 
+    {
+      if (aSelection) {
+        aSelection->Collapse(newTextNode, 0);
       }
     }
   }
@@ -529,6 +572,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
                 nsCOMPtr<nsIDOMNode> parentNode;
                 selectedNode->GetParentNode(getter_AddRefs(parentNode));
                 result = mEditor->JoinNodes(siblingNode, selectedNode, parentNode);
+                // selectedNode will remain after the join, siblingNode is removed
               }
             }
             selectedNode->GetNextSibling(getter_AddRefs(siblingNode));
@@ -543,8 +587,9 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
                 nsCOMPtr<nsIDOMNode> parentNode;
                 selectedNode->GetParentNode(getter_AddRefs(parentNode));
                 result = mEditor->JoinNodes(selectedNode, siblingNode, parentNode);
+                // selectedNode will remain after the join, siblingNode is removed
                 // set selection
-                aSelection->Collapse(selectedNode, selectedNodeLength);
+                aSelection->Collapse(siblingNode, selectedNodeLength);
               }
             }
           }

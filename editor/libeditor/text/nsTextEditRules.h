@@ -89,7 +89,19 @@ protected:
     * aSelection is optional.  If provided, aSelection is set to (aNode, 0)
     * if aNode was successfully placed in a new style node
     */
-  NS_IMETHOD InsertStyleNode(nsIDOMNode *aNode, nsIAtom *aTag, nsIDOMSelection *aSelection);
+  NS_IMETHOD InsertStyleNode(nsIDOMNode *aNode, 
+                             nsIAtom    *aTag, 
+                             nsIDOMSelection *aSelection);
+
+  /** create a new style node of type aTag in aParentNode, and put a new text node 
+    * in the new style node.  
+    * If aSelection is provided and points to a text node, just call InsertStyleNode instead.
+    * aSelection is optional.  If provided, aSelection is set to (newTextNode, 0)
+    * if newTextNode was successfully created.
+    */
+  NS_IMETHOD InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, 
+                                       nsIAtom    *aTag, 
+                                       nsIDOMSelection *aSelection);
   
   // data
   nsTextEditor *mEditor;  // note that we do not refcount the editor

@@ -19,6 +19,10 @@
 #include "nsTransactionItem.h"
 #include "nsCOMPtr.h"
 
+#ifdef NS_DEBUG
+//#define NOISY
+#endif
+
 nsTransactionItem::nsTransactionItem(nsITransaction *aTransaction)
     : mTransaction(aTransaction), mUndoStack(0), mRedoStack(0)
 {
@@ -112,6 +116,12 @@ nsTransactionItem::Undo()
   if (!mTransaction)
     return NS_OK;
 
+#ifdef NOISY
+  nsAutoString redoString;
+  mTransaction->GetRedoString(&redoString);
+  printf("undoing %s\n", redoString);
+#endif
+
   result = mTransaction->Undo();
 
   if (NS_FAILED(result)) {
@@ -149,6 +159,12 @@ nsTransactionItem::UndoChildren()
         return result;
       }
 
+#ifdef NOISY
+  nsAutoString redoString;
+  item->GetRedoString(&redoString);
+  printf("undoing %s\n", redoString);
+#endif
+
       result = item->Undo();
 
       if (NS_FAILED(result)) {
@@ -181,6 +197,13 @@ nsTransactionItem::Redo()
   nsresult result;
 
   if (mTransaction) {
+
+#ifdef NOISY
+  nsAutoString undoString;
+  mTransaction->GetUndoString(&undoString);
+  printf("redoing %s\n", undoString);
+#endif
+
     result = mTransaction->Redo();
 
     if (NS_FAILED(result))
@@ -220,6 +243,12 @@ nsTransactionItem::RedoChildren()
     if (NS_FAILED(result)) {
       return result;
     }
+
+#ifdef NOISY
+  nsAutoString undoString;
+  item->GetUndoString(&undoString);
+  printf("redoing %s\n", undoString);
+#endif
 
     result = item->Redo();
 
