@@ -55,6 +55,11 @@ public class Main {
 
     public Main(String title)
     {
+        if (!ContextFactory.hasExplicitGlobal()) {
+            ContextFactory.initGlobal(
+                org.mozilla.javascript.tools.shell.Main.shellContextFactory);
+        }
+
         dim = new Dim();
         debugGui = new DebugGui(dim, title);
         dim.callback = debugGui;

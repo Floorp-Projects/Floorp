@@ -53,13 +53,23 @@ import org.mozilla.javascript.serialize.*;
  *
  * @author Norris Boyd
  */
-public class Global extends ImporterTopLevel {
+public class Global extends ImporterTopLevel
+{
+
+    public Global()
+    {
+    }
 
     public Global(Context cx)
     {
+        init(cx);
+    }
+
+    public void init(Context cx)
+    {
         // Define some global functions particular to the shell. Note
         // that these functions are not part of ECMA.
-        super(cx, Main.sealedStdLib);
+        initStandardObjects(cx, Main.sealedStdLib);
         String[] names = { "print", "quit", "version", "load", "help",
                            "loadClass", "defineClass", "spawn", "sync",
                            "serialize", "deserialize", "runCommand",
@@ -76,6 +86,7 @@ public class Global extends ImporterTopLevel {
 
         history = (NativeArray) cx.newArray(this, 0);
         defineProperty("history", history, ScriptableObject.DONTENUM);
+        initialized = true;
     }
 
     /**
@@ -910,6 +921,7 @@ public class Global extends ImporterTopLevel {
     public InputStream inStream;
     public PrintStream outStream;
     public PrintStream errStream;
+    boolean initialized;
 }
 
 

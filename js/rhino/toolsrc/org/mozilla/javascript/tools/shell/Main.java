@@ -55,7 +55,10 @@ import org.mozilla.javascript.tools.ToolErrorReporter;
  *
  * @author Norris Boyd
  */
-public class Main {
+public class Main
+{
+    public static final ShellContextFactory
+        shellContextFactory = new ShellContextFactory();
 
     /**
      * Main entry point.
@@ -128,13 +131,7 @@ public class Main {
 
     public static Global getGlobal() {
         if (global == null) {
-            withContext(new ContextAction() {
-                public Object run(Context cx)
-                {
-                    global = new Global(cx);
-                    return global;
-                }
-            });
+            global = new Global();
         }
         return global;
     }
@@ -152,7 +149,7 @@ public class Main {
                 }
             };
         }
-        return Context.call(action);
+        return shellContextFactory.call(action);
     }
 
     /**
@@ -183,7 +180,8 @@ public class Main {
                 double d = cx.toNumber(args[i]);
                 if (d != d)
                     usage(arg);
-                cx.setOptimizationLevel((int)d);
+                int opt = (int)d;
+                cx.setOptimizationLevel(opt);
                 continue;
             }
             if (arg.equals("-e")) {
@@ -381,6 +379,9 @@ public class Main {
                                         String sourceName,
                                         int lineno, Object securityDomain)
     {
+        if (!global.initialized) {
+            global.init(cx);
+        }
         Object result = cx.getUndefinedValue();
         try {
             if (in != null) {
@@ -424,6 +425,9 @@ public class Main {
     }
 
     public static ScriptableObject getScope() {
+        if (!global.initialized) {
+            global.init(Context.getCurrentContext());
+        }
         return global;
     }
 
