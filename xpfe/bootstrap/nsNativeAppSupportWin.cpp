@@ -863,6 +863,7 @@ struct MessageWindow {
             nsCOMPtr<nsIDOMWindowInternal> win;
             GetMostRecentWindow( 0, getter_AddRefs( win ) );
             return win ? (long)hwndForDOMWindow( win ) : 0;
+#ifndef MOZ_PHOENIX
  } else if ( msg == WM_USER ) {
      if ( lp == WM_RBUTTONUP ) {
          // Show menu with Exit disabled/enabled appropriately.
@@ -956,6 +957,7 @@ struct MessageWindow {
          (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla" );
      }
      return TRUE;
+#endif
   } else if ( msg == WM_QUERYENDSESSION ) {
     // Invoke "-killAll" cmd line handler.  That will close all open windows,
     // and display dialog asking whether to save/don't save/cancel.  If the
@@ -1082,7 +1084,7 @@ nsNativeAppSupportWin::FindTopic( HSZ topic ) {
 // Utility function that determines if we're handling http Internet shortcuts.
 static PRBool handlingHTTP() {
     PRBool result = PR_FALSE; // Answer no if an error occurs.
-    // See if we're the "default browser" (i.e., handling http Internet shortcuts)        
+    // See if we're the "default browser" (i.e., handling http Internet shortcuts)
     nsCOMPtr<nsIWindowsHooks> winhooks( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID ) );
     if ( winhooks ) {
         nsCOMPtr<nsIWindowsHooksSettings> settings;
@@ -1102,12 +1104,15 @@ static PRBool handlingHTTP() {
 
                 // First, turn off all the other protocols.
                 settings->SetIsHandlingHTTPS( PR_FALSE );
+#ifndef MOZ_PHOENIX
                 settings->SetIsHandlingFTP( PR_FALSE );
                 settings->SetIsHandlingCHROME( PR_FALSE );
                 settings->SetIsHandlingGOPHER( PR_FALSE );
-
+#endif
                 // Next, all the file types.
                 settings->SetIsHandlingHTML( PR_FALSE );
+                settings->SetIsHandlingXHTML( PR_FALSE );
+#ifndef MOZ_PHOENIX
                 settings->SetIsHandlingJPEG( PR_FALSE );
                 settings->SetIsHandlingGIF( PR_FALSE );
                 settings->SetIsHandlingPNG( PR_FALSE );
@@ -1115,9 +1120,8 @@ static PRBool handlingHTTP() {
                 settings->SetIsHandlingBMP( PR_FALSE );
                 settings->SetIsHandlingICO( PR_FALSE );
                 settings->SetIsHandlingXML( PR_FALSE );
-                settings->SetIsHandlingXHTML( PR_FALSE );
                 settings->SetIsHandlingXUL( PR_FALSE );
-
+#endif
                 // Now test the HTTP setting in the registry.
                 settings->GetRegistryMatches( &result );
             }
@@ -1251,7 +1255,7 @@ nsNativeAppSupportWin::Quit() {
     //  created by the same thread.
     MessageWindow mw;
     mw.Destroy();
-    
+
     if ( mInstance ) {
         // Undo registry setting if we need to.
         if ( mSupportingDDEExec && handlingHTTP() ) {
@@ -2636,7 +2640,7 @@ nsNativeAppSupportWin::OnLastWindowClosing() {
         // Turn off MessageWindow so the other process can't see us.
         MessageWindow mw;
         mw.Destroy();
-    
+
         // Launch another instance.
         char buffer[ _MAX_PATH ];
         // Same application as this one.
@@ -2646,7 +2650,7 @@ nsNativeAppSupportWin::OnLastWindowClosing() {
         nsCAutoString cmdLine( buffer );
         // The new process must run in turbo mode (no splash screen, no window, etc.).
         cmdLine.Append( " -turbo" );
-    
+
         // Now do the Win32 stuff...
         STARTUPINFO startupInfo;
         ::GetStartupInfo( &startupInfo );
@@ -2661,7 +2665,7 @@ nsNativeAppSupportWin::OnLastWindowClosing() {
                               0,
                               &startupInfo,
                               &processInfo );
-    
+
         // Turn off turbo mode and quit the application.
         SetIsServerMode( PR_FALSE );
         appShell->Quit(nsIAppShellService::eAttemptQuit);
