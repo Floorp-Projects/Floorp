@@ -63,6 +63,12 @@ public:
   NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel);
   NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult);
 
+  NS_IMETHOD WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel);
+  NS_IMETHOD DidUndo(nsIDOMSelection *aSelection, nsresult aResult);
+
+  NS_IMETHOD WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel);
+  NS_IMETHOD DidRedo(nsIDOMSelection *aSelection, nsresult aResult);
+
 protected:
 
   nsTextEditor *mEditor;  // note that we do not refcount the editor
