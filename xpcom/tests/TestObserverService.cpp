@@ -74,10 +74,6 @@ int main(int argc, char *argv[])
     nsString topicB( "topic-B" );
     nsresult rv;
 
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                         "components");
-    if (NS_FAILED(rv)) return rv;
-
     nsresult res = nsComponentManager::CreateInstance(NS_OBSERVERSERVICE_PROGID,
                                                 NULL,
                                                  nsIObserverService::GetIID(),

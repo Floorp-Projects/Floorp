@@ -260,11 +260,6 @@ main()
     rv = NS_InitXPCOM(&servMgr);
     if (NS_FAILED(rv)) return rv;
 
-    // XXX why do I have to do this?!
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                          "components");
-    if (NS_FAILED(rv)) return rv;
-
     rv = TestMallocBuffers(1, 1);
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestMallocBuffers failed");
 

@@ -34,9 +34,8 @@ int main(int argc, char **argv) {
   rv = NS_InitXPCOM(&servMgr);
   if (NS_FAILED(rv)) return rv;
 
-  // XXX why do I have to do this?!
   rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                        "components");
+                                        NULL /* default */);
   if (NS_FAILED(rv)) return rv;
 
   RegisterTestFactories();
