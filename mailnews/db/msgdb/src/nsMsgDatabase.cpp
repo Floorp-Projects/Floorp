@@ -615,6 +615,7 @@ NS_IMETHODIMP nsMsgDatabase::CloseMDB(PRBool commit)
 NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 {
 	nsresult	err = NS_OK;
+    nsCOMPtr<nsIMsgDatabase> aDb(do_QueryInterface(this, &err));
 
 	NotifyAnnouncerGoingAway();
 	// OK, remove from cache first and close the store.
