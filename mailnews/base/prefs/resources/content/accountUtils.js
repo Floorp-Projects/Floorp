@@ -26,14 +26,18 @@ var messengerMigratorProgID   = "component://netscape/messenger/migrator";
 
 // returns the first account with an invalid server or identity
 
-function getFirstInvalidAccount(accounts)
+function getInvalidAccounts(accounts)
 {
     var numAccounts = accounts.Count();
+    var invalidAccounts = new Array;
     for (var i=0; i<numAccounts; i++) {
         var account = accounts.QueryElementAt(i, Components.interfaces.nsIMsgAccount);
         try {
-            if (!account.incomingServer.valid)
-                return account;
+            if (!account.incomingServer.valid) {
+                invalidAccounts[invalidAccounts.length] = account;
+                // skip to the next account
+                continue;
+            }
         } catch (ex) {
             // this account is busted, just keep going
             continue;
@@ -44,13 +48,15 @@ function getFirstInvalidAccount(accounts)
 
         for (var j=0; j<numIdentities; j++) {
             var identity = identities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
-            if (!identity.valid)
-                return account
+            if (!identity.valid) {
+                invalidAccounts[invalidAccounts.length] = account;
+                continue;
+            }
         }
     }
 
     // none found
-    return null;
+    return invalidAccounts;
 }
 
 function verifyAccounts() {
@@ -64,10 +70,16 @@ function verifyAccounts() {
 
         // as long as we have some accounts, we're fine.
         var accountCount = accounts.Count();
-        if (accountCount > 0) {
-            prefillAccount = getFirstInvalidAccount(accounts);
+        var invalidAccounts = getInvalidAccounts(accounts);
+        if (invalidAccounts.length > 0) {
+            prefillAccount = invalidAccounts[0];
             dump("prefillAccount = " + prefillAccount + "\n");
         } else {
+        }
+
+        // if there are no accounts, or all accounts are "invalid"
+        // then kick off the account migration
+        if (accountCount == invalidAccounts.length) {
             try {
                 messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);  
                 dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");

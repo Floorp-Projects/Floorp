@@ -491,14 +491,20 @@ function checkForInvalidAccounts()
 {
     am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
 
-    var account = getFirstInvalidAccount(am.accounts);
+    var invalidAccounts = getInvalidAccounts(am.accounts);
+    var firstInvalidAccount; 
+  
+    if (invalidAccounts.length > 0)
+        firstInvalidAccount = invalidAccounts[0];
+    else
+        return null;
 
-    if (account) {
+    if (firstInvalidAccount) {
         var pageData = GetPageData();
-        dump("We have an invalid account, " + account + ", let's use that!\n");
-        currentAccount = account;
+        dump("We have an invalid account, " + firstInvalidAccount + ", let's use that!\n");
+        currentAccount = firstInvalidAccount;
 
-        var accountData = AccountToAccountData(account);
+        var accountData = AccountToAccountData(firstInvalidAccount);
         
         AccountDataToPageData(accountData, pageData);
         dump(parent.wizardManager.WSM);
