@@ -189,7 +189,7 @@ printIncomingServer(nsIMsgIncomingServer *server)
   if (NS_SUCCEEDED(rv) && value) printf("\tUserName: %s\n", value);
 
   value=nsnull;
-  rv = server->GetPassword(&value);
+  rv = server->GetPassword(PR_FALSE, &value);
   if (NS_SUCCEEDED(rv) && value) printf("\tPassword: %s\n", value);  
 
   value=nsnull;
