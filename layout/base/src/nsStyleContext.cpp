@@ -172,7 +172,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
           if (isBase) {
             nsSize  size;
             frame->GetSize(size);
-            baseWidth = size.width;
+            baseWidth = size.width; // not really width, need to subtract out padding...
             break;
           }
           frame->GetGeometricParent(frame);
@@ -539,6 +539,8 @@ public:
   virtual void InheritFrom(const StyleContextImpl& aParent);
   virtual void RecalcAutomaticData(nsIPresContext* aPresContext);
 
+  virtual void  List(FILE* out, PRInt32 aIndent);
+
   nsIStyleContext*  mParent;
   PRUint32          mHashValid: 1;
   PRUint32          mHashValue: 31;
@@ -553,10 +555,15 @@ public:
   StyleTextImpl     mText;
   StyleDisplayImpl  mDisplay;
   StyleTableImpl*   mTable;
+
+#ifdef DEBUG_REFS
+  PRInt32 mInstance;
+#endif
 };
 
 #ifdef DEBUG_REFS
 static PRInt32 gInstanceCount;
+static PRInt32 gInstrument = 6;
 #endif
 
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
@@ -589,8 +596,8 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     }
   }
 #ifdef DEBUG_REFS
-  ++gInstanceCount;
-  fprintf(stdout, "%d + StyleContext\n", gInstanceCount);
+  mInstance = ++gInstanceCount;
+  fprintf(stdout, "%d of %d + StyleContext\n", mInstance, gInstanceCount);
 #endif
 }
 
@@ -604,12 +611,40 @@ StyleContextImpl::~StyleContextImpl()
   }
 
 #ifdef DEBUG_REFS
+  fprintf(stdout, "%d of %d - StyleContext\n", mInstance, gInstanceCount);
   --gInstanceCount;
-  fprintf(stdout, "%d - StyleContext\n", gInstanceCount);
 #endif
 }
 
+
+
+#ifdef DEBUG_REFS
+NS_IMPL_QUERY_INTERFACE(StyleContextImpl, kIStyleContextIID)
+
+nsrefcnt StyleContextImpl::AddRef(void)                                
+{                                    
+  if ((gInstrument == -1) || (mInstance == gInstrument)) {
+    fprintf(stdout, "%d AddRef StyleContext %d\n", mRefCnt + 1, mInstance);
+  }
+  return ++mRefCnt;                                          
+}
+
+nsrefcnt StyleContextImpl::Release(void)                         
+{                                                      
+  if ((gInstrument == -1) || (mInstance == gInstrument)) {
+    fprintf(stdout, "%d Release StyleContext %d\n", mRefCnt - 1, mInstance);
+  }
+  if (--mRefCnt == 0) {                                
+    delete this;                                       
+    return 0;                                          
+  }                                                    
+  return mRefCnt;                                      
+}
+#else
 NS_IMPL_ISUPPORTS(StyleContextImpl, kIStyleContextIID)
+#endif
+
+
 
 nsIStyleContext* StyleContextImpl::GetParent(void) const
 {
@@ -718,11 +753,34 @@ void StyleContextImpl::RecalcAutomaticData(nsIPresContext* aPresContext)
   mSpacing.RecalcData(aPresContext);
 }
 
+void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
+{
+  // Indent
+  PRInt32 index;
+  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  PRInt32 count = mRules->Count();
+  if (0 < count) {
+    fputs("{\n", out);
+
+    for (index = 0; index < count; index++) {
+      nsIStyleRule* rule = (nsIStyleRule*)mRules->ElementAt(index);
+      rule->List(out, aIndent + 1);
+      NS_RELEASE(rule);
+    }
+
+    for (index = aIndent; --index >= 0; ) fputs("  ", out);
+    fputs("}\n", out);
+  }
+  else {
+    fputs("{}\n", out);
+  }
+
+}
+
 NS_LAYOUT nsresult
 NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                    nsISupportsArray* aRules,
                    nsIPresContext* aPresContext,
-                   nsIContent* aContent,
                    nsIFrame* aParentFrame)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
