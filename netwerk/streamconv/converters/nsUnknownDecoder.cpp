@@ -351,6 +351,9 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
                     offset = str.Find("<A HREF", PR_TRUE);
                     if (offset < 0) {
                       offset = str.Find("<APPLET", PR_TRUE);
+                      if (offset < 0) {
+                        offset = str.Find("<META", PR_TRUE);
+                      }
                     }
                   }
                 }
