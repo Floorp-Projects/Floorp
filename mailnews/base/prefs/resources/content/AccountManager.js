@@ -581,7 +581,7 @@ function getPageFormElements(pageId) {
  try {
 	var pageFrame = top.frames[pageId];
 	var pageDoc = top.frames[pageId].document;
-	var pageElements = pageDoc.getElementsByTagName("FORM")[0].elements;
+	var pageElements = pageDoc.controls;
 	return pageElements;
  }
  catch (ex) {
