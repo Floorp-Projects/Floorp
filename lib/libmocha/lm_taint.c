@@ -508,7 +508,6 @@ lm_CheckPermissions(JSContext *cx, JSObject *obj, JSTarget target)
     JSPrincipals *principals;
     JSBool result;
 
-    
     /* May be in a layer loaded from a different origin.*/
     subjectOrigin = lm_GetSubjectOriginURL(cx);
 
@@ -760,6 +759,7 @@ typedef struct JSPrincipalsData {
     int serial;
 #endif
     enum Signedness signedness;
+    void *pNSISecurityContext;
 } JSPrincipalsData;
 
 PR_STATIC_CALLBACK(void)
@@ -1657,17 +1657,17 @@ LM_SetUntransformedSource(JSPrincipals *principals, char *original,
 }
 
 JSPrincipals * PR_CALLBACK
-LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, void *principalsArray)
+LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, void *principalsArray, void *pNSISecurityContext)
 {
     setupJSCapsCallbacks();
     if (principalsArray == NULL)
         return NULL;
 
-    return newJSPrincipalsFromArray(cx, principalsArray);
+    return newJSPrincipalsFromArray(cx, principalsArray, pNSISecurityContext);
 }
 
 static JSPrincipals *
-newJSPrincipalsFromArray(JSContext *cx, void *principalsArray)
+newJSPrincipalsFromArray(JSContext *cx, void *principalsArray, void *pNSISecurityContext)
 {
     JSPrincipals *result;
     struct nsPrincipal *principal;
@@ -1700,6 +1700,7 @@ newJSPrincipalsFromArray(JSContext *cx, void *principalsArray)
 
     data = (JSPrincipalsData *) result;
     data->principalsArrayRef = principalsArray;
+    data->pNSISecurityContext = pNSISecurityContext;
     data->signedness = count == 1 && codebase
                        ? HAS_UNSIGNED_SCRIPTS
                        : HAS_SIGNED_SCRIPTS;

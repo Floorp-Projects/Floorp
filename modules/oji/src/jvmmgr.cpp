@@ -35,6 +35,7 @@
 #include "jsjava.h"
 #include "libmocha.h"
 #include "libevent.h"
+#include "nsCCapsManager.h"
 
 #include "xpgetstr.h"
 extern "C" int XP_PROGRESS_STARTING_JAVA;
@@ -368,19 +369,15 @@ get_java_vm_impl(char **errp)
 #endif
 
 static JSPrincipals* PR_CALLBACK
-get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext)
+get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext)
 {
-    nsIPrincipal  **ppNSIPrincipalArray = NULL;
+    nsIPrincipal  **ppNSIPrincipalArray = (nsIPrincipal  **)ppNSIPrincipalArrayIN;
     PRInt32        length = 0;
     nsresult       err    = NS_OK;
-    void          *pNSPrincipalArray = NULL;
-#if 0 // TODO: =-= sudu: fix it.
     nsJVMMgr* pJVMMgr = JVM_GetJVMMgr();
+    void          *pNSPrincipalArray = NULL;
     if (pJVMMgr != NULL) {
-      nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
-      if (pJVMPI != NULL) {
-         err = pJVMPI->GetPrincipalArray(pJNIEnv, 0, &ppNSIPrincipalArray, &length);   
-         if ((err == NS_OK) && (ppNSIPrincipalArray != NULL)) {
+         if (ppNSIPrincipalArray != NULL) {
              nsIPluginManager *pNSIPluginManager = NULL;
              NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
              err = pJVMMgr->QueryInterface(kIPluginManagerIID,
@@ -414,16 +411,13 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext)
                pNSIPluginManager->Release();
              }
          }
-         //pJVMPI->Release();
-      }
       pJVMMgr->Release();
     }
-#endif
     if (  (pNSPrincipalArray != NULL)
         &&(length != 0)
        )
     {
-        return LM_GetJSPrincipalsFromJavaCaller(pJSContext, pNSPrincipalArray);
+        return LM_GetJSPrincipalsFromJavaCaller(pJSContext, pNSPrincipalArray, pNSISecurityContext);
     }
 
     return NULL;
