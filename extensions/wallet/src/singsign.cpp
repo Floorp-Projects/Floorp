@@ -1945,7 +1945,7 @@ si_RememberSignonData
 {
   int passwordCount = 0;
   int pswd[3];
-  si_SignonDataStruct * data;
+  si_SignonDataStruct * data = nsnull;  // initialization only to avoid warning message
   si_SignonDataStruct * data0;
   si_SignonDataStruct * data1;
   si_SignonDataStruct * data2;
@@ -2308,6 +2308,7 @@ si_DoDialogIfPrefIsOff(
       break;
     default:
       NS_ASSERTION(PR_FALSE, "Undefined DialogType in si_DoDialogIfPrefIsOff");
+      res = NS_ERROR_FAILURE;
 #endif
   }
 
