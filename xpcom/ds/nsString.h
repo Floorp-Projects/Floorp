@@ -55,6 +55,7 @@ class NS_BASE nsString {
   virtual   void          EnsureCapacityFor(PRInt32 aNewLength);
 
   virtual   void          SizeOf(nsISizeOfHandler* aHandler) const;
+            PRBool        IsOrdered(void) const;
 
   ///accessor methods
   //@{
@@ -136,6 +137,7 @@ class NS_BASE nsString {
 
   ///searching methods...
   //@{
+            PRInt32       BinarySearch(PRUnichar aChar) const;
             PRInt32       Find(const char* anISOLatin1) const;
             PRInt32       Find(const PRUnichar* aString) const;
             PRInt32       Find(PRUnichar aChar,PRInt32 offset=0) const;
