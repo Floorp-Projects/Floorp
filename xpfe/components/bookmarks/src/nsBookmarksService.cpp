@@ -74,7 +74,6 @@
 #include "nsHTTPEnums.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-#include "nsIBuffer.h"
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
 #include "nsIStreamListener.h"
