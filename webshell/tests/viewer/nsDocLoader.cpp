@@ -15,8 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "nsDocLoader.h"
+#include "nsIBrowserWindow.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsVoidArray.h"
@@ -25,7 +25,7 @@
 #include "nsIWebShell.h"
 #include "resources.h"
 #include "nsString.h"
-#include "nsViewer.h"
+#include "nsViewerApp.h"
 
 /* 
   This class loads creates and loads URLs until finished.
@@ -34,8 +34,8 @@
 
 */
 
-nsDocLoader::nsDocLoader(nsIWebShell* aShell,
-                         nsViewer* aViewer,
+nsDocLoader::nsDocLoader(nsIBrowserWindow* aBrowser,
+                         nsViewerApp* aViewer,
                          PRInt32 aSeconds,
                          PRBool aPostExit)
 {
@@ -45,7 +45,7 @@ nsDocLoader::nsDocLoader(nsIWebShell* aShell,
   mDelay = aSeconds;
   mPostExit = aPostExit;
   mDocNum = 0;
-  mWebShell = aShell;
+  mBrowser = aBrowser;
   mViewer = aViewer;
   mTimers = new nsVoidArray();
   mURLList = new nsVoidArray();
@@ -71,7 +71,7 @@ nsDocLoader::~nsDocLoader()
     mTimers = nsnull;
   }
 
-  NS_RELEASE(mWebShell);
+  NS_RELEASE(mBrowser);
 }
 
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
@@ -86,7 +86,7 @@ void nsDocLoader::SetDelay(PRInt32 aSeconds)
 
     
 // Add a URL to the doc loader
-void nsDocLoader::AddURL(char* aURL)
+void nsDocLoader::AddURL(const char* aURL)
 {
   if (aURL)
   {
@@ -104,19 +104,16 @@ void nsDocLoader::AddURL(char* aURL)
 }
 
 // Add a URL to the doc loader
-void nsDocLoader::AddURL(nsString* aURL)
+void nsDocLoader::AddURL(const nsString& aURL)
 {
-  if (aURL)
+  if (mStart == PR_FALSE)
   {
-    if (mStart == PR_FALSE)
-    {
-      nsString* url;
+    nsString* url;
 
-      if (mURLList == nsnull)
-        mURLList = new nsVoidArray();
-      url = new nsString(*aURL);
-      mURLList->AppendElement((void*)url);
-    }
+    if (mURLList == nsnull)
+      mURLList = new nsVoidArray();
+    url = new nsString(aURL);
+    mURLList->AppendElement((void*)url);
   }
 }
 
@@ -155,9 +152,14 @@ nsDocLoader::LoadDoc(PRInt32 aDocNum, PRBool aObserveIt)
 {
   nsString* url = (nsString*)mURLList->ElementAt(aDocNum);
   if (url) {
-    mWebShell->LoadURL(*url,                           // URL string
-                       aObserveIt ? this : nsnull,     // Observer
-                       nsnull);                        // Post Data
+    nsIWebShell* shell = nsnull;
+    mBrowser->GetWebShell(shell);
+    if (nsnull != shell) {
+      shell->LoadURL(*url,                           // URL string
+                     aObserveIt ? this : nsnull,     // Observer
+                     nsnull);                        // Post Data
+      NS_RELEASE(shell);
+    }
   }
 }
 
@@ -254,7 +256,7 @@ void nsDocLoader::CallTest()
     if (mPostExit)
     {
       printf("QUITTING APPLICATION \n");
-      mViewer->ExitViewer();
+      mViewer->Exit();
     }
   }
 }

@@ -29,7 +29,7 @@ static nsIDOMNode* kCurrentNode;
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 
-nsresult nsInitEditorMode(nsIDOMDocument *aDOMDocument)
+nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument)
 {
   NS_IF_RELEASE(kCurrentNode);
   

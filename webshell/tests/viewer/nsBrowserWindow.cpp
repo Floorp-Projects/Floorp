@@ -35,7 +35,6 @@
 #include "nsViewerApp.h"
 
 #include "resources.h"
-#define SAMPLES_BASE_URL "resource:/res/samples"
 
 // XXX greasy constants
 #define THROBBER_WIDTH 32
@@ -527,6 +526,13 @@ nsBrowserWindow::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 NS_IMETHODIMP
+nsBrowserWindow::GetBounds(nsRect& aBounds)
+{
+  mWindow->GetBounds(aBounds);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBrowserWindow::Show()
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
@@ -561,6 +567,14 @@ NS_IMETHODIMP
 nsBrowserWindow::LoadURL(const nsString& aURL)
 {
   return mWebShell->LoadURL(aURL, this, nsnull);
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::GetWebShell(nsIWebShell*& aResult)
+{
+  aResult = mWebShell;
+  NS_IF_ADDREF(mWebShell);
+  return NS_OK;
 }
 
 //----------------------------------------
@@ -675,6 +689,12 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
 
 // nsIScriptContextOwner
 
+// XXX this code is moving into nsWebShell.cpp so beware!
+
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+
 nsresult 
 nsBrowserWindow::GetScriptContext(nsIScriptContext** aContext)
 {
@@ -692,8 +712,7 @@ nsBrowserWindow::GetScriptContext(nsIScriptContext** aContext)
       return res;
     }
 
-#if XXX_this_is_wrong
-    nsIPresShell* shell = GetPresShell(mWebShell);
+    nsIPresShell* shell = GetPresShell();
     if (nsnull != shell) {
       nsIDocument* doc = shell->GetDocument();
       if (nsnull != doc) {
@@ -707,7 +726,6 @@ nsBrowserWindow::GetScriptContext(nsIScriptContext** aContext)
       }
       NS_RELEASE(shell);
     }
-#endif
   }
 
   *aContext = mScriptContext;
@@ -766,13 +784,13 @@ nsBrowserWindow::DestroyThrobberImages()
 
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
-static nsIPresShell*
-GetPresShell(nsIWebShell* aWebShell)
+nsIPresShell*
+nsBrowserWindow::GetPresShell()
 {
   nsIPresShell* shell = nsnull;
-  if (nsnull != aWebShell) {
+  if (nsnull != mWebShell) {
     nsIContentViewer* cv = nsnull;
-    aWebShell->GetContentViewer(cv);
+    mWebShell->GetContentViewer(cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
@@ -794,7 +812,7 @@ GetPresShell(nsIWebShell* aWebShell)
 void
 nsBrowserWindow::DumpContent(FILE* out)
 {
-  nsIPresShell* shell = GetPresShell(mWebShell);
+  nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIDocument* doc = shell->GetDocument();
     if (nsnull != doc) {
@@ -815,7 +833,7 @@ nsBrowserWindow::DumpContent(FILE* out)
 void
 nsBrowserWindow::DumpFrames(FILE* out)
 {
-  nsIPresShell* shell = GetPresShell(mWebShell);
+  nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIFrame* root = shell->GetRootFrame();
     if (nsnull != root) {
@@ -831,7 +849,7 @@ nsBrowserWindow::DumpFrames(FILE* out)
 void
 nsBrowserWindow::DumpViews(FILE* out)
 {
-  nsIPresShell* shell = GetPresShell(mWebShell);
+  nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIViewManager* vm = shell->GetViewManager();
     if (nsnull != vm) {
@@ -887,7 +905,7 @@ nsBrowserWindow::DumpWebShells(FILE* out)
 void
 nsBrowserWindow::DumpStyleSheets(FILE* out)
 {
-  nsIPresShell* shell = GetPresShell(mWebShell);
+  nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIStyleSet* styleSet = shell->GetStyleSet();
     if (nsnull == styleSet) {
@@ -906,7 +924,7 @@ nsBrowserWindow::DumpStyleSheets(FILE* out)
 void
 nsBrowserWindow::DumpStyleContexts(FILE* out)
 {
-  nsIPresShell* shell = GetPresShell(mWebShell);
+  nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIPresContext* cx = shell->GetPresContext();
     nsIStyleSet* styleSet = shell->GetStyleSet();
@@ -947,7 +965,7 @@ nsBrowserWindow::ToggleFrameBorders()
 void
 nsBrowserWindow::ForceRefresh()
 {
-  nsIPresShell* shell = GetPresShell(mWebShell);
+  nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIViewManager* vm = shell->GetViewManager();
     if (nsnull != vm) {
@@ -970,7 +988,7 @@ nsBrowserWindow::ShowContentSize()
     return;
   }
 
-  nsIPresShell* shell = GetPresShell(mWebShell);
+  nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIDocument* doc = shell->GetDocument();
     if (nsnull != doc) {
@@ -992,7 +1010,7 @@ nsBrowserWindow::ShowContentSize()
 void
 nsBrowserWindow::ShowFrameSize()
 {
-  nsIPresShell* shell0 = GetPresShell(mWebShell);
+  nsIPresShell* shell0 = GetPresShell();
   if (nsnull != shell0) {
     nsIDocument* doc = shell0->GetDocument();
     if (nsnull != doc) {
@@ -1031,7 +1049,7 @@ nsBrowserWindow::ShowStyleSize()
 void
 nsBrowserWindow::DoDebugSave()
 {
-  nsIPresShell* shell = GetPresShell(mWebShell);
+  nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIDocument* doc = shell->GetDocument();
     if (nsnull != doc) {
@@ -1063,6 +1081,44 @@ nsBrowserWindow::DoDebugSave()
         NS_RELEASE(parser);
       }
     }
+  }
+}
+
+void
+nsBrowserWindow::DoDebugRobot()
+{
+  mApp->CreateRobot(this);
+}
+
+void
+nsBrowserWindow::DoSiteWalker()
+{
+  mApp->CreateSiteWalker(this);
+}
+
+void
+nsBrowserWindow::DoJSConsole()
+{
+  mApp->CreateJSConsole(this);
+}
+
+#include "nsEditorMode.h"
+void
+nsBrowserWindow::DoEditorMode()
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsIDOMDocument *domdoc = nsnull;
+      doc->QueryInterface(kIDOMDocumentIID, (void**) &domdoc);
+      if (nsnull != domdoc) {
+        NS_InitEditorMode(domdoc);
+        NS_RELEASE(domdoc);
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
   }
 }
 
@@ -1137,6 +1193,22 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 
   case VIEWER_DEBUGSAVE:
     DoDebugSave();
+    break;
+
+  case VIEWER_DEBUGROBOT:
+    DoDebugRobot();
+    break;
+
+  case VIEWER_TOP100:
+    DoSiteWalker();
+    break;
+
+  case JS_CONSOLE:
+    DoJSConsole();
+    break;
+
+  case EDITOR_MODE:
+    DoEditorMode();
     break;
   }
   return(result);
