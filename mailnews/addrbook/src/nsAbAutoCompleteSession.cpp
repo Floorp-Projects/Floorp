@@ -50,8 +50,53 @@ NS_IMPL_ISUPPORTS(nsAbAutoCompleteSession, nsCOMTypeInfo<nsIAutoCompleteSession>
 nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 {
 	NS_INIT_REFCNT();
-
+    m_numEntries = 0;
     m_tableInitialized = PR_FALSE;
+}
+
+nsresult nsAbAutoCompleteSession::PopulateTableWithAB(nsIEnumerator * aABCards)
+{
+    nsresult rv = NS_OK;
+    if (!aABCards)
+        return rv;
+
+    rv = aABCards->First();
+    while (NS_SUCCEEDED(rv) && m_numEntries < MAX_ENTRIES) 
+    {
+        m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
+        m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
+    
+        nsCOMPtr<nsISupports> i;
+        rv = aABCards->CurrentItem(getter_AddRefs(i));
+        if (NS_FAILED(rv)) break;
+    
+        nsCOMPtr<nsIAbCard> card(do_QueryInterface(i, &rv));
+        if (NS_FAILED(rv)) break;
+    
+	    /* card holds unicode string, convert to utf8 String for autocomplete*/
+	    nsXPIDLString pUnicodeStr;
+	    PRInt32 unicharLength = 0;
+	    rv=card->GetDisplayName(getter_Copies(pUnicodeStr));
+        if (NS_FAILED(rv)) break; 
+
+	    unicharLength = nsCRT::strlen(pUnicodeStr);
+	    INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].userName);
+    
+        rv=card->GetPrimaryEmail(getter_Copies(pUnicodeStr));
+        if (NS_FAILED(rv)) break;
+
+	    unicharLength = nsCRT::strlen(pUnicodeStr);
+	    INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].emailAddress);
+    
+        rv = aABCards->Next();
+        m_numEntries++;
+        m_tableInitialized = PR_TRUE;
+    
+        if (m_numEntries == MAX_ENTRIES)
+            break;
+    }
+
+    return rv;
 }
 
 nsresult nsAbAutoCompleteSession::InitializeTable()
@@ -64,7 +109,7 @@ nsresult nsAbAutoCompleteSession::InitializeTable()
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
+  rv = rdfService->GetResource("abdirectory://history.mab", getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
   
   // query interface 
@@ -74,49 +119,22 @@ nsresult nsAbAutoCompleteSession::InitializeTable()
   nsCOMPtr<nsIEnumerator> cards;
   rv = directory->GetChildCards(getter_AddRefs(cards));
   if (NS_FAILED(rv)) return rv;
-  
-  m_numEntries = 0;
-  rv = cards->First();
-  while (NS_SUCCEEDED(rv)) {
-    m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
-    m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
-    
-    nsCOMPtr<nsISupports> i;
-    rv = cards->CurrentItem(getter_AddRefs(i));
-    if (NS_FAILED(rv)) break;
-    
-    nsCOMPtr<nsIAbCard> card(do_QueryInterface(i, &rv));
-    if (NS_FAILED(rv)) break;
-    
-	/* card holds unicode string, convert to utf8 String for autocomplete*/
-	nsXPIDLString pUnicodeStr;
-	PRInt32 unicharLength = 0;
-	rv=card->GetDisplayName(getter_Copies(pUnicodeStr));
-    if (NS_FAILED(rv)) {
-      m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
-      break;
-    }
-	unicharLength = nsCRT::strlen(pUnicodeStr);
-	INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].userName);
-    
-    rv=card->GetPrimaryEmail(getter_Copies(pUnicodeStr));
-    if (NS_FAILED(rv)) {
-      m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
-      break;
-    }
-	unicharLength = nsCRT::strlen(pUnicodeStr);
-	INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].emailAddress);
-    
-    rv = cards->Next();
-    m_numEntries++;
-    m_tableInitialized = PR_TRUE;
-    
-    if (m_numEntries == MAX_ENTRIES) {
-      break;
-    }
-  }
 
-  return NS_OK;
+  rv = PopulateTableWithAB(cards);
+  if (NS_FAILED(rv)) return rv;
+
+  // now if we have any left over space, populate the table with the regular address book
+
+  rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
+  if (NS_FAILED(rv)) return rv;
+  
+  directory = do_QueryInterface(resource, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = directory->GetChildCards(getter_AddRefs(cards));
+  if (NS_FAILED(rv)) return rv;
+
+  return NS_OK; // always return success??
 }
 
 nsAbAutoCompleteSession::~nsAbAutoCompleteSession()

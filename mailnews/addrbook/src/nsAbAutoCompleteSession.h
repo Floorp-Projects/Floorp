@@ -43,6 +43,7 @@ public:
 
 protected:
   nsresult InitializeTable();
+  nsresult PopulateTableWithAB(nsIEnumerator * aABCards); // enumerates through the cards and adds them to the table
   
   nsCOMPtr<nsIAutoCompleteListener> m_resultListener;
   PRBool	m_tableInitialized;
