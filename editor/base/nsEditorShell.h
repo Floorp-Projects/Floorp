@@ -133,7 +133,8 @@ class nsEditorShell :   public nsIEditorShell,
       eCantEditNoReason = 0,
       eCantEditFramesets = 1,
       eCantEditMimeType = 2,
-      eCantEditOther = 3
+      eCantEditFileNotFound = 3,
+      eCantEditOther = 9
     } ECantEditReason;
     
     nsresult        DoEditorMode(nsIDocShell *aDocShell);
@@ -208,6 +209,7 @@ class nsEditorShell :   public nsIEditorShell,
     // We need this to add mMouseListenerP to document
     nsresult GetDocumentEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 
+    nsresult GetDocShellFromContentWindow(nsIDocShell **aDocShell);
     PRBool mMailCompose;
 
     // These doc listeners are registered with the editor when that gets
