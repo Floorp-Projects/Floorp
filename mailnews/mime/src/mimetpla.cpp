@@ -115,7 +115,7 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
        )       );  // The output will be inserted in the composer as quotation
   PRBool plainHTML = quoting || (obj->options &&
        obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs);
-       // Just good(tm) HTML. No reliance on CSS (only for prefs).
+       // Just good(tm) HTML. No reliance on CSS.
 
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
   if (status < 0) return status;
@@ -184,27 +184,35 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
       }
 
       // Opening <div>. We currently have to add formatting here. :-(
-      nsCAutoString openingDiv("<div class=text-plain");
-      if (!plainHTML)
+      nsCAutoString openingDiv;
+      if (!quoting)
+           /* 4.x' editor can't break <div>s (e.g. to interleave comments).
+              We'll add the class to the <blockquote type=cite> later. */
       {
-        if (obj->options->wrap_long_lines_p)
-          openingDiv += " wrap=true";
-        else
-          openingDiv += " wrap=false";
-
-        if (graphicalQuote)
-          openingDiv += " graphical-quote=true";
-        else
-          openingDiv += " graphical-quote=false";
-
-        if (!fontstyle.IsEmpty())
+        openingDiv = "<div class=\"text-plain\"";
+        if (!plainHTML)
         {
-          openingDiv += " style=\"";
-          openingDiv += fontstyle;
-          openingDiv += '\"';
+          if (obj->options->wrap_long_lines_p)
+            openingDiv += " wrap=true";
+          else
+            openingDiv += " wrap=false";
+
+          if (graphicalQuote)
+            openingDiv += " graphical-quote=true";
+          else
+            openingDiv += " graphical-quote=false";
+
+          if (!fontstyle.IsEmpty())
+          {
+            openingDiv += " style=\"";
+            openingDiv += fontstyle;
+            openingDiv += '\"';
+          }
         }
+        openingDiv += "><pre wrap>";
       }
-      openingDiv += "><pre wrap>";
+      else
+        openingDiv = "<pre wrap>";
 	  status = MimeObject_write(obj, openingDiv,openingDiv.Length(), PR_FALSE);
 	  if (status < 0) return status;
 
