@@ -470,6 +470,17 @@ nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
         GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
         LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
       }
+      else {
+        // The only insertion point specified was actually a filtered insertion point.
+        // This means (strictly speaking) that we actually have multiple insertion
+        // points: the filtered one and a generic insertion point (content that doesn't
+        // match the filter will just go right underneath the bound element).
+        *aMultipleInsertionPoints = PR_TRUE;
+        *aResult = nsnull;
+        return NS_OK;
+      }
+
+      *aMultipleInsertionPoints = PR_FALSE;
       if (realContent)
         *aResult = realContent;
       else
