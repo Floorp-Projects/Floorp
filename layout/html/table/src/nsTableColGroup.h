@@ -175,14 +175,6 @@ inline void nsTableColGroup::SetSpan (int aSpan)
     ResetColumns ();
 }
 
-inline void nsTableColGroup::ResetColumns ()
-{
-  mColCount = 0;
-  if (nsnull != mTable)
-    mTable->ResetColumns ();
-}
-
-
 #endif
 
 

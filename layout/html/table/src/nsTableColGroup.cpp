@@ -138,6 +138,13 @@ int nsTableColGroup::GetColumnCount ()
   return mColCount;
 }
 
+void nsTableColGroup::ResetColumns ()
+{
+  mColCount = 0;
+  if (nsnull != mTable)
+    mTable->ResetColumns ();
+}
+
 NS_IMETHODIMP
 nsTableColGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
 {
