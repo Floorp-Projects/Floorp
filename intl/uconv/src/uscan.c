@@ -215,6 +215,15 @@ PRIVATE PRBool uCheckAndScanJohabSymbol(
 		PRUint32*				inscanlen
 );
 
+PRIVATE PRBool uCheckAndScan4BytesGB18030(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+);
+
 PRIVATE PRBool uScanAlways2Byte(
 		unsigned char*		in,
 		PRUint16*				out
@@ -260,8 +269,10 @@ PRIVATE uScannerFunc m_scanner[uNumOfCharsetType] =
 	uCheckAndScan2ByteGRPrefix8EA7,
 	uCheckAndScanAlways1ByteShiftGL,
         uCnSAlways8BytesComposedHangul,
+        uCnSAlways8BytesGLComposedHangul,
         uCheckAndScanJohabHangul,
-        uCheckAndScanJohabSymbol
+        uCheckAndScanJohabSymbol,
+        uCheckAndScan4BytesGB18030
 };
 
 /*=================================================================================
@@ -917,4 +928,35 @@ PRIVATE PRBool uCheckAndScanJohabSymbol(
 #else
     return PR_FALSE;
 #endif
+}
+PRIVATE PRBool uCheckAndScan4BytesGB18030(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+  PRUint32  data;
+  if(inbuflen < 4) 
+    return PR_FALSE;
+
+  if((in[0] < 0x81 ) || (0xfe < in[0])) 
+    return PR_FALSE;
+  if((in[1] < 0x30 ) || (0x39 < in[1])) 
+    return PR_FALSE;
+  if((in[2] < 0x81 ) || (0xfe < in[2])) 
+    return PR_FALSE;
+  if((in[3] < 0x30 ) || (0x39 < in[3])) 
+    return PR_FALSE;
+
+  data = (((((in[0] - 0x81) * 10 + (in[1] - 0x30)) * 126) + 
+             (in[2] - 0x81)) * 10 ) + (in[3] - 0x30);
+
+  *inscanlen = 4;
+  if(data >= 0x00010000)  
+    return PR_FALSE;
+  *out = (PRUint16) data;
+    return PR_TRUE;
 }
