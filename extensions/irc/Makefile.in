@@ -39,4 +39,4 @@ DIRS            = xul
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) ./js/lib/chatzilla-service.js $(DIST)/bin/components
+	$(INSTALL) $(srcdir)/js/lib/chatzilla-service.js $(DIST)/bin/components
