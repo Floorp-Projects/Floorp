@@ -946,9 +946,9 @@ nsPop3Protocol::GetStat()
 
     num = nsCRT::strtok(newStr, " ", &newStr);
 	m_commandResponse = newStr;
-	PR_FREEIF(oldStr);
-
+	
     m_pop3ConData->total_folder_size = (PRInt32) atol(num);
+	PR_FREEIF(oldStr);
     m_pop3ConData->really_new_messages = 0;
     m_pop3ConData->real_new_counter = 1;
 
