@@ -2824,10 +2824,15 @@ FE_SubmitInputElement(	MWContext	*	window,
 	submitData = LO_SubmitForm(window, formElement);
 	if (submitData == NULL)	
 		return;
+
+#ifdef SingleSignon
+	// Check for a password submission and remember the data if so
+	SI_RememberSignonData(window, submitData);
+#endif
 	
 	url =  NET_CreateURLStruct((char *)submitData->action, NET_DONT_RELOAD);
 	currentHistoryPosition = SHIST_GetCurrent( &window->hist );
-	
+
 	if (currentHistoryPosition && currentHistoryPosition->address)
 		url->referer = XP_STRDUP(currentHistoryPosition->address);
 	

@@ -1284,7 +1284,7 @@ PRIVATE void
 NET_SetCookieWarningPref(Bool x)
 {
 /* morse start -- temporary until preference bug is fixed */
-    /*	x = TRUE;  */
+/*    x = TRUE; */
 /* morse end */
 	net_WarnAboutCookies = x;
 }
@@ -3463,9 +3463,11 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 	cookieNumber++;
     }
 
-    if (cookieToDelete) {
-	net_FreeCookie(cookieToDelete);
-    }
+	if (cookieToDelete) {
+		net_FreeCookie(cookieToDelete);
+		cookies_changed = TRUE;
+		NET_SaveCookies(NULL);
+	}
 
     /* get the comma-separated sequence of permissions to be deleted */
     gone = XP_FindValueInArgs("goneP", argv, argc);
@@ -3492,9 +3494,11 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 	cookieNumber++;
     }
 
-    if (cookiePermissionToDelete) {
-	net_FreeCookiePermission(cookiePermissionToDelete, TRUE);
-    }
+	if (cookiePermissionToDelete) {
+		net_FreeCookiePermission(cookiePermissionToDelete, TRUE);
+		cookie_permissions_changed = TRUE;
+		net_SaveCookiePermissions(NULL);
+	}
 
     net_unlock_cookie_permission_list();
     return PR_FALSE;

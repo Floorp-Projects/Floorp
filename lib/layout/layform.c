@@ -33,6 +33,11 @@
 
 #include "secnav.h"		/* For SECNAV_GenKeyFromChoice and SECNAV_GetKeyChoiceList protos */
 
+#ifdef XP_MAC
+#include "prpriv.h"             /* for NewNamedMonitor */
+#include "prinrval.h"			/* for PR_IntervalNow */
+#endif
+
 #ifdef PROFILE
 #pragma profile on
 #endif
@@ -4479,9 +4484,9 @@ si_StripLF(char* buffer) {
 /* If user-entered password is "generate", then generate a random password */
 PRIVATE void
 si_Randomize(char * password) {
-    int64 random;
+    PRIntervalTime random;
     int i;
-    CONST char * hexDigits = "0123456789AbCdEf";
+    const char * hexDigits = "0123456789AbCdEf";
     if (XP_STRCMP(password, XP_GetString(MK_SIGNON_PASSWORDS_GENERATE)) == 0) {
 	random = PR_IntervalNow();
 	for (i=0; i<8; i++) {
@@ -4755,7 +4760,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
     /* discard this if the password is empty */
     for (i=0; i<submit->value_cnt; i++) {
 	if ((((uint8*)submit->type_array)[i] == FORM_TYPE_PASSWORD) &&
-		(XP_STRLEN(((char *)submit->value_array[i])) == 0)) {
+		(XP_STRLEN( ((char **)(submit->value_array)) [i])) == 0) {
 	    return;
 	}
     }
@@ -4858,7 +4863,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 	    if ((j < submit->value_cnt) &&
 		    (data->isPassword ==
 			(((uint8*)submit->type_array)[j]==FORM_TYPE_PASSWORD)) &&
-		    (!XP_STRCMP(data->name, (char *)submit->name_array[j]))) {
+		    (!XP_STRCMP(data->name, ((char **)submit->name_array)[j]))) {
 
 		/* success, now check for match on value field if not password */
 		if (!submit->value_array[j]) {
@@ -4869,7 +4874,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 			mismatch = TRUE;
 			break; /* value mismatch, try next user */
 		    }
-		} else if (!XP_STRCMP(data->value, (char *)submit->value_array[j])
+		} else if (!XP_STRCMP(data->value, ((char **)submit->value_array)[j])
 			|| data->isPassword) {
 		    j++; /* success */
 		} else {
@@ -4906,9 +4911,9 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 
 		/* update saved password */
 		if ((j < submit->value_cnt) && data->isPassword) {
-		    if (XP_STRCMP(data->value, (char *)submit->value_array[j])) {
+		    if (XP_STRCMP(data->value, ((char **)submit->value_array)[j])) {
 			si_signon_list_changed = TRUE;
-			StrAllocCopy(data->value, (char *)submit->value_array[j]);
+			StrAllocCopy(data->value, ((char **)submit->value_array)[j]);
 			si_Randomize(data->value);
 		    }
 		}
@@ -4969,11 +4974,11 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 	data->isPassword =
 	    (((uint8 *)submit->type_array)[j] == FORM_TYPE_PASSWORD);
         name = 0; /* so that StrAllocCopy doesn't free previous name */
-	StrAllocCopy(name, (char *)submit->name_array[j]);
+	StrAllocCopy(name, ((char **)submit->name_array)[j]);
 	data->name = name;
         value = 0; /* so that StrAllocCopy doesn't free previous name */
 	if (submit->value_array[j]) {
-	    StrAllocCopy(value, (char *)submit->value_array[j]);
+	    StrAllocCopy(value, ((char **)submit->value_array)[j]);
 	} else {
             StrAllocCopy(value, ""); /* insures that value is not null */
 	}
@@ -5042,9 +5047,9 @@ SI_LoadSignonData(char * filename) {
 	return(-1);
 
     /* initialize the submit structure */
-    submit.name_array = (unsigned long*)name_array;
-    submit.value_array = (unsigned long*)value_array;
-    submit.type_array = (unsigned long*)type_array;
+    submit.name_array = (PA_Block)name_array;
+    submit.value_array = (PA_Block)value_array;
+    submit.type_array = (PA_Block)type_array;
 
     /* read the URL line */
     si_lock_signon_list();
@@ -5092,9 +5097,20 @@ SI_LoadSignonData(char * filename) {
 	    value_array[submit.value_cnt] = NULL;
             /* note that we need to skip over leading '=' of value */
 	    if (type_array[submit.value_cnt] == FORM_TYPE_PASSWORD) {
-		unmungedValue = SECNAV_UnMungeString(buffer+1);
-		StrAllocCopy(value_array[submit.value_cnt++], unmungedValue);
-		XP_FREE(unmungedValue);
+	    	/* UnMungeString will return NULL in the free source because there is
+	    	 * no security. When saving out the string, we wrote 8 stars. If that is
+	    	 * what we get, create an empty password to be copied into the value array
+	    	 */
+	    	if ( strcmp(buffer+1, "********") == 0 ) {
+	    		/* don't use an empty string because si_PutData doesn't like it */
+	    		unmungedValue = XP_ALLOC(2);
+	    		unmungedValue[0] = '?'; unmungedValue[1] = '\0';
+	    	}
+	    	else {
+				unmungedValue = SECNAV_UnMungeString(buffer+1);
+			}
+			StrAllocCopy(value_array[submit.value_cnt++], unmungedValue);
+			XP_FREE(unmungedValue);
 	    } else {
 		StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
 	    }
@@ -5198,9 +5214,17 @@ si_SaveSignonDataLocked(char * filename) {
 		XP_FileWrite(LINEBREAK, -1, fp);
                 XP_FileWrite("=", -1, fp); /* precede values with '=' */
 		if (data->isPassword) {
+			/* in free source, MungeString will return NULL because there is
+			 * no security available. Instead, we write out 8 stars so we know
+			 * this isn't a valid password.
+			 */
 		    mungedValue = SECNAV_MungeString(data->value);
-		    XP_FileWrite(mungedValue, -1, fp);
-		    XP_FREE(mungedValue);
+		    if ( mungedValue ) {
+			    XP_FileWrite(mungedValue, -1, fp);
+			    XP_FREE(mungedValue);
+			}
+			else
+				XP_FileWrite("********", -1, fp);
 		} else {
 		    XP_FileWrite(data->value, -1, fp);
 		}
@@ -5298,8 +5322,8 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
 	/* make sure all passwords are non-null and 2nd and 3rd are identical */
 	if (!submit->value_array[pswd[0]] || ! submit->value_array[pswd[1]] ||
 		!submit->value_array[pswd[2]] ||
-		XP_STRCMP((char *)submit->value_array[pswd[1]],
-		       (char *)submit->value_array[pswd[2]])) {
+		XP_STRCMP(((char **)submit->value_array)[pswd[1]],
+		       ((char **)submit->value_array)[pswd[2]])) {
 	    return;
 	}
 
@@ -5333,10 +5357,10 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
 	 * create a random password of exactly eight characters -- the
          * same length as "generate".)
 	 */
-	si_Randomize((char *)submit->value_array[pswd[1]]);
-	XP_STRCPY((char *)submit->value_array[pswd[2]],
-	       (char *)submit->value_array[pswd[1]]);
-	StrAllocCopy(data->value, (char *)submit->value_array[pswd[1]]);
+	si_Randomize(((char **)submit->value_array)[pswd[1]]);
+	XP_STRCPY(((char **)submit->value_array)[pswd[2]],
+	       ((char **)submit->value_array)[pswd[1]]);
+	StrAllocCopy(data->value, ((char **)submit->value_array)[pswd[1]]);
 	si_signon_list_changed = TRUE;
 	si_SaveSignonDataLocked(NULL);
 	si_unlock_signon_list();
@@ -5451,9 +5475,9 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password)
     }
 
     /* initialize a temporary submit structure */
-    submit.name_array = (unsigned long*)name_array;
-    submit.value_array = (unsigned long*)value_array;
-    submit.type_array = (unsigned long*)type_array;
+    submit.name_array = (PA_Block)name_array;
+    submit.value_array = (PA_Block)value_array;
+    submit.type_array = (PA_Block)type_array;
     submit.value_cnt = 2;
 
     name_array[0] = USERNAME;
@@ -5855,10 +5879,13 @@ si_SignonInfoDialogDone
     }
     if (userToDelete) {
         /* get to first data item -- that's the user name */
-	data_ptr = userToDelete->signonData_list;
-	data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
-	/* do the deletion */
-	SI_RemoveUser(URLToDelete->URLName, data->value, TRUE);
+		data_ptr = userToDelete->signonData_list;
+		data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
+		/* do the deletion */
+		SI_RemoveUser(URLToDelete->URLName, data->value, TRUE);
+
+		si_signon_list_changed = TRUE;
+		si_SaveSignonDataLocked(NULL);
     }
 
     return PR_FALSE;
