@@ -99,7 +99,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mReflowStatus = NS_FRAME_COMPLETE;
 
   mPresContext = aPresContext;
-  mBlock->GetNextInFlow(NS_REINTERPRET_CAST(nsIFrame**, &mNextInFlow));
+  mNextInFlow = NS_STATIC_CAST(nsBlockFrame*, mBlock->GetNextInFlow());
   mKidXMost = 0;
 
   // Compute content area width (the content area is inside the border
@@ -953,17 +953,15 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   }
   // If the float is continued, it will get the same absolute x value as its prev-in-flow
   nsRect prevRect(0,0,0,0);
-  nsIFrame* prevInFlow;
-  floatFrame->GetPrevInFlow(&prevInFlow);
+  nsIFrame* prevInFlow = floatFrame->GetPrevInFlow();
   if (prevInFlow) {
     prevRect = prevInFlow->GetRect();
 
-    nsIFrame *placeParentPrev, *prevPlace;
     // If prevInFlow's placeholder is in a block that wasn't continued, we need to adjust 
     // prevRect.x to account for the missing frame offsets.
     nsIFrame* placeParent = placeholder->GetParent();
-    placeParent->GetPrevInFlow(&placeParentPrev);
-    prevPlace =
+    nsIFrame* placeParentPrev = placeParent->GetPrevInFlow();
+    nsIFrame* prevPlace =
       mPresContext->FrameManager()->GetPlaceholderFrameFor(prevInFlow);
 
     nsIFrame* prevPlaceParent = prevPlace->GetParent();

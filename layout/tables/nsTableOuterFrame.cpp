@@ -2116,9 +2116,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsPresContext* aPresContext,
   if (!aChild) return;
   NS_PRECONDITION(mFrames.ContainsFrame(aChild), "bad geometric parent");
 
-  nsIFrame* nextInFlow;
-   
-  aChild->GetNextInFlow(&nextInFlow);
+  nsIFrame* nextInFlow = aChild->GetNextInFlow();
   if (!nextInFlow) {
     NS_ASSERTION(PR_FALSE, "null next-in-flow");
     return;
@@ -2132,9 +2130,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsPresContext* aPresContext,
   }
   // If the next-in-flow has a next-in-flow then delete it too (and
   // delete it first).
-  nsIFrame* nextNextInFlow;
-
-  nextInFlow->GetNextInFlow(&nextNextInFlow);
+  nsIFrame* nextNextInFlow = nextInFlow->GetNextInFlow();
   if (nextNextInFlow) {
     parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
@@ -2159,10 +2155,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsPresContext* aPresContext,
   // Delete the next-in-flow frame and adjust it's parent's child count
   nextInFlow->Destroy(aPresContext);
 
-#ifdef NS_DEBUG
-  aChild->GetNextInFlow(&nextInFlow);
-  NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
-#endif
+  NS_POSTCONDITION(!aChild->GetNextInFlow(), "non null next-in-flow");
 }
 
 nsIAtom*

@@ -232,9 +232,9 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
-  NS_IMETHOD  GetPrevInFlow(nsIFrame** aPrevInFlow) const;
+  virtual nsIFrame* GetPrevInFlow() const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
-  NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const;
+  virtual nsIFrame* GetNextInFlow() const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
   NS_IMETHOD  GetOffsetFromView(nsPresContext* aPresContext, nsPoint& aOffset, nsIView** aView) const;
   NS_IMETHOD  GetOriginToViewOffset(nsPresContext *aPresContext, nsPoint& aOffset, nsIView **aView) const;

@@ -170,11 +170,8 @@ PRBool BasicTableLayoutStrategy::Initialize(const nsHTMLReflowState& aReflowStat
 
 void BasicTableLayoutStrategy::ContinuingFrameCheck()
 {
-#ifdef NS_DEBUG
-  nsIFrame* tablePIF = nsnull;
-  mTableFrame->GetPrevInFlow(&tablePIF);
-  NS_ASSERTION(!tablePIF, "never ever call me on a continuing frame!");
-#endif
+  NS_ASSERTION(!mTableFrame->GetPrevInFlow(),
+               "never ever call me on a continuing frame!");
 }
 
 PRBool BCW_Wrapup(const nsHTMLReflowState&  aReflowState,

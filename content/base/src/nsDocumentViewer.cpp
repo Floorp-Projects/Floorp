@@ -3203,7 +3203,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 
   if (aType == nsIWebBrowserPrint::PRINTPREVIEW_PREV_PAGE) {
     if (currentPage) {
-      currentPage->GetPrevInFlow(&fndPageFrame);
+      fndPageFrame = currentPage->GetPrevInFlow();
       if (!fndPageFrame) {
         return NS_OK;
       }
@@ -3212,7 +3212,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
     }
   } else if (aType == nsIWebBrowserPrint::PRINTPREVIEW_NEXT_PAGE) {
     if (currentPage) {
-      currentPage->GetNextInFlow(&fndPageFrame);
+      fndPageFrame = currentPage->GetNextInFlow();
       if (!fndPageFrame) {
         return NS_OK;
       }

@@ -1723,8 +1723,7 @@ void
 nsTableFrame::CheckRequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
 {
   if (!aReflowState.frame) ABORT0();
-  nsIFrame* prevInFlow;
-  aReflowState.frame->GetPrevInFlow(&prevInFlow);
+  nsIFrame* prevInFlow = aReflowState.frame->GetPrevInFlow();
 
   if (!prevInFlow                                             &&   // 1st in flow                                            && // 1st in flow
       ((NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) ||   // no computed height
@@ -3104,8 +3103,7 @@ nsTableFrame::OrderRowGroups(nsVoidArray&           aChildren,
     // Get the next sibling but skip it if it's also the next-in-flow, since
     // a next-in-flow will not be part of the current table.
     while (kidFrame) {
-      nsIFrame* nif;
-      kidFrame->GetNextInFlow(&nif);
+      nsIFrame* nif = kidFrame->GetNextInFlow();
       kidFrame = kidFrame->GetNextSibling();
       if (kidFrame != nif) 
         break;
@@ -3219,8 +3217,7 @@ nsTableFrame::ReflowChildren(nsPresContext*     aPresContext,
         
         // record the next in flow in case it gets destroyed and the row group array
         // needs to be recomputed.
-        nsIFrame* kidNextInFlow;
-        kidFrame->GetNextInFlow(&kidNextInFlow);
+        nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
   
         rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
                          aReflowState.x, aReflowState.y, 0, aStatus);
@@ -3243,7 +3240,7 @@ nsTableFrame::ReflowChildren(nsPresContext*     aPresContext,
  
         // Special handling for incomplete children
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {         
-          kidFrame->GetNextInFlow(&kidNextInFlow);
+          kidNextInFlow = kidFrame->GetNextInFlow();
           if (!kidNextInFlow) {
             // The child doesn't have a next-in-flow so create a continuing
             // frame. This hooks the child into the flow
@@ -7487,12 +7484,11 @@ void DumpTableFramesRecur(nsIFrame*       aFrame,
   GetFrameTypeName(fType, fName);
 
   printf("%s%s %p", indent, fName, aFrame);
-  nsIFrame* flowFrame;
-  aFrame->GetPrevInFlow(&flowFrame);
+  nsIFrame* flowFrame = aFrame->GetPrevInFlow();
   if (flowFrame) {
     printf(" pif=%p", flowFrame);
   }
-  aFrame->GetNextInFlow(&flowFrame);
+  flowFrame = aFrame->GetNextInFlow();
   if (flowFrame) {
     printf(" nif=%p", flowFrame);
   }
@@ -7516,20 +7512,19 @@ nsTableFrame::DumpTableFrames(nsIFrame* aFrame)
   nsTableFrame* tableFrame = nsnull;
 
   if (nsLayoutAtoms::tableFrame == aFrame->GetType()) { 
-    tableFrame = (nsTableFrame*)aFrame;
+    tableFrame = NS_STATIC_CAST(nsTableFrame*, aFrame);
   }
   else {
     nsTableFrame::GetTableFrame(aFrame, tableFrame);
   }
-  tableFrame = (nsTableFrame*)tableFrame->GetFirstInFlow();
+  tableFrame = NS_STATIC_CAST(nsTableFrame*, tableFrame->GetFirstInFlow());
   while (tableFrame) {
     DumpTableFramesRecur(tableFrame, 0);
-    tableFrame->GetNextInFlow((nsIFrame**)&tableFrame);
+    tableFrame = NS_STATIC_CAST(nsTableFrame*, tableFrame->GetNextInFlow());
   }
 }
 
 #endif
-
 
 
 

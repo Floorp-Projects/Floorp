@@ -617,8 +617,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up), unless it is an out of flow frame.
     if (NS_FRAME_IS_COMPLETE(aFrameReflowStatus)) {
-      nsIFrame* kidNextInFlow;
-      mFrame->GetNextInFlow(&kidNextInFlow);
+      nsIFrame* kidNextInFlow = mFrame->GetNextInFlow();
       if (nsnull != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask
         // the right parent to do the removal (it's possible that the

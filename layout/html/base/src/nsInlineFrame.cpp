@@ -261,8 +261,7 @@ nsInlineFrame::RemoveFrame(nsPresContext* aPresContext,
       // When the parent is an inline frame we have a simple task - just
       // remove the frame from its parents list and generate a reflow
       // command.
-      nsIFrame* oldFrameNextInFlow;
-      aOldFrame->GetNextInFlow(&oldFrameNextInFlow);
+      nsIFrame* oldFrameNextInFlow = aOldFrame->GetNextInFlow();
       parent->mFrames.DestroyFrame(aPresContext, aOldFrame);
       aOldFrame = oldFrameNextInFlow;
       if (aOldFrame) {
@@ -514,8 +513,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
       // its parent frame pointer, too. Otherwise, if we reflow frame and it's
       // complete we'll fail when deleting its next-in-flow which is no longer
       // needed. This scenario doesn't happen often, but it can happen
-      nsIFrame* nextInFlow;
-      frame->GetNextInFlow(&nextInFlow);
+      nsIFrame* nextInFlow = frame->GetNextInFlow();
       while (nextInFlow) {
         // Since we only do lazy setting of parent pointers for the frame's
         // initial reflow, this frame can't have a next-in-flow. That means
@@ -523,7 +521,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
         // not, then something is wrong
         NS_ASSERTION(mFrames.ContainsFrame(nextInFlow), "unexpected flow");
         nextInFlow->SetParent(this);
-        nextInFlow->GetNextInFlow(&nextInFlow);
+        nextInFlow = nextInFlow->GetNextInFlow();
       }
     }
     rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);

@@ -428,8 +428,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
       y += deadSpaceGap;
 
       // Is the page complete?
-      nsIFrame* kidNextInFlow;
-      kidFrame->GetNextInFlow(&kidNextInFlow);
+      nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
 
       if (NS_FRAME_IS_COMPLETE(status)) {
         NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");

@@ -230,8 +230,7 @@ PRBool nsLineLayout::AllocateDeque()
 inline PRBool
 HasPrevInFlow(nsIFrame *aFrame)
 {
-  nsIFrame *prevInFlow;
-  aFrame->GetPrevInFlow(&prevInFlow);
+  nsIFrame *prevInFlow = aFrame->GetPrevInFlow();
   return prevInFlow != nsnull;
 }
 
@@ -1151,8 +1150,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up).
     if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
-      nsIFrame* kidNextInFlow;
-      aFrame->GetNextInFlow(&kidNextInFlow);
+      nsIFrame* kidNextInFlow = aFrame->GetNextInFlow();
       if (nsnull != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask
         // the right parent to do the removal (it's possible that the
@@ -1203,8 +1201,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       PRInt32 newEnd;
       aFrame->GetOffsets(start, newEnd);
       if (newEnd != end) {
-        nsIFrame* nextInFlow;
-        aFrame->GetNextInFlow(&nextInFlow);
+        nsIFrame* nextInFlow = aFrame->GetNextInFlow();
         if (nextInFlow) {
           nextInFlow->GetOffsets(start, end);
           nextInFlow->AdjustOffsetsForBidi(newEnd, end);
@@ -1387,11 +1384,9 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   // If this is a piece of text inside a letter frame...
   if (pfd->GetFlag(PFD_ISNONEMPTYTEXTFRAME)) {
     if (psd->mFrame && psd->mFrame->GetFlag(PFD_ISLETTERFRAME)) {
-      nsIFrame* prevInFlow;
-      psd->mFrame->mFrame->GetPrevInFlow(&prevInFlow);
+      nsIFrame* prevInFlow = psd->mFrame->mFrame->GetPrevInFlow();
       if (prevInFlow) {
-        nsIFrame* prevPrevInFlow;
-        prevInFlow->GetPrevInFlow(&prevPrevInFlow);
+        nsIFrame* prevPrevInFlow = prevInFlow->GetPrevInFlow();
         if (!prevPrevInFlow) {
           // And it's the first continuation of the letter frame...
           // Then make sure that the text fits
@@ -1402,11 +1397,9 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
   }
   else if (pfd->GetFlag(PFD_ISLETTERFRAME)) {
     // If this is the first continuation of the letter frame...
-    nsIFrame* prevInFlow;
-    pfd->mFrame->GetPrevInFlow(&prevInFlow);
+    nsIFrame* prevInFlow = pfd->mFrame->GetPrevInFlow();
     if (prevInFlow) {
-      nsIFrame* prevPrevInFlow;
-      prevInFlow->GetPrevInFlow(&prevPrevInFlow);
+      nsIFrame* prevPrevInFlow = prevInFlow->GetPrevInFlow();
       if (!prevPrevInFlow) {
         return PR_TRUE;
       }
@@ -1929,10 +1922,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   // - it has a prev-in-flow
   // - it has no next in flow
   // - it's zero sized
-  nsIFrame* spanNextInFlow;
-  spanFrame->GetNextInFlow(&spanNextInFlow);
-  nsIFrame* spanPrevInFlow;
-  spanFrame->GetPrevInFlow(&spanPrevInFlow);
+  nsIFrame* spanNextInFlow = spanFrame->GetNextInFlow();
+  nsIFrame* spanPrevInFlow = spanFrame->GetPrevInFlow();
   PRBool emptyContinuation = spanPrevInFlow && !spanNextInFlow &&
     (0 == spanFramePFD->mBounds.width) && (0 == spanFramePFD->mBounds.height);
 

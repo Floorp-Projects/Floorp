@@ -117,15 +117,8 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsPresContext*   aPresContext,
       // Place and size the child
       FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, 0, 0, 0);
 
-#ifdef NS_DEBUG
-      // Is the frame complete?
-      if (NS_FRAME_IS_COMPLETE(aStatus)) {
-        nsIFrame* childNextInFlow;
-
-        frame->GetNextInFlow(&childNextInFlow);
-        NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
-      }
-#endif
+      NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) ||
+                   !frame->GetNextInFlow(), "bad child flow list");
 
 #ifdef DEBUG_PRINTING
       nsRect r = frame->GetRect();

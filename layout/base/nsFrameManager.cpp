@@ -1498,8 +1498,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
           localContent->IsContentOfType(nsIContent::eELEMENT)) {
         // Check for a new :before pseudo and an existing :before
         // frame, but only if the frame is the first-in-flow.
-        nsIFrame* prevInFlow = nsnull;
-        aFrame->GetPrevInFlow(&prevInFlow);
+        nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
         if (!prevInFlow) {
           // Checking for a :before frame is cheaper than getting the
           // :before style context.
@@ -1524,8 +1523,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
           localContent->IsContentOfType(nsIContent::eELEMENT)) {
         // Check for new :after content, but only if the frame is the
         // first-in-flow.
-        nsIFrame* nextInFlow = nsnull;
-        aFrame->GetNextInFlow(&nextInFlow);
+        nsIFrame* nextInFlow = aFrame->GetNextInFlow();
 
         if (!nextInFlow) {
           // Getting the :after frame is more expensive than getting the pseudo
@@ -1623,13 +1621,7 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
   nsIFrame* frame = aFrame;
   nsIFrame* frame2 = aFrame;
 
-#ifdef DEBUG
-  {
-    nsIFrame* prevInFlow;
-    frame->GetPrevInFlow(&prevInFlow);
-    NS_ASSERTION(!prevInFlow, "must start with the first in flow");
-  }
-#endif
+  NS_ASSERTION(!frame->GetPrevInFlow(), "must start with the first in flow");
 
   // We want to start with this frame and walk all its next-in-flows,
   // as well as all its special siblings and their next-in-flows,
@@ -1650,15 +1642,12 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
         // If it's going to cause a framechange, then don't bother
         // with the continuations or special siblings since they'll be
         // clobbered by the frame reconstruct anyway.
-#ifdef NS_DEBUG
-        nsIFrame* prevInFlow;
-        frame->GetPrevInFlow(&prevInFlow);
-        NS_ASSERTION(!prevInFlow, "continuing frame had more severe impact than first-in-flow");
-#endif
+        NS_ASSERTION(!frame->GetPrevInFlow(),
+                     "continuing frame had more severe impact than first-in-flow");
         return topLevelChange;
       }
 
-      frame->GetNextInFlow(&frame);
+      frame = frame->GetNextInFlow();
     } while (frame);
 
     // Might we have special siblings?

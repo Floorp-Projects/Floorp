@@ -825,9 +825,9 @@ public:
   /**
    * Flow member functions
    */
-  NS_IMETHOD  GetPrevInFlow(nsIFrame** aPrevInFlow) const = 0;
+  virtual nsIFrame* GetPrevInFlow() const = 0;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*) = 0;
-  NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const = 0;
+  virtual nsIFrame* GetNextInFlow() const = 0;
   NS_IMETHOD  SetNextInFlow(nsIFrame*) = 0;
 
   /**

@@ -4839,7 +4839,8 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext,
         while (!frameRect.width || !frameRect.height)
         {
           //try to notify next in flow that its content is selected.
-          if (NS_SUCCEEDED(frame->GetNextInFlow(&frame)) && frame)
+          frame = frame->GetNextInFlow();
+          if (frame)
           {
             frameRect = frame->GetRect();
             frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);

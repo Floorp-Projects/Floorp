@@ -991,8 +991,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   // If the reflow was successful and the child frame is complete, delete any
   // next-in-flows
   if (NS_SUCCEEDED(result) && NS_FRAME_IS_COMPLETE(aStatus)) {
-    nsIFrame* kidNextInFlow;
-    aKidFrame->GetNextInFlow(&kidNextInFlow);
+    nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow();
     if (nsnull != kidNextInFlow) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
@@ -1107,15 +1106,13 @@ void
 nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
                                         nsIFrame*       aNextInFlow)
 {
-  nsIFrame* prevInFlow;
-  aNextInFlow->GetPrevInFlow(&prevInFlow);
+  nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
   NS_PRECONDITION(prevInFlow, "bad prev-in-flow");
   NS_PRECONDITION(mFrames.ContainsFrame(aNextInFlow), "bad geometric parent");
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
-  nsIFrame* nextNextInFlow;
-  aNextInFlow->GetNextInFlow(&nextNextInFlow);
+  nsIFrame* nextNextInFlow = aNextInFlow->GetNextInFlow();
   if (nextNextInFlow) {
     NS_STATIC_CAST(nsContainerFrame*, nextNextInFlow->GetParent())
       ->DeleteNextInFlowChild(aPresContext, nextNextInFlow);
@@ -1153,11 +1150,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
   // Delete the next-in-flow frame and its descendants.
   aNextInFlow->Destroy(aPresContext);
 
-#ifdef NS_DEBUG
-  nsIFrame* nextInFlow;
-  prevInFlow->GetNextInFlow(&nextInFlow);
-  NS_POSTCONDITION(!nextInFlow, "non null next-in-flow");
-#endif
+  NS_POSTCONDITION(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
 }
 
 nsIFrame*

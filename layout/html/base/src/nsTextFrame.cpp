@@ -404,9 +404,8 @@ public:
                                   nsIContent*     aChild,
                                   PRBool          aAppend);
 
-  NS_IMETHOD GetNextInFlow(nsIFrame** aNextInFlow) const {
-    *aNextInFlow = mNextInFlow;
-    return NS_OK;
+  virtual nsIFrame* GetNextInFlow() const {
+    return mNextInFlow;
   }
   NS_IMETHOD SetNextInFlow(nsIFrame* aNextInFlow) {
     mNextInFlow = aNextInFlow;
@@ -843,9 +842,8 @@ public:
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD GetPrevInFlow(nsIFrame** aPrevInFlow) const {
-    *aPrevInFlow = mPrevInFlow;
-    return NS_OK;
+  virtual nsIFrame* GetPrevInFlow() const {
+    return mPrevInFlow;
   }
   NS_IMETHOD SetPrevInFlow(nsIFrame* aPrevInFlow) {
     mPrevInFlow = aPrevInFlow;
@@ -925,7 +923,7 @@ nsContinuingTextFrame::GetFirstInFlow() const
                                      NS_STATIC_CAST(const nsIFrame*, this));
   do {
     firstInFlow = previous;
-    firstInFlow->GetPrevInFlow(&previous);
+    previous = firstInFlow->GetPrevInFlow();
   } while (previous);
   return firstInFlow;
 }
@@ -3568,7 +3566,6 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
                          PRBool aSelected,
                          nsSpread aSpread)
 {
-  nsresult result;
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
 
@@ -3685,20 +3682,15 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
   }
   if (aSpread == eSpreadDown)
   {
-    nsIFrame *frame;
-    GetPrevInFlow(&frame);
+    nsIFrame* frame = GetPrevInFlow();
     while(frame){
       frame->SetSelected(aPresContext, aRange,aSelected,eSpreadNone);
-      result = frame->GetPrevInFlow(&frame);
-      if (NS_FAILED(result))
-        break;
+      frame = frame->GetPrevInFlow();
     }
-    GetNextInFlow(&frame);
+    frame = GetNextInFlow();
     while (frame){
       frame->SetSelected(aPresContext, aRange,aSelected,eSpreadNone);
-      result = frame->GetNextInFlow(&frame);
-      if (NS_FAILED(result))
-        break;
+      frame = frame->GetNextInFlow();
     }
 #ifdef IBMBIDI
     if ((mState & NS_FRAME_IS_BIDI) &&
@@ -3831,7 +3823,6 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
 {
   if (nsnull == outChildFrame)
     return NS_ERROR_NULL_POINTER;
-  nsresult result;
   PRInt32 contentOffset = inContentOffset;
   
   if (contentOffset != -1) //-1 signified the end of the current content
@@ -3840,8 +3831,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
   if ((contentOffset > mContentLength) || ((contentOffset == mContentLength) && inHint) )
   {
     //this is not the frame we are looking for.
-    nsIFrame *nextInFlow;
-    GetNextInFlow(&nextInFlow);
+    nsIFrame* nextInFlow = GetNextInFlow();
     if (nextInFlow)
     {
       return nextInFlow->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
@@ -3873,12 +3863,12 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
 
   if (inContentOffset < mContentOffset) //could happen with floats!
   {
-    result = GetPrevInFlow(outChildFrame);
-    if (NS_SUCCEEDED(result) && *outChildFrame)
+    *outChildFrame = GetPrevInFlow();
+    if (*outChildFrame)
       return (*outChildFrame)->GetChildFrameContainingOffset(inContentOffset, inHint,
         outFrameContentOffset,outChildFrame);
     else
-      return result;
+      return NS_OK; //this can't be the right thing to do?
   }
   
   *outFrameContentOffset = contentOffset;
@@ -3915,7 +3905,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     }
     else
 #endif
-    GetNextInFlow(&nextInFlow);
+    nextInFlow = GetNextInFlow();
     if (!nextInFlow){
       NS_ASSERTION(PR_FALSE,"nsTextFrame::PeekOffset no more flow \n");
       return NS_ERROR_INVALID_ARG;
@@ -4040,7 +4030,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
           if (i <0){
             found = PR_FALSE;
-            GetPrevInFlow(&frameUsed);
+            frameUsed = GetPrevInFlow();
             start = mContentOffset;
             aPos->mContentOffset = start;//in case next call fails we stop at this offset
           }
@@ -4095,7 +4085,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   */
           if (i > mContentLength){
             found = PR_FALSE;
-            GetNextInFlow(&frameUsed);
+            frameUsed = GetNextInFlow();
             start = mContentOffset + mContentLength;
             aPos->mContentOffset = start;//in case next call fails we stop at this offset
           }
@@ -4250,7 +4240,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           } 
 
   TryNextFrame:        
-          GetNextInFlow(&frameUsed);
+          frameUsed = GetNextInFlow();
           start = 0;
         }
       }
@@ -4398,7 +4388,7 @@ nsTextFrame::CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt
     rv = NS_OK;
     while (!aFinished && nextInFlow && NS_SUCCEEDED(rv) && !*_retval) //while we havent found anything visible
     {
-      rv = nextInFlow->GetNextInFlow(&nextInFlow);
+      nextInFlow = nextInFlow->GetNextInFlow();
       if (nextInFlow)
       {
         rv = nextInFlow->CheckVisibility(aContext,aStartIndex,aEndIndex,PR_FALSE,aFinished,_retval);
@@ -5186,9 +5176,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
 
   // Get starting offset into the content
   PRInt32 startingOffset = 0;
-  nsIFrame* prevInFlow;
-
-  GetPrevInFlow(&prevInFlow);
+  nsIFrame* prevInFlow = GetPrevInFlow();
   if (nsnull != prevInFlow) {
     nsTextFrame* prev = (nsTextFrame*)prevInFlow;
     startingOffset = prev->mContentOffset + prev->mContentLength;
@@ -5912,8 +5900,7 @@ nsTextFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
   if (nsnull != mNextSibling) {
     fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));
   }
-  nsIFrame* prevInFlow;
-  GetPrevInFlow(&prevInFlow);
+  nsIFrame* prevInFlow = GetPrevInFlow();
   if (nsnull != prevInFlow) {
     fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, prevInFlow));
   }

@@ -2574,8 +2574,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     if (startRangeOffset < endFrameOffset) {
       break;
     }
-    nsIFrame *nextInFlowFrame = nsnull;
-    frame->GetNextInFlow(&nextInFlowFrame);
+    nsIFrame *nextInFlowFrame = frame->GetNextInFlow();
     if (nextInFlowFrame) {
       frame = nextInFlowFrame;
     }

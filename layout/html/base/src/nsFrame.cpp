@@ -1221,9 +1221,8 @@ ContentContainsPoint(nsPresContext *aPresContext,
       return PR_TRUE;
     }
 
-    rv = frame->GetNextInFlow(&frame);
+    frame = frame->GetNextInFlow();
 
-    if (NS_FAILED(rv)) return PR_FALSE;
   }
 
   return PR_FALSE;
@@ -2100,8 +2099,7 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
       aReflowState->mStylePosition                                     && // percent height
       (eStyleUnit_Percent == aReflowState->mStylePosition->mHeight.GetUnit())) {
 
-    nsIFrame* prevInFlow;
-    GetPrevInFlow(&prevInFlow);
+    nsIFrame* prevInFlow = GetPrevInFlow();
     if (!prevInFlow) { // 1st in flow
       aReflowState->mPercentHeightObserver->NotifyPercentHeight(*aReflowState);
     }
@@ -2181,10 +2179,9 @@ NS_IMETHODIMP nsFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::GetPrevInFlow(nsIFrame** aPrevInFlow) const
+nsIFrame* nsFrame::GetPrevInFlow() const
 {
-  *aPrevInFlow = nsnull;
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow)
@@ -2198,10 +2195,9 @@ NS_IMETHODIMP nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::GetNextInFlow(nsIFrame** aNextInFlow) const
+nsIFrame* nsFrame::GetNextInFlow() const
 {
-  *aNextInFlow = nsnull;
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
@@ -3042,10 +3038,10 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, P
   nsRect rect = GetRect();
   if (!rect.width || !rect.height)
   {
-    nsIFrame *nextFlow = nsnull;
     //if we have a 0 width or height then lets look for another frame that possibly has
     //the same content.  If we have no frames in flow then just let us return 'this' frame
-    if (NS_SUCCEEDED(GetNextInFlow(&nextFlow)) && nextFlow)
+    nsIFrame* nextFlow = GetNextInFlow();
+    if (nextFlow)
       return nextFlow->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
   }
   *outChildFrame = this;
@@ -5262,12 +5258,11 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
     DR_state->PrettyUC(aReflowState.mComputedHeight, height);
     printf("c=%s,%s ", width, height);
 
-    nsIFrame* inFlow;
-    aFrame->GetPrevInFlow(&inFlow);
+    nsIFrame* inFlow = aFrame->GetPrevInFlow();
     if (inFlow) {
       printf("pif=%p ", (void*)inFlow);
     }
-    aFrame->GetNextInFlow(&inFlow);
+    inFlow = aFrame->GetNextInFlow();
     if (inFlow) {
       printf("nif=%p ", (void*)inFlow);
     }
