@@ -33,7 +33,8 @@
 #include "nsInputStreamChannel.h"
 #include "nsXPIDLString.h" 
 #include "nsIErrorService.h" 
-#include "netCore.h" 
+#include "netCore.h"
+#include "nsIObserverService.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -318,6 +319,9 @@ nsIOService::GetOffline(PRBool *offline)
 NS_IMETHODIMP
 nsIOService::SetOffline(PRBool offline)
 {
+    nsCOMPtr<nsIObserverService>
+        observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+    
     nsresult rv1 = NS_OK;
     nsresult rv2 = NS_OK;
     if (offline) {
@@ -329,6 +333,11 @@ nsIOService::SetOffline(PRBool offline)
             rv2 = mSocketTransportService->Shutdown();
         if (NS_FAILED(rv1)) return rv1;
         if (NS_FAILED(rv2)) return rv2;
+
+        // don't care if notification fails
+        (void)observerService->Notify(this,
+                                      NS_LITERAL_STRING("network:offline-status-changed"),
+                                      NS_LITERAL_STRING("offline"));
     }
     else if (!offline && mOffline) {
         // go online
@@ -339,7 +348,12 @@ nsIOService::SetOffline(PRBool offline)
         if (mSocketTransportService)
             rv2 = mSocketTransportService->Init();		//XXX should we shutdown the dns service?
         if (NS_FAILED(rv2)) return rv1;        
-        mOffline = PR_FALSE;	// indicate success only AFTER we've brought up the services
+        mOffline = PR_FALSE;    // indicate success only AFTER we've
+                                // brought up the services
+        // don't care if notification fails
+        (void)observerService->Notify(this,
+                                      NS_LITERAL_STRING("network:offline-status-changed"),
+                                      NS_LITERAL_STRING("online"));
     }
     return NS_OK;
 }
