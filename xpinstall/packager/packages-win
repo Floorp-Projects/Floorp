@@ -50,6 +50,7 @@ bin\zlib.dll
 bin\components\jar50.dll
 bin\components\xpinstal.dll
 bin\components\ucharuti.dll
+install\ren8dot3.exe,bin\ren8dot3.exe
 
 [browser]
 ; files listed in xpcom (missing in this section) will be installed as part of the browser
