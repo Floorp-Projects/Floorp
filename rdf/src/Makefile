@@ -26,22 +26,32 @@ LIBRARY_NAME	= rdf
 
 REQUIRES	= nspr xpcom netlib raptor
 
-LOCAL_INCLUDES  = \
-	-I(PUBLIC)/rdf		\
-	-I(PUBLIC)/xpcom	\
-	-I(PUBLIC)/netlib	\
+LOCAL_INCLUDES=			\
+	-I$(PUBLIC)/rdf		\
+	-I$(PUBLIC)/xpcom	\
+	-I$(PUBLIC)/netlib	\
+	$(NULL)
 
-CSRCS		= \
-		  vocab.c 	\
-		  core.c 	\
-		  remstore.c 	\
-		  utils.c 	\
-		  rdfparse.c 	\
-		  bmk2mcf.c 	\
-		  rdfht.c 	\
-		  columns.c 	\
-		  ht.c 		\
-		  $(NULL)
+CSRCS=			\
+	vocab.c 	\
+	core.c		\
+	remstore.c 	\
+	utils.c 	\
+	rdfparse.c 	\
+	bmk2rdf.c 	\
+	columns.c 	\
+	rdfht.c 	\
+	$(NULL)
+
+CPPSRCS=			\
+	comwrap.cpp		\
+	netglue.cpp		\
+	nsRDFDataModel.cpp	\
+	nsRDFDataModelItem.cpp	\
+	nsRDFTreeColumn.cpp	\
+	nsRDFTreeDataModel.cpp	\
+	nsRDFTreeItem.cpp	\
+	$(NULL)
 
 include $(DEPTH)/config/config.mk
 
