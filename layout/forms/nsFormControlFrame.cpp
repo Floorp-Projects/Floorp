@@ -559,7 +559,6 @@ nsFormControlFrame::GetWidgetInitData(nsIPresContext* aPresContext)
 nsresult
 nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg)
 {
-#if 0
   NS_ASSERTION(aPresContext, "aPresContext is NULL in RegUnRegAccessKey!");
   NS_ASSERTION(aFrame, "aFrame is NULL in RegUnRegAccessKey!");
 
@@ -607,13 +606,12 @@ nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * a
     nsCOMPtr<nsIEventStateManager> stateManager;
     if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
       if (aDoReg) {
-        return stateManager->RegisterAccessKey(aFrame, (PRUint32)accessKey.First());
+        return stateManager->RegisterAccessKey(aFrame, nsnull, (PRUint32)accessKey.First());
       } else {
-        return stateManager->UnregisterAccessKey(aFrame);
+        return stateManager->UnregisterAccessKey(aFrame, nsnull, (PRUint32)accessKey.First());
       }
     }
   }
-#endif
   return NS_ERROR_FAILURE;
 }
 

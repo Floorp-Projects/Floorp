@@ -42,6 +42,7 @@
 #include "nsIFrameManager.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
+#include "nsIHTMLAttributes.h"
 
 // XXX suppress
 

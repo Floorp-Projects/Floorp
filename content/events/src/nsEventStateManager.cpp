@@ -122,6 +122,7 @@ nsEventStateManager::nsEventStateManager()
   mLastWindowToHaveFocus = nsnull;
   mFirstBlurEvent = nsnull;
   mFirstFocusEvent = nsnull;
+  mAccessKeys = nsnull;
   NS_INIT_REFCNT();
   
   ++mInstanceCount;
@@ -169,6 +170,10 @@ nsEventStateManager::~nsEventStateManager()
   if(mInstanceCount == 0) {
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
+  }
+
+  if (mAccessKeys) {
+    delete mAccessKeys;
   }
 
   if (!m_haveShutdown) {
@@ -584,6 +589,39 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     break;
     
   case NS_KEY_PRESS:
+    {
+      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+      //This is to prevent keyboard scrolling while alt modifier in use.
+      if (keyEvent->isAlt) {
+        //Alt key is down, we may need to do an accesskey
+        if (mAccessKeys) {
+          //Someone registered an accesskey.  Find and activate it.
+          nsVoidKey key((void*)keyEvent->charCode);
+          if (mAccessKeys->Exists(&key)) {
+            nsCOMPtr<nsIContent> content = getter_AddRefs(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
+
+            //Its hard to say what HTML4 wants us to do in all cases.  So for now we'll settle for
+            //A) Set focus
+            ChangeFocus(content, nsnull, PR_TRUE);
+
+            //B) Click on it.
+            nsEventStatus status = nsEventStatus_eIgnore;
+            nsMouseEvent event;
+            event.eventStructType = NS_GUI_EVENT;
+            event.message = NS_MOUSE_LEFT_CLICK;
+            event.isShift = PR_FALSE;
+            event.isControl = PR_FALSE;
+            event.isAlt = PR_FALSE;
+            event.isMeta = PR_FALSE;
+            event.clickCount = 0;
+            event.widget = nsnull;
+            content->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+            *aStatus = nsEventStatus_eConsumeNoDefault;
+          }
+        }
+      }
+    }
   case NS_KEY_DOWN:
   case NS_KEY_UP:
   case NS_MOUSE_SCROLL:
@@ -2328,21 +2366,57 @@ nsEventStateManager::SetFocusedContent(nsIContent* aContent)
 // Access Key Registration
 //-------------------------------------------
 NS_IMETHODIMP
-nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, PRUint32 aKey)
+nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, PRUint32 aKey)
 {
-#ifdef DEBUG_rods
-  printf("Obj: %p Registered %d [%c]accesskey\n", aFrame, aKey, (char)aKey);
-#endif
-  return NS_ERROR_FAILURE;
+  if (!mAccessKeys) {
+    mAccessKeys = new nsSupportsHashtable();
+    if (!mAccessKeys) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  nsCOMPtr<nsIContent> content;
+  if (!aContent) {
+    aFrame->GetContent(getter_AddRefs(content));
+  }
+  else {
+    content = aContent;
+  }
+
+  if (content) {
+    nsVoidKey key((void*)aKey);
+
+    nsIContent* oldContent = NS_STATIC_CAST(nsIContent*, mAccessKeys->Put(&key, content));
+    NS_IF_RELEASE(oldContent);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame)
+nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, PRUint32 aKey)
 {
-#ifdef DEBUG_rods
-  printf("Obj: %p Unregistered accesskey\n", aFrame);
-#endif
-  return NS_ERROR_FAILURE;
+  if (!mAccessKeys) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIContent> content;
+  if (!aContent) {
+    aFrame->GetContent(getter_AddRefs(content));
+  }
+  else {
+    content = aContent;
+  }
+  if (content) {
+    nsVoidKey key((void*)aKey);
+
+    nsCOMPtr<nsIContent> oldContent = getter_AddRefs(NS_STATIC_CAST(nsIContent*, mAccessKeys->Get(&key)));
+    if (oldContent != content) {
+      return NS_OK;
+    }
+    mAccessKeys->Remove(&key);
+  }
+  return NS_OK;
 }
 
 // This function MAY CHANGE the PresContext that you pass into it.  It
