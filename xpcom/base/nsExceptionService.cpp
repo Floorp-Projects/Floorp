@@ -290,6 +290,15 @@ nsExceptionService::DoGetExceptionFromProvider(nsresult errCode,
                                                nsIException * defaultException,
                                                nsIException **_exc)
 {
+    // Check for an existing exception
+    nsresult nr = GetCurrentException(_exc);
+    if (NS_SUCCEEDED(nr) && *_exc) {
+        (*_exc)->GetResult(&nr);
+        // If it matches our result then use it
+        if (nr == errCode)
+            return NS_OK;
+        NS_RELEASE(*_exc);
+    }
     nsProviderKey key(NS_ERROR_GET_MODULE(errCode));
     nsCOMPtr<nsIExceptionProvider> provider =
         dont_AddRef((nsIExceptionProvider *)mProviders.Get(&key));
