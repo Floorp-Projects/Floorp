@@ -277,6 +277,10 @@ ImageConsumer::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
     NS_RELEASE(mTimer);
   }
 
+  if (NS_BINDING_SUCCEEDED != status) {
+    mStatus = MK_INTERRUPTED;
+  }
+
   // Since we're still holding on to the stream, there's still data
   // that needs to be read. So, pump the stream ourselves.
   if((mStream != nsnull) && (status == NS_BINDING_SUCCEEDED)) {
