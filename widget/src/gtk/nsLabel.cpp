@@ -136,6 +136,6 @@ NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
   char * text;
   gtk_label_get(GTK_LABEL(mWidget), &text);
   aBuffer.SetLength(0);
-  aBuffer.Append(text);
+  aBuffer.AppendWithConversion(text);
   return NS_OK;
 }

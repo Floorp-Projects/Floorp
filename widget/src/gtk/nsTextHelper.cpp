@@ -87,7 +87,7 @@ NS_IMETHODIMP  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize
                                     gtk_text_get_length (GTK_TEXT (mTextWidget)));
     }
   aTextBuffer.SetLength(0);
-  aTextBuffer.Append(str);
+  aTextBuffer.AppendWithConversion(str);
   PRUint32 len = (PRUint32)strlen(str);
   aActualSize = len;
 

@@ -185,7 +185,7 @@ NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
     char * text;
     if (mLabel) {
       gtk_label_get(GTK_LABEL(mLabel), &text);
-      aBuffer.Append(text);
+      aBuffer.AppendWithConversion(text);
     }
   }
   return NS_OK;

@@ -424,7 +424,7 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
 
       if (NS_FAILED(rv)) {
         NS_ASSERTION(0, "error getting locale charset, using ISO-8859-1");
-        localeCharset.SetString("ISO-8859-1");
+        localeCharset.AssignWithConversion("ISO-8859-1");
         rv = NS_OK;
       }
 

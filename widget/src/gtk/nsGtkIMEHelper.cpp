@@ -81,10 +81,11 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
   NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_PROGID,
                   &result);
   if (platform && NS_SUCCEEDED(result)) {
-    nsAutoString charset("");
+    nsAutoString charset;
+    charset.AssignWithConversion("");
     result = platform->GetCharset(kPlatformCharsetSel_Menu, charset);
     if (NS_FAILED(result) || (charset.Length() == 0)) {
-      charset = "ISO-8859-1";   // default
+      charset.AssignWithConversion("ISO-8859-1");   // default
     }
     nsICharsetConverterManager* manager = nsnull;
     nsresult res = nsServiceManager::
