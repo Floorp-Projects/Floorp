@@ -53,4 +53,4 @@ config/doxygen.cfg
 include/Makefile
 "
 
-#### Generated files go after this line.
+#### Generated lines go after this line.
