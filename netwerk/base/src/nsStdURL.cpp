@@ -1011,41 +1011,30 @@ nsStdURL::SetSpec(const char* i_Spec)
         CRTFREEIF(eSpec);
         return rv;
     }
+    char*   srcPtr  = eSpec;
+    char*   destPtr = eSpec;
 
     // Skip leading spaces and control-characters
-    char* fwdPtr= (char*) eSpec;
-    while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
-        fwdPtr++;
+    while ((*srcPtr > '\0') && (*srcPtr <= ' '))
+        srcPtr++;
 
     // Strip linebreaks and tabs
-    char* copyToPtr = 0;
-    char* midPtr = fwdPtr;
-    while (midPtr && (*midPtr != '\0')) {
-        while ((*midPtr == '\r') || (*midPtr == '\n') || (*midPtr == '\t')) { // if linebreak or tab
-            if (!copyToPtr)
-                copyToPtr = midPtr; // start copying
-            midPtr++; // skip linebreak and tab
+    while (*srcPtr) {
+        if ( (*srcPtr == '\r') || (*srcPtr == '\n') || (*srcPtr == '\t') )
+            srcPtr ++;
+        else if (srcPtr != destPtr)
+            *destPtr++ = *srcPtr++;
+        else {
+            srcPtr++;
+            destPtr++;
         }
-        if (copyToPtr) { // if copying
-            *copyToPtr = *midPtr;
-            copyToPtr++;
-            if (*midPtr == '\0')
-                break;
-        }
-        midPtr++;
-    }
-    if (copyToPtr) { // If we removed linebreaks or tabs, copyToPtr is the end of the string
-        midPtr = copyToPtr;
     }
 
     // Remove trailing spaces and control-characters
-    while ((midPtr-fwdPtr) >= 0) {
-        midPtr--;
-        if ((*midPtr > ' ') || (*midPtr <= '\0'))  // UTF-8 chars < 0?
-            break;
-    }
-    if (midPtr && (*midPtr != '\0'))
-        *(midPtr+1) = '\0'; // Restore trailing null
+    while ( (destPtr > eSpec) && ((*(destPtr - 1) > 0) && (*(destPtr - 1) <= ' ')) )
+        destPtr --;
+
+    *destPtr = '\0';
 
     // If spec is being rewritten clean up everything-
     CRTFREEIF(mScheme);
@@ -1059,7 +1048,7 @@ nsStdURL::SetSpec(const char* i_Spec)
     CRTFREEIF(mParam);
     CRTFREEIF(mQuery);
     CRTFREEIF(mRef);
-    rv = Parse(fwdPtr);
+    rv = Parse(eSpec);
     CRTFREEIF(eSpec);
 
     NS_ASSERTION(mScheme, "no scheme? You shouldn't be calling this function without scheme!");
