@@ -26,8 +26,6 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "prenv.h"
-#include "xp_core.h"
-#include "xp_str.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -214,7 +212,7 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
         nsUnixMozillaHomePath = homepath;
     }
 
-    resourceBase = XP_STRDUP(nsUnixMozillaHomePath);
+    resourceBase = nsCRT::strdup(nsUnixMozillaHomePath);
 #ifdef DEBUG
     {
         static PRBool firstTime = PR_TRUE;
@@ -230,7 +228,7 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
 #ifdef XP_BEOS
     char *moz5 = getenv("MOZILLA_FIVE_HOME");
     if (moz5)
-      resourceBase = XP_STRDUP(moz5);
+      resourceBase = nsCRT::strdup(moz5);
     else
     {
       static char buf[MAXPATHLEN];
@@ -244,7 +242,7 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
         if((p = strrchr(buf, '/')) != 0)
         {
           *p = 0;
-          resourceBase = XP_STRDUP(buf);
+          resourceBase = nsCRT::strdup(buf);
         }
         else
           return nsnull;
@@ -255,7 +253,7 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
 #endif
 
 #ifdef XP_MAC
-    resourceBase = XP_STRDUP("usr/local/netscape/bin");
+    resourceBase = nsCRT::strdup("usr/local/netscape/bin");
 #endif /* XP_MAC */
 
     // Join base path to resource name
