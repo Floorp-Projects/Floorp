@@ -235,17 +235,25 @@ public:
   // Additional Methods
   nsresult Start(nsIPresContext *aPresContext) 
   {
-    mPresContext     = aPresContext;
-    //mHasBeenNotified = PR_FALSE;
+    mPresContext = aPresContext;
 
+    nsresult result = NS_OK;
     if (!mTimer) {
-      nsresult result;
       mTimer = do_CreateInstance("@mozilla.org/timer;1", &result);
 
       if (NS_FAILED(result))
         return result;
 
+    } else {
+      // The time "Init" will addref the listener which is "this" object.
+      // So if the timer has already been created then the "this" pointer is
+      // already addef'ed and will be addref'ed again when it is re-inited
+      // below, so we release here in anticipation of the Init and it's addref
+      NS_ASSERTION(mRefCnt > 1, "This must always be greater than 1");
+
+      NS_RELEASE_THIS();
     }
+    result = mTimer->Init(this, mDelay);
 
     if (mHasBeenNotified) {
       mItemsAdded      = PR_FALSE;
@@ -256,7 +264,7 @@ public:
       mInxArray.Clear();
     }
 
-    return mTimer->Init(this, mDelay);
+    return result;
   }
 
   void Init(nsListControlFrame *aList, PRUint32 aDelay)  { mListControl = aList; mDelay = aDelay; }
@@ -411,7 +419,7 @@ nsListControlFrame::~nsListControlFrame()
   REFLOW_COUNTER_DUMP("nsLCF");
   if (mUpdateTimer != nsnull) {
     StopUpdateTimer();
-    delete mUpdateTimer;
+    NS_RELEASE(mUpdateTimer);
   }
 
   mComboboxFrame = nsnull;
@@ -2776,6 +2784,28 @@ nsListControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
     return SetSelectionInPresState(aIndex, aValue);
   }
 
+  // The mUpdateTimer will NOT be null if this is called from script
+  // and it hasn't been notified. 
+  //
+  // So when there is a timer and the option's new value is TRUE
+  // then we want to stop the timer, set the value and restart the timer.
+  // The timer only tracks the indexes that will be set to true,
+  // so if "aValue" is false we don't need to do anything.
+  if (mUpdateTimer != nsnull && !mUpdateTimer->HasBeenNotified()) {
+    if (aValue) {
+      StopUpdateTimer();
+      ToggleSelected(aIndex); // sets mSelectedIndex
+      nsresult rv = StartUpdateTimer(mPresContext);
+      if (NS_SUCCEEDED(rv) && mUpdateTimer != nsnull) {
+        mUpdateTimer->ItemIndexSet(aIndex);
+      }
+    }
+    return NS_OK;
+  }
+
+  // It gets here when there is a timer and it HAS been notified
+  // which can happen if the JS is setting the "selectedIndex" of
+  // the selecte and no items were added or removed form the select
   PRBool multiple;
   nsresult rv = GetMultiple(&multiple);
   if (NS_SUCCEEDED(rv)) {
