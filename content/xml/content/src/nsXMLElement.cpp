@@ -158,8 +158,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
             nsIURL* baseURL = nsnull;
 	          nsLinkVerb verb = eLinkVerb_Replace;
 	          target.Truncate();
-            GetAttribute(kNameSpaceID_XML, kHrefAtom, href);
-            GetAttribute(kNameSpaceID_XML, kShowAtom, show);
+            GetAttribute(kNameSpaceID_None, kHrefAtom, href);
+            GetAttribute(kNameSpaceID_None, kShowAtom, show);
 	          // XXX Should probably do this using atoms 
 	          if (show.Equals("new")) {
 	            verb = eLinkVerb_New;
@@ -167,8 +167,11 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
 	          else if (show.Equals("embed")) {
 	            verb = eLinkVerb_Embed;
 	          }
+            
+            if (nsnull != mInner.mDocument) {
+              baseURL = mInner.mDocument->GetDocumentURL();
+            }
             mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
-              // XXX shouldn't base URL come from document???
             NS_IF_RELEASE(baseURL);
             aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
@@ -185,9 +188,14 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
       {
         nsAutoString href, target;
         nsIURL* baseURL = nsnull;
-        GetAttribute(kNameSpaceID_XML, kHrefAtom, href);
+        GetAttribute(kNameSpaceID_None, kHrefAtom, href);
+        if (nsnull != mInner.mDocument) {
+          baseURL = mInner.mDocument->GetDocumentURL();
+        }
+
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);
-              // XXX shouldn't base URL come from document???
+        
+        NS_IF_RELEASE(baseURL);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
