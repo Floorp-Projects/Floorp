@@ -224,16 +224,16 @@ sub DoFactoidCheck {
                                  'is', # am => is
                      $event->{'from'}, # subject
                           $direct);
-    } elsif ($shortMessage =~ /^(no\s*, (\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? (.+?) \s+ (is|are) \s+ (also\s+)? (.+?) $/six) {
+    } elsif ($shortMessage =~ /^(no\s*, (?:\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? (.+?) \s+ (is|are) \s+ (also\s+)? (.+?) $/six) {
         # the "remember:" prefix can be used to delimit the start of the actual content, if necessary.
         $self->SetFactoid($event,
                           defined($1), # replace existing answer?
-                                   $3, # subject
-                               lc($4), # is/are
-                          defined($5), # add to existing answer?
-                                   $6, # object
+                                   $2, # subject
+                               lc($3), # is/are
+                          defined($4), # add to existing answer?
+                                   $5, # object
                          ($direct or defined($2)));
-    } elsif ($shortMessage =~ /^(no\s*, (\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? I \s+ am \s+ (also\s+)? (.+?) $/osix) {
+    } elsif ($shortMessage =~ /^(no\s*, (?:\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? I \s+ am \s+ (also\s+)? (.+?) $/osix) {
         # the "remember:" prefix can be used to delimit the start of the actual content, if necessary.
         $self->SetFactoid($event,
                           defined($1), # replace existing answer?
