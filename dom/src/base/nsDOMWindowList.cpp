@@ -116,12 +116,14 @@ nsDOMWindowList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
   mWebShell->FindChildWithName(aName.GetUnicode(), *getter_AddRefs(item));
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
+  if (NS_WARN_IF_FALSE(globalObject, "Couldn't get to the globalObject")) {
+    *aReturn = nsnull;
   NS_ASSERTION(globalObject != nsnull, "Couldn't get to the globalObject");
   if (globalObject) {
     CallQueryInterface(globalObject.get(), aReturn);
   }
   else {
-    *aReturn = nsnull;
+    CallQueryInterface(globalObject.get(), aReturn);
   }
   return NS_OK;
 }
