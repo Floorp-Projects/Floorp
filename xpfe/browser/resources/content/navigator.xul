@@ -131,8 +131,12 @@ Contributor(s): ______________________________________. -->
                   oncommand="BrowserForward()"/>
         <menuitem id="context-reload"
                   value="&reloadCmd.label;"
-                  accesskey=""
+                  accesskey="&reloadCmd.accesskey;"
                   oncommand="BrowserReallyReload(0);"/>
+        <menuitem id="context-reload-frame"
+                  value="&reloadFrameCmd.label;"
+                  accesskey="&reloadFrameCmd.accesskey;"
+                  oncommand="contextMenu.reloadFrame();"/>
         <menuitem id="context-stop"
                   value="&stopCmd.label;"
                   accesskey=""

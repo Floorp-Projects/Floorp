@@ -88,7 +88,9 @@ nsContextMenu.prototype = {
         // Forward determined by canGoForward broadcaster.
         this.setItemAttrFromNode( "context-forward", "disabled", "canGoForward" );
     
-        // Reload is always OK.
+        // Reload is OK if not on a frame; vice-versa for reload-frame.
+        this.showItem( "context-reload", !this.inFrame );
+        this.showItem( "context-reload-frame", this.inFrame );
     
         // Stop determined by canStop broadcaster.
         this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
@@ -300,6 +302,10 @@ nsContextMenu.prototype = {
     // Edit linked-to URL in a new window.
     editLink : function () {
         BrowserEditPage( this.linkURL() );
+    },
+    // Reload clicked-in frame.
+    reloadFrame : function () {
+        this.target.ownerDocument.location.reload();
     },
     // Open clicked-in frame in its own window.
     openFrame : function () {
