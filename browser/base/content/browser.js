@@ -1931,6 +1931,41 @@ function openHomeDialog(aURL)
   }
 }
 
+var bookmarksButtonObserver = {
+  onDrop: function (aEvent, aXferData, aDragSession)
+  {
+    var split = aXferData.data.split("\n");
+    var url = split[0];
+    if (url != aXferData.data) {  //do nothing if it's not a valid URL
+      var name = split[1];
+      openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
+                 "centerscreen,chrome,dialog,resizable,dependent", name, url);
+    }
+  },
+
+  onDragOver: function (aEvent, aFlavour, aDragSession)
+  {
+    var statusTextFld = document.getElementById("statusbar-display");
+    statusTextFld.label = gNavigatorBundle.getString("droponbookmarksbutton");
+    aDragSession.dragAction = Components.interfaces.nsIDragService.DRAGDROP_ACTION_LINK;
+  },
+
+  onDragExit: function (aEvent, aDragSession)
+  {
+    var statusTextFld = document.getElementById("statusbar-display");
+    statusTextFld.label = "";
+  },
+
+  getSupportedFlavours: function ()
+  {
+    var flavourSet = new FlavourSet();
+    flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+    flavourSet.appendFlavour("text/x-moz-url");
+    flavourSet.appendFlavour("text/unicode");
+    return flavourSet;
+  }
+}
+
 var goButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
     {
