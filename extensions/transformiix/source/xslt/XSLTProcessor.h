@@ -298,8 +298,10 @@ private:
     void parseStylesheetPI(String& data, String& type, String& href);
 #endif
 
-    void process(Node* node, Node* context, ProcessorState* ps);
-    void process(Node* node, Node* context, String* mode, ProcessorState* ps);
+    void process(Node* node,
+                 Node* context,
+                 const String& mode,
+                 ProcessorState* ps);
 
     void processAction(Node* node, Node* xslAction, ProcessorState* ps);
 
@@ -326,7 +328,9 @@ private:
      * @param ps    current ProcessorState
      * @param mode  template mode
     **/
-    void processDefaultTemplate(Node* node, ProcessorState* ps, String* mode);
+    void processDefaultTemplate(Node* node,
+                                ProcessorState* ps,
+                                const String& mode);
 
     void processTopLevel(Document* aSource,
                          Document* aStylesheet,

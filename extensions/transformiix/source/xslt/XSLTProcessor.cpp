@@ -421,6 +421,14 @@ void XSLTProcessor::processTopLevel(Document* aSource,
     if (!aStylesheet)
         return;
 
+    ProcessorState::ImportFrame* currentFrame =
+        (ProcessorState::ImportFrame*)importFrame->current();
+
+    NS_ASSERTION(currentFrame,
+                 "processTopLevel called with no current importframe");
+    if (!currentFrame)
+        return;
+
     NS_ASSERTION(aSource, "processTopLevel called without source document");
 
     MBool importsDone = MB_FALSE;
@@ -461,7 +469,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
             String name = element->getNodeName();
             switch (getElementType(name, aPs)) {
                 case XSLType::ATTRIBUTE_SET:
-                    aPs->addAttributeSet(element);
+                    aPs->addAttributeSet(element, currentFrame);
                     break;
                 case XSLType::PARAM :
                 {
@@ -532,7 +540,7 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                     break;
                 }
                 case XSLType::TEMPLATE :
-                    aPs->addTemplate(element);
+                    aPs->addTemplate(element, currentFrame);
                     break;
                 case XSLType::VARIABLE :
                 {
@@ -555,7 +563,9 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                         notifyError(err);
                     }
                     else {
-                        aPs->shouldStripSpace(elements, MB_FALSE);
+                        aPs->shouldStripSpace(elements,
+                                              MB_FALSE,
+                                              currentFrame);
                     }
                     break;
                 }
@@ -569,7 +579,9 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                         notifyError(err);
                     }
                     else {
-                        aPs->shouldStripSpace(elements,MB_TRUE);
+                        aPs->shouldStripSpace(elements,
+                                              MB_TRUE,
+                                              currentFrame);
                     }
                     break;
                 }
@@ -679,7 +691,7 @@ Document* XSLTProcessor::process
       //----------------------------------------/
      //- Process root of XML source document -/
     //--------------------------------------/
-    process(&xmlDocument, &xmlDocument, &ps);
+    process(&xmlDocument, &xmlDocument, NULL_STRING, &ps);
 
     //-- return result Document
     return result;
@@ -725,7 +737,7 @@ void XSLTProcessor::process
       //----------------------------------------/
      //- Process root of XML source document -/
     //--------------------------------------/
-    process(&xmlDocument, &xmlDocument, &ps);
+    process(&xmlDocument, &xmlDocument, NULL_STRING, &ps);
 
     print(*result, ps.getOutputFormat(), out);
 
@@ -938,12 +950,13 @@ void XSLTProcessor::notifyError(String& errorMessage, ErrorObserver::ErrorLevel 
     delete iter;
 } //-- notifyError
 
-void XSLTProcessor::process(Node* node, Node* context, ProcessorState* ps) {
-    process(node, context, 0, ps);
-} //-- process
+void XSLTProcessor::process(Node* node,
+                            Node* context,
+                            const String& mode,
+                            ProcessorState* ps) {
+    if (!node)
+        return;
 
-void XSLTProcessor::process(Node* node, Node* context, String* mode, ProcessorState* ps) {
-    if ( !node ) return;
     Element* xslTemplate = ps->findTemplate(node, context, mode);
     if (xslTemplate)
         processTemplate(node, xslTemplate, ps);
@@ -1008,9 +1021,8 @@ void XSLTProcessor::processAction
             //-- xsl:apply-templates
             case XSLType::APPLY_TEMPLATES :
             {
-                String* mode = 0;
-                Attr* modeAttr = actionElement->getAttributeNode(MODE_ATTR);
-                if ( modeAttr ) mode = new String(modeAttr->getValue());
+                const String& mode =
+                    actionElement->getAttribute(MODE_ATTR);
                 String selectAtt  = actionElement->getAttribute(SELECT_ATTR);
                 if ( selectAtt.length() == 0 ) selectAtt = "node()";
                 pExpr = ps->getPatternExpr(selectAtt);
@@ -1061,7 +1073,6 @@ void XSLTProcessor::processAction
                     notifyError("error processing apply-templates");
                 }
                 //-- clean up
-                delete mode;
                 delete exprResult;
                 break;
             }
@@ -1595,6 +1606,7 @@ void XSLTProcessor::processAttributeSets
             for ( int i = 0; i < attSet->size(); i++) {
                 processAction(node, attSet->get(i), ps);
             }
+            delete attSet;
         }
     }
 } //-- processAttributeSets
@@ -1728,7 +1740,9 @@ void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorStat
  * @param ps    current ProcessorState
  * @param mode  template mode
 **/
-void XSLTProcessor::processDefaultTemplate(Node* node, ProcessorState* ps, String* mode)
+void XSLTProcessor::processDefaultTemplate(Node* node,
+                                           ProcessorState* ps,
+                                           const String& mode)
 {
     NS_ASSERTION(node, "context node is NULL in call to XSLTProcessor::processTemplate!");
 
@@ -2049,7 +2063,7 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
       //---------------------------------------/
      //- Process root of XML source document -/
     //---------------------------------------/
-    process(sourceNode, sourceNode, ps);
+    process(sourceNode, sourceNode, NULL_STRING, ps);
 
     // XXX Hack, ProcessorState::addToResultTree should do the right thing
     // for adding several consecutive text nodes
