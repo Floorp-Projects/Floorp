@@ -208,6 +208,26 @@ sub MainMenu() {
 #              li(MyForm("EditPartition") . submit($title) .
 #                 hidden(-name=>"partitionid") . end_form()));
 #     }
+
+    my $query = Query("select id,name from repositories order by id");
+    my @vals = ();
+    my %labels;
+    while (my @row = $query->fetchrow()) {
+        my $v = $row[0];
+        push(@vals, $v);
+        $labels{$v} = $row[1];
+    }
+    my $radio = popup_menu(-name=>"repid",
+                           "-values"=>\@vals,
+                           -default=>$vals[0],
+                           -labels=>\%labels);
+    push(@list, li(MyForm("FindPartition") .
+                   submit("Find partition containing file") .
+                   "named<nobr> " .
+                   textfield(-name=>"file", -size=>60) .
+                   "</nobr> in <nobr>repository " . $radio .
+                   end_form()));
+
     if ($::candespot) {
         param("_despot", !$::despot);
         my $str = $::despot ? "Disable" : "Enable";
@@ -234,18 +254,6 @@ sub MainMenu() {
                     "with email<nobr> " .
                     textfield(-name=>"email", -size=>25) . "</nobr>" .
                     end_form()));
-            my $query = Query("select id,name from repositories order by id");
-            my @vals = ();
-            my %labels;
-            while (my @row = $query->fetchrow()) {
-                my $v = $row[0];
-                push(@vals, $v);
-                $labels{$v} = $row[1];
-            }
-            my $radio = popup_menu(-name=>"repid",
-                                   "-values"=>\@vals,
-                                   -default=>$vals[0],
-                                   -labels=>\%labels);
             push(@l2,
                  li(MyForm("AddPartition") . submit("Create or edit partition")
                     . " named<nobr> " .
@@ -644,6 +652,34 @@ sub ViewAccount {
 
 }
     
+
+
+sub FindPartition {
+    my $repid = $F::repid;
+    my $file = $F::file;
+    print h1("Searching for partitions matching $file ...");
+    my $query = Query("select files.pattern,partitions.name,partitions.id from files,partitions where partitions.id=files.partitionid and partitions.repositoryid=$repid");
+    my $found = 0;
+    while (@row = $query->fetchrow()) {
+        my ($pattern,$name,$id) = (@row);
+        if (FileMatches($file, $pattern) || FileMatches($pattern, $file)) {
+            print MyForm("EditPartition") . submit($name) .
+                hidden("partitionid", $id) . "(matches pattern $pattern)" .
+                    end_form();
+            $found = 1;
+        }
+    }
+
+    if (!$found) {
+        print "No partitions found.";
+        if ($file !~ /^mozilla/) {
+            print p("Generally, your filename should start with mozilla/ or mozilla-org/.");
+        }
+    }
+}
+                    
+
+
 
 
 sub AddPartition {
