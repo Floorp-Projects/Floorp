@@ -133,15 +133,15 @@ Rights Reserved.
 		<menuitem id="threadPaneContext-replySender"
 			  value="&contextReplySender.label;"
 			  accesskey=""
-			  oncommand="MsgReplyMessage(null);"/>
+			  oncommand="MsgReplyMessage(event);"/>
 		<menuitem id="threadPaneContext-replyAll"
 			  value="&contextReplyAll.label;"
 			  accesskey=""
-			  oncommand="MsgReplyToAllMessage(null);"/>
+			  oncommand="MsgReplyToAllMessage(event);"/>
 		<menuitem id="threadPaneContext-forward"
 			  value="&contextForward.label;"
 			  accesskey=""
-			  oncommand="MsgForwardMessage(null);"/>
+			  oncommand="MsgForwardMessage(event);"/>
 		<menuseparator id="threadPaneContext-sep-reply"/>
 		<menu id="threadPaneContext-moveMenu"
 			  value="&contextMoveMsgMenu.label;"
@@ -621,8 +621,8 @@ Rights Reserved.
       <menuitem value="&forwardMsgCmd.label;" oncommand="MsgForwardMessage(event);"/>
       <menu value="&forwardAsMenu.label;">
         <menupopup>
-		<menuitem value="&forwardAsInline.label;" oncommand="MsgForwardAsInline();"/>
-        <menuitem value="&forwardAsAttachmentCmd.label;" oncommand="MsgForwardAsAttachment();"/>
+		<menuitem value="&forwardAsInline.label;" oncommand="MsgForwardAsInline(event);"/>
+        <menuitem value="&forwardAsAttachmentCmd.label;" oncommand="MsgForwardAsAttachment(event);"/>
 		</menupopup>
       </menu>
       <menuitem value="&editMsgAsNewCmd.label;" disabled="true" oncommand="MsgEditMessageAsNew();"/>

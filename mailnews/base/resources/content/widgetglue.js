@@ -486,9 +486,9 @@ function MsgForwardMessage(event)
   } catch (e) {dump ("failed to retrieve pref mail.forward_message_mode");}
   
   if (forwardType == 0)
-  	MsgForwardAsAttachment(null);
+  	MsgForwardAsAttachment(event);
   else
-  	MsgForwardAsInline(null);
+  	MsgForwardAsInline(event);
 }
 
 function MsgForwardAsAttachment(event)
