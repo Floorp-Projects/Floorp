@@ -103,7 +103,9 @@ fips_140_1()
   echo "$SCRIPTNAME: Attempt to list FIPS module keys with incorrect password"
   echo "certutil -d ${R_FIPSDIR} -K -f ${FIPSBADPWFILE}"
   certutil -d ${R_FIPSDIR} -K -f ${FIPSBADPWFILE} 2>&1
-  html_msg $? 255 "Attempt to list FIPS module keys with incorrect password (certutil -K)"
+  RET=$?
+  html_msg $RET 255 "Attempt to list FIPS module keys with incorrect password (certutil -K)"
+  echo "certutil -K returned $RET"
 
   echo "$SCRIPTNAME: Validate the certificate --------------------------"
   echo "certutil -d ${R_FIPSDIR} -V -n ${FIPSCERTNICK} -u SR -e -f ${R_FIPSPWFILE}"
