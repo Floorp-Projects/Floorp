@@ -411,6 +411,23 @@ function showTokenInfo()
 
 function toggleFIPS()
 {
+  if (!secmoddb.isFIPSEnabled) {
+    // A restriction of FIPS mode is, the password must be set
+    // In FIPS mode the password must be non-empty.
+    // This is different from what we allow in NON-Fips mode.
+
+    var tokendb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
+    var internal_token = tokendb.getInternalKeyToken(); // nsIPK11Token
+    var slot = secmoddb.findSlotByName(internal_token.tokenName);
+    switch (slot.status) {
+      case nsIPKCS11Slot.SLOT_UNINITIALIZED:
+      case nsIPKCS11Slot.SLOT_READY:
+        // Token has either no or an empty password.
+        alert(bundle.GetStringFromName("fips_nonempty_password_required"));
+        return;
+    }
+  }
+  
   secmoddb.toggleFIPSMode();
   //Remove the existing listed modules so that re-fresh doesn't 
   //display the module that just changed.
