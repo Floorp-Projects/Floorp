@@ -475,6 +475,7 @@ public:
   static PRBool IsEditable(nsIDOMNode *aNode);
 
   /** from html rules code - migration in progress */
+  static nsresult GetTagString(nsIDOMNode *aNode, nsString& outString);
   static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
   static PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
   static PRBool IsBlockNode(nsIDOMNode *aNode);
