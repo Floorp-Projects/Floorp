@@ -101,12 +101,14 @@ public:
     nsrefcnt mRefCnt;
 }; // class nsSplashScreenPh
 
+
 NS_IMETHODIMP
 nsSplashScreenPh::Show()
 {
   PhImage_t  *img = nsnull;
   char       *p = NULL;
-  int         inp_grp = 0;
+  char       *splash = NULL;
+  int         inp_grp;
   PhRid_t     rid;
   PhRegion_t  region;
   PhRect_t    rect;
@@ -114,14 +116,10 @@ nsSplashScreenPh::Show()
   PhRect_t  console;
 
    /* Get the Screen Size and Depth, so I can center the splash dialog, there has to be a better way!*/
-   p = getenv("PHIG");
-   if (p == nsnull)
-   {
-     fprintf( stderr, "The PHIG environment variable must be set, try setting it to 1\n");
-     exit( EXIT_FAILURE );
-   }
+	 p = getenv("PHIG");
+	 if( p ) inp_grp = atoi( p );
+	 else inp_grp = 1;
 
-   inp_grp = atoi(p);
    PhQueryRids( 0, 0, inp_grp, Ph_INPUTGROUP_REGION, 0, 0, 0, &rid, 1 );
    PhRegionQuery( rid, &region, &rect, NULL, 0 );
    inp_grp = region.input_group;
@@ -133,34 +131,45 @@ nsSplashScreenPh::Show()
    if (PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, inp_grp, &console ) == 0)
       
    mDialog = nsnull;   
+	
+   /* Setup proper path to the splash.bmp so it loads the splash screen at start up. */
+   /* Only try and open the splash screen bitmap if running exec'ing from mozilla shellscript*/
+   splash = getenv ("ADDON_PATH");
+   if ( splash )  {
+      strcat (splash,"/splash.bmp");
+      if (img = PxLoadImage(splash, NULL))
+      {
+        PtArg_t     arg[6];
+        PhPoint_t   pos;
 
-   if (img = PxLoadImage("splash.bmp", NULL))
-   {
-     PtArg_t     arg[5];
-     PhPoint_t   pos;
-     
-       img->flags = img->flags | Ph_RELEASE_IMAGE_ALL;
+          img->flags = img->flags | Ph_RELEASE_IMAGE_ALL;
 
-       pos.x = (aWidth/2)  - (img->size.w/2);
-       pos.y = (aHeight/2) - (img->size.h/2);
+          pos.x = (aWidth/2)  - (img->size.w/2);
+          pos.y = (aHeight/2) - (img->size.h/2);
 
-      pos.x += console.ul.x;
-      pos.y += console.ul.y;
-             
-       PtSetArg( &arg[0], Pt_ARG_DIM, &img->size, 0 );
-       PtSetArg( &arg[1], Pt_ARG_POS, &pos, 0 );
-       PtSetArg( &arg[2], Pt_ARG_WINDOW_RENDER_FLAGS, 0, 0xFFFFFFFF );
-       mDialog = PtCreateWidget( PtWindow, NULL, 3, arg );
+          pos.x += console.ul.x;
+          pos.y += console.ul.y;
 
-       PtSetArg( &arg[0], Pt_ARG_LABEL_TYPE, Pt_IMAGE, 0 );
-       PtSetArg( &arg[1], Pt_ARG_LABEL_DATA, img, sizeof(PhImage_t) );
-       PtCreateWidget( PtLabel, mDialog, 2, arg );
-       PtRealizeWidget( mDialog );
-       PtFlush();
+          PtSetArg( &arg[0], Pt_ARG_DIM, &img->size, 0 );
+          PtSetArg( &arg[1], Pt_ARG_POS, &pos, 0 );
+          PtSetArg( &arg[2], Pt_ARG_WINDOW_RENDER_FLAGS, 0, 0xFFFFFFFF );
+          PtSetArg( &arg[3], Pt_ARG_FILL_COLOR, Pg_BLACK, 0 );
+          mDialog = PtCreateWidget( PtWindow, NULL, 4, arg );
+
+          PtSetArg( &arg[0], Pt_ARG_LABEL_TYPE, Pt_IMAGE, 0 );
+          PtSetArg( &arg[1], Pt_ARG_LABEL_DATA, img, sizeof(PhImage_t) );
+          PtSetArg( &arg[2], Pt_ARG_BASIC_FLAGS, 0, 0xFFFFFFFF );
+          PtSetArg( &arg[3], Pt_ARG_FLAGS, 0, Pt_HIGHLIGHTED);
+          PtSetArg( &arg[4], Pt_ARG_MARGIN_HEIGHT, 0, 0);
+          PtSetArg( &arg[5], Pt_ARG_MARGIN_WIDTH, 0, 0);
+          PtCreateWidget( PtLabel, mDialog, 6, arg );
+          PtRealizeWidget( mDialog );
+          PtFlush();
+      }
    }
    else
    {
-     fprintf( stderr, "Error loading splash screen image %s\n", "splash.bmp" );
+     fprintf( stderr, "Error loading splash screen image: %s\n", splash );
    }
 
    return NS_OK;
