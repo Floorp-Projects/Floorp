@@ -1734,9 +1734,9 @@ nsEditor::QueryComposition(nsTextEventReply* aReply)
   
   if (NS_SUCCEEDED(result) && caretP) {
     if (aReply) {
-      caretP->GetWindowRelativeCoordinates(
-		aReply->mCursorPosition,
-		aReply->mCursorIsCollapsed, selection);
+      caretP->SetCaretDOMSelection(selection);
+      result = caretP->GetCaretCoordinates(nsICaret::eTopLevelWindowCoordinates, selection,
+		                      &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
     }
   }
   return result;
