@@ -22,10 +22,10 @@
    - Contributor(s):
   --> 
 
-<!ENTITY window.title.label          "Customize Search">
+<!ENTITY window.title.label          "Edit Categories">
 <!ENTITY allengines.label            "All Engines">
-<!ENTITY engine.column.label         "Search Engines">
-<!ENTITY category.label              "Category:">
+<!ENTITY engine.column.label         "Engines for this Category">
+<!ENTITY category.label              "Category">
 <!ENTITY category.accesskey          "c">
 <!ENTITY done.label                  "Done">
 
