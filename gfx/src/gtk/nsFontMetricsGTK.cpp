@@ -2176,8 +2176,8 @@ CheckMap(nsFontCharSetMap* aEntry)
         printf("=== %s failed (%s)\n", aEntry->mInfo->mCharSet, __FILE__);
       }
     }
+    aEntry++;
   }
-  aEntry++;
 }
 
 static void
