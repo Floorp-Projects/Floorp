@@ -240,8 +240,11 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   nsresult rv = nsComponentManager::CreateInstance(
     kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
-    pnsMenuItem->Create(this, labelStr, PR_FALSE); //PR_TRUE);                
     nsISupports * supports = nsnull;
+    QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenuItem->Create(supports, labelStr, PR_FALSE); //PR_TRUE); 
+    NS_RELEASE(supports);               
+    
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
     AddItem(supports); // Parent should now own menu item
     NS_RELEASE(supports);
@@ -272,9 +275,11 @@ NS_METHOD nsMenu::AddSeparator()
     kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     nsString tmp = "separator";
-    pnsMenuItem->Create(this, tmp, PR_TRUE);  
-                   
     nsISupports * supports = nsnull;
+    QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenuItem->Create(supports, tmp, PR_TRUE);  
+    NS_RELEASE(supports);
+    
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
     AddItem(supports); // Parent should now own menu item
     NS_RELEASE(supports); 
