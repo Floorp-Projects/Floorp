@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3gthr.c,v 1.2 2000/10/07 02:22:22 nelsonb%netscape.com Exp $
+ * $Id: ssl3gthr.c,v 1.3 2000/12/02 00:53:59 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -76,6 +76,7 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	gs->offset      = 0;
 	gs->writeOffset = 0;
 	gs->readOffset  = 0;
+	gs->inbuf.len   = 0;
     }
     
     lbp = gs->inbuf.buf;
@@ -108,8 +109,9 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	}
 
 	gs->offset    += nb;
-	gs->inbuf.len += nb;
 	gs->remainder -= nb;
+	if (gs->state == GS_DATA)
+	    gs->inbuf.len += nb;
 
 	/* if there's more to go, read some more. */
 	if (gs->remainder > 0) {
