@@ -31,7 +31,7 @@
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsViewsCID.h"
-#include "nsHTMLAToms.h"
+#include "nsHTMLAtoms.h"
 
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMNOTIFICATION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
