@@ -358,7 +358,7 @@ static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLine
         if (NS_FAILED(rv)) return rv;
 
         if (openWindowWithArgs) {
-          nsString cmdArgs((const char *)cmdResult);
+          nsString cmdArgs; cmdArgs.AssignWithConversion(NS_STATIC_CAST(const char *, cmdResult));
 #ifdef DEBUG_CMD_LINE
           printf("opening %s with %s\n",(const char *)chromeUrlForTask,"OpenWindow");
 #endif /* DEBUG_CMD_LINE */

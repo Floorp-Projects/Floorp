@@ -265,7 +265,7 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
   // Final case: we're not just starting up. How do we handle this?
   nsFileSpec fileSpec(inFileSpec);
   nsFileURL fileURL(fileSpec);
-  nsString urlString(fileURL.GetURLString());
+  nsString urlString; urlString.AssignWithConversion(fileURL.GetURLString());
   nsresult rv;
   rv = OpenWindow( "chrome://navigator/content", urlString.GetUnicode() );
   if (NS_FAILED(rv))
@@ -337,7 +337,7 @@ OSErr nsMacCommandLine::DispatchURLToNewBrowser(const char* url)
 	if (mStartedUp)
 	{
 		nsresult rv;
-		rv = OpenWindow("chrome://navigator/content", nsAutoString(url).GetUnicode());
+		rv = OpenWindow("chrome://navigator/content", NS_ConvertASCIItoUCS2(url).GetUnicode());
 		if (NS_FAILED(rv))
 			return errAEEventNotHandled;
 	}
