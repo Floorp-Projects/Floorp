@@ -62,7 +62,7 @@ function SetCommandEnabled(id, enabled)
 
 function AbDelete()
 {
-	dump("\AbDelete from XUL\n");
+//	dump("\AbDelete from XUL\n");
 	var tree = document.getElementById('resultsTree');
 	if ( tree )
 	{
@@ -78,10 +78,11 @@ function AbDelete()
 
 function AbDeleteDirectory()
 {
-	dump("\AbDeleteDirectory from XUL\n");
+//	dump("\AbDeleteDirectory from XUL\n");
 	var tree = document.getElementById('dirTree');
 	
-	if ( tree && tree.selectedItems && tree.selectedItems.length )
+//	if ( tree && tree.selectedItems && tree.selectedItems.length )
+	if ( tree )
 		top.addressbook.DeleteAddressBooks(tree.database, tree, tree.selectedItems);
 }
 
@@ -134,4 +135,9 @@ function AbPrintAddressBook()
         catch (ex) {
                 dump("failed to print address book\n");
         }
+}
+
+function AbImport()
+{
+	addressbook.ImportAddressBook();
 }

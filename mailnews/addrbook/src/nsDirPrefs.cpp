@@ -1196,7 +1196,7 @@ static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fu
 {
 	PRBool rc = PR_FALSE;
 
-	const char *endname = XP_STRCHR(&fullprefname[PL_strlen(PREF_LDAP_SERVER_TREE_NAME) + 1], '.');
+	const char *endname = PL_strchr(&fullprefname[PL_strlen(PREF_LDAP_SERVER_TREE_NAME) + 1], '.');
 	if (endname)
 	{
 		char *prefname = (char *)PR_Malloc(endname - fullprefname + 1);
@@ -1441,7 +1441,7 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 	 */
 	if (PL_strstr(prefname, PREF_LDAP_SERVER_TREE_NAME) == prefname)
 	{
-		prefname = XP_STRCHR(&prefname[PL_strlen(PREF_LDAP_SERVER_TREE_NAME) + 1], '.');
+		prefname = PL_strchr(&prefname[PL_strlen(PREF_LDAP_SERVER_TREE_NAME) + 1], '.');
 		if (!prefname)
 			return idNone;
 		else
@@ -2295,7 +2295,7 @@ static nsresult DIR_AddCustomAttribute(DIR_Server *server, const char *attrName,
 	 * attributes without a pretty name. So find the default pretty name, and generate
 	 * a "complete" string to use for tokenizing.
 	 */
-	if (NS_SUCCEEDED(status) && !XP_STRCHR(jsAttr, ':'))
+	if (NS_SUCCEEDED(status) && !PL_strchr(jsAttr, ':'))
 	{
 		const char *defaultPrettyName = DIR_GetAttributeName (server, id);
 		if (defaultPrettyName)
@@ -2803,8 +2803,8 @@ void DIR_GetServerFileName(char** filename, const char* leafName)
 	char* realLeafName;
 	char* nativeName;
 	char* urlName;
-	if (XP_STRCHR(leafName, ':') != nsnull)
-		realLeafName = XP_STRRCHR(leafName, ':') + 1;	/* makes sure that leafName is not a fullpath */
+	if (PL_strchr(leafName, ':') != nsnull)
+		realLeafName = PL_strrchr(leafName, ':') + 1;	/* makes sure that leafName is not a fullpath */
 	else
 		realLeafName = leafName;
 

@@ -93,11 +93,12 @@ Rights Reserved.
 			<menuitem value="&undoCmd.label;" oncommand="AbEditUndo()"/>
 			<menuitem value="&redoCmd.label;" oncommand="AbEditRedo()"/>
 			<menuseparator/>
-			<menuitem value="&cutCmd.label;" oncommand="AbEditCut();"/>
-			<menuitem value="&copyCmd.label;" oncommand="AbEditCopy();"/>
-			<menuitem value="&pasteCmd.label;" oncommand="AbEditPaste();"/>
+			<menuitem value="&cutCmd.label;" onaction="AbEditCut();"/>
+			<menuitem value="&copyCmd.label;" onaction="AbEditCopy();"/>
+			<menuitem value="&pasteCmd.label;" onaction="AbEditPaste();"/>
 			<menuitem value="&deleteCmd.label;" oncommand="AbDelete();"/>
-			<menuitem value="&selectAllCmd.label;" oncommand="AbSelectAll();"/>
+			<menuitem value="&deleteAbCmd.label;" oncommand="AbDeleteDirectory();"/>
+			<menuitem value="&selectAllCmd.label;" onaction="AbSelectAll();"/>
 			<menuseparator/>
 			<menuitem value="&searchCmd.label;" oncommand="AbSearch();"/>
 			<menuseparator/>

@@ -24,6 +24,8 @@
 #include "nsAbRDFResource.h"
 #include "nsIAddrDatabase.h"
 
+#include "xp_core.h"
+#include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"	 
 
@@ -332,7 +334,11 @@ protected:
     nsresult ParseTabFile(PRFileDesc* file);
     nsresult ParseLdifFile(PRFileDesc* file);
 	void AddTabRowToDatabase();
-	void AddLdifColToDatabase(nsIMdbRow* newRow);
+	void AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot);
+
+	nsresult GetLdifStringRecord(char* buf, PRInt32 len, PRInt32* stopPos);
+	nsresult str_parse_line(char *line, char	**type, char **value, int *vlen);
+	char * str_getline( char **next );
 
 public:
     AddressBookParser(nsIFileSpecWithUI* fileSpec);
@@ -609,6 +615,223 @@ void AddressBookParser::AddTabRowToDatabase()
 		mDatabase->AddCardRowToDB(newRow);
 }
 
+#define RIGHT2			0x03
+#define RIGHT4			0x0f
+#define CONTINUED_LINE_MARKER	'\001'
+#define IS_SPACE(VAL)                \
+    (((((intn)(VAL)) & 0x7f) == ((intn)(VAL))) && isspace((intn)(VAL)) )
+
+static unsigned char b642nib[0x80] = {
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0x3e, 0xff, 0xff, 0xff, 0x3f,
+	0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b,
+	0x3c, 0x3d, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+	0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+	0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
+	0x17, 0x18, 0x19, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
+	0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
+	0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30,
+	0x31, 0x32, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff
+};
+
+/*
+ * str_parse_line - takes a line of the form "type:[:] value" and splits it
+ * into components "type" and "value".  if a double colon separates type from
+ * value, then value is encoded in base 64, and parse_line un-decodes it
+ * (in place) before returning.
+ */
+
+nsresult AddressBookParser::str_parse_line(
+    char	*line,
+    char	**type,
+    char	**value,
+    int		*vlen
+)
+{
+	char	*p, *s, *d, *byte, *stop;
+	char	nib;
+	int	i, b64;
+
+	/* skip any leading space */
+	while ( IS_SPACE( *line ) ) {
+		line++;
+	}
+	*type = line;
+
+	for ( s = line; *s && *s != ':'; s++ )
+		;	/* NULL */
+	if ( *s == '\0' ) {
+		return NS_ERROR_FAILURE;
+	}
+
+	/* trim any space between type and : */
+	for ( p = s - 1; p > line && isspace( *p ); p-- ) {
+		*p = '\0';
+	}
+	*s++ = '\0';
+
+	/* check for double : - indicates base 64 encoded value */
+	if ( *s == ':' ) {
+		s++;
+		b64 = 1;
+
+	/* single : - normally encoded value */
+	} else {
+		b64 = 0;
+	}
+
+	/* skip space between : and value */
+	while ( IS_SPACE( *s ) ) {
+		s++;
+	}
+
+	/* if no value is present, error out */
+	if ( *s == '\0' ) {
+		return NS_ERROR_FAILURE;
+	}
+
+	/* check for continued line markers that should be deleted */
+	for ( p = s, d = s; *p; p++ ) {
+		if ( *p != CONTINUED_LINE_MARKER )
+			*d++ = *p;
+	}
+	*d = '\0';
+
+	*value = s;
+	if ( b64 ) {
+		stop = PL_strchr( s, '\0' );
+		byte = s;
+		for ( p = s, *vlen = 0; p < stop; p += 4, *vlen += 3 ) {
+			for ( i = 0; i < 3; i++ ) {
+				if ( p[i] != '=' && (p[i] & 0x80 ||
+				    b642nib[ p[i] & 0x7f ] > 0x3f) ) {
+					return NS_ERROR_FAILURE;
+				}
+			}
+
+			/* first digit */
+			nib = b642nib[ p[0] & 0x7f ];
+			byte[0] = nib << 2;
+			/* second digit */
+			nib = b642nib[ p[1] & 0x7f ];
+			byte[0] |= nib >> 4;
+			byte[1] = (nib & RIGHT4) << 4;
+			/* third digit */
+			if ( p[2] == '=' ) {
+				*vlen += 1;
+				break;
+			}
+			nib = b642nib[ p[2] & 0x7f ];
+			byte[1] |= nib >> 2;
+			byte[2] = (nib & RIGHT2) << 6;
+			/* fourth digit */
+			if ( p[3] == '=' ) {
+				*vlen += 2;
+				break;
+			}
+			nib = b642nib[ p[3] & 0x7f ];
+			byte[2] |= nib;
+
+			byte += 3;
+		}
+		s[ *vlen ] = '\0';
+	} else {
+		*vlen = (int) (d - s);
+	}
+
+	return NS_OK;
+}
+
+/*
+ * str_getline - return the next "line" (minus newline) of input from a
+ * string buffer of lines separated by newlines, terminated by \n\n
+ * or \0.  this routine handles continued lines, bundling them into
+ * a single big line before returning.  if a line begins with a white
+ * space character, it is a continuation of the previous line. the white
+ * space character (nb: only one char), and preceeding newline are changed
+ * into CONTINUED_LINE_MARKER chars, to be deleted later by the
+ * str_parse_line() routine above.
+ *
+ * it takes a pointer to a pointer to the buffer on the first call,
+ * which it updates and must be supplied on subsequent calls.
+ */
+
+char * AddressBookParser::str_getline( char **next )
+{
+	char	*lineStr;
+	char	c;
+
+	if ( *next == NULL || **next == '\n' || **next == '\0' ) {
+		return( NULL );
+	}
+
+	lineStr = *next;
+	while ( (*next = PL_strchr( *next, '\n' )) != NULL ) {
+		c = *(*next + 1);
+		if ( IS_SPACE ( c ) && c != '\n' ) {
+			**next = CONTINUED_LINE_MARKER;
+			*(*next+1) = CONTINUED_LINE_MARKER;
+		} else {
+			*(*next)++ = '\0';
+			break;
+		}
+/*		*(*next)++; Linux complaint it is never used, comment out */
+	}
+
+	return( lineStr );
+}
+
+/*
+ * get one ldif record
+ * 
+ */
+nsresult AddressBookParser::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32* stopPos)
+{
+	PRInt32 LFCount = 0;
+	PRInt32 CRCount = 0;
+
+	for (; *stopPos < len; (*stopPos)++) 
+	{
+		char c = buf[*stopPos];
+
+		if (c == 0xA)
+		{
+			LFCount++;
+		}
+		else if (c == 0xD)
+		{
+			CRCount++;
+		}
+		else if ( c != 0xA && c != 0xD)
+		{
+			if (LFCount == 0 && CRCount == 0)
+         		mLine.Append(c);
+			else if (( LFCount > 1) || ( CRCount > 2 && LFCount ) ||
+				( !LFCount && CRCount > 1 ))
+			{
+				return NS_OK;
+			}
+			else if ((LFCount == 1 || CRCount == 1) && c != ' ')
+			{
+         		mLine.Append('\n');
+         		mLine.Append(c);
+				LFCount = 0;
+				CRCount = 0;
+			}
+		}
+	}
+	if (*stopPos ==len && (LFCount > 1) || (CRCount > 2 && LFCount) ||
+		(!LFCount && CRCount > 1))
+		return NS_OK;
+	else
+		return NS_ERROR_FAILURE;
+}
 
 nsresult AddressBookParser::ParseLdifFile(PRFileDesc* file)
 {
@@ -616,9 +839,8 @@ nsresult AddressBookParser::ParseLdifFile(PRFileDesc* file)
         return NS_ERROR_NULL_POINTER;
 
     char buf[1024];
+	PRInt32 startPos = 0;
     PRInt32 len = 0;
-	PRInt32 LFCount = 0;
-	PRInt32 CRCount = 0;
 	nsIMdbRow* newRow = nsnull;
 
 	if (mDatabase)
@@ -633,80 +855,49 @@ nsresult AddressBookParser::ParseLdifFile(PRFileDesc* file)
 
     while ((len = PR_Read(file, buf, sizeof(buf))) > 0)
 	{
-		for (PRInt32 i = 0; i < len; i++) 
-		{
-			char c = buf[i];
+		startPos = 0;
 
-			if (c == 0xA)
+		while (NS_SUCCEEDED(GetLdifStringRecord(buf, len, &startPos)))
+		{
+			if (mDatabase)
 			{
-				LFCount++;
+				mDatabase->GetNewRow(&newRow); 
+
+				if (!newRow)
+					return NS_ERROR_FAILURE;
 			}
-			else if (c == 0xD)
+			else
+				return NS_ERROR_FAILURE;
+
+			char* cursor = (char*)mLine.ToNewCString(); 
+			char* saveCursor = cursor;  /* keep for deleting */ 
+			char* line = 0; 
+			char* typeSlot = 0; 
+			char* valueSlot = 0; 
+			int length = 0;  // the length  of an ldif attribute
+			while ( (line = str_getline(&cursor)) != NULL)
 			{
-				CRCount++;
-			}
-			else if ( c != 0xA && c != 0xD)
-			{
-				if (LFCount ==0 && CRCount ==0)
-         			mLine.Append(c);
-				else if (LFCount == 1 || CRCount == 1)
+				if ( str_parse_line(line, &typeSlot, &valueSlot, &length) == 0 )
 				{
-					AddLdifColToDatabase(newRow);
-					if (c != ' ')
-						mLine.Append(c);
-					LFCount = 0;
-					CRCount = 0;
+					AddLdifColToDatabase(newRow, typeSlot, valueSlot);
 				}
-				else if (c != ' ' && (( LFCount > 1) || ( CRCount > 2 && LFCount ) ||
-					( !LFCount && CRCount > 1 )))
-				{
-					mDatabase->AddCardRowToDB(newRow);
-					if (c != ' ')
-						mLine.Append(c);
-					LFCount = 0;
-					CRCount = 0;
-				}
+				else
+					continue; // parse error: continue with next loop iteration
 			}
+			delete [] saveCursor;
+			mDatabase->AddCardRowToDB(newRow);	
 		}
 	}
-
 	return NS_OK;
 }
 
-void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
+void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot)
 {
-    nsCAutoString colType;
-    nsCAutoString column;
-	
-//	const PRUnichar *str = nsnull;
-//	const char *str = nsnull;
-	PRInt32 nSize = mLine.Length();
-	PRBool bGetType = PR_TRUE;
+    nsCAutoString colType(typeSlot);
+    nsCAutoString column(valueSlot);
 
-	for (int i = 0; i < nSize; i++)
-	{
-//        PRUnichar c = mLine[i];
-        char c = (mLine.GetBuffer())[i];
-		if (!bGetType)
-		{
-			column.Append(c);
-			continue;
-		}
-		while (bGetType && c != ':' && i < nSize)
-		{
-			colType.Append(c);
-			c = (mLine.GetBuffer())[++i];
-		}
-		if (c != ':')
-		{
-			bGetType = PR_FALSE;
-			c = (mLine.GetBuffer())[++i];
-			if (c == ':')
-				i++;
-		}
-	}
- 
-	mdb_u1 firstByte = (mdb_u1) (colType.GetBuffer()) [0];
+//	mdb_u1 firstByte = (mdb_u1)colType[0];
+	mdb_u1 firstByte = (mdb_u1)(colType.GetBuffer())[0];
 	switch ( firstByte )
 	{
 	case 'b':

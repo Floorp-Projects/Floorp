@@ -45,6 +45,7 @@ Rights Reserved.
 <!ENTITY copyCmd.label						".Copy">  
 <!ENTITY pasteCmd.label						".Paste">  
 <!ENTITY deleteCmd.label					"Delete">  
+<!ENTITY deleteAbCmd.label					"Delete Address Book">  
 <!ENTITY selectAllCmd.label					".Select All">  
 <!ENTITY searchCmd.label					".Search..."> 
 <!ENTITY htmlDomainCmd.label				".HTML Domains...">  

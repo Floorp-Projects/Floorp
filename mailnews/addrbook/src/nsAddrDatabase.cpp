@@ -253,7 +253,7 @@ NS_IMETHODIMP nsAddrDatabase::RemoveListener(nsIAddrDBListener *listener)
 			return NS_OK;
 		}
 	}
-	return NS_COMFALSE;
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAddrDatabase::NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator)
@@ -471,7 +471,7 @@ void nsAddrDatabase::UnixToNative(char*& ioPath)
 		const char* src = ioPath;
 		if (*src == '/')		 	// * full path
 			src++;
-		else if (strchr(src, '/'))	// * partial path, and not just a leaf name
+		else if (PL_strchr(src, '/'))	// * partial path, and not just a leaf name
 			*dst++ = ':';
 		strcpy(dst, src);
 
@@ -492,7 +492,7 @@ void nsAddrDatabase::NativeToUnix(char*& ioPath)
 // anything
 //----------------------------------------------------------------------------------------
 {
-	size_t len = strlen(ioPath);
+	size_t len = PL_strlen(ioPath);
 	char* result = new char[len + 2]; // ... but allow for the initial colon in a partial name
 	if (result)
 	{
@@ -500,9 +500,9 @@ void nsAddrDatabase::NativeToUnix(char*& ioPath)
 		const char* src = ioPath;
 		if (*src == ':')		 	// * partial path, and not just a leaf name
 			src++;
-		else if (strchr(src, ':'))	// * full path
+		else if (PL_strchr(src, ':'))	// * full path
 			*dst++ = '/';
-		strcpy(dst, src);
+		PL_strcpy(dst, src);
 
 		while ( *dst != 0)
 		{
@@ -2192,7 +2192,7 @@ NS_IMETHODIMP nsAddrDBEnumerator::CurrentItem(nsISupports **aItem)
 
 NS_IMETHODIMP nsAddrDBEnumerator::IsDone(void)
 {
-    return mDone ? NS_OK : NS_COMFALSE;
+    return mDone ? NS_OK : NS_ERROR_FAILURE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
