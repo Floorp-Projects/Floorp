@@ -18,6 +18,7 @@
 #include "nsLayoutCID.h"
 #include "nsXMLDocument.h"
 #include "nsHTMLAtoms.h"
+#include "nsSupportsArray.h"
 
 #include "nsIXBLBinding.h"
 
@@ -248,7 +249,35 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
 NS_IMETHODIMP
 nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult)
 { 
-  // XXX Implement me!
+  // Iterate over all of the bindings one by one and build up an array
+  // of anonymous items.
+  *aResult = nsnull;
+  nsCOMPtr<nsIBindableContent> bindable = do_QueryInterface(aContent);
+  if (!bindable)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIXBLBinding> binding;
+  bindable->GetBinding(getter_AddRefs(binding));
+  while (binding) {
+    // Get the anonymous content.
+    nsCOMPtr<nsIContent> content;
+    binding->GetAnonymousContent(getter_AddRefs(content));
+    if (content) {
+      PRInt32 childCount;
+      content->ChildCount(childCount);
+      for (PRInt32 i = 0; i < childCount; i++) {
+        nsCOMPtr<nsIContent> anonymousChild;
+        content->ChildAt(i, *getter_AddRefs(anonymousChild));
+        if (!(*aResult)) 
+          NS_NewISupportsArray(aResult); // This call addrefs the array.
+        (*aResult)->AppendElement(anonymousChild);
+      }
+    }
+
+    nsCOMPtr<nsIXBLBinding> nextBinding;
+    binding->GetBaseBinding(getter_AddRefs(nextBinding));
+    binding = nextBinding;
+  }
   return NS_OK;
 }
 
