@@ -61,6 +61,7 @@ public:
   virtual CToken*           PushToken(CToken* theToken);
 	virtual CToken*           PopToken(void);
 	virtual CToken*           PeekToken(void);
+	virtual CToken*           GetTokenAt(PRInt32 anIndex);
 	virtual PRInt32           GetCount(void);
 
 protected:

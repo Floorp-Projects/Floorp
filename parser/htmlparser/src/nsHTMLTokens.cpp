@@ -253,7 +253,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  *  @return  
  */
 void CStartToken::DebugDumpSource(ostream& out) {
-  char buffer[200];
+  char buffer[1000];
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
   out << "<" << buffer;
   if(!mAttributed)
@@ -380,7 +380,7 @@ PRInt32 CEndToken::GetTokenType(void) {
  *  @return  
  */
 void CEndToken::DebugDumpSource(ostream& out) {
-  char buffer[200];
+  char buffer[1000];
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
   out << "</" << buffer << ">";
 }
@@ -987,7 +987,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  *  @return  
  */
 void CAttributeToken::DebugDumpSource(ostream& out) {
-  char buffer[200];
+  static char buffer[1000];
   mTextKey.ToCString(buffer,sizeof(buffer)-1);
   out << " " << buffer;
   if(mTextValue.Length()){

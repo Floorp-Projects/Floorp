@@ -61,6 +61,7 @@ public:
 	virtual CToken*           PopToken(void)=0;
 	virtual CToken*           PeekToken(void)=0;
 	virtual PRInt32           GetCount(void)=0;
+	virtual CToken*           GetTokenAt(PRInt32 anIndex)=0;
   
 };
 

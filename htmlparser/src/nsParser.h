@@ -181,17 +181,7 @@ friend class CTokenHandler;
      */
     virtual nsresult ResumeParse(nsIDTD* mDefaultDTD=0);
 
-    /**
-     *  This debug routine is used to cause the tokenizer to
-     *  iterate its token list, asking each token to dump its
-     *  contents to the given output stream.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   
-     *  @return  
-     */
-    void DebugDumpSource(ostream& out);
-
+    void  DebugDumpSource(ostream& anOutput);
 
      //*********************************************
       // These methods are callback methods used by
@@ -268,18 +258,6 @@ private:
      *  @return  TRUE if all went well
      */
     PRBool DidTokenize();
-
-    /**
-     *  This debug routine is used to cause the tokenizer to
-     *  iterate its token list, asking each token to dump its
-     *  contents to the given output stream.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   
-     *  @return  
-     */
-    void DebugDumpTokens(ostream& out);
-
     
     /**
      * This method is used as a backstop to compute the kind of content
@@ -312,7 +290,6 @@ protected:
     PRBool              mDTDVerification;
     nsString            mCommand;
     PRInt32             mStreamStatus;
-    PRBool              mMultipart;
 };
 
 

@@ -536,6 +536,7 @@ PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsIParser * aParser, int aContextStackP
             // write the true URL at the top of the file.
             if (debugFile) {
                // dump the html source into the newly created file.
+
                PRofstream ps;
                ps.attach(debugFile);
                if (theParser)

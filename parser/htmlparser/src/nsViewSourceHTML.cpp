@@ -306,27 +306,31 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
   * @param	aFilename is the name of the file being parsed.
   * @return	error code (almost always 0)
   */
-NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser) {
+NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
   nsresult result=NS_OK;
 
-  nsHTMLTokenizer*  theTokenizer=(nsHTMLTokenizer*)GetTokenizer();
-  nsITokenRecycler* theRecycler=GetTokenRecycler();
-  if(theTokenizer) {
+  if(aTokenizer) {
+    nsITokenizer*  oldTokenizer=mTokenizer;
+    mTokenizer=aTokenizer;
+    nsITokenRecycler* theRecycler=mTokenizer->GetTokenRecycler();
+
     while(NS_OK==result){
-      CToken* theToken=theTokenizer->PopToken();
+      CToken* theToken=mTokenizer->PopToken();
       if(theToken) {
         result=HandleToken(theToken,aParser);
         if(NS_SUCCEEDED(result)) {
           theRecycler->RecycleToken(theToken);
         }
         else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
-          theTokenizer->PushTokenFront(theToken);
+          mTokenizer->PushTokenFront(theToken);
         }
         // theRootDTD->Verify(kEmptyString,aParser);
       }
       else break;
-    }
+    }//while
+    mTokenizer=oldTokenizer;
   }
+  else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
   return result;
 }
 

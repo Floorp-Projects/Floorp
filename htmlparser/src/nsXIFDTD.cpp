@@ -439,7 +439,7 @@ nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIPars
   * @param	aFilename is the name of the file being parsed.
   * @return	error code (almost always 0)
   */
-NS_IMETHODIMP nsXIFDTD::BuildModel(nsIParser* aParser) {
+NS_IMETHODIMP nsXIFDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
   nsresult result=NS_OK;
   return result;
 }

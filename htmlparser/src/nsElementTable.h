@@ -260,7 +260,7 @@ static nsHTMLElement gHTMLElements[] = {
   
   {eHTMLTag_i,          &gRootTags,    0,              0,              kBPIPIC},
   {eHTMLTag_iframe,     &gRootTags,    0,              0,              kAll},
-  {eHTMLTag_ilayer,     &gRootTags,    0,              0,              kBPIP},
+  {eHTMLTag_ilayer,     &gRootTags,    0,              0,              kAll},
   {eHTMLTag_img,        &gRootTags,    0,              0,              kBPIP},  
   {eHTMLTag_input,      &gRootTags,    0,              0,              kBPIP},  //NOT DONE!!!
   {eHTMLTag_ins,        &gRootTags,    0,              0,              kAll,         &gInBody,     0},
@@ -359,6 +359,7 @@ public:
     for(index=0;index<max;index++){
       gHTMLElements[gStyleTags[index]].mSelfContained=PR_TRUE;
     }
+    gHTMLElements[eHTMLTag_a].mSelfContained=PR_FALSE;
     gHTMLElements[eHTMLTag_frameset].mSelfContained=PR_TRUE;
     gHTMLElements[eHTMLTag_ol].mSelfContained=PR_TRUE;
     gHTMLElements[eHTMLTag_ul].mSelfContained=PR_TRUE;

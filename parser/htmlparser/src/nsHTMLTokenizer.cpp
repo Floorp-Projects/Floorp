@@ -199,6 +199,10 @@ PRInt32 nsHTMLTokenizer::GetCount(void) {
   return mTokenDeque.GetSize();
 }
 
+CToken* nsHTMLTokenizer::GetTokenAt(PRInt32 anIndex){
+  return (CToken*)mTokenDeque.ObjectAt(anIndex);
+}
+
 /**
  *  This method repeatedly called by the tokenizer. 
  *  Each time, we determine the kind of token were about to 
