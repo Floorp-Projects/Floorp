@@ -113,13 +113,10 @@ ifdef MOZ_NETCAST
 ICONS += images/Desk_Netcaster.gif
 endif
 
-# Alphabetical order seems to matter here.
-ifdef NETSCAPE_PRIV
-ANIM		+= $(wildcard $(ANIM_PRIV)/main/*.gif \
-			$(ANIM_PRIV)/compass/*.gif \
-			$(ANIM_PRIV)/mozilla/*.gif)
-else
 ANIM		= $(wildcard anim/main/*.gif)
+
+ifdef XFEPRIVDIR
+-include $(XFEPRIVDIR)/icons/Animation.mk
 endif
 
 ICONLIST	 = $(OBJDIR)/icon.list
