@@ -48,6 +48,35 @@ my $whoid = confirm_login();
 
 my $requiremilestone = 0;
 
+######################################################################
+# Begin Data/Security Validation
+######################################################################
+
+# Create a list of IDs of all bugs being modified in this request.
+# This list will either consist of a single bug number from the "id"
+# form/URL field or a series of numbers from multiple form/URL fields
+# named "id_x" where "x" is the bug number.
+my @idlist;
+if (defined $::FORM{'id'}) {
+  push @idlist, $::FORM{'id'};
+} else {
+  foreach my $i (keys %::FORM) {
+    if ($i =~ /^id_([1-9][0-9]*)/) {
+      push @idlist, $1;
+    }
+  }
+}
+
+# For each bug being modified, make sure its ID is a valid bug number 
+# representing an existing bug that the user is authorized to access.
+foreach my $id (@idlist) {
+  ValidateBugID($id);
+}
+
+######################################################################
+# End Data/Security Validation
+######################################################################
+
 print "Content-type: text/html\n\n";
 
 PutHeader ("Bug processed");
@@ -221,9 +250,7 @@ empowered user, may make that change to the $f field.
     
 
 
-my @idlist;
-if (defined $::FORM{'id'}) {
-
+if (defined $::FORM{'id'} && Param('strictvaluechecks')) {
     # since this means that we were called from show_bug.cgi, now is a good
     # time to do a whole bunch of error checking that can't easily happen when
     # we've been called from buglist.cgi, because buglist.cgi only tweaks
@@ -231,31 +258,18 @@ if (defined $::FORM{'id'}) {
     # (XXX those error checks need to happen too, but implementing them 
     # is more work in the current architecture of this script...)
     #
-    if ( Param('strictvaluechecks') ) { 
-        CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
-        CheckFormField(\%::FORM, 'priority', \@::legal_priority);
-        CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
-        CheckFormField(\%::FORM, 'component', 
-                       \@{$::components{$::FORM{'product'}}});
-        CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
-        CheckFormFieldDefined(\%::FORM, 'short_desc');
-        CheckFormField(\%::FORM, 'product', \@::legal_product);
-        CheckFormField(\%::FORM, 'version', 
-                       \@{$::versions{$::FORM{'product'}}});
-        CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
-        CheckFormFieldDefined(\%::FORM, 'longdesclength');
-        CheckPosInt($::FORM{'id'});
-    }
-    push @idlist, $::FORM{'id'};
-} else {
-    foreach my $i (keys %::FORM) {
-        if ($i =~ /^id_/) {
-            if ( Param('strictvaluechecks') ) { 
-                CheckPosInt(substr($i, 3));
-            }
-            push @idlist, substr($i, 3);
-        }
-    }
+    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
+    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
+    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
+    CheckFormField(\%::FORM, 'component', 
+                   \@{$::components{$::FORM{'product'}}});
+    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
+    CheckFormFieldDefined(\%::FORM, 'short_desc');
+    CheckFormField(\%::FORM, 'product', \@::legal_product);
+    CheckFormField(\%::FORM, 'version', 
+                   \@{$::versions{$::FORM{'product'}}});
+    CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
+    CheckFormFieldDefined(\%::FORM, 'longdesclength');
 }
 
 my $action  = '';

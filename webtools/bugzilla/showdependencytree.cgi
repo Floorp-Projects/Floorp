@@ -29,18 +29,29 @@ require "CGI.pl";
 
 use vars %::FORM;
 
+ConnectToDatabase();
+
+quietly_check_login();
+
+$::usergroupset = $::usergroupset; # More warning suppression silliness.
+
+######################################################################
+# Begin Data/Security Validation
+######################################################################
+
+# Make sure the bug ID is a positive integer representing an existing
+# bug that the user is authorized to access.
+ValidateBugID($::FORM{'id'});
+
+######################################################################
+# End Data/Security Validation
+######################################################################
 
 my $id = $::FORM{'id'};
 my $linkedid = qq{<a href="show_bug.cgi?id=$id">$id</a>};
 
 print "Content-type: text/html\n\n";
 PutHeader("Dependency tree", "Dependency tree", "Bug $linkedid");
-
-ConnectToDatabase();
-
-quietly_check_login();
-
-$::usergroupset = $::usergroupset; # More warning suppression silliness.
 
 my %seen;
 

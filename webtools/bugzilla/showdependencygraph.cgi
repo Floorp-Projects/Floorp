@@ -25,8 +25,28 @@ use strict;
 
 require "CGI.pl";
 
+ConnectToDatabase();
+
+quietly_check_login();
+
+$::usergroupset = $::usergroupset; # More warning suppression silliness.
+
+######################################################################
+# Begin Data/Security Validation
+######################################################################
+
+# Make sure the bug ID is a positive integer representing an existing
+# bug that the user is authorized to access.
+if (defined $::FORM{'id'}) {
+  ValidateBugID($::FORM{'id'});
+}
+
+######################################################################
+# End Data/Security Validation
+######################################################################
+
 my $id = $::FORM{'id'};
-die "Invalid id: $id" unless $id =~ /^\s*\d+\s*$/;
+
 my $urlbase = Param("urlbase");
 
 my %seen;
@@ -51,10 +71,6 @@ $::FORM{'rankdir'} = "LR" if !defined $::FORM{'rankdir'};
 
 
 if (defined $id) {
-    ConnectToDatabase();
-    quietly_check_login();
-    $::usergroupset = $::usergroupset; # More warning suppression silliness.
-
     mkdir("data/webdot", 0777);
 
     my $filename = "data/webdot/$$.dot";

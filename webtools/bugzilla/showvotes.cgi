@@ -28,49 +28,50 @@ require "CGI.pl";
 
 ConnectToDatabase();
 
-################################################################################
-# START Form Data Validation
-################################################################################
-
-# For security and correctness, validate the value of the "voteon" form variable.
-# Valid values are those containing a number that is the ID of an existing bug.
-if (defined $::FORM{'voteon'}) {
-  $::FORM{'voteon'} =~ /^(\d+)$/;
-  $::FORM{'voteon'} = $1 || 0;
-  SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $::FORM{'voteon'}");
-  FetchSQLData() 
-    || DisplayError("You entered an invalid bug number to vote on.") && exit;
-}
-
-# For security and correctness, validate the value of the "bug_id" form variable.
-# Valid values are those containing a number that is the ID of an existing bug.
-if (defined $::FORM{'bug_id'}) {
-  $::FORM{'bug_id'} =~ /^(\d+)$/;
-  $::FORM{'bug_id'} = $1 || 0;
-  SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $::FORM{'bug_id'}");
-  FetchSQLData() 
-    || DisplayError("You entered an invalid bug number.") && exit;
-}
-
-# For security and correctness, validate the value of the "userid" form variable.
-# Valid values are those containing a number that is the ID of an existing user.
-if (defined $::FORM{'user'}) {
-  $::FORM{'user'} =~ /^(\d+)$/;
-  $::FORM{'user'} = $1 || 0;
-  SendSQL("SELECT userid FROM profiles WHERE userid = $::FORM{'user'}");
-  FetchSQLData() 
-    || DisplayError("You specified an invalid user number.") && exit;
-}
-
-################################################################################
-# END Form Data Validation
-################################################################################
-
 if (defined $::FORM{'voteon'} || (!defined $::FORM{'bug_id'} &&
                                   !defined $::FORM{'user'})) {
     confirm_login();
     $::FORM{'user'} = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
+} else {
+  # Check whether or not the user is currently logged in without throwing
+  # an error if the user is not logged in. This function sets the value 
+  # of $::usergroupset, the binary number that records the set of groups 
+  # to which the user belongs and which gets used in ValidateBugID below
+  # to determine whether or not the user is authorized to access the bug
+  # whose votes are being shown or which is being voted on.
+  quietly_check_login();
 }
+
+################################################################################
+# Begin Data/Security Validation
+################################################################################
+
+# Make sure the bug ID is a positive integer representing an existing
+# bug that the user is authorized to access.
+if (defined $::FORM{'bug_id'}) {
+  ValidateBugID($::FORM{'bug_id'});
+}
+
+# Make sure the bug ID being voted on is a positive integer representing 
+# an existing bug that the user is authorized to access.
+if (defined $::FORM{'voteon'}) {
+  ValidateBugID($::FORM{'voteon'});
+}
+
+# Make sure the user ID is a positive integer representing an existing user.
+if (defined $::FORM{'user'}) {
+  $::FORM{'user'} =~ /^([1-9][0-9]*)$/
+    || DisplayError("The user number is invalid.") 
+    && exit;
+  SendSQL("SELECT 1 FROM profiles WHERE userid = $::FORM{'user'}");
+  FetchSQLData() 
+    || DisplayError("User #$::FORM{'user'} does not exist.") 
+    && exit;
+}
+
+################################################################################
+# End Data/Security Validation
+################################################################################
 
 print "Content-type: text/html\n\n";
 
