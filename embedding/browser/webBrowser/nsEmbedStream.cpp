@@ -92,16 +92,16 @@ nsEmbedStream::Init(void)
 }
 
 NS_METHOD
-nsEmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
+nsEmbedStream::OpenStream(nsIURI *aBaseURI, const nsACString& aContentType)
 {
   NS_ENSURE_ARG_POINTER(aBaseURI);
-  NS_ENSURE_ARG_POINTER(aContentType);
+  NS_ENSURE_TRUE(IsASCII(aContentType), NS_ERROR_INVALID_ARG);
 
   nsresult rv = NS_OK;
 
-  // if we're already doing a stream then close the current one
+  // if we're already doing a stream, return an error
   if (mDoingStream)
-    CloseStream();
+    return NS_ERROR_IN_PROGRESS;
 
   // set our state
   mDoingStream = PR_TRUE;
@@ -115,23 +115,15 @@ nsEmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
   nsCOMPtr<nsIContentViewerContainer> viewerContainer;
   viewerContainer = do_GetInterface(mOwner);
 
-  // create a new uri object
-  nsCOMPtr<nsIURI> uri;
-  nsCAutoString spec(aBaseURI);
-  rv = NS_NewURI(getter_AddRefs(uri), spec.get());
-  
-  if (NS_FAILED(rv))
-    return rv;
-
   // create a new load group
   rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), nsnull);
   if (NS_FAILED(rv))
     return rv;
 
   // create a new input stream channel
-  rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), uri,
+  rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), aBaseURI,
 				NS_STATIC_CAST(nsIInputStream *, this),
-				nsDependentCString(aContentType));
+				aContentType);
   if (NS_FAILED(rv))
     return rv;
 
@@ -142,12 +134,18 @@ nsEmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
 
   // find a document loader for this content type
 
+  const nsCString& flatContentType = PromiseFlatCString(aContentType);
+
   nsXPIDLCString docLoaderContractID;
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", aContentType,
+  rv = catMan->GetCategoryEntry("Gecko-Content-Viewers",
+                                flatContentType.get(),
                                 getter_Copies(docLoaderContractID));
+  // Note: When the category manager does not find an entry for the requested
+  // contract ID, it will return NS_ERROR_NOT_AVAILABLE. This conveniently
+  // matches what this method wants to return in that case.
   if (NS_FAILED(rv))
     return rv;
 
@@ -160,7 +158,7 @@ nsEmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
   // mime type
   nsCOMPtr<nsIContentViewer> contentViewer;
   rv = docLoaderFactory->CreateInstance("view", mChannel, mLoadGroup,
-					aContentType, viewerContainer,
+					flatContentType.get(), viewerContainer,
 					nsnull,
 					getter_AddRefs(mStreamListener),
 					getter_AddRefs(contentViewer));
@@ -187,7 +185,7 @@ nsEmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
 }
 
 NS_METHOD
-nsEmbedStream::AppendToStream(const char *aData, PRInt32 aLen)
+nsEmbedStream::AppendToStream(const PRUint8 *aData, PRUint32 aLen)
 {
   nsresult rv;
 
@@ -216,6 +214,8 @@ nsEmbedStream::CloseStream(void)
 {
   nsresult rv = NS_OK;
 
+  // NS_ENSURE_STATE returns NS_ERROR_UNEXPECTED if the condition isn't
+  // satisfied; this is exactly what we want to return.
   NS_ENSURE_STATE(mDoingStream);
   mDoingStream = PR_FALSE;
 
@@ -237,11 +237,11 @@ nsEmbedStream::CloseStream(void)
 }
 
 NS_METHOD
-nsEmbedStream::Append(const char *aData, PRUint32 aLen)
+nsEmbedStream::Append(const PRUint8 *aData, PRUint32 aLen)
 {
-  nsresult rv = NS_OK;
   PRUint32 bytesWritten = 0;
-  rv = mOutputStream->Write(aData, aLen, &bytesWritten);
+  nsresult rv = mOutputStream->Write(NS_REINTERPRET_CAST(const char*, aData),
+                                     aLen, &bytesWritten);
   if (NS_FAILED(rv))
     return rv;
   

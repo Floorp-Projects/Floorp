@@ -43,7 +43,7 @@
 #include <nsIChannel.h>
 #include <nsIStreamListener.h>
 #include <nsIWebBrowser.h>
-  
+
 class nsEmbedStream : public nsIInputStream 
 {
  public:
@@ -54,11 +54,11 @@ class nsEmbedStream : public nsIInputStream
   void      InitOwner      (nsIWebBrowser *aOwner);
   NS_METHOD Init           (void);
 
-  NS_METHOD OpenStream     (const char *aBaseURI, const char *aContentType);
-  NS_METHOD AppendToStream (const char *aData, PRInt32 aLen);
+  NS_METHOD OpenStream     (nsIURI *aBaseURI, const nsACString& aContentType);
+  NS_METHOD AppendToStream (const PRUint8 *aData, PRUint32 aLen);
   NS_METHOD CloseStream    (void);
 
-  NS_METHOD Append         (const char *aData, PRUint32 aLen);
+  NS_METHOD Append         (const PRUint8 *aData, PRUint32 aLen);
 
   // nsISupports
   NS_DECL_ISUPPORTS

@@ -38,12 +38,52 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(27108bc2-dc7c-42d9-9c64-132550c78ce4)]
+interface nsIURI;
+
+/**
+ * This interface provides a way to stream data to the web browser. This allows
+ * loading of data from sources which it can not access using URIs and
+ * nsIWebNavigation.
+ */
+[scriptable, uuid(86d02f0e-219b-4cfc-9c88-bd98d2cce0b8)]
 interface nsIWebBrowserStream : nsISupports
 {
-  void openStream(in string aBaseURI, in string aContentType);
+  /**
+   * Prepare to load a stream of data. When this function returns successfully,
+   * it must be paired by a call to closeStream.
+   *
+   * @param aBaseURI
+   *        The base URI of the data. Must not be null. Relative
+   *        URIs will be resolved relative to this URI.
+   * @param aContentType
+   *        ASCII string giving the content type of the data. If rendering
+   *        content of this type is not supported, this method fails.
+   *        This string may include a charset declaration, for example:
+   *        text/html;charset=ISO-8859-1
+   *
+   * @throw NS_ERROR_NOT_AVAILABLE
+   *        The requested content type is not supported.
+   * @throw NS_ERROR_IN_PROGRESS
+   *        openStream was called twice without an intermediate closeStream.
+   */
+  void openStream(in nsIURI aBaseURI, in ACString aContentType);
 
-  void appendToStream(in string aData, in long aLen);
+  /**
+   * Append data to this stream.
+   * @param aData The data to append
+   * @param aLen  Length of the data to append.
+   *
+   * @note To append more than 4 GB of data, call this method multiple times.
+   */
+  void appendToStream([const, array, size_is(aLen)] in octet aData,
+                      in unsigned long aLen);
 
+  /**
+   * Notifies the browser that all the data has been appended. This may notify
+   * the user that the browser is "done loading" in some form.
+   *
+   * @throw NS_ERROR_UNEXPECTED
+   *        This method was called without a preceding openStream.
+   */
   void closeStream();
 };
