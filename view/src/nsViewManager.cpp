@@ -140,7 +140,6 @@ NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
   mContext = aContext;
 
   mDSBounds.Empty();
-  mDrawingSurface = nsnull;
   mTimer = nsnull;
   mFrameRate = 0;
   mTransCnt = 0;
