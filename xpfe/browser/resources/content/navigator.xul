@@ -179,9 +179,13 @@ Contributor(s): ______________________________________. -->
                      ontextrevert="return handleURLBarRevert();"
                      onfocus="URLBarFocusHandler(event);"
                      onblur="URLBarBlurHandler(event);">
-              <image id="page-proxy-button" allowevents="true"
-                     ondraggesture="PageProxyDragGesture(event);"/>
-  
+              <deck id="page-proxy-deck">
+                <image id="page-proxy-button"
+                       ondraggesture="PageProxyDragGesture(event);"/>
+                <image id="page-proxy-favicon" validate="never"
+                       ondraggesture="PageProxyDragGesture(event);"
+                       onload="this.parentNode.selectedIndex = 1; event.stopPropagation(); event.preventBubble();"/>
+              </deck>
               <menupopup id="ubhist-popup" class="autocomplete-history-popup"
                          popupalign="topleft" popupanchor="bottomleft"
                          onpopupshowing="createUBHistoryMenu(event.target);" 

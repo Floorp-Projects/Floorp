@@ -20,7 +20,7 @@
     <content>
       <xul:hbox class="autocomplete-internal-box textbox-internal-box" flex="1">
         <xul:hbox class="autocomplete-icon-box" align="center" inherits="userAction">
-          <children includes="image">
+          <children includes="image|deck">
             <xul:image class="autocomplete-icon" allowevents="true"/>
           </children>
         </xul:hbox>
