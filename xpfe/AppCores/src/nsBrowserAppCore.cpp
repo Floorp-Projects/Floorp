@@ -471,7 +471,6 @@ nsBrowserAppCore::LoadUrl(const nsString& aUrl)
   if (!urlstr)
     return NS_OK;
 
-  printf("URL to load in nsBrowserAppCore is %s\n", urlstr);
 
   /* Ask nsWebShell to load the URl */
   mContentAreaWebShell->LoadURL(nsString(urlstr), nsnull, nsnull);
@@ -572,7 +571,6 @@ static nsresult setAttribute( nsIWebShell *shell,
                               const nsString &value ) {
     nsresult rv = NS_OK;
 
-    printf("In SetAttribute name = %s value = %s\n", name, value);  
     nsCOMPtr<nsIContentViewer> cv;
     rv = shell->GetContentViewer(getter_AddRefs(cv));
     if ( cv ) {
@@ -591,29 +589,28 @@ static nsresult setAttribute( nsIWebShell *shell,
                     rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
                     if ( elem ) {
                         // Set the text attribute.
-			printf("Set attribute %s, value %s\n", name, value);
                         rv = elem->SetAttribute( name, value );
                         if ( APP_DEBUG ) {
                             char *p = value.ToNewCString();
                             delete [] p;
                         }
                         if ( rv != NS_OK ) {
-                             printf("SetAttribute failed, rv=0x%X\n",(int)rv);
+                             if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
                         }
                     } else {
-                        printf("GetElementByID failed, rv=0x%X\n",(int)rv);
+                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
                     }
                 } else {
-                    printf("Upcast to nsIDOMXULDocument failed\n");
+                  if (APP_DEBUG)   printf("Upcast to nsIDOMXULDocument failed\n");
                 }
             } else {
-                printf("GetDocument failed, rv=0x%X\n",(int)rv);
+                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
             }
         } else {
-             printf("Upcast to nsIDocumentViewer failed\n");
+             if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
         }
     } else {
-        printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
+        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
     }
     return rv;
 }
@@ -624,7 +621,6 @@ NS_IMETHODIMP
 nsBrowserAppCore::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
 {
   // Kick start the throbber
-   printf("Setting throbber to busy\n");
    setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
    return NS_OK;
 }
@@ -666,9 +662,8 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
     }
     
     // Stop the throbber
-    printf("Setting throbber to unbusy\n");
     setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
-
+    printf("Document %s loaded successfully\n", spec);
    return NS_OK;
 }
 
