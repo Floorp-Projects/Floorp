@@ -51,14 +51,15 @@ identifier returns [ExpressionNode e]
 	|	"constructor"   { e = new JSValue("object", "constructor"); }
 	;
 
-qualified_identifier
-	:	(parenthesized_expression)? ("::" identifier)+
-	|	identifier ("::" identifier)*
+qualified_identifier returns [ExpressionNode e]
+    { e = null; ExpressionNode e2 = null; }
+	:	(e2 = parenthesized_expression)? ("::" e = identifier { e = new BinaryNode("::", e2, e); } )+
+	|	e = identifier ("::" e2 = identifier { e = new BinaryNode("::", e, e2); } )*
 	;
 
 qualified_identifier_or_parenthesized_expression returns [ExpressionNode e]
-    { e = null; }
-	:	(e = parenthesized_expression | e = identifier) ("::" identifier)*
+    { e = null; ExpressionNode e2 = null; }
+	:	(e = parenthesized_expression | e = identifier) ("::" e2 = identifier { e = new BinaryNode("::", e, e2); } )*
 	;
 
 // ********* Primary Expressions **********
@@ -66,8 +67,8 @@ primary_expression[boolean initial] returns [ExpressionNode e]
     { e = null; }
 	:	{initial}?
 		(
-			function_expression
-		|	object_literal
+			e = function_expression
+		|	e = object_literal
 		)
 	|	e = simple_expression
 	;
@@ -91,18 +92,22 @@ parenthesized_expression returns [ExpressionNode e]
 	:	"(" e = expression[false, true] ")"	;
 
 // ********* Function Expressions **********
-function_expression
-	:	function[false]
+function_expression returns [ExpressionNode e]
+    { e = null; }
+	:	e = function[false]
 	;
 
 // ********* Object Literals **********
-object_literal
+object_literal returns [ExpressionNode e]
+    { e = null; }
 	:	"{" (field_list)? "}" ;
 
-field_list
+field_list returns [ExpressionNode e]
+    { e = null; }
 	:	literal_field ("," literal_field)* ;
 
-literal_field
+literal_field returns [ExpressionNode e]
+    { e = null; }
 	:	qualified_identifier ":" assignment_expression[false, true]
 	;
 
@@ -326,30 +331,33 @@ non_assignment_expression[boolean initial, boolean allowIn] returns [ExpressionN
 
 // FIXME - Can we get rid of lookahead ?
 assignment_expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
-	:	(postfix_expression[initial] ("=" | compound_assignment)) =>
-		postfix_expression[initial] ("=" | compound_assignment) assignment_expression[false, allowIn]
+    { e = null; ExpressionNode p = null; ExpressionNode a = null; String op = null; }
+	:	(postfix_expression[initial] "=") =>
+    	    	(p = postfix_expression[initial] "=" a = assignment_expression[false, allowIn] { e = new AssignmentNode("=", p, a); } )
+	|	(postfix_expression[initial] compound_assignment) =>
+        	    (p = postfix_expression[initial] op = compound_assignment a = assignment_expression[false, allowIn] { e = new AssignmentNode(op, p, a); } )
 	|	e = conditional_expression[false, allowIn]
 	;
 
-compound_assignment
-	:	"*="
-	|	"/="
-	|	"%="
-	|	"+="
-	|	"-="
-	|	"<<="
-	|	">>="
-	|	">>>="
-	|	"&="
-	|	"^="
-	|	"|="
+compound_assignment returns [String op]
+    { op = null; }
+	:	"*="    { op = "*="; }
+	|	"/="    { op = "/="; }
+	|	"%="    { op = "%="; }
+	|	"+="    { op = "+="; }
+	|	"-="    { op = "-="; }
+	|	"<<="   { op = "<<="; }
+	|	">>="   { op = ">>="; }
+	|	">>>="  { op = ">>>="; }
+	|	"&="    { op = "&="; }
+	|	"^="    { op = "^="; }
+	|	"|="    { op = "|="; }
 	;
 
 // ********* Expressions **********
 expression[boolean initial, boolean allowIn] returns [ExpressionNode e]
-    { e = null; }
-	:	e = assignment_expression[initial, allowIn] ("," assignment_expression[false, allowIn] { e = new UnaryNode(",", e); })*
+    { e = null; ExpressionNode e2 = null; }
+	:	e = assignment_expression[initial, allowIn] ("," e2 = assignment_expression[false, allowIn] { e = new BinaryNode(",", e, e2); } )*
 	;
 
 optional_expression
@@ -363,17 +371,19 @@ type_expression[boolean initial, boolean allowIn]
 
 // ********* Statements **********
 
-statement[int scope, boolean non_empty]
-	:	code_statement[non_empty]
+statement[int scope, boolean non_empty] returns [ControlNode c]
+    { c = null; }
+	:	c = code_statement[non_empty]
 	|	definition[scope]
 	;
 
-code_statement[boolean non_empty]
+code_statement[boolean non_empty] returns [ControlNode c]
+    { c = null; }
 	:	empty_statement[non_empty]
 	|	(identifier ":") => labeled_statement[non_empty]
-	|	expression_statement semicolon
+	|	c = expression_statement semicolon
 	|	block[BlockScope]
-	|	if_statement[non_empty]
+	|	c = if_statement[non_empty]
 	|	switch_statement
 	|	do_statement semicolon
 	|	while_statement[non_empty]
@@ -394,23 +404,28 @@ semicolon
 
 // ********* Empty Statement **********
 // FIXME
-empty_statement[boolean non_empty]
+empty_statement[boolean non_empty]returns [ControlNode c]
+    { c = null; }
 	:	";"
 	;
 
 // ********* Expression Statement **********
-expression_statement
-	:	expression[true, true]
+expression_statement returns [ControlNode c]
+    { c = null; ExpressionNode e = null; }
+	:	e = expression[true, true] { c = new ControlNode(e); }
 	;
 
 // ********* Block **********
-block[int scope]
-	:	"{" statements[scope] "}"
+block[int scope] returns [ControlNode c]
+    { c = null; }
+	:	"{" c = statements[scope] "}"
 	;
 
 // FIXME
-statements[int scope]
-	:	(statement[scope, false])+
+statements[int scope] returns [ControlNode c]
+    { c = null; ControlNode t = null; ControlNode n = null; }
+	:	 c = statement[scope, false] { t = c; }
+	        ( n = statement[scope, false] { t.setNext(n); t = n; } )*
 	;
 
 // ********* Labeled Statements **********
@@ -418,12 +433,13 @@ labeled_statement[boolean non_empty]
 	:	identifier ":" code_statement[non_empty]
 	;
 
-if_statement[boolean non_empty]
-	:	"if" parenthesized_expression code_statement[non_empty]
+if_statement[boolean non_empty] returns [ConditionalNode c]
+    { c = null; ControlNode t = null; ControlNode f = null; ExpressionNode e = null; }
+	:	"if"  e = parenthesized_expression t = code_statement[non_empty] { c = new ConditionalNode(e, t); }
 		(
 			// Standard if/else ambiguity
 			options { warnWhenFollowAmbig=false; }:
-			"else" code_statement[non_empty]
+			"else" t = code_statement[non_empty] { c.setFalse(t); }
 		)?
 	;
 
@@ -632,7 +648,8 @@ named_function
 	:	function[true]
 	;
 
-function[boolean nameRequired]
+function[boolean nameRequired] returns [ExpressionNode e]
+    { e = null; }
 	:	"function"
 		(
 			{nameRequired}? identifier
