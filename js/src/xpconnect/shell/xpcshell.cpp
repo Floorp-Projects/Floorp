@@ -598,11 +598,14 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
     }
 
     length = argc - i;
-    vector = (jsval*) JS_malloc(cx, length * sizeof(jsval));
+    if (length == 0) {
+        vector = NULL;
+    } else {
+        vector = (jsval*) JS_malloc(cx, length * sizeof(jsval));
+        if (vector == NULL)
+            return 1;
+    }
     p = vector;
-
-    if (vector == NULL)
-        return 1;
 
     while (i < argc) {
         JSString *str = JS_NewStringCopyZ(cx, argv[i]);
@@ -612,7 +615,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         i++;
     }
     argsObj = JS_NewArrayObject(cx, length, vector);
-    JS_free(cx, vector);
+    if (vector) {
+        JS_free(cx, vector);
+    }
     if (argsObj == NULL)
         return 1;
 
