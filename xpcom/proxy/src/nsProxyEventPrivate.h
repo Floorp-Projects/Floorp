@@ -46,29 +46,27 @@ class nsProxyEventClass;
 
 class nsProxyEventClass : public nsISupports
 {
+public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
-
-public:
+    NS_IMETHOD DelegatedQueryInterface(nsProxyEventObject* self, REFNSIID aIID, void** aInstancePtr);
 
     static nsProxyEventClass* GetNewOrUsedClass(REFNSIID aIID);
-    
-    
-    NS_IMETHOD DelegatedQueryInterface(nsProxyEventObject* self, REFNSIID aIID, void** aInstancePtr);
+
     REFNSIID                 GetIID() const {return mIID;}
     nsIInterfaceInfo*        GetInterfaceInfo() const {return mInfo;}
 	nsresult				 GetRootProxyObject(nsProxyEventObject* anObject, nsProxyEventObject** result);
 	nsresult				 CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID aIID, nsProxyEventObject** aInstancePtr);
-    
-    virtual ~nsProxyEventClass();
-private:
-    nsProxyEventClass();   // not implemented
-    nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo);
 
+protected:
+
+    nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo);
+    virtual ~nsProxyEventClass();
+    
 private:
     nsIInterfaceInfo* mInfo;
-    nsIID mIID;
-    uint32* mDescriptors;
+    nsIID             mIID;
+    uint32*           mDescriptors;
 };
 
 
@@ -82,9 +80,7 @@ public:
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
 
     // call this method and return result
-    NS_IMETHOD CallMethod(PRUint16 methodIndex,
-                          const nsXPTMethodInfo* info,
-                          nsXPTCMiniVariant* params);
+    NS_IMETHOD CallMethod(PRUint16 methodIndex, const nsXPTMethodInfo* info, nsXPTCMiniVariant* params);
 
     
     static nsProxyEventObject* GetNewOrUsedProxy(nsIEventQueue *destQueue,
@@ -93,31 +89,30 @@ public:
                                                  REFNSIID aIID);
 
 
-    nsIEventQueue*        GetQueue() const { return mProxyObject->GetQueue(); }
-    nsIEventQueue*        GetPLQueue() const { return mProxyObject->GetQueue(); }
-
-    REFNSIID             GetIID()   const {return GetClass()->GetIID();}
-    nsProxyEventClass*   GetClass() const { return mClass; }
-
-    nsISupports*         GetRealObject() const { return mProxyObject->GetRealObject(); }
-    nsProxyEventObject*  GetRootProxyObject() const { return mRoot; }
+    REFNSIID              GetIID()             const { return GetClass()->GetIID();}
     
-    nsProxyEventObject*  Find(REFNSIID aIID);
+    nsIEventQueue*        GetQueue()           const { return mProxyObject->GetQueue(); }
+    nsIEventQueue*        GetPLQueue()         const { return mProxyObject->GetQueue(); }
+    nsProxyEventClass*    GetClass()           const { return mClass; }
+    nsISupports*          GetRealObject()      const { return mProxyObject->GetRealObject(); }
+    nsProxyEventObject*   GetRootProxyObject() const { return mRoot; }
     
+    nsProxyEventObject*   Find(REFNSIID aIID);
+    
+
+protected:
     virtual ~nsProxyEventObject();
-
-private:
-    nsProxyEventObject();   // not implemented
+    
     nsProxyEventObject(nsIEventQueue *destQueue,
                        PRInt32 proxyType,
                        nsISupports* aObj,
     				   nsProxyEventClass* aClass,
                        nsProxyEventObject* root);
 
+private:
 
-    nsProxyObject*  mProxyObject;
-   
-    nsProxyEventClass* mClass;
+    nsProxyObject*      mProxyObject;
+    nsProxyEventClass*  mClass;
     nsProxyEventObject* mRoot;
     nsProxyEventObject* mNext;
 };
@@ -134,8 +129,7 @@ class nsProxyObjectManager: public nsIProxyObjectManager
 public:
 
     NS_DECL_ISUPPORTS
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPROXYEVENT_MANAGER_IID);
-    
+
     NS_IMETHOD GetProxyObject(nsIEventQueue *destQueue, 
                               REFNSIID aIID, 
                               nsISupports* aObj, 
@@ -151,10 +145,7 @@ public:
     
     
     
-    // Helpers
-	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
-    
-    
+    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
     
     nsProxyObjectManager();
     virtual ~nsProxyObjectManager();

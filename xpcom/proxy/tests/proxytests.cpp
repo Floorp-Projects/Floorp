@@ -29,10 +29,11 @@
 
 #include "nsITestProxy.h"
 
-
-
 #include "nsProxyObjectManager.h"
+#include "nsIEventQueueService.h"
+
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /***************************************************************************/
 extern "C" void
@@ -133,8 +134,25 @@ NS_IMPL_ISUPPORTS(nsTestXPCFoo2,kITestXPCFooIID)
 
 NS_IMETHODIMP nsTestXPCFoo2::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
-    printf("Thread (%d) nsTestXPCFoo2::Test2() called successfully! Party on...\n", p1);
-    *retval = 0;
+printf("calling back to caller!\n\n");
+
+    nsIProxyObjectManager*  manager;
+    nsITestProxy         *  proxyObject;
+    
+    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                  kProxyObjectManagerIID,
+                                  (nsISupports **)&manager);
+
+    printf("ProxyObjectManager: %d \n", manager);
+    
+    PR_ASSERT(manager);
+
+    manager->GetProxyObject((nsIEventQueue*)p1, nsITestProxy::GetIID(), this, PROXY_SYNC, (void**)&proxyObject);
+    proxyObject->Test3(nsnull, nsnull);
+    
+    printf("Deleting Proxy Object\n");
+    NS_RELEASE(proxyObject);
+
     return NS_OK;
 }
 
@@ -149,7 +167,7 @@ NS_IMETHODIMP nsTestXPCFoo2::Test2()
 
 NS_IMETHODIMP nsTestXPCFoo2::Test3(nsISupports *p1, nsISupports **p2)
 {
-    *p2 = nsnull;
+    printf("Got called");
     return NS_OK;
 }
 
@@ -219,11 +237,6 @@ void TestCase_TwoClassesOneInterface(void *arg)
         rv = proxyObject->Test2();   
         printf("Thread (%d) error: %d.\n", threadNumber, rv);
 
-
-        printf("Thread (%d) Prior to calling proxyObject2->Test.\n", threadNumber);
-        rv = proxyObject2->Test(threadNumber, 0, &a);   
-        printf("Thread (%d) proxyObject2 error: %d.\n", threadNumber, rv);
-
         printf("Thread (%d) Prior to calling proxyObject2->Test2.\n", threadNumber);
         rv = proxyObject2->Test2();   
         printf("Thread (%d) proxyObject2 error: %d.\n", threadNumber, rv);
@@ -240,6 +253,67 @@ void TestCase_TwoClassesOneInterface(void *arg)
 
 
 
+void TestCase_NestedLoop(void *arg)
+{
+    ArgsStruct *argsStruct = (ArgsStruct*) arg;
+
+
+    nsIProxyObjectManager*  manager;
+    
+    nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                  kProxyObjectManagerIID,
+                                  (nsISupports **)&manager);
+
+    printf("ProxyObjectManager: %d \n", manager);
+    
+    PR_ASSERT(manager);
+
+    nsITestProxy         *proxyObject;
+    nsTestXPCFoo2*        foo   = new nsTestXPCFoo2();
+    
+    PR_ASSERT(foo);
+    
+    
+    manager->GetProxyObject(argsStruct->queue, nsITestProxy::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
+    
+    if (proxyObject)
+    {
+    // release ownership of the real object. 
+        
+        PRInt32 a;
+        nsresult rv;
+        PRInt32 threadNumber = argsStruct->threadNumber;
+        
+        printf("Deleting real Object (%d)\n", threadNumber);
+        NS_RELEASE(foo);
+   
+        PRInt32 retval;
+        
+        printf("Getting EventQueue...\n");
+
+        nsIEventQueue* eventQ;
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+        if (NS_SUCCEEDED(rv)) 
+        {
+            rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+            if (NS_FAILED(rv))
+                rv = eventQService->CreateThreadEventQueue();
+            if (NS_FAILED(rv))
+                return;
+            else
+                rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+        
+            printf("Thread (%d) Prior to calling proxyObject->Test.\n", threadNumber);
+            rv = proxyObject->Test((PRInt32)eventQ, 0, &retval);   
+            printf("Thread (%d) proxyObject error: %d.\n", threadNumber, rv);
+
+            printf("Deleting Proxy Object (%d)\n", threadNumber );
+            NS_RELEASE(proxyObject);
+        }    
+
+        PR_Sleep( PR_MillisecondsToInterval(1000) );  // If your thread goes away, your stack goes away.  Only use ASYNC on calls that do not have out parameters
+    }
+}
 
 
 
@@ -320,16 +394,14 @@ void TestCase_nsISupports(void *arg)
 
 static void PR_CALLBACK ProxyTest( void *arg )
 {
-   TestCase_TwoClassesOneInterface(arg);
+   //TestCase_TwoClassesOneInterface(arg);
    // TestCase_2(arg);
-   TestCase_nsISupports(arg);
+   //TestCase_nsISupports(arg);
+   TestCase_NestedLoop(arg);
 
-    NS_RELEASE( ((ArgsStruct*) arg)->queue);
-    free((void*) arg);
+   NS_RELEASE( ((ArgsStruct*) arg)->queue);
+   free((void*) arg);
 }
-
-#include "nsIEventQueueService.h"
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsIEventQueue *gEventQueue = nsnull;
 
@@ -427,7 +499,7 @@ main(int argc, char **argv)
                                      0 );
 
     
-    PR_Sleep(PR_MillisecondsToInterval(10000));
+    PR_Sleep(PR_MillisecondsToInterval(1000));
 
     NS_ASSERTION(gEventQueue, "no main event queue"); // BAD BAD BAD.  EVENT THREAD DID NOT CREATE QUEUE.  This may be a timing issue, set the 
                             // sleep about longer, and try again.

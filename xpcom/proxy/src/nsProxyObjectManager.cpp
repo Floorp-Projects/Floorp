@@ -46,7 +46,6 @@ class nsProxyCreateInstance : public nsIProxyCreateInstance
 
     nsProxyCreateInstance();
     virtual ~nsProxyCreateInstance();
-
 };
 
 nsProxyCreateInstance::nsProxyCreateInstance()
