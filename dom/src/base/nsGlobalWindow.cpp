@@ -417,7 +417,7 @@ GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
 NS_IMETHODIMP
 GlobalWindowImpl::GetClosed(PRBool* aClosed)
 {
-  if (nsnull == mDocument) {
+  if (nsnull == mWebShell) {
     *aClosed = PR_TRUE;
   }
   else {
