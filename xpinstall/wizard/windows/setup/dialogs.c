@@ -1033,7 +1033,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       _ui64toa(ullDSBuf, tchBuffer, 10);
       ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), FALSE, PP_ROOT_ONLY);
       RemoveBackSlash(szBuf);
-      lstrcat(szBuf, " - ");
+      lstrcat(szBuf, "   ");
       lstrcat(szBuf, tchBuffer);
       lstrcat(szBuf, " KB");
       SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
@@ -1237,7 +1237,7 @@ LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM w
       _ui64toa(ullDSBuf, tchBuffer, 10);
       ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), FALSE, PP_ROOT_ONLY);
       RemoveBackSlash(szBuf);
-      lstrcat(szBuf, " - ");
+      lstrcat(szBuf, "   ");
       lstrcat(szBuf, tchBuffer);
       lstrcat(szBuf, " KB");
       SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
