@@ -916,7 +916,7 @@ nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,
 			{
 					nsAutoString reStr="Re: ";
 					reStr +=subject;
-					*getter_Copies(subject) = nsXPIDLString::Copy(reStr.GetUnicode());
+					*((PRUnichar **)getter_Copies(subject)) = nsXPIDLString::Copy(reStr.GetUnicode());
 			}
 	}
 	if(NS_SUCCEEDED(rv))
