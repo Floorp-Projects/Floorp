@@ -426,10 +426,11 @@
 #define cmd_Select_Col                      1321
 #define cmd_Select_Cell                     1322
 #define cmd_Select_All_Cells                1323
+#define cmd_DisplayTables					1324
 #define cmd_Join_With_Next_Cell             1326
 #define cmd_Split_Cell                      1327
-
-#define cmd_DisplayTables					1324
+#define cmd_Convert_Table_To_Text           1328
+#define cmd_Convert_Text_To_Table           1329
 
 
 #define cmd_Paragraph_Hierarchical_Menu		'Para'		// 1296
