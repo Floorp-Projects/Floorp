@@ -120,6 +120,7 @@
  </popup>
 </popupset>
 
+<commandset id="commands"/>
 
    <toolbox id="calendar-toolbox" class="toolbox-top" deferattached="true">
       <!-- Menu -->
