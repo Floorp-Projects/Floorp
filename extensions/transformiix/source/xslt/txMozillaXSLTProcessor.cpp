@@ -674,6 +674,15 @@ txMozillaXSLTProcessor::ClearParameters()
     return NS_OK;
 }
 
+NS_IMETHODIMP
+txMozillaXSLTProcessor::Reset()
+{
+    mStylesheet = nsnull;
+    mVariables.clear();
+
+    return NS_OK;
+}
+
 /* static*/
 nsresult
 txVariable::Convert(nsIVariant *aValue, ExprResult** aResult)
