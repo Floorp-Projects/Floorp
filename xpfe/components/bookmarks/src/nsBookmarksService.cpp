@@ -3123,7 +3123,7 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 		}
 	} while (0);
 
-#ifdef DEBUG_
+#ifdef DEBUG
 	if (NS_FAILED(rv)) {
 		*aResult = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 		*aResult += "chrome";
