@@ -191,7 +191,7 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 
   int argc = bac ? *bac : 0;
   char **argv = bav;
-#if 1
+
   nsresult rv;
 
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
@@ -205,7 +205,6 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
     if(NS_FAILED(rv))
       argv = bav;
   }
-#endif
 
   gtk_set_locale ();
 
