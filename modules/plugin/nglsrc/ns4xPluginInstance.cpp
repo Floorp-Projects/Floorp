@@ -466,7 +466,7 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
   // pinkerton
   // relies on routine descriptors, not present in carbon. We need to fix this.
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
   // some really weird thing causes crash on 
   // http://www.vw.com/autoshow/index_flash.html for optimized build
   // try/catch construction misteriously prevent it
