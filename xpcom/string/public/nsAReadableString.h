@@ -950,9 +950,7 @@ class nsPromiseConcatenation
       virtual PRBool Promises( const basic_nsAReadableString<CharT>& ) const;
 //    virtual PRBool PromisesExactly( const basic_nsAReadableString<CharT>& ) const;
 
-//    nsPromiseConcatenation<CharT> operator+( const basic_nsAReadableString<CharT>& rhs ) const;
-
-      PRUint32 GetFragmentIdentifierMask() const { return mFragmentIdentifierMask; }
+      nsPromiseConcatenation<CharT> operator+( const basic_nsAReadableString<CharT>& rhs ) const;
 
     private:
       void operator+( const nsPromiseConcatenation<CharT>& ); // NOT TO BE IMPLEMENTED
@@ -1053,7 +1051,6 @@ nsPromiseConcatenation<CharT>::GetReadableFragment( nsReadableFragment<CharT>& a
     return result;
   }
 
-#if 0
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>
@@ -1061,7 +1058,7 @@ nsPromiseConcatenation<CharT>::operator+( const basic_nsAReadableString<CharT>& 
   {
     return nsPromiseConcatenation<CharT>(*this, rhs, mFragmentIdentifierMask<<1);
   }
-#endif
+
 
 
 
@@ -1277,20 +1274,10 @@ Compare( const CharT* lhs, const basic_nsAReadableString<CharT>& rhs )
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>
-operator+( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    return nsPromiseConcatenation<CharT>(lhs, rhs, lhs.GetFragmentIdentifierMask());
-  }
-
-template <class CharT>
-inline
-nsPromiseConcatenation<CharT>
 operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
     return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
-
-
 
 #ifdef NEED_CPP_DERIVED_TEMPLATE_OPERATORS
   #define NS_DEF_DERIVED_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT) \
@@ -1313,7 +1300,6 @@ operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStr
   #define NS_DEF_2_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT)
 #endif
 
-  // I believe this operator is now superfluous and can be removed
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>
@@ -1322,7 +1308,6 @@ operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsLiteralStrin
     return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
 
-  // I believe this operator is now superfluous and can be removed
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>
@@ -1331,7 +1316,6 @@ operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsAReadableStrin
     return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
 
-  // I believe this operator is now superfluous and can be removed
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>
