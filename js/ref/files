@@ -41,6 +41,7 @@ jslock.c
 jslock.h
 jsmath.c
 jsmath.h
+jsmsg.def
 jsnum.c
 jsnum.h
 jsobj.c
