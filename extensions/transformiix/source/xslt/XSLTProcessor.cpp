@@ -35,7 +35,7 @@
  * Nathan Pride, npride@wavo.com
  *    -- fixed a document base issue
  *
- * $Id: XSLTProcessor.cpp,v 1.13 2000/05/18 11:57:09 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.cpp,v 1.14 2000/05/23 08:33:18 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -48,7 +48,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.13 $ $Date: 2000/05/18 11:57:09 $
+ * @version $Revision: 1.14 $ $Date: 2000/05/23 08:33:18 $
 **/
 
 /**
@@ -69,7 +69,7 @@ XSLTProcessor::XSLTProcessor() {
 
     xslVersion.append("1.0");
     appName.append("TransforMiiX");
-    appVersion.append("1.0 [beta v20000420]");
+    appVersion.append("1.0 [beta v20000523]");
 
 
     //-- create XSL element types
