@@ -5213,6 +5213,11 @@ PresShell::ReconstructFrames(void)
   return rv;
 }
 
+/*
+ * It's better to add stuff to the |DidSetStyleContext| method of the
+ * relevant frames than adding it here.  This method should (ideally,
+ * anyway) go away.
+ */
 static nsresult 
 FlushMiscWidgetInfo(nsStyleChangeList& aChangeList, nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
@@ -5249,12 +5254,7 @@ FlushMiscWidgetInfo(nsStyleChangeList& aChangeList, nsIPresContext* aPresContext
     return NS_OK;
   }
 
-  // Outliners have a special style cache that needs to be flushed when
-  // the theme changes.
-  nsCOMPtr<nsIOutlinerBoxObject> outlinerBox(do_QueryInterface(aFrame));
-  if (outlinerBox)
-    outlinerBox->ClearStyleAndImageCaches();
-
+  // Perhaps this should move to the appropriate |DidSetStyleContext|?
   nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(aFrame));
   if (menuFrame) {
     menuFrame->UngenerateMenu();   // We deliberately don't re-resolve style on
@@ -5275,7 +5275,7 @@ FlushMiscWidgetInfo(nsStyleChangeList& aChangeList, nsIPresContext* aPresContext
     while (child) {
       nsFrameState  state;
       child->GetFrameState(&state);
-      if (NS_FRAME_OUT_OF_FLOW != (state & NS_FRAME_OUT_OF_FLOW)) {
+      if (!(state & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
         nsCOMPtr<nsIAtom> frameType;
         child->GetFrameType(getter_AddRefs(frameType));

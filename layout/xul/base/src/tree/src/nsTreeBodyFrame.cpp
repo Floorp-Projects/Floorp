@@ -848,14 +848,32 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
   return NS_OK;
 }
 
+nsIFrame*
+nsOutlinerBodyFrame::EnsureScrollbar()
+{
+  if (!mScrollbar) {
+    // Try to find it.
+    nsCOMPtr<nsIContent> parContent;
+    GetBaseElement(getter_AddRefs(parContent));
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    nsIFrame* outlinerFrame;
+    shell->GetPrimaryFrameFor(parContent, &outlinerFrame);
+    if (outlinerFrame)
+      mScrollbar = InitScrollbarFrame(mPresContext, outlinerFrame, this);
+  }
+
+  NS_ASSERTION(mScrollbar, "no scroll bar");
+  return mScrollbar;
+}
+
 void
 nsOutlinerBodyFrame::UpdateScrollbar()
 {
   // Update the scrollbar.
-  nsCOMPtr<nsIContent> scrollbarContent;
-  NS_ASSERTION(mScrollbar, "no scroll bar");
-  if (!mScrollbar)
+  if (!EnsureScrollbar())
     return;
+  nsCOMPtr<nsIContent> scrollbarContent;
   mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
   float t2p;
   mPresContext->GetTwipsToPixels(&t2p);
@@ -906,20 +924,7 @@ nsresult nsOutlinerBodyFrame::CheckVerticalOverflow(PRBool aInReflow)
 
 NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
 {
-  if (!mScrollbar) {
-    // Try to find it.
-    nsCOMPtr<nsIContent> parContent;
-    GetBaseElement(getter_AddRefs(parContent));
-    nsCOMPtr<nsIPresShell> shell;
-    mPresContext->GetShell(getter_AddRefs(shell));
-    nsIFrame* outlinerFrame;
-    shell->GetPrimaryFrameFor(parContent, &outlinerFrame);
-    if (outlinerFrame)
-      mScrollbar = InitScrollbarFrame(mPresContext, outlinerFrame, this);
-  }
-
-  NS_ASSERTION(mScrollbar, "no scroll bar");
-  if (!mScrollbar || !mView)
+  if (!EnsureScrollbar() || !mView)
     return NS_OK;
 
   PRInt32 rowCount = 0;
@@ -1840,6 +1845,16 @@ nsLineStyle nsOutlinerBodyFrame::ConvertBorderStyleToLineStyle(PRUint8 aBorderSt
     default:
       return nsLineStyle_kSolid;
   }
+}
+
+NS_IMETHODIMP
+nsOutlinerBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
+{
+  mStyleCache.Clear();
+  mImageCache = nsnull;
+  mScrollbar = nsnull;
+
+  return nsLeafBoxFrame::DidSetStyleContext(aPresContext);
 }
 
 // Painting routines
@@ -2976,8 +2991,10 @@ nsOutlinerBodyFrame::ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex
 NS_IMETHODIMP
 nsOutlinerBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 {
+  if (!mRowHeight || !EnsureScrollbar())
+    return NS_ERROR_UNEXPECTED;
+
   float t2p;
-  if (!mRowHeight) return NS_ERROR_UNEXPECTED;
   mPresContext->GetTwipsToPixels(&t2p);
   nscoord rh = NSToCoordRound((float)mRowHeight*t2p);
 
@@ -3126,14 +3143,6 @@ nsOutlinerBodyFrame::GetBaseElement(nsIContent** aContent)
 
   *aContent = parent;
   NS_IF_ADDREF(*aContent);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsOutlinerBodyFrame::ClearStyleAndImageCaches()
-{
-  mStyleCache.Clear();
-  mImageCache = nsnull;
-  mScrollbar = nsnull;
   return NS_OK;
 }
 

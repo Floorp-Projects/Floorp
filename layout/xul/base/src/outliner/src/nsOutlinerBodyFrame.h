@@ -252,6 +252,9 @@ public:
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
+  // Overridden nsIFrame method to clear style cache
+  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
+
   // Painting methods.
   // Paint is the generic nsIFrame paint method.  We override this method
   // to paint our contents (our rows and cells).
@@ -377,6 +380,9 @@ protected:
 
   // Builds our cache of column info.
   void EnsureColumns();
+
+  // Makes |mScrollbar| non-null if at all possible, and returns it.
+  nsIFrame* EnsureScrollbar();
 
   // Update the curpos of the scrollbar.
   void UpdateScrollbar();
