@@ -44,7 +44,7 @@
   <script src="certManager.js"/>
 
 
-<box flex="1">
+<hbox flex="1">
   <grid flex="1">
     <column flex="1"/>
     <rows>
@@ -59,17 +59,17 @@
             <tab id="ca_tab" label="&certmgr.tab.ca;" selected="true"/>
           </tabs>
           <tabpanels flex="1">
-            <box id="myCerts" flex="1"/>
+            <vbox id="myCerts" flex="1"/>
 <!--
-            <box id="othersCerts" flex="1"/>
+            <vbox id="othersCerts" flex="1"/>
 -->
-            <box id="webCerts" flex="1"/>
-            <box id="CACerts" flex="1"/>
+            <vbox id="webCerts" flex="1"/>
+            <vbox id="CACerts" flex="1"/>
           </tabpanels>
         </tabbox>
       </row>
       <row>
-        <box orient="horizontal" flex="1">
+        <hbox flex="1">
           <button id="HelpButton" class="normal" 
                   label="&certmgr.help.label;" 
                   orient="horizontal" accesskey="h" 
@@ -79,10 +79,10 @@
                   orient="horizontal" accesskey="c"
                   onclick="window.close();"
                   onkeypress="window.close();"/>
-        </box>
+        </hbox>
       </row>
     </rows>
   </grid>
-</box>
+</hbox>
 
 </window>

@@ -55,8 +55,8 @@
             <tab id="prettyprint_tab" label="&certmgr.detail.prettyprint_tab.title;" />
           </tabs>
           <tabpanels flex="1">
-            <hbox id="general_info" flex="1"/>
-            <hbox id="certPrettyPrint" flex ="1" />
+            <vbox id="general_info" flex="1"/>
+            <vbox id="certPrettyPrint" flex="1"/>
           </tabpanels>
         </tabbox>
       </row>
