@@ -282,16 +282,12 @@ nsLayoutModule::GetClassObject(nsIComponentManager *aCompMgr,
     }
   }
 
-  nsIFactory* f = new nsLayoutFactory(aClass);
+  nsCOMPtr<nsIFactory> f = new nsLayoutFactory(aClass);
   if (!f) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = f->QueryInterface(aIID, r_classObj);
-  if (NS_FAILED(rv)) {
-    delete f;
-  }
 
-  return rv;
+  return f->QueryInterface(aIID, r_classObj);
 }
 
 //----------------------------------------
