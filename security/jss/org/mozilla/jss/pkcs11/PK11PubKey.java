@@ -54,6 +54,10 @@ public class PK11PubKey extends org.mozilla.jss.pkcs11.PK11Key
 
     public native KeyType getKeyType();
 
+    public String getAlgorithm() {
+        return getKeyType().toString();
+    }
+
     /**
      * Creates a PK11PubKey from its raw form. The raw form is a DER encoding
      * of the public key.  For example, this is what is stored in a
