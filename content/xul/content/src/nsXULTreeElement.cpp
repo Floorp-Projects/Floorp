@@ -418,7 +418,7 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
 
 		// If tag==item, Do selection stuff
     content->GetTag(*getter_AddRefs(tag));
-    if (tag && tag == kTreeItemAtom)
+    if (tag && tag.get() == kTreeItemAtom)
     {
       // Only select if we aren't already selected.
 			content->SetAttribute(kNameSpaceID_None, kSelectedAtom, 
