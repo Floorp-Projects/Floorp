@@ -127,7 +127,7 @@ nsresult nsOffscreenSurface::Init( HPS     aCompatiblePS,
    // Find the compatible device context and create a memory one
    HDC hdcCompat = GFX (::GpiQueryDevice (aCompatiblePS), HDC_ERROR);
    DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
-   mDC = ::DevOpenDC( 0/*hab*/, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat);
+   mDC = GFX (::DevOpenDC( 0/*hab*/, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat), DEV_ERROR);
 
    if( DEV_ERROR != mDC)
    {
@@ -148,7 +148,7 @@ nsresult nsOffscreenSurface::Init( HPS     aCompatiblePS,
 
          // find bitdepth
          LONG lBitCount = 0;
-         ::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount);
+         GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
          hdr.cBitCount = (USHORT) lBitCount;
       
          mBitmap = GFX (::GpiCreateBitmap (mPS, &hdr, 0, 0, 0), GPI_ERROR);

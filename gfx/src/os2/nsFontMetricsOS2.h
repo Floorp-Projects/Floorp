@@ -194,6 +194,9 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    nscoord  mSpaceWidth;
    nscoord  mXHeight;
   nscoord             mAveCharWidth;
+#ifdef MOZ_MATHML
+  float               mItalicSlope;
+#endif
 
    nsFontHandleOS2    *mFontHandle;
    nsDeviceContextOS2 *mDeviceContext;
