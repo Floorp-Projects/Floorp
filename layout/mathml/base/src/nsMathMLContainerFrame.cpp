@@ -126,7 +126,7 @@ nsMathMLContainerFrame::IsOnlyWhitespace(nsIFrame* aFrame)
   return rv;
 }
 
-// helper to get an attribute from the content or the surrounding <mstyle>
+// helper to get an attribute from the content or the surrounding <mstyle> hierarchy
 nsresult
 nsMathMLContainerFrame::GetAttribute(nsIContent* aContent,
                                      nsIFrame*   aMathMLmstyleFrame,          
@@ -136,16 +136,37 @@ nsMathMLContainerFrame::GetAttribute(nsIContent* aContent,
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
 
   // see if we can get the attribute from the content
-  if (aContent) {
+  if (aContent)
+  {
     rv = aContent->GetAttribute(kNameSpaceID_None, aAttributeAtom, aValue);
   }
 
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+  if (NS_CONTENT_ATTR_NOT_THERE == rv)
+  {
     // see if we can get the attribute from the mstyle frame
-    if (aMathMLmstyleFrame) {
+    if (aMathMLmstyleFrame)
+    {
       nsCOMPtr<nsIContent> mstyleContent;
-      aMathMLmstyleFrame->GetContent(getter_AddRefs(mstyleContent));
-      rv = mstyleContent->GetAttribute(kNameSpaceID_None, aAttributeAtom, aValue);
+      aMathMLmstyleFrame->GetContent(getter_AddRefs(mstyleContent)); 
+
+      nsIFrame* mstyleParent;
+      aMathMLmstyleFrame->GetParent(&mstyleParent); 
+
+      nsPresentationData mstyleParentData;
+      mstyleParentData.mstyle = nsnull;
+ 
+      if (mstyleParent)
+      {
+        nsIMathMLFrame* aMathMLFrame = nsnull;
+        rv = mstyleParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
+        if (NS_SUCCEEDED(rv) && nsnull != aMathMLFrame)
+        {
+          aMathMLFrame->GetPresentationData(mstyleParentData);
+        }
+      }
+
+      // recurse all the way up into the <mstyle> hierarchy
+      rv = GetAttribute(mstyleContent, mstyleParentData.mstyle, aAttributeAtom, aValue);
     }
   }
   return rv;
@@ -318,25 +339,25 @@ printf("String:%s,  Number:%s,  Unit:%s\n", s1, s2, s3);
 nscoord 
 nsMathMLContainerFrame::CalcLength(nsIPresContext*   aPresContext,
                                    nsIStyleContext*  aStyleContext,
-                                   const nsCSSValue& aValue)
+                                   const nsCSSValue& aCSSValue)
 {
-  NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
+  NS_ASSERTION(aCSSValue.IsLengthUnit(), "not a length unit");
 
-  if (aValue.IsFixedLengthUnit()) {
-    return aValue.GetLengthTwips();
+  if (aCSSValue.IsFixedLengthUnit()) {
+    return aCSSValue.GetLengthTwips();
   }
 
-  nsCSSUnit unit = aValue.GetUnit();
+  nsCSSUnit unit = aCSSValue.GetUnit();
 
   if (eCSSUnit_Pixel == unit) {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
-    return NSFloatPixelsToTwips(aValue.GetFloatValue(), p2t);
+    return NSFloatPixelsToTwips(aCSSValue.GetFloatValue(), p2t);
   }
   else if (eCSSUnit_EM == unit) {
     nsStyleFont font;
     aStyleContext->GetStyle(eStyleStruct_Font, font);
-    return NSToCoordRound(aValue.GetFloatValue() * (float)font.mFont.size);
+    return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font.mFont.size);
   }
   else if (eCSSUnit_XHeight == unit) {
     nscoord xHeight;
@@ -345,10 +366,84 @@ nsMathMLContainerFrame::CalcLength(nsIPresContext*   aPresContext,
     nsCOMPtr<nsIFontMetrics> fm;
     aPresContext->GetMetricsFor(font.mFont, getter_AddRefs(fm));
     fm->GetXHeight(xHeight);
-    return NSToCoordRound(aValue.GetFloatValue() * (float)xHeight);
+    return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
 
   return 0;
+}
+
+PRBool
+nsMathMLContainerFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
+                                             nsString&   aString,
+                                             nsCSSValue& aCSSValue)
+{
+  aCSSValue.Reset();
+  aString.CompressWhitespace(); //  aString is not a const in this code...
+  if (!aString.Length()) return PR_FALSE;
+
+  // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
+  PRInt32 i = 0;
+  nsIAtom* namedspaceAtom;
+  if (aString.EqualsWithConversion("veryverythinmathspace"))
+  {
+    i = 1;
+    namedspaceAtom = nsMathMLAtoms::veryverythinmathspace_;
+  }
+  else if (aString.EqualsWithConversion("verythinmathspace"))
+  {
+  	i = 2; 
+  	namedspaceAtom = nsMathMLAtoms::verythinmathspace_;
+  }
+  else if (aString.EqualsWithConversion("thinmathspace"))
+  {
+    i = 3;
+    namedspaceAtom = nsMathMLAtoms::thinmathspace_;
+  }
+  else if (aString.EqualsWithConversion("mediummathspace"))
+  {
+  	i = 4;
+  	namedspaceAtom = nsMathMLAtoms::mediummathspace_;
+  }
+  else if (aString.EqualsWithConversion("thickmathspace"))
+  {
+  	i = 5;
+  	namedspaceAtom = nsMathMLAtoms::thickmathspace_;
+  }
+  else if (aString.EqualsWithConversion("verythickmathspace"))
+  {
+  	i = 6;
+  	namedspaceAtom = nsMathMLAtoms::verythickmathspace_;
+  }
+  else if (aString.EqualsWithConversion("veryverythickmathspace"))
+  {
+  	i = 7;
+  	namedspaceAtom = nsMathMLAtoms::veryverythickmathspace_;
+  }
+
+  if (0 != i) 
+  {
+    if (aMathMLmstyleFrame) 
+    {
+      // see if there is a <mstyle> that has overriden the default value
+      // GetAttribute() will recurse all the way up into the <mstyle> hierarchy
+      nsAutoString value;
+      if (NS_CONTENT_ATTR_HAS_VALUE ==
+          GetAttribute(nsnull, aMathMLmstyleFrame, namedspaceAtom, value))
+      {
+        if (ParseNumericValue(value, aCSSValue) &&
+            aCSSValue.IsLengthUnit())
+        {
+          return PR_TRUE;
+        }
+      }
+    }
+
+    // fall back to the default value
+    aCSSValue.SetFloatValue(float(i)/float(18), eCSSUnit_EM);
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 // -------------------------
@@ -1253,6 +1348,26 @@ nsMathMLContainerFrame::ReflowTokenFor(nsIFrame*                aFrame,
   NS_PRECONDITION(aFrame, "null arg");
   nsresult rv = NS_OK;
 
+  // See if this is an incremental reflow
+  if (aReflowState.reason == eReflowReason_Incremental) {
+    nsIFrame* targetFrame;
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+#ifdef MATHML_NOISY_INCREMENTAL_REFLOW
+printf("nsMathMLContainerFrame::ReflowTokenFor:IncrementalReflow received by: ");
+nsFrame::ListTag(stdout, aFrame);
+printf("for target: ");
+nsFrame::ListTag(stdout, targetFrame);
+printf("\n");
+#endif
+    if (aFrame == targetFrame) {
+    }
+    else {
+      // Remove the next frame from the reflow path
+      nsIFrame* nextFrame;
+      aReflowState.reflowCommand->GetNext(nextFrame);
+    }
+  }
+
   // initializations needed for empty markup like <mtag></mtag>
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = aDesiredSize.descent = 0;
@@ -1357,6 +1472,31 @@ nsMathMLContainerFrame::PlaceTokenFor(nsIFrame*            aFrame,
   return NS_OK;
 }
 
+// We are an inline frame, so we handle dirty request like nsInlineFrame
+NS_IMETHODIMP
+nsMathMLContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
+{
+  // The inline container frame does not handle the reflow
+  // request.  It passes it up to its parent container.  
+
+  // If you don't already have dirty children,
+  if (!(mState & NS_FRAME_HAS_DIRTY_CHILDREN)) {
+    if (mParent) {
+      // Record that you are dirty and have dirty children    
+      mState |= NS_FRAME_IS_DIRTY;
+      mState |= NS_FRAME_HAS_DIRTY_CHILDREN;      
+
+      // Pass the reflow request up to the parent    
+      mParent->ReflowDirtyChild(aPresShell, (nsIFrame*) this);
+    }
+    else {
+      NS_ASSERTION(0, "No parent to pass the reflow request up to.");
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMathMLContainerFrame::Reflow(nsIPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
@@ -1367,6 +1507,29 @@ nsMathMLContainerFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = aDesiredSize.descent = 0;
   aDesiredSize.mBoundingMetrics.Clear();
+
+  // See if this is an incremental reflow
+  if (aReflowState.reason == eReflowReason_Incremental) {
+    nsIFrame* targetFrame;
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+#ifdef MATHML_NOISY_INCREMENTAL_REFLOW
+printf("nsMathMLContainerFrame::Reflow:IncrementalReflow received by: ");
+nsFrame::ListTag(stdout, this);
+printf("for target: ");
+nsFrame::ListTag(stdout, targetFrame);
+printf("\n");
+#endif
+    if (this == targetFrame) {
+      // XXX We are the target of the incremental reflow.
+      // Rather than reflowing everything, see if we can speedup things
+      // by just doing the minimal work needed to update ourselves
+    }
+    else {
+      // Remove the next frame from the reflow path
+      nsIFrame* nextFrame;
+      aReflowState.reflowCommand->GetNext(nextFrame);
+    }
+  }
 
   /////////////
   // Reflow children
@@ -1571,6 +1734,27 @@ nsMathMLWrapperFrame::Reflow(nsIPresContext*          aPresContext,
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
   aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
+
+  // See if this is an incremental reflow
+  if (aReflowState.reason == eReflowReason_Incremental) {
+    nsIFrame* targetFrame;
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+#ifdef MATHML_NOISY_INCREMENTAL_REFLOW
+printf("nsMathMLWrapperFrame::Reflow:IncrementalReflow received by: ");
+nsFrame::ListTag(stdout, this);
+printf("for target: ");
+nsFrame::ListTag(stdout, targetFrame);
+printf("\n");
+#endif
+    if (this == targetFrame) {
+    }
+    else {
+      // Remove the next frame from the reflow path
+      nsIFrame* nextFrame;
+      aReflowState.reflowCommand->GetNext(nextFrame);
+    }
+  }
+
   nsIFrame* childFrame = mFrames.FirstChild();
   if (childFrame) {
     nsReflowStatus childStatus;

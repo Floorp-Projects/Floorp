@@ -423,7 +423,11 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       mContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...
-      ContentChanged(mPresContext, mContent, nsnull);
+//      ContentChanged(mPresContext, mContent, nsnull);
+
+      nsCOMPtr<nsIPresShell> presShell;
+      mPresContext->GetShell(getter_AddRefs(presShell));
+      ReflowDirtyChild(presShell, mSelectedFrame);
     }
   }
   else if (NS_MATHML_ACTION_TYPE_RESTYLE == mActionType) 

@@ -95,7 +95,9 @@ nsMathMLmspaceFrame::Init(nsIPresContext*  aPresContext,
   mWidth = 0;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::width_, value)) {
-    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+    if ((ParseNumericValue(value, cssValue) ||
+         ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue)) &&
+         cssValue.IsLengthUnit()) {
       mWidth = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
@@ -104,7 +106,9 @@ nsMathMLmspaceFrame::Init(nsIPresContext*  aPresContext,
   mHeight = 0;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::height_, value)) {
-    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+    if ((ParseNumericValue(value, cssValue) ||
+         ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue)) &&
+         cssValue.IsLengthUnit()) {
       mHeight = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
@@ -113,7 +117,9 @@ nsMathMLmspaceFrame::Init(nsIPresContext*  aPresContext,
   mDepth = 0;
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::depth_, value)) {
-    if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
+    if ((ParseNumericValue(value, cssValue) ||
+         ParseNamedSpaceValue(mPresentationData.mstyle, value, cssValue)) &&
+         cssValue.IsLengthUnit()) {
       mDepth = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }

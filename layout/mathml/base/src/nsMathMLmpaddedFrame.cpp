@@ -56,6 +56,7 @@
 #define NS_MATHML_PSEUDO_UNIT_HEIGHT      3
 #define NS_MATHML_PSEUDO_UNIT_DEPTH       4
 #define NS_MATHML_PSEUDO_UNIT_LSPACE      5
+#define NS_MATHML_PSEUDO_UNIT_NAMEDSPACE  6
 
 nsresult
 NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -94,7 +95,7 @@ nsMathMLmpaddedFrame::Init(nsIPresContext*  aPresContext,
   /*
   parse the attributes
 
-  width = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | h-unit)
+  width = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | h-unit | namedspace)
   height= [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | v-unit)
   depth = [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | v-unit)
   lspace= [+|-] unsigned-number (% [pseudo-unit] | pseudo-unit | h-unit)
@@ -234,13 +235,36 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     return PR_TRUE;
   }
 
-  aString.Right(value, stringLength - i);
-  if      (value.EqualsWithConversion("width"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
+  if (value.EqualsWithConversion("width"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
   else if (value.EqualsWithConversion("height")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
   else if (value.EqualsWithConversion("depth"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
   else if (value.EqualsWithConversion("lspace")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
-  else // unexpected pseudo-unit
+  else 
   {
+    nsCSSValue aCSSNamedSpaceValue;
+    if (!aCSSValue.IsLengthUnit() &&
+         ParseNamedSpaceValue(nsnull, value, aCSSNamedSpaceValue))
+    { // XXX nsnull in ParseNamedSpacedValue()? don't access mstyle?
+
+      aPseudoUnit = NS_MATHML_PSEUDO_UNIT_NAMEDSPACE;
+      float namedspace = aCSSNamedSpaceValue.GetFloatValue();
+
+      // combine aCSSNamedSpaceValue and aCSSValue since
+      // we know that the unit of aCSSNamedSpaceValue is 'em'
+      nsCSSUnit unit = aCSSValue.GetUnit();
+      if (eCSSUnit_Number == unit) {
+        float scaler = aCSSValue.GetFloatValue();
+        aCSSValue.SetFloatValue(scaler*namedspace, eCSSUnit_EM);
+        return PR_TRUE;
+      }
+      else if (eCSSUnit_Percent == unit) {
+        float scaler = aCSSValue.GetPercentValue();
+        aCSSValue.SetFloatValue(scaler*namedspace, eCSSUnit_EM);
+        return PR_TRUE;
+      }
+    }
+
+    // if we reach here, it means we encounter an unexpected pseudo-unit
     aCSSValue.Reset();
     aSign = NS_MATHML_SIGN_INVALID;
     return PR_FALSE;
