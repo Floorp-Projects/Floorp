@@ -157,6 +157,7 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
 
   // and get the load group out of the open context
   nsCOMPtr<nsILoadGroup> aLoadGroup = do_QueryInterface(aOpenContext);
+#if 0
   if (!aLoadGroup)
   { 
     // i haven't implemented this yet...it's going to be hard
@@ -164,8 +165,9 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
     // that we don't have in this architecture in order to create a new load group
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+#endif
 
-  if (aCurrentOpenContext)
+  if (aCurrentOpenContext && aLoadGroup)
     aLoadGroup->QueryInterface(NS_GET_IID(nsISupports), (void **) aCurrentOpenContext);
 
   // now we have all we need, so go get the necko channel service so we can 
