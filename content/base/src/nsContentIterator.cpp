@@ -160,6 +160,20 @@ ContentIsInTraversalRange(nsIContent *aContent,   PRBool aIsPreMode,
   if (!aStartNode || !aEndNode || !aContent)
     return PR_FALSE;
 
+  nsCOMPtr<nsIDOMCharacterData> cData(do_QueryInterface(aContent));
+
+  if (cData)
+  {
+    // If a chardata node contains an end point of the traversal range,
+    // it is always in the traversal range.
+
+    nsCOMPtr<nsIContent> startContent(do_QueryInterface(aStartNode));
+    nsCOMPtr<nsIContent> endContent(do_QueryInterface(aEndNode));
+
+    if (aContent == startContent || aContent == endContent)
+      return PR_TRUE;
+  }
+
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 indx = 0;
 
