@@ -650,6 +650,72 @@ ULONG ParseCommandLine(int argc, char *argv[])
   }
 }
 
+#define BUFMIN	8*1024
+#define BUFMAX	256*1024
+#define BUFDEFAULT 32*1024
+
+BOOL CheckForProcess(PID pid, PSZ szProcessName, ULONG ulProcessName, PSZ szFQProcessName, ULONG ulFQProcessName)
+{
+/* Only compile this code if we have the new toolkit */
+#ifdef QS_PROCESS
+  ULONG bufsize = BUFDEFAULT;
+  QSPTRREC* pbh;
+  APIRET rc = 0;
+  CHAR szUpperAppName[CCHMAXPATH] = {0};
+
+  /* Can't call with both - only one or the other */
+  if (pid && szProcessName) {
+    return FALSE;
+  }
+  if (szProcessName) {
+    strcpy(szUpperAppName, szProcessName);
+    strupr(szUpperAppName);
+  }
+  do {
+    pbh = (QSPTRREC*) malloc(bufsize);
+    if(!pbh) {
+      if(bufsize <= BUFMIN)
+        rc = ERROR_NOT_ENOUGH_MEMORY;
+      else if(rc != ERROR_BUFFER_OVERFLOW)
+        bufsize /= 2;
+    } else {
+      rc = DosQuerySysState(QS_PROCESS | QS_MTE, 0, 0, 0, pbh, bufsize);
+      if(rc == ERROR_BUFFER_OVERFLOW) {
+        if(bufsize < BUFMAX) {
+          free(pbh);
+          bufsize *= 2;
+        } else {
+          rc = ERROR_TOO_MANY_NAMES;    // give up.
+        }
+      }
+    }
+  } while(rc == ERROR_BUFFER_OVERFLOW);
+
+  if(rc == NO_ERROR) {
+    QSPREC* ppiLocal = pbh->pProcRec;
+    while(ppiLocal->RecType == QS_PROCESS) {
+      QSLREC* pmi = pbh->pLibRec;
+      while (pmi && pmi->hmte != ppiLocal->hMte)
+        pmi = (QSLREC*)pmi->pNextRec;
+      if(pmi) {
+        if ((szUpperAppName[0] && strstr((char*)pmi->pName, szUpperAppName)) ||
+           (ppiLocal->pid == pid)) {
+            if (szFQProcessName)
+              strcpy(szFQProcessName, (char*)pmi->pName);
+            if (pbh)
+              free(pbh);
+            return TRUE;
+        }
+      }
+      ppiLocal=(QSPREC*)(ppiLocal->pThrdRec+ppiLocal->cTCB);
+    }
+  }
+  if(pbh)
+    free(pbh);
+#endif
+  return FALSE;
+}
+
 int PreCheckInstance(char *szSection, char *szIniFile, char *szFQProcessName)
 {
   char  szParameter[MAX_BUF];
@@ -704,6 +770,7 @@ int PreCheckInstance(char *szSection, char *szIniFile, char *szFQProcessName)
 HRESULT CheckInstances()
 {
   char  szFQProcessName[CCHMAXPATH];
+  char  szProcessName[CCHMAXPATH];
   char  szSection[MAX_BUF];
   char  szClassName[MAX_BUF];
   char  szWindowName[MAX_BUF];
@@ -732,6 +799,59 @@ HRESULT CheckInstances()
 
     GetPrivateProfileString(szSection, "Message", "", szMessage, MAX_BUF, szFileIniUninstall);
 
+    if(GetPrivateProfileString(szSection, "Process Name", "", szProcessName, sizeof(szProcessName), szFileIniUninstall) != 0L)
+    {
+      if(*szProcessName != '\0')
+      {
+        /* If an instance is found, call PreCheckInstance first */
+        if(CheckForProcess(0, szProcessName, sizeof(szProcessName), szFQProcessName, sizeof(szFQProcessName)) == TRUE)
+          PreCheckInstance(szSection, szFileIniUninstall, szFQProcessName);
+
+        if(CheckForProcess(0, szProcessName, sizeof(szProcessName), NULL, 0) == TRUE)
+        {
+          if(*szMessage != '\0')
+          {
+            switch(ugUninstall.ulMode)
+            {
+              case NORMAL:
+                switch(WinMessageBox(HWND_DESKTOP, hWndMain, szMessage, NULL, 0, MB_ICONEXCLAMATION | MB_OKCANCEL))
+                {
+                  case MBID_CANCEL:
+                    /* User selected to cancel Setup */
+                    return(TRUE);
+
+                  case MBID_RETRY:
+                  case MBID_OK:
+                    /* User selected to retry.  Reset counter */
+                    iIndex = -1;
+                    break;
+                }
+                break;
+
+              case AUTO:
+                ShowMessage(szMessage, TRUE);
+                DosSleep(5000);
+                ShowMessage(szMessage, FALSE);
+
+                /* Setup mode is AUTO.  Show message, timeout, then cancel because we can't allow user to continue */
+                return(TRUE);
+
+              case SILENT:
+                return(TRUE);
+            }
+          }
+          else
+          {
+            /* No message to display.  Assume cancel because we can't allow user to continue */
+            return(TRUE);
+          }
+        }
+      }
+
+      /* Process Name= key existed, and has been processed, so continue looking for more */
+      continue;
+    }
+
     /* Process Name= key did not exist, so look for other keys */
     ulRv0 = GetPrivateProfileString(szSection, "Class Name", "", szClassName, MAX_BUF, szFileIniUninstall);
     ulRv1 = GetPrivateProfileString(szSection, "Window Name", "", szWindowName, MAX_BUF, szFileIniUninstall);
@@ -757,9 +877,7 @@ HRESULT CheckInstances()
         PID pid;
         TID tid;
         WinQueryWindowProcess(hwndFW, &pid, &tid);
-#ifdef OLDCODE
         CheckForProcess(pid, NULL, 0, szFQProcessName, sizeof(szFQProcessName));
-#endif
         PreCheckInstance(szSection, szFileIniUninstall, szFQProcessName);
       }
 
@@ -854,7 +972,7 @@ HRESULT GetUninstallLogPath()
 
   PrfQueryProfileString(HINI_USERPROFILE, szApp, "Uninstall Log Folder", "", szLogFolder, sizeof(szLogFolder));
 
-  strcpy(ugUninstall.szDescription, "Hello"); /* OLDCODE */
+  strcpy(ugUninstall.szDescription, ugUninstall.szOIMainApp);
 
   if(FileExists(szLogFolder) == FALSE)
   {
