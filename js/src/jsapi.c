@@ -658,11 +658,23 @@ bad:
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
-    JSContext *cx, *iter;
+#ifdef DEBUG
+#ifndef MOZILLA_CLIENT
+    JS_ASSERT(rt->contextList.next == &rt->contextList);
+#else
+    /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
+    if (rt->contextList.next != &rt->contextList) {
+        JSContext *cx, *iter = NULL;
+        uintN cxcount = 0;
+        while ((cx = js_ContextIterator(rt, &iter)) != NULL)
+            cxcount++;
+        fprintf(stderr,
+"JS API usage error: %u contexts left in runtime upon JS_DestroyRuntime.\n",
+                cxcount);
+    }
+#endif
+#endif
 
-    iter = NULL;
-    while ((cx = js_ContextIterator(rt, &iter)) != NULL)
-        js_DestroyContext(cx, JS_NO_GC);
     js_FinishGC(rt);
 #ifdef JS_THREADSAFE
     if (rt->gcLock)

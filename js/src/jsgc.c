@@ -80,7 +80,12 @@
 #define GC_FLAGS_SIZE   (GC_THINGS_SIZE / sizeof(JSGCThing))
 #define GC_ARENA_SIZE   (GC_THINGS_SIZE + GC_FLAGS_SIZE)
 
-/* The private JSGCThing struct, which describes a gcFreelist element. */
+/*
+ * The private JSGCThing struct, which describes a gcFreelist element.  We use
+ * it also for things to be finalized in rt->gcFinalVec, in which case next is
+ * not a next-thing link, it points to the thing to be finalized.  The flagp
+ * member points to this thing's flags, for fast recycling and finalization.
+ */
 struct JSGCThing {
     JSGCThing   *next;
     uint8       *flagp;
@@ -156,7 +161,7 @@ struct JSGCThing {
  * the card-mark byte on split's low byte.)
  */
 #define GC_PAGE_SHIFT   10
-#define GC_PAGE_MASK    JS_BITMASK(GC_PAGE_SHIFT)
+#define GC_PAGE_MASK    ((jsuword) JS_BITMASK(GC_PAGE_SHIFT))
 #define GC_PAGE_SIZE    JS_BIT(GC_PAGE_SHIFT)
 
 typedef struct JSGCPageInfo {
@@ -789,6 +794,8 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
                             break;
                         }
                     }
+                } else {
+                    strcpy(name, "**UNKNOWN OBJECT MAP ENTRY**");
                 }
 #endif
                 GC_MARK(cx, JSVAL_TO_GCTHING(v), name, arg);
@@ -1230,6 +1237,7 @@ out:
     JS_NOTIFY_GC_DONE(rt);
     JS_UNLOCK_GC(rt);
 #endif
-    if (rt->gcCallback)
+
+    if (!(gcflags & GC_LAST_CONTEXT) && rt->gcCallback)
 	(void) rt->gcCallback(cx, JSGC_END);
 }
