@@ -143,4 +143,12 @@ create table tags (
 	
 
 
+create table checkinlocks (
+	repositoryid mediumint not null,
+	branchid mediumint not null,
+	dirid mediumint not null,
+	fileid mediumint not null,
+	revision
+
+
 OK_ALL_DONE

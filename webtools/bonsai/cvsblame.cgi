@@ -187,7 +187,7 @@ if ($ENV{'HTTP_USER_AGENT'} =~ /Win/) {
 #
 $output = "<DIV ALIGN=LEFT>";
 foreach $path (split('/',$rcs_path)) {
-    $link_path .= $path;
+    $link_path .= url_encode2($path);
     $output .= "<A HREF='rview.cgi?dir=$link_path";
     $output .= "&cvsroot=$form{'root'}" if defined $form{'root'};
     $output .= "&rev=$browse_revtag" unless $browse_revtag eq 'HEAD';
@@ -346,6 +346,8 @@ sub print_top {
     local ($diff_link) = "cvsview2.cgi?diff_mode=context&whitespace_mode=show";
     $diff_link .= "&root=$form{'root'}" if defined $form{'root'};
     $diff_link .= "&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail";
+    
+    $diff_link = &url_encode3($diff_link);
 
     print <<__TOP__;
 <HTML>
@@ -391,7 +393,12 @@ function log(event, line, prev_rev, rev) {
         l.document.write(eval("log" + revToName(rev)) + "</TD></TR></TABLE>");
         l.document.close();
     }
-    l.top = event.target.y - 3;
+
+    if(event.target.y > window.innerHeight + window.pageYOffset - l.clip.height) { 
+         l.top = (window.innerHeight + window.pageYOffset - (l.clip.height + 15));
+    } else {
+         l.top = event.target.y - 3;
+    }
     l.left = event.target.x + 40;
     l.visibility="show";
 

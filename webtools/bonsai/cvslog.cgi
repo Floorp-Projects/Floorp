@@ -173,6 +173,7 @@ if ($opt_sort eq 'author') {
     $table_header_tag .= "<TH ALIGN=LEFT>Rev<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$filename&root=$root&rev=$browse_revtag&sort=author&author=$author_arg'>Author</A><TH ALIGN=LEFT>Date<TH><TH ALIGN=LEFT>Log";
 }
 
+$table_header_tag = &url_encode3($table_header_tag);
 print "$font_tag$table_tag$table_header_tag";
 
 # Print each line of the revision, preceded by its annotation.
@@ -215,16 +216,24 @@ foreach $revision (@revisions)
     }
 
     $output .= "<TR$bgcolor VALIGN=TOP><TD>"
-        ."<A NAME=$revision><A HREF='cvsview2.cgi";
+        ."<A NAME=$revision>";
+
+    $anchor = "<A HREF=cvsview2.cgi";
+
     if (defined($prev_revision{$revision})) {
-        $output .= "?diff_mode=context&whitespace_mode=show&file=$file_tail"
+        $anchor .= "?diff_mode=context&whitespace_mode=show&file=$file_tail"
             ."&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET"
             ."&rev1=$prev_revision{$revision}&rev2=$revision";
     } else {
-        $output .= "?files=$file_tail"
+        $anchor .= "?files=$file_tail"
             ."&root=$root&subdir=$rcs_path\&command=DIRECTORY\&rev2=$revision";
-        $output .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
+        $anchor .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
     }
+
+    $anchor = &url_encode3($anchor);
+
+    $output .= $anchor;
+
     $output .= "'>$revision</A>"
         .'&nbsp' x ($max_rev_length - length($revision)).'</TD>';
 

@@ -69,6 +69,17 @@ sub url_encode2 {
     $s =~ s/\'/\%27/g;
     $s =~ s/\|/\%7c/g;
     $s =~ s/\&/\%26/g;
+    $s =~ s/\+/\%2b/g;
+    return $s;
+}
+
+sub url_encode3 {
+    local( $s ) = @_;
+
+    $s =~ s/\n/\%0a/g;
+    $s =~ s/\r//g;
+    $s =~ s/\"/\%22/g;
+    $s =~ s/\+/\%2b/g;
     return $s;
 }
 
