@@ -767,6 +767,194 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
 }
 
 
+
+
+PRInt32
+nsGfxTextControlFrame2::CalculateSizeNavQuirks (nsIPresContext*       aPresContext, 
+                                              nsIRenderingContext*  aRendContext,
+                                              nsIFormControlFrame*  aFrame,
+                                              const nsSize&         aCSSSize, 
+                                              nsInputDimensionSpec& aSpec, 
+                                              nsSize&               aDesiredSize, 
+                                              nsSize&               aMinSize, 
+                                              PRBool&               aWidthExplicit, 
+                                              PRBool&               aHeightExplicit, 
+                                              nscoord&              aRowHeight,
+                                              nsMargin&             aBorder,
+                                              nsMargin&             aPadding)
+{
+  nscoord charWidth   = 0; 
+  aWidthExplicit      = PR_FALSE;
+  aHeightExplicit     = PR_FALSE;
+
+  aDesiredSize.width  = CSS_NOTSET;
+  aDesiredSize.height = CSS_NOTSET;
+
+  // Quirks does not use rowAttr
+  nsHTMLValue colAttr;
+  nsresult    colStatus;
+  nsHTMLValue rowAttr;
+  nsresult    rowStatus;
+  if (NS_ERROR_FAILURE == GetColRowSizeAttr(aFrame, 
+                                            aSpec.mColSizeAttr, colAttr, colStatus,
+                                            aSpec.mRowSizeAttr, rowAttr, rowStatus)) {
+    return 0;
+  }
+
+  // Get the Font Metrics for the Control
+  // without it we can't calculate  the size
+  nsCOMPtr<nsIFontMetrics> fontMet;
+  nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
+  if (NS_SUCCEEDED(res) && fontMet) {
+    aRendContext->SetFont(fontMet);
+
+    // Figure out the number of columns
+    // and set that as the default col size
+    if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
+      PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
+      col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
+      aSpec.mColDefaultSize = col;
+    }
+    charWidth = nsFormControlHelper::CalcNavQuirkSizing(aPresContext, 
+                                                        aRendContext, fontMet, 
+                                                        aFrame, aSpec, aDesiredSize);
+    aMinSize.width = aDesiredSize.width;
+
+    // XXX I am commenting this out below to let CSS 
+    // override the column setting - rods
+
+    // If COLS was not set then check to see if CSS has the width set
+    //if (NS_CONTENT_ATTR_HAS_VALUE != colStatus) {  // col attr will provide width
+      if (CSS_NOTSET != aCSSSize.width) {  // css provides width
+        NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
+        if (NS_INTRINSICSIZE != aCSSSize.width) {
+          aDesiredSize.width = aCSSSize.width;
+          aWidthExplicit = PR_TRUE;
+        }
+      }
+    //}
+
+    aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
+    if (CSS_NOTSET != aCSSSize.height) {  // css provides height
+      NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
+      if (NS_INTRINSICSIZE != aCSSSize.height) {
+        aDesiredSize.height = aCSSSize.height;
+        aHeightExplicit = PR_TRUE;
+      }
+    }
+
+  } else {
+    NS_ASSERTION(fontMet, "Couldn't get Font Metrics"); 
+    aDesiredSize.width = 300;  // arbitrary values
+    aDesiredSize.width = 1500;
+  }
+
+  aRowHeight      = aDesiredSize.height;
+  aMinSize.height = aDesiredSize.height;
+
+  PRInt32 numRows = (aRowHeight > 0) ? (aDesiredSize.height / aRowHeight) : 0;
+
+  return numRows;
+}
+
+//------------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxTextControlFrame2::ReflowNavQuirks(nsIPresContext*           aPresContext,
+                                        nsHTMLReflowMetrics&     aDesiredSize,
+                                        const nsHTMLReflowState& aReflowState,
+                                        nsReflowStatus&          aStatus,
+                                        nsMargin&                aBorder,
+                                        nsMargin&                aPadding)
+{
+  nsMargin borderPadding;
+  borderPadding.SizeTo(0, 0, 0, 0);
+  // Get the CSS border
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+
+  // This calculates the reflow size
+  // get the css size and let the frame use or override it
+  nsSize styleSize;
+  nsFormControlFrame::GetStyleSize(aPresContext, aReflowState, styleSize);
+
+  nsSize desiredSize;
+  nsSize minSize;
+  
+  PRBool widthExplicit, heightExplicit;
+  PRInt32 ignore;
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+    PRInt32 width = 0;
+    if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
+      width = GetDefaultColumnWidth();
+    }
+    nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
+                                  nsnull, width, 
+                                  PR_FALSE, nsnull, 1);
+    CalculateSizeNavQuirks(aPresContext, aReflowState.rendContext, this, styleSize, 
+                           textSpec, desiredSize, minSize, widthExplicit, 
+                           heightExplicit, ignore, aBorder, aPadding);
+  } else {
+    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
+                                  nsnull, GetDefaultColumnWidth(), 
+                                  PR_FALSE, nsHTMLAtoms::rows, 1);
+    CalculateSizeNavQuirks(aPresContext, aReflowState.rendContext, this, styleSize, 
+                           areaSpec, desiredSize, minSize, widthExplicit, 
+                           heightExplicit, ignore, aBorder, aPadding);
+  }
+  if (widthExplicit) {
+    desiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+  }
+  if (heightExplicit) {
+    desiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+  }
+
+  aDesiredSize.width   = desiredSize.width;
+  aDesiredSize.height  = desiredSize.height;
+  aDesiredSize.ascent  = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+
+  if (aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width  = widthExplicit?desiredSize.width:minSize.width;
+    aDesiredSize.maxElementSize->height = heightExplicit?desiredSize.height:minSize.height;
+  }
+
+  // In Nav Quirks mode we only add in extra size for padding
+  nsMargin padding;
+  padding.SizeTo(0, 0, 0, 0);
+  spacing->CalcPaddingFor(this, padding);
+
+  // Check to see if style was responsible 
+  // for setting the height or the width
+  PRBool addBorder = PR_FALSE;
+  PRInt32 width;
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetSizeFromContent(&width)) {
+    // if a size attr gets incorrectly 
+    // put on a textarea it comes back as -1
+    if (width > -1) { 
+      addBorder = (width < GetDefaultColumnWidth()) && !widthExplicit;
+    }
+  }
+
+  if (addBorder) {
+    if (CSS_NOTSET != styleSize.width || 
+        CSS_NOTSET != styleSize.height) {  // css provides width
+      nsMargin border;
+      border.SizeTo(0, 0, 0, 0);
+      spacing->CalcBorderFor(this, border);
+      if (CSS_NOTSET != styleSize.width) {  // css provides width
+        aDesiredSize.width  += border.left + border.right;
+      }
+      if (CSS_NOTSET != styleSize.height) {  // css provides heigth
+        aDesiredSize.height += border.top + border.bottom;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
                                nsIContent *      aContent,
@@ -1024,7 +1212,7 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
     // GetDesiredSize calculates the size without CSS borders
     // the nsLeafFrame::Reflow will add in the borders
     if (eCompatibility_NavQuirks == mode) {
-      //rv = ReflowNavQuirks(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
+      rv = ReflowNavQuirks(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
     } else {
       rv = ReflowStandard(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
     }
