@@ -19,16 +19,22 @@ DEPTH=..\..
 DIRS=java as_html win 
 !include <$(DEPTH)\config\rules.mak>
 
+!ifdef MOZ_DEBUG
+BUILD_INSTALL_DIR=$(DEPTH)\..\x86Dbg\
+!else
+BUILD_INSTALL_DIR=$(DEPTH)\..\x86Rel\
+!endif
+
 install::
 	$(MAKE_INSTALL)  \
 		$(DEPTH)\dist\$(OBJDIR)\lib\np32asw.dll \
-		$(DEPTH)\..\x86dbg\plugins
+		$(BUILD_INSTALL_DIR)\plugins
 	$(MAKE_INSTALL) \
 		java\signed\npasw.jar \
-		$(DEPTH)\..\x86Dbg\plugins
+		$(BUILD_INSTALL_DIR)\plugins
 	$(MAKE_INSTALL) \
 		as_html\signed\asw.jar \
-		$(DEPTH)\..\x86Dbg\asw
+		$(BUILD_INSTALL_DIR)\asw
 #	$(MAKE_INSTALL) \
 #		as_html\metadata\html\compare.js \
 #		as_html
