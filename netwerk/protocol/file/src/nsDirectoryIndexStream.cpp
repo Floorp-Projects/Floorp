@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+
+/*
+
+  The converts a filesystem directory into an "HTTP index" stream.
+
+ */
+
 #include "nsEscape.h"
 #include "nsDirectoryIndexStream.h"
 #include "prio.h"
@@ -110,6 +117,8 @@ nsDirectoryIndexStream::Close()
 NS_IMETHODIMP
 nsDirectoryIndexStream::GetLength(PRUint32* aLength)
 {
+    // Lie, and tell the caller that the stream is endless (until we
+    // actually don't have anything left).
     if (mIter->Exists()) {
         *aLength = -1;
         return NS_OK;
@@ -126,16 +135,20 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 {
     PRUint32 nread = 0;
 
+    // If anything is enqueued (or left-over) in mBuf, then feed it to
+    // the reader first.
     while (mOffset < mBuf.Length() && aCount != 0) {
         *(aBuf++) = char(mBuf.CharAt(mOffset++));
         --aCount;
         ++nread;
     }
 
+    // Room left?
     if (aCount > 0) {
         mOffset = 0;
         mBuf.Truncate();
 
+        // Okay, now we'll suck stuff off of our iterator into the mBuf...
         while (PRUint32(mBuf.Length()) < aCount && mIter->Exists()) {
             const nsFileSpec& current = mIter->Spec();
             ++(*mIter);
@@ -188,6 +201,8 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             mBuf.Append('\n');
         }
 
+        // ...and once we've either run out of directory entries, or
+        // filled up the buffer, then we'll push it to the reader.
         while (mOffset < mBuf.Length() && aCount != 0) {
             *(aBuf++) = char(mBuf.CharAt(mOffset++));
             --aCount;
