@@ -18,25 +18,26 @@
    - 
    - Contributor(s): Stephen Lamm <slamm@netscape.com>
    -                 Blake Ross <BlakeR1234@aol.com>
+   -                 Samir Gehani <sgehani@netscape.com>
   --> 
 
-<!ENTITY sidebar.panels.label        "&sidebarName;">
+<!ENTITY sidebar.panels.label        "Sidebar">
 <!ENTITY sidebar.reload.label        "Reload">
 <!ENTITY sidebar.picker.label        "Tabs">
-<!ENTITY sidebar.customize.label     "Customize &sidebarName;...">
+<!ENTITY sidebar.customize.label     "Customize Sidebar...">
 <!ENTITY sidebar.customize.accesskey "u">
 <!ENTITY sidebar.hide.label          "Hide Panel">
 <!ENTITY sidebar.hide.accesskey      "H">
 <!ENTITY sidebar.switch.label        "Switch to Panel">
 <!ENTITY sidebar.switch.accesskey    "S">
-<!ENTITY sidebarCmd.label            "&sidebarName;">
+<!ENTITY sidebarCmd.label            "Sidebar">
 <!ENTITY sidebarCmd.accesskey        "b">
 <!ENTITY sidebar.loading.label       "Loading...">
 <!ENTITY sidebar.loading.stop.label  "Stop">
 
-<!ENTITY sidebar.no-panels.state     "The &sidebarName; is currently empty.">
+<!ENTITY sidebar.no-panels.state     "The sidebar is currently empty.">
 <!ENTITY sidebar.no-panels.add       'You may add tabs by clicking on the "Tabs" button above.'>
-<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide the &sidebarName;, click on the "View" menu above, and select "&sidebarName;."'>
+<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide the Sidebar, click on the "View" menu above, and select "Sidebar."'>
 <!ENTITY sidebar.sbDirectory.label   "Sidebar Directory...">
 
 <!ENTITY sidebar.pagenotfound.label  "This tab is not available right now.">
