@@ -21,15 +21,14 @@
   
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
 
-<window id="calibrateScreen"
+<dialog id="calibrateScreen"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&calibrateDialog.title;"
-        class="dialog" 
         onload="Init();"
+        ondialogaccept="return onOK();"
+        ondialogcancel="return onCancel();"
         persist="screenX screenY">
 
   <script type="application/x-javascript" 
@@ -45,9 +44,9 @@
     <hbox align="center">
       <label value="&calibrate.instructions;"/>
     </hbox>
-      
+
     <separator class="thin"/>
-      
+
     <hbox align="center">
       <textbox id="horizSize" size="5"/>
       <menulist id="units" persist="value">
@@ -55,15 +54,11 @@
           <menuitem value="centimetres" label="&units.centimetres;"/>
           <menuitem value="inches" label="&units.inches;"/>
         </menupopup>
-      </menulist>              
-
+      </menulist>
     </hbox>
-    
+
     <separator/>
 
-    <keyset id="dialogKeys"/>
-    <hbox id="okCancelButtonsRight"/>
-
   </vbox>
-  
-</window>
+
+</dialog>

@@ -666,7 +666,6 @@ function setResolution( resolution )
 function Init()
   {
       sizeToContent();
-      doSetOKCancel(onOK, onCancel);
       document.getElementById("horizSize").focus();
   }
   
