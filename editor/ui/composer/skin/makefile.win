@@ -38,7 +38,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\link.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\numbers.gif		$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\object-popup.gif	$(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\outdent.dif		$(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\outdent.gif		$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\paste.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\redo.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\spell.gif			$(DIST)\bin\chrome\editor\skin\default\images
@@ -75,7 +75,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\justify.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\copy.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\cut.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\outdent.dif			
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\outdent.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\find.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\hline.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\image.gif			
