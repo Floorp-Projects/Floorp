@@ -43,12 +43,16 @@ public:
   NS_IMETHOD GetWebWidget(nsIWebWidget** aResult);
   NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
                          const nsString& aURLSpec,
-			                   const nsString& aTargetSpec,
+                         const nsString& aTargetSpec,
                          nsIPostData* aPostData = 0);
+  NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
+                        const nsString& aURLSpec,
+                        const nsString& aTargetSpec,
+                        nsIPostData* aPostData = 0);
   NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
 
   void HandleLinkClickEvent(const nsString& aURLSpec,
-			                      const nsString& aTargetSpec,
+                            const nsString& aTargetSpec,
                             nsIPostData* aPostDat = 0);
 
   nsIWebWidget* mWidget;
@@ -59,7 +63,7 @@ public:
 
 struct OnLinkClickEvent : public PLEvent {
   OnLinkClickEvent(LinkHandlerImpl* aHandler, const nsString& aURLSpec,
-		   const nsString& aTargetSpec, nsIPostData* aPostData = 0);
+                   const nsString& aTargetSpec, nsIPostData* aPostData = 0);
   ~OnLinkClickEvent();
 
   void HandleEvent();
@@ -81,8 +85,8 @@ static void PR_CALLBACK DestroyEvent(OnLinkClickEvent* aEvent)
 }
 
 OnLinkClickEvent::OnLinkClickEvent(LinkHandlerImpl* aHandler,
-				                           const nsString& aURLSpec,
-				                           const nsString& aTargetSpec,
+                                   const nsString& aURLSpec,
+                                   const nsString& aTargetSpec,
                                    nsIPostData* aPostData)
 {
   mHandler = aHandler;
@@ -95,8 +99,8 @@ OnLinkClickEvent::OnLinkClickEvent(LinkHandlerImpl* aHandler,
   }
 
   PL_InitEvent(this, nsnull,
-	       (PLHandleEventProc) ::HandleEvent,
-	       (PLDestroyEventProc) ::DestroyEvent);
+               (PLHandleEventProc) ::HandleEvent,
+               (PLDestroyEventProc) ::DestroyEvent);
 
 #ifdef XP_PC
   PLEventQueue* eventQueue = PL_GetMainEventQueue();
@@ -131,7 +135,8 @@ NS_IMPL_ISUPPORTS(LinkHandlerImpl, kILinkHandlerIID);
 
 // this Init method assumes that the nsIWebWidget passed in owns this
 // LinkHandlerImpl also, so it wont refcount the aWidget.  
-NS_IMETHODIMP LinkHandlerImpl::Init(nsIWebWidget* aWidget)
+NS_IMETHODIMP
+LinkHandlerImpl::Init(nsIWebWidget* aWidget)
 {
   NS_PRECONDITION(nsnull != aWidget, "null ptr");
   NS_PRECONDITION(nsnull == mWidget, "init twice");
@@ -146,7 +151,8 @@ NS_IMETHODIMP LinkHandlerImpl::Init(nsIWebWidget* aWidget)
   return NS_OK;
 }
 
-NS_IMETHODIMP LinkHandlerImpl::GetWebWidget(nsIWebWidget** aResult)
+NS_IMETHODIMP
+LinkHandlerImpl::GetWebWidget(nsIWebWidget** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -157,17 +163,29 @@ NS_IMETHODIMP LinkHandlerImpl::GetWebWidget(nsIWebWidget** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP LinkHandlerImpl::OnLinkClick(nsIFrame* aFrame,
-					   const nsString& aURLSpec,
-					   const nsString& aTargetSpec,
-             nsIPostData* aPostData)
+NS_IMETHODIMP
+LinkHandlerImpl::OnLinkClick(nsIFrame* aFrame,
+                             const nsString& aURLSpec,
+                             const nsString& aTargetSpec,
+                             nsIPostData* aPostData)
 
 {
   new OnLinkClickEvent(this, aURLSpec, aTargetSpec, aPostData);
   return NS_OK;
 }
 
-NS_IMETHODIMP LinkHandlerImpl::GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
+NS_IMETHODIMP
+LinkHandlerImpl::OnOverLink(nsIFrame* aFrame,
+                            const nsString& aURLSpec,
+                            const nsString& aTargetSpec,
+                            nsIPostData* aPostData)
+
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LinkHandlerImpl::GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
 {
   // XXX not yet implemented
   aState = eLinkState_Unvisited;
@@ -189,11 +207,13 @@ NS_IMETHODIMP LinkHandlerImpl::GetLinkState(const nsString& aURLSpec, nsLinkStat
   return NS_OK;
 }
 
-void LinkHandlerImpl::HandleLinkClickEvent(const nsString& aURLSpec,
-					   const nsString& aTargetSpec, nsIPostData* aPostData)
+void
+LinkHandlerImpl::HandleLinkClickEvent(const nsString& aURLSpec,
+                                      const nsString& aTargetSpec,
+                                      nsIPostData* aPostData)
 {
   if (nsnull != mWidget) {
-    mWidget->LoadURL(aURLSpec, aPostData);
+    mWidget->LoadURL(aURLSpec, nsnull, aPostData);
   }
 }
 
