@@ -156,7 +156,7 @@ nsIFontCache* nsDeviceContextWin::GetFontCache()
 
 void nsDeviceContextWin::FlushFontCache()
 {
-  NS_RELEASE(mFontCache);
+  NS_IF_RELEASE(mFontCache);
 }
 
 nsresult nsDeviceContextWin::CreateFontCache()
