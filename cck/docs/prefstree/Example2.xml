@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <PREFSGROUP uiname="Netscape Preferences">
   <PREFSGROUP uiname="Group 1">
-    <PREF uiname="Autoload What's Related" prefname="browser.related.autoload" type="int" lockable="true" description="A good description of this pref goes here.">
+    <PREF uiname="Autoload What's Related" prefname="browser.related.autoload" type="int" default="0" lockable="true" description="A good description of this pref goes here.">
       <CHOICES>
         <CHOICE uiname="Always" value="0"/>
         <CHOICE uiname="After First Use" value="1"/>
@@ -10,7 +10,7 @@
       <VALUE>0</VALUE>
       <LOCKED>false</LOCKED>
     </PREF>
-    <PREF uiname="Start Page" prefname="browser.startup.page" type="int" lockable="true" description="Display this page when Navigator starts up.">
+    <PREF uiname="Start Page" prefname="browser.startup.page" type="int" default="0" lockable="true" description="Display this page when Navigator starts up.">
       <CHOICES>
         <CHOICE uiname="Blank Page" value="0"/>
         <CHOICE uiname="Home Page" value="1"/>
@@ -21,11 +21,11 @@
     </PREF>
   </PREFSGROUP>
   <PREFSGROUP uiname="Group 2">
-    <PREF uiname="Bookmarks" prefname="browser.toolbars.showbutton.bookmarks" type="bool" lockable="true" description="Show Booksmarks button on browser toolbar.">
+    <PREF uiname="Bookmarks" prefname="browser.toolbars.showbutton.bookmarks" type="bool" default="true" lockable="true" description="Show Booksmarks button on browser toolbar.">
       <VALUE>true</VALUE>
       <LOCKED>false</LOCKED>
     </PREF>
-    <PREF uiname="Go" prefname="browser.toolbars.showbutton.go" type="bool" lockable="true" description="Show Go button on browser toolbar.">
+    <PREF uiname="Go" prefname="browser.toolbars.showbutton.go" type="bool" default="true" lockable="true" description="Show Go button on browser toolbar.">
       <VALUE>true</VALUE>
       <LOCKED>false</LOCKED>
     </PREF>

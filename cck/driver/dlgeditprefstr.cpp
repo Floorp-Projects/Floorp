@@ -168,6 +168,8 @@ void CDlgEditPrefStr::OnResetDefault()
   {
     if (m_strDefault.CompareNoCase("true") == 0)
       m_checkValue.SetCheck(TRUE);
+    else
+      m_checkValue.SetCheck(FALSE);
   }	
 
   else // string or int type
