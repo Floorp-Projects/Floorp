@@ -3598,6 +3598,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
         if (bNodeFound) {
           // GetElementOrParentByTagName addref'd this, so we don't need to do it here
           *aReturn = parentLinkOfAnchor;
+          NS_IF_ADDREF(*aReturn);
           return NS_OK;
         }
       }
