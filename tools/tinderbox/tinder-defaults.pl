@@ -1,3 +1,6 @@
+$ENV{MOZ_PACKAGE_MSI}   = 0; # Default: 0.  Create a MSI package where possible.
+                             # (Requires Windows + local MakeMSI installation.)
+
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
 #$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
 $BuildAdministrator = ($ENV{USER} || "cltbld") . "\@" . ($ENV{HOST} || "dhcp");
