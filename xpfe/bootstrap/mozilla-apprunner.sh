@@ -91,7 +91,7 @@ done
 
 # if you are debugging, you can't have moreargs
 # ./mozilla-apprunner.sh -g -mail makes no sense.
-if [ $debugging -eq 1 -a $moreargs != "" ]
+if [ $debugging -eq 1 -a "x$moreargs" != "x" ]
 then
 	echo "You can't have -g and $moreargs at the same time"
 	exit 1
