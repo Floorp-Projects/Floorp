@@ -21,6 +21,7 @@
 
 #ifndef NS_STR_UTIL_H
 #define NS_STR_UTIL_H
+#include "nsString.h"
 
 // nsString to temporary char[] macro
 
@@ -75,5 +76,7 @@
 if (! _ns_smallBufUsed) \
     delete[] aBuf; 
 
+
+char* GetACPString(nsString&);
 
 #endif  // NSStringUtil

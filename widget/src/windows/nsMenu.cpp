@@ -360,7 +360,7 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
     PRInt32 id = ((nsWindow *)win)->GetNewCmdMenuId();
     ((nsMenuItem *)((nsIMenuItem *)menuItem))->SetCmdId(id);
 
-    char * nameStr = name.ToNewCString();
+    char * nameStr = GetACPString(name);
 
     MENUITEMINFO menuInfo;
     menuInfo.cbSize     = sizeof(menuInfo);
@@ -380,7 +380,7 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
       menu->GetLabel(name);
       //mItems->AppendElement((nsISupports *)(nsIMenu *)menu);
 
-      char * nameStr = name.ToNewCString();
+      char * nameStr = GetACPString(name);
 
       HMENU nativeMenuHandle;
       void * voidData;
@@ -476,7 +476,7 @@ NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  char* menuLabel = mLabel.ToNewCString();
+  char* menuLabel = GetACPString(mLabel);
   printf("Menu Selected %s\n", menuLabel);
   delete[] menuLabel;
   if (nsnull != mListener) {
@@ -488,7 +488,7 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-  char* menuLabel = mLabel.ToNewCString();
+  char* menuLabel = GetACPString(mLabel);
   printf("Menu Deselected %s\n", menuLabel);
   delete[] menuLabel;
   if (nsnull != mListener) {

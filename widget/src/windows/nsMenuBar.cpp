@@ -164,7 +164,7 @@ NS_METHOD nsMenuBar::InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu)
 {
   nsString name;
   aMenu->GetLabel(name);
-  char * nameStr = name.ToNewCString();
+  char * nameStr = GetACPString(name);
 
   mItems->InsertElementAt(aMenu, (PRInt32)aPos);
   NS_ADDREF(aMenu);
