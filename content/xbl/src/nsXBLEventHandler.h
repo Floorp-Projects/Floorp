@@ -25,6 +25,7 @@
 #ifndef nsXBLEventHandler_h__
 #define nsXBLEventHandler_h__
 
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMenuListener.h"
@@ -47,7 +48,7 @@ class nsXBLEventHandler : public nsIDOMKeyListener,
                           public nsIDOMScrollListener
 {
 public:
-  nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement, const nsString& aEventName);
+  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIContent* aHandlerElement, const nsString& aEventName);
   virtual ~nsXBLEventHandler();
   
   NS_IMETHOD BindingAttached();
@@ -93,7 +94,7 @@ public:
   void RemoveEventHandlers();
 
   void MarkForDeath() {
-    if (mNextHandler) mNextHandler->MarkForDeath(); mHandlerElement = mBoundElement = nsnull;
+    if (mNextHandler) mNextHandler->MarkForDeath(); mHandlerElement = nsnull; mEventReceiver = nsnull;
   }
 
 protected:
@@ -107,37 +108,44 @@ protected:
 
   NS_IMETHOD ExecuteHandler(const nsAReadableString & aEventName, nsIDOMEvent* aEvent);
 
+  void ConstructKeyMask();
+  PRBool MatchesMask(nsIDOMUIEvent* aEvent);
+
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyAtom;
   static nsIAtom* kKeyCodeAtom;
   static nsIAtom* kCharCodeAtom;
-  static nsIAtom* kPrimaryAtom;
-  static nsIAtom* kShiftAtom;
-  static nsIAtom* kControlAtom;
-  static nsIAtom* kAltAtom;
-  static nsIAtom* kMetaAtom;
   static nsIAtom* kActionAtom;
   static nsIAtom* kCommandAtom;
   static nsIAtom* kClickCountAtom;
   static nsIAtom* kButtonAtom;
   static nsIAtom* kBindingAttachedAtom;
   static nsIAtom* kBindingDetachedAtom;
+  static nsIAtom* kModifiersAtom;
+
+  static PRInt32 kAccessKey;
+  static void InitAccessKey();
 
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
 
+  static const PRInt32 cShift;
+  static const PRInt32 cAlt;
+  static const PRInt32 cControl;
+  static const PRInt32 cMeta;
+
 protected:
-  nsIContent* mBoundElement; // Both of these refs are weak.
+  nsIDOMEventReceiver* mEventReceiver; // Both of these refs are weak.
   nsIContent* mHandlerElement;
   nsAutoString mEventName;
 
-  void InitAccessKey();
-  PRInt32 mAccessKey;        // the default access key or "xulkey"
+  PRInt32 mKeyMask;          // Which modifier keys this event handler expects to have down
+                             // in order to be matched.
 
   nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
 };
 
 extern nsresult
-NS_NewXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement, 
+NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIContent* aHandlerElement, 
                       const nsString& aEventName,
                       nsXBLEventHandler** aResult);
 

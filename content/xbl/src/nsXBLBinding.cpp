@@ -616,12 +616,12 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
           nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
           nsAutoString attachType;
           child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
-          if (attachType == NS_LITERAL_STRING("document") || 
-              attachType == NS_LITERAL_STRING("window"))
+          if (attachType == NS_LITERAL_STRING("_document") || 
+              attachType == NS_LITERAL_STRING("_window"))
           {
             nsCOMPtr<nsIDocument> boundDoc;
             mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
-            if (attachType == NS_LITERAL_STRING("window")) {
+            if (attachType == NS_LITERAL_STRING("_window")) {
               nsCOMPtr<nsIScriptGlobalObject> global;
               boundDoc->GetScriptGlobalObject(getter_AddRefs(global));
               receiver = do_QueryInterface(global);
@@ -632,7 +632,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
           if (mouse || key || focus || xul || scroll || special) {
             // Create a new nsXBLEventHandler.
             nsXBLEventHandler* handler;
-            NS_NewXBLEventHandler(mBoundElement, child, type, &handler);
+            NS_NewXBLEventHandler(receiver, child, type, &handler);
 
             // We chain all our event handlers together for easy
             // removal later (if/when the binding dies).
