@@ -260,8 +260,11 @@ void PR_CALLBACK nsProtocolProxyService::HandlePACLoadEvent(PLEvent* aEvent)
         NS_ERROR("HandlePACLoadEvent owner is null");
         return;
     }
-    if (!pps->mPAC) {
-        NS_ERROR("HandlePACLoadEvent: js PAC component is null");
+
+    // create pac js component
+    pps->mPAC = do_CreateInstance(NS_PROXY_AUTO_CONFIG_CONTRACTID, &rv);
+    if (!pps->mPAC || NS_FAILED(rv)) {
+        NS_ERROR("Cannot load PAC js component");
         return;
     }
 
@@ -382,9 +385,9 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
     if (2 == mUseProxy)
     {
         if (!mPAC) {
-            NS_ERROR("ERROR: PAC js component is null");
+            NS_ERROR("ERROR: PAC js component is null, assuming DIRECT");
             delete proxyInfo;
-            return NS_ERROR_NULL_POINTER;
+            return NS_OK; // assume DIRECT connection for now
         }
 
          rv = mPAC->ProxyForURL(aURI, 
@@ -489,13 +492,6 @@ nsProtocolProxyService::ConfigureFromPAC(const char *url)
 {
     nsresult rv = NS_OK;
     mPACURL.Adopt(nsCRT::strdup(url));
-
-    // create pac js component
-    mPAC = do_CreateInstance(NS_PROXY_AUTO_CONFIG_CONTRACTID, &rv);
-    if (!mPAC || NS_FAILED(rv)) {
-        NS_ERROR("Cannot load PAC js component");
-        return rv;
-    }
 
     /* now we need to setup a callback from the main ui thread
        in which we will load the pac file from the specified
