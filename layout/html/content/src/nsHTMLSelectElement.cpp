@@ -462,6 +462,7 @@ nsHTMLSelectElement::SetForm(nsIDOMHTMLFormElement* aForm)
   return result;
 }
 
+static
 void GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)
 {
   PRInt32 numChildren;

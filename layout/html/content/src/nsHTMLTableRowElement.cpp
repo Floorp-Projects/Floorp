@@ -104,6 +104,7 @@ protected:
   GenericElementCollection* mCells;
 };
 
+static
 void TempList(nsIDOMHTMLTableElement* aTable) {
   nsIHTMLContent* content = nsnull;
   nsresult result = aTable->QueryInterface(kIHTMLContentIID, (void**)&content);
