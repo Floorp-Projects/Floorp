@@ -28,22 +28,15 @@
 #ifndef nsDeckFrame_h___
 #define nsDeckFrame_h___
 
-#include "nsHTMLContainerFrame.h"
-#include "nsIBox.h"
+#include "nsBoxFrame.h"
 
-class nsDeckFrame : public nsHTMLContainerFrame, public nsIBox
+class nsDeckFrame : public nsBoxFrame
 {
 public:
 
   friend nsresult NS_NewDeckFrame(nsIFrame** aNewFrame);
 
-  NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
-
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
-
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+ 
 
   NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
                                       nsIStyleContext* aParentContext,
@@ -63,42 +56,17 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
-
-  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
-
-  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame);
-
+ 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList);
 
-/*
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
-*/
+
   NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
                                nsIFrame**     aFrame);
 
@@ -107,21 +75,16 @@ public:
 protected:
 
   virtual nsIFrame* GetSelectedFrame();
-  virtual nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize);
-  virtual void GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize);
-  virtual nsresult FlowChildAt(nsIFrame* frame, 
-                     nsIPresContext& aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus,
-                     const nsSize& size,
-                     nsIFrame*& incrementalChild);
+    virtual nsresult PlaceChildren(nsRect& boxRect);
+    virtual void ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
+    virtual void LayoutChildrenInRect(nsRect& size);
+    virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);
+
 
 
 private:
 
   nsIFrame* mSelected;
-  PRBool mSelectedChanged;
 
 }; // class nsDeckFrame
 
