@@ -469,7 +469,7 @@ int main(int argc, char* argv[])
   /* Comments/questions to alecf@netscape.com */
   {
 	/*MESSENGER*/
-    nsIAppShellComponent *messenger;
+    nsCOMPtr<nsIAppShellComponent> messenger;
     //const char *messengerProgID = "component://netscape/messenger";
     nsresult result;
 
@@ -484,14 +484,12 @@ int main(int argc, char* argv[])
     result = nsComponentManager::CreateInstance(kCMessengerBootstrapCID,
                                                 nsnull,
                                                 nsIAppShellComponent::GetIID(),
-                                                (void **)&messenger);
-    if (NS_SUCCEEDED(result)) {
-      printf("The Messenger component is available. Initializing...\n");
+                                                getter_AddRefs(messenger));
+    if (NS_SUCCEEDED(result)) 
       result = messenger->Initialize(appShell, cmdLineArgs);
-    }
  
 	/*COMPOSER*/
-      nsIAppShellComponent *composer;
+    nsCOMPtr<nsIAppShellComponent> composer;
       //const char *composerProgID = "component://netscape/composer";
 
     /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
@@ -505,11 +503,9 @@ int main(int argc, char* argv[])
     result = nsComponentManager::CreateInstance(kCComposerBootstrapCID,
                                                 nsnull,
                                                 nsIAppShellComponent::GetIID(),
-                                                (void **)&composer);
-    if (NS_SUCCEEDED(result)) {
-      printf("The Message Compose component is available. Initializing...\n");
-      result = composer->Initialize(appShell, cmdLineArgs);
-    }
+                                                getter_AddRefs(composer));
+    if (NS_SUCCEEDED(result)) 
+		result = composer->Initialize(appShell, cmdLineArgs);
   }
   /* End of mailhack */
   /* ********************************************************************* */
