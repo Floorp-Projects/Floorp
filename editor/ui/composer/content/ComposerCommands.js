@@ -3195,8 +3195,8 @@ var nsNormalModeCommand =
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
-    if (gEditorDisplayMode != DisplayModeNormal)
-      SetEditMode(DisplayModeNormal);
+    if (gEditorDisplayMode != gDisplayModeNormal)
+      SetEditMode(gDisplayModeNormal);
   }
 };
 
@@ -3213,8 +3213,8 @@ var nsAllTagsModeCommand =
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
-    if (gEditorDisplayMode != DisplayModeAllTags)
-      SetEditMode(DisplayModeAllTags);
+    if (gEditorDisplayMode != gDisplayModeAllTags)
+      SetEditMode(gDisplayModeAllTags);
   }
 };
 
