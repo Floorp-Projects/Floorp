@@ -268,13 +268,8 @@ function UpdateSortIndicators(sortType, sortOrder)
 
 function IsSpecialFolderSelected(flags)
 {
-    var selectedFolder = GetThreadPaneFolder();
-    if (!selectedFolder || ((selectedFolder.flags & flags) == 0)) {
-        return false;
-    }
-    else {
-        return true;
-    }
+  var selectedFolder = GetThreadPaneFolder();
+  return IsSpecialFolder(selectedFolder, flags);
 }
 
 function GetThreadOutliner()

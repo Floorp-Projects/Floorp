@@ -35,6 +35,7 @@ var MSG_FOLDER_FLAG_TRASH = 0x0100;
 var MSG_FOLDER_FLAG_SENTMAIL = 0x0200;
 var MSG_FOLDER_FLAG_DRAFTS = 0x0400;
 var MSG_FOLDER_FLAG_QUEUE = 0x0800;
+var MSG_FOLDER_FLAG_INBOX = 0x1000;
 var MSG_FOLDER_FLAG_TEMPLATES = 0x400000;
 
 var gPrefs;
@@ -776,11 +777,35 @@ function OpenToFolder(item, folderURI)
 
 function IsSpecialFolder(msgFolder, flags)
 {
-    if (!msgFolder || ((msgFolder.flags & flags) == 0)) {
+    if (!msgFolder) {
         return false;
     }
+    else if ((msgFolder.flags & flags) == 0) {
+        var folder = msgFolder.QueryInterface(Components.interfaces.nsIFolder);
+
+        if (folder && folder.parent) {
+            var parentMsgFolder = folder.parent.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+            if(!parentMsgFolder) {
+                return false;
+            }
+
+            return IsSpecialFolder(parentMsgFolder, flags);
+        }
+        else {
+            return false;
+        }
+    }
     else {
-        return true;
+        // the user can set their INBOX to be their SENT folder.
+        // in that case, we want this folder to act like an INBOX, 
+        // and not a SENT folder
+        if ((flags & MSG_FOLDER_FLAG_SENTMAIL) && (msgFolder.flags & MSG_FOLDER_FLAG_INBOX)) {
+          return false;
+        }
+        else {
+          return true;
+        }
     }
 }
 
