@@ -219,6 +219,7 @@ protected:
   virtual ~StyleSetImpl();
   PRBool EnsureArray(nsISupportsArray** aArray);
   nsIStyleContext* GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
+                              nsIContent* aContent,
                               nsIStyleContext* aParentContext, nsISupportsArray* aRules,
                               PRBool aForceUnique);
   PRInt32 RulesMatching(nsISupportsArray* aSheets,
@@ -465,6 +466,7 @@ PRInt32 StyleSetImpl::RulesMatching(nsISupportsArray* aSheets,
 }
 
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame* aParentFrame, 
+                                          nsIContent* aContent,
                                           nsIStyleContext* aParentContext, nsISupportsArray* aRules,
                                           PRBool aForceUnique)
 {
@@ -488,7 +490,7 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
       result = nsnull;
     }
     if (nsnull == result) {
-      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aPresContext)) {
+      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aContent, aPresContext)) {
         if (PR_TRUE == aForceUnique) {
           result->ForceUnique();
         }
@@ -509,7 +511,7 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
       result = nsnull;
     }
     if (nsnull == result) {
-      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aPresContext)) {
+      if (NS_OK == NS_NewStyleContext(&result, aParentContext, aRules, aContent, aPresContext)) {
         if (PR_TRUE == aForceUnique) {
           result->ForceUnique();
         }
@@ -538,18 +540,23 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
   }
 
   // want to check parent frame's context for cached child context first
+  if ((nsnull != parentContext) && (nsnull != aContent)) {
+    result = parentContext->FindChildWithContent(aContent);
+  }
 
-  // then do a brute force rule search
+  if (nsnull == result) {
+    // then do a brute force rule search
 
-  nsISupportsArray*  rules = nsnull;
-  if (NS_OK == NS_NewISupportsArray(&rules)) {
-    PRInt32 ruleCount = RulesMatching(mOverrideSheets, aPresContext, aContent, aParentFrame, rules);
-    ruleCount += RulesMatching(mDocSheets, aPresContext, aContent, aParentFrame, rules);
-    ruleCount += RulesMatching(mBackstopSheets, aPresContext, aContent, aParentFrame, rules);
+    nsISupportsArray*  rules = nsnull;
+    if (NS_OK == NS_NewISupportsArray(&rules)) {
+      PRInt32 ruleCount = RulesMatching(mOverrideSheets, aPresContext, aContent, aParentFrame, rules);
+      ruleCount += RulesMatching(mDocSheets, aPresContext, aContent, aParentFrame, rules);
+      ruleCount += RulesMatching(mBackstopSheets, aPresContext, aContent, aParentFrame, rules);
 
-    result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
+      result = GetContext(aPresContext, aParentFrame, aContent, parentContext, rules, aForceUnique);
 
-    NS_RELEASE(rules);
+      NS_RELEASE(rules);
+    }
   }
 
   NS_IF_RELEASE(parentContext);
@@ -602,7 +609,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
     ruleCount += RulesMatching(mDocSheets, aPresContext, aPseudoTag, aParentFrame, rules);
     ruleCount += RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
 
-    result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
+    result = GetContext(aPresContext, aParentFrame, nsnull, parentContext, rules, aForceUnique);
 
     NS_RELEASE(rules);
   }
@@ -636,7 +643,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
     ruleCount += RulesMatching(mBackstopSheets, aPresContext, aPseudoTag, aParentFrame, rules);
 
     if (0 < ruleCount) {
-      result = GetContext(aPresContext, aParentFrame, parentContext, rules, aForceUnique);
+      result = GetContext(aPresContext, aParentFrame, nsnull, parentContext, rules, aForceUnique);
     }
 
     NS_RELEASE(rules);

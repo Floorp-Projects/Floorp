@@ -35,15 +35,16 @@ static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 // --------------------
 // nsStyleFont
 //
-nsStyleFont::nsStyleFont(const nsFont& aFont)
-  : mFont(aFont)
+nsStyleFont::nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont)
+  : mFont(aVariableFont),
+    mFixedFont(aFixedFont)
 { }
 
 nsStyleFont::~nsStyleFont(void) { }
 
 struct StyleFontImpl : public nsStyleFont {
-  StyleFontImpl(const nsFont& aFont)
-    : nsStyleFont(aFont)
+  StyleFontImpl(const nsFont& aVariableFont, const nsFont& aFixedFont)
+    : nsStyleFont(aVariableFont, aFixedFont)
   {}
 
   void ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresContext);
@@ -57,10 +58,12 @@ void StyleFontImpl::ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresC
 {
   if (nsnull != aParent) {
     mFont = aParent->mFont;
+    mFixedFont = aParent->mFixedFont;
     mThreeD = aParent->mThreeD;
   }
   else {
     mFont = aPresContext->GetDefaultFont();
+    mFixedFont = aPresContext->GetDefaultFixedFont();
     mThreeD = PR_FALSE;
   }
 }
@@ -88,14 +91,24 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
     mOpacity = aParent->mOpacity;
   }
   else {
-    mColor = NS_RGB(0, 0, 0);
+    if (nsnull != aPresContext) {
+      aPresContext->GetDefaultColor(mColor);
+    }
+    else {
+      mColor = NS_RGB(0x00, 0x00, 0x00);
+    }
     mOpacity = 1.0F;
   }
 
   mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT;
   mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
-  mBackgroundColor = NS_RGB(192,192,192);
+  if (nsnull != aPresContext) {
+    aPresContext->GetDefaultBackgroundColor(mBackgroundColor);
+  }
+  else {
+    mBackgroundColor = NS_RGB(192,192,192);
+  }
   mBackgroundXPosition = 0;
   mBackgroundYPosition = 0;
 
@@ -538,7 +551,8 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
 
 class StyleContextImpl : public nsIStyleContext {
 public:
-  StyleContextImpl(nsIStyleContext* aParent, nsISupportsArray* aRules, nsIPresContext* aPresContext);
+  StyleContextImpl(nsIStyleContext* aParent, nsISupportsArray* aRules, 
+                   nsIContent* aContent, nsIPresContext* aPresContext);
   ~StyleContextImpl();
 
   void* operator new(size_t sz) {
@@ -553,6 +567,7 @@ public:
   virtual nsISupportsArray* GetStyleRules(void) const;
   virtual PRInt32 GetStyleRuleCount(void) const;
 
+  virtual nsIStyleContext* FindChildWithContent(nsIContent* aContent);
   virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules);
 
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
@@ -569,12 +584,17 @@ public:
   virtual void  List(FILE* out, PRInt32 aIndent);
 
 protected:
-  void AddChild(StyleContextImpl* aChild);
+  void AppendChild(StyleContextImpl* aChild);
 
   StyleContextImpl* mParent;
   StyleContextImpl* mChild;
-  StyleContextImpl* mPrev;
-  StyleContextImpl* mNext;
+  StyleContextImpl* mPrevSibling;
+  StyleContextImpl* mNextSibling;
+
+  StyleContextImpl* mPrevLinear;
+  StyleContextImpl* mNextLinear;
+
+  nsIContent*       mContent;
 
   PRUint32          mHashValid: 1;
   PRUint32          mHashValue: 31;
@@ -605,12 +625,14 @@ static PRInt32 gInstrument = 6;
 
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
                                    nsISupportsArray* aRules, 
+                                   nsIContent* aContent,
                                    nsIPresContext* aPresContext)
   : mParent((StyleContextImpl*)aParent), // weak ref
     mChild(nsnull),
+    mContent(aContent),
     mRules(aRules),
     mDataCode(-1),
-    mFont(aPresContext->GetDefaultFont()),
+    mFont(aPresContext->GetDefaultFont(), aPresContext->GetDefaultFixedFont()),
     mColor(),
     mSpacing(),
     mList(),
@@ -620,13 +642,17 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mTable(nsnull)
 {
   NS_INIT_REFCNT();
+  NS_IF_ADDREF(mContent);
   NS_IF_ADDREF(mRules);
 
-  mNext = this;
-  mPrev = this;
+  mNextSibling = this;
+  mPrevSibling = this;
   if (nsnull != mParent) {
-    mParent->AddChild(this);
+    mParent->AppendChild(this);
   }
+
+  mNextLinear = this;
+  mPrevLinear = this;
 
   RemapStyle(aPresContext);
 
@@ -644,13 +670,15 @@ StyleContextImpl::~StyleContextImpl()
     StyleContextImpl* child = mChild;
     do {
       StyleContextImpl* goner = child;
-      child = child->mNext;
+      child = child->mNextSibling;
       NS_RELEASE(goner);
     } while (child != mChild);
     mChild = nsnull;
   }
 
   NS_IF_RELEASE(mRules);
+  NS_IF_RELEASE(mContent);
+
   if (nsnull != mTable) {
     delete mTable;
     mTable = nsnull;
@@ -698,16 +726,16 @@ nsIStyleContext* StyleContextImpl::GetParent(void) const
   return mParent;
 }
 
-void StyleContextImpl::AddChild(StyleContextImpl* aChild)
+void StyleContextImpl::AppendChild(StyleContextImpl* aChild)
 {
   if (nsnull == mChild) {
     mChild = aChild;
   }
   else {
-    aChild->mNext = mChild;
-    aChild->mPrev = mChild->mPrev;
-    mChild->mPrev->mNext = aChild;
-    mChild->mPrev = aChild;
+    aChild->mNextSibling = mChild;
+    aChild->mPrevSibling = mChild->mPrevSibling;
+    mChild->mPrevSibling->mNextSibling = aChild;
+    mChild->mPrevSibling = aChild;
   }
   NS_ADDREF(aChild);
 }
@@ -726,6 +754,26 @@ PRInt32 StyleContextImpl::GetStyleRuleCount(void) const
   return 0;
 }
 
+nsIStyleContext* StyleContextImpl::FindChildWithContent(nsIContent* aContent)
+{
+  nsIStyleContext* result = nsnull;
+
+  if (nsnull != mChild) {
+    StyleContextImpl* child = mChild->mPrevSibling;
+    do {
+      if ((0 == child->mDataCode) &&  // only look at children with un-twiddled data
+          (child->mContent == aContent)) {
+        result = child;
+        NS_ADDREF(result);
+        break;
+      }
+      child = child->mPrevSibling;
+    } while (child != mChild->mPrevSibling);
+  }
+  return result;
+}
+
+
 nsIStyleContext* StyleContextImpl::FindChildWithRules(nsISupportsArray* aRules)
 {
   nsIStyleContext* result = nsnull;
@@ -742,7 +790,7 @@ nsIStyleContext* StyleContextImpl::FindChildWithRules(nsISupportsArray* aRules)
           break;
         }
       }
-      child = child->mNext;
+      child = child->mNextSibling;
     } while (child != mChild);
   }
   return result;
@@ -759,6 +807,9 @@ PRBool StyleContextImpl::Equals(const nsIStyleContext* aOther) const
       result = PR_FALSE;
     }
     else if (mDataCode != other->mDataCode) {
+      result = PR_FALSE;
+    }
+    else if (mContent != other->mContent) {
       result = PR_FALSE;
     }
     else {
@@ -932,6 +983,24 @@ void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
   if (-1 == mDataCode) {
     mDataCode = 0;
   }
+  if ((mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) || 
+      (mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)) {
+    // time to emulate a sub-document
+    // This is ugly, but we need to map style once to determine display type
+    // then reset and map it again so that all local style is preserved
+    mFont.ResetFrom(nsnull, aPresContext);
+    mColor.ResetFrom(nsnull, aPresContext);
+    mSpacing.ResetFrom(nsnull, aPresContext);
+    mList.ResetFrom(nsnull, aPresContext);
+    mText.ResetFrom(nsnull, aPresContext);
+    mPosition.ResetFrom(nsnull, aPresContext);
+    mDisplay.ResetFrom(nsnull, aPresContext);
+
+    if ((nsnull != mRules) && (0 < mRules->Count())) {
+      MapStyleData  data(this, aPresContext);
+      mRules->EnumerateBackwards(MapStyleRule, &data);
+    }
+  }
 }
 
 void StyleContextImpl::ForceUnique(void)
@@ -972,7 +1041,7 @@ void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
     StyleContextImpl* child = mChild;
     do {
       child->List(out, aIndent + 1);
-      child = child->mNext;
+      child = child->mNextSibling;
     } while (mChild != child);
   }
 }
@@ -981,6 +1050,7 @@ NS_LAYOUT nsresult
 NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                    nsIStyleContext* aParentContext,
                    nsISupportsArray* aRules,
+                   nsIContent* aContent,
                    nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -988,7 +1058,7 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
 
-  StyleContextImpl* context = new StyleContextImpl(aParentContext, aRules, aPresContext);
+  StyleContextImpl* context = new StyleContextImpl(aParentContext, aRules, aContent, aPresContext);
   if (nsnull == context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
