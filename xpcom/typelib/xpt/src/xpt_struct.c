@@ -249,18 +249,18 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
 
     if (!XPT_DoHeaderPrologue(arena, cursor, headerp, &ide_offset))
         return PR_FALSE;
+    header = *headerp;
     /* 
      * Make sure the file length reported in the header is the same size as
      * as our buffer unless it is zero (not set) 
      */
-    if (mode == XPT_DECODE && ((*headerp)->file_length != 0 && 
-        cursor->state->pool->allocated < (*headerp)->file_length)) {
+    if (mode == XPT_DECODE && (header->file_length != 0 && 
+        cursor->state->pool->allocated < header->file_length)) {
         fputs("libxpt: File length in header does not match actual length. File may be corrupt\n",
             stderr);
         goto error;
     }
 
-    header = *headerp;
     if (mode == XPT_ENCODE)
         XPT_DataOffset(cursor->state, &header->data_pool);
     if (!XPT_Do32(cursor, &header->data_pool))
