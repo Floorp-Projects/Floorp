@@ -51,6 +51,7 @@
   BrowserTabItemContainerView* mTabContentsView;
   NSProgressIndicator*         mProgressWheel;     // STRONG ref
   NSButton*                    mCloseButton;       // STRING ref
+  NSMenuItem*                  mMenuItem;          // STRONG ref
   BOOL                         mDraggable;
   int                          mTag;
 }
@@ -70,6 +71,10 @@
 - (void)willBeRemoved:(BOOL)remove;
 
 - (NSButton *)closeButton;
+- (NSMenuItem *)menuItem;
+- (void) willDeselect;
+- (void) willSelect;
+- (void) selectTab:(id)sender;
 
 + (NSImage*)closeIcon;
 + (NSImage*)closeIconPressed;

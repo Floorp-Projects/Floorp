@@ -43,6 +43,7 @@
 @interface TabButtonCell : RolloverTrackingCell {
   BrowserTabViewItem *mTabViewItem;
   BOOL mNeedsDivider;
+  NSButton * mCloseButton;
 }
 
 -(id)initFromTabViewItem:(BrowserTabViewItem*)tabViewItem;

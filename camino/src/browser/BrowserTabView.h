@@ -49,4 +49,6 @@
 - (BrowserTabViewItem*)itemWithTag:(int)tag;
 - (void)refreshTabBar:(BOOL)rebuild;
 
+- (void)windowClosed;
+
 @end

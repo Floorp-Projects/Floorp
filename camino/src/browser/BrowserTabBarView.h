@@ -47,19 +47,25 @@
   IBOutlet BrowserTabView *mTabView;
   
   TabButtonCell *mActiveTabButton;     // active tab button, mainly useful for handling drags (STRONG)
+  NSButton *mOverflowButton;      // button for overflow menu if we've got more tabs than space (STRONG)
+  NSMenu *mOverflowMenu;          // menu for tab overflow (STRONG);
   
   // drag tracking
   NSPoint mLastClickPoint;
   BOOL mDragStarted;
   NSView *mDragDest;
   TabButtonCell *mDragDestButton;
+  
+  BOOL mOverflowTabs;
+  NSMutableArray *mTrackingCells; // cells which currently have tracking rects in this view
 }
-
 // destroy the tab bar and recreate it from the tabview
 -(void)rebuildTabBar;
 // return the height the tab bar should be
 -(float)tabBarHeight;
 -(BrowserTabViewItem*)tabViewItemAtPoint:(NSPoint)location;
+- (void)windowClosed;
+- (IBAction)overflowMenu:(id)sender;
 
 @end
 

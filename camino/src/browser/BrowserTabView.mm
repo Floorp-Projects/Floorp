@@ -248,6 +248,20 @@
   }
 }
 
+- (void)windowClosed
+{
+  // Loop over all tabs, and tell them that the window is closed. This
+  // stops gecko from going any further on any of its open connections
+  // and breaks all the necessary cycles between Gecko and the BrowserWrapper.
+  int numTabs = [self numberOfTabViewItems];
+  for (int i = 0; i < numTabs; i++) {
+    NSTabViewItem* item = [self tabViewItemAtIndex: i];
+    [[item view] windowClosed];
+  }
+  
+  // Tell the tab bar the window is closed so it will perform any needed cleanup
+  [mTabBar windowClosed];
+}
 
 - (BOOL)tabsVisible
 {

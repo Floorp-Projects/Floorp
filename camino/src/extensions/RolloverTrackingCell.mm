@@ -89,8 +89,11 @@
   NSView *view = [userData objectForKey:@"view"];
   mMouseWithin = YES;
   // only act on the mouseEntered if the view is active or accepts the first mouse click
-  if ([[view window] isKeyWindow] || [view acceptsFirstMouse:theEvent])
+  if ([[view window] isKeyWindow] || [view acceptsFirstMouse:theEvent]) {
     [view setNeedsDisplayInRect:[self frame]];
+    // calling displayIfNeeded prevents the "lag" observed when displaying rollover events
+    [view displayIfNeeded];
+  }
 }
 
 - (void)mouseExited:(NSEvent*)theEvent
@@ -99,8 +102,11 @@
   NSView *view = [userData objectForKey:@"view"];
   mMouseWithin = NO;
   // only act on the mouseExited if the view is active or accepts the first mouse click
-  if ([[view window] isKeyWindow] || [view acceptsFirstMouse:theEvent])
+  if ([[view window] isKeyWindow] || [view acceptsFirstMouse:theEvent]) {
 	  [view setNeedsDisplayInRect:[self frame]];
+    // calling displayIfNeeded prevents the "lag" observed when displaying rollover events
+    [view displayIfNeeded];
+  }
 }
 
 - (void)setDragTarget:(BOOL)isDragTarget

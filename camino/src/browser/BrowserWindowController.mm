@@ -126,7 +126,7 @@ static NSString *NavigatorWindowFrameSaveName = @"NavigatorWindow";
 // hardcoded defaults.
 static NSArray* sToolbarDefaults = nil;
 
-#define kMaxBrowserWindowTabs 16
+#define kMaxBrowserWindowTabs 0
 
 enum BWCOpenDest {
   kDestinationNewWindow = 0,
@@ -504,14 +504,8 @@ enum BWCOpenDest {
     NS_IF_RELEASE(mURIFixer);
   } // matters
   
-  // Loop over all tabs, and tell them that the window is closed. This
-  // stops gecko from going any further on any of its open connections
-  // and breaks all the necessary cycles between Gecko and the BrowserWrapper.
-  int numTabs = [mTabBrowser numberOfTabViewItems];
-  for (int i = 0; i < numTabs; i++) {
-    NSTabViewItem* item = [mTabBrowser tabViewItemAtIndex: i];
-    [[item view] windowClosed];
-  }
+  // Tell the BrowserTabView the window is closed
+  [mTabBrowser windowClosed];
   
   // if the bookmark manager is visible when we close the window, all hell
   // breaks loose in the autorelease pool and when we try to show another
@@ -2404,6 +2398,18 @@ enum BWCOpenDest {
       
   // Make the new view the primary content area.
   [mBrowserView makePrimaryBrowserView: mURLBar status: mStatus windowController: self];
+}
+
+- (void)tabView:(NSTabView *)aTabView willSelectTabViewItem:(NSTabViewItem *)aTabViewItem
+{
+  // we'll get called for the sidebar tabs as well. ignore any calls coming from
+  // there, we're only interested in the browser tabs.
+  if (aTabView != mTabBrowser)
+    return;
+  if ([aTabView isKindOfClass:[BrowserTabView class]] && [aTabViewItem isKindOfClass:[BrowserTabViewItem class]]) {
+    [(BrowserTabViewItem *)[aTabView selectedTabViewItem] willDeselect];
+    [(BrowserTabViewItem *)aTabViewItem willSelect];
+  }
 }
 
 - (void)tabViewDidChangeNumberOfTabViewItems:(NSTabView *)aTabView

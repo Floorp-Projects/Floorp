@@ -64,16 +64,15 @@ static NSImage * tabButtonDividerImage = nil;
 -(id)initFromTabViewItem:(BrowserTabViewItem *)tabViewItem
 {
   [super init];
-  mTabViewItem = [tabViewItem retain];
+  mTabViewItem = tabViewItem;
   mNeedsDivider = YES;
   return self;
 }
 
-// XXX does the menu need released here??
 -(void)dealloc
 {
-  [[mTabViewItem closeButton] removeFromSuperview];
-  [mTabViewItem release];
+  [mCloseButton removeFromSuperview];
+  [mCloseButton release];
   [super dealloc];
 }
 
@@ -102,7 +101,11 @@ static NSImage * tabButtonDividerImage = nil;
   // we have bigger problems
   
   NSSize textSize = [mTabViewItem sizeOfLabel:NO];
-  NSSize buttonSize = [[mTabViewItem closeButton] frame].size;
+  
+  // retain a reference to the close button; otherwise we can't be sure it's removed from the view hierarchy
+  // during our d'tor, when mTabViewItem will be invalid.
+  if (!mCloseButton) mCloseButton = [[mTabViewItem closeButton] retain];
+  NSSize buttonSize = [mCloseButton frame].size;
   
   // center based on the larger of the two heights if there's a difference
   float maxHeight = textSize.height > buttonSize.height ? textSize.height : buttonSize.height;
@@ -148,13 +151,10 @@ static NSImage * tabButtonDividerImage = nil;
     rect.origin.y += kTabBottomPad;
     NSRectFill(rect);
   }
-  NSButton *closeButton = [mTabViewItem closeButton];
-  if (controlView != [closeButton superview]) {
-    [controlView addSubview:closeButton];
+  if (controlView != [mCloseButton superview]) {
+    [controlView addSubview:mCloseButton];
   }
-  [closeButton setFrame:buttonRect];
-  // XXX is this necessary, or even good?
-  [closeButton setNeedsDisplay:YES];
+  [mCloseButton setFrame:buttonRect];
   [labelCell drawInteriorWithFrame:labelRect inView:controlView];
 }
 
@@ -170,9 +170,8 @@ static NSImage * tabButtonDividerImage = nil;
 
 -(void)hideCloseButton
 {
-  NSButton * closeButton  = [mTabViewItem closeButton];
-  if ([closeButton superview] != nil)
-	  [closeButton removeFromSuperview];
+  if ([mCloseButton superview] != nil)
+	  [mCloseButton removeFromSuperview];
 }
 
 -(void)setDrawDivider:(BOOL)willDraw

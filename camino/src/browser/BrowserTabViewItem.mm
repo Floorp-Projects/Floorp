@@ -52,6 +52,8 @@
 // we cannot use the spinner before 10.2, so don't allow it. This is the
 // version of appkit in 10.2 (taken from the 10.3 SDK headers which we cannot use).
 const double kJaguarAppKitVersion = 663;
+// truncate menuitem title to the same width as the bookmarks menu
+const int kMenuTruncationChars = 60;
 
 @interface BrowserTabViewItem(Private)
 - (void)setTag:(int)tag;
@@ -107,6 +109,8 @@ const double kJaguarAppKitVersion = 663;
 {
   [mLabelCell release];
   [mTabButtonCell release];
+  // needs to be nil so that [super dealloc]'s call to setMenu doesn't cause us to call setMenu on an invalid object
+  mTabButtonCell = nil;
   [super dealloc];
 }
 
@@ -340,7 +344,12 @@ const double kJaguarAppKitVersion = 663;
     [mCloseButton setTarget:self];
     [mCloseButton setAction:@selector(closeTab)];
     [mCloseButton setAutoresizingMask:NSViewMinXMargin];
-    [mCloseButton retain];
+    
+    // create a menu item, to be used when there are more tabs than screen real estate. keep a strong ref
+    // since it will be added to and removed from the menu repeatedly
+    mMenuItem = [[NSMenuItem alloc] initWithTitle:[self label] action:@selector(selectTab:) keyEquivalent:@""];
+    [mMenuItem setTarget:self];
+    [mMenuItem retain];
 
     [[self tabView] setAutoresizesSubviews:YES];
 
@@ -363,6 +372,7 @@ const double kJaguarAppKitVersion = 663;
   [mTabContentsView release];               // balance our init
   [mProgressWheel release];
   [mCloseButton release];
+  [mMenuItem release];
   [super dealloc];
 }
 
@@ -423,6 +433,7 @@ const double kJaguarAppKitVersion = 663;
 {
   NSAttributedString* labelString = [[[NSAttributedString alloc] initWithString:label attributes:mLabelAttributes] autorelease];
   [[mTabContentsView labelCell] setAttributedStringValue:labelString];
+  [mMenuItem setTitle:[label stringByTruncatingTo:kMenuTruncationChars at:kTruncateAtMiddle]];
   [(BrowserTabView *)[self tabView] refreshTabBar:NO];
 
   [super setLabel:label];
@@ -447,6 +458,7 @@ const double kJaguarAppKitVersion = 663;
 {
   [super setTabIcon:newIcon];
   [[mTabContentsView labelCell] setImage:mTabIcon];
+  [mMenuItem setImage:mTabIcon];
   [(BrowserTabView *)[self tabView] refreshTabBar:NO];
 }
 
@@ -498,6 +510,27 @@ const double kJaguarAppKitVersion = 663;
 - (NSButton *) closeButton
 {
   return mCloseButton;
+}
+
+- (NSMenuItem *) menuItem
+{
+  return mMenuItem;
+}
+
+- (void) selectTab:(id)sender
+{
+  [[self tabView] selectTabViewItem:self];
+}
+
+// called by delegate when a tab will be deselected
+- (void) willDeselect
+{
+  [mMenuItem setState:NSOffState];
+}
+// called by delegate when a tab will be selected
+- (void) willSelect
+{
+  [mMenuItem setState:NSOnState];
 }
 
 #pragma mark -

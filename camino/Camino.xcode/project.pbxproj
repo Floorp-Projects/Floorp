@@ -1692,6 +1692,7 @@
 				E010866D06BCA2E500BD5DE0,
 				E010866E06BCA2E500BD5DE0,
 				E010866F06BCA2E500BD5DE0,
+				3FF71AE00710A6800081B5D7,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5625,6 +5626,7 @@
 				E010867406BCA2E500BD5DE0,
 				E010867506BCA2E500BD5DE0,
 				E010867606BCA2E500BD5DE0,
+				3FF71AE10710A6800081B5D7,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -9216,6 +9218,26 @@
 			settings = {
 			};
 		};
+		3FF71ADF0710A67F0081B5D7 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = tab_overflow.tif;
+			path = resources/images/chrome/tab_overflow.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3FF71AE00710A6800081B5D7 = {
+			fileRef = 3FF71ADF0710A67F0081B5D7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FF71AE10710A6800081B5D7 = {
+			fileRef = 3FF71ADF0710A67F0081B5D7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //3F0
 //3F1
 //3F2
@@ -10002,6 +10024,7 @@
 				3FF08F1206E7D3C2001C9B19,
 				3FF08F1306E7D3C2001C9B19,
 				3FF08F1406E7D3C2001C9B19,
+				3FF71ADF0710A67F0081B5D7,
 				E091C0D006225EA3007D9E8F,
 				F540BD1A029ED15301026D5D,
 				F540BD1C029ED17901026D5D,

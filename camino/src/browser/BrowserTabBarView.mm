@@ -47,25 +47,34 @@
 -(TabButtonCell*)buttonAtPoint:(NSPoint)clickPoint;
 -(void)registerTabButtonsForTracking;
 -(void)unregisterTabButtonsForTracking;
+-(void)initOverflowMenu;
+-(NSRect)tabsRect;
 @end
 
 static NSImage *gBackgroundImage = nil;
 static NSImage *gTabButtonDividerImage = nil;
+static NSImage *gTabOverflowImage = nil;
 static const float kTabBarDefaultHeight = 22.0;
 
 @implementation BrowserTabBarView
 
 static const int kTabBarMargin = 5;       // left/right margin for tab bar
-static const float kMinTabWidth = 42.0;   // tabs smaller than this are useless... tabs this small may be useless
+static const float kMinTabWidth = 100.0;   // the smallest tabs that will be drawn
 static const float kMaxTabWidth = 175.0;  // the widest tabs that will be drawn
 
 static const int kTabDragThreshold = 3;   // distance a drag must go before we start dnd
+
+static const float kOverflowButtonWidth = 16;
+static const float kOverflowButtonHeight = 16;
+static const int kOverflowButtonMargin = 1;
 
 -(id)initWithFrame:(NSRect)frame 
 {
   self = [super initWithFrame:frame];
   if (self) {
     mActiveTabButton = nil;
+    mOverflowButton = nil;
+    mOverflowTabs = NO;
     // this will not likely have any result here
     [self rebuildTabBar];
     [self registerForDraggedTypes:[NSArray arrayWithObjects: @"MozURLType", @"MozBookmarkType", NSStringPboardType,
@@ -82,7 +91,10 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
 
 -(void)dealloc
 {
+  [mTrackingCells release];
   [mActiveTabButton release];
+  [mOverflowButton release];
+  [mOverflowMenu release];
   [super dealloc];
 }
 
@@ -93,7 +105,10 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
     [self loadImages];
   
   // determine the frame of the active tab button and fill the rest of the bar in with the background
-  NSRect activeTabButtonFrame = [mActiveTabButton frame];  
+  NSRect activeTabButtonFrame = [mActiveTabButton frame];
+  NSRect tabsRect = [self tabsRect];
+  // if any of the active tab would be outside the drawable area, fill it in
+  if (NSMaxX(activeTabButtonFrame) > NSMaxX(tabsRect)) activeTabButtonFrame.size.width = 0.0;
   [self drawTabBarBackgroundInRect:rect withActiveTabRect:activeTabButtonFrame];
   NSArray *tabItems = [mTabView tabViewItems];
   NSEnumerator *tabEnumerator = [tabItems objectEnumerator];
@@ -104,7 +119,7 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
     BrowserTabViewItem *nextTab = [tabEnumerator nextObject];
     
     NSRect tabButtonFrame = [tabButton frame];
-    if (NSIntersectsRect(tabButtonFrame,rect))
+    if (NSIntersectsRect(tabButtonFrame,rect) && NSMaxX(tabButtonFrame) <= NSMaxX(tabsRect))
       [tabButton drawWithFrame:tabButtonFrame inView:self];
     // draw the first divider.
     if ((prevButton == nil) && ([tab tabState] != NSSelectedTab))
@@ -119,7 +134,9 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
 {
   [super setFrame:frameRect];
   // tab buttons probably need to be resized if the frame changes
+  [self unregisterTabButtonsForTracking];
   [self layoutButtons];
+  [self registerTabButtonsForTracking];
 }
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
@@ -134,7 +151,7 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
 {
   NSPoint clickPoint = [self convertPoint:[theEvent locationInWindow] fromView:nil];
   TabButtonCell *clickedTabButton = [self buttonAtPoint:clickPoint];
-  
+
   mLastClickPoint = clickPoint;
   
   if (clickedTabButton && ![clickedTabButton willTrackMouse:theEvent inRect:[clickedTabButton frame] ofView:self])
@@ -220,6 +237,8 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
     gBackgroundImage = [[NSImage imageNamed:@"tab_bar_bg"] retain];
   if (!gTabButtonDividerImage) 
     gTabButtonDividerImage = [[NSImage imageNamed:@"tab_button_divider"] retain];
+  if (!gTabOverflowImage)
+    gTabOverflowImage = [[NSImage imageNamed:@"tab_overflow"] retain];
 }
 
 // construct the tab bar based on the current state of mTabView;
@@ -233,11 +252,20 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
   [self registerTabButtonsForTracking];
 }
 
+- (void)windowClosed
+{
+  // remove all tracking rects because this view is implicitly retained when they're registered
+  [self unregisterTabButtonsForTracking];
+}
+
 // allows tab button cells to react to mouse events
 -(void)registerTabButtonsForTracking
 {
   if ([self window]) {
     NSArray * tabItems = [mTabView tabViewItems];
+    if(mTrackingCells) [self unregisterTabButtonsForTracking];
+    mTrackingCells = [NSMutableArray arrayWithCapacity:[tabItems count]];
+    [mTrackingCells retain];
     NSEnumerator *tabEnumerator = [tabItems objectEnumerator];
     
     NSPoint local = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
@@ -246,8 +274,13 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
     BrowserTabViewItem *tab = nil;
     while (tab = [tabEnumerator nextObject]) {
       TabButtonCell * tabButton = [tab tabButtonCell];
-      NSRect trackingRect = [tabButton frame];
-      [tabButton addTrackingRectInView: self withFrame:trackingRect cursorLocation:local];
+      if (tabButton) {
+        [mTrackingCells addObject:tabButton];
+        NSRect trackingRect = [tabButton frame];
+        // only track tabs that are onscreen
+        if (NSMaxX(trackingRect) <= NSMaxX([self tabsRect]))
+          [tabButton addTrackingRectInView: self withFrame:trackingRect cursorLocation:local];
+      }
     }
   }
 }
@@ -255,11 +288,14 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
 // causes tab buttons to stop reacting to mouse events
 -(void)unregisterTabButtonsForTracking
 {
-  NSArray * tabItems = [mTabView tabViewItems];
-  NSEnumerator *tabEnumerator = [tabItems objectEnumerator];
-  BrowserTabViewItem *tab = nil;
-  while (tab = [tabEnumerator nextObject])
-    [[tab tabButtonCell] removeTrackingRectFromView: self];
+  if (mTrackingCells) {
+    NSEnumerator *tabEnumerator = [mTrackingCells objectEnumerator];
+    TabButtonCell *tab = nil;
+    while (tab = (TabButtonCell *)[tabEnumerator nextObject])
+      [tab removeTrackingRectFromView: self];
+    [mTrackingCells release];
+    mTrackingCells = nil;
+  }
 }
   
 // returns the height the tab bar should be if drawn
@@ -282,8 +318,21 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
   const int numTabs = [mTabView numberOfTabViewItems];
   float tabWidth = kMaxTabWidth;
 
-  // calculate the largest tabs that would fit
+  // calculate the largest tabs that would fit... [self tabsRect] may not be correct until mOverflowTabs is set here.
   float maxWidth = floor((NSWidth([self bounds]) - (2*kTabBarMargin))/numTabs);
+  // if tabs will overflow, leave space for the button
+  if (maxWidth < kMinTabWidth) {
+    mOverflowTabs = YES;
+    NSRect tabsRect = [self tabsRect];
+    for (int i = 1; i < numTabs; i++) {
+      maxWidth = floor(NSWidth(tabsRect)/(numTabs - i));
+      if (maxWidth >= kMinTabWidth) break;
+    }
+    // because the specific tabs which overflow may change, empty the menu and rebuild it as tabs are laid out
+    [self initOverflowMenu];
+  } else {
+    mOverflowTabs = NO;
+  }
   // if our tabs are currently larger than that, shrink them to the larger of kMinTabWidth or maxWidth
   if (tabWidth > maxWidth)
     tabWidth = (maxWidth > kMinTabWidth ? maxWidth : kMinTabWidth);
@@ -299,24 +348,79 @@ static const int kTabDragThreshold = 3;   // distance a drag must go before we s
     buttonSize.width = tabWidth;
     buttonSize.height = kTabBarDefaultHeight;
     NSPoint buttonOrigin = NSMakePoint(xCoord,0);
-    // TODO: take care of tabs that run off the end... right now we're the same as Firebird, except I think we
-    // hit our tab limit before we'll run off the end of the average user's windows given the current kMinTabWidth
     [tabButtonCell setFrame:NSMakeRect(buttonOrigin.x,buttonOrigin.y,buttonSize.width,buttonSize.height)];
-	  // If the tab ran off the edge, suppress its close button
-	  if (buttonOrigin.x + buttonSize.width > NSMaxX([self bounds]))
-		  [tabButtonCell hideCloseButton];
 	  // tell the button whether it needs to draw the right side dividing line
-	  if (NSSelectedTab == [tab tabState]) {
+	  if ([tab tabState] == NSSelectedTab) {
 		  [tabButtonCell setDrawDivider:NO];
 		  [prevTabButton setDrawDivider:NO];
 	  } else {
 		  [tabButtonCell setDrawDivider:YES];
 	  }
+    // If the tab ran off the edge, suppress its close button, make sure the divider is drawn, and add it to the menu
+	  if (buttonOrigin.x + buttonSize.width > NSMaxX([self tabsRect])) {
+		  [tabButtonCell hideCloseButton];
+      // push the tab off the edge of the view to keep it from grabbing clicks if there is an area
+      // between the overflow menu and the last tab which is within tabsRect due to rounding
+      [tabButtonCell setFrame:NSMakeRect(NSMaxX([self bounds]),buttonOrigin.y,buttonSize.width,buttonSize.height)];
+      // if the tab prior to the overflow is not selected, it must draw a divider
+      if([[prevTabButton tabViewItem] tabState] != NSSelectedTab) [prevTabButton setDrawDivider:YES];
+      [mOverflowMenu addItem:[tab menuItem]];
+    }
 	  prevTabButton = tabButtonCell;
 	  xCoord += (int)tabWidth;
   }
+  // if tabs overflowed, position and display the overflow button
+  if (mOverflowTabs) {
+    [mOverflowButton setFrame:NSMakeRect(NSMaxX([self tabsRect]) + kOverflowButtonMargin,
+                                         ([self tabBarHeight] - kOverflowButtonHeight)/2,kOverflowButtonWidth,kOverflowButtonHeight)];
+    [self addSubview:mOverflowButton];
+  } else {
+    [mOverflowButton removeFromSuperview];
+  }
   [self setNeedsDisplay:YES];
 }
+
+-(void)initOverflowMenu
+{
+  if (!mOverflowButton) {
+    // if it hasn't been created yet, create an NSPopUpButton and retain a strong reference
+    mOverflowButton = [[NSButton alloc] initWithFrame:NSMakeRect(0,0,kOverflowButtonWidth,kOverflowButtonHeight)];
+    if (!gTabOverflowImage) [self loadImages];
+    [mOverflowButton setImage:gTabOverflowImage];
+    [mOverflowButton setImagePosition:NSImageOnly];
+    [mOverflowButton setBezelStyle:NSShadowlessSquareBezelStyle];
+    [mOverflowButton setBordered:NO];
+    [[mOverflowButton cell] setHighlightsBy:NSNoCellMask];
+    [mOverflowButton setTarget:self];
+    [mOverflowButton setAction:@selector(overflowMenu:)];
+    [(NSButtonCell *)[mOverflowButton cell]sendActionOn:NSLeftMouseDownMask];
+  }
+  if (!mOverflowMenu) {
+    // create an empty NSMenu for later use and retain a strong reference
+    mOverflowMenu = [[NSMenu alloc] init];
+    [mOverflowMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
+  }
+  // remove any items on the menu other than the dummy item
+  for (int i = [mOverflowMenu numberOfItems]; i > 1; i--)
+    [mOverflowMenu removeItemAtIndex:i-1];
+}
+
+- (IBAction)overflowMenu:(id)sender
+{
+  NSPopUpButtonCell *popupCell = [[[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES] autorelease];
+  [popupCell setMenu:mOverflowMenu];
+  [popupCell trackMouse:[NSApp currentEvent] inRect:[sender bounds] ofView:sender untilMouseUp:YES];
+}
+
+// returns an NSRect of the area where tab widgets may be drawn
+-(NSRect)tabsRect
+{
+  NSRect rect = [self bounds];
+  rect.origin.x += kTabBarMargin;
+  rect.size.width -= 2 * kTabBarMargin + (mOverflowTabs ? kOverflowButtonWidth : 0.0);
+  return rect;
+}
+    
 
 #pragma mark -
 
