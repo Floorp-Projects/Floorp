@@ -408,9 +408,11 @@ PK11_IsFIPS(void)
 /* combines NewModule() & AddModule */
 /* give a string for the module name & the full-path for the dll, */
 /* installs the PKCS11 module & update registry */
-SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
+SECStatus SECMOD_AddNewModuleEx(char* moduleName, char* dllPath,
                               unsigned long defaultMechanismFlags,
-                              unsigned long cipherEnableFlags) {
+                              unsigned long cipherEnableFlags,
+                              char* modparms,
+                              char* nssparms) {
     SECMODModule *module;
     SECStatus result = SECFailure;
     int s,i;
@@ -418,7 +420,7 @@ SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
 
     PR_SetErrorText(0, NULL);
 
-    module = SECMOD_CreateModule(dllPath,moduleName,NULL, NULL);
+    module = SECMOD_CreateModule(dllPath,moduleName, modparms, nssparms);
 
     if (module->dllName != NULL) {
         if (module->dllName[0] != 0) {
@@ -453,6 +455,15 @@ SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
     }
     SECMOD_DestroyModule(module);
     return result;
+}
+
+SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
+                              unsigned long defaultMechanismFlags,
+                              unsigned long cipherEnableFlags)
+{
+    return SECMOD_AddNewModuleEx(moduleName, dllPath, defaultMechanismFlags,
+                  cipherEnableFlags, 
+                  NULL, NULL); /* don't pass module or nss params */
 }
 
 SECStatus SECMOD_UpdateModule(SECMODModule *module)
