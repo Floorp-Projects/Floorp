@@ -576,7 +576,7 @@ GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val)
                 break;
             val.Truncate();
             domText->GetData(val);
-            found = true;
+            found = PR_TRUE;
             break;
 		}
 	}
