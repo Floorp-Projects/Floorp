@@ -384,6 +384,7 @@ XFE_TaskBar::createUndockButton()
 	{
 		XtVaSetValues(m_undockButton,
 					  XmNpixmap, TaskSm_Handle_group.pixmap_icon.pixmap,
+					  XmNpixmapMask, TaskSm_Handle_group.pixmap_icon.mask,
 					  NULL);
 	}
 }
