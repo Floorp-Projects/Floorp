@@ -198,11 +198,16 @@ sub print_script {
   $out .= "\n" if $have_client_mk_options;
   foreach $param ($query->param()) {
     if ($param =~ /^--/) {
-      next if $query->param($param) eq '';
+      my $value = $query->param($param);
+      next if $value eq '';
+
+      # Wrap in double quotes if $value contains a space.
+      $value = "\"$value\"" if $value =~ /\s/;
+
       $out .= "# Options for 'configure' (same as command-line options).\n"
         if not $have_configure_options;
       $out .= "ac_add_options $param";
-      $out .= "=".$query->param($param) if $query->param($param) ne "yes";
+      $out .= "=".$value if $value ne "yes";
       $out .= "\n";
       $have_configure_options = 1;
     }
