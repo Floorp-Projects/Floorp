@@ -153,7 +153,7 @@ BOOL CInterpret::BrowseFile(WIDGET *curWidget)
 			if (tmpWidget->type == "EditBox")
 				tmpWidget->display = fullFileName;
 			else
-				tmpWidget->display = GetTrimFile(fullFileName);
+				tmpWidget->display = GetTrimFile(fullFileName,tmpWidget->URLDisplayLength);
 		}
 	}
 	((CEdit*)tmpWidget->control)->SetWindowText(tmpWidget->display);
@@ -624,15 +624,15 @@ BOOL CInterpret::CallDLL(char *dll, char *proc, char *parms, WIDGET *curWidget)
 	return TRUE;
 }
 
-CString CInterpret::GetTrimFile(CString filePath)
+CString CInterpret::GetTrimFile(CString filePath, int URLDisplayLength)
 {
 	int fileLength=0;
 	int findSlash=0;
 	fileLength = filePath.GetLength();
-	if (fileLength > FILEPATHLENGTH)
+	if (fileLength > URLDisplayLength)
 	{
 		findSlash = filePath.Find('\\');
-		filePath.Delete(findSlash+1,(fileLength - FILEPATHLENGTH));
+		filePath.Delete(findSlash+1,(fileLength - URLDisplayLength));
 		filePath.Insert(findSlash+1,"...");
 	}
 	return filePath;
@@ -891,6 +891,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				}
 
 			}
+
 			else if (strcmp(pcmd, "IsNonAscii") == 0)
 			{
 				// check if user agent string contains non-ascii characters
@@ -1231,6 +1232,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 			{
 				if (curWidget)
 					NewConfig(curWidget, CString(parms),"Create Copy");
+
 			}
 #endif
 			// Delete a configuration

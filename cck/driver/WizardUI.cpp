@@ -678,7 +678,7 @@ void CWizardUI::CreateControls()
 
 		else if (widgetType == "DynamicText") {
 			curWidget->control = new CStatic;
-			curWidget->display = theInterpreter->GetTrimFile(curWidget->value);
+			curWidget->display = theInterpreter->GetTrimFile(curWidget->value,curWidget->URLDisplayLength);
 			rv = ((CStatic*)curWidget->control)->Create(curWidget->display, SS_LEFT, tmpRect, this, ID);
 		}
 

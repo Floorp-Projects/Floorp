@@ -1353,6 +1353,10 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 	GetPrivateProfileString(iniSection, "Attrib", "", buffer, MAX_SIZE, iniFile);
 	aWidget->attrib = buffer;
 
+    GetPrivateProfileString(iniSection, "URLDisplayLength", "", buffer, MAX_SIZE, iniFile);
+	aWidget->URLDisplayLength = atoi(buffer);;
+
+
 	GetPrivateProfileString(iniSection, "Options", "", buffer, MAX_SIZE, iniFile);
 	aWidget->items = buffer;
 

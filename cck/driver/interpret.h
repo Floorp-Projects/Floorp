@@ -53,7 +53,7 @@ public:
 	BOOL CInterpret::GetRegistryKey( HKEY key, const char *subkey, char *retdata );
 	BOOL CInterpret::OpenBrowser(const char *url);
 	BOOL CInterpret::OpenViewer(const char *url);
-	CString CInterpret::GetTrimFile(CString filePath);
+	CString CInterpret::GetTrimFile(CString filePath,  int URLDisplayLength);
 
 // Overrides
 	// ClassWizard generated virtual function overrides
