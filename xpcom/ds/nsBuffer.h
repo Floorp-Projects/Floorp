@@ -41,6 +41,11 @@ public:
                               const char* *resultSegment,
                               PRUint32 *resultSegmentLen);
     NS_IMETHOD GetReadableAmount(PRUint32 *amount);
+    NS_IMETHOD Search(const char* forString, PRBool ignoreCase,
+                      PRBool *found, PRUint32 *offsetSearchedTo);
+    NS_IMETHOD ReaderClosed(void);
+    NS_IMETHOD GetCondition(nsresult *result);
+
     NS_IMETHOD Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount);
     NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount);
     NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
@@ -48,10 +53,8 @@ public:
     NS_IMETHOD GetWriteSegment(char* *resultSegment,
                                PRUint32 *resultSegmentLen);
     NS_IMETHOD GetWritableAmount(PRUint32 *amount);
-    NS_IMETHOD SetEOF();
-    NS_IMETHOD AtEOF(PRBool *result);
-    NS_IMETHOD Search(const char* forString, PRBool ignoreCase,
-                      PRBool *found, PRUint32 *offsetSearchedTo);
+    NS_IMETHOD GetReaderClosed(PRBool *result);
+    NS_IMETHOD SetCondition(nsresult condition);
 
     // nsBuffer methods:
     nsBuffer();
@@ -77,7 +80,8 @@ protected:
     char*               mWriteSegmentEnd;
     char*               mWriteCursor;
 
-    PRBool              mEOF;
+    PRBool              mReaderClosed;
+    nsresult            mCondition;
 };
 
 #endif // nsBuffer_h___

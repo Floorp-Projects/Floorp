@@ -41,6 +41,7 @@ interface nsIBufferOutputStream : nsIOutputStream
      *         bytes written. if an error occurs, the writecount
      *         is undefined
      */
-    unsigned long WriteFrom(in nsIInputStream inStr, in unsigned long count);
+    unsigned long WriteFrom(in nsIInputStream inStr,
+                            in unsigned long count);
 
 };
