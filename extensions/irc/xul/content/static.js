@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.6";
+client.version = "0.8.7";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -1449,6 +1449,17 @@ function updateChannel (obj)
     
     client.statusBar["channel-mode"].setAttribute("value", mode);
     client.statusBar["channel-users"].setAttribute("value", users);
+    var regex = new RegExp ("(\\S{" + client.MAX_WORD_DISPLAY + ",})", "g");
+    var ary = topic.match(regex);
+    if (ary && ary.length)
+    {
+        for (var i = 0; i < ary.length; ++i)
+        {
+            var hyphenated = hyphenateWord(ary[i], client.MAX_WORD_DISPLAY);
+            topic = topic.replace(ary[i], hyphenated);
+        }
+    }        
+
     client.statusBar["channel-topic"].firstChild.data = topic;
 
 }
@@ -1663,16 +1674,19 @@ function setCurrentObject (obj)
 
     /* Unselect currently selected users. */
     userList = document.getElementById("user-list");
-    /* Remove curently selection items before this tree gets rerooted,
-     * because it seems to remember the selections for eternity if not. */
-    if (userList.treeBoxObject.selection)
-      userList.treeBoxObject.selection.clearSelection ();
+    if (isVisible("user-list-box"))
+    {
+        /* Remove currently selected items before this tree gets rerooted,
+         * because it seems to remember the selections for eternity if not. */
+        if (userList.treeBoxObject.selection)
+            userList.treeBoxObject.selection.clearSelection ();
 
-    if (obj.TYPE == "IRCChannel")
-        client.rdf.setTreeRoot ("user-list", obj.getGraphResource());
-    else
-        client.rdf.setTreeRoot ("user-list", client.rdf.resNullChan);
-
+        if (obj.TYPE == "IRCChannel")
+            client.rdf.setTreeRoot ("user-list", obj.getGraphResource());
+        else
+            client.rdf.setTreeRoot ("user-list", client.rdf.resNullChan);
+    }
+    
     client.currentObject = obj;
     tb = getTabForObject(obj);
     if (tb)

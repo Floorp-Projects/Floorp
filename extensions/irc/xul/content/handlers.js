@@ -467,6 +467,15 @@ function onToggleVisibility(thing)
     
     if (d == "true")
     {
+        if (thing == "info")
+        {
+            if (client.currentObject.TYPE == "IRCChannel")
+                client.rdf.setTreeRoot ("user-list", 
+                                        client.currentObject.getGraphResource());
+            else
+                client.rdf.setTreeRoot ("user-list", client.rdf.resNullChan);
+        }
+        
         newState = "false";
         menu.setAttribute ("checked", "true");
         client.uiState[thing] = true;
