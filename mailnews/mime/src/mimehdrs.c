@@ -2361,6 +2361,15 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   status = MimeHeaders_grow_obuffer (hdrs, /*210*/ 750);
   if (status < 0) return status;
 
+#if XP_PC
+// For the dog food only. Post dog food should be always utf-8.
+#include <windows.h>
+#define MHTML_META_TAG      "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-2022-jp\">"
+  if (GetACP() == 932) {
+    status = MimeHeaders_write(opt, MHTML_META_TAG,  PL_strlen(MHTML_META_TAG));
+  }
+#endif
+
   /*
    * First, let's import some style sheet information and
    * JavaScript!
