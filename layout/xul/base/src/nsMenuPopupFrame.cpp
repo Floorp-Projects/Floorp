@@ -1443,6 +1443,9 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
   }
 
   nsCOMPtr<nsIMenuElement> popupEl = do_QueryInterface(mContent);
+  NS_ASSERTION(popupEl, "a MenuPopupFrame's content does not implement nsIMenuElement!");
+  if (!popupEl)
+    return NS_OK;
   popupEl->SetActiveItem(newContent);
 
   // Send menuactive state notification.
