@@ -49,9 +49,11 @@
 #include "nsIAppShell.h"
 #include "nsIJSContextStack.h"
 
+#define ASSERT_VALID_SCRIPT { if (!mValid) return NS_ERROR_NOT_AVAILABLE; }
+
 static JSBool
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
-    
+
 /*******************************************************************************
  * global vars
  *******************************************************************************/
@@ -60,9 +62,16 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 const char jsdServiceContractID[] = "@mozilla.org/js/jsd/debugger-service;1";
 
+PRUint32 gScriptCount = 0;
+
 static jsdService   *gJsds       = 0;
 static JSGCCallback  gLastGCProc = jsds_GCCallbackProc;
 static JSGCStatus    gGCStatus   = JSGC_END;
+static struct DeadScript {
+    PRCList     links;
+    JSDContext *jsdc;
+    jsdIScript *script;
+} *gDeadScripts = 0;
 
 /*******************************************************************************
  * c callbacks
@@ -72,8 +81,39 @@ static JSBool
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
 {
     gGCStatus = status;
+#ifdef DEBUG
     printf ("new gc status is %i\n", status);
-
+#endif
+    if (status == JSGC_END && gDeadScripts) {
+        nsCOMPtr<jsdIScriptHook> hook = 0;   
+        gJsds->GetScriptHook (getter_AddRefs(hook));
+        if (hook)
+        {
+            DeadScript *ds;
+            do {
+#ifdef DEBUG_verbose  
+                printf ("calling script delete hook.\n");
+#endif
+                ds = gDeadScripts;
+            
+                /* tell the user this script has been destroyed */
+                hook->OnScriptDestroyed (jsdContext::FromPtr(ds->jsdc),
+                                         ds->script);
+                /* get next deleted script */
+                gDeadScripts = NS_REINTERPRET_CAST(DeadScript *,
+                                                   PR_NEXT_LINK(&ds->links));
+                /* take ourselves out of the circular list */
+                PR_REMOVE_LINK(&ds->links);
+                /* addref came from the FromPtr call in jsds_ScriptHookProc */
+                NS_RELEASE(ds->script);
+                /* free the struct! */
+                PR_Free(ds);
+            } while (&gDeadScripts->links != &ds->links);
+            /* keep going until we catch up with our tail */
+        }
+        gDeadScripts = 0;
+    }
+    
     if (gLastGCProc)
         return gLastGCProc (cx, status);
     
@@ -138,14 +178,61 @@ static void
 jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
                      void* callerdata)
 {
-    if (!callerdata)
-        return;
+    if (creating) {
+        jsdIScriptHook *hook = 0;
+        
+        gJsds->GetScriptHook (&hook);
+        if (!hook)
+            return;
+            
+        nsCOMPtr<jsdIContext> cx = getter_AddRefs(jsdContext::FromPtr(jsdc));
+        nsCOMPtr<jsdIScript> script = 
+            getter_AddRefs(jsdScript::FromPtr(jsdc, jsdscript));
+        hook->OnScriptCreated (cx, script);
+    } else {
+#ifdef DEBUG_verbose  
+        printf ("script deleted.\n");
+#endif
+        jsdIScript *jsdis = jsdScript::FromPtr(jsdc, jsdscript);
+        /* the initial addref is owned by the DeadScript record */
+        jsdis->Invalidate();
+
+        if (gGCStatus == JSGC_END) {
+            /* if GC *isn't* running, we can tell the user about the script
+             * delete now. */
+            nsCOMPtr<jsdIScriptHook> hook = 0;   
+            gJsds->GetScriptHook (getter_AddRefs(hook));
+            if (hook) {
+#ifdef DEBUG_verbose
+                printf ("calling script delete hook immediatly.\n");
+#endif
+                hook->OnScriptDestroyed (jsdContext::FromPtr(jsdc), jsdis);
+            }
+        } else {
+            /* if a GC *is* running, we've got to wait until it's done before
+             * we can execute any JS, so we queue the notification in a PRCList
+             * until GC tells us it's done. See jsds_GCCallbackProc(). */
+            DeadScript *ds = PR_NEW(DeadScript);
+            if (!ds) {
+                NS_RELEASE(jsdis);
+                return; /* NS_ERROR_OUT_OF_MEMORY */
+            }
+        
+            ds->jsdc = jsdc;
+            ds->script = jsdis;
+        
+            if (gDeadScripts)
+                /* if the queue exists, add to it */
+                PR_APPEND_LINK(&ds->links, &gDeadScripts->links);
+            else {
+                /* otherwise create the queue */
+                PR_INIT_CLIST(&ds->links);
+                gDeadScripts = ds;
+            }
+        }
+    }
     
-    jsdIScriptHook *hook = NS_STATIC_CAST(jsdIScriptHook *, callerdata);
-    if (creating)
-        hook->OnScriptLoaded (jsdContext::FromPtr(jsdc),
-                              jsdScript::FromPtr(jsdc, jsdscript),
-                              creating ? PR_TRUE : PR_FALSE);
+            
 }
 
 /*******************************************************************************
@@ -237,7 +324,6 @@ jsdObject::GetValue(jsdIValue **_rval)
     JSDValue *jsdv = JSD_GetValueForObject (mCx, mObject);
     
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -286,7 +372,6 @@ jsdProperty::GetAlias(jsdIValue **_rval)
     JSDValue *jsdv = JSD_GetPropertyValue (mCx, mProperty);
     
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -309,7 +394,6 @@ jsdProperty::GetName(jsdIValue **_rval)
     JSDValue *jsdv = JSD_GetPropertyName (mCx, mProperty);
     
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -322,7 +406,6 @@ jsdProperty::GetValue(jsdIValue **_rval)
     JSDValue *jsdv = JSD_GetPropertyValue (mCx, mProperty);
     
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -342,6 +425,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(jsdScript, jsdIScript);
 NS_IMETHODIMP
 jsdScript::GetJSDContext(JSDContext **_rval)
 {
+    ASSERT_VALID_SCRIPT;
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
@@ -352,6 +436,7 @@ jsdScript::GetJSDContext(JSDContext **_rval)
 NS_IMETHODIMP
 jsdScript::GetJSDScript(JSDScript **_rval)
 {
+    ASSERT_VALID_SCRIPT;
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
@@ -360,8 +445,22 @@ jsdScript::GetJSDScript(JSDScript **_rval)
 }
 
 NS_IMETHODIMP
+jsdScript::Invalidate()
+{
+    ASSERT_VALID_SCRIPT;
+    
+    /* release the addref we do in FromPtr */
+    jsdIScript *script = NS_STATIC_CAST(jsdIScript *,
+                                        JSD_GetScriptPrivate(mScript));
+    NS_ASSERTION (script == this, "That's not my script!");
+    NS_RELEASE(script);
+    return NS_OK;
+}
+    
+NS_IMETHODIMP
 jsdScript::GetIsActive(PRBool *_rval)
 {
+    ASSERT_VALID_SCRIPT;
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
@@ -374,6 +473,7 @@ jsdScript::GetIsActive(PRBool *_rval)
 NS_IMETHODIMP
 jsdScript::GetFileName(char **_rval)
 {
+    ASSERT_VALID_SCRIPT;
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
@@ -386,6 +486,7 @@ jsdScript::GetFileName(char **_rval)
 NS_IMETHODIMP
 jsdScript::GetFunctionName(char **_rval)
 {
+    ASSERT_VALID_SCRIPT;
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
@@ -398,6 +499,7 @@ jsdScript::GetFunctionName(char **_rval)
 NS_IMETHODIMP
 jsdScript::GetBaseLineNumber(PRUint32 *_rval)
 {
+    ASSERT_VALID_SCRIPT;
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
@@ -410,6 +512,7 @@ jsdScript::GetBaseLineNumber(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdScript::GetLineExtent(PRUint32 *_rval)
 {
+    ASSERT_VALID_SCRIPT;
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
@@ -422,6 +525,7 @@ jsdScript::GetLineExtent(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdScript::PcToLine(jsdIPC *aPC, PRUint32 *_rval)
 {
+    ASSERT_VALID_SCRIPT;
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
@@ -434,18 +538,19 @@ jsdScript::PcToLine(jsdIPC *aPC, PRUint32 *_rval)
 NS_IMETHODIMP
 jsdScript::LineToPc(PRUint32 aLine, jsdIPC **_rval)
 {
+    ASSERT_VALID_SCRIPT;
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
     jsuword pc = JSD_GetClosestPC (mCx, mScript, aLine);
     *_rval = jsdPC::FromPtr (pc);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 jsdScript::SetBreakpoint(jsdIPC *aPC)
 {
+    ASSERT_VALID_SCRIPT;
     jsuword pc;
     aPC->GetPc (&pc);
     
@@ -456,6 +561,7 @@ jsdScript::SetBreakpoint(jsdIPC *aPC)
 NS_IMETHODIMP
 jsdScript::ClearBreakpoint(jsdIPC *aPC)
 {
+    ASSERT_VALID_SCRIPT;
     jsuword pc;
     aPC->GetPc (&pc);
     
@@ -466,6 +572,7 @@ jsdScript::ClearBreakpoint(jsdIPC *aPC)
 NS_IMETHODIMP
 jsdScript::ClearAllBreakpoints()
 {
+    ASSERT_VALID_SCRIPT;
     JSD_ClearAllExecutionHooksForScript (mCx, mScript);
     return NS_OK;
 }
@@ -512,7 +619,6 @@ jsdStackFrame::GetCallingFrame(jsdIStackFrame **_rval)
     JSDStackFrameInfo *sfi = JSD_GetCallingStackFrame (mCx, mThreadState,
                                                        mStackFrameInfo);
     *_rval = jsdStackFrame::FromPtr (mCx, mThreadState, sfi);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -525,7 +631,6 @@ jsdStackFrame::GetScript(jsdIScript **_rval)
     JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
                                                     mStackFrameInfo);
     *_rval = jsdScript::FromPtr (mCx, script);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -538,7 +643,6 @@ jsdStackFrame::GetPc(jsdIPC **_rval)
     jsuword pc;
     pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
     *_rval = jsdPC::FromPtr (pc);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -565,7 +669,6 @@ jsdStackFrame::GetCallee(jsdIValue **_rval)
                                                      mStackFrameInfo);
     
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -579,7 +682,6 @@ jsdStackFrame::GetScope(jsdIValue **_rval)
                                                      mStackFrameInfo);
     
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -593,7 +695,6 @@ jsdStackFrame::GetThisValue(jsdIValue **_rval)
                                                mStackFrameInfo);
     
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -618,7 +719,6 @@ jsdStackFrame::Eval (const nsAReadableString &bytes, const char *fileName,
     
     JSDValue *jsdv = JSD_NewValue (mCx, jv);
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }        
 
@@ -664,7 +764,6 @@ jsdThreadState::GetTopFrame (jsdIStackFrame **_rval)
     JSDStackFrameInfo *sfi = JSD_GetStackFrame (mCx, mThreadState);
     
     *_rval = jsdStackFrame::FromPtr (mCx, mThreadState, sfi);
-    NS_IF_ADDREF (*_rval);
     return NS_OK;
 }
 
@@ -677,7 +776,6 @@ jsdThreadState::GetPendingException(jsdIValue **_rval)
     JSDValue *jsdv = JSD_GetException (mCx, mThreadState);
     
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -784,7 +882,6 @@ jsdValue::GetJsPrototype (jsdIValue **_rval)
 
     JSDValue *jsdv = JSD_GetValuePrototype (mCx, mValue);
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -796,7 +893,6 @@ jsdValue::GetJsParent (jsdIValue **_rval)
 
     JSDValue *jsdv = JSD_GetValueParent (mCx, mValue);
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -818,7 +914,6 @@ jsdValue::GetJsConstructor (jsdIValue **_rval)
 
     JSDValue *jsdv = JSD_GetValueConstructor (mCx, mValue);
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
 
@@ -871,7 +966,6 @@ jsdValue::GetObjectValue(jsdIObject **_rval)
     JSDObject *obj;
     obj = JSD_GetObjectForValue (mCx, mValue);
     *_rval = jsdObject::FromPtr (mCx, obj);
-    NS_IF_ADDREF(*_rval);
     return NS_OK;
 }
     
@@ -937,7 +1031,6 @@ jsdValue::GetProperty (const char *name, jsdIProperty **_rval)
     JSDProperty *prop = JSD_GetValueProperty (mCx, mValue, jstr_name);
     
     *_rval = jsdProperty::FromPtr (mCx, prop);
-    NS_IF_ADDREF (*_rval);
     return NS_OK;
 }
 
@@ -981,7 +1074,7 @@ jsdService::On (void)
 
     if (gLastGCProc == jsds_GCCallbackProc)
         /* condition indicates that the callback proc has not been set yet */
-        gLastGCProc = JS_SetGCCallback (cx, jsds_GCCallbackProc);
+        gLastGCProc = JS_SetGCCallbackRT (rt, jsds_GCCallbackProc);
         
     mCx = JSD_DebuggerOnForUser (rt, NULL, NULL);
     if (!mCx)
@@ -1173,8 +1266,7 @@ jsdService::SetScriptHook (jsdIScriptHook *aHook)
 {    
     mScriptHook = aHook;
     if (aHook)
-        JSD_SetScriptHook (mCx, jsds_ScriptHookProc,
-                           NS_STATIC_CAST(void *, aHook));
+        JSD_SetScriptHook (mCx, jsds_ScriptHookProc, NULL);
     else
         JSD_SetScriptHook (mCx, NULL, NULL);
     
