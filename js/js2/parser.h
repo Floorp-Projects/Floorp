@@ -257,7 +257,8 @@ namespace JavaScript {
 		enum Flag {
 			isAttribute,				// True if this token is an attribute
 			canFollowAttribute,			// True if this token is an attribute or can follow an attribute
-			canFollowReturn				// True if this token can follow a return without an expression
+			canFollowReturn,			// True if this token can follow a return without an expression
+			canFollowGet				// True if this token can follow a get or set in a FunctionName
 		};
 
 	  private:
@@ -412,7 +413,8 @@ namespace JavaScript {
 
 
 	struct ExprNode;
-	struct StmtNode;
+	struct AttributeStmtNode;
+	struct BlockStmtNode;
 	
 	struct FunctionName {
 		enum Prefix {
@@ -425,6 +427,8 @@ namespace JavaScript {
 		ExprNode *name;					// The name; nil if omitted
 		
 		FunctionName(): prefix(normal), name(0) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct VariableBinding: ParseNode {
@@ -444,7 +448,9 @@ namespace JavaScript {
 		VariableBinding *optParameters;	// Pointer to first non-required parameter inside parameters list; nil if none
 		VariableBinding *restParameter;	// Pointer to rest parameter inside parameters list; nil if none
 		ExprNode *resultType;			// Result type expression or nil if not provided
-		StmtNode *body;					// Body; nil if none
+		BlockStmtNode *body;			// Body; nil if none
+
+		void print(PrettyPrinter &f, bool isConstructor, const AttributeStmtNode *attributes, bool noSemi) const;
 	};
 
 
@@ -619,7 +625,7 @@ namespace JavaScript {
 	struct FunctionExprNode: ExprNode {
 		FunctionDefinition function;	// Function definition
 
-		FunctionExprNode(uint32 pos, Kind kind): ExprNode(pos, kind) {}
+		explicit FunctionExprNode(uint32 pos): ExprNode(pos, functionLiteral) {}
 
 		void print(PrettyPrinter &f) const;
 	};
@@ -726,7 +732,7 @@ namespace JavaScript {
 		bool hasKind(Kind k) const {return kind == k;}
 
 		static void printStatements(PrettyPrinter &f, const StmtNode *statements);
-		static void printBlock(PrettyPrinter &f, const StmtNode *statements);
+		static void printBlockStatements(PrettyPrinter &f, const StmtNode *statements, bool loose);
 		static void printSemi(PrettyPrinter &f, bool noSemi);
 		void printSubstatement(PrettyPrinter &f, bool noSemi, const char *continuation = 0) const;
 		virtual void print(PrettyPrinter &f, bool noSemi) const;
@@ -763,6 +769,7 @@ namespace JavaScript {
 				AttributeStmtNode(pos, kind, attributes), statements(statements) {}
 
 		void print(PrettyPrinter &f, bool noSemi) const;
+		void printBlock(PrettyPrinter &f, bool loose) const;
 	};
 	
 	struct LabelStmtNode: StmtNode {
@@ -782,6 +789,7 @@ namespace JavaScript {
 				ExprStmtNode(pos, kind, expr), stmt(stmt) {ASSERT(stmt);}
 
 		void print(PrettyPrinter &f, bool noSemi) const;
+		virtual void printContents(PrettyPrinter &f, bool noSemi) const;
 	};
 	
 	struct BinaryStmtNode: UnaryStmtNode {
@@ -790,7 +798,7 @@ namespace JavaScript {
 		BinaryStmtNode(uint32 pos, Kind kind, ExprNode *expr, StmtNode *stmt1, StmtNode *stmt2):
 				UnaryStmtNode(pos, kind, expr, stmt1), stmt2(stmt2) {ASSERT(stmt2);}
 
-		void print(PrettyPrinter &f, bool noSemi) const;
+		void printContents(PrettyPrinter &f, bool noSemi) const;
 	};
 	
 	struct ForStmtNode: StmtNode {
@@ -909,6 +917,8 @@ namespace JavaScript {
 		FunctionDefinition function;	// Function definition
 
 		FunctionStmtNode(uint32 pos, Kind kind, IdentifierList *attributes): AttributeStmtNode(pos, kind, attributes) {}
+
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 
 	struct NamespaceStmtNode: AttributeStmtNode {
@@ -965,6 +975,7 @@ namespace JavaScript {
 		bool lineBreakBefore(const Token &t) const {return lineBreaksSignificant && t.getLineBreak();}
 		bool lineBreakBefore() {return lineBreaksSignificant && lexer.peek(true).getLineBreak();}
 
+		ExprNode *makeIdentifierExpression(const Token &t) const;
 		ExprNode *parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers, bool preferRegExp);
 		ExprNode *parseParenthesesAndIdentifierQualifiers(const Token &tParen, bool &foundQualifiers, bool preferRegExp);
 		ExprNode *parseQualifiedIdentifier(const Token &t, bool preferRegExp);
@@ -1012,11 +1023,15 @@ namespace JavaScript {
 	  private:
 		ExprNode *parseParenthesizedExpression();
 		const StringAtom &parseTypedIdentifier(ExprNode *&type);
+		ExprNode *parseTypeBinding(bool noIn);
 		VariableBinding *parseVariableBinding(bool noQualifiers, bool noIn);
+		void parseFunctionName(FunctionName &fn);
+		void parseFunctionSignature(FunctionDefinition &fd);
 		
 		enum SemicolonState {semiNone, semiNoninsertable, semiInsertable};
 		enum AttributeStatement {asAny, asBlock, asConstVar};
-		StmtNode *parseBlock(bool inSwitch, bool noOpenBrace, bool noCloseBrace);
+		StmtNode *parseBlock(bool inSwitch, bool noCloseBrace);
+		BlockStmtNode *parseBlockStatement(uint32 pos, IdentifierList *attributes);
 		StmtNode *parseAttributeStatement(uint32 pos, IdentifierList *attributes, const Token &t, bool noIn, SemicolonState &semicolonState);
 		StmtNode *parseAttributesAndStatement(const Token *t, AttributeStatement as, SemicolonState &semicolonState);
 		StmtNode *parseAnnotatedBlock();
@@ -1025,7 +1040,7 @@ namespace JavaScript {
 	  public:
 		StmtNode *parseStatement(bool topLevel, bool inSwitch, SemicolonState &semicolonState);
 		StmtNode *parseStatementAndSemicolon(SemicolonState &semicolonState);
-		StmtNode *parseProgram() {return parseBlock(false, true, true);}
+		StmtNode *parseProgram() {return parseBlock(false, true);}
 	};
 }
 #endif
