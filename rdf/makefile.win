@@ -20,8 +20,10 @@ DEPTH=..
 MODULE = rdf
 
 DIRS=\
-	include \
-	src \
+        base            \
+        content         \
+        datasource      \
+        build           \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
