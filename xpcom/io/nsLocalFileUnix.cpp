@@ -748,7 +748,11 @@ nsLocalFile::MoveTo(nsIFile *newParent, const char *newName)
 
     // try for atomic rename, falling back to copy/delete
     if (rename((const char *)mPath, (const char *)newPathName) < 0) {
+#ifdef VMS
+        if (errno == EXDEV || errno == ENXIO) {
+#else
         if (errno == EXDEV) {
+#endif
             rv = CopyTo(newParent, newName);
             if (NS_SUCCEEDED(rv))
                 rv = Delete(PR_TRUE);
