@@ -78,6 +78,10 @@ JAVA_OR_OJI=1
 LCFLAGS=$(LCFLAGS) -DSMART_MAIL
 !endif
 
+!ifdef MOZ_TRACE_XPCOM_REFCNT
+LCFLAGS=$(LCFLAGS) -DMOZ_TRACE_XPCOM_REFCNT
+!endif
+
 
 ## Include support for MOZ_LITE/MOZ_MEDIUM
 include <$(DEPTH)/config/liteness.mak>
