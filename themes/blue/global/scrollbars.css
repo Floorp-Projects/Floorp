@@ -1,0 +1,86 @@
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to XUL */
+
+/********* XP Scrollbar *********/
+
+scrollbar {
+   behavior: url("chrome://global/content/xulBindings.xml#scrollbar");
+}
+
+/********* XP Scrollbar *********/
+
+thumb {
+  behavior: url(chrome://global/content/xulBindings.xml#thumb);
+  background-color: #CCCCCC;
+  border: 1px outset #CCCCCC;
+  list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")
+}
+
+thumb[disabled="true"] {
+   list-style-image: url("chrome://global/skin/scroll-thumb-horiz-disabled.gif");
+}
+
+thumb[align="vertical"] {
+   list-style-image: url("chrome://global/skin/scroll-thumb-vert.gif")
+}
+
+scrollbarbutton {
+  vertical-align: bottom;
+  cursor: default;
+
+  border: 1px outset white;
+  background-color: #CCCCCC;
+  color:black; 
+
+  padding: 1px;
+}
+
+scrollbarbutton:active {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+scrollbarbutton[type="decrement"] {
+   list-style-image: url("chrome://global/skin/scroll-left.gif")
+}
+
+scrollbarbutton[type="decrement"][disabled="true"] {
+   list-style-image: url("chrome://global/skin/scroll-left-disabled.gif") 
+}
+
+scrollbarbutton[type="increment"] {
+   list-style-image: url("chrome://global/skin/scroll-right.gif")
+}
+
+
+scrollbarbutton[type="increment"][disabled="true"] {
+   list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
+}
+
+
+scrollbar[align="vertical"] scrollbarbutton[type="decrement"] {
+   list-style-image: url("chrome://global/skin/scroll-up.gif")
+}
+
+scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] {
+   list-style-image: url("chrome://global/skin/scroll-up-disabled.gif") 
+}
+
+scrollbar[align="vertical"] scrollbarbutton[type="increment"] {
+   list-style-image: url("chrome://global/skin/scroll-down.gif")
+}
+
+scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] {
+   list-style-image: url("chrome://global/skin/scroll-down-disabled.gif") 
+}
+
+slider[align="vertical"] thumb:active {
+   background-color: #CCCCCC;
+}
+
+slider {
+   background-color: #999999;
+}

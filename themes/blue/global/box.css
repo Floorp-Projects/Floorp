@@ -1,0 +1,54 @@
+
+titledbox
+  {
+    border                : 2px groove #CCCCCC;
+    padding               : 7px;
+    margin                : 5px;
+  }
+
+title
+  {
+    margin                : 0px 6px 2px 6px;
+  }
+
+.titledbox-body
+  {
+    display               : block;
+    padding               : inherit;
+  }
+
+title text {
+  margin : 0px 3px 0px 3px;
+}
+    
+/** box formatting **/
+  box[autostretch="never"]
+    {
+      vertical-align      : middle;
+    }
+    
+  box[autostretch="never"][valign="top"]
+    {
+      vertical-align      : top;
+    }
+    
+  box[autostretch="never"][valign="bottom"]
+    {
+      vertical-align      : bottom;
+    }
+    
+  box[autostretch="never"][halign="center"] 
+    {
+      text-align          : center;
+    }
+    
+  box[autostretch="never"][halign="right"]
+    {
+      text-align          : right;
+    }
+
+  row
+    {
+      vertical-align      : middle;
+    }
+  

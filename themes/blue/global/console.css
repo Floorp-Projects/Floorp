@@ -1,0 +1,46 @@
+/* 
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ */
+
+.error-icon-box {
+  background-color: #CCCCCC;
+  padding: 5px;
+  border-right: 1px solid #999999;
+}
+
+
+
+.treecell-error {
+  border-bottom: 1px solid #000000 !important;
+  padding: 0px;
+}
+
+.treecell-error[type="error"] {
+  list-style-image: url("chrome://global/skin/error-icon.gif") !important;
+}
+
+.treecell-error[type="warning"] {
+  list-style-image: url("chrome://global/skin/alert-icon.gif") !important;
+}
+
+.error-icon {
+  list-style-image: inherit !important;
+}
+

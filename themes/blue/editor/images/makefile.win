@@ -1,0 +1,103 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ..\..\..\..
+THEME_ROOT_DEPTH = ..\..
+
+include <$(DEPTH)\config\rules.mak>
+include <$(THEME_ROOT_DEPTH)\theme.mk>
+
+clobber::
+	rm -f $(DIST)\chrome\skins\$(THEME)\editor\skin\images\*.*
+
+install:: 
+	$(MAKE_INSTALL) Map_Copy.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_Cut.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_Paste.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_checker.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_circleTool.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_contrast.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_pointerTool.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_polygonTool.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_rectangleTool.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_zoomIn.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) Map_zoomOut.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) align.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) anchor-in-doc.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) anchor-white.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) anchor.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) bold.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) bold_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images	
+	$(MAKE_INSTALL) bullets.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) bullets_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) center.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) center_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) color.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) dec-font-size.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) dec-font-size_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) div.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) find.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) hline-white.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) hline.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) hover-teal.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) image-white.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) image.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) img-align-bottom.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) img-align-left.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) img-align-middle.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) img-align-right.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) img-align-top.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) inc-font-size.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) inc-font-size_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) indent.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) indent_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) italic.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) italic_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) justify.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) justify_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) left.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) left_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) link-white.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) link.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) newfile.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) numbers.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) numbers_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) object-popup.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) openfile.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) outdent.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) outdent_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) preview.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) print.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) publish.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) right.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) right_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) savefile.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) savemod.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) span.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) spell.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) table-white.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) table.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) underline.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) underline_disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) editmode-normal.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) editmode-tags.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) editmode-html.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) editmode-preview.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images

@@ -1,0 +1,37 @@
+
+#navigator-throbber
+  {
+    behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
+    background-image      : url("chrome://communicator/skin/navbar-endbox.gif");
+    background-repeat     : no-repeat;
+    list-style-image      : url("chrome://global/skin/animthrob_single.gif");
+    width                 : 56px;
+    max-width             : 56px;
+    padding               : 8px 8px 7px 16px;
+    margin                : 0px;
+    cursor                : pointer;
+    border                : none;
+  }  
+
+#navigator-throbber[busy="true"]
+  {
+    list-style-image      : url("chrome://global/skin/animthrob.gif");
+  }
+  
+#navigator-throbber:hover:active
+  {
+    padding               : 9px 7px 6px 17px;
+  }
+
+#navigator-throbber > .button-internal-box
+  {
+    border                : none;
+    padding               : 0px;
+    margin                : 0px;
+  }
+  
+#navigator-throbber > .button-internal-box > .button-text-container
+  {
+    display               : none;
+  }
+  

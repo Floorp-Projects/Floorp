@@ -1,0 +1,130 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ..\..\..
+THEME_ROOT_DEPTH = ..
+
+DIRS= addressbook messengercompose
+
+include <$(DEPTH)\config\rules.mak>
+include <$(THEME_ROOT_DEPTH)\theme.mk>
+
+clobber::
+	rm -f $(DIST)\chrome\skins\$(THEME)\messenger\skin\*.*
+
+install:: 
+	$(MAKE_INSTALL) AccountManager.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) addtoab.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) attach.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) check.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) dot.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) fieldMapImport.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) file.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) flagcol.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) flaggedmail.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-draft-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-draft-share-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-draft-share.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-draft.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-filed-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-filed.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-hasmail.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-inbox-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-inbox-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-inbox-share-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-inbox-share.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-inbox.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-mailserver.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-new-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-new-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-newsgroup-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-newsgroup.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-outbox-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-outbox.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-sent-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-sent-share-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-sent-share.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-sent.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-server-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-server.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-share-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-share.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-template-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-template-share-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-template-share.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-template.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-trash-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-trash-share-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-trash-share.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folder-trash.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) folderPane.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) forward.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) frown.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) getmsg.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) inbox.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) less.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) local-mailhost.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) mailfolder.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) mailheader.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) message-mail-attach.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) message-mail-imapdelete.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) message-mail-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) message-mail.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) message-news-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) message-news.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) messenger.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) more.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) msgHdrViewOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) newmsg.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) newshost.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) next.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) open-mailfolder.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) outbox.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) pref-mailnews.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) readcol.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) readmail.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) reply.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) replyall.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) server-local-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) server-local.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) server-mail-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) server-mail.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) server-news-lock.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) server-news-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) server-news.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) server-remote-lock.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) server-remote.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) sick.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) smile.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) subscribe.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) threadPane.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) threadcol.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) trash.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) unreadmail.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) unthreadcol.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) winclassic.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) wink.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) winwide.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) wizard.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) importDialog.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin

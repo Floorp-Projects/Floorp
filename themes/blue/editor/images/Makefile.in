@@ -1,0 +1,114 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 2000 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ../../../..
+THEME_ROOT_DEPTH = @srcdir@/../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(THEME_ROOT_DEPTH)/theme.mk
+
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/editor/skin/images
+
+EXPORT_RESOURCE_SAMPLES = \
+	Map_Copy.gif \
+	Map_Cut.gif \
+	Map_Paste.gif \
+	Map_checker.gif \
+	Map_circleTool.gif \
+	Map_contrast.gif \
+	Map_pointerTool.gif \
+	Map_polygonTool.gif \
+	Map_rectangleTool.gif \
+	Map_zoomIn.gif \
+	Map_zoomOut.gif \
+	align.gif \
+	anchor-in-doc.gif \
+	anchor-white.gif \
+	anchor.gif \
+	bold.gif \
+	bold_disabled.gif \
+	bullets.gif \
+	bullets_disabled.gif \
+	center.gif \
+	center_disabled.gif \
+	color.gif \
+	dec-font-size.gif \
+	dec-font-size_disabled.gif \
+	div.gif \
+	find.gif \
+	hline-white.gif \
+	hline.gif \
+	hover-teal.gif \
+	image-white.gif \
+	image.gif \
+	img-align-bottom.gif \
+	img-align-left.gif \
+	img-align-middle.gif \
+	img-align-right.gif \
+	img-align-top.gif \
+	inc-font-size.gif \
+	inc-font-size_disabled.gif \
+	indent.gif \
+	indent_disabled.gif \
+	italic.gif \
+	italic_disabled.gif \
+	justify.gif \
+	justify_disabled.gif \
+	left.gif \
+	left_disabled.gif \
+	link-white.gif \
+	link.gif \
+	newfile.gif \
+	numbers.gif \
+	numbers_disabled.gif \
+	object-popup.gif \
+	openfile.gif \
+	outdent.gif \
+	outdent_disabled.gif \
+	preview.gif \
+	print.gif \
+	publish.gif \
+	right.gif \
+	right_disabled.gif \
+	savefile.gif \
+	savemod.gif \
+	span.gif \
+	spell.gif \
+	table-white.gif \
+	table.gif \
+	underline.gif \
+	underline_disabled.gif \
+	editmode-normal.gif \
+	editmode-tags.gif \
+	editmode-html.gif \
+	editmode-preview.gif \
+    $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
+

@@ -1,0 +1,152 @@
+/** Contains style definitions for the navigator application 
+ **/
+
+@import url(chrome://communicator/skin/);
+@import url(chrome://communicator/skin/bookmarks/bookmarks.css);
+@import url(chrome://communicator/skin/sidebar/sidebar.css);
+
+#sidebar-parent 
+  {
+	  margin-right          : 2px;
+  }
+
+/*
+ * Rules for 'hiding' portions of the chrome for special
+ * kinds of browser windows.
+ */
+window[chromehidden~="menubar"] .chromeclass-menubar {
+	display: none;
+}
+
+window[chromehidden~="toolbar"] .chromeclass-toolbar {
+        display: none;
+}
+
+window[chromehidden~="location"] .chromeclass-location {
+        display: none;
+}
+
+window[chromehidden~="directories"] .chromeclass-directories {
+        display: none;
+}
+
+window[chromehidden~="status"] .chromeclass-status {
+        display: none;
+}
+
+window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
+        display: none;
+}
+
+/*
+ * Images for the main buttons
+ */
+#back-button 
+  {
+	  list-style-image      : url("chrome://navigator/skin/back.gif");
+    margin                : 0px;
+  }
+
+#forward-button 
+  {
+	  list-style-image      : url("chrome://navigator/skin/forward.gif");
+    margin                : 0px;
+  }
+
+#stop-button 
+  {
+	  list-style-image      : url("chrome://navigator/skin/stop.gif");
+  } 
+
+#reload-button 
+  {
+	  list-style-image      : url("chrome://navigator/skin/reload.gif");
+  }
+
+/*all the urlbar stuff*/
+#page-proxy-button 
+  {
+	  list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
+	  cursor                : grab;
+  } 
+
+#ubhist-keyword-popup
+  {
+    margin                : 0px 4px 0px 0px;
+    width                 : 10px; 
+    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+  } 
+
+#ubhist
+  {
+    margin                : 3px 1px 3px 0px;
+    width                 : 10px; 
+    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+    border                : none;
+    padding               : 0px;
+  }
+
+#ubhist-popup
+  {
+    max-width             : none !important;
+  }
+
+#action-popup 
+  {
+    list-style-image      : url("chrome://global/skin/scroll-down.gif"); 
+    margin                : 0px; 
+    -moz-border-radius    : 4px;
+  }
+
+#content-frame 
+  {
+    min-width             : 0px;
+    min-height            : 0px;
+  }
+
+#statusbar-icon 
+  {
+    width                 : 100px;
+  }
+
+#statusbar-display
+  {
+    list-style-image      : url("chrome://communicator/skin/document.gif"):
+  }
+  
+#statusbar-display[error="true"]
+  {
+    list-style-image      : url("chrome://communicator/skin/document-error.gif");
+  }  
+  
+#go-button  
+  {
+    display               : none;
+  }
+  
+#nav-bar-inner
+  {
+    padding-left          : 6px;
+  }
+  
+#search-button
+  {
+    margin-right          : 1px;
+  }
+  
+#homebutton
+  {
+    list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
+  }
+  
+.menuitem-iconic
+  {
+    padding               : 2px;
+  }
+
+#print-button 
+  {
+    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
+	list-style-image      : url("chrome://global/skin/print.gif");
+    margin                : 0px;
+  }

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<bindings id="sidebarSplitterBindings.xml"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="sidebar-splitter" extends="xul:splitter">
+    <content excludes="observes,template">
+      <xul:box autostretch="never" halign="right">
+        <xul:image class="sidebar-splitter-topright-cap"/>
+      </xul:box>
+      <xul:spring flex="1"/>
+      <xul:box>
+        <children/>
+      </xul:box>
+      <xul:spring flex="1"/>
+      <xul:box autostretch="never" halign="right">
+        <xul:image class="sidebar-splitter-bottomright-cap"/>
+      </xul:box>
+    </content>
+  </binding>
+          
+</bindings> 

@@ -1,0 +1,55 @@
+/******* Splitters *******/
+
+splitter 
+  {
+    cursor                : e-resize;
+    background-color      : #CCCCCC;
+  }
+
+splitter[state="dragging"]
+  {
+    background-color      : #999999;
+  }
+
+grippy, grippy[collapse="before"]
+  {
+	  margin                : 0px;
+    border                : 1px outset #CCCCCC;
+	  padding               : 0px;
+	  list-style-image      : url("chrome://global/skin/grippy-vertical-before.gif");
+	  cursor                : pointer;
+  }
+
+grippy:hover
+  {
+	  background-color      : #CCCCFF;
+  }
+
+grippy:hover:active
+  {
+	  border                : 1px inset #CCCCCC;
+  }
+
+/* vertical splitters */
+  window > splitter, box > splitter 
+    {
+    	width               : 8px;
+      border-left         : 1px outset #CCCCCC;
+      border-right        : 1px outset #CCCCCC;
+    }
+  
+/* horizontal splitters */  
+  /* XXX we should comment out the 'align' support to force people to migrate 
+         to 'orient' */
+  rows > splitter,
+  window[orient="vertical"] > splitter,
+  box[orient="vertical"] > splitter,
+  window[align="vertical"] > splitter,
+  box[align="vertical"] > splitter
+    {
+      cursor              : n-resize;
+      border-top          : 1px outset #CCCCCC;
+      border-right        : 1px outset #CCCCCC;
+    }
+
+

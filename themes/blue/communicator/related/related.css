@@ -1,0 +1,99 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+/*
+
+  Style rules specific to the related links panel
+
+*/
+
+treeitem > treerow.relatedresult > treecell
+{
+  color: black;
+  text-decoration: none;
+}
+treeitem > treerow.relatedresult > treecell:hover
+{
+  color: blue;
+  text-decoration: underline;
+}
+treeitem > treerow.relatedresult > treecell > titledbutton:active
+{
+  color: red;
+  text-decoration: underline;
+}
+
+treeitem[container="true"][open="true"][loading="true"] > treerow.relatedresult > .treecell-indent
+{
+  list-style-image: url("chrome://global/skin/loading.gif") ! important ;
+}
+
+treeitem[container="true"][open="true"] > treerow.relatedresult > .treecell-indent 
+{
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+}
+
+/* Uncomment if double-click model is needed
+treeitem[container="true"][open="true"][selected="true"] > treerow.relatedresult > .treecell-indent 
+{
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open-sel.gif");
+}
+*/
+
+treeitem[container="true"] > treerow.relatedresult > .treecell-indent 
+{
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
+}
+
+/* Uncomment if double-click model is needed
+treeitem[container="true"][selected="true"] > treerow.relatedresult > .treecell-indent 
+{
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed-sel.gif");
+}
+*/
+
+treeitem[container="true"][id="NC:SiteMapRoot"] > treerow.relatedresult > .treecell-indent 
+{
+  list-style-image: url("chrome://communicator/skin/related/sitemap.gif");
+}
+
+treeitem[container="true"][open="true"][id="NC:SiteMapRoot"] > treerow.relatedresult > .treecell-indent 
+{
+  list-style-image: url("chrome://communicator/skin/related/sitemap.gif");
+}
+
+/* Single click model, so undo regular search tree selection look. */
+treeitem[selected="true"] > treerow.relatedseparator, 
+treeitem[selected="true"] > treerow.relatedresult
+{ 
+  background-color: transparent;
+}
+
+.treecell-indent 
+{
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
+}
+
+.tree-cell-twisty
+{
+  display: none;
+}

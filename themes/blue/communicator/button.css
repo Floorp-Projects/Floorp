@@ -1,0 +1,295 @@
+
+/** Standard toolbar buttons
+ *  class="button-toolbar"
+ **/
+  .button-toolbar
+    {
+      border                : 1px solid transparent;
+      margin                : 1px 0px 1px 0px;
+      -moz-border-radius    : 0px;
+      color                 : black;
+      padding               : 0px;
+      font                  : 3mm arial;
+      max-width             : 10em;
+    }
+    
+  .button-toolbar:hover
+    {
+      border                : 1px solid #FFFFFF;
+    }
+  
+  .button-toolbar:hover:active,
+  .button-toolbar[home-dragover="true"]
+    {
+      border                : 1px solid #336699;
+    }
+    
+  .button-toolbar > .button-internal-box,
+  .button-toolbar:hover > .button-internal-box,
+  .button-toolbar[disabled="true"] > .button-internal-box,
+  .button-toolbar[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar[disabled="true"]:hover:active > .button-internal-box
+    {
+      padding               : 1px 3px 1px 3px;
+      border                : none;
+    }
+    
+  .button-toolbar > .button-internal-box > .button-text-container,
+  .button-toolbar > .button-internal-box > .button-text-container > .button-text
+    {
+      padding               : none;
+      margin                : none;
+    }
+
+  .button-toolbar:hover:active > .button-internal-box
+    {
+      padding               : 2px 2px 0px 4px;
+      border                : none;
+    }
+
+  .button-toolbar:hover:active[home-dragover="true"] > .button-internal-box
+    {
+      padding               : 1px 3px 1px 3px;
+      border                : none;
+    }
+    
+  .button-toolbar[toggled="true"]
+    {
+      border                : 1px solid 0x003366;
+      background-color      : #AAAAAA;
+      -moz-border-radius    : 4px;
+    }    
+
+  .button-toolbar[disabled="true"],
+  .button-toolbar[disabled="true"]:hover,
+  .button-toolbar[disabled="true"]:hover:active
+    {
+      border                : 1px solid transparent;
+    }
+
+/** The largest type of toolbar buttons. In the Seamonkey implementation, 
+ *  these are only used in the navigation toolbar in the navigator package.
+ **/
+ 
+  /* outer frame */
+  .button-toolbar-1
+    {
+      background-repeat   : no-repeat;
+      background-color    : transparent;
+      background-position : 0px 0px;
+      background-image    : url("chrome://global/skin/button32-bg.gif");
+      color               : #CCFFFF;
+      width               : 36px;
+      height              : 36px;
+      margin              : 2px 6px 1px 1px;
+      font-size           : smaller;
+      border              : none;
+    }
+    
+  .button-toolbar-1:hover 
+    {
+      background-image    : url("chrome://global/skin/button32-bg-hover.gif");
+      border              : none;
+    } 
+
+  .button-toolbar-1:hover:active
+    {
+      margin              : 3px 5px 0px 2px;
+      border              : none;
+    }
+
+  .button-toolbar-1[disabled="true"],
+  .button-toolbar-1[disabled="true"]:hover,
+  .button-toolbar-1[disabled="true"]:hover:active
+    {
+      background-image    : url("chrome://global/skin/button32-bg-disabled.gif");
+      margin              : 2px 6px 1px 1px;
+      border              : none;
+    }
+    
+/* internal frame */
+  .button-toolbar-1[disabled="true"] > .button-internal-box,
+  .button-toolbar-1[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box
+    {
+      border              : none;
+    }
+      
+  .button-toolbar-1 > .button-internal-box,
+  .button-toolbar-1:hover > .button-internal-box,
+  .button-toolbar-1:hover:active > .button-internal-box
+    {
+      border              : none;
+      vertical-align      : middle;
+    }
+    
+  .button-toolbar-1 > .button-internal-box > .button-text-container 
+    {
+      display             : none;
+      text-align          : center;
+    }
+    
+/** Styles for the standard 'large' toolbar button, these buttons are used for
+ *  toolbar buttons that are the most commonly used elements on a toolbar, e.g.
+ *  'GetMsg' in Mailnews or 'Send' in Mail/Compose.
+ **/
+  .button-toolbar-2
+    {
+      background-repeat   : no-repeat;
+      background-position : 50% 0px;
+      background-color    : transparent;
+      background-image    : url("chrome://global/skin/button28-bg.gif");
+      color               : #CCFFFF;
+      min-width           : 28px;
+      min-height          : 28px;
+      margin              : 4px 7px 1px 1px;
+      padding             : 3px 0px 0px 1px;
+      font-size           : smaller;
+      border              : none;
+    }
+    
+  .button-toolbar-2:hover 
+    {
+      background-image    : url("chrome://global/skin/button28-bg-hover.gif");
+      border              : none;
+    } 
+
+  .button-toolbar-2:hover:active
+    {
+      margin              : 5px 6px 0px 2px;
+      border              : none;
+    }
+
+  .button-toolbar-2[disabled="true"],
+  .button-toolbar-2[disabled="true"]:hover,
+  .button-toolbar-2[disabled="true"]:hover:active
+    {
+      background-image    : url("chrome://global/skin/button28-bg-disabled.gif");
+      margin              : 4px 7px 1px 1px;
+      border              : none;
+    }
+    
+/* internal frame */
+  .button-toolbar-2[disabled="true"] > .button-internal-box,
+  .button-toolbar-2[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
+    {
+      border              : none;
+      vertical-align      : middle;
+    }
+      
+  .button-toolbar-2 > .button-internal-box,
+  .button-toolbar-2:hover > .button-internal-box,
+  .button-toolbar-2:hover:active > .button-internal-box
+    {
+      border              : none;
+    }
+  
+/* text wrapper frame */
+  .button-toolbar-2 > .button-internal-box > .button-text-container 
+    {
+      padding-top         : 6px;
+      text-align          : center;
+    }
+
+
+/** "Green" buttons, e.g. "Search"
+ *  class="button-toolbar-3"
+ **/  
+  .button-toolbar-3 
+    {
+      margin                : 0px 0px 0px 3px;
+      font-weight           : bold;
+      background-color      : #99CCCC;
+    }  
+    
+  .button-toolbar-3 > .button-internal-box
+    {
+      border                : 1px outset #99CCCC;
+      padding               : 2px 4px 2px 4px;
+    }
+    
+  .button-toolbar-3:hover:active > .button-internal-box 
+    {
+      border                : 1px inset #99CCCC;
+      padding               : 3px 3px 1px 5px;
+    } 
+
+/** Expanding Region Button **/
+
+/* outer frame */
+  button.expander
+    {
+      border              : none;
+      padding             : none;
+      margin              : 1px 5px 3px 1px;
+      background-color    : inherit;
+      list-style-image    : url("chrome://global/skin/closedtwisty.gif");
+    }
+    
+  button[open="true"].expander 
+    {
+      list-style-image    : url("chrome://global/skin/opentwisty.gif");
+    }
+    
+/* internal frame */
+  button.expander > .button-internal-box
+    {
+      border              : none;
+      background-color    : inherit;
+      padding             : none;
+      margin              : none;
+    }
+
+/* text frame */
+  button.expander > .button-internal-box > .button-text-container > .button-text
+    {
+      color               : #0000FF;
+      text-decoration     : underline;
+    }
+    
+  button.expander:hover > .button-internal-box > .button-text-container > .button-text
+    {
+      color               : #FF0000;
+    }
+
+/** 
+ * button styles for taskbar, sidebar headers, etc.
+ **/
+.button-toolbar-4
+  {
+    color                 : #99CCCC;
+    background            : inherit;
+    font                  : inherit;
+    border                : none;
+    padding               : 1px !important;
+    margin                : 0px;
+  }
+
+.button-toolbar-4:hover 
+  {
+    text-decoration       : none;
+    background-color      : #336699;
+    color                 : #CCFFFF;
+  }
+
+.button-toolbar-4:hover:active 
+  {
+    text-decoration       : none;
+    color                 : #CCFFFF;
+    padding               : 2px 0px 0px 2px !important;
+  }
+  
+menubutton.button-toolbar-4
+  {
+    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+  }
+  
+.button-toolbar-4 > .button-internal-box,
+.button-toolbar-4 > .menubutton-internal-box
+  {
+    border                : none !important;
+    padding               : 0px !important;
+  }  
+
+  

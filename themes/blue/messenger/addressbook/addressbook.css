@@ -1,0 +1,181 @@
+/*
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+*/
+ 
+@import url(chrome://communicator/skin/);
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for XUL elements */
+ 
+/* CardView styles - used in the Card View Pane*/
+
+#CardViewBox {
+	overflow: auto;
+	background-color: #EEEEEE;
+	min-width: 150px;
+	user-focus: ignore;
+}
+
+#CardViewInnerBox {
+	margin-top: 2px;
+	margin-bottom: 2px;
+	padding-left: 8px;
+	padding-right: 8px;
+}
+
+#CardTitle {
+	font-size: 150%;
+	font-weight: bold;
+	border-bottom: 2px solid black;
+	min-width: 120px;
+	margin: 0px;
+}
+ 
+.cardViewGroup {
+	margin-top: 8px;
+	padding-bottom: 5px;
+	min-width: 50px;
+}
+
+[class="CardViewHeading"] {
+	padding: 1px;
+	padding-left: 5px;
+	margin: 0px 0px 1px 0px;
+	background-color: #99CCCC;
+	color: black;
+	font-weight: bold;
+	min-width: 30px;
+}
+
+[class="CardViewText"] {
+	padding-left: 20px;
+	padding-right: 2px;
+	min-width: 30px;
+	margin: 0px;
+}
+
+html|a {
+	padding-left: 0px;
+	padding-right: 2px;
+	border: none !important;
+}
+
+html|p {
+    border: none !important;
+}
+
+
+/* CardEdit styles - used in the Card Edit Dialog */
+
+[class="CardEditWidth"] {
+	width: 25em;
+}
+
+[class="CardEditLabel"] {
+	padding: 0px;
+	margin-top: 3px;
+}
+
+[class="alignBoxWithFieldset"] {
+	margin-left: 6px;
+	margin-right: 5px;
+}
+
+.stateZipSpacer { width: 3em; }
+
+
+/* Custom Trees */
+
+tree { 
+	border-left: 1px solid transparent;
+}
+
+treeitem[selected="true"] > treerow { 
+	color: black;
+	background-color: #CCCCCC;
+}
+
+tree[class="abDirectory"] treeitem > treerow > treecell > .tree-icon {
+	list-style-image: url("chrome://messenger/skin/addressbook/myaddrbk.gif");
+}
+
+tree[class="abResults"] treeitem > treerow > treecell.cardicon {
+	list-style-image: url("chrome://messenger/skin/addressbook/person.gif");
+	height: 14px;
+	min-height: 14px;
+}
+
+
+/* Address Book specific style */
+
+#results_box {
+	border-left: 8px solid #CCCCCC;
+}
+ 
+[hide] {
+  visibility: collapse;
+}
+
+#button-newcard {
+	list-style-image:url("chrome://messenger/skin/addressbook/newcard.gif");
+}
+
+#button-newlist {
+	list-style-image:url("chrome://messenger/skin/addressbook/newlist.gif");
+}
+
+#button-editcard {
+	list-style-image:url("chrome://messenger/skin/addressbook/edit.gif");
+}
+
+#button-newmessage {
+	list-style-image:url("chrome://messenger/skin/addressbook/newmsgab.gif");
+}
+
+#button-elete {
+	list-style-image:url("chrome://messenger/skin/trash.gif");
+}
+
+#button-stop {
+	list-style-image:url("chrome://global/skin/stop.gif");
+}
+
+#button-search {
+	list-style-image:url("chrome://global/skin/search.gif");
+}
+
+#searchlabel {
+	padding: 0px;
+	padding-left: 5px;
+	padding-bottom:2px;
+	white-space: nowrap;
+	font-size: smaller;
+	min-width: 20px;
+}
+
+#searchtext {
+	min-width: 20px;
+	padding: 0px;
+}
+
+treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
+                                                                                                                                               
+  list-style-image: none !important;                                             
+                                                                                                                                               
+}    

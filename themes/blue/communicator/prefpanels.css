@@ -1,0 +1,15 @@
+/********** Fonts ***************/
+
+#sizeVar, #sizeMono {
+	width: 4em;
+}
+
+#mouseWheelMode {
+      width: 9em;
+}
+
+/******* SmartBrowsing **********/
+
+#disabledDomains {
+	max-height: 13em;
+}

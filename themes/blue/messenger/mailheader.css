@@ -1,0 +1,83 @@
+/* 
+ * These are the style attributes for the XUL display.
+ */
+window						          { overflow: auto; }
+mailheader					        { display: block; }
+mailattachcount				      { display: none; }
+
+box[name=header-attachment] { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
+box[name=header-part1]      { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
+box[name=header-part2]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
+box[name=header-part3]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
+box[name=header-seamonkey]  { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
+
+headerdisplayname			      { font-weight: bold;  white-space: pre; }
+header						          { text-align: left; }
+
+menubar[name=attachment-menubar]  { background-color: #EFEFEF; border: 0px solid #EFEFEF; }
+menu[name=attachment-menu]        { background-color: #EFEFEF; border: 0px solid #EFEFEF; }
+
+/* 
+ * For printing/HTML display...
+ */
+table[name=header-part1]    { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
+table[name=header-part2]    { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
+table[name=header-part3]    { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
+div.headerdisplayname       { font-weight: bold;  white-space: pre; display: inline; }
+
+body {
+  background-color: white;
+}
+
+
+
+.text-flowed tt {
+  font-family: inherit;
+}
+.text-flowed blockquote {
+  margin: 0em 0em;
+  border-color: black;
+}
+
+/* Anyhow, the <div class=txt-sig> doesn't inherit whitespace setting from
+   its parent pre, but from its ancestor .text-plain. */
+.text-plain {
+  white-space: -moz-pre-wrap;
+}
+.text-plain[wrap=false] {
+  white-space: pre;
+}
+.text-plain pre {
+  font-family: inherit;
+  white-space: inherit;
+  margin: inherit;
+}
+/* That's how it should really be
+.text-plain pre {
+  font-family: inherit;
+  margin: inherit;
+}
+.text-plain[wrap=false] pre {
+  white-space: pre;
+}
+*/
+.text-plain[graphical-quote=false] blockquote {
+  padding-left: inherit;
+  border-left: inherit;
+  margin: 0em 0em;
+}
+.text-plain[graphical-quote=true] blockquote {
+  margin: 0em 0em;
+  border-width: medium;
+  border-color: black;
+}
+.text-plain[graphical-quote=true] .txt-citetags {
+  display: none;
+}
+
+.txt-sig, .signature {
+  color: gray;
+}
+.txt-sig > a, .signature > a {
+  color: 7777FF /* light blue */;
+}

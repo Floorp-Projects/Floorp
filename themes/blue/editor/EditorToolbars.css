@@ -1,0 +1,347 @@
+/* 
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ */
+
+/* This contains CSS just for editor toolbars */
+
+#EditorToolbox {
+  min-width: 1px;
+}
+
+#FormatToolbar {
+  border-bottom: 1px solid #003366;
+}
+
+.separator_small { 
+  width: 1em; 
+}
+
+.margin-left-right {
+  margin-left:  3px;
+  margin-right: 3px;
+}
+
+.toolbar, .key-toolbar {
+  margin-right: 2px;
+}
+
+.inset-border {
+  border: 1px inset white;
+}
+
+/* THIS DOESN'T WORK ON <text>! */
+.center {
+  text-align: center;
+}
+
+#EditModeToolbar {
+  padding:       0px;
+  /* Same as "standard" toolbar background */
+  border-top:    1px solid #003366;
+  border-bottom: 1px solid darkgray;
+  margin-bottom: 0px;
+  min-width:     1px;
+  color:         white;
+  background-color: #999999;
+  overflow:      hidden;
+}
+
+button.edit-mode:hover, button.edit-mode:hover:active,
+button.edit-mode {
+  -moz-border-radius: 0px 0px 8px 8px;
+  padding: 1px 5px 1px 4px;
+  margin: 0px 1px;
+  color: black;
+  background-color: #CCCCCC;
+  border-top: 0px;
+  border-bottom: 1px solid #666666;
+  border-left: 1px solid white;
+  border-right: 1px solid #666666;
+}
+
+button.edit-mode:hover {
+  border:  1px solid white;
+  border-top: 0px;
+}
+
+button.edit-mode:hover:active {
+  padding: 2px 4px 0px 5px;
+}
+
+button.edit-mode[selected="1"] {
+/* Not resizing well! - use color instead
+  font-weight: bold; 
+*/
+  background-color: #FFFFFF;
+}
+
+button.edit-mode[selected="1"]:active,
+button.edit-mode[selected="1"]:hover:active {
+  padding: 2px 4px 0px 5px;
+}
+
+#NormalModeButton {
+  list-style-image:url(chrome://editor/skin/images/editmode-normal.gif); 
+}
+
+#TagModeButton {
+  list-style-image:url(chrome://editor/skin/images/editmode-tags.gif); 
+}
+#SourceModeButton {
+  list-style-image:url(chrome://editor/skin/images/editmode-html.gif); 
+}
+#PreviewModeButton {
+  list-style-image:url(chrome://editor/skin/images/editmode-preview.gif); 
+}
+
+/* Needed to suppress inner box settings - same as button.plain
+   (we can't use 'plain', else we get no outer borders!)
+*/
+button.edit-mode:hover:active > .button-internal-box,
+button.edit-mode > .button-internal-box, 
+button.edit-mode > .button-internal-box:hover:active,
+button.edit-mode > .button-internal-box > .button-text-container, 
+button.edit-mode > .button-internal-box > .button-text-container:hover:active,
+button.edit-mode > .button-internal-box > .button-text-container > .button-text, 
+button.edit-mode > .button-internal-box > .button-text-container > .button.text:hover:active,
+button.edit-mode > .button-internal-box > .button-icon, 
+button.edit-mode > .button-internal-box > .button.icon:hover:active
+{
+  border  : 0px ! important;
+  margin  : 0px;
+  padding : 0px;
+}
+
+/* Image URLs for all Editor toolbar buttons */
+
+#newButton {
+	list-style-image:url("chrome://editor/skin/images/newfile.gif");
+}
+#openButton {
+	list-style-image:url("chrome://editor/skin/images/openfile.gif");
+}
+
+#saveButton {
+	list-style-image:url("chrome://editor/skin/images/savefile.gif");
+}
+#saveButton[dirty="true"] {
+  list-style-image:url(chrome://editor/skin/images/savemod.gif); 
+}
+
+#publishButton {
+	list-style-image:url("chrome://editor/skin/images/publish.gif");
+}
+#previewButton {
+	list-style-image:url("chrome://editor/skin/images/preview.gif");
+}
+
+#printButton 
+  {
+    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
+	  list-style-image      : url("chrome://editor/skin/images/print.gif");
+    margin-top            : 0px;
+    margin-left           : 0px !important;
+  }
+
+#findButton {
+	list-style-image:url("chrome://editor/skin/images/find.gif");
+}
+#linkButton {
+	list-style-image:url("chrome://editor/skin/images/link.gif");
+}
+#imageButton {
+	list-style-image:url("chrome://editor/skin/images/image.gif");
+}
+#namedAnchorButton {
+	list-style-image:url("chrome://editor/skin/images/anchor.gif");
+}
+#hlineButton {
+	list-style-image:url("chrome://editor/skin/images/hline.gif");
+}
+#tableButton {
+	list-style-image:url("chrome://editor/skin/images/table.gif");
+}
+#linkButton-dark {
+	list-style-image:url("chrome://editor/skin/images/link.gif");
+}
+#imageButton-dark {
+	list-style-image:url("chrome://editor/skin/images/image.gif");
+}
+#namedAnchorButton-dark {
+	list-style-image:url("chrome://editor/skin/images/anchor.gif");
+}
+#hlineButton-dark {
+	list-style-image:url("chrome://editor/skin/images/hline.gif");
+}
+#tableButton-dark {
+	list-style-image:url("chrome://editor/skin/images/table.gif");
+}
+#spellingButton {
+	list-style-image:url("chrome://editor/skin/images/spell.gif");
+}
+
+/* formatting buttons */
+
+#DecreaseFontSizeButton {
+	list-style-image:url("chrome://editor/skin/images/dec-font-size.gif");
+}
+
+#DecreaseFontSizeButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/dec-font-size_disabled.gif");
+}
+
+#IncreaseFontSizeButton {
+	list-style-image:url("chrome://editor/skin/images/inc-font-size.gif");
+}
+
+#IncreaseFontSizeButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/inc-font-size_disabled.gif");
+}
+
+#boldButton {
+  list-style-image:url(chrome://editor/skin/images/bold.gif); 
+}
+#boldButton[disabled="true"] {
+  list-style-image:url(chrome://editor/skin/images/bold_disabled.gif); 
+}
+
+#italicButton {
+  list-style-image:url(chrome://editor/skin/images/italic.gif); 
+}
+#italicButton[disabled="true"] {
+  list-style-image:url(chrome://editor/skin/images/italic_disabled.gif); 
+}
+
+#underlineButton {
+  list-style-image:url(chrome://editor/skin/images/underline.gif); 
+}
+#underlineButton[disabled="true"] {
+  list-style-image:url(chrome://editor/skin/images/underline_disabled.gif); 
+}
+
+#ulButton {
+	list-style-image:url("chrome://editor/skin/images/bullets.gif");
+}
+#ulButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/bullets_disabled.gif");
+}
+
+#olButton {
+	list-style-image:url("chrome://editor/skin/images/numbers.gif");
+}
+#olButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/numbers_disabled.gif");
+}
+
+#outdentButton {
+	list-style-image:url("chrome://editor/skin/images/outdent.gif");
+}
+#outdentButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/outdent_disabled.gif");
+}
+
+#indentButton {
+	list-style-image:url("chrome://editor/skin/images/indent.gif");
+}
+#indentButton[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/indent_disabled.gif");
+}
+
+#AlignPopupButton {
+	list-style-image:url("chrome://editor/skin/images/align.gif");
+}
+
+#InsertPopupButton {
+	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
+}
+
+#text-align-left,
+#align-left-button
+{
+	list-style-image:url("chrome://editor/skin/images/left.gif");
+}
+
+#text-align-left[disabled="true"],
+#align-left-button[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/left_disabled.gif");
+}
+
+#text-align-center,
+#align-center-button {
+	list-style-image:url("chrome://editor/skin/images/center.gif");
+}
+
+#text-align-center[disabled="true"],
+#align-center-button[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/center_disabled.gif");
+}
+
+#text-align-right,
+#align-right-button {
+	list-style-image:url("chrome://editor/skin/images/right.gif");
+}
+
+#text-align-right[disabled="true"],
+#align-right-button[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/right_disabled.gif");
+}
+
+#text-align-justify,
+#align-justify-button {
+	list-style-image:url("chrome://editor/skin/images/justify.gif");
+}
+#text-align-justify[disabled="true"],
+#align-justify-button[disabled="true"] {
+	list-style-image:url("chrome://editor/skin/images/justify_disabled.gif");
+}
+
+
+.ColorPickerLabel {
+  border:     1px inset white;
+  margin:     0px;
+  padding:    2px;
+  text-align: center;
+}
+
+/* TODO: How to make inset color skinable? */
+.color-button {
+  border: 1px inset #CCCCCC;
+  padding: 0px;
+  width:  14px;
+  height: 12px;
+  margin:  2px;
+}
+
+.color-button:hover {
+  border:  1px solid white;
+}
+
+#TextColorPopupButton {
+  margin: 2px 9px 9px 2px;
+  /* TEMP: Set color here. TODO: Set color from page */
+  background-color: #AA0000;
+}
+
+#BackColorPopupButton {
+  margin: 9px 2px 2px 9px;
+  /* TEMP: Set color here. TODO: Set color from page */
+  background-color: #FFFF00;
+}

@@ -1,0 +1,173 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 2000 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ../../..
+THEME_ROOT_DEPTH = @srcdir@/..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(THEME_ROOT_DEPTH)/theme.mk
+
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/global/skin
+
+# split EXPORT_RESOURCE_SAMPLES in two otherwise the generated commands
+# can be too long for some systems.
+EXPORT_RESOURCE_SAMPLES_1 = \
+	alert-icon.gif \
+	animthrob.gif \
+	animthrob_single.gif \
+	blank.gif \
+	box.css \
+	button.css \
+	button28-bg-active.gif \
+	button28-bg-disabled.gif \
+	button28-bg-hover.gif \
+	button28-bg.gif \
+	button32-bg-active.gif \
+	button32-bg-disabled.gif \
+	button32-bg-hover.gif \
+	button32-bg.gif \
+	check-check-disabled.gif \
+	check-check.gif \
+	check-radio-disabled.gif \
+	check-radio.gif \
+	checkbox.css \
+	closedtwisty-selected.gif \
+	closedtwisty.gif \
+	columnselect.gif \
+	columnselect-hover.gif \
+	commonDialog.css \
+	console.css \
+	dir-closed.gif \
+	dir-open.gif \
+	error-icon.gif \
+	filepicker.css \
+	formatting.css \
+	global.css \
+	gray-bottomleft.gif \
+	gray-bottomright.gif \
+	gray-topright.gif \
+	grippy-horizontal-after.gif \
+	grippy-horizontal-before.gif \
+	grippy-vertical-after.gif \
+	grippy-vertical-before.gif \
+	lessCOls_dis.gif \
+	lessCols.gif \
+	lessCols_mo.gif \
+	menu-arrow-disabled.gif \
+	menu-arrow-hover.gif \
+	menu-arrow.gif \
+	menu-check-disabled.gif \
+	menu-check-hover.gif \
+	menu-check.gif \
+	menu.css \
+	menubutton.css \
+	menulist.css \
+	message-icon.gif \
+	moreCols.gif \
+	moreCols_dis.gif \
+	moreCols_mo.gif \
+	n-box-navbar.gif \
+	n-box.gif \
+	navbar-bg-begincap.gif \
+	navbar-bg.gif \
+	navbar-endcap.gif \
+	opentwisty-selected.gif \
+	opentwisty.gif \
+	otherbutton28-bg-active.gif \
+	otherbutton28-bg-hover.gif \
+	print.gif \
+	progressmeter-busy.gif \
+	question-icon.gif \
+	radio.css \
+	return-disabled.gif \
+	return.gif
+
+EXPORT_RESOURCE_SAMPLES_2 = \
+	arrow-up.gif \
+	arrow-down.gif \
+	arrow-left.gif \
+	arrow-right.gif \
+	scroll-down-disabled.gif \
+	scroll-down-hover.gif \
+	scroll-down.gif \
+	scroll-left-disabled.gif \
+	scroll-left-hover.gif \
+	scroll-left.gif \
+	scroll-right-disabled.gif \
+	scroll-right-hover.gif \
+	scroll-right.gif \
+	scroll-thumb-horiz-disabled.gif \
+	scroll-thumb-horiz-hover.gif \
+	scroll-thumb-horiz.gif \
+	scroll-thumb-vert-disabled.gif \
+	scroll-thumb-vert-hover.gif \
+	scroll-thumb-vert.gif \
+	scroll-up-disabled.gif \
+	scroll-up-hover.gif \
+	scroll-up.gif \
+	scrollbars.css \
+	search.gif \
+	seltab-leftedge.gif \
+	seltab-rightedge.gif \
+	sortAscending.gif \
+	sortDescending.gif \
+	stop.gif \
+	tab-leftedge.gif \
+	tab-rightedge.gif \
+	taskbar-addressbook.gif \
+	taskbar-composer.gif \
+	taskbar-mail.gif \
+	taskbar-mailnew.gif \
+	taskbar-navigator.gif \
+	taskbar-popup-arrow.gif \
+	taskbar-tab-hover.gif \
+	taskbar-tab-minimized.gif \
+	taskbar-tab-trans.gif \
+	taskbar-tab.gif \
+	textfield.css \
+	toolbar-begincap.gif \
+	toolbar-dropdown-hover.gif \
+	toolbar-dropdown.gif \
+	toolbar-endcap.gif \
+	toolbar-menu-arrow-disabled.gif \
+	toolbar-menu-arrow-hover.gif \
+	toolbar-menu-arrow.gif \
+	toolbar.css \
+	tree.css \
+	wizardOverlay.css \
+	splitter.css \
+	tabcontrol.css \
+	loading.gif \
+	globalBindings.xml \
+	$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES_1)) $(SAMPLES_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES_2)) $(SAMPLES_DIR)
+
+distclean clean clobber realclean clobber_all::
+	rm -f $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES_1))
+	rm -f $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES_2))

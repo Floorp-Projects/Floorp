@@ -1,0 +1,14 @@
+.title {
+  font-weight: bold;
+  margin-bottom: 1em;
+  font-size: larger;
+}
+tree {
+  height: 100px;
+  margin-bottom: 1em;
+}
+treerow {
+  background-color: #ebebcc;
+}
+treecell { border-left: 1px solid #cccccc; border-top: 1px solid #cccccc; }
+
