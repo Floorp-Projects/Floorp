@@ -38,6 +38,7 @@ class nsTextRun;
  * Additional frame-state bits
  */
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x10000
+#define NS_BLOCK_IS_HTML_PARAGRAPH        0x20000
 
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
