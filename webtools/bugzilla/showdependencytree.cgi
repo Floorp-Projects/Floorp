@@ -151,7 +151,7 @@ sub DumpKids {
                     |;
                 }
 
-                if (exists $seen{$kid}) {     
+                if (exists $printed{$kid}) {     
                     $short_desc = "&lt;<em>This bug appears elsewhere in this tree</em>&gt;";
                 }
                 else {
