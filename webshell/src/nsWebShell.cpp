@@ -99,6 +99,7 @@ public:
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
   NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult);
+  NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
   NS_IMETHOD SetParent(nsIWebShell* aParent);
   NS_IMETHOD GetParent(nsIWebShell*& aParent);
@@ -210,6 +211,10 @@ nsWebShell::nsWebShell()
 
 nsWebShell::~nsWebShell()
 {
+  // Stop any pending document loads and destroy the loader...
+  mDocLoader->Stop();
+  NS_IF_RELEASE(mDocLoader);
+
   NS_IF_RELEASE(mInnerWindow);
 
   NS_IF_RELEASE(mContentViewer);
@@ -320,7 +325,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
     mContentViewer->Show();
   }
 
-  // Now that we have switch documents, forget all of our children
+  // Now that we have switched documents, forget all of our children
   ReleaseChildren();
 
   return rv;
@@ -334,14 +339,32 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
 
-  nsresult rv = NSRepository::CreateInstance(kDocumentLoaderCID,
-                                             nsnull,
-                                             kIDocumentLoaderIID,
-                                             (void**)&mDocLoader);
+  nsresult rv = NS_OK;
 
+  // Initial error checking...
   NS_PRECONDITION(nsnull != aNativeParent, "null Parent Window");
   if (nsnull == aNativeParent) {
     rv = NS_ERROR_NULL_POINTER;
+    goto done;
+  }
+
+  // Create a document loader...
+  if (nsnull != mParent) {
+    nsIDocumentLoader* parentLoader;
+
+    // Create a child document loader...
+    mParent->GetDocumentLoader(parentLoader);
+    if (NS_OK == rv) {
+      rv = parentLoader->CreateDocumentLoader(&mDocLoader);
+      NS_RELEASE(parentLoader);
+    }
+  } else {
+    rv = NSRepository::CreateInstance(kDocumentLoaderCID,
+                                      nsnull,
+                                      kIDocumentLoaderIID,
+                                      (void**)&mDocLoader);
+  }
+  if (NS_OK != rv) {
     goto done;
   }
 
@@ -500,6 +523,15 @@ nsWebShell::GetObserver(nsIStreamObserver*& aResult)
   aResult = mObserver;
   NS_IF_ADDREF(mObserver);
   return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
+{
+  aResult = mDocLoader;
+  NS_IF_ADDREF(mDocLoader);
+  return (nsnull != mDocLoader) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
