@@ -72,6 +72,8 @@ private:
     void Init(nsIFile *dllSpec);
     void Init(const char *persistentDescriptor);
 
+    void BreakAfterLoad(const char *nsprPath);
+
 public:
  
 	nsDll(nsIFile *dllSpec, const char *registryLocation);
