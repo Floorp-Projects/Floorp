@@ -44,14 +44,14 @@ var gHideIncoming;
 
 function serverPageValidate() 
 {
-  var smtpserver = document.getElementById("smtphostname");
-  var incomingServerName = document.getElementById("incomingServer");
-  var newsServerName = document.getElementById("newsServer");
+  var smtpServerName = trim(document.getElementById("smtphostname").value);
+  var incomingServerName = trim(document.getElementById("incomingServer").value);
+  var newsServerName = trim(document.getElementById("newsServer").value);
 
   if ((gOnMailServersPage && 
-      ((hostnameIsIllegal(incomingServerName.value) && !gHideIncoming) || 
-       (hostnameIsIllegal(smtpserver.value)))) ||
-      (gOnNewsServerPage && hostnameIsIllegal(newsServerName.value))) {
+      ((hostnameIsIllegal(incomingServerName) && !gHideIncoming) || 
+       (hostnameIsIllegal(smtpServerName)))) ||
+      (gOnNewsServerPage && hostnameIsIllegal(newsServerName))) {
     var alertText = gPrefsBundle.getString("enterValidHostname");
     window.alert(alertText);
     return false;
@@ -68,9 +68,9 @@ function serverPageValidate()
     var userName = parent.getCurrentUserName(pageData);
     var hostName;
     if (gOnMailServersPage)
-      hostName = incomingServerName.value;
+      hostName = incomingServerName;
     else if (gOnNewsServerPage)
-      hostName = newsServerName.value;
+      hostName = newsServerName;
 
     if (parent.AccountExists(userName,hostName,serverType)) {
       alertText = gPrefsBundle.getString("accountExists");
@@ -85,12 +85,12 @@ function serverPageValidate()
     // If we have hidden the incoming server dialogs, we don't want
     // to set the server to an empty value here
     if (!gHideIncoming) {
-      setPageData(pageData, "server", "hostname", incomingServerName.value);
+      setPageData(pageData, "server", "hostname", incomingServerName);
     }
-    setPageData(pageData, "server", "smtphostname", smtpserver.value);
+    setPageData(pageData, "server", "smtphostname", smtpServerName);
   }
   else if (gOnNewsServerPage) {
-    setPageData(pageData, "newsserver", "hostname", newsServerName.value);
+    setPageData(pageData, "newsserver", "hostname", newsServerName);
   }
 
   return true;

@@ -69,7 +69,7 @@ function identityPageValidate()
 function validateEmail()
 {
   var emailElement = document.getElementById("email");
-  var email = emailElement.value;
+  var email = trim(emailElement.value);
   var emailArray = email.split('@');
 
   if (gCurrentDomain) {
