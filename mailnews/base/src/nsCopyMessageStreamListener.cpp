@@ -29,31 +29,7 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
-/* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsCopyMessageStreamListener)
-NS_IMPL_RELEASE(nsCopyMessageStreamListener)
-
-NS_IMETHODIMP nsCopyMessageStreamListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID()) || aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
-	}              
-	else if(aIID.Equals(nsCOMTypeInfo<nsICopyMessageStreamListener>::GetIID()))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsICopyMessageStreamListener*, this);
-	}
-
-	if(*aInstancePtr)
-	{
-		AddRef();
-		return NS_OK;
-	}
-
-	return NS_ERROR_NO_INTERFACE;
-}
+NS_IMPL_ISUPPORTS3(nsCopyMessageStreamListener, nsIStreamListener, nsIStreamObserver, nsICopyMessageStreamListener);
 
 static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 {
