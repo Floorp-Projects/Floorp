@@ -21,19 +21,23 @@
 #include "prtypes.h"
 
 #ifdef NS_USING_NAMESPACE
-#include <ostream>
+
 #include <strstream>
-#include <string>
+
 #else
+
 #include <ostream.h>
 #include <strstream.h>
-#include <string.h>
+
 #endif
 
 #ifdef NS_USING_NAMESPACE
 	using std::ends;
 	using std::ostrstream;
 #endif
+
+#include <string.h>
+#include "nsDebug.h"
 
 //========================================================================================
 NS_NAMESPACE nsFileSpecHelpers
@@ -132,10 +136,10 @@ char* nsFileSpecHelpers::GetLeaf(const char* inPath, char inSeparator)
 } // nsNativeFileSpec::GetLeaf
 
 
-#ifdef XP_MAC
-#include "nsFileSpecMac.cpp" // Macintosh-specific implementations
-#elif defined(XP_PC)
+#if defined(XP_PC)
 #include "nsFileSpecWin.cpp" // Windows-specific implementations
+#elif defined(XP_MAC)
+#include "nsFileSpecMac.cpp" // Macintosh-specific implementations
 #elif defined(XP_UNIX)
 #include "nsFileSpecUnix.cpp" // Unix-specific implementations
 #endif
@@ -414,7 +418,7 @@ void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
-:    mPath(nsFileSpecHelpers::StringDup((const char*)inSpec))
+:    mPath(nsFileSpecHelpers::StringDup(inSpec.mPath))
 {
 }
 #endif //XP_UNIX

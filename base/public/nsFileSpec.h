@@ -111,20 +111,22 @@
 #endif
 
 #ifdef NS_USING_NAMESPACE
+
 #define NS_NAMESPACE_PROTOTYPE
 #define NS_NAMESPACE namespace
 #define NS_NAMESPACE_END
 #include <ostream>
 	using std::ostream;
+
 #else
+
 #define NS_NAMESPACE_PROTOTYPE static
 #define NS_NAMESPACE struct
 #define NS_NAMESPACE_END ;
 #include <ostream.h>
+
 #endif
 //=========================== End Compiler-specific macros ===============================
-
-#include "nsDebug.h"
 
 #ifdef XP_MAC
 #include <Files.h>
