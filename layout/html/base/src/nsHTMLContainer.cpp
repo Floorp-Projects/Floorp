@@ -598,13 +598,13 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         GetAttribute(nsHTMLAtoms::size, value);
         if ((value.GetUnit() == eHTMLUnit_Integer) || (value.GetUnit() == eHTMLUnit_Enumerated)) { 
           static float kFontScale[7] = {
-            0.7f,
-            0.8f,
-            1.0f,
-            1.2f,
-            1.5f,
-            2.0f,
-            3.0f
+            0.6874999f,  // size=1
+            0.85f,    // 2
+            1.0f,     // 3
+            1.175f,   // 4
+            1.5f,     // 5
+            2.0f,     // 6
+            3.0f      // 7
           };
           PRInt32 size = value.GetIntValue();
         
@@ -620,7 +620,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
               for (index = 0; index < 6; index++)
                 if (parentFont->mFont.size < (nscoord)((float)normal.size * kFontScale[index]))
                   break;
-              size = ((index - 1) + size);
+              size = (index + size);
               if (size < 0) size = 0;
               if (size > 6) size = 6;
               font->mFont.size = (nscoord)((float)normal.size * kFontScale[size]);
