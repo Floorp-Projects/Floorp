@@ -36,4 +36,8 @@ install::
 	@$(REGCHROME) content navigator-platform comm.jar
 	@$(REGCHROME) locale en-US/navigator en-US.jar
 	@$(REGCHROME) locale US/navigator-region US.jar
+ifeq ($(OS_ARCH),OS2)
+	@$(REGCHROME) locale en-US/navigator-platform en-win.jar
+else
 	@$(REGCHROME) locale en-US/navigator-platform en-unix.jar
+endif

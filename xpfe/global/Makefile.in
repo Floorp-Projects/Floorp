@@ -44,5 +44,9 @@ install::
 	@$(REGCHROME) content global-platform toolkit.jar
 	@$(REGCHROME) locale en-US/global en-US.jar
 	@$(REGCHROME) locale US/global-region US.jar
+ifeq ($(OS_ARCH),OS2)
+	@$(REGCHROME) locale en-US/global-platform en-win.jar
+else
 	@$(REGCHROME) locale en-US/global-platform en-unix.jar
+endif
 

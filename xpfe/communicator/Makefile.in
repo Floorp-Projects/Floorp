@@ -36,4 +36,8 @@ install::
 	@$(REGCHROME) content communicator-platform comm.jar
 	@$(REGCHROME) locale en-US/communicator en-US.jar
 	@$(REGCHROME) locale US/communicator-region US.jar
+ifeq ($(OS_ARCH),OS2)
+	@$(REGCHROME) locale en-US/communicator-platform en-win.jar
+else
 	@$(REGCHROME) locale en-US/communicator-platform en-unix.jar
+endif
