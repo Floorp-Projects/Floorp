@@ -70,9 +70,10 @@ class ColumnInfo {
 	   PRInt32 aType,
 	   PRInt32 aSize,
 	   PRInt32 aMod,
+           PRBool aIsPrimaryKey,
            nsIRDFResource* aProperty) {
       void* place = aAllocator.Alloc(sizeof(ColumnInfo));
-      return place ? ::new(place) ColumnInfo(aName, aType, aSize, aMod, aProperty) : nsnull;
+      return place ? ::new(place) ColumnInfo(aName, aType, aSize, aMod, aIsPrimaryKey, aProperty) : nsnull;
     }
 
     static void
@@ -81,11 +82,13 @@ class ColumnInfo {
       aAllocator.Free(aColumnInfo, sizeof(ColumnInfo));
     }
 
-    ColumnInfo(PRUnichar* aName, PRInt32 aType, PRInt32 aSize, PRInt32 aMod, nsIRDFResource* aProperty)
+    ColumnInfo(PRUnichar* aName, PRInt32 aType, PRInt32 aSize, PRInt32 aMod,
+               PRBool aIsPrimaryKey, nsIRDFResource* aProperty)
       : mName(aName),
         mType(aType),
         mSize(aSize),
         mMod(aMod),
+        mIsPrimaryKey(aIsPrimaryKey),
 	mProperty(aProperty) {
       NS_IF_ADDREF(mProperty);
     }
@@ -100,6 +103,7 @@ class ColumnInfo {
     PRInt32             mType;
     PRInt32             mSize;
     PRInt32             mMod;
+    PRBool              mIsPrimaryKey;
     nsIRDFResource*     mProperty;
 
   private:
@@ -337,10 +341,10 @@ class mozSqlResult : public mozISqlResult,
     void ClearRows();
 
     nsresult EnsureTableName();
-    nsresult EnsurePrimaryKeys();
+    virtual nsresult EnsurePrimaryKeys();
 
     void AppendValue(Cell* aCell, nsAutoString& aValues);
-    nsresult AppendKeys(Row* aRow, nsAutoString& aKeys);
+    virtual nsresult AppendKeys(Row* aRow, nsAutoString& aKeys);
     nsresult GetValues(Row* aRow, mozISqlResult** aResult, PRBool aUseID);
     nsresult CopyValues(mozISqlResult* aResult, Row* aRow);
 

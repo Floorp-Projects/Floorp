@@ -92,7 +92,7 @@ mozSqlResultSqlite::BuildColumnInfo()
     gRDFService->GetResource(uri, getter_AddRefs(property));
 
     ColumnInfo* columnInfo = ColumnInfo::Create(mAllocator, name, type, size,
-                                                mod, property);
+                                                mod, PR_FALSE, property);
     mColumnInfo.AppendElement(columnInfo); 
   }
 

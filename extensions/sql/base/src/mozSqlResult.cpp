@@ -1295,21 +1295,27 @@ mozSqlResult::InsertRow(Row* aSrcRow, PRInt32* _retval)
     return rv;
   }
 
-  nsCOMPtr<mozISqlResult> result;
-  rv = GetValues(aSrcRow, getter_AddRefs(result), PR_TRUE);
-  if (NS_FAILED(rv))
-    return rv;
+  nsAutoString IDName;
+  ((mozSqlConnection*)mConnection.get())->GetIDName(IDName);
 
-  PRInt32 rowCount;
-  result->GetRowCount(&rowCount);
-  if (rowCount == 0) {
-    *_retval = 0;
-    return NS_OK;
+  // assume that if the IDName is empty that we don't need to re-get the last row
+  if (!IDName.IsEmpty()){
+    nsCOMPtr<mozISqlResult> result;
+    rv = GetValues(aSrcRow, getter_AddRefs(result), PR_TRUE);
+    if (NS_FAILED(rv))
+      return rv;
+
+    PRInt32 rowCount;
+    result->GetRowCount(&rowCount);
+    if (rowCount == 0) {
+      *_retval = 0;
+      return NS_OK;
+    }
+
+    rv = CopyValues(result, aSrcRow);
+    if (NS_FAILED(rv))
+      return rv;
   }
-
-  rv = CopyValues(result, aSrcRow);
-  if (NS_FAILED(rv))
-    return rv;
 
   nsCOMPtr<nsIRDFResource> resource;
   gRDFService->GetAnonymousResource(getter_AddRefs(resource));

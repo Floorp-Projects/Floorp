@@ -116,7 +116,7 @@ mozSqlResultPgsql::BuildColumnInfo()
     nsCOMPtr<nsIRDFResource> property;
     gRDFService->GetResource(uri, getter_AddRefs(property));
 
-    ColumnInfo* columnInfo = ColumnInfo::Create(mAllocator, name, type, size, mod, property);
+    ColumnInfo* columnInfo = ColumnInfo::Create(mAllocator, name, type, size, mod, PR_FALSE, property);
     mColumnInfo.AppendElement(columnInfo); 
   }
 

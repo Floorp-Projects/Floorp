@@ -42,6 +42,9 @@
 #ifdef MOZ_ENABLE_SQLITE
 #include "mozSqlConnectionSqlite.h"
 #endif
+#ifdef MOZ_ENABLE_MYSQL
+#include "mozSqlConnectionMysql.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSqlService, Init)
 #ifdef MOZ_ENABLE_PGSQL
@@ -49,6 +52,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionPgsql)
 #endif
 #ifdef MOZ_ENABLE_SQLITE
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionSqlite)
+#endif
+#ifdef MOZ_ENABLE_MYSQL
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozSqlConnectionMysql)
 #endif
 
 static nsModuleComponentInfo components[] =
@@ -75,6 +81,13 @@ static nsModuleComponentInfo components[] =
     MOZ_SQLCONNECTIONSQLITE_CID,
     MOZ_SQLCONNECTIONSQLITE_CONTRACTID,
     mozSqlConnectionSqliteConstructor
+  }
+#endif
+#ifdef MOZ_ENABLE_MYSQL
+  ,{ MOZ_SQLCONNECTIONMYSQL_CLASSNAME,
+    MOZ_SQLCONNECTIONMYSQL_CID,
+    MOZ_SQLCONNECTIONMYSQL_CONTRACTID,
+    mozSqlConnectionMysqlConstructor
   }
 #endif
 };

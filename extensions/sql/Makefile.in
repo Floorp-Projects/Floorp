@@ -51,6 +51,10 @@ ifdef MOZ_ENABLE_SQLITE
 DIRS            += sqlite
 endif
 
+ifdef MOZ_ENABLE_MYSQL
+DIRS		+= mysql
+endif
+
 DIRS		+= build
 
 ifdef ENABLE_TESTS
