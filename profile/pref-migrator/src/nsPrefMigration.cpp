@@ -1495,7 +1495,7 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
 
         if (needToRenameFiles) {
           // rename the file, if it matches
-          if (fileOrDirNameStr == oldName) {
+          if (fileOrDirNameStr.Equals(oldName)) {
             nsFileSpec newFile = newPath;
             newFile += fileOrDirNameStr;
             newFile.Rename(newName);
@@ -1634,7 +1634,11 @@ Fix4xCookies(nsIFileSpec * profilePath) {
     PR_snprintf(dateString, sizeof(dateString), "%lu", expires);
 
     /* generate the output buffer and write it to file */
-    outBuffer = prefix + '\t' + dateString + '\t' + suffix;
+    outBuffer = prefix;
+    outBuffer.Append('\t');
+    outBuffer.Append(dateString);
+    outBuffer.Append('\t');
+    outBuffer.Append(suffix);
     PutCookieLine(outStream, outBuffer);
   }
 

@@ -317,7 +317,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                 nsAutoString type("");
                 rv = inputElement->GetType(type);
                 if (NS_SUCCEEDED(rv)) {
-                  if ((type == "") || (type.Compare("text", PR_TRUE) == 0) ||
+                  if ((type.IsEmpty()) || (type.Compare("text", PR_TRUE) == 0) ||
                     (type.Compare("password", PR_TRUE) == 0)) {
                     nsAutoString field;
                     rv = inputElement->GetName(field);
