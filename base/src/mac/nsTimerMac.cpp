@@ -50,7 +50,7 @@ class TimerImpl : public nsITimer
 
 	  TimerImpl();
 
-	  virtual ~TimerImpl();
+	  virtual ~TimerImpl(){};
 
 	 	NS_DECL_ISUPPORTS
 
@@ -85,7 +85,7 @@ class TimerImpl : public nsITimer
 // 
 class TimerPeriodical	: public LPeriodical
 {
-		static TimerPeriodical * sPeriodical;
+		static TimerPeriodical * gPeriodical;
 		
 		LArray * mTimers;	// List of TimerImpl *
 	
@@ -173,19 +173,29 @@ void TimerImpl::SetDelay(PRUint32 aDelay)
 	NS_RELEASE(this);
 }
 
+void TimerImpl::Fire()
+{
+	if (mCallbackFunc != NULL) {
+		(*mCallbackFunc)(this, mClosure);
+  }
+  else if (mCallbackObject != NULL) {
+    mCallbackObject->Notify(this); // Fire the timer
+  }
+}
+
 void TimerImpl::SetDelaySelf( PRUint32 aDelay )
 {
 	mDelay = aDelay;
 	mFireTime = TickCount() + mDelay / 100 * 6;	// We need mFireTime in ticks, 1/60th of a second
 }
 
-TimerPeriodical * TimerPeriodical::sPeriodical = NULL;
+TimerPeriodical * TimerPeriodical::gPeriodical = NULL;
 
 TimerPeriodical * TimerPeriodical::GetPeriodical()
 {
-	if (sPeriodical == NULL)
-		sPeriodical = new TimerPeriodical();
-	return sPeriodical;
+	if (gPeriodical == NULL)
+		gPeriodical = new TimerPeriodical();
+	return gPeriodical;
 }
 
 TimerPeriodical::TimerPeriodical()
