@@ -89,11 +89,6 @@ protected:
   nsIWidget *  GetParentWidget();
   char* GetACPString(nsString& aStr);
 
-  void MenuPosFunc(GtkMenu *menu,
-                   gint *x,
-                   gint *y,
-                   gpointer data);
-
   void LoadMenuItem(nsIMenu       * pParentMenu,
                     nsIDOMElement * menuitemElement,
                     nsIDOMNode    * menuitemNode,
