@@ -129,13 +129,15 @@ sub init {
     if ($F{'product'}) {
         push(@supptables, "products products_");
         push(@wherepart, "products_.id = bugs.product_id");
-        push(@specialchart, ["products_.name", "anyexact", $F{'product'}]);
+        push(@specialchart, ["products_.name", "anyexact",
+                             join(',',@{$M{'product'}})]);
     }
 
     if ($F{'component'}) {
         push(@supptables, "components components_");
         push(@wherepart, "components_.id = bugs.component_id");
-        push(@specialchart, ["components_.name", "anyexact", $F{'component'}]);
+        push(@specialchart, ["components_.name", "anyexact",
+                             join(',',@{$M{'component'}})]);
     }
 
     if ($F{'keywords'}) {
