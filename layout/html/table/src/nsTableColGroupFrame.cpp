@@ -96,7 +96,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsTableColGroupFrame::AddColsToTable(nsIPresContext&  aPresContext,
                                      PRInt32          aFirstColIndex,
                                      PRBool           aResetSubsequentColIndices,
@@ -126,7 +126,10 @@ nsTableColGroupFrame::AddColsToTable(nsIPresContext&  aPresContext,
     }
     kidFrame = kidFrame->GetNextSibling(); 
   }
-
+  // We have already set the colindex for all the colframes in this
+  // colgroup that come after the first inserted colframe, but there could
+  // be other colgroups following this one and their colframes need
+  // correct colindices too.
   if (aResetSubsequentColIndices && GetNextSibling()) {
     ResetColIndices(GetNextSibling(), colIndex);
   }
@@ -134,53 +137,6 @@ nsTableColGroupFrame::AddColsToTable(nsIPresContext&  aPresContext,
   return rv;
 }
 
-// this is called when a col frame doesn't have an explicit col group parent.
-nsTableColGroupFrame* 
-nsTableColGroupFrame::FindParentForAppendedCol(nsTableFrame*  aTableFrame, 
-                                               nsTableColType aColType)
-{
-  nsVoidArray& cols = aTableFrame->GetColCache();
-  PRInt32 numCols = cols.Count();
-  if (numCols == 0) return nsnull; // no columns so no colgroups
-  nsIFrame* lastCol = (nsIFrame*)cols.ElementAt(numCols - 1);
-  NS_ASSERTION(lastCol,"null entry in column array");
-  nsIFrame* lastColGroup = lastCol->GetParent();
-  if (!lastColGroup) return nsnull; // shouldn't happen
- 
-  nsTableColGroupFrame* relevantColGroup =
-    NS_STATIC_CAST(nsTableColGroupFrame *, lastColGroup);
-  nsTableColGroupType relevantColGroupType = relevantColGroup->GetColType();
-  if (eColGroupAnonymousCell == relevantColGroupType) {
-    if (eColAnonymousCell == aColType) {
-      return relevantColGroup;
-    }
-    else {
-      // find the next to last col group
-      for (PRInt32 colX = numCols - 2; colX >= 0; colX--) {
-        nsTableColFrame* colFrame = (nsTableColFrame*)cols.ElementAt(colX);
-        nsTableColGroupFrame* colGroupFrame =
-          NS_STATIC_CAST(nsTableColGroupFrame*, colFrame->GetParent());
-        nsTableColGroupType cgType = colGroupFrame->GetColType();
-        if (cgType != relevantColGroupType) {
-          relevantColGroup = colGroupFrame;
-          relevantColGroupType = cgType;
-          break;
-        }
-        else if (0 == colX) {
-          return nsnull;
-        }
-      }
-    }
-  }
-
-  if (eColGroupAnonymousCol == relevantColGroupType) {
-    if ((eColContent == aColType) || (eColAnonymousCol == aColType)) {
-      return relevantColGroup;
-    }
-  }
-
-  return nsnull;
-}
 
 PRBool
 nsTableColGroupFrame::GetLastRealColGroup(nsTableFrame* aTableFrame, 
@@ -294,18 +250,25 @@ nsTableColGroupFrame::InsertColsReflow(nsIPresContext& aPresContext,
 void
 nsTableColGroupFrame::RemoveChild(nsIPresContext&  aPresContext,
                                   nsTableColFrame& aChild,
-                                  PRBool           aResetColIndices)
+                                  PRBool           aResetSubsequentColIndices)
 {
   PRInt32 colIndex = 0;
   nsIFrame* nextChild = nsnull;
-  if (aResetColIndices) {
+  if (aResetSubsequentColIndices) {
     colIndex = aChild.GetColIndex();
     nextChild = aChild.GetNextSibling();
   }
   if (mFrames.DestroyFrame(&aPresContext, (nsIFrame*)&aChild)) {
     mColCount--;
-    if (aResetColIndices) {
-      ResetColIndices(this, colIndex, nextChild);
+    if (aResetSubsequentColIndices) {
+      if (nextChild) { // reset inside this and all following colgroups
+        ResetColIndices(this, colIndex, nextChild);
+      }
+      else {
+        nsIFrame* nextGroup = GetNextSibling();
+        if (nextGroup) // reset next and all following colgroups
+          ResetColIndices(nextGroup, colIndex);
+      }
     }
   }
   nsTableFrame* tableFrame;
@@ -317,35 +280,6 @@ nsTableColGroupFrame::RemoveChild(nsIPresContext&  aPresContext,
   // Generate a reflow command so we reflow the table
   nsTableFrame::AppendDirtyReflowCommand(aPresContext.PresShell(), tableFrame);
 }
-
-// this removes children form the last col group (eColGroupAnonymousCell) in the 
-// table only,so there is no need to reset col indices for subsequent col groups.
-void
-nsTableColGroupFrame::RemoveChildrenAtEnd(nsIPresContext& aPresContext,
-                                          PRInt32         aNumChildrenToRemove)
-{
-  PRInt32 numToRemove = aNumChildrenToRemove;
-  if (numToRemove > mColCount) {
-    NS_ASSERTION(PR_FALSE, "invalid arg to RemoveChildrenAtEnd");
-    numToRemove = mColCount;
-  }
-  PRInt32 offsetOfFirstRemoval = mColCount - numToRemove;
-  PRInt32 offsetX = 0;
-  nsIFrame* kidFrame = mFrames.FirstChild();
-  while(kidFrame) {
-    if (nsLayoutAtoms::tableColFrame == kidFrame->GetType()) {
-      offsetX++;
-      if (offsetX > offsetOfFirstRemoval) {
-        nsIFrame* byebye = kidFrame;
-        kidFrame = kidFrame->GetNextSibling();
-        mFrames.DestroyFrame(&aPresContext, byebye);
-        continue;
-      }
-    }
-    kidFrame = kidFrame->GetNextSibling();
-  }
-}
-
 
 NS_IMETHODIMP
 nsTableColGroupFrame::RemoveFrame(nsIPresContext* aPresContext,
@@ -592,28 +526,6 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
   return result;
 }
 
-
-nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
-{
-  nsTableColFrame *result = nsnull;
-  PRInt32 count = 0;
-  nsIFrame *childFrame = mFrames.FirstChild();
-
-  while (nsnull!=childFrame) {
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
-        childFrame->GetStyleDisplay()->mDisplay) {
-      nsTableColFrame *col = (nsTableColFrame *)childFrame;
-      count++;
-      if (aColIndex<=count) {
-        result = col;
-      }
-    }
-    childFrame = childFrame->GetNextSibling();
-  }
-
-  return result;
-}
-
 PRInt32 nsTableColGroupFrame::GetSpan()
 {
   PRInt32 span = 1;
@@ -634,26 +546,6 @@ PRInt32 nsTableColGroupFrame::GetSpan()
   }
   return span;
 }
-
-/** returns colcount because it is frequently used in the context of 
-  * shuffling relative colgroup order, and it's convenient to not have to
-  * call GetColumnCount redundantly.
-  */
-PRInt32 nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
-{
-  PRInt32 result = mColCount;
-  if (aIndex != mStartColIndex) {  
-    mStartColIndex = aIndex;
-    result = GetColCount(); 
-  }
-  return result;
-}
-
-void nsTableColGroupFrame::DeleteColFrame(nsIPresContext* aPresContext, nsTableColFrame* aColFrame)
-{
-  mFrames.DestroyFrame(aPresContext, aColFrame);
-}
-
 
 void nsTableColGroupFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
                                                       BCPixelSize aPixelValue)

@@ -460,9 +460,18 @@ public:
     */
   PRInt32 GetEffectiveCOLSAttribute();
 
-  /** return the column frame associated with aColIndex */
+  /** return the column frame associated with aColIndex
+    * returns nsnull if the col frame has not yet been allocated, or if
+    * aColIndex is out of range
+    */
   nsTableColFrame* GetColFrame(PRInt32 aColIndex) const;
 
+  /** Insert a col frame reference into the colframe cache and adapt the cellmap
+    * @param aPresContext - the presentation context
+    * @param aColFrame    - the column frame
+    * @param aColIndex    - index where the column should be inserted into the
+    *                       colframe cache
+    */
   void InsertCol(nsIPresContext&  aPresContext,
                  nsTableColFrame& aColFrame,
                  PRInt32          aColIndex);
@@ -583,14 +592,6 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   virtual PRBool ParentDisablesSelection() const; //override default behavior
-
-  // Sets the starting column index for aColGroupFrame and the siblings frames that
-  // follow
-  void SetStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame,
-                                 PRInt32 aIndex);
-
-  // Calculate the starting column index to use for the specified col group frame
-  PRInt32 CalculateStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame);
 
 public:
   /** first pass of ResizeReflow.  
@@ -830,13 +831,6 @@ protected:
   void SetColumnDimensions(nscoord         aHeight,
                            const nsMargin& aReflowState);
 
-  /** return the number of columns as specified by the input. 
-    * has 2 side effects:<br>
-    * calls SetStartColumnIndex on each nsTableColumn<br>
-    * sets mSpecifiedColCount.<br>
-    */
-  virtual PRInt32 GetSpecifiedColumnCount ();
-
   PRInt32 CollectRows(nsIFrame*       aFrame,
                       nsVoidArray&    aCollection);
 
@@ -855,10 +849,6 @@ public: /* ----- Cell Map public methods ----- */
   virtual PRInt32 GetEffectiveColCount() const;
   virtual PRInt32 GetColCount() const;
 
-  /** return the column frame at colIndex.
-    * returns nsnull if the col frame has not yet been allocated, or if aColIndex is out of range
-    */
-  nsTableColFrame * GetColFrame(PRInt32 aColIndex);
   // return the last col index which isn't of type eColAnonymousCell
   PRInt32 GetIndexOfLastRealCol();
 

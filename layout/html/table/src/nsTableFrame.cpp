@@ -491,18 +491,6 @@ void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext,
 
 /* ****** CellMap methods ******* */
 
-/* counts columns in column groups */
-PRInt32 nsTableFrame::GetSpecifiedColumnCount ()
-{
-  PRInt32 colCount = 0;
-  nsIFrame * childFrame = mColGroups.FirstChild();
-  while (nsnull!=childFrame) {
-    colCount += ((nsTableColGroupFrame *)childFrame)->GetColCount();
-    childFrame = childFrame->GetNextSibling();
-  }    
-  return colCount;
-}
-
 PRInt32 nsTableFrame::GetRowCount () const
 {
   PRInt32 rowCount = 0;
@@ -553,7 +541,8 @@ PRInt32 nsTableFrame::GetIndexOfLastRealCol()
   return -1; 
 }
 
-nsTableColFrame* nsTableFrame::GetColFrame(PRInt32 aColIndex)
+nsTableColFrame*
+nsTableFrame::GetColFrame(PRInt32 aColIndex) const
 {
   NS_ASSERTION(!mPrevInFlow, "GetColFrame called on next in flow");
   PRInt32 numCols = mColFrames.Count();
@@ -701,7 +690,7 @@ void nsTableFrame::InsertColGroups(nsIPresContext& aPresContext,
   }
 
   if (firstColGroupToReset) {
-    nsTableColGroupFrame::ResetColIndices(firstColGroupToReset, aStartColIndex);
+    nsTableColGroupFrame::ResetColIndices(firstColGroupToReset, colIndex);
   }
 }
 
@@ -2468,35 +2457,6 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-// Sets the starting column index for aColGroupFrame and the siblings frames that
-// follow
-void
-nsTableFrame::SetStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame,
-                                        PRInt32 aIndex)
-{
-  while (aColGroupFrame) {
-    aIndex += aColGroupFrame->SetStartColumnIndex(aIndex);
-    aColGroupFrame =
-      NS_STATIC_CAST(nsTableColGroupFrame*, aColGroupFrame->GetNextSibling());
-  }
-}
-
-// Calculate the starting column index to use for the specified col group frame
-PRInt32
-nsTableFrame::CalculateStartingColumnIndexFor(nsTableColGroupFrame* aColGroupFrame)
-{
-  PRInt32 index = 0;
-  for (nsTableColGroupFrame* colGroupFrame = (nsTableColGroupFrame*)mColGroups.FirstChild();
-       colGroupFrame && (colGroupFrame != aColGroupFrame);
-       colGroupFrame =
-         NS_STATIC_CAST(nsTableColGroupFrame*, colGroupFrame->GetNextSibling()))
-  {
-    index += colGroupFrame->GetColCount();
-  }
-
-  return index;
-}
-
 NS_IMETHODIMP
 nsTableFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
@@ -2617,8 +2577,6 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
     nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
     PRInt32 firstColIndex = colGroup->GetStartColumnIndex();
     PRInt32 lastColIndex  = firstColIndex + colGroup->GetColCount() - 1;
-    // remove the col frames, the colGroup frame and reset col indices
-    colGroup->RemoveChildrenAtEnd(*aPresContext, colGroup->GetColCount());
     mColGroups.DestroyFrame(aPresContext, aOldFrame);
     nsTableColGroupFrame::ResetColIndices(nextColGroupFrame, firstColIndex);
     // remove the cols from the table
