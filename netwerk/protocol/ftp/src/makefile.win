@@ -23,6 +23,10 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
+!ifndef MOZ_DEBUG
+LCFLAGS = $(LCFLAGS) -DFORCE_PR_LOG
+!endif
+
 CPP_OBJS =                                        \
         .\$(OBJDIR)\nsFtpProtocolHandler.obj      \
         .\$(OBJDIR)\nsFTPChannel.obj              \
@@ -43,4 +47,3 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
