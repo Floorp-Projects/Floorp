@@ -99,56 +99,6 @@ function onOK() {
   }
 }
 
-// check download directory is valid
-function checkDownloadDirectory() {
-   var dloadDir = Components.classes["@mozilla.org/file/local;1"]
-                            .createInstance(Components.interfaces.nsILocalFile);
-   if (!dloadDir) 
-     return false;
-
-   var givenValue = document.getElementById("defaultDir");
-   var downloadDir = document.getElementById("downloadDir");
-   if (downloadDir.selectedItem == document.getElementById("alwaysAskRadio"))
-     return;
-   
-   try {
-     dloadDir.initWithPath(givenValue.value);
-     dloadDir.isDirectory();
-   }
-   catch(ex) {
-     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                   .getService(Components.interfaces.nsIPromptService);
-     var prefbundle = document.getElementById("bundle_prefutilities");
-
-     if (givenValue.value == "") { 
-       // no directory, reset back to Always Ask
-       downloadDir.selectedItem = document.getElementById("alwaysAskRadio");
-     } else {
-       var checkValue = {value:false};
-
-       var title = prefbundle.getString("downloadDirTitle");
-       var description = prefbundle.getFormattedString("invalidDirPopup", [givenValue.value]);
-       var buttonPressed = promptService.confirmEx(window, 
-         title, description,
-         (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) +
-         (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1),
-         null, null, null, null, checkValue);
-
-       if (buttonPressed != 0) {
-         // they don't want to create the directory
-         return;
-       }
-       try { 
-         dloadDir.create(nsIFile.DIRECTORY_TYPE, 0755);
-       } catch(ex) {
-         title = prefbundle.getString("invalidDirPopupTitle");
-         description = prefbundle.getFormattedString("invalidDir", [givenValue.value])
-         promptService.alert(parent, title, description);
-       }
-     }
-  }
-}
-
 function Startup()
 {  
   if (top.opener) {
