@@ -166,6 +166,10 @@ label[disabled="true"] {
   font-weight: bold;
 }
    
+.monospace {
+  font-family: monospace;
+}
+
 .indent {
   margin-left: 20px;
 }
