@@ -311,7 +311,7 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
 	if (!PK11_IsFriendly(slot)) {
 	    rv = PK11_Authenticate(slot, PR_TRUE, pwdata);
 	    if (rv != SECSuccess) {
-		SECU_PrintError(progName, "could authenticate to token or database");
+		SECU_PrintError(progName, "could not authenticate to token or database");
 		GEN_BREAK(SECFailure);
 	    }
 	}
