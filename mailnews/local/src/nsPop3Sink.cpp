@@ -142,10 +142,10 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
     // ### if we're doing a UIDL, then the fileSpec needs to be for the current folder
 
     PRBool isLocked;
-
+    nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIPop3Sink*, this));
 	m_folder->GetLocked(&isLocked);
 	if(!isLocked)
-      m_folder->AcquireSemaphore(m_folder);
+      m_folder->AcquireSemaphore(supports);
 	else
       return NS_MSG_FOLDER_BUSY;
 
@@ -238,9 +238,10 @@ nsPop3Sink::ReleaseFolderLock()
   nsresult result = NS_OK;
   if (!m_folder) return result;
   PRBool haveSemaphore;
-  result = m_folder->TestSemaphore(m_folder, &haveSemaphore);
+  nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIPop3Sink*, this));
+  result = m_folder->TestSemaphore(supports, &haveSemaphore);
   if(NS_SUCCEEDED(result) && haveSemaphore)
-    result = m_folder->ReleaseSemaphore(m_folder);
+    result = m_folder->ReleaseSemaphore(supports);
   return result;
 }
 

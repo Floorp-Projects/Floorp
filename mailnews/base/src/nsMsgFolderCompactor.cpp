@@ -292,11 +292,19 @@ NS_IMETHODIMP nsFolderCompactState::StartCompacting()
 {
   nsresult rv = NS_OK;
   PRBool isLocked;
+  nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMsgFolderCompactor*, this));
   m_folder->GetLocked(&isLocked);
   if(!isLocked)
-    m_folder->AcquireSemaphore(m_folder);
+    m_folder->AcquireSemaphore(supports);
   else
-    FinishCompact();
+  {
+    NS_ASSERTION(0, "Some other operation is in progress on this folder");
+    m_folder->NotifyCompactCompleted();
+    if (m_compactAll)
+      CompactNextFolder();
+    else
+      return rv;
+  }
   if (m_size > 0)
   {
     ShowCompactingStatusMsg();
@@ -397,9 +405,10 @@ nsFolderCompactState::ReleaseFolderLock()
   nsresult result = NS_OK;
   if (!m_folder) return result;
   PRBool haveSemaphore;
-  result = m_folder->TestSemaphore(m_folder, &haveSemaphore);
+  nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMsgFolderCompactor*, this));
+  result = m_folder->TestSemaphore(supports, &haveSemaphore);
   if(NS_SUCCEEDED(result) && haveSemaphore)
-    result = m_folder->ReleaseSemaphore(m_folder);
+    result = m_folder->ReleaseSemaphore(supports);
   return result;
 }
 
