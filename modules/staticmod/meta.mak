@@ -47,6 +47,23 @@ LLIBS           = $(DIST)\lib\gkgfx.lib         \
                   $(DIST)\lib\xpcom.lib         \
                   $(LIBNSPR)
 
+!ifdef MOZ_GECKO_DLL
+LLIBS           = $(LLIBS)                      \
+                  $(DIST)\lib\png.lib           \
+                  $(DIST)\lib\mng.lib           \
+                  $(DIST)\lib\util.lib          \
+                  $(DIST)\lib\expat.lib         \
+                  $(DIST)\lib\nsldap32v40.lib   
+
+WIN_LIBS        = comctl32.lib  \
+                  comdlg32.lib  \
+                  uuid.lib      \
+                  ole32.lib     \
+                  shell32.lib   \
+                  oleaut32.lib  \
+                  version.lib
+!endif
+
 include <$(DEPTH)/config/rules.mak>
 
 #
@@ -97,6 +114,21 @@ $(EXTRA_LIBS_LIST_FILE): $(LINK_COMPS) $(LINK_LIBS)
         rm -f $@
         sed -e "s/\(.*\)/$(DIST:\=\\\)\\\lib\\\\\1.lib/" $(LINK_COMPS)  > $@
         sed -e "s/\(.*\)/$(DIST:\=\\\)\\\lib\\\\\1.lib/" $(LINK_LIBS)  >> $@
+
+
+# XXX this is a hack. The ``gecko'' meta-module consists
+# of all the static components linked into a DLL instead
+# of an executable. To make this work, we'll copy the
+# statically linked libs, components, and component names
+# to the right file. This relies on the fact that the
+# modules/staticmod directory gets built after all the other
+# directories in the tree are processed.
+!if defined(MOZ_GECKO_DLL) && "$(META_MODULE)" == "gecko"
+export::
+        copy $(FINAL_LINK_LIBS) $(DIST)\$(META_MODULE)-link-libs
+        copy $(FINAL_LINK_COMPS) $(DIST)\$(META_MODULE)-link-comps
+        copy $(FINAL_LINK_COMP_NAMES) $(DIST)\$(META_MODULE)-link-comp-names
+!endif
 
 install:: $(DLL)
         $(MAKE_INSTALL) $(DLL) $(DIST)/bin/components

@@ -26,6 +26,14 @@ include <$(DEPTH)\config\config.mak>
 
 META_MODULES=mail
 
+!ifdef DISABLE_MAILNEWS
+META_MODULES=
+!endif
+
+!ifdef MOZ_GECKO_DLL
+META_MODULES=$(META_MODULES) gecko
+!endif
+
 !ifdef BUILD_PSM2
 META_MODULES=$(META_MODULES) crypto
 !endif

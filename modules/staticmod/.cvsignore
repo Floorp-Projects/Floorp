@@ -2,3 +2,5 @@ nsMetaModule_mail.cpp.sed
 nsMetaModule_mail.cpp
 nsMetaModule_crypto.cpp.sed
 nsMetaModule_crypto.cpp
+nsMetaModule_gecko.cpp.sed
+nsMetaModule_gecko.cpp
