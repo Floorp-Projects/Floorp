@@ -580,7 +580,8 @@ void CheckForUpgrade(HWND aPanel, int aNextPanel)
   // "Easy Install" mode. If that flag is set to FALSE, the Upgrade 
   // panel is shown only in the "Custom"/"Advanced" pass. 
   if (sgProduct.checkCleanupOnUpgrade && 
-      !(dwSetupType == ST_RADIO0 && !diUpgrade.bShowInEasyInstall)) {
+      !(dwSetupType == ST_RADIO0 && !diUpgrade.bShowInEasyInstall) && 
+      !(dwSetupType == ST_RADIO1 && !diUpgrade.bShowDialog)) {
 
     // Found destination folder.  check to see if we're upgrading ontop
     // of a previous installation.  If so, we need to prompt the user

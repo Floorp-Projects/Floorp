@@ -279,7 +279,7 @@ Sub Title=Where $ProductName$ will be installed.
 Message0=$ProductName$ will be installed into the following folder:
 
 [Dialog Upgrade]
-Show Dialog=TRUE
+Show Dialog=FALSE
 Show In Easy Install=FALSE
 ;*** LOCALIZE ME BABY ***
 Title=Upgrade
