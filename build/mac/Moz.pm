@@ -204,6 +204,8 @@ sub log_recent_errors($)
 					{
 						if ( /^Error/ || /^Couldn’t find project file/ )
 							{
+								if (!$found_errors)
+									print $_; # put the first error in the perl console.
 								$found_errors = 1;
 							}
 						print ERROR_LOG $_;
