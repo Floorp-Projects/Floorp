@@ -38,9 +38,9 @@ open( LOG, "<$ARGV[0]") || die "cant open $!";
 # run thru if EOF and we haven't hit our section end marker
  
 &check_required_vars;
-$tree = $tbx{'tree'} if (!defined($tree));
-$logfile = "$builddate.$$.gz" if (!defined($logfile));
-$building++ if ($tbx{'status'} =~ m/building/);
+$tree = $tbx{tree} unless defined $tree;
+$logfile = "$builddate.$$.gz" if unless defined $logfile;
+$building++ if $tbx{status} =~ m/building/;
 &lock;
 &write_build_data;
 &unlock;
@@ -57,10 +57,10 @@ $ENV{QUERY_STRING}="tree=$tree&static=1";
 system './showbuilds.cgi';
 
 # Generate build warnings (only for a successful shrike clobber build)
-#if ($tbx{build} =~ /shrike.*\b(Clobber|Clbr)\b/ and
-#    $tbx{status} eq 'success') {
-#  system './warnings.pl';
-#}
+if ($tbx{build} eq 'shrike Linux Clobber' and $tbx{status} eq 'success') {
+  # Use at to give the file time to show up.
+  system 'echo "./warnings.pl >/dev/null 2>&1" | at now + 1 minute';
+}
 
 # end of main
 ######################################################################
