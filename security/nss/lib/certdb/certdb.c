@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.36 2002/08/01 22:51:56 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.37 2002/08/02 00:28:23 jpierre%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -925,7 +925,7 @@ CERT_CheckCertValidTimes(CERTCertificate *c, PRTime t, PRBool allowOverride)
     
     LL_I2L(llPendingSlop, pendingSlop);
     /* convert to micro seconds */
-    LL_I2L(tmp1, PR_USEC_PER_SEC);
+    LL_UI2L(tmp1, PR_USEC_PER_SEC);
     LL_MUL(llPendingSlop, llPendingSlop, tmp1);
     LL_SUB(notBefore, notBefore, llPendingSlop);
     if ( LL_CMP( t, <, notBefore ) ) {
