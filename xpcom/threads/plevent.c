@@ -264,7 +264,7 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
 
     /* insert event into thread's event queue: */
     if (event != NULL) {
-    PR_APPEND_LINK(&event->link, &self->queue);
+      PR_APPEND_LINK(&event->link, &self->queue);
     }
 
     /* notify even if event is NULL */
@@ -499,6 +499,18 @@ PL_ProcessPendingEvents(PLEventQueue* self)
      * number of events currently in the queue
      */
     count = _pl_GetEventCount(self);
+
+#ifdef XP_UNIX
+    // XXX HACK (pav)
+    node = PR_LIST_HEAD(&self->queue);
+    if (self->notifyCount > 0 &&
+        self->type == EventQueueIsNative &&
+        node == &self->queue) {
+      printf("we have an event stuck -- removing it.\n");
+      _pl_AcknowledgeNativeNotify(self);
+    }
+#endif
+
     while (count-- > 0) {
       PLEvent* event = PL_GetEvent(self);
       if (event == NULL)
