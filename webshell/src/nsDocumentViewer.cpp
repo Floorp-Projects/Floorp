@@ -495,7 +495,7 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
 
         newdx->GetDeviceSurfaceDimensions(width, height);
 
-        NS_NewGalleyContext(&cx);
+        NS_NewPrintContext(&cx);
         mPresContext->GetPrefs(prefs);
         cx->Init(newdx, prefs);
 
