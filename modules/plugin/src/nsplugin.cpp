@@ -963,17 +963,9 @@ nsPluginTagInfo::GetAttributes(PRUint16& n,
     if (instance->type == NP_EMBED) {
         np_data* ndata = (np_data*)instance->app->np_data;
 
-#ifdef OJI
         names = (const char*const*)ndata->lo_struct->attributes.names;
         values = (const char*const*)ndata->lo_struct->attributes.values;
         n = (PRUint16)ndata->lo_struct->attributes.n;
-#else
-        // XXX I think all the parameters and attributes just get
-        // munged together under MOZ_JAVA...
-        names = (const char*const*) ndata->lo_struct->attribute_list;
-        values = (const char*const*) ndata->lo_struct->value_list;
-        n = (PRUint16) ndata->lo_struct->attribute_cnt;
-#endif
 
         return NS_OK;
     } else {
@@ -1060,17 +1052,9 @@ nsPluginTagInfo::GetParameters(PRUint16& n,
     if (instance->type == NP_EMBED) {
         np_data* ndata = (np_data*)instance->app->np_data;
 
-#ifdef OJI
         names = (const char*const*)ndata->lo_struct->parameters.names;
         values = (const char*const*)ndata->lo_struct->parameters.values;
         n = (PRUint16)ndata->lo_struct->parameters.n;
-#else
-        // XXX I think all the parameters and attributes just get
-        // munged together under MOZ_JAVA...
-        names = (const char*const*) ndata->lo_struct->attribute_list;
-        values = (const char*const*) ndata->lo_struct->value_list;
-        n = (PRUint16)ndata->lo_struct->attribute_cnt;
-#endif
 
         return NS_OK;
     } else {

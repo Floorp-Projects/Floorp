@@ -946,15 +946,15 @@ struct LO_CellStruct_struct {
     Bool isCaption;		/* Needed for relayout without reload */
 };
 
-#ifdef OJI
 struct lo_NVList {
     uint32 n; /* number of name/value pairs */
     char** names;
     char** values;
 };
 
-#define LO_NVList_Init( pList ) (pList)->n=0; (pList)->names=NULL; (pList)->values=NULL
-#endif
+typedef struct lo_NVList lo_NVList;
+
+#define LO_NVList_Init( pList ) (pList)->n=0, (pList)->names=NULL, (pList)->values=NULL
 
 struct LO_CommonPluginStruct_struct {
     int16 type;
@@ -1005,13 +1005,7 @@ struct LO_BuiltinStruct_struct {
 		void * FE_Data;
 		void *session_data;
 		PA_Block builtin_src;
-#if defined(OJI)
-        struct lo_NVList attributes;
-#else
-		int32 attribute_cnt;
-		char **attribute_list;
-		char **value_list;
-#endif /* OJI */
+        lo_NVList attributes;
 		int32 alignment;
 		int32 border_width;
 		int32 border_vert_space;
@@ -1034,14 +1028,8 @@ struct LO_EmbedStruct_struct {
 
     struct LO_EmbedStruct_struct *nextEmbed;
     PA_Block embed_src;
-#ifdef OJI
-    struct lo_NVList attributes;
-    struct lo_NVList parameters;
-#else
-    int32 attribute_cnt;
-    char **attribute_list;
-    char **value_list;
-#endif /* OJI */
+    lo_NVList attributes;
+    lo_NVList parameters;
 };
 
 #define LO_JAVA_SELECTOR_APPLET             0
@@ -1068,14 +1056,8 @@ struct LO_JavaAppStruct_struct {
     PA_Block attr_archive;
     PA_Block attr_name;
     Bool may_script;
-#ifdef OJI
-    struct lo_NVList attributes;
-    struct lo_NVList parameters;
-#else /* OJI */
-    int32 param_cnt;
-    char **param_names;
-    char **param_values;
-#endif /* OJI */
+    lo_NVList attributes;
+    lo_NVList parameters;
 };
 
 

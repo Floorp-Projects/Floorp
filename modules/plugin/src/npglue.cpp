@@ -2819,15 +2819,10 @@ np_newinstance(np_handle *handle, MWContext *cx, NPEmbeddedApp *app,
                 if (instance->type == NP_EMBED)
                 {
                     /* Embedded plug-ins get their attributes passed in from layout */
-#ifdef OJI
                     int16 argc = (int16) ndata->lo_struct->attributes.n;
                     char** names = ndata->lo_struct->attributes.names;
                     char** values = ndata->lo_struct->attributes.values;
-#else
-                    int16 argc = (int16) ndata->lo_struct->attribute_cnt;
-                    char** names = ndata->lo_struct->attribute_list;
-                    char** values = ndata->lo_struct->value_list;
-#endif
+
                     err = CallNPP_NewProc(handle->f->newp, requestedType, npp, 
                                           instance->type, argc, names, values, savedData);
                 }
@@ -4409,7 +4404,6 @@ np_findTypeAttribute(LO_EmbedStruct* embed_struct)
 	unsigned int i;
 
 	/* Look for the TYPE attribute */
-#ifdef OJI
 	for (i = 0; i < embed_struct->attributes.n; i++)
 	{
 		if (XP_STRCASECMP(embed_struct->attributes.names[i], "TYPE") == 0)
@@ -4418,16 +4412,6 @@ np_findTypeAttribute(LO_EmbedStruct* embed_struct)
 			break;
 		}
 	}	
-#else
-	for (i = 0; i < embed_struct->attribute_cnt; i++)
-	{
-		if (XP_STRCASECMP(embed_struct->attribute_list[i], "TYPE") == 0)
-		{
-			typeAttribute = embed_struct->value_list[i];
-			break;
-		}
-	}
-#endif
 
 	return typeAttribute;
 }
