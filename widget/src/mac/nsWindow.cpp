@@ -760,7 +760,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP	nsWindow::Update()
 {
-	if (! mVisible)
+	if (! mVisible || !mWindowPtr)
 		return NS_OK;
 
 	static PRBool  reentrant = PR_FALSE;
@@ -778,7 +778,8 @@ NS_IMETHODIMP	nsWindow::Update()
 #if TARGET_CARBON
 		::GetWindowRegion(mWindowPtr, kWindowUpdateRgn, saveUpdateRgn);
 #else
-		::CopyRgn(((WindowRecord*)mWindowPtr)->updateRgn, saveUpdateRgn);
+		if(mWindowPtr)
+			::CopyRgn(((WindowRecord*)mWindowPtr)->updateRgn, saveUpdateRgn);
 #endif
 
 		// draw the widget
