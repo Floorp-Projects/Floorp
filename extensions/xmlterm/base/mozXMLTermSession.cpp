@@ -2884,6 +2884,8 @@ NS_IMETHODIMP mozXMLTermSession::ScrollToBottomLeft(void)
   if (NS_FAILED(result) || !domWindow)
     return NS_ERROR_FAILURE;
 
+  mPresShell->FlushPendingNotifications();
+
   // Scroll to bottom left of screen
   domWindow->ScrollBy(-99999,99999);
 
@@ -3950,7 +3952,7 @@ NS_IMETHODIMP mozXMLTermSession::SetEventAttributes(const nsString& name,
   int j;
   for (j=0; j<SESSION_EVENT_TYPES; j++) {
     nsAutoString attName; attName.AssignWithConversion("on");
-    attName.AssignWithConversion(sessionEventNames[j]);
+    attName.AppendWithConversion(sessionEventNames[j]);
 
     nsAutoString attValue; attValue.AssignWithConversion("return HandleEvent(event, '");
     attValue.AppendWithConversion(sessionEventNames[j]);
