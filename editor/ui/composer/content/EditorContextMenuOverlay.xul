@@ -20,6 +20,7 @@
    - 
    - Contributor(s):
    -   Daniel Glazman (glazman@netscape.com)
+   -   Charles Manske (cmanske@netscape.com)
   -->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
@@ -38,7 +39,7 @@
       observes="cmd_redo"  oncommand="goDoCommand('cmd_redo')"/>
     <menuseparator id="undoredo-separator"/>
     
-    <!-- In these commands, the "obverves" is needed for proper command disabling,
+    <!-- In these commands, the "observes" is needed for proper command disabling,
          but the "oncommand" is still needed since we can't get it from global overlay -->
     <menuitem id="menu_cut_cm"    label="&cutCmd.label;"    accesskey="&cut.accesskey;"
       observes="cmd_cut" oncommand="goDoCommand('cmd_cut')"/>
@@ -46,6 +47,7 @@
       observes="cmd_copy" oncommand="goDoCommand('cmd_copy')"/>
     <menuitem id="menu_paste_cm"  label="&pasteCmd.label;"  accesskey="&paste.accesskey;"
       observes="cmd_paste" oncommand="goDoCommand('cmd_paste')"/>
+    <menuitem id="menu_pasteNoFormatting_cm" observes="cmd_pasteNoFormatting"/>
     <menuitem id="menu_delete_cm" label="&deleteCmd.label;" accesskey="&delete.accesskey;"
       observes="cmd_delete" oncommand="goDoCommand('cmd_delete')"/>
     <menuseparator id="edit-separator"/>

@@ -210,6 +210,67 @@ nsPasteQuotationCommand::GetCommandStateParams(const char *aCommandName, nsIComm
 #endif
 
 
+NS_IMETHODIMP
+nsPasteNoFormattingCommand::IsCommandEnabled(const char * aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+{
+  NS_ENSURE_ARG_POINTER(outCmdEnabled);
+  *outCmdEnabled = PR_FALSE;
+
+  nsCOMPtr<nsIHTMLEditor> htmlEditor(do_QueryInterface(refCon));
+  if (!htmlEditor)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsCOMPtr<nsIEditor> editor(do_QueryInterface(htmlEditor));
+  if (!editor)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  return editor->CanPaste(nsIClipboard::kGlobalClipboard, outCmdEnabled);
+}
+
+
+NS_IMETHODIMP
+nsPasteNoFormattingCommand::DoCommand(const char *aCommandName, nsISupports *refCon)
+{
+  nsCOMPtr<nsIHTMLEditor> htmlEditor(do_QueryInterface(refCon));
+  if (!htmlEditor)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  return htmlEditor->PasteNoFormatting(nsIClipboard::kGlobalClipboard);
+}
+
+NS_IMETHODIMP
+nsPasteNoFormattingCommand::DoCommandParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *refCon)
+{
+  NS_ENSURE_ARG_POINTER(aParams);
+  nsCOMPtr<nsIHTMLEditor> htmlEditor(do_QueryInterface(refCon));
+  if (!htmlEditor)
+    return NS_ERROR_NOT_IMPLEMENTED;
+  
+  return htmlEditor->PasteNoFormatting(nsIClipboard::kGlobalClipboard);
+}
+
+NS_IMETHODIMP
+nsPasteNoFormattingCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *refCon)
+{
+  NS_ENSURE_ARG_POINTER(aParams);
+  nsCOMPtr<nsIHTMLEditor> htmlEditor(do_QueryInterface(refCon));
+  if (!htmlEditor)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsCOMPtr<nsIEditor> editor(do_QueryInterface(htmlEditor));
+  if (!editor)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  PRBool enabled = PR_FALSE;
+  nsresult rv = editor->CanPaste(nsIClipboard::kGlobalClipboard, &enabled);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return aParams->SetBooleanValue(STATE_ENABLED, enabled);
+}
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 nsStyleUpdatingCommand::nsStyleUpdatingCommand(const char* aTagName)
 : nsBaseStateUpdatingCommand(aTagName)
 {

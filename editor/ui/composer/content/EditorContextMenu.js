@@ -18,6 +18,8 @@
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Contributor(s):
+ *    Charles Manske (cmanske@netscape.com)
  */
 
 function EditorFillContextMenu(event, contextMenuNode)
@@ -30,6 +32,7 @@ function EditorFillContextMenu(event, contextMenuNode)
   goUpdateCommand("cmd_cut");
   goUpdateCommand("cmd_copy");
   goUpdateCommand("cmd_paste");
+  goUpdateCommand("cmd_pasteNoFormatting");
   goUpdateCommand("cmd_delete");
   goUpdateCommand("cmd_link");
 
@@ -75,6 +78,7 @@ function EditorFillContextMenu(event, contextMenuNode)
     IsMenuItemShowing("menu_cut_cm")   ||
     IsMenuItemShowing("menu_copy_cm")  ||
     IsMenuItemShowing("menu_paste_cm") ||
+    IsMenuItemShowing("menu_pasteNoFormatting_cm") ||
     IsMenuItemShowing("menu_delete_cm");
 
   var haveStyle =

@@ -41,7 +41,6 @@
 
 #include "nsIComponentManager.h"
 #include "nsComposerController.h"
-#include "nsIEditorShell.h"
 
 #if 0
 #include "nsIEditor.h"
@@ -166,6 +165,7 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   
   // Edit menu
   NS_REGISTER_ONE_COMMAND(nsPasteQuotationCommand, "cmd_pasteQuote");
+  NS_REGISTER_ONE_COMMAND(nsPasteNoFormattingCommand, "cmd_pasteNoFormatting");
 
   // indent/outdent
   NS_REGISTER_ONE_COMMAND(nsIndentCommand, "cmd_indent");

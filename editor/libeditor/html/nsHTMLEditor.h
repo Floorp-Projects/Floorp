@@ -154,9 +154,11 @@ public:
   NS_IMETHOD IncreaseFontSize();
   NS_IMETHOD DecreaseFontSize();
 
+  NS_IMETHOD PasteNoFormatting(PRInt32 aSelectionType);
   NS_IMETHOD InsertHTML(const nsAString &aInputString);
   NS_IMETHOD InsertHTMLWithCharset(const nsAString& aInputString,
                                    const nsAString& aCharset);
+
   NS_IMETHOD LoadHTML(const nsAString &aInputString);
   NS_IMETHOD LoadHTMLWithCharset(const nsAString& aInputString,
                                    const nsAString& aCharset);

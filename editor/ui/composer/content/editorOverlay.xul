@@ -166,11 +166,11 @@
     <command id="cmd_cut"/>
     <command id="cmd_copy"/>
     <command id="cmd_paste"/>  
+    <command id="cmd_pasteNoFormatting" oncommand="goDoCommand('cmd_pasteNoFormatting')"
+             label="&pasteNoFormatting.label;" accesskey="&pasteNoFormatting.accesskey;"/>
     <command id="cmd_delete"/>
     <command id="cmd_selectAll"/>
-
     <command id="cmd_preferences"   oncommand="goDoCommand('cmd_preferences')"/>
-
     <command id="cmd_find"          oncommand="goDoCommand('cmd_find')"/>
     <command id="cmd_findNext"      oncommand="goDoCommand('cmd_findNext')"     label="&findAgainCmd.label;"/>
     <command id="cmd_findPrev"      oncommand="goDoCommand('cmd_findPrev')"     label="&findPrevCmd.label;"/>
@@ -346,6 +346,7 @@
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_paste"/>
+      <menuitem id="menu_pasteNoFormatting" observes="cmd_pasteNoFormatting"/>"
 
 <!-- PasteAs not implemented yet
       <menu id="menu_pasteAs" label="&pasteAs.label;" accesskey="&pasteAs.accesskey;">
@@ -870,7 +871,7 @@
     <menuitem label="&editRewrapCmd.label;"
            oncommand="editorShell.Rewrap(true)"/>
     <menuitem label="&editStripQuotesCmd.label;"
-           oncommand="editorShell.StripCites()"/>
+           oncommand="editorShell.StripCites(true)"/>
     <menuitem label="&insertTextCmd.label;"
            oncommand="EditorInsertText('All good things come to those who wait. ')"/>
     <menuitem id="menu_checkLinks" observes="cmd_checkLinks"

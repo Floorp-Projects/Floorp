@@ -283,6 +283,7 @@ NS_DECL_COMPOSER_COMMAND(nsNewCommands)   // handles 'new' anything
 
 // Edit menu
 NS_DECL_COMPOSER_COMMAND(nsPasteQuotationCommand)
+NS_DECL_COMPOSER_COMMAND(nsPasteNoFormattingCommand)
 
 // Block transformations
 NS_DECL_COMPOSER_COMMAND(nsIndentCommand)
