@@ -194,10 +194,11 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
                                         const struct tm*  tmTime, 
                                         nsString& stringOut) 
 {
+  NS_ENSURE_TRUE(mDecoder, NS_ERROR_NOT_INITIALIZED);
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
   char strOut[NSDATETIME_FORMAT_BUFFER_LEN*2];  // buffer for date and time
   char fmtD[NSDATETIME_FORMAT_BUFFER_LEN], fmtT[NSDATETIME_FORMAT_BUFFER_LEN];
-  nsresult res;
+  nsresult rv;
 
   
   // set up locale data
@@ -267,18 +268,16 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   (void) setlocale(LC_TIME, old_locale);
 
   // convert result to unicode
-  if (mDecoder) {
-    PRInt32 srcLength = (PRInt32) PL_strlen(strOut);
-    PRInt32 unicharLength = NSDATETIME_FORMAT_BUFFER_LEN*2;
-    PRUnichar unichars[NSDATETIME_FORMAT_BUFFER_LEN*2];   // buffer for date and time
+  PRInt32 srcLength = (PRInt32) PL_strlen(strOut);
+  PRInt32 unicharLength = NSDATETIME_FORMAT_BUFFER_LEN*2;
+  PRUnichar unichars[NSDATETIME_FORMAT_BUFFER_LEN*2];   // buffer for date and time
 
-    res = mDecoder->Convert(strOut, &srcLength, unichars, &unicharLength);
-    if (NS_SUCCEEDED(res)) {
-      stringOut.Assign(unichars, unicharLength);
-    }
-  }
-  
-  return res;
+  rv = mDecoder->Convert(strOut, &srcLength, unichars, &unicharLength);
+  if (NS_FAILED(rv))
+    return rv;
+  stringOut.Assign(unichars, unicharLength);
+
+  return rv;
 }
 
 // performs a locale sensitive date formatting operation on the PRTime parameter
