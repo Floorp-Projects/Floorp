@@ -312,7 +312,7 @@ nsBidiPresUtils::Resolve(nsIPresContext* aPresContext,
             frame->SetFrameState(frameState);
           }
           frame->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
-                                 (void**) &nextBidi);
+                                 (void**) &nextBidi,sizeof(nextBidi));
           if (RemoveBidiContinuation(aPresContext, frame, nextBidi,
                                      content.get(), frameIndex, temp) ) {
             aForceReflow = PR_TRUE;
@@ -519,7 +519,7 @@ nsBidiPresUtils::Reorder(nsIPresContext* aPresContext,
   for (i = 0; i < count; i++) {
     frame = (nsIFrame*) (mLogicalFrames[i]);
     frame->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel,
-                           (void**)&mLevels[i], sizeof(PRUint8) );
+                           (void**)&mLevels[i], sizeof(mLevels[i]) );
   }
   if (!mIndexMap) {
     mIndexMap = new PRInt32[mArraySize];
@@ -590,10 +590,10 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
 #ifdef FIX_FOR_BUG_40882
     ch = 0;
     ( (nsIFrame*)mVisualFrames[i])->GetBidiProperty(aPresContext,
-                             nsLayoutAtoms::charType, (void**)&charType);
+                             nsLayoutAtoms::charType, (void**)&charType,sizeof(charType));
     if (CHARTYPE_IS_RTL(charType) ) {
       frame->GetBidiProperty(aPresContext,
-                             nsLayoutAtoms::endsInDiacritic, (void**)&ch);
+                             nsLayoutAtoms::endsInDiacritic, (void**)&ch,sizeof(ch));
       if (ch) {
         if (!alefWidth) {
           aRendContext->GetWidth(buf, 1, alefWidth, nsnull);
@@ -626,7 +626,7 @@ nsBidiPresUtils::RepositionInlineFrames(nsIPresContext*      aPresContext,
   if (dx > 0) {
     PRInt32 alignRight;
     frame->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel,
-                           (void**) &alignRight);
+                           (void**) &alignRight,sizeof(alignRight));
     if (0 == (alignRight & 1) ) {
       const nsStyleText* styleText;
       frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);

@@ -845,16 +845,16 @@ nsContinuingTextFrame::Init(nsIPresContext*  aPresContext,
       aPrevInFlow->GetOffsets(start, mContentOffset);
 
       void* value;
-      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, &value);
+      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, &value,sizeof(value));
       SetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, value);
 
-      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, &value);
+      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, &value,sizeof(value));
       SetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, value);
 
-      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::charType, &value);
+      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::charType, &value,sizeof(value));
       SetBidiProperty(aPresContext, nsLayoutAtoms::charType, value);
 
-      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, &value);
+      aPrevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, &value,sizeof(value));
       if (value) {  // nextBidi
         // aPrevInFlow and this frame will point to the same next bidi frame.
         SetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, value);
@@ -1321,7 +1321,7 @@ nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
       textFrame->mState |= NS_FRAME_IS_DIRTY;
 #ifdef IBMBIDI
       nsIFrame* nextBidi;
-      textFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &nextBidi);
+      textFrame->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &nextBidi,sizeof(nextBidi));
       if (nextBidi)
         textFrame = (nsTextFrame*)nextBidi;
       else
@@ -2114,7 +2114,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
   PRInt16 selectionValue;
   nsCOMPtr<nsILineBreaker> lb;
 #ifdef IBMBIDI
-  PRInt32 level = 0;
+  PRUint8 level = 0;
 #endif
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
                                        aRenderingContext,
@@ -2166,8 +2166,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
     aPresContext->SetIsBidiSystem(isBidiSystem);
     if (bidiEnabled) {
       nsCharType charType;
-      GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level);
-      GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType);
+      GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level,sizeof(level));
+      GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType,sizeof(charType));
 
       if (isBidiSystem && (eCharType_RightToLeft == charType) ) {
         isRightToLeftOnBidiPlatform = PR_TRUE;
@@ -2414,8 +2414,8 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   }
 
 #ifdef IBMBIDI // Simon -- reverse RTL text here
-  PRInt32 level;
-  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level);
+  PRUint8 level;
+  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level,sizeof(level));
   PRBool isOddLevel = (level & 1);
   if (isOddLevel) {
     PRUnichar *tStart, *tEnd;
@@ -2839,9 +2839,9 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 
       if (bidiUtils) {
         nsCharType charType;
-        PRInt32           level;
-        GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level);
-        GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType);
+        PRUint8           level;
+        GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level,sizeof(level));
+        GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType,sizeof(charType));
         if (CHARTYPE_IS_RTL(charType))
           isRightToLeft = PR_TRUE;
         // Since we paint char by char, handle the text like on non-bidi platform
@@ -3334,7 +3334,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
         PRUint32 hints = 0;
         PRBool isVisual;
         PRInt32 charType;
-        GetBidiProperty(aCX, nsLayoutAtoms::charType, (void**)&charType);
+        GetBidiProperty(aCX, nsLayoutAtoms::charType, (void**)&charType,sizeof(charType));
 
         acx->GetHints(hints);
         aCX->IsVisualMode(isVisual);
@@ -3591,7 +3591,7 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
         break;
     }
 #ifdef IBMBIDI
-    GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &frame);
+    GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &frame,sizeof(frame));
     if (frame) {
       frame->SetSelected(aPresContext, aRange, aSelected, aSpread);
     }
@@ -3686,8 +3686,8 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
     }
   }
 #ifdef IBMBIDI
-  PRInt32 level;
-  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level);
+  PRUint8 level;
+  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level,sizeof(level));
 
   if (level & 1) {
     outPoint->x = mRect.width - width;
@@ -3774,9 +3774,9 @@ NS_IMETHODIMP
 nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) 
 {
 #ifdef IBMBIDI
-  PRInt32 level, baseLevel;
-  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level);
-  GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&baseLevel);
+  PRUint8 level, baseLevel;
+  GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**)&level,sizeof(level));
+  GetBidiProperty(aPresContext, nsLayoutAtoms::baseLevel, (void**)&baseLevel,sizeof(baseLevel));
   PRBool isOddLevel = (level & 1);
 
   if ((eSelectCharacter == aPos->mAmount)
@@ -3795,7 +3795,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     nsIFrame *nextInFlow;
 #ifdef IBMBIDI
     if (isOddLevel) {
-      GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &nextInFlow);
+      GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &nextInFlow,sizeof(nextInFlow));
     }
     else
 #endif
@@ -4357,7 +4357,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   PRInt32      start = -1, end;
 
   if (mState & NS_FRAME_IS_BIDI) {
-    GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &nextBidi);
+    GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi, (void**) &nextBidi,sizeof(nextBidi));
 
     if (nextBidi) {
       if (mContentLength < 1) {

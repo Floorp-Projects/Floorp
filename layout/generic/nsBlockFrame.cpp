@@ -4750,7 +4750,7 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
 #ifdef IBMBIDI
   nsIFrame* nextBidi;
   aChild->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
-                          (void**) &nextBidi);
+                          (void**) &nextBidi,sizeof(nextBidi));
   if (nextBidi != nextInFlow) {
 #endif // IBMBIDI
   nsBlockFrame* parent;
