@@ -320,7 +320,7 @@ NS_IMETHODIMP nsSupportsPRUint32Impl::SetData(PRUint32 aData)
 NS_IMPL_ISUPPORTS(nsSupportsPRUint64Impl, NS_GET_IID(nsISupportsPRUint64))
 
 nsSupportsPRUint64Impl::nsSupportsPRUint64Impl()
-    : mData(0)
+    : mData(LL_ZERO)
 {
     NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
@@ -350,7 +350,7 @@ NS_IMETHODIMP nsSupportsPRUint64Impl::SetData(PRUint64 aData)
 NS_IMPL_ISUPPORTS(nsSupportsPRTimeImpl, NS_GET_IID(nsISupportsPRTime))
 
 nsSupportsPRTimeImpl::nsSupportsPRTimeImpl()
-    : mData(0)
+    : mData(LL_ZERO)
 {
     NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
@@ -470,7 +470,7 @@ NS_IMETHODIMP nsSupportsPRInt32Impl::SetData(PRInt32 aData)
 NS_IMPL_ISUPPORTS(nsSupportsPRInt64Impl, NS_GET_IID(nsISupportsPRInt64))
 
 nsSupportsPRInt64Impl::nsSupportsPRInt64Impl()
-    : mData(0)
+    : mData(LL_ZERO)
 {
     NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
