@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Josh Aas - josha@mac.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -450,7 +451,7 @@ const int kReuseWindowOnAE = 2;
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController saveDocument:NO filterView:mFilterView];
+    [browserController saveDocument:NO filterView:[self getSavePanelView]];
 }
 
 -(IBAction) pageSetup:(id)aSender
@@ -658,6 +659,8 @@ const int kReuseWindowOnAE = 2;
 
 - (NSView*)getSavePanelView
 {
+  if (!mFilterView)
+    [NSBundle loadNibNamed:@"AccessoryViews" owner:self];
   return mFilterView;
 }
 
@@ -767,27 +770,19 @@ const int kReuseWindowOnAE = 2;
 {
   NSSavePanel* savePanel = [NSSavePanel savePanel];
   [savePanel setPrompt:NSLocalizedString(@"Export", @"Export")];
-  // make an accessory view for HTML or Safari .plist output
-  NSPopUpButton *button = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0,0,0,0) pullsDown:NO];
-  [button insertItemWithTitle:@"HTML" atIndex:0];
-  NSMenuItem *fileType = [button itemAtIndex:0];
-  [fileType setTarget:self];
-  [fileType setAction:@selector(setFileExtension:)];
-  [fileType setRepresentedObject:savePanel];
-  [button insertItemWithTitle:@"Safari" atIndex:1];
-  fileType = [button itemAtIndex:1];
-  [fileType setTarget:self];
-  [fileType setAction:@selector(setFileExtension:)];
-  [fileType setRepresentedObject:savePanel];
-  [button selectItemAtIndex:0];
   [savePanel setRequiredFileType:@"html"];
-  [button synchronizeTitleAndSelectedItem];
-  [button sizeToFit];
-  [savePanel setAccessoryView:button];
+  
+  // get an accessory view for HTML or Safari .plist output
+  if (!mExportPanelView)
+    [NSBundle loadNibNamed:@"AccessoryViews" owner:self];
+  NSPopUpButton *button = [mExportPanelView viewWithTag:1001];
+  [[button itemAtIndex:0] setRepresentedObject:savePanel];
+  [[button itemAtIndex:1] setRepresentedObject:savePanel];
+  [savePanel setAccessoryView:mExportPanelView];
+  
   // start the save panel
   int saveResult = [savePanel runModalForDirectory:nil file:NSLocalizedString(@"ExportedBookmarkFile", @"Exported Bookmarks")];
   int selectedButton = [button indexOfSelectedItem];
-  [button release];
   if (saveResult != NSFileHandlingPanelOKButton)
     return;
   if (0 == selectedButton)

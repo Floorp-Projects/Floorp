@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Josh Aas - josha@mac.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -53,6 +54,7 @@
     
     // The following item is added to NSSavePanels as an accessory view
     IBOutlet NSView*        mFilterView;
+    IBOutlet NSView*        mExportPanelView;
     
     // IBOutlet NSMenuItem*    mOfflineMenuItem;
     IBOutlet NSMenuItem*    mCloseWindowMenuItem;
