@@ -31,8 +31,8 @@
  * file under either the NPL or the GPL.
  */
 
-#ifndef jstypes_h
-#define jstypes_h
+#ifndef jstypes_h___
+#define jstypes_h___
 
 #include "utilities.h"
 #include "gc_allocator.h"

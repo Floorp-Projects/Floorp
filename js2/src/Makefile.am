@@ -1,14 +1,12 @@
 
 include $(top_srcdir)/common.mk
 
-gc_dir = $(top_srcdir)/../gc/boehm/
-
-LIBS = $(gc_dir)/gc.a
-INCLUDES = -I$(gc_dir)
+INCLUDES = -I$(BOEHM_DIR)
 
 noinst_LIBRARIES = libjs2.a
 
-libjs2_a_DEPENDENCIES = $(gc_dir)/gc.a
+libjs2_a_LIBADD = $(LIBBOEHM)
+libjs2_a_DEPENDENCIES = $(BOEHM_DIR)/gc.a
 libjs2_a_SOURCES = \
 	algo.h \
 	cpucfg.h \
@@ -24,7 +22,6 @@ libjs2_a_SOURCES = \
 	hash.cpp \
 	hash.h \
 	icode_emitter.cpp \
-	icode_emitter.h \
 	icodegenerator.cpp \
     icodegenerator.h \
 	interpreter.cpp \

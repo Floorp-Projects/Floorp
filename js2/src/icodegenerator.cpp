@@ -39,7 +39,9 @@
 #include "icodegenerator.h"
 #include "interpreter.h"
 #include "exception.h"
+#ifdef TEST_ICASM
 #include "icodeasm.h"
+#endif
 
 #include <algorithm>
 #include <stdexcept>
@@ -52,8 +54,10 @@ using namespace VM;
 using namespace JSTypes;
 using namespace JSClasses;
 using namespace Interpreter;
+#ifdef TEST_ICASM
 using namespace ICodeASM;
-
+#endif
+    
 inline char narrow(char16 ch) { return char(ch); }
 
 
@@ -647,6 +651,7 @@ Formatter& operator<<(Formatter &f, string &s)
 
 ICodeModule *ICodeGenerator::readFunction(XMLNode *element, JSClass *thisClass)
 {
+#ifdef TEST_ICASM
     ICodeModule *result = NULL;
 
     String resultTypeName;
@@ -693,10 +698,16 @@ ICodeModule *ICodeGenerator::readFunction(XMLNode *element, JSClass *thisClass)
                                             NotABanana);            /* exception register */
     }
     return result;
+#else
+
+    return 0;
+
+#endif
 }
 
 ICodeModule *ICodeGenerator::readICode(const char *fileName)
 {
+#ifdef TEST_ICASM
     ICodeModule *result = NULL;
 
     XMLParser xp(fileName);
@@ -814,6 +825,12 @@ ICodeModule *ICodeGenerator::readICode(const char *fileName)
 
     }
     return result;
+
+#else
+
+    return 0;
+
+#endif
 }
     
 
