@@ -87,7 +87,7 @@ static FactoryData g_FactoryData[] =
   },
   {
     &kUnicodeToGB2312CID,
-    nsUnicodeToGB2312::CreateInstance,
+    nsUnicodeToGB2312V2::CreateInstance,
     "Unicode",
     "GB2312"
   },
