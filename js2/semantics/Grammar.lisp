@@ -106,8 +106,14 @@
   (ash 1 (terminal-number grammar terminal)))
 
 
+; Return a terminalset containing all terminals in the grammar.
+(defun make-full-terminalset (grammar)
+  (1- (ash 1 (length (grammar-terminals grammar)))))
+
+
 ; Call f on every terminal in the terminalset in reverse order.
 (defun map-terminalset-reverse (f grammar terminalset)
+  (assert-true (>= terminalset 0))
   (do ()
       ((zerop terminalset))
     (let ((last (1- (integer-length terminalset))))
@@ -124,7 +130,12 @@
 
 
 (defun print-terminalset (grammar terminalset &optional (stream t))
-  (pprint-fill stream (terminalset-list grammar terminalset) nil))
+  (let ((first t))
+    (dolist (terminal (terminalset-list grammar terminalset))
+      (if first
+        (setq first nil)
+        (format stream " ~:_"))
+      (write terminal :stream stream))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -153,7 +164,8 @@
 ;;; A constraint modifies the rhs of a production.  The constraint applies just before the pos-th
 ;;; general grammar symbol on the rhs of the production.
 (defstruct (constraint (:constructor nil) (:copier nil) (:predicate constraint?))
-  (pos nil :type integer :read-only t))            ;Position of this constraint; ranges between 0 and length(general-production-rhs), inclusive.
+  (pos nil :type integer :read-only t)             ;Position of this constraint; ranges between 0 and length(general-production-rhs), inclusive.
+  (terminalset nil :type (or null terminalset)))   ;Set of allowed lookahead terminals; null until terminals are numbered
 
 
 ;;; A lookahead-constraint imposes a restriction on the current lookahead terminal when matching
@@ -163,8 +175,7 @@
                                  (:constructor make-lookahead-constraint (pos forbidden-terminals source))
                                  (:predicate lookahead-constraint?))
   (forbidden-terminals nil :type list :read-only t) ;List of forbidden terminals
-  (source nil :type list :read-only t)              ;List of grammar symbols (terminals or nonterminals) that produced the list of forbidden terminals
-  (terminalset nil :type (or null terminalset)))    ;Set of allowed terminals (complement of forbidden-terminals); null until terminals are numbered
+  (source nil :type list :read-only t))             ;List of grammar symbols (terminals or nonterminals) that produced the list of forbidden terminals
 
 
 ; Emit markup for a lookahead-constraint.
@@ -182,20 +193,21 @@
     (format stream "-~{ ~:_~W~}" (lookahead-constraint-source lookahead-constraint))))
 
 
-;;; A no-line-break-constraint succeeds only when there is no line break at the current position.
-(defstruct (no-line-break-constraint (:include constraint)
-                                     (:constructor make-no-line-break-constraint (pos))
-                                     (:predicate no-line-break-constraint?)))
+;;; A variant-constraint succeeds only when there is no line break at the current position.
+(defstruct (variant-constraint (:include constraint)
+                               (:constructor make-variant-constraint (pos name))
+                               (:predicate variant-constraint?))
+  (name nil :read-only t))                         ;This variant-constraint's depict name
 
 
-; Emit markup for a no-line-break-constraint.
-(defun depict-no-line-break-constraint (markup-stream no-line-break-constraint)
-  (declare (ignore no-line-break-constraint))
-  (depict markup-stream :no-line-break))
+; Emit markup for a variant-constraint.
+(defun depict-variant-constraint (markup-stream variant-constraint)
+  (depict markup-stream (variant-constraint-name variant-constraint)))
 
 
-(defmethod print-object ((no-line-break-constraint no-line-break-constraint) stream)
-  (print-unreadable-object (no-line-break-constraint stream)))
+(defmethod print-object ((variant-constraint variant-constraint) stream)
+  (print-unreadable-object (variant-constraint stream)
+    (write (variant-constraint-name variant-constraint) :stream stream)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -237,12 +249,13 @@
                        0)))
 
 
-; Return the general-production's lookahead-constraint's terminalset at the given position.
-(defun general-production-lookahead-constraint (general-production pos)
-  (dolist (constraint (general-production-constraints general-production) *full-terminalset*)
-    (when (and (lookahead-constraint? constraint)
-               (= (constraint-pos constraint) pos))
-      (return (lookahead-constraint-terminalset constraint)))))
+; Return the general-production's constraint's terminalset at the given position.
+(defun general-production-constraint (general-production pos)
+  (let ((terminalset *full-terminalset*))
+    (dolist (constraint (general-production-constraints general-production))
+      (when (= (constraint-pos constraint) pos)
+        (terminalset-intersection-f terminalset (constraint-terminalset constraint))))
+    terminalset))
 
 
 ; Emit a markup paragraph for the left-hand-side of a general production.
@@ -257,8 +270,8 @@
   (cond
    ((lookahead-constraint? production-rhs-component)
     (depict-lookahead-constraint markup-stream production-rhs-component))
-   ((no-line-break-constraint? production-rhs-component)
-    (depict-no-line-break-constraint markup-stream production-rhs-component))
+   ((variant-constraint? production-rhs-component)
+    (depict-variant-constraint markup-stream production-rhs-component))
    (t (depict-general-grammar-symbol markup-stream production-rhs-component :reference subscript))))
 
 
@@ -785,7 +798,7 @@
           (let ((transition-cons (pprint-pop)))
             (pprint-logical-block (stream nil)
               (pprint-fill stream (car transition-cons) nil)
-              (format stream " ~2I~_=> " (car transition-cons))
+              (format stream " ~2I~_=> ")
               (print-transition (cdr transition-cons) stream))
             (format stream "   ~:_")))))
     (when (state-gotos state)
@@ -998,6 +1011,8 @@
   (terminals nil :type simple-vector :read-only t)       ;Vector of all terminals (in order of terminal numbers)
   (nonterminals nil :type simple-vector :read-only t)    ;Vector of all nonterminals (in a depth-first order)
   (nonterminals-list nil :type list :read-only t)        ;List version of the nonterminals vector
+  (terminal-variants nil :type hash-table :read-only t)  ;Hash table of terminal -> list of that terminal's variants, including the terminal itself
+  (terminal-terminalsets nil :type hash-table :read-only t) ;Hash table of terminal -> terminalset of that terminal's variants, including the terminal itself
   (terminal-numbers nil :type hash-table :read-only t)   ;Hash table of terminal -> terminal number
   (terminal-actions nil :type hash-table :read-only t)   ;Hash table of terminal -> list of (action-symbol . action-function-or-nil)
   (rules nil :type hash-table :read-only t)              ;Hash table of nonterminal -> rule
@@ -1010,6 +1025,20 @@
   (states nil :type list)                                ;List of LR(0) states (in order of state numbers)
   ;The following fields are used for the action generator.
   (action-signatures nil :type (or null hash-table)))    ;Hash table of grammar-symbol -> list of (action-symbol . type-or-type-expr)
+
+
+; Return a list of the given terminal's variants, including the terminal itself.
+(declaim (inline terminal-variants))
+(defun terminal-variants (grammar terminal)
+  (or (gethash terminal (grammar-terminal-variants grammar))
+      (error "Can't find terminal ~S" terminal)))
+
+
+; Return a terminalset of the given terminal's variants, including the terminal itself.
+(declaim (inline terminal-terminalset))
+(defun terminal-terminalset (grammar terminal)
+  (or (gethash terminal (grammar-terminal-terminalsets grammar))
+      (error "Can't find terminal ~S" terminal)))
 
 
 ; Return a rule for the given nonterminal lhs.
@@ -1072,6 +1101,7 @@
 ; G is the terminalset of all terminals x that satisfy
 ;   symbol ==>* x rest,
 ; where rest is an arbitrary string of grammar symbols.
+;
 ; P is the terminalset of all terminals x that satisfy
 ;   symbol x ==> x
 (defun symbol-initial-terminals (grammar symbol)
@@ -1079,7 +1109,7 @@
   (if (nonterminal? symbol)
     (let ((rule (grammar-rule grammar symbol)))
       (values (rule-initial-terminals rule) (rule-passthrough-terminals rule)))
-    (values (make-terminalset grammar symbol) *empty-terminalset*)))
+    (values (terminal-terminalset grammar symbol) *empty-terminalset*)))
 
 
 ; Given an arbitrary string of grammar symbols, a list of constraints, and an initial position,
@@ -1090,21 +1120,25 @@
 ; G is the terminalset of all terminals x that satisfy
 ;   symbol-string ==>* x rest,
 ; where rest is an arbitrary string of grammar symbols.
+;
 ; P is the terminalset of all terminals x that satisfy
 ;   symbol-string x ==> x
 ;
 ; The constraints' positions are relative to the given initial position, which specifies the position
 ; of the first grammar-symbol in the symbol-string.  The constraints must be listed in order of
-; increasing positions.
-(defun string-initial-terminals (grammar symbol-string constraints pos)
+; increasing positions.  If ignore-initial-constraints is true, ignore the constraints located at pos
+; but include the constraints at subsequent positions if applicable.
+(defun string-initial-terminals (grammar symbol-string constraints pos ignore-initial-constraints)
   (do ((symbol-string symbol-string (cdr symbol-string))
+       (pos pos (1+ pos))
        (initial-terminals *empty-terminalset*)
        (passthrough-terminals *full-terminalset*))
       ((terminalset-empty? passthrough-terminals) (values initial-terminals *empty-terminalset*))
-    (dolist (constraint constraints)
-      (when (and (lookahead-constraint? constraint)
-                 (= (constraint-pos constraint) pos))
-        (terminalset-intersection-f passthrough-terminals (lookahead-constraint-terminalset constraint))))
+    (if ignore-initial-constraints
+      (setq ignore-initial-constraints nil)
+      (dolist (constraint constraints)
+        (when (= (constraint-pos constraint) pos)
+          (terminalset-intersection-f passthrough-terminals (constraint-terminalset constraint)))))
     (if symbol-string
       (multiple-value-bind (generate passthrough) (symbol-initial-terminals grammar (first symbol-string))
         (terminalset-union-f initial-terminals (terminalset-intersection passthrough-terminals generate))
@@ -1115,14 +1149,15 @@
 ; Intern attributed or generic nonterminals in the production's lhs and rhs.  Replace
 ; (:- <terminal> ... <terminal>) or (:-- (<grammar-symbol> ... <grammar-symbol>) <terminal> ... <terminal>)
 ; sublists in the rhs with lookahead-constraints and put these, in order, after the third element of
-; the returned list.  Also replace :~ symbols with no-line-break-constraints.
+; the returned list.  Also replace variant constraint symbols with variant-constraints.
+; The variant-constraint-names parameter should be a list of possible variant constraint symbols.
 ; Return the resulting production source.
-(defun intern-production-source (grammar-parametrization production-source)
+(defun intern-production-source (grammar-parametrization variant-constraint-names production-source)
   (assert-type production-source (tuple (or user-nonterminal cons) (list (or user-grammar-symbol cons)) identifier))
   (let ((production-lhs-source (first production-source))
         (production-rhs-source (second production-source))
         (production-name (third production-source)))
-    (if (or (consp production-lhs-source) (some #'consp production-rhs-source) (find ':~ production-rhs-source))
+    (if (or (consp production-lhs-source) (some #'consp production-rhs-source) (intersection variant-constraint-names production-rhs-source))
       (multiple-value-bind (lhs-nonterminal lhs-arguments) (grammar-parametrization-intern grammar-parametrization production-lhs-source)
         (let ((rhs nil)
               (constraints nil)
@@ -1139,8 +1174,8 @@
                 (push
                  (make-lookahead-constraint pos (assert-non-null (rest lookaheads)) (assert-non-null (first lookaheads)))
                  constraints)))
-             ((eq component-source ':~)
-              (push (make-no-line-break-constraint pos) constraints))
+             ((member component-source variant-constraint-names)
+              (push (make-variant-constraint pos component-source) constraints))
              (t
               (push (grammar-parametrization-intern grammar-parametrization component-source lhs-arguments) rhs)
               (incf pos))))
@@ -1160,36 +1195,45 @@
 ; nonterminal can have attributes, thereby designating a specialization instead of a fully
 ; generic production.
 ;
+; variant-constraint-names should be a list of keywords that are variant-constraints instead of nonterminals
+;
+; A variant-generator is either nil or a function that takes a terminal and outputs a list of its variants.
+; Each variant is specified as a cons of:
+;   A variant terminal
+;   A list of names of variant constraints which exclude this variant terminal
+;
 ; The rhs can also contain lookahead constraints of the form
 ;   (:- <terminal> ... <terminal>) 
 ; which indicate that the following terminal must not be one of the listed terminals.  The form
 ;   (:-- (<grammar-symbol> ... <grammar-symbol>) <terminal> ... <terminal>)
 ; does the same thing except that it prints the grammar-symbols instead of the terminals when
 ; the production is printed.  The form
-;   :~
-; indicates that a line break is not allowed at the current position between terminals (this
-; constraint is currently ignored by the parser but does show up in printed grammars).
+;   <constraint>
+; where <constraint> is a member of the variant-constraint-names list also represents a constraint on the following
+; terminal; that constraint excludes all variants that were returned by variant-generator along with this constraint.
 ;
-; excluded-nonterminals-source is a list of nonterminals not used in the grammar.  Productions,
+; excluded-nonterminals is a list of nonterminals not used in the grammar.  Productions,
 ; including productions expanded from generic productions, that have one of these nonterminals
 ; on the lhs are ignored.
-(defun make-grammar (grammar-parametrization start-symbol grammar-source &optional excluded-nonterminals-source)
-  (let ((interned-grammar-source
+(defun make-grammar (grammar-parametrization start-symbol grammar-source &key variant-constraint-names variant-generator excluded-nonterminals)
+  (let ((variant-constraint-forbid-lists (mapcar #'list variant-constraint-names))
+        (interned-grammar-source
          (mapcar #'(lambda (production-source)
-                     (intern-production-source grammar-parametrization production-source))
+                     (intern-production-source grammar-parametrization variant-constraint-names production-source))
                  grammar-source))
         (rules (make-hash-table :test #'eq))
         (terminals-hash (make-hash-table :test *grammar-symbol-=*))
+        (terminal-variants (make-hash-table :test *grammar-symbol-=*))
         (general-productions (make-hash-table :test #'equal))
         (production-number 0)
         (max-production-length 1)
         (excluded-nonterminals-hash (make-hash-table :test *grammar-symbol-=*))
-        (lookahead-constraints nil))
+        (constraints nil))
     
     ;Set up excluded-nonterminals-hash.  The values of the hash table are either :seen or :unseen
     ;depending on whether a production with the particular nonterminal has been seen yet.
-    (dolist (excluded-nonterminal-source excluded-nonterminals-source)
-      (setf (gethash (grammar-parametrization-intern grammar-parametrization excluded-nonterminal-source nil) excluded-nonterminals-hash)
+    (dolist (excluded-nonterminal excluded-nonterminals)
+      (setf (gethash (grammar-parametrization-intern grammar-parametrization excluded-nonterminal nil) excluded-nonterminals-hash)
             :unseen))
     
     ;Create the starting production:  *start-nonterminal* ==> start-symbol
@@ -1243,6 +1287,16 @@
                     (create-production production-lhs production-rhs production-constraints production-name)))))))
     
     
+    (when variant-generator
+      (dolist (terminal (hash-table-keys terminals-hash))
+        (dolist (variant-and-constraints (funcall variant-generator terminal))
+          (let ((variant (first variant-and-constraints)))
+            (push variant (gethash terminal terminal-variants))
+            (setf (gethash variant terminals-hash) t)
+            (dolist (constraint (rest variant-and-constraints))
+              (push variant (cdr (assoc constraint variant-constraint-forbid-lists))))))))
+    
+    
     ;Change all values of the rules hash table to contain rule structures
     ;instead of mere lists of rules.  Also check that all referenced nonterminals
     ;have been defined.
@@ -1254,8 +1308,8 @@
                (unless (gethash grammar-symbol rules)
                  (error "Nonterminal ~S used but not defined" grammar-symbol))))
            (dolist (constraint (production-constraints rule-production))
+             (push constraint constraints)
              (when (lookahead-constraint? constraint)
-               (push constraint lookahead-constraints)
                (dolist (lookahead-terminal (lookahead-constraint-forbidden-terminals constraint))
                  (unless (gethash lookahead-terminal terminals-hash)
                    (warn "Lookahead terminal ~S not used in main grammar" lookahead-terminal)
@@ -1282,16 +1336,21 @@
       
       (let ((terminals (coerce (cons *end-marker* (sorted-hash-table-keys terminals-hash))
                                'simple-vector))
+            (terminal-terminalsets (make-hash-table :test *grammar-symbol-=*))
             (nonterminals (coerce nonterminals-list 'simple-vector)))
         (dotimes (n (length terminals))
-          (setf (gethash (svref terminals n) terminals-hash) n))
+          (let ((terminal (svref terminals n)))
+            (setf (gethash terminal terminals-hash) n)
+            (pushnew terminal (gethash terminal terminal-variants))))
         (dotimes (n (length nonterminals))
           (setf (rule-number (gethash (svref nonterminals n) rules)) n))
         (let ((grammar (allocate-grammar
                         :argument-attributes (grammar-parametrization-argument-attributes grammar-parametrization)
                         :terminals terminals
-                        :nonterminals-list nonterminals-list
                         :nonterminals nonterminals
+                        :nonterminals-list nonterminals-list
+                        :terminal-variants terminal-variants
+                        :terminal-terminalsets terminal-terminalsets
                         :terminal-numbers terminals-hash
                         :terminal-actions (make-hash-table :test *grammar-symbol-=*)
                         :rules rules
@@ -1301,12 +1360,34 @@
                         :n-productions production-number
                         :items-hash (make-hash-table :test #'equal))))
           
-          ;Compute the terminalsets in the lookahead-constraints.
-          (dolist (lookahead-constraint lookahead-constraints)
+          ;Compute the terminalsets in the terminal-terminalsets.
+          (dotimes (n (length terminals))
+            (let ((terminal (svref terminals n))
+                  (terminalset *empty-terminalset*))
+              (dolist (variant (terminal-variants grammar terminal))
+                (terminalset-union-f terminalset (make-terminalset grammar variant)))
+              (setf (gethash terminal terminal-terminalsets) terminalset)))
+          
+          ;Replace the cdr of each element of variant-constraint-forbid-lists with a terminalset of all
+          ;terminals not forbidden by that constraint.
+          (dolist (constraint-and-forbidden-variants variant-constraint-forbid-lists)
             (let ((terminalset *full-terminalset*))
-              (dolist (forbidden-terminal (lookahead-constraint-forbidden-terminals lookahead-constraint))
-                (terminalset-difference-f terminalset (make-terminalset grammar forbidden-terminal)))
-              (setf (lookahead-constraint-terminalset lookahead-constraint) terminalset)))
+              (dolist (variant (rest constraint-and-forbidden-variants))
+                (terminalset-difference-f terminalset (ash 1 (gethash variant terminals-hash)))
+                (setf (rest constraint-and-forbidden-variants) terminalset))))
+          
+          ;Compute the terminalsets in the constraints.
+          (dolist (constraint constraints)
+            (cond
+             ((lookahead-constraint? constraint)
+              (let ((terminalset *full-terminalset*))
+                (dolist (forbidden-terminal (lookahead-constraint-forbidden-terminals constraint))
+                  (terminalset-difference-f terminalset (terminal-terminalset grammar forbidden-terminal)))
+                (setf (constraint-terminalset constraint) terminalset)))
+             ((variant-constraint? constraint)
+              (setf (constraint-terminalset constraint) (assert-non-null (cdr (assoc (variant-constraint-name constraint)
+                                                                                     variant-constraint-forbid-lists)))))
+             (t (error "Unknown constraint ~S" constraint))))
           
           ;Compute the values of passthrough-terminals and initial-terminals in each rule.
           (do ((changed t))
@@ -1318,7 +1399,7 @@
                     (new-passthrough-terminals *empty-terminalset*))
                 (dolist (production (rule-productions rule))
                   (multiple-value-bind (production-initial-terminals production-passthrough-terminals)
-                                       (string-initial-terminals grammar (production-rhs production) (production-constraints production) 0)
+                                       (string-initial-terminals grammar (production-rhs production) (production-constraints production) 0 nil)
                     (terminalset-union-f new-initial-terminals production-initial-terminals)
                     (terminalset-union-f new-passthrough-terminals production-passthrough-terminals)))
                 (unless (terminalset-= new-initial-terminals (rule-initial-terminals rule))
@@ -1382,9 +1463,11 @@
                     (format stream "~:@_ | ")))
                 (pprint-indent :block 2 stream)
                 (when details
-                  (format stream "~:@_Initial terminals: ~@_~@<~:[~;<epsilon> ~:_~]~{~W ~:_~}~:>"
-                          (not (terminalset-empty? (rule-passthrough-terminals rule)))
-                          (terminalset-list grammar (rule-initial-terminals rule)))))
+                  (format stream "~:@_Initial terminals: ~@_")
+                  (pprint-logical-block (stream nil)
+                    (unless (terminalset-empty? (rule-passthrough-terminals rule))
+                      (format stream "<epsilon> ~:_"))
+                    (print-terminalset grammar (rule-initial-terminals rule) stream))))
               (pprint-newline :mandatory stream))
             (pprint-exit-if-list-exhausted)
             (pprint-newline :mandatory stream)))
@@ -1432,6 +1515,18 @@
              states-hash)
     (sort equivalences #'< :key #'(lambda (equivalence)
                                     (state-number (first equivalence))))))
+
+; Call f on each state in the grammar, in order of state numbers.
+; f should take two parameters:
+;   a state;
+;   a hash table of terminal -> transition
+(defun all-state-transitions (f grammar)
+  (let ((transitions-hash (make-hash-table :test *grammar-symbol-=*)))
+    (dolist (state (grammar-states grammar))
+      (dolist (transition-pair (state-transitions state))
+        (setf (gethash (car transition-pair) transitions-hash) (cdr transition-pair)))
+      (funcall f state transitions-hash)
+      (clrhash transitions-hash))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
