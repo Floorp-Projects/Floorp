@@ -53,7 +53,7 @@ public:
   /**
    * Class destructor.
    */
-  ~nsSJIS2Unicode();
+  virtual ~nsSJIS2Unicode();
 
   /**
    * Static class constructor.

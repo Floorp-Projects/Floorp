@@ -127,7 +127,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
   nsConverterFactory * fac;
   FactoryData * data;
 
-  for (PRInt32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+  for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     data = &(g_FactoryData[i]);
     if (aClass.Equals(*(data->mCID))) {
       fac = new nsConverterFactory(data);
@@ -148,7 +148,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char
 {
   nsresult res;
 
-  for (PRInt32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+  for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     res = nsRepository::RegisterComponent(*(g_FactoryData[i].mCID), NULL, NULL,
       path, PR_TRUE, PR_TRUE);
     if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
@@ -161,7 +161,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const ch
 {
   nsresult res;
 
-  for (PRInt32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+  for (PRUint32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
     res = nsRepository::UnregisterFactory(*(g_FactoryData[i].mCID), path);
     if(NS_FAILED(res)) return res;
   }
