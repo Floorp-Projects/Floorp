@@ -10,3 +10,8 @@
 <!ENTITY grayRadio.label "GrayScale">
 <!ENTITY colorRadio.label "Color">
 
+<!ENTITY edgeMarginInput.label "Gap from edge of paper to Margin (inches)">
+<!ENTITY topInput.label "Top:">
+<!ENTITY bottomInput.label "Bottom:">
+<!ENTITY leftInput.label "Left:">
+<!ENTITY rightInput.label "Right:">

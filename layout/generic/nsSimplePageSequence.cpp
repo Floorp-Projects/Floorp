@@ -115,7 +115,7 @@ nsSharedPageData::nsSharedPageData() :
   mShadowSize(0,0),
   mDeadSpaceMargin(0,0,0,0),
   mExtraMargin(0,0,0,0),
-  mHeadFooterGap(0)
+  mEdgePaperMargin(0,0,0,0)
 {
 }
 
@@ -223,6 +223,24 @@ nsSimplePageSequenceFrame::CreateContinuingPageFrame(nsIPresContext* aPresContex
   return rv;
 }
 
+static void GetEdgePaperMarginCoord(nsIPref* aPref, char* aPrefName, nscoord& aCoord)
+{
+  if (NS_SUCCEEDED(aPref->GetIntPref(aPrefName, &aCoord))) {
+    nscoord inchInTwips = NS_INCHES_TO_TWIPS(1.0);
+    aCoord = PR_MAX(NS_INCHES_TO_TWIPS(float(aCoord)/100.0f), 0);
+    aCoord = PR_MIN(aCoord, inchInTwips); // an inch is still probably excessive
+  }
+}
+
+static void GetEdgePaperMargin(nsIPref* aPref, nsMargin& aMargin)
+{
+  aMargin.SizeTo(0,0,0,0);
+  GetEdgePaperMarginCoord(aPref, "print.print_edge_top", aMargin.top);
+  GetEdgePaperMarginCoord(aPref, "print.print_edge_left", aMargin.left);
+  GetEdgePaperMarginCoord(aPref, "print.print_edge_bottom", aMargin.bottom);
+  GetEdgePaperMarginCoord(aPref, "print.print_edge_right", aMargin.right);
+}
+
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
@@ -234,6 +252,20 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;  // we're always complete
+
+  // absolutely ignore all other types of reflows
+  // we only want to have done the Initial Reflow
+  if (eReflowReason_Resize == aReflowState.reason ||
+      eReflowReason_Incremental == aReflowState.reason ||
+      eReflowReason_StyleChange == aReflowState.reason ||
+      eReflowReason_Dirty == aReflowState.reason) {
+    // Return our desired size
+    aDesiredSize.height  = mSize.height;
+    aDesiredSize.width   = mSize.width;
+    aDesiredSize.ascent  = aDesiredSize.height;
+    aDesiredSize.descent = 0;
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
 
@@ -274,17 +306,13 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord extraGap = 0;
   nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
   if (pref) {
+    GetEdgePaperMargin(pref, mPageData->mEdgePaperMargin);
     nscoord inchInTwips = NS_INCHES_TO_TWIPS(1.0);
     PRInt32 gapInTwips;
-    if (NS_SUCCEEDED(pref->GetIntPref("print.print_headerfooter_gap", &gapInTwips))) {
-      gapInTwips = PR_MAX(gapInTwips, 0);
-      gapInTwips = PR_MIN(gapInTwips, inchInTwips); // an inch is still probably excessive
-      mPageData->mHeadFooterGap = nscoord(gapInTwips);
-    }
     if (NS_SUCCEEDED(pref->GetIntPref("print.print_extra_margin", &gapInTwips))) {
       gapInTwips = PR_MAX(gapInTwips, 0);
       gapInTwips = PR_MIN(gapInTwips, inchInTwips); // an inch is still probably excessive
-      extraGap = nscoord(gapInTwips);
+      extraGap   = nscoord(gapInTwips);
     }
   }
 
@@ -306,20 +334,6 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   mPageData->mShadowSize      = shadowSize;
   mPageData->mExtraMargin     = extraMargin;
   mPageData->mDeadSpaceMargin = deadSpaceMargin;
-
-  // absolutely ignore all other types of reflows
-  // we only want to have done the Initial Reflow
-  if (eReflowReason_Resize == aReflowState.reason ||
-      eReflowReason_Incremental == aReflowState.reason ||
-      eReflowReason_StyleChange == aReflowState.reason ||
-      eReflowReason_Dirty == aReflowState.reason) {
-    // Return our desired size
-    aDesiredSize.height  = mSize.height;
-    aDesiredSize.width   = mSize.width;
-    aDesiredSize.ascent  = aDesiredSize.height;
-    aDesiredSize.descent = 0;
-    return NS_OK;
-  }
 
   PRBool suppressLeftMargin   = PR_FALSE;
   PRBool suppressRightMargin  = PR_FALSE;

@@ -108,10 +108,13 @@ pref("print.print_color", true);
 pref("print.print_landscape", false);
 pref("print.print_paper_size", 0);
 
-// print_headerfooter_gap enables platforms to specify an extra "gap" in twips
-// between the H/F and the edge of the paper,  
+// Enables you to specify the gap from the edge of the paper to the margin
 // this is used by both Printing and Print Preview
-pref("print.print_headerfooter_gap", 60); // twips
+pref("print.print_edge_top", 4); // 1/100 of an inch
+pref("print.print_edge_left", 4); // 1/100 of an inch
+pref("print.print_edge_right", 4); // 1/100 of an inch
+pref("print.print_edge_bottom", 4); // 1/100 of an inch
+
 
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only

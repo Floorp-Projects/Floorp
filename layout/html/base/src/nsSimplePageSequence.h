@@ -61,7 +61,7 @@ public:
   nsSize      mShadowSize;       // shadow of page in PrintPreview
   nsMargin    mDeadSpaceMargin;  // Extra dead space around outside of Page in PrintPreview
   nsMargin    mExtraMargin;      // Extra Margin between the printable area and the edge of the page
-  nscoord     mHeadFooterGap;    // In twips, gap between H/F from edge of page
+  nsMargin    mEdgePaperMargin;  // In twips, gap between the Margin and edge of page
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintOptions> mPrintOptions;

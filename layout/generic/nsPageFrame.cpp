@@ -100,9 +100,7 @@ nsresult
 NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
+
   nsPageFrame* it = new (aPresShell) nsPageFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -236,6 +234,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
         aDesiredSize.height = aReflowState.availableHeight;
       }
 
+#ifdef NS_DEBUG
       // Is the frame complete?
       if (NS_FRAME_IS_COMPLETE(aStatus)) {
         nsIFrame* childNextInFlow;
@@ -243,6 +242,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
         frame->GetNextInFlow(&childNextInFlow);
         NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
       }
+#endif
     }
     PRINT_DEBUG_MSG2("PageFrame::Reflow %p ", this);
     PRINT_DEBUG_MSG5("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.availableWidth, aReflowState.availableHeight);
@@ -455,7 +455,7 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
   nscoord x = aRect.x;
   switch (aJust) {
     case nsIPrintSettings::kJustLeft:
-      x += mPD->mExtraMargin.left + mPD->mHeadFooterGap;
+      x += mPD->mExtraMargin.left + mPD->mEdgePaperMargin.left;
       break;
 
     case nsIPrintSettings::kJustCenter:
@@ -463,7 +463,7 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
       break;
 
     case nsIPrintSettings::kJustRight:
-      x += aRect.width - width - mPD->mExtraMargin.right - mPD->mHeadFooterGap;
+      x += aRect.width - width - mPD->mExtraMargin.right - mPD->mEdgePaperMargin.right;
       break;
   } // switch
 
@@ -534,7 +534,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                               nscoord              aWidth)
 {
 
-  nscoord contentWidth = aWidth - (mPD->mHeadFooterGap * 2);
+  nscoord contentWidth = aWidth - (mPD->mEdgePaperMargin.left + mPD->mEdgePaperMargin.right);
 
   // first make sure we have a vaild string and that the height of the
   // text will fit in the margin
@@ -566,9 +566,9 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     nscoord x = GetXPosition(aRenderingContext, rect, aJust, str);
     nscoord y;
     if (aHeaderFooter == eHeader) {
-      y = rect.y + mPD->mExtraMargin.top + mPD->mHeadFooterGap;
+      y = rect.y + mPD->mExtraMargin.top + mPD->mEdgePaperMargin.top;
     } else {
-      y = rect.y + rect.height - aHeight - mPD->mExtraMargin.bottom - mPD->mHeadFooterGap;
+      y = rect.y + rect.height - aHeight - mPD->mExtraMargin.bottom - mPD->mEdgePaperMargin.bottom;
     }
 
     // set up new clip and draw the text
