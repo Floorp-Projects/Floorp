@@ -30,7 +30,6 @@
 #include "nsUnitConversion.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsStyleChangeList.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
