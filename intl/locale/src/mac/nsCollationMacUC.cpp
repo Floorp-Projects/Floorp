@@ -219,7 +219,7 @@ NS_IMETHODIMP nsCollationMacUC::CompareString(
   err = ::UCCompareText(mCollator, 
                         (const UniChar *) PromiseFlatString(string1).get(), (UniCharCount) string1.Length(),
                         (const UniChar *) PromiseFlatString(string2).get(), (UniCharCount) string2.Length(),
-                        NULL, result);
+                        NULL, (SInt32*) result);
 
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
   return NS_OK;
@@ -240,7 +240,7 @@ NS_IMETHODIMP nsCollationMacUC::CompareRawSortKey(
   OSStatus err;
   err = ::UCCompareCollationKeys((const UCCollationValue*) key1, (ItemCount) len1,
                                  (const UCCollationValue*) key2, (ItemCount) len2,
-                                 NULL, result);
+                                 NULL, (SInt32*) result);
 
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
   return NS_OK;
