@@ -31,12 +31,10 @@
 #include "nsIBaseWindow.h"
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIDocumentLoaderObserver.h"
 
 class CBrowserWindow;
 
 class CWebBrowserChrome : public nsIWebBrowserChrome,
-                           public nsIDocumentLoaderObserver,
                            public nsIWebProgressListener,
                            public nsIBaseWindow,
                            public nsIInterfaceRequestor
@@ -46,7 +44,6 @@ friend class CBrowserWindow;
 public:
    NS_DECL_ISUPPORTS
    NS_DECL_NSIWEBBROWSERCHROME
-   NS_DECL_NSIDOCUMENTLOADEROBSERVER
    NS_DECL_NSIWEBPROGRESSLISTENER
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSIINTERFACEREQUESTOR
