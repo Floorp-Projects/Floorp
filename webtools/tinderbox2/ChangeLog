@@ -1,3 +1,15 @@
+New Configure script contributed by Stephen Lamm (slamm@yahoo-inc.com)
+This includes a fix to allow Perl to be in different locations on the 
+machine where make is run and on the machine where the webserver runs.
+	
+Now it is possible to include the time column on the left and right 
+side of the status table.
+
+There is now a working Perforce module for those who use this product
+instead of CVS.
+
+There is a module to interface with the req ticketing system.
+	
 New Summary format and number of errors displayed on build page by
         Adam Di Carlo <adam@onshore-devel.com>,
 
