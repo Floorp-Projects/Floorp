@@ -37,12 +37,17 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define XmNarrow						"arrow"
+#define XmNgetTextFunc					"getTextFunc"
 #define XmNlistFontList					"listFontList"
+#define XmNsetTextProc					"setTextProc"
 #define XmNshareShell					"shareShell"
 #define XmNshell						"shell"
 #define XmNtitleShadowThickness			"titleShadowThickness"
 #define XmNtitleShadowType				"titleShadowType"
+
+#define XmCGetTextFunc					"GetTextFunc"
 #define XmCListFontList					"ListFontList"
+#define XmCSetTextProc					"SetTextProc"
 #define XmCShareShell					"ShareShell"
 
 /* Things that conflict with Motif 2.x */
@@ -77,6 +82,33 @@ enum
 	XmCOMBO_BOX_EDITABLE,						/*						*/
 	XmCOMBO_BOX_READ_ONLY						/*						*/
 };
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeComboBoxSetTextProc												*/
+/*																		*/
+/* Type for XmNsetTextProc resource.  If set, this procedure will be	*/
+/* called instead of XmTextFieldSetString().  You can use this to 		*/
+/* work around Motif bugs or locale customizations.           			*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+typedef void	(*XfeComboBoxSetTextProc)		(Widget			w,
+												 char *			text);
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeComboBoxGetTextFunc												*/
+/*																		*/
+/* Type for XmNgetTextFunc resource.  If set, this function will be		*/
+/* called instead of XmTextFieldGetString().  You can use this to 		*/
+/* work around Motif bugs or locale customizations.           			*/
+/*																		*/
+/* Use XtFree() on the returned string.									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+typedef char *	(*XfeComboBoxGetTextFunc)		(Widget			w);
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/

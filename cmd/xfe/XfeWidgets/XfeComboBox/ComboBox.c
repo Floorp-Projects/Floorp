@@ -194,6 +194,14 @@ static void			SyntheticGetListItemCount	(Widget,int, XtArgVal *);
 /*----------------------------------------------------------------------*/
 static void			ComboBoxRegisterRepTypes	(void);
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XmTextField manipulation functions									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void			InvokeSetTextProc			(Widget,char *);
+static char *		InvokeGetTextFunc			(Widget);
+
 #if 0
 /*
  * External definitions of syn_resources for our list widget.
@@ -218,6 +226,27 @@ extern void _DtComboBoxGetListVisibleItemCount	SYN_RESOURCE_AA;
 /*----------------------------------------------------------------------*/
 static XtResource resources[] = 	
 {					
+    /* XmTextField manipulation resources */
+	{
+		XmNgetTextFunc,
+		XmCGetTextFunc,
+		XmRFunction,
+		sizeof(XfeComboBoxGetTextFunc),
+		XtOffsetOf(XfeComboBoxRec , xfe_combo_box . get_text_func),
+		XmRImmediate, 
+		(XtPointer) NULL
+	},
+	{
+		XmNsetTextProc,
+		XmCSetTextProc,
+		XmRFunction,
+		sizeof(XfeComboBoxSetTextProc),
+		XtOffsetOf(XfeComboBoxRec , xfe_combo_box . set_text_proc),
+		XmRImmediate, 
+		(XtPointer) NULL
+	},
+
+
     /* Title resources */
 	{
 		XmNtitle,
@@ -1544,6 +1573,56 @@ StickRemoveTimeout(Widget w)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XmTextField manipulation functions									*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+InvokeSetTextProc(Widget text_field,char * text)
+{
+	Widget				w = _XfeParent(text_field);
+    XfeComboBoxPart *	cp = _XfeComboBoxPart(w);
+
+	assert( XmIsTextField(text_field) );
+	assert( _XfeIsAlive(w) );
+	assert( text != NULL );
+	
+	/* Invoke the set_text_proc if available */
+	if (cp->set_text_proc != NULL)
+	{
+		(*cp->set_text_proc)(text_field,text);
+	}
+	else
+	{
+		XmTextFieldSetString(text_field,text);
+	}
+}
+/*----------------------------------------------------------------------*/
+static char *
+InvokeGetTextProc(Widget text_field)
+{
+	Widget				w = _XfeParent(text_field);
+    XfeComboBoxPart *	cp = _XfeComboBoxPart(w);
+	char *				result;
+
+	assert( XmIsTextField(text_field) );
+	assert( _XfeIsAlive(w) );
+
+	/* Invoke the get_text_func if available */
+	if (cp->get_text_func != NULL)
+	{
+		result = (*cp->get_text_func)(text_field);
+	}
+	else
+	{
+		result = XmTextFieldGetString(text_field);
+	}
+
+	return result;
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeComboBox method invocation functions								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -1609,6 +1688,22 @@ XfeCreateComboBox(Widget pw,char * name,Arg * av,Cardinal ac)
 	return XtCreateWidget(name,xfeComboBoxWidgetClass,pw,av,ac);
 }
 /*----------------------------------------------------------------------*/
+/* extern */ Widget
+XfeComboBoxSetEditableText(Widget w,char * text)
+{
+    XfeComboBoxPart *		cp = _XfeComboBoxPart(w);
+	
+	assert( cp->combo_box_type == XmCOMBO_BOX_EDITABLE );
+}
+/*----------------------------------------------------------------------*/
+/* extern */ Widget
+XfeComboBoxSetText(Widget w,char * text)
+{
+    XfeComboBoxPart *		cp = _XfeComboBoxPart(w);
+
+}
+/*----------------------------------------------------------------------*/
+
 /* extern */ void
 XfeComboBoxAddItem(Widget w,XmString item,int position)
 {
