@@ -202,6 +202,12 @@ nsThread::RegisterThreadSelf()
 NS_BASE nsresult
 nsIThread::GetCurrent(nsIThread* *result)
 {
+    return GetIThread(PR_CurrentThread(), result);
+}
+
+NS_BASE nsresult
+nsIThread::GetIThread(PRThread* prthread, nsIThread* *result)
+{
     PRStatus status;
     nsThread* thread;
 
@@ -219,7 +225,7 @@ nsIThread::GetCurrent(nsIThread* *result)
         if (thread == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(thread);
-        thread->SetPRThread(PR_CurrentThread());
+        thread->SetPRThread(prthread);
         nsresult rv = thread->RegisterThreadSelf();
         if (NS_FAILED(rv)) return rv;
     }
