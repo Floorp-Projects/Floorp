@@ -47,7 +47,7 @@ GetAttributeValueAt(const nsIParserNode& aNode,
 
   // Strip quotes if present
   PRUnichar first = aResult.First();
-  if ((first == '"') || (first == '\'')) {
+  if ((first == '\"') || (first == '\'')) {
     if (aResult.Last() == first) {
       aResult.Cut(0, 1);
       PRInt32 pos = aResult.Length() - 1;
@@ -227,7 +227,7 @@ NewElement(const nsIParserNode& aNode, nsIXMLContent** aResult)
 class nsFrameRegressionDataSink : public nsIXMLContentSink {
 public:
   nsFrameRegressionDataSink();
-  ~nsFrameRegressionDataSink();
+  virtual ~nsFrameRegressionDataSink();
 
   NS_DECL_ISUPPORTS
 
@@ -260,7 +260,7 @@ nsFrameRegressionDataSink::nsFrameRegressionDataSink()
 {
   mRoot = nsnull;
   mCurrentContainer = nsnull;
-  mRefCnt = 1;
+  NS_INIT_REFCNT();
 }
 
 nsFrameRegressionDataSink::~nsFrameRegressionDataSink()
@@ -418,10 +418,11 @@ nsFrameRegressionDataSink::AddEntityReference(const nsIParserNode& aNode)
 class nsFrameUtil : public nsIFrameUtil {
 public:
   nsFrameUtil();
-  ~nsFrameUtil();
+  virtual ~nsFrameUtil();
 
   NS_DECL_ISUPPORTS
   NS_IMETHOD LoadFrameRegressionData(nsIURL* aURL, nsIXMLContent** aResult);
+  NS_IMETHOD ReadFrameRegressionData(FILE* aInput, nsIXMLContent** aResult);
 };
 
 nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
@@ -464,22 +465,27 @@ nsFrameUtil::LoadFrameRegressionData(nsIURL* aURL, nsIXMLContent** aResult)
   if (nsnull == sink) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  NS_ADDREF(sink);
 
   nsIParser* parser;
   nsresult rv = nsRepository::CreateInstance(kCParserCID, nsnull, kCParserIID,
                                              (void **)&parser);
   if (NS_FAILED(rv)) {
-    delete sink;
+    NS_RELEASE(sink);
     return rv;
   }
 
-  // XXX since the parser can't sync load data, we do it right here
-  nsAutoString theWholeDarnThing;
+  nsIDTD* theDTD = 0;
+  NS_NewWellFormed_DTD(&theDTD);
+  parser->RegisterDTD(theDTD);
+  parser->SetContentSink(sink);
+
   nsIInputStream* iin;
   rv = NS_OpenURL(aURL, &iin);
   if (NS_OK != rv) {
     return rv;
   }
+  nsAutoString tmp;
   for (;;) {
     char buf[4000];
     PRUint32 rc;
@@ -487,20 +493,65 @@ nsFrameUtil::LoadFrameRegressionData(nsIURL* aURL, nsIXMLContent** aResult)
     if (NS_FAILED(rv) || (rc <= 0)) {
       break;
     }
-    theWholeDarnThing.Append(buf, rc);
+    tmp.Truncate();
+    tmp.Append(buf, rc);
+    parser->Parse(tmp, this, PR_FALSE, PR_FALSE, PR_FALSE);
   }
   NS_RELEASE(iin);
+  tmp.Truncate();
+  parser->Parse(tmp, this, PR_FALSE, PR_FALSE, PR_TRUE);
 
-  // XXX yucky API
+  *aResult = sink->GetRoot();
+  NS_RELEASE(sink); 
+  NS_RELEASE(parser);
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsFrameUtil::ReadFrameRegressionData(FILE* aInput, nsIXMLContent** aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null pointer");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsFrameRegressionDataSink* sink = new nsFrameRegressionDataSink();
+  if (nsnull == sink) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(sink);
+
+  nsIParser* parser;
+  nsresult rv = nsRepository::CreateInstance(kCParserCID, nsnull, kCParserIID,
+                                             (void **)&parser);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(sink);
+    return rv;
+  }
+
   nsIDTD* theDTD = 0;
   NS_NewWellFormed_DTD(&theDTD);
   parser->RegisterDTD(theDTD);
   parser->SetContentSink(sink);
-  parser->Parse(theWholeDarnThing, this, PR_FALSE, PR_FALSE, PR_TRUE);
-  NS_RELEASE(parser);
+
+  nsAutoString tmp;
+  for (;;) {
+    char buf[4000];
+    size_t count = fread(buf, sizeof(buf[0]), sizeof(buf), aInput);
+    if ((0 == count) || ferror(aInput)) {
+      break;
+    }
+    tmp.Truncate();
+    tmp.Append(buf, count);
+    parser->Parse(tmp, this, PR_FALSE, PR_FALSE, PR_FALSE);
+  }
+  tmp.Truncate();
+  parser->Parse(tmp, this, PR_FALSE, PR_FALSE, PR_TRUE);
 
   *aResult = sink->GetRoot();
   NS_RELEASE(sink); 
+  NS_RELEASE(parser);
 
   return rv;
 }
