@@ -362,8 +362,8 @@ XULContentSinkImpl::~XULContentSinkImpl()
                        ("xul: warning: unclosed namespace '%s' (%s)",
                         prefixStr, uriStr));
 
-                delete[] prefixStr;
-                delete[] uriStr;
+                nsCRT::free(prefixStr);
+                nsCRT::free(uriStr);
             }
 #endif
 
@@ -417,8 +417,8 @@ XULContentSinkImpl::~XULContentSinkImpl()
                        ("xul: warning: unclosed tag '%s' in namepace '%s'",
                         tagStr, nameSpaceURIStr));
 
-                delete[] tagStr;
-                delete[] nameSpaceURIStr;
+                nsCRT::free(tagStr);
+                nsCRT::free(nameSpaceURIStr);
             }
 #endif
 
@@ -640,7 +640,7 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xul: extra close tag '</%s>' at line %d\n",
                     tagStr, aNode.GetSourceLineNumber()));
-            delete[] tagStr;
+            nsCRT::free(tagStr);
         }
 #endif
         // Failure to return NS_OK causes stuff to freak out. See Bug 4433.
