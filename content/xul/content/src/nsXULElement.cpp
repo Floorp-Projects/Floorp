@@ -4555,6 +4555,7 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     }
     else {
         AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE); 
+        AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE); 
     }
 
     return NS_OK;

@@ -39,6 +39,7 @@
 #include "nsIXULPopupListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMContextMenuListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsContentCID.h"
 
@@ -81,7 +82,8 @@ static NS_DEFINE_IID(kXULPopupListenerCID,      NS_XULPOPUPLISTENER_CID);
 class XULPopupListenerImpl : public nsIXULPopupListener,
                              public nsIDOMMouseListener,
                              public nsIDOMKeyListener,
-                             public nsIDOMMouseMotionListener
+                             public nsIDOMMouseMotionListener,
+                             public nsIDOMContextMenuListener
 {
 public:
     XULPopupListenerImpl(void);
@@ -105,6 +107,9 @@ public:
     // nsIDOMMouseMotionListener
     virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
     virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+
+    // nsIDOMContextMenuListener
+    virtual nsresult ContextMenu(nsIDOMEvent* aContextMenuEvent);
 
     // nsIDOMKeyListener
     virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent) ;
@@ -201,6 +206,7 @@ NS_INTERFACE_MAP_BEGIN(XULPopupListenerImpl)
   NS_INTERFACE_MAP_ENTRY(nsIXULPopupListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMContextMenuListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULPopupListener)
@@ -276,6 +282,12 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
   else
     return NS_OK;
 #endif
+}
+
+nsresult
+XULPopupListenerImpl::ContextMenu(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK;
 }
 
 nsresult

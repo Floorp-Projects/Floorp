@@ -27,6 +27,7 @@
 extern const nsIID kIDOMMouseListenerIID;
 extern const nsIID kIDOMKeyListenerIID;
 extern const nsIID kIDOMMouseMotionListenerIID;
+extern const nsIID kIDOMContextMenuListenerIID;
 extern const nsIID kIDOMFocusListenerIID;
 extern const nsIID kIDOMFormListenerIID;
 extern const nsIID kIDOMLoadListenerIID;

@@ -149,6 +149,7 @@ protected:
   nsVoidArray* mEventListeners;
   nsVoidArray* mMouseListeners;
   nsVoidArray* mMouseMotionListeners;
+  nsVoidArray* mContextMenuListeners;
   nsVoidArray* mKeyListeners;
   nsVoidArray* mLoadListeners;
   nsVoidArray* mFocusListeners;
@@ -186,6 +187,10 @@ protected:
 #define NS_EVENT_BITS_MOUSEMOTION_NONE        0x00
 #define NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE   0x01
 #define NS_EVENT_BITS_MOUSEMOTION_DRAGMOVE    0x02
+
+//nsIDOMContextMenuListener
+#define NS_EVENT_BITS_CONTEXTMENU_NONE   0x00
+#define NS_EVENT_BITS_CONTEXTMENU        0x01
 
 //nsIDOMKeyListener
 #define NS_EVENT_BITS_KEY_NONE      0x00
