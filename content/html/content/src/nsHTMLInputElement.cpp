@@ -1705,21 +1705,23 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           case NS_FORM_INPUT_SUBMIT:
           case NS_FORM_INPUT_IMAGE:
             {
-              nsFormEvent event;
-              event.eventStructType = NS_FORM_EVENT;
-              event.message         = (type == NS_FORM_INPUT_RESET) ? NS_FORM_RESET : NS_FORM_SUBMIT;
-              event.originator      = this;
-              nsEventStatus status  = nsEventStatus_eIgnore;
+              if (mForm) {
+                nsFormEvent event;
+                event.eventStructType = NS_FORM_EVENT;
+                event.message         = (type == NS_FORM_INPUT_RESET) ? NS_FORM_RESET : NS_FORM_SUBMIT;
+                event.originator      = this;
+                nsEventStatus status  = nsEventStatus_eIgnore;
 
-              nsCOMPtr<nsIPresShell> presShell;
-              aPresContext->GetShell(getter_AddRefs(presShell));
-              // If |nsIPresShell::Destroy| has been called due to
-              // handling the event (base class HandleDOMEvent, above),
-              // the pres context will return a null pres shell.  See
-              // bug 125624.
-              if (presShell) {
-                nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
-                presShell->HandleDOMEventWithTarget(form, &event, &status);
+                nsCOMPtr<nsIPresShell> presShell;
+                aPresContext->GetShell(getter_AddRefs(presShell));
+                // If |nsIPresShell::Destroy| has been called due to
+                // handling the event (base class HandleDOMEvent, above),
+                // the pres context will return a null pres shell.  See
+                // bug 125624.
+                if (presShell) {
+                  nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+                  presShell->HandleDOMEventWithTarget(form, &event, &status);
+                }
               }
             }
             break;
