@@ -802,6 +802,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    if( hwndP != HWND_DESKTOP)
    {
+
       // For pop-up menus, the parent is the desktop, but use the "parent" as owner
       if( aInitData && aInitData->mWindowType == eWindowType_popup)
       {
@@ -812,9 +813,14 @@ void nsWindow::RealDoCreate( HWND              hwndP,
          hwndP = HWND_DESKTOP;
       }
       // For scrollbars, the parent is the owner, for notification purposes
-      else if( !hwndOwner && WindowClass() == WC_SCROLLBAR)
+      else if( !hwndOwner )
       {
-         hwndOwner = hwndP;
+         BOOL bHwndIsScrollBar = 
+                           (!(strcmp( WindowClass(), WC_SCROLLBAR_STRING )));
+         if( bHwndIsScrollBar )
+         {
+            hwndOwner = hwndP;
+         }
       }
    }
 

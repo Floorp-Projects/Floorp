@@ -326,7 +326,12 @@ PRBool nsScrollbar::OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2)
 //-------------------------------------------------------------------------
 PCSZ nsScrollbar::WindowClass()
 {
-    return WC_SCROLLBAR;
+    /* Can't return (PSZ)WC_SCROLLBAR since we need to return a real string
+     * as some string manipulation might be done on the returned value.
+     * The return from WinQueryClassName for a WC_SCROLLBAR is "#8", so that is
+     * what we'll return.  Value makes since since WC_SCROLLBAR is 0xFFFF0008.
+     */
+    return WC_SCROLLBAR_STRING;
 }
 
 
