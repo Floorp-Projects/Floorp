@@ -275,9 +275,10 @@ void nsMsgDatabase::RemoveFromCache(nsMsgDatabase* pMessageDB)
 #ifdef DEBUG
 void nsMsgDatabase::DumpCache()
 {
+    nsMsgDatabase* pMessageDB = nsnull;
 	for (PRUint32 i = 0; i < GetDBCache()->Count(); i++)
 	{
-		nsMsgDatabase* pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
+		pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
 	}
 }
 #endif /* DEBUG */
@@ -732,7 +733,9 @@ nsresult nsMsgDatabase::InitNewDB()
 			dbFolderInfo->SetVersion(GetCurVersion());
 			nsIMdbStore *store = GetStore();
 			// create the unique table for the dbFolderInfo.
-			mdb_err mdberr = (nsresult) store->NewTable(GetEnv(), m_hdrRowScopeToken, 
+			mdb_err mdberr;
+
+            mdberr = (nsresult) store->NewTable(GetEnv(), m_hdrRowScopeToken, 
 				m_hdrTableKindToken, PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
 //			m_mdbAllMsgHeadersTable->BecomeContent(GetEnv(), &gAllMsgHdrsTableOID);
 			m_dbFolderInfo = dbFolderInfo;
@@ -2279,7 +2282,7 @@ nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(nsString2 &reference)
 nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 {
 	nsIMsgDBHdr	*msgHdr = nsnull;
-
+    nsresult rv = NS_OK;
 	mdbYarn	messageIdYarn;
 
 	messageIdYarn.mYarn_Buf = (void*)msgID.GetBuffer();
@@ -2299,7 +2302,7 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 		nsMsgKey key=0;
 		if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
 			key = outOid.mOid_Id;
-		nsresult rv = CreateMsgHdr(hdrRow, key, &msgHdr);
+		rv = CreateMsgHdr(hdrRow, key, &msgHdr);
 	}
 	return msgHdr;
 }
