@@ -391,7 +391,9 @@ PCK4BITS(3,3,3,3,3,3,3,3),  // 80 - 87
 PCK4BITS(3,3,3,3,3,3,3,3),  // 88 - 8f 
 PCK4BITS(3,3,3,3,3,3,3,3),  // 90 - 97 
 PCK4BITS(3,3,3,3,3,3,3,3),  // 98 - 9f 
-PCK4BITS(4,2,2,2,2,2,2,2),  // a0 - a7 
+//0xa0 is illegal in sjis encoding, but some pages does 
+//contain such byte. We need to be more error forgiven.
+PCK4BITS(2,2,2,2,2,2,2,2),  // a0 - a7     
 PCK4BITS(2,2,2,2,2,2,2,2),  // a8 - af 
 PCK4BITS(2,2,2,2,2,2,2,2),  // b0 - b7 
 PCK4BITS(2,2,2,2,2,2,2,2),  // b8 - bf 
