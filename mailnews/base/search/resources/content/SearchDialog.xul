@@ -75,7 +75,7 @@ Rights Reserved.
     
     <splitter id="gray_horizontal_splitter" collapse="after"  persist="state"/>
     
-    <titledbox value="&results.label;" orient="vertical" class="dialog box-padded" flex="1">
+    <titledbox orient="vertical" class="dialog box-padded" flex="1">
        <box id="searchTermListBox" orient="vertical" flex="1">
             <tree id="threadTree" flex="1" context="threadPaneContext"/>
        </box>
