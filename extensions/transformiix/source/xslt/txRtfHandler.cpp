@@ -40,7 +40,8 @@
 #include "txRtfHandler.h"
 
 txResultTreeFragment::txResultTreeFragment(nsAutoPtr<txResultBuffer>& aBuffer)
-    : txAExprResult(nsnull), mBuffer(aBuffer)
+    : txAExprResult(nsnull),
+      mBuffer(aBuffer)
 {
 }
 

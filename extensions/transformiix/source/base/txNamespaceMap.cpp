@@ -60,12 +60,8 @@ txNamespaceMap::addNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI)
         nsId = kNameSpaceID_None;
     }
     else {
-#ifdef TX_EXE
         nsId = txNamespaceManager::getNamespaceID(aNamespaceURI);
-#else
-        NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
-        gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
-#endif
+        NS_ENSURE_FALSE(nsId == kNameSpaceID_Unknown, NS_ERROR_FAILURE);
     }
 
     // Check if the mapping already exists

@@ -51,10 +51,7 @@ class txOutputFormat;
 #define kTXNameSpaceURI "http://www.mozilla.org/TransforMiix"
 #define kTXWrapper "transformiix:result"
 
-class nsIContent;
 class nsIDOMDocument;
-class nsIDOMHTMLScriptElement;
-class nsITransformObserver;
 #endif
 
 /**

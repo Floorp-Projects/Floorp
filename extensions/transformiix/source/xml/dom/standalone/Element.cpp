@@ -75,7 +75,7 @@ Element::Element(const nsAString& aNamespaceURI,
   if (aNamespaceURI.IsEmpty())
     mNamespaceID = kNameSpaceID_None;
   else
-    mNamespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
+    mNamespaceID = txStandaloneNamespaceManager::getNamespaceID(aNamespaceURI);
 }
 
 //
@@ -139,7 +139,7 @@ PRInt32 Element::getNamespaceID()
                                     nsURI)) {
         // xmlns = "" sets the default namespace ID to kNameSpaceID_None;
         if (!nsURI.IsEmpty()) {
-          mNamespaceID = txNamespaceManager::getNamespaceID(nsURI);
+          mNamespaceID = txStandaloneNamespaceManager::getNamespaceID(nsURI);
         }
         else {
           mNamespaceID = kNameSpaceID_None;
@@ -189,7 +189,8 @@ void Element::setAttributeNS(const nsAString& aNamespaceURI,
 {
   // Check to see if an attribute with this name already exists. If it does
   // overwrite its value, if not, add it.
-  PRInt32 namespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
+  PRInt32 namespaceID =
+      txStandaloneNamespaceManager::getNamespaceID(aNamespaceURI);
   nsCOMPtr<nsIAtom> localName = do_GetAtom(XMLUtils::getLocalPart(aName));
 
   Attr* foundNode = 0;

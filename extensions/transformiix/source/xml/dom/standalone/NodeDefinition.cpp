@@ -292,7 +292,8 @@ MBool NodeDefinition::getLocalName(nsIAtom** aLocalName)
 
 nsresult NodeDefinition::getNamespaceURI(nsAString& aNSURI)
 {
-  return txNamespaceManager::getNamespaceURI(getNamespaceID(), aNSURI);
+  return txStandaloneNamespaceManager::getNamespaceURI(getNamespaceID(),
+                                                       aNSURI);
 }
 
 PRInt32 NodeDefinition::getNamespaceID()
@@ -309,11 +310,11 @@ PRInt32 NodeDefinition::getNamespaceID()
 PRInt32 NodeDefinition::lookupNamespaceID(nsIAtom* aPrefix)
 {
   // this is http://www.w3.org/2000/xmlns/,
-  // ID = kNameSpaceID_XMLNS, see txNamespaceManager::Init
+  // ID = kNameSpaceID_XMLNS, see txStandaloneNamespaceManager::Init
   if (aPrefix == txXMLAtoms::xmlns)
     return kNameSpaceID_XMLNS; 
   // this is http://www.w3.org/XML/1998/namespace,
-  // ID = kNameSpaceID_XML, see txNamespaceManager::Init
+  // ID = kNameSpaceID_XML, see txStandaloneNamespaceManager::Init
   if (aPrefix == txXMLAtoms::xml)
     return kNameSpaceID_XML; 
 
@@ -343,7 +344,7 @@ PRInt32 NodeDefinition::lookupNamespaceID(nsIAtom* aPrefix)
        */
       nsAutoString nsURI;
       xmlns->getNodeValue(nsURI);
-      return txNamespaceManager::getNamespaceID(nsURI);
+      return txStandaloneNamespaceManager::getNamespaceID(nsURI);
     }
     node = node->getXPathParent();
   }

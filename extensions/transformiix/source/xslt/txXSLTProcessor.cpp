@@ -56,7 +56,7 @@ txXSLTProcessor::init()
     TX_LG_CREATE;
 
 #ifdef TX_EXE
-    if (!txNamespaceManager::init())
+    if (!txStandaloneNamespaceManager::init())
         return MB_FALSE;
 
     if (NS_FAILED(txHTMLOutput::init())) {
@@ -80,7 +80,7 @@ void
 txXSLTProcessor::shutdown()
 {
 #ifdef TX_EXE
-    txNamespaceManager::shutdown();
+    txStandaloneNamespaceManager::shutdown();
     txHTMLOutput::shutdown();
 #endif
 
