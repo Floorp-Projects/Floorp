@@ -21,10 +21,15 @@
  */
 
 #include "nsCharDetDll.h"
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 #include "nsDocumentCharsetInfo.h"
 #include "nsCOMPtr.h"
 
 // XXX doc me
+
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 class nsDocumentCharsetInfo : public nsIDocumentCharsetInfo
 {
@@ -37,11 +42,17 @@ public:
 
   NS_IMETHOD SetForcedCharset(nsIAtom * aCharset);
   NS_IMETHOD GetForcedCharset(nsIAtom ** aResult);
+
   NS_IMETHOD SetForcedDetector(PRBool aForced);
   NS_IMETHOD GetForcedDetector(PRBool * aResult);
 
+  NS_IMETHOD SetParentCharset(nsIAtom * aCharset);
+  NS_IMETHOD GetParentCharset(nsIAtom ** aResult);
+  NS_IMETHOD SetParentCharset(nsString * aCharset);
+
 private:
   nsCOMPtr<nsIAtom> mForcedCharset;
+  nsCOMPtr<nsIAtom> mParentCharset;
 };
 
 class nsDocumentCharsetInfoFactory : public nsIFactory 
@@ -99,6 +110,32 @@ NS_IMETHODIMP nsDocumentCharsetInfo::GetForcedDetector(PRBool * aResult)
 {
   // XXX write me
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocumentCharsetInfo::SetParentCharset(nsIAtom * aCharset)
+{
+  mParentCharset = aCharset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocumentCharsetInfo::GetParentCharset(nsIAtom ** aResult)
+{
+  *aResult = mParentCharset;
+  if (mParentCharset) NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocumentCharsetInfo::SetParentCharset(nsString * aCharset)
+{
+  nsresult res = NS_OK;
+  NS_WITH_SERVICE(nsICharsetConverterManager2, ccMan, kCharsetConverterManagerCID, &res);
+  if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> csAtom;
+  res = ccMan->GetCharsetAtom(aCharset->GetUnicode(), getter_AddRefs(csAtom));
+  if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+
+  return SetParentCharset(csAtom);
 }
 
 NS_IMPL_ISUPPORTS(nsDocumentCharsetInfoFactory, NS_GET_IID(nsIFactory));

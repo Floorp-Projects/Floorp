@@ -38,6 +38,8 @@
   "component://netscape/document-charset-info"
 
 // XXX doc me
+// XXX make this interface IDL
+// XXX mark the right params "const"
 
 class nsIDocumentCharsetInfo : public nsISupports 
 {
@@ -46,8 +48,19 @@ public:
 
   NS_IMETHOD SetForcedCharset(nsIAtom * aCharset) = 0;
   NS_IMETHOD GetForcedCharset(nsIAtom ** aResult) = 0;
+
   NS_IMETHOD SetForcedDetector(PRBool aForced) = 0;
   NS_IMETHOD GetForcedDetector(PRBool * aResult) = 0;
+
+  NS_IMETHOD SetParentCharset(nsIAtom * aCharset) = 0;
+  NS_IMETHOD GetParentCharset(nsIAtom ** aResult) = 0;
+
+  /**
+   * You should NOT use this method!!! It will very soon be deprecated. I only 
+   * added it here for convenience in the ongoing transition to Atoms. Use
+   * SetParentCharset(nsIAtom *) instead.
+   */
+  NS_IMETHOD SetParentCharset(nsString * aCharset) = 0;
 };
 
 #endif // nsIDocumentCharsetInfo_h__
