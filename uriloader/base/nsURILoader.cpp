@@ -383,7 +383,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       // did one of them give us a stream listener back? if so, let's start reading data
       // into it...
       rv = RetargetOutput(request, contentType, desiredContentType, contentStreamListener);
-      m_originalContext = nsnull; // we don't need this anymore....
+      // Reinitialize the content listener in case this is a multipart stream.
+      m_contentListener = do_GetInterface(m_originalContext);
     } 
   }
   return rv;
