@@ -99,6 +99,17 @@ int ssl3CipherSuites[] = {
     TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA, 	/* l */
     TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,		/* m */
     SSL_RSA_WITH_RC4_128_SHA,                   /* n */
+    TLS_DHE_DSS_WITH_RC4_128_SHA,		/* o */
+    SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,		/* p */
+    SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,		/* q */
+    SSL_DHE_RSA_WITH_DES_CBC_SHA,		/* r */
+    SSL_DHE_DSS_WITH_DES_CBC_SHA,		/* s */
+    TLS_DHE_DSS_WITH_AES_128_CBC_SHA, 	    	/* t */
+    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,       	/* u */
+    TLS_RSA_WITH_AES_128_CBC_SHA,     	    	/* v */
+    TLS_DHE_DSS_WITH_AES_256_CBC_SHA, 	    	/* w */
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,       	/* x */
+    TLS_RSA_WITH_AES_256_CBC_SHA,     	    	/* y */
     0
 };
 

@@ -97,6 +97,12 @@ int ssl3CipherSuites[] = {
     SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,		/* q */
     SSL_DHE_RSA_WITH_DES_CBC_SHA,		/* r */
     SSL_DHE_DSS_WITH_DES_CBC_SHA,		/* s */
+    TLS_DHE_DSS_WITH_AES_128_CBC_SHA, 	    	/* t */
+    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,       	/* u */
+    TLS_RSA_WITH_AES_128_CBC_SHA,     	    	/* v */
+    TLS_DHE_DSS_WITH_AES_256_CBC_SHA, 	    	/* w */
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,       	/* x */
+    TLS_RSA_WITH_AES_256_CBC_SHA,     	    	/* y */
     0
 };
 
@@ -214,6 +220,12 @@ static void Usage(const char *progName)
 "q    SSL3 DHE DSS WITH 3DES EDE CBC SHA\n"
 "r    SSL3 DHE RSA WITH DES CBC SHA\n"
 "s    SSL3 DHE DSS WITH DES CBC SHA\n"
+"t    TLS_DHE_DSS_WITH_AES_128_CBC_SHA\n"
+"u    TLS_DHE_RSA_WITH_AES_128_CBC_SHA\n"
+"v    TLS_RSA_WITH_AES_128_CBC_SHA\n"
+"w    TLS_DHE_DSS_WITH_AES_256_CBC_SHA\n"
+"x    TLS_DHE_RSA_WITH_AES_256_CBC_SHA\n"
+"y    TLS_RSA_WITH_AES_256_CBC_SHA\n"
 	);
     exit(1);
 }
