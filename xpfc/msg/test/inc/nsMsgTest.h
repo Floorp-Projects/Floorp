@@ -59,12 +59,19 @@ public:
 
   NS_IMETHOD ReceiveCommand(nsString& aCommand, nsString& aReply);
   NS_IMETHOD StartCommandServer();
+  NS_METHOD ParseCommandLine();
 
 private:
   NS_METHOD RegisterFactories();
 
 private:
   nsIShellInstance * mShellInstance ;
+  nsString mServer ;
+  nsString mFrom ;
+  nsString mTo ;
+  nsString mDomain ;
+  nsString mMessage ;
+  nsString mHeader;
 
 };
 
