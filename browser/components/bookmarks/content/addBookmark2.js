@@ -183,8 +183,10 @@ function fillSelectFolderMenupopup ()
 
   var folder = RDF.GetResource("NC:BookmarksRoot");
   fillFolder(popup, folder, 0);
-  if (gList.selectedIndex == -1)
-    gList.selectedIndex=0;
+  if (gList.selectedIndex == -1) {
+    gList.selectedIndex = 0;
+    gSelectedFolder = "NC:BookmarksRoot";
+  }
 }
 
 function selectFolder(aEvent)
