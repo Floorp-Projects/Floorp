@@ -162,7 +162,7 @@ int ReplaceJARFiles()
 
 int ReplaceINIFile()
 {
-	CString command1,command2;
+	CString command1,command2,commandReadme;
 	CString zipName("N6Setup.zip");
 	CString exeName("N6Setup.exe");
 	CString copyb = "copy /b ";
@@ -180,6 +180,14 @@ int ReplaceINIFile()
 //	command = quotes + rootPath + "nszip.exe " + quotes + spaces + exeName + spaces + "config.ini";
 	command1 = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + zipName + spaces + "config.ini";
 	ExecuteCommand((char *)(LPCTSTR) command1, SW_SHOW, INFINITE);
+//	Copy the Readme file to the core directory and insert it inside the N6Setup.zip**********
+	CString readmePath = GetGlobal("ReadMeFile");
+	CString replaceReadme = xpiDstPath + "\\Readme.txt";
+	if (!CopyFile(readmePath, replaceReadme, FALSE))
+		DWORD e = GetLastError();
+	commandReadme = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + zipName + spaces + "Readme.txt";
+	ExecuteCommand((char *)(LPCTSTR) commandReadme, SW_SHOW, INFINITE);
+// Finished copying readme and inserting into the zip**********
 	command2 = copyb + quotes + rootPath + "unzipsfx.exe" + quotes + " + N6Setup.zip N6Setup.exe";
 //	copy /b unzipsfx.exe+letters.zip letters.exe
 	///////////////////////////////////////////////////////
