@@ -144,15 +144,7 @@ nsJVMManager::GetProxyJNI(JNIEnv** outProxyEnv)
 }
 
 NS_METHOD
-nsJVMManager::IsJavaEnabled(PRBool* outEnabled)
-{
-	nsJVMStatus status = GetJVMStatus();
-	*outEnabled = (status == nsJVMStatus_Enabled || status == nsJVMStatus_Running);
-	return NS_OK;
-}
-
-NS_METHOD
-nsJVMManager::JavaEnabled(PRBool* outEnabled)
+nsJVMManager::GetJavaEnabled(PRBool* outEnabled)
 {
 	nsJVMStatus status = GetJVMStatus();
 	*outEnabled = (status == nsJVMStatus_Enabled || status == nsJVMStatus_Running);
