@@ -135,9 +135,9 @@ protected:
 
   // row-specific methods
 
-  void nsTableRowFrame::GetMinRowSpan();
+  void GetMinRowSpan();
 
-  void nsTableRowFrame::FixMinCellHeight();
+  void FixMinCellHeight();
 
 
 
