@@ -115,7 +115,7 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&New Browser Window\tCtrl+N", ID_NEW_BROWSER
-        MENUITEM "&New Editor Window",          ID_NEW_EDITWINDOW
+        MENUITEM "New &Editor Window",          ID_NEW_EDITORWINDOW
         MENUITEM SEPARATOR
         MENUITEM "&Open File...\tCtrl+O",       ID_FILE_OPEN
         MENUITEM "&Save Page As...\tCtrl+S",    ID_FILE_SAVE_AS
@@ -232,7 +232,8 @@ IDR_EDITOR MENU PRELOAD DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "New &Browser Window\tCtrl+N", ID_NEW_BROWSER
+        MENUITEM "&New Browser Window\tCtrl+N", ID_NEW_BROWSER
+        MENUITEM "New &Editor Window",          ID_NEW_EDITORWINDOW
         MENUITEM SEPARATOR
         MENUITEM "&Open File...\tCtrl+O",       ID_FILE_OPEN
         MENUITEM "&Save Page As...\tCtrl+S",    ID_FILE_SAVE_AS
@@ -240,7 +241,6 @@ BEGIN
         MENUITEM "&Print...\tCtrl-P",           ID_FILE_PRINT
         MENUITEM SEPARATOR
         MENUITEM "E&xit\tCtrl+Q",               ID_APP_EXIT
-        MENUITEM "New &Editor Window",          ID_NEW_EDITORWINDOW
     END
     POPUP "&Edit"
     BEGIN

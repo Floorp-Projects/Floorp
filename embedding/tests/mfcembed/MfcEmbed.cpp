@@ -56,6 +56,7 @@
 #include "stdafx.h"
 #include "MfcEmbed.h"
 #include "BrowserFrm.h"
+#include "EditorFrm.h"
 #include "winEmbedFileLocProvider.h"
 #include "ProfileMgr.h"
 #include "BrowserImpl.h"
@@ -87,6 +88,7 @@ static NS_DEFINE_CID(kHelperAppLauncherDialogCID, NS_HELPERAPPLAUNCHERDIALOG_CID
 BEGIN_MESSAGE_MAP(CMfcEmbedApp, CWinApp)
 	//{{AFX_MSG_MAP(CMfcEmbedApp)
 	ON_COMMAND(ID_NEW_BROWSER, OnNewBrowser)
+	ON_COMMAND(ID_NEW_EDITORWINDOW, OnNewEditor)
 	ON_COMMAND(ID_MANAGE_PROFILES, OnManageProfiles)
 	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
     ON_COMMAND(ID_EDIT_PREFERENCES, OnEditPreferences)
@@ -333,9 +335,8 @@ CBrowserFrame* CMfcEmbedApp::CreateNewBrowserFrame(PRUint32 chromeMask,
                            PRBool bIsEditor,
 												   PRBool bShowWindow)
 {
-  UINT resId = IDR_MAINFRAME;
-  if (bIsEditor)
-    resId = IDR_EDITOR;
+	UINT resId = bIsEditor ? IDR_EDITOR : IDR_MAINFRAME;
+
 	// Setup a CRect with the requested window dimensions
 	CRect winSize(x, y, cx, cy);
 
@@ -348,8 +349,10 @@ CBrowserFrame* CMfcEmbedApp::CreateNewBrowserFrame(PRUint32 chromeMask,
 	strTitle.LoadString(IDR_MAINFRAME);
 
 	// Now, create the browser frame
-	CBrowserFrame* pFrame = new CBrowserFrame(chromeMask);
-  pFrame->SetEditable(bIsEditor);
+	CBrowserFrame* pFrame = bIsEditor ? ( new  CEditorFrame(chromeMask) ) :
+					    ( new  CBrowserFrame(chromeMask) );
+	pFrame->SetEditable(bIsEditor);
+
 	if (!pFrame->Create(NULL, strTitle, WS_OVERLAPPEDWINDOW, 
 					winSize, NULL, MAKEINTRESOURCE(resId), 0L, NULL))
 	{
@@ -379,6 +382,18 @@ void CMfcEmbedApp::OnNewBrowser()
 	//Load the HomePage into the browser view
 	if(pBrowserFrame && (GetStartupPageMode() == 1))
 		pBrowserFrame->m_wndBrowserView.LoadHomePage();
+}
+
+void CMfcEmbedApp::OnNewEditor() 
+{
+    CEditorFrame *pEditorFrame = (CEditorFrame *)CreateNewBrowserFrame(nsIWebBrowserChrome::CHROME_ALL, 
+                                    -1, -1, -1, -1,
+                                    PR_TRUE,PR_TRUE);
+    if (pEditorFrame)
+    {
+        pEditorFrame->m_wndBrowserView.OpenURL("about:blank");
+        pEditorFrame->InitEditor();
+    }
 }
 
 // This gets called anytime a BrowserFrameWindow is
