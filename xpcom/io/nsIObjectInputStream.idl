@@ -40,8 +40,8 @@
 #include "nsrootidl.idl"
 
 /**
- * @See nsIObjectOutputStream
- * @See nsIBinaryInputStream
+ * @see nsIObjectOutputStream
+ * @see nsIBinaryInputStream
  */
 
 [scriptable, uuid(6c248606-4eae-46fa-9df0-ba58502368eb)]
@@ -54,7 +54,7 @@ interface nsIObjectInputStream : nsIBinaryInputStream
      * readObject will QueryInterface from the deserialized object root to the
      * correct interface, which was specified when the object was serialized.
      *
-     * @See nsIObjectOutputStream
+     * @see nsIObjectOutputStream
      */
     nsISupports readObject(in PRBool aIsStrongRef);
 

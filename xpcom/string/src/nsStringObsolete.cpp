@@ -274,7 +274,7 @@ RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PR
  * @param   aStr1 is the first buffer to be compared
  * @param   aStr2 is the 2nd buffer to be compared
  * @param   aCount is the number of chars to compare
- * @param   aIgnorecase tells us whether to use a case-sensitive comparison
+ * @param   aIgnoreCase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
 static
@@ -304,7 +304,7 @@ Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCa
  * @param   aStr1 is the first buffer to be compared
  * @param   aStr2 is the 2nd buffer to be compared
  * @param   aCount is the number of chars to compare
- * @param   aIgnorecase tells us whether to use a case-sensitive comparison
+ * @param   aIgnoreCase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
 static 
@@ -344,7 +344,7 @@ Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount){
  * @param   aStr1 is the first buffer to be compared
  * @param   aStr2 is the 2nd buffer to be compared
  * @param   aCount is the number of chars to compare
- * @param   aIgnorecase tells us whether to use a case-sensitive comparison
+ * @param   aIgnoreCase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
 static
@@ -398,7 +398,7 @@ Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgn
  * @param   aStr1 is the first buffer to be compared
  * @param   aStr2 is the 2nd buffer to be compared
  * @param   aCount is the number of chars to compare
- * @param   aIgnorecase tells us whether to use a case-sensitive comparison
+ * @param   aIgnoreCase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
 inline PRInt32
