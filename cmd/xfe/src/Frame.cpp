@@ -5190,7 +5190,7 @@ displayImage(MWContext * context, IL_Pixmap * image,
                                            width, height, x_tile_offset,
                                            y_tile_offset, -rect_x_offset,
                                            -rect_y_offset,
-                                           fe_drawable->clip_region);
+                                           (Region)fe_drawable->clip_region);
             
             /* Create the GC.  Don't attempt to get a GC from the GC cache
                because we are using a temporary mask pixmap. */
@@ -5224,7 +5224,7 @@ displayImage(MWContext * context, IL_Pixmap * image,
                                                  mask_x_pixmap, width, height,
                                                  img_x_offset, img_y_offset,
                                                  x_offset, y_offset,
-                                                 fe_drawable->clip_region);
+                                                 (Region)fe_drawable->clip_region);
             }
             else {              /* No clip region. */
                 /* XXX transparent, non-tiled and no clip_region. */
@@ -5243,7 +5243,7 @@ displayImage(MWContext * context, IL_Pixmap * image,
                 GCTileStipYOrigin;
             if (fe_drawable->clip_region)
                 gc = fe_GetGCfromDW(dpy, drawable, flags, &gcv,
-                                    fe_drawable->clip_region);
+                                    (Region)fe_drawable->clip_region);
             else
                 gc = fe_GetGCfromDW(dpy, drawable, flags, &gcv, NULL);
 
@@ -5257,7 +5257,7 @@ displayImage(MWContext * context, IL_Pixmap * image,
             gcv.function = GXcopy;
             if (fe_drawable->clip_region)
                 gc = fe_GetGCfromDW(dpy, drawable, GCFunction,
-                                    &gcv, fe_drawable->clip_region);
+                                    &gcv, (Region)fe_drawable->clip_region);
             else
                 gc = fe_GetGCfromDW(dpy, drawable, GCFunction, &gcv, NULL);
  
