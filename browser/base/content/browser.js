@@ -3557,6 +3557,7 @@ function BrowserToolbarChanged()
   var homeButton = document.getElementById("home-button");
   if (homeButton)
     homeButton.setAttribute("tooltiptext", homePage);
+  window.XULBrowserWindow.init();
 }
 
 function BrowserCustomizeToolbar()
