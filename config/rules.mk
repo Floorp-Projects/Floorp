@@ -801,6 +801,7 @@ ifdef USE_AUTOCONF
 ALL_TRASH := $(filter-out $(OBJDIR), $(ALL_TRASH))
 endif
 
+ifndef NO_MDUPDATE
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 -include $(DEPENDENCIES)
 # Can't use sed because of its 4000-char line length limit, so resort to perl
@@ -833,6 +834,7 @@ ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 		print "$(MAKE): *** No rule to make target $<.  Stop.\n";     \
 		exit(1);                                                      \
 	    }'
+endif
 endif
 
 #############################################################################
