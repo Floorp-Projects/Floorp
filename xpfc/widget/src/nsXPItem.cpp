@@ -54,6 +54,8 @@ nsXPItem :: nsXPItem(nsISupports* outer) : nsXPFCCanvas(outer)
 
 nsXPItem :: ~nsXPItem()
 {
+  NS_IF_RELEASE(mMiniImageRequest);
+  NS_IF_RELEASE(mFullImageRequest);
 }
 
 nsresult nsXPItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      

@@ -780,14 +780,14 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
   {
 
     nsIXPFCToolbar * container  = nsnull;
-    nsIXPFCToolbar * parent = nsnull;
+    nsIXPFCCanvas * parent = nsnull;
     nsIXPFCCanvas * child_canvas  = nsnull;
 
     aObject.QueryInterface(kIXPFCCanvasIID,(void**)&child_canvas);
 
     nsresult res = aObject.QueryInterface(kCIXPFCToolbarIID,(void**)&container);
 
-    parent = (nsIXPFCToolbar *) mXPFCStack->Top();
+    parent = (nsIXPFCCanvas *) mXPFCStack->Top();
 
     if (parent == nsnull)
     {
@@ -795,19 +795,9 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
 
     } else {
 
-      nsIXPFCCanvas * parent_canvas = nsnull;
-
       if (child_canvas != nsnull)
       {
-        res = parent->QueryInterface(kIXPFCCanvasIID,(void**)&parent_canvas);
-
-        if (NS_OK == res)
-        {
-          parent_canvas->AddChildCanvas(child_canvas);
-        
-          NS_RELEASE(parent_canvas);
-        }
-
+        parent->AddChildCanvas(child_canvas);
       }
 
     }
