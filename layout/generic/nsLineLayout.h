@@ -131,7 +131,6 @@ public:
 protected:
 #define LL_ENDSINWHITESPACE            0x00000001
 #define LL_UNDERSTANDSNWHITESPACE      0x00000002
-#define LL_TEXTSTARTSWITHNBSP          0x00000004
 #define LL_FIRSTLETTERSTYLEOK          0x00000008
 #define LL_ISTOPOFPAGE                 0x00000010
 #define LL_UPDATEDBAND                 0x00000020
@@ -183,11 +182,6 @@ public:
   void SetTextJustificationWeights(PRInt32 aNumSpaces, PRInt32 aNumLetters) {
     mTextJustificationNumSpaces = aNumSpaces;
     mTextJustificationNumLetters = aNumLetters;
-  }
-
-
-  void SetTextStartsWithNBSP(PRBool aYes) {
-    SetFlag(LL_TEXTSTARTSWITHNBSP, aYes);
   }
 
   void RecordWordFrame(nsIFrame* aWordFrame) {
