@@ -84,27 +84,7 @@ class mozXMLTerminal : public mozIXMLTerminal,
   NS_IMETHOD Resize(void);
 
   // nsIDocumentLoaderObserver interface
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
-                                 const char* aCommand);
-
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
-                               nsresult aStatus);
-
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel);
-
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress,
-                               PRUint32 aProgressMax);
-
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
-                             nsString& aMsg);
-
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
-                          nsresult aStatus);
-
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
-                                      nsIChannel* channel,
-                                      const char *aContentType,
-                                      const char *aCommand );
+  NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
   // nsIObserver interface
   NS_IMETHOD Observe(nsISupports *aSubject, const PRUnichar *aTopic,
