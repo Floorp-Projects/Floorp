@@ -1055,7 +1055,7 @@ static PRBool intl_is_legal_utf8(const char *input, unsigned len)
   while (len) {
     c = (unsigned char)*input++;
     len--;
-    if (c == 0x1B) break;
+    if (c == 0x1B) return PR_FALSE;
     if ((c & 0x80) == 0) continue;
     if ((c & 0xE0) == 0xC0) {
       if (len < 1 || (*input & 0xC0) != 0x80 ||
