@@ -50,6 +50,7 @@
 
 #include "tracer.h"
 #include "collector.h"
+#include "regexp.h"
 
 namespace JavaScript {
 namespace JS2Runtime {
@@ -99,6 +100,10 @@ static const double two31 = 2147483648.0;
     class JSArrayType;
     class JSStringType;
     class Context;
+    class NamedArgument;
+    class JSInstance;
+    class Attribute;
+    class Package;
 
 
     extern JSType *Object_Type;         // the base type for all types
@@ -117,7 +122,6 @@ static const double two31 = 2147483648.0;
 
     extern JSType *Attribute_Type;      // used to define 'prototype' 'static' etc & Namespace values
     extern JSType *Package_Type;
-    extern JSType *NamedArgument_Type;
 
     extern JSType *Date_Type;
     extern JSType *RegExp_Type;
@@ -132,46 +136,63 @@ static const double two31 = 2147483648.0;
         union {
             float64 f64;
             JSObject *object;
+            JSInstance *instance;
             JSFunction *function;
             const String *string;
             JSType *type;
             bool boolean;
+            NamedArgument *namedArg;
+            Attribute *attribute;
+            Package *package;
         };
         
         typedef enum {
             undefined_tag, 
             f64_tag,
             object_tag,
+            instance_tag,
             function_tag,
             type_tag,
             boolean_tag,
             string_tag,
-            null_tag
+            null_tag,
+            namedArg_tag,
+            attribute_tag,
+            package_tag
         } Tag;
         Tag tag;
         
         JSValue() : f64(0.0), tag(undefined_tag) {}
         explicit JSValue(float64 f64) : f64(f64), tag(f64_tag) {}
         explicit JSValue(JSObject *object) : object(object), tag(object_tag) { ASSERT(object); }
+        explicit JSValue(JSInstance *instance) : instance(instance), tag(instance_tag) { ASSERT(instance); }
         explicit JSValue(JSFunction *function) : function(function), tag(function_tag) { ASSERT(function); }
         explicit JSValue(JSType *type) : type(type), tag(type_tag) { ASSERT(type); }
         explicit JSValue(const String *string) : string(string), tag(string_tag) { ASSERT(string); }
         explicit JSValue(bool boolean) : boolean(boolean), tag(boolean_tag) {}
+        explicit JSValue(NamedArgument *arg) : namedArg(arg), tag(namedArg_tag) { ASSERT(arg); }
+        explicit JSValue(Attribute *attr) : attribute(attr), tag(attribute_tag) { ASSERT(attribute); }
+        explicit JSValue(Package *pkg) : package(pkg), tag(package_tag) { ASSERT(pkg); }
         explicit JSValue(Tag tag) : tag(tag) {}
 
         float64& operator=(float64 f64)                 { return (tag = f64_tag, this->f64 = f64); }
         JSObject*& operator=(JSObject* object)          { return (tag = object_tag, this->object = object); }
+        JSInstance*& operator=(JSInstance* instance)    { return (tag = instance_tag, this->instance = instance); }
         JSType*& operator=(JSType* type)                { return (tag = type_tag, this->type = type); }
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
         bool& operator=(bool boolean)                   { return (tag = boolean_tag, this->boolean = boolean); }
         
         bool isObject() const                           { return (tag == object_tag); }
+        bool isInstance() const                         { return (tag == instance_tag); }
         bool isNumber() const                           { return (tag == f64_tag); }
         bool isBool() const                             { return (tag == boolean_tag); }
         bool isType() const                             { return (tag == type_tag); }
         bool isFunction() const                         { return (tag == function_tag); }
         bool isString() const                           { return (tag == string_tag); }
-        bool isPrimitive() const                        { return (tag != object_tag) && (tag != type_tag) && (tag != function_tag); }
+        bool isPrimitive() const                        { return isNumber() || isBool() || isString() || isUndefined() || isNull(); }
+        bool isNamedArg() const                         { return (tag == namedArg_tag); }
+        bool isAttribute() const                        { return (tag == attribute_tag); }
+        bool isPackage() const                          { return (tag == package_tag); }
 
         bool isUndefined() const                        { return (tag == undefined_tag); }
         bool isNull() const                             { return (tag == null_tag); }
@@ -192,13 +213,16 @@ static const double two31 = 2147483648.0;
         JSValue toUInt32(Context *cx) const             { return valueToUInt32(cx, *this); }
         JSValue toUInt16(Context *cx) const             { return valueToUInt16(cx, *this); }
         JSValue toInt32(Context *cx) const              { return valueToInt32(cx, *this); }
-        JSValue toObject(Context *cx) const             { return ((isObject() || isType() || isFunction()) ?
+        JSValue toObject(Context *cx) const             { return ((isObject() || isType() || isFunction() || isInstance() || isPackage()) ?
                                                                 *this : valueToObject(cx, *this)); }
         JSValue toBoolean(Context *cx) const            { return (isBool() ? *this : valueToBoolean(cx, *this)); }
 
         float64 getNumberValue() const;
         const String *getStringValue() const;
         bool getBoolValue() const;
+        JSObject *getObjectValue() const;
+
+        JSObject *toObjectValue(Context *cx) const;
 
         /* These are for use in 'toPrimitive' calls */
         enum Hint {
@@ -524,23 +548,15 @@ XXX ...couldn't get this to work...
     class JSObject {
     public:
     // The generic Javascript object. Every JS2 object is one of these
-        JSObject(JSType *type = Object_Type) : mType(type), mPrivate(NULL), mPrototype(NULL) { }
+        JSObject() : mPrototype(kNullValue) { }
         
         virtual ~JSObject() { } // keeping gcc happy
         
-        // every object has a type
-        JSType        *mType;
-
         // the property data is kept (or referenced from) here
         PropertyMap   mProperties;
 
-        // Every JSObject has a private part
-        void          *mPrivate;
-
         // Every JSObject (except the Ur-object) has a prototype
-        JSObject      *mPrototype;
-
-        JSType *getType() const { return mType; }
+        JSValue       mPrototype;
 
         virtual bool isDynamic() { return true; }
 
@@ -638,11 +654,8 @@ XXX ...couldn't get this to work...
         */
         Collector::size_type scan(Collector* collector)
         {
-            mType = (JSType*) collector->copy(mType);
             // enumerate property map elements.
-            // what is mPrivate?
-            mPrivate = collector->copy(mPrivate);
-            mPrototype = (JSObject*) collector->copy(mPrototype);
+            // scan mPrototype.
             return sizeof(JSObject);
         }
 
@@ -681,7 +694,7 @@ XXX ...couldn't get this to work...
     public:
         
         JSInstance(Context *cx, JSType *type) 
-            : JSObject(type), mInstanceValues(NULL) { if (type) initInstance(cx, type); }
+            : JSObject(), mType(type), mInstanceValues(NULL) { if (type) initInstance(cx, type); }
 
         virtual ~JSInstance() { } // keeping gcc happy
 
@@ -700,8 +713,12 @@ XXX ...couldn't get this to work...
             mInstanceValues[index] = v;
         }
 
-        virtual bool isDynamic();
+        JSType *getType() const { return mType; }
+        
+        bool isDynamic();
 
+        // the class that created this instance
+        JSType        *mType;
 
         JSValue         *mInstanceValues;
 
@@ -714,6 +731,7 @@ XXX ...couldn't get this to work...
         Collector::size_type scan(Collector* collector)
         {
             JSObject::scan(collector);
+            mType = (JSType*) collector->copy(mType);
             // FIXME: need some kind of array operator new[] (gc) thing.
             // this will have to use an extra word to keep track of the
             // element count.
@@ -751,12 +769,19 @@ XXX ...couldn't get this to work...
 
 
 
-    class JSType : public JSObject {
+    class JSType : public JSInstance {
+    protected:
+        // XXX these initializations are for ParameterBarrel & Activation which are 'types' only
+        // because they take advantage of the slotted variable handling - maybe an interim class
+        // for just that purpose would be better...
+        JSType() : JSInstance(NULL, NULL), mSuperType(NULL), mIsDynamic(false), mVariableCount(0) { }
+
     public:        
-        JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj = NULL, JSObject *typeProto = NULL);
-        JSType(JSType *xClass);     // used for constructing the static component type
+        JSType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto);
 
         virtual ~JSType() { }       // keeping gcc happy
+
+
 
         void setSuperType(JSType *super);
 
@@ -767,7 +792,7 @@ XXX ...couldn't get this to work...
 
 
         // construct a new (empty) instance of this class
-        virtual JSInstance *newInstance(Context *cx);
+        virtual JSValue newInstance(Context *cx);
            
 
         Property *defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type);
@@ -794,16 +819,6 @@ XXX ...couldn't get this to work...
 
         void defineSetterMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f);
 
-        void defineUnaryOperator(Operator which, JSFunction *f)
-        {
-            mUnaryOperators[which] = f;
-        }
-
-        JSFunction *getUnaryOperator(Operator which)
-        {
-            return mUnaryOperators[which];      // XXX Umm, aren't these also getting inherited? 
-        }
-
         void setDefaultConstructor(Context * /*cx*/, JSFunction *f)
         {
             mDefaultConstructor = f;
@@ -827,16 +842,17 @@ XXX ...couldn't get this to work...
         JSFunction *getDefaultConstructor() { return mDefaultConstructor; }
         JSFunction *getTypeCastFunction()   { return mTypeCast; }
 
-        JSValue getUninitializedValue()    { return mUninitializedValue; }
+        JSValue getUninitializedValue()     { return mUninitializedValue; }
 
+        // Generates defaultConstructor if one doesn't exist -
         // assumes that the super types have been completed already
         void completeClass(Context *cx, ScopeChain *scopeChain);
 
-        virtual bool isDynamic() { return mIsDynamic; }
+        virtual bool isDynamic()            { return mIsDynamic; }
 
-        JSType          *mSuperType;        // NULL implies that this is the base Object
+        JSType          *mSuperType;                // NULL implies that this is the base Object
 
-        uint32          mVariableCount;
+        uint32          mVariableCount;             // number of instance variables
         JSFunction      *mInstanceInitializer;
         JSFunction      *mDefaultConstructor;
         JSFunction      *mTypeCast;
@@ -847,14 +863,12 @@ XXX ...couldn't get this to work...
         const StringAtom    *mClassName;
         const StringAtom    *mPrivateNamespace;
 
-        JSFunction      *mUnaryOperators[OperatorCount];    // XXX too wasteful
-
         bool            mIsDynamic;
         JSValue         mUninitializedValue;            // the value for uninitialized vars
 
-        JSObject        *mPrototypeObject;              // becomes the prototype for any instance
+        JSValue         mPrototypeObject;              // becomes the prototype for any instance
 
-
+        // DEBUG
         void printSlotsNStuff(Formatter& f) const;
 
     protected:
@@ -873,11 +887,8 @@ XXX ...couldn't get this to work...
             // scan mMethods.
             // scan mClassName.
             // scan mPrivateNamespace.
-            uint32 i;
-            for (i = 0; i < OperatorCount; ++i)
-                mUnaryOperators[i] = (JSFunction*) collector->copy(mUnaryOperators[i]);
             // scan mUninitializedValue.
-            mPrototypeObject = (JSObject*) collector->copy(mPrototypeObject);
+            // scan mPrototypeObject.
             return sizeof(JSType);
         }
 
@@ -897,17 +908,27 @@ XXX ...couldn't get this to work...
 
     Formatter& operator<<(Formatter& f, const JSType& obj);
 
+    //
+    // we have to have unique instance classes whenever the instance requires
+    // extra data - otherwise where else does this data go?
+    //
+    // XXX could instead have dynamically constructed the various classes with
+    // the appropriate number of instance slots and used the generic newInstance
+    // mechanism. Then the extra data would just be instance->slot[0,1...]
+    //
+    // XXX maybe could have implemented length (for string) as a getter/setter pair
+    // (would still require StringType, but the new instances would all get
+    // the pair of methods for free)
+    //
     class JSArrayInstance : public JSInstance {
     public:
-        JSArrayInstance(Context *cx, JSType * /*type*/) : JSInstance(cx, NULL), mLength(0) { mType = (JSType *)Array_Type; mPrototype = Object_Type->mPrototypeObject; }
+        JSArrayInstance(Context *cx) : JSInstance(cx, NULL), mLength(0) { mType = (JSType *)Array_Type; mPrototype = Object_Type->mPrototypeObject; }
         virtual ~JSArrayInstance() { } // keeping gcc happy
 
 #ifdef DEBUG
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSArrayInstance", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSArrayInstance", t); STD::free(t); }
 #endif
-
-        // XXX maybe could have implemented length as a getter/setter pair?
         void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v);
         void getProperty(Context *cx, const String &name, NamespaceList *names);
 
@@ -915,12 +936,11 @@ XXX ...couldn't get this to work...
         bool deleteProperty(Context *cx, const String &name, NamespaceList *names);
 
         uint32 mLength;
-
     };
 
     class JSArrayType : public JSType {
     public:
-        JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super, JSObject *protoObj = NULL, JSObject *typeProto = NULL) 
+        JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
             : JSType(cx, name, super, protoObj, typeProto), mElementType(elementType)
         {
         }
@@ -931,51 +951,154 @@ XXX ...couldn't get this to work...
         void operator delete(void* t)   { trace_release("JSArrayType", t); STD::free(t); }
 #endif
 
-        JSInstance *newInstance(Context *cx);
-
+        JSValue newInstance(Context *cx);
         JSType *mElementType;
-
     };
 
     class JSStringInstance : public JSInstance {
     public:
-        JSStringInstance(Context *cx, JSType * /*type*/) : JSInstance(cx, NULL), mLength(0) { mType = (JSType *)String_Type; }
+        JSStringInstance(Context *cx) : JSInstance(cx, NULL), mValue(NULL) { mType = (JSType *)String_Type; }
         virtual ~JSStringInstance() { } // keeping gcc happy
-
 #ifdef DEBUG
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSStringInstance", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSStringInstance", t); STD::free(t); }
 #endif
-
         void setProperty(Context *cx, const String &name, NamespaceList *names, const JSValue &v);
         void getProperty(Context *cx, const String &name, NamespaceList *names);
         bool hasOwnProperty(Context *cx, const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
         bool deleteProperty(Context *cx, const String &name, NamespaceList *names);
 
-
-        uint32 mLength;
-
+        const String *mValue;
     };
 
     class JSStringType : public JSType {
     public:
-        JSStringType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj = NULL, JSObject *typeProto = NULL) 
+        JSStringType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
             : JSType(cx, name, super, protoObj, typeProto)
         {
         }
         virtual ~JSStringType() { } // keeping gcc happy
-
 #ifdef DEBUG
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSStringType", s, t); return t; }
         void operator delete(void* t)   { trace_release("JSStringType", t); STD::free(t); }
 #endif
-
-        JSInstance *newInstance(Context *cx);
-
+        JSValue newInstance(Context *cx);
     };
 
+    class JSBooleanInstance : public JSInstance {
+    public:
+        JSBooleanInstance(Context *cx) : JSInstance(cx, NULL), mValue(false) { mType = (JSType *)Boolean_Type; }
+        virtual ~JSBooleanInstance() { } // keeping gcc happy
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSBooleanInstance", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSBooleanInstance", t); STD::free(t); }
+#endif
+        bool mValue;
+    };
 
+    class JSBooleanType : public JSType {
+    public:
+        JSBooleanType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+            : JSType(cx, name, super, protoObj, typeProto)
+        {
+        }
+        virtual ~JSBooleanType() { } // keeping gcc happy
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSBooleanType", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSBooleanType", t); STD::free(t); }
+#endif
+        JSValue newInstance(Context *cx);
+    };
 
+    class JSNumberInstance : public JSInstance {
+    public:
+        JSNumberInstance(Context *cx) : JSInstance(cx, NULL), mValue(0.0) { mType = (JSType *)Number_Type; }
+        virtual ~JSNumberInstance() { } // keeping gcc happy
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSNumberInstance", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSNumberInstance", t); STD::free(t); }
+#endif
+        float64 mValue;
+    };
+
+    class JSNumberType : public JSType {
+    public:
+        JSNumberType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+            : JSType(cx, name, super, protoObj, typeProto)
+        {
+        }
+        virtual ~JSNumberType() { } // keeping gcc happy
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSNumberType", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSNumberType", t); STD::free(t); }
+#endif
+        JSValue newInstance(Context *cx);
+    };
+
+    class JSDateInstance : public JSInstance {
+    public:
+        JSDateInstance(Context *cx) : JSInstance(cx, NULL), mValue(0.0) { mType = (JSType *)Date_Type; }
+        virtual ~JSDateInstance() { } // keeping gcc happy
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSDateInstance", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSDateInstance", t); STD::free(t); }
+#endif
+        float64 mValue;
+    };
+
+    class JSDateType : public JSType {
+    public:
+        JSDateType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+            : JSType(cx, name, super, protoObj, typeProto)
+        {
+        }
+        virtual ~JSDateType() { } // keeping gcc happy
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSDateType", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSDateType", t); STD::free(t); }
+#endif
+        JSValue newInstance(Context *cx);
+    };
+
+    class JSRegExpInstance : public JSInstance {
+    public:
+        JSRegExpInstance(Context *cx) : JSInstance(cx, NULL), mLastIndex(0), mRegExp(NULL) { mType = (JSType *)RegExp_Type; }
+        virtual ~JSRegExpInstance() { } // keeping gcc happy
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSRegExpInstance", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSRegExpInstance", t); STD::free(t); }
+#endif    
+        uint32 mLastIndex;
+        REState *mRegExp;
+    };
+
+    class JSRegExpType : public JSType {
+    public:
+        JSRegExpType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+            : JSType(cx, name, super, protoObj, typeProto)
+        {
+        }
+        virtual ~JSRegExpType() { } // keeping gcc happy
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSBooleanType", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSBooleanType", t); STD::free(t); }
+#endif
+        JSValue newInstance(Context *cx);
+    };
+
+    class JSObjectType : public JSType {
+    public:
+        JSObjectType(Context *cx, const StringAtom *name, JSType *super, JSValue &protoObj, JSValue &typeProto) 
+            : JSType(cx, name, super, protoObj, typeProto)
+        {
+        }
+        virtual ~JSObjectType() { } // keeping gcc happy
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSObjectType", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSObjectType", t); STD::free(t); }
+#endif
+        JSValue newInstance(Context *cx);
+    };
 
 
     // captures the Parameter names scope
@@ -984,7 +1107,7 @@ XXX ...couldn't get this to work...
     class ParameterBarrel : public JSType {
     public:
 
-        ParameterBarrel() : JSType(NULL) 
+        ParameterBarrel() : JSType() 
         {
         }
         virtual ~ParameterBarrel() { } // keeping gcc happy
@@ -1020,8 +1143,7 @@ XXX ...couldn't get this to work...
     public:
 
         Activation() 
-            :	JSType(NULL), 
-                mLocals(NULL), 
+            :	mLocals(NULL), 
                 mStack(NULL),
                 mStackTop(0),
                 mPC(0), 
@@ -1037,8 +1159,7 @@ XXX ...couldn't get this to work...
                    uint8 *pc, 
                    ByteCodeModule *module,
                    NamespaceList *namespaceList )
-            : 	JSType(NULL), 
-                mLocals(locals), 
+            : 	mLocals(locals), 
                 mStack(stack), 
                 mStackTop(stackTop),
                 mScopeChain(scopeChain),
@@ -1186,12 +1307,7 @@ XXX ...couldn't get this to work...
             ASSERT(dynamic_cast<JSType *>(top));
             top->defineStaticSetterMethod(cx, name, attr, f);
         }
-        void defineUnaryOperator(Operator which, JSFunction *f)
-        {
-            JSObject *top = mScopeStack.back();
-            ASSERT(dynamic_cast<JSType *>(top));
-            ((JSType *)top)->defineUnaryOperator(which, f);
-        }
+        void defineUnaryOperator(Context *cx, Operator which, JSFunction *f);
 
         // see if the current scope contains a name already
         bool hasProperty(Context *cx, const String& name, NamespaceList *names, Access acc, PropertyIterator *p)
@@ -1295,9 +1411,14 @@ XXX ...couldn't get this to work...
     };
 
 
-    class JSFunction : public JSObject {
+    class JSFunction : public JSInstance {
     protected:
-        JSFunction() : JSObject(Function_Type), mActivation() { mActivation.mContainer = this; mPrototype = Function_Type->mPrototypeObject; }        // for JSBoundFunction (XXX ask Patrick about this structure)
+        JSFunction(Context *cx) : JSInstance(cx, NULL), mActivation() 
+        { 
+            mType = (JSType *)Function_Type; 
+            mActivation.mContainer = this; 
+            mPrototype = Function_Type->mPrototypeObject; 
+        }        // for JSBoundFunction (XXX ask Patrick about this structure)
     public:
 
         typedef enum { Invalid, RequiredParameter, OptionalParameter, RestParameter, NamedParameter } ParameterFlag;
@@ -1421,7 +1542,7 @@ XXX ...couldn't get this to work...
             mParameterBarrel = (ParameterBarrel*) collector->copy(mParameterBarrel);
             mResultType = (JSType*) collector->copy(mResultType);
             mClass = (JSType*) collector->copy(mClass);
-            mPrototype = (JSObject*) collector->copy(mPrototype);
+            // scan mPrototype.
             return sizeof(JSFunction);
         }
 
@@ -1444,8 +1565,8 @@ XXX ...couldn't get this to work...
         JSFunction *mFunction;
         JSObject *mThis;
     public:
-        JSBoundFunction(JSFunction *f, JSObject *thisObj)
-            : mFunction(NULL), mThis(thisObj) { if (f->hasBoundThis()) mFunction = f->getFunction(); else mFunction = f; }
+        JSBoundFunction(Context *cx, JSFunction *f, JSObject *thisObj)
+            : JSFunction(cx), mFunction(NULL), mThis(thisObj) { if (f->hasBoundThis()) mFunction = f->getFunction(); else mFunction = f; }
 
         ~JSBoundFunction() { }  // keeping gcc happy
 
@@ -1530,7 +1651,7 @@ XXX ...couldn't get this to work...
 #endif
     };
 
-    // This is for binary operators, it collects together the operand
+    // This is for unary & binary operators, it collects together the operand
     // types and the function pointer for the given operand. See also
     // Context::initOperators where the default operators are set up.
     class OperatorDefinition {
@@ -1539,6 +1660,8 @@ XXX ...couldn't get this to work...
         OperatorDefinition(JSType *type1, JSType *type2, JSFunction *imp)
             : mType1(type1), mType2(type2), mImp(imp) { ASSERT(mType1); ASSERT(mType2); }
 
+        OperatorDefinition(JSType *type1, JSFunction *imp)
+            : mType1(type1), mImp(imp) { ASSERT(mType1); }
 
         JSType *mType1;
         JSType *mType2;
@@ -1553,10 +1676,12 @@ XXX ...couldn't get this to work...
                       ((ty == mType2) || ty->derivesFrom(mType2)) );
         }
 
+        bool isApplicable(JSType *tx)
+        {
+            return ( (tx == mType1) || tx->derivesFrom(mType1) );
+        }
 
     };
-
-
 
 
 
@@ -1576,13 +1701,12 @@ XXX ...couldn't get this to work...
     // called directly by String.match
     extern JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
 
-    class Attribute;
 
-    class Package : public JSObject {
+    class Package : public JSObject  {
     public:
         typedef enum { OnItsWay, InHand } PackageStatus;
         
-        Package(const String &name) : JSObject(Package_Type), mName(name), mStatus(OnItsWay) { }
+        Package(const String &name) : JSObject(), mName(name), mStatus(OnItsWay) { }
 
         String mName;
         PackageStatus mStatus;
@@ -1635,7 +1759,12 @@ XXX ...couldn't get this to work...
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("Context", s, t); return t; }
         void operator delete(void* t)   { trace_release("Context", t); STD::free(t); }
 #endif
-
+        //
+        // Initialize a bunch of useful string atoms to save 
+        // having to look them up during execution.
+        //
+        // Should these be in World instead?
+        //
         StringAtom& Virtual_StringAtom; 
         StringAtom& Constructor_StringAtom; 
         StringAtom& Operator_StringAtom; 
@@ -1699,9 +1828,18 @@ XXX ...couldn't get this to work...
         void defineOperator(Operator which, JSType *t1, JSType *t2, JSFunction *imp)
         {
             OperatorDefinition *op = new OperatorDefinition(t1, t2, imp);
-            mOperatorTable[which].push_back(op);
+            mBinaryOperatorTable[which].push_back(op);
         }
 
+        void defineOperator(Operator which, JSType *t, JSFunction *imp)
+        {
+            OperatorDefinition *op = new OperatorDefinition(t, imp);
+            mUnaryOperatorTable[which].push_back(op);
+        }
+
+        // Construct an array of argument values, updating argCount to
+        // reflect the final size. Pulls incoming args from the top of
+        // the stack.
         JSValue *buildArgumentBlock(JSFunction *target, uint32 &argCount);
 
         
@@ -1711,10 +1849,11 @@ XXX ...couldn't get this to work...
         Attribute *executeAttributes(ExprNode *attr);
 
 
-
+        // Run the binary operator designated, after using the types to do the dispatch
         bool executeOperator(Operator op, JSType *t1, JSType *t2);
         JSValue mapValueToType(JSValue v, JSType *t);
 
+        // Run the interpreter loop on the function
         JSValue invokeFunction(JSFunction *target, const JSValue& thisValue, JSValue *argv, uint32 argc);
 
         // This reader is used to generate source information
@@ -1786,13 +1925,7 @@ XXX ...couldn't get this to work...
             mStack[index] = v;
             mStackTop++;
         }
-/*
-        void setValue(uint32 n, JSValue v)
-        {
-            ASSERT(n < mStackTop);
-            mStack[n] = v;
-        }
-*/
+
         JSValue *getBase(uint32 n)
         {
             ASSERT(n <= mStackTop);     // s'ok to point beyond the end
@@ -1825,7 +1958,9 @@ XXX ...couldn't get this to work...
 
         typedef std::vector<OperatorDefinition *> OperatorList;
             
-        OperatorList mOperatorTable[OperatorCount];
+        // XXX bigger than necessary...
+        OperatorList mBinaryOperatorTable[OperatorCount];
+        OperatorList mUnaryOperatorTable[OperatorCount];
         
 
         PackageList mPackages;  // the currently loaded packages, mPackages.back() is the current package
@@ -1847,6 +1982,8 @@ XXX ...couldn't get this to work...
         void reportError(Exception::Kind kind, char *message, const char *arg = NULL);
         void reportError(Exception::Kind kind, char *message, const String& name);
         void reportError(Exception::Kind kind, char *message, size_t pos, const String& name);
+
+        JSFunction *getUnaryOperator(JSType *dispatchType, Operator which);
 
         
         /* utility routines */
@@ -1907,9 +2044,9 @@ XXX ...couldn't get this to work...
     };
 
     
-    class NamedArgument : public JSObject {
+    class NamedArgument {
     public:
-        NamedArgument(JSValue &v, const String *n) : JSObject(NamedArgument_Type), mValue(v), mName(n) { }
+        NamedArgument(JSValue &v, const String *n) : mValue(v), mName(n) { }
 
         JSValue mValue;
         const String *mName;
@@ -1922,7 +2059,6 @@ XXX ...couldn't get this to work...
         */
         Collector::size_type scan(Collector* collector)
         {
-            JSObject::scan(collector);
             mValue.scan(collector);
             return sizeof(NamedArgument);
         }
@@ -1942,10 +2078,10 @@ XXX ...couldn't get this to work...
     };
     
     
-    class Attribute : public JSObject {
+    class Attribute {
     public:
         Attribute(PropertyAttribute t, PropertyAttribute f)
-            : JSObject(Attribute_Type), mTrueFlags(t), mFalseFlags(f), mExtendArgument(NULL), mNamespaceList(NULL) { }
+            : mTrueFlags(t), mFalseFlags(f), mExtendArgument(NULL), mNamespaceList(NULL) { }
 
         PropertyAttribute mTrueFlags;
         PropertyAttribute mFalseFlags;
@@ -1961,7 +2097,6 @@ XXX ...couldn't get this to work...
         */
         Collector::size_type scan(Collector* collector)
         {
-            JSObject::scan(collector);
             mExtendArgument = (JSType*) collector->copy(mExtendArgument);
             return sizeof(Attribute);
         }
@@ -2018,8 +2153,17 @@ XXX ...couldn't get this to work...
         defineMethod(cx, name, attr, f);
     }
 
+    inline bool JSInstance::isDynamic()
+    {
+        return mType->isDynamic(); 
+    }
 
-    inline bool JSInstance::isDynamic() { return mType->isDynamic(); }
+    inline void ScopeChain::defineUnaryOperator(Context *cx, Operator which, JSFunction *f)
+    {
+        JSObject *top = mScopeStack.back();
+        ASSERT(dynamic_cast<JSType *>(top));
+        cx->defineOperator(which, (JSType *)top, f);
+    }
 
 }
 }

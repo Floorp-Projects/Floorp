@@ -45,96 +45,108 @@ typedef unsigned int REuint32;
 typedef int REint32;
 typedef unsigned char REuint8;
 
-#ifdef STANDALONE
-typedef unsigned char REbool;
-enum { false, true };
-#else
-typedef bool REbool;
-#endif
 
-typedef enum RE_FLAGS {
-    MULTILINE = 0x1,
-    IGNORECASE = 0x2,
-    GLOBAL = 0x4
-} RE_FLAGS;
+typedef enum RE_Flags {
+    RE_IGNORECASE = 0x1,
+    RE_GLOBAL = 0x2,
+    RE_MULTILINE = 0x4
+} RE_Flags;
 
-typedef enum REError {
-    NO_ERROR,
-    TRAILING_SLASH,         /* an backslash just before the end of the RE */
-    UNCLOSED_PAREN,         /* mis-matched parens */
-    UNCLOSED_BRACKET,       /* mis-matched parens */
-    UNCLOSED_CLASS,         /* '[' missing ']' */
-    BACKREF_IN_CLASS,       /* used '\<digit>' in '[..]' */
-    BAD_FLAG,               /* unrecognized flag (not i, g or m) */
-    WRONG_RANGE,            /* range lo > range hi */
-    OUT_OF_MEMORY
-} REError;
+typedef enum RE_Version {
+    RE_VERSION_1,              /* octal literal support */
+    RE_VERSION_2
+} RE_Version;
+
+typedef enum RE_Error {
+    RE_NO_ERROR,
+    RE_TRAILING_SLASH,         /* a backslash just before the end of the RE */
+    RE_UNCLOSED_PAREN,         /* mis-matched parens */
+    RE_UNCLOSED_BRACKET,       /* mis-matched parens */
+    RE_UNCLOSED_CLASS,         /* '[' missing ']' */
+    RE_BACKREF_IN_CLASS,       /* used '\<digit>' in '[..]' */
+    RE_BAD_FLAG,               /* unrecognized flag (not i, g or m) */
+    RE_WRONG_RANGE,            /* range lo > range hi */
+    RE_OUT_OF_MEMORY
+} RE_Error;
 
 typedef struct RENode RENode;
 
-typedef struct CharSet {
+typedef struct RECharSet {
     REuint8 *bits;
     REuint32 length;
-    REbool sense;
-} CharSet;
+    unsigned char sense;
+} RECharSet;
 
 
-typedef struct REParseState {
+typedef struct REState {
     REchar *srcStart;           /* copy of source text */
     REchar *src;                /* current parse position */
     REchar *srcEnd;             /* end of source text */
-    RENode *result;             /* head of result tree */
     REuint32 parenCount;        /* # capturing parens */
-    REuint32 flags;             /* flags from regexp */
-    REint32 lastIndex;          /* position from last match (for 'g' flag) */
-    REbool oldSyntax;           /* backward compatibility for octal chars */
-    REError error;              /* parse-time error */
+    REuint32 flags;             /* union of flags from regexp */
+    RE_Version version;         
+    RE_Error error;             /* parse-time or runtime error */
     REuint32 classCount;        /* number of contained []'s */
-    CharSet *classList;         /* data for []'s */
+    RECharSet *classList;       /* data for []'s */
+    RENode *result;             /* head of result tree */
     REint32 codeLength;         /* length of bytecode */
     REuint8 *pc;                /* start of bytecode */
-} REParseState;
+} REState;
 
 typedef struct RECapture {
     REint32 index;              /* start of contents of this capture, -1 for empty  */
     REint32 length;             /* length of capture */
 } RECapture;
 
-typedef struct REState {
-    REint32 startIndex;           
-    REint32 endIndex;
-    REint32 n;                  /* set to (n - 1), i.e. for /((a)b)/, this field is 1 */
+typedef struct REMatchState {
+    REint32 startIndex;         /* beginning of succesful match */     
+    REint32 endIndex;           /* character beyond end of succesful match */
+    REint32 parenCount;         /* set to (n - 1), i.e. for /((a)b)/, this field is 1 */
     RECapture parens[1];        /* first of 'n' captures, allocated at end of this struct */
-} REState;
+} REMatchState;
 
+
+
+/*
+ *  Compiles the flags source text into a union of flag values. Returns RE_NO_ERROR
+ *  or RE_BAD_FLAG.
+ *
+ */
+RE_Error parseFlags(const REchar *flagsSource, REint32 flagsLength, REuint32 *flags);
 
 /* 
- *  Compiles the RegExp source into a tree of RENodes in the returned
- *  parse state result field. Errors are flagged via the error reporter
- *  function and signalled via a NULL return.
- *  The RegExp source does not have any delimiters and the flag string is
- *  to be supplied separately (can be NULL, with a 0 length)
+ *  Compiles the RegExp source into a stream of REByteCodes and fills in the REState struct.
+ *  Errors are recorded in the state 'error' field and signalled by a NULL return.
+ *  The RegExp source does not have any delimiters.
  */
-REParseState *REParse(const REchar *source, REint32 sourceLength, const REchar *flags, REint32 flagsLength, REbool oldSyntax);
+REState *REParse(const REchar *source, REint32 sourceLength, REuint32 flags, RE_Version version);
+
 
 /*
- *  The [[Match]] implementation
+ *  Execute the RegExp against the supplied text.
+ *  The return value is NULL for no match, otherwise an REMatchState struct.
  *
  */
-REState *REMatch(REParseState *parseState, const REchar *text, REint32 length);
+REMatchState *REExecute(REState *pState, const REchar *text, REint32 offset, REint32 length, int globalMulitline);
+
 
 /*
- *  Execute the RegExp against the supplied text, filling in the REState.
- *
+ *  The [[Match]] implementation, applies the regexp at the start of the text
+ *  only (i.e. it does not search repeatedly through the text for a match).
+ *  NULL return for no match.
  *
  */
-REState *REExecute(REParseState *parseState, const REchar *text, REint32 length);
+REMatchState *REMatch(REState *pState, const REchar *text, REint32 length);
+
 
 
 /*
  *  Throw away the RegExp and all data associated with it.
  */
-void freeRegExp(REParseState *parseState);
+void REfreeRegExp(REState *pState);
+
+
+
 
 /*
  *  Needs to be provided by the host, following these specs:
@@ -151,3 +163,11 @@ void freeRegExp(REParseState *parseState);
  * 6. Return cu.
  */
 extern REchar canonicalize(REchar ch);
+
+/*
+ *  The host should also provide a definition of whitespace to match the following:
+ *
+ */
+#ifndef RE_ISSPACE
+#define RE_ISSPACE(c) ( (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r')  || (c == '\v')  || (c == '\f') )
+#endif

@@ -99,6 +99,7 @@ void ClosureVarReference::emitCodeSequence(ByteCodeGen *bcg)
 void StaticFieldReference::emitImplicitLoad(ByteCodeGen *bcg) 
 {
     bcg->addOp(LoadTypeOp);
+    ASSERT(mClass);
     bcg->addPointer(mClass);
 }
 
@@ -577,6 +578,7 @@ void ByteCodeGen::genCodeForFunction(FunctionDefinition &f, size_t pos, JSFuncti
         // incoming 'this' is null
         //
         addOp(LoadTypeOp);
+        ASSERT(topClass);
         addPointer(topClass);
         addOp(NewThisOp);
         //
@@ -1207,6 +1209,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 genExpr(e->expr);
                 if (container->getResultType() != Object_Type) {
                     addOp(LoadTypeOp);
+                    ASSERT(container->getResultType());
                     addPointer(container->getResultType());
                     addOp(CastOp);
                 }
@@ -1892,6 +1895,7 @@ BinaryOpEquals:
 
             if (writeRef->mType != Object_Type) {
                 addOp(LoadTypeOp);
+                ASSERT(writeRef->mType);
                 addPointer(writeRef->mType);
                 addOp(CastOp);
             }
@@ -1934,6 +1938,7 @@ BinaryOpEquals:
 
             if (writeRef->mType != Object_Type) {
                 addOp(LoadTypeOp);
+                ASSERT(writeRef->mType);
                 addPointer(writeRef->mType);
                 addOp(CastOp);
             }
@@ -1975,6 +1980,7 @@ BinaryOpEquals:
 
             if (writeRef->mType != Object_Type) {
                 addOp(LoadTypeOp);
+                ASSERT(writeRef->mType);
                 addPointer(writeRef->mType);
                 addOp(CastOp);
             }
@@ -2010,6 +2016,7 @@ BinaryOpEquals:
 
             if (writeRef->mType != Object_Type) {
                 addOp(LoadTypeOp);
+                ASSERT(writeRef->mType);
                 addPointer(writeRef->mType);
                 addOp(CastOp);
             }
@@ -2084,6 +2091,7 @@ BinaryOpEquals:
 
             if (ref->mType != Object_Type) {
                 addOp(LoadTypeOp);
+                ASSERT(ref->mType);
                 addPointer(ref->mType);
                 addOp(CastOp);
             }
@@ -2279,6 +2287,7 @@ BinaryOpEquals:
     case ExprNode::arrayLiteral:
         {
             addOp(LoadTypeOp);
+            ASSERT(Array_Type);
             addPointer(Array_Type);
             addOpAdjustDepth(NewInstanceOp, 0);
             addLong(0);
@@ -2336,6 +2345,7 @@ BinaryOpEquals:
             NumUnitExprNode *n = checked_cast<NumUnitExprNode *>(p);
 
             addOp(LoadTypeOp);
+            ASSERT(Unit_Type);
             addPointer(Unit_Type);
             addOp(GetInvokePropertyOp);
             addStringRef(n->str);
@@ -2352,6 +2362,7 @@ BinaryOpEquals:
         {
             FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
             JSFunction *fnc = new JSFunction(m_cx, NULL, mScopeChain);
+            fnc->setResultType(Object_Type);
             fnc->countParameters(m_cx, f->function);
 	    if (mScopeChain->isPossibleUncheckedFunction(f->function))
 		fnc->setIsPrototype(true);
@@ -2435,9 +2446,9 @@ BinaryOpEquals:
             m_cx->mCurModule = &errorHandlingModule;
             reValue = RegExp_Constructor(m_cx, reValue, args, 2);
             m_cx->mCurModule = curModule;
-            ASSERT(reValue.isObject());
+            ASSERT(reValue.isInstance());
             addOp(LoadConstantRegExpOp);
-            addPointer(reValue.object);
+            addPointer(reValue.instance);
             return RegExp_Type;
         }
         break;

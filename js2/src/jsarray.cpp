@@ -57,9 +57,8 @@ JSValue Array_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, 
     JSValue thatValue = thisValue;
     if (thatValue.isNull())
         thatValue = Array_Type->newInstance(cx);
-    ASSERT(thatValue.isObject());
-    JSObject *thisObj = thatValue.object;
-    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisObj);
+    ASSERT(thatValue.isInstance());
+    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thatValue.instance);
     if (argc > 0) {
         if (argc == 1) {
             if (argv[0].isNumber()) {
@@ -89,9 +88,11 @@ JSValue Array_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, 
 
 static JSValue Array_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;
-    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisObj);
+    if (thisValue.getType() != Array_Type)
+        cx->reportError(Exception::typeError, "Array.prototype.toString called on a non Array");
+
+    ASSERT(thisValue.isInstance());
+    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisValue.instance);
 
     ContextStackReplacement csr(cx);
 
@@ -107,6 +108,7 @@ static JSValue Array_toString(Context *cx, const JSValue& thisValue, JSValue * /
                 s->append(*result.toString(cx).string);
             if (i < (arrInst->mLength - 1))
                 s->append(widenCString(","));
+            delete id;
         }
         return JSValue(s);
     }
@@ -115,9 +117,11 @@ static JSValue Array_toString(Context *cx, const JSValue& thisValue, JSValue * /
 
 static JSValue Array_toSource(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;
-    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisObj);
+    if (thisValue.getType() != Array_Type)
+        cx->reportError(Exception::typeError, "Array.prototype.toSource called on a non Array");
+
+    ASSERT(thisValue.isInstance());
+    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisValue.instance);
 
     ContextStackReplacement csr(cx);
 
@@ -133,6 +137,7 @@ static JSValue Array_toSource(Context *cx, const JSValue& thisValue, JSValue * /
                 s->append(*result.toString(cx).string);
             if (i < (arrInst->mLength - 1))
                 s->append(widenCString(", "));
+            delete id;
         }
         s->append(widenCString("]"));
         return JSValue(s);
@@ -142,33 +147,40 @@ static JSValue Array_toSource(Context *cx, const JSValue& thisValue, JSValue * /
 
 static JSValue Array_push(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;
-    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisObj);
+    ContextStackReplacement csr(cx);
+
+    JSObject *thisObj = thisValue.getObjectValue();
+    thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
+    JSValue result = cx->popValue();
+    uint32 length = (uint32)(result.toUInt32(cx).f64);    
 
     for (uint32 i = 0; i < argc; i++) {
-        const String *id = numberToString(i + arrInst->mLength);
-        arrInst->defineVariable(cx, *id, (NamespaceList *)(NULL), Property::NoAttribute, Object_Type, argv[i]);
+        const String *id = numberToString(i + length);
+        thisObj->defineVariable(cx, *id, (NamespaceList *)(NULL), Property::NoAttribute, Object_Type, argv[i]);
         delete id;
     }
-    arrInst->mLength += argc;
-    return JSValue((float64)arrInst->mLength);
+    length += argc;
+    result = JSValue((float64)length);
+    thisObj->setProperty(cx, cx->Length_StringAtom, CURRENT_ATTR, result);
+    return result;
 }
               
 static JSValue Array_pop(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;
-    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisObj);
-
     ContextStackReplacement csr(cx);
 
-    if (arrInst->mLength > 0) {
-        const String *id = numberToString(arrInst->mLength - 1);
-        arrInst->getProperty(cx, *id, NULL);
+    JSObject *thisObj = thisValue.getObjectValue();
+    thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
+    JSValue result = cx->popValue();
+    uint32 length = (uint32)(result.toUInt32(cx).f64);    
+
+    if (length > 0) {
+        const String *id = numberToString(length - 1);
+        thisObj->getProperty(cx, *id, NULL);
         JSValue result = cx->popValue();
-        arrInst->deleteProperty(cx, *id, NULL);
-        --arrInst->mLength;
+        thisObj->deleteProperty(cx, *id, NULL);
+        --length;
+        thisObj->setProperty(cx, cx->Length_StringAtom, CURRENT_ATTR, JSValue((float64)length));
         delete id;
         return result;
     }
@@ -180,7 +192,8 @@ JSValue Array_concat(Context *cx, const JSValue& thisValue, JSValue *argv, uint3
 {
     JSValue E = thisValue;
 
-    JSArrayInstance *A = (JSArrayInstance *)(Array_Type->newInstance(cx));
+    JSValue result = Array_Type->newInstance(cx);
+    JSArrayInstance *A = checked_cast<JSArrayInstance *>(result.instance);
     uint32 n = 0;
     uint32 i = 0;
 
@@ -189,31 +202,35 @@ JSValue Array_concat(Context *cx, const JSValue& thisValue, JSValue *argv, uint3
     do {
         if (E.getType() != Array_Type) {
             const String *id = numberToString(n++);
-            A->setProperty(cx, *id, CURRENT_ATTR, E);            
+            A->setProperty(cx, *id, CURRENT_ATTR, E);
+            delete id;
         }
         else {
-            ASSERT(E.isObject());
-            JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(E.object);
-            for (uint32 k = 0; k < arrInst->mLength; k++) {
+            JSObject *arrObj = E.getObjectValue();
+            arrObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
+            JSValue result = cx->popValue();
+            uint32 length = (uint32)(result.toUInt32(cx).f64);    
+            for (uint32 k = 0; k < length; k++) {
                 const String *id = numberToString(k);
-                arrInst->getProperty(cx, *id, NULL);
-                JSValue result = cx->popValue();
+                arrObj->getProperty(cx, *id, NULL);
+                delete id;
                 id = numberToString(n++);
-                A->setProperty(cx, *id, CURRENT_ATTR, result);            
+                JSValue result = cx->popValue();
+                A->setProperty(cx, *id, CURRENT_ATTR, result);
+                delete id;
             }
         }
         E = argv[i++];
     } while (i <= argc);
     
-    return JSValue(A);
+    return result;
 }
 
 static JSValue Array_join(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     ContextStackReplacement csr(cx);
 
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;
+    JSObject *thisObj = thisValue.getObjectValue();
 
     thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
     JSValue result = cx->popValue();
@@ -230,19 +247,23 @@ static JSValue Array_join(Context *cx, const JSValue& thisValue, JSValue *argv, 
     else
         separator = argv[0].toString(cx).string;
 
-    thisObj->getProperty(cx, *numberToString(0), CURRENT_ATTR);
+    const String *id = numberToString(0);
+    thisObj->getProperty(cx, *id, CURRENT_ATTR);
+    delete id;
     result = cx->popValue();
 
     String *S = new String();
 
     for (uint32 k = 0; k < length; k++) {
-        thisObj->getProperty(cx, *numberToString(k), CURRENT_ATTR);
+        id = numberToString(k);
+        thisObj->getProperty(cx, *id, CURRENT_ATTR);
         result = cx->popValue();
         if (!result.isUndefined() && !result.isNull())
             *S += *result.toString(cx).string;
 
         if (k < (length - 1))
             *S += *separator;
+        delete id;
     }
     
     return JSValue(S);
@@ -252,8 +273,7 @@ static JSValue Array_reverse(Context *cx, const JSValue& thisValue, JSValue * /*
 {
     ContextStackReplacement csr(cx);
 
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;
+    JSObject *thisObj = thisValue.getObjectValue();
 
     thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
     JSValue result = cx->popValue();
@@ -290,6 +310,8 @@ static JSValue Array_reverse(Context *cx, const JSValue& thisValue, JSValue * /*
                 thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);
             }
         }
+        delete id1;
+        delete id2;
     }
 
     return thisValue;
@@ -299,8 +321,7 @@ static JSValue Array_shift(Context *cx, const JSValue& thisValue, JSValue * /*ar
 {
     ContextStackReplacement csr(cx);
 
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;
+    JSObject *thisObj = thisValue.getObjectValue();
 
     thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
     JSValue result = cx->popValue();
@@ -311,8 +332,10 @@ static JSValue Array_shift(Context *cx, const JSValue& thisValue, JSValue * /*ar
         return kUndefinedValue;
     }
 
-    thisObj->getProperty(cx, *numberToString(0), CURRENT_ATTR);
+    const String *id = numberToString(0);
+    thisObj->getProperty(cx, *id, CURRENT_ATTR);
     result = cx->popValue();
+    delete id;
 
     for (uint32 k = 1; k < length; k++) {
         const String *id1 = numberToString(k);
@@ -325,9 +348,13 @@ static JSValue Array_shift(Context *cx, const JSValue& thisValue, JSValue * /*ar
         }
         else
             thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);        
+        delete id1;
+        delete id2;
     }
 
-    thisObj->deleteProperty(cx, *numberToString(length - 1), CURRENT_ATTR);
+    id = numberToString(length - 1);
+    thisObj->deleteProperty(cx, *id, CURRENT_ATTR);
+    delete id;
     thisObj->setProperty(cx, cx->Length_StringAtom, CURRENT_ATTR, JSValue((float64)(length - 1)) );
 
     return result;
@@ -337,14 +364,14 @@ static JSValue Array_slice(Context *cx, const JSValue& thisValue, JSValue *argv,
 {
     ContextStackReplacement csr(cx);
 
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;
+    JSObject *thisObj = thisValue.getObjectValue();
 
-    JSArrayInstance *A = (JSArrayInstance *)Array_Type->newInstance(cx);
+    JSValue result = Array_Type->newInstance(cx);
+    JSArrayInstance *A = checked_cast<JSArrayInstance *>(result.instance);
 
     thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
-    JSValue result = cx->popValue();
-    uint32 length = (uint32)(result.toUInt32(cx).f64);    
+    JSValue lengthValue = cx->popValue();
+    uint32 length = (uint32)(lengthValue.toUInt32(cx).f64);    
 
     uint32 start, end;
     if (argc < 1) 
@@ -396,6 +423,7 @@ static JSValue Array_slice(Context *cx, const JSValue& thisValue, JSValue *argv,
         }
         n++;
         start++;
+        delete id1;
     }
     A->setProperty(cx, cx->Length_StringAtom, CURRENT_ATTR, JSValue((float64)n) );
     return JSValue(A);
@@ -517,7 +545,6 @@ static int32 sort_compare(JSValue *a, JSValue *b, CompareArgs *arg)
 
 static JSValue Array_sort(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject());
     ContextStackReplacement csr(cx);
 
     CompareArgs ca;
@@ -532,7 +559,7 @@ static JSValue Array_sort(Context *cx, const JSValue& thisValue, JSValue *argv, 
         }
     }
 
-    JSObject *thisObj = thisValue.object;
+    JSObject *thisObj = thisValue.getObjectValue();
     thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
     JSValue result = cx->popValue();
     uint32 length = (uint32)(result.toUInt32(cx).f64);
@@ -566,13 +593,13 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
         uint32 k;
         ContextStackReplacement csr(cx);
 
-        ASSERT(thisValue.isObject());
-        JSObject *thisObj = thisValue.object;
+        JSObject *thisObj = thisValue.getObjectValue();
         thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
-        JSValue result = cx->popValue();
-        uint32 length = (uint32)(result.toUInt32(cx).f64);    
+        JSValue lengthValue = cx->popValue();
+        uint32 length = (uint32)(lengthValue.toUInt32(cx).f64);    
 
-        JSArrayInstance *A = (JSArrayInstance *)Array_Type->newInstance(cx);
+        JSValue result = Array_Type->newInstance(cx);
+        JSArrayInstance *A = checked_cast<JSArrayInstance *>(result.instance);
 
         int32 arg0 = (int32)(argv[0].toInt32(cx).f64);
         uint32 start;
@@ -608,6 +635,7 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
                 thisObj->getProperty(cx, *id1, CURRENT_ATTR);
                 A->setProperty(cx, *id2, CURRENT_ATTR, cx->popValue());
             }
+            delete id1;
         }
         A->setProperty(cx, cx->Length_StringAtom, CURRENT_ATTR, JSValue((float64)deleteCount) );
 
@@ -623,6 +651,8 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
                 }
                 else
                     thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);
+                delete id1;
+                delete id2;
             }
             for (k = length; k > (length - deleteCount + newItemCount); k--) {
                 const String *id1 = numberToString(k - 1);
@@ -641,6 +671,8 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
                     }
                     else
                         thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);
+                    delete id1;
+                    delete id2;
                 }
             }
         }
@@ -648,10 +680,11 @@ static JSValue Array_splice(Context *cx, const JSValue& thisValue, JSValue *argv
         for (uint32 i = 2; i < argc; i++) {
             const String *id1 = numberToString(k++);
             thisObj->setProperty(cx, *id1, CURRENT_ATTR, argv[i]);
+            delete id1;
         }
         thisObj->setProperty(cx, cx->Length_StringAtom, CURRENT_ATTR, JSValue((float64)(length - deleteCount + newItemCount)) );
 
-        return JSValue(A);
+        return result;
     }
     return kUndefinedValue;
 }
@@ -660,8 +693,7 @@ static JSValue Array_unshift(Context *cx, const JSValue& thisValue, JSValue *arg
 {
     ContextStackReplacement csr(cx);
 
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;
+    JSObject *thisObj = thisValue.getObjectValue();
     thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
     JSValue result = cx->popValue();
     uint32 length = (uint32)(result.toUInt32(cx).f64);
@@ -677,11 +709,14 @@ static JSValue Array_unshift(Context *cx, const JSValue& thisValue, JSValue *arg
         }
         else
             thisObj->deleteProperty(cx, *id2, CURRENT_ATTR);
+        delete id1;
+        delete id2;
     }
 
     for (k = 0; k < argc; k++) {
         const String *id1 = numberToString(k);
         thisObj->setProperty(cx, *id1, CURRENT_ATTR, argv[k]);
+        delete id1;
     }
     thisObj->setProperty(cx, cx->Length_StringAtom, CURRENT_ATTR, JSValue((float64)(length + argc)) );
 
@@ -712,10 +747,7 @@ JSValue Array_GetElement(Context *cx, const JSValue& thisValue, JSValue *argv, u
     if (argc != 2)
         cx->reportError(Exception::referenceError, "[] only supports single dimension");
 
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;    
-    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisObj); 
-    ASSERT(thisObj->mType == Array_Type);
+    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisValue.instance); 
 
     JSValue index = argv[1];
     const String *name = index.toString(cx).string;
@@ -730,10 +762,7 @@ JSValue Array_SetElement(Context *cx, const JSValue& thisValue, JSValue *argv, u
     if (argc != 3)
         cx->reportError(Exception::referenceError, "[]= only supports single dimension");
 
-    ASSERT(thisValue.isObject());
-    JSObject *thisObj = thisValue.object;    
-    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisObj); 
-    ASSERT(thisObj->mType == Array_Type);
+    JSArrayInstance *arrInst = checked_cast<JSArrayInstance *>(thisValue.instance); 
 
     JSValue index = argv[2];
     const String *name = index.toString(cx).string;
@@ -741,9 +770,9 @@ JSValue Array_SetElement(Context *cx, const JSValue& thisValue, JSValue *argv, u
     if (index.isNumber()) {
         uint32 intIndex;
         if (isArrayIndex(cx, index, intIndex)) {
-            PropertyIterator it = thisObj->findNamespacedProperty(*name, NULL);
-            if (it == thisObj->mProperties.end())
-                thisObj->insertNewProperty(*name, NULL, Property::Enumerable, Object_Type, argv[1]);
+            PropertyIterator it = arrInst->findNamespacedProperty(*name, NULL);
+            if (it == arrInst->mProperties.end())
+                arrInst->insertNewProperty(*name, NULL, Property::Enumerable, Object_Type, argv[1]);
             else {
                 Property *prop = PROPERTY(it);
                 ASSERT(prop->mFlag == ValuePointer);

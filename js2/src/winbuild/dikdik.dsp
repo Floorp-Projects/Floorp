@@ -98,6 +98,10 @@ SOURCE=..\bytecodegen.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\collector.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\exception.cpp
 
 !IF  "$(CFG)" == "DikDik - Win32 Release"

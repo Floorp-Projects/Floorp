@@ -291,11 +291,12 @@ static int32 WeekDay(float64 t)
 
 static float64 *Date_getProlog(Context *cx, const JSValue& thisValue)
 {
-    ASSERT(thisValue.isObject());
     if (thisValue.getType() != Date_Type)
         cx->reportError(Exception::typeError, "You need a date");
+    ASSERT(thisValue.isInstance());
+    JSDateInstance *dateInst = checked_cast<JSDateInstance *>(thisValue.instance);
 
-    return (float64 *)(thisValue.object->mPrivate);
+    return &dateInst->mValue;
 }
 
 
@@ -869,9 +870,8 @@ JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, u
     JSValue thatValue = thisValue;
     if (thatValue.isNull())
         thatValue = Date_Type->newInstance(cx);
-    ASSERT(thatValue.isObject());
-    JSObject *thisObj = thatValue.object;
-    thisObj->mPrivate = new float64;
+    ASSERT(thatValue.isInstance());
+    JSDateInstance *thisInst = checked_cast<JSDateInstance *>(thatValue.instance);
 
     /* Date called as constructor */
     if (argc == 0) {
@@ -883,20 +883,20 @@ JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, u
 	JSLL_DIV(ms, us, us2ms);
 	JSLL_L2D(msec_time, ms);
 
-	*((float64 *)(thisObj->mPrivate)) = msec_time;
+	thisInst->mValue = msec_time;
     } 
     else {
         if (argc == 1) {
 	    if (!argv[0].isString()) {
 	        /* the argument is a millisecond number */
 	        float64 d = argv[0].toNumber(cx).f64;
-	        *((float64 *)(thisObj->mPrivate)) = TIMECLIP(d);
+	        thisInst->mValue = TIMECLIP(d);
 	    } else {
 	        /* the argument is a string; parse it. */
 	        const String *str = argv[0].toString(cx).string;
 
 	        float64 d = date_parseString(*str);
-	        *((float64 *)(thisObj->mPrivate)) = TIMECLIP(d);
+	        thisInst->mValue = TIMECLIP(d);
 	    }
         } 
         else {
@@ -911,7 +911,7 @@ JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, u
 		    /* if any arg is NaN, make a NaN date object
 		       and return */
 		    if (!JSDOUBLE_IS_FINITE(double_arg)) {
-		        *((float64 *)(thisObj->mPrivate)) = nan;
+		        thisInst->mValue = nan;
                         return thatValue;
 		    }
 		    array[loop] = JSValue::float64ToInteger(double_arg);
@@ -931,7 +931,7 @@ JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, u
 	    msec_time = MakeTime(array[3], array[4], array[5], array[6]);
 	    msec_time = MakeDate(day, msec_time);
 	    msec_time = UTC(msec_time);
-	    *((float64 *)(thisObj->mPrivate)) = TIMECLIP(msec_time);
+	    thisInst->mValue = TIMECLIP(msec_time);
         }
     }
     return thatValue;

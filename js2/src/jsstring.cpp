@@ -45,7 +45,6 @@
 #include "js2runtime.h"
 
 #include "jsstring.h"
-#include "regexp.h"
 
 namespace JavaScript {    
 namespace JS2Runtime {
@@ -56,15 +55,13 @@ JSValue String_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv,
     JSValue thatValue = thisValue;
     if (thatValue.isNull())
         thatValue = String_Type->newInstance(cx);
-    ASSERT(thatValue.isObject());
-    JSObject *thisObj = thatValue.object;
-    JSStringInstance *strInst = checked_cast<JSStringInstance *>(thisObj);
+    ASSERT(thatValue.isInstance());
+    JSStringInstance *strInst = checked_cast<JSStringInstance *>(thatValue.instance);
 
     if (argc > 0)
-        thisObj->mPrivate = (void *)(new String(*argv[0].toString(cx).string));
+        strInst->mValue = new String(*argv[0].toString(cx).string);
     else
-        thisObj->mPrivate = (void *)(&cx->Empty_StringAtom);
-    strInst->mLength = ((String *)(thisObj->mPrivate))->size();
+        strInst->mValue = &cx->Empty_StringAtom;
     return thatValue;
 }
 
@@ -89,85 +86,105 @@ JSValue String_fromCharCode(Context *cx, const JSValue& /*thisValue*/, JSValue *
 
 static JSValue String_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isObject());
     if (thisValue.getType() != String_Type)
         cx->reportError(Exception::typeError, "String.toString called on something other than a string thing");
-    JSObject *thisObj = thisValue.object;
-    return JSValue((String *)thisObj->mPrivate);
+    ASSERT(thisValue.isInstance());
+    JSStringInstance *strInst = checked_cast<JSStringInstance *>(thisValue.instance);
+    return JSValue(strInst->mValue);
 }
 
 static JSValue String_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isObject());
     if (thisValue.getType() != String_Type)
         cx->reportError(Exception::typeError, "String.valueOf called on something other than a string thing");
-    JSObject *thisObj = thisValue.object;
-    return JSValue((String *)thisObj->mPrivate);
+    ASSERT(thisValue.isInstance());
+    JSStringInstance *strInst = checked_cast<JSStringInstance *>(thisValue.instance);
+    return JSValue(strInst->mValue);
 }
 
+/*
+ * 15.5.4.12 String.prototype.search (regexp)
+ *
+ * If regexp is not an object whose [[Class]] property is "RegExp", it is replaced with the result of the expression new
+ * RegExp(regexp). Let string denote the result of converting the this value to a string.
+ * The value string is searched from its beginning for an occurrence of the regular expression pattern regexp. The
+ * result is a number indicating the offset within the string where the pattern matched, or -1 if there was no match.
+ * NOTE This method ignores the lastIndex and global properties of regexp. The lastIndex property of regexp is left
+ * unchanged.
+*/
 static JSValue String_search(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     ContextStackReplacement csr(cx);
 
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     JSValue S = thisValue.toString(cx);
 
     JSValue regexp = argv[0];
-    if ((argc == 0) || !regexp.isObject() || (regexp.object->mType != RegExp_Type)) {
+    if ((argc == 0) || (regexp.getType() != RegExp_Type)) {
         regexp = kNullValue;
         regexp = RegExp_Constructor(cx, regexp, argv, 1);
     }
-    REParseState *parseResult = (REParseState *)(regexp.object->mPrivate);
+    REState *pState = (checked_cast<JSRegExpInstance *>(regexp.instance))->mRegExp;
 
-    /* save & restore lastIndex as it's not to be modified */
-    uint32 lastIndex = parseResult->lastIndex;
-    parseResult->lastIndex = 0;
-    REState *regexp_result = REExecute(parseResult, S.string->begin(), S.string->length());
-    parseResult->lastIndex = lastIndex;
-
-    if (regexp_result)
-        return JSValue((float64)(regexp_result->startIndex));
+    REMatchState *match = REExecute(pState, S.string->begin(), 0, S.string->length(), false);
+    if (match)
+        return JSValue((float64)(match->startIndex));
     else
         return JSValue(-1.0);
 
 }
 
+/*
+ * 15.5.4.10 String.prototype.match (regexp)
+ * 
+ * If regexp is not an object whose [[Class]] property is "RegExp", it is replaced with the result of the expression new
+ * RegExp(regexp). Let string denote the result of converting the this value to a string. Then do one of the following:
+ * - If regexp.global is false: Return the result obtained by invoking RegExp.prototype.exec (see section
+ *    15.10.6.2) on regexp with string as parameter.
+ * - If regexp.global is true: Set the regexp.lastIndex property to 0 and invoke RegExp.prototype.exec
+ *    repeatedly until there is no match. If there is a match with an empty string (in other words, if the value of
+ *    regexp.lastIndex is left unchanged), increment regexp.lastIndex by 1. Let n be the number of matches. The
+ *    value returned is an array with the length property set to n and properties 0 through n-1 corresponding to the
+ *    first elements of the results of all matching invocations of RegExp.prototype.exec.
+ */
+ 
 static JSValue String_match(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     ContextStackReplacement csr(cx);
 
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     JSValue S = thisValue.toString(cx);
 
     JSValue regexp = argv[0];
-    if ((argc == 0) || !regexp.isObject() || (regexp.object->mType != RegExp_Type)) {
+    if ((argc == 0) || (regexp.getType() != RegExp_Type)) {
         regexp = kNullValue;
         regexp = RegExp_Constructor(cx, regexp, argv, 1);
     }
 
-    REParseState *parseResult = (REParseState *)(regexp.object->mPrivate);
-    if ((parseResult->flags & GLOBAL) == 0) {
+    REState *pState = (checked_cast<JSRegExpInstance *>(regexp.instance))->mRegExp;
+    if ((pState->flags & RE_GLOBAL) == 0) {
         return RegExp_exec(cx, regexp, &S, 1);                
     }
     else {
-        JSArrayInstance *A = (JSArrayInstance *)Array_Type->newInstance(cx);
-        parseResult->lastIndex = 0;
+        JSValue result = Array_Type->newInstance(cx);
+        JSArrayInstance *A = checked_cast<JSArrayInstance *>(result.instance);
         int32 index = 0;
+        int32 lastIndex = 0;
         while (true) {
-            REState *regexp_result = REExecute(parseResult, S.string->begin(), S.string->length());
-            if (regexp_result == NULL)
+            REMatchState *match = REExecute(pState, S.string->begin(), lastIndex, S.string->length(), false);
+            if (match == NULL)
                 break;
-            if (parseResult->lastIndex == index)
-                parseResult->lastIndex++;
-            String *matchStr = new String(S.string->substr(regexp_result->startIndex, regexp_result->endIndex - regexp_result->startIndex));
+            if (lastIndex == match->endIndex)
+                lastIndex++;
+            else
+                lastIndex = match->endIndex;
+            String *matchStr = new String(S.string->substr(match->startIndex, match->endIndex - match->startIndex));
             A->setProperty(cx, *numberToString(index++), NULL, JSValue(matchStr));
         }
-        regexp.object->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue((float64)(parseResult->lastIndex)));
-        return JSValue(A);
+        regexp.instance->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue((float64)lastIndex));
+        return result;
     }
 }
 
-static const String interpretDollar(Context *cx, const String *replaceStr, uint32 dollarPos, const String *searchStr, REState *regexp_result, uint32 &skip)
+static const String interpretDollar(Context *cx, const String *replaceStr, uint32 dollarPos, const String *searchStr, REMatchState *match, uint32 &skip)
 {
     skip = 2;
     const char16 *dollarValue = replaceStr->begin() + dollarPos + 1;
@@ -175,11 +192,11 @@ static const String interpretDollar(Context *cx, const String *replaceStr, uint3
     case '$':
 	return cx->Dollar_StringAtom;
     case '&':
-	return searchStr->substr(regexp_result->startIndex, regexp_result->endIndex - regexp_result->startIndex);
+	return searchStr->substr(match->startIndex, match->endIndex - match->startIndex);
     case '`':
-	return searchStr->substr(0, regexp_result->startIndex);
+	return searchStr->substr(0, match->startIndex);
     case '\'':
-	return searchStr->substr(regexp_result->endIndex, searchStr->length() - regexp_result->endIndex);
+	return searchStr->substr(match->endIndex, searchStr->length() - match->endIndex);
     case '0':
     case '1':
     case '2':
@@ -192,16 +209,16 @@ static const String interpretDollar(Context *cx, const String *replaceStr, uint3
     case '9':
 	{
 	    int32 num = (uint32)(*dollarValue - '0');
-	    if (num <= regexp_result->n) {
+	    if (num <= match->parenCount) {
 		if ((dollarPos < (replaceStr->length() - 2))
 			&& (dollarValue[1] >= '0') && (dollarValue[1] <= '9')) {
 		    int32 tmp = (num * 10) + (dollarValue[1] - '0');
-		    if (tmp <= regexp_result->n) {
+		    if (tmp <= match->parenCount) {
 			num = tmp;
 			skip = 3;
 		    }
 		}
-		return searchStr->substr((uint32)(regexp_result->parens[num - 1].index), (uint32)(regexp_result->parens[num - 1].length));
+		return searchStr->substr((uint32)(match->parens[num - 1].index), (uint32)(match->parens[num - 1].length));
 	    }
 	}
 	// fall thru
@@ -211,9 +228,37 @@ static const String interpretDollar(Context *cx, const String *replaceStr, uint3
     }
 }
 
+/*
+ * 15.5.4.11 String.prototype.replace (searchValue, replaceValue)
+ * 
+ * Let string denote the result of converting the this value to a string.
+ * 
+ * If searchValue is a regular expression (an object whose [[Class]] property is "RegExp"), do the following: If
+ * searchValue.global is false, then search string for the first match of the regular expression searchValue. If
+ * searchValue.global is true, then search string for all matches of the regular expression searchValue. Do the search
+ * in the same manner as in String.prototype.match, including the update of searchValue.lastIndex. Let m
+ * be the number of left capturing parentheses in searchValue (NCapturingParens as specified in section 15.10.2.1).
+ * 
+ * If searchValue is not a regular expression, let searchString be ToString(searchValue) and search string for the first
+ * occurrence of searchString. Let m be 0.
+ * 
+ * If replaceValue is a function, then for each matched substring, call the function with the following m + 3 arguments.
+ * Argument 1 is the substring that matched. If searchValue is a regular expression, the next m arguments are all of
+ * the captures in the MatchResult (see section 15.10.2.1). Argument m + 2 is the offset within string where the match
+ * occurred, and argument m + 3 is string. The result is a string value derived from the original input by replacing each
+ * matched substring with the corresponding return value of the function call, converted to a string if need be.
+ * 
+ * Otherwise, let newstring denote the result of converting replaceValue to a string. The result is a string value derived
+ * from the original input string by replacing each matched substring with a string derived from newstring by replacing
+ * characters in newstring by replacement text as specified in the following table. These $ replacements are done left-to-
+ * right, and, once such a replacement is performed, the new replacement text is not subject to further
+ * replacements. For example, "$1,$2".replace(/(\$(\d))/g, "$$1-$1$2") returns "$1-$11,$1-$22". A
+ * $ in newstring that does not match any of the forms below is left as is.
+ */
+
+
 static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     JSValue S = thisValue.toString(cx);
 
     JSValue searchValue;
@@ -223,54 +268,58 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
     if (argc > 1) replaceValue = argv[1];
     const String *replaceStr = replaceValue.toString(cx).string;
 
-    if (searchValue.isObject() && (searchValue.object->mType == RegExp_Type)) {
-	REParseState *parseResult = (REParseState *)(searchValue.object->mPrivate);
-	REState *regexp_result;
-	uint32 m = parseResult->parenCount;
+    if (searchValue.getType() == RegExp_Type) {
+	REState *pState = (checked_cast<JSRegExpInstance *>(searchValue.instance))->mRegExp;
+	REMatchState *match;
+	uint32 m = pState->parenCount;
 	String newString;
-        uint32 index = 0;
+        int32 lastIndex = 0;
 
 	while (true) {
-	    if (parseResult->flags & GLOBAL)
-		parseResult->lastIndex = (int32)index;
-            regexp_result = REExecute(parseResult, S.string->begin(), S.string->length());
-	    if (regexp_result) {
+            match = REExecute(pState, S.string->begin(), lastIndex, S.string->length(), false);
+	    if (match) {
 		String insertString;
 		uint32 start = 0;
 		while (true) {
+                    // look for '$' in the replacement string and interpret it as necessary
 		    uint32 dollarPos = replaceStr->find('$', start);
 		    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
 			uint32 skip;
 			insertString += replaceStr->substr(start, dollarPos - start);
-			insertString += interpretDollar(cx, replaceStr, dollarPos, S.string, regexp_result, skip);
+			insertString += interpretDollar(cx, replaceStr, dollarPos, S.string, match, skip);
 			start = dollarPos + skip;
 		    }
 		    else {
+                        // otherwise, absorb the entire replacement string
 			insertString += replaceStr->substr(start, replaceStr->length() - start);
 			break;
 		    }
 		}
-		newString += S.string->substr(index, regexp_result->startIndex - index);
+                // grab everything preceding the match
+		newString += S.string->substr(lastIndex, match->startIndex - lastIndex);
+                // and then add the replacement string
 		newString += insertString;
 	    }
 	    else
 		break;
-	    index = regexp_result->endIndex;
-	    if ((parseResult->flags & GLOBAL) == 0)
+	    lastIndex = match->endIndex;        // use lastIndex to grab remainder after break
+	    if ((pState->flags & RE_GLOBAL) == 0)
 		break;
 	}
-	newString += S.string->substr(index, S.string->length() - index);
+	newString += S.string->substr(lastIndex, S.string->length() - lastIndex);
+	if ((pState->flags & RE_GLOBAL) == 0)
+            searchValue.instance->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue((float64)lastIndex));
 	return JSValue(new String(newString));
     }
     else {
 	const String *searchStr = searchValue.toString(cx).string;
-	REState regexp_result;
+	REMatchState match;
         uint32 pos = S.string->find(*searchStr, 0);
 	if (pos == String::npos)
 	    return JSValue(S.string);
-	regexp_result.startIndex = (int32)pos;
-	regexp_result.endIndex = regexp_result.startIndex + searchStr->length();
-	regexp_result.n = 0;
+	match.startIndex = (int32)pos;
+	match.endIndex = match.startIndex + searchStr->length();
+	match.parenCount = 0;
 	String insertString;
 	String newString;
 	uint32 start = 0;
@@ -279,7 +328,7 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 	    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
 		uint32 skip;
 		insertString += replaceStr->substr(start, dollarPos - start);
-		insertString += interpretDollar(cx, replaceStr, dollarPos, S.string, &regexp_result, skip);
+		insertString += interpretDollar(cx, replaceStr, dollarPos, S.string, &match, skip);
 		start = dollarPos + skip;
 	    }
 	    else {
@@ -287,9 +336,9 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 		break;
 	    }
 	}
-	newString += S.string->substr(0, regexp_result.startIndex);
+	newString += S.string->substr(0, match.startIndex);
 	newString += insertString;
-	uint32 index = regexp_result.endIndex;
+	uint32 index = match.endIndex;
 	newString += S.string->substr(index, S.string->length() - index);
 	return JSValue(new String(newString));
     }
@@ -320,23 +369,23 @@ static void strSplitMatch(const String *S, uint32 q, const String *R, MatchResul
     result.failure = false;
 }
 
-static void regexpSplitMatch(const String *S, uint32 q, REParseState *RE, MatchResult &result)
+static void regexpSplitMatch(const String *S, uint32 q, REState *RE, MatchResult &result)
 {
     result.failure = true;
     result.captures = NULL;
 
-    REState *regexp_result = REMatch(RE, S->begin() + q, S->length() - q);
+    REMatchState *match = REMatch(RE, S->begin() + q, S->length() - q);
 
-    if (regexp_result) {
-        result.endIndex = regexp_result->startIndex + q;
+    if (match) {
+        result.endIndex = match->startIndex + q;
         result.failure = false;
-        result.capturesCount = regexp_result->n;
-        if (regexp_result->n) {
-            result.captures = new JSValue[regexp_result->n];
-            for (int32 i = 0; i < regexp_result->n; i++) {
-                if (regexp_result->parens[i].index != -1) {
-                    String *parenStr = new String(S->substr((uint32)(regexp_result->parens[i].index + q), 
-                                                    (uint32)(regexp_result->parens[i].length)));
+        result.capturesCount = match->parenCount;
+        if (match->parenCount) {
+            result.captures = new JSValue[match->parenCount];
+            for (int32 i = 0; i < match->parenCount; i++) {
+                if (match->parens[i].index != -1) {
+                    String *parenStr = new String(S->substr((uint32)(match->parens[i].index + q), 
+                                                    (uint32)(match->parens[i].length)));
                     result.captures[i] = JSValue(parenStr);
                 }
 		else
@@ -351,10 +400,10 @@ static JSValue String_split(Context *cx, const JSValue& thisValue, JSValue *argv
 {
     ContextStackReplacement csr(cx);
 
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     JSValue S = thisValue.toString(cx);
 
-    JSArrayInstance *A = (JSArrayInstance *)Array_Type->newInstance(cx);
+    JSValue result = Array_Type->newInstance(cx);
+    JSArrayInstance *A = checked_cast<JSArrayInstance *>(result.instance);
     uint32 lim;
     JSValue separatorV = (argc > 0) ? argv[0] : kUndefinedValue;
     JSValue limitV = (argc > 1) ? argv[1] : kUndefinedValue;
@@ -367,15 +416,15 @@ static JSValue String_split(Context *cx, const JSValue& thisValue, JSValue *argv
     uint32 s = S.string->size();
     uint32 p = 0;
 
-    REParseState *RE = NULL;
+    REState *RE = NULL;
     const String *R = NULL;
-    if (separatorV.isObject() && (separatorV.object->mType == RegExp_Type))
-        RE = (REParseState *)(separatorV.object->mPrivate);
+    if (separatorV.getType() == RegExp_Type)
+        RE = (checked_cast<JSRegExpInstance *>(separatorV.instance))->mRegExp;
     else
         R = separatorV.toString(cx).string;
 
     if (lim == 0) 
-        return JSValue(A);
+        return result;
 
 /* XXX standard requires this, but Monkey doesn't do it and the tests break
 
@@ -391,9 +440,9 @@ static JSValue String_split(Context *cx, const JSValue& thisValue, JSValue *argv
         else
             strSplitMatch(S.string, 0, R, z);
         if (!z.failure)
-            return JSValue(A);
+            return result;
         A->setProperty(cx, widenCString("0"), NULL, S);
-        return JSValue(A);
+        return result;
     }
 
     while (true) {
@@ -403,7 +452,7 @@ step11:
             String *T = new String(*S.string, p, (s - p));
             JSValue v(T);
             A->setProperty(cx, *numberToString(A->mLength), NULL, v);
-            return JSValue(A);
+            return result;
         }
         MatchResult z;
         if (RE)
@@ -423,20 +472,19 @@ step11:
         JSValue v(T);
         A->setProperty(cx, *numberToString(A->mLength), NULL, v);
         if (A->mLength == lim)
-            return JSValue(A);
+            return result;
         p = e;
 
         for (uint32 i = 0; i < z.capturesCount; i++) {
             A->setProperty(cx, *numberToString(A->mLength), NULL, JSValue(z.captures[i]));
             if (A->mLength == lim)
-                return JSValue(A);
+                return result;
         }
     }
 }
 
 static JSValue String_charAt(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     const String *str = thisValue.toString(cx).string;
 
     uint32 pos = 0;
@@ -452,7 +500,6 @@ static JSValue String_charAt(Context *cx, const JSValue& thisValue, JSValue *arg
 
 static JSValue String_charCodeAt(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     const String *str = thisValue.toString(cx).string;
 
     uint32 pos = 0;
@@ -467,7 +514,6 @@ static JSValue String_charCodeAt(Context *cx, const JSValue& thisValue, JSValue 
 
 static JSValue String_concat(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     const String *str = thisValue.toString(cx).string;
     String *result = new String(*str);
 
@@ -480,7 +526,6 @@ static JSValue String_concat(Context *cx, const JSValue& thisValue, JSValue *arg
 
 static JSValue String_indexOf(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     if (argc == 0)
         return JSValue(-1.0);
 
@@ -508,7 +553,6 @@ static JSValue String_indexOf(Context *cx, const JSValue& thisValue, JSValue *ar
 
 static JSValue String_lastIndexOf(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     if (argc == 0)
         return JSValue(-1.0);
 
@@ -543,7 +587,6 @@ static JSValue String_localeCompare(Context * /*cx*/, const JSValue& /*thisValue
 
 static JSValue String_toLowerCase(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     JSValue S = thisValue.toString(cx);
 
     String *result = new String(*S.string);
@@ -555,7 +598,6 @@ static JSValue String_toLowerCase(Context *cx, const JSValue& thisValue, JSValue
 
 static JSValue String_toUpperCase(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     JSValue S = thisValue.toString(cx);
 
     String *result = new String(*S.string);
@@ -565,9 +607,29 @@ static JSValue String_toUpperCase(Context *cx, const JSValue& thisValue, JSValue
     return JSValue(result);
 }
 
+/*
+ * 15.5.4.13 String.prototype.slice (start, end)
+ * 
+ * The slice method takes two arguments, start and end, and returns a substring of the result of converting this
+ * object to a string, starting from character position start and running to, but not including, character position end (or
+ * through the end of the string if end is undefined). If start is negative, it is treated as (sourceLength+start) where
+ * sourceLength is the length of the string. If end is negative, it is treated as (sourceLength+end) where sourceLength
+ * is the length of the string. The result is a string value, not a String object. 
+ * 
+ *  The following steps are taken:
+ * 1. Call ToString, giving it the this value as its argument.
+ * 2. Compute the number of characters in Result(1).
+ * 3. Call ToInteger(start).
+ * 4. If end is undefined, use Result(2); else use ToInteger(end).
+ * 5. If Result(3) is negative, use max(Result(2)+Result(3),0); else use min(Result(3),Result(2)).
+ * 6. If Result(4) is negative, use max(Result(2)+Result(4),0); else use min(Result(4),Result(2)).
+ * 7. Compute max(Result(6)–Result(5),0).
+ * 8. Return a string containing Result(7) consecutive characters from Result(1) beginning with the character at
+ *       position Result(5).
+ */
+
 static JSValue String_slice(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     const String *sourceString = thisValue.toString(cx).string;
 
     uint32 sourceLength = sourceString->size();
@@ -616,9 +678,30 @@ static JSValue String_slice(Context *cx, const JSValue& thisValue, JSValue *argv
     return JSValue(new String(sourceString->substr(start, end - start)));
 }
 
+/*
+ * 15.5.4.15 String.prototype.substring (start, end)
+ * The substring method takes two arguments, start and end, and returns a substring of the result of converting this
+ * object to a string, starting from character position start and running to, but not including, character position end of
+ * the string (or through the end of the string is end is undefined). The result is a string value, not a String object.
+ * If either argument is NaN or negative, it is replaced with zero; if either argument is larger than the length of the
+ * string, it is replaced with the length of the string.
+ * If start is larger than end, they are swapped.
+ * 
+ *   The following steps are taken:
+ * 1. Call ToString, giving it the this value as its argument.
+ * 2. Compute the number of characters in Result(1).
+ * 3. Call ToInteger(start).
+ * 4. If end is undefined, use Result(2); else use ToInteger(end).
+ * 5. Compute min(max(Result(3), 0), Result(2)).
+ * 6. Compute min(max(Result(4), 0), Result(2)).
+ * 7. Compute min(Result(5), Result(6)).
+ * 8. Compute max(Result(5), Result(6)).
+ * 9. Return a string whose length is the difference between Result(8) and Result(7), containing characters from
+ *       Result(1), namely the characters with indices Result(7) through Result(8)-1, in ascending order.
+ */
+
 static JSValue String_substring(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
     const String *sourceString = thisValue.toString(cx).string;
 
     uint32 sourceLength = sourceString->size();
