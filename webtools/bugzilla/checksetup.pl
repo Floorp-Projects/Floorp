@@ -33,56 +33,52 @@
 #                 Max Kanat-Alexander <mkanat@kerio.com>
 #
 #
-# Direct any questions on this source code to
-#
-# Holger Schurig <holgerschurig@nikocity.de>
-#
-#
 #
 # Hey, what's this?
 #
 # 'checksetup.pl' is a script that is supposed to run during installation
 # time and also after every upgrade.
 #
-# The goal of this script is to make the installation even more easy.
-# It does so by doing things for you as well as testing for problems
-# early.
+# The goal of this script is to make the installation even easier.
+# It does this by doing things for you as well as testing for problems
+# in advance.
 #
-# And you can re-run it whenever you want. Especially after Bugzilla
-# gets updated you SHOULD rerun it. Because then it may update your
-# SQL table definitions so that they are again in sync with the code.
+# You can run the script whenever you like. You SHOULD run it after 
+# you update Bugzilla, because it may then update your SQL table
+# definitions to resync them with the code.
 #
-# So, currently this module does:
+# Currently, this module does the following:
 #
 #     - check for required perl modules
 #     - set defaults for local configuration variables
 #     - create and populate the data directory after installation
-#     - set the proper rights for the *.cgi, *.html ... etc files
-#     - check if the code can access MySQL
-#     - creates the database 'bugs' if the database does not exist
+#     - set the proper rights for the *.cgi, *.html, etc. files
+#     - verify that the code can access MySQL
+#     - creates the database 'bugs' if it does not exist
 #     - creates the tables inside the database if they don't exist
-#     - automatically changes the table definitions of older BugZilla
-#       installations
+#     - automatically changes the table definitions if they are from
+#       an older version of Bugzilla
 #     - populates the groups
 #     - put the first user into all groups so that the system can
 #       be administrated
-#     - changes already existing SQL tables if you change your local
+#     - changes preexisting SQL tables if you change your local
 #       settings, e.g. when you add a new platform
+#     - ... and a whole lot more.
 #
-# People that install this module locally are not supposed to modify
-# this script. This is done by shifting the user settable stuff into
-# a local configuration file 'localconfig'. When this file get's
-# changed and 'checkconfig.pl' will be re-run, then the user changes
+# There should be no need for Bugzilla Administrators to modify
+# this script; all user-configurable stuff has been moved 
+# into a local configuration file called 'localconfig'. When that file
+# in changed and 'checkconfig.pl' is run, then the user's changes
 # will be reflected back into the database.
 #
-# Developers however have to modify this file at various places. To
-# make this easier, I have added some special comments that one can
-# search for.
+# Developers, however, have to modify this file at various places. To
+# make this easier, there are some special tags for which one
+# can search.
 #
 #     To                                               Search for
 #
 #     add/delete local configuration variables         --LOCAL--
-#     check for more prerequired modules               --MODULES--
+#     check for more required modules                  --MODULES--
 #     change the defaults for local configuration vars --LOCAL--
 #     update the assigned file permissions             --CHMOD--
 #     add more MySQL-related checks                    --MYSQL--
@@ -90,23 +86,24 @@
 #     add more groups                                  --GROUPS--
 #     create initial administrator account             --ADMIN--
 #
-# Note: sometimes those special comments occur more then once. For
-# example, --LOCAL-- is at least 3 times in this code!  --TABLE--
-# also is used more than once. So search for every occurence!
+# Note: sometimes those special comments occur more than once. For
+# example, --LOCAL-- is used at least 3 times in this code!  --TABLE--
+# is also used more than once, so search for each and every occurrence!
 #
 # To operate checksetup non-interactively, run it with a single argument
-# specifying a filename with the information usually obtained by
-# prompting the user or by editing localconfig. Only information
-# superceding defaults from LocalVar() function calls needs to be
-# specified.
+# specifying a filename that contains the information usually obtained by
+# prompting the user or by editing localconfig.
 #
-# The format of that file is....
+# The format of that file is as follows:
 #
-# $answer{'db_host'} = '$db_host = "localhost";
-# $db_driver = "mydbdriver";
+#
+# $answer{'db_host'} = q[
+# $db_host = 'localhost';
+# $db_driver = 'mydbdriver';
 # $db_port = 3306;
-# $db_name = "mydbname";
-# $db_user = "mydbuser";';
+# $db_name = 'mydbname';
+# $db_user = 'mydbuser';
+# ];
 #
 # $answer{'db_pass'} = q[$db_pass = 'mydbpass';];
 #
@@ -116,6 +113,9 @@
 # $answer{'ADMIN_REALNAME'} = 'Joel Peshkin';
 #
 #
+# Note: Only information that supersedes defaults from LocalVar()
+# function calls needs to be specified in this file.
+# 
 
 use strict;
 
@@ -163,10 +163,10 @@ sub help_page {
     print "   --check-modules  Only check for correct module dependencies and quit thereafter;\n";
     print "                    does not perform any changes.\n";
     print "   --no-templates (-t)  Don't compile the templates at all. Existing\n"; 
-    print "                        compiled templates will remain; missing compiled\n";
-    print "                        templates will not be created. (Used primarily by\n";
-    print "                        developers to speed up checksetup.)  Use this\n";
-    print "                        switch at your own risk.\n";
+    print "                    compiled templates will remain; missing compiled\n";
+    print "                    templates will not be created. (Used primarily by\n";
+    print "                    developers to speed up checksetup.)  Use this\n";
+    print "                    switch at your own risk.\n";
     print "    SCRIPT          Name of script to drive non-interactive mode.\n";
     print "                    This script should define an \%answer hash whose\n"; 
     print "                    keys are variable names and the values answers to\n";
@@ -206,75 +206,75 @@ print "\nChecking perl modules ...\n" unless $silent;
 # which is not included with Perl by default, hence the need to copy it here.
 # Seems silly to require it when this is the only place we need it...
 sub vers_cmp {
-  if (@_ < 2) { die "not enough parameters for vers_cmp" }
-  if (@_ > 2) { die "too many parameters for vers_cmp" }
-  my ($a, $b) = @_;
-  my (@A) = ($a =~ /(\.|\d+|[^\.\d]+)/g);
-  my (@B) = ($b =~ /(\.|\d+|[^\.\d]+)/g);
-  my ($A,$B);
-  while (@A and @B) {
-    $A = shift @A;
-    $B = shift @B;
-    if ($A eq "." and $B eq ".") {
-      next;
-    } elsif ( $A eq "." ) {
-      return -1;
-    } elsif ( $B eq "." ) {
-      return 1;
-    } elsif ($A =~ /^\d+$/ and $B =~ /^\d+$/) {
-      return $A <=> $B if $A <=> $B;
-    } else {
-      $A = uc $A;
-      $B = uc $B;
-      return $A cmp $B if $A cmp $B;
+    if (@_ < 2) { die "not enough parameters for vers_cmp" }
+    if (@_ > 2) { die "too many parameters for vers_cmp" }
+    my ($a, $b) = @_;
+    my (@A) = ($a =~ /(\.|\d+|[^\.\d]+)/g);
+    my (@B) = ($b =~ /(\.|\d+|[^\.\d]+)/g);
+    my ($A,$B);
+    while (@A and @B) {
+        $A = shift @A;
+        $B = shift @B;
+        if ($A eq "." and $B eq ".") {
+            next;
+        } elsif ( $A eq "." ) {
+            return -1;
+        } elsif ( $B eq "." ) {
+            return 1;
+        } elsif ($A =~ /^\d+$/ and $B =~ /^\d+$/) {
+            return $A <=> $B if $A <=> $B;
+        } else {
+            $A = uc $A;
+            $B = uc $B;
+            return $A cmp $B if $A cmp $B;
+        }
     }
-  }
-  @A <=> @B;
+    @A <=> @B;
 }
 
 # This was originally clipped from the libnet Makefile.PL, adapted here to
 # use the above vers_cmp routine for accurate version checking.
 sub have_vers {
-  my ($pkg, $wanted) = @_;
-  my ($msg, $vnum, $vstr);
-  no strict 'refs';
-  printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)") unless $silent;
+    my ($pkg, $wanted) = @_;
+    my ($msg, $vnum, $vstr);
+    no strict 'refs';
+    printf("Checking for %15s %-9s ", $pkg, !$wanted?'(any)':"(v$wanted)") unless $silent;
 
-  # Modules may change $SIG{__DIE__} and $SIG{__WARN__}, so localise them here
-  # so that later errors display 'normally'
-  local $::SIG{__DIE__};
-  local $::SIG{__WARN__};
+    # Modules may change $SIG{__DIE__} and $SIG{__WARN__}, so localise them here
+    # so that later errors display 'normally'
+    local $::SIG{__DIE__};
+    local $::SIG{__WARN__};
 
-  eval "require $pkg;";
+    eval "require $pkg;";
 
-  # do this twice to avoid a "used only once" error for these vars
-  $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
-  $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
-  $vnum = -1 if $@;
+    # do this twice to avoid a "used only once" error for these vars
+    $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
+    $vnum = ${"${pkg}::VERSION"} || ${"${pkg}::Version"} || 0;
+    $vnum = -1 if $@;
 
-  # CGI's versioning scheme went 2.75, 2.751, 2.752, 2.753, 2.76
-  # That breaks the standard version tests, so we need to manually correct
-  # the version
-  if ($pkg eq 'CGI' && $vnum =~ /(2\.7\d)(\d+)/) {
-      $vnum = $1 . "." . $2;
-  }
+    # CGI's versioning scheme went 2.75, 2.751, 2.752, 2.753, 2.76
+    # That breaks the standard version tests, so we need to manually correct
+    # the version
+    if ($pkg eq 'CGI' && $vnum =~ /(2\.7\d)(\d+)/) {
+        $vnum = $1 . "." . $2;
+    }
 
-  if ($vnum eq "-1") { # string compare just in case it's non-numeric
-    $vstr = "not found";
-  }
-  elsif (vers_cmp($vnum,"0") > -1) {
-    $vstr = "found v$vnum";
-  }
-  else {
-    $vstr = "found unknown version";
-  }
+    if ($vnum eq "-1") { # string compare just in case it's non-numeric
+        $vstr = "not found";
+      }
+    elsif (vers_cmp($vnum,"0") > -1) {
+        $vstr = "found v$vnum";
+    }
+    else {
+        $vstr = "found unknown version";
+    }
 
-  my $vok = (vers_cmp($vnum,$wanted) > -1);
-  print ((($vok) ? "ok: " : " "), "$vstr\n") unless $silent;
-  return $vok;
+    my $vok = (vers_cmp($vnum,$wanted) > -1);
+    print ((($vok) ? "ok: " : " "), "$vstr\n") unless $silent;
+    return $vok;
 }
 
-# Check versions of dependencies.  0 for version = any version acceptible
+# Check versions of dependencies.  0 for version = any version acceptable
 my $modules = [ 
     { 
         name => 'AppConfig',  
@@ -377,15 +377,16 @@ if ($^O =~ /MSWin32/i && !$silent) {
 
 if ((!$gd || !$chartbase) && !$silent) {
     print "If you you want to see graphical bug charts (plotting historical ";
-    print "data over \ntime), you should install libgd and the following Perl ";     print "modules:\n\n";
+    print "data over \ntime), you should install libgd and the following Perl ";
+    print "modules:\n\n";
     print "GD:          " . install_command("GD") ."\n" if !$gd;
     print "Chart:       " . install_command("Chart::Base") . "\n" if !$chartbase;
     print "\n";
 }
 if (!$xmlparser && !$silent) {
-    print "If you want to use the bug import/export feature to move bugs to or from\n",
-    "other bugzilla installations, you will need to install the XML::Parser module by\n",
-    "running (as $::root):\n\n",
+    print "If you want to use the bug import/export feature to move bugs to\n",
+          "or from other bugzilla installations, you will need to install\n ",
+          "the XML::Parser module by running (as $::root):\n\n",
     "   " . install_command("XML::Parser") . "\n\n";
 }
 if ((!$gd || !$gdgraph || !$gdtextalign) && !$silent) {
@@ -407,9 +408,9 @@ if (!$patchreader && !$silent) {
 
 if (%missing) {
     print "\n\n";
-    print "Bugzilla requires some Perl modules which are either missing from your\n",
-    "system, or the version on your system is too old.\n",
-    "They can be installed by running (as $::root) the following:\n";
+    print "Bugzilla requires some Perl modules which are either missing from\n",
+          "your system, or the version on your system is too old.\n",
+          "They can be installed by running (as $::root) the following:\n";
     foreach my $module (keys %missing) {
         print "   " . install_command("$module") . "\n";
         if ($missing{$module} > 0) {
@@ -453,10 +454,10 @@ use Bugzilla::Config qw(:DEFAULT :admin :locations);
 # This is quite tricky. But fun!
 #
 # First we read the file 'localconfig'. Then we check if the variables we
-# need are defined. If not, localconfig will be amended by the new settings
-# and the user informed to check this. The program then stops.
+# need are defined. If not, we will append the new settings to
+# localconfig, instruct the user to check them, and stop.
 #
-# Why do it this way around?
+# Why do it this way?
 #
 # Assume we will enhance Bugzilla and eventually more local configuration
 # stuff arises on the horizon.
@@ -523,13 +524,13 @@ LocalVar('index_html', <<'END');
 # With the introduction of a configurable index page using the
 # template toolkit, Bugzilla's main index page is now index.cgi.
 # Most web servers will allow you to use index.cgi as a directory
-# index and many come preconfigured that way, however if yours
-# doesn't you'll need an index.html file that provides redirection
+# index, and many come preconfigured that way, but if yours doesn't
+# then you'll need an index.html file that provides redirection
 # to index.cgi. Setting $index_html to 1 below will allow
 # checksetup.pl to create one for you if it doesn't exist.
 # NOTE: checksetup.pl will not replace an existing file, so if you
 #       wish to have checksetup.pl create one for you, you must
-#       make sure that there isn't already an index.html
+#       make sure that index.html doesn't already exist
 $index_html = 0;
 END
 
@@ -563,11 +564,12 @@ if (!LocalVarExists('interdiffbin')) {
     my $interdiff_executable;
     if ($^O !~ /MSWin32/i) {
         $interdiff_executable = `which interdiff`;
-        if ($interdiff_executable =~ /no interdiff/ || $interdiff_executable eq '') {
+        if ($interdiff_executable =~ /no interdiff/ ||
+            $interdiff_executable eq '') {
             if (!$silent) {
-                print "\nOPTIONAL NOTE: If you want to ";
-                print "be able to use the\n 'difference between two patches' ";
-                print "feature of Bugzilla (requires\n the PatchReader Perl module ";
+                print "\nOPTIONAL NOTE: If you want to be able to ";
+                print "use the\n 'difference between two patches' feature";
+                print "of Bugzilla (requires\n the PatchReader Perl module ";
                 print "as well), you should install\n patchutils from ";
                 print "http://cyberelk.net/tim/patchutils/\n\n";
             }
@@ -611,7 +613,7 @@ if (!LocalVarExists('diffpath')) {
 
 #
 # The interdiff feature needs diff, so we have to have that path.
-# Please specify only the directory name, with no trailing slash.
+# Please specify the directory name only; do not use trailing slash.
 \$diffpath = "$diff_binaries";
 END
 }
@@ -619,7 +621,7 @@ END
 
 LocalVar('create_htaccess', <<'END');
 #
-# If you are using Apache for your web server, Bugzilla can create .htaccess
+# If you are using Apache as your web server, Bugzilla can create .htaccess
 # files for you that will instruct Apache not to serve files that shouldn't
 # be accessed from the web (like your local configuration data and non-cgi
 # executable files).  For this to work, the directory your Bugzilla
@@ -642,15 +644,15 @@ if ($^O !~ /MSWin32/i) {
 
 LocalVar('webservergroup', <<"END");
 #
-# This is the group your web server runs on.
+# This is the group your web server runs as.
 # If you have a windows box, ignore this setting.
 # If you do not have access to the group your web server runs under,
 # set this to "". If you do set this to "", then your Bugzilla installation
 # will be _VERY_ insecure, because some files will be world readable/writable,
 # and so anyone who can get local access to your machine can do whatever they
 # want. You should only have this set to "" if this is a testing installation
-# and you cannot set this up any other way. YOU HAVE BEEN WARNED.
-# If you set this to anything besides "", you will need to run checksetup.pl
+# and you cannot set this up any other way. YOU HAVE BEEN WARNED!
+# If you set this to anything other than "", you will need to run checksetup.pl
 # as $::root, or as a user who is a member of the specified group.
 \$webservergroup = "$webservergroup_default";
 END
@@ -665,38 +667,39 @@ LocalVar('db_driver', '
 #
 $db_driver = "mysql";
 ');
-LocalVar('db_host', '
+LocalVar('db_host', q[
 #
 # How to access the SQL database:
 #
-$db_host = "localhost";         # where is the database?
+$db_host = 'localhost';         # where is the database?
 $db_port = 3306;                # which port to use
-$db_name = "bugs";              # name of the MySQL database
-$db_user = "bugs";              # user to attach to the MySQL database
-');
-LocalVar('db_pass', '
+$db_name = 'bugs';              # name of the MySQL database
+$db_user = 'bugs';              # user to attach to the MySQL database
+]);
+LocalVar('db_pass', q[
 #
-# Enter your database password here. It\'s normally advisable to specify
+# Enter your database password here. It's normally advisable to specify
 # a password for your bugzilla database user.
-# If you use apostrophe (\') or a backslash (\\) in your password, you\'ll
-# need to escape it by preceding it with a \\ character. (\\\') or (\\\\)
+# If you use apostrophe (') or a backslash (\) in your password, you'll
+# need to escape it by preceding it with a '\' character. (\') or (\\)
+# (Far simpler just not to use those characters.)
 #
-$db_pass = \'\';
-');
+$db_pass = '';
+]);
 
-LocalVar('db_sock', '
+LocalVar('db_sock', q[
 # Enter a path to the unix socket for mysql. If this is blank, then mysql\'s
 # compiled-in default will be used. You probably want that.
-$db_sock = \'\';
-');
+$db_sock = '';
+]);
 
-LocalVar('db_check', '
+LocalVar('db_check', q[
 #
-# Should checksetup.pl try to check if your MySQL setup is correct?
-# (with some combinations of MySQL/Msql-mysql/Perl/moonphase this doesn\'t work)
+# Should checksetup.pl try to verify that your MySQL setup is correct?
+# (with some combinations of MySQL/Msql-mysql/Perl/moonphase this doesn't work)
 #
 $db_check = 1;
-');
+]);
 
 my @deprecatedvars;
 push(@deprecatedvars, '@severities') if (LocalVarExists('severities'));
@@ -717,9 +720,9 @@ if (LocalVarExists('mysqlpath')) {
 }
 
 if ($newstuff ne "") {
-    print "\nThis version of Bugzilla contains some variables that you may want\n",
-          "to change and adapt to your local settings. Please edit the file\n",
-          "'$localconfig' and rerun checksetup.pl\n\n",
+    print "\nThis version of Bugzilla contains some variables that you may \n",
+          "want to change and adapt to your local settings. Please edit the\n",
+          "file '$localconfig' and rerun checksetup.pl\n\n",
           "The following variables are new to localconfig since you last ran\n",
           "checksetup.pl:  $newstuff\n\n";
     exit;
@@ -727,7 +730,7 @@ if ($newstuff ne "") {
 
 # 2000-Dec-18 - justdave@syndicomm.com - see Bug 52921
 # This is a hack to read in the values defined in localconfig without getting
-# them predeclared at compile time if they're missing from localconfig.
+# them defined at compile time if they're missing from localconfig.
 # Ideas swiped from pp. 281-282, O'Reilly's "Programming Perl 2nd Edition"
 # Note that we won't need to do this in globals.pl because globals.pl couldn't
 # care less whether they were defined ahead of time or not. 
@@ -790,7 +793,7 @@ EOF
     }
 
 } else {
-    # Theres no webservergroup, this is very very very very bad.
+    # There's no webservergroup, this is very very very very bad.
     # However, if we're being run on windows, then this option doesn't
     # really make sense. Doesn't make it any more secure either, though,
     # but don't print the message, since they can't do anything about it.
@@ -837,17 +840,17 @@ unless (-d $datadir && -e "$datadir/nomail") {
 }
 
 
- unless (-d $attachdir) {
-     print "Creating local attachments directory ...\n";
-     # permissions for non-webservergroup are fixed later on
-     mkdir $attachdir, 0770;
- }
+unless (-d $attachdir) {
+    print "Creating local attachments directory ...\n";
+    # permissions for non-webservergroup are fixed later on
+    mkdir $attachdir, 0770;
+}
 
 
 # 2000-12-14 New graphing system requires a directory to put the graphs in
 # This code copied from what happens for the data dir above.
 # If the graphs dir is not present, we assume that they have been using
-# a Bugzilla with the old data format, and so upgrade their data files.
+# a Bugzilla with the old data format, and upgrade their data files.
 
 # NB - the graphs dir isn't movable yet, unlike the datadir
 unless (-d 'graphs') {
@@ -878,7 +881,7 @@ unless (-d 'graphs') {
         my @intermediate_fields = qw(DATE UNCONFIRMED NEW ASSIGNED REOPENED 
                                      RESOLVED VERIFIED CLOSED);
 
-        # Fields we actually want (matches the current collectstats.pl)                             
+        # Fields we actually want (matches the current collectstats.pl)
         my @out_fields = qw(DATE NEW ASSIGNED REOPENED UNCONFIRMED RESOLVED
                             VERIFIED CLOSED FIXED INVALID WONTFIX LATER REMIND
                             DUPLICATE WORKSFORME MOVED);
@@ -910,7 +913,8 @@ unless (-d 'graphs') {
                     }
                 }
                 else {
-                    print "Oh dear, input line $. of $in_file had " . scalar(@data) . " fields\n";
+                    print "Oh dear, input line $. of $in_file had " . 
+                      scalar(@data) . " fields\n";
                     print "This was unexpected. You may want to check your data files.\n";
                 }
 
@@ -1032,7 +1036,7 @@ END
     print "Creating $attachdir/.htaccess...\n";
     open HTACCESS, ">$attachdir/.htaccess";
     print HTACCESS <<'END';
-# nothing in this directory is retrievable unless overriden by an .htaccess
+# nothing in this directory is retrievable unless overridden by an .htaccess
 # in a subdirectory;
 deny from all
 END
@@ -1043,7 +1047,7 @@ END
     print "Creating Bugzilla/.htaccess...\n";
     open HTACCESS, '>', 'Bugzilla/.htaccess';
     print HTACCESS <<'END';
-# nothing in this directory is retrievable unless overriden by an .htaccess
+# nothing in this directory is retrievable unless overridden by an .htaccess
 # in a subdirectory
 deny from all
 END
@@ -1085,7 +1089,7 @@ END
     open HTACCESS, '>', "$webdotdir/.htaccess";
     print HTACCESS <<'END';
 # Restrict access to .dot files to the public webdot server at research.att.com 
-# if research.att.com ever changed their IP, or if you use a different
+# if research.att.com ever changes their IP, or if you use a different
 # webdot server, you'll need to edit this
 <FilesMatch \.dot$>
   Allow from 192.20.225.10
@@ -1145,8 +1149,8 @@ unless ($switch{'no_templates'}) {
        #Check that the directory was really removed
        if(-e "$datadir/template") {
            print "\n\n";
-           print "The directory '$datadir/template' could not be removed. Please\n";
-           print "remove it manually and rerun checksetup.pl.\n\n";
+           print "The directory '$datadir/template' could not be removed.\n";
+           print "Please remove it manually and rerun checksetup.pl.\n\n";
            exit;
        }
     }
@@ -1173,7 +1177,7 @@ unless ($switch{'no_templates'}) {
     }
 
     # Precompile stuff. This speeds up initial access (so the template isn't
-    # compiled multiple times simulataneously by different servers), and helps
+    # compiled multiple times simultaneously by different servers), and helps
     # to get the permissions right.
     sub compile {
         my $name = $File::Find::name;
@@ -1234,7 +1238,7 @@ unless ($switch{'no_templates'}) {
            }) || die ("Could not create Template Provider: "
                        . Template::Provider->error() . "\n");
 
-           # Traverse the template hierachy. 
+           # Traverse the template hierarchy. 
            find({ wanted => \&compile, no_chdir => 1 }, $::templatepath);
        }
     }
@@ -1253,8 +1257,8 @@ if (@oldparams) {
       || die "$0: Can't open old-params.txt for writing: $!\n";
 
     print "The following parameters are no longer used in Bugzilla, " .
-      "and so have been\nremoved from your parameters file and " .
-      "appended to old-params.txt:\n";
+          "and so have been\nmoved from your parameters file " .
+          "into old-params.txt:\n";
 
     foreach my $p (@oldparams) {
         my ($item, $value) = @{$p};
@@ -1278,7 +1282,7 @@ WriteParams();
 #
 # Here we use --CHMOD-- and friends to set the file permissions
 #
-# The rationale is that the web server generally runs as apache and so the cgi
+# The rationale is that the web server generally runs as apache, so the cgi
 # scripts should not be writable for apache, otherwise someone may be possible
 # to change the cgi's when exploiting some security flaw somewhere (not
 # necessarily in Bugzilla!)
@@ -1296,7 +1300,7 @@ WriteParams();
 # Not all directories have permissions changed on them.  i.e., changing ./CVS
 # to be 0640 is bad.
 #
-# Fixed bug in chmod invokation.  chmod (at least on my linux box running perl
+# Fixed bug in chmod invocation.  chmod (at least on my linux box running perl
 # 5.005 needs a valid first argument, not 0.
 #
 # (end changes, 03/14/00 by SML)
@@ -1306,7 +1310,7 @@ WriteParams();
 # Fix file permissions for non-webservergroup installations (see
 # http://bugzilla.mozilla.org/show_bug.cgi?id=71555). I'm setting things
 # by default to world readable/executable for all files, and
-# world-writeable (with sticky on) to data and graphs.
+# world-writable (with sticky on) to data and graphs.
 #
 
 # These are the files which need to be marked executable
@@ -1317,18 +1321,18 @@ my @executable_files = ('whineatnews.pl', 'collectstats.pl',
 # tell me if a file is executable.  All CGI files and those in @executable_files
 # are executable
 sub isExecutableFile {
-  my ($file) = @_;
-  if ($file =~ /\.cgi/) {
-    return 1;
-  }
-
-  my $exec_file;
-  foreach $exec_file (@executable_files) {
-    if ($file eq $exec_file) {
-      return 1;
+    my ($file) = @_;
+    if ($file =~ /\.cgi/) {
+        return 1;
     }
-  }
-  return undef;
+
+    my $exec_file;
+    foreach $exec_file (@executable_files) {
+        if ($file eq $exec_file) {
+            return 1;
+        }
+    }
+    return undef;
 }
 
 # fix file (or files - wildcards ok) permissions 
@@ -1360,7 +1364,8 @@ sub fixPerms {
                 #printf ("Changing $file to %o\n", $execperm);
                 chmod $execperm, $file;
                 fixPerms("$file/.htaccess", $owner, $group, $umask, $do_dirs);
-                fixPerms("$file/*", $owner, $group, $umask, $do_dirs); # do the contents of the directory
+                # do the contents of the directory
+                fixPerms("$file/*", $owner, $group, $umask, $do_dirs); 
             }
         }
     }
@@ -1372,8 +1377,8 @@ if ($^O !~ /MSWin32/i) {
         my $webservergid = getgrnam($my_webservergroup) 
         or die("no such group: $my_webservergroup");
         # chown needs to be called with a valid uid, not 0.  $< returns the
-        # caller's uid.  Maybe there should be a $bugzillauid, and call with that
-        # userid.
+        # caller's uid.  Maybe there should be a $bugzillauid, and call 
+        # with that userid.
         fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
         fixPerms("$datadir/.htaccess", $<, $webservergid, 027);
         fixPerms("$datadir/duplicates", $<, $webservergid, 027, 1);
@@ -1392,8 +1397,8 @@ if ($^O !~ /MSWin32/i) {
         fixPerms('js', $<, $webservergid, 027, 1);
         chmod 0644, 'globals.pl';
         
-        # Don't use fixPerms here, because it won't change perms on the directory
-        # unless its using recursion
+        # Don't use fixPerms here, because it won't change perms 
+        # on the directory unless it's using recursion
         chown $<, $webservergid, $datadir;
         chmod 0771, $datadir;
         chown $<, $webservergid, 'graphs';
@@ -1418,8 +1423,8 @@ if ($^O !~ /MSWin32/i) {
         fixPerms('skins', $<, $gid, 022, 1);
         fixPerms('js', $<, $gid, 022, 1);
         
-        # Don't use fixPerms here, because it won't change perms on the directory
-        # unless its using recursion
+        # Don't use fixPerms here, because it won't change perms
+        # on the directory unless it's using recursion
         chown $<, $gid, $datadir;
         chmod 0777, $datadir;
         chown $<, $gid, 'graphs';
@@ -1522,7 +1527,7 @@ This might have several reasons:
 * MySQL is running, but the rights are not set correct. Go and read the
   Bugzilla Guide in the doc directory and all parts of the MySQL
   documentation.
-* There is an subtle problem with Perl, DBI, DBD::mysql and MySQL. Make
+* There is a subtle problem with Perl, DBI, DBD::mysql and MySQL. Make
   sure all settings in '$localconfig' are correct. If all else fails, set
   '\$db_check' to zero.\n
 EOF
@@ -1568,12 +1573,12 @@ if( Param('webdotbase') && Param('webdotbase') !~ /^https?:/ ) {
 
     # Check .htaccess allows access to generated images
     if(-e "$webdotdir/.htaccess") {
-      open HTACCESS, "$webdotdir/.htaccess";
-      if(! grep(/png/,<HTACCESS>)) {
-        print "Dependency graph images are not accessible.\n";
-        print "Delete $webdotdir/.htaccess and re-run checksetup.pl to rectify.\n";
-      }
-      close HTACCESS;
+        open HTACCESS, "$webdotdir/.htaccess";
+        if(! grep(/png/,<HTACCESS>)) {
+            print "Dependency graph images are not accessible.\n";
+            print "delete $webdotdir/.htaccess and re-run checksetup.pl to fix.\n";
+        }
+        close HTACCESS;
     }
 }
 
@@ -1598,9 +1603,10 @@ print "\n" unless $silent;
 #    mysql> exit;
 #    $ ./checksetup.pl
 #
-# If you change one of those field definitions, then also go below to the
-# next occurence of the string --TABLE-- (near the end of this file) to
-# add the code that updates older installations automatically.
+# If you change one of the field definitions, then you must also go to the
+# next occurrence of the string --TABLE-- (near the end of this file) and
+# add in some conditional code that will automatically update an older 
+# installation.
 #
 
 
@@ -1940,8 +1946,8 @@ $table{duplicates} =
      dupe mediumint(9) not null primary key';
 
 # 2001-06-21, myk@mozilla.org, bug 77473:
-# Stores the tokens users receive when they want to change their password 
-# or email address.  Tokens provide an extra measure of security for these changes.
+# Stores the tokens users receive when a password or email change is
+# requested.  Tokens provide an extra measure of security for these changes.
 $table{tokens} =
     'userid mediumint not null , 
      issuedate datetime not null , 
@@ -1991,8 +1997,6 @@ $table{bug_group_map} =
      unique(bug_id, group_id),
      index(group_id)';
 
-# 2002-07-19, davef@tetsubo.com, bug 67950:
-# 2005-02-20, LpSolit@gmail.com, bug 277504
 # Store quips in the db.
 $table{quips} =
     'quipid mediumint not null auto_increment primary key,
@@ -2011,7 +2015,6 @@ $table{group_control_map} =
      unique(product_id, group_id),
      index(group_id)';
 
-# 2003-06-26 gerv@gerv.net, bug 16009
 # Generic charting over time of arbitrary queries.
 # Queries are disabled when frequency == 0.
 $table{series} =
@@ -2152,9 +2155,10 @@ while (my ($name, $type) = $sth->fetchrow_array) {
 }
 
 if(scalar(@isam_tables)) {
-    print "One or more of the tables in your existing MySQL database are of type ISAM.\n" . 
-          "ISAM tables are deprecated in MySQL 3.23 and don't support more than 16 indexes\n" . 
-          "per table, which Bugzilla needs.  Converting your ISAM tables to type MyISAM:\n\n";
+    print "One or more of the tables in your existing MySQL database are of\n" .
+      "type ISAM. ISAM tables are deprecated in MySQL 3.23 and don't \n " .
+      "support more than 16 indexes per table, which Bugzilla needs. \n" .
+      "Converting your ISAM tables to type MyISAM:\n\n";
     foreach my $table (@isam_tables) {
         print "Converting table $table... ";
         $dbh->do("ALTER TABLE $table TYPE = MYISAM");
@@ -2175,7 +2179,8 @@ while (my ($tabname, $fielddef) = each %table) {
     print "Creating table $tabname ...\n";
 
     $dbh->do("CREATE TABLE $tabname (\n$fielddef\n) TYPE = MYISAM")
-        or die "Could not create table '$tabname'. Please check your '$my_db_driver' access.\n";
+        or die "Could not create table '$tabname'. " .
+          "Please check your '$my_db_driver' access.\n";
 }
 
 ###########################################################################
@@ -2195,8 +2200,8 @@ sub GroupDoesExist ($)
 
 
 #
-# This subroutine checks if a group exist. If not, it will be automatically
-# created with the next available groupid
+# This subroutine ensures that a group exists. If not, it will be created 
+# automatically, and given the next available groupid
 #
 
 sub AddGroup {
@@ -2238,8 +2243,10 @@ sub AddFDef ($$$) {
              "(fieldid, name, description, mailhead, sortkey) VALUES " .
              "($fieldid, $name, $description, $mailhead, $headernum)");
     } else {
-        $dbh->do("UPDATE fielddefs SET name = $name, description = $description, " .
-                 "mailhead = $mailhead, sortkey = $headernum WHERE fieldid = $fieldid");
+        $dbh->do("UPDATE fielddefs " .
+                 "SET name = $name, description = $description, " .
+                 "mailhead = $mailhead, sortkey = $headernum " .
+                 "WHERE fieldid = $fieldid");
     }
     $headernum++;
 }
@@ -2320,7 +2327,7 @@ sub GetFieldDef ($$)
     while (my $ref = $sth->fetchrow_arrayref) {
         next if $$ref[0] ne $field;
         return $ref;
-   }
+    }
 }
 
 sub GetIndexDef ($$)
@@ -2332,7 +2339,7 @@ sub GetIndexDef ($$)
     while (my $ref = $sth->fetchrow_arrayref) {
         next if $$ref[2] ne $field;
         return $ref;
-   }
+    }
 }
 
 sub CountIndexes ($)
@@ -2364,24 +2371,22 @@ sub DropIndexes ($)
     #
     while ( my $ref = $sth->fetchrow_arrayref) {
       
-      # note that some indexes are described by multiple rows in the
-      # index table, so we may have already dropped the index described
-      # in the current row.
-      # 
-      next if exists $SEEN{$$ref[2]};
+        # note that some indexes are described by multiple rows in the
+        # index table, so we may have already dropped the index described
+        # in the current row.
+        # 
+        next if exists $SEEN{$$ref[2]};
 
-      if ($$ref[2] eq 'PRIMARY') {
-          # The syntax for dropping a PRIMARY KEY is different
-          # from the normal DROP INDEX syntax.
-          $dbh->do("ALTER TABLE $table DROP PRIMARY KEY"); 
-      }
-      else {
-          $dbh->do("ALTER TABLE $table DROP INDEX $$ref[2]");
-      }
-      $SEEN{$$ref[2]} = 1;
-
+        if ($$ref[2] eq 'PRIMARY') {
+            # The syntax for dropping a PRIMARY KEY is different
+            # from the normal DROP INDEX syntax.
+            $dbh->do("ALTER TABLE $table DROP PRIMARY KEY"); 
+        }
+        else {
+            $dbh->do("ALTER TABLE $table DROP INDEX $$ref[2]");
+        }
+        $SEEN{$$ref[2]} = 1;
     }
-
 }
 
 # mkanat@kerio.com - bug 17453
@@ -2453,8 +2458,9 @@ $sth = $dbh->prepare("SELECT description FROM products");
 $sth->execute;
 unless ($sth->rows) {
     print "Creating initial dummy product 'TestProduct' ...\n";
-    $dbh->do('INSERT INTO products(name, description, milestoneurl, disallownew, votesperuser, votestoconfirm) VALUES ("TestProduct",
-              "This is a test product.  This ought to be blown away and ' .
+    $dbh->do('INSERT INTO products(name, description, milestoneurl, disallownew, votesperuser, votestoconfirm) ' .
+             'VALUES ("TestProduct", ' .
+             '"This is a test product.  This ought to be blown away and ' .
              'replaced with real stuff in a finished installation of ' .
              'bugzilla.", "", 0, 0, 0)');
     # We could probably just assume that this is "1", but better
@@ -2464,8 +2470,9 @@ unless ($sth->rows) {
     $dbh->do(qq{INSERT INTO versions (value, product_id) VALUES ("other", $product_id)});
     # note: since admin user is not yet known, components gets a 0 for 
     # initialowner and this is fixed during final checks.
-    $dbh->do("INSERT INTO components (name, product_id, description, initialowner, initialqacontact)
-             VALUES (" .
+    $dbh->do("INSERT INTO components (name, product_id, description, " .
+                                     "initialowner, initialqacontact) " .
+             "VALUES (" .
              "'TestComponent', $product_id, " .
              "'This is a test component in the test product database.  " .
              "This ought to be blown away and replaced with real stuff in " .
@@ -2490,7 +2497,7 @@ sub ChangeFieldType ($$$)
     my ($table, $field, $newtype) = @_;
 
     my $ref = GetFieldDef($table, $field);
-    #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
+    #print "0: $$ref[0]  1: $$ref[1]  2: $$ref[2]  3: $$ref[3]  4: $$ref[4]\n";
 
     my $oldtype = $ref->[1];
     if (! $ref->[2]) {
@@ -2518,7 +2525,7 @@ sub RenameField ($$$)
 
     my $ref = GetFieldDef($table, $field);
     return unless $ref; # already fixed?
-    #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
+    #print "0: $$ref[0]  1: $$ref[1]  2: $$ref[2]  3: $$ref[3]  4: $$ref[4]\n";
 
     if ($$ref[1] ne $newname) {
         print "Updating field $field in table $table ...\n";
@@ -2558,16 +2565,16 @@ sub DropField ($$)
 # this uses a mysql specific command. 
 sub TableExists ($)
 {
-   my ($table) = @_;
-   my @tables;
-   my $dbtable;
-   my $exists = 0;
-   my $sth = $dbh->prepare("SHOW TABLES");
-   $sth->execute;
-   while ( ($dbtable) = $sth->fetchrow_array ) {
-      if ($dbtable eq $table) {
-         $exists = 1;
-      } 
+    my ($table) = @_;
+    my @tables;
+    my $dbtable;
+    my $exists = 0;
+    my $sth = $dbh->prepare("SHOW TABLES");
+    $sth->execute;
+    while ( ($dbtable) = $sth->fetchrow_array ) {
+        if ($dbtable eq $table) {
+            $exists = 1;
+        } 
    } 
    return $exists;
 }   
@@ -2656,12 +2663,12 @@ if (!GetFieldDef('bugs', 'keywords')) {
     my @kwords;
     print "Making sure 'keywords' field of table 'bugs' is empty ...\n";
     $dbh->do("UPDATE bugs SET delta_ts = delta_ts, keywords = '' " .
-             "WHERE keywords != ''");
+              "WHERE keywords != ''");
     print "Repopulating 'keywords' field of table 'bugs' ...\n";
     my $sth = $dbh->prepare("SELECT keywords.bug_id, keyworddefs.name " .
-                            "FROM keywords, keyworddefs " .
-                            "WHERE keyworddefs.id = keywords.keywordid " .
-                            "ORDER BY keywords.bug_id, keyworddefs.name");
+                              "FROM keywords, keyworddefs " .
+                             "WHERE keyworddefs.id = keywords.keywordid " .
+                          "ORDER BY keywords.bug_id, keyworddefs.name");
     $sth->execute;
     my @list;
     my $bugid = 0;
@@ -2726,7 +2733,7 @@ if (GetFieldDef('bugs', 'long_desc')) {
     $dbh->do('DELETE FROM longdescs');
 
     $sth = $dbh->prepare("SELECT bug_id, creation_ts, reporter, long_desc " .
-                         "FROM bugs ORDER BY bug_id");
+                           "FROM bugs ORDER BY bug_id");
     $sth->execute();
     my $count = 0;
     while (1) {
@@ -2767,7 +2774,7 @@ if (GetFieldDef('bugs', 'long_desc')) {
                     $buffer = "";
                     $when = $date;
                     my $s2 = $dbh->prepare("SELECT userid FROM profiles " .
-                                           "WHERE login_name = " .
+                                            "WHERE login_name = " .
                                            $dbh->quote($name));
                     $s2->execute();
                     ($who) = ($s2->fetchrow_array());
@@ -2783,7 +2790,7 @@ if (GetFieldDef('bugs', 'long_desc')) {
                             my $nsname = $name . "\@netscape.com";
                             $s2 =
                                 $dbh->prepare("SELECT userid FROM profiles " .
-                                              "WHERE login_name = " .
+                                               "WHERE login_name = " .
                                               $dbh->quote($nsname));
                             $s2->execute();
                             ($who) = ($s2->fetchrow_array());
@@ -2798,7 +2805,8 @@ if (GetFieldDef('bugs', 'long_desc')) {
                                  "(login_name, cryptpassword," .
                                  " disabledtext) VALUES (" .
                                  $dbh->quote($name) .
-                                 ", " . $dbh->quote(bz_crypt('okthen')) . ", " . 
+                                 ", " . $dbh->quote(bz_crypt('okthen')) . 
+                                 ", " . 
                                  "'Account created only to maintain database integrity')");
                         $who = $dbh->bz_last_key('profiles', 'userid');
                     }
@@ -2860,7 +2868,7 @@ if (GetFieldDef('bugs_activity', 'field')) {
 
 # 2000-01-18 New email-notification scheme uses a new field in the bug to 
 # record when email notifications were last sent about this bug.  Also,
-# added a user pref whether a user wants to use the brand new experimental
+# added 'newemailtech' field to record if user wants to use the experimental
 # stuff.
 # 2001-04-29 jake@bugzilla.org - The newemailtech field is no longer needed
 #   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552
@@ -2884,10 +2892,10 @@ if (GetIndexDef('profiles', 'login_name')->[1]) {
         # out from under us in the profiles table.  Things get weird if
         # there are *three* or more entries for the same user...
         $sth = $dbh->prepare("SELECT p1.userid, p2.userid, p1.login_name " .
-                             "FROM profiles AS p1, profiles AS p2 " .
-                             "WHERE p1.userid < p2.userid " .
-                             "AND p1.login_name = p2.login_name " .
-                             "ORDER BY p1.login_name");
+                               "FROM profiles AS p1, profiles AS p2 " .
+                              "WHERE p1.userid < p2.userid " .
+                                "AND p1.login_name = p2.login_name " .
+                           "ORDER BY p1.login_name");
         $sth->execute();
         my ($u1, $u2, $n) = ($sth->fetchrow_array);
         if (!$u1) {
@@ -2909,7 +2917,7 @@ if (GetIndexDef('profiles', 'login_name')->[1]) {
                 $extra = ", delta_ts = delta_ts";
             }
             $dbh->do("UPDATE $table SET $field = $u1 $extra " .
-                     "WHERE $field = $u2");
+                      "WHERE $field = $u2");
         }
         $dbh->do("DELETE FROM profiles WHERE userid = $u2");
     }
@@ -2929,58 +2937,77 @@ AddField('profiles', 'mybugslink', 'tinyint not null default 1');
 AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 
 
-if (($_ = GetFieldDef('components', 'initialowner')) and ($_->[1] eq 'tinytext')) {
-    $sth = $dbh->prepare("SELECT program, value, initialowner, initialqacontact FROM components");
+if (($_ = GetFieldDef('components', 'initialowner')) and 
+    ($_->[1] eq 'tinytext')) {
+    $sth = $dbh->prepare(
+         "SELECT program, value, initialowner, initialqacontact " .
+         "FROM components");
     $sth->execute();
     while (my ($program, $value, $initialowner) = $sth->fetchrow_array()) {
         $initialowner =~ s/([\\\'])/\\$1/g; $initialowner =~ s/\0/\\0/g;
         $program =~ s/([\\\'])/\\$1/g; $program =~ s/\0/\\0/g;
         $value =~ s/([\\\'])/\\$1/g; $value =~ s/\0/\\0/g;
 
-        my $s2 = $dbh->prepare("SELECT userid FROM profiles WHERE login_name = '$initialowner'");
+        my $s2 = $dbh->prepare("SELECT userid " .
+                                 "FROM profiles " .
+                                "WHERE login_name = '$initialowner'");
         $s2->execute();
 
         my $initialownerid = $s2->fetchrow_array();
 
         unless (defined $initialownerid) {
-            print "Warning: You have an invalid initial owner '$initialowner' in program '$program', component '$value'!\n";
+            print "Warning: You have an invalid initial owner '$initialowner'\n" .
+              "in component '$value' of program '$program'. !\n";
             $initialownerid = 0;
         }
 
-        my $update = "UPDATE components SET initialowner = $initialownerid ".
-            "WHERE program = '$program' AND value = '$value'";
-        my $s3 = $dbh->prepare("UPDATE components SET initialowner = $initialownerid ".
-                               "WHERE program = '$program' AND value = '$value';");
+        my $update = 
+          "UPDATE components " .
+             "SET initialowner = $initialownerid " .
+           "WHERE program = '$program' " .
+             "AND value = '$value'";
+        my $s3 = $dbh->prepare("UPDATE components " .
+                                  "SET initialowner = $initialownerid " .
+                                "WHERE program = '$program' " .
+                                  "AND value = '$value';");
         $s3->execute();
     }
 
     ChangeFieldType('components','initialowner','mediumint');
 }
 
-if (($_ = GetFieldDef('components', 'initialqacontact')) and ($_->[1] eq 'tinytext')) {
-    $sth = $dbh->prepare("SELECT program, value, initialqacontact, initialqacontact FROM components");
+if (($_ = GetFieldDef('components', 'initialqacontact')) and 
+    ($_->[1] eq 'tinytext')) {
+    $sth = $dbh->prepare(
+           "SELECT program, value, initialqacontact, initialqacontact " .
+           "FROM components");
     $sth->execute();
     while (my ($program, $value, $initialqacontact) = $sth->fetchrow_array()) {
         $initialqacontact =~ s/([\\\'])/\\$1/g; $initialqacontact =~ s/\0/\\0/g;
         $program =~ s/([\\\'])/\\$1/g; $program =~ s/\0/\\0/g;
         $value =~ s/([\\\'])/\\$1/g; $value =~ s/\0/\\0/g;
 
-        my $s2 = $dbh->prepare("SELECT userid FROM profiles WHERE login_name = '$initialqacontact'");
+        my $s2 = $dbh->prepare("SELECT userid " .
+                               "FROM profiles " .
+                               "WHERE login_name = '$initialqacontact'");
         $s2->execute();
 
         my $initialqacontactid = $s2->fetchrow_array();
 
         unless (defined $initialqacontactid) {
             if ($initialqacontact ne '') {
-                print "Warning: You have an invalid initial QA contact '$initialqacontact' in program '$program', component '$value'!\n";
+                print "Warning: You have an invalid initial QA contact $initialqacontact' in program '$program', component '$value'!\n";
             }
             $initialqacontactid = 0;
         }
 
-        my $update = "UPDATE components SET initialqacontact = $initialqacontactid ".
+        my $update = "UPDATE components " .
+            "SET initialqacontact = $initialqacontactid " .
             "WHERE program = '$program' AND value = '$value'";
-        my $s3 = $dbh->prepare("UPDATE components SET initialqacontact = $initialqacontactid ".
-                               "WHERE program = '$program' AND value = '$value';");
+        my $s3 = $dbh->prepare("UPDATE components " .
+                               "SET initialqacontact = $initialqacontactid " .
+                               "WHERE program = '$program' " .
+                               "AND value = '$value';");
         $s3->execute();
     }
 
@@ -3004,9 +3031,11 @@ $sth = $dbh->prepare("SELECT count(*) from milestones");
 $sth->execute();
 if (!($sth->fetchrow_arrayref()->[0])) {
     print "Replacing blank milestones...\n";
-    $dbh->do("UPDATE bugs SET target_milestone = '---', delta_ts=delta_ts WHERE target_milestone = ' '");
+    $dbh->do("UPDATE bugs " .
+             "SET target_milestone = '---', delta_ts=delta_ts " .
+             "WHERE target_milestone = ' '");
     
-# Populate milestone table with all exisiting values in database
+# Populate the milestone table with all existing values in the database
     $sth = $dbh->prepare("SELECT DISTINCT target_milestone, product FROM bugs");
     $sth->execute();
     
@@ -3025,7 +3054,10 @@ if (!($sth->fetchrow_arrayref()->[0])) {
         }
         $value = $dbh->quote($value);
         $product = $dbh->quote($product);
-        my $s2 = $dbh->prepare("SELECT value FROM milestones WHERE value = $value AND product = $product");
+        my $s2 = $dbh->prepare("SELECT value " .
+                               "FROM milestones " .
+                               "WHERE value = $value " .
+                               "AND product = $product");
         $s2->execute();
         
         if(!$s2->fetchrow_array())
@@ -3100,30 +3132,33 @@ if ( CountIndexes('keywords') != 3 ) {
 $sth = $dbh->prepare("SELECT count(*) from duplicates");
 $sth->execute();
 if (!($sth->fetchrow_arrayref()->[0])) {
-        # populate table
-        print("Populating duplicates table...\n") unless $silent;
+    # populate table
+    print("Populating duplicates table...\n") unless $silent;
+    
+    $sth = $dbh->prepare(
+        "SELECT longdescs.bug_id, thetext " .
+          "FROM longdescs " .
+     "LEFT JOIN bugs using(bug_id) " .
+         "WHERE (thetext regexp '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') " .
+           "AND (resolution = 'DUPLICATE') " .
+      "ORDER BY longdescs.bug_when");
+    $sth->execute();
 
-        $sth = $dbh->prepare("SELECT longdescs.bug_id, thetext FROM longdescs left JOIN bugs using(bug_id) WHERE (thetext " . 
-                "regexp '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') AND (resolution = 'DUPLICATE') ORDER" .
-                        " BY longdescs.bug_when");
-        $sth->execute();
+    my %dupes;
+    my $key;
 
-        my %dupes;
-        my $key;
+    # Because of the way hashes work, this loop removes all but the last dupe
+    # resolution found for a given bug.
+    while (my ($dupe, $dupe_of) = $sth->fetchrow_array()) {
+        $dupes{$dupe} = $dupe_of;
+    }
 
-        # Because of the way hashes work, this loop removes all but the last dupe
-        # resolution found for a given bug.
-        while (my ($dupe, $dupe_of) = $sth->fetchrow_array()) {
-                $dupes{$dupe} = $dupe_of;
-        }
-
-        foreach $key (keys(%dupes))
-        {
-                $dupes{$key} =~ /^.*\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*$/ms;
-                $dupes{$key} = $1;
-                $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
-                #                                        BugItsADupeOf   Dupe
-        }
+    foreach $key (keys(%dupes)){
+        $dupes{$key} =~ /^.*\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*$/ms;
+        $dupes{$key} = $1;
+        $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
+        #                                        BugItsADupeOf   Dupe
+    }
 }
 
 # 2000-12-18.  Added an 'emailflags' field for storing preferences about
@@ -3210,7 +3245,9 @@ ENDTEXT
     print "Fixing password #1... ";
     while (my ($userid, $password) = $sth->fetchrow_array()) {
         my $cryptpassword = $dbh->quote(bz_crypt($password));
-        $dbh->do("UPDATE profiles SET cryptpassword = $cryptpassword WHERE userid = $userid");
+        $dbh->do("UPDATE profiles " .
+                    "SET cryptpassword = $cryptpassword " .
+                  "WHERE userid = $userid");
         ++$i;
         # Let the user know where we are at every 500 records.
         print "$i... " if !($i%500);
@@ -3241,10 +3278,12 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
     AddField("bugs_activity", "removed", "tinytext");
     AddField("bugs_activity", "added", "tinytext");
 
-    # Need to get fieldid's for the fields that have multipule values
+    # Need to get fieldid's for the fields that have multiple values
     my @multi = ();
     foreach my $f ("cc", "dependson", "blocked", "keywords") {
-        my $sth = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = '$f'");
+        my $sth = $dbh->prepare("SELECT fieldid " .
+                                "FROM fielddefs " .
+                                "WHERE name = '$f'");
         $sth->execute();
         my ($fid) = $sth->fetchrow_array();
         push (@multi, $fid);
@@ -3257,7 +3296,8 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
                             oldvalue, newvalue FROM bugs_activity");
     $sth->execute;
     while (my ($bug_id, $who, $bug_when, $fieldid, $oldvalue, $newvalue) = $sth->fetchrow_array()) {
-        # print the iteration count every 500 records so the user knows we didn't die
+        # print the iteration count every 500 records 
+        # so the user knows we didn't die
         print "$i..." if !($i++ % 500); 
         # Make sure (old|new)value isn't null (to suppress warnings)
         $oldvalue ||= "";
@@ -3288,7 +3328,7 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
                 $added = "?";
                 $removed = "?";
             }
-            # If the origianl field (old|new)value was full, then this
+            # If the original field (old|new)value was full, then this
             # could be incomplete data.
             if (length($oldvalue) == 255 || length($newvalue) == 255) {
                 $added = "? $added";
@@ -3309,7 +3349,7 @@ if (GetFieldDef('bugs_activity', 'oldvalue')) {
     DropField("bugs_activity", "newvalue");
 } 
 
-# 2001-07-24 jake@bugzilla.org - disabledtext was being handled inconsitantly
+# 2001-07-24 jake@bugzilla.org - disabledtext was being handled inconsistently
 # http://bugzilla.mozilla.org/show_bug.cgi?id=90933
 ChangeFieldType("profiles", "disabledtext", "mediumtext not null");
 
@@ -3324,7 +3364,7 @@ AddField("bugs", "reporter_accessible", "tinyint not null default 1");
 AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 
 # 2001-08-21 myk@mozilla.org bug84338:
-# Add a field for the attachment ID to the bugs_activity table, so installations
+# Add a field to the bugs_activity table for the attachment ID, so installations
 # using the attachment manager can record changes to attachments.
 AddField("bugs_activity", "attach_id", "mediumint null");
 
@@ -3332,7 +3372,7 @@ AddField("bugs_activity", "attach_id", "mediumint null");
 # Remove logincookies.cryptpassword, and delete entries which become
 # invalid
 if (GetFieldDef("logincookies", "cryptpassword")) {
-    # We need to delete any cookies which are invalid, before dropping the
+    # We need to delete any cookies which are invalid before dropping the
     # column
 
     print "Removing invalid login cookies...\n";
@@ -3405,10 +3445,11 @@ if (-r "$datadir/comments" && -s "$datadir/comments"
         $dbh->do("INSERT INTO quips (quip) VALUES ("
                  . $dbh->quote($_) . ")");
     }
-    print "The $datadir/comments file (used to store quips) has been copied into\n" .
-      "the database, and the $datadir/comments file moved to $datadir/comments.bak - \n" .
-      "you can delete this fileonce you're satisfied the migration worked\n" .
-      "correctly.\n\n";
+    print "Quips are now stored in the database, rather than in an external file.\n" .
+          "The quips previously stored in $datadir/comments have been copied into\n" .
+          "the database, and that file has been renamed to $datadir/comments.bak\n"  .
+          "You may delete the renamed file once you have confirmed that all your \n" .
+          "quips were moved successfully.\n\n";
     close COMMENTS;
     rename("$datadir/comments", "$datadir/comments.bak");
 }
@@ -3482,8 +3523,8 @@ if (GetFieldDef("products", "product")) {
         }
         $components{$component}{$product_id} = 1;
         $dbh->do("UPDATE bugs SET component_id = $component_id, delta_ts=delta_ts " .
-                 "WHERE component = " . $dbh->quote($component) .
-                 " AND product_id = $product_id");
+                  "WHERE component = " . $dbh->quote($component) .
+                   " AND product_id = $product_id");
     }
     print "Fixing Indexes and Uniqueness.\n";
     # Drop any indexes that may exist on the milestones table.
@@ -3534,19 +3575,21 @@ if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
     # obsolete from the attachment creation screen. So we have to go
     # and recreate these times from the comments..
     $sth = $dbh->prepare("SELECT bug_id, attach_id, submitter_id " .
-                         "FROM attachments");
+                           "FROM attachments");
     $sth->execute();
 
     # Restrict this as much as possible in order to avoid false positives, and
     # keep the db search time down
-    my $sth2 = $dbh->prepare("SELECT bug_when FROM longdescs
-                              WHERE bug_id=? AND who=? AND thetext LIKE ?
-                              ORDER BY bug_when " . $dbh->sql_limit(1));
+    my $sth2 = $dbh->prepare("SELECT bug_when FROM longdescs " .
+                              "WHERE bug_id=? AND who=? AND thetext LIKE ? " .
+                           "ORDER BY bug_when " . $dbh->sql_limit(1));
     while (my ($bug_id, $attach_id, $submitter_id) = $sth->fetchrow_array()) {
         $sth2->execute($bug_id, $submitter_id, "Created an attachment (id=$attach_id)%");
         my ($when) = $sth2->fetchrow_array();
         if ($when) {
-            $dbh->do("UPDATE attachments SET creation_ts='$when' WHERE attach_id=$attach_id");
+            $dbh->do("UPDATE attachments " .
+                        "SET creation_ts='$when' " .
+                      "WHERE attach_id=$attach_id");
         } else {
             print "Warning - could not determine correct creation time for attachment $attach_id on bug $bug_id\n";
         }
@@ -3659,11 +3702,15 @@ if (GetFieldDef("profiles", "groupset")) {
     # Replace old activity log groupset records with lists of names of groups.
     # Start by defining the bug_group field and getting its id.
     AddFDef("bug_group", "Group", 0);
-    $sth = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = " . $dbh->quote('bug_group'));
+    $sth = $dbh->prepare("SELECT fieldid " .
+                           "FROM fielddefs " .
+                          "WHERE name = " . $dbh->quote('bug_group'));
     $sth->execute();
     my ($bgfid) = $sth->fetchrow_array;
     # Get the field id for the old groupset field
-    $sth = $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = " . $dbh->quote('groupset'));
+    $sth = $dbh->prepare("SELECT fieldid " .
+                           "FROM fielddefs " .
+                          "WHERE name = " . $dbh->quote('groupset'));
     $sth->execute();
     my ($gsid) = $sth->fetchrow_array;
     # Get all bugs_activity records from groupset changes
@@ -3675,14 +3722,20 @@ if (GetFieldDef("profiles", "groupset")) {
             $added ||= 0;
             $removed ||= 0;
             # Get names of groups added.
-            my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
+            my $sth2 = $dbh->prepare("SELECT name " .
+                                       "FROM groups " .
+                                      "WHERE (bit & $added) != 0 " .
+                                        "AND (bit & $removed) = 0");
             $sth2->execute();
             my @logadd = ();
             while (my ($n) = $sth2->fetchrow_array) {
                 push @logadd, $n;
             }
             # Get names of groups removed.
-            $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
+            $sth2 = $dbh->prepare("SELECT name " .
+                                    "FROM groups " .
+                                   "WHERE (bit & $removed) != 0 " .
+                                     "AND (bit & $added) = 0");
             $sth2->execute();
             my @logrem = ();
             while (my ($n) = $sth2->fetchrow_array) {
@@ -3712,27 +3765,36 @@ if (GetFieldDef("profiles", "groupset")) {
             $dbh->do("UPDATE bugs_activity SET fieldid = $bgfid, added = " .
                       $dbh->quote($loga) . ", removed = " . 
                       $dbh->quote($logr) .
-                      " WHERE bug_id = $bug_id AND bug_when = " . $dbh->quote($bug_when) .
-                      " AND who = $who AND fieldid = $gsid");
+                     " WHERE bug_id = $bug_id AND bug_when = " . 
+                      $dbh->quote($bug_when) .
+                     " AND who = $who AND fieldid = $gsid");
     
         }
         # Replace groupset changes with group name changes in profiles_activity.
         # Get profiles_activity records for groupset.
-        $sth = $dbh->prepare("SELECT userid, profiles_when, who, newvalue, oldvalue
-                              FROM profiles_activity WHERE fieldid = $gsid");
+        $sth = $dbh->prepare(
+             "SELECT userid, profiles_when, who, newvalue, oldvalue " .
+               "FROM profiles_activity " .
+              "WHERE fieldid = $gsid");
         $sth->execute();
         while (my ($uid, $uwhen, $uwho, $added, $removed) = $sth->fetchrow_array) {
             $added ||= 0;
             $removed ||= 0;
             # Get names of groups added.
-            my $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $added) != 0 AND (bit & $removed) = 0");
+            my $sth2 = $dbh->prepare("SELECT name " .
+                                       "FROM groups " .
+                                      "WHERE (bit & $added) != 0 " .
+                                        "AND (bit & $removed) = 0");
             $sth2->execute();
             my @logadd = ();
             while (my ($n) = $sth2->fetchrow_array) {
                 push @logadd, $n;
             }
             # Get names of groups removed.
-            $sth2 = $dbh->prepare("SELECT name FROM groups WHERE (bit & $removed) != 0 AND (bit & $added) = 0");
+            $sth2 = $dbh->prepare("SELECT name " .
+                                    "FROM groups " .
+                                   "WHERE (bit & $removed) != 0 " .
+                                     "AND (bit & $added) = 0");
             $sth2->execute();
             my @logrem = ();
             while (my ($n) = $sth2->fetchrow_array) {
@@ -3742,8 +3804,10 @@ if (GetFieldDef("profiles", "groupset")) {
             my $lrem = "";
             $ladd = join(", ", @logadd) . '?' if @logadd;
             $lrem = join(", ", @logrem) . '?' if @logrem;
-            # Replace profiles_activity record for groupset change with group list.
-            $dbh->do("UPDATE profiles_activity SET fieldid = $bgfid, newvalue = " .
+            # Replace profiles_activity record for groupset change 
+            # with group list.
+            $dbh->do("UPDATE profiles_activity " .
+                     "SET fieldid = $bgfid, newvalue = " .
                       $dbh->quote($ladd) . ", oldvalue = " . 
                       $dbh->quote($lrem) .
                       " WHERE userid = $uid AND profiles_when = " . 
@@ -3759,8 +3823,10 @@ if (GetFieldDef("profiles", "groupset")) {
     my ($adminid) = $sth->fetchrow_array();
     # find existing admins
     # Don't lose admins from DBs where Bug 157704 applies
-    $sth = $dbh->prepare("SELECT userid, (groupset & 65536), login_name FROM profiles 
-                WHERE (groupset | 65536) = 9223372036854775807");
+    $sth = $dbh->prepare(
+           "SELECT userid, (groupset & 65536), login_name " .
+             "FROM profiles " .
+            "WHERE (groupset | 65536) = 9223372036854775807");
     $sth->execute();
     while ( my ($userid, $iscomplete, $login_name) = $sth->fetchrow_array() ) {
         # existing administrators are made members of group "admin"
@@ -3830,11 +3896,12 @@ if (TableExists("attachstatuses") && TableExists("attachstatusdefs")) {
     # from the status table and then, for each one, figure out who set it
     # and when they set it from the bugs activity table.
     my $id = 0;
-    $sth = $dbh->prepare("SELECT attachstatuses.attach_id, attachstatusdefs.id, " . 
-                         "attachstatusdefs.name, attachments.bug_id " . 
-                         "FROM attachstatuses, attachstatusdefs, attachments " . 
-                         "WHERE attachstatuses.statusid = attachstatusdefs.id " .
-                         "AND attachstatuses.attach_id = attachments.attach_id");
+    $sth = $dbh->prepare(
+        "SELECT attachstatuses.attach_id, attachstatusdefs.id, " . 
+               "attachstatusdefs.name, attachments.bug_id " . 
+          "FROM attachstatuses, attachstatusdefs, attachments " . 
+         "WHERE attachstatuses.statusid = attachstatusdefs.id " .
+           "AND attachstatuses.attach_id = attachments.attach_id");
     
     # a query to determine when the attachment status was set and who set it
     my $sth2 = $dbh->prepare("SELECT added, who, bug_when " . 
@@ -3901,8 +3968,9 @@ if (TableExists("attachstatuses") && TableExists("attachstatusdefs")) {
 
     print "done.\n";
 }
+
 # 2004-12-13 Nick.Barnes@pobox.com bug 262268
-# Check flag type names for spaces and commas, and rename them.
+# Check for spaces and commas in flag type names; if found, rename them.
 if (TableExists("flagtypes")) {
     # Get all names and IDs, to find broken ones and to
     # check for collisions when renaming.
@@ -4153,11 +4221,12 @@ if (!$series_exists) {
         # Create the groupsets for the category
         my $category_id = 
             $dbh->selectrow_array("SELECT id " . 
-                                  "FROM series_categories " . 
-                                  "WHERE name = " . $dbh->quote($product));
+                                    "FROM series_categories " . 
+                                   "WHERE name = " . $dbh->quote($product));
         my $product_id =
-            $dbh->selectrow_array("SELECT id FROM products " . 
-                                  "WHERE name = " . $dbh->quote($product));
+            $dbh->selectrow_array("SELECT id " .
+                                    "FROM products " . 
+                                   "WHERE name = " . $dbh->quote($product));
                                   
         if (defined($category_id) && defined($product_id)) {
           
@@ -4254,7 +4323,7 @@ if (!GetFieldDef('longdescs', 'already_wrapped')) {
                   AND SUBSTRING(thetext FROM 1 FOR 80) LIKE '% %'});
 }
 
-# 2001-09-03 dkl@redhat.com bug 17453
+# 2001-09-03 (landed 2005-02-24)  dkl@redhat.com bug 17453
 # Moved enum types to separate tables so we need change the old enum types to 
 # standard varchars in the bugs table.
 ChangeFieldType ('bugs', 'bug_status', 'varchar(64) not null');
@@ -4277,7 +4346,7 @@ if (!GetFieldDef('quips', 'userid')->[2]) {
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
-# That is: if you add a new field, you first search for the first occurence
+# That is: if you add a new field, you first search for the first occurrence
 # of --TABLE-- and add your field to into the table hash. This new setting
 # would be honored for every new installation. Then add your
 # AddField/DropField/ChangeFieldType/RenameField code above. This would then
@@ -4356,7 +4425,7 @@ if (@admins) {
             (user_id, group_id, isbless, grant_type) 
             VALUES ($userid, $adminid, 0, " . GRANT_DIRECT . ")");
         # Existing administrators are made blessers of group "admin"
-        # but only explitly defined blessers can bless group admin.
+        # but only explicitly defined blessers can bless group admin.
         # Other groups can be blessed by any admin (by default) or additional
         # defined blessers.
         $dbh->do("INSERT INTO user_group_map 
@@ -4393,161 +4462,166 @@ while ( my @row = $sth->fetchrow_array() ) {
 #  Prompt the user for the email address and name of an administrator.  Create
 #  that login, if it doesn't exist already, and make it a member of all groups.
 
-$sth = $dbh->prepare("SELECT user_id FROM groups, user_group_map" .
-                    " WHERE name = 'admin' AND id = group_id");
+$sth = $dbh->prepare("SELECT user_id FROM groups, user_group_map " .
+                     "WHERE name = 'admin' AND id = group_id");
 $sth->execute;
 # when we have no admin users, prompt for admin email address and password ...
 if ($sth->rows == 0) {
-  my $login = "";
-  my $realname = "";
-  my $pass1 = "";
-  my $pass2 = "*";
-  my $admin_ok = 0;
-  my $admin_create = 1;
-  my $mailcheckexp = "";
-  my $mailcheck    = ""; 
+    my $login = "";
+    my $realname = "";
+    my $pass1 = "";
+    my $pass2 = "*";
+    my $admin_ok = 0;
+    my $admin_create = 1;
+    my $mailcheckexp = "";
+    my $mailcheck    = ""; 
 
-  # Here we look to see what the emailregexp is set to so we can 
-  # check the email addy they enter. Bug 96675. If they have no 
-  # params (likely but not always the case), we use the default.
-  if (-e "$datadir/params") { 
-    require "$datadir/params"; # if they have a params file, use that
-  }
-  if (Param('emailregexp')) {
-    $mailcheckexp = Param('emailregexp');
-    $mailcheck    = Param('emailregexpdesc');
-  } else {
-    $mailcheckexp = '^[\\w\\.\\+\\-=]+@[\\w\\.\\-]+\\.[\\w\\-]+$';
-    $mailcheck    = 'A legal address must contain exactly one \'@\', 
-      and at least one \'.\' after the @.';
-  }
-
-  print "\nLooks like we don't have an administrator set up yet.  Either this is your\n";
-  print "first time using Bugzilla, or your administrator's privileges might have accidently\n";
-  print "been deleted.\n";
-  while(! $admin_ok ) {
-    while( $login eq "" ) {
-      print "Enter the e-mail address of the administrator: ";
-      $login = $answer{'ADMIN_EMAIL'} 
-          || ($silent && die("cant preload ADMIN_EMAIL")) 
-          || <STDIN>;
-      chomp $login;
-      if(! $login ) {
-        print "\nYou DO want an administrator, don't you?\n";
-      }
-      unless ($login =~ /$mailcheckexp/) {
-        print "\nThe login address is invalid:\n";
-        print "$mailcheck\n";
-        print "You can change this test on the params page once checksetup has successfully\n";
-        print "completed.\n\n";
-        # Go round, and ask them again
-        $login = "";
-      }
+    # Here we look to see what the emailregexp is set to so we can 
+    # check the email addy they enter. Bug 96675. If they have no 
+    # params (likely but not always the case), we use the default.
+    if (-e "$datadir/params") { 
+        require "$datadir/params"; # if they have a params file, use that
     }
-    $login = $dbh->quote($login);
-    $sth = $dbh->prepare("SELECT login_name FROM profiles" .
-                        " WHERE login_name=$login");
-    $sth->execute;
-    if ($sth->rows > 0) {
-      print "$login already has an account.\n";
-      print "Make this user the administrator? [Y/n] ";
-      my $ok = $answer{'ADMIN_OK'} 
-          || ($silent && die("cant preload ADMIN_OK")) 
-          || <STDIN>;
-      chomp $ok;
-      if ($ok !~ /^n/i) {
-        $admin_ok = 1;
-        $admin_create = 0;
-      } else {
-        print "OK, well, someone has to be the administrator.  Try someone else.\n";
-        $login = "";
-      }
+    if (Param('emailregexp')) {
+        $mailcheckexp = Param('emailregexp');
+        $mailcheck    = Param('emailregexpdesc');
     } else {
-      print "You entered $login.  Is this correct? [Y/n] ";
-      my $ok = $answer{'ADMIN_OK'} 
-          || ($silent && die("cant preload ADMIN_OK")) 
-          || <STDIN>;
-      chomp $ok;
-      if ($ok !~ /^n/i) {
-        $admin_ok = 1;
-      } else {
-        print "That's okay, typos happen.  Give it another shot.\n";
-        $login = "";
-      }
-    }
-  }
-
-  if ($admin_create) {
-
-    while( $realname eq "" ) {
-      print "Enter the real name of the administrator: ";
-      $realname = $answer{'ADMIN_REALNAME'} 
-          || ($silent && die("cant preload ADMIN_REALNAME")) 
-          || <STDIN>;
-      chomp $realname;
-      if(! $realname ) {
-        print "\nReally.  We need a full name.\n";
-      }
+        $mailcheckexp = '^[\\w\\.\\+\\-=]+@[\\w\\.\\-]+\\.[\\w\\-]+$';
+        $mailcheck    = 'A legal address must contain exactly one \'@\', 
+        and at least one \'.\' after the @.';
     }
 
-    # trap a few interrupts so we can fix the echo if we get aborted.
-    $SIG{HUP}  = \&bailout;
-    $SIG{INT}  = \&bailout;
-    $SIG{QUIT} = \&bailout;
-    $SIG{TERM} = \&bailout;
-
-    if ($^O !~ /MSWin32/i) {
-        system("stty","-echo");  # disable input echoing
-    }
-
-    while( $pass1 ne $pass2 ) {
-      while( $pass1 eq "" || $pass1 !~ /^[[:print:]]{3,16}$/ ) {
-        print "Enter a password for the administrator account: ";
-        $pass1 = $answer{'ADMIN_PASSWORD'} 
-            || ($silent && die("cant preload ADMIN_PASSWORD")) 
-            || <STDIN>;
-        chomp $pass1;
-        if(! $pass1 ) {
-          print "\n\nAn empty password is a security risk. Try again!\n";
-        } elsif ( $pass1 !~ /^.{3,16}$/ ) {
-          print "\n\nThe password must be 3-16 characters in length.\n";
-        } elsif ( $pass1 !~ /^[[:print:]]{3,16}$/ ) {
-          print "\n\nThe password contains non-printable characters.\n";
+    print "\nLooks like we don't have an administrator set up yet.\n";
+    print "Either this is your first time using Bugzilla, or your\n ";
+    print "administrator's privileges might have accidentally been deleted.\n";
+    while(! $admin_ok ) {
+        while( $login eq "" ) {
+            print "Enter the e-mail address of the administrator: ";
+            $login = $answer{'ADMIN_EMAIL'} 
+                || ($silent && die("cant preload ADMIN_EMAIL")) 
+                || <STDIN>;
+            chomp $login;
+            if(! $login ) {
+                print "\nYou DO want an administrator, don't you?\n";
+            }
+            unless ($login =~ /$mailcheckexp/) {
+                print "\nThe login address is invalid:\n";
+                print "$mailcheck\n";
+                print "You can change this test on the params page once checksetup has successfully\n";
+                print "completed.\n\n";
+                # Go round, and ask them again
+                $login = "";
+            }
         }
-      }
-      print "\nPlease retype the password to verify: ";
-      $pass2 = $answer{'ADMIN_PASSWORD'} 
-          || ($silent && die("cant preload ADMIN_PASSWORD")) 
-          || <STDIN>;
-      chomp $pass2;
-      if ($pass1 ne $pass2) {
-        print "\n\nPasswords don't match.  Try again!\n";
-        $pass1 = "";
-        $pass2 = "*";
-      }
+        $login = $dbh->quote($login);
+        $sth = $dbh->prepare("SELECT login_name FROM profiles " .
+                              "WHERE login_name=$login");
+        $sth->execute;
+        if ($sth->rows > 0) {
+            print "$login already has an account.\n";
+            print "Make this user the administrator? [Y/n] ";
+            my $ok = $answer{'ADMIN_OK'} 
+                || ($silent && die("cant preload ADMIN_OK")) 
+                || <STDIN>;
+            chomp $ok;
+            if ($ok !~ /^n/i) {
+                $admin_ok = 1;
+                $admin_create = 0;
+            } else {
+                print "OK, well, someone has to be the administrator.\n";
+                print "Try someone else.\n";
+                $login = "";
+            }
+        } else {
+            print "You entered $login.  Is this correct? [Y/n] ";
+            my $ok = $answer{'ADMIN_OK'} 
+                || ($silent && die("cant preload ADMIN_OK")) 
+                || <STDIN>;
+            chomp $ok;
+            if ($ok !~ /^n/i) {
+                $admin_ok = 1;
+            } else {
+                print "That's okay, typos happen.  Give it another shot.\n";
+                $login = "";
+            }
+        }
     }
 
-    # Crypt the administrator's password
-    my $cryptedpassword = bz_crypt($pass1);
+    if ($admin_create) {
 
-    if ($^O !~ /MSWin32/i) {
-        system("stty","echo"); # re-enable input echoing
+        while( $realname eq "" ) {
+            print "Enter the real name of the administrator: ";
+            $realname = $answer{'ADMIN_REALNAME'} 
+                || ($silent && die("cant preload ADMIN_REALNAME")) 
+                || <STDIN>;
+            chomp $realname;
+            if(! $realname ) {
+                print "\nReally.  We need a full name.\n";
+            }
+        }
+
+        # trap a few interrupts so we can fix the echo if we get aborted.
+        $SIG{HUP}  = \&bailout;
+        $SIG{INT}  = \&bailout;
+        $SIG{QUIT} = \&bailout;
+        $SIG{TERM} = \&bailout;
+
+        if ($^O !~ /MSWin32/i) {
+            system("stty","-echo");  # disable input echoing
+        }
+
+        while( $pass1 ne $pass2 ) {
+            while( $pass1 eq "" || $pass1 !~ /^[[:print:]]{3,16}$/ ) {
+                print "Enter a password for the administrator account: ";
+                $pass1 = $answer{'ADMIN_PASSWORD'} 
+                    || ($silent && die("cant preload ADMIN_PASSWORD")) 
+                    || <STDIN>;
+                chomp $pass1;
+                if(! $pass1 ) {
+                    print "\n\nAn empty password is a security risk. Try again!\n";
+                } elsif ( $pass1 !~ /^.{3,16}$/ ) {
+                    print "\n\nThe password must be 3-16 characters in length.\n";
+                } elsif ( $pass1 !~ /^[[:print:]]{3,16}$/ ) {
+                    print "\n\nThe password contains non-printable characters.\n";
+                }
+            }
+            print "\nPlease retype the password to verify: ";
+            $pass2 = $answer{'ADMIN_PASSWORD'} 
+                || ($silent && die("cant preload ADMIN_PASSWORD")) 
+                || <STDIN>;
+            chomp $pass2;
+            if ($pass1 ne $pass2) {
+                print "\n\nPasswords don't match.  Try again!\n";
+                $pass1 = "";
+                $pass2 = "*";
+            }
+        }
+
+        # Crypt the administrator's password
+        my $cryptedpassword = bz_crypt($pass1);
+
+        if ($^O !~ /MSWin32/i) {
+            system("stty","echo"); # re-enable input echoing
+        }
+
+        $SIG{HUP}  = 'DEFAULT'; # and remove our interrupt hooks
+        $SIG{INT}  = 'DEFAULT';
+        $SIG{QUIT} = 'DEFAULT';
+        $SIG{TERM} = 'DEFAULT';
+
+        $realname = $dbh->quote($realname);
+        $cryptedpassword = $dbh->quote($cryptedpassword);
+
+        # Set default email flags for the Admin, same as for users
+        my $defaultflagstring = 
+          $dbh->quote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS);
+    
+        $dbh->do(
+          "INSERT " .
+           " INTO profiles (login_name, realname, cryptpassword, emailflags) " .
+          "VALUES ($login, $realname, $cryptedpassword, $defaultflagstring)");
     }
 
-    $SIG{HUP}  = 'DEFAULT'; # and remove our interrupt hooks
-    $SIG{INT}  = 'DEFAULT';
-    $SIG{QUIT} = 'DEFAULT';
-    $SIG{TERM} = 'DEFAULT';
-
-    $realname = $dbh->quote($realname);
-    $cryptedpassword = $dbh->quote($cryptedpassword);
-
-    # Set default email flags for the Admin, same as for users
-    my $defaultflagstring = $dbh->quote(Bugzilla::Constants::DEFAULT_EMAIL_SETTINGS);
-
-    $dbh->do("INSERT INTO profiles (login_name, realname, cryptpassword, emailflags) " .
-             "VALUES ($login, $realname, $cryptedpassword, $defaultflagstring)");
-  }
     # Put the admin in each group if not already    
     my $query = "select userid from profiles where login_name = $login";    
     $sth = $dbh->prepare($query); 
@@ -4574,7 +4648,7 @@ if ($sth->rows == 0) {
             VALUES ($admingroupid, $group, " . GROUP_BLESS . ")");
     }
 
-  print "\n$login is now set up as an administrator account.\n";
+    print "\n$login is now set up as an administrator account.\n";
 }
 
 # Add fulltext indexes for bug summaries and descriptions/comments.
@@ -4675,8 +4749,8 @@ while (my ($userid) = $sth->fetchrow_array()) {
 }
 
 if ($emailflags_count) {
-  print "Added default email prefs to $emailflags_count users who had none.\n" unless $silent;
-  $emailflags_count = 0;
+    print "Added default email prefs to $emailflags_count users who had none.\n" unless $silent;
+    $emailflags_count = 0;
 }
 
 
@@ -4692,8 +4766,8 @@ while (my ($userid, $emailflags) = $sth->fetchrow_array()) {
 }
 
 if ($emailflags_count) {
-  print "Added default Flagrequester/ee email prefs to $emailflags_count users who had none.\n" unless $silent;
-  $emailflags_count = 0;
+    print "Added default Flagrequester/ee email prefs to $emailflags_count users who had none.\n" unless $silent;
+    $emailflags_count = 0;
 }
 
 
@@ -4738,7 +4812,8 @@ if ($emptygroupid) {
             $trycount ++;
         }
     } while ($trygroupsth->rows > 0);
-    $sth = $dbh->prepare("UPDATE groups SET name = ? WHERE id = $emptygroupid");
+    $sth = $dbh->prepare("UPDATE groups SET name = ? " .
+                         "WHERE id = $emptygroupid");
     $sth->execute($trygroupname);
     print "Group $emptygroupid had an empty name; renamed as '$trygroupname'.\n";
 }
@@ -4763,14 +4838,18 @@ if (!defined GetIndexDef('bugs_activity','who')) {
 #
 # Final checks...
 
-$sth = $dbh->prepare("SELECT user_id FROM groups, user_group_map" .
-                    " WHERE groups.name = 'admin'" .
-                    " AND groups.id = user_group_map.group_id");
+$sth = $dbh->prepare("SELECT user_id " .
+                       "FROM groups, user_group_map " .
+                      "WHERE groups.name = 'admin' " .
+                        "AND groups.id = user_group_map.group_id");
 $sth->execute;
 my ($adminuid) = $sth->fetchrow_array;
 if (!$adminuid) { die "No administrator!" } # should never get here
 # when test product was created, admin was unknown
-$dbh->do("UPDATE components SET initialowner = $adminuid WHERE initialowner = 0");
+$dbh->do("UPDATE components " .
+            "SET initialowner = $adminuid " .
+          "WHERE initialowner = 0");
 
 unlink "$datadir/versioncache";
 
+################################################################################
