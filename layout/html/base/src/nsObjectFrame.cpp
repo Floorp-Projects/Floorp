@@ -1508,11 +1508,17 @@ nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, P
   // it may need to be corrected, like after scrolling
   if (aWindowless && parentWithView) {
     nsPoint correction(0,0);
+    nsCOMPtr<nsIViewManager> parentVM;
+    parentWithView->GetViewManager(*getter_AddRefs(parentVM));
 
     // Walk up all the views and add up their positions. This will give us our
     // absolute position which is what we want to give the plugin
     nsIView* theView = parentWithView;
     while (theView) {
+      nsCOMPtr<nsIViewManager> vm;
+      theView->GetViewManager(*getter_AddRefs(vm));
+      if (vm != parentVM)
+        break;
 
       theView->GetPosition(&correction.x, &correction.y);
       origin += correction;
