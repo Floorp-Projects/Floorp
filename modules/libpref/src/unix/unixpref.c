@@ -127,7 +127,7 @@ char *fe_GetConfigDir(void) {
     len += strlen("/") + strlen(MOZ_USER_DIR) + 1;
 
     config_dir = (char *)XP_CALLOC(len, sizeof(char));
-    // we really should use XP_STRN*_SAFE but this is MODULAR_NETLIB
+    /* we really should use XP_STRN*_SAFE but this is MODULAR_NETLIB */
     XP_STRCPY(config_dir, home);
     XP_STRCAT(config_dir, "/");
     XP_STRCAT(config_dir, MOZ_USER_DIR); 
