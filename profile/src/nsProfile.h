@@ -52,6 +52,7 @@
 #define REGISTRY_MIGRATED_STRING            "migrated"
 #define REGISTRY_DIRECTORY_STRING           "directory"
 #define REGISTRY_NEED_MIGRATION_STRING      "NeedMigration"
+#define REGISTRY_MOZREG_DATA_MOVED_STRING   "OldRegDataMoved"
 
 #define REGISTRY_VERSION_STRING	  "Version"
 #define REGISTRY_VERSION_1_0      "1.0"		

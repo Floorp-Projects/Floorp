@@ -28,6 +28,7 @@ interface nsIFileSpec;
 %{C++
 #include "nsFileSpec.h"
 #include "nsICmdLineService.h"
+#include "nsIFile.h"
       
 #define NS_PROFILE_CID                                 \
   { /* {02b0625b-e7f3-11d2-9f5a-006008a6efe9} */       \
@@ -46,6 +47,7 @@ interface nsIFileSpec;
 
 [ptr] native nsFileSpec(nsFileSpec);
 [ref] native nsFileSpecRef(nsFileSpec);
+[ptr] native nsIFile(nsIFile);
 [scriptable, uuid(02b0625a-e7f3-11d2-9f5a-006008a6efe9)]
 interface nsIProfile : nsISupports {
     [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
@@ -94,7 +96,7 @@ interface nsIProfile : nsISupports {
 
     readonly attribute nsIFileSpec defaultProfileParentDir;
 
-    void updateRegistry();
+    [noscript] void updateRegistry(in nsIFile regName);
     void setRegStrings(in wstring profileName, 
                        in wstring regString,
                        in wstring regName,
