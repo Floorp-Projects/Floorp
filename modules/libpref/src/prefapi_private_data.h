@@ -41,17 +41,17 @@ extern char *               gSavedLine;
 extern PLHashAllocOps       pref_HashAllocOps;
 
 NSPR_BEGIN_EXTERN_C
-extern JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
-extern PrefResult pref_savePref(PLHashEntry *he, int i, void *arg);
-extern PrefResult pref_saveLIPref(PLHashEntry *he, int i, void *arg);
-extern PRBool pref_VerifyLockFile(char* buf, long buflen);
-extern PrefResult PREF_SetSpecialPrefsLocal(void);
-extern int pref_CompareStrings(const void *v1, const void *v2);
+PR_EXTERN(JSBool) PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
+PR_EXTERN(PrefResult) pref_savePref(PLHashEntry *he, int i, void *arg);
+PR_EXTERN(PrefResult) pref_saveLIPref(PLHashEntry *he, int i, void *arg);
+PR_EXTERN(PRBool) pref_VerifyLockFile(char* buf, long buflen);
+PR_EXTERN(PrefResult) PREF_SetSpecialPrefsLocal(void);
+PR_EXTERN(int) pref_CompareStrings(const void *v1, const void *v2);
 NSPR_END_EXTERN_C
 
 /* Possibly exportable */
 #if defined(__cplusplus)
-extern PrefResult PREF_SavePrefFileSpecWith(
+PR_EXTERN(PrefResult) PREF_SavePrefFileSpecWith(
 	const nsFileSpec& fileSpec,
 	PLHashEnumerator heSaveProc);
 #endif /*PREF_SUPPORT_OLD_PATH_STRINGS*/
