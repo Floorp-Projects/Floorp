@@ -21,11 +21,11 @@
 #include "nsILookAndFeel.h"
 
 class nsLookAndFeel: public nsILookAndFeel {
+  NS_DECL_ISUPPORTS
+  
 public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
-
-  NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor);
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
