@@ -1174,7 +1174,12 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpfe:components:find:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
 	_InstallResources(":mozilla:xpfe:components:bookmarks:resources:MANIFEST",		"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:bookmarks:resources:locale:en-US:MANIFEST",		"$samples_dir");
-	_InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",			"$samples_dir");
+        {
+          my($history_dir) = "$chrome_dir"."History";
+	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",			"$history_dir:content:default");
+	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-skin",			"$history_dir:skin:default");
+	  _InstallResources(":mozilla:xpfe:components:history:resources:locale:MANIFEST",			"$history_dir:locale");
+        }
 	_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",			"$samples_dir");
 	_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
         {
