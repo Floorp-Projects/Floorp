@@ -28,6 +28,8 @@
 #include <malloc.h>
 #endif
 
+//#define VIEWER_PLUGINS
+
 #define NS_IMPL_IDS
 #include "nsViewer.h"
 #include "resources.h"          // #defines ID's for menu items
@@ -79,6 +81,12 @@
 #include "nsIStyleSet.h"
 #include "nsIStyleContext.h"
 
+#ifdef VIEWER_PLUGINS
+#include "nsPluginsCID.h"
+#include "nsplugin.h"
+#include "nsIPluginHost.h"
+#endif
+
 // Class ID's
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
@@ -108,12 +116,21 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kCWebWidgetCID, NS_WEBWIDGET_CID);
 static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 
+#ifdef VIEWER_PLUGINS
+static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
+#endif
+
 // IID's
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIChildWidgetIID, NS_IWIDGET_IID);
+
+#ifdef VIEWER_PLUGINS
+static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
+static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+#endif
 
 #define VIEWER_UI
 #undef INSET_WEBWIDGET
@@ -129,7 +146,7 @@ static NS_DEFINE_IID(kIChildWidgetIID, NS_IWIDGET_IID);
 #endif
 
 #define BUTTON_HEIGHT THROBBER_HEIGHT
-#define THROB_NUM 20
+#define THROB_NUM 14
 #define THROBBER_AT "resource:/res/throbber/anims%02d.gif"
 
 #ifdef INSET_WEBWIDGET
@@ -164,6 +181,10 @@ static PRInt32 gRepeatCount=1;    // if running in an auto mode, this is the num
 static PRInt32 gNumSamples=9;     // if running in an auto mode that uses the samples, this is the last sample to load
 static char gInputFileName[MAXPATHLEN];
 
+#ifdef VIEWER_PLUGINS
+nsIPluginManager *gPluginManager = nsnull;
+nsIPluginHost *gPluginHost = nsnull;
+#endif
 
 // Temporary Netlib stuff...
 /* XXX: Don't include net.h... */
@@ -323,6 +344,13 @@ DocObserver::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
+
+#ifdef VIEWER_PLUGINS
+  //XXX wow, what a hack... MMP
+  if (nsnull != gPluginManager)
+    return gPluginManager->QueryInterface(aIID, aInstancePtrResult);
+#endif
+
   return NS_NOINTERFACE;
 }
 
@@ -1030,6 +1058,18 @@ nsEventStatus PR_CALLBACK HandleThrobberEvent(nsGUIEvent *aEvent)
 
       break;
     }
+
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      gTheViewer->GoTo(nsString("http://www.mozilla.org"));
+      break;
+
+    case NS_MOUSE_ENTER:
+      aEvent->widget->SetCursor(eCursor_hyperlink);
+      break;
+
+    case NS_MOUSE_EXIT:
+      aEvent->widget->SetCursor(eCursor_standard);
+      break;
   }
 
   return nsEventStatus_eIgnore;
@@ -1683,7 +1723,23 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   NSRepository::RegisterFactory(kCDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
 
+#ifdef VIEWER_PLUGINS
+  NSRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
+#endif
+
   nsresult res;
+  res=NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&gAppShell);
+  if (NS_OK==res)
+  {
+    gAppShell->Create(&argc, argv);
+    gAppShell->SetDispatchListener(this);
+  }
+  else
+  {
+    fprintf(stderr, "Couldn't create an instance of AppShell\n");
+    return(nsnull);
+  }
+
   res=NSRepository::CreateInstance(kPrefCID, NULL, kIPrefIID, (void **) &gPrefs);
   if (NS_OK==res)
   {
@@ -1700,18 +1756,22 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
      mRLWindow = mRelatedLinks->MakeRLWindowWithCallback(DumpRLValues, this);
   }
 
-  // Create an application shell
-  res=NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&gAppShell);
+#ifdef VIEWER_PLUGINS
+  res=NSRepository::CreateInstance(kCPluginHostCID, nsnull, kIPluginManagerIID, (void**)&gPluginManager);
   if (NS_OK==res)
   {
-    gAppShell->Create(&argc, argv);
-    gAppShell->SetDispatchListener(this);
+    if (NS_OK == gPluginManager->QueryInterface(kIPluginHostIID, (void **)&gPluginHost))
+    {
+      gPluginHost->Init();
+      gPluginHost->LoadPlugins();
+    }
   }
   else
   {
-    fprintf(stderr, "Couldn't create an instance of AppShell\n");
+    fprintf(stderr, "Couldn't create an instance of PluginManager\n");
     return(nsnull);
   }
+#endif
   
     // Create a top level window for the WebWidget
   WindowData* wd = CreateTopLevel("Raptor HTML Viewer", 620, 400);
