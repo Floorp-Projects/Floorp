@@ -30,6 +30,8 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
+DIRS = client
+
 LIBRARY_NAME = urpTest
 MODULE = urpTest
 IS_COMPONENT = 1
@@ -41,24 +43,23 @@ CXXFLAGS        +=  -I$(topsrcdir)/java/xpcom/xpcom -I../transport -I$(JDKHOME)/
 
 CPPSRCS  =   \
 	 urpTestImpl.cpp \
+	 urpTestImplFactory.cpp \
 	 server.cpp \
 	 $(NULL)
 
-EXTRA_DSO_LIBS += \
-      bcorb  bcxpcomstubs \
-      $(NULL)
-
-LIBS            = -L./ -L$(DIST)/bin/components/ $(XPCOM_LIBS) $(NSPR_LIBS) $(EXTRA_DSO_LIBS) \
+LIBS            = -L./  $(XPCOM_LIBS) $(NSPR_LIBS) $(EXTRA_DSO_LIBS) \
       ../urpStub.o \
+      ../urpMarshalToolkit.o \
       ../urpManager.o \
       ../transport/llTransport.o ../transport/urpPacket.o \
       ../transport/urpTransport.o \
-      -L../../java/src  \
+      -L../../java/src 
 
 EXTRA_DSO_LDOPTS += \
       ../transport/llTransport.o ../transport/urpPacket.o \
       ../transport/urpTransport.o \
       ../urpStub.o \
+      ../urpMarshalToolkit.o \
       ../urpManager.o \
       $(NULL)
 

@@ -61,13 +61,14 @@ protected:
     PRNetAddr addr; // only for client needs
 public:
     PRStatus Open( char *name, llSideType type );
-    PRStatus Close( void );
+    virtual PRStatus Close( void );
     llConnection * ProvideConnection( void );
 };
 
 class llPipeTransport  : public llTCPTransport {
 public:
     PRStatus Open( char *name, llSideType type );
+    PRStatus Close( void );
 };
 
 #endif // llTransport_included

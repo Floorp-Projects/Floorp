@@ -49,9 +49,9 @@ protected:
     llTransport *trans;
     llSideType type;
 
-public:
     urpTransport();
 
+public:
     PRBool IsClient( void );
     PRBool IsServer( void );
 

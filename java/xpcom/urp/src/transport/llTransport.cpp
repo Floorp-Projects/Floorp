@@ -229,3 +229,11 @@ PRStatus llPipeTransport::Open( char *name, llSideType type )
 
     return PR_FAILURE;
 }
+
+PRStatus llPipeTransport::Close( void )
+{
+    PRNetAddr addr;
+    PR_GetSockName( fd, &addr );
+    PR_Delete( addr.local.path );
+    return PR_Close( fd );
+}

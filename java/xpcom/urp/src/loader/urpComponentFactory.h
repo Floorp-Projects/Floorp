@@ -19,22 +19,21 @@
  * Contributor(s):
  * Sergey Lunegov <lsv@sparc.spb.su>
  */
+#ifndef __urpComponentFactory_h
+#define __urpComponentFactory_h
+#include "nsIFactory.h"
 
-#ifndef __urpStub_h
-#define __urpStub_h
-
-#include "bcIStub.h"
-#include "xptinfo.h"
-
-#include "urpManager.h"
-
-class urpStub : public bcIStub {
- public:
-    urpStub(urpConnection* conn);
-    virtual ~urpStub();
-    virtual void Dispatch(bcICall *call) ;
- private:
-    urpManager* manager;
+class urpComponentFactory : public nsIFactory {
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIFACTORY
+    urpComponentFactory(const char *location, const nsCID &aCID);
+    virtual ~urpComponentFactory();
+private:
+    char *location;
+    nsCID aClass;    
 };
 
 #endif
+
+

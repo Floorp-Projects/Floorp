@@ -22,7 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "urpTestImpl.h"
+#include "urpManager.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 
@@ -41,6 +41,7 @@
 #include "bcORBComponentCID.h"
 #include "bcIStub.h"
 #include "urpStub.h"
+#include "urpITest.h"
 
 static NS_DEFINE_CID(kORBCIID,BC_ORBCOMPONENT_CID);
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
@@ -75,12 +76,18 @@ nsIInterfaceInfo *interfaceInfo;
     bcIORB *orb;
     _orb->GetORB(&orb);
     bcIStub *stub = NULL;
-    urpITest *object = new urpTestImpl();
-    object->AddRef();
+//    urpITest *object = new urpTestImpl();
+//    object->AddRef();
     urpITest *proxy = NULL;
-    stub = new urpStub(connectString);
+    urpTransport* transport = new urpConnector();
+    PRStatus status = transport->Open(connectString);
+    if(status != PR_SUCCESS) {
+        printf("Error during opening connection\n");
+        exit(-1);
+    }
+    stub = new urpStub(transport->GetConnection());
     bcOID oid = orb->RegisterStub(stub);
-    printf("---urpTestImpl iid=%s\n",NS_GET_IID(urpITest).ToString());
+    printf("---urpTestImpl oid=%ld iid=%s\n",oid, NS_GET_IID(urpITest).ToString());
     r = xpcomStubsAndProxies->GetProxy(oid,NS_GET_IID(urpITest),orb,(nsISupports**)&proxy);
     if (NS_FAILED(r)) {
         printf("--urpTestImpl test failed\n");
@@ -97,7 +104,7 @@ nsIInterfaceInfo *interfaceInfo;
     PRInt32 l1 = 1999;
     PRInt32 ret;
     PRInt32 rt;
-    object->Test1(&l1);
+//    object->Test1(&l1);
     l1 = 1999;
     proxy->Test1(&l1);
     printf("--urpTestImpl after Test1 l=%d %d\n",l1,ret);
@@ -124,7 +131,7 @@ nsIInterfaceInfo *interfaceInfo;
     for (unsigned int i = 0; i < 4; i++) {
         printf("valueArray[%d]=%s\n",i,(*valueArray2)[i]);
     }
-    object->Test5(4,valueArray2);
+//    object->Test5(4,valueArray2);
     printf("after calling object\n");
     for (unsigned int i = 0; i < 4; i++) {
         printf("valueArray[%d]=%s\n",i,(*valueArray2)[i]);
@@ -138,7 +145,7 @@ nsIInterfaceInfo *interfaceInfo;
     }
 
     /*********************************************/
-    proxy->Test6(object);
+//    proxy->Test6(object);
     /*********************************************/
     {
         urpITest *p1;
@@ -152,9 +159,11 @@ nsIInterfaceInfo *interfaceInfo;
         if (NS_SUCCEEDED(p1->QueryInterface(NS_GET_IID(urpITest),(void**)&p3))) {
             l=2000;
             p3->Test1(&l);
+	    printf("l in client after test1 %ld\n",l);
         }
 
 
     }
+//    trans->Close();
 }
 

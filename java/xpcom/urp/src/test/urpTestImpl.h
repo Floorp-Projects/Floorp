@@ -26,23 +26,23 @@
 
 class urpTestImpl : public  urpITest {
     NS_DECL_ISUPPORTS 
-    urpTestImpl() {
-        NS_INIT_REFCNT();
-    }
+    NS_DECL_URPITEST
+    urpTestImpl();
+    virtual ~urpTestImpl();
     /*void test1(inout long l);*/
-    NS_IMETHOD Test1(PRInt32 *l);
+//    NS_IMETHOD Test1(PRInt32 *l);
     /*void test2(in long l1,inout long l2);*/
-    NS_IMETHOD Test2(PRInt32 l1, PRInt32* l2);
+//    NS_IMETHOD Test2(PRInt32 l1, PRInt32* l2);
     /*void test3(in string s1,inout string s2);*/
-    NS_IMETHOD Test3(const char *s1, char **s2);
+//    NS_IMETHOD Test3(const char *s1, char **s2);
     /*void test4(in PRUint32 count,[array, size_is(count)] in string valueArray);*/
-    NS_IMETHOD Test4(PRUint32 count, const char **valueArray);
+//    NS_IMETHOD Test4(PRUint32 count, const char **valueArray);
     /*void test5(in PRUint32 count,[array, size_is(count)] inout string valueArray);*/
-    NS_IMETHOD Test5(PRUint32 count, char ***valueArray);
+//    NS_IMETHOD Test5(PRUint32 count, char ***valueArray);
     /*void test6(in urpITest o);*/
-    NS_IMETHOD Test6(class urpITest *o);
+//    NS_IMETHOD Test6(class urpITest *o);
     /* void test7 (out urpITest o); */
-    NS_IMETHOD Test7(urpITest **o);
+//    NS_IMETHOD Test7(urpITest **o);
 };
 
 #endif /* __urpTestImpl_h */

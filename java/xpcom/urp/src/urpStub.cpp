@@ -29,22 +29,14 @@
 
 #include "urpManager.h"
 
-urpStub::urpStub(char* conStr) {
-  transport = new urpConnector();
-  PRStatus status = transport->Open(conStr);
-  if(status != NS_OK) {
-     fprintf(stderr,"Error in opening of remote server on client side\n");
-     exit(-1);
-  }
-  manager = new urpManager(transport);
+
+urpStub::urpStub(urpConnection* conn) {
+  manager = new urpManager(PR_TRUE, nsnull, conn);
+//here zavodim condWait i peredaem v urpManager
 }
 
 
 urpStub::~urpStub() {
-  if(transport) {
-     transport->Close();
-     delete transport;
-  }
   if(manager) 
      delete manager;
 }
@@ -72,25 +64,17 @@ void urpStub::Dispatch(bcICall *call) {
   interfaceInfo->GetMethodInfo(mid, (const nsXPTMethodInfo **)&info);
   PRUint32 paramCount = info->GetParamCount();
 printf("ThreadID is written %d\n",paramCount);
-  nsXPTCVariant* params;
-  bcXPCOMMarshalToolkit* mt = NULL;
-  if (paramCount > 0) {
-      params = (nsXPTCVariant*)malloc(sizeof(nsXPTCVariant) * paramCount);
-      mt = new bcXPCOMMarshalToolkit(mid, interfaceInfo, params, call->GetORB());
-      bcIUnMarshaler * um = call->GetUnMarshaler();
-      mt->UnMarshal(um);
-      if (params == nsnull) {
-          return;
-      }
-  }
-  
-  manager->SendUrpRequest(oid, iid, mid, interfaceInfo, call, params, paramCount,
+  PRMonitor* mon = PR_NewMonitor();
+  PR_EnterMonitor(mon);
+  manager->SetCall(call, mon);
+  manager->SendUrpRequest(oid, iid, mid, interfaceInfo, call, paramCount,
 		 info);
-  manager->ReadReply(params, paramCount, info, interfaceInfo, mid);
-  if (mt != NULL) { //nb to do what about nsresult ?
-      bcIMarshaler * m = call->GetMarshaler();
-      mt->Marshal(m);
-  } 
+  if(NS_FAILED(PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT))) {
+	printf("Can't wait on cond var\n");
+	exit(-1);
+  }
+  PR_ExitMonitor(mon);
+  PR_DestroyMonitor(mon);
 }
 
 

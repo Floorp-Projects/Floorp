@@ -25,6 +25,7 @@
 
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 static NS_DEFINE_CID(kORBCIID,BC_ORBCOMPONENT_CID);
+static NS_DEFINE_CID(compManag, NS_COMPONENTMANAGER_CID);
 
 struct localThreadArg {
     urpManager *mgr;
@@ -50,6 +51,8 @@ int main( int argc, char *argv[] ) {
 	nsresult rv = NS_InitXPCOM(NULL, NULL);
 	NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
+	(void) nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+
 	NS_WITH_SERVICE(bcIORBComponent, _orb, kORBCIID, &rv);
                     if (NS_FAILED(rv)) {
 printf("NS_WITH_SERVICE(bcXPC in Marshal failed\n");
@@ -64,17 +67,19 @@ printf("NS_WITH_SERVICE(bcXPC in Marshal failed\n");
 	bcIORB *orb;
         _orb->GetORB(&orb);
         bcIStub *stub = nsnull;
-        urpITest *object = new urpTestImpl();
-        object->AddRef();
+	NS_WITH_SERVICE(nsIComponentManager, mComp, compManag, &rv);
+	if (NS_FAILED(rv)) {
+           printf("compManager failed\n");
+           return -1;
+        }
         urpITest *proxy = nsnull;
-        xpcomStubsAndProxies->GetStub((nsISupports*)object, &stub);
+        xpcomStubsAndProxies->GetStub((nsISupports*)mComp, &stub);
         bcOID oid = orb->RegisterStub(stub);
 
 	urpTransport* trans = new urpAcceptor();
 	PRStatus status = trans->Open(connectString);
 	if(status == PR_SUCCESS) printf("succes %ld\n",oid);
 	else printf("failed\n");
-	object->AddRef();
 	urpManager* mngr = new urpManager(PR_FALSE, orb, nsnull);
 	rv = NS_OK;
 	while(NS_SUCCEEDED(rv)) {

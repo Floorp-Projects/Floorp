@@ -18,7 +18,8 @@
 # Rights Reserved.
 #
 # Contributor(s):
-# Igor Kushnirskiy <idk@eng.sun.com>
+# Serge Pikalev <sep@sparc.spb.su>
+# 
 #
 DEPTH           = ../../../../
 topsrcdir	= $(DEPTH)
@@ -33,18 +34,19 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = transport test
+DIRS = transport test loader
 
-CXXFLAGS        +=  -I$(CONNECT_SRC)/public -I$(topsrcdir)/java/xpcom/xpcom -Itransport
+CXXFLAGS        +=  -I$(CONNECT_SRC)/public -I$(topsrcdir)/java/xpcom/xpcom -Itransport 
 CPPSRCS =  \
+     urpMarshalToolkit.cpp \
      urpManager.cpp   \
      urpStub.cpp \
      $(NULL)
      
 EXPORTS = \
+       urpMarshalToolkit.h \
        urpStub.h \
        urpManager.h \
-       $(NULL)
 
 LIBS     = \
         -lxpcom \

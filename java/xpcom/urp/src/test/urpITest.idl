@@ -35,3 +35,15 @@ interface urpITest : nsISupports
     void test7(out urpITest o);
 };
 
+%{ C++
+#define URPTEST_CID                 \
+{   /*70ef013d-bca9-4226-bdd4-42a92cf6930d*/         \
+    0x70ef013d,                                      \
+    0xbca9,                                          \
+    0x4226,                                          \
+    {0xbd, 0xd4, 0x42, 0xa9, 0x2c, 0xf6, 0x93, 0x0d} \
+}
+
+#define URPTEST_PROGID "urpTest"
+
+%}
