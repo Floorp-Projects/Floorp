@@ -292,6 +292,10 @@ function panel_loader() {
       var element = this.contentDocument.getElementById(elementToFocus);
       if (element)
         element.focus();
+      else
+        dump(elementToFocus + ' element was not found to focus!\n');
+    } else {
+      this.contentWindow.focus();
     }
     this.removeAttribute('focusOnLoad');
   }
