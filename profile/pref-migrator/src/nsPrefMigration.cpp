@@ -30,6 +30,9 @@
 #include "plstr.h"
 #include "prprf.h"
 
+#include "nsCOMPtr.h"
+#include "nsIFileSpec.h"
+
 /* Network */
 
 #include "net.h"
@@ -542,8 +545,12 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
  
   rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
-  // magically, it will find newPrefsFile and use that. 
-  m_prefs->StartUp();
+
+  nsCOMPtr<nsIFileSpec> prefsFile; 
+  rv = NS_NewFileSpecWithSpec(newPrefsFile, getter_AddRefs(prefsFile));
+  if (NS_FAILED(rv)) return rv;
+
+  m_prefs->ReadUserPrefsFrom(prefsFile);
 
   return NS_OK;
 }
