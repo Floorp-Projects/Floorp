@@ -1958,9 +1958,16 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
 
         if (xDistance < closestXDistance || (xDistance == closestXDistance && rect.x <= aPoint.x))
         {
-          closestXDistance = xDistance;
-          closestYDistance = yDistance;
-          closestFrame     = kid;
+          // If we are only near (not directly over) then don't traverse a frame with independent
+          // selection (e.g. text and list controls) unless we're already inside such a frame,
+          // except in "browsewithcaret" mode, bug 268497.
+          if (!(kid->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) ||
+              (GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) ||
+              nsContentUtils::GetBoolPref("accessibility.browsewithcaret")) {
+            closestXDistance = xDistance;
+            closestYDistance = yDistance;
+            closestFrame     = kid;
+          }
         }
         // else if (xDistance > closestXDistance)
         //   break;//done
@@ -2892,26 +2899,22 @@ nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionControl
 {
   if (!aPresContext || !aSelCon)
     return NS_ERROR_INVALID_ARG;
-  if (GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) 
-  {
-    nsIFrame *tmp = this;
-    while (tmp)
-    {
-      nsITextControlFrame *tcf;
-      if (NS_SUCCEEDED(tmp->QueryInterface(NS_GET_IID(nsITextControlFrame),(void**)&tcf)))
-      {
-        return tcf->GetSelectionContr(aSelCon);
-      }
-      tmp = tmp->GetParent();
+
+  nsIFrame *frame = this;
+  while (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION)) {
+    nsITextControlFrame *tcf;
+    if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsITextControlFrame),(void**)&tcf))) {
+      return tcf->GetSelectionContr(aSelCon);
     }
+    frame = frame->GetParent();
   }
+
   nsIPresShell *shell = aPresContext->GetPresShell();
-  if (shell)
-  {
+  if (shell) {
     nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
     NS_IF_ADDREF(*aSelCon = selCon);
-    return NS_OK;
   }
+
   return NS_OK;
 }
 

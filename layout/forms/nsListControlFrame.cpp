@@ -164,6 +164,7 @@ NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  it->AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
 #if 0
   // set the state flags (if any are provided)
   it->AddStateBits(NS_BLOCK_SPACE_MGR);
