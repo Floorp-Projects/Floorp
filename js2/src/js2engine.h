@@ -289,12 +289,16 @@ public:
 
     void mark();
 
+    bool traceInstructions;     // emit trace of each instruction executed
 
     static js2val defaultConstructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
 
 };
 
+#ifdef DEBUG
+uint8 *printInstruction(uint8 *pc, uint8 *start, BytecodeContainer *bCon, JS2Engine *engine);
+#endif
 
 }
 }

@@ -77,7 +77,7 @@ namespace MetaData {
             rts();
             throw jsx;
         }
-        activationStackTop = f;     // when execution falls 'off the bottom' an rts hasn't occurred
+        activationStackTop = f - 1; // when execution falls 'off the bottom' an rts hasn't occurred
                                     // so the activation stack is off by 1.
         return result;
     }
@@ -92,6 +92,10 @@ namespace MetaData {
             try {
                 a = JS2VAL_VOID;
                 b = JS2VAL_VOID;
+#ifdef DEBUG
+                if (traceInstructions)
+                    printInstruction(pc, bCon->getCodeStart(), bCon, this);
+#endif
                 JS2Op op = (JS2Op)*pc++;
                 switch (op) {
         #include "js2op_arithmetic.cpp"
@@ -366,7 +370,8 @@ namespace MetaData {
                   Dollar_StringAtom(&world.identifiers["$"]),
                   INIT_STRINGATOM(prototype),
                   INIT_STRINGATOM(length),
-                  INIT_STRINGATOM(toString)
+                  INIT_STRINGATOM(toString),
+                  traceInstructions(false)
     {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
@@ -483,69 +488,78 @@ namespace MetaData {
 
     };
 
+    uint8 *printInstruction(uint8 *pc, uint8 *start, BytecodeContainer *bCon, JS2Engine *engine)
+    {
+        if (engine)
+            printFormat(stdOut, "%.4d %.4d ", pc - start, (int32)(engine->sp - engine->execStack));
+        else
+            printFormat(stdOut, "%.4d ", pc - start);
+        stdOut << opcodeData[*pc].name;
+        switch (opcodeData[*pc++].flags) {
+        case BRANCH_OFFSET:
+            {
+                int32 offset = BytecodeContainer::getOffset(pc);
+                stdOut << " " << offset << " --> " << (pc - start) + offset;
+                pc += sizeof(int32);
+            }
+            break;
+        case STR_PTR:
+            {
+                uint16 index = BytecodeContainer::getShort(pc);
+                stdOut << "\"" << bCon->mStringList[index] << "\"";
+                pc += sizeof(short);
+            }
+            break;
+        case NAME_INDEX:
+            {
+                Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+                stdOut << " " << *mn->name;
+                pc += sizeof(short);
+            }
+            break;
+        case FRAME_INDEX:
+            {
+                pc += sizeof(short);
+            }
+            break;
+        case BRANCH_PAIR:
+            {
+                int32 offset1 = BytecodeContainer::getOffset(pc);
+                pc += sizeof(int32);
+                int32 offset2 = BytecodeContainer::getOffset(pc);
+                pc += sizeof(int32);
+                if (offset1 == (int32)NotALabel)
+                    stdOut << "no finally; ";
+                else
+                    stdOut << "(finally) " << offset1 << " --> " << (pc - start) + offset1 << "; ";
+                if (offset2 == (int32)NotALabel)
+                    stdOut << "no catch;";
+                else
+                    stdOut << "(catch) " << offset2 << " --> " << (pc - start) + offset2;
+            }
+            break;
+        case FLOAT64:
+            {
+                stdOut << " " << BytecodeContainer::getFloat64(pc);
+                pc += sizeof(float64);
+            }
+            break;
+        }
+        stdOut << "\n";
+        return pc;
+    }
+
     void dumpBytecode(BytecodeContainer *bCon)
     {
         uint8 *start = bCon->getCodeStart();
         uint8 *end = bCon->getCodeEnd();
         uint8 *pc = start;
         while (pc < end) {
-            printFormat(stdOut, "%.4d ", pc - start);
-            stdOut << opcodeData[*pc].name;
-            switch (opcodeData[*pc++].flags) {
-            case BRANCH_OFFSET:
-                {
-                    int32 offset = BytecodeContainer::getOffset(pc);
-                    stdOut << " " << offset << " --> " << (pc - start) + offset;
-                    pc += sizeof(int32);
-                }
-                break;
-            case STR_PTR:
-                {
-                    uint16 index = BytecodeContainer::getShort(pc);
-                    stdOut << "\"" << bCon->mStringList[index] << "\"";
-                    pc += sizeof(short);
-                }
-                break;
-            case NAME_INDEX:
-                {
-                    Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
-                    stdOut << " " << *mn->name;
-                    pc += sizeof(short);
-                }
-                break;
-            case FRAME_INDEX:
-                {
-                    pc += sizeof(short);
-                }
-                break;
-            case BRANCH_PAIR:
-                {
-                    int32 offset1 = BytecodeContainer::getOffset(pc);
-                    pc += sizeof(int32);
-                    int32 offset2 = BytecodeContainer::getOffset(pc);
-                    pc += sizeof(int32);
-                    if (offset1 == (int32)NotALabel)
-                        stdOut << "no finally; ";
-                    else
-                        stdOut << "(finally) " << offset1 << " --> " << (pc - start) + offset1 << "; ";
-                    if (offset2 == (int32)NotALabel)
-                        stdOut << "no catch;";
-                    else
-                        stdOut << "(catch) " << offset2 << " --> " << (pc - start) + offset2;
-                }
-                break;
-            case FLOAT64:
-                {
-                    stdOut << " " << BytecodeContainer::getFloat64(pc);
-                    pc += sizeof(float64);
-                }
-                break;
-            }
-            stdOut << "\n";
+            pc = printInstruction(pc, start, bCon, NULL);
         }
     }
 
-#endif
+#endif          // DEBUG
 
     // Return the effect of an opcode on the execution stack.
     // Some ops (e.g. eCall) have a variable effect, those are handled separately

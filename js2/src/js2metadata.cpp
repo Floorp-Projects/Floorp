@@ -1195,7 +1195,8 @@ namespace MetaData {
                                         if (r) r->emitReadBytecode(bCon, p->pos);
                                         LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
                                         lVal->variableMultiname->addNamespace(publicNamespace);
-                                        lVal->emitWriteBytecode(bCon, p->pos);                                                        
+                                        lVal->emitWriteBytecode(bCon, p->pos);      
+                                        bCon->emitOp(ePop, p->pos);
                                     }
                                 }
                             }

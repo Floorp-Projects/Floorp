@@ -115,7 +115,7 @@ static int readEvalPrint(FILE *in)
         try {
             Pragma::Flags flags = Pragma::es4;
             Parser p(world, a, flags, buffer, ConsoleName);
-            if (metadata->showTrees) {
+            if (showTokens) {
                 Lexer &l = p.lexer;
                 while (true) {
                     const Token &t = l.get(true);
@@ -128,7 +128,7 @@ static int readEvalPrint(FILE *in)
             } else {
                 StmtNode *parsedStatements = p.parseProgram();
                 ASSERT(p.lexer.peek(true).hasKind(Token::end));
-                if (true)
+                if (metadata->showTrees)
                 {
                     PrettyPrinter f(stdOut, 30);
                     {
@@ -165,10 +165,11 @@ static int readEvalPrint(FILE *in)
     return result;
 }
 
-static bool processArgs(int argc, char **argv, int *result, bool *doTrees)
+static bool processArgs(int argc, char **argv, int *result, bool *doTrees, bool *doTrace)
 {
     bool doInteractive = true;
     *doTrees = false;
+    *doTrace = false;
     for (int i = 0; i < argc; i++)  {    
         if (argv[i][0] == '-') {
             switch (argv[i][1]) {
@@ -178,6 +179,9 @@ static bool processArgs(int argc, char **argv, int *result, bool *doTrees)
                 break;
             case 't':
                 *doTrees = true;
+                break;
+            case 'x':
+                *doTrace = true;
                 break;
             case 'i':
                 doInteractive = true;
@@ -217,6 +221,18 @@ js2val print(JS2Metadata * /* meta */, const js2val /* thisValue */, js2val argv
 }
 
 #ifdef DEBUG
+js2val trees(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
+{
+    meta->showTrees = !meta->showTrees;
+    return JS2VAL_UNDEFINED;
+}
+
+js2val trace(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
+{
+    meta->engine->traceInstructions = !meta->engine->traceInstructions;
+    return JS2VAL_UNDEFINED;
+}
+
 js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
 {
     if (argc) {
@@ -288,13 +304,15 @@ int main(int argc, char **argv)
     metadata->addGlobalObjectFunction("load", load);
 #ifdef DEBUG
     metadata->addGlobalObjectFunction("dump", dump);
+    metadata->addGlobalObjectFunction("trees", dump);
+    metadata->addGlobalObjectFunction("trace", dump);
 #endif
 
     try {
         bool doInteractive = true;
         int result = 0;
         if (argc > 1) {
-            doInteractive = processArgs(argc - 1, argv + 1, &result, &metadata->showTrees);
+            doInteractive = processArgs(argc - 1, argv + 1, &result, &metadata->showTrees, &metadata->engine->traceInstructions);
         }
         if (doInteractive)
             result = readEvalPrint(stdin);
