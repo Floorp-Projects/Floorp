@@ -7718,7 +7718,10 @@ ResDef(MK_ACCESS_COOKIES_PERMISSION, (XP_MSG_BASE + 1420),
 "Hosts that may (+) or may not (-)<BR> set cookies")
 
 ResDef(MK_SIGNON_PASSWORDS_GENERATE, (XP_MSG_BASE + 1425), \
-"generate")
+"********")
+/* Note: above string used to say "generate" but at Rick Elliott's
+ * suggestion it is being changed to be all asterisks.
+ */
 /*
  * This must be eight-characters long in all translations.  Alternate
  * words that it could translate into would be any word that conveys
