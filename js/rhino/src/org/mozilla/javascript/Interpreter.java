@@ -107,8 +107,12 @@ public class Interpreter
         Icode_SHORTNUMBER               = BASE_ICODE + 28,
         Icode_INTNUMBER                 = BASE_ICODE + 29,
 
+    // To create and populate array to hold values for [] and {} literals
+        Icode_LITERAL_NEW               = BASE_ICODE + 30,
+        Icode_LITERAL_SET               = BASE_ICODE + 31,
+
     // Last icode
-        END_ICODE                       = BASE_ICODE + 30;
+        MAX_ICODE                       = BASE_ICODE + 31;
 
     public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
@@ -324,7 +328,7 @@ public class Interpreter
         return iCodeTop;
     }
 
-    private void badTree(Node node)
+    private RuntimeException badTree(Node node)
     {
         throw new RuntimeException(node.toString());
     }
@@ -706,7 +710,7 @@ public class Interpreter
                         } else if (special == Node.SPECIAL_PROP_PARENT) {
                             iCodeTop = addIcode(Icode_GETSCOPEPARENT, iCodeTop);
                         } else {
-                            badTree(node);
+                            throw badTree(node);
                         }
                         // Compensate for the following USE_STACK
                         itsStackDepth--;
@@ -717,7 +721,7 @@ public class Interpreter
                     } else if (special == Node.SPECIAL_PROP_PARENT) {
                         iCodeTop = addIcode(Icode_SETPARENT, iCodeTop);
                     } else {
-                        badTree(node);
+                        throw badTree(node);
                     }
                     itsStackDepth--;
                 } else {
@@ -1091,46 +1095,14 @@ public class Interpreter
                 break;
             }
 
-            case Token.ARRAYLIT: {
+            case Token.ARRAYLIT:
+            case Token.OBJECTLIT:
                 stackDelta = 1;
-                int count = 0;
-                while (child != null) {
-                    iCodeTop = generateICode(child, iCodeTop);
-                    child = child.getNext();
-                    ++count;
-                }
-                int[] skipIndexes = (int[])node.getProp(Node.SKIP_INDEXES_PROP);
-                int skipOffset = -1;
-                if (skipIndexes != null) {
-                    skipOffset = itsLiteralIds.size();
-                    itsLiteralIds.add(skipIndexes);
-                }
-                iCodeTop = addToken(Token.ARRAYLIT, iCodeTop);
-                iCodeTop = addInt(count, iCodeTop);
-                iCodeTop = addInt(skipOffset, iCodeTop);
-                stackChange(-count + 1);
+                iCodeTop = visitLiteral(iCodeTop, node, child);
                 break;
-            }
-
-            case Token.OBJECTLIT: {
-                stackDelta = 1;
-                Object[] propertyIds
-                    = (Object[])node.getProp(Node.OBJECT_IDS_PROP);
-                while (child != null) {
-                    iCodeTop = generateICode(child, iCodeTop);
-                    child = child.getNext();
-                }
-                int idsOffset = itsLiteralIds.size();
-                itsLiteralIds.add(propertyIds);
-                iCodeTop = addToken(Token.OBJECTLIT, iCodeTop);
-                iCodeTop = addInt(idsOffset, iCodeTop);
-                stackChange(-propertyIds.length + 1);
-                break;
-            }
 
             default :
-                badTree(node);
-                break;
+                throw badTree(node);
         }
         if (stackDelta != itsStackDepth - savedStackDepth) {
             //System.out.println("Bad stack delta: type="+Token.name(type)+" expected="+stackDelta+" real="+ (itsStackDepth - savedStackDepth));
@@ -1202,7 +1174,7 @@ public class Interpreter
             } else if (special == Node.SPECIAL_PROP_PARENT) {
                 iCodeTop = addIcode(Icode_GETSCOPEPARENT, iCodeTop);
             } else {
-                badTree(node);
+                throw badTree(node);
             }
         } else {
             child = child.getNext();
@@ -1224,6 +1196,43 @@ public class Interpreter
         iCodeTop = generateICode(child, iCodeTop);
         iCodeTop = addToken(Token.GETELEM, iCodeTop);
         stackChange(-1);
+        return iCodeTop;
+    }
+
+    private int visitLiteral(int iCodeTop, Node node, Node child)
+    {
+        int type = node.getType();
+        int count;
+        Object ids;
+        if (type == Token.ARRAYLIT) {
+            count = 0;
+            for (Node n = child; n != null; n = n.getNext()) {
+                ++count;
+            }
+            ids = (int[])node.getProp(Node.SKIP_INDEXES_PROP);
+        } else if (type == Token.OBJECTLIT) {
+            Object[] propertyIds = (Object[])node.getProp(Node.OBJECT_IDS_PROP);
+            count = propertyIds.length;
+            ids = propertyIds;
+        } else {
+            throw badTree(node);
+        }
+        iCodeTop = addIcode(Icode_LITERAL_NEW, iCodeTop);
+        iCodeTop = addInt(count, iCodeTop);
+        stackChange(1);
+        while (child != null) {
+            iCodeTop = generateICode(child, iCodeTop);
+            iCodeTop = addIcode(Icode_LITERAL_SET, iCodeTop);
+            stackChange(-1);
+            child = child.getNext();
+        }
+        int idsOffset = -1;
+        if (ids != null) {
+            idsOffset = itsLiteralIds.size();
+            itsLiteralIds.add(ids);
+        }
+        iCodeTop = addToken(type, iCodeTop);
+        iCodeTop = addInt(idsOffset, iCodeTop);
         return iCodeTop;
     }
 
@@ -1377,7 +1386,7 @@ public class Interpreter
 
     private int addIcode(int icode, int iCodeTop)
     {
-        if (!(BASE_ICODE < icode && icode < END_ICODE)) Kit.codeBug();
+        if (!(BASE_ICODE < icode && icode <= MAX_ICODE)) Kit.codeBug();
         return addByte(icode, iCodeTop);
     }
 
@@ -1577,6 +1586,8 @@ public class Interpreter
                     case Icode_LINE:             return "LINE";
                     case Icode_SHORTNUMBER:      return "SHORTNUMBER";
                     case Icode_INTNUMBER:        return "INTNUMBER";
+                    case Icode_LITERAL_NEW:      return "LITERAL_NEW";
+                    case Icode_LITERAL_SET:      return "LITERAL_SET";
                 }
             }
             return "<UNKNOWN ICODE: "+icode+">";
@@ -1731,6 +1742,12 @@ public class Interpreter
                         pc += 2;
                         break;
                     }
+                    case Icode_LITERAL_NEW: {
+                        int numberOfValues = getInt(iCode, pc);
+                        out.println(tname + " : " + numberOfValues);
+                        pc += 4;
+                        break;
+                    }
                 }
                 if (old_pc + icodeLength != pc) Kit.codeBug();
             }
@@ -1823,6 +1840,7 @@ public class Interpreter
             case Token.UNDEFINED :
             case Icode_CATCH:
             case Icode_RETUNDEF:
+            case Icode_LITERAL_SET:
                 return 1;
 
             case Token.THROW :
@@ -1906,6 +1924,9 @@ public class Interpreter
                 return 1 + 4 + 4;
             case Token.OBJECTLIT:
                 // offset of property ids array
+                return 1 + 4;
+            case Icode_LITERAL_NEW:
+                // number of literal values
                 return 1 + 4;
             default:
                 Kit.codeBug(); // Bad icodeToken
@@ -3059,14 +3080,42 @@ public class Interpreter
         pc += 2;
         break;
     }
-    case Token.ARRAYLIT :
-        stackTop = do_arraylit(cx, scope, idata, pc, stack, sDbl, stackTop);
-        pc += 8;
-        break;
-    case Token.OBJECTLIT :
-        stackTop = do_objectlit(cx, scope, idata, pc, stack, sDbl, stackTop);
+    case Icode_LITERAL_NEW : {
+        int i = getInt(iCode, pc + 1);
+        ++stackTop;
+        stack[stackTop] = new Object[i];
+        sDbl[stackTop] = 0;
         pc += 4;
         break;
+    }
+    case Icode_LITERAL_SET : {
+        Object value = stack[stackTop];
+        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        --stackTop;
+        int i = (int)sDbl[stackTop];
+        ((Object[])stack[stackTop])[i] = value;
+        sDbl[stackTop] = i + 1;
+        break;
+    }
+    case Token.ARRAYLIT : {
+        int skipOffset = getInt(iCode, pc + 1);
+        int[] skipIndexces = null;
+        if (skipOffset >= 0) {
+            skipIndexces = (int[])idata.literalIds[skipOffset];
+        }
+        Object[] values = (Object[])stack[stackTop];
+        stack[stackTop] = ScriptRuntime.newArrayLiteral(values, skipIndexces, cx, scope);
+        pc += 4;
+        break;
+    }
+    case Token.OBJECTLIT : {
+        int idsOffset = getInt(iCode, pc + 1);
+        Object[] propertyIds = (Object[])idata.literalIds[idsOffset];
+        Object[] propertyValues = (Object[])stack[stackTop];
+        stack[stackTop] = ScriptRuntime.newObjectLiteral(propertyIds, propertyValues, cx, scope);
+        pc += 4;
+        break;
+    }
     case Icode_LINE : {
         cx.interpreterLineIndex = pc + 1;
         if (debuggerFrame != null) {
@@ -3384,57 +3433,6 @@ public class Interpreter
         stack[++stackTop] = prop;
         stack[++stackTop] = thisArg;
 
-        return stackTop;
-    }
-
-    private static int do_arraylit(Context cx, Scriptable scope,
-                                   InterpreterData idata, int pc,
-                                   Object[] stack, double[] sDbl, int stackTop)
-        throws JavaScriptException
-    {
-        int count = getInt(idata.itsICode, pc + 1);
-        int skipOffset = getInt(idata.itsICode, pc + 5);
-        int[] skipIndexces = null;
-        if (skipOffset >= 0) {
-            skipIndexces = (int[])idata.literalIds[skipOffset];
-        }
-        Object[] array = new Object[count];
-        stackTop += 1  - count;
-        for (int i = 0; i != count; ++i) {
-            Object obj = stack[stackTop + i];
-            if (obj == DBL_MRK) {
-                obj = doubleWrap(sDbl[stackTop + i]);
-            } else {
-                // to help GC
-                stack[stackTop + i] = null;
-            }
-            array[i] = obj;
-        }
-        stack[stackTop] = ScriptRuntime.newArrayLiteral(array, skipIndexces, cx, scope);
-        return stackTop;
-    }
-
-    private static int do_objectlit(Context cx, Scriptable scope,
-                                    InterpreterData idata, int pc,
-                                    Object[] stack, double[] sDbl, int stackTop)
-        throws JavaScriptException
-    {
-        int idsOffset = getInt(idata.itsICode, pc + 1);
-        Object[] propertyIds = (Object[])idata.literalIds[idsOffset];
-        int count = propertyIds.length;
-        Object[] propertyValues = new Object[count];
-        stackTop += 1  - count;
-        for (int i = 0; i != count; ++i) {
-            Object obj = stack[stackTop + i];
-            if (obj == DBL_MRK) {
-                obj = doubleWrap(sDbl[stackTop + i]);
-            } else {
-                // to help GC
-                stack[stackTop + i] = null;
-            }
-            propertyValues[i] = obj;
-        }
-        stack[stackTop] = ScriptRuntime.newObjectLiteral(propertyIds, propertyValues, cx, scope);
         return stackTop;
     }
 
