@@ -58,20 +58,6 @@
 
 /* Local helper functions */
 
-static char* GetFileName(const char* pathname)
-{
-	const char* filename = nsnull;
-
-	// this is most likely a path, so skip to the filename
-	filename = PL_strrchr(pathname, '/');
-	if(filename)
-		++filename;
-	else
-		filename = pathname;
-
-	return PL_strdup(filename);
-}
-
 static char* GetKeyValue(char* verbuf, char* key)
 {
 	char        *buf = NULL;
