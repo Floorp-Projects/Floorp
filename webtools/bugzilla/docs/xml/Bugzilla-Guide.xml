@@ -39,7 +39,7 @@
 
 <!ENTITY bz "http://www.bugzilla.org/">
 <!ENTITY bzg-auth "The Bugzilla Team">
-<!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla</ulink>">
+<!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla Documentation</ulink>">
 <!ENTITY mysql "http://www.mysql.com/">
 <!ENTITY newest-perl-ver "5.8">
 
@@ -107,6 +107,8 @@ try to avoid clutter and feel free to waste space in the code to make it more re
       </author>
     </authorgroup>
 
+    <edition>&bz-ver; <![%bz-devel;[Development ]]>Release</edition>
+
     <pubdate>&bz-date;</pubdate>
 
     <abstract>
@@ -121,8 +123,7 @@ try to avoid clutter and feel free to waste space in the code to make it more re
       <para>  
 	      This documentation is maintained in DocBook 4.1.2 XML format.
         Changes are best submitted as plain text or SGML diffs, attached
-        to a bug filed in
-        <ulink url="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation">mozilla.org's Bugzilla</ulink>.
+        to a bug filed in the &bzg-bugs; compontent.
       </para>
       <![%bz-devel;[
         <para>This is a development version of this guide.  Information in it
@@ -171,6 +172,9 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 
 <!-- Appendix: Major Bugzilla Variants -->
 &variants;
+
+<!-- Appendix: GNU Free Documentation License -->
+&gfdl;
 
 <!-- Glossary -->
 &glossary;
