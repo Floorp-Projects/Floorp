@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.27 $ $Date: 2002/01/24 00:26:27 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.28 $ $Date: 2002/01/24 00:58:02 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -586,7 +586,8 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
 	}
     } else if (instance) {
 	/* slot */
-	cc->slot = instance->token->pk11slot;
+	cc->slot = PK11_ReferenceSlot(instance->token->pk11slot);
+	cc->ownSlot = PR_TRUE;
 	/* pkcs11ID */
 	cc->pkcs11ID = instance->handle;
 	/* trust */
@@ -595,6 +596,9 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
     /* database handle is now the trust domain */
     cc->dbhandle = c->object.trustDomain;
     /* subjectList ? */
+    /* istemp and isperm are supported in NSS 3.4 */
+    cc->istemp = PR_FALSE; /* CERT_NewTemp will override this */
+    cc->isperm = PR_TRUE;  /* by default */
     /* pointer back */
     cc->nssCertificate = c;
 }
