@@ -51,7 +51,7 @@ public:
   virtual ~nsTridentPreferences();
 
   // perform the migration
-  virtual nsresult MigrateTridentPreferences() = 0;
+  virtual nsresult MigrateTridentPreferences(PRUint32 aItems) = 0;
 };
 
 // generic constructor access; a kind of factory

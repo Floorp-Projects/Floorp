@@ -54,18 +54,20 @@ public:
   nsTridentPreferencesWin();
   virtual ~nsTridentPreferencesWin();
 
-  virtual nsresult MigrateTridentPreferences();
+  virtual nsresult MigrateTridentPreferences(PRUint32 aItems);
 
 private:
 
-  PRBool CopyStyleSheet();
-  PRBool CopyCookies();
-  PRBool CopyCookiesFromBuffer(char *aBuffer, PRUint32 aBufferLength,
-                               nsICookieManager2 *aCookieManager);
-  void   DelimitField(char **aBuffer, const char *aBufferEnd, char **aField);
-  time_t FileTimeToTimeT(const char *aLowDateIntString,
-                         const char *aHighDateIntString);
-  void   GetUserStyleSheetFile(nsIFile **aUserFile);
+  nsresult CopyPreferences();
+  nsresult CopyStyleSheet();
+  nsresult CopyCookies();
+
+  nsresult CopyCookiesFromBuffer(char *aBuffer, PRUint32 aBufferLength,
+                                 nsICookieManager2 *aCookieManager);
+  void     DelimitField(char **aBuffer, const char *aBufferEnd, char **aField);
+  time_t   FileTimeToTimeT(const char *aLowDateIntString,
+                           const char *aHighDateIntString);
+  void     GetUserStyleSheetFile(nsIFile **aUserFile);
 };
 
 #endif

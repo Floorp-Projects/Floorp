@@ -37,13 +37,20 @@
 
 #include "nsISupports.idl"
 
-// temporarily scriptble for testing purposes. this shouldn't be scriptable.
 [scriptable, uuid(5E8711D6-9CAA-44a0-BFAA-1DA45232FAFB)]
 interface nsITridentProfileMigrator : nsISupports {
+
+  /**
+   * profile items to migrate. use with migrateTridentProfile().
+   */
+  const unsigned long PREFERENCES = 0x0001;
+  const unsigned long COOKIES     = 0x0002;
+
   /**
    * Copy Trident user profile information to the current active profile.
+   * @param aItems list of data items to migrate. see above for values.
    */
-  void migrateTridentProfile();
+  void migrateTridentProfile(in unsigned long aItems);
 };  
 
 %{C++

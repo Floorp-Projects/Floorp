@@ -58,6 +58,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsISimpleEnumerator.h"
+#include "nsITridentProfileMigrator.h"
 
 const int sInitialCookieBufferSize = 1024; // but it can grow
 const int sUsernameLengthLimit     = 80;
@@ -370,7 +371,20 @@ nsTridentPreferencesWin::~nsTridentPreferencesWin() {
 
 // migration entry point
 nsresult
-nsTridentPreferencesWin::MigrateTridentPreferences() {
+nsTridentPreferencesWin::MigrateTridentPreferences(PRUint32 aItems) {
+
+  nsresult rv = NS_OK;
+
+  if (aItems & nsITridentProfileMigrator::PREFERENCES)
+    rv = CopyPreferences();
+  if (NS_SUCCEEDED(rv) && (aItems & nsITridentProfileMigrator::COOKIES))
+    rv = CopyCookies();
+
+  return rv;
+}
+
+nsresult
+nsTridentPreferencesWin::CopyPreferences() {
 
   HKEY            regKey;
   PRBool          regKeyOpen = PR_FALSE;
@@ -419,21 +433,18 @@ nsTridentPreferencesWin::MigrateTridentPreferences() {
   if (regKeyOpen)
     ::RegCloseKey(regKey);
 
-  CopyStyleSheet();
-  CopyCookies();
-
-  return NS_OK;
+  return CopyStyleSheet();
 }
 
 /* Fetch and translate the current user's cookies.
    Return true if successful. */
-PRBool
+nsresult
 nsTridentPreferencesWin::CopyCookies() {
 
   // IE cookies are stored in files named <username>@domain[n].txt
   // (in <username>'s Cookies folder. isn't the naming redundant?)
 
-  PRBool success = PR_FALSE;
+  PRBool rv = NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIFile> cookiesDir;
   nsCOMPtr<nsISimpleEnumerator> cookieFiles;
@@ -441,14 +452,14 @@ nsTridentPreferencesWin::CopyCookies() {
   nsCOMPtr<nsICookieManager2> cookieManager(do_GetService(NS_COOKIEMANAGER_CONTRACTID));
   nsCOMPtr<nsICookieService> cookieService(do_GetService(NS_COOKIESERVICE_CONTRACTID));
   if (!cookieManager || !cookieService)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   // find the cookies directory
   NS_GetSpecialDirectory(NS_WIN_COOKIES_DIR, getter_AddRefs(cookiesDir));
   if (cookiesDir)
     cookiesDir->GetDirectoryEntries(getter_AddRefs(cookieFiles));
   if (!cookieFiles)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   // fetch the current user's name from the environment
   char username[sUsernameLengthLimit+2];
@@ -460,7 +471,7 @@ nsTridentPreferencesWin::CopyCookies() {
   // allocate a buffer into which to read each cookie file
   char *fileContents = (char *) PR_Malloc(sInitialCookieBufferSize);
   if (!fileContents)
-    return PR_FALSE;
+    return NS_ERROR_OUT_OF_MEMORY;
   PRUint32 fileContentsSize = sInitialCookieBufferSize;
 
   do { // for each file in the cookies directory
@@ -507,26 +518,29 @@ nsTridentPreferencesWin::CopyCookies() {
       readSize = PR_Read(fd, fileContents, fileSize);
       PR_Close(fd);
 
-      if (fileSize == readSize) // translate this file's cookies
-        success |= CopyCookiesFromBuffer(fileContents, readSize, cookieManager);
+      if (fileSize == readSize) { // translate this file's cookies
+        nsresult onerv;
+        onerv = CopyCookiesFromBuffer(fileContents, readSize, cookieManager);
+        if (NS_SUCCEEDED(onerv))
+          rv = NS_OK;
+      }
     }
   } while(1);
 
   if (fileContents)
     PR_Free(fileContents);
-  return success;
+  return rv;
 }
 
 /* Fetch cookies from a single IE cookie file.
    Return true if successful. */
-PRBool
+nsresult
 nsTridentPreferencesWin::CopyCookiesFromBuffer(
                            char *aBuffer,
                            PRUint32 aBufferLength,
                            nsICookieManager2 *aCookieManager) {
 
-  nsresult  nsres;
-  PRBool    success = PR_FALSE;
+  nsresult  rv = NS_ERROR_FAILURE;
 
   const char *bufferEnd = aBuffer + aBufferLength;
   // cookie fields:
@@ -578,16 +592,18 @@ nsTridentPreferencesWin::CopyCookiesFromBuffer(
       *path = '/';
     }
 
-    nsres = aCookieManager->Add(nsDependentCString(host),
-                              nsDependentCString(path),
-                              nsDependentCString(name),
-                              nsDependentCString(value),
-                              flagsValue & 0x1, expirationDate);
-    success |= NS_SUCCEEDED(nsres);
+    nsresult onerv;
+    onerv = aCookieManager->Add(nsDependentCString(host),
+                                nsDependentCString(path),
+                                nsDependentCString(name),
+                                nsDependentCString(value),
+                                flagsValue & 0x1, expirationDate);
+    if (NS_SUCCEEDED(onerv))
+      rv = NS_OK;
 
   } while(aBuffer < bufferEnd);
 
-  return success;
+  return rv;
 }
 
 /* Delimit the next field in the IE cookie buffer.
@@ -643,11 +659,10 @@ nsTridentPreferencesWin::FileTimeToTimeT(const char *aLowDateIntString,
 
 /* Find the accessibility stylesheet if it exists and replace Mozilla's
    with it. Return true if we found and copied a stylesheet. */
-PRBool
+nsresult
 nsTridentPreferencesWin::CopyStyleSheet() {
 
-  PRBool   success = PR_FALSE;
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
   HKEY     regKey;
   DWORD    regType,
            regLength,
@@ -658,7 +673,7 @@ nsTridentPreferencesWin::CopyStyleSheet() {
   if (::RegOpenKeyEx(HKEY_CURRENT_USER,
                  "Software\\Microsoft\\Internet Explorer\\Styles", 0,
                  KEY_READ, &regKey) != ERROR_SUCCESS)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
   
   regLength = sizeof(DWORD);
   if (::RegQueryValueEx(regKey, "Use My Stylesheet", 0, &regType,
@@ -688,13 +703,12 @@ nsTridentPreferencesWin::CopyStyleSheet() {
           if (chromeDir)
             rv = tridentFile->CopyToNative(chromeDir,
                               nsDependentCString("userContent.css"));
-            success = NS_SUCCEEDED(rv);
         }
       }
     }
   }
   ::RegCloseKey(regKey);
-  return success;
+  return rv;
 }
 
 void
