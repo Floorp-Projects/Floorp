@@ -339,11 +339,7 @@ nsXBLService::FlushBindings(nsIContent* aContent)
     // Clear out the script references.
     nsCOMPtr<nsIDocument> document;
     aContent->GetDocument(*getter_AddRefs(document));
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    document->GetScriptGlobalObject(getter_AddRefs(global));
-    nsCOMPtr<nsIScriptContext> context;
-    global->GetContext(getter_AddRefs(context));
-    binding->RemoveScriptReferences(context);
+    binding->ChangeDocument(document, nsnull);
   }
   
   bindable->SetBinding(nsnull); // Flush old bindings

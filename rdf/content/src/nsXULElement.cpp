@@ -2211,12 +2211,13 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
                     global->GetContext(getter_AddRefs(context));
                     if (context) {
                         context->RemoveReference((void*) &mScriptObject, mScriptObject);
-                        if (Binding())
-                          Binding()->RemoveScriptReferences(context);
                     }
                 }
             }
         }
+
+        if (Binding())
+            Binding()->ChangeDocument(mDocument, aDocument);
 
         mDocument = aDocument; // not refcounted
 
@@ -2234,6 +2235,12 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
                 }
             }
 
+            // When we SetDocument(), we're either adding an element
+            // into the document that wasn't there before, or we're
+            // moving the element from one document to
+            // another. Regardless, we need to (re-)initialize several
+            // attributes that are dependant on the document. Do that
+            // now.
             PRInt32 count;
             GetAttributeCount(count);
 

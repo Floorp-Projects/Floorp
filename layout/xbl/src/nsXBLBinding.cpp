@@ -153,7 +153,7 @@ class nsXBLBinding: public nsIXBLBinding, public nsIScriptObjectOwner
 
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
 
-  NS_IMETHOD RemoveScriptReferences(nsIScriptContext* aContext);
+  NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
 
   NS_IMETHOD GetBindingURI(nsString& aResult);
 
@@ -354,29 +354,8 @@ nsXBLBinding::nsXBLBinding(void)
 }
 
 
-// Error code that ensures the binding clears
-// out its script object, even in cases where it should
-// have done so earlier.
-static nsresult RemoveRoot(void* aSlot)
-{
-  const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
-  nsresult rv;
-  NS_WITH_SERVICE(nsIJSRuntimeService, runtimeService, kJSRuntimeServiceProgID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  JSRuntime* rt;
-  rv = runtimeService->GetRuntime(&rt);
-  if (NS_FAILED(rv)) return rv;
-  return (JS_RemoveRootRT(rt, aSlot) ? NS_OK : NS_ERROR_FAILURE);
-}
- 
 nsXBLBinding::~nsXBLBinding(void)
 {
-  NS_ASSERTION(!mScriptObject, "XBL binding hasn't properly cleared its script object out.");
-  if (mScriptObject) {
-    RemoveRoot(&mScriptObject);
-    mScriptObject = nsnull;
-  }
- 
   delete mAttributeTable;
 
   gRefCnt--;
@@ -1036,14 +1015,40 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
 }
 
 NS_IMETHODIMP
-nsXBLBinding::RemoveScriptReferences(nsIScriptContext* aContext)
+nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument)
 {
-  if (mNextBinding)
-    mNextBinding->RemoveScriptReferences(aContext);
+  if (aOldDocument != aNewDocument) {
+    if (mNextBinding)
+      mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
 
-  if (mScriptObject) {
-    aContext->RemoveReference((void*) &mScriptObject, mScriptObject);
-    mScriptObject = nsnull;
+    if (mScriptObject) {
+      if (aOldDocument) {
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        aOldDocument->GetScriptGlobalObject(getter_AddRefs(global));
+        if (global) {
+          nsCOMPtr<nsIScriptContext> context;
+          global->GetContext(getter_AddRefs(context));
+          if (context)
+            context->RemoveReference((void*) &mScriptObject, mScriptObject);
+        }
+      }
+
+      if (aNewDocument) {
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        aNewDocument->GetScriptGlobalObject(getter_AddRefs(global));
+        if (global) {
+          nsCOMPtr<nsIScriptContext> context;
+          global->GetContext(getter_AddRefs(context));
+          if (context)
+            context->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXBLBinding::mScriptObject");
+        }
+      }
+    }
+
+    nsCOMPtr<nsIContent> anonymous;
+    GetAnonymousContent(getter_AddRefs(anonymous));
+    if (anonymous)
+      anonymous->SetDocument(aNewDocument, PR_TRUE);
   }
 
   return NS_OK;
