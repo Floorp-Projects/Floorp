@@ -210,7 +210,7 @@ do
 	else
 	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} & 
 	fi
-	sleep 10
+	sleep 20
 
 	tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
 	if [ $? -ne 0 ]; then
@@ -248,7 +248,7 @@ do
 	else
 	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
 	fi
-	sleep 10
+	sleep 20
 	pwd
 	echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam}"
 	tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} < ${REQUEST_FILE}
@@ -302,7 +302,7 @@ do
 	else
 	    selfserv -p ${PORT} -d ${SERVERDIR}  -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
 	fi
-	sleep 10
+	sleep 20
 
 	strsclnt -p ${PORT} ${HOST} -d . -w nss $cparam 
 	if [ $? -ne $value ]; then
