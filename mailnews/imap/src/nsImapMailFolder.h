@@ -54,6 +54,8 @@ public:
     // nsIMsgImapMailFolder methods
     NS_IMETHOD GetPathName(nsNativeFileSpec& aPathName);
 
+	NS_IMETHOD GetPath(nsFileSpec& aPathName);
+
     // nsICollection methods:
     NS_IMETHOD Enumerate(nsIEnumerator* *result);
     
@@ -257,6 +259,8 @@ protected:
 	//Creates a subfolder with the name 'name' and adds it to the list of
     //children. Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
+
+	nsresult GetDatabase();
 
     nsNativeFileSpec m_pathName;
 	nsIMsgDatabase* m_mailDatabase;

@@ -450,7 +450,7 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
 
-	// m_flags = 0;
+//	m_flags = 0;
 
 	// query the URL for a nsIImapUrl
 	m_runningUrl = nsnull; // initialize to NULL

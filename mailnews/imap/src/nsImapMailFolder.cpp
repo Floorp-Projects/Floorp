@@ -95,7 +95,7 @@ nsImapMailFolder::nsImapMailFolder() :
         nsServiceManager::ReleaseService(kEventQueueServiceCID,
                                          pEventQService);
 
-    
+	m_msgParser = nsnull;
 //  NS_INIT_REFCNT(); done by superclass
 }
 
@@ -340,11 +340,75 @@ NS_IMETHODIMP nsImapMailFolder::ReplaceElement(nsISupports* element,
     return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::GetPath(nsFileSpec& aPathName)
+{
+//  nsFileSpec nopath("/tmp/Inbox");
+//  if (mPath == nopath) {
+    //nsresult rv = nsURI2Path(kMailboxRootURI, mURI, mPath);
+//    if (NS_FAILED(rv)) return rv;
+//  }
+  aPathName = "/tmp/Inbox";
+  return NS_OK;
+}
+
+
+//Makes sure the database is open and exists.  If the database is valid then
+//returns NS_OK.  Otherwise returns a failure error value.
+nsresult nsImapMailFolder::GetDatabase()
+{
+	if (m_mailDatabase == nsnull)
+	{
+		nsNativeFileSpec path;
+		nsresult rv = GetPath(path);
+		if (NS_FAILED(rv)) return rv;
+
+		nsresult folderOpen = NS_OK;
+		nsIMsgDatabase * mailDBFactory = nsnull;
+
+		rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+		if (NS_SUCCEEDED(rv) && mailDBFactory)
+		{
+			folderOpen = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &m_mailDatabase, PR_TRUE);
+	
+			NS_RELEASE(mailDBFactory);
+		}
+
+		if(m_mailDatabase)
+		{
+
+			m_mailDatabase->AddListener(this);
+
+			// if we have to regenerate the folder, run the parser url.
+			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+			{
+			}
+			else
+			{
+				//Otherwise we have a valid database so lets extract necessary info.
+				UpdateSummaryTotals();
+			}
+		}
+	}
+	return NS_OK;
+}
+
+
 NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 {
     nsresult rv;
 	if (result)
 		*result = nsnull;
+
+	rv = GetDatabase();
+
+	if(NS_SUCCEEDED(rv))
+		rv = m_mailDatabase->EnumerateMessages(result);
+	else
+		return rv;
+
+
+	if (!NS_SUCCEEDED(rv))
+		return rv;
 
     nsIImapService* imapService = nsnull;
 
@@ -364,7 +428,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
     if (imapService)
             nsServiceManager::ReleaseService(kCImapService, imapService);
 
-	return NS_ERROR_NULL_POINTER;
+	return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetThreads(nsIEnumerator** threadEnumerator)
