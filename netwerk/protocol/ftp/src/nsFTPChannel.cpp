@@ -334,7 +334,6 @@ nsFTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
 // FTP does not provide a file typing mechanism. We fallback to file
 // extension mapping.
 
-#define FTP_DUMMY_TYPE  "text/html"
 NS_IMETHODIMP
 nsFTPChannel::GetContentType(char* *aContentType) {
     nsresult rv = NS_OK;
@@ -368,7 +367,7 @@ nsFTPChannel::GetContentType(char* *aContentType) {
 
     // if all else fails treat it as text/html?
 	if (!*aContentType) 
-		*aContentType = nsCRT::strdup(FTP_DUMMY_TYPE);
+		*aContentType = nsCRT::strdup("application/x-unknown-content-type");
     if (!*aContentType) {
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
