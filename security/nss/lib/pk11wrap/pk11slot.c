@@ -69,6 +69,8 @@ PK11DefaultArrayEntry PK11_DefaultArray[] = {
 	{ "SHA-1", SECMOD_SHA1_FLAG, CKM_SHA_1 },
 	{ "MD5", SECMOD_MD5_FLAG, CKM_MD5 },
 	{ "MD2", SECMOD_MD2_FLAG, CKM_MD2 },
+	{ "SSL", SECMOD_SSL_FLAG, CKM_SSL3_PRE_MASTER_KEY_GEN },
+	{ "TLS", SECMOD_TLS_FLAG, CKM_TLS_MASTER_KEY_DERIVE },
 	{ "SKIPJACK", SECMOD_FORTEZZA_FLAG, CKM_SKIPJACK_CBC64 },
 	{ "Publicly-readable certs", SECMOD_FRIENDLY_FLAG, CKM_INVALID_MECHANISM },
 	{ "Random Num Generator", SECMOD_RANDOM_FLAG, CKM_FAKE_RANDOM },
@@ -89,8 +91,10 @@ static PK11SlotList pk11_desSlotList,
     pk11_rsaSlotList,
     pk11_dsaSlotList,
     pk11_dhSlotList,
-    pk11_idea,
-    pk11_random;
+    pk11_ideaSlotList,
+    pk11_sslSlotList,
+    pk11_tlsSlotList,
+    pk11_randomSlotList;
 
 /*
  * Tables used for Extended mechanism mapping (currently not used)
@@ -270,6 +274,32 @@ PK11_MoveListToList(PK11SlotList *target,PK11SlotList *src)
     target->tail = src->tail;
     src->head = src->tail = NULL;
     return SECSuccess;
+}
+
+/*
+ * get an element from the list with a reference. You must own the list.
+ */
+PK11SlotListElement *
+PK11_GetFirstRef(PK11SlotList *list)
+{
+    PK11SlotListElement *le;
+
+    le = list->head;
+    if (le != NULL) (le)->refCount++;
+    return le;
+}
+
+/*
+ * get the next element from the list with a reference. You must own the list.
+ */
+PK11SlotListElement *
+PK11_GetNextRef(PK11SlotList *list, PK11SlotListElement *le, PRBool restart)
+{
+    PK11SlotListElement *new_le;
+    new_le = le->next;
+    if (new_le) new_le->refCount++;
+    pk11_FreeListElement(list,le);
+    return new_le;
 }
 
 /*
@@ -1087,8 +1117,10 @@ PK11_InitSlotLists(void)
     pk11_initSlotList(&pk11_rsaSlotList);
     pk11_initSlotList(&pk11_dsaSlotList);
     pk11_initSlotList(&pk11_dhSlotList);
-    pk11_initSlotList(&pk11_idea);
-    pk11_initSlotList(&pk11_random);
+    pk11_initSlotList(&pk11_ideaSlotList);
+    pk11_initSlotList(&pk11_sslSlotList);
+    pk11_initSlotList(&pk11_tlsSlotList);
+    pk11_initSlotList(&pk11_randomSlotList);
     return SECSuccess;
 }
 
@@ -1124,11 +1156,19 @@ PK11_GetSlotList(CK_MECHANISM_TYPE type)
     case CKM_DH_PKCS_KEY_PAIR_GEN:
     case CKM_DH_PKCS_DERIVE:
 	return &pk11_dhSlotList;
+    case CKM_SSL3_PRE_MASTER_KEY_GEN:
+    case CKM_SSL3_MASTER_KEY_DERIVE:
+    case CKM_SSL3_SHA1_MAC:
+    case CKM_SSL3_MD5_MAC:
+	return &pk11_sslSlotList;
+    case CKM_TLS_MASTER_KEY_DERIVE:
+    case CKM_TLS_KEY_AND_MAC_DERIVE:
+	return &pk11_tlsSlotList;
     case CKM_IDEA_CBC:
     case CKM_IDEA_ECB:
-	return &pk11_idea;
+	return &pk11_ideaSlotList;
     case CKM_FAKE_RANDOM:
-	return &pk11_random;
+	return &pk11_randomSlotList;
     }
     return NULL;
 }
@@ -2225,7 +2265,7 @@ PK11_GetBestSlotMultiple(CK_MECHANISM_TYPE *type, int mech_count, void *wincx)
 
     list = PK11_GetSlotList(type[0]);
 
-    if (list == NULL) {
+    if ((list == NULL) || (list->head == NULL)) {
 	/* We need to look up all the tokens for the mechanism */
 	list = PK11_GetAllTokens(type[0],PR_FALSE,PR_TRUE,wincx);
 	freeit = PR_TRUE;
@@ -2249,8 +2289,8 @@ PK11_GetBestSlotMultiple(CK_MECHANISM_TYPE *type, int mech_count, void *wincx)
 	}
     }
 
-    for (le = PK11_GetFirstSafe(list); le;
-			 	le = PK11_GetNextSafe(list,le,PR_TRUE)) {
+    for (le = PK11_GetFirstRef(list); le;
+			 	le = PK11_GetNextRef(list,le,PR_TRUE)) {
 	if (PK11_IsPresent(le->slot)) {
 	    PRBool doExit = PR_FALSE;
 	    for (i=0; i < mech_count; i++) {
