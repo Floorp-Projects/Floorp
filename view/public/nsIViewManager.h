@@ -36,7 +36,8 @@ typedef enum
 {
   nsContentQuality_kGood = 0,
   nsContentQuality_kFair,
-  nsContentQuality_kPoor
+  nsContentQuality_kPoor,
+  nsContentQuality_kUnknown
 } nsContentQuality;
 
 #define NS_IVIEWMANAGER_IID   \
