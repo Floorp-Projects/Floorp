@@ -22,7 +22,7 @@
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 #define GDK_COLOR_TO_NS_RGB(c) \
-  ((nscolor) ((255 << 24) | ((c.blue)<<16) | ((c.green)<<8) | (c.blue)))
+  ((nscolor) NS_RGB(c.red, c.green, c.blue))
 
 NS_IMPL_ISUPPORTS(nsLookAndFeel, kILookAndFeelIID);
 

@@ -770,8 +770,6 @@ void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
 //  g_print("DoResized called\n");
   nsWindow *win = (nsWindow*)data;
 
-  gtk_layout_freeze(GTK_LAYOUT(w));
-
   nsRect bounds;
   bounds.width = allocation->width;
   bounds.height = allocation->height;
@@ -790,7 +788,6 @@ void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
   }
 
   win->SetResized(PR_TRUE);
-  gtk_layout_thaw(GTK_LAYOUT(w));
 }
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
