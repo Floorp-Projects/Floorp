@@ -369,7 +369,6 @@ StackArena::Push()
     StackMark* oldMarks = mMarks;
     PRUint32 oldLength = mMarkLength;
     mMarkLength += MARK_INCREMENT;
-    void* marks = 0;
     mMarks = new StackMark[mMarkLength];
     nsCRT::memcpy(mMarks, oldMarks, sizeof(StackMark)*oldLength);
 
@@ -1899,7 +1898,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   if (GetVerifyReflowEnable() && (VERIFY_REFLOW_DURING_RESIZE_REFLOW & gVerifyReflowFlags))
   {
     mInVerifyReflow = PR_TRUE;
-    PRBool ok = VerifyIncrementalReflow();
+    /*PRBool ok = */VerifyIncrementalReflow();
     mInVerifyReflow = PR_FALSE;
   }
 #endif
@@ -2904,6 +2903,12 @@ PresShell::DoCopy()
     
   if (NS_FAILED(rv) || !sel)
     return rv?rv:NS_ERROR_FAILURE;
+
+  // Now we have the selection.  Make sure it's nonzero:
+  PRBool isCollapsed;
+  sel->GetIsCollapsed(&isCollapsed);
+  if (isCollapsed)
+    return NS_OK;
 
   doc->CreateXIF(buffer,sel);
 
