@@ -31,14 +31,14 @@ CPPSRCS =				\
 	$(NULL)
 
 MODULE=privacy 
-REQUIRES=privacy style lay layer rdf network pref nspr util img js
+REQUIRES=privacy style lay layer rdf network pref nspr util img js htmldlgs
 EXPORTS= $(NULL)
 
 LINCS=-I$(PUBLIC)\lay -I$(PUBLIC)\style -I$(PUBLIC)\pref \
     -I$(PUBLIC)\layer -I$(PUBLIC)\rdf -I$(PUBLIC)\network \
     -I$(PUBLIC)\nspr -I$(PUBLIC)\util -I$(PUBLIC)\img \
+    -I$(PUBLIC)\htmldlgs	\
     -I$(PUBLIC)\privacy -I$(PUBLIC)\js
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \

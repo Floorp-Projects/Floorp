@@ -55,6 +55,9 @@ PRVCY_ToggleAnonymous();
 extern Bool
 PRVCY_IsAnonymous();
 
+extern void
+PRVCY_SiteInfo(MWContext *context);
+
 XP_END_PROTOS
 
 #endif /* !_PRIVACY_H */
