@@ -27,7 +27,8 @@ ostream& operator<<(ostream &s, IdlEnum &aEnum)
 
   long count = aEnum.EnumeratorCount();
   if (count) {
-    for (int i = 0; i < count - 1; i++) {
+  	int i;
+    for (i = 0; i < count - 1; i++) {
       IdlVariable *enumerator = aEnum.GetEnumeratorAt(i);
       s << "  " << enumerator->GetName();
       if (TYPE_INT == enumerator->GetType()) {

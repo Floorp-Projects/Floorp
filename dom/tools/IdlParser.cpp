@@ -39,6 +39,9 @@
  */
 
 // initialize cout
+#ifdef XP_MAC
+#include <iostream>
+#endif
 #include <ostream.h>
 
 #include "IdlParser.h"
@@ -834,21 +837,21 @@ IdlParameter* IdlParser::ParseFunctionParameter(IdlSpecification &aSpecification
   switch(token->id) {
     // base type
     case INPUT_PARAM_TOKEN:
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_MAC
       argObj->SetAttribute(IdlParameter::INPUT);
 #else
       argObj->SetAttribute(IdlParameter.INPUT);
 #endif
       break;
     case OUTPUT_PARAM_TOKEN:
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_MAC
       argObj->SetAttribute(IdlParameter::OUTPUT);
 #else
       argObj->SetAttribute(IdlParameter.OUTPUT);
 #endif
       break;
     case INOUT_PARAM_TOKEN:
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_MAC
       argObj->SetAttribute(IdlParameter::INOUT);
 #else
       argObj->SetAttribute(IdlParameter.INOUT);

@@ -80,7 +80,7 @@ AbortParser::AbortParser(char *aFileName, long aLineNumber)
   strcat(message, aFileName);
   strcat(message, ". Line Number: ");
 
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_MAC
   sprintf(lineNumber,"%d",aLineNumber);
 #else
   itoa(aLineNumber, lineNumber, 10);

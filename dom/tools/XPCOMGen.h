@@ -22,7 +22,12 @@
 #include <string.h>
 #include "FileGen.h"
 
+#ifdef XP_MAC
+#include <ostream.h>			// required for namespace resolution
+#else
 class ofstream;
+#endif
+
 class IdlSpecification;
 class IdlInterface;
 class IdlFunction;

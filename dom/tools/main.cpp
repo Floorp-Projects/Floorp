@@ -17,13 +17,26 @@
  */
 
 // initialize cout
-#include "ostream.h"
-#include "string.h"
+#include <ostream.h>
+#include <string.h>
+
+#ifndef XP_MAC
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifndef XP_UNIX
+#else
+#include <ctype.h>
+#include <stat.h>
+#include <iostream.h>
+#endif
+
+#if !defined XP_UNIX && !defined XP_MAC
 #include <direct.h>
 #endif
+
+#ifdef XP_MAC
+#include <console.h>
+#endif
+
 #include "IdlParser.h"
 #include "Exceptions.h"
 #include "IdlSpecification.h"
@@ -38,6 +51,10 @@ int main(int argc, char *argv[])
   int is_global = 0;
   int op_dir = 0;
   int op_dir_arg;
+
+#ifdef XP_MAC
+	argc = ccommand(&argv);
+#endif
 
   // extract filenames from argv
   if (argc >= 2) {
@@ -68,14 +85,16 @@ int main(int argc, char *argv[])
     if (op_dir) {
       struct stat sb;
       if (stat(argv[op_dir_arg], &sb) == 0) {
-#ifdef XP_UNIX
+#if defined XP_UNIX || defined XP_MAC
         if (!(sb.st_mode & S_IFDIR)) {
 #else
         if (!(sb.st_mode & _S_IFDIR)) {
 #endif
           cout << "Creating directory " << argv[op_dir_arg] << " ...\n";
-#ifdef XP_UNIX
+#if defined XP_UNIX 
           if (mkdir(argv[op_dir_arg],S_IWGRP | S_IWOTH) < 0) {
+#elif defined XP_MAC
+          if (mkdir(argv[op_dir_arg], 0) < 0) {			// mode is ignored
 #else
           if (mkdir(argv[op_dir_arg]) < 0) {
 #endif
