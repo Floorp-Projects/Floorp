@@ -67,6 +67,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIForm.h"
 #include "nsIContentList.h"
+#include "nsReadableUtils.h"
 
 #define NEW_CONTEXT_PARENTAGE_INVARIANT
 
@@ -2298,6 +2299,14 @@ static inline void KeyAppendAtom(nsIAtom* aAtom, nsCString& aKey)
   KeyAppendString(nsDependentString(atomString), aKey);
 }
 
+static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
+{
+  nsAutoString autocomplete;
+  aElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
+  ToLowerCase(autocomplete);
+  return autocomplete.Equals(NS_LITERAL_STRING("off"));
+}
+
 NS_IMETHODIMP
 FrameManager::GenerateStateKey(nsIContent* aContent,
                                nsIStatefulFrame::SpecialStateID aID,
@@ -2319,6 +2328,11 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
   PRUint32 contentID;
   aContent->GetContentID(&contentID);
   if (!contentID) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
+  if (element && IsAutocompleteOff(element)) {
     return NS_OK;
   }
 
@@ -2354,6 +2368,11 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
     nsCOMPtr<nsIDOMHTMLFormElement> formElement;
     control->GetForm(getter_AddRefs(formElement));
     if (formElement) {
+
+      if (IsAutocompleteOff(formElement)) {
+        aKey.Truncate();
+        return NS_OK;
+      }
 
       nsAutoString formName;
       formElement->GetName(formName);
