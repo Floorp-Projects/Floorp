@@ -24,7 +24,7 @@
 
 /* blocks */
 
-html, div, map, dt, :-moz-anonymous-block, :cell-content {
+html, div, map, dt, isindex, :-moz-anonymous-block, :cell-content {
   display: block;
 }
 
