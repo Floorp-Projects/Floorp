@@ -27,6 +27,7 @@
 #include "nsxpfcCIID.h"
 #include "nsIAppShell.h"
 #include "nspr.h"
+#include "plevent.h"
 
 #define XPFC_DLL "xpfc10.dll"
 
@@ -72,6 +73,9 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
 
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
+
+    PL_InitializeEventsLib("");
+
 
     // Let get a ShellInstance for this Application instance
     nsRepository::RegisterFactory(kCShellInstanceCID, XPFC_DLL, PR_FALSE, PR_FALSE);
