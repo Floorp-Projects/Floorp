@@ -107,7 +107,7 @@ function commonDialogOnLoad()
   iconElement.setAttribute("class", iconElement.getAttribute("class") + " " + iconClass);
 
   // set the number of command buttons
-  var nButtons = gCommonDialogParam.GetInt(2);
+  nButtons = gCommonDialogParam.GetInt(2);
   switch (nButtons) {
     case 4:
       document.documentElement.getButton("extra2").label = gCommonDialogParam.GetString(11);
