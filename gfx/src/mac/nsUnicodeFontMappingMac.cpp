@@ -49,6 +49,7 @@
 #define BAD_FONT_NUM	-1
 #define BAD_SCRIPT 0x7f
 
+#include <UnicodeConverter.h>
 
 //------------------------------------------------------------------------
 static UnicodeToTextInfo gConverters[32] = { 
@@ -262,7 +263,7 @@ PRBool nsUnicodeFontMappingMac::FontEnumCallback(const nsString& aFamily, PRBool
 }
 
 PRBool nsUnicodeFontMappingMac::ConvertUnicodeToGlyphs(short aFontNum, 
-    PRUnichar* aString, ByteCount aStringLength,
+    const PRUnichar* aString, ByteCount aStringLength,
     char *aBuffer, ByteCount aBufferLength, ByteCount& oActualLength,
     ByteCount& oBytesRead, OptionBits opts)
 {
