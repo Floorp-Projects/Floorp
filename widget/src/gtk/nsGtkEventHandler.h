@@ -19,43 +19,44 @@
 #ifndef __nsXtEventHandler_h      
 #define __nsXtEventHandler_h
 
-#include "Xm/Xm.h"
+#include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 class nsIWidget;
 class nsIMenuItem;
 
-void nsGtkWidget_KeyPressMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
-void nsGtkWidget_KeyReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
-void nsGtkWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
-void nsGtkWidget_ButtonPressMask_EventHandler(Widget w,XtPointer p, XEvent * event, Boolean * b);
-void nsGtkWidget_ButtonReleaseMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
-void nsGtkWidget_ButtonMotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
-void nsGtkWidget_MotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
-void nsGtkWidget_EnterMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
-void nsGtkWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
+void nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
+void nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
+void nsGtkWidget_ExposureMask_EventHandler(GtkWidget * w, gpointer p, GdkEvent * event, gboolean * b);
+void nsGtkWidget_ButtonPressMask_EventHandler(GtkWidget * w,gpointer p, GdkEvent * event, gboolean * b);
+void nsGtkWidget_ButtonReleaseMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
+void nsGtkWidget_ButtonMotionMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
+void nsGtkWidget_MotionMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
+void nsGtkWidget_EnterMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
+void nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, gpointer p, GdkEvent * event, gboolean * b);
 //----------------------------------------------------
 
-void nsGtkWidget_FSBCancel_Callback(Widget w, XtPointer p, XtPointer call_data);
-void nsGtkWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data);
+void nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p, gpointer call_data);
+void nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p, gpointer call_data);
 
 //----------------------------------------------------
-void nsGtkWidget_Focus_Callback(Widget w, XtPointer p, XtPointer call_data);
-void nsGtkWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data);
-void nsGtkWidget_Toggle_Callback(Widget w, XtPointer p, XtPointer call_data);
-void nsGtkWidget_Toggle_ArmCallback(Widget w, XtPointer p, XtPointer call_data);
-void nsGtkWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data);
-void nsGtkWidget_RadioButton_ArmCallback(Widget w, XtPointer p, XtPointer call_data);
-void nsGtkWidget_RadioButton_DisArmCallback(Widget w, XtPointer p, XtPointer call_data);
+void nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p, gpointer call_data);
+void nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p, gpointer call_data);
+void nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p, gpointer call_data);
+void nsGtkWidget_Toggle_ArmCallback(GtkWidget *w, gpointer p, gpointer call_data);
+void nsGtkWidget_Toggle_DisArmCallback(GtkWidget *w, gpointer p, gpointer call_data);
+void nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p, gpointer call_data);
+void nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p, gpointer call_data);
 
-void nsGtkWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data);
-void nsGtkWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data);
-void nsGtkWidget_Expose_Callback(Widget w, XtPointer p, XtPointer call_data);
+void nsGtkWidget_Text_Callback(GtkWidget *w, gpointer p, gpointer call_data);
+void nsGtkWidget_Resize_Callback(GtkWidget *w, gpointer p, gpointer call_data);
+void nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p, gpointer call_data);
 
-void nsGtkWidget_Refresh_Callback(XtPointer call_data);
+void nsGtkWidget_Refresh_Callback(gpointer call_data);
 
-void nsGtkWidget_ResetResize_Callback(XtPointer call_data);
+void nsGtkWidget_ResetResize_Callback(gpointer call_data);
 
-void nsGtkWidget_Menu_Callback(Widget w, XtPointer p, XtPointer call_data);
+void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p, gpointer call_data);
 
 #endif  // __nsXtEventHandler.h
 
