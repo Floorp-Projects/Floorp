@@ -1603,6 +1603,30 @@ BillTo.PostalCode
 billingpostalcode
 BillTo.PostalCode
 
+bzipfour
+BillTo.PostalCode.Suffix
+
+billzipfour
+BillTo.PostalCode.Suffix
+
+billtozipfour
+BillTo.PostalCode.Suffix
+
+billingzipfour
+BillTo.PostalCode.Suffix
+
+bzipplus
+BillTo.PostalCode.Suffix
+
+billzipplus
+BillTo.PostalCode.Suffix
+
+billtozipplus
+BillTo.PostalCode.Suffix
+
+billingzipplus
+BillTo.PostalCode.Suffix
+
 bprovince
 BillTo.Prov
 
@@ -1981,6 +2005,15 @@ Business.PostalCode
 businesszipcode
 Business.PostalCode
 
+businesspostalcode
+Business.PostalCode
+
+businesszipfour
+Business.PostalCode.Suffix
+
+businesszipplus
+Business.PostalCode.Suffix
+
 businessprovince
 Business.Prov
 
@@ -2250,6 +2283,12 @@ Home.PostalCode
 
 postalcode
 Home.PostalCode
+
+zipfour
+Home.PostalCode.Suffix
+
+zipplus
+Home.PostalCode.Suffix
 
 province
 Home.Prov
@@ -2928,6 +2967,30 @@ ShipTo.PostalCode
 
 shippingpostalcode
 ShipTo.PostalCode
+
+szipfour
+ShipTo.PostalCode.Suffix
+
+shipzipfour
+ShipTo.PostalCode.Suffix
+
+shiptozipfour
+ShipTo.PostalCode.Suffix
+
+shippingzipfour
+ShipTo.PostalCode.Suffix
+
+szipplus
+ShipTo.PostalCode.Suffix
+
+shipzipplus
+ShipTo.PostalCode.Suffix
+
+shiptozipplus
+ShipTo.PostalCode.Suffix
+
+shippingzipplus
+ShipTo.PostalCode.Suffix
 
 sprovince
 ShipTo.Prov

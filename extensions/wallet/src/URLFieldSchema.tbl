@@ -34,9 +34,6 @@ Home.Fax.Number.Suffix
 
 
 www.mozilla.org/wallet/samples/classifieds2000.html
-areacode
-Home.Phone.LocCode
-
 phone1
 Home.Phone.Number.Prefix
 
@@ -45,30 +42,6 @@ Home.Phone.Number.Suffix
 
 
 www.mozilla.org/wallet/samples/musicblvd.html
-bill.first
-BillTo.Name.First
-
-bill.last
-BillTo.Name.Last
-
-bill.street1
-BillTo.Street.Line1
-
-bill.street2
-BillTo.Street.Line2
-
-bill.city
-BillTo.City
-
-bill.state
-BillTo.State
-
-bill.province
-BillTo.Prov
-
-bill.zip
-BillTo.PostalCode
-
 bill.contact_phone
 BillTo.Phone
 
@@ -130,29 +103,8 @@ Home.PostalCode
 
 
 www.mozilla.org/wallet/samples/netmarket.html
-ship_fname
-ShipTo.Name.First
-
-ship_lname
-ShipTo.Name.Last
-
-ship_address1
-ShipTo.Street.Line1
-
-ship_address2
-ShipTo.Street.Line2
-
-ship_city
-ShipTo.City
-
 ship_zip
 ShipTo.PostalCode.Prefix
-
-ship_zipfour
-ShipTo.PostalCode.Suffix
-
-ship_state
-ShipTo.State
 
 
 www.mozilla.org/wallet/samples/coolsavings.html
@@ -396,9 +348,6 @@ Name.Middle
 customer_lname
 Name.Last
 
-email_address
-Home.Email
-
 customer_phone_ac
 Home.Phone.LocCode
 
@@ -422,14 +371,8 @@ www.british-airways.com/flightSelling/payment.jhtml
 cardholder_name
 Card.Name
 
-card_number
-Card.Number
-
 expiry_date
 Card.ExpDate
-
-card_type
-Card.Type
 
 cardholder_phone
 BillTo.Phone
@@ -448,91 +391,19 @@ BillTo.PostalCode
 
 
 commerce.us.dell.com:443/dellstore/chkout2_ship.asp
-ship_to_fname
-ShipTo.Name.First
-
-ship_to_mname
-ShipTo.Name.Middle
-
-ship_to_lname
-ShipTo.Name.Last
-
-ship_to_street1
-ShipTo.Street.Line1
-
-ship_to_street2
-ShipTo.Street.Line2
-
-ship_to_city
-ShipTo.City
-
-ship_to_state
-ShipTo.State
-
 ship_to_zip
 ShipTo.PostalCode.Prefix
 
 ship_to_zip_4
 ShipTo.PostalCode.Suffix
 
-ship_to_phone_ac
-ShipTo.Phone.LocCode
-
-ship_to_phone_num
-ShipTo.Phone.Number
-
-ship_to_phone_ext
-ShipTo.Phone.Extension
-
-ship_to_fax_ac
-ShipTo.Fax.LocCode
-
-ship_to_fax_num
-ShipTo.Fax.Number
-
 
 commerce.us.dell.com:443/dellstore/chkout3_bill.asp
-bill_to_fname
-BillTo.Name.First
-
-bill_to_mname
-BillTo.Name.Middle
-
-bill_to_lname
-BillTo.Name.Last
-
-bill_to_street1
-BillTo.Street.Line1
-
-bill_to_street2
-BillTo.Street.Line2
-
-bill_to_city
-BillTo.City
-
-bill_to_state
-BillTo.State
-
 bill_to_zip
 BillTo.PostalCode.Prefix
 
 bill_to_zip_4
 BillTo.PostalCode.Suffix
-
-bill_to_phone_ac
-BillTo.Phone.LocCode
-
-bill_to_phone_num
-BillTo.Phone.Number
-
-bill_to_phone_ext
-BillTo.Phone.Extension
-
-bill_to_fax_ac
-BillTo.Fax.LocCode
-
-bill_to_fax_num
-BillTo.Fax.Number
 
 
 commerce.us.dell.com:443/dellstore/chkout4_paycc.asp
@@ -680,9 +551,6 @@ ShipTo.CompanyName
 
 
 commerce.www.ibm.com/cgi-bin/ncommerce/CheckDACResponse1
-ccname
-Card.Name
-
 ccxmonth
 Card.ExpDate.Month
 
@@ -694,26 +562,8 @@ buy.avnetmarshall.com/account/dynamic/register
 salutation
 Name.Prefix
 
-first_name
-Name.First
-
-middle_initial
-Name.Middle
-
-last_name
-Name.Last
-
-job_title
-Business.JobTitle
-
 email_addr
 Business.Email
-
-company_name
-Business.CompanyName
-
-dept
-Business.Department
 
 phone
 Business.Phone
@@ -801,12 +651,6 @@ ShipTo.Country
 
 
 www.avnetmarshall.com/dynamic/html/html/semi/marketing/mot-20000116semw-req.html
-Company
-Business.CompanyName
-
-Name
-Name
-
 Title
 Business.JobTitle
 
@@ -909,15 +753,6 @@ ShipTo.Phone.Number
 order.3com.com/tms-ts/bin/order-form.cgi
 CF__B2CCardHolderName
 Card.Name
-
-CCN
-Card.Number
-
-CCExpMM
-Card.ExpDate.Month
-
-CCExpYY
-Card.ExpDate.Year
 
 
 www.arrow.com/cgi-bin/pc_order.pc_order_form
@@ -1192,27 +1027,6 @@ Joint.Home.Country
 
 
 scgi.ebay.com/saw-cgi/eBayISAPI.dll
-email
-Home.Email
-
-name
-Name
-
-company
-Business.CompanyName
-
-address
-Home.Street.Line1
-
-city
-Home.City
-
-state
-Home.State
-
-zip
-Home.PostalCode
-
 dayphone1
 Home.Phone.LocCode
 
@@ -1239,27 +1053,6 @@ Home.AltPhone.Extension
 
 
 cgi4.ebay.com/aw-cgi/eBayISAPI.dll
-email
-Home.Email
-
-name
-Name
-
-company
-Business.CompanyName
-
-address
-Home.Street.Line1
-
-city
-Home.City
-
-state
-Home.State
-
-zip
-Home.PostalCode
-
 dayphone1
 Home.Phone.LocCode
 
@@ -1324,15 +1117,6 @@ Business.Phone
 
 
 store.disney.go.com/ObjectBuilder/ObjectBuilder.iwx
-card_type
-Card.Type
-
-name_on_card
-Card.Name
-
-card_number
-Card.Number
-
 card_month
 Card.ExpDate.Month
 
@@ -1341,17 +1125,8 @@ Card.ExpDate.Year
 
 
 www.sabre.com/contact/index.html
-first
-Name.First
-
-last
-Name.Last
-
 email
 Business.Email
-
-company
-Business.CompanyName
 
 customerTitle
 Business.JobTitle
@@ -1420,12 +1195,6 @@ ShipTo.Name.First
 salname
 ShipTo.Name.Last
 
-ccnum
-Card.Number
-
-cctype
-Card.Type
-
 ccxmonth
 Card.ExpDate.Month
 
@@ -1458,21 +1227,6 @@ BillTo.Phone
 
 
 trading.etrade.com/cgi-bin/gx.cgi/Applogic+OLAMasterPage2
-FIRST_NAME
-Name.First
-
-MIDDLE_NAME
-Name.Middle
-
-LAST_NAME
-Name.Last
-
-ADDR_LINE1
-Home.Street.Line1
-
-ADDR_LINE2
-Home.Street.Line2
-
 ADDR_CITY
 Home.City
 
@@ -1487,14 +1241,8 @@ Home.Country
 
 
 trading.etrade.com/cgi-bin/gx.cgi/Applogic+OLAMasterPage2
-HOME_PHONE
-Home.Phone
-
 BUSS_PHONE
 Business.Phone
-
-EMAIL_ADDR
-Home.Email
 
 HEAR_ABOUT_US
 Home.Street.Line1
@@ -1504,20 +1252,11 @@ trading.etrade.com/cgi-bin/gx.cgi/Applogic+OLAMasterPage2
 SSN_NUM
 Card.Number
 
-DOB
-Bdate
-
 RES_COUNTRY
 Home.Country
 
 
 trading.etrade.com/cgi-bin/gx.cgi/Applogic+OLAMasterPage2
-EMPLOYER_NAME
-Business.CompanyName
-
-OCCUPATION
-Business.JobTitle
-
 BUSS_ADDRESS
 Business.Street.Line1
 
@@ -1557,56 +1296,11 @@ Joint.SocSec
 
 
 necxdirect.necx.com:443/hai/account_link_page.html
-firstname
-Name.First
-
-mi
-Name.Middle
-
-lastname
-Name.Last
-
-dayphone
-Home.Phone
-
-fax
-Home.Fax
-
-nightphone
-Home.AltPhone
-
-emailaddr
-Home.Email
-
 bcompanyname
 BillTo.Name
 
 companyname
 ShipTo.Name
-
-bill_street1
-BillTo.Street.Line1
-
-Shipstreet1
-ShipTo.Street.Line1
-
-bill_street2
-BillTo.Street.Line2
-
-Shipstreet2
-ShipTo.Street.Line2
-
-bill_city
-BillTo.City
-
-bill_state
-BillTo.State
-
-Shipcity
-ShipTo.City
-
-Shipstate
-ShipTo.State
 
 country
 BillTo.Country
@@ -1635,53 +1329,8 @@ Card.Number
 Exp_Date
 Card.ExpDate
 
-cc_name
-Card.Name
-
 
 www.ubid.com/app/sgnon/default.asp
-FirstName
-Name.First
-
-MiddleInitial
-Name.Middle
-
-LastName
-Name.Last
-
-CompanyName
-Business.CompanyName
-
-BillToStreet1
-BillTo.Street.Line1
-
-BillToStreet2
-BillTo.Street.Line2
-
-BillToCity
-BillTo.City
-
-BillToState
-BillTo.State
-
-BillToZip
-BillTo.PostalCode
-
-ShipToStreet1
-ShipTo.Street.Line1
-
-ShipToStreet2
-ShipTo.Street.Line2
-
-ShipToCity
-ShipTo.City
-
-ShipToState
-ShipTo.State
-
-ShipToZip
-ShipTo.PostalCode
-
 DayNumber
 Business.Phone
 
@@ -1691,21 +1340,6 @@ Business.Phone.Extension
 EMail
 Business.Email
 
-NameOnCard
-Card.Name
-
-CardType
-Card.Type
-
-CardNumber
-Card.Number
-
-ExpiryMonth
-Card.ExpDate.Month
-
-ExpiryYear
-Card.ExpDate.Year
-
 
 reg.excite.com/mps/new
 fn
@@ -1713,15 +1347,6 @@ Name.First
 
 ln
 Name.Last
-
-addr
-Home.Street.Line1
-
-zip
-Home.PostalCode
-
-email
-Home.Email
 
 birthmonth
 Bdate.Month
@@ -1819,9 +1444,6 @@ Name.Middle
 createlastname
 Name.Last
 
-zipcode
-Home.PostalCode
-
 netemail
 Home.Email
 
@@ -1897,74 +1519,20 @@ Card.ExpDate.Year
 
 
 www.beyond.com/orders/order.htm
-bill_first_name
-BillTo.Name.First
-
-bill_last_name
-BillTo.Name.Last
-
 email
 BillTo.Email
 
 email2
 BillTo.Email
 
-bill_phone
-BillTo.Phone
-
 company
 BillTo.CompanyName
-
-bill_address_1
-BillTo.Street.Line1
-
-bill_address_2
-BillTo.Street.Line2
-
-bill_city
-BillTo.City
 
 bill_state_province_name
 BillTo.State
 
-bill_postal_code
-BillTo.PostalCode
-
 
 www.us.buy.com/basket/shopper.asp
-bill_to_first_name
-BillTo.Name.First
-
-bill_to_last_name
-BillTo.Name.Last
-
-bill_to_phone_ac
-BillTo.Phone.LocCode
-
-bill_to_phone_prefix
-BillTo.Phone.Number.Prefix
-
-bill_to_phone_suffix
-BillTo.Phone.Number.Suffix
-
-bill_to_street1
-BillTo.Street.Line1
-
-bill_to_street2
-BillTo.Street.Line2
-
-bill_to_city
-BillTo.City
-
-bill_to_state
-BillTo.State
-
-bill_to_zip
-BillTo.PostalCode
-
-bill_to_company
-BillTo.CompanyName
-
 bill_to_company_phone_ac
 BillTo.Phone.LocCode
 
@@ -1976,48 +1544,6 @@ BillTo.Phone.Number.Suffix
 
 bill_to_company_phone_ext
 BillTo.Phone.Extension
-
-bill_to_fax_ac
-BillTo.Fax.LocCode
-
-bill_to_fax_prefix
-BillTo.Fax.Number.Prefix
-
-bill_to_fax_suffix
-BillTo.Fax.Number.Suffix
-
-ship_to_first_name
-ShipTo.Name.First
-
-ship_to_last_name
-ShipTo.Name.Last
-
-ship_to_phone_ac
-ShipTo.Phone.LocCode
-
-ship_to_phone_prefix
-ShipTo.Phone.Number.Prefix
-
-ship_to_phone_suffix
-ShipTo.Phone.Number.Suffix
-
-ship_to_street1
-ShipTo.Street.Line1
-
-ship_to_street2
-ShipTo.Street.Line2
-
-ship_to_city
-ShipTo.City
-
-ship_to_state
-ShipTo.State
-
-ship_to_zip
-ShipTo.PostalCode
-
-ship_to_company
-ShipTo.CompanyName
 
 ship_to_company_phone_ac
 ShipTo.Phone.LocCode
@@ -2033,18 +1559,6 @@ ShipTo.Phone.Extension
 
 payment_method
 Card.Type
-
-cc_name
-Card.Name
-
-cc_number
-Card.Number
-
-cc_expmonth
-Card.ExpDate.Month
-
-cc_expyear
-Card.ExpDate.Year
 
 shopper_name
 Home.Email
@@ -2098,12 +1612,6 @@ Business.Fax
 
 
 www.thomasregional.com/newtrd/register.html
-name
-Name
-
-company
-Business.CompanyName
-
 title
 Business.JobTitle
 
@@ -2138,18 +1646,6 @@ Business.Email
 www2.warehouse.com/pm/new_reg_info.asp
 Email
 Business.Email
-
-First_Name
-Name.First
-
-Middle_Initial
-Name.Middle
-
-Last_Name
-Name.Last
-
-Company_Name
-Business.CompanyName
 
 Street
 Business.Street.Line1
@@ -2283,9 +1779,6 @@ www.llbean.com/cgi-bin/ncommerce3/OrderDisplay
 cctyp
 Card.Type
 
-ccnum
-Card.Number
-
 ccxmonth
 Card.ExpDate.Month
 
@@ -2297,17 +1790,8 @@ www.grainger.com/cgi-bin/new_registration
 SALUT
 Name.Prefix
 
-FIRSTNAME
-Name.First
-
-LASTNAME
-Name.Last
-
 TITLE
 Business.JobTitle
-
-COMPANY
-Business.CompanyName
 
 ADDRESS
 Business.Street.Line1
@@ -2370,30 +1854,6 @@ qnes1.tdwaterhouse.com/account/openAccount.jsp
 title
 Name.Prefix
 
-firstName
-Name.First
-
-middleInitial
-Name.Middle
-
-lastName
-Name.Last
-
-address1
-Home.Street.Line1
-
-address2
-Home.Street.Line2
-
-city
-Home.City
-
-state
-Home.State
-
-zip
-Home.PostalCode
-
 dayPhoneNumber
 Business.Phone
 
@@ -2431,38 +1891,8 @@ qnes1.tdwaterhouse.com/account/joint/step2.jsp
 title
 Name.Prefix
 
-firstName
-Name.First
-
-middleInitial
-Name.Middle
-
-lastName
-Name.Last
-
-dateOfBirth
-Bdate
-
-address1
-Home.Street.Line1
-
-address2
-Home.Street.Line2
-
-city
-Home.City
-
-state
-Home.State
-
-zip
-Home.PostalCode
-
 socialSecurityNumber
 SocSec
-
-employer
-Business.CompanyName
 
 employerAddress1
 Business.Street.Line1
@@ -2532,53 +1962,8 @@ BillTo.Email
 EmailAddress2
 BillTo.Email
 
-ShipToFirstName
-ShipTo.Name.First
-
-ShipToMiddleInitial
-ShipTo.Name.Middle
-
-ShipToLastName
-ShipTo.Name.Last
-
-ShipCompany
-ShipTo.CompanyName
-
-ShipToAddress1
-ShipTo.Street.Line1
-
-ShipToAddress2
-ShipTo.Street.Line2
-
-ShipToCity
-ShipTo.City
-
-ShipToState
-ShipTo.State
-
-ShipToZip
-ShipTo.PostalCode
-
-ShipToCountry
-ShipTo.Country
-
-ShipToPhone
-ShipTo.Phone
-
 
 www.shopintuit.com/qstore/CCInfo.asp
-CCNumber
-Card.Number
-
-CCName
-Card.Name
-
-ExpMonth
-Card.ExpDate.Month
-
-ExpYear
-Card.ExpDate.Year
-
 
 www.cdw.com/shop/eaccount/signup.asp
 UserContactFirstName
@@ -2672,117 +2057,15 @@ Card.ExpDate.Year
 
 
 www.home.com/signup-us.html
-address1
-Home.Street.Line1
-
-city
-Home.City
-
-state
-Home.State
-
-zipcode
-Home.PostalCode
-
-country
-Home.Country
-
-email_address
-Home.Email
-
 
 www.home.com/cgi-bin/sacheck.cgi/athm/vstart
-first_name
-Name.First
-
-middle_name
-Name.Middle
-
-last_name
-Name.Last
-
-home_phone
-Home.Phone
-
-email_address
-Home.Email
-
 
 www.egghead.com/custserv/register.htm
-BFirstName
-BillTo.Name.First
-
-BLastName
-BillTo.Name.Last
-
-BCompany
-BillTo.CompanyName
-
-BAddress
-BillTo.Street.Line1
-
-BAddress2
-BillTo.Street.Line2
-
-BAddress3
-BillTo.Street.Line3
-
-BCity
-BillTo.City
-
-BState
-BillTo.State
-
-BZip
-BillTo.PostalCode
-
-BCountry
-BillTo.Country
-
-BDayPhone
-BillTo.Phone
-
-BNightPhone
-BillTo.AltPhone
-
 Fax
 BillTo.Fax
 
 Email
 BillTo.Email
-
-SFirstName
-ShipTo.Name.First
-
-SLastName
-ShipTo.Name.Last
-
-SCompany
-ShipTo.CompanyName
-
-SAddress
-ShipTo.Street.Line1
-
-SAddress2
-ShipTo.Street.Line2
-
-SAddress3
-ShipTo.Street.Line3
-
-SCity
-ShipTo.City
-
-SState
-ShipTo.State
-
-SZip
-ShipTo.PostalCode
-
-SCountry
-ShipTo.Country
-
-SDayPhone
-ShipTo.Phone
 
 NUsername
 ShipTo.AltPhone
@@ -2790,43 +2073,13 @@ ShipTo.AltPhone
 CardNo
 Card.Number
 
-ExpMonth
-Card.ExpDate.Month
-
-ExpYear
-Card.ExpDate.Year
-
 
 v2.superstats.com/sign_up/signup.html
-first_name
-Name.First
-
-last_name
-Name.Last
-
-e_mail
-Home.Email
-
-state
-Home.State
-
-province
-Home.Prov
-
-country
-Home.Country
-
 base_url
 Home.URI
 
 
 mail.dotcomnow.com/signup/
-fname
-Name.First
-
-lname
-Name.Last
-
 
 www.rei.com/cgi-bin/ncommerce3/RegisterForm
 satitle
@@ -2873,42 +2126,6 @@ Home.AltPhone
 
 
 twbooker.thisco.com/cgi-bin/bldbk.cgi
-first_name
-Name.First
-
-last_name
-Name.Last
-
-phone
-Home.Phone
-
-email_addr
-Home.Email
-
-addr1
-Home.Street.Line1
-
-addr2
-Home.Street.Line2
-
-city
-Home.City
-
-state
-Home.State
-
-zip
-Home.PostalCode
-
-country
-Home.Country
-
-cc_num
-Card.Number
-
-cc_exp
-Card.ExpDate
-
 
 secure.valueamerica.com:443/signin.asp
 nnn1reg_firstname
@@ -3090,27 +2307,6 @@ Card.ExpDate.Year
 
 
 custos.earthlink.net/cgi/SELF_tc.cgi
-FIRSTNAME
-Name.First
-
-LASTNAME
-Name.Last
-
-ADDRESS1
-Home.Street.Line1
-
-ADDRESS2
-Home.Street.Line2
-
-CITY
-Home.City
-
-STATE
-Home.State
-
-ZIP
-Home.PostalCode
-
 CNTRYCODE
 Home.Country
 
@@ -3120,29 +2316,11 @@ Business.Phone
 DAYFAX
 Business.Fax
 
-HOMEPHONE
-Home.Phone
-
-HOMEFAX
-Home.Fax
-
-CREDITCARDNUMBER
-Card.Number
-
 EXPIRATIONDATE
 Card.ExpDate
 
 
 www.landsend.com/checkout1.cgi
-FIRST
-Name.First
-
-MI
-Name.Middle
-
-LAST
-Name.Last
-
 ADDR1
 BillTo.Street.Line1
 
@@ -3224,18 +2402,6 @@ Card.ExpDate.Year
 
 
 wwws.ameritrade.com/online/ap.cgi
-firstname
-Name.First
-
-middlename
-Name.Middle
-
-lastname
-Name.Last
-
-namesuffix
-Name.Suffix
-
 ssn1
 SocSec.Prefix
 
@@ -3245,38 +2411,8 @@ SocSec.Middle
 ssn3
 SocSec.Suffix
 
-dob_month
-Bdate.Month
-
-dob_day
-Bdate.Day
-
-dob_year
-Bdate.Year
-
 identifier
 MothersMaidenName
-
-address1
-Home.Street.Line1
-
-address2
-Home.Street.Line2
-
-city
-Home.City
-
-state
-Home.State
-
-zip
-Home.PostalCode
-
-province
-Home.Prov
-
-country
-Home.Country
 
 address1_alt
 BillTo.Street.Line1
@@ -3322,9 +2458,6 @@ Home.Fax.LocCode
 
 fax
 Home.Fax.Number
-
-email
-Home.Email
 
 occupation_e
 Business.JobTitle
@@ -3450,30 +2583,6 @@ Joint.Business.Country
 
 
 athome.compaq.com/cart/orderform.asp
-ship_to_firstname
-ShipTo.Name.First
-
-ship_to_middle_initial
-ShipTo.Name.Middle
-
-ship_to_lastname
-ShipTo.Name.Last
-
-ship_to_street1
-ShipTo.Street.Line1
-
-ship_to_street2
-ShipTo.Street.Line2
-
-ship_to_city
-ShipTo.City
-
-ship_to_state
-ShipTo.State
-
-ship_to_zip
-ShipTo.PostalCode
-
 ship_to_day_phone_area
 ShipTo.Phone.LocCode
 
@@ -3492,35 +2601,8 @@ ShipTo.AltPhone.Number.Prefix
 ship_to_evening_phone_last4
 ShipTo.AltPhone.Number.Suffix
 
-ship_to_email
-ShipTo.Email
-
 
 athome.compaq.com/cart/OrderForm2.asp
-bill_to_firstname
-BillTo.Name.First
-
-bill_to_middle_initial
-BillTo.Name.Middle
-
-bill_to_lastname
-BillTo.Name.Last
-
-bill_to_street1
-BillTo.Street.Line1
-
-bill_to_street2
-BillTo.Street.Line2
-
-bill_to_city
-BillTo.City
-
-bill_to_state
-BillTo.State
-
-bill_to_zip
-BillTo.PostalCode
-
 bill_to_day_phone_area
 BillTo.Phone.LocCode
 
@@ -3541,49 +2623,10 @@ BillTo.AltPhone.Number.Suffix
 
 
 athome.compaq.com/cart/ssl/purchase.asp
-cc_name
-Card.Name
-
-_cc_number
-Card.Number
-
-cc_type
-Card.Type
-
-_cc_expmonth
-Card.ExpDate.Month
-
-_cc_expyear
-Card.ExpDate.Year
-
 
 st6.yahoo.com/cgi-bin/shipping-form
-ship-firstname
-ShipTo.Name.First
-
 ship-name
 ShipTo.Name.Last
-
-ship-address1
-ShipTo.Street.Line1
-
-ship-address2
-ShipTo.Street.Line2
-
-ship-city
-ShipTo.City
-
-ship-state
-ShipTo.State
-
-ship-zip
-ShipTo.PostalCode
-
-ship-phone
-ShipTo.Phone
-
-ship-country
-ShipTo.Country
 
 vwcf-natsemi-Business-Name-
 Business.CompanyName
@@ -3593,35 +2636,8 @@ Business.JobTitle
 
 
 st6.yahoo.com/cgi-bin/billing-form
-bill-firstname
-BillTo.Name.First
-
 bill-name
 BillTo.Name.Last
-
-bill-address1
-BillTo.Street.Line1
-
-bill-address2
-BillTo.Street.Line2
-
-bill-city
-BillTo.City
-
-bill-state
-BillTo.State
-
-bill-zip
-BillTo.PostalCode
-
-bill-phone
-BillTo.Phone
-
-bill-country
-BillTo.Country
-
-bill-email
-BillTo.Email
 
 card
 Card.Type
@@ -3629,17 +2645,8 @@ Card.Type
 number
 Card.Number
 
-exp-month
-Card.ExpDate.Month
-
-exp-year
-Card.ExpDate.Year
-
 
 store.sun.com/checkout/BillingAdd.jhtml;$sessionid$TTZUOOIAAAGRTAMTA1ESPJT5AAAACJ1K
-FirstName
-Name.First
-
 LastName
 BillTo.Name.Last
 
@@ -3719,106 +2726,31 @@ ShipTo.Email
 
 
 store.sun.com/checkout/PaymentInfo.jhtml;$sessionid$TXVJ4AQAAAJYHAMTA1ESPJT5AAAACJ1K
-cc_type
-Card.Type
-
-cc_number
-Card.Number
-
-expiration_month
-Card.ExpDate.Month
-
-expiration_year
-Card.ExpDate.Year
-
 LastName
 Card.Name
 
 
 shop.microsoft.com/store/secure/checkout.asp
-BillToprefix
-BillTo.Name.Prefix
-
-BillTofname
-BillTo.Name.First
-
-BillTomname
-BillTo.Name.Middle
-
 BillTolname1
 BillTo.Name.Last
-
-BillTosuffix
-BillTo.Name.Suffix
-
-BillToaddr1
-BillTo.Street.Line1
-
-BillToaddr2
-BillTo.Street.Line2
-
-BillTocity
-BillTo.City
 
 BillTostatecode
 BillTo.State
 
-BillTozip
-BillTo.PostalCode
-
 BillTofullphone
 BillTo.Phone
-
-BillToextension
-BillTo.Phone.Extension
-
-shiptoprefix
-ShipTo.Name.Prefix
-
-shiptofname
-ShipTo.Name.First
-
-shiptomname
-ShipTo.Name.Middle
 
 shiptolname1
 ShipTo.Name.Last
 
-shiptosuffix
-ShipTo.Name.Suffix
-
-shiptoaddr1
-ShipTo.Street.Line1
-
-shiptoaddr2
-ShipTo.Street.Line2
-
-shiptocity
-ShipTo.City
-
 shiptostatecode
 ShipTo.State
-
-shiptozip
-ShipTo.PostalCode
 
 shiptofullphone
 ShipTo.Phone
 
-shiptoextension
-ShipTo.Phone.Extension
-
 
 orders.one.microsoft.com/shoporders/checkout.asp
-cc_type
-Card.Type
-
-_cc_expmonth
-Card.ExpDate.Month
-
-_cc_expyear
-Card.ExpDate.Year
-
 _cc_number2
 Card.Number
 
@@ -3827,62 +2759,17 @@ Card.Name
 
 
 www.gecompanystore.com/cgi-bin/gx.cgi/AppLogic+gecompanystore.ShowCheckout
-Shipping_FName
-ShipTo.Name.First
-
-Shipping_LName
-ShipTo.Name.Last
-
-Shipping_Address1
-ShipTo.Street.Line1
-
-Shipping_Address2
-ShipTo.Street.Line2
-
-Shipping_City
-ShipTo.City
-
 Shipping_State_Province
 ShipTo.State
 
 Shipping_Zip_Postalcode
 ShipTo.PostalCode
 
-Shipping_Phone
-ShipTo.Phone
-
-Shipping_EPhone
-ShipTo.AltPhone
-
-Billing_Email
-BillTo.Email
-
-Billing_FName
-BillTo.Name.First
-
-Billing_LName
-BillTo.Name.Last
-
-Billing_Address1
-BillTo.Street.Line1
-
-Billing_Address2
-BillTo.Street.Line2
-
-Billing_City
-BillTo.City
-
 Billing_State_Province
 BillTo.State
 
 Billing_Zip_Postalcode
 BillTo.PostalCode
-
-Billing_Phone
-BillTo.Phone
-
-Billing_EPhone
-BillTo.AltPhone
 
 Payment_Value
 Card.Number
@@ -3895,32 +2782,14 @@ Card.ExpDate.Year
 
 
 www.nwa.com/cgi-bin/nwacomclub_register.cgi
-First+Name
-Name.First
-
-Middle+Initial
-Name.Middle
-
-Last+Name
-Name.Last
-
 Phone+Number
 Home.Phone
-
-Email+Address
-Home.Email
 
 Billing+First+Name+and+MI
 BillTo.Name.First
 
-Billing+Last+Name
-BillTo.Name.Last
-
 Credit+Card+Type
 Card.Type
-
-Credit+Card+Number
-Card.Number
 
 Expiration+Date
 Card.ExpDate
@@ -4025,74 +2894,17 @@ ShipTo.PostalCode.Suffix
 
 
 www.gateway.com/cgi-bin/checkout.pl
-ship_firstname
-ShipTo.Name.First
-
-ship_middlename
-ShipTo.Name.Middle
-
-ship_lastname
-ShipTo.Name.Last
-
-ship_company
-ShipTo.CompanyName
-
-ship_address1
-ShipTo.Street.Line1
-
-ship_address2
-ShipTo.Street.Line2
-
-ship_city
-ShipTo.City
-
-ship_state
-ShipTo.State
-
 ship_zip1
 ShipTo.PostalCode.Prefix
 
 ship_zip1
 ShipTo.PostalCode.Suffix
 
-ship_phonearea
-ShipTo.Phone.LocCode
-
 ship_phone
 ShipTo.Phone.Number
 
-ship_phoneext
-ShipTo.Phone.Extension
-
-ship_email
-ShipTo.Email
-
 confirm_ship_email
 ShipTo.Email
-
-bill_firstname
-BillTo.Name.First
-
-bill_middlename
-BillTo.Name.Middle
-
-bill_lastname
-BillTo.Name.Last
-
-bill_company
-BillTo.CompanyName
-
-bill_address1
-BillTo.Street.Line1
-
-bill_address2
-BillTo.Street.Line2
-
-bill_city
-BillTo.City
-
-bill_state
-BillTo.State
 
 bill_zip1
 BillTo.PostalCode.Prefix
@@ -4100,60 +2912,30 @@ BillTo.PostalCode.Prefix
 bill_zip1
 BillTo.PostalCode.Suffix
 
-bill_phonearea
-BillTo.Phone.LocCode
-
 bill_phone
 BillTo.Phone.Number
-
-bill_phoneext
-BillTo.Phone.Extension
-
-bill_email
-BillTo.Email
 
 confirm_bill_email
 BillTo.Email
 
 
 wsecure.gateway.com/cgi-bin/checkout.pl
-card_type
-Card.Type
-
 card_exp_month
 Card.ExpDate.Month
 
 card_exp_year
 Card.ExpDate.Year
 
-card_number
-Card.Number
-
 
 www.itn.net/cgi/get
 *ntitle
 Name.Prefix
 
-*first_name
-Name.First
-
 middle_i
 Name.Middle
 
-*last_name
-Name.Last
-
 suffix
 Name.Suffix
-
-*address
-Home.Street.Line1
-
-address2
-Home.Street.Line2
-
-*city
-Home.City
 
 state,cross_ck_postalcd
 Home.Prov
@@ -4173,44 +2955,8 @@ Home.Phone.LocCode
 *day_phone
 Home.Phone.Number
 
-phone_ext
-Home.Phone.Extension
-
-*email
-Home.Email
-
 
 www.zones.com/cgi-bin/zones.exe/zones/scripts/profile/login.jsp
-s_firstName
-ShipTo.Name.First
-
-s_lastName
-ShipTo.Name.Last
-
-s_middleName
-ShipTo.Name.Middle
-
-s_company
-ShipTo.CompanyName
-
-s_address1
-ShipTo.Street.Line1
-
-s_address2
-ShipTo.Street.Line2
-
-s_city
-ShipTo.City
-
-s_state
-ShipTo.State
-
-s_country
-ShipTo.Country
-
-s_zip
-ShipTo.PostalCode
-
 sp_areaCode
 ShipTo.Phone.LocCode
 
@@ -4249,18 +2995,6 @@ Card.ExpDate.Month
 c_expYear
 Card.ExpDate.Year
 
-b_firstName
-BillTo.Name.First
-
-b_lastName
-BillTo.Name.Last
-
-b_middleName
-BillTo.Name.Middle
-
-b_company
-BillTo.CompanyName
-
 bp_areaCode
 BillTo.Phone.LocCode
 
@@ -4273,100 +3007,13 @@ BillTo.Phone.Number.Suffix
 bp_extention
 BillTo.Phone.Extension
 
-b_address1
-BillTo.Street.Line1
-
-b_address2
-BillTo.Street.Line2
-
-b_city
-BillTo.City
-
-b_state
-BillTo.State
-
-b_country
-BillTo.Country
-
-b_zip
-BillTo.PostalCode
-
 
 catalog.robertsonmarketing.com/psinet/shipping.asp
-ship_to_firstname
-ShipTo.Name.First
-
-ship_to_lastname
-ShipTo.Name.Last
-
 ship_to_name
 ShipTo.CompanyName
 
-ship_to_street
-ShipTo.Street.Line1
-
-ship_to_street2
-ShipTo.Street.Line2
-
-ship_to_city
-ShipTo.City
-
-ship_to_state
-ShipTo.State
-
-ship_to_zip
-ShipTo.PostalCode
-
-ship_to_country
-ShipTo.Country
-
-ship_to_phone
-ShipTo.Phone
-
 
 catalog.robertsonmarketing.com/psinet/purchase.asp
-cc_name
-Card.Name
-
-_cc_number
-Card.Number
-
-cc_type
-Card.Type
-
-_cc_expmonth
-Card.ExpDate.Month
-
-_cc_expyear
-Card.ExpDate.Year
-
-bill_to_firstname
-BillTo.Name.First
-
-bill_to_lastname
-BillTo.Name.Last
-
-bill_to_street
-BillTo.Street.Line1
-
-bill_to_street2
-BillTo.Street.Line2
-
-bill_to_city
-BillTo.City
-
-bill_to_state
-BillTo.State
-
-bill_to_zip
-BillTo.PostalCode
-
-bill_to_country
-BillTo.Country
-
-bill_to_phone
-BillTo.Phone
-
 
 wcorp.itn.net/cgi/res
 first_name.0
@@ -4402,139 +3049,19 @@ ShipTo.Phone
 home_phone
 ShipTo.AltPhone
 
-cc_type
-Card.Type
-
 cc_user
 Card.Name
 
-*cc_num
-Card.Number
-
-*cc_exp
-Card.ExpDate
-
 
 www.1800flowers.com/flowers/shipping.asp
-ship_to_firstname
-ShipTo.Name.First
-
-ship_to_lastname
-ShipTo.Name.Last
-
-ship_to_street1
-ShipTo.Street.Line1
-
-ship_to_street2
-ShipTo.Street.Line2
-
-ship_to_city
-ShipTo.City
-
-ship_to_state
-ShipTo.State
-
-ship_to_zip
-ShipTo.PostalCode
-
-ship_to_phone
-ShipTo.Phone
-
-ship_to_country
-ShipTo.Country
-
 
 www.1800flowers.com/flowers/billingform.asp
-bill_to_firstname
-BillTo.Name.First
-
-bill_to_lastname
-BillTo.Name.Last
-
-bill_to_email
-BillTo.Email
-
-bill_to_street1
-BillTo.Street.Line1
-
-bill_to_street2
-BillTo.Street.Line2
-
-bill_to_city
-BillTo.City
-
-bill_to_state
-BillTo.State
-
-bill_to_zip
-BillTo.PostalCode
-
-bill_to_phone
-BillTo.Phone
-
-bill_to_country
-BillTo.Country
-
 
 www.1800flowers.com/flowers/review.asp
-cc_name
-Card.Name
-
-cc_number
-Card.Number
-
-cc_type
-Card.Type
-
-_cc_expmonth
-Card.ExpDate.Month
-
-_cc_expyear
-Card.ExpDate.Year
-
 
 www.auctionuniverse.com/au/join.asp
-Email
-Home.Email
-
 VerifyEmail
 Home.Email
-
-first_name
-Name.First
-
-last_name
-Name.Last
-
-business_name
-Business.CompanyName
-
-address1
-Home.Street.Line1
-
-address2
-Home.Street.Line2
-
-city
-Home.City
-
-state
-Home.State
-
-postal_code
-Home.PostalCode
-
-country
-Home.Country
-
-Day_Phone
-Home.Phone
-
-Evening_Phone
-Home.AltPhone
-
-fax
-Home.Fax
 
 alternate_mail
 Home.Pager.Number
@@ -4614,21 +3141,6 @@ Home.Email
 
 
 www2.gte.com/StoreTools/SCPages/billing.cfm
-bill_add_1
-BillTo.Street.Line1
-
-bill_add_2
-BillTo.Street.Line2
-
-bill_city
-BillTo.City
-
-bill_state
-BillTo.State
-
-bill_zip
-BillTo.PostalCode
-
 
 www2.gte.com/StoreTools/SCPages/other.cfm
 ssn
@@ -4650,12 +3162,6 @@ ShipTo.Name.First
 
 LAST_NAME
 ShipTo.Name.Last
-
-SHIPPING_ADDRESS_1
-ShipTo.Street.Line1
-
-SHIPPING_ADDRESS_2
-ShipTo.Street.Line2
 
 CITY
 ShipTo.City
@@ -4688,12 +3194,6 @@ BillTo.Name.First
 
 LAST_NAME
 BillTo.Name.Last
-
-BILLING_ADDRESS_1
-BillTo.Street.Line1
-
-BILLING_ADDRESS_2
-BillTo.Street.Line2
 
 CITY
 BillTo.City
@@ -4731,126 +3231,21 @@ BillTo.AltPhone.Extension
 EMAIL_ADDRESS
 BillTo.Email
 
-CC_NAME
-Card.Name
-
-CC_TYPE
-Card.Type
-
-CC_NUMBER
-Card.Number
-
-CC_EXPIRY_MONTH
-Card.ExpDate.Month
-
-CC_EXPIRY_YEAR
-Card.ExpDate.Year
-
 
 www.egghead.com/custserv/register.htm
-BFirstName
-BillTo.Name.First
-
-BLastName
-BillTo.Name.Last
-
-BCompany
-BillTo.CompanyName
-
-BAddress
-BillTo.Street.Line1
-
-BAddress2
-BillTo.Street.Line2
-
-BAddress3
-BillTo.Street.Line3
-
-BCity
-BillTo.City
-
-BState
-BillTo.State
-
-BZip
-BillTo.PostalCode
-
-BCountry
-BillTo.Country
-
-BDayPhone
-BillTo.Phone
-
-BNightPhone
-BillTo.AltPhone
-
 Fax
 BillTo.Fax
 
 Email
 BillTo.Email
 
-SFirstName
-ShipTo.Name.First
-
-SLastName
-ShipTo.Name.Last
-
-SCompany
-ShipTo.CompanyName
-
-SAddress
-ShipTo.Street.Line1
-
-SAddress2
-ShipTo.Street.Line2
-
-SAddress3
-ShipTo.Street.Line3
-
-SCity
-ShipTo.City
-
-SState
-ShipTo.State
-
-SZip
-ShipTo.PostalCode
-
-SCountry
-ShipTo.Country
-
-SDayPhone
-ShipTo.Phone
-
 CardNo
 Card.Number
 
-ExpMonth
-Card.ExpDate.Month
-
-ExpYear
-Card.ExpDate.Year
-
 
 air.onetravel.com/account/AccountNew.cfm
-EmailAddress
-Home.Email
-
-FirstName
-Name.First
-
-LastName
-Name.Last
-
 CCLastName
 Card.Name
-
-CCType
-Card.Type
-
-CCNumber
-Card.Number
 
 CCExp
 Card.ExpDate.Month
@@ -4863,18 +3258,6 @@ BillTo.Street.Line1
 
 BillAddressTwo
 BillTo.Street.Line2
-
-BillCity
-BillTo.City
-
-BillState
-BillTo.State
-
-BillZip
-BillTo.PostalCode
-
-BillCountry
-BillTo.Country
 
 BillPhoneNum1
 BillTo.Phone
@@ -4991,15 +3374,6 @@ Home.Country
 
 
 secure.register.com/step-5a.cgi
-ExpirationMonth
-Card.ExpDate.Month
-
-ExpirationYear
-Card.ExpDate.Year
-
-CardNumber
-Card.Number
-
 BILL_CONTACT_FIRST_NAME
 BillTo.Name.First
 
@@ -5029,47 +3403,8 @@ BillTo.Country
 
 
 shop.barnesandnoble.com/Shop/shipping.asp
-ship_to_fname
-ShipTo.Name.First
-
-ship_to_lname
-ShipTo.Name.Last
-
-ship_to_company
-ShipTo.CompanyName
-
-ship_to_addr1
-ShipTo.Street.Line1
-
-ship_to_addr2
-ShipTo.Street.Line2
-
-ship_to_addr3
-ShipTo.Street.Line3
-
-ship_to_city
-ShipTo.City
-
-ship_to_state
-ShipTo.State
-
-ship_to_zip
-ShipTo.PostalCode
-
-ship_to_country
-ShipTo.Country
-
-ship_to_phone
-ShipTo.Phone
-
 
 shop.barnesandnoble.com/shop/payment.asp
-cc_number
-Card.Number
-
-cc_exp_month
-Card.ExpDate.Month
-
 cc_expire_yr
 Card.ExpDate.Year
 
@@ -5290,9 +3625,6 @@ Home.Email
 
 
 www.cdnow.com/cgi-bin/mserver/SID=736394999/pagename=/RP/CDN/ACCT/processaccount.html
-ccnum
-Card.Number
-
 ccdate
 Card.ExpDate
 
@@ -5316,9 +3648,6 @@ BillTo.Country
 
 
 www3.peapod.com/fcgi-bin/sam.fcg
-emailaddress
-Home.Email
-
 mtitle
 Name.Prefix
 
@@ -5354,20 +3683,5 @@ Business.Phone
 
 mext
 Business.Phone.Extension
-
-cardType
-Card.Type
-
-cardNum
-Card.Number
-
-expMonth
-Card.ExpDate.Month
-
-expYear
-Card.ExpDate.Year
-
-cardName
-Card.Name
 
 
