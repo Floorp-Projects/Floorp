@@ -33,10 +33,16 @@ interface nsICacheListener;
 interface nsICacheSession : nsISupports
 {
     /**
-     * A cache session can only give out one cache entry descriptor with
-     * WRITE access at a time.  Until the client calls MarkValid on its
-     * descriptor, other attempts to open the same cache entry will 
-     * block.
+     * Expired entries will be doomed or evicted if this attribute is set to true.
+     * If false, expired entries will be returned (useful for offline-mode). This
+     * attribute defaults to true.
+     */
+    attribute PRBool doomEntriesIfExpired;
+
+    /**
+     * A cache session can only give out one descriptor with WRITE access
+     * to a given cache entry at a time.  Until the client calls MarkValid on
+     * its descriptor, other attempts to open the same cache entry will block.
      */
 
     /**

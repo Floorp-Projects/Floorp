@@ -50,6 +50,11 @@ interface nsICacheEntryDescriptor : nsISupports
     readonly attribute PRTime lastFetched;
 
     /**
+     * Get the last time the cache entry was modified.
+     */
+    readonly attribute PRTime lastModified;
+
+    /**
      * Get the last time the cache entry was marked valid.
      */
     readonly attribute PRTime lastValidated;
