@@ -2891,7 +2891,6 @@ nsChildContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   content = (nsIContent *)mArray.ElementAt(aIndex);
   if (nsnull != content) {
     res = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
-    NS_RELEASE(content);
   }
   else {
     *aReturn = nsnull;
