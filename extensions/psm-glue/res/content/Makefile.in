@@ -27,22 +27,20 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-CONTENT_DIR   = $(DIST)/bin/chrome/navigator/content/default/
-EXPORT_CONTENT = \
+NAVIGATOR_CONTENT_DIR = $(DIST)/bin/chrome/navigator/content/default/
+NAVIGATOR_EXPORT_CONTENT = \
   $(srcdir)/NavSecurityOverlay.xul \
   $(srcdir)/NavSecurityUI.js       \
   $(NULL)
 
-install::
-	$(INSTALL) $(EXPORT_CONTENT) $(CONTENT_DIR)
-
-CONTENT_DIR   = $(DIST)/bin/chrome/global/content/default/
-EXPORT_CONTENT = \
+GLOBAL_CONTENT_DIR = $(DIST)/bin/chrome/global/content/default/
+GLOBAL_EXPORT_CONTENT = \
   $(srcdir)/PSMTaskMenu.xul \
   $(srcdir)/psm.js \
   $(NULL)
 
 install::
-	$(INSTALL) $(EXPORT_CONTENT) $(CONTENT_DIR)
+	$(INSTALL) $(NAVIGATOR_EXPORT_CONTENT) $(NAVIGATOR_CONTENT_DIR)
+	$(INSTALL) $(GLOBAL_EXPORT_CONTENT) $(GLOBAL_CONTENT_DIR)
 
 
