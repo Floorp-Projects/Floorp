@@ -27,7 +27,8 @@ EXPORTS	=				      \
 	nsIMalloc.h                           \
 	nsIPlugin.h			      \
 	nsIPluginInstance.h		      \
-	nsIPluginInstancePeer.h		      \
+	nsIPluginInstancePeer.h	      \
+	nsIPluginInstancePeer2.h      \
 	nsIPluginManager.h		      \
 	nsIPluginManager2.h		      \
 	nsIPluginTagInfo.h		      \
