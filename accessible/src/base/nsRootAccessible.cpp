@@ -212,11 +212,12 @@ void nsRootAccessible::Notify(nsITimer *timer)
 NS_IMETHODIMP nsRootAccessible::StartDocReadyTimer()
 {
   nsresult rv;
-  if (!mTimer)
+  if (!mTimer) {
     mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    const PRUint32 kUpdateTimerDelay = 1;
-    rv = mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kUpdateTimerDelay);
+    if (NS_SUCCEEDED(rv)) {
+      const PRUint32 kUpdateTimerDelay = 1;
+      rv = mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kUpdateTimerDelay);
+    }
   }
 
   return rv;
