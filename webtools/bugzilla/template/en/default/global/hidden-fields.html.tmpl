@@ -29,5 +29,5 @@
 [% FOREACH field = form %]
   [% NEXT IF exclude && field.key.search(exclude) %]
   <input type="hidden" name="[% field.key %]"
-         value="[% field.value | html | html_newline %]">
+         value="[% field.value | html | html_linebreak %]">
 [% END %]
