@@ -3809,3 +3809,4 @@ NS_IMETHODIMP nsDOMWindowController::OnEvent(const PRUnichar *aEventName)
   return NS_OK;
 }
 #endif
+
