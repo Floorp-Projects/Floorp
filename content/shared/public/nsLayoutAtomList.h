@@ -101,6 +101,7 @@ LAYOUT_ATOM(viewportFrame, "ViewportFrame")
 
   // Alphabetical list of frame property names
 LAYOUT_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")
+LAYOUT_ATOM(inlineFrameAnnotation, "InlineFrameAnnotation")
 LAYOUT_ATOM(maxElementSizeProperty, "MaxElementSizeProperty")
 LAYOUT_ATOM(overflowProperty, "OverflowProperty")
 LAYOUT_ATOM(viewProperty, "ViewProperty")
