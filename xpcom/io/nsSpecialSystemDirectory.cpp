@@ -165,7 +165,8 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
             {
                 aFileSpec = nsFileSpec(appFSSpec.vRefNum,
                                        catInfo.dirInfo.ioDrParID,
-                                       name);
+                                       name,
+                                       PR_TRUE);
                 return;
             }
         }

@@ -74,6 +74,7 @@ LLIBS =                                \
 
 WIN_LIBS =                             \
         shell32.lib                    \
+        ole32.lib                      \
 !if defined(MOZ_TRACE_XPCOM_REFCNT)
         imagehlp.lib                   \
 !endif

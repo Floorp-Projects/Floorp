@@ -118,8 +118,49 @@ PRBool nsFileSpec::IsDirectory() const
 PRBool nsFileSpec::IsHidden() const
 //----------------------------------------------------------------------------------------
 {
-    return PR_FALSE; // FIX!!!!!
+    PRBool hidden = PR_TRUE;
+    char *leafname = GetLeafName();
+    if (nsnull != leafname)
+    {
+        if ((!strcmp(leafname, ".")) || (!strcmp(leafname, "..")))
+        {
+            hidden = PR_FALSE;
+        }
+        nsCRT::free(leafname);
+    }
+    return hidden;
 } // nsFileSpec::IsHidden
+
+//----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsSymlink() const
+//----------------------------------------------------------------------------------------
+{
+    struct stat st;
+    if (!mPath.IsEmpty() && stat(mPath, &st) == 0 && S_ISLNK(st.st_mode))
+        return PR_TRUE;
+
+    return PR_FALSE;
+} // nsFileSpec::IsSymlink
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
+//----------------------------------------------------------------------------------------
+{
+    wasAliased = PR_FALSE;
+
+    char resolvedPath[MAXPATHLEN];
+    int charCount = readlink(mPath, (char*)&resolvedPath, MAXPATHLEN);
+    if (0 < charCount)
+    {
+        if (MAXPATHLEN > charCount)
+            resolvedPath[charCount] = '\0';
+        
+        wasAliased = PR_TRUE;
+        mPath = (char*)&resolvedPath;
+    }
+    
+    return NS_OK;
+} // nsFileSpec::ResolveSymlink
 
 //----------------------------------------------------------------------------------------
 void nsFileSpec::GetParent(nsFileSpec& outSpec) const
@@ -167,7 +208,7 @@ void nsFileSpec::Delete(PRBool inRecursive) const
     {
         if (inRecursive)
         {
-            for (nsDirectoryIterator i(*this); i.Exists(); i++)
+            for (nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
             {
                 nsFileSpec& child = (nsFileSpec&)i;
                 child.Delete(inRecursive);
@@ -190,7 +231,7 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 			newDir.CreateDirectory();
 		}
 
-		for (nsDirectoryIterator i(*this); i.Exists(); i++)
+		for (nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
 		{
 			nsFileSpec& child = (nsFileSpec&)i;
 
@@ -398,11 +439,12 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 nsDirectoryIterator::nsDirectoryIterator(
     const nsFileSpec& inDirectory
-,   int /*inIterateDirection*/)
+,   PRBool resolveSymlinks)
 //----------------------------------------------------------------------------------------
     : mCurrent(inDirectory)
     , mExists(PR_FALSE)
     , mDir(nsnull)
+    , mResoveSymLinks(resolveSymlinks)
 {
     mCurrent += "sysygy"; // prepare the path for SetLeafName
     mDir = opendir((const char*)nsFilePath(inDirectory));
@@ -435,6 +477,11 @@ nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
     {
         mExists = PR_TRUE;
         mCurrent.SetLeafName(entry->d_name);
+        if (mResoveSymLinks)
+        {   
+          PRBool ignore;
+          mCurrent.ResolveSymlink(ignore);
+        }
     }
     return *this;
 } // nsDirectoryIterator::operator ++

@@ -599,13 +599,16 @@ nsFileSpec::nsFileSpec()
 }
 
 //----------------------------------------------------------------------------------------
-nsFileSpec::nsFileSpec(const FSSpec& inSpec)
+nsFileSpec::nsFileSpec(const FSSpec& inSpec, PRBool resolveAlias)
 //----------------------------------------------------------------------------------------
 : mSpec(inSpec)
 , mError(NS_OK)
 {
-    PRBool dummy;
-    ResolveAlias(dummy);
+    if (resolveAlias)
+    {
+        PRBool dummy;
+        ResolveSymlink(dummy);
+    }
 }
 
 //----------------------------------------------------------------------------------------
@@ -614,8 +617,6 @@ void nsFileSpec::operator = (const FSSpec& inSpec)
 {
 	mSpec = inSpec;
 	mError = NS_OK;
-    PRBool dummy;
-    ResolveAlias(dummy);
 }
 
 //----------------------------------------------------------------------------------------
@@ -639,8 +640,7 @@ nsFileSpec::nsFileSpec(const char* inNativePathString, PRBool inCreateDirs)
             mSpec, inCreateDirs));
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
-    PRBool dummy;
-    ResolveAlias(dummy);
+
 } // nsFileSpec::nsFileSpec
 
 //----------------------------------------------------------------------------------------
@@ -656,19 +656,22 @@ nsFileSpec::nsFileSpec(const nsString& inNativePathString, PRBool inCreateDirs)
             mSpec, inCreateDirs));
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
-    PRBool dummy;
-    ResolveAlias(dummy);
+
 } // nsFileSpec::nsFileSpec
 
 //----------------------------------------------------------------------------------------
-nsFileSpec::nsFileSpec(short vRefNum, long parID, ConstStr255Param name)
+nsFileSpec::nsFileSpec(short vRefNum, long parID, ConstStr255Param name,  PRBool resolveAlias)
 //----------------------------------------------------------------------------------------
 {
     mError = NS_FILE_RESULT(::FSMakeFSSpec(vRefNum, parID, name, &mSpec));
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
-    PRBool dummy;
-    ResolveAlias(dummy);
+ 
+    if (resolveAlias)
+    {
+        PRBool dummy;
+        ResolveSymlink(dummy);
+    }
 }
 
 //----------------------------------------------------------------------------------------
@@ -691,8 +694,7 @@ void nsFileSpec::operator = (const char* inString)
         MacFileHelpers::FSSpecFromPathname(inString, mSpec, true));
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
-    PRBool dummy;
-    ResolveAlias(dummy);
+    
 } // nsFileSpec::operator =
 
 //----------------------------------------------------------------------------------------
@@ -792,6 +794,8 @@ void nsFileSpec::MakeUnique(ConstStr255Param inSuggestedLeafName)
 void nsFileSpec::ResolveAlias(PRBool& wasAliased) 
 //---------------------------------------------------------------------------------------- 
 { 
+    NS_ASSERTION(0, "Use ResolveSymlink not ResolveAlias!");
+
 	Boolean wasAliased2; // Type conversion Boolean <--> PRBool 
 	OSErr err = MacFileHelpers::ResolveAliasFile(mSpec, wasAliased2); 
 	if (wasAliased2) 
@@ -834,6 +838,37 @@ PRBool nsFileSpec::IsHidden() const
     
     return hidden;
 } // nsFileSpec::IsHidden
+
+//----------------------------------------------------------------------------------------
+PRBool nsFileSpec::IsSymlink() const
+//----------------------------------------------------------------------------------------
+{
+    CInfoPBRec      cInfo;
+    PRBool          hidden = PR_FALSE;
+
+    if (noErr == GetCatInfo(cInfo))
+        if (cInfo.hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
+            hidden = PR_TRUE;
+    
+    return hidden;
+} // nsFileSpec::IsSymlink
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
+//----------------------------------------------------------------------------------------
+{
+    Boolean wasAliased2; // Type conversion Boolean <--> PRBool 
+	OSErr err = MacFileHelpers::ResolveAliasFile(mSpec, wasAliased2); 
+	if (wasAliased2) 
+	{ 
+		mError = NS_FILE_RESULT(err); 
+		wasAliased = PR_TRUE; 
+	} 
+	else 
+		wasAliased = PR_FALSE; 
+
+    return mError;
+} // nsFileSpec::ResolveSymlink
 
 //----------------------------------------------------------------------------------------
 void nsFileSpec::GetParent(nsFileSpec& outSpec) const
@@ -884,8 +919,7 @@ void nsFileSpec::operator += (const char* inRelativePath)
     }
     if (mError == NS_FILE_RESULT(fnfErr))
         mError = NS_OK;
-    PRBool dummy;
-    ResolveAlias(dummy);
+    
 } // nsFileSpec::operator +=
 
 //----------------------------------------------------------------------------------------
@@ -931,7 +965,7 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 			newDir.CreateDirectory();
 		}
 
-		for (nsDirectoryIterator i(*this); i.Exists(); i++)
+		for (nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
 		{
 			nsFileSpec& child = (nsFileSpec&)i;
 
@@ -1276,11 +1310,12 @@ void nsFileURL::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 nsDirectoryIterator::nsDirectoryIterator(
     const nsFileSpec& inDirectory
-,    int inIterateDirection)
+,   PRBool resolveSymLinks)
 //----------------------------------------------------------------------------------------
     : mCurrent(inDirectory)
     , mExists(false)
     , mIndex(-1)
+    , mResoveSymLinks(resolveSymLinks)
 {
     CInfoPBRec pb;
     OSErr err = inDirectory.GetCatInfo(pb);
@@ -1294,16 +1329,9 @@ nsDirectoryIterator::nsDirectoryIterator(
     mVRefNum = currentSpec.vRefNum;
     mParID = dipb->ioDrDirID;
     mMaxIndex = pb.dirInfo.ioDrNmFls;
-    if (inIterateDirection > 0)
-    {
-        mIndex = 0; // ready to increment
-        ++(*this); // the pre-increment operator
-    }
-    else
-    {
-        mIndex = mMaxIndex + 1; // ready to decrement
-        --(*this); // the pre-decrement operator
-    }
+    mIndex = 0; // ready to increment
+    ++(*this); // the pre-increment operator
+    
 } // nsDirectoryIterator::nsDirectoryIterator
 
 //----------------------------------------------------------------------------------------
@@ -1324,8 +1352,14 @@ OSErr nsDirectoryIterator::SetToIndex()
     FSSpec temp;
     if (err == noErr)
         err = FSMakeFSSpec(mVRefNum, mParID, objectName, &temp);
-    mCurrent = temp; // use the operator: it clears the string cache and resolves the alias.
+    mCurrent = temp; // use the operator: it clears the string cache.
     mExists = err == noErr;
+
+    if (mExists && mResoveSymLinks)
+    {   
+        PRBool ignore;
+        mCurrent.ResolveSymlink(ignore);
+    }
     return err;
 } // nsDirectoryIterator::SetToIndex()
 

@@ -91,6 +91,10 @@ interface nsIFileSpec : nsISupports
 
 	void createDir();
 	void touch();
+    
+    boolean isSymlink();
+    void resolveSymlink();
+
 	void rename([const] in string newLeafName);
 	void copyToDir([const] in nsIFileSpec newParentDir);
 	void moveToDir([const] in nsIFileSpec newParentDir);

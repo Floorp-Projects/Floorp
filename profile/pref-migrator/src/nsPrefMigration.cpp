@@ -343,7 +343,7 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
   nsAutoString fileOrDirNameStr;
   PRInt32 len;
 
-  for (nsDirectoryIterator dir(inputPath); dir.Exists(); dir++)
+  for (nsDirectoryIterator dir(inputPath, PR_FALSE); dir.Exists(); dir++)
   {
     nsFileSpec fileOrDirName = (nsFileSpec&)dir;
     folderName = fileOrDirName.GetLeafName();
@@ -409,7 +409,7 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
   char* folderName;
   nsAutoString fileOrDirNameStr;
  
-  for (nsDirectoryIterator dir(oldPath); dir.Exists(); dir++)
+  for (nsDirectoryIterator dir(oldPath, PR_FALSE); dir.Exists(); dir++)
   {
     nsFileSpec fileOrDirName = (nsFileSpec&)dir; //set first file or dir to a nsFileSpec
     folderName = fileOrDirName.GetLeafName();    //get the filename without the full path

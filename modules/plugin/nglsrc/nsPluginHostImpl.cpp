@@ -2216,7 +2216,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 		if (! pluginsDir.Valid())
 			break;
 
-		for (nsDirectoryIterator iter(pluginsDir); iter.Exists(); iter++) {
+		for (nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) {
 			const nsFileSpec& file = iter;
 			if (pluginsDir.IsPluginFile(file)) {
 				nsPluginFile pluginFile(file);

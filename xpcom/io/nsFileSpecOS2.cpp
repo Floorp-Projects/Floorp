@@ -194,10 +194,34 @@ PRBool nsFileSpec::IsDirectory() const
    return (0 == stat( mPath, &st)) && (S_IFDIR == (st.st_mode & S_IFDIR));
 }
 
+// Really should factor out DosQPI() call to an internal GetFS3() method and then use
+// here, in IsDirectory(), IsFile(), GetModDate(), GetFileSize() [and a future IsReadOnly()]
+// and lose the clumsy stat() calls.  Exists() too.
+
 PRBool nsFileSpec::IsHidden() const
 {
-   return PR_FALSE;  // FIX!  
+   FILESTATUS3 fs3;
+   APIRET rc;
+   PRBool bHidden = PR_FALSE; // XXX how do I return an error?
+   rc = DosQueryPathInfo( mPath, FIL_STANDARD, &fs3, sizeof fs3);
+   if( !rc)
+      bHidden = fs3.attrFile & FILE_HIDDEN ? PR_TRUE : PR_FALSE;
+
+   return bHidden; 
 }
+
+// On FAT or HPFS there's no such thing as a symlink; it's possible that JFS
+// (new with Warp Server for e-business) does know what they are.  Someone
+// with a recent toolkit should check it out, but this will be OK for now.
+PRBool nsFileSpec::IsSymlink() const
+{
+    return PR_FALSE;
+} 
+
+nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
+{
+    return NS_OK;
+} 
 
 void nsFileSpec::GetModDate( TimeStamp& outStamp) const
 {
@@ -280,7 +304,7 @@ void nsFileSpec::Delete( PRBool inRecursive) const
    {
       if( inRecursive)
       {
-         for( nsDirectoryIterator i(*this); i.Exists(); i++)
+         for( nsDirectoryIterator i(*this, PR_FALSE); i.Exists(); i++)
          {
             nsFileSpec &child = (nsFileSpec &) i;
             child.Delete( inRecursive);
@@ -404,8 +428,11 @@ nsresult nsFileSpec::Execute( const char *inArgs) const
 // nsDirectoryIterator ------------------------------------------------------
 
 nsDirectoryIterator::nsDirectoryIterator(	const nsFileSpec &aDirectory,
-                                          int   inIterateDirection)
-                   : mCurrent( aDirectory), mDir( nsnull), mExists(PR_FALSE)
+                                            PRBool resolveSymlinks)
+: mCurrent( aDirectory), 
+  mDir( nsnull), 
+  mExists(PR_FALSE), 
+  mResoveSymLinks(resolveSymlinks)
 {
    mDir = PR_OpenDir( aDirectory);
    mCurrent += "dummy";
@@ -428,6 +455,11 @@ nsDirectoryIterator &nsDirectoryIterator::operator ++ ()
    {
       mExists = PR_TRUE;
       mCurrent.SetLeafName( entry->name);
+      if (mResoveSymLinks)
+      {   
+          PRBool ignore;
+          mCurrent.ResolveSymlink(ignore);
+      }
    }
    return *this;
 }

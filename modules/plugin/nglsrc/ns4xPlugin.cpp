@@ -305,7 +305,7 @@ ns4xPlugin::CreatePlugin(nsPluginTag* pluginTag, nsIServiceManager* serviceMgr)
 		
 	short appRefNum = ::CurResFile();
 	short pluginRefNum;
-	for(nsDirectoryIterator iter(pluginsDir); iter.Exists(); iter++)
+	for(nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++)
 	{
 		const nsFileSpec& file = iter;
 		if (pluginsDir.IsPluginFile(file)) 

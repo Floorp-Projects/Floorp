@@ -362,7 +362,7 @@ Test(CreateFun create, PRUint32 count,
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewISupportsArray failed");
 
     nsFileSpec inDirSpec(inDir);
-    nsDirectoryIterator iter(inDirSpec);
+    nsDirectoryIterator iter(inDirSpec, PR_TRUE);
     for (i = 0; i < count && iter.Exists(); i++, iter++) {
         nsIThread* thread;
         nsIRunnable* worker;
