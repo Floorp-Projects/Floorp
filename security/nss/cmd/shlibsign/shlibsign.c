@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.9 2003/03/23 00:16:43 wtc%netscape.com Exp $
+ * $Id: shlibsign.c,v 1.10 2003/04/01 19:09:41 bishakhabanerjee%netscape.com Exp $
  */
 
 #ifdef XP_UNIX
@@ -405,7 +405,9 @@ main (int argc, char **argv)
     retval = 0;
 
 loser:
-    NSS_Shutdown();
+    if (NSS_Shutdown() != SECSuccess) {
+	exit(1);
+    }
 
 prdone:
     PR_Cleanup ();
