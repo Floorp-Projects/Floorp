@@ -1,22 +1,13 @@
-COSES
+TemplateToolkit
 1
 
-<text xml:space="default" xmlns="http://bugzilla.mozilla.org/coses">
+[% INCLUDE template.header title="Internal Error" response="500 Internal Server Error" %]
 
-<set variable="title" value="Internal Error">
-<set variable="response" value="500 Server Error">
-  <include href="template.header"/>
-</set></set>
-
-<![CDATA[
 <p>An internal error occured. Please <a
 href="http://www.hixie.ch/bugzilla/">report this bug</a>, including
 the date and time of the error along with the information included
 below:</p>
 
-<pre>]]><text escape="html" value="(error)"/><![CDATA[</pre>
-]]>
+<pre>[% error %]</pre>
 
-<include href="template.footer"/>
-
-</text>
+[% INCLUDE template.footer %]
