@@ -234,6 +234,9 @@ CViewSourceHTML::CViewSourceHTML() : nsIDTD(),
  */
 CViewSourceHTML::~CViewSourceHTML(){
   mParser=0; //just to prove we destructed...
+
+  NS_IF_RELEASE(mTokenizer);
+
 }
 
 /**
@@ -448,8 +451,7 @@ nsITokenRecycler* CViewSourceHTML::GetTokenRecycler(void){
  * @param 
  * @return
  */
-nsresult  CViewSourceHTML::Terminate(void)
-{
+nsresult  CViewSourceHTML::Terminate(void) {
   return NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 
@@ -461,7 +463,7 @@ nsresult  CViewSourceHTML::Terminate(void)
  */
 nsITokenizer* CViewSourceHTML::GetTokenizer(void) {
   if(!mTokenizer) {
-    mTokenizer = new nsHTMLTokenizer(eParseMode_quirks,mIsText);
+    nsresult result=NS_NewHTMLTokenizer(&mTokenizer);
   }
   return mTokenizer;
 }

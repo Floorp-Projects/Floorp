@@ -91,7 +91,7 @@ protected:
   
   virtual void     RecordTrailingContent(CStartToken* aStartToken,nsScanner& aScanner);
 
-  static void AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque,CTokenRecycler* aRecycler);
+  static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,CTokenRecycler* aRecycler);
 
   nsDeque mTokenDeque;
   PRBool  mDoXMLEmptyTags;
@@ -99,7 +99,7 @@ protected:
   PRBool  mPlainText;
 };
 
-extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsIDTD** aInstancePtrResult);
+extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult);
 
 #endif
 

@@ -333,8 +333,7 @@ CNavDTD::~CNavDTD(){
   delete mHeadContext;
   delete mBodyContext;
 
-  if(mTokenizer)
-    delete (nsHTMLTokenizer*)mTokenizer;
+  NS_IF_RELEASE(mTokenizer);
 
   if(mTempContext)
     delete mTempContext;
@@ -3316,8 +3315,9 @@ nsITokenRecycler* CNavDTD::GetTokenRecycler(void){
  * @return  ptr to tokenizer
  */
 nsITokenizer* CNavDTD::GetTokenizer(void) {
-  if(!mTokenizer)
-    mTokenizer=new nsHTMLTokenizer(mParseMode);
+  if(!mTokenizer) {
+    nsresult result=NS_NewHTMLTokenizer(&mTokenizer);
+  }
   return mTokenizer;
 }
 

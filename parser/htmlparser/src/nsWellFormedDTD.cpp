@@ -143,9 +143,7 @@ CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mFilename("") {
  */
 CWellFormedDTD::~CWellFormedDTD(){
   mParser=0; //just to prove we destructed...
-  if (mTokenizer)
-    delete mTokenizer;
-  mTokenizer=0;
+  NS_IF_RELEASE(mTokenizer);
 }
 
 /**
@@ -350,8 +348,10 @@ nsresult  CWellFormedDTD::Terminate(void)
  * @return  ptr to tokenizer
  */
 nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
-  if(!mTokenizer)
+  if(!mTokenizer) {
     mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer(&mFilename);
+    NS_IF_ADDREF(mTokenizer);
+  }
   return mTokenizer;
 }
 

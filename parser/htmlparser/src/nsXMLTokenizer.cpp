@@ -91,7 +91,7 @@ nsXMLTokenizer::FreeTokenRecycler(void) {
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_NewXMLTokenizer(nsIDTD** aInstancePtrResult) {
+NS_HTMLPARS nsresult NS_NewXMLTokenizer(nsITokenizer** aInstancePtrResult){
   nsXMLTokenizer* it = new nsXMLTokenizer();
 
   if (it == 0) {
@@ -208,7 +208,7 @@ nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanne
     aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
     if(aToken) {
       result=aToken->Consume(aChar,aScanner,eParseMode_noquirks);
-      AddToken(aToken,result,mTokenDeque,theRecycler);
+      AddToken(aToken,result,&mTokenDeque,theRecycler);
     }
   }
 
@@ -251,7 +251,7 @@ nsresult nsXMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,ns
  
     if(aToken) {
       result=aToken->Consume(aChar,aScanner,eParseMode_noquirks);
-      AddToken(aToken,result,mTokenDeque,theRecycler);
+      AddToken(aToken,result,&mTokenDeque,theRecycler);
     }
   }
   return result;

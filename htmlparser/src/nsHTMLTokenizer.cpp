@@ -85,20 +85,22 @@ nsHTMLTokenizer::FreeTokenRecycler(void) {
 }
 
 /**
- *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsParser.
+ *  This method is defined in nsHTMLTokenizer.h. It is used to 
+ *  cause the COM-like construction of an HTMLTokenizer.
  *  
  *  @update  gess 4/8/98
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsIDTD** aInstancePtrResult) {
+NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult) {
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsHTMLTokenizer* it = new nsHTMLTokenizer();
-
-  if (it == 0) {
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
   return it->QueryInterface(kClassIID, (void **) aInstancePtrResult);
 }
 
@@ -142,10 +144,10 @@ nsHTMLTokenizer::~nsHTMLTokenizer(){
   Here begins the real working methods for the tokenizer.
  *******************************************************************/
 
-void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque,CTokenRecycler* aRecycler) {
-  if(aToken) {
+void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,CTokenRecycler* aRecycler) {
+  if(aToken && aDeque) {
     if(NS_SUCCEEDED(aResult)) {
-      aDeque.Push(aToken);
+      aDeque->Push(aToken);
     }
     else {
       if(aRecycler) {
@@ -423,7 +425,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
         }
         else {
           theAttrCount++;
-          AddToken(theToken,result,mTokenDeque,theRecycler);
+          AddToken(theToken,result,&mTokenDeque,theRecycler);
         }
       }
       else { //if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
@@ -447,7 +449,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
             eHTMLTags theEndTag = (eHTMLTags)aToken->GetTypeID();
             if(result==NS_OK&&(gHTMLElements[theEndTag].mSkipTarget)){
               CToken* theEndToken=theRecycler->CreateTokenOfType(eToken_end,theEndTag);
-              AddToken(theEndToken,NS_OK,mTokenDeque,theRecycler); 
+              AddToken(theEndToken,NS_OK,&mTokenDeque,theRecycler); 
             }
             done=PR_TRUE;
           }
@@ -490,7 +492,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
     result= aToken->Consume(aChar,aScanner,mParseMode);  //tell new token to finish consuming text...    
     if(NS_SUCCEEDED(result)) {
      
-      AddToken(aToken,result,mTokenDeque,theRecycler);
+      AddToken(aToken,result,&mTokenDeque,theRecycler);
       eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
       
       if(((CStartToken*)aToken)->IsAttributed()) {
@@ -512,8 +514,8 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           result=((CTextToken*)textToken)->ConsumeUntil(0,PR_TRUE,aScanner,endTag,mParseMode);  //tell new token to finish consuming text...    
           //endTag.Append(">");
           CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
-          AddToken(textToken,result,mTokenDeque,theRecycler);
-          AddToken(endToken,result,mTokenDeque,theRecycler);
+          AddToken(textToken,result,&mTokenDeque,theRecycler);
+          AddToken(endToken,result,&mTokenDeque,theRecycler);
         }
       }
  
@@ -548,7 +550,7 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
   
   if(aToken) {
     result= aToken->Consume(aChar,aScanner,mParseMode);  //tell new token to finish consuming text...    
-    AddToken(aToken,result,mTokenDeque,theRecycler);
+    AddToken(aToken,result,&mTokenDeque,theRecycler);
   } //if
   return result;
 }
@@ -594,7 +596,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
         theRecycler->RecycleToken(aToken);
         aToken=theToken;
       }
-      AddToken(aToken,result,mTokenDeque,theRecycler);
+      AddToken(aToken,result,&mTokenDeque,theRecycler);
     }
   }//if
   return result;
@@ -617,7 +619,7 @@ nsresult nsHTMLTokenizer::ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsSc
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner,mParseMode);
-    AddToken(aToken,result,mTokenDeque,theRecycler);
+    AddToken(aToken,result,&mTokenDeque,theRecycler);
   }
   return result;
 }
@@ -638,7 +640,7 @@ nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScann
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner,mParseMode);
-    AddToken(aToken,result,mTokenDeque,theRecycler);
+    AddToken(aToken,result,&mTokenDeque,theRecycler);
   }
   return result;
 }
@@ -668,7 +670,7 @@ nsresult nsHTMLTokenizer::ConsumeText(const nsString& aString,CToken*& aToken,ns
       }
       else result=NS_OK;
     }
-    AddToken(aToken,result,mTokenDeque,theRecycler);
+    AddToken(aToken,result,&mTokenDeque,theRecycler);
   }
   return result;
 }
@@ -703,7 +705,7 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
   
   if(aToken) {
     result=aToken->Consume(aChar,aScanner,mParseMode);
-    AddToken(aToken,result,mTokenDeque,theRecycler);
+    AddToken(aToken,result,&mTokenDeque,theRecycler);
   }
   return result;
 }
@@ -723,7 +725,7 @@ nsresult nsHTMLTokenizer::ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScann
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner,mParseMode);
-    AddToken(aToken,result,mTokenDeque,theRecycler);
+    AddToken(aToken,result,&mTokenDeque,theRecycler);
   }
   return result;
 }
@@ -744,7 +746,7 @@ nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& 
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner,mParseMode);
-    AddToken(aToken,result,mTokenDeque,theRecycler);
+    AddToken(aToken,result,&mTokenDeque,theRecycler);
   }
   return result;
 }

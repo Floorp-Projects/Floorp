@@ -264,6 +264,7 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
  */
 nsXIFDTD::~nsXIFDTD(){
   NS_IF_RELEASE(mSink);
+  NS_IF_RELEASE(mTokenizer);
 }
 
 
@@ -1223,10 +1224,12 @@ nsresult nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
  * @return
  */
 nsITokenizer* nsXIFDTD::GetTokenizer(void){
-  if(!mTokenizer)
-    mTokenizer=new nsXMLTokenizer();
+  if(!mTokenizer) {
+    nsresult result=NS_NewXMLTokenizer(&mTokenizer);
+  }
   return mTokenizer;
 }
+
 
 /**
  * 
