@@ -29,7 +29,6 @@
 
 
 #include "../../../js/src/xpconnect/public/xpctest.h"
-#include "idl/nsITestProxyFoo.h"
 
 #include "nsProxyObjectManager.h"
 
@@ -108,42 +107,6 @@ NS_SetupRegistry()
                                     PR_FALSE, PR_FALSE);
 
 }
-
-
-
-/***************************************************************************/
-/* nsTestProxy                                                            */
-/***************************************************************************/
-class nsTestProxy : public nsITestProxyFoo
-{
-    NS_DECL_ISUPPORTS
-    
-    NS_IMETHOD Test(nsISupports *p1, nsISupports **p2);
-    
-    nsTestProxy();
-    ~nsTestProxy();
-};
-
-
-nsTestProxy::nsTestProxy()
-{
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-}
-
-nsTestProxy::~nsTestProxy()
-{
-}
-
-NS_IMPL_ISUPPORTS(nsTestProxy,NS_ITESTPROXYFOO_IID)
-
-NS_IMETHODIMP nsTestProxy::Test(nsISupports *p1, nsISupports **p2)
-{
-    *p2 = this;
-
-    return NS_OK;
-}
-
 
 
 /***************************************************************************/
