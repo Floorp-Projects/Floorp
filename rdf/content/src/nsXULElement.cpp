@@ -3228,21 +3228,21 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
-nsXULElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
+nsXULElement::BeginConvertToXIF(nsIXIFConverter* aConverter) const
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsXULElement::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsXULElement::ConvertContentToXIF(nsIXIFConverter* aConverter) const
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsXULElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsXULElement::FinishConvertToXIF(nsIXIFConverter* aConverter) const
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;

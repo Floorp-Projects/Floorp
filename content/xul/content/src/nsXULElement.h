@@ -403,9 +403,9 @@ public:
                                   nsIAtom*& aName) const;
     NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
     NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-    NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const;
-    NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
-    NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const;
+    NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const;
+    NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const;
+    NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const;
     NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
     NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,
