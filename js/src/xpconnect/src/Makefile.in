@@ -31,6 +31,8 @@ MODULE=xpconnect
 
 # XXX hackage!
 # only copy the .so to components dir on platforms where xptcall is supported
+
+# Unixish x86
 ifneq (,$(filter SunOS Linux FreeBSD NetBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 IS_COMPONENT =  1

@@ -535,7 +535,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             }
             if(useAllocator)
             {
-                int len = strlen(bytes)+1;
+                int len = (JS_GetStringLength(str) + 1) * sizeof(char);
                 if(!(*((void**)d) = nsAllocator::Alloc(len)))
                 {
                     return JS_FALSE;
