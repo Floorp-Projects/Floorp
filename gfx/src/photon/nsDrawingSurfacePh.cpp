@@ -230,7 +230,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( ) {
 	mGC = PgCreateGC(0);
 	if( !mGC )
 		    return NS_ERROR_FAILURE;
-//	PgSetDrawBufferSize(65000);
+	PgSetDrawBufferSize(65000);
 	// this is definatly going to be on the screen, as it will be the window of a widget or something
 	mIsOffscreen = PR_FALSE;
 	mDrawContext = nsnull;
