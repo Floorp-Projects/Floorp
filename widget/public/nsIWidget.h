@@ -31,7 +31,7 @@
 
 #include "prthread.h"
 #include "nsEvent.h"
-#include "nsAReadableString.h"
+#include "nsString.h"
 
 // forward declarations
 class   nsIAppShell;
