@@ -22,6 +22,9 @@ MODULE = shell
 EXPORTS =			\
     nsMenuBar.h \
     nsMenuItem.h \
+    nsApplicationManager.h \
+    nsShellInstance.h \
+    nsShellCIID.h \
 	$(NULL)
 
 include $(DEPTH)/config/config.mk

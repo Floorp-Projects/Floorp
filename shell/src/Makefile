@@ -57,6 +57,7 @@ CPPSRCS=				\
  nsShellInstance.cpp			\
  nsMenuItem.cpp \
  nsMenuBar.cpp \
+ nsShellFactory.cpp \
  $(NULL)
 
 CPP_OBJS=				\
@@ -64,6 +65,7 @@ CPP_OBJS=				\
  ./$(OBJDIR)/nsShellInstance.o		\
  ./$(OBJDIR)/nsMenuItem.o		\
  ./$(OBJDIR)/nsMenuBar.o		\
+ ./$(OBJDIR)/nsShellFactory.o		\
  $(NULL)
 
 

@@ -20,6 +20,7 @@
 #include "nsShellInstance.h"
 #include "nsApplicationManager.h"
 #include "nsGfxCIID.h"
+#include "nsShellCIID.h"
 
 #include "Xm/Xm.h"
 #include "Xm/MainW.h"

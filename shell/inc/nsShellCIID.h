@@ -16,38 +16,29 @@
  * Reserved.
  */
 
-#ifndef nsIApplicationShell_h___
-#define nsIApplicationShell_h___
+#ifndef nsShellCIID_h__
+#define nsShellCIID_h__
 
-#include "nscore.h"
-#include "nsshell.h"
 #include "nsISupports.h"
-#include "nsIShellInstance.h"
+#include "nsIFactory.h"
+#include "nsRepository.h"
 
-#define NS_IAPPLICATIONSHELL_IID      \
- { 0xaf9a93e0, 0xdebc, 0x11d1, \
+#define NS_SHELLINSTANCE_CID      \
+ { 0x90487580, 0xfefe, 0x11d1, \
+   {0xbe, 0xcd, 0x00, 0x80, 0x5f, 0x8a, 0x8d, 0xbd} }
+
+// 74222650-2d76-11d2-9246-00805f8a7ab6
+#define NS_MENUBAR_CID      \
+ { 0x74222650, 0x2d76, 0x11d2, \
+   {0x92, 0x46, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
+
+// 7a01c6d0-2d76-11d2-9246-00805f8a7ab6
+#define NS_MENUITEM_CID      \
+ { 0x7a01c6d0, 0x2d76, 0x11d2, \
+   {0x92, 0x46, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
+
+#define NS_IAPPLICATIONSHELL_CID      \
+ { 0x2293d960, 0xdeff, 0x11d1, \
    {0x92, 0x44, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
 
-extern "C" nsresult NS_RegisterApplicationShellFactory();
-
-// Application Shell Interface
-class nsIApplicationShell : public nsISupports 
-{
-public:
-
-  /**
-   * Initialize the ApplicationShell
-   * @result The result of the initialization, NS_OK if no errors
-   */
-  NS_IMETHOD Init() = 0;
-
-  /**
-   * Start the Shell's Event Loop.  
-   * @result The result of the event loop execution, NS_Ok if appropriate Exit Message occured
-   */
-  NS_IMETHOD Run() = 0;
-
-
-};
-
-#endif /* nsIApplicationShell_h___ */
+#endif
