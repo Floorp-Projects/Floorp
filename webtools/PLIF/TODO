@@ -10,9 +10,13 @@ Move PLIF/Service/User* to PLIF/Session/*
 Move PLIF/Service/Session.pm to PLIF/Session.pm
 Move PLIF/Service/ContactMethods to PLIF/ProtocolHelper/...
 Move PLIF/DataSource/*/MySQL.pm to PLIF/DataSource/MySQL/*.pm
+Move PLIF/Service/Coses.pm and PLIF/Service/TemplateToolkit.bm to PLIF/???
 
 
 CGI input needs POST support
+
+
+Abstract out the metadata stuff in the Input classes.
 
 
 Change output system (again) by removing the pointless
@@ -21,4 +25,5 @@ into a hash labelling those parameters. The callers can do that, it's
 just like requiring named arguments.
 
 
-Need to move default default strings to the PLIF directory
+Make the DBI Results Frame return array refs and not arrays (will
+require rather large changes throughout PLIF).
