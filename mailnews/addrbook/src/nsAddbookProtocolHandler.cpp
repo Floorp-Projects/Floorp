@@ -276,8 +276,6 @@ nsAddbookProtocolHandler::FindPossibleAbName(nsIAbCard  *aCard,
                                              PRUnichar  **retName)
 {
   nsresult    rv = NS_ERROR_FAILURE;
-  nsVoidArray *attrlist = nsnull;
-  nsVoidArray *valuelist = nsnull;
 
   nsCOMPtr<nsIAbMDBCard> dbaCard(do_QueryInterface(aCard, &rv));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -212,3 +212,4 @@ NS_IMETHODIMP nsAbMDBDirProperty::SetValueForCard(nsIAbCard *card, const char *n
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
+
