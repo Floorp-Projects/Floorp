@@ -122,7 +122,12 @@ extern "C" NS_GFX_(void) NS_RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat
 extern "C" NS_GFX_(void) NS_HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue);
 
 // Gamma correction
-PR_EXPORT_DATA(PRUint8) nsGammaRamp[256], nsInverseGammaRamp[256];
+#ifndef NS_WIN32
+PR_EXPORT_DATA(PRUint8)
+#else
+extern PRUint8
+#endif
+nsGammaRamp[256], nsInverseGammaRamp[256];
 
 extern "C" NS_GFX_(double) NS_DisplayGammaValue(void);
 extern "C" NS_GFX_(void)   NS_InitializeGamma(void);
