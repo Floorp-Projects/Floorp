@@ -45,4 +45,9 @@ public class NamedNodeMapImpl extends NodeImpl implements NamedNodeMap {
                                   throws DOMException {
         throw new UnsupportedOperationException();
     }    
+
+    public Node         setNamedItemNS(Node arg)
+	                               throws DOMException {
+        throw new UnsupportedOperationException();
+    }
 }

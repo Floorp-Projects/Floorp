@@ -34,11 +34,20 @@ public class DocumentTypeImpl  extends NodeImpl implements DocumentType {
     public native NamedNodeMap getNotations();
     
     //since DOM level 2
+
+    // latest declaration:
+    //    public String             getPublicId() {
     public String             getPublicID() {
         throw new UnsupportedOperationException();
     }
     
+    // latest declaration:
+    //    public String             getSystemId() {
     public String             getSystemID() {
+        throw new UnsupportedOperationException();
+    }
+
+    public String       getInternalSubset() {
         throw new UnsupportedOperationException();
     }
 }

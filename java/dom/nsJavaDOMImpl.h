@@ -1,8 +1,12 @@
 #ifndef __nsJavaDOMImpl_h__
 #define __nsJavaDOMImpl_h__
 
-#include <jni.h>
+#include "jni.h"
 #include "nsIJavaDOM.h"
+#ifndef JAVA_DOM_OJI_DISABLE
+#include "nsJVMManager.h"
+#include "JavaDOMSecurityContext.h"
+#endif /* JAVA_DOM_OJI_DISABLE */
 
 class nsIURI;
 class nsIDOMDocument;
@@ -46,8 +50,12 @@ class nsJavaDOMImpl : public nsIJavaDOM {
 				      const char *aCommand);
 
  private:
-  static JavaVM*	jvm;
-  static JNIEnv*	env;
+#ifndef JAVA_DOM_OJI_DISABLE
+  static nsJVMManager* jvmManager;
+  static JavaDOMSecurityContext* securityContext;
+#else
+  static JavaVM*        jvm;
+#endif
 
   static jclass		domAccessorClass;
   static jclass		documentClass;
@@ -57,6 +65,7 @@ class nsJavaDOMImpl : public nsIJavaDOM {
   static jobject	docListener;
 
   static jfieldID	documentPtrFID;
+  static jmethodID      documentInitID;
 
   static jmethodID	getInstanceMID;
   static jmethodID	startURLLoadMID;
@@ -69,8 +78,9 @@ class nsJavaDOMImpl : public nsIJavaDOM {
   static jmethodID	gcMID;
 
   // cleanup after a JNI method invocation
-  static PRBool Cleanup();
-
+  static PRBool Cleanup(JNIEnv* env);
+  static JNIEnv* GetJNIEnv(void);
+  static void StartJVM(void);
   nsIDOMDocument* GetDocument(nsIDocumentLoader* loader);  
   jobject CaffienateDOMDocument(nsIDOMDocument* domDoc);
 };

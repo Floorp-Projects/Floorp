@@ -76,6 +76,9 @@ public class NodeImpl implements Node, EventTarget {
 
     // instantiated from JNI only
     protected NodeImpl() {}
+    protected NodeImpl(long p) {
+	p_nsIDOMNode = p;
+    }
 
     public boolean equals(Object o) {
 	if (!(o instanceof NodeImpl))
@@ -223,4 +226,8 @@ public class NodeImpl implements Node, EventTarget {
     private native void  removeNativeEventListener(String type,
                                                 long nativeListener,
                                                 boolean useCapture);
+
+    public void         normalize() {
+        throw new UnsupportedOperationException();
+    };
 }

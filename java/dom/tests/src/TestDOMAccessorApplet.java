@@ -33,7 +33,8 @@ public class TestDOMAccessorApplet extends java.applet.Applet
     public void init()
     {
         accessor = DOMAccessorImpl.getInstance();
-	accessor.addDocumentLoadListener(new TestDocLoadListener());
+	accessor.addDocumentLoadListener(
+	    new TestDocLoadListener("TestDOMAccessorApplet"));
 	System.out.println("inited......");
 	System.out.println("accsessor: " + accessor);
     }

@@ -23,5 +23,6 @@ package org.mozilla.dom;
 
 public class DOMGarbageCollector {
 
-    private static native void doGC();
+    //    private static native void doGC();
+    public static native void doGC();
 }

@@ -34,11 +34,13 @@ import org.mozilla.dom.DOMAccessor;
 import org.mozilla.dom.DOMAccessorImpl;
 import org.mozilla.dom.DocumentLoadListener;
 import org.mozilla.dom.tests.TestDocLoadListener;
+import org.mozilla.dom.test.*;
 
 public class TestDOMAccessorApplet1 extends Applet implements DocumentLoadListener
 {
     private DOMAccessor accessor;
     private static final boolean debug = true;
+    private static final String prefix = "TestDOMAccessorApplet1: ";
 
     public void init()
     {
@@ -50,40 +52,22 @@ public class TestDOMAccessorApplet1 extends Applet implements DocumentLoadListen
 
   public void startURLLoad(String url, String contentType, Document doc) {
     if (debug)
-      System.err.println("DOM: start URL load - " + 
+      System.err.println(prefix + "start URL load - " + 
 			 url.toString() + " " + 
 			 contentType);
   }
 
   public void endURLLoad(String url, int status, Document doc) {
     if (debug)
-      System.err.println("DOM: end URL load - " + 
+      System.err.println(prefix + "end URL load - " + 
 			 url.toString() + " " +
 			 Integer.toHexString(status));
-
-    if (!(url.endsWith(".xml") || url.endsWith(".html"))) return;
- 
-    if (doc == null) return;
-    Element element = doc.getDocumentElement();
-    if (element == null) return;
-    element.normalize();
-
-    PrintStream ps = null;
-    ps = new PrintStream(new BufferedOutputStream(System.out, 1024));
-    ps.println("\n+++ " + url.toString() + " +++");
-
-    dump(ps, element, 0, false);
-    ps.println();
-    ps.flush();
-    
-    element = null;
-    doc = null;
   }
 
   public void progressURLLoad(String url, int progress, int progressMax,
 			      Document doc) {
     if (debug)
-      System.err.println("DOM: progress URL load - " + 
+      System.err.println(prefix + "progress URL load - " + 
 			 url.toString() + " " +
 			 Integer.toString(progress) + "/" +
 			 Integer.toString(progressMax));
@@ -91,23 +75,25 @@ public class TestDOMAccessorApplet1 extends Applet implements DocumentLoadListen
 
   public void statusURLLoad(String url, String message, Document doc) {
     if (debug)
-      System.err.println("DOM: status URL load - " + 
+      System.err.println(prefix + "status URL load - " + 
 			 url.toString() + " (" +
 			 message + ")");
   }
 
   public void startDocumentLoad(String url) {
     if (debug)
-      System.err.println("DOM: start load - " + 
+      System.err.println(prefix + "start load - " + 
 			 url.toString());
   }
 
   public void endDocumentLoad(String url, int status, Document doc) {
     if (debug) {
-      System.err.println("DOM: end load - " + 
+      System.err.println(prefix + "end load - " + 
 			 url.toString() + " " + 
 			 Integer.toHexString(status));
     } 
+    dumpDocument(url, doc);
+    //runTests(doc);
   }
 
   private void dump(PrintStream ps, Node node, int indent, boolean isMapNode) {
@@ -202,7 +188,32 @@ public class TestDOMAccessorApplet1 extends Applet implements DocumentLoadListen
     return sb.toString();
   }
 
-}
+  private void dumpDocument(String url, Document doc) {
+      if (!(url.endsWith(".xml") || url.endsWith(".html"))) return; 
+      if (doc == null) return;
+      Element element = doc.getDocumentElement();
+      if (element == null) return;
+      element.normalize();
+    
+      PrintStream ps = null;
+      ps = new PrintStream(new BufferedOutputStream(System.out, 1024));
+      ps.println("\n+++ " + url.toString() + " +++");
+    
+      dump(ps, element, 0, false);
+      ps.println();
+      ps.flush();
+    
+      element = null;
+      doc = null;
+  }
 
+  private void runTests(Document doc) {
+    Object obj = (Object) doc;
+    TestLoader tl = new TestLoader(obj, 0);
+    if (tl != null) {
+       Object retobj = tl.loadTest();
+    }
+  }
+}
 
 

@@ -19,8 +19,8 @@ static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
 JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_register
   (JNIEnv *, jclass jthis)
 {
-  PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
-	 ("DOMAccessor::register: registering %x\n", jthis));
+//    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+//  	 ("DOMAccessor::register: registering %x\n", jthis));
 
   nsresult rv = NS_OK; 
   NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv);
@@ -38,7 +38,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_register
 	      rv));
     }
   }
-  nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
+  //  nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
 }
 
 /*
@@ -49,8 +49,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_register
 JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_unregister
   (JNIEnv *, jclass jthis)
 {
-  PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
-	 ("DOMAccessor::unregister: unregistering %x\n", jthis));
+//    PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
+//  	 ("DOMAccessor::unregister: unregistering %x\n", jthis));
 
   nsresult rv = NS_OK;
 
@@ -68,5 +68,5 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_unregister
 	      rv));
     }
   }
-  nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
+//    nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
 }

@@ -62,5 +62,10 @@ public class DOMImplementationImpl implements DOMImplementation {
         throw new UnsupportedOperationException();
     }
 
-                                                                                                      
+    public DocumentType createDocumentType(String qualifiedName, 
+                                           String publicId, 
+                                           String systemId, 
+                                           String internalSubset) {
+        throw new UnsupportedOperationException();
+    }                                                                                                      
 }

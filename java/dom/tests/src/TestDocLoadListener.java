@@ -38,6 +38,11 @@ import org.mozilla.dom.DocumentLoadListener;
 public class TestDocLoadListener implements DocumentLoadListener {
 
   private static final boolean debug = true;
+  private static String prefix = "TestDocLoadListener";
+
+  public TestDocLoadListener(String prefix) {
+    this.prefix = prefix;
+  }
 
   public DocumentLoadListener getDocumentLoadListener() {
     return this;
@@ -45,14 +50,14 @@ public class TestDocLoadListener implements DocumentLoadListener {
 
   public void startURLLoad(String url, String contentType, Document doc) {
     if (debug)
-      System.err.println("DOM: start URL load - " + 
+      System.err.println(prefix + "start URL load - " + 
 			 url.toString() + " " + 
 			 contentType);
   }
 
   public void endURLLoad(String url, int status, Document doc) {
     if (debug)
-      System.err.println("DOM: end URL load - " + 
+      System.err.println(prefix + " :end URL load - " + 
 			 url.toString() + " " +
 			 Integer.toHexString(status));
 
@@ -85,7 +90,7 @@ public class TestDocLoadListener implements DocumentLoadListener {
   public void progressURLLoad(String url, int progress, int progressMax,
 			      Document doc) {
     if (debug)
-      System.err.println("DOM: progress URL load - " + 
+      System.err.println(prefix + " :progress URL load - " + 
 			 url.toString() + " " +
 			 Integer.toString(progress) + "/" +
 			 Integer.toString(progressMax));
@@ -93,20 +98,20 @@ public class TestDocLoadListener implements DocumentLoadListener {
 
   public void statusURLLoad(String url, String message, Document doc) {
     if (debug)
-      System.err.println("DOM: status URL load - " + 
+      System.err.println(prefix + " :status URL load - " + 
 			 url.toString() + " (" +
 			 message + ")");
   }
 
   public void startDocumentLoad(String url) {
     if (debug)
-      System.err.println("DOM: start load - " + 
+      System.err.println(prefix + " :start doc load - " + 
 			 url.toString());
   }
 
   public void endDocumentLoad(String url, int status, Document doc) {
     if (debug) {
-      System.err.println("DOM: end load - " + 
+      System.err.println(prefix + " :end doc load - " + 
 			 url.toString() + " " + 
 			 Integer.toHexString(status));
     } 

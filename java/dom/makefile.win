@@ -22,17 +22,25 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
+#DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
+DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN -DJAVA_DOM_OJI_DISABLE
+JAVA_DOM_OJI_DISABLE=true
 MODULE=javadom 
 IS_COMPONENT=1
 LIBRARY_NAME=libjavadom
 
 CPPSRCS= \
+!ifndef JAVA_DOM_OJI_DISABLE
+	JavaDOMSecurityContext.cpp \
+!endif
 	nsJavaDOMImpl.cpp \
 	nsJavaDOMModule.cpp \
  $(NULL)
 
 CPP_OBJS= \
+!ifndef JAVA_DOM_OJI_DISABLE
+	.\$(OBJDIR)\JavaDOMSecurityContext.obj \
+!endif
 	.\$(OBJDIR)\nsJavaDOMImpl.obj \
 	.\$(OBJDIR)\nsJavaDOMModule.obj \
  $(NULL)
@@ -40,9 +48,11 @@ CPP_OBJS= \
 EXPORTS = \
 	nsIJavaDOM.h 
 
+!ifdef JAVA_DOM_OJI_DISABLE
 LINCS= \
 	-I$(JAVAHOME)\include \
 	-I$(JAVAHOME)\include\win32
+!endif
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = javadom
@@ -54,7 +64,11 @@ LCFLAGS = \
  $(NULL)
 
 LLIBS=	\
+!ifndef JAVA_DOM_OJI_DISABLE
+        $(DIST)\lib\oji.lib \
+!else
 	$(JAVAHOME)\lib\jvm.lib \
+!endif
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\img32$(VERSION_NUMBER).lib \
 	$(DIST)\lib\util.lib \

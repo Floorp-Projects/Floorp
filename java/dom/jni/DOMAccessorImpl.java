@@ -34,6 +34,10 @@ public class DOMAccessorImpl implements DOMAccessor, DocumentLoadListener {
     public static native void register();
     public static native void unregister();
 
+    static {
+	System.loadLibrary("javadomjni");
+    }
+
     public static synchronized DOMAccessor getInstance() {
 	if (instance == null) {
 	    instance = new DOMAccessorImpl();
