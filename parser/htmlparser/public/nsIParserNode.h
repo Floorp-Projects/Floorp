@@ -100,13 +100,6 @@ class nsIParserNode { // XXX Should be nsAParserNode
     virtual const nsAString& GetText() const =0;  //get plain text if available
 
     /**
-     * Retrieve skipped context from node
-     * @update	gess5/11/98
-     * @return  string containing skipped content
-     */
-    virtual const nsString& GetSkippedContent() const =0;
-
-    /**
      * Retrieve the type of the parser node.
      * @update	gess5/11/98
      * @return  node type.

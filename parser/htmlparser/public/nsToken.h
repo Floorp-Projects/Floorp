@@ -188,7 +188,7 @@ class CToken {
     /** @update	harishd 03/23/00
      *  @return  reference to string containing string value
      */
-    virtual void AppendSource(nsString& anOutputString);
+    virtual void AppendSourceTo(nsAString& anOutputString);
 
     /**
      * Sets the ordinal value of this token (not currently used)
@@ -203,13 +203,6 @@ class CToken {
      * @return  current ordinal value 
      */
     virtual PRInt32 GetTypeID(void);
-
-    /**
-     * Sets the # of attributes found for this token.
-     * @update	gess5/11/98
-     * @param   value is the attr count
-     */
-    virtual void SetAttributeCount(PRInt16 aValue);
 
     /**
      * Getter which retrieves the current attribute count for this token
@@ -269,6 +262,34 @@ class CToken {
      */
     virtual PRBool IsWellFormed(void) const {return PR_FALSE;}
 
+    virtual PRBool IsEmpty(void) { return PR_FALSE; }
+    
+    /**
+     * If aValue is TRUE then the token represents a short-hand tag
+     */
+    virtual void SetEmpty(PRBool aValue) { return ; }
+
+    PRInt32 GetNewlineCount() 
+    { 
+      return mNewlineCount; 
+    }
+
+    void SetNewlineCount(PRInt32 aCount)
+    {
+      mNewlineCount = aCount;
+    }
+
+    PRInt32 GetLineNumber() 
+    { 
+      return mLineNumber;
+    }
+
+    void SetLineNumber(PRInt32 aLineNumber) 
+    { 
+      mLineNumber = mLineNumber == 0 ? aLineNumber : mLineNumber;
+    }
+
+    void SetAttributeCount(PRInt16 aValue) {  mAttrCount = aValue; }
 
     /**
      * perform self test.
@@ -278,7 +299,7 @@ class CToken {
 
     static int GetTokenCount();
 
-    PRInt32       mNewlineCount;
+    
 
 protected:
     /**
@@ -288,6 +309,8 @@ protected:
 
     PRInt32 mTypeID;
     PRInt32 mUseCount;
+    PRInt32 mNewlineCount;
+    PRInt32 mLineNumber;
     PRInt16 mAttrCount;
 };
 

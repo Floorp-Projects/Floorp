@@ -210,8 +210,7 @@ COtherDTD::~COtherDTD(){
     delete mNodeAllocator;
     mNodeAllocator=nsnull;
   }
-  
-  NS_IF_RELEASE(mTokenizer);
+
   NS_IF_RELEASE(mSink);
 }
  
@@ -324,7 +323,9 @@ COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
   * @param	aSink
   * @return	error code (almost always 0)
   */
-nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink){
+nsresult COtherDTD::WillBuildModel(const CParserContext& aParserContext,
+                                   nsITokenizer* aTokenizer,
+                                   nsIContentSink* aSink){
   nsresult result=NS_OK;
 
   mFilename=aParserContext.mScanner->GetFilename();
@@ -334,6 +335,7 @@ nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsICon
   mHasOpenScript=PR_FALSE;
   mDTDMode=aParserContext.mDTDMode;
   mParserCommand=aParserContext.mParserCommand;
+  mTokenizer = aTokenizer;
 
   if((!aParserContext.mPrevContext) && (aSink)) {
 
@@ -486,6 +488,18 @@ NS_IMETHODIMP_(void)
 COtherDTD::Terminate() 
 { 
   mDTDState = NS_ERROR_HTMLPARSER_STOPPARSING; 
+}
+
+NS_IMETHODIMP_(PRInt32)  
+COtherDTD::GetType() 
+{ 
+  return NS_IPARSER_FLAG_HTML; 
+}
+
+NS_IMETHODIMP 
+COtherDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo)
+{
+  return NS_OK;
 }
 
 /** 
@@ -682,7 +696,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
   //Begin by gathering up attributes...  
  
   nsresult  result=NS_OK;
-  nsCParserNode* theNode=mNodeAllocator->CreateNode(aToken,mLineNumber,mTokenAllocator);
+  nsCParserNode* theNode=mNodeAllocator->CreateNode(aToken, mTokenAllocator);
   if(theNode) {
    
     eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
@@ -695,7 +709,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
       result=WillHandleStartTag(aToken,theChildTag,*theNode);
       if(NS_OK==result) {
  
-        mLineNumber += aToken->mNewlineCount;
+        mLineNumber += aToken->GetNewlineCount();
  
         PRBool theTagWasHandled=PR_FALSE; 
  
@@ -769,7 +783,7 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
       }
       CElement* theElement=gElementTable->mElements[theParent];
       if(theElement) { 
-        nsCParserNode* theNode=mNodeAllocator->CreateNode(aToken,mLineNumber,mTokenAllocator);
+        nsCParserNode* theNode=mNodeAllocator->CreateNode(aToken, mTokenAllocator);
         if(theNode) {
           result=theElement->HandleEndToken(theNode,theChildTag,mBodyContext,mSink);
           IF_FREE(theNode, mNodeAllocator);
@@ -864,7 +878,7 @@ nsresult COtherDTD::HandleEntityToken(CToken* aToken) {
     eHTMLTags theParent=mBodyContext->Last();
     CElement* theElement=gElementTable->mElements[theParent];
     if(theElement) {
-      nsCParserNode theNode(aToken,mLineNumber,0);
+      nsCParserNode theNode(aToken, 0);
       result=theElement->HandleStartToken(&theNode,eHTMLTag_text,mBodyContext,mSink);  
     }
   }
@@ -980,23 +994,6 @@ PRBool COtherDTD::IsInlineElement(PRInt32 aChildID,PRInt32 aParentID) const {
 PRBool COtherDTD::IsContainer(PRInt32 aTag) const {
   return gElementTable->mElements[eHTMLTags(aTag)]->IsContainer();
 }
-
- 
-/**
- * Retrieve the preferred tokenizer for use by this DTD.
- * @update  gess12/28/98
- * @param   none
- * @return  ptr to tokenizer
- */
-nsresult COtherDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
-  nsresult result=NS_OK;
-  if(!mTokenizer) {
-    result=NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,mParserCommand);
-  }
-  aTokenizer=mTokenizer;
-  return result;
-}
- 
  
 /**
  * 
