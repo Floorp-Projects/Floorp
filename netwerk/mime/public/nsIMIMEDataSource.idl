@@ -59,4 +59,5 @@ interface nsIMIMEDataSource : nsISupports {
 	void Remove( in string aType );
 	nsISimpleEnumerator GetEnumerator();
 	void Serialize();
+	void InitFromFile( in nsIFile aFile ); 
 };

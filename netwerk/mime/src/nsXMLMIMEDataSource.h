@@ -57,7 +57,6 @@ private:
 
     nsresult InitFromURI(nsIURI *aUri);
     nsresult InitFromHack();
-    nsresult InitFromFile( nsIFile* /* aFile */ );
 
     nsCOMPtr<nsIFile>						mFile; // File to load the datasource from
     nsHashtable                 *mInfoObjects; // used for fast access and
