@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<bindings id="outlinerBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <binding id="outliner">
+    <content orient="vertical">
+	  <xul:box class="outliner-columns">
+	    <children includes="outlinercol|splitter"/>
+	  </xul:box>
+	  <xul:outlinerrows class="outliner-rows" flex="1">
+	    <children/>
+	  </xul:outlinerrows>
+	</content>
+  </binding>
+
+  <binding id="outlinerrows" extends="xul:box">
+    <content>
+	  <children/>
+      <xul:scrollbar align="vertical" class="outliner-scrollbar"/>
+    </content>
+  </binding>
+
+  <binding id="outlinerbody"/>
+
+  <binding id="outlinercol">
+    <content autostretch="never">
+      <xul:image class="outlinercol-image" inherits="src"/>
+      <xul:text class="outlinercol-text" inherits="crop,value" flex="1" crop="right"/>
+      <xul:image class="outlinercol-sortdirection"/>
+    </content>
+  </binding>
+
+</bindings>
+
