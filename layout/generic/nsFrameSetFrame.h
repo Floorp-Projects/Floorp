@@ -166,6 +166,7 @@ protected:
   void Scale(nscoord  aDesired, 
              PRInt32  aNumIndicies, 
              PRInt32* aIndicies, 
+             PRInt32  aNumItems,
              PRInt32* aItems);
 
   void CalculateRowCol(nsIPresContext* aPresContext, 
