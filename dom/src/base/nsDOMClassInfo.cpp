@@ -3068,9 +3068,12 @@ nsDOMClassInfo::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
   nsCOMPtr<nsISupports> native;
   wrapper->GetNative(getter_AddRefs(native));
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
 
-  if (!sgo) {
+  if (isWindow) {
+    sgo = do_QueryInterface(native);
+    NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
+  } else {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(native));
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
