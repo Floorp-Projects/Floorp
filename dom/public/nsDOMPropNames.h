@@ -812,7 +812,9 @@
     "screen.availwidth", \
     "screen.colordepth", \
     "screen.height", \
+    "screen.left", \
     "screen.pixeldepth", \
+    "screen.top", \
     "screen.width", \
     "selection.addrange", \
     "selection.addselectionlistener", \
