@@ -2081,10 +2081,12 @@ nsMsgAccountManager::findServerUrl(nsISupports *aElement, void *data)
 
   // treat "" as a wild card, so if the caller passed in "" for the desired attribute
   // treat it as a match
-  if ((!*entry->type || (strcmp(entry->type, thisType)==0)) && 
-      (!*entry->hostname || (nsCRT::strcasecmp(entry->hostname, thisHostname)==0)) && 
+  // NOTE: DO NOT REPLACE PL_strcmp OR PL_strcasecmp below because one or more
+  // of these items may be null
+  if ((!*entry->type || (PL_strcmp(entry->type, thisType)==0)) && 
+      (!*entry->hostname || (PL_strcasecmp(entry->hostname, thisHostname)==0)) && 
       (!(entry->port != 0) || (entry->port == thisPort)) && 
-      (!*entry->username || (strcmp(entry->username, thisUsername)==0))) 
+      (!*entry->username || (PL_strcmp(entry->username, thisUsername)==0))) 
   {
     entry->server = server;
     return PR_FALSE;            // stop on first find 
