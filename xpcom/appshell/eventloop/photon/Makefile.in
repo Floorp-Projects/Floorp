@@ -31,12 +31,13 @@ REQUIRES=xpcom
 IS_COMPONENT    = 1
 
 CPPSRCS =					\
+	nsCPhEvent.cpp			\
 	nsCEvent.cpp 			\
-	nsCEventFilter.cpp 		
+	nsCEventFilter.cpp 		\
+	nsCPlatformBaseLoop.cpp	\
+	nsCAppLoop.cpp
 
-#	nsCPlatformBaseLoop.cpp
-
-LOCAL_INCLUDES += -I../xp
+LOCAL_INCLUDES += -I. -I../xp
 
 include $(topsrcdir)/config/config.mk
 

@@ -23,6 +23,7 @@
 #ifndef nsCAppLoop_h__
 #define nsCAppLoop_h__
 
+
 #include "nsCBaseAppLoop.h"
 
 class nsCAppLoop : public nsCBaseAppLoop 

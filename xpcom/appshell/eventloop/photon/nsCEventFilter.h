@@ -24,7 +24,6 @@
 #ifndef nsCEventFilter_h__
 #define nsCEventFilter_h__
 
-#include "PhT.h"
 #include "nsIEventFilter.h"
 #include "nsCPhFilter.h"
 

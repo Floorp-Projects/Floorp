@@ -24,7 +24,7 @@
 #ifndef nsCPhFilter_h__
 #define nsCPhFilter_h__
 
-#include "PhT.h"
+//#include "PhT.h"
 
 class nsCPhFilter
 {
