@@ -26,6 +26,14 @@ class  BulletFrame;
 struct LineData;
 struct nsBlockReflowState;
 
+/**
+ * Child list name indices
+ * @see #GetAdditionalChildListName()
+ */
+#define NS_BLOCK_FRAME_FLOATER_LIST_INDEX 0
+#define NS_BLOCK_FRAME_BULLET_LIST_INDEX  1
+#define NS_BLOCK_FRAME_LAST_LIST_INDEX    NS_BLOCK_FRAME_BULLET_LIST_INDEX
+
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
 class nsBlockFrame : public nsBlockFrameSuper

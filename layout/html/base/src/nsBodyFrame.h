@@ -28,6 +28,12 @@ class nsSpaceManager;
 struct nsStyleDisplay;
 struct nsStylePosition;
 
+/**
+ * Child list name indices
+ * @see #GetAdditionalChildListName()
+ */
+#define NS_BODY_FRAME_ABSOLUTE_LIST_INDEX   (NS_BLOCK_FRAME_LAST_LIST_INDEX + 1)
+
 class nsBodyFrame : public nsBlockFrame,
                     public nsIAbsoluteItems
 {
