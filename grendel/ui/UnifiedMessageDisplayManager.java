@@ -16,8 +16,6 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1997
  * Netscape Communications Corporation.  All Rights Reserved.
  *
- * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
- * Modified: Jeff Galyan <talisman@anamorphic.com>, 31 Dec 1998
  */
 
 package grendel.ui;
@@ -149,6 +147,10 @@ class UnifiedMessageFrame extends GeneralFrame {
   JSplitPane    splitter1 = null, splitter2 = null;
   String        fLayout = null;
   JToolBar      fToolBar1 = null;
+  int folderX = 350;
+  int folderY = 225;
+  int threadX = 200;
+  int threadY = 200;
 
   public UnifiedMessageFrame() {
     super("appNameLabel", "mail.multi_pane");
@@ -158,6 +160,9 @@ class UnifiedMessageFrame extends GeneralFrame {
     fFolders = new MasterPanel();
     fThreads = new FolderPanel();
     fMessage = new MessagePanel();
+
+    fFolders.setPreferredSize(new Dimension(folderX, folderY));
+    fThreads.setPreferredSize(new Dimension(threadX, threadY));
 
     splitter1 = new JSplitPane();
     splitter2 = new JSplitPane();
@@ -179,7 +184,7 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     fMenu = buildMenu("menus.xml");
 
-    getRootPane().setMenuBar(fMenu);
+    getRootPane().setJMenuBar(fMenu);
 
     GrendelToolBar masterToolBar = fFolders.getToolBar();
     GrendelToolBar folderToolBar = fThreads.getToolBar();
@@ -220,6 +225,7 @@ class UnifiedMessageFrame extends GeneralFrame {
     String splitWeight = "1.0";
 
     // XXX store dimensions into preferences. NYI --giao
+    /*
     if (fLayout.equals(UnifiedMessageDisplayManager.STACKED)) {
       // masterWeight = splitter1.getWeight(fFolders).toString();
       // folderWeight = splitter1.getWeight(fThreads).toString();
@@ -235,13 +241,16 @@ class UnifiedMessageFrame extends GeneralFrame {
       // messageWeight = splitter1.getWeight(fMessage).toString();
       // splitWeight = splitter1.getWeight(splitter2).toString();
     }
+    */
 
-    prefs.putString("mail.multi_pane.master_weight", masterWeight);
-    prefs.putString("mail.multi_pane.folder_weight", folderWeight);
-    prefs.putString("mail.multi_pane.message_weight", messageWeight);
-    prefs.putString("mail.multi_pane.split_weight", splitWeight);
-
-    prefs.putString("mail.multi_pane.layout", fLayout);
+    prefs.putString("mail.multi_pane.folder_x",
+		    Integer.toString(fFolders.getSize().width));
+    prefs.putString("mail.multi_pane.folder_y",
+		    Integer.toString(fFolders.getSize().height));
+    prefs.putString("mail.multi_pane.thread_x",
+		    Integer.toString(fThreads.getSize().width));
+    prefs.putString("mail.multi_pane.thread_y",
+		    Integer.toString(fThreads.getSize().height));
 
     fFolders.dispose();
     fThreads.dispose();
@@ -273,11 +282,34 @@ class UnifiedMessageFrame extends GeneralFrame {
 
     Preferences prefs = PreferencesFactory.Get();
 
-    String masterWeight = prefs.getString("mail.multi_pane.master_weight", "1.0");
-    String folderWeight = prefs.getString("mail.multi_pane.folder_weight", "2.0");
-    String messageWeight = prefs.getString("mail.multi_pane.message_weight", "2.0");
-    String splitWeight = prefs.getString("mail.multi_pane.split_weight", "1.0");
+    // read dimensions out of preferences
+    try {
+      folderX = 
+	Integer.parseInt(prefs.getString("mail.multi_pane.folder_x", 
+					 Integer.toString(folderX)));
+    } catch (NumberFormatException nf_fx) {}
 
+    try {
+      folderY =
+	Integer.parseInt(prefs.getString("mail.multi_pane.folder_y",
+					 Integer.toString(folderY)));
+    } catch (NumberFormatException nf_fy) {}
+
+    try {
+      threadX = 
+	Integer.parseInt(prefs.getString("mail.multi_pane.thread_x",
+					 Integer.toString(threadX)));
+    } catch (NumberFormatException nf_tx) {}
+
+    try {
+      threadY =
+	Integer.parseInt(prefs.getString("mail.multi_pane.thread_y",
+					 Integer.toString(threadY)));
+    } catch (NumberFormatException nf_ty) {}
+
+
+    prefs.getString("mail.multi_pane.folder_y",
+		    Integer.toString(folderY));
     if (layout.equals(UnifiedMessageDisplayManager.STACKED)) {
       splitter1.setOrientation(JSplitPane.VERTICAL_SPLIT);
       splitter2.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -286,6 +318,9 @@ class UnifiedMessageFrame extends GeneralFrame {
       splitter1.setBottomComponent(splitter2);
       splitter2.setTopComponent(fThreads);
       splitter2.setBottomComponent(fMessage);
+
+      fFolders.setPreferredSize(new Dimension(folderX, 100));
+      fThreads.setPreferredSize(new Dimension(threadX, 100));
 
       //      fStackedLayoutAction.setSelected(IUICmd.kSelected);
     } else if (layout.equals(UnifiedMessageDisplayManager.SPLIT_LEFT)) {
@@ -318,7 +353,9 @@ class UnifiedMessageFrame extends GeneralFrame {
       splitter1.setTopComponent(splitter2);
       splitter1.setBottomComponent(fMessage);
 
-      
+      fFolders.setPreferredSize(new Dimension(folderX, folderY));
+      fThreads.setPreferredSize(new Dimension(threadX, threadY));
+
       //      fSplitTopLayoutAction.setSelected(IUICmd.kSelected);
     }
 
