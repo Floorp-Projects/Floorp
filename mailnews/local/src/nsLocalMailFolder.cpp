@@ -104,6 +104,11 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
     mInitialized(PR_FALSE), mCopyState(nsnull)
 {
 	mPath = nsnull;
+  
+  // temp hack to precache the local path
+  nsCOMPtr<nsIFileSpec> path;
+  GetPath(getter_AddRefs(path));
+  
 //  NS_INIT_REFCNT(); done by superclass
 }
 
