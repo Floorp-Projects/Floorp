@@ -917,7 +917,12 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
       self->timerSet = PR_FALSE;
     }
     RemoveProp(self->eventReceiverWindow, _md_GetEventQueuePropName());
-    DestroyWindow(self->eventReceiverWindow);
+
+    // DestroyWindow doesn't do anything when called a non ui thread.  Since 
+    // self->eventReceiverWindow was created on the ui thread, it must be destroyed
+    // on the ui thread.
+    SendMessage(self->eventReceiverWindow, WM_CLOSE, 0, 0);
+
 #elif defined(XP_OS2)
     WinDestroyWindow(self->eventReceiverWindow);
 #elif defined(MAC_USE_CARBON_EVENT)
