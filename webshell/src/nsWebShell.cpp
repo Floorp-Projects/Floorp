@@ -3392,6 +3392,54 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
        dlObserver->OnEndDocumentLoad(mDocLoader, channel, aStatus, aWebShell);
     }
 
+   if ( (mDocLoader == loader) && (aStatus == NS_ERROR_UNKNOWN_HOST) ) {
+         // We need to check for a dns failure in aStatus, but dns failure codes 
+         // aren't proliferated yet. This checks for failure for a host lacking
+         // "www." and/or ".com" and munges the url acordingly, then fires off
+         // a new request.
+         //
+         // XXX This code may or may not have mem leaks depending on the version 
+         // XXX stdurl that is in the tree at a given point in time. This needs t
+         // XXX be fixed once we have a solid version of std url in.
+         char *host = nsnull;
+         nsString2 hostStr;
+         rv = aURL->GetHost(&host);
+         if (NS_FAILED(rv)) return rv;
+
+         hostStr.SetString(host);
+         nsAllocator::Free(host);
+         PRInt32 dotLoc = -1;
+         dotLoc = hostStr.FindChar('.');
+         PRBool retry = PR_FALSE;
+         if (-1 == dotLoc) {
+             hostStr.Insert("www.", 0, 4);
+             hostStr.Append(".com");
+             retry = PR_TRUE;
+         } else if ( (hostStr.Length() - dotLoc) == 3) {
+             hostStr.Insert("www.", 0, 4);
+             retry = PR_TRUE;
+         }
+
+         if (retry) {
+             char *modHost = hostStr.ToNewCString();
+             if (!modHost)
+                 return NS_ERROR_OUT_OF_MEMORY;
+             rv = aURL->SetHost(modHost);
+             nsAllocator::Free(modHost);
+             modHost = nsnull;
+             if (NS_FAILED(rv)) return rv;
+             char *aSpec = nsnull;
+             rv = aURL->GetSpec(&aSpec);
+             if (NS_FAILED(rv)) return rv;
+             nsString2 newURL(aSpec);
+             // reload the url
+             const PRUnichar *spec = newURL.GetUnicode();
+             if (spec) {
+                 rv = LoadURL(spec, "view");
+             }
+         } // retry            
+     } // unknown host
+
   } //!mProcessedEndDocumentLoad
   else {
     rv = NS_OK;
