@@ -18,7 +18,6 @@
 
 #include "nsTransferable.h"
 #include "nsString.h"
-#include "nsDataFlavor.h"
 #include "nsWidgetsCID.h"
 #include "nsVoidArray.h"
 #include "nsIFormatConverter.h"

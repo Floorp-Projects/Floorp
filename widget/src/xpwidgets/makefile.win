@@ -28,7 +28,6 @@ CPPSRCS = \
 	nsMenuButton.cpp        \
 	nsImageButton.cpp         \
 	nsBaseClipboard.cpp         \
-	nsDataFlavor.cpp         \
 	nsTransferable.cpp         \
 	nsXIFFormatConverter.cpp         \
 	$(NULL)
@@ -41,7 +40,6 @@ OBJS= \
 	.\$(OBJDIR)\nsMenuButton.obj  \
 	.\$(OBJDIR)\nsImageButton.obj  \
 	.\$(OBJDIR)\nsBaseClipboard.obj  \
-	.\$(OBJDIR)\nsDataFlavor.obj  \
 	.\$(OBJDIR)\nsTransferable.obj  \
 	.\$(OBJDIR)\nsXIFFormatConverter.obj  \
 	$(NULL)
