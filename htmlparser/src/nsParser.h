@@ -301,7 +301,6 @@ protected:
     // And now, some data members...
     //*********************************************
     
-  enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
   
     CParserContext*     mParserContext;
     PRInt32             mMajorIteration;
@@ -311,11 +310,9 @@ protected:
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
     PRBool              mDTDVerification;
-    PRBool              mParserEnabled;
     nsString            mCommand;
-    eStreamState        mStreamListenerState; //this is really only here for debug purposes.
     PRInt32             mStreamStatus;
-    PRBool              mIncremental;
+    PRBool              mMultipart;
 };
 
 

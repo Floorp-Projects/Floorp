@@ -65,6 +65,9 @@ public:
     CParserContext*     mPrevContext;
     void*               mKey;
     PRUint32            mTransferBufferSize;
+    PRBool              mParserEnabled;
+    eStreamState        mStreamListenerState; //this is really only here for debug purposes.
+
     // nsDeque          mTokenDeque;
 };
 

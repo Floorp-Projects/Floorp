@@ -28,6 +28,7 @@
 #include <fstream.h>
 #include "nsIParserFilter.h"
 #include "nshtmlpars.h"
+#include "CNavDTD.h"
 #include "nsWellFormedDTD.h"
 #include "nsViewSourceHTML.h" //uncomment this to partially enable viewsource...
 
@@ -75,10 +76,9 @@ public:
 class CDTDFinder: public nsDequeFunctor{
 public:
   CDTDFinder(nsIDTD* aDTD) {
-    NS_IF_ADDREF(mTargetDTD=aDTD);
+    mTargetDTD=aDTD;
   }
   virtual ~CDTDFinder() {
-    NS_IF_RELEASE(mTargetDTD);
   }
   virtual void* operator()(void* anObject) {
     nsIDTD* theDTD=(nsIDTD*)anObject;
@@ -97,18 +97,30 @@ public:
       NS_NewWellFormed_DTD(&theDTD);
       RegisterDTD(theDTD);
     */
-      nsIDTD* theDTD;
-      NS_NewViewSourceHTML(&theDTD);  //do this so all html files can be viewed...
-      RegisterDTD(theDTD);
+
+    nsIDTD* theDTD;
+
+    NS_NewNavHTMLDTD(&theDTD);    //do this as the default HTML DTD...
+    RegisterDTD(theDTD);
+
+    NS_NewViewSourceHTML(&theDTD);  //do this so all html files can be viewed...
+    RegisterDTD(theDTD);
   }
 
   ~CSharedParserObjects() {
   }
 
   void RegisterDTD(nsIDTD* aDTD){
-    CDTDFinder theFinder(aDTD);
-    if(!mDTDDeque.FirstThat(theFinder))
-      mDTDDeque.Push(aDTD);
+    if(aDTD) {
+      NS_ADDREF(aDTD);
+      CDTDFinder theFinder(aDTD);
+      if(!mDTDDeque.FirstThat(theFinder)) {
+        nsIDTD* theDTD;
+        aDTD->CreateNewInstance(&theDTD);
+        mDTDDeque.Push(theDTD);
+      }
+      NS_RELEASE(aDTD);
+    }
   }
   
   nsIDTD*  FindDTD(nsIDTD* aDTD){
@@ -132,13 +144,11 @@ CSharedParserObjects gSharedParserObjects;
  */
 nsParser::nsParser() : mCommand("") {
   NS_INIT_REFCNT();
-  mStreamListenerState=eNone;
   mParserFilter = 0;
   mObserver = 0;
   mSink=0;
   mParserContext=0;
   mDTDVerification=PR_FALSE;
-  mParserEnabled=PR_TRUE;
 }
 
 
@@ -150,10 +160,11 @@ nsParser::nsParser() : mCommand("") {
  *  @return  
  */
 nsParser::~nsParser() {
+  NS_POSTCONDITION(eOnStop==mParserContext->mStreamListenerState,kOnStopNotCalled);
+
   NS_IF_RELEASE(mObserver);
   NS_RELEASE(mSink);
 
-  NS_POSTCONDITION(eOnStop==mStreamListenerState,kOnStopNotCalled);
   //don't forget to add code here to delete 
   //what may be several contexts...
   delete mParserContext;
@@ -435,7 +446,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
 
   nsresult result=NS_OK;
 
-  if(eOnStart==mStreamListenerState) {  
+  if(eOnStart==mParserContext->mStreamListenerState) {  
     mMajorIteration=-1; 
     mMinorIteration=-1; 
     if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
@@ -445,7 +456,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
           mParserContext->mDTD=aDefaultDTD;
           if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand)) {
             //mParserContext->mDTD->SetContentSink(mSink);
-            mStreamListenerState=eOnDataAvail;
+            mParserContext->mStreamListenerState=eOnDataAvail;
             mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext),this);
           }
         }
@@ -468,7 +479,7 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
   //One last thing...close any open containers.
   nsresult result=anErrorCode;
 
-  if(mParserEnabled) {
+  if(mParserContext->mParserEnabled) {
     if((!mParserContext->mPrevContext) && (mParserContext->mDTD)) {
       result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this);
     }
@@ -521,19 +532,14 @@ PRBool nsParser::EnableParser(PRBool aState){
   // that we might start closing things down when the parser
   // is reenabled. To make sure that we're not deleted across
   // the reenabling process, hold a reference to ourselves.
-  if (eOnStop == mStreamListenerState) {
+  if (eOnStop == mParserContext->mStreamListenerState) {
     me = this;
     NS_ADDREF(me);
   }    
 
   // If we're reenabling the parser
-  if ((PR_FALSE == mParserEnabled) && aState) {
-    mParserEnabled = PR_TRUE;
-    ResumeParse();
-  }
-  else {
-    mParserEnabled=aState;
-  }
+  mParserContext->mParserEnabled=aState;
+  nsresult result=(aState) ? ResumeParse() : NS_OK;
 
   // Release reference if we added one at the top of this routine
   NS_IF_RELEASE(me);
@@ -558,16 +564,17 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
 
   nsresult result=kBadURL;
   mDTDVerification=aVerifyEnabled;
-  mStreamListenerState=eNone;  
-  mIncremental=PR_TRUE; 
+  mMultipart=PR_TRUE; 
   if(aURL) {
     const char* spec;
     nsresult rv = aURL->GetSpec(&spec);
     if (rv != NS_OK) return rv;
     nsAutoString theName(spec);
     CParserContext* cp=new CParserContext(new nsScanner(theName,PR_FALSE),aURL,aListener);
-    PushContext(*cp);
-    result=NS_OK;
+    if(cp) {
+      PushContext(*cp);
+      result=NS_OK;
+    }
   }
   return result;
 }
@@ -582,18 +589,20 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
 nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
 
   mDTDVerification=aVerifyEnabled;
-  mStreamListenerState=eOnStart;  
+  nsresult  result=NS_ERROR_OUT_OF_MEMORY;
   
   //ok, time to create our tokenizer and begin the process
   CParserContext* pc=new CParserContext(new nsScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
-  PushContext(*pc);
-  pc->mSourceType="text/html";
-  mParserContext->mScanner->Eof();
-  mIncremental=PR_FALSE;
-  nsresult result=ResumeParse();
-  pc=PopContext();
-  delete pc;
-
+  if(pc) {
+    PushContext(*pc);
+    pc->mSourceType="text/html";
+    pc->mStreamListenerState=eOnStart;  
+    mParserContext->mScanner->Eof();
+    mMultipart=PR_FALSE;
+    result=ResumeParse();
+    pc=PopContext();
+    delete pc;
+  }
   return result;
 }
 
@@ -609,8 +618,6 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
  * @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVerifyEnabled){
-  mDTDVerification=aVerifyEnabled;
-  mStreamListenerState=eOnStart;  
 
 #ifdef rickgdebug
   {
@@ -619,20 +626,25 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVer
   }
 #endif
 
+  mDTDVerification=aVerifyEnabled;
   nsresult result=NS_OK;
-  if(0<aSourceBuffer.Length()){
-    CParserContext* pc=new CParserContext(new nsScanner(aSourceBuffer),&aSourceBuffer,0);
 
-    nsIDTD* thePrevDTD=(mParserContext) ? mParserContext->mDTD: 0;
-      
-    PushContext(*pc);
-    if(PR_TRUE==anHTMLString)
-      pc->mSourceType="text/html";
-    mIncremental=PR_FALSE;
-    result=ResumeParse();
-    mParserContext->mDTD=0; 
-    pc=PopContext();
-    delete pc;
+  if(0<aSourceBuffer.Length()){
+
+    CParserContext* pc=new CParserContext(new nsScanner(aSourceBuffer),&aSourceBuffer,0);
+    if(pc) {
+      nsIDTD* thePrevDTD=(mParserContext) ? mParserContext->mDTD: 0;  
+      PushContext(*pc);
+      pc->mStreamListenerState=eOnStart;  
+      if(PR_TRUE==anHTMLString)
+        pc->mSourceType="text/html";
+      mMultipart=PR_FALSE;
+      result=ResumeParse();
+      // mParserContext->mDTD=0; 
+      pc=PopContext();
+      delete pc;
+    }
+    else result=NS_ERROR_OUT_OF_MEMORY;
   }
   return result;
 }
@@ -650,27 +662,30 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVer
  */
 nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
   
-  nsresult result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
-  mParserContext->mDTD->WillResumeParse();
-  if(NS_OK==result) {
+  nsresult result=NS_OK;
+  if(mParserContext->mParserEnabled) {
+    result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
+    mParserContext->mDTD->WillResumeParse();
+    if(NS_OK==result) {
      
-    result=Tokenize();
-    result=BuildModel();
+      result=Tokenize();
+      result=BuildModel();
 
-    if((!mIncremental) || ((eOnStop==mStreamListenerState) && (NS_OK==result))){
-      DidBuildModel(mStreamStatus);
-    }
-    else {
-      mParserContext->mDTD->WillInterruptParse();
-    // If we're told to block the parser, we disable
-    // all further parsing (and cache any data coming
-    // in) until the parser is enabled.
-      PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
-      if(NS_ERROR_HTMLPARSER_BLOCK==result) {
-        EnableParser(PR_FALSE);
+      if((!mMultipart) || ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
+        DidBuildModel(mStreamStatus);
       }
+      else {
+        mParserContext->mDTD->WillInterruptParse();
+      // If we're told to block the parser, we disable
+      // all further parsing (and cache any data coming
+      // in) until the parser is enabled.
+        PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
+        if(NS_ERROR_HTMLPARSER_BLOCK==result) {
+          EnableParser(PR_FALSE);
+        }
+      }//if
     }//if
-  }
+  }//if
   return result;
 }
 
@@ -768,12 +783,12 @@ nsParser::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::OnStartBinding(nsIURL* aURL, const char *aSourceType){
-  NS_PRECONDITION((eNone==mStreamListenerState),kBadListenerInit);
+  NS_PRECONDITION((eNone==mParserContext->mStreamListenerState),kBadListenerInit);
 
   if (nsnull != mObserver) {
     mObserver->OnStartBinding(aURL, aSourceType);
   }
-  mStreamListenerState=eOnStart;
+  mParserContext->mStreamListenerState=eOnStart;
   mParserContext->mAutoDetectStatus=eUnknownDetect;
   mParserContext->mDTD=0;
   mParserContext->mSourceType=aSourceType;
@@ -800,7 +815,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
     mListener->OnDataAvailable(pIStream, aLength);
   }
 */
-  NS_PRECONDITION(((eOnStart==mStreamListenerState)||(eOnDataAvail==mStreamListenerState)),kOnStartNotCalled);
+  NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail==mParserContext->mStreamListenerState)),kOnStartNotCalled);
 
   if(eInvalidDetect==mParserContext->mAutoDetectStatus) {
     if(mParserContext->mScanner) {
@@ -849,12 +864,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
     theStartPos+=theNumRead;
   }//while
 
-  if (mParserEnabled) {
-    return ResumeParse();
-  }
-  else {
-    return NS_OK;
-  }
+  return ResumeParse();
 }
 
 /**
@@ -866,18 +876,12 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUin
  *  @return  
  */
 nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg){
-  mStreamListenerState=eOnStop;
+  mParserContext->mStreamListenerState=eOnStop;
   mStreamStatus=status;
-  nsresult result;
+  nsresult result=ResumeParse();
   // If the parser isn't enabled, we don't finish parsing till
   // it is reenabled.
 
-  if (mParserEnabled) {
-    return ResumeParse();
-  }
-  else {
-    return NS_OK;
-  }
 
   // XXX Should we wait to notify our observers as well if the
   // parser isn't yet enabled?
