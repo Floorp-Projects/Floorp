@@ -913,14 +913,14 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         rv = ds->Init(uri);
         if (NS_FAILED(rv)) return rv;
 
-        // XXX hack for now: make sure that the data source is
-        // synchronously loaded. In the long run, we should factor out
-        // the "loading" from the "creating". See nsRDFXMLDataSource::Init().
+        // Start the datasource load asynchronously. If you wanted it
+        // loaded synchronously, then you should've tried to do it
+        // yourself.
         nsCOMPtr<nsIRDFXMLDataSource> rdfxmlDataSource(do_QueryInterface(ds));
         NS_ASSERTION(rdfxmlDataSource, "not an RDF/XML data source!");
         if (! rdfxmlDataSource) return NS_ERROR_UNEXPECTED;
 
-        rv = rdfxmlDataSource->Open(PR_TRUE);
+        rv = rdfxmlDataSource->Open(PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }
 
