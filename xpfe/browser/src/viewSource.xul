@@ -167,7 +167,7 @@
 
   </html:script>
 
-  <broadcaster id="args" value="http://law/"/>
+  <broadcaster id="args" value="http://www.mozilla.org/"/>
   <broadcaster id="canPrint"/>
   <broadcaster id="Browser:LoadingProgress"/>
   <broadcaster id="Browser:Status"/>
