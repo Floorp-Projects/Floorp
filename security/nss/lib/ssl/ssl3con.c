@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.1 2000/03/31 19:33:01 relyea%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.2 2000/05/08 23:55:05 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -684,10 +684,22 @@ ssl3_ComputeExportRSAKeyHash(SECItem modulus, SECItem publicExponent,
 {
     PK11Context * md5 		= NULL;
     PK11Context * sha 		= NULL;
+    PRUint8     * hashBuf;
+    PRUint8     * pBuf;
     SECStatus     rv 		= SECSuccess;
     unsigned int  outLen;
-    uint8         modulus_length[2];
-    uint8         exponent_length[2];
+    unsigned int  bufLen;
+    PRUint8       buf[2*SSL3_RANDOM_LENGTH + 2 + 4096/8 + 2 + 4096/8];
+
+    bufLen = 2*SSL3_RANDOM_LENGTH + 2 + modulus.len + 2 + publicExponent.len;
+    if (bufLen <= sizeof buf) {
+    	hashBuf = buf;
+    } else {
+    	hashBuf = PORT_Alloc(bufLen);
+	if (!hashBuf) {
+	    return SECFailure;
+	}
+    }
 
     md5 = PK11_CreateDigestContext(SEC_OID_MD5);
     if (md5 == NULL) {
@@ -701,18 +713,25 @@ ssl3_ComputeExportRSAKeyHash(SECItem modulus, SECItem publicExponent,
 	rv = SECFailure; /* Caller must set hiLevel error code. */
 	goto done;
     }
-    modulus_length[0]  = (modulus.len >> 8) & 0xff;
-    modulus_length[1]  = (modulus.len) & 0xff;
-    exponent_length[0] = (publicExponent.len >> 8) & 0xff;
-    exponent_length[1] = (publicExponent.len) & 0xff;
+
+    memcpy(hashBuf, client_rand, SSL3_RANDOM_LENGTH); 
+    	pBuf = hashBuf + SSL3_RANDOM_LENGTH;
+    memcpy(pBuf, server_rand, SSL3_RANDOM_LENGTH);
+    	pBuf += SSL3_RANDOM_LENGTH;
+    pBuf[0]  = (PRUint8)(modulus.len >> 8);
+    pBuf[1]  = (PRUint8)(modulus.len);
+    	pBuf += 2;
+    memcpy(pBuf, modulus.data, modulus.len);
+    	pBuf += modulus.len;
+    pBuf[0] = (PRUint8)(publicExponent.len >> 8);
+    pBuf[1] = (PRUint8)(publicExponent.len);
+    	pBuf += 2;
+    memcpy(pBuf, publicExponent.data, publicExponent.len);
+    	pBuf += publicExponent.len;
+    PORT_Assert(pBuf - hashBuf == bufLen);
 
     rv  = PK11_DigestBegin(md5);
-    rv |= PK11_DigestOp(md5, (unsigned char *)client_rand, SSL3_RANDOM_LENGTH);
-    rv |= PK11_DigestOp(md5, (unsigned char *)server_rand, SSL3_RANDOM_LENGTH);
-    rv |= PK11_DigestOp(md5, modulus_length, 2);
-    rv |= PK11_DigestOp(md5, modulus.data, modulus.len);
-    rv |= PK11_DigestOp(md5, exponent_length, 2);
-    rv |= PK11_DigestOp(md5, publicExponent.data, publicExponent.len);
+    rv |= PK11_DigestOp(md5, hashBuf, bufLen);
     rv |= PK11_DigestFinal(md5, hashes->md5, &outLen, MD5_LENGTH);
     PORT_Assert(rv != SECSuccess || outLen == MD5_LENGTH);
     if (rv != SECSuccess) {
@@ -722,12 +741,7 @@ ssl3_ComputeExportRSAKeyHash(SECItem modulus, SECItem publicExponent,
     }
 
     rv  = PK11_DigestBegin(sha);
-    rv |= PK11_DigestOp(sha, (unsigned char *)client_rand, SSL3_RANDOM_LENGTH);
-    rv |= PK11_DigestOp(sha, (unsigned char *)server_rand, SSL3_RANDOM_LENGTH);
-    rv |= PK11_DigestOp(sha, modulus_length, 2);
-    rv |= PK11_DigestOp(sha, modulus.data, modulus.len);
-    rv |= PK11_DigestOp(sha, exponent_length, 2);
-    rv |= PK11_DigestOp(sha, publicExponent.data, publicExponent.len);
+    rv |= PK11_DigestOp(sha, hashBuf, bufLen);
     rv |= PK11_DigestFinal(sha, hashes->sha, &outLen, SHA1_LENGTH);
     PORT_Assert(rv != SECSuccess || outLen == SHA1_LENGTH);
     if (rv != SECSuccess) {
@@ -736,18 +750,15 @@ ssl3_ComputeExportRSAKeyHash(SECItem modulus, SECItem publicExponent,
 	goto done;
     }
 
-    PRINT_BUF(95, (NULL, "RSAkey hash: client rand", (unsigned char *)client_rand, SSL3_RANDOM_LENGTH));
-    PRINT_BUF(95, (NULL, "RSAkey hash: server rand", (unsigned char *)server_rand, SSL3_RANDOM_LENGTH));
-    PRINT_BUF(95, (NULL, "RSAkey hash: modulus length", modulus_length, 2));
-    PRINT_BUF(95, (NULL, "RSAkey hash: modulus data",   modulus.data, modulus.len));
-    PRINT_BUF(95, (NULL, "RSAkey hash: exponent length", exponent_length, 2));
-    PRINT_BUF(95, (NULL, "RSAkey hash: exponent data",   publicExponent.data, publicExponent.len));
+    PRINT_BUF(95, (NULL, "RSAkey hash: ", hashBuf, bufLen));
     PRINT_BUF(95, (NULL, "RSAkey hash: MD5 result", hashes->md5, MD5_LENGTH));
     PRINT_BUF(95, (NULL, "RSAkey hash: SHA1 result", hashes->sha, SHA1_LENGTH));
 
 done:
     if (md5 != NULL) PK11_DestroyContext(md5, PR_TRUE);
     if (sha != NULL) PK11_DestroyContext(sha, PR_TRUE);
+    if (hashBuf != buf && hashBuf != NULL)
+    	PORT_Free(hashBuf);
     return rv;
 }
 
@@ -770,6 +781,7 @@ ssl3_ComputeFortezzaPublicKeyHash(SECItem publicValue, unsigned char * hash)
     PORT_Assert(rv != SECSuccess || outLen == SHA1_LENGTH);
     if (rv != SECSuccess)
     	rv = SECFailure;
+    PK11_DestroyContext(sha, PR_TRUE);
 
     return rv;
 }
