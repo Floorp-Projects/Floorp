@@ -56,6 +56,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIWindowListener.h"
 #include "nsIBaseWindow.h"
+#include "nsIWebNavigation.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -373,8 +374,9 @@ NS_IMETHODIMP nsXPBaseWindow::GetTitle(const PRUnichar** aResult)
 //---------------------------------------------------------------
 NS_IMETHODIMP nsXPBaseWindow::LoadURL(const nsString& aURL)
 {
-  mWebShell->LoadURL(aURL.GetUnicode());
-  return NS_OK;
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebShell));
+   webNav->LoadURI(aURL.GetUnicode());
+   return NS_OK;
 }
 
 //---------------------------------------------------------------
