@@ -140,7 +140,7 @@
 // nsAbAutoCompleteSession
 //
 #define NS_ABAUTOCOMPLETESESSION_PROGID \
-  "component://netscape/messenger/autocomplete&type=addrbook"
+  "component://netscape/autocompleteSession&type=addrbook"
 #define NS_ABAUTOCOMPLETESESSION_CID				\
 { /* 138DE9BD-362B-11d3-988E-001083010E9B */		\
     0x138de9bd, 0x362b, 0x11d3,						\
