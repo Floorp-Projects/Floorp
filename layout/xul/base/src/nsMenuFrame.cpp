@@ -1746,6 +1746,12 @@ nsMenuFrame::SetActiveChild(nsIDOMElement* aChild)
   if (!frame)
     return NS_ERROR_FAILURE;
 
+  if (!aChild) {
+    // Remove the current selection
+    menuPopup->SetCurrentMenuItem(nsnull);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
   
   nsCOMPtr<nsIContent> par;
