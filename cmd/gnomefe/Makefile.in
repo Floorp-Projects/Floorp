@@ -244,8 +244,9 @@ else
 BASIC_LIBS	+= $(DIST)/lib/libjpeg.a
 endif
 
-ifndef NO_MOCHA
 BASIC_LIBS	+= $(DIST)/lib/libjs.a $(DIST)/lib/libmocha.a
+ifdef JAVA_OR_OJI
+BASIC_LIBS	+= $(DIST)/lib/libjsj.a
 endif
 
 BASIC_LIBS      += \
@@ -321,6 +322,12 @@ BASIC_LIBS	+= \
 		  $(NULL)
 endif
 
+ifdef SMART_MAIL
+BASIC_LIBS    += \
+                $(DIST)/lib/libpop3url.a \
+                $(NULL)
+endif
+
 ifdef MOZ_MAIL_NEWS
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libmime.a \
@@ -339,7 +346,14 @@ ifndef NO_LAYERS
 BASIC_LIBS	+= $(DIST)/lib/liblayer.a
 endif
 
+########################################################################
+# Java
+#
+
 ifdef MOZ_JAVA
+#
+# Monolithic Java
+#
 
 BASIC_LIBS	+= \
 		  $(DIST)/lib/lib$(LITE_PREFIX)applet.a \
@@ -373,14 +387,43 @@ endif
 
 BASIC_LIBS	+= $(DIST)/lib/libjrt.a
 
-else  # MOZ_JAVA
+else  # !MOZ_JAVA
+
+#
+# OJI
+#
+
+ifdef MOZ_OJI
+
+BASIC_LIBS	+= $(DIST)/lib/liboji.a
+
+ifdef NSJVM
+
+ifdef MOZ_EDITOR
+BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
+endif
+BASIC_LIBS	+= $(DIST)/lib/libsoftupdate.a
+else # !NSJVM
+BASIC_LIBS	+= \
+		$(DIST)/lib/libstubsj.a \
+		$(DIST)/lib/libstubnj.a \
+		$(NULL)
+endif # !NSJVM
+
+BASIC_LIBS	+= $(DIST)/lib/libprgrss.a \
+		$(NULL)
+
+
+else   # !MOZ_OJI
+# No Monolithic Java, no OJI, just stubs.
 
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libstubsj.a \
 		  $(DIST)/lib/libstubnj.a \
 		  $(NULL)
 
-endif  # MOZ_JAVA
+endif  # !MOZ_OJI
+endif  # !MOZ_JAVA
 
 ifdef MOZ_NATIVE_ZLIB
 BASIC_LIBS	+= -lz
