@@ -114,12 +114,13 @@ certu()
         #will strip the quotes off the string, if called otherwise...
         echo "certutil -s \"${CU_SUBJECT}\" $*"
         certutil -s "${CU_SUBJECT}" $*
+        RET=$?
         CU_SUBJECT=""
     else
         echo "certutil $*"
         certutil $*
+        RET=$?
     fi
-    RET=$?
     if [ "$RET" -ne 0 ]; then
         CERTFAILED=$RET
         html_failed "<TR><TD>${CU_ACTION} ($RET) " 
