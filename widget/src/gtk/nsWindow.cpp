@@ -1622,9 +1622,11 @@ nsWindow::dumpWindowChildren(Window aWindow, unsigned int depth)
   XQueryTree(display, window, &root_return, &parent_return,
              &children_return, &nchildren_return);
 
+#ifdef DEBUG_DND_XLATE
   printDepth(depth);
 
   g_print("Window 0x%lx ", window);
+#endif
 
   GdkWindow *thisWindow = NULL;
 
