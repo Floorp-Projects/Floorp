@@ -1840,6 +1840,32 @@ NET_GetCookie(MWContext * context, char * address)
           }
 	  }
 
+#if defined(MOZ_BRPROF)
+    /*
+     * Okay, this is a horrible hack. It looks for a URL with
+     * 'iiop/BRPROF' in it (our little browsing profile reader), and
+     * if it finds it, it uploads the browsing profile cookie.
+     *
+     * The _real_ way to do this would be to
+     *
+     * 1) See if the user has enabled the preference to even allow us
+     *    to send out the cookie to _anyone_.
+     *
+     * 2) See if the specific site has asked for and received
+     *    permission to be sent the cookie.
+     */
+    if (PL_strstr(address, "iiop/BRPROF")) {
+      extern PRBrool BP_GetProfile(char* *aProfileCookie);
+      char* profile;
+      if (BP_GetProfile(&profile)) {
+        if (! first)
+          StrAllocCat(rv, "; BP=");
+        StrAllocCat(rv, profile);
+        PL_strfree(profile);
+      }
+    }
+#endif    
+
 	  net_unlock_cookie_list();
 	PR_FREEIF(name);
 	PR_Free(path);
