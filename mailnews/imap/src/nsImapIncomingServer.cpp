@@ -58,7 +58,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIImapService.h"
-#include "nsMsgUtils.h"
 
 #include "nsITimer.h"
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
