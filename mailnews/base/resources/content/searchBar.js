@@ -499,7 +499,9 @@ function onSearchInput(returnKeyHit)
 
 function onClearSearch()
 {
-  var focusedElement = gLastFocusedElement;  //save of the last focused element so that focus can be restored
+  // Use the last focused element so that focus can be restored
+  // if it does not exist, try and get the thread tree instead
+  var focusedElement = gLastFocusedElement || GetThreadTree();
   Search("");
   focusedElement.focus();
 }
