@@ -62,12 +62,12 @@ interface nsIURI;
  * Observers added in mid-load will not get any notifications they
  * missed.  We should NOT freeze this interface without considering
  * this issue.  (It could be that the image status on imgIRequest is
- * sufficient, when combined with the isImageBlocked() information.)
+ * sufficient, when combined with the imageBlockingStatus information.)
  *
  * XXXbz Do not freeze without removing imageURIChanged!
  */
 
-[scriptable, uuid(f3138741-353d-4b2b-beb8-01c308428895)]
+[scriptable, uuid(da19c86d-08aa-421c-8c37-12ec2ba5a2c3)]
 interface nsIImageLoadingContent : imgIDecoderObserver
 {
   /**
@@ -90,11 +90,12 @@ interface nsIImageLoadingContent : imgIDecoderObserver
   attribute boolean loadingEnabled;
 
   /**
-   * Returns true if the image load was blocked (by content policies,
-   * security manager, etc).  Returns false otherwise.  This always
-   * refers to the CURRENT_REQUEST load.
+   * Returns the image blocking status (@see nsIContentPolicy).  This
+   * will always be an nsIContentPolicy REJECT_* status for cases when
+   * the image was blocked.  This status always refers to the
+   * CURRENT_REQUEST load.
    */
-  readonly attribute boolean imageBlocked;
+  readonly attribute short imageBlockingStatus;
 
   /**
    * Used to register an image decoder observer.  Typically, this will

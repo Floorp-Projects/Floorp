@@ -108,15 +108,18 @@ private:
 
   /**
    * CancelImageRequests can be called when we want to cancel the
-   * image requests.  The "current" request will be canceled only if
-   * it has not progressed far enough to know the image size yet unless
-   * aEvenIfSizeAvailable is true.
+   * image requests, generally due to our src changing and us wanting
+   * to start a new load.  The "current" request will be canceled only
+   * if it has not progressed far enough to know the image size yet
+   * unless aEvenIfSizeAvailable is true.
    *
    * @param aReason the reason the requests are being canceled
    * @param aEvenIfSizeAvailable cancels the current load even if its size is
    *                             available
+   * @param aNewImageStatus the nsIContentPolicy status of the new image load
    */
-  void CancelImageRequests(nsresult aReason, PRBool aEvenIfSizeAvailable);
+  void CancelImageRequests(nsresult aReason, PRBool aEvenIfSizeAvailable,
+                           PRInt16 aNewImageStatus);
 
   /**
    * helper to get the document for this content (from the nodeinfo
@@ -164,8 +167,8 @@ private:
    */
   ImageObserver mObserverList;
 
+  PRInt16 mImageBlockingStatus;
   PRPackedBool mLoadingEnabled;
-  PRPackedBool mImageIsBlocked;
   PRPackedBool mHaveHadObserver;
 };
 
