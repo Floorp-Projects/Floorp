@@ -24,7 +24,7 @@
 
 #include "nsXIEngine.h"
 
-#define CORE_LIB_COUNT 9
+#define CORE_LIB_COUNT 10
 static char sCoreLibs[ CORE_LIB_COUNT * 2 ][ 32 ] = 
 {
 /*      Archive Subdir      File                            */
@@ -36,6 +36,7 @@ static char sCoreLibs[ CORE_LIB_COUNT * 2 ][ 32 ] =
 		"bin/", 			"libplds4.so",
 		"bin/",				"libxpcom.so",
 		"bin/",				"libxpistub.so",
+		"bin/",				"libzlib.so",
 		"bin/components/",	"libxpinstall.so",
 		"bin/components/",	"libjar50.so"
 };
