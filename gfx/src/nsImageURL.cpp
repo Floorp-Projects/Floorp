@@ -162,7 +162,7 @@ ImageURLImpl::SetBackgroundLoad(PRBool aBgload)
 {
 }
 
-nsresult 
+extern "C" NS_GFX_(nsresult)
 NS_NewImageURL(ilIURL **aInstancePtrResult, const char *aURL)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");

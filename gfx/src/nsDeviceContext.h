@@ -21,7 +21,7 @@
 
 #include "nsIDeviceContext.h"
 
-class NS_EXPORT DeviceContextImpl : public nsIDeviceContext
+class DeviceContextImpl : public nsIDeviceContext
 {
 public:
   DeviceContextImpl();

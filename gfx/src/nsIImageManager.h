@@ -77,7 +77,7 @@ public:
 };
 
 /// Factory method to get a reference to the singleton image manager
-extern NS_GFX nsresult
+extern "C" NS_GFX_(nsresult)
   NS_NewImageManager(nsIImageManager **aInstancePtrResult);
 
 #endif

@@ -22,10 +22,9 @@
 #include "ilISystemServices.h"
 #include "nscore.h"
 
-extern NS_GFX nsresult NS_NewImageNetContext(ilINetContext **aInstancePtrResult);
-extern NS_GFX nsresult NS_NewImageURL(ilIURL **aInstancePtrResult, 
-				      const char *aURL);
+extern "C" NS_GFX_(nsresult) NS_NewImageNetContext(ilINetContext **aInstancePtrResult);
+extern "C" NS_GFX_(nsresult) NS_NewImageURL(ilIURL **aInstancePtrResult,  const char *aURL);
 
-extern NS_GFX nsresult NS_NewImageRenderer(ilIImageRenderer  **aInstancePtrResult);
+extern "C" NS_GFX_(nsresult) NS_NewImageRenderer(ilIImageRenderer  **aInstancePtrResult);
 
-extern NS_GFX nsresult NS_NewImageSystemServices(ilISystemServices **aInstancePtrResult);
+extern "C" NS_GFX_(nsresult) NS_NewImageSystemServices(ilISystemServices **aInstancePtrResult);

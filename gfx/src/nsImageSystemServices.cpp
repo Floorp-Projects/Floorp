@@ -113,7 +113,7 @@ ImageSystemServicesImpl::ClearTimeout(void *aTimerID)
     NS_RELEASE(timer);
 }
 
-nsresult
+extern "C" NS_GFX_(nsresult)
 NS_NewImageSystemServices(ilISystemServices **aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");

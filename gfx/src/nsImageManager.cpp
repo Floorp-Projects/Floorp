@@ -116,7 +116,7 @@ ImageManagerImpl::GetImageType(const char *buf, PRInt32 length)
   }
 }
 
-NS_GFX nsresult
+extern "C" NS_GFX_(nsresult)
 NS_NewImageManager(nsIImageManager **aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");

@@ -62,7 +62,7 @@ public:
   virtual void Flush() = 0;
 };
 
-extern NS_GFX nsresult
+extern "C" NS_GFX_(nsresult)
   NS_NewFontCache(nsIFontCache **aInstancePtrResult);
 
 #endif

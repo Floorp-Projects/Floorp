@@ -231,7 +231,7 @@ ImageGroupImpl::Interrupt(void)
   }
 }
 
-nsresult
+extern "C" NS_GFX_(nsresult)
 NS_NewImageGroup(nsIImageGroup **aInstancePtrResult)
 {
   nsresult result;

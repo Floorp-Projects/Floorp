@@ -43,10 +43,10 @@ typedef PRUint32 nscolor;
 
 // Translate a hex string to a color. Return true if it parses ok,
 // otherwise return false.
-extern NS_GFX PRBool NS_HexToRGB(const char* aBuf, nscolor* aResult);
+extern "C" NS_GFX_(PRBool) NS_HexToRGB(const char* aBuf, nscolor* aResult);
 
 // Translate a color name to a color. Return true if it parses ok,
 // otherwise return false.
-extern NS_GFX PRBool NS_ColorNameToRGB(const char* aBuf, nscolor* aResult);
+extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const char* aBuf, nscolor* aResult);
 
 #endif /* nsColor_h___ */

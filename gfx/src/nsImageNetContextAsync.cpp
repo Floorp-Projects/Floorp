@@ -470,7 +470,7 @@ ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer)
   }
 }
 
-nsresult 
+extern "C" NS_GFX_(nsresult)
 NS_NewImageNetContext(ilINetContext **aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
