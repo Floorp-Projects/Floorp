@@ -245,17 +245,12 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
     // See if it's a menu item.
     if (IsValidItem(current)) {
       // Get the shortcut attribute.
-      nsString shortcutKey;
+      nsAutoString shortcutKey;
       current->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
-      shortcutKey.ToUpperCase();
-      if (shortcutKey.Length() > 0) {
+      if (!shortcutKey.IsEmpty()) {
         // We've got something.
-        char tempChar[2];
-        tempChar[0] = aLetter;
-        tempChar[1] = 0;
-        nsAutoString tempChar2; tempChar2.AssignWithConversion(tempChar);
-  
-        if (shortcutKey.EqualsIgnoreCase(tempChar2)) {
+        PRUnichar letter = PRUnichar(aLetter); // throw away the high-zero-fill
+        if ( Compare(shortcutKey, nsDependentString(&letter, 1), nsCaseInsensitiveStringComparator())==0 )  {
           // We match!
           nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(currFrame);
           if (menuFrame)
