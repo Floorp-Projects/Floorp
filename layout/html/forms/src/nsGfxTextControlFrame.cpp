@@ -429,7 +429,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
-    result =  nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    result =  nsTextControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
   }
 
 // DUMMY
