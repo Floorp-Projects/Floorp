@@ -204,6 +204,8 @@ function select_panel(target) {
 
   debug("select_panel("+target+")");
 
+  iframe.setAttribute('src', 'about:blank');
+
   var select_index = find_panel(top_headers, target);
 
   if (!select_index) {
@@ -353,18 +355,18 @@ function SidebarCustomize() {
 // Show/Hide the entire sidebar.
 // Envoked by the "View / Sidebar" menu option.
 function SidebarShowHide() {
-  var sidebarBox = document.getElementById('sidebar-box');
+  var sidebar_box = document.getElementById('sidebar-box');
   var sidebar_splitter = document.getElementById('sidebar-splitter');
-  var is_hidden = sidebarBox.getAttribute('hidden');
+  var is_hidden = sidebar_box.getAttribute('hidden');
 
   if (is_hidden && is_hidden == "true") {
     debug("Showing the sidebar");
-    sidebarBox.removeAttribute('hidden');
+    sidebar_box.removeAttribute('hidden');
     sidebar_splitter.removeAttribute('hidden');
     sidebar_overlay_init();
   } else {
     debug("Hiding the sidebar");
-    sidebarBox.setAttribute('hidden','true');
+    sidebar_box.setAttribute('hidden','true');
     sidebar_splitter.setAttribute('hidden','true');
   }
   // Immediately save persistent values
@@ -373,46 +375,10 @@ function SidebarShowHide() {
 }
 
 // SidebarExpandCollapse() - Respond to grippy click.
-// XXX This whole function is a hack to work around
-// bugs #20546, and #22214.
 function SidebarExpandCollapse() {
-  var sidebarBox = document.getElementById('sidebar-box');
-  var sidebar_splitter = document.getElementById('sidebar-splitter');
-
-  sidebarBox.setAttribute('hackforbug20546-applied','true');
-
-  // Get the current open/collapsed state
-  // The value of state is the "preclick" state
-  var state = sidebar_splitter.getAttribute('state');
-
-  if (state && state == 'collapsed') {
-    // Going from collapsed to open.
-
-    sidebarBox.removeAttribute('hackforbug20546');
-
-    // Reset the iframe's src to get the content to display.
-    // This might be bug #22214.
-    var panels = document.getElementById('sidebar-panels');
-    var target = panels.getAttribute('open-panel-src');
-    var iframe = document.getElementById('sidebar-content');
-    iframe.setAttribute('src', target);
-
-    // XXX Partial hack workaround for bug #22214.
-    bump_width(+1);
-    setTimeout("bump_width(-1)",10);
-
-  } else {
-    // Going from open to collapsed.
-
-    sidebarBox.setAttribute('hackforbug20546','true');
-  }
-}
-
-// XXX Partial hack workaround for bug #22214.
-function bump_width(delta) {
-  var sidebarBox = document.getElementById('sidebar-box');
-  var width = sidebarBox.getAttribute('width');
-  sidebarBox.setAttribute('width', parseInt(width) + delta);
+  // XXX Mini hack. Persist isn't working too well. Force the persist,
+  // but wait until the change has commited.
+  setTimeout("document.persist('sidebar-box', 'collapsed');",100);
 }
 
 function PersistHeight() {
@@ -425,22 +391,16 @@ function PersistHeight() {
 
 function persist_width() {
   // XXX Partial workaround for bug #19488.
-  var sidebarBox = document.getElementById('sidebar-box');
-  var sidebar_splitter = document.getElementById('sidebar-splitter');
-  var state = sidebar_splitter.getAttribute('state');
+  var sidebar_box = document.getElementById('sidebar-box');
 
-  var width = sidebarBox.getAttribute('width');
-
-  if (!state || state == '' || state == 'open') {
-    sidebarBox.removeAttribute('hackforbug20546');
-    sidebarBox.setAttribute('hackforbug20546-applied','true');
-  }
-
+  var width = sidebar_box.getAttribute('width');
   if (width && (width > 410 || width < 15)) {
-    sidebarBox.setAttribute('width',168);
+    sidebar_box.setAttribute('width',168);
   }
 
-  document.persist('sidebar-box', 'width');
+  // XXX Mini hack. Persist isn't working too well. Force the persist,
+  // but wait until the width change has commited.
+  setTimeout("document.persist('sidebar-box', 'width');",100);
 }
 
 function SidebarFinishDrag() {
