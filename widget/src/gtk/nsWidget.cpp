@@ -1345,17 +1345,15 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 
     event.point.x = nscoord(x);
     event.point.y = nscoord(y);
-
     event.widget = this;
   }
 
-#if 0
-  if (nsnull != sButtonMotionTarget)
+  if (sButtonMotionTarget)
   {
     gint diffX;
     gint diffY;
 
-    if (aGdkMotionEvent != NULL) 
+    if (aGdkMotionEvent) 
     {
       // Compute the difference between the original root coordinates
       diffX = (gint) aGdkMotionEvent->x_root - sButtonMotionRootX;
@@ -1373,22 +1371,26 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   {
     event.widget = this;
 
-    if (aGdkMotionEvent != NULL) 
+    if (aGdkMotionEvent)
     {
-      event.point.x = nscoord(aGdkMotionEvent->x);
-      event.point.y = nscoord(aGdkMotionEvent->y);
+      event.point.x = nscoord(x);
+      event.point.y = nscoord(y);
     }
   }
 
-  if (aGdkMotionEvent != NULL) 
+  if (aGdkMotionEvent)
   {
     event.time = aGdkMotionEvent->time;
   }
-#endif
+
+  printf("x=%i , y=%i target=%p\n", event.point.x, event.point.y, event.widget);
 
   AddRef();
 
-  DispatchMouseEvent(event);
+  if (sButtonMotionTarget)
+    sButtonMotionTarget->DispatchMouseEvent(event);
+  else
+    DispatchMouseEvent(event);
 
   Release();
 }
@@ -1715,7 +1717,15 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
     break;
 	}
 
+
   InitMouseEvent(aGdkButtonEvent, event, eventType);
+
+  event.widget = sButtonMotionTarget ? sButtonMotionTarget : this;
+
+  NS_ADDREF(event.widget);
+  NS_STATIC_CAST(nsWidget*,event.widget)->DispatchMouseEvent(event);
+  NS_IF_RELEASE(event.widget);
+
 
   if (sButtonMotionTarget)
   {
@@ -1724,12 +1734,6 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
     sButtonMotionRootX = -1;
     sButtonMotionRootY = -1;
   }
-
-  AddRef();
-
-  DispatchMouseEvent(event);
-
-  Release();
 }
 //////////////////////////////////////////////////////////////////////
 /* virtual */ void
