@@ -150,7 +150,7 @@ const char* nsEditor::kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
 
 #ifdef NS_DEBUG_EDITOR
-static PRBool gNoisy = PR_TRUE;
+static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -1622,7 +1622,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
   if ((nsIEditor::eRTL==aDir) && (PR_TRUE==isFirst))
   { // we're backspacing from the beginning of the node.  Delete the first thing to our left
     nsCOMPtr<nsIDOMNode> priorNode;
-    result = GetPriorNode(node, getter_AddRefs(priorNode));
+    result = GetPriorNode(node, PR_TRUE, getter_AddRefs(priorNode));
     if ((NS_SUCCEEDED(result)) && priorNode)
     { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
       // if it has no children, delete it
@@ -1659,7 +1659,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
   else if ((nsIEditor::eLTR==aDir) && (PR_TRUE==isLast))
   { // we're deleting from the end of the node.  Delete the first thing to our right
     nsCOMPtr<nsIDOMNode> nextNode;
-    result = GetNextNode(node, getter_AddRefs(nextNode));
+    result = GetNextNode(node, PR_TRUE, getter_AddRefs(nextNode));
     if ((NS_SUCCEEDED(result)) && nextNode)
     { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
       // if it has no children, delete it
@@ -2343,19 +2343,37 @@ nsEditor::IntermediateNodesAreInline(nsIDOMRange *aRange,
 
 
 nsresult 
-nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode, 
+                       PRBool       aEditableNode, 
+                       nsIDOMNode **aResultNode)
 {
   nsresult result;
-  *aResultNode = nsnull;
+  if (!aCurrentNode || !aResultNode) { return NS_ERROR_NULL_POINTER; }
+  
+  *aResultNode = nsnull;  // init out-param
+
   // if aCurrentNode has a left sibling, return that sibling's rightmost child (or itself if it has no children)
   result = aCurrentNode->GetPreviousSibling(aResultNode);
   if ((NS_SUCCEEDED(result)) && *aResultNode)
-    return GetRightmostChild(*aResultNode, aResultNode);
+  {
+    result = GetRightmostChild(*aResultNode, aResultNode);
+    if (NS_FAILED(result)) { return result; }
+    if (PR_FALSE==aEditableNode) {
+      return result;
+    }
+    if (PR_TRUE==IsEditable(*aResultNode)) {
+      return result;
+    }
+    else 
+    { // restart the search from the non-editable node we just found
+      nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+      return GetPriorNode(notEditableNode, aEditableNode, aResultNode);
+    }
+  }
   
   // otherwise, walk up the parent change until there is a child that comes before 
   // the ancestor of aCurrentNode.  Then return that node's rightmost child
-
-  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
+  nsCOMPtr<nsIDOMNode> parent = do_QueryInterface(aCurrentNode);
   do {
     nsCOMPtr<nsIDOMNode> node(parent);
     result = node->GetParentNode(getter_AddRefs(parent));
@@ -2364,8 +2382,19 @@ nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
       result = parent->GetPreviousSibling(getter_AddRefs(node));
       if ((NS_SUCCEEDED(result)) && node)
       {
-
-        return GetRightmostChild(node, aResultNode);
+        result = GetRightmostChild(node, aResultNode);
+        if (NS_FAILED(result)) { return result; }
+        if (PR_FALSE==aEditableNode) {
+          return result;
+        }
+        if (PR_TRUE==IsEditable(*aResultNode)) {
+          return result;
+        }
+        else 
+        { // restart the search from the non-editable node we just found
+          nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+          return GetPriorNode(notEditableNode, aEditableNode, aResultNode);
+        }
       }
     }
   } while ((NS_SUCCEEDED(result)) && parent);
@@ -2374,14 +2403,30 @@ nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 }
 
 nsresult 
-nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode, 
+                      PRBool       aEditableNode, 
+                      nsIDOMNode **aResultNode)
 {
   nsresult result;
   *aResultNode = nsnull;
   // if aCurrentNode has a right sibling, return that sibling's leftmost child (or itself if it has no children)
   result = aCurrentNode->GetNextSibling(aResultNode);
   if ((NS_SUCCEEDED(result)) && *aResultNode)
-    return GetLeftmostChild(*aResultNode, aResultNode);
+  {
+    result = GetLeftmostChild(*aResultNode, aResultNode);
+    if (NS_FAILED(result)) { return result; }
+    if (PR_FALSE==aEditableNode) {
+      return result;
+    }
+    if (PR_TRUE==IsEditable(*aResultNode)) {
+      return result;
+    }
+    else 
+    { // restart the search from the non-editable node we just found
+      nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+      return GetNextNode(notEditableNode, aEditableNode, aResultNode);
+    }
+  }
   
   // otherwise, walk up the parent change until there is a child that comes before 
   // the ancestor of aCurrentNode.  Then return that node's rightmost child
@@ -2395,7 +2440,19 @@ nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
       result = parent->GetNextSibling(getter_AddRefs(node));
       if ((NS_SUCCEEDED(result)) && node)
       {
-        return GetLeftmostChild(node, aResultNode);
+        result = GetLeftmostChild(node, aResultNode);
+        if (NS_FAILED(result)) { return result; }
+        if (PR_FALSE==aEditableNode) {
+          return result;
+        }
+        if (PR_TRUE==IsEditable(*aResultNode)) {
+          return result;
+        }
+        else 
+        { // restart the search from the non-editable node we just found
+          nsCOMPtr<nsIDOMNode> notEditableNode = do_QueryInterface(*aResultNode);
+          return GetNextNode(notEditableNode, aEditableNode, aResultNode);
+        }
       }
     }
   } while ((NS_SUCCEEDED(result)) && parent);
