@@ -181,9 +181,6 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
-  if (mBounds.x == aX && mBounds.y == aY)
-    return NS_ERROR_FAILURE;
-
   mBounds.x = aX;
   mBounds.y = aY;
 
@@ -194,7 +191,6 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-
   printf("nsWidget::Resize called.\n");
 
   if (mBounds.width == aWidth && mBounds.height == aHeight)
