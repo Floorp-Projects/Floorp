@@ -540,16 +540,19 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   PRInt32 screenTop;
   screen->GetAvailLeft(&screenLeft);
   screen->GetAvailTop(&screenTop); 
-  PRInt32 screenRight;
-  if(screenLeft<0)
-    screenRight = screenWidth + screenLeft;
-  else
-    screenRight = screenWidth - screenLeft;  
-  PRInt32 screenBottom;
-  if(screenTop<0)
-    screenBottom = screenHeight + screenTop;
-  else
-    screenBottom = screenHeight - screenTop; 
+  PRInt32 screenRight, screenBottom;
+  screenRight = screenLeft + screenWidth;
+  screenBottom = screenTop + screenHeight;
+  
+   // inset the screen by 5px so that menus don't butt up against the side
+  const PRInt32 kTrimMargin = 5;
+  screenLeft += kTrimMargin;
+  screenTop += kTrimMargin;
+  screenRight -= kTrimMargin;
+  screenBottom -= kTrimMargin;
+  screenWidth -= 2 * kTrimMargin;
+  screenHeight -= 2 * kTrimMargin;
+
   PRInt32 screenTopTwips    = NSIntPixelsToTwips(screenTop, p2t);
   PRInt32 screenLeftTwips   = NSIntPixelsToTwips(screenLeft, p2t);
   PRInt32 screenWidthTwips  = NSIntPixelsToTwips(screenWidth, p2t);
@@ -606,17 +609,21 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
       // We are allowed to move the popup along the axis to which we're not anchored to the parent
       // in order to get it to not spill off the screen.
       if ( readjustAboveBelow ) {
-        // move left to be on screen.
+        // move left to be on screen, but don't let it go off the screen at the left
         if ( (screenViewLocX + mRect.width) > screenRightTwips ) {
           PRInt32 moveDistX = (screenViewLocX + mRect.width) - screenRightTwips;
+          if ( screenViewLocX - moveDistX < screenLeftTwips )
+            moveDistX = screenViewLocX - screenLeftTwips;          
           screenViewLocX -= moveDistX;
           xpos -= moveDistX;
         }
       }
       else {
-        // move it up to be on screen.
+        // move it up to be on screen, but don't let it go off the screen at the top
         if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
           PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenBottomTwips;
+          if ( screenViewLocY - moveDistY < screenTopTwips )
+            moveDistY = screenViewLocY - screenTopTwips;          
           screenViewLocY -= moveDistY;
           ypos -= moveDistY; 
         } 
