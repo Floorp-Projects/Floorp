@@ -173,7 +173,7 @@ function loadEventsFromFile()
 
         var buttonPressed =      
           promptService.confirmEx(window, 
-                                  "Import", calendarStringBundle.GetStringFromName( "aboutToImport" ) + calendarEventArray.length + " " + calendarStringBundle.GetStringFromName( "aboutToImportEnd" ), 
+                                  "Import", calendarStringBundle.GetStringFromName( "aboutToImport" ) + " "+ calendarEventArray.length + " " + calendarStringBundle.GetStringFromName( "aboutToImportEnd" ), 
                                   (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) + 
                                   (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + 
                                   (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2), 
