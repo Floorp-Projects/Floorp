@@ -464,6 +464,10 @@ ifndef MODULAR_NETLIB
 MOZ_COOKIEMANAGE	= 1
 endif
 
+ifndef MOZ_SECURITY
+NO_SECURITY	= 1
+endif
+
 ifndef USE_AUTOCONF
 ifdef MOZ_LITE
 NO_EDITOR	= 1
@@ -486,9 +490,6 @@ endif # ! USE_AUTOCONF
 ifdef MOZ_MEDIUM
 ifndef MODULAR_NETLIB
 MOZ_SINGLESIGNON	= 1
-endif
-ifndef MOZ_SECURITY
-NO_SECURITY	= 1
 endif
 endif
 
