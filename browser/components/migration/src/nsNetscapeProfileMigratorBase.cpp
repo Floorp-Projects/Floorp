@@ -217,6 +217,8 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
 
     keys->Next();
   }
+
+  return NS_OK;
 }
 
 #define GETPREF(xform, method, value) \
