@@ -69,8 +69,10 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
 
   // first check if it is already in our list.
   for ( MimeMapConstIterator it = mMappings.begin(); it != mMappings.end(); ++it ) {
-    if ( it->second == aMimeStr )
+    if ( it->second == aMimeStr ) {
       format = it->first;
+      break;
+    }
   }
 
   // if it's not there, do a mapping and put it there. Some things we want to map

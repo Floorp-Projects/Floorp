@@ -45,9 +45,13 @@ catch (ex) {
 }  
 
 
+// XXX this currently controls whether bookmarks D&D is enabled or not
+gDragDropEnabled = true;
+
+
 function TopLevelDrag ( event )
 {
-  debug("TOP LEVEL bookmarks window got a drag");
+  dump("TOP LEVEL bookmarks window got a drag");
   return(true);
 }
 
@@ -72,10 +76,6 @@ function BeginDragTree ( event )
     
   var dragStarted = false;
 
-  var dragService = 
-    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
-  if ( !dragService ) return(false);
-
   var trans = 
     Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
   if ( !trans ) return(false);
@@ -84,14 +84,36 @@ function BeginDragTree ( event )
     Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
   if (!genData) return(false);
 
+  var genDataURL = 
+    Components.classes["component://netscape/supports-wstring"].createInstance(Components.interfaces.nsISupportsWString);
+  if (!genDataURL) return(false);
+
   trans.addDataFlavor("text/unicode");
+  trans.addDataFlavor("moz/rdfitem");
         
-  // id (url) is on the <treeitem> which is two levels above the <treecell> which is
+  // ref/id (url) is on the <treeitem> which is two levels above the <treecell> which is
   // the target of the event.
-  var id = event.target.parentNode.parentNode.getAttribute("id");
-  genData.data = id;
-  genTextData.data = id;
-  debug("ID: " + id);
+  var id = event.target.parentNode.parentNode.getAttribute("ref");
+  if (!id || id=="")
+  {
+	id = event.target.parentNode.parentNode.getAttribute("id");
+  }
+  dump("\n    ID: " + id);
+
+  var parentID = event.target.parentNode.parentNode.parentNode.parentNode.getAttribute("ref");
+  if (!parentID || parentID == "")
+  {
+	parentID = event.target.parentNode.parentNode.parentNode.parentNode.getAttribute("id");
+  }
+  dump("    Parent ID: " + parentID);
+
+  var trueID = id;
+  if (parentID != null)
+  {
+  	trueID += "\n" + parentID;
+  }
+  genData.data = trueID;
+  genDataURL.data = id;
 
   var database = childWithDatabase.database;
   var rdf = 
@@ -106,15 +128,15 @@ function BeginDragTree ( event )
   if (target) target = target.QueryInterface(Components.interfaces.nsIRDFResource);
   if (target) target = target.Value;
   if ((!target) || (target == "")) {dump("BAD\n"); return(false);}
-  debug("Type: '" + target + "'");
+  dump("    Type: '" + target + "'");
 
   if ((target != "http://home.netscape.com/NC-rdf#BookmarkSeparator") &&
     (target != "http://home.netscape.com/NC-rdf#Bookmark") &&
     (target != "http://home.netscape.com/NC-rdf#Folder")) return(false);
 
-
-//  trans.setTransferData ( "moz/toolbaritem", genData, id.length*2 );  // double byte data (len*2)
-  trans.setTransferData ( "text/unicode", genData, id.length * 2);  // double byte data
+dump("genData is " + genData.data + " len is " + genData.data.length + "\n");
+  trans.setTransferData ( "moz/rdfitem", genData, genData.data.length * 2);  // double byte data
+  trans.setTransferData ( "text/unicode", genDataURL, genDataURL.data.length * 2);  // double byte data
 
   var transArray = 
     Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
@@ -123,12 +145,17 @@ function BeginDragTree ( event )
   // put it into the transferable as an |nsISupports|
   var genTrans = trans.QueryInterface(Components.interfaces.nsISupports);
   transArray.AppendElement(genTrans);
+  
+  var dragService = 
+    Components.classes["component://netscape/widget/dragservice"].getService(Components.interfaces.nsIDragService);
+  if ( !dragService ) return(false);
+
   var nsIDragService = Components.interfaces.nsIDragService;
   dragService.invokeDragSession ( transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
                                      nsIDragService.DRAGDROP_ACTION_MOVE );
   dragStarted = true;
 
-  return(!dragStarted);  // don't propagate the event if a drag has begun
+  return(!dragStarted);
 }
 
 
@@ -136,7 +163,17 @@ function BeginDragTree ( event )
 function DragOverTree ( event )
 {
   if ( !gDragDropEnabled )
-    return;
+    return(false);
+
+  // for beta1, don't allow D&D if sorting is active
+  var tree = document.getElementById("bookmarksTree");
+  if (!tree)	return(false);
+  var sortActive = tree.getAttribute("sortActive");
+  if (sortActive == "true")
+  {
+  	dump("Sorry, drag&drop is currently disabled when sorting is active.\n");
+  	return(false);
+  }
     
   var validFlavor = false;
   var dragSession = null;
@@ -149,7 +186,7 @@ function DragOverTree ( event )
   dragSession = dragService.getCurrentSession();
   if ( !dragSession ) return(false);
 
-  if ( dragSession.isDataFlavorSupported("moz/toolbaritem") ) validFlavor = true;
+  if ( dragSession.isDataFlavorSupported("moz/rdfitem") ) validFlavor = true;
   else if ( dragSession.isDataFlavorSupported("text/unicode") ) validFlavor = true;
   //XXX other flavors here...
 
@@ -161,7 +198,7 @@ function DragOverTree ( event )
     rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
     dragSession.canDrop = true;
     // necessary??
-    retVal = false; // do not propagate message
+    retVal = false;
   }
   return(retVal);
 }
@@ -171,8 +208,21 @@ function DragOverTree ( event )
 function DropOnTree ( event )
 {
   if ( !gDragDropEnabled )
-    return;
-    
+    return(false);
+
+  var treeRoot = document.getElementById("bookmarksTree");
+  if (!treeRoot)  return(false);
+  var treeDatabase = treeRoot.database;
+  if (!treeDatabase)  return(false);
+
+  // for beta1, don't allow D&D if sorting is active
+  var sortActive = treeRoot.getAttribute("sortActive");
+  if (sortActive == "true")
+  {
+  	dump("Sorry, drag&drop is currently disabled when sorting is active.\n");
+  	return(false);
+  }
+
   var RDF = 
     Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
   if (!RDF) return(false);
@@ -183,12 +233,7 @@ function DropOnTree ( event )
   var Bookmarks = RDF.GetDataSource("rdf:bookmarks");
   if (!Bookmarks) return(false);
 
-  var treeRoot = document.getElementById("bookmarksTree");
-  if (!treeRoot)  return(false);
-  var treeDatabase = treeRoot.database;
-  if (!treeDatabase)  return(false);
-
-  // target is the <treecell>, and "id" is on the <treeitem> two levels above
+  // target is the <treecell>, and "ref/id" is on the <treeitem> two levels above
   var treeItem = event.target.parentNode.parentNode;
   if (!treeItem)  return(false);
   var targetID = getAbsoluteID(treeRoot, treeItem);
@@ -226,6 +271,7 @@ function DropOnTree ( event )
   var trans = 
     Components.classes["component://netscape/widget/transferable"].createInstance(Components.interfaces.nsITransferable);
   if ( !trans )   return(false);
+  trans.addDataFlavor("moz/rdfitem");
   trans.addDataFlavor("text/unicode");
 
   var dirty = false;
@@ -240,17 +286,49 @@ function DropOnTree ( event )
     if ( dataObj )  dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
     if ( !dataObj ) continue;
 
-    // pull the URL out of the data object
-    var sourceID = dataObj.data;
-    if (!sourceID)  continue;
+    var sourceID = null;
+    var parentID = null;
+    var checkNameHack = false;
 
-    debug("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'");
+    if (bestFlavor.value == "moz/rdfitem")
+    {
+	    // pull the URL out of the data object
+	    var data = dataObj.data.substring(0, len.value / 2);;
+
+	    var cr = data.indexOf("\n");
+	    if (cr >= 0)
+	    {
+	    	sourceID = data.substr(0, cr);
+	    	parentID = data.substr(cr+1);
+	    }
+    }
+    else
+    {
+    	sourceID = dataObj.data;
+
+	// XXX for the moment, if its a text/unicode drop
+	// we may need to synthesize a name (just use the URL)
+	checkNameHack = true;
+    }
+
+    dump("    Node #" + i + ": drop '" + sourceID + "'\n");
+    dump("             from container '" + parentID + "'\n");
+    dump("             action = '" + dropAction + "'\n");
+    dump("             target = '" + targetID + "'\n");
 
     var sourceNode = RDF.GetResource(sourceID, true);
     if (!sourceNode)  continue;
+
+    var parentNode = null;
+    if (parentID != null)
+    {
+    	parentNode = RDF.GetResource(parentID, true);
+    }
     
     // Prevent dropping of a node before, after, or on itself
     if (sourceNode == targetNode) continue;
+    // Prevent dropping of a node onto its parent container
+    if ((dropAction == "on") && (containerID) && (containerID == parentID))	continue;
 
     RDFC.Init(Bookmarks, containerNode);
 
@@ -260,6 +338,7 @@ function DropOnTree ( event )
       var nodeIndex;
 
       nodeIndex = RDFC.IndexOf(sourceNode);
+
       if (nodeIndex >= 1)
       {
         // moving a node around inside of the container
@@ -268,19 +347,66 @@ function DropOnTree ( event )
       }
       
       nodeIndex = RDFC.IndexOf(targetNode);
+
       if (nodeIndex < 1)  return(false);
       if (dropAction == "after")  ++nodeIndex;
 
       RDFC.InsertElementAt(sourceNode, nodeIndex, true);
+
+	// select the newly added node
+	if (parentID)
+	{
+	      selectDroppedItems(treeRoot, containerID, sourceID);
+	}	     
+
       dirty = true;
     }
     else
     {
       // drop on
       RDFC.AppendElement(sourceNode);
+
+	// select the newly added node
+	if (parentID)
+	{
+	      selectDroppedItems(treeRoot, containerID, sourceID);
+	}	     
+
       dirty = true;
     }
+
+    if (checkNameHack == true)
+    {
+	// XXX for the moment, if its a text/unicode drop
+	// we may need to synthesize a name (just use the URL)
+	var srcArc = RDF.GetResource(sourceID, true);
+	var propArc = RDF.GetResource("http://home.netscape.com/NC-rdf#Name", true);
+	if (srcArc && propArc && treeDatabase)
+	{
+		var targetArc = treeDatabase.GetTarget(srcArc, propArc, true);
+		if (!targetArc)
+		{
+			var defaultNameArc = RDF.GetLiteral(sourceID);
+			if (defaultNameArc)
+			{
+				treeDatabase.Assert(srcArc, propArc, defaultNameArc, true); 
+			}
+		}
+	}
+    }
   }
+
+	// should we move the node? (i.e. take it out of the source container?)
+	if ((parentNode != null) && (containerNode != parentNode))
+	{
+		RDFC.Init(Bookmarks, parentNode);
+		var nodeIndex = RDFC.IndexOf(sourceNode);
+
+		if (nodeIndex >= 1)
+		{
+			RDFC.RemoveElementAt(nodeIndex, true, sourceNode);
+		}
+	}
 
   if (dirty == true)
   {
@@ -288,9 +414,37 @@ function DropOnTree ( event )
     if (remote)
     {
       remote.Flush();
-      debug("Wrote out bookmark changes.");
+      dump("Wrote out bookmark changes.");
     }
   }
 
   return(false);
+}
+
+
+
+function selectDroppedItems(treeRoot, containerID, targetID)
+{
+	var select_list = treeRoot.getElementsByAttribute("id", targetID);
+	for (var x=0; x<select_list.length; x++)
+	{
+		var node = select_list[x];
+		if (!node)	continue;
+
+		var parent = node.parentNode.parentNode;
+		if (!parent)	continue;
+
+		var id = parent.getAttribute("ref");
+		if (!id || id=="")
+		{
+			id = parent.getAttribute("id");
+		}
+		if (!id || id=="")	continue;
+
+		if (id == containerID)
+		{
+			node.setAttribute("selected", "true");
+			break;
+		}
+	}
 }
