@@ -44,10 +44,10 @@
 [uuid(CEB5BDB1-121D-11d3-BCFB-00805F0E1353)]
 interface nsIZip : nsISupports
 {
-	PRInt32 Open(in string aZipFileName);
-	PRInt32 Extract(in string aFilename, in string aOutname);
-	nsISimpleEnumerator Find(in string aPattern);
-    nsIInputStream GetInputStream(in string aFilename);
-    PRUint32 ItemSize(in string aFilename);
+    PRInt32 open(in string aZipFileName);
+    PRInt32 extract(in string aFilename, in string aOutname);
+    nsISimpleEnumerator find(in string aPattern);
+    nsIInputStream getInputStream(in string aFilename);
+    PRUint32 itemSize(in string aFilename);
 };
 
