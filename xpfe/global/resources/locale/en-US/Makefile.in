@@ -50,6 +50,7 @@ CHROME_L10N = \
 		regionNames.properties \
 		commonDialogs.properties \
 		plugins.properties \
+		printdialog.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -41,6 +41,8 @@ toolkit.jar:
         content/global/nsJSComponentManager.js      (resources/content/nsJSComponentManager.js) 
         content/global/nsUserSettings.js            (resources/content/nsUserSettings.js) 
         content/global/xul.css                      (resources/content/xul.css) 
+        content/global/printdialog.xul              (resources/content/printdialog.xul)
+        content/global/printdialog.js               (resources/content/printdialog.js)
         content/global/build.dtd                    (build.dtd)
         content/global/bindings/browser.xml         (resources/content/bindings/browser.xml)
         content/global/bindings/button.xml          (resources/content/bindings/button.xml)
@@ -96,6 +98,7 @@ en-US.jar:
     locale/en-US/global/plugins.properties          (resources/locale/en-US/plugins.properties) 
     locale/en-US/global/nsOutlinerSorting.properties (resources/locale/en-US/nsOutlinerSorting.properties)
     locale/en-US/global/dialog.properties           (resources/locale/en-US/dialog.properties)
+    locale/en-US/global/printdialog.dtd             (resources/locale/en-US/printdialog.dtd)
 
 US.jar:
     locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 

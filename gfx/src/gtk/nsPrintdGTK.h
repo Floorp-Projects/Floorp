@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -75,6 +76,8 @@ typedef struct unixprdata {
         int orientation;            /* Orientation e.g. Portrait */
         char command[ PATH_MAX ];   /* Print command e.g., lpr */
         char path[ PATH_MAX ];      /* If toPrinter = PR_FALSE, dest file */
+        char printer[256];          /* Printer name */
+        int  copies;                /* number of copies */
 	PRBool cancel;		    /* If PR_TRUE, user cancelled */
 	float left;		    /* left margin */
 	float right;		    /* right margin */
@@ -86,4 +89,5 @@ void UnixPrDialog(UnixPrData *prData);
 
 PR_END_EXTERN_C
 
-#endif /* nsPrintdGTK_h___ */
+#endif /* !nsPrintdGTK_h___ */
+

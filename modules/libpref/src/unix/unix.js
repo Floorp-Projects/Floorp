@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -99,11 +100,9 @@ pref("applications.tn3270", "xterm -e tn3270 %h");
 pref("applications.rlogin", "xterm -e rlogin %h");
 pref("applications.rlogin_with_user", "xterm -e rlogin %h -l %u");
 pref("applications.tmp_dir", "/tmp");
-// Choose print module. Default is "auto" which selects Xprint module
-// if the XPSERVERLIST env var is set
-pref("print.print_method", 0); // 0=auto, 1=Xprint, 2=PostScript, 3=reserved
 // On Solaris/IRIX, this should be "lp"
-pref("print.print_command", "lpr");
+pref("print.print_command", "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
+pref("print.printer_list", ""); // list of printers, seperated by spaces
 pref("print.print_reversed", false);
 pref("print.print_color", true);
 pref("print.print_landscape", false);

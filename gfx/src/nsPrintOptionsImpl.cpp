@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jessica Blanco <jblanco@us.ibm.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -45,6 +46,12 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
+#include "nsISimpleEnumerator.h"
+#include "nsISupportsPrimitives.h"
+#include "nsGfxCIID.h"
+ 
+static NS_DEFINE_IID(kCPrinterEnumerator, NS_PRINTER_ENUMERATOR_CID);
+
 NS_IMPL_ISUPPORTS1(nsPrintOptions, nsIPrintOptions)
 
 // Pref Constants
@@ -69,6 +76,7 @@ const char kPrintColor[]      = "print.print_color";
 const char kPrintPaperSize[]  = "print.print_paper_size";
 const char kPrintOrientation[]= "print.print_orientation";
 const char kPrintCommand[]    = "print.print_command";
+const char kPrinter[]         = "print.print_printer";
 const char kPrintFile[]       = "print.print_file";
 const char kPrintToFile[]     = "print.print_tofile";
 const char kPrintPageDelay[]  = "print.print_pagedelay";
@@ -95,6 +103,7 @@ nsPrintOptions::nsPrintOptions() :
   mPrintRange(kRangeAllPages),
   mStartPageNum(1),
   mEndPageNum(1),
+  mNumCopies(1),
   mPrintFrameType(kFramesAsIs),
   mHowToEnableFrameUI(kFrameEnableNone),
   mIsCancelled(PR_FALSE),
@@ -139,6 +148,88 @@ nsPrintOptions::~nsPrintOptions()
     delete sDefaultFont;
     sDefaultFont = nsnull;
   }
+}
+
+
+class
+nsPrinterListEnumerator : public nsISimpleEnumerator
+{
+   public:
+     nsPrinterListEnumerator();
+     virtual ~nsPrinterListEnumerator();
+
+     //nsISupports interface
+     NS_DECL_ISUPPORTS
+
+     //nsISimpleEnumerator interface
+     NS_DECL_NSISIMPLEENUMERATOR
+
+     NS_IMETHOD Init();
+
+   protected:
+     PRUnichar **mPrinters;
+     PRUint32 mCount;
+     PRUint32 mIndex;
+};
+
+nsPrinterListEnumerator::nsPrinterListEnumerator() :
+  mPrinters(nsnull), mCount(0), mIndex(0)
+{
+   NS_INIT_REFCNT();
+}
+
+nsPrinterListEnumerator::~nsPrinterListEnumerator()
+{
+   if (mPrinters) {
+      PRUint32 i;
+      for (i = 0; i < mCount; i++ ) {
+         nsMemory::Free(mPrinters[i]);
+      }
+      nsMemory::Free(mPrinters);
+   }
+}
+
+NS_IMPL_ISUPPORTS1(nsPrinterListEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP nsPrinterListEnumerator::Init( )
+{
+   nsresult rv;
+   nsCOMPtr<nsIPrinterEnumerator> printerEnumerator;
+
+   printerEnumerator = do_CreateInstance(kCPrinterEnumerator, &rv);
+   if (NS_FAILED(rv))
+      return rv;
+
+   rv = printerEnumerator->EnumeratePrinters(&mCount, &mPrinters);
+   return rv;
+}
+
+NS_IMETHODIMP nsPrinterListEnumerator::HasMoreElements(PRBool *result)
+{
+   *result = (mIndex < mCount);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsPrinterListEnumerator::GetNext(nsISupports **aPrinter)
+{
+   NS_ENSURE_ARG_POINTER(aPrinter);
+   *aPrinter = nsnull;
+   if (mIndex >= mCount) {
+     return NS_ERROR_UNEXPECTED;
+   }
+
+   PRUnichar *printerName = mPrinters[mIndex++];
+   nsCOMPtr<nsISupportsWString> printerNameWrapper;
+   nsresult rv;
+
+   rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull,
+                                           NS_GET_IID(nsISupportsWString), getter_AddRefs(printerNameWrapper));
+   NS_ENSURE_SUCCESS(rv, rv);
+   NS_ENSURE_TRUE(printerNameWrapper, NS_ERROR_OUT_OF_MEMORY);
+   printerNameWrapper->SetData(NS_CONST_CAST(PRUnichar*, printerName));
+   *aPrinter = NS_STATIC_CAST(nsISupports*, printerNameWrapper);
+   NS_ADDREF(*aPrinter);
+   return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -283,6 +374,7 @@ nsPrintOptions::ReadPrefs()
     prefs->GetIntPref(kPrintPaperSize,   &mPaperSize);
     prefs->GetIntPref(kPrintOrientation, &mOrientation);
     ReadPrefString(prefs, kPrintCommand, mPrintCommand);
+    ReadPrefString(prefs, kPrinter, mPrinter);
     prefs->GetBoolPref(kPrintFile,       &mPrintToFile);
     ReadPrefString(prefs, kPrintToFile,  mToFileName);
     prefs->GetIntPref(kPrintPageDelay,   &mPrintPageDelay);
@@ -322,6 +414,7 @@ nsPrintOptions::WritePrefs()
     prefs->SetIntPref(kPrintPaperSize,    mPaperSize);
     prefs->SetIntPref(kPrintOrientation,  mOrientation);
     WritePrefString(prefs, kPrintCommand, mPrintCommand);
+    WritePrefString(prefs, kPrinter, mPrinter);
     prefs->SetBoolPref(kPrintFile,        mPrintToFile);
     WritePrefString(prefs, kPrintToFile,  mToFileName);
     prefs->SetIntPref(kPrintPageDelay,    mPrintPageDelay);
@@ -396,6 +489,19 @@ NS_IMETHODIMP nsPrintOptions::SetPaperSize(PRInt32 aPaperSize)
   return NS_OK;
 }
 
+/* attribute wstring printCommand; */
+NS_IMETHODIMP nsPrintOptions::GetPrintCommand(PRUnichar * *aPrintCommand)
+{
+  //NS_ENSURE_ARG_POINTER(aPrintCommand);
+  *aPrintCommand = ToNewUnicode(mPrintCommand);
+  return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrintCommand(const PRUnichar * aPrintCommand)
+{
+  mPrintCommand = aPrintCommand;
+  return NS_OK;
+}
+
 /* attribute short orientation; */
 NS_IMETHODIMP nsPrintOptions::GetOrientation(PRInt32 *aOrientation)
 {
@@ -409,18 +515,67 @@ NS_IMETHODIMP nsPrintOptions::SetOrientation(PRInt32 aOrientation)
   return NS_OK;
 }
 
-/* attribute wstring printCommand; */
-NS_IMETHODIMP nsPrintOptions::GetPrintCommand(PRUnichar * *aPrintCommand)
+/* attribute wstring printer; */
+NS_IMETHODIMP nsPrintOptions::GetPrinter(PRUnichar * *aPrinter)
 {
-  //NS_ENSURE_ARG_POINTER(aPrintCommand);
-  *aPrintCommand = ToNewUnicode(mPrintCommand);
+   //NS_ENSURE_ARG_POINTER(aPrinter);
+   *aPrinter = ToNewUnicode(mPrinter);
+   return NS_OK;
+}
+NS_IMETHODIMP nsPrintOptions::SetPrinter(const PRUnichar * aPrinter)
+{
+   mPrinter = aPrinter;
+   return NS_OK;
+}
+
+/* attribute long numCopies; */
+NS_IMETHODIMP nsPrintOptions::GetNumCopies(PRInt32 *aNumCopies)
+{
+  //NS_ENSURE_ARG_POINTER(aNumCopies);
+  *aNumCopies = mNumCopies;
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintOptions::SetPrintCommand(const PRUnichar * aPrintCommand)
+NS_IMETHODIMP nsPrintOptions::SetNumCopies(PRInt32 aNumCopies)
 {
-  mPrintCommand = aPrintCommand;
+  mNumCopies = aNumCopies;
   return NS_OK;
 }
+
+/* create and return a new |nsPrinterListEnumerator| */
+NS_IMETHODIMP nsPrintOptions::AvailablePrinters( nsISimpleEnumerator **aPrinterEnumerator)
+{
+   NS_ENSURE_ARG_POINTER(aPrinterEnumerator);
+   nsCOMPtr<nsPrinterListEnumerator> printerListEnum = new nsPrinterListEnumerator();
+   NS_ENSURE_TRUE(printerListEnum.get(), NS_ERROR_OUT_OF_MEMORY);
+
+   nsresult rv = printerListEnum->Init();
+   NS_ENSURE_SUCCESS(rv, rv);
+
+   *aPrinterEnumerator = NS_STATIC_CAST(nsISimpleEnumerator*, printerListEnum);
+   NS_ADDREF(*aPrinterEnumerator);
+   return NS_OK;
+
+}
+
+NS_IMETHODIMP nsPrintOptions::DisplayJobProperties( const PRUnichar *aPrinter, PRBool *aDisplayed)
+{
+   NS_ENSURE_ARG(aPrinter);
+   *aDisplayed = PR_FALSE;
+
+   nsresult  rv;
+   nsCOMPtr<nsIPrinterEnumerator> propDlg;
+
+   propDlg = do_CreateInstance(kCPrinterEnumerator, &rv);
+   if (NS_FAILED(rv))
+     return rv;
+
+   if (NS_FAILED(propDlg->DisplayPropertiesDlg((PRUnichar*)aPrinter)))
+     return rv;
+   
+   *aDisplayed = PR_TRUE;
+      
+   return NS_OK;
+}   
 
 /* attribute boolean printToFile; */
 NS_IMETHODIMP nsPrintOptions::GetPrintToFile(PRBool *aPrintToFile)

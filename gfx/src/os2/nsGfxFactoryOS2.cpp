@@ -69,6 +69,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerOS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsOS2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorOS2)
 
 // our custom constructors
 
@@ -178,7 +179,12 @@ static nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     //    "@mozilla.org/gfx/screenmanager/gtk;1",
     "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerOS2Constructor }
+    nsScreenManagerOS2Constructor },
+  { "OS/2 Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorOS2Constructor }
 };
 
 PR_STATIC_CALLBACK(void)

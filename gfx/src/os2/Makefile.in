@@ -35,21 +35,23 @@ MODULE_NAME	= nsGfxOS2Module
 REQUIRES = xpcom \
 		  string \
 		  widget \
+		  view \
+		  util \
+		  dom \
 		  pref \
 		  uconv \
+		  windowwatcher \
+		  locale \
 		  $(NULL)
 
-DIRS			= res
-
 CPPSRCS		= \
-		libprint.cpp \
+		nsDeviceContextSpecOS2.cpp \
 		nsDeviceContextOS2.cpp \
 		nsDrawingSurfaceOS2.cpp \
 		nsRenderingContextOS2.cpp \
 		nsFontMetricsOS2.cpp \
 		nsImageOS2.cpp \
 		nsRegionOS2.cpp \
-		nsDeviceContextSpecOS2.cpp \
 		nsDeviceContextSpecFactoryO.cpp \
 		nsScreenOS2.cpp          \
 		nsScreenManagerOS2.cpp          \
@@ -57,8 +59,6 @@ CPPSRCS		= \
 		nsPrintOptionsOS2.cpp \
 		nsGfxDefs.cpp \
 		$(NULL)
-
-RES_FILE	= $(srcdir)/libprint.res
 
 EXPORTS	= \
 		nsIRenderingContextOS2.h \

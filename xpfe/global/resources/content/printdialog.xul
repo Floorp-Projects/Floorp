@@ -1,0 +1,119 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
+
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s):
+  Masaki Katakai <katakai@japan.sun.com>
+  Dan Rosen <dr@netscape.com>
+  Jessica Blanco <jblanco@us.ibm.com>
+  Asko Tontti <atontti@cc.hut.fi>
+
+-->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://global/locale/printdialog.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="onLoad();"
+  ondialogaccept="return onAccept();"
+  title="&printDialog.title;"
+  persist="screenX screenY"
+  screenX="24" screenY="24">
+
+  <script type="application/x-javascript" src="chrome://global/content/printdialog.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+
+  <groupbox>
+    <caption label="&printer.label;"/>
+
+    <hbox align="center">
+      <label value="&printTo.label;"/>
+      <radiogroup id="destGroup" orient="horizontal">
+        <radio id="printerRadio" label="&printerRadio.label;" onclick="doPrintToFile( false );"/>
+        <radio id="fileRadio" label="&fileRadio.label;" onclick="doPrintToFile( true );"/>
+      </radiogroup>
+    </hbox>
+
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+        <column/>
+      </columns>
+
+      <rows>
+        <row align="center">
+          <label id="printerLabel" value="&printerInput.label;"/>
+          <menulist id="printerList" flex ="1">
+            <menupopup/>
+          </menulist>
+          <button id="properties" label="&propertiesButton.label;" oncommand="displayPropertiesDialog();"/>
+        </row>
+        <row align="center">
+          <label id="fileLabel" control="fileInput" value="&fileInput.label;"/>
+          <textbox id="fileInput" flex="1" onblur="stripTrailingWhitespace(this)"/>
+          <button id="chooseFile" label="&chooseButton.label;" oncommand="onChooseFile()"/>
+        </row>
+      </rows>
+
+    </grid>
+  </groupbox>
+
+  <hbox>
+    <groupbox flex="1">
+      <caption label="&printrangeGroup.label;"/>
+
+      <radiogroup id="printrangeGroup">
+        <radio id="allpagesRadio" label="&allpagesRadio.label;" onclick="doPrintRange(0)"/>
+        <hbox align="center">
+          <radio id="rangeRadio" label="&rangeRadio.label;" onclick="doPrintRange(1)"/>
+          <label id="frompageLabel" control="frompageInput" value="&frompageInput.label;" />
+          <textbox id="frompageInput" style="width:5em;" onkeyup="checkInteger(this.id)"/>
+          <label id="topageLabel" control="topageInput" value="&topageInput.label;" />
+          <textbox id="topageInput" style="width:5em;" onkeyup="checkInteger(this.id)"/>
+        </hbox>
+        <radio id="selectionRadio" label="&selectionRadio.label;" onclick = "doPrintRange(2)"/>
+      </radiogroup>
+    </groupbox>
+
+    <groupbox flex="1">
+      <caption label="&copies.label;"/>
+      <hbox align="center">
+        <label control="numCopiesInput" value="&numCopies.label;"/>  
+        <textbox id="numCopiesInput" style="width:5em;" onkeyup="checkInteger(this.id)"/>
+      </hbox>
+    </groupbox>
+  </hbox>
+
+  <groupbox flex="1">
+    <caption label="&printframeGroup.label;" id="printframeGroupLabel"/>
+    <radiogroup id="printframeGroup">
+      <radio id="aslaidoutRadio" label="&aslaidoutRadio.label;" />
+      <radio id="selectedframeRadio" label="&selectedframeRadio.label;" />
+      <radio id="eachframesepRadio" label="&eachframesepRadio.label;" />
+    </radiogroup>
+  </groupbox>
+
+  <!-- used to store titles and labels -->
+  <data style="display:none;" id="printButton" label="&printButton.label;"/>
+  <data style="display:none;" id="fpDialog" label="&fpDialog.title;"/>
+
+</dialog>
+

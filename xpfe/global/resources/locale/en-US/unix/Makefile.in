@@ -16,7 +16,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s):
+#   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
 #
 
 DEPTH		= ../../../../../..
@@ -32,7 +33,7 @@ CHROME_L10N_DIR=global/locale
 CHROME_L10N = \
 		platformGlobalOverlay.dtd \
 		platformDialogOverlay.dtd \
-		printdialog.dtd \
+		printjoboptions.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

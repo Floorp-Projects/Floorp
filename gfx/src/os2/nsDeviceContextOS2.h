@@ -43,7 +43,7 @@
 
 #include "nsDeviceContext.h"
 #include "nsIScreenManager.h"
-#include "libprint.h"
+#include "nsDeviceContextSpecOS2.h"
 
 class nsIScreen;
 

@@ -40,6 +40,10 @@
 #include <limits.h>
 #include <errno.h>
 
+#ifdef XPU_USE_NSPR
+#define strtok_r(s1, s2, x) PL_strtok_r((s1), (s2), (x))
+#endif /* USE_MOZILLA_TYPES */
+
 /* conformace only; X11 API does (currrently) not make use of |const|. 
  * If Xlib API gets fixed these macros can be turned into empty 
  * placeholders... (|#define MAKE_STRING_WRITABLE(x)|) :-)
@@ -75,10 +79,15 @@ int XpuCheckExtension( Display *pdpy )
 
 const char *XpuGetXpServerList( void )
 {
+  const char *s;
   /* BUG/TODO: XpServerList resource needs to be sourced first, then append 
    * contents of XPSERVERLIST, then remove duplicates...
    */
-  return(getenv("XPSERVERLIST"));
+  s = getenv("XPSERVERLIST"); 
+  if( s == NULL )
+    s = "";
+    
+  return(s);
 }
 
 

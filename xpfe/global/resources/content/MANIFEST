@@ -41,4 +41,5 @@ nsUserSettings.js
 toolbarBindings.xml
 stringbundleBindings.xml
 plugins.html
-
+printdialog.xul
+printdialog.js

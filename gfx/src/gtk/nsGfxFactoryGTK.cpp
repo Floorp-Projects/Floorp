@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Christopher Blizzzard <blizzard@mozilla.org>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -73,6 +74,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsGTK)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 
 // our custom constructors
 
@@ -182,7 +184,12 @@ static nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     //    "@mozilla.org/gfx/screenmanager/gtk;1",
     "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerGtkConstructor }
+    nsScreenManagerGtkConstructor },
+  { "Gtk Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorGTKConstructor }    
 };
 
 PR_STATIC_CALLBACK(void)
