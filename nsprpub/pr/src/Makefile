@@ -391,7 +391,12 @@ export:: $(TARGETS)
 	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
 ifdef SHARED_LIBRARY
 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/bin
+ifeq ($(OS_ARCH),HP-UX)
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/lib
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/bin
+else
 ifeq ($(OS_ARCH), OpenVMS)
+endif
 	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/lib
 endif
 endif
