@@ -158,6 +158,7 @@ protected:
   nscolor           mCurrPenColor;
   HPEN              mCurrPen;
   HPEN              mNullPen;
+  PRUint8           *mGammaTable;
 
 #ifdef NS_DEBUG
   PRBool          mInitialized;

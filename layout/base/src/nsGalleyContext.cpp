@@ -47,6 +47,7 @@ GalleyContext::GalleyContext()
     mDeviceContext->Init();
     mDeviceContext->SetDevUnitsToAppUnits(mDeviceContext->GetDevUnitsToTwips());
     mDeviceContext->SetAppUnitsToDevUnits(mDeviceContext->GetTwipsToDevUnits());
+    mDeviceContext->SetGamma(1.7f);
   }
 }
 

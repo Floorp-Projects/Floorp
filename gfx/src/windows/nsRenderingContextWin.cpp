@@ -286,6 +286,8 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mBlackPen = ::CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
   mOrigSolidPen = ::SelectObject(mDC, mBlackPen);
 
+  mGammaTable = mContext->GetGammaTable();
+
   return NS_OK;
 }
 
@@ -438,7 +440,9 @@ const nsRect& nsRenderingContextWin :: GetClipRect()
 void nsRenderingContextWin :: SetColor(nscolor aColor)
 {
   mCurrentColor = aColor;
-  mColor = RGB(NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
+  mColor = RGB(mGammaTable[NS_GET_R(aColor)],
+               mGammaTable[NS_GET_G(aColor)],
+               mGammaTable[NS_GET_B(aColor)]);
 }
 
 nscolor nsRenderingContextWin :: GetColor() const
