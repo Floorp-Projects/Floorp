@@ -1185,11 +1185,6 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
         if ((NS_STYLE_TEXT_ALIGN_CENTER == value.GetIntValue()) ||
             (NS_STYLE_TEXT_ALIGN_MOZ_CENTER == value.GetIntValue())) {
-          if (eCompatibility_Standard == mode) {
-            nsStyleText* text = (nsStyleText*)
-              aContext->GetMutableStyleData(eStyleStruct_Text);
-            text->mTextAlign = NS_STYLE_TEXT_ALIGN_CENTER;
-          }
           nsStyleCoord otto(eStyleUnit_Auto);
           spacing->mMargin.SetLeft(otto);
           spacing->mMargin.SetRight(otto);
