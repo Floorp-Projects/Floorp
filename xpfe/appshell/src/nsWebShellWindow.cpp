@@ -44,6 +44,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMFocusListener.h"
+#include "nsIWebNavigation.h"
 
 #include "nsIXULPopupListener.h"
 #include "nsIDOMXULElement.h"
@@ -349,7 +350,9 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
     if (NS_FAILED(rv)) return rv;
     urlString = tmpStr;
     nsCRT::free(tmpStr);
-    rv = mWebShell->LoadURL(urlString.GetUnicode());
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+    NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(webNav->LoadURI(urlString.GetUnicode()), NS_ERROR_FAILURE);
   }
                      
   return rv;
@@ -1519,7 +1522,8 @@ void nsWebShellWindow::LoadContentAreas() {
         if (urlChar) {
           nsUnescape(urlChar);
           contentURL = urlChar;
-          contentShell->LoadURL(contentURL.GetUnicode());
+          nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(contentShell));
+          webNav->LoadURI(contentURL.GetUnicode());
           delete [] urlChar;
         }
         NS_RELEASE(contentShell);
