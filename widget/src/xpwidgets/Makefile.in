@@ -32,6 +32,8 @@ CPPSRCS=							\
     nsBaseWidget.cpp                \
 	nsMenuButton.cpp                \
 	nsImageButton.cpp               \
+	nsDataFlavor.cpp                \
+	nsTransferable.cpp              \
 	$(NULL)
 
 LOCAL_INCLUDES := \
