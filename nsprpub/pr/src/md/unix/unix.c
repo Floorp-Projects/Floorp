@@ -2088,21 +2088,6 @@ static void HPUX9_ClockInterruptHandler(
 void _MD_StartInterrupts()
 {
     char *eval;
-#ifdef HPUX9
-    struct sigvec vec;
-
-    vec.sv_handler = (void (*)()) HPUX9_ClockInterruptHandler;
-    vec.sv_mask = 0;
-    vec.sv_flags = 0;
-    sigvector(SIGALRM, &vec, 0);
-#else
-    struct sigaction vtact;
-
-    vtact.sa_handler = (void (*)()) ClockInterruptHandler;
-    sigemptyset(&vtact.sa_mask);
-    vtact.sa_flags = SA_RESTART;
-    sigaction(SIGALRM, &vtact, 0);
-#endif /* HPUX9 */
 
     if ((eval = getenv("NSPR_NOCLOCK")) != NULL) {
         if (atoi(eval) == 0)
@@ -2127,6 +2112,21 @@ void _MD_EnableClockInterrupts()
 {
     struct itimerval itval;
     extern PRUintn _pr_numCPU;
+#ifdef HPUX9
+    struct sigvec vec;
+
+    vec.sv_handler = (void (*)()) HPUX9_ClockInterruptHandler;
+    vec.sv_mask = 0;
+    vec.sv_flags = 0;
+    sigvector(SIGALRM, &vec, 0);
+#else
+    struct sigaction vtact;
+
+    vtact.sa_handler = (void (*)()) ClockInterruptHandler;
+    sigemptyset(&vtact.sa_mask);
+    vtact.sa_flags = SA_RESTART;
+    sigaction(SIGALRM, &vtact, 0);
+#endif /* HPUX9 */
 
     PR_ASSERT(_pr_numCPU == 1);
 	itval.it_interval.tv_sec = 0;

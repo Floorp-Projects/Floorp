@@ -252,6 +252,9 @@ extern PRStatus _MD_KillUnixProcess(struct PRProcess *process);
 
 /************************************************************************/
 
+extern void _MD_EnableClockInterrupts(void);
+extern void _MD_DisableClockInterrupts(void);
+
 #define _MD_START_INTERRUPTS			_MD_StartInterrupts
 #define _MD_STOP_INTERRUPTS				_MD_StopInterrupts
 #define _MD_DISABLE_CLOCK_INTERRUPTS	_MD_DisableClockInterrupts
