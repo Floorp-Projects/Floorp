@@ -64,7 +64,9 @@
       <description>&info2.label;</description>
       <spacer/>
       <description>&info3.label;</description>
+#ifndef MOZ_THUNDERBIRD
       <spacer/>
       <description>&info4.label;</description>
+#endif
   </vbox>
 </dialog>
