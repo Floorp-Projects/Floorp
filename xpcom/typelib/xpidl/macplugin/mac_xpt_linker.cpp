@@ -31,6 +31,8 @@
 /* system headers */
 #include <Files.h>
 #include <Strings.h>
+#include <Aliases.h>
+#include <Resources.h>
 
 /* compiler headers */
 #include "DropInCompilerLinker.h"
@@ -183,60 +185,107 @@ static CWResult GetSettings(CWPluginContext context, XPIDLSettings& settings)
 	CWMemHandle	settingsHand;
 	CWResult err = CWGetNamedPreferences(context, kXPIDLPanelName, &settingsHand);
 	if (!CWSUCCESS(err))
-		return (err);
+		return err;
 	
 	XPIDLSettings* settingsPtr = NULL;
 	err = CWLockMemHandle(context, settingsHand, false, (void**)&settingsPtr);
 	if (!CWSUCCESS(err))
-		return (err);
+		return err;
 	
 	settings = *settingsPtr;
 	
 	err = CWUnlockMemHandle(context, settingsHand);
 	if (!CWSUCCESS(err))
-		return (err);
+		return err;
 
-	return noErr;
+	return cwNoErr;
 }
 
-static CWResult	Link(CWPluginContext context)
+static CWResult LinkHeaders(CWPluginContext context, XPIDLSettings& settings)
 {
-	long		index;
-	CWResult	err;
-	long		filecount;
-
-	// load the relevant prefs.
-	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
-	err = GetSettings(context, settings);
-	if (err != cwNoErr)
-		return (err);
-
 	// find out how many files there are to link.
-	err = CWGetProjectFileCount(context, &filecount);
-	if (err != cwNoErr)
-		return (err);
+	long fileCount = 0;
+	CWResult err = CWGetProjectFileCount(context, &fileCount);
+	if (err != cwNoErr || fileCount == 0)
+		return err;
+
+	// get the output directory.
+	FSSpec outputDir;
+	err = CWGetOutputFileDirectory(context, &outputDir);
+	if (!CWSUCCESS(err))
+		return err;
+	
+	// enumerate all of the output header files, and make aliases to them in
+	// the output directory.
+	for (long index = 0; (err == cwNoErr) && (index < fileCount); index++) {
+		// get the name of each output file.
+		CWFileSpec outputFile;
+		err = CWGetStoredObjectFileSpec(context, index, &outputFile);
+		if (err == cwNoErr) {
+			FInfo info;
+			err = FSpGetFInfo(&outputFile, &info);
+			
+			FSSpec aliasFile = { outputDir.vRefNum, outputDir.parID };
+			BlockMoveData(outputFile.name, aliasFile.name, 1 + outputFile.name[0]);
+			
+			AliasHandle alias = NULL;
+			if (NewAliasMinimal(&outputFile, &alias) == noErr) {
+				// recreate the alias file from scratch.
+				FSpDelete(&aliasFile);
+				FSpCreateResFile(&aliasFile, info.fdCreator, info.fdType, smRoman);
+				short refNum = FSpOpenResFile(&aliasFile, fsRdWrPerm);
+				if (refNum != -1) {
+					UseResFile(refNum);
+					AddResource(Handle(alias), rAliasType, 0, aliasFile.name);
+					ReleaseResource(Handle(alias));
+					UpdateResFile(refNum);
+					CloseResFile(refNum);
+				}
+				// finally, mark the newly created file as an alias file.
+				FSpGetFInfo(&aliasFile, &info);
+				info.fdFlags |= kIsAlias;
+				FSpSetFInfo(&aliasFile, &info);
+			}
+		}
+	}
+	
+	// create the target file in the output directory.
+	BlockMoveData(settings.output, outputDir.name, 1 + settings.output[0]);
+	FILE* outputFile = FSp_fopen(&outputDir, "w");
+	if (outputFile != NULL) fclose(outputFile);
+
+	return err;
+}
+
+static CWResult LinkTypeLib(CWPluginContext context, XPIDLSettings& settings)
+{
+	// find out how many files there are to link.
+	long fileCount = 0;
+	CWResult err = CWGetProjectFileCount(context, &fileCount);
+	if (err != cwNoErr || fileCount == 0)
+		return err;
 
 	// assemble the argument list.
 	// { "xpt_link", outputFile, inputFile1, ..., inputFileN, NULL }
-	char** argv = new char*[2 + filecount + 1];
+	char** argv = new char*[2 + fileCount + 1];
 	int argc = 0;
 	argv[argc++] = "xpt_link";
 
 	// get the output directory.
 	err = CWGetOutputFileDirectory(context, &gOutputDirectory);
 	if (!CWSUCCESS(err))
-		return (err);
+		return err;
 	
 	// get the object code directory.
 	err = CWGetStoredObjectFileSpec(context, 0, &gObjectCodeDirectory);
 	if (!CWSUCCESS(err))
-		return (err);
+		return err;
 
 	// push the output file name.
 	if ((argv[argc++] = p2c_strdup(settings.output)) == NULL)
 		return cwErrOutOfMemory;
 
-	for (index = 0; (err == cwNoErr) && (index < filecount); index++) {
+	for (long index = 0; (err == cwNoErr) && (index < fileCount); index++) {
 		// get the name of each output file.
 		CWFileSpec outputFile;
 		err = CWGetStoredObjectFileSpec(context, index, &outputFile);
@@ -261,7 +310,25 @@ static CWResult	Link(CWPluginContext context)
 			err = cwErrRequestFailed;
 	}
 	
-	return (err);
+	return err;
+}
+
+static CWResult	Link(CWPluginContext context)
+{
+	// load the relevant prefs.
+	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
+	CWResult err = GetSettings(context, settings);
+	if (err != cwNoErr)
+		return err;
+
+	switch (settings.mode) {
+	case kXPIDLModeHeader:
+		return LinkHeaders(context, settings);
+	case kXPIDLModeTypelib:
+		return LinkTypeLib(context, settings);
+	default:
+		return cwNoErr;
+	}
 }
 
 static CWResult	Disassemble(CWPluginContext context)
@@ -271,17 +338,17 @@ static CWResult	Disassemble(CWPluginContext context)
 	// cache the project's output directory.
 	err = CWGetOutputFileDirectory(gPluginContext, &gOutputDirectory);
 	if (!CWSUCCESS(err))
-		return (err);
+		return err;
 
 	long fileNum;
 	err = CWGetMainFileNumber(context, &fileNum);
 	if (!CWSUCCESS(err))
-		return (err);
+		return err;
 
 	// get the output file's location from the stored object data.
 	err = CWGetStoredObjectFileSpec(context, fileNum, &gObjectCodeDirectory);
 	if (!CWSUCCESS(err))
-		return (err);
+		return err;
 	
 	char* outputName = p2c_strdup(gObjectCodeDirectory.name);
 	if (outputName == NULL)
@@ -319,7 +386,7 @@ static CWResult	Disassemble(CWPluginContext context)
 		err = CWCreateNewTextDocument(context, &info);
 	}
 
-	return (err);
+	return err;
 }
 
 static CWResult	GetTargetInfo(CWPluginContext context)
@@ -338,7 +405,7 @@ static CWResult	GetTargetInfo(CWPluginContext context)
 	XPIDLSettings settings = { kXPIDLSettingsVersion, kXPIDLModeTypelib, false, false };
 	err = GetSettings(context, settings);
 	if (err != cwNoErr)
-		return (err);
+		return err;
 	
 #if CWPLUGIN_HOST == CWPLUGIN_HOST_MACOS
 	// tell the IDE about the output file.
