@@ -468,7 +468,11 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       if (tempString)
         PR_sscanf(tempString, "%d", &height);
 				 
+#if 0
       rv = OpenBrowserWindow(height, width);
+#else
+      rv = OpenChromURL("chrome://navigator/content/", height, width );
+#endif
     }
 	}
 	return rv;
