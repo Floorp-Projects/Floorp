@@ -457,12 +457,18 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 
 - (IBAction)endLocationSheet:(id)sender
 {
-    [mLocationSheetWindow orderOut:self];
-    [NSApp endSheet:mLocationSheetWindow returnCode:1];
-    [self loadURL:[NSURL URLWithString:[mLocationSheetURLField stringValue]]];
-    
-    // Focus and activate our content area.
-    [[mBrowserView getBrowserView] setActive: YES];
+  [mLocationSheetWindow orderOut:self];
+  [NSApp endSheet:mLocationSheetWindow returnCode:1];
+  [self loadURL:[NSURL URLWithString:[mLocationSheetURLField stringValue]]];
+  
+  // Focus and activate our content area.
+  [[mBrowserView getBrowserView] setActive: YES];
+}
+
+- (IBAction)cancelLocationSheet:(id)sender
+{
+  [mLocationSheetWindow orderOut:self];
+  [NSApp endSheet:mLocationSheetWindow returnCode:0];
 }
 
 -(IBAction)cancelAddBookmarkSheet:(id)sender
