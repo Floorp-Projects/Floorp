@@ -105,9 +105,8 @@ pre[wrap], pre[cols], pre[width] {
 }
 
 
-/* Quirk: text input has fixed look in compat mode (b=25580) */
+/* Quirk: no bottom padding */
 input[type="text"] {
-  border: 2px inset ! important;
   padding: 1px 0 0 0;
 } 
 
