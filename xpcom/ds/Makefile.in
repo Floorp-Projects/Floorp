@@ -83,7 +83,6 @@ CPPSRCS		= \
 EXPORTS		= \
 		nsAtomService.h \
 		nsBaseHashtable.h \
-		nsBaseHashtableImpl.h \
 		nsCheapSets.h \
 		nsClassHashtable.h \
 		nsCppSharedAllocator.h \
@@ -102,7 +101,6 @@ EXPORTS		= \
 		nsIUnicharBuffer.h \
 		nsInt64.h \
 		nsInterfaceHashtable.h \
-		nsInterfaceHashtableImpl.h \
 		nsObserverService.h \
 		nsQuickSort.h \
 		nsRecyclingAllocator.h \
@@ -111,7 +109,6 @@ EXPORTS		= \
 		nsSupportsArray.h \
 		nsSupportsPrimitives.h \
 		nsTHashtable.h \
-		nsTHashtableImpl.h \
 		nsTime.h \
 		nsUnitConversion.h \
 		nsVariant.h \
