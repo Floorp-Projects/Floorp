@@ -42,6 +42,7 @@
 #include "plstr.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgFolder.h"
+#include "nsIMsgImapMailFolder.h"
 #include "nsImapUtils.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"

@@ -31,6 +31,7 @@ XPIDLSRCS =	\
             .\nsIImapProtocol.idl	\
             .\nsIMailboxSpec.idl	\
             .\nsIImapMailFolderSink.idl	\
+            .\nsIMsgImapMailFolder.idl  \
 			$(NULL)
 
 ################################################################################

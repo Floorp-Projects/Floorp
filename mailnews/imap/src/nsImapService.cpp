@@ -31,6 +31,7 @@
 #include "nsImapUrl.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgFolder.h"
+#include "nsIMsgImapMailFolder.h"
 #include "nsIImapIncomingServer.h"
 #include "nsIImapServerSink.h"
 #include "nsIImapMockChannel.h"

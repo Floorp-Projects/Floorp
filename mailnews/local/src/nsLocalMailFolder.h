@@ -39,6 +39,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsIMsgParseMailMsgState.h"
 #include "nsITransactionManager.h"
+#include "nsIMsgLocalMailFolder.h"
 
 #define FOUR_K 4096
 

@@ -283,33 +283,3 @@ interface nsIMsgFolder : nsIFolder {
 
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
 };
-
-
-[scriptable, uuid(27D2DE40-BAF1-11d2-9578-00805F8AC615)]
-interface nsIMsgLocalMailFolder : nsISupports {
-
-};
-
-[scriptable, uuid(3716abe4-f6d4-11d2-86d5-004005263078)]
-interface nsIMsgNewsFolder : nsISupports {
-  attribute string unreadSetStr;
-  attribute string groupUsername;
-  attribute string groupPassword;
-
-  nsIMsgFolder addNewsgroup(in string newsgroupName, in string setStr);
-};
-
-[scriptable, uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
-interface nsIMsgImapMailFolder : nsISupports {
-
-  void RemoveSubFolder(in nsIMsgFolder folder);
-  void CreateClientSubfolderInfo(in string folderName);
-  void List();
-  attribute boolean verifiedAsOnlineFolder;
-  attribute boolean explicitlyVerify;
-  attribute wchar hierarchyDelimiter;
-  attribute long boxFlags;
-  attribute string onlineName;
-};
-
-

@@ -76,6 +76,7 @@
 
 #include "nsINntpIncomingServer.h"
 #include "nsIMsgFolder.h"
+#include "nsIMsgNewsFolder.h"
 
 #include "nsIRDFService.h"
 #include "nsIRDFResource.h"

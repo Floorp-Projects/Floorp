@@ -36,6 +36,7 @@
 #include "nsNewsUtils.h"
 #include "nsMsgLineBuffer.h"
 #include "nsMsgKeySet.h"
+#include "nsIMsgNewsFolder.h"
 #include "nsCOMPtr.h"
 
 class nsMsgNewsFolder : public nsMsgDBFolder, public nsIMsgNewsFolder, public nsMsgLineBuffer

@@ -41,6 +41,8 @@
 #include "nsIMsgFilterList.h"
 #include "prmon.h"
 #include "nsIEventQueue.h"
+#include "nsIMsgImapMailFolder.h"
+
 class nsImapMoveCoalescer;
 
 

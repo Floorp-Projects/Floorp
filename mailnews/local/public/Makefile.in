@@ -38,6 +38,7 @@ XPIDLSRCS	= \
 		nsIMsgParseMailMsgState.idl \
 		nsINoIncomingServer.idl \
 		nsINoneService.idl	\
+        nsIMsgLocalMailFolder.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
