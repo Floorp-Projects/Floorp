@@ -26,6 +26,9 @@
 #include "nsIScriptableRegion.idl"
 
 
+interface nsIDOMNode;
+
+
 [scriptable, uuid(8B5314BB-DB01-11d2-96CE-0060B0FB9956)]
 interface nsIDragService : nsISupports
 {
@@ -42,7 +45,7 @@ interface nsIDragService : nsISupports
     *            in window coordinates.
     * @param  aActionType - specified which of copy/move/link are allowed
     */
-  void invokeDragSession ( in nsISupportsArray aTransferables, 
+  void invokeDragSession ( in nsIDOMNode aDOMNode, in nsISupportsArray aTransferables, 
                              in nsIScriptableRegion aRegion, in unsigned long aActionType );
 
   /**
