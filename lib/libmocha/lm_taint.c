@@ -509,6 +509,7 @@ lm_CheckPermissions(JSContext *cx, JSObject *obj, JSTarget target)
     JSPrincipals *principals;
     JSBool result;
 
+    
     /* May be in a layer loaded from a different origin.*/
     subjectOrigin = lm_GetSubjectOriginURL(cx);
 
@@ -1653,14 +1654,9 @@ LM_SetUntransformedSource(JSPrincipals *principals, char *original,
 }
 
 JSPrincipals * PR_CALLBACK
-LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, int callerDepth)
+LM_GetJSPrincipalsFromJavaCaller(JSContext *cx, void *principalsArray)
 {
-    void *principalsArray;
-
     setupJSCapsCallbacks();
-
-    principalsArray = nsCapsGetClassPrincipalsFromStack(cx, callerDepth);
-
     if (principalsArray == NULL)
         return NULL;
 
