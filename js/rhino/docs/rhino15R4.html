@@ -39,8 +39,20 @@ Due to changes in Rhino implementation and bug fixes in serialization support ru
 <h3>Regular expressions improvements</h3>
 <a href="mailto:rogerl@netscape.com">rogerl@netscape.com</a> committed new regular expressions implementation which fully confirms to EcmaScript 262 standard and faster.
 
+<h3>Scripting of classes from any class loader</h3>
+
+Christopher Oliver contributed code to allow to use the <tt>Packages</tt> object as a constructor taking a class loader argument so a script can access classes defined by that class loader. For example, to access classes from foo.jar file in the current directory, the following can be used:
+<pre>
+// create class loader
+var loader = new java.net.URLClassLoader([new java.net.URL("file:./foo.jar")]);
+// create its LiveConnect wrapper
+var fooJar = new Packages(loader);
+// create an instance of the class For from foo.jar
+var obj = new fooJar.Foo(1, 2, 3);
+obj.someMethod();
+</pre>
+
 <hr width="100%"><br>
 <a href="index.html">back to top</a></h3>
-
 
 </body></html>
