@@ -10,13 +10,6 @@ icalversion.h
 *.la
 ical.h
 icalyacc.output
-icalproperty.c
-icalproperty.h
-icalvalue.h
-icalvalue.c
-icalparameter.h
-icalparameter.c
-icalrestriction.c
 icalderivedparameter.c
 icalderivedparameter.h
 icalderivedproperty.c
