@@ -148,7 +148,7 @@ nsCompressedCharMap::NewCCMap()
 
   // transfer the data
   for (int i=0; i<mUsedLen; i++)
-    newMap[i] = mCCMap[i];
+    newMap[i] = u.mCCMap[i];
 
   return newMap;
 }
@@ -161,12 +161,12 @@ nsCompressedCharMap::nsCompressedCharMap()
   //    1 empty page
 
   int i;
-  memset(mCCMap, 0, sizeof(mCCMap));
+  memset(u.mCCMap, 0, sizeof(u.mCCMap));
   mUsedLen = 0;
   mAllOnesPage = 0;
 
   // init the upper pointers
-  PRUint16 *upper = &mCCMap[0];
+  PRUint16 *upper = &u.mCCMap[0];
   for (i=0; i<CCMAP_NUM_UPPER_POINTERS; i++) {
     upper[i] = CCMAP_EMPTY_MID;
   }
@@ -174,7 +174,7 @@ nsCompressedCharMap::nsCompressedCharMap()
 
   // init the empty mid
   NS_ASSERTION(mUsedLen==CCMAP_EMPTY_MID, "empty mid offset misconfigured");
-  PRUint16 *mid = &mCCMap[CCMAP_EMPTY_MID];
+  PRUint16 *mid = &u.mCCMap[CCMAP_EMPTY_MID];
   for (i=0; i<CCMAP_NUM_MID_POINTERS; i++) {
     mid[i] = CCMAP_EMPTY_PAGE;
   }
@@ -193,26 +193,26 @@ nsCompressedCharMap::SetChar(PRUint16 aChar)
   unsigned int upper_index      = CCMAP_UPPER_INDEX(aChar);
   unsigned int mid_index        = CCMAP_MID_INDEX(aChar);
 
-  PRUint16 mid_offset = mCCMap[upper_index];
+  PRUint16 mid_offset = u.mCCMap[upper_index];
   if (mid_offset == CCMAP_EMPTY_MID) {
-    mid_offset = mCCMap[upper_index] = mUsedLen;
+    mid_offset = u.mCCMap[upper_index] = mUsedLen;
     mUsedLen += CCMAP_NUM_MID_POINTERS;
     NS_ASSERTION(mUsedLen<=CCMAP_MAX_LEN,"length too long");
     // init the mid
-    PRUint16 *mid = &mCCMap[mid_offset];
+    PRUint16 *mid = &u.mCCMap[mid_offset];
     for (i=0; i<CCMAP_NUM_MID_POINTERS; i++) {
       NS_ASSERTION(mid[i]==0, "this mid pointer should be unused");
       mid[i] = CCMAP_EMPTY_PAGE;
     }
   }
 
-  PRUint16 page_offset = mCCMap[mid_offset+mid_index];
+  PRUint16 page_offset = u.mCCMap[mid_offset+mid_index];
   if (page_offset == CCMAP_EMPTY_PAGE) {
-    page_offset = mCCMap[mid_offset+mid_index] = mUsedLen;
+    page_offset = u.mCCMap[mid_offset+mid_index] = mUsedLen;
     mUsedLen += CCMAP_NUM_PRUINT16S_PER_PAGE;
     NS_ASSERTION(mUsedLen<=CCMAP_MAX_LEN,"length too long");
     // init the page
-    PRUint16 *page = &mCCMap[page_offset];
+    PRUint16 *page = &u.mCCMap[page_offset];
     for (i=0; i<CCMAP_NUM_PRUINT16S_PER_PAGE; i++) {
       NS_ASSERTION(page[i]==0, "this page should be unused");
       page[i] = 0;
@@ -220,9 +220,9 @@ nsCompressedCharMap::SetChar(PRUint16 aChar)
   }
 #undef CCMAP_SET_CHAR
 #define CCMAP_SET_CHAR(m,c) (CCMAP_TO_ALU(m,c) |= (CCMAP_POW2(CCMAP_BIT_INDEX(c))))
-  CCMAP_SET_CHAR(mCCMap,aChar);
+  CCMAP_SET_CHAR(u.mCCMap,aChar);
 #undef CCMAP_SET_CHAR
-  NS_ASSERTION(CCMAP_HAS_CHAR(mCCMap,aChar), "failed to set bit");
+  NS_ASSERTION(CCMAP_HAS_CHAR(u.mCCMap,aChar), "failed to set bit");
 }
 
 void
@@ -251,13 +251,13 @@ nsCompressedCharMap::SetChars(PRUint16 aBase, ALU_TYPE* aPage)
   //
   // Alloc mid if necessary
   //
-  PRUint16 mid_offset = mCCMap[upper_index];
+  PRUint16 mid_offset = u.mCCMap[upper_index];
   if (mid_offset == CCMAP_EMPTY_MID) {
-    mid_offset = mCCMap[upper_index] = mUsedLen;
+    mid_offset = u.mCCMap[upper_index] = mUsedLen;
     mUsedLen += CCMAP_NUM_MID_POINTERS;
     NS_ASSERTION(mUsedLen<=CCMAP_MAX_LEN,"length too long");
     // init the mid
-    PRUint16 *mid = &mCCMap[mid_offset];
+    PRUint16 *mid = &u.mCCMap[mid_offset];
     for (i=0; i<CCMAP_NUM_MID_POINTERS; i++) {
       NS_ASSERTION(mid[i]==0, "this mid pointer should be unused");
       mid[i] = CCMAP_EMPTY_PAGE;
@@ -272,28 +272,28 @@ nsCompressedCharMap::SetChars(PRUint16 aBase, ALU_TYPE* aPage)
       mAllOnesPage = mUsedLen;
       mUsedLen += CCMAP_NUM_PRUINT16S_PER_PAGE;
       NS_ASSERTION(mUsedLen<=CCMAP_MAX_LEN,"length too long");
-      ALU_TYPE *all_ones_page = (ALU_TYPE*)&mCCMap[mAllOnesPage];
+      ALU_TYPE *all_ones_page = (ALU_TYPE*)&u.mCCMap[mAllOnesPage];
       for (i=0; i<CCMAP_NUM_ALUS_PER_PAGE; i++) {
         NS_ASSERTION(all_ones_page[i]==0, "this page should be unused");
         all_ones_page[i] = CCMAP_ALU_MASK;
       }
     }
-    mCCMap[mid_offset+mid_index] = mAllOnesPage;
+    u.mCCMap[mid_offset+mid_index] = mAllOnesPage;
     return;
   }
 
   //
   // Alloc page if necessary
   //
-  PRUint16 page_offset = mCCMap[mid_offset+mid_index];
+  PRUint16 page_offset = u.mCCMap[mid_offset+mid_index];
   if (page_offset == CCMAP_EMPTY_PAGE) {
-    page_offset = mCCMap[mid_offset+mid_index] = mUsedLen;
+    page_offset = u.mCCMap[mid_offset+mid_index] = mUsedLen;
     mUsedLen += CCMAP_NUM_PRUINT16S_PER_PAGE;
     NS_ASSERTION(mUsedLen<=CCMAP_MAX_LEN,"length too long");
   }
 
   // copy the page data
-  ALU_TYPE *page = (ALU_TYPE*)&mCCMap[page_offset];
+  ALU_TYPE *page = (ALU_TYPE*)&u.mCCMap[page_offset];
   for (i=0; i<CCMAP_NUM_ALUS_PER_PAGE; i++) {
     NS_ASSERTION(page[i]==0, "this page should be unused");
     page[i] = aPage[i];
