@@ -456,6 +456,72 @@
                    tooltiptext="&calendar.monthview.button.tooltip;"
                    observes="month_view_command"/>
 
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-cut-button"
+                   label="&calendar.cut.button.label;"
+                   tooltiptext="&calendar.cut.button.tooltip;"
+                   observes="cut_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-copy-button"
+                   label="&calendar.copy.button.label;"
+                   tooltiptext="&calendar.copy.button.tooltip;"
+                   observes="copy_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-paste-button"
+                   label="&calendar.paste.button.label;"
+                   tooltiptext="&calendar.paste.button.tooltip;"
+                   observes="paste_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-import-button"
+                   label="&calendar.import.button.label;"
+                   tooltiptext="&calendar.import.button.tooltip;"
+                   observes="import_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-export-button"
+                   label="&calendar.export.button.label;"
+                   tooltiptext="&calendar.export.button.tooltip;"
+                   observes="export_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-subscribe-button"
+                   label="&calendar.subscribe.button.label;"
+                   tooltiptext="&calendar.subscribe.button.tooltip;"
+                   observes="new_server_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-publish-button"
+                   label="&calendar.publish.button.label;"
+                   tooltiptext="&calendar.publish.button.tooltip;"
+                   observes="publish_events_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-print-button"
+                   label="&calendar.print.button.label;"
+                   tooltiptext="&calendar.print.button.tooltip;"
+                   observes="print_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-new-task-button"
+                   label="&calendar.newtask.button.label;"
+                   tooltiptext="&calendar.newtask.button.tooltip;"
+                   observes="new_todo_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-go-to-today-button"
+                   label="&calendar.gototoday.button.label;"
+                   tooltiptext="&calendar.gototoday.button.tooltip;"
+                   observes="go_today_command"/>
+
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-choose-date-button"
+                   label="&calendar.choosedate.button.label;"
+                   tooltiptext="&calendar.choosedate.button.tooltip;"
+                   observes="go_date_command"/>
+
     <toolbaritem id="throbber-box" align="center" pack="center">
       <button id="navigator-throbber"
               oncommand="openAboutDialog();"
@@ -464,7 +530,7 @@
   </toolbarpalette>
   <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar"
            iconsize="big"
-           defaultset="calendar-new-event-button,calendar-edit-event-button,calendar-delete-event-button,separator,calendar-day-view-button,calendar-week-view-button,calendar-multiweek-view-button,calendar-month-view-button,spring,throbber-box"
+           defaultset="calendar-new-event-button,calendar-new-task-button,calendar-edit-event-button,calendar-delete-event-button,separator,calendar-day-view-button,calendar-week-view-button,calendar-multiweek-view-button,calendar-month-view-button,spring,throbber-box"
            customizable="true" mode="full"
            toolbarname="&calendar.maintoolbar.name;" accesskey="&calendar.maintoolbar.accesskey;"
            context="toolbar-context-menu"/>

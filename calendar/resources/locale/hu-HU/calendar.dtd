@@ -254,6 +254,26 @@
 
 <!ENTITY calendar.choosedate.button.label       "Dátumválasztás" >
 
+<!ENTITY calendar.cut.button.tooltip            "Cut" >
+<!ENTITY calendar.copy.button.tooltip           "Copy" >
+<!ENTITY calendar.paste.button.tooltip          "Paste" >
+<!ENTITY calendar.print.button.tooltip          "Print Calendar" >
+
+<!ENTITY calendar.cut.button.label              "Cut" >
+<!ENTITY calendar.copy.button.label             "Copy" >
+<!ENTITY calendar.paste.button.label            "Paste" >
+<!ENTITY calendar.print.button.label            "Print" >
+
+<!ENTITY calendar.import.button.tooltip            "Import: Import events from a local file." >
+<!ENTITY calendar.export.button.tooltip            "Export: Export events to a local file." >
+<!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
+<!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
+
+<!ENTITY calendar.import.button.label              "Import" >
+<!ENTITY calendar.export.button.label              "Export" >
+<!ENTITY calendar.subscribe.button.label           "Subscribe" >
+<!ENTITY calendar.publish.button.label             "Publish" >
+
 <!ENTITY calendar.dayview.button.label          "Napi nézet" >
 <!ENTITY calendar.weekview.button.label         "Heti nézet" >
 <!ENTITY calendar.monthview.button.label        "Havi nézet" >
