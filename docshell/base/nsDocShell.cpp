@@ -1525,24 +1525,28 @@ NS_IMETHODIMP nsDocShell::Reload(PRUint32 aReloadFlags)
 {
     NS_ASSERTION(((aReloadFlags & 0xf) == 0), "Reload command not updated to use load flags!");
 
-
-   // XXX Honor the reload type
-   //NS_ENSURE_STATE(mCurrentURI);
-
    // XXXTAB Convert reload type to our type
    LoadType type = LOAD_RELOAD_NORMAL;
    if ( aReloadFlags & LOAD_FLAGS_BYPASS_CACHE &&
         aReloadFlags & LOAD_FLAGS_BYPASS_PROXY )
    	type = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
 
-   // OK. Atleast for the heck of it, pollmann says that he doesn't crash
-   // in bug 45297 if he just did the following, instead of the one in #if 0.
-   // If this really keeps the crash from re-occuring, may be this can stay. However 
-   // there is no major difference between this one and the one inside #if 0
-   
-   return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
-                       nsnull, nsnull, type);
- 
+    nsresult rv;
+  // If there is a OSHE, make use of it, so that postdata cases are
+  // taken care. Otherwise call InternalLoad() directly.
+  if (OSHE) {
+    nsCOMPtr<nsIInputStream> postData;
+    OSHE->GetPostData(getter_AddRefs(postData));
+    if (postData) {
+      rv = LoadHistoryEntry(OSHE, aReloadFlags);
+      return rv;
+    }
+  }
+  rv =InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
+                    nsnull, nsnull, type); 
+  return rv;
+
+
 }
 
 NS_IMETHODIMP nsDocShell::Stop()
@@ -4081,7 +4085,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
     }
     
 
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, PR_TRUE, PR_FALSE, nsnull, 
+   NS_ENSURE_SUCCESS(InternalLoad(uri, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                                   postData, nsnull, aLoadType, aEntry),
       NS_ERROR_FAILURE);
    return NS_OK;
