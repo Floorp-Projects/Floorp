@@ -55,6 +55,12 @@ public:
     ~nsCacheEntry();
 
 
+    static nsresult  Create( const char *          key,
+                             PRBool                streamBased,
+                             nsCacheStoragePolicy  storagePolicy,
+                             nsCacheDevice *       device,
+                             nsCacheEntry **       result);
+                                      
     nsCString *  Key()  { return mKey; }
 
     PRInt32  FetchCount()                              { return mFetchCount;}

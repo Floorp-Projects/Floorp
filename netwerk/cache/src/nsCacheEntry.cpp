@@ -109,6 +109,25 @@ nsCacheEntry::~nsCacheEntry()
 }
 
 
+nsresult
+nsCacheEntry::Create( const char *          key,
+                      PRBool                streamBased,
+                      nsCacheStoragePolicy  storagePolicy,
+                      nsCacheDevice *       device,
+                      nsCacheEntry **       result)
+{
+    nsCString* newKey = new nsCString(key);
+    if (!newKey) return NS_ERROR_OUT_OF_MEMORY;
+    
+    nsCacheEntry* entry = new nsCacheEntry(newKey, streamBased, storagePolicy);
+    if (!entry) { delete newKey; return NS_ERROR_OUT_OF_MEMORY; }
+    
+    entry->SetCacheDevice(device);
+    
+    *result = entry;
+    return NS_OK;
+}
+
 void
 nsCacheEntry::Fetched()
 {
@@ -641,3 +660,4 @@ nsCacheEntryHashTable::ClearEntry(PLDHashTable * /* table */,
 {
     ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = 0;
 }
+

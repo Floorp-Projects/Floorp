@@ -26,19 +26,14 @@
 #define _nsDiskCacheDevice_h_
 
 #include "nsCacheDevice.h"
+#include "nsDiskCacheBinding.h"
+#include "nsDiskCacheBlockFile.h"
 #include "nsDiskCacheEntry.h"
 
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
 
-class nsDiskCacheEntry;
 class nsDiskCacheMap;
-class nsDiskCacheRecord;
-
-class nsISupportsArray;
-class nsIInputStream;
-class nsIOutputStream;
-class nsANSIFileStream;
 
 class nsDiskCacheDevice : public nsCacheDevice {
 public:
@@ -70,52 +65,32 @@ public:
     virtual nsresult        EvictEntries(const char * clientID);
 
 /* private: */
-    void                    setPrefsObserver(nsIObserver* observer);
+    void                    setPrefsObserver(nsIObserver *  observer);
     void                    getPrefsObserver(nsIObserver ** result);
-    void                    setCacheDirectory(nsILocalFile* directory);
+    void                    setCacheDirectory(nsILocalFile *  directory);
+    void                    getCacheDirectory(nsILocalFile ** result);
     void                    setCacheCapacity(PRUint32 capacity);
     PRUint32                getCacheCapacity();
     PRUint32                getCacheSize();
     PRUint32                getEntryCount();
-
-    nsresult getFileForHashNumber(PLDHashNumber hashNumber, PRBool meta, PRUint32 generation, nsIFile ** result);
-    nsresult getFileForKey(const char* key, PRBool meta, PRUint32 generation, nsIFile ** result);
-    nsresult getFileForDiskCacheEntry(nsDiskCacheEntry * diskEntry, PRBool meta, nsIFile ** result);
-
-    static nsresult getTransportForFile(nsIFile* file, nsCacheAccessMode mode, nsITransport ** result);
-    static nsresult openInputStream(nsIFile* file, nsIInputStream ** result);
-    static nsresult openOutputStream(nsIFile* file, nsIOutputStream ** result);
-
-    nsresult visitEntries(nsICacheVisitor * visitory);
     
-    nsresult readDiskCacheEntry(const char * key, nsDiskCacheEntry ** diskEntry);
-
-    nsresult updateDiskCacheEntries();
-    nsresult updateDiskCacheEntry(nsDiskCacheEntry * diskEntry);
-    nsresult deleteDiskCacheEntry(nsDiskCacheEntry * diskEntry);
+private:    
+    /**
+     *  Private methods
+     */
+    nsresult    InitializeCacheDirectory();
+    nsresult    GetCacheTrashDirectory(nsIFile ** result);
+    nsresult    EvictDiskCacheEntries();
     
-    nsresult scavengeDiskCacheEntries(nsDiskCacheEntry * diskEntry);
-
-    nsresult scanDiskCacheEntries(nsISupportsArray ** result);
-    nsresult evictDiskCacheEntries();
-
-    nsresult clobberDiskCache();
-    
-    nsresult openCacheMap();
-    nsresult readCacheMap();
-    nsresult writeCacheMap();
-
-    nsresult updateCacheMap(nsDiskCacheEntry * diskEntry);
-    nsresult evictDiskCacheRecord(nsDiskCacheRecord * record);
-    
-private:
-    PRBool                      mInitialized;
-    nsCOMPtr<nsIObserver>       mPrefsObserver;
-    nsCOMPtr<nsILocalFile>      mCacheDirectory;
-    nsDiskCacheEntryHashTable   mBoundEntries;
-    PRUint32                    mCacheCapacity;
-    nsDiskCacheMap*             mCacheMap;
-    nsANSIFileStream*           mCacheStream;
+    /**
+     *  Member variables
+     */
+    PRBool                  mInitialized;
+    nsCOMPtr<nsIObserver>   mPrefsObserver;     // XXX ?
+    nsCOMPtr<nsILocalFile>  mCacheDirectory;
+    nsDiskCacheBindery      mBindery;
+    PRUint32                mCacheCapacity;     // XXX need soft/hard limits, currentTotal
+    nsDiskCacheMap *        mCacheMap;
 };
 
 #endif // _nsDiskCacheDevice_h_

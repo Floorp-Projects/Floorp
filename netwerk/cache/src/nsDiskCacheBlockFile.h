@@ -24,18 +24,11 @@
 #ifndef _nsDiskCacheBlockFile_h_
 #define _nsDiskCacheBlockFile_h_
 
-#include "nsANSIFileStreams.h"
+#include "nsILocalFile.h"
+#include "nspr.h"
 
 enum { kBitMapBytes = 4096 };
 
-/*
-typedef struct BlockFile {
-    PRUint32    version;        // we could rely on the verion in the _CACHE_MAP_ file
-    PRUint32    blockSize;      // caller can keep track of this
-    PRUint32    blockCount;     // can be calculated & verified from bitmap and EOF
-    char        bitMap[];
-} BlockFile;
-*/
 
 /******************************************************************************
  *  nsDiskCacheBlockFile
@@ -48,7 +41,7 @@ typedef struct BlockFile {
 class nsDiskCacheBlockFile {
 public:
     nsDiskCacheBlockFile()
-           : mStream(nsnull)
+           : mFD(nsnull)
            , mBlockSize(0)
            , mEndOfFile(0)
            , mBitMap(nsnull)
@@ -61,19 +54,19 @@ public:
     nsresult  Trim();
     PRInt32   AllocateBlocks( PRInt32  numBlocks);
     nsresult  DeallocateBlocks( PRInt32  startBlock, PRInt32  numBlocks);
-    nsresult  WriteBlocks( char * buffer, PRInt32  startBlock, PRInt32  numBlocks);
-    nsresult  ReadBlocks(  char * buffer, PRInt32   startBlock, PRInt32  numBlocks);
+    nsresult  WriteBlocks( void * buffer, PRInt32  startBlock, PRInt32  numBlocks);
+    nsresult  ReadBlocks(  void * buffer, PRInt32  startBlock, PRInt32  numBlocks);
     
-// private:
-    virtual nsresult  FlushBitMap();
-    virtual nsresult  ValidateFile();   // called by Open()
-    virtual nsresult  VerifyAllocation( PRInt32 startBlock, PRInt32 numBLocks);
-    virtual PRInt32   LastBlock();
+private:
+    nsresult  FlushBitMap();
+    nsresult  ValidateFile();   // called by Open()
+    nsresult  VerifyAllocation( PRInt32 startBlock, PRInt32 numBLocks);
+    PRInt32   LastBlock();
 
 /**
  *  Data members
  */
-    nsANSIFileStream *          mStream;
+    PRFileDesc *                mFD;
     PRUint32                    mBlockSize;
     PRUint32                    mEndOfFile;
     PRUint8 *                   mBitMap;      // XXX future: array of bit map blocks
