@@ -43,6 +43,16 @@ public:
      * instantiated.
      */
     NS_IMETHOD PeekChildCount(PRInt32& aCount) const = 0;
+
+    enum {
+        eChildrenMustBeRebuilt  = 0x1,
+        eTemplateContentsBuilt  = 0x2,
+        eContainerContentsBuilt = 0x4,
+    };
+
+    NS_IMETHOD SetLazyState(PRInt32 aFlags) = 0;
+    NS_IMETHOD ClearLazyState(PRInt32 aFlags) = 0;
+    NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aResult) = 0;
 };
 
 #endif // nsIXULContent_h__

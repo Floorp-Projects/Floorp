@@ -331,6 +331,9 @@ public:
 
     // nsIXULContent
     NS_IMETHOD PeekChildCount(PRInt32& aCount) const;
+    NS_IMETHOD SetLazyState(PRInt32 aFlags);
+    NS_IMETHOD ClearLazyState(PRInt32 aFlags);
+    NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
 
     // nsIDOMEventReceiver
     NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -420,7 +423,6 @@ private:
     static nsIAtom*             kRefAtom;
     static nsIAtom*             kClassAtom;
     static nsIAtom*             kStyleAtom;
-    static nsIAtom*             kLazyContentAtom;
     
     static nsIAtom*             kTreeAtom;
     static nsIAtom*             kTreeItemAtom;
@@ -451,7 +453,6 @@ private:
     nsIAtom*               mTag;                // [OWNER]
     nsIEventListenerManager* mListenerManager;  // [OWNER]
     nsXULAttributes*       mAttributes;         // [OWNER]
-    PRBool                 mContentsMustBeGenerated;
     nsVoidArray*		   mBroadcastListeners; // [WEAK]
     nsIDOMXULElement*      mBroadcaster;        // [WEAK]
     nsIController*         mController;         // [OWNER]
@@ -460,6 +461,9 @@ private:
     // An unreferenced bare pointer to an aggregate that can implement
     // element-specific APIs.
     nsXULElement*          mInnerXULElement;
+
+    // The state of our sloth; see nsIXULContent.
+    PRInt32                mLazyState;
 };
 
 
@@ -471,7 +475,6 @@ nsIAtom*             RDFElementImpl::kIdAtom;
 nsIAtom*             RDFElementImpl::kRefAtom;
 nsIAtom*             RDFElementImpl::kClassAtom;
 nsIAtom*             RDFElementImpl::kStyleAtom;
-nsIAtom*             RDFElementImpl::kLazyContentAtom;
 nsIAtom*             RDFElementImpl::kTreeAtom;
 nsIAtom*             RDFElementImpl::kTreeItemAtom;
 nsIAtom*             RDFElementImpl::kTreeRowAtom;
@@ -552,11 +555,11 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mTag(aTag),
       mListenerManager(nsnull),
       mAttributes(nsnull),
-      mContentsMustBeGenerated(PR_FALSE),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
       mController(nsnull),
-      mInnerXULElement(nsnull)
+      mInnerXULElement(nsnull),
+      mLazyState(0)
 {
     NS_INIT_REFCNT();
     NS_ADDREF(aTag);
@@ -573,7 +576,6 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kRefAtom         = NS_NewAtom("ref");
         kClassAtom       = NS_NewAtom("class");
         kStyleAtom       = NS_NewAtom("style");
-        kLazyContentAtom = NS_NewAtom("lazycontent");
         kTreeAtom        = NS_NewAtom("tree");
         kTreeItemAtom    = NS_NewAtom("treeitem");
         kTreeRowAtom     = NS_NewAtom("treerow");
@@ -663,7 +665,6 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kClassAtom);
         NS_IF_RELEASE(kStyleAtom);
-        NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kTreeAtom);
         NS_IF_RELEASE(kTreeItemAtom);
         NS_IF_RELEASE(kTreeRowAtom);
@@ -1445,6 +1446,28 @@ RDFElementImpl::PeekChildCount(PRInt32& aCount) const
         aCount = 0;
     }
     
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFElementImpl::SetLazyState(PRInt32 aFlags)
+{
+    mLazyState |= aFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::ClearLazyState(PRInt32 aFlags)
+{
+    mLazyState &= ~aFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::GetLazyState(PRInt32 aFlag, PRBool& aResult)
+{
+    aResult = (mLazyState & aFlag) ? PR_TRUE : PR_FALSE;
     return NS_OK;
 }
 
@@ -2410,15 +2433,6 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aName, NS_STYLE_HINT_UNKNOWN);
     }
 
-    // Check to see if this is the RDF:container property; if so, and
-    // the value is "true", then remember to generate our kids on
-    // demand.
-    if ((aNameSpaceID == kNameSpaceID_None) &&
-        (aName == kLazyContentAtom) &&
-        (aValue.EqualsIgnoreCase("true"))) {
-        mContentsMustBeGenerated = PR_TRUE;
-    }
-
     return rv;
 }
 
@@ -3123,38 +3137,37 @@ RDFElementImpl::GetRefResource(nsIRDFResource** aResource)
 nsresult
 RDFElementImpl::EnsureContentsGenerated(void) const
 {
-    if (! mContentsMustBeGenerated)
-        return NS_OK;
+    if (mLazyState & nsIXULContent::eChildrenMustBeRebuilt) {
+        nsresult rv;
 
-    nsresult rv;
+        // Ensure that the element is actually _in_ the document tree;
+        // otherwise, somebody is trying to generate children for a node
+        // that's not currently in the content model.
+        NS_PRECONDITION(mDocument != nsnull, "element not in tree");
+        if (!mDocument)
+            return NS_ERROR_NOT_INITIALIZED;
 
-    // Ensure that the element is actually _in_ the document tree;
-    // otherwise, somebody is trying to generate children for a node
-    // that's not currently in the content model.
-    NS_PRECONDITION(mDocument != nsnull, "element not in tree");
-    if (!mDocument)
-        return NS_ERROR_NOT_INITIALIZED;
+        // XXX hack because we can't use "mutable"
+        RDFElementImpl* unconstThis = NS_CONST_CAST(RDFElementImpl*, this);
 
-    // XXX hack because we can't use "mutable"
-    RDFElementImpl* unconstThis = NS_CONST_CAST(RDFElementImpl*, this);
+        if (! unconstThis->mChildren) {
+            if (NS_FAILED(rv = NS_NewISupportsArray(&unconstThis->mChildren)))
+                return rv;
+        }
 
-    if (! unconstThis->mChildren) {
-        if (NS_FAILED(rv = NS_NewISupportsArray(&unconstThis->mChildren)))
-            return rv;
+        // Clear this value *first*, so we can re-enter the nsIContent
+        // getters if needed.
+        unconstThis->mLazyState &= ~nsIXULContent::eChildrenMustBeRebuilt;
+
+        nsCOMPtr<nsIRDFDocument> rdfDoc = do_QueryInterface(mDocument);
+        if (! mDocument)
+            return NS_OK;
+
+        rv = rdfDoc->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
+        if (NS_FAILED(rv)) return rv;
     }
-
-    // Clear this value *first*, so we can re-enter the nsIContent
-    // getters if needed.
-    unconstThis->mContentsMustBeGenerated = PR_FALSE;
-
-    nsCOMPtr<nsIRDFDocument> rdfDoc;
-    if (NS_FAILED(rv = mDocument->QueryInterface(kIRDFDocumentIID,
-                                                 (void**) getter_AddRefs(rdfDoc))))
-        return rv;
-
-    rv = rdfDoc->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
-    return rv;
+    return NS_OK;
 }
 
     
