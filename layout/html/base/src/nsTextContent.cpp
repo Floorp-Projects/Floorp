@@ -192,8 +192,10 @@ protected:
 public:
   PRInt32 mContentOffset;
   PRInt32 mContentLength;
-  PRUint16 mFlags;
-  PRUint16 mColumn;
+
+  // XXX need a better packing
+  PRUint32 mFlags;
+  PRUint32 mColumn;
 
   // When this text frame is justified, this pointer is not null
   // and points to data about each word/space in the text
@@ -206,13 +208,14 @@ public:
 // Flag information used by rendering code. This information is
 // computed by the ResizeReflow code. Remaining bits are used by the
 // tab count.
-#define TEXT_SKIP_LEADING_WS    0x1
-#define TEXT_HAS_MULTIBYTE      0x2
-#define TEXT_IS_PRE             0x4
-#define TEXT_BLINK_ON           0x8
+#define TEXT_SKIP_LEADING_WS    0x01
+#define TEXT_HAS_MULTIBYTE      0x02
+#define TEXT_IS_PRE             0x04
+#define TEXT_BLINK_ON           0x08
+#define TEXT_ENDS_IN_WHITESPACE 0x10
 
-#define TEXT_GET_TAB_COUNT(_mf) ((_mf) >> 4)
-#define TEXT_SET_TAB_COUNT(_mf,_tabs) (_mf) = (_mf) | ((_tabs)<< 4)
+#define TEXT_GET_TAB_COUNT(_mf) ((_mf) >> 5)
+#define TEXT_SET_TAB_COUNT(_mf,_tabs) (_mf) = (_mf) | ((_tabs)<< 5)
 
 // mWords bit definitions
 #define WORD_IS_WORD                    0x80000000L
@@ -714,6 +717,23 @@ void TextFrame::PaintJustifiedText(nsIRenderingContext& aRenderingContext,
 NS_METHOD TextFrame::GetReflowMetrics(nsIPresContext* aCX,
                                       nsReflowMetrics& aMetrics)
 {
+  // Get cached state for containing block frame
+  nsLineLayout* lineLayoutState = nsnull;
+  nsBlockReflowState* state = nsBlockFrame::FindBlockReflowState(aCX, this);
+  if (nsnull != state) {
+    lineLayoutState = state->mCurrentLine;
+    if (nsnull != lineLayoutState) {
+      lineLayoutState->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_AWARE;
+    }
+
+    if (0 == (mFlags & TEXT_IS_PRE)) {
+      if (mRect.width != 0) {
+        lineLayoutState->mSkipLeadingWhiteSpace =
+          (0 != (mFlags & TEXT_ENDS_IN_WHITESPACE));
+      }
+    }
+  }
+
   aMetrics.width = mRect.width;
   aMetrics.height = mRect.height;
 
@@ -723,6 +743,7 @@ NS_METHOD TextFrame::GetReflowMetrics(nsIPresContext* aCX,
   aMetrics.ascent = fm->GetMaxAscent();
   aMetrics.descent = fm->GetMaxDescent();
   NS_RELEASE(fm);
+
   return NS_OK;
 }
 
@@ -922,6 +943,9 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   }
   if (hasMultibyte) {
     mFlags |= TEXT_HAS_MULTIBYTE;
+  }
+  if (endsInWhitespace) {
+    mFlags |= TEXT_ENDS_IN_WHITESPACE;
   }
 
   if (nsnull != aLineState) {
