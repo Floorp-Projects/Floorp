@@ -102,12 +102,13 @@ nsDiskCacheInputStream::~nsDiskCacheInputStream()
 NS_IMETHODIMP
 nsDiskCacheInputStream::Close()
 {
-    if (mClosed)  return NS_ERROR_NOT_AVAILABLE;
-    if (mFD) {
-        (void) PR_Close(mFD);
-        mFD = nsnull;
+    if (!mClosed) {
+        if (mFD) {
+            (void) PR_Close(mFD);
+            mFD = nsnull;
+        }
+        mClosed = PR_TRUE;
     }
-    mClosed = PR_TRUE;
     return NS_OK;
 }
 
@@ -220,10 +221,11 @@ nsDiskCacheOutputStream::~nsDiskCacheOutputStream()
 NS_IMETHODIMP
 nsDiskCacheOutputStream::Close()
 {
-    if (mClosed)  return NS_ERROR_NOT_AVAILABLE;
-    // tell parent streamIO we are closing
-    mStreamIO->CloseOutputStream(this);
-    mClosed = PR_TRUE;
+    if (!mClosed) {
+        // tell parent streamIO we are closing
+        mStreamIO->CloseOutputStream(this);
+        mClosed = PR_TRUE;
+    }
     return NS_OK;
 }
 
@@ -322,7 +324,6 @@ nsDiskCacheStreamIO::nsDiskCacheStreamIO(nsDiskCacheBinding *   binding)
     , mBufPos(0)
     , mBufEnd(0)
     , mBufSize(0)
-    , mBufOffset(0)
     , mBufDirty(PR_FALSE)
     , mBuffer(nsnull)
 {
@@ -362,8 +363,8 @@ nsDiskCacheStreamIO::Close(nsresult status)
     NS_ASSERTION(!mOutStream, "output stream still open");
     NS_ASSERTION(mInStreamCount == 0, "input stream still open");
     NS_ASSERTION(!mFD, "file descriptor not closed");
-    if (mBuffer)
-        free(mBuffer);
+
+    DeleteBuffer();
     
     return NS_OK;
 }
@@ -401,6 +402,8 @@ nsDiskCacheStreamIO::GetInputStream(nsIInputStream ** inputStream)
         rv = ReadCacheBlocks();
         if (NS_FAILED(rv))  return rv;
     }
+    // else, mBuffer already contains all of the data (left over from a
+    // previous block-file read or write).
 
     NS_ASSERTION(!(fd && mBuffer), "ambiguous data sources for input stream");
 
@@ -426,7 +429,8 @@ nsDiskCacheStreamIO::GetOutputStream(nsIOutputStream ** outputStream)
     NS_ASSERTION(mInStreamCount == 0, "we already have input streams open");
     if (mOutStream || mInStreamCount)  return NS_ERROR_NOT_AVAILABLE;
     
-    // mBuffer lazily allocated, but might exist if a previous stream already created one
+    // mBuffer lazily allocated, but might exist if a previous stream already
+    // created one.
     mBufPos    = 0;
     mStreamPos = 0;
     mStreamEnd = mBinding->mCacheEntry->DataSize();
@@ -505,6 +509,13 @@ nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
         (void) PR_Close(mFD);
         mFD = nsnull;
 
+        // since the data location is on disk as a single file, the only value
+        // in keeping mBuffer around is to avoid an extra malloc the next time
+        // we need to write to this file.  reading will use a file descriptor.
+        // therefore, it's probably not worth optimizing for the subsequent
+        // write, so we unconditionally delete mBuffer here.
+        DeleteBuffer();
+
     } else {
         // store data (if any) in cache block files
         
@@ -528,14 +539,8 @@ nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
                 
             }
         }
-    }
-    
-    // dealloc mBuffer if it doesn't contain beginning of stream
-    if (mBufOffset != 0) {
-        free(mBuffer);
-        mBuffer    = nsnull;
-        mBufOffset = 0;
-        mBufEnd    = 0;
+
+        mBufDirty = PR_FALSE;
     }
     
     // XXX do we need this here?  WriteDataCacheBlocks() calls UpdateRecord()
@@ -648,30 +653,15 @@ nsDiskCacheStreamIO::OpenCacheFile(PRIntn flags, PRFileDesc ** fd)
 nsresult
 nsDiskCacheStreamIO::ReadCacheBlocks()
 {
-    if (mStreamEnd != mBinding->mCacheEntry->DataSize()) {
-        NS_WARNING("bad stream");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    if (mStreamEnd > kMaxBufferSize) {
-        NS_WARNING("data too large for buffer");
-        return NS_ERROR_UNEXPECTED;
-    }
+    NS_ASSERTION(mStreamEnd == mBinding->mCacheEntry->DataSize(), "bad stream");
+    NS_ASSERTION(mStreamEnd <= kMaxBufferSize, "data too large for buffer");
 
     nsDiskCacheRecord * record = &mBinding->mRecord;
-    if (!record->DataLocationInitialized())  return NS_OK;
-    
-    if (record->DataFile() == kSeparateFile) {
-        NS_WARNING("attempted to read cache blocks on separate file");
-        return NS_ERROR_UNEXPECTED;
-    }
+    if (!record->DataLocationInitialized()) return NS_OK;
 
-    PRUint32    bufSize = record->DataBlockCount() * record->DataBlockSize();
-    if (mBuffer && (mBufSize < bufSize)) {
-            // XXX how does this happen?  Is mBuffer dirty?
-            NS_WARNING("allocated buffer is too small");
-            return NS_ERROR_UNEXPECTED;
-    }
+    NS_ASSERTION(record->DataFile() != kSeparateFile, "attempt to read cache blocks on separate file");
+
+    PRUint32 bufSize = record->DataBlockCount() * record->DataBlockSize();
     
     if (!mBuffer) {
         // allocate buffer
@@ -682,16 +672,16 @@ nsDiskCacheStreamIO::ReadCacheBlocks()
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }
+    NS_ASSERTION(bufSize <= mBufSize, "allocated buffer is too small");
     
     // read data stored in cache block files            
-    nsDiskCacheMap *    map = mDevice->CacheMap();  // get map reference
-    nsresult  rv = map->ReadDataCacheBlocks(mBinding, mBuffer, mBufSize);
-    if (NS_FAILED(rv))  return rv;
+    nsDiskCacheMap *map = mDevice->CacheMap();  // get map reference
+    nsresult rv = map->ReadDataCacheBlocks(mBinding, mBuffer, mBufSize);
+    if (NS_FAILED(rv)) return rv;
 
     // update streamIO variables
-    mBufOffset  = 0;
-    mBufPos     = 0;
-    mBufEnd     = mStreamEnd;
+    mBufPos = 0;
+    mBufEnd = mStreamEnd;
     
     return NS_OK;
 }
@@ -704,7 +694,6 @@ nsDiskCacheStreamIO::FlushBufferToFile(PRBool  clearBuffer)
     nsDiskCacheRecord * record = &mBinding->mRecord;
     
     if (!mFD) {
-        
         if (record->DataLocationInitialized() && (record->DataFile() > 0)) {
             // remove cache block storage
             nsDiskCacheMap * cacheMap = mDevice->CacheMap();
@@ -746,7 +735,6 @@ nsDiskCacheStreamIO::WriteToBuffer(const char * buffer, PRUint32 count)
     
     while (bytesLeft) {
         if (mBufPos == mBufSize) {
-        
             if (mBufSize < kMaxBufferSize) {
                 mBufSize = kMaxBufferSize;
                 mBuffer  = (char *) realloc(mBuffer, mBufSize);
@@ -777,7 +765,21 @@ nsDiskCacheStreamIO::WriteToBuffer(const char * buffer, PRUint32 count)
     return count;
 }
 
+void
+nsDiskCacheStreamIO::DeleteBuffer()
+{
+    if (mBuffer) {
+        NS_ASSERTION(mBufDirty == PR_FALSE, "deleting dirty buffer");
+        free(mBuffer);
+        mBuffer = nsnull;
+        mBufPos = 0;
+        mBufEnd = 0;
+        mBufSize = 0;
+    }
+}
 
+
+// called only from nsDiskCacheOutputStream::Seek
 nsresult
 nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
 {
@@ -786,21 +788,28 @@ nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (PRUint32(offset) > mStreamEnd)  return NS_ERROR_FAILURE;
+ 
+    if (mBinding->mRecord.DataLocationInitialized()) {
+        if (mBinding->mRecord.DataFile() == 0) {
+            if (!mFD) {
+                // we need an mFD, we better open it now
+                nsresult rv = OpenCacheFile(PR_RDWR | PR_CREATE_FILE, &mFD);
+                if (NS_FAILED(rv))  return rv;
+            }
+        }
+    }
 
     if (mFD) {
-        
         // do we have data in the buffer that needs to be flushed?
         if (mBufDirty) {
             // XXX optimization: are we just moving within the current buffer?
-            
             nsresult rv = FlushBufferToFile(PR_TRUE);
             if (NS_FAILED(rv))  return rv;
         }
     
         newPos = PR_Seek(mFD, offset, (PRSeekWhence)whence);
-        if (newPos == -1) {
+        if (newPos == -1)
             return NS_ErrorAccordingToNSPR();
-        }
         
         mStreamPos = (PRUint32) newPos;
         mBufPos = 0;
@@ -808,36 +817,7 @@ nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
         return NS_OK;
     }
     
-    // seek in mBuffer
-
-    // read data into mBuffer if not read yet.
-    if (mStreamEnd && !mBufEnd) {
-        nsresult rv = ReadCacheBlocks();
-        if (NS_FAILED(rv))  return rv;
-    } else {
-        // XXX warn if mStreamEnd and mBufEnd aren't coherent
-    }
-
-    // stream buffer sanity checks
-    if (mBufEnd > (16 * 1024)) {
-        NS_WARNING("bad stream: mBufEnd > 16k");
-        return NS_ERROR_UNEXPECTED;
-    }
-    
-    if (mBufPos > mBufEnd) {
-        NS_WARNING("bad stream: mBufPos > mBufEnd");
-        return NS_ERROR_UNEXPECTED;
-    }
-    
-    if (mStreamPos != mBufPos) {
-        NS_WARNING("bad stream: mStreamPos != mBufPos");
-        return NS_ERROR_UNEXPECTED;
-    }
-    
-    if (mStreamEnd != mBufEnd) {
-        NS_WARNING("bad stream: mStreamEnd != mBufEnd");
-        return NS_ERROR_UNEXPECTED;
-    }
+    // else, seek in mBuffer
     
     switch(whence) {
         case PR_SEEK_SET:
@@ -855,6 +835,20 @@ nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
         default:
             return NS_ERROR_INVALID_ARG;
     }
+
+    // read data into mBuffer if not read yet.
+    if (mStreamEnd && !mBufEnd) {
+        if (newPos > 0) {
+            nsresult rv = ReadCacheBlocks();
+            if (NS_FAILED(rv))  return rv;
+        }
+    }
+
+    // stream buffer sanity checks
+    NS_ASSERTION(mBufEnd <= (16 * 1024), "bad stream");
+    NS_ASSERTION(mBufPos <= mBufEnd,     "bad stream");
+    NS_ASSERTION(mStreamPos == mBufPos,  "bad stream");
+    NS_ASSERTION(mStreamEnd == mBufEnd,  "bad stream");
     
     if ((newPos < 0) || (PRUint32(newPos) > mBufEnd)) {
         NS_WARNING("seek offset out of range");
@@ -867,6 +861,7 @@ nsDiskCacheStreamIO::Seek(PRInt32 whence, PRInt32 offset)
 }
 
 
+// called only from nsDiskCacheOutputStream::Tell
 nsresult
 nsDiskCacheStreamIO::Tell(PRUint32 * result)
 {
@@ -880,16 +875,17 @@ nsDiskCacheStreamIO::Tell(PRUint32 * result)
 // SetEOF() will only be called by FileTransport.
 //      nsCacheEntryDescriptor::TransportWrapper::OpenOutputStream() will eventually update
 //          the cache entry, so we need only update the underlying data structure here.
+//
+// called only from nsDiskCacheOutputStream::SetEOF
 nsresult
 nsDiskCacheStreamIO::SetEOF()
 {
     nsresult    rv;
-    NS_ASSERTION(mStreamPos <= mStreamEnd, "bad stream");
     nsAutoLock lock(nsCacheService::ServiceLock()); // grab service lock
+    NS_ASSERTION(mStreamPos <= mStreamEnd, "bad stream");
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
     
     if (mBinding->mRecord.DataLocationInitialized()) {
-        
         if (mBinding->mRecord.DataFile() == 0) {
             if (!mFD) {
                 // we need an mFD, we better open it now
@@ -898,7 +894,7 @@ nsDiskCacheStreamIO::SetEOF()
             }
         } else {
             // data in cache block files
-            if (mStreamPos != 0) {
+            if ((mStreamPos != 0) && (mStreamPos != mBufPos)) {
                 // only read data if there will be some left after truncation
                 rv = ReadCacheBlocks();
                 if (NS_FAILED(rv))  return rv;
@@ -911,13 +907,12 @@ nsDiskCacheStreamIO::SetEOF()
 #ifdef DEBUG
         PRUint32 oldSizeK = (mStreamEnd + 0x03FF) >> 10;
         NS_ASSERTION(mBinding->mRecord.DataFileSize() == oldSizeK, "bad disk cache entry size");
-#endif
     } else {
         // data stored in buffer.
         NS_ASSERTION(mStreamEnd < (16 * 1024), "buffer truncation inadequate");
-        NS_ASSERTION(mBufOffset == 0, "buffer truncation inadequate");
         NS_ASSERTION(mBufPos == mStreamPos, "bad stream");
         NS_ASSERTION(mBuffer ? mBufEnd == mStreamEnd : PR_TRUE, "bad stream");
+#endif
     }
 
     NS_ASSERTION(mStreamEnd == mBinding->mCacheEntry->DataSize(), "cache entry not updated");
