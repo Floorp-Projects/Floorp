@@ -45,10 +45,6 @@ include $(topsrcdir)/config/config.mk
 
 DIRS = dll
 
-ifeq ($(OS_TARGET),OS2)
-OS_CFLAGS = $(OS_EXE_CFLAGS)
-endif
-
 CSRCS =             \
 	accept.c		\
 	acceptread.c	\
@@ -486,7 +482,7 @@ ifeq ($(OS_ARCH), WINNT)
 	link $(LDOPTS) $(EXTRA_LDOPTS) $< $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) wsock32.lib -out:$@
 else
 ifeq ($(OS_ARCH),OS2)
-	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBNSPR) $(OS_LIBS) $(EXTRA_LIBS)
+	$(LD) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBNSPR) $(OS_LIBS) $(EXTRA_LIBS)
 else
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) -o $@
 endif # OS/2
