@@ -221,6 +221,8 @@ public:
                     nsFramePaintLayer aWhichLayer,
                     PRUint32 aFlags = 0);
 
+  PRBool CanPaintBackground() { return PR_FALSE; }
+
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
