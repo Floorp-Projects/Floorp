@@ -801,6 +801,7 @@ case "$target" in
     # Use the standard preprocessor (cpp)
     CFLAGS="$CFLAGS -traditional-cpp"
     MKSHLIB='$(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS) -o $@'
+    STRIP="$STRIP -x -S"
     DLL_SUFFIX=dylib
     USE_PTHREADS=1
     MDCPUCFG_H=_darwin.cfg
