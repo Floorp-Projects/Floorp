@@ -94,6 +94,7 @@ OBJS =					\
 	.\$(OBJDIR)\jscntxt.obj		\
 	.\$(OBJDIR)\jsdate.obj		\
 	.\$(OBJDIR)\jsdbgapi.obj	\
+	.\$(OBJDIR)\jsdhash.obj	        \
 	.\$(OBJDIR)\jsdtoa.obj		\
 	.\$(OBJDIR)\jsemit.obj		\
 	.\$(OBJDIR)\jsexn.obj		\
@@ -141,6 +142,7 @@ INSTALL_FILE_LIST=	\
 	jscpucfg.h	\
 	jsdate.h	\
 	jsdbgapi.h	\
+	jsdhash.h	\
 	jsemit.h	\
 	jsfun.h		\
 	jsgc.h		\
