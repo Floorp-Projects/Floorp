@@ -1331,8 +1331,7 @@ protected:
   nsresult WillCauseReflow();
   nsresult DidCauseReflow();
   nsresult ProcessReflowCommands(PRBool aInterruptible);
-  nsresult GetReflowEventStatus(PRBool* aPending);
-  nsresult SetReflowEventStatus(PRBool aPending);  
+  nsresult ClearReflowEventStatus();  
   void     PostReflowEvent();
   PRBool   AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand,
                           nsVoidArray&         aQueue);
@@ -1403,11 +1402,11 @@ protected:
   nsCOMPtr<nsICaret>            mCaret;
   PRInt16                       mSelectionFlags;
   PRPackedBool                  mScrollingEnabled; //used to disable programmable scrolling from outside
-  PRPackedBool                  mPendingReflowEvent;
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
   nsIFrameManager*              mFrameManager;  // we hold a reference
   PresShellViewEventListener    *mViewEventListener;
-  nsCOMPtr<nsIEventQueue>       mEventQueue;
+  nsCOMPtr<nsIEventQueueService> mEventQueueService;
+  nsCOMPtr<nsIEventQueue>       mReflowEventQueue;
   FrameArena                    mFrameArena;
   StackArena*                   mStackArena;
   nsCOMPtr<nsIObserverService>  mObserverService; // Observer service for reflow events
@@ -1767,12 +1766,12 @@ PresShell::Init(nsIDocument* aDocument,
     }
   }
   
-  // Cache the event queue of the current UI thread
-  nsCOMPtr<nsIEventQueueService> eventService = 
-           do_GetService(kEventQueueServiceCID, &result);
-  if (NS_SUCCEEDED(result))                    // XXX this implies that the UI is the current thread.
-    result = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
-  
+  mEventQueueService = do_GetService(kEventQueueServiceCID, &result);
+
+  if (!mEventQueueService) {
+    NS_WARNING("couldn't get event queue service");
+    return NS_ERROR_FAILURE;
+  }
 
   if (gMaxRCProcessingTime == -1) {
     // First, set the defaults
@@ -1907,10 +1906,11 @@ PresShell::Destroy()
   }
 
   // Revoke pending reflow events
-  if (mPendingReflowEvent) {
-    mPendingReflowEvent = PR_FALSE;
-    mEventQueue->RevokeEvents(this);
-  }
+  mReflowEventQueue = nsnull;
+  nsCOMPtr<nsIEventQueue> eventQueue;
+  mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                           getter_AddRefs(eventQueue));
+  eventQueue->RevokeEvents(this);
 
   CancelAllReflowCommands();
   KillResizeEventTimer();
@@ -6290,7 +6290,7 @@ struct ReflowEvent : public PLEvent {
       // is a friend of the PresShell class)
       PresShell* ps = NS_REINTERPRET_CAST(PresShell*, presShell.get());
       PRBool isBatching;
-      ps->SetReflowEventStatus(PR_FALSE);
+      ps->ClearReflowEventStatus();
       ps->GetReflowBatchingStatus(&isBatching);
       if (!isBatching) {
         nsCOMPtr<nsIViewManager> viewManager;
@@ -6339,10 +6339,15 @@ ReflowEvent::ReflowEvent(nsIPresShell* aPresShell)
 void
 PresShell::PostReflowEvent()
 {
-  if (!mPendingReflowEvent && !mIsReflowing && mReflowCommands.Count() > 0) {
+  nsCOMPtr<nsIEventQueue> eventQueue;
+  mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                           getter_AddRefs(eventQueue));
+
+  if (eventQueue != mReflowEventQueue &&
+      !mIsReflowing && mReflowCommands.Count() > 0) {
     ReflowEvent* ev = new ReflowEvent(NS_STATIC_CAST(nsIPresShell*, this));
-    mEventQueue->PostEvent(ev);
-    mPendingReflowEvent = PR_TRUE;
+    eventQueue->PostEvent(ev);
+    mReflowEventQueue = eventQueue;
 #ifdef DEBUG
     if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
       printf("\n*** PresShell::PostReflowEvent(), this=%p, event=%p\n", (void*)this, (void*)ev);
@@ -6524,17 +6529,9 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 }
 
 nsresult
-PresShell::GetReflowEventStatus(PRBool* aPending)
+PresShell::ClearReflowEventStatus()
 {
-  if (aPending)
-    *aPending = mPendingReflowEvent;
-  return NS_OK;
-}
-
-nsresult
-PresShell::SetReflowEventStatus(PRBool aPending)
-{
-  mPendingReflowEvent = aPending;
+  mReflowEventQueue = nsnull;
   return NS_OK;
 }
 
