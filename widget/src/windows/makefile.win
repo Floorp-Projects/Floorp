@@ -56,6 +56,7 @@ CPPSRCS =              \
 	nsLabel.cpp          \
 	nsToolkit.cpp        \
 	nsSelectionMgr.cpp   \
+	nsStringUtil.cpp   \
 	$(NULL)
 
 MODULE=raptor 
@@ -94,6 +95,7 @@ OBJS =                             \
 	.\$(OBJDIR)\nsLabel.obj    \
 	.\$(OBJDIR)\nsToolkit.obj        \
 	.\$(OBJDIR)\nsSelectionMgr.obj   \
+	.\$(OBJDIR)\nsStringUtil.obj   \
 	$(NULL)
 
 LINCS=                                  \
