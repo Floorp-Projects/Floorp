@@ -548,7 +548,6 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 // creates an optimized bitmap, or HBITMAP
 nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
 {
-  return NS_OK;                 // TAKE THIS OUT
 
   HDC the_hdc = (HDC)aSurface;
 
