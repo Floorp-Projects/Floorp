@@ -763,44 +763,6 @@ static int msg_parse_Header_addresses (const char *line, char **names, char **ad
     {
       TRIM_WHITESPACE(addr_start, addr_out, 0);
       TRIM_WHITESPACE(name_start, name_out, 0);
-
-      /* Attempt to deal with the simple error case of a missing comma.
-       * We can only really deal with this in the non-<> case.
-       * If there is no name, and if the address doesn't contain
-       * double-quotes, but the address does contain whitespace,
-       * then assume that the whitespace is an address delimiter.
-       */
-      if (!name_start || !*name_start)
-      {
-        char *s;
-        char *space = 0;
-        for (s = addr_start; s < addr_out; NEXT_CHAR(s))
-        {
-          if (*s == '\\')
-            s++;
-          else if (!space && nsCRT::IsAsciiSpace(*s))
-            space = s;
-          else if (*s == '\"')
-          {
-            space = 0;
-            break;
-          }
-        }
-        if (space)
-        {
-          for (s = space; s < addr_out; NEXT_CHAR(s))
-          {
-            if (*s == '\\')
-              s++;
-            else if (nsCRT::IsAsciiSpace(*s))
-            {
-              *s = 0;
-              *name_out++ = 0;
-              addr_count++;
-            }
-          }
-        }
-      }
     }
 
     /* Now re-quote the names and addresses if necessary.

@@ -1052,16 +1052,14 @@ var gAutomatedAutoCompleteListener = null;
 
 function parseAndAddAddresses(addressText, recipientType)
 {
-  var fullNames;
+  // strip any leading >> characters inserted by the autocomplete widget
+  var strippedAddresses = addressText.replace(/.* >> /, "");
 
-  fullNames = addressText.split(',');
-  numAddresses = fullNames.length;
-
-  for (index in fullNames)
-  {
-    // we want to eat leading and trailing white space... 
-    fullNames[index] = fullNames[index].replace(/^\s+|\s+$/g, "");
-  }
+  var hdrParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+  var addresses = {};
+  var names = {};
+  var fullNames = {};
+  var numAddresses = hdrParser.parseHeadersWithArray(strippedAddresses, addresses, names, fullNames);
 
   if (numAddresses > 0)
   {
@@ -1071,7 +1069,7 @@ function parseAndAddAddresses(addressText, recipientType)
     if (!gAutomatedAutoCompleteListener)
       gAutomatedAutoCompleteListener = new AutomatedAutoCompleteHandler();
 
-    gAutomatedAutoCompleteListener.init(fullNames, numAddresses, recipientType);
+    gAutomatedAutoCompleteListener.init(fullNames.value, numAddresses, recipientType);
   }
 }
 
