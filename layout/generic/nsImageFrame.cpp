@@ -382,10 +382,15 @@ UpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
       NS_RELEASE(content);
     }
   } else if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
+    // XXX Turned off for the time being until the frame construction code for
+    // images that can't be rendered handles floated and absolutely positioned
+    // images...
+#if 0
     // We failed to load the image. Notify the pres shell
     nsIPresShell* presShell = aPresContext.GetShell();
     presShell->CantRenderReplacedElement(&aPresContext, aFrame);
     NS_RELEASE(presShell);
+#endif
   }
   return NS_OK;
 }
