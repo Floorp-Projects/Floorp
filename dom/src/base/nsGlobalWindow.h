@@ -55,7 +55,6 @@ class nsIDocument;
 class nsIContent;
 class nsIPresContext;
 class nsIDOMEvent;
-class nsIBrowserWindow;
 class nsIScrollableView;
 
 
