@@ -61,6 +61,7 @@
 #include "nsRegion.h"
 #include "nsInt64.h"
 #include "nsScrollPortView.h"
+#include "nsHashtable.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -232,25 +233,6 @@ private: // Prevent new/delete of these elements
   DisplayZTreeNode();
   ~DisplayZTreeNode();
 };
-
-void nsViewManager::DestroyZTreeNode(DisplayZTreeNode* aNode) 
-{
-  if (aNode) {
-    if (mMapPlaceholderViewToZTreeNode.Count() > 0) {
-       nsVoidKey key(aNode->mView);
-       mMapPlaceholderViewToZTreeNode.Remove(&key);
-    }
-  
-    DestroyZTreeNode(aNode->mZChild);
-    DestroyZTreeNode(aNode->mZSibling);
-    // We no longer need to delete the node & element.  They are now allocated
-    // from an Arena, and the entire Arena is freed after the elements are
-    // used.  This function is only called to remove unused elements from
-    // the Placeholder hash.
-    // delete aNode->mDisplayElement;
-    // delete aNode;
-  }
-}
 
 #ifdef DEBUG
 static PRInt32 PrintDisplayListElement(DisplayListElement2* element,
@@ -2062,15 +2044,13 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
   return NS_OK;
 }
 
-void nsViewManager::ReparentViews(DisplayZTreeNode* aNode) {
-  if (aNode == nsnull) {
-    return;
-  }
-
+void nsViewManager::ReparentViews(DisplayZTreeNode* aNode,
+                                  nsHashtable &aMapPlaceholderViewToZTreeNode)
+{
   DisplayZTreeNode* child;
   DisplayZTreeNode** prev = &aNode->mZChild;
   for (child = aNode->mZChild; nsnull != child; child = *prev) {
-    ReparentViews(child);
+    ReparentViews(child, aMapPlaceholderViewToZTreeNode);
 
     nsZPlaceholderView *zParent = nsnull;
     if (nsnull != child->mView) {
@@ -2078,7 +2058,7 @@ void nsViewManager::ReparentViews(DisplayZTreeNode* aNode) {
     }
     if (nsnull != zParent) {
       nsVoidKey key(zParent);
-      DisplayZTreeNode* placeholder = (DisplayZTreeNode *)mMapPlaceholderViewToZTreeNode.Get(&key);
+      DisplayZTreeNode* placeholder = (DisplayZTreeNode *)aMapPlaceholderViewToZTreeNode.Get(&key);
 
       if (placeholder == child) {
         // don't do anything if we already reparented this node;
@@ -2100,7 +2080,14 @@ void nsViewManager::ReparentViews(DisplayZTreeNode* aNode) {
         } else {
           // the placeholder was not added to the display list
           // we don't need the real view then, either
-          DestroyZTreeNode(child);
+
+          // We used to call DestroyZTreeNode which would delete the child
+          // and its children/siblings and remove them from the Placeholder
+          // hash.  However, we now use an Arena to build the tree.  This
+          // means that we will never reuse a node (because it is never
+          // freed), thus we can just leave it in the hash.  It will never
+          // be looked up again.
+          // DestroyZTreeNode(child);
         }
       }
     } else {
@@ -2179,13 +2166,20 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
   } else {
     paintFloats = displayRoot->GetFloating();
   }
-  CreateDisplayList(displayRoot, zTree, origin.x, origin.y,
-                    aView, &aRect, displayRoot, displayRootOrigin.x, displayRootOrigin.y,
-                    paintFloats, aEventProcessing, aPool);
 
-  // Reparent any views that need reparenting in the Z-order tree
-  ReparentViews(zTree);
-  mMapPlaceholderViewToZTreeNode.Reset();
+  {
+    nsHashtable       PlaceholderHash;
+
+    CreateDisplayList(displayRoot, zTree, origin.x, origin.y,
+                      aView, &aRect, displayRoot,
+                      displayRootOrigin.x, displayRootOrigin.y,
+                      paintFloats, aEventProcessing, PlaceholderHash, aPool);
+
+    // Reparent any views that need reparenting in the Z-order tree
+    if(zTree) {
+      ReparentViews(zTree, PlaceholderHash);
+    }
+  }
     
   if (nsnull != zTree) {
     // Apply proper Z-order handling
@@ -2193,8 +2187,6 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
 
     SortByZOrder(zTree, *aDisplayList, mergeTmp, PR_TRUE, aPool);
   }
-
-  mMapPlaceholderViewToZTreeNode.Reset();
 }
 
 void nsViewManager::BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent,
@@ -3361,7 +3353,9 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
                                         nscoord aOriginX, nscoord aOriginY, nsView *aRealView,
                                         const nsRect *aDamageRect, nsView *aTopView,
                                         nscoord aX, nscoord aY, PRBool aPaintFloats,
-                                        PRBool aEventProcessing, PLArenaPool &aPool)
+                                        PRBool aEventProcessing,
+                                        nsHashtable &aMapPlaceholderViewToZTreeNode,
+                                        PLArenaPool &aPool)
 {
   PRBool retval = PR_FALSE;
 
@@ -3486,7 +3480,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
       DisplayZTreeNode* createdNode;
       retval = CreateDisplayList(childView, createdNode,
                                  aOriginX, aOriginY, aRealView, aDamageRect, aTopView,
-                                 pos.x, pos.y, aPaintFloats, aEventProcessing, aPool);
+                                 pos.x, pos.y, aPaintFloats, aEventProcessing,
+                                 aMapPlaceholderViewToZTreeNode, aPool);
       if (createdNode != nsnull) {
         EnsureZTreeNodeCreated(aView, aResult, aPool);
         createdNode->mZSibling = aResult->mZChild;
@@ -3524,7 +3519,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
       if (aView->IsZPlaceholderView()) {
         EnsureZTreeNodeCreated(aView, aResult, aPool);
         nsVoidKey key(aView);
-        mMapPlaceholderViewToZTreeNode.Put(&key, aResult);
+        aMapPlaceholderViewToZTreeNode.Put(&key, aResult);
       }
     }
   }
