@@ -20,7 +20,7 @@
 #include "gtklayout.h"
 
 #include "nsButton.h"
-#include "nsIButton.h"
+#include "nsIAppShell.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"
@@ -35,9 +35,8 @@ NS_IMPL_RELEASE(nsButton)
 // nsButton constructor
 //
 //-------------------------------------------------------------------------
-nsButton::nsButton() : nsWindow() , nsIButton()
+nsButton::nsButton() : nsWidget() , nsIButton()
 {
-  NS_INIT_REFCNT();
 }
 
 
@@ -126,7 +125,7 @@ nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_OK;
     }
 
-    return nsWindow::QueryInterface(aIID,aInstancePtr);
+    return nsWidget::QueryInterface(aIID, aInstancePtr);
 }
 
 
