@@ -93,8 +93,11 @@ nsGCCache::ReportStats() {
                 fprintf(stderr, " %4d", GCCacheStats.hits[i]);
                 hits+=GCCacheStats.hits[i];
               }
-              fprintf(stderr, "\n\thits: %d, misses: %d, reclaimed %d times\n", 
-                      hits, GCCacheStats.misses, GCCacheStats.reclaim);
+              int total = hits + GCCacheStats.misses;
+              float percent = float(float(hits) / float(total));
+              percent *= 100;
+              fprintf(stderr, "\n\thits: %d, misses: %d, hit percent: %f%%\n", 
+                      hits, GCCacheStats.misses, percent);
               );
 }
 
