@@ -370,10 +370,6 @@ ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
 LDFLAGS += /HEAP:0x40000
 endif
-# Get rid of console window
-ifdef GNU_CC
-LDFLAGS += -mwindows
-endif
 endif
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)

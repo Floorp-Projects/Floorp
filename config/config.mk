@@ -741,7 +741,11 @@ ifeq ($(MOZ_OS2_TOOLS),EMX)
 BIN_FLAGS	+= -Zlinker /PM:VIO
 endif
 ifeq ($(OS_ARCH),WINNT)
+ifdef GNU_CC
+WIN32_EXE_LDFLAGS	+= -mconsole
+else
 WIN32_EXE_LDFLAGS	+= /SUBSYSTEM:CONSOLE
+endif
 endif
 else # MOZ_WINCONSOLE
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -751,7 +755,11 @@ ifeq ($(MOZ_OS2_TOOLS),EMX)
 BIN_FLAGS	+= -Zlinker /PM:PM
 endif
 ifeq ($(OS_ARCH),WINNT)
+ifdef GNU_CC
+WIN32_EXE_LDFLAGS	+= -mwindows
+else
 WIN32_EXE_LDFLAGS	+= /SUBSYSTEM:WINDOWS
+endif
 endif
 endif
 endif
