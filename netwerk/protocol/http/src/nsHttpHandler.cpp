@@ -1027,7 +1027,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     nsresult rv = NS_OK;
     PRInt32 val;
 
-    LOG(("nsHttpHandler::PrefsChanged [pref=%x]\n", pref));
+    LOG(("nsHttpHandler::PrefsChanged [pref=%s]\n", pref));
 
 #define PREF_CHANGED(p) ((pref == nsnull) || !PL_strcmp(pref, p))
 
