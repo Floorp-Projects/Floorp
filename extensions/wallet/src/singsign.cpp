@@ -482,7 +482,7 @@ si_CheckGetData
     0, /* is first edit field a password field */
     &buttonPressed);
 
-  if (dialogTitle == nsnull)
+  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
     Recycle(prompt_string);
   if (check_string)
     Recycle(check_string);
