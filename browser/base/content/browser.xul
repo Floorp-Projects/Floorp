@@ -428,6 +428,10 @@
         <menuseparator/>
       </menupopup>
     </statusbarpanel>
+    <statusbarpanel id="livemark-button" type="menu" class="statusbarpanel-menu-iconic">
+      <menupopup onpopupshowing="return livemarkFillPopup(this);"
+                 oncommand="livemarkAddMark(window._content, event.target.getAttribute('data'));" />
+    </statusbarpanel>
 
     <statusbarpanel id="statusbar-display" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">

@@ -420,7 +420,7 @@
         </menubar>
 
 
-<template id='bookmarks-template' xmlns:nc="http://home.netscape.com/NC-rdf#">
+  <template id='bookmarks-template' xmlns:nc="http://home.netscape.com/NC-rdf#">
     <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
       <toolbarseparator uri="rdf:*"
                         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
@@ -453,16 +453,9 @@
                      tooltip="btTooltip"
                      label="rdf:http://home.netscape.com/NC-rdf#Name"/>
     </rule>
-    <rule iscontainer="true" isempty="true"
-          rdf:type="http://home.netscape.com/NC-rdf#Folder">
-      <menupopup>
-        <menu class="menu-iconic bookmark-item" uri="rdf:*" 
-              type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-              label="rdf:http://home.netscape.com/NC-rdf#Name">
-          <menupopup>
-            <menuitem label="&emptyItem.label;" disabled="true"/>
-          </menupopup>
-        </menu>
+    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+      <menupopup> 
+        <menuseparator uri="rdf:*" />
       </menupopup>
     </rule>
     <rule iscontainer="true">
@@ -472,11 +465,6 @@
               type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
           <menupopup contextmenu="bookmarks-context-menu"/>
         </menu>
-      </menupopup>
-    </rule>
-    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-      <menupopup> 
-        <menuseparator uri="rdf:*" />
       </menupopup>
     </rule>
     <rule>

@@ -50,6 +50,7 @@
   <command id="cmd_bm_newseparator"    oncommand="goDoCommand('cmd_bm_newseparator');"/>
   <command id="cmd_bm_find"            oncommand="goDoCommand('cmd_bm_find');"/>
   <command id="cmd_bm_properties"      oncommand="goDoCommand('cmd_bm_properties');"/>
+  <command id="cmd_bm_refreshlivemark" oncommand="goDoCommand('cmd_bm_refreshlivemark');"/>
   
   <hbox align="center">
     <label value="&search.label;" accesskey="&search.accesskey;" control="search-box"/>

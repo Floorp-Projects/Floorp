@@ -81,6 +81,8 @@
  *   window.arguments[9]: PostData to be saved with this bookmark, 
  *                        in the format a string of name=value pairs
  *                        separated by CRLFs.
+ *   window.arguments[10]: feed URL for Livemarks (turns bookmark
+ *                         into Livemark)
  */
 
 var gSelectedFolder;
@@ -168,6 +170,7 @@ function onOK()
   RDFC.Init(BMDS, gSelectedFolder);
 
   var url, rSource;
+  var livemarkFeed = window.arguments[10];
   if (gGroup && gGroup.checked) {
     rSource = BMDS.createFolder(gName.value);
     const groups = window.arguments[5];
@@ -176,6 +179,9 @@ function onOK()
       BMDS.createBookmarkInContainer(groups[i].name, url, gKeyword.value, null,
                                      groups[i].charset, gPostData, rSource, -1);
     }
+  } else if (livemarkFeed != null) {
+    url = getNormalizedURL(window.arguments[1]);
+    rSource = BMDS.createLivemark(gName.value, url, livemarkFeed, null);
   } else {
     url = getNormalizedURL(window.arguments[1]);
     rSource = BMDS.createBookmark(gName.value, url, gKeyword.value, null, window.arguments[3], gPostData);

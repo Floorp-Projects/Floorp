@@ -66,7 +66,7 @@ function Init()
   window.arguments[1].ok = false;
 
   // This is the set of fields that are visible in the window.
-  gFields     = ["name", "url", "shortcut", "description", "webpanel"];
+  gFields     = ["name", "url", "shortcut", "description", "webpanel", "feedurl"];
 
   // ...and this is a parallel array that contains the RDF properties
   // that they are associated with.
@@ -74,7 +74,8 @@ function Init()
                  RDF.GetResource(NC_NS+"URL"),
                  RDF.GetResource(NC_NS+"ShortcutURL"),
                  RDF.GetResource(NC_NS+"Description"),
-                 RDF.GetResource(NC_NS+"WebPanel")];
+                 RDF.GetResource(NC_NS+"WebPanel"),
+                 RDF.GetResource(NC_NS+"FeedURL")];
 
   var x;
   // Initialize the properties panel by copying the values from the
@@ -181,6 +182,7 @@ function Init()
     //            of this is the "File System" container.
   }
 
+  var isLivemark = BookmarksUtils.resolveType(gResource) == "Livemark";
   var isSeparator = BookmarksUtils.resolveType(gResource) == "BookmarkSeparator";
 
   if (isContainerFlag || isSeparator) {
@@ -196,6 +198,13 @@ function Init()
     }
   }
 
+  if (isLivemark) {
+    document.getElementById("locationrow").hidden = true;
+    document.getElementById("shortcutrow").hidden = true;
+  } else {
+    document.getElementById("feedurlrow").hidden = true;
+  }
+
   var showScheduling = false;
   var url = BMDS.GetTarget(gResource, gProperties[1], true);
   if (url) {
@@ -206,8 +215,8 @@ function Init()
       showScheduling = true;
   }
 
-  if (!showScheduling) {
-    // only allow scheduling of http/https URLs
+  if (!showScheduling || isLivemark) {
+    // only allow scheduling of http/https URLs that are not livemarks
     document.getElementById("ScheduleTab").setAttribute("hidden", "true");
     document.getElementById("NotifyTab").setAttribute("hidden", "true");
   }
@@ -220,7 +229,6 @@ function Init()
   // set initial focus
   nameNode.focus();
   nameNode.select();
-
 }
 
 
@@ -235,7 +243,7 @@ function Commit()
     var field = document.getElementById(gFields[i]);
 
     if (! field)
-      continue
+      continue;
 
     // Get the new value as a literal, using 'null' if the value is empty.
     var newValue = field.value;

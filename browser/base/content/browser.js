@@ -59,6 +59,7 @@ var gGlobalHistory = null;
 var gURIFixup = null;
 var gReportButton = null;
 var gPageThemeButton = null;
+var gLivemarksButton = null;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
@@ -107,6 +108,7 @@ function loadEventHandlers(event)
     checkForDirectoryListing();
     charsetLoadListener(event);
     updatePageTheme();
+    updatePageLivemarks();
   }
 
   // some event handlers want to be told what the original browser is
@@ -334,6 +336,7 @@ function prepareForStartup()
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
   gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
+  gBrowser.addEventListener("DOMLinkAdded", livemarkOnLinkAdded, false);
 
   var webNavigation;
   try {
@@ -2559,7 +2562,7 @@ nsBrowserStatusHandler.prototype =
     }
     UpdateBackForwardButtons();
     
-    setTimeout(updatePageTheme, 0);
+    setTimeout(function () { updatePageTheme(); updatePageLivemarks(); }, 0);
   },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
@@ -2612,6 +2615,9 @@ nsBrowserStatusHandler.prototype =
     // (so we keep it while switching tabs after failed load
     getBrowser().userTypedClear = true;
 
+    // clear out livemark data
+    gBrowser.mCurrentBrowser.livemarkLinks = null;
+    
     const nsIChannel = Components.interfaces.nsIChannel;
     var urlStr = aRequest.QueryInterface(nsIChannel).URI.spec;
     var observerService = Components.classes["@mozilla.org/observer-service;1"]
@@ -4750,6 +4756,130 @@ function AddKeywordForSearchField()
              false, "", true, postData);
 }
 
+/////////////// livemark handling
+
+// XXX this event listener can/should probably be combined with the onLinkAdded
+// listener in tabbrowser.xml, which only listens for favicons and then passes
+// them to onLinkIconAvailable in the ProgressListener.  We could extend the
+// progress listener to have a generic onLinkAvailable and have tabbrowser pass
+// along all events.  It should give us the browser for the tab, as well as
+// the actual event.
+function livemarkOnLinkAdded(event)
+{
+  if (!gLivemarksButton)
+    gLivemarksButton = document.getElementById("livemark-button");
+
+  // from tabbrowser.xml
+  // mechanism for reading properties of the underlying XPCOM object
+  // (ignoring potential getters/setters added by malicious content)
+  var safeGetProperty = function(obj, propname) {
+    return Components.lookupMethod(obj, propname).call(obj);
+  }
+
+  var etype = event.target.type;
+  var etitle = event.target.title;
+
+  if (etype == "application/rss+xml" ||
+      etype == "application/atom+xml" ||
+      etype == "application/x.atom+xml" || // this is, apparently, the "official" Atom type.
+      etitle == "rss" ||
+      etitle == "RSS" ||
+      etitle == "Atom")
+  {
+    const targetDoc = safeGetProperty(event.target, "ownerDocument");
+
+    // find which tab this is for, and set the attribute on the browser
+    // should there be a getTabForDocument method on tabbedbrowser?
+    var browserForLink = null;
+    if (gBrowser.mTabbedMode) {
+      // var browserIndex = gBrowser.getBrowserIndexForDocument(targetDoc);
+      // if (browserIndex == -1)
+      //   return;
+      // browserForLink = gBrowser.getBrowserAtIndex(browserIndex);
+      for (var i = 0; i < gBrowser.mPanelContainer.childNodes.length; i++) {
+        if (gBrowser.mPanelContainer.childNodes[i].contentDocument == targetDoc) {
+          browserForLink = gBrowser.mPanelContainer.childNodes[i];
+          break;
+        }
+      }
+    } else if (gBrowser.mCurrentBrowser.contentDocument == targetDoc) {
+      browserForLink = gBrowser.mCurrentBrowser;
+    }
+
+    if (!browserForLink) {
+      // ??? this really shouldn't happen..
+      return;
+    }
+
+    var livemarkLinks = [];
+    if (browserForLink.livemarkLinks != null) {
+      livemarkLinks = browserForLink.livemarkLinks;
+    }
+
+    livemarkLinks.push({ href: event.target.href,
+                         type: event.target.type,
+                        title: event.target.title});
+
+    browserForLink.livemarkLinks = livemarkLinks;
+    if (browserForLink == gBrowser || browserForLink == gBrowser.mCurrentBrowser)
+      gLivemarksButton.setAttribute("livemarks", "true");
+  }
+}
+
+// this is called both from onload and also whenever the user
+// switches tabs; we update whether we show or hide the livemark
+// button based on whether the window has livemarks set.
+function updatePageLivemarks()
+{
+  if (!gLivemarksButton)
+    gLivemarksButton = document.getElementById("livemark-button");
+
+  var livemarkLinks = gBrowser.mCurrentBrowser.livemarkLinks;
+  if (!livemarkLinks || livemarkLinks.length == 0) {
+    gLivemarksButton.removeAttribute("livemarks");
+    gLivemarksButton.setAttribute("tooltiptext", gNavigatorBundle.getString("livemarkNoLivemarksTooltip"));
+  } else {
+    gLivemarksButton.setAttribute("livemarks", "true");
+    gLivemarksButton.setAttribute("tooltiptext", gNavigatorBundle.getString("livemarkHasLivemarksTooltip"));
+  }
+}
+
+function livemarkFillPopup(menuPopup)
+{
+  var livemarkLinks = gBrowser.mCurrentBrowser.livemarkLinks;
+  if (livemarkLinks == null) {
+    // XXX hack -- menu opening depends on setting of an "open"
+    // attribute, and the menu refuses to open if that attribute is
+    // set (because it thinks it's already open).  onpopupshowing gets
+    // called after the attribute is unset, and it doesn't get unset
+    // if we return false.  so we unset it here; otherwise, the menu
+    // refuses to work past this point.
+    menuPopup.parentNode.removeAttribute("open");
+    return false;
+  }
+
+  while (menuPopup.firstChild) {
+    menuPopup.removeChild(menuPopup.firstChild);
+  }
+
+  for (var i = 0; i < livemarkLinks.length; i++) {
+    var markinfo = livemarkLinks[i];
+
+    var menuItem = document.createElement("menuitem");
+    menuItem.setAttribute("label", markinfo.title || markinfo.href);
+    menuItem.setAttribute("data", markinfo.href);
+    menuItem.setAttribute("tooltiptext", markinfo.href);
+    menuPopup.appendChild(menuItem);
+  }
+
+  return true;
+}
+
+function livemarkAddMark(wincontent, data) {
+  var title = wincontent.document.title;
+  BookmarksUtils.addLivemark(wincontent.document.baseURI, data, title);
+}
+
 function updatePageFavIcon(aBrowser) {
   var uri = aBrowser.currentURI;
 
@@ -4760,8 +4890,6 @@ function updatePageFavIcon(aBrowser) {
   // the page load.  We try to fetch a generic favicon.ico.
   if (aBrowser.mFavIconURL == null)
     aBrowser.mFavIconURL = gBrowser.buildFavIconString(uri);
-
-  dump ("updatePageFavIcon: " + uri.spec + " => " + aBrowser.mFavIconURL + "\n");
 
   if (aBrowser == gBrowser.mCurrentBrowser) {
       if (gProxyFavIcon.src != aBrowser.mFavIconURL) {

@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# -*- Mode: javascript; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: NPL 1.1/GPL 2.0/LGPL 2.1
 # 
@@ -254,6 +254,7 @@ var BookmarksMenu = {
             type == "Bookmark"              ||
             type == "Folder"                ||
             type == "PersonalToolbarFolder" ||
+            type == "Livemark"              ||
             aURI == "bookmarks-ptf")
   },
 

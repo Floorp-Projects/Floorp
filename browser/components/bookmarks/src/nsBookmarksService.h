@@ -93,6 +93,13 @@ protected:
     PRBool        mBrowserIcons;
     PRBool        busySchedule;
 
+public:
+    // bookmark resources used to indicate that a livemark
+    // is either loading or failed to load.
+    nsCOMPtr<nsIRDFResource>        mLivemarkLoadingBookmark;
+    nsCOMPtr<nsIRDFResource>        mLivemarkLoadFailedBookmark;
+
+protected:
     // System Bookmark parsing
 #if defined(XP_MAC) || defined(XP_MACOSX)
     PRBool        mIEFavoritesAvailable;
@@ -168,6 +175,8 @@ protected:
     nsresult InitDataSource();
 
     nsresult GetLastModifiedFolders(nsISimpleEnumerator **aResult);
+
+    nsresult UpdateLivemarkChildren(nsIRDFResource* aSource);
 
     // nsIStreamObserver methods:
     NS_DECL_NSIREQUESTOBSERVER

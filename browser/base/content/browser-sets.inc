@@ -68,6 +68,7 @@
     <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
     <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
     <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
+    <command id="cmd_bm_refreshlivemark"           oncommand="goDoCommand('cmd_bm_refreshlivemark');"/>
     <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
     <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
 
