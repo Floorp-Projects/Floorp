@@ -60,8 +60,6 @@
 #include "prerror.h"
 #include "nsCRT.h"
 #include "nsInt64.h"
-#include "nsCExternalHandlerService.h"
-#include "nsIMIMEService.h"
 #include "nsIFile.h"
 #include "nsDirectoryIndexStream.h"
 #include "nsMimeTypes.h"
