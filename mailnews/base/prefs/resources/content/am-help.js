@@ -59,7 +59,7 @@ var pageTagPairs = {
 function doHelpButton() 
 {
   // Get the URI of the page loaded in the AccountManager's content frame.
-  var pageSourceURI = document.getElementById("contentFrame").getAttribute("src");
+  var pageSourceURI = contentFrame.location.href;
   // Get the help tag corresponding to the page loaded.
   var helpTag = pageTagPairs[pageSourceURI];
 
