@@ -118,7 +118,7 @@ sub removeUserField {
 sub setUserGroups {
     my $self = shift;
     my($app, $userID, $groupIDs) = @_;
-    $groupIDs is a hashref in the form { groupID => level }*
+    # $groupIDs is a hashref in the form { groupID => level }*
     foreach my $groupID (keys(%$groupIDs)) {
         $self->assert($groupIDs->{$groupID} > 0, 1, 'Invalid group membership level passed to setUserGroups');
     }

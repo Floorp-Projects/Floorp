@@ -81,7 +81,6 @@ sub getUserByID {
                                                         FROM groups, userGroupsMapping
                                                         WHERE userGroupsMapping.userID = ?
                                                         AND userGroupsMapping.groupID = groups.groupID', $id)->rows;
-        my %groupData = map { $$_[0] => $$_[1] } @$groupData;
         # rights
         my $rightsData = $self->database($app)->execute('SELECT rights.name
                                                          FROM rights, userGroupsMapping, groupRightsMapping
@@ -90,7 +89,7 @@ sub getUserByID {
                                                          AND groupRightsMapping.rightID = rights.rightID', $id)->rows;
         my @rightsData = map { $$_[0] } @$rightsData;
         # bake it all up and send it to the customer
-        return (@userData, \%fieldData, \%groupData, \@rightsData);
+        return (@userData, \%fieldData, $groupData, \@rightsData);
     } else {
         return ();
     }

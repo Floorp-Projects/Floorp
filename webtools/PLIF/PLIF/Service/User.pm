@@ -85,7 +85,7 @@ sub getUserByContactDetails {
 sub getUserByID {
     my $self = shift;
     my($app, $userID) = @_;
-    my(@data) = $app->getService('dataSource.user')->getUserByUserID($app, $userID);
+    my(@data) = $app->getService('dataSource.user')->getUserByID($app, $userID);
     if (@data) {
         return $self->objectCreate($app, @data);
     } else {
@@ -108,6 +108,7 @@ sub objectProvides {
 sub objectInit {
     my $self = shift;
     my($app, $userID, $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldPassword, $fields, $groups, $rights) = @_;
+
     $self->{'_DIRTY'} = {}; # make sure propertySet is happy
     $self->SUPER::objectInit(@_);
     $self->userID($userID);

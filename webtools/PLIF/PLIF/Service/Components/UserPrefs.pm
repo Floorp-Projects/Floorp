@@ -62,7 +62,8 @@ sub cmdUserPrefs {
     } else {
         # one or more users selected
         # let's get rid of the duplicates
-        @userIDs = keys(map { $_ => 1 } @userIDs);
+        my %userIDs = map { $_ => 1 } @userIDs;
+        @userIDs = keys(%userIDs);
     }
 
     # cache rights (for efficiently reasons)
@@ -70,12 +71,17 @@ sub cmdUserPrefs {
 
     # get a handle to some useful services (also for efficiently reasons)
     my $userFactory = $app->getService('user.factory');
-    my $userDataSource = $app->getService('user.dataSource');
+    my $userDataSource = $app->getService('dataSource.user');
 
     # get the data for each user being edited
     my $userData = {};
     foreach my $userID (@userIDs) {
-        $userData->{$userID} = $self->populateUserPrefsHash($app, $userDataSource, $user, $userFactory->getUserByID($userID), $userID, $userID == $user->userID, @rights);
+        my $targetUser = $userFactory->getUserByID($app, $userID);
+        if (defined($targetUser)) {
+            $userData->{$userID} = $self->populateUserPrefsHash($app, $userDataSource, $user, $targetUser, $userID, $userID == $user->userID, @rights);
+        } else {
+            $self->warn(2, "someone tried to get the details of invalid user $userID");
+        }
     }
 
     # put it all together
@@ -116,9 +122,9 @@ sub populateUserPrefsHash {
 
     # XXX there is probably a more generic way of doing this...
     $userData->{'fields'} = {};
-    $self->populateUserPrefsHashFieldCategory($app, $rightContactMethods, 'contact', $editingUserIsTargetUser, $userData);
-    $self->populateUserPrefsHashFieldCategory($app, $rightPersonalDetails, 'personal', $editingUserIsTargetUser, $userData);
-    $self->populateUserPrefsHashFieldCategory($app, $rightSettings, 'settings', $editingUserIsTargetUser, $userData);
+    $self->populateUserPrefsHashFieldCategory($app, $targetUser, $rightContactMethods, 'contact', $editingUserIsTargetUser, $userData);
+    $self->populateUserPrefsHashFieldCategory($app, $targetUser, $rightPersonalDetails, 'personal', $editingUserIsTargetUser, $userData);
+    $self->populateUserPrefsHashFieldCategory($app, $targetUser, $rightSettings, 'settings', $editingUserIsTargetUser, $userData);
 
     $userData->{'groups'} = {};
     if ($rightGroups) {
@@ -144,7 +150,7 @@ sub populateUserPrefsHash {
 
 sub populateUserPrefsHashFieldCategory {
     my $self = shift;
-    my($app, $right, $category, $editingUserIsTargetUser, $userData) = @_;
+    my($app, $targetUser, $right, $category, $editingUserIsTargetUser, $userData) = @_;
     if ($right or $editingUserIsTargetUser) {
         # give user ${category}s
         $userData->{'fields'}->{$category} = {};
@@ -180,7 +186,8 @@ sub cmdUserPrefsSet {
     } else {
         # one or more users selected
         # let's get rid of the duplicates
-        @userIDs = keys(map { $_ => 1 } @userIDs);
+        my %userIDs = map { $_ => 1 } @userIDs;
+        @userIDs = keys(%userIDs);
     }
 
     # cache rights (for efficiently reasons as well as to protect
@@ -238,13 +245,13 @@ sub applyUserPrefsChanges {
     my @notifications = ();
 
     # first, get a lists of all the relevant arguments
-    my $arguments = $app->input->getArgumentsBranch("userPrefs.$userID");
+    my $arguments = $app->input->getArgumentsBranch("userPrefs.$targetUserID");
 
-    if (defined($arguments('password'))) {
+    if (defined($arguments->{'password'})) {
         if ($editingUserIsTargetUser) {
-            if (defined($arguments('password.old')) and ($user->checkPassword($arguments('password.old')))) {
-                if (defined($arguments('password.confirmation')) and
-                    $arguments('password.confirmation') eq $arguments('password')) {
+            if (defined($arguments->{'password.old'}) and ($targetUser->checkPassword($arguments->{'password.old'}))) {
+                if (defined($arguments->{'password.confirmation'}) and
+                    $arguments->{'password.confirmation'} eq $arguments->{'password'}) {
                     $targetUser->password($app->getService('service.passwords')->encryptPassword(arguments('password')));
                 } else {
                     # new passwords don't match
@@ -263,16 +270,16 @@ sub applyUserPrefsChanges {
         }
     }
 
-    my $userDataSource = $app->getService('user.dataSource');
+    my $userDataSource = $app->getService('dataSource.user');
     foreach my $fieldRow ($userDataSource->getFields($app)) {
         # $field contains [type, fieldID, category, name, typeData]*
         my $fieldID = $fieldRow->[1];
         my $fieldCategory = $fieldRow->[2];
         my $fieldName = $fieldRow->[3];
-        my $newValue = $arguments("fields.$category.$name");
+        my $newValue = $arguments->{"fields.$fieldCategory.$fieldName"};
         if (defined($newValue)) {
             my $field = $targetUser->getFieldByID($fieldID);
-            $oldValue = $field->data;
+            my $oldValue = $field->data;
             if (not defined($oldValue)) {
                 $oldValue = '';
             }
@@ -284,9 +291,9 @@ sub applyUserPrefsChanges {
         }
     }
 
-    if (defined($arguments('adminMessage'))) {
+    if (defined($arguments->{'adminMessage'})) {
         if ($rightAdminMessage) {
-            $targetUser->adminMessage($arguments('adminMessage'));
+            $targetUser->adminMessage($arguments->{'adminMessage'});
         } else {
             my $userID = $user->userID;
             $self->warn(2, "user $userID tried to change user $targetUserID's admin message: denied");
@@ -294,9 +301,9 @@ sub applyUserPrefsChanges {
         }
     }
 
-    if (defined($arguments('mode'))) {
+    if (defined($arguments->('mode'))) {
         if ($rightAdminMessage) {
-            $targetUser->Mode($arguments('mode'));
+            $targetUser->mode($arguments->{'mode'});
         } else {
             my $userID = $user->userID;
             $self->warn(2, "user $userID tried to change user $targetUserID's user mode: denied");
@@ -307,7 +314,7 @@ sub applyUserPrefsChanges {
     foreach my $group (@{$userDataSource->getGroups($app)}) {
         # $group contains [groupID, name, [rightName]*]
         my $groupID = $group->[0];
-        my $newValue = $arguments("groups.$groupID");
+        my $newValue = $arguments->{"groups.$groupID"};
         if (defined($newValue)) {
             if ($newValue =~ /^\d+$/o) {
                 my $userLevel = $user->levelInGroup($groupID);
@@ -337,7 +344,7 @@ sub applyUserPrefsChanges {
         }
     }
 
-    return @notificatons;
+    return @notifications;
 }
 
 # descendants should only call this once they have tried to handle field changes
