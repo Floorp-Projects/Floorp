@@ -179,6 +179,9 @@ protected:
   // For mousewheel preferences handling
   nsCOMPtr<nsIPref> mPrefService;
   PRBool m_haveShutdown;
+
+  //Pref for using hierarchical hover (possibly expensive) or not
+  PRBool hHover;
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);
