@@ -98,42 +98,42 @@ buffer.push(0xB7);
 pushInterval(buffer, 0x0300, 0x036F);
 pushInterval(buffer, 0x203F, 0x2040);
 
-var stringWithAllValidCahrsBellow64K = String.fromCharCode.apply(this, buffer);
+var stringWithAllValidCahrsBelow64K = String.fromCharCode.apply(this, buffer);
 
 // Self-consistency test
-TEST(6, stringWithAllValidCahrsBellow64K.length, buffer.length);
+TEST(6, stringWithAllValidCahrsBelow64K.length, buffer.length);
 
 // Check that string with all valid characters bellow 64K gives true
-TEST(7, true, isXMLName(stringWithAllValidCahrsBellow64K));
+TEST(7, true, isXMLName(stringWithAllValidCahrsBelow64K));
 
 // Return string with all failed char indexes.
 function getBadIndexes()
 {
     // This has to be optimized or it would take too long time to run in Rhino    
     var x_code = "x".charCodeAt(0);
-    var validStartCharsBellow64K = {};
-    var validNonStartCharsBellow64K = {};
+    var validStartCharsBelow64K = {};
+    var validNonStartCharsBelow64K = {};
     
     var badIndexes = [];
     var i, end = +validStartCharsEnd;
     for (i = 0; i != end; ++i) {
-        validStartCharsBellow64K[buffer[i]] = true;
+        validStartCharsBelow64K[buffer[i]] = true;
     }
 
     end = +buffer.length;
     for (; i != end; ++i) {
-        validNonStartCharsBellow64K[buffer[i]] = true;
+        validNonStartCharsBelow64K[buffer[i]] = true;
     }
 
     var isName = isXMLName;
     var fromCharCode = String.fromCharCode;
     for (i = 0; i != 0xFFFF; ++i) {
         var s = fromCharCode(i);
-        if (i in validStartCharsBellow64K) {
+        if (i in validStartCharsBelow64K) {
             if (!isName(s)) {
                 badIndexes.push(i);
             }  
-        } else if (i in validNonStartCharsBellow64K) {
+        } else if (i in validNonStartCharsBelow64K) {
             if (isName(s)) {
                 badIndexes.push(i);
             }  
