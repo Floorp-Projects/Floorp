@@ -31,6 +31,7 @@
 #include "nsXPBaseWindow.h"
 #endif
 
+#include "nsCOMPtr.h"
 #include "nsIPrompt.h"
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
@@ -54,6 +55,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIWindowListener.h"
+#include "nsIBaseWindow.h"
 
 
 #if defined(WIN32)
@@ -235,7 +237,8 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
                        aAllowPlugins, PR_FALSE);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetPrefs(aPrefs);
-  mWebShell->Show();
+  nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+  webShellWin->SetVisibility(PR_TRUE);
 
   // Now lay it all out
   Layout(r.width, r.height);
@@ -272,7 +275,8 @@ void nsXPBaseWindow::ForceRefresh()
 void nsXPBaseWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 {
   nsRect rr(0, 0, aWidth, aHeight);
-  mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
+  nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+  webShellWin->SetPositionAndSize(rr.x, rr.y, rr.width, rr.height, PR_FALSE);
 }
 
 //----------------------------------------------------------------------
@@ -328,7 +332,8 @@ NS_IMETHODIMP nsXPBaseWindow::Close()
   }
 
   if (nsnull != mWebShell) {
-    mWebShell->Destroy();
+    nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+    webShellWin->Destroy();
     NS_RELEASE(mWebShell);
   }
 
