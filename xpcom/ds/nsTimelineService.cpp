@@ -43,6 +43,7 @@
 #include "prlock.h"
 #include "prinit.h"
 #include "prinrval.h"
+#include "prthread.h"
 
 #ifdef MOZ_TIMELINE
 
@@ -52,15 +53,31 @@
 static PRIntervalTime initInterval = 0;
 #endif
 
-static PRTime initTime = 0;
 static PRFileDesc *timelineFD = PR_STDERR;
-static PRHashTable *timers;
-static PRLock *timerLock;
-static int indent;
 static PRBool gTimelineDisabled = PR_TRUE;
 
+// Notes about threading:
+// We avoid locks as we always use thread-local-storage.
+// This means every other thread has its own private copy of
+// data, and this thread can't re-enter (as our implemenation
+// doesn't call back out anywhere).  Thus, we can avoid locks!
+// TLS index
+static const PRUintn BAD_TLS_INDEX = (PRUintn) -1;
+static PRUintn gTLSIndex = BAD_TLS_INDEX;
+
+class TimelineThreadData {
+public:
+    TimelineThreadData() : initTime(0), indent(0),
+                           disabled(PR_TRUE), timers(nsnull) {}
+    ~TimelineThreadData() {if (timers) PL_HashTableDestroy(timers);}
+    PRTime initTime;
+    PRHashTable *timers;
+    int indent;
+    PRBool disabled;
+};
+
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsTimelineService, nsITimelineService)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsTimelineService, nsITimelineService)
 
 static PRTime Now(void);
 
@@ -88,32 +105,36 @@ class nsTimelineServiceTimer {
     PRTime mAccum;
     PRTime mStart;
     PRInt32 mRunning;
-    PRLock *mLock;
+    PRThread *mOwnerThread; // only used for asserts - could be #if MOZ_DEBUG
 };
-    
+
+#define TIMER_CHECK_OWNER() \
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == mOwnerThread, \
+                      "Timer used by non-owning thread")
+
+
 nsTimelineServiceTimer::nsTimelineServiceTimer()
-: mAccum(LL_ZERO), mStart(LL_ZERO), mRunning(0), mLock(PR_NewLock())
+: mAccum(LL_ZERO), mStart(LL_ZERO), mRunning(0),
+  mOwnerThread(PR_GetCurrentThread())
 {
 }
-    
+
 nsTimelineServiceTimer::~nsTimelineServiceTimer()
 {
-    PR_DestroyLock(mLock);
 }
 
 void nsTimelineServiceTimer::start()
 {
-    PR_Lock(mLock);
+    TIMER_CHECK_OWNER();
     if (!mRunning) {
         mStart = Now();
     }
     mRunning++;
-    PR_Unlock(mLock);
 }
 
 void nsTimelineServiceTimer::stop(PRTime now)
 {
-    PR_Lock(mLock);
+    TIMER_CHECK_OWNER();
     mRunning--;
     if (mRunning == 0) {
         PRTime delta, accum;
@@ -121,20 +142,20 @@ void nsTimelineServiceTimer::stop(PRTime now)
         LL_ADD(accum, mAccum, delta);
         mAccum = accum;
     }
-    PR_Unlock(mLock);
 }
 
 void nsTimelineServiceTimer::reset()
 {
+  TIMER_CHECK_OWNER();
   mStart = 0;
   mAccum = 0;
 }
 
 PRTime nsTimelineServiceTimer::getAccum()
 {
+    TIMER_CHECK_OWNER();
     PRTime accum;
 
-    PR_Lock(mLock);
     if (!mRunning) {
         accum = mAccum;
     } else {
@@ -142,15 +163,14 @@ PRTime nsTimelineServiceTimer::getAccum()
         LL_SUB(delta, Now(), mStart);
         LL_ADD(accum, mAccum, delta);
     }
-    PR_Unlock(mLock);
     return accum;
 }
 
 PRTime nsTimelineServiceTimer::getAccum(PRTime now)
 {
+    TIMER_CHECK_OWNER();
     PRTime accum;
 
-    PR_Lock(mLock);
     if (!mRunning) {
         accum = mAccum;
     } else {
@@ -158,7 +178,6 @@ PRTime nsTimelineServiceTimer::getAccum(PRTime now)
         LL_SUB(delta, now, mStart);
         LL_ADD(accum, mAccum, delta);
     }
-    PR_Unlock(mLock);
     return accum;
 }
 
@@ -185,7 +204,46 @@ static PRTime Now(void)
 }
 #endif
 
-static void TimelineInit(void)
+static TimelineThreadData *GetThisThreadData()
+{
+    NS_ABORT_IF_FALSE(gTLSIndex!=BAD_TLS_INDEX, "Our TLS not initialized");
+    TimelineThreadData *new_data = nsnull;
+    TimelineThreadData *data = (TimelineThreadData *)PR_GetThreadPrivate(gTLSIndex);
+    if (data == nsnull) {
+        // First request for this thread - allocate it.
+        new_data = new TimelineThreadData();
+        // Fill it
+        new_data->timers = PL_NewHashTable(100, PL_HashString, PL_CompareStrings,
+                                 PL_CompareValues, NULL, NULL);
+        if (new_data->timers==NULL)
+            goto done;
+        new_data->initTime = PR_Now();
+        NS_WARN_IF_FALSE(!gTimelineDisabled,
+                         "Why are we creating new state when disabled?");
+        new_data->disabled = PR_FALSE;
+        data = new_data;
+        new_data = nsnull;
+        PR_SetThreadPrivate(gTLSIndex, data);
+    }
+done:
+    if (new_data) // eeek - error during creation!
+        delete new_data;
+    NS_WARN_IF_FALSE(data, "TimelineService could not get thread-local data");
+    return data;
+}
+
+static void ThreadDestruct( void *data )
+{
+    if (data)
+        delete (TimelineThreadData *)data;
+}
+
+/*
+* PRCallOnceFN that initializes stuff for the timing service.
+*/
+static PRCallOnceType initonce;
+
+static PRStatus TimelineInit(void)
 {
     char *timeStr;
     char *fileName;
@@ -193,11 +251,18 @@ static void TimelineInit(void)
     PRFileDesc *fd;
     PRInt64 tmp1, tmp2;
 
+    PRStatus status = PR_NewThreadPrivateIndex( &gTLSIndex, ThreadDestruct );
+    NS_WARN_IF_FALSE(status==0, "TimelineService could not allocate TLS storage.");
+
     timeStr = PR_GetEnv("NS_TIMELINE_INIT_TIME");
 #ifdef XP_MAC    
     initInterval = PR_IntervalNow();
 #endif
+    // NS_TIMELINE_INIT_TIME only makes sense for the main thread, so if it
+    // exists, set it there.  If not, let normal thread management code take
+    // care of setting the init time.
     if (timeStr != NULL && 2 == PR_sscanf(timeStr, "%d.%d", &secs, &msecs)) {
+        PRTime &initTime = GetThisThreadData()->initTime;
         LL_MUL(tmp1, (PRInt64)secs, 1000000);
         LL_MUL(tmp2, (PRInt64)msecs, 1000);
         LL_ADD(initTime, tmp1, tmp2);
@@ -205,9 +270,8 @@ static void TimelineInit(void)
         initInterval -= PR_MicrosecondsToInterval(
             (PRUint32)(PR_Now() - initTime));
 #endif
-    } else {
-        initTime = PR_Now();
     }
+    // Get the log file.
 #ifdef XP_MAC
     fileName = "timeline.txt";
 #else
@@ -218,14 +282,14 @@ static void TimelineInit(void)
                          0666)) != NULL) {
         timelineFD = fd;
         PR_fprintf(fd,
-                   "NOTE: due to threading and asynchrony, the indentation\n"
-                   "that you see does not necessarily correspond to nesting\n"
-                   "in the code.\n\n");
+                   "NOTE: due to asynchrony, the indentation that you see does"
+                   " not necessarily correspond to nesting in the code.\n\n");
     }
 
     // Runtime disable of timeline
     if (PR_GetEnv("NS_TIMELINE_ENABLE"))
         gTimelineDisabled = PR_FALSE;
+    return PR_SUCCESS;
 }
 
 static void ParseTime(PRTime tm, PRInt32& secs, PRInt32& msecs)
@@ -242,10 +306,11 @@ static void ParseTime(PRTime tm, PRInt32& secs, PRInt32& msecs)
 
 static char *Indent(char *buf)
 {
+    int &indent = GetThisThreadData()->indent;
     int amount = indent;
     if (amount > MAXINDENT) {
         amount = MAXINDENT;
-    }        
+    }
     if (amount < 0) {
         amount = 0;
         indent = 0;
@@ -260,7 +325,7 @@ static char *Indent(char *buf)
 static void PrintTime(PRTime tm, const char *text, va_list args)
 {
     PRInt32 secs, msecs;
-    char pbuf[500], *pc, tbuf[500];
+    char pbuf[550], *pc, tbuf[550];
 
     ParseTime(tm, secs, msecs);
 
@@ -268,8 +333,8 @@ static void PrintTime(PRTime tm, const char *text, va_list args)
     // messages from multiple threads to garble one another.
     pc = Indent(pbuf);
     PR_vsnprintf(pc, sizeof pbuf - (pc - pbuf), text, args);
-    PR_snprintf(tbuf, sizeof tbuf, "%05d.%03d: %s\n",
-                secs, msecs, pbuf);
+    PR_snprintf(tbuf, sizeof tbuf, "%05d.%03d (%08p): %s\n",
+                secs, msecs, PR_GetCurrentThread(), pbuf);
     PR_Write(timelineFD, tbuf, strlen(tbuf));
 }
 
@@ -280,15 +345,15 @@ static nsresult NS_TimelineMarkV(const char *text, va_list args)
 {
     PRTime elapsed,tmp;
 
-    if (LL_IS_ZERO(initTime)) {
-        TimelineInit();
-    }
+    PR_CallOnce(&initonce, TimelineInit);
+
+    TimelineThreadData *thread = GetThisThreadData();
 
     tmp = Now();
-    LL_SUB(elapsed, tmp, initTime);
+    LL_SUB(elapsed, tmp, thread->initTime);
 
     PrintTime(elapsed, text, args);
-   
+
     return NS_OK;
 }
 
@@ -306,11 +371,14 @@ PR_IMPLEMENT(nsresult) NS_TimelineMark(const char *text, ...)
     va_list args;
     va_start(args, text);
 
-    if (LL_IS_ZERO(initTime)) {
-        TimelineInit();
-    }
+    PR_CallOnce(&initonce, TimelineInit);
 
     if (gTimelineDisabled)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    TimelineThreadData *thread = GetThisThreadData();
+
+    if (thread->disabled)
         return NS_ERROR_NOT_AVAILABLE;
 
     NS_TimelineMarkV(text, args);
@@ -318,64 +386,48 @@ PR_IMPLEMENT(nsresult) NS_TimelineMark(const char *text, ...)
     return NS_OK;
 }
 
-/*
- * PRCallOnceFN that initializes stuff for the timing service.
- */
-static PRStatus InitTimers(void)
-{
-    timerLock = PR_NewLock();
-    if (timerLock == NULL) {
-        return PR_FAILURE;
-    }
-    timers = PL_NewHashTable(100, PL_HashString, PL_CompareStrings,
-                             PL_CompareValues, NULL, NULL);
-    return timers != NULL ? PR_SUCCESS : PR_FAILURE;
-}
-
 PR_IMPLEMENT(nsresult) NS_TimelineStartTimer(const char *timerName)
 {
-    static PRCallOnceType once;
-    PR_CallOnce(&once, InitTimers);
-
-    if (timers == NULL) {
-        return NS_ERROR_FAILURE;
-    }
+    PR_CallOnce(&initonce, TimelineInit);
 
     if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
-    PR_Lock(timerLock);
+    TimelineThreadData *thread = GetThisThreadData();
+
+    if (thread->timers == NULL)
+        return NS_ERROR_FAILURE;
+    if (thread->disabled)
+        return NS_ERROR_NOT_AVAILABLE;
+
     nsTimelineServiceTimer *timer
-        = (nsTimelineServiceTimer *)PL_HashTableLookup(timers, timerName);
+        = (nsTimelineServiceTimer *)PL_HashTableLookup(thread->timers, timerName);
     if (timer == NULL) {
         timer = new nsTimelineServiceTimer;
-        PL_HashTableAdd(timers, timerName, timer);
+        PL_HashTableAdd(thread->timers, timerName, timer);
     }
-    PR_Unlock(timerLock);
-        
     timer->start();
     return NS_OK;
 }
 
 PR_IMPLEMENT(nsresult) NS_TimelineStopTimer(const char *timerName)
 {
-    if (timers == NULL) {
-        return NS_ERROR_FAILURE;
-    }
-
     if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
     /*
      * Strange-looking now/timer->stop() interaction is to avoid
-     * including time spent in PR_Lock and PL_HashTableLookup in the
+     * including time spent in TLS and PL_HashTableLookup in the
      * timer.
      */
     PRTime now = Now();
 
-    PR_Lock(timerLock);
+    TimelineThreadData *thread = GetThisThreadData();
+    if (thread->timers == NULL)
+        return NS_ERROR_FAILURE;
+    if (thread->disabled)
+        return NS_ERROR_NOT_AVAILABLE;
     nsTimelineServiceTimer *timer
-        = (nsTimelineServiceTimer *)PL_HashTableLookup(timers, timerName);
-    PR_Unlock(timerLock);
+        = (nsTimelineServiceTimer *)PL_HashTableLookup(thread->timers, timerName);
     if (timer == NULL) {
         return NS_ERROR_FAILURE;
     }
@@ -387,17 +439,18 @@ PR_IMPLEMENT(nsresult) NS_TimelineStopTimer(const char *timerName)
 
 PR_IMPLEMENT(nsresult) NS_TimelineMarkTimer(const char *timerName, const char *str)
 {
-    if (timers == NULL) {
-        return NS_ERROR_FAILURE;
-    }
+    PR_CallOnce(&initonce, TimelineInit);
 
     if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
-    PR_Lock(timerLock);
+    TimelineThreadData *thread = GetThisThreadData();
+    if (thread->timers == NULL)
+        return NS_ERROR_FAILURE;
+    if (thread->disabled)
+        return NS_ERROR_NOT_AVAILABLE;
     nsTimelineServiceTimer *timer
-        = (nsTimelineServiceTimer *)PL_HashTableLookup(timers, timerName);
-    PR_Unlock(timerLock);
+        = (nsTimelineServiceTimer *)PL_HashTableLookup(thread->timers, timerName);
     if (timer == NULL) {
         return NS_ERROR_FAILURE;
     }
@@ -419,17 +472,16 @@ PR_IMPLEMENT(nsresult) NS_TimelineMarkTimer(const char *timerName, const char *s
 
 PR_IMPLEMENT(nsresult) NS_TimelineResetTimer(const char *timerName)
 {
-    if (timers == NULL) {
-        return NS_ERROR_FAILURE;
-    }
-
     if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
-    PR_Lock(timerLock);
+    TimelineThreadData *thread = GetThisThreadData();
+    if (thread->timers == NULL)
+        return NS_ERROR_FAILURE;
+    if (thread->disabled)
+        return NS_ERROR_NOT_AVAILABLE;
     nsTimelineServiceTimer *timer
-        = (nsTimelineServiceTimer *)PL_HashTableLookup(timers, timerName);
-    PR_Unlock(timerLock);
+        = (nsTimelineServiceTimer *)PL_HashTableLookup(thread->timers, timerName);
     if (timer == NULL) {
         return NS_ERROR_FAILURE;
     }
@@ -443,7 +495,10 @@ PR_IMPLEMENT(nsresult) NS_TimelineIndent()
     if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
-    indent++;                   // Could have threading issues here.
+    TimelineThreadData *thread = GetThisThreadData();
+    if (thread->disabled)
+        return NS_ERROR_NOT_AVAILABLE;
+    thread->indent++;
     return NS_OK;
 }
 
@@ -452,7 +507,10 @@ PR_IMPLEMENT(nsresult) NS_TimelineOutdent()
     if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
-    indent--;                   // Could have threading issues here.
+    TimelineThreadData *thread = GetThisThreadData();
+    if (thread->disabled)
+        return NS_ERROR_NOT_AVAILABLE;
+    thread->indent--;
     return NS_OK;
 }
 
@@ -502,10 +560,16 @@ NS_IMETHODIMP nsTimelineService::StopTimer(const char *timerName)
     return NS_TimelineStopTimer(timerName);
 }
 
-/* void markTimer (in string timerName, in string text); */
+/* void markTimer (in string timerName); */
 NS_IMETHODIMP nsTimelineService::MarkTimer(const char *timerName)
 {
     return NS_TimelineMarkTimer(timerName);
+}
+
+/* void markTimerWithComment(in string timerName, in string comment); */
+NS_IMETHODIMP nsTimelineService::MarkTimerWithComment(const char *timerName, const char *comment)
+{
+    return NS_TimelineMarkTimer(timerName, comment);
 }
 
 /* void resetTimer (in string timerName); */
