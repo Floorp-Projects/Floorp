@@ -138,7 +138,7 @@ nsHTMLHRElement::ParseAttribute(nsIAtom* aAttribute,
     return aResult.ParseEnumValue(aValue, kAlignTable);
   }
   if (aAttribute == nsHTMLAtoms::color) {
-    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
+    return aResult.ParseColor(aValue, GetOwnerDoc());
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);

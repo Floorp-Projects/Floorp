@@ -74,9 +74,6 @@ public:
   // nsIContent
   virtual nsIAtom *Tag() const;
 
-  // nsITextContent
-  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText);
-
 protected:
   nsCOMPtr<nsIAtom> mName;
   nsCOMPtr<nsIDOMNamedNodeMap> mEntities;

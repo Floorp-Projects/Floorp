@@ -438,6 +438,7 @@ PRUint32             nsXULPrototypeAttribute::gNumCacheFills;
 
 nsXULElement::nsXULElement()
     : mPrototype(nsnull),
+      mDocument(nsnull),
       mBindingParent(nsnull),
       mSlots(nsnull)
 {
@@ -463,6 +464,8 @@ nsXULElement::Init()
 
 nsXULElement::~nsXULElement()
 {
+    mAttrsAndChildren.Clear();
+
     if (mPrototype)
         mPrototype->Release();
 
@@ -632,8 +635,9 @@ nsXULElement::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsXULElement::GetParentNode(nsIDOMNode** aParentNode)
 {
-    if (GetParent()) {
-        return CallQueryInterface(GetParent(), aParentNode);
+    nsIContent *parent = GetParent();
+    if (parent) {
+        return CallQueryInterface(parent, aParentNode);
     }
 
     if (mDocument) {
@@ -704,10 +708,11 @@ nsXULElement::GetLastChild(nsIDOMNode** aLastChild)
 NS_IMETHODIMP
 nsXULElement::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
-    if (GetParent()) {
-        PRInt32 pos = GetParent()->IndexOf(this);
+    nsIContent *parent = GetParent();
+    if (parent) {
+        PRInt32 pos = parent->IndexOf(this);
         if (pos > 0) {
-            nsIContent *prev = GetParent()->GetChildAt(--pos);
+            nsIContent *prev = parent->GetChildAt(--pos);
             if (prev) {
                 nsresult rv = CallQueryInterface(prev, aPreviousSibling);
                 NS_ASSERTION(*aPreviousSibling, "not a DOM node");
@@ -726,10 +731,11 @@ nsXULElement::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 NS_IMETHODIMP
 nsXULElement::GetNextSibling(nsIDOMNode** aNextSibling)
 {
-    if (GetParent()) {
-        PRInt32 pos = GetParent()->IndexOf(this);
+    nsIContent *parent = GetParent();
+    if (parent) {
+        PRInt32 pos = parent->IndexOf(this);
         if (pos > -1) {
-            nsIContent *next = GetParent()->GetChildAt(++pos);
+            nsIContent *next = parent->GetChildAt(++pos);
             if (next) {
                 nsresult rv = CallQueryInterface(next, aNextSibling);
                 NS_ASSERTION(*aNextSibling, "not a DOM Node");
@@ -767,14 +773,13 @@ nsXULElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 NS_IMETHODIMP
 nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-    if (mDocument) {
-        return CallQueryInterface(mDocument, aOwnerDocument);
+    nsIDocument *document = GetOwnerDoc();
+    if (document) {
+        return CallQueryInterface(document, aOwnerDocument);
     }
-    nsIDocument* doc = nsContentUtils::GetDocument(NodeInfo());
-    if (doc) {
-        return CallQueryInterface(doc, aOwnerDocument);
-    }
+
     *aOwnerDocument = nsnull;
+
     return NS_OK;
 }
 
@@ -1634,7 +1639,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
           mListenerManager->SetListenerTarget(nsnull);
         mListenerManager = nsnull;
 
-        nsIContent::SetDocument(aDocument, aDeep, aCompileEventHandlers);
+        mDocument = aDocument;
 
         if (mDocument) {
             // When we SetDocument(), we're either adding an element
@@ -1682,7 +1687,8 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 void
 nsXULElement::SetParent(nsIContent* aParent)
 {
-    nsIContent::SetParent(aParent);
+    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent);
+
     if (aParent) {
       nsIContent* bindingPar = aParent->GetBindingParent();
       if (bindingPar)

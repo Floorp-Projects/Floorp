@@ -108,10 +108,11 @@ void
 nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                               PRBool aCompileEventHandlers)
 {
-  PRBool documentChanging = (aDocument != mDocument);
+  nsIDocument *document = GetCurrentDoc();
+  PRBool documentChanging = (aDocument != document);
   
   if (documentChanging) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
 
     if (htmlDoc) {
       htmlDoc->RemoveImageMap(this);
@@ -122,7 +123,7 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   
   if (documentChanging) {
     // Since we changed the document, gotta re-QI
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
 
     if (htmlDoc) {
       htmlDoc->AddImageMap(this);

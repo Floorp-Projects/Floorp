@@ -160,10 +160,11 @@ void
 nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                 PRBool aCompileEventHandlers)
 {
-  PRBool documentChanging = (aDocument != mDocument);
+  nsIDocument *document = GetCurrentDoc();
+  PRBool documentChanging = (aDocument != document);
 
   // Unregister the access key for the old document.
-  if (documentChanging && mDocument) {
+  if (documentChanging && document) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
@@ -171,7 +172,7 @@ nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                         aCompileEventHandlers);
 
   // Register the access key for the new document.
-  if (documentChanging && mDocument) {
+  if (documentChanging && aDocument) {
     RegUnRegAccessKey(PR_TRUE);
   }
 }

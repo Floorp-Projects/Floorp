@@ -51,7 +51,7 @@
 #include "nsParserCIID.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
-#include "nsIContent.h"
+#include "nsITextContent.h"
 #include "nsIDocument.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
@@ -499,13 +499,14 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
           nsAutoString value;
           aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
           if (!value.IsEmpty()) {
-            nsCOMPtr<nsIDOMText> textNode;
-            nsCOMPtr<nsIDOMDocument> domDoc(
-                     do_QueryInterface(aChangedElement->GetDocument()));
-            domDoc->CreateTextNode(value, getter_AddRefs(textNode));
-            nsCOMPtr<nsIDOMNode> dummy;
-            nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(realElement));
-            domElement->AppendChild(textNode, getter_AddRefs(dummy));
+            nsCOMPtr<nsITextContent> textContent;
+            NS_NewTextNode(getter_AddRefs(textContent));
+            if (!textContent) {
+              continue;
+            }
+
+            textContent->SetText(value, PR_TRUE);
+            realElement->AppendChildTo(textContent, PR_TRUE, PR_FALSE);
           }
         }
       }
@@ -886,13 +887,14 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
             (realElement->GetNodeInfo()->Equals(nsHTMLAtoms::html,
                                                 kNameSpaceID_XUL) &&
              dst == nsHTMLAtoms::value && !value.IsEmpty())) {
-          nsCOMPtr<nsIDOMText> textNode;
-          nsCOMPtr<nsIDOMDocument> domDoc =
-            do_QueryInterface(changeData->mBoundElement->GetDocument());
-          domDoc->CreateTextNode(value, getter_AddRefs(textNode));
-          nsCOMPtr<nsIDOMNode> dummy;
-          nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(realElement));
-          domElement->AppendChild(textNode, getter_AddRefs(dummy));
+          nsCOMPtr<nsITextContent> textContent;
+          NS_NewTextNode(getter_AddRefs(textContent));
+          if (!textContent) {
+            continue;
+          }
+
+          textContent->SetText(value, PR_TRUE);
+          realElement->AppendChildTo(textContent, PR_TRUE, PR_FALSE);
         }
       }
 

@@ -38,7 +38,7 @@
 #include "nsIDOMCDATASection.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsLayoutAtoms.h"
-
+#include "nsIDocument.h"
 #include "nsContentUtils.h"
 
 
@@ -46,7 +46,7 @@ class nsXMLCDATASection : public nsGenericDOMDataNode,
                           public nsIDOMCDATASection
 {
 public:
-  nsXMLCDATASection();
+  nsXMLCDATASection(nsIDocument *aDocument);
   virtual ~nsXMLCDATASection();
 
   // nsISupports
@@ -72,24 +72,32 @@ public:
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
 
-  // nsITextContent
-  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText);
+  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText,
+                                                        nsIDocument *aOwnerDocument);
 
 protected:
 };
 
 nsresult
-NS_NewXMLCDATASection(nsIContent** aInstancePtrResult)
+NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
+                      nsIDocument *aOwnerDocument)
 {
-  *aInstancePtrResult = new nsXMLCDATASection();
-  NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
+  *aInstancePtrResult = nsnull;
 
-  NS_ADDREF(*aInstancePtrResult);
+  nsCOMPtr<nsIContent> instance = new nsXMLCDATASection(aOwnerDocument);
+  NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
+
+  if (aOwnerDocument && !aOwnerDocument->AddOrphan(instance)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  instance.swap(*aInstancePtrResult);
 
   return NS_OK;
 }
 
-nsXMLCDATASection::nsXMLCDATASection()
+nsXMLCDATASection::nsXMLCDATASection(nsIDocument *aDocument)
+  : nsGenericDOMDataNode(aDocument)
 {
 }
 
@@ -153,16 +161,16 @@ nsXMLCDATASection::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsXMLCDATASection::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsCOMPtr<nsITextContent> textContent = CloneContent(PR_TRUE);
+  nsCOMPtr<nsITextContent> textContent = CloneContent(PR_TRUE, GetOwnerDoc());
   NS_ENSURE_TRUE(textContent, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(textContent, aReturn);
 }
 
 already_AddRefed<nsITextContent> 
-nsXMLCDATASection::CloneContent(PRBool aCloneText)
+nsXMLCDATASection::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
 {
-  nsXMLCDATASection* it = new nsXMLCDATASection();
+  nsXMLCDATASection* it = new nsXMLCDATASection(aOwnerDocument);
   if (!it)
     return nsnull;
 
@@ -172,6 +180,10 @@ nsXMLCDATASection::CloneContent(PRBool aCloneText)
 
   NS_ADDREF(it);
 
+  if (aOwnerDocument && !aOwnerDocument->AddOrphan(it)) {
+    NS_RELEASE(it);
+  }
+
   return it;
 }
 
@@ -179,7 +191,7 @@ nsXMLCDATASection::CloneContent(PRBool aCloneText)
 void
 nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(mDocument, "bad content");
+  NS_PRECONDITION(IsInDoc(), "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);

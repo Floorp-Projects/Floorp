@@ -245,6 +245,7 @@ nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
       if (NS_FAILED(result)) {
         return result;
       }
+      // XXX We should be setting |this| as the parent of the textnode!
       result = CallQueryInterface(content, &mChild);
     }
     mChild->SetData(value);

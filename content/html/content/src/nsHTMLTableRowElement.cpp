@@ -403,7 +403,7 @@ nsHTMLTableRowElement::ParseAttribute(nsIAtom* aAttribute,
     return ParseTableCellHAlignValue(aValue, aResult);
   }
   if (aAttribute == nsHTMLAtoms::bgcolor) {
-    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
+    return aResult.ParseColor(aValue, GetOwnerDoc());
   }
   if (aAttribute == nsHTMLAtoms::valign) {
     return ParseTableVAlignValue(aValue, aResult);

@@ -499,6 +499,14 @@ NS_IMPL_ADDREF_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
 NS_IMPL_RELEASE_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
 
 
+class OrphansEntry : public PLDHashEntryHdr
+{
+public:
+  nsIContent *mKey; // must be first, to look like PLDHashEntryStub
+};
+
+PLDHashTable nsDocument::sOrphans;
+
 // ==================================================================
 // =
 // ==================================================================
@@ -553,6 +561,8 @@ nsDocument::~nsDocument()
 
     mSubDocuments = nsnull;
   }
+
+  RemoveOrphans();
 
   if (mRootContent) {
     if (mRootContent->GetDocument()) {
@@ -673,6 +683,15 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsDocument)
 NS_IMPL_RELEASE(nsDocument)
 
+// static
+void
+nsDocument::Shutdown()
+{
+  if (sOrphans.entrySize) {
+    PL_DHashTableFinish(&sOrphans);
+  }
+}
+
 nsresult
 nsDocument::Init()
 {
@@ -747,6 +766,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 
     mSubDocuments = nsnull;
   }
+
+  RemoveOrphans();
 
   mRootContent = nsnull;
   PRInt32 count, i;
@@ -1787,6 +1808,8 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 
     mIsGoingAway = PR_TRUE;
 
+    RemoveOrphans();
+
     for (indx = 0; indx < count; ++indx) {
       mChildren[indx]->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     }
@@ -2309,7 +2332,7 @@ nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
   *aReturn = nsnull;
 
   nsCOMPtr<nsITextContent> text;
-  nsresult rv = NS_NewTextNode(getter_AddRefs(text));
+  nsresult rv = NS_NewTextNode(getter_AddRefs(text), this);
 
   if (NS_SUCCEEDED(rv)) {
     rv = CallQueryInterface(text, aReturn);
@@ -2331,7 +2354,7 @@ nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
   *aReturn = nsnull;
 
   nsCOMPtr<nsIContent> comment;
-  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment));
+  nsresult rv = NS_NewCommentNode(getter_AddRefs(comment), this);
 
   if (NS_SUCCEEDED(rv)) {
     rv = CallQueryInterface(comment, aReturn);
@@ -2356,7 +2379,7 @@ nsDocument::CreateCDATASection(const nsAString& aData,
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
 
   nsCOMPtr<nsIContent> content;
-  nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(content));
+  nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(content), this);
 
   if (NS_SUCCEEDED(rv)) {
     rv = CallQueryInterface(content, aReturn);
@@ -2377,7 +2400,8 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content;
-  rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content), aTarget, aData);
+  rv = NS_NewXMLProcessingInstruction(getter_AddRefs(content), aTarget, aData,
+                                      this);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -4436,4 +4460,94 @@ nsDocument::CreateElement(nsINodeInfo *aNodeInfo, PRInt32 aElementType,
   content.swap(*aResult);
 
   return NS_OK;
+}
+
+PRBool
+nsDocument::IsOrphan(nsIContent* aContent)
+{
+  if (mOrphanCache == aContent) {
+    return PR_TRUE;
+  }
+
+  if (!sOrphans.ops) {
+    return PR_FALSE;
+  }
+
+  PLDHashEntryHdr *entry = PL_DHashTableOperate(&sOrphans, aContent,
+                                                PL_DHASH_LOOKUP);
+
+  return PL_DHASH_ENTRY_IS_BUSY(entry);
+}
+
+PRBool
+nsDocument::AddOrphan(nsIContent* aContent)
+{
+  if (mIsGoingAway || mInDestructor) {
+    return PR_FALSE;
+  }
+
+  if (mOrphanCache) {
+    if (!sOrphans.ops &&
+        !PL_DHashTableInit(&sOrphans, PL_DHashGetStubOps(), nsnull,
+                           sizeof(OrphansEntry), 5)) {
+      return PR_FALSE;
+    }
+
+    PLDHashEntryHdr *entry = PL_DHashTableOperate(&sOrphans, mOrphanCache,
+                                                  PL_DHASH_ADD);
+    if (!entry) {
+      return PR_FALSE;
+    }
+
+    NS_REINTERPRET_CAST(OrphansEntry*, entry)->mKey = mOrphanCache;
+  }
+
+  mOrphanCache = aContent;
+
+  return PR_TRUE;
+}
+
+void
+nsDocument::RemoveOrphan(nsIContent* aContent)
+{
+  if (mOrphanCache == aContent) {
+    mOrphanCache = nsnull;
+  }
+  else if (sOrphans.ops) {
+    PL_DHashTableOperate(&sOrphans, aContent, PL_DHASH_REMOVE);
+  }
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+RemoveOrphanFromDocument(PLDHashTable *aTable, PLDHashEntryHdr *aHeader,
+                         PRUint32 aNumber, void *aArg)
+{
+  nsIContent *content = NS_REINTERPRET_CAST(OrphansEntry*,
+                                            aHeader)->mKey;
+  nsIDocument *document = content->GetOwnerDoc();
+
+  if (document == NS_STATIC_CAST(nsIDocument*, aArg)) {
+      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+
+      return PL_DHASH_REMOVE;
+  }
+
+  // XXX Not an orphan anymore if the document pointer has already been
+  //     cleared. This shouldn't happen, but until we clean up
+  //     SetDocument and SetParent it will.
+  return document ? PL_DHASH_NEXT : PL_DHASH_REMOVE;
+}
+
+void
+nsDocument::RemoveOrphans()
+{
+  if (mOrphanCache) {
+    mOrphanCache->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+    mOrphanCache = nsnull;
+  }
+
+  if (sOrphans.ops) {
+    PL_DHashTableEnumerate(&sOrphans, RemoveOrphanFromDocument,
+                           NS_STATIC_CAST(nsIDocument*, this));
+  }
 }

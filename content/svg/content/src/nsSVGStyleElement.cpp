@@ -185,7 +185,7 @@ void
 nsSVGStyleElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
-  nsCOMPtr<nsIDocument> oldDoc = mDocument;
+  nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
 
   nsSVGStyleElementBase::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 

@@ -738,9 +738,6 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
       rv = NS_NewTextNode(getter_AddRefs(textContent));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // Set the content's document
-      textContent->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-
       // Set the text in the text node
       textContent->SetText(mText, mTextLength, PR_FALSE);
 
@@ -1084,7 +1081,6 @@ nsXMLContentSink::HandleComment(const PRUnichar *aName)
     nsCOMPtr<nsIDOMComment> domComment = do_QueryInterface(comment, &result);
     if (domComment) {
       domComment->AppendData(nsDependentString(aName));
-      comment->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddContentAsLeaf(comment);
     }
   }
@@ -1108,7 +1104,6 @@ nsXMLContentSink::HandleCDataSection(const PRUnichar *aData,
     nsCOMPtr<nsIDOMCDATASection> domCDATA = do_QueryInterface(cdata);
     if (domCDATA) {
       domCDATA->SetData(nsDependentString(aData, aLength));
-      cdata->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddContentAsLeaf(cdata);
     }
   }

@@ -87,8 +87,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 
-static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
-
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h" // Temporary fix for Bug 36558
 #endif
@@ -2015,11 +2013,13 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   //nsIAtom* tag = NS_NewAtom("mozcombodisplay");
 
   // Add a child text content node for the label
-  nsresult rv;
-  nsCOMPtr<nsIContent> labelContent(do_CreateInstance(kTextNodeCID, &rv));
-  if (NS_SUCCEEDED(rv) && labelContent) {
+
+  nsCOMPtr<nsITextContent> labelContent;
+  NS_NewTextNode(getter_AddRefs(labelContent));
+
+  if (labelContent) {
     // set the value of the text node
-    mDisplayContent = do_QueryInterface(labelContent);
+    mDisplayContent.swap(labelContent);
     mDisplayContent->SetText(NS_LITERAL_STRING("X"), PR_TRUE);
 
     nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
@@ -2030,11 +2030,11 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                         kNameSpaceID_None,
                                         getter_AddRefs(nodeInfo));
 
-    aChildList.AppendElement(labelContent);
+    aChildList.AppendElement(mDisplayContent);
 
     // create button which drops the list down
     nsCOMPtr<nsIContent> btnContent;
-    rv = NS_NewHTMLElement(getter_AddRefs(btnContent), nodeInfo);
+    nsresult rv = NS_NewHTMLElement(getter_AddRefs(btnContent), nodeInfo);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // make someone to listen to the button. If its pressed by someone like Accessibility

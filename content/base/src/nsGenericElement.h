@@ -100,6 +100,8 @@ typedef unsigned long PtrBits;
   ((PRUint32)((~PtrBits(0)) >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET))
 
 
+#define PARENT_BIT_INDOCUMENT ((PtrBits)0x1 << 0)
+
 /**
  * Class that implements the nsIDOMNodeList interface (a list of children of
  * the content), by holding a reference to the content and delegating GetLength
@@ -348,8 +350,20 @@ public:
   static void Shutdown();
 
   // nsIContent interface methods
+  nsIDocument* GetDocument() const
+  {
+    return IsInDoc() ? GetOwnerDoc() : nsnull;
+  }
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
+  PRBool IsInDoc() const
+  {
+    return mParentPtrBits & PARENT_BIT_INDOCUMENT;
+  }
+  nsIDocument *GetOwnerDoc() const
+  {
+    return mNodeInfo->GetDocument();
+  }
   virtual void SetParent(nsIContent* aParent);
   virtual PRBool IsNativeAnonymous() const;
   virtual void SetNativeAnonymous(PRBool aAnonymous);
@@ -720,19 +734,6 @@ protected:
 
     return (flags & GENERIC_ELEMENT_HAS_LISTENERMANAGER &&
             sEventListenerManagersHash.ops);
-  }
-
-  nsIDocument* GetOwnerDocument() const
-  {
-    return mDocument ? mDocument : nsContentUtils::GetDocument(mNodeInfo);
-  }
-  
-  nsIContent*  GetParent() const {
-    // Override nsIContent::GetParent to be more efficient internally,
-    // since no subclasses of nsGenericElement use the low 2 bits of
-    // mParentPtrBits for anything.
-
-    return NS_REINTERPRET_CAST(nsIContent *, mParentPtrBits);
   }
 
   /**

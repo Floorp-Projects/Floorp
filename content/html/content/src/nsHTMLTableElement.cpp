@@ -904,7 +904,7 @@ nsHTMLTableElement::ParseAttribute(nsIAtom* aAttribute,
   }
   if (aAttribute == nsHTMLAtoms::bgcolor ||
            aAttribute == nsHTMLAtoms::bordercolor) {
-    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
+    return aResult.ParseColor(aValue, GetOwnerDoc());
   }
   if (aAttribute == nsHTMLAtoms::frame) {
     return aResult.ParseEnumValue(aValue, kFrameTable);

@@ -185,8 +185,8 @@ nsHTMLAreaElement::SetFocus(nsPresContext* aPresContext)
                                                      NS_EVENT_STATE_FOCUS);
     
   // Make sure the presentation is up-to-date    
-  if (mDocument) {
-    mDocument->FlushPendingNotifications(Flush_Layout);
+  if (IsInDoc()) {
+    GetOwnerDoc()->FlushPendingNotifications(Flush_Layout);
   }
 
   nsIPresShell *presShell = aPresContext->GetPresShell();
@@ -205,17 +205,18 @@ void
 nsHTMLAreaElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
-  PRBool documentChanging = (aDocument != mDocument);
+  nsIDocument *document = GetCurrentDoc();
+  PRBool documentChanging = (aDocument != document);
   
   // Unregister the access key for the old document.
-  if (documentChanging && mDocument) {
+  if (documentChanging && document) {
     RegUnRegAccessKey(PR_FALSE);
   }
 
   nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
   // Register the access key for the new document.
-  if (documentChanging && mDocument) {
+  if (documentChanging && aDocument) {
     RegUnRegAccessKey(PR_TRUE);
   }
 }
@@ -266,8 +267,7 @@ nsHTMLAreaElement::GetProtocol(nsAString& aProtocol)
     return rv;
 
   // XXX this should really use GetHrefURI and not do so much string stuff
-  return GetProtocolFromHrefString(href, aProtocol,
-                                   nsGenericHTMLElement::GetOwnerDocument());
+  return GetProtocolFromHrefString(href, aProtocol, GetOwnerDoc());
 }
 
 NS_IMETHODIMP

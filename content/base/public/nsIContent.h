@@ -59,8 +59,8 @@ class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x78030220, 0x9447, 0x11d1, \
-  {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+{ 0x658d21a4, 0xc446, 0x11d8, \
+  { 0x84, 0xe1, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -71,13 +71,14 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
   nsIContent()
-    : mDocument(nsnull), mParentPtrBits(0) { }
+    : mParentPtrBits(0) { }
 
   /**
+   * DEPRECATED - Use GetCurrentDoc or GetOwnerDoc.
    * Get the document for this content.
    * @return the document
    */
-  nsIDocument* GetDocument() const { return mDocument; }
+  virtual nsIDocument* GetDocument() const = 0;
 
   /**
    * Set the document for this content.
@@ -88,16 +89,40 @@ public:
    *        the document (used by nsXULElement)
    */
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers)
+                           PRBool aCompileEventHandlers) = 0;
+
+  /**
+   * Returns true if the content has an ancestor that is a document.
+   *
+   * @return whether this content is in a document tree
+   */
+  virtual PRBool IsInDoc() const = 0;
+
+  /**
+   * Get the document that this content is currently in, if any. This will be
+   * null if the content has no ancestor that is a document.
+   *
+   * @return the current document
+   */
+  nsIDocument *GetCurrentDoc() const
   {
-    mDocument = aDocument;
+    // XXX This should become:
+    // return IsInDoc() ? GetOwnerDoc() : nsnull;
+    return GetDocument();
   }
+
+  /**
+   * Get the ownerDocument for this content.
+   *
+   * @return the ownerDocument
+   */
+  virtual nsIDocument *GetOwnerDoc() const = 0;
 
   /**
    * Get the parent content for this content.
    * @return the parent, or null if no parent
    */
-  nsIContent* GetParent() const
+  virtual nsIContent* GetParent() const
   {
     return NS_REINTERPRET_CAST(nsIContent *, mParentPtrBits & ~kParentBitMask);
   }
@@ -108,10 +133,7 @@ public:
    * pointer, so subclasses which use those bits should override this.
    * @param aParent the new parent content to set (could be null)
    */
-  virtual void SetParent(nsIContent* aParent)
-  {
-    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent);
-  }
+  virtual void SetParent(nsIContent* aParent) = 0;
 
   /**
    * Get whether this content is C++-generated anonymous content
@@ -623,7 +645,6 @@ protected:
   // Subclasses may use the low two bits of mParentPtrBits to store other data
   enum { kParentBitMask = 0x3 };
 
-  nsIDocument *mDocument;
   PtrBits      mParentPtrBits;
 };
 

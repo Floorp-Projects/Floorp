@@ -42,7 +42,6 @@
 #include "nsFormControlFrame.h"
 #include "nsISupportsArray.h"
 #include "nsINameSpaceManager.h"
-#include "nsContentCID.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -54,8 +53,6 @@
 #include "nsStyleSet.h"
 // MouseEvent suppression in PP
 #include "nsGUIEvent.h"
-
-static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 
 // Saving PresState
 #include "nsIPresState.h"
@@ -197,14 +194,13 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   }
 
   // Add a child text content node for the label
-  nsCOMPtr<nsIContent> labelContent(do_CreateInstance(kTextNodeCID,&result));
-  if (NS_SUCCEEDED(result) && labelContent) {
+  nsCOMPtr<nsITextContent> labelContent;
+  NS_NewTextNode(getter_AddRefs(labelContent));
+  if (labelContent) {
     // set the value of the text node and add it to the child list
-    mTextContent = do_QueryInterface(labelContent, &result);
-    if (NS_SUCCEEDED(result) && mTextContent) {
-      mTextContent->SetText(value, PR_TRUE);
-      aChildList.AppendElement(mTextContent);
-    }
+    mTextContent.swap(labelContent);
+    mTextContent->SetText(value, PR_TRUE);
+    aChildList.AppendElement(mTextContent);
   }
   return result;
 }

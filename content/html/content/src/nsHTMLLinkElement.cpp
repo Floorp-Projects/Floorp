@@ -193,7 +193,7 @@ void
 nsHTMLLinkElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                PRBool aCompileEventHandlers)
 {
-  nsCOMPtr<nsIDocument> oldDoc = mDocument;
+  nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
 
   nsAutoString rel;
   nsAutoString rev;
@@ -207,7 +207,7 @@ nsHTMLLinkElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   UpdateStyleSheet(oldDoc);
 		
-  CreateAndDispatchEvent(mDocument, rel, rev,
+  CreateAndDispatchEvent(aDocument, rel, rev,
                          NS_LITERAL_STRING("DOMLinkAdded"));
 }
  

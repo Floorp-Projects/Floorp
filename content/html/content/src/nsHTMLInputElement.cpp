@@ -895,8 +895,8 @@ nsHTMLInputElement::GetRadioGroupContainer()
   nsIRadioGroupContainer* retval = nsnull;
   if (mForm) {
     CallQueryInterface(mForm, &retval);
-  } else if (mDocument && GetParent()) {
-    CallQueryInterface(mDocument, &retval);
+  } else if (IsInDoc() && GetParent()) {
+    CallQueryInterface(GetOwnerDoc(), &retval);
   }
   return retval;
 }
@@ -999,9 +999,10 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
 
   // Notify the document that the CSS :checked pseudoclass for this element
   // has changed state.
-  if (mDocument && aNotify) {
-    mozAutoDocUpdate(mDocument, UPDATE_CONTENT_STATE, aNotify);
-    mDocument->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
+  if (IsInDoc() && aNotify) {
+    nsIDocument* document = GetOwnerDoc();
+    mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, aNotify);
+    document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
   }
 
   return NS_OK;
@@ -1044,7 +1045,7 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
     return;
 
   // We can't be focus'd if we don't have a document
-  if (!mDocument)
+  if (!IsInDoc())
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
@@ -1057,7 +1058,8 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
   // If the window is not active, do not allow the focus to bring the
   // window to the front.  We update the focus controller, but do
   // nothing else.
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
+  nsCOMPtr<nsPIDOMWindow> win =
+    do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
   nsIFocusController *focusController = win->GetRootFocusController();
   PRBool isActive = PR_FALSE;
   focusController->GetActive(&isActive);
@@ -1085,7 +1087,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::Select()
 {
   nsresult rv = NS_OK;
-  if (!mDocument)
+  if (!IsInDoc())
     return NS_OK;
 
   // first see if we are disabled or not. If disabled then do nothing.
@@ -1105,7 +1107,8 @@ nsHTMLInputElement::Select()
     // If the window is not active, do not allow the select to bring the
     // window to the front.  We update the focus controller, but do
     // nothing else.
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
+    nsCOMPtr<nsPIDOMWindow> win =
+      do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
     nsIFocusController *focusController = win->GetRootFocusController();
     PRBool isActive = PR_FALSE;
     focusController->GetActive(&isActive);
@@ -1187,7 +1190,7 @@ nsHTMLInputElement::Click()
 
   // see what type of input we are.  Only click button, checkbox, radio,
   // reset, submit, & image
-  if (mDocument &&
+  if (IsInDoc() &&
       (mType == NS_FORM_INPUT_BUTTON   ||
        mType == NS_FORM_INPUT_CHECKBOX ||
        mType == NS_FORM_INPUT_RADIO    ||
@@ -1195,7 +1198,8 @@ nsHTMLInputElement::Click()
        mType == NS_FORM_INPUT_SUBMIT   ||
        mType == NS_FORM_INPUT_IMAGE)) {
 
-    nsCOMPtr<nsIDocument> doc = mDocument; // Strong in case the event kills it
+    // Strong in case the event kills it
+    nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
     nsCOMPtr<nsPresContext> context;
 
     nsIPresShell *shell = doc->GetShellAt(0);
@@ -1657,7 +1661,7 @@ void
 nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                 PRBool aCompileEventHandlers)
 {
-  PRBool documentChanging = (aDocument != mDocument);
+  PRBool documentChanging = (aDocument != GetCurrentDoc());
 
   // SetDocument() sets the form and that takes care of form's WillRemove
   // so we just have to take care of the case where we're removing from the
@@ -1698,7 +1702,7 @@ void
 nsHTMLInputElement::SetParent(nsIContent* aParent)
 {
   nsGenericHTMLFormElement::SetParent(aParent);
-  if (mType == NS_FORM_INPUT_IMAGE && aParent && mDocument) {
+  if (mType == NS_FORM_INPUT_IMAGE && aParent && IsInDoc()) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
     nsAutoString uri;
@@ -2533,7 +2537,7 @@ nsHTMLInputElement::AddedToRadioGroup(PRBool aNotify)
   //  If the input element is not in a form and
   //  not in a document, we just need to return.
   //
-  if (!mForm && !(mDocument && GetParent())) {
+  if (!mForm && !(IsInDoc() && GetParent())) {
     return NS_OK;
   }
 
@@ -2588,7 +2592,7 @@ nsHTMLInputElement::WillRemoveFromRadioGroup()
   // If the input element is not in a form and
   // not in a document, we just need to return.
   //
-  if (!mForm && !(mDocument && GetParent())) {
+  if (!mForm && !(IsInDoc() && GetParent())) {
     return NS_OK;
   }
 

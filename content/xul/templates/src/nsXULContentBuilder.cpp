@@ -79,7 +79,6 @@
 
 //----------------------------------------------------------------------0
 
-static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 
 PRBool
@@ -656,11 +655,11 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = SubstituteText(*aMatch, attrValue, value);
                 if (NS_FAILED(rv)) return rv;
 
-                nsCOMPtr<nsITextContent> content =
-                  do_CreateInstance(kTextNodeCID, &rv);
+                nsCOMPtr<nsITextContent> content;
+                rv = NS_NewTextNode(getter_AddRefs(content));
                 if (NS_FAILED(rv)) return rv;
 
-                content->SetText(value.get(), value.Length(), PR_FALSE);
+                content->SetText(value, PR_FALSE);
 
                 rv = aRealNode->AppendChildTo(content, aNotify, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
@@ -670,12 +669,14 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
         }
         else if (tag == nsLayoutAtoms::textTagName) {
-            nsCOMPtr<nsITextContent> tmplTextContent = do_QueryInterface(tmplKid);
-            if (!tmplTextContent) {
-                NS_ERROR("textnode not implementing nsITextContent??");
+            nsCOMPtr<nsIDOMNode> tmplTextNode = do_QueryInterface(tmplKid);
+            if (!tmplTextNode) {
+                NS_ERROR("textnode not implementing nsIDOMNode??");
                 return NS_ERROR_FAILURE;
             }
-            nsCOMPtr<nsITextContent> clonedContent = tmplTextContent->CloneContent(PR_TRUE);
+            nsCOMPtr<nsIDOMNode> clonedNode;
+            tmplTextNode->CloneNode(PR_FALSE, getter_AddRefs(clonedNode));
+            nsCOMPtr<nsIContent> clonedContent = do_QueryInterface(clonedNode);
             if (!clonedContent) {
                 NS_ERROR("failed to clone textnode");
                 return NS_ERROR_FAILURE;

@@ -114,8 +114,8 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
   
-  if (!mDocument) return NS_ERROR_FAILURE;
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  if (!IsInDoc()) return NS_ERROR_FAILURE;
+  nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 
@@ -141,8 +141,8 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
   nsCOMPtr<nsIDOMSVGMatrix> CTM;
 
   nsIBindingManager *bindingManager = nsnull;
-  if (mDocument) {
-    bindingManager = mDocument->GetBindingManager();
+  if (IsInDoc()) {
+    bindingManager = GetOwnerDoc()->GetBindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
@@ -216,8 +216,8 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   nsCOMPtr<nsIDOMSVGMatrix> screenCTM;
 
   nsIBindingManager *bindingManager = nsnull;
-  if (mDocument) {
-    bindingManager = mDocument->GetBindingManager();
+  if (IsInDoc()) {
+    bindingManager = GetOwnerDoc()->GetBindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;

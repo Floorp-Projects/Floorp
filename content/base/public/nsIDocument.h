@@ -89,8 +89,8 @@ class nsIHTMLCSSStyleSheet;
 // IID for the nsIDocument interface
 // c59c70e5-28d1-494b-9f8e-c18368d09ebc
 #define NS_IDOCUMENT_IID      \
-{ 0xc59c70e5, 0x28d1, 0x494b, \
-  { 0x9f, 0x8e, 0xc1, 0x83, 0x68, 0xd0, 0x9e, 0xbc } }
+{ 0x9f670164, 0xc446, 0x11d8, \
+  { 0x84, 0xe1, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -608,11 +608,13 @@ public:
                               PRBool aDocumentDefaultType,
                               nsIContent** aResult) = 0;
 
-  // Get the security info (i.e. SSL state etc) that the document got
-  // from the channel/document that created the content of the
-  // document.
-  //
-  // @see nsIChannel
+  /**
+   * Get the security info (i.e. SSL state etc) that the document got
+   * from the channel/document that created the content of the
+   * document.
+   *
+   * @see nsIChannel
+   */
   nsISupports *GetSecurityInfo()
   {
     return mSecurityInfo;
@@ -623,6 +625,27 @@ public:
    * document.
    */
   virtual PRInt32 GetDefaultNamespaceID() const = 0;
+
+  /**
+   * Returns false if aContent is an orphan (an orphan is a node that is not a
+   * descendant of this document but whose ownerDocument pointer points to this
+   * document).
+   */
+  virtual PRBool IsOrphan(nsIContent* aContent) = 0;
+
+  /**
+   * Add aContent as an orphan of this document (an orphan is a node that is
+   * not a descendant of this document but whose ownerDocument pointer points
+   * to this document).
+   */
+  virtual PRBool AddOrphan(nsIContent* aContent) = 0;
+
+  /**
+   * Remove aContent as an orphan of this document (an orphan is a node that is
+   * not a descendant of this document but whose ownerDocument pointer points
+   * to this document).
+   */
+  virtual void RemoveOrphan(nsIContent* aContent) = 0;
 
 protected:
   nsString mDocumentTitle;

@@ -50,7 +50,8 @@ class nsXMLProcessingInstruction : public nsGenericDOMDataNode,
 {
 public:
   nsXMLProcessingInstruction(const nsAString& aTarget,
-                             const nsAString& aData);
+                             const nsAString& aData,
+                             nsIDocument *aDocument);
   virtual ~nsXMLProcessingInstruction();
 
   // nsISupports
@@ -70,9 +71,6 @@ public:
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
 #endif
-
-  // nsITextContent
-  virtual already_AddRefed<nsITextContent> CloneContent(PRBool aCloneText);
 
 protected:
   PRBool GetAttrValue(const nsAString& aAttr, nsAString& aValue);

@@ -433,8 +433,20 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIContent (from nsIStyledContent)
+    nsIDocument *GetDocument() const
+    {
+        return mDocument;
+    }
     virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                              PRBool aCompileEventHandlers);
+    PRBool IsInDoc() const
+    {
+        return !!mDocument;
+    }
+    nsIDocument *GetOwnerDoc() const
+    {
+        return mDocument ? mDocument : NodeInfo()->GetDocument();
+    }
     virtual void SetParent(nsIContent* aParent);
     virtual PRBool IsNativeAnonymous() const;
     virtual void SetNativeAnonymous(PRBool aAnonymous);
@@ -572,6 +584,7 @@ protected:
 protected:
     // Required fields
     nsXULPrototypeElement*              mPrototype;
+    nsIDocument*                        mDocument;
     nsAttrAndChildArray                 mAttrsAndChildren;   // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
 

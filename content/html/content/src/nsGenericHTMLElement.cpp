@@ -539,13 +539,14 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 void
 nsGenericHTMLElement::RecreateFrames()
 {
-  if (!mDocument) {
+  if (!IsInDoc()) {
     return;
   }
 
-  PRInt32 numShells = mDocument->GetNumberOfShells();
+  nsIDocument *document = GetOwnerDoc();
+  PRInt32 numShells = document->GetNumberOfShells();
   for (PRInt32 i = 0; i < numShells; ++i) {
-    nsIPresShell *shell = mDocument->GetShellAt(i);
+    nsIPresShell *shell = document->GetShellAt(i);
     if (shell) {
       nsIFrame* frame = nsnull;
       shell->GetPrimaryFrameFor(this, &frame);
@@ -584,12 +585,13 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   aRect.x = aRect.y = 0;
   aRect.Empty();
 
-  if (!mDocument) {
+  nsIDocument *document = GetCurrentDoc();
+  if (!document) {
     return;
   }
 
   // Get Presentation shell 0
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  nsIPresShell *presShell = document->GetShellAt(0);
 
   if (!presShell) {
     return;
@@ -604,7 +606,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   }
 
   // Flush all pending notifications so that our frames are uptodate
-  mDocument->FlushPendingNotifications(Flush_Layout);
+  document->FlushPendingNotifications(Flush_Layout);
 
   // Get the Frame for our content
   nsIFrame* frame = nsnull;
@@ -629,7 +631,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     rcFrame = frame->GetRect();
   }
 
-  nsIContent *docElement = mDocument->GetRootContent();
+  nsIContent *docElement = document->GetRootContent();
 
   // Find the frame parent whose content's tagName either matches
   // the tagName passed in or is the document element.
@@ -722,7 +724,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
       // parent chain. We want the offset parent in this case to be
       // the body, so we just get the body element from the document.
 
-      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(mDocument));
+      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(document));
 
       if (html_doc) {
         nsCOMPtr<nsIDOMHTMLElement> html_element;
@@ -856,7 +858,7 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   aInnerHTML.Truncate();
 
-  nsCOMPtr<nsIDocument> doc = GetOwnerDocument();
+  nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
   if (!doc) {
     return NS_OK; // We rely on the document for doing HTML conversion
   }
@@ -908,7 +910,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
 
-  nsCOMPtr<nsIDocument> doc = GetOwnerDocument();
+  nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
 
   nsIScriptContext *scx = nsnull;
   PRBool scripts_enabled = PR_FALSE;
@@ -957,14 +959,15 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   *aP2T = 0.0f;
   *aT2P = 0.0f;
 
-  if (!mDocument) {
+  nsIDocument *document = GetCurrentDoc();
+  if (!document) {
     return;
   }
 
-  mDocument->FlushPendingNotifications(Flush_Layout);
+  document->FlushPendingNotifications(Flush_Layout);
 
   // Get the presentation shell
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  nsIPresShell *presShell = document->GetShellAt(0);
   if (!presShell) {
     return;
   }
@@ -1004,7 +1007,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
       }
     }
 
-    PRBool quirksMode = InNavQuirksMode(mDocument);
+    PRBool quirksMode = InNavQuirksMode(document);
     if ((quirksMode && mNodeInfo->Equals(nsHTMLAtoms::body)) ||
         (!quirksMode && mNodeInfo->Equals(nsHTMLAtoms::html))) {
       // In quirks mode, the scroll info for the body element should map to the
@@ -1256,18 +1259,19 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
 nsresult
 nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
 {
-  if (!mDocument) {
+  if (!IsInDoc()) {
     return NS_OK;
   }
 
   // Get the presentation shell
-  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  nsIDocument *document = GetOwnerDoc();
+  nsIPresShell *presShell = document->GetShellAt(0);
   if (!presShell) {
     return NS_OK;
   }
 
   // Now flush to make sure things are up to date
-  mDocument->FlushPendingNotifications(Flush_Layout);
+  document->FlushPendingNotifications(Flush_Layout);
   
   // Get the primary frame for this element
   nsIFrame *frame = nsnull;
@@ -1301,13 +1305,14 @@ void
 nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                   PRBool aCompileEventHandlers)
 {
-  PRBool doNothing = aDocument == mDocument; // short circuit useless work
+  nsIDocument *document = GetCurrentDoc();
+  PRBool doNothing = aDocument == document; // short circuit useless work
 
   nsGenericElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
   ReparseStyleAttribute();
-  if (!doNothing && mDocument) {
-    nsHTMLStyleSheet* sheet = mDocument->GetAttributeStyleSheet();
+  if (!doNothing && aDocument) {
+    nsHTMLStyleSheet* sheet = aDocument->GetAttributeStyleSheet();
     if (sheet) {
       mAttrsAndChildren.SetMappedAttrStyleSheet(sheet);
     }
@@ -1418,11 +1423,12 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
         {
           // don't make the link grab the focus if there is no link handler
           nsILinkHandler *handler = aPresContext->GetLinkHandler();
-          if (handler && mDocument) {
+          if (handler && IsInDoc()) {
             // If the window is not active, do not allow the focus to bring the
             // window to the front.  We update the focus controller, but do
             // nothing else.
-            nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
+            nsCOMPtr<nsPIDOMWindow> win =
+              do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
             nsIFocusController *focusController =
               win->GetRootFocusController();
             PRBool isActive = PR_FALSE;
@@ -1555,7 +1561,7 @@ nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI)
     // Get absolute URI.
     nsresult rv = nsContentUtils::NewURIWithDocumentCharset(aURI,
                                                             relURISpec,
-                                                            mDocument,
+                                                            GetCurrentDoc(),
                                                             baseURI);
     if (NS_FAILED(rv)) {
       *aURI = nsnull;
@@ -1592,7 +1598,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
   PRBool hasListeners = PR_FALSE;
   PRBool modification = PR_FALSE;
 
-  if (mDocument) {
+  if (IsInDoc()) {
     hasListeners = nsGenericElement::HasMutationListeners(this,
       NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
 
@@ -1650,15 +1656,16 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::MODIFICATION) :
     NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::ADDITION);
 
-  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
-  if (aNotify && mDocument) {
-    mDocument->AttributeWillChange(this, aNamespaceID, aAttribute);
+  nsIDocument* document = GetCurrentDoc();
+  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
+  if (aNotify && document) {
+    document->AttributeWillChange(this, aNamespaceID, aAttribute);
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
     if (IsAttributeMapped(aAttribute)) {
-      nsHTMLStyleSheet* sheet = mDocument ?
-        mDocument->GetAttributeStyleSheet() : nsnull;
+      nsHTMLStyleSheet* sheet = document ?
+        document->GetAttributeStyleSheet() : nsnull;
       rv = mAttrsAndChildren.SetAndTakeMappedAttr(aAttribute, aParsedValue,
                                                   this, sheet);
     }
@@ -1678,9 +1685,9 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (mDocument) {
+  if (document) {
     nsCOMPtr<nsIXBLBinding> binding;
-    mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
+    document->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding) {
       binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
     }
@@ -1717,7 +1724,7 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     }
 
     if (aNotify) {
-      mDocument->AttributeChanged(this, aNamespaceID, aAttribute, modType);
+      document->AttributeChanged(this, aNamespaceID, aAttribute, modType);
     }
   }
   
@@ -1954,7 +1961,7 @@ nsGenericHTMLElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
   PRBool modification = PR_FALSE;
   nsAutoString oldValueStr;
 
-  if (mDocument) {
+  if (IsInDoc()) {
     hasListeners = nsGenericElement::HasMutationListeners(this,
       NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
 
@@ -1981,7 +1988,7 @@ nsGenericHTMLElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
 already_AddRefed<nsIURI>
 nsGenericHTMLElement::GetBaseURI() const
 {
-  nsIDocument* doc = GetOwnerDocument();
+  nsIDocument* doc = GetOwnerDoc();
 
   const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsHTMLAtoms::_baseHref);
   if (val) {
@@ -2025,8 +2032,8 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
     return;
   }
 
-  if (mDocument) {
-    mDocument->GetBaseTarget(aBaseTarget);
+  if (IsInDoc()) {
+    GetOwnerDoc()->GetBaseTarget(aBaseTarget);
   }
   else {
     aBaseTarget.Truncate();
@@ -2069,7 +2076,7 @@ nsGenericHTMLElement::ListAttributes(FILE* out) const
 void
 nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(nsnull != mDocument, "bad content");
+  NS_PRECONDITION(IsInDoc(), "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -2099,7 +2106,7 @@ void
 nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,
                                   PRBool aDumpAll) const
 {
-   NS_PRECONDITION(nsnull != mDocument, "bad content");
+   NS_PRECONDITION(IsInDoc(), "bad content");
 
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -2480,7 +2487,7 @@ PRBool
 nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
                                             nsAttrValue& aResult) const
 {
-  if (InNavQuirksMode(mDocument)) {
+  if (InNavQuirksMode(GetCurrentDoc())) {
     return aResult.ParseEnumValue(aString, kCompatTableHAlignTable);
   }
   return aResult.ParseEnumValue(aString, kTableHAlignTable);
@@ -2490,7 +2497,7 @@ PRBool
 nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
                                                nsAString& aResult) const
 {
-  if (InNavQuirksMode(mDocument)) {
+  if (InNavQuirksMode(GetCurrentDoc())) {
     return aValue.EnumValueToString(kCompatTableHAlignTable, aResult);
   }
   return aValue.EnumValueToString(kTableHAlignTable, aResult);
@@ -2529,7 +2536,7 @@ PRBool
 nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
                                                 nsAttrValue& aResult) const
 {
-  if (InNavQuirksMode(mDocument)) {
+  if (InNavQuirksMode(GetCurrentDoc())) {
     return aResult.ParseEnumValue(aString, kCompatTableCellHAlignTable);
   }
   return aResult.ParseEnumValue(aString, kTableCellHAlignTable);
@@ -2539,7 +2546,7 @@ PRBool
 nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
                                                    nsAString& aResult) const
 {
-  if (InNavQuirksMode(mDocument)) {
+  if (InNavQuirksMode(GetCurrentDoc())) {
     return aValue.EnumValueToString(kCompatTableCellHAlignTable, aResult);
   }
   return aValue.EnumValueToString(kTableCellHAlignTable, aResult);
@@ -3168,7 +3175,7 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsCOMPtr<nsIURI> attrURI;
   rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
-                                                 attrValue, GetOwnerDocument(),
+                                                 attrValue, GetOwnerDoc(),
                                                  baseURI);
   if (NS_FAILED(rv)) {
     // Just use the attr value as the result...
@@ -3279,8 +3286,8 @@ nsGenericHTMLFrameElement::IsFocusable(PRInt32 *aTabIndex)
 
   // If there is no subdocument, docshell or content viewer, it's not tabbable
   PRBool isFocusable = PR_FALSE;
-  if (mDocument) {
-    nsIDocument *subDoc = mDocument->GetSubDocumentFor(this);
+  if (IsInDoc()) {
+    nsIDocument *subDoc = GetOwnerDoc()->GetSubDocumentFor(this);
     if (subDoc) {
       nsCOMPtr<nsISupports> container = subDoc->GetContainer();
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
@@ -3314,7 +3321,7 @@ nsGenericHTMLFormElement::SetParent(nsIContent* aParent)
 {
   if (!aParent && mForm) {
     SetForm(nsnull);
-  } else if (mDocument && aParent && (GetParent() || !mForm)) {
+  } else if (IsInDoc() && aParent && (GetParent() || !mForm)) {
     // If we have a new parent and either we had an old parent or we
     // don't have a form, search for a containing form.  If we didn't
     // have an old parent, but we do have a form, we shouldn't do the
@@ -3488,7 +3495,7 @@ nsGenericHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 nsresult
 nsGenericHTMLFrameElement::EnsureFrameLoader()
 {
-  if (!GetParent() || !mDocument || mFrameLoader) {
+  if (!GetParent() || !IsInDoc() || mFrameLoader) {
     // If frame loader is there, we just keep it around, cached
     return NS_OK;
   }
@@ -3539,7 +3546,7 @@ nsGenericHTMLFrameElement::SetParent(nsIContent *aParent)
 
   // When parent is being set to null on the element's destruction, do not
   // call LoadSrc().
-  if (!GetParent() || !mDocument) {
+  if (!GetParent() || !IsInDoc()) {
     return;
   }
 
@@ -3550,7 +3557,7 @@ void
 nsGenericHTMLFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
                                        PRBool aCompileEventHandlers)
 {
-  const nsIDocument *old_doc = mDocument;
+  const nsIDocument *old_doc = GetCurrentDoc();
 
   nsGenericHTMLElement::SetDocument(aDocument, aDeep,
                                     aCompileEventHandlers);
@@ -3651,7 +3658,7 @@ nsGenericHTMLElement::RemoveFocus(nsPresContext *aPresContext)
     }
   }
   
-  if (mDocument) {
+  if (IsInDoc()) {
     aPresContext->EventStateManager()->SetContentState(nsnull,
                                                        NS_EVENT_STATE_FOCUS);
   }

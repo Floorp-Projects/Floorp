@@ -73,6 +73,7 @@ nsDOMDocumentType::nsDOMDocumentType(nsIAtom *aName,
                                      const nsAString& aPublicId,
                                      const nsAString& aSystemId,
                                      const nsAString& aInternalSubset) :
+  nsGenericDOMDataNode(nsnull),
   mName(aName),
   mEntities(aEntities),
   mNotations(aNotations),
@@ -205,12 +206,4 @@ nsDOMDocumentType::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
 
   return CallQueryInterface(it, aReturn);
-}
-
-already_AddRefed<nsITextContent>
-nsDOMDocumentType::CloneContent(PRBool aCloneText)
-{
-  NS_ERROR("Huh, this should never be called!");
-
-  return nsnull;
 }

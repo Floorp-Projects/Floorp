@@ -292,7 +292,7 @@ nsHTMLFrameSetElement::ParseAttribute(nsIAtom* aAttribute,
                                       nsAttrValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    return aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument());
+    return aResult.ParseColor(aValue, GetOwnerDoc());
   } 
   if (aAttribute == nsHTMLAtoms::frameborder) {
     return nsGenericHTMLElement::ParseFrameborderValue(aValue, aResult);
@@ -444,7 +444,7 @@ nsHTMLFrameSetElement::ParseRowColSpec(nsString&       aSpec,
       // Treat 0* as 1* in quirks mode (bug 40383)
       nsCompatibility mode = eCompatibility_FullStandards;
       nsCOMPtr<nsIHTMLDocument> htmlDocument =
-        do_QueryInterface(nsGenericHTMLElement::GetOwnerDocument());
+        do_QueryInterface(GetOwnerDoc());
       if (htmlDocument) {
         mode = htmlDocument->GetCompatibilityMode();
       }
