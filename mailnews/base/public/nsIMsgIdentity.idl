@@ -86,7 +86,7 @@ interface nsIMsgIdentity : nsISupports {
   attribute string draftFolder;
   attribute string stationeryFolder;
   attribute string junkMailFolder;
-
+  attribute boolean showSaveMsgDlg;
   /**
    * valid determines if the UI should use this identity
    * and the wizard uses this to determine whether or not

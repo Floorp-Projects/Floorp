@@ -1161,7 +1161,10 @@ function Save()
 function SaveAsFile(saveAs)
 {
 	dump("SaveAsFile from XUL\n");
-	editorShell.saveDocument(saveAs, false, "text/html");
+  if (msgCompose.bodyConvertible() == msgCompConvertible.Plain)
+  	editorShell.saveDocument(saveAs, false, "text/plain");
+  else
+  	editorShell.saveDocument(saveAs, false, "text/html");
   defaultSaveOperation = "file";
 }
 
@@ -1886,15 +1889,10 @@ function GetMsgFolderFromUri(uri)
 
 function DisplaySaveFolderDlg(folderURI)
 {
-  const kPrefContractID = "@mozilla.org/preferences;1";
-  const kPrefIID = Components.interfaces.nsIPref;
-  const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
-  var showDialog = true;
-  
-  try {
-    showDialog = kPrefSvc.GetBoolPref("mail.compose.show_save_folder_dlg");
+  try{
+    showDialog = currentIdentity.showSaveMsgDlg;
   }//try
-  catch (e) {
+  catch (e){
     return;
   }//catch
 
@@ -1915,7 +1913,7 @@ function DisplaySaveFolderDlg(folderURI)
     else
       window.alert(SaveDlgMsg);
     try {
-          kPrefSvc.SetBoolPref("mail.compose.show_save_folder_dlg", !checkbox.value);
+          currentIdentity.showSaveMsgDlg = !checkbox.value;
     }//try
     catch (e) { 
     return;

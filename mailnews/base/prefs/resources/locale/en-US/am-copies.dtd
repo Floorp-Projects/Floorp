@@ -11,3 +11,4 @@
 <!ENTITY specialFolderTitle.label "Special Folders">
 <!ENTITY draftMailFolder.label "Keep message drafts in:">
 <!ENTITY templateMailFolder.label "Keep message templates in:">
+<!ENTITY saveMessageDlg.label "Show confirmation dialog when messages are saved">

@@ -64,6 +64,9 @@
         </row>
       </rows>
     </grid>
+    <box autostretch="never">
+      <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" value="&saveMessageDlg.label;"/>
+    </box>
   </titledbox>
 
 </window>
