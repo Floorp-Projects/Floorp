@@ -1,0 +1,70 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+README_PLEASE:
+DON'T USE THIS IDL UNTIL NECKO LANDS!!!!
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+#include "nsIFileSpec.idl"
+#include "nsIOutputStream.idl"
+
+interface nsIURI;
+interface nsIStreamListener;
+
+%{C++
+#include "nsIRUL.h"
+#include "nsIStreamListener.h"
+%}
+
+
+[scriptable, uuid(D01D7B59-DCCD-11d2-A411-00805F613C79)]
+interface nsIMimeEmitter : nsISupports{
+
+    // These will be called to start and stop the total operation
+    void    Initialize(in nsIURI url);
+    void    Complete();
+
+    // Set the output stream/listener for processed data.
+    void    SetOutputStream(in nsIOutputStream outStream);
+    void    SetOutputListener(in nsIStreamListener listener);
+
+    // Header handling routines.
+    void    StartHeader(in PRBool rootMailHeader, in PRBool headerOnly, 
+                        [const] in string msgID, [const] in string outCharset);
+    void    AddHeaderField([const] in string field, [const] in string value);
+    void    EndHeader();
+
+    // Attachment handling routines
+    void    StartAttachment([const] in string name, [const] in string contentType, 
+                            [const] in string url);
+    void    AddAttachmentField([const] in string field, [const] in string value);
+    void    EndAttachment();
+
+    // Body handling routines
+    void    StartBody(in PRBool bodyOnly, [const] in string msgID, [const] in string outCharset);
+    void    WriteBody([const] in string buf, in PRUint32 size, out PRUint32 amountWritten);
+    void    EndBody();
+
+    // Generic write routine. This is necessary for output that
+    // libmime needs to pass through without any particular parsing
+    // involved (i.e. decoded images, HTML Body Text, etc...
+    void    Write([const] in string buf, in PRUint32 size, out PRUint32 amountWritten);
+    void    UtilityWrite([const] in string buf);
+};
+
