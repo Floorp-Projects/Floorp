@@ -387,8 +387,8 @@ nsresult CMfcEmbedApp::InitializePrefs()
 		rv = prefs->GetBoolPref("mfcbrowser.prefs_inited", &inited);
 		if (NS_FAILED(rv) || !inited)
 		{
-            prefs->SetIntPref("font.size.variable.x-western", 12);
-            prefs->SetIntPref("font.size.fixed.x-western", 12);
+            prefs->SetIntPref("font.size.variable.x-western", 16);
+            prefs->SetIntPref("font.size.fixed.x-western", 13);
             rv = prefs->SetBoolPref("mfcbrowser.prefs_inited", PR_TRUE);
             if (NS_SUCCEEDED(rv))
                 rv = prefs->SavePrefFile();
