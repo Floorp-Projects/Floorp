@@ -38,6 +38,7 @@
       setCheck("cbxAutoFill", window.arguments[0]);
       setCheck("cbxShowPopup", window.arguments[1]);
       setCheck("cbxShowSearch", window.arguments[2]);
+      setCheck("cbxMatchOnlyTyped", window.arguments[3]);
 
       updateImage("AutoFill");
       updateImage("ShowPopup");
@@ -50,7 +51,8 @@
     {
       window.opener.receiveACPrefs(getCheck("cbxAutoFill"), 
                                    getCheck("cbxShowPopup"),
-                                   getCheck("cbxShowSearch"));
+                                   getCheck("cbxShowSearch"),
+                                   getCheck("cbxMatchOnlyTyped"));
                                          
       return true;                                           
     }
@@ -101,6 +103,7 @@
                 oncommand="updateShowPopup(); updateImage('ShowPopup')"/>
       <checkbox id="cbxShowSearch" label="&autoCompleteShowSearch.label;"
                 oncommand="updateImage('ShowSearch')"/>
+      <checkbox id="cbxMatchOnlyTyped" label="&autoCompleteMatchOnlyTyped.label;"/>
     </vbox>
   </groupbox>
   

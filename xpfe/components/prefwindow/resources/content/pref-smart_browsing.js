@@ -173,14 +173,16 @@ function showACAdvanced()
                     "modal=yes,chrome,resizable=no",
                     document.getElementById("browserUrlbarAutoFill").getAttribute("value"),
                     document.getElementById("browserUrlbarShowPopup").getAttribute("value"),
-                    document.getElementById("browserUrlbarShowSearch").getAttribute("value"));
+                    document.getElementById("browserUrlbarShowSearch").getAttribute("value"),
+                    document.getElementById("browserUrlbarMatchOnlyTyped").getAttribute("value"));
 }
 
-function receiveACPrefs(aAutoFill, aShowPopup, aShowSearch)
+function receiveACPrefs(aAutoFill, aShowPopup, aShowSearch, aAutoType)
 {
   document.getElementById("browserUrlbarAutoFill").setAttribute("value", aAutoFill);
   document.getElementById("browserUrlbarShowPopup").setAttribute("value", aShowPopup);
   document.getElementById("browserUrlbarShowSearch").setAttribute("value", aShowSearch);
+  document.getElementById("browserUrlbarMatchOnlyTyped").setAttribute("value", aAutoType);
 }
 
  
