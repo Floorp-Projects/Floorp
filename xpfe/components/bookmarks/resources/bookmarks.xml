@@ -81,6 +81,10 @@
            extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarksBase">
     <implementation>
       <constructor><![CDATA[
+        var bookmarksSvc = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService(Components.interfaces.nsIBookmarksService);
+        // This function only reads in the bookmarks from disk if they have not already been read.
+        bookmarksSvc.ReadBookmarks();
+        
         // We implement nsIController
         this.outliner.controllers.appendController(this.controller);
         var olb = document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-outlinerbody");
