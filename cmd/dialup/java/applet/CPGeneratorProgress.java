@@ -125,7 +125,8 @@ public class CPGeneratorProgress extends ProgressApplet
 						progressBar.setPercent( (double)ServerDownload.getBytesDownloaded() / (double)CPGenerator.totalBytes );
 					
 					repaint();
-					Thread.sleep( 50 );
+					Thread.yield();
+					//Thread.sleep( 50 );
 				}
 				
 				Trace.TRACE( "CPGenerator done" );
@@ -134,7 +135,8 @@ public class CPGeneratorProgress extends ProgressApplet
 				status.setText( DONE_STRING );
 				
 				repaint();
-				Thread.sleep( 1000 );
+				final int FOREVER = 100000;
+				Thread.sleep( FOREVER );
 			}
 		}
 		catch (Exception e)
