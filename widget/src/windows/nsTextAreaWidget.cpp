@@ -22,6 +22,10 @@
 #include "nsString.h"
 #include <windows.h>
 
+void nsTextAreaWidget::SetMaxTextLength(PRUint32 aChars) {
+  nsTextHelper::SetMaxTextLength(aChars);
+}
+
 PRUint32  nsTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
   return(nsTextHelper::GetText(aTextBuffer, aBufferSize));
 }

@@ -994,6 +994,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     textWidget->SetFont(font);
     nsString initialText("0123456789");
     textWidget->SetText(initialText);
+    textWidget->SetMaxTextLength(12);
 
     NS_RELEASE(textWidget); 
     y += rect.height + 5;
