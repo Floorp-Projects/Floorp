@@ -56,6 +56,7 @@
 #include <LCommander.h>
 
 #include "CSimpleTextView.h"
+#include "CFormattingToolBar.h"
 
 #include "UUnicodeTextHandler.h"
 #include "UUTF8TextHandler.h"
@@ -745,7 +746,43 @@ CFormHTMLArea::CFormHTMLArea(LStream *inStream)
 CFormHTMLArea::~CFormHTMLArea()
 {
 }
-	
+
+void CFormHTMLArea::FinishCreateSelf()
+{
+	mParagraphToolbarPopup 	= 0;
+	mSizeToolbarPopup 		= 0;
+	mAlignToolbarPopup 		= 0;
+	mFontToolbarPopup 		= 0;
+	mColorPopup 			= 0;
+
+	CHTMLView::FinishCreateSelf();
+}
+
+
+void CFormHTMLArea::BeTarget()
+{
+	// I tried to do this stuff in FinishCreateSelf(), but the UReanimator class
+	// (which streams in these objects, including the tool windoid) is not
+	// reintrant.  ugh.
+	LView *view = CFormattingToolFloatView::GetFloatingToolBar(this);
+	Assert_(view);
+
+	mParagraphToolbarPopup = (LGAPopup *)view->FindPaneByID( cmd_Paragraph_Hierarchical_Menu );
+	mSizeToolbarPopup = (LGAPopup *)view->FindPaneByID( cmd_Font_Size_Hierarchical_Menu );
+	mAlignToolbarPopup = (CPatternButtonPopup *)view->FindPaneByID( cmd_Align_Hierarchical_Menu );
+	mFontToolbarPopup = (CFontMenuPopup *)view->FindPaneByID( 'Font' );
+	mColorPopup = (CColorPopup *)view->FindPaneByID( 'Colr' );
+	CFormattingToolFloatView::ShowFormatFloatTool();
+	inherited::BeTarget();
+}
+
+void CFormHTMLArea::DontBeTarget()
+{
+	inherited::DontBeTarget();
+	CFormattingToolFloatView::HideFormatFloatTool();
+}
+
+
 #pragma mark == CFormList ==
 
 //---------------------------------------------------------------------------

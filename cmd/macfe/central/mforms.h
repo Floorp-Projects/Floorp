@@ -326,8 +326,13 @@ public:
 
 // ее Constructors/destructors
 	CFormHTMLArea(LStream *inStream);
-	
 	virtual	~CFormHTMLArea();
+
+	void FinishCreateSelf();
+
+// ее Misc
+	virtual	void BeTarget();
+	virtual	void DontBeTarget();
 };
 
 

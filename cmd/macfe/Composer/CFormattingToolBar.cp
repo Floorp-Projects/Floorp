@@ -20,6 +20,7 @@
 #include "CEditView.h"
 #include "resgui.h"
 #include "edt.h"
+#include "URobustCreateWindow.h"
 
 CFormattingToolBar::CFormattingToolBar(LStream * inStream) 
 							: CAMSavvyBevelView(inStream)
@@ -122,3 +123,64 @@ void CFormattingToolBar::ListenToMessage( MessageT inMessage, void* ioParam )
 	mEditView->ObeyCommand( inMessage, ioParam );
 }
 
+#ifdef ENDER
+LWindow* CFormattingToolFloatView::mFormatToolWin = 0;
+
+// CFormattingToolFloatView is just a CFormattingToolBar for <htmlarea>
+// form widgets.  CFormattingToolFloatView lives in a floating window
+// instead of in a toolbar in the browser window.
+
+CFormattingToolFloatView::CFormattingToolFloatView(LStream * inStream) 
+							: CFormattingToolBar(inStream)
+{
+	mEditView = NULL;
+}
+
+CFormattingToolFloatView::~CFormattingToolFloatView()
+{
+}
+
+void CFormattingToolFloatView::FinishCreateSelf()
+{
+	UReanimator::LinkListenerToControls(this, this, 11616);
+}
+
+void CFormattingToolFloatView::SetEditView(CEditView* inEditView)
+{
+	mEditView = inEditView;
+}
+
+//	GetFloatingToolBar()  [ static ]
+//  lazy construction of floating formatting tool bar for Ender done here.
+CFormattingToolFloatView* CFormattingToolFloatView::GetFloatingToolBar(CEditView* inEditView)
+{
+	if (!mFormatToolWin)
+	{
+		// time to build the floating formatting tool windoid
+		mFormatToolWin = (URobustCreateWindow::CreateWindow( 
+										CFormattingToolFloatView::mToolWinResID, 
+										LCommander::GetTopCommander() ));
+		// sanity check
+		if (!mFormatToolWin) return 0;
+	}
+	CFormattingToolFloatView *theView = 
+		(CFormattingToolFloatView*)(mFormatToolWin->FindPaneByID( CFormattingToolFloatView::pane_ID ));
+	Assert_(theView);
+	theView->SetEditView(inEditView);
+	return theView;
+}
+
+//	ShowFormatFloatTool()  [ static ]
+//  tool bar revealed - this is called from CHTMLView::BeTarget()
+void CFormattingToolFloatView::ShowFormatFloatTool()
+{
+	if (mFormatToolWin) mFormatToolWin->Show();
+}
+
+//	HideFormatFloatTool()  [ static ]
+//  tool bar hidden - this is called from CHTMLView::DontBeTarget()
+void CFormattingToolFloatView::HideFormatFloatTool()
+{
+	if (mFormatToolWin)	mFormatToolWin->Hide();
+}
+#endif // ENDER
