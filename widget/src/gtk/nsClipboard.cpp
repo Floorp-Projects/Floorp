@@ -500,10 +500,10 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 
   // XXX hack, string-only for now.
   // Create string data-flavor.
-  nsString *dataFlavor;
+  nsString dataFlavor (kTextMime);
 
   // Get data out of transferable.
-  rv = clipboard->mTransferable->GetTransferData(dataFlavor, 
+  rv = clipboard->mTransferable->GetTransferData(&dataFlavor, 
                                                  &clipboardData,
                                                  &dataLength);
 
@@ -516,8 +516,6 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   }
   else
     printf("Transferable didn't support the data flavor\n");
-
-  delete dataFlavor;
 }
 
 
