@@ -79,13 +79,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIObserverService.h"
 #include "nsFileLocations.h"
 
-#ifdef ClientWallet
 #include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-#endif
 
 // Interface for "unknown content type handler" component/service.
 #include "nsIUnkContentTypeHandler.h"
@@ -810,7 +808,6 @@ static void DOMWindowToWebShellWindow(
 }
 
 
-#if ClientWallet
 NS_IMETHODIMP    
 nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
 {
@@ -968,9 +965,6 @@ nsBrowserAppCore::WalletRequestToCapture(nsIDOMWindow* aWin)
     return res;
   }
 }
-
-#endif
-
 
 NS_IMETHODIMP    
 nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
