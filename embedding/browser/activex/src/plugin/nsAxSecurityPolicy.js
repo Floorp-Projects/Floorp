@@ -45,28 +45,64 @@ const nsISupports               = Components.interfaces.nsISupports;
 const nsIObserver               = Components.interfaces.nsIObserver;
 const nsIActiveXSecurityPolicy  = Components.interfaces.nsIActiveXSecurityPolicy;
 
-// TODO lockdown this value
-const kDefaultGlobalHostingFlags =
-        nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_SAFE_OBJECTS |
-        nsIActiveXSecurityPolicy.HOSTING_FLAGS_DOWNLOAD_CONTROLS |
-        nsIActiveXSecurityPolicy.HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS;
+///////////////////////////////////////////////////////////////////////////////
+// Constants representing some default flag combinations of varying degrees
+// of safety.
 
-const kDefaultOtherHostingFlags =
-        nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_NOTHING;
+// No controls at all
+const kTotalSecurityHostingFlags =
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_NOTHING;
+
+// Host only safe controls, no downloading or scripting
+const kHighSecurityHostingFlags = 
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_SAFE_OBJECTS;
+    
+// Host and script safe controls and allow downloads
+const kMediumSecurityGlobalHostingFlags =
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_SAFE_OBJECTS |
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_DOWNLOAD_CONTROLS |
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS;
+
+// Host any control and script safe controls
+const kLowSecurityHostFlags =
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_SAFE_OBJECTS |
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_DOWNLOAD_CONTROLS |
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS |
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_ALL_OBJECTS;
+    
+// Goodbye cruel world
+const kNoSecurityHostingFlags = 
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_SAFE_OBJECTS |
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_DOWNLOAD_CONTROLS |
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS |
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_SCRIPT_ALL_OBJECTS |
+    nsIActiveXSecurityPolicy.HOSTING_FLAGS_HOST_ALL_OBJECTS;
+
+///////////////////////////////////////////////////////////////////////////////
+// Constants representing the default hosting flag values when there is
+// no pref value. Note that these should be as tight as possible except for
+// testing purposes.
+
+const kDefaultGlobalHostingFlags = kMediumSecurityGlobalHostingFlags;
+const kDefaultOtherHostingFlags  = kMediumSecurityGlobalHostingFlags;
+
+// Preferences security policy reads from
+const kHostingPrefPart1 = "security.xpconnect.activex."; 
+const kHostingPrefPart2 = ".hosting_flags";
+const kGlobalHostingFlagsPref = kHostingPrefPart1 + "global" + kHostingPrefPart2;
 
 var gPref = null;
 
-function addPrefListener(observer, domain)
+function addPrefListener(observer, prefStr)
 {
     try {
-        if (gPref == null)
-        {
+        if (gPref == null) {
             var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                         .getService(Components.interfaces.nsIPrefService);
             gPref = prefService.getBranch(null);
         }
         var pbi = gPref.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-        pbi.addObserver(domain, observer, false);
+        pbi.addObserver(prefStr, observer, false);
     } catch(ex) {
         dump("Failed to observe prefs: " + ex + "\n");
     }
@@ -74,33 +110,32 @@ function addPrefListener(observer, domain)
 
 function AxSecurityPolicy()
 {
-    this.prefPart1 = "security.xpconnect.activex.";
-    this.prefPart2 = ".hosting_flags";
-    this.globalPrefName = this.prefPart1 + "global" + this.prefPart2;
-    // TODO read from prefs
-    // addPrefListener(this, this.globalPrefName);
+    addPrefListener(this, kGlobalHostingFlagsPref);
     this.syncPrefs();
+    this.globalHostingFlags = kDefaultGlobalHostingFlags;
 }
 
 AxSecurityPolicy.prototype = {
     syncPrefs: function()
     {
-        this.globalHostingFlags = kDefaultGlobalHostingFlags;
-        // TODO read from prefs
-        /*
+        var hostingFlags = this.globalHostingFlags;
         try {
             if (gPref == null) {
                 var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                             .getService(Components.interfaces.nsIPrefService);
                 gPref = prefService.getBranch(null);
             }
-            this.globalHostingFlags = gPref.getIntPref(this.globalPrefName);
+            hostingFlags = gPref.getIntPref(kGlobalHostingFlagsPref);
         }
         catch (ex) {
-            dump("Failed to read prefs from " + this.globalPrefName + " : " + ex + "\n");
-            this.globalHostingFlags = kDefaultGlobalHostingFlags;
+            dump("Failed to read control hosting flags from \"" + kGlobalHostingFlagsPref + "\"\n");
+            hostingFlags = kDefaultGlobalHostingFlags;
         }
-        */
+        if (hostingFlags != this.globalHostingFlags)
+        {
+            dump("Global activex hosting flags have changed value to " + hostingFlags + "\n");
+            this.globalHostingFlags = hostingFlags
+        }
     },
 
     // nsIActiveXSecurityPolicy
@@ -111,17 +146,14 @@ AxSecurityPolicy.prototype = {
             hostingFlags = this.globalHostingFlags;
         }
         else {
-            // TODO read from prefs
-            /*
             try {
-                var prefName = prefPart1 + context + prefPart2;
+                var prefName = kHostingPrefPart1 + context + kHostingPrefPart2;
                 hostingFlags = gPref.getIntPref(prefName);
             }
             catch (ex) {
-                dump("Failed to read prefs from " + prefName + " : " + ex + "\n");
+                dump("Failed to read control hosting prefs for \"" + context + "\" from \"" + prefName + "\" pref\n");
                 hostingFlags = kDefaultOtherHostingFlags;
             }
-            */
             hostingFlags = kDefaultOtherHostingFlags;
         }
         return hostingFlags;

@@ -304,8 +304,19 @@ NS_IMETHODIMP nsDispatchSupport::IsObjectSafeForScripting(void * theObject, cons
     // Test if safe for scripting
     if(!(dwEnabled & dwSupported) & INTERFACESAFE_FOR_UNTRUSTED_CALLER)
     {
-        *_retval = PR_FALSE;
-        return NS_OK;
+        // Object says it is not set to be safe, but supports unsafe calling,
+        // try enabling it and asking again.
+
+        if (!(dwSupported & INTERFACESAFE_FOR_UNTRUSTED_CALLER) ||
+            FAILED(objectSafety->SetInterfaceSafetyOptions(
+                iid, INTERFACESAFE_FOR_UNTRUSTED_CALLER, INTERFACESAFE_FOR_UNTRUSTED_CALLER)) ||
+            FAILED(objectSafety->GetInterfaceSafetyOptions(
+                iid, &dwSupported, &dwEnabled)) ||
+            !(dwEnabled & dwSupported) & INTERFACESAFE_FOR_UNTRUSTED_CALLER)
+        {
+            *_retval = PR_FALSE;
+            return NS_OK;
+        }
     }
 
     *_retval = PR_TRUE;
