@@ -33,8 +33,9 @@
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
 #include "nsPrintManager.h"
+#include "nsPSStructs.h"
 
-class GraphicState;
+class PS_State;
 typedef void* nsDrawingSurfacePS;
 
 class nsRenderingContextPS : public nsIRenderingContext
@@ -53,22 +54,11 @@ public:
 
   // nsIPrinterRenderingContext methods
 
-   // Postscript utilities
-  void PostscriptColor(nscolor aColor);
-  void PostscriptFillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  void PostscriptDrawBitmap(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, IL_Pixmap *aImage, IL_Pixmap *aMask);
-  void PostscriptFont(nscoord aHeight, PRUint8 aStyle, 
-			  PRUint8 aVariant, PRUint16 aWeight, PRUint8 decorations);
-  void PostscriptTextOut(const char *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY, nscoord aWidth,
-                                    const nscoord* aSpacing, PRBool aIsUnicode);
-
-
 protected:
 
 public:
   // nsIRenderingContext
-  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIRenderingContext *aDelRenderingContext);
+  NS_IMETHOD Init(nsIDeviceContext* aContext);
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget){return NS_OK;}
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface){return NS_OK;}
 
@@ -162,6 +152,41 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
 
+  // Postscript utilities
+  /** ---------------------------------------------------
+   *  Set the color of the Postscript to a file set up by the nsDeviceContextPS
+   *	@update 12/21/98 dwc
+   */
+  void PostscriptColor(nscolor aColor);
+
+  /** ---------------------------------------------------
+   *  Fill a postscript rectangle to a file set up by the nsDeviceContextPS
+   *	@update 12/21/98 dwc
+   */
+  void PostscriptFillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+
+  /** ---------------------------------------------------
+   *  Render a bitmap in postscript to a file set up by the nsDeviceContextPS
+   *	@update 12/21/98 dwc
+   */
+  void PostscriptDrawBitmap(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, IL_Pixmap *aImage, IL_Pixmap *aMask);
+
+  /** ---------------------------------------------------
+   *  Set the current postscript font
+   *	@update 12/21/98 dwc
+   */
+  void PostscriptFont(nscoord aHeight, PRUint8 aStyle, 
+			  PRUint8 aVariant, PRUint16 aWeight, PRUint8 decorations);
+
+  /** ---------------------------------------------------
+   *  Output postscript text to a file set up by the nsDeviceContextPS
+   *	@update 12/21/98 dwc
+   */  
+  void PostscriptTextOut(const char *aString, PRUint32 aLength,
+                                    nscoord aX, nscoord aY, nscoord aWidth,
+                                    const nscoord* aSpacing, PRBool aIsUnicode);
+
+
 private:
   nsresult CommonInit(void);
   void SetupFontAndColor(void);
@@ -169,11 +194,17 @@ private:
 
 protected:
   nsIDeviceContext    *mContext;
-  nsIRenderingContext *mDelRenderingContext;
+  nsIFontMetrics	    *mFontMetrics;
+  nsLineStyle          mCurrLineStyle;
+  PS_State            *mStates;
+  nsVoidArray         *mStateCache;
+  nsTransform2D		    *mTMatrix;
+  float                mP2T;
+
 
   //state management
   PRUint8             *mGammaTable;
-  MWContext           *mPrintContext; //XXX: Remove need for MWContext
+  PSContext           *mPrintContext; //XXX: Remove need for MWContext
 
 
 };

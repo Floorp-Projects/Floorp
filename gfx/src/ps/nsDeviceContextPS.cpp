@@ -20,13 +20,20 @@
 #include "nsRenderingContextPS.h"
 #include "nsString.h"
 #include "nsFontMetricsPS.h"
-
 #include "prprf.h"
-#include "nsPSUtil.h"
-#include "nsPrintManager.h"
-#include "xlate.h"
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+
+
+#define NS_LETTER_SIZE    0
+#define NS_LEGAL_SIZE     1
+#define NS_EXECUTIVE_SIZE 2
+
+#define PAGE_WIDTH 612 // Points
+#define PAGE_HEIGHT 792 //Points
+
+
 
 
 
@@ -39,7 +46,6 @@ nsDeviceContextPS :: nsDeviceContextPS()
 
   NS_INIT_REFCNT();
   mSpec = nsnull;
-  mDelContext = nsnull;
   
 }
 
@@ -75,7 +81,6 @@ float origscale, newscale;
 float t2d, a2d;
 
   mDepth = 1;
-  mDelContext = aCreatingDeviceContext;
 
   mDC = aTheDC;
 
@@ -94,7 +99,6 @@ float t2d, a2d;
   return  NS_OK;
 }
 
-
 /** ---------------------------------------------------
  *  Create a Postscript RenderingContext.  This will create a RenderingContext
  *  from the deligate RenderingContext and intall that into our Postscript RenderingContext.
@@ -104,26 +108,18 @@ float t2d, a2d;
  */
 NS_IMETHODIMP nsDeviceContextPS :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-nsIRenderingContext   *delContext;
-nsresult              rv = NS_ERROR_OUT_OF_MEMORY;
+nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
 
-  if(mDelContext){
-    // create the platform specific RenderingContext from the deligate
-    mDelContext->CreateRenderingContext(delContext);
+	aContext = new nsRenderingContextPS();
+  if (nsnull != aContext){
+    NS_ADDREF(aContext);
+    rv = ((nsRenderingContextPS*) aContext)->Init(this);
+  }else{
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    // create a new postscript renderingcontext
-	  aContext = new nsRenderingContextPS();
-    if (nsnull != aContext){
-      NS_ADDREF(aContext);
-      rv = ((nsRenderingContextPS*) aContext)->Init(this,delContext);
-    }
-    else{
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (NS_OK != rv){
-      NS_IF_RELEASE(aContext);
-    }
+  if (NS_OK != rv){
+    NS_IF_RELEASE(aContext);
   }
 
   return rv;
@@ -161,8 +157,7 @@ NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &
  */
 NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
-
-  return(mDelContext->GetDrawingSurface(aContext,aSurface));
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -172,7 +167,6 @@ NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aConte
 NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
   return(1);    // postscript is 1 bit
-
 }
 
 /** ---------------------------------------------------
@@ -181,8 +175,7 @@ NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
  */
 NS_IMETHODIMP nsDeviceContextPS::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
 {
-  nsresult result = NS_OK;
-  return result;
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -191,7 +184,8 @@ NS_IMETHODIMP nsDeviceContextPS::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
  */
 NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
-    return (mDelContext->GetILColorSpace(aColorSpace));
+  aColorSpace = nsnull;
+  return NS_OK;
 }
 
 
@@ -202,9 +196,8 @@ NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 NS_IMETHODIMP nsDeviceContextPS :: CheckFontExistence(const nsString& aFontName)
 {
 
-  return (mDelContext->CheckFontExistence(aFontName));
-
-  //return NS_OK;
+  // XXX this needs to find out if this font is supported for postscript
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -238,9 +231,8 @@ NS_IMETHODIMP nsDeviceContextPS::BeginDocument(void)
 PrintInfo* pi = new PrintInfo();
 PrintSetup* ps = new PrintSetup();
 
-   //XXX:PS Get rid of the need for a MWContext
-  mPrintContext = new MWContext();
-  memset(mPrintContext, 0, sizeof(struct MWContext_));
+  mPrintContext = new PSContext();
+  memset(mPrintContext, 0, sizeof(struct PSContext_));
   memset(ps, 0, sizeof(struct PrintSetup_));
   memset(pi, 0, sizeof(struct PrintInfo_));
  

@@ -16,52 +16,45 @@
  * Reserved.
  */
 
-#define M12N
+//#define M12N
 
 #include "xp.h"
 #include "xlate.h"
-
-#define MAKE_FE_FUNCS_PREFIX(f) TXFE_##f
-#define MAKE_FE_FUNCS_EXTERN
-#include "mk_cx_fn.h"
+#include "nsPSStructs.h"
 
 extern PS_FontInfo *PSFE_MaskToFI[N_FONTS];
 
 #define LINE_WIDTH 160
-
 #define TEXT_WIDTH 8
 #define TEXT_HEIGHT 16
 
-#define MAKE_FE_FUNCS_PREFIX(f) PSFE_##f
-#define MAKE_FE_FUNCS_EXTERN
-#include "mk_cx_fn.h"
+// this should be in the devicecontext now.
+extern void xl_begin_document(PSContext*);
+extern void xl_begin_page(PSContext*,int);
+extern void xl_end_page(PSContext*,int);
+extern void xl_end_document(PSContext*);
+extern void xl_show(PSContext *cx, char* txt, int len, char*);
+extern void xl_moveto(PSContext* cx, int x, int y);
+extern void xl_moveto_loc(PSContext* cx, int x, int y);
+extern void xl_lineto(PSContext* cx, int x1, int y1);
+extern void xl_circle(PSContext* cx, int w, int h);
+extern void xl_box(PSContext* cx, int w, int h);
+extern void xl_line(PSContext* cx, int x1, int y1, int x2, int y2, int thick);
+extern void xl_stroke(PSContext*);
+extern void xl_fill(PSContext*);
+extern void xl_colorimage(PSContext *cx, int x, int y, int w, int h,IL_Pixmap *image, IL_Pixmap *mask);
+extern void xl_begin_squished_text(PSContext*, float);
+extern void xl_end_squished_text(PSContext*);
+extern void xl_initialize_translation(PSContext*, PrintSetup*);
+extern void xl_finalize_translation(PSContext*);
+extern void xl_annotate_page(PSContext*, char*, int, int, int);
+extern void xl_draw_border(PSContext *, int , int , int , int , int );
+extern void xl_draw_3d_border(PSContext *, int , int , int , int , int, int tl, int br );
+extern void xl_draw_3d_radiobox(PSContext *, int , int , int , int , int, int t, int b, int c);
+extern void xl_draw_3d_checkbox(PSContext *, int , int , int , int , int, int tl, int br, int c);
+extern void xl_draw_3d_arrow(PSContext *, int, int, int, int, int, XP_Bool, int, int, int);
+extern XP_Bool xl_item_span(PSContext* cx, int top, int bottom);
 
-extern void xl_begin_document(MWContext*);
-extern void xl_begin_page(MWContext*,int);
-extern void xl_end_page(MWContext*,int);
-extern void xl_end_document(MWContext*);
-extern void xl_show(MWContext *cx, char* txt, int len, char*);
-extern void xl_moveto(MWContext* cx, int x, int y);
-extern void xl_moveto_loc(MWContext* cx, int x, int y);
-extern void xl_circle(MWContext* cx, int w, int h);
-extern void xl_box(MWContext* cx, int w, int h);
-extern void xl_line(MWContext* cx, int x1, int y1, int x2, int y2, int thick);
-extern void xl_stroke(MWContext*);
-extern void xl_fill(MWContext*);
-extern void xl_colorimage(MWContext *cx, int x, int y, int w, int h,
-                          IL_Pixmap *image, IL_Pixmap *mask);
-extern void xl_begin_squished_text(MWContext*, float);
-extern void xl_end_squished_text(MWContext*);
-extern void xl_initialize_translation(MWContext*, PrintSetup*);
-extern void xl_finalize_translation(MWContext*);
-extern void xl_annotate_page(MWContext*, char*, int, int, int);
-extern void xl_draw_border(MWContext *, int , int , int , int , int );
-extern void xl_draw_3d_border(MWContext *, int , int , int , int , int, int tl, int br );
-extern void xl_draw_3d_radiobox(MWContext *, int , int , int , int , int, int t, int b, int c);
-extern void xl_draw_3d_checkbox(MWContext *, int , int , int , int , int, int tl, int br, int c);
-extern void xl_draw_3d_arrow(MWContext *, int, int, int, int, int, XP_Bool, int, int, int);
-extern XP_Bool xl_item_span(MWContext* cx, int top, int bottom);
-
-extern XP_Bool psfe_init_image_callbacks(MWContext *cx);
+extern XP_Bool psfe_init_image_callbacks(PSContext *cx);
 
 struct LineRecord_struct;
