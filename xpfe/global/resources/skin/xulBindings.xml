@@ -225,7 +225,7 @@
   <binding name="textfield" extends="xul:box">
     <content excludes="observes,template">
       <xul:html flex="1">
-        <html:input inherits="value,disabled,size,readonly"/>
+        <html:input inherits="value,type,maxlength,disabled,size,readonly"/>
       </xul:html>
     </content>
   </binding>
