@@ -96,6 +96,7 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
   fStatusRecentMessages = 0;
   fStatusNextUID = nsMsgKey_None;
   fStatusExistingMessages = 0;
+  fReceivedHeaderOrSizeForUID = nsMsgKey_None;
 }
 
 nsImapServerResponseParser::~nsImapServerResponseParser()
@@ -183,6 +184,7 @@ void nsImapServerResponseParser::InitializeState()
   fProcessingTaggedResponse = PR_FALSE;
   fCurrentCommandFailed = PR_FALSE;
   fNumberOfRecentMessages = 0;
+  fReceivedHeaderOrSizeForUID = nsMsgKey_None;
 }
 
 void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentCommand, PRBool aIgnoreBadAndNOResponses)
@@ -1202,8 +1204,16 @@ void nsImapServerResponseParser::msg_fetch()
         AdvanceToNextToken();
         if (ContinueParse())
         {
+          PRBool sendEndMsgDownload = (GetDownloadingHeaders() 
+                                        && fReceivedHeaderOrSizeForUID == CurrentResponseUID());
           fSizeOfMostRecentMessage = atoi(fNextToken);
-          
+          fReceivedHeaderOrSizeForUID = CurrentResponseUID();
+          if (sendEndMsgDownload)
+          {
+            fServerConnection.NormalMessageEndDownload();
+            fReceivedHeaderOrSizeForUID = nsMsgKey_None;
+          }
+
           // if we are in the process of fetching everything RFC822 then we should
           // turn around and force the total download size to be set to this value.
           // this helps if the server gaves us a bogus size for the message in response to the 
@@ -2050,7 +2060,15 @@ void nsImapServerResponseParser::msg_fetch_content(PRBool chunk, PRInt32 origin,
   {
     // complete the message download
     if (ContinueParse())
-      fServerConnection.NormalMessageEndDownload();
+    {
+      if (fReceivedHeaderOrSizeForUID == CurrentResponseUID())
+      {
+        fServerConnection.NormalMessageEndDownload();
+        fReceivedHeaderOrSizeForUID = nsMsgKey_None;
+      }
+      else
+         fReceivedHeaderOrSizeForUID = CurrentResponseUID();
+    }
     else
       fServerConnection.AbortMessageDownLoad();
   }

@@ -238,6 +238,8 @@ private:
   PRInt32           fNumberOfRecentMessages;
   PRUint32          fCurrentResponseUID;
   PRUint32          fHighestRecordedUID;
+  // used to handle server that sends msg size after headers
+  PRUint32          fReceivedHeaderOrSizeForUID;
   PRInt32           fSizeOfMostRecentMessage;
   PRInt32           fTotalDownloadSize;
   
