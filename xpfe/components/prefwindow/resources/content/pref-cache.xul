@@ -36,7 +36,7 @@
   ]]>
   </script>
   
-	<script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
   <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
   <script language="javascript" src="chrome://communicator/content/pref/pref-cache.js"></script>
 
@@ -83,14 +83,16 @@
     <separator/>
     
     <html>&docCache;</html>
+	<box orient="vertical" autostretch="never" class="indent">
+      <radiogroup id="browserCacheCheckDocFrequency" orient="vertical" autostretch="never"
+                  pref="true" preftype="int" prefstring="browser.cache.check_doc_frequency"
+                  prefattribute="data">
+        <radio group="browserCacheCheckDocFrequency" data="0" value="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
+        <radio group="browserCacheCheckDocFrequency" data="1" value="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>
+        <radio group="browserCacheCheckDocFrequency" data="2" value="&neverRadio.label;" accesskey="&neverRadio.accesskey;"/>
+      </radiogroup>
+    </box>
 
-    <radiogroup id="browserCacheCheckDocFrequency" orient="vertical" autostretch="never"
-                pref="true" preftype="int" prefstring="browser.cache.check_doc_frequency"
-                prefattribute="data">
-      <radio group="browserCacheCheckDocFrequency" data="0" value="&oncePsessionRadio.label;" accesskey="&oncePsessionRadio.accesskey;"/>
-      <radio group="browserCacheCheckDocFrequency" data="1" value="&everyTimeRadio.label;" accesskey="&everyTimeRadio.accesskey;"/>
-      <radio group="browserCacheCheckDocFrequency" data="2" value="&neverRadio.label;" accesskey="&neverRadio.accesskey;"/>
-    </radiogroup>
   </titledbox>
 
 </window>
