@@ -41,7 +41,7 @@
 #include "nsString.h"
 #include "nsMemory.h"
 #include "jsdebug.h"
-#include "prmem.h"
+#include "nspr.h"
 
 /* XXX this stuff is used by NestEventLoop, a temporary hack to be refactored
  * later */
