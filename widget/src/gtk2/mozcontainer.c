@@ -123,8 +123,8 @@ moz_container_put (MozContainer *container, GtkWidget *child_widget,
   child->x = x;
   child->y = y;
 
-  printf("moz_container_put %p %p %d %d\n", (void *)container,
-	 (void *)child_widget, x, y);
+  /*  printf("moz_container_put %p %p %d %d\n", (void *)container,
+      (void *)child_widget, x, y); */
 
   container->children = g_list_append (container->children, child);
 
@@ -150,10 +150,10 @@ moz_container_move (MozContainer *container, GtkWidget *child_widget,
   new_allocation.width = width;
   new_allocation.height = height;
 
-  printf("moz_container_move %p %p will allocate to %d %d %d %d\n",
+  /* printf("moz_container_move %p %p will allocate to %d %d %d %d\n",
 	 (void *)container, (void *)child_widget,
 	 new_allocation.x, new_allocation.y,
-	 new_allocation.width, new_allocation.height);
+	 new_allocation.width, new_allocation.height); */
   
   gtk_widget_size_allocate(child_widget, &new_allocation);
 }
@@ -180,10 +180,10 @@ moz_container_scroll_update (MozContainer *container, GtkWidget *child_widget,
   new_allocation.width = child_widget->allocation.width;
   new_allocation.height = child_widget->allocation.height;
 
-  printf("moz_container_update %p %p will allocate to %d %d %d %d\n",
+  /* printf("moz_container_update %p %p will allocate to %d %d %d %d\n",
 	 (void *)container, (void *)child_widget,
 	 new_allocation.x, new_allocation.y,
-	 new_allocation.width, new_allocation.height);
+	 new_allocation.width, new_allocation.height); */
 
   gtk_widget_size_allocate(child_widget, &new_allocation);
 }
@@ -288,7 +288,7 @@ moz_container_realize (GtkWidget *widget)
 
   widget->window = gdk_window_new (gtk_widget_get_parent_window (widget),
 				   &attributes, attributes_mask);
-  printf("widget->window is %p\n", (void *)widget->window);
+  /*  printf("widget->window is %p\n", (void *)widget->window); */
   gdk_window_set_user_data (widget->window, container);
 
   widget->style = gtk_style_attach (widget->style, widget->window);
@@ -311,12 +311,12 @@ moz_container_size_allocate (GtkWidget     *widget,
 
   g_return_if_fail (IS_MOZ_CONTAINER (widget));
 
-  printf("moz_container_size_allocate %p %d %d %d %d\n",
+  /*  printf("moz_container_size_allocate %p %d %d %d %d\n",
 	 (void *)widget,
 	 allocation->x,
 	 allocation->y,
 	 allocation->width,
-	 allocation->height);
+	 allocation->height); */
 
   /* short circuit if you can */
   if (widget->allocation.x == allocation->x &&

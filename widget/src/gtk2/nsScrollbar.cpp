@@ -95,7 +95,7 @@ nsScrollbar::Destroy(void)
   if (mIsDestroyed)
     return NS_OK;
 
-  printf("nsScrollbar::Destroy [%p]\n", (void *)this);
+  LOG(("nsScrollbar::Destroy [%p]\n", (void *)this));
   mIsDestroyed = PR_TRUE;
 
   NativeShow(PR_FALSE);
@@ -130,8 +130,8 @@ nsScrollbar::Move(PRInt32 aX, PRInt32 aY)
   if (aX == mBounds.x && aY == mBounds.y)
     return NS_OK;
 
-  printf("nsScrollbar::Move [%p] %d %d\n", (void *)this,
-	 aX, aY);
+  LOG(("nsScrollbar::Move [%p] %d %d\n", (void *)this,
+       aX, aY));
 
   mBounds.x = aX;
   mBounds.y = aY;
@@ -376,16 +376,16 @@ nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 NS_IMETHODIMP
 nsScrollbar::SetBounds (const nsRect &aRect)
 {
-  printf("nsScrollbar::SetBounds [%p] %d %d %d %d\n",
+  LOG(("nsScrollbar::SetBounds [%p] %d %d %d %d\n",
 	 (void *)this, aRect.x, aRect.y,
-	 aRect.width, aRect.height);
+       aRect.width, aRect.height));
 
   if (mWidget) {
-    printf("widget allocation %d %d %d %d\n",
-	   mWidget->allocation.x,
-	   mWidget->allocation.y,
-	   mWidget->allocation.width,
-	   mWidget->allocation.height);
+    LOG(("widget allocation %d %d %d %d\n",
+	 mWidget->allocation.x,
+	 mWidget->allocation.y,
+	 mWidget->allocation.width,
+	 mWidget->allocation.height));
     nsCommonWidget::SetBounds(aRect);
     
     // update the x/y with our new sizes
@@ -471,12 +471,12 @@ nsScrollbar::NativeCreate(nsIWidget        *aParent,
   g_signal_connect(G_OBJECT(mAdjustment), "value_changed",
 		   G_CALLBACK(value_changed_cb), this);
 
-  printf("nsScrollbar [%p] %s %p %lx\n", (void *)this,
-	 (mOrientation == GTK_ORIENTATION_VERTICAL)
-	 ? "vertical" : "horizontal", 
-	 (void *)mWidget, GDK_WINDOW_XWINDOW(mWidget->window));
-  printf("\tparent was %p %lx\n", (void *)parentWindow,
-	 GDK_WINDOW_XWINDOW(parentWindow));
+  LOG(("nsScrollbar [%p] %s %p %lx\n", (void *)this,
+       (mOrientation == GTK_ORIENTATION_VERTICAL)
+       ? "vertical" : "horizontal", 
+       (void *)mWidget, GDK_WINDOW_XWINDOW(mWidget->window)));
+  LOG(("\tparent was %p %lx\n", (void *)parentWindow,
+       GDK_WINDOW_XWINDOW(parentWindow)));
   
   return NS_OK;
 }
@@ -484,8 +484,8 @@ nsScrollbar::NativeCreate(nsIWidget        *aParent,
 void
 nsScrollbar::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-  printf("nsScrollbar::NativeResize [%p] %d %d\n", (void *)this,
-	 aWidth, aHeight);
+  LOG(("nsScrollbar::NativeResize [%p] %d %d\n", (void *)this,
+       aWidth, aHeight));
   // clear our resize flag
   mNeedsResize = PR_FALSE;
 
@@ -498,8 +498,8 @@ nsScrollbar::NativeResize(PRInt32 aX, PRInt32 aY,
 			  PRInt32 aWidth, PRInt32 aHeight,
 			  PRBool  aRepaint)
 {
-  printf("nsScrollbar::NativeResize [%p] %d %d %d %d\n", (void *)this,
-	 aX, aY, aWidth, aHeight);
+  LOG(("nsScrollbar::NativeResize [%p] %d %d %d %d\n", (void *)this,
+       aX, aY, aWidth, aHeight));
   // clear our resize flag
   mNeedsResize = PR_FALSE;
 
@@ -510,7 +510,7 @@ nsScrollbar::NativeResize(PRInt32 aX, PRInt32 aY,
 void
 nsScrollbar::NativeShow (PRBool  aAction)
 {
-  printf("nsScrollbar::NativeShow [%p] %d\n", (void *)this, aAction);
+  LOG(("nsScrollbar::NativeShow [%p] %d\n", (void *)this, aAction));
 
   if (aAction) {
     // unset our flag now that our window has been shown
@@ -525,7 +525,7 @@ nsScrollbar::NativeShow (PRBool  aAction)
 void
 nsScrollbar::OnValueChanged(void)
 {
-  printf("nsScrollbar::OnValueChanged [%p]\n", (void *)this);
+  LOG(("nsScrollbar::OnValueChanged [%p]\n", (void *)this));
   nsScrollbarEvent event;
   InitScrollbarEvent(event, NS_SCROLLBAR_POS);
   event.position = (PRUint32)mAdjustment->value;

@@ -81,21 +81,22 @@ static gboolean scroll_event_cb           (GtkWidget *widget,
 
 nsWindow::nsWindow()
 {
+  mFocusChild          = nsnull;
   mContainer           = nsnull;
   mDrawingarea         = nsnull;
   mShell               = nsnull;
-  mWindowType          = eWindowType_child;
+  mWindowGroup         = nsnull;
   mContainerGotFocus   = PR_FALSE;
   mContainerLostFocus  = PR_FALSE;
   mContainerBlockFocus = PR_FALSE;
   mHasFocus            = PR_FALSE;
-  mFocusChild          = nsnull;
   mInKeyRepeat         = PR_FALSE;
+  mWindowType          = eWindowType_child;
 }
 
 nsWindow::~nsWindow()
 {
-  printf("nsWindow::~nsWindow() [%p]\n", (void *)this);
+  LOG(("nsWindow::~nsWindow() [%p]\n", (void *)this));
   Destroy();
 }
 
@@ -131,7 +132,7 @@ nsWindow::Destroy(void)
   if (mIsDestroyed)
     return NS_OK;
 
-  printf("nsWindow::Destroy [%p]\n", (void *)this);
+  LOG(("nsWindow::Destroy [%p]\n", (void *)this));
   mIsDestroyed = PR_TRUE;
 
   NativeShow(PR_FALSE);
@@ -155,7 +156,7 @@ nsWindow::Destroy(void)
 
   // make sure that we remove ourself as the focus window
   if (mHasFocus) {
-    printf("automatically losing focus...\n");
+    LOG(("automatically losing focus...\n"));
     mHasFocus = PR_FALSE;
     // get the owning gtk widget and the nsWindow for that widget and
     // remove ourselves as the focus widget tracked in that window
@@ -163,6 +164,12 @@ nsWindow::Destroy(void)
       get_owning_window_for_gdk_window(mDrawingarea->inner_window);
     owningWindow->mFocusChild = nsnull;
   }
+
+  // Remove our reference to the window group.  If there was a window
+  // group destroying the widget will have automatically unreferenced
+  // the group, destroying it if necessary.  And, if we're a child
+  // window this isn't going to harm anything.
+  mWindowGroup = nsnull;
 
   if (mShell) {
     gtk_widget_destroy(mShell);
@@ -184,7 +191,22 @@ nsWindow::Destroy(void)
 NS_IMETHODIMP
 nsWindow::SetModal(PRBool aModal)
 {
-  return NS_ERROR_NOT_IMPLEMENTED; 
+  LOG(("nsWindow::SetModal [%p] %d\n", (void *)this, aModal));
+
+  // find the toplevel window and add it to the grab list
+  GtkWidget *grabWidget = nsnull;
+
+  GetToplevelWidget(&grabWidget);
+  
+  if (!grabWidget)
+    return NS_ERROR_FAILURE;
+
+  if (aModal)
+    gtk_grab_add(grabWidget);
+  else
+    gtk_grab_remove(grabWidget);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -205,8 +227,8 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
   if (aX == mBounds.x && aY == mBounds.y)
     return NS_OK;
 
-  printf("nsWindow::Move [%p] %d %d\n", (void *)this,
-	 aX, aY);
+  LOG(("nsWindow::Move [%p] %d %d\n", (void *)this,
+       aX, aY));
 
   mBounds.x = aX;
   mBounds.y = aY;
@@ -249,7 +271,7 @@ nsWindow::SetFocus(PRBool aRaise)
   // Make sure that our owning widget has focus.  If it doesn't try to
   // grab it.  Note that we don't set our focus flag in this case.
   
-  printf("SetFocus [%p]\n", (void *)this);
+  LOG(("SetFocus [%p]\n", (void *)this));
   gpointer user_data = NULL;
   gdk_window_get_user_data(mDrawingarea->inner_window, &user_data);
   if (!user_data)
@@ -273,14 +295,14 @@ nsWindow::SetFocus(PRBool aRaise)
 
   // If this is the widget that already has focus, return.
   if (mHasFocus) {
-    printf("already have focus...\n");
+    LOG(("already have focus...\n"));
     return NS_OK;
   }
   
   // If there is already a focued child window, dispatch a LOSTFOCUS
   // event from that widget and unset its got focus flag.
   if (owningWindow->mFocusChild) {
-    printf("removing focus child %p\n", (void *)owningWindow->mFocusChild);
+    LOG(("removing focus child %p\n", (void *)owningWindow->mFocusChild));
     owningWindow->mFocusChild->LoseFocus();
   }
 
@@ -298,10 +320,10 @@ nsWindow::GetScreenBounds(nsRect &aRect)
 {
   nsRect origin(0, 0, mBounds.width, mBounds.height);
   WidgetToScreen(origin, aRect);
-  printf("GetScreenBounds %d %d | %d %d | %d %d\n",
-	 aRect.x, aRect.y,
-	 mBounds.width, mBounds.height,
-	 aRect.width, aRect.height);
+  LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
+       aRect.x, aRect.y,
+       mBounds.width, mBounds.height,
+       aRect.width, aRect.height));
   return NS_OK;
 }
 
@@ -535,11 +557,11 @@ nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   if (mContainer) {
     gdk_window_get_root_origin(GTK_WIDGET(mContainer)->window,
 			       &x, &y);
-    printf("WidgetToScreen (container) %d %d\n", x, y);
+    LOG(("WidgetToScreen (container) %d %d\n", x, y));
   }
   else {
     gdk_window_get_origin(mDrawingarea->inner_window, &x, &y);
-    printf("WidgetToScreen (drawing) %d %d\n", x, y);
+    LOG(("WidgetToScreen (drawing) %d %d\n", x, y));
   }
 
   aNewRect.x = x + aOldRect.x;
@@ -606,17 +628,10 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
 }
 
 NS_IMETHODIMP
-nsWindow::ModalEventFilter(PRBool  aRealEvent,
-			   void   *aEvent,
-			   PRBool *aForWindow)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::GetAttention()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  LOG(("nsWindow::GetAttention [%p]\n", (void *)this));
+  return NS_OK;
 }
 
 void
@@ -637,8 +652,8 @@ gboolean
 nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 {
   if (mIsDestroyed) {
-    printf("Expose event on destroyed window [%p] window %p\n",
-	   (void *)this, (void *)aEvent->window);
+    LOG(("Expose event on destroyed window [%p] window %p\n",
+	 (void *)this, (void *)aEvent->window));
     return NS_OK;
   }
 
@@ -646,12 +661,12 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
   if (aEvent->window != mDrawingarea->inner_window)
     return FALSE;
 
-  printf("sending expose event [%p] %p 0x%lx\n\t%d %d %d %d\n",
-	 (void *)this,
-	 (void *)aEvent->window,
-	 GDK_WINDOW_XWINDOW(aEvent->window),
-	 aEvent->area.x, aEvent->area.y,
-	 aEvent->area.width, aEvent->area.height);
+  LOG(("sending expose event [%p] %p 0x%lx\n\t%d %d %d %d\n",
+       (void *)this,
+       (void *)aEvent->window,
+       GDK_WINDOW_XWINDOW(aEvent->window),
+       aEvent->area.x, aEvent->area.y,
+       aEvent->area.width, aEvent->area.height));
 
   // ok, send out the paint event
   // XXX figure out the region/rect stuff!
@@ -681,8 +696,8 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 gboolean
 nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
 {
-  printf("configure event [%p] %d %d %d %d\n", (void *)this,
-	 aEvent->x, aEvent->y, aEvent->width, aEvent->height);
+  LOG(("configure event [%p] %d %d %d %d\n", (void *)this,
+       aEvent->x, aEvent->y, aEvent->width, aEvent->height));
 
   // can we shortcut?
   if (mBounds.x == aEvent->x &&
@@ -706,9 +721,9 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
 void
 nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
 {
-  printf("size_allocate [%p] %d %d %d %d\n",
-	 (void *)this, aAllocation->x, aAllocation->y,
-	 aAllocation->width, aAllocation->height);
+  LOG(("size_allocate [%p] %d %d %d %d\n",
+       (void *)this, aAllocation->x, aAllocation->y,
+       aAllocation->width, aAllocation->height));
   
   nsRect rect(aAllocation->x, aAllocation->y,
 	      aAllocation->width, aAllocation->height);
@@ -1057,6 +1072,20 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 	gtk_window_set_type_hint(GTK_WINDOW(mShell),
 				 GDK_WINDOW_TYPE_HINT_DIALOG);
 	gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
+	// add ourselves to the parent window's window group
+	if (parentArea) {
+	  nsWindow *parentnsWindow =
+	    get_window_for_gdk_window(parentArea->inner_window);
+	  NS_ASSERTION(parentnsWindow, "no nsWindow for parentArea!");
+	  if (parentnsWindow && parentnsWindow->mWindowGroup) {
+	    gtk_window_group_add_window(parentnsWindow->mWindowGroup,
+					GTK_WINDOW(mShell));
+	    // store this in case any children are created
+	    mWindowGroup = parentnsWindow->mWindowGroup;
+	    LOG(("adding window %p to group %p\n",
+		 (void *)mShell, (void *)mWindowGroup));
+	  }
+	}
       }
       else if (mWindowType == eWindowType_popup) {
 	mShell = gtk_window_new(GTK_WINDOW_POPUP);
@@ -1064,6 +1093,12 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
       }
       else { // must be eWindowType_toplevel
 	mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	// each toplevel window gets its own window group
+	mWindowGroup = gtk_window_group_new();
+	// and add ourselves to the window group
+	LOG(("adding window %p to new group %p\n",
+	     (void *)mShell, (void *)mWindowGroup));
+	gtk_window_group_add_window(mWindowGroup, GTK_WINDOW(mShell));
       }
 
       // create our container
@@ -1139,20 +1174,23 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 		     G_CALLBACK(scroll_event_cb), NULL);
   }
 
-  printf("nsWindow [%p]\n", (void *)this);
-  if (mShell) 
-    printf("\tmShell %p %p %lx\n", (void *)mShell, (void *)mShell->window,
-	   GDK_WINDOW_XWINDOW(mShell->window));
-  if (mContainer)
-    printf("\tmContainer %p %p %lx\n", (void *)mContainer,
-	   (void *)GTK_WIDGET(mContainer)->window,
-	   GDK_WINDOW_XWINDOW(GTK_WIDGET(mContainer)->window));
-  if (mDrawingarea)
-    printf("\tmDrawingarea %p %p %p %lx %lx\n", (void *)mDrawingarea,
-	   (void *)mDrawingarea->clip_window,
-	   (void *)mDrawingarea->inner_window,
-	   GDK_WINDOW_XWINDOW(mDrawingarea->clip_window),
-	   GDK_WINDOW_XWINDOW(mDrawingarea->inner_window));
+  LOG(("nsWindow [%p]\n", (void *)this));
+  if (mShell) {
+    LOG(("\tmShell %p %p %lx\n", (void *)mShell, (void *)mShell->window,
+	 GDK_WINDOW_XWINDOW(mShell->window)));
+  }
+  if (mContainer) {
+    LOG(("\tmContainer %p %p %lx\n", (void *)mContainer,
+	 (void *)GTK_WIDGET(mContainer)->window,
+	 GDK_WINDOW_XWINDOW(GTK_WIDGET(mContainer)->window)));
+  }
+  if (mDrawingarea) {
+    LOG(("\tmDrawingarea %p %p %p %lx %lx\n", (void *)mDrawingarea,
+	 (void *)mDrawingarea->clip_window,
+	 (void *)mDrawingarea->inner_window,
+	 GDK_WINDOW_XWINDOW(mDrawingarea->clip_window),
+	 GDK_WINDOW_XWINDOW(mDrawingarea->inner_window)));
+  }
 
   // resize so that everything is set to the right dimensions
   Resize(mBounds.width, mBounds.height, PR_FALSE);
@@ -1163,8 +1201,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 void
 nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
 {
-  printf("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
-	 aWidth, aHeight);
+  LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
+       aWidth, aHeight));
 
   // clear our resize flag
   mNeedsResize = PR_FALSE;
@@ -1182,8 +1220,8 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
 {
   mNeedsResize = PR_FALSE;
   
-  printf("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
-	 aX, aY, aWidth, aHeight);
+  LOG(("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
+       aX, aY, aWidth, aHeight));
   
   if (mIsTopLevel) {
     if (mParent && mWindowType == eWindowType_popup) {
@@ -1230,6 +1268,26 @@ nsWindow::NativeShow (PRBool  aAction)
     }
     moz_drawingarea_set_visibility(mDrawingarea, aAction);
   }
+}
+
+void
+nsWindow::GetToplevelWidget(GtkWidget **aWidget)
+{
+  *aWidget = nsnull;
+
+  if (mShell) {
+    *aWidget = mShell;
+    return;
+  }
+
+  gpointer user_data = nsnull;
+  gdk_window_get_user_data(mDrawingarea->inner_window, &user_data);
+  NS_ASSERTION(user_data, "no user data for parentArea\n");
+  
+  if (!user_data)
+    return;
+  
+  *aWidget = gtk_widget_get_toplevel(GTK_WIDGET(user_data));
 }
 
 /* static */
@@ -1385,7 +1443,7 @@ motion_notify_event_cb (GtkWidget *widget, GdkEventMotion *event)
 gboolean
 button_press_event_cb   (GtkWidget *widget, GdkEventButton *event)
 {
-  printf("button_press_event_cb\n");
+  LOG(("button_press_event_cb\n"));
   nsWindow *window = get_window_for_gdk_window(event->window);
   if (!window)
     return TRUE;
@@ -1438,7 +1496,7 @@ focus_out_event_cb (GtkWidget *widget, GdkEventFocus *event)
 gboolean
 key_press_event_cb (GtkWidget *widget, GdkEventKey *event)
 {
-  printf("key_press_event_cb\n");
+  LOG(("key_press_event_cb\n"));
   // find the window with focus and dispatch this event to that widget
   nsWindow *window = get_window_for_gtk_widget(widget);
   if (!window)
@@ -1454,7 +1512,7 @@ key_press_event_cb (GtkWidget *widget, GdkEventKey *event)
 gboolean
 key_release_event_cb (GtkWidget *widget, GdkEventKey *event)
 {
-  printf("key_release_event_cb\n");
+  LOG(("key_release_event_cb\n"));
   // find the window with focus and dispatch this event to that widget
   nsWindow *window = get_window_for_gtk_widget(widget);
   if (!window)

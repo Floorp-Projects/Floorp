@@ -40,6 +40,8 @@
 #include "mozcontainer.h"
 #include "mozdrawingarea.h"
 
+#include <gtk/gtkwindow.h>
+
 class nsWindow : public nsCommonWidget {
  public:
   nsWindow();
@@ -112,9 +114,6 @@ class nsWindow : public nsCommonWidget {
   NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
 					 PRBool           aDoCapture,
 					 PRBool           aConsumeRollupEvent);
-  NS_IMETHOD         ModalEventFilter(PRBool  aRealEvent,
-				      void   *aEvent,
-				      PRBool *aForWindow);
   NS_IMETHOD         GetAttention();
 
   // utility methods
@@ -150,32 +149,38 @@ class nsWindow : public nsCommonWidget {
   void               OnScrollEvent(GtkWidget *aWidget,
 				   GdkEventScroll *aEvent);
 
-  nsresult NativeCreate(nsIWidget        *aParent,
-		        nsNativeWidget    aNativeParent,
-		        const nsRect     &aRect,
-		        EVENT_CALLBACK    aHandleEventFunction,
-		        nsIDeviceContext *aContext,
-		        nsIAppShell      *aAppShell,
-		        nsIToolkit       *aToolkit,
-		        nsWidgetInitData *aInitData);
+  nsresult           NativeCreate(nsIWidget        *aParent,
+				  nsNativeWidget    aNativeParent,
+				  const nsRect     &aRect,
+				  EVENT_CALLBACK    aHandleEventFunction,
+				  nsIDeviceContext *aContext,
+				  nsIAppShell      *aAppShell,
+				  nsIToolkit       *aToolkit,
+				  nsWidgetInitData *aInitData);
 
-  void     NativeResize(PRInt32 aWidth,
-			PRInt32 aHeight,
-			PRBool  aRepaint);
+  void               NativeResize(PRInt32 aWidth,
+				  PRInt32 aHeight,
+				  PRBool  aRepaint);
 
-  void     NativeResize(PRInt32 aX,
-			PRInt32 aY,
-			PRInt32 aWidth,
-			PRInt32 aHeight,
-			PRBool  aRepaint);
+  void               NativeResize(PRInt32 aX,
+				  PRInt32 aY,
+				  PRInt32 aWidth,
+				  PRInt32 aHeight,
+				  PRBool  aRepaint);
 
-  void     NativeShow  (PRBool  aAction);
+  void               NativeShow  (PRBool  aAction);
+  
+  nsWindow           *mFocusChild;
 
  private:
+
+  void               GetToplevelWidget(GtkWidget **aWidget);
 
   GtkWidget          *mShell;
   MozContainer       *mContainer;
   MozDrawingarea     *mDrawingarea;
+
+  GtkWindowGroup     *mWindowGroup;
 
   PRPackedBool        mContainerGotFocus;
   PRPackedBool        mContainerLostFocus;
@@ -183,9 +188,6 @@ class nsWindow : public nsCommonWidget {
   PRPackedBool        mHasFocus;
 
   PRPackedBool        mInKeyRepeat;
-
- public:
-  nsWindow           *mFocusChild;
 
 };
 
