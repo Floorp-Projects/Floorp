@@ -60,8 +60,8 @@
     <script src="chrome://chatzilla/content/lib/xul/munger.js"/>
 
     <script src="chrome://chatzilla/content/commands.js"/>
-    <script src="chrome://chatzilla/content/readprefs.js"/>
     <script src="chrome://chatzilla/content/static.js"/>
+    <script src="chrome://chatzilla/content/readprefs.js"/>
     <script src="chrome://chatzilla/content/handlers.js"/>
     <script src="chrome://chatzilla/content/rdf.js"/>
 

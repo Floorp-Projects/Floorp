@@ -1,44 +1,107 @@
 <?xml version="1.0"?> 
 
-<!--
-   The contents of this file are subject to the Netscape Public
-   License Version 1.1 (the "License"); you may not use this file
-   except in compliance with the License. You may obtain a copy of
-   the License at http://www.mozilla.org/NPL/
-    
-   implied. See the License for the specific language governing
-   rights and limitations under the License.
-    
-   The Original Code is Mozilla Communicator client code, released
-   March 31, 1998.
-   
-   The Initial Developer of the Original Code is Netscape
-   Communications Corporation. Portions created by Netscape are
-   Copyright (C) 1998-1999 Netscape Communications Corporation. All
-   Rights Reserved.
-   
-   Contributor(s): 
-  -->
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License
+   - Version 1.1 (the "License"); you may not use this file except in
+   - compliance with the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/ 
+   - 
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License. 
+   -
+   - The Original Code is Chatzilla
+   - 
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU Public License (the "GPL"), in which case the
+   - provisions of the GPL are applicable instead of those above.
+   - If you wish to allow use of your version of this file only
+   - under the terms of the GPL and not to allow others to use your
+   - version of this file under the MPL, indicate your decision by
+   - deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL.  If you do not delete
+   - the provisions above, a recipient may use your version of this
+   - file under either the MPL or the GPL.
+   -
+   - Contributor(s):
+   -  James Ross, <twpol@aol.com>, original author
+   -
+   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-irc.dtd" >
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        title="&window.title;"
-        onload="if( parent.handle ) parent.handle.onpageload( 'pref-irc' ); else parent.queuedTag = 'pref-irc';">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="parent.initPanel('chrome://chatzilla/content/pref-irc.xul');"
+    headertitle="&window.title;">
 
-  <hbox class="header">  
-    <button class="left-header-text" label="&lHeader;"/>
-    <spacer class="header-spacer" flex="1"/>
-    <button class="right-header-text" label="&rHeader;"/>
-  </hbox>
-
-<html:fieldset style="width: 100%;">
-
-<!-- put something here -->
-
-</html:fieldset>
-
-</window>
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["czNickname", "czUsername", "czDesc", 
+        "czNotify", "czDisplayCollapse", "czDisplayCopyMsgs",
+        "czNickCompleteStr"];
+  ]]>
+  </script>
+  
+  <groupbox>
+    <caption label="&userDetails.title;"/>
+    
+    <grid flex="1">
+      <columns>
+        <column/><column flex="1"/>
+      </columns>
+      <rows>
+        <row align="center">
+          <label value="&userDetails.nick.label;" control="czNickname" 
+              accesskey="&userDetails.nick.accesskey;"/><hbox>
+          <textbox id="czNickname" size="20" prefdefval="IRCMonkey" 
+              prefstring="extensions.irc.nickname"/><spacer/></hbox>
+        </row><row align="center">
+          <label value="&userDetails.name.label;" control="czUsername" 
+              accesskey="&userDetails.name.accesskey;"/><hbox>
+          <textbox id="czUsername" size="20" prefdefval="chatzilla" 
+              prefstring="extensions.irc.username"/><spacer/></hbox>
+        </row><row align="center">
+          <label value="&userDetails.desc.label;" control="czDesc" 
+              accesskey="&userDetails.desc.accesskey;"/>
+          <textbox id="czDesc" prefdefval="New Now Know How" 
+              prefstring="extensions.irc.desc"/>
+        </row>
+      </rows>
+    </grid>
+    <hbox id="czUserHelpButton">
+      <button label="&userDetails.help.label;" 
+          oncommand="
+              document.getElementById('czUserHelpButton').hidden = true;
+              document.getElementById('czUserHelpBox').hidden = false;
+          "/>
+      <spacer flex="1"/>
+    </hbox>
+    <label id="czUserHelpBox" hidden="true">&userDetails.help.desc;</label>
+  </groupbox>
+  
+  <groupbox align="start">
+    <caption label="&global.title;"/>
+    
+    <checkbox id="czNotify" label="&global.notify.label;" 
+        accesskey="&global.notify.accesskey;" prefdefval="true" 
+        prefstring="extensions.irc.notify.aggressive"/>
+    <checkbox id="czDisplayCollapse" label="&global.collapse.label;" 
+        accesskey="&global.collapse.accesskey;" prefdefval="false"
+        prefstring="extensions.irc.views.collapseMsgs"/>
+    <checkbox id="czDisplayCopyMsgs" label="&global.copyMsgs.label;" 
+        accesskey="&global.copyMsgs.accesskey;" prefdefval="true" 
+        prefstring="extensions.irc.views.copyMessages"/>
+    <separator/>
+    <hbox align="center">
+      <label value="&global.nickCompleteStr.label;" control="czNickCompleteStr" 
+          accesskey="&global.nickCompleteStr.accesskey;"/>
+      <textbox id="czNickCompleteStr" size="5" prefdefval=","
+          prefstring="extensions.irc.nickCompleteStr"/>
+    </hbox>
+    <label>&global.nickCompleteStr.desc;</label>
+  </groupbox>
+</page>

@@ -1,0 +1,18 @@
+<!ENTITY window.title "Appearance">
+
+<!ENTITY prePro.title "Text Pre-processor">
+<!ENTITY prePro.desc "The Text Pre-processor processes all text before display, and does things like convert web addresses into links you can click on.">
+<!ENTITY prePro.styles "Styles:">
+<!ENTITY prePro.links "Links:">
+<!ENTITY prePro.otherOptions "Other text options:">
+<!ENTITY prePro.emoti "Enable emoticons (smilies)">
+<!ENTITY prePro.colors "Enable color codes">
+<!ENTITY prePro.wrap "Wrap long lines">
+
+<!ENTITY text.title "Text Display">
+<!ENTITY text.desc "These are some options that affect how text is displayed after it has been through the Text Pre-processor.">
+<!ENTITY text.collapse "Collapse consecutive messages">
+<!ENTITY text.copyMsgs "Copy important messages (to server tab)">
+
+<!ENTITY style.title "Text Style">
+<!ENTITY style.desc "">

@@ -56,6 +56,7 @@ jsenv.HAS_JAVA = (typeof java == "object");
 jsenv.HAS_RHINO = (typeof defineClass == "function");
 jsenv.HAS_DOCUMENT = (typeof document == "object");
 jsenv.HAS_NSPR_EVENTQ = jsenv.HAS_DOCUMENT;
+jsenv.HAS_STREAM_PROVIDER = ("nsIStreamProvider" in Components.interfaces);
 
 function dumpObject (o, pfx, sep)
 {

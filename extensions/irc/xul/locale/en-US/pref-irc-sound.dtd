@@ -1,0 +1,17 @@
+<!ENTITY window.title "Sound">
+
+<!ENTITY sndFile.label "Sound file:">
+<!ENTITY sndPresets.label "Preset sounds:">
+<!ENTITY sndPreset1.label "No sound">
+<!ENTITY sndPreset2.label "Single beep">
+<!ENTITY sndPreset3.label "Double beep">
+<!ENTITY sndChoose.label "Custom sound file...">
+
+<!ENTITY sndSimpleMsg.title "Sound on new Private Message tab">
+<!ENTITY sndSimpleMsg.accesskey "n">
+
+<!ENTITY sndPrivateMsg.title "Sound on existing Private Message tab">
+<!ENTITY sndPrivateMsg.accesskey "e">
+
+<!ENTITY sndStalkMsg.title "Sound on stalk word(s)">
+<!ENTITY sndStalkMsg.accesskey "s">

@@ -1,0 +1,15 @@
+<!ENTITY window.title "Stalking">
+
+<!ENTITY stalkWords.title "Stalk Words">
+<!ENTITY stalkWords.accesskey "S">
+
+<!ENTITY stalkWords.label1 "When ChatZilla sees an 'important' message, it will highlight the line and the channel's tab. If you have 'aggressive notify' enabled, ChatZilla will also use an OS-dependant method to grab your attention.">
+<!ENTITY stalkWords.label2 "Your nickname is always considered 'important', but you can add more words; just add them to the list below.">
+
+<!ENTITY list.up "Move Up">
+<!ENTITY list.dn "Move Down">
+<!ENTITY list.add.label "Add...">
+<!ENTITY list.add.accesskey "A">
+<!ENTITY list.edit "Edit...">
+<!ENTITY list.del.label "Remove">
+<!ENTITY list.del.accesskey "R">

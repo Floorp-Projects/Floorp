@@ -655,7 +655,7 @@ function serv_ppline(e)
     if (line == "")
         return false;
     
-    var incomplete = (line[line.length] != '\n');
+    var incomplete = (line[line.length - 1] != '\n');
     var lines = line.split("\n");
 
     if (this.savedLine)
@@ -671,7 +671,8 @@ function serv_ppline(e)
     {
         var ev = new CEvent("server", "rawdata", this, "onRawData");
         ev.data = lines[i].replace(/\r/g, "");
-        this.parent.eventPump.addEvent (ev);
+        if (ev.data)
+            this.parent.eventPump.addEvent (ev);
     }
 
     return true;
@@ -704,6 +705,12 @@ function serv_onRawData(e)
     var ary;
     var l = e.data;
 
+    if (l.length == 0)
+    {
+        dd ("empty line on onRawData?");
+        return false;
+    }
+    
     if (l[0] == ":")
     {
         ary = l.match (/:(\S+)\s(.*)/);
@@ -2031,7 +2038,7 @@ function chan_secret (f)
     var modifier = (f) ? "+" : "-";
     
     this.parent.parent.sendData ("MODE " + this.parent.encodedName + " " +
-                                 modifier + "p\n");
+                                 modifier + "s\n");
     return true;
     
 }

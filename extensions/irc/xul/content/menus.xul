@@ -124,7 +124,7 @@
       <key id="key_clearview" observes="cmd_clearview"
         modifiers="accel" key="R"/>
       <key id="key_deleteview" observes="cmd_deleteview"
-        modifiers="accel" key="X"/>
+        modifiers="accel" key="W"/>
       <key id="key_status" observes="cmd_status"
         modifiers="accel shift" key="S"/>
 
@@ -136,7 +136,7 @@
       <key id="key_toggleheader" observes="cmd_toggleheader"
         modifiers="accel" key="H"/>
       <key id="key_togglestatus" observes="cmd_togglestatus"
-        modifiers="accel" key="S"/>
+        modifiers="accel" key="B"/>
       
       <!-- Tasks keys -->
       <keyset id="tasksKeys"/>
@@ -174,7 +174,7 @@
   
                 <menuitem id="menu-settings-save-now"
                   label="&SaveSetNowCmd.label;" accesskey="&SaveSetNowCmd.akey;"
-                  oncommand="writeIRCPrefs()"/>
+                  oncommand="writePrefs()"/>
                 <menuitem id="menu-settings-autosave"
                   label="&SaveSetExitCmd.label;" accesskey="&SaveSetExitCmd.akey;"
                   oncommand="onToggleSaveOnExit()" type="checkbox"/>

@@ -15,6 +15,10 @@
 <!ENTITY whois.value        "Whois">
 <!ENTITY whois.accesskey    "w">
 
+<!ENTITY multiline-expand.tooltip   "Switch to multi-line input (Ctrl+Up)">
+<!ENTITY multiline-contract.tooltip "Switch to single-line input (Ctrl+Down)">
+<!ENTITY multiline-send.tooltip      "Send this text (Ctrl+Enter)">
+
 <!ENTITY url.label   "URL">
 <!ENTITY mode.label  "Mode">
 <!ENTITY topic.label "Topic">

@@ -78,10 +78,20 @@ function onLoad()
 {
     
     initHost(client);
-    readIRCPrefs();
+    initPrefs();
+    readPrefs();
     setClientOutput();
     initStatic();
 
+    if (!CIRCNetwork.prototype.INITIAL_NICK)
+        CIRCNetwork.prototype.INITIAL_NICK = "IRCMonkey";
+
+    if (!CIRCNetwork.prototype.INITIAL_NAME)
+        CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
+
+    if (!CIRCNetwork.prototype.INITIAL_DESC)
+        CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
+    
     client.userScripts = new Array();
     if (client.INITIAL_SCRIPTS)
     {
@@ -94,6 +104,10 @@ function onLoad()
     }
     
     processStartupURLs();
+
+    client.onInputNetworks();
+    client.onInputCommands();
+
     mainStep();
 }
 
@@ -117,7 +131,9 @@ function onClose()
 function onUnload()
 {
     if (client.SAVE_SETTINGS)
-        writeIRCPrefs();
+        writePrefs();
+
+    destroyPrefs();
 }
 
 function onNotImplemented()
@@ -630,7 +646,10 @@ function onSortCol(sortColName)
         return false;
     try
     {
-        xulSortService.sort(node, sortResource, sortDirection);
+        if ("sort" in xulSortService)
+            xulSortService.sort(node, sortResource, sortDirection);
+        else
+            xulSortService.Sort(node, sortResource, sortDirection);
     }
     catch(ex)
     {
@@ -663,8 +682,7 @@ function onMultilineInputKeyPress (e)
     if ((e.ctrlKey || e.metaKey) && e.keyCode == 13)
     {
         /* meta-enter, execute buffer */
-        e.line = e.target.value;
-        onInputCompleteLine (e);
+        onMultilineSend(e);
     }
     else
     {
@@ -674,6 +692,14 @@ function onMultilineInputKeyPress (e)
             multilineInputMode (false);
         }
     }
+}
+
+function onMultilineSend(e)
+{
+    var multiline = document.getElementById("multiline-input");
+    e.line = multiline.value;
+    onInputCompleteLine (e);
+    multiline.value = "";
 }
 
 function onToggleMsgCollapse()
@@ -954,7 +980,7 @@ function onInputCompleteLine(e, simulated)
 
     if (!simulated)
     {
-        if (client.inputHistory[0] != e.line)
+        if (!client.inputHistory.length || client.inputHistory[0] != e.line)
             client.inputHistory.unshift (e.line);
     
         if (client.inputHistory.length > client.MAX_HISTORY)
@@ -1734,7 +1760,7 @@ function cli_irlist (e)
         return false;
     }
     o.network.list = new Array();
-    var ary = e.inputData.match (/^\s*("([^"]*)"|([^\s]*))/);
+    var ary = e.inputData.match (/^\s*(\"([^\"]*)\"|([^\s]*))/);
     try
     {
         if (ary[2])

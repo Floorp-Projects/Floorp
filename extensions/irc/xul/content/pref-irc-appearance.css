@@ -1,0 +1,17 @@
+
+#czMungerBold {
+	font-weight: bold;
+}
+
+#czMungerItalic {
+	font-style: italic;
+}
+
+/* FIXME: This doesn't work in XUL due to bug 68841. */
+#czMungerUnderline {
+	text-decoration: underline;
+}
+
+#czMungerTeletype {
+	font-family: monospace;
+}

@@ -74,11 +74,11 @@ function CLineService()
 
 CLineService.prototype.commandLineArgument = "-chat";
 CLineService.prototype.prefNameForStartup = "general.startup.chat";
-CLineService.prototype.chromeUrlForTask="chrome://chatzilla/content";
+CLineService.prototype.chromeUrlForTask = "chrome://chatzilla/content";
 CLineService.prototype.helpText = "Start with an IRC chat client";
-CLineService.prototype.handlesArgs=false;
-CLineService.prototype.defaultArgs ="";
-CLineService.prototype.openWindowWithArgs=false;
+CLineService.prototype.handlesArgs = false;
+CLineService.prototype.defaultArgs = "";
+CLineService.prototype.openWindowWithArgs = false;
 
 /* factory for command line handler service (CLineService) */
 var CLineFactory = new Object();
@@ -177,8 +177,8 @@ function (aPort, aScheme)
 IRCProtocolHandler.prototype.newURI =
 function (aSpec, aCharset, aBaseURI)
 {
-    var url = Components.classes[STANDARDURL_CONTRACTID].
-      createInstance(nsIStandardURL);
+    var cls = Components.classes[STANDARDURL_CONTRACTID];
+    var url = cls.createInstance(nsIStandardURL);
     url.init(nsIStandardURL.URLTYPE_STANDARD, 6667, aSpec, aCharset, aBaseURI);
     
     return url.QueryInterface(nsIURI);

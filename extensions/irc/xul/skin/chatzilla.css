@@ -53,6 +53,18 @@ window {
     border: thin silver inset;
 }
 
+#button-multiline-expand {
+    list-style-image:url("chrome://chatzilla/skin/images/multiline-expand.png");
+}
+
+#button-multiline-contract {
+    list-style-image:url("chrome://chatzilla/skin/images/multiline-contract.png");
+}
+
+#button-input {
+    list-style-image:url("chrome://chatzilla/skin/images/input-send.png");
+}
+
 .highlight-menu-item:hover {
     color: white !important;
     background: darkslategrey !important;

@@ -1,0 +1,25 @@
+<!ENTITY window.title "Tabs">
+
+<!ENTITY tabs.title "Tab Options">
+
+<!ENTITY tabs.createForPMs.label "Create new tabs for private messages">
+<!ENTITY tabs.createForPMs.accesskey "">
+<!ENTITY tabs.limitPMTabs.label "Limit private message tabs to:">
+<!ENTITY tabs.limitPMTabs.accesskey "">
+<!ENTITY tabs.focusPMs.label "Focus Private Message tabs when created">
+<!ENTITY tabs.focusPMs.accesskey "f">
+<!ENTITY tabs.closeOnLeave.label "Close tab when you leave a channel">
+<!ENTITY tabs.closeOnLeave.accesskey "c">
+
+<!ENTITY scrollback.title "Scrollback Options">
+
+<!ENTITY scrollback.label "Use the boxes here to specify how many lines of scrollback each type of tab has. When more text arrives in a tab, the oldest lines are removed according to the limits set here.">
+
+<!ENTITY scrollback.1.label "Client view">
+<!ENTITY scrollback.1.accesskey "">
+<!ENTITY scrollback.2.label "Network views">
+<!ENTITY scrollback.2.accesskey "">
+<!ENTITY scrollback.3.label "Channel views">
+<!ENTITY scrollback.3.accesskey "">
+<!ENTITY scrollback.4.label "Private message views">
+<!ENTITY scrollback.4.accesskey "">

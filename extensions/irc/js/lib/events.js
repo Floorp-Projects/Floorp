@@ -106,8 +106,17 @@ function ep_addhook(pattern, f, name, neg, enabled, hooks)
 
     neg = Boolean(neg);
 
-    return (hooks.push({pattern: pattern, f: f, name: name,
-                       neg: neg, enabled: enabled}) - 1);
+    var hook = {
+        pattern: pattern,
+        f: f,
+        name: name,
+        neg: neg,
+        enabled: enabled
+    };
+    
+    hooks.push(hook);
+
+    return hook;
 
 }
 

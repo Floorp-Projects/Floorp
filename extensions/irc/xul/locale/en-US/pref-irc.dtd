@@ -1,19 +1,24 @@
-<!-- extracted from content/pref-advanced.xul -->
+<!ENTITY window.title "ChatZilla">
 
-<!--LOCALIZATION NOTE : FILE 'Advanced' prefs settings -->
-<!ENTITY window.title "Advanced">
-<!ENTITY lHeader "Advanced">
-<!ENTITY autoLoadImgCheck.label "Automatically load images"> 
-<!--LOCALIZATION NOTE (enbJavaCheck.label): 'Java' should never be translated -->
-<!ENTITY enbJavaCheck.label "Enable Java">
-<!--LOCALIZATION NOTE (enbJsCheck.label): 'JavaScript' should never be translated -->
-<!ENTITY enbJsCheck.label "Enable JavaScript in Navigator">
-<!ENTITY enbJsCheck.labelforMailNNews "Enable JavaScript for Mail and News">
-<!ENTITY enbCssCheck.label "Enable style sheets">
-<!ENTITY sendAddFtpCheck.label "Send email address as anonymous FTP password">
-<!ENTITY remSignCheck.label "Automatically prefill usernames and passwords">
-<!ENTITY capFormsCheck.label "Enable prefilling of forms">
-<!ENTITY rHeader "Changing preferences that affect the entire product">
-<!--LOCALIZATION NOTE (server.label): 'Wallet' is a product name and should not be translated. -->
-<!ENTITY server.label "Server for wallet tables">
+<!ENTITY userDetails.title "User Identification">
+<!ENTITY userDetails.help.label "What do these mean?">
+<!ENTITY userDetails.help.desc "Your hostmask, which is used to identify you to other clients and the server, places your user name before the host you are connecting from. So a user name of 'myself' would mean you would be identified as 'myself@host.tld', where 'host.tld' would be dependant on your internet service provider.">
 
+<!ENTITY userDetails.nick.label "Nick name:">
+<!ENTITY userDetails.nick.accesskey "N">
+<!ENTITY userDetails.name.label "User name:">
+<!ENTITY userDetails.name.accesskey "U">
+<!ENTITY userDetails.desc.label "Description:">
+<!ENTITY userDetails.desc.accesskey "D">
+
+<!ENTITY global.title "Global Options">
+
+<!ENTITY global.notify.label "Allow aggressive notify (flashing window or bringing to top)">
+<!ENTITY global.notify.accesskey "a">
+<!ENTITY global.collapse.label "Collapse consecutive messages from the same source">
+<!ENTITY global.collapse.accesskey "c">
+<!ENTITY global.copyMsgs.label "Copy important messages to the network tab">
+<!ENTITY global.copyMsgs.accesskey "i">
+<!ENTITY global.nickCompleteStr.label "Nickname completion string:">
+<!ENTITY global.nickCompleteStr.accesskey "k">
+<!ENTITY global.nickCompleteStr.desc "This is appended to a nickname when tab-completed as the first word.">

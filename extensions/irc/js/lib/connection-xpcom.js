@@ -45,8 +45,7 @@ function toScriptableInputStream (i)
     si = si.QueryInterface(Components.interfaces.nsIScriptableInputStream);
     si.init(i);
 
-    return si;
-    
+    return si;    
 }
 
 function CBSConnection ()
@@ -80,9 +79,9 @@ function bc_connect(host, port, bind, tcp_flag, observer)
     this.tcp_flag = tcp_flag;
 
     // Lets get a transportInfo for this
-    var pps = Components.classes["@mozilla.org/network/protocol-proxy-service;1"].
-        getService().
-        QueryInterface(Components.interfaces.nsIProtocolProxyService);
+    var cls =
+        Components.classes["@mozilla.org/network/protocol-proxy-service;1"];
+    var pps = cls.getService(Components.interfaces.nsIProtocolProxyService);
 
     if (!pps)
         throw ("Couldn't get protocol proxy service");
@@ -108,13 +107,15 @@ function bc_connect(host, port, bind, tcp_flag, observer)
                                             0, -1, 0);
         }
         else
-        {   /* no nspr event queues in this environment, we can't use async calls,
-             * so set up the streams. */
+        {
+            /* no nspr event queues in this environment, we can't use async
+             * calls, so set up the streams. */
             this._outputStream = this._transport.openOutputStream(0, -1, 0);
             if (!this._outputStream)
                 throw "Error getting output stream.";
             this._inputStream =
-                toScriptableInputStream(this._transport.openInputStream (0, -1, 0));
+                toScriptableInputStream(this._transport.openInputStream(0,
+                                                                        -1, 0));
             if (!this._inputStream)
                 throw "Error getting input stream.";
         }    
@@ -122,7 +123,8 @@ function bc_connect(host, port, bind, tcp_flag, observer)
     else
     {
         /* use new necko interfaces */
-        this._transport = this._sockService.createTransport(null, 0, host, port, info);
+        this._transport = this._sockService.createTransport(null, 0, host, port,
+                                                            info);
         if (!this._transport)
             throw ("Error creating transport.");
 
@@ -134,7 +136,8 @@ function bc_connect(host, port, bind, tcp_flag, observer)
             openFlags = Components.interfaces.nsITransport.OPEN_BLOCKING;
 
         /* no limit on the output stream buffer */
-        this._outputStream = this._transport.openOutputStream(openFlags, 4096, -1);
+        this._outputStream = 
+            this._transport.openOutputStream(openFlags, 4096, -1);
         if (!this._outputStream)
             throw "Error getting output stream.";
         this._inputStream = this._transport.openInputStream(openFlags, 0, 0);
@@ -201,11 +204,14 @@ CBSConnection.prototype.startAsyncRead =
 function bc_saread (observer)
 {
     if (jsenv.HAS_STREAM_PROVIDER)
-        this._transport.asyncRead (new StreamListener (observer), this, 0, -1, 0);
+    {
+        this._transport.asyncRead (new StreamListener (observer),
+                                   this, 0, -1, 0);
+    }
     else
     {
-        var pump = Components.classes["@mozilla.org/network/input-stream-pump;1"].
-            createInstance(Components.interfaces.nsIInputStreamPump);
+        var cls = Components.classes["@mozilla.org/network/input-stream-pump;1"];
+        var pump = cls.createInstance(Components.interfaces.nsIInputStreamPump);
         pump.init(this._inputStream, -1, -1, 0, 0, false);
         pump.asyncRead(new StreamListener(observer), this);
     }
@@ -291,7 +297,7 @@ function sp_datawrite (request, ctxt, ostream, offset, count)
 {
     //dd ("StreamProvider.prototype.onDataWritable");
  
-    if (this.isClosed)
+    if ("isClosed" in this && this.isClosed)
         throw Components.results.NS_BASE_STREAM_CLOSED;
     
     if (!this.pendingData)
@@ -356,7 +362,8 @@ function sl_dataavail (request, ctxt, inStr, sourceOffset, count)
             "StreamListener.onDataAvailable ***");
         return;
     }
-    if (!ctxt._scriptableInputStream)
+
+    if (!("_scriptableInputStream" in ctxt))
         ctxt._scriptableInputStream = toScriptableInputStream (inStr);
 
     if (this._observer)

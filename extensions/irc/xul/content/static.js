@@ -34,9 +34,9 @@ const MSG_CSP       = getMsg ("commaSpace", " ");
 const MSG_NONE      = getMsg ("none");
 const MSG_UNKNOWN   = getMsg ("unknown");
 
-client.defaultNick = getMsg( "defaultNick" );
+client.defaultNick = getMsg("defaultNick");
 
-client.version = "0.8.11";
+client.version = "0.8.12";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -277,16 +277,6 @@ function initStatic()
     client.display (getMsg("welcome"), "HELLO");
     setCurrentObject (client);
 
-    client.onInputNetworks();
-    client.onInputCommands();
-
-    ary = client.INITIAL_VICTIMS.split(/\s*;\s*/);
-    for (i in ary)
-    {
-        if (ary[i])
-            client.stalkingVictims.push (ary[i]);
-    }
-
     var m = document.getElementById ("menu-settings-autosave");
     m.setAttribute ("checked", String(client.SAVE_SETTINGS));
      
@@ -412,12 +402,15 @@ function initHost(obj)
     obj.primNet = obj.networks["efnet"];
 
     if (DEBUG)
+    {
         /* hook all events EXCEPT server.poll and *.event-end types
          * (the 4th param inverts the match) */
-        obj.eventPump.addHook ([{type: "poll", set: /^(server|dcc-chat)$/},
-                               {type: "event-end"}], event_tracer,
-                               "event-tracer", true /* negate */,
-                               false /* disable */);
+        obj.debugHook = 
+            obj.eventPump.addHook ([{type: "poll", set: /^(server|dcc-chat)$/},
+                                    {type: "event-end"}], event_tracer,
+                                    "event-tracer", true /* negate */,
+                                    false /* disable */);
+    }
 
     obj.linkRE = /((\w+):[^<>\[\]()\'\"\s]+|www(\.[^.<>\[\]()\'\"\s]+){2,})/;
 
@@ -539,9 +532,7 @@ function insertBugzillaLink (matchText, containerTag)
     
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
-    anchor.setAttribute ("href",
-                         "http://bugzilla.mozilla.org/show_bug.cgi?id=" + 
-                         number);
+    anchor.setAttribute ("href", client.BUG_URL.replace("%s", number));
     anchor.setAttribute ("class", "chatzilla-link");
     anchor.setAttribute ("target", "_content");
     insertHyphenatedWord (matchText, anchor);
@@ -747,10 +738,7 @@ function msgIsImportant (msg, sourceNick, myNick)
     var str = "(^|[\\W\\s])" + sv + "([\\W\\s]|$)";
     var re = new RegExp(str, "i");
     if (msg.search(re) != -1 || sourceNick && sourceNick.search(re) != -1)
-    {
-        playSounds(client.STALK_BEEP);
         return true;
-    }
 
     return false;    
 }
@@ -1193,6 +1181,9 @@ function parseIRCURL (url)
         
         rv.target = (1 in ary) ? 
             unescape(ary[1]).replace("\n", "\\n") : "";
+        var i = rv.target.indexOf(" ");
+        if (i != -1)
+            rv.target = rv.target.substr(0, i);
         var params = (2 in ary) ? ary[2].toLowerCase() : "";
         var query = (3 in ary) ? ary[3] : "";
 
@@ -1203,12 +1194,16 @@ function parseIRCURL (url)
             if (rv.isnick && !rv.target)
             {
                 dd ("parseIRCURL: isnick w/o target");
-                    /* isnick w/o a target is bogus */
+                /* isnick w/o a target is bogus */
                 return null;
             }
         
-            rv.isserver =
-                (params.search (/,\s*isserver\s*,|,\s*isserver\s*$/) != -1);
+            if (!rv.isserver)
+            {
+                rv.isserver =
+                    (params.search (/,\s*isserver\s*,|,\s*isserver\s*$/) != -1);
+            }
+            
             if (rv.isserver && !specifiedHost)
             {
                 dd ("parseIRCURL: isserver w/o host");
@@ -1226,16 +1221,32 @@ function parseIRCURL (url)
 
         if (query)
         {
-            ary = query.match
-                (/^\?msg=([^\&]*)$|^\?msg=([^\&]*)\&|\&msg=([^\&]*)\&|\&msg=([^\&]*)$/);
-            if (ary)
-                for (var i = 1; i < ary.length; i++)
-                    if (i in ary)
-                    {
-                        rv.msg = unescape(ary[i]).replace ("\n", "\\n");
+            ary = query.substr(1).split("&");
+            while (ary.length)
+            {
+                var arg = ary.pop().split("=");
+                /*
+                 * we don't want to accept *any* query, or folks could
+                 * say things like "target=foo", and overwrite what we've
+                 * already parsed, so we only use query args we know about.
+                 */
+                switch (arg[0].toLowerCase())
+                {
+                    case "msg":
+                        rv.msg = unescape(arg[1]).replace ("\n", "\\n");
+                         break;
+
+                    case "pass":
+                        rv.needpass = true;
+                        rv.pass = unescape(arg[1]).replace ("\n", "\\n");
                         break;
-                    }
-            
+
+                    case "key":
+                        rv.needkey = true;
+                        rv.key = unescape(arg[1]).replace ("\n", "\\n");
+                        break;
+                }
+            }            
         }
     }
 
@@ -1268,7 +1279,12 @@ function gotoIRCURL (url)
     var pass = "";
     
     if (url.needpass)
-        pass = window.prompt (getMsg("gotoIRCURLMsg2",url.spec));
+    {
+        if ("pass" in url)
+            pass = url.pass;
+        else
+            pass = window.prompt (getMsg("gotoIRCURLMsg2",url.spec));
+    }
     
     if (url.isserver)
     {
@@ -1344,7 +1360,13 @@ function gotoIRCURL (url)
             /* url points to a channel */
             var key = "";
             if (url.needkey)
-                key = window.prompt (getMsg("gotoIRCURLMsg3", url.spec));
+            {
+                if ("key" in url)
+                    key = url.key;
+                else
+                    key = window.prompt (getMsg("gotoIRCURLMsg3", url.spec));
+            }
+            
             ev = {inputData: url.target + " " + key,
                   network: net, server: net.primServ};
             client.onInputJoin (ev);
@@ -1377,7 +1399,6 @@ function gotoIRCURL (url)
                              "INFO");
         setCurrentObject (net);
     }
-
 }
 
 function setTopicText (text)
@@ -1528,7 +1549,9 @@ function updateTitle (obj)
 function multilineInputMode (state)
 {
     var multiInput = document.getElementById("multiline-input");
+    var multiInputBox = document.getElementById("multiline-box");
     var singleInput = document.getElementById("input");
+    var singleInputBox = document.getElementById("singleline-box");
     var splitter = document.getElementById("input-splitter");
     var iw = document.getElementById("input-widgets");
     var h;
@@ -1542,9 +1565,9 @@ function multilineInputMode (state)
         if (h)
             iw.setAttribute ("height", h); /* restore the slider position */
 
-        singleInput.setAttribute ("collapsed", "true");
+        singleInputBox.setAttribute ("collapsed", "true");
         splitter.setAttribute ("collapsed", "false");
-        multiInput.setAttribute ("collapsed", "false");
+        multiInputBox.setAttribute ("collapsed", "false");
         client.input = multiInput;
     }
     else  /* turn off multiline input mode */
@@ -1554,8 +1577,8 @@ function multilineInputMode (state)
         iw.removeAttribute ("height");     /* let the slider drop */
         
         splitter.setAttribute ("collapsed", "true");
-        multiInput.setAttribute ("collapsed", "true");
-        singleInput.setAttribute ("collapsed", "false");
+        multiInputBox.setAttribute ("collapsed", "true");
+        singleInputBox.setAttribute ("collapsed", "false");
         client.input = singleInput;
     }
 
@@ -1816,7 +1839,7 @@ function notifyAttention (source)
 function getFrameForDOMWindow(window)
 {
     var frame;
-    for (i = 0; i < client.deck.childNodes.length; i++)
+    for (var i = 0; i < client.deck.childNodes.length; i++)
     {
         frame = client.deck.childNodes[i];
         if (frame.contentWindow == window)
@@ -2014,7 +2037,7 @@ function getTabForObject (source, create)
         browser.setAttribute ("tooltip", "aHTMLTooltip");
         browser.setAttribute ("context", "outputContext");
         //browser.setAttribute ("onload", "scrollDown(true);");
-        browser.setAttribute ("onclick", "focusInput()");
+        //browser.setAttribute ("onclick", "focusInput()");
         browser.setAttribute ("ondragover", "nsDragAndDrop.dragOver(event, contentDropObserver);");
         browser.setAttribute ("ondragdrop", "nsDragAndDrop.drop(event, contentDropObserver);");
         browser.setAttribute ("ondraggesture", "nsDragAndDrop.startDrag(event, contentAreaDNDObserver);");
@@ -2388,8 +2411,12 @@ function __display(message, msgtype, sourceObj, destObj)
                 {
                     isImportant = msgIsImportant (message, nick, me.nick);
                     if (isImportant)
+                    {
                         this.defaultCompletion = nick +
                             client.ADDRESSED_NICK_SEP + " ";
+                        if (this.TYPE != "IRCNetwork")
+                            playSounds(client.STALK_BEEP);
+                    }                        
                 }
             }
         }
@@ -2444,13 +2471,13 @@ function __display(message, msgtype, sourceObj, destObj)
     else
     {
         isSuperfluous = true;
-        if (!client.debugMode && msgtype in client.responseCodeMap)
+        if (!client.debugHook.enabled && msgtype in client.responseCodeMap)
         {
             code = client.responseCodeMap[msgtype];
         }
         else
         {
-            if (!client.debugMode && client.HIDE_CODES)
+            if (!client.debugHook.enabled && client.HIDE_CODES)
                 code = client.DEFAULT_RESPONSE_CODE;
             else
                 code = "[" + msgtype + "]";
@@ -2742,27 +2769,58 @@ function gettabmatch_usr (line, wordStart, wordEnd, word, cursorPos)
 CIRCChannel.prototype.performTabMatch =
 CIRCNetwork.prototype.performTabMatch =
 CIRCUser.prototype.performTabMatch    =
-function gettabmatch_usr (line, wordStart, wordEnd, word, cursorpos)
+function gettabmatch_other (line, wordStart, wordEnd, word, cursorpos)
 {
     if (wordStart == 0 && line[0] == client.COMMAND_CHAR)
+    {
         return client.performTabMatch (line, wordStart, wordEnd, word,
                                        cursorpos);
+    }
     
-    if (!("users" in this))
-        return [];
+    var matchList = new Array();
+    var users;
+    var channels;
+
+    var details = getObjectDetails(this);
+
+    if ("channel" in details && word == details.channel.name[0])
+    {
+        /* When we have #<tab>, we just want the current channel, if possible. */
+        matchList.push (details.channel.unicodeName);
+    }
+    else
+    {
+        /* Ok, not #<tab> or no current channel, so get the full list. */
+        
+        if ("users" in details.orig)
+        {
+            users = details.orig.users;
+            for (var n in users)
+                matchList.push (users[n].nick);
+        }
+        
+        if ("server" in details)
+        {
+            channels = details.server.channels;
+            for (var c in channels)
+                matchList.push (channels[c].name);
+        }
+    }
     
-    var users = this.users;
-    var nicks = new Array();
-        
-    for (var n in users)
-        nicks.push (users[n].nick);
-        
-    var matches = matchEntry (word, nicks);
+    var matches = matchEntry (word, matchList);
+
     if (matches.length == 1)
     {
-        matches[0] = this.users[matches[0]].properNick;
-        if (wordStart == 0)
-            matches[0] += client.ADDRESSED_NICK_SEP;
+        if (users && matches[0] in users)
+        {
+            matches[0] = users[matches[0]].properNick;
+            if (wordStart == 0)
+                matches[0] += client.ADDRESSED_NICK_SEP;
+        }
+        else if (channels && matches[0] in channels)
+        {
+            matches[0] = channels[matches[0]].unicodeName;
+        }
 
         if (wordEnd == line.length)
         {
