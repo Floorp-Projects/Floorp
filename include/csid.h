@@ -139,18 +139,25 @@
 #define CS_CNS11643_14 (MULTIBYTE         |  80) /*   336 */
 #define CS_CNS11643_15 (MULTIBYTE         |  81) /*   337 */
 #define CS_CNS11643_16 (MULTIBYTE         |  82) /*   338 */
-#define CS_VISCII      (                     83) /*   83 */
-#define CS_VIQR        (                     84) /*   84 */
-#define CS_KOI8_U      (                     85) /*   85 */
-#define CS_ISO_IR_111  (                     86) /*   86 */
+#define CS_VIET_VISCII (SINGLEBYTE        |  83) /*   83 Vietnamese VISCII */
+#define CS_VIET_VIQR   (                     84) /*   84 Vietnamese VIQR */
+/* Temporary keep this untill we clean up CS_VISCII and CS_VIQR */
+#define CS_VISCII      CS_VIET_VISCII
+#define CS_VIQR        CS_VIET_VIQR
+
+#define CS_KOI8_U      (SINGLEBYTE        |  85) /*   85 */
+#define CS_ISO_IR_111  (SINGLEBYTE        |  86) /*   86 */
 #define CS_8859_6_I    (                     87) /*   87 */
 #define CS_8859_6_E    (                     88) /*   88 */
 #define CS_8859_8_I    (                     89) /*   89 */
 #define CS_8859_8_E    (                     90) /*   90 */
-#define CS_JOHAB       (MULTIBYTE        |   91) /*   91 cp1361 */
-#define CS_JOHABFONT   (MULTIBYTE        |   92) /*   92 hangterm font*/
+#define CS_JOHAB       (MULTIBYTE         |  91) /*   91 cp1361 */
+#define CS_JOHABFONT   (MULTIBYTE         |  92) /*   92 hangterm font*/
+#define CS_VIET_VPS    (SINGLEBYTE        |  93) /*   93 Vietnamese VPS */
+#define CS_VIET_TCVN   (SINGLEBYTE        |  94) /*   94 Vietnamese TCVN */
+#define CS_VIET_VNI    (                     95) /*   95 Vietnamese VNI */
 
-#define INTL_CHAR_SET_MAX                    93  /* must be highest + 1 */
+#define INTL_CHAR_SET_MAX                    96  /* must be highest + 1 */
 
 
 #define CS_USER_DEFINED_ENCODING (SINGLEBYTE | 254) /* 254 */
