@@ -51,6 +51,7 @@
 #include "nsIRegion.h"
 #include "nsIBlender.h"
 #include "nsIEventQueue.h"
+#include "nsIEventProcessor.h"
 
 class nsISupportsArray;
 struct DisplayListElement2;
@@ -154,7 +155,7 @@ public:
 
   nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds);
 
-  NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY);
+  NS_IMETHOD Display(nsIView *aView, nscoord aX, nscoord aY, const nsRect& aClipRect);
 
   NS_IMETHOD AddCompositeListener(nsICompositeListener *aListener);
   NS_IMETHOD RemoveCompositeListener(nsICompositeListener *aListener);
@@ -274,6 +275,12 @@ private:
 	 */
   NS_IMETHOD IsRectVisible(nsIView *aView, const nsRect &aRect, PRBool aMustBeFullyVisible, PRBool *isVisible);
 
+  /**
+	 * Installs event processor
+	 */
+  NS_IMETHOD SetEventProcessor(nsIEventProcessor* aEventProcessor) { mEventProcessor = aEventProcessor; return NS_OK; }
+
+
   nsresult ProcessWidgetChanges(nsIView* aView);
 
   // Utilities used to size the offscreen drawing surface
@@ -392,6 +399,8 @@ protected:
   PRBool            mPendingInvalidateEvent;
   nsCOMPtr<nsIEventQueue>  mEventQueue;
   void PostInvalidateEvent();
+
+  nsCOMPtr<nsIEventProcessor> mEventProcessor;
 
 #ifdef NS_VM_PERF_METRICS
   MOZ_TIMER_DECLARE(mWatch) //  Measures compositing+paint time for current document

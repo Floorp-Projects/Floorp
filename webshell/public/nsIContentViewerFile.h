@@ -42,6 +42,8 @@ class nsIContentViewerFile : public nsISupports {
    */
   NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener = nsnull) = 0;
 
+  NS_IMETHOD PrintPreview() = 0;
+
   /* [noscript] void PrintContent (in nsIWebShell parent, in nsIDeviceContext DContext, in nsIDOMWindow aDOMWin, PRBool aIsSubDoc); */
   NS_IMETHOD PrintContent(nsIWebShell *      aParent,
                           nsIDeviceContext * aDContext,
@@ -57,6 +59,7 @@ class nsIContentViewerFile : public nsISupports {
   NS_IMETHOD Save(void); \
   NS_IMETHOD GetSaveable(PRBool *aSaveable); \
   NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener); \
+  NS_IMETHOD PrintPreview(); \
   NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext, nsIDOMWindow * aDOMWin, PRBool aIsSubDoc); \
   NS_IMETHOD GetPrintable(PRBool *aPrintable); 
 
@@ -65,6 +68,7 @@ class nsIContentViewerFile : public nsISupports {
   NS_IMETHOD Save(void) { return _to ## Save(); } \
   NS_IMETHOD GetSaveable(PRBool *aSaveable) { return _to ## GetSaveable(aSaveable); } \
   NS_IMETHOD Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener) { return _to ## Print(); } \
+  NS_IMETHOD PrintPreview() { return _to ## Print(); } \
   NS_IMETHOD PrintContent(nsIWebShell * parent, nsIDeviceContext * DContext, nsIDOMWindow * aDOMWin, PRBool aIsSubDoc) { return _to ## PrintContent(parent, DContext, aDOMWin, aIsSubDoc); } \
   NS_IMETHOD GetPrintable(PRBool *aPrintable) { return _to ## GetPrintable(aPrintable); } 
 

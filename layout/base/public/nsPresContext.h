@@ -368,6 +368,18 @@ public:
   NS_IMETHOD IsPaginated(PRBool* aResult) = 0;
 
   /**
+   * Sets whether the presentation context can scroll for a paginated
+   * context.
+   */
+  NS_IMETHOD SetPaginatedScrolling(PRBool aResult) = 0;
+
+  /**
+   * Return true if this presentation context can scroll for paginated
+   * context.
+   */
+  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult) = 0;
+
+  /**
    * Gets the rect for the page Dimimensions, 
    * this includes X,Y Offsets which are used to determine 
    * the inclusion of margins
@@ -390,6 +402,8 @@ public:
   NS_IMETHOD GetPixelsToTwips(float* aResult) const = 0;
 
   NS_IMETHOD GetTwipsToPixels(float* aResult) const = 0;
+
+  NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const = 0;
 
   //XXX this is probably not an ideal name. MMP
   /** 

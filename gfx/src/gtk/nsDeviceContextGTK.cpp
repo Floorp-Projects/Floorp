@@ -254,6 +254,13 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
 NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&aContext)
 {
+#ifdef NS_PRINT_PREVIEW
+  // Defer to Alt when there is one
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC)) {
+    return mAltDC->CreateRenderingContext(aContext);
+  }
+#endif
+
   nsIRenderingContext *pContext;
   nsresult             rv;
   nsDrawingSurfaceGTK  *surf;
@@ -398,6 +405,13 @@ NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
+#ifdef NS_PRINT_PREVIEW
+  // Defer to Alt when there is one
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_SURFACE_DIM)) {
+    return mAltDC->GetDeviceSurfaceDimensions(aWidth, aHeight);
+  }
+#endif
+
   if (mWidth == -1)
     mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
 

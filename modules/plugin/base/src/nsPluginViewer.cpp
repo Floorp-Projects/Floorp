@@ -811,6 +811,11 @@ PluginViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintList
 
 }
 
+NS_IMETHODIMP
+PluginViewerImpl::PrintPreview()
+{
+  return NS_OK;      // XXX: hey, plug in guys!  implement me!
+}
 
 NS_IMETHODIMP
 PluginViewerImpl::GetPrintable(PRBool *aPrintable) 

@@ -94,6 +94,15 @@ typedef void * nsNativeDeviceContext;
 #define NS_ERROR_GFX_PRINTER_FILE_IO_ERROR          \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+12)
 
+/**
+ * Conts need for Print Preview
+ */
+#ifdef NS_PRINT_PREVIEW
+const PRUint8 kUseAltDCFor_NONE        = 0x00; // Do not use the AltDC for anything
+const PRUint8 kUseAltDCFor_FONTMETRICS = 0x01; // Use it for only getting the font metrics
+const PRUint8 kUseAltDCFor_CREATE_RC   = 0x02; // Use when creating RenderingContexts
+const PRUint8 kUseAltDCFor_SURFACE_DIM = 0x04; // Use it for getting the Surface Dimensions
+#endif
 
 #define NS_IDEVICE_CONTEXT_IID   \
 { 0x5931c580, 0xb917, 0x11d1,    \
@@ -415,6 +424,26 @@ public:
    * @return error status
    */
   NS_IMETHOD EndPage(void) = 0;
+
+#ifdef NS_PRINT_PREVIEW
+  /**
+   * Set an Alternative Device Context where some of the calls
+   * are deferred to it
+   */
+  NS_IMETHOD SetAltDevice(nsIDeviceContext* aAltDC) = 0;
+
+  /**
+   * Get the Alternate Device Context
+   */
+  NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC) = 0;
+
+  /**
+   * Turn on/off which types of information is retrived 
+   * via the alt device context
+   */
+  NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn) = 0;
+#endif
+
 };
 
 #endif /* nsIDeviceContext_h___ */

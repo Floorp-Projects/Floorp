@@ -41,7 +41,7 @@
 #include "nsRect.h"
 
 class nsIPresContext;
-class  nsIPrintOptions;
+class nsIPrintOptions;
 
 // IID for the nsIPageSequenceFrame interface 
 // a6cf90d2-15b3-11d2-932e-00805f8add32
@@ -151,7 +151,8 @@ public:
   NS_IMETHOD SetOffset(nscoord aX, nscoord aY) = 0;
   NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup) = 0;
   NS_IMETHOD SetClipRect(nsIPresContext*  aPresContext, nsRect* aSize) = 0;
-
+  NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) = 0;
+  
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

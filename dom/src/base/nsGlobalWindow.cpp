@@ -1933,18 +1933,33 @@ NS_IMETHODIMP GlobalWindowImpl::Stop()
   return webNav->Stop(nsIWebNavigation::STOP_ALL);
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Print()
+nsresult GlobalWindowImpl::DoPrint(PRBool aDoPreview)
 {
   if (mDocShell) {
     nsCOMPtr<nsIContentViewer> viewer;
     mDocShell->GetContentViewer(getter_AddRefs(viewer));
     if (viewer) {
       nsCOMPtr<nsIContentViewerFile> viewerFile(do_QueryInterface(viewer));
-      if (viewerFile)
-        return viewerFile->Print(PR_FALSE, nsnull);
+      if (viewerFile) {
+        if (aDoPreview) {
+          return viewerFile->PrintPreview();
+        } else {
+          return viewerFile->Print(PR_FALSE, nsnull);
+        }
+      }
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::Print()
+{
+  return DoPrint(PR_FALSE);
+}
+
+NS_IMETHODIMP GlobalWindowImpl::PrintPreview()
+{
+  return DoPrint(PR_TRUE);
 }
 
 NS_IMETHODIMP GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)

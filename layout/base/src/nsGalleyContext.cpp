@@ -46,6 +46,8 @@ public:
 
   NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
+  NS_IMETHOD SetPaginatedScrolling(PRBool aResult)  { return NS_ERROR_FAILURE; }
+  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
   NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   NS_IMETHOD SetPageDim(nsRect* aRect);
 };
@@ -77,6 +79,14 @@ GalleyContext::IsPaginated(PRBool* aResult)
   if (nsnull == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
+  *aResult = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GalleyContext::GetPaginatedScrolling(PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
   *aResult = PR_FALSE;
   return NS_OK;
 }

@@ -149,10 +149,13 @@ public:
   NS_IMETHOD GetVisibleArea(nsRect& aResult);
   NS_IMETHOD SetVisibleArea(const nsRect& r);
   NS_IMETHOD IsPaginated(PRBool* aResult) = 0;
+  NS_IMETHOD SetPaginatedScrolling(PRBool aResult) = 0;
+  NS_IMETHOD GetPaginatedScrolling(PRBool* aResult) = 0;
   NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect) = 0;
   NS_IMETHOD SetPageDim(nsRect* aRect) = 0;
   NS_IMETHOD GetPixelsToTwips(float* aResult) const;
   NS_IMETHOD GetTwipsToPixels(float* aResult) const;
+  NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const;
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
   NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
