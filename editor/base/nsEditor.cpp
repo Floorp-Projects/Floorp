@@ -671,7 +671,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
       {
         // Get the first child of the body node:
         nsCOMPtr<nsIDOMNode> firstNode;
-        result = GetFirstEditableNode(bodyNode, getter_AddRefs(firstNode));
+        result = GetFirstEditableNode(bodyNode, &firstNode);
         if (firstNode)
         {
           // if firstNode is text, set selection to beginning of the text node
@@ -722,8 +722,8 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
       result = nodeList->Item(0, getter_AddRefs(bodyNode));
       if ((NS_SUCCEEDED(result)) && bodyNode)
       {
-        nsCOMPtr<nsIDOMNode> lastChild;    // = GetDeepLastChild(bodyNode);
-        result = GetLastEditableNode(bodyNode, getter_AddRefs(lastChild));
+        nsCOMPtr<nsIDOMNode> lastChild;  
+        result = GetLastEditableNode(bodyNode, &lastChild);
         if ((NS_SUCCEEDED(result)) && lastChild)
         {
           // See if the last child is a text node; if so, set offset:
@@ -1767,85 +1767,47 @@ NS_IMETHODIMP nsEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
 }
 
 
-nsresult nsEditor::GetFirstEditableNode(nsIDOMNode *aRoot, nsIDOMNode* *outFirstNode)
+nsresult nsEditor::GetFirstEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outFirstNode)
 {
+  if (!aRoot || !outFirstNode) return NS_ERROR_NULL_POINTER;
+
   *outFirstNode = nsnull;
-  
-  nsCOMPtr<nsIContentIterator> iter;
-  nsresult rv = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                  nsIContentIterator::GetIID(), 
-                                                  getter_AddRefs(iter));
-  if (NS_FAILED(rv)) return rv;
-   
-  nsCOMPtr<nsIContent> contentRoot = do_QueryInterface(aRoot);
-  rv = iter->Init(contentRoot);
+
+  nsCOMPtr<nsIDOMNode> node,next;
+  nsresult rv = GetLeftmostChild(aRoot, getter_AddRefs(node));
   if (NS_FAILED(rv)) return rv;
 
-  iter->MakePre();
-  
-  while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+  if (node && !IsEditable(node))
   {
-    nsCOMPtr<nsIContent> curNode;    
-    rv = iter->CurrentNode(getter_AddRefs(curNode));
-    if (NS_FAILED(rv)) return rv;
-    
-    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(curNode);
-    if (domNode)
-    { // we have a DOM node, see if it is a leaf node
-      PRBool canContainChildren;
-      curNode->CanContainChildren(canContainChildren);
-      if ((PR_FALSE==canContainChildren) || IsTextNode(domNode))
-      { // we have a leaf node, if it's editable, return it.
-        if (IsEditable(domNode))
-        {
-          *outFirstNode = domNode;
-          NS_ADDREF(*outFirstNode);
-          return NS_OK;
-        }
-      }
-    }    
-    iter->Next();
+    rv = GetNextNode(node, PR_TRUE, getter_AddRefs(next));
+    node = next;
   }
   
-  return NS_OK;
+  *outFirstNode = node;
+
+  return rv;
 }
 
 
-nsresult nsEditor::GetLastEditableNode(nsIDOMNode *aRoot, nsIDOMNode* *outLastNode)
+nsresult nsEditor::GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outLastNode)
 {
+  if (!aRoot || !outLastNode) return NS_ERROR_NULL_POINTER;
+
   *outLastNode = nsnull;
-  
-  nsCOMPtr<nsIContentIterator> iter;
-  nsresult rv = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                  nsIContentIterator::GetIID(), 
-                                                  getter_AddRefs(iter));
-  if (NS_FAILED(rv)) return rv;
-   
-  nsCOMPtr<nsIContent> contentRoot = do_QueryInterface(aRoot);
-  rv = iter->Init(contentRoot);
+
+  nsCOMPtr<nsIDOMNode> node,next;
+  nsresult rv = GetRightmostChild(aRoot, getter_AddRefs(node));
   if (NS_FAILED(rv)) return rv;
 
-  iter->MakePre();
-  iter->Last();
-  
-  while (iter->IsDone() == NS_ENUMERATOR_FALSE)
+  if (node && !IsEditable(node))
   {
-    nsCOMPtr<nsIContent> curNode;    
-    rv = iter->CurrentNode(getter_AddRefs(curNode));
-    if (NS_FAILED(rv)) return rv;
-    
-    nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(curNode);
-    if (domNode && IsTextNode(domNode) && IsEditable(domNode))
-    {
-      *outLastNode = domNode;
-      NS_ADDREF(*outLastNode);
-      return NS_OK;
-    }
-    
-    iter->Prev();
+    rv = GetPriorNode(node, PR_TRUE, getter_AddRefs(next));
+    node = next;
   }
   
-  return NS_OK;
+  *outLastNode = node;
+
+  return rv;
 }
 
 
