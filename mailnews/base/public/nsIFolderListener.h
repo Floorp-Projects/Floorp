@@ -13,6 +13,7 @@
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
+class nsIFolder; /* forward decl */
 
 /* starting interface nsIFolderListener */
 
@@ -36,7 +37,7 @@ class nsIFolderListener : public nsISupports {
   NS_IMETHOD OnItemRemoved(nsIFolder *parentFolder, nsISupports *item) = 0;
 
   /* void OnItemPropertyChanged (in nsISupports item, in string property, in string value); */
-  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, char *property, char *value) = 0;
+  NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property, const char *value) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

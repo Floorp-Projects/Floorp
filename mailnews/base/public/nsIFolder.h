@@ -7,18 +7,13 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsICollection.h" /* interface nsICollection */
+#include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
-
+class nsIFolderListener; /* forward decl */
 
 /* starting interface nsIFolder */
 
@@ -43,13 +38,19 @@ class nsIFolder : public nsICollection {
   NS_IMETHOD SetName(char * aName) = 0;
 
   /* nsISupports GetChildNamed (in string name); */
-  NS_IMETHOD GetChildNamed(char *name, nsISupports **_retval) = 0;
+  NS_IMETHOD GetChildNamed(const char *name, nsISupports **_retval) = 0;
 
   /* nsIFolder GetParent (); */
   NS_IMETHOD GetParent(nsIFolder **_retval) = 0;
 
   /* nsIEnumerator GetSubFolders (); */
   NS_IMETHOD GetSubFolders(nsIEnumerator **_retval) = 0;
+
+  /* void AddFolderListener (in nsIFolderListener listener); */
+  NS_IMETHOD AddFolderListener(nsIFolderListener *listener) = 0;
+
+  /* void RemoveFolderListener (in nsIFolderListener listener); */
+  NS_IMETHOD RemoveFolderListener(nsIFolderListener *listener) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

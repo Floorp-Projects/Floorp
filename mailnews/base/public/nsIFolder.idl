@@ -17,6 +17,9 @@
  */
  
 #include "nsICollection.idl"
+#include "nsIFolderListener.idl"
+
+interface nsIFolderListener;
 
 [uuid(361c89b0-c481-11d2-8614-000000000001)]    /* XXX regenerate */
 interface nsIFolder : nsICollection {
@@ -28,5 +31,8 @@ interface nsIFolder : nsICollection {
         nsIFolder GetParent();
 
         nsIEnumerator GetSubFolders();
+
+		void AddFolderListener(in nsIFolderListener listener);
+		void RemoveFolderListener(in nsIFolderListener listener);
 };
 
