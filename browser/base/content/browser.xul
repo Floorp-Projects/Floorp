@@ -299,7 +299,9 @@
 
     <popup type="autocomplete" id="PopupAutoComplete"/>
 
-    <popup id="toolbar-context-menu">
+    <popup id="toolbar-context-menu"
+           onpopupshowing="updateToolbarStates(this); onViewToolbarsPopupShowing(event);">
+      <menuseparator/>
       <menuitem command="cmd_CustomizeToolbars"
                 label="&viewCustomizeToolbar.label;"
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
