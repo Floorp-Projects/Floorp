@@ -510,11 +510,7 @@ function serv_ctcpto (target, code, msg, method)
     
     code = code.toUpperCase();
     if (code == "PING" && !msg)
-    {
-        var user = this.users[target.toLowerCase()];
-        if (user)
-             msg = Number(new Date());
-    }
+        msg = Number(new Date());
     this.messageTo (method, target, msg, code);
 
 }
