@@ -187,7 +187,7 @@ public:
   }
 
   // nsITextControlElement
-  NS_IMETHOD SetValueGuaranteed(const nsAReadableString& aValue);
+  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsIGfxTextControlFrame2* aFrame);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
 protected:
@@ -195,6 +195,7 @@ protected:
   void SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
                            PRBool aValue);
   NS_IMETHOD SetValueSecure(const nsAReadableString& aValue,
+                            nsIGfxTextControlFrame2* aFrame,
                             PRBool aCheckSecurity);
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
@@ -473,17 +474,19 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
 {
-  return SetValueSecure(aValue, PR_TRUE);
+  return SetValueSecure(aValue, nsnull, PR_TRUE);
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::SetValueGuaranteed(const nsAReadableString& aValue)
+nsHTMLInputElement::SetValueGuaranteed(const nsAString& aValue,
+                                       nsIGfxTextControlFrame2* aFrame)
 {
-  return SetValueSecure(aValue, PR_FALSE);
+  return SetValueSecure(aValue, aFrame, PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsHTMLInputElement::SetValueSecure(const nsAReadableString& aValue,
+                                   nsIGfxTextControlFrame2* aFrame,
                                    PRBool aCheckSecurity)
 {
   PRInt32 type;
@@ -511,16 +514,17 @@ nsHTMLInputElement::SetValueSecure(const nsAReadableString& aValue,
       }
     }
 
-    nsIFormControlFrame* formControlFrame = nsnull;
+    nsIGfxTextControlFrame2* textControlFrame = aFrame;
+    nsIFormControlFrame* formControlFrame = textControlFrame;
+    if (!textControlFrame) {
+      // No need to flush here, if there's no frame at this point we
+      // don't need to force creation of one just to tell it about this
+      // new value.
+      GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
-    // No need to flush here, if there's no frame at this point we
-    // don't need to force creation of one just to tell it about this
-    // new value.
-    GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
-
-    nsIGfxTextControlFrame2* textControlFrame = nsnull;
-    if (formControlFrame) {
-      CallQueryInterface(formControlFrame, &textControlFrame);
+      if (formControlFrame) {
+        CallQueryInterface(formControlFrame, &textControlFrame);
+      }
     }
 
     PRBool frameOwnsValue = PR_FALSE;
@@ -1796,7 +1800,7 @@ nsHTMLInputElement::Reset()
     case NS_FORM_INPUT_FILE:
     {
       // Resetting it to blank should not perform security check
-      rv = SetValueSecure(NS_LITERAL_STRING(""), PR_FALSE);
+      rv = SetValueSecure(NS_LITERAL_STRING(""), nsnull, PR_FALSE);
       break;
     }
     default:

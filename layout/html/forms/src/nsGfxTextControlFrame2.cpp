@@ -131,11 +131,12 @@ static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 
+static nsWeakPtr sElementFactory;
 
 static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
 {
   nsresult rv(NS_OK);
-  static nsWeakPtr sElementFactory = getter_AddRefs( NS_GetWeakReference(nsCOMPtr<nsIElementFactory>(do_GetService(
+  sElementFactory = getter_AddRefs( NS_GetWeakReference(nsCOMPtr<nsIElementFactory>(do_GetService(
                      NS_ELEMENT_FACTORY_CONTRACTID_PREFIX"http://www.w3.org/1999/xhtml", &rv) )));
   if (sElementFactory)
   {
@@ -3405,7 +3406,7 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
     nsCOMPtr<nsITextControlElement> textControl = do_QueryInterface(mContent);
     if (textControl)
     {
-      textControl->SetValueGuaranteed(aValue);
+      textControl->SetValueGuaranteed(aValue, this);
     }
   }
 }

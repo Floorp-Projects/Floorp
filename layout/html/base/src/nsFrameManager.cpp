@@ -640,7 +640,14 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
         rv = parent->IndexOf(aContent, index);
         if (NS_SUCCEEDED(rv) && index>0)  // no use looking if it's the first child
         {
-          rv = parent->ChildAt(index-1, *getter_AddRefs(prevSibling));
+          nsCOMPtr<nsIAtom> tag;
+          do {
+            rv = parent->ChildAt(--index, *getter_AddRefs(prevSibling));
+            prevSibling->GetTag(*getter_AddRefs(tag));
+          } while (index &&
+                   (tag == nsLayoutAtoms::textTagName ||
+                    tag == nsLayoutAtoms::commentTagName ||
+                    tag == nsLayoutAtoms::processingInstructionTagName));
           if (NS_SUCCEEDED(rv) && prevSibling)
           {
             entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
@@ -972,6 +979,17 @@ FrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
   mPresShell->GetPresContext(getter_AddRefs(presContext));
 
   RemoveAllPropertiesFor(presContext, aFrame);
+
+#ifdef DEBUG
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  PrimaryFrameMapEntry *entry = NS_STATIC_CAST(PrimaryFrameMapEntry*,
+      PL_DHashTableOperate(&mPrimaryFrameMap, content, PL_DHASH_LOOKUP));
+  NS_ASSERTION(!PL_DHASH_ENTRY_IS_BUSY(entry) || entry->frame != aFrame,
+               "frame was not removed from primary frame map before"
+               "destruction or was readded to map after being removed");
+#endif
+
   return NS_OK;
 }
 
