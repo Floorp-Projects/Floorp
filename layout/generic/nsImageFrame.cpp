@@ -64,6 +64,7 @@
 #include "prprf.h"
 #include "nsIFontMetrics.h"
 #include "nsCSSRendering.h"
+#include "nsILink.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDeviceContext.h"
@@ -1541,22 +1542,23 @@ nsImageFrame::TranslateEventCoords(nsIPresContext* aPresContext,
 }
 
 PRBool
-nsImageFrame::GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget)
+nsImageFrame::GetAnchorHREFAndTarget(nsIURI** aHref, nsString& aTarget)
 {
   PRBool status = PR_FALSE;
-  aHref.Truncate();
   aTarget.Truncate();
 
   // Walk up the content tree, looking for an nsIDOMAnchorElement
   for (nsIContent* content = mContent->GetParent();
        content; content = content->GetParent()) {
-    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));
-    if (anchor) {
-      anchor->GetHref(aHref);
-      if (!aHref.IsEmpty()) {
-        status = PR_TRUE;
+    nsCOMPtr<nsILink> link(do_QueryInterface(content));
+    if (link) {
+      link->GetHrefURI(aHref);
+      status = (*aHref != nsnull);
+
+      nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(content));
+      if (anchor) {
+        anchor->GetTarget(aTarget);
       }
-      anchor->GetTarget(aTarget);
       break;
     }
   }
@@ -1637,48 +1639,29 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
         }
 
         if (!inside && isServerMap) {
-          nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
 
-          if (baseURI) {
-            // Server side image maps use the href in a containing anchor
-            // element to provide the basis for the destination url.
-            nsAutoString src;
-            if (GetAnchorHREFAndTarget(src, target)) {
-              nsINodeInfo *nodeInfo = mContent->GetNodeInfo();
-              NS_ASSERTION(nodeInfo, "Image content without a nodeinfo?");
-              nsIDocument* doc = nodeInfo->GetDocument();
-              nsCAutoString charset;
-              if (doc) {
-                charset = doc->GetDocumentCharacterSet();
-              } 
-              nsCOMPtr<nsIURI> uri;
-              nsresult rv = NS_NewURI(getter_AddRefs(uri), src, charset.get(),
-                                      baseURI);
-              NS_ENSURE_SUCCESS(rv, rv);
+          // Server side image maps use the href in a containing anchor
+          // element to provide the basis for the destination url.
+          nsCOMPtr<nsIURI> uri;
+          if (GetAnchorHREFAndTarget(getter_AddRefs(uri), target)) {
+            // XXX if the mouse is over/clicked in the border/padding area
+            // we should probably just pretend nothing happened. Nav4
+            // keeps the x,y coordinates positive as we do; IE doesn't
+            // bother. Both of them send the click through even when the
+            // mouse is over the border.
+            if (p.x < 0) p.x = 0;
+            if (p.y < 0) p.y = 0;
+            nsCAutoString spec;
+            uri->GetSpec(spec);
+            spec += nsPrintfCString("?%d,%d", p.x, p.y);
+            uri->SetSpec(spec);                
             
-              // XXX if the mouse is over/clicked in the border/padding area
-              // we should probably just pretend nothing happened. Nav4
-              // keeps the x,y coordinates positive as we do; IE doesn't
-              // bother. Both of them send the click through even when the
-              // mouse is over the border.
-              if (p.x < 0) p.x = 0;
-              if (p.y < 0) p.y = 0;
-              nsCAutoString spec;
-              uri->GetSpec(spec);
-              spec += nsPrintfCString("?%d,%d", p.x, p.y);
-              uri->SetSpec(spec);                
-              
-              PRBool clicked = PR_FALSE;
-              if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-                *aEventStatus = nsEventStatus_eConsumeDoDefault; 
-                clicked = PR_TRUE;
-              }
-              TriggerLink(aPresContext, uri, target, clicked);
+            PRBool clicked = PR_FALSE;
+            if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+              *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+              clicked = PR_TRUE;
             }
-          } 
-          else 
-          {
-            NS_WARNING("baseURI is null for imageFrame - ignoring mouse event");
+            TriggerLink(aPresContext, uri, target, clicked);
           }
         }
       }

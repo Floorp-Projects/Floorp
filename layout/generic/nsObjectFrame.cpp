@@ -328,7 +328,7 @@ public:
   //nsIEventListener interface
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
-  void Paint(const nsRect& aDirtyRect, PRUint32 ndc = nsnull);
+  void Paint(const nsRect& aDirtyRect, PRUint32 ndc = 0);
 
   // nsITimerCallback interface
   NS_DECL_NSITIMERCALLBACK
