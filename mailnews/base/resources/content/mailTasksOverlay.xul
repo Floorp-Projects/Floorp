@@ -55,7 +55,6 @@
   
   <menupopup id="taskPopup">
     <menuitem position="2" value="&messengerCmd.label;" accesskey="&messengerCmd.accesskey;" oncommand="toMessengerWindow()"/>
-    <menuitem position="3" value="&newsgroupsCmd.label;" accesskey="&newsgroupsCmd.accesskey;" disabled="true" oncommand="toNewsgroups()"/>
   </menupopup>
   
 </overlay>         

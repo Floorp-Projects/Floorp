@@ -370,7 +370,7 @@ function FindThreadPaneColumnBySortResource(sortID)
 		return "PriorityColumn";
 	else if(sortID == "http://home.netscape.com/NC-rdf#Size")
 		return "SizeColumn";
-	else if(sortID == "http://home.netscape.com/NC-rdf#HasUnreadMessages")
+	else if(sortID == "http://home.netscape.com/NC-rdf#IsUnread")
 		return "UnreadButtonColumn";
 	else if(sortID == "http://home.netscape.com/NC-rdf#TotalUnreadMessages")
 		return "UnreadColumn";
@@ -453,22 +453,6 @@ function UpdateSortIndicator(column,sortDirection)
 	//it here so that the css can handle changing it's style correctly.
 	if(column == "AuthorColumn"){
 		column = "SenderColumn";
-	}
-
-	//Sorting by UnreadButtonColumn and FlaggedButtonColumn causes 
-	//display problems in their respective column headers, so we disable
-	//the changing of their header appearances. (We also need to remove the
-	//sort indicator from the other columns, because sorting by FlaggedButton
-	//and UnreadButton is still taking place, only not being indicated.)
-	if(column == "UnreadButtonColumn" || column == "FlaggedButtonColumn"){
-		var treecell = treerow.getElementsByTagName("treecell");
-		// Loop through each treecell...
-		var node_count = treecell.length;
-		for (var i=0; i < node_count; i++)
-		{
-			treecell[i].removeAttribute('sortDirection');
-		}
-		return;
 	}
 
 	var id = column + "Header";

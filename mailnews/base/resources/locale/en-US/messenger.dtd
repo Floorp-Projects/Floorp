@@ -107,7 +107,7 @@ Rights Reserved.
 <!ENTITY sortMenu.accesskey "o"> 
 <!ENTITY sortByDateCmd.label "by Date">  
 <!ENTITY sortByDateCmd.accesskey "e">  
-<!ENTITY sortByFlagCmd.label ".by Flag">  
+<!ENTITY sortByFlagCmd.label "by Flag">  
 <!ENTITY sortByFlagCmd.accesskey "f">  
 <!ENTITY sortByPriorityCmd.label "by Priority">  
 <!ENTITY sortByPriorityCmd.accesskey "p">  
@@ -119,15 +119,15 @@ Rights Reserved.
 <!ENTITY sortByStatusCmd.accesskey "by Status">  
 <!ENTITY sortBySubjectCmd.label "by Subject">  
 <!ENTITY sortBySubjectCmd.accesskey "s">  
-<!ENTITY sortByUnreadCmd.label ".by Unread">  
+<!ENTITY sortByUnreadCmd.label "by Unread">  
 <!ENTITY sortByUnreadCmd.accesskey "u">  
 <!ENTITY sortByOrderReceivedCmd.label "by Order Received">  
 <!ENTITY sortByOrderReceivedCmd.accesskey "o">  
-<!ENTITY msgsMenu.label ".Messages"> 
+<!ENTITY msgsMenu.label "Messages"> 
 <!ENTITY msgsMenu.accesskey "m"> 
 <!ENTITY threadsMsgsCmd.label "Threaded">  
 <!ENTITY threadsMsgsCmd.accesskey "t">  
-<!ENTITY allMsgsCmd.label ".All">  
+<!ENTITY allMsgsCmd.label "All">  
 <!ENTITY allMsgsCmd.accesskey "a">  
 <!ENTITY expandOrCollapseMenu.label "Expand/Collapse">  
 <!ENTITY expandOrCollapseMenu.accesskey "x">  
@@ -135,14 +135,8 @@ Rights Reserved.
 <!ENTITY expandAllThreadsCmd.accesskey "e">  
 <!ENTITY collapseAllThreadsCmd.label "Collapse All Threads">  
 <!ENTITY collapseAllThreadsCmd.accesskey "c">  
-<!ENTITY unreadMsgsCmd.label ".Unread">  
+<!ENTITY unreadMsgsCmd.label "Unread">  
 <!ENTITY unreadMsgsCmd.accesskey "u">  
-<!ENTITY threadsWithUnreadMsgsCmd.label ".Threads with Unread">  
-<!ENTITY threadsWithUnreadMsgsCmd.accesskey "t">  
-<!ENTITY watchedThreadsMsgsCmd.label ".Watched Threads with Unread">  
-<!ENTITY watchedThreadsMsgsCmd.accesskey "w">  
-<!ENTITY ignoreThreadMsgsCmd.label ".Ignored Threads">  
-<!ENTITY ignoreThreadMsgsCmd.accesskey "i">  
 <!ENTITY headersMenu.label "Headers"> 
 <!ENTITY headersMenu.accesskey "h"> 
 <!ENTITY headersAllCmd.label "All">  

@@ -209,9 +209,6 @@ function fillFolderPaneContextMenu()
 	ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
 	EnableMenuItem("folderPaneContext-searchMessages", false);
 
-	ShowMenuItem("folderPaneContext-sep-search", (numSelected<=1));
-
-	SetupPropertiesMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
 	return(true);
 }
 
@@ -282,38 +279,6 @@ function SetupNewMenuItem(targetFolder, numSelected, isServer, serverType, speci
 			SetMenuItemValue("folderPaneContext-new", Bundle.GetStringFromName("newFolder"));
 		else
 			SetMenuItemValue("folderPaneContext-new", Bundle.GetStringFromName("newSubfolder"));
-	}
-
-}
-
-function SetupPropertiesMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder)
-{
-	ShowMenuItem("folderPaneContext-properties", (numSelected <=1));
-	EnableMenuItem("folderPaneContext-properties", false);
-
-	if(isServer)
-	{
-		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("accountProperties"));
-	}
-	else if(specialFolder == 'Inbox')
-	{
-		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("inboxProperties"));
-	}
-	else if(specialFolder == 'Trash')
-	{
-		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("trashProperties"));
-	}
-	else if(specialFolder == 'Unsent Messages')
-	{
-		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("unsentMessagesProperties"));
-	}
-	else if(serverType == 'nntp')
-	{
-		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("newsgroupProperties"));
-	}
-	else
-	{
-		SetMenuItemValue("folderPaneContext-properties", Bundle.GetStringFromName("folderProperties"));
 	}
 
 }

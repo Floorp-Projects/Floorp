@@ -417,11 +417,7 @@ function MsgGetFlaggedMsg() {}
 function MsgSelectThread() {}
 function MsgSelectFlaggedMsg() {}
 function MsgShowFolders(){}
-function MsgFolderProperties() {}
 function MsgShowLocationbar() {}
-function MsgViewThreadsUnread() {}
-function MsgViewWatchedThreadsUnread() {}
-function MsgViewIgnoreThread() {}
 function MsgViewAttachInline() {}
 function MsgWrapLongLines() {}
 function MsgIncreaseFont() {}

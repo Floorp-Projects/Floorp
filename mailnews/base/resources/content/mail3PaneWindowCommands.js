@@ -271,10 +271,14 @@ var DefaultController =
 			case "cmd_sortByStatus":
 			case "cmd_sortByRead":
 			case "cmd_sortByOrderReceived":
-			case "cmd_sortByThread":
 			case "cmd_viewAllMsgs":
-			case "cmd_viewUnreadMsgs":
 				return true;
+			case "cmd_sortByThread":
+				return (messageView.viewType != viewShowUnread);
+				break;
+  			case "cmd_viewUnreadMsgs":
+  				return (messageView.showThreads == false);
+  				break;
             case "cmd_undo":
             case "cmd_redo":
                 return SetupUndoRedoCommand(command);
@@ -649,8 +653,6 @@ function FillInFolderTooltip(cellNode)
 	var db = folderTree.database;
 
 	var nameProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#Name');
-	var unreadCountProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#TotalUnreadMessages');
-	var totalCountProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#TotalMessages');
 
 	var nameResult;
 	try {
@@ -664,20 +666,19 @@ function FillInFolderTooltip(cellNode)
 	nameResult = nameResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
 	var name = nameResult.Value;
 
-	var unreadCountResult = db.GetTarget(folderResource, unreadCountProperty , true);
-	unreadCountResult = unreadCountResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
-	var unreadCount = unreadCountResult.Value;
-	if(unreadCount == "")
-		unreadCount = "0";
+	var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+	var unreadCount = msgFolder.getNumUnread(false);
+	if(unreadCount < 0)
+		unreadCount = 0;
 
-	var totalCountResult = db.GetTarget(folderResource, totalCountProperty , true);
-	totalCountResult = totalCountResult.QueryInterface(Components.interfaces.nsIRDFLiteral);
-	var totalCount = totalCountResult.Value;
-	if(totalCount == "")
-		totalCount = "0";
+	var totalCount = msgFolder.getTotalMessages(false);
+	if(totalCount < 0)
+		totalCount = 0;
 
 	var textNode = document.getElementById("foldertooltipText");
-	var folderTooltip = name + " ("  + unreadCount + "/" + totalCount +")";
+	var folderTooltip = name;
+	if(!msgFolder.isServer)
+		folderTooltip += " ("  + unreadCount + "/" + totalCount +")";
 	textNode.setAttribute('value', folderTooltip);
 	return true;
 	

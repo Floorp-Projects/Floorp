@@ -85,6 +85,8 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_ORDERRECEIVED_SORT		NC_NAMESPACE_URI "OrderReceived?sort=true"
 #define NC_RDF_PRIORITY_SORT			NC_NAMESPACE_URI "Priority?sort=true"
 #define NC_RDF_SIZE_SORT				NC_NAMESPACE_URI "Size?sort=true"
+#define NC_RDF_ISUNREAD_SORT			NC_NAMESPACE_URI "IsUnread?sort=true"
+#define NC_RDF_FLAGGED_SORT				NC_NAMESPACE_URI "Flagged?sort=true"
 
 #define NC_RDF_NAME_SORT				NC_NAMESPACE_URI "Name?sort=true"
 #define NC_RDF_FOLDERTREENAME_SORT		NC_NAMESPACE_URI "FolderTreeName?sort=true"

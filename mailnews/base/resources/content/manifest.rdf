@@ -28,6 +28,7 @@
     <RDF:li resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul"/>
     <RDF:li resource="chrome://messenger/content/messengercompose/messengercompose.xul"/>
     <RDF:li resource="chrome://messenger/content/addressbook/addressbook.xul"/>
+    <RDF:li resource="chrome://messenger/content/addressbook/abSelectAddressesDialog.xul"/>
     <RDF:li resource="chrome://editor/content/editor.xul"/>
   </RDF:Seq>
 
@@ -90,6 +91,12 @@
     <RDF:li>chrome://messenger/content/mailABOverlay.xul</RDF:li>
   </RDF:Seq>
   
+  <!-- messenger items for Select Addresses dialog -->
+  <RDF:Seq about="chrome://messenger/content/addressbook/abSelectAddressesDialog.xul">
+    <RDF:li>chrome://messenger/content/mailOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+
   <!-- messenger items for Composer -->
   <RDF:Seq about="chrome://editor/content/editor.xul">
     <RDF:li>chrome://messenger/content/mailEditorOverlay.xul</RDF:li>

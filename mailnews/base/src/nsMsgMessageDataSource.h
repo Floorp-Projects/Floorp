@@ -146,7 +146,7 @@ protected:
 	nsresult createStatusNodeFromFlag(PRUint32 flags, /*nsAutoString &statusStr*/ nsIRDFNode **node, PRBool needDisplayString);
 
 	nsresult createMessageFlaggedNode(nsIMessage *message,
-								   nsIRDFNode **target);
+								   nsIRDFNode **target, PRBool sort);
 	nsresult createFlaggedStringFromFlag(PRUint32 flags, nsAutoString &statusStr);
 
 	nsresult createMessagePriorityNode(nsIMessage *message,
@@ -158,7 +158,7 @@ protected:
 
 	nsresult createMessageSizeNode(nsIMessage *message, nsIRDFNode **target, PRBool sort);
 
-	nsresult createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target);
+	nsresult createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target, PRBool sort);
 	nsresult createMessageHasAttachmentNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageIsImapDeletedNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageMessageTypeNode(nsIMessage *message, nsIRDFNode **target);
@@ -228,6 +228,7 @@ protected:
 	static nsIRDFResource* kNC_Status;
 	static nsIRDFResource* kNC_StatusString;
 	static nsIRDFResource* kNC_Flagged;
+	static nsIRDFResource* kNC_FlaggedSort;
 	static nsIRDFResource* kNC_Priority;
 	static nsIRDFResource* kNC_PriorityString;
 	static nsIRDFResource* kNC_PrioritySort;
@@ -237,6 +238,7 @@ protected:
 	static nsIRDFResource* kNC_Unread;
 	static nsIRDFResource* kNC_MessageChild;
 	static nsIRDFResource* kNC_IsUnread;
+	static nsIRDFResource* kNC_IsUnreadSort;
 	static nsIRDFResource* kNC_HasAttachment;
 	static nsIRDFResource* kNC_IsImapDeleted;
 	static nsIRDFResource* kNC_MessageType;

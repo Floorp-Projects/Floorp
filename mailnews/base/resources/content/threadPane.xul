@@ -85,11 +85,11 @@ Rights Reserved.
     <treecol persist="hidden width" flex="7" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
     <splitter class="tree-splitter"/>
     <treecol persist="hidden width" flex="4" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
-	  <treecol persist="hidden width" id="UnreadButtonColumn"/>
+	  <treecol persist="hidden width" id="UnreadButtonColumn" rdf:resource="http://home.netscape.com/NC-rdf#IsUnread"/>
 	  <treecol persist="hidden width" flex="2" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
 	  <splitter class="tree-splitter"/>
     <treecol persist="hidden width" flex="1" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
-    <treecol persist="hidden width" id="FlaggedButtonColumn"/>
+    <treecol persist="hidden width" id="FlaggedButtonColumn" rdf:resource="http://home.netscape.com/NC-rdf#Flagged"/>
     <treecol persist="hidden width" flex="1" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
 	  <splitter class="tree-splitter"/>
     <treecol persist="hidden width" flex="1" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
@@ -106,10 +106,10 @@ Rights Reserved.
 		<treecell display="Thread" onclick="return top.ChangeThreadView();" class="treecell-header treecell-inset-header threadColumnHeader" tooltip="aTooltip" tooltiptext="&threadColumnHeader.tooltip;" id="ThreadColumnHeader"/> 
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&subjectColumn.label;" onclick="return top.MsgSortBySubject();" id="SubjectColumnHeader"/>
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" onclick="return top.MsgSortBySender();" value="&senderColumn.label;" id="SenderColumnHeader"/>
-		<treecell class="treecell-header treecell-header-image treecell-inset-header readColumnHeader sortDirectionIndicator" display="Read" onclick="return top.MsgSortByRead();" id="UnreadButtonColumnHeader"/> 
+		<treecell class="treecell-header treecell-header-image treecell-inset-header readColumnHeader" display="Read" onclick="return top.MsgSortByRead();" id="UnreadButtonColumnHeader"/> 
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&dateColumn.label;" onclick="return top.MsgSortByDate();" id="DateColumnHeader"/> 
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&priorityColumn.label;" onclick="return top.MsgSortByPriority();" id="PriorityColumnHeader"/>
-		<treecell class="treecell-header treecell-header-image treecell-inset-header flagColumnHeader sortDirectionIndicator" display="Flag" onclick="return top.MsgSortByFlagged();" id="FlaggedButtonColumnHeader"/>
+		<treecell class="treecell-header treecell-header-image treecell-inset-header flagColumnHeader" display="Flag" onclick="return top.MsgSortByFlagged();" id="FlaggedButtonColumnHeader"/>
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&statusColumn.label;" onclick="return top.MsgSortByStatus();" id="StatusColumnHeader"/>
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&sizeColumn.label;" onclick="return top.MsgSortBySize();" id="SizeColumnHeader"/>
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&unreadColumn.label;" onclick="return top.MsgSortByUnread();" id="UnreadColumnHeader"/>

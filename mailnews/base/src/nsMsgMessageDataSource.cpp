@@ -59,6 +59,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Date= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Status= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_StatusString= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Flagged= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_FlaggedSort= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Priority= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_PriorityString= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_PrioritySort= nsnull;
@@ -68,6 +69,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Total = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Unread = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageChild = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_IsUnread = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_IsUnreadSort = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_HasAttachment = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_IsImapDeleted = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageType = nsnull;
@@ -109,6 +111,7 @@ nsMsgMessageDataSource::nsMsgMessageDataSource()
 		rdf->GetResource(NC_RDF_STATUS, &kNC_Status);
 		rdf->GetResource(NC_RDF_STATUS_STRING, &kNC_StatusString);
 		rdf->GetResource(NC_RDF_FLAGGED, &kNC_Flagged);
+		rdf->GetResource(NC_RDF_FLAGGED_SORT, &kNC_FlaggedSort);
 		rdf->GetResource(NC_RDF_PRIORITY, &kNC_Priority);
 		rdf->GetResource(NC_RDF_PRIORITY_STRING, &kNC_PriorityString);
 		rdf->GetResource(NC_RDF_PRIORITY_SORT, &kNC_PrioritySort);
@@ -118,6 +121,7 @@ nsMsgMessageDataSource::nsMsgMessageDataSource()
 		rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES,   &kNC_Unread);
 		rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
 		rdf->GetResource(NC_RDF_ISUNREAD, &kNC_IsUnread);
+		rdf->GetResource(NC_RDF_ISUNREAD_SORT, &kNC_IsUnreadSort);
 		rdf->GetResource(NC_RDF_HASATTACHMENT, &kNC_HasAttachment);
 		rdf->GetResource(NC_RDF_ISIMAPDELETED, &kNC_IsImapDeleted);
 		rdf->GetResource(NC_RDF_MESSAGETYPE, &kNC_MessageType);
@@ -156,6 +160,7 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_Status, refcnt);
 		NS_RELEASE2(kNC_StatusString, refcnt);
 		NS_RELEASE2(kNC_Flagged, refcnt);
+		NS_RELEASE2(kNC_FlaggedSort, refcnt);
 		NS_RELEASE2(kNC_Priority, refcnt);
 		NS_RELEASE2(kNC_PriorityString, refcnt);
 		NS_RELEASE2(kNC_PrioritySort, refcnt);
@@ -165,6 +170,7 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_Unread, refcnt);
 		NS_RELEASE2(kNC_MessageChild, refcnt);
 		NS_RELEASE2(kNC_IsUnread, refcnt);
+		NS_RELEASE2(kNC_IsUnreadSort, refcnt);
 		NS_RELEASE2(kNC_HasAttachment, refcnt);
 		NS_RELEASE2(kNC_IsImapDeleted, refcnt);
 		NS_RELEASE2(kNC_MessageType, refcnt);
@@ -1062,7 +1068,9 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 	else if ((kNC_StatusString == property))
 		rv = createMessageStatusNode(message, target, PR_TRUE);
 	else if ((kNC_Flagged == property))
-		rv = createMessageFlaggedNode(message, target);
+		rv = createMessageFlaggedNode(message, target, PR_FALSE);
+	else if ((kNC_FlaggedSort == property))
+		rv = createMessageFlaggedNode(message, target, PR_TRUE);
 	else if ((kNC_Priority == property))
 		rv = createMessagePriorityNode(message, target, PR_FALSE);
 	else if ((kNC_PriorityString == property))
@@ -1078,7 +1086,9 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 	else if ((kNC_Unread == property))
 		rv = createMessageUnreadNode(message, target);
 	else if((kNC_IsUnread == property))
-		rv = createMessageIsUnreadNode(message, target);
+		rv = createMessageIsUnreadNode(message, target, PR_FALSE);
+	else if((kNC_IsUnreadSort == property))
+		rv = createMessageIsUnreadNode(message, target, PR_TRUE);
 	else if((kNC_HasAttachment == property))
 		rv = createMessageHasAttachmentNode(message, target);
 	else if((kNC_IsImapDeleted == property))
@@ -1243,7 +1253,7 @@ nsMsgMessageDataSource::createMessageStatusNode(nsIMessage *message,
 }
 
 nsresult
-nsMsgMessageDataSource::createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target)
+nsMsgMessageDataSource::createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target, PRBool sort)
 {
 	nsresult rv;
 	PRUint32 flags;
@@ -1251,9 +1261,9 @@ nsMsgMessageDataSource::createMessageIsUnreadNode(nsIMessage *message, nsIRDFNod
 	if(NS_FAILED(rv))
 		return rv;
 	if(flags & MSG_FLAG_READ)
-		*target = kFalseLiteral;
+		*target = sort ? kHighestSortLiteral : kFalseLiteral;
 	else
-		*target = kTrueLiteral;
+		*target =  sort ? kLowestSortLiteral : kTrueLiteral;
 
 	NS_IF_ADDREF(*target);
 	return NS_OK;
@@ -1335,19 +1345,18 @@ nsMsgMessageDataSource::createMessageOrderReceivedSortNode(nsIMessage *message, 
 
 nsresult
 nsMsgMessageDataSource::createMessageFlaggedNode(nsIMessage *message,
-                                               nsIRDFNode **target)
+                                               nsIRDFNode **target, PRBool sort)
 {
 	nsresult rv;
 	PRUint32 flags;
 	rv = message->GetFlags(&flags);
 	if(NS_FAILED(rv))
 		return rv;
-	*target = kEmptyStringLiteral;
 
 	if(flags & MSG_FLAG_MARKED)
-		*target = kFlaggedLiteral;
+		*target = sort ? kHighestSortLiteral : kFlaggedLiteral;
 	else 
-		*target = kUnflaggedLiteral;
+		*target = sort ? kLowestSortLiteral : kUnflaggedLiteral;
 	NS_IF_ADDREF(*target);
 	return NS_OK;
 }
