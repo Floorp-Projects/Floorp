@@ -189,29 +189,15 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kMimeContentTypeHandlerCID,
                                        "MIME Calendar Handler",
                                        "mimecth:text/calendar",
                                        path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-
-#ifdef NS_DEBUG
-  printf("*** Register MIME Calendar Content Type Handler...\n");
-#endif
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -220,20 +206,11 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kMimeContentTypeHandlerCID, path);
-  if (NS_FAILED(rv)) goto done;
 
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
