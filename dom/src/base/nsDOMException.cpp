@@ -276,7 +276,7 @@ nsDOMException::GetData(nsISupports **aData)
 NS_IMETHODIMP
 nsDOMException::ToString(char **aReturn)
 {
-  *aReturn = nsCRT::strdup("foo");
+  *aReturn = nsnull;
 
   const ResultStruct *rs = NSResultToResultStruct(mResult);
 
