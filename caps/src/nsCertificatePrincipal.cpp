@@ -75,6 +75,10 @@ nsCertificatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
         *result = PR_TRUE;
         return NS_OK;
     }
+    if (!other) {
+        *result = PR_FALSE;
+        return NS_OK;
+    }
     nsresult rv;
     nsCOMPtr<nsICertificatePrincipal> otherCertificate = 
         do_QueryInterface(other, &rv);
