@@ -1,0 +1,90 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+
+
+DEPTH		= ../..
+
+MODULE		= mailto
+LIBRARY_NAME	= mailto
+
+CSRCS	= \
+	ad_strm.c \
+	ap_decod.c \
+	ap_encod.c \
+	appledbl.c \
+	bh_strm.c \
+	m_binhex.c \
+	msgutils.c \
+	$(NULL)
+
+
+CPPSRCS	= \
+	addrutil.cpp \
+	bytearr.cpp \
+	dwordarr.cpp \
+	mhtmlstm.cpp \
+	msgbg.cpp \
+	msgcflds.cpp \
+	msgcpane.cpp \
+	msgglue.cpp \
+	msgmast.cpp \
+	msgmdn.cpp \
+	msgpane.cpp \
+	msgppane.cpp \
+	msgprefs.cpp \
+	msgsend.cpp \
+	msgsendp.cpp \
+	msgurlq.cpp \
+	msgzap.cpp \
+	ptrarray.cpp \
+	$(NULL)
+# We'd like to include msgdlqml.cpp eventually (deliver queued mail)
+
+
+EXPORTS = \
+	ad_codes.h \
+	appledbl.h \
+	bytearr.h \
+	dwordarr.h \
+	errcode.h \
+	error.h \
+	m_binhex.h \
+	mhtmlstm.h \
+	msg.h \
+	msgcflds.h \
+	msgcpane.h \
+	msghdr.h \
+	msgmast.h \
+	msgmdn.h \
+	msgpane.h \
+	msgppane.h \
+	msgprefs.h \
+	msgprnot.h \
+	msgsend.h \
+	msgsendp.h \
+	msgutils.h \
+	msgzap.h \
+	ptrarray.h \
+	$(NULL)
+
+REQUIRES	= nspr htmldlgs img util layer pref security js java net progress network
+
+
+include $(DEPTH)/config/rules.mk
+
+# INCLUDES	+= -I$(DIST)/include -I$(PUBLIC)/security -I../libaddr -I$(PUBLIC)/msg
