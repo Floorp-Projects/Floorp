@@ -97,22 +97,8 @@ function filepickerLoad() {
   handleColumnClick("FilenameColumn");
 
   try {
-    var buttonLabel;
-    switch (filePickerMode) {
-      case nsIFilePicker.modeOpen:
-        buttonLabel = gFilePickerBundle.getString("openButtonLabel");
-        break;
-      case nsIFilePicker.modeSave:
-        buttonLabel = gFilePickerBundle.getString("saveButtonLabel");
-        break;
-      case nsIFilePicker.modeGetFolder:
-        buttonLabel = gFilePickerBundle.getString("selectFolderButtonLabel");
-        break;
-    }
-
-    if (buttonLabel) {
-      okButton.setAttribute("label", buttonLabel);
-    }
+    var buttonLabel = getOKAction();
+    okButton.setAttribute("label", buttonLabel);
   } catch (exception) {
     // keep it set to "OK"
   }
@@ -124,7 +110,9 @@ function filepickerLoad() {
   var outliner = document.getElementById("directoryOutliner");
   outliner.outlinerBoxObject.view = outlinerView;
 
-  doEnabling();
+  // Start out with the ok button disabled since nothing will be
+  // selected and nothing will be in the text field.
+  okButton.disabled = true;
   textInput.focus();
 
   // This allows the window to show onscreen before we begin
@@ -311,22 +299,21 @@ function onDblClick(e) {
   if (t.localName != "outlinerbody")
     return;
 
+  openSelectedFile();
+}
+
+function openSelectedFile() {
   var file = outlinerView.getSelectedFile();
   if (!file)
     return;
 
-  if (file.isSymlink()) {
-    var targetFile = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
-    targetFile.initWithUnicodePath(file.unicodeTarget);
-    file = targetFile;
-  }
+  if (file.isSymlink())
+    file.initWithUnicodePath(file.unicodeTarget);
 
-  if (file.isDirectory()) {
+  if (file.isDirectory())
     gotoDirectory(file);
-  }
-  else if (file.isFile()) {
+  else if (file.isFile())
     doOKButton();
-  }
 }
 
 function onClick(e) {
@@ -391,6 +378,15 @@ function doSort(sortType) {
 function onKeypress(e) {
   if (e.keyCode == 8) /* backspace */
     goUp();
+  else if (e.keyCode == 13) { /* enter */
+    var file = outlinerView.getSelectedFile();
+    if (file) {
+      if (file.isDirectory()) {
+        gotoDirectory(file);
+        e.preventDefault();
+      }
+    }
+  }
 }
 
 function doEnabling() {
@@ -401,15 +397,50 @@ function doEnabling() {
   okButton.disabled = !enable;
 }
 
-function onSelect(file) {
-  var path = file.unicodeLeafName;
+function onOutlinerFocus(event) {
+  // Reset the button label and enabled/disabled state.
+  onSelect(outlinerView.getSelectedFile());
+}
 
-  if (path) {
-    if ((filePickerMode == nsIFilePicker.modeGetFolder) || file.isFile()) {
-      textInput.value = path;
-      doEnabling();
+function getOKAction(file) {
+  if (file && file.isDirectory() && filePickerMode != nsIFilePicker.modeGetFolder)
+    return gFilePickerBundle.getString("openButtonLabel");
+
+  switch(filePickerMode) {
+  case nsIFilePicker.modeGetFolder:
+    return gFilePickerBundle.getString("selectFolderButtonLabel");
+    break;
+  case nsIFilePicker.modeOpen:
+    return gFilePickerBundle.getString("openButtonLabel");
+    break;
+  case nsIFilePicker.modeSave:
+    return gFilePickerBundle.getString("saveButtonLabel");
+    break;
+  }
+}
+
+function onSelect(file) {
+  if (file) {
+    var path = file.unicodeLeafName;
+    
+    if (path) {
+      if ((filePickerMode == nsIFilePicker.modeGetFolder) || !file.isDirectory())
+        textInput.value = path;
+      
+      var buttonLabel = getOKAction(file);
+      okButton.setAttribute("label", buttonLabel);
+      okButton.disabled = false;
+      return;
     }
   }
+
+  okButton.disabled = true;
+}
+
+function onTextFieldFocus() {
+  var buttonLabel = getOKAction(null);
+  okButton.setAttribute("label", buttonLabel);
+  doEnabling();
 }
 
 function onDirectoryChanged(target)
