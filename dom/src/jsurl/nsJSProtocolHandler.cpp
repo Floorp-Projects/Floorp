@@ -64,6 +64,7 @@
 #include "nsIConsoleService.h"
 #include "nsXPIDLString.h"
 #include "prprf.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -136,6 +137,9 @@ nsresult nsJSThunk::EvaluateScript()
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
+
+    // Unescape the script
+    NS_UnescapeURL(script);
 
     // Get the url.
     nsCAutoString url;
