@@ -4,9 +4,9 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
-  <binding id="inputFields" extends="resource://gre/res/builtin/htmlBindings.xml#inputFieldsBase">
+  <binding id="inputFields">
     <handlers>
-      
+#include ../input-fields-base.inc
       <handler event="keypress" keycode="VK_UP"   command="cmd_beginLine"/>
       <handler event="keypress" keycode="VK_DOWN" command="cmd_endLine"/>
       <handler event="keypress" keycode="VK_UP"   modifiers="shift" command="cmd_selectBeginLine"/>
@@ -27,8 +27,9 @@
     </handlers>
   </binding>
 
-  <binding id="textAreas" extends="resource://gre/res/builtin/htmlBindings.xml#textAreasBase">
+  <binding id="textAreas">
     <handlers>
+#include ../textareas-base.inc
       <handler event="keypress" keycode="VK_HOME" command="cmd_scrollTop"/>
       <handler event="keypress" keycode="VK_END"  command="cmd_scrollBottom"/>
       <handler event="keypress" keycode="VK_HOME" modifiers="shift" command="cmd_scrollTop"/>
@@ -61,6 +62,7 @@
 
   <binding id="browser">
     <handlers>
+#include ../browser-base.inc
       <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_scrollPageUp"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown"/>
 
@@ -77,6 +79,7 @@
 
   <binding id="editor">
     <handlers>
+#include ../editor-base.inc
       <handler event="keypress" keycode="VK_HOME" command="cmd_scrollTop" /> 
       <handler event="keypress" keycode="VK_END"  command="cmd_scrollBottom" /> 
       <handler event="keypress" keycode="VK_HOME" modifiers="shift" command="cmd_scrollTop"/>

@@ -74,7 +74,7 @@ protected:
   PRBool IsEditor() ;
 
   // lazily load the handlers
-  virtual nsresult EnsureHandlers();
+  virtual nsresult EnsureHandlers(PRBool *aIsEditor);
   
   // walk the handlers, looking for one to handle the event
   virtual nsresult WalkHandlersInternal(nsIDOMEvent* aKeyEvent,
@@ -91,8 +91,7 @@ protected:
 
   // these are not owning references; the prototype handlers are owned
   // by the prototype bindings which are owned by the docinfo.
-  nsXBLPrototypeHandler* mHandler;            // XP bindings
-  nsXBLPrototypeHandler* mPlatformHandler;    // platform-specific bindings
+  nsXBLPrototypeHandler* mHandler;            // platform bindings
   nsXBLPrototypeHandler* mUserHandler;        // user-specific bindings
 
   static nsXBLSpecialDocInfo* sXBLSpecialDocInfo;       // holds document info about bindings

@@ -137,6 +137,7 @@
 #include "nsViewManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsFrame.h"
+#include "nsXBLWindowKeyHandler.h"
 
 // DOM includes
 #include "nsDOMException.h"
@@ -419,6 +420,7 @@ Shutdown()
   GlobalWindowImpl::ShutDown();
   nsDOMClassInfo::ShutDown();
   nsTextControlFrame::ShutDown();
+  nsXBLWindowKeyHandler::ShutDown();
 }
 
 #ifdef NS_DEBUG

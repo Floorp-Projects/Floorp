@@ -255,6 +255,10 @@ static const nsModuleComponentInfo components[] =
   { "TextArea Native Keybindings",
     NS_NATIVEKEYBINDINGSTEXTAREA_CID,
     NS_NATIVEKEYBINDINGSTEXTAREA_CONTRACTID,
+    nsNativeKeyBindingsTextAreaConstructor },
+  { "Editor Native Keybindings",
+    NS_NATIVEKEYBINDINGSEDITOR_CID,
+    NS_NATIVEKEYBINDINGSEDITOR_CONTRACTID,
     nsNativeKeyBindingsTextAreaConstructor }
 };
 

@@ -78,15 +78,8 @@ nsXBLWindowDragHandler::WalkHandlers(nsIDOMEvent* aDragEvent, nsIAtom* aEventTyp
   if (!dragEvent)
     return NS_OK;
 
-  EnsureHandlers();
+  EnsureHandlers(nsnull);
   
-  if (!mElement) {
-    WalkHandlersInternal(aDragEvent, aEventType, mPlatformHandler);
-    evt->GetPreventDefault(&prevent);
-    if (prevent)
-      return NS_OK; // Handled by the platform. Our work here is done.
-  }
-
   WalkHandlersInternal(aDragEvent, aEventType, mHandler);
   
   return NS_OK;

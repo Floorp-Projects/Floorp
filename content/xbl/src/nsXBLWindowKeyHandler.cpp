@@ -54,7 +54,14 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"
 #include "nsXBLAtoms.h"
+#include "nsINativeKeyBindings.h"
+#include "nsIController.h"
+#include "nsIControllers.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIFocusController.h"
+#include "nsPIWindowRoot.h"
 
+static nsINativeKeyBindings *sNativeEditorBindings = nsnull;
 
 nsXBLWindowKeyHandler::nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventReceiver* aReceiver)
   : nsXBLWindowHandler(aElement, aReceiver)
@@ -99,21 +106,54 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
 // to a particular element rather than the document
 //
 nsresult
-nsXBLWindowKeyHandler::EnsureHandlers()
+nsXBLWindowKeyHandler::EnsureHandlers(PRBool *aIsEditor)
 {
   if (mElement) {
     // We are actually a XUL <keyset>.
-    if (mHandler)
+    if (mHandler) {
+      if (aIsEditor)
+        *aIsEditor = PR_FALSE;
+
       return NS_OK;
+    }
+
     nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
     BuildHandlerChain(content, &mHandler);
   }
   else // We are an XBL file of handlers.
-    nsXBLWindowHandler::EnsureHandlers();
+    nsXBLWindowHandler::EnsureHandlers(aIsEditor);
   
   return NS_OK;
 }
 
+static nsINativeKeyBindings*
+GetEditorKeyBindings()
+{
+  static PRBool noBindings = PR_FALSE;
+  if (!sNativeEditorBindings && !noBindings) {
+    CallGetService(NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "editor",
+                   &sNativeEditorBindings);
+
+    if (!sNativeEditorBindings) {
+      noBindings = PR_TRUE;
+    }
+  }
+
+  return sNativeEditorBindings;
+}
+
+static void
+DoCommandCallback(const char *aCommand, void *aData)
+{
+  nsIControllers *controllers = NS_STATIC_CAST(nsIControllers*, aData);
+  if (controllers) {
+    nsCOMPtr<nsIController> controller;
+    controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));
+    if (controller) {
+      controller->DoCommand(aCommand);
+    }
+  }
+}
 
 NS_IMETHODIMP
 nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
@@ -140,25 +180,57 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
   if (!keyEvent)
     return NS_OK;
 
-  EnsureHandlers();
+  PRBool isEditor;
+  EnsureHandlers(&isEditor);
   
   if (!mElement) {
     if (mUserHandler) {
       WalkHandlersInternal(aKeyEvent, aEventType, mUserHandler);
       evt->GetPreventDefault(&prevent);
       if (prevent)
-        return NS_OK; // Handled by the platform. Our work here is done.
-    }
-
-    if (mPlatformHandler) {
-      WalkHandlersInternal(aKeyEvent, aEventType, mPlatformHandler);
-      evt->GetPreventDefault(&prevent);
-      if (prevent)
-        return NS_OK; // Handled by the platform. Our work here is done.
+        return NS_OK; // Handled by the user bindings. Our work here is done.
     }
   }
 
   WalkHandlersInternal(aKeyEvent, aEventType, mHandler);
+
+  nsINativeKeyBindings *nativeBindings;
+  if (isEditor && (nativeBindings = GetEditorKeyBindings())) {
+    nsNativeKeyEvent nativeEvent;
+    keyEvent->GetCharCode(&nativeEvent.charCode);
+    keyEvent->GetKeyCode(&nativeEvent.keyCode);
+    keyEvent->GetAltKey(&nativeEvent.altKey);
+    keyEvent->GetCtrlKey(&nativeEvent.ctrlKey);
+    keyEvent->GetShiftKey(&nativeEvent.shiftKey);
+    keyEvent->GetMetaKey(&nativeEvent.metaKey);
+
+    // get the DOM window we're attached to
+    nsCOMPtr<nsIControllers> controllers;
+    nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(mReceiver);
+    if (root) {
+      nsCOMPtr<nsIFocusController> fc;
+      root->GetFocusController(getter_AddRefs(fc));
+      if (fc) {
+        fc->GetControllers(getter_AddRefs(controllers));
+      }
+    }
+
+    PRBool handled;
+    if (aEventType == nsXBLAtoms::keyup) {
+      handled = sNativeEditorBindings->KeyUp(nativeEvent,
+                                             DoCommandCallback, controllers);
+    } else if (aEventType == nsXBLAtoms::keypress) {
+      handled = sNativeEditorBindings->KeyPress(nativeEvent,
+                                                DoCommandCallback, controllers);
+    } else {
+      handled = sNativeEditorBindings->KeyDown(nativeEvent,
+                                               DoCommandCallback, controllers);
+    }
+
+    if (handled)
+      aKeyEvent->PreventDefault();
+
+  }
   
   return NS_OK;
 }
@@ -195,7 +267,12 @@ nsXBLWindowKeyHandler::EventMatched(nsXBLPrototypeHandler* inHandler,
   return PR_FALSE;
 }
 
- 
+/* static */ void
+nsXBLWindowKeyHandler::ShutDown()
+{
+  NS_IF_RELEASE(sNativeEditorBindings);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult

@@ -43,26 +43,29 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-DIRS		= win
+PLATFORM_DIR	= win
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		= mac
+PLATFORM_DIR	= mac
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-DIRS		= gtk2
+PLATFORM_DIR	= gtk2
 else
-DIRS		= unix
+PLATFORM_DIR	= unix
 endif
 endif
 endif
 
 include $(topsrcdir)/config/rules.mk
 
-_BUILTINS = htmlBindings.xml
+PLATFORM_BINDINGS = $(srcdir)/$(PLATFORM_DIR)/platformHTMLBindings.xml
+PREPROCESS_BINDINGS = $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(PLATFORM_BINDINGS)
 
-libs:: $(_BUILTINS)
-	$(INSTALL) $^ $(DIST)/bin/res/builtin
+$(DIST)/bin/res/builtin/platformHTMLBindings.xml $(DESTDIR)$(mozappdir)/res/builtin/platformHTMLBindings.xml: $(PLATFORM_BINDINGS) $(wildcard $(srcdir)/*.inc)
+	@mkdir -p $(dir $@)
+	@rm -f $@
+	@$(PREPROCESS_BINDINGS) > $@
 
-install:: $(_BUILTINS)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/builtin 
+libs:: $(DIST)/bin/res/builtin/platformHTMLBindings.xml
 
+install:: $(DESTDIR)$(mozappdir)/res/builtin/platformHTMLBindings.xml

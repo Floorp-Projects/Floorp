@@ -258,7 +258,6 @@ res\arrow.gif
 res\arrowd.gif
 res\loading-image.gif
 res\broken-image.gif
-res\builtin\htmlBindings.xml
 res\builtin\platformHTMLBindings.xml
 res\entityTables\html40Special.properties
 res\entityTables\htmlEntityVersions.properties
