@@ -38,6 +38,8 @@ interface nsILoadGroupListenerFactory : nsISupports
 
 /**
  * A load group maintains a collection of active URL requests. 
+ *
+ * @status UNDER_REVIEW
  */
 [scriptable, uuid(19845248-29ab-11d3-8cce-0060b0fc14a3)]
 interface nsILoadGroup : nsIRequest

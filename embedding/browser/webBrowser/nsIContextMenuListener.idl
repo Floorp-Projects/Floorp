@@ -31,6 +31,8 @@ interface nsIDOMNode;
 /**
  * The nsIContextMenuListener interface is called on embedding clients when
  * a context menu should be displayed.
+ *
+ * @status UNDER_REVIEW
  */
 
 [uuid(3478b6b0-3875-11d4-94ef-0020183bf181)]

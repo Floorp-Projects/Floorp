@@ -52,6 +52,8 @@
  * stream to a URI as a source/destination, as well as providing additional     
  * accessors to destructure the path, query and reference portions typically    
  * associated with URLs.                                                        
+ *
+ * @status UNDER_REVIEW
  */
 
 %{C++

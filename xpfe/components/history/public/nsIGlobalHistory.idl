@@ -20,10 +20,12 @@
  * Contributor(s): 
  */
 
-/*
-
-  The interface to global history.
-
+/**
+ *
+ * The interface to global history.
+ *
+ * @status FROZEN
+ * @version 1.0
  */
 
 #include "nsISupports.idl"

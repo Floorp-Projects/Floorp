@@ -37,6 +37,8 @@
 
 /**
  * Simplified graphics interface for JS rendering.
+ *
+ * @status UNDER_REVIEW
  */
 [scriptable, uuid(CAE87E20-479E-11d4-A856-00105A183419)]
 

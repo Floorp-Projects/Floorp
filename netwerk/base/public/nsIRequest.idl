@@ -22,6 +22,10 @@
 
 #include "nsISupports.idl"
 
+/**
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(F2CAABA0-2F25-11d3-A164-0050041CAF44)]
 interface nsIRequest : nsISupports
 {

@@ -25,6 +25,10 @@
 #include "nsISupports.idl"
 
 interface nsIAtom;
+
+/**
+ * @status UNDER_REVIEW
+ */
                   
 [scriptable, uuid(a3ec67f0-465a-11d3-9a89-0080c7cb1080)]
 interface nsIHTTPHeader : nsISupports

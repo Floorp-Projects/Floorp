@@ -21,6 +21,10 @@
 
 #include "nsISupports.idl"
 
+/**
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(b8100c90-73be-11d2-92a5-00105a1b0d64)]
 interface nsIClipboardCommands : nsISupports {
 	/**

@@ -28,6 +28,8 @@ interface nsIWebProgressListener;
 /**
  * The nsIWebProgress interface is used to look at the progress of document
  * loading in a particular DOM Window.
+ *
+ * @status UNDER_REVIEW
  */
 
 [scriptable, uuid(570F39D0-EFD0-11d3-B093-00A024FFC08C)]

@@ -26,6 +26,10 @@ interface nsIURI;
 interface nsIInputStream;
 interface nsIDOMDocument;
 
+/**
+ * @status UNDER_REVIEW
+ */
+
 [scriptable, uuid(F823C5B0-AF6C-11d4-9597-0020183BF181)]
 interface nsIWebBrowserPersistProgress : nsISupports
 {

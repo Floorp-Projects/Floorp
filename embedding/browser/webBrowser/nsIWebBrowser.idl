@@ -30,6 +30,8 @@ interface nsIWeakReference;
 
 /**
  * The nsIWebBrowser
+ *
+ * @status UNDER_REVIEW
  */
 
 [scriptable, uuid(69E5DF00-7B8B-11d3-AF61-00A024FFC08C)]

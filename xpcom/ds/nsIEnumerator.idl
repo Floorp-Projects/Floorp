@@ -26,6 +26,13 @@
 #define NS_ENUMERATOR_FALSE 1
 %}
 
+/**
+ * nsISimpleEnumerator
+ *
+ * @status FROZEN
+ * @version 1.0
+ */
+
 [scriptable, uuid(D1899240-F9D2-11D2-BDD6-000064657374)]
 interface nsISimpleEnumerator : nsISupports {
   boolean hasMoreElements();

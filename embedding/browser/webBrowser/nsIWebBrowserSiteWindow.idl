@@ -26,6 +26,8 @@
  * The nsIWebBrowserSiteWindow is implemented by the embedder on the chrome
  * object to provide the web browser with the means to resize the host window,
  * and to the query for some of its properties.
+ *
+ * @status UNDER_REVIEW
  */
 
 [scriptable, uuid(3E5432CD-9568-4bd1-8CBE-D50ABA110743)]

@@ -26,11 +26,15 @@
 interface nsIHelperAppLauncher;
 interface nsILocalFile;
 
-// nsIHelperAppLauncherDialog
-// ==========================
-// This service is used to display a confirmatino dialog before
-// launching a "helper app" to handle content not handled by
-// Mozilla.
+/**
+ * nsIHelperAppLauncherDialog
+ * ==========================
+ * This service is used to display a confirmatino dialog before
+ * launching a "helper app" to handle content not handled by
+ * Mozilla.
+ *
+ * @status UNDER_REVIEW
+ */
 
 [scriptable, uuid(d7ebddf0-4c84-11d4-807a-00600811a9c3)]
 interface nsIHelperAppLauncherDialog : nsISupports {
