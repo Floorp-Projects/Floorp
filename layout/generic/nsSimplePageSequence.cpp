@@ -741,6 +741,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext,
     PRINT_DEBUG_MSG4("SeqFr::Paint -> %p PageNo: %d  View: %p", pf, mPageNum, view);
     PRINT_DEBUG_MSG3(" At: %d,%d\n", mMargin.left+mOffsetX, mMargin.top+mOffsetY);
 
+    view->SetContentTransparency(PR_FALSE);
     vm->Display(view, mMargin.left+mOffsetX, mMargin.top+mOffsetY);
 
 
