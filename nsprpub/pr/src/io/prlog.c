@@ -194,7 +194,10 @@ void _PR_InitLog(void)
 
     ev = PR_GetEnv("NSPR_LOG_MODULES");
     if (ev && ev[0]) {
-        char module[64];
+        char module[64];  /* Security-Critical: If you change this
+                           * size, you must also change the sscanf
+                           * format string to be size-1.
+                           */
         PRBool isSync = PR_FALSE;
         PRIntn evlen = strlen(ev), pos = 0;
         PRInt32 bufSize = DEFAULT_BUF_SIZE;
@@ -295,7 +298,10 @@ static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
 
     ev = PR_GetEnv("NSPR_LOG_MODULES");
     if (ev && ev[0]) {
-        char module[64];
+        char module[64];  /* Security-Critical: If you change this
+                           * size, you must also change the sscanf
+                           * format string to be size-1.
+                           */
         PRIntn evlen = strlen(ev), pos = 0;
         while (pos < evlen) {
             PRIntn level = 1, count = 0, delta = 0;
