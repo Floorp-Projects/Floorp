@@ -3104,7 +3104,9 @@ void
 nsGfxTextControlFrame2::SubmitAttempt()
 {
   // Submit the form
-  if (mFormFrame && mTextSelImpl) {
+  PRInt32 type;
+  GetType(&type);
+  if (mFormFrame && mTextSelImpl && NS_FORM_TEXTAREA != type) {
     nsIContent *formContent = nsnull;
 
     nsEventStatus status = nsEventStatus_eIgnore;
