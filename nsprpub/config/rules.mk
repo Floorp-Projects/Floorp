@@ -268,7 +268,11 @@ $(LIBRARY): $(OBJS)
 ifdef XP_OS2_VACPP
 	$(AR) $(subst /,\\,$(OBJS)) $(AR_EXTRA_ARGS)
 else
+ifdef USE_AUTOCONF
+	$(AR) $(AR_FLAGS) $(OBJS) $(AR_EXTRA_ARGS)
+else
 	$(AR) $(OBJS) $(AR_EXTRA_ARGS)
+endif # USE_AUTOCONF
 endif
 	$(RANLIB) $@
 
