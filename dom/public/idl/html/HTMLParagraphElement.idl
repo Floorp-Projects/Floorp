@@ -1,3 +1,0 @@
-   interface HTMLParagraphElement : HTMLElement {
-     attribute wstring         align;
-   };

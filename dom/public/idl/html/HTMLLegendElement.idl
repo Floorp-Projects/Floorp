@@ -1,5 +1,0 @@
-   interface HTMLLegendElement : HTMLElement {
-     attribute HTMLFormElement form;
-     attribute wstring         accessKey;
-     attribute wstring         align;
-   };

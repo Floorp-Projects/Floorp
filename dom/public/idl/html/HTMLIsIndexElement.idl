@@ -1,4 +1,0 @@
-   interface HTMLIsIndexElement : HTMLElement {
-     attribute HTMLFormElement form;
-     attribute wstring         prompt;
-   };

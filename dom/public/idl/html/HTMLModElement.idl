@@ -1,4 +1,0 @@
-   interface HTMLModElement : HTMLElement {
-     attribute wstring         cite;
-     attribute wstring         dateTime;
-   };

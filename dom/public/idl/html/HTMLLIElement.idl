@@ -1,4 +1,0 @@
-   interface HTMLLIElement : HTMLElement {
-     attribute wstring         type;
-     attribute long            value;
-   };

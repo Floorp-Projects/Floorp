@@ -1,3 +1,0 @@
-   interface HTMLBRElement : HTMLElement {
-     attribute wstring         clear;
-   };

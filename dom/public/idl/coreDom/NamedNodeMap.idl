@@ -1,7 +1,0 @@
-   interface NamedNodeMap {
-     Node                      getNamedItem(in wstring name);
-     void                      setNamedItem(in Node node);
-     Node                      removeNamedItem(in wstring name);
-     Node                      item(in unsigned long index);
-     readonly attribute unsigned long length;
-   };

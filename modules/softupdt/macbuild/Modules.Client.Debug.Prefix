@@ -1,8 +1,0 @@
-//
-//	Debug specific defines for the JavaRuntime
-//
-
-#define DEBUG 1
-#define TRACING 1
-
-#include "Client.Prefix.h"

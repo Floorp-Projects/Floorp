@@ -1,3 +1,0 @@
-   interface DocumentFragment : Node {
-     readonly attribute Document        masterDoc;
-   };

@@ -1,5 +1,0 @@
-//
-//	Non-debug specific defines for the JavaRuntime
-//
-
-#include "Client.Prefix.h"

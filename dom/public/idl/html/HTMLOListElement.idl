@@ -1,5 +1,0 @@
-   interface HTMLOListElement : HTMLElement {
-     attribute boolean         compact;
-     attribute long            start;
-     attribute wstring         type;
-   };

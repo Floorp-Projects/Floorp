@@ -1,5 +1,0 @@
-   interface HTMLFontElement : HTMLElement {
-     attribute wstring         color;
-     attribute wstring         face;
-     attribute wstring         size;
-   };

@@ -1,9 +1,0 @@
-   interface HTMLButtonElement : HTMLElement {
-     attribute HTMLFormElement form;
-     attribute wstring         accessKey;
-     attribute boolean         disabled;
-     attribute wstring         name;
-     attribute long            tabIndex;
-     attribute wstring         type;
-     attribute wstring         value;
-   };

@@ -1,9 +1,0 @@
-   interface HTMLScriptElement : HTMLElement {
-     attribute wstring         text;
-     attribute wstring         htmlFor;
-     attribute wstring         event;
-     attribute wstring         charset;
-     attribute boolean         defer;
-     attribute wstring         src;
-     attribute wstring         type;
-   };

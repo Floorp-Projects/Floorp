@@ -1,5 +1,0 @@
-   interface Text : Data {
-     Text                      splitText(in unsigned long offset);
-     Text                      joinText(in Text node1, 
-                                        in Text node2);
-   };

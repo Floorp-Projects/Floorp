@@ -1,6 +1,0 @@
-   interface HTMLMetaElement : HTMLElement {
-     attribute wstring         content;
-     attribute wstring         httpEquiv;
-     attribute wstring         name;
-     attribute wstring         scheme;
-   };

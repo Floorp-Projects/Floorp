@@ -1,9 +1,0 @@
-nsCSSProps.cpp
-nsCSSKeywords.cpp
-nsColorNames.cpp
-nsColorNamesRGB.cpp
-nsHTMLTags.cpp
-nsCSSPropIDs.h
-nsCSSKeywordIDs.h
-nsColorNameIDs.h
-nsHTMLTagIDs.h
