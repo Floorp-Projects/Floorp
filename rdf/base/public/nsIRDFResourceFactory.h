@@ -16,6 +16,14 @@
  * Reserved.
  */
 
+
+/*
+
+  The RDF resource factory interface. A resource factory produces
+  nsIRDFResource objects for a specified URI prefix.
+
+ */
+
 #ifndef nsIRDFResourceFactory_h__
 #define nsIRDFResourceFactory_h__
 

@@ -16,19 +16,11 @@
  * Reserved.
  */
 
-#include "nsIRDFCursor.h"
-#include "nsIRDFNode.h"
-#include "nsIRDFDataBase.h"
-#include "nsISupportsArray.h"
-#include "nsRepository.h"
-#include "nsVoidArray.h"
-#include "prlog.h"
-
 /*
 
   A simple "database" implementation. An RDF database is just a
-  "strategy" pattern for combining individual data sources into a
-  collective graph.
+  strategy for combining individual data sources into a collective
+  graph.
 
 
   1) A database is a sequence of data sources. The set of data sources
@@ -45,6 +37,14 @@
      fixed.
 
 */
+
+#include "nsIRDFCursor.h"
+#include "nsIRDFNode.h"
+#include "nsIRDFDataBase.h"
+#include "nsISupportsArray.h"
+#include "nsRepository.h"
+#include "nsVoidArray.h"
+#include "prlog.h"
 
 static NS_DEFINE_IID(kIRDFArcsInCursorIID,    NS_IRDFARCSINCURSOR_IID);
 static NS_DEFINE_IID(kIRDFArcsOutCursorIID,   NS_IRDFARCSOUTCURSOR_IID);

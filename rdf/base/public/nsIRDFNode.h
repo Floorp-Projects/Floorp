@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+/*
+
+  RDF node interfaces, including nsIRDFNode, nsIRDFResource, and
+  nsIRDFLiteral. Nodes are the elements that appear in RDF graphs.
+
+ */
+
 #ifndef nsIRDFNode_h__
 #define nsIRDFNode_h__
 

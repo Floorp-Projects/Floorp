@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+/*
+
+  RDF data base interface. An RDF database aggregates individual RDF
+  data sources.
+
+ */
+
 #ifndef nsIRDFDataBase_h__
 #define nsIRDFDataBase_h__
 

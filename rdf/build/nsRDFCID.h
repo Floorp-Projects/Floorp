@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+/*
+
+  XPCOM Class IDs for RDF objects that can be constructed via the RDF
+  factory.
+
+ */
+
 #ifndef nsRDFCID_h__
 #define nsRDFCID_h__
 

@@ -16,6 +16,12 @@
  * Reserved.
  */
 
+/*
+
+  The RDF factory implementation.
+
+ */
+
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIRDFContentSink.h"
