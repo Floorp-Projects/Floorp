@@ -551,6 +551,10 @@
           }
           var browserTarget = whereToOpenLink(aEvent);
           BookmarksCommand.openBookmark(selection, browserTarget, this.db);
+          // give focus back to this; openBookmark/openLocation steals it and gives it
+          // to the browser content.  This is to make things like cut/copy/etc. behave sanely
+          // in the bookmarks sidebar.
+          this.focus();
         ]]></body>
       </method>
 

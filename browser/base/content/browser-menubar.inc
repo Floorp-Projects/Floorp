@@ -302,8 +302,8 @@
                   datasources="rdf:bookmarks rdf:files rdf:localsearch" 
                   ref="NC:BookmarksRoot" flags="dont-test-empty"
                   template='bookmarks-template'
-                  onpopupshowing="BookmarksMenu.showOpenInTabsMenuItem(event.target)"
-                  onpopuphidden="BookmarksMenu.hideOpenInTabsMenuItem(event.target)"
+                  onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
+                  onpopuphidden="BookmarksMenu.onHideMenu(event.target)"
                   oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
                   onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
                   ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
