@@ -25,6 +25,7 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMKeyListener.h"
+#include "nsIDOMFocusListener.h"
 #include "nsIDOMEventReceiver.h"
 
 class nsMenuBarFrame;
@@ -32,7 +33,7 @@ class nsIPresContext;
 
 /** editor Implementation of the DragListener interface
  */
-class nsMenuBarListener : public nsIDOMKeyListener
+class nsMenuBarListener : public nsIDOMKeyListener, nsIDOMFocusListener
 {
 public:
   /** default constructor
@@ -47,6 +48,11 @@ public:
   virtual nsresult KeyUp(nsIDOMEvent* aMouseEvent);
   virtual nsresult KeyDown(nsIDOMEvent* aMouseEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aMouseEvent);
+  
+  
+  virtual nsresult Focus(nsIDOMEvent* aEvent);
+  virtual nsresult Blur(nsIDOMEvent* aEvent);
+  
   
   NS_DECL_ISUPPORTS
 

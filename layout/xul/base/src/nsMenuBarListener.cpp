@@ -49,7 +49,7 @@
 
 NS_IMPL_ADDREF(nsMenuBarListener)
 NS_IMPL_RELEASE(nsMenuBarListener)
-NS_IMPL_QUERY_INTERFACE1(nsMenuBarListener, nsIDOMKeyListener)
+NS_IMPL_QUERY_INTERFACE2(nsMenuBarListener, nsIDOMKeyListener, nsIDOMFocusListener)
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -160,7 +160,29 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
   return NS_OK; // means I am NOT consuming event
 }
 
-  ////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+nsMenuBarListener::Focus(nsIDOMEvent* aEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
+
+////////////////////////////////////////////////////////////////////////
+nsresult
+nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
+{
+  if(mAltKeyDown)
+    mAltKeyDown = PR_FALSE;
+  
+  if(mMenuBarFrame->IsActive()) {
+    mMenuBarFrame->ToggleMenuActiveState();
+  }
+  
+  return NS_OK; // means I am NOT consuming event
+}
+  
+////////////////////////////////////////////////////////////////////////
 nsresult
 nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
 {
