@@ -914,9 +914,8 @@ QueueEvent(PLEvent* aEvent)
 
   nsCOMPtr<nsIEventQueueService> eqs = do_QueryInterface(is);
   if (eqs) {
-    PRThread* me = PR_CurrentThread();
     nsCOMPtr<nsIEventQueue> eq;
-    rv = eqs->GetThreadEventQueue(me, getter_AddRefs(eq));
+    rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eq));
     if (eq) {
       eq->PostEvent(aEvent);
     }
