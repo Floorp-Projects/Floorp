@@ -28,6 +28,7 @@
 #include "nsVoidArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
+#include "nsIStatefulFrame.h"
 
 class nsButtonControlFrame;
 class nsTextControlFrame;
@@ -49,8 +50,8 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIDOMMouseListener,
                                public nsIDOMFocusListener,
                                public nsIAnonymousContentCreator,
-                               public nsISelectControlFrame
-
+                               public nsISelectControlFrame,
+			       public nsIStatefulFrame
 {
 public:
   nsComboboxControlFrame();
@@ -140,6 +141,7 @@ public:
   NS_IMETHOD AddOption(PRInt32 index);
   NS_IMETHOD RemoveOption(PRInt32 index);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
+  NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
 
   //nsIDOMEventListener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
@@ -153,6 +155,11 @@ public:
   //nsIDOMFocusListener
   virtual nsresult Focus(nsIDOMEvent* aEvent);
   virtual nsresult Blur(nsIDOMEvent* aEvent);
+
+  //nsIStatefulFrame
+  NS_IMETHOD GetStateType(StateType* aStateType);
+  NS_IMETHOD SaveState(nsISupports** aState);
+  NS_IMETHOD RestoreState(nsISupports* aState);
 
 protected:
 

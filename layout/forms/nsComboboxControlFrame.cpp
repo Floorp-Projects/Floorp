@@ -38,11 +38,14 @@
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
 #include "nsIScrollableView.h"
-
 #include "nsIEventStateManager.h"
-// Get onChange to target Select not Option
 #include "nsIDOMNode.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIStatefulFrame.h"
+#include "nsISupportsArray.h"
+#include "nsISelectControlFrame.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kIFormControlFrameIID,      NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIComboboxControlFrameIID,  NS_ICOMBOBOXCONTROLFRAME_IID);
@@ -148,11 +151,15 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
     return NS_OK;   
-  } else if (aIID.Equals(nsCOMTypeInfo<nsISelectControlFrame>::GetIID())) {
-    *aInstancePtr = (void *)((nsISelectControlFrame*)this);
+  } else if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
+    *aInstancePtr = (void *)(nsISelectControlFrame*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void *)(nsIStatefulFrame*)this;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
-
   return nsAreaFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -1042,16 +1049,16 @@ nsComboboxControlFrame::SelectionChanged(PRBool aDoDispatchEvent)
       nsIDOMNode* node = nsnull;
       res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
       if (NS_SUCCEEDED(res) && node) {
-	      nsIPrivateDOMEvent* pDOMEvent = nsnull;
+        nsIPrivateDOMEvent* pDOMEvent = nsnull;
         res = DOMEvent->QueryInterface(kIPrivateDOMEventIID, (void**)&pDOMEvent);
         if (NS_SUCCEEDED(res) && pDOMEvent) {
           pDOMEvent->SetTarget(node);
-	        NS_RELEASE(pDOMEvent);
+          NS_RELEASE(pDOMEvent);
 
            // Have the content handle the event.
           mContent->HandleDOMEvent(*mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, status); 
         }
-	      NS_RELEASE(node);
+        NS_RELEASE(node);
       }
       NS_RELEASE(DOMEvent);
     }
@@ -1077,10 +1084,11 @@ nsComboboxControlFrame::AddOption(PRInt32 aIndex)
 {
   nsISelectControlFrame* listFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
-  nsresult rv = dropdownFrame->QueryInterface(nsCOMTypeInfo<nsISelectControlFrame>::GetIID(), 
+  nsresult rv = dropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
                                               (void**)&listFrame);
-  if (NS_SUCCEEDED(rv) && nsnull != listFrame) {
-    return listFrame->AddOption(aIndex);
+  if (NS_SUCCEEDED(rv) && listFrame) {
+    rv = listFrame->AddOption(aIndex);
+    NS_RELEASE(listFrame);
   }
   return rv;
 }
@@ -1091,10 +1099,11 @@ nsComboboxControlFrame::RemoveOption(PRInt32 aIndex)
 {
   nsISelectControlFrame* listFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
-  nsresult rv = dropdownFrame->QueryInterface(nsCOMTypeInfo<nsISelectControlFrame>::GetIID(), 
+  nsresult rv = dropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
                                               (void**)&listFrame);
-  if (NS_SUCCEEDED(rv) && nsnull != listFrame) {
-    return listFrame->RemoveOption(aIndex);
+  if (NS_SUCCEEDED(rv) && listFrame) {
+    rv = listFrame->RemoveOption(aIndex);
+    NS_RELEASE(listFrame);
   }
   return rv;
 }
@@ -1104,10 +1113,25 @@ nsComboboxControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
 {
   nsISelectControlFrame* listFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
-  nsresult rv = dropdownFrame->QueryInterface(nsCOMTypeInfo<nsISelectControlFrame>::GetIID(), 
+  nsresult rv = dropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
                                               (void**)&listFrame);
-  if (NS_SUCCEEDED(rv) && nsnull != listFrame) {
-    return listFrame->SetOptionSelected(aIndex, aValue);
+  if (NS_SUCCEEDED(rv) && listFrame) {
+    rv = listFrame->SetOptionSelected(aIndex, aValue);
+    NS_RELEASE(listFrame);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
+{
+  nsISelectControlFrame* listFrame = nsnull;
+  nsIFrame* dropdownFrame = GetDropdownFrame();
+  nsresult rv = dropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
+                                              (void**)&listFrame);
+  if (NS_SUCCEEDED(rv) && listFrame) {
+    rv = listFrame->GetOptionSelected(aIndex, aValue);
+    NS_RELEASE(listFrame);
   }
   return rv;
 }
@@ -1368,4 +1392,42 @@ nsComboboxControlFrame::Blur(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+// XXX Do we need to implement this here?  It is already implemented in
+//     the ListControlFrame, our child...
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsComboboxControlFrame::GetStateType(StateType* aStateType)
+{
+  *aStateType = eSelectType;
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsComboboxControlFrame::SaveState(nsISupports** aState)
+{
+  if (!mListControlFrame) return NS_ERROR_UNEXPECTED;
+  nsIStatefulFrame* sFrame = nsnull;
+  nsresult res = mListControlFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame),
+                                                   (void**)&sFrame);
+  if (NS_SUCCEEDED(res) && sFrame) {
+    res = sFrame->SaveState(aState);
+    NS_RELEASE(sFrame);
+  }
+  return res;
+}
+
+NS_IMETHODIMP
+nsComboboxControlFrame::RestoreState(nsISupports* aState)
+{
+  if (!mListControlFrame) return NS_ERROR_UNEXPECTED;
+  nsIStatefulFrame* sFrame = nsnull;
+  nsresult res = mListControlFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame),
+                                                   (void**)&sFrame);
+  if (NS_SUCCEEDED(res) && sFrame) {
+    res = sFrame->RestoreState(aState);
+    NS_RELEASE(sFrame);
+  }
+  return res;
+}
