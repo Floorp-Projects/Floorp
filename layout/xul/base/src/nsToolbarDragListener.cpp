@@ -290,9 +290,11 @@ printf ( "DRAGOVER:: toolbar content is %ld, as DOMNode %ld, target is %ld\n", c
     mToolbar->GetContent ( getter_AddRefs(content) );
     if ( content ) {
       char buffer[10];
-      sprintf(buffer, "%ld", xLoc);
+
+      	// need the cast, because on some platforms, PR[U]int32 != long, but we're using "%ld"
+      sprintf(buffer, "%ld", NS_STATIC_CAST(long, xLoc));
       content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::tbDropLocationCoord, buffer, PR_TRUE );
-      sprintf(buffer, "%ld", beforeIndex);
+      sprintf(buffer, "%ld", NS_STATIC_CAST(long, beforeIndex));
       content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::tbDropLocation, "1", PR_FALSE );
       content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::tbDropOn, onChild ? "true" : "false", PR_FALSE );
     }

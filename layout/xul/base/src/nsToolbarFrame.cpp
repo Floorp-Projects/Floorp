@@ -245,7 +245,7 @@ nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
       for ( PRUint32 i = 0; i < length; ++i ) {
         nsCOMPtr<nsIDOMNode> node;
         inputList->Item(i, getter_AddRefs(node));
-        nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(node));
+        receiver = do_QueryInterface(node);
         if ( receiver )
           receiver->AddEventListenerByIID(new nsTEMPDragGestureEater, nsIDOMDragListener::GetIID());
         // yes, i know this will leak. That's ok, i don't care because this code will go away

@@ -424,19 +424,22 @@ nsToolboxFrame::CalculateGrippies(nsIPresContext& aPresContext)
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-  nscoord grippyWidth = kGrippyWidthInPixels * onePixel;   // remember to leave room for the grippy on the right
   nscoord collapsedGrippyHeight = kCollapsedGrippyHeightInPixels * onePixel;
   nscoord collapsedGrippyWidth  = kCollapsedGrippyWidthInPixels  * onePixel;
 
   const PRBool isHorz = IsHorizontal();
 
-  // Leave room at the side for the grippies of visible toolbars. Make a margin 
-  // of the appropriate dimensions.
-  mInset = nsMargin(0,0,0,0);
-  if ( isHorz )     // Set margins so we have a place for uncollapsed grippies
-     mInset.top = grippyWidth;
-  else
-     mInset.left = grippyWidth;
+	{
+	  nscoord grippyWidth = kGrippyWidthInPixels * onePixel;   // remember to leave room for the grippy on the right
+
+	  // Leave room at the side for the grippies of visible toolbars. Make a margin 
+	  // of the appropriate dimensions.
+	  mInset = nsMargin(0,0,0,0);
+	  if ( isHorz )     // Set margins so we have a place for uncollapsed grippies
+	     mInset.top = grippyWidth;
+	  else
+	     mInset.left = grippyWidth;
+  }
 
   // Save old tabs so we can make newly collapsed bars as wide as they WERE tall. We will
   // release the grippies in mGrippies at the very end when we dispose of |oldGrippies|
