@@ -1,0 +1,30 @@
+
+/* this interface is basically for the old ListNewsGroupState class
+ * (the implementation of this class probably wants to also implement
+ * or contain ChangeListener so that it can react to OnAnnouncerGoingAway()
+ * to destroy the DBView)
+ */
+[object, uuid({E628ED19-9452-11d2-B7EA-00805F05FFA5})]
+interface nsIMsgNewsArticleList {
+
+/* These calls are used by libnet to determine which articles it ought to
+     get in a big newsgroup. */
+  /* the nsIUnknown will probably hold a ListNewsGroupState
+   * this stuff might really belong on the XOVER stuff, but I'm not sure
+   * -alecf */
+
+
+  void InitAddArticleKeyToGroup();
+  void AddArticleKeyToGroup(in long found_id);
+  void FinishAddArticleKeyToGroup();
+  void GetRangeOfArtsToDownload(in long first_message,
+                                in long last_message,
+                                in long total_messages,
+                                out long real_first_message,
+                                out long real_last_message,
+                                out long real_total_messages);
+  
+  void AddToKnownArticles(in long first_message, in long last_message);
+  
+};
+

@@ -1,0 +1,71 @@
+[object, uuid(2F5041B0-939E-11d2-B7EA-00805F05FFA5)]
+interface nsIMsgHostNews {
+
+  attribute boolean supportsExtensions;
+  void AddExtension(in string extension);
+  boolean QueryExtension(in string extension);
+
+  attribute boolean postingAllowed;
+  attribute boolean pushAuth;
+  attribute long lastUpdatedTime;
+
+  /* libnet callbacks for Dredd NNTP extensions
+   * please document if you know how these work
+   */
+  void AddPropertyForGet(in string name, in string value);
+  void AddSearchableGroup(in string groupname);
+  void AddProfileGroup(in string responseText);
+  /* going away */
+  void AddSubscribedNewsgroup(in string url);
+
+  /* In response to an NNTP GROUP command, the server said
+   * the group doesn't exist
+   */
+  void GroupNotFound(in string group, in boolean opening);
+  
+  /* Tell the subscribe pane about a new newsgroup we noticed. */
+  /* XXX should xactive flags be a long? */
+  void AddNewNewsgroup(in string groupname,
+                       in long first, in long last,
+                       in string flags, in boolean xactiveFlags);
+
+  /* formerly GetNewsRCCount() */
+  /* After displaying a list of newsgroups, we need the NNTP module to go and
+     run "GROUP" commands for the ones for which we don't know the unread
+     article count.  This function returns a count of how many groups we think
+     we're going to need this for (so we can display progress in a reasonable
+     way).
+  */
+  long GetNumGroupsNeedingCounts();
+  
+  /* formerly GetNewsRCGroup() */
+  /* Gets the name of the next group that we want to get article counts for.
+     MSG_DisplaySubscribedGroup() should get called with this group before
+     this call happens again. */
+  string GetFirstGroupNeedingCounts();
+  
+  /* In response to a "news://host/" URL; this is called once for each group
+     that was returned by MSG_GetNewsRCGroup(), after the NNTP GROUP
+     command has been run.  It's also called whenever we actually visit the
+     group (the user clicks on the newsgroup line), in case the data has
+     changed since the initial passthrough.  The "nowvisiting" parameter
+     is TRUE in the latter case, FALSE otherwise. */
+  void DisplaySubscribedGroup(in string groupname,
+                              in long first_message, in long last_message,
+                              in long total_messages,
+                              in boolean visit_now);
+
+  string GetFirstGroupNeedingExtraInfo();
+
+  
+  /* News servers work better if you ask for message numbers instead of IDs.
+     So, the NNTP module asks us what the group and number of an ID is with
+     this.  If we don't know, we return 0 for both.   If the pane is not a
+     thead or message pane, this routine will fail.
+  */
+  void GetNewsGroupAndNumberOfID(in string message_id,
+                                 out string groupname,
+                                 out long message_number);
+  
+};
+
