@@ -22,7 +22,6 @@
 DEPTH=..\..
 
 DIRS=webBrowser \
-     setup      \
      build      \
 !ifndef MOZ_NO_ACTIVEX_SUPPORT
      activex    \
