@@ -87,6 +87,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_SYNCDISABLED         NC_NAMESPACE_URI "SyncDisabled"
 #define NC_RDF_KEY                      NC_NAMESPACE_URI "Key"
 #define NC_RDF_CANSEARCHMESSAGES			NC_NAMESPACE_URI "CanSearchMessages"
+#define NC_RDF_ISDEFERRED NC_NAMESPACE_URI "IsDeferred"
 
 //Sort Properties
 #define NC_RDF_SUBJECT_COLLATION_SORT	NC_NAMESPACE_URI "Subject?collation=true"

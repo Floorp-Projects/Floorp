@@ -177,6 +177,7 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
                                  &kNC_CanGetMessages);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_CANGETINCOMINGMESSAGES),
                                  &kNC_CanGetIncomingMessages);
+
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_ACCOUNT), &kNC_Account);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_SERVER), &kNC_Server);
     getRDFService()->GetResource(NS_LITERAL_CSTRING(NC_RDF_IDENTITY), &kNC_Identity);
@@ -288,14 +289,16 @@ nsMsgAccountManagerDataSource::Init()
   nsCOMPtr<nsIMsgAccountManager> am;
 
   // get a weak ref to the account manager
-  if (!mAccountManager) {
+  if (!mAccountManager) 
+  {
     am = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     mAccountManager = do_GetWeakReference(am);
   }
   else
     am = do_QueryReferent(mAccountManager);
 
-  if (am) {
+  if (am) 
+  {
     am->AddIncomingServerListener(this);
     am->AddRootFolderListener(this);
   }
@@ -308,7 +311,8 @@ void nsMsgAccountManagerDataSource::Cleanup()
 {
   nsCOMPtr<nsIMsgAccountManager> am = do_QueryReferent(mAccountManager);
 
-  if (am) {
+  if (am)
+  {
     am->RemoveIncomingServerListener(this);
     am->RemoveRootFolderListener(this);
   }
@@ -330,8 +334,8 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 
   nsAutoString str;
   if (property == kNC_Name || property == kNC_FolderTreeName ||
-      property == kNC_FolderTreeSimpleName) {
-
+      property == kNC_FolderTreeSimpleName) 
+  {
     rv = getStringBundle();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1202,12 +1206,12 @@ nsMsgAccountManagerDataSource::getServerForFolderNode(nsIRDFNode *aResource,
 {
   nsresult rv;
   nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(aResource, &rv);
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv)) 
+  {
     PRBool isServer;
     rv = folder->GetIsServer(&isServer);
-    if (NS_SUCCEEDED(rv) && isServer) {
+    if (NS_SUCCEEDED(rv) && isServer) 
       return folder->GetServer(aResult);
-    }
   }
   return NS_ERROR_FAILURE;
 }
@@ -1224,7 +1228,8 @@ nsMsgAccountManagerDataSource::findServerByKey(nsISupports *aElement,
 
   nsXPIDLCString key;
   server->GetKey(getter_Copies(key));
-  if (nsCRT::strcmp(key, entry->serverKey)==0) {
+  if (nsCRT::strcmp(key, entry->serverKey)==0) 
+  {
     entry->found = PR_TRUE;
     return PR_FALSE;        // stop when found
   }
@@ -1243,18 +1248,15 @@ nsMsgAccountManagerDataSource::getStringBundle()
       do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = strBundleService->CreateBundle("chrome://messenger/locale/prefs.properties",
+  return strBundleService->CreateBundle("chrome://messenger/locale/prefs.properties",
                                       getter_AddRefs(mStringBundle));
-  return rv;
 }
 
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::OnServerLoaded(nsIMsgIncomingServer* aServer)
 {
-  nsresult rv;
-
   nsCOMPtr<nsIMsgFolder> serverFolder;
-  rv = aServer->GetRootFolder(getter_AddRefs(serverFolder));
+  nsresult rv = aServer->GetRootFolder(getter_AddRefs(serverFolder));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFResource> serverResource = do_QueryInterface(serverFolder,&rv);
@@ -1283,10 +1285,8 @@ nsMsgAccountManagerDataSource::OnServerLoaded(nsIMsgIncomingServer* aServer)
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::OnServerUnloaded(nsIMsgIncomingServer* aServer)
 {
-  nsresult rv;
-
   nsCOMPtr<nsIMsgFolder> serverFolder;
-  rv = aServer->GetRootFolder(getter_AddRefs(serverFolder));
+  nsresult rv = aServer->GetRootFolder(getter_AddRefs(serverFolder));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFResource> serverResource = do_QueryInterface(serverFolder,&rv);
@@ -1404,7 +1404,8 @@ nsMsgAccountManagerDataSource::IsIncomingServerForFakeAccount(nsIMsgIncomingServ
   rv = GetFakeAccountHostName(getter_Copies(fakeAccountHostName));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  if (fakeAccountHostName.IsEmpty()) {
+  if (fakeAccountHostName.IsEmpty()) 
+  {
     *aResult = PR_FALSE;
     return NS_OK;
   }
