@@ -15,7 +15,7 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+/*defines interfaces for codebase and certificate principals*/
 #include "nsISupports.idl"
 
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]

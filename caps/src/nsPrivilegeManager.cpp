@@ -15,11 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+/* handles operations dealing with enabling and disabling privileges */
 #include "nsPrivilegeManager.h"
 #include "nsPrivilege.h"
 #include "nsPrincipalArray.h"
-#include "nsPrincipalManager.h"
 #include "prmem.h"
 #include "prmon.h"
 #include "prlog.h"
@@ -32,17 +31,8 @@
 #include "jsec2rdf.h"
 #endif /* ENABLE_RDF */
 
-
-static nsPrivilegeManager * thePrivilegeManager = NULL;
-/*
-static nsIPrincipal * theSystemPrincipal = NULL;
-static nsIPrincipal * theUnsignedPrincipal;
-static nsIPrincipal * theUnknownPrincipal;
-static nsIPrincipalArray * theUnknownPrincipalArray;
-static nsIPrincipalArray * theUnsignedPrincipalArray;
-*/
 static nsIPrivilege * thePrivilegeCache[nsIPrivilege::PrivilegeState_NumberOfPrivileges][nsIPrivilege::PrivilegeDuration_NumberOfDurations];
-static PRMonitor *caps_lock = NULL;
+static PRMonitor * caps_lock = NULL;
 
 /* We could avoid the following globals if nsHashTable's Enumerate accepted
  * a void * as argument and it passed that argument as a parameter to the 
@@ -53,13 +43,12 @@ char * gSession;
 char * gDenied;
 nsPrivilegeTable * gPrivilegeTable;
 
+static PRBool RDF_RemovePrincipalsPrivilege(nsIPrincipal * prin, nsITarget * target);
+
 #ifdef ENABLE_RDF
 static nsIPrincipal * RDF_getPrincipal(JSec_Principal jsec_pr);
 static JSec_Principal RDF_CreatePrincipal(nsPrincipal *prin);
 #endif /* ENABLE_RDF */
-
-static PRBool RDF_RemovePrincipal(nsIPrincipal *prin);
-static PRBool RDF_RemovePrincipalsPrivilege(nsIPrincipal * prin, nsITarget * target);
 
 PR_BEGIN_EXTERN_C
 #include "xp.h"
@@ -101,18 +90,40 @@ NS_IMPL_ISUPPORTS(nsPrivilegeManager, kIPrivilegeManagerIID);
 
 nsPrivilegeManager::nsPrivilegeManager(void)
 {
-  nsCaps_lock();
-  itsPrinToPrivTable = new nsHashtable();
-  itsPrinToMacroTargetPrivTable = new nsHashtable();
-  nsCaps_unlock();
+	NS_INIT_REFCNT();
+	NS_ADDREF(this);
+	nsCaps_lock();
+	itsPrinToPrivTable = new nsHashtable();
+	itsPrinToMacroTargetPrivTable = new nsHashtable();
+	PRInt16 privState = 0, durationState = 0;
+	for (PRUint16 i = 0; i < nsIPrivilege::PrivilegeState_NumberOfPrivileges; i++) {
+		for(PRUint16 j = 0; j < nsIPrivilege::PrivilegeDuration_NumberOfDurations; j++) {
+			privState = i;
+			durationState = j;
+			thePrivilegeCache[i][j] = new nsPrivilege(privState, durationState);
+		}
+	}
+#ifdef ENABLE_RDF
+	RDFJSec_InitPrivilegeDB();
+#endif /* ENABLE_RDF */
+	nsCaps_unlock();
 }
 
 nsPrivilegeManager::~nsPrivilegeManager(void)
 {
 	nsCaps_lock();
-	if (itsPrinToPrivTable) delete itsPrinToPrivTable;
-	if (itsPrinToMacroTargetPrivTable) delete itsPrinToMacroTargetPrivTable;
+	if(itsPrinToPrivTable) delete itsPrinToPrivTable;
+	if(itsPrinToMacroTargetPrivTable) delete itsPrinToMacroTargetPrivTable;
 	nsCaps_unlock();
+}
+
+nsPrivilegeManager *
+nsPrivilegeManager::GetPrivilegeManager()
+{
+	static nsPrivilegeManager * privMan = NULL;
+	if(!privMan)
+		privMan = new nsPrivilegeManager();
+	return privMan;
 }
 
 nsIPrivilege * 
@@ -176,66 +187,6 @@ nsPrivilegeManager::Add(nsIPrivilege * priv1, nsIPrivilege * priv2) {
 	rv = priv1->GetState(p1state);
 	rv = priv2->GetState(p2state);
 	return (p1state < p2state) ? priv1 : priv2; 
-}
-
-void 
-nsPrivilegeManager::RegisterSystemPrincipal(nsIPrincipal * prin)
-{
-	PrincipalKey prinKey(prin);
-	nsCaps_lock();
-	if (NULL == itsPrinToPrivTable->Get(&prinKey)) 
-		itsPrinToPrivTable->Put(&prinKey, new nsSystemPrivilegeTable());
-	if (NULL == itsPrinToMacroTargetPrivTable->Get(&prinKey)) 
-		itsPrinToMacroTargetPrivTable->Put(&prinKey, new nsSystemPrivilegeTable());
-//	nsPrincipalManager::GetPrincipalManager()->SetSystemPrincipal(prin);
-	CreateSystemTargets(prin);
-	// Load the signed applet's ACL from the persistence store
-	this->Load();
-	nsCaps_unlock();
-}
-
-void 
-nsPrivilegeManager::RegisterPrincipal(nsIPrincipal * prin)
-{
-	//
-	// the new PrivilegeTable will have all privileges "blank forever"
-	// until changed by calls to enablePrincipalPrivilegeHelper
-	//
-	PrincipalKey prinKey(prin);
-	nsCaps_lock();
-	if (NULL == itsPrinToPrivTable->Get(&prinKey)) {
-		itsPrinToPrivTable->Put(&prinKey, new nsPrivilegeTable());
-	}
-	if (NULL == itsPrinToMacroTargetPrivTable->Get(&prinKey)) {
-		itsPrinToMacroTargetPrivTable->Put(& prinKey, new nsPrivilegeTable());
-	}
-//	nsPrincipalManager::GetPrincipalManager()->AddToPrincipalNameToPrincipalTable(prin);
-	nsCaps_unlock();
-}
-
-
-PRBool 
-nsPrivilegeManager::UnregisterPrincipal(nsIPrincipal * prin)
-{
-	PRBool result;
-	prin->Equals(nsPrincipalManager::GetPrincipalManager()->GetSystemPrincipal(),& result);
-	if (result) return PR_FALSE;
-	PrincipalKey prinKey(prin);
-	nsCaps_lock();
-	/* Get the privilegetables and free them up */
-	nsPrivilegeTable *pt = (nsPrivilegeTable *)itsPrinToPrivTable->Get(&prinKey);
-	if (pt != NULL)  delete pt;
-	nsPrivilegeTable *mpt = (nsPrivilegeTable *)itsPrinToMacroTargetPrivTable->Get(&prinKey);
-	if (mpt != NULL) delete mpt;
-	/* Remove the principal */
-	void *old_prin = itsPrinToPrivTable->Remove(&prinKey);
-	void *old_prin1 = itsPrinToMacroTargetPrivTable->Remove(&prinKey);
-	/* remove principal from PrinNameToPrincipalTable */
-	nsPrincipalManager::GetPrincipalManager()->RemoveFromPrincipalNameToPrincipalTable(prin);
-	/* remove the principal from RDF also */
-	RDF_RemovePrincipal(prin);
-	nsCaps_unlock();
-	return ((old_prin == NULL) && (old_prin1 == NULL)) ? PR_FALSE : PR_TRUE;
 }
 
 PRBool 
@@ -356,7 +307,7 @@ nsPrivilegeManager::EnablePrincipalPrivilegeHelper(nsIScriptContext * context, n
 		nsIPrincipal * callerPrin;
 		PRUint32 i;
 		callerPrinArray->GetPrincipalArraySize(& i);
-		for (i; i-- > 0;) {
+		while (i-- > 0) {
 			callerPrinArray->GetPrincipalArrayElement(i, & callerPrin);
 			PRBool result;
 			callerPrin->Equals(preferredPrin, & result);
@@ -516,20 +467,18 @@ nsPrivilegeManager::SetPermission(nsIPrincipal * useThisPrin, nsITarget * target
 
 
 void 
-nsPrivilegeManager::RegisterPrincipalAndSetPrivileges(nsIPrincipal * prin, nsITarget *target, 
-                                                      nsIPrivilege * newPrivilege)
+nsPrivilegeManager::RegisterPrincipalAndSetPrivileges(nsIPrincipal * prin, nsITarget * target, nsIPrivilege * newPrivilege)
 {
-  nsPrivilegeTable *privTable;
-  this->RegisterPrincipal(prin);
-  //Store the list of targets for which the user has given privilege
-  PrincipalKey prinKey(prin);
-  nsCaps_lock();
-  privTable = (nsPrivilegeTable *)itsPrinToMacroTargetPrivTable->Get(&prinKey);
-  privTable->Put(target, newPrivilege);
-  nsCaps_unlock();
-
-  privTable = (nsPrivilegeTable *)itsPrinToPrivTable->Get(&prinKey);
-  this->UpdatePrivilegeTable(target, privTable, newPrivilege); 
+	nsPrivilegeTable *privTable;
+	nsPrincipalManager::GetPrincipalManager()->RegisterPrincipal(prin);
+	//Store the list of targets for which the user has given privilege
+	PrincipalKey prinKey(prin);
+	nsCaps_lock();
+	privTable = (nsPrivilegeTable *)itsPrinToMacroTargetPrivTable->Get(&prinKey);
+	privTable->Put(target, newPrivilege);
+	nsCaps_unlock();
+	privTable = (nsPrivilegeTable *)itsPrinToPrivTable->Get(&prinKey);
+	this->UpdatePrivilegeTable(target, privTable, newPrivilege); 
 }
 
 
@@ -540,14 +489,14 @@ nsPrivilegeManager::UpdatePrivilegeTable(nsITarget * target, nsPrivilegeTable * 
 	target->GetFlattenedTargetArray(& primitiveTargets);
 	nsIPrivilege * oldPrivilege, * privilege;
 	nsITarget * primTarget;
-  nsCaps_lock();
-  for (int i = primitiveTargets->GetSize(); i-- > 0;) {
-    primTarget = (nsITarget *)primitiveTargets->Get(i);
-    oldPrivilege = privTable->Get(primTarget);
-    privilege = (oldPrivilege != NULL) ? nsPrivilegeManager::Add(oldPrivilege, newPrivilege) :  newPrivilege;
-    privTable->Put(primTarget, privilege);
-  }
-  nsCaps_unlock();
+	nsCaps_lock();
+	for (int i = primitiveTargets->GetSize(); i-- > 0;) {
+		primTarget = (nsITarget *)primitiveTargets->Get(i);
+		oldPrivilege = privTable->Get(primTarget);
+		privilege = (oldPrivilege != NULL) ? nsPrivilegeManager::Add(oldPrivilege, newPrivilege) :  newPrivilege;
+		privTable->Put(primTarget, privilege);
+	}
+	nsCaps_unlock();
 }
 
 PRBool 
@@ -587,124 +536,12 @@ nsPrivilegeManager::CheckPrivilegeGranted(nsITarget *target, PRInt32 callerDepth
 NS_IMETHODIMP
 nsPrivilegeManager::CheckPrivilegeGranted(nsIScriptContext * context, nsITarget * target, PRInt32 callerDepth, void * data, PRBool * result)
 {
-	nsIPrincipalArray* callerPrinArray = 
+	nsIPrincipalArray * callerPrinArray = 
 		nsPrincipalManager::GetPrincipalManager()->GetClassPrincipalsFromStack((nsIScriptContext *)context, callerDepth);
 	PRInt16 privilegeState = this->GetPrincipalPrivilege(target, callerPrinArray, data);
 	* result = (privilegeState == nsIPrivilege::PrivilegeState_Allowed) ? PR_TRUE : PR_FALSE;
 	return NS_OK;
 }
-
-nsPrivilegeManager *
-nsPrivilegeManager::GetPrivilegeManager(void)
-{
-	return thePrivilegeManager;
-}
-/*
-nsIPrincipalArray * 
-nsPrivilegeManager::GetMyPrincipals(PRInt32 callerDepth)
-{
-	return nsPrivilegeManager::GetMyPrincipals(NULL, callerDepth);
-}
-
-nsIPrincipalArray * 
-nsPrivilegeManager::GetMyPrincipals(void* context, PRInt32 callerDepth)
-{
-	return (thePrivilegeManager == NULL) ? NULL
-	: thePrivilegeManager->GetClassPrincipalsFromStack(context, callerDepth);
-}
-*/
-/*
-nsIPrincipal * 
-nsPrivilegeManager::GetSystemPrincipal(void)
-{
-	return theSystemPrincipal;
-}
-*/
-/*
-PRBool 
-nsPrivilegeManager::HasSystemPrincipal(nsIPrincipalArray *prinArray)
-{
-	nsIPrincipal * sysPrin = nsPrivilegeManager::GetSystemPrincipal();
-	nsIPrincipal * prin;
-	if (sysPrin == NULL) return PR_FALSE;
-	PRUint32 i;
-	prinArray->GetPrincipalArraySize(& i);
-	for (i; i-- > 0;) {
-		prinArray->GetPrincipalArrayElement(i,& prin);
-		PRBool result;
-		sysPrin->Equals(prin, & result);
-		if (result) return PR_TRUE;
-	}
-	return PR_FALSE;
-}
-*/
-/*
-nsIPrincipal * 
-nsPrivilegeManager::GetUnsignedPrincipal(void)
-{
-	return theUnsignedPrincipal;
-}
-*/
-/*
-nsIPrincipal * 
-nsPrivilegeManager::GetUnknownPrincipal(void)
-{
-	return theUnknownPrincipal;
-}
-*/
-/*
-PRBool 
-nsPrivilegeManager::CanExtendTrust(nsIPrincipalArray * from, nsIPrincipalArray * to)
-{
-	if ((from == NULL) || (to == NULL)) return PR_FALSE;
-	nsIPrincipalArray * intersect;
-	from->IntersectPrincipalArray(to,& intersect);
-	PRUint32 intersectSize = 0, fromSize = 0;
-	intersect->GetPrincipalArraySize(& intersectSize);
-	from->GetPrincipalArraySize(& fromSize);
-	if (intersectSize == fromSize) return PR_TRUE;
-	if (intersectSize == 0 || (intersectSize != (fromSize - 1))) return PR_FALSE;
-	nsIPrincipal * prin;
-	PRUint32 i;
-	for (i=0; i < intersectSize; i++) {
-		intersect->GetPrincipalArrayElement(i, & prin);
-		PRInt16 prinType = nsIPrincipal::PrincipalType_Unknown;
-		prin->GetType(& prinType);
-		if (prinType == nsIPrincipal::PrincipalType_CodebaseExact ||
-			prinType == nsIPrincipal::PrincipalType_CodebaseRegex)
-			return PR_FALSE;
-	}
-	PRUint32 codebaseCount = 0;
-	for (i=0; i < fromSize; i++) {
-		from->GetPrincipalArrayElement(i, & prin);
-		PRInt16 prinType = nsIPrincipal::PrincipalType_Unknown;
-		prin->GetType(& prinType);
-		if (prinType == nsIPrincipal::PrincipalType_CodebaseExact ||
-			prinType == nsIPrincipal::PrincipalType_CodebaseRegex)
-			codebaseCount++;
-	}
-	return (codebaseCount == 1) ? PR_TRUE : PR_FALSE;
-}
-*/
-/*
-PRBool 
-nsPrivilegeManager::CheckMatchPrincipal(nsIPrincipal * prin, PRInt32 callerDepth)
-{
-	return this->CheckMatchPrincipal(NULL, prin, callerDepth);
-}
-*/
-/*
-PRBool 
-nsPrivilegeManager::CheckMatchPrincipal(void * context, nsIPrincipal * prin, PRInt32 callerDepth)
-{
-	nsIPrincipalArray * prinArray = new nsPrincipalArray(0);
-	prinArray->AddPrincipalArrayElement(prin);
-	nsIPrincipalArray * classPrinArray = this->GetClassPrincipalsFromStack(context, callerDepth);
-	PRInt16 compType = 0;
-	prinArray->ComparePrincipalArray(classPrinArray,& compType);
-	return (compType != nsPrincipalArray::SetComparisonType_NoSubset) ? PR_TRUE : PR_FALSE;
-}
-*/
 
 static PRBool 
 GetPermissionsString(nsHashKey * aKey, void * aData, void * closure) 
@@ -722,8 +559,7 @@ GetPermissionsString(nsHashKey * aKey, void * aData, void * closure)
 }
 
 void 
-nsPrivilegeManager::GetTargetsWithPrivileges(char *prinName, char** forever, 
-                                             char** session, char **denied)
+nsPrivilegeManager::GetTargetsWithPrivileges(char *prinName, char** forever, char** session, char **denied)
 {
 	/* Admin UI */
 	nsCaps_lock();
@@ -755,14 +591,14 @@ nsPrivilegeManager::GetTargetsWithPrivileges(char *prinName, char** forever,
 PRBool 
 nsPrivilegeManager::RemovePrincipal(char * prinName)
 {
-	/* Admin UI */
+	nsPrincipalManager * itsPrincipalManager = nsPrincipalManager::GetPrincipalManager();
 	nsCaps_lock();
-	nsIPrincipal * prin = nsPrincipalManager::GetPrincipalManager()->GetPrincipalFromString(prinName);
+	nsIPrincipal * prin = itsPrincipalManager->GetPrincipalFromString(prinName);
 	if (prin == NULL) {
 		nsCaps_unlock();
 		return PR_FALSE;
 	}
-	this->UnregisterPrincipal(prin);
+	itsPrincipalManager->UnregisterPrincipal(prin,NULL);
 	nsCaps_unlock();
 	return PR_TRUE;
 }
@@ -828,9 +664,7 @@ nsPrivilegeManager::Remove(nsIPrincipal * prin, nsITarget * target)
 	nsCaps_unlock();
 }
 
-// 			PRIVATE METHODS 
-
-PRBool 
+PRBool
 nsPrivilegeManager::EnablePrivilegePrivate(nsIScriptContext * context, nsITarget *target, nsIPrincipal * prefPrin, PRInt32 callerDepth)
 {
 	if (PR_FALSE == this->EnablePrincipalPrivilegeHelper(context, target, callerDepth, prefPrin, NULL, NULL)) return PR_FALSE;
@@ -845,7 +679,7 @@ nsPrivilegeManager::GetPrincipalPrivilege(nsITarget * target, nsIPrincipalArray 
 	PRBool isAllowed = PR_FALSE;
 	PRUint32 i;
 	callerPrinArray->GetPrincipalArraySize(& i);
-	for (i; i-- > 0; ) {
+	while (i-- > 0) {
 		callerPrinArray->GetPrincipalArrayElement(i,& principal);
 		this->GetPrincipalPrivilege(target, principal, data,& privilege);
 		if (privilege == NULL) continue;
@@ -1126,45 +960,6 @@ RDF_CreatePrincipal(nsIPrincipal *prin)
 }
 #endif /* ENABLE_RDF */
 
-
-static PRBool 
-RDF_RemovePrincipal(nsIPrincipal *prin)
-{
-  PRBool found = PR_FALSE;
-
-#ifdef ENABLE_RDF
-  nsCaps_lock();
-  RDFJSec_InitPrivilegeDB();
-
-  RDF_Cursor prin_cursor = RDFJSec_ListAllPrincipals();
-  if (prin_cursor == NULL) {
-    nsCaps_unlock();
-    return PR_FALSE;
-  }
-  
-  JSec_Principal jsec_prin;
-  nsIPrincipal *cur_prin = NULL;
-  while ((jsec_prin = RDFJSec_NextPrincipal(prin_cursor)) != NULL) {
-    if ((cur_prin = RDF_getPrincipal(jsec_prin)) == NULL) {
-      continue;
-    }
-    if (prin->equals(cur_prin)) {
-      found = PR_TRUE;
-      break;
-    }
-  }
-
-  RDFJSec_ReleaseCursor(prin_cursor);
-  if (found) {
-    RDFJSec_DeletePrincipal(jsec_prin);
-  }
-  nsCaps_unlock();
-
-#endif /* ENABLE_RDF */
-  return found;
-}
-
-
 #ifdef ENABLE_RDF
 
 static nsIPrincipal *
@@ -1303,24 +1098,3 @@ nsPrivilegeManager::Load(void)
 #endif /* ENABLE_RDF */
 }
 
-
-PRBool 
-nsPrivilegeManagerInitialize(void) 
-{
-	thePrivilegeManager = new nsPrivilegeManager();
-	PRInt16 privState = 0, durationState = 0;
-	for (PRInt16 i = 0; i < nsIPrivilege::PrivilegeState_NumberOfPrivileges; i++) {
-		for(PRInt16 j = 0; j < nsIPrivilege::PrivilegeDuration_NumberOfDurations; j++) {
-			privState = i;
-			durationState = j;
-			thePrivilegeCache[i][j] = new nsPrivilege(privState, durationState);
-		}
-	}
-#ifdef ENABLE_RDF
-  RDFJSec_InitPrivilegeDB();
-#endif /* ENABLE_RDF */
-
-  return PR_TRUE;
-}
-
-PRBool nsPrivilegeManager::theInited = nsPrivilegeManagerInitialize();

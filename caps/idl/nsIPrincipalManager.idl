@@ -15,15 +15,13 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/*creates, registers, and performs logical operations on principals*/
 #include "nsISupports.idl"
 #include "nsIPrincipal.idl"
 #include "nsITarget.idl"
 #include "nsIPrincipalArray.idl"
 
 interface nsIScriptContext;
-
-//#define NS_ALL_PRIVILEGES ((nsITarget *)NULL)
-
 
 [uuid(dc7d0bb0-25e1-11d2-8160-006008119d7a)]
 interface nsIPrincipalManager : nsISupports
@@ -37,6 +35,8 @@ interface nsIPrincipalManager : nsISupports
 
 	void RegisterPrincipal(in nsIPrincipal prin);
 
+	void UnregisterPrincipal(in nsIPrincipal prin, out boolean result);
+
 	void CanExtendTrust(in nsIPrincipalArray fromPrinArray, in nsIPrincipalArray toPrinArray, out boolean result);
 
 	void NewPrincipalArray(in unsigned long count, out nsIPrincipalArray result);
@@ -44,3 +44,10 @@ interface nsIPrincipalManager : nsISupports
 	void CheckMatchPrincipal(in nsIScriptContext cx, in nsIPrincipal principal, in long callerDepth, out boolean result);
 
 };
+%{C++
+#define NS_PRINCIPALMANAGER_CID \
+{ 0x7ee2a4c0, 0x4b91, 0x11d3, \
+{ 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
+#define NS_PRINCIPALMANAGER_PROGID "component://netscape/principalmanager"
+#define NS_PRINCIPALMANAGER_CLASSNAME "principalmanager"
+%}

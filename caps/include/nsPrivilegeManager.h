@@ -15,10 +15,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+/* handles operations dealing with enabling and disabling privileges */
 #ifndef _NS_PRIVILEGE_MANAGER_H_
 #define _NS_PRIVILEGE_MANAGER_H_
 
+#include "nsIPrivilegeManager.h"
 #include "prtypes.h"
 #include "prio.h"
 #include "prmon.h"
@@ -28,7 +29,8 @@
 #include "nsTarget.h"
 #include "nsIPrincipal.h"
 #include "nsIPrincipalArray.h"
-#include "nsIPrivilegeManager.h"
+#include "nsIPrincipalManager.h"
+#include "nsPrincipalManager.h"
 #include "nsIPrivilege.h"
 #include "nsPrivilegeTable.h"
 #include "nsSystemPrivilegeTable.h"
@@ -40,15 +42,18 @@ PR_BEGIN_EXTERN_C
 PRBool CMGetBoolPref(char * pref_name);
 PR_END_EXTERN_C
 
-PRBool nsPrivilegeManagerInitialize(void);
-
 class nsPrivilegeManager : public nsIPrivilegeManager {
 
 public:
 
+nsHashtable * itsPrinToPrivTable;
+nsHashtable * itsPrinToMacroTargetPrivTable;
+
 NS_DECL_ISUPPORTS
 
-nsPrivilegeManager(void);
+static nsPrivilegeManager *
+GetPrivilegeManager();
+
 virtual ~nsPrivilegeManager(void);
 
 static nsIPrivilege *
@@ -139,9 +144,6 @@ CheckPrivilegeGranted(nsIScriptContext * context, nsITarget * target, PRInt32 ca
 NS_IMETHOD
 GetPrincipalPrivilege(nsITarget * target, nsIPrincipal * prin, void * data, nsIPrivilege * * result);
 
-static nsPrivilegeManager * 
-GetPrivilegeManager(void);
-
 char * 
 CheckPrivilegeEnabled(nsTargetArray * targetArray, PRInt32 callerDepth, void *data);
 
@@ -163,36 +165,22 @@ RemovePrincipalsPrivilege(const char * prinName, const char * targetName, PRBool
 void 
 Remove(nsIPrincipal *prin, nsITarget *target);
 
-/* Helper functions for ADMIN UI */
 PRBool 
 RemovePrincipal(char *prinName);
 
 void 
-RegisterSystemPrincipal(nsIPrincipal * principal);
-
-void 
-RegisterPrincipal(nsIPrincipal * principal);
-
-PRBool 
-UnregisterPrincipal(nsIPrincipal * principal);
-
-void 
 RegisterPrincipalAndSetPrivileges(nsIPrincipal * principal, nsITarget * target, nsIPrivilege * newPrivilege);
 
-/* End of native methods */
+void 
+Save(nsIPrincipal * prin, nsITarget * target, nsIPrivilege * newPrivilege);
+
+void 
+Load(void);
 
 private:
-
-nsHashtable * itsPrinToPrivTable;
-nsHashtable * itsPrinToMacroTargetPrivTable;
-
-static PRBool theSecurityInited;
+nsPrivilegeManager(void);
 
 static char * SignedAppletDBName;
-
-static PRBool theInited;
-
-/* Private Methods */
 
 PRBool 
 EnablePrivilegePrivate(nsIScriptContext * context, nsITarget *target, nsIPrincipal *preferredPrincipal, 
@@ -204,14 +192,6 @@ GetPrincipalPrivilege(nsITarget * target, nsIPrincipalArray * callerPrinArray, v
 PRBool 
 IsPermissionGranted(nsITarget *target, nsIPrincipalArray * callerPrinArray, void *data);
 
-
-  /* The following methods are used to save and load the persistent store */
-void 
-Save(nsIPrincipal * prin, nsITarget * target, nsIPrivilege * newPrivilege);
-
-void 
-Load(void);
 };
-
 
 #endif /* _NS_PRIVILEGE_MANAGER_H_ */

@@ -33,7 +33,6 @@ EXPORTS=                           \
         jpermission.h              \
         nsCaps.h                   \
         nsCCapsManager.h           \
-        nsCCapsManagerFactory.h    \
         nsCertificatePrincipal.h   \
         nsCodebasePrincipal.h      \
         nsLoadZig.h                \

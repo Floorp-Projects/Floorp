@@ -72,7 +72,7 @@ public:
 	{
 	}
 
-	nsIPrivilege * EnablePrivilege(nsIPrincipal * prin, void *data);
+	NS_IMETHOD EnablePrivilege(nsIPrincipal * prin, void * data, nsIPrivilege * * result);
 
 private:
 

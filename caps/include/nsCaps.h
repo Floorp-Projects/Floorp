@@ -30,8 +30,8 @@ class nsPrivilegeManager;
 struct NSJSJavaFrameWrapper;
 
 /* wrappers for nsPrivilegeManager object */
-PR_IMPLEMENT(PRBool) 
-nsCapsInitialize();
+//PR_IMPLEMENT(PRBool) 
+//nsCapsInitialize();
 
 PR_EXTERN(PRBool) 
 nsCapsRegisterPrincipal(class nsIPrincipal * principal); 

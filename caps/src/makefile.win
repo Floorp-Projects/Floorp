@@ -54,23 +54,23 @@ C_OBJS=                                     \
     .\$(OBJDIR)\nsZip.obj                   \
      $(NULL)
 
-CPP_OBJS=                                   \
-    .\$(OBJDIR)\admin.obj                   \
-    .\$(OBJDIR)\nsCaps.obj                  \
-    .\$(OBJDIR)\nsCCapsManager.obj          \
-    .\$(OBJDIR)\nsCCapsManagerFactory.obj   \
-    .\$(OBJDIR)\nsCertificatePrincipal.obj  \
-    .\$(OBJDIR)\nsCodebasePrincipal.obj     \
-    .\$(OBJDIR)\nsPrincipalArray.obj        \
-    .\$(OBJDIR)\nsPrincipalManager.obj      \
-    .\$(OBJDIR)\nsPrivilege.obj             \
-    .\$(OBJDIR)\nsPrivilegeManager.obj      \
-    .\$(OBJDIR)\nsPrivilegeTable.obj        \
-    .\$(OBJDIR)\nsSystemPrivilegeTable.obj  \
-    .\$(OBJDIR)\nsTarget.obj                \
-    .\$(OBJDIR)\nsUserDialogHelper.obj      \
-    .\$(OBJDIR)\nsUserTarget.obj            \
-    .\$(OBJDIR)\nsZig.obj                   \
+CPP_OBJS=                                    \
+    .\$(OBJDIR)\admin.obj                    \
+    .\$(OBJDIR)\nsCaps.obj                   \
+    .\$(OBJDIR)\nsCCapsManager.obj           \
+    .\$(OBJDIR)\nsCertificatePrincipal.obj   \
+    .\$(OBJDIR)\nsCodebasePrincipal.obj      \
+    .\$(OBJDIR)\nsPrincipalArray.obj         \
+    .\$(OBJDIR)\nsPrincipalManager.obj       \
+    .\$(OBJDIR)\nsPrivilege.obj              \
+    .\$(OBJDIR)\nsPrivilegeManager.obj       \
+    .\$(OBJDIR)\nsPrivilegeTable.obj         \
+    .\$(OBJDIR)\nsSecurityManagerFactory.obj \
+    .\$(OBJDIR)\nsSystemPrivilegeTable.obj   \
+    .\$(OBJDIR)\nsTarget.obj                 \
+    .\$(OBJDIR)\nsUserDialogHelper.obj       \
+    .\$(OBJDIR)\nsUserTarget.obj             \
+    .\$(OBJDIR)\nsZig.obj                    \
      $(NULL)
 
 #//------------------------------------------------------------------------
@@ -119,6 +119,10 @@ LLIBS = \
 include <$(DEPTH)/config/rules.mak>
 
 install::  $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(DLLNAME).lib
+	rm -f $(DIST)\bin\components\$(DLLNAME).dll
 

@@ -12,10 +12,13 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/*native java calls from oji into security system*/
 
+//	nsresult rv;
+//	NS_WITH_SERVICE(nsIPrincipalManager, observer, "component://netscape/observer-service",& rv);
 
 #include "prtypes.h"
 #include "prmem.h"
@@ -38,17 +41,19 @@ extern "C" {
 PR_PUBLIC_API(const char *)
 java_netscape_security_getPrincipals(const char *charSetName)
 {
-    const char * prins = nsPrincipalManager::GetPrincipalManager()->GetAllPrincipalsString();
-    PRBool test_admin_api = PR_FALSE;
-    if (test_admin_api) {
-      char *a1;
-      char *a2;
-      char *a3;
-      java_netscape_security_getPrivilegeDescs(NULL, "raman tenneti", &a1, &a2, &a3);
-      java_netscape_security_removePrivilege(NULL, "raman tenneti", "Reading, modification, or deletion of any of your files");
-      java_netscape_security_removePrincipal(NULL, "raman tenneti");
-    }
-    return prins;
+
+
+	const char * prins = nsPrincipalManager::GetPrincipalManager()->GetAllPrincipalsString();
+	PRBool test_admin_api = PR_FALSE;
+	if (test_admin_api) {
+		char *a1;
+		char *a2;
+		char *a3;
+		java_netscape_security_getPrivilegeDescs(NULL, "raman tenneti", &a1, &a2, &a3);
+		java_netscape_security_removePrivilege(NULL, "raman tenneti", "Reading, modification, or deletion of any of your files");
+		java_netscape_security_removePrincipal(NULL, "raman tenneti");
+	}
+	return prins;
 }
 
 PR_PUBLIC_API(PRBool)

@@ -39,13 +39,11 @@
  */
 class nsCCapsManager : public nsICapsManager {
 public:
-////////////////////////////////////////////////////////////////////////////
-// from nsISupports and AggregatedQueryInterface:
 
-NS_DECL_AGGREGATED
+NS_DECL_ISUPPORTS
 
-////////////////////////////////////////////////////////////////////////////
-// from nsICapsManager:
+nsPrivilegeManager * thePrivilegeManager;
+nsPrincipalManager * thePrincipalManager;
 
 NS_IMETHOD
 GetPrincipalManager(nsIPrincipalManager * * prinMan);
@@ -95,24 +93,22 @@ DisablePrivilege(nsIScriptContext * context, const char* targetName, PRInt32 cal
 NS_IMETHOD
 IsAllowed(void * annotation, const char * target, PRBool * result);
 
-nsCCapsManager(nsISupports *aOuter);
+static nsCCapsManager *
+GetSecurityManager();
+
 virtual ~nsCCapsManager(void);
 
+private:
+
+nsCCapsManager(void);
+
+/*
 void
 CreateNSPrincipalArray(nsIPrincipalArray * prinArray, nsIPrincipalArray * * pPrincipalArray);
 
 NS_METHOD
 GetNSPrincipalArray(nsIPrincipalArray * prinArray, nsIPrincipalArray * * pPrincipalArray);
-
-void
-SetSystemPrivilegeManager();
-
-void
-SetSystemPrincipalManager();
-
-protected:
-	nsIPrivilegeManager * privilegeManager;
-	nsIPrincipalManager * principalManager;
+*/
 };
 
 #endif // nsCCapsManager_h___

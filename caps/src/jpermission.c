@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+/*native java calls from oji into security system dealing with user targets*/
 #include "prtypes.h"
 #include "nspr.h"
 #include "prmem.h"
