@@ -694,7 +694,7 @@ void CWizardUI::CreateControls()
 			rv = ((CComboBox*)curWidget->control)->Create(CBS_DROPDOWNLIST | WS_TABSTOP, tmpRect, this, ID);
 
 		}
-		else if (widgetType == "GroupBox") {
+		else if ((widgetType == "GroupBox") || (widgetType == "BoldGroup")) {
 			curWidget->control = new CButton;
 			rv = ((CButton*)curWidget->control)->Create(curWidget->value, BS_GROUPBOX, tmpRect, this, ID);
 		}
@@ -716,6 +716,11 @@ void CWizardUI::CreateControls()
 		{
 			curWidget->control->SetFont(m_pNavFont);
 		}
+		else if (curWidget->type == "BoldGroup")
+		{
+			curWidget->control->SetFont(m_pNavFont);
+		}
+
 		else if (curWidget->control && curWidget->control->m_hWnd)
 		{
 			curWidget->control->SetFont(m_pFont);
