@@ -369,8 +369,6 @@ nsFileChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
     return NS_OK;
 }
 
-#define DUMMY_TYPE "text/html"
-
 NS_IMETHODIMP
 nsFileChannel::GetContentType(char * *aContentType)
 {
@@ -388,8 +386,7 @@ nsFileChannel::GetContentType(char * *aContentType)
         if (NS_SUCCEEDED(rv)) return rv;
     }
 
-    // if all else fails treat it as text/html?
-    *aContentType = nsCRT::strdup(DUMMY_TYPE);
+    *aContentType = nsCRT::strdup(UNKNOWN_MIME);
     if (!*aContentType) {
         return NS_ERROR_OUT_OF_MEMORY;
     } else {

@@ -423,10 +423,8 @@ nsFTPChannel::GetContentType(char* *aContentType) {
         }
     }
 
-    // if all else fails treat it as unknown?
-    // XXX this will go away once we have AsyncOpen in place.
 	if (!*aContentType) 
-		*aContentType = nsCRT::strdup("application/x-unknown-content-type");
+		*aContentType = nsCRT::strdup(UNKNOWN_MIME);
     if (!*aContentType) {
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
