@@ -1651,6 +1651,9 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 NS_IMETHODIMP
 nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
 {
+  if (!mScrollbarSheet)
+    LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
+
   if(mScrollbarSheet || mUserSheet)
   {
     NS_NewISupportsArray(aResult);
