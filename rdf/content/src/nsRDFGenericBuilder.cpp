@@ -237,9 +237,6 @@ public:
     PRBool
     IsElementInWidget(nsIContent* aElement);
    
-    PRBool
-    IsResourceElement(nsIContent* aElement);
- 
     nsresult
     GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
 
@@ -1776,7 +1773,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // XXX I've hacked insertion sorting to be OFF for
                 // now, until I can figure out how to make the
                 // insertion sort go a bit faster.
-                if (PR_FALSE && (nsnull != gXULSortService) && (isResourceElement) && (tag.get() == kTreeItemAtom)) {
+                if ((nsnull != gXULSortService) && (isResourceElement) && (tag.get() == kTreeItemAtom)) {
                     rv = gXULSortService->InsertContainerNode(aRealNode, realKid, aNotify);
                     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert element via sort service");
                 }
@@ -2247,18 +2244,6 @@ RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
     else {
         return NS_RDF_ELEMENT_WAS_THERE;
     }
-}
-
-
-PRBool
-RDFGenericBuilderImpl::IsResourceElement(nsIContent* aElement)
-{
-    nsresult rv;
-    nsAutoString str;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, str);
-    if (NS_FAILED(rv)) return PR_FALSE;
-
-    return (rv == NS_CONTENT_ATTR_HAS_VALUE) ? PR_TRUE : PR_FALSE;
 }
 
 
