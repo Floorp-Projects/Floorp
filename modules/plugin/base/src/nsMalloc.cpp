@@ -99,17 +99,11 @@ nsMalloc::DidAlloc(void* ptr)
     return PR_TRUE;
 }
 
-// For the definition of CallCacheFlushers()
-#ifdef XP_MAC
-#    include "MacMemAllocator.h"
-#endif
-
 NS_METHOD_(void)
 nsMalloc::HeapMinimize(void)
 {
 #ifdef XP_MAC
-    // something wonderful
-//    CallCacheFlushers(0x7fffffff);
+    // obsolete
 #endif
 }
 
