@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.35 $ $Date: 2003/08/01 02:02:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.36 $ $Date: 2003/09/23 20:34:15 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -511,6 +511,7 @@ find_objects_by_template (
 #ifdef NSS_3_4_CODE
 	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 #endif
+	if (statusOpt) *statusOpt = PR_FAILURE;
 	return NULL;
     }
     /* If these objects are being cached, try looking there first */
