@@ -187,6 +187,7 @@ protected:
 protected:
   nsCOMPtr<nsIDOMRange> mDocChangeRange;
   PRBool                mListenerEnabled;
+  PRBool                mReturnInEmptyLIKillsList;
   nsCOMPtr<nsIDOMRange> mUtilRange;
   PRUint32              mJoinOffset;  // need to remember an int across willJoin/didJoin...
   
