@@ -221,8 +221,8 @@ protected:
   void FireDOMEvent(PRUint32 aMessage);
 
 private:
-  nsresult LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest);
-  nsresult RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest);
+  nsresult LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy = PR_TRUE);
+  nsresult RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy = PR_TRUE);
   inline int GetImageLoad(imgIRequest *aRequest);
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
   void GetDocumentCharacterSet(nsAWritableString& aCharset) const;

@@ -1860,9 +1860,9 @@ nsImageFrame::IsImageComplete(PRBool* aComplete)
 }
 
 nsresult
-nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest)
+nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy)
 {
-  nsresult rv = RealLoadImage(aSpec, aPresContext, aRequest);
+  nsresult rv = RealLoadImage(aSpec, aPresContext, aRequest, aCheckContentPolicy);
 
   if (NS_FAILED(rv)) {
     int whichLoad = GetImageLoad(aRequest);
@@ -1874,7 +1874,7 @@ nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresCon
 }
 
 nsresult
-nsImageFrame::RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest)
+nsImageFrame::RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest, PRBool aCheckContentPolicy)
 {
   nsresult rv = NS_OK;
 
@@ -1888,7 +1888,8 @@ nsImageFrame::RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPre
 
   /* don't load the image if some security check fails... */
   GetRealURI(aSpec, getter_AddRefs(realURI));
-  if (!CanLoadImage(realURI)) return NS_ERROR_FAILURE;
+  if (aCheckContentPolicy)
+    if (!CanLoadImage(realURI)) return NS_ERROR_FAILURE;
 
   if (!mListener) {
     nsImageListener *listener = new nsImageListener(this);
@@ -2049,7 +2050,7 @@ nsImageFrame::CanLoadImage(nsIURI *aURI)
     nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
 
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
-                                 aURI, element, domWin, &shouldLoad);
+                                   aURI, element, domWin, &shouldLoad);
     if (NS_SUCCEEDED(rv) && !shouldLoad) {
       // this image has been blocked, so flag it
       mImageBlocked = PR_TRUE;
@@ -2097,14 +2098,14 @@ nsresult nsImageFrame::LoadIcons(nsIPresContext *aPresContext)
 #ifdef NOISY_ICON_LOADING
       printf( "Loading request %p\n", mIconLoad->mIconLoads[NS_ICON_LOADING_IMAGE].mRequest.get() );
 #endif
-      rv = LoadImage(loadingSrc, aPresContext, mIconLoad->mIconLoads[NS_ICON_LOADING_IMAGE].mRequest);
+      rv = LoadImage(loadingSrc, aPresContext, mIconLoad->mIconLoads[NS_ICON_LOADING_IMAGE].mRequest, PR_FALSE);
       if (NS_SUCCEEDED(rv)) {
         mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest = do_CreateInstance("@mozilla.org/image/request;1");
         if (mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest) {
 #ifdef NOISY_ICON_LOADING
           printf( "Loading request %p\n", mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest.get() );
 #endif
-          rv = LoadImage(brokenSrc, aPresContext, mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest);
+          rv = LoadImage(brokenSrc, aPresContext, mIconLoad->mIconLoads[NS_ICON_BROKEN_IMAGE].mRequest, PR_FALSE);
           // ImageLoader will callback into OnStartContainer, which will handle the mIconsLoaded flag
         }
       }
