@@ -43,6 +43,7 @@ var Bundle;
 var gDataSourceSearchListener;
 
 var gIsSearchHit = false;
+var gButton;
 
 // nsIMsgSearchNotify object
 var gSearchNotificationListener = 
@@ -56,6 +57,7 @@ var gSearchNotificationListener =
 
     onSearchDone: function(status) 
     {
+        gButton.setAttribute("value", Bundle.GetStringFromName("labelForSearchButton"));
         // if there are no hits, it means no matches were found in the search.
         if (!gIsSearchHit) {
             gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchFailureMessage"));
@@ -69,6 +71,7 @@ var gSearchNotificationListener =
 	
     onNewSearch: function() 
     {
+        gButton.setAttribute("value", Bundle.GetStringFromName("labelForStopButton"));
         gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchingMessage"));
     }
 }
@@ -105,6 +108,7 @@ function initializeSearchWindowWidgets()
 {
     gFolderPicker = document.getElementById("searchableFolders");
     gThreadTree = document.getElementById("threadTree");
+    gButton = document.getElementById("search-button");
 
     msgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
     msgWindow.statusFeedback = gStatusFeedback;
@@ -113,7 +117,7 @@ function initializeSearchWindowWidgets()
 
 
 function onSearchStop() {
-
+    gSearchSession.interruptSearch();
 }
 
 function onReset() {
@@ -323,4 +327,13 @@ function setMsgDatasourceWindow(ds, msgwindow)
     } catch (ex) {
         dump("error setting DS on " + ds + ": " + ex + "\n");
     }
+}
+
+// used to toggle functionality for Search/Stop button.
+function onSearchButton(event)
+{
+    if (event.target.value == Bundle.GetStringFromName("labelForSearchButton"))
+        onSearch(event);
+    else
+        onSearchStop(event);
 }

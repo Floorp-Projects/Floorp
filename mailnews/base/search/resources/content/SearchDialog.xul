@@ -34,6 +34,7 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="searchOnLoad();"
     onunload="searchOnUnload();"
+    onclose="onSearchStop();"
     title="&searchDialogTitle.label;"
     width="640" height="470"
     persist="screenX screenY width height"
@@ -66,7 +67,7 @@ Rights Reserved.
         
         <box orient="vertical">
            <spring flex="1"/>
-           <button value="&searchButton.label;" oncommand="onSearch(event);"/>
+           <button value="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);"/>
            <button value="&resetButton.label;" oncommand="onReset(event);"/>
            <spring flex="1"/>
          </box>
