@@ -37,7 +37,6 @@
 Notation::Notation(nsIDOMNotation* aNotation, Document* aOwner) :
         Node(aNotation, aOwner)
 {
-    nsNotation = aNotation;
 }
 
 /**
@@ -48,25 +47,17 @@ Notation::~Notation()
 }
 
 /**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aNotation the nsIDOMNotation you want to wrap
- */
-void Notation::setNSObj(nsIDOMNotation* aNotation)
-{
-    Node::setNSObj(aNotation);
-    nsNotation = aNotation;
-}
-
-/**
  * Call nsIDOMNotation::GetPublicId to retrieve the public id for this notation.
  *
  * @return the notation's public id
  */
 const String& Notation::getPublicId()
 {
+    NSI_FROM_TX(Notation)
+
     publicId.clear();
-    nsNotation->GetPublicId(publicId.getNSString());
+    if (nsNotation)
+        nsNotation->GetPublicId(publicId.getNSString());
     return publicId;
 }
 
@@ -77,7 +68,10 @@ const String& Notation::getPublicId()
  */
 const String& Notation::getSystemId()
 {
+    NSI_FROM_TX(Notation)
+
     systemId.clear();
-    nsNotation->GetSystemId(systemId.getNSString());
+    if (nsNotation)
+        nsNotation->GetSystemId(systemId.getNSString());
     return systemId;
 }

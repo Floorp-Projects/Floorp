@@ -36,7 +36,6 @@
  */
 Attr::Attr(nsIDOMAttr* aAttr, Document* aOwner) : Node(aAttr, aOwner)
 {
-    nsAttr = aAttr;
 }
 
 /**
@@ -47,33 +46,17 @@ Attr::~Attr()
 }
 
 /**
- * Return the wrapped nsIDOMAttr.
- */
-nsIDOMAttr* Attr::getNSAttr()
-{
-    return nsAttr;
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aAttr the nsIDOMAttr you want to wrap
- */
-void Attr::setNSObj(nsIDOMAttr* aAttr)
-{
-    Node::setNSObj(aAttr);
-    nsAttr = aAttr;
-}
-
-/**
  * Call nsIDOMAttr::GetName to retrieve the name of this attribute.
  *
  * @return the attribute's name
  */
 const String& Attr::getName()
 {
+    NSI_FROM_TX(Attr)
+
     nodeName.clear();
-    nsAttr->GetName(nodeName.getNSString());
+    if (nsAttr)
+        nsAttr->GetName(nodeName.getNSString());
     return nodeName;
 }
 
@@ -85,9 +68,11 @@ const String& Attr::getName()
  */
 MBool Attr::getSpecified() const
 {
-    MBool specified;
+    NSI_FROM_TX(Attr)
+    MBool specified = MB_FALSE;
 
-    nsAttr->GetSpecified(&specified);
+    if (nsAttr)
+        nsAttr->GetSpecified(&specified);
     return specified;
 }
 
@@ -98,8 +83,11 @@ MBool Attr::getSpecified() const
  */
 const String& Attr::getValue()
 {
+    NSI_FROM_TX(Attr)
+
     nodeValue.clear();
-    nsAttr->GetValue(nodeValue.getNSString());
+    if (nsAttr)
+        nsAttr->GetValue(nodeValue.getNSString());
     return nodeValue;
 }
 
@@ -110,5 +98,8 @@ const String& Attr::getValue()
  */
 void Attr::setValue(const String& aNewValue)
 {
-    nsAttr->SetValue(aNewValue.getConstNSString());
+    NSI_FROM_TX(Attr)
+
+    if (nsAttr)
+        nsAttr->SetValue(aNewValue.getConstNSString());
 }

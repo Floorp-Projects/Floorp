@@ -37,7 +37,6 @@
 DocumentType::DocumentType(nsIDOMDocumentType* aDocumentType, Document* aOwner):
         Node(aDocumentType, aOwner)
 {
-    nsDocumentType = aDocumentType;
 }
 
 /**
@@ -48,25 +47,17 @@ DocumentType::~DocumentType()
 }
 
 /**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aDocumentType the nsIDOMDocumentType you want to wrap
- */
-void DocumentType::setNSObj(nsIDOMDocumentType* aDocumentType)
-{
-    Node::setNSObj(aDocumentType);
-    nsDocumentType = aDocumentType;
-}
-
-/**
  * Call nsIDOMDocumentType::GetName to get the name of the document type.
  *
  * @return the name of the document type
  */
 const String& DocumentType::getName()
 {
+    NSI_FROM_TX(DocumentType)
+
     nodeName.clear();
-    nsDocumentType->GetName(nodeName.getNSString());
+    if (nsDocumentType)
+        nsDocumentType->GetName(nodeName.getNSString());
     return nodeName;
 }
 
@@ -78,6 +69,7 @@ const String& DocumentType::getName()
  */
 NamedNodeMap* DocumentType::getEntities()
 {
+    NSI_FROM_TX_NULL_CHECK(DocumentType)
     nsCOMPtr<nsIDOMNamedNodeMap> tmpEntities;
 
     if (NS_SUCCEEDED(nsDocumentType->GetEntities(getter_AddRefs(tmpEntities))))
@@ -94,6 +86,7 @@ NamedNodeMap* DocumentType::getEntities()
  */
 NamedNodeMap* DocumentType::getNotations()
 {
+    NSI_FROM_TX_NULL_CHECK(DocumentType)
     nsCOMPtr<nsIDOMNamedNodeMap> notations;
 
     if (NS_SUCCEEDED(nsDocumentType->GetNotations(getter_AddRefs(notations))))

@@ -39,7 +39,6 @@ DOMImplementation::DOMImplementation(nsIDOMDOMImplementation* aDomImpl,
             Document* aOwner) :
         MozillaObjectWrapper(aDomImpl, aOwner)
 {
-    nsDOMImpl = aDomImpl;
 }
 
 /**
@@ -47,17 +46,6 @@ DOMImplementation::DOMImplementation(nsIDOMDOMImplementation* aDomImpl,
  */
 DOMImplementation::~DOMImplementation()
 {
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aDomImpl the nsIDOMDOMImplementation you want to wrap
- */
-void DOMImplementation::setNSObj(nsIDOMDOMImplementation* aDomImpl)
-{
-    MozillaObjectWrapper::setNSObj(aDomImpl);
-    nsDOMImpl = aDomImpl;
 }
 
 /**
@@ -70,10 +58,12 @@ void DOMImplementation::setNSObj(nsIDOMDOMImplementation* aDomImpl)
 MBool DOMImplementation::hasFeature(const String& aFeature,
        const String& aVersion) const
 {
+    NSI_FROM_TX(DOMImplementation)
     MBool bHasFeature = MB_FALSE;
 
-    nsDOMImpl->HasFeature(aFeature.getConstNSString(), aVersion.getConstNSString(),
-            &bHasFeature);
+    if (nsDOMImplementation)
+        nsDOMImplementation->HasFeature(aFeature.getConstNSString(), aVersion.getConstNSString(),
+                &bHasFeature);
 
     return bHasFeature;
 }

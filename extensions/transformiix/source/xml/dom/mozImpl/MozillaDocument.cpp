@@ -57,7 +57,6 @@ Document::Document() : Node(NULL, NULL)
     res = implementation->CreateDocument(emptyStr, emptyStr, nsnull,
                 getter_AddRefs(document));
     //if (NS_FAILED(res)) return NULL;
-    nsDocument = document;
     wrapperHashTable = new nsObjectHashtable(nsnull, nsnull, DeleteWrapper, nsnull);
     bInHashTableDeletion = PR_FALSE;
     addWrapper(this);
@@ -71,7 +70,6 @@ Document::Document() : Node(NULL, NULL)
  */
 Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, this)
 {
-    nsDocument = aDocument;
     wrapperHashTable = new nsObjectHashtable(nsnull, nsnull, DeleteWrapper, nsnull);
     bInHashTableDeletion = PR_FALSE;
     addWrapper(this);
@@ -85,17 +83,6 @@ Document::~Document()
     removeWrapper(this);
     bInHashTableDeletion = PR_TRUE;
     delete wrapperHashTable;
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aDocument the nsIDOMDocument you want to wrap
- */
-void Document::setNSObj(nsIDOMDocument* aDocument)
-{
-    Node::setNSObj(aDocument);
-    nsDocument = aDocument;
 }
 
 /**
@@ -117,11 +104,8 @@ PRBool Document::inHashTableDeletion()
  */
 Element* Document::getDocumentElement()
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMElement> theElement;
-    Element* elemWrapper = NULL;
-
-    if (nsDocument == NULL)
-      return NULL;
 
     if (NS_SUCCEEDED(nsDocument->GetDocumentElement(
                 getter_AddRefs(theElement))))
@@ -137,10 +121,8 @@ Element* Document::getDocumentElement()
  */
 DocumentType* Document::getDoctype()
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMDocumentType> theDocType;
-
-    if (nsDocument == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsDocument->GetDoctype(getter_AddRefs(theDocType))))
         return (DocumentType*)createWrapper(theDocType);
@@ -156,10 +138,8 @@ DocumentType* Document::getDoctype()
  */
 DOMImplementation* Document::getImplementation()
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMDOMImplementation> theImpl;
-
-    if (nsDocument == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsDocument->GetImplementation(getter_AddRefs(theImpl))))
         return createDOMImplementation(theImpl);
@@ -174,10 +154,8 @@ DOMImplementation* Document::getImplementation()
  */
 DocumentFragment* Document::createDocumentFragment()
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMDocumentFragment> fragment;
-
-    if (nsDocument == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsDocument->CreateDocumentFragment(
                 getter_AddRefs(fragment))))
@@ -194,23 +172,7 @@ DocumentFragment* Document::createDocumentFragment()
  *
  * @return the DocumentFragment
  */
-DocumentFragment* Document::createDocumentFragment(
-            nsIDOMDocumentFragment* aFragment)
-{
-    DocumentFragment* docFragWrapper = NULL;
-
-    if (aFragment)
-    {
-        nsISupportsKey key(aFragment);
-        docFragWrapper =
-            (DocumentFragment*)wrapperHashTable->Get(&key);
-
-        if (!docFragWrapper)
-            docFragWrapper = new DocumentFragment(aFragment, this);
-    }
-
-    return docFragWrapper;
-}
+IMPL_CREATE_WRAPPER(DocumentFragment)
 
 /**
  * Call nsIDOMDocument::CreateElement to create an Element.
@@ -221,6 +183,7 @@ DocumentFragment* Document::createDocumentFragment(
  */
 Element* Document::createElement(const String& aTagName)
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMElement> element;
 
     if (NS_SUCCEEDED(nsDocument->CreateElement(aTagName.getConstNSString(),
@@ -239,6 +202,7 @@ Element* Document::createElement(const String& aTagName)
  */
 Element* Document::getElementById(const String aID)
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMElement> element;
 
     if (NS_SUCCEEDED(nsDocument->GetElementById(aID.getConstNSString(), getter_AddRefs(element))))
@@ -254,21 +218,7 @@ Element* Document::getElementById(const String aID)
  *
  * @return the Element
  */
-Element* Document::createElement(nsIDOMElement* aElement)
-{
-    Element* elemWrapper = NULL;
-
-    if (aElement)
-    {
-        nsISupportsKey key(aElement);
-        elemWrapper = (Element*)wrapperHashTable->Get(&key);
-
-        if (!elemWrapper)
-            elemWrapper = new Element(aElement, this);
-    }
-
-    return elemWrapper;
-}
+IMPL_CREATE_WRAPPER(Element)
 
 /**
  * Call nsIDOMDocument::CreateElementNS to create an Element.
@@ -281,6 +231,7 @@ Element* Document::createElement(nsIDOMElement* aElement)
 Element* Document::createElementNS(const String& aNamespaceURI,
             const String& aTagName)
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMElement> element;
 
     if (NS_SUCCEEDED(nsDocument->CreateElementNS(
@@ -300,13 +251,36 @@ Element* Document::createElementNS(const String& aNamespaceURI,
  */
 Attr* Document::createAttribute(const String& aName)
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
+    nsCOMPtr<nsIDOMAttr> attr;
+
+    if (NS_SUCCEEDED(nsDocument->CreateAttribute(aName.getConstNSString(),
+                getter_AddRefs(attr))))
+        return createAttribute(attr);
+    else
+        return NULL;
+}
+
+/**
+ * Call nsIDOMDocument::CreateAttributeNS to create an Attribute.
+ *
+ * @param aNamespaceURI the URI of the namespace for the element
+ * @param aName the name of the attribute you want to create
+ *
+ * @return the Attribute
+ */
+Attr* Document::createAttributeNS(const String& aNamespaceURI,
+            const String& aName)
+{
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMAttr> attr;
 
     if (nsDocument == NULL)
         return NULL;
 
-    if (nsDocument->CreateAttribute(aName.getConstNSString(),
-                getter_AddRefs(attr)) == NS_OK)
+    if (NS_SUCCEEDED(nsDocument->CreateAttributeNS(
+                aNamespaceURI.getConstNSString(), aName.getConstNSString(),
+                getter_AddRefs(attr)) == NS_OK))
         return createAttribute(attr);
     else
         return NULL;
@@ -319,21 +293,7 @@ Attr* Document::createAttribute(const String& aName)
  *
  * @return the Attribute
  */
-Attr* Document::createAttribute(nsIDOMAttr* aAttr)
-{
-    Attr* attrWrapper = NULL;
-
-    if (aAttr)
-    {
-        nsISupportsKey key(aAttr);
-        attrWrapper = (Attr*)wrapperHashTable->Get(&key);
-
-        if (!attrWrapper)
-            attrWrapper = new Attr(aAttr, this);
-    }
-
-    return attrWrapper;
-}
+IMPL_CREATE_WRAPPER2(Attr, createAttribute)
 
 /**
  * Call nsIDOMDocument::CreateTextNode to create a Text node.
@@ -344,10 +304,8 @@ Attr* Document::createAttribute(nsIDOMAttr* aAttr)
  */
 Text* Document::createTextNode(const String& aData)
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMText> text;
-
-    if (nsDocument == NULL)
-        return NULL;
 
     if (nsDocument->CreateTextNode(aData.getConstNSString(),
                 getter_AddRefs(text)) == NS_OK)
@@ -363,21 +321,7 @@ Text* Document::createTextNode(const String& aData)
  *
  * @return the Text node
  */
-Text* Document::createTextNode(nsIDOMText* aText)
-{
-    Text* textWrapper = NULL;
-
-    if (aText)
-    {
-        nsISupportsKey key(aText);
-        textWrapper = (Text*)wrapperHashTable->Get(&key);
-
-        if (!textWrapper)
-            textWrapper = new Text(aText, this);
-    }
-
-    return textWrapper;
-}
+IMPL_CREATE_WRAPPER2(Text, createTextNode)
 
 /**
  * Call nsIDOMDocument::CreateComment to create a Comment node.
@@ -388,10 +332,8 @@ Text* Document::createTextNode(nsIDOMText* aText)
  */
 Comment* Document::createComment(const String& aData)
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMComment> comment;
-
-    if (nsDocument == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsDocument->CreateComment(aData.getConstNSString(),
                 getter_AddRefs(comment))))
@@ -407,21 +349,7 @@ Comment* Document::createComment(const String& aData)
  *
  * @return the Comment node
  */
-Comment* Document::createComment(nsIDOMComment* aComment)
-{
-    Comment* commentWrapper = NULL;
-
-    if (aComment)
-    {
-        nsISupportsKey key(aComment);
-        commentWrapper = (Comment*)wrapperHashTable->Get(&key);
-
-        if (!commentWrapper)
-            commentWrapper = new Comment(aComment, this);
-    }
-
-    return commentWrapper;
-}
+IMPL_CREATE_WRAPPER(Comment)
 
 /**
  * Call nsIDOMDocument::CreateCDATASection to create a CDataSection.
@@ -432,10 +360,8 @@ Comment* Document::createComment(nsIDOMComment* aComment)
  */
 CDATASection* Document::createCDATASection(const String& aData)
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMCDATASection> cdata;
-
-    if (nsDocument == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsDocument->CreateCDATASection(aData.getConstNSString(),
                 getter_AddRefs(cdata))))
@@ -452,21 +378,7 @@ CDATASection* Document::createCDATASection(const String& aData)
  *
  * @return the CDATASection node
  */
-CDATASection* Document::createCDATASection(nsIDOMCDATASection* aCdata)
-{
-    CDATASection* cdataWrapper = NULL;
-
-    if (aCdata)
-    {
-        nsISupportsKey key(aCdata);
-        cdataWrapper = (CDATASection*)wrapperHashTable->Get(&key);
-
-        if (!cdataWrapper)
-            cdataWrapper = new CDATASection(aCdata, this);
-    }
-
-    return cdataWrapper;
-}
+IMPL_CREATE_WRAPPER(CDATASection)
 
 /**
  * Call nsIDOMDocument::CreateProcessingInstruction to create a
@@ -480,10 +392,8 @@ CDATASection* Document::createCDATASection(nsIDOMCDATASection* aCdata)
 ProcessingInstruction* Document::createProcessingInstruction(
             const String& aTarget, const String& aData)
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMProcessingInstruction> pi;
-
-    if (nsDocument == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsDocument->CreateProcessingInstruction(
                 aTarget.getConstNSString(), aData.getConstNSString(),
@@ -501,22 +411,7 @@ ProcessingInstruction* Document::createProcessingInstruction(
  *
  * @return the ProcessingInstruction node
  */
-ProcessingInstruction* Document::createProcessingInstruction(
-            nsIDOMProcessingInstruction* aPi)
-{
-    ProcessingInstruction* piWrapper;
-
-    if (aPi)
-    {
-        nsISupportsKey key(aPi);
-        piWrapper = (ProcessingInstruction*)wrapperHashTable->Get(&key);
-
-        if (!piWrapper)
-            piWrapper = new ProcessingInstruction(aPi, this);
-    }
-
-    return piWrapper;
-}
+IMPL_CREATE_WRAPPER(ProcessingInstruction)
 
 /**
  * Call nsIDOMDocument::CreateEntityReference to create a EntityReference.
@@ -527,10 +422,8 @@ ProcessingInstruction* Document::createProcessingInstruction(
  */
 EntityReference* Document::createEntityReference(const String& aName)
 {
+    NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMEntityReference> entityRef;
-
-    if (nsDocument == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsDocument->CreateEntityReference(aName.getConstNSString(),
                 getter_AddRefs(entityRef))))
@@ -547,22 +440,7 @@ EntityReference* Document::createEntityReference(const String& aName)
  *
  * @return the EntityReference
  */
-EntityReference* Document::createEntityReference(
-            nsIDOMEntityReference* aEntityRef)
-{
-    EntityReference* entityWrapper = NULL;
-
-    if (aEntityRef)
-    {
-        nsISupportsKey key(aEntityRef);
-        entityWrapper = (EntityReference*)wrapperHashTable->Get(&key);
-
-        if (!entityWrapper)
-            entityWrapper = new EntityReference(aEntityRef, this);
-    }
-
-    return entityWrapper;
-}
+IMPL_CREATE_WRAPPER(EntityReference)
 
 /**
  * Create a wrapper for a nsIDOMEntity, reuses an existing wrapper if possible.
@@ -571,21 +449,7 @@ EntityReference* Document::createEntityReference(
  *
  * @return the Entity
  */
-Entity* Document::createEntity(nsIDOMEntity* aEntity)
-{
-    Entity* entityWrapper = NULL;
-
-    if (aEntity)
-    {
-        nsISupportsKey key(aEntity);
-        entityWrapper = (Entity*)wrapperHashTable->Get(&key);
-
-        if (!entityWrapper)
-            entityWrapper = new Entity(aEntity, this);
-    }
-
-    return entityWrapper;
-}
+IMPL_CREATE_WRAPPER(Entity)
 
 /**
  * Create a wrapper for a nsIDOMNode, reuses an existing wrapper if possible.
@@ -594,21 +458,7 @@ Entity* Document::createEntity(nsIDOMEntity* aEntity)
  *
  * @return the Node
  */
-Node* Document::createNode(nsIDOMNode* aNode)
-{
-    Node* nodeWrapper = NULL;
-
-    if (aNode)
-    {
-        nsISupportsKey key(aNode);
-        nodeWrapper = (Node*)wrapperHashTable->Get(&key);
-
-        if (!nodeWrapper)
-            nodeWrapper = new Node(aNode, this);
-    }
-
-    return nodeWrapper;
-}
+IMPL_CREATE_WRAPPER(Node)
 
 /**
  * Create a wrapper for a nsIDOMNotation, reuses an existing wrapper if
@@ -618,21 +468,7 @@ Node* Document::createNode(nsIDOMNode* aNode)
  *
  * @return the Notation
  */
-Notation* Document::createNotation(nsIDOMNotation* aNotation)
-{
-    Notation* notationWrapper = NULL;
-
-    if (aNotation)
-    {
-        nsISupportsKey key(aNotation);
-        notationWrapper = (Notation*)wrapperHashTable->Get(&key);
-
-        if (!notationWrapper)
-            notationWrapper = new Notation(aNotation, this);
-    }
-
-    return notationWrapper;
-}
+IMPL_CREATE_WRAPPER(Notation)
 
 /**
  * Create a wrapper for a nsIDOMDOMImplementation, reuses an existing wrapper if
@@ -642,22 +478,7 @@ Notation* Document::createNotation(nsIDOMNotation* aNotation)
  *
  * @return the DOMImplementation
  */
-DOMImplementation* Document::createDOMImplementation(
-            nsIDOMDOMImplementation* aImpl)
-{
-    DOMImplementation* implWrapper = NULL;
-
-    if (aImpl)
-    {
-        nsISupportsKey key(aImpl);
-        implWrapper = (DOMImplementation*)wrapperHashTable->Get(&key);
-
-        if (!implWrapper)
-            implWrapper = new DOMImplementation(aImpl, this);
-    }
-
-    return implWrapper;
-}
+IMPL_CREATE_WRAPPER(DOMImplementation)
 
 /**
  * Create a wrapper for a nsIDOMDocumentType, reuses an existing wrapper if
@@ -667,21 +488,7 @@ DOMImplementation* Document::createDOMImplementation(
  *
  * @return the DocumentType
  */
-DocumentType* Document::createDocumentType(nsIDOMDocumentType* aDoctype)
-{
-    DocumentType* doctypeWrapper = NULL;
-
-    if (aDoctype)
-    {
-        nsISupportsKey key(aDoctype);
-        doctypeWrapper = (DocumentType*)wrapperHashTable->Get(&key);
-
-        if (!doctypeWrapper)
-            doctypeWrapper = new DocumentType(aDoctype, this);
-    }
-
-    return doctypeWrapper;
-}
+IMPL_CREATE_WRAPPER(DocumentType)
 
 /**
  * Create a wrapper for a nsIDOMNodeList, reuses an existing wrapper if
@@ -691,21 +498,7 @@ DocumentType* Document::createDocumentType(nsIDOMDocumentType* aDoctype)
  *
  * @return the NodeList
  */
-NodeList* Document::createNodeList(nsIDOMNodeList* aList)
-{
-    NodeList* listWrapper = NULL;
-
-    if (aList)
-    {
-        nsISupportsKey key(aList);
-        listWrapper = (NodeList*)wrapperHashTable->Get(&key);
-
-        if (!listWrapper)
-            listWrapper = new NodeList(aList, this);
-    }
-
-    return listWrapper;
-}
+IMPL_CREATE_WRAPPER(NodeList)
 
 /**
  * Create a wrapper for a nsIDOMNamedNodeMap, reuses an existing wrapper if
@@ -715,21 +508,7 @@ NodeList* Document::createNodeList(nsIDOMNodeList* aList)
  *
  * @return the NamedNodeMap
  */
-NamedNodeMap* Document::createNamedNodeMap(nsIDOMNamedNodeMap* aMap)
-{
-    NamedNodeMap* mapWrapper = NULL;
-
-    if (aMap)
-    {
-        nsISupportsKey key(aMap);
-        mapWrapper = (NamedNodeMap*)wrapperHashTable->Get(&key);
-
-        if (!mapWrapper)
-            mapWrapper = new NamedNodeMap(aMap, this);
-    }
-
-    return mapWrapper;
-}
+IMPL_CREATE_WRAPPER(NamedNodeMap)
 
 /**
  * Create a wrapper for a nsIDOMNode, reuses an existing wrapper if possible.
@@ -851,11 +630,13 @@ MITREObject* Document::removeWrapper(MozillaObjectWrapper* aObject)
 
 String Document::getBaseURI()
 {
+    NSI_FROM_TX(Document)
     String url;
 
     nsIURI* docURL = nsnull;
     nsCOMPtr<nsIDocument> sourceNsDocument(do_QueryInterface(nsDocument));
-    sourceNsDocument->GetBaseURL(docURL);
+    if (sourceNsDocument)
+        sourceNsDocument->GetBaseURL(docURL);
     if (docURL) {
         char* urlString;
         docURL->GetSpec(&urlString);

@@ -43,7 +43,6 @@ Node::Node(nsIDOMNode* aNode, Document* aOwner) :
             MozillaObjectWrapper(aNode, aOwner)
 {
     MOZ_COUNT_CTOR(Node);
-    nsNode = aNode;
 }
 
 /**
@@ -61,6 +60,8 @@ Node::~Node()
  */
 void Node::setNSObj(nsIDOMNode* aNode)
 {
+    NSI_FROM_TX(Node)
+
     // First we must remove this wrapper from the document hash table since we 
     // don't want to be associated with the existing nsIDOM* object anymore
     if (ownerDocument && nsNode)
@@ -68,32 +69,10 @@ void Node::setNSObj(nsIDOMNode* aNode)
 
     // Now assume control of the new node
     MozillaObjectWrapper::setNSObj(aNode);
-    nsNode = aNode;
 
     // Finally, place our selves back in the hash table
     if (ownerDocument && aNode)
         ownerDocument->addWrapper(this);
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper and set document owner.
- *
- * @param aNode the nsIDOMNode you want to wrap
- */
-void Node::setNSObj(nsIDOMNode* aNode, Document* aOwner)
-{
-    MozillaObjectWrapper::setNSObj(aNode, aOwner);
-    nsNode = aNode;
-}
-
-/**
- * Get the Mozilla object wrapped with this wrapper.
- *
- * @return the Mozilla object wrapped with this wrapper
- */
-nsIDOMNode* Node::getNSNode()
-{
-    return nsNode;
 }
 
 /**
@@ -103,8 +82,11 @@ nsIDOMNode* Node::getNSNode()
  */
 const String& Node::getNodeName()
 {
+    NSI_FROM_TX(Node)
+
     nodeName.clear();
-    nsNode->GetNodeName(nodeName.getNSString());
+    if (nsNode)
+        nsNode->GetNodeName(nodeName.getNSString());
     return nodeName;
 }
 
@@ -115,8 +97,11 @@ const String& Node::getNodeName()
  */
 const String& Node::getNodeValue()
 {
+    NSI_FROM_TX(Node)
+
     nodeValue.clear();
-    nsNode->GetNodeValue(nodeValue.getNSString());
+    if (nsNode)
+        nsNode->GetNodeValue(nodeValue.getNSString());
     return nodeValue;
 }
 
@@ -127,12 +112,11 @@ const String& Node::getNodeValue()
  */
 unsigned short Node::getNodeType() const
 {
-    unsigned short nodeType;
+    NSI_FROM_TX(Node)
+    unsigned short nodeType = 0;
 
-    if (nsNode == NULL)
-        return 0;
-
-    nsNode->GetNodeType(&nodeType);
+    if (nsNode)
+        nsNode->GetNodeType(&nodeType);
     return nodeType;
 }
 
@@ -143,10 +127,8 @@ unsigned short Node::getNodeType() const
  */
 Node* Node::getParentNode()
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
     nsCOMPtr<nsIDOMNode> tmpParent;
-
-    if (nsNode == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsNode->GetParentNode(getter_AddRefs(tmpParent))))
         return ownerDocument->createWrapper(tmpParent);
@@ -161,10 +143,8 @@ Node* Node::getParentNode()
  */
 NodeList* Node::getChildNodes()
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
     nsCOMPtr<nsIDOMNodeList> tmpNodeList;
-
-    if (nsNode == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsNode->GetChildNodes(getter_AddRefs(tmpNodeList))))
         return (NodeList*)ownerDocument->createNodeList(tmpNodeList);
@@ -179,10 +159,8 @@ NodeList* Node::getChildNodes()
  */
 Node* Node::getFirstChild()
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
     nsCOMPtr<nsIDOMNode> tmpFirstChild;
-
-    if (nsNode == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsNode->GetFirstChild(getter_AddRefs(tmpFirstChild))))
         return ownerDocument->createWrapper(tmpFirstChild);
@@ -197,15 +175,13 @@ Node* Node::getFirstChild()
  */
 Node* Node::getLastChild() 
 {
-  nsCOMPtr<nsIDOMNode> tmpLastChild;
+    NSI_FROM_TX_NULL_CHECK(Node)
+    nsCOMPtr<nsIDOMNode> tmpLastChild;
 
-  if (nsNode == NULL)
-    return NULL;
-
-  if (NS_SUCCEEDED(nsNode->GetLastChild(getter_AddRefs(tmpLastChild))))
-    return ownerDocument->createWrapper(tmpLastChild);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsNode->GetLastChild(getter_AddRefs(tmpLastChild))))
+        return ownerDocument->createWrapper(tmpLastChild);
+    else
+        return NULL;
 }
 
 /**
@@ -215,10 +191,8 @@ Node* Node::getLastChild()
  */
 Node* Node::getPreviousSibling()
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
     nsCOMPtr<nsIDOMNode> tmpPrevSib;
-
-    if (nsNode == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsNode->GetPreviousSibling(getter_AddRefs(tmpPrevSib))))
         return ownerDocument->createWrapper(tmpPrevSib);
@@ -233,10 +207,8 @@ Node* Node::getPreviousSibling()
  */
 Node* Node::getNextSibling()
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
     nsCOMPtr<nsIDOMNode> tmpNextSib;
-
-    if (nsNode == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsNode->GetNextSibling(getter_AddRefs(tmpNextSib))))
         return ownerDocument->createWrapper(tmpNextSib);
@@ -251,10 +223,8 @@ Node* Node::getNextSibling()
  */
 NamedNodeMap* Node::getAttributes()
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
     nsCOMPtr<nsIDOMNamedNodeMap> tmpAttributes;
-
-    if (nsNode == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsNode->GetAttributes(getter_AddRefs(tmpAttributes))))
         return (NamedNodeMap*)ownerDocument->createNamedNodeMap(tmpAttributes);
@@ -279,7 +249,9 @@ Document* Node::getOwnerDocument()
  */
 void Node::setNodeValue(const String& aNewNodeValue)
 {
-    if (nsNode != NULL)
+    NSI_FROM_TX(Node)
+
+    if (nsNode)
         nsNode->SetNodeValue(aNewNodeValue.getConstNSString());
 }
 
@@ -293,13 +265,13 @@ void Node::setNodeValue(const String& aNewNodeValue)
  */
 Node* Node::insertBefore(Node* aNewChild, Node* aRefChild)
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
+    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(aNewChild->getNSObj()));
+    nsCOMPtr<nsIDOMNode> refChild(do_QueryInterface(aRefChild->getNSObj()));
     nsCOMPtr<nsIDOMNode> returnValue;
 
-    if (nsNode == NULL)
-        return NULL;
-
-    if (NS_SUCCEEDED(nsNode->InsertBefore(aNewChild->getNSNode(),
-            aRefChild->getNSNode(), getter_AddRefs(returnValue))))
+    if (NS_SUCCEEDED(nsNode->InsertBefore(newChild, refChild,
+            getter_AddRefs(returnValue))))
         return ownerDocument->createWrapper(returnValue);
     else
         return NULL;
@@ -315,13 +287,13 @@ Node* Node::insertBefore(Node* aNewChild, Node* aRefChild)
  */
 Node* Node::replaceChild(Node* aNewChild, Node* aOldChild)
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
+    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(aNewChild->getNSObj()));
+    nsCOMPtr<nsIDOMNode> oldChild(do_QueryInterface(aOldChild->getNSObj()));
     nsCOMPtr<nsIDOMNode> returnValue;
 
-    if (nsNode == NULL)
-        return NULL;
-
-    if (NS_SUCCEEDED(nsNode->ReplaceChild(aNewChild->getNSNode(),
-               aOldChild->getNSNode(), getter_AddRefs(returnValue))))
+    if (NS_SUCCEEDED(nsNode->ReplaceChild(newChild,
+               oldChild, getter_AddRefs(returnValue))))
         return (Node*)ownerDocument->removeWrapper(returnValue.get());
     else
         return NULL;
@@ -336,12 +308,11 @@ Node* Node::replaceChild(Node* aNewChild, Node* aOldChild)
  */
 Node* Node::removeChild(Node* aOldChild)
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
+    nsCOMPtr<nsIDOMNode> oldChild(do_QueryInterface(aOldChild->getNSObj()));
     nsCOMPtr<nsIDOMNode> returnValue;
 
-    if (nsNode == NULL)
-        return NULL;
-
-    if (NS_SUCCEEDED(nsNode->RemoveChild(aOldChild->getNSNode(),
+    if (NS_SUCCEEDED(nsNode->RemoveChild(oldChild,
             getter_AddRefs(returnValue))))
         return (Node*)ownerDocument->removeWrapper(returnValue.get());
     else
@@ -357,12 +328,11 @@ Node* Node::removeChild(Node* aOldChild)
  */
 Node* Node::appendChild(Node* aNewChild)
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
+    nsCOMPtr<nsIDOMNode> newChild(do_QueryInterface(aNewChild->getNSObj()));
     nsCOMPtr<nsIDOMNode> returnValue;
 
-    if (nsNode == NULL)
-        return NULL;
-
-    if (NS_SUCCEEDED(nsNode->AppendChild(aNewChild->getNSNode(),
+    if (NS_SUCCEEDED(nsNode->AppendChild(newChild,
             getter_AddRefs(returnValue))))
         return ownerDocument->createWrapper(returnValue);
     else
@@ -379,10 +349,8 @@ Node* Node::appendChild(Node* aNewChild)
  */
 Node* Node::cloneNode(MBool aDeep, Node* aDest)
 {
+    NSI_FROM_TX_NULL_CHECK(Node)
     nsCOMPtr<nsIDOMNode> returnValue;
-
-    if (nsNode == NULL)
-        return NULL;
 
     if (NS_SUCCEEDED(nsNode->CloneNode(aDeep, getter_AddRefs(returnValue))))
     {
@@ -400,12 +368,11 @@ Node* Node::cloneNode(MBool aDeep, Node* aDest)
  */
 MBool Node::hasChildNodes() const
 {
-    PRBool returnValue;
+    NSI_FROM_TX(Node)
+    PRBool returnValue = MB_FALSE;
 
-    if (nsNode == NULL)
-        return MB_FALSE;
-
-    nsNode->HasChildNodes(&returnValue);
+    if (nsNode)
+        nsNode->HasChildNodes(&returnValue);
     return returnValue;
 }
 
@@ -417,40 +384,11 @@ MBool Node::hasChildNodes() const
 **/
 String Node::getBaseURI()
 {
-    Node* node=this;
-    ArrayList baseUrls;
+    NSI_FROM_TX(Node)
     String url;
-    Node* xbAttr;
-    
-    while(node) {
-        switch(node->getNodeType()) {
-         case Node::ELEMENT_NODE :
-            xbAttr = ((Element*)node)->getAttributeNode(XMLBASE_ATTR);
-            if(xbAttr)
-                baseUrls.add(new String(xbAttr->getNodeValue()));
-            break;
 
-         case Node::DOCUMENT_NODE :
-            baseUrls.add(new String(((Document*)node)->getBaseURI()));
-            break;
-            
-         default:
-            break;
-        }
-        node = node->getParentNode();
-    }
-
-    if(baseUrls.size()) {
-        url = *((String*)baseUrls.get(baseUrls.size()-1));
-
-        for(int i=baseUrls.size()-2;i>=0;i--) {
-            String dest;
-            URIUtils::resolveHref(*(String*)baseUrls.get(i), url, dest);
-            url = dest;
-        }
-    }
-
-    baseUrls.clear(MB_TRUE);
-    
+    if (nsNode)
+        nsNode->GetBaseURI(url.getNSString());
+   
     return url;
-} //-- getBaseURI
+}
