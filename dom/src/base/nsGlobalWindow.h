@@ -187,7 +187,7 @@ protected:
    NS_IMETHOD ReadyOpenedDocShellItem(nsIDocShellTreeItem* aDocShellItem,
       nsIDOMWindow** aDOMWindow);
    NS_IMETHOD CheckWindowName(JSContext* cx, nsString& aName);
-   PRInt32 WinHasOption(char* options, const char* name, PRBool* aPresenceFlag);
+   PRInt32 WinHasOption(char* aOptions, const char* aName, PRInt32 aDefault, PRBool* aPresenceFlag);
    static void CloseWindow(nsISupports* aWindow);
 
    // Timeout Functions

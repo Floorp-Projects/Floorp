@@ -2895,9 +2895,9 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
    if (windowIsNew) {
      PRBool present = PR_FALSE;
      PRInt32 temp;
-    
-     if (!((temp = WinHasOption(options, "outerWidth", &present)) || present) &&
-         !((temp = WinHasOption(options, "outerHeight", &present)) || present)) {
+
+     if (!((temp = WinHasOption(options, "outerWidth", 0, &present)) || present) &&
+         !((temp = WinHasOption(options, "outerHeight", 0, &present)) || present)) {
          
          nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
          newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
@@ -3040,29 +3040,29 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char* aFeatures, PRBool aDialog)
 
 
    chromeFlags = nsIWebBrowserChrome::windowBordersOn;
-   if(aDialog && WinHasOption(aFeatures, "all", &presenceFlag))
+   if(aDialog && WinHasOption(aFeatures, "all", 0, &presenceFlag))
       chromeFlags = nsIWebBrowserChrome::allChrome;
 
    /* Next, allow explicitly named options to override the initial settings */
 
-   chromeFlags |= WinHasOption(aFeatures, "titlebar", &presenceFlag) ? 
+   chromeFlags |= WinHasOption(aFeatures, "titlebar", 0, &presenceFlag) ? 
                   nsIWebBrowserChrome::titlebarOn : 0;
-   chromeFlags |= WinHasOption(aFeatures, "close", &presenceFlag) ? 
+   chromeFlags |= WinHasOption(aFeatures, "close", 0, &presenceFlag) ? 
                   nsIWebBrowserChrome::windowCloseOn : 0;
-   chromeFlags |= WinHasOption(aFeatures, "toolbar", &presenceFlag) ? 
+   chromeFlags |= WinHasOption(aFeatures, "toolbar", 0, &presenceFlag) ? 
                   nsIWebBrowserChrome::toolBarOn : 0;
-   chromeFlags |= WinHasOption(aFeatures, "location", &presenceFlag) ? 
+   chromeFlags |= WinHasOption(aFeatures, "location", 0, &presenceFlag) ? 
                   nsIWebBrowserChrome::locationBarOn : 0;
-   chromeFlags |= (WinHasOption(aFeatures, "directories", &presenceFlag) || 
-                  WinHasOption(aFeatures, "personalbar", &presenceFlag)) ?
+   chromeFlags |= (WinHasOption(aFeatures, "directories", 0, &presenceFlag) || 
+                  WinHasOption(aFeatures, "personalbar", 0, &presenceFlag)) ?
                   nsIWebBrowserChrome::personalToolBarOn : 0;
-   chromeFlags |= WinHasOption(aFeatures, "status", &presenceFlag) ?
+   chromeFlags |= WinHasOption(aFeatures, "status", 0, &presenceFlag) ?
                   nsIWebBrowserChrome::statusBarOn : 0;
-   chromeFlags |= WinHasOption(aFeatures, "menubar", &presenceFlag) ? 
+   chromeFlags |= WinHasOption(aFeatures, "menubar", 0, &presenceFlag) ? 
                   nsIWebBrowserChrome::menuBarOn : 0;
-   chromeFlags |= WinHasOption(aFeatures, "scrollbars", &presenceFlag) ? 
+   chromeFlags |= WinHasOption(aFeatures, "scrollbars", 0, &presenceFlag) ? 
                   nsIWebBrowserChrome::scrollbarsOn : 0;
-   chromeFlags |= WinHasOption(aFeatures, "resizable", &presenceFlag) ?
+   chromeFlags |= WinHasOption(aFeatures, "resizable", 0, &presenceFlag) ?
                   nsIWebBrowserChrome::windowResizeOn : 0;
 
    /* OK.
@@ -3085,21 +3085,21 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char* aFeatures, PRBool aDialog)
       with the features that are more operating hints than appearance
       instructions. (Note modality implies dependence.) */
 
-   if ( WinHasOption(aFeatures, "alwaysLowered", nsnull) ||
-        WinHasOption(aFeatures, "z-lock", nsnull) )
+   if (WinHasOption(aFeatures, "alwaysLowered", 0, nsnull) ||
+       WinHasOption(aFeatures, "z-lock", 0, nsnull))
      chromeFlags |= nsIWebBrowserChrome::windowLowered;
-   else if (WinHasOption(aFeatures, "alwaysRaised", nsnull))
+   else if (WinHasOption(aFeatures, "alwaysRaised", 0, nsnull))
      chromeFlags |= nsIWebBrowserChrome::windowRaised;
 
-   chromeFlags |= WinHasOption(aFeatures, "chrome", nsnull) ? 
+   chromeFlags |= WinHasOption(aFeatures, "chrome", 0, nsnull) ? 
       nsIWebBrowserChrome::openAsChrome : 0;
-   chromeFlags |= WinHasOption(aFeatures, "centerscreen", nsnull) ? 
+   chromeFlags |= WinHasOption(aFeatures, "centerscreen", 0, nsnull) ? 
       nsIWebBrowserChrome::centerScreen : 0;
-   chromeFlags |= WinHasOption(aFeatures, "dependent", nsnull) ? 
+   chromeFlags |= WinHasOption(aFeatures, "dependent", 0, nsnull) ? 
       nsIWebBrowserChrome::dependent : 0;
-   chromeFlags |= WinHasOption(aFeatures, "modal", nsnull) ? 
+   chromeFlags |= WinHasOption(aFeatures, "modal", 0, nsnull) ? 
       (nsIWebBrowserChrome::modal | nsIWebBrowserChrome::dependent) : 0;
-   chromeFlags |= WinHasOption(aFeatures, "dialog", nsnull) ? 
+   chromeFlags |= WinHasOption(aFeatures, "dialog", 0, nsnull) ? 
       nsIWebBrowserChrome::openAsDialog : 0;
 
    /* and dialogs need to have the last word. assume dialogs are dialogs,
@@ -3113,7 +3113,6 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char* aFeatures, PRBool aDialog)
 
    /* missing
    chromeFlags->copy_history
-   chromeFlags->scrollbars
    */
 
    /* Allow disabling of commands only if there is no menubar */
@@ -3170,9 +3169,9 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
    PRBool positionSpecified = PR_FALSE;
    PRInt32 temp;
 
-   if((temp = WinHasOption(aFeatures, "left", &present)) || present)
+   if ((temp = WinHasOption(aFeatures, "left", 0, &present)) != 0 || present)
       chromeX = temp;
-   else if((temp = WinHasOption(aFeatures, "screenX", &present)) || present)
+   else if ((temp = WinHasOption(aFeatures, "screenX", 0, &present)) != 0 || present)
       chromeX = temp;
 
    if(present)
@@ -3180,9 +3179,9 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
 
    present = PR_FALSE;
 
-   if((temp = WinHasOption(aFeatures, "top", &present)) || present)
+   if ((temp = WinHasOption(aFeatures, "top", 0, &present)) != 0 || present)
       chromeY = temp;
-   else if((temp = WinHasOption(aFeatures, "screenY", &present)) || present)
+   else if ((temp = WinHasOption(aFeatures, "screenY", 0, &present)) != 0 || present)
       chromeY = temp;
 
    if(present)
@@ -3194,47 +3193,39 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
 
    PRBool sizeSpecified = PR_FALSE;
 
-   if((temp = WinHasOption(aFeatures, "outerWidth", &present)) || present)
-      {
+   if ((temp = WinHasOption(aFeatures, "outerWidth", chromeCX, &present)) != 0 || present) {
       chromeCX = temp;
       sizeChrome = PR_TRUE;
       sizeSpecified = PR_TRUE;
-      }
+   }
 
    present = PR_FALSE;
 
-   if((temp = WinHasOption(aFeatures, "outerHeight", &present)) || present)
-      {
+   if((temp = WinHasOption(aFeatures, "outerHeight", chromeCY, &present)) != 0 || present) {
       chromeCY = temp;
       sizeChrome = PR_TRUE;
       sizeSpecified = PR_TRUE;
-      }
+   }
 
    // We haven't switched to chrome sizing so we need to get the content area
-   if(!sizeChrome)
-      {
-      if((temp = WinHasOption(aFeatures, "width", &present)) || present)
-         {
-         contentCX = temp;
-         sizeSpecified = PR_TRUE;
-         }
-      else if((temp = WinHasOption(aFeatures, "innerWidth", &present)) || present)
-         {
-         contentCX = temp;
-         sizeSpecified = PR_TRUE;
-         }
+   if(!sizeChrome) {
 
-      if((temp = WinHasOption(aFeatures, "height", &present)) || present)
-         {
-         contentCY = temp;
+      if ((temp = WinHasOption(aFeatures, "width", chromeCX, &present)) != 0 || present) {
+         contentCX = temp;
          sizeSpecified = PR_TRUE;
-         }
-      else if((temp = WinHasOption(aFeatures, "innerHeight", &present)) || present)
-         {
-         contentCY = temp;
+      } else if ((temp = WinHasOption(aFeatures, "innerWidth", chromeCX, &present)) || present) {
+         contentCX = temp;
          sizeSpecified = PR_TRUE;
-         }
       }
+
+      if ((temp = WinHasOption(aFeatures, "height", chromeCY, &present)) != 0 || present) {
+         contentCY = temp;
+         sizeSpecified = PR_TRUE;
+      } else if ((temp = WinHasOption(aFeatures, "innerHeight", chromeCY, &present)) != 0 || present) {
+         contentCY = temp;
+         sizeSpecified = PR_TRUE;
+      }
+   }
 
    nsresult res;
    PRBool enabled;
@@ -3352,41 +3343,44 @@ NS_IMETHODIMP GlobalWindowImpl::CheckWindowName(JSContext* cx, nsString& aName)
    return NS_OK;
 }
 
-PRInt32 GlobalWindowImpl::WinHasOption(char *options, const char *name, PRBool* aPresenceFlag)
+PRInt32 GlobalWindowImpl::WinHasOption(char *aOptions, const char *aName, PRInt32 aDefault, PRBool* aPresenceFlag)
 {
-   if(!options)
+   if(!aOptions)
       return 0;
    char *comma, *equal;
    PRInt32 found = 0;
 
-   while(PR_TRUE)
-      {
-      while (nsCRT::IsAsciiSpace(*options))
-         options++;
+   while(PR_TRUE) {
+      while (nsCRT::IsAsciiSpace(*aOptions))
+         aOptions++;
 
-      comma = strchr(options, ',');
+      comma = strchr(aOptions, ',');
       if(comma)
          *comma = '\0';
-      equal = strchr(options, '=');
+      equal = strchr(aOptions, '=');
       if(equal)
          *equal = '\0';
-      if(nsCRT::strcasecmp(options, name) == 0)
-         {
-         if(aPresenceFlag)
+      if (nsCRT::strcasecmp(aOptions, aName) == 0) {
+         if (aPresenceFlag)
             *aPresenceFlag = PR_TRUE;
-         if(!equal || (nsCRT::strcasecmp(equal + 1, "yes") == 0))
-            found = 1;
+         if (equal)
+            if (*(equal+1) == '*')
+               found = aDefault;
+            else if (nsCRT::strcasecmp(equal+1, "yes") == 0)
+               found = 1;
+            else
+               found = atoi(equal+1);
          else
-            found = atoi(equal + 1);
-         }
+            found = 1;
+      }
       if(equal)
          *equal = '=';
       if(comma)
          *comma = ',';
       if(found || !comma)
          break;
-      options = comma + 1;
-      }
+      aOptions = comma + 1;
+   }
    return found;
 }
 
