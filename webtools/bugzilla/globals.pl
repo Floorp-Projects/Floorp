@@ -621,19 +621,6 @@ sub ValidatePassword {
     }
 }
 
-sub DBID_to_real_or_loginname {
-    my ($id) = (@_);
-    PushGlobalSQLState();
-    SendSQL("SELECT login_name,realname FROM profiles WHERE userid = $id");
-    my ($l, $r) = FetchSQLData();
-    PopGlobalSQLState();
-    if (!defined $r || $r eq "") {
-        return $l;
-    } else {
-        return "$l ($r)";
-    }
-}
-
 sub DBID_to_name {
     my ($id) = (@_);
     # $id should always be a positive integer
