@@ -1437,32 +1437,6 @@ mime_encoder_output_fn(const char *buf, PRInt32 size, void *closure)
   return mime_write_message_body (state, (char *) buf, size);
 }
 
-nsresult nsMsgComposeAndSend::ChangeBackgroundImageUrl(nsIDOMElement * aBodyElement, const nsAString& aCurrentUrl, const nsAString& aNewUrl)
-{
-  nsAutoString styleValue;
-  aBodyElement->GetAttribute(NS_LITERAL_STRING("style"), styleValue);
-
-  PRInt32 startOfUrl = styleValue.Find(PromiseFlatString(aCurrentUrl).get());
-  if (startOfUrl != kNotFound)
-  {
-    // cut out the current url
-    nsAutoString before; 
-    styleValue.Left(before, startOfUrl);
-    nsAutoString after;  
-    styleValue.Mid(after, startOfUrl + aCurrentUrl.Length(), styleValue.Length() - (startOfUrl + aCurrentUrl.Length()) );
-    before.Append(aNewUrl);
-    before.Append(after);
-
-    styleValue = before;
-  }
-
-  // styleValue.ReplaceSubstring(aCurrentUrl, aNewUrl);
-
-  aBodyElement->SetAttribute(NS_LITERAL_STRING("style"), styleValue);
-
-  return NS_OK;
-}
-
 nsresult
 nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData *attachment, PRBool *acceptObject)
 {
@@ -1498,14 +1472,11 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
   // First, try to see if the body as a background image
   if (body)
   {
-    // get the url from computed style
-    nsAutoString value;
-    rv = GetBackgroundImageUrl(domElement, NS_LITERAL_STRING("background-image"), value);
-            
-    if (!value.IsEmpty())
+    nsAutoString    tUrl;
+    if (NS_SUCCEEDED(body->GetBackground(tUrl)))
     {
       nsCAutoString turlC;
-      turlC.AssignWithConversion(value);
+      turlC.AssignWithConversion(tUrl);
       if (NS_SUCCEEDED(nsMsgNewURL(&attachment->url, turlC.get())))      
         NS_IF_ADDREF(attachment->url);
       else
@@ -1954,7 +1925,6 @@ typedef struct
   char          *url;
 } domSaveStruct;
 
-
 nsresult
 nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aNewsCount)
 {
@@ -2130,10 +2100,8 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       }
       else if (body)
       {
-        // get the url from computed style
-        GetBackgroundImageUrl(body, NS_LITERAL_STRING("background-image"), domURL);
-        if (!domURL.IsEmpty())
-          ChangeBackgroundImageUrl(body, domURL, newSpec);
+        body->GetBackground(domURL);
+        body->SetBackground(newSpec);
       }
 
       if (!domURL.IsEmpty())
@@ -2168,13 +2136,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     else if (image)
       image->SetSrc(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
     else if (body)
-    {
-      // get the url from computed style
-      nsString domURL;
-      GetBackgroundImageUrl(body, NS_LITERAL_STRING("background-image"), domURL);
-      if (!domURL.IsEmpty())
-        ChangeBackgroundImageUrl(body, domURL, NS_ConvertASCIItoUCS2(domSaveArray[i].url));
-    }
+      body->SetBackground(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
 
     nsMemory::Free(domSaveArray[i].url);
   }

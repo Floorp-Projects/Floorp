@@ -60,15 +60,6 @@
 #include "nsMsgUtils.h"
 #include "nsMsgSimulateError.h"
 
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMViewCSS.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMCSSPrimitiveValue.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
-
 #include "nsIMsgCompUtils.h"
 #include "nsIMsgMdnGenerator.h"
 
@@ -2141,38 +2132,3 @@ PRBool UseFormatFlowed(const char *charset)
   
 }
 
-nsresult GetBackgroundImageUrl(nsIDOMElement * aElement, const nsAString& aPropertyName, nsAString& aUrl)
-{
-  NS_ENSURE_ARG(aElement);
-
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> primCSSValue;
-
-  nsCOMPtr<nsIDOMDocument> domDocument; 
-  aElement->GetOwnerDocument(getter_AddRefs(domDocument));
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
-  if (document)
-  {    
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    document->GetScriptGlobalObject(getter_AddRefs(global));
-    nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(global));
-    if (viewCSS)
-    {
-      nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-      nsAutoString empty;
-      viewCSS->GetComputedStyle(aElement, empty, getter_AddRefs(cssDecl));
-      if (cssDecl)
-      {
-        nsAutoString value;
-        nsCOMPtr<nsIDOMCSSValue> cssValue; 
-        cssDecl->GetPropertyCSSValue(aPropertyName, getter_AddRefs(cssValue));  
-        primCSSValue = do_QueryInterface(cssValue);
-
-        if (primCSSValue)
-          primCSSValue->GetStringValue(aUrl);    
-
-      }
-    }
-  }
-
-  return NS_OK;
-}

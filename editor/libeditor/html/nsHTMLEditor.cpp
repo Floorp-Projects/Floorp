@@ -445,7 +445,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SetFlags(PRUint32 aFlags)
 {
   if (!mRules) { return NS_ERROR_NULL_POINTER; }
-  mCSSAware = ((aFlags & nsIPlaintextEditor::eEditorNoCSSMask) == 0);
+  mCSSAware = ((aFlags & (eEditorNoCSSMask | eEditorMailMask)) == 0);
 
   return mRules->SetFlags(aFlags);
 }
@@ -3992,10 +3992,8 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
           if (element)
           {
-            nsAutoString bgImageStr;
-
-            mHTMLCSSUtils->GetComputedProperty(element, nsEditProperty::cssBackgroundImage, bgImageStr);
-            if (!bgImageStr.Equals(NS_LITERAL_STRING("none"))) 
+            PRBool hasBackground = PR_FALSE;
+            if (NS_SUCCEEDED(element->HasAttribute(NS_LITERAL_STRING("background"), &hasBackground)) && hasBackground)
               (*aNodeList)->AppendElement(node);
           }
         }

@@ -159,7 +159,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIMsgComposeSecure.h"
-#include "nsAString.h"
+
 //
 // Some necessary defines...
 //
@@ -408,8 +408,6 @@ private:
 
   // generates a message id for our message, if necessary
   void GenerateMessageId( );
-
-  nsresult ChangeBackgroundImageUrl(nsIDOMElement * aBodyElement, const nsAString& aCurrentUrl, const nsAString& aNewUrl);
 
   // add default custom headers to the message
   nsresult AddDefaultCustomHeaders();
