@@ -1135,7 +1135,8 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
 #endif
 
   // Look for simple entities not included in a tags and scan them.
-  /* Skip all tags ("<[...]>") and content in an a tag ("<a[...]</a>").
+  /* Skip all tags ("<[...]>") and content in an a tag ("<a[...]</a>")
+     or in a tag ("<!--[...]-->").
      Unescape the rest (text between tags) and pass it to ScanTXT. */
   for (PRInt32 i = 0; PRUint32(i) < lengthOfInString;)
   {
@@ -1150,6 +1151,17 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
           i = lengthOfInString;
         else
           i += 4;
+      }
+      else if (aInString[PRUint32(i) + 1] == '!' && aInString[PRUint32(i) + 2] == '-' &&
+        aInString[PRUint32(i) + 3] == '-')
+          //if out-commended code, skip until -->
+      {
+        i = aInString.Find("-->", PR_FALSE, i);
+        if (i == kNotFound)
+          i = lengthOfInString;
+        else
+          i += 3;
+
       }
       else  // just skip tag (attributes etc.)
       {
