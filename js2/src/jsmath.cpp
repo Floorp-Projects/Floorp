@@ -145,10 +145,12 @@ static JSValue Math_log(Context *cx, const JSValue& /*thisValue*/, JSValue *argv
 static JSValue Math_max(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {
     if (argc == 0)
-        return kNaNValue;
+        return kNegativeInfinity;
     float64 result = argv[0].toNumber(cx).f64;
+    if (JSDOUBLE_IS_NaN(result)) return kNaNValue;
     for (uint32 i = 1; i < argc; ++i) {
         float64 arg = argv[i].toNumber(cx).f64;
+        if (JSDOUBLE_IS_NaN(arg)) return kNaNValue;
         if (arg > result)
             result = arg;
     }
@@ -157,11 +159,13 @@ static JSValue Math_max(Context *cx, const JSValue& /*thisValue*/, JSValue *argv
 static JSValue Math_min(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {
     if (argc == 0)
-        return kNaNValue;
+        return kPositiveInfinity;
     float64 result = argv[0].toNumber(cx).f64;
+    if (JSDOUBLE_IS_NaN(result)) return kNaNValue;
     for (uint32 i = 1; i < argc; ++i) {
         float64 arg = argv[i].toNumber(cx).f64;
-        if (arg < result)
+        if (JSDOUBLE_IS_NaN(arg)) return kNaNValue;
+        if ((arg < result) || (JSDOUBLE_IS_POSZERO(result) && JSDOUBLE_IS_NEGZERO(arg)))
             result = arg;
     }
     return JSValue(result);
@@ -220,25 +224,26 @@ struct {
 struct MathObjectFunctionDef {
     char *name;
     JSFunction::NativeCode *imp;
+    uint32 length;
 } MathObjectFunctions[] = {
-    { "abs",    Math_abs },
-    { "acos",   Math_acos },
-    { "asin",   Math_asin },
-    { "atan",   Math_atan },
-    { "atan2",  Math_atan2 },
-    { "ceil",   Math_ceil },
-    { "cos",    Math_cos },
-    { "exp",    Math_exp },
-    { "floor",  Math_floor },
-    { "log",    Math_log },
-    { "max",    Math_max },
-    { "min",    Math_min },
-    { "pow",    Math_pow },
-    { "random", Math_random },
-    { "round",  Math_round },
-    { "sin",    Math_sin },
-    { "sqrt",   Math_sqrt },
-    { "tan",    Math_tan },    
+    { "abs",    Math_abs,    1 },
+    { "acos",   Math_acos,   1 },
+    { "asin",   Math_asin,   1 },
+    { "atan",   Math_atan,   1 },
+    { "atan2",  Math_atan2,  2 },
+    { "ceil",   Math_ceil,   1 },
+    { "cos",    Math_cos,    1 },
+    { "exp",    Math_exp,    1 },
+    { "floor",  Math_floor,  1 },
+    { "log",    Math_log,    1 },
+    { "max",    Math_max,    2 },
+    { "min",    Math_min,    2 },
+    { "pow",    Math_pow,    2 },
+    { "random", Math_random, 1 },
+    { "round",  Math_round,  1 },
+    { "sin",    Math_sin,    1 },
+    { "sqrt",   Math_sqrt,   1 },
+    { "tan",    Math_tan,    1 },    
 };
 
 void initMathObject(Context *cx, JSObject *mathObj)
@@ -246,13 +251,15 @@ void initMathObject(Context *cx, JSObject *mathObj)
     uint32 i;
     for (i = 0; i < M_CONSTANTS_COUNT; i++)
         mathObj->defineVariable(cx, widenCString(MathObjectConstants[i].name), 
-                                    (NamespaceList *)(NULL), Property::NoAttribute, 
+                                    (NamespaceList *)(NULL), Property::ReadOnly | Property::DontDelete, 
                                     Number_Type, JSValue(MathObjectConstants[i].value));
 
     for (i = 0; i < sizeof(MathObjectFunctions) / sizeof(MathObjectFunctionDef); i++) {
         JSFunction *f = new JSFunction(cx, MathObjectFunctions[i].imp, Number_Type);
+        f->setArgCounts(cx, MathObjectFunctions[i].length, 0, false);
         mathObj->defineVariable(cx, widenCString(MathObjectFunctions[i].name), 
-                                    (NamespaceList *)(NULL), Property::NoAttribute, Number_Type, JSValue(f));
+                                    (NamespaceList *)(NULL), Property::ReadOnly | Property::DontDelete, 
+                                    Number_Type, JSValue(f));
     }
 }    
 

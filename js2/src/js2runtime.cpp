@@ -172,6 +172,16 @@ bool JSObject::hasProperty(const String &name, NamespaceList *names, Access acc,
             return false;
 }
 
+bool JSObject::deleteProperty(const String &name, NamespaceList *names)
+{    
+    PropertyIterator i = findNamespacedProperty(name, names);
+    if ((PROPERTY_ATTR(i) & Property::DontDelete) == 0) {
+        mProperties.erase(i);
+        return true;
+    }
+    return false;
+}
+
 
 // get a property value
 JSValue JSObject::getPropertyValue(PropertyIterator &i)
@@ -423,6 +433,7 @@ void JSObject::setProperty(Context *cx, const String &name, NamespaceList *names
 {
     PropertyIterator i;
     if (hasProperty(name, names, Write, &i)) {
+        if (PROPERTY_ATTR(i) & Property::ReadOnly) return;
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
         case ValuePointer:
@@ -459,6 +470,7 @@ void JSInstance::setProperty(Context *cx, const String &name, NamespaceList *nam
 {
     PropertyIterator i;
     if (hasOwnProperty(name, names, Write, &i)) {
+        if (PROPERTY_ATTR(i) & Property::ReadOnly) return;
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
         case Slot:
@@ -536,6 +548,8 @@ void JSArrayInstance::setProperty(Context *cx, const String &name, NamespaceList
     }
 }
 
+// get a named property from a string instance, but intercept
+// 'length' by returning the known value
 void JSStringInstance::getProperty(Context *cx, const String &name, NamespaceList *names)
 {
     if (name.compare(cx->Length_StringAtom) == 0) {
@@ -545,7 +559,9 @@ void JSStringInstance::getProperty(Context *cx, const String &name, NamespaceLis
         JSInstance::getProperty(cx, name, names);
 }
 
-
+// construct an instance of a type
+// - allocate memory for the slots, load the instance variable names into the 
+// property map. 
 void JSInstance::initInstance(Context *cx, JSType *type)
 {
     if (type->mVariableCount)
@@ -637,12 +653,18 @@ void ScopeChain::setNameValue(Context *cx, const String& name, AttributeStmtNode
     {
         PropertyIterator i;
         if ((*s)->hasProperty(name, names, Write, &i)) {
-            if (PROPERTY_KIND(i) == ValuePointer) {
+            PropertyFlag flag = PROPERTY_KIND(i);
+            switch (flag) {
+            case ValuePointer:
                 *PROPERTY_VALUEPOINTER(i) = v;
                 break;
-            }
-            else
+            case Slot:
+                (*s)->setSlotValue(cx, PROPERTY_INDEX(i), v);
+                break;
+            default:
                 ASSERT(false);      // what else needs to be implemented ?
+            }
+            return;
         }
     }
     cx->getGlobalObject()->defineVariable(cx, name, attr, Object_Type, v);
@@ -734,11 +756,47 @@ Reference *ParameterBarrel::genReference(bool /* hasBase */, const String& name,
 
 JSValue ParameterBarrel::getSlotValue(Context *cx, uint32 slotIndex)
 {
-    // Assume that the appropriate argument chunk is the topmost one
+    // find the appropriate activation object:
+    if (cx->mArgumentBase == NULL) {// then must be in eval code, 
+        Activation *prev = cx->mActivationStack.top();
+        return prev->mArgumentBase[slotIndex];        
+    }
     return cx->mArgumentBase[slotIndex];
 }
 
+void ParameterBarrel::setSlotValue(Context *cx, uint32 slotIndex, JSValue &v)
+{
+    // find the appropriate activation object:
+    if (cx->mArgumentBase == NULL) {// then must be in eval code, 
+        Activation *prev = cx->mActivationStack.top();
+        prev->mArgumentBase[slotIndex] = v;        
+    }
+    else
+        cx->mArgumentBase[slotIndex] = v;
+}
 
+
+
+JSValue Activation::getSlotValue(Context *cx, uint32 slotIndex)
+{
+    // find the appropriate activation object:
+    if (cx->mArgumentBase == NULL) {// then must be in eval code, 
+        Activation *prev = cx->mActivationStack.top();
+        return prev->mLocals[slotIndex];        
+    }
+    return cx->mLocals[slotIndex];
+}
+
+void Activation::setSlotValue(Context *cx, uint32 slotIndex, JSValue &v)
+{
+    // find the appropriate activation object:
+    if (cx->mArgumentBase == NULL) {// then must be in eval code, 
+        Activation *prev = cx->mActivationStack.top();
+        prev->mLocals[slotIndex] = v;
+    }
+    else
+        cx->mLocals[slotIndex] =v;
+}
 
 
 
@@ -873,19 +931,19 @@ bool ScopeChain::isPossibleUncheckedFunction(FunctionDefinition *f)
 {
     bool result = false;
     if ((f->resultType == NULL)
-	    && (f->restParameter == NULL)
-	    && (f->optParameters == NULL)
-	    && (f->prefix == FunctionName::normal)
-	    && (topClass() == NULL)) {
-	result = true;
-	VariableBinding *b = f->parameters;
-	while (b) {
-	    if (b->type != NULL) {
-		    result = false;
-		    break;
-	    }
-	    b = b->next;
-	}
+            && (f->restParameter == NULL)
+            && (f->optParameters == NULL)
+            && (f->prefix == FunctionName::normal)
+            && (topClass() == NULL)) {
+        result = true;
+        VariableBinding *b = f->parameters;
+        while (b) {
+            if (b->type != NULL) {
+                    result = false;
+                    break;
+            }
+            b = b->next;
+        }
     }
     return result;
 }
@@ -1294,15 +1352,9 @@ bool JSType::hasProperty(const String &name, NamespaceList *names, Access acc, P
     if (hasOwnProperty(name, names, acc, p))
         return true;
     else
-    
-//        XXX with this change we get unknown type failure for 
-
         if (mSuperType)
             return mSuperType->hasProperty(name, names, acc, p);
         else
-
-
-
             return false;
 }
 
@@ -1374,9 +1426,9 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *pro
         mPrototypeObject->mPrototype = mSuperType->mPrototypeObject;
 
     if (mSuperType)
-        defineVariable(cx, cx->Prototype_StringAtom, NULL, Object_Type, JSValue(mPrototypeObject));
+        defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, Property::ReadOnly | Property::DontDelete, Object_Type, JSValue(mPrototypeObject));
     else  // must be Object_Type
-        defineVariable(cx, cx->Prototype_StringAtom, NULL, this, JSValue(mPrototypeObject));
+        defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, Property::ReadOnly | Property::DontDelete, this, JSValue(mPrototypeObject));
 
     if (mSuperType)
         mPrototype = mSuperType->mPrototypeObject;
@@ -1849,9 +1901,10 @@ static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSVal
         }
         fnc->setArgCounts(cx, reqArgCount, optArgCount, (f->function.restParameter != NULL));
 
-	if (cx->mScopeChain->isPossibleUncheckedFunction(&f->function))
+        if (cx->mScopeChain->isPossibleUncheckedFunction(&f->function)) {
 	    fnc->setIsPrototype(true);
-
+            fnc->setIsUnchecked();
+        }
         cx->buildRuntimeForFunction(f->function, fnc);
         ByteCodeGen bcg(cx, cx->mScopeChain);
         bcg.genCodeForFunction(f->function, f->pos, fnc, false, NULL);
@@ -1859,13 +1912,16 @@ static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSVal
     }
     /***************************************************************/
 
+    JSObject *fncPrototype = Object_Type->newInstance(cx);
+    fncPrototype->defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, Property::Enumerable, Object_Type, JSValue(fnc));
+    fnc->defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, Property::Enumerable, Object_Type, JSValue(fncPrototype));
     v = JSValue(fnc);
     return v;
 }
 
 static JSValue Function_toString(Context *, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
-    ASSERT(thisValue.isFunction());
+    ASSERT(thisValue.isFunction() || (thisValue.isObject() && (thisValue.object->getType() == Function_Type)) );
     return JSValue(new String(widenCString("function () { }")));
 }
 
@@ -2085,7 +2141,6 @@ JSFunction::JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain)
     if (Function_Type)    // protect against bootstrap
         mPrototype = Function_Type->mPrototypeObject;
     mActivation.mContainer = this;
-    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::NoAttribute, Number_Type, JSValue((float64)0)); 
 }
 
 JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType) 
@@ -2110,7 +2165,6 @@ JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType)
     if (Function_Type)    // protect against bootstrap
         mPrototype = Function_Type->mPrototypeObject;
     mActivation.mContainer = this;
-    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::NoAttribute, Number_Type, JSValue((float64)0)); 
 }
               
 JSValue JSFunction::runArgInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
@@ -2125,7 +2179,7 @@ void JSFunction::setArgCounts(Context *cx, uint32 r, uint32 o, bool hasRest)
     mRequiredArgs = r; 
     mOptionalArgs = o; 
     mArguments = new ArgumentData[mRequiredArgs + mOptionalArgs + ((hasRest) ? 1 : 0)]; 
-    setProperty(cx, cx->Length_StringAtom, (NamespaceList *)NULL, JSValue((float64)mRequiredArgs));
+    defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::DontDelete | Property::ReadOnly, Number_Type, JSValue((float64)mRequiredArgs)); 
 }
 
 
@@ -2247,9 +2301,17 @@ void Context::initBuiltins()
     Function_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type, funProto);
     funProto->mType = Function_Type;
     
-    Number_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type);
+    JSObject *numProto  = new JSObject();
+    Number_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type, numProto);
+    numProto->mType = Number_Type;
+    numProto->mPrivate = (void *)(new float64(0.0));
+
     Integer_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[4].name)], Object_Type);
-    String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type);
+
+    JSObject *strProto  = new JSStringInstance(this, NULL);
+    String_Type         = new JSStringType(this, &mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type, strProto);
+    strProto->mType = String_Type;
+    strProto->mPrivate = (void *)(&Empty_StringAtom);
     
     JSArrayInstance *arrayProto = new JSArrayInstance(this, NULL);
     Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type, arrayProto);
@@ -2319,9 +2381,11 @@ void Context::initBuiltins()
     initClass(Attribute_Type,       &builtInClasses[10], NULL);
     initClass(NamedArgument_Type,   &builtInClasses[11], NULL);
     initClass(Date_Type,            &builtInClasses[12], getDateProtos() );
-    initClass(Null_Type,            &builtInClasses[13],  NULL);
+    initClass(Null_Type,            &builtInClasses[13], NULL);
 
     Type_Type->defineUnaryOperator(Index, new JSFunction(this, arrayMaker, Type_Type));
+
+    Function_Type->mTypeCast = new JSFunction(this, Function_Constructor, Object_Type);
 
     Array_Type->defineUnaryOperator(Index, new JSFunction(this, Array_GetElement, Object_Type));
     Array_Type->defineUnaryOperator(IndexEqual, new JSFunction(this, Array_SetElement, Object_Type));
@@ -2329,6 +2393,8 @@ void Context::initBuiltins()
     Date_Type->mTypeCast = new JSFunction(this, Date_TypeCast, String_Type);
     Date_Type->defineStaticMethod(this, widenCString("parse"), NULL, new JSFunction(this, Date_parse, Number_Type));
     Date_Type->defineStaticMethod(this, widenCString("UTC"), NULL, new JSFunction(this, Date_UTC, Number_Type));
+
+    String_Type->mTypeCast = new JSFunction(this, String_Constructor, String_Type);
 
 }
 
@@ -2457,17 +2523,18 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
         initBuiltins();
     }
     
+    JSType *MathType = new JSType(this, &mWorld.identifiers[widenCString("Math")], Object_Type);
+    JSObject *mathObj = MathType->newInstance(this);
 
-    JSObject *mathObj = Object_Type->newInstance(this);
     getGlobalObject()->defineVariable(this, Math_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Object_Type, JSValue(mathObj));
     initMathObject(this, mathObj);
     initDateObject(this);
     
-    Number_Type->defineVariable(this, widenCString("MAX_VALUE"), NULL, Number_Type, JSValue(maxValue));
-    Number_Type->defineVariable(this, widenCString("MIN_VALUE"), NULL, Number_Type, JSValue(minValue));
-    Number_Type->defineVariable(this, widenCString("NaN"), NULL, Number_Type, JSValue(nan));
-    Number_Type->defineVariable(this, widenCString("POSITIVE_INFINITY"), NULL, Number_Type, JSValue(positiveInfinity));
-    Number_Type->defineVariable(this, widenCString("NEGATIVE_INFINITY"), NULL, Number_Type, JSValue(negativeInfinity));
+    Number_Type->defineVariable(this, widenCString("MAX_VALUE"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(maxValue));
+    Number_Type->defineVariable(this, widenCString("MIN_VALUE"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(minValue));
+    Number_Type->defineVariable(this, widenCString("NaN"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(nan));
+    Number_Type->defineVariable(this, widenCString("POSITIVE_INFINITY"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(positiveInfinity));
+    Number_Type->defineVariable(this, widenCString("NEGATIVE_INFINITY"), NULL, Property::ReadOnly | Property::DontDelete, Number_Type, JSValue(negativeInfinity));
 
     initOperators();
     
@@ -2628,10 +2695,16 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         break;
     case JSValue::function_tag:
         if (!value.function->isNative()) {
-            StringFormatter s;
-            PrettyPrinter pp(s);
-            value.function->getFunctionName()->print(pp);
-            f << "function '" << s.getString() << "'\n" << *value.function->getByteCode();
+            FunctionName *fnName = value.function->getFunctionName();
+            if (fnName) {
+                StringFormatter s;
+                PrettyPrinter pp(s);
+                fnName->print(pp);
+                f << "function '" << s.getString() << "'\n" << *value.function->getByteCode();
+            }
+            else {
+                f << "function anonymous\n" << *value.function->getByteCode();
+            }
         }
         else
             f << "function\n";

@@ -650,6 +650,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         }
 
                         mScopeChain->addScope(target->getParameterBarrel());
+                        mScopeChain->addScope(target->getActivation());
+
                         mCurModule = target->getByteCode();
                         pc = mCurModule->mCodeBase;
                         endPC = mCurModule->mCodeBase + mCurModule->mLength;
@@ -799,8 +801,12 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     const String &name = *mCurModule->getString(index);
                     PropertyIterator it;
                     if (obj->hasOwnProperty(name, CURRENT_ATTR, Read, &it))
-                        obj->deleteProperty(name, CURRENT_ATTR);
-                    pushValue(kTrueValue);
+                        if (obj->deleteProperty(name, CURRENT_ATTR))
+                            pushValue(kTrueValue);
+                        else
+                            pushValue(kFalseValue);
+                    else
+                        pushValue(kTrueValue);
                 }
                 break;
             case TypeOfOp:
@@ -2408,6 +2414,26 @@ JSValue JSValue::valueToInteger(Context *cx, const JSValue& value)
     return v;
 }
 
+int32 JSValue::float64ToInt32(float64 d)
+{
+    d = fd::fmod(d, two32);
+    d = (d >= 0) ? d : d + two32;
+    if (d >= two31)
+        return (int32)(d - two32);
+    else
+        return (int32)(d);    
+}
+
+uint32 JSValue::float64ToUInt32(float64 d)
+{
+    bool neg = (d < 0);
+    d = fd::floor(neg ? -d : d);
+    d = neg ? -d : d;
+    d = fd::fmod(d, two32);
+    d = (d >= 0) ? d : d + two32;
+    return (uint32)d;
+}
+
 JSValue JSValue::valueToInt32(Context *, const JSValue& value)
 {
     float64 d;
@@ -2433,12 +2459,7 @@ JSValue JSValue::valueToInt32(Context *, const JSValue& value)
     }
     if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
         return JSValue((float64)0);
-    d = fd::fmod(d, two32);
-    d = (d >= 0) ? d : d + two32;
-    if (d >= two31)
-        return JSValue((float64)(d - two32));
-    else
-        return JSValue((float64)d);    
+    return JSValue((float64)float64ToInt32(d));
 }
 
 JSValue JSValue::valueToUInt32(Context *, const JSValue& value)
@@ -2466,12 +2487,7 @@ JSValue JSValue::valueToUInt32(Context *, const JSValue& value)
     }
     if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d))
         return JSValue((float64)0);
-    bool neg = (d < 0);
-    d = fd::floor(neg ? -d : d);
-    d = neg ? -d : d;
-    d = fd::fmod(d, two32);
-    d = (d >= 0) ? d : d + two32;
-    return JSValue((float64)d);
+    return JSValue((float64)float64ToUInt32(d));
 }
 
 JSValue JSValue::valueToUInt16(Context *, const JSValue& value)

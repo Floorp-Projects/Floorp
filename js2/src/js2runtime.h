@@ -221,6 +221,8 @@ static const double two31 = 2147483648.0;
         
 
         static float64 float64ToInteger(float64 d);
+        static int32 float64ToInt32(float64 d);
+        static uint32 float64ToUInt32(float64 d);
 
         int operator==(const JSValue& value) const;
 
@@ -528,16 +530,12 @@ XXX ...couldn't get this to work...
         // find a property by the given name, and then check to see if there's any
         // overlap between the supplied attribute list and the property's list.
         // ***** REWRITE ME -- matching attribute lists for inclusion is a bad idea.
-        PropertyIterator findNamespacedProperty(const String &name, NamespaceList *names);
+        virtual PropertyIterator findNamespacedProperty(const String &name, NamespaceList *names);
 
-        void deleteProperty(const String &name, NamespaceList *names)
-        {
-            PropertyIterator i = findNamespacedProperty(name, names);
-            mProperties.erase(i);
-        }
+        virtual bool deleteProperty(const String &name, NamespaceList *names);
 
         // see if the property exists by a specific kind of access
-        bool hasOwnProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
+        virtual bool hasOwnProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
         
         virtual bool hasProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p);
 
@@ -602,6 +600,7 @@ XXX ...couldn't get this to work...
         virtual void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type);
 
         virtual JSValue getSlotValue(Context * /*cx*/, uint32 /*slotIndex*/)    { ASSERT(false); return kUndefinedValue; }
+        virtual void setSlotValue(Context * /*cx*/, uint32 /*slotIndex*/, JSValue & /*v*/)    { ASSERT(false); }
 
         // debug only        
         void printProperties(Formatter &f) const
@@ -714,6 +713,10 @@ XXX ...couldn't get this to work...
         Property *defineVariable(Context *cx, const String& name, AttributeStmtNode *attr, JSType *type, JSValue v)
         {
             return JSObject::defineVariable(cx, name, attr, type, v);
+        }
+        Property *defineVariable(Context *cx, const String &name, NamespaceList *names, PropertyAttribute attrFlags, JSType *type, const JSValue v)
+        {
+            return JSObject::defineVariable(cx, name, names, attrFlags, type, v);
         }
 
 
@@ -848,8 +851,8 @@ XXX ...couldn't get this to work...
 
     class JSStringType : public JSType {
     public:
-        JSStringType(Context *cx, const StringAtom *name, JSType *super) 
-            : JSType(cx, name, super)
+        JSStringType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj = NULL) 
+            : JSType(cx, name, super, protoObj)
         {
         }
         virtual ~JSStringType() { } // keeping gcc happy
@@ -886,6 +889,7 @@ XXX ...couldn't get this to work...
         Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
         JSValue getSlotValue(Context *cx, uint32 slotIndex);
+        void setSlotValue(Context *cx, uint32 slotIndex, JSValue &v);
 
     };
 
@@ -970,6 +974,9 @@ XXX ...couldn't get this to work...
         void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type);
 
         Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
+
+        JSValue getSlotValue(Context *cx, uint32 slotIndex);
+        void setSlotValue(Context *cx, uint32 slotIndex, JSValue &v);
 
     };
 
@@ -1083,10 +1090,10 @@ XXX ...couldn't get this to work...
         }
 
         // delete a property from the top object (already know it's there)
-        void deleteProperty(const String &name, NamespaceList *names)
+        bool deleteProperty(const String &name, NamespaceList *names)
         {
             JSObject *top = mScopeStack.back();
-            top->deleteProperty(name, names);
+            return top->deleteProperty(name, names);
         }
 
         // generate a reference to the given name
@@ -1221,11 +1228,12 @@ XXX ...couldn't get this to work...
         virtual bool isNative()                 { return (mCode != NULL); }
         virtual bool isPrototype()              { return mIsPrototype; }
         virtual bool isConstructor()            { return mIsConstructor; }
-        bool isMethod()                         { return (mClass != NULL); }
+        virtual bool isMethod()                 { return (mClass != NULL); }
         virtual ByteCodeModule *getByteCode()   { ASSERT(!isNative()); return mByteCode; }
         virtual NativeCode *getNativeCode()     { ASSERT(isNative()); return mCode; }
         virtual ParameterBarrel *getParameterBarrel()
                                                 { return mParameterBarrel; }
+        virtual Activation *getActivation()     { return &mActivation; }
 
         virtual JSType *getResultType()         { return mResultType; }
         virtual JSType *getArgType(uint32 a)    { ASSERT(mArguments && (a < (mRequiredArgs + mOptionalArgs))); return mArguments[a].mType; }
@@ -1284,10 +1292,12 @@ XXX ...couldn't get this to work...
         bool isNative()                 { return mFunction->isNative(); }
         bool isPrototype()              { return mFunction->isPrototype(); }
         bool isConstructor()            { return mFunction->isConstructor(); }
+        bool isMethod()                 { return mFunction->isMethod(); }
         ByteCodeModule *getByteCode()   { return mFunction->getByteCode(); }
         NativeCode *getNativeCode()     { return mFunction->getNativeCode(); }
         ParameterBarrel *getParameterBarrel()
                                         { return mFunction->mParameterBarrel; }
+        Activation *getActivation()     { return &mFunction->mActivation; }
         JSType *getResultType()         { return mFunction->getResultType(); }
         JSType *getArgType(uint32 a)    { return mFunction->getArgType(a); }
         bool argHasInitializer(uint32 a){ return mFunction->argHasInitializer(a); }
@@ -1316,6 +1326,12 @@ XXX ...couldn't get this to work...
                                         { mFunction->setProperty(cx, name, names, v); }
         bool hasProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
                                         { return mFunction->hasProperty(name, names, acc, p); }
+        bool hasOwnProperty(const String &name, NamespaceList *names, Access acc, PropertyIterator *p)
+                                        { return mFunction->hasOwnProperty(name, names, acc, p); }
+        PropertyIterator findNamespacedProperty(const String &name, NamespaceList *names)
+                                        { return mFunction->findNamespacedProperty(name, names); }
+        bool deleteProperty(const String &name, NamespaceList *names)
+                                        { return mFunction->deleteProperty(name, names); }
 
         JSFunction *getFunction()       { return mFunction; }
 

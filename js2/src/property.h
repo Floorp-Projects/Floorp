@@ -107,7 +107,9 @@ namespace JS2Runtime {
                 Public      = 0x00002000, 
                 Private     = 0x00004000, 
                 Final       = 0x00008000,
-                Const       = 0x00010000
+                Const       = 0x00010000,
+                DontDelete  = 0x00020000,
+                ReadOnly    = 0x00040000
         };
 
         
