@@ -81,22 +81,7 @@ treerow
     min-height            : 19px;
   }
 
-/**
- * This fixes a bug. As you scroll down in a tree the computed column width
- * can change. That would make the columns shift durning scrolling.
- * So we give them inital preferred widths so they aren't computed.
- */
-#FilenameColumn {
-  width: 100px;
-}
 
-#ContentLengthColumn {
-  width: 100px;
-}
-
-#LastModColumn {
-  width: 100px;
-}
 
 div.server     { 
   color:    blue;
