@@ -39,8 +39,10 @@
 
 #include <stdio.h> 
 
-/* Hmm, everyone seems to be defining this. */
+#if defined(XP_UNIX) && defined(STDC_HEADERS)
 #define STDARG
+#endif
+
 #include <stdlib.h>
 #ifdef STDARG
 #include <stdarg.h>
