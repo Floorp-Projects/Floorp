@@ -44,7 +44,7 @@ public:
     virtual ~nsTreeItem() {};
 
 	virtual void GetItemStyle(nsIDeviceContext* dc, 
-							  nsTreeItemStyleInfo& styleInfo) const = 0;
+							  nsTreeItemStyleInfo& styleInfo) = 0;
 
 	virtual void GetTextForColumn(nsTreeColumn* pColumn, nsString& nodeText) const = 0;
 

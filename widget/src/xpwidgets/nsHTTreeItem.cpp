@@ -68,7 +68,7 @@ nsresult nsHTTreeItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 // TreeItem Implementation ---------------------
 
-void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& styleInfo) const
+void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& styleInfo)
 {
 	styleInfo.foregroundColor = NS_RGB(0,0,0);
 	styleInfo.backgroundColor = NS_RGB(240,240,240);
@@ -85,7 +85,7 @@ void nsHTTreeItem::GetItemStyle(nsIDeviceContext* dc, nsTreeItemStyleInfo& style
 	styleInfo.pBackgroundImage = GetBackgroundImage();
 }
 
-nsIImage* nsHTTreeItem::GetTriggerImage() const
+nsIImage* nsHTTreeItem::GetTriggerImage()
 {
 	// TODO: Really read in these properties
 	nsString openTriggerURL("file:///c|/Program%20Files/SL/CLIENT/IMAGES/overlay.gif");
@@ -108,7 +108,7 @@ nsIImage* nsHTTreeItem::GetTriggerImage() const
 	}
 }
 
-nsIImage* nsHTTreeItem::GetIconImage() const
+nsIImage* nsHTTreeItem::GetIconImage()
 {
 	nsString openIconURL("file:///c|/Program%20Files/SL/CLIENT/IMAGES/OpenRead.gif");
 	nsString closedIconURL("file:///c|/Program%20Files/SL/CLIENT/IMAGES/ClosedRead.gif");
@@ -127,7 +127,7 @@ nsIImage* nsHTTreeItem::GetIconImage() const
 	}
 }
 
-nsIImage* nsHTTreeItem::GetBackgroundImage() const
+nsIImage* nsHTTreeItem::GetBackgroundImage()
 {
 	nsString bgURL("http://www.shadowland.org/images/chalk.jpg");
 	if (mBackgroundRequest == nsnull)
