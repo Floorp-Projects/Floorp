@@ -73,7 +73,7 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 // this class contains a helper method we need to get 
 // a string from a string bundle
 #include "nsFormControlHelper.h"
-#define PRINTING_PROPERTIES "chrome://communicator/locale/printing.properties"
+#define PRINTING_PROPERTIES "chrome://global/locale/printing.properties"
 
 // Print Options
 #include "nsIPrintSettings.h"
