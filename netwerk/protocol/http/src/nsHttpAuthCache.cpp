@@ -287,7 +287,7 @@ nsHttpAuthNode::GetAuthEntryForPath(const char *path,
     PRInt32 i;
     for (i=0; i<mList.Count(); ++i) {
         *entry = (nsHttpAuthEntry *) mList[i];
-        if (!nsCRT::strncmp(path, (*entry)->Path(), strlen((*entry)->Path())))
+        if (!nsCRT::strncmp(path, (*entry)->Path(), (PRUint32) strlen((*entry)->Path())))
             break;
         *entry = nsnull;
     }
