@@ -453,6 +453,7 @@ public:
 	void SwitchHTViews(HT_View htView);
 
 	CNavTitleBar* GetTitleBar() { return m_pNavBar; }
+	CPaneCX* GetHTMLView() { return m_pHTMLView; }
 
 	static CRDFContentView* DisplayRDFTreeFromSHACK(MWContext *pContext, CWnd* pParent, int xPos, int yPos, int width, 
 		int height, char* url, char* templateType, int32 param_count, char** param_names, char** param_values);

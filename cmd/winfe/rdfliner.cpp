@@ -4075,9 +4075,12 @@ int CRDFContentView::OnCreate ( LPCREATESTRUCT lpCreateStruct )
 							   WS_VISIBLE|WS_CHILD|WS_CLIPCHILDREN,
 							   CRect(0,0,100,100), this, 101 );
 
-	m_pHTMLView = NULL; //wfe_CreateNavCenterHTMLPain(m_hWnd);
+	m_pHTMLView = wfe_CreateNavCenterHTMLPain(m_hWnd);
 
 	m_pNavBar->Create(NULL, "", WS_CHILD | WS_VISIBLE, CRect(0,0,100,100), this, NC_IDW_NAVMENU);
+	
+	CRDFOutliner* pOutliner = (CRDFOutliner*)(GetOutlinerParent()->GetOutliner());
+	HT_View v = pOutliner->GetHTView();
 	
     return iRetVal;
 }
@@ -4094,7 +4097,6 @@ CRDFContentView::~CRDFContentView()
 
 	delete m_pNavBar;
 	delete m_pOutlinerParent;
-	delete m_pHTMLView;
 }
 
 void CRDFContentView::OnSize ( UINT nType, int cx, int cy )
@@ -4104,7 +4106,52 @@ void CRDFContentView::OnSize ( UINT nType, int cx, int cy )
 	{
 		int titleHeight = m_pNavBar->GetHeightBasedOnProperties();
 		m_pNavBar->MoveWindow(0,0, cx, titleHeight);
-		m_pOutlinerParent->MoveWindow ( 0, titleHeight, cx, cy-titleHeight);
+		int htmlPaneHeight = 0;
+		CRDFOutliner* pOutliner = (CRDFOutliner*)(m_pOutlinerParent->GetOutliner());
+		HT_View theView = pOutliner->GetHTView();
+		BOOL percent = FALSE;
+		
+		if (theView)
+		{
+			HT_Resource topNode = HT_TopNode(theView);
+			if (HT_HasHTMLPane(theView))
+			{
+				htmlPaneHeight = 150;
+
+				// Need to get the HTML pane's height.
+				char* data = HT_HTMLPaneHeight(theView);
+				int height = 0;
+
+				if (data)
+				{
+					CString strData(data);
+					int length = strData.GetLength();
+					if (strData[length-1] == '%')
+					{
+						percent = TRUE;
+						strData = strData.Left(length-1);
+					}
+					else if (strData[0] == '*')
+					{
+						percent = TRUE;
+						strData = "100";
+					}
+					else
+						percent = FALSE;
+						
+					height = atoi(strData);
+
+					if (percent)
+						htmlPaneHeight = (int)((height/100.0) * (cy - titleHeight));
+					else htmlPaneHeight = height;
+				}
+			}
+		}
+
+		int outlinerHeight = cy-titleHeight-htmlPaneHeight;
+		m_pOutlinerParent->MoveWindow ( 0, titleHeight, cx, outlinerHeight);
+		::MoveWindow(m_pHTMLView->GetPane(), 0, titleHeight + outlinerHeight, cx, 
+					 htmlPaneHeight, TRUE);
 	}
 }
 
@@ -4164,6 +4211,18 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromPane(CWnd* pParent, int xPos
 	pTitleBar->SetHTView(HT_GetSelectedView(thePane));
 	pOutliner->SetTitleBar(pTitleBar);
 
+	// Register the HTML pane to load the URL
+	if (HT_HasHTMLPane(HT_GetSelectedView(thePane)))
+	{
+		XP_RegisterViewHTMLPane(HT_GetSelectedView(thePane), newView->GetHTMLView()->GetContext());
+		char* data;
+		HT_Resource top = HT_TopNode(HT_GetSelectedView(thePane));
+		HT_GetTemplateData (top, gNavCenter->RDF_HTMLURL, HT_COLUMN_STRING, (void**)&data);
+		if (data)
+		{
+			XP_GetURLForView(HT_GetSelectedView(thePane), data); 		
+		}
+	}
 	return newView;
 }
 

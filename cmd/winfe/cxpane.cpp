@@ -1304,7 +1304,6 @@ void CPaneCX::PreNavCenterQueryPosition(PaneMessage *pMessage)
 
 void CPaneCX::PreIdleUpdateCmdUI(PaneMessage *pMsg)
 {
-/*
     //  Don't want to update CMD UI unless we have a frame parent.
     //  This effectively stops CMD UI in the NavCenter HTML pane
     //      from messing with the UI state when docked.
@@ -1313,7 +1312,6 @@ void CPaneCX::PreIdleUpdateCmdUI(PaneMessage *pMsg)
         pMsg->lRetval = NULL;
         pMsg->bSetRetval = TRUE;
     }
-*/
 }
 
 #ifdef XP_WIN16
@@ -1396,11 +1394,10 @@ PaneProc(HWND hPane, UINT uMsg, WPARAM wParam, LPARAM lParam)
             case WM_NAVCENTER_QUERYPOSITION:
                 pThis->PreNavCenterQueryPosition(&message);
                 break;
-
+*/
             case WM_IDLEUPDATECMDUI:
                 pThis->PreIdleUpdateCmdUI(&message);
                 break;
-*/
 
 #if defined(XP_WIN32) && _MSC_VER >= 1100
             case WM_MOUSEWHEEL:

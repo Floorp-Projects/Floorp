@@ -2327,7 +2327,8 @@ win_click_callback(MWContext * pContext, LO_Element * pEle, int32 event,
     }
 
     MapToAnchorAndTarget(pWin->GetContext(), pEle, pClose->x, pClose->y, csAnchor, csTarget);
-
+	
+		
 #ifdef EDITOR
     if( EDT_IS_EDITOR(pWin->GetContext()) ){
         // Ctrl Click = edit the URL
@@ -2337,7 +2338,16 @@ win_click_callback(MWContext * pContext, LO_Element * pEle, int32 event,
 #endif // EDITOR
 
     if(status == EVENT_OK)  {
-        CWinCX *pLoader = pWin->DetermineTarget(csTarget);
+        CWinCX *pLoader = NULL;
+		if (pWin->IsNavCenterHTMLPane())
+		{
+			// We are really an HTML pane.
+			// Our target should always be the last active context.
+			pLoader = (CWinCX*)(FEU_GetLastActiveFrameContext());
+			csTarget = "";
+		}
+		else pLoader = pWin->DetermineTarget(csTarget);
+
         pLoader->NormalGetUrl(csAnchor, pClose->szRefer, (csTarget.IsEmpty() ? NULL : (LPCSTR)csTarget));
     } else {
         if(pClose->bCloseOnFail)
