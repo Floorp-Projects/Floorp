@@ -73,7 +73,7 @@ if [ $SHOWHELP ]; then
     echo "This command will output two numbers to stdout that will represent"
     echo "  the total size of all code and data, and a delta from the prior."
     echo "  the old results."
-    echo "For much more detail to size drifts refer to the summary report."
+    echo "For much more detail on size drifts refer to the summary report."
     exit
 fi
 
