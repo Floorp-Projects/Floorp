@@ -17,40 +17,45 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/02/2000)
-//
-//  Implementation of the wrapper class to convert a Mozilla 
-// nsIDOMDocumentFragmetn into a TransforMIIX DocumentFragmet interface.
-//
-// Modification History:
-// Who  When      What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla
+   nsIDOMDocumentFragment interface into a TransforMIIX DocumentFragment
+   interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct a DocumentFragment wrapper using the given Mozilla Object and owning
-//document.
-//
-DocumentFragment::DocumentFragment(nsIDOMDocumentFragment* docFragment, 
-                   Document* owner) : Node(docFragment, owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aDocFragment the nsIDOMDocumentFragment you want to wrap
+ * @param aOwner the document that owns this object
+ */
+DocumentFragment::DocumentFragment(nsIDOMDocumentFragment* aDocFragment,
+            Document* aOwner) :
+        Node(aDocFragment, aOwner)
 {
-  nsDocumentFragment = docFragment;
+    nsDocumentFragment = aDocFragment;
 }
 
-//
-//Destructor.  Do nothing.
-//
+/**
+ * Destructor
+ */
 DocumentFragment::~DocumentFragment()
 {
 }
 
-//
-//Use this object to wrap another Mozilla object.
-//
-void DocumentFragment::setNSObj(nsIDOMDocumentFragment* docFragment)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aDocFragment the nsIDOMDocumentFragment you want to wrap
+ */
+void DocumentFragment::setNSObj(nsIDOMDocumentFragment* aDocFragment)
 {
-  Node::setNSObj(docFragment);
-  nsDocumentFragment = docFragment;
+    Node::setNSObj(aDocFragment);
+    nsDocumentFragment = aDocFragment;
 }

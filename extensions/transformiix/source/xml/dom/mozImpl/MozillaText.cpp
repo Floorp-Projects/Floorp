@@ -17,52 +17,59 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/01/2000)
-//
-//  Wrapper class to convert the Mozilla nsIDOMText interface into a TransforMIIX
-//  Text interface
-//
-// Modification History:
-// Who  When      What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla nsIDOMText
+   interface into a TransforMIIX Text interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct a text object with the specified document owner and data
-//
-Text::Text(nsIDOMText* text, Document* owner) : CharacterData(text, owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aText the nsIDOMCharacterData you want to wrap
+ * @param aOwner the document that owns this object
+ */
+Text::Text(nsIDOMText* aText, Document* aOwner) : CharacterData(aText, aOwner)
 {
-  nsText = text;
+    nsText = aText;
 }
 
-//
-//Destructor.  Do nothing
-//
+/**
+ * Destructor
+ */
 Text::~Text()
 {
 }
 
-//
-//Wrap a different nsIDOMText object with this wrapper
-//
-void Text::setNSObj(nsIDOMText* text)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aText the nsIDOMText you want to wrap
+ */
+void Text::setNSObj(nsIDOMText* aText)
 {
-  CharacterData::setNSObj(text);
-  nsText = text;
+    CharacterData::setNSObj(aText);
+    nsText = aText;
 }
 
-//
-//Request the Mozilla object to split, and wrap the result in the appropriate
-//wrapper object.
-//
-Text* Text::splitText(Int32 offset)
+/**
+ * Call nsIDOMText::SplitText to split the text.
+ *
+ * @param aOffset the offset at which you want to split
+ *
+ * @return the resulting Text object
+ */
+Text* Text::splitText(Int32 aOffset)
 {
-  nsIDOMText* split = NULL;
+    nsCOMPtr<nsIDOMText> split;
 
-  if (nsText->SplitText(offset, &split) == NS_OK)
-    return ownerDocument->createTextNode(split);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsText->SplitText(aOffset, getter_AddRefs(split))))
+        return (Text*)ownerDocument->createWrapper(split);
+    else
+        return NULL;
 }

@@ -17,61 +17,73 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (01/13/2000)
-//
-//  Wrapper class to convert Mozilla's NodeList Interface to TransforMIIX's 
-//  NodeList Interface.
-//
-//  NOTE:  The objects being wrapped are not deleted.  It is assumed that they
-//         will be deleted when the actual ("real") Mozilla Document is
-//         destroyed
-//
-// Modification History:
-// Who  When        What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla nsIDOMNodeList
+   interface into a TransforMIIX NodeList interface.
+*/
 
 #include "mozilladom.h"
 
-//
-// Construct a NodeList wrapper class to wrap the provided nsIDOMNodeList object
-//
-NodeList::NodeList(nsIDOMNodeList* nodeList, Document* owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aNodeList the nsIDOMNodeList you want to wrap
+ * @param aOwner the document that owns this object
+ */
+NodeList::NodeList(nsIDOMNodeList* aNodeList, Document* aOwner) :
+        MozillaObjectWrapper(aNodeList, aOwner)
 {
-  nsNodeList = nodeList;
-  ownerDocument = owner;
+    nsNodeList = aNodeList;
 }
 
-//
-// Destroy the NodeList wrapper class.  Leave the mozilla object behind though.
-//
+/**
+ * Destructor
+ */
 NodeList::~NodeList()
 {
 }
 
-//
-// Retrieve the Node specified by index, then ask the owning document to provide
-// a wrapper object for it. ( nsIDOMNodeList::Item )
-//
-Node* NodeList::item(UInt32 index)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aNodeList the nsIDOMNodeList you want to wrap
+ */
+void NodeList::setNSObj(nsIDOMNodeList* aNodeList)
 {
-  nsIDOMNode* node = NULL;
-
-  if (nsNodeList->Item(index, &node) == NS_OK)
-    return ownerDocument->createWrapper(node);
-  else
-    return NULL;
+    MozillaObjectWrapper::setNSObj(aNodeList);
+    nsNodeList = aNodeList;
 }
 
-//
-// Get the number of Nodes stored in this list (nsIDOMNodeList::GetLength())
-//
+/**
+ * Call nsIDOMNodeList::Item to the child at the specified index.
+ *
+ * @param aIndex the index of the child you want to get
+ *
+ * @return the child at the given index or NULL if there is none
+ */
+Node* NodeList::item(UInt32 aIndex)
+{
+    nsCOMPtr<nsIDOMNode> node;
+
+    if (NS_SUCCEEDED(nsNodeList->Item(aIndex, getter_AddRefs(node))))
+        return ownerDocument->createWrapper(node);
+    else
+        return NULL;
+}
+
+/**
+ * Call nsIDOMNodeList::GetLength to get the number of nodes.
+ *
+ * @return the number of nodes
+ */
 UInt32 NodeList::getLength()
 {
-  UInt32 length = 0;
+    UInt32 length = 0;
 
-  nsNodeList->GetLength(&length);
-
-  return length;
-} 
-
+    nsNodeList->GetLength(&length);
+    return length;
+}

@@ -17,71 +17,67 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/02/2000)
-//
-//  Implementation of the wrapper class to convert a Mozilla nsIDOMNotation into
-// a TransforMIIX Notation interface.
-//
-// Modification History:
-// Who  When      What
 
-//
+/* Implementation of the wrapper class to convert the Mozilla nsIDOMNotation
+   interface into a TransforMIIX Notation interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct a wrapper object using the provided mozilla object and document 
-//owner.
-//
-Notation::Notation(nsIDOMNotation* notation, Document* document) : 
-  Node(notation, document)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aCharData the nsIDOMNotation you want to wrap
+ * @param aOwner the document that owns this object
+ */
+Notation::Notation(nsIDOMNotation* aNotation, Document* aOwner) :
+        Node(aNotation, aOwner)
 {
-  nsNotation = notation;
+    nsNotation = aNotation;
 }
 
-//
-//Destructor.  Do Nothing
-//
+/**
+ * Destructor
+ */
 Notation::~Notation()
 {
 }
 
-//
-//Use this object to wrap another mozilla object
-//
-void Notation::setNSObj(nsIDOMNotation* notation)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aNotation the nsIDOMNotation you want to wrap
+ */
+void Notation::setNSObj(nsIDOMNotation* aNotation)
 {
-  Node::setNSObj(notation);
-  nsNotation = notation;
+    Node::setNSObj(aNotation);
+    nsNotation = aNotation;
 }
 
-//
-//Return the Public ID of the Notation
-//
-const String& Notation::getPublicId() const
+/**
+ * Call nsIDOMNotation::GetPublicId to retrieve the public id for this notation.
+ *
+ * @return the notation's public id
+ */
+const String& Notation::getPublicId()
 {
-  nsString* publicId = new nsString();
-
-  if (nsNotation->GetPublicId(*publicId) == NS_OK)
-    return *(ownerDocument->createDOMString(publicId));
-  else
-    {
-      delete publicId;
-      return NULL_STRING;
-    }
+    publicId.clear();
+    nsNotation->GetPublicId(publicId.getNSString());
+    return publicId;
 }
 
-//Return the System ID of the Notation
-const String& Notation::getSystemId() const
+/**
+ * Call nsIDOMNotation::GetSystemId to retrieve the system id for this notation.
+ *
+ * @return the notation's system id
+ */
+const String& Notation::getSystemId()
 {
-  nsString* systemId = new nsString();
-
-  if (nsNotation->GetSystemId(*systemId) == NS_OK)
-    return *(ownerDocument->createDOMString(systemId));
-  else
-    {
-      delete systemId;
-      return NULL_STRING;
-    }
+    systemId.clear();
+    nsNotation->GetSystemId(systemId.getNSString());
+    return systemId;
 }

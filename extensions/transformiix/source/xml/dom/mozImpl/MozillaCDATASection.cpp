@@ -17,39 +17,43 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/01/2000)
-//
-//  Implementation of the wrapper class to convert the Mozilla 
-//  nsIDOMCDATASection interface into a TransforMIIX CDATASection interface.
-//
-// Modification History:
-// Who  When      What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla nsIDOMCDATASection
+   interface into a TransforMIIX CDATASection interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct a text object with the specified document owner and data
-//
-CDATASection::CDATASection(nsIDOMCDATASection* cdataSection, Document* owner) :
-  Text(cdataSection, owner)
+/**
+ * Construct a text object with the specified Mozilla object and document owner.
+ *
+ * @param aCdataSection the nsIDOMCDATASection you want to wrap
+ * @param aOwner the document that owns this object
+ */
+CDATASection::CDATASection(nsIDOMCDATASection* aCdataSection, Document* aOwner) :
+    Text(aCdataSection, aOwner)
 {
-  nsCDATASection = cdataSection;
+    nsCDATASection = aCdataSection;
 }
 
-//
-//Destructor.  Do nothing
-//
+/**
+ * Destructor
+ */
 CDATASection::~CDATASection()
 {
 }
 
-//
-//Use this object to wrap a different Mozilla Object
-//
-void CDATASection::setNSObj(nsIDOMCDATASection* cdataSection)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aCdataSection the nsIDOMCDATASection you want to wrap
+ */
+void CDATASection::setNSObj(nsIDOMCDATASection* aCdataSection)
 {
-  Text::setNSObj(cdataSection);
-  nsCDATASection = cdataSection;
+    Text::setNSObj(aCdataSection);
+    nsCDATASection = aCdataSection;
 }

@@ -25,7 +25,8 @@ MOZILLA_OBJS = MozillaDOMImplementation.o \
                MozillaElement.o \
                MozillaDocument.o \
                MozillaNode.o \
-               MozillaAttr.o
+               MozillaAttr.o \
+               MozillaObjectWrapper.o
 
 make_mozilla_dom: $(MOZILLA_OBJS)
 
@@ -40,6 +41,7 @@ MozillaNotation.o: MozillaNotation.cpp mozilladom.h
 
 MozillaDocumentType.o: MozillaDocumentType.cpp mozilladom.h
 	$(CC) -c MozillaDocumentType.cpp
+
 MozillaProcInstruction.o: MozillaProcInstruction.cpp mozilladom.h
 	$(CC) -c MozillaProcInstruction.cpp
 
@@ -79,9 +81,8 @@ MozillaNode.o: MozillaNode.cpp mozilladom.h
 MozillaAttr.o: MozillaAttr.cpp mozilladom.h
 	$(CC) -c MozillaAttr.cpp
 
-
-
-
+MozillaObjectWrapper.o: MozillaObjectWrapper.cpp mozilladom.h
+	$(CC) -c MozillaObjectWrapper.cpp
 
 
 

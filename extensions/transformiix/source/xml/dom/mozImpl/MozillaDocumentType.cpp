@@ -17,81 +17,87 @@
  *
  * Please see release.txt distributed with this file for more information.
  *
+ * Contributor(s): Tom Kneeland
+ *                 Peter Van der Beken <peter.vanderbeken@pandora.be>
+ *
  */
-// Tom Kneeland (02/02/2000)
-//
-// Implementation of the wrapper class to convert an nsIDOMDocumentType into a
-// TransforMIIX DocumentType interface.
-//
-// Modification History:
-// Who  When      What
-//
+
+/* Implementation of the wrapper class to convert the Mozilla nsIDOMDocumentType
+   interface into a TransforMIIX DocumentType interface.
+*/
 
 #include "mozilladom.h"
 
-//
-//Construct a text object with the specified document owner and data
-//
-DocumentType::DocumentType(nsIDOMDocumentType* documentType, Document* owner):
-  Node(documentType, owner)
+/**
+ * Construct a wrapper with the specified Mozilla object and document owner.
+ *
+ * @param aDocumentType the nsIDOMDocumentType you want to wrap
+ * @param aOwner the document that owns this object
+ */
+DocumentType::DocumentType(nsIDOMDocumentType* aDocumentType, Document* aOwner):
+        Node(aDocumentType, aOwner)
 {
-  nsDocumentType = documentType;
+    nsDocumentType = aDocumentType;
 }
 
-//
-//Destructor.  Do nothing
-//
+/**
+ * Destructor
+ */
 DocumentType::~DocumentType()
 {
 }
 
-//
-//Use this wrapper object to wrap a different Mozilla object
-//
-void DocumentType::setNSObj(nsIDOMDocumentType* documentType)
+/**
+ * Wrap a different Mozilla object with this wrapper.
+ *
+ * @param aDocumentType the nsIDOMDocumentType you want to wrap
+ */
+void DocumentType::setNSObj(nsIDOMDocumentType* aDocumentType)
 {
-  Node::setNSObj(documentType);
-  nsDocumentType = documentType;
+    Node::setNSObj(aDocumentType);
+    nsDocumentType = aDocumentType;
 }
 
-//
-//Retrieve the name from the Mozilla object and wrap acordingly.
-//
-const String& DocumentType::getName() const
+/**
+ * Call nsIDOMDocumentType::GetName to get the name of the document type.
+ *
+ * @return the name of the document type
+ */
+const String& DocumentType::getName()
 {
-  nsString* name = new nsString();
-
-  if (nsDocumentType->GetName(*name) == NS_OK)
-    return *(ownerDocument->createDOMString(name));
-  else
-    {
-      delete name;
-      return NULL_STRING;
-    }
+    nodeName.clear();
+    nsDocumentType->GetName(nodeName.getNSString());
+    return nodeName;
 }
 
-//
-//Retrieve the entites from the Mozilla object and wrap acordingly.
-//
+/**
+ * Call nsIDOMDocumentType::GetEntities to get the entities of the document
+ * type.
+ *
+ * @return the entities of the document type
+ */
 NamedNodeMap* DocumentType::getEntities()
 {
-  nsIDOMNamedNodeMap* tmpEntities = NULL;
+    nsCOMPtr<nsIDOMNamedNodeMap> tmpEntities;
 
-  if (nsDocumentType->GetEntities(&tmpEntities) == NS_OK)
-    return ownerDocument->createNamedNodeMap(tmpEntities);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsDocumentType->GetEntities(getter_AddRefs(tmpEntities))))
+        return (NamedNodeMap*)ownerDocument->createNamedNodeMap(tmpEntities);
+    else
+        return NULL;
 }
 
-//
-//Retrieve the notations from the Mozilla object and wrap acordingly
-//
+/**
+ * Call nsIDOMDocumentType::GetNotations to get the notations of the document
+ * type.
+ *
+ * @return the notations of the document type
+ */
 NamedNodeMap* DocumentType::getNotations()
 {
-  nsIDOMNamedNodeMap* notations = NULL;
+    nsCOMPtr<nsIDOMNamedNodeMap> notations;
 
-  if (nsDocumentType->GetNotations(&notations) == NS_OK)
-    return ownerDocument->createNamedNodeMap(notations);
-  else
-    return NULL;
+    if (NS_SUCCEEDED(nsDocumentType->GetNotations(getter_AddRefs(notations))))
+        return (NamedNodeMap*)ownerDocument->createNamedNodeMap(notations);
+    else
+        return NULL;
 }
