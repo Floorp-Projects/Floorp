@@ -887,14 +887,24 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   nsCOMPtr<nsIDeviceContext> dx;
   mPresContext->GetDeviceContext(getter_AddRefs(dx));
 
-  if ((NS_OK != rv) || (NS_OK != mViewManager->Init(dx))) {
-    return rv;
-  }
-
+ 
   nsRect tbounds = aBounds;
   float p2t;
   mPresContext->GetPixelsToTwips(&p2t);
   tbounds *= p2t;
+
+    // Initialize the view manager with an offset. This allows the viewmanager
+    // to manage a coordinate space offset from (0,0)
+   if ((NS_OK != rv) || (NS_OK != mViewManager->Init(dx, tbounds.x, tbounds.y))) {
+    return rv;
+  }
+   // Reset the bounds offset so the root view is set to 0,0. The offset is
+   // specified in nsIViewManager::Init above. 
+   // Besides, layout will reset the root view to (0,0) during reflow, 
+   // so changing it to 0,0 eliminates placing
+   // the root view in the wrong place initially.
+  tbounds.x = 0;
+  tbounds.y = 0;
 
   // Create a child window of the parent that is our "root view/window"
   // Create a view
