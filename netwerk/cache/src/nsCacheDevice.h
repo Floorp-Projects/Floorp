@@ -52,7 +52,7 @@ public:
 
     virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize ) = 0;
 
-    //** need to define methods for enumerating entries
+    // XXX need to define methods for enumerating entries
 };
 
 #endif // _nsCacheDevice_h_

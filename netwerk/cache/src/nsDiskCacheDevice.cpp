@@ -148,6 +148,8 @@ private:
 };
 NS_IMPL_ISUPPORTS0(DiskCacheEntry);
 
+#if 0
+// get rid of warning on linux until this routine is used.
 static DiskCacheEntry*
 getDiskCacheEntry(nsCacheEntry * entry)
 {
@@ -155,6 +157,7 @@ getDiskCacheEntry(nsCacheEntry * entry)
     entry->GetData(getter_AddRefs(data));
     return (DiskCacheEntry*) data.get();
 }
+#endif
 
 static DiskCacheEntry*
 ensureDiskCacheEntry(nsCacheEntry * entry)
@@ -240,7 +243,7 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
         }
     }
 
-    //** find eviction element and move it to the tail of the queue
+    // XXX find eviction element and move it to the tail of the queue
     
     return entry;
 }
@@ -428,9 +431,9 @@ nsresult nsDiskCacheDevice::scanEntries()
 struct MetaDataHeader {
     PRUint32        mHeaderSize;
     PRInt32         mFetchCount;
-    PRTime          mLastFetched;
-    PRTime          mLastValidated;     // NOT NEEDED
-    PRTime          mExpirationTime;
+    PRUint32        mLastFetched;
+    PRUint32        mLastValidated;     // NOT NEEDED
+    PRUint32        mExpirationTime;
     PRUint32        mDataSize;
     PRUint32        mKeySize;
     PRUint32        mMetaDataSize;
@@ -714,4 +717,4 @@ nsresult nsDiskCacheDevice::deleteDiskCacheEntry(nsCacheEntry* entry)
     return NS_OK;
 }
 
-//** need methods for enumerating entries
+// XXX need methods for enumerating entries

@@ -114,7 +114,7 @@ nsCacheEntryDescriptor::GetLastFetched(PRTime *result)
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    *result = mCacheEntry->LastFetched();
+    *result = ConvertSecondsToPRTime(mCacheEntry->LastFetched());
     return NS_OK;
 }
 
@@ -125,7 +125,7 @@ nsCacheEntryDescriptor::GetLastValidated(PRTime *result)
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    *result = mCacheEntry->LastValidated();
+    *result = ConvertSecondsToPRTime(mCacheEntry->LastValidated());
     return NS_OK;
 }
 
@@ -136,7 +136,7 @@ nsCacheEntryDescriptor::GetExpirationTime(PRTime *result)
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    *result = mCacheEntry->ExpirationTime();
+    *result = ConvertSecondsToPRTime(mCacheEntry->ExpirationTime());
     return NS_OK;
 }
 
@@ -146,7 +146,7 @@ nsCacheEntryDescriptor::SetExpirationTime(PRTime expirationTime)
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    mCacheEntry->SetExpirationTime(expirationTime);
+    mCacheEntry->SetExpirationTime(ConvertPRTimeToSeconds(expirationTime));
     return NS_OK;
 }
 
@@ -156,7 +156,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(PRBool *result)
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    *result = mCacheEntry->IsStreamData();  //** which name is better?
+    *result = mCacheEntry->IsStreamData();  // XXX which name is better?
     return NS_OK;
 }
 
@@ -177,7 +177,7 @@ nsCacheEntryDescriptor::RequestDataSizeChange(PRInt32 deltaSize)
     nsresult  rv;
     rv = nsCacheService::GlobalInstance()->OnDataSizeChange(mCacheEntry, deltaSize);
     if (NS_SUCCEEDED(rv)) {
-        //** review for signed/unsigned math errors
+        // XXX review for signed/unsigned math errors
         PRUint32  newDataSize = mCacheEntry->DataSize() + deltaSize;
         mCacheEntry->SetDataSize(newDataSize);
     }
@@ -190,7 +190,7 @@ nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    //** review for signed/unsigned math errors
+    // XXX review for signed/unsigned math errors
     PRInt32  deltaSize = dataSize - mCacheEntry->DataSize();
 
     // this had better be NS_OK, this call instance is advisory
@@ -328,7 +328,7 @@ nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
 
     if (!key) return NS_ERROR_NULL_POINTER;
 
-    //** allow null value, for clearing key?
+    // XXX allow null value, for clearing key?
     nsresult rv = mCacheEntry->SetMetaDataElement(nsLiteralCString(key),
                                                   nsLiteralCString(value));
     return rv;
@@ -483,7 +483,7 @@ nsCacheOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUi
 nsresult
 nsCacheOutputStream::OnWrite(PRUint32 count)
 {
-    //** if count > 2^31 error_write_too_big
+    // XXX if count > 2^31 error_write_too_big
     return mDescriptor->RequestDataSizeChange((PRInt32)count);
 
 #if 0
