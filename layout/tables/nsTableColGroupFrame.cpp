@@ -94,10 +94,11 @@ void nsTableColGroupFrame::ResetColIndices(nsIPresContext* aPresContext,
           ((nsTableColFrame*)colFrame)->SetColIndex(colIndex);
           colIndex++;
         }
-        colFrame->GetNextSibling(&colFrame);
+        colFrame = colFrame->GetNextSibling();
       }
     }
-    colGroupFrame->GetNextSibling((nsIFrame**)&colGroupFrame);
+    colGroupFrame = NS_STATIC_CAST(nsTableColGroupFrame*,
+                                   colGroupFrame->GetNextSibling());
   }
 }
 
@@ -133,15 +134,11 @@ nsTableColGroupFrame::AddColsToTable(nsIPresContext&  aPresContext,
     if (kidFrame == aLastFrame) {
       foundLastFrame = PR_TRUE;
     }
-    kidFrame->GetNextSibling(&kidFrame); 
+    kidFrame = kidFrame->GetNextSibling(); 
   }
 
-  if (aResetSubsequentColIndices) {
-    nsIFrame* nextSibling;
-    GetNextSibling(&nextSibling);
-    if (nextSibling) {
-      ResetColIndices(&aPresContext, nextSibling, colIndex);
-    }
+  if (aResetSubsequentColIndices && GetNextSibling()) {
+    ResetColIndices(&aPresContext, GetNextSibling(), colIndex);
   }
 
   return rv;
@@ -154,14 +151,13 @@ nsTableColGroupFrame::FindParentForAppendedCol(nsTableFrame*  aTableFrame,
 {
   nsVoidArray& cols = aTableFrame->GetColCache();
   PRInt32 numCols = cols.Count();
-  nsIFrame* lastColGroup;
   if (numCols == 0) return nsnull; // no columns so no colgroups
   nsIFrame* lastCol = (nsIFrame*)cols.ElementAt(numCols - 1);
   NS_ASSERTION(lastCol,"null entry in column array");
-  lastCol->GetParent(&lastColGroup);
+  nsIFrame* lastColGroup = lastCol->GetParent();
   if (!lastColGroup) return nsnull; // shouldn't happen
  
-  nsTableColGroupFrame* relevantColGroup = (nsTableColGroupFrame *)lastColGroup;
+  nsTableColGroupFrame* relevantColGroup = (nsTableColGroupFrame *)lastCol;
   nsTableColGroupType relevantColGroupType = relevantColGroup->GetType();
   if (eColGroupAnonymousCell == relevantColGroupType) {
     if (eColAnonymousCell == aColType) {
@@ -171,8 +167,8 @@ nsTableColGroupFrame::FindParentForAppendedCol(nsTableFrame*  aTableFrame,
       // find the next to last col group
       for (PRInt32 colX = numCols - 2; colX >= 0; colX--) {
         nsTableColFrame* colFrame = (nsTableColFrame*)cols.ElementAt(colX);
-        nsTableColGroupFrame* colGroupFrame;
-        colFrame->GetParent((nsIFrame**)&colGroupFrame);
+        nsTableColGroupFrame* colGroupFrame =
+          NS_STATIC_CAST(nsTableColGroupFrame*, colFrame->GetParent());
         nsTableColGroupType cgType = colGroupFrame->GetType();
         if (cgType != relevantColGroupType) {
           relevantColGroup = colGroupFrame;
@@ -205,8 +201,7 @@ nsTableColGroupFrame::GetLastRealColGroup(nsTableFrame* aTableFrame,
   nsIFrame* nextToLastColGroup = nsnull;
   nsIFrame* lastColGroup       = colGroups.FirstChild();
   while(lastColGroup) {
-    nsIFrame* next;
-    lastColGroup->GetNextSibling(&next);
+    nsIFrame* next = lastColGroup->GetNextSibling();
     if (next) {
       nextToLastColGroup = lastColGroup;
       lastColGroup = next;
@@ -313,7 +308,7 @@ nsTableColGroupFrame::RemoveChild(nsIPresContext&  aPresContext,
   nsIFrame* nextChild = nsnull;
   if (aResetColIndices) {
     colIndex = aChild.GetColIndex();
-    aChild.GetNextSibling(&nextChild);
+    nextChild = aChild.GetNextSibling();
   }
   if (mFrames.DestroyFrame(&aPresContext, (nsIFrame*)&aChild)) {
     mColCount--;
@@ -352,14 +347,14 @@ nsTableColGroupFrame::RemoveChildrenAtEnd(nsIPresContext& aPresContext,
       offsetX++;
       if (offsetX > offsetOfFirstRemoval) {
         nsIFrame* byebye = kidFrame;
-        kidFrame->GetNextSibling(&kidFrame);
+        kidFrame = kidFrame->GetNextSibling();
         mFrames.DestroyFrame(&aPresContext, byebye);
         NS_RELEASE(kidType);
         continue;
       }
     }
     NS_IF_RELEASE(kidType);
-    kidFrame->GetNextSibling(&kidFrame);
+    kidFrame = kidFrame->GetNextSibling();
   }
 }
 
@@ -456,8 +451,8 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext*          aPresContext,
     rv = IncrementalReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 
-  for (kidFrame = mFrames.FirstChild(); nsnull != kidFrame;
-       kidFrame->GetNextSibling(&kidFrame)) {
+  for (kidFrame = mFrames.FirstChild(); kidFrame;
+       kidFrame = kidFrame->GetNextSibling()) {
     // Give the child frame a chance to reflow, even though we know it'll have 0 size
     nsHTMLReflowMetrics kidSize(nsnull);
     // XXX Use a valid reason...
@@ -598,7 +593,7 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
       result = (nsTableColFrame *)childFrame;
       break;
     }
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
   return result;
 }
@@ -619,7 +614,7 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
         result = col;
       }
     }
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
 
   return result;
@@ -628,14 +623,13 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
 PRInt32 nsTableColGroupFrame::GetSpan()
 {
   PRInt32 span = 1;
-  nsCOMPtr<nsIContent> iContent;
-  nsresult rv = GetContent(getter_AddRefs(iContent));
-  if (NS_FAILED(rv) || !iContent) return rv;
+  nsIContent* iContent = GetContent();
+  if (!iContent) return NS_OK;
 
   // col group element derives from col element
   nsIDOMHTMLTableColElement* cgContent = nsnull;
-  rv = iContent->QueryInterface(NS_GET_IID(nsIDOMHTMLTableColElement), 
-                               (void **)&cgContent);  
+  nsresult rv = iContent->QueryInterface(NS_GET_IID(nsIDOMHTMLTableColElement), 
+                                         (void **)&cgContent);
   if (cgContent && NS_SUCCEEDED(rv)) { 
     cgContent->GetSpan(&span);
     // XXX why does this work!!
@@ -681,11 +675,11 @@ nsTableColGroupFrame::GetColGroupFrameContaining(nsIPresContext*  aPresContext,
           NS_RELEASE(frameType);
           return (nsTableColGroupFrame *)childFrame;
         }
-        colFrame->GetNextSibling((nsIFrame **)&colFrame);
+        colFrame = NS_STATIC_CAST(nsTableColFrame*, colFrame->GetNextSibling());
       }
     }
     NS_IF_RELEASE(frameType);
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
   return nsnull;
 }
