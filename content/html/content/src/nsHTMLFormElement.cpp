@@ -773,8 +773,8 @@ nsFormControlList::SetForm(nsIDOMHTMLFormElement* aForm)
   mForm = aForm; // WEAK - the form owns me
 }
 
-static PRBool FormControlResetEnumFunction(nsHashKey *aKey, void *aData,
-                                           void* closure)
+static PRBool PR_CALLBACK
+FormControlResetEnumFunction(nsHashKey *aKey, void *aData, void* closure)
 {
   nsIFormControl *f = NS_STATIC_CAST(nsIFormControl *, aData);
 
