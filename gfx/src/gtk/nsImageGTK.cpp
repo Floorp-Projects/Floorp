@@ -731,7 +731,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
         PRUint8 *scaledRGB = (PRUint8 *)nsMemory::Alloc(3*dstWidth*dstHeight);
 
         if (!scaledRGB)
-          return NS_ERROR_FAILURE;
+          return NS_ERROR_OUT_OF_MEMORY;
 
         RectStretch(0, 0, mWidth-1, mHeight-1,
                     0, 0, dstWidth-1, dstHeight-1,
