@@ -1130,7 +1130,6 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           break;
         }
       }
-      // else the width becomes auto if width = 0 or 0% for backward compatibility
 
       // height
       aAttributes->GetAttribute(nsHTMLAtoms::height, value);
