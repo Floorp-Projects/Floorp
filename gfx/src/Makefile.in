@@ -32,7 +32,11 @@ SHORT_LIBNAME	= nggfx
 
 REQUIRES	= util img xpcom raptor netlib dom js
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+DIRS		=
+else
 DIRS		= ps
+endif
 
 ifdef MOZ_ENABLE_XPRINT
 DIRS		+= xprint
