@@ -93,8 +93,6 @@ NS_IMETHODIMP nsIOService::GetURLSpecFromFile(nsIFile* aFile, char * *aURL)
                      escPath += "/";
              }
              
-             // colons (originally slashes) need encoding
-             escPath.ReplaceSubstring(":", "%2F");
              escPath.Insert("file:///", 0);
              *aURL = ToNewCString(escPath);
              rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
