@@ -45,6 +45,7 @@
 
 icaltimetype ConvertFromPrtime( PRTime indate );
 PRTime ConvertToPrtime ( icaltimetype indate );
+icaltimezone *currenttimezone = nsnull;
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(oeDateTimeImpl, oeIDateTime)
@@ -68,11 +69,13 @@ oeDateTimeImpl::oeDateTimeImpl()
 {
   /* member initializers and constructor code */
   m_datetime = icaltime_null_time();
+  m_tzid = nsnull;
 }
 
 oeDateTimeImpl::~oeDateTimeImpl()
 {
-  /* destructor code */
+    if( m_tzid )
+        nsMemory::Free( m_tzid );
 }
 
 /* attribute short year; */
@@ -163,6 +166,35 @@ NS_IMETHODIMP oeDateTimeImpl::SetTime( PRTime ms )
     return NS_OK;
 }
 
+NS_IMETHODIMP oeDateTimeImpl::SetTimeInTimezone( PRTime ms, const char *tzid )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "SetTimeInTimezone( %s )\n", tzid );
+#endif
+    if( m_tzid )
+        nsMemory::Free( m_tzid );
+    
+    if( tzid )
+        m_tzid= (char*) nsMemory::Clone( tzid, strlen(tzid)+1);
+    else
+        m_tzid = nsnull;
+
+	icaltimetype newdatetime = ConvertFromPrtime( ms );
+
+    icaltimezone *from_zone = icaltimezone_get_builtin_timezone_from_tzid ( tzid );
+    if( from_zone )
+        icaltimezone_convert_time ( &newdatetime, from_zone, currenttimezone );
+    else {
+        if( m_tzid )
+            nsMemory::Free( m_tzid );
+        m_tzid = nsnull;
+    }
+
+    m_datetime = newdatetime;
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP oeDateTimeImpl::Clear()
 {
 	m_datetime = icaltime_null_time();
@@ -188,4 +220,22 @@ void oeDateTimeImpl::AdjustToWeekday( short weekday ) {
         m_datetime = icaltime_normalize( m_datetime );
         currentday = icaltime_day_of_week( m_datetime );
     }
+}
+
+/* readonly attribute string tzid; */
+NS_IMETHODIMP oeDateTimeImpl::GetTzID(char **aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "GetTzID() = " );
+#endif
+    if( m_tzid ) {
+        *aRetVal= (char*) nsMemory::Clone( m_tzid, strlen(m_tzid)+1);
+        if( *aRetVal == nsnull )
+            return  NS_ERROR_OUT_OF_MEMORY;
+    } else
+        *aRetVal= nsnull;
+#ifdef ICAL_DEBUG_ALL
+    printf( "\"%s\"\n", *aRetVal );
+#endif
+    return NS_OK;
 }

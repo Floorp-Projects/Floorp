@@ -41,7 +41,11 @@
 #include "oeIICal.h"
 extern "C" {
     #include "ical.h"
+    int   icaltimezone_get_vtimezone_properties (icaltimezone  *zone,
+						    icalcomponent *component);
 }
+
+extern icaltimezone *currenttimezone;
 
 #define OE_DATETIME_CID \
 { 0x78b5b255, 0x7450, 0x47c0, { 0xba, 0x16, 0x0a, 0x6e, 0x7e, 0x80, 0x6e, 0x5d } }
@@ -58,6 +62,7 @@ public:
   void AdjustToWeekday( short weekday );
   /* additional members */
   struct icaltimetype m_datetime;
+  char *m_tzid;
 };
 
 #endif

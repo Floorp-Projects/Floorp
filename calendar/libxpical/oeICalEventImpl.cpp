@@ -1935,6 +1935,15 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
             m_start->SetMinute( 0 );
             m_start->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
         }
+        icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_TZID_PARAMETER );
+        const char *tzid=nsnull;
+        if( tmppar )
+            tzid = icalparameter_get_tzid( tmppar );
+        if( tzid ) {
+            PRTime timeinms;
+            m_start->GetTime( &timeinms );
+            m_start->SetTimeInTimezone( timeinms, tzid );
+        }
     } else {
         m_start->m_datetime = icaltime_null_time();
     }
@@ -1952,6 +1961,15 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         prop = icalcomponent_get_first_property( vevent, ICAL_DTEND_PROPERTY );
         if ( prop != 0) {
             m_end->m_datetime = icalproperty_get_dtend( prop );
+            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_TZID_PARAMETER );
+            const char *tzid=nsnull;
+            if( tmppar )
+                tzid = icalparameter_get_tzid( tmppar );
+            if( tzid ) {
+                PRTime timeinms;
+                m_end->GetTime( &timeinms );
+                m_end->SetTimeInTimezone( timeinms, tzid );
+            }
         } else if( !icaltime_is_null_time( m_start->m_datetime ) ) {
             m_end->m_datetime = m_start->m_datetime;
         } else {
@@ -2414,26 +2432,59 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     }
 
     //startdate
+    char *starttzid=nsnull;
     if( m_start && !icaltime_is_null_time( m_start->m_datetime ) ) {
-        if( m_allday ) {
+        m_start->GetTzID( &starttzid );
+        if( m_allday && !starttzid ) {
             m_start->SetHour( 0 );
             m_start->SetMinute( 0 );
             m_start->m_datetime.is_date = true; //This will reflect the event being an all-day event
         }
         prop = icalproperty_new_dtstart( m_start->m_datetime );
+        if( starttzid ) {
+            icaltimezone *timezone = icaltimezone_get_builtin_timezone_from_tzid (starttzid);
+            icaltimetype convertedtime = m_start->m_datetime;
+            icaltimezone_convert_time ( &convertedtime, currenttimezone, timezone );
+            if( m_allday ) {
+                convertedtime.is_date = true; //This will reflect the event being an all-day event
+            }
+            icalproperty_set_dtstart( prop, convertedtime );
+            icalparameter *tmppar = icalparameter_new_tzid( starttzid );
+            icalproperty_add_parameter( prop, tmppar );
+            icalcomponent_add_component( newcalendar, icalcomponent_new_clone( icaltimezone_get_component ( timezone ) ) );
+        }
         icalcomponent_add_property( vevent, prop );
         m_start->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
     }
 
+    //enddate
     if( m_end && !icaltime_is_null_time( m_end->m_datetime ) ) {
-        //enddate
-        if( m_allday ) {
+        char *tzid=nsnull;
+        m_end->GetTzID( &tzid );
+        if( m_allday && !tzid ) {
             m_end->SetHour( 23 );
             m_end->SetMinute( 59 );
         }
         prop = icalproperty_new_dtend( m_end->m_datetime );
+        if( tzid ) {
+            icaltimezone *timezone = icaltimezone_get_builtin_timezone_from_tzid (tzid);
+            icaltimetype convertedtime = m_end->m_datetime;
+            icaltimezone_convert_time ( &convertedtime, currenttimezone, timezone );
+            if( m_allday ) {
+                convertedtime.hour=23;
+                convertedtime.minute=59;
+            }
+            icalproperty_set_dtend( prop, convertedtime );
+            icalparameter *tmppar = icalparameter_new_tzid( tzid );
+            icalproperty_add_parameter( prop, tmppar );
+            if( !starttzid || strcmp( starttzid, tzid ) != 0 ) 
+                icalcomponent_add_component( newcalendar, icalcomponent_new_clone( icaltimezone_get_component ( timezone ) ) );
+            nsMemory::Free( tzid );
+        }
         icalcomponent_add_property( vevent, prop );
     }
+    if( starttzid )
+        nsMemory::Free( starttzid );
 
     if( m_stamp && !icaltime_is_null_time( m_stamp->m_datetime ) ) {
         //stampdate
@@ -2443,11 +2494,11 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     //snoozetimes
     icalcomponent *tmpcomp=NULL;
-    int i;
-    for( i=0; i<m_snoozetimes.Count(); i++ ) {
+    int j;
+    for( j=0; j<m_snoozetimes.Count(); j++ ) {
         if( tmpcomp == NULL )
             tmpcomp = icalcomponent_new( ICAL_X_COMPONENT );
-        icaltimetype snoozetime = ConvertFromPrtime( *(PRTime *)(m_snoozetimes[i]) );
+        icaltimetype snoozetime = ConvertFromPrtime( *(PRTime *)(m_snoozetimes[j]) );
         prop = icalproperty_new_dtstamp( snoozetime );
         icalcomponent_add_property( tmpcomp, prop );
     }
@@ -2457,6 +2508,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     PRUint32 attachmentCount = 0;
     m_attachments->Count(&attachmentCount);
     nsCOMPtr<nsIMsgAttachment> element;
+    unsigned int i;
     for (i = 0; i < attachmentCount; i ++) {
         m_attachments->QueryElementAt(i, NS_GET_IID(nsIMsgAttachment), getter_AddRefs(element));
         if (element)

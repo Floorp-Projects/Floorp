@@ -41,6 +41,105 @@
 icaltimetype ConvertFromPrtime( PRTime indate );
 PRTime ConvertToPrtime ( icaltimetype indate );
 
+extern icalarray *builtin_timezones;
+extern char *gDefaultTzidPrefix;
+
+//icaltimetype ConvertFromPrtime( PRTime indate );
+void icaltimezone_init_mozilla_zones (void)
+{
+    gDefaultTzidPrefix="/Mozilla.org/";
+
+    char timezonecalstr[] = \
+"BEGIN:VCALENDAR\n\
+PRODID:-//Mozilla.org/NONSGML Mozilla Calendar Timezone Table V1.0//EN\n\
+VERSION:2.0\n\
+END:VCALENDAR\n\
+";
+
+    char *timezoneformatstr = "BEGIN:VTIMEZONE\n\
+TZID:/Mozilla.org/BasicTimezones/NH-GMT%c%02d:%02d\n\
+LOCATION:NH-GMT%c%02d:%02d\n\
+BEGIN:STANDARD\n\
+TZOFFSETFROM:%c%02d%02d\n\
+TZOFFSETTO:%c%02d%02d\n\
+TZNAME:NHS-GMT%c%02d:%02d\n\
+DTSTART:19991031T020000\n\
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\n\
+END:STANDARD\n\
+BEGIN:DAYLIGHT\n\
+TZOFFSETFROM:%c%02d%02d\n\
+TZOFFSETTO:%c%02d%02d\n\
+TZNAME:NHD-GMT%c%02d:%02d\n\
+DTSTART:20000402T020000\n\
+RRULE:FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=1,2,3,4,5,6,7;BYDAY=SU\n\
+END:DAYLIGHT\n\
+END:VTIMEZONE\n";
+
+    char timezonestr[1024];
+
+    builtin_timezones = icalarray_new ( 44, 32); //HARDCODED sizeof(icaltimezone)=44
+
+    icalcomponent *vcalendar = icalparser_parse_string(timezonecalstr);
+    icalcomponent *vtimezone;
+
+    //Components should be sorted by location
+    //+00:00 to +12:00
+    for( int i=0; i<25; i++ ) {
+        char sign = '+';
+        int hour = i/2;
+        int minute = i%2==0 ? 00 : 30;
+        int hour2 = (i+2)/2;
+        sprintf( timezonestr, timezoneformatstr
+                 , sign, hour, minute
+                 , sign, hour, minute
+                 , sign, hour2, minute
+                 , sign, hour, minute
+                 , sign, hour, minute
+                 , sign, hour, minute
+                 , sign, hour2, minute
+                 , sign, hour, minute );
+        vtimezone = icalcomponent_new_from_string( timezonestr );
+        icalcomponent_add_component( vcalendar, vtimezone );
+    }
+    //-00:30 to -12:00
+    for( int i=-1; i>-25; i-- ) {
+        char sign = '-';
+        int hour = -1*i/2;
+        int minute = i%2==0 ? 00 : 30;
+        char sign2 = (i+2)<0 ? '-' : '+';
+        int hour2 = (i+2)<0 ? -1*(i+2)/2 : (i+2)/2;
+        sprintf( timezonestr, timezoneformatstr
+                 , sign, hour, minute
+                 , sign, hour, minute
+                 , sign2, hour2, minute
+                 , sign, hour, minute
+                 , sign, hour, minute
+                 , sign, hour, minute
+                 , sign2, hour2, minute
+                 , sign, hour, minute );
+        vtimezone = icalcomponent_new_from_string( timezonestr );
+        icalcomponent_add_component( vcalendar, vtimezone );
+    }
+
+    for( vtimezone = icalcomponent_get_first_component( vcalendar, ICAL_VTIMEZONE_COMPONENT );
+         vtimezone != NULL;
+         vtimezone = icalcomponent_get_next_component( vcalendar, ICAL_VTIMEZONE_COMPONENT ) ) {
+        icaltimezone *zone=icaltimezone_new();
+        icaltimezone_get_vtimezone_properties  ( zone, vtimezone );
+        icalarray_append (builtin_timezones, zone);
+    }
+
+    PRExplodedTime ext;
+    PR_ExplodeTime( PR_Now(), PR_LocalTimeParameters, &ext);
+    int gmtoffsethour = ext.tm_params.tp_gmt_offset < 0 ? -1*ext.tm_params.tp_gmt_offset / 3600 : ext.tm_params.tp_gmt_offset / 3600;
+    int gmtoffsetminute = ext.tm_params.tp_gmt_offset%3600 ? 30 : 00;
+    char zone_location[20];
+    sprintf( zone_location, "NH-GMT%c%02d:%02d", ext.tm_params.tp_gmt_offset < 0 ? '-' : '+'
+                                                , gmtoffsethour, gmtoffsetminute );
+
+    currenttimezone = icaltimezone_get_builtin_timezone ( zone_location );
+}
+
 oeICalContainerImpl::oeICalContainerImpl()
 {
 #ifdef ICAL_DEBUG
@@ -73,6 +172,8 @@ oeICalContainerImpl::oeICalContainerImpl()
         m_filter = new oeICalContainerFilter();
         NS_ADDREF( m_filter );
         m_filter->m_calendarArray = m_calendarArray;
+
+        icaltimezone_init_mozilla_zones ();
 }
 
 oeICalContainerImpl::~oeICalContainerImpl()
@@ -1453,3 +1554,14 @@ void oeFilterDateTime::SetFieldType( PRInt32 icaltype )
 {
     m_icaltype = icaltype;
 }
+
+NS_IMETHODIMP oeFilterDateTime::GetTzID(char **aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeFilterDateTime::SetTimeInTimezone( PRTime ms, const char *tzid )
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
