@@ -725,7 +725,7 @@ nsHTMLSelectElement::GetValue(nsString& aValue)
             if (eHTMLUnit_String == value.GetUnit()) {
               value.GetStringValue(aValue);
             } else {
-              aValue = "";
+              aValue.SetLength(0);
             }
             return NS_OK;
           }
@@ -736,7 +736,7 @@ nsHTMLSelectElement::GetValue(nsString& aValue)
             if (eHTMLUnit_String == value.GetUnit()) {
               value.GetStringValue(aValue);
             } else {
-              aValue = "";
+              aValue.SetLength(0);
             }
             return NS_OK;
           } 

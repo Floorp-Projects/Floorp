@@ -1274,7 +1274,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
   if(ch!=aChar) {
     if(!aScanner.IsIncremental() && result==kEOF) {
       aScanner.Mark(theOffset);
-      aString=aChar;
+      aString.Assign(aChar);
       result=kBadStringLiteral; 
     }
     else {
