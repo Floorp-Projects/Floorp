@@ -139,8 +139,12 @@ nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
                                        PRBool aReplace,
                                        PRUint16* aResult)
 {
-  if (!mOperaProfile)
+  *aResult = 0;
+  if (!mOperaProfile) {
     GetOperaProfile(aProfile, getter_AddRefs(mOperaProfile));
+    if (!mOperaProfile)
+      return NS_ERROR_FILE_NOT_FOUND;
+  }
 
   MigrationData data[] = { { ToNewUnicode(OPERA_PREFERENCES_FILE_NAME),
                              nsIBrowserProfileMigrator::SETTINGS,

@@ -191,10 +191,6 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
     nsXPIDLString profileName;
     node->GetName(getter_Copies(profileName));
 
-    nsCOMPtr<nsISupportsString> profileNameString(do_CreateInstance("@mozilla.org/supports-string;1"));
-    profileNameString->SetData(profileName);
-    aProfileNames->AppendElement(profileNameString);
-
     // Get the profile location and add it to the locations array
     nsXPIDLString directory;
     reg->GetString(profile, NS_LITERAL_STRING("directory").get(), getter_Copies(directory));
@@ -212,8 +208,13 @@ nsNetscapeProfileMigratorBase::GetProfileDataFromRegistry(nsILocalFile* aRegistr
     PRBool exists;
     dir->Exists(&exists);
 
-    if (exists)
+    if (exists) {
+      nsCOMPtr<nsISupportsString> profileNameString(do_CreateInstance("@mozilla.org/supports-string;1"));
+      profileNameString->SetData(profileName);
+      aProfileNames->AppendElement(profileNameString);
+
       aProfileLocations->AppendElement(dir);
+    }
 
     keys->Next();
   }
