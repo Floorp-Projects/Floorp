@@ -447,11 +447,26 @@ HandleMailtoSubject(nsCString& aPath) {
     }
 
     // Get the default subject
+    nsXPIDLString brandName;
+    nsresult rv =
+      nsContentUtils::GetLocalizedString(nsContentUtils::eBRAND_PROPERTIES,
+                                         "brandShortName", brandName);
+    if (NS_FAILED(rv))
+      return;
+    const PRUnichar *formatStrings[] = { brandName.get() };
     nsXPIDLString subjectStr;
-    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES, "DefaultFormSubject", subjectStr);
+    rv = nsContentUtils::FormatLocalizedString(
+                                           nsContentUtils::eFORMS_PROPERTIES,
+                                           "DefaultFormSubject",
+                                           formatStrings,
+                                           NS_ARRAY_LENGTH(formatStrings),
+                                           subjectStr);
+    if (NS_FAILED(rv))
+      return;
     aPath.AppendLiteral("subject=");
     nsCString subjectStrEscaped;
-    aPath.Append(NS_EscapeURL(NS_ConvertUTF16toUTF8(subjectStr), esc_Query, subjectStrEscaped));
+    aPath.Append(NS_EscapeURL(NS_ConvertUTF16toUTF8(subjectStr), esc_Query,
+                              subjectStrEscaped));
   }
 }
 

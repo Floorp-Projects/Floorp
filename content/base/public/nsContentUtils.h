@@ -495,6 +495,7 @@ public:
     eFORMS_PROPERTIES,
     ePRINTING_PROPERTIES,
     eDOM_PROPERTIES,
+    eBRAND_PROPERTIES,
     PropertiesFile_COUNT
   };
   static nsresult ReportToConsole(PropertiesFile aFile,
