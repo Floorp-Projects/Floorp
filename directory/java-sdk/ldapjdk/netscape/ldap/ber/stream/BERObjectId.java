@@ -29,7 +29,7 @@ import java.io.*;
  * This class is for the Object ID object.
  *
  * @version 1.0
- * @seeAlso CCITT X.209
+ * seeAlso CCITT X.209
  */
 public class BERObjectId extends BERElement {
     /**

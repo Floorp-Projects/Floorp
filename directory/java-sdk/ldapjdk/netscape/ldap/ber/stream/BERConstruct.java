@@ -29,7 +29,7 @@ import java.io.*;
  * types such as sequence or set.
  *
  * @version 1.0
- * @seeAlso CCITT X.209
+ * seeAlso CCITT X.209
  */
 public abstract class BERConstruct extends BERElement {
     /**

@@ -34,7 +34,7 @@ import java.io.*;
  * decoder.
  *
  * @version 1.0
- * @seeAlso CCITT X.209
+ * seeAlso CCITT X.209
  */
 public abstract class BERTagDecoder {
 

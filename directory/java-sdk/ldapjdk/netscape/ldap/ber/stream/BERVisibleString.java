@@ -36,7 +36,7 @@ import java.io.*;
  * </pre>
  *
  * @version 1.0
- * @seeAlso X.209
+ * seeAlso X.209
  */
 public class BERVisibleString extends BERCharacterString {
 

@@ -36,7 +36,7 @@ import java.io.*;
  * </pre>
  *
  * @version 1.0
- * @seeAlso CCITT X.209
+ * seeAlso CCITT X.209
  */
 public class BERUTCTime extends BERElement {
 
@@ -120,13 +120,12 @@ public class BERUTCTime extends BERElement {
         }
     }
 
+    private byte[] byte_buf;
     /**
      * Writes BER to a stream.
      * @return number of bytes written to stream.
      * @exception IOException failed to write
      */
-    private byte[] byte_buf;
-
     public void write(OutputStream stream) throws IOException {
         stream.write((byte)getType());
         if (m_value == null) {

@@ -28,7 +28,7 @@ import java.io.*;
  * This is an abstract base class for character string types.
  *
  * @version 1.0
- * @seeAlso CCITT X.209
+ * seeAlso CCITT X.209
  */
 public abstract class BERCharacterString extends BERElement {
     /**

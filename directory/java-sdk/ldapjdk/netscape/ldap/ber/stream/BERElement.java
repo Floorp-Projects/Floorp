@@ -29,7 +29,7 @@ import java.io.*;
  * allowed. A tagged element contains another BER element.
  *
  * @version 1.0
- * @seeAlso CCITT X.209
+ * seeAlso CCITT X.209
  */
 public abstract class BERElement implements Serializable {
     /**

@@ -33,7 +33,7 @@ import java.io.*;
  * </pre>
  *
  * @version 1.0
- * @seeAlso CCITT X.209
+ * seeAlso CCITT X.209
  */
 public class BERReal extends BERElement {
     /**
