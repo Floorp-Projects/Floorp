@@ -904,8 +904,7 @@ function sidebar_revert_to_default_panels() {
   try {
     var sidebar_file = sidebar_get_panels_file();
 
-    // Calling delete() with array notation (workaround for bug 37406).
-    sidebar_file["delete"](false);
+    sidebar_file.remove(false);
 
     // Since we just removed the panels file,
     // this should copy the defaults over.

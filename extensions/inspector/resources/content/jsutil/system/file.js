@@ -109,8 +109,6 @@ const JSFILE_READ_MODE                = "r";
 const JSFILE_WRITE_MODE               = "w";
 const JSFILE_APPEND_MODE              = "a";
 
-const JSFILE_DELETE                   = "delete";
-
 const JSFILE_FILETYPE                 = 0x00;     // 0
 
 const JSFILE_CHUNK                    = 1024;     // buffer for readline => set to 1k
@@ -181,7 +179,7 @@ var fileExists          = this.exists();
       {
         try
         {
-          this.fileInst[JSFILE_DELETE](false);
+          this.fileInst.remove(false);
           fileExists=false;
         } 
 
