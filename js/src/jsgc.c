@@ -348,7 +348,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 }
 
 #ifdef JS_GCMETER
-void
+JS_FRIEND_API(void)
 js_DumpGCStats(JSRuntime *rt, FILE *fp)
 {
     uintN i;
