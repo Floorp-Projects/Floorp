@@ -75,6 +75,9 @@ public:
   /* This needs to be accessed by nsRenderingPh a lot so make it public */
   PhImage_t  *mPixmap;
 
+  PRUint32			mWidth;
+  PRUint32			mHeight;
+
 private:
 
   PRBool			mIsOffscreen;
@@ -84,8 +87,6 @@ private:
   PhDrawContext_t	*mDrawContext;
   PhDrawContext_t	*moldDrawContext;
   
-  PRUint32			mWidth;
-  PRUint32			mHeight;
   PRUint32			mFlags;
   nsPixelFormat 	mPixFormat;
 

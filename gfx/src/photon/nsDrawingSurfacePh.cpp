@@ -1,5 +1,3 @@
-int kedl=0;
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -280,7 +278,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC )
   mPixmap      = NULL;
   mDrawContext = PhDCGetCurrent();
 
- PgSetDrawBufferSize(8 * 1024 );  
+ PgSetDrawBufferSize(16 * 1024 );  
 
 /* Code to clear the clipping from the GC */
   /* Activate this GC */
@@ -311,7 +309,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
   /* Init a Off-Screen Drawing Surface */
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height this=<%p> w,h=(%ld,%ld) aGC=<%p>\n", this, aWidth, aHeight, aGC));
 
- PgSetDrawBufferSize(8 * 1024 );  
+ PgSetDrawBufferSize(16 * 1024 );  
 
   mGC = aGC;
   mWidth = aWidth;
@@ -366,6 +364,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
 
   mPixmap->type = Pg_IMAGE_DIRECT_8888; // 4 bytes per pixel with this type
   mPixmap->size = dim;
+/*zzz
   mPixmap->image = (char *) PgShmemCreate( dim.w * dim.h * bytes_per_pixel, NULL);
 
   if (mPixmap->image == NULL)
@@ -375,6 +374,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
 	abort();
     return NS_ERROR_FAILURE;
   }
+*/
   
   mPixmap->bpl = bytes_per_pixel * dim.w;
 
@@ -383,11 +383,14 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
   moldDrawContext = PhDCGetCurrent();
 
     /*   Some cards need to be forced to 2048 to work right... */
-    //mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext( 0 ,dim.w,dim.h,0);
-    //mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext( 0 ,2048,dim.h,0);
-    mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext( 0 ,1024,dim.h,0);
-
-  //printf ("kedl: create pd....................................... %d, %p\n",kedl++,mDrawContext);
+int w;
+#define GRAN 512
+    w = dim.w;
+    w = (w+GRAN)/GRAN*GRAN;
+    mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext( 0 ,w,dim.h,0);
+//    mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext( 0 ,dim.w,dim.h,0);
+//    mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext( 0 ,2048,dim.h,0);
+//    mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext( 0 ,1024,dim.h,0);
 
   if (mDrawContext == NULL)
   {
@@ -435,6 +438,10 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
   /* Clear out the Multi-clip, it will be reset later if needed */
   /* This fixed the toolbar drawing */
   PgSetMultiClip(0,NULL);
+
+// clear the new buffer
+  PgSetFillColor(0x0);
+  PgDrawIRect( 0, 0, dim.w,dim.h, Pg_DRAW_FILL_STROKE ); 
 
   /* Clear out the Image if its still set */
   if (mImage)
