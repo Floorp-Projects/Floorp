@@ -2024,11 +2024,17 @@ public class ScriptRuntime {
     private static Method getContextClassLoaderMethod;
     static {
         try {
+            // Don't use "Thread.class": that performs the lookup
+            // in the class initializer, which doesn't allow us to
+            // catch possible security exceptions.
+            Class threadClass = Class.forName("java.lang.Thread");
             // We'd like to use "getContextClassLoader", but 
             // that's only available on Java2. 
             getContextClassLoaderMethod = 
-                Thread.class.getDeclaredMethod("getContextClassLoader", 
+                threadClass.getDeclaredMethod("getContextClassLoader", 
                                                new Class[0]);
+        } catch (ClassNotFoundException e) {
+            // ignore exceptions; we'll use Class.forName instead.
         } catch (NoSuchMethodException e) {
             // ignore exceptions; we'll use Class.forName instead.
         } catch (SecurityException e) {
