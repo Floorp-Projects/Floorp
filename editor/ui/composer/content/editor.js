@@ -106,29 +106,30 @@ nsButtonPrefListener.prototype =
     if (button) {
       var prefs = GetPrefs();
       var useCSS = prefs.getBoolPref(prefName);
-      var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-      if (useCSS && htmlEditor) {
+      if (useCSS && gEditor && gIsHTMLEditor) {
         button.removeAttribute("disabled");
-        var state = htmlEditor.getHighlightColorState(mixedObj);
+        var state = gEditor.getHighlightColorState(mixedObj);
         button.setAttribute("state", state);
       }      
       else {
         button.setAttribute("disabled", "true");
         button.setAttribute("state", "transparent");
       }
-      if (htmlEditor) {
-        htmlEditor.isCSSEnabled = useCSS;
-      }
+
+      if (gEditor && gIsHTMLEditor)
+        gEditor.isCSSEnabled = useCSS;
     }
   }
 }
 
 function AfterHighlightColorChange()
 {
+  if (!gIsHTMLEditor) return;
+
   var button = document.getElementById("cmd_highlight");
-  var mixedObj = new Object();
   if (button) {
-    var state = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor).getHighlightColorState(mixedObj);
+    var mixedObj = new Object();
+    var state = gEditor.getHighlightColorState(mixedObj);
     button.setAttribute("state", state);
     onHighlightColorChange();
   }      
@@ -186,11 +187,6 @@ function PageIsEmptyAndUntouched()
          !docWasModified && !gHTMLSourceChanged;
 }
 
-function IsEditorContentHTML()
-{
-  return (gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor) != 0);
-}
-
 function IsInHTMLSourceMode()
 {
   return (gEditorDisplayMode == DisplayModeSource);
@@ -199,7 +195,7 @@ function IsInHTMLSourceMode()
 // are we editing HTML (i.e. neither in HTML source mode, nor editing a text file)
 function IsEditingRenderedHTML()
 {
-    return IsEditorContentHTML() && !IsInHTMLSourceMode();
+  return gIsHTMLEditor && !IsInHTMLSourceMode();
 }
 
 
@@ -233,6 +229,11 @@ var MessageComposeDocumentStateListener =
 {
   NotifyDocumentCreated: function()
   {
+    gEditor = editorShell.editor;
+
+    // do all of our QI'ing here so we don't need to do it elsewhere
+    DoAllQueryInterfaceOnEditor();
+
     addEditorClickEventListener();
   },
 
@@ -258,6 +259,20 @@ function isPlaintextEditor()
   return (editorflags & Components.interfaces.nsIPlaintextEditor.eEditorPlaintextMask);
 }
 
+function DoAllQueryInterfaceOnEditor()
+{
+  // do QI here so the interfaces will be accessible on gEditor
+  try {
+    gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
+  } catch(e) {}
+  try {
+    gEditor.QueryInterface(Components.interfaces.nsIPlaintextEditor);
+  } catch(e) {}
+  try {
+    gEditor.QueryInterface(Components.interfaces.nsITableEditor);
+  } catch(e) {}
+}
+
 // This is called when the real editor document is created,
 // before it's loaded.
 var DocumentStateListener =
@@ -265,6 +280,9 @@ var DocumentStateListener =
   NotifyDocumentCreated: function()
   {
     gEditor = editorShell.editor;
+
+    // do all of our QI'ing here so we don't need to do it elsewhere
+    DoAllQueryInterfaceOnEditor();
 
     // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
     EditorSetDefaultPrefsAndDoctype();
@@ -382,6 +400,8 @@ function EditorSharedStartup()
   {
       case "html":
       case "htmlmail":
+        gIsHTMLEditor = true;
+
         SetupHTMLEditorCommands();
         editorShell.contentsMIMEType = "text/html";
         if (editorShell.editorType == "htmlmail")
@@ -554,8 +574,9 @@ function CheckAndSaveDocument(command, allowDontSave)
   var dialogMsg = GetString("SaveFilePrompt");
   dialogMsg = (dialogMsg.replace(/%title%/,title)).replace(/%reason%/,reasonToSave);
 
-  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-  promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+  var promptService = GetPromptService();
+  if (!promptService)
+    return false;
 
   var result = {value:0};
   var promptFlags = promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1;
@@ -600,7 +621,7 @@ function CheckAndSaveDocument(command, allowDontSave)
 
     // Save to local disk
     var contentsMIMEType;
-    if (gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor))
+    if (gIsHTMLEditor)
       contentsMIMEType = "text/html";
     else
       contentsMIMEType = "text/plain";
@@ -691,32 +712,40 @@ function GetAtomService()
     gAtomService = Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
 }
 
-function EditorGetTextProperty(property, attribute, value)
+function EditorGetTextProperty(property, attribute, value, firstHas, anyHas, allHas)
 {
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  if (!htmlEditor) return;
-  htmlEditor.getTextProperty("font", "size", sizeString,
+  if (!gIsHTMLEditor) return;
+  try {
+    if (!gAtomService) GetAtomService();
+    var propAtom = gAtomService.getAtom(property);
+    gEditor.getInlineProperty(propAtom, attribute, value,
                              firstHas, anyHas, allHas);
+  }
+  catch(e) {}
 }
 
 function EditorSetTextProperty(property, attribute, value)
 {
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  if (!htmlEditor) return;
-  if (!gAtomService) GetAtomService();
-  var propAtom = gAtomService.getAtom(property);
-  htmlEditor.setInlineProperty(propAtom, attribute, value);
-  gContentWindow.focus();
+  if (!gIsHTMLEditor) return;
+  try {
+    if (!gAtomService) GetAtomService();
+    var propAtom = gAtomService.getAtom(property);
+    gEditor.setInlineProperty(propAtom, attribute, value);
+    gContentWindow.focus();
+  }
+  catch(e) {}
 }
 
 function EditorRemoveTextProperty(property, attribute)
 {
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  if (!htmlEditor) return;
-  if (!gAtomService) GetAtomService();
-  var propAtom = gAtomService.getAtom(property);
-  htmlEditor.removeInlineProperty(propAtom, attribute);
-  gContentWindow.focus();
+  if (!gIsHTMLEditor) return;
+  try {
+    if (!gAtomService) GetAtomService();
+    var propAtom = gAtomService.getAtom(property);
+    gEditor.removeInlineProperty(propAtom, attribute);
+    gContentWindow.focus();
+  }
+  catch(e) {}
 }
 
 function onParagraphFormatChange(paraMenuList, commandID)
@@ -869,9 +898,9 @@ function initFontFaceMenu(menuPopup)
     var children = menuPopup.childNodes;
     if (!children) return;
 
-    var firstHas = new Object;
-    var anyHas = new Object;
-    var allHas = new Object;
+    var firstHas = new Object();
+    var anyHas = new Object();
+    var allHas = new Object();
     allHas.value = false;
 
     // we need to set or clear the checkmark for each menu item since the selection
@@ -911,9 +940,9 @@ function initFontSizeMenu(menuPopup)
     var children = menuPopup.childNodes;
     if (!children) return;
 
-    var firstHas = new Object;
-    var anyHas = new Object;
-    var allHas = new Object;
+    var firstHas = new Object();
+    var anyHas = new Object();
+    var allHas = new Object();
     allHas.value = false;
 
     var sizeWasFound = false;
@@ -1067,12 +1096,16 @@ function GetBackgroundElementWithColor()
   gColorObj.CellColor = "";
   gColorObj.BackgroundColor = "";
 
-  var tagNameObj = new Object;
-  var countObj = new Object;
-  var tableEd = gEditor.QueryInterface(Components.interfaces.nsITableEditor);
+  var tagNameObj = new Object();
+  var numSelected;
   var element;
-  if (tableEd)
-    tableEd.getSelectedOrParentTableElement(element, tagNameObj, countObj);
+  try {
+    var elt = new Object();
+    numSelected = gEditor.getSelectedOrParentTableElement(elt, tagNameObj);
+    element = elt.value;
+  }
+  catch(e) {}
+
   if (element && tagNameObj && tagNameObj.value)
   {
     gColorObj.BackgroundColor = GetHTMLOrCSSStyleValue(element, "bgcolor", "background-color");
@@ -1097,14 +1130,13 @@ function GetBackgroundElementWithColor()
   {
     var prefs = GetPrefs();
     var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
-    var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-    if (IsCSSPrefChecked && htmlEditor)
+    if (IsCSSPrefChecked && gIsHTMLEditor)
     {
       var selection = gEditor.selection;
       if (selection)
       {
         element = selection.focusNode;
-        while (!htmlEditor.NodeIsBlock(element))
+        while (!gEditor.NodeIsBlock(element))
           element = element.parentNode;
       }
       else
@@ -1136,11 +1168,11 @@ function GetBackgroundElementWithColor()
 
 function SetSmiley(smileyText)
 {
-  textEditor = gEditor.QueryInterface(Components.interfaces.nsIPlaintextEditor);
-  if (textEditor)
-    textEditor.InsertText(smileyText);
-
-  gContentWindow.focus();
+  try {
+    gEditor.InsertText(smileyText);
+    gContentWindow.focus();
+  }
+  catch(e) {}
 }
 
 function EditorSelectColor(colorType, mouseEvent)
@@ -1282,39 +1314,44 @@ function EditorSelectColor(colorType, mouseEvent)
         }
       }
     }
-    else if (currentColor != gColorObj.BackgroundColor)
+    else if (currentColor != gColorObj.BackgroundColor && gIsHTMLEditor)
     {
-      gEditor.BeginTransaction();
-      var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-      htmlEditor.setBackgroundColor(gColorObj.BackgroundColor);
-      if (gColorObj.Type == "Page" && gColorObj.BackgroundColor)
+      gEditor.beginTransaction();
+      try
       {
-        // Set all page colors not explicitly set,
-        //  else you can end up with unreadable pages
-        //  because viewer's default colors may not be same as page author's
-        var bodyelement = GetBodyElement();
-        if (bodyelement)
+        gEditor.setBackgroundColor(gColorObj.BackgroundColor);
+
+        if (gColorObj.Type == "Page" && gColorObj.BackgroundColor)
         {
-          var defColors = GetDefaultBrowserColors();
-          if (defColors)
+          // Set all page colors not explicitly set,
+          //  else you can end up with unreadable pages
+          //  because viewer's default colors may not be same as page author's
+          var bodyelement = GetBodyElement();
+          if (bodyelement)
           {
-            if (!bodyelement.getAttribute("text"))
-              gEditor.setAttributeOrEquivalent(bodyelement, "text", defColors.TextColor);
+            var defColors = GetDefaultBrowserColors();
+            if (defColors)
+            {
+              if (!bodyelement.getAttribute("text"))
+                gEditor.setAttributeOrEquivalent(bodyelement, "text", defColors.TextColor);
 
-            // The following attributes have no individual CSS declaration counterparts
-            // Getting rid of them in favor of CSS implies CSS rules management
-            if (!bodyelement.getAttribute("link"))
-              gEditor.setAttribute(bodyelement, "link", defColors.LinkColor);
+              // The following attributes have no individual CSS declaration counterparts
+              // Getting rid of them in favor of CSS implies CSS rules management
+              if (!bodyelement.getAttribute("link"))
+                gEditor.setAttribute(bodyelement, "link", defColors.LinkColor);
 
-            if (!bodyelement.getAttribute("alink"))
-              gEditor.setAttribute(bodyelement, "alink", defColors.LinkColor);
+              if (!bodyelement.getAttribute("alink"))
+                gEditor.setAttribute(bodyelement, "alink", defColors.LinkColor);
 
-            if (!bodyelement.getAttribute("vlink"))
-              gEditor.setAttribute(bodyelement, "vlink", defColors.VisitedLinkColor);
+              if (!bodyelement.getAttribute("vlink"))
+                gEditor.setAttribute(bodyelement, "vlink", defColors.VisitedLinkColor);
+            }
           }
         }
       }
-      gEditor.EndTransaction();
+      catch(e) {}
+
+      gEditor.endTransaction();
     }
 
     goUpdateCommand("cmd_backgroundColor");
@@ -1360,7 +1397,7 @@ function EditorDblClick(event)
 
      //  We use "href" instead of "a" to not be fooled by named anchor
     if (!element)
-      element = editorShell.getSelectedElement("href");
+      element = gEditor.getSelectedElement("href");
 
     if (element)
     {
@@ -1384,23 +1421,17 @@ function EditorClick(event)
   // In Show All Tags Mode,
   // single click selects entire element,
   //  except for body and table elements
-  if (event.target && gEditorDisplayMode == DisplayModeAllTags)
+  if (event.target && gIsHTMLEditor && gEditorDisplayMode == DisplayModeAllTags)
   {
-    try {
+    try
+    {
       var element = event.target.QueryInterface( Components.interfaces.nsIDOMElement);
-      if (element)
-      {
-        var name = element.localName.toLowerCase();
-        if (name != "body" && name != "table" &&
-            name != "td" && name != "th" && name != "caption" && name != "tr")
-        {          
-          var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-          if (htmlEditor && event.target)
-          {
-            htmlEditor.selectElement(event.target);
-            event.preventDefault();
-          }
-        }
+      var name = element.localName.toLowerCase();
+      if (name != "body" && name != "table" &&
+          name != "td" && name != "th" && name != "caption" && name != "tr")
+      {          
+        gEditor.selectElement(event.target);
+        event.preventDefault();
       }
     } catch (e) {}
   }
@@ -1414,12 +1445,9 @@ function EditorClick(event)
 //  but will accept a parent link, list, or table cell if inside one
 function GetObjectForProperties()
 {
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  if (!htmlEditor)
-    return null;
-  var elementObj = {value:0};
-  htmlEditor.getSelectedElement("", elementObj);
-  var element = elementObj.value;
+  if (!gIsHTMLEditor) return null;
+
+  var element = gEditor.getSelectedElement("");
   if (element)
     return element;
 
@@ -1464,116 +1492,115 @@ function GetObjectForProperties()
 
 function SetEditMode(mode)
 {
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  if (htmlEditor)
+  if (!gIsHTMLEditor) return;
+
+  var bodyNode = gEditor.document.getElementsByTagName("body").item(0);
+  if (!bodyNode)
   {
-    var bodyNode = gEditor.document.getElementsByTagName("body").item(0);
-    if (!bodyNode)
-    {
-      dump("SetEditMode: We don't have a body node!\n");
-      return;
-    }
-    // Switch the UI mode before inserting contents
-    //   so user can't type in source window while new window is being filled
-    var previousMode = gEditorDisplayMode;
-    if (!SetDisplayMode(mode))
-      return;
+    dump("SetEditMode: We don't have a body node!\n");
+    return;
+  }
 
-    if (mode == DisplayModeSource)
+  // Switch the UI mode before inserting contents
+  //   so user can't type in source window while new window is being filled
+  var previousMode = gEditorDisplayMode;
+  if (!SetDisplayMode(mode))
+    return;
+
+  if (mode == DisplayModeSource)
+  {
+    // Display the DOCTYPE as a non-editable string above edit area
+    var domdoc;
+    try { domdoc = gEditor.document; } catch (e) { dump( e + "\n");}
+    if (domdoc)
     {
-      // Display the DOCTYPE as a non-editable string above edit area
-      var domdoc;
-      try { domdoc = gEditor.document; } catch (e) { dump( e + "\n");}
-      if (domdoc)
+      var doctypeNode = document.getElementById("doctype-text");
+      var dt = domdoc.doctype;
+      if (doctypeNode)
       {
-        var doctypeNode = document.getElementById("doctype-text");
-        var dt = domdoc.doctype;
-        if (doctypeNode)
+        if (dt)
         {
-          if (dt)
-          {
-            doctypeNode.removeAttribute("collapsed");
-            var doctypeText = "<!DOCTYPE " + domdoc.doctype.name;
-            if (dt.publicId)
-              doctypeText += " PUBLIC \"" + domdoc.doctype.publicId;
-            if (dt.systemId)
-              doctypeText += " "+"\"" + dt.systemId;
-            doctypeText += "\">"
-            doctypeNode.setAttribute("value", doctypeText);
-          }
-          else
-            doctypeNode.setAttribute("collapsed", "true");
+          doctypeNode.removeAttribute("collapsed");
+          var doctypeText = "<!DOCTYPE " + domdoc.doctype.name;
+          if (dt.publicId)
+            doctypeText += " PUBLIC \"" + domdoc.doctype.publicId;
+          if (dt.systemId)
+            doctypeText += " "+"\"" + dt.systemId;
+          doctypeText += "\">"
+          doctypeNode.setAttribute("value", doctypeText);
         }
+        else
+          doctypeNode.setAttribute("collapsed", "true");
       }
-      // Get the entire document's source string
-
-      var flags = 256; // OutputEncodeEntities;
-
-      try { 
-        var prettyPrint = gPrefs.getBoolPref("editor.prettyprint");
-        if (prettyPrint)
-          flags |= 2; // OutputFormatted
-
-      } catch (e) {}
-
-      var source = gEditor.outputToString("text/html", flags);
-      var start = source.search(/<html/i);
-      if (start == -1) start = 0;
-      gSourceContentWindow.value = source.slice(start);
-      gSourceContentWindow.focus();
-
-      // Add input handler so we know if user made any changes
-      gSourceContentWindow.addEventListener("input", oninputHTMLSource, false);
-      gHTMLSourceChanged = false;
     }
-    else if (previousMode == DisplayModeSource)
+    // Get the entire document's source string
+
+    var flags = 256; // OutputEncodeEntities;
+
+    try { 
+      var prettyPrint = gPrefs.getBoolPref("editor.prettyprint");
+      if (prettyPrint)
+        flags |= 2; // OutputFormatted
+
+    } catch (e) {}
+
+    var source = gEditor.outputToString("text/html", flags);
+    var start = source.search(/<html/i);
+    if (start == -1) start = 0;
+    gSourceContentWindow.value = source.slice(start);
+    gSourceContentWindow.focus();
+
+    // Add input handler so we know if user made any changes
+    gSourceContentWindow.addEventListener("input", oninputHTMLSource, false);
+    gHTMLSourceChanged = false;
+  }
+  else if (previousMode == DisplayModeSource)
+  {
+    // Only rebuild document if a change was made in source window
+    if (gHTMLSourceChanged)
     {
-      // Only rebuild document if a change was made in source window
-      if (gHTMLSourceChanged)
-      {
-        gEditor.BeginTransaction();
-        try {
-          // We are comming from edit source mode,
-          //   so transfer that back into the document
-          source = gSourceContentWindow.value;
-          editorShell.RebuildDocumentFromSource(source);
+      gEditor.beginTransaction();
+      try {
+        // We are comming from edit source mode,
+        //   so transfer that back into the document
+        source = gSourceContentWindow.value;
+        editorShell.RebuildDocumentFromSource(source);
 
-          // Get the text for the <title> from the newly-parsed document
-          // (must do this for proper conversion of "escaped" characters)
-          var title = "";
-          var titlenodelist = gEditor.document.getElementsByTagName("title");
-          if (titlenodelist)
-          {
-            var titleNode = titlenodelist.item(0);
-            if (titleNode && titleNode.firstChild && titleNode.firstChild.data)
-              title = titleNode.firstChild.data;
-          }
-          if (gEditor.document.title != title)
-          {
-            gEditor.document.title = title;
-            ResetWindowTitleWithFilename();
-          }
-
-          // reset selection to top of doc (wish we could preserve it!)
-          if (bodyNode)
-            gEditor.selection.collapse(bodyNode, 0);
-
-        } catch (ex) {
-          dump(ex);
+        // Get the text for the <title> from the newly-parsed document
+        // (must do this for proper conversion of "escaped" characters)
+        var title = "";
+        var titlenodelist = gEditor.document.getElementsByTagName("title");
+        if (titlenodelist)
+        {
+          var titleNode = titlenodelist.item(0);
+          if (titleNode && titleNode.firstChild && titleNode.firstChild.data)
+            title = titleNode.firstChild.data;
         }
-        gEditor.EndTransaction();
+        if (gEditor.document.title != title)
+        {
+          gEditor.document.title = title;
+          ResetWindowTitleWithFilename();
+        }
 
-      } else {
-        // We don't need to call this again, so remove handler
-        gSourceContentWindow.removeEventListener("input", oninputHTMLSource, false);
+        // reset selection to top of doc (wish we could preserve it!)
+        if (bodyNode)
+          gEditor.selection.collapse(bodyNode, 0);
+
+      } catch (ex) {
+        dump(ex);
       }
-      gHTMLSourceChanged = false;
+      gEditor.endTransaction();
 
-      // Clear out the string buffers
-      gSourceContentWindow.value = null;
-
-      gContentWindow.focus();
+    } else {
+      // We don't need to call this again, so remove handler
+      gSourceContentWindow.removeEventListener("input", oninputHTMLSource, false);
     }
+    gHTMLSourceChanged = false;
+
+    // Clear out the string buffers
+    gSourceContentWindow.value = null;
+
+    gContentWindow.focus();
   }
 }
 
@@ -1623,91 +1650,88 @@ function CollapseItem(id, collapse)
 
 function SetDisplayMode(mode)
 {
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  if (htmlEditor)
+  if (!gIsHTMLEditor) return false;
+
+  // Already in requested mode:
+  //  return false to indicate we didn't switch
+  if (mode == gEditorDisplayMode)
+    return false;
+
+  gEditorDisplayMode = mode;
+
+  // Save the last non-source mode so we can cancel source editing easily
+  if (mode != DisplayModeSource)
+    PreviousNonSourceDisplayMode = mode;
+
+  // Editorshell does the style sheet loading/unloading
+  editorShell.SetDisplayMode(mode);
+
+  // Set the UI states
+  var selectedTab = null;
+  if (mode == DisplayModePreview) selectedTab = gPreviewModeButton;
+  if (mode == DisplayModeNormal) selectedTab = gNormalModeButton;
+  if (mode == DisplayModeAllTags) selectedTab = gTagModeButton;
+  if (mode == DisplayModeSource) selectedTab = gSourceModeButton;
+  if (selectedTab)
+    document.getElementById("EditModeTabs").selectedItem = selectedTab;
+
+  if (mode == DisplayModeSource)
   {
-    // Already in requested mode:
-    //  return false to indicate we didn't switch
-    if (mode == gEditorDisplayMode)
-      return false;
+    // Switch to the sourceWindow (second in the deck)
+    gContentWindowDeck.setAttribute("selectedIndex","1");
 
-    gEditorDisplayMode = mode;
-
-    // Save the last non-source mode so we can cancel source editing easily
-    if (mode != DisplayModeSource)
-      PreviousNonSourceDisplayMode = mode;
-
-    // Editorshell does the style sheet loading/unloading
-    editorShell.SetDisplayMode(mode);
-
-    // Set the UI states
-    var selectedTab = null;
-    if (mode == DisplayModePreview) selectedTab = gPreviewModeButton;
-    if (mode == DisplayModeNormal) selectedTab = gNormalModeButton;
-    if (mode == DisplayModeAllTags) selectedTab = gTagModeButton;
-    if (mode == DisplayModeSource) selectedTab = gSourceModeButton;
-    if (selectedTab)
-      document.getElementById("EditModeTabs").selectedItem = selectedTab;
-
-    if (mode == DisplayModeSource)
+    //Hide the formatting toolbar if not already hidden
+    gFormatToolbarHidden = gFormatToolbar.getAttribute("hidden");
+    if (gFormatToolbarHidden != "true")
     {
-      // Switch to the sourceWindow (second in the deck)
-      gContentWindowDeck.setAttribute("selectedIndex","1");
-
-      //Hide the formatting toolbar if not already hidden
-      gFormatToolbarHidden = gFormatToolbar.getAttribute("hidden");
-      if (gFormatToolbarHidden != "true")
-      {
-        gFormatToolbar.setAttribute("hidden", "true");
-      }
-
-      gSourceContentWindow.focus();
-    }
-    else
-    {
-      // Switch to the normal editor (first in the deck)
-      gContentWindowDeck.setAttribute("selectedIndex","0");
-
-      // Restore menus and toolbars
-      if (gFormatToolbarHidden != "true")
-      {
-        gFormatToolbar.setAttribute("hidden", gFormatToolbarHidden);
-      }
-
-      gContentWindow.focus();
+      gFormatToolbar.setAttribute("hidden", "true");
     }
 
-    // update commands to disable or re-enable stuff
-    window.updateCommands("mode_switch");
-
-    // We must set check on menu item since toolbar may have been used
-    document.getElementById("viewPreviewMode").setAttribute("checked","false");
-    document.getElementById("viewNormalMode").setAttribute("checked","false");
-    document.getElementById("viewAllTagsMode").setAttribute("checked","false");
-    document.getElementById("viewSourceMode").setAttribute("checked","false");
-
-    var menuID;
-    switch(mode)
-    {
-      case DisplayModePreview:
-        menuID = "viewPreviewMode";
-        break;
-      case DisplayModeNormal:
-        menuID = "viewNormalMode";
-        break;
-      case DisplayModeAllTags:
-        menuID = "viewAllTagsMode";
-        break;
-      case DisplayModeSource:
-        menuID = "viewSourceMode";
-        break;
-    }
-    if (menuID)
-      document.getElementById(menuID).setAttribute("checked","true");
-
-    return true;
+    gSourceContentWindow.focus();
   }
-  return false;
+  else
+  {
+    // Switch to the normal editor (first in the deck)
+    gContentWindowDeck.setAttribute("selectedIndex","0");
+
+    // Restore menus and toolbars
+    if (gFormatToolbarHidden != "true")
+    {
+      gFormatToolbar.setAttribute("hidden", gFormatToolbarHidden);
+    }
+
+    gContentWindow.focus();
+  }
+
+  // update commands to disable or re-enable stuff
+  window.updateCommands("mode_switch");
+
+  // We must set check on menu item since toolbar may have been used
+  document.getElementById("viewPreviewMode").setAttribute("checked","false");
+  document.getElementById("viewNormalMode").setAttribute("checked","false");
+  document.getElementById("viewAllTagsMode").setAttribute("checked","false");
+  document.getElementById("viewSourceMode").setAttribute("checked","false");
+
+  var menuID;
+  switch(mode)
+  {
+    case DisplayModePreview:
+      menuID = "viewPreviewMode";
+      break;
+    case DisplayModeNormal:
+      menuID = "viewNormalMode";
+      break;
+    case DisplayModeAllTags:
+      menuID = "viewAllTagsMode";
+      break;
+    case DisplayModeSource:
+      menuID = "viewSourceMode";
+      break;
+  }
+  if (menuID)
+    document.getElementById(menuID).setAttribute("checked","true");
+
+  return true;
 }
 
 function EditorToggleParagraphMarks()
@@ -1907,10 +1931,13 @@ function InitObjectPropertiesMenuitem(id)
       case "img":
         // Check if img is enclosed in link
         //  (use "href" to not be fooled by named anchor)
-        var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-        if (htmlEditor.getElementOrParentByTagName("href", element))
-          objStr = GetString("ImageAndLink");
-        else
+        try
+        {
+          if (gEditor.getElementOrParentByTagName("href", element))
+            objStr = GetString("ImageAndLink");
+        } catch(e) {}
+        
+        if (objStr == "")
           objStr = GetString("Image");
         break;
       case "hr":
@@ -1986,8 +2013,11 @@ function InitObjectPropertiesMenuitem(id)
 function InitParagraphMenu()
 {
   var mixedObj = new Object();
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  var state = htmlEditor.getParagraphState(mixedObj);
+  var state;
+  try {
+    state = gEditor.getParagraphState(mixedObj);
+  }
+  catch(e) {}
   var IDSuffix;
 
   // PROBLEM: When we get blockquote, it masks other styles contained by it
@@ -2008,73 +2038,103 @@ function InitParagraphMenu()
     menuItem.setAttribute("checked", "false");
 }
 
-function InitListMenu()
+function GetListStateString()
 {
   var mixedObj = new Object();
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  var state = htmlEditor.getListState(mixedObj);
-  var IDSuffix = "noList";
-  if (state)
-  {
-    if (state == "dl")
-      state = htmlEditor.getListItemState(mixedObj);
+  var hasOL = new Object();
+  var hasUL = new Object();
+  var hasDL = new Object();
+  gEditor.getListState(mixedObj, hasOL, hasUL, hasDL);
 
-    if (state)
-      IDSuffix = state;
+  if (mixedObj.value)
+    return "mixed";
+  if (hasOL.value)
+    return "ol";
+  if (hasUL.value)
+    return "ul";
+
+  if (hasDL.value)
+  {
+    var hasLI = new Object();
+    var hasDT = new Object();
+    var hasDD = new Object();
+    gEditor.getListItemState(mixedObj, hasLI, hasDT, hasDD);
+    if (mixedObj.value)
+      return "mixed";
+    if (hasLI.value)
+      return "li";
+    if (hasDT.value)
+      return "dt";
+    if (hasDD.value)
+      return "dd";
   }
+
+  // return "noList" if we aren't in a list at all
+  return "noList";
+}
+
+function InitListMenu()
+{
+  if (!gIsHTMLEditor) return;
+
+  var IDSuffix = GetListStateString();
+
   // Set enable state for the "None" menuitem
-  goSetCommandEnabled("cmd_removeList", state);
+  goSetCommandEnabled("cmd_removeList", IDSuffix != "noList");
 
   // Set "radio" check on one item, but...
+  // we won't find a match if it's "mixed"
   var menuItem = document.getElementById("menu_"+IDSuffix);
-  if (!menuItem)
-    return;
+  if (menuItem)
+    menuItem.setAttribute("checked", "true");
+}
 
-  menuItem.setAttribute("checked", "true");
+function GetAlignmentString()
+{
+  var mixedObj = new Object();
+  var alignObj = new Object();
+  gEditor.getAlignment(mixedObj, alignObj);
 
-  // ..."noList" is returned if mixed selection, so remove checkmark
   if (mixedObj.value)
-    menuItem.setAttribute("checked", "false");
+    return "mixed";
+  if (alignObj.value == nsIHTMLEditor.eLeft)
+    return "left";
+  if (alignObj.value == nsIHTMLEditor.eCenter)
+    return "center";
+  if (alignObj.value == nsIHTMLEditor.eRight)
+    return "right";
+  if (alignObj.value == nsIHTMLEditor.eJustify)
+    return "justify";
 
+  // return "left" if we got here
+  return "left";
 }
 
 function InitAlignMenu()
 {
-  var mixedObj = new Object();
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  // Note: GetAlignment DOESN'T set the "mixed" flag,
-  //  but always returns "left" in mixed state
-  // We'll pay attention to it here so it works when fixed
-  var state = htmlEditor.getAlignment(mixedObj);
-  var IDSuffix;
+  if (!gIsHTMLEditor) return;
 
-  if (!state)
-    IDSuffix = "left"
-  else
-    IDSuffix = state;
+  var IDSuffix = GetAlignmentString();
 
+  // we won't find a match if it's "mixed"
   var menuItem = document.getElementById("menu_"+IDSuffix);
-  menuItem.setAttribute("checked", "true");
-
-  if (mixedObj.value)
-    menuItem.setAttribute("checked", "false");
+  if (menuItem)
+    menuItem.setAttribute("checked", "true");
 }
 
 function EditorInitToolbars()
 {
-  // Nothing to do now, but we might want some state updating here
-  if (!IsEditorContentHTML())
+  if (!gIsHTMLEditor)
   {
     //Hide the formating toolbar
-    gFormatToolbar.setAttribute("hidden", "true");
+    HideItem("FormatToolbar");
 
     //Hide the edit mode toolbar
-    gEditModeBar.setAttribute("hidden", "true");
-    
+    HideItem("EditModeToolbar");
+
     SetElementEnabledById("cmd_viewFormatToolbar", false);
     SetElementEnabledById("cmd_viewEditModeToolbar", false);
   }
-
 }
 
 function EditorSetDefaultPrefsAndDoctype()
@@ -2415,17 +2475,8 @@ function RemoveInapplicableUIElements()
     SetElementEnabled(document.getElementById("checkspellingkb"), true);
   }
 
-  if (!gEditor)
-  {
-    // XXX This is called once too early, so detect that case.
-    // Announce the problem so we know it needs to be fixed.
-    dump("RemoveInapplicableUIElements called too early\n");
-    return;
-  }
-
   // Remove menu items (from overlay shared with HTML editor) in non-HTML.
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  if (!htmlEditor)
+  if (!gIsHTMLEditor)
   {
     HideItem("insertAnchor");
     HideItem("insertImage");
@@ -2478,15 +2529,18 @@ function InitJoinCellMenuitem(id)
   if (!menuItem) return;
 
   // Use "Join selected cells if there's more than 1 cell selected
-  var tagNameObj = new Object;
-  var countObj = new Object;
+  var tagNameObj = new Object();
+  var numSelected;
   var foundElement;
   
-  var tableEd = gEditor.QueryInterface(Components.interfaces.nsITableEditor);
-  tableEd.getSelectedOrParentTableElement(foundElement,
-                                          tagNameObj, countObj);
-    
-  if (foundElement && countObj.value > 1)
+  try {
+    var elt = new Object();
+    numSelected = gEditor.getSelectedOrParentTableElement(elt,
+                                          tagNameObj);
+    foundElement = elt.value;
+  }
+  catch(e) {}
+  if (foundElement && numSelected > 1)
     menuText = GetString("JoinSelectedCells");
   else
     menuText = GetString("JoinCellToRight");
@@ -2515,10 +2569,10 @@ function InitRemoveStylesMenuitems(removeStylesId, removeLinksId, removeNamedAnc
 
     // Disable if not in a link, but always allow "Remove"
     //  if selection isn't collapsed since we only look at anchor node
-    var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-    if (!htmlEditor) return;
-    SetElementEnabled(linkItem, !isCollapsed ||
-                      htmlEditor.getElementOrParentByTagName("href", null));
+    try {
+      SetElementEnabled(linkItem, !isCollapsed ||
+                      gEditor.getElementOrParentByTagName("href", null));
+    } catch(e) {}      
   }
   // Disable if selection is collapsed
   SetElementEnabledById(removeNamedAnchorsId, !isCollapsed);
@@ -2534,17 +2588,19 @@ function goUpdateTableMenuItems(commandset)
     dump("goUpdateTableMenuItems: too early, not initialized\n");
     return;
   }
+
   var flags = gEditor.flags;
-  if (gEditor && !(flags & nsIPlaintextEditor.eEditorReadonlyMask) &&
+  if (!(flags & nsIPlaintextEditor.eEditorReadonlyMask) &&
       IsEditingRenderedHTML())
   {
-    var selectedCountObj = new Object();
     var tagNameObj = new Object();
-    var tableEditor = gEditor.QueryInterface(Components.interfaces.nsITableEditor);
-    var element = 0;
-    element = tableEditor.getSelectedOrParentTableElement(tagNameObj,
-                                                          selectedCountObj);
-    if (element)
+    var element = new Object();
+    try {
+      gEditor.getSelectedOrParentTableElement(element, tagNameObj);
+    }
+    catch(e) {}
+
+    if (element && element.value)
     {
       // Value when we need to have a selected table or inside a table
       enabledIfTable = true;
@@ -2588,27 +2644,28 @@ function goUpdateTableMenuItems(commandset)
 
 function IsInTable()
 {
-  var flags = gEditor.flags;
   if (!gEditor) return false;
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  return (htmlEditor &&
+  var flags = gEditor.flags;
+  return (gIsHTMLEditor &&
           !(flags & nsIPlaintextEditor.eEditorReadonlyMask) &&
           IsEditingRenderedHTML() &&
-          null != htmlEditor.getElementOrParentByTagName("table", null));
+          null != gEditor.getElementOrParentByTagName("table", null));
 }
 
 function IsInTableCell()
 {
+  if (!gEditor) return false;
   var flags = gEditor.flags;
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  return (gEditor && htmlEditor &&
+  return (gIsHTMLEditor &&
           !(flags & nsIPlaintextEditor.eEditorReadonlyMask) && 
           IsEditingRenderedHTML() &&
-          null != htmlEditor.getElementOrParentByTagName("td", null));
+          null != gEditor.getElementOrParentByTagName("td", null));
 }
 
 function IsSelectionInOneCell()
 {
+  if (!gEditor || !gIsHTMLEditor) return false;
+
   var selection = gEditor.selection;
 
   if (selection && selection.rangeCount == 1)
@@ -2618,11 +2675,8 @@ function IsSelectionInOneCell()
        selection.anchorNode != selection.focusNode)
     {
       // Check if both nodes are within the same cell
-      var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-      if (!htmlEditor)
-        return false;
-      var anchorCell = htmlEditor.getElementOrParentByTagName("td", selection.anchorNode);
-      var focusCell = htmlEditor.getElementOrParentByTagName("td", selection.focusNode);
+      var anchorCell = gEditor.getElementOrParentByTagName("td", selection.anchorNode);
+      var focusCell = gEditor.getElementOrParentByTagName("td", selection.focusNode);
       return (focusCell != null && anchorCell != null && (focusCell == anchorCell));
     }
     // Collapsed selection or anchor == focus (thus must be in 1 cell)
@@ -2658,10 +2712,9 @@ function EditorInsertTable()
 
 function EditorTableCellProperties()
 {
-  var htmlEditor = gEditor.QueryInterface(Components.interfaces.nsIHTMLEditor);
-  if (!htmlEditor)
-    return;
-  var cell = htmlEditor.getElementOrParentByTagName("td", null);
+  if (!gIsHTMLEditor) return;
+
+  var cell = gEditor.getElementOrParentByTagName("td", null);
   if (cell) {
     // Start Table Properties dialog on the "Cell" panel
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
@@ -2671,22 +2724,20 @@ function EditorTableCellProperties()
 
 function GetNumberOfContiguousSelectedRows()
 {
-  var tableEditor = gEditor.QueryInterface(Components.interfaces.nsITableEditor);
-  if (!tableEditor)
-    return 0;
-  var cell = tableEditor.getFirstSelectedCell();
+  if (!gIsHTMLEditor) return 0;
 
+  var cell = gEditor.getFirstSelectedCell();
   if (!cell)
     return 0;
 
   var rows = 1;
-  var lastIndex = tableEditor.getRowIndex(cell);
+  var lastIndex = gEditor.getRowIndex(cell);
 
   do {
-    cell = tableEditor.getNextSelectedCell();
+    cell = gEditor.getNextSelectedCell();
     if (cell)
     {
-      var index = tableEditor.getRowIndex(cell);
+      var index = gEditor.getRowIndex(cell);
       if (index == lastIndex + 1)
       {
         lastIndex = index;
@@ -2701,22 +2752,20 @@ function GetNumberOfContiguousSelectedRows()
 
 function GetNumberOfContiguousSelectedColumns()
 {
-  var tableEditor = gEditor.QueryInterface(Components.interfaces.nsITableEditor);
-  if (!tableEditor)
-    return 0;
-  var cell = tableEditor.getFirstSelectedCell();
+  if (!gIsHTMLEditor) return 0;
 
+  var cell = gEditor.getFirstSelectedCell();
   if (!cell)
     return 0;
 
   var columns = 1;
-  var lastIndex = tableEditor.getColumnIndex(cell);
+  var lastIndex = gEditor.getColumnIndex(cell);
 
   do {
-    cell = tableEditor.getNextSelectedCell();
+    cell = gEditor.getNextSelectedCell();
     if (cell)
     {
-      var index = tableEditor.getColumnIndex(cell);
+      var index = gEditor.getColumnIndex(cell);
       if (index == lastIndex +1)
       {
         lastIndex = index;
@@ -2767,21 +2816,24 @@ function SwitchInsertCharToThisWindow(windowWithDialog)
 
 function FindEditorWithInsertCharDialog()
 {
-  // Find window with an InsertCharsWindow and switch association to this one
-  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-  var enumerator = windowManagerInterface.getEnumerator( null );
+  try {
+    // Find window with an InsertCharsWindow and switch association to this one
+    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
+    var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+    var enumerator = windowManagerInterface.getEnumerator( null );
 
-  while ( enumerator.hasMoreElements()  )
-  {
-    var  tempWindow = enumerator.getNext();
-
-    if (tempWindow != window && "InsertCharWindow" in tempWindow &&
-        tempWindow.InsertCharWindow)
+    while ( enumerator.hasMoreElements()  )
     {
-      return tempWindow;
+      var tempWindow = enumerator.getNext();
+
+      if (tempWindow != window && "InsertCharWindow" in tempWindow &&
+          tempWindow.InsertCharWindow)
+      {
+        return tempWindow;
+      }
     }
   }
+  catch(e) {}
   return null;
 }
 
@@ -2813,8 +2865,13 @@ function SwitchInsertCharToAnotherEditorOrClose()
   if ("InsertCharWindow" in window && window.InsertCharWindow)
   {
     var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-    var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-    var enumerator = windowManagerInterface.getEnumerator( null );
+    var enumerator;
+    try {
+      var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+      enumerator = windowManagerInterface.getEnumerator( null );
+    }
+    catch(e) {}
+    if (!enumerator) return;
 
     // TODO: Fix this to search for command controllers and look for "cmd_InsertChars"
     // For now, detect just Web Composer and HTML Mail Composer
@@ -2824,8 +2881,7 @@ function SwitchInsertCharToAnotherEditorOrClose()
       if (tempWindow != window && tempWindow != window.InsertCharWindow && 
           ("editorShell" in tempWindow) && tempWindow.editorShell)
       {
-        textEditor = gEditor.QueryInterface(Components.interfaces.nsIPlaintextEditor);
-        if (textEditor)
+        if (gEditor)
         {
           tempWindow.InsertCharWindow = window.InsertCharWindow;
           window.InsertCharWindow = null;

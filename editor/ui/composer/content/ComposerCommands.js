@@ -148,9 +148,11 @@ function SetupComposerWindowCommands()
     return;
   }
 
-  var editorController = composerController.QueryInterface(Components.interfaces.nsIEditorController);
-  if (!editorController)
-  {
+  var editorController;
+  try {
+    editorController = composerController.QueryInterface(Components.interfaces.nsIEditorController);
+  }
+  catch (e) {
     dump("Failed to get interface for nsIEditorController\n");
     return;
   }
@@ -158,9 +160,11 @@ function SetupComposerWindowCommands()
   // Note: We init with the editorShell for the main composer window, not the HTML Source textfield?
   editorController.Init(window.editorShell);
 
-  var interfaceRequestor = composerController.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-  if (!interfaceRequestor)
-  {
+  var interfaceRequestor;
+  try {
+    interfaceRequestor = composerController.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  }
+  catch (e) {
     dump("Failed to get iterfaceRequestor for composerController\n");
     return;
   }
@@ -221,8 +225,6 @@ function GetEditorController()
       var controller = window._content.controllers.getControllerAt(i);
       
       var interfaceRequestor = controller.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-      if (!interfaceRequestor) continue;
-    
       commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
     }
     catch(ex)
@@ -540,7 +542,6 @@ function GetExtensionBasedOnMimeType(aMIMEType)
     var mimeService = null;
     mimeService = Components.classes["@mozilla.org/mime;1"].getService();
     mimeService = mimeService.QueryInterface(Components.interfaces.nsIMIMEService);
-    if (!mimeService) return "";
 
     var mimeInfo = mimeService.GetFromMIMEType(aMIMEType);
     if (!mimeInfo) return "";
@@ -690,12 +691,7 @@ function PromptAndSetTitleIfNone(aHTMLDoc)
   if (title.length > 0) // we have a title; no need to prompt!
     return true;
 
-  var promptService = null;
-  try {
-    promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-  }
-  catch (e) {}
+  var promptService = GetPromptService();
   if (!promptService) return false;
 
   var result = {value:null};
@@ -721,9 +717,8 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
 {
   gPersistObj = null;
   try {
-    var imeEditor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
-    if (imeEditor)
-      imeEditor.ForceCompositionEnd();
+    var imeEditor = gEditor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
+    imeEditor.ForceCompositionEnd();
     } catch (e) {}
 
   var isLocalFile = false;
@@ -808,14 +803,7 @@ const nsIHTMLEditor = Components.interfaces.nsIHTMLEditor;
 const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
 function GetWrapColumn()
 {
-  var wrapCol = 72;
-  try {
-    var textEditor = window.editorShell.editor.QueryInterface(nsIPlaintextEditor);
-    wrapCol = textEditor.wrapWidth;
-  }
-  catch (e) {}
-
-  return wrapCol;
+  return gEditor.wrapWidth;
 }
 
 function GetPromptService()
@@ -943,12 +931,11 @@ var gEditorOutputProgressListener =
         if (gRestoreDocumentSource)
         {
           try {
-            var htmlEditor = window.editorShell.editor.QueryInterface(nsIHTMLEditor);
-            htmlEditor.rebuildDocumentFromSource(gRestoreDocumentSource);
+            gEditor.rebuildDocumentFromSource(gRestoreDocumentSource);
 
             // Clear transaction cache since we just did a potentially 
             //  very large insert and this will eat up memory
-            window.editorShell.editor.transactionManager.clear();
+            gEditor.transactionManager.clear();
           }
           catch (e) {}
         }
@@ -1008,9 +995,8 @@ var gEditorOutputProgressListener =
             var urlstring = GetDocUrlFromPublishData(gPublishData);
 
             window.editorShell.doAfterSave(true, urlstring);  // we need to update the url before notifying listeners
-            var editor = window.editorShell.editor.QueryInterface(Components.interfaces.nsIEditor);
             // this should cause notification to listeners that doc has changed
-            editor.resetModificationCount();
+            gEditor.resetModificationCount();
 
             // Set UI based on whether we're editing a remote or local url
             SetSaveAndPublishUI(urlstring);
@@ -1077,8 +1063,11 @@ var gEditorOutputProgressListener =
     if (gShowDebugOutputLocationChange)
     {
       dump("***** onLocationChange: "+aLocation.spec+"\n");
-      var channel = aRequest.QueryInterface(nsIChannel);
-      dump("*****          request: " + channel.URI.spec + "\n");
+      try {
+        var channel = aRequest.QueryInterface(nsIChannel);
+        dump("*****          request: " + channel.URI.spec + "\n");
+      }
+      catch(e) {}
     }
   },
 
@@ -1816,9 +1805,7 @@ var nsRevertCommand =
   doCommand: function(aCommand)
   {
     // Confirm with the user to abandon current changes
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-
+    var promptService = GetPromptService();
     if (promptService)
     {
       // Put the page title in the message string
@@ -1895,7 +1882,7 @@ var nsPreviewCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     return (window.editorShell && window.editorShell.documentEditable && 
-            IsEditorContentHTML() && 
+            gIsHTMLEditor && 
             (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
 
@@ -2129,8 +2116,9 @@ var nsValidateCommand =
 
     URL2Validate = GetDocumentUrl();
     // See if it's a file:
-    var ifile = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
+    var ifile;
     try {
+      ifile = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
       var ioService = GetIOService();
       ioService.initFileFromURLSpec(ifile, URL2Validate);
       // nsIFile throws an exception if it's not a file url
@@ -2267,7 +2255,7 @@ var nsLabelCommand =
   doCommand: function(aCommand)
   {
     var tagName = "label";
-    var labelElement = editorShell.GetSelectedElement(tagName);
+    var labelElement = gEditor.getSelectedElement(tagName);
     if (!labelElement)
       labelElement = editorShell.GetElementOrParentByTagName(tagName, editorShell.editorSelection.anchorNode);
     if (!labelElement)
@@ -2339,7 +2327,7 @@ var nsHLineCommand =
     //  We get the last-used attributes from the prefs and insert immediately
 
     var tagName = "hr";
-    var hLine = window.editorShell.GetSelectedElement(tagName);
+    var hLine = gEditor.getSelectedElement(tagName);
 
     if (hLine) {
       // We only open the dialog for an existing HRule
@@ -2512,14 +2500,16 @@ var nsObjectPropertiesCommand =
     if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
     {
       isEnabled = (GetObjectForProperties() != null ||
-                   window.editorShell.GetSelectedElement("href") != null);
+                   gEditor.getSelectedElement("href") != null);
     }
     return isEnabled;
   },
   doCommand: function(aCommand)
   {
     // Launch Object properties for appropriate selected element 
+    dump("********** get object for props\n");
     var element = GetObjectForProperties();
+    dump("********** get object for props"+element+"\n");
     if (element)
     {
       var name = element.nodeName.toLowerCase();
@@ -2585,7 +2575,7 @@ var nsObjectPropertiesCommand =
       }
     } else {
       // We get a partially-selected link if asked for specifically
-      element = window.editorShell.GetSelectedElement("href");
+      element = gEditor.getSelectedElement("href");
       if (element)
         goDoCommand("cmd_link");
     }
@@ -2693,7 +2683,7 @@ var nsAdvancedPropertiesCommand =
   doCommand: function(aCommand)
   {
     // Launch AdvancedEdit dialog for the selected element
-    var element = window.editorShell.GetSelectedElement("");
+    var element = gEditor.getSelectedElement("");
     doAdvancedProperties(element);
   }
 };
@@ -2755,7 +2745,7 @@ var nsEditLinkCommand =
   },
   doCommand: function(aCommand)
   {
-    var element = window.editorShell.GetSelectedElement("href");
+    var element = gEditor.getSelectedElement("href");
     if (element)
       editPage(element.href, window, false);
 
@@ -2769,7 +2759,7 @@ var nsNormalModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return IsEditorContentHTML() && window.editorShell.documentEditable;
+    return gIsHTMLEditor && window.editorShell.documentEditable;
   },
   doCommand: function(aCommand)
   {
@@ -2782,7 +2772,7 @@ var nsAllTagsModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditorContentHTML());
+    return (window.editorShell && window.editorShell.documentEditable && gIsHTMLEditor);
   },
   doCommand: function(aCommand)
   {
@@ -2795,7 +2785,7 @@ var nsHTMLSourceModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditorContentHTML());
+    return (window.editorShell && window.editorShell.documentEditable && gIsHTMLEditor);
   },
   doCommand: function(aCommand)
   {
@@ -2808,7 +2798,7 @@ var nsPreviewModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditorContentHTML());
+    return (window.editorShell && window.editorShell.documentEditable && gIsHTMLEditor);
   },
   doCommand: function(aCommand)
   {
@@ -3278,7 +3268,7 @@ var nsConvertToTable =
     if (selection && !selection.isCollapsed)
     {
       // Don't allow if table or cell is the selection
-      var element = window.editorShell.GetSelectedElement("");
+      var element = gEditor.getSelectedElement("");
 
       if (element && (element.nodeName == "td" ||
                       element.nodeName == "table"))
