@@ -67,23 +67,24 @@ static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_
 
 nsDocLoaderImpl::nsDocLoaderImpl()
 {
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 
 #if defined(PR_LOGGING)
-    if (nsnull == gDocLoaderLog) {
-        gDocLoaderLog = PR_NewLogModule("DocLoader");
-    }
+  if (nsnull == gDocLoaderLog) {
+      gDocLoaderLog = PR_NewLogModule("DocLoader");
+  }
 #endif /* PR_LOGGING */
 
-    mContainer = nsnull;
-    mParent    = nsnull;
+  mContainer = nsnull;
+  mParent    = nsnull;
 
-    mIsLoadingDocument = PR_FALSE;
+  mIsLoadingDocument = PR_FALSE;
+  mProgressStatusFlags = 0;
 
-    mProgressStatusFlags = 0;
+  ClearInternalProgress();
 
-    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader:%p: created.\n", this));
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader:%p: created.\n", this));
 }
 
 nsresult
@@ -167,6 +168,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoader)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
+   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)   
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -367,26 +369,26 @@ nsDocLoaderImpl::GetContentViewerContainer(nsISupports* aDocumentID,
 NS_IMETHODIMP
 nsDocLoaderImpl::Destroy()
 {
-    Stop();
+  Stop();
 
-  // Remove the document loader from the parent list of loaders...
-    if (mParent) {
-        mParent->RemoveChildGroup(this);
-        mParent = nsnull;
-    }
+// Remove the document loader from the parent list of loaders...
+  if (mParent) 
+  {
+    mParent->RemoveChildGroup(this);
+    mParent = nsnull;
+  }
 
-    mDocumentChannel = null_nsCOMPtr();
+  mDocumentChannel = null_nsCOMPtr();
 
-    // Clear factory pointer (which is the docloader)
-    (void)mLoadGroup->SetGroupListenerFactory(nsnull);
+  // Clear factory pointer (which is the docloader)
+  (void)mLoadGroup->SetGroupListenerFactory(nsnull);
 
-    mLoadGroup->SetGroupObserver(nsnull);
+  mLoadGroup->SetGroupObserver(nsnull);
+  // now forget about our progress listener...
+  mProgressListener = nsnull;
 
-    return NS_OK;
+  return NS_OK;
 }
-
-
-
 
 NS_IMETHODIMP
 nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
@@ -425,11 +427,13 @@ nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
             mLoadGroup->SetDefaultLoadChannel(mDocumentChannel); 
             FireOnStartDocumentLoad(this, uri);
         } 
-        else {
+        else
           FireOnStartURLLoad(this, aChannel);
-        }
     }
-    return NS_OK;
+    else
+      FireOnStartURLLoad(this, aChannel);
+    
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -453,13 +457,14 @@ nsDocLoaderImpl::OnStopRequest(nsIChannel *aChannel,
     //
     // The load group for this DocumentLoader is idle...
     //
-    if (0 == count) {
+    if (0 == count) 
       DocLoaderIsEmpty(aStatus);
-    } else {
+    else 
       FireOnEndURLLoad(this, aChannel, aStatus);
-    }
   }
-
+  else 
+    FireOnEndURLLoad(this, aChannel, aStatus);
+  
   return NS_OK;
 }
 
@@ -525,27 +530,49 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   PRInt32 count;
 
 #if defined(DEBUG)
-  char *buffer;
+  nsXPIDLCString buffer;
 
-  aURL->GetSpec(&buffer);
+  aURL->GetSpec(getter_Copies(buffer));
   if (aLoadInitiator == this) {
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: ++ Firing OnStartDocumentLoad(...).\tURI: %s\n",
-            this, buffer));
+            this, (const char *) buffer));
   } else {
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: --   Propagating OnStartDocumentLoad(...)."
             "DocLoader:%p  URI:%s\n", 
-            this, aLoadInitiator, buffer));
+            this, aLoadInitiator, (const char *) buffer));
   }
-  nsCRT::free(buffer);
 #endif /* DEBUG */
 
   // if we have a web progress listener, propagate the fact that we are starting to load a url
-  if (mProgressListener)
+  // but only propogate it if we are the one who initiated the on start...
+  if (mProgressListener && aLoadInitiator == this)
   {
+#if defined(DEBUG)
+   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+          ("DocLoader:%p: ++ Firing OnStatusChange for start document load (...).\tURI: %s \tWebProgressListener: %p\n",
+            this, (const char *) buffer, mProgressListener.get()));
+#endif
     mProgressStatusFlags = nsIWebProgress::flag_net_start;
     mProgressListener->OnStatusChange(mDocumentChannel, mProgressStatusFlags);
+  }
+
+  if (aLoadInitiator == this)
+  {
+    ClearInternalProgress(); // only clear our progress if we are starting a new load....
+    nsCOMPtr<nsIWebProgressListener> parentProgressListener;
+    GetParentWebProgressListener(this, getter_AddRefs(parentProgressListener));
+    if (parentProgressListener && parentProgressListener != mProgressListener)
+    {
+#if defined(DEBUG)
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+          ("DocLoader:%p: ++ Firing OnChildStatusChange for start document load (...).\tURI: %s \tWebProgressListener: %p\n",
+            this, (const char *) buffer, parentProgressListener.get()));
+#endif
+      mProgressStatusFlags = nsIWebProgress::flag_net_start;
+      parentProgressListener->OnChildStatusChange(mDocumentChannel, mProgressStatusFlags);  
+    }
   }
 
   /*
@@ -583,37 +610,61 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
 {
 #if defined(DEBUG)
   nsCOMPtr<nsIURI> uri;
+  nsXPIDLCString buffer;
   nsresult rv = NS_OK;
   if (aDocChannel)
     rv = aDocChannel->GetURI(getter_AddRefs(uri));
   if (NS_SUCCEEDED(rv)) {
-    char* buffer = nsnull;
     if (uri)
-      rv = uri->GetSpec(&buffer);
+      rv = uri->GetSpec(getter_Copies(buffer));
       if (NS_SUCCEEDED(rv) && buffer != nsnull) {
         if (aLoadInitiator == this) {
           PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                  ("DocLoader:%p: ++ Firing OnEndDocumentLoad(...)"
                   "\tURI: %s Status: %x\n", 
-                  this, buffer, aStatus));
+                  this, (const char *) buffer, aStatus));
         } else {
           PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                  ("DocLoader:%p: --   Propagating OnEndDocumentLoad(...)."
                   "DocLoader:%p  URI:%s\n", 
-                  this, aLoadInitiator, buffer));
+                  this, aLoadInitiator, (const char *)buffer));
         }
-        nsCRT::free(buffer);
       }
     }
 #endif /* DEBUG */
 
-  // if we have a web progress listener, propagate the fact that we are starting to load a url
-  if (mProgressListener)
+  if (aLoadInitiator == this)
   {
+    nsCOMPtr<nsIWebProgressListener> parentProgressListener;
+    GetParentWebProgressListener(this, getter_AddRefs(parentProgressListener));
+    if (parentProgressListener && parentProgressListener != mProgressListener)
+    {
+#if defined(DEBUG)
+   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+          ("DocLoader:%p: ++ Firing OnChildStatusChange for end document load (...).\tURI: %s \tWebProgressListener: %p\n",
+            this, (const char *) buffer, parentProgressListener.get()));
+#endif
+      mProgressStatusFlags = nsIWebProgress::flag_net_stop;
+      parentProgressListener->OnChildStatusChange(aDocChannel, mProgressStatusFlags);  
+    }
+  }
+
+  PRBool isBusy = PR_FALSE;
+  IsBusy(&isBusy);
+  // if we have a web progress listener, propagate the fact that we are stoppinging a document load
+  // only signal a OnStatusChange iff we are the doc loader which initiated the onEndDocumentLoad
+  // OR the on end document load we are receiving is the last one for the doc loader hierarchy (i.e. it 
+  // isn't busy anymore).
+  if (mProgressListener && (aLoadInitiator == this || !isBusy ))
+  {
+#if defined(DEBUG)
+   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+          ("DocLoader:%p: ++ Firing OnStatusChange for end document load (...).\tURI: %s \tWebProgressListener: %p\n",
+            this, (const char *) buffer, mProgressListener.get()));
+#endif
     mProgressStatusFlags = nsIWebProgress::flag_net_stop;
     mProgressListener->OnStatusChange(aDocChannel, mProgressStatusFlags);
   }
-
 
   /*
    * First notify any observers that the document load has finished...
@@ -645,7 +696,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   }
 
   // now forget about our progress listener...
-  mProgressListener = nsnull;
+//  mProgressListener = nsnull;
 }
 
 
@@ -654,29 +705,49 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
 {
 #if defined(DEBUG)
   nsCOMPtr<nsIURI> uri;
+  nsXPIDLCString buffer;
   nsresult rv = NS_OK;
   if (aChannel)
     rv = aChannel->GetURI(getter_AddRefs(uri));
   if (NS_SUCCEEDED(rv)) {
-    char* buffer = nsnull;
     if (uri)
-      rv = uri->GetSpec(&buffer);
+      rv = uri->GetSpec(getter_Copies(buffer));
     if (NS_SUCCEEDED(rv) && buffer != nsnull) {
       if (aLoadInitiator == this) {
         PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                ("DocLoader:%p: ++ Firing OnStartURLLoad(...)"
                 "\tURI: %s\n", 
-                this, buffer));
+                this, (const char *) buffer));
       } else {
         PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                ("DocLoader:%p: --   Propagating OnStartURLLoad(...)."
                 "DocLoader:%p  URI:%s\n", 
-                this, aLoadInitiator, buffer));
+                this, aLoadInitiator, (const char *) buffer));
       }
-      nsCRT::free(buffer);
     }
   }
 #endif /* DEBUG */
+
+  // if we initiated this load AND we have a web progress listener OR we have
+  // a parent that has a listener, then signal a on child status change to signify that
+  // we are beginning to load a url contined within the document.
+  if (aLoadInitiator == this)
+  {
+    nsCOMPtr<nsIWebProgressListener> progressListener (mProgressListener);
+    if (!progressListener) // if we don't have a listener, get the parent listener....
+      GetParentWebProgressListener(this, getter_AddRefs(progressListener));
+    if (progressListener)
+    {
+#if defined(DEBUG)
+        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+          ("DocLoader:%p: ++ Firing OnChildStatusChange for start url load (...).\tURI: %s \tWebProgressListener: %p\n",
+            this, (const char *) buffer, progressListener.get()));
+#endif
+      mProgressStatusFlags = nsIWebProgress::flag_net_start;
+      progressListener->OnChildStatusChange(mDocumentChannel, nsIWebProgress::flag_net_start);  
+    }
+  }
+
 
   PRInt32 count;
 
@@ -714,29 +785,49 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
 {
 #if defined(DEBUG)
   nsCOMPtr<nsIURI> uri;
+  nsXPIDLCString buffer;
   nsresult rv = NS_OK;
   if (aChannel)
     rv = aChannel->GetURI(getter_AddRefs(uri));
   if (NS_SUCCEEDED(rv)) {
-    char* buffer = nsnull;
     if (uri)
-      rv = uri->GetSpec(&buffer);
+      rv = uri->GetSpec(getter_Copies(buffer));
     if (NS_SUCCEEDED(rv) && buffer != nsnull) {
       if (aLoadInitiator == this) {
         PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                ("DocLoader:%p: ++ Firing OnEndURLLoad(...)"
                 "\tURI: %s Status: %x\n", 
-                this, buffer, aStatus));
+                this, (const char *) buffer, aStatus));
       } else {
         PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
                ("DocLoader:%p: --   Propagating OnEndURLLoad(...)."
                 "DocLoader:%p  URI:%s\n", 
-                this, aLoadInitiator, buffer));
+                this, aLoadInitiator, (const char *) buffer));
       }
-      nsCRT::free(buffer);
     }
   }
 #endif /* DEBUG */
+  
+  // if we initiated this load AND we have a web progress listener OR we have
+  // a parent that has a listener, then signal a on child status change to signify that
+  // we are done loading a url contained within the document.
+  if (aLoadInitiator == this)
+  {
+    nsCOMPtr<nsIWebProgressListener> progressListener (mProgressListener);
+    if (!progressListener) // if we don't have a listener, get the parent listener....
+      GetParentWebProgressListener(this, getter_AddRefs(progressListener));
+
+    if (progressListener)
+    {
+#if defined(DEBUG)
+   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+          ("DocLoader:%p: ++ Firing OnChildStatusChange for end url load (...).\tURI: %s \tWebProgressListener: %p\n",
+            this, (const char *) buffer, progressListener.get()));
+#endif
+      mProgressStatusFlags = nsIWebProgress::flag_net_stop;
+      progressListener->OnChildStatusChange(aChannel, nsIWebProgress::flag_net_stop);  
+    }
+  }
 
   PRInt32 count;
 
@@ -772,6 +863,29 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
 // The following section contains support for nsIWebProgress and related stuff
 ////////////////////////////////////////////////////////////////////////////////////
 
+// get web progress returns our web progress listener or if
+// we don't have one, it will look up the doc loader hierarchy
+// to see if one of our parent doc loaders has one.
+nsresult nsDocLoaderImpl::GetParentWebProgressListener(nsDocLoaderImpl * aDocLoader, nsIWebProgressListener ** aWebProgress)
+{
+  // only return our progress listener if we aren't the one asking for the parent 
+  // web progress listener...
+  if (mProgressListener && aDocLoader != this)
+  {
+    *aWebProgress = mProgressListener;
+    NS_ADDREF(*aWebProgress);
+  }
+  else if (mParent)
+    return mParent->GetParentWebProgressListener(aDocLoader, aWebProgress);
+  else
+  {
+    // if we got here, there is no web progress to return
+    *aWebProgress = nsnull;
+  }
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDocLoaderImpl::AddProgressListener(nsIWebProgressListener *listener)
 {
   // the doc loader only needs to worry about the progress listener for the docshell.
@@ -794,22 +908,111 @@ NS_IMETHODIMP nsDocLoaderImpl::GetProgressStatusFlags(PRInt32 *aProgressStatusFl
 
 NS_IMETHODIMP nsDocLoaderImpl::GetCurSelfProgress(PRInt32 *aCurSelfProgress)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aCurSelfProgress = mCurrentSelfProgress;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP nsDocLoaderImpl::GetMaxSelfProgress(PRInt32 *aMaxSelfProgress)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aMaxSelfProgress = mMaxSelfProgress;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP nsDocLoaderImpl::GetCurTotalProgress(PRInt32 *aCurTotalProgress)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aCurTotalProgress = mCurrentSelfProgress;
+
+  PRUint32 count = 0;
+  nsresult rv = NS_OK;
+  PRInt32 invididualProgress;
+  rv = mChildList->Count(&count);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIWebProgress> webProgress;
+  nsCOMPtr<nsISupports> docloader;
+  for (PRUint32 i=0; i<count; i++) 
+  {
+
+    invididualProgress = 0;
+    docloader = getter_AddRefs(mChildList->ElementAt(i));
+    if (docloader)
+    {
+      webProgress = do_QueryInterface(docloader);
+      webProgress->GetCurTotalProgress(&invididualProgress);
+    }
+     *aCurTotalProgress += invididualProgress;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aMaxTotalProgress = mMaxSelfProgress;
+
+  PRUint32 count = 0;
+  nsresult rv = NS_OK;
+  PRInt32 invididualProgress;
+
+  rv = mChildList->Count(&count);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIWebProgress> webProgress;
+  nsCOMPtr<nsISupports> docloader;
+  for (PRUint32 i=0; i<count; i++) 
+  {
+    invididualProgress = 0;
+    docloader = getter_AddRefs(mChildList->ElementAt(i));
+    if (docloader)
+    {
+      webProgress = do_QueryInterface(docloader);
+      webProgress->GetMaxTotalProgress(&invididualProgress);
+    }
+     *aMaxTotalProgress += invididualProgress;
+  }
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// The following section contains support for nsIEventProgressSink which is used to 
+// pass progress and status between the actual channel and the doc loader. The doc loader
+// then turns around and makes the right web progress calls based on this information.
+////////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIChannel* channel, nsISupports* ctxt, 
+                                          PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  mCurrentSelfProgress = aProgress;
+  mMaxSelfProgress = aProgressMax;
+
+  PRInt32 currentTotal = 0;
+  PRInt32 currentMax = 0;
+
+  GetMaxTotalProgress(&currentMax);
+  GetCurTotalProgress(&currentTotal);
+
+  if (mProgressListener)
+    mProgressListener->OnProgressChange(channel, mCurrentSelfProgress, mMaxSelfProgress, 
+                                        currentTotal /* current total progress */, currentMax /* max total progress */);
+  // if we have a parent progress listener, then signal a on child progress change to it
+  nsCOMPtr<nsIWebProgressListener> parentProgressListener;
+  GetParentWebProgressListener(this, getter_AddRefs(parentProgressListener));
+  if (parentProgressListener)
+  {
+     parentProgressListener->OnChildProgressChange(channel, mCurrentSelfProgress, mMaxSelfProgress);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIChannel* channel, nsISupports* ctxt, const PRUnichar* aMsg)
+{
+  return NS_OK;
+}
+
+void nsDocLoaderImpl::ClearInternalProgress()
+{
+  mCurrentSelfProgress = 0;
+  mMaxSelfProgress = 0;
 }

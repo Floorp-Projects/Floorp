@@ -36,6 +36,7 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIChannel.h"
+#include "nsIProgressEventSink.h"
 #include "nsCOMPtr.h"
 
 
@@ -46,6 +47,7 @@
 class nsDocLoaderImpl : public nsIDocumentLoader, 
                         public nsIStreamObserver,
                         public nsSupportsWeakReference,
+                        public nsIProgressEventSink,
                         public nsIWebProgress
 {
 public:
@@ -59,6 +61,10 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOCUMENTLOADER
+    
+    // nsIProgressEventSink
+    NS_DECL_NSIPROGRESSEVENTSINK
+
     // nsIStreamObserver methods: (for observing the load group)
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSIWEBPROGRESS
@@ -83,6 +89,11 @@ protected:
 
     void FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
                           nsIChannel* channel, nsresult aStatus);
+
+    // get web progress returns our web progress listener or if
+    // we don't have one, it will look up the doc loader hierarchy
+    // to see if one of our parent doc loaders has one.
+    nsresult GetParentWebProgressListener(nsDocLoaderImpl * aDocLoader, nsIWebProgressListener ** aWebProgres);
 
 protected:
 
@@ -114,6 +125,11 @@ protected:
     // feedback interfaces that travis cooked up.
     nsCOMPtr<nsIWebProgressListener> mProgressListener;
     PRInt32 mProgressStatusFlags;
+    PRInt32 mCurrentSelfProgress;
+    PRInt32 mMaxSelfProgress;
+    
+    // used to clear our internal progress state between loads...
+    void ClearInternalProgress(); 
 };
 
 #endif /* nsDocLoader_h__ */
