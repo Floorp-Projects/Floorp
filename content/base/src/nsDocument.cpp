@@ -725,6 +725,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mDocumentTitle.Truncate();
 
   mPrincipal = nsnull;
+  mSecurityInfo = nsnull;
+
   mDocumentLoadGroup = nsnull;
 
   // Delete references to sub-documents and kill the subdocument map,
