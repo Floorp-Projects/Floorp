@@ -142,6 +142,7 @@ typedef enum {
     eRDFContentSinkState_InEpilog
 } RDFContentSinkState;
 
+MOZ_DECL_CTOR_COUNTER(RDFContentSinkImpl::NameSpaceEntry);
 
 class RDFContentSinkImpl : public nsIRDFContentSink
 {
@@ -284,8 +285,6 @@ protected:
 
     nsIURI*      mDocumentURL;
 };
-
-MOZ_DECL_CTOR_COUNTER(RDFContentSinkState::NameSpaceEntry);
 
 PRInt32         RDFContentSinkImpl::gRefCnt = 0;
 nsIRDFService*  RDFContentSinkImpl::gRDFService;
