@@ -300,25 +300,28 @@ var messageHeaderSink = {
       if (gIsEditableMsgFolder)
         ShowEditMessageButton();
     },
-    processHeaders: function(headerNameEnumerator, headerValueEnumerator, dontCollectAddress)
+
+    processHeaders: function(headerNames, headerValues, numHeaders, dontCollectAddress)
     {
       this.onStartHeaders(); 
 
-      while (headerNameEnumerator.hasMore()) 
+      var index = 0;
+      // process each header
+      while (index < numHeaders)
       {
-        var header = new Object;        
-        header.headerValue = headerValueEnumerator.getNext();
-        header.headerName = headerNameEnumerator.getNext();
-
         // for consistancy sake, let's force all header names to be lower case so
         // we don't have to worry about looking for: Cc and CC, etc.
-        var lowerCaseHeaderName = header.headerName.toLowerCase();
+        var lowerCaseHeaderName = headerNames[index].toLowerCase();
 
         // if we have an x-mailer string, put it in the user-agent slot which we know how to handle
         // already. 
         if (lowerCaseHeaderName == "x-mailer")
           lowerCaseHeaderName = "user-agent";   
         
+        var foo = new Object;        
+        foo.headerValue = headerValues[index];
+        foo.headerName = headerNames[index];
+
         // according to RFC 2822, certain headers
         // can occur "unlimited" times
         if (lowerCaseHeaderName in currentHeaderData)
@@ -326,35 +329,37 @@ var messageHeaderSink = {
           // sometimes, you can have multiple To or Cc lines....
           // in this case, we want to append these headers into one.
           if (lowerCaseHeaderName == 'to' || lowerCaseHeaderName == 'cc')
-            currentHeaderData[lowerCaseHeaderName].headerValue = currentHeaderData[lowerCaseHeaderName].headerValue + ',' + header.headerValue;
+            currentHeaderData[lowerCaseHeaderName].headerValue = currentHeaderData[lowerCaseHeaderName].headerValue + ',' + foo.headerValue;
           else {  
             // use the index to create a unique header name like:
             // received5, received6, etc
-            currentHeaderData[lowerCaseHeaderName + index] = header;
+            currentHeaderData[lowerCaseHeaderName + index] = foo;
           }
         }
         else
-         currentHeaderData[lowerCaseHeaderName] = header;
+         currentHeaderData[lowerCaseHeaderName] = foo;
 
         if (lowerCaseHeaderName == "from")
         {
-          if (header.value && abAddressCollector) {
+          if (foo.headerValue && abAddressCollector) {
             if ((gCollectIncoming && !dontCollectAddress) || 
                 (gCollectNewsgroup && dontCollectAddress))
             {
-              gCollectAddress = header.headerValue;
+              gCollectAddress = foo.headerValue;
               // collect, and add card if doesn't exist
               gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, true);', 2000);
             }
             else if (gCollectOutgoing) 
             {
               // collect, but only update existing cards
-              gCollectAddress = header.headerValue;
+              gCollectAddress = foo.headerValue;
               gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, false);', 2000);
             }
           } 
-        } // if lowerCaseHeaderName == "from"
-      } // while we have more headers to parse
+        }
+       
+        index++;
+      }
 
       this.onEndHeaders();
     },
