@@ -228,7 +228,16 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
     aPresContext.GetScaledPixelsToTwips(p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
     if (aReflowState.HaveFixedContentWidth()) {
-      aDesiredSize.maxElementSize->width = aReflowState.minWidth;
+      const nsStylePosition* pos;
+      GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
+      if (eStyleUnit_Percent == pos->mWidth.GetUnit()) {
+        // When the HR is using a percentage width, make sure it
+        // remains springy.
+        aDesiredSize.maxElementSize->width = onePixel;
+      }
+      else {
+        aDesiredSize.maxElementSize->width = aReflowState.minWidth;
+      }
       aDesiredSize.maxElementSize->height = onePixel;
     }
     else {
