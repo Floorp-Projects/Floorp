@@ -46,7 +46,7 @@
 outlinerchildren:-moz-outliner-image(Name) {
     padding-right: 2px;
 }
- 
+
 .bookmark-item, outlinerchildren:-moz-outliner-image(Name) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
@@ -79,4 +79,15 @@ outlinerchildren:-moz-outliner-image(Name) {
   height: 16px;
   max-width: 32px;   /* 32 pixel hack to get too-large favicons to show; fix when tree becomes outliner */
   max-height: 16px;
+}
+
+
+outlinerchildren:-moz-outliner-twisty(group,hidetwisty) 
+{
+  list-style-image: none;
+}
+
+outlinerchildren:-moz-outliner-image(Name, container, group) 
+{
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-group.gif");
 }

@@ -111,6 +111,10 @@ menuitem.bookmark-item {
   padding: 1px 2px;
 }
   
+.bookmark-group {
+  list-style-image: url(chrome://communicator/skin/bookmarks/bookmark-group.gif) !important;
+}
+
 menuitem.bookmark-item[disabled="true"] {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-dis.gif");
 }

@@ -63,3 +63,13 @@ outlinerchildren:-moz-outliner-image(Name, open) {
 outlinerchildren:-moz-outliner-image(Name) {
   padding-right: 2px;
 }
+
+outlinerchildren:-moz-outliner-twisty(group,hidetwisty) 
+{
+  list-style-image: none;
+}
+
+outlinerchildren:-moz-outliner-image(Name, container, group) 
+{
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-group.gif");
+}
