@@ -1106,8 +1106,6 @@ void nsTableCellFrame::RecalcLayoutData(nsMargin& aMargin)
   mMargin.top    = aMargin.top;
   mMargin.right  = aMargin.right;
   mMargin.bottom = aMargin.bottom;
-
-  mCalculated = NS_OK;
 }
 
 
