@@ -134,7 +134,8 @@ typedef struct uninstallStruct
   LPSTR     szWrKey;
   LPSTR     szUserAgent;
   LPSTR     szDefaultComponent;
-  LPSTR     szAppID;
+  LPSTR     szClientAppID;
+  LPSTR     szClientAppPath;
   BOOL      bVerbose;
   BOOL      bUninstallFiles;
   BOOL      bSharedInst;

@@ -93,8 +93,10 @@ void              SetUninstallRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);
 HRESULT           GetAppPath();
 DWORD             CleanupAppList();
-BOOL              ProcessAppItem(HKEY hkRoot, LPSTR szKeyAppList, LPSTR szAppID);
+DWORD             ProcessAppItem(HKEY hkRoot, LPSTR szKeyAppList, LPSTR szAppID);
+void              RemovePathToExeXX(HKEY hkRoot, LPSTR szKey, DWORD dwIndex, DWORD dwUpperLimit);
 HRESULT           GetUninstallLogPath();
-
+BOOL              WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
+void              DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 #endif
 

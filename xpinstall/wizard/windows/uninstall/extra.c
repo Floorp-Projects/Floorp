@@ -802,7 +802,9 @@ HRESULT InitUninstallGeneral()
     return(1);
   if((ugUninstall.szUninstallFilename       = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((ugUninstall.szAppID                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((ugUninstall.szClientAppID             = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((ugUninstall.szClientAppPath           = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -822,7 +824,8 @@ void DeInitUninstallGeneral()
   FreeMemory(&(ugUninstall.szCompanyName));
   FreeMemory(&(ugUninstall.szProductName));
   FreeMemory(&(ugUninstall.szWrMainKey));
-  FreeMemory(&(ugUninstall.szAppID));
+  FreeMemory(&(ugUninstall.szClientAppID));
+  FreeMemory(&(ugUninstall.szClientAppPath));
   DeleteObject(ugUninstall.definedFont);
 }
 
@@ -943,7 +946,13 @@ void ParseCommandLine(LPSTR lpszCmdLine)
     // Set the App ID
     {
       if((i + 1) < iArgC)
-        GetArgV(lpszCmdLine, ++i, ugUninstall.szAppID, MAX_BUF);
+        GetArgV(lpszCmdLine, ++i, ugUninstall.szClientAppID, MAX_BUF);
+    }
+    else if((lstrcmpi(szArgVBuf, "-app_path") == 0) || (lstrcmpi(szArgVBuf, "/app_path") == 0))
+    // Set the App Path
+    {
+      if((i + 1) < iArgC)
+        GetArgV(lpszCmdLine, ++i, ugUninstall.szClientAppPath, MAX_BUF);
     }
     else if((lstrcmpi(szArgVBuf, "-reg_path") == 0) || (lstrcmpi(szArgVBuf, "/reg_path") == 0))
     // Set the alternative Windows registry path
@@ -1339,6 +1348,8 @@ BOOL CheckLegacy(HWND hDlg)
   return(FALSE);
 }
 
+// This function looks up the path for the application being uninstalled, NOT the client
+//   app in a shared install environment.
 HRESULT GetAppPath()
 {
   char szTmpAppPath[MAX_BUF];
@@ -1449,9 +1460,8 @@ DWORD CleanupAppList()
     if(lstrcmp(siALTmp->szAppID, szDefaultApp) == 0)
       bFoundDefaultApp = TRUE;
 
-    // ProcessAppItem returns true if the App is installed
-    if(ProcessAppItem(ugUninstall.hWrMainRoot, szKey, siALTmp->szAppID))
-      dwAppCount++;
+    // ProcessAppItem returns the # of installations of the App
+    dwAppCount = dwAppCount + ProcessAppItem(ugUninstall.hWrMainRoot, szKey, siALTmp->szAppID);
 
     siALPrev = siALTmp;
     siALTmp = siALTmp->Next;
@@ -1475,53 +1485,104 @@ DWORD CleanupAppList()
 
 // Removes the app item if it is the app identified with the /app command-line option
 // If an app item is not installed this removes it from the app list.
-// Returns TRUE if the app item is installed, FALSE if the app is not installed.
-BOOL ProcessAppItem(HKEY hkRootKey, LPSTR szKeyAppList, LPSTR szAppID)
+// Returns the # of installations of the app item found in the AppList.
+DWORD ProcessAppItem(HKEY hkRootKey, LPSTR szKeyAppList, LPSTR szAppID)
 {
+  DWORD dwCount = 0;
+  DWORD dwIndex = 1;
+  const DWORD dwUpperLimit = 100;
+  BOOL  bDefaultApp;
   char szBuf[MAX_BUF];
   char szKey[MAX_BUF];
+  char szName[MAX_BUF];
   char szUninstKey[MAX_BUF];
-  char szDefaultApp[MAX_BUF_TINY];
 
-  GetPrivateProfileString("General", "Default AppID", "", szDefaultApp, MAX_BUF_TINY, szFileIniUninstall);
+  GetPrivateProfileString("General", "Default AppID", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+  bDefaultApp = (lstrcmp(szAppID, szBuf) == 0);
 
   wsprintf(szKey, "%s\\%s", szKeyAppList, szAppID);
-  GetWinReg(hkRootKey, szKey, "PathToExe", szBuf, sizeof(szBuf));
 
-  if(lstrcmp(szAppID, ugUninstall.szAppID) == 0)
-  {
-    // This is the app that the user said on the command-line to uninstall,
-    //   so it needs to be removed from the AppList
-    RegDeleteKey(hkRootKey, szKey);
-    if(lstrcmp(szAppID, szDefaultApp) == 0)
-    {
-      wsprintf(szKey, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GRE (%s)", ugUninstall.szUserAgent);
+  if(lstrcmp(szAppID, ugUninstall.szClientAppID) == 0) // This is the app that the user said 
+  {                                                    //    on the command-line to uninstall.
+
+    if((ugUninstall.szClientAppPath[0] == '\0') || (bDefaultApp)) //If we didn't get an /app_path or this
+    {                                                             //   is the default app, just remove it.
       RegDeleteKey(hkRootKey, szKey);
+      if(bDefaultApp)
+      {
+        wsprintf(szKey, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\GRE (%s)", ugUninstall.szUserAgent);
+        RegDeleteKey(hkRootKey, szKey);
+      }
+
+      return 0;
     }
 
-    return FALSE;
+    wsprintf(szName, "PathToExe%02d", dwIndex);
+    while( (WinRegNameExists(hkRootKey, szKey, szName)) // Since we got an /app_path we need to cycle
+        && (dwIndex < dwUpperLimit) )                   //   through the list looking for that instance.
+    {
+      GetWinReg(hkRootKey, szKey, szName, szBuf, MAX_BUF);
+      if( (lstrcmp(szBuf, ugUninstall.szClientAppPath) == 0) || (!FileExists(szBuf)) )
+        RemovePathToExeXX(hkRootKey, szKey, dwIndex, dwUpperLimit);
+      else
+        dwCount++;
+
+      wsprintf(szName, "PathToExe%02d", ++dwIndex);
+    }
+
+    if(dwCount == 0)
+      RegDeleteKey(hkRootKey, szKey);
+
+    return dwCount;
   }
 
-  if(FileExists(szBuf))    
-    // Any app the user is not uninstalling that is still on the machine 
-    //   should be counted.
-    return TRUE;
-
-  if(lstrcmp(szAppID, szDefaultApp) == 0)
-  {
-    // The Default App does not have any installed files registered.  An entry in 
-    // the Windows Add/Remove products list indicates that the Default App is installed,
-    // however, and needs to be counted.
+  if(bDefaultApp) // The Default App does not have an installed file registered.  However, an entry in 
+  {               // the Windows Add/Remove products list indicates that the Default App is installed
+                  // and needs to be counted.
     wsprintf(szUninstKey, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)",ugUninstall.szProductName, ugUninstall.szUserAgent);
     GetWinReg(hkRootKey, szUninstKey, "UninstallString", szBuf, sizeof(szBuf));
 
     if(szBuf[0] != '\0')
-      return TRUE;
+      return 1;
   }
 
-  // The only entries left in the AppList are orphaned entries.  Remove them.
-  RegDeleteKey(hkRootKey, szKey);
-  return FALSE;
+  wsprintf(szName, "PathToExe%02d", dwIndex);
+  while(WinRegNameExists(hkRootKey, szKey, szName)) // Count the entries which can be verified by the
+  {                                                 //   existence of the file pointed to by PathToExeXX
+    GetWinReg(hkRootKey, szKey, szName, szBuf, MAX_BUF);
+    if(FileExists(szBuf))    
+    {
+      dwCount++;
+    }
+    else                                       // This is an orphaned entry.  Remove it from the list.
+      RemovePathToExeXX(hkRootKey, szKey, dwIndex, dwUpperLimit);  // When we remove a PathToExeXX registry setting we must 
+                                               // reenumerate the list so there are no gaps in the count.
+    wsprintf(szName, "PathToExe%02d", ++dwIndex);
+  }
+
+  if(dwCount == 0)
+    RegDeleteKey(hkRootKey, szKey);
+
+  return dwCount;
+}
+
+void RemovePathToExeXX(HKEY hkRootKey, LPSTR szKey, DWORD dwIndex, const DWORD dwUpperLimit)
+{
+  char szBuf[MAX_BUF_TINY];
+  char szName[MAX_BUF_TINY];
+  char szNextName[MAX_BUF_TINY];
+
+  wsprintf(szName,     "PathToExe%02d", dwIndex++);
+  wsprintf(szNextName, "PathToExe%02d", dwIndex);
+  while(WinRegNameExists(hkRootKey, szKey, szNextName) && (dwIndex < dwUpperLimit))
+  {
+    GetWinReg(hkRootKey, szKey, szNextName, szBuf, MAX_BUF);
+    SetWinReg(hkRootKey, szKey, szName, REG_SZ, szBuf, lstrlen(szBuf));
+    lstrcpy(szName, szNextName);
+    wsprintf(szNextName, "PathToExe%02d", ++dwIndex);
+  }        
+
+  DeleteWinRegValue(hkRootKey, szKey, szName);
 }
 
 HRESULT GetUninstallLogPath()
@@ -1708,7 +1769,7 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
     //   what version of GRE to clean up so we can't do anything--including CleanupAppList()
     //   so don't change the order of the if statement.  
     //   (We should add UI warning the user when a required UserAgent is not supplied.)
-    // CleanupAppList() returns the number of installed apps dependant on this shared app.
+    // CleanupAppList() returns the number of installations of apps dependant on this shared app.
     if((ugUninstall.szUserAgent[0] == '\0') || (CleanupAppList() != 0))
       ugUninstall.bUninstallFiles = FALSE;
   }
@@ -2177,6 +2238,46 @@ HRESULT FileExists(LPSTR szFile)
   else
   {
     return(rv);
+  }
+}
+
+BOOL WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
+{
+  HKEY  hkResult;
+  DWORD dwErr;
+  DWORD dwSize;
+  char  szBuf[MAX_BUF];
+  BOOL  bNameExists = FALSE;
+
+  szBuf[0] = '/0';
+  if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
+  {
+    dwSize = sizeof(szBuf);
+    dwErr  = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
+
+    if((*szBuf != '\0') && (dwErr == ERROR_SUCCESS))
+      bNameExists = TRUE;
+
+    RegCloseKey(hkResult);
+  }
+
+  return(bNameExists);
+}
+
+void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
+{
+  HKEY    hkResult;
+  DWORD   dwErr;
+
+  dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
+  if(dwErr == ERROR_SUCCESS)
+  {
+    if(*szName == '\0')
+      dwErr = RegDeleteValue(hkResult, NULL);
+    else
+      dwErr = RegDeleteValue(hkResult, szName);
+
+    RegCloseKey(hkResult);
   }
 }
 

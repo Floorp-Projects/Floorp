@@ -502,6 +502,15 @@ Filename=install_wizard.log
 Source=[SETUP PATH]
 Destination=[SETUP PATH]\Uninstall
 
+; Legal values for the Overwrite Name key are TRUE, FALSE and ENUMERATE.
+;   ENUMERATE is used for shared installs and means:
+;     1) Starting with 01, increment though the NameXX named values in the 
+;        Windows registry (where Name is the value from Name= and XX is 
+;        the integer value being incremented) until a NameXX is found with 
+;        the same value as that in Name Value=.
+;     2) If no NameXX is found with that value, create a new name/value pair
+;        named NameXX where XX is the next unused integer value
+;
 [Windows Registry0]
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
@@ -556,7 +565,7 @@ Decrypt Key=TRUE
 Decrypt Name=FALSE
 Decrypt Name Value=TRUE
 Overwrite Key=TRUE
-Overwrite Name=TRUE
+Overwrite Name=ENUMERATE
 Timing=post smartupdate
 
 [Windows Registry4]

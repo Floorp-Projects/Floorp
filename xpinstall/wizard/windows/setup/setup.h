@@ -177,6 +177,7 @@ typedef int PRInt32;
 #define FO_ERROR_DESTINATION_CONFLICT   2
 #define FO_ERROR_CHANGE_DIR             3
 #define FO_ERROR_WRITE                  4
+#define FO_ERROR_INCR_EXCEEDS_LIMIT     5
 
 /* Mode of Setup to run in */
 #define NORMAL                          0
