@@ -626,9 +626,11 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
       mPasswordText.Cut(start, end-start);
     }
 
+#ifdef DEBUG_buster
     char *password = mPasswordText.ToNewCString();
     printf("mPasswordText is %s\n", password);
     delete [] password;
+#endif
   }
   return NS_OK;
 }
@@ -984,7 +986,7 @@ nsTextEditRules::EchoInsertionToPWBuff(nsIDOMSelection *aSelection, nsString *aO
   NS_ASSERTION((NS_SUCCEEDED(res)), "getTextSelectionOffsets failed!");
   mPasswordText.Insert(*aOutString, start);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_jfrancis
     char *password = mPasswordText.ToNewCString();
     printf("mPasswordText is %s\n", password);
     delete [] password;
