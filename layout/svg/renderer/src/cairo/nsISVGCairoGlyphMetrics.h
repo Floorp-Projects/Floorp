@@ -45,10 +45,8 @@
 #include "nsISVGRendererGlyphMetrics.h"
 #include <cairo.h>
 
-// 193e2d48-3898-4bf3-b6bf-d7c00a8aba1f
 #define NS_ISVGCAIROGLYPHMETRICS_IID \
-{ 0x193e2d48, 0x3898, 0x4bf3, { 0xb6, 0xbf, 0xd7, 0xc0, 0x0a, 0x8a, 0xba, 0x1f } }
-
+{ 0x6e335395, 0x5627, 0x4179, { 0x96, 0x88, 0x6a, 0xb7, 0x14, 0xd3, 0x9b, 0x83 } }
 
 /**
  * \addtogroup gdiplus_renderer Cairo Rendering Engine
@@ -65,7 +63,7 @@ public:
 
   NS_IMETHOD_(void) GetSubBoundingBox(PRUint32 charoffset, PRUint32 count, nsIDOMSVGRect * *aBoundingBox)=0;
 
-  NS_IMETHOD_(cairo_font_t*) GetFont() = 0;
+  NS_IMETHOD_(void) SelectFont(cairo_t *ctx) = 0;
 };
 
 /** @} */

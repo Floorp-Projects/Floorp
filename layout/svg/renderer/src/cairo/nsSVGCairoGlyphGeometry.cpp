@@ -171,8 +171,6 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       return NS_ERROR_FAILURE;
   }
 
-  cairo_font_t *font = metrics->GetFont();
-
   PRUint16 renderMode;
   cairo_matrix_t *matrix;
   canvas->GetRenderMode(&renderMode);
@@ -185,9 +183,9 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     cairo_current_matrix(ctx, matrix);
   }
 
-  cairo_set_font(ctx, font);
-
   GetGlobalTransform(ctx);
+
+  metrics->SelectFont(ctx);
 
   float x,y;
   mSource->GetX(&x);
@@ -407,14 +405,10 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
       return NS_ERROR_FAILURE;
   }
 
-  cairo_font_t *font = metrics->GetFont();
-
-  if (!font)
-    return NS_OK;
-
-  cairo_set_font(ctx, font);
-
   GetGlobalTransform(ctx);
+
+  metrics->SelectFont(ctx);
+
   float x,y;
   mSource->GetX(&x);
   mSource->GetY(&y);
@@ -508,13 +502,13 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
       return NS_ERROR_FAILURE;
   }
 
-  cairo_font_t *font = metrics->GetFont();
-
   cairo_t *ctx = cairo_create();
   cairo_set_tolerance(ctx, 1.0);
-  cairo_set_font(ctx, font);
 
   GetGlobalTransform(ctx);
+
+  metrics->SelectFont(ctx);
+
   nsAutoString text;
   mSource->GetCharacterData(text);
   cairo_text_path(ctx, (unsigned char*)NS_ConvertUCS2toUTF8(text).get());

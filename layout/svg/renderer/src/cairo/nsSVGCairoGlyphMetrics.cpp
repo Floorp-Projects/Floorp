@@ -82,11 +82,10 @@ public:
   NS_IMETHOD_(void) GetSubBoundingBox(PRUint32 charoffset, PRUint32 count,
                                       nsIDOMSVGRect * *aBoundingBox);
 
-  NS_IMETHOD_(cairo_font_t*)GetFont() { return mFont; }
+  NS_IMETHOD_(void) SelectFont(cairo_t *ctx);
 
 private:
   cairo_t *mCT;
-  cairo_font_t *mFont;
   cairo_text_extents_t mExtents;
   nsCOMPtr<nsISVGGlyphMetricsSource> mSource;
 };
@@ -97,14 +96,13 @@ private:
 // implementation:
 
 nsSVGCairoGlyphMetrics::nsSVGCairoGlyphMetrics(nsISVGGlyphMetricsSource *src)
-  : mFont(NULL), mSource(src)
+  : mSource(src)
 {
   mCT = cairo_create();
 }
 
 nsSVGCairoGlyphMetrics::~nsSVGCairoGlyphMetrics()
 {
-  // don't delete mFont because the cairo_destroy takes it down
   cairo_destroy(mCT);
 }
 
@@ -254,7 +252,7 @@ nsSVGCairoGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retva
   mSource->GetCharacterData(text);
   glyph.index = text[charnum];
 
-  cairo_set_font(mCT, mFont);
+  SelectFont(mCT);
   cairo_glyph_extents(mCT, &glyph, 1, &extent);
 
   nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
@@ -284,14 +282,23 @@ nsSVGCairoGlyphMetrics::Update(PRUint32 updatemask, PRBool *_retval)
   }
 
   if (updatemask & nsISVGGlyphMetricsSource::UPDATEMASK_FONT) {
-    if (mFont) {
-      // don't delete mFont because we're just pointing at the ctx copy
-      mFont = NULL;
-    }
     *_retval = PR_TRUE;
   }
 
-  if (!mFont) {
+  SelectFont(mCT);
+
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+  cairo_text_extents(mCT, 
+                     (unsigned char*)NS_ConvertUCS2toUTF8(text).get(),
+                     &mExtents);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsSVGCairoGlyphMetrics::SelectFont(cairo_t *ctx)
+{
     nsFont font;
     mSource->GetFont(&font);
       
@@ -320,23 +327,12 @@ nsSVGCairoGlyphMetrics::Update(PRUint32 updatemask, PRBool *_retval)
     nsString family;
     font.GetFirstFamily(family);
     char *f = ToNewCString(family);
-    cairo_select_font(mCT, f, slant, weight);
-    free(f);
+    cairo_select_font(ctx, f, slant, weight);
+    nsMemory::Free(f);
 
     nsCOMPtr<nsPresContext> presContext;
     mSource->GetPresContext(getter_AddRefs(presContext));
     float pxPerTwips;
     pxPerTwips = presContext->TwipsToPixels();
-    cairo_scale_font(mCT, font.size*pxPerTwips);
- 
-    mFont = cairo_current_font(mCT);
-
-    nsAutoString text;
-    mSource->GetCharacterData(text);
-    cairo_text_extents(mCT, 
-                       (unsigned char*)NS_ConvertUCS2toUTF8(text).get(),
-                       &mExtents);
-  }
-  
-  return NS_OK;
+    cairo_scale_font(ctx, font.size*pxPerTwips);
 }
