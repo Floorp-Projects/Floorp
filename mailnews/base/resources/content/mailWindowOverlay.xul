@@ -699,8 +699,9 @@ Rights Reserved.
 			<menuitem value="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
 			<menuitem value="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
 			<menuseparator/>
-			<menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://search.netscape.com/')"/>
 			<menuitem value="&searchMailCmd.label;" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages();"/>
+			<menuseparator/>
+			<menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://search.netscape.com/')"/>
 			<menuitem value="&searchBookmarksCmd.label;" accesskey="&searchBookmarksCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'centerscreen,dialog=no,close,chrome,resizable');"/>
 		</menupopup>
 	</menu>

@@ -222,7 +222,7 @@ Rights Reserved.
 <!-- Search Menu -->
 <!ENTITY searchMenu.accesskey "s">
 <!ENTITY searchMenu.label "Search">
-<!ENTITY findCmd.label "Find...">  
+<!ENTITY findCmd.label "Find in This Message...">  
 <!ENTITY findCmd.accesskey "f">  
 <!ENTITY findCmd.key "f">  
 <!ENTITY findAgainCmd.label "Find Again">
