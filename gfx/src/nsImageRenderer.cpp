@@ -76,6 +76,7 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
   nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
   nsIImage  *img;
   nsresult  rv;
+  nsMaskRequirements maskflag;
 
   static NS_DEFINE_IID(kImageCID, NS_IMAGE_CID);
   static NS_DEFINE_IID(kImageIID, NS_IIMAGE_IID);
@@ -98,13 +99,23 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
   depth = colorSpace->pixmap_depth;
 
   // Initialize the image object
-  img->Init(aWidth, aHeight, depth, (aMask == nsnull) ? nsMaskRequirements_kNoMask : 
-	          nsMaskRequirements_kNeeds1Bit);
+ 
+  if(aMask == nsnull) 
+    maskflag = nsMaskRequirements_kNoMask; 
+  else
+    maskflag = nsMaskRequirements_kNeeds1Bit;
+
+  if(aImage->header.alpha_bits == 8)
+      maskflag = nsMaskRequirements_kNeeds8Bit;
+
+  img->Init(aWidth, aHeight, depth, maskflag);
 
   // Update the pixmap image and mask information
   aImage->bits = img->GetBits();
   aImage->client_data = img;  // we don't need to add a ref here, because there's
                               // already one from the call to create the image object
+ 
+
   aImage->header.width = aWidth;
   aImage->header.height = aHeight;
   aImage->header.widthBytes = img->GetLineStride();
