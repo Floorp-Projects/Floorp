@@ -178,20 +178,20 @@ while(<UNICODATA>) {
 ######################################################################
 
 $ttotal = 0;
-print OUT "extern PRUnichar gUpperToTitle[] = { \n";
+print OUT "static PRUnichar gUpperToTitle[] = { \n";
 while(($upper, $title) = each(%utot)) {
    print OUT "   0x" . $upper . ",    0x" . $utot{$upper} . ", \n";
    $ttotal++;
 }
 print OUT "};\n\n";
-print OUT "extern PRUint32 gUpperToTitleItems = $ttotal;\n\n";
+print OUT "static PRUint32 gUpperToTitleItems = $ttotal;\n\n";
 
 ######################################################################
 #
 # Print out gToUpper table
 #
 ######################################################################
-print OUT "extern PRUnichar gToUpper[] = \n";
+print OUT "static PRUnichar gToUpper[] = \n";
 print OUT "{ /*   From    To      Every   Diff   */ \n";
 $utotal=0;
 $ufrom = 0;   # remember the start of the output item
@@ -233,7 +233,7 @@ for ($i = 0; $i <= $#ucv; $i++)
      printf OUT "0x%04x, 0x%04x, 0x%04x  \n};\n\n",
             $ucv[$i], $ulastd[$i], $ud[$i];
      $utotal++;
-     print OUT "extern PRUint32 gToUpperItems = $utotal;\n\n";
+     print OUT "static PRUint32 gToUpperItems = $utotal;\n\n";
   }
   #
   #  printf "%4x - %4x - %4x - %4x\n", $ucv[$i], $uv[$i], $ud[$i], $ulastd[$i];
@@ -245,7 +245,7 @@ for ($i = 0; $i <= $#ucv; $i++)
 # Print out gToLower table
 #
 ######################################################################
-print OUT "extern PRUnichar gToLower[] = \n";
+print OUT "static PRUnichar gToLower[] = \n";
 print OUT "{ /*   From    To      Every   Diff   */ \n";
 $ltotal=0;
 $lfrom = 0;   # remember the start of the output item
@@ -287,7 +287,7 @@ for ($i = 0; $i <= $#lcv; $i++)
      printf OUT "0x%04x, 0x%04x, 0x%04x  \n};\n\n",
             $lcv[$i], $llastd[$i], $ld[$i];
      $ltotal++;
-     print OUT "extern PRUint32 gToLowerItems = $ltotal;\n\n";
+     print OUT "static PRUint32 gToLowerItems = $ltotal;\n\n";
   }
   #
   #  printf "%4x - %4x - %4x - %4x\n", $lcv[$i], $lv[$i], $ld[$i], $llastd[$i];
