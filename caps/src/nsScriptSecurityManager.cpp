@@ -436,8 +436,15 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
                                       PRBool aDisallowFromMail)
 {
+    nsCOMPtr<nsIJARURI> jarURI;
+    nsCOMPtr<nsIURI> uri = aFromURI;
+    while(uri && NS_SUCCEEDED(uri->QueryInterface(NS_GET_IID(nsIJARURI),
+                                                  getter_AddRefs(jarURI))))
+        jarURI->GetJARFile(getter_AddRefs(uri));
+    if (!uri) return NS_ERROR_FAILURE;
+
     nsXPIDLCString fromScheme;
-    if (NS_FAILED(aFromURI->GetScheme(getter_Copies(fromScheme))))
+    if (NS_FAILED(uri->GetScheme(getter_Copies(fromScheme))))
         return NS_ERROR_FAILURE;
 
     if (aDisallowFromMail && 
@@ -448,8 +455,14 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         return NS_ERROR_DOM_BAD_URI;
     }
 
+    uri = aURI;
+    while(uri && NS_SUCCEEDED(uri->QueryInterface(NS_GET_IID(nsIJARURI),
+                                                  getter_AddRefs(jarURI))))
+        jarURI->GetJARFile(getter_AddRefs(uri));
+    if (!uri) return NS_ERROR_FAILURE;
+
     nsXPIDLCString scheme;
-    if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
+    if (NS_FAILED(uri->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
     
     if (nsCRT::strcasecmp(scheme, fromScheme) == 0)
@@ -458,7 +471,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         return NS_OK;
     }
 
-    enum Action { AllowProtocol, DenyProtocol, AboutProtocol };
+    enum Action { AllowProtocol, DenyProtocol, AboutProtocol};
     struct { 
         const char *name;
         Action action;
@@ -469,7 +482,6 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         { "ftp",             AllowProtocol },
         { "http",            AllowProtocol },
         { "https",           AllowProtocol },
-        { "jar",             AllowProtocol   },
         { "keyword",         DenyProtocol  },
         { "res",             DenyProtocol  },
         { "resource",        DenyProtocol  },
