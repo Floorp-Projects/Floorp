@@ -63,7 +63,7 @@ nsMarkupDocument::CreateShell(nsIPresContext* aContext,
                               nsIPresShell** aInstancePtrResult)
 {
   // Don't add anything here.  Add it to |doCreateShell| instead.  This
-  // exists so nsHTMLDocument can pass PR_TRUE for the 4th parameter
+  // exists so nsHTMLDocument can pass other values for the 4th parameter
   // some of the time.
   return doCreateShell(aContext, aViewManager, aStyleSet,
                        eCompatibility_FullStandards, aInstancePtrResult);
