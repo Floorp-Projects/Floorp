@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  appshell \
 		  appcomps \
+		  xulapp \
 		  $(NULL)
 
 #    PatriciaTree.cpp \
