@@ -173,49 +173,68 @@ nsresult nsHTTPResponse::SetServerVersion(const char* i_Version)
   nsresult rv = NS_OK;
 
   PRInt32 err, offset;
-  float version;
-  nsCString str(i_Version);
+  PRInt32 major, minor;
+  nsCAutoString str(i_Version);
 
-  // Make sure the version string is prefixed by 'HTTP/'
+  mServerVersion = HTTP_UNKNOWN;
+  //
+  // Chop off the leading 'HTTP/'
+  //
   offset = str.Find("HTTP/");
-
   // Malformed Version string - Not prefixed by 'HTTP/'.
   if (0 != offset) {
-    mServerVersion = HTTP_UNKNOWN;
     return NS_ERROR_FAILURE;
   }
-
-  // Chop off the leading 'HTTP/'
   str.Cut(0, 5);
-  version = str.ToFloat(&err);
-
+  
+  //
+  // Extract the Major version from the string.
+  //
+  major = str.ToInteger(&err);
   // Malformed Version string - Version number not a number!
   if ((PRInt32)NS_OK != err) {
-    mServerVersion = HTTP_UNKNOWN;
+    return NS_ERROR_FAILURE;
+  }
+  
+  //
+  // The HTTP Spec says that there must be a '.' separating the major and
+  // minor revisions...
+  //
+  offset = str.FindChar('.');
+  if (-1 == offset) {
+    return NS_ERROR_FAILURE;
+  }
+  str.Cut(0,offset+1);
+
+  //
+  // Extract the minor version from the string...
+  //
+  minor = str.ToInteger(&err);
+  // Malformed Version string - Version number not a number!
+  if ((PRInt32)NS_OK != err) {
     return NS_ERROR_FAILURE;
   }
 
   // At least HTTP/1.1
-  if (version >= 1.1f) {
+  if ((major > 1) || ((major == 1) && (minor >=1))) {
     mServerVersion = HTTP_ONE_ONE;
   } 
   //
   // At least HTTP/1.0.  Some 1.0 servers actually send 0.0 as their
   // version :-(
   //
-  else if ((version >= 1.0f) || (version == 0.0f)) {
+  else if (((major == 1) || (major == 0)) && (minor == 0)) {
     mServerVersion = HTTP_ONE_ZERO;
   }
   //
   // HTTP/0.9.  In this case, the version string has been supplied internally
   // since 0.9 responses do not contain a status line!
   //
-  else if (version == 0.9f) {
+  else if ((major == 0) && (minor == 9)) {
     mServerVersion = HTTP_ZERO_NINE;
   }
   // No idea what the version is.  It must be malformed!
   else {
-    mServerVersion = HTTP_UNKNOWN;
     rv = NS_ERROR_FAILURE;
   }
 
