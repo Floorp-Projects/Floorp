@@ -459,6 +459,8 @@ get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
 static JSBool PR_CALLBACK
 enter_js_from_java_impl(JNIEnv *jEnv, char **errp)
 {
+    MWContext *cx = XP_FindSomeContext();   /* XXXMLM */
+
 #ifdef OJI
     ThreadLocalStorageAtIndex0 *priv = NULL;
     if ( PR_GetCurrentThread() == NULL )
@@ -477,7 +479,7 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp)
         }
     }
 
-    return LM_LockJS(errp);
+    return LM_LockJS(cx, errp);
 #else
     return JS_TRUE;
 #endif
@@ -486,9 +488,10 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp)
 static void PR_CALLBACK
 exit_js_impl(JNIEnv *jEnv)
 {
+    MWContext *cx = XP_FindSomeContext();   /* XXXMLM */
     ThreadLocalStorageAtIndex0 *priv = NULL;
 
-    LM_UnlockJS();
+    LM_UnlockJS(cx);
 
     if (   (PR_GetCurrentThread() != NULL )
            && ((priv = (ThreadLocalStorageAtIndex0 *)PR_GetThreadPrivate(tlsIndex_g)) != NULL)
