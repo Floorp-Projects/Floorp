@@ -239,6 +239,11 @@ nsSystemPrefService::~nsSystemPrefService()
 nsresult
 nsSystemPrefService::Init()
 {
+    if (!gSysPrefLog) {
+        gSysPrefLog = PR_NewLogModule("Syspref");
+        if (!gSysPrefLog) return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     SYSPREF_LOG(("Init SystemPref Service\n"));
     if (mInitialized)
         return NS_ERROR_FAILURE;
