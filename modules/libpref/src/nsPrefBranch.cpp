@@ -41,6 +41,7 @@
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
+#include "nsObserverService.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
@@ -60,7 +61,8 @@ struct EnumerateData {
 
 struct PrefCallbackData {
   nsIPrefBranch *pBranch;
-  nsIObserver   *pObserver;
+  nsISupports   *pObserver;
+  PRBool        bIsWeakRef;
 };
 
 
@@ -112,36 +114,23 @@ nsPrefBranch::nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch)
   mPrefRoot = aPrefRoot;
   mPrefRootLength = mPrefRoot.Length();
   mIsDefault = aDefaultBranch;
+
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (observerService) {
+    ++mRefCnt;    // Our refcnt must be > 0 when we call this, or we'll get deleted!
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+    --mRefCnt;
+  }
 }
 
 nsPrefBranch::~nsPrefBranch()
 {
-  PrefCallbackData *pCallback;
-
-  if (mObservers) {
-    // unregister the observers
-    PRInt32 count;
-
-    count = mObservers->Count();
-    if (count > 0) {
-      PRInt32 i;
-      nsCString domain;
-      for (i = 0; i < count; i++) {
-        pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
-        if (pCallback) {
-          mObserverDomains.CStringAt(i, domain);
-          PREF_UnregisterCallback(domain, NotifyObserver, pCallback);
-          NS_RELEASE(pCallback->pObserver);
-        }
-        nsMemory::Free(pCallback);
-      }
-
-      // now empty the observer arrays in bulk
-      mObservers->Clear();
-      mObserverDomains.Clear();
-    }
-    delete mObservers;
-  }
+  freeObserverList();
+  nsCOMPtr<nsIObserverService> observerService = 
+           do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (observerService)
+    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 }
 
 
@@ -157,6 +146,7 @@ NS_INTERFACE_MAP_BEGIN(nsPrefBranch)
   NS_INTERFACE_MAP_ENTRY(nsIPrefBranch)
   NS_INTERFACE_MAP_ENTRY(nsIPrefBranchInternal)
   NS_INTERFACE_MAP_ENTRY(nsISecurityPref)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -583,7 +573,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
  *  nsIPrefBranchInternal methods
  */
 
-NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver)
+NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak)
 {
  PrefCallbackData *pCallback;
 
@@ -602,8 +592,23 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
     return NS_ERROR_OUT_OF_MEMORY;
 
   pCallback->pBranch = NS_STATIC_CAST(nsIPrefBranch *, this);
-  NS_ADDREF(aObserver);
-  pCallback->pObserver = aObserver;
+  pCallback->bIsWeakRef = aHoldWeak;
+
+  // hold a weak reference to the observer if so requested
+  nsCOMPtr<nsISupports> observerRef;
+  if (aHoldWeak) {
+    nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(aObserver);
+    if (!weakRefFactory) {
+      // the caller didn't give us a object that supports weak reference... tell them
+      nsMemory::Free(pCallback);
+      return NS_ERROR_INVALID_ARG;
+    }
+    observerRef = do_GetWeakReference(weakRefFactory);
+  } else {
+    observerRef = aObserver;
+  }
+  pCallback->pObserver = observerRef;
+  NS_ADDREF(pCallback->pObserver);
 
   mObservers->AppendElement(pCallback);
   mObserverDomains.AppendCString(nsCString(aDomain));
@@ -618,7 +623,7 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
   PRInt32 count;
   PRInt32 i;
   nsresult rv;
-  nsCString domain;
+  nsCAutoString domain;
 
   NS_ENSURE_ARG_POINTER(aDomain);
   NS_ENSURE_ARG_POINTER(aObserver);
@@ -633,10 +638,21 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
 
   for (i = 0; i < count; i++) {
     pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
-    if (pCallback && (pCallback->pObserver == aObserver)) {
-      mObserverDomains.CStringAt(i, domain);
-      if (domain.Equals(aDomain))
-        break;
+    if (pCallback) {
+     nsCOMPtr<nsISupports> observerRef;
+     if (pCallback->bIsWeakRef) {
+       nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(aObserver);
+       if (weakRefFactory)
+         observerRef = do_GetWeakReference(aObserver);
+     }
+     if (!observerRef)
+       observerRef = aObserver;
+
+      if (pCallback->pObserver == observerRef) {
+        mObserverDomains.CStringAt(i, domain);
+        if (domain.Equals(aDomain))
+          break;
+      }
     }
   }
 
@@ -653,19 +669,72 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
   return rv;
 }
 
+NS_IMETHODIMP nsPrefBranch::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+{
+  // watch for xpcom shutdown and free our observers to eliminate any cyclic references
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    freeObserverList();
+  }
+  return NS_OK;
+}
+
 static int PR_CALLBACK NotifyObserver(const char *newpref, void *data)
 {
   PrefCallbackData *pData = (PrefCallbackData *)data;
 
-  nsCOMPtr<nsIObserver> observer = NS_STATIC_CAST(nsIObserver *, pData->pObserver);
-  observer->Observe(pData->pBranch,
-                    NS_PREFBRANCH_PREFCHANGE_OBSERVER_ID,
-                    NS_ConvertASCIItoUCS2(newpref).get());
+  nsCOMPtr<nsIObserver> observer;
+  if (pData->bIsWeakRef) {
+    nsIWeakReference *weakRef = NS_STATIC_CAST(nsIWeakReference *, pData->pObserver);
+    observer = do_QueryReferent(weakRef);
+    if (!observer) {
+      // this weak referenced observer went away, remove them from the list
+      nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(pData->pBranch);
+      if (pbi) {
+        observer = NS_STATIC_CAST(nsIObserver *, pData->pObserver);
+        pbi->RemoveObserver(newpref, observer);
+      }
+      return 0;
+    }
+  } else
+    observer = NS_STATIC_CAST(nsIObserver *, pData->pObserver);
 
-    return 0;
+  observer->Observe(pData->pBranch, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
+                    NS_ConvertASCIItoUCS2(newpref).get());
+  return 0;
 }
 
 
+void nsPrefBranch::freeObserverList(void)
+{
+  PrefCallbackData *pCallback;
+
+  if (mObservers) {
+    // unregister the observers
+    PRInt32 count;
+
+    count = mObservers->Count();
+    if (count > 0) {
+      PRInt32 i;
+      nsCAutoString domain;
+      for (i = 0; i < count; i++) {
+        pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
+        if (pCallback) {
+          mObserverDomains.CStringAt(i, domain);
+          PREF_UnregisterCallback(domain, NotifyObserver, pCallback);
+          NS_RELEASE(pCallback->pObserver);
+          nsMemory::Free(pCallback);
+        }
+      }
+
+      // now empty the observer arrays in bulk
+      mObservers->Clear();
+      mObserverDomains.Clear();
+    }
+    delete mObservers;
+    mObservers = 0;
+  }
+}
+ 
 nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUnichar **return_buf)
 {
   nsresult rv;

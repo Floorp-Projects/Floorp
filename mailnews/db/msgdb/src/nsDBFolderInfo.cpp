@@ -40,7 +40,10 @@
 #include "nsDBFolderInfo.h"
 #include "nsMsgDatabase.h"
 #include "nsMsgFolderFlags.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsObserverService.h"
@@ -99,32 +102,41 @@ NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const char
 {
   nsresult rv;
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!nsCRT::strcmp(aTopic, "nsPref:changed"))
+  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
   {
     nsDependentString prefName(someData);
     
     if (prefName.Equals(NS_LITERAL_STRING(kMAILNEWS_VIEW_DEFAULT_CHARSET)))
     {
-      PRUnichar *prefCharset = nsnull;
-      rv = prefs->GetLocalizedUnicharPref(kMAILNEWS_VIEW_DEFAULT_CHARSET, &prefCharset);
-      if (NS_SUCCEEDED(rv))
-      {
-        gDefaultCharacterSet.Assign(prefCharset);
-        PR_Free(prefCharset);
+      nsCOMPtr<nsIPrefLocalizedString> pls;
+      rv = prefBranch->GetComplexValue(kMAILNEWS_VIEW_DEFAULT_CHARSET,
+                      NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(pls));
+      if (NS_SUCCEEDED(rv)) {
+        nsXPIDLString ucsval;
+        pls->ToString(getter_Copies(ucsval));
+        if (ucsval)
+          gDefaultCharacterSet.Assign(ucsval.get());
       }
     }
     else if (prefName.Equals(NS_LITERAL_STRING(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE)))
     {
-      rv = prefs->GetBoolPref(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, &gDefaultCharacterOverride);
+      rv = prefBranch->GetBoolPref(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, &gDefaultCharacterOverride);
     }
   }
   else if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
   {
-    rv = prefs->RemoveObserver(kMAILNEWS_VIEW_DEFAULT_CHARSET, this);
-    rv = prefs->RemoveObserver(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, this);
+    nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
+    if (pbi) {
+      rv = pbi->RemoveObserver(kMAILNEWS_VIEW_DEFAULT_CHARSET, this);
+      rv = pbi->RemoveObserver(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, this);
+    }
     gReleaseObserver = PR_TRUE;   // set true to release observer
   }
 
@@ -185,17 +197,24 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
   {
     gInitializeObserver = PR_TRUE;
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIPrefBranch> prefBranch;
     if (NS_SUCCEEDED(rv))
     {
-      PRUnichar *prefCharset = nsnull;
-      rv = prefs->GetLocalizedUnicharPref(kMAILNEWS_VIEW_DEFAULT_CHARSET, &prefCharset);
-      if (NS_SUCCEEDED(rv))
-      {
-        gDefaultCharacterSet.Assign(prefCharset);
-        PR_Free(prefCharset);
+      rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    }
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIPrefLocalizedString> pls;
+      rv = prefBranch->GetComplexValue(kMAILNEWS_VIEW_DEFAULT_CHARSET,
+                      NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(pls));
+      if (NS_SUCCEEDED(rv)) {
+        nsXPIDLString ucsval;
+        pls->ToString(getter_Copies(ucsval));
+        if (ucsval)
+          gDefaultCharacterSet.Assign(ucsval.get());
       }
-      rv = prefs->GetBoolPref(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, &gDefaultCharacterOverride);
+      rv = prefBranch->GetBoolPref(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, &gDefaultCharacterOverride);
 
       gFolderCharsetObserver = new nsFolderCharsetObserver();
       NS_ASSERTION(gFolderCharsetObserver, "failed to create observer");
@@ -204,8 +223,11 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
       if (gFolderCharsetObserver)
       {
         NS_ADDREF(gFolderCharsetObserver);
-        rv = prefs->AddObserver(kMAILNEWS_VIEW_DEFAULT_CHARSET, gFolderCharsetObserver);
-        rv = prefs->AddObserver(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, gFolderCharsetObserver);
+        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
+        if (pbi) {
+          rv = pbi->AddObserver(kMAILNEWS_VIEW_DEFAULT_CHARSET, gFolderCharsetObserver, PR_FALSE);
+          rv = pbi->AddObserver(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, gFolderCharsetObserver, PR_FALSE);
+        }
 
         // also register for shutdown
         nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);

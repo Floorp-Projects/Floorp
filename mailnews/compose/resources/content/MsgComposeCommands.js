@@ -74,18 +74,8 @@ const DEBUG = false;
 
 var other_header = "";
 var sendFormat = msgCompSendFormat.AskUser;
-var prefs = Components.classes["@mozilla.org/preferences;1"].getService();
-if (prefs) {
-	prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-	if (prefs) {
-		try {
-			other_header = prefs.CopyCharPref("mail.compose.other.header");
-		}
-		catch (ex) {
-			 dump("failed to get the mail.compose.other.header pref\n");
-		}
-	}
-}
+var prefs = null;
+var gPrefBranchInternal = null;
 
 function disableEditableFields()
 {
@@ -619,41 +609,43 @@ var directoryServerObserver = {
 
 function AddDirectoryServerObserver(flag) {
   if (flag) {
-    prefs.addObserver("ldap_2.autoComplete.useDirectory", directoryServerObserver, false);
-    prefs.addObserver("ldap_2.autoComplete.directoryServer", directoryServerObserver, false);
+    gPrefBranchInternal.addObserver("ldap_2.autoComplete.useDirectory",
+                                    directoryServerObserver, false);
+    gPrefBranchInternal.addObserver("ldap_2.autoComplete.directoryServer",
+                                    directoryServerObserver, false);
   }
   else
   {
     var prefstring = "mail.identity." + gCurrentIdentity.key + ".overrideGlobal_Pref";
-    prefs.addObserver(prefstring, directoryServerObserver, false);
+    gPrefBranchInternal.addObserver(prefstring, directoryServerObserver, false);
     prefstring = "mail.identity." + gCurrentIdentity.key + ".directoryServer";
-    prefs.addObserver(prefstring, directoryServerObserver, false);
+    gPrefBranchInternal.addObserver(prefstring, directoryServerObserver, false);
   }
 }
 
 function RemoveDirectoryServerObserver(prefstring)
 {
   if (!prefstring) {
-    prefs.removeObserver("ldap_2.autoComplete.useDirectory", directoryServerObserver);
-    prefs.removeObserver("ldap_2.autoComplete.directoryServer", directoryServerObserver);
+    gPrefBranchInternal.removeObserver("ldap_2.autoComplete.useDirectory", directoryServerObserver);
+    gPrefBranchInternal.removeObserver("ldap_2.autoComplete.directoryServer", directoryServerObserver);
   }
   else
   {
     var str = prefstring + ".overrideGlobal_Pref";
-    prefs.removeObserver(str, directoryServerObserver);
+    gPrefBranchInternal.removeObserver(str, directoryServerObserver);
     str = prefstring + ".directoryServer";
-    prefs.removeObserver(str, directoryServerObserver);
+    gPrefBranchInternal.removeObserver(str, directoryServerObserver);
   }
 }
 
 function AddDirectorySettingsObserver()
 {
-  prefs.addObserver(currentAutocompleteDirectory, directoryServerObserver, false);
+  gPrefBranchInternal.addObserver(currentAutocompleteDirectory, directoryServerObserver, false);
 }
 
 function RemoveDirectorySettingsObserver(prefstring)
 {
-  prefs.removeObserver(prefstring, directoryServerObserver);
+  gPrefBranchInternal.removeObserver(prefstring, directoryServerObserver);
 }
 
 function setupLdapAutocompleteSession()
@@ -663,9 +655,9 @@ function setupLdapAutocompleteSession()
     var prevAutocompleteDirectory = currentAutocompleteDirectory;
     var i;
 
-    autocompleteLdap = prefs.GetBoolPref("ldap_2.autoComplete.useDirectory");
+    autocompleteLdap = prefs.getBoolPref("ldap_2.autoComplete.useDirectory");
     if (autocompleteLdap)
-        autocompleteDirectory = prefs.CopyCharPref(
+        autocompleteDirectory = prefs.getCharPref(
             "ldap_2.autoComplete.directoryServer");
 
     if(gCurrentIdentity.overrideGlobalPref) {
@@ -709,7 +701,7 @@ function setupLdapAutocompleteSession()
                     Components.interfaces.nsILDAPURL);
 
             try {
-                serverURL.spec = prefs.CopyCharPref(autocompleteDirectory + 
+                serverURL.spec = prefs.getCharPref(autocompleteDirectory + 
                                                     ".uri");
             } catch (ex) {
                 dump("ERROR: " + ex + "\n");
@@ -719,7 +711,7 @@ function setupLdapAutocompleteSession()
             // don't search on non-CJK strings shorter than this
             //
             try { 
-                LDAPSession.minStringLength = prefs.GetIntPref(
+                LDAPSession.minStringLength = prefs.getIntPref(
                     autocompleteDirectory + ".autoComplete.minStringLength");
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
@@ -729,7 +721,7 @@ function setupLdapAutocompleteSession()
             // don't search on CJK strings shorter than this
             //
             try { 
-                LDAPSession.cjkMinStringLength = prefs.GetIntPref(
+                LDAPSession.cjkMinStringLength = prefs.getIntPref(
                   autocompleteDirectory + ".autoComplete.cjkMinStringLength");
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
@@ -747,8 +739,9 @@ function setupLdapAutocompleteSession()
             //
             try {
                 ldapFormatter.nameFormat = 
-                    prefs.CopyUnicharPref(autocompleteDirectory + 
-                                          ".autoComplete.nameFormat");
+                    prefs.getComplexValue(autocompleteDirectory + 
+                                      ".autoComplete.nameFormat",
+                                      Components.interfaces.nsISupportsWString);
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsAbLDAPAutoCompFormatter use its default.
@@ -758,8 +751,9 @@ function setupLdapAutocompleteSession()
             //
             try {
                 ldapFormatter.addressFormat = 
-                    prefs.CopyUnicharPref(autocompleteDirectory + 
-                                          ".autoComplete.addressFormat");
+                    prefs.getComplexValue(autocompleteDirectory + 
+                                      ".autoComplete.addressFormat",
+                                      Components.interfaces.nsISupportsWString);
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsAbLDAPAutoCompFormatter use its default.
@@ -773,7 +767,7 @@ function setupLdapAutocompleteSession()
                 // 2 = other per-addressbook format
                 //
                 var showComments = 0;
-                showComments = prefs.GetIntPref(
+                showComments = prefs.getIntPref(
                     "mail.autoComplete.commentColumn");
 
                 switch (showComments) {
@@ -781,8 +775,9 @@ function setupLdapAutocompleteSession()
                 case 1:
                     // use the name of this directory
                     //
-                    ldapFormatter.commentFormat = prefs.CopyUnicharPref(
-                        autocompleteDirectory + ".description");
+                    ldapFormatter.commentFormat = prefs.getComplexValue(
+                                autocompleteDirectory + ".description",
+                                Components.interfaces.nsISupportsWString);
                     break;
 
                 case 2:
@@ -790,9 +785,9 @@ function setupLdapAutocompleteSession()
                     //
                     try {
                         ldapFormatter.commentFormat = 
-                            prefs.CopyUnicharPref(autocompleteDirectory + 
-                                                ".autoComplete.commentFormat");
-                
+                            prefs.getComplexValue(autocompleteDirectory + 
+                                        ".autoComplete.commentFormat",
+                                        Components.interfaces.nsISupportsWString);
                     } catch (innerException) {
                         // if nothing has been specified, use the ldap
                         // organization field
@@ -820,8 +815,10 @@ function setupLdapAutocompleteSession()
             //
             try {
                 LDAPSession.outputFormat = 
-                    prefs.CopyUnicharPref(autocompleteDirectory + 
-                                          ".autoComplete.outputFormat");
+                    prefs.getComplexValue(autocompleteDirectory + 
+                                      ".autoComplete.outputFormat",
+                                      Components.interfaces.nsISupportsWString);
+
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsLDAPAutoCompleteSession use its default.
@@ -830,8 +827,10 @@ function setupLdapAutocompleteSession()
             // override default search filter template?
             //
             try { 
-                LDAPSession.filterTemplate = prefs.CopyUnicharPref(
-                    autocompleteDirectory + ".autoComplete.filterTemplate");
+                LDAPSession.filterTemplate = prefs.getComplexValue(
+                    autocompleteDirectory + ".autoComplete.filterTemplate",
+                    Components.interfaces.nsISupportsWString);
+
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
                 // nsLDAPAutoCompleteSession use its default
@@ -844,7 +843,7 @@ function setupLdapAutocompleteSession()
                 // but there's no UI for that yet
                 // 
                 LDAPSession.maxHits = 
-                    prefs.GetIntPref(autocompleteDirectory + ".maxHits");
+                    prefs.getIntPref(autocompleteDirectory + ".maxHits");
             } catch (ex) {
                 // if this pref isn't there, or is out of range, no big deal. 
                 // just let nsLDAPAutoCompleteSession use its default.
@@ -1186,6 +1185,24 @@ function WizCallback(state)
 
 function ComposeLoad()
 {
+  // First get the preferences service
+  try {
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefService);
+    prefs = prefService.getBranch(null);
+    gPrefBranchInternal = prefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  }
+  catch (ex) {
+    dump("failed to preferences services\n");
+  }
+
+  try {
+    other_header = prefs.getCharPref("mail.compose.other.header");
+  }
+  catch (ex) {
+    dump("failed to get the mail.compose.other.header pref\n");
+  }
+
   AddMessageComposeOfflineObserver();
   AddDirectoryServerObserver(true);
 
@@ -1261,7 +1278,8 @@ function SetDocumentCharacterSet(aCharset)
 
 function UpdateMailEditCharset()
 {
-  var send_default_charset = prefs.getLocalizedUnicharPref("mailnews.send_default_charset");
+  var send_default_charset = prefs.getComplexValue("mailnews.send_default_charset",
+                                     Components.interfaces.nsIPrefLocalizedString);
 //  dump("send_default_charset is " + send_default_charset + "\n");
 
   var compFieldsCharset = msgCompose.compFields.characterSet;
@@ -1306,7 +1324,8 @@ function GetCharsetUIString()
 {
   var charset = msgCompose.compFields.characterSet;
   if (g_send_default_charset == null) {
-    g_send_default_charset = prefs.getLocalizedUnicharPref("mailnews.send_default_charset");
+    g_send_default_charset = prefs.getComplexValue("mailnews.send_default_charset",
+                                     Components.interfaces.nsIPrefLocalizedString);
   }
 
   charset = charset.toUpperCase();
@@ -1378,7 +1397,7 @@ function GenericSendMessage( msgType )
 			if (msgType == msgCompDeliverMode.Now || msgType == msgCompDeliverMode.Later)
 			{
 			  //Do we need to check the spelling?
-        if (prefs.GetBoolPref("mail.SpellCheckBeforeSend"))
+        if (prefs.getBoolPref("mail.SpellCheckBeforeSend"))
 	        goDoCommand('cmd_spelling');
 
 				//Check if we have a subject, else ask user for confirmation
@@ -1477,7 +1496,7 @@ function SendMessage()
 
 function SendMessageWithCheck()
 {
-    var warn = prefs.GetBoolPref("mail.warn_on_send_accel_key");
+    var warn = prefs.getBoolPref("mail.warn_on_send_accel_key");
 
     if (warn) {
         var buttonPressed = {value:1};
@@ -1499,7 +1518,7 @@ function SendMessageWithCheck()
             return;
         }
         if (checkValue.value) {
-            prefs.SetBoolPref("mail.warn_on_send_accel_key", false);
+            prefs.setBoolPref("mail.warn_on_send_accel_key", false);
         }
     }
 
@@ -2073,7 +2092,7 @@ function DetermineHTMLAction(convertible)
                   default :
                     //See if a preference has been set to tell us what to do. Note that we do not honor that
                     //preference for newsgroups. Only for e-mail addresses.
-                    var action = prefs.GetIntPref("mail.default_html_action");
+                    var action = prefs.getIntPref("mail.default_html_action");
                     switch (action)
                     {
                         case msgCompSendFormat.PlainText    :
@@ -2203,7 +2222,7 @@ function setupAutocomplete()
       // honor it as well
       //
       try {
-          if (prefs.GetIntPref("mail.autoComplete.commentColumn")) {
+          if (prefs.getIntPref("mail.autoComplete.commentColumn")) {
               document.getElementById('msgRecipient#1').showCommentColumn =
                   true;
           }

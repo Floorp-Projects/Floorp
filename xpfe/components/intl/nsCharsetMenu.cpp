@@ -52,7 +52,10 @@
 #include "nsCollationCID.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsICurrentCharsetListener.h"
 #include "nsQuickSort.h"
 #include "nsIObserver.h"
@@ -179,7 +182,7 @@ private:
 
   nsCOMPtr<nsIRDFService>               mRDFService;
   nsCOMPtr<nsICharsetConverterManager2> mCCManager;
-  nsCOMPtr<nsIPref>                     mPrefService;
+  nsCOMPtr<nsIPrefBranch>               mPrefs;
   nsCOMPtr<nsIObserver>                 mCharsetMenuObserver;
   nsCOMPtr<nsISupportsArray>            mDecoderList;
   nsCOMPtr<nsISupportsArray>            mEncoderList;
@@ -343,7 +346,7 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
 {
   nsresult rv;
 
-  if (!nsCRT::strcmp(aTopic, "nsPref:changed")) {
+  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsDependentString prefName(someData);
 
     if (prefName.Equals(NS_LITERAL_STRING(kBrowserStaticPrefKey))) {
@@ -681,7 +684,11 @@ nsresult nsCharsetMenu::InitResources()
   res = mCCManager->GetEncoderList(getter_AddRefs(mEncoderList));
   if (NS_FAILED(res)) return res;
 
-  mPrefService = do_GetService(NS_PREF_CONTRACTID, &res);
+  nsCOMPtr<nsIPrefService> mPrefService;
+  mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &res);
+  if (NS_FAILED(res)) return res;
+
+  res = mPrefService->GetBranch(nsnull, getter_AddRefs(mPrefs));
   if (NS_FAILED(res)) return res;
 
   mCharsetMenuObserver = new nsCharsetMenuObserver(this);
@@ -698,13 +705,16 @@ nsresult nsCharsetMenu::FreeResources()
   nsresult res = NS_OK;
 
   if (mCharsetMenuObserver) {
-    mPrefService->RemoveObserver(kBrowserStaticPrefKey, mCharsetMenuObserver);
-    mPrefService->RemoveObserver(kMaileditPrefKey, mCharsetMenuObserver);
+    nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefs);
+    if (pbi) {
+      pbi->RemoveObserver(kBrowserStaticPrefKey, mCharsetMenuObserver);
+      pbi->RemoveObserver(kMaileditPrefKey, mCharsetMenuObserver);
+    }
   }
 
-  mRDFService   = NULL;
-  mCCManager    = NULL;
-  mPrefService  = NULL;
+  mRDFService = NULL;
+  mCCManager  = NULL;
+  mPrefs      = NULL;
 
   return res;
 }
@@ -730,7 +740,7 @@ nsresult nsCharsetMenu::InitBrowserMenu()
 
   // mark the end of the static area, the rest is cache
   mBrowserCacheStart = mBrowserMenu.Count();
-  mPrefService->GetIntPref(kBrowserCacheSizePrefKey, &mBrowserCacheSize);
+  mPrefs->GetIntPref(kBrowserCacheSizePrefKey, &mBrowserCacheSize);
 
   // compute the position of the menu in the RDF container
   res = container->GetCount(&mBrowserMenuRDFPosition);
@@ -744,7 +754,9 @@ nsresult nsCharsetMenu::InitBrowserMenu()
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser cache charset menu");
 
   // register prefs callback
-  res = mPrefService->AddObserver(kBrowserStaticPrefKey, mCharsetMenuObserver);
+  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefs);
+  if (pbi)
+    res = pbi->AddObserver(kBrowserStaticPrefKey, mCharsetMenuObserver, PR_FALSE);
 
   return res;
 }
@@ -765,7 +777,9 @@ nsresult nsCharsetMenu::InitMaileditMenu()
   NS_ASSERTION(NS_SUCCEEDED(res), "error initializing mailedit charset menu from prefs");
 
   // register prefs callback
-  res = mPrefService->AddObserver(kMaileditPrefKey, mCharsetMenuObserver);
+  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefs);
+  if (pbi)
+    res = pbi->AddObserver(kMaileditPrefKey, mCharsetMenuObserver, PR_FALSE);
 
   return res;
 }
@@ -789,7 +803,7 @@ nsresult nsCharsetMenu::InitMailviewMenu()
 
   // mark the end of the static area, the rest is cache
   mMailviewCacheStart = mMailviewMenu.Count();
-  mPrefService->GetIntPref(kMailviewCacheSizePrefKey, &mMailviewCacheSize);
+  mPrefs->GetIntPref(kMailviewCacheSizePrefKey, &mMailviewCacheSize);
 
   // compute the position of the menu in the RDF container
   res = container->GetCount(&mMailviewMenuRDFPosition);
@@ -824,7 +838,7 @@ nsresult nsCharsetMenu::InitComposerMenu()
 
   // mark the end of the static area, the rest is cache
   mComposerCacheStart = mComposerMenu.Count();
-  mPrefService->GetIntPref(kComposerCacheSizePrefKey, &mComposerCacheSize);
+  mPrefs->GetIntPref(kComposerCacheSizePrefKey, &mComposerCacheSize);
 
   // compute the position of the menu in the RDF container
   res = container->GetCount(&mComposerMenuRDFPosition);
@@ -1215,14 +1229,16 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(
 {
   nsresult res = NS_OK;
 
-  PRUnichar * value = NULL;
-  res = mPrefService->GetLocalizedUnicharPref(aKey, &value);
+  nsCOMPtr<nsIPrefLocalizedString> pls;
+  res = mPrefs->GetComplexValue(aKey, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(pls));
   if (NS_FAILED(res)) return res;
 
-  if (value != NULL) {
-    res = AddFromStringToMenu(NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(value).get()), aArray, aContainer, 
-      aDecs, aIDPrefix);
-    nsMemory::Free(value);
+  if (pls != NULL) {
+    nsXPIDLString ucsval;
+    pls->ToString(getter_Copies(ucsval));
+    if (ucsval)
+      res = AddFromStringToMenu(NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(ucsval).get()), aArray,
+        aContainer, aDecs, aIDPrefix);
   }
 
   return res;
@@ -1238,7 +1254,7 @@ nsresult nsCharsetMenu::AddFromNolocPrefsToMenu(
   nsresult res = NS_OK;
 
   char * value = NULL;
-  res = mPrefService->CopyCharPref(aKey, &value);
+  res = mPrefs->GetCharPref(aKey, &value);
   if (NS_FAILED(res)) return res;
 
   if (value != NULL) {
@@ -1365,7 +1381,7 @@ nsresult nsCharsetMenu::WriteCacheToPrefs(nsVoidArray * aArray,
   }
 
   // write the pref
-  res = mPrefService->SetCharPref(aKey, NS_ConvertUCS2toUTF8(cache).get());
+  res = mPrefs->SetCharPref(aKey, NS_ConvertUCS2toUTF8(cache).get());
 
   return res;
 }

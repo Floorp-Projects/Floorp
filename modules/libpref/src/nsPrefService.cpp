@@ -259,13 +259,13 @@ NS_IMETHODIMP nsPrefService::GetDefaultBranch(const char *aPrefRoot, nsIPrefBran
 
 // Forward these methods through the nsIPrefBranchInternal headers
 
-NS_IMETHODIMP nsPrefService::AddObserver(const char *aDomain, nsIObserver *aObserver)
+NS_IMETHODIMP nsPrefService::AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak)
 {
   nsresult rv;
 
   nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_QueryInterface(mRootBranch, &rv);
   if (NS_SUCCEEDED(rv))
-    rv = prefBranch->AddObserver(aDomain, aObserver);
+    rv = prefBranch->AddObserver(aDomain, aObserver, aHoldWeak);
   return rv;
 }
 

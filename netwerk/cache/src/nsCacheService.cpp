@@ -133,19 +133,19 @@ nsCacheProfilePrefObserver::Install()
     nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefService, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = prefInternal->AddObserver(MEMORY_CACHE_ENABLE_PREF, this);
+    rv = prefInternal->AddObserver(MEMORY_CACHE_ENABLE_PREF, this, PR_FALSE);
     if (NS_FAILED(rv)) rv2 = rv;
 
-    rv = prefInternal->AddObserver(DISK_CACHE_ENABLE_PREF, this);
+    rv = prefInternal->AddObserver(DISK_CACHE_ENABLE_PREF, this, PR_FALSE);
     if (NS_FAILED(rv)) rv2 = rv;
     
-    rv = prefInternal->AddObserver(DISK_CACHE_DIR_PREF, this);
+    rv = prefInternal->AddObserver(DISK_CACHE_DIR_PREF, this, PR_FALSE);
     if (NS_FAILED(rv)) rv2 = rv;
     
-    rv = prefInternal->AddObserver(DISK_CACHE_CAPACITY_PREF, this);
+    rv = prefInternal->AddObserver(DISK_CACHE_CAPACITY_PREF, this, PR_FALSE);
     if (NS_FAILED(rv)) rv2 = rv;
     
-    rv = prefInternal->AddObserver(MEMORY_CACHE_CAPACITY_PREF, this);
+    rv = prefInternal->AddObserver(MEMORY_CACHE_CAPACITY_PREF, this, PR_FALSE);
     if (NS_FAILED(rv)) rv2 = rv;
     
     rv = ReadPrefs();
@@ -231,7 +231,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
         ReadPrefs();
         nsCacheService::OnProfileChanged();
     
-    } else if (!nsCRT::strcmp("nsPref:changed", topic)) {
+    } else if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, topic)) {
         if (!mHaveProfile)  return NS_OK;
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject, &rv);
         if (NS_FAILED(rv))

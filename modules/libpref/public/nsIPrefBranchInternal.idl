@@ -65,14 +65,27 @@ interface nsIPrefBranchInternal : nsISupports
    *
    * @param aDomain   The preference on which to listen for changes.
    * @param aObserver The object to be notified if the preference changes.
+   * @param aHoldWeak true  Hold a weak reference to |aObserver|. The object
+   *                        must implement the nsISupportsWeakReference
+   *                        interface or this will fail.
+   *                  false Hold a strong reference to |aObserver|.
    *
    * @note
    * Registering as a preference observer can open an object to potential
    * cyclical references which will cause memory leaks. These cycles generally
    * occur because an object both registers itself as an observer (causing the
    * branch to hold a reference to the observer) and holds a reference to the
-   * branch object for the purpose of getting/setting preference values. This
-   * should be addressed in the near future.
+   * branch object for the purpose of getting/setting preference values. There
+   * are 3 approaches which have been implemented in an attempt to avoid these
+   * situations.
+   * 1) The nsPrefBranch object supports nsISupportsWeakReference. Any consumer
+   *    may hold a weak reference to it instead of a strong one.
+   * 2) The nsPrefBranch object listens for xpcom-shutdown and frees all of the
+   *    objects currently in its observer list. This insures that long lived
+   *    objects (services for example) will be freed correctly.
+   * 3) The observer can request to be held as a weak reference when it is
+   *    registered. This insures that shorter lived objects (say one tied to an
+   *    open window) will not fall into the cyclical reference trap.
    *
    * @return NS_OK The observer was successfully set.
    * @return Other The observer could not be created.
@@ -80,7 +93,7 @@ interface nsIPrefBranchInternal : nsISupports
    * @see nsIObserver
    * @see removeObserver
    */
-  void addObserver(in string aDomain, in nsIObserver aObserver);
+  void addObserver(in string aDomain, in nsIObserver aObserver, in boolean aHoldWeak);
 
   /**
    * Called by a preferences consumer to remove itself from the preference
@@ -104,6 +117,6 @@ interface nsIPrefBranchInternal : nsISupports
 /**
  * Notification sent when a preference changes.
  */
-#define NS_PREFBRANCH_PREFCHANGE_OBSERVER_ID "nsPref:changed"
+#define NS_PREFBRANCH_PREFCHANGE_TOPIC_ID "nsPref:changed"
 
 %}

@@ -85,7 +85,6 @@ static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);
 static NS_DEFINE_CID(kCScriptNameSetRegistryCID,
                      NS_SCRIPT_NAMESET_REGISTRY_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
@@ -2426,8 +2425,8 @@ nsScriptSecurityManager::InitPrefs()
     // Set the initial value of the "javascript.enabled" prefs
     JSEnabledPrefChanged(securityPref);
     // set observer callbacks in case the value of the pref changes
-    prefBranchInternal->AddObserver(sJSEnabledPrefName, this);
-    prefBranchInternal->AddObserver(sJSMailEnabledPrefName, this);
+    prefBranchInternal->AddObserver(sJSEnabledPrefName, this, PR_FALSE);
+    prefBranchInternal->AddObserver(sJSMailEnabledPrefName, this, PR_FALSE);
     PRUint32 prefCount;
     char** prefNames;
 
@@ -2440,7 +2439,7 @@ nsScriptSecurityManager::InitPrefs()
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
     }
     //-- Set a callback for policy changes
-    prefBranchInternal->AddObserver(sPolicyPrefix, this);
+    prefBranchInternal->AddObserver(sPolicyPrefix, this, PR_FALSE);
 
     //-- Initialize the principals database from prefs
     rv = prefBranch->GetChildList(sPrincipalPrefix, &prefCount, &prefNames);
@@ -2451,7 +2450,7 @@ nsScriptSecurityManager::InitPrefs()
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
     }
     //-- Set a callback for principal changes
-    prefBranchInternal->AddObserver(sPrincipalPrefix, this);
+    prefBranchInternal->AddObserver(sPrincipalPrefix, this, PR_FALSE);
 
     return NS_OK;
 }
