@@ -213,6 +213,13 @@ public:
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
 
   /**
+   * Returns the top level window (this would be the containing window
+   * the same object that implements nsIWebShellContainer, nsIWebShellWindow, 
+   * and nsIBrowserWindow).
+   */
+  NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aTopLevelWindow) = 0;
+
+  /**
    * Set the DocLoaderObserver which receives all notifications from URLs 
    * loaded by the document.
    */
@@ -239,11 +246,6 @@ public:
    * outermost WebShell.
    */
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult) = 0;
-
-	/**
-	 * Get the root WebShell and allow the content/chrome sandbox to be crossed
-	 */
-	NS_IMETHOD GetRootWebShellEvenIfChrome(nsIWebShell*& aResult) = 0;
 
   /**
    * Set the parent WebShell.
