@@ -109,7 +109,11 @@ nsresult nsFontPackageService::CallDownload(const char *aFontPackID, PRInt8 aInS
     nsCOMPtr<nsIFontEnumerator> fontEnum = do_GetService("@mozilla.org/gfx/fontenumerator;1", &rv);
     if (NS_SUCCEEDED(rv)) { 
       PRBool have = PR_FALSE;
-      rv = fontEnum->HaveFontFor(aFontPackID, &have);
+
+      // aFontPackID="lang:xxxx", strip "lang:" and get the actual langID
+      NS_ASSERTION((strncmp(aFontPackID, "lang:", 5) == 0), "Invalid FontPackID format.");
+      const char *langID = &aFontPackID[5]; 
+      rv = fontEnum->HaveFontFor(langID, &have);
       if (NS_SUCCEEDED(rv)) { 
         if (!have)  {
           *aOutState = eDownload;
