@@ -1021,6 +1021,19 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   }
 #endif
 
+  // Make sure we get the reflow reason right. If an incremental
+  // reflow arrives that's targeted directly at the top-level combobox
+  // frame, then we can't pass it down to the children ``as is'':
+  // we're the last frame in the reflow command's chain. So, convert
+  // it to a resize reflow.
+  nsReflowReason reason = aReflowState.reason;
+  if (reason == eReflowReason_Incremental) {
+    nsIFrame* target;
+    aReflowState.reflowCommand->GetTarget(target);
+    if (target == this)
+      reason = eReflowReason_Resize;
+  }
+
   // now that we know what the overall display width & height will be
   // set up a new reflow state and reflow the area frame at that size
   nsSize availSize(dispWidth + aBorderPadding.left + aBorderPadding.right, 
@@ -1028,6 +1041,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, this, availSize);
   kidReflowState.mComputedWidth  = dispWidth;
   kidReflowState.mComputedHeight = dispHeight;
+  kidReflowState.reason = reason;
 
 #ifdef IBMBIDI
   const nsStyleVisibility* vis;
@@ -1056,6 +1070,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   nsSize txtAvailSize(dispWidth - aBtnWidth, dispHeight);
   nsHTMLReflowMetrics txtKidSize(&txtAvailSize);
   nsHTMLReflowState   txtKidReflowState(aPresContext, aReflowState, aDisplayFrame, txtAvailSize);
+  txtKidReflowState.reason = reason;
 
   aDisplayFrame->WillReflow(aPresContext);
   //aDisplayFrame->MoveTo(aPresContext, dspBorderPadding.left + aBorderPadding.left, dspBorderPadding.top + aBorderPadding.top);
