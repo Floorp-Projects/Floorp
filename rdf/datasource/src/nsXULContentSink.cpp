@@ -1008,7 +1008,16 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
     for (PRInt32 i = 0; i < ac; i++) {
         // Get upper-cased key
         const nsString& key = aNode.GetKeyAt(i);
-        SplitQualifiedName(key, nameSpaceID, attr);
+
+        attr = key;
+        nsIAtom* prefix = CutNameSpacePrefix(attr);
+        if (prefix != nsnull)
+        {
+            SplitQualifiedName(key, nameSpaceID, attr);
+            NS_RELEASE(prefix);
+        }
+        else
+            nameSpaceID = kNameSpaceID_None; // Unqualified attributes have a namespace of none (always)
 
         // Don't add xmlns: declarations, these are really just
         // processing instructions.
@@ -1025,27 +1034,8 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
         v = aNode.GetValueAt(i);
         nsRDFParserUtils::StripAndConvert(v);
 
-//#define USE_TAG_NAMESPACE_AS_DEFAULT_NAMESPACE
-#ifdef  USE_TAG_NAMESPACE_AS_DEFAULT_NAMESPACE
-        // XXX This is a hack that I'm not sure is legal: as a last
-        // ditch effort, we treat attributes with an unknown (or no)
-        // namespace as being in the same namespace as the tag itself.
-
-        // XXX Note, for this to really work right, you need to make
-        // sure to do this in GetXULIDAttribute(), too...
-        if ((nameSpaceID == kNameSpaceID_Unknown) ||
-            (nameSpaceID == kNameSpaceID_None)) {
-            nsAutoString tag = aNode.GetText();
-            nsIAtom* prefix = CutNameSpacePrefix(tag);
-            if (prefix) {
-                nameSpaceID = GetNameSpaceID(prefix);
-                NS_RELEASE(prefix);
-            }
-        }
-#endif
-
-        if (nameSpaceID == kNameSpaceID_HTML)
-            attr.ToLowerCase();
+        //if (nameSpaceID == kNameSpaceID_HTML)
+        //    attr.ToLowerCase(); // Not our problem. You'd better be lowercase.
 
         // Get the URI for the namespace, so we can construct a
         // fully-qualified property name.

@@ -1648,7 +1648,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     }
 
     // See if they're opening or closing the element.
-    if ((aNameSpaceID == kNameSpaceID_XUL) && (aName == kOpenAtom)) {
+    if ((aNameSpaceID == kNameSpaceID_None) && (aName == kOpenAtom)) {
         if (aValue.EqualsIgnoreCase("true")) {
             mContentsMustBeGenerated = PR_TRUE;
             rv = EnsureContentsGenerated();

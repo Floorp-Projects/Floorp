@@ -1803,7 +1803,9 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
     if ((index = uri.RFind('#')) < 0) {
         if ((index = uri.RFind('/')) < 0) {
             *aNameSpaceID = kNameSpaceID_None;
-            *aTag = NS_NewAtom(uri);
+            nsAutoString name;
+            uri.Right(name, uri.Length()-1);
+            *aTag = NS_NewAtom(name);
             return NS_OK;
         }
     }
