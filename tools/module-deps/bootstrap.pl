@@ -205,15 +205,11 @@ sub FindMakefiles {
   my @modules;
   my $modules_string = "";
   my $num_modules = 0;
-  my $modules_cmd = "mozilla/tools/module-deps/module-graph\.pl --file mozilla/tools/module-deps/meta\.dot --start-module $root_modules --list-only";
+  my $modules_cmd = "mozilla/tools/module-deps/module-graph\.pl --file mozilla/tools/module-deps/meta\.dot --start-module $root_modules --list-only --force-order mozilla/tools/module-deps/force_order\.txt";
   $modules_string = run_shell_command($modules_cmd, 0);
 
   # Yank modules we know we don't want.
   $modules_string =~ s/mozldap //; # no ldap.
-
-  ###
-  ###  Ordering could go here.
-  ###
 
   @modules = split(' ', $modules_string);
   $num_modules = $#modules + 1;

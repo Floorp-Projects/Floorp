@@ -36,7 +36,7 @@ Getopt::Long::Configure("auto_abbrev");
 sub PrintUsage {
   die <<END_USAGE
   Prints out required modules for specified directories.
-  usage: module-graph.pl [--list-only] [--start-module <mod> ] [--file <file> | <dir1> <dir2> ...]
+  usage: module-graph.pl [--list-only] [--start-module <mod> ] [--force-order <file> ] [--file <file> | <dir1> <dir2> ...]
 END_USAGE
 }
 
@@ -58,6 +58,8 @@ my $opt_list_only;
 my $load_file = 0;       # --file
 my $opt_start_module;    # --start-module optionally print out dependencies    
                          # for a given module.
+my $force_order = 0;     # --force-order gives rules on ordering outside of
+                         #   normal means.
 
 
 # Parse commandline input.
@@ -66,7 +68,8 @@ sub parse_args() {
   # Print usage if we get an unknown argument.
   PrintUsage() if !GetOptions('list-only' => \$opt_list_only,
 							  'start-module=s' => \$opt_start_module,
-							  'file=s' => \$load_file);
+							  'file=s' => \$load_file,
+							  'force-order=s' => \$force_order);
 
   # Pick up arguments, if any.
   if($opt_list_only) {
@@ -194,6 +197,83 @@ sub print_deps_matrix() {
   }
 }
 
+#
+#   Here we order an array based on other rules, and return the result.
+#   Optional from --force-order.
+#
+sub possibly_force_order {
+  my @modarray = @_;
+  
+  if ($force_order) {
+    open FORCEORDER, $force_order     or die "can't open force order file $force_order\n";
+    
+    my @mod_orders;
+    
+    LINE: while(<FORCEORDER>) {
+      # skip comments
+      next LINE if /^#/;
+      
+      # Should be two strings, or we skip.
+      @mod_orders = split;
+      if( $#mod_orders + 1 == 2 ) {
+        my $mod_before = $mod_orders[0];
+        my $has_before = -1;
+        my $mod_after = $mod_orders[1];
+        my $has_after = -1;
+        my $traverse = 0;
+        
+        my $mod_item = "";
+        foreach $mod_item (@modarray) {
+          # strip whitespace.
+          for ($mod_item) {
+              s/^\s+//;
+              s/\s+$//;
+          }
+          
+          if( $mod_item eq $mod_before) {
+            $has_before = $traverse;
+          }
+          if( $mod_item eq $mod_after ) {
+            $has_after = $traverse;
+          }
+          
+          $traverse++;
+        }
+        
+        # Must find both strings.
+        # Must be out of order to rewrite string.
+        if(-1 != $has_before && -1 != $has_after && $has_before > $has_after) {
+          # Rewrite the array.
+          my $modules_string = "";
+          $traverse = 0;
+          foreach $mod_item (@modarray) {
+            # skip before, it comes with after.
+            if( $traverse != $has_before ) {
+              # if after, then we add before.
+              if( $traverse == $has_after ) {
+                $modules_string .= $mod_before;
+                $modules_string .= " ";
+              }
+              
+              # add this item to the string.
+              $modules_string .= $mod_item;
+              $modules_string .= " ";
+            }
+            $traverse++;
+          }
+          
+          # rewrite return value.
+          @modarray = split(' ', $modules_string);
+        }
+      }
+    }
+    
+    close FORCEORDER;
+  }
+  
+  return @modarray;
+}
+
 # ** old method: find only internal nodes
 # (nodes with both parents and children)
 sub print_internal_nodes() {
@@ -237,7 +317,10 @@ sub print_dependency_list() {
 	my %saw;
 	undef %saw;
 	@unique_list = grep(!$saw{$_}++, @raw_list);
-	
+
+	# apply forced order if desired.
+	@unique_list = possibly_force_order(@unique_list);
+
 	my $i;
 	for ($i=0;$i <= $#unique_list; $i++) {
 	  print $unique_list[$i], " ";
@@ -349,6 +432,9 @@ sub walk_module_digraph {
 sub print_module_deps {
   # Recursively hunt down dependencies for $opt_start_module
   walk_module_digraph($opt_start_module, 1);
+
+  # apply forced ordering if needed.
+  @visited_nodes_leaf_first_order = possibly_force_order(@visited_nodes_leaf_first_order);
 
   # Post-recursion version.
   my $visited_mod;
