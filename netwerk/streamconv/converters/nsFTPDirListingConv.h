@@ -53,62 +53,6 @@
 }
 static NS_DEFINE_CID(kFTPDirListingConverterCID, NS_FTPDIRLISTINGCONVERTER_CID);
 
-// The nsFTPDirListingConv stream converter converts a stream of type "text/ftp-dir-SERVER_TYPE"
-// (where SERVER_TYPE is one of the following):
-//
-// SERVER TYPES:
-// generic
-// unix
-// dcts
-// ncsa
-// peter_lewis
-// machten
-// cms
-// tcpc
-// vms
-// nt
-// eplf
-//
-// nsFTPDirListingConv converts the raw ascii text directory generated via a FTP
-// LIST or NLST command, to the application/http-index-format MIME-type.
-// For more info see: http://www.area.com/~roeber/file_format.html
-
-typedef enum _FTP_Server_Type {
-    GENERIC,
-    UNIX,
-    DCTS,
-    NCSA,
-    PETER_LEWIS,
-    MACHTEN,
-    CMS,
-    TCPC,
-    VMS,
-    NT,
-    EPLF,
-    OS_2,
-    ERROR_TYPE
-} FTP_Server_Type;
-
-typedef enum _FTPentryType {
-    Dir,
-    File,
-    Link
-} FTPentryType;
-
-
-// indexEntry is the data structure used to maintain directory entry information.
-class indexEntry {
-public:
-    indexEntry() { mContentLen = 0; mType = File; mSupressSize = PR_FALSE; };
-
-    nsCString       mName;              // the file or dir name
-    FTPentryType    mType;              
-    PRInt32         mContentLen;        // length of the file
-    nsCString       mContentType;       // type of the file
-    PRExplodedTime  mMDTM;              // modified time
-    PRBool          mSupressSize;       // supress the size info from display
-};
-
 class nsFTPDirListingConv : public nsIStreamConverter {
 public:
     // nsISupports methods
@@ -128,52 +72,14 @@ public:
     virtual ~nsFTPDirListingConv();
     nsresult Init();
 
-    // For factory creation.
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
-        nsresult rv;
-        if (aOuter)
-            return NS_ERROR_NO_AGGREGATION;
-
-        nsFTPDirListingConv* _s = new nsFTPDirListingConv();
-        if (_s == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(_s);
-        rv = _s->Init();
-        if (NS_FAILED(rv)) {
-            delete _s;
-            return rv;
-        }
-        rv = _s->QueryInterface(aIID, aResult);
-        NS_RELEASE(_s);
-        return rv;
-    }
-
 private:
     // Get the application/http-index-format headers
     nsresult GetHeaders(nsACString& str, nsIURI* uri);
-
-    // util parsing methods
-    PRInt8   MonthNumber(const char *aCStr);
-    PRBool   IsLSDate(char *aCStr);
-
-    // date conversion/parsing methods
-    PRBool   ConvertUNIXDate(char *aCStr, PRExplodedTime& outDate);
-    PRBool   ConvertDOSDate(char *aCStr, PRExplodedTime& outDate);
-
-    // line parsing methods
-    nsresult ParseLSLine(char *aLine, indexEntry *aEntry);
-    nsresult ParseVMSLine(char *aLine, indexEntry *aEntry);
-
-    void     InitPRExplodedTime(PRExplodedTime& aTime);
-    PRBool   ls_lCandidate(const char *aLine); 
     char*    DigestBufferLines(char *aBuffer, nsCString &aString);
 
     // member data
-    FTP_Server_Type     mServerType;        // what kind of server is the data coming from?
     nsCAutoString       mBuffer;            // buffered data.
     PRBool              mSentHeading;       // have we sent 100, 101, 200, and 300 lines yet?
-
 
     nsIStreamListener   *mFinalListener; // this guy gets the converted data via his OnDataAvailable()
     nsIChannel          *mPartChannel;  // the channel for the given part we're processing.

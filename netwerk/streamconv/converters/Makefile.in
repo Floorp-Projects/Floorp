@@ -47,6 +47,7 @@ EXPORTS =                 \
         $(NULL)
 
 CPPSRCS		= \
+		ParseFTPList.cpp \
 		nsMultiMixedConv.cpp \
 		nsFTPDirListingConv.cpp \
 		nsGopherDirListingConv.cpp \
