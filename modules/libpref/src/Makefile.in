@@ -59,7 +59,7 @@ PREF_JS_EXPORTS	= \
 		$(srcdir)/init/editor.js \
 		$(NULL)
 
-ifneq (,filter mac cocoa,$(MOZ_WIDGET_TOOLKIT))
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 PREF_JS_EXPORTS += $(srcdir)/mac/macprefs.js
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
