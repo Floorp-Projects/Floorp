@@ -24,11 +24,9 @@
  */
 
 
+#include "nsCRT.h"
 #include "prmem.h"
 #include "prprf.h"
-
-#include "nsFileSpec.h"
-
 #include "VerReg.h"
 #include "ScheduledTasks.h"
 #include "nsInstallLogComment.h"
@@ -36,7 +34,7 @@
 
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
-#include "nsReadableUtils.h"
+#include "nsNativeCharsetUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsInstallLogComment)
 
@@ -49,6 +47,7 @@ nsInstallLogComment::nsInstallLogComment( nsInstall* inInstall,
 {
     MOZ_COUNT_CTOR(nsInstallLogComment);
 
+    *error = nsInstall::SUCCESS;
     if (inInstall == NULL) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
@@ -90,24 +89,14 @@ char* nsInstallLogComment::toString()
     if (buffer == nsnull || !mInstall)
         return nsnull;
 
-    char* cstrFileOpCommand = ToNewCString(mFileOpCommand);
-    char* cstrComment       = ToNewCString(mComment);
-
-    if((cstrFileOpCommand == nsnull) || (cstrComment == nsnull))
-        return nsnull;
-
-    rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2(cstrFileOpCommand));
+    rsrcVal = mInstall->GetResourcedString(mFileOpCommand);
     if (rsrcVal)
     {
-        PR_snprintf(buffer, 1024, rsrcVal, cstrComment);
+        nsCAutoString comment;
+        if ( NS_SUCCEEDED( NS_CopyUnicodeToNative(mComment, comment) ) )
+          PR_snprintf(buffer, 1024, rsrcVal, comment.get());
         nsCRT::free(rsrcVal);
     }
-
-    if (cstrFileOpCommand)
-        Recycle(cstrFileOpCommand);
-
-    if (cstrComment)
-        Recycle(cstrComment);
 
     return buffer;
 }

@@ -71,7 +71,7 @@ class nsWinProfile
      */
     PRInt32 GetString( nsString section, nsString key, nsString* aReturn );
     
-    nsString* GetFilename();
+    nsString& GetFilename();
     nsInstall* InstallObject();
     
     PRInt32 FinalWriteString( nsString section, nsString key, nsString value );
@@ -80,7 +80,7 @@ class nsWinProfile
   private:
     
     /* Private Fields */
-    nsString*  mFilename;
+    nsString   mFilename;
     nsInstall* mInstallObject;
     
     /* Private Methods */

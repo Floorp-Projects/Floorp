@@ -32,9 +32,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-#include "nsSpecialSystemDirectory.h"
 #include "nsProxiedService.h"
-#include "nsFileStream.h"
 #include "nsIURI.h"
 #include "nsIFileURL.h"
 #include "nsNetUtil.h"
@@ -190,11 +188,6 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         }
     }
 
-    if (!report)
-        return;
-
-    nsIXPIListener *listener;
-
     // lets set up an eventQ so that our xpcom/proxies will not have to:
     nsCOMPtr<nsISoftwareUpdate> softwareUpdate =
              do_GetService(kSoftwareUpdateCID, &rv);
@@ -205,18 +198,24 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         return;
     }
 
-    softwareUpdate->GetMasterListener(&listener);
+    nsCOMPtr<nsIXPIListener> listener;
+    softwareUpdate->GetMasterListener(getter_AddRefs(listener));
 
     if(listener)
     {
         nsAutoString logMessage;
-        logMessage.Assign(NS_LITERAL_STRING("Line: "));
-        logMessage.AppendInt(report->lineno, 10);
-        logMessage.Append(NS_LITERAL_STRING("\t"));
-        if (report->ucmessage)
-            logMessage.Append( NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage) );
+        if (report)
+        {
+            logMessage.Assign(NS_LITERAL_STRING("Line: "));
+            logMessage.AppendInt(report->lineno, 10);
+            logMessage.Append(NS_LITERAL_STRING("\t"));
+            if (report->ucmessage)
+                logMessage.Append( NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage) );
+            else
+                logMessage.AppendWithConversion( message );
+        }
         else
-            logMessage.AppendWithConversion( message );
+            logMessage.AssignWithConversion( message );
 
         listener->OnLogComment( logMessage.get() );
     }
@@ -247,7 +246,6 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* 
 
     nsIFile* jFile;
     nsresult rv =jarFile->Clone(&jFile);
-    //NS_NewLocalFile(jarFile, PR_TRUE, getter_AddRefs(jFile));
     if (NS_SUCCEEDED(rv))
       rv = hZip->Init(jFile);
 
@@ -273,17 +271,9 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* 
         return nsInstall::INVALID_SIGNATURE;
     }
 
-    // Extract the install.js file to the temporary directory
-    nsSpecialSystemDirectory installJSFileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-    installJSFileSpec += "install.js";
-    installJSFileSpec.MakeUnique();
-
     // Extract the install.js file.
-    nsCOMPtr<nsILocalFile> iFile;
-    rv = NS_NewNativeLocalFile(nsDependentCString(installJSFileSpec), PR_TRUE, getter_AddRefs(iFile));
-
-    if (NS_SUCCEEDED(rv))
-      rv = hZip->Extract("install.js", iFile);
+    nsCOMPtr<nsIInputStream> instream;
+    rv = hZip->GetInputStream("install.js", getter_AddRefs(instream));
     if ( NS_SUCCEEDED(rv) )
     {
         // Read it into a buffer
@@ -292,12 +282,9 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* 
         PRUint32 readLength;
         result = nsInstall::CANT_READ_ARCHIVE;
 
-        nsInputFileStream fileStream(installJSFileSpec);
-        nsCOMPtr<nsIInputStream> instream = fileStream.GetIStream();
-
-        if ( instream )
+        rv = instream->Available(&bufferLength);
+        if (NS_SUCCEEDED(rv))
         {
-            instream->Available(&bufferLength);
             buffer = new char[bufferLength + 1];
 
             if (buffer != nsnull)
@@ -315,11 +302,8 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* 
                     delete [] buffer;
                 }
             }
-
-            fileStream.close();
         }
-
-        installJSFileSpec.Delete(PR_FALSE);
+        instream->Close();
     }
     else
     {

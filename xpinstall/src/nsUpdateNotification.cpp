@@ -539,7 +539,7 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
 					nsMemory::Free(regkeyCString);
 
                     // check to see if this software title should be "flashed"
-                    if (IsNewerOrUninstalled(NS_LossyConvertUCS2toASCII(regKeyString).get(), NS_LossyConvertUCS2toASCII(versionString).get()))
+                    if (IsNewerOrUninstalled(NS_ConvertUCS2toUTF8(regKeyString).get(), NS_ConvertUCS2toUTF8(versionString).get()))
                     {
                         //assert into flash
                         

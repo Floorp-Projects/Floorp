@@ -119,7 +119,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsInstallFolder* folder = new nsInstallFolder();
         if ( folder )
         {
-          folder->Init(a->GetJarFileLocation());
+          folder->Init(a->GetJarFileLocation(),nsString());
           JSObject* fileSpecObject =
               JS_NewObject(cx, &FileSpecObjectClass, gFileSpecProto, NULL);
 
@@ -333,7 +333,7 @@ PR_STATIC_CALLBACK(JSBool)
 InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRInt32   b0;
+  int32   b0;
 
   *rval = JSVAL_VOID;
 
@@ -345,35 +345,19 @@ InstallAbortInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   if(argc >= 1)
   {
     //  public int AbortInstall(Number aErrorNumber);
-    if(JSVAL_IS_NUMBER(argv[0]))
+    if(JS_ValueToInt32(cx, argv[0], &b0))
     {
-      b0 = JSVAL_TO_INT(argv[0]);
-
-      if(NS_OK != nativeThis->AbortInstall(b0))
-      {
-        return JS_FALSE;
-      }
+      nativeThis->AbortInstall(b0);
     }
     else
+    {
       JS_ReportError(cx, "Parameter must be a number");
-
-    *rval = JSVAL_VOID;
+    }
   }
   else if(argc == 0)
   {
     //  public int AbortInstall(void);
-
-    if(NS_OK != nativeThis->AbortInstall(nsInstall::INSTALL_CANCELLED))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else
-  {
-    JS_ReportError(cx, "Function AbortInstall requires 0 or 1 parameter");
-    return JS_FALSE;
+    nativeThis->AbortInstall(nsInstall::INSTALL_CANCELLED);
   }
 
   return JS_TRUE;
@@ -410,18 +394,16 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
     ConvertJSValToStr(b0, cx, argv[0]);
 
-    if(NS_OK != nativeThis->AddDirectory(b0, &nativeRet))
+    if(NS_OK == nativeThis->AddDirectory(b0, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else if (argc == 4)
   {
     //  public int AddDirectory ( String registryName,
     //                            String jarSourcePath,
-    //                            String localDirSpec,
+    //                            Object localDirSpec,
     //                            String relativeLocalPath);
 
     ConvertJSValToStr(b0, cx, argv[0]);
@@ -444,12 +426,10 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    if(NS_OK != nativeThis->AddDirectory(b0, b1, folder, b3, &nativeRet))
+    if(NS_OK == nativeThis->AddDirectory(b0, b1, folder, b3, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else if (argc == 5)
   {
@@ -483,13 +463,10 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
     if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, folder, b4, &nativeRet))
     {
-        return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-
   }
-  else if (argc == 6)
+  else if (argc >= 6)
   {
      //   public int AddDirectory (  String registryName,
      //                              String version,        --OR--     VersionInfo version,
@@ -525,17 +502,14 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    if(NS_OK != nativeThis->AddDirectory(b0, b1, b2, folder, b4, flags, &nativeRet))
+    if(NS_OK == nativeThis->AddDirectory(b0, b1, b2, folder, b4, flags, &nativeRet))
     {
-        return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
     JS_ReportError(cx, "Install.AddDirectory() parameters error");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -607,10 +581,9 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
     rv= nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, flags, &nativeRet);
     JS_ResumeRequest(cx, saveDepth);
-    if (NS_FAILED(rv))
-      return JS_FALSE;
 
-    *rval = INT_TO_JSVAL(nativeRet);
+    if (NS_SUCCEEDED(rv))
+      *rval = INT_TO_JSVAL(nativeRet);
   }
   else if(argc >= 5)
   {
@@ -647,10 +620,9 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
     rv = nativeThis->AddSubcomponent(b0, b1, b2, folder, b4, &nativeRet);
     JS_ResumeRequest(cx, saveDepth);
-    if (NS_FAILED(rv))
-        return JS_FALSE;
 
-    *rval = INT_TO_JSVAL(nativeRet);
+    if (NS_SUCCEEDED(rv))
+      *rval = INT_TO_JSVAL(nativeRet);
   }
   else if(argc >= 4)
   {
@@ -680,12 +652,10 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
-    if(NS_OK != nativeThis->AddSubcomponent(b0, b1, folder, b3, &nativeRet))
+    if(NS_OK == nativeThis->AddSubcomponent(b0, b1, folder, b3, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else if(argc >= 1)
   {
@@ -693,17 +663,14 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     ConvertJSValToStr(b0, cx, argv[0]);
 
-    if(NS_OK != nativeThis->AddSubcomponent(b0, &nativeRet))
+    if(NS_OK == nativeThis->AddSubcomponent(b0, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "Function AddSubcomponent requires 6 parameters");
-    return JS_FALSE;
+    JS_ReportError(cx, "Install.addFile parameter error");
   }
 
   return JS_TRUE;
@@ -748,7 +715,7 @@ InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if(NS_OK != nativeThis->DiskSpaceAvailable(b0, &nativeRet))
     {
-      return JS_FALSE;
+      return JS_TRUE;
     }
 
     double d;
@@ -760,7 +727,6 @@ InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   else
   {
     JS_ReportError(cx, "Function DiskSpaceAvailable requires 1 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -825,8 +791,7 @@ InstallExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   else
   {
-    JS_ReportError(cx, "Function Execute requires 1 parameter");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "Function Execute requires 1 parameter");
   }
 
   return JS_TRUE;

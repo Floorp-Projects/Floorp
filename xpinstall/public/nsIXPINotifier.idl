@@ -30,7 +30,7 @@ interface nsIXPIListener : nsISupports
 {
     void    onInstallStart(in wstring URL);
     void    onInstallDone(in wstring URL, in long status);
-    void    onPackageNameSet(in wstring URL, in wstring UIPackageName);
+    void    onPackageNameSet(in wstring URL, in wstring UIPackageName, in wstring version);
     void    onItemScheduled(in wstring message );
     void    onFinalizeProgress(in wstring message, in long itemNum, in long totNum );
     void    onLogComment(in wstring comment);

@@ -30,15 +30,13 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsReadableUtils.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
 #include "nsHashtable.h"
-#include "nsFileStream.h"
 #include "nsIFileChannel.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 
@@ -48,6 +46,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prprf.h"
+#include "nsCRT.h"
 
 #include "VerReg.h"
 
@@ -361,6 +360,8 @@ nsInstall::InternalAbort(PRInt32 errcode)
     nsInstallObject* ie;
     if (mInstalledFiles != nsnull)
     {
+        // abort must work backwards through the list so cleanup can
+        // happen in the correct order
         for (PRInt32 i = mInstalledFiles->Count()-1; i >= 0; i--)
         {
             ie = (nsInstallObject *)mInstalledFiles->ElementAt(i);
@@ -953,11 +954,10 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
 {
     long        err;
     char        dir[MAXREGPATHLEN];
-    nsFileSpec  nsfsDir;
     nsresult    res = NS_OK;
 
     if(!aNewFolder)
-      return INVALID_ARGUMENTS;
+        return INVALID_ARGUMENTS;
 
     *aNewFolder = nsnull;
 
@@ -973,44 +973,43 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
 
     if((err = VR_GetDefaultDirectory( NS_CONST_CAST(char *, componentCString.get()), sizeof(dir), dir )) != REGERR_OK)
     {
-        if((err = VR_GetPath( NS_CONST_CAST(char *, componentCString.get()), sizeof(dir), dir )) == REGERR_OK)
+        // if there's not a default directory, try to see if the component
+        // // is registered as a file and then strip the filename off the path
+        if((err = VR_GetPath( NS_CONST_CAST(char *, componentCString.get()), sizeof(dir), dir )) != REGERR_OK)
         {
-            int i;
+          // no path, either
+          *dir = '\0';
+        }
+    }
 
-            nsString dirStr; dirStr.AssignWithConversion(dir);
-            if (  (i = dirStr.RFindChar(FILESEP)) > 0 )
-            {
-                // i is the index in the string, not the total number of
-                // characters in the string.  ToCString() requires the
-                // total number of characters in the string to copy,
-                // therefore add 1 to it.
-                dirStr.Truncate(i + 1);
-                dirStr.ToCString(dir, MAXREGPATHLEN);
-            }
+    nsCOMPtr<nsILocalFile> componentDir;
+    nsCOMPtr<nsIFile> componentIFile;
+    if(*dir != '\0')
+        NS_NewNativeLocalFile( nsDependentCString(dir), PR_FALSE, getter_AddRefs(componentDir) );
+
+    if ( componentDir )
+    {
+        PRBool isFile;
+
+        res = componentDir->IsFile(&isFile);
+        if (NS_SUCCEEDED(res) && isFile)
+            componentDir->GetParent(getter_AddRefs(componentIFile));
+        else
+            componentIFile = do_QueryInterface(componentDir);
+
+        nsInstallFolder * folder = new nsInstallFolder();
+        if (!folder)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        res = folder->Init(componentIFile, aSubdirectory);
+        if (NS_FAILED(res))
+        {
+            delete folder;
         }
         else
         {
-            *dir = '\0';
+            *aNewFolder = folder;
         }
-    }
-    else
-    {
-        *dir = '\0';
-    }
-
-    if(*dir != '\0')
-    {
-      nsInstallFolder * folder = new nsInstallFolder();
-      if (!folder) return NS_ERROR_OUT_OF_MEMORY;
-      res = folder->Init(NS_ConvertASCIItoUCS2(dir), aSubdirectory);
-      if (NS_FAILED(res))
-      {
-        delete folder;
-      }
-      else
-      {
-        *aNewFolder = folder;
-      }
     }
 
     return res;
@@ -1253,11 +1252,12 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
         if (NS_FAILED(ret))
             goto cleanup;
 
-        if (!pKey.IsEmpty() && !pKey.IsEmpty())
+        if (!pKey.IsEmpty() && !pVal.IsEmpty())
         {
             JSString* propValJSStr = JS_NewUCStringCopyZ(cx, NS_REINTERPRET_CAST(const jschar*, pVal.get()));
             jsval propValJSVal = STRING_TO_JSVAL(propValJSStr);
-            JS_SetProperty(cx, res, pKey.get(), &propValJSVal);
+            nsString UCKey = NS_ConvertUTF8toUCS2(pKey);
+            JS_SetUCProperty(cx, res, UCKey.get(), UCKey.Length(), &propValJSVal);
         }
     }
 
@@ -1474,11 +1474,14 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     {
         // found one saved in the registry
         mPackageFolder = new nsInstallFolder();
-        if (mPackageFolder)
+        nsCOMPtr<nsILocalFile> packageDir;
+        NS_NewNativeLocalFile(
+                            nsDependentCString(szRegPackagePath), // native path
+                            PR_FALSE, getter_AddRefs(packageDir) );
+
+        if (mPackageFolder && packageDir)
         {
-            if (NS_FAILED( mPackageFolder->Init(
-                                NS_ConvertASCIItoUCS2(szRegPackagePath),
-                                nsAutoString() ) ))
+            if (NS_FAILED( mPackageFolder->Init(packageDir, nsString()) ))
             {
                 delete mPackageFolder;
                 mPackageFolder = nsnull;
@@ -1493,7 +1496,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     mStartInstallCompleted = PR_TRUE;
     mFinalStatus = MALFORMED_INSTALL;
     if (mListener)
-        mListener->OnPackageNameSet(mInstallURL.get(), mUIName.get());
+        mListener->OnPackageNameSet(mInstallURL.get(), mUIName.get(), aVersion.get());
 
     return NS_OK;
 }
@@ -1618,7 +1621,7 @@ nsInstall::FileOpDirGetParent(nsInstallFolder& aTarget, nsInstallFolder** thePar
     {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-      folder->Init(parent);
+      folder->Init(parent,nsString());
       *theParentFolder = folder;
   }
   else
@@ -2068,6 +2071,7 @@ nsInstall::FileOpFileWindowsGetShortName(nsInstallFolder& aTarget, nsString& aSh
   PRBool              flagExists;
   nsString            tmpNsString;
   nsCAutoString       nativeTargetPath;
+  nsAutoString        unicodePath;
   char                nativeShortPathName[MAX_PATH];
   nsCOMPtr<nsIFile>   localTarget(aTarget.GetFileSpec());
 
@@ -2091,20 +2095,29 @@ nsInstall::FileOpFileWindowsGetShortName(nsInstallFolder& aTarget, nsString& aSh
         return NS_OK;
 
       err = GetShortPathName(nativeTargetPath.get(), nativeShortPathNameTmp, err + 1);
-      // Is it safe to assume that the second time around the buffer is big enough
-      // and not to worry about it unless it's a different problem?
-
-      // if err is 0, it's not a buffer size problem.  It's something else unexpected.
+      // It is safe to assume that the second time around the buffer is big
+      // enough and not to worry about it unless it's a different problem.  If
+      // it failed the first time because of buffer size being too small, err
+      // will be the buffer size required.  If it's any other error, err will
+      // be 0 and GetLastError() will have the actual error.
       if(err != 0)
-        aShortPathName.AssignWithConversion(nativeShortPathNameTmp);
+      {
+        // if err is 0, it's not a buffer size problem.  It's something else unexpected.
+        NS_CopyNativeToUnicode(nsDependentCString(nativeShortPathNameTmp), unicodePath);
+      }
 
       if(nativeShortPathNameTmp)
         delete [] nativeShortPathNameTmp;
     }
     else if(err != 0)
+    {
       // if err is 0, it's not a buffer size problem.  It's something else unexpected.
-      aShortPathName.AssignWithConversion(nativeShortPathName);
+      NS_CopyNativeToUnicode(nsDependentCString(nativeShortPathName), unicodePath);
+    }
   }
+
+  if (!unicodePath.IsEmpty())
+    aShortPathName = unicodePath;
 
 #endif
 

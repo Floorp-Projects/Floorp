@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  windowwatcher \
 		  plugin \
+		  unicharutil \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
@@ -99,7 +100,6 @@ CPPSRCS		+= \
 		nsWinReg.cpp \
 		nsJSWinReg.cpp \
 		nsWinRegItem.cpp \
-		nsWinRegValue.cpp \
 		nsWinProfile.cpp \
 		nsJSWinProfile.cpp \
 		nsWinProfileItem.cpp \
@@ -117,6 +117,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_XPCOM_OBSOLETE_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(ZLIB_LIBS) \
 		$(NULL)
 

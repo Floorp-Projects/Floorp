@@ -23,8 +23,6 @@
  */
 
 #include "nscore.h"
-#include "nsFileSpec.h"
-#include "nsFileStream.h"
 #include "nsInstall.h" // for error codes
 #include "prmem.h"
 #include "nsInstallBitwise.h"

@@ -35,7 +35,6 @@
 #include "plevent.h"
 
 #include "nsString.h"
-#include "nsFileSpec.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"

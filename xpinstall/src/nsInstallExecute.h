@@ -35,7 +35,7 @@
 #include "nsInstall.h"
 #include "nsIDOMInstallVersion.h"
 
-PRInt32 xpi_PrepareProcessArguments(char *aArgsString, char **aArgs, PRInt32 aArgsAvailable);
+PRInt32 xpi_PrepareProcessArguments(const char *aArgsString, char **aArgs, PRInt32 aArgsAvailable);
 
 
 class nsInstallExecute : public nsInstallObject 

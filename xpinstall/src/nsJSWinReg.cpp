@@ -81,7 +81,6 @@ PR_STATIC_CALLBACK(JSBool)
 WinRegSetRootKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsWinReg *nativeThis  = (nsWinReg*)JS_GetPrivate(cx, obj);
-  JSBool   rBool        = JS_FALSE;
   PRInt32  b0;
 
   *rval = JSVAL_NULL;
@@ -94,25 +93,19 @@ WinRegSetRootKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   if(argc >= 1)
   {
-    //  public int setRootKey(PRInt32 key);
-
-    if(!JS_ValueToInt32(cx, argv[0], (int32 *)&b0))
+    //  public void setRootKey(PRInt32 key);
+    if(JS_ValueToInt32(cx, argv[0], (int32 *)&b0))
     {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      nativeThis->SetRootKey(b0);
     }
-
-    if(NS_OK != nativeThis->SetRootKey(b0))
+    else
     {
-      return JS_FALSE;
+      JS_ReportWarning(cx, "Parameter must be a number");
     }
-
-    *rval = JSVAL_VOID;
   }
   else
   {
-    JS_ReportError(cx, "Function SetRootKey requires 1 parameters");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "Function SetRootKey requires 1 parameters");
   }
 
   return JS_TRUE;
@@ -126,7 +119,7 @@ PR_STATIC_CALLBACK(JSBool)
 WinRegKeyExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsWinReg *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
-  PRInt32 nativeRet;
+  PRBool nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_FALSE;
@@ -139,20 +132,22 @@ WinRegKeyExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
   if(argc >= 1)
   {
-    //  public int keyExists ( String subKey );
+    //  public boolean keyExists ( String subKey );
 
     ConvertJSValToStr(b0, cx, argv[0]);
 
-    if(NS_OK != nativeThis->KeyExists(b0, &nativeRet))
+    if(NS_OK == nativeThis->KeyExists(b0, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = BOOLEAN_TO_JSVAL(nativeRet);
     }
-
-    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+    else
+    {
+      NS_WARNING("WinReg.KeyExists() internal error");
+    }
   }
   else
   {
-    JS_ReportError(cx, "WinReg.KeyExists() parameters error");
+    JS_ReportWarning(cx, "WinReg.KeyExists() parameters error");
   }
 
   return JS_TRUE;
@@ -165,7 +160,7 @@ PR_STATIC_CALLBACK(JSBool)
 WinRegValueExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsWinReg *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
-  PRInt32 nativeRet;
+  PRBool nativeRet;
   nsAutoString b0;
   nsAutoString b1;
 
@@ -179,22 +174,20 @@ WinRegValueExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   if(argc >= 2)
   {
-    //  public int valueExists ( String subKey,
+    //  public boolean valueExists ( String subKey,
     //                           String value );
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->ValueExists(b0, b1, &nativeRet))
+    if(NS_OK == nativeThis->ValueExists(b0, b1, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = BOOLEAN_TO_JSVAL(nativeRet);
     }
-
-    *rval = BOOLEAN_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.ValueExists() parameters error");
+    JS_ReportWarning(cx, "WinReg.ValueExists() parameters error");
   }
 
   return JS_TRUE;
@@ -220,20 +213,18 @@ WinRegIsKeyWritable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
   if(argc >= 1)
   {
-    //  public int isKeyWritable ( String subKey );
+    //  public boolean isKeyWritable ( String subKey );
 
     ConvertJSValToStr(b0, cx, argv[0]);
 
-    if(NS_OK != nativeThis->IsKeyWritable(b0, &nativeRet))
+    if(NS_OK == nativeThis->IsKeyWritable(b0, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = BOOLEAN_TO_JSVAL(nativeRet);
     }
-
-    *rval = BOOLEAN_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.IsKeyWritable() parameters error");
+    JS_ReportWarning(cx, "WinReg.IsKeyWritable() parameters error");
   }
 
   return JS_TRUE;
@@ -250,7 +241,7 @@ WinRegCreateKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   nsAutoString b0;
   nsAutoString b1;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -266,17 +257,14 @@ WinRegCreateKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->CreateKey(b0, b1, &nativeRet))
+    if(NS_OK == nativeThis->CreateKey(b0, b1, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.CreateKey() parameters error");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "WinReg.CreateKey() parameters error");
   }
 
   return JS_TRUE;
@@ -292,7 +280,7 @@ WinRegDeleteKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   PRInt32 nativeRet;
   nsAutoString b0;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -306,17 +294,14 @@ WinRegDeleteKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
     ConvertJSValToStr(b0, cx, argv[0]);
 
-    if(NS_OK != nativeThis->DeleteKey(b0, &nativeRet))
+    if(NS_OK == nativeThis->DeleteKey(b0, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.DeleteKey() parameters error");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "WinReg.DeleteKey() parameters error");
   }
 
   return JS_TRUE;
@@ -334,7 +319,7 @@ WinRegDeleteValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   nsString b0;
   nsString b1;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -350,17 +335,14 @@ WinRegDeleteValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->DeleteValue(b0, b1, &nativeRet))
+    if(NS_OK == nativeThis->DeleteValue(b0, b1, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.DeleteValue() parameters error");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "WinReg.DeleteValue() parameters error");
   }
 
   return JS_TRUE;
@@ -378,7 +360,7 @@ WinRegSetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   nsAutoString b1;
   nsAutoString b2;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -396,17 +378,14 @@ WinRegSetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     ConvertJSValToStr(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
 
-    if(NS_OK != nativeThis->SetValueString(b0, b1, b2, &nativeRet))
+    if(NS_OK == nativeThis->SetValueString(b0, b1, b2, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.SetValueString() parameters error");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "WinReg.SetValueString() parameters error");
   }
 
   return JS_TRUE;
@@ -433,23 +412,20 @@ WinRegGetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   if(argc >= 2)                             
   {
-    //  public int getValueString ( String subKey,
+    //  public string getValueString ( String subKey,
     //                              String valueName);
 
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->GetValueString(b0, b1, &nativeRet))
+    if(NS_OK == nativeThis->GetValueString(b0, b1, &nativeRet))
     {
-      return JS_FALSE;
+      ConvertStrToJSVal(nativeRet, cx, rval);
     }
-
-    ConvertStrToJSVal(nativeRet, cx, rval);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.GetValueString() parameters error");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "WinReg.GetValueString() parameters error");
   }
 
   return JS_TRUE;
@@ -559,9 +535,9 @@ WinRegSetValueNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
-  PRInt32      ib2;
+  int32        ib2;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -578,27 +554,18 @@ WinRegSetValueNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(JSVAL_IS_INT(argv[2])) 
+    if(!JS_ValueToInt32(cx, argv[2], &ib2))
     {
-      ib2 = JSVAL_TO_INT(argv[2]);
+      JS_ReportWarning(cx, "Parameter 3 must be a number");
     }
-    else
+    else if(NS_OK == nativeThis->SetValueNumber(b0, b1, ib2, &nativeRet))
     {
-      JS_ReportError(cx, "Parameter 3 must be a number");
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    if(NS_OK != nativeThis->SetValueNumber(b0, b1, ib2, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.SetValueNumber() parameters error");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "WinReg.SetValueNumber() parameters error");
   }
 
   return JS_TRUE;
@@ -631,17 +598,14 @@ WinRegGetValueNumber(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->GetValueNumber(b0, b1, &nativeRet))
+    if(NS_OK == nativeThis->GetValueNumber(b0, b1, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.GetValueNumber() parameters error");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "WinReg.GetValueNumber() parameters error");
   }
 
   return JS_TRUE;
@@ -654,12 +618,10 @@ PR_STATIC_CALLBACK(JSBool)
 WinRegSetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsWinReg *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
-//  PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
-//  nsWinRegItem *b2;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -689,8 +651,7 @@ WinRegSetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   else
   {
-    JS_ReportError(cx, "WinReg.SetValue() parameters error");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "WinReg.SetValue() parameters error");
   }
 
   return JS_TRUE;
@@ -723,17 +684,14 @@ WinRegGetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    if(NS_OK != nativeThis->GetValue(b0, b1, &nativeRet))
+    if(NS_OK == nativeThis->GetValue(b0, b1, &nativeRet))
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nativeRet);
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
   {
-    JS_ReportError(cx, "WinReg.GetValue() parameters error");
-    return JS_FALSE;
+    JS_ReportWarning(cx, "WinReg.GetValue() parameters error");
   }
 
   return JS_TRUE;
