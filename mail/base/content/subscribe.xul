@@ -85,11 +85,15 @@
         <separator class="thin"/>
         <spacer/>
       </row>
+      <row>
+        <label id="subscribeFolderLabel"/>
+      </row>
       <row flex="1">
       <deck id="subscribedeck" selectedIndex="0">
       <hbox id="normalview">
         <tree id="subscribeTree"
               flex="1"
+              hidecolumnpicker="true"
               seltype="multiple"
               datasources="rdf:null"
               flags="dont-build-content"
@@ -128,8 +132,6 @@
                     <treerow>
                       <treecell label="?LeafName" properties="ServerType-?ServerType Subscribable-?Subscribable"/>
                       <treecell properties="Subscribed-?Subscribed Subscribable-?Subscribable"/>
-                      <!-- commenting out until bug 38906 is fixed 
-                      <treecell label="?TotalMessages"/> -->
                     </treerow>
                   </treeitem>
                 </treechildren>
@@ -138,16 +140,10 @@
           </template>
     
           <treecols id="theSubscribeColumns">
-            <treecol id="nameColumn" persist="hidden" flex="1" primary="true" label="..."
-                     sort="?LeafName"/>
+            <treecol id="nameColumn" primary="true"  sort="?LeafName" flex="10" hideheader="true"/>
             <splitter class="tree-splitter"/>
-            <treecol id="subscribedColumn" persist="hidden" cycler="true" label="&subscribedHeader.label;"
-                     sort="?Subscribed"/>
-            <!-- commenting out until bug 38906 is fixed 
-            <splitter class="tree-splitter"/>
-            <treecol id="messagesColumn" persist="hidden" label="&messagesHeader.label;"
-                     sort="?TotalMessages"/> -->
-          </treecols>
+            <treecol id="subscribedColumn"  hideheader="true" flex="1" sort="?Subscribed"/>
+           </treecols>
         </tree>
      </hbox>
      <hbox id="searchview">
@@ -156,12 +152,9 @@
               onkeypress="onSearchTreeKeyPress(event);"
               onclick="SearchOnClick(event);"> 
          <treecols>
-           <treecol id="nameColumn2" persist="hidden" flex="1" primary="true" label="..." />
+           <treecol id="nameColumn2"  primary="true"  sort="?LeafName" flex="10" hideheader="true"/>
            <splitter class="tree-splitter"/>
-           <treecol id="subscribedColumn2" persist="hidden" cycler="true" label="&subscribedHeader.label;" />
-           <!-- commenting out until bug 38906 is fixed 
-           <splitter class="tree-splitter"/>
-           <treecol id="messagesColumn2" persist="hidden" label="&messagesHeader.label;" /> -->
+           <treecol id="subscribedColumn2" hideheader="true" flex="1" sort="?Subscribed"/>
          </treecols>
          <treechildren id="searchTreeBody"/>
        </tree>

@@ -26,6 +26,7 @@ messenger.jar:
 *+  content/messenger/FilterListDialog.xul          (content/FilterListDialog.xul)
 *+  content/messenger/FilterListDialog.js           (content/FilterListDialog.js)
 *+  content/messenger/subscribe.xul                 (content/subscribe.xul)
++   content/messenger/subscribe.js                  (content/subscribe.js)
 *+  content/messenger/aboutDialog.xul               (content/aboutDialog.xul)
 *+  content/messenger/junkMail.xul                  (content/junkMail.xul)
 *+  content/messenger/junkMail.js                   (content/junkMail.js)
