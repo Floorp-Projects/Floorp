@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -29,58 +29,58 @@ var manager;
 function onLoad() 
 {
     var i = 0;
-	 var row = 0;
-	 var moduleName;
-	 var URL;
+    var row = 0;
+    var moduleName;
+    var URL;
     var numberOfDialogTreeElements;
 
-	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
-	if ( !param )
+    param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
+    if ( !param )
     {
-	    dump (" error getting param block interface \n");
-	}
+        dump (" error getting param block interface \n");
+    }
     numberOfDialogTreeElements = param.GetInt(1);
     dump(numberOfDialogTreeElements += "\n");
 
-	manager = window.arguments[1];
-	
-	for (i = 0; i < numberOfDialogTreeElements; i++)
-	{
-		moduleName = param.GetString(i);
-		URL = param.GetString(++i);
+    manager = window.arguments[1];
+
+    for (i = 0; i < numberOfDialogTreeElements; i++)
+    {
+        moduleName = param.GetString(i);
+        URL = param.GetString(++i);
         addTreeItem(row++, moduleName, URL);
-	}
-	manager.DialogOpened(window);
+    }
+    manager.dialogOpened(window);
 
 }
 
 function addTreeItem(num, modName, url)
 {
-  dump("Adding Progress element " + num + " : " + name + "\n");
-  var body = document.getElementById("theTreeBody");
+    dump("Adding Progress element " + num + " : " + name + "\n");
+    var body = document.getElementById("theTreeBody");
 
-  var newitem = document.createElement('treeitem');
-  var newrow = document.createElement('treerow');
-  
-  newrow.setAttribute("rowNum", num);
-  newrow.setAttribute("rowName", modName);
+    var newitem = document.createElement('treeitem');
+    var newrow = document.createElement('treerow');
 
-  var elem = document.createElement('treecell');
-  elem.setAttribute("value", modName);
-  newrow.appendChild(elem);
+    newrow.setAttribute("rowNum", num);
+    newrow.setAttribute("rowName", modName);
 
-  var elem = document.createElement('treecell');
-  elem.setAttribute("value", url);
-  newrow.appendChild(elem);
+    var elem = document.createElement('treecell');
+    elem.setAttribute("value", modName);
+    newrow.appendChild(elem);
 
-  newitem.appendChild(newrow);
-  body.appendChild(newitem);
+    var elem = document.createElement('treecell');
+    elem.setAttribute("value", url);
+    newrow.appendChild(elem);
+
+    newitem.appendChild(newrow);
+    body.appendChild(newitem);
 }
 
-function cancel() 
+function cancel()
 {
     if (manager)
-        manager.CancelInstall();
+        manager.cancelInstall();
 
     // window is closed by native impl after cleanup
 }

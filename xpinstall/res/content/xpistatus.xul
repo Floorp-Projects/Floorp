@@ -33,12 +33,12 @@
         onload="onLoad()"
         onclose="return false"
         title="&progress.label;"
-		align = "vertical"
-		class = "dialog"
+        align = "vertical"
+        class = "dialog"
         > 
 
     <html:script language="javascript" src="chrome://xpinstall/content/xpistatus.js"/>
-  
+
     <box align="vertical" id="mainBox">
         <box align="horizontal" id="interiorTitleBox">
             <html:div id="interiorTitle"> &progress.label; </html:div>
@@ -47,28 +47,28 @@
         </box>
 
         <html:div>
-		    <html:hr/>
-		</html:div>
+            <html:hr/>
+        </html:div>
 
         <spring id="verticalSmallSpacer"/>  
 
         <box align="vertical" id="treeBox">  
-		    <html:div id="table-housing">
+            <html:div id="table-housing">
                 <tree id="modulesTree">
-		            <treecol />
-			        <treecol />
+                    <treecol />
+                    <treecol />
 
-			        <treehead>
-			            <treerow>
-			                <treecell id="moduleName" value="&moduleName.label;" />
-			                <treecell id="moduleSource" value="&moduleSource.label;"/>
-			            </treerow>
-			        </treehead>
+                    <treehead>
+                        <treerow>
+                            <treecell id="moduleName" value="&moduleName.label;" />
+                            <treecell id="moduleSource" value="&moduleSource.label;"/>
+                        </treerow>
+                    </treehead>
 
-			        <treechildren id="theTreeBody">
-			        </treechildren>
+                    <treechildren id="theTreeBody">
+                    </treechildren>
                 </tree>
-			</html:div>
+            </html:div>
         </box>
 
         <spring id="verticalLargeSpacer"/>
@@ -78,7 +78,7 @@
         <html:input id="dialog.currentAction" readonly="" />
         </box>
 
-		<spring style="height:1ex"/>
+        <spring style="height:1ex"/>
 
         <box align="horizontal">
 
@@ -88,7 +88,7 @@
                 </progressmeter>
             </box>
 
-		    <spring flex="80%"/>
+            <spring flex="80%"/>
 
             <titledbutton class="dialog push" id="dialog.cancel" disabled="false" onclick="cancel()" value="&dialogCancel.label;"/>
         </box>

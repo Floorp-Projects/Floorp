@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "License"); you may not use this file except in
+ * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  * 
@@ -25,23 +25,29 @@ var rval;
 function OnLoad() 
 {
     dump("In OnLoad \n");
-	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
-	dump("After ParmBlock QI \n");
-	dump( window.arguments );
-	if ( window.arguments.length > 1)
-	{
-		manager = window.arguments[1];
-		dump("After creation of manager \n");
-		dump("manager = " + manager + "\n");
-		manager.DialogOpened(window);
-		dump("After call to DialogOpened \n");
-	}
+    param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
+    dump("After ParmBlock QI \n");
+    dump( window.arguments );
+    if ( window.arguments.length > 1)
+    {
+        manager = window.arguments[1];
+        dump("After creation of manager \n");
+        dump("manager = " + manager + "\n");
+        manager.dialogOpened(window);
+        dump("After call to DialogOpened \n");
+    }
 }
 
 function onCancel()
 {
     if (manager)
-	    manager.CancelInstall();
+        manager.cancelInstall();
 
-	window.close();
+    window.close();
+}
+
+function onUnload()
+{
+    if (manager)
+        manager.dialogClosed();
 }
