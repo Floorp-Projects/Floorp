@@ -699,6 +699,24 @@ public:
         }
         break;
 
+      case eHTMLTag_tr:
+      case eHTMLTag_th:
+        if(aContext->mTableStates && (!aContext->mTableStates->mHasTBody)) {
+          nsCParserNode* theNode=new nsCParserNode();
+          CToken* theToken=new CStartToken(eHTMLTag_tbody);
+          theNode->Init(theToken,0,0);  //this will likely leak...
+
+          result=HandleStartToken(theNode,eHTMLTag_tbody,aContext,aSink);
+          if(NS_SUCCEEDED(result)) {
+            CElement *theElement=GetElement(eHTMLTag_tbody);
+            if(theElement) {
+              result=theElement->HandleStartToken(aNode,aTag,aContext,aSink);
+            }
+          }
+        }
+
+        break;
+
       default:
         break;
     }

@@ -9,7 +9,7 @@
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or 
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *         
+ *          
  * The Original Code is mozilla.org code. 
  *  
  * The Initial Developer of the Original Code is Netscape
@@ -704,7 +704,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
         mLineNumber++;
         break;
       default:
-        break;
+        break; 
     }
 
     CObserverService* theService=mParser->GetObserverService();
@@ -765,13 +765,13 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
       switch(theChildTag) {    
     
         case eHTMLTag_html: 
-          if(!HasOpenContainer(theChildTag)) {
+          if(!HasOpenContainer(theChildTag)) { 
             mSink->OpenHTML(*theNode);
             mBodyContext->Push(theNode,0);
           }
           theTagWasHandled=PR_TRUE;  
           break;    
-         
+           
         default:   
           CElement* theElement=gElementTable->mElements[theParent];
           if(theElement) {
