@@ -415,11 +415,6 @@ MoveChildrenTo(nsIPresContext* aPresContext,
                nsIFrame* aNewParent,
                nsIFrame* aFrameList)
 {
-  // when reparenting a frame, it is critical to also reparent any views associated with the frame.
-  nsIFrame *oldParent;
-  aFrameList->GetParent(&oldParent);
-  nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, aFrameList, oldParent, aNewParent);
-
   while (aFrameList) {
     aFrameList->SetParent(aNewParent);
     aFrameList->GetNextSibling(&aFrameList);
@@ -12820,6 +12815,11 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
     // Relatively positioned frames need a view
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext, blockFrame,
                                              aStyleContext, nsnull, PR_FALSE);
+
+    // Move list2's frames into the new view
+    nsIFrame* oldParent;
+    list2->GetParent(&oldParent);
+    nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, list2, oldParent, blockFrame);
   }
 
   MoveChildrenTo(aPresContext, blockSC, blockFrame, list2);
