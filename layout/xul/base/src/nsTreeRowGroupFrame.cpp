@@ -31,6 +31,8 @@
 #include "nsCellMap.h"
 #include "nsIReflowCommand.h"
 #include "nsHTMLParts.h"
+#include "nsScrollbarButtonFrame.h"
+#include "nsSliderFrame.h"
 
 //
 // NS_NewTreeFrame
@@ -63,6 +65,52 @@ nsTreeRowGroupFrame::nsTreeRowGroupFrame()
 // Destructor
 nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 {
+}
+
+NS_IMPL_ADDREF(nsTreeRowGroupFrame)
+NS_IMPL_RELEASE(nsTreeRowGroupFrame)
+  
+NS_IMETHODIMP
+nsTreeRowGroupFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr) 
+{
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(nsIScrollbarListener::GetIID())) {                                         
+    *aInstancePtr = (void*)(nsIScrollbarListener*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
+  return nsTableRowGroupFrame::QueryInterface(aIID, aInstancePtr);   
+}
+
+NS_IMETHODIMP
+nsTreeRowGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex)
+{
+  printf("The position changed!\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeRowGroupFrame::PagedUpDown()
+{
+  printf("Hey! You paged up and down!\n");
+  return NS_OK;
+}
+
+void
+nsTreeRowGroupFrame::SetScrollbarFrame(nsIFrame* aFrame)
+{
+  mIsLazy = PR_TRUE;
+  mScrollbar = aFrame;
+  nsCOMPtr<nsIAtom> scrollbarAtom = dont_AddRef(NS_NewAtom("slider"));
+  nsIFrame* sliderFrame;
+  nsScrollbarButtonFrame::GetChildWithTag(scrollbarAtom, aFrame, sliderFrame);
+  ((nsSliderFrame*)sliderFrame)->SetScrollbarListener(this);
 }
 
 PRBool nsTreeRowGroupFrame::RowGroupDesiresExcessSpace() 

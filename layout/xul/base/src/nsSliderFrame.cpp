@@ -553,8 +553,6 @@ nsSliderFrame::SetCurrentPosition(nsIPresContext& aPresContext, nsIContent* scro
   // set the new position
   scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsString(ch), PR_TRUE);
 
-  CurrentPositionChanged(&aPresContext);
-
   printf("Current Pos=%d\n",newpos);
   
 }

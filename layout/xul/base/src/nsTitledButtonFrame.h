@@ -38,12 +38,7 @@ public:
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
   NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
-
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-
-
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
