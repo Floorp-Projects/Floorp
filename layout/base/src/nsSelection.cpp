@@ -1870,6 +1870,13 @@ nsSelection::NotifySelectionListeners()
 
 // Start of Table Selection methods
 
+static PRBool IsCell(nsIContent *aContent)
+{
+  nsIAtom *tag;
+  aContent->GetTag(tag);
+  return (tag != 0 && tag == nsSelection::sCellAtom);
+}
+
 nsresult
 nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent)
 {
@@ -1916,8 +1923,7 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
       printf("HandleTableSelection: Dragged into a new cell\n");
 #endif
       // Reselect block of cells to new end location
-      mEndSelectedCell = selectedContent;
-      return SelectBlockOfCells(mStartSelectedCell, mEndSelectedCell);
+      return SelectBlockOfCells(mStartSelectedCell, selectedContent);
     }
   }
   else 
@@ -1935,6 +1941,8 @@ nsSelection::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
       mSelectingTableCells = PR_FALSE;
       mStartSelectedCell = nsnull;
       mEndSelectedCell = nsnull;
+
+#ifdef DEBUG_cmanske
 #ifdef DEBUG_TABLE
 printf("HandleTableSelection: Selecting Table\n");
       {
@@ -1949,10 +1957,9 @@ printf("Table frame orgin: x=%d, y=%d\n", rect1.x, rect1.y);
           mDomSelections[SELECTION_NORMAL]->GetFrameToRootViewOffset(frame, &rect2.x, &rect2.y);
 printf("Translated frame orgin: x=%d, y=%d\n", rect2.x, rect2.y);
 printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->point.y);
-        
         }
       }
-
+#endif
 #endif
       // Select the table      
       mDomSelections[SELECTION_NORMAL]->ClearSelection();
@@ -1965,6 +1972,12 @@ printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->
     result = mDomSelections[SELECTION_NORMAL]->GetRangeCount(&rangeCount);
     if (NS_FAILED(result)) return result;
 
+    if (rangeCount > 0 && aMouseEvent->isShift && selectedContent != mStartSelectedCell)
+    {
+      // If Shift is down as well, do a block selection
+      return SelectBlockOfCells(mStartSelectedCell, selectedContent);
+    }
+    
     nsCOMPtr<nsIDOMNode> previousCellParent;
     nsCOMPtr<nsIDOMRange> range;
     PRInt32 offset;
@@ -1985,13 +1998,12 @@ printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->
       nsCOMPtr<nsIContent> childContent;
       result = parentContent->ChildAt(offset, *getter_AddRefs(childContent));
       if (NS_FAILED(result)) return result;
-      if (childContent)
+      if (childContent && IsCell(childContent))
       {
-        nsIAtom *tag;
-        childContent->GetTag(tag);
-        if (tag && tag == nsSelection::sCellAtom)
           previousCellParent = parent;
       }
+
+
       // We're done if we didn't find parent of a previously-selected cell
       if (!previousCellParent) break;
         
@@ -2056,14 +2068,42 @@ printf("Mouse was clicked at: x=%d, y=%d\n", aMouseEvent->point.x, aMouseEvent->
 nsresult
 nsSelection::SelectBlockOfCells(nsIContent *aStartCell, nsIContent *aEndCell)
 {
-  if (!aStartCell || !aEndCell) return NS_ERROR_NULL_POINTER;
+  if (!aEndCell) return NS_ERROR_NULL_POINTER;
+  mEndSelectedCell = aEndCell;
+  
+  nsresult result = NS_OK;
+  if (!aStartCell)
+  {
+    // User unselected the origianl start cell
+    // Try to use the first cell in existing selection
+    nsCOMPtr<nsIDOMRange> range;
+    PRInt32 offset;
+    result = mDomSelections[SELECTION_NORMAL]->GetRangeAt(0, getter_AddRefs(range));
+    if (NS_FAILED(result)) return result;
+    if (!range) return NS_ERROR_NULL_POINTER;
 
+    nsCOMPtr<nsIDOMNode> parent;
+    result = range->GetStartParent(getter_AddRefs(parent));
+    if (NS_FAILED(result)) return result;
+    if (!parent) return NS_ERROR_NULL_POINTER;
 
+    range->GetStartOffset(&offset);
+    // Be sure previous selection is a table cell
+    nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parent);
+    nsCOMPtr<nsIContent> childContent;
+    result = parentContent->ChildAt(offset, *getter_AddRefs(childContent));
+    if (NS_FAILED(result)) return result;
+    if (!childContent) return NS_ERROR_NULL_POINTER;
+    // We shouldn't be here if selected child isn't a cell!
+    if (!IsCell(childContent)) return NS_ERROR_FAILURE;
+    aStartCell = childContent;
+  }
+  
   // Get starting and ending cells' location in the cellmap
   PRInt32 startRowIndex, startColIndex, endRowIndex, endColIndex;
 
   // Get starting and ending cells' location in the cellmap
-  nsresult result = GetCellIndexes(aStartCell, startRowIndex, startColIndex);
+  result = GetCellIndexes(aStartCell, startRowIndex, startColIndex);
   if(NS_FAILED(result)) return result;
   result = GetCellIndexes(aEndCell, endRowIndex, endColIndex);
   if(NS_FAILED(result)) return result;

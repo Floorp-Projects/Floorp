@@ -49,6 +49,16 @@ public:
   
   /** return the mapped cell's column index (starting at 0 for the first column) */
   virtual nsresult GetColIndex(PRInt32 &aColIndex) const = 0;
+
+  /** return the previous cell having the same column index as current cell
+    * returns null if no cell is present (but nsresult is still NS_OK)
+    */
+  NS_IMETHOD GetPreviousCellInColumn(nsITableCellLayout **aCellLayout)=0;
+
+  /** return the next cell having the same column index
+    * returns null if no cell is present (but nsresult is still NS_OK)
+    */
+  NS_IMETHOD GetNextCellInColumn(nsITableCellLayout **aCellLayout)=0;
 };
 
 
