@@ -884,6 +884,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     if (!transferredSpaceManager)
 #endif
       delete spaceManager;
+    state.mSpaceManager = nsnull;
   }
 
 #ifdef NOISY_SPACEMANAGER
