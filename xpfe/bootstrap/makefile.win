@@ -24,7 +24,7 @@ include <$(DEPTH)/config/config.mak>
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 
-!ifdef MOZ_STATIC_COMPONENT_LIBS
+!if defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_GECKO_DLL)
 DEFINES=$(DEFINES) -D_BUILD_STATIC_BIN
 EXTRA_LIBS_LIST_FILE=$(OBJDIR)\libs.txt
 SEDCMDS=nsStaticComonents.cpp.sed
@@ -38,7 +38,7 @@ CPPSRCS=                                \
  nsNativeAppSupportBase.cpp             \
  nsNativeAppSupportWin.cpp              \
  showOSAlert.cpp                        \
-!ifdef MOZ_STATIC_COMPONENT_LIBS
+!if defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_GECKO_DLL)
  nsStaticComponents.cpp                 \
 !endif
  $(NULL)
@@ -50,7 +50,7 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsNativeAppSupportBase.obj \
  .\$(OBJDIR)\nsNativeAppSupportWin.obj  \
  .\$(OBJDIR)\showOSAlert.obj            \
-!ifdef MOZ_STATIC_COMPONENT_LIBS
+!if defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_GECKO_DLL)
  .\$(OBJDIR)\nsStaticComponents.obj     \
 !endif
  $(NULL)
@@ -140,7 +140,7 @@ WIN_LIBS=       \
 
 include <$(DEPTH)\config\rules.mak>
 
-!ifdef MOZ_STATIC_COMPONENT_LIBS
+!if defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_GECKO_DLL)
 
 $(SEDCMDS): $(FINAL_LINK_COMP_NAMES)
         rm -f $@
