@@ -32,6 +32,7 @@ extern "C" {
 #include "nsIXlibWindowService.h"
 #include "nsIUnixToolkitService.h"
 #include "nsIWebShell.h"
+#include "nsIContentViewer.h"
 #include "nsRepository.h"
 #include "nsIPref.h"
 #include "xlibrgb.h"
@@ -227,7 +228,14 @@ int main(int argc, char **argv)
   sgPrefs->ReadUserPrefs();
 
   sgWebShell->SetPrefs(sgPrefs);
-  sgWebShell->Show();
+  nsIContentViewer *content_viewer;
+  rv = sgWebShell->GetContentViewer(&content_viewer);
+  if (NS_SUCCEEDED(rv) && content_viewer) {
+    content_viewer->Show();
+    NS_RELEASE(content_viewer);
+  }
+    
+  //  sgWebShell->Show();
 
   // attach the size_allocate signal to the main window
   gtk_signal_connect_after(GTK_OBJECT(main_window),
@@ -269,5 +277,14 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
   printf("handling size allocate\n");
   nsIWebShell *moz_widget = (nsIWebShell *)p;
-  moz_widget->SetBounds(0, 0, alloc->width, alloc->height);
+  nsIContentViewer *content_viewer;
+  nsresult rv;
+  
+  rv = moz_widget->GetContentViewer(&content_viewer);
+  if (NS_SUCCEEDED(rv) && content_viewer) {
+    nsRect bounds(0,0, alloc->width, alloc->height);
+    
+    content_viewer->SetBounds(bounds);
+    NS_RELEASE(content_viewer);
+  }
 }
