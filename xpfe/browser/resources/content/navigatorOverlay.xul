@@ -570,7 +570,7 @@
 
       <menuseparator />
 
-      <menuitem label="Bugs Filed Today" oncommand="loadURI('http://bugzilla.mozilla.org/buglist.cgi?changedin=1&amp;chfield=%5BBug+creation%5D&amp;amp;chfieldto=Now&amp;product=Browser&amp;product=MailNews');"/>
+      <menuitem label="Bugs Filed Today" oncommand="loadURI('http://bugzilla.mozilla.org/buglist.cgi?chfield=%5BBug+creation%5D&amp;chfieldfrom=0d&amp;chfieldto=Now&amp;product=Browser&amp;product=MailNews');"/>
       <menuitem label="CVS Checkins Today" oncommand="loadURI('http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&amp;module=SeaMonkeyAll&amp;branch=HEAD&amp;branchtype=match&amp;sortby=Date&amp;date=day&amp;cvsroot=%2Fcvsroot');"/>
       <menuitem label="Tree Status" oncommand="loadURI('http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey');"/>
 
