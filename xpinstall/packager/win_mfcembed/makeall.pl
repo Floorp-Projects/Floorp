@@ -96,7 +96,7 @@ $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mfcembed-win32-installer.exe";
 $seiStubRootName = "mfcembed-win32-stub-installer";
 $seiFileNameSpecificStub  = "$seiStubRootName.exe";
-$seuFileNameSpecific  = "MREUninstall.exe";
+$seuFileNameSpecific  = "MfcEmbedUninstall.exe";
 $seuzFileNameSpecific = "mfcembeduninstall.zip";
 
 # set environment vars for use by other .pl scripts called from this script.
@@ -110,8 +110,8 @@ else
 }
 print "The display version is: $versionMain\n";
 $ENV{WIZ_nameCompany}          = "Mozilla";
-$ENV{WIZ_nameProduct}          = "MRE";
-$ENV{WIZ_nameProductNoVersion} = "MRE";
+$ENV{WIZ_nameProduct}          = "MfcEmbed";
+$ENV{WIZ_nameProductNoVersion} = "MfcEmbed";
 $ENV{WIZ_fileMainExe}          = "none.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
