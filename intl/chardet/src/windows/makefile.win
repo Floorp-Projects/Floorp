@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 LCFLAGS= $(LCFLAGS) -D__STDC__
 
 DEFINES= -DWIN32_LEAN_AND_MEAN
-LIBRARY_NAME= chardetnative
+LIBRARY_NAME= chardetnativeTest
 
 OBJS= \
 	$(NULL)
@@ -38,12 +38,12 @@ CPP_OBJS= \
         .\$(OBJDIR)\nsNativeDetectors.obj \
 	$(NULL)
 
-MODULE=chardetnative
+MODULE=chardetnativeTest
 
 REQUIRES=xpcom
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=chardetnative
+DLLNAME=chardetnativeTest
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 
