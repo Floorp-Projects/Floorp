@@ -20,6 +20,14 @@
 
 @import url(chrome://global/skin/);
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
+
+
+[hide] {
+ display: none;
+} 
+
 tree { 
 	border-left: 1px solid transparent;
 }
