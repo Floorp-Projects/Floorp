@@ -38,6 +38,7 @@
 #include "nsIStyleContext.h"
 #include "nsCSSLayout.h"
 
+#include "nsIDocumentWidget.h"
 #include "nsIDocumentLoader.h"
 class nsHTMLIFrame;
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
@@ -48,10 +49,7 @@ static NS_DEFINE_IID(kCWebWidgetCID, NS_WEBWIDGET_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 
-static NS_DEFINE_IID(kIViewerContainerIID, NS_IVIEWERCONTAINER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
 /*******************************************************************************
  * TempObserver XXX temporary until doc manager/loader is in place
@@ -78,23 +76,6 @@ protected:
   nsString mOverTarget;
 };
 
-/*******************************************************************************
- * FrameLoadingInfo 
- ******************************************************************************/
-class FrameLoadingInfo : public nsISupports
-{
-public:
-  FrameLoadingInfo(const nsSize& aSize);
-
-  // nsISupports interface...
-  NS_DECL_ISUPPORTS
-
-protected:
-  virtual ~FrameLoadingInfo() {}
-
-public:
-  nsSize mFrameSize;
-};
 
 /*******************************************************************************
  * nsHTMLIFrameOuterFrame
@@ -124,7 +105,7 @@ protected:
 /*******************************************************************************
  * nsHTMLIFrameInnerFrame
  ******************************************************************************/
-class nsHTMLIFrameInnerFrame : public nsLeafFrame, public nsIWebFrame, public nsIViewerContainer {
+class nsHTMLIFrameInnerFrame : public nsLeafFrame, public nsIWebFrame {
 
 public:
 
@@ -148,12 +129,6 @@ public:
   NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
 
-  /* nsIViewerContainer interface */
-  NS_IMETHOD Embed(nsIDocumentWidget* aDocViewer, 
-                   const char* aCommand,
-                   nsISupports* aExtraInfo);
-
-
   virtual nsIWebWidget* GetWebWidget();
 
   float GetTwipsToPixels();
@@ -170,8 +145,9 @@ protected:
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredSize);
 
+  nsresult CreateWebWidget(const nsSize& aSize);
+
   nsIWebWidget* mWebWidget;
-  nsIDocumentLoader* mDocLoader;
   PRBool mCreatingViewer;
 
   // XXX fix these
@@ -339,14 +315,11 @@ nsHTMLIFrameInnerFrame::nsHTMLIFrameInnerFrame(nsIContent* aContent, nsIFrame* a
   mCreatingViewer = PR_FALSE;
   mTempObserver = new TempObserver();
   NS_ADDREF(mTempObserver);
-
-  NSRepository::CreateInstance(kCDocumentLoaderCID, nsnull, kIDocumentLoaderIID, (void**)&mDocLoader);
 }
 
 nsHTMLIFrameInnerFrame::~nsHTMLIFrameInnerFrame()
 {
   NS_IF_RELEASE(mWebWidget);
-  NS_IF_RELEASE(mDocLoader);
   NS_RELEASE(mTempObserver);
 }
 
@@ -363,11 +336,6 @@ nsHTMLIFrameInnerFrame::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIWebFrameIID)) {
     *aInstancePtrResult = (void*) ((nsIWebFrame*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIViewerContainerIID)) {
-    *aInstancePtrResult = (void*) ((nsIViewerContainer*)this);
     AddRef();
     return NS_OK;
   }
@@ -460,39 +428,26 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   NS_IF_RELEASE(docURL);
 }
 
-NS_IMETHODIMP
-nsHTMLIFrameInnerFrame::Embed(nsIDocumentWidget* aDocViewer, 
-                              const char* aCommand,
-                              nsISupports* aExtraInfo)
+nsresult nsHTMLIFrameInnerFrame::CreateWebWidget(const nsSize& aSize)
 {
   nsresult rv;
-  nsIWebWidget* ww;
   nsHTMLIFrame* content;
   GetParentContent(content);
 
-  if (nsnull != mWebWidget) {
-    mWebWidget->SetLinkHandler(nsnull);
-    mWebWidget->SetContainer(nsnull); // release the doc observer
-    NS_RELEASE(mWebWidget);
-  }
-
-  rv = aDocViewer->QueryInterface(kIWebWidgetIID, (void**)&ww);
+  rv = NSRepository::CreateInstance(kCWebWidgetCID, nsnull, kIWebWidgetIID, (void**)&mWebWidget);
   if (NS_OK != rv) {
     NS_ASSERTION(0, "could not create web widget");
     return rv;
   }
 
-  FrameLoadingInfo *frameInfo;
-  frameInfo = (FrameLoadingInfo*) aExtraInfo;
-
   nsString frameName;
   if (content->GetName(frameName)) {
-    ww->SetName(frameName);
+    mWebWidget->SetName(frameName);
   }
 
   // set the web widget parentage
   nsIWebWidget* parentWebWidget = content->mParentWebWidget;
-  parentWebWidget->AddChild(ww);
+  parentWebWidget->AddChild(mWebWidget);
 
 
   // Get the view manager, conversion
@@ -519,7 +474,6 @@ nsHTMLIFrameInnerFrame::Embed(nsIDocumentWidget* aDocViewer,
 
   nsIView* parView;
   nsPoint origin;
-  nsSize aSize = frameInfo->mFrameSize;
   GetOffsetFromView(origin, parView);  
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 
@@ -530,7 +484,8 @@ nsHTMLIFrameInnerFrame::Embed(nsIDocumentWidget* aDocViewer,
   NS_RELEASE(parView);
 
   // init the web widget
-  mWebWidget = ww;
+  mWebWidget->SetUAStyleSheet(parentWebWidget->GetUAStyleSheet());
+
   nsIWidget* widget = view->GetWidget();
   NS_RELEASE(view);
   nsRect webBounds(0, 0, NS_TO_INT_ROUND(aSize.width * t2p), 
@@ -540,8 +495,7 @@ nsHTMLIFrameInnerFrame::Embed(nsIDocumentWidget* aDocViewer,
   NS_RELEASE(content);
   NS_RELEASE(widget);
 
-  //mWebWidget->Show();
-  mCreatingViewer = PR_FALSE;
+///  mWebWidget->Show();
 
   return NS_OK;
 }
@@ -555,9 +509,7 @@ nsHTMLIFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
   nsresult rv = NS_OK;
 
   // use the max size set in aReflowState by the nsHTMLIFrameOuterFrame as our size
-  if ((nsnull == mWebWidget) && (!mCreatingViewer)) {
-    FrameLoadingInfo *frameInfo;
-
+  if (!mCreatingViewer) {
     nsHTMLIFrame* content;
     GetParentContent(content);
 
@@ -565,24 +517,20 @@ nsHTMLIFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
     content->GetURL(url);
     nsSize size;
 
-    frameInfo = new FrameLoadingInfo(aReflowState.maxSize);
-    NS_ADDREF(frameInfo);
-
-    if (nsnull != mDocLoader) {
+    if (nsnull == mWebWidget) {
+      rv = CreateWebWidget(aReflowState.maxSize);
+    }
+    if (nsnull != mWebWidget) {
       mCreatingViewer=PR_TRUE;
 
       // load the document
       nsString absURL;
       TempMakeAbsURL(content, url, absURL);
 
-      rv = mDocLoader->LoadURL(absURL,          // URL string
-                               nsnull,          // Command
-                               this,            // Container
-                               nsnull,          // Post Data
-                               frameInfo,       // Extra Info...
-                               mTempObserver);  // Observer
+      rv = mWebWidget->LoadURL(absURL,          // URL string
+                               mTempObserver,   // Observer
+                               nsnull);         // Post Data
     }
-    NS_RELEASE(frameInfo);
     NS_RELEASE(content);
   }
 
@@ -762,29 +710,14 @@ NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-/*******************************************************************************
- * FrameLoadingInfo
- ******************************************************************************/
-FrameLoadingInfo::FrameLoadingInfo(const nsSize& aSize)
-{
-  NS_INIT_REFCNT();
-
-  mFrameSize = aSize;
-}
-
-/*
- * Implementation of ISupports methods...
- */
-NS_IMPL_ISUPPORTS(FrameLoadingInfo,kISupportsIID);
-
 // XXX temp implementation
+/*******************************************************************************
+ * TempObserver
+ ******************************************************************************/
 
 NS_IMPL_ADDREF(TempObserver);
 NS_IMPL_RELEASE(TempObserver);
 
-/*******************************************************************************
- * TempObserver
- ******************************************************************************/
 nsresult
 TempObserver::QueryInterface(const nsIID& aIID,
                             void** aInstancePtrResult)
