@@ -222,7 +222,7 @@ function onOK()
   if (sepCharacter.length > 0)
   {
     var tempStr = sepCharacter;
-    var regExpChars = ".!@#$%^&*-+[]{}\\\/";
+    var regExpChars = ".!@#$%^&*-+[]{}()\|\\\/";
     if (regExpChars.indexOf(sepCharacter) >= 0)
       tempStr = "\\" + sepCharacter;
 
