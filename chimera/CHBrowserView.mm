@@ -83,6 +83,7 @@
 #include "nsNetUtil.h"
 #include "nsIContextMenuListener.h"
 #include "nsITooltipListener.h"
+#include "nsIEmbeddingSiteWindow2.h"
 
 typedef unsigned int DragReference;
 #include "nsIDragHelperService.h"
@@ -99,7 +100,7 @@ class nsCocoaBrowserListener : public nsSupportsWeakReference,
                                public nsIInterfaceRequestor,
 			                         public nsIWebBrowserChrome,
                                public nsIWindowCreator,
-			                         public nsIEmbeddingSiteWindow,
+                               public nsIEmbeddingSiteWindow2,
                                public nsIWebProgressListener,
                                public nsIContextMenuListener,
                                public nsITooltipListener
@@ -113,6 +114,7 @@ public:
   NS_DECL_NSIWEBBROWSERCHROME
   NS_DECL_NSIWINDOWCREATOR
   NS_DECL_NSIEMBEDDINGSITEWINDOW
+  NS_DECL_NSIEMBEDDINGSITEWINDOW2
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSICONTEXTMENULISTENER
   NS_DECL_NSITOOLTIPLISTENER
@@ -145,11 +147,12 @@ nsCocoaBrowserListener::~nsCocoaBrowserListener()
   }
 }
 
-NS_IMPL_ISUPPORTS8(nsCocoaBrowserListener,
+NS_IMPL_ISUPPORTS9(nsCocoaBrowserListener,
 		               nsIInterfaceRequestor,
 		               nsIWebBrowserChrome,
                    nsIWindowCreator,
 		               nsIEmbeddingSiteWindow,
+                   nsIEmbeddingSiteWindow2,
 		               nsIWebProgressListener,
                    nsISupportsWeakReference,
                    nsIContextMenuListener,
@@ -354,6 +357,13 @@ nsCocoaBrowserListener::ExitModalEventLoop(nsresult aStatus)
 //  [NSApp stopModalWithCode:(int)aStatus];
 
   return NS_OK;
+}
+
+// Implementation of nsIEmbeddingSiteWindow2
+NS_IMETHODIMP
+nsCocoaBrowserListener::Blur()
+{
+	return NS_OK;
 }
 
 // Implementation of nsIEmbeddingSiteWindow
