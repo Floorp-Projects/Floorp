@@ -107,13 +107,24 @@ private:
     nsresult CalculateUniqueFilename(nsIURI *aURI);
     nsresult MakeFilenameFromURI(
         nsIURI *aURI, nsString &aFilename);
+    nsresult StoreURI(
+        const char *aURI,
+        PRBool aNeedsPersisting = PR_TRUE,
+        URIData **aData = nsnull);
     nsresult StoreURIAttribute(
         nsIDOMNode *aNode, const char *aAttribute,
         PRBool aNeedsPersisting = PR_TRUE,
         URIData **aData = nsnull);
+    PRBool GetQuotedAttributeValue(
+    const nsAString &aSource, const nsAString &aAttribute, nsAString &aValue);
+
     nsresult GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
+    nsresult FixupURI(nsAString &aURI);
     nsresult FixupNodeAttribute(nsIDOMNode *aNode, const char *aAttribute);
     nsresult FixupAnchor(nsIDOMNode *aNode);
+    nsresult FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref);
+    nsresult GetXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, nsAString &aHref);
+
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
     nsresult SaveDocumentWithFixup(
         nsIDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
