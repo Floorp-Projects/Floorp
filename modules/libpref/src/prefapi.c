@@ -607,6 +607,10 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
             if (c == '\n')
                 break;
         }
+
+        /* Free up gSavedLine to avoid MLK. */
+        if (gSavedLine) 
+            free(gSavedLine);
         gSavedLine = malloc(i+1);
         if (!gSavedLine)
             return JS_FALSE;
