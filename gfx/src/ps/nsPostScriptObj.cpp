@@ -60,6 +60,7 @@
 #include "prenv.h"
 
 #include <locale.h>
+#include <limits.h>
 #include <errno.h>
 
 #ifdef VMS
@@ -355,7 +356,13 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
          * - which means that if the ${MOZ_PRINTER_NAME} env var is not empty
          * the "-P" option of lpr will be set to the printer name.
          */
-        char *envvar;
+#ifndef ARG_MAX
+#define ARG_MAX 4096
+#endif /* !ARG_MAX */
+        /* |putenv()| will use the pointer to this buffer directly and will not
+         * |strdup()| the content!!!! */
+        static char envvar[ARG_MAX];
+
         /* get printer name */
         aSpec->GetPrinterName(&printername);
         
@@ -372,15 +379,26 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
         else 
           printername = "";
 
-        envvar = (char *)malloc(strlen(printername) + /*strlen("MOZ_PRINTER_NAME=")+1*/18);
-        if (!envvar)
-          return NS_ERROR_OUT_OF_MEMORY;
-        sprintf(envvar, "MOZ_PRINTER_NAME=%s", printername);
+        /* We're using a |static| buffer (|envvar|) here to ensure that the
+         * memory "remembered" in the env var pool does still exist when we
+         * leave this context.
+         * However we can't write to the buffer while it's memory is linked
+         * to the env var pool - otherwise we may corrupt the pool.
+         * Therefore we're feeding a "dummy" env name/value string to the pool
+         * to "unlink" our static buffer (if it was set by an previous print
+         * job), then we write to the buffer and finally we |putenv()| our
+         * static buffer again.
+         */
+        PR_SetEnv("MOZ_PRINTER_NAME=dummy_value_to_make_putenv_happy");
+        PRInt32 nchars = snprintf(envvar, ARG_MAX,
+                                  "MOZ_PRINTER_NAME=%s", printername);
+        if (nchars < 0 || nchars >= ARG_MAX)
+            sprintf(envvar, "MOZ_PRINTER_NAME=");
+
 #ifdef DEBUG
         printf("setting printer name via '%s'\n", envvar);
 #endif /* DEBUG */
         PR_SetEnv(envvar);
-        free(envvar);
         
         aSpec->GetCommand(&mPrintSetup->print_cmd);
 #ifndef VMS
