@@ -127,15 +127,13 @@ protected:
 /*******************************************************************************
  * nsHTMLFrameInnerFrame
  ******************************************************************************/
-class nsHTMLFrameInnerFrame : public nsLeafFrame, public nsIWebFrame {
+class nsHTMLFrameInnerFrame : public nsLeafFrame {
 
 public:
 
   nsHTMLFrameInnerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   NS_IMETHOD ListTag(FILE* out = stdout) const;
-
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   /**
     * @see nsIFrame::Paint
@@ -154,10 +152,6 @@ public:
 
   NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
-
-  NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
-
-//  float GetTwipsToPixels();
 
   NS_IMETHOD GetParentContent(nsHTMLFrame*& aContent);
 
@@ -386,29 +380,6 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
   NS_IF_RELEASE(mWebShell);
   NS_RELEASE(mTempObserver);
-}
-
-nsresult
-nsHTMLFrameInnerFrame::QueryInterface(const nsIID& aIID,
-                                      void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIWebFrameIID)) {
-    *aInstancePtrResult = (void*) ((nsIWebFrame*)this);
-    return NS_OK;
-  }
-  return nsLeafFrame::QueryInterface(aIID, aInstancePtrResult);
-}
-
-NS_IMETHODIMP
-nsHTMLFrameInnerFrame::GetWebShell(nsIWebShell*& aResult)
-{
-  aResult = mWebShell;
-  NS_IF_ADDREF(mWebShell);
-  return NS_OK;
 }
 
 #if 0
