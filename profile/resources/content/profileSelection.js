@@ -155,7 +155,8 @@ function onStart()
   if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
     var lString = bundle.GetStringFromName("migratebeforestart");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
-    if( confirm( lString ) ) 
+    var title = bundle.GetStringFromName("migratetitle");   
+    if (commonDialogService.Confirm(window, title, lString))
       profile.migrateProfile( profilename, true );
     else
       return false;
@@ -174,9 +175,9 @@ function onStart()
     ExitApp();
   }
   catch (ex) {
-    var stringA = bundle.GetStringFromName(failProfileStartA);
-    var stringB = bundle.GetStringFromName(failProfileStartB);
-    alert(stringA + " " + profilename + " " + stringB);
+    //var stringA = bundle.GetStringFromName(failProfileStartA);
+    //var stringB = bundle.GetStringFromName(failProfileStartB);
+    //alert(stringA + " " + profilename + " " + stringB);
   }
 }
 
