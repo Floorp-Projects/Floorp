@@ -351,9 +351,9 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     {
       nsCString iconBuffer;
 
+     // Alloc and zero init
      HANDLE h_bmp_info = GlobalAlloc (GHND, sizeof (BITMAPINFO) + (sizeof (RGBQUAD) * 256));
      BITMAPINFO* pBitMapInfo = (BITMAPINFO *) GlobalLock (h_bmp_info);
-     memset (pBitMapInfo, NULL, sizeof (BITMAPINFO) + (sizeof (RGBQUAD) * 255));
      pBitMapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
      pBitMapInfo->bmiHeader.biPlanes = 1;
      pBitMapInfo->bmiHeader.biBitCount = 0;
@@ -371,8 +371,16 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
           // temporary hack alert...currently moz-icon urls only support 16, 24 and 32 bit color. we don't support
           // 8, 4 or 1 bit color yet. return an error in those cases
           if (pBitMapInfo->bmiHeader.biBitCount <= 8)
-            return NS_ERROR_FAILURE; 
-
+          {
+            nsMemory::Free(buffer);
+            GlobalUnlock(h_bmp_info);
+            GlobalFree(h_bmp_info);
+            DeleteDC(pDC);
+            DeleteObject(pIconInfo.hbmColor);
+            DeleteObject(pIconInfo.hbmMask);
+            DestroyIcon(sfi.hIcon);
+            return NS_ERROR_FAILURE;
+	  }
           // The first 2 bytes into our output buffer needs to be the width and the height (in pixels) of the icon
           // as specified by our data format.
           iconBuffer.Assign((char) pBitMapInfo->bmiHeader.biWidth);
@@ -413,7 +421,10 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
       GlobalUnlock(h_bmp_info);
       GlobalFree(h_bmp_info);
       DeleteDC(pDC);
+      DeleteObject(pIconInfo.hbmColor);
+      DeleteObject(pIconInfo.hbmMask);
     } // if we got icon info
+    DestroyIcon(sfi.hIcon);
   } // if we got sfi
 
   return rv;
