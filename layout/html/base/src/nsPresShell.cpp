@@ -4858,7 +4858,7 @@ PresShell::PostAttributeChange(nsIContent* aContent,
   nsAttributeChangeRequest* request = nsnull;
 
   void* result = AllocateFrame(sizeof(nsAttributeChangeRequest));
-  request = (nsAttributeChangeRequest*)result;
+  request = new (result) nsAttributeChangeRequest();
 
   request->content = aContent;
   NS_ADDREF(aContent);
