@@ -27,10 +27,13 @@
 *						the input stream instead of file.
 */
 
-#include "msg.h"
-#include "appledbl.h"
-#include "m_binhex.h"
-#include "ad_codes.h"
+#include "nscore.h"
+#include "msgCore.h"
+
+#include "nsMsgAppleDouble.h"
+#include "nsMsgAppleCodes.h"
+#include "nsMsgBinHex.h"
+
 /* for XP_GetString() */
 #include "xpgetstr.h"
 

@@ -33,7 +33,7 @@
 
 #include "nsMsgAppleDouble.h"
 #include "nsMsgAppleCodes.h"
-#include "m_binhex.h"
+#include "nsMsgBinHex.h"
 #ifdef XP_MAC
 #include <StandardFile.h>
 #endif
@@ -1037,7 +1037,7 @@ PRIVATE int from_decoder(
 	appledouble_decode_object* p_ap_decode_obj, 
 	char 	*buff, 
 	int 	buff_size, 
-	PRUPRInt32	*in_count)
+	PRInt32	*in_count)
 {
 	int 	status;
 	
@@ -1084,7 +1084,7 @@ PRIVATE int decoder_seek(
 {
 	char 	tmp[1024];
 	int  	status = NOERR;
-	PRUPRInt32	 in_count;
+	PRInt32	 in_count;
 	
 	/*
 	**	 force a reset on the in buffer.
@@ -1181,7 +1181,7 @@ PRIVATE int from_64(
 	appledouble_decode_object* p_ap_decode_obj, 
 	char	 *buff, 
 	int 	size, 
-	PRUPRInt32 	*real_size)
+	PRInt32 	*real_size)
 {
 	int 	i, j, buf[4];
 	int 	c1, c2, c3, c4;
@@ -1339,7 +1339,7 @@ PRIVATE int from_qp(
 	appledouble_decode_object* p_ap_decode_obj, 
 	char	*buff, 
 	int 	size, 
-	PRUPRInt32 	*real_size)
+	PRInt32 	*real_size)
 {
     char c;
     int c1, c2;
@@ -1608,7 +1608,7 @@ PRIVATE int from_uu(
 	appledouble_decode_object* p_ap_decode_obj, 
 	char	*buff, 
 	int 	size, 
-	PRUPRInt32 	*real_size)
+	PRInt32 	*real_size)
 {
     char c;
     int i;
@@ -1739,7 +1739,7 @@ PRIVATE int from_none(
 	appledouble_decode_object* p_ap_decode_obj, 
 	char 	*buff, 
 	int 	size, 
-	PRUPRInt32 	*real_size)
+	PRInt32 	*real_size)
 {
 	char 	c;
     int  	i, status = NOERR; 

@@ -25,13 +25,13 @@
 
 #include "nscore.h"
 #include "msgCore.h"
+#include "prio.h"
 
 #include "nsMsgAppleDouble.h"
-#include "nsMsgAppleDoubleCodes.h"
+#include "nsMsgAppleCodes.h"
 
-#include "m_binhex.h"
+#include "nsMsgBinHex.h"
 #include "m_cvstrm.h"
-#include "ad_codes.h"
 
 extern int MK_MSG_SAVE_ATTACH_AS;
 
@@ -119,11 +119,11 @@ PRIVATE void net_AppleDouble_Encode_Complete (void *stream)
  	{
     	XP_FileClose(obj->fp);						/* done with the target file	*/
 
-        FREEIF(obj->fname);							/* and the file name too		*/
+        PR_FREEIF(obj->fname);							/* and the file name too		*/
     }
 								
-    FREEIF(obj->buff);								/* free the working buff.		*/
-    PR_FREE(obj);
+    PR_FREEIF(obj->buff);								/* free the working buff.		*/
+    PR_FREEIF(obj);
 }
 
 PRIVATE void net_AppleDouble_Encode_Abort (void *stream, int status)
@@ -138,10 +138,10 @@ PRIVATE void net_AppleDouble_Encode_Abort (void *stream, int status)
 
         XP_FileRemove (obj->fname, xpURL);			/* remove the partial file.		*/
         
-        FREEIF(obj->fname);
+        PR_FREEIF(obj->fname);
 	}
-    FREEIF(obj->buff);								/* free the working buff.		*/
-    PR_FREE(obj);
+    PR_FREEIF(obj->buff);								/* free the working buff.		*/
+    PR_FREEIF(obj);
 }
 
 /*
@@ -177,7 +177,7 @@ fe_MakeAppleDoubleEncodeStream (int  format_out,
     obj = XP_NEW(AppleDoubleEncodeObject);
     if (obj == NULL) 
     {
-        PR_FREE (stream);
+        PR_FREEIF (stream);
         return(NULL);
     }
    
@@ -189,8 +189,8 @@ fe_MakeAppleDoubleEncodeStream (int  format_out,
 	}
    	if (working_buff == NULL)
    	{
-   		PR_FREE (obj);
-   		PR_FREE (stream);
+   		PR_FREEIF (obj);
+   		PR_FREEIF (stream);
 		return (NULL);
    	}
   	
@@ -205,9 +205,9 @@ fe_MakeAppleDoubleEncodeStream (int  format_out,
 	obj->fp  = XP_FileOpen(dst_filename, xpFileToPost, XP_FILE_WRITE_BIN);
 	if (obj->fp == NULL)
 	{
-		PR_FREE (working_buff);
-   		PR_FREE (obj);
-   		PR_FREE (stream);
+		PR_FREEIF (working_buff);
+   		PR_FREEIF (obj);
+   		PR_FREEIF (stream);
 		return (NULL);
 	}
 	
@@ -319,12 +319,12 @@ net_AppleDouble_Decode_Complete (void *stream)
     ap_decode_end(&(obj->ap_decode_obj), FALSE);		/* it is a normal clean up cases.*/
 
 	if (obj->binhex_stream)
-		PR_FREE(obj->binhex_stream);
+		PR_FREEIF(obj->binhex_stream);
 	
 	if (obj->in_buff)
-		PR_FREE(obj->in_buff);
+		PR_FREEIF(obj->in_buff);
 		
-	PR_FREE(obj);
+	PR_FREEIF(obj);
 }
 
 PRIVATE void 
@@ -336,12 +336,12 @@ net_AppleDouble_Decode_Abort (
 	ap_decode_end(&(obj->ap_decode_obj), TRUE);			/* it is an abort. 				*/
 	
 	if (obj->binhex_stream)
-		PR_FREE(obj->binhex_stream);
+		PR_FREEIF(obj->binhex_stream);
 	
 	if (obj->in_buff)
-		PR_FREE(obj->in_buff);
+		PR_FREEIF(obj->in_buff);
 		
-	PR_FREE(obj);
+	PR_FREEIF(obj);
 }
 
 
@@ -398,7 +398,7 @@ fe_MakeAppleDoubleDecodeStream_1 (int  format_out,
 						window_id, 
 						true,
 						url+7);
-	PR_FREE(url);
+	PR_FREEIF(url);
 	return (p);
 
 #else	/* for the none mac-os to get a file name */
@@ -429,7 +429,7 @@ fe_MakeAppleDoubleDecodeStream_1 (int  format_out,
 						window_id, 
 						TRUE,
 						filename);
-	PR_FREE(filename);
+	PR_FREEIF(filename);
 	return (p);	
 
 #endif
@@ -458,7 +458,7 @@ fe_MakeAppleDoubleDecodeStream (int  format_out,
     obj = XP_NEW(AppleDoubleDecodeObject);
     if (obj == NULL)
     {
-    	PR_FREE(stream);
+    	PR_FREEIF(stream);
         return(NULL);
     }
     
@@ -476,8 +476,8 @@ fe_MakeAppleDoubleDecodeStream (int  format_out,
 	obj->in_buff = (char *)PR_CALLOC(1024);
 	if (obj->in_buff == NULL)
 	{
-		PR_FREE(obj);
-		PR_FREE(stream);
+		PR_FREEIF(obj);
+		PR_FREEIF(stream);
 		return (NULL);
 	}
 	
@@ -493,9 +493,9 @@ fe_MakeAppleDoubleDecodeStream (int  format_out,
 							dst_filename);
 		if (obj->binhex_stream == NULL)
 		{
-			PR_FREE(obj);
-			PR_FREE(stream);
-			PR_FREE(obj->in_buff);
+			PR_FREEIF(obj);
+			PR_FREEIF(stream);
+			PR_FREEIF(obj->in_buff);
 			return NULL;
 		}
 		
@@ -577,7 +577,7 @@ fe_MakeAppleSingleDecodeStream_1 (int  format_out,
 						window_id, 
 						true,
 						url+7);
-	PR_FREE(url);
+	PR_FREEIF(url);
 	return (p);
 
 #else	/* for the none mac-os to get a file name */
@@ -616,7 +616,7 @@ fe_MakeAppleSingleDecodeStream_1 (int  format_out,
 						window_id, 
 						FALSE,
 						filename);
-	PR_FREE(filename);
+	PR_FREEIF(filename);
 	return (p);	
 
 #endif
@@ -649,7 +649,7 @@ fe_MakeAppleSingleDecodeStream (int  format_out,
     obj = XP_NEW(AppleDoubleDecodeObject);
     if (obj == NULL)
     {
-    	PR_FREE(stream);
+    	PR_FREEIF(stream);
         return(NULL);
     }
     
@@ -667,8 +667,8 @@ fe_MakeAppleSingleDecodeStream (int  format_out,
 	obj->in_buff = (char *)PR_CALLOC(1024);
 	if (obj->in_buff == NULL)
 	{
-		PR_FREE(obj);
-		PR_FREE(stream);
+		PR_FREEIF(obj);
+		PR_FREEIF(stream);
 		return (NULL);
 	}
 	
@@ -684,9 +684,9 @@ fe_MakeAppleSingleDecodeStream (int  format_out,
 							dst_filename);
 		if (obj->binhex_stream == NULL)
 		{
-			PR_FREE(obj);
-			PR_FREE(stream);
-			PR_FREE(obj->in_buff);
+			PR_FREEIF(obj);
+			PR_FREEIF(stream);
+			PR_FREEIF(obj->in_buff);
 			return NULL;
 		}
 		

@@ -68,9 +68,9 @@ typedef struct ap_header
 
 typedef struct ap_entry 
 {
-	PRUPRInt32  id;
-	PRUPRInt32	offset;
-	PRUPRInt32	length;
+	PRInt32  id;
+	PRInt32	offset;
+	PRInt32	length;
 	
 } ap_entry;
 
