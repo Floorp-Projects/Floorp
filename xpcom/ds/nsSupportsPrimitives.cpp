@@ -69,18 +69,18 @@ NS_IMETHODIMP nsSupportsIDImpl::SetData(nsID *aData)
 
 NS_IMETHODIMP nsSupportsIDImpl::toString(char **_retval)
 {
+    char* result = nsnull;
     if(!_retval)
     {
         NS_ASSERTION(0,"Bad pointer");
         return NS_ERROR_NULL_POINTER;
     }
-    *_retval = nsnull;
     if(mData)
     {
         char * str = mData->ToString();
         if(str)
         {
-            *_retval = (char*) nsAllocator::Clone(str, 
+            result = (char*) nsAllocator::Clone(str, 
                                     (nsCRT::strlen(str)+1)*sizeof(char));
             delete [] str;
         }
@@ -88,9 +88,11 @@ NS_IMETHODIMP nsSupportsIDImpl::toString(char **_retval)
     else
     {
       static const char nullStr[] = "null";
-      *_retval = (char*) nsAllocator::Clone(nullStr, sizeof(nullStr));
+      result = (char*) nsAllocator::Clone(nullStr, sizeof(nullStr));
     }
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 
@@ -237,9 +239,10 @@ NS_IMETHODIMP nsSupportsPRBoolImpl::toString(char **_retval)
         return NS_ERROR_NULL_POINTER;
     }
     const char * str = mData ? "true" : "false";
-    *_retval = (char*) nsAllocator::Clone(str,
+    char* result = (char*) nsAllocator::Clone(str,
                                 (nsCRT::strlen(str)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -283,9 +286,10 @@ NS_IMETHODIMP nsSupportsPRUint8Impl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%u", (PRUint16) mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -329,9 +333,10 @@ NS_IMETHODIMP nsSupportsPRUint16Impl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%u", (int) mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -375,9 +380,10 @@ NS_IMETHODIMP nsSupportsPRUint32Impl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%lu", mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -421,9 +427,10 @@ NS_IMETHODIMP nsSupportsPRUint64Impl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%llu", mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -467,9 +474,10 @@ NS_IMETHODIMP nsSupportsPRTimeImpl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%llu", mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -503,18 +511,20 @@ NS_IMETHODIMP nsSupportsCharImpl::SetData(char aData)
 
 NS_IMETHODIMP nsSupportsCharImpl::toString(char **_retval)
 {
+    char* result;
     if(!_retval)
     {
         NS_ASSERTION(0,"Bad pointer");
         return NS_ERROR_NULL_POINTER;
     }
 
-    *_retval = (char*) nsAllocator::Alloc(2*sizeof(char));
-    if(!*_retval)
-        return NS_ERROR_OUT_OF_MEMORY;
-    (*_retval)[0] = mData;
-    (*_retval)[1] = 0;
-    return NS_OK;
+    if(nsnull != (result = (char*) nsAllocator::Alloc(2*sizeof(char))))
+    {
+        result[0] = mData;
+        result[1] = '\0';
+    }
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -558,9 +568,10 @@ NS_IMETHODIMP nsSupportsPRInt16Impl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%d", mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -604,9 +615,10 @@ NS_IMETHODIMP nsSupportsPRInt32Impl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%ld", mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -650,9 +662,10 @@ NS_IMETHODIMP nsSupportsPRInt64Impl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%lld", mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -696,9 +709,10 @@ NS_IMETHODIMP nsSupportsFloatImpl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%f", (double) mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/
@@ -742,9 +756,54 @@ NS_IMETHODIMP nsSupportsDoubleImpl::toString(char **_retval)
 
     PR_snprintf(buf, size, "%f", mData);
 
-    *_retval = (char*) nsAllocator::Clone(buf,
+    char* result = (char*) nsAllocator::Clone(buf,
                                 (nsCRT::strlen(buf)+1)*sizeof(char));
-    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    *_retval = result;
+    return  result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}  
+
+/***************************************************************************/
+
+
+NS_IMPL_ISUPPORTS(nsSupportsVoidImpl, NS_GET_IID(nsISupportsVoid))
+
+nsSupportsVoidImpl::nsSupportsVoidImpl()
+    : mData(nsnull)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsSupportsVoidImpl::~nsSupportsVoidImpl() {}
+
+NS_IMETHODIMP nsSupportsVoidImpl::GetData(const void * *aData)
+{
+    if(!aData)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aData = mData;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsVoidImpl::SetData(void * aData)
+{
+    mData = aData;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsSupportsVoidImpl::toString(char **_retval)
+{
+    if(!_retval)
+    {
+        NS_ASSERTION(0,"Bad pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    static const char str[] = "[raw data]";
+    char* result = (char*) nsAllocator::Clone(str, sizeof(str));
+    *_retval = result;
+    return  result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }  
 
 /***************************************************************************/

@@ -291,6 +291,22 @@ private:
 
 /***************************************************************************/
 
+class nsSupportsVoidImpl : public nsISupportsVoid
+{
+public:
+    NS_DECL_ISUPPORTS
 
+    NS_IMETHOD GetData(const void * *aData);
+    NS_IMETHOD SetData(void * aData);
+    NS_IMETHOD toString(char **_retval);
+
+    nsSupportsVoidImpl();
+    virtual ~nsSupportsVoidImpl();
+
+private:
+    void* mData;
+};
+
+/***************************************************************************/
 
 #endif /* nsSupportsPrimitives_h__ */
