@@ -118,11 +118,11 @@ nsProxyAutoConfig.prototype = {
         }
         // add predefined functions to pac
         var mypac = pacUtils + pac;
-        // evaluate loded js file
-        evalInSandbox(mypac, ProxySandBox, pacURL);
         ProxySandBox.myIpAddress = myIpAddress;
         ProxySandBox.dnsResolve = dnsResolve;
         ProxySandBox.alert = proxyAlert;
+        // evaluate loaded js file
+        evalInSandbox(mypac, ProxySandBox, pacURL);
         LocalFindProxyForURL=ProxySandBox.FindProxyForURL;
         this.done = true;
     },
