@@ -58,7 +58,6 @@ public:
   static nsGraphicsState * GetNewGS();
   static void              ReleaseGS(nsGraphicsState* aGS);
   
-  
   nsGraphicsStatePool();
   ~nsGraphicsStatePool();
   

@@ -50,7 +50,7 @@ public:
   virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
   virtual PRInt32     GetLineStride();
 
-  NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
+  NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);
   virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
   virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
   virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
@@ -81,12 +81,6 @@ public:
   virtual PRInt32     GetAlphaLineStride();
   virtual nsIImage*   DuplicateImage();
 
-  /**
-   * Calculate the number of bytes spaned for this image for a given width
-   * @param aWidth is the width to calculate the number of bytes for
-   * @return the number of bytes in this span
-   */
-  PRInt32  CalcBytesSpan(PRUint32  aWidth);
   virtual void  SetAlphaLevel(PRInt32 aAlphaLevel);
   virtual PRInt32 GetAlphaLevel();
   virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY);
@@ -98,7 +92,15 @@ private:
   /**
    * Calculate the amount of memory needed for the initialization of the image
    */
-  void ComputMetrics();
+  void ComputeMetrics() {
+    mRowBytes = (mWidth * mDepth) >> 5;
+
+    if (((PRUint32)mWidth * mDepth) & 0x1F)
+      mRowBytes++;
+    mRowBytes <<= 2;
+    
+    mSizeImage = mRowBytes * mHeight;
+  };
   void ComputePaletteSize(PRIntn nBitCount);
 
 private:

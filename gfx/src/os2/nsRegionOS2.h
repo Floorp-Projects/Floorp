@@ -56,6 +56,8 @@ class nsRegionOS2 : public nsIRegion
    NS_IMETHOD GetRects( nsRegionRectSet **aRects);
    NS_IMETHOD FreeRects( nsRegionRectSet *aRects);
 
+   NS_IMETHOD GetNumRects(PRUint32 *aRects) const { *aRects = 0; return NS_OK; }
+   
    // Don't use this -- it returns a region defined in CRS.
    NS_IMETHOD GetNativeRegion( void *&aRegion) const;
    NS_IMETHOD GetRegionComplexity( nsRegionComplexity &aComplexity) const;

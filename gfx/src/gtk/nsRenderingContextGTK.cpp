@@ -24,7 +24,6 @@
 #include "nsRenderingContextGTK.h"
 #include "nsRegionGTK.h"
 #include "nsGraphicsStateGTK.h"
-#include "nsGfxCIID.h"
 #include "nsICharRepresentable.h"
 #include <math.h>
 #include "nsGCCache.h"
@@ -62,6 +61,7 @@ nsRenderingContextGTK::nsRenderingContextGTK()
   mStateCache = new nsVoidArray();
   mClipRegion = nsnull;
   mDrawStringBuf = nsnull;
+  mGC = nsnull;
 
   mFunction = GDK_COPY;
   mClipIsSet = PR_TRUE;
@@ -367,21 +367,6 @@ NS_IMETHODIMP nsRenderingContextGTK::IsVisibleRect(const nsRect& aRect,
   return NS_OK;
 }
 
-NS_METHOD nsRenderingContextGTK::CreateClipRegion()
-{
-  PRUint32 w, h;
-  mSurface->GetSize(&w, &h);
-
-  if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) ) {
-    mClipRegion->Init();
-    mClipRegion->SetTo(0,0,w,h);
-  } else {
-    // we're going to crash shortly after if we hit this, but we will return NS_ERROR_FAILURE anyways.
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
   PRInt32 x, y, w, h;
@@ -445,10 +430,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
                                                  nsClipCombine aCombine,
                                                  PRBool &aClipEmpty)
 {
-
-  if (!mClipRegion) {
-    CreateClipRegion();
-  }
+  CreateClipRegion();
 
   nsRect trect = aRect;
 
@@ -519,57 +501,13 @@ void nsRenderingContextGTK::UpdateGC()
                            &values,
                            valuesMask,
                            rgn);
-
-
-#if 0
-#ifdef USE_XLIB_GC_STUFF
-  XGCValues xvalues;
-  unsigned long xvalues_mask = 0;
-#endif
-  if (!mClipIsSet && mClipRegion) {
-    // we can't use a region with XChangeGC :(
-    GdkRegion *rgn;
-    mClipRegion->GetNativeRegion((void*&)rgn);
-    gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
-    mClipIsSet = PR_TRUE;
-  }
-
-  if (!mFontIsSet && mSurface) {
-#ifdef USE_XLIB_GC_STUFF
-    xvalues.font = ((XFontStruct *) ((GdkFontPrivate*) mCurrentFont)->xfont)->fid;
-    xvalues_mask |= GCFont;
-#else
-    gdk_gc_set_font(mSurface->GetGC(),
-                    mCurrentFont);
-#endif
-    mFontIsSet = PR_TRUE;
-  }
-  if (!mColorIsSet) {
-#ifdef USE_XLIB_GC_STUFF
-    xvalues.foreground = gdk_rgb_xpixel_from_rgb(NS_TO_GDK_RGB(mCurrentColor));
-    xvalues_mask |= GCForeground;
-#else
-    gdk_rgb_gc_set_foreground(mSurface->GetGC(), NS_TO_GDK_RGB(mCurrentColor));
-#endif
-    mColorIsSet = PR_TRUE;
-  }
-
-#ifdef USE_XLIB_GC_STUFF
-  // do this so that we only send 1 message if both color and font changes
-  if ((xvalues_mask != 0) && mSurface) {
-    XChangeGC(GDK_DISPLAY(), GDK_GC_XGC(mSurface->GetGC()), xvalues_mask, &xvalues);
-  }
-#endif
-#endif
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
                                                    nsClipCombine aCombine,
                                                    PRBool &aClipEmpty)
 {
-  if (!mClipRegion) {
-    CreateClipRegion();
-  }
+  CreateClipRegion();
 
   mClipIsSet = PR_FALSE;
 
