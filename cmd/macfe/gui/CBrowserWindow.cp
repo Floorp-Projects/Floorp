@@ -1889,7 +1889,7 @@ CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inR
 
 		mPopdownParent->ResizeFrameTo ( kTreeWidth, newHeight, false );
 		mPopdownParent->PlaceInSuperImageAt ( inLeft, inTop, false );
-		mPopdownParent->BuildHTPane ( inResource );
+		mPopdownParent->BuildHTPane ( inResource, *(mHTMLView->GetContext()) );
 		
 		mSavedPopdownTarget = LCommander::GetTarget();
 		LCommander::SwitchTarget(mPopdownParent);
@@ -1954,7 +1954,7 @@ void
 CBrowserWindow :: OpenDockedTreeView ( HT_Resource inTopNode )
 {
 	mNavCenterParent->NavCenterShelf().SetShelfState(true, NULL);
-	mNavCenterParent->BuildHTPane ( inTopNode );
+	mNavCenterParent->BuildHTPane ( inTopNode, *mHTMLView->GetContext() );
 
 } // OpenDockedTreeView
 
