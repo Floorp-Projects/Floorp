@@ -1076,7 +1076,7 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
       ApplyCommandToIndices(nsMsgViewCommandType::toggleMessageRead, (nsMsgViewIndex *) &row, 1);
    break;
   case 't': // threaded cell or total cell
-    if ((colID[1] == 'h') && ((m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) && (m_flags [row] & MSG_VIEW_FLAG_HASCHILDREN))) // 'th' for threaded, 'to' for total
+    if (colID[1] == 'h') 
     {
       ExpandAndSelectThreadByIndex(row);
     }
@@ -2647,16 +2647,25 @@ nsresult nsMsgDBView::ExpandAndSelectThread()
 nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index)
 {
   nsresult rv;
-  nsMsgViewIndex threadIndex = ThreadIndexOfMsg(GetAt(index), index);
-  if (threadIndex == nsMsgViewIndex_None) {
-    NS_ASSERTION(PR_FALSE, "couldn't find thread");
-    return NS_MSG_MESSAGE_NOT_FOUND;
+
+  nsMsgViewIndex threadIndex;
+  PRBool inThreadedMode = (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay);
+  
+  if (inThreadedMode) {
+    threadIndex = ThreadIndexOfMsg(GetAt(index), index);
+    if (threadIndex == nsMsgViewIndex_None) {
+      NS_ASSERTION(PR_FALSE, "couldn't find thread");
+      return NS_MSG_MESSAGE_NOT_FOUND;
+    }
+  }
+  else {
+    threadIndex = index;
   }
 
   PRInt32 flags = m_flags[threadIndex];
   PRInt32 count = 0;
 
-  if ((flags & MSG_VIEW_FLAG_ISTHREAD) && (flags && MSG_VIEW_FLAG_HASCHILDREN)) {
+  if (inThreadedMode && (flags & MSG_VIEW_FLAG_ISTHREAD) && (flags && MSG_VIEW_FLAG_HASCHILDREN)) {
     // if closed, expand this thread.
     if (flags & MSG_FLAG_ELIDED) {
       PRUint32 numExpanded;
@@ -2668,7 +2677,12 @@ nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index)
     // so we know how many to select
     count = CountExpandedThread(threadIndex); 
   }
+  else {
+    count = 1;
+  }
   NS_ASSERTION(count > 0, "bad count");
+
+  // update the selection
 
   NS_ASSERTION(mOutlinerSelection, "no outliner selection");
   if (!mOutlinerSelection) return NS_ERROR_UNEXPECTED;
@@ -2676,16 +2690,23 @@ nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index)
   // clear the existing selection.
   mOutlinerSelection->ClearSelection(); 
 
-  // is this correct?
+  // is this correct when we are selecting multiple items?
   mOutlinerSelection->SetCurrentIndex(threadIndex); 
 
   // the count should be 1 or greater. if there was only one message in the thread, we just select it.
   // if more, we select all of them.
   mOutlinerSelection->RangedSelect(threadIndex, threadIndex + count - 1, PR_TRUE /* augment */);
 
-  //do we want to do something like this to clear the message pane
-  //when the user selects a thread?
-  //NoteChange(?, ?, nsMsgViewNotificationCode::clearMessagePane);
+  if (count == 1) {
+    // if we ended up selecting on message, this will cause us to load it.
+    SelectionChanged();
+  }
+  else {
+    //XXX todo, should multiple selection clear the thread pane?  see bug #xxxxx
+    //do we want to do something like this to clear the message pane
+    //when the user selects a thread?
+    //NoteChange(?, ?, nsMsgViewNotificationCode::clearMessagePane);
+  }
   return NS_OK;
 }
 
