@@ -22,6 +22,7 @@ MODULE=xpconnect
 XPIDLSRCS= .\xpccomponents.idl \
            .\xpcjsid.idl \
            .\xpctest.idl \
+           .\nsIXPCSecurityManager.idl \
            $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

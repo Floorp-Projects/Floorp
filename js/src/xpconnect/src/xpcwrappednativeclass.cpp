@@ -263,7 +263,8 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
            desc->IsMethod())
         {
             if(!clazz->CallWrappedMethod(cx, wrapper, desc, 
-                                         JS_FALSE, 0, NULL, vp))
+                                         nsXPCWrappedNativeClass::CALL_METHOD, 
+                                         0, NULL, vp))
                 return JS_FALSE;
             if(JSVAL_IS_PRIMITIVE(*vp))
                 return JS_TRUE;
@@ -382,7 +383,7 @@ JSBool
 nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                                            nsXPCWrappedNative* wrapper,
                                            const XPCNativeMemberDescriptor* desc,
-                                           JSBool isAttributeSet,
+                                           CallMode callMode,
                                            uintN argc, jsval *argv, jsval *vp)
 {
 #define PARAM_BUFFER_COUNT     16
@@ -402,26 +403,73 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     nsID* conditional_iid = NULL;
     uintN err;
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    nsIXPCSecurityManager* securityManager;
 
     if(vp)
         *vp = JSVAL_NULL;
 
     if(!xpcc)
         goto done;
-    
+
     xpcc->SetLastResult(NS_ERROR_UNEXPECTED);
 
-    // make sure we have what we need
+    // make sure we have what we need...
 
-    if(isAttributeSet)
+    // set up the method index and do the security check if needed
+    securityManager = xpcc->GetSecurityManager();
+    switch(callMode)
     {
-        // fail silently if trying to write a readonly attribute
-        if(!desc->IsWritableAttribute())
+        case CALL_METHOD:
+            vtblIndex = desc->index;
+
+            if(securityManager && 
+               (xpcc->GetSecurityManagerFlags() & 
+                nsIXPCSecurityManager::HOOK_CALL_METHOD) &&
+               NS_OK != 
+                securityManager->CanCallMethod(cx, mIID, wrapper->GetNative(), 
+                                               mInfo, vtblIndex, desc->id))
+            {
+                // the security manager vetoed. It should have set an exception.
+                goto done;
+            }
+            break;
+
+        case CALL_GETTER:
+            vtblIndex = desc->index;
+
+            if(securityManager && 
+               (xpcc->GetSecurityManagerFlags() & 
+                nsIXPCSecurityManager::HOOK_GET_PROPERTY) &&
+               NS_OK != 
+                securityManager->CanGetProperty(cx, mIID, wrapper->GetNative(), 
+                                                mInfo, vtblIndex, desc->id))
+            {
+                // the security manager vetoed. It should have set an exception.
+                goto done;
+            }
+            break;
+
+        case CALL_SETTER:
+            // fail silently if trying to write a readonly attribute
+            if(!desc->IsWritableAttribute())
+                goto done;
+            vtblIndex = desc->index2;
+
+            if(securityManager && 
+               (xpcc->GetSecurityManagerFlags() & 
+                nsIXPCSecurityManager::HOOK_SET_PROPERTY) &&
+               NS_OK != 
+                securityManager->CanSetProperty(cx, mIID, wrapper->GetNative(), 
+                                                mInfo, vtblIndex, desc->id))
+            {
+                // the security manager vetoed. It should have set an exception.
+                goto done;
+            }
+            break;
+        default:
+            NS_ASSERTION(0,"bad value");
             goto done;
-        vtblIndex = desc->index2;
     }
-    else
-        vtblIndex = desc->index;
 
     if(NS_FAILED(mInfo->GetMethodInfo(vtblIndex, &info)))
     {
@@ -669,7 +717,9 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
     if(!desc || !desc->IsMethod())
         return JS_FALSE;
 
-    return clazz->CallWrappedMethod(cx, wrapper, desc, JS_FALSE, argc, argv, vp);
+    return clazz->CallWrappedMethod(cx, wrapper, desc, 
+                                    nsXPCWrappedNativeClass::CALL_METHOD, 
+                                    argc, argv, vp);
 }
 
 JSObject*

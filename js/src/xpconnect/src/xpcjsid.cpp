@@ -320,10 +320,24 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
         return NS_ERROR_FAILURE;
     }
 
-    nsISupports* inst;
-    nsresult rv;
+    // Do the security check if necessary
 
-    // XXX can do security check here (don't forget to free cid)
+    XPCContext* xpcc;
+    if(NULL != (xpcc = nsXPConnect::GetContext(cx)))
+    {
+        nsIXPCSecurityManager* sm;
+        if(NULL != (sm = xpcc->GetSecurityManager()) &&
+           (xpcc->GetSecurityManagerFlags() & 
+            nsIXPCSecurityManager::HOOK_CREATE_INSTANCE) &&
+           NS_OK != sm->CanCreateInstance(cx, *cid))
+        {
+            // the security manager vetoed. It should have set an exception.
+            nsAllocator::Free(cid);
+            *rval = JSVAL_NULL;
+            *retval = JS_TRUE;
+            return NS_OK;
+        }
+    }
 
     // If an IID was passed in then use it
     // XXX should it be JS error to pass something that is *not* and JSID?
@@ -340,6 +354,9 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
     }
     if(!piid)
         piid = &nsISupports::GetIID();
+
+    nsISupports* inst;
+    nsresult rv;
 
     rv = nsComponentManager::CreateInstance(*cid, NULL, *piid, (void**) &inst);
     nsAllocator::Free(cid);
@@ -523,10 +540,24 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
         return NS_ERROR_FAILURE;
     }
 
-    nsISupports* srvc;
-    nsresult rv;
+    // Do the security check if necessary
 
-    // XXX can do security check here (don't forget to free cid)
+    XPCContext* xpcc;
+    if(NULL != (xpcc = nsXPConnect::GetContext(cx)))
+    {
+        nsIXPCSecurityManager* sm;
+        if(NULL != (sm = xpcc->GetSecurityManager()) &&
+           (xpcc->GetSecurityManagerFlags() & 
+            nsIXPCSecurityManager::HOOK_GET_SERVICE) &&
+           NS_OK != sm->CanGetService(cx, *cid))
+        {
+            // the security manager vetoed. It should have set an exception.
+            nsAllocator::Free(cid);
+            *rval = JSVAL_NULL;
+            *retval = JS_TRUE;
+            return NS_OK;
+        }
+    }
 
     // If an IID was passed in then use it
     // XXX should it be JS error to pass something that is *not* and JSID?
@@ -543,6 +574,9 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
     }
     if(!piid)
         piid = &nsISupports::GetIID();
+
+    nsISupports* srvc;
+    nsresult rv;
 
     rv = nsServiceManager::GetService(*cid, *piid, &srvc, NULL);
 

@@ -330,7 +330,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     argc = paramCount -
             (paramCount && info->GetParam(paramCount-1).IsRetval() ? 1 : 0);
 
-    if(!cx || !IsReflectable(methodIndex))
+    if(!mXPCContext || !cx || !IsReflectable(methodIndex))
         goto pre_call_clean_up;
 
     older = JS_SetErrorReporter(cx, NULL);

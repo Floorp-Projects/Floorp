@@ -5,3 +5,5 @@
 xpccomponents.idl
 xpcjsid.idl
 xpctest.idl
+nsIXPCSecurityManager.idl
+
