@@ -172,6 +172,8 @@ sub query_checkins {
         $::query_filetype ||= "exact";
         if ($::query_filetype eq 'regexp') {
             $qstring .= " and files.file regexp $q";
+		} elsif ($::query_filetype eq 'notregexp') {
+            $qstring .= " and not (files.file regexp $q)";
         } else {
             $qstring .= " and files.file = $q";
         }
