@@ -238,12 +238,8 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
   PRInt32  c;
   nsresult ret;
 
-#if 1
-  nsString utf8("UTF-8");
-  ret = NS_NewConverterStream(&mIn, nsnull, aIn, 0, &utf8);
-#else
-  ret = NS_NewConverterStream(&mIn, nsnull, aIn);
-#endif
+  nsString uesc("x-u-escaped");
+  ret = NS_NewConverterStream(&mIn, nsnull, aIn, 0, &uesc);
   if (ret != NS_OK) {
 #ifdef NS_DEBUG
     cout << "NS_NewConverterStream failed" << endl;
