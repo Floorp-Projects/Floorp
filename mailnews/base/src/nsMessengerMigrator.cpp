@@ -522,7 +522,7 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   nsAutoString localMailFakeHostName(LOCAL_MAIL_FAKE_HOST_NAME);
   server->SetPrettyName(localMailFakeHostName.ToNewUnicode());
 
-  // hook them together
+  // notice, no identity for local mail
   account->SetIncomingServer(server);
 
   nsCOMPtr<nsINoIncomingServer> noServer;
@@ -1074,6 +1074,7 @@ nsMessengerMigrator::MigrateLocalMailAccount()
                             "none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
+  // notice, no identity for local mail
   rv = account->SetIncomingServer(server);
   if (NS_FAILED(rv)) return rv;
   
@@ -1169,6 +1170,10 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   rv = accountManager->CreateIdentity(getter_AddRefs(copied_identity));
   if (NS_FAILED(rv)) return rv;
 
+  // hook them together early, see bug #31904
+  account->SetIncomingServer(server);
+  account->AddIdentity(copied_identity);
+
   // make this new identity to copy of the identity
   // that we created out of the 4.x prefs
   rv = CopyIdentity(identity,copied_identity);
@@ -1178,10 +1183,6 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   // the cc and fcc values
   rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, MOVEMAIL_FAKE_HOST_NAME);
   if (NS_FAILED(rv)) return rv;
-
-  // hook them together
-  account->SetIncomingServer(server);
-  account->AddIdentity(copied_identity);
   
   // now upgrade all the prefs
   nsCOMPtr <nsIFileSpec> mailDir;
@@ -1296,6 +1297,10 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   rv = accountManager->CreateIdentity(getter_AddRefs(copied_identity));
   if (NS_FAILED(rv)) return rv;
 
+  // hook them together early, see bug #31904
+  account->SetIncomingServer(server);
+  account->AddIdentity(copied_identity);
+
   // make this new identity to copy of the identity
   // that we created out of the 4.x prefs
   rv = CopyIdentity(identity,copied_identity);
@@ -1303,10 +1308,6 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
 
   rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, (const char *)hostname);
   if (NS_FAILED(rv)) return rv;
-
-  // hook them together
-  account->SetIncomingServer(server);
-  account->AddIdentity(copied_identity);
   
   // now upgrade all the prefs
   nsCOMPtr <nsIFileSpec> mailDir;
@@ -1549,6 +1550,11 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = accountManager->CreateIdentity(getter_AddRefs(copied_identity));
   if (NS_FAILED(rv)) return rv;
 
+  // hook them together early, see bug #31904
+  account->SetIncomingServer(server);
+  account->AddIdentity(copied_identity);
+
+
   // make this new identity to copy of the identity
   // that we created out of the 4.x prefs
   rv = CopyIdentity(identity,copied_identity);
@@ -1557,10 +1563,6 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = SetMailCopiesAndFolders(copied_identity, (const char *)username, (const char *)hostname);
   if (NS_FAILED(rv)) return rv;  
   
-  // hook them together
-  account->SetIncomingServer(server);
-  account->AddIdentity(copied_identity);
-
   // now upgrade all the prefs
 
   rv = MigrateOldImapPrefs(server, hostAndPort);
@@ -1951,6 +1953,10 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
     rv = accountManager->CreateIdentity(getter_AddRefs(copied_identity));
 	if (NS_FAILED(rv)) return rv;
 
+	// hook them together early, see bug #31904
+	account->SetIncomingServer(server);
+	account->AddIdentity(copied_identity);
+
     // make this new identity to copy of the identity
     // that we created out of the 4.x prefs
 	rv = CopyIdentity(identity,copied_identity);
@@ -1958,10 +1964,6 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 
     rv = SetNewsCopiesAndFolders(copied_identity);
     if (NS_FAILED(rv)) return rv;
-
-    // hook them together
-	account->SetIncomingServer(server);
-	account->AddIdentity(copied_identity);
 	
 #ifdef DEBUG_MIGRATOR
     printf("migrate old nntp prefs\n");
