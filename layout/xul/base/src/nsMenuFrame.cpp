@@ -289,11 +289,6 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   if (!frame || (rv != NS_OK))
     return rv;
 
-  static int k = 0;
-
-  printf("Reflow #%d\n", k);
-  k++;
-
   // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
   nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
