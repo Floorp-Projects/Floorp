@@ -42,7 +42,7 @@
 <!ENTITY open.label "Open">
 <!ENTITY save.label "Save">
 <!ENTITY publish.label "Publish">
-<!ENTITY preview.label "Preview">
+<!ENTITY preview.label "Browse">
 <!ENTITY cut.label "Cut">
 <!ENTITY copy.label "Copy">
 <!ENTITY paste.label "Paste">
