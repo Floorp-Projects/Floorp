@@ -958,7 +958,7 @@ public:
   NS_DECL_NSIFACTORY
 
   nsSingletonFactory(nsISupports* aSingleton);
-  ~nsSingletonFactory();
+  ~nsSingletonFactory() { }
 
 private:
   nsCOMPtr<nsISupports> mSingleton;
@@ -969,9 +969,6 @@ nsSingletonFactory::nsSingletonFactory(nsISupports* aSingleton)
 {
   NS_ASSERTION(mSingleton, "Singleton was null!");
 }
-
-nsSingletonFactory::~nsSingletonFactory()
-{ }
 
 NS_IMPL_ISUPPORTS1(nsSingletonFactory, nsIFactory)
 
