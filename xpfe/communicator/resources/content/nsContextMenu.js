@@ -379,7 +379,7 @@ nsContextMenu.prototype = {
     },
     // Edit linked-to URL in a new window.
     editLink : function () {
-        editPage( this.linkURL() );
+        editPage( this.linkURL(), window, false );
     },
     // Reload clicked-in frame.
     reloadFrame : function () {
