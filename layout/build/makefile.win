@@ -44,6 +44,7 @@ MISCDEP =				\
  $(DIST)\lib\raptorhtmltable_s.lib	\
  $(DIST)\lib\raptorxmlcontent_s.lib	\
  $(DIST)\lib\raptorxmldoc_s.lib		\
+ $(DIST)\lib\raptorxulcontent_s.lib	\
  $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom32.lib		\
  $(DIST)\lib\raptorbase.lib		\
@@ -72,6 +73,7 @@ LLIBS=					\
  $(DIST)\lib\raptorhtmltable_s.lib	\
  $(DIST)\lib\raptorxmlcontent_s.lib	\
  $(DIST)\lib\raptorxmldoc_s.lib		\
+ $(DIST)\lib\raptorxulcontent_s.lib	\
  $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom32.lib		\
  $(DIST)\lib\raptorbase.lib		\
@@ -81,6 +83,9 @@ LLIBS=					\
  $(DIST)\lib\netlib.lib		        \
  $(DIST)\lib\libplc21.lib		\
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
+!if defined(MOZ_DEBUG) && defined(GLOWCODE) && "$(MOZ_BITS)"=="32"
+ $(GLOWDIR)\glowcode.lib                \
+!endif
  $(LIBNSPR)
 
 include <$(DEPTH)\layout\config\rules.mak>
