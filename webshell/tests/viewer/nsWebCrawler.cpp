@@ -798,8 +798,6 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
     return;
   }
   rv = fu->CompareRegressionData(f1, f2);
-  fclose(f1);
-  fclose(f2);
   NS_RELEASE(fu);
 
   printf("regression test %s\n", NS_SUCCEEDED(rv) ? "passed" : "failed");
