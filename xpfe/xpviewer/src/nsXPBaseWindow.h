@@ -61,13 +61,14 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIBrowserWindow
-  NS_IMETHOD Init(nsIAppShell* aAppShell,
-                  nsIPref*        aPrefs,
-                  const nsString& aDialogURL,
-                  const nsString& aTitle,
-                  const nsRect&   aBounds,
-                  PRUint32        aChromeMask,
-                  PRBool          aAllowPlugins = PR_TRUE);
+  NS_IMETHOD Init(nsXPBaseWindowType aType,
+                  nsIAppShell*       aAppShell,
+                  nsIPref*           aPrefs,
+                  const nsString&    aDialogURL,
+                  const nsString&    aTitle,
+                  const nsRect&      aBounds,
+                  PRUint32           aChromeMask,
+                  PRBool             aAllowPlugins = PR_TRUE);
 
   NS_IMETHOD SetLocation(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD SetDimensions(PRInt32 aWidth, PRInt32 aHeight);
@@ -162,6 +163,7 @@ protected:
   nsIPref*     mPrefs;          //not addref'ed!
   PRBool       mAllowPlugins;
 
+  nsXPBaseWindowType mWindowType;
 
 };
 
