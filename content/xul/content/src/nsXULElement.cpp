@@ -3673,8 +3673,9 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
 
     nsCOMPtr<nsIScriptGlobalObject> global;
     aDocument->GetScriptGlobalObject(getter_AddRefs(global));
-
-    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+    NS_ASSERTION(global != nsnull, "no script global object");
+    if (! global)
+        return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIScriptContext> context;
     rv = global->GetContext(getter_AddRefs(context));
