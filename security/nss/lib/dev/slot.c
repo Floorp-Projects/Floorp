@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.5 $ $Date: 2001/09/19 21:37:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.6 $ $Date: 2001/09/19 21:47:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -74,7 +74,7 @@ nss_ck_slot_notify
  * any uses of slots where independence is needed?
  */
 NSS_IMPLEMENT NSSSlot *
-NSSSlot_Create
+nssSlot_Create
 (
   NSSArena *arenaOpt,
   CK_SLOT_ID slotID,
@@ -142,7 +142,7 @@ NSSSlot_Create
     rvSlot->ckFlags = slotInfo.flags;
     /* Initialize the token if present. */
     if (slotInfo.flags & CKF_TOKEN_PRESENT) {
-	token = NSSToken_Create(arena, slotID, rvSlot);
+	token = nssToken_Create(arena, slotID, rvSlot);
 	if (!token) {
 	    goto loser;
 	}
@@ -170,7 +170,7 @@ loser:
 }
 
 NSS_IMPLEMENT PRStatus
-NSSSlot_Destroy
+nssSlot_Destroy
 (
   NSSSlot *slot
 )
@@ -183,7 +183,7 @@ NSSSlot_Destroy
 }
 
 NSS_IMPLEMENT NSSUTF8 *
-NSSSlot_GetName
+nssSlot_GetName
 (
   NSSSlot *slot,
   NSSArena *arenaOpt
@@ -350,7 +350,7 @@ nssslot_change_password(NSSSlot *slot, nssSession *rwSession, NSSCallback pwcb)
 }
 
 NSS_IMPLEMENT PRStatus
-NSSSlot_Login
+nssSlot_Login
 (
   NSSSlot *slot,
   PRBool asSO,
@@ -363,7 +363,7 @@ NSSSlot_Login
     needsInit = PR_FALSE; /* XXX */
     needsLogin = PR_TRUE; /* XXX */
     if (needsInit) {
-	return NSSSlot_SetPassword(slot, pwcb);
+	return nssSlot_SetPassword(slot, pwcb);
     } else if (needsLogin) {
 	return nssslot_login(slot, slot->token->defaultSession, 
 	                     userType, pwcb);
@@ -372,7 +372,7 @@ NSSSlot_Login
 }
 
 NSS_IMPLEMENT PRStatus
-NSSSlot_Logout
+nssSlot_Logout
 (
   NSSSlot *slot,
   nssSession *sessionOpt
@@ -393,7 +393,7 @@ NSSSlot_Logout
 }
 
 NSS_IMPLEMENT void
-NSSSlot_SetPasswordDefaults
+nssSlot_SetPasswordDefaults
 (
   NSSSlot *slot,
   PRInt32 askPasswordTimeout
@@ -403,7 +403,7 @@ NSSSlot_SetPasswordDefaults
 }
 
 NSS_IMPLEMENT PRStatus
-NSSSlot_SetPassword
+nssSlot_SetPassword
 (
   NSSSlot *slot,
   NSSCallback pwcb
@@ -413,7 +413,7 @@ NSSSlot_SetPassword
     nssSession *rwSession;
     PRBool needsInit;
     needsInit = PR_FALSE; /* XXX */
-    rwSession = NSSSlot_CreateSession(slot, NULL, PR_TRUE);
+    rwSession = nssSlot_CreateSession(slot, NULL, PR_TRUE);
     if (needsInit) {
 	nssrv = nssslot_init_password(slot, rwSession, pwcb);
     } else {
@@ -424,7 +424,7 @@ NSSSlot_SetPassword
 }
 
 NSS_IMPLEMENT nssSession *
-NSSSlot_CreateSession
+nssSlot_CreateSession
 (
   NSSSlot *slot,
   NSSArena *arenaOpt,

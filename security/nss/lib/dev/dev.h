@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.4 $ $Date: 2001/09/19 21:37:20 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.5 $ $Date: 2001/09/19 21:47:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -60,11 +60,6 @@ static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.4 $ $Dat
  *  |-----------|---> NSSSlot <--> NSSToken
  */
 
-/* XXX These should probably all be "nss" not "NSS".  Though the types are
- *     exposed, the API's should not be (with the exception of functions
- *     put in a friend header.
- */
-
 #ifndef DEVT_H
 #include "devt.h"
 #endif /* DEVT_H */
@@ -72,7 +67,7 @@ static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.4 $ $Dat
 PR_BEGIN_EXTERN_C
 
 NSS_EXTERN NSSModule *
-NSSModule_Create
+nssModule_Create
 (
   NSSUTF8 *moduleOpt,
   NSSUTF8 *uriOpt,
@@ -83,43 +78,43 @@ NSSModule_Create
 
 /* This is to use the new loading mechanism. */
 NSS_EXTERN NSSModule *
-NSSModule_CreateFromSpec
+nssModule_CreateFromSpec
 (
   NSSUTF8 *moduleSpec
 );
 
 NSS_EXTERN PRStatus
-NSSModule_Destroy
+nssModule_Destroy
 (
   NSSModule *mod
 );
 
 NSS_EXTERN PRStatus
-NSSModule_Load
+nssModule_Load
 (
   NSSModule *mod
 );
 
 NSS_EXTERN PRStatus
-NSSModule_Unload
+nssModule_Unload
 (
   NSSModule *mod
 );
 
 NSS_EXTERN PRStatus
-NSSModule_LogoutAllSlots
+nssModule_LogoutAllSlots
 (
   NSSModule *mod
 );
 
 NSS_EXTERN NSSSlot **
-NSSModule_GetSlots
+nssModule_GetSlots
 (
   NSSModule *mod
 );
 
 NSS_EXTERN NSSSlot *
-NSSModule_FindSlotByName
+nssModule_FindSlotByName
 (
   NSSModule *mod,
   NSSUTF8 *slotName
@@ -129,7 +124,7 @@ NSSModule_FindSlotByName
  * function.  Do we want NSS to have access to this at the module level?
  */
 NSS_EXTERN PRStatus *
-NSSModule_TraverseCertificates
+nssModule_TraverseCertificates
 (
   NSSModule *mod,
   PRStatus (*callback)(NSSCertificate *c, void *arg),
@@ -137,7 +132,7 @@ NSSModule_TraverseCertificates
 );
 
 NSS_EXTERN NSSSlot *
-NSSSlot_Create
+nssSlot_Create
 (
   NSSArena *arenaOpt,
   CK_SLOT_ID slotId,
@@ -145,20 +140,20 @@ NSSSlot_Create
 );
 
 NSS_EXTERN PRStatus
-NSSSlot_Destroy
+nssSlot_Destroy
 (
   NSSSlot *slot
 );
 
 NSS_EXTERN NSSUTF8 *
-NSSSlot_GetName
+nssSlot_GetName
 (
   NSSSlot *slot,
   NSSArena *arenaOpt
 );
 
 NSS_EXTERN PRStatus
-NSSSlot_Login
+nssSlot_Login
 (
   NSSSlot *slot,
   PRBool asSO,
@@ -168,7 +163,7 @@ extern const NSSError NSS_ERROR_INVALID_PASSWORD;
 extern const NSSError NSS_ERROR_USER_CANCELED;
 
 NSS_EXTERN PRStatus
-NSSSlot_Logout
+nssSlot_Logout
 (
   NSSSlot *slot,
   nssSession *sessionOpt
@@ -177,14 +172,14 @@ NSSSlot_Logout
 #define NSSSLOT_ASK_PASSWORD_FIRST_TIME -1
 #define NSSSLOT_ASK_PASSWORD_EVERY_TIME  0
 NSS_EXTERN void
-NSSSlot_SetPasswordDefaults
+nssSlot_SetPasswordDefaults
 (
   NSSSlot *slot,
   PRInt32 askPasswordTimeout
 );
 
 NSS_EXTERN PRStatus
-NSSSlot_SetPassword
+nssSlot_SetPassword
 (
   NSSSlot *slot,
   NSSCallback pwcb
@@ -193,11 +188,11 @@ extern const NSSError NSS_ERROR_INVALID_PASSWORD;
 extern const NSSError NSS_ERROR_USER_CANCELED;
 
 /*
- * NSSSlot_IsLoggedIn
+ * nssSlot_IsLoggedIn
  */
 
 NSS_EXTERN nssSession *
-NSSSlot_CreateSession
+nssSlot_CreateSession
 (
   NSSSlot *slot,
   NSSArena *arenaOpt,
@@ -205,7 +200,7 @@ NSSSlot_CreateSession
 );
 
 NSS_EXTERN NSSToken *
-NSSToken_Create
+nssToken_Create
 (
   NSSArena *arenaOpt,
   CK_SLOT_ID slotID,
@@ -213,7 +208,7 @@ NSSToken_Create
 );
 
 NSS_EXTERN PRStatus
-NSSToken_Destroy
+nssToken_Destroy
 (
   NSSToken *tok
 );
@@ -223,7 +218,7 @@ NSSToken_Destroy
  * Return the object as an NSS type.
  */
 NSS_EXTERN NSSCertificate *
-NSSToken_ImportCertificate
+nssToken_ImportCertificate
 (
   NSSToken *tok,
   nssSession *sessionOpt,
@@ -231,7 +226,7 @@ NSSToken_ImportCertificate
 );
 
 NSS_EXTERN NSSPublicKey *
-NSSToken_ImportPublicKey
+nssToken_ImportPublicKey
 (
   NSSToken *tok,
   nssSession *sessionOpt,
@@ -239,7 +234,7 @@ NSSToken_ImportPublicKey
 );
 
 NSS_EXTERN NSSPrivateKey *
-NSSToken_ImportPrivateKey
+nssToken_ImportPrivateKey
 (
   NSSToken *tok,
   nssSession *sessionOpt,
@@ -247,7 +242,7 @@ NSSToken_ImportPrivateKey
 );
 
 NSS_EXTERN NSSSymmetricKey *
-NSSToken_ImportSymmetricKey
+nssToken_ImportSymmetricKey
 (
   NSSToken *tok,
   nssSession *sessionOpt,
@@ -255,7 +250,7 @@ NSSToken_ImportSymmetricKey
 );
 
 NSS_EXTERN NSSPublicKey *
-NSSToken_GenerateKeyPair
+nssToken_GenerateKeyPair
 (
   NSSToken *tok,
   nssSession *sessionOpt
@@ -263,7 +258,7 @@ NSSToken_GenerateKeyPair
 );
 
 NSS_EXTERN NSSSymmetricKey *
-NSSToken_GenerateSymmetricKey
+nssToken_GenerateSymmetricKey
 (
   NSSToken *tok,
   nssSession *sessionOpt
@@ -272,7 +267,7 @@ NSSToken_GenerateSymmetricKey
 
 /* Permanently remove an object from the token. */
 NSS_EXTERN PRStatus
-NSSToken_DeleteStoredObject
+nssToken_DeleteStoredObject
 (
   NSSToken *tok,
   nssSession *sessionOpt,
@@ -280,7 +275,7 @@ NSSToken_DeleteStoredObject
 );
 
 NSS_EXTERN NSSCertificate **
-NSSToken_FindCertificatesByTemplate
+nssToken_FindCertificatesByTemplate
 (
   NSSToken *tok,
   nssSession *sessionOpt,
@@ -293,7 +288,7 @@ NSSToken_FindCertificatesByTemplate
 
 /* again, a questionable function.  maybe some tokens allow this? */
 NSS_EXTERN PRStatus *
-NSSToken_TraverseCertificates
+nssToken_TraverseCertificates
 (
   NSSToken *tok,
   nssSession *sessionOpt,
@@ -322,7 +317,7 @@ nssSession_ExitMonitor
 );
 
 #ifdef DEBUG
-void NSSModule_Debug(NSSModule *m);
+void nssModule_Debug(NSSModule *m);
 #endif
 
 PR_END_EXTERN_C

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.2 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.3 $ $Date: 2001/09/19 21:47:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -105,7 +105,7 @@ s_ck_initialize_args = {
  *  if provided.  XXX use the opaque arg also, right? 
  */
 NSS_IMPLEMENT NSSModule *
-NSSModule_Create
+nssModule_Create
 (
   NSSUTF8 *moduleOpt,
   NSSUTF8 *uriOpt,
@@ -190,7 +190,7 @@ module_load_slots(NSSModule *mod)
     }
     /* Initialize each slot */
     for (i=0; i<ulNumSlots; i++) {
-	slots[i] = NSSSlot_Create(mod->arena, slotIDs[i], mod);
+	slots[i] = nssSlot_Create(mod->arena, slotIDs[i], mod);
     }
     nss_ZFreeIf(slotIDs);
 #ifdef arena_mark_bug_fixed
@@ -217,21 +217,21 @@ loser:
  * kind of consistency check is needed here, or perhaps at a higher level.
  */
 NSS_IMPLEMENT PRStatus
-NSSModule_Destroy
+nssModule_Destroy
 (
   NSSModule *mod
 )
 {
     if (--mod->refCount == 0) {
 	/* Ignore any failure here.  */
-	(void)NSSModule_Unload(mod);
+	(void)nssModule_Unload(mod);
 	return NSSArena_Destroy(mod->arena);
     }
     return PR_SUCCESS;
 }
 
 NSS_IMPLEMENT PRStatus
-NSSModule_Load
+nssModule_Load
 (
   NSSModule *mod
 )
@@ -291,7 +291,7 @@ loser:
 }
 
 NSS_IMPLEMENT PRStatus
-NSSModule_Unload
+nssModule_Unload
 (
   NSSModule *mod
 )
@@ -308,7 +308,7 @@ NSSModule_Unload
 }
 
 NSS_IMPLEMENT PRStatus *
-NSSModule_TraverseCertificates
+nssModule_TraverseCertificates
 (
   NSSModule *mod,
   PRStatus (*callback)(NSSCertificate *c, void *arg),
@@ -318,7 +318,7 @@ NSSModule_TraverseCertificates
     PRUint32 i;
     for (i=0; i<mod->numSlots; i++) {
 	/* might as well skip straight to token, right? or is this slot? */
-	NSSToken_TraverseCertificates(mod->slots[i]->token, 
+	nssToken_TraverseCertificates(mod->slots[i]->token, 
 	                              NULL, callback, arg);
     }
     return NULL;
@@ -326,7 +326,7 @@ NSSModule_TraverseCertificates
 
 #ifdef DEBUG
 void
-NSSModule_Debug(NSSModule *m)
+nssModule_Debug(NSSModule *m)
 {
     PRUint32 i;
     printf("\n");
