@@ -207,7 +207,7 @@ BookmarksUIElement.prototype = {
                   "newfolder"];
       break;
     case "http://home.netscape.com/NC-rdf#Bookmark":
-      commands = ["open", "find", "separator", "bm_cut", "bm_copylink",
+      commands = ["open", "find", "separator", "bm_cut", 
                   "bm_copy", "bm_paste", "bm_delete", "separator", "rename",
                   "separator", "bm_fileBookmark", "separator", "newfolder", 
                   "separator", "properties"];
@@ -223,7 +223,7 @@ BookmarksUIElement.prototype = {
                   "bm_fileBookmark", "separator", "separator", "properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavorite":
-      commands = ["open", "find", "separator", "bm_copylink", "bm_copy"];
+      commands = ["open", "find", "separator", "bm_copy"];
       break;
     case "http://home.netscape.com/NC-rdf#FileSystemObject":
       commands = ["open", "find", "separator", "bm_copy"];
@@ -312,9 +312,6 @@ BookmarksUIElement.prototype = {
       break;
     case "bm_copy":
       this.copySelection(selection);
-      break;
-    case "bm_copylink":
-      this.copyLinkLocation (selectedItem);
       break;
     case "bm_paste":
       this.paste(selection);
@@ -432,18 +429,6 @@ BookmarksUIElement.prototype = {
     const kClipboardIID = Components.interfaces.nsIClipboard;
     var clipboard = Components.classes[kClipboardContractID].getService(kClipboardIID);
     clipboard.setData(xferable, null, kClipboardIID.kGlobalClipboard);
-  },
-
-  copyLinkLocation: function (aBookmarkItem)
-  {
-    var url = LITERAL(this.db, aBookmarkItem, NC_NS + "URL");
-
-    // Get the clipboard helper
-    var contractid = "@mozilla.org/widget/clipboardhelper;1";
-    var iid = Components.interfaces.nsIClipboardHelper;
-    var clipboard = Components.classes[contractid].getService(iid);
-
-    clipboard.copyString(url);
   },
 
   paste: function (aSelection)
