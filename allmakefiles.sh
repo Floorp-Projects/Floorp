@@ -628,8 +628,9 @@ xpfe/components/regviewer/Makefile
 xpfe/components/find/Makefile
 xpfe/components/find/public/Makefile
 xpfe/components/find/src/Makefile
-xpfe/components/filepicker/src/Makefile
 xpfe/components/filepicker/Makefile
+xpfe/components/filepicker/public/Makefile
+xpfe/components/filepicker/src/Makefile
 xpfe/components/history/Makefile
 xpfe/components/history/src/Makefile
 xpfe/components/history/public/Makefile
@@ -657,9 +658,6 @@ xpfe/components/xfer/src/Makefile
 xpfe/components/ucth/Makefile
 xpfe/components/ucth/public/Makefile
 xpfe/components/ucth/src/Makefile
-xpfe/components/remote/Makefile
-xpfe/components/remote/public/Makefile
-xpfe/components/remote/src/Makefile
 xpfe/components/autocomplete/Makefile
 xpfe/components/autocomplete/public/Makefile
 xpfe/components/autocomplete/src/Makefile
