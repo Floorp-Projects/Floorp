@@ -539,7 +539,7 @@ nsStdURL::ReconstructSpec()
     if(!tempSpec)
         return NS_ERROR_OUT_OF_MEMORY;
     mSpec = nsCRT::strdup(tempSpec);
-    delete[] tempSpec;
+    nsCRT::free(tempSpec);
     
     return (mSpec ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
@@ -552,9 +552,7 @@ nsStdURL::Create(nsISupports *aOuter,
     nsStdURL* url = new nsStdURL(nsnull, aOuter);
     if (url == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(url);
     nsresult rv = url->QueryInterface(aIID, aResult);
-    NS_RELEASE(url);
     return rv;
 }
 
@@ -743,7 +741,7 @@ nsStdURL::ReconstructPath(void)
     ReplaceDotMess(tempPath);
 
     mPath = nsCRT::strdup(tempPath);
-    delete[] tempPath;
+    nsCRT::free(tempPath);
     return (mPath ? ReconstructSpec() : NS_ERROR_OUT_OF_MEMORY);
 }
 
