@@ -529,7 +529,8 @@ NS_IMETHODIMP CBrowserImpl::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 	QAOutput("nsIURIContentListener->OnStartURIOpen()",1);
 
 	GetTheUri(aURI, 1);
-	*_retval = PR_TRUE;
+	// set return boolean to false so uriOpen doesn't abort
+	*_retval = PR_FALSE;
 	FormatAndPrintOutput("_retval set to = ", *_retval, 1);
 
 	return NS_OK;

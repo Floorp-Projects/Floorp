@@ -71,7 +71,7 @@ CnsICommandMgr::~CnsICommandMgr()
 {
 }
 
-
+// 1st column: command; 2nd column: DoCommand state; 
 CommandTest CommandTable[] = {
 	{"cmd_bold", "", "state_all", "state_begin", "state_end", "state_mixed", 1},
 	{"cmd_italic", "", "state_all", "state_begin", "state_end", "state_mixed", 1},
@@ -199,7 +199,8 @@ void CnsICommandMgr::GetCommandStateTest(const char *aCommandName)
 	}
 }
 
-void CnsICommandMgr::DoCommandTest(const char *aCommandName)
+void CnsICommandMgr::DoCommandTest(const char *aCommandName,
+								   const char *doCommandState)
 {
 	nsCAutoString value;
 
@@ -214,10 +215,8 @@ void CnsICommandMgr::DoCommandTest(const char *aCommandName)
         QAOutput("Didn't get nsICommandParam object. Test fail");
 		return;
 	}
-	if  (strcmp(aCommandName,"cmd_fontColor") == 0 ||
-		 strcmp(aCommandName,"cmd_backgroundColor") == 0 ||
-		 strcmp(aCommandName,"cmd_fontFace") == 0 ||
-		 strcmp(aCommandName,"cmd_align") == 0)
+
+	if (strcmp(doCommandState, "state_attribute") == 0)
 	{
 		if (strcmp(aCommandName,"cmd_fontColor") == 0 ||
 		    strcmp(aCommandName,"cmd_backgroundColor") == 0)
@@ -256,7 +255,7 @@ void CnsICommandMgr::OnStartTests(UINT nMenuID)
 			GetCommandStateTest("cmd_charSet");
 			break;
 		case ID_INTERFACES_NSICOMMANDMANAGER_DOCOMMAND :
-			DoCommandTest("cmd_fontColor");
+			DoCommandTest("cmd_fontColor", "state_attribute");
 			break;
 	}
 }
@@ -271,7 +270,8 @@ void CnsICommandMgr::RunAllTests()
 		IsCommandSupportedTest(CommandTable[i].mCmdName);
 		IsCommandEnabledTest(CommandTable[i].mCmdName);
 		GetCommandStateTest(CommandTable[i].mCmdName);
-		DoCommandTest(CommandTable[i].mCmdName);
+		DoCommandTest(CommandTable[i].mCmdName,
+					  CommandTable[i].mDoCmdParam);
 	}
 }
 

@@ -519,6 +519,7 @@ void CTests::OnTestsAddUriContentListenerByUriLoader()
 
 void CTests::OnTestsAddUriContentListenerByOpenUri()
 {
+	CUrlDialog myDialog;
 	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
 	RvTestResult(rv, "nsIURILoader() object test", 1);
 	if (!myLoader) {
@@ -527,8 +528,15 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 	}
 	nsCOMPtr<nsIChannel> theChannel;
 	nsCOMPtr<nsIURI> theURI;
-	NS_NewURI(getter_AddRefs(theURI), "http://www.yahoo.com");
-	NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
+	if (myDialog.DoModal() == IDOK)
+	{
+		NS_NewURI(getter_AddRefs(theURI), myDialog.m_urlfield);
+		NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
+	}
+	else {
+		QAOutput("Didn't get a url. test failed", 2);
+		return;
+	}
 	nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
 	rv = myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
 	RvTestResult(rv, "nsIUriLoader->OpenURI() test", 2);
