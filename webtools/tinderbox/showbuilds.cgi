@@ -237,7 +237,8 @@ sub display_build_table_row {
                 $buildname = $br->{buildname};
                 if( $tree2 ne "" ){
                     $buildname =~ s/^[^ ]* //;
-                } 
+                }
+                $popupbuildname = $buildname; #Added so text in popup isn't whacky
                 $buildname = &url_encode($buildname);
                 $buildtime = $br->{buildtime};
                 $buildtree = $br->{td}->{name};
@@ -248,7 +249,13 @@ sub display_build_table_row {
                     print "<a href='' onClick=\"return js_what_menu(event,$noteid,'$logfile','$errorparser','$buildname','$buildtime');\">";
                     print "<img src=star.gif border=0></a>\n";
                 }
-                print "<a href='showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&mainframe=1'>\n"; 
+                print "<A HREF='showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&mainframe=1' " .
+                      "onClick=\"return log_popup(event,'$buildtree','$popupbuildname'," .
+                      "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&mainframe=1'," .
+                      "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&fulltext=1&mainframe=1'," .
+                      "'addnote.cgi?tree=$treename&buildname=$buildname&buildtime=$buildtime&logfile=$logfile&errorparser=$errorparser');\">";
+
+
                 print "L</a>\n";
 
                 #print "Build Summary</a><br>\n";
@@ -475,6 +482,49 @@ note_array = new Array();
 
 <layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
 </layer>
+
+<layer name="logpopup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
+</layer>
+
+<SCRIPT>
+function log_popup(e,tree,platform,brieflogurl,fulllogurl,commenturl) {
+
+    if( parseInt(navigator.appVersion) < 4 ){
+        return true;
+    }
+
+    q = document.layers["logpopup"];
+
+    q.top = e.target.y - 6;
+
+    yy = e.target.x;
+    if( yy + q.clip.right > window.innerWidth ){
+        yy = (window.innerWidth-30) - q.clip.right;
+        if( yy < 0 ){
+            yy = 0;
+        }
+    
+    }
+
+    q.left = yy;
+
+
+//    q.left = e.target.x - 6;
+//    if( q.left + q.clipWidth > window.width ){
+//        q.left = window.width - q.clipWidth;
+//    }
+
+    q.visibility="show"; 
+    q.document.write("<TABLE BORDER=1><TR><TD><B>" + platform + "--" + tree + "</B><BR>" +
+        "<A HREF=\"" + brieflogurl + "\">View Brief Log</A><BR>" +
+        "<A HREF=\"" + fulllogurl + "\">View Full Log</A><BR>" +
+        "<A HREF=\"" + commenturl + "\">Add a Comment this Log</A><BR>" +
+	"</TD></TR></TABLE>");
+    q.document.close();
+    return false;
+}
+
+</SCRIPT>
 
 ENDJS
 

@@ -195,7 +195,7 @@ sub load_buildlog {
     for $t (@treelist) {
         open(BUILDLOG, "<$t->{name}/build.dat" );
         while( <BUILDLOG> ){
-            chop;
+            chomp;
             ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile, $binaryname) = 
                 split( /\|/ );
 
