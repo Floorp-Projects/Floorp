@@ -1,27 +1,5 @@
-#righttext {
-  text-align: left;
-  font-style: bold;
-  
-}
-
-#righttext {
-  text-align: right;
-}
-
 #top  {
 background-color: grey
-}
-
-table {
-    display: block;
-    width: 100%;
-    border: 0px;
-    min-height: 16px;
-/*    color: white; */
-}
-
-td {
-    font-size: 8pt;
 }
 
 #pref-appearance {
