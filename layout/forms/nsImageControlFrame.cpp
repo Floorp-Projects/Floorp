@@ -193,7 +193,12 @@ NS_IMETHODIMP nsImageControlFrame::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    if (mContent->Tag() == nsHTMLAtoms::button) {
+      return accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    }
+    else if (mContent->Tag() == nsHTMLAtoms::input) {
+      return accService->CreateHTMLButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
+    }
   }
 
   return NS_ERROR_FAILURE;

@@ -47,6 +47,7 @@
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
+#include "nsISupportsArray.h"
 
 // --- checkbox -----
 
@@ -196,22 +197,45 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
 {
-  nsCOMPtr<nsIDOMHTMLInputElement> button(do_QueryInterface(mDOMNode));
-
-  if (!button)
-    return NS_ERROR_FAILURE;
-
-  nsAutoString name;
-  button->GetValue(name);
-  name.CompressWhitespace();
-  if (name.IsEmpty()) {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-    elt->GetAttribute(NS_LITERAL_STRING("title"), name);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
+    return NS_ERROR_FAILURE; // Node shut down
   }
 
-  _retval.Assign(name);
+  nsAutoString name;
+  if (NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
+                                                    nsAccessibilityAtoms::value,
+                                                    name) &&
+      NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
+                                                    nsAccessibilityAtoms::alt,
+                                                    name) &&
+      NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
+                                                    nsAccessibilityAtoms::title,
+                                                    name) &&
+      NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
+                                                    nsAccessibilityAtoms::src,
+                                                    name) &&
+      NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
+                                                    nsAccessibilityAtoms::data,
+                                                    name)) {
+    // Use anonymous text child of button if nothing else works.
+    // This is necessary for submit, reset and browse buttons.
+    nsCOMPtr<nsIPresShell> shell(GetPresShell());
+    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+    nsCOMPtr<nsISupportsArray> anonymousElements;
+    shell->GetAnonymousContentFor(content, getter_AddRefs(anonymousElements));
+    if (anonymousElements) {
+      nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(anonymousElements, 0));
+      if (domNode) {
+        domNode->GetNodeValue(name);
+      }
+    }
+  }
+
+  name.CompressWhitespace();
+  aName = name;
 
   return NS_OK;
 }
