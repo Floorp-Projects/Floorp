@@ -97,6 +97,17 @@ public:
    * trigger off of ContentChanged notifications.
    */
 
+  /** Add a block parent node around the selected content.
+    * If the selected content already has a block parent, it is changed to  the type given by aParentTag
+    * @param aParentTag  The tag from which the new parent is created.
+    */
+  NS_IMETHOD AddBlockParent(nsString& aParentTag)=0;
+
+  /** Remove the most deeply nested block parent node from around the selected content.
+    * @param aParentTag  The tag from which the new parent is created.
+    */
+  NS_IMETHOD RemoveBlockParent()=0;
+
   NS_IMETHOD InsertLink(nsString& aURL)=0;
   NS_IMETHOD InsertImage(nsString& aURL,
                          nsString& aWidth, nsString& aHeight,
