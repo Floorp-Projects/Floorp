@@ -88,7 +88,7 @@ void ByteRanges::FreeByteRanges(nsByteRange * ranges) {
 }
 
 void ByteRanges::Initialize(JNIEnv *env) {
-    jclass clazz = env->FindClass("org/mozilla/pluglet/mozilla/ByteRangesImpl");
+    jclass clazz = env->FindClass("org/mozilla/pluglet/mozilla/ByteRanges");
     if(!clazz) {
 	env->ExceptionDescribe();
 	return;

@@ -23,14 +23,36 @@ package org.mozilla.pluglet.mozilla;
 /**
  * This interface is for setting up a range of bytes.
  */
-public interface ByteRanges {
+public class  ByteRanges {
     /**
      * Sets a range of bytes, given an offset and a length. If offset is negative,
      * then the offset is from the end.<p>
-     * @param offset This is the offset for the range of bytes -- from the 
+     * @param offset This is the offset for the range of bytes - from the 
      * beginning if offset is positive, from the end if offset is negative.<p>
      * @param length This is the length of the range of bytes; i.e., the number
      * of bytes.
      */
-    public void addRange(int offset, int length);
+    public void addRange(int off, int len) {
+	if (current >= offset.length) {
+	    int tmpOffset[] = new int[offset.length+STEP];
+	    int tmpLength[] = new int[offset.length+STEP];
+	    System.arraycopy(offset,0,tmpOffset,0,offset.length);
+	    System.arraycopy(length,0,tmpLength,0,length.length);
+	    offset = tmpOffset;
+	    length = tmpLength;
+	}
+	offset[current] = off;
+	length[current] = len;
+	current++;
+    }
+    public ByteRanges() {
+	offset = new int[STEP];
+	length = new int[STEP];
+    }
+    private int offset[]; 
+    private int length[];
+    //this is the index for next available free cell in the array
+    private int current = 0; 
+    //size increment for offset and length arrays
+    private final static int STEP = 10;
 }
