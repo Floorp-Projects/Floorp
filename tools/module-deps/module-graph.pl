@@ -307,6 +307,7 @@ sub sortby_deps() {
 # Recursively traverse the deps matrix.
 #
 my %visited_nodes;
+my @visited_nodes_leaf_first_order; # Store in post-recursion order.
 
 sub walk_module_digraph {
   my ($module, $level) = @_;
@@ -334,6 +335,9 @@ sub walk_module_digraph {
 	}
   }
 
+  # Post-recursion.  Store in array form so we keep the order.
+  push(@visited_nodes_leaf_first_order, $module);
+
   if (!$list_only_mode) {
 	if($level == 1) {
 	  print "\n";
@@ -346,8 +350,9 @@ sub print_module_deps {
   # Recursively hunt down dependencies for $opt_start_module
   walk_module_digraph($opt_start_module, 1);
 
+  # Post-recursion version.
   my $visited_mod;
-  foreach $visited_mod (sort keys %visited_nodes ) {
+  foreach $visited_mod (@visited_nodes_leaf_first_order) {
 	print "$visited_mod ";
   }
   print "\n";
